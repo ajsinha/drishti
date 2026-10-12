@@ -76,6 +76,16 @@ class PackLoaderTest {
     }
 
     @Test
+    void aSyntaxErrorInPackYamlSaysWhereAndIsNotRetried(@TempDir Path dir) throws Exception {
+        Files.createDirectories(dir.resolve("a"));
+        Files.writeString(dir.resolve("a").resolve("pack.yaml"), "pack: a\nkinds: [thing\nmnemonics:\n  TRD: { kind: thing }\n");
+        PackLoader l = new PackLoader();
+        assertThatThrownBy(() -> l.load(dir, List.of("a"))).isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("a/pack.yaml has a syntax error at line ").hasMessageContaining("column ").hasMessageNotContaining(dir.toString())
+                .satisfies(e -> assertThat(com.ash.drishti.common.RetryPolicy.looksPermanent(e.getMessage())).isTrue());   // waiting does not fix it: the file must change
+    }
+
+    @Test
     void conflictsAndMissingPacksAreErrors(@TempDir Path dir) throws Exception {
         for (String n : new String[] {"a", "b"}) {
             Files.createDirectories(dir.resolve(n));

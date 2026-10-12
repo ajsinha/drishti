@@ -166,7 +166,7 @@ def cmd_rollback(cli, a, extra) -> int:
 
 def print_datasource(ds: dict, say=print) -> None:
     say(f"connectors of {ds['pack']}   [files in {ds['directory']}; change them with `drishti.py connector ...`]")
-    rows = [[c["name"], str(c.get("state", "")).lower().replace("_", " "), c.get("plugin") or "", ",".join(c.get("kinds") or []),
+    rows = [[c["name"], c.get("label") or str(c.get("state", "")).lower().replace("_", " "), c.get("plugin") or "", ",".join(c.get("kinds") or []),
              (c.get("origin") if c.get("defined") else "nothing defines it"), "; ".join(c.get("problems") or [])] for c in ds["connectors"]]
     _table(rows, ["connector", "state", "plugin", "kinds from this pack", "defined by", "problems"], say)
     for m in ds.get("missing") or []:

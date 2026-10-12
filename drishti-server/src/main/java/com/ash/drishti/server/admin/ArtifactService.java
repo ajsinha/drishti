@@ -119,6 +119,11 @@ public final class ArtifactService {
 
     // ---- disable / enable -------------------------------------------------------------------------------------------------------
 
+    /** True for a pack named in {@code drishti.packs.enabled} (not loaded from Admin): it can only be disabled here, never uninstalled. */
+    public boolean pinnedByConfiguration(String kind, String name) {
+        return "pack".equals(kind) && configured.contains(name) && !overlay.added().contains(name);
+    }
+
     /** Switches the artifact off and keeps it. A pack that other enabled packs extend needs {@code cascade} (they are switched off first). */
     public Map<String, Object> disable(String kind, String subtype, String name, boolean cascade, String actor) {
         lock.lock();
@@ -197,7 +202,7 @@ public final class ArtifactService {
             String why = null;
             if (im.templated()) {
                 why = "connector '" + name + "' is named by pack " + im.templatePack() + "'s template, so it would be written back: disable or reset it instead";
-            } else if ("pack".equals(kind) && configured.contains(name) && !overlay.added().contains(name)) {
+            } else if (pinnedByConfiguration(kind, name)) {
                 why = "pack '" + name + "' is named in drishti.packs.enabled (DRISHTI_PACKS): take it out there and restart, or disable it here";
             }
             if (why != null) {

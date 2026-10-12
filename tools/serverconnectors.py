@@ -72,6 +72,9 @@ def cmd_list(cli, a, extra) -> int:
         return ",".join(k[:3]) + (f" +{len(k) - 3}" if len(k) > 3 else "")
 
     def state(c):
+        # the server's own words (the Admin page says the same): "down, retrying", "running, with a warning", "disabled"
+        if c.get("label"):
+            return c["label"]
         h = str(c.get("health") or "")
         return c["state"].lower() + (f" ({h.split(':')[0].split()[0]})" if h and not h.startswith("UP") else "")
 
@@ -95,7 +98,9 @@ def cmd_get(cli, a, extra) -> int:
     if a.json:
         cli.say_json(c)
         return 0
-    print(f"connector {c['name']}   origin {c['origin']}   plugin {c.get('plugin')}   {c['state'].lower()}   version {c.get('etag') or '-'}")
+    print(f"connector {c['name']}   origin {c['origin']}   plugin {c.get('plugin')}   {c.get('label') or c['state'].lower()}   version {c.get('etag') or '-'}")
+    if c.get("health") and c.get("level") in ("warn", "down"):
+        print(f"  health: {c['health']}")
     if c.get("file"):
         print(f"  file {c['file']}")
     if c.get("kinds"):

@@ -529,10 +529,38 @@ public final class ConnectorManager {
         m.put("updated", updated.get(name));
         m.put("etag", d == null ? null : d.etag());
         m.put("problems", problemsOf(name, status));
-        m.put("retry", registry.retryStatus(name).map(s -> com.ash.drishti.common.RetryBoard.describe(s, Instant.now())).orElse(null));
+        Object retry = registry.retryStatus(name).map(s -> com.ash.drishti.common.RetryBoard.describe(s, Instant.now())).orElse(null);
+        m.put("retry", retry);
+        String[] shown = shown((String) m.get("state"), health, retry != null);
+        m.put("level", shown[0]);
+        m.put("label", shown[1]);
         m.put("usedBy", usedBy(name));
         m.put("template", t.map(Template::pack).orElse(null));
         return m;
+    }
+
+    /**
+     * What the badge says, so no screen shows "running" for a connector that is down or serving nothing: {level, label} where the level is
+     * ok, warn, down or off. A connector that runs but reports DOWN (or is being retried) is "down, retrying"; one whose health carries a
+     * warning (unreadable lines, nothing served for the day) is "running, with a warning".
+     */
+    static String[] shown(String state, String health, boolean retrying) {
+        if ("DISABLED".equals(state)) {
+            return new String[] {"off", "disabled"};
+        }
+        if ("FAILED".equals(state)) {
+            return new String[] {"down", retrying ? "failed, retrying" : "failed"};
+        }
+        if (!"RUNNING".equals(state)) {
+            return new String[] {"warn", "NOT_LOADED".equals(state) ? "not started" : String.valueOf(state).toLowerCase(java.util.Locale.ROOT)};
+        }
+        if (health != null && health.startsWith("DOWN") || retrying) {
+            return new String[] {"down", retrying ? "down, retrying" : "down"};
+        }
+        if (health != null && (health.contains("unreadable") || health.contains("0 rows served") || health.contains("duplicate"))) {
+            return new String[] {"warn", "running, with a warning"};
+        }
+        return new String[] {"ok", "running"};
     }
 
     private List<String> problemsOf(String name, SourceRegistry.ConnectorStatus status) {
@@ -655,6 +683,8 @@ public final class ConnectorManager {
                 row.put("name", n);
                 row.put("defined", false);
                 row.put("state", "NOT_CONFIGURED");
+                row.put("level", "down");
+                row.put("label", "not configured");
                 row.put("problems", List.of("connector " + n + " is not configured"));
                 missing.add(n);
             }

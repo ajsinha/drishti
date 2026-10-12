@@ -356,6 +356,30 @@ class PackDeployApiTest {
         mvc.perform(delete("/api/v1/admin/packs/deploy/" + same.path("uploadId").asText()));
     }
 
+    @Test
+    void aVersionThatIsNotXYZIsRefusedWithTheRule() throws Exception {
+        JsonNode r = checked(TestArchives.bundle("lakepack", "1.0", files("1.0", true, SUTRA)));
+        assertThat(r.path("ok").asBoolean()).isFalse();
+        assertThat(check(r, "pack.yaml")).startsWith("FAIL").contains("X.Y.Z").contains("'1.0'");
+        JsonNode pre = checked(TestArchives.bundle("lakepack", "1.1.0-rc.1", files("1.1.0-rc.1", true, SUTRA)));
+        assertThat(check(pre, "pack.yaml")).startsWith("ok");
+        mvc.perform(delete("/api/v1/admin/packs/deploy/" + pre.path("uploadId").asText()));
+    }
+
+    @Test
+    void aSameVersionRedeployKeepsNoDuplicateAndTheRunningVersionIsNotARollbackTarget() throws Exception {
+        for (String note : new String[] {"", "# a hot fix\n"}) {
+            JsonNode up = checked(TestArchives.bundle("lakepack", "3.0.0", files("3.0.0", true, SUTRA + note)));
+            mvc.perform(post("/api/v1/admin/packs/deploy/" + up.path("uploadId").asText()).param("acceptBreaking", "true")).andExpect(status().isOk());
+        }
+        mvc.perform(get("/api/v1/admin/packs/history").param("pack", "lakepack")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.kept.lakepack[?(@.version=='3.0.0')]").isEmpty())                                // the running version is not offered
+                .andExpect(jsonPath("$.kept.lakepack[?(@.version=='shipped')]").isNotEmpty());
+        mvc.perform(post("/api/v1/admin/packs/lakepack/rollback").param("version", "3.0.0")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value(containsString("is the version that is running")));
+        mvc.perform(post("/api/v1/admin/packs/lakepack/rollback").param("version", "shipped")).andExpect(status().isOk()).andExpect(jsonPath("$.restored").value("1.0.0"));
+    }
+
     // -- data source ---------------------------------------------------------------------------------------------------
 
     @Test
@@ -374,6 +398,7 @@ class PackDeployApiTest {
         mvc.perform(get("/api/v1/admin/packs/not-loaded/datasource")).andExpect(status().isNotFound());
         // the old edit doors are gone: connectors are changed in Admin -> Connectors
         mvc.perform(put("/api/v1/admin/packs/lakepack/datasource").contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().is4xxClientError());
-        mvc.perform(get("/api/v1/admin/packs")).andExpect(jsonPath("$[?(@.name=='lakepack')].connectors[0]").value(hasItem("item-store")));
+        mvc.perform(get("/api/v1/admin/packs")).andExpect(jsonPath("$[?(@.name=='lakepack')].connectors[0]").value(hasItem("item-store")))   // from connector-templates and routes too
+                .andExpect(jsonPath("$[?(@.name=='lakepack')].sutraProblems[0]").isEmpty());                                 // the pack's Sutra problems, one line each
     }
 }

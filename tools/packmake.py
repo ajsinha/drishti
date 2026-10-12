@@ -347,8 +347,8 @@ def make(a, cli) -> int:
             raise MakeError(str(e), e.code) from None
     if not a.inputs or not a.kind or not a.match:
         raise MakeError("without --schema, give the JSON Lines folder, --kind and --match (or give --schema)")
-    if not re.fullmatch(r"[0-9A-Za-z][0-9A-Za-z._-]*", a.version):
-        raise MakeError("--version is a plain version such as 1.0.0")
+    if not re.fullmatch(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?", a.version):
+        raise MakeError("--version must be X.Y.Z, such as 1.0.0 or 2.0.0-rc.1")
     out = (a.out or pathlib.Path("build") / f"{a.name}-{a.version}").resolve()
     SG = cli.sutragen()
     kinds = SG.load_folder(a.inputs, a.recursive, a.kind)

@@ -146,6 +146,12 @@ public final class PackLoader {
             }
             return new Pack(n, String.valueOf(m.getOrDefault("version", "0")), String.valueOf(m.getOrDefault("title", n)),
                     String.valueOf(m.getOrDefault("description", "")), packDir.toAbsolutePath(), m);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            // a syntax error: say where (line and column) and which file, relative to the packs folder; waiting does not fix it
+            var at = e.getLocation();
+            String first = String.valueOf(e.getOriginalMessage()).lines().findFirst().orElse("");
+            throw new IllegalStateException(n + "/pack.yaml has a syntax error" + (at == null || at.getLineNr() < 0 ? "" : " at line " + at.getLineNr() + ", column " + at.getColumnNr())
+                    + ": " + first + "; fix the file and the pack is read again when it changes", e);
         } catch (IOException e) {
             throw new UncheckedIOException("cannot read " + manifest, e);
         }

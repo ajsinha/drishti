@@ -104,6 +104,7 @@ public class PackDetailController {
             }
         }
         out.put("sutras", rows);
+        out.put("sutraProblems", PackSutraProblems.of(sutras, dir));
         return out;
     }
 }

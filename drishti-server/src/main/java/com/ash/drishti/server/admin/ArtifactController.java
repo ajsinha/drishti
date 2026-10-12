@@ -87,7 +87,9 @@ public class ArtifactController {
     public Map<String, Object> impact(@RequestParam String kind, @RequestParam(defaultValue = "") String subtype, @RequestParam String name,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
-        return shown(service.impact(kind, subtype, name));
+        Map<String, Object> out = shown(service.impact(kind, subtype, name));
+        out.put("configPinned", service.pinnedByConfiguration(kind, name));           // named in DRISHTI_PACKS: only Disable is offered
+        return out;
     }
 
     @PostMapping("/disable")

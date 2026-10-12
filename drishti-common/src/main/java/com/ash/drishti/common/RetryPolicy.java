@@ -157,6 +157,6 @@ public record RetryPolicy(boolean enabled, Duration initial, double factor, Dura
         String m = message.toLowerCase(Locale.ROOT);
         return m.contains("401") || m.contains("403") || m.contains("unauthori") || m.contains("forbidden") || m.contains("authentication failed")
                 || m.contains("access denied") || m.contains("invalid credentials") || m.contains("bad credentials") || m.contains("invalid api key")
-                || m.contains("incorrect api key") || m.contains("is not set") || m.contains("no plugin named");
+                || m.contains("incorrect api key") || m.contains("is not set") || m.contains("no plugin named") || m.contains("has a syntax error");
     }
 }

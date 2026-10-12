@@ -63,7 +63,8 @@ import org.springframework.core.env.Environment;
 public final class PackDeployService {
 
     private static final Pattern NAME = Pattern.compile("[A-Za-z0-9][A-Za-z0-9._-]{0,63}");
-    private static final Pattern VERSION = Pattern.compile("[A-Za-z0-9][A-Za-z0-9._+-]{0,63}");
+    /** A deployed version is semantic: X.Y.Z, optionally with a -pre-release and +build part (1.4.0, 2.0.0-rc.1). */
+    private static final Pattern VERSION = Pattern.compile("(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?");
 
     /** One check of an upload: {@code ok}, or a reason. {@code warn} marks an ok that deserves a look. */
     public record Check(String name, boolean ok, String detail, boolean warn) {
@@ -172,7 +173,8 @@ public final class PackDeployService {
             String name = String.valueOf(meta.get("pack"));
             String version = String.valueOf(meta.get("version"));
             if (!NAME.matcher(name).matches() || !VERSION.matcher(version).matches()) {
-                checks.add(Check.fail("pack.yaml", "needs a plain 'pack' name and a 'version' (got '" + name + "', '" + version + "')"));
+                checks.add(Check.fail("pack.yaml", !NAME.matcher(name).matches() ? "needs a plain 'pack' name (got '" + name + "')"
+                        : "'version' must be X.Y.Z, such as 1.4.0 or 2.0.0-rc.1 (got '" + version + "')"));
                 return finish(out, checks, null, null);
             }
             out.put("pack", name);
@@ -463,8 +465,13 @@ public final class PackDeployService {
                 chosenVersion = versionOf(packsDir.resolve(name));
             } else {
                 List<Path> kept = keptDirs(name);
+                String runningNow = Files.exists(target) ? versionOf(target) : null;
+                if (version != null && version.equals(runningNow)) {
+                    throw new DrishtiException(ErrorCode.BAD_REQUEST, "'" + name + "' " + version + " is the version that is running; pick an earlier one");
+                }
                 for (int i = kept.size() - 1; i >= 0 && chosen == null; i--) {
-                    if (version == null || version.equals(versionOfDir(kept.get(i)))) {
+                    String v = versionOfDir(kept.get(i));
+                    if (version == null ? !v.equals(runningNow) : version.equals(v)) {
                         chosen = kept.get(i);
                     }
                 }
@@ -523,9 +530,16 @@ public final class PackDeployService {
     public List<Map<String, Object>> kept(String name) {
         List<Map<String, Object>> out = new ArrayList<>();
         List<Path> dirs = keptDirs(name);
+        Path now = installed.resolve(name);
+        String runningNow = Files.isDirectory(now) ? versionOf(now) : null;
+        java.util.Set<String> shown = new java.util.HashSet<>();
         for (int i = dirs.size() - 1; i >= 0; i--) {
+            String v = versionOfDir(dirs.get(i));
+            if (v.equals(runningNow) || !shown.add(v)) {                  // the running version is not a rollback target; one entry per version
+                continue;
+            }
             Map<String, Object> m = new LinkedHashMap<>();
-            m.put("version", versionOfDir(dirs.get(i)));
+            m.put("version", v);
             m.put("keptAt", Instant.ofEpochMilli(stamp(dirs.get(i))).toString());
             out.add(m);
         }

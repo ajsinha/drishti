@@ -69,11 +69,13 @@ public class PackAdminController {
     private final com.ash.drishti.packs.SamplePolicy policy;
 
     private final com.ash.drishti.server.RetryService retry;
+    private final com.ash.drishti.rachana.SutraRegistry sutras;
 
     public PackAdminController(PackRegistry registry, PackAccess access, PackStateStore states, Entitlements entitlements, Environment env,
             com.ash.drishti.identity.AuditLog audit, com.ash.drishti.server.PackReloader reloader, com.ash.drishti.packs.SamplePolicy policy,
-            com.ash.drishti.server.RetryService retry) {
+            com.ash.drishti.server.RetryService retry, com.ash.drishti.rachana.SutraRegistry sutras) {
         this.retry = retry;
+        this.sutras = sutras;
         this.reloader = reloader;
         this.policy = policy;
         this.registry = registry;
@@ -184,16 +186,21 @@ public class PackAdminController {
             m.put("added", overlay.added().contains(pack.name()));
             m.put("sample", pack.sample());
             m.put("problem", registry.problems().get(pack.name()));
-            m.put("connectors", pack.connectorRefs());
             m.put("enabled", access.isEnabled(pack.name()));
             m.put("extends", pack.parents());
             m.put("requiredBy", access.requiredBy(pack.name()));
             m.put("kinds", pack.kinds());
-            m.put("connectors", List.copyOf(map(pack.manifest().get("connectors")).keySet()));
+            m.put("connectors", pack.connectorRefs());                 // the connectors and connector-templates it names, and those its routes use
+            m.put("sutraProblems", PackSutraProblems.of(sutras, pack.dir()));
             m.put("mnemonics", List.copyOf(map(pack.manifest().get("mnemonics")).keySet()));
             states.find(pack.name()).ifPresent(s -> {
                 m.put("updatedAt", s.updatedAt());
                 m.put("updatedBy", s.updatedBy());
+            });
+            // the pack's own file says when it last changed (a deploy); shown when newer than the last switch, or when it was never switched
+            changedOnDisk(pack.dir()).filter(t -> !(m.get("updatedAt") instanceof java.time.Instant at) || t.isAfter(at)).ifPresent(t -> {
+                m.put("updatedAt", t);
+                m.put("updatedBy", "files on disk");
             });
             out.add(m);
         }
@@ -245,13 +252,24 @@ public class PackAdminController {
                     r.put("sample", Boolean.TRUE.equals(y.get("sample")));
                     out.add(r);
                 } catch (IOException | RuntimeException e) {
-                    out.add(row(d.getFileName().toString(), d.getFileName().toString(), "pack.yaml cannot be read: " + e.getMessage(), ""));
+                    String why = e instanceof org.yaml.snakeyaml.error.MarkedYAMLException my && my.getProblemMark() != null
+                            ? "syntax error at line " + (my.getProblemMark().getLine() + 1) + ", column " + (my.getProblemMark().getColumn() + 1) + ": " + my.getProblem()
+                            : String.valueOf(e.getMessage()).lines().findFirst().orElse("");
+                    out.add(row(d.getFileName().toString(), d.getFileName().toString(), d.getFileName() + "/pack.yaml cannot be read: " + why, ""));
                 }
             });
         } catch (IOException e) {
             return out;
         }
         return out;
+    }
+
+    private static java.util.Optional<java.time.Instant> changedOnDisk(Path packDir) {
+        try {
+            return java.util.Optional.of(Files.getLastModifiedTime(packDir.resolve("pack.yaml")).toInstant().truncatedTo(java.time.temporal.ChronoUnit.SECONDS));
+        } catch (IOException | RuntimeException e) {
+            return java.util.Optional.empty();
+        }
     }
 
     private static Map<String, Object> row(String name, String title, String description, String version) {

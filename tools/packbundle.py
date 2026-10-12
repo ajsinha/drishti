@@ -37,6 +37,8 @@ FORMAT = 1
 SKIP_DIRS = {".git", "__pycache__", ".idea", ".pytest_cache", ".generated", ".venv", "node_modules"}
 SKIP_FILES = {".DS_Store", "Thumbs.db", MANIFEST}
 NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+# a pack's version is semantic: X.Y.Z, optionally -pre-release and +build (1.4.0, 2.0.0-rc.1); the server's deploy check says the same
+VERSION_RE = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$")
 
 
 class BundleError(Exception):
@@ -118,8 +120,10 @@ def bundle(pack: pathlib.Path, out: pathlib.Path, tool_versions: dict, required_
     """Writes <out>/<name>-<version>.tar.gz (+ .sha256 and .manifest.json); byte-for-byte reproducible for the same content."""
     meta = read_pack_yaml(pack)
     name, version = str(meta.get("pack", "")), str(meta.get("version", ""))
-    if not NAME_RE.match(name) or not NAME_RE.match(version):
-        raise BundleError(f"{pack / 'pack.yaml'}: needs a plain 'pack' name and a 'version' (got {name!r}, {version!r})")
+    if not NAME_RE.match(name):
+        raise BundleError(f"{pack / 'pack.yaml'}: needs a plain 'pack' name (got {name!r})")
+    if not VERSION_RE.match(version):
+        raise BundleError(f"{pack / 'pack.yaml'}: 'version' must be X.Y.Z, such as 1.4.0 or 2.0.0-rc.1 (got {version!r})")
     man = build_manifest(pack, tool_versions, required_server)
     mbytes = (json.dumps(man, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
     out.mkdir(parents=True, exist_ok=True)

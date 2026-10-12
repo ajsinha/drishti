@@ -81,6 +81,7 @@ public final class FileSourcePlugin implements SourcePlugin {
     private com.github.benmanes.caffeine.cache.Cache<DayKey, JsonlDay> days;
     private final com.ash.drishti.api.SingleFlight<DayKey> builds = new com.ash.drishti.api.SingleFlight<>();
     private String idField;
+    private String businessZone = "America/New_York";      // the zone whose today is the business date health checks the folders against
     private volatile Set<String> kinds = Set.of();
     private int maxLoadRows;
     private JsonlFormat format = JsonlFormat.DEFAULT;
@@ -102,6 +103,7 @@ public final class FileSourcePlugin implements SourcePlugin {
         String domain = ctx.setting("domain", "");
         this.root = (domain.isBlank() ? base : base.resolve(domain)).toAbsolutePath().normalize();
         this.idField = ctx.setting("id-field", "id");
+        this.businessZone = ctx.setting("business-zone", "America/New_York");
         this.maxLoadRows = Integer.parseInt(ctx.setting("max-load-rows", "200000"));
         this.format = JsonlFormat.of(ctx.settings());
         ctx.settings().forEach((k, v) -> {
@@ -663,6 +665,22 @@ public final class FileSourcePlugin implements SourcePlugin {
     }
 
     /**
+     * Kinds whose dated files all lie after {@code today} (a wrong business date or a folder dated ahead): the connector is up and
+     * answers nothing for the day, so health says so instead of a plain UP. A lake that holds only older days is left alone.
+     */
+    List<String> stale(LocalDate today) {
+        List<String> out = new ArrayList<>();
+        jsonl.forEach((kind, ds) -> {
+            java.util.NavigableSet<LocalDate> dated = ds.tailSet(UNDATED, false);
+            if (!dated.isEmpty() && !effective(kind) && dated.first().isAfter(today) && snapshotDay(kind, today).isEmpty()) {
+                out.add("0 rows served for " + today + ": '" + kind + "' holds " + (dated.size() == 1 ? "only " + dated.first() : dated.first() + " to " + dated.last())
+                        + ", none on or before " + today + " within lookback-days " + lookbackDays);
+            }
+        });
+        return out;
+    }
+
+    /**
      * UP, and what is wrong with the files indexed so far: "UP (3 unreadable lines in trading/2026-09-30/trade.jsonl
      * (line 201: ...))". The rest of each such file is served.
      */
@@ -675,6 +693,8 @@ public final class FileSourcePlugin implements SourcePlugin {
                 .sorted(java.util.Map.Entry.comparingByKey(java.util.Comparator.comparing(DayKey::day).reversed().thenComparing(DayKey::kind)))
                 .map(e -> e.getValue().describe(where(e.getKey()))).toList();
         String indexNote = datedIdx.enabled() ? datedIdx.index().summary() : null;
+        said = new ArrayList<>(said);
+        said.addAll(stale(LocalDate.now(java.time.ZoneId.of(businessZone))));
         if (said.isEmpty()) {
             return indexNote == null ? "UP" : "UP (" + indexNote + ")";
         }
