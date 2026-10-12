@@ -145,7 +145,7 @@
       if (!e || !v) { return; }
       const group = (D.catalogue.visuals[v.type] || {}).group;
       const spec = Object.assign({}, v, { title: v.title || '' });
-      if (group === 'static') { e.frame.result(null, (host) => B.visuals.draw(host, spec, ctxFor(v), null)); return; }
+      if (group === 'static' || group === 'entity') { e.frame.result(null, (host) => B.visuals.draw(host, spec, ctxFor(v), null)); return; }
       if (group === 'python') {                                           // Python runs when the report is viewed (server or browser), never while designing
         const item = (v.format && v.format.python) || ((v.wells.values || [])[0] ? 'the measure ' + v.wells.values[0] : '');
         B.clear(e.frame.body).appendChild(h('div', { class: 'bi-vis-empty bi-dropnote', role: 'status', 'data-py-placeholder': '' }, B.icon('filetype-py'), ' Python visual' + (item ? ' · ' + item : ''), h('br'),

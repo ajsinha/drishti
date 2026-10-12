@@ -96,7 +96,7 @@ public final class VisualQueries {
 
     private Built build() {
         VisualCatalogue.Type spec = VisualCatalogue.type(visual.type());
-        if (spec == null || "static".equals(spec.group())) {
+        if (spec == null || "static".equals(spec.group()) || "entity".equals(spec.group())) {
             throw new DrishtiException(ErrorCode.REPORT_STATE, "the " + visual.type() + " visual draws no data");
         }
         LocalDate from = date(state.from() != null ? state.from() : report.dates() == null ? null : report.dates().from());

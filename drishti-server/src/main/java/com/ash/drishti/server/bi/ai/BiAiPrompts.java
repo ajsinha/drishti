@@ -70,7 +70,7 @@ final class BiAiPrompts {
                 """);
         VisualCatalogue.names().forEach(n -> {
             var t = VisualCatalogue.type(n);
-            if (t.wells().isEmpty() || VisualCatalogue.RESERVED.contains(n) || "python".equals(t.group()) || "perspective".equals(t.group())) {
+            if (t.wells().isEmpty() || VisualCatalogue.RESERVED.contains(n) || "python".equals(t.group()) || "entity".equals(t.group()) || "perspective".equals(t.group())) {
                 return;
             }
             StringBuilder w = new StringBuilder();

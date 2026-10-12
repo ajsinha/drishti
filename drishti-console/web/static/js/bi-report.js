@@ -74,7 +74,7 @@
   function ctxFor(spec) {
     const sel = state.selections.find((s) => s.visual === spec.id);
     return {
-      index: idxOf(spec), palette, t: tokens, interactive: true, selected: sel || null, rolling,
+      index: idxOf(spec), palette, t: tokens, interactive: true, selected: sel || null, rolling, entity: true, selections: state.selections,
       onMark: (mark) => selectMark(spec, mark), navigate: (a) => navigate(a),
       slicer: spec.type === 'slicer' ? { value: state.slicers[spec.id] == null ? null : state.slicers[spec.id], onChange: (v) => { state.slicers[spec.id] = v; refreshAll(spec.id); } } : null
     };
@@ -88,7 +88,7 @@
       return b;
     };
     const group = VGROUP[spec.type];
-    if (group === 'static' || spec.type === 'slicer') { return out; }
+    if (group === 'static' || group === 'entity' || spec.type === 'slicer') { return out; }
     if (group === 'python') { return out; }                                        // a Python result is drawn from rows Python was handed: no alert, drill or marks
     if (B.ai && group !== 'python') { out.push(B.ai.explainButton(spec, mk)); }                                  // Explain this number: hidden unless the server's AI layer is on
     out.push(alertButton(spec, mk));                                               // Alert me: every visual that shows numbers, live ones too (a live source can alert on change)
@@ -153,7 +153,7 @@
     const entry = frames.get(spec.id);
     if (!entry) { return Promise.resolve(); }
     const token = ++entry.token;
-    if (VGROUP[spec.type] === 'static') { entry.frame.result(null, (host) => B.visuals.draw(host, spec, ctxFor(spec), null)); return Promise.resolve(); }
+    if (VGROUP[spec.type] === 'static' || VGROUP[spec.type] === 'entity') { entry.frame.result(null, (host) => B.visuals.draw(host, spec, ctxFor(spec), null)); return Promise.resolve(); }
     if (VGROUP[spec.type] === 'perspective') { return loadPerspective(spec, entry, token, quiet); }
     if (VGROUP[spec.type] === 'python') { return loadPython(spec, entry, token, quiet); }
     if (!quiet) { entry.frame.busy(); }
@@ -237,7 +237,7 @@
   // ---- live: the page follows the report's live tables (RUPAKA.md section 12) -----------------------------------------------
   /** A tick: every visual of the page that draws data is asked again, quietly, three at a time; a burst of ticks is one round (bi-live.js coalesce). */
   function refreshLive() {
-    const specs = pageOf(pageId).visuals.filter((v) => ['static', 'slicer'].indexOf(VGROUP[v.type]) < 0);
+    const specs = pageOf(pageId).visuals.filter((v) => ['static', 'entity', 'slicer'].indexOf(VGROUP[v.type]) < 0);
     return Promise.all(specs.map((v) => load(v, { quiet: true }))).then(() => { canvas.setAttribute('data-live-round', String((Number(canvas.getAttribute('data-live-round')) || 0) + 1)); });
   }
 
@@ -460,7 +460,7 @@
     window.history.replaceState({ page: pageId, carry }, '', window.location.pathname + window.location.search);
     startLive();
     // what the export and subscribe controls (bi-export.js) need: the report, the page being shown, the state of the screen and the visuals that hold data
-    B.reportView = { id: reportId, title: r.title, page: () => pageId, state: () => stateFor({ id: '' }), visuals: () => pageOf(pageId).visuals.filter((v) => ['static', 'slicer'].indexOf(VGROUP[v.type]) < 0) };
+    B.reportView = { id: reportId, title: r.title, page: () => pageId, state: () => stateFor({ id: '' }), visuals: () => pageOf(pageId).visuals.filter((v) => ['static', 'entity', 'slicer'].indexOf(VGROUP[v.type]) < 0) };
     document.dispatchEvent(new CustomEvent('drishti:report-ready'));
     q('[data-ready]').setAttribute('data-ready', 'yes');
   }).catch((e) => { say(e.message, true); });

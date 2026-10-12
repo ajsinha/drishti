@@ -37,7 +37,7 @@ import java.util.Set;
 public final class BiExporter {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final Set<String> NOT_DATA = Set.of("slicer", "text", "image", "button");
+    private static final Set<String> NOT_DATA = Set.of("slicer", "text", "image", "button", "entity-view");
     private static final Set<String> BARS = Set.of("bar", "column", "line", "area", "pie", "donut", "waterfall", "treemap", "funnel", "histogram");
     private static final Set<String> CARDS = Set.of("card", "multirow-card", "kpi", "gauge");
 

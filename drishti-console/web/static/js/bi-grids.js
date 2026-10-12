@@ -318,8 +318,30 @@
     return NONE;
   };
 
+  /**
+   * An entity view (RUPAKA.md section 20.3): the Drishti view of the entity whose key is selected on the page, inline. The key well names a field (a table's
+   * id column); a click on a mark of another visual that selects one value of it shows that entity's view here. The view is the console's own page in its
+   * embedded form, so it is built for the person looking: their masks and rights apply, not the report's author's. Outside the report viewer (the designer's
+   * canvas, an embedded element) it shows what it will do instead.
+   */
+  V.entityView = function (host, spec, ctx) {
+    const field = spec.wells.key && spec.wells.key[0];
+    const col = field ? B.column(ctx.index, field) : null;
+    const kind = (spec.format && spec.format.kind) || (col && col.kind) || '';
+    const note = (text) => B.clear(host).appendChild(h('div', { class: 'bi-vis-note bi-entity-note', role: 'status', 'data-entity': 'none' }, h('p', { text })));
+    if (!ctx.entity) { note('Shows the ' + (kind || 'entity') + ' view of the ' + (field ? B.label(field) : 'key') + ' selected in another visual, in the report viewer.'); return NONE; }
+    if (!field || !kind) { note('Name the key field of an entity (a table\'s id column) in the key well.'); return NONE; }
+    const sel = (ctx.selections || []).find((s) => s.field === field && s.values.length === 1);
+    if (!sel) { note('Select a ' + B.label(field) + ' in another visual to see its ' + kind + ' here.'); return NONE; }
+    const src = '/v/' + encodeURIComponent(kind) + '/' + encodeURIComponent(String(sel.values[0])) + '?embed=1';
+    const frame = h('iframe', { class: 'bi-entity-frame', src, title: (spec.title || kind) + ': ' + sel.values[0], 'data-entity': String(sel.values[0]), loading: 'lazy' });
+    B.clear(host).appendChild(frame);
+    return NONE;
+  };
+
   /** Draws any visual: a chart or a card (bi-visuals.js), else the table, the matrix, the slicer or a static one; `res` is null for static visuals. */
   V.draw = function (host, spec, ctx, res) {
+    if (spec.type === 'entity-view') { return V.entityView(host, spec, ctx); }
     if (['text', 'image', 'button'].indexOf(spec.type) >= 0) { return V.staticVisual(host, spec, ctx); }
     if (spec.type === 'table') { return V.dataTable(host, spec, ctx, res, false); }
     if (spec.type === 'matrix') { return V.matrix(host, spec, ctx, res); }

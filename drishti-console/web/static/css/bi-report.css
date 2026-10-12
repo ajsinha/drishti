@@ -143,3 +143,7 @@ h3.bi-text { font-size: 1.1rem; }
 .bi-vis:has(details[open]) { overflow: visible; z-index: 40; position: relative; }
 .bi-vis:has(details[open]) .bi-vis-body, .bi-vis:has(details[open]) .bi-slicer { overflow: visible; }
 .bi-vis details:has(> .ms-pop) { position: relative; }
+
+/* an entity view: the Drishti view of the selected entity, in a frame of the visual's size */
+.bi-entity-frame { display: block; width: 100%; height: 100%; min-height: 12rem; border: 0; background: var(--d-bg); }
+.bi-entity-note { display: flex; align-items: center; justify-content: center; text-align: center; height: 100%; }

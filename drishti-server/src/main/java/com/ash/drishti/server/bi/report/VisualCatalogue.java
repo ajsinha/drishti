@@ -34,14 +34,14 @@ public final class VisualCatalogue {
     /** One well: its kind, whether it must be filled, and the most items it takes (0: any number). */
     public record Well(Kind kind, boolean required, int max) {}
 
-    /** A visual type: the group it belongs to (chart, card, table, slicer, static) and its wells in order. */
+    /** A visual type: the group it belongs to (chart, card, table, slicer, entity, static) and its wells in order. */
     public record Type(String group, Map<String, Well> wells) {}
 
     /** Visuals whose figures are worked out from the members of their axis: the query asks for every member and the server bins or summarises them. */
     public static final Set<String> DISTRIBUTIONS = Set.of("histogram", "box");
 
     /** Types the grammar reserves and this server does not build (RUPAKA.md sections 8 and 12). */
-    public static final Set<String> RESERVED = Set.of("entity-view", "shape");
+    public static final Set<String> RESERVED = Set.of("shape");
     /** Slicer modes: a list of values, a dropdown of them, a range, and the relative-date slicer ({@link RelativeDates}). */
     public static final Set<String> SLICER_MODES = Set.of("list", "dropdown", "range", "relative-date");
 
@@ -82,6 +82,8 @@ public final class VisualCatalogue {
         // Python (RUPAKA.md section 20.8): the rows of one table (or a Python measure) go to the Python runner; the visual draws what the item returns
         put("python", "python", "columns", new Well(Kind.FIELD, false, 0), "values", new Well(Kind.MEASURE, false, 1));
         put("live-chart", "live", "values", new Well(Kind.MEASURE, true, 4));
+        // an entity view (RUPAKA.md section 20.3): draws no query of its own; it shows the Drishti view of the entity whose key is selected on the page
+        put("entity-view", "entity", "key", new Well(Kind.FIELD, true, 1));
         put("text", "static");
         put("image", "static");
         put("button", "static");

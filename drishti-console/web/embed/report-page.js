@@ -39,7 +39,7 @@ export class ReportPage {
   get report() { return this.rep.report; }
   page(id) { return this.report.pages.find((p) => p.id === id); }
   get current() { return this.page(this.pageId); }
-  drawn(spec) { return ['static', 'slicer', 'perspective'].indexOf(this.group[spec.type]) < 0; }
+  drawn(spec) { return ['static', 'entity', 'slicer', 'perspective'].indexOf(this.group[spec.type]) < 0; }
 
   /** What the host may read: the filters in force. */
   filters() {

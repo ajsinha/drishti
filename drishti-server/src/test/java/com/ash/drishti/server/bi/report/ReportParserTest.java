@@ -16,6 +16,7 @@
 package com.ash.drishti.server.bi.report;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
@@ -133,8 +134,21 @@ class ReportParserTest {
     }
 
     @Test
+    void anEntityViewNeedsItsKeyFieldAndAsksNoQuery() throws IOException {
+        String ok = MINI.replace("type: bar, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trade.desk], values: [MTM] }",
+                "type: entity-view, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { key: [trade.desk] }");
+        assertThat(errors(ok, "trades-basic")).isEmpty();
+        assertThat(errors(ok.replace("key: [trade.desk]", "key: []"), "trades-basic")).extracting(Problem::code).contains("DRS-9032");
+        assertThat(errors(ok.replace("key: [trade.desk]", "key: [MTM]"), "trades-basic")).isNotEmpty();                   // a measure is not a key
+        Report r = ReportParser.parse(ok).report();
+        Report.Page p = r.page("p");
+        assertThatThrownBy(() -> VisualQueries.build(r, p, p.visual("v"), ReportState.NONE, dataset("trades-basic"), BiReportProperties.defaults(), (f, n, by, d, c, a, b) -> List.of()))
+                .isInstanceOf(com.ash.drishti.common.DrishtiException.class).hasMessageContaining("draws no data");
+    }
+
+    @Test
     void reservedVisualsAreDrs9033() {
-        for (String type : List.of("entity-view", "shape")) {
+        for (String type : List.of("shape")) {
             List<Problem> p = ReportParser.parse(MINI.replace("type: bar", "type: " + type)).problems();
             assertThat(p).as(type).extracting(Problem::code).contains("DRS-9033");
         }
