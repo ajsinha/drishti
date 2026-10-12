@@ -587,3 +587,16 @@ The rail's **Analyse** (`/bi/explore`) opens a dataset as an **extract**: the ro
 opens it). **Promote** turns a Python cell into a Python Measure or Visual draft and a slice into a report draft; nothing is published. Slice and SQL totals are the *extract's*, not the dataset's: use a
 report for true totals. Reference: [ANALYSE.md](ANALYSE.md); tutorial chapter 25. Not built: DuckDB-Wasm in the page (Slice is JavaScript and SQL runs on the console), a *Data* tab, *Notes*,
 million-row extracts, scheduled notebooks (ANALYSE.md section 12).
+
+## 22. With AI: describe a report, ask the data, explain a number (stage 2)
+
+When your administrator has switched the AI layer on ([BI_AI.md](BI_AI.md)), three things appear; with it off (the default) none does.
+
+* **Describe a report** (designer toolbar, `bi-author`): say what you want in words and the model drafts the report YAML over the report's dataset. The draft is **checked before you see it**,
+  appears as text, and goes into the YAML tab only when you press *Use this draft*; nothing is saved or published.
+* **Ask the data** (the box under a report's bar): a question becomes a query that the **engine** runs as you (your row rules and masks), shown as a table, the visual that suits it and the query used.
+* **Explain** (the light bulb in a visual's header): where the number comes from (dataset, measure definition, columns, sources) and what it is made of (the engine's breakdown by its main
+  dimensions); with the administrator's `aggregates` setting also a short wording of it.
+
+The model is told the names, types and descriptions of the dataset and your words; **never a row**, a value, a measure's definition or a field masked for you (unless an administrator chose
+`aggregates`, which also lets it word *your own* masked results). It can choose a wrong query: that is why the query is shown. Reference, settings, codes and tests: [BI_AI.md](BI_AI.md).

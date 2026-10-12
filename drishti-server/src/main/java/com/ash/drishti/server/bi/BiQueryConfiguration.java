@@ -120,6 +120,18 @@ public class BiQueryConfiguration {
     }
 
     @Bean
+    public com.ash.drishti.server.bi.ai.BiAiService biAiService(com.ash.drishti.ai.llm.LLMFactory gateway, com.ash.drishti.server.ai.AiProperties ai,
+            com.ash.drishti.server.bi.ai.BiAiProperties props, BiService bi, BiReportService reports, DatasetService datasets, AuditLog audit) {
+        return new com.ash.drishti.server.bi.ai.BiAiService(new com.ash.drishti.ai.llm.LLMFactory(gateway.gateway(), java.time.Duration.ofSeconds(props.timeoutSeconds())), ai, props, bi, reports,
+                datasets, audit);
+    }
+
+    @Bean
+    public com.ash.drishti.server.bi.ai.BiAiController biAiController(com.ash.drishti.server.bi.ai.BiAiService service) {
+        return new com.ash.drishti.server.bi.ai.BiAiController(service);
+    }
+
+    @Bean
     public BiGovernance biGovernance(BiService bi, BiStore store, BiAccess access, ImpactAnalyzer impact, BiGovProperties gov, PackRegistry packs, DatasetService datasets) {
         return new BiGovernance(bi, store, access, impact, gov, packs, datasets);
     }

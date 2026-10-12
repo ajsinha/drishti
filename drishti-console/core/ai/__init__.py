@@ -59,6 +59,8 @@ class AiRuntime:
         self.registry = LlmRegistry(FACTORIES, (lambda: cfgmod.load_providers(self.dir, env)) if self.enabled else (lambda: ([], {})), self,
                                     str(settings.get("ai.default_model", "") or ""), self.retry_ai)
         self.gateway = LlmGateway(self.registry, DefaultPolicy(ps, masker, self._audit))
+        from core.ai.llm import LLMFactory                   # the canonical door (LLMModel / LLMProvider), over the same gateway and policy
+        self.llm = LLMFactory(self.gateway)
         self.mcp = McpRegistry((lambda: cfgmod.load_mcp(self.mcp_dir, env)) if self.mcp_enabled else (lambda: ([], {})), self, retry=self.retry_mcp)
         self.mcp_gateway = McpGateway(self.mcp, McpPolicy(
             server_roles=dict(settings.get("mcp.server_roles", {}) or {}), tool_roles=dict(settings.get("mcp.tool_roles", {}) or {}),

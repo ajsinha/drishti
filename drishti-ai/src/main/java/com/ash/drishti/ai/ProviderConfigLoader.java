@@ -90,6 +90,11 @@ public final class ProviderConfigLoader {
         } catch (IOException | RuntimeException e) {
             throw new LlmException(LlmException.Kind.CONFIG, "not readable YAML");
         }
+        return fromNode(base, root, env);
+    }
+
+    /** One provider from its parsed block (a file's content, or the map {@code LLMProviders.fromSettings} is given); {@code base} is the name when the block gives none. */
+    public static ProviderConfig fromNode(String base, JsonNode root, Function<String, String> env) {
         if (root == null || !root.isObject()) {
             throw new LlmException(LlmException.Kind.CONFIG, "the file is empty or not a mapping");
         }

@@ -215,7 +215,7 @@ Start with the **[quickstart](docs/guides/QUICKSTART.md)**, then the **[user gui
 | you ship what you built to servers by copying: bundles, checksums, promotion, rollback (no API) | [OPERATIONALISING.md](docs/guides/OPERATIONALISING.md) |
 | you install for the first time, every step explained | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) |
 | you use the console | [USER_GUIDE.md](docs/guides/USER_GUIDE.md) |
-| you use or build business intelligence (Rūpaka) | [BI_GUIDE.md](docs/guides/BI_GUIDE.md), [BI_TUTORIAL.md](docs/guides/BI_TUTORIAL.md), [DATASETS.md](docs/guides/DATASETS.md), [REPORTS.md](docs/guides/REPORTS.md), [PYTHON_BI.md](docs/guides/PYTHON_BI.md), [BI_GOVERNANCE.md](docs/guides/BI_GOVERNANCE.md), [BOARDS.md](docs/guides/BOARDS.md) |
+| you use or build business intelligence (Rūpaka) | [BI_GUIDE.md](docs/guides/BI_GUIDE.md), [BI_TUTORIAL.md](docs/guides/BI_TUTORIAL.md), [DATASETS.md](docs/guides/DATASETS.md), [REPORTS.md](docs/guides/REPORTS.md), [PYTHON_BI.md](docs/guides/PYTHON_BI.md), [BI_AI.md](docs/guides/BI_AI.md), [BI_GOVERNANCE.md](docs/guides/BI_GOVERNANCE.md), [BOARDS.md](docs/guides/BOARDS.md) |
 | you run on Windows, or read from a script or Excel | [WINDOWS.md](docs/guides/WINDOWS.md), [CLIENTS.md](docs/guides/CLIENTS.md) |
 | you use or refresh the real public data (economics, politics-society) | [REAL_DATA.md](docs/guides/REAL_DATA.md) |
 | you define connectors as files, with TLS or a proxy | [CONNECTOR_FILES.md](docs/connectors/CONNECTOR_FILES.md), [TLS.md](docs/connectors/TLS.md), [PROXY.md](docs/connectors/PROXY.md) |

@@ -740,6 +740,12 @@ answer comes from a language model that is given only this page's explanation (l
 document's values unless the administrator chose that, and never a field hidden from your role. It can be wrong: the layers above
 are the reference. If it cannot be reached the box says "Ask is unavailable"; everything else in the drawer works. `Alt+?` jumps to the box.
 
+### Ask the data, explain a number, describe a report (BI, when your administrator has turned AI on)
+
+In BI ([BI_AI.md](BI_AI.md)), a report page shows a box **Ask the data**: type "notional by desk" and you get a table, a chart that suits it and the query that was asked, answered from
+what *you* may see (the same rows and masks as the report). The light bulb in a visual's header **explains** its number: where it comes from and what it is made of. In the designer,
+**Describe a report** drafts a report from your words; you read it, use it and save it, or not. These are off unless your administrator switched them on; if you do not see the box and the bulb, they are off.
+
 ### The keys
 
 | Key | Does |

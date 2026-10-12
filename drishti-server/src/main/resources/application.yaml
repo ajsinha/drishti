@@ -260,10 +260,11 @@ drishti:
         allow:
           - POST /api/v1/packs/*/loads
       "[ai:use]":
-        description: "Call the configured models and MCP tools through the AI policy (chat, MCP tool calls). Admin pages stay closed."
+        description: "Call the configured models and MCP tools through the AI policy (chat, MCP tool calls, and the BI hooks: report from words, ask the data, explain this number). Admin pages stay closed."
         allow:
           - POST /api/v1/ai/chat
           - POST /api/v1/ai/mcp/*/tools/*
+          - POST /api/v1/bi/ai/*
       "[ai:admin]":
         description: "Send a test call to a configured model (Admin -> AI). Needs the admin role."
         allow:
@@ -365,6 +366,7 @@ drishti:
       per-user-per-day: 0
       cost-per-user-per-day: 0       # in the unit of the models' cost-per-1k-* prices
       features: {}                   # per feature: "[ask]": {roles: [..], per-user-per-minute: 6}
+      # BI hooks use the features bi-draft, bi-ask and bi-explain (docs/guides/BI_AI.md), e.g. "[bi-ask]": {roles: [analyst], per-user-per-minute: 10}
   mcp:                               # MCP client (docs/architecture/MCP_CLIENT.md): OFF by default
     enabled: ${DRISHTI_MCP_ENABLED:false}
     dir: ${DRISHTI_MCP_DIR:./config/mcp}      # one YAML per MCP server: transport, url, headers as ${ENV}, allowed-tools
@@ -477,6 +479,15 @@ drishti:
     workspace-creation: authors      # who creates shared workspaces: authors (bi-author), stewards (bi-steward), admins (bi-admin); Admin, BI settings changes it at run time
     max-body-bytes: 262144           # largest YAML body of one item
     versions-keep: 50                # published versions kept per item
+    ai:                              # the three BI hooks on the AI layer (docs/guides/BI_AI.md); they also need drishti.ai.enabled
+      model: ""                      # provider/model; blank = drishti.ai.default-model
+      values: labels-only            # labels-only: the model sees names, types, descriptions, never a value | aggregates: it may also word the reader's own masked aggregates
+      max-question-chars: 600
+      max-tokens: 2000
+      timeout-seconds: 30
+      ask-rows: 200                  # most rows an answer holds (and the model sees, in aggregates mode)
+      explain-dimensions: 3          # explain this number: dimensions broken down
+      explain-members: 5             # members listed per dimension
     usage-days: 30                   # days of views counted as usage
     recent: 12                       # rows under Recent, Certified and Shared on Home
     list-limit: 200                  # most rows one catalogue or workspace page returns

@@ -123,3 +123,11 @@ copy), seed `config/apikeys.json` from `config/apikeys.json.example`, then
 
 `AiProxyTest` and `tests/test_ai_proxy.py` (the MCP client through a fake proxy, plain and `CONNECT` to a TLS server with its own CA), `McpLayerTest` (mock under policy: roles, masking, `allowed-tools`, credential headers; the Streamable HTTP client against a loopback
 stub: handshake, session id, JSON and event-stream answers, DELETE on close), `AiApiTest` (REST), `tests/test_ai_layer.py` (console).
+
+## 7. The tool base class
+
+A tool (something an MCP server serves, or a locally defined one) is written against `BaseMCPTool` (Python, `core/ai/mcp_tool.py`) or `BaseMcpTool` (Java, `com.ash.drishti.ai.llm`), whose abstract methods and signatures
+are those of sajhamcpserver's `sajha/tools/base_mcp_tool.py`: `execute(arguments)`, `get_input_schema()` and `get_output_schema()` (Java: `execute`, `getInputSchema`, `getOutputSchema`). A tool is configured by a map
+(`name`, `description`, `version`, `enabled`), or `load_from_config(path)`; `validate_arguments` checks the required and (with `additionalProperties: false`) the known names; `execute_with_tracking` validates, runs
+and counts (`get_metrics`: calls, errors, last call, last error); `to_mcp_format()` is the `tools/list` entry. The client side (calling a remote server's tools, section 1) is unchanged. The mapping table of the whole
+layer is in [AI_PROVIDERS.md](AI_PROVIDERS.md) section 10.

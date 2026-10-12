@@ -1119,6 +1119,7 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 | `DRS-4017` | Over the AI rate or cost limit for your user: wait, or ask an admin to raise the policy limit |
 | `DRS-4018` | The AI policy does not allow this feature for your role |
 | `DRS-4019` | The model, provider, MCP server or tool named is not configured: check `config/ai/` or `config/mcp/` |
+| `DRS-4020` | BI with AI: the model's answer could not be used. A draft that did not pass the report check (after one repair) or an answer that is not a query is refused, nothing is changed: say it more plainly, name the measure or field, or try a stronger model (`drishti.bi.ai.model`). With the `mock` provider this is what a question no rule matches answers ([BI_AI.md](BI_AI.md) section 7) |
 | `DRS-5001` | bad request |
 | `DRS-5002` | forbidden (role or pack) |
 | `DRS-5003` | raised by the console only: it cannot reach the server, a live stream was refused, or a browser is over its live-subscription limit |
@@ -1217,3 +1218,11 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 | "MTM by desk: Not available: DRS-9021 'MTM' is masked for you" in a file | that visual sorts on a column your role may not see; every other visual is still there |
 | The PDF has fewer rows than the screen | PDF and PNG draw `pdf-max-rows` (500) rows a table and say so under the table; Excel holds up to `max-rows` (50,000) |
 | `a view is named kind/id` | export a view as `kind/id`, for example `trade/IRS-48213` |
+
+## Describe a report, Ask the data or Explain does nothing or is refused
+
+* **No box, no light bulb, no "Describe a report" button:** the AI layer is off (`drishti.ai.enabled`, no provider in `config/ai/`), or you lack the power (`bi-author` to describe a report). `GET /api/v1/bi/ai/status` says what the server allows you.
+* **`DRS-4018`:** the AI policy does not list your role for `bi-draft`, `bi-ask` or `bi-explain` (`drishti.ai.policy.features`). **`DRS-4017`:** over your limit.
+* **"the query the model chose was refused":** the engine would not run what the model wrote (an unknown field, a masked one, you are already running the maximum number of queries): read the query shown, rephrase, or build the visual by hand.
+* **Ask answers fewer rows than a colleague gets:** correct: it runs as you, with your row rules and masks. **Explain lists fewer dimensions:** a dimension masked for you is left out.
+* **Explain has no wording:** the narrative is only written with `drishti.bi.ai.values: aggregates`; the lineage and the breakdown are always there.

@@ -1549,6 +1549,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-4017 | 429 | AI rate limited | over a per-user rate or cost limit of the AI policy |
 | DRS-4018 | 403 | AI policy | the AI policy refuses the call for this user, role or feature |
 | DRS-4019 | 404 | AI not found | no such model, provider, MCP server or tool |
+| DRS-4020 | 422 | AI answer unusable | BI with AI: the model's draft did not pass the report check (after one repair), or its answer is not a query; nothing was changed ([BI_AI.md](BI_AI.md)) |
 | DRS-5001 | 400 | bad request | an invalid argument or body; a path not written plainly (`;`, a needless `%`-escape, a dot or empty segment); also "too many live streams on this server" |
 | DRS-5002 | 403 | forbidden | the caller lacks the role, the pack is not active for them, or the feature is off |
 | DRS-5005 | 413 | too large | builder samples over `drishti.builder.max-samples`, `max-file-mb`, `max-total-mb` or `max-depth`; any `/api/v1/builder/**` request body over `max-total-mb` (answered before the body is read: `detail` gives the size and the limit, the connection is not reset; `drishti.http.request-limits`, `server.tomcat.max-swallow-size`); designs over `drishti.builder.designs.*` (`detail` names the limit and the file) |
@@ -2157,7 +2158,7 @@ patterns, and the server decides in one filter (`TokenScopes`):
 | `bi:approve` | `POST /bi/items/{id}/approve`, `/reject` and `/endorse`, and `POST /bi/bundle/import` | `approve` and workspace member for approving (never your own proposal, four-eyes); promote: owner or member; certify: `bi-steward` |
 | `bi:admin` | `PUT` and `DELETE /bi/workspaces/{id}`, `PUT` and `DELETE /bi/workspaces/{id}/members/{user}`, `PUT /bi/settings` | workspace admin, or `bi-admin` |
 | `packs:admin` | `POST /admin/packs/{name}/load` and `/unload`, `PUT /admin/packs/{name}`, `POST /admin/registry/**` (install and roll back), `POST /admin/connectors/**`, deploy an archive (`POST /admin/packs/deploy`, `POST` and `DELETE /admin/packs/deploy/{id}`), `POST /admin/packs/{name}/rollback`, the create-connectors step of a deploy (`POST /admin/packs/deploy/{id}/connectors`), and every write under `/admin/connectors` (`PUT`, `DELETE`, `.../enabled`, `.../reset`, `.../test`, `.../restore/{id}`), and **Retry now** (`POST /admin/retry/{area}`) | `admin` |
-| `ai:use` | `POST /ai/chat` and `POST /ai/mcp/{server}/tools/{tool}` ([AI](#ai-and-mcp-apiv1ai-and-apiv1adminai)) | any signed-in user, under the AI policy |
+| `ai:use` | `POST /ai/chat`, `POST /ai/mcp/{server}/tools/{tool}` ([AI](#ai-and-mcp-apiv1ai-and-apiv1adminai)) and the three BI hooks `POST /bi/ai/draft`, `/bi/ai/ask`, `/bi/ai/explain` ([BI with AI](#bi-with-ai-apiv1biai)) | any signed-in user, under the AI policy (and the BI power each hook needs) |
 | `ai:admin` | `POST /admin/ai/test` | `admin` |
 
 There is no `admin` scope and no `data:admin`: the server has no data-loading endpoint (data is loaded by your ETL, or staged by
@@ -2312,6 +2313,28 @@ thread; nothing is erased. Each is also in the audit log (`collab.comment.add`, 
 | `DELETE` | `/me/workspaces/{name}/share` | stops sharing (deleting the workspace does too) |
 | `GET` | `/workspaces/shared` | the workspaces shared with you: `[{owner, name, sharedAt}]` |
 | `GET` | `/workspaces/shared/{owner}/{name}` | one, as its owner keeps it now: `readOnly: true`, and panes on kinds you may not open as `{"ref": null, "hidden": true}` |
+
+## BI with AI: `/api/v1/bi/ai`
+
+Report from words, ask the data and explain this number ([BI_AI.md](BI_AI.md)). Off with the AI layer (`404 DRS-4015`); every call goes through the AI policy under the feature names `bi-draft`,
+`bi-ask` and `bi-explain` (masks, limits, roles, audit: `403 DRS-4018`, `429 DRS-4017`, `502`/`504 DRS-4016`); an answer that cannot be used is `422 DRS-4020`; a query the engine refuses keeps the engine's
+code (`DRS-9020`, `DRS-9021`, `DRS-9025`). Responses are `Cache-Control: no-store`.
+
+| Call | Needs | What it does | Token rule |
+|---|---|---|---|
+| `GET /api/v1/bi/ai/status` | signed in | `{enabled, values, draft, ask, explain}`: what the page may show (`values` is `labels-only` or `aggregates`; `draft` needs `bi-author`) | GET: read |
+| `POST /api/v1/bi/ai/draft` | `bi-author` | body `{dataset, request}`: `{yaml, valid, problems, dataset, saved: false}`; the YAML passed the report checker; nothing is stored | non-GET, not on `token-read-posts`: scope `ai:use` |
+| `POST /api/v1/bi/ai/ask` | `bi`, and the right to read the report | body `{report \| dataset, question}`: `{columns, rows, rowCount, meta, question, query, visual, values, summary}`, run by the engine as the caller | non-GET: scope `ai:use` |
+| `POST /api/v1/bi/ai/explain` | `bi`, and the right to read the report | body `{report, page, visual, measure?, state?}`: `{measure, lineage{dataset, measure, columns, sources}, value, breakdown[{dimension, members[{member, value, share}]}], values, narrative}` | non-GET: scope `ai:use` |
+
+```
+POST /bi/ai/ask  {"report": "file:report:trades-overview", "question": "notional by desk"}     (as rita)   200
+{"columns": [...], "rows": [["DESK-FX", 79000000.0], ["DESK-FI", 78000000.0], ["DESK-EQD", 77000000.0]], "rowCount": 3,
+ "query": {"fields": ["trade.desk"], "measures": ["Notional"], "filters": [], "dates": {...}, "orderBy": [{"by": "Notional", "desc": true}], "limit": 200},
+ "visual": "bar", "values": "labels-only", "summary": null}
+```
+
+The console passes `/bi/api/ai/*` to these (the same JSON, the signed-in identity).
 
 ## Scheduled reports
 

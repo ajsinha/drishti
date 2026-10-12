@@ -335,6 +335,23 @@ public final class BiReportService {
     }
 
     /** A visual's query, built and ready to run. */
+    /** What the AI hooks need of one visual: its dataset (item, model and the reader's summary of it), the visual and the query it asks under the page's state. */
+    public record Base(BiStore.Item dsItem, Dataset dataset, Map<String, Object> model, Report.Visual visual, QueryRequest query) {}
+
+    public Base base(Principal p, String id, String pageId, String visualId, JsonNode stateJson) {
+        Prepared pre = prepare(p, id, null, pageId, visualId, stateJson);
+        return new Base(pre.dsItem(), pre.dataset(), datasetSummary(p, pre.dsItem()), pre.visual(), pre.built().query());
+    }
+
+    /** The dataset a stored report reads, for "ask the data" (read with the report's grants, queried as the caller). */
+    public Base target(Principal p, String id) {
+        Loaded l = loadItem(p, id);
+        if (l.dataset() == null || !ok(l.problems())) {
+            throw new DrishtiException(ErrorCode.REPORT_DATASET, "the report has errors, so its dataset cannot be asked");
+        }
+        return new Base(l.datasetItem(), l.dataset(), datasetSummary(p, l.datasetItem()), null, null);
+    }
+
     private record Prepared(Report report, Report.Visual visual, BiStore.Item dsItem, Dataset dataset, VisualQueries.Built built) {}
 
     private Prepared prepare(Principal p, String id, String yaml, String pageId, String visualId, JsonNode stateJson) {

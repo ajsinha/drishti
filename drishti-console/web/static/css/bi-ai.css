@@ -1,0 +1,30 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* BI with AI (docs/guides/BI_AI.md): the question box under the report bar, its answer, the explain panel */
+.bi-ai-ask { margin: .5rem 0 1rem; padding: .6rem .8rem; border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); }
+.bi-ai-form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: flex-end; }
+.bi-ai-form .bi-tool { flex: 1 1 18rem; }
+.bi-ai-form .studio-in { width: 100%; }
+.bi-ai-chart { width: 100%; height: 260px; }
+.bi-ai-card { font-size: 2rem; margin: .4rem 0; }
+.bi-ai-summary { margin: .5rem 0; font-style: italic; }
+.bi-ai-query pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.bi-ai-panel { position: fixed; right: 1rem; bottom: 1rem; width: min(34rem, calc(100vw - 2rem)); max-height: 70vh; overflow: auto; z-index: 60; padding: .8rem 1rem; border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); box-shadow: 0 6px 24px rgba(0, 0, 0, .25); }
+.bi-ai-panel[hidden] { display: none; }
+.bi-ai-panel header { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
+.bi-ai-panel h2 { font-size: 1.05rem; margin: 0; }
+.bi-ai-lineage { padding-left: 1.2rem; }
+@media (pointer: coarse) { .bi-ai-form .btn-pill, .bi-ai-panel .btn-pill { min-height: 44px; } }
