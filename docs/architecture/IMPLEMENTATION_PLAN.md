@@ -8,7 +8,7 @@
 
 *Revision 1.2 · 2026-10-11 · Author: Ashutosh Sinha · Companion to [ARCHITECTURE.md](ARCHITECTURE.md)*
 
-**Where things stand.** Every wave in this plan is done. The current release is **2.0.0**
+**Where things stand.** Every wave in this plan is done. The current release is **2.0.0**; **2.1.0** (the BI long tail, waves A to D) is built and about to ship
 ([CHANGELOG.md](../../CHANGELOG.md), [RELEASE_NOTES.md](../../RELEASE_NOTES.md)). The table below maps each release to
 the waves it shipped; [What shipped after the waves](#what-shipped-after-the-waves-1100) and [Since 1.10](#since-110) list the work done since
 the last numbered wave, and [Known gaps](#known-gaps) lists what is still open. The wave sections themselves are
@@ -40,6 +40,7 @@ kept as they were planned, with notes where the delivery differed.
 | 1.21.0 | Rūpaka phases 4 and 5 (governance, live tables, Perspective, boards), outbound HTTP proxy, news and market sample packs, Forms and Reports in the top bar, the Live toggle, a documentation review against the code |
 | 1.22.0 | Rūpaka phase 7, distribution: export (PDF, PNG, Excel, CSV), scheduled subscriptions rendered per recipient, alerts on measures and board notifications, `<drishti-report>` and Elements steps 11 to 14, per-report phone layouts; one shared file watcher per process |
 | 2.0.0 | the waves after 1.22.0 in one release, see [What 2.0.0 contains](#what-200-contains) |
+| 2.1.0 | the BI long tail in four waves, see [What 2.1.0 contains](#what-210-contains) |
 
 ## What 2.0.0 contains
 
@@ -56,6 +57,19 @@ The three waves agreed on 2026-10-11 (BI gaps, Python and Analyse, AI-driven BI)
 | Console | one top bar on every page (signed in or out); Forms and Reports inside Views; the Live button merged with the stream status; Sajha's crimson, blue and green themes, the Cinzel wordmark and the footer slogan | [USER_GUIDE.md](../guides/USER_GUIDE.md#the-top-bar) |
 | Connections | shared, sized database connection pools (`drishti.db.pool.*`) with their metrics in Admin → Health | [CONFIGURATION.md](../admin/CONFIGURATION.md), [OPERATIONS.md](../admin/OPERATIONS.md) |
 | Documentation | seventeen tutorials with real screenshots; the help centre cut from 90 pages to about forty in six sections; tutorials teach, guides are reference; every old help address redirects | [docs/README.md](../README.md), [tutorials](../tutorials/README.md) |
+
+## What 2.1.0 contains
+
+Waves A to D close what 2.0.0 listed as "not built" in BI. The one consolidated list of what is still not built is [RUPAKA.md section 20.15](RUPAKA.md#2015-as-built-at-210-and-what-is-still-not-built).
+
+| Wave | What is in 2.1.0 | Read |
+|---|---|---|
+| A, the long tail | window functions; several unrelated fact tables in one query; incremental live measures; refresh state that survives a restart and Refresh now; the relative-date slicer; tablet layouts; expected-value tests that stop a publish; the entity-view visual; the Region economics sample | [DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md) |
+| B, governance and boards | grain-correct measures; rename detection and type or meaning impact; import rollback; BI inside pack archives; lineage past the connector; live-table history; tile alert hysteresis; the board designer; one temp folder per process | [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md), [BOARDS.md](../guides/BOARDS.md) |
+| C, Python and Analyse | Vega-Lite visuals; Python on boards and in alerts; tests shipped with a Python item; Calc's `drishti_bi` and Graphic Walker; DuckDB-Wasm in Analyse; promote to a report visual; Perspective charts and the settings panel; measures that mix grains | [PYTHON_BI.md](../guides/PYTHON_BI.md), [PYTHON_CALC.md](../guides/PYTHON_CALC.md), [ANALYSE.md](../guides/ANALYSE.md) |
+| D, AI, distribution, embedding | narrative summaries; the designer copilot and the dataset helper; charts in Excel; alert retries; webhook and text channels; `<drishti-about>` and `<drishti-search>`; React, Vue and Angular samples | [BI_AI.md](../guides/BI_AI.md), [DISTRIBUTION.md](../guides/DISTRIBUTION.md), [ELEMENTS.md](../guides/ELEMENTS.md) |
+| Type-ahead index | several business days with date keys; disk segments; automatic and manual reload; `DRISHTI_INDEX_DIR` | [ARCHITECTURE.md](ARCHITECTURE.md), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
+| Documentation | the BI docs read as one set; tutorials 10 to 17 re-followed with new pictures | [docs/README.md](../README.md) |
 
 ## Working agreement
 
@@ -254,7 +268,7 @@ Releases 1.11 to 1.20 and what is unreleased; each is in [CHANGELOG.md](../../CH
 | Drishti Elements (1.19) | `<drishti-view>`: live views in another web application's page, no iframe; host applications registered by an administrator (Admin → Embedding) | [ELEMENTS.md](ELEMENTS.md) |
 | AI and MCP (1.19) | Pluggable LLM providers and an MCP client, off by default, behind one policy (masking, limits, audit) | [AI_PROVIDERS.md](AI_PROVIDERS.md), [MCP_CLIENT.md](MCP_CLIENT.md) |
 | Schema to pack (1.19) | Sutras and packs from JSON Schema; Build → New pack | [SCHEMA_TO_PACK.md](../guides/SCHEMA_TO_PACK.md) |
-| Rūpaka, business intelligence (1.19 to unreleased) | Phase 1 shell, workspaces and catalogue (1.19); phase 2 datasets and the query engine, phase 3 reports, the designer and the Model view (1.20); phase 4 publishing and governance, phase 5 live tables, Perspective and boards (unreleased) | [RUPAKA.md](RUPAKA.md), [BI_GUIDE.md](../guides/BI_GUIDE.md), [DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [BOARDS.md](../guides/BOARDS.md), [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md) |
+| Rūpaka, business intelligence (1.19 to 2.1.0) | Phase 1 shell, workspaces and catalogue (1.19); phase 2 datasets and the query engine, phase 3 reports, the designer and the Model view (1.20); phase 4 publishing and governance, phase 5 live tables, Perspective and boards (1.21); distribution (1.22); the Python, Analyse, AI and multi-dataset waves (2.0); the long tail of waves A to D (2.1) | [RUPAKA.md](RUPAKA.md), [BI_GUIDE.md](../guides/BI_GUIDE.md), [DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [BOARDS.md](../guides/BOARDS.md), [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md) |
 | Deep trades and real data (1.20) | Tabs hold panels (a trade, its legs, their cashflows and fixings on one screen); the `economics` and `politics-society` packs carry real public data (`tools/realdata`; the IMF data is for internal demos only) | [PANELS.md](../guides/PANELS.md), [REAL_DATA.md](../guides/REAL_DATA.md) |
 | Connectors that compute (unreleased) | `news` and `yfinance` source plugins whose documents are computed when asked for; the `news-watch` and `market-watch` sample packs | [NEWS.md](../connectors/NEWS.md), [YFINANCE.md](../connectors/YFINANCE.md) |
 | Forms and Reports in the top bar (unreleased) | Two top-bar entries beside BI, with a forms home | [USER_GUIDE.md](../guides/USER_GUIDE.md) |
@@ -266,18 +280,15 @@ What is open today. None blocks normal use; each is a candidate for a future wav
 | Gap | Today | Where it shows |
 |---|---|---|
 | Several console processes | A tab's live channel lives in one console process, so a load balancer needs sticky sessions | [LIVE.md](LIVE.md) |
-| Rūpaka, not built | Window functions, several fact tables in one query, relative-date slicers, per-device layouts beyond the phone; each is marked "not built" where it would appear | [RUPAKA.md](RUPAKA.md) |
+| Rūpaka, not built | The Python Source interface, a warm worker pool, escalation of alerts, a Data tab and Notes in Analyse, a large-screen layout; the full list is in RUPAKA.md section 20.15 | [RUPAKA.md](RUPAKA.md) |
 | Server-side pricing | Not built: the QuantLib service is a proposal | [QUANT_SERVICE.md](QUANT_SERVICE.md) |
 | A million trades a day on a real server | The numbers in the scale document are measured on one workstation at the sizes its safety rule allows and extrapolated beyond | [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md) |
 
 ## Roadmap
 
-Everything planned up to 2.0.0 is built (see the changelog and [What 2.0.0 contains](#what-200-contains)). The roadmap has no dated waves open.
+Everything planned up to 2.1.0 is built (see the changelog, [What 2.0.0 contains](#what-200-contains) and [What 2.1.0 contains](#what-210-contains)). The roadmap has no dated waves open.
 
-Trimmed on 2026-10-11 to wrap up sooner (the product owner's call): the long tail of BI gaps (window functions, several
-fact tables in one query, relative-date slicers, reports over several datasets, per-device layouts beyond the phone,
-rename detection, BI in pack archives, import rollback, incremental aggregates, live-table history, a board designer) and
-the platform loose ends (live bridges and plugin jars, proxy gaps, AI streaming and stdio MCP) are candidates, not plans.
+The long tail of BI gaps that the product owner trimmed on 2026-10-11 (window functions, several fact tables in one query, relative-date slicers, per-device layouts, rename detection, BI in pack archives, import rollback, incremental aggregates, live-table history, a board designer) was built after all, in 2.1.0. The platform loose ends (live bridges and plugin jars, proxy gaps, AI streaming and stdio MCP) remain candidates, not plans.
 
 Later candidates: server-side pricing (the QuantLib service), Windows proven on a real machine, a real deployment (single
 sign-on, HTTPS, the images together), scale on a real server, load with many users, several console processes without

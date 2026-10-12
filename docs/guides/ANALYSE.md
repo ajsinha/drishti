@@ -82,7 +82,7 @@ Every extract is the reader's, so a join of two extracts shows **their** rows: t
 Because the extract is cut, **Slice and SQL give the extract's totals, not the dataset's**. For true totals use a report.
 
 An extract can also be a **report visual's data** (`POST /bi/explore/extract` with `{report, page, visual, state}`), the same rows the visual drew, masked the same way; the page's
-form opens datasets, and a link from a report is planned (section 12).
+form opens datasets, and a link *Analyse this* from a report is not built (section 12).
 
 ## 3. Slice
 

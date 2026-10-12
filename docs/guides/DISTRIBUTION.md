@@ -706,13 +706,13 @@ Both channels are in the history: an alert's `delivered` has `webhook:NAME` and 
 
 ## 7. What is not built
 
-* **In an embedded report** (section 5): drill, alerts, Export and Subscribe, Perspective, and cross-filtering between two elements. Embedding and the hand-made phone layout are built.
-* **For alerts**: **escalation** (tell someone else if no one reacts; not built), alerts that are **shared** between people (a board's
+* **In an embedded report** (section 5): drill, alerts, Export and Subscribe, Perspective, Vega-Lite and Python visuals, and cross-filtering between two elements. Embedding and the hand-made phone and tablet layouts are built.
+* **For alerts**: **escalation** (tell someone else if no one reacts), alerts that are **shared** between people (a board's
   audience is the only way an alert reaches more than its owner), a **calendar of quiet hours**, an alert on **several numbers at once** (make one alert each), and **forecast** conditions. An alert on a visual's *number* is a
   threshold on one value: per-row thresholds ("any desk below zero") are a board tile with `crit`, which judges the worst row.
 * **A headless-browser rendering** of the page: the PDF and PNG are drawn by the server from the tables (and, for a view, the snapshot layout); they are faithful to the numbers, not to every pixel of the screen
   (chart colours, a heatmap, a scatter, a map are shown as their data).
-* **Excel pivot tables** inside the workbook, and charts other than bar, column, line, area, pie and donut (they are drawn as columns); **XLSX styling** beyond the header, number and date formats.
+* **Excel pivot tables** inside the workbook, and charts other than bar, column, line, area, pie and donut in an Excel export (they are drawn as columns; the six are real Excel charts); **XLSX styling** beyond the header, number and date formats.
 * **Notifying the owner in the inbox** when a delivery fails for good: the history and the audit say so; the bell does not.
 * **Subscribing a Perspective visual's live state**; a subscription reads the data as of the run.
 * **Per-recipient pictures of a view with charts in the email body**: a view is sent as its tables (html) or as a PDF.

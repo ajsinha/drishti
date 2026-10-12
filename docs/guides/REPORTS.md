@@ -417,7 +417,7 @@ YAML tab and Check button, and the viewer when a report cannot be drawn).
 | `DRS-9030` | the structure is wrong: not YAML, an unknown visual type, a bad `at`, a duplicate id, an operator that is not one, an image from another address | `pages[0].visuals[1].at: x is 0 to 11 and w is 1 to 12, and x + w is at most 12 ... this is x=8, w=6` |
 | `DRS-9031` | a name the dataset or the report lacks: a field, a measure, a hierarchy, a page, a bookmark, a slicer | `pages[0].visuals[0].wells.axis: table 'trade' has no column 'nope' (it has id, tradeId, desk, ...)` |
 | `DRS-9032` | a visual built wrongly: a measure in a field well, a field in a measure well, an unknown well, a required well empty, too many items | `...wells.values: 'trade.mtm' is a field; the values well takes measures (Notional, MTM, ...)` |
-| `DRS-9033` | reserved, not built: a visual type (`shape`) | `...type: the visual 'map' is reserved and not built yet` |
+| `DRS-9033` | reserved, not built: a visual type (`shape`) | `...type: the visual 'shape' is reserved and not built yet` |
 | `DRS-9034` | the dataset cannot be found or has errors, so the report cannot be drawn | `no dataset 'x' (a catalogue id, a file name such as trades-basic, or the dataset's name)` |
 | `DRS-9035` | a visual query names a page, a visual or a slicer the report lacks, or its state is not valid (a drill path past the last level, dates that are not dates) | `the hierarchy 'Desk and book' has 2 levels; there is nothing below trade.book` |
 
@@ -449,11 +449,13 @@ Built with several datasets (section 16): a visual's own `dataset:`, `links` acr
 
 Built in phase 6 (section 3.3): the `python` visual, run on the server in a sandboxed worker or in the browser.
 
-Built in phase 5 (section 13): visuals over live tables redraw in place with a live indicator, pause and resume, stale and disconnected states; the rolling chart; the Perspective grid and pivot; the sample live reports.
+Built in phase 5 (section 13): visuals over live tables redraw in place with a live indicator, pause and resume, stale and disconnected states; the rolling chart; the Perspective grid, pivot and chart with the settings panel; the sample live reports.
+
+Built later: Vega-Lite visuals (3.5), the relative-date slicer (6.1), tablet layouts (14.1), expected values (17), the entity view (3.4) and *promote to visual* from Analyse ([ANALYSE.md](ANALYSE.md#14-promote-to-a-report-visual)).
 
 Not built, and not faked: a Perspective visual over **several tables**; settings of the panel that are not Perspective's (a saved view is Perspective's state, not a re-design of the visual); a `perspective-*` visual in the designer's canvas (it shows a note: the designer's page has no WebAssembly); a `shape` visual; the **entity view in the designer's canvas and in an embedded element** (it shows a note; the viewer shows the view); a python visual in a **subscription** (section 3.3; [PYTHON_BI.md](PYTHON_BI.md) section 12; boards and alerts are built: [PYTHON_BI.md section 16](PYTHON_BI.md#16-python-in-alerts-and-on-boards)); a **tile** map or a map service (nothing is fetched from outside; the shapes are the vendored files), regions **below the first level** (counties inside a state), a
 shape-file import, a **choropleth by a field that is not a country code or name**; a histogram with bands of your own (equal-width only), a box plot of **summary** data you already have (it summarises the members the query returns); true totals for a **table's subtotals by group** (a table has one total row); highlight for charts other than bar and column; capturing a bookmark's slicer choices from the page (they are
-written in the YAML); per-device layouts for a **large screen** (a phone and a tablet are built: section 14); embedding is built for the report's visuals but not for its drill, alert and export chrome (section 15; export, subscriptions and alerts: [DISTRIBUTION.md](DISTRIBUTION.md)); Explore to visual (phase 9);
+written in the YAML); per-device layouts for a **large screen** (a phone and a tablet are built: section 14); embedding is built for the report's visuals but not for its drill, alert and export chrome (section 15; export, subscriptions and alerts: [DISTRIBUTION.md](DISTRIBUTION.md)); Vega-Lite and Python visuals in the embedded `<drishti-report>`;
 report-level security beyond the catalogue and the dataset's rules.
 
 ## 13. Live visuals and Perspective (phase 5)
