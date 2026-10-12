@@ -106,7 +106,47 @@ public class ProviderBase implements LLMProvider {
 
     @Override
     public HealthStatus health() {
-        return config.enabled() ? new HealthStatus("ok", "configured; no call is made to find out") : new HealthStatus("down", "enabled: false");
+        if (!config.enabled()) {
+            return new HealthStatus("down", "enabled: false");
+        }
+        com.ash.drishti.ai.LlmProvider.Readiness r = wire.check();
+        String note = wire.tlsNote();
+        return new HealthStatus(r.ok() ? "ok" : "down", r.detail() + (r.ok() && !note.isEmpty() ? " (" + note + ")" : ""));
+    }
+
+    /** One cheap live call to the endpoint (a model list; Ollama: /api/tags) when the type has one; {@link #health} otherwise. Mirrors {@code aprobe} / {@code probe} in Python. */
+    public HealthStatus probe() {
+        if (!config.enabled()) {
+            return new HealthStatus("down", "enabled: false");
+        }
+        com.ash.drishti.ai.LlmProvider.Readiness r = wire.probe();
+        return new HealthStatus(r.ok() ? "ok" : "down", r.detail());
+    }
+
+    /** The models the endpoint reports now that the file does not list, as entries with source {@code live}. Mirrors {@code live_models}. */
+    public List<ModelInfo> liveModels() {
+        java.util.Set<String> known = new java.util.HashSet<>();
+        wire.models().forEach(m -> known.add(m.id()));
+        models().forEach(m -> known.add(m.id()));
+        List<ModelInfo> out = new ArrayList<>();
+        for (com.ash.drishti.ai.LlmProvider.LiveModel m : wire.liveModels()) {
+            if (!known.contains(m.id())) {
+                boolean emb = "embedding".equals(m.kind());
+                out.add(new ModelInfo(m.id(), name(), m.kind(), emb ? new ModelCapabilities(false, false, false, false, true, true, 0, 0, 0, 0, 0, true, true,
+                        java.util.Set.of(), null) : ModelCapabilities.chatModel(), m.id(), "live"));
+            }
+        }
+        return out;
+    }
+
+    private static final java.util.regex.Pattern SECRETISH = java.util.regex.Pattern
+            .compile("(?i)(^|.*[-_.])(key|secret|token|password|passwd|authorization|auth|cookie|credential|credentials)([-_.].*)?$");
+
+    /** The provider file's other settings with every credential (key, token, secret, password, auth header) shown as {@code ********}. */
+    static Map<String, String> maskedSettings(Map<String, String> settings) {
+        Map<String, String> out = new java.util.TreeMap<>();
+        settings.forEach((k, v) -> out.put(k, SECRETISH.matcher(k.substring(k.lastIndexOf('.') + 1)).matches() && !v.isEmpty() ? "********" : v));
+        return out;
     }
 
     @Override
@@ -120,6 +160,8 @@ public class ProviderBase implements LLMProvider {
         m.put("timeoutSeconds", config.timeout().toSeconds());
         m.put("defaultModel", config.defaultModel());
         m.put("models", models().stream().map(ModelInfo::id).toList());
+        m.put("settings", maskedSettings(config.settings()));
+        m.put("tls", wire.tlsCertificates());
         return m;
     }
 

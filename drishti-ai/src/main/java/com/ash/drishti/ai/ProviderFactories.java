@@ -24,11 +24,17 @@ public final class ProviderFactories {
 
     private ProviderFactories() {}
 
+    /** The OpenAI-compatible types served by {@link OpenAiCompatProvider}: the presets of sajhamcpserver, Mistral and the generic one. */
+    static final List<String> OPENAI_COMPATIBLE = List.of("openai_compatible", "groq", "together", "fireworks", "deepseek", "xai", "openrouter", "perplexity",
+            "huggingface", "vllm", "lmstudio", "mistral");
+
     public static List<ProviderFactory> discover(List<ProviderFactory> extra) {
         List<ProviderFactory> all = new ArrayList<>(extra);
         for (ProviderFactory f : ServiceLoader.load(ProviderFactory.class)) {
             all.add(f);
         }
+        OPENAI_COMPATIBLE.forEach(t -> all.add(OpenAiCompatProvider.factory(t)));
+        all.add(AzureOpenAiProvider.azureFactory());
         return all;
     }
 }

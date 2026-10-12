@@ -1,0 +1,22 @@
+# Copy to config/ai/azure_openai.yaml (no .example) and set drishti.ai.enabled=true. One file = one provider. OFF until you set enabled: true.
+type: azure_openai
+enabled: false
+base-url: https://my-resource.openai.azure.com   # also read from AZURE_OPENAI_ENDPOINT
+api-style: v1                               # v1: /openai/v1/...; deployments: /openai/deployments/<name>/...?api-version=
+# api-version: 2024-10-21                   # for api-style: deployments
+auth: api_key                               # api_key | bearer | entra
+api-key: ${AZURE_OPENAI_API_KEY}
+# Microsoft Entra ID instead of a key (client secret or workload identity; managed identity is not built):
+# auth: entra
+# tenant-id: ${AZURE_TENANT_ID}   # plain text is fine for ids; secrets are ${ENV} only
+# client-id: ...
+# client-secret: ${AZURE_CLIENT_SECRET}
+# federated-token-file: /var/run/secrets/azure/tokens/azure-identity-token
+deployments:                                 # model id: deployment name; each is also a model of this provider
+  gpt-4o: my-gpt4o-deployment
+  text-embedding-3-small: my-embedding-deployment
+timeout: 60s
+# tls:                                      # the shared tls.* block of the connectors (docs/connectors/TLS.md): a private CA, mutual TLS, ...
+#   ca-file: /etc/drishti/ca.pem
+# proxy:                                    # the shared proxy.* block (docs/connectors/PROXY.md); else the site default
+#   url: http://proxy.corp:3128

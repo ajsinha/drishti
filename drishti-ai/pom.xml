@@ -31,6 +31,23 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
     <dependency><groupId>org.springframework.ai</groupId><artifactId>spring-ai-starter-model-openai</artifactId></dependency>
+    <!-- AWS Bedrock (type: bedrock): the runtime and control-plane modules and the JDK's HTTP clients only, as the S3 plugin does (no Netty, no bundle) -->
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId><artifactId>bedrockruntime</artifactId><version>${awssdk.version}</version>
+      <exclusions>
+        <exclusion><groupId>software.amazon.awssdk</groupId><artifactId>netty-nio-client</artifactId></exclusion>
+        <exclusion><groupId>software.amazon.awssdk</groupId><artifactId>apache-client</artifactId></exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId><artifactId>bedrock</artifactId><version>${awssdk.version}</version>
+      <exclusions>
+        <exclusion><groupId>software.amazon.awssdk</groupId><artifactId>netty-nio-client</artifactId></exclusion>
+        <exclusion><groupId>software.amazon.awssdk</groupId><artifactId>apache-client</artifactId></exclusion>
+      </exclusions>
+    </dependency>
+    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>url-connection-client</artifactId><version>${awssdk.version}</version></dependency>
+    <dependency><groupId>software.amazon.awssdk</groupId><artifactId>apache5-client</artifactId><version>${awssdk.version}</version></dependency>
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
   </dependencies>

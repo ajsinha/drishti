@@ -1,0 +1,12 @@
+# Copy to config/ai/gemini.yaml (no .example) and set drishti.ai.enabled=true. One file = one provider. OFF until you set enabled: true.
+type: gemini
+enabled: false
+api-key: ${GEMINI_API_KEY}                  # GEMINI_API_KEY or GOOGLE_API_KEY is also read when this line is left out
+# api-version: v1beta
+# schema-mode: json_schema                  # openapi: the OpenAPI subset of tool schemas
+# embedding-task-type: RETRIEVAL_DOCUMENT
+timeout: 60s
+# tls:                                      # the shared tls.* block of the connectors (docs/connectors/TLS.md): a private CA, mutual TLS, ...
+#   ca-file: /etc/drishti/ca.pem
+# proxy:                                    # the shared proxy.* block (docs/connectors/PROXY.md); else the site default
+#   url: http://proxy.corp:3128

@@ -1,3 +1,7 @@
 com.ash.drishti.ai.SpringAiOpenAiProvider$Factory
 com.ash.drishti.ai.AnthropicProvider$Factory
 com.ash.drishti.ai.MockProvider$Factory
+com.ash.drishti.ai.GeminiProvider$Factory
+com.ash.drishti.ai.CohereProvider$Factory
+com.ash.drishti.ai.OllamaProvider$Factory
+com.ash.drishti.ai.BedrockProvider$Factory

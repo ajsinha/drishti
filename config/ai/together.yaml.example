@@ -1,0 +1,18 @@
+# Copy to config/ai/together.yaml (no .example) and set drishti.ai.enabled=true. One file = one provider. OFF until you set enabled: true.
+type: together
+enabled: false
+# base-url: https://api.together.xyz/v1   # the vendor's address is the default
+api-key: ${TOGETHER_API_KEY}                  # an ${ENV_NAME} placeholder only; a literal key is refused (TOGETHER_API_KEY is also read when this line is left out)
+timeout: 60s
+retries: 1
+# default-model: ...                        # a catalogue model; the catalogue (ai/llm_catalog.json) is listed unless 'catalogue: false'
+# models:                                   # add to or override the catalogue (a new vendor model id needs no code change)
+#   - name: my-model
+#     id: vendor/model-id
+#     capabilities: [chat, tool-calls, json-mode]
+#     cost-per-1k-input: 0.0006
+#     cost-per-1k-output: 0.0024
+# tls:                                      # the shared tls.* block of the connectors (docs/connectors/TLS.md): a private CA, mutual TLS, ...
+#   ca-file: /etc/drishti/ca.pem
+# proxy:                                    # the shared proxy.* block (docs/connectors/PROXY.md); else the site default
+#   url: http://proxy.corp:3128

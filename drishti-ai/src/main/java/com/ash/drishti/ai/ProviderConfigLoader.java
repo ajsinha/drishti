@@ -140,9 +140,19 @@ public final class ProviderConfigLoader {
                     m.hasNonNull("temperature") ? m.get("temperature").asDouble() : null, caps,
                     m.path("cost-per-1k-input").asDouble(0), m.path("cost-per-1k-output").asDouble(0)));
         }
-        return new ProviderConfig(name, type, root.path("enabled").asBoolean(true), text(root, "base-url", ""),
-                resolveKey(text(root, "api-key", ""), env), duration(text(root, "timeout", "")), root.path("retries").asInt(0),
-                text(root, "default-model", ""), settings, models);
+        for (String k : LlmCatalog.CREDENTIAL_SETTINGS) {
+            if (!settings.getOrDefault(k, "").isBlank()) {
+                String raw = settings.get(k);
+                if (!ENV.matcher(raw.strip()).matches()) {
+                    throw new LlmException(LlmException.Kind.CONFIG, k + " must be an ${ENV_NAME} placeholder; secrets are never written into a file");
+                }
+                settings.put(k, resolveKey(raw, env));
+            }
+        }
+        LlmCatalog.Applied a = LlmCatalog.applyDefaults(type, settings, models, text(root, "base-url", ""), resolveKey(text(root, "api-key", ""), env),
+                text(root, "default-model", ""), env);
+        return new ProviderConfig(name, type, root.path("enabled").asBoolean(true), a.baseUrl(), a.apiKey(), duration(text(root, "timeout", "")),
+                root.path("retries").asInt(0), a.defaultModel(), settings, a.models());
     }
 
     /** The proxy password is an {@code ${ENV}} reference or a {@code proxy.password-file}, never the value itself. */

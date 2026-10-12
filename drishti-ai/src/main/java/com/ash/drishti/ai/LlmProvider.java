@@ -42,6 +42,37 @@ public interface LlmProvider extends AutoCloseable {
         return Optional.empty();
     }
 
+    /** A readiness answer: is what the type needs (a key, credentials, a region) there? {@code detail} says what, or what is missing. */
+    record Readiness(boolean ok, String detail) {}
+
+    /** A model the endpoint reports now (not one of the file's): its own id and {@code chat} or {@code embedding}. */
+    record LiveModel(String id, String kind) {}
+
+    /** No network: the readiness of the configuration. */
+    default Readiness check() {
+        return new Readiness(true, "configured; no call is made to find out");
+    }
+
+    /** One cheap live call to the endpoint (a model list), when the type has one; the readiness check otherwise. Never throws. */
+    default Readiness probe() {
+        return check();
+    }
+
+    /** The models the endpoint reports now (Ollama: the ones pulled; keyless OpenAI-compatible servers: {@code GET /models}); empty when the API has no listing. */
+    default List<LiveModel> liveModels() {
+        return List.of();
+    }
+
+    /** The soonest TLS certificate expiry sentence when less than 30 days away, else empty. */
+    default String tlsNote() {
+        return "";
+    }
+
+    /** The configured TLS certificates ({@code subject}, {@code source}, {@code notAfter}); empty without {@code tls.*}. */
+    default List<java.util.Map<String, String>> tlsCertificates() {
+        return List.of();
+    }
+
     @Override
     default void close() {}
 }
