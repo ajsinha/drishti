@@ -206,8 +206,9 @@ public final class SqlCompiler {
             throw invalid("the query names no table");
         }
         Plan whole = new Plan(ds, q, fields, measures, filters, rules, denied, tables, null, List.of(), null);
+        Plan joined;
         try {
-            return join(whole, aggTables);
+            joined = join(whole, aggTables);
         } catch (DrishtiException e) {
             if (e.errorCode() == ErrorCode.QUERY_INVALID && measureTables.size() > 1) {
                 Plan several = factParts(whole, measureTables, dimTables, reader);
@@ -217,6 +218,36 @@ public final class SqlCompiler {
             }
             throw e;
         }
+        if (measureTables.size() > 1 && grains(measureTables).size() > 1) {
+            // measures of different tables: each is aggregated at its own table's grain, so a one-side measure is never repeated by the many side
+            Plan several = factParts(whole, measureTables, dimTables, reader);
+            if (several != null) {
+                return several;
+            }
+            throw invalid("the measures " + measureTables.keySet() + " aggregate different tables, and each must be computed at its own table's grain so that none is repeated by "
+                    + "another's rows; but a table the query groups, filters or applies a row rule on is not reachable many-to-one from each of them: ask for them in separate queries");
+        }
+        return joined;
+    }
+
+    /** The table each measure is aggregated at (its own grain): the first of its tables that reaches the rest many-to-one; the distinct grains of the query. */
+    private Set<String> grains(Map<String, Set<String>> measureTables) {
+        List<Edge> edges = edges();
+        Set<String> out = new LinkedHashSet<>();
+        for (Set<String> tables : measureTables.values()) {
+            String g = grainOf(tables, edges);
+            out.add(g == null ? String.join("+", tables) : g);
+        }
+        return out;
+    }
+
+    private static String grainOf(Set<String> tables, List<Edge> edges) {
+        for (String t : tables) {
+            if (tree(t, tables, edges, true) != null) {
+                return t;
+            }
+        }
+        return null;
     }
 
     // ---- several fact tables ------------------------------------------------------------------------------------------
@@ -233,26 +264,19 @@ public final class SqlCompiler {
             }
         }
         List<Edge> edges = edges();
-        List<Set<String>> groupTables = new ArrayList<>();
-        List<List<String>> groups = new ArrayList<>();
+        Map<String, Set<String>> groupTablesOf = new LinkedHashMap<>();
+        Map<String, List<String>> groupOf = new LinkedHashMap<>();
         for (Map.Entry<String, Set<String>> e : measureTables.entrySet()) {
-            boolean placed = false;
-            for (int i = 0; i < groups.size() && !placed; i++) {
-                Set<String> merged = union(groupTables.get(i), e.getValue());
-                if (partBase(merged, dimTables, edges) != null) {
-                    groupTables.set(i, merged);
-                    groups.get(i).add(e.getKey());
-                    placed = true;
-                }
+            String grain = grainOf(e.getValue(), edges);
+            if (grain == null || tree(grain, union(e.getValue(), dimTables), edges, true) == null) {
+                return null;
             }
-            if (!placed) {
-                if (partBase(e.getValue(), dimTables, edges) == null) {
-                    return null;
-                }
-                groupTables.add(new LinkedHashSet<>(e.getValue()));
-                groups.add(new ArrayList<>(List.of(e.getKey())));
-            }
+            groupTablesOf.computeIfAbsent(grain, k -> new LinkedHashSet<>()).addAll(e.getValue());
+            groupOf.computeIfAbsent(grain, k -> new ArrayList<>()).add(e.getKey());
         }
+        List<Set<String>> groupTables = new ArrayList<>(groupTablesOf.values());
+        List<List<String>> groups = new ArrayList<>(groupOf.values());
+        List<String> bases = new ArrayList<>(groupOf.keySet());
         if (groups.size() < 2) {
             return null;
         }
@@ -261,7 +285,7 @@ public final class SqlCompiler {
         QueryRequest q = whole.query();
         List<FilterUse> dims = whole.filters().stream().filter(f -> f.measure() == null).toList();
         for (int i = 0; i < groups.size(); i++) {
-            String base = partBase(groupTables.get(i), dimTables, edges);
+            String base = bases.get(i);
             List<Join> joins = tree(base, union(groupTables.get(i), dimTables), edges, true);
             List<Use> uses = new ArrayList<>();
             for (String name : groups.get(i)) {
@@ -279,16 +303,6 @@ public final class SqlCompiler {
         Set<String> out = new LinkedHashSet<>(a);
         out.addAll(b);
         return out;
-    }
-
-    /** The table one part aggregates from: the first fact that reaches the other facts of the part and every dimension of the query many-to-one; null if none does. */
-    private String partBase(Set<String> facts, Set<String> dims, List<Edge> edges) {
-        for (String base : facts) {
-            if (tree(base, union(facts, dims), edges, true) != null) {
-                return base;
-            }
-        }
-        return null;
     }
 
     private List<Resolver.ColRef> columnsOfMeasure(String name) {
