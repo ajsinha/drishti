@@ -130,3 +130,4 @@ body {
 :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-name small { color: #fff; -webkit-text-fill-color: #fff; opacity: .95; }
 :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .brand-mark { color: #fff; }
 :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .brand-mark .eye { stroke: #fff; }   /* the eye's outline is ink elsewhere: white on a coloured bar */
+

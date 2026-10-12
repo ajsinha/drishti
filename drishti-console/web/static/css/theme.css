@@ -150,8 +150,17 @@ a:hover { text-decoration: underline; }
   background: radial-gradient(800px 300px at 50% 120%, var(--d-accent-tint), transparent 70%); }
 
 /* ---- Footer ---- */
-.site-footer { border-top: 1px solid var(--d-border); color: var(--d-faint); font-size: .8rem; padding: 1.2rem 1.25rem; }
-.site-footer .inner { max-width: 1240px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: .6rem 1.5rem; justify-content: space-between; }
+/* The footer, as in Sajha: one centred closing block under a thin rule: the slogan (Playfair, the heading colour), the
+   product, version and main links, then the fine print. A step larger than Sajha's so it reads clearly. */
+.site-footer { margin-top: 2.5rem; border-top: 1px solid var(--d-border); color: var(--d-muted); font-size: .88rem; padding: 1.3rem 1.25rem 1.6rem; text-align: center; }
+.site-footer .inner { max-width: 1240px; margin: 0 auto; }
+.site-footer p { margin: 0 0 .4rem; }
+.site-footer .sf-tag { font-family: "Drishti Tagline", Georgia, serif; font-size: 1.15rem; color: var(--d-accent-strong); margin-bottom: .55rem; }
+.site-footer .sf-name { font-family: "Drishti Wordmark", Georgia, serif; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--d-ink); }
+.site-footer .sf-links { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: .3rem 1.2rem; }
+.site-footer .sf-links a { color: var(--d-link); font-weight: 600; text-decoration: none; padding: .3rem 0; }
+.site-footer .sf-links a:hover, .site-footer .sf-links a:focus-visible { text-decoration: underline; }
+.site-footer .sf-fine { font-size: .8rem; margin: .3rem 0 0; }
 
 @media (max-width: 900px) {
   .lp-grid2, .lp-shots { grid-template-columns: 1fr; }
