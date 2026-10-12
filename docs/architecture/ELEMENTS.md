@@ -1419,7 +1419,7 @@ difference for a direct call, so the `kinds` list is the boundary that is enforc
 
 ### 18.3 Phone layout in the element
 
-The element measures **its own width** (`ResizeObserver` on the host), not the page's: at 640 px or narrower, and when the report declares `layouts.phone` for the page, it draws the arranged page (`order`, `hide`, `span`: [REPORTS.md](../guides/REPORTS.md#14-phone-layouts)) and swaps back to the grid when it grows, with no reload. A hidden visual is not queried.
+The element measures **its own width** (`ResizeObserver` on the host), not the page's: at 640 px or narrower, and when the report declares `layouts.phone` for the page, it draws the arranged page (`order`, `hide`, `span`: [REPORTS.md](../guides/REPORTS.md#14-phone-and-tablet-layouts)) and swaps back to the grid when it grows, with no reload. A hidden visual is not queried.
 Without a layout the container rule of the sheet (`@container drishti (max-width: 760px)`) stacks the grid into one column as for any report. `drishti:page-changed` carries `phone: true` when the arranged layout is on screen.
 
 ### 18.4 Security and host policy

@@ -33,6 +33,7 @@ About 60 minutes.
 
 - the parts of a dataset: a table, columns, measures; and how to ask it a question before drawing anything;
 - how to make a report in the designer: cards, a **map**, a bar with a **top 10** filter, a slicer; where each visual sits on the 12-column grid;
+- (at the end) a **relative-date slicer**, a **tablet layout** and an **entity view**: *last 4 weeks*, two columns on an 820 px screen, and a counterparty's own view beside a bar;
 - how the map drills **world, country, region** with a breadcrumb, and how a click on a map or a bar **cross-filters** the rest of the page;
 - how to publish: your own workspace, a shared workspace, the catalogue;
 - **filter like Power BI**: list, dropdown and range slicers, page and report scope, a top-N filter that tames a busy donut, bookmarks, and when to use a slicer instead of a click;
@@ -300,6 +301,59 @@ You should see `Desk P&L` `2,671,113`, `Exposure (EE peak)` `1,447,544,943` and 
 ![Banking chosen: the cards read -1,456,152 and 240,271,956, the bars keep only banks, the donut is Banking 100%](img/t10/30-sector-chosen.jpg)
 
 You should see a chip `Sector: Banking`, the cards narrowed to the banks (`Desk P&L` `-1,456,152`, exposure `240,271,956`), three banks in the bar chart and the donut a single slice: the slicer's choice reached the visuals of the *other* dataset through the link. Click a slice of the donut instead and the same happens. Open the report as a desk head and the numbers shrink to the counterparties your desk trades with; open it as an analyst and the names read `•••` (the join is on the counterparty's **id**, which is not masked, so the report still works). The same table made by a Python Transform is in [tutorial 14](14-python-and-analyse.md); the reference is [DATASETS.md section 11](../guides/DATASETS.md#11-composed-and-derived-datasets) and [REPORTS.md section 16](../guides/REPORTS.md#16-reports-over-several-datasets).
+
+## Step 12 · Relative dates, a tablet, and a view inside a report
+
+Three things a real report needs, each a few lines of YAML (open **My workspace → New item**, kind *report*, paste, **Save draft**, then **View**).
+
+**A slicer that says "last 4 weeks".** A slicer on a date column can offer named windows instead of values. The server works them out from the report's date and the business-day calendar, so the same name means the same dates on the screen, in an export and in a subscription:
+
+```yaml
+rachana: 1
+report: relative-dates
+dates: { from: 2026-10-07, to: 2026-10-08 }
+title: Relative dates
+dataset: trades-basic
+pages:
+  - id: main
+    title: Main
+    visuals:
+      - { id: when, type: slicer, title: When, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { field: [trade.tradeDate] }, format: { mode: relative-date, default: last-30-days } }
+      - { id: count, type: card, title: Trades, at: { x: 4, y: 0, w: 4, h: 3 }, wells: { values: [Trades] } }
+      - { id: mtm, type: card, title: Mark to market, at: { x: 8, y: 0, w: 4, h: 3 }, wells: { values: [MTM] } }
+      - { id: desk, type: bar, title: MTM by desk, at: { x: 0, y: 3, w: 12, h: 6 }, wells: { axis: [trade.desk], values: [MTM] } }
+```
+
+![The relative-date slicer set to Last 4 weeks: a chip names it, the cards read 74 trades and +66,886,850](img/t10/31-relative-date.jpg)
+
+You should see the slicer's dropdown (the report's `default: last-30-days` is chosen until you pick another) and, after choosing **Last 4 weeks**, a chip `When: Last 4 weeks` and cards narrowed to the 74 trades of the four weeks ending on the report's date (the whole book is 750). The names are `last-N-days`, `last-N-business-days`, `last-N-weeks`, `last-N-months`, `this-week|month|quarter|year` (to date), `previous-...` and `all`: [REPORTS.md section 6.1](../guides/REPORTS.md#61-the-relative-date-slicer).
+
+**A tablet layout.** A phone gets one column ([step 10](#step-10--on-a-phone)); a tablet (up to 1024 px) can get two, with some visuals across:
+
+```yaml
+layouts:
+  tablet:
+    main:
+      order: [desk, trades, mtm, notional, rows]    # first, in this order
+      wide: [desk, rows]                            # the whole width; the others take half
+      span: { desk: 5, rows: 4 }                    # heights in grid rows
+```
+
+Open the draft in the designer and press the **Tablet** tab:
+
+![The designer's Tablet tab: five visuals in tablet order, the bar and the table ticked Wide, a row-height box for each](img/t10/33-tablet-tab.jpg)
+
+You should see the visuals in tablet order with **Hide**, **Wide** and **Rows**, and a preview below. Then open the report on an 820 px screen:
+
+![The report on an 820 px screen: the bar across the page, then two cards side by side](img/t10/34-tablet-view.jpg)
+
+You should see the bar the whole width, then the cards in two columns. A phone, or a desktop, is not affected.
+
+**A counterparty's own view inside the report.** The sample **Counterparty risk** has a page *Counterparty lookup*: a bar of the ten largest counterparties and, beside it, a visual of `type: entity-view` with `wells: { key: [counterparties.id] }`. Open it and click a bar:
+
+![Counterparty lookup: a bar of ten counterparties with CP-HALCYON selected, and its Drishti view beside it with the netting sets](img/t10/32-entity-view.jpg)
+
+You should see the counterparty's own **Drishti view** (its name, rating, net MTM and netting sets) in the frame beside the bar, with a chip `counterparties.id: CP-HALCYON`. It is the view page built **for you**: someone who may not see a field does not see it here either. [REPORTS.md section 3.4](../guides/REPORTS.md#34-the-entity-view).
 
 ## Next steps
 

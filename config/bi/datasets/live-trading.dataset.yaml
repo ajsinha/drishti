@@ -81,5 +81,10 @@ measures:
 hierarchies:
   Desk and book: [trade.desk, trade.book]
 
+# Kept by group as trades change (docs/guides/DATASETS.md section 7.1): a sum, count, minimum or maximum of a stored column moves by the difference, so the cards and the
+# bar read these few rows, not every trade. Losses (a condition inside the aggregate) is not here: it is computed over the rows, as before.
+rollups:
+  - { name: byDeskBook, table: trade, by: [desk, book, productType, currency], measures: [Trades, Notional, MTM, PnL 1d, Worst trade, Best trade] }
+
 security:
   masked: [trader]              # readers without the raw power see the mask in the trader column

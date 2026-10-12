@@ -224,7 +224,8 @@
         if (t.live) {                                    // a live table is in memory, kept up to date by the feed (phase 5)
           rows = t.live.rows || 0;
           where = t.live.state === 'not started' ? 'in memory: not started yet (it starts with the first query or stream)'
-            : 'in memory, ' + t.live.state + ': ' + num(t.live.subscribed) + ' of ' + num(t.live.entities) + ' entities push their changes' + (t.live.lastUpdate ? ', last change ' + new Date(t.live.lastUpdate).toTimeString().slice(0, 8) : '');
+            : 'in memory, ' + t.live.state + ': ' + num(t.live.subscribed) + ' of ' + num(t.live.entities) + ' entities push their changes' + (t.live.lastUpdate ? ', last change ' + new Date(t.live.lastUpdate).toTimeString().slice(0, 8) : '')
+            + ((t.live.aggregates || []).length ? '; kept by group: ' + t.live.aggregates.map(function (a) { return a.rollup + ' (' + num(a.groups) + ' groups)'; }).join(', ') : '');
         }
         tb.appendChild(h('tr', {}, h('th', { scope: 'row', text: t.table }), h('td', { text: t.mode }), h('td', { text: where }), h('td', { text: num(rows) })));
       });

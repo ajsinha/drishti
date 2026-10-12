@@ -21,7 +21,7 @@ from __future__ import annotations
 import base64
 import urllib.parse
 
-from _bi import bi, clean_items, open_report, settled
+from _bi import bi, clean_everywhere, clean_items, open_report, settled
 from _tut import ROOT, OUT, elem_shot, SERVER_ENV, VERA, call, go, login, people  # noqa: F401
 from shotlib import Ctx, register
 
@@ -55,16 +55,14 @@ def refresh(c: Ctx):
     c.page.evaluate("document.querySelector('[data-refresh-sec]').scrollIntoView()")
     c.page.wait_for_timeout(500)
     box = c.page.locator("[data-refresh-sec]").bounding_box()
-    c.save("01-refresh.jpg", clip={"x": 240, "y": max(0, box["y"] - 20), "width": 1040, "height": min(500, 900 - max(0, box["y"] - 20))})
-    call(c, "POST", f"/bi/api/datasets/{ds}/refresh", {})
-    c.page.wait_for_timeout(5000)
-    c.page.reload()
-    c.page.wait_for_selector("[data-refresh-sec]")
+    c.save("01-refresh.jpg", clip={"x": 240, "y": max(0, box["y"] - 20), "width": 1040, "height": min(760, 900 - max(0, box["y"] - 20))})
+    c.page.click("[data-refresh-now]")
+    c.page.wait_for_function("() => /Refreshed|Refresh /.test(document.querySelector('[data-refresh-msg]').textContent)", timeout=60000)
     c.page.wait_for_timeout(1500)
     c.page.evaluate("document.querySelector('[data-refresh-sec]').scrollIntoView()")
     c.page.wait_for_timeout(400)
     box = c.page.locator("[data-refresh-sec]").bounding_box()
-    c.save("02-refresh-now.jpg", clip={"x": 240, "y": max(0, box["y"] - 20), "width": 1040, "height": min(500, 900 - max(0, box["y"] - 20))})
+    c.save("02-refresh-now.jpg", clip={"x": 240, "y": max(0, box["y"] - 20), "width": 1040, "height": min(760, 900 - max(0, box["y"] - 20))})
 
 
 @shot("03-subscribe-form.jpg", also=("04-subscription-saved.jpg", "05-run-no-smtp.jpg", "06-history-no-smtp.jpg"))
@@ -167,3 +165,40 @@ def subscribe_with_mail(c: Ctx):
     c.page.locator("details.dist-hist summary").first.click()
     c.page.wait_for_timeout(1200)
     c.save("15-history-with-smtp.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 640})
+
+
+TESTED_TITLE = "Trades with expected values"
+
+
+@shot("16-tests.jpg", also=("17-publish-refused.jpg",))
+def expected_values(c: Ctx):
+    """Expected values (tests:) on a dataset: run from the dataset page, and a publish refused while one fails."""
+    login(c, height=900)
+    clean_everywhere(c, TESTED_TITLE)
+    if not any(w["id"] == WORKSPACE for w in bi(c, "GET", "/workspaces")):
+        bi(c, "POST", "/workspaces", {"name": "Economics desk", "description": "Reports on the world economy"})
+    base = (DATA / "trades-daily.dataset.yaml").read_text().replace("dataset: trades-daily", "dataset: trades-tested").replace("title: Trades refreshed daily", "title: " + TESTED_TITLE)
+    base = base.replace('refresh: "business-days 06:30"', "# no schedule: this one is about tests")
+    made = bi(c, "POST", f"/workspaces/{WORKSPACE}/items", {"kind": "dataset", "title": TESTED_TITLE, "body": base})
+    got = bi(c, "POST", f"/datasets/{made['id']}/query", {"measures": ["Trades"]})
+    trades = int(got["rows"][0][0])
+    print("trades in the dataset:", trades)
+    tests = (f"\ntests:\n  - {{ name: The book holds {trades} trades, measure: Trades, expect: {trades} }}\n"
+             f"  - {{ name: Trades within a range, measure: Trades, expect: {{ min: {max(1, trades - 5)}, max: {trades + 5} }} }}\n"
+             f"  - {{ name: Close to 100 trades, measure: Trades, expect: 100, tolerance: 1% }}\n")
+    bi(c, "PUT", "/items/" + made["id"], {"body": base + tests})
+    go(c, "/bi/d/" + made["id"], wait="h1", settle=1500)
+    c.page.locator("[data-tests-sec]").wait_for(state="visible")
+    c.page.click("[data-tests-run]")
+    c.page.wait_for_selector("[data-tests-table] tbody tr", timeout=60000)
+    c.page.wait_for_timeout(800)
+    elem_shot(c, "16-tests.jpg", "[data-tests-sec]", pad=14)
+    c.page.goto(c.base + "/bi/i/" + made["id"])
+    c.page.wait_for_selector("h1")
+    c.page.wait_for_timeout(1200)
+    c.page.get_by_role("button", name="Publish", exact=True).click()
+    c.page.wait_for_selector(".bi-bad", timeout=30000)
+    print("publish answers:", c.page.locator(".bi-bad").first.inner_text())
+    c.page.wait_for_timeout(500)
+    c.save("17-publish-refused.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 480})
+    clean_everywhere(c, TESTED_TITLE)

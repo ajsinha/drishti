@@ -1173,6 +1173,7 @@ Times are in `drishti.business-date.zone`, business days by `drishti.business-da
 | `tick` | `30s` | How often the scheduler looks for a refresh that is due or a retry whose wait is over (a schedule runs within one tick of its time). |
 | `max-attempts` | `4` | Tries for one scheduled refresh (the first included) before it is left `failed` until its next scheduled time (1 to 20). |
 | `load-delay` | `2s` | For `after-load`: how long after the data-load signal the refresh starts. |
+| `history` | `25` | Past runs of each job kept and shown under **Recent refreshes** (0 to 500). The state and the history are written to `<drishti.bi.query.store-dir>/refresh/state.json`, so they survive a restart; a run in progress when the server stopped shows as `interrupted`, and a time that passed while it was down is run once at start-up. |
 
 ### `drishti.bi.ai` — BI with AI (stage 2)
 
@@ -1208,6 +1209,7 @@ Live tables kept in memory by the engine and the streams that tell browsers they
 | `stale-after` | `30s` | A feed that pushes but has delivered nothing for this long is shown as **stale**. |
 | `max-streams` | `100` | Live report streams open at once on the server (`429 DRS-9051`). |
 | `max-streams-per-user` | `10` | Live report streams open at once for one person (`429 DRS-9051`). A browser holds one per distinct report on its open reports and boards. |
+| `incremental-aggregates` | `true` | The rollups a dataset declares over a live table are kept by group as rows change (sums and counts by difference; a lost minimum or maximum is read again for its group alone), and a query a rollup can answer reads them ([DATASETS.md section 7.1](../guides/DATASETS.md#71-live-tables-phase-5)). `false`: every measure of a live table is computed over its rows on each query. |
 
 ### `drishti.distribution`: export and subscriptions
 
@@ -1275,6 +1277,7 @@ Saved states, review, certification, impact analysis and bundles ([BI_GOVERNANCE
 | `preview-rows` | `20` | Rows of data a reviewer sees in the preview of a dataset or a report under review (at most 500). The reviewer's own row rules and masks apply. |
 | `refuse-breaking` | `true` | Refuse (`409 DRS-9040`) publishing a dataset change that removes or renames a field, measure or hierarchy a **published** report uses. A `bi-admin` can publish with `force`. Off: the publish goes ahead and answers with warnings. |
 | `revoke-certification` | `true` | Take certification away automatically from a certified dataset that changed incompatibly, and from certified reports broken by such a change; the owner and whoever certified are told. |
+| `refuse-failing-tests` | `true` | Refuse (`409 DRS-9043`) publishing or approving a report or dataset whose expected values (`tests:`) fail or cannot run; a `bi-admin` can publish with `force`. Off: Check still shows the results, a publish goes ahead ([REPORTS.md section 17](../guides/REPORTS.md#17-expected-values-tests)). |
 | `bundle-max-bytes` | `8388608` | Largest BI bundle an import reads (`422 DRS-9041` above it). |
 | `tell-people` | `true` | Tell people in the inbox (the bell) when a review is asked for (reviewers), decided (the author) or a certification is revoked (the owner and whoever certified). Off: no inbox rows; the audit log and the item's history still record everything. |
 

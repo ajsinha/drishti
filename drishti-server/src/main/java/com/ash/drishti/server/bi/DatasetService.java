@@ -559,7 +559,11 @@ public final class DatasetService {
             Map<String, Object> m = new LinkedHashMap<>(e);
             Dataset.Table t = d.tables().get(String.valueOf(e.get("table")));
             if (t != null && t.isLive() && queries.keepsLive(d)) {
-                m.put("live", queries.live().find(key, t.name()).map(x -> x.status().toMap()).orElse(Map.of("state", "not started", "table", t.name())));
+                m.put("live", queries.live().find(key, t.name()).map(x -> {
+                    Map<String, Object> st = new LinkedHashMap<>(x.status().toMap());
+                    st.put("aggregates", x.aggregateStats());
+                    return st;
+                }).orElse(Map.of("state", "not started", "table", t.name())));
             }
             out.add(m);
         }

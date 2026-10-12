@@ -237,6 +237,7 @@ The codes this phase adds (the item and workspace codes `DRS-9001` to `9006` are
 | `DRS-9040` | 409 | publishing or approving a dataset would break published reports (a field, measure or hierarchy they use is removed or renamed); a `bi-admin` may force it |
 | `DRS-9041` | 422 | a bundle is not readable, fails its checksums, is over `bundle-max-bytes`, or holds an invalid item |
 | `DRS-9042` | 409 | a bundle import would overwrite what differs here (conflicts), or names a workspace or owner that cannot be mapped |
+| `DRS-9043` | 409 | publishing or approving a report or dataset whose expected values (`tests:`) fail or cannot run; a `bi-admin` may force it ([REPORTS.md section 17](REPORTS.md#17-expected-values-tests)) |
 
 ## 10. Built and not built
 

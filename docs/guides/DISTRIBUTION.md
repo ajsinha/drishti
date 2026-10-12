@@ -18,7 +18,7 @@
 Rūpaka phase 7 ([RUPAKA.md section 20.6](../architecture/RUPAKA.md#206-phase-7-part-1-as-built)). Part 1: two things leave Drishti as files and mail: an **export** (a BI report, a page, one
 visual, or a Sutra view, saved as PDF, a picture, an Excel workbook or CSV) and a **subscription** (the same content sent by email on a schedule, or after the day's data lands).
 Part 2 (section 4 here): **alerts** on a number, and notifications from a board tile, to the inbox, email and the chat bridges.
-Part 3 (section 5): a report **embedded** in another web application (`<drishti-report>`), and the report's own phone layout ([REPORTS.md](REPORTS.md#14-phone-layouts)).
+Part 3 (section 5): a report **embedded** in another web application (`<drishti-report>`), and the report's own phone layout ([REPORTS.md](REPORTS.md#14-phone-and-tablet-layouts)).
 The walk-throughs with pictures are [tutorial 11](../tutorials/11-bi-that-runs-itself.md) (export, subscribe and alerts); this is the reference.
 
 **One rule runs through all of it: the file or the mail is made for the person who gets it.** The numbers are asked of the data engine *as that person*, so their row rules and their
@@ -618,7 +618,7 @@ What the host heard (`drishti:filter-changed`, captured from that page):
 **Which hosts may embed which reports (Admin → Embedding).** Register the host application (exact origins, a secret or a public key) with the scope **`embed:report`**. Its **Kinds and reports it may show** list is the allow-list: `report:file:report:live-trading-desk` allows that one report, `report:*` every report, an
 empty list everything the user's roles open. A host whose list names only entity kinds may show no report, and a report off the list is refused `DRS-8005` (the element shows the code and tells the host with `drishti:error`). Only a **published** report is embedded: a draft is refused. The server checks the list on every call.
 
-**Phone.** `<drishti-report>` uses the report's `layouts.phone` when **the element** is 640 px or narrower, so a report in a narrow card of a wide page, or a full-width one on a phone, gets the arranged page; see [REPORTS.md section 14](REPORTS.md#14-phone-layouts):
+**Phone.** `<drishti-report>` uses the report's `layouts.phone` when **the element** is 640 px or narrower, so a report in a narrow card of a wide page, or a full-width one on a phone, gets the arranged page; see [REPORTS.md section 14](REPORTS.md#14-phone-and-tablet-layouts):
 
 ![The report in the host's page at 390 px, with the report's phone layout](img/bi-elements/host-phone-390.png)
 

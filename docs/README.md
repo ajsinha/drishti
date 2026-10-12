@@ -111,7 +111,10 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Design of Drishti Rūpaka, BI inside Drishti benchmarked against Power BI, and what its phase 0 proof of concept measured | [RUPAKA.md](architecture/RUPAKA.md), [RUPAKA_POC.md](architecture/RUPAKA_POC.md) |
 | Collaboration: share a view with a note, comment threads anchored to the data, the inbox, email, retention and legal hold; the design, what was built and the plan | [COLLABORATION.md](architecture/COLLABORATION.md) |
 | Show Drishti's live views and BI reports inside another web application without iframes (Drishti Elements: `<drishti-view>`, `<drishti-panel>`, `<drishti-report>`, token exchange, npm package) | [guides/ELEMENTS.md](guides/ELEMENTS.md) (developer guide), [architecture/ELEMENTS.md](architecture/ELEMENTS.md) (design) |
-| Arrange a report for a phone (`layouts.phone`: order, hide, height; the designer's Phone tab) | [REPORTS.md](guides/REPORTS.md#14-phone-layouts) |
+| Arrange a report for a phone or a tablet (`layouts.phone`, `layouts.tablet`: order, hide, height, wide; the designer's Phone and Tablet tabs) | [REPORTS.md](guides/REPORTS.md#14-phone-and-tablet-layouts) |
+| Say what a number should be (`tests:`: expected values that Check runs as a role and that stop a publish) | [REPORTS.md](guides/REPORTS.md#17-expected-values-tests) |
+| Show "last 30 days" or "this quarter to date" (a relative-date slicer, business-day aware) | [REPORTS.md](guides/REPORTS.md#61-the-relative-date-slicer) |
+| Rank, lag and moving averages in a measure (window functions) | [DATASETS.md](guides/DATASETS.md#43-window-functions) |
 | Put live BI results (aggregates, pivots, rankings streamed by Pravaha, Flink or a custom BI server) in front of people as live views and boards | [LIVE_BI.md](architecture/LIVE_BI.md) |
 
 ### Add an industry or data

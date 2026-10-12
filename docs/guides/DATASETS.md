@@ -104,9 +104,48 @@ relationships:
 `cardinality` is `many-to-one` (default), `one-to-many`, `one-to-one` or `many-to-many`; `direction` `single` or `both`; `active` true or false. Both columns must exist and have
 the same type. **Built:** a query joins along **active** relationships, in the many-to-one direction (and either way for one-to-one), `LEFT JOIN`ed from the table the
 measures aggregate (the *base*), so a measure is never counted twice. A query with **no measure** (a list of values) may also join one-to-many and answers distinct rows.
-**Refused (`DRS-9020`):** measures that aggregate two tables no many-to-one path connects, and a field whose table cannot be reached from the measures' table without repeating rows.
+**Several fact tables in one query:** when the measures of a query aggregate tables that no many-to-one path connects (`trades` and a table of `limits`, both many-to-one to `desks`), each fact is aggregated **alone** at the query's fields and the answers are joined on those fields, so neither fact is repeated by the other's rows (section 3.1). **Refused (`DRS-9020`):** a field one of the facts cannot reach many-to-one, and a measure that mixes the facts in one expression (`[MTM] / [Limit]`).
 `direction: both` and many-to-many are stored; a query still joins as written (many-to-many warns). Inactive relationships are skipped and cannot yet be
 turned on by a measure.
+
+### 3.1 Several unrelated fact tables in one query
+
+Two fact tables that share dimensions (every trade has a desk; every limit has a desk) are not joined to each other: joining them would repeat each desk's limits once per trade. A query that asks for a measure of each, grouped by the shared dimension, is answered **per fact, then joined**:
+
+```yaml
+tables:
+  trades:  { source: { connector: trading-store, kind: trade }, columns: { tradeId: { type: string, key: true }, counterpartyId: { path: counterparty.id, type: string }, mtm: decimal } }
+  netting_sets: { source: { connector: credit-store, kind: netting-set }, columns: { counterparty: string, eePeak: decimal } }
+  counterparties: { source: { connector: reference-store, kind: counterparty }, columns: { name: string, sector: string } }
+relationships:
+  - { from: trades.counterpartyId,      to: counterparties.id, cardinality: many-to-one }
+  - { from: netting_sets.counterparty,  to: counterparties.id, cardinality: many-to-one }
+measures:
+  MTM: { expr: "sum(trades.mtm)" }   Trades: { expr: "count(trades)" }   Exposure: { expr: "sum(netting_sets.eePeak)" }   Netting sets: { expr: "count(netting_sets)" }
+```
+
+`fields: [counterparties.sector]`, `measures: [MTM, Trades, Exposure, Netting sets]` (real answer, first four sectors, with `?explain=true` for the SQL; the table sources are shortened):
+
+```text
+Agriculture        20378377.0   35    59019457.0    4
+Airlines           15984208.0   33    73868165.0    4
+Asset management   70776928.0  153   289738661.0   15
+Banking            23279594.0   94   240271956.0   12
+```
+```sql
+SELECT "counterparties.sector", "MTM", "Trades", "Exposure", "Netting sets" FROM (
+  SELECT coalesce("p0"."counterparties.sector", "p1"."counterparties.sector") AS "counterparties.sector", "p0"."MTM" AS "MTM", "p0"."Trades" AS "Trades", "p1"."Exposure" AS "Exposure", "p1"."Netting sets" AS "Netting sets"
+  FROM (SELECT "counterparties"."sector" AS "counterparties.sector", (sum("trades"."mtm")) AS "MTM", (count(*)) AS "Trades"
+        FROM (trades) AS "trades" LEFT JOIN (counterparties) AS "counterparties" ON "trades"."counterpartyId" = "counterparties"."id" GROUP BY "counterparties"."sector" ...) AS "p0"
+  FULL OUTER JOIN (SELECT "counterparties"."sector" AS "counterparties.sector", (sum("netting_sets"."eePeak")) AS "Exposure", (count(*)) AS "Netting sets"
+        FROM (netting_sets) AS "netting_sets" LEFT JOIN (counterparties) AS "counterparties" ON "netting_sets"."counterparty" = "counterparties"."id" GROUP BY "counterparties"."sector" ...) AS "p1"
+  ON "p0"."counterparties.sector" IS NOT DISTINCT FROM "p1"."counterparties.sector") AS "q" ORDER BY "counterparties.sector" ASC LIMIT 4
+```
+
+* Each part is the ordinary query of one fact: its own row rules, filters and masks. The parts are **full-outer-joined** on the fields (a null equals a null), so a sector one fact lacks still shows with the other's figures (and an empty cell for the missing one).
+* With **no fields** the totals sit side by side in one row. A **filter on a shared dimension** reaches every fact; a filter on a measure (`LimitTotal gt 50`) is applied to the joined rows, as are the sort and the limit.
+* **Refused, safely:** a field one fact cannot reach many-to-one (`trades.desk` beside a measure of `limits`: `DRS-9020`, no many-to-one path); a measure that mixes the facts (`[MTM] / [LimitTotal]`: combine them in a composed dataset, section 11); a window measure (4.3) with another fact; and a **row rule that reads a fact table** the other fact cannot reach (a desk-head's `trades.desk in user.desks` against limits): the query is refused rather than shown unrestricted.
+* A rollup does not answer a several-facts query; each part reads its own layers.
 
 ## 4. Measures and the expression language
 
@@ -140,7 +179,7 @@ and in a calculated column a bare column of its own table.
 | `year(d)`, `quarter`, `month`, `day`, and the field form `table.dateColumn.year` (also `quarter`, `month`, `day`, `week`) | date parts of a `date` or `timestamp` column |
 
 A measure must aggregate (a column outside an aggregate is an error), aggregates do not nest (except `ratio`'s two arguments), and measures may not refer to each other in a circle.
-**Reserved, parsed and refused with `DRS-9013`:** `lag` and `rank` (window functions). Time intelligence and running totals are built: section 4.1.
+**Window functions** (`lag`, `lead`, `rank`, `dense_rank`, `percent_rank`, `moving_avg`, `moving_sum`, `moving_min`, `moving_max`, `cumulative`) are built: section 4.3. Time intelligence and running totals: section 4.1.
 
 Real compiled output (captured from the `trades-basic` sample by a BI author's `?explain=true`; the values are placeholders, never in the text):
 
@@ -218,6 +257,46 @@ FROM (...) AS "trades" WHERE ("trades"."tradeDate" BETWEEN CAST(? AS DATE) AND C
 * A **rollup** cannot hold a time measure (`DRS-9012`, as for a distinct count); the query runs on the columns layer.
 * `running` takes one `sum`, `count`, `min` or `max` (an average, ratio, distinct count or percentile has no running total: `DRS-9011`), needs the date as a **field** of the query (`422 DRS-9020` otherwise), cannot be filtered on (`DRS-9020`), and a date masked for the reader is `403 DRS-9021`.
 * Masks and row rules apply as for any measure; the as-of date is part of the cached result's key, so a new date is a new answer.
+
+### 4.3 Window functions
+
+A window function is worked out **over the rows the query returns**, after the reader's row rules, the filters and the grouping, so a rank is a rank among the rows this reader may see and a masked column never decides a position. They are DuckDB window SQL; the numbers in them are checked whole numbers, never text from the query.
+
+| Function | Meaning |
+|---|---|
+| `lag(agg, n, order [, partition...])` / `lead(...)` | the aggregate of the row `n` rows **before** / **after** in `order` (empty at the edge); `n` is 1 to 1000 |
+| `moving_avg(agg, n, order [, partition...])`, `moving_sum`, `moving_min`, `moving_max` | the average, sum, minimum or maximum of the aggregate over this row and the `n - 1` before it |
+| `cumulative(agg, date)` | a running total (the same as `running`, 4.1) |
+| `rank(agg ['asc'\|'desc' [, partition...]])`, `dense_rank(...)`, `percent_rank(...)` | the position of the row by the aggregate (default descending); `rank` leaves gaps after a tie, `dense_rank` does not, `percent_rank` is 0 to 1 |
+
+`agg` is an aggregate expression (`sum(trades.mtm)`, `ratio(...)`, `count(trades)`). `order` is a **column** of the dataset (`trades.tradeDate`) and must be a **field of the visual** (its axis), as for `running`; the window runs along its finest part (`trades.tradeDate.month` before `trades.tradeDate`). Without partition columns the window **restarts for each combination of the visual's other fields**; with them (`lag(sum(trades.mtm), 1, trades.tradeDate, trades.desk)`) it restarts by those fields, which must be fields of the visual too. `rank` with no partition ranks all rows.
+
+```yaml
+measures:
+  MTM rank:          { expr: "rank(sum(trades.mtm))" }
+  MTM 3-day average: { expr: "moving_avg(sum(trades.mtm), 3, trades.tradeDate)", format: signed0 }
+  Change on prior:   { expr: "sum(trades.mtm) - lag(sum(trades.mtm), 1, trades.tradeDate)" }
+```
+
+Real answers on the Trading and counterparty risk sample (`fields: [trades.desk]`, `measures: [MTM, MTM rank]`, five rows; the rank is answered from the stored rollup), and by trade date with the three-row average, newest five rows (`orderBy` descending, the window itself runs in date order):
+
+```text
+DESK-RATES   161766771.0  1       SELECT "trades"."desk" AS "trades.desk", (sum(m0)) AS "MTM", (rank() OVER (ORDER BY sum(m0) DESC NULLS LAST)) AS "MTM rank" FROM (...) AS "trades" GROUP BY "trades"."desk" ORDER BY "MTM rank" ASC NULLS LAST LIMIT 5
+DESK-COMM     16954390.0  2
+DESK-STRUCT   15784130.0  3
+DESK-MM        9453242.0  4
+DESK-CREDIT    7948456.0  5
+
+2026-09-25    5276528.0   167656.67      SELECT "trades"."tradeDate" AS "trades.tradeDate", (sum("trades"."mtm")) AS "MTM",
+2026-09-24     193584.0  -886751.67             (avg(sum("trades"."mtm")) OVER (ORDER BY "trades"."tradeDate" ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)) AS "MTM 3-day average"
+2026-09-23   -4967142.0  -977848.67      FROM (...) AS "trades" GROUP BY "trades"."tradeDate" ORDER BY "trades.tradeDate" DESC NULLS LAST LIMIT 5
+2026-09-22    2113303.0  12167064.33
+2026-09-21     -79707.0  11413476.33
+```
+
+**What they refuse.** The shape is checked when the dataset is read (`DRS-9011` for a wrong number of arguments, an `n` that is not a whole number from 1 to 1000, an `agg` that does not aggregate, another window, time function or `[Measure]` inside `agg`, an order or partition that is not a column). A window needs its order column as a **field** of the visual (`422 DRS-9020` otherwise); it cannot be **filtered on** (`DRS-9020`: filter the rows, then rank); a masked order column makes the whole measure read as masked; a **rollup** can hold only a `rank` with no direction or partition (anything else runs on the columns layer); and it cannot be asked together with the measures of another fact table (3.1).
+
+A "row" is a row of the visual, not a calendar day: `lag(..., 1, trades.tradeDate)` is the previous *date that has trades* (a weekend with none is not a row), and a moving average of three is three rows. Ask for the dates you want (a date dimension, or a filter) when the gaps matter.
 
 ### 4.2 Python measures (phase 6)
 
@@ -364,7 +443,9 @@ GET  /api/v1/bi/datasets/file:dataset:nv-demo/refresh          (the demo lake ho
 **`after-load`.** A data-load signal with `status: ready` for a kind a table reads starts the refresh `drishti.bi.refresh.load-delay` (2 s) later, for the date loaded; the dataset then has the *tracked and retried* version of the rebuild, so the plain on-load rebuild
 (background, untracked) leaves it alone. A schedule for one kind (`after-load trade`) ignores the others.
 
-**The state is in memory.** After a restart a job shows `never` until it runs, and its next time is worked out again from the clock. Settings: `drishti.bi.refresh.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibirefresh--scheduled-dataset-refresh)). The refresh is audited (`bi-dataset-refresh`).
+**The state survives a restart.** The state and the last `drishti.bi.refresh.history` (25) runs of every job are kept in `<BI store>/refresh/state.json` (written after each run and each planned time, atomically). After a restart the page shows the same last run, status, rows, duration and history; a run that was in progress when the server stopped shows as `interrupted`; a time that passed while the server was down is run once at start-up (`trigger: schedule (catch-up)`). A file that cannot be read is ignored (a warning in the log) and the jobs start as `never`.
+
+**Refresh now, last and next run, history.** The **Refresh** section has a **Refresh now** button for people with the `bi-author` power (it is `POST /datasets/{id}/refresh`, audited as `bi-dataset-refresh`; the page then asks for the state once a second until the run is no longer `running`), a line *Last refresh ... · Next ...* and **Recent refreshes**, newest first: when, started by (`schedule`, `after-load trade`, `retry`, `manual (<person>)`), result, date, rows, time and the error of a failed run. `GET /datasets/{id}/refresh` carries the same in `dataset.history`. Settings: `drishti.bi.refresh.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibirefresh--scheduled-dataset-refresh)). The refresh is audited (`bi-dataset-refresh`).
 No new write endpoint: `POST .../refresh` is the one that existed and needs `bi-author` (and, for a personal token, the `bi:write` scope).
 
 ### 7.1 Live tables (phase 5)
@@ -393,8 +474,30 @@ The table follows at most `drishti.bi.live.follow-max` (2,000) entities and says
 and the table's state says `pushes: false`.
 
 **Incremental, and what that means.** The *table* is maintained incrementally: a batch of changes (merged per entity, every `drishti.bi.live.batch`, 100 ms) is written in **one transaction** with the retention, so a query never sees half a batch, and a row whose declared
-columns did not change does not move the table's counters (a source that republishes the same values costs nothing downstream). The *measures* are **recomputed** by the engine over the table on each query, as every measure is: with the table in memory that is a few
-milliseconds at 10,000 rows. The engine does **not** keep running totals by group that a change adjusts; that is not built (heavy continuous aggregation belongs in a producer, [LIVE_BI.md](../architecture/LIVE_BI.md)).
+columns did not change does not move the table's counters (a source that republishes the same values costs nothing downstream). The *measures* are **incremental too, for the rollups the dataset declares**, and recomputed otherwise (next paragraph).
+
+**Incremental aggregates by group.** A dataset's `rollups:` over a live table are kept **by group** as rows change: for each combination of the rollup's `by` columns and the business date, the engine holds the sums, counts, minimums and maximums its measures are made of, in a small table written in the **same transaction** as the batch. A row that arrives adds to its group; a row replaced, deleted or evicted first takes its old values out, so a **sum or count moves by the difference** (an average is a sum and a count) and nothing is recomputed. A **minimum or maximum** is incremental while values only join the group; when the row that held it leaves or changes, **that group alone** is read again from the table (inside the transaction). A query the rollup can answer (the same rules as a stored rollup: only its `by` columns, only measures made of its components) reads that table: `meta.layer` is `live` and `meta.rollup` names the rollup, and the reader's row rules and masks are applied on top, as ever.
+
+```yaml
+rollups:
+  - { name: byDeskBook, table: trade, by: [desk, book, productType, currency], measures: [Trades, Notional, MTM, PnL 1d, Worst trade, Best trade] }
+```
+
+The Live trading desk sample (`config/bi/datasets/live-trading.dataset.yaml`) declares that. A bar of `Notional`, `MTM` and `Worst trade` by desk, with the demo ticker running (real answer, `?explain=true`), reads 90 trades for `DESK-COMM` from the kept groups, not from the trades:
+
+```text
+SELECT "trade"."desk" AS "trade.desk", (CAST(coalesce(sum(m0), 0) AS BIGINT)) AS "Trades", (sum(m1)) AS "Notional", (sum(m2)) AS "MTM", (min(m4)) AS "Worst trade"
+FROM (SELECT * FROM live_1_agg0) AS "trade" GROUP BY "trade"."desk" ORDER BY "trade.desk" ASC LIMIT 3
+DESK-COMM   90   11359000000.0   16954390.0   -3307013.0         layer: live   rollup: byDeskBook
+```
+
+and the dataset's `layers[].live.aggregates` says how it is going (after about a minute of ticks over 750 trades: 572 groups, 5,788 rows moved by difference, 1,826 groups whose minimum or maximum was read again because the row that held it changed):
+
+```json
+{"rollup": "byDeskBook", "groups": 572, "incremental": 5788, "recomputedGroups": 1826}
+```
+
+**Recomputed instead** (the fallback, and always correct): a measure that is not a plain stored aggregate (`sum(trade.mtm, trade.mtm < 0)` has a condition inside; `percentile`, `distinct`, `ratio` of an expression), a rollup grouped by a calculated column, a query the rollup cannot answer (a column outside its `by`), `layer: columns` asked for, and every table when `drishti.bi.live.incremental-aggregates` is `false`. The tests compare the two for sums, counts, averages, minimums and maximums through inserts, replacements, moves between groups, deletions and eviction. Sums are floating-point: a long run of additions and subtractions can differ from a fresh sum in the last digits (never in what a card shows).
 
 **Retention.** `live: { rows, age }` (both optional). `rows` bounds the table: past it the rows changed longest ago go first (`drishti.bi.live.max-rows`, 50,000, is the ceiling whatever a dataset asks). `age` drops rows that have not changed for that long (`90s`, `15m`, `2h`,
 `1d` or ISO `PT15M`); it is applied with every batch and on every resync, so a quiet table forgets too. Whatever leaves (evicted, or deleted by the source) starts a new **epoch** of the table; a client that holds rows (a Perspective grid) reads them again.
@@ -434,6 +537,23 @@ starts-with is-null not-null`; a filter whose field is a measure name filters th
 `orderBy`, `limit`, `layer` (`auto`, `columns`, `rollup`). Every name is checked against the model and quoted; **every value is a bound parameter**; a value of the wrong type for its column is refused
 (`DRS-9020`), never cast into SQL. Limits and their codes are in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibiquery--the-dataset-query-engine-phase-2).
 
+### 8.1 Expected values: `tests:`
+
+A dataset may declare what a number should be. **Check** (the dataset page's *Expected values* section, or `POST /api/v1/bi/items/{id}/tests`) runs the tests, and **publishing is refused while one fails** (`409 DRS-9043`).
+
+```yaml
+tests:
+  - name: The book holds 750 trades
+    measure: Trades                       # a measure of the dataset (a Python measure cannot be checked)
+    expect: 750                           # a number, a range { min: 745, max: 755 } or [745, 755]
+  - { name: Rates desk, measure: MTM, by: [trades.desk], row: { trades.desk: DESK-RATES }, expect: 161766771, tolerance: 0.5% }
+  - { name: USD only, measure: Notional, filters: [{ field: trades.currency, op: eq, values: [USD] }], date: 2026-10-09, expect: { min: 1000000 } }
+```
+
+`by` groups the answer and `row` picks one row of it by the values of its fields (without `row` the answer must be exactly one row); `filters` are the form of a report filter (`field`, `op`, `values`); `date` is the business date (default the latest); `tolerance` is an amount (`0.01`) or a percentage (`'0.5%'`) and widens a number or the ends of a range. `role` runs the test as a role. Each test comes back as `pass`, `fail` (with the figure found) or `error` (it could not run, and why: a masked figure, an answer of several rows, a role you do not hold). The same list is read by reports (REPORTS.md section 14), where a test may also name a visual.
+
+![The Expected values section: two tests pass, one fails with the figure found](../tutorials/img/t11/16-tests.jpg)
+
 ## 9. Problems and DRS codes
 
 Validation never throws: it returns every problem with its code and the path of the key (`POST /api/v1/bi/datasets/validate`, the dataset page, and the check on publish, which refuses an invalid dataset).
@@ -443,7 +563,7 @@ Validation never throws: it returns every problem with its code and the path of 
 | `DRS-9010` | the YAML or a structure is not valid (unknown type, mode or cardinality, a bad name, a missing `source.kind`, a `refresh` schedule the server cannot read) |
 | `DRS-9011` | an expression does not parse, names something the model lacks, misuses an aggregate, uses an unknown function, refers to measures in a circle |
 | `DRS-9012` | a relationship, hierarchy, masked column, row rule or rollup points at a table or column that does not exist (or a rollup holds a measure it cannot) |
-| `DRS-9013` | a reserved feature (the window functions `lag` and `rank`) or a Python measure named in a query: parsed, **not built** for SQL (a python visual shows a Python measure: 4.2). Time intelligence (`ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year`, `running`) is built (4.1): a wrong shape is `DRS-9011`, a rollup listing one `DRS-9012` |
+| `DRS-9013` | a Python measure named in a query: **not built** for SQL (a python visual shows a Python measure: 4.2). Time intelligence (4.1) and the window functions (4.3) are built: a wrong shape is `DRS-9011`, a rollup listing a time measure `DRS-9012` |
 | `DRS-9014` | a composed dataset names a source, column, measure or join key that does not exist, joins keys of different types, or leaves a source unjoined (11.1) |
 | `DRS-9015` | a warning: a join repeats rows (many-to-many, or the unique source on the wrong end), so the measures of the repeated side add up too high (11.1) |
 | `DRS-9016` | a dataset reads itself, directly or through the datasets it is composed of or derived from (11.1) |
@@ -456,13 +576,15 @@ Validation never throws: it returns every problem with its code and the path of 
 | `DRS-9026` | a table's connector is not running, or is not a SQL store for a `direct` table |
 | `DRS-9027` | the engine failed on the compiled query (the message says how) |
 | `DRS-9050` | a live table cannot be kept: it is over an array (`each`) or its `live:` block is wrong (a query over a live table whose kind no running connector serves answers `DRS-9026`) |
+| `DRS-9043` | a dataset's (or report's) expected value fails or cannot run, so publishing is refused (HTTP 409); a bi-admin may publish with `force` (8.1) |
 | `DRS-9051` | too many live streams are open for the server or the person (`drishti.bi.live.max-streams`, `max-streams-per-user`), HTTP 429 |
 
 ## 10. What is not built
 
-Marked so nothing is mistaken for working: the **window functions** `lag` and `rank` (time intelligence and `running` are built: 4.1); a Python measure **inside a query** (a python visual runs it: 4.2);
-the **state of a refresh across a restart** (it is in memory: 7.2); a refresh of **an earlier date** than the current business date (a schedule refreshes today; a load refreshes the date it names); **queries whose measures aggregate several unrelated fact tables**;
-**filter direction `both`** and **many-to-many** semantics, and **inactive relationships used by a measure**; **running totals by group that a change adjusts** (live tables are maintained incrementally, measures are recomputed over them: 7.1), **history of a live table** (it holds current state with retention, not every update), **live tables over arrays** (`each`), **live tables in `direct` queries**;
+Marked so nothing is mistaken for working: a Python measure **inside a query** (a python visual runs it: 4.2);
+a refresh of **an earlier date** than the current business date (a schedule refreshes today; a load refreshes the date it names); a **measure that mixes two unrelated fact tables** in one expression (several facts in one query are built: 3.1);
+a window function **in a filter**, with the measures of another fact, or **inside a rollup** other than a plain `rank` (4.3);
+**filter direction `both`** and **many-to-many** semantics, and **inactive relationships used by a measure**; **incremental groups for a measure that is not a plain sum, count, minimum or maximum of a stored column** (it is recomputed over the live rows: 7.1), **history of a live table** (it holds current state with retention, not every update), **live tables over arrays** (`each`), **live tables in `direct` queries**;
 the **BI store as a configured connector** (a folder today; S3 by mounting it); **other engines** than DuckDB (the interface exists); **Delta native deletes/updates** are honoured only as far as the Delta connector
 honours them (the engine reads through the connector, not the files); **classification tags** and **per-entry export rules**. (Lineage and impact analysis are phase 4: [BI_GOVERNANCE.md](BI_GOVERNANCE.md).) Reports, the designer and the Model view (a dataset's tables and relationships as a diagram, with the `layout:` key) are built in phase 3: [REPORTS.md](REPORTS.md), [BI_GUIDE.md](BI_GUIDE.md) sections 14 to 16.
 

@@ -34,7 +34,8 @@ About 40 minutes.
 - how to subscribe a person to a whole report, a page or one visual, in HTML, PDF or Excel, and why each recipient gets their own copy;
 - what **Run now** says with no SMTP host (`no SMTP host: set spring.mail.host`) and how to configure mail so it sends;
 - how to put an **alert** on a number, the difference between *armed* and *active*, and where the firing lands (inbox, email);
-- how to export a report to **PDF, PNG, Excel and CSV**, a whole page or one visual.
+- how to export a report to **PDF, PNG, Excel and CSV**, a whole page or one visual;
+- how to say what a number should be (`tests:`), run it as a role, and why a failing test stops a publish.
 
 ## Step 1 · A dataset that refreshes itself
 
@@ -67,7 +68,9 @@ $ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: ap
 
 ![The Refresh section after a refresh: status ok, the last run, and a note the engine left](img/t11/02-refresh-now.jpg)
 
-You should see the status `ok`, the time of the last run and a note. (This one says the demo connector reads the trade documents one by one instead of scanning columns, which is slower on a big table and fine on the demo; the refresh worked.) A refresh that fails is
+You should see the status `ok`, the time of the last run and a note, and above the table the line *Last refresh ... · Next ...*, the **Refresh now** button (for people with the BI author power: it asks for the refresh, then for its state until it is done, and says *Refreshed 750 rows in 319 ms*) and **Recent refreshes**: every run, newest first, with who or what started it (`schedule`, `after-load trade`, `retry`, `manual (drishti-dev-admin)`), the rows, the time and any error. The history and the state are kept in the BI store, so they are still there after a restart (a run the restart interrupted shows as `interrupted`).
+
+The status also carries a note. (This one says the demo connector reads the trade documents one by one instead of scanning columns, which is slower on a big table and fine on the demo; the refresh worked.) A refresh that fails is
 **retried** with the shared retry policy (5 s, doubling, up to 5 minutes; after four tries it is `failed` until its next time), and the dataset page says so.
 
 ## Step 2 · Subscribe a colleague to a report
@@ -229,6 +232,27 @@ DESK-INFL,-47932696
 ```
 
 You should see a header row and one line per desk. Every export carries your **business date and slicer choices**, is built as you (masked fields stay masked), and is audited; limits (rows per sheet, file size, time) are settings of `drishti.distribution.export.*`. [DISTRIBUTION.md](../guides/DISTRIBUTION.md) has them.
+
+## Step 7 · Say what a number should be
+
+A report or a dataset may declare the numbers it must show, as `tests:`. Add this to a copy of the dataset (the tutorial's file, [data/trades-daily.dataset.yaml](data/trades-daily.dataset.yaml), is enough; the demo book holds 750 trades):
+
+```yaml
+tests:
+  - { name: The book holds 750 trades, measure: Trades, expect: 750 }
+  - { name: Trades within a range, measure: Trades, expect: { min: 745, max: 755 } }
+  - { name: Close to 100 trades, measure: Trades, expect: 100, tolerance: 1% }
+```
+
+Save it, open the dataset and scroll to **Expected values**: choose who to **Run as** (yourself, or a role you hold) and press **Run the tests**:
+
+![Expected values: two tests pass, the third fails with "expected 100 +- 1%, got 750"](img/t11/16-tests.jpg)
+
+You should see two `pass` and one `fail` that says what it expected and what it found. The designer's **Check** shows the same list for a report's tests. Now press **Publish** on the item's page:
+
+![The publish refused: DRS-9043 names the failing test, the figure expected and the figure found](img/t11/17-publish-refused.jpg)
+
+You should see `DRS-9043 'Trades with expected values' cannot be published: 1 of its tests fails (Close to 100 trades: expected 100 +- 1%, got 750).` Mend the expectation (or the data) and publish again; a `bi-admin` may publish anyway with `force`, and the audit log says so. The same words work in a report, where a test can also name a visual (`visual: trades`). [REPORTS.md section 17](../guides/REPORTS.md#17-expected-values-tests).
 
 ## Next steps
 

@@ -281,3 +281,91 @@ def two_datasets(c: Ctx):
     c.page.wait_for_timeout(1500)
     c.page.evaluate("window.scrollTo(0, 0)")
     c.save("30-sector-chosen.jpg")
+
+
+RELATIVE = """rachana: 1
+report: relative-dates
+dates: { from: 2026-10-07, to: 2026-10-08 }
+title: Relative dates
+dataset: trades-basic
+pages:
+  - id: main
+    title: Main
+    visuals:
+      - { id: when, type: slicer, title: When, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { field: [trade.tradeDate] }, format: { mode: relative-date, default: last-30-days } }
+      - { id: count, type: card, title: Trades, at: { x: 4, y: 0, w: 4, h: 3 }, wells: { values: [Trades] } }
+      - { id: mtm, type: card, title: Mark to market, at: { x: 8, y: 0, w: 4, h: 3 }, wells: { values: [MTM] } }
+      - { id: desk, type: bar, title: MTM by desk, at: { x: 0, y: 3, w: 12, h: 6 }, wells: { axis: [trade.desk], values: [MTM] } }
+"""
+
+
+@shot("31-relative-date.jpg")
+def relative_date(c: Ctx):
+    """A relative-date slicer: its default applies until a name is chosen; the server works the dates out (here four weeks ending 8 October)."""
+    login(c, height=900)
+    clean_items(c, "Relative dates")
+    made = bi(c, "POST", "/workspaces/me/items", {"kind": "report", "title": "Relative dates", "body": RELATIVE})
+    print("relative-date report:", made.get("id"), made.get("problems"))
+    print("latest trade dates:", bi(c, "POST", "/datasets/file:dataset:trades-basic/query", {"fields": ["trade.tradeDate"], "orderBy": [{"by": "trade.tradeDate", "desc": True}], "limit": 3}).get("rows"))
+    open_report(c, made["id"], height=620)
+    c.page.select_option("[data-relative]", "last-4-weeks")
+    c.page.wait_for_timeout(600)
+    settled(c.page)
+    c.page.wait_for_timeout(800)
+    c.save("31-relative-date.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 560})
+    clean_items(c, "Relative dates")
+
+
+@shot("32-entity-view.jpg")
+def entity_view(c: Ctx):
+    """An entity view beside a bar: click a counterparty and its Drishti view opens inline, as the person looking."""
+    login(c, height=900)
+    open_report(c, "file:report:counterparty-risk", "lookup", height=760)
+    first = c.page.evaluate("""() => { const o = echarts.getInstanceByDom(document.querySelector('[data-visual="ids"] .bi-chart')).getOption();
+        return (o.yAxis[0].type === 'category' ? o.yAxis[0].data : o.xAxis[0].data)[0]; }""")
+    click_mark(c.page, "ids", first)
+    c.page.wait_for_selector(".bi-entity-frame", timeout=30000)
+    c.page.wait_for_timeout(4000)
+    c.save("32-entity-view.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 744})
+
+
+TABLET = """rachana: 1
+report: tablet-demo
+title: Tablet demo
+dataset: trades-basic
+pages:
+  - id: main
+    title: Main
+    visuals:
+      - { id: trades, type: card, title: Trades, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }
+      - { id: mtm, type: card, title: Mark to market, at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [MTM] } }
+      - { id: notional, type: card, title: Notional, at: { x: 6, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }
+      - { id: desk, type: bar, title: MTM by desk, at: { x: 0, y: 2, w: 8, h: 6 }, wells: { axis: [trade.desk], values: [MTM] } }
+      - { id: rows, type: table, title: Desks, at: { x: 8, y: 2, w: 4, h: 6 }, wells: { columns: [trade.desk, Trades, MTM] } }
+layouts:
+  tablet:
+    main:
+      order: [desk, trades, mtm, notional, rows]
+      wide: [desk, rows]
+      span: { desk: 5, rows: 4 }
+"""
+
+
+@shot("33-tablet-tab.jpg", also=("34-tablet-view.jpg",))
+def tablet(c: Ctx):
+    """The designer's Tablet tab (order, Wide, rows) and the report on an 820 px screen: two columns, the bar and the table across."""
+    login(c, height=900)
+    clean_items(c, "Tablet demo")
+    made = bi(c, "POST", "/workspaces/me/items", {"kind": "report", "title": "Tablet demo", "body": TABLET})
+    print("tablet report:", made.get("id"), made.get("problems"))
+    c.page.set_viewport_size({"width": 1280, "height": 900})
+    c.page.goto(c.base + "/bi/design/" + made["id"])
+    c.page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
+    c.page.click('[data-tab="tablet"]')
+    c.page.wait_for_selector("[data-tablet-list] li")
+    c.page.wait_for_timeout(600)
+    c.save("33-tablet-tab.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 760})
+    open_report(c, made["id"], width=820, height=900)
+    c.page.wait_for_timeout(800)
+    c.save("34-tablet-view.jpg", clip={"x": 0, "y": 0, "width": 820, "height": 900})
+    clean_items(c, "Tablet demo")

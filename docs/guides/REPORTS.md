@@ -38,9 +38,10 @@ Three sample reports ship in `config/bi/reports/` (and a fourth for Python, **De
 11. [Settings](#11-settings)
 12. [Built and not built](#12-built-and-not-built)
 13. [Live visuals and Perspective (phase 5)](#13-live-visuals-and-perspective-phase-5)
-14. [Phone layouts](#14-phone-layouts)
+14. [Phone and tablet layouts](#14-phone-and-tablet-layouts)
 15. [A report in another web application](#15-a-report-in-another-web-application)
 16. [Reports over several datasets](#16-reports-over-several-datasets)
+17. [Expected values: `tests:`](#17-expected-values-tests)
 
 ## 1. Where a report lives
 
@@ -77,9 +78,11 @@ pages:
         format: { conditional: [{ measure: MTM, op: lt, value: 0, colour: "#b3261e" }] }
 bookmarks:
   - { name: FX desk only, page: overview, filters: [{ field: trade.desk, op: in, values: [DESK-FX] }] }
-layouts:                       # optional: how a page is arranged on a phone (section 14)
+layouts:                       # optional: how a page is arranged on a phone and on a tablet (section 14)
   phone:
     overview: { order: [mtm], span: { mtm: 2 } }
+tests:                         # optional: what a number should be (section 17)
+  - { name: Trades is not empty, measure: Trades, expect: { min: 1 } }
 ```
 
 | Key | Meaning |
@@ -92,7 +95,8 @@ layouts:                       # optional: how a page is arranged on a phone (se
 | `theme` | `palette`: `default` (the console's colours, following light, dark and high contrast), `colour-blind` (Okabe-Ito) or `mono`; optional `background` (a `#rrggbb`, used by the contrast check) |
 | `dates` | `from` and `to` (`yyyy-mm-dd`, inclusive) for every query; a person can pick a business date in the viewer's toolbar instead |
 | `filters`, `bookmarks`, `pages` | sections 4, 8 and below |
-| `layouts` | `phone: { <page id>: { order, hide, span } }`: how a page is arranged at 640 px and narrower. Without it a phone stacks the grid in reading order (section 14) |
+| `layouts` | `phone: { <page id>: { order, hide, span } }` (640 px and narrower) and `tablet: { <page id>: { order, hide, span, wide } }` (1024 px and narrower): how a page is arranged. Without them a phone stacks the grid in reading order and a tablet keeps the grid (section 14) |
+| `tests` | expected values Check and publishing run (section 17) |
 
 A **page** has `id` (letters, digits, hyphen, underscore, up to 40; made from the title when missing), `title`, `filters`, `visuals`, and optionally `drillthrough: { fields: [table.column] }`, which makes it a
 **drill-through target** (section 8): it is left out of the page tabs and opened from a visual. At most 30 pages, 60 visuals a page.
@@ -150,7 +154,9 @@ A **well** holds fields (`table.column`, or `table.column.year|quarter|month|wee
 | `python` | python | `columns` fields (any number), `values` one Python measure of the dataset | what a Python item returns for the rows this person may see: bars of a Python measure, or a chart or image (section 3.3) |
 
 
-Reserved and **refused with `DRS-9033`** (not built): `entity-view`, `shape`.
+| `entity-view` | entity | `key` (1, required): a field holding an entity's id | the Drishti view of the entity whose key is selected on the page (section 3.4) |
+
+Reserved and **refused with `DRS-9033`** (not built): `shape`.
 
 A measure in a field well, a field in a measure well, an unknown well, a required well left empty or one over its number of items is `DRS-9032`; a name the dataset does not have is `DRS-9031`. A map with neither a `location` nor a `latitude` and `longitude`, or with both,
 or with a latitude without a longitude, or with a latitude that is not a number, is `DRS-9032`, and so is a `histogram` with `bins` outside 2 to 100.
@@ -222,6 +228,22 @@ The region files are made by `tools/maps/build_regions.py` (download once, simpl
 the console from its static folder and, for `<drishti-report>` and `<drishti-panel>`, from `/embed/v1/world-countries.json`, `/embed/v1/world-points.json` and `/embed/v1/regions/<ISO3>.json`. Natural Earth is public domain: [VENDOR.md](../../drishti-console/web/static/vendor/VENDOR.md), [THIRD-PARTY-NOTICES.md](../../THIRD-PARTY-NOTICES.md).
 The same shapes draw the Sutra `map` panel ([PANELS.md](PANELS.md#map)).
 
+### 3.4 The entity view
+
+`type: entity-view` shows **a Drishti view (a Sutra) inline**, for the row the person picks: click a counterparty in a bar and its netting-set view opens beside it.
+
+```yaml
+- { id: ids, type: bar, title: Exposure by counterparty (click one), at: { x: 0, y: 0, w: 5, h: 10 }, wells: { axis: [counterparties.id], values: [Exposure (EE peak)] },
+    filters: [{ field: counterparties.id, op: top, n: 10, by: Exposure (EE peak) }] }
+- { id: counterparty-view, type: entity-view, title: The counterparty's view, at: { x: 5, y: 0, w: 7, h: 10 }, wells: { key: [counterparties.id] } }
+```
+
+The `key` well names the field that holds the entity's id (a table's `id` or key column; the table's pack kind says which view). When a mark of **another visual** selects exactly one value of that field, the visual shows the console's view of that entity (`/v/<kind>/<id>?embed=1`, in a frame of the visual's size); until then it says *Select a counterparty in another visual to see its counterparty here*. `format: { kind: counterparty }` names the kind when the field's table does not. The sample **Counterparty risk** has the page *Counterparty lookup*.
+
+![The Counterparty lookup page: a bar of the ten largest counterparties, one selected, and its Drishti view beside it with the netting sets](../tutorials/img/t10/32-entity-view.jpg)
+
+**Whose view it is.** The frame is the view page built **for the person looking**: their masks, row rules and rights apply, not the report author's, and a kind they may not open is refused in the frame as it would be in the terminal. The report's dataset only supplies the id. The visual asks the dataset no query of its own (so it has no *Alert me*, *Show as a table* or export; an export of the page leaves it out), and it is a visual of the **viewer**: the designer's canvas and an embedded `<drishti-report>` (which has no console session to build the view with) show a note of what it will do. Select by **id**, not by a name that may be masked: a bar by `counterparties.name` selects a name, which is not a key.
+
 ### 3.2 True totals
 
 A total of a measure that adds up (a `sum` or a `count`) is the sum of the figures shown. A total of one that does not (a ratio, an average, a distinct count, a percentile, a minimum, a maximum, a time-intelligence measure) is **not** the sum or the average of
@@ -287,7 +309,7 @@ Rank by a column that is not masked (`counterparties.id`, not the masked name): 
 
 A `slicer` visual lists the values of its field (from the dataset, under the reader's rows and masks) and filters the visuals in its **scope**.
 
-* `format.mode: list` (the default: a checkbox list with a search box), `dropdown` (the shared multi-select) or `range` (two inputs, for a number or a date field). `relative-date` is reserved (`DRS-9033`).
+* `format.mode: list` (the default: a checkbox list with a search box), `dropdown` (the shared multi-select) or `range` (two inputs, for a number or a date field). `relative-date` is a choice of **dates relative to the report's date** (section 6.1).
 * `format.scope: page` (the default) filters this page; `report` filters every page, so a choice made on one page holds on the others.
 * A slicer never filters itself, and other slicers filter it. A visual a slicer cannot reach through the dataset's relationships answers `DRS-9020` and says so.
 
@@ -327,6 +349,31 @@ the filters in force are chips under it.
 * **Keys.** Tab moves through the visuals in reading order; in a chart the arrows move between marks and Enter selects; `Esc` clears; `t`, `r`, `d`, `u` as above; `?` lists them.
 * **A phone** (390 px) shows one column in reading order with 44 px targets and no sideways scroll.
 
+### 6.1 The relative-date slicer
+
+`format.mode: relative-date` on a slicer whose field is a **date or timestamp** column offers named windows instead of values, worked out **on the server** from the report's **as-of date** (the end of its `dates`, or the date picked in the toolbar, else the current business date) and the pack's **business-day calendar**; so the same name means the same dates on a screen, in an export and in a subscription.
+
+```yaml
+- { id: when, type: slicer, title: When, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { field: [trade.tradeDate] },
+    format: { mode: relative-date, default: last-30-days, options: [last-7-days, last-5-business-days, last-4-weeks, this-month, this-quarter, this-year, previous-month, all] } }
+```
+
+| Name | The window |
+|---|---|
+| `last-N-days` | the N calendar days ending on the as-of date (the as-of date counts as one) |
+| `last-N-business-days` | the N business days ending on the as-of date, or on the business day before it when that is a weekend or holiday; holidays are skipped, so it can reach back further than N days |
+| `last-N-weeks` | the 7 x N days ending on the as-of date |
+| `last-N-months` | from the day after the same date N months earlier, to the as-of date |
+| `this-week`, `this-month`, `this-quarter`, `this-year` | from the start of the period (a week starts on Monday) **to date** |
+| `previous-week`, `previous-month`, `previous-quarter`, `previous-year` | the whole period before the one the as-of date is in |
+| `all` | no restriction ("All dates") |
+
+N is 1 to 3,660. `default` applies until the person chooses (and in exports and subscriptions, which have no one choosing); choosing *All dates* switches it off. `options` lists the names offered (default: the sixteen in `RelativeDates.DEFAULT_OPTIONS`: `last-7-days`, `last-30-days`, `last-90-days`, `last-5-business-days`, `last-4-weeks`, `last-3-months`, `last-12-months`, `this-*`, `previous-*`, `all`). The window becomes a filter `field >= from` and `field < the day after to`, so it holds for a timestamp too. The state the viewer sends is `slicers: { when: { relative: "last-4-weeks" } }`; a name that is not one of the above is `DRS-9035`, a `default` or `options` that is not one is `DRS-9030`, a field that is not a date `DRS-9032`.
+
+![A relative-date slicer set to Last 4 weeks: a chip names it and the cards count 74 trades](../tutorials/img/t10/31-relative-date.jpg)
+
+(The report above has `dates: { from: 2026-10-07, to: 2026-10-08 }`, so the four weeks end on 8 October; the whole book is 750 trades.) Business-day windows follow the pack calendar: with USNY, 5 business days ending Tuesday 7 July 2026 start on Tuesday 30 June, because Friday 3 July (Independence Day observed) is skipped.
+
 **The designer** (`/bi/design/<draft>`) and the **Model view** (`/bi/m/<dataset>`) are described in [BI_GUIDE.md](BI_GUIDE.md) sections 15 and 16.
 
 ## 9. Checking a report: DRS-9030 to DRS-9035
@@ -339,7 +386,7 @@ YAML tab and Check button, and the viewer when a report cannot be drawn).
 | `DRS-9030` | the structure is wrong: not YAML, an unknown visual type, a bad `at`, a duplicate id, an operator that is not one, an image from another address | `pages[0].visuals[1].at: x is 0 to 11 and w is 1 to 12, and x + w is at most 12 ... this is x=8, w=6` |
 | `DRS-9031` | a name the dataset or the report lacks: a field, a measure, a hierarchy, a page, a bookmark, a slicer | `pages[0].visuals[0].wells.axis: table 'trade' has no column 'nope' (it has id, tradeId, desk, ...)` |
 | `DRS-9032` | a visual built wrongly: a measure in a field well, a field in a measure well, an unknown well, a required well empty, too many items | `...wells.values: 'trade.mtm' is a field; the values well takes measures (Notional, MTM, ...)` |
-| `DRS-9033` | reserved, not built: a visual type, the relative-date slicer | `...type: the visual 'map' is reserved and not built yet` |
+| `DRS-9033` | reserved, not built: a visual type (`shape`) | `...type: the visual 'map' is reserved and not built yet` |
 | `DRS-9034` | the dataset cannot be found or has errors, so the report cannot be drawn | `no dataset 'x' (a catalogue id, a file name such as trades-basic, or the dataset's name)` |
 | `DRS-9035` | a visual query names a page, a visual or a slicer the report lacks, or its state is not valid (a drill path past the last level, dates that are not dates) | `the hierarchy 'Desk and book' has 2 levels; there is nothing below trade.book` |
 
@@ -373,9 +420,9 @@ Built in phase 6 (section 3.3): the `python` visual, run on the server in a sand
 
 Built in phase 5 (section 13): visuals over live tables redraw in place with a live indicator, pause and resume, stale and disconnected states; the rolling chart; the Perspective grid and pivot; the sample live reports.
 
-Not built, and not faked: Perspective **charts** (the d3fc plugin) and the Perspective settings panel (the viewer's configuration is the YAML); a Perspective visual over **several tables**; a `perspective-*` visual in the designer's canvas (it shows a note: the designer's page has no WebAssembly); `entity-view` and `shape` visuals; a python visual on a **board**, in an **alert** or a **subscription** (section 3.3; [PYTHON_BI.md](PYTHON_BI.md) section 12); the relative-date slicer; a **tile** map or a map service (nothing is fetched from outside; the shapes are the vendored files), regions **below the first level** (counties inside a state), a
-shape-file import, a **choropleth by a field that is not a country code or name**; a histogram with bands of your own (equal-width only), a box plot of **summary** data you already have (it summarises the members the query returns); true totals for a **table's subtotals by group** (a table has one total row); the window functions `lag` and `rank` (the dataset refuses them); highlight for charts other than bar and column; capturing a bookmark's slicer choices from the page (they are
-written in the YAML); a phone layout is the only per-device layout (no tablet or large-screen variant); a *Check* that runs expected values on sample data; embedding is built for the report's visuals but not for its drill, alert and export chrome (section 15; export, subscriptions and alerts: [DISTRIBUTION.md](DISTRIBUTION.md)); Explore to visual (phase 9);
+Not built, and not faked: Perspective **charts** (the d3fc plugin) and the Perspective settings panel (the viewer's configuration is the YAML); a Perspective visual over **several tables**; a `perspective-*` visual in the designer's canvas (it shows a note: the designer's page has no WebAssembly); a `shape` visual; the **entity view in the designer's canvas and in an embedded element** (it shows a note; the viewer shows the view); a python visual on a **board**, in an **alert** or a **subscription** (section 3.3; [PYTHON_BI.md](PYTHON_BI.md) section 12); a **tile** map or a map service (nothing is fetched from outside; the shapes are the vendored files), regions **below the first level** (counties inside a state), a
+shape-file import, a **choropleth by a field that is not a country code or name**; a histogram with bands of your own (equal-width only), a box plot of **summary** data you already have (it summarises the members the query returns); true totals for a **table's subtotals by group** (a table has one total row); highlight for charts other than bar and column; capturing a bookmark's slicer choices from the page (they are
+written in the YAML); per-device layouts for a **large screen** (a phone and a tablet are built: section 14); embedding is built for the report's visuals but not for its drill, alert and export chrome (section 15; export, subscriptions and alerts: [DISTRIBUTION.md](DISTRIBUTION.md)); Explore to visual (phase 9);
 report-level security beyond the catalogue and the dataset's rules.
 
 ## 13. Live visuals and Perspective (phase 5)
@@ -458,7 +505,7 @@ rows:    ["BBG-60000001","DESK-FI","BOOK-FI-3","GOVT_BOND","CHF","Short","••
 * **Checks.** All the fields of a `perspective-*` visual must be columns **of one table** and not date parts; `format.aggregates` may name only columns of `values` and one of `sum avg count "distinct count" min max first last median dominant unique`; a pivot's `values` must hold a column (`DRS-9031`, `DRS-9032`). Without `title` or `alt` Check warns (`A11Y`).
 * **Not built:** Perspective charts (d3fc) and the settings panel; the viewer is configured by the YAML only. Rows are limited by `drishti.bi.report.perspective-rows` (20,000).
 
-## 14. Phone layouts
+## 14. Phone and tablet layouts
 
 *Built in phase 7 ([RUPAKA.md section 20.6, part 3](../architecture/RUPAKA.md#206-part-3-embedding-and-phone-layouts-as-built-phase-7-complete)).* A phone shows one column. Without anything declared it is the grid in **reading order** (top to bottom, then left to right), each visual at a height its type has by default,
 which is a good first answer. When the order is wrong for a small screen (the headline numbers first, the table last), a report may say how each page is arranged at **640 px and narrower**:
@@ -487,6 +534,26 @@ the undo history, *Back to automatic* removes the page's entry, and a visual or 
 ([tutorial 16](../tutorials/16-embed-drishti.md)).
 
 ![The designer's Phone tab](img/bi-elements/designer-phone-tab.png)
+
+### 14.1 A tablet
+
+A tablet (wider than a phone, **1024 px and narrower**) keeps the 12-column grid unless the report says otherwise. `layouts.tablet.<page id>` arranges the page in **two columns**: each visual takes half the width, and the ones listed in `wide` the whole width.
+
+```yaml
+layouts:
+  tablet:
+    main:
+      order: [desk, trades, mtm, notional, rows]    # first, in this order; the rest follow in reading order
+      wide: [desk, rows]                            # the whole width (the others take half)
+      span: { desk: 5, rows: 4 }                    # height in grid rows (1 to 40); left out: the visual's own height in the grid
+      hide: []                                      # not drawn on a tablet, and not queried
+```
+
+`order`, `hide` and `span` mean what they mean on a phone; `wide` is the tablet's own (on a phone it is ignored with a warning, `layouts.phone.<page>.wide`; an unknown device such as `watch` is ignored with a warning, a page or visual that does not exist is `DRS-9031`, a bad height `DRS-9030`). The viewer chooses by the **screen** (`max-width: 640px` is a phone, `max-width: 1024px` a tablet; a phone with only a tablet layout gets the automatic one-column layout, since half of a phone's width is too little), and `<drishti-report>` by the **element's own width** (the library is 1.3.0). The designer has a **Tablet** tab beside Phone: the visuals in tablet order with *Hide*, *Wide* and *Rows*, above a 768 px preview drawn to scale.
+
+![The designer's Tablet tab: five visuals in tablet order, the bar and the table ticked Wide](../tutorials/img/t10/33-tablet-tab.jpg)
+
+![The same report on an 820 px screen: the bar across the page, the cards in two columns beneath it](../tutorials/img/t10/34-tablet-view.jpg)
 
 ## 15. A report in another web application
 
@@ -537,3 +604,38 @@ POST /api/v1/bi/reports/file:report:pnl-vs-exposure/query?explain=true   {"page"
 **Everywhere else.** Alerts, subscriptions, exports, boards and the embedded report ask each visual through the same server code, so they work over several datasets; a Perspective visual shows the rows of one table of its dataset. Governance: **impact analysis** counts only what a report reads of the dataset being changed (a visual's own dataset, else the report's), so a change to `counterparty-exposure` is set against the visuals that read it; lineage shows the report below each dataset it reads. **The designer** has a **Dataset** field in a visual's Format tab (with the catalogue's datasets to choose from) and a **Links between datasets** box under Report; its Fields pane lists the report's own dataset, so the wells of a visual of another dataset are written in the YAML tab, where the Check button tells you if a name is wrong.
 
 Not built: a visual that reads **two datasets at once** (compose them: DATASETS.md section 11); links **with a transformation** (a code to a name); the designer's **Fields pane for another dataset** and drag-and-drop of its fields.
+
+## 17. Expected values: `tests:`
+
+A report (or a dataset: [DATASETS.md section 8.1](DATASETS.md#81-expected-values-tests)) may declare what its numbers should be. **Check** runs the tests and shows each as passed, failed or could-not-run; **publishing is refused while one fails** (`409 DRS-9043`) unless a `bi-admin` forces it (`force: true`, audited as `FORCED over N failing test(s)`).
+
+```yaml
+tests:
+  - { name: The card shows every trade, visual: trades, expect: 750 }                      # what a visual shows: its first measure, one row
+  - { name: Rates desk MTM, measure: MTM, by: [trade.desk], row: { trade.desk: DESK-RATES }, expect: 161766771, tolerance: 0.5% }
+  - { name: A bad day, measure: Trades, filters: [{ field: trade.desk, op: eq, values: [DESK-FX] }], date: 2026-10-09, expect: { min: 10, max: 90 }, role: desk-head }
+```
+
+| Key | Meaning |
+|---|---|
+| `visual` or `measure` | a visual of the report (asked as the viewer asks it: the page's own filters apply, then the test's), or a measure of the report's dataset (asked directly, grouped by `by`) |
+| `row`, `column` | pick one row of the answer by the values of its fields (without it the answer must be one row); the measure column to read (default: the visual's first measure) |
+| `filters`, `date` | extra conditions (`field`, `op`, `values`: the form of a report filter) and a business date |
+| `expect`, `tolerance` | a number, a range `{ min, max }` or `[low, high]`; an amount or a percentage (`'0.5%'`) that widens it |
+| `role` | run as this role (default: the one chosen in Check, else you) |
+
+**As a chosen role.** The figure a test finds is the figure a reader with that role's row rules and masks sees. Check offers **Run the tests as** *yourself* or a role you hold (a `bi-steward` may choose any); the report and dataset are loaded as you, only the query runs as the role. A role you do not hold makes each test `error` (`does not hold the role 'reader'`), never a figure. A figure masked for the role cannot be checked (`error`), and an answer of several rows needs a `row`.
+
+```text
+POST /api/v1/bi/items/bi-d73f79cdbc/tests     {"role": "writer"}
+{"item": "bi-d73f79cdbc", "kind": "report", "role": "writer", "total": 3, "passed": 2, "failed": 1, "errors": 0, "ok": false, "results": [
+  {"name": "card shows the count", "kind": "visual", "target": "n", "expect": "16", "actual": 16.0, "status": "pass", "message": "", "role": "writer"},
+  {"name": "card is wrong", "kind": "visual", "target": "n", "expect": "1", "actual": 16.0, "status": "fail", "message": "expected 1, got 16", "role": "writer"},
+  {"name": "measure through the report", "kind": "measure", "target": "N", "expect": "1 or more", "actual": 16.0, "status": "pass", "message": "", "role": "writer"}]}
+```
+
+The designer's **Check** runs the report's tests (of the text on the screen, saved or not) under *Expected values*, with the role box and *Run again*. The dataset page has *Expected values* with the same box. A report with a test that names a visual or measure it does not have is `DRS-9031` (`tests[0].visual`), a malformed one `DRS-9030`.
+
+![A publish refused while a test fails: DRS-9043 names the test, the figure it expected and the figure it found](../tutorials/img/t11/17-publish-refused.jpg)
+
+`drishti.bi.governance.refuse-failing-tests` (on) turns the publish gate off (a failing test then only shows in Check). A test that cannot run (a source down, a role the publisher lacks) counts as failing at publish. Exports and subscriptions do not run tests.

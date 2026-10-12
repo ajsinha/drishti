@@ -230,6 +230,27 @@ warnings: desk, counterparty, netting_set: the connector promotes no columns to 
 Inference matters for kinds with no declared link: for each text column of one table and each other table's ids it reports *"3 of 3 distinct values are ids of region"* (rate, count, cardinality, a few unmatched values) when the rate is at least
 `drishti.bi.query.infer-min-match` (0.8). It is profiling, not AI, and nothing is accepted on its own.
 
+## Rank desks and smooth a series with window functions
+
+Window measures are measures like the others. On `trading-risk` the sample has two (`MTM rank`, `MTM 3-day average`); write your own in a copy (see *Change a measure in a copy*):
+
+```yaml
+measures:
+  MTM rank:          { expr: "rank(sum(trades.mtm))" }                                       # 1 for the highest MTM among the rows you may see
+  MTM 3-day average: { expr: "moving_avg(sum(trades.mtm), 3, trades.tradeDate)" }            # this row and the two before it, along the date
+  Day on day:        { expr: "sum(trades.mtm) - lag(sum(trades.mtm), 1, trades.tradeDate)" }
+```
+
+Preview `fields: [trades.desk]`, `measures: [MTM, MTM rank]` (DESK-RATES comes back 1, DESK-COMM 2) and `fields: [trades.tradeDate]`, `measures: [MTM, MTM 3-day average]`. A window along a date needs that date as a **field** of the visual (its axis), and a measure that is a window cannot be filtered on. [DATASETS.md section 4.3](../guides/DATASETS.md#43-window-functions).
+
+## Show "last 30 days" and "this quarter to date"
+
+Add a slicer on a date field with `format: { mode: relative-date, default: last-30-days }` (REPORTS.md 6.1). The server works the dates out from the report's date and the business-day calendar, so `last-5-business-days` skips holidays and an export of the page says the same.
+
+## Say what a number should be
+
+Add `tests:` to a report or a dataset and press **Check** (REPORTS.md section 17): *The card shows 750 trades* passes, *close to 100* fails and says what was found, and the publish is refused until the expectation or the data is mended.
+
 ## On a phone
 
 The pages work at 390 px: the rail scrolls sideways, the form stacks, tables scroll inside their frame, targets are 44 px.

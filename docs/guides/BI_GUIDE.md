@@ -338,6 +338,12 @@ time intelligence in the measure language (`ytd`, `mtd`, `qtd`, `prior_period`, 
 country file: no tiles, no CDN), **funnel**, **histogram**, **box plot** and **bubble** in the visual catalogue, the designer, exports and `<drishti-report>`; and **true totals** for the measures of a matrix or table that do not add up, worked out by the engine
 ([REPORTS.md sections 3.1 and 3.2](REPORTS.md#31-the-map-funnel-histogram-box-plot-and-bubble)). Walk-through: [tutorial 10](../tutorials/10-first-bi-report.md); settings `drishti.bi.refresh.*` and `drishti.bi.report.distribution-rows` and `totals-max-rows`.
 
+**The long tail (wave A).** The measure language has **window functions** (`lag`, `lead`, `rank`, `dense_rank`, `percent_rank`, `moving_avg`, `moving_sum`, `moving_min`, `moving_max`, `cumulative`: [DATASETS.md section 4.3](DATASETS.md#43-window-functions)), badged in the Fields pane;
+a query may ask for measures of **several unrelated fact tables** at once (each aggregated alone at the shared fields, then joined, no fan-out: [DATASETS.md 3.1](DATASETS.md#31-several-unrelated-fact-tables-in-one-query)); the rollups of a **live table are kept by group** as rows change ([DATASETS.md 7.1](DATASETS.md#71-live-tables-phase-5));
+a dataset's **refresh state and history survive a restart** and its page has **Refresh now** ([7.2](DATASETS.md#72-scheduled-refresh)); a slicer can be **relative-date** (*Last 30 days*, *This quarter to date*, business-day aware: [REPORTS.md 6.1](REPORTS.md#61-the-relative-date-slicer));
+a report has **tablet layouts** beside the phone ones ([14.1](REPORTS.md#141-a-tablet)); reports and datasets declare **expected values** that Check runs as a chosen role and that stop a publish while they fail ([REPORTS.md 17](REPORTS.md#17-expected-values-tests)); an **entity view** shows a Drishti view inline for the selected key ([3.4](REPORTS.md#34-the-entity-view));
+and the sample *Region economics* drills from the world map to Australian and US regions (illustrative figures, labelled). Walk-throughs: [tutorials 10, 11 and 12](../tutorials/10-first-bi-report.md).
+
 **Several datasets.** Composed datasets (`from:` / `join:`), derived datasets made by a Python Transform, per-visual datasets and links in reports, several extracts in an Analyse notebook, impact and lineage across all of them (`DRS-9014` to `9017`, `9075`; [DATASETS.md section 11](DATASETS.md#11-composed-and-derived-datasets), [RUPAKA.md section 20.10](../architecture/RUPAKA.md)).
 
 **Not built (and not faked).** Everything of phases 8 and 9 and part of 6: the Python Source interface and a warm worker pool ([PYTHON_BI.md](PYTHON_BI.md) section 12); the rest of the analyst workbench (phase 9: DuckDB-Wasm in the page, Data, Notes, large extracts: [ANALYSE.md](ANALYSE.md) section 12); importing BI content by deploying a pack archive; *Analyse in BI* from a terminal view; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses; AI features (stage 2).
@@ -439,8 +445,8 @@ and the layer that answered (`columns`, `rollup`, `direct`, `live`); *masked* is
 
 * **Keys.** `Tab` walks the visuals in reading order (top to bottom, left to right); in a chart `Left` and `Right` move between marks and `Enter` selects; `Esc` clears; `t`, `r`, `d`, `u` (table, rows, drill down, up) act
   on the focused visual; `?` lists them.
-* **A phone** (390 px) shows one column in reading order, 44 px buttons and no sideways scroll; a report that declares `layouts.phone` for the page shows **its own arrangement** instead (the visuals in the order the author chose, some hidden, heights set), see section 15
-  and [REPORTS.md section 14](REPORTS.md#14-phone-layouts):
+* **A phone** (390 px) shows one column in reading order, 44 px buttons and no sideways scroll (a **tablet**, up to 1024 px, can have two columns with `layouts.tablet`: [REPORTS.md 14.1](REPORTS.md#141-a-tablet)); a report that declares `layouts.phone` for the page shows **its own arrangement** instead (the visuals in the order the author chose, some hidden, heights set), see section 15
+  and [REPORTS.md section 14](REPORTS.md#14-phone-and-tablet-layouts):
 
   ![A report on a phone](img/bi-reports/viewer-phone-390.png)
 
@@ -454,8 +460,9 @@ authors expect them: the canvas on the left, then **Filters**, **Visualizations*
 
 ![The designer, with a report of two cards, a bar, a line and a slicer](img/bi-reports/design-two-visuals.png)
 
+* **Tablet.** The **Tablet** tab beside Phone arranges the page for a tablet (1024 px and narrower): the same list with *Wide* (the whole width instead of half) above a 768 px preview; it writes `layouts.tablet`.
 * **Phone.** The **Phone** tab beside Canvas and YAML arranges the page being edited for a phone (640 px and narrower): the visuals in phone order (**drag** a row or use its arrows), a **Hide** box and a **Rows** height for each, and a **390 px preview** drawn to scale beside it. *Back to automatic*
-  removes the page's arrangement. It writes `layouts.phone` of the YAML ([REPORTS.md section 14](REPORTS.md#14-phone-layouts); walk-through: [tutorial 16](../tutorials/16-embed-drishti.md)).
+  removes the page's arrangement. It writes `layouts.phone` of the YAML ([REPORTS.md section 14](REPORTS.md#14-phone-and-tablet-layouts); walk-through: [tutorial 16](../tutorials/16-embed-drishti.md)).
 
   ![The Phone tab](img/bi-elements/designer-phone-tab.png)
 * **Fields.** The dataset's tables, their columns (a date opens into its parts: year, quarter, month, week, day), its measures and its hierarchies, with a search box. **Drag a field onto the canvas** and the best

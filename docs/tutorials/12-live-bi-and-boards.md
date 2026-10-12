@@ -102,6 +102,23 @@ $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" http://localhost:18480/api/v
 You should see `state: live`, **750 rows** from **750 entities** followed (`subscribed`), `pushes: true`, and a count of changes applied (99,736 here, 14 skipped because the value had not changed). A live table starts when it is first used and is closed after ten idle minutes. The queries are the ones of any dataset: a live table is just another
 layer that answers them.
 
+**Kept by group, not recomputed.** The dataset declares a rollup over the live table:
+
+```yaml
+rollups:
+  - { name: byDeskBook, table: trade, by: [desk, book, productType, currency], measures: [Trades, Notional, MTM, PnL 1d, Worst trade, Best trade] }
+```
+
+The engine keeps the sums, counts, minimums and maximums **by group** as each change arrives: a row that changes takes its old values out of its group and puts the new ones in (a sum moves by the difference; a minimum is read again for that one group only when the row that held it changed). A query the rollup can answer reads those few rows, not every trade. Ask the bar of a desk (`fields: [trade.desk]`, `measures: [Trades, Notional, MTM, Worst trade]`, with `?explain=true`):
+
+```text
+SELECT "trade"."desk" AS "trade.desk", (CAST(coalesce(sum(m0), 0) AS BIGINT)) AS "Trades", (sum(m1)) AS "Notional", (sum(m2)) AS "MTM", (min(m4)) AS "Worst trade"
+FROM (SELECT * FROM live_1_agg0) AS "trade" GROUP BY "trade"."desk" ORDER BY "trade.desk" ASC LIMIT 3
+DESK-COMM   90   11359000000.0   16954390.0   -3307013.0         layer: live   rollup: byDeskBook
+```
+
+You should see `layer: live` and `rollup: byDeskBook` in the answer's `meta`, and the FROM reads `live_1_agg0`, the kept groups. The dataset's layer line says how it is going: `{"rollup": "byDeskBook", "groups": 572, "incremental": 5788, "recomputedGroups": 1826}` after about a minute of ticks (572 groups; 5,788 rows moved by difference; 1,826 groups whose minimum or maximum was read again). The reader's row rules and masks still apply on top. A measure that is not a plain sum, count, minimum or maximum of a column (`Losses` has a condition inside) is computed over the rows as before; `drishti.bi.live.incremental-aggregates: false` turns this off. [DATASETS.md section 7.1](../guides/DATASETS.md#71-live-tables-phase-5).
+
 ## Step 3 · A report that follows it
 
 Open the report **Live trading desk** (**Catalogue**, or `BI live trading desk <GO>`).

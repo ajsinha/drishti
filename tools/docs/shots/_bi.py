@@ -61,7 +61,7 @@ def quiet_inbox(c: Ctx):
 def settled(page, timeout: int = 30000):
     """Every visual of a report has answered (no frame busy) and shows its rows-and-milliseconds line, or its error."""
     page.wait_for_function("() => !document.querySelector('.bi-vis-busy') && document.querySelectorAll('.bi-vis').length > 0 && "
-                           "[...document.querySelectorAll('.bi-vis:not(.bi-vis-text):not(.bi-vis-button):not(.bi-vis-image)')].every(v => v.querySelector('.bi-vis-ms') || v.classList.contains('bi-vis-failed'))",
+                           "[...document.querySelectorAll('.bi-vis:not(.bi-vis-text):not(.bi-vis-button):not(.bi-vis-image):not(.bi-vis-entity-view)')].every(v => v.querySelector('.bi-vis-ms') || v.classList.contains('bi-vis-failed'))",
                            timeout=timeout)
 
 

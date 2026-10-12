@@ -299,7 +299,7 @@ filter-changed rep {"page":"desk","slicers":{},"dates":null,"selections":[{"visu
 **Which reports a host may show.** The host application's **kinds and reports** list (Admin → Embedding): `report:file:report:live-trading-desk` allows one report, `report:*` every report; a host whose list holds only entity kinds may show none; an empty list means everything the user's roles open. Only a **published**
 report is embedded. A refusal is `DRS-8005` (`drishti:error`, `fatal: true`, the element shows the code).
 
-**On a phone.** The element measures **its own width**: at 640 px or narrower it draws the report's `layouts.phone` for the page when the report has one ([REPORTS.md section 14](REPORTS.md#14-phone-layouts)), else the automatic single column, and swaps back as it grows, with no reload. `drishti:page-changed` carries `phone: true` when the arranged page is on screen.
+**On a phone.** The element measures **its own width**: at 640 px or narrower it draws the report's `layouts.phone` for the page when the report has one ([REPORTS.md section 14](REPORTS.md#14-phone-and-tablet-layouts)), else the automatic single column, and swaps back as it grows, with no reload. `drishti:page-changed` carries `phone: true` when the arranged page is on screen.
 
 ![The report in a host's card at 390 px, with its phone layout](img/bi-elements/host-phone-390.png)
 
