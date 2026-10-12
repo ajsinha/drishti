@@ -1,3 +1,17 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
 """BI with AI in the console (docs/guides/BI_AI.md), over a stand-in server: the three hooks reach the server's /api/v1/bi/ai/* under the caller's identity and nothing else of
 ``ai`` does, the server's refusals (AI off DRS-4015, a policy refusal DRS-4018, an unusable draft DRS-4020) reach the page with their codes, the pages carry the script, and
 the script obeys the rules of the console (vendored, same-origin, no inline handler, no eval, no innerHTML)."""

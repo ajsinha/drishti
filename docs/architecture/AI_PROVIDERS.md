@@ -202,6 +202,13 @@ Point it at a model with `drishti.explain.ask.model: <provider>/<model>`. The or
 **deprecated but unchanged in behaviour**: they become provider `ask` (with the endpoint split into `base-url` and path), work even
 when `drishti.ai.enabled` is false, and log a warning at start. A provider file may not be named `ask` while they are set.
 
+### BI uses (stage 2 of Rūpaka)
+
+Three features use the layer through `LLMFactory.model(...)` ([section 10](#10-one-design-in-two-languages-the-sajhamcpserver-abstractions)): **`bi-draft`** (report from words), **`bi-ask`**
+(ask the data) and **`bi-explain`** (the narrative of "explain this number", only when `drishti.bi.ai.values` is `aggregates`). Each is a feature name for the policy (section 4), so masks,
+per-feature roles and limits, the cost limit and the audit row apply; each runs under the caller's identity and sends the dataset **model** (names, types, descriptions) and the person's words,
+never a row. Point them at a model with `drishti.bi.ai.model`. Details, settings, errors (`DRS-4020`: an answer that cannot be used) and tests: [BI_AI.md](../guides/BI_AI.md).
+
 ## 8. The console
 
 `drishti-console/core/ai/` mirrors the server with `typing.Protocol`s in `protocols.py` (`LlmProvider`, `ChatModel`, `EmbeddingModel`,

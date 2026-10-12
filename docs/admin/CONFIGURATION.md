@@ -1127,6 +1127,22 @@ Times are in `drishti.business-date.zone`, business days by `drishti.business-da
 | `max-attempts` | `4` | Tries for one scheduled refresh (the first included) before it is left `failed` until its next scheduled time (1 to 20). |
 | `load-delay` | `2s` | For `after-load`: how long after the data-load signal the refresh starts. |
 
+### `drishti.bi.ai` — BI with AI (stage 2)
+
+The three BI hooks on the AI layer ([BI_AI.md](../guides/BI_AI.md)). They also need `drishti.ai.enabled` (off by default) and a provider ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md));
+the policy's feature names are `bi-draft`, `bi-ask` and `bi-explain` (`drishti.ai.policy.features`, above).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `model` | blank | `provider/model` for the hooks; blank is `drishti.ai.default-model` |
+| `values` | `labels-only` | `labels-only`: the model sees names, types and descriptions only. `aggregates`: it may also word the reader's own masked aggregate results (sends their figures to the provider) |
+| `max-question-chars` | `600` | Longest question or description |
+| `max-tokens` | `2000` | Longest answer asked of the model |
+| `timeout-seconds` | `30` | One model call |
+| `ask-rows` | `200` | Most rows an Ask answer holds, and the most the model sees of them in `aggregates` mode |
+| `explain-dimensions` | `3` | Dimensions Explain breaks a number down by |
+| `explain-members` | `5` | Members listed per dimension |
+
 ### `drishti.bi.live` — streaming BI (phase 5)
 
 Live tables kept in memory by the engine and the streams that tell browsers they changed ([DATASETS.md](../guides/DATASETS.md#71-live-tables-phase-5), [REPORTS.md](../guides/REPORTS.md#13-live-visuals-and-perspective-phase-5), [BOARDS.md](../guides/BOARDS.md),

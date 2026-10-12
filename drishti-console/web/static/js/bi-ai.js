@@ -33,7 +33,7 @@
   function table(res) {
     const head = h('tr', {}, res.columns.map((c) => h('th', { scope: 'col', text: B.label ? B.label(c.name) : c.name })));
     const rows = res.rows.map((r) => h('tr', {}, r.map((v, i) => h('td', { class: typeof v === 'number' ? 'num' : '', text: B.fmt(v, res.columns[i].name, res.columns[i].masked) }))));
-    return h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl bi-ai-table' }, h('thead', {}, head), h('tbody', {}, rows)));
+    return h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl bi-ai-table', 'data-plain': '' }, h('thead', {}, head), h('tbody', {}, rows)));
   }
 
   function picture(res, kind) {
@@ -76,7 +76,7 @@
       if (!question) { return; }
       go.disabled = true;
       B.say(msg, 'Asking...');
-      B.api('POST', '/ai/ask', { report: canvas.getAttribute('data-item'), question }).then((res) => { B.say(msg, ''); showAnswer(out, res); })
+      B.enqueue(() => B.api('POST', '/ai/ask', { report: canvas.getAttribute('data-item'), question })).then((res) => { B.say(msg, ''); showAnswer(out, res); })
         .catch((err) => { B.clear(out); fail(msg, err); }).then(() => { go.disabled = false; });
     });
   }
@@ -108,7 +108,7 @@
       h('li', { text: 'Sources: ' + src })));
     res.breakdown.forEach((d) => {
       const rows = d.members.map((m) => h('tr', {}, h('td', { text: String(m.member) }), h('td', { class: 'num', text: B.fmt(m.value, res.measure, false) }), h('td', { class: 'num', text: m.share == null ? '' : m.share + '%' })));
-      b.appendChild(h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl', 'data-ai-breakdown': d.dimension }, h('caption', { text: 'By ' + B.label(d.dimension) }),
+      b.appendChild(h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl', 'data-plain': '', 'data-ai-breakdown': d.dimension }, h('caption', { text: 'By ' + B.label(d.dimension) }),
         h('thead', {}, h('tr', {}, h('th', { scope: 'col', text: B.label(d.dimension) }), h('th', { scope: 'col', text: res.measure }), h('th', { scope: 'col', text: 'Share' }))), h('tbody', {}, rows))));
     });
     if (res.narrative) { b.appendChild(h('p', { class: 'bi-ai-summary', 'data-ai-summary': '', text: res.narrative })); }
@@ -122,7 +122,7 @@
       const v = B.reportView;
       const measure = (spec.wells && spec.wells.values && spec.wells.values[0]) || '';
       btn.disabled = true;
-      B.api('POST', '/ai/explain', { report: canvas.getAttribute('data-item'), page: v.page(), visual: spec.id, measure, state: v.state() }).then(showExplain)
+      B.enqueue(() => B.api('POST', '/ai/explain', { report: canvas.getAttribute('data-item'), page: v.page(), visual: spec.id, measure, state: v.state() })).then(showExplain)
         .catch((e) => { const p = explainPanel(); B.clear(p.body).appendChild(h('p', { class: 'bi-bad', role: 'alert', text: (e.code ? e.code + ' ' : '') + (e.detail || e.message) })); p.hidden = false; })
         .then(() => { btn.disabled = false; });
     }, { 'data-act': 'explain', hidden: '' });

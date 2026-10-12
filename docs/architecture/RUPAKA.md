@@ -665,6 +665,8 @@ OpenAI-compatible endpoints, Anthropic, and on-premises models; configured by an
 > OpenAI-compatible endpoints, Anthropic, and a mock) with a matching `core/ai/` in the console, plus an MCP client
 > ([MCP_CLIENT.md](MCP_CLIENT.md)). "Ask about this page" already runs on it. The hooks in this table are stage 2 and build on that layer: a hook calls
 > the `LlmGateway` with its own feature name, so masking, audit, limits and "which roles may use which hook" come from the policy.
+> **Built (stage 2, first slice):** *report from words*, *ask the data* and *explain this number* (section 20.1, "Stage 2 as built"; [BI_AI.md](../guides/BI_AI.md)).
+> Narrative summaries, the designer copilot and the dataset helper are not built.
 Every feature below has a non-AI equivalent that works out of the box.
 
 | Hook | What it does | Guardrails | Without AI |
@@ -1048,6 +1050,25 @@ every report, dataset and Sutra is a schema-validated document (so a generated o
 change goes through drafts and review (so nothing generated is published without a person); queries carry the user's row
 rules and masks (so a prompt can only ever see what that user may see); and the designer edits a draft as a list of
 changes (so suggestions can arrive as diffs).
+
+#### Stage 2 as built (A2 report from words, A3 ask the data and explain this number)
+
+Reference: [BI_AI.md](../guides/BI_AI.md); the layer under it: [AI_PROVIDERS.md](AI_PROVIDERS.md) sections 7 and 10; tests `BiAiTest`, `test_bi_ai.py`, `test_bi_ai_browser.py` (mock provider only).
+
+* **Where.** `com.ash.drishti.server.bi.ai` (`BiAiService`, `BiAiController`, `BiAiPrompts`, `BiAiProperties`): `GET /api/v1/bi/ai/status`, `POST /draft`, `/ask`, `/explain`. They call the
+  layer through `LLMFactory.model()` under the feature names `bi-draft`, `bi-ask`, `bi-explain`, so the policy (masks, audit, limits, roles) applies and the call counts in Admin -> AI. Off with
+  `drishti.ai.enabled` (`DRS-4015`); settings `drishti.bi.ai.*` (model, `values`, limits); new code `DRS-4020` (an answer that cannot be used). A personal token needs `ai:use`.
+* **The prompt is the dataset model**: table, column and measure names, types and descriptions, hierarchies, the person's words. Never a row, a value, a measure definition, or a field masked for the
+  reader. `values: labels-only` (default) keeps it so for the whole flow; `values: aggregates` lets a second call word the **reader's own** unmasked aggregate result.
+* **Report from words.** The model is given the grammar (visual types and wells from `VisualCatalogue`, the 12-column grid); its YAML has `dataset:` pinned to the report's dataset and goes through
+  the report parser and checker (`BiReportService.validate`), one repair round with the problem list, else `DRS-4020` and nothing shown. The designer's *Describe a report* shows the passing draft
+  and puts it in the YAML tab on request; nothing is saved or published (the seam of 20.1: "every report is a schema-validated document, every change goes through drafts and review").
+* **Ask the data.** The model answers one JSON query; `QueryRequest.of` and the engine validate and bind it, and run it **as the caller** (`DatasetService.queryItem`: row rules, masks, limits;
+  `ask-rows` caps the limit). The visual is chosen by Drishti from the query's shape (card, line over a date, bar, table); the query is always shown.
+* **Explain this number.** `BiReportService.base` rebuilds the visual's query under the page's state; lineage comes from the parsed dataset (measure, columns read, table kind and connector);
+  the breakdown is the engine's (the visual's own fields, then the text columns of the tables the measure reads; a dimension masked for the reader is dropped); in `aggregates` mode one call words
+  it.
+* **Not built:** stage 2's narrative summary for subscriptions, designer copilot (diffs) and dataset helper (A4); change-over-time explanations; follow-up questions; streaming.
 
 ## 21. Open decisions
 
