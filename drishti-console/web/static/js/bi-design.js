@@ -215,6 +215,9 @@
   }
   D.flushYaml = () => (yamlStale ? (clearTimeout(yamlTimer), refreshYaml()) : Promise.resolve(D.yamlText()));
 
+  /** Puts YAML in the tab as if typed (the Describe a report draft): the draft model follows it once it checks. */
+  D.loadYaml = (text) => { setYamlText(text); onYamlEdit(); showTab('yaml'); };
+
   function onYamlEdit() {
     if (ignoreChange) { return; }
     clearTimeout(textTimer);
