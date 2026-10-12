@@ -16,6 +16,8 @@
 # Changelog
 
 ## Unreleased
+- **Changed:** the Trades overview sample's "By product" page has dropdown slicers for product type, desk and currency (`type: slicer`, `format.mode: dropdown`: a checkbox list with a search box, Select all and Clear), and its donut shows the twelve largest product types (`op: top`).
+- **Fixed:** a dropdown slicer's list was cut off by its visual's frame; it now floats over the page while open.
 - **Changed:** **Reports** is an entry of **Views** (the Reports page: every scheduled report and subscription, a box to find one, and links to your alerts, everyone's subscriptions for administrators, and the BI reports); the BI menu lists no report names (with hundreds of reports a menu cannot hold them).
 - **Fixed:** on BI pages the top bar was taller and its items out of line, and the BI menu had wide gaps: the page body carried the class of BI's YAML boxes (`bi-body`, `white-space: pre-wrap`), so the HTML's line breaks showed. The body class is now `bi-page`.
 - **Changed:** a view's function-key bar is one row of key chips (it scrolls sideways when it does not fit, instead of wrapping), on its own surface; its note says only when the data was updated, the generation and the date (the full source is its tooltip and in "How this view was built") and a short copyright linking to About.
