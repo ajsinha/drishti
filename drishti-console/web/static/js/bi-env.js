@@ -20,7 +20,7 @@
   var B = window.drishtiBi, canvas = document.getElementById('biCanvas');
   if (!B || !canvas || !B.q('[data-export]')) { return; }
   var h = B.h, q = B.q, clear = B.clear;
-  var bundle = null, last = null;
+  var bundle = null, last = null, admin = false;
 
   function say(text, bad) { B.say(q('[data-msg]'), text, bad); }
   function fail(e) { say(e.message, true); }
@@ -37,7 +37,8 @@
   }
 
   B.api('GET', '/me').then(function (me) {
-    var steward = (me.powers || []).indexOf('bi-steward') >= 0, admin = (me.powers || []).indexOf('bi-admin') >= 0;
+    var steward = (me.powers || []).indexOf('bi-steward') >= 0;
+    admin = (me.powers || []).indexOf('bi-admin') >= 0;
     q('[data-import-need]').hidden = steward;
     q('[data-force-box]').hidden = !admin; q('[data-force-label]').hidden = !admin;
     ['[data-file]', '[data-dry]'].forEach(function (s) { q(s).disabled = !steward; });
@@ -91,6 +92,29 @@
     });
     q('[data-apply]').disabled = !p.dryRun || !p.ok;
   }
+  // -- the imports that can be rolled back ----------------------------------------------------------------------------------
+  function imports() {
+    return B.api('GET', '/imports').then(function (r) {
+      var tb = q('[data-imports] tbody'); clear(tb);
+      q('[data-no-imports]').hidden = r.imports.length > 0; q('[data-imports]').hidden = !r.imports.length;
+      r.imports.forEach(function (x) {
+        var btn = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-rollback': x.id, text: 'Roll back this import' });
+        btn.disabled = x.rolledBack;
+        btn.addEventListener('click', function () { rollback(x, false); });
+        tb.appendChild(h('tr', { 'data-import-id': x.id },
+          h('th', { scope: 'row', text: (x.at || '').slice(0, 19).replace('T', ' ') + ' UTC' }), h('td', { text: x.by }), h('td', { text: x.source }),
+          h('td', { text: x.items + ' (' + x.created + ' created, ' + x.replaced + ' replaced)' }),
+          h('td', { text: x.rolledBack ? 'rolled back by ' + x.rolledBackBy : 'applied' }), h('td', {}, btn)));
+      });
+    }).catch(function () { q('[data-imports-sec]').hidden = true; });
+  }
+  function rollback(x, force) {
+    B.api('POST', '/imports/' + encodeURIComponent(x.id) + '/rollback', { force: force }).then(function (r) {
+      say('Rolled back: ' + r.restored + ' item(s) put back, ' + r.removed + ' created item(s) removed' + (r.forced ? ' (forced over edits made since)' : '') + '.'); imports();
+    }).catch(function (e) {
+      if (e.code === 'DRS-9004' && admin && !force && window.confirm(e.detail + ' Roll back anyway and lose that work?')) { rollback(x, true); } else { fail(e); }
+    });
+  }
   q('[data-import]').addEventListener('input', function () { q('[data-apply]').disabled = true; });         // a changed choice needs a new dry run
   q('[data-import]').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -100,4 +124,6 @@
   q('[data-apply]').addEventListener('click', function () {
     request(false).then(function (p) { say('Imported ' + (p.counts.create + p.counts.update) + ' item(s).'); plan(p); q('[data-apply]').disabled = true; }).catch(fail);
   });
+  q('[data-apply]').addEventListener('click', function () { setTimeout(imports, 600); });
+  imports();
 })();

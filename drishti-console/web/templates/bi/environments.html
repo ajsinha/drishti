@@ -45,6 +45,13 @@
     <caption class="visually-hidden">Items of the bundle and what the import does with each</caption>
     <thead><tr><th scope="col">Item</th><th scope="col">Kind</th><th scope="col">Action</th><th scope="col">Into</th><th scope="col">Owner</th><th scope="col">Notes</th></tr></thead>
     <tbody></tbody></table></div></section>
+<section class="bi-sec" data-imports-sec aria-labelledby="eimp"><h2 id="eimp">Imports you can roll back</h2>
+  <p class="text-muted-d">Every import (a bundle, or the BI content of a deployed pack) keeps what it replaced. <strong>Roll back this import</strong> puts the earlier versions back (and removes what the import created); an item edited since is not touched unless a bi-admin forces it. The roll back is audited.</p>
+  <p class="bi-empty" data-no-imports hidden>No import is kept yet.</p>
+  <div class="tbl-wrap"><table class="tbl bi-tbl" data-imports data-plain hidden>
+    <caption class="visually-hidden">Imports and what each replaced</caption>
+    <thead><tr><th scope="col">When</th><th scope="col">By</th><th scope="col">From</th><th scope="col">Items</th><th scope="col">State</th><th scope="col"><span class="visually-hidden">Action</span></th></tr></thead>
+    <tbody></tbody></table></div></section>
 </div>
 {% endblock %}
 {% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-env.js?v={{ ASSET_V }}"></script>{% endblock %}

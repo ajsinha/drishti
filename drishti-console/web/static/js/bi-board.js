@@ -216,6 +216,8 @@
   B.api('GET', '/boards/' + B.id2path(boardId)).then(async (m) => {
     model = m;
     q('[data-title]').textContent = m.title;
+    const design = q('[data-design]');
+    if (design) { design.hidden = !(m.mayEdit && !m.shipped); design.href = '/bi/design/board/' + B.id2path(boardId); }
     q('[data-desc]').textContent = m.description || '';
     const badges = q('[data-badges]');
     if (m.sample) { badges.appendChild(h('span', { class: 'bi-badge' }, B.icon('mortarboard'), ' sample')); }

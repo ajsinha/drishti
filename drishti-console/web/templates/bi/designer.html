@@ -31,8 +31,17 @@
   <section class="bi-sec" aria-labelledby="dMine"><h2 id="dMine">Your report drafts</h2>
     <ul class="bi-warn" data-drafts></ul>
     <p class="bi-empty" data-no-drafts hidden>No report drafts in your workspace yet. Open a shipped report and use <strong>Open a copy in the designer</strong>, or start a new one above.</p></section>
+  <section class="bi-sec" data-board-start aria-labelledby="dBoard"><h2 id="dBoard">Boards</h2>
+    <p class="text-muted-d">A board is a wall of tiles from your reports, page by page, for a screen. Lay it out here: tiles, pages, the kiosk rotation and a threshold alert for each tile.</p>
+    <form class="bi-form" data-new-board autocomplete="off">
+      <label>Title<input class="studio-in" data-new-board-title maxlength="200" value="My board"></label>
+      <button type="submit" class="btn-pill btn-accent">Start a board</button>
+    </form>
+    <h3>Your board drafts</h3>
+    <ul class="bi-warn" data-board-drafts></ul>
+    <p class="bi-empty" data-no-board-drafts hidden>No board drafts in your workspace yet.</p></section>
   <section class="bi-sec" aria-labelledby="dSamples"><h2 id="dSamples">Samples to start from</h2>
     <p><a href="/bi/catalogue?kind=report">The catalogue of reports</a>: a shipped report opens in the viewer; <strong>Design</strong> there opens a copy of it here.</p></section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-board.js?v={{ ASSET_V }}"></script>{% endblock %}

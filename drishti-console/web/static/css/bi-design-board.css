@@ -1,0 +1,43 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* The board designer (docs/guides/BOARDS.md, "Designing a board"): the board's grid with its tiles, and the two panes beside it. Built on the report designer's
+   sheet (bi-design.css) and the report grid (bi-report.css). Colours are theme tokens; a state has its word as well as its colour; touch targets are 44 px. */
+.bi-bmain { grid-template-columns: minmax(0, 1fr) 15rem 17rem; }
+.bi-bgrid { grid-auto-rows: 56px; }
+.bi-btile { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); overflow: hidden; cursor: default; }
+.bi-btile.bi-selected { outline: 2px solid var(--d-accent); outline-offset: 0; box-shadow: 0 0 0 4px var(--d-accent-tint); }
+.bi-btile.bi-dragging { opacity: .8; z-index: 5; }
+.bi-btile-bad { border-color: var(--d-bad); }
+.bi-btile-head { display: flex; justify-content: space-between; align-items: center; gap: .3rem; background: var(--d-surface-2); padding: .2rem .4rem; touch-action: none; user-select: none; cursor: grab; }
+.bi-btile-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .85rem; }
+.bi-btile-body { padding: .35rem .5rem; font-size: .8rem; overflow: hidden; }
+.bi-btile-sub { color: var(--d-muted); overflow-wrap: anywhere; }
+.bi-btile-alert { margin-top: .25rem; color: var(--d-ink); overflow-wrap: anywhere; }
+.bi-btile-warn { margin-top: .25rem; color: var(--d-bad); font-weight: 600; }
+.bi-fs { border: 1px solid var(--d-border); border-radius: var(--d-radius); margin: .5rem 0; padding: .35rem .55rem; }
+.bi-fs legend { font-size: .8rem; padding: 0 .3rem; width: auto; float: none; }
+.bi-bdesign label { display: block; margin: .3rem 0; font-size: .85rem; }
+.bi-bdesign label.bi-checkrow { display: flex; align-items: center; gap: .4rem; }
+.bi-bdesign .studio-in, .bi-bdesign .studio-select { width: 100%; }
+.bi-bdesign .bi-checkrow input { width: auto; }
+@media (max-width: 1100px) { .bi-bmain { grid-template-columns: minmax(0, 1fr); } }
+@media (pointer: coarse), (max-width: 640px) {
+  .bi-bdesign .btn-pill, .bi-bdesign .studio-in, .bi-bdesign .studio-select, .bi-bdesign .bi-tab, .bi-bdesign .bi-vis-btn { min-height: 44px; min-width: 44px; }
+  .bi-bdesign .bi-checkrow input { min-width: 44px; min-height: 44px; }
+  .bi-btile-head { min-height: 44px; }
+  .bi-bdesign .bi-dback { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
+}
+@media (max-width: 640px) { .bi-bgrid { grid-auto-rows: 56px; } }

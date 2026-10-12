@@ -279,7 +279,7 @@
       if (ana) { ana.hidden = it.kind !== 'notebook'; ana.href = '/bi/explore?item=' + encodeURIComponent(it.id); }
       var brd = q('[data-open-board]');
       if (brd) { brd.hidden = it.kind !== 'board'; brd.href = '/bi/b/' + enc; }
-      if (des) { des.hidden = !(it.kind === 'report' && it.can && it.can.edit) && !(it.kind === 'report' && it.shipped); des.href = '/bi/design/' + enc; des.lastChild.textContent = it.shipped ? ' Open a copy in the designer' : ' Open in the designer'; }
+      if (des) { const designable = it.kind === 'report' || it.kind === 'board'; des.hidden = !(designable && it.can && it.can.edit) && !(designable && it.shipped); des.href = (it.kind === 'board' ? '/bi/design/board/' : '/bi/design/') + enc; des.lastChild.textContent = it.shipped ? ' Open a copy in the designer' : ' Open in the designer'; }
       if (mod) { mod.hidden = !(it.kind === 'dataset' && ((it.can && it.can.edit) || it.shipped)); mod.href = '/bi/m/' + enc; }
       document.dispatchEvent(new CustomEvent('bi:item', { detail: x }));          // bi-govern.js draws history, review, impact and lineage
     }

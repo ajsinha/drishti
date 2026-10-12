@@ -41,7 +41,8 @@
 
   // After a change that restarts the server in place: wait for it to go and come back, then show the new state.
   function afterChange(msgNode, body) {
-    say(msgNode, body.note || 'Done.', false);
+    var bi = body.bi && body.bi.items ? ' BI content: ' + (body.bi.loaded ? body.bi.items + ' item(s) loaded through the import (roll it back in BI, Environments).' : 'held, not loaded: ' + (body.bi.problem || 'see the audit log') + '.') : '';
+    say(msgNode, (body.note || 'Done.') + bi, false);
     if (!body.restarting) { setTimeout(function () { location.reload(); }, 700); return; }
     var seenDown = false, started = Date.now();
     (function poll() {
@@ -148,6 +149,16 @@
       ['breaking', 'selection', 'layout', 'change'].forEach(function (lv) { chips.appendChild(el('span', { class: 'st ' + (lv === 'breaking' && counts[lv] ? 'st-bad' : ''), text: counts[lv] + ' ' + lv })); chips.appendChild(document.createTextNode(' ')); });
       out.appendChild(chips);
       out.appendChild(findings(pv));
+      if (rep.bi && rep.bi.items) {
+        out.appendChild(el('h3', { text: 'BI content' }));
+        var bc = rep.bi.counts || {};
+        out.appendChild(el('p', { 'data-bi-content': true, text: rep.bi.items + ' report, dataset or board file(s) in config/bi will be loaded through the BI import'
+          + (rep.bi.counts ? ': ' + (bc.create || 0) + ' new, ' + (bc.update || 0) + ' changed, ' + (bc.unchanged || 0) + ' unchanged' + (bc.conflict || bc.invalid ? ', ' + ((bc.conflict || 0) + (bc.invalid || 0)) + ' held back' : '') : '') + '.' }));
+        (rep.bi.plan || []).forEach(function (x) {
+          out.appendChild(el('p', { class: 'dep-bi-item' + (x.blocks && x.blocks.length ? ' t-warn' : ''), text: x.kind + ' ' + x.title + ': ' + x.action + (x.blocks && x.blocks.length ? ' (' + x.blocks[0] + ')' : '') }));
+        });
+        if (rep.bi.problem) { out.appendChild(el('p', { class: 't-warn', text: rep.bi.problem })); }
+      }
       var ack = null;
       if (breaking) {
         ack = el('input', { type: 'checkbox', id: 'depAck', 'data-ack': true });

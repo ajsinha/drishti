@@ -99,16 +99,34 @@
       return h('li', { class: p.level === 'warning' ? 'bi-warn-line' : 'bi-bad-line' }, h('b', { text: (p.level || 'error') + ' ' + (p.code || '') + ' ' }), h('span', { class: 'mono', text: p.path || '' }), ' ' + p.message);
     }));
   }
+  /** Names that stayed but now mean something else (another type, another path or expression), and the published reports that use them. */
+  function alterBlock(box, im) {
+    var alters = (im.change && im.change.alters) || [];
+    if (!alters.length) { return; }
+    box.appendChild(h('p', { class: 'bi-warn-line', 'data-alters': true, text: 'Changed type or meaning: ' + alters.map(function (a) { return a.name + ' (' + a.what + ': ' + a.from + ' → ' + a.to + ')'; }).join('; ') + '.' }));
+    if (im.altered && im.altered.length) {
+      box.appendChild(h('p', { class: 'text-muted-d', text: im.altered.length + ' published report' + (im.altered.length === 1 ? '' : 's') + ' use' + (im.altered.length === 1 ? 's' : '') + ' them and will show different figures (not refused):' }));
+      box.appendChild(h('ul', { 'data-altered': true }, im.altered.map(function (x) {
+        return h('li', {}, x.visible ? [h('a', { href: '/bi/i/' + encodeURIComponent(x.id).replace(/%3A/g, ':'), text: x.title }), ' — ', h('span', { class: 'mono', text: x.uses.join('; ') })] : '(a report you cannot see)');
+      })));
+    }
+  }
   function impactBlock(im) {
     if (im.applies === false) { return h('p', { class: 'bi-empty', text: im.note }); }
     var box = h('div', { class: 'bi-impact' });
     var c = im.change || {};
+    alterBlock(box, im);
     if (!c.breaking) {
       box.appendChild(h('p', { class: 'bi-ok', text: 'Nothing a published report uses is removed or renamed.' }));
       if (c.addedFields && c.addedFields.length) { box.appendChild(h('p', { class: 'text-muted-d', text: 'New: ' + c.addedFields.concat(c.addedMeasures || []).join(', ') + '.' })); }
       return box;
     }
     box.appendChild(h('p', { class: 'bi-bad-line', text: 'Removed or renamed: ' + (c.removedFields || []).concat(c.removedMeasures || [], c.removedHierarchies || []).join(', ') + '.' }));
+    if (c.renames && c.renames.length) {
+      box.appendChild(h('p', { 'data-renames': true }, h('b', { text: 'Recognised as renames (same path or expression): ' }),
+        c.renames.map(function (r, i) { return h('span', { class: 'mono' }, (i ? '; ' : '') + r.from + ' → ' + r.to); })));
+      if (im.renamable) { box.appendChild(h('p', { class: 'bi-ok', 'data-renamable': true, text: 'Every published report that loses a name loses only a renamed one: publishing with “update the reports” rewrites them to the new names in the same step.' })); }
+    }
     if (!im.published.length) { box.appendChild(h('p', { class: 'bi-ok', text: 'No published report uses them.' })); }
     else {
       box.appendChild(h('p', { class: 'bi-bad-line', text: im.published.length + ' published report' + (im.published.length === 1 ? '' : 's') + ' would break' + (im.refused ? ': the publish is refused' + (im.canForce ? ' (you may force it)' : '') : '') + '.' }));
@@ -142,7 +160,12 @@
       body.appendChild(diffTable(r.diff));
       body.appendChild(h('h3', { text: 'Check' }));
       body.appendChild(problems(r.check));
-      if (r.kind === 'dataset') { body.appendChild(h('h3', { text: 'What it does to reports' })); body.appendChild(impactBlock(r.impact)); }
+      if (r.kind === 'dataset') {
+        body.appendChild(h('h3', { text: 'What it does to reports' })); body.appendChild(impactBlock(r.impact));
+        if (r.impact.renamable && r.mayDecide && item.can && item.can.approve) {            // every lost name is a recognised rename: approve and change the reports in one step
+          body.appendChild(button('Approve and update the reports', function () { publishRenamed('approve'); }, 'btn-accent'));
+        }
+      }
       body.appendChild(h('h3', { text: 'Data preview' }));
       body.appendChild(previewTable(r.preview));
       body.appendChild(h('p', { class: 'text-muted-d', text: 'Write your comment in the note box above, then Approve and publish or Reject. The author cannot approve their own request.' }));
@@ -156,7 +179,12 @@
     sec.hidden = false;
     var out = q('[data-impact-draft]'); clear(out);
     if (!item.isPublished && !item.publishedVersion) { out.appendChild(h('p', { class: 'bi-empty', text: 'Not published yet: no report reads it, so nothing can break.' })); return; }
-    B.api('GET', path() + '/impact').then(function (im) { out.appendChild(h('h3', { text: 'If you publish the draft' })); out.appendChild(impactBlock(im)); }).catch(fail);
+    B.api('GET', path() + '/impact').then(function (im) {
+      out.appendChild(h('h3', { text: 'If you publish the draft' })); out.appendChild(impactBlock(im));
+      if (im.renamable && item && item.can && (item.can.publish || item.can.approve)) {
+        out.appendChild(button('Publish and update the reports', function () { publishRenamed(item.can.approve && item.status === 'proposed' ? 'approve' : 'publish'); }, 'btn-accent'));
+      }
+    }).catch(fail);
   }
   function wireImpact() {
     q('[data-impact-form]').addEventListener('submit', function (e) {
@@ -171,6 +199,14 @@
   }
 
   // -- lineage --------------------------------------------------------------------------------------------------------------
+  /** Past the connector: what it reads from (the table, topic, path or bucket its file declares). Administrators read the values; others see only that there is a source. */
+  function sourceOf(s) {
+    if (!s) { return null; }
+    var keys = Object.keys(s.declared || {});
+    if (!keys.length) { return h('div', { class: 'text-muted-d', 'data-source': true, text: 'reads through the ' + s.plugin + ' plugin' }); }
+    return h('div', { class: 'text-muted-d', 'data-source': true, title: s.masked ? 'Masked for you: only an administrator reads where the connector reads from' : '' },
+      'reads from (' + s.plugin + '): ', keys.map(function (k, i) { return h('span', {}, (i ? ' · ' : '') + k + ' ', h('span', { class: 'mono', text: s.declared[k] })); }));
+  }
   function lineage() {
     var sec = q('[data-sec-lineage]'), box = q('[data-lineage]');
     B.api('GET', path() + '/lineage').then(function (l) {
@@ -180,7 +216,7 @@
         box.appendChild(h('h3', { text: 'Comes from' }));
         box.appendChild(h('ul', { 'data-upstream': true }, l.upstream.map(function (t) {
           return h('li', {}, h('b', { text: t.table }), ' · kind ', h('span', { class: 'mono', text: t.kind }), t.packs.length ? ' of pack ' + t.packs.join(', ') : ' (no loaded pack has it)',
-            ' · connector ', h('span', { class: 'mono', text: t.connector || 'whichever serves the kind' }), ' · ' + t.mode + (t.each ? ' · one row per element of ' + t.each : ''));
+            ' · connector ', h('span', { class: 'mono', text: t.connector || 'whichever serves the kind' }), ' · ' + t.mode + (t.each ? ' · one row per element of ' + t.each : ''), sourceOf(t.source));
         })));
       }
       if (l.dataset) {
@@ -210,6 +246,13 @@
     var w = it && it.warnings || [];
     box.hidden = !w.length;
     if (w.length) { box.appendChild(h('h2', { text: 'Heads up' })); box.appendChild(h('ul', {}, w.map(function (x) { return h('li', { text: x }); }))); }
+  }
+  /** Publishes the dataset and rewrites the reports that use its renamed fields and measures to the new names, in one step. */
+  function publishRenamed(sub) {
+    var note = q('.bi-note');
+    B.api('POST', path() + '/' + sub, { note: note ? note.value : '', applyRenames: true }).then(function (n) {
+      say('Published, and the reports that used the old names now use the new ones.'); document.dispatchEvent(new CustomEvent('bi:reload', { detail: n }));
+    }).catch(fail);
   }
   function force(sub) {
     var note = q('.bi-note');

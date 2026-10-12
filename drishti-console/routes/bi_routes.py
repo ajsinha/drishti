@@ -30,7 +30,7 @@ from routes.common import ident, render
 router = APIRouter(include_in_schema=False)
 
 # the server paths the page script may reach: nothing else is passed on
-_ALLOWED = ("me", "home", "catalogue", "settings", "workspaces", "items", "datasets", "model", "engine", "reports", "bundle", "boards", "python", "ai")
+_ALLOWED = ("me", "home", "catalogue", "settings", "workspaces", "items", "datasets", "model", "engine", "reports", "bundle", "boards", "python", "ai", "imports")
 _NO_BODY = {"GET", "DELETE"}
 
 
@@ -128,6 +128,12 @@ async def board(request: Request, item: str):
 async def designer(request: Request):
     """The designer's start: your report drafts, and a new report on a dataset."""
     return _page(request, "bi/designer.html", "designer")
+
+
+@router.get("/bi/design/board/{draft:path}")
+async def design_board(request: Request, draft: str):
+    """The board designer on one draft (a board item you may edit): the grid of tiles, pages, kiosk rotation, a threshold alert for each tile, and the YAML."""
+    return _page(request, "bi/design_board.html", "designer", item=draft)
 
 
 @router.get("/bi/design/{draft}")

@@ -32,6 +32,7 @@ _PREFIX = "drishti-console-"
 _MARKER = ".drishti-console-tmp"
 _root: Path | None = None
 _base: Path | None = None
+_before: str | None = None            # tempfile.tempdir before start(), put back by clean_up()
 
 
 def configured_base(setting: str = "") -> str:
@@ -72,7 +73,7 @@ def remove_stale(base: Path) -> int:
 
 def start(setting: str = "") -> Path:
     """Makes the process folder (once), removes stale ones, sets ``tempfile.tempdir`` and registers the clean-up."""
-    global _root, _base
+    global _root, _base, _before
     if _root is not None:
         return _root
     base = Path(configured_base(setting)).expanduser().resolve()
@@ -81,7 +82,7 @@ def start(setting: str = "") -> Path:
     root = base / f"{_PREFIX}{os.getpid()}"
     root.mkdir(exist_ok=True)
     (root / _MARKER).write_text(f"pid {os.getpid()}\n", encoding="utf-8")
-    _root, _base = root, base
+    _root, _base, _before = root, base, tempfile.tempdir
     tempfile.tempdir = str(root)
     atexit.register(clean_up)
     return root
@@ -98,6 +99,7 @@ def clean_up() -> None:
     if _root is not None:
         shutil.rmtree(_root, ignore_errors=True)
         _root = None
+        tempfile.tempdir = _before
 
 
 def mkdtemp(prefix: str = "tmp-", dir: str | os.PathLike | None = None) -> str:

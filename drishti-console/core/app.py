@@ -214,6 +214,10 @@ def create_app(settings: Settings) -> FastAPI:
         ai = getattr(app.state, "ai", None)
         watcher = asyncio.create_task(ai.supervise()) if ai is not None and (ai.enabled or ai.mcp_enabled) else None
         yield
+        if getattr(app.state, "tmp_owner", False):          # the process that runs this app: uvicorn re-raises the stop signal after this, so atexit would not run
+            from core import tmpdir
+
+            tmpdir.clean_up()
         if watcher is not None:
             watcher.cancel()
         for client in (app.state.backend.each() if isinstance(app.state.backend, Switch) else [app.state.backend]):

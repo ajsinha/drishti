@@ -33,6 +33,7 @@ from core.config import load_settings  # noqa: E402
 def main() -> None:
     settings = load_settings(HERE / "config", sys.argv[1:])
     app = create_app(settings)
+    app.state.tmp_owner = True                    # this process removes its temp folder when the server stops (core/tmpdir.py)
     uvicorn.run(app, host=settings.get("server.host"), port=int(settings.get("server.port")),
                 log_level="info", access_log=False)
 

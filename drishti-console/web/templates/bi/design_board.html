@@ -1,0 +1,94 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The board designer (docs/guides/BOARDS.md, "Designing a board"). A grid of tiles from reports, pages, the kiosk rotation, a threshold alert for each tile, and
+   the board's YAML as a second view of the same draft. Drawn by static/js/bi-design-board.js from /bi/api/items/<id>, /bi/api/boards/validate and /format;
+   every action also has a button or a field, so nothing needs the mouse. #}
+{% extends "bi/shell.html" %}
+{% block bi_title %}Board designer{% endblock %}
+{% block bi_keys %}
+    <dt><kbd>Tab</kbd></dt><dd>Walk the fields and the tiles</dd>
+    <dt><kbd>&larr;</kbd> <kbd>&rarr;</kbd> <kbd>&uarr;</kbd> <kbd>&darr;</kbd></dt><dd>On a tile: move it one cell; with <kbd>Shift</kbd> resize it</dd>
+    <dt><kbd>Del</kbd></dt><dd>On a tile: remove it</dd>
+    <dt><kbd>Ctrl</kbd>+<kbd>Z</kbd> <kbd>Ctrl</kbd>+<kbd>Y</kbd></dt><dd>Undo; redo</dd>
+    <dt><kbd>Ctrl</kbd>+<kbd>S</kbd></dt><dd>Save the draft</dd>
+{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-report.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-design.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-design-board.css?v={{ ASSET_V }}">{% endblock %}
+{% block bi_main %}
+<div class="bi-design bi-bdesign" data-board-design-root data-ready="">
+  <header class="bi-dbar">
+    <div class="bi-dtitle"><a class="bi-dback" href="/bi/designer" aria-label="Back to the designer start"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+      <h1 data-title>Board</h1><span class="bi-badge" data-state>Loading</span></div>
+    <div class="bi-dactions" role="toolbar" aria-label="Board designer actions">
+      <button type="button" class="btn-pill btn-ghost" data-undo disabled><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Undo</button>
+      <button type="button" class="btn-pill btn-ghost" data-redo disabled><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Redo</button>
+      <button type="button" class="btn-pill btn-ghost" data-check><i class="bi bi-clipboard-check" aria-hidden="true"></i> Check <span class="bi-badge" data-problem-count></span></button>
+      <a class="btn-pill btn-ghost" data-view-link href="/bi"><i class="bi bi-eye" aria-hidden="true"></i> View</a>
+      <a class="btn-pill btn-ghost" data-item-link href="/bi"><i class="bi bi-send" aria-hidden="true"></i> Publish&hellip;</a>
+      <button type="button" class="btn-pill btn-ghost" data-save-copy hidden><i class="bi bi-files" aria-hidden="true"></i> Save a copy</button>
+      <button type="button" class="btn-pill btn-accent" data-save><i class="bi bi-floppy" aria-hidden="true"></i> Save</button>
+    </div>
+  </header>
+  <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+  <p class="bi-warn bi-readonly" data-readonly hidden>This is shipped, read-only content. You can look, try changes and check them; <strong>Save a copy</strong> makes a draft of your own.</p>
+  <section class="bi-checkpanel" data-check-box hidden aria-labelledby="bchkH"><h2 id="bchkH">Check</h2>
+    <p data-check-sum tabindex="-1" role="status"></p><ul class="bi-warn" data-check-list></ul>
+    <button type="button" class="btn-pill btn-ghost" data-check-close>Close</button></section>
+  <div class="bi-dmain bi-bmain">
+    <div class="bi-dleft">
+      <div class="bi-dtabs">
+        <nav class="bi-tabs" data-ptabs role="tablist" aria-label="Pages of the board"></nav>
+        <div class="bi-viewtabs" role="tablist" aria-label="View">
+          <button type="button" class="bi-tab" role="tab" data-tab="canvas" aria-selected="true">Grid</button>
+          <button type="button" class="bi-tab" role="tab" data-tab="yaml" aria-selected="false">YAML</button>
+        </div>
+      </div>
+      <div data-view="canvas" class="bi-dview">
+        <div class="bi-dgrid-wrap">
+          <div class="bi-dgrid bi-bgrid" data-board-grid role="group" aria-label="Board page: the tiles on the 12-column grid"></div>
+          <p class="bi-dempty" data-board-empty><i class="bi bi-plus-circle" aria-hidden="true"></i> Choose a report and one of its visuals on the right to add a tile.</p>
+        </div>
+      </div>
+      <div data-view="yaml" class="bi-dview" hidden>
+        <p class="text-muted-d">The same draft as text. Edit here or on the grid: each shows the other.</p>
+        <textarea data-yaml class="studio-in mono" rows="24" spellcheck="false" aria-label="Board YAML"></textarea>
+        <ul class="bi-warn" data-yaml-problems role="status"></ul>
+      </div>
+    </div>
+    <aside class="bi-pane" aria-labelledby="bsH"><h2 id="bsH">Board</h2>
+      <label>Title<input class="studio-in" data-b-title maxlength="200"></label>
+      <label>Description<textarea class="studio-in" data-b-desc rows="2" maxlength="2000"></textarea></label>
+      <label>Kiosk: turn the pages every (seconds)<input class="studio-in" type="number" min="5" max="3600" step="1" inputmode="numeric" data-b-rotate placeholder="not at all"></label>
+      <p class="text-muted-d">In kiosk mode (the Kiosk button, or <code>?kiosk=1</code>) the board fills the screen and turns its pages by itself.</p>
+      <h3 class="bi-fhead">This page</h3>
+      <label>Page title<input class="studio-in" data-p-title maxlength="120"></label>
+      <p class="bi-dactions"><button type="button" class="btn-pill btn-ghost" data-p-left aria-label="Move the page earlier"><i class="bi bi-arrow-left" aria-hidden="true"></i></button>
+        <button type="button" class="btn-pill btn-ghost" data-p-right aria-label="Move the page later"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+        <button type="button" class="btn-pill btn-ghost" data-p-delete><i class="bi bi-trash" aria-hidden="true"></i> Delete page</button></p>
+      <h3 class="bi-fhead">Add a tile</h3>
+      <form data-add-form autocomplete="off">
+        <label>Report<select class="studio-select" data-add-report><option value="">Choose a report</option></select></label>
+        <label>Visual<select class="studio-select" data-add-visual></select></label>
+        <p><button type="submit" class="btn-pill btn-accent" data-add-btn disabled><i class="bi bi-plus-lg" aria-hidden="true"></i> Add tile</button></p>
+      </form>
+    </aside>
+    <aside class="bi-pane" aria-labelledby="btH"><h2 id="btH">Tile</h2>
+      <p class="text-muted-d" data-tile-none>Select a tile to set its title, place and alert.</p>
+      <div data-tile-form></div>
+    </aside>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script><script src="/static/js/cm-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-board.js?v={{ ASSET_V }}"></script>{% endblock %}

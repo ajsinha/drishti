@@ -38,7 +38,8 @@ def test_the_health_page_shows_connectors_packs_and_live(client, backend, monkey
             "packs": [{"name": "trading", "title": "Trading", "version": "1.0.0", "requires": ["market-data"], "kinds": 1, "sutras": 125,
                        "sutraProblems": [{"file": "rates/x.v1.sutra.md", "problems": ["DRS-2021 unknown panel kind"]}], "connectors": ["trading-store"],
                        "connectorsDown": ["trading-store"], "connectorsOff": [], "status": "DEGRADED"}],
-            "live": {"streams": 2, "topics": 3, "frames": 120, "droppedFrames": 0, "p50Ms": 3.1, "p99Ms": 11.0}}
+            "live": {"streams": 2, "topics": 3, "frames": 120, "droppedFrames": 0, "p50Ms": 3.1, "p99Ms": 11.0},
+            "tmp": {"base": "/var/tmp/drishti", "path": "/var/tmp/drishti/drishti-4242", "bytes": 5242880, "files": 7}}
 
     async def admin(method, path, ident, body=None, **params):
         if path == "/connectors":                                       # the connector files; "demo" is a plugin's own source
@@ -57,6 +58,8 @@ def test_the_health_page_shows_connectors_packs_and_live(client, backend, monkey
     assert "20/20 in use · 0 idle · 3 waiting · longest borrow 41.5 s · 1 leak warning · 2 timeouts" in flat      # the connector's pool
     assert "Identity database pool (PostgreSQL): 1/20 in use · 2 idle · 0 waiting · longest borrow n/a" in flat
     assert "data-pool-attention" in page and "every connection is in use" in page
+    assert "server /var/tmp/drishti/drishti-4242 · 5.0 MB · 7 files" in flat                    # the temp folders of the two processes (path, size)
+    assert "data-tmp-folders" in page and "data-tmp-console" in page and "console " in flat
     body = client.get("/admin/health", params={"partial": 1}).text
     assert "<html" not in body and "trading-store" in body
     assert "data-health-body" not in body and "setInterval" in client.get("/static/js/admin.js").text
