@@ -109,7 +109,10 @@ def browser(stack):
 
 
 def new_page(browser, width=1280, height=900):
-    page = browser.new_page(viewport={"width": width, "height": height})
+    if width < 700:                                                      # a phone: a coarse pointer, which is what makes controls finger-sized
+        page = browser.new_context(viewport={"width": width, "height": height}, has_touch=True, is_mobile=True).new_page()
+    else:
+        page = browser.new_page(viewport={"width": width, "height": height})
     page.problems = []
     page.on("console", lambda m: page.problems.append(m.text) if m.type == "error" else None)
     page.on("pageerror", lambda e: page.problems.append(str(e)))
@@ -119,6 +122,7 @@ def new_page(browser, width=1280, height=900):
 
 def pixel(page, selector, lon, lat):
     """Where a longitude and latitude are on the map drawn in `selector`, in page coordinates."""
+    page.locator(selector).first.scroll_into_view_if_needed()
     return page.evaluate("""([sel, lon, lat]) => { const el = document.querySelector(sel); const c = echarts.getInstanceByDom(el); const r = el.getBoundingClientRect();
         const q = c.convertToPixel({ geoIndex: 0 }, [lon, lat]); return [r.left + q[0], r.top + q[1]]; }""", [selector, lon, lat])
 
@@ -169,7 +173,7 @@ def test_the_report_map_drills_from_the_world_to_australia_and_its_regions_and_b
     assert page.locator('[data-visual="economies"] .bi-card-value').first.inner_text().strip() not in ("", "1")      # the whole world
     x, y = pixel(page, ".bi-vis-map .bi-chart", 134, -25)
     page.mouse.click(x, y)
-    page.wait_for_selector(".bi-map-crumb", timeout=20000)
+    page.locator(".bi-map-crumb [data-map-up]").wait_for(timeout=20000)                 # at the world the crumb is only "World": the button appears once a country is open
     assert "Australia" in page.locator(".bi-map-crumb").inner_text()
     page.wait_for_timeout(1200)
     names = [r[0] for r in regions(page, ".bi-vis-map .bi-chart")] or []
