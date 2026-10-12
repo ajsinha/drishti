@@ -306,7 +306,8 @@ public final class QueryService implements AutoCloseable {
         if (rows == null) {
             throw new DrishtiException(ErrorCode.QUERY_INVALID, "dataset '" + d.name() + "' is " + (d.composed() ? "composed" : "derived") + ": it is queried through the dataset service, which asks its sources");
         }
-        SqlCompiler.Reader reader = new SqlCompiler.Reader(who.enforce(), who.roles(), who.attributes(), who.masks());
+        SqlCompiler.Masks own = who.masks();
+        SqlCompiler.Reader reader = new SqlCompiler.Reader(who.enforce(), who.roles(), who.attributes(), (table, column) -> own.masked(table, column) || rows.masked().contains(column));
         SqlCompiler probe = new SqlCompiler(d, Dialect.DUCKDB);
         SqlCompiler.Plan plan = probe.plan(q, reader);
         int cap = q.limit() != null ? Math.min(q.limit(), props.maxRows()) : props.maxRows() + 1;

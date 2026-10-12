@@ -18,6 +18,7 @@ package com.ash.drishti.server.bi.engine;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The rows of a composed or derived dataset's one table (RUPAKA.md section 20.10), supplied lazily by whoever resolved the sources as the reader: the engine
@@ -34,16 +35,17 @@ public interface Frames {
 
     /**
      * The rows. {@code answers} are the sources' answers by alias, each already masked and row-ruled for the reader, for a composed dataset; {@code parquet} is
-     * the Transform's result file for a derived one; {@code warnings} are what the sources said.
+     * the Transform's result file for a derived one; {@code warnings} are what the sources said; {@code masked} the columns of the joined table that a source
+     * masked for the reader (so the composed dataset shows them as masked too, and a measure over one is null).
      */
-    record Rows(Map<String, QueryService.Result> answers, Path parquet, List<String> warnings, List<String> dates) {
+    record Rows(Map<String, QueryService.Result> answers, Path parquet, List<String> warnings, List<String> dates, Set<String> masked) {
 
-        public static Rows ofAnswers(Map<String, QueryService.Result> answers, List<String> warnings, List<String> dates) {
-            return new Rows(answers, null, warnings, dates);
+        public static Rows ofAnswers(Map<String, QueryService.Result> answers, List<String> warnings, List<String> dates, Set<String> masked) {
+            return new Rows(answers, null, warnings, dates, masked);
         }
 
         public static Rows ofParquet(Path file, List<String> warnings) {
-            return new Rows(Map.of(), file, warnings, List.of());
+            return new Rows(Map.of(), file, warnings, List.of(), Set.of());
         }
     }
 }

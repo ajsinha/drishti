@@ -26,10 +26,10 @@ description: One-day P&L of the trades by counterparty joined to expected exposu
 sample: true
 endorsement: promoted
 tags: [sample, multi-dataset, python, counterparty-risk]
-dataset: trading-risk
+dataset: file:dataset:trading-risk
 fields: [trades.counterpartyId, trades.desk, trades.pnl1d]
 extracts:
-  - { name: exposure, dataset: counterparty-exposure, fields: [netting_sets.counterparty, netting_sets.eePeak, netting_sets.pfePeak] }
+  - { name: exposure, dataset: file:dataset:counterparty-exposure, fields: [netting_sets.counterparty, netting_sets.eePeak, netting_sets.pfePeak] }
 cells:
   - type: python
     source: |

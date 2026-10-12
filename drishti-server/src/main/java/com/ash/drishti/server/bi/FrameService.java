@@ -189,7 +189,29 @@ public final class FrameService implements DatasetRefresher.FramedHooks {
                 refuseMasked(d, j.right(), sides[1].trim(), c.from().get(j.right()), answers.get(j.right()));
             }
         }
-        return Frames.Rows.ofAnswers(answers, warnings.stream().distinct().toList(), dates);
+        return Frames.Rows.ofAnswers(answers, warnings.stream().distinct().toList(), dates, maskedColumns(d, answers));
+    }
+
+    /** The columns of the joined table that a source masked for the reader: its answer's masked columns, by the name the frame gives them and then the table's column. */
+    private static java.util.Set<String> maskedColumns(Dataset d, Map<String, QueryService.Result> answers) {
+        java.util.Set<String> out = new java.util.LinkedHashSet<>();
+        List<String> columns = new ArrayList<>(d.tables().get(Dataset.JOINED).columns().keySet());
+        for (Dataset.Input in : d.compose().from().values()) {
+            QueryService.Result a = answers.get(in.alias());
+            List<String> names = FrameSql.frameNames(in);
+            for (int i = 0; i < names.size() && i < a.columns().size(); i++) {
+                if (!a.meta().masked().contains(a.columns().get(i).name())) {
+                    continue;
+                }
+                for (int k = 0; k < d.compose().frame().size(); k++) {
+                    Dataset.FrameColumn fc = d.compose().frame().get(k);
+                    if (fc.alias().equals(in.alias()) && fc.name().equals(names.get(i))) {
+                        out.add(columns.get(k));
+                    }
+                }
+            }
+        }
+        return out;
     }
 
     /** A masked join key holds one constant for every row: joining on it would match every row to every row, so it is refused. */

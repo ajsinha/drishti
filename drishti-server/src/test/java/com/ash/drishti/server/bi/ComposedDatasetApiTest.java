@@ -123,6 +123,7 @@ class ComposedDatasetApiTest {
                     - { role: bi-analyst, where: "true" }
                     - { role: admin, where: "true" }
                     - { role: raw-author, where: "true" }
+                  masked: [mtm]
                 """);
         // source two: gross notional, every reader sees every row
         write("lake-b", "dataset: lake-b\n" + HEAD.formatted("Lake B") + """
@@ -418,8 +419,13 @@ class ComposedDatasetApiTest {
         // counterpartyId is on the server's redact list: ann has no raw, so each source answers one constant for it
         refused(call("POST", "/api/v1/bi/datasets/file:dataset:lake-ab/query", ann(), "{\"fields\":[\"joined.cp\"],\"measures\":[\"MTM\"]}"), 403, "DRS-9021");
         // a reader with the raw power is fine (checked in the second test); the masked non-key measure of a source is null, not an error
-        JsonNode ok = query("lake-ab-desk", ann(), "{\"fields\":[\"joined.desk\"],\"measures\":[\"MTM\",\"Gross\"],\"dates\":{\"from\":\"2026-10-08\"}}");
+        JsonNode ok = query("lake-ab-desk", ann(), "{\"fields\":[\"joined.desk\"],\"measures\":[\"MTM\",\"Gross\",\"MTM per gross\"],\"dates\":{\"from\":\"2026-10-08\"}}");
         assertThat(ok.path("rowCount").asInt()).isEqualTo(3);
+        // lake-a masks mtm for ann: the composed dataset shows MTM, and the measure of its own made from it, as masked (null), and Gross as it is
+        assertThat(byFirst(ok, 1).values()).containsOnlyNulls();
+        assertThat(byFirst(ok, 3).values()).containsOnlyNulls();
+        assertThat(byFirst(ok, 2).get("DESK-A")).isEqualTo(gross(null, "DESK-A"));
+        assertThat(ok.path("meta").path("masked").toString()).contains("MTM").contains("MTM per gross").doesNotContain("Gross\"");
     }
 
     @Test @Order(5)
