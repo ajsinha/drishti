@@ -103,10 +103,10 @@ public final class UserService {
         return true;
     }
 
-    /** Whether the seeded admin still has the default password (the console shows a warning). */
+    /** Whether the seeded admin can still sign in with the default password (the console shows a warning); a disabled account cannot, so it clears the warning. */
     public boolean defaultAdminPasswordInUse() {
         return props.seedPasswordIsDefault()
-                && store.find(props.seedUsername()).map(u -> hasher.verify(props.seedPassword(), u.passwordHash())).orElse(false);
+                && store.find(props.seedUsername()).map(u -> u.enabled() && hasher.verify(props.seedPassword(), u.passwordHash())).orElse(false);
     }
 
     // ---- sign-in and self service --------------------------------------------------------------

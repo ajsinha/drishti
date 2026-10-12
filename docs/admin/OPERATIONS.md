@@ -1643,7 +1643,7 @@ max_connections  >=  (sum of the pool sizes of every connector that points at it
 ```
 
 For example a PostgreSQL that serves the six banking connectors of the `postgres` profile (6 x 20 = 120), the identity database (20) and a loader (20) for two
-server instances needs 2 x 140 = 280 plus headroom for administrators: PostgreSQL's default `max_connections` of 100 is **not** enough, and the symptom is
+server instances needs 2 x 160 = 320 plus headroom for administrators: PostgreSQL's default `max_connections` of 100 is **not** enough, and the symptom is
 `FATAL: sorry, too many clients already` from the database, long before a Drishti pool is exhausted. Either raise `max_connections`, put PgBouncer (transaction
 mode) in front, or lower the pools: `pool-size` per connector, or the site default `drishti.db.pool.size`. A pool opens connections only as it is used and
 closes extras after `pool-idle-timeout`, so the sum is a ceiling, not the usual count (Admin shows the open count). Start from the busiest reads: a pool needs

@@ -130,3 +130,34 @@ def drawer(c: Ctx):
     c.page.locator("#aboutDrawer:not([hidden])").wait_for(timeout=30000)
     c.page.wait_for_timeout(1500)
     c.save("11-about-drawer.jpg")
+
+
+@shot("12-map-live.jpg", also=("13-map-hover.jpg", "13-map-click.jpg"))
+def map_live(c: Ctx):
+    """The `map` panel on a live view: the jurisdiction page of Australia draws the world with JUR-AUS highlighted; a click on another country opens that country's page."""
+    login(c)
+    go(c, "/v/jurisdiction/JUR-AUS", height=900, wait="#p-geography", settle=4000)
+    c.page.evaluate("window.scrollTo(0, 0)")
+    c.save("12-map-live.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 600})
+    where = c.page.evaluate("""() => { const host = document.querySelector('#p-geography'); const e = [...host.querySelectorAll('div')].find(d => window.echarts && echarts.getInstanceByDom(d));
+        const g = echarts.getInstanceByDom(e).convertToPixel({geoIndex: 0}, [113.9, -0.8]); const b = e.getBoundingClientRect(); return [b.left + g[0], b.top + g[1]]; }""")
+    c.page.mouse.move(where[0], where[1])
+    c.page.wait_for_timeout(700)
+    c.save("13-map-hover.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 600})
+    c.page.mouse.click(where[0], where[1])
+    c.page.wait_for_url("**/v/jurisdiction/JUR-IDN*", timeout=30000)
+    c.page.wait_for_selector("#p-geography")
+    c.page.wait_for_timeout(3500)
+    c.save("13-map-click.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 600})
+
+
+@shot("14-map-workbench.jpg", also=("15-map-palette.jpg",))
+def map_workbench(c: Ctx):
+    """The map example opened as a copy in the workbench: two map panels (the world with the country highlighted, and its regions), and the palette that adds one."""
+    login(c, width=1280, height=900)
+    c.example("map")
+    c.page.wait_for_timeout(1500)
+    c.save("14-map-workbench.jpg")
+    c.page.locator('[data-palette] [data-kind="map"]').scroll_into_view_if_needed()
+    c.page.wait_for_timeout(400)
+    c.save("15-map-palette.jpg", "[data-palette-box]")

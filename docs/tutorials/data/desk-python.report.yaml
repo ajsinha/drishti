@@ -1,0 +1,30 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Tutorial 14: a report with a Python visual of your own (notional-by-desk.python.yaml) beside the shipped Python measure. `format.python` names the item;
+# the visual is handed the rows of its `columns` well, under the page's slicers and filters.
+rachana: 1
+report: desk-python
+version: 1
+title: Desks in Python
+dataset: trades-basic
+pages:
+  - id: desks
+    title: Desks
+    visuals:
+      - { id: currency, type: slicer, title: Currency, at: { x: 0, y: 0, w: 4, h: 2 }, wells: { field: [trade.currency] }, format: { mode: dropdown, scope: page } }
+      - { id: notional-chart, type: python, title: "Notional by desk (my Python visual)", at: { x: 0, y: 2, w: 6, h: 6 },
+          wells: { columns: [trade.desk, trade.notional] }, format: { python: Notional by desk chart, params: { top: 8 }, run: auto } }
+      - { id: volatility, type: python, title: "Desk P&L volatility (the shipped Python measure)", at: { x: 6, y: 2, w: 6, h: 6 },
+          wells: { values: [Desk P&L volatility] }, format: { run: auto } }

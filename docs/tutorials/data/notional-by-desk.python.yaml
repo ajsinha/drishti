@@ -1,0 +1,40 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Tutorial 14: a Python VISUAL of your own. render(table, params) gets the rows its `columns` well names (as the person looking may see them) and
+# returns a chart as data: an ECharts option. Here: the desks with the largest notional, as bars, with the biggest first.
+rachana: 1
+python: notional-by-desk
+title: Notional by desk chart
+description: The desks with the largest notional, drawn by Python as an ECharts option.
+interface: visual
+output: echarts
+inputs: [desk, notional]
+packages: [pandas]
+target: both
+timeout: 10
+memory: 256
+params: { top: 8 }
+source: |
+  def render(table, params):
+      top = int(params.get("top", 8))
+      g = table.groupby("desk", as_index=False)["notional"].sum().sort_values("notional", ascending=False).head(top)
+      return {
+          "title": {"text": f"Notional of the {len(g)} largest desks", "left": "center", "textStyle": {"fontSize": 13}},
+          "tooltip": {"trigger": "axis"},
+          "grid": {"left": 90, "right": 20, "top": 40, "bottom": 30},
+          "xAxis": {"type": "value", "name": "Notional"},
+          "yAxis": {"type": "category", "data": list(g["desk"])[::-1]},
+          "series": [{"type": "bar", "data": [float(v) for v in g["notional"]][::-1]}],
+      }

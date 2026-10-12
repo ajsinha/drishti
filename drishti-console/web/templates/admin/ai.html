@@ -32,7 +32,9 @@
     <tbody>{% for p in d.providers %}<tr data-provider="{{ p.name }}">
       <td class="mono">{{ p.name }}</td><td>{{ p.type }}</td><td><b>{{ p.health.status }}</b></td>
       <td class="mono">{% for m in p.models %}<div>{{ m.ref }} <span class="text-muted-d">({{ m.capabilities | join(', ') }})</span></div>{% else %}—{% endfor %}</td>
-      <td>{{ retry_note(p.retry) }}{{ p.health.detail }}{% if p.baseUrl %} · <span class="mono">{{ p.baseUrl }}</span>{% endif %}{% if p.keySet %} · key set{% endif %}</td></tr>
+      <td>{{ retry_note(p.retry) }}{{ p.health.detail }}{% if p.baseUrl %} · <span class="mono">{{ p.baseUrl }}</span>{% endif %}{% if p.keySet %} · key set{% endif %}
+        {% if where == 'console' %}<div class="ai-test"><button type="button" class="fk" data-ai-test="{{ p.name }}" title="Make one live call to this provider (its model list) and show the answer here">Test connection</button>
+          <div class="t-note" data-ai-test-result="{{ p.name }}" role="status" aria-live="polite"></div></div>{% endif %}</td></tr>
     {% else %}<tr><td colspan="5">No providers.{% if not d.enabled %} The layer is off (<span class="mono">enabled: false</span>).{% endif %}</td></tr>{% endfor %}</tbody>
   </table></div>
   {% for f, why in (d.fileErrors or {}).items() %}<p class="adm-warn" role="alert"><span class="mono">{{ f }}</span>: {{ why }}</p>{% endfor %}
@@ -65,4 +67,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-retry.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-retry.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-ai-test.js?v={{ ASSET_V }}"></script>{% endblock %}

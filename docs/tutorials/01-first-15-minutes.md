@@ -133,7 +133,7 @@ under **My account** before you ever put real data in; tutorials here leave it s
 ![The home page: the command line, the date box, the menus and a list of commands to try](img/t01/02-home.jpg)
 
 You should see, from left to right in the top bar: the **command line** (the rounded box, `> TRD MX-20000001, CPTY ...` is its hint), the **business date** box, the menu icons
-(Views, with Forms inside it, then BI, Reports, Build, Admin, Help), the bell for your inbox, the packs icon with a count, the theme button, the green round **Live** button and your name.
+(**Views**, then BI, Build, Admin, Help), the bell for your inbox, the packs icon with a count, the theme button, the green round **Live** button and your name.
 Below it is a list of commands you can click.
 
 The command line is the heart of Drishti. A command is a **mnemonic** (a short code for a kind of thing: `TRD` is a trade) and an **identifier**:
@@ -223,7 +223,11 @@ per trade, biggest MTM first. (Your count may differ: the sample data is generat
 
 ## Step 7 · Fill in a form instead
 
-If you would rather click than write, open **Forms** (the third icon in the top bar), then **All forms**.
+If you would rather click than write, open **Views** (the first icon in the top bar) and choose **Forms**.
+
+![The Views menu: under Look up, Terminal, Search and pick lists, Forms (highlighted) and Reports; under Watch, Workspaces, Monitors and Alerts](img/t01/06b-views-menu.jpg)
+
+You should see two columns: **Look up** (the terminal, search, **Forms** and **Reports**: every report you have: scheduled ones, subscriptions, alerts and the BI reports) and **Watch** (workspaces of live views, monitors and alerts). **Forms** opens **All forms**:
 
 ![The forms home: every pack that has a search form, with its kinds](img/t01/07-forms-home.jpg)
 

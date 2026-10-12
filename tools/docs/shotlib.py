@@ -98,7 +98,12 @@ class Ctx:
         self.page.locator("[data-preview] [data-panel]").first.wait_for(timeout=30000)
         self.page.wait_for_timeout(1800)                       # charts draw, the first check runs
 
+    def hush(self):
+        """Removes the live toasts (an old notification replayed on page load would sit over the picture)."""
+        self.page.evaluate("document.querySelectorAll('.toast-a').forEach(e => e.remove())")
+
     def save(self, name, locator=None, clip=None):
+        self.hush()
         out = out_dir(self.guide)
         out.mkdir(parents=True, exist_ok=True)
         path = out / name

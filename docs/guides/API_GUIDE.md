@@ -679,7 +679,7 @@ can take exponential time): classes, groups, alternation, `* + ? {n,m}`, `^`, `$
 groups, possessive quantifiers and `\b` are refused with `DRS-4010`, as are patterns over 200 characters or whose expansion passes 4,000 steps;
 a value is cut to 8,192 characters and a match that takes over 50 ms is `DRS-4011`. The caps are the system properties
 `drishti.search.regex.max-pattern`, `.max-program`, `.max-input` and `.timeout-ms`. The form's other limits are
-`drishti.search.form.max-values` (500, an `in` list), `.max-inferred-fields` (14), `.enum-max` (12) and `.sample-rows` (200).
+`drishti.search.form.max-values` (500, an `in` list), `.max-inferred-fields` (14), `.enum-max` (12), `.sample-rows` (200) and `.enum-scan-rows` (1,000: how many rows of a kind are read to find the values of a dropdown, up to the search's own limit; the first 200 of a kind can all be one product group, such as the rates trades, which left the other products out of the list).
 
 ### The Pivot tab: panel rows, search pivots, saved pivots
 

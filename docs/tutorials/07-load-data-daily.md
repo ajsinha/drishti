@@ -196,7 +196,7 @@ You should see the late data listed on Health, linked to the pack's Data loads p
 
 ## Step 6 · An alert for a missing day
 
-An expectation tells the people the pack names. An **alert** can tell *you*, and carry a number. Open **Reports**, then **My alerts**, then **New alert on a number**.
+An expectation tells the people the pack names. An **alert** can tell *you*, and carry a number. Open **Views**, then **Reports**, then **My alerts** (on the Reports page), then **New alert on a number**.
 
 ![The alert form: a measure of a dataset, no data by 18:30, after a data load of kind trade, by inbox](img/t07/06-alert-form.jpg)
 

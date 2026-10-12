@@ -16,7 +16,7 @@
 # Tutorial 9 · Reports
 
 Two things in Drishti run on a schedule and deliver what you saw: a **scheduled report** (a search, run as you, delivered as a CSV file) and a **subscription** (a view or a BI report, sent by email in
-the form you choose, rendered separately for each recipient). In this tutorial you make one of each, run them by hand, read their history, and see how they sit together under the **Reports** menu next to alerts and
+the form you choose, rendered separately for each recipient). In this tutorial you make one of each, run them by hand, read their history, and see how they sit together under **Views → Reports** next to alerts and
 BI reports.
 
 ## Time to complete
@@ -33,7 +33,7 @@ About 25 minutes.
 - how to turn a search into a scheduled report: when it runs (business days, holidays, after a load), which day's data, and where the file goes;
 - **Run now**, the last-run line, and the file it wrote;
 - a subscription: formats (HTML, PDF, Excel), recipients (**users and roles only**, never an email address) and why each recipient gets their own render;
-- where both live: **Reports** in the top bar;
+- where both live: **Views → Reports** in the top bar;
 - what the command line and the REST API can do for them.
 
 ## Step 1 · Start from a search
@@ -121,12 +121,12 @@ a BI author or an administrator may subscribe other people; anyone may subscribe
 
 ## Step 5 · Reports, all in one place
 
-Open the **Reports** menu in the top bar.
+Open **Views** in the top bar and choose **Reports** (it is an entry of Views, with Forms, the terminal and search).
 
-![The Reports menu: Saved and scheduled reports, My subscriptions, My alerts, All subscriptions, All alerts, BI reports](img/t09/06-reports-menu.jpg)
+![The Views menu with Reports highlighted: Every report you have: scheduled reports, subscriptions, alerts, and BI reports](img/t09/06-reports-menu.jpg)
 
-You should see the menu entries: **Saved and scheduled reports** and **My subscriptions** (both open the same page), **My alerts** (tutorial 7), **All subscriptions** and **All alerts** (administrators), and **BI reports**
-(the published reports of Rūpaka, the catalogue filtered to reports). The page is one list:
+You should see **Reports** under **Look up** with the words "Every report you have". It opens **one page** with the links at its top: **My subscriptions**, **My alerts** ([tutorial 7](07-load-data-daily.md)), **BI reports and boards** (the published reports of Rūpaka, the catalogue filtered to reports) and, for administrators, **All subscriptions** and **All alerts**; a **Find** box
+(*Find a report or subscription: name, what, when, to...*) narrows the list as you type, and the list is one list:
 
 ![Reports and subscriptions: Big losers (REPORT) and Swap for Vera (SUBSCRIPTION) in one list, each with when, to, next and last run](img/t09/07-reports-list.jpg)
 

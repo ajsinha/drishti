@@ -379,9 +379,12 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         }
     }
 
-    private static Map<String, String> ownSettings(String name, SourcesProperties.ConnectorSettings c) {
+    static Map<String, String> ownSettings(String name, SourcesProperties.ConnectorSettings c) {
         Map<String, String> own = new LinkedHashMap<>(com.ash.drishti.common.ConnectorSecrets.resolve(c.settings()));
-        own.putIfAbsent("source-name", name);   // documents say which connector they came from
+        String given = own.get("source-name");
+        if (given == null || given.isBlank()) {
+            own.put("source-name", name);       // documents say which connector they came from (a blank setting, as a form sends, counts as none)
+        }
         return own;
     }
 

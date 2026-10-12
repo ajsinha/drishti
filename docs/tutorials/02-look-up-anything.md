@@ -115,7 +115,7 @@ and search all follow the date in the top bar, which is the next step.
 
 ## Step 5 · A past date, and the Live toggle
 
-The **business date** box in the top bar says which day you are looking at. Empty means **live**: today's business date, updating as data arrives. Back on the trade, click the date box and
+The **business date** box in the top bar says which day you are looking at. Empty means **live**: today's business date, updating as data arrives. The demo data ticks **as a whole**: when a rate moves, everything that depends on it moves with it. Open a curve (`CRV CRV-USD-BASIS`) and watch: the 10-year figure, every row of the pillars table and the chart change together, not just one cell ([tutorial 12](12-live-bi-and-boards.md) shows it side by side). Back on the trade, click the date box and
 type `2026-09-29`, then press Enter.
 
 ![The trade on 29 September: an amber date box, a red Live button and a Compare link](img/t02/08-past-date.jpg)

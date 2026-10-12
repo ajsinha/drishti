@@ -19,7 +19,7 @@ Drishti talks to language models through its **own** interfaces. Which vendor, l
 `config/ai/`, not a decision in a feature. Spring AI (`spring-ai-starter-model-openai`) is an implementation detail behind the
 `openai` provider type; no feature sees it. The layer is **off by default** (`drishti.ai.enabled=false`): while off, no
 provider file is read and no model is called. The same shape exists in the console (`drishti-console/core/ai/`, section 8).
-MCP servers (tools a model or a feature can call) have a sibling layer: [MCP_CLIENT.md](MCP_CLIENT.md). Beyond `openai`, `anthropic` and `mock`, sixteen more provider types (Groq, Together, Fireworks, DeepSeek, xAI, OpenRouter, Perplexity, Hugging Face, vLLM, LM Studio, Mistral, any OpenAI-compatible server, Azure OpenAI, Gemini, Cohere, Ollama, AWS Bedrock) come from sajhamcpserver: [section 11](#11-more-providers-the-way-sajhamcpserver-has-them).
+MCP servers (tools a model or a feature can call) have a sibling layer: [MCP_CLIENT.md](MCP_CLIENT.md). Beyond `openai`, `anthropic` and `mock`, seventeen more provider types (Groq, Together, Fireworks, DeepSeek, xAI, OpenRouter, Perplexity, Hugging Face, vLLM, LM Studio, Mistral, any OpenAI-compatible server, Azure OpenAI, Gemini, Cohere, Ollama, AWS Bedrock) come from sajhamcpserver: [section 11](#11-more-providers-the-way-sajhamcpserver-has-them).
 
 ## 1. The pieces (server, module `drishti-ai`)
 
@@ -228,7 +228,7 @@ Settings (`drishti-console/config/application.yaml`): `ai.enabled` (`DRISHTI_AI_
 `ai.default_model`, `ai.redact` (the field names to mask), `ai.policy.*` (same meaning as above). Console code calls
 `request.app.state.ai.gateway.chat(CallContext(...), ChatRequest.of(...))`; the ready-made route is `POST /api/ai/chat` (JSON only,
 signed in, feature `console:<name>`). **Admin -> AI** is a read-only page for both layers: on or off, providers with health and
-models, MCP servers and (one server at a time, by link) their tools. The console's Ask stays a thin proxy to the server's Ask.
+models, MCP servers and (one server at a time, by link) their tools. Each console provider has a **Test connection** button: it calls the provider's `probe()` (one cheap live call such as a model list) and `live_models()` once, on request, and shows the answer inline (`POST /admin/ai/api/test/<name>`: administrators only, a JSON body, at most 15 seconds, one test per provider every two seconds, the key never in the answer). `health()` still never calls the network. Every test is an `ai-audit` line in the console's log (who, provider, outcome, milliseconds). The console's Ask stays a thin proxy to the server's Ask.
 
 ## 9. Tests
 
@@ -288,7 +288,7 @@ by `LLMContractTest` (Java) and `tests/test_llm_contract.py` (Python); `BaseMcpT
 
 ## 11. More providers, the way sajhamcpserver has them
 
-Sixteen provider types joined `openai`, `anthropic`, `server` and `mock`, mirroring `sajha/ai/llm/providers/*.py` of sajhamcpserver: the type names, the settings (sajha's `snake_case` fields are
+Seventeen provider types joined `openai`, `anthropic`, `server` and `mock`, mirroring `sajha/ai/llm/providers/*.py` of sajhamcpserver: the type names, the settings (sajha's `snake_case` fields are
 `kebab-case` keys of the provider file), the model catalogue and the presets. They sit on the same abstractions (section 10), in **both** languages, behind the same policy (masks, audit,
 limits, roles, labels-only: section 4). **Every one is off until you copy its example from `config/ai/<type>.yaml.example` to `config/ai/<name>.yaml`, set `enabled: true`** and
 `drishti.ai.enabled=true`. A provider file is the same in the server and the console.

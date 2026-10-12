@@ -343,3 +343,51 @@ def test_chat_api_is_404_while_off(client):
     client.app.state.ai = AiRuntime(Settings({}))
     r = client.post("/api/ai/chat", json={"prompt": "x"})
     assert r.status_code == 404 and r.json()["code"] == "DRS-4015"
+
+
+def test_admin_ai_test_connection_probes_one_provider_and_audits_it(client, tmp_path):
+    """Admin -> AI "Test connection": the provider's probe() and live_models() on request, bounded, rate-limited per provider, audited, never carrying the key."""
+    from routes import ai_routes
+
+    models = json.dumps({"data": [{"id": "live-x"}, {"id": "live-embed"}]})
+    stub = Stub(lambda m, p, h, b: (200, "application/json", models, None) if p.endswith("/models") else (404, "application/json", "{}", None))
+    try:
+        write(tmp_path, "mock.yaml", MOCK)
+        write(tmp_path, "local.yaml", f"type: vllm\nbase-url: {stub.url}/v1\nmodels:\n  - {{name: base}}\n")
+        write(tmp_path, "off.yaml", "type: groq\nenabled: false\n")
+        client.app.state.ai = AiRuntime(Settings({"ai": {"enabled": True, "dir": str(tmp_path), "default_model": "mock/m"}}))
+        ai_routes._TESTED.clear()
+        page = client.get("/admin/ai").text
+        assert 'data-ai-test="mock"' in page and 'data-ai-test="local"' in page and "admin-ai-test.js" in page
+
+        r = client.post("/admin/ai/api/test/mock", json={})
+        assert r.status_code == 200 and r.json()["ok"] is True and r.json()["models"] == [] and "no live call" in r.json()["detail"]
+
+        r = client.post("/admin/ai/api/test/local", json={})
+        body = r.json()
+        assert r.status_code == 200 and body["ok"] is True and body["network"] is True and "live-x" in body["models"] and "live-embed" in body["models"]
+        assert any(p.endswith("/models") for _, p, _, _ in stub.seen)                       # the endpoint really was asked
+
+        again = client.post("/admin/ai/api/test/local", json={})                              # a second test straight after: one per provider every few seconds
+        assert again.status_code == 429 and again.json()["kind"] == "rate_limited"
+
+        off = client.post("/admin/ai/api/test/off", json={}).json()
+        assert off["ok"] is False and off["network"] is False and "enabled: false" in off["detail"]
+        assert client.post("/admin/ai/api/test/nope", json={}).status_code == 404
+
+        audited = [a for a in client.app.state.ai.audit_log if a.get("feature") == "test-connection"]
+        assert [(a["provider"], a["outcome"]) for a in audited] == [("mock", "ok"), ("local", "ok"), ("off", "not-usable")]
+        assert all(a["user"] for a in audited)                                                # who tested it is on every row
+    finally:
+        stub.close()
+
+
+def test_admin_ai_test_connection_reports_a_provider_that_does_not_answer(client, tmp_path):
+    from routes import ai_routes
+
+    write(tmp_path, "gone.yaml", "type: vllm\nbase-url: http://127.0.0.1:1/v1\nmodels:\n  - {name: base}\n")
+    client.app.state.ai = AiRuntime(Settings({"ai": {"enabled": True, "dir": str(tmp_path)}}))
+    ai_routes._TESTED.clear()
+    body = client.post("/admin/ai/api/test/gone", json={}).json()
+    assert body["ok"] is False and body["models"] == [] and body["detail"]
+    assert [a["outcome"] for a in client.app.state.ai.audit_log if a.get("feature") == "test-connection"] == ["failed"]

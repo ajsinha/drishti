@@ -61,6 +61,18 @@ class UserServiceTest {
     }
 
     @Test
+    void disablingTheDevelopmentAdminClearsTheDefaultPasswordWarning() {
+        UserService s = service();
+        s.seedIfEmpty();
+        assertThat(s.defaultAdminPasswordInUse()).isTrue();
+        s.create("drishti-dev-admin", "ops", new UserService.Profile("Ops", "ops@example.com", "", Set.of("admin"), true), "long-enough-pass-1", false);     // the last admin cannot be disabled
+        s.setEnabled("ops", "drishti-dev-admin", false);
+        assertThat(s.defaultAdminPasswordInUse()).isFalse();                                   // nobody can sign in with the default password any more
+        s.setEnabled("ops", "drishti-dev-admin", true);
+        assertThat(s.defaultAdminPasswordInUse()).isTrue();
+    }
+
+    @Test
     void aFirstAdministratorChosenInTheConfigurationIsNotTheDevelopmentAdmin() {
         IdentityProperties p = new IdentityProperties(dir.resolve("users.json").toString(), dir.resolve("audit.jsonl").toString(),
                 1000, 10, 3, Duration.ofMinutes(15), true, "ops-admin", "chosen-by-the-operator-9", null, false, false,
