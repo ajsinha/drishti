@@ -569,6 +569,13 @@ public final class BiService {
         return catalogueItems(p).stream().filter(i -> "dataset".equals(i.kind())).toList();
     }
 
+    /** The caller's own unpublished datasets (in their private workspace, or in a workspace they belong to): listed, greyed with the reason, never usable by a report until published. */
+    public List<BiStore.Item> draftDatasets(Principal p) {
+        open(p);
+        Set<String> mine = myWorkspaces(p);
+        return store.items().stream().filter(i -> "dataset".equals(i.kind()) && !i.isPublished() && (i.owner().equals(p.user()) || mine.contains(i.workspace()))).toList();
+    }
+
     /** The published report items the caller may see (what a board's tile can name). */
     public List<BiStore.Item> reportItems(Principal p) {
         open(p);

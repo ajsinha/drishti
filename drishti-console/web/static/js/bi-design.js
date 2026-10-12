@@ -53,11 +53,8 @@
         });
         q('[data-no-drafts]').hidden = list.children.length > 0;
       }).catch((e) => say(e.message, true));
-    B.api('GET', '/datasets').then((ds) => {
-      const sel = q('[data-new-dataset]');
-      ds.datasets.filter((d) => d.valid).forEach((d) => sel.appendChild(h('option', { value: d.id, text: d.title })));
-      q('[data-no-datasets]').hidden = sel.options.length > 1;
-      if (want) { const o = Array.prototype.find.call(sel.options, (x) => x.value === want || x.value === 'file:dataset:' + want); if (o) { sel.value = o.value; } }
+    B.fillDatasetPickers(q('[data-new-dataset]'), q('[data-new-also]'), want).then((ds) => {
+      q('[data-no-datasets]').hidden = ds.some((d) => !B.datasetWhy(d));
     }).catch((e) => say(e.message, true));
     B.api('GET', '/workspaces').then((all) => {
       const shipped = all.find((w) => w.shipped);
@@ -80,7 +77,8 @@
       const name = B.slug(title) || 'my-report';
       const body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify(title) + '\ndataset: ' + ref + '\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n';
       const go = q('[data-new] [type=submit]');
-      B.busy(go, () => B.api('POST', '/workspaces/' + encodeURIComponent(wsSel.value || 'me') + '/items', { kind: 'report', title, description: '', body }).then((it) => { window.location.href = '/bi/design/' + B.id2path(it.id); }).catch((err) => B.near(go, err.message, true)));
+      const also = Array.prototype.filter.call(q('[data-new-also]').selectedOptions, (o) => o.value !== ref).map((o) => o.value.replace(/^file:dataset:/, ''));
+      B.busy(go, () => B.api('POST', '/workspaces/' + encodeURIComponent(wsSel.value || 'me') + '/items', { kind: 'report', title, description: '', body }).then((it) => { window.location.href = '/bi/design/' + B.id2path(it.id) + (also.length ? '?also=' + encodeURIComponent(also.join(',')) : ''); }).catch((err) => B.near(go, err.message, true)));
     });
     return;
   }

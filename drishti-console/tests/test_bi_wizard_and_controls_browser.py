@@ -227,7 +227,9 @@ def test_edit_in_the_wizard_keeps_a_key_it_has_no_control_for(stack, page):
     page.goto(f"{CONSOLE_URL}/bi/d/{state['dataset']}")
     page.wait_for_selector("[data-edit-wizard]:not([hidden])")
     page.click("[data-edit-wizard]")
-    page.wait_for_selector('[data-wiz-body][data-step="columns"]')
+    page.wait_for_selector('[data-wiz-body][data-step="source"]')                                         # edit mode opens on an overview with the list of steps
+    expect(page.locator("[data-wiz-stepjump] [data-jump]")).to_have_count(6)
+    next_step(page, "columns")
     expect(page.locator('[data-col-desc="trade.desk"]')).to_have_value("The desk that owns the trade")
     page.fill('[data-col-desc="trade.book"]', "The book")
     for step in ("relationships", "measures", "hierarchies", "refresh", "review"):
@@ -316,3 +318,119 @@ def test_the_wizard_fits_a_phone(stack, browser):
         assert box["height"] >= 43.5, sel
     clean(phone)
     phone.context.close()
+
+
+# ---- saving safely: two tabs, a frozen draft, a refresh, add visual, one bad visual -------------------------------------------------------------
+
+def make_report(title, visuals, workspace=None):
+    body = f"rachana: 1\nreport: {title.lower().replace(' ', '-')}\ntitle: {title}\ndataset: {state['dataset']}\npages:\n  - id: page1\n    title: Page 1\n    visuals:\n{visuals}"
+    if not visuals:
+        body = body.replace("    visuals:\n", "    visuals: []\n")
+    s, r = api("POST", f"/bi/workspaces/{workspace or state['ws']}/items", *WES, {"kind": "report", "title": title, "description": "", "body": body})
+    assert s in (200, 201), r
+    return r["id"]
+
+
+def test_two_tabs_on_one_draft_the_second_save_is_refused_and_offers_reload_copy_or_overwrite(stack, browser):
+    rid = make_report("Two tabs", "")
+    a = sign_in(browser, "wes", "/bi/designer")
+    b = a.context.new_page()
+    for pg in (a, b):
+        pg.goto(f"{CONSOLE_URL}/bi/design/{rid}")
+        pg.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
+    b.click("[data-add-visual]")                                                                         # an explicit Add visual
+    expect(b.locator("[data-canvas-grid] .bi-vis")).to_have_count(1)
+    b.click("[data-save]")
+    b.wait_for_function("() => /^Saved/.test(document.querySelector('[data-msg]').textContent)", timeout=20000)
+    a.click("[data-add-visual]")
+    a.click("[data-save]")
+    a.wait_for_selector("[data-stale-choice]", timeout=20000)                                            # 409 DRS-9007: saved elsewhere since you opened it
+    for want in ("data-stale-reload", "data-stale-copy", "data-stale-overwrite"):
+        assert a.locator(f"[{want}]").count() == 1, want
+    assert "visuals: []" not in item(rid)["body"] and item(rid)["body"].count("type:") == 1               # nothing of tab A was written
+    a.click("[data-stale-overwrite]")
+    a.wait_for_function("() => /^Saved/.test(document.querySelector('[data-msg]').textContent)", timeout=20000)
+    assert item(rid)["body"].count("type:") == 1                                                          # A overwrote with its own single visual
+    clean(a)
+    a.context.close()
+
+
+def test_a_proposed_draft_opens_read_only_with_a_banner_instead_of_failing_on_save(stack, browser):
+    rid = make_report("Frozen", "")
+    s, r = api("POST", f"/bi/items/{rid}/propose", *WES, {"note": "please"})
+    assert s == 200, r
+    pg = sign_in(browser, "wes", "/bi/designer")
+    pg.goto(f"{CONSOLE_URL}/bi/design/{rid}")
+    pg.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
+    expect(pg.locator("[data-readonly]")).to_contain_text("Proposed for review")
+    expect(pg.locator("[data-save]")).to_be_disabled()
+    expect(pg.locator("[data-withdraw]")).to_be_visible()
+    clean(pg)
+    pg.context.close()
+
+
+def test_one_broken_visual_is_one_error_card_and_the_others_are_drawn_for_a_reader(stack, browser):
+    rid = make_report("One bad visual", "      - { id: good, type: card, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Gross notional] } }\n"
+                                        "      - { id: bad, type: card, at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [NoSuchMeasure] } }\n")
+    pg = sign_in(browser, "wes", "/bi")
+    pg.goto(f"{CONSOLE_URL}/bi/r/{rid}")
+    pg.wait_for_selector("[data-ready=yes]", timeout=30000)
+    pg.wait_for_function("() => !document.querySelector('.bi-vis-busy') && document.querySelectorAll('.bi-vis').length === 2", timeout=30000)
+    expect(pg.locator(".bi-vis-failed")).to_have_count(1)
+    expect(pg.locator(".bi-vis:not(.bi-vis-failed) .bi-vis-ms")).to_have_count(1)
+    clean(pg)
+    pg.context.close()
+
+
+def test_a_refresh_gives_the_wizard_its_draft_back_and_discard_draft_throws_it_away(stack, browser):
+    pg = sign_in(browser, "wes", "/bi/datasets/new")
+    pg.wait_for_selector('[data-wiz-body][data-step="source"]')
+    pg.check('[data-wiz-mode="connector"]')
+    pg.select_option("[data-wiz-connector]", "trading-store")
+    pg.check('[data-kind="trade"]')
+    pg.fill("[data-wiz-name]", "refresh-me")
+    next_step(pg, "columns")
+    pg.fill('[data-col-desc="trade.desk"]', "kept across a refresh")
+    next_step(pg, "relationships")
+    pg.go_back()                                                                                          # the browser's Back is a step back, not a page away
+    pg.wait_for_selector('[data-wiz-body][data-step="columns"]')
+    pg.go_forward()
+    pg.wait_for_selector('[data-wiz-body][data-step="relationships"]')
+    pg.reload()
+    pg.wait_for_selector("[data-wiz-restored]", timeout=20000)
+    pg.wait_for_selector('[data-wiz-body][data-step="relationships"]')
+    pg.click("[data-wiz-back]")
+    pg.wait_for_selector('[data-wiz-body][data-step="columns"]')
+    expect(pg.locator('[data-col-desc="trade.desk"]')).to_have_value("kept across a refresh")
+    pg.click("[data-wiz-discard]")
+    pg.wait_for_selector('[data-wiz-body][data-step="source"]')
+    assert pg.locator("[data-wiz-restored]").count() == 0
+    clean(pg)
+    pg.context.close()
+
+
+def test_a_new_report_takes_a_main_dataset_and_more_and_greys_out_what_cannot_be_used(stack, browser):
+    pg = sign_in(browser, "wes", "/bi/designer")
+    pg.wait_for_selector("[data-new-also] option", timeout=20000)
+    private = pg.locator('[data-new-dataset] option:has-text("Plain trades")')                              # a draft in the private workspace (made above)
+    assert private.count() == 1 and private.get_attribute("disabled") is not None
+    assert "private workspace" in private.inner_text() and "publish it first" in private.inner_text()
+    pg.select_option("[data-new-dataset]", state["dataset"])
+    pg.select_option("[data-new-also]", "file:dataset:trades-basic")
+    pg.fill("[data-new-title]", "Two datasets")
+    pg.click("[data-new] button[type=submit]")
+    pg.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
+    assert "also=" in pg.url
+    pg.wait_for_function("() => document.querySelectorAll('[data-fields-tree] > *').length >= 2", timeout=20000)      # both datasets are in the Fields pane
+    box = pg.locator("[data-add-dataset]").bounding_box()
+    tree = pg.locator("[data-fields-tree]").bounding_box()
+    assert box["y"] < tree["y"], "Add dataset is above the tree"
+    clean(pg)
+    # the same pickers on the workspace form
+    pg.goto(f"{CONSOLE_URL}/bi/w/me")
+    pg.wait_for_selector("[data-new-item]:not([hidden])")
+    pg.select_option('[data-new-item] [name="kind"]', "report")
+    expect(pg.locator("[data-new-also]")).to_be_visible()
+    pg.wait_for_selector("[data-new-also] option", timeout=20000)
+    clean(pg)
+    pg.context.close()

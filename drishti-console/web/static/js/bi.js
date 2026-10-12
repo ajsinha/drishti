@@ -307,7 +307,7 @@
     };
     function kindChanged() {
       var f = q('[data-new-item]'), k = f.elements.kind.value, s = START[k];
-      q('[data-dataset-row]').hidden = k !== 'report';
+      qa('[data-dataset-row]').forEach(function (r) { r.hidden = k !== 'report'; });
       q('[data-python-row]').hidden = k !== 'python';
       q('[data-kind-hint]').textContent = s.hint;
       q('[data-create]').textContent = s.go;
@@ -315,18 +315,17 @@
     }
     q('[data-new-item]').elements.kind.addEventListener('change', kindChanged);
     kindChanged();
-    api('GET', '/datasets').then(function (d) {
-      var sel = q('[data-new-dataset]');
-      (d.datasets || []).filter(function (x) { return x.valid; }).forEach(function (x) { sel.appendChild(h('option', { value: x.id, text: x.title })); });
-    }).catch(function () {});
+    var fillPickers = function () { var B = window.drishtiBi; if (B && B.fillDatasetPickers) { B.fillDatasetPickers(q('[data-new-dataset]'), q('[data-new-also]')).catch(function () {}); } else { setTimeout(fillPickers, 50); } };
+    fillPickers();
     q('[data-new-item]').addEventListener('submit', function (e) {
       e.preventDefault();
       var f = e.target, kind = f.elements.kind.value, st = START[kind];
       if (st.href) { window.location.href = st.href + (kind === 'dataset' ? encodeURIComponent(id) : ''); return; }
-      var title = f.elements.title.value.trim() || defaultTitle(kind), body, to;
+      var title = f.elements.title.value.trim() || defaultTitle(kind), body, to, also = [];
       var name = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || kind;
       if (kind === 'report') {
-        if (!f.elements.dataset.value) { say('Choose a dataset: a report draws one.', true); f.elements.dataset.focus(); return; }
+        if (!f.elements.dataset.value) { say('Choose a main dataset: a report draws one.', true); f.elements.dataset.focus(); return; }
+        also = Array.prototype.filter.call(f.elements.also.selectedOptions, function (o) { return o.value !== f.elements.dataset.value; }).map(function (o) { return o.value.replace(/^file:dataset:/, ''); });
         body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify(title) + '\ndataset: ' + f.elements.dataset.value + '\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n';
         to = '/bi/design/';
       } else if (kind === 'python') {
@@ -339,7 +338,7 @@
         to = '/bi/design/board/';
       }
       api('POST', '/workspaces/' + encodeURIComponent(id) + '/items', { kind: kind, title: title, description: f.elements.description.value, body: body })
-        .then(function (it) { window.location.href = to + encodeURIComponent(it.id).replace(/%3A/g, ':') + (kind === 'python' ? '?edit=1' : ''); }).catch(fail);
+        .then(function (it) { window.location.href = to + encodeURIComponent(it.id).replace(/%3A/g, ':') + (kind === 'python' ? '?edit=1' : also.length ? '?also=' + encodeURIComponent(also.join(',')) : ''); }).catch(fail);
     });
     q('[data-add-member]').addEventListener('submit', function (e) {
       e.preventDefault();

@@ -25,7 +25,9 @@
   <section class="bi-sec" aria-labelledby="dNew"><h2 id="dNew">New report</h2>
     <form class="bi-form" data-new autocomplete="off">
       <label>Title<input class="studio-in" data-new-title maxlength="200" placeholder="Left empty: Report with the date and time"></label>
-      <label>Dataset<select class="studio-select" data-new-dataset required><option value="">Choose a dataset</option></select></label>
+      <label>Main dataset<select class="studio-select" data-new-dataset required><option value="">Choose a dataset</option></select></label>
+      <label>Also add (optional)<select class="studio-select" data-new-also multiple size="4" aria-label="More datasets to open in the Fields pane"></select>
+        <small class="text-muted-d">Hold Ctrl or Shift to choose several. They open beside the main dataset in the Fields pane; link them there.</small></label>
       <label>Workspace<select class="studio-select" data-new-workspace aria-label="Save the draft in this workspace"></select></label>
       <button type="submit" class="btn-pill btn-accent">Start designing</button>
     </form>

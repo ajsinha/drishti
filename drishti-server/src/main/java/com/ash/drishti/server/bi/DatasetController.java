@@ -58,8 +58,8 @@ public class DatasetController {
     }
 
     @GetMapping("/datasets")
-    public Map<String, Object> list(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return Map.of("datasets", datasets.list(p));
+    public Map<String, Object> list(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @org.springframework.web.bind.annotation.RequestParam(defaultValue = "false") boolean drafts) {
+        return Map.of("datasets", datasets.list(p, drafts));
     }
 
     /** Checks a dataset's YAML without storing it: the problems with their DRS codes and the path of each. */

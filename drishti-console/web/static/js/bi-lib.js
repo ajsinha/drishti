@@ -264,6 +264,25 @@
     return lines.slice(i).filter((l) => !/^sample:\s*true\b/.test(l)).join('\n').replace(/^tags:\s*\[(.*)\]/m, (m, t) => 'tags: [' + t.split(',').map((x) => x.trim()).filter((x) => x && x !== 'sample' && x !== 'tutorial').join(', ') + ']');
   };
 
+  /** Why a dataset of GET /datasets cannot be used for a new report yet, or '' when it can: shown beside the greyed entry instead of hiding it. */
+  B.datasetWhy = function (d) {
+    if (!d.valid) { return 'has errors: open it' + (d.errors ? ' (' + d.errors + ')' : ''); }
+    if (d.status && d.status !== 'published') { return d.personal ? 'draft in a private workspace: publish it first' : 'a draft: publish it first'; }
+    return '';
+  };
+  /** Fills the Main dataset <select> and the Also add <select multiple> from GET /datasets; datasets that cannot be used are greyed with the reason. */
+  B.fillDatasetPickers = function (main, also, want) {
+    return B.api('GET', '/datasets?drafts=1').then((d) => {
+      (d.datasets || []).forEach((x) => {
+        const why = B.datasetWhy(x), text = x.title + (why ? ' (' + why + ')' : '');
+        main.appendChild(B.h('option', { value: x.id, text, disabled: !!why }));
+        if (also) { also.appendChild(B.h('option', { value: x.id, text, disabled: !!why })); }
+      });
+      if (want) { const o = Array.prototype.find.call(main.options, (x) => !x.disabled && (x.value === want || x.value === 'file:dataset:' + want)); if (o) { main.value = o.value; } }
+      return d.datasets || [];
+    });
+  };
+
   B.ROW_PX = 56;                 // the height of one grid row of a report, in pixels (also in bi-report.css)
   B.GAP_PX = 10;
 })();

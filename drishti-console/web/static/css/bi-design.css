@@ -223,8 +223,7 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
   .bi-mpanes { display: flex; gap: .25rem; overflow-x: auto; margin: .4rem 0; }
   .bi-mpanes .bi-tab { min-height: 44px; flex: 0 0 auto; }
   .bi-dmain[data-mpane="canvas"] .bi-pane, .bi-dmain[data-mpane="vis"] .bi-pane:not(.bi-pane-vis), .bi-dmain[data-mpane="fields"] .bi-pane:not(.bi-pane-fields), .bi-dmain[data-mpane="filters"] .bi-pane:not(.bi-pane-filters) { display: none; }
-  .bi-dmain:not([data-mpane="canvas"]) .bi-dleft { display: none; }
-  .bi-dmain { grid-template-columns: minmax(0, 1fr); }
+  .bi-dmain[data-mpane]:not([data-mpane="canvas"]) .bi-dleft { display: none; }
   .bi-pane-vis { resize: none; min-height: 0; }
 }
 @media (pointer: coarse) { .bi-pane-head button, .bi-addvisual .btn-pill, .bi-addvisual select, .bi-chipbtn, .bi-vtype { min-height: 44px; min-width: 44px; } }

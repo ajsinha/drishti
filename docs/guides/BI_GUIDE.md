@@ -227,6 +227,12 @@ An **item** has a kind (`dataset`, `report`, `board`, `notebook`, `python`), a t
   (`drishti.governance.four-eyes`, `DRS-9005` otherwise). **Reject** needs a reason and returns the item to draft; the proposer
   may **withdraw**.
 
+- **Two people, one draft.** Every editor saves from the saved state it opened. If someone else saved first, the save is refused (`DRS-9007`, nothing is written) and the editor offers **Reload theirs**, **Save mine as a copy** (into a workspace you choose) or **Overwrite with mine**. This holds in the report designer, the board designer, the Model view, the dataset wizard in edit mode and the item page's Edit form.
+- **Frozen items open read-only.** A proposed item opens in a designer with a banner and **Withdraw to edit** (and the item page shows who can approve it). A published item is editable: the edit makes a new draft, and readers keep the published version until you publish again.
+- **Publish from the designer.** The designer's **Publish** button (**Propose** in a workspace that requires review) saves first (it asks when there are unsaved changes), then publishes or proposes. A report that cannot be drawn is refused with its errors listed.
+- **One bad visual, not a blank report.** A visual with an error of its own shows an error card; every other visual of the report is drawn, in the designer, the viewer, exports and boards.
+- **Forms that do not double-submit.** Buttons that send a request are disabled while it is in flight, and the answer (success or error) appears beside the button.
+
 ![Proposed for review](img/bi/08-review.jpg)
 
 ![Approving](img/bi/09-approve.jpg)
@@ -370,6 +376,7 @@ and the sample *Region economics* drills from the world map to Australian and US
 | `DRS-9004` | 409 | the state forbids it: name taken, nothing new to publish, already proposed, personal workspace (private, cannot publish or be shared), last admin, workspace not empty, shipped content is read-only |
 | `DRS-9005` | 403 | four-eyes: you proposed it, so you may not approve or reject it |
 | `DRS-9006` | 403 | BI is switched off on this server (`drishti.bi.enabled`) |
+| `DRS-9007` | 409 | stale save: someone saved the item since you opened it (the update named the saved state it started from, `baseEtag`, and it is no longer the latest) |
 The codes of the later phases are described once, in the reference that raises them, with their HTTP status:
 
 | Codes | About | Where |

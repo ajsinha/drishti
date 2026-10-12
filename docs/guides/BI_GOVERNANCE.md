@@ -87,6 +87,8 @@ Review extends the phase 1 flow; it does not replace it. A workspace may *requir
 
 **Who may decide.** A **bi-steward** may, in any workspace (a steward reads what is proposed for review, in any shared workspace; what is published stays behind its audience, so to certify an item a steward must be in its audience or its workspace). A workspace **member** may if they hold the `approve` power on a role. **Four-eyes** (`drishti.governance.four-eyes`, with security on): the person who proposed may not approve or reject (`DRS-9005`); they may withdraw. An approval that would break published reports is refused like any publish (section 6), and a bi-admin may force it.
 
+**Who is asked, and what is refused.** While an item is proposed its page says who can decide it (the rule, and the list of eligible approvers: every bi-steward and every workspace member whose role has the `approve` power, never the proposer), and that list is exactly who was told in the inbox. The proposer's own page hides **Edit** while it is proposed, and the designer opens a proposed report or board **read-only** with a banner (*Proposed for review: it is frozen. Withdraw the proposal to edit it*) and a **Withdraw to edit** button, instead of failing on Save. **Propose, Approve and Publish refuse a report that cannot be drawn** (its dataset is missing or a visual names a field that is gone): `422 DRS-9030` lists the errors, and a bi-admin may force it (`"force": true`; the audit trail says `FORCED over n drawing error(s)`, as it does for failing tests and breaking changes). A draft that cannot be drawn can still be saved.
+
 ![The review page: the request, the diff, Check, what it does to reports and a data preview](img/bi-governance/review.png)
 
 ## 4. Certification and endorsement

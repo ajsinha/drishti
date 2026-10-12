@@ -196,8 +196,17 @@ public final class DatasetService {
 
     /** The datasets the caller may see, with what is wrong with each. */
     public List<Map<String, Object>> list(Principal p) {
+        return list(p, false);
+    }
+
+    /** As above; with {@code drafts} the caller's own unpublished datasets follow, each marked by its status (a picker greys them out with the reason). */
+    public List<Map<String, Object>> list(Principal p, boolean drafts) {
         List<Map<String, Object>> out = new ArrayList<>();
-        for (BiStore.Item i : bi.datasetItems(p)) {
+        List<BiStore.Item> seen = new ArrayList<>(bi.datasetItems(p));
+        if (drafts) {
+            seen.addAll(bi.draftDatasets(p));
+        }
+        for (BiStore.Item i : seen) {
             DatasetParser.Result r = parse(i.id(), bi.bodyFor(p, i));
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("id", i.id());
@@ -208,6 +217,8 @@ public final class DatasetService {
             m.put("sample", i.tags().contains(BiFolder.SAMPLE_TAG));
             m.put("shipped", BiFolder.isShipped(i.id()));
             m.put("valid", r.ok());
+            m.put("status", i.status());
+            m.put("personal", !BiFolder.isShipped(i.id()) && bi.workspaceOf(i.workspace()).personal());
             m.put("errors", r.problems().stream().filter(DatasetParser.Problem::error).count());
             if (r.dataset() != null) {
                 m.put("tables", r.dataset().tables().size());
