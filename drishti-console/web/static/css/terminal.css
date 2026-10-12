@@ -471,7 +471,11 @@ body.embed .vhead { padding: .6rem .8rem; }
 .asof-live .dot { width: 11px; height: 11px; display: block; background: none; border: 0; position: relative; }
 .asof-live .dot::before, .asof-live .dot::after { content: ""; position: absolute; top: 0; bottom: 0; width: 4px; background: currentColor; border-radius: 1px; }
 .asof-live .dot::before { left: 1px; } .asof-live .dot::after { right: 1px; }
-.asof-live.on .ring { border-color: var(--d-ok); background: var(--d-ok); box-shadow: 0 0 .6rem var(--d-ok); animation: asof-live-glow 2.4s ease-in-out infinite; }
+.asof-live.on .ring { border-color: var(--d-ok); background: var(--d-ok); }
+/* the stream of this page, on the same button (the old separate dot): glowing while ticks arrive, an amber ring while it
+   reconnects (or the source deleted the entity), steady on a page without a stream */
+.asof-live.on[data-live-state="live"] .ring { box-shadow: 0 0 .6rem var(--d-ok); animation: asof-live-glow 2.4s ease-in-out infinite; }
+.asof-live.on[data-live-state="reconnecting"] .ring, .asof-live.on[data-live-state="deleted"] .ring { border-color: var(--d-warn); box-shadow: 0 0 0 2px var(--d-warn); }
 .asof-live.on .dot { border-radius: 50%; background: currentColor; box-shadow: none; }
 .asof-live.on .dot::before, .asof-live.on .dot::after { content: none; }
 .asof-live:hover { filter: brightness(1.08); }

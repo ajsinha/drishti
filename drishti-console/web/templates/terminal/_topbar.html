@@ -163,8 +163,6 @@
   </nav>
 
   <div class="tbar-tools">
-    {% if live is defined %}<span class="tbar-live tool" data-live-state="{{ 'live' if live else 'static' }}" title="{{ 'Live' if live else 'Static' }}{% if built_ms %}, built {{ built_ms }} ms{% endif %}"><span class="dot" aria-hidden="true"></span>
-      <span class="visually-hidden" data-live-text>{{ 'Live' if live else 'Static' }}{% if built_ms %}, built {{ built_ms }} ms{% endif %}</span></span>{% endif %}
     {% if SERVERS %}
     <div class="dropdown">
       <button class="tool srv-chip" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Server: {{ SERVER.name }} ({{ SERVER.url }})">
@@ -200,9 +198,9 @@
     {% endif %}
     {% include "_theme_menu.html" %}
     {# Live: left of the person's initials; a toggle (green live, red paused at the current business date) #}
-    <button type="button" class="asof-live{% if live_on %} on{% endif %}" data-asof-live aria-pressed="{{ 'true' if live_on else 'false' }}"
-            aria-label="{{ live_tip }}" title="{{ live_tip }}"
-            data-live-href="/asof?d=live&amp;next={{ request.url.path | urlencode }}" data-pause-href="/asof?d={{ bd.current or '' }}&amp;next={{ request.url.path | urlencode }}"><span class="ring" aria-hidden="true"><span class="dot"></span></span></button>
+    {% set stream = ("live" if live else "static") if live is defined else "none" %}{% set stream_text = (("Live" if live else "Static") ~ ((", built " ~ built_ms ~ " ms") if built_ms else "")) if live is defined else "" %}<button type="button" class="asof-live{% if live_on %} on{% endif %}" data-asof-live data-live-status data-live-state="{{ stream }}" data-tip="{{ live_tip }}" aria-pressed="{{ 'true' if live_on else 'false' }}"
+            aria-label="{{ live_tip }}" title="{{ live_tip }}{% if stream_text %} · {{ stream_text }}{% endif %}"
+            data-live-href="/asof?d=live&amp;next={{ request.url.path | urlencode }}" data-pause-href="/asof?d={{ bd.current or '' }}&amp;next={{ request.url.path | urlencode }}"><span class="ring" aria-hidden="true"><span class="dot"></span></span><span class="visually-hidden" data-live-text>{{ stream_text }}</span></button>
     <div class="dropdown">
       {% set who = me.display if me else USER %}
       <button class="tool user" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ who }}">

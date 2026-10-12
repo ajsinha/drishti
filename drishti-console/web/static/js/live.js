@@ -24,7 +24,7 @@
   if (!view || !window.DrishtiChannel) { return; }
   // a picked business date is a static snapshot: nothing to stream
   if (document.querySelector('[data-asof].asof-past') || view.hasAttribute('data-static')) { return; }
-  var liveBox = document.querySelector('.tbar-live');
+  var liveBox = document.querySelector('[data-live-status]');
   var liveText = document.querySelector('[data-live-text]');
   var strip = document.querySelectorAll('.strip-i dd');
   var first = true;
@@ -33,6 +33,7 @@
   function state(s, text) {
     if (liveBox) { liveBox.setAttribute('data-live-state', s); }
     if (liveText && text) { liveText.textContent = text; }
+    if (liveBox && text) { liveBox.title = (liveBox.getAttribute('data-tip') || '') + ' · ' + text; }   // the Live button says the choice and the stream
   }
   function flash(el) { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }

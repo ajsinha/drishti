@@ -28,7 +28,7 @@ ON, OFF = "Live updates on — click to pause", "Live updates paused — click t
 STATE = """() => { const b = document.querySelector('.tbar .asof-live'), ring = b.querySelector('.ring'), r = ring.getBoundingClientRect(), c = getComputedStyle(ring);
   const av = document.querySelector('.tbar .avatar').getBoundingClientRect(), hit = b.getBoundingClientRect();
   const d = getComputedStyle(b.querySelector('.dot'), '::before');
-  return {w: r.width, h: r.height, aw: av.width, ah: av.height, hit: Math.min(hit.width, hit.height), text: b.textContent.trim(), visible: !!r.width, bg: c.backgroundColor, radius: c.borderRadius,
+  return {w: r.width, h: r.height, aw: av.width, ah: av.height, hit: Math.min(hit.width, hit.height), text: [...b.childNodes].filter(n => !(n.classList && n.classList.contains('visually-hidden'))).map(n => n.textContent).join('').trim(), stream: b.getAttribute('data-live-state'), visible: !!r.width, bg: c.backgroundColor, radius: c.borderRadius,
           pressed: b.getAttribute('aria-pressed'), label: b.getAttribute('aria-label'), title: b.title, tag: b.tagName,
           bars: d.content !== 'none', sw: document.documentElement.scrollWidth, vw: document.documentElement.clientWidth}; }"""
 
@@ -48,7 +48,8 @@ def test_live_is_a_green_red_toggle(browser, console_url, width, mobile, scheme)
         assert s["tag"] == "BUTTON" and s["visible"] and s["text"] == "" and s["radius"] in ("50%", "22px")
         assert (round(s["w"]), round(s["h"])) == (round(s["aw"]), round(s["ah"])), s   # the same circle as the initials beside it
         assert s["hit"] >= (44 if mobile else 34), s                              # the button around it is the hit area
-        assert s["pressed"] == "true" and s["label"] == ON and s["title"] == ON and not s["bars"]
+        assert s["pressed"] == "true" and s["label"] == ON and s["title"].startswith(ON) and not s["bars"]
+        assert s["stream"] in ("live", "static") and (" · Live" in s["title"] or " · Static" in s["title"]), s   # the stream of this page, on the same button
         green = _rgb(s["bg"])
         assert green[1] > green[0] and green[1] > green[2], f"live should be green, got {s['bg']}"
         assert s["sw"] <= s["vw"]
@@ -59,7 +60,7 @@ def test_live_is_a_green_red_toggle(browser, console_url, width, mobile, scheme)
         s = page.evaluate(STATE)
         red = _rgb(s["bg"])
         assert red[0] > red[1] and red[0] > red[2], f"paused should be red, got {s['bg']}"
-        assert s["label"] == OFF and s["title"] == OFF and s["bars"] and s["text"] == "" and round(s["w"]) == round(s["aw"])
+        assert s["label"] == OFF and s["title"].startswith(OFF) and s["bars"] and s["text"] == "" and round(s["w"]) == round(s["aw"])
         before = _ticks(page)
         page.wait_for_timeout(1200)
         assert _ticks(page) == before, "updates kept arriving while paused"

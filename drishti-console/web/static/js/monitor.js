@@ -19,7 +19,7 @@
   var root = document.querySelector('[data-monitor]');
   if (!root) { return; }
   var name = root.dataset.name, msg = root.querySelector('[data-msg]');
-  var liveText = document.querySelector('[data-live-text]'), liveBox = document.querySelector('.tbar-live');
+  var liveText = document.querySelector('[data-live-text]'), liveBox = document.querySelector('[data-live-status]');
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function entities() {
     return [].map.call(root.querySelectorAll('[data-row]'), function (r) { return { kind: r.dataset.kind, id: r.dataset.id }; });
@@ -34,7 +34,7 @@
   function onRow(d) {
     {
       var row = root.querySelector('[data-row="' + CSS.escape(d.kind + '/' + d.id) + '"]');
-      if (liveText) { liveText.textContent = 'Live, p99 ' + Math.round(d.p99Ms) + ' ms'; liveBox.setAttribute('data-live-state', 'live'); }
+      if (liveText) { liveText.textContent = 'Live, p99 ' + Math.round(d.p99Ms) + ' ms'; liveBox.setAttribute('data-live-state', 'live'); liveBox.title = (liveBox.getAttribute('data-tip') || '') + ' · ' + liveText.textContent; }
       if (!row) { return; }
       d.patches.forEach(function (p) {
         var dd = row.querySelector('[data-i="' + p.index + '"]');
@@ -45,7 +45,7 @@
       });
     }
   }
-  function onError() { if (liveBox) { liveBox.setAttribute('data-live-state', 'reconnecting'); liveText.textContent = 'Reconnecting…'; } }
+  function onError() { if (liveBox) { liveBox.setAttribute('data-live-state', 'reconnecting'); liveText.textContent = 'Reconnecting…'; liveBox.title = (liveBox.getAttribute('data-tip') || '') + ' · Reconnecting…'; } }
   root.querySelector('[data-add]').addEventListener('submit', function (e) {
     e.preventDefault();
     var input = e.target.querySelector('input');

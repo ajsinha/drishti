@@ -123,7 +123,7 @@ what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *De
 
 | Tool | Looks like | What it does |
 |---|---|---|
-| Live | a dot, only on a view | Glows while the view streams; amber while it reconnects or while the tab is paused; grey for a static view (a past date). Hover over it to read `Live, built 1.92 ms`: how long the server took to build the view |
+| Live | the round button right of the theme switcher | Your choice and this page's stream in one: green while live (glowing while ticks arrive, an amber ring while it reconnects, steady on a page without a stream), red with pause bars while paused or on a picked date. Hover to read both, for example *Live updates on — click to pause · Live, built 1.92 ms*. A click switches ([Business dates](#business-dates-live-or-a-day-in-the-past)) |
 | Alerts | a bell | Opens `/alerts`. A number on the bell counts alerts you have not seen ([Alerts](#alerts)) |
 | Packs | a box with a number | Appears when you may use more than one pack. The number is how many you have switched on; hover to read their names ([Domain packs](#domain-packs-choosing-what-you-see)) |
 | Theme | a palette | Seven themes ([Themes](#themes)) |
@@ -1175,7 +1175,7 @@ could find yourself, and a masked measure and its total read `•••`. See th
 Views of live entities tick: figures change in place and flash briefly. Open `TRD MX-20000001` and watch
 **MTM (USD)** for a few seconds.
 
-- The **live dot** among the round tools of the top bar glows while the view streams. Hover over it to read
+- The round **Live** button glows while the view streams (an amber ring while it reconnects). Hover over it to read
   how long the view took to build (`Live, built 1.92 ms`).
 - All views, panes, the bell and monitors in **all the tabs of one browser** share **one** connection, so you can
   keep as many live tabs and workspaces open as you like (one per screen, say): new pages still load at once.
