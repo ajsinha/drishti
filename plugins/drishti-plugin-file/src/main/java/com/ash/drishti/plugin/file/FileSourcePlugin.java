@@ -538,6 +538,11 @@ public final class FileSourcePlugin implements SourcePlugin {
         return lastUpdate;
     }
 
+    /** The multi-day index (tests). */
+    com.ash.drishti.api.DatedHitIndex datedIndexForTest() {
+        return datedIdx.index();
+    }
+
     void rescan() {
         if (!Files.isDirectory(root)) {
             return;

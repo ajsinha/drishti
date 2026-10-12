@@ -79,7 +79,7 @@ class DatedHitIndexTest {
         DatedHitIndex idx = new DatedHitIndex(days(3), null);
         idx.putDay("trade", D0, List.of(hit("A")));
         assertThat(idx.search("trade", "a", 5, D0.minusDays(1))).isEmpty();
-        assertThat(idx.search("trade", "a", 5, null)).isEmpty();
+        assertThat(ids(idx.search("trade", "a", 5, null))).containsExactly("A");     // null is the newest date, never a key of its own
         assertThat(ids(idx.search("trade", "a", 5, D0))).containsExactly("A");
     }
 

@@ -141,7 +141,10 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         this.maxLoadRows = Integer.parseInt(ctx.setting("max-load-rows", "200000"));
         this.reverseIndex = Boolean.parseBoolean(ctx.setting("reverse-index", "true"));
         this.lake = IcebergLake.of(ctx.settings());
-        this.dated = new DatedHitIndex(ctx.settings(), this::dayHits);
+        this.dated = new DatedHitIndex(sourceName, DatedHitIndex.defaultRoot(), ctx.settings(), this::dayHits, (k, d) -> {
+            Long v = datedSnapshots.get(k);
+            return v == null ? null : "s" + v;
+        });
         this.layouts = Caffeine.newBuilder().executor(loaders).maximumSize(Long.parseLong(ctx.setting("layout-cache", "64"))).buildAsync();
         this.idMaps = Caffeine.newBuilder().executor(loaders).maximumWeight(mb(ctx, "id-map-mb", "1024"))
                 .weigher((DayKey k, IdMap v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes())).buildAsync();
@@ -466,8 +469,8 @@ public final class IcebergSourcePlugin implements SourcePlugin {
 
     @Override
     public List<EntityHit> search(String kind, String text, int limit, AsOf asOf) {
-        if (asOf != null && asOf.businessDate() != null && dated.enabled()) {
-            var hits = dated.search(kind, text, limit, asOf.businessDate());
+        if (dated.enabled()) {
+            var hits = dated.search(kind, text, limit, asOf == null ? null : asOf.businessDate());
             if (hits.isPresent()) {
                 return hits.get();
             }

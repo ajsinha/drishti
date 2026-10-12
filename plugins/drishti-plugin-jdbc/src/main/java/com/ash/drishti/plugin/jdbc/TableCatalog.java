@@ -101,14 +101,14 @@ final class TableCatalog {
         this.lookbackDays = lookbackDays;
         this.promoted = Map.copyOf(promoted);
         this.scanThreads = Math.max(1, scanThreads);
-        this.dated = new DatedHitIndex(settings, (kind, day) -> {
+        this.dated = new DatedHitIndex(sourceName, DatedHitIndex.defaultRoot(), settings, (kind, day) -> {
             List<EntityHit> hits = new ArrayList<>();
             db.with(c -> {
                 table.ids(c, kind, day, id -> hits.add(new EntityHit(EntityRef.of(kind, id), id, kind + " · " + sourceName)));
                 return null;
             });
             return hits;
-        });
+        }, (kind, day) -> loadedAt == null ? null : loadedAt.toString());
         this.columnSets = Caffeine.newBuilder().maximumWeight(columnsCacheMb * 1024 * 1024)
                 .weigher((DayKey k, ColumnSet v) -> (int) Math.min(Integer.MAX_VALUE, weight(v))).expireAfterWrite(columnsTtl).build();
     }
@@ -248,8 +248,8 @@ final class TableCatalog {
      * with another), else the newest day's ids as before.
      */
     List<EntityHit> search(String kind, String text, int limit, AsOf asOf) {
-        if (asOf != null && asOf.businessDate() != null && dated.enabled()) {
-            var hits = dated.search(kind, text, limit, asOf.businessDate());
+        if (dated.enabled()) {
+            var hits = dated.search(kind, text, limit, asOf == null ? null : asOf.businessDate());
             if (hits.isPresent()) {
                 return hits.get();
             }

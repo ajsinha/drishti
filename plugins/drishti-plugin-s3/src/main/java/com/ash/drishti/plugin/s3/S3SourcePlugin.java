@@ -298,8 +298,8 @@ public final class S3SourcePlugin implements SourcePlugin {
 
     @Override
     public List<EntityHit> search(String kind, String text, int limit, AsOf asOf) {
-        if (asOf != null && asOf.businessDate() != null && dated.enabled()) {
-            var hits = dated.search(kind, text, limit, asOf.businessDate());
+        if (dated.enabled()) {
+            var hits = dated.search(kind, text, limit, asOf == null ? null : asOf.businessDate());
             if (hits.isPresent()) {
                 return hits.get();
             }

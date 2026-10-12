@@ -180,7 +180,10 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 promoted.put(k.substring(7, k.length() - 8), java.util.Arrays.stream(v.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList());
             }
         });
-        this.dated = new DatedHitIndex(ctx.settings(), this::dayHits);
+        this.dated = new DatedHitIndex(sourceName, DatedHitIndex.defaultRoot(), ctx.settings(), this::dayHits, (k, d) -> {
+            Long v = versions.get(k);
+            return v == null ? null : "v" + v;
+        });
         reindex();
         ctx.scheduler().scheduleWithFixedDelay(this::reindex, refresh * 6, refresh * 6, TimeUnit.SECONDS);
         int warm = Integer.parseInt(ctx.setting("warm-dates", "3"));
@@ -427,8 +430,8 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     @Override
     public List<EntityHit> search(String kind, String text, int limit, AsOf asOf) {
-        if (asOf != null && asOf.businessDate() != null && dated.enabled()) {
-            var hits = dated.search(kind, text, limit, asOf.businessDate());
+        if (dated.enabled()) {
+            var hits = dated.search(kind, text, limit, asOf == null ? null : asOf.businessDate());
             if (hits.isPresent()) {
                 return hits.get();
             }

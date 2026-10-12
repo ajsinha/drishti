@@ -63,6 +63,8 @@ plugins:
       - { name: index.max-memory, default: "600MB", desc: "Most memory the kept days may use; older days drop early above it (600MB, 2GB; 0 = no cap)", group: tuning }
       - { name: index.warm, type: "enum:background|lazy", default: "background", desc: "Build past days in the background after start, or on the first search for them", group: tuning }
       - { name: index.any-recent-day, type: boolean, default: "false", desc: "A bare id on the newest day also suggests ids seen only on earlier kept days (marked last seen)", group: tuning }
+      - { name: index.storage, type: "enum:heap|mmap", default: "heap", desc: "heap: closed days stay in memory until max-memory, then move to memory-mapped files; mmap: closed days go to files at once", group: tuning }
+      - { name: index.max-disk, default: "2GB", desc: "Most disk the connector's index segment files may use (under drishti.index.dir); the oldest days drop above it; 0 = no cap", group: tuning }
       - { name: "index.kinds.*", desc: "Per-kind override of any index setting (index.kinds.<kind>.days)", group: tuning }
   duckdb:
     settings:
@@ -84,6 +86,8 @@ plugins:
       - { name: index.max-memory, default: "600MB", desc: "Most memory the kept days may use; older days drop early above it (600MB, 2GB; 0 = no cap)", group: tuning }
       - { name: index.warm, type: "enum:background|lazy", default: "background", desc: "Build past days in the background after start, or on the first search for them", group: tuning }
       - { name: index.any-recent-day, type: boolean, default: "false", desc: "A bare id on the newest day also suggests ids seen only on earlier kept days (marked last seen)", group: tuning }
+      - { name: index.storage, type: "enum:heap|mmap", default: "heap", desc: "heap: closed days stay in memory until max-memory, then move to memory-mapped files; mmap: closed days go to files at once", group: tuning }
+      - { name: index.max-disk, default: "2GB", desc: "Most disk the connector's index segment files may use (under drishti.index.dir); the oldest days drop above it; 0 = no cap", group: tuning }
       - { name: "index.kinds.*", desc: "Per-kind override of any index setting (index.kinds.<kind>.days)", group: tuning }
   delta:
     tls: true
@@ -118,6 +122,8 @@ plugins:
       - { name: index.max-memory, default: "600MB", desc: "Most memory the kept days may use; older days drop early above it (600MB, 2GB; 0 = no cap)", group: tuning }
       - { name: index.warm, type: "enum:background|lazy", default: "background", desc: "Build past days in the background after start, or on the first search for them", group: tuning }
       - { name: index.any-recent-day, type: boolean, default: "false", desc: "A bare id on the newest day also suggests ids seen only on earlier kept days (marked last seen)", group: tuning }
+      - { name: index.storage, type: "enum:heap|mmap", default: "heap", desc: "heap: closed days stay in memory until max-memory, then move to memory-mapped files; mmap: closed days go to files at once", group: tuning }
+      - { name: index.max-disk, default: "2GB", desc: "Most disk the connector's index segment files may use (under drishti.index.dir); the oldest days drop above it; 0 = no cap", group: tuning }
       - { name: "index.kinds.*", desc: "Per-kind override of any index setting (index.kinds.<kind>.days)", group: tuning }
   iceberg:
     tls: true
@@ -150,6 +156,8 @@ plugins:
       - { name: index.max-memory, default: "600MB", desc: "Most memory the kept days may use; older days drop early above it (600MB, 2GB; 0 = no cap)", group: tuning }
       - { name: index.warm, type: "enum:background|lazy", default: "background", desc: "Build past days in the background after start, or on the first search for them", group: tuning }
       - { name: index.any-recent-day, type: boolean, default: "false", desc: "A bare id on the newest day also suggests ids seen only on earlier kept days (marked last seen)", group: tuning }
+      - { name: index.storage, type: "enum:heap|mmap", default: "heap", desc: "heap: closed days stay in memory until max-memory, then move to memory-mapped files; mmap: closed days go to files at once", group: tuning }
+      - { name: index.max-disk, default: "2GB", desc: "Most disk the connector's index segment files may use (under drishti.index.dir); the oldest days drop above it; 0 = no cap", group: tuning }
       - { name: "index.kinds.*", desc: "Per-kind override of any index setting (index.kinds.<kind>.days)", group: tuning }
   aerospike:
     tls: true
@@ -260,6 +268,8 @@ plugins:
       - { name: index.max-memory, default: "600MB", desc: "Most memory the kept days may use; older days drop early above it (600MB, 2GB; 0 = no cap)", group: tuning }
       - { name: index.warm, type: "enum:background|lazy", default: "background", desc: "Build past days in the background after start, or on the first search for them", group: tuning }
       - { name: index.any-recent-day, type: boolean, default: "false", desc: "A bare id on the newest day also suggests ids seen only on earlier kept days (marked last seen)", group: tuning }
+      - { name: index.storage, type: "enum:heap|mmap", default: "heap", desc: "heap: closed days stay in memory until max-memory, then move to memory-mapped files; mmap: closed days go to files at once", group: tuning }
+      - { name: index.max-disk, default: "2GB", desc: "Most disk the connector's index segment files may use (under drishti.index.dir); the oldest days drop above it; 0 = no cap", group: tuning }
       - { name: "index.kinds.*", desc: "Per-kind override of any index setting (index.kinds.<kind>.days)", group: tuning }
   demo:
     settings:
@@ -350,6 +360,8 @@ plugins:
       - { name: index.max-memory, default: "600MB", desc: "Most memory the kept days may use; older days drop early above it (600MB, 2GB; 0 = no cap)", group: tuning }
       - { name: index.warm, type: "enum:background|lazy", default: "background", desc: "Build past days in the background after start, or on the first search for them", group: tuning }
       - { name: index.any-recent-day, type: boolean, default: "false", desc: "A bare id on the newest day also suggests ids seen only on earlier kept days (marked last seen)", group: tuning }
+      - { name: index.storage, type: "enum:heap|mmap", default: "heap", desc: "heap: closed days stay in memory until max-memory, then move to memory-mapped files; mmap: closed days go to files at once", group: tuning }
+      - { name: index.max-disk, default: "2GB", desc: "Most disk the connector's index segment files may use (under drishti.index.dir); the oldest days drop above it; 0 = no cap", group: tuning }
       - { name: "index.kinds.*", desc: "Per-kind override of any index setting (index.kinds.<kind>.days)", group: tuning }
   kafka:
     tls: true

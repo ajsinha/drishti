@@ -67,6 +67,11 @@ public final class DuckDbSourcePlugin implements SourcePlugin {
     private final Map<String, String> modes = new LinkedHashMap<>();
     private DuckDbFile file;
     private DuckDbCatalog catalog;
+
+    /** The multi-day index (tests). */
+    com.ash.drishti.api.DatedHitIndex datedIndexForTest() {
+        return catalog.dated();
+    }
     private String table;
     private String sourceName = "duckdb";
     private SourceContext context;

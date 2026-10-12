@@ -15,6 +15,9 @@
  */
 package com.ash.drishti.api;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,19 +38,32 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Stream;
 
 /**
- * Type-ahead over several business days. Per kind: one dictionary of ids, each stored once and sorted for prefix binary
- * search, and one compact bitmap per business day marking which ids existed that day. A lookup is for one requested day
- * and never mixes days. Reads are lock-free (they use an immutable snapshot that writers swap); writers (the newest day's
- * refresh, a restated past day, the background warm-up) take a per-kind lock. When the kept days roll forward the oldest
- * day's bitmap drops and ids that no kept day holds are purged, so memory stays flat. {@link DayIndexSettings#maxMemoryBytes}
- * caps the connector's total and drops the oldest days early.
+ * Type-ahead over several business days. Every lookup is by a concrete business date: the index is a map of date to day
+ * segment, and "live" or "current" is resolved to the kind's newest date before it gets here (a {@code null} date is
+ * answered as the newest date, never as a separate key). A kind with no dates uses {@link #UNDATED}.
+ *
+ * <p>Tiers. The newest day and, by default, the closed days live on the heap: per kind one dictionary of ids, each stored
+ * once and sorted for prefix binary search, and one compact bitmap per day. When {@link DayIndexSettings#maxMemoryBytes}
+ * is reached (or {@code index.storage: mmap} says so) a closed day moves to a {@link DaySegment}: a file of sorted,
+ * block-compressed ids read through a memory map, so its prefix lookups stay fast with nothing on the heap. A day neither
+ * tier holds is built on demand by the caller's fallback. Segment files live under {@code drishti.index.dir} (default
+ * {@code <data dir>/index}), are capped by {@code index.max-disk}, record the source watermark they were built from and
+ * are reused after a restart only while it is unchanged.
+ *
+ * <p>Reads are lock-free (immutable snapshots that writers swap); writers (the newest day's refresh, a restated past day,
+ * the background warm-up) take a per-kind lock. When the business date rolls, a new day is added, the oldest day (heap
+ * bitmap or file) is dropped, and ids no kept day holds are purged, so memory and disk stay flat.
  *
  * <p>A connector that keeps one day ({@code days} 1) does not use this class: {@link #search} answers empty and the
  * connector's own {@link HitIndex} serves, as before.
  */
 public final class DatedHitIndex {
+
+    /** The key of a kind with no business dates. */
+    public static final LocalDate UNDATED = LocalDate.MIN;
 
     /** Reads the ids of one kind on one business day (a table query, a folder listing). */
     @FunctionalInterface
@@ -55,10 +71,16 @@ public final class DatedHitIndex {
         List<EntityHit> load(String kind, LocalDate day) throws Exception;
     }
 
-    /** What Health shows. */
-    public record Stats(int kinds, int days, int ids, long memoryBytes, String warm, List<LocalDate> indexedDays) {}
+    /** The version of the source a day was read from (a load time, a table version); null when unknown. */
+    @FunctionalInterface
+    public interface Watermark {
+        String of(String kind, LocalDate day);
+    }
 
-    /** An immutable version of one kind: dictionary (parallel arrays by ordinal), id order, and a bitmap per day. */
+    /** What Health shows. */
+    public record Stats(int kinds, int days, int ids, long memoryBytes, String warm, List<LocalDate> indexedDays, int diskDays, long diskBytes) {}
+
+    /** An immutable version of one kind: dictionary (parallel arrays by ordinal), id order, and a bitmap per heap day. */
     private record Snap(String[] lower, EntityHit[] hits, int[] order, TreeMap<LocalDate, BitSet> days) {
         static final Snap EMPTY = new Snap(new String[0], new EntityHit[0], new int[0], new TreeMap<>());
     }
@@ -66,7 +88,17 @@ public final class DatedHitIndex {
     private static final class KindIndex {
         final ReentrantLock lock = new ReentrantLock();
         final AtomicReference<Snap> snap = new AtomicReference<>(Snap.EMPTY);
+        final AtomicReference<TreeMap<LocalDate, DaySegment>> spilled = new AtomicReference<>(new TreeMap<>());
+        final Map<LocalDate, String> marks = new HashMap<>();            // the source watermark each day was read at (under lock)
         volatile NavigableSet<LocalDate> wanted = new TreeSet<>();
+
+        LocalDate newest() {
+            Snap s = snap.get();
+            TreeMap<LocalDate, DaySegment> sp = spilled.get();
+            LocalDate a = s.days().isEmpty() ? null : s.days().lastKey();
+            LocalDate b = sp.isEmpty() ? null : sp.lastKey();
+            return a == null ? b : b == null ? a : a.isAfter(b) ? a : b;
+        }
     }
 
     private final Map<String, KindIndex> kinds = new ConcurrentHashMap<>();
@@ -74,16 +106,46 @@ public final class DatedHitIndex {
     private final AtomicBoolean warming = new AtomicBoolean();
     private final AtomicInteger warmPending = new AtomicInteger();
     private final DayLoader loader;
+    private final Watermark watermark;
+    private final Path dir;                                              // this connector's segment folder, or null (no disk tier)
     private volatile Map<String, String> settings;
 
+    /** An index with no disk tier (tests, connectors that hold days on the heap only). */
     public DatedHitIndex(Map<String, String> settings, DayLoader loader) {
+        this(null, null, settings, loader, null);
+    }
+
+    /**
+     * @param namespace names this connector's folder under {@code root}; null with a null {@code root} for no disk tier
+     * @param root the index folder ({@link #defaultRoot()})
+     * @param watermark the source version of a day, so a restart can reuse a file; null never reuses
+     */
+    public DatedHitIndex(String namespace, Path root, Map<String, String> settings, DayLoader loader, Watermark watermark) {
         this.settings = Map.copyOf(settings);
         this.loader = loader;
+        this.watermark = watermark;
+        this.dir = root == null || namespace == null ? null : root.resolve(safe(namespace));
+    }
+
+    /** {@code drishti.index.dir}, default {@code <data dir>/index} (never the temporary folder). */
+    public static Path defaultRoot() {
+        String p = System.getProperty("drishti.index.dir");
+        return Path.of(p == null || p.isBlank() ? DataDir.under("index") : p).toAbsolutePath().normalize();
+    }
+
+    private static String safe(String s) {
+        return s.replaceAll("[^A-Za-z0-9._-]", "_");
     }
 
     /** The settings that apply to {@code kind}. */
     public DayIndexSettings settingsFor(String kind) {
         return DayIndexSettings.of(settings, kind);
+    }
+
+    /** True when any kind keeps more than one day (so a connector can skip all of this at the default). */
+    public boolean enabled() {
+        return DayIndexSettings.of(settings, null).multiDay()
+                || settings.keySet().stream().anyMatch(k -> k.startsWith("index.kinds.") && k.endsWith(".days"));
     }
 
     /** The most days any kind keeps (the connector default or a kind's override). */
@@ -97,16 +159,14 @@ public final class DatedHitIndex {
         return max;
     }
 
-    /** True when any kind keeps more than one day (so a connector can skip all of this at the default). */
-    public boolean enabled() {
-        return DayIndexSettings.of(settings, null).multiDay()
-                || settings.keySet().stream().anyMatch(k -> k.startsWith("index.kinds.") && k.endsWith(".days"));
-    }
-
     /** Applies new settings live: windows shrink at once (a grown window fills as {@link #plan} is next called). */
     public void reconfigure(Map<String, String> next) {
         this.settings = Map.copyOf(next);
-        kinds.forEach((kind, ki) -> locked(ki, () -> ki.snap.set(trimmed(kind, ki.snap.get()))));
+        kinds.forEach((kind, ki) -> locked(ki, () -> commit(kind, ki, ki.snap.get())));
+    }
+
+    private Path segmentPath(String kind, LocalDate day) {
+        return dir.resolve(safe(kind) + "-" + (UNDATED.equals(day) ? "undated" : day.toString()) + ".seg");
     }
 
     // ---- writes ------------------------------------------------------------------------------------------------
@@ -117,13 +177,42 @@ public final class DatedHitIndex {
      * kept window.
      */
     public void putDay(String kind, LocalDate day, Collection<EntityHit> hits) {
+        put(kind, day, hits, watermark == null ? null : watermark.of(kind, day));
+    }
+
+    private void put(String kind, LocalDate day, Collection<EntityHit> hits, String mark) {
         KindIndex ki = kinds.computeIfAbsent(kind, k -> new KindIndex());
         locked(ki, () -> {
             Snap old = ki.snap.get();
-            if (old.days().size() >= settingsFor(kind).days() && day.isBefore(old.days().firstKey()) && !old.days().containsKey(day)) {
+            TreeMap<LocalDate, DaySegment> sp = ki.spilled.get();
+            TreeSet<LocalDate> all = union(old, sp);
+            DayIndexSettings cfg = settingsFor(kind);
+            if (all.size() >= cfg.days() && day.isBefore(all.first()) && !all.contains(day)) {
                 return;
             }
-            ki.snap.set(trimmed(kind, with(old, day, hits)));
+            LocalDate newest = all.isEmpty() ? null : all.last();
+            boolean toDisk = dir != null
+                    && (sp.containsKey(day) || cfg.storage() == DayIndexSettings.Storage.MMAP && newest != null && day.isBefore(newest));
+            ki.marks.put(day, mark);
+            if (toDisk) {
+                try {
+                    DaySegment seg = DaySegment.write(segmentPath(kind, day), mark, new ArrayList<>(distinct(hits).values()));
+                    TreeMap<LocalDate, DaySegment> next = new TreeMap<>(sp);
+                    next.put(day, seg);
+                    ki.spilled.set(next);
+                    Snap cur = old;
+                    if (old.days().containsKey(day)) {
+                        TreeMap<LocalDate, BitSet> d = new TreeMap<>(old.days());
+                        d.remove(day);
+                        cur = purge(old, d);
+                    }
+                    commit(kind, ki, cur);
+                    return;
+                } catch (java.io.UncheckedIOException e) {
+                    // the disk refused: this day goes on the heap instead
+                }
+            }
+            commit(kind, ki, with(old, day, hits));
         });
     }
 
@@ -132,18 +221,28 @@ public final class DatedHitIndex {
         KindIndex ki = kinds.get(kind);
         if (ki != null) {
             locked(ki, () -> {
-                TreeMap<LocalDate, BitSet> d = new TreeMap<>(ki.snap.get().days());
-                if (d.remove(day) != null) {
-                    ki.snap.set(purge(ki.snap.get(), d));
+                TreeMap<LocalDate, DaySegment> sp = new TreeMap<>(ki.spilled.get());
+                DaySegment seg = sp.remove(day);
+                if (seg != null) {
+                    seg.delete();
+                    ki.spilled.set(sp);
                 }
+                TreeMap<LocalDate, BitSet> d = new TreeMap<>(ki.snap.get().days());
+                Snap cur = ki.snap.get();
+                if (d.remove(day) != null) {
+                    cur = purge(cur, d);
+                }
+                ki.marks.remove(day);
+                ki.snap.set(cur);
             });
         }
     }
 
     /**
      * Declares the business dates the kind has. The newest {@code days} are the window: days outside it are dropped (a
-     * business-date roll) and, per the warm mode, missing days inside it are loaded in the background newest first
-     * (background) or on the first search for them (lazy). The newest day is expected to be put by the caller.
+     * business-date roll: the oldest day's bitmap or file goes) and a segment file left by an earlier run is reused when
+     * its watermark still matches the source; per the warm mode, other missing days inside the window are loaded in the
+     * background newest first (background) or on the first search for them (lazy). The caller puts the newest day.
      */
     public void plan(String kind, NavigableSet<LocalDate> available) {
         DayIndexSettings s = settingsFor(kind);
@@ -165,21 +264,69 @@ public final class DatedHitIndex {
             if (d.keySet().removeIf(x -> !want.contains(x))) {
                 cur = purge(cur, d);
             }
-            ki.snap.set(trimmed(kind, cur));
+            TreeMap<LocalDate, DaySegment> sp = new TreeMap<>(ki.spilled.get());
+            sp.entrySet().removeIf(e -> {
+                boolean out = !want.contains(e.getKey());
+                if (out) {
+                    e.getValue().delete();
+                }
+                return out;
+            });
+            adoptFiles(kind, want, cur, sp, ki);
+            ki.spilled.set(sp);
+            commit(kind, ki, cur);
         });
         if (s.warm() == DayIndexSettings.Warm.BACKGROUND) {
             for (LocalDate d : want.descendingSet()) {
-                if (!ki.snap.get().days().containsKey(d)) {
+                if (!has(kind, d)) {
                     enqueue(kind, d);
                 }
             }
         }
     }
 
-    /** A past day was restated or a data load named it: its bitmap is rebuilt in the background (only if kept). */
+    /** Reuses the files an earlier run left whose watermark still matches; removes stray and temporary files. */
+    private void adoptFiles(String kind, TreeSet<LocalDate> want, Snap cur, TreeMap<LocalDate, DaySegment> sp, KindIndex ki) {
+        if (dir == null || !Files.isDirectory(dir)) {
+            return;
+        }
+        for (LocalDate d : want) {
+            if (cur.days().containsKey(d) || sp.containsKey(d) || watermark == null) {
+                continue;
+            }
+            String now = watermark.of(kind, d);
+            Path f = segmentPath(kind, d);
+            Optional<DaySegment> seg = now == null ? Optional.empty() : DaySegment.open(f);
+            if (seg.isPresent() && now.equals(seg.get().watermark())) {
+                sp.put(d, seg.get());
+                ki.marks.put(d, now);
+            } else if (Files.exists(f)) {
+                try {
+                    Files.deleteIfExists(f);                            // the source changed since: rebuilt below
+                } catch (IOException e) {
+                    // retried at the next plan
+                }
+            }
+        }
+        String prefix = safe(kind) + "-";
+        try (Stream<Path> files = Files.list(dir)) {
+            for (Path f : files.toList()) {
+                String n = f.getFileName().toString();
+                boolean stray = n.contains(".tmp-")
+                        || n.startsWith(prefix) && n.endsWith(".seg") && sp.values().stream().noneMatch(x -> x.file().equals(f))
+                                && want.stream().noneMatch(d -> segmentPath(kind, d).equals(f));
+                if (stray) {
+                    Files.deleteIfExists(f);                            // a crash mid-write, or a day that rolled out
+                }
+            }
+        } catch (IOException e) {
+            // cleaned at the next plan
+        }
+    }
+
+    /** A past day was restated or a data load named it: its bitmap or file is rebuilt in the background (only if kept). */
     public void restated(String kind, LocalDate day) {
-        KindIndex ki = kinds.get(kind);
-        if (ki != null && ki.snap.get().days().containsKey(day)) {
+        if (has(kind, day)) {
             enqueue(kind, day);
         }
     }
@@ -188,7 +335,7 @@ public final class DatedHitIndex {
     public void restatedAll(String kind) {
         KindIndex ki = kinds.get(kind);
         if (ki != null) {
-            ki.snap.get().days().descendingKeySet().forEach(d -> enqueue(kind, d));
+            union(ki.snap.get(), ki.spilled.get()).descendingSet().forEach(d -> enqueue(kind, d));
         }
     }
 
@@ -199,7 +346,8 @@ public final class DatedHitIndex {
         warmPending.incrementAndGet();
         warmQueue.addLast(() -> {
             try {
-                putDay(kind, day, loader.load(kind, day));
+                String mark = watermark == null ? null : watermark.of(kind, day);       // read before the data: never newer than it
+                put(kind, day, loader.load(kind, day), mark);
             } catch (Exception e) {
                 // the day stays unindexed (or as it was): searches for it fall back, the next plan tries again
             }
@@ -252,27 +400,95 @@ public final class DatedHitIndex {
         }
     }
 
-    /** {@code s} cut to the kind's window and, with the other kinds, to the connector's memory cap (oldest days first). */
-    private Snap trimmed(String kind, Snap s) {
+    private static TreeSet<LocalDate> union(Snap s, Map<LocalDate, DaySegment> sp) {
+        TreeSet<LocalDate> all = new TreeSet<>(s.days().keySet());
+        all.addAll(sp.keySet());
+        return all;
+    }
+
+    private static Map<String, EntityHit> distinct(Collection<EntityHit> hits) {
+        Map<String, EntityHit> distinct = new LinkedHashMap<>();
+        hits.forEach(h -> distinct.put(h.ref().id(), h));
+        return distinct;
+    }
+
+    /**
+     * Publishes {@code s} for the kind after applying the window (oldest days out, their files deleted), the storage mode
+     * (closed days to files) and the memory and disk caps (oldest closed days to files, then out). Under the kind's lock.
+     */
+    private void commit(String kind, KindIndex ki, Snap s) {
         DayIndexSettings cfg = settingsFor(kind);
         Snap out = s;
-        if (out.days().size() > cfg.days()) {
-            TreeMap<LocalDate, BitSet> d = new TreeMap<>(out.days());
-            while (d.size() > cfg.days()) {
-                d.pollFirstEntry();
+        TreeMap<LocalDate, DaySegment> sp = new TreeMap<>(ki.spilled.get());
+        TreeSet<LocalDate> all = union(out, sp);
+        while (all.size() > cfg.days()) {
+            LocalDate oldest = all.pollFirst();
+            DaySegment seg = sp.remove(oldest);
+            if (seg != null) {
+                seg.delete();
+            } else {
+                TreeMap<LocalDate, BitSet> d = new TreeMap<>(out.days());
+                d.remove(oldest);
+                out = purge(out, d);
             }
-            out = purge(out, d);
+            ki.marks.remove(oldest);
+        }
+        LocalDate newest = all.isEmpty() ? null : all.last();
+        if (dir != null && cfg.storage() == DayIndexSettings.Storage.MMAP) {
+            for (LocalDate d : new ArrayList<>(out.days().keySet())) {
+                if (!d.equals(newest)) {
+                    out = spill(kind, ki, out, sp, d);
+                }
+            }
         }
         long cap = DayIndexSettings.of(settings, null).maxMemoryBytes();
         if (cap > 0) {
             long others = kinds.entrySet().stream().filter(e -> !e.getKey().equals(kind)).mapToLong(e -> memory(e.getValue().snap.get())).sum();
-            while (out.days().size() > 1 && others + memory(out) > cap) {
-                TreeMap<LocalDate, BitSet> d = new TreeMap<>(out.days());
-                d.pollFirstEntry();
-                out = purge(out, d);
+            while (others + memory(out) > cap) {
+                LocalDate oldest = out.days().keySet().stream().filter(d -> !d.equals(newest)).findFirst().orElse(null);
+                if (oldest == null) {
+                    break;
+                }
+                out = dir != null ? spill(kind, ki, out, sp, oldest) : dropHeap(out, oldest, ki);
             }
         }
-        return out;
+        long diskCap = cfg.maxDiskBytes();
+        if (dir != null && diskCap > 0) {
+            long others = kinds.entrySet().stream().filter(e -> !e.getKey().equals(kind)).mapToLong(e -> diskBytes(e.getValue().spilled.get())).sum();
+            while (!sp.isEmpty() && others + diskBytes(sp) > diskCap) {
+                sp.pollFirstEntry().getValue().delete();                 // the oldest closed day goes; a search for it falls back
+            }
+        }
+        ki.spilled.set(sp);
+        ki.snap.set(out);
+    }
+
+    private static Snap dropHeap(Snap s, LocalDate day, KindIndex ki) {
+        TreeMap<LocalDate, BitSet> d = new TreeMap<>(s.days());
+        d.remove(day);
+        ki.marks.remove(day);
+        return purge(s, d);
+    }
+
+    /** Moves a heap day to a segment file (or drops it when the disk refuses). */
+    private Snap spill(String kind, KindIndex ki, Snap s, TreeMap<LocalDate, DaySegment> sp, LocalDate day) {
+        BitSet bits = s.days().get(day);
+        List<EntityHit> hits = new ArrayList<>(bits.cardinality());
+        for (int i = bits.nextSetBit(0); i >= 0; i = bits.nextSetBit(i + 1)) {
+            hits.add(s.hits()[i]);
+        }
+        try {
+            sp.put(day, DaySegment.write(segmentPath(kind, day), ki.marks.get(day), hits));
+        } catch (java.io.UncheckedIOException e) {
+            return dropHeap(s, day, ki);
+        }
+        TreeMap<LocalDate, BitSet> d = new TreeMap<>(s.days());
+        d.remove(day);
+        return purge(s, d);
+    }
+
+    private static long diskBytes(Map<LocalDate, DaySegment> sp) {
+        return sp.values().stream().mapToLong(DaySegment::bytes).sum();
     }
 
     /** {@code old} with {@code day} set to {@code hits}: new ids are appended to the dictionary and merged into the order. */
@@ -281,12 +497,10 @@ public final class DatedHitIndex {
         for (int i = 0; i < old.hits().length; i++) {
             at.put(old.hits()[i].ref().id(), i);
         }
-        Map<String, EntityHit> distinct = new LinkedHashMap<>();
-        hits.forEach(h -> distinct.put(h.ref().id(), h));
         BitSet bits = new BitSet(old.hits().length);
         List<EntityHit> fresh = new ArrayList<>();
         int next = old.hits().length;
-        for (EntityHit h : distinct.values()) {
+        for (EntityHit h : distinct(hits).values()) {
             Integer i = at.get(h.ref().id());
             if (i == null) {
                 i = next++;
@@ -370,20 +584,32 @@ public final class DatedHitIndex {
 
     // ---- reads (lock-free) ---------------------------------------------------------------------------------------
 
-    /** True when the kind's {@code day} is indexed (so {@link #search} answers for it). */
+    /** True when the kind's {@code day} is indexed, on the heap or on disk (so {@link #search} answers for it). */
     public boolean has(String kind, LocalDate day) {
         KindIndex ki = kinds.get(kind);
-        return ki != null && ki.snap.get().days().containsKey(day);
+        return ki != null && (ki.snap.get().days().containsKey(day) || ki.spilled.get().containsKey(day));
+    }
+
+    /** True when the day is held as a memory-mapped segment file. */
+    public boolean onDisk(String kind, LocalDate day) {
+        KindIndex ki = kinds.get(kind);
+        return ki != null && ki.spilled.get().containsKey(day);
+    }
+
+    /** The kind's newest indexed date: what "live" or "current" resolves to here. */
+    public Optional<LocalDate> newest(String kind) {
+        KindIndex ki = kinds.get(kind);
+        return ki == null ? Optional.empty() : Optional.ofNullable(ki.newest());
     }
 
     /**
      * Hits of {@code kind} (null or blank: every kind with the day) on {@code day} matching {@code text}, ranked as
-     * {@link HitIndex} does. Empty (not an empty list) when the day is not indexed here: the caller answers from its
-     * newest-day index or loads the day on demand. In lazy mode a search for a kept-window day that is not built starts
-     * building it.
+     * {@link HitIndex} does. A {@code null} day is the kind's newest date. Empty (not an empty list) when the day is not
+     * indexed here: the caller answers from its newest-day index or loads the day on demand. In lazy mode a search for a
+     * kept-window day that is not built starts building it.
      */
     public Optional<List<EntityHit>> search(String kind, String text, int limit, LocalDate day) {
-        if (day == null || limit <= 0) {
+        if (limit <= 0) {
             return Optional.empty();
         }
         String q = text == null ? "" : text.trim().toLowerCase(Locale.ROOT);
@@ -396,17 +622,20 @@ public final class DatedHitIndex {
                 continue;
             }
             Snap s = ki.snap.get();
-            BitSet bits = s.days().get(day);
-            if (bits == null) {
-                if (ki.wanted.contains(day) && settingsFor(k).warm() == DayIndexSettings.Warm.LAZY) {
-                    enqueue(k, day);
+            TreeMap<LocalDate, DaySegment> sp = ki.spilled.get();
+            LocalDate d = day != null ? day : ki.newest();
+            if (d == null) {
+                continue;
+            }
+            if (!searchDay(s, sp, d, q, limit - out.size(), out)) {
+                if (ki.wanted.contains(d) && settingsFor(k).warm() == DayIndexSettings.Warm.LAZY) {
+                    enqueue(k, d);
                 }
                 continue;
             }
             any = true;
-            rank(s, bits, q, limit - out.size(), out);
-            if (out.size() < limit && settingsFor(k).anyRecentDay() && day.equals(s.days().lastKey())) {
-                recent(s, day, q, limit - out.size(), out);
+            if (out.size() < limit && settingsFor(k).anyRecentDay() && d.equals(ki.newest())) {
+                recent(s, sp, d, q, limit - out.size(), out);
             }
             if (out.size() >= limit) {
                 break;
@@ -415,29 +644,53 @@ public final class DatedHitIndex {
         return any ? Optional.of(out) : Optional.empty();
     }
 
-    /** Ids seen on earlier kept days only, marked with the last day they were seen. */
-    private static void recent(Snap s, LocalDate day, String q, int room, List<EntityHit> out) {
-        BitSet others = new BitSet(s.hits().length);
-        s.days().forEach((d, b) -> {
-            if (!d.equals(day)) {
-                others.or(b);
+    /** Appends the day's matches from whichever tier holds it; false when neither does. */
+    private static boolean searchDay(Snap s, Map<LocalDate, DaySegment> sp, LocalDate day, String q, int room, List<EntityHit> out) {
+        BitSet bits = s.days().get(day);
+        if (bits != null) {
+            rank(s, bits, q, room, out);
+            return true;
+        }
+        DaySegment seg = sp.get(day);
+        if (seg != null) {
+            seg.search(q, room, out);
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean holds(Snap s, Map<LocalDate, DaySegment> sp, LocalDate day, String id) {
+        BitSet bits = s.days().get(day);
+        if (bits != null) {
+            int ord = ordinal(s, id);
+            return ord >= 0 && bits.get(ord);
+        }
+        DaySegment seg = sp.get(day);
+        if (seg == null) {
+            return false;
+        }
+        List<EntityHit> probe = new ArrayList<>();
+        seg.search(id.toLowerCase(Locale.ROOT), 4, probe);
+        return probe.stream().anyMatch(h -> h.ref().id().equals(id));
+    }
+
+    /** Ids seen on earlier kept days only, marked with the last day they were seen, in id order. */
+    private static void recent(Snap s, Map<LocalDate, DaySegment> sp, LocalDate day, String q, int room, List<EntityHit> out) {
+        Map<String, EntityHit> extra = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        for (LocalDate d : union(s, sp).descendingSet()) {
+            if (d.equals(day)) {
+                continue;
             }
-        });
-        others.andNot(s.days().get(day));
-        List<EntityHit> found = new ArrayList<>();
-        rank(s, others, q, room, found);
-        for (EntityHit h : found) {
-            int ord = ordinal(s, h.ref().id());
-            LocalDate last = null;
-            for (LocalDate d : s.days().descendingKeySet()) {
-                if (ord >= 0 && s.days().get(d).get(ord)) {
-                    last = d;
-                    break;
+            List<EntityHit> found = new ArrayList<>();
+            searchDay(s, sp, d, q, room * 3 + 20, found);
+            for (EntityHit h : found) {
+                if (!extra.containsKey(h.ref().id()) && !holds(s, sp, day, h.ref().id())) {
+                    String sub = h.subtitle() == null || h.subtitle().isEmpty() ? "" : h.subtitle() + " · ";
+                    extra.put(h.ref().id(), new EntityHit(h.ref(), h.title(), sub + "last seen " + d));
                 }
             }
-            String sub = h.subtitle() == null || h.subtitle().isEmpty() ? "" : h.subtitle() + " · ";
-            out.add(new EntityHit(h.ref(), h.title(), sub + "last seen " + last));
         }
+        extra.values().stream().limit(room).forEach(out::add);
     }
 
     private static int ordinal(Snap s, String id) {
@@ -499,7 +752,7 @@ public final class DatedHitIndex {
 
     // ---- stats ---------------------------------------------------------------------------------------------------
 
-    /** A rough size of one kind's snapshot: dictionary strings and hits, the order array and the bitmaps. */
+    /** A rough size of one kind's heap snapshot: dictionary strings and hits, the order array and the bitmaps. */
     private static long memory(Snap s) {
         long m = 0;
         for (EntityHit h : s.hits()) {
@@ -515,24 +768,34 @@ public final class DatedHitIndex {
     public Stats stats() {
         int ids = 0;
         int days = 0;
+        int diskDays = 0;
         long mem = 0;
+        long disk = 0;
         TreeSet<LocalDate> all = new TreeSet<>();
         for (KindIndex ki : kinds.values()) {
             Snap s = ki.snap.get();
+            TreeMap<LocalDate, DaySegment> sp = ki.spilled.get();
             ids += s.hits().length;
-            days = Math.max(days, s.days().size());
+            for (DaySegment seg : sp.values()) {
+                ids += seg.count();
+                disk += seg.bytes();
+            }
+            diskDays += sp.size();
+            days = Math.max(days, union(s, sp).size());
             mem += memory(s);
-            all.addAll(s.days().keySet());
+            all.addAll(union(s, sp));
         }
         int pending = warmPending.get();
         String warm = pending > 0 ? "warming (" + pending + " days to build)" : "warm";
-        return new Stats(kinds.size(), days, ids, mem, warm, new ArrayList<>(all.descendingSet()));
+        return new Stats(kinds.size(), days, ids, mem, warm, new ArrayList<>(all.descendingSet()), diskDays, disk);
     }
 
-    /** One line for a connector's health: {@code type-ahead index: 5 days, 500,000 ids, 12.3 MB, warm}. */
+    /** One line for a connector's health: {@code type-ahead index: 5 days (2 on disk), 500,000 ids, 12.3 MB, warm}. */
     public String summary() {
         Stats st = stats();
-        return String.format(Locale.ROOT, "type-ahead index: %d days, %,d ids, %.1f MB, %s", st.days(), st.ids(), st.memoryBytes() / 1048576.0, st.warm());
+        String disk = st.diskDays() == 0 ? "" : String.format(Locale.ROOT, " (%d on disk, %.1f MB)", st.diskDays(), st.diskBytes() / 1048576.0);
+        return String.format(Locale.ROOT, "type-ahead index: %d days%s, %,d ids, %.1f MB, %s", st.days(), disk, st.ids(), st.memoryBytes() / 1048576.0,
+                st.warm());
     }
 
     /** The stats as a plain map for health and the connector page. */
@@ -540,8 +803,10 @@ public final class DatedHitIndex {
         Stats st = stats();
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("indexDays", st.days());
+        m.put("indexDaysOnDisk", st.diskDays());
         m.put("indexIds", st.ids());
         m.put("indexMemoryMb", Math.round(st.memoryBytes() / 1048.576) / 1000.0);
+        m.put("indexDiskMb", Math.round(st.diskBytes() / 1048.576) / 1000.0);
         m.put("indexWarm", st.warm());
         return m;
     }

@@ -53,7 +53,7 @@ final class FileDatedIndex {
         this.root = root;
         this.sourceName = sourceName;
         this.jsonlIds = jsonlIds;
-        this.dated = new DatedHitIndex(settings, this::dayHits);
+        this.dated = new DatedHitIndex(sourceName, DatedHitIndex.defaultRoot(), settings, this::dayHits, (kind, day) -> Long.toString(stamp(kind, day)));
     }
 
     boolean enabled() {
@@ -152,9 +152,9 @@ final class FileDatedIndex {
 
     /** The date's own ids when the kept days hold it; empty when the caller answers from the newest day's index. */
     Optional<List<EntityHit>> search(String kind, String text, int limit, AsOf asOf) {
-        if (!dated.enabled() || asOf == null || asOf.businessDate() == null) {
+        if (!dated.enabled()) {
             return Optional.empty();
         }
-        return dated.search(kind, text, limit, asOf.businessDate());
+        return dated.search(kind, text, limit, asOf == null ? null : asOf.businessDate());
     }
 }

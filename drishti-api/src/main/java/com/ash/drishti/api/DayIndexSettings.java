@@ -27,8 +27,11 @@ import java.util.Map;
  * @param maxMemoryBytes the most the kept days may use (an estimate); older days are dropped early above it; 0 = no cap
  * @param warm how past days are built: {@code background} after start, newest first, or {@code lazy} on the first search
  * @param anyRecentDay a bare id on the newest day may also suggest ids seen only on earlier kept days
+ * @param storage {@code heap}: closed days stay on the heap until {@code max-memory}, then move to memory-mapped files;
+ *     {@code mmap}: closed days go to files at once
+ * @param maxDiskBytes the most the connector's segment files may use; the oldest days drop above it; 0 = no cap
  */
-public record DayIndexSettings(int days, long maxMemoryBytes, Warm warm, boolean anyRecentDay) {
+public record DayIndexSettings(int days, long maxMemoryBytes, Warm warm, boolean anyRecentDay, Storage storage, long maxDiskBytes) {
 
     /** How past days are built. */
     public enum Warm {
@@ -36,11 +39,18 @@ public record DayIndexSettings(int days, long maxMemoryBytes, Warm warm, boolean
         LAZY
     }
 
-    public static final DayIndexSettings DEFAULT = new DayIndexSettings(1, 600L << 20, Warm.BACKGROUND, false);
+    /** Where closed days live. */
+    public enum Storage {
+        HEAP,
+        MMAP
+    }
+
+    public static final DayIndexSettings DEFAULT = new DayIndexSettings(1, 600L << 20, Warm.BACKGROUND, false, Storage.HEAP, 2L << 30);
 
     public DayIndexSettings {
         days = Math.max(1, days);
         maxMemoryBytes = Math.max(0, maxMemoryBytes);
+        maxDiskBytes = Math.max(0, maxDiskBytes);
     }
 
     /** True when more than the newest day is kept. */
@@ -54,7 +64,9 @@ public record DayIndexSettings(int days, long maxMemoryBytes, Warm warm, boolean
         long mem = number(settings, kind, "max-memory", DEFAULT.maxMemoryBytes(), true);
         String warm = text(settings, kind, "warm", "background");
         String recent = text(settings, kind, "any-recent-day", "false");
-        return new DayIndexSettings(days, mem, "lazy".equalsIgnoreCase(warm) ? Warm.LAZY : Warm.BACKGROUND, Boolean.parseBoolean(recent));
+        long disk = number(settings, kind, "max-disk", DEFAULT.maxDiskBytes(), true);
+        Storage storage = "mmap".equalsIgnoreCase(text(settings, kind, "storage", "heap")) ? Storage.MMAP : Storage.HEAP;
+        return new DayIndexSettings(days, mem, "lazy".equalsIgnoreCase(warm) ? Warm.LAZY : Warm.BACKGROUND, Boolean.parseBoolean(recent), storage, disk);
     }
 
     private static String text(Map<String, String> s, String kind, String key, String fallback) {
