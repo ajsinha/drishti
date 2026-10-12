@@ -1672,6 +1672,8 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9077 | 422 | Vega-Lite not drawn | Shown in the visual's frame by the page, not an HTTP answer: a Vega-Lite specification that names a `url` or a `loader`, or a library that did not load ([REPORTS.md section 3.5](REPORTS.md#35-vega-lite-visuals)) |
 | DRS-9100 | 422 | Layer dataset invalid | Publishing a `rachana: 2` dataset whose Check has an error (the problem list uses `DRS-9100` to `DRS-9108`, [BI_MODEL_SPEC.md section 1.11](../architecture/BI_MODEL_SPEC.md#111-dataset-problems)) |
 | DRS-9107 | 409 | Generated dataset | Saving a dataset that a pack generates (`pack.<pack>.<kind>`, or one with `generated:`): it is read-only; save one that `extends` it |
+| DRS-9108 | 422 | Source query | The query of a dataset whose source is a model does not validate (Check: its own code follows), or its answer lacks a column the dataset declares |
+| DRS-9109 | 422 | Source cycle | A model that reaches itself through a dataset whose source is a model (Check, the bind of a query, or at run time): `model:a -> dataset:x -> model:a` |
 | DRS-9120 | 422 | Model invalid | Publishing a data model whose Check has an error (`DRS-9120` to `DRS-9129` in the problem list, [BI_MODEL_SPEC.md section 2.11](../architecture/BI_MODEL_SPEC.md#211-model-problems)) |
 | DRS-9126 | 409 | Breaking change | A published model or dataset loses a measure, column or relationship (by stable id or name), makes a relationship inactive or changes a grain key without a new major version; or the version goes down |
 | DRS-9130 | 409 | Security safeguard | A model where a role restricted by a row rule elsewhere would see every row of a dataset with no rule: give that dataset a rule, or write `may-see-all: { <alias>: [<role>] }` (audited `bi-model-may-see-all`) |
@@ -1815,7 +1817,40 @@ datasets in a star with relationships, measures, model security (only tighter) a
 and the **model query** (`mq: 1`, YAML or JSON) is the one request for data. Every pack kind gets a read-only dataset `pack.<pack>.<kind>` without anyone writing it.
 A query names its model as `name@major` (`desk-trading@1`), a catalogue id, `dataset:<name>` (the **implicit model** of one dataset: its default measures and, for a
 pack dataset, the pack dimensions its columns reference, one hop), or the name of a version-1 dataset file (read as a model by the **compatibility reader**, with its old
-security unchanged, until wave W4 converts the files). The old `POST /bi/datasets/{id}/query` is kept as it is until W4.
+security unchanged, until wave W4 converts the files). The old `POST /bi/datasets/{id}/query` keeps its body and answer until W4.
+
+**Every consumer asks through the model query language** (section 5.9 of the spec). A report visual (and with it exports, subscriptions, board tiles, live tiles
+and the embedded report element), an Analyse extract (`POST /bi/datasets/{id}/query`), an alert, a dataset test and an AI answer build the request they always
+built; the server turns it into a model query on the dataset's model (the implicit model of a `rachana: 2` dataset, the compatibility reader's model of a
+version-1 one) and runs it through the same validator and compiler as `POST /bi/mq`, as the reader. Their answers keep their shapes; `POST /bi/reports/{id}/query`
+adds `mq`, the canonical model query the visual ran, and the query's warnings are added to `meta.warnings`. A refusal keeps the endpoint's code (`DRS-9020` for a
+query the engine would not take, `DRS-9021` for a masked field) and carries the model query's problems with their own codes, paths and fixes (captured):
+
+```
+POST /api/v1/bi/reports/file:report:acc-report/query  as rita   {"page":"main","visual":"by-desk","state":{"dates":{"from":"2026-10-08","to":"2026-10-08"}}}
+{"columns":[{"name":"trades.desk",...},{"name":"Notional",...},{"name":"MTM",...}], "rows":[["DESK-C",108000.0,-100.0],["DESK-B",100000.0,100.0],["DESK-A",92000.0,-200.0]],
+ ..., "query":{"fields":["trades.desk"],"measures":["Notional","MTM"],"filters":[],"orderBy":["Notional desc"],"limit":500},
+ "mq":{"limit":500,"model":"file:dataset:acc-trades","mq":1,"options":{"format":"json","layer":"auto"},"select":{"fields":["trades.desk"],"measures":["Notional","MTM"]},
+       "shape":"grouped","sort":[{"by":"Notional","desc":true}],"time":{"as-of":"2026-10-08"}}}
+
+POST /api/v1/bi/datasets/file:dataset:acc-trades/query  as ann (no raw)   {"measures":["Trades"],"filters":[{"field":"trades.mtm","op":"gt","values":[0]}]}
+403 {"title":"query masked","detail":"DRS-9021 'trades.mtm' is masked for you: it cannot be filtered on","code":"DRS-9021","path":"where[0].field",
+     "fix":{"with":["trades.id"],"replace":"where[0].field"},"problems":[{"code":"DRS-9161","path":"where[0].field",...}],"also":"DRS-9021"}
+```
+
+**A dataset whose source is another model's answer** (`source: { model: acc-model@1, query: { select: ... } }`, spec section 1.2 D) is filled, for each query that
+reads it, by its inner query asked **as the reader** (at the outer query's date when it names none); its declared columns are filled by name (`path:` naming a field
+or measure of the inner query, else the column's name). A model that reaches itself through such datasets is refused by Check, by the bind and at run time
+(`DRS-9109`); an inner answer without a declared column is `DRS-9108`. Captured, the desk-head `hana` asking a model over a dataset read from `acc-model`:
+
+```
+POST /api/v1/bi/mq  {"mq":1,"model":"desk-view@1","select":{"fields":["books.desk"],"measures":["Book notional","Book trades"]},"time":{"as-of":"2026-10-07"}}
+{"mq":1,"model":{"id":"file:model:desk-view","name":"desk-view","version":"1.0.0","implicit":false,"compat":false}, ..., "rows":[["DESK-A",92000.0,8]],
+ "meta":{"asOf":"2026-10-07","dates":["2026-10-07"],"layer":"columns","tables":["books"],...}}
+
+POST /api/v1/bi/mq  {"mq":1,"model":"loop-model@1","select":{"measures":["Total"]}}
+422 {"title":"layer source cycle","detail":"DRS-9109 a model cannot read its own answer: model:loop-model -> dataset:loop-a -> model:loop-model","code":"DRS-9109","path":"model",...}
+```
 
 | Method | Path | What it does |
 |---|---|---|
@@ -1909,7 +1944,7 @@ any item (`404 DRS-9001` otherwise); what a visual shows is the dataset engine's
 | Method | Path | What it does |
 |---|---|---|
 | `GET` | `/bi/reports/{id}` | the report for this caller: `{id, title, description, status, shipped, sample, valid, problems[{level, code, path, message}], report, dataset, mayEdit}`; `report` is the model (the YAML's structure with defaults filled in), `dataset` the model of the dataset it reads (tables with columns, measures, hierarchies, relationships; no row rules); when visuals name datasets of their own (`dataset:`), `datasets` maps each such name to that dataset's model, and `report.links` are the fields declared to mean the same across datasets ([REPORTS.md section 16](REPORTS.md#16-reports-over-several-datasets)) |
-| `POST` | `/bi/reports/{id}/query` | one visual's data: body `{page, visual, state}`; the answer is the dataset query's JSON answer plus `highlight`, `visual` and `query` (what was asked), and, over a dataset with a live table, `live` (phase 5, below); `?explain=true` adds the SQL for BI authors; `?format=arrow` answers an Apache Arrow IPC stream (a Perspective visual's rows, masked for the caller) with `X-Bi-Rows`, `X-Bi-Masked` and `X-Bi-Live` headers |
+| `POST` | `/bi/reports/{id}/query` | one visual's data: body `{page, visual, state}`; the answer is the dataset query's JSON answer plus `highlight`, `visual`, `query` (what was asked) and `mq` (the model query it ran as), and, over a dataset with a live table, `live` (phase 5, below); `?explain=true` adds the SQL for BI authors; `?format=arrow` answers an Apache Arrow IPC stream (a Perspective visual's rows, masked for the caller) with `X-Bi-Rows`, `X-Bi-Masked` and `X-Bi-Live` headers |
 | `GET` | `/bi/reports/{id}/live` | **SSE** (phase 5): the report's live tables as they change: `hello`, `tick`, `status` (below); `429 DRS-9051` when too many streams are open |
 | `POST` | `/bi/reports/query` | the same for a draft (needs `bi-author`): `{report \| yaml, page, visual, state}` |
 | `POST` | `/bi/reports/validate` | `{yaml, quality?}` (needs `bi-author`): `{valid, problems[], report}`; `quality: true` adds the accessibility, layout checks |
@@ -2066,7 +2101,7 @@ them is never judged or put in a message. Errors are `422 DRS-9062`; an alert th
 |---|---|---|
 | `GET` | `/me/measure-alerts` | your alerts: the stored alert (below) plus `describe` (the condition in words), `label` (what it watches) and `link` (the console path that opens it) |
 | `GET` | `/me/measure-alerts/{name}` | one |
-| `PUT` | `/me/measure-alerts/{name}` | save (create, or change: an edited alert is armed afresh and keeps its history): `{title?, severity?: info\|warn\|critical, enabled?, source: {type: visual, report, page, visual, measure?, reduce?: first\|last\|sum\|min\|max\|avg\|count, state?} \| {type: dataset, dataset, measure, filters?: [{field, op, values}]} \| {type: field, kind, id, field}, condition: {type: threshold, op: above\|below\|between\|outside, value, high?} \| {type: change, mode: pct\|abs, op: rises\|falls\|moves, value, against: previous-run\|previous-day} \| {type: nodata, by: "HH:MM"}, trigger: {mode: schedule, schedule} \| {mode: after-load, kind?} \| {mode: live, debounce?}, hysteresis?, cooldown?, delivery?: {inbox, email, bridge, webhooks?: [name], sms?: bool}}`. `webhooks` are names an administrator defined (`GET /notify/options`; at most 5; an unknown one is `422 DRS-9062`), `sms` needs a gateway and your own number on file (`PUT /me/phone`). A failed email, webhook or text is tried again by the shared retry policy (`drishti.retry.alerts.*`, `drishti.alerts.measure.max-attempts`); each history entry's `delivered` says what happened per channel (`email: "sent (attempt 3 of 4)"`, `emailAttempts: 3`, `webhook:ops: "sent"`, `sms: "failed after 4 attempts: ..."`). The alert is looked at once as you save it |
+| `PUT` | `/me/measure-alerts/{name}` | save (create, or change: an edited alert is armed afresh and keeps its history): `{title?, severity?: info\|warn\|critical, enabled?, source: {type: visual, report, page, visual, measure?, reduce?: first\|last\|sum\|min\|max\|avg\|count, state?} \| {type: dataset, dataset, measure, filters?: [{field, op, values}]} \| {type: model, model, query: <a model query that selects one measure; `model` may be left out>, reduce?} \| {type: field, kind, id, field}, condition: {type: threshold, op: above\|below\|between\|outside, value, high?} \| {type: change, mode: pct\|abs, op: rises\|falls\|moves, value, against: previous-run\|previous-day} \| {type: nodata, by: "HH:MM"}, trigger: {mode: schedule, schedule} \| {mode: after-load, kind?} \| {mode: live, debounce?}, hysteresis?, cooldown?, delivery?: {inbox, email, bridge, webhooks?: [name], sms?: bool}}`. `webhooks` are names an administrator defined (`GET /notify/options`; at most 5; an unknown one is `422 DRS-9062`), `sms` needs a gateway and your own number on file (`PUT /me/phone`). A failed email, webhook or text is tried again by the shared retry policy (`drishti.retry.alerts.*`, `drishti.alerts.measure.max-attempts`); each history entry's `delivered` says what happened per channel (`email: "sent (attempt 3 of 4)"`, `emailAttempts: 3`, `webhook:ops: "sent"`, `sms: "failed after 4 attempts: ..."`). The alert is looked at once as you save it |
 | `DELETE` | `/me/measure-alerts/{name}` | delete (`204`) |
 | `POST` | `/me/measure-alerts/{name}/check` | look now, as you; answers the alert with its new state and history |
 | `POST` | `/me/measure-alerts/{name}/pause` · `/me/measure-alerts/{name}/resume` | pause, or resume (armed afresh, and looked at once) |

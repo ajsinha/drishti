@@ -361,7 +361,8 @@ itself; the MQ `select` has no `as`, the answer's columns are the field and meas
 | `DRS-9105` | `extends`: base not found, removes a key, or loosens security |
 | `DRS-9106` | security: a rule naming another dataset's columns, a mask naming no column |
 | `DRS-9107` | a generated dataset edited (it is read-only; use `extends`) |
-| `DRS-9108` | a Python or model source: an input query that does not validate (the 915x code of the inner query is attached) |
+| `DRS-9108` | a Python or model source: an input query that does not validate (the 915x code of the inner query is attached), or (when read) an answer without a declared column |
+| `DRS-9109` | a model source that reaches its own model again (`model:a -> dataset:x -> model:a`): refused by Check, the bind and at run time |
 
 ---
 

@@ -17,6 +17,15 @@
 
 ## Unreleased
 
+- **Changed: every BI consumer asks through the model query language** (wave W1 packages S4 and S5, [BI_MODEL_SPEC.md](docs/architecture/BI_MODEL_SPEC.md)
+  section 5.9). Report visuals (and with them exports, subscriptions, board and live tiles, the embedded report element), Analyse extracts (`POST
+  /datasets/{id}/query`), alerts, dataset tests and AI ask/explain become model queries on the dataset's model and run through the one validator and compiler, as the
+  reader; the endpoints keep their answers and codes (a refusal also carries the model query's `problems` with codes, paths and fixes), and the report query answer adds
+  `mq`, the query it ran. Alerts get a `model` source (`{type: model, model, query, reduce?}`: a model query that selects one measure). A `rachana: 2` dataset whose
+  source is another model's answer is now read (the inner query as the reader, staged for the one query); a model that reaches itself that way is refused (`DRS-9109`),
+  an answer without a declared column is `DRS-9108`. Fixed: a model source's `query:` was taken for a connector query. The W1 acceptance test (a report, an alert
+  and an Analyse slice give the same masked answers per reader) and standing-query parity are in `ModelAcceptanceTest`.
+
 - **Added: the BI model layer, wave W1 server package** ([BI_MODEL_SPEC.md](docs/architecture/BI_MODEL_SPEC.md)). New item kind `model` (shipped files in
   `config/bi/models/`) and `rachana: 2` datasets (one governed table: source, grain, typed columns with roles, units and additivity, time mode, own security), each with
   Check (`DRS-9100` to `DRS-9130`), stable ids written on save and semver contracts (a breaking change needs a new major, `DRS-9126`). Every pack kind publishes a

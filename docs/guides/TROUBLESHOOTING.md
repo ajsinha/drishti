@@ -1338,7 +1338,8 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 | `DRS-9105` | `extends` (Check): the base is not published, a narrowing dataset with its own `source:` or a different column type, `where:` without `extends`, a chain that extends itself |
 | `DRS-9106` | a dataset's own security (Check): a rule naming another table's column (write it in a model), a mask naming no column |
 | `DRS-9107` | a pack-generated dataset was saved (HTTP 409): `pack.<pack>.<kind>` datasets are read-only; save a dataset that `extends: pack.<pack>.<kind>@1` to narrow it or add columns |
-| `DRS-9108` | an input of a Python dataset, or the query of a `model` source, is not a model query (Check); the inner query's own code follows |
+| `DRS-9108` | an input of a Python dataset, or the query of a `model` source, is not a model query (Check); the inner query's own code follows; or, when the dataset is read, the inner query's answer has no column for one the dataset declares (name the column's `path:` after a field or measure of the inner query) |
+| `DRS-9109` | a model reaches itself through a dataset whose source is a model (Check, or HTTP 422 when it is asked): the detail shows the loop, `model:a -> dataset:x -> model:a`; read the dataset from another model, or put its source's datasets into the model directly |
 | `DRS-9120` | a data model's structure (Check, or HTTP 422 when it is published): a bad name, version, alias, lifecycle, a dataset not published at the version range it names, a rollup on no alias ([section 2.11](../architecture/BI_MODEL_SPEC.md#211-model-problems)) |
 | `DRS-9121` | a dataset of a model with no relationship to the others (a warning): it can be asked alone, never with their fields |
 | `DRS-9122` | a relationship naming no column, columns of two types, an unknown cardinality or direction |
