@@ -1,0 +1,203 @@
+{
+  "deskId": "DESK-RATES",
+  "name": "Rates",
+  "region": "EMEA",
+  "reportDate": "2026-09-30",
+  "headOfDesk": "Mei Lin",
+  "mtm": -3935100,
+  "var99": 900000,
+  "limit": 3000000,
+  "limitUse": 0.58,
+  "openTrades": 24,
+  "currencies": [
+    {
+      "code": "EUR",
+      "trades": [
+        {
+          "id": "RAT-1001",
+          "product": "FRA",
+          "notional": 250000000,
+          "mtm": 427900,
+          "maturity": "2036-04-06"
+        },
+        {
+          "id": "RAT-1002",
+          "product": "OIS",
+          "notional": 250000000,
+          "mtm": -2364700,
+          "maturity": "2031-03-03"
+        },
+        {
+          "id": "RAT-1003",
+          "product": "FRA",
+          "notional": 5000000,
+          "mtm": 70200,
+          "maturity": "2036-11-06"
+        },
+        {
+          "id": "RAT-1004",
+          "product": "IRS",
+          "notional": 5000000,
+          "mtm": -52000,
+          "maturity": "2030-04-20"
+        },
+        {
+          "id": "RAT-1005",
+          "product": "FRA",
+          "notional": 5000000,
+          "mtm": -16000,
+          "maturity": "2036-04-17"
+        },
+        {
+          "id": "RAT-1006",
+          "product": "Swaption",
+          "notional": 50000000,
+          "mtm": 74700,
+          "maturity": "2028-08-21"
+        },
+        {
+          "id": "RAT-1007",
+          "product": "FRA",
+          "notional": 75000000,
+          "mtm": 1120300,
+          "maturity": "2028-12-09"
+        },
+        {
+          "id": "RAT-1008",
+          "product": "OIS",
+          "notional": 100000000,
+          "mtm": 184800,
+          "maturity": "2027-02-19"
+        },
+        {
+          "id": "RAT-1009",
+          "product": "FRA",
+          "notional": 10000000,
+          "mtm": -90900,
+          "maturity": "2031-07-03"
+        }
+      ],
+      "netMtm": -645700,
+      "notional": 750000000
+    },
+    {
+      "code": "GBP",
+      "trades": [
+        {
+          "id": "RAT-1010",
+          "product": "OIS",
+          "notional": 5000000,
+          "mtm": -31700,
+          "maturity": "2027-08-13"
+        },
+        {
+          "id": "RAT-1011",
+          "product": "FRA",
+          "notional": 150000000,
+          "mtm": -1504200,
+          "maturity": "2030-11-09"
+        },
+        {
+          "id": "RAT-1012",
+          "product": "IRS",
+          "notional": 100000000,
+          "mtm": -359700,
+          "maturity": "2027-07-25"
+        },
+        {
+          "id": "RAT-1013",
+          "product": "OIS",
+          "notional": 10000000,
+          "mtm": -53500,
+          "maturity": "2028-01-02"
+        },
+        {
+          "id": "RAT-1014",
+          "product": "FRA",
+          "notional": 250000000,
+          "mtm": -1800700,
+          "maturity": "2035-04-15"
+        },
+        {
+          "id": "RAT-1015",
+          "product": "OIS",
+          "notional": 50000000,
+          "mtm": -34000,
+          "maturity": "2033-02-13"
+        }
+      ],
+      "netMtm": -3783800,
+      "notional": 565000000
+    },
+    {
+      "code": "USD",
+      "trades": [
+        {
+          "id": "RAT-1016",
+          "product": "IRS",
+          "notional": 50000000,
+          "mtm": -235800,
+          "maturity": "2036-05-01"
+        },
+        {
+          "id": "RAT-1017",
+          "product": "OIS",
+          "notional": 50000000,
+          "mtm": -67700,
+          "maturity": "2036-11-19"
+        },
+        {
+          "id": "RAT-1018",
+          "product": "IRS",
+          "notional": 10000000,
+          "mtm": 147100,
+          "maturity": "2030-08-09"
+        },
+        {
+          "id": "RAT-1019",
+          "product": "Swaption",
+          "notional": 5000000,
+          "mtm": 52100,
+          "maturity": "2033-02-03"
+        },
+        {
+          "id": "RAT-1020",
+          "product": "OIS",
+          "notional": 10000000,
+          "mtm": 37300,
+          "maturity": "2030-01-20"
+        },
+        {
+          "id": "RAT-1021",
+          "product": "Swaption",
+          "notional": 100000000,
+          "mtm": 479800,
+          "maturity": "2029-10-16"
+        },
+        {
+          "id": "RAT-1022",
+          "product": "FRA",
+          "notional": 25000000,
+          "mtm": -176600,
+          "maturity": "2029-05-08"
+        },
+        {
+          "id": "RAT-1023",
+          "product": "OIS",
+          "notional": 50000000,
+          "mtm": -386100,
+          "maturity": "2035-04-22"
+        },
+        {
+          "id": "RAT-1024",
+          "product": "FRA",
+          "notional": 150000000,
+          "mtm": 644300,
+          "maturity": "2033-01-04"
+        }
+      ],
+      "netMtm": 494400,
+      "notional": 450000000
+    }
+  ]
+}

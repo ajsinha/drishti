@@ -15,6 +15,8 @@ are, so fixing a file here fixes the help.
 2. **[USER_GUIDE.md](guides/USER_GUIDE.md)**: every feature of the console, each with a worked example.
 3. **[PACKS.md](guides/PACKS.md)**: which industries are available, the commands each one adds, and how to load them; building your own is [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md).
 
+Prefer to learn by doing? **[tutorials/](tutorials/README.md)** has hands-on tutorials, each a worked example on the shipped demo data with the exact commands, real output and real screenshots: your first fifteen minutes, looking things up, querying by form, connecting your data, building a pack, designing a screen, loading data daily, sharing, and reports.
+
 If the quickstart goes too fast, [GETTING_STARTED.md](guides/GETTING_STARTED.md) walks the same ground with every step
 explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md).
 
@@ -22,6 +24,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 
 | Folder | What is in it |
 |---|---|
+| [tutorials/](tutorials/README.md) | hands-on tutorials 1 to 9 (more to come): a worked example each, on the demo data, with commands, real output and screenshots |
 | [guides/](guides/) | getting started, the user guide, business intelligence (Rūpaka), packs and the command line, the Sutra and Rachana guides, clients, API and troubleshooting; `examples/` holds working Sutras |
 | [connectors/](connectors/) | connecting your data: the connector and plugin guides, a design document per store (Delta Lake, PostgreSQL, Aerospike, files …) and demo data |
 | [admin/](admin/) | running Drishti: operations, configuration, users and roles, performance, and the runbooks |
