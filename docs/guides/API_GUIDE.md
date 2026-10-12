@@ -1634,7 +1634,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9012 | 422 | Dataset reference | A relationship, hierarchy, masked column, row rule or rollup points at something that does not exist |
 | DRS-9013 | 501 | Dataset not built | The document uses a feature the grammar reserves and this server does not build yet (a Python measure named in a query; time intelligence and the window functions are built) |
 | DRS-9014 | 422 | Dataset composition | A composed dataset (`from:`, `join:`) names a source dataset, column, measure or join key that does not exist, joins keys of different types, or leaves a source unjoined ([DATASETS.md section 11](DATASETS.md#11-composed-and-derived-datasets)) |
-| DRS-9015 | 422 | Dataset fan-out | A warning of the check, not a refusal: a join repeats rows (many-to-many, or the unique side on the wrong end), so measures of the repeated side add up too high |
+| DRS-9015 | 422 | Dataset fan-out | An error of the check (so publish is refused): a join repeats rows (many-to-many, or the unique side on the wrong end), so measures of the repeated side add up too high; with `allow-repeat: true` on the join it is a warning |
 | DRS-9016 | 422 | Dataset cycle | A dataset reads itself, directly or through the datasets it is composed of or derived from |
 | DRS-9017 | 422 | Derived dataset | A derived dataset (`derived:`) names no Transform or no inputs, or declares a column it cannot have; a warning when its columns are not known yet |
 | DRS-9020 | 422 | Query invalid | The query names a field, measure, operator, value or date the dataset cannot take, or the model cannot join what it asks |

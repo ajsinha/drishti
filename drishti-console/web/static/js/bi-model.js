@@ -335,7 +335,7 @@
     q('[data-infer]').hidden = readOnly || composed();
     if (composed()) {                                                         // the joins are written in the YAML (from: and join:), not drawn into it
       model.composition.joins && model.composition.joins.forEach((j) => ul.appendChild(h('li', { class: 'bi-rel', 'data-join-row': j.left + '-' + j.right },
-        h('code', { text: j.left + ' ' + j.type + ' join ' + j.right + ' on ' + j.on.join(', ') }))));
+        h('code', { text: j.left + ' ' + j.type + ' join ' + j.right + ' on ' + j.on.join(', ') }), j.allowRepeat ? h('span', { class: 'badge bi-status ms-2', 'data-join-repeats': '', text: 'repeats rows (accepted)' }) : null)));
       if (model.composition.kind === 'derived') { ul.appendChild(h('li', { class: 'bi-rel', 'data-transform-row': '' }, h('code', { text: 'Python Transform ' + model.composition.transform }))); }
       return;
     }

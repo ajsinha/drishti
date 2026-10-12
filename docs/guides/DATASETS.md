@@ -609,7 +609,7 @@ Validation never throws: it returns every problem with its code and the path of 
 | `DRS-9012` | a relationship, hierarchy, masked column, row rule or rollup points at a table or column that does not exist (or a rollup holds a measure it cannot) |
 | `DRS-9013` | a Python measure named in a query: **not built** for SQL (a python visual shows a Python measure: 4.2). Time intelligence (4.1) and the window functions (4.3) are built: a wrong shape is `DRS-9011`, a rollup listing a time measure `DRS-9012` |
 | `DRS-9014` | a composed dataset names a source, column, measure or join key that does not exist, joins keys of different types, or leaves a source unjoined (11.1) |
-| `DRS-9015` | a warning: a join repeats rows (many-to-many, or the unique source on the wrong end), so the measures of the repeated side add up too high (11.1) |
+| `DRS-9015` | an error: a join repeats rows (many-to-many, or the unique source on the wrong end), so the measures of the repeated side add up too high; Check and publish refuse it. With `allow-repeat: true` on the join it is a warning (11.1) |
 | `DRS-9016` | a dataset reads itself, directly or through the datasets it is composed of or derived from (11.1) |
 | `DRS-9017` | a derived dataset names no Transform or no inputs, declares a column it cannot have, or (a warning) does not know its columns yet (11.2) |
 | `DRS-9020` | a query names a field, measure, operator, value or date the dataset cannot take, or cannot be joined |
@@ -699,12 +699,21 @@ The joined table's columns have the names of the frame with anything that is not
 | join keys of different types | `error DRS-9014 join[0].on: the key 'day' of 'pnl' is date but 'day' of 'exposure' is string: both sides of a join are of one type` |
 | a source nobody joins, a join of a source twice, a join naming a column the frame lacks, a key that is a measure | `error DRS-9014` naming the path |
 | a column of the same name in two sources that is not a join key | `error DRS-9014 from.exposure: the column 'day' is in 'pnl' and in 'exposure' and is not a join key: rename one with as` |
-| a join that repeats rows | `warning DRS-9015 join[0]: many-to-many: neither 'pnl' nor 'exposure' has one row per counterparty, so every row matches several and the measures of both repeat; ...` |
+| a join that repeats rows | `error DRS-9015 join[0]: many-to-many: neither 'pnl' nor 'exposure' has one row per counterparty, so every row matches several and the measures of both repeat; ...` |
 | a dataset that reads itself, through any depth | `error DRS-9016` with the loop, on every dataset in it |
 | a source that has errors of its own | `error DRS-9014 ... source dataset 'x' has errors, so nothing can be built from it: <its first error>` |
 | `tables:`, `relationships:` or `rollups:` beside `from:` | `error DRS-9010` (a composed dataset has one table, built at query time) |
 
-**The fan-out warning** (`DRS-9015`) matters because a join that matches several rows on one side repeats the other side's measures, and a sum over them overstates. A source with one row per join key (its grouping columns, or its `key`, are all in the join's `on`) is *unique*: unique on the right is the ordinary lookup, unique on both is one-to-one, and neither is warned. Unique on the left only (one-to-many) warns that the left's measures repeat; unique on neither warns many-to-many. The fix is to add the missing columns to the join, to group a source by the key alone, or to declare the `key:` when the other grouping columns are attributes of it (the sample does: a counterparty's name and sector are attributes of its id).
+**The fan-out check** (`DRS-9015`) matters because a join that matches several rows on one side repeats the other side's measures, and a sum over them overstates. A source with one row per join key (its grouping columns, or its `key`, are all in the join's `on`) is *unique*: unique on the right is the ordinary lookup, unique on both is one-to-one, and neither is refused. Unique on the left only (one-to-many) repeats the left's measures; unique on neither is many-to-many. **Both are errors**: Check and publish refuse the dataset, so a total that is several times too high cannot be published by accident. The fix is to aggregate the many side by the key (add the missing columns to the join, or group a source by the key alone), to swap the ends, or to declare the `key:` when the other grouping columns are attributes of it (the sample does: a counterparty's name and sector are attributes of its id).
+
+When the repetition is what you mean, say so on the join and accept it:
+
+```yaml
+join:
+  - { left: pnl, right: exposure, on: [sector], type: inner, allow-repeat: true }
+```
+
+`allow-repeat: true` means *you accept repeated measures*: Check then shows `DRS-9015` as a **warning** (the dataset saves and publishes), and the Model view marks the join `repeats rows (accepted)`. The rule is for YAML joins only; a Python Transform is not checked this way.
 
 ### 11.2 Derived datasets: a Python Transform
 

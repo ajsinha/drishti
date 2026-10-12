@@ -261,16 +261,23 @@ The totals are step 1's, to the unit. Now the report [counterparty-view.report.y
 
 You should see MTM and exposure **in one visual**, which step 3 could not give you, and the ratio. Without the ids, in the designer, **Make a composed dataset from these** (the Links panel, step 3) writes a first draft of this YAML on the first linked pair for you to read; **Create the draft and review it** is the only thing that saves it.
 
-**The checks.** A composed dataset is checked on the dataset page, by `POST /datasets/validate`, and when you publish. Change the join to the sector and make the second source finer than the first (the draft is in the picture below): the page marks it *valid* and prints the **warning**:
+**The checks.** A composed dataset is checked on the dataset page, by `POST /datasets/validate`, and when you publish. Change the join to the sector and make the second source finer than the first (the draft is in the picture below): the page marks it **has errors** and prints the refusal, so it cannot be saved as a good dataset or published:
 
-![The dataset page of a draft that joins on sector: valid, with DRS-9015 at join 0: one-to-many: 'pnl' has one row per sector but 'exposure' has several, so the measures of 'pnl' repeat for each and add up too high](img/t18/15-fan-out.jpg)
+![The dataset page of a draft that joins on sector: has errors, with DRS-9015 at join 0: one-to-many: 'pnl' has one row per sector but 'exposure' has several, so the measures of 'pnl' repeat for each and add up too high](img/t18/15-fan-out.jpg)
 
 ```text
 $ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' -d '{"yaml": "<the draft: pnl by sector, exposure by who and sector, join on sector>"}' http://localhost:18480/api/v1/bi/datasets/validate
-{"valid":true,"problems":[{"message":"one-to-many: 'pnl' has one row per sector but 'exposure' has several, so the measures of 'pnl' repeat for each and add up too high; put the source with several rows on the left","path":"join[0]","code":"DRS-9015","level":"warning"}], ...}
+{"valid":false,"problems":[{"message":"one-to-many: 'pnl' has one row per sector but 'exposure' has several, so the measures of 'pnl' repeat for each and add up too high; aggregate the many side by the key, or swap the ends so the source with several rows is on the left; or accept repeated measures with allow-repeat: true on the join","path":"join[0]","code":"DRS-9015","level":"error"}], ...}
 ```
 
-Be exact about what this is. `DRS-9015` is a **warning** (the dataset still saves and publishes): the check knows the grain of each source from its grouping columns (or the `key:` you declared) and warns when the join would repeat rows. It cannot see a `key:` you declared falsely, and it does not warn about a lookup (a source unique on the key on the right), so it will not catch every inflation; **declare keys you can defend, and compare a total with the source's total** as step 4 did. The **refusals** (`error`, so no save-and-publish) are the structural mistakes, real output:
+Be exact about what this is. `DRS-9015` is an **error** (Check and publish refuse the dataset): the check knows the grain of each source from its grouping columns (or the `key:` you declared) and refuses a join that would repeat rows, because a sum over the repeated rows overstates and nothing else would tell you. The cure is the one in the message: aggregate the many side by the key (group `exposure` by `sector` alone, or join on the counterparty id as above), or swap the ends. If the repetition is what you mean, **accept it on the join**, in the YAML:
+
+```yaml
+join:
+  - { left: pnl, right: exposure, on: [sector], type: left, allow-repeat: true }
+```
+
+`allow-repeat: true` says *you accept repeated measures*. Check then shows the same `DRS-9015` as a **warning** (`"level":"warning"`, the dataset saves and publishes) and the Model view marks the join *repeats rows (accepted)*. It cannot see a `key:` you declared falsely, and it does not object to a lookup (a source unique on the key on the right), so it will not catch every inflation; **declare keys you can defend, and compare a total with the source's total** as step 4 did. The other refusals (`error`) are the structural mistakes, real output:
 
 | Mistake | Real answer of the check |
 |---|---|
@@ -377,7 +384,7 @@ You should see a short, honest table, not a scorecard (the claims about Power BI
 | Several tables of different grains | one model with **relationships** between tables (many-to-one, many-to-many, bidirectional) and DAX that follows them | each **dataset** is its own model; a visual reads one dataset; its own multi-fact queries are **aggregated per fact, then joined** |
 | A slicer across models | slicers filter through relationships; across separate models you use a composite model or a shared dimension | **links** (`links:`) carry a slicer, a click or a drill value, **by value** and without translation, to the visuals of another dataset |
 | Two sources in one table | Power Query merge (rows) or a composite model with limited relationships | a **composed** dataset (sums joined at a declared grain) or a **derived** one (Python), asked as the reader |
-| A bad join | a many-to-many or bidirectional filter can over-count silently | the **fan-out check** warns (`DRS-9015`) and rejects structural errors (`DRS-9014`); grain-split queries inside one dataset; it does not catch a `key:` you declare falsely |
+| A bad join | a many-to-many or bidirectional filter can over-count silently | the **fan-out check** refuses a join that repeats rows (`DRS-9015`, unless you accept it with `allow-repeat: true`) and structural errors (`DRS-9014`); grain-split queries inside one dataset; it does not catch a `key:` you declare falsely |
 | Row-level security | a rule per role in the model, applied by the model | a rule and a mask **per dataset, applied as the reader to each source before the join** |
 | Behind the tools | DAX, the Power BI service, capacity licences | closed, compiled measure language, one open server, your own infrastructure |
 
@@ -395,7 +402,7 @@ Where Drishti is **behind** (the plan says so too): there is no relationship tha
 |---|---|
 | a slicer changes one dataset's visuals and not the other's | no **link** names the field, or the field is not in that dataset: tick the link in the Links panel, or write `links:` ([REPORTS.md section 16](../guides/REPORTS.md#16-reports-over-several-datasets)) |
 | a visual goes empty after a slicer is used | the link joins fields whose values differ (`GB` and `GBR`, a name and a code); link fields that mean the same, in the same spelling |
-| a total is several times what the source says | a join repeated rows: `DRS-9015`; group the sources to the key, declare `key:` only when it is true, compare with the source's own total |
+| a total is several times what the source says | a join repeated rows (`DRS-9015` refuses it unless the join says `allow-repeat: true`); group the sources to the key, declare `key:` only when it is true, compare with the source's own total |
 | `DRS-9014` on a composed dataset | a source, a measure, a join key or a type is wrong; the message names the path |
 | `DRS-9021` on a composed dataset | a join key is masked for you; join on the id, not on the name |
 | `DRS-9020` for exposure by desk | a netting set has no desk: group the sources by a grain they share (the counterparty) |
