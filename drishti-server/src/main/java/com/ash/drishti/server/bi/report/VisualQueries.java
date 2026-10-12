@@ -300,7 +300,11 @@ public final class VisualQueries {
                     base.add(new QueryRequest.Filter(field, "ge", List.of(ReportState.scalar(v.get("from")))));
                 }
                 if (v.hasNonNull("to")) {
-                    base.add(new QueryRequest.Filter(field, "le", List.of(ReportState.scalar(v.get("to")))));
+                    if (v.path("day").asBoolean(false)) {              // a relative date ends on a whole day: before the next midnight, for a timestamp too
+                        base.add(new QueryRequest.Filter(field, "lt", List.of(LocalDate.parse(v.get("to").asText()).plusDays(1).toString())));
+                    } else {
+                        base.add(new QueryRequest.Filter(field, "le", List.of(ReportState.scalar(v.get("to")))));
+                    }
                 }
             }
         }

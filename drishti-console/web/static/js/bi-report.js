@@ -370,7 +370,7 @@
       const v = state.slicers[k];
       if (v == null) { return; }
       const sp = rep.report.pages.map((p) => p.visuals.find((x) => x.id === k)).find(Boolean);
-      box.appendChild(h('span', { class: 'bi-chip', 'data-chip': 'slicer' }, B.icon('sliders'), ' ' + (sp ? sp.title || B.label(sp.wells.field[0]) : k) + ': ' + (Array.isArray(v) ? v.join(', ') : (v.from == null ? '' : v.from) + ' to ' + (v.to == null ? '' : v.to))));
+      box.appendChild(h('span', { class: 'bi-chip', 'data-chip': 'slicer' }, B.icon('sliders'), ' ' + (sp ? sp.title || B.label(sp.wells.field[0]) : k) + ': ' + (Array.isArray(v) ? v.join(', ') : v.relative ? B.visuals.relativeLabel(v.relative) : (v.from == null ? '' : v.from) + ' to ' + (v.to == null ? '' : v.to))));
     });
     q('[data-reset]').hidden = !box.children.length && !state.dates;
   }

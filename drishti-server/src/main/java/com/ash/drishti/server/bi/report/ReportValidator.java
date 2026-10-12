@@ -307,6 +307,12 @@ public final class ReportValidator {
                 err(ReportParser.REFERENCE, p + ".action.bookmark", "the report has no bookmark '" + bm + "'");
             }
         }
+        if ("slicer".equals(v.type()) && "relative-date".equals(v.format().get("mode")) && !v.well("field").isEmpty()) {
+            String type = typeOf(v.well("field").get(0));
+            if (type != null && !"date".equals(type) && !"timestamp".equals(type)) {
+                err(ReportParser.VISUAL, p + ".format.mode", "a relative-date slicer needs a date or timestamp field; " + v.well("field").get(0) + " is " + type);
+            }
+        }
         if ("slicer".equals(v.type()) && "range".equals(v.format().get("mode")) && !v.well("field").isEmpty()) {
             String type = typeOf(v.well("field").get(0));
             if (type != null && !Set.of("integer", "decimal", "date", "timestamp").contains(type)) {

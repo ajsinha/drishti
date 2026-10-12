@@ -133,14 +133,11 @@ class ReportParserTest {
     }
 
     @Test
-    void reservedVisualsAndSlicerModesAreDrs9033() {
+    void reservedVisualsAreDrs9033() {
         for (String type : List.of("entity-view", "shape")) {
             List<Problem> p = ReportParser.parse(MINI.replace("type: bar", "type: " + type)).problems();
             assertThat(p).as(type).extracting(Problem::code).contains("DRS-9033");
         }
-        String slicer = MINI.replace("type: bar, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trade.desk], values: [MTM] }",
-                "type: slicer, at: { x: 0, y: 0, w: 3, h: 3 }, wells: { field: [trade.desk] }, format: { mode: relative-date }");
-        assertThat(ReportParser.parse(slicer).problems()).extracting(Problem::code).contains("DRS-9033");
     }
 
     @Test

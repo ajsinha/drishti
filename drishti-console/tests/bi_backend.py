@@ -48,7 +48,7 @@ REPORT = {"id": REPORT_ID, "title": "Trades overview", "description": "", "statu
           "report": REPORT_MODEL, "dataset": DATASET_MODEL, "mayEdit": True}
 REPORT_CATALOGUE = {"visuals": {"card": {"group": "card", "wells": {"values": {"kind": "measure", "required": True, "max": 1}}},
                                 "bar": {"group": "chart", "wells": {"axis": {"kind": "field", "required": True, "max": 1}, "values": {"kind": "measure", "required": True, "max": 0}}}},
-                    "reserved": ["map"], "slicerModes": ["dropdown", "list", "range"]}
+                    "reserved": ["map"], "slicerModes": ["dropdown", "list", "range", "relative-date"]}
 
 
 class BiBackend(FakeBackend):

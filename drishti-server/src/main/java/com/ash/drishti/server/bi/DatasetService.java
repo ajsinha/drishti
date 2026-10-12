@@ -91,6 +91,15 @@ public final class DatasetService {
         this.sources = sources;
     }
 
+    /** The current business date and the business-day calendar, for the dates a report's relative-date slicers mean. */
+    public java.time.LocalDate currentDate() {
+        return sources.currentDate();
+    }
+
+    public com.ash.drishti.common.BusinessCalendar calendar() {
+        return sources.calendar();
+    }
+
     /** The service that asks the sources of composed and derived datasets (set once at start-up). */
     public void attach(FrameService frames) {
         this.frames = frames;

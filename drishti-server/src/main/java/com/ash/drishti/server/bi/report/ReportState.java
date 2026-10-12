@@ -94,6 +94,11 @@ public record ReportState(Map<String, JsonNode> slicers, List<Selection> selecti
                 dates.path("to").isTextual() ? dates.path("to").asText() : null, rows, limit, since);
     }
 
+    /** The same state with other slicer values (the relative-date choices worked out into dates). */
+    public ReportState withSlicers(Map<String, JsonNode> other) {
+        return new ReportState(other, selections, drill, carry, from, to, rows, limit, since);
+    }
+
     private static List<JsonNode> list(JsonNode n, String key) {
         List<JsonNode> out = new ArrayList<>();
         JsonNode a = n.path(key);

@@ -211,7 +211,27 @@
 
   // ---- slicer --------------------------------------------------------------------------------------------------------
 
+  /** The names a relative-date slicer offers when the report lists none (the server works each out: business-day aware). */
+  const RELATIVE = ['last-7-days', 'last-30-days', 'last-90-days', 'last-5-business-days', 'last-4-weeks', 'last-3-months', 'last-12-months', 'this-week', 'this-month', 'this-quarter',
+    'this-year', 'previous-week', 'previous-month', 'previous-quarter', 'previous-year', 'all'];
+  V.relativeLabel = function (name) {
+    if (name === 'all') { return 'All dates'; }
+    const m = /^last-(\d+)-(days|business-days|weeks|months)$/.exec(name);
+    if (m) { return 'Last ' + (m[1] === '1' ? '' : m[1] + ' ') + m[2].replace('-', ' ').replace(/s$/, m[1] === '1' ? '' : 's'); }
+    const p = /^(this|previous)-(week|month|quarter|year)$/.exec(name);
+    return p ? (p[1] === 'this' ? 'This ' + p[2] + ' to date' : 'Previous ' + p[2]) : name;
+  };
+
   V.slicer = function (host, spec, ctx, res) {
+    if (spec.format && spec.format.mode === 'relative-date') {
+      const options = spec.format.options && spec.format.options.length ? spec.format.options : RELATIVE;
+      const cur = ctx.slicer && ctx.slicer.value ? (typeof ctx.slicer.value === 'string' ? ctx.slicer.value : ctx.slicer.value.relative) : (spec.format.default || 'all');
+      const sel = h('select', { class: 'studio-select', 'aria-label': spec.title || 'Relative dates', 'data-relative': '' },
+        options.map((o) => h('option', { value: o, text: V.relativeLabel(o), selected: o === cur })));
+      sel.addEventListener('change', () => { if (ctx.slicer && ctx.slicer.onChange) { ctx.slicer.onChange({ relative: sel.value }); } });
+      B.clear(host).appendChild(h('div', { class: 'bi-slicer', 'data-mode': 'relative-date' }, sel));
+      return NONE;
+    }
     const tb = V.table(res);
     const field = spec.wells.field[0];
     const mode = (spec.format && spec.format.mode) || 'list';

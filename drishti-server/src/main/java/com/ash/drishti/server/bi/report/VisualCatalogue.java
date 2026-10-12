@@ -42,8 +42,8 @@ public final class VisualCatalogue {
 
     /** Types the grammar reserves and this server does not build (RUPAKA.md sections 8 and 12). */
     public static final Set<String> RESERVED = Set.of("entity-view", "shape");
-    /** Slicer modes built; {@code relative-date} is reserved. */
-    public static final Set<String> SLICER_MODES = Set.of("list", "dropdown", "range");
+    /** Slicer modes: a list of values, a dropdown of them, a range, and the relative-date slicer ({@link RelativeDates}). */
+    public static final Set<String> SLICER_MODES = Set.of("list", "dropdown", "range", "relative-date");
 
     private static final Map<String, Type> TYPES = new LinkedHashMap<>();
 

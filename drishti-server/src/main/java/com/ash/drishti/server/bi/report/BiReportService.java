@@ -403,12 +403,17 @@ public final class BiReportService {
         if (visual == null) {
             throw new DrishtiException(ErrorCode.REPORT_STATE, "page '" + pageId + "' has no visual '" + visualId + "'");
         }
-        ReportState state = ReportState.of(stateJson);
+        ReportState state = relative(report, ReportState.of(stateJson));
         DatasetSet.Entry own = l.of(visual) == null ? new DatasetSet.Entry(l.datasetItem(), l.dataset()) : l.of(visual);       // the visual's own dataset, else the report's
         BiStore.Item dsItem = own.item();
         VisualQueries.Built built = VisualQueries.build(report, page, visual, state, own.dataset(), props, (field, n, by, desc, context, from, to) -> top(p, dsItem, field, n, by, desc, context, from, to),
                 l.sets());
         return new Prepared(report, visual, dsItem, own.dataset(), built);
+    }
+
+    /** Works out the relative-date slicers of the report under the state ({@link RelativeDates#apply}). */
+    ReportState relative(Report report, ReportState state) {
+        return RelativeDates.apply(report, state, datasets::currentDate, datasets.calendar());
     }
 
     private volatile com.ash.drishti.server.bi.python.PythonItems pythonItems;

@@ -410,10 +410,18 @@ public final class ReportParser {
             return;
         }
         String mode = String.valueOf(format.get("mode"));
+        if (!VisualCatalogue.SLICER_MODES.contains(mode)) {
+            out.add(error(INVALID, p + ".format.mode", "a slicer's mode is list, dropdown, range or relative-date"));
+        }
         if ("relative-date".equals(mode)) {
-            out.add(error(NOT_BUILT, p + ".format.mode", "the relative-date slicer is reserved and not built yet; use list, dropdown or range"));
-        } else if (!VisualCatalogue.SLICER_MODES.contains(mode)) {
-            out.add(error(INVALID, p + ".format.mode", "a slicer's mode is list, dropdown or range"));
+            Object def = format.get("default");
+            if (def != null && !RelativeDates.valid(String.valueOf(def))) {
+                out.add(error(INVALID, p + ".format.default", "'" + def + "' is not a relative date: last-N-days, last-N-business-days, last-N-weeks, last-N-months, this-week|month|quarter|year, previous-week|month|quarter|year or all"));
+            }
+            Object options = format.get("options");
+            if (options != null && !(options instanceof List<?> l && !l.isEmpty() && l.stream().allMatch(x -> RelativeDates.valid(String.valueOf(x))))) {
+                out.add(error(INVALID, p + ".format.options", "options is a list of relative dates, for example [last-7-days, last-30-days, this-month, all]"));
+            }
         }
         Object scope = format.get("scope");
         if (scope != null && !"page".equals(scope) && !"report".equals(scope)) {
