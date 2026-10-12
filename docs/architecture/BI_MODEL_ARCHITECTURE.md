@@ -56,7 +56,26 @@ AI never reads raw data: it writes model queries (D5), checked like a person's a
 always come from the engine. AI drafts datasets, models, measures, reports and Transforms as YAML that go through Check,
 tests and four-eyes review with their provenance recorded. Models are exposed to outside agents as MCP tools.
 
-## 3. Waves
+## 3. The experience comes first
+
+Adoption depends on how friendly the designers are and how obvious each workflow is, so every wave is held to these
+rules, and judged by power users before it ships:
+
+- **No dead ends:** every page says what to do next; nothing a person can start is impossible to finish in the UI.
+- **No YAML typing needed:** the designers write the YAML; the YAML tab is for experts and review. Python runs on the
+  server (sandboxed) or in the browser (WebAssembly), whichever the task needs, behind the same item.
+- **Direct manipulation:** drag fields, visuals and tiles; edit titles in place; suggestions from the packs (datasets,
+  relationships, measures, links) one click away; undo everywhere.
+- **Never lose work:** drafts kept across refresh and Back; stale saves detected; leaving asks first.
+- **Feedback where you look:** errors and results beside the control, in plain words, with the fix.
+- **Right defaults:** sensible visuals for the fields chosen, measures with the right aggregation and format, the
+  business date and the reader's security applied without asking.
+- **Every screen at phone width,** keyboard-only, 44 px targets.
+
+Each release adds an **experience wave**: the adversarial QA by power users (designers, workspaces, packs,
+connectors) plus a usability review against these rules, and its findings are fixed before the drill.
+
+## 4. Waves
 
 Each release: builders (at most two at once) → adversarial QA by power users → fixes → one drill → tag. Every wave
 updates its docs and tutorials with UI, CLI and YAML (never thinner) and migrates the shipped samples.
@@ -108,7 +127,7 @@ updates its docs and tutorials with UI, CLI and YAML (never thinner) and migrate
 | 2.7.0 | **W16** paginated reports and statements |
 | 3.0.0 | a scale test on a real server, a second query engine, an Excel add-in |
 
-## 4. Risks
+## 5. Risks
 
 - The migration (W4) touches every sample, tutorial and BI test: it is its own wave and is drilled on its own.
 - Standing queries (W3) need care with memory and back-pressure: W3 includes a load test with many subscribers.
