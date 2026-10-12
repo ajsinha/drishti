@@ -77,9 +77,18 @@ async def extract_for(request: Request, spec: dict) -> Extract:
                                                   {"page": page, "visual": visual, "state": spec.get("state") or {}}, format="arrow")
         low = {str(k).lower(): v for k, v in headers.items()}
         return from_arrow(content, cap, [x for x in (low.get("x-bi-masked") or "").split(",") if x])
+    if spec.get("model"):                                                 # a model (or dataset:<name>): the rows as one model query, shape rows (BI_MODEL_SPEC.md 5.1)
+        mq = {"mq": 1, "model": str(spec["model"]), "select": {"fields": check_fields(spec.get("fields"), limits), "measures": []}, "shape": "rows", "limit": cap}
+        if spec.get("filters"):
+            mq["where"] = spec["filters"]
+        if arrow:
+            content, headers = await backend.bi_arrow("/mq", me, mq, format="arrow")
+            low = {str(k).lower(): v for k, v in headers.items()}
+            return from_arrow(content, cap, [x for x in (low.get("x-bi-masked") or "").split(",") if x])
+        return from_json(await backend.bi("POST", "/mq", me, mq, format="json"), cap)
     dataset = str(spec.get("dataset") or "")
     if not dataset:
-        raise ExploreError("DRS-9070", 422, "send {dataset, fields} or {report, page, visual}")
+        raise ExploreError("DRS-9070", 422, "send {model, fields}, {dataset, fields} or {report, page, visual}")
     body = query_body(check_fields(spec.get("fields"), limits), cap, spec.get("filters"), spec.get("dates"))
     path = "/datasets/" + quote(dataset, safe=":") + "/query"
     if arrow:
