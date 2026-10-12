@@ -28,6 +28,12 @@
 
   const say = (t, bad) => B.say(q('[data-msg]'), t, bad);
 
+  /** A distinct default title for a new report: the kind and the minute, so reports made without a title can be told apart. */
+  function defaultTitle() {
+    const d = new Date(), z = (n) => (n < 10 ? '0' : '') + n;
+    return 'Report ' + d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + ' ' + z(d.getHours()) + ':' + z(d.getMinutes());
+  }
+
   // ---- the start page ------------------------------------------------------------------------------------------------
   if (q('[data-design-start]')) {
     const list = q('[data-drafts]');
@@ -38,11 +44,13 @@
       q('[data-no-drafts]').hidden = list.children.length > 0;
       const sel = q('[data-new-dataset]');
       ds.datasets.filter((d) => d.valid).forEach((d) => sel.appendChild(h('option', { value: d.id, text: d.title })));
-      q('[data-new-title]').value = 'My report';
+      q('[data-no-datasets]').hidden = sel.options.length > 1;
+      const want = new URLSearchParams(window.location.search).get('dataset');             // from a dataset page: New report on this dataset
+      if (want) { const o = Array.prototype.find.call(sel.options, (x) => x.value === want || x.value === 'file:dataset:' + want); if (o) { sel.value = o.value; } }
     }).catch((e) => say(e.message, true));
     q('[data-new]').addEventListener('submit', (e) => {
       e.preventDefault();
-      const ref = q('[data-new-dataset]').value, title = q('[data-new-title]').value.trim() || 'My report';
+      const ref = q('[data-new-dataset]').value, title = q('[data-new-title]').value.trim() || defaultTitle();
       if (!ref) { say('Choose a dataset.', true); return; }
       const name = B.slug(title) || 'my-report';
       const body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify(title) + '\ndataset: ' + ref + '\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n';
@@ -100,6 +108,11 @@
     updateButtons();
     scheduleYaml();
   }
+  /** A visual with nothing in its wells comes back from the server without a `wells` key: give it one, so every pane and the canvas can read it. */
+  D.normalize = function (model) {
+    ((model && model.pages) || []).forEach((p) => (p.visuals || []).forEach((v) => { if (!v.wells) { v.wells = {}; } }));
+    return model;
+  };
   D.undo = function () {
     if (!undo.length) { return; }
     redo.push(JSON.stringify(D.model));
@@ -230,7 +243,7 @@
             const before = JSON.stringify(D.model);
             undo.push(before);
             redo.length = 0;
-            D.model = r.report;
+            D.model = D.normalize(r.report);
             D.dirty = true;
             yamlStale = false;
             D.lastYaml = text;
@@ -249,8 +262,10 @@
     const box = into || q('[data-yaml-problems]');
     B.clear(box);
     list.forEach((p) => {
-      const li = h('li', { class: 'bi-problem bi-problem-' + p.level, 'data-code': p.code }, h('strong', { text: (p.code || p.level) + ' ' }), p.path ? h('code', { text: p.path }) : null, ': ' + p.message);
       const m = /^pages\[(\d+)\]\.visuals\[(\d+)\]/.exec(p.path || '');
+      const vis = m && D.model && D.model.pages[+m[1]] && D.model.pages[+m[1]].visuals[+m[2]];
+      const who = vis ? 'Visual ' + (vis.title ? '"' + vis.title + '" ' : '') + '(' + vis.id + ', number ' + (+m[2] + 1) + ' on page ' + D.model.pages[+m[1]].title + '): ' : '';
+      const li = h('li', { class: 'bi-problem bi-problem-' + p.level, 'data-code': p.code }, h('strong', { text: (p.code || p.level) + ' ' }), p.path ? h('code', { text: p.path }) : null, ': ' + who + p.message);
       if (m && D.model && D.model.pages[+m[1]] && D.model.pages[+m[1]].visuals[+m[2]]) {
         li.tabIndex = 0;
         li.classList.add('bi-problem-link');
@@ -379,6 +394,27 @@
     } else { ta.addEventListener('input', onYamlEdit); }
   }
 
+  /** A report draft that names no dataset has nothing to draw: ask for one (the datasets the person may read) and write `dataset:` into the draft. */
+  function ensureDataset(item) {
+    if (/^dataset:\s*\S/m.test(item.body || '')) { return Promise.resolve(); }
+    return B.api('GET', '/datasets').then((r) => new Promise((resolve) => {
+      const sel = h('select', { class: 'studio-select', 'data-pick-dataset': '', 'aria-label': 'Dataset for this report' }, h('option', { value: '', text: 'Choose a dataset' }));
+      (r.datasets || []).filter((d) => d.valid).forEach((d) => sel.appendChild(h('option', { value: d.id.replace(/^file:dataset:/, ''), text: d.title })));
+      const go = h('button', { type: 'button', class: 'btn-pill btn-accent', 'data-pick-dataset-go': '', text: 'Use this dataset' });
+      const box = h('section', { class: 'bi-form', 'data-choose-dataset': '', role: 'group', 'aria-label': 'Choose a dataset' },
+        h('h2', { text: 'Choose a dataset' }), h('p', { class: 'text-muted-d', text: 'This report does not name a dataset yet, so there is nothing to draw. Choose the one it reads; you can change it later in the YAML tab.' }), sel, go);
+      canvas.insertBefore(box, canvas.firstChild);
+      go.addEventListener('click', () => {
+        if (!sel.value) { say('Choose a dataset.', true); return; }
+        const line = 'dataset: ' + sel.value + '\n';
+        item.body = /^pages:/m.test(item.body || '') ? item.body.replace(/^pages:/m, line + 'pages:') : (item.body || '') + (item.body && !/\n$/.test(item.body) ? '\n' : '') + line;
+        D.pickedDataset = true;
+        box.remove();
+        resolve();
+      });
+    }));
+  }
+
   Promise.all([B.api('GET', '/items/' + B.id2path(itemId)), B.api('GET', '/reports/catalogue')]).then(([item, cat]) => {
     D.item = item;
     D.catalogue = cat;
@@ -390,10 +426,10 @@
     q('[data-save-copy]').hidden = !D.readOnly;
     if (D.readOnly) { q('[data-readonly]').hidden = false; }
     bindToolbar();
-    return B.api('POST', '/reports/validate', { yaml: item.body });
+    return ensureDataset(item).then(() => B.api('POST', '/reports/validate', { yaml: item.body }));
   }).then((r) => {
     if (!r.report) { showProblems(r.problems || []); q('[data-yaml-problems]').hidden = false; showTab('yaml'); setYamlText(D.item.body); say('The YAML does not parse; fix it in the YAML tab.', true); return null; }
-    D.model = r.report;
+    D.model = D.normalize(r.report);
     D.pageId = D.model.pages[0].id;
     D.lastYaml = D.item.body;
     return B.api('GET', '/reports/dataset?ref=' + encodeURIComponent(D.model.dataset)).then((ds) => {
@@ -409,6 +445,7 @@
       D.emit('select', null);
       const bad = (r.problems || []).filter((p) => p.level === 'error');
       if (bad.length) { say(bad.length + ' problem' + (bad.length === 1 ? '' : 's') + ' in the draft; see Check.', true); }
+      if (D.pickedDataset) { D.dirty = true; updateButtons(); }
       root.setAttribute('data-ready', 'yes');
     });
   }).catch((e) => { say(e.message, true); });
