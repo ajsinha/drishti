@@ -62,7 +62,7 @@ Now ask the machine whether it is ready. `doctor` prints green, yellow and red l
 ```text
 $ python3 tools/drishti.py doctor --server http://localhost:18940
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-1.22.0-exec.jar (version 1.22.0)
+GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.0.0-exec.jar (version 2.0.0)
 GREEN  python                  /usr/bin/python3: Python 3.14.4
 GREEN  python pyyaml           installed
 YELLOW python deltalake        not installed (needed for data ingest --store delta)
@@ -74,7 +74,7 @@ GREEN  console venv            ~/drishti/drishti-console/.venv
 GREEN  configured directories  none of DRISHTI_DELTA_ROOT, DRISHTI_FILES_ROOT, DRISHTI_PACKS_INSTALLED is set
 GREEN  port 18940              in use by Drishti: status UP
 GREEN  port 17940              in use by Drishti: answers 404 on /actuator/health, as the Drishti console does
-YELLOW server                  http://localhost:18940: version 1.22.0, java 21.0.12.1, status DEGRADED
+YELLOW server                  http://localhost:18940: version 2.0.0, java 21.0.12.1, status DEGRADED
 GREEN  token                   accepted; this token 'oF6pcM68sQUO' acts as drishti-dev-admin: scopes loads:write, design:write, packs:admin, bi:write, expires 2026-11-11T02:14:19.018Z
 doctor: 0 red, 3 yellow
 ```
@@ -94,7 +94,7 @@ export DRISHTI_PACKS=market-risk,counterparty-risk,liquidity-risk,climate-risk,o
 export DRISHTI_STUDIO_SAVE=true
 export DRISHTI_SECURITY_ENABLED=true
 export DRISHTI_TOKEN_SECRET=change-me-to-a-long-random-string-0123456789
-java -jar drishti-server/target/drishti-server-1.22.0-exec.jar
+java -jar drishti-server/target/drishti-server-2.0.0-exec.jar
 ```
 
 The console, in the second (the same token secret, so the two trust each other):
@@ -279,7 +279,7 @@ With it, the server answers. `server health` lists every source (a connector to 
 
 ```text
 $ python3 tools/drishti.py server health
-status DEGRADED  version 1.22.0  java 21.0.12.1  uptime 40s
+status DEGRADED  version 2.0.0  java 21.0.12.1  uptime 40s
 packs 12  sources 20 (degraded 0, down 8)  packs with problems 7  failed to start 0
   civic-store                 DOWN      DOWN: cannot reach ~/drishti/data/delta/civic (engine: native)
   climate-store               DOWN      DOWN: cannot reach ~/drishti/data/delta/climate (engine: native)

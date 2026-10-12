@@ -13,7 +13,44 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 1.22.0 — release notes
+# Drishti 2.0.0 — release notes
+
+*2026-10-12.* **BI complete, maps, coherent live data, seventeen hands-on tutorials and one consistent look.**
+
+- **BI essentials:** scheduled dataset refresh; time intelligence (year-, quarter- and month-to-date, prior period, same
+  period last year, running totals, business-day aware); map, funnel, histogram, box and bubble visuals; true totals for
+  measures that do not add up.
+- **Several datasets:** **composed datasets** in YAML (`from:` and `join:` inner, left or full; each source masked and
+  row-ruled for the reader before the join; key, fan-out and cycle checks), **Python Transforms** published as derived
+  datasets, reports whose visuals each name a dataset with slicers and clicks that carry across (`links:`), and Analyse
+  notebooks over several extracts. The sample *Desk P&L vs counterparty exposure* is built both ways.
+- **Python in BI and Analyse:** Python measures, visuals and Transforms in a sandboxed runner (no network, CPU, memory and
+  time limits, an allow-list of packages, masked input only), the same items in the browser through Pyodide; the Analyse
+  workbench (Slice, SQL, Python cells, notebooks, promote a cell) and a quant-engine slot with a stand-in.
+- **AI-driven BI**, off by default: describe a report, ask the data (run as the reader), explain this number. The AI layer
+  follows Sajha's design in Python and Java (`LLMProvider`, `LLMModel`, the tool base) with **17 vendor types** (the
+  OpenAI-compatible family with ten presets, Azure OpenAI, Anthropic, Gemini, Mistral, Cohere, Ollama, AWS Bedrock, a mock),
+  each with the connectors' TLS settings and the HTTP proxy, and **Test connection** in Admin → AI.
+- **Maps:** a `map` Sutra panel (a jurisdiction's page highlights its country; a click opens another), region shapes for
+  251 countries, and BI maps that drill from world to country to region.
+- **Coherent live demo data:** a tick moves a curve's points and forwards with its headline rate, a trade's legs with its
+  MTM, a netting set's exposure profile, an LCR's parts; every live sample is checked to stay consistent.
+- **Connection pools everywhere** (JDBC and PostgreSQL, the identity database, MongoDB, Redis, Aerospike): 20 by default,
+  leak warnings with the borrower, borrows only for a unit of work (a build rule), in-use shown in Admin and Health.
+- **One look:** one top bar on every page (Forms and Reports inside Views; the Live button carries the page's stream);
+  Sajha's Crimson, Dark, Blue and Green themes with their navigation gradients; the Cinzel wordmark; a footer with the
+  slogan; dropdown slicers that float over the page; a tidy function-key bar.
+- **Documentation:** **17 hands-on tutorials** (docs/tutorials: CLI and UI steps with real output and screenshots), a help
+  centre of 40 pages in six sections (every old address redirects), and a pass of every guide against the code.
+- **Reliability:** one shared file watcher per process; the drill removes its temporary files.
+
+**Upgrading from 1.22.0:** new tables for revisions of composed datasets and Transform caches are created at start. The
+console needs `pandas`, `numpy`, `pyarrow` and `boto3` (`requirements.txt`). Pool sizes default to 20: check the
+database's `max_connections` against pools × instances (docs/admin/OPERATIONS.md). Help addresses changed; the old ones
+redirect. The BI menu no longer lists report names, and Forms and Reports moved into Views. Pyodide (browser Python) is
+installed by `tools/fetch-pyodide.sh`, as for Calc.
+
+# Previous release: Drishti 1.22.0 — release notes
 
 *2026-10-11.* **Distribution: export, subscriptions, alerts and embedded reports.**
 
@@ -36,7 +73,7 @@
 appear in the same list and keep working. Outside email addresses on old subscriptions are skipped at send. Hosts that
 embed reports need the `embed:report` scope and `report:<id>` (or `report:*`) in their allowed kinds.
 
-# Previous release: Drishti 1.21.0 — release notes
+# Older release: Drishti 1.21.0 — release notes
 
 *2026-10-11.* **BI you can govern and watch live; connectors behind a proxy; Forms and Reports in the top bar; documentation checked against the code.**
 
