@@ -36,7 +36,7 @@ About 20 minutes.
 
 ## Step 1 · Open the form
 
-Type `FORM trading trade` and press Enter (or **Forms**, **Trading**, then **Trade**).
+Type `FORM trading trade` and press Enter (or **Views**, **Forms**, **Trading**, then **Trade**).
 
 ![The empty form for trades: identity, product, where, money and dates](img/t03/01-empty-form.jpg)
 

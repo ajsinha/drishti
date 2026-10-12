@@ -20,15 +20,31 @@ person it does not list."""
 from __future__ import annotations
 
 from _bi import WORLD, bi, clean_items, open_report, quiet_inbox, start_design, submit_design
-from _tut import OUT, SERVER_ENV, elem_shot, go, login  # noqa: F401
+from _tut import OUT, ROOT, SERVER_ENV, elem_shot, go, login  # noqa: F401
 from shotlib import Ctx, register
 from t13 import as_, people
 
 shot = register("t15", OUT / "t15")
+AI_POLICY = ('{"drishti.ai.policy.features.[bi-ask].roles[0]":"admin","drishti.ai.policy.features.[bi-ask].roles[1]":"bi-writer",'
+             '"drishti.ai.policy.per-user-per-minute":30}')
+
+
+def start_servers(work):
+    """A scratch stack with the AI layer on and the MOCK provider: the tutorial's provider files in <work>/ai (the server and the console read the same folder), a switched-off
+    vendor provider, and the policy of the tutorial (the ask feature open to admin and bi-writer only)."""
+    import shutil
+
+    import shotlib
+    ai = work / "ai"
+    ai.mkdir(exist_ok=True)
+    for name in ("mock.yaml", "local-model.yaml"):
+        shutil.copy(ROOT / "docs" / "tutorials" / "data" / "ai" / name, ai / name)
+    (ai / "fast.yaml").write_text((ROOT / "config" / "ai" / "groq.yaml.example").read_text().replace("enabled: true", "enabled: false"))
+    return shotlib.start_servers(work, {**SERVER_ENV, "DRISHTI_AI_ENABLED": "true", "DRISHTI_AI_DIR": str(ai), "DRISHTI_AI_DEFAULT_MODEL": "mock/m", "SPRING_APPLICATION_JSON": AI_POLICY})
 WORLD_REPORT = "file:report:world-economics"
 
 
-@shot("01-admin-ai.jpg", also=("02-test-connection.jpg"))
+@shot("01-admin-ai.jpg", also=("02-test-connection.jpg",))
 def admin_ai(c: Ctx):
     login(c, height=900)
     quiet_inbox(c)
@@ -42,7 +58,7 @@ def admin_ai(c: Ctx):
     elem_shot(c, "02-test-connection.jpg", '[data-ai-layer="console"] table', pad=8)
 
 
-@shot("03-describe.jpg", also=("04-draft-used.jpg"))
+@shot("03-describe.jpg", also=("04-draft-used.jpg",))
 def describe(c: Ctx):
     login(c, height=900)
     quiet_inbox(c)

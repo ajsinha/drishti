@@ -22,7 +22,9 @@ The pictures run in order (the first makes what the others use), as ann, sue and
 from __future__ import annotations
 
 import json
+import os
 import re
+from pathlib import Path
 
 from _bi import bi, clean_everywhere
 from _tut import ADMIN, OUT, PASSWORD, ROOT, SERVER_ENV, call, go, login, page_shot  # noqa: F401
@@ -224,7 +226,7 @@ def environments(c: Ctx):
     c.save("14-environments-export.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 744})
     with c.page.expect_download() as d:
         c.page.click("[data-export] button[type=submit]")
-    path = ROOT / "drishti-data" / "rates.bi-bundle.json"
+    path = Path(os.environ.get("DRISHTI_SHOTS_WORK") or "/tmp") / "rates.bi-bundle.json"
     d.value.save_as(path)
     bundle = json.loads(path.read_text())
     show("bundle_head", {k: bundle[k] for k in ("format", "formatVersion", "createdAt", "createdBy", "checksum")})

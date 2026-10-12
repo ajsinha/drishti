@@ -36,6 +36,7 @@ About 40 minutes.
 - a `tabs` panel with several panels inside each tab, and a **slider** that filters what is inside;
 - column filters and phone width;
 - the *About this page* text and glossary, and where it is written;
+- the **`map`** panel: a country highlighted, its regions, a click that opens the country's page;
 - `sutra lint` and `sutra preview` from the command line.
 
 ## Step 1 · Bring your documents
@@ -166,7 +167,42 @@ You should see a skeleton for the kind, the panel texts and a glossary entry for
 button reads `13 fields; 13 explained (help coverage 13/13)`. Write real sentences in the box and the card updates as you type; the lint warnings vanish as entries appear. The text is saved with the design and
 travels with the pack fragment you export; it goes live when an administrator deploys the pack ([SCREEN_DESIGNER.md › The About tab](../guides/SCREEN_DESIGNER.md#the-about-tab)).
 
-## Step 7 · What you have, and what comes next
+## Step 7 · A map on a screen
+
+A panel of kind **`map`** draws a world map from a country code in the document, with shapes that ship with the console (no tiles, no map service, nothing fetched from the internet). Look at one that is already in the politics-society pack: type `JUR JUR-AUS` and press Enter, the jurisdiction of Australia.
+
+![The page of JUR-AUS: the strip (Australia, Canberra, population 27.61, area), the panel "Where it is": the world map with Australia in the accent colour and its name, small countries as dots, and "Open a country" under it](img/t06/12-map-live.jpg)
+
+You should see, in the panel **Where it is**, the world with **Australia highlighted** and named, the small island states as **dots** (they are too small for the world shapes, but they can still be clicked), and **Open a country** under the map: the same countries as a list, for the keyboard and for screen readers. Move the pointer over another country.
+
+![The pointer over Indonesia: the country turns blue and a tooltip says "Indonesia, click to open"](img/t06/13-map-hover.jpg)
+
+You should see the country change colour and a tip, `Indonesia · click to open`. Click it.
+
+![The page of JUR-IDN: Indonesia, Jakarta, population 285.72, and the map with Indonesia highlighted; the breadcrumb at the top reads MX-20000001, JUR-AUS, JUR-IDN](img/t06/13-map-click.jpg)
+
+You should see **Indonesia's own page** (`JUR-IDN`), with the map now highlighting Indonesia, and the trail of pages you came by at the top (`JUR-AUS / JUR-IDN`). The panel that did all of this is three lines of the pack's Sutra, `config/packs/politics-society/sutras/politics-and-society/jurisdiction.v1.sutra.yaml`:
+
+```yaml
+- id: geography
+  kind: map
+  title: Where it is
+  highlight: $.iso3                                   # the country to colour: an ISO alpha-3 or alpha-2 code, or its English name
+  link: { kind: jurisdiction, id: "JUR-{iso3}" }      # a click on a country opens this entity (the id is built from the country's code)
+  height: 11
+```
+
+`highlight` takes the country (or a list of them) from the document; `region: $.iso3` draws the **regions** of a country instead (its states, provinces or counties, from ISO 3166-2 codes such as `AU-NSW`); `link` makes a click open another entity, and a `shade: { kind: economy, field: $.gdpUsdBn, label: "GDP (USD bn)" }` colours the countries by a figure read across a kind. Now build one yourself in the workbench: **Build**, **New screen**, the tab **Examples**, and open **map**: it opens as **your own copy**, with its own sample document.
+
+![The workbench with the map example: the sample map.json, the palette on the left with metric, map, kv, status ..., and the canvas with the two panels The world and Its regions](img/t06/14-map-workbench.jpg)
+
+You should see the canvas with **two map panels** (the world with Australia in the accent colour, and Australia's regions: Northern Territory, Queensland, Western Australia, South Australia, New South Wales ...) and a **Facts** panel below them. The **palette** on the left, **Add a panel**, lists the kinds; `map` is the one with the globe.
+
+![The palette: metric, map, kv, status, provenance, markdown, table, ladder, pivot, tabs, line, area, each with an Add button](img/t06/15-map-palette.jpg)
+
+You should see `map` among the kinds with an **Add** button (or drag it onto the canvas); the **YAML** tab shows the lines above, and the **Inspector** takes `highlight`, `region`, `link` and `shade` as boxes. In the example's YAML the two panels are `highlight: $.iso3` and `region: $.iso3`: the same field, two views of it. [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) and [PANEL_KINDS.md](../guides/PANEL_KINDS.md) have the rest of the options, and the reports have a map visual of their own ([tutorial 10](10-first-bi-report.md)).
+
+## Step 8 · What you have, and what comes next
 
 The design is yours (see **My designs** under Build). To make it live for everyone: **Submit for review**, a reviewer with the approve power reads the diff and the evidence, and approves; or export it as a pack
 fragment (**Ship**) and put it in a pack. [BUILD_WORKBENCH_TUTORIAL.md](../guides/BUILD_WORKBENCH_TUTORIAL.md) walks through proposing and approving as two people.

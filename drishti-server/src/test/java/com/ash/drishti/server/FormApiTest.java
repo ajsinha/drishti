@@ -68,6 +68,17 @@ class FormApiTest {
     }
 
     @Test
+    void aDropdownListsTheValuesOfTheWholeKindNotOnlyItsFirstRows() throws Exception {
+        // the demo trades come grouped by product (rates first): the first 200 rows hold no FX product, but the dropdown must offer it
+        mvc.perform(get("/api/v1/forms/trading").header("Authorization", as("searcher")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.form.fields[?(@.path=='productType')].values[*]").value(hasItem("IRS_FIXFLOAT")))
+                .andExpect(jsonPath("$.form.fields[?(@.path=='productType')].values[*]").value(hasItem("FX_BARRIER")))
+                .andExpect(jsonPath("$.form.fields[?(@.path=='assetClass')].values[*]").value(hasItem("Rates")))
+                .andExpect(jsonPath("$.form.fields[?(@.path=='assetClass')].values[*]").value(hasItem("FX")));
+    }
+
+    @Test
     void theFormOfAPackYouCannotOpenIsRefused() throws Exception {
         mvc.perform(get("/api/v1/forms/trading").header("Authorization", as("nothing"))).andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/forms/no-such-pack").header("Authorization", as("searcher"))).andExpect(status().isBadRequest());

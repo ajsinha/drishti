@@ -130,7 +130,7 @@ drishti:
         "[bi-ask]": { roles: [admin, bi-writer] }   # bi-draft and bi-explain are named the same way; a feature with no entry is open to anyone who passes gate one
 ```
 
-You will see it work in step 6.
+You should see it work in step 6: a person the policy does not list is refused before any model is called.
 
 ## Step 4 · Report from words
 
@@ -225,7 +225,7 @@ default-model: llama-3.3-70b-versatile
 ```
 
 Everything about each type (settings, model catalogue, proxy, TLS, retries, errors that never carry a response body) is in [AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md) section 11; the BI side (what the hooks send, `aggregates` mode, limits) is [BI_AI.md](../guides/BI_AI.md). Then use **Test connection** on the new row: the first honest answer tells you whether the key, the address and the network are right,
-before anyone asks the data a question.
+before anyone asks the data a question. You should see `OK` or the reason on the new row.
 
 ## Next steps
 

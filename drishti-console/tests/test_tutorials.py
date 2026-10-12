@@ -14,9 +14,11 @@
 
 """The hands-on tutorials (docs/tutorials/): every picture exists, every relative link and anchor resolves, and each tutorial has the parts a new reader needs.
 
-The pictures themselves are made by tools/docs/screenshots.py (guides t01 to t09); test_guide_images.py already fails for a picture no document shows or
+The pictures themselves are made by tools/docs/screenshots.py (guides t01 to t17); test_guide_images.py already fails for a picture no document shows or
 one the script cannot make. This file checks the tutorials as documents."""
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -25,7 +27,7 @@ from conftest import CONSOLE
 
 ROOT = CONSOLE.parent
 TUTORIALS = ROOT / "docs" / "tutorials"
-WRITTEN = sorted(TUTORIALS.glob("0[1-9]-*.md"))
+WRITTEN = sorted(TUTORIALS.glob("[01][0-9]-*.md"))
 LINK = re.compile(r"(?<!!)\[[^\]]*\]\(([^)\s]+)\)")
 IMAGE = re.compile(r"!\[[^\]]*\]\(([^)\s]+)\)")
 HEADING = re.compile(r"^#{1,6}\s+(.*?)\s*#*\s*$", re.M)
@@ -43,14 +45,16 @@ def anchors(path: Path) -> set:
     return {slug(h) for h in HEADING.findall(text)}
 
 
-def test_there_are_nine_written_tutorials_and_the_index_names_seventeen():
-    assert [p.name[:2] for p in WRITTEN] == [f"0{i}" for i in range(1, 10)]
+def test_there_are_seventeen_written_tutorials_and_the_index_names_every_one():
+    assert [p.name[:2] for p in WRITTEN] == [f"{i:02d}" for i in range(1, 18)]
     index = (TUTORIALS / "README.md").read_text()
     rows = re.findall(r"^\|\s*(\d{1,2})\s*\|", index, re.M)
     assert [int(r) for r in rows] == list(range(1, 18))
-    assert index.count("coming") >= 8
+    assert "coming" not in index.split("## What you need once")[0].split("## The tutorials")[1]
     for p in WRITTEN:
         assert p.name in index, p.name
+        row = next(line for line in index.splitlines() if p.name in line)
+        assert "written" in row and f"[" in row, row                      # the index row says it is written and links the tutorial by its title
 
 
 def test_the_docs_index_links_to_the_tutorials():
@@ -106,8 +110,24 @@ def test_no_tutorial_leaks_the_authors_scratch_folders_or_a_token(doc):
     assert not re.search(r"drk_[A-Za-z0-9_-]{20,}", text), doc.name
 
 
+def test_the_pictures_of_the_later_tutorials_are_made_by_the_script_and_shown_at_a_phone_width_where_it_matters():
+    """Tutorials 10 to 17: every picture is listed by the picture script (guides t10 to t17), and the ones about reports, embedding and governance show a phone."""
+    listed = []
+    for guide in (f"t{n}" for n in range(10, 18)):
+        listed += subprocess.run([sys.executable, str(ROOT / "tools" / "docs" / "screenshots.py"), "--list", "--guide", guide], capture_output=True, text=True, cwd=ROOT).stdout.split()
+    for doc in sorted(TUTORIALS.glob("1[0-7]-*.md")):
+        for rel in IMAGE.findall(doc.read_text()):
+            if rel.startswith("img/t1"):
+                assert Path(rel).name in listed, f"{doc.name}: {rel} is not made by tools/docs/screenshots.py"
+    for name in ("10-first-bi-report.md", "13-govern-bi.md", "16-embed-drishti.md"):
+        assert re.search(r"phone|390 px", (TUTORIALS / name).read_text()), name
+
+
 def test_the_sample_data_the_tutorials_use_is_in_the_repository():
     data = TUTORIALS / "data"
     assert len(list((data / "desk-quotes").glob("*/quote.jsonl"))) == 10
     for name in ("schemas/quote.schema.json", "connectors/desk-quotes.yaml", "connectors/desk-ledger.yaml", "desk-book.sutra.yaml", "desks/desk-rates.json"):
+        assert (data / name).is_file(), name
+    for name in ("slicer-kinds.report.yaml", "trades-daily.dataset.yaml", "smtp-catcher.py", "trades-model.dataset.yaml", "trades-report.report.yaml", "notional-by-desk.python.yaml",
+                 "desk-python.report.yaml", "ai/mock.yaml", "ai/local-model.yaml", "pools.py"):
         assert (data / name).is_file(), name

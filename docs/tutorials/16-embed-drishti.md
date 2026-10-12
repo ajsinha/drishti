@@ -46,11 +46,11 @@ export DRISHTI_PUBLIC_URL=http://127.0.0.1:18480        # the server's address a
 export DRISHTI_CONSOLE_URL=http://127.0.0.1:17480       # the console's address as the browser reaches it (the token's audience)
 ```
 
-(Sign-in must already be on: embedding needs `DRISHTI_SECURITY_ENABLED=true` on the server, which tutorial 1 set. The pictures were made on ports 18943 and 17943; yours are 18480 and 17480.) Restart both. Without the setting the embed calls are refused.
+(Sign-in must already be on: embedding needs `DRISHTI_SECURITY_ENABLED=true` on the server, which tutorial 1 set. The pictures were made on ports 18943 and 17943; yours are 18480 and 17480.) Restart both. Without the setting the embed calls are refused. You should see **Admin → Embedding** open once both are back (step 3).
 
 ## Step 2 · Two users the host will sign in
 
-The sample host has two demo users, `viewer` and `author`. A host application tells Drishti **who** its user is; Drishti refuses a stranger, so both must exist in Drishti too. As the administrator make them under **Admin → Users → New user**: `viewer` with the role `viewer` and `author` with the role `author`, any password (the host never asks for it; Drishti never sees it), *Must change at first sign-in* unticked.
+The sample host has two demo users, `viewer` and `author`. A host application tells Drishti **who** its user is; Drishti refuses a stranger, so both must exist in Drishti too. As the administrator make them under **Admin → Users → New user**: `viewer` with the role `viewer` and `author` with the role `author`, any password (the host never asks for it; Drishti never sees it), *Must change at first sign-in* unticked. You should see both in the **Users** list.
 
 ## Step 3 · Register the host application
 
@@ -208,7 +208,7 @@ If an element stays in `loading` with no event at all, the token provider never 
 ## Step 9 · Pin the version, and stay safe
 
 The console serves the library at an **exact semantic version**, immutably, with the SHA-384 of every file at `/embed/v1/elements/<version>/integrity.json`. A production page pins the version and puts the `integrity` on the script line, so the bytes it runs are the bytes it reviewed; `/embed/v1/drishti-elements.js` follows the console and is for development. Keep the client secret in the backend's environment, rotate it
-from the row's **Rotate** button (with a grace period so a rolling restart does not fail), and make the application's origins, scopes and kinds as narrow as the page needs: **a registered application can show exactly the kinds and reports it lists and nothing else**, whatever the user's roles allow.
+from the row's **Rotate** button (with a grace period so a rolling restart does not fail), and make the application's origins, scopes and kinds as narrow as the page needs: **a registered application can show exactly the kinds and reports it lists and nothing else**, whatever the user's roles allow. You should see the file list and its hashes by opening `/embed/v1/elements/<version>/integrity.json` on the console (the version is in the address of the script line).
 
 ## Next steps
 

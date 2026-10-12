@@ -167,6 +167,8 @@ You should see the menus gone and the wall filling the screen: the Net MTM and L
 - **The server's clock and calendar.** Dates on the wall are business dates of the server's calendar.
 - **A board with a mistake** says what and where: `POST /api/v1/bi/boards/validate` answers `DRS-9052` (a tile that does not fit the grid, or names a report or visual that does not exist) and `DRS-9053` (a setting that is reserved).
 
+You should see, once the screen is signed in as that user, the wall with the figures of that user's roles, and nothing the roles mask.
+
 ## Next steps
 
 - [Tutorial 13](13-govern-bi.md): publish with a review, certify, and see what a change would break.

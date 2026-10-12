@@ -38,8 +38,15 @@ HOST_PORT = int(os.environ.get("DRISHTI_SHOTS_HOST_PORT", "17944"))
 HOST = f"http://127.0.0.1:{HOST_PORT}"
 APP = "harbour-crm"
 KEY = json.loads((ROOT / "tools" / "elements-demo" / "demo-host-key.json").read_text())
-SECRET_FILE = ROOT / "drishti-data" / "embed-secret.txt"
+SECRET_FILE = Path(os.environ.get("DRISHTI_SHOTS_WORK") or "/tmp") / "embed-secret.txt"      # the registration's secret, for the host to read (the work folder is never committed)
 REPORT = "report:file:report:live-trading-desk"
+
+
+def start_servers(work):
+    """A scratch stack with embedding on (the server's public address and the console's, which are the token's issuer and audience)."""
+    import shotlib
+    return shotlib.start_servers(work, {**SERVER_ENV, "DRISHTI_EMBED_ENABLED": "true", "DRISHTI_PUBLIC_URL": f"http://127.0.0.1:{shotlib.SERVER_PORT}",
+                                        "DRISHTI_CONSOLE_URL": f"http://127.0.0.1:{shotlib.CONSOLE_PORT}"})
 
 
 def b64(hexa: str) -> str:

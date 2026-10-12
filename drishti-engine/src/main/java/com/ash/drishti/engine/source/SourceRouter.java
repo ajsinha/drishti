@@ -201,7 +201,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             }
             if (d.isPresent()) {
                 stats.found(name, System.nanoTime() - t0);
-                return d.get();
+                return named(d.get(), name);
             }
             stats.notHeld(name, System.nanoTime() - t0);
             if (coverage == DateCoverage.HELD) {
@@ -214,6 +214,15 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             throw noSource(ref.kind());                 // the connector the pack routes this kind to is not there: say that, not just "nothing holds it"
         }
         throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no source holds " + ref);
+    }
+
+    /** A document whose connector gave it no source name carries the connector's name, so a view never says "Source: , gen 0". */
+    static EntityDocument named(EntityDocument doc, String connector) {
+        var pv = doc.provenance();
+        if (pv == null || (pv.source() != null && !pv.source().isBlank())) {
+            return doc;
+        }
+        return new EntityDocument(doc.ref(), doc.data(), new com.ash.drishti.api.Provenance(connector, pv.generation(), pv.fetchedAt(), pv.live(), pv.businessDate()), doc.deleted());
     }
 
     private static Throwable translate(EntityRef ref, Throwable e, String source, Duration timeout) {

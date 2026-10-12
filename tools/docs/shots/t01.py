@@ -68,6 +68,18 @@ def search(c: Ctx):
     c.save("06-search.jpg")
 
 
+@shot("06b-views-menu.jpg")
+def views_menu(c: Ctx):
+    """The Views menu: Terminal, Search, Forms and Reports under Look up; Workspaces, Monitors and Alerts under Watch."""
+    login(c)
+    go(c, "/t", wait=".cmd-input")
+    c.page.locator(".tbar-menu-btn[title='Views']").first.click()
+    c.page.wait_for_timeout(500)
+    c.page.locator(".dropdown-menu.show a.mega-item", has_text="Forms").first.hover()
+    c.page.wait_for_timeout(300)
+    c.save("06b-views-menu.jpg", clip={"x": 0, "y": 0, "width": 1280, "height": 460})
+
+
 @shot("07-forms-home.jpg", also=("08-form-trading.jpg",))
 def forms(c: Ctx):
     login(c)

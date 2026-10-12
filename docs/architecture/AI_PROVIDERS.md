@@ -228,7 +228,7 @@ Settings (`drishti-console/config/application.yaml`): `ai.enabled` (`DRISHTI_AI_
 `ai.default_model`, `ai.redact` (the field names to mask), `ai.policy.*` (same meaning as above). Console code calls
 `request.app.state.ai.gateway.chat(CallContext(...), ChatRequest.of(...))`; the ready-made route is `POST /api/ai/chat` (JSON only,
 signed in, feature `console:<name>`). **Admin -> AI** is a read-only page for both layers: on or off, providers with health and
-models, MCP servers and (one server at a time, by link) their tools. The console's Ask stays a thin proxy to the server's Ask.
+models, MCP servers and (one server at a time, by link) their tools. Each console provider has a **Test connection** button: it calls the provider's `probe()` (one cheap live call such as a model list) and `live_models()` once, on request, and shows the answer inline (`POST /admin/ai/api/test/<name>`: administrators only, a JSON body, at most 15 seconds, one test per provider every two seconds, the key never in the answer). `health()` still never calls the network. Every test is an `ai-audit` line in the console's log (who, provider, outcome, milliseconds). The console's Ask stays a thin proxy to the server's Ask.
 
 ## 9. Tests
 
