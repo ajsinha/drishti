@@ -46,7 +46,8 @@ public final class SutraExpressions {
             Map.entry(PanelKind.WATERFALL, Set.of("where", "rows")), Map.entry(PanelKind.HISTOGRAM, Set.of("where", "rows")),
             Map.entry(PanelKind.SCATTER, Set.of("where", "rows")), Map.entry(PanelKind.CANDLESTICK, Set.of("where", "rows")),
             Map.entry(PanelKind.GRAPH, Set.of("nodes", "edges")), Map.entry(PanelKind.TIMELINE, Set.of("where", "rows")),
-            Map.entry(PanelKind.PIVOT, Set.of("where", "rows")), Map.entry(PanelKind.METRIC, Set.of("value", "delta")));
+            Map.entry(PanelKind.PIVOT, Set.of("where", "rows")), Map.entry(PanelKind.METRIC, Set.of("value", "delta")),
+            Map.entry(PanelKind.MAP, Set.of("highlight", "region")));
 
     /** The expression options of a panel kind: its own, and {@code source} for every kind that reads data. */
     static Set<String> expressionOptions(PanelKind kind) {
@@ -140,6 +141,13 @@ public final class SutraExpressions {
             for (Object mk : markers) {
                 if (mk instanceof Map<?, ?> m && m.get("value") != null) {
                     expr(m.get("value").toString(), p.location(), out);
+                }
+            }
+        }
+        if (p.kind() == PanelKind.MAP && p.options().get("shade") instanceof Map<?, ?> sh) {
+            for (String key : List.of("field", "by")) {
+                if (sh.get(key) != null) {
+                    expr(sh.get(key).toString(), p.location(), out);
                 }
             }
         }

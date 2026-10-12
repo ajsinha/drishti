@@ -79,7 +79,7 @@ Open the workbench with nothing at all and you get an unnamed **scratch design**
 
 | Where | What it holds |
 |---|---|
-| **Left: Data** | The samples (add, remove, choose the previewed one), the **palette** of the 21 panel kinds, and the **shape**: every field of your data with its role. |
+| **Left: Data** | The samples (add, remove, choose the previewed one), the **palette** of the 22 panel kinds, and the **shape**: every field of your data with its role. |
 | **Centre** | Tabs **Design** (the real screen with an editing layer), **YAML** (the Sutra text), **Summary** (the Sutra read back as a page) and **Notes** (the design's notes in markdown, with a preview; they travel to the reviewer). **Split** shows Design and YAML side by side. |
 | **Right** | Tabs **Inspector** (a form for what is selected), **Problems**, **Tests** and **Versions**. |
 | **Status bar** | `◀ sample 2/12 ▶`, Desktop or Phone width, Theme, **Preview with a file…**, the check result `✓ 12/12`, the revision, Undo and Redo. |
@@ -109,7 +109,7 @@ Everything you do is an **operation** on the design (add a panel, move it, set a
 
 Conflicts (the same field with different types in different files) and rare fields (in fewer than half of the records) are listed above the tree: a panel built on a rare field is empty for many samples. Filter by path or role; arrows move, Right and Left open and close, **Enter** shows a field's reason, examples and files. Each opened field has two buttons, **Suggest panels…** and **Bind to selected panel** (also the keys `S` and `B`), and every field can be **dragged** onto the canvas (section 6).
 
-**Palette.** The 21 panel kinds, each with an icon and a line on what it shows. Drag one onto the canvas, or press its **Add** button (section 5).
+**Palette.** The 22 panel kinds, each with an icon and a line on what it shows. Drag one onto the canvas, or press its **Add** button (section 5).
 
 ![The palette of panel kinds](img/designer/04-palette.jpg)
 
@@ -132,8 +132,8 @@ Every one of these is a single operation, sent with the revision you built on. I
 
 Four ways, all producing the same operation, and the first is always in sight:
 
-1. **+ Add panel** in the bar above the screen, on every tab and at phone width. A chooser lists all 21 kinds with an icon and a line each; type to filter, Up/Down, Enter. Whatever tab you were on, the workbench switches to **Design**, selects the new panel, scrolls it into view, flashes it and opens the inspector.
-2. **Drag a kind** from the palette (**Add a panel**, a filterable grid of the 21 kinds) onto the canvas. The bar shows where it will go; drop it.
+1. **+ Add panel** in the bar above the screen, on every tab and at phone width. A chooser lists all 22 kinds with an icon and a line each; type to filter, Up/Down, Enter. Whatever tab you were on, the workbench switches to **Design**, selects the new panel, scrolls it into view, flashes it and opens the inspector.
+2. **Drag a kind** from the palette (**Add a panel**, a filterable grid of the 22 kinds) onto the canvas. The bar shows where it will go; drop it.
 3. Press a kind's **Add** button in the palette: it goes after the selected panel (or at the end of the main column).
 4. The key `N` on the canvas, or the command palette's **Add panel…**.
 

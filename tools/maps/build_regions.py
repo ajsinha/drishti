@@ -107,6 +107,22 @@ def code_of(props: dict) -> str:
     return c or "%s-%s" % ((props.get("iso_a2") or props["adm0_a3"])[:3], props.get("adm1_code", "X")[-4:])
 
 
+def unwrap(merged: dict) -> bool:
+    """A country that crosses the antimeridian (Russia, Fiji, the United States with the Aleutians) would be drawn across the whole
+    world; its western longitudes are moved past 180 so the country is one block. Returns whether it did."""
+    xs = [p[0] for m in merged.values() for poly in m["polys"] for ring in poly for p in ring]
+    if not xs or max(xs) - min(xs) < 200 or min(xs) >= 0 or max(xs) <= 0:
+        return False
+    shifted = [x + 360 if x < 0 else x for x in xs]
+    if max(shifted) - min(shifted) >= max(xs) - min(xs):
+        return False
+    for m in merged.values():
+        m["polys"] = [[[[x + 360 if x < 0 else x, y] for x, y in ring] for ring in poly] for poly in m["polys"]]
+        if m["lon"] is not None and m["lon"] < 0:
+            m["lon"] += 360
+    return True
+
+
 def build_country(iso3: str, feats: list, eps_rel: float, digits: int) -> dict:
     merged = {}
     for ft in feats:
@@ -114,6 +130,7 @@ def build_country(iso3: str, feats: list, eps_rel: float, digits: int) -> dict:
         c = code_of(p)
         m = merged.setdefault(c, {"name": p.get("name") or c, "polys": [], "lat": p.get("latitude"), "lon": p.get("longitude")})
         m["polys"].extend(polygons(ft["geometry"]))
+    wrapped = unwrap(merged)
     allpolys = [q for m in merged.values() for q in m["polys"]]
     x0, y0, x1, y1 = bbox(allpolys)
     ext = max(x1 - x0, y1 - y0, 0.05)
@@ -142,7 +159,7 @@ def build_country(iso3: str, feats: list, eps_rel: float, digits: int) -> dict:
         else:
             geom = {"type": "Polygon", "coordinates": polys[0]} if len(polys) == 1 else {"type": "MultiPolygon", "coordinates": polys}
             out.append({"type": "Feature", "properties": props, "geometry": geom})
-    return {"type": "FeatureCollection", "properties": {"iso3": iso3, "bbox": [round(x0, 3), round(y0, 3), round(x1, 3), round(y1, 3)]}, "features": out}
+    return {"type": "FeatureCollection", "properties": {"iso3": iso3, "bbox": [round(x0, 3), round(y0, 3), round(x1, 3), round(y1, 3)], **({"unwrapped": True} if wrapped else {})}, "features": out}
 
 
 def dump(fc: dict) -> bytes:
@@ -199,7 +216,7 @@ One GeoJSON file per country (`<ISO3>.json`): the country's regions (states, pro
 |---|---|
 | Source | Natural Earth 1:10m Admin 1 - States, Provinces (<https://www.naturalearthdata.com/downloads/10m-cultural-vectors/>), from <{URL}> |
 | Licence | Public domain (Natural Earth terms of use: no permission needed, no attribution required; credited in THIRD-PARTY-NOTICES.md) |
-| Processing | grouped by country (`adm0_a3`), features with the same ISO 3166-2 code merged, rings simplified with Douglas-Peucker (tolerance relative to the country's size, raised until the file is at most {a.budget_kb} KB), coordinates rounded to 2 or 3 decimals, regions under 1.2% of the country's size written as Point features (`point: true`) so they stay clickable |
+| Processing | grouped by country (`adm0_a3`), features with the same ISO 3166-2 code merged, rings simplified with Douglas-Peucker (tolerance relative to the country's size, raised until the file is at most {a.budget_kb} KB), coordinates rounded to 2 or 3 decimals, regions under 1.2% of the country's size written as Point features (`point: true`) so they stay clickable, longitudes of a country across the antimeridian (Russia, Fiji, the United States) moved past 180 so it draws as one block (`unwrapped: true`) |
 | Files | {len(sizes)} countries |
 | Total size | {total / 1e6:.1f} MB (limit 15 MB) |
 | Largest | {', '.join('%s %d KB' % (k, v // 1000) for k, v in top)} (limit 1.5 MB each) |

@@ -114,6 +114,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
     private final ReferenceCatalog catalog;
     private final GraphProperties graph;
     private final Binder binder;
+    private final com.ash.drishti.engine.bind.MapSupport mapSupport;
     private final ElCompiler el;
     private final Formats formats;
     private final Mnemonics mnemonics;
@@ -140,6 +141,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         this.catalog = catalog;
         this.graph = graph;
         this.binder = binder;
+        this.mapSupport = new com.ash.drishti.engine.bind.MapSupport(router, el, formats, binder.limits());
         this.el = el;
         this.formats = formats;
         this.mnemonics = mnemonics;
@@ -423,7 +425,9 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         pending.removeAll(missing);                      // held by no source: not waiting, simply not found
         long tLinks = System.nanoTime();
 
-        BindContext ctx = new BindContext(seen, layout, fp, eval, links, linked, pending, denied);
+        Map<String, com.ash.drishti.engine.bind.MapSupport.Lookup> maps = mapSupport.resolve(layout.sutra().panels(), values::builds,
+                asOf.businessDate() == null ? dates.resolve(asOf) : asOf, redact, mayOpen);   // what a map's link and shade read across a kind
+        BindContext ctx = new BindContext(seen, layout, fp, eval, links, linked, pending, denied, maps);
         List<CompletableFuture<PanelView>> futures = new ArrayList<>();
         for (Panel p : layout.sutra().panels()) {
             if (values.builds(p.id())) {                          // a control changed: only the panels that read it are built

@@ -20,7 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The twenty-one panel kinds of the grammar. Each declares which options it requires and which it accepts,
+ * The twenty-two panel kinds of the grammar. Each declares which options it requires and which it accepts,
  * so the validator can reject a Sutra before it ever meets data.
  */
 public enum PanelKind {
@@ -60,7 +60,13 @@ public enum PanelKind {
      * One large formatted, toned figure (a KPI tile), with an optional small change beside it ({@code delta}, with its own
      * format and tone), a {@code unit} and a {@code caption} under it.
      */
-    METRIC(Set.of("value"), Set.of("label", "fmt", "tone", "delta", "deltaFmt", "deltaTone", "unit", "caption"));
+    METRIC(Set.of("value"), Set.of("label", "fmt", "tone", "delta", "deltaFmt", "deltaTone", "unit", "caption")),
+    /**
+     * A map of the world with a country highlighted ({@code highlight}) and a click on any country opening that country's entity
+     * ({@code link}), optionally shaded by a field of every entity of a kind ({@code shade}); or, with {@code region}, the regions
+     * of one country. Drawn from vendored Natural Earth shapes: nothing is fetched from outside.
+     */
+    MAP(Set.of(), Set.of("highlight", "region", "link", "shade", "fmt", "unit"));
 
     private final Set<String> required;
     private final Set<String> optional;

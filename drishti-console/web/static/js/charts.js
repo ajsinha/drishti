@@ -260,6 +260,91 @@
     };
   }
 
+  // ---- map: the world with a place highlighted and shaded, or one country's regions; shapes come from geomap.js ----------
+  // The panel's data holds codes and figures only (mode, highlight, region, link, shade): the shapes are vendored files, loaded here.
+  var TOKEN = /\{(iso3|iso2|code)\}/;
+  function upper(v) { return String(v == null ? '' : v).trim().toUpperCase(); }
+  function mapNote(el, text) {
+    var n = el.parentNode && el.parentNode.querySelector('.xmap-note');
+    if (n) { n.textContent = text || ''; n.hidden = !text; }
+  }
+  function placeList(el, places) {
+    var ul = el.parentNode && el.parentNode.querySelector('.xmap-list');
+    if (!ul) { return; }
+    ul.textContent = '';
+    places.forEach(function (p) {
+      var li = document.createElement('li'), a = document.createElement('a');
+      a.className = 'lnk'; a.href = '/v/' + encodeURIComponent(p.link.kind) + '/' + encodeURIComponent(p.link.id); a.textContent = p.name;
+      li.appendChild(a);
+      if (p.text) { var s2 = document.createElement('span'); s2.className = 'mono'; s2.textContent = p.text; li.appendChild(s2); }
+      ul.appendChild(li);
+    });
+    var det = ul.closest('details');
+    if (det) { det.hidden = !places.length; }
+  }
+  function drawMap(el, d, t, options) {
+    var G = window.drishtiGeo;
+    if (!G) { throw new Error('geomap.js is not loaded'); }
+    var tick = el.__tick = (el.__tick || 0) + 1, isRegion = d.mode === 'region';
+    G.world().then(function (w) {
+      var c = isRegion ? G.find(w, d.region) : null;
+      if (isRegion && !c) { throw new Error('unknown country'); }
+      return (isRegion ? G.region(c.iso3) : Promise.resolve(w)).then(function (geo) { return { w: w, geo: geo, c: c }; });
+    }).then(function (got) {
+      if (tick !== el.__tick) { return; }
+      var w = got.w, geo = got.geo, link = d.link, shade = d.shade, notes = [];
+      function codeFor(raw) {                       // a code as the document names it -> the code of the shapes (alpha-3, or an ISO 3166-2 code)
+        if (isRegion) { return upper(raw); }
+        var f = G.find(w, raw); return f ? f.iso3 : null;
+      }
+      var items = ((shade && shade.items) || []).map(function (i) { var k = codeFor(i.code); return k ? { code: k, value: i.value, text: i.text } : null; }).filter(Boolean);
+      var highlight = d.highlight == null ? [] : [codeFor(d.highlight)].filter(Boolean);
+      if (d.highlight != null && !highlight.length) { notes.push('Not on the map: ' + d.highlight); }
+      if (shade && shade.note) { notes.push('Not shaded: ' + shade.note); }
+      var clickable = null, make = null;
+      if (link) {
+        var tk = TOKEN.exec(link.template);
+        var codes = (link.codes || []).map(function (x) { return tk && tk[1] === 'iso2' ? codeFor(x) : (isRegion ? upper(x) : upper(x)); }).filter(Boolean);
+        clickable = codes;
+        make = function (place) {
+          var rec = isRegion ? { code: place, iso2: null, iso3: geo.iso3 } : G.find(w, place);
+          var v = tk[1] === 'code' ? place : tk[1] === 'iso2' ? rec && rec.iso2 : rec && rec.iso3;
+          return v ? { kind: link.kind, id: link.template.replace(TOKEN, v) } : null;
+        };
+        if (link.note) { notes.push('Nothing to open: ' + link.note); }
+      }
+      var chart = window.echarts.getInstanceByDom(el) || window.echarts.init(el, null, { renderer: 'svg' });
+      chart.setOption(G.option({ level: isRegion ? 'region' : 'world', geo: geo, t: t, items: items, highlight: highlight, clickable: clickable, linked: !!(link && !link.note),
+        legend: shade && shade.label, unit: d.unit || (shade && shade.unit) || '', numText: compact }), true);
+      if (charts.indexOf(chart) < 0) { charts.push(chart); }
+      el.__places = { make: make, clickable: clickable };
+      if (!el.__clicks) {
+        el.__clicks = true;
+        chart.on('click', function (p) {
+          var code = G.codeOf(p), pl = el.__places;
+          if (code && pl && pl.make && (!pl.clickable || pl.clickable.indexOf(code) >= 0)) { open(el, pl.make(code), options); }
+        });
+      }
+      var list = [];
+      if (make) {
+        var names = function (code) { if (isRegion) { var r = geo.by.code[code]; return r ? r.name : code; } var f = w.by.iso3[code]; return f ? f.name : code; };
+        var byCode = {};
+        items.forEach(function (i) { byCode[i.code] = i; });
+        clickable.forEach(function (code) { var l = make(code); if (l) { list.push({ name: names(code), link: l, text: byCode[code] ? byCode[code].text : '' }); } });
+        list.sort(function (a, b) { return a.name.localeCompare(b.name); });
+      }
+      placeList(el, list);
+      mapNote(el, notes.join(' · '));
+    }).catch(function () {
+      if (tick !== el.__tick) { return; }
+      var broken = window.echarts.getInstanceByDom(el);
+      if (broken) { broken.dispose(); }
+      el.className = 'pnl-empty';
+      el.textContent = isRegion ? 'No regions available for this country' : 'The map did not load';
+      el.removeAttribute('data-xchart');
+    });
+  }
+
   var BUILD = { waterfall: waterfall, histogram: histogram, scatter: scatter, candlestick: candlestick, graph: graph };
 
   function draw(root, options) {
@@ -269,6 +354,7 @@
       var kind = el.getAttribute('data-kind'), d;
       try {
         d = JSON.parse(el.getAttribute('data-xchart')) || {};
+        if (kind === 'map') { drawMap(el, d, t, options); return; }
         var c = window.echarts.getInstanceByDom(el) || window.echarts.init(el, null, { renderer: 'svg' });
         c.setOption(BUILD[kind](d, t, { width: el.clientWidth || 800, height: el.clientHeight || 360 }), true);
         if (charts.indexOf(c) < 0) { charts.push(c); }

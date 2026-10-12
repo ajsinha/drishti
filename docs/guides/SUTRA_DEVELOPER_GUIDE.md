@@ -28,7 +28,7 @@ running sample server.
 | For | Go to |
 |---|---|
 | every key, option, format, tone, function and problem code | [Rachana reference](RACHANA_REFERENCE.md) |
-| each of the 21 panel kinds: when to use it, its options, what it does when empty, masked or live | [Panel kinds](PANEL_KINDS.md) |
+| each of the 22 panel kinds: when to use it, its options, what it does when empty, masked or live | [Panel kinds](PANEL_KINDS.md) |
 | the Build workbench: canvas, inspector, YAML tab, tests, proposing | [Screen designer](SCREEN_DESIGNER.md) |
 | what Drishti does with no Sutra, and how inference fills a Sutra's gaps | [Inference](../architecture/INFERENCE.md) |
 | how a view keeps itself up to date | [Live updates](../architecture/LIVE.md) |
@@ -36,7 +36,7 @@ running sample server.
 | shipping Sutras in a pack | [Pack developer guide](PACK_DEVELOPER_GUIDE.md) |
 
 Eleven small working Sutras, each with a self-contained JSON document and a note, are in [examples](examples/README.md):
-together they use all 21 panel kinds, nested pivot groups and tree rows. In the workbench every example opens as
+together they use all 22 panel kinds, nested pivot groups and tree rows. In the workbench every example opens as
 **your own copy** (Build → New screen → Examples), and **File → Open** loads any `.yaml` or `.json` of your own.
 
 **What you need**
@@ -768,7 +768,7 @@ amber because its status is *Pending*.
 total, the closing bar, the sort by date), so the console only draws. Five more kinds work the same way:
 `histogram` (a VaR scenario vector with VaR and ES lines), `scatter` (books' VaR against P&L), `candlestick` (daily
 bars), `graph` (a counterparty's group, agreement and netting sets) and `pivot` (MTM by book and currency, with
-totals). [Section 10](#10-the-panel-kinds) links to the entry of each of the 21 kinds in [PANEL_KINDS.md](PANEL_KINDS.md), which
+totals). [Section 10](#10-the-panel-kinds) links to the entry of each of the 22 kinds in [PANEL_KINDS.md](PANEL_KINDS.md), which
 explains every kind: its options, what the server computes and what it does when empty, masked or live.
 
 Put the blocks of 4.2 to 4.7 together under one `panels:` and you have a complete trade view. The
@@ -1020,7 +1020,7 @@ and `GET /api/v1/sutras/problems` give `<file>:<line>:<column> <code> <message>`
 
 ## 10. The panel kinds
 
-There are 21 panel kinds. Each has one catalogue entry in [PANEL_KINDS.md](PANEL_KINDS.md): what it shows, when to use
+There are 22 panel kinds. Each has one catalogue entry in [PANEL_KINDS.md](PANEL_KINDS.md): what it shows, when to use
 it, its key options, what it does when its data is empty, in error, masked or live, a complete YAML and a screenshot.
 The exhaustive option tables are in the [Rachana reference](RACHANA_REFERENCE.md#panel-kinds). This guide does not
 repeat either; pick a kind by what you need to show.
@@ -1416,7 +1416,7 @@ twice; `DRS-2029` an option value of the wrong kind; `DRS-2030` bad `span`; `DRS
 ## Where next
 
 - [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md): every key, panel kind, format, function and problem code.
-- [PANEL_KINDS.md](PANEL_KINDS.md): the 21 panel kinds, one entry each.
+- [PANEL_KINDS.md](PANEL_KINDS.md): the 22 panel kinds, one entry each.
 - [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md) and the [Build workbench tutorial](BUILD_WORKBENCH_TUTORIAL.md): build screens visually.
 - [INFERENCE.md](../architecture/INFERENCE.md): what Drishti does without a Sutra, and how to start a Sutra from inference.
 - [LIVE.md](../architecture/LIVE.md): how a view you laid out keeps itself up to date.

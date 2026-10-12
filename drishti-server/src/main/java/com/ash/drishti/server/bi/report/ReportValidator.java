@@ -254,7 +254,7 @@ public final class ReportValidator {
         boolean lat = !v.well("latitude").isEmpty();
         boolean lon = !v.well("longitude").isEmpty();
         if (!place && !lat && !lon) {
-            err(ReportParser.VISUAL, p + ".wells", "a map needs a location (a country code field) or a latitude and a longitude");
+            err(ReportParser.VISUAL, p + ".wells", "a map needs a location (a country or ISO 3166-2 region code field) or a latitude and a longitude");
         } else if (place && (lat || lon)) {
             err(ReportParser.VISUAL, p + ".wells", "a map shades countries (location) or marks points (latitude and longitude), not both");
         } else if (lat != lon) {
@@ -271,6 +271,14 @@ public final class ReportValidator {
         Object mode = v.format().get("mode");
         if (mode != null && !Set.of("countries", "points").contains(String.valueOf(mode))) {
             err(ReportParser.VISUAL, p + ".format.mode", "a map's mode is countries or points");
+        }
+        Object level = v.format().get("level");
+        if (level != null && (!(level instanceof String lv) || lv.isBlank())) {
+            err(ReportParser.VISUAL, p + ".format.level", "a map's level is world (the default) or the country it opens at: an ISO code or the English name");
+        }
+        Object drill = v.format().get("drill");
+        if (drill != null && !(drill instanceof Boolean)) {
+            err(ReportParser.VISUAL, p + ".format.drill", "a map's drill is true (the default: a click on a country opens its regions) or false");
         }
     }
 

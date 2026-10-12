@@ -13,14 +13,14 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 
-# The twenty-one panel kinds
+# The twenty-two panel kinds
 
-Every box on a Drishti screen is a **panel**, and every panel is one of twenty-one kinds. A Sutra names the kind and says where the data is; with no Sutra, inference picks a kind for you. This is the catalogue: for each kind what it means, when to use it and when not, its key options, how it behaves when the data is empty, masked, not accessible, live or on a phone, and a real example you can copy.
+Every box on a Drishti screen is a **panel**, and every panel is one of twenty-two kinds. A Sutra names the kind and says where the data is; with no Sutra, inference picks a kind for you. This is the catalogue: for each kind what it means, when to use it and when not, its key options, how it behaves when the data is empty, masked, not accessible, live or on a phone, and a real example you can copy.
 
 - **Writing a Sutra?** The full list of every option, format and tone is the [Rachana reference](RACHANA_REFERENCE.md#panels); this page links to it per kind and does not repeat it.
 - **Adding a kind to Drishti itself?** [PANEL_DEVELOPER_GUIDE.md](PANEL_DEVELOPER_GUIDE.md) walks through it with `metric`.
 - **Building screens in the workbench?** [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md) shows the palette and the inspector for every kind.
-- **Examples.** Each kind's YAML below is a panel of a working example in [examples/](examples/README.md): the [all-panels showcase](examples/all-panels-showcase.md) has all twenty-one, [metric](examples/metric.md) has the tiles. Open any of them in the workbench (Build, New, Examples) and press the `?` in a panel's heading to come back here: it opens the section of its kind (`/help/panel-kinds#kv`).
+- **Examples.** Each kind's YAML below is a panel of a working example in [examples/](examples/README.md): the [all-panels showcase](examples/all-panels-showcase.md) has all twenty-two, [metric](examples/metric.md) has the tiles. Open any of them in the workbench (Build, New, Examples) and press the `?` in a panel's heading to come back here: it opens the section of its kind (`/help/panel-kinds#kv`).
 
 ## Contents
 
@@ -703,7 +703,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 | Mistake | What you see | Fix |
 |---|---|---|
-| `kind: chart`, `kind: bar` | `DRS-2021 unknown panel kind 'chart'; expected one of kv, table, …` | use one of the twenty-one |
+| `kind: chart`, `kind: bar` | `DRS-2021 unknown panel kind 'chart'; expected one of kv, table, …` | use one of the twenty-two |
 | a scatter without `y`, a metric without `value` | `DRS-2022 'scatter' panel 'rr' needs option 'y'` | add it |
 | `rows:` on a `graph` or on a `metric` | `DRS-2023 option 'rows' is not valid for 'graph' panels` | a graph takes `nodes` and `edges`; a metric takes `value` |
 | `limit:` on a `ladder`, `search:` on a chart | `DRS-2023 option 'limit' is not valid for 'ladder' panels` | remove it, or use a `table` |

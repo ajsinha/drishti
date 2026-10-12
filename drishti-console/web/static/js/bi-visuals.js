@@ -109,6 +109,7 @@
       let m = p.name ? state.marks.byName(p.name) : null;
       if (!m) { m = state.marks.items[p.seriesType === 'heatmap' || p.seriesType === 'custom' ? p.value[0] : p.dataIndex]; }
       const ev = p.event && p.event.event;
+      if (m && state.marks.pick && state.marks.pick(m, p)) { return; }              // a map that opens a country's regions on a click (pick: true when that was all)
       openMark(m, ev ? ev.clientX : 0, ev ? ev.clientY : 0);
     });
     box.addEventListener('keydown', (e) => {
@@ -560,41 +561,36 @@
     return mount(host, option, spec, ctx, { field: field && tb.names[cat] === field ? field : null, items: field ? items : [], byName: (n) => (field ? items.find((q) => q.label === n) : null) });
   }
 
-  // the map: countries only, vendored (no tiles, no CDN); loaded once, on first use
-  // (a <drishti-report> element loads this file from /embed/v1/js/, and the map from /embed/v1/world-countries.json on the same server)
-  const SELF = typeof document !== 'undefined' && document.currentScript && document.currentScript.src ? document.currentScript.src : '';
-  const MAP_URL = /\/embed\/v1\/js\/bi-visuals\.js/.test(SELF) ? SELF.replace(/js\/bi-visuals\.js.*$/, 'world-countries.json') : '/static/vendor/echarts/maps/world-countries.json';
-  const MAP_NAME = 'drishti-world';
-  let world = null;
-  let worldPromise = null;
-  function loadWorld() {
-    if (world) { return Promise.resolve(world); }
-    if (!worldPromise) {
-      worldPromise = fetch(MAP_URL, { credentials: 'same-origin' }).then((r) => { if (!r.ok) { throw new Error('map ' + r.status); } return r.json(); }).then((geo) => {
-        const by = { iso2: {}, iso3: {}, name: {} };
-        geo.features.forEach((ft) => {
-          const p = ft.properties;
-          if (p.iso2) { by.iso2[p.iso2.toUpperCase()] = p; }
-          by.iso3[p.iso3.toUpperCase()] = p;
-          by.name[p.name.toLowerCase()] = p;
-        });
-        window.echarts.registerMap(MAP_NAME, geo);
-        world = { geo, by };
-        return world;
-      });
-      worldPromise.catch(() => { worldPromise = null; });
+  // the map: countries, and below a country its regions; vendored shapes (no tiles, no CDN), loaded by geomap.js on first use
+  // (a <drishti-report> element loads geomap.js from /embed/v1/js/ and the shapes from /embed/v1/ on the same server).
+  // Drilling is the visual's own zoom: a click on a country selects it (the cross-filter, as ever) and opens its regions; the breadcrumb
+  // "World > Australia" goes back. The level is kept per visual while the report is open.
+  const ISO_REGION = /^([A-Za-z]{2})-[A-Za-z0-9]{1,3}$/;
+  const mapLevel = {};                                    // visual id -> the iso3 of the country its map has opened; null: the world
+
+  /** What a location value means: {c: the country, region: its upper-case ISO 3166-2 code or null}; null when no country matches. */
+  function place(w, raw) {
+    if (raw == null) { return null; }
+    const G = window.drishtiGeo;
+    const s = String(raw).trim();
+    const m = ISO_REGION.exec(s);
+    if (m) {
+      const c = G.find(w, m[1]);
+      if (c) { return { c, region: s.toUpperCase() }; }
     }
-    return worldPromise;
+    const c = G.find(w, s);
+    return c ? { c, region: null } : null;
   }
 
-  /** The country a code means: ISO alpha-2 or alpha-3, or the English name; null when the map has no such country. */
-  function country(w, code) {
-    if (code == null) { return null; }
-    const k = String(code).trim();
-    return w.by.iso2[k.toUpperCase()] || w.by.iso3[k.toUpperCase()] || w.by.name[k.toLowerCase()] || null;
+  function startLevel(w, spec) {
+    const f = spec.format || {};
+    if (!f.level || String(f.level).toLowerCase() === 'world') { return null; }
+    const c = window.drishtiGeo.find(w, f.level);
+    return c ? c.iso3 : null;
   }
 
   function drawMap(host, spec, ctx, res, w) {
+    const G = window.drishtiGeo;
     const tb = V.table(res);
     const f = spec.format || {};
     const measure = (spec.wells.values || [])[0];
@@ -602,35 +598,10 @@
     const t = ctx.t;
     const nf = V.numFmt(spec, ctx, measure);
     const maskedValue = tb.isMasked(measure);
-    host.querySelectorAll(':scope > .bi-map-note').forEach((n) => n.remove());
+    host.querySelectorAll(':scope > .bi-map-note, :scope > .bi-map-crumb').forEach((n) => n.remove());
     if (!tb.rows.length) { return emptyNote(host, 'No data for this selection.'); }
     const loc = (spec.wells.location || [])[0];
-    if (loc) {
-      const li = tb.at(loc);
-      const data = [], items = [], missing = [];
-      tb.rows.forEach((r) => {
-        const c = country(w, r[li]);
-        if (!c) { if (r[li] != null) { missing.push(String(r[li])); } return; }
-        const v = typeof r[mi] === 'number' ? r[mi] : null;
-        data.push({ name: c.iso3, value: v });
-        items.push({ value: r[li], label: c.name, iso3: c.iso3, text: c.name + ': ' + B.fmt(v, nf, maskedValue) });
-      });
-      const nums = data.map((d) => d.value).filter((v) => typeof v === 'number');
-      const sel = selectedSet(ctx, spec);
-      const option = baseOption(spec, ctx, {
-        legend: false, extra: {
-          tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { trigger: 'item', formatter: (p) => { const c = w.by.iso3[p.name]; return (c ? c.name : p.name) + ': ' + (typeof p.value === 'number' ? B.fmt(p.value, nf, maskedValue) : 'no figure'); } }),
-          visualMap: { min: Math.min(0, ...nums), max: Math.max(1, ...nums), calculable: false, orient: 'horizontal', left: 'center', bottom: 0, itemWidth: 12, itemHeight: 90, inRange: { color: [t['surface-2'] || t.surface, t.link] }, textStyle: { color: t.muted, fontSize: 10 }, formatter: (v) => B.compact(v) },
-          series: [{ type: 'map', map: MAP_NAME, nameProperty: 'iso3', roam: false, left: 4, right: 4, top: 4, bottom: 34, data,
-            itemStyle: { areaColor: t['surface-2'] || t.surface, borderColor: t.border, borderWidth: 0.5 }, emphasis: { label: { show: false }, itemStyle: { areaColor: t.pos } },
-            select: { disabled: true }, label: { show: false } }]
-        }
-      });
-      if (sel) { option.series[0].data = data.map((d) => Object.assign({}, d, { itemStyle: { opacity: items.find((i) => i.iso3 === d.name) && sel.has(String(items.find((i) => i.iso3 === d.name).value)) ? 1 : 0.4 } })); }
-      const handle = mount(host, option, spec, ctx, { field: loc, items, byName: (n) => items.find((x) => x.iso3 === n) });
-      if (missing.length) { host.appendChild(h('p', { class: 'bi-map-note', 'data-map-missing': missing.join(','), text: 'Not on the map: ' + [...new Set(missing)].join(', ') + ' (it holds countries only).' })); }
-      return handle;
-    }
+    if (loc) { return drawPlaces(host, spec, ctx, tb, w, { loc, mi, nf, maskedValue, t, f }); }
     const lat = tb.at((spec.wells.latitude || [])[0]), lon = tb.at((spec.wells.longitude || [])[0]);
     const label = (spec.wells.details || [])[0];
     const di = label ? tb.at(label) : -1;
@@ -640,7 +611,7 @@
     const option = baseOption(spec, ctx, {
       legend: false, extra: {
         tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { trigger: 'item', formatter: (p) => p.name + ': ' + B.fmt(p.value[2], nf, maskedValue) }),
-        geo: { map: MAP_NAME, roam: false, left: 4, right: 4, top: 4, bottom: 4, silent: true, itemStyle: { areaColor: t['surface-2'] || t.surface, borderColor: t.border, borderWidth: 0.5 } },
+        geo: { map: w.name, roam: false, left: 4, right: 4, top: 4, bottom: 4, silent: true, itemStyle: { areaColor: t['surface-2'] || t.surface, borderColor: t.border, borderWidth: 0.5 } },
         series: [{ type: 'scatter', coordinateSystem: 'geo', data, itemStyle: { color: ctx.palette[0], opacity: 0.8 } }]
       }
     });
@@ -648,13 +619,107 @@
     return mount(host, option, spec, ctx, { field: label || null, items: label ? items : [], byName: (n) => (label ? items.find((x) => x.label === n) : null) });
   }
 
+  /** The countries (or one country's regions) shaded by the measure; `o` carries the well names and formats. */
+  function drawPlaces(host, spec, ctx, tb, w, o) {
+    const G = window.drishtiGeo;
+    const { loc, mi, nf, maskedValue, t, f } = o;
+    const li = tb.at(loc);
+    const drill = f.drill !== false;
+    if (!(spec.id in mapLevel)) { mapLevel[spec.id] = startLevel(w, spec); }
+    const level = mapLevel[spec.id];                       // an iso3, or null for the world
+    const parsed = tb.rows.map((r) => ({ raw: r[li], p: place(w, r[li]), v: typeof r[mi] === 'number' ? r[mi] : null })).filter((x) => x.raw != null);
+    const missing = parsed.filter((x) => !x.p).map((x) => String(x.raw));
+    const sel = selectedSet(ctx, spec);
+    let inner = { dispose() {}, resize() {} };
+    let dead = false;
+    const redraw = () => { inner.dispose(); inner = drawPlaces(host, spec, ctx, tb, w, o) || inner; };
+    const crumb = (country) => {
+      if (!drill && !country) { return; }
+      const nav = h('nav', { class: 'bi-map-crumb', 'aria-label': 'Map level' });
+      const world = h('button', { type: 'button', class: 'bi-vis-btn bi-map-up', 'data-map-up': '', text: 'World' });
+      world.addEventListener('click', () => { mapLevel[spec.id] = null; redraw(); });
+      if (!country) { nav.appendChild(h('span', { class: 'bi-map-here', 'aria-current': 'location', text: 'World' })); }
+      else { nav.appendChild(world); nav.appendChild(h('span', { 'aria-hidden': 'true', text: ' › ' })); nav.appendChild(h('span', { class: 'bi-map-here', 'aria-current': 'location', text: country.name })); }
+      host.insertBefore(nav, host.firstChild);
+    };
+    const finish = (handle) => {
+      inner = handle || inner;
+      if (missing.length) { host.appendChild(h('p', { class: 'bi-map-note', 'data-map-missing': [...new Set(missing)].join(','), text: 'Not on the map: ' + [...new Set(missing)].join(', ') + ' (a country or region code is expected).' })); }
+    };
+    const mk = (geo, lvl, items, marks) => {
+      const keep = sel ? marks.items.filter((m) => m.value != null && sel.has(String(m.value))).map((m) => m.iso) : null;
+      const g = G.option({ level: lvl, geo, t, items, clickable: items.map((i) => i.code), linked: !!ctx.interactive, numText: (v) => B.compact(v), selected: keep,
+        openText: 'click to select' + (drill && lvl === 'world' ? ' and open its regions' : ''), closedText: 'no figure' });
+      return mount(host, Object.assign(baseOption(spec, ctx, { legend: false }), g), spec, ctx, marks);
+    };
+
+    if (!level) {
+      // the world: one figure per country (a country with only regional rows shows their sum), a dot for the countries the shapes are too small for
+      const by = new Map();
+      parsed.filter((x) => x.p).forEach((x) => {
+        const k = x.p.c.iso3;
+        const e = by.get(k) || { c: x.p.c, v: null, raw: null, regional: true };
+        if (typeof x.v === 'number') { e.v = (e.v || 0) + x.v; }
+        if (!x.p.region && e.raw == null) { e.raw = x.raw; e.regional = false; }
+        by.set(k, e);
+      });
+      const items = [], list = [];
+      by.forEach((e, k) => {
+        items.push({ code: k, value: e.v, text: B.fmt(e.v, nf, maskedValue) });
+        list.push({ value: e.raw, label: e.c.name, iso: k, text: e.c.name + ': ' + B.fmt(e.v, nf, maskedValue) + (e.regional ? ' (all regions)' : '') });
+      });
+      const marks = { field: loc, items: list, byName: (n) => list.find((x) => x.iso === n) };
+      marks.pick = (mark) => {
+        if (!drill || !mark) { return false; }
+        mapLevel[spec.id] = mark.iso;
+        const selects = mark.value != null && ctx.interactive && ctx.onMark;          // a selection redraws the visual itself; otherwise redraw here
+        if (!selects) { redraw(); }
+        return !selects;
+      };
+      finish(mk(w, 'world', items, marks));
+      crumb(null);
+      return { dispose() { dead = true; inner.dispose(); }, resize() { inner.resize(); } };
+    }
+
+    // one country's regions: a figure per region code; a click selects the region
+    const country = w.by.iso3[level];
+    B.clear(host).appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'Loading the regions of ' + (country ? country.name : level) + '…' }));
+    G.region(level).then((geo) => {
+      if (dead) { return; }
+      B.clear(host);
+      const seen = new Map();
+      parsed.filter((x) => x.p && x.p.c.iso3 === level && x.p.region).forEach((x) => {
+        const code = x.p.region;
+        if (!geo.by.code[code]) { missing.push(String(x.raw)); return; }
+        const e = seen.get(code) || { v: null, raw: x.raw };
+        if (typeof x.v === 'number') { e.v = (e.v || 0) + x.v; }
+        seen.set(code, e);
+      });
+      const items = [], list = [];
+      seen.forEach((e, code) => {
+        const name = geo.by.code[code].name;
+        items.push({ code, value: e.v, text: B.fmt(e.v, nf, maskedValue) });
+        list.push({ value: e.raw, label: name, iso: code, text: name + ': ' + B.fmt(e.v, nf, maskedValue) });
+      });
+      finish(mk(geo, 'region', items, { field: loc, items: list, byName: (n) => list.find((x) => x.iso === n) }));
+      crumb(country);
+      if (!items.length) { host.appendChild(h('p', { class: 'bi-map-note', 'data-map-noregions': level, text: 'No figures at region level for ' + (country ? country.name : level) + ': the location field holds countries, not their regions.' })); }
+    }).catch(() => {
+      if (dead) { return; }
+      mapLevel[spec.id] = null;                             // a country with no region file: back to the world, and say so
+      redraw();
+      host.appendChild(h('p', { class: 'bi-map-note', 'data-map-noregions': level, text: 'No regions are available for ' + (country ? country.name : level) + '.' }));
+    });
+    return { dispose() { dead = true; inner.dispose(); }, resize() { inner.resize(); } };
+  }
+
   function map(host, spec, ctx, res) {
     if (!window.echarts) { return emptyNote(host, 'The chart library did not load.'); }
-    if (world) { return drawMap(host, spec, ctx, res, world); }
+    if (!window.drishtiGeo) { return emptyNote(host, 'The map data did not load.'); }
     B.clear(host).appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'Loading the map…' }));
     let inner = { dispose() {}, resize() {} };
     let dead = false;
-    loadWorld().then((w) => { if (!dead) { inner = drawMap(host, spec, ctx, res, w) || inner; } })
+    window.drishtiGeo.world().then((w) => { if (!dead) { inner = drawMap(host, spec, ctx, res, w) || inner; } })
       .catch(() => { if (!dead) { emptyNote(host, 'The map data did not load.'); } });
     return { dispose() { dead = true; inner.dispose(); }, resize() { inner.resize(); } };
   }

@@ -4,6 +4,7 @@
   "productType": "GOVT_BOND",
   "direction": "BUY",
   "currency": "USD",
+  "issuerCountry": "USA",
   "notional": 25000000,
   "maturityDate": "2038-04-30",
   "mtm": 1209000,

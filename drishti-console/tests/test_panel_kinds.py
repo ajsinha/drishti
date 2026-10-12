@@ -43,11 +43,11 @@ def anchors(text: str) -> dict:
 
 
 def test_the_catalogue_lists_all_twenty_one_kinds_each_with_its_own_anchor():
-    assert len(KINDS) == 21 and len(set(KINDS)) == 21
+    assert len(KINDS) == 22 and len(set(KINDS)) == 22
     found = anchors(KINDS_DOC.read_text())
     for kind in KINDS:
         assert found.get(kind) == kind, f"### {kind} must be the first heading that slugs to '{kind}': got {found.get(kind)!r}"
-    assert "# The twenty-one panel kinds" in KINDS_DOC.read_text()
+    assert "# The twenty-two panel kinds" in KINDS_DOC.read_text()
 
 
 def test_the_kinds_of_the_grammar_are_exactly_these_twenty_one():
@@ -120,7 +120,7 @@ def test_the_developer_guide_walks_through_metric_with_the_real_code():
 def test_the_help_centre_serves_the_catalogue_with_an_anchor_per_kind_and_its_pictures(client):
     """Needs the help.yaml entry ``panel-kinds`` (doc: guides/PANEL_KINDS.md); ``panels`` moves to it."""
     page = client.get("/help/panel-kinds")
-    assert page.status_code == 200 and "The twenty-one panel kinds" in page.text and "data-unavailable" not in page.text
+    assert page.status_code == 200 and "The twenty-two panel kinds" in page.text and "data-unavailable" not in page.text
     for kind in KINDS:
         assert f'id="{kind}"' in page.text, kind
     srcs = re.findall(r'<img[^>]*\bsrc="([^"]+)"', page.text)

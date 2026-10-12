@@ -15,7 +15,7 @@
 
 """The pictures of the panel guides (docs/guides/PANEL_KINDS.md and PANEL_DEVELOPER_GUIDE.md), written to docs/guides/img/panels/.
 
-  kind-<kind>.jpg          each of the 21 kinds, light theme, from the all-panels showcase opened in the workbench (the real page and scripts)
+  kind-<kind>.jpg          each of the 22 kinds, light theme, from the all-panels showcase opened in the workbench (the real page and scripts)
   state-<kind>-<state>.jpg empty, error, masked and phone width for one kind of each family (kv, table, line, metric), and dark for three
   metric-*.jpg             the worked example: palette tile, inspector, the suggestion menu
 

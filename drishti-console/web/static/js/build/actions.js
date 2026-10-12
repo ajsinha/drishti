@@ -61,6 +61,10 @@
         else if (n === 'by' || n === 'across') { out[n] = rel(txt, '@.name'); }
         else { out[n] = rel(num, '@.value'); }
       });
+      if (kind === 'map') {       // nothing is required, but a map that highlights nothing is a plain world: start from the field that names a country
+        var place = fieldList.filter(function (f) { return f.path.indexOf('[]') < 0 && f.path.indexOf('{}') < 0 && /(^|\.)(iso_?[23]?|iso_?code|country)/i.test(f.path); })[0];
+        if (place) { out.highlight = place.path; } else { note = 'No field in your samples names a country, so the map shows the world: set highlight to an ISO code or a country name.'; }
+      }
       return out;
     }
 

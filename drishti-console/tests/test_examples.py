@@ -24,7 +24,7 @@ from core.examples import Examples
 
 EXAMPLES = Path(__file__).resolve().parents[2] / "docs" / "guides" / "examples"
 KINDS = {"kv", "table", "tabs", "line", "area", "hbar", "ladder", "links", "status", "provenance", "markdown", "gauge", "surface",
-         "metric", "waterfall", "histogram", "scatter", "candlestick", "graph", "timeline", "pivot"}
+         "metric", "waterfall", "histogram", "scatter", "candlestick", "graph", "timeline", "pivot", "map"}
 
 
 def _panels(node):
@@ -57,7 +57,7 @@ def test_the_set_covers_every_panel_kind_a_nested_pivot_and_a_tree_table():
     assert any(p["kind"] == "pivot" and isinstance(p.get("by"), list) and len(p["by"]) > 1 for p in panels), "no nested pivot"
     assert any(p["kind"] in ("table", "ladder") and p.get("children") for p in panels), "no tree table"
     showcase = {p["kind"] for p in _panels(_sutras()["all-panels-showcase"])}
-    assert showcase == KINDS, "the showcase must hold all twenty-one kinds"
+    assert showcase == KINDS, "the showcase must hold all twenty-two kinds"
 
 
 def test_only_the_linked_sources_example_reads_other_entities():

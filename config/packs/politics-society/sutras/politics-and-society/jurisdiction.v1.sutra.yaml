@@ -27,6 +27,12 @@ strip:
   - { label: Area (km2), bind: $.areaKm2, fmt: amount0 }
   - { label: Currency, bind: $.currency }
 panels:
+  - id: geography
+    kind: map
+    title: Where it is
+    highlight: $.iso3
+    link: { kind: jurisdiction, id: "JUR-{iso3}" }
+    height: 11
   - id: legislature
     kind: table
     title: "Seats by party, lower chamber"

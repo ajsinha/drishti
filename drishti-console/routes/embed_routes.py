@@ -213,6 +213,24 @@ async def world_countries(request: Request):
     return await send(request, path.read_bytes(), "application/json", f'"{path.stat().st_mtime_ns:x}"')
 
 
+@router.get("/world-points.json")
+async def world_points(request: Request):
+    """The countries too small for the 1:110m world map, one point each (Natural Earth; vendored)."""
+    path = WEB / "static/vendor/echarts/maps/world-points.json"
+    return await send(request, path.read_bytes(), "application/json", f'"{path.stat().st_mtime_ns:x}"')
+
+
+@router.get("/regions/{iso3}.json")
+async def country_regions(request: Request, iso3: str):
+    """One country's regions for a map that drills into it (Natural Earth admin-1, ISO 3166-2 codes; vendored). The name is a three-letter code and nothing else."""
+    if not re.fullmatch(r"[A-Z]{3}", iso3):
+        return await refuse(request, 404, "DRS-9404", f"no such country: {iso3}")
+    path = WEB / "static/vendor/echarts/maps/regions" / f"{iso3}.json"
+    if not path.is_file():
+        return await refuse(request, 404, "DRS-9404", f"no regions for {iso3}")
+    return await send(request, path.read_bytes(), "application/json", f'"{path.stat().st_mtime_ns:x}"')
+
+
 @router.get("/echarts.js")
 async def echarts_js(request: Request):
     path = WEB / "static/vendor/echarts/echarts.min.js"
@@ -221,7 +239,7 @@ async def echarts_js(request: Request):
 
 # The console's own enhancer scripts, root-scoped (static/js; ELEMENTS.md section 12): the element loads these, with
 # data-manual so they do not start by themselves, and calls init(shadowRoot, options) on each.
-ENHANCERS = ("view", "charts", "colfilter", "tables", "tree-rows", "pivot", "pivot-engine", "pivot-grid", "about", "about-hints", "zoom", "multiselect", "controls",
+ENHANCERS = ("view", "geomap", "charts", "colfilter", "tables", "tree-rows", "pivot", "pivot-engine", "pivot-grid", "about", "about-hints", "zoom", "multiselect", "controls",
              "bi-lib", "bi-visuals", "bi-grids", "bi-frame", "bi-live", "bi-phone")
 
 

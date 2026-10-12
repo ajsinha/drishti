@@ -26,7 +26,7 @@ import zipfile
 # a number as a view shows it: sign (ASCII or Unicode minus), digits with thousands separators, decimals, maybe %
 _SHOWN_NUMBER = re.compile(r"^([+\-−]?)(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(%?)$")
 EXPORTABLE = {"table", "ladder", "kv", "status", "tabs", "line", "area", "hbar", "surface", "links", "gauge",
-              "waterfall", "histogram", "scatter", "candlestick", "graph", "timeline", "pivot", "metric"}
+              "waterfall", "histogram", "scatter", "candlestick", "graph", "timeline", "pivot", "metric", "map"}
 
 
 def plain(text):
@@ -69,6 +69,8 @@ def panel_rows(panel: dict) -> tuple[list[str], list[list]]:
         return [], []
     if kind in _CHARTS:
         return _CHARTS[kind](d)
+    if kind == "map":                                                    # the figures that shade the map, and which place is highlighted and clickable
+        return _map(d)
     if "columns" in d and "rows" in d:                                   # table, ladder (a tree: every row, each followed by its children)
         rows = [[plain(c.get("text")) for c in r.get("cells", [])] for r in _walk(d.get("rows", []))]
         if d.get("total"):
@@ -118,6 +120,17 @@ def _pivot(d: dict) -> tuple[list[str], list[list]]:
     if totals:
         rows.append(["Total"] + [""] * max(0, len(levels) - 1) + [plain(c.get("text")) for c in totals])
     return header, rows
+
+
+def _map(d: dict) -> tuple[list[str], list[list]]:
+    shade = d.get("shade") or {}
+    openable = {str(c).upper() for c in (d.get("link") or {}).get("codes") or []}
+    marked = str(d.get("highlight") or d.get("region") or "").upper()
+    rows = [[i.get("code", ""), i.get("value"), "yes" if str(i.get("code", "")).upper() == marked else "", "yes" if str(i.get("code", "")).upper() in openable else ""]
+            for i in shade.get("items") or []]
+    if not rows and marked:
+        rows = [[marked, "", "yes", "yes" if marked in openable else ""]]
+    return ["Code", shade.get("label") or "Value", "Highlighted", "Opens a page"], rows
 
 
 def _graph(d: dict) -> tuple[list[str], list[list]]:
