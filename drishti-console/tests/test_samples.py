@@ -51,4 +51,4 @@ def test_landing_commands_come_from_the_installed_packs(client, with_packs):
 def test_landing_without_packs_names_no_entity(client, with_packs):
     with_packs("no-such-pack")
     page = client.get("/").text
-    assert "IRS-48213" not in page and "TRD MX-" not in page and 'data-commands="' in page
+    assert "IRS-48213" not in page and 'data-commands="' in page      # the top bar's placeholder is a syntax example, not a stored entity

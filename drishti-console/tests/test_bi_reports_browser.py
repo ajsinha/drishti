@@ -442,8 +442,8 @@ def test_designer_pages_the_report_settings_and_a_drillthrough_target(stack, bro
     page.click("[data-add-page]")
     expect(page.locator("[data-ptabs] [role=tab]")).to_have_count(2)
     page.click("[data-ptab='format']")
-    page.fill("[data-page-title]", "Detail")
-    page.press("[data-page-title]", "Enter")
+    page.fill("input[data-page-title]", "Detail")
+    page.press("input[data-page-title]", "Enter")
     page.select_option("[data-page-drill]", "trade.desk")
     m = model(page)
     assert m["pages"][1]["title"] == "Detail" and m["pages"][1]["drillthrough"] == {"fields": ["trade.desk"]}

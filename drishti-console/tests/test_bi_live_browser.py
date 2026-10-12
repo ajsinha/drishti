@@ -81,11 +81,11 @@ def open_report(page, path=REPORT, suffix=""):
 
 
 def live(page):
-    return page.get_attribute("[data-live-state]", "data-live-state")
+    return page.get_attribute(".bi-live-state", "data-live-state")
 
 
 def wait_state(page, state, timeout=20000):
-    page.wait_for_function("(s) => document.querySelector('[data-live-state]').getAttribute('data-live-state') === s", arg=state, timeout=timeout)
+    page.wait_for_function("(s) => document.querySelector('.bi-live-state').getAttribute('data-live-state') === s", arg=state, timeout=timeout)
 
 
 def rounds(page, n, timeout=20000):
@@ -119,7 +119,7 @@ def test_the_live_report_redraws_in_place_as_the_trades_tick_and_says_when(stack
     assert page.query_selector('[data-visual="by-desk"] .bi-chart[data-mark="same-element"]'), "the chart was redrawn in place, not rebuilt"
     assert page.query_selector('[data-visual="mtm"][data-mark="same-frame"]')
     assert TIME.search(page.inner_text("[data-live-bar]")), page.inner_text("[data-live-bar]")
-    assert "Live" in page.inner_text("[data-live-text]")
+    assert "Live" in page.inner_text(".bi-live-state [data-live-text]")
     # the rolling line collects one point for each update
     points = page.evaluate("echarts.getInstanceByDom(document.querySelector('[data-visual=\"rolling\"] .bi-chart')).getOption().series[0].data.length")
     assert points >= 3
@@ -148,7 +148,7 @@ def test_pause_stops_the_redraws_and_resume_catches_up(stack, browser):
     wait_state(page, "live")
     page.click("[data-live-pause]")
     wait_state(page, "paused")
-    assert page.get_attribute("[data-live-pause]", "aria-pressed") == "true" and "Resume" in page.inner_text("[data-live-pause]") and "Paused" in page.inner_text("[data-live-text]")
+    assert page.get_attribute("[data-live-pause]", "aria-pressed") == "true" and "Resume" in page.inner_text("[data-live-pause]") and "Paused" in page.inner_text(".bi-live-state [data-live-text]")
     page.wait_for_timeout(600)
     stopped = page.evaluate(ROUND)
     page.wait_for_timeout(2500)
@@ -167,7 +167,7 @@ def test_a_dropped_connection_is_said_and_a_new_one_redraws_everything(stack, br
     stack.stop_console()                                                           # every stream of the browser drops
     try:
         wait_state(page, "disconnected", timeout=60000)
-        assert "Disconnected" in page.inner_text("[data-live-text]") and page.get_attribute("[data-live-state]", "title")
+        assert "Disconnected" in page.inner_text(".bi-live-state [data-live-text]") and page.get_attribute(".bi-live-state", "title")
     finally:
         stack.start_console()
     wait_state(page, "live", timeout=90000)                                       # the hub opens a new channel by itself; the report's hello redraws every visual
@@ -185,7 +185,7 @@ def test_a_tab_in_the_background_gives_back_its_stream_and_redraws_when_shown(st
     page.evaluate("""() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
       Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' }); document.dispatchEvent(new Event('visibilitychange')); }""")
     wait_state(page, "hidden", timeout=20000)                                      # after ten seconds of being hidden (channel.js)
-    assert "background" in page.inner_text("[data-live-text]")
+    assert "background" in page.inner_text(".bi-live-state [data-live-text]")
     start = page.evaluate(ROUND)
     page.evaluate("""() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
       Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' }); document.dispatchEvent(new Event('visibilitychange')); }""")
@@ -248,7 +248,7 @@ def test_the_perspective_grid_and_pivot_load_under_the_policy_and_apply_streamin
     size = page.evaluate("document.querySelector('perspective-viewer').getTable().then(t => t.size())")
     assert size == 750
     assert page.evaluate("document.querySelector('perspective-viewer').save().then(c => c.plugin)") == "Datagrid"
-    assert "Live" in page.inner_text("[data-live-text]")
+    assert "Live" in page.inner_text(".bi-live-state [data-live-text]")
     # the rows that changed arrive by key: the table keeps its 750 rows and says how many changed
     page.wait_for_function("() => Number(document.querySelector('.bi-psp').getAttribute('data-psp-changed')) > 0", timeout=20000)
     assert page.get_attribute(".bi-psp", "data-psp-rows") == "750"

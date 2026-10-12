@@ -132,13 +132,13 @@ def test_create_an_alert_fire_it_with_a_load_and_see_it_in_the_inbox(stack, brow
     expect(hist).to_contain_text("fired")
     expect(hist).to_contain_text("inbox: ok")
 
-    # pause and resume from the list; the Reports menu leads here
+    # pause and resume from the list; the Reports page leads here
     page.goto(CONSOLE_URL + "/alerts")
     page.locator('tr[data-alert-row="MTM floor"]').get_by_role("button", name="Pause").click()
     expect(page.locator('tr[data-alert-row="MTM floor"] [data-standing]')).to_have_text("paused")
     page.locator('tr[data-alert-row="MTM floor"]').get_by_role("button", name="Resume").click()
-    page.click('.tbar-menu-btn[title^="Reports"]')
-    expect(page.locator(".mega-panel.show, .dropdown-menu.show").get_by_text("My alerts")).to_be_visible()
+    page.goto(CONSOLE_URL + "/reports")                                       # Reports is an entry of Views; its page leads here
+    expect(page.locator("nav.rep-links").get_by_text("My alerts")).to_be_visible()
     clean(page)
     page.context.close()
 

@@ -43,7 +43,8 @@ def _sign_in(c):
 
 
 def test_sign_in_off_says_so_and_adds_nothing_to_the_public_nav(client):
-    assert "data-sign-in" not in client.get("/").text and "data-public-user" not in client.get("/").text
+    home = client.get("/").text            # sign-in off: everyone is the developer, so the landing shows the terminal top bar
+    assert "data-sign-in>" not in home and "data-public-user" not in home and "Sign out" not in home and "Sign-in is off on this server" in home
     menu = client.get("/t").text
     assert "Sign-in is off on this server" in menu and "/help/user-management#signing-in-and-out" in menu and "Sign out" not in menu
     login = client.get("/login").text
@@ -70,7 +71,7 @@ def test_signed_in_public_pages_show_the_account_menu_and_sign_out_lands_home_wi
     c = _secure(backend)
     _sign_in(c)
     page = c.get("/").text
-    assert "data-public-user" in page and "data-sign-in>" not in page and 'action="/logout"' in page and "My account" in page
+    assert "data-sign-in>" not in page and 'action="/logout"' in page and "My account" in page          # one top bar: the terminal's account menu
     assert "Sign out" in c.get("/t").text and "Sign-in is off" not in c.get("/t").text
     r = c.post("/logout", headers={"Origin": "http://testserver"}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/?signedout=1"

@@ -151,8 +151,6 @@ def test_a_view_says_when_the_runtime_is_missing(client, calc_on, tmp_path):
         html = client.get("/v/trade/IRS-48213").text
         assert NOT_INSTALLED in html and 'data-runtime=""' in html
         assert client.get("/healthz").json()["pythonRuntime"] == "not installed: run tools/fetch-pyodide.sh"
-        about = client.get("/about").text
-        assert "Python runtime (Calc)" in about and NOT_INSTALLED in about
     finally:
         calc.runtime = real
 

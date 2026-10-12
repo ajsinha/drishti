@@ -50,7 +50,7 @@ def ready(page, path, psp=False):
         page.wait_for_selector(".bi-psp[data-psp=ready]", state="attached", timeout=60000)
     else:
         page.wait_for_function("() => !document.querySelector('.bi-vis-busy') && document.querySelectorAll('.bi-vis').length > 0", timeout=30000)
-    page.wait_for_function("() => document.querySelector('[data-live-state]').getAttribute('data-live-state') === 'live'", timeout=30000)
+    page.wait_for_function("() => document.querySelector('.bi-live-state').getAttribute('data-live-state') === 'live'", timeout=30000)
     page.wait_for_timeout(2500)                                      # a few updates have drawn over the first picture
 
 
@@ -106,10 +106,10 @@ def main(out: Path, captures: Path) -> None:
                 # a connection that drops: the console is stopped, the page says so, a new one redraws everything
                 ready(page, f"/bi/r/{REPORT}")
                 stack.stop_console()
-                page.wait_for_function("() => document.querySelector('[data-live-state]').getAttribute('data-live-state') === 'disconnected'", timeout=60000)
+                page.wait_for_function("() => document.querySelector('.bi-live-state').getAttribute('data-live-state') === 'disconnected'", timeout=60000)
                 page.locator("[data-live-bar]").screenshot(path=str(out / "live-disconnected.png"))
                 stack.start_console()
-                page.wait_for_function("() => document.querySelector('[data-live-state]').getAttribute('data-live-state') === 'live'", timeout=90000)
+                page.wait_for_function("() => document.querySelector('.bi-live-state').getAttribute('data-live-state') === 'live'", timeout=90000)
 
                 # ---- the same grid for a reader without raw -----------------------------------------------------------------------
                 ann = sign_in(browser, "ann")

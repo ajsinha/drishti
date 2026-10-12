@@ -182,11 +182,11 @@ def test_a_country_the_map_does_not_hold_is_named_not_dropped(stack, browser):
     # the same visual with a code the map does not hold, drawn by the code that draws every map
     note = page.evaluate("""() => { const host = document.createElement('div'); document.body.appendChild(host); host.style.width = '400px'; host.style.height = '300px';
       const B = window.drishtiBi, spec = { id: 'x', type: 'map', title: 'x', wells: { location: ['trade.country'], values: ['Notional'] }, format: {} };
-      const res = { columns: [{ name: 'trade.country' }, { name: 'Notional' }], rows: [['US', 5], ['KY', 7]], meta: { masked: [] } };
+      const res = { columns: [{ name: 'trade.country' }, { name: 'Notional' }], rows: [['US', 5], ['ZZ', 7]], meta: { masked: [] } };
       const ctx = { index: window.drishtiBi.indexOf ? null : { measures: { Notional: {} }, columns: {} }, palette: ['#336', '#693'], t: { ink: '#000', muted: '#666', surface: '#fff', border: '#ccc', mono: 'monospace', link: '#33a', pos: '#3a3' }, interactive: false };
       B.visuals.drawChartOrCard(host, spec, ctx, res);
       return new Promise((resolve) => setTimeout(() => resolve(host.querySelector('.bi-map-note') ? host.querySelector('.bi-map-note').textContent : ''), 800)); }""")
-    assert "Not on the map: KY" in note
+    assert "Not on the map: ZZ" in note
     page.context.close()
 
 
