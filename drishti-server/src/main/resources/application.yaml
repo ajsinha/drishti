@@ -490,6 +490,8 @@ drishti:
       ask-rows: 200                  # most rows an answer holds (and the model sees, in aggregates mode)
       explain-dimensions: 3          # explain this number: dimensions broken down
       explain-members: 5             # members listed per dimension
+      suggestions: 6                 # designer copilot: most visuals proposed at once
+      helper-items: 8                # dataset helper: most items proposed per kind (relationships, measures, column descriptions)
     usage-days: 30                   # days of views counted as usage
     recent: 12                       # rows under Recent, Certified and Shared on Home
     list-limit: 200                  # most rows one catalogue or workspace page returns

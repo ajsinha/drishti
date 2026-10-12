@@ -36,10 +36,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param maxAudience most people one board tile notifies (the board's readers); over it the tile notifies nobody and says so
  * @param email false stops alert email whatever an alert asks for
  * @param bridges false stops chat bridge posts whatever an alert asks for
+ * @param maxAttempts a failed delivery by email, webhook or text is tried this many times in all, with the shared retry policy ({@code drishti.retry.alerts.*}) between tries
+ * @param webhooks false stops webhook posts whatever an alert asks for
+ * @param sms false stops text messages whatever an alert asks for
  */
 @ConfigurationProperties("drishti.alerts.measure")
 public record MeasureAlertProperties(Boolean enabled, Integer perUser, Duration tick, Duration loadDelay, Duration livePoll, Duration liveDebounce, Duration minDebounce,
-        Duration liveMaxWait, Duration minGap, Duration cooldown, Integer keepHistory, Boolean boards, Integer maxAudience, Boolean email, Boolean bridges) {
+        Duration liveMaxWait, Duration minGap, Duration cooldown, Integer keepHistory, Boolean boards, Integer maxAudience, Boolean email, Boolean bridges, Integer maxAttempts, Boolean webhooks, Boolean sms) {
+
+    public MeasureAlertProperties(Boolean enabled, Integer perUser, Duration tick, Duration loadDelay, Duration livePoll, Duration liveDebounce, Duration minDebounce,
+            Duration liveMaxWait, Duration minGap, Duration cooldown, Integer keepHistory, Boolean boards, Integer maxAudience, Boolean email, Boolean bridges) {
+        this(enabled, perUser, tick, loadDelay, livePoll, liveDebounce, minDebounce, liveMaxWait, minGap, cooldown, keepHistory, boards, maxAudience, email, bridges, null, null, null);
+    }
 
     public MeasureAlertProperties {
         enabled = enabled == null ? Boolean.TRUE : enabled;
@@ -57,6 +65,9 @@ public record MeasureAlertProperties(Boolean enabled, Integer perUser, Duration 
         maxAudience = maxAudience == null ? 300 : Math.max(1, maxAudience);
         email = email == null ? Boolean.TRUE : email;
         bridges = bridges == null ? Boolean.TRUE : bridges;
+        maxAttempts = maxAttempts == null ? 4 : Math.max(1, maxAttempts);
+        webhooks = webhooks == null ? Boolean.TRUE : webhooks;
+        sms = sms == null ? Boolean.TRUE : sms;
     }
 
     /** All defaults. */

@@ -45,4 +45,32 @@ public interface AlertChannels {
      * this firing is the one to post (a bridge is a shared room, so not once per person).
      */
     String bridge(Fired f);
+
+    /** The webhooks an administrator defined, by name (an alert may name only these). */
+    default java.util.List<String> webhookNames() {
+        return java.util.List.of();
+    }
+
+    /** Whether a text-message gateway is set up. */
+    default boolean smsConfigured() {
+        return false;
+    }
+
+    /** Whether the person has given a number for texts. */
+    default boolean hasPhone(String username) {
+        return false;
+    }
+
+    /**
+     * A signed JSON post to the named webhook: that the alert fired, which, its severity, condition and where it opens. It holds no number: a webhook is a shared endpoint.
+     * Answers {@code sent}, {@code failed: reason} (worth retrying) or {@code failed (permanent): reason}.
+     */
+    default String webhook(Fired f, String name) {
+        return "skipped: webhooks are not set up";
+    }
+
+    /** A short text to the person's own number: the alert's title, severity and a link; a figure only if the administrator allows it ({@code drishti.notify.sms.include-values}). */
+    default String sms(Fired f) {
+        return "skipped: text messages are not set up";
+    }
 }

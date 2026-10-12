@@ -87,6 +87,7 @@ public class MeasureAlertConfiguration {
     @Bean
     @SuppressWarnings("java:S107")
     public AlertChannels alertChannels(InboxService inbox, InboxHub hub, ObjectProvider<JavaMailSender> sender, CollabProperties collab, ObjectProvider<BridgeNotifier> bridges,
+            com.ash.drishti.server.notify.NotifyChannels notify, com.ash.drishti.server.notify.PhoneBook phones,
             @Value("${drishti.branding.product:Drishti}") String product) {
         String from = collab.email().from();
         String host = from.contains("@") ? from.substring(from.indexOf('@') + 1) : "localhost";
@@ -95,14 +96,14 @@ public class MeasureAlertConfiguration {
             throw new IllegalStateException("no SMTP host: set spring.mail.host");
         };
         return new ServerAlertChannels(inbox, hub, new MailRenderer(new MailTemplates(collab.email().templatesDir()), product, host), transport, from, collab.consoleUrl(),
-                bridges.getIfAvailable());
+                bridges.getIfAvailable()).with(notify, phones);
     }
 
     @Bean(destroyMethod = "close")
     @SuppressWarnings("java:S107")
     public MeasureAlertService measureAlertService(PreferenceStore store, BiValueReader bi, FieldValueReader fields, ServerAlertSources sources, BoardAlertSource boards,
             AlertChannels channels, UserService users, Principals principals, SecurityProperties security, AuditLog audit, MeasureAlertProperties props, BusinessDates dates, LoadService loads,
-            ObjectProvider<BridgeItemRenderer> renderer, CollabProperties collab, @Value("${drishti.branding.product:Drishti}") String product) {
+            ObjectProvider<BridgeItemRenderer> renderer, CollabProperties collab, org.springframework.core.env.Environment env, @Value("${drishti.branding.product:Drishti}") String product) {
         ValueReader reader = (spec, who, date) -> spec.source().type().equals("field") ? fields.read(spec, who, date) : bi.read(spec, who, date);
         // with security off the signed-in name need not be a user of the directory: it is still a person to alert (no email address, the rights security-off gives)
         AlertEnvironment.People people = name -> users.find(name)
@@ -110,6 +111,7 @@ public class MeasureAlertConfiguration {
                         principals.of(u.username())))
                 .or(() -> security.enabled() ? Optional.empty() : Optional.of(new Person(name, name, "", true, principals.of(name))));
         MeasureAlertService s = new MeasureAlertService(store, reader, sources, people, sources, boards, channels, audit, props, dates, Clock.systemUTC(), true);
+        s.retryWith(com.ash.drishti.common.RetryPolicy.of(env::getProperty, "alerts"));       // drishti.retry.alerts.*
         loads.onReady(r -> s.onLoad(r.kind(), r.businessDate()));                      // the data-load signal
         BridgeItemRenderer br = renderer.getIfAvailable();
         if (br != null) {

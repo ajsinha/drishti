@@ -28,17 +28,37 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * BI on the AI layer (docs/guides/BI_AI.md): {@code GET /status}, {@code POST /draft} (report from words), {@code POST /ask} (ask the data) and
- * {@code POST /explain} (explain this number). Off with the AI layer (DRS-4015); an unusable model answer is DRS-4020; the AI policy's refusals are DRS-4016..4019.
+ * BI on the AI layer (docs/guides/BI_AI.md): {@code GET /status}, {@code POST /draft} (report from words), {@code POST /ask} (ask the data),
+ * {@code POST /explain} (explain this number) and the authoring helpers {@code POST /suggest}, {@code /explain-checks} and {@code /dataset-helper}. Off with the AI layer (DRS-4015); an unusable model answer is DRS-4020; the AI policy's refusals are DRS-4016..4019.
  */
 @RestController
 @RequestMapping("/api/v1/bi/ai")
 public class BiAiController {
 
     private final BiAiService service;
+    private final BiAiCopilot copilot;
 
-    public BiAiController(BiAiService service) {
+    public BiAiController(BiAiService service, BiAiCopilot copilot) {
         this.service = service;
+        this.copilot = copilot;
+    }
+
+    /** Body {@code {dataset, goal, yaml?}}: visuals and slicers for the goal, each as YAML to add; nothing is saved or applied. */
+    @PostMapping("/suggest")
+    public ResponseEntity<Map<String, Object>> suggest(@RequestBody JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return noStore(copilot.suggest(p, body.path("dataset").asText(""), body.path("goal").asText(""), body.path("yaml").asText("")));
+    }
+
+    /** Body {@code {yaml}}: the report checker's problems for the draft, each with a plain explanation and a fix. */
+    @PostMapping("/explain-checks")
+    public ResponseEntity<Map<String, Object>> explainChecks(@RequestBody JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return noStore(copilot.explainChecks(p, body.path("yaml").asText("")));
+    }
+
+    /** Body {@code {dataset}}: proposed relationships, measures (with descriptions) and column descriptions, each checked against the model; nothing is applied. */
+    @PostMapping("/dataset-helper")
+    public ResponseEntity<Map<String, Object>> helper(@RequestBody JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return noStore(copilot.helper(p, body.path("dataset").asText("")));
     }
 
     @GetMapping("/status")

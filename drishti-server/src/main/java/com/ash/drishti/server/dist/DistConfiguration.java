@@ -66,7 +66,8 @@ public class DistConfiguration {
     @SuppressWarnings("java:S107")
     public SubscriptionService subscriptionService(PreferenceStore store, ContentExporter exports, UserService users, Principals principals, Entitlements entitlements,
             BiService bi, AuditLog audit, ObjectProvider<JavaMailSender> sender, CollabProperties collab, DistProperties props, Environment env, BusinessDates dates,
-            LoadService loads, @Value("${drishti.branding.product:Drishti}") String product) {
+            LoadService loads, ObjectProvider<com.ash.drishti.server.bi.ai.BiAiService> ai, com.ash.drishti.server.notify.NotifyChannels notify,
+            com.ash.drishti.server.notify.PhoneBook phones, @Value("${drishti.branding.product:Drishti}") String product) {
         String from = collab.email().from();
         String host = from.contains("@") ? from.substring(from.indexOf('@') + 1) : "localhost";
         JavaMailSender smtp = sender.getIfAvailable();
@@ -98,6 +99,33 @@ public class DistConfiguration {
         SubscriptionService s = new SubscriptionService(store, exports::render, exports::check, directory, audit,
                 new MailRenderer(new MailTemplates(collab.email().templatesDir()), product, host), transport, from, collab.consoleUrl(), props.subscriptions(),
                 RetryPolicy.of(env::getProperty, "distribution"), dates, Clock.systemUTC(), true);
+        com.ash.drishti.server.bi.ai.BiAiService aiService = ai.getIfAvailable();
+        s.with(aiService == null ? null : new AiNarrator(aiService, props.subscriptions().narrativeRows()), new SubscriptionService.Outbound() {
+            @Override
+            public List<String> webhookNames() {
+                return notify.webhookNames();
+            }
+
+            @Override
+            public boolean smsConfigured() {
+                return notify.smsConfigured();
+            }
+
+            @Override
+            public Optional<String> phone(String username) {
+                return phones.phone(username);
+            }
+
+            @Override
+            public void webhook(String name, com.fasterxml.jackson.databind.node.ObjectNode payload) {
+                notify.webhook(name, "subscription", payload);
+            }
+
+            @Override
+            public void sms(String phone, String text) {
+                notify.sms(phone, text);
+            }
+        });
         loads.onReady(r -> s.onLoad(r.kind(), r.businessDate()));          // the data-load signal: "after-load" subscriptions run shortly after
         return s;
     }

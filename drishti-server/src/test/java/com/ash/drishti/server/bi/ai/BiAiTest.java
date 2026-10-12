@@ -242,7 +242,7 @@ class BiAiTest {
             @Override public void after(CallContext ctx, ModelInfo model, ChatRequest request, ChatResponse response, LlmException failure, long millis) {}
         };
         return new BiAiService(new LLMFactory(new LlmGateway(registry, capture), null), new AiProperties(true, null, null, null, null, null),
-                new BiAiProperties(null, values, null, null, null, null, null, null), bi, reports, datasets, audit);
+                new BiAiProperties(null, values, null, null, null, null, null, null, null, null), bi, reports, datasets, audit);
     }
 
     @Test
