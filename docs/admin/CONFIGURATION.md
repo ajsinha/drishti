@@ -300,6 +300,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_SUTRA_FOUR_EYES` | `drishti.governance.four-eyes` | `true` | Nobody approves their own proposal (with security on). |
 | `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `./data/governance` | Where proposals are kept. |
 | `DRISHTI_DATA_DIR` | `drishti.data.dir` | `./data` | The data folder: the umbrella every runtime path below defaults under (see [The data folder](#the-data-folder-and-the-config-folder)). |
+| `DRISHTI_INDEX_DIR` | `drishti.index.dir` | *(empty)* | The multi-day type-ahead index's segment files, one folder per connector; empty means `<data dir>/index` (`./data/index`). See [`drishti.index`](#drishtiindex--the-multi-day-type-ahead-index). |
 | `DRISHTI_BI_DIR` | `drishti.bi.dir` | `./config/bi` | Where Rupaka (BI) files live: `datasets/`, `reports/`, `boards/`, `notebooks/`, `python/`. Never inside a pack. |
 | `DRISHTI_BI_TRANSFORM_PYTHON` | `drishti.bi.transform.python` | empty | The Python that runs a derived dataset's Transform: it needs `pandas` and `pyarrow`, normally the console's `drishti-console/.venv/bin/python`. Empty: that file when it exists, else `python3`. |
 | `DRISHTI_BI_TRANSFORM_RUNNER` | `drishti.bi.transform.runner` | empty | The console's `core/transform_cli.py`, which the server starts to run a Transform in the sandboxed runner. Empty: looked for in `drishti-console/core` from the working directory and its parents. |
