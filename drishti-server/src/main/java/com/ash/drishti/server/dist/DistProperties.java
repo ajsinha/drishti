@@ -77,6 +77,7 @@ public record DistProperties(Export export, Subscriptions subscriptions) {
             this(enabled, perUser, maxRecipients, tick, keepRuns, maxAttempts, emailRows, loadDelay, null);
         }
 
+        @org.springframework.boot.context.properties.bind.ConstructorBinding
         public Subscriptions {
             enabled = enabled == null ? Boolean.TRUE : enabled;
             perUser = perUser == null ? 20 : Math.max(1, perUser);

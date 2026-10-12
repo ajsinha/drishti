@@ -49,6 +49,7 @@ public record MeasureAlertProperties(Boolean enabled, Integer perUser, Duration 
         this(enabled, perUser, tick, loadDelay, livePoll, liveDebounce, minDebounce, liveMaxWait, minGap, cooldown, keepHistory, boards, maxAudience, email, bridges, null, null, null);
     }
 
+    @org.springframework.boot.context.properties.bind.ConstructorBinding
     public MeasureAlertProperties {
         enabled = enabled == null ? Boolean.TRUE : enabled;
         perUser = perUser == null ? 20 : Math.max(1, perUser);
