@@ -231,7 +231,9 @@ public enum ErrorCode {
     /** Python in BI: a Transform returned something a derived dataset cannot use (not a frame, a declared column missing, too many rows) or its inputs do not match the dataset's. */
     TRANSFORM_FAILED("DRS-9075", 422),
     /** Python in BI: a test shipped with a Python item failed, so the item is not published (a bi-admin may force it). */
-    PYTHON_TESTS("DRS-9076", 422);
+    PYTHON_TESTS("DRS-9076", 422),
+    /** BI: a Vega-Lite specification could not be drawn (a url or loader in it, a library that did not load); raised by the page, in the visual's frame, and listed here so the code has one home. */
+    VEGA_FAILED("DRS-9077", 422);
 
     private final String code;
     private final int httpStatus;

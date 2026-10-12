@@ -19,7 +19,7 @@ that draws a chart, a saved notebook, and the promotion of a cell to a visual an
 from __future__ import annotations
 
 from _bi import bi, clean_items, quiet_inbox
-from _tut import OUT, ROOT, SERVER_ENV, elem_shot, go, login  # noqa: F401
+from _tut import OUT, ROOT, SERVER_ENV, elem_shot, go, login, page_shot  # noqa: F401
 from shotlib import Ctx, register
 
 shot = register("t14", OUT / "t14")
@@ -173,3 +173,104 @@ def analyse_extracts(c: Ctx):
     c.page.wait_for_function("() => /Python transform draft saved/.test(document.querySelector('[data-msg]').textContent)", timeout=30000)
     c.page.evaluate("window.scrollTo(0, 0)")
     c.save("15-promote-transform.jpg", clip={"x": 240, "y": 56, "width": 1040, "height": 300})
+
+
+PY_REPORT = "file:report:python-desk-risk"
+
+
+@shot("16-vega-lite.jpg", also=("17-python-vega.jpg",))
+def vega_visuals(c: Ctx):
+    """A vega-lite visual written in the report (its spec in the YAML, its data the rows of the wells), and a Python visual that returns a Vega-Lite specification."""
+    login(c, height=900)
+    quiet_inbox(c)
+    c.page.set_viewport_size({"width": 1280, "height": 900})
+    c.page.goto(f"{c.base}/bi/r/{PY_REPORT}/vega")
+    c.page.wait_for_selector('[data-visual="mtm-by-desk"] .bi-vega[data-ready="1"] canvas', timeout=90000)
+    c.page.wait_for_timeout(800)
+    elem_shot(c, "16-vega-lite.jpg", '[data-visual="mtm-by-desk"]', pad=8)
+    c.page.goto(f"{c.base}/bi/r/{PY_REPORT}/risk")
+    c.page.wait_for_selector('[data-visual="strip"] .bi-vega[data-ready="1"] canvas', timeout=120000)
+    c.page.wait_for_timeout(800)
+    elem_shot(c, "17-python-vega.jpg", '[data-visual="strip"]', pad=8)
+
+
+@shot("18-python-tests.jpg")
+def python_tests(c: Ctx):
+    """Check on a Python item that ships tests: each is run in the sandbox and shown as passed, failed or could not run."""
+    login(c, height=900)
+    quiet_inbox(c)
+    go(c, "/bi/i/file:python:desk-pnl-volatility", wait="[data-meta]", settle=1500)
+    c.page.get_by_role("button", name="Check the Python").click()
+    c.page.wait_for_selector("[data-py-tests]", timeout=60000)
+    c.page.wait_for_timeout(600)
+    elem_shot(c, "18-python-tests.jpg", "[data-warnings]", pad=12)
+
+
+REPORT_DRAFT = "Desk views"
+SPAN = """([a, b]) => { const r = (s) => { const e = document.querySelector(s); const x = e.getBoundingClientRect(); return {l: x.left, t: x.top + window.scrollY, r: x.right, b: x.bottom + window.scrollY}; };
+  const p = r(a), q = r(b); return {x: Math.min(p.l, q.l), y: Math.min(p.t, q.t), width: Math.max(p.r, q.r) - Math.min(p.l, q.l), height: Math.max(p.b, q.b) - Math.min(p.t, q.t)}; }"""
+
+
+def span_shot(c: Ctx, name: str, top: str, bottom: str, pad: int = 10):
+    """A picture of the page from the top of one element to the bottom of another (from the top of the page, so the sticky bar is not in the middle of it)."""
+    c.page.evaluate("window.scrollTo(0, 0)")
+    c.page.wait_for_timeout(300)
+    page_shot(c, name, c.page.evaluate(SPAN, [top, bottom]), pad=pad)
+
+
+@shot("19-analyse-browser.jpg", also=("20-promote-existing.jpg",))
+def analyse_in_the_browser(c: Ctx):
+    """Slice and SQL worked out by DuckDB in the browser (the line under each says so), then a SQL cell promoted into an existing report draft."""
+    login(c, height=900)
+    quiet_inbox(c)
+    clean_items(c, REPORT_DRAFT, "Slice of file:dataset:trades-basic", "SQL of file:dataset:trades-basic")
+    bi(c, "POST", "/workspaces/me/items", {"kind": "report", "title": REPORT_DRAFT, "body": (DATA / "desk-python.report.yaml").read_text()})
+    open_extract(c)
+    c.page.click("[data-open-go]")
+    c.page.wait_for_function("() => /rows,/.test(document.querySelector('[data-info]').textContent)", timeout=60000)
+    c.page.click('.bx-chip[data-field="desk"] [data-to="rows"]')
+    c.page.click('.bx-chip[data-field="notional"] [data-to="values"]')
+    c.page.wait_for_function("() => document.querySelector('[data-pivot-meta]').dataset.engine === 'duckdb-wasm'", timeout=120000)
+    c.page.wait_for_timeout(600)
+    span_shot(c, "19-analyse-browser.jpg", ".bx-engine", "[data-pane=slice]")
+    c.page.wait_for_function("() => document.querySelectorAll('[data-promote-target] option').length > 1", timeout=30000)
+    c.page.locator("[data-promote-target]").select_option(label=f"the report: {REPORT_DRAFT}")
+    c.page.click("#bxT-sql")
+    c.page.fill("[data-cells=sql] textarea", "SELECT desk, COUNT(*) AS trades, SUM(notional) AS notional\nFROM extract\nGROUP BY desk\nORDER BY notional DESC")
+    c.page.click("[data-cells=sql] [data-run]")
+    c.page.wait_for_selector('[data-cells=sql] [data-engine="duckdb-wasm"]', timeout=60000)
+    c.page.click("[data-promote-report]")
+    c.page.wait_for_function("() => /added to the report draft/.test(document.querySelector('[data-msg]').textContent)", timeout=30000)
+    c.page.wait_for_timeout(600)
+    span_shot(c, "20-promote-existing.jpg", "[data-msg]", "[data-pane=sql]")
+    clean_items(c, REPORT_DRAFT)
+
+
+CALC_VIEW = "/v/trade/MX-20000001"
+
+
+def open_calc(c: Ctx, code: str):
+    """Opens Calc on a trade's view, types `code` and runs it (Ctrl+Enter); waits for the run to finish."""
+    go(c, CALC_VIEW, height=900, wait="[data-panel]", settle=1500)
+    c.page.keyboard.press("Alt+c")
+    c.page.wait_for_selector("#calcDrawer:not([hidden])", timeout=10000)
+    c.page.evaluate("(code) => document.querySelector('#calcDrawer .CodeMirror').CodeMirror.setValue(code)", code)         # the editor is CodeMirror's
+    c.page.click("[data-calc-run]")
+    c.page.wait_for_function("() => /^(Done|Failed)/.test(document.querySelector('[data-calc-status]').textContent)", timeout=180000)
+
+
+@shot("21-calc-bi.jpg", also=("22-calc-walker.jpg",))
+def calc_bi(c: Ctx):
+    """Calc's BI client (drishti_bi.query: the engine's answer as you, a DataFrame) and Graphic Walker over that frame (drishti_bi.walk)."""
+    login(c, height=900)
+    quiet_inbox(c)
+    open_calc(c, "import drishti_bi\ndf = await drishti_bi.query_async('file:dataset:trades-basic', measures=['MTM', 'Trades'], by=['trade.desk'])\nshow(df, 'MTM by desk')")
+    assert "Done" in c.page.inner_text("[data-calc-status]"), c.page.inner_text("[data-calc-status]")
+    c.page.wait_for_timeout(500)
+    c.save("21-calc-bi.jpg", "#calcDrawer")
+    open_calc(c, "import drishti_bi\ndf = await drishti_bi.query_async('file:dataset:trades-basic', measures=['MTM'], by=['trade.desk', 'trade.currency'])\ndrishti_bi.walk(df, 'MTM by desk and currency')")
+    c.page.wait_for_selector("[data-calc-walker]", timeout=30000)
+    frame = c.page.frame_locator("[data-calc-walker]")
+    frame.locator("#walker[data-ready='1']").wait_for(timeout=60000)
+    c.page.wait_for_timeout(2500)
+    c.save("22-calc-walker.jpg", "#calcDrawer")

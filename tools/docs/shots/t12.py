@@ -141,3 +141,35 @@ def board_designer(c: Ctx):
     c.page.wait_for_function("() => /Night desk/.test(document.querySelector('[data-view=yaml]').innerText)")
     c.page.wait_for_timeout(800)
     c.save("14-board-yaml.jpg", clip={"x": 0, "y": 56, "width": 1400, "height": 640})
+
+
+@shot("15-perspective-chart.jpg", also=("16-chart-settings.jpg",))
+def perspective_chart(c: Ctx):
+    """The chart page of the live desk report: Perspective's chart plugin, then its settings panel open (the gear on the visual)."""
+    login(c, height=900)
+    c.page.set_viewport_size({"width": 1280, "height": 900})
+    c.page.goto(f"{c.base}/bi/r/{LIVE_REPORT}/chart")
+    c.page.wait_for_selector("[data-psp=ready]", timeout=60000)
+    c.page.wait_for_timeout(2500)
+    c.page.evaluate("window.scrollTo(0, 0)")
+    c.save("15-perspective-chart.jpg")
+    c.page.click('[data-act="psp-settings"]')
+    c.page.wait_for_selector('[data-psp-settings="open"]', timeout=30000)
+    c.page.wait_for_timeout(1500)
+    c.page.evaluate("window.scrollTo(0, 0)")
+    c.save("16-chart-settings.jpg")
+
+
+PYTHON_BOARD = "file:board:python-wall"
+
+
+@shot("17-python-wall.jpg")
+def python_wall(c: Ctx):
+    """The Python wall: three tiles that are Python visuals, run for the person looking."""
+    login(c, height=900)
+    c.page.set_viewport_size({"width": 1280, "height": 900})
+    c.page.goto(f"{c.base}/bi/b/{PYTHON_BOARD}")
+    c.page.wait_for_function("() => document.querySelectorAll('[data-tile] .bi-py-foot').length === 3", timeout=120000)
+    c.page.wait_for_timeout(1500)
+    c.page.evaluate("window.scrollTo(0, 0)")
+    c.save("17-python-wall.jpg")

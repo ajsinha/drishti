@@ -36,10 +36,13 @@ Python in the *terminal* (Calc) is a different thing: [PYTHON_CALC.md](PYTHON_CA
 7. [The sandbox, exactly](#7-the-sandbox-exactly)
 8. [Who sees what](#8-who-sees-what)
 9. [Settings](#9-settings)
-10. [Errors: DRS-9070 to DRS-9074](#10-errors-drs-9070-to-drs-9074)
+10. [Errors: DRS-9070 to DRS-9077](#10-errors-drs-9070-to-drs-9077)
 11. [Measured](#11-measured)
 12. [Built and not built](#12-built-and-not-built)
 13. [Transforms: a table in, a table out](#13-transforms-a-table-in-a-table-out)
+14. [Vega-Lite output](#14-vega-lite-output)
+15. [Tests shipped with an item](#15-tests-shipped-with-an-item)
+16. [Python in alerts and on boards](#16-python-in-alerts-and-on-boards)
 
 ## 1. At a glance
 
@@ -57,7 +60,7 @@ Python in the *terminal* (Calc) is a different thing: [PYTHON_CALC.md](PYTHON_CA
 |---|---|---|
 | function | `compute(table, params)` | `render(table, params)` |
 | called | once per group, with that group's rows | once, with all the rows handed over |
-| returns | one number (or `None`) | an ECharts option (a dict), SVG text or PNG bytes |
+| returns | one number (or `None`) | an ECharts option or a Vega-Lite specification (a dict, by `output:`), SVG text or PNG bytes |
 | drawn as | bars, one per group | the chart or image |
 
 Two samples ship (`config/bi/python/`), and a sample report **Desk P&L risk (Python)** shows both on the trades model:
@@ -115,7 +118,7 @@ source: |
 `table` is a DataFrame of the rows the visual hands over (the columns of its `columns` well; the row `id` is dropped). The function returns **data, never markup**: an ECharts option
 drawn by the console's own ECharts (any `formatter`, `valueFormatter`, `extraCssText` and `appendToBody` key is removed: those are the places an option can carry HTML), an SVG (refused
 if it holds `<script`, `javascript:`, `<foreignObject`, `<iframe`, `<image`, `xlink:href` or an `on...` handler; shown as an image, which never runs script) or PNG bytes. Colours you leave
-out (text, axes, grid lines) take the page's theme, so a chart reads in the dark and the light theme alike. *Vega-Lite specs are not built (section 12).*
+out (text, axes, grid lines) take the page's theme, so a chart reads in the dark and the light theme alike. A visual may also return a Vega-Lite specification (`output: vega-lite`, section 14).
 
 ## 3. The manifest
 
@@ -132,8 +135,9 @@ The body of a `python` item is YAML:
 | `target` | no | `server` (default), `browser` or `both`. A browser target cannot need a package Pyodide lacks (it has numpy, pandas, scipy, statsmodels, not pyarrow) |
 | `timeout` | no | seconds, 1 to `drishti.bi.report.python-max-seconds` (60); default 10 |
 | `memory` | no | megabytes the code may add to what Python needs to start, 32 to `python-max-memory-mb` (1024); default 256 |
-| `output` | visual | `echarts` (default), `svg` or `png`; a measure's output is `number`, a transform's `frame` |
+| `output` | visual | `echarts` (default), `vega-lite` (section 14), `svg` or `png`; a measure's output is `number`, a transform's `frame` |
 | `params` | no | defaults the function reads from `params`; a visual of a report overrides them in `format.params` |
+| `tests` | no | examples the item must pass: run by Check, and a failing one refuses a publish through the console (section 15) |
 | `title`, `description`, `owner`, `tags`, `endorsement`, `audience`, `sample`, `version` | no | the catalogue's keys, as for any item |
 
 Anything else is refused with `DRS-9070` and the path of the key. The server checks the manifest ( `POST /api/v1/bi/python/validate`, and on every publish); the **console** adds the checks
@@ -265,7 +269,7 @@ container with the usual limits. `GET /bi/python/status` says which isolation is
 | `network_namespace` | `auto` | `auto`, `require`, `off` |
 | `scratch_dir` | system temp | where scratch folders are made |
 
-## 10. Errors: DRS-9070 to DRS-9074
+## 10. Errors: DRS-9070 to DRS-9077
 
 | Code | HTTP | Meaning | Usual cause |
 |---|---|---|---|
@@ -275,6 +279,8 @@ container with the usual limits. `GET /bi/python/status` says which isolation is
 | `DRS-9073` | 403 | the sandbox refused something | an `import` that is not on the list, the network, a file outside the scratch folder, a process |
 | `DRS-9075` | 422 | a Transform's result is not usable | a column the derived dataset declares is missing from the frame, or the Transform's `inputs` are not the derived dataset's inputs (a Transform only: section 13) |
 | `DRS-9074` | 503 | no runner | all workers busy for `queue_seconds`, the runner switched off, `pandas` or `pyarrow` not installed in the console's environment, a package not installed, Pyodide not installed for a browser run |
+| `DRS-9076` | 422 | a test the item ships with fails, so it is not published | `POST /bi/api/items/<id>/publish` (or `approve`) of a Python item whose `tests:` do not all pass; a bi-admin may publish with `force: true` (section 15) |
+| `DRS-9077` | 422 | a Vega-Lite specification could not be drawn (shown in the visual's frame; no HTTP call) | a `url` or `loader` in the specification, a library that did not load, an invalid specification (section 14) |
 
 Real output (a measure on 60 trades, then the failures, from `core/pyrunner.py`):
 
@@ -309,8 +315,8 @@ Built: the Measure and Visual interfaces; Python items as BI items (versions, re
 Built with several datasets (section 13): the **Transform** interface, run on the server as the reader's masked frames and published as a derived dataset ([DATASETS.md section 11.2](DATASETS.md#112-derived-datasets-a-python-transform)), kept per reader and version of the inputs; Analyse promotes a join cell to one.
 
 Not built, and not faked: the **Source** interface (RUPAKA.md section 13.1; rows from a Python-only source such as an API); a Python measure **inside** a SQL query or a bar chart's measures (a query that names one is `DRS-9013`);
-**tests shipped with an item** and run by the check (the check parses and lints, it does not run your examples); **Vega-Lite** specs; Python on **boards**, in **alerts**, **subscriptions** and **embedded** reports (an export of a python visual is the table of rows handed to Python); a
-**warm worker pool** and a **separate runner service** (`bi.python.runner-url`: RUPAKA.md section 17); a **kernel-level** sandbox (seccomp, containers: use the platform's); the `drishti_bi` client, **PygWalker** and notebooks in Calc; **R**; `scikit-learn` and `polars` in the
+Python in **subscriptions** and **embedded** reports (an export of a python visual is the table of rows handed to Python; an embedded report does not draw Vega-Lite or Python visuals); a
+**warm worker pool** and a **separate runner service** (`bi.python.runner-url`: RUPAKA.md section 17); a **kernel-level** sandbox (seccomp, containers: use the platform's); **PygWalker** itself (Calc has its front end, Graphic Walker: [PYTHON_CALC.md](PYTHON_CALC.md#19-the-bi-client-and-graphic-walker)) and notebooks in Calc; **R**; `scikit-learn` and `polars` in the
 allow-list (add them to `bi.python.packages` and the server's `python-packages` when installed).
 
 
@@ -360,3 +366,94 @@ Python Transform pnl-vs-exposure: 18 rows in 218 ms (first run); the same reader
 ![The derived sample dataset: its sources, Run the Transform now and the columns it returned](../tutorials/img/t14/12-derived-dataset.jpg)
 
 Settings: `drishti.bi.transform.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibitransform--python-transforms-and-composed-datasets). The sample is `config/bi/python/pnl-vs-exposure.python.yaml` with the derived dataset `desk-pnl-vs-exposure-py`.
+
+## 14. Vega-Lite output
+
+A visual may return a **Vega-Lite** specification instead of an ECharts option: say `output: vega-lite` in the manifest and return the specification as a dict (`mark`, `encoding`, `layer`, `transform` ... as [Vega-Lite](https://vega.github.io/vega-lite/) has them). The sample `config/bi/python/pnl-vega.python.yaml` draws one dot for each trade's one-day P&L, by desk, with each desk's median as a tick:
+
+```python
+def render(table, params):
+    rows = table.dropna(subset=["pnl1d"]).head(int(params.get("max_points", 400)))
+    dots = [{"desk": str(r.desk), "pnl1d": float(r.pnl1d)} for r in rows.itertuples()]
+    medians = [{"desk": str(d), "median": float(v)} for d, v in rows.groupby("desk")["pnl1d"].median().items()]
+    return {"layer": [
+        {"data": {"values": dots}, "mark": {"type": "circle", "opacity": 0.6, "size": 40}, "encoding": {"x": {"field": "pnl1d", "type": "quantitative"}, "y": {"field": "desk", "type": "nominal"}}},
+        {"data": {"values": medians}, "mark": {"type": "tick", "thickness": 3, "color": "#d9534f"}, "encoding": {"x": {"field": "median", "type": "quantitative"}, "y": {"field": "desk", "type": "nominal"}}}]}
+```
+
+![The sample Python visual that returns Vega-Lite: a dot for each trade, a tick for each desk's median](../tutorials/img/t14/17-python-vega.jpg)
+
+What comes back from the worker is data, as with ECharts: `{"kind": "vega-lite", "spec": {...}, "ms": 258}`. The rules:
+
+* **The data is inside the specification** (`data.values`). A `url` or a `loader` anywhere in it is refused, in the sandbox (`DRS-9073`: "a Vega-Lite specification may not load anything from a URL or name a loader") and again in the page. The page draws it with the vendored Vega, Vega-Lite, vega-embed and **vega-interpreter**
+  ([VENDOR.md](../../drishti-console/web/static/vendor/VENDOR.md)): the interpreter walks the expression tree instead of compiling it to a function, so an expression such as `datum.MTM < 0` is evaluated **without `eval`** and the page keeps the strict content security policy (no `unsafe-eval`, no inline style: vega-embed is told not to write its own `<style>`). The loader refuses every URL, there is no actions menu, no editor link and no tooltip plug-in.
+* The page puts the theme's colours and the report's palette under whatever the specification's own `config` says, sizes the chart to its frame (`width` and `height` as `container`) and draws it on a canvas.
+* `target: browser` works the same way (the Pyodide driver returns the same answer); the size limit is `bi.python.max_output_bytes`.
+* A **report** can also hold a Vega-Lite visual with **no Python at all**: `type: vega-lite` ([REPORTS.md](REPORTS.md#35-vega-lite-visuals)).
+
+## 15. Tests shipped with an item
+
+A Python item may carry `tests:`: examples of what its function must return. **Check** runs them in the console's sandbox, one worker each (the same as a report's run), and shows each as passed, failed or could not run; a **publish** through the console is refused while one fails.
+
+```yaml
+tests:
+  - name: the standard deviation of one desk
+    input: { columns: [pnl1d], rows: [[1.0], [2.0], [3.0], [4.0]] }      # a frame written in the test
+    expect: 1.2909944
+    tolerance: 0.000001
+  - name: a desk of its own in a grouped call
+    input: { columns: [desk, pnl1d], rows: [[FX, 1.0], [FX, 3.0], [RATES, 10.0], [RATES, 14.0]] }
+    by: [desk]                                                                # a measure: the group columns
+    expect: { FX: 1.4142136, RATES: 2.8284271 }                              # a number for each group
+    tolerance: 0.000001
+```
+
+A test may read rows of a dataset instead of a frame it carries: `sample: { dataset: trades-basic, fields: [trade.desk, trade.pnl1d], limit: 200 }`.
+
+| Key | Meaning |
+|---|---|
+| `name` | required, unique in the item |
+| `input` | the frame: `{columns: [...], rows: [[...]]}` (up to 1,000 rows). For a **transform**, a mapping of each input dataset to its frame |
+| `sample` | instead of `input`: `{dataset, fields: [table.column, ...], limit}` (at most 1,000 rows). The rows are the ones the **person running the test** may see (row rules and masks apply), so such a test can pass for one person and fail for another; a sample is for a check against real data, an `input` for a stable one |
+| `params` | values over the item's defaults |
+| `by` | a measure: the group columns; without it the whole input is one group |
+| `expect` | a **measure**: a number (no `by`) or a number for each group (`by`: no group may be missing and none may be extra). A **visual**: `{kind: echarts \| vega-lite \| svg \| png, has: {<dotted path>: <value>}}`, for example `{kind: vega-lite, has: {layer.0.mark.type: circle}}` (a path steps through keys and list indexes). A **transform**: `{columns: [...], rows: <count>}` |
+| `tolerance` | absolute, default `1e-9`; for numbers in `expect` and in `has` |
+
+The server reads the **shape** of `tests:` when the item is validated or published (`DRS-9070`, with the path of the key: `tests[0].expect`); it does not run them, because it has no Python. The console runs them, so:
+
+* **Check** (`POST /bi/python/check`, the item page's *Check the Python*) shows them, each with its result: `passed`, `FAILED` (with what it expected and got) or `could not run` (the code failed, a package is off the list, the runner is switched off: the message has the `DRS` code). Body `{yaml, tests: false}` skips them.
+* **Publish and approve** through the console (`POST /bi/api/items/<id>/publish` and `/approve`) run them first; a failing or unrunnable one answers `DRS-9076` with the first three: `'Vol' cannot be published: 1 of its 3 tests fails (bad: expected 9.0, got 1.0). Fix the item or the test; a bi-admin may publish it anyway with force.` A **bi-admin** may send `{"force": true}`. A call made straight to the server's API is not run through the console, so it is **not gated**: the gate is the console's, which is the only place with Python.
+
+Real output of Check on the two samples that ship tests (the results the console returned):
+
+```
+desk-pnl-volatility  3 tests: passed 3
+  pass  the standard deviation of one desk      1.2909944487358056
+  pass  too few trades is zero                  0.0
+  pass  a desk of its own in a grouped call     2 groups
+pnl-vega             2 tests: passed 2
+  pass  a dot for every trade and a median for every desk   vega-lite
+  pass  at most max_points dots                             vega-lite
+```
+
+![Check on the sample measure: manifest and source checks, then each test with its result](../tutorials/img/t14/18-python-tests.jpg)
+
+## 16. Python in alerts and on boards
+
+**Boards.** A board tile may be a **python visual** (a Python measure shown as bars, or a Python visual that returns a chart or a Vega-Lite specification): the tile runs it for the person looking, as the report does, on the server or in the browser (`format.run` of the visual). The sample board `python-wall` has three. A Python tile has no threshold alert of its own (the colour rule of a tile reads numbers the query returns); to be told when a Python measure crosses a limit, make an **alert** on it. See [BOARDS.md](BOARDS.md#python-tiles).
+
+**Alerts.** An alert's source may be a **Python measure**: a dataset source whose measure is one (`type: dataset`, `measure: Desk P&L volatility`), or a visual source whose visual is a python visual that shows one. The server has no Python, so it does what a Transform does: it **builds the rows the person may see** (their row rules and masks applied by the engine, up to `drishti.bi.report.python-rows`), writes the item and the rows to a scratch folder and starts the console's runner (`drishti-console/core/transform_cli.py`, in `measure` mode), which runs the item in the same sandbox and answers a number for each group; the alert reduces the groups to one number (a dataset source: the whole input is one group; a visual source: the alert's `reduce`, `first` by default). It is read **for each person**, on the alert's schedule or after a load, like any other. What follows from that:
+
+* a column **masked for the person** makes the reading *masked*: nothing is run and no figure is shown;
+* a run that fails (the code, a limit, the sandbox, no Python installed on the server's side) is an *error reading* with the DRS code and words; it never fires and never clears;
+* the runner is the one the Transforms use: `drishti.bi.transform.enabled`, `python` (the interpreter that has pandas and pyarrow) and `runner` (`transform_cli.py`), `timeout` and `work-dir` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibitransform--python-transforms-and-composed-datasets)); the package list and limits are the server's `drishti.bi.report.python-*`;
+* a **python visual that draws a chart** has no number: such an alert reads as an error saying to watch a Python measure.
+
+```
+PUT /api/v1/me/measure-alerts/Vol
+{"title": "Desk P&L volatility", "source": {"type": "dataset", "dataset": "file:dataset:trades-basic", "measure": "Desk P&L volatility"},
+ "condition": {"type": "threshold", "op": "above", "value": 5000}, "trigger": {"mode": "after-load"}}
+```
+
+The reader is tested against the real runner ([ProcessMeasureRunnerTest](../../drishti-server/src/test/java/com/ash/drishti/server/bi/transform/ProcessMeasureRunnerTest.java)) and with a stand-in ([PythonAlertReaderTest](../../drishti-server/src/test/java/com/ash/drishti/server/alerts/measure/PythonAlertReaderTest.java): what the runner is handed, a masked column, a failing run).

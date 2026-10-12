@@ -25,7 +25,7 @@
 
    X.duck.usable()            whether the browser engine can be tried
    X.duck.pivot(ex, slice)    Promise of {rowKeys, colKeys, vals, used, cell(rk, ck)} as X.pivot gives
-   X.duck.sql(sql)            Promise of {columns, rows, rowCount, truncated, ms, engine}; rejects with Error(.code) like the console's route */
+   X.duck.sql(sql)            Promise of {columns, rows, rowCount, truncated, ms, engine}; rejects with Error(.code): DRS-9070 (not valid), 9072 (a limit), 9073 (refused), as the console's route */
 (function () {
   'use strict';
   var B = window.drishtiBi, X = B && B.explore, root = document.getElementById('bx');
@@ -114,7 +114,7 @@
   function timed(promise) {
     var timer;
     var limit = new Promise(function (_, reject) {
-      timer = setTimeout(function () { reset(); reject(err('DRS-9081', 'the SQL ran longer than ' + SQL_SECONDS + ' s and was stopped (bi.explore.sql_max_seconds)')); }, SQL_SECONDS * 1000);
+      timer = setTimeout(function () { reset(); reject(err('DRS-9072', 'the SQL ran longer than ' + SQL_SECONDS + ' s and was stopped (bi.explore.sql_max_seconds)')); }, SQL_SECONDS * 1000);
     });
     return Promise.race([promise, limit]).then(function (v) { clearTimeout(timer); return v; }, function (e) { clearTimeout(timer); throw e; });
   }
@@ -122,9 +122,9 @@
   // ---- SQL ------------------------------------------------------------------------------------------------------------------------
   D.sql = function (text) {
     var sql = String(text || '').trim().replace(/;+\s*$/, '');
-    if (!sql) { return Promise.reject(err('DRS-9080', 'write one SELECT')); }
-    if (sql.length > SQL_CHARS) { return Promise.reject(err('DRS-9080', 'the SQL is over ' + SQL_CHARS + ' characters')); }
-    if (sql.indexOf(';') >= 0 || !ALLOWED.test(sql)) { return Promise.reject(err('DRS-9080', 'one read-only statement: a SELECT (or WITH, FROM, VALUES, DESCRIBE, SUMMARIZE)')); }
+    if (!sql) { return Promise.reject(err('DRS-9070', 'write one SELECT')); }
+    if (sql.length > SQL_CHARS) { return Promise.reject(err('DRS-9072', 'the SQL is over ' + SQL_CHARS + ' characters')); }
+    if (sql.indexOf(';') >= 0 || !ALLOWED.test(sql)) { return Promise.reject(err('DRS-9073', 'refused: one read-only statement, a SELECT (or WITH, FROM, VALUES, DESCRIBE, SUMMARIZE)')); }
     var t0 = performance.now();
     return timed(ensure().then(function (e) { return e.conn.query(sql); })).then(function (result) {
       var columns = result.schema.fields.map(function (f) { return f.name; });
@@ -133,7 +133,8 @@
       return { columns: columns, rows: truncated ? rows.slice(0, SQL_ROWS) : rows, rowCount: Math.min(rows.length, SQL_ROWS), truncated: truncated, ms: Math.round(performance.now() - t0), engine: 'duckdb-wasm' };
     }, function (e) {
       if (e && e.code) { throw e; }
-      throw err('DRS-9080', String(e && e.message || e).split('\n')[0]);
+      var text = String(e && e.message || e).split('\n')[0];
+      throw err(/external access|permission|configuration|not allowed|locked/i.test(text) ? 'DRS-9073' : 'DRS-9070', text);
     });
   };
 

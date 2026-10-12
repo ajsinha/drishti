@@ -121,7 +121,7 @@ The viewer's keyboard order is the picture's: visuals are read top to bottom, th
 ## 3. The visuals and their wells
 
 A **well** holds fields (`table.column`, or `table.column.year|quarter|month|week|day` for a date), measures (names of the dataset) or either, and takes a few items. Charts draw with ECharts
-(vendored); everything else is plain elements. Required wells must be filled. The designer's Visualizations pane offers the first 26 types below (`bar` to `button`, with `bubble`, `funnel`, `histogram`, `box` and `map` among the charts); `live-chart`, `perspective-grid` and `perspective-pivot` (phase 5) are written in the YAML, and the designer's canvas shows a note for a Perspective visual (its page has no WebAssembly).
+(vendored); everything else is plain elements. Required wells must be filled. The designer's Visualizations pane offers the first 26 types below (`bar` to `button`, with `bubble`, `funnel`, `histogram`, `box` and `map` among the charts); `live-chart`, `perspective-grid`, `perspective-pivot` and `perspective-chart` (phase 5, wave C) are written in the YAML, and the designer's canvas shows a note for a Perspective visual (its page has no WebAssembly). `vega-lite` is in the designer's *Charts* with a box for its specification (JSON) under Format.
 
 | Type | Group | Wells (kind, how many) | What it draws |
 |---|---|---|---|
@@ -151,6 +151,8 @@ A **well** holds fields (`table.column`, or `table.column.year|quarter|month|wee
 | `live-chart` | live | `values` measures (1 to 4, required) | a **rolling line**: each update of the live table adds a point per measure; `format: { window: 120 }` keeps the latest 5 to 1,000 points (section 13). The points live in the browser from the moment the page opened; for a line that is there when the page opens, chart the table's **history** instead: a `line` with `axis: [history.ts]` and `values: [MTM history]` ([DATASETS.md section 7.1](DATASETS.md#71-live-tables-phase-5), the sample *Live trading desk* has one, *Net MTM and losses, last hour*) |
 | `perspective-grid` | perspective | `columns` fields of **one table** (required) | the table's rows in a Perspective grid, masked for the reader and updated as the table changes (section 13) |
 | `perspective-pivot` | perspective | `rows` fields (required), `columns` fields, `values` fields (required) | the same rows pivoted by Perspective in the browser: `rows` down, `columns` across, `values` aggregated (`format: { aggregates: { trade.mtm: sum } }`) |
+| `perspective-chart` | perspective | `rows` fields (required), `columns` fields, `values` fields (required) | the same pivot drawn by Perspective's **chart plugin** (d3fc): `format.plugin` is `Y Bar` (default), `X Bar`, `Y Line`, `Y Area`, `Y Scatter`, `X/Y Line`, `X/Y Scatter`, `Heatmap`, `Treemap`, `Sunburst`, `Candlestick` or `OHLC`; the gear opens the settings panel (section 13, *Perspective charts and the settings panel*) |
+| `vega-lite` | chart | `axis` fields, `legend` field (1), `values` measures: at least a field or a measure | a **Vega-Lite** specification written in `format.spec`, its data the rows of the wells (section 3.5) |
 | `python` | python | `columns` fields (any number), `values` one Python measure of the dataset | what a Python item returns for the rows this person may see: bars of a Python measure, or a chart or image (section 3.3) |
 
 
@@ -243,6 +245,35 @@ The `key` well names the field that holds the entity's id (a table's `id` or key
 ![The Counterparty lookup page: a bar of the ten largest counterparties, one selected, and its Drishti view beside it with the netting sets](../tutorials/img/t10/32-entity-view.jpg)
 
 **Whose view it is.** The frame is the view page built **for the person looking**: their masks, row rules and rights apply, not the report author's, and a kind they may not open is refused in the frame as it would be in the terminal. The report's dataset only supplies the id. The visual asks the dataset no query of its own (so it has no *Alert me*, *Show as a table* or export; an export of the page leaves it out), and it is a visual of the **viewer**: the designer's canvas and an embedded `<drishti-report>` (which has no console session to build the view with) show a note of what it will do. Select by **id**, not by a name that may be masked: a bar by `counterparties.name` selects a name, which is not a key.
+
+### 3.5 Vega-Lite visuals
+
+A `vega-lite` visual draws a [Vega-Lite](https://vega.github.io/vega-lite/) specification that you write in the report. Its **data is the rows of its wells**: the page asks the dataset the same grouped query a bar chart would (the `axis` and `legend` fields, the `values` measures, under the page's filters and slicers, **as the person looking**: row rules and masks apply) and puts the rows in the specification as `data.values`. Put no data in the specification.
+
+```yaml
+- id: mtm-by-desk
+  type: vega-lite
+  title: Net MTM by desk (Vega-Lite)
+  at: { x: 0, y: 0, w: 8, h: 7 }
+  wells: { axis: [trade.desk], values: [MTM, Trades] }
+  format:
+    spec:
+      mark: { type: bar, cornerRadiusEnd: 3 }
+      encoding:
+        x: { field: desk, type: nominal, sort: "-y", title: Desk }
+        y: { field: MTM, type: quantitative, title: Net MTM }
+        color: { condition: { test: "datum.MTM < 0", value: "#b3261e" }, value: "#4f7cff" }
+        tooltip: [{ field: desk }, { field: MTM, format: ",.0f" }, { field: Trades }]
+  alt: Bars of net mark to market for each desk, red where it is negative
+```
+
+![The sample vega-lite visual: net MTM by desk, red where negative, drawn from the specification in the report](../tutorials/img/t14/16-vega-lite.jpg)
+
+* **Field names.** A row is an object keyed by the well's item: a field by the text after the table's dot (`trade.desk` is `desk`), the table put back with an underscore when two fields share a name (`trade_desk`, `desks_desk`); a measure by its name (`MTM`, `Exposure (EE peak)`). Check warns about a field the specification names that no well supplies, unless the specification has a `transform` (which can make fields of its own).
+* **Nothing is loaded.** `data.url` and `url` or `loader` as a plain value anywhere in the specification are refused (`DRS-9032`, with the path); the page's loader refuses every URL too. The specification is limited to 200,000 characters.
+* **No `eval`.** The page draws it with the vendored Vega, Vega-Lite and vega-embed and the **vega-interpreter**: vega-embed builds the expression tree and the interpreter walks it, so `test: "datum.MTM < 0"`, `calculate`, `filter` and the like run without `eval`, and the page keeps the **strict content security policy** (a Chromium test asserts the header has no `unsafe-eval` and no violation is reported). The libraries (about 0.9 MB) load the first time a page draws one. vega-embed is told not to write its own `<style>`, to draw on a canvas, to show no actions menu and no tooltip plug-in.
+* The theme's colours and the report's palette go underneath the specification's own `config`; `width` and `height` default to `container`, so the chart fills its frame. A Vega-Lite visual has the chart buttons (alert, show the rows, as a table) but no marks to click: a selection does not filter the page.
+* The designer's preview draws it (with the preview's rows); `<drishti-report>` (the embedded element) does **not** draw a `vega-lite` visual (it shows the note a visual it cannot draw shows). A visual **drawn by Python** instead is [PYTHON_BI.md section 14](PYTHON_BI.md#14-vega-lite-output).
 
 ### 3.2 True totals
 
@@ -420,7 +451,7 @@ Built in phase 6 (section 3.3): the `python` visual, run on the server in a sand
 
 Built in phase 5 (section 13): visuals over live tables redraw in place with a live indicator, pause and resume, stale and disconnected states; the rolling chart; the Perspective grid and pivot; the sample live reports.
 
-Not built, and not faked: Perspective **charts** (the d3fc plugin) and the Perspective settings panel (the viewer's configuration is the YAML); a Perspective visual over **several tables**; a `perspective-*` visual in the designer's canvas (it shows a note: the designer's page has no WebAssembly); a `shape` visual; the **entity view in the designer's canvas and in an embedded element** (it shows a note; the viewer shows the view); a python visual on a **board**, in an **alert** or a **subscription** (section 3.3; [PYTHON_BI.md](PYTHON_BI.md) section 12); a **tile** map or a map service (nothing is fetched from outside; the shapes are the vendored files), regions **below the first level** (counties inside a state), a
+Not built, and not faked: a Perspective visual over **several tables**; settings of the panel that are not Perspective's (a saved view is Perspective's state, not a re-design of the visual); a `perspective-*` visual in the designer's canvas (it shows a note: the designer's page has no WebAssembly); a `shape` visual; the **entity view in the designer's canvas and in an embedded element** (it shows a note; the viewer shows the view); a python visual in a **subscription** (section 3.3; [PYTHON_BI.md](PYTHON_BI.md) section 12; boards and alerts are built: [PYTHON_BI.md section 16](PYTHON_BI.md#16-python-in-alerts-and-on-boards)); a **tile** map or a map service (nothing is fetched from outside; the shapes are the vendored files), regions **below the first level** (counties inside a state), a
 shape-file import, a **choropleth by a field that is not a country code or name**; a histogram with bands of your own (equal-width only), a box plot of **summary** data you already have (it summarises the members the query returns); true totals for a **table's subtotals by group** (a table has one total row); highlight for charts other than bar and column; capturing a bookmark's slicer choices from the page (they are
 written in the YAML); per-device layouts for a **large screen** (a phone and a tablet are built: section 14); embedding is built for the report's visuals but not for its drill, alert and export chrome (section 15; export, subscriptions and alerts: [DISTRIBUTION.md](DISTRIBUTION.md)); Explore to visual (phase 9);
 report-level security beyond the catalogue and the dataset's rules.
@@ -503,7 +534,43 @@ rows:    ["BBG-60000001","DESK-FI","BOOK-FI-3","GOVT_BOND","CHF","Short","••
   `drishti-console/core/perspective_csp.py`; `python tools/perspective-style-hashes.py --console ... --check` measures the vendored version's styles on the real pages and a Chromium test fails, naming the hash, when a library update writes another. Details and measurements: [RUPAKA_POC.md](../architecture/RUPAKA_POC.md#12-the-perspective-retest-phase-5).
 * **If Perspective cannot start** in a tab (WebAssembly blocked or failing), the visual shows the first 500 rows in Drishti's own table with a line that says so, and keeps following the live table the same way.
 * **Checks.** All the fields of a `perspective-*` visual must be columns **of one table** and not date parts; `format.aggregates` may name only columns of `values` and one of `sum avg count "distinct count" min max first last median dominant unique`; a pivot's `values` must hold a column (`DRS-9031`, `DRS-9032`). Without `title` or `alt` Check warns (`A11Y`).
-* **Not built:** Perspective charts (d3fc) and the settings panel; the viewer is configured by the YAML only. Rows are limited by `drishti.bi.report.perspective-rows` (20,000).
+* Rows are limited by `drishti.bi.report.perspective-rows` (20,000).
+
+#### Perspective charts and the settings panel
+
+`perspective-chart` draws the same rows as a pivot with Perspective's **chart plugin** (d3fc, in the vendored 3.8.0): `format.plugin` names the chart (`Y Bar`, `X Bar`, `Y Line`, `Y Area`, `Y Scatter`, `X/Y Line`, `X/Y Scatter`, `Heatmap`, `Treemap`, `Sunburst`, `Candlestick`, `OHLC`; the default is `Y Bar`). The plugin is loaded the first time a chart needs it.
+
+```yaml
+- { id: mtm-chart, type: perspective-chart, title: Net MTM by desk and currency, at: { x: 0, y: 0, w: 12, h: 12 },
+    wells: { rows: [trade.desk], columns: [trade.currency], values: [trade.mtm] },
+    format: { plugin: Y Bar, aggregates: { trade.mtm: sum } } }
+```
+
+![The chart page of the live desk report](../tutorials/img/t12/15-perspective-chart.jpg)
+
+Every Perspective visual (grid, pivot, chart) has two buttons on its frame:
+
+* **Settings** (the sliders icon) opens Perspective's own **settings panel**: the columns, *Group by*, *Split by*, *Order by*, *Where*, the aggregates, the plugin and each plugin's own options. It changes only what *you* see.
+* **Save this view into the report** (the floppy icon; for the people who may edit the report, and not on a shipped report) writes the viewer's current state into the report's **draft** as `format.view`, through the same checker and writer the designer uses (`GET /items/<id>`, `POST /reports/validate`, `POST /reports/format`, `PUT /items/<id>`), and says so. Publish the report for everyone to see it.
+
+![The settings panel open on the chart: group by desk, split by currency, the sum of mtm](../tutorials/img/t12/16-chart-settings.jpg)
+
+```yaml
+format:
+  plugin: Y Bar
+  view:                              # what the settings panel left (Perspective's own save(), less the theme and whether the panel was open)
+    plugin: Y Line
+    group_by: [desk]
+    split_by: []
+    columns: [mtm]
+    aggregates: { mtm: sum }
+    sort: [[mtm, desc]]
+    filter: [[currency, "==", EUR]]
+```
+
+`view` is applied over what the wells say, the next time the report opens. Its keys are `plugin`, `plugin_config`, `columns`, `group_by`, `split_by`, `aggregates`, `sort`, `filter`, `expressions` and `columns_config` (the column names are the **table's own**, `desk`, not `trade.desk`); another key is a warning and is ignored, a `plugin` that is not Datagrid or a chart is `DRS-9032`, and a view over 20,000 characters is refused. The view of a `perspective-grid` and `perspective-pivot` is saved the same way.
+
+**The policy.** A page that holds a **chart** is given, besides the four styles of a grid and a pivot, the two more `<style>` texts the chart plugin writes (`CHART_STYLE_HASHES`, `core/perspective_csp.py`); the Chromium test of the chart page lists every style the viewer, the plugin and the open panel write and fails, naming the hash, if one is missing. Still no `unsafe-eval`, no `unsafe-inline`, no blob worker. **Opening the settings panel logs about a dozen refused `style` attributes** (`style-src-attr`): the viewer's own code sets a few inline sizes with `setAttribute('style', ...)`, which this policy does not allow and which are not worth relaxing it for; the panel works, and the only thing that can differ is some spacing. Nothing else is refused.
 
 ## 14. Phone and tablet layouts
 

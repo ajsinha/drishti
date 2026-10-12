@@ -40,7 +40,8 @@ def _install(tmp_path, monkeypatch):
 
 def test_the_page_offers_the_browser_engine_only_when_it_is_installed(tmp_path, monkeypatch):
     client, _ = make()
-    assert 'data-duckdb' not in client.get("/bi/explore").text or (DUCK / "1.33.1-dev57.0" / "duckdb-eh.wasm").exists()
+    installed = any(DUCK.glob("*/duckdb-eh.wasm"))
+    assert ('data-duckdb="' in client.get("/bi/explore").text) == installed
     _install(tmp_path, monkeypatch)
     page = client.get("/bi/explore").text
     assert 'data-duckdb="/static/vendor/duckdb-wasm/9.9.9"' in page and "data-engine-pick" in page and "/static/js/bi-explore-duck.js" in page
@@ -51,7 +52,7 @@ def test_the_setting_server_keeps_every_run_on_the_console(tmp_path, monkeypatch
     _install(tmp_path, monkeypatch)
     client, _ = make(browser_engine="server")
     page = client.get("/bi/explore").text
-    assert "data-duckdb" not in page and "data-engine-pick" not in page
+    assert 'data-duckdb="' not in page and "data-engine-pick" not in page
 
 
 def test_the_page_keeps_the_strict_policy_and_only_the_workers_compile_webassembly(tmp_path, monkeypatch):

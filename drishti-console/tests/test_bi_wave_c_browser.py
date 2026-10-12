@@ -1,3 +1,17 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
 """Wave C in Chromium over the real server and console (tests/bi_report_stack.py on ports 18948 and 17948, security on, a small file lake: two business days of 60 trades).
 
 * Vega-Lite: a `vega-lite` report visual and a Python visual that returns a Vega-Lite specification are drawn under the strict policy (no violation, no eval, no
@@ -13,6 +27,7 @@ Skipped when Playwright, Chromium, the built server jar or pandas and pyarrow ar
 (tools/fetch-duckdb-wasm.sh). Never run with pytest -n (the ports are fixed)."""
 import json
 import os
+import re
 import pytest
 
 os.environ.setdefault("DRISHTI_BI_REPORT_SERVER_PORT", "18948")
@@ -260,17 +275,17 @@ def test_slice_and_sql_run_in_the_browser_and_agree_with_the_console(stack, brow
         page.fill("[data-cells=sql] textarea", bad)
         page.click("[data-cells=sql] [data-run]")
         page.wait_for_selector("[data-cells=sql] .bi-bad", timeout=30000)
-        assert "DRS-9080" in page.inner_text("[data-cells=sql] .bi-bad")
+        assert re.search(r"DRS-907[03]", page.inner_text("[data-cells=sql] .bi-bad"))
     page.fill("[data-cells=sql] textarea", "SELECT * FROM read_csv('http://127.0.0.1:1/x.csv')")
     page.click("[data-cells=sql] [data-run]")
     page.wait_for_selector("[data-cells=sql] .bi-bad", timeout=30000)
-    assert "DRS-9080" in page.inner_text("[data-cells=sql] .bi-bad")
+    assert re.search(r"DRS-907[03]", page.inner_text("[data-cells=sql] .bi-bad"))
     quiet(page)
 
     # a runaway query is stopped and the engine starts again
     page.fill("[data-cells=sql] textarea", "SELECT sum(a.i * b.i) FROM range(400000) a(i), range(400000) b(i)")
     page.click("[data-cells=sql] [data-run]")
-    page.wait_for_function("() => /DRS-9081/.test(document.querySelector('[data-cells=sql]').textContent)", timeout=60000)
+    page.wait_for_function("() => /DRS-9072/.test(document.querySelector('[data-cells=sql]').textContent)", timeout=60000)
     page.fill("[data-cells=sql] textarea", "SELECT count(*) AS n FROM extract")
     page.click("[data-cells=sql] [data-run]")
     page.wait_for_selector('[data-cells=sql] [data-engine="duckdb-wasm"]', timeout=90000)

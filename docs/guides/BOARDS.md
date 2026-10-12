@@ -83,9 +83,23 @@ Unknown keys are **warnings** (ignored), never errors. A file that does not pars
 | `at` | `{ x, y, w, h }` on the same **12-column grid** as a report: `x` 0 to 11, `w` 1 to 12 with `x + w` at most 12, `y` 0 or more, `h` 1 to 40 rows of 56 px |
 | `alert` | the thresholds, and `notify:` (section 4) |
 
-Any visual draws as a tile except a **slicer** (a control, not a picture: refused, `DRS-9052`). A tile is not interactive: nothing a person clicks on a tile filters another tile, and there is no drill. Perspective tiles work (the page then has the narrow WebAssembly policy, [REPORTS.md](REPORTS.md#13-live-visuals-and-perspective-phase-5)); a **rolling chart** keeps its points in the browser for as long as the board is open.
+Any visual draws as a tile except a **slicer** (a control, not a picture: refused, `DRS-9052`). A tile is not interactive: nothing a person clicks on a tile filters another tile, and there is no drill. Python tiles run Python for you (below). Perspective tiles work, charts included (the page then has the narrow WebAssembly policy, [REPORTS.md](REPORTS.md#13-live-visuals-and-perspective-phase-5)); a **rolling chart** keeps its points in the browser for as long as the board is open.
 
 A tile whose report the reader may not open, or that has lost its visual, shows **Not available** with the reason; the rest of the wall draws.
+
+### Python tiles
+
+A tile may be a **python visual** of its report: a Python measure shown as bars, a Python visual that returns a chart, or one that returns a Vega-Lite specification. The tile runs the item for the person looking, exactly as the report does (`format.run` of the visual: the console's sandbox or the browser's Pyodide; [PYTHON_BI.md](PYTHON_BI.md)), and shows the line *Python · item · target · ms · rows* under it. The sample board `python-wall` ([config/bi/boards/python-wall.board.yaml](../../config/bi/boards/python-wall.board.yaml)) has three:
+
+```yaml
+- { id: vol,   report: python-desk-risk, visual: volatility, title: Desk P&L volatility, at: { x: 0, y: 0, w: 6, h: 6 } }
+- { id: hist,  report: python-desk-risk, visual: histogram,  title: One-day P&L,          at: { x: 6, y: 0, w: 6, h: 6 } }
+- { id: strip, report: python-desk-risk, visual: strip,      title: P&L by desk,           at: { x: 0, y: 6, w: 12, h: 6 } }
+```
+
+![The Python wall: a Python measure, a Python histogram and a Python visual that returns Vega-Lite, as tiles](../tutorials/img/t12/17-python-wall.jpg)
+
+A tile of a `vega-lite` visual or a `perspective-chart` works the same way as any chart or Perspective tile. A Python tile has **no `alert:` of its own**: the colour rule reads the numbers a query returns, and a Python tile's number is made by code that runs for the person looking. To be told when a Python measure crosses a limit, make an **alert** on it: the server reads it for each person on its schedule or after a load ([DISTRIBUTION.md section 4.1](DISTRIBUTION.md#41-what-can-be-watched), [PYTHON_BI.md section 16](PYTHON_BI.md#16-python-in-alerts-and-on-boards)).
 
 ## 4. Alerts: a tile changes colour
 

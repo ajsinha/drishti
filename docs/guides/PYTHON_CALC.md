@@ -45,6 +45,7 @@ strip, the tables, searches and columns alike.
 16. [Troubleshooting](#16-troubleshooting)
 17. [The `drishti.quant` module](#17-the-drishtiquant-module)
 18. [Snippet catalogue](#18-snippet-catalogue)
+19. [The BI client and Graphic Walker](#19-the-bi-client-and-graphic-walker)
 
 ---
 
@@ -429,7 +430,7 @@ They are kept with your other saved documents (workspaces, monitors) in the iden
 | What can it read? | Only what you can: every read is a request from your page to the console with your session (`/api/view`, `/api/raw`, `/api/series`, `/api/calc/search`, `/api/calc/columns`), and the console asks the server as you. Your roles and packs decide; fields masked for your role (`drishti.security.redact`) stay masked. The worker's own reads are not requests at all: it asks the page by message, and the page fetches only those five routes, with arguments encoded into the path. Even if Calc code tried `pyfetch` or `js.fetch` to another console route, the worker's policy (next row) lets it reach nothing but static files and the runtime. |
 | Can it reach the network? | No. The worker's Content Security Policy is `default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src <host>/static/ <host>/pyodide/` (the host the browser used): scripts and data from two paths of the console's own origin only, so Calc code cannot call any other console route, `/api` included, though the browser would send your session cookie with it. The runtime and its packages are served by the console under `/pyodide/<version>/`, and Pyodide is told every location explicitly (index, packages, lock file, standard library), so it never looks at its default CDN. Measured: no request left the origin in any test run (section 13). |
 | Can it change data? | No more than you can by clicking. The only writes Calc adds are your own snippets. |
-| What else changed in the page's security? | The page's policy adds `worker-src 'self'`; `'wasm-unsafe-eval'` (compiling WebAssembly) is granted to the Calc worker's script alone, and `'unsafe-eval'` to nothing. |
+| What else changed in the page's security? | The page's policy adds `worker-src 'self'`; `'wasm-unsafe-eval'` (compiling WebAssembly) is granted to the Calc worker's script alone, and `'unsafe-eval'` to nothing on the page. The one exception is the Graphic Walker frame of `drishti_bi.walk` ([section 19](#19-the-bi-client-and-graphic-walker)): a sandboxed frame with a policy of its own, that cannot reach the network or the console. |
 | Is it recorded? | The reads are recorded as any read is ([access log](../admin/USER_MANAGEMENT.md#who-looked-at-what-the-access-log)): `view`, `raw`, `history`, and `search` for searches and for `drishti.columns()` (with the fields read). The code itself is not sent anywhere unless you save it. |
 | Who may use it? | Roles with `calc` ([section 9](#9-roles-who-may-use-calc)); the server checks it on its Calc endpoints, the console on its own. |
 | Can one user's code affect another's? | No: each tab has its own worker and memory. A loop that never ends uses one core of your machine until you press **Stop**. |
@@ -793,3 +794,44 @@ from the screen* (`netting-set`, `NS-NORTH-01`, from `view.tables`); and eight f
 | **Overnight index: compounded in arrears and averages** · `f_sofr_compounding.py` | `index` | The index's daily fixings compounded in arrears (each rate weighted by the calendar days it applies, ACT/360) against the simple average, over the whole window and over the last 30 calendar days (as the published 30-day averages), the daily spread between the 1st and 99th percentile of transactions, and the latest fixing against the discount curve's 1-month zero rate. | quant: `ZeroCurve`; reads: get |
 | **Curve analytics: rates, futures or FX forwards** · `g_curve_analytics.py` | `curve` | Whatever the curve holds: for a rates curve, zero rates, discount factors, 3M forwards and par swap rates with their PV01 per 10m (log-linear on discount factors); for a futures strip, contango or backwardation and the annualised roll yield month by month; for an FX forward curve, outrights and the yield differential the points imply (ln(F/S)/T). | quant: `ZeroCurve`, `annuity`, `par_swap_rate` |
 | **Credit limit: utilisation, headroom and the PFE profile** · `h_credit_limit.py` | `credit-limit` | The limit's buckets: used against limit, utilisation against the early-warning line, headroom; and the peak PFE of the counterparty's netting sets in each bucket's tenor range (their exposure profiles, read in full), set against the bucket's limit: how much a new trade could add before a bucket breaches. | quant: `tenor_years`; reads: search, get |
+
+## 19. The BI client and Graphic Walker
+
+Calc can ask the **BI engine** for a dataset's measures and groups and get a pandas DataFrame, then explore that frame with **Graphic Walker**. Both are modules of the worker, like `drishti`:
+
+```python
+import drishti_bi
+
+drishti_bi.datasets()                                   # the datasets you may query: id, title, tables, measures, description
+drishti_bi.describe("file:dataset:trades-basic")         # its fields (table.column, type, masked) and measures
+df = await drishti_bi.query_async("file:dataset:trades-basic", measures=["MTM", "Trades"], by=["trade.desk"])
+df = await drishti_bi.query_async("file:dataset:trades-basic", measures=["MTM"], by=["trade.desk", "trade.currency"],
+                                  filters={"trade.desk": ["DESK-FX", "DESK-RATES"]}, dates=("2026-10-01", "2026-10-09"), limit=500)
+show(df, "MTM by desk")
+drishti_bi.walk(df, "MTM by desk and currency")          # Graphic Walker over the frame
+```
+
+| Call | Returns |
+|---|---|
+| `datasets()` / `datasets_async()` | a DataFrame of the datasets you may open |
+| `describe(dataset)` / `describe_async` | a DataFrame: `kind` (`field` or `measure`), `name`, `type` (`python` for a Python measure), `masked`, `description` |
+| `query(dataset, measures=None, by=None, filters=None, dates=None, limit=None)` / `query_async` | the engine's answer as a DataFrame, columns named as the engine names them (`trade.desk`, `MTM`) |
+| `walk(df, title=None, limit=20000)` | draws Graphic Walker over the frame (below) |
+
+`filters` is `{"table.column": [values]}` (an `in` filter for each) or a list of `{field, op, values}` (`eq ne lt le gt ge in not-in between contains starts-with is-null not-null`); `dates` is a date or `(from, to)`, the latest business day when omitted. The plain forms need JavaScript Promise Integration, like `drishti.get`; **write `await drishti_bi.query_async(...)`** to work in every browser (the error says how when it cannot pause).
+
+![Calc: drishti_bi.query in a cell, and the DataFrame it returned, shown as a table](../tutorials/img/t14/21-calc-bi.jpg)
+
+The picture is real output of that cell on the sample trades dataset: ten desks, their MTM and trade counts (for instance `DESK-COMM` 16,954,390 over 90 trades). `df.attrs` carries what the engine added: `dataset`, `masked` (the masked columns), `asOf` (the business date), `layer` and `millis`.
+
+**As you.** Each call is a message from the worker to the page, which asks the same route a report's visual does (`POST /bi/api/datasets/<id>/query`, the console passing your session to the server): **your row rules apply, and a column masked for you comes back masked** (its name is in `df.attrs["masked"]`; the measures that read it are masked too). You need the BI power; without it the call fails with the server's code (`DRS-9002`) as any read does. The worker still holds no credential and cannot reach the network.
+
+**Graphic Walker, not PygWalker.** [PygWalker](https://github.com/Kanaries/pygwalker) is a Jupyter package: it needs a Python server beside the notebook, installs a dozen dependencies Pyodide does not ship offline, and loads its front end from the internet. What it puts over a DataFrame is **[Graphic Walker](https://github.com/Kanaries/graphic-walker)** (Apache-2.0), a drag-and-drop chart builder: so Calc vendors Graphic Walker 0.5.3 itself and `walk` gives it your frame, with PygWalker's `walk(df)` shape. Drag fields to the axes, colour, size and filters; the chart is drawn; the *Data* tab shows the frame.
+
+![Graphic Walker over the frame in Calc: the fields on the left, the shelves, and the chart builder](../tutorials/img/t14/22-calc-walker.jpg)
+
+* **A frame of its own.** The walker runs in an `<iframe sandbox="allow-scripts">`: no `allow-same-origin`, so its origin is opaque (**no cookie, no storage, no way to call the console or reach the page**), no forms, no navigation. Its page (`/static/calc/walker.html`) is served with a policy of its own: `default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src data: blob:; font-src data:; worker-src blob:; connect-src 'none'; form-action 'none'; sandbox allow-scripts`. **That is the one place `unsafe-eval` and inline styles are allowed**, because Graphic Walker (through Vega) compiles chart expressions and writes its styles with JavaScript; it is why the walker is a separate, sandboxed page and not part of Calc's own. The rows go in by `postMessage` and nothing goes out: `connect-src 'none'`. Calc's own page and the Pyodide worker keep their policies.
+* **Loaded on demand.** The 4.5 MB bundle loads when the frame opens, not before. `drishti_bi.py` is fetched into the worker the first time a cell names `drishti_bi`.
+* **Vendored, offline, and patched.** The bundle is built from the npm package by `tools/vendor-js/build_walker.mjs` (pinned in [VENDOR.md](../../drishti-console/web/static/vendor/VENDOR.md)): the library's modules, its workers as inline blob workers, its Tailwind sheet as the library compiled it, and **no map**: its map chart uses `react-leaflet`, whose licence (Hippocratic-2.1) the product does not take in, so that package is replaced by an empty stand-in and the map chart draws nothing. The hosts Graphic Walker names for its own services (its AI features, sample data, an image, a map stylesheet, map tiles) point at `blocked.invalid`, so nothing is attempted; the frame's policy would refuse them anyway. Opening the frame can still log a refused stylesheet and image to the console: harmless.
+* **Limits.** `walk` hands over at most 20,000 rows (`limit=`), and the run's output budget applies (`LIMITS`, section 14). Rows are plain values; dates are ISO strings.
+* **Not built:** Graphic Walker over a **report visual** or an Analyse extract (it is a Calc cell's tool); saving a Graphic Walker chart back into a report (a vega-lite visual is the way to keep a chart: [REPORTS.md](REPORTS.md#35-vega-lite-visuals)); PygWalker's `to_html`, cloud sharing and `walk(...)` options.

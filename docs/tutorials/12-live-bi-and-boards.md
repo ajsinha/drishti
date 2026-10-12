@@ -33,7 +33,8 @@ About 30 minutes.
 - the `mode: live` table of a dataset and how to see how it is doing;
 - the live indicator of a report, **Pause** and **Resume**, and what redraws;
 - a **board**: tiles from several reports, amber and red tiles from their alert rules, pages that turn on their own, and **kiosk mode**;
-- the **history** of a live table (a line that is there when the page opens) and the **board designer**, with a tile alert that does not flicker (hysteresis).
+- the **history** of a live table (a line that is there when the page opens) and the **board designer**, with a tile alert that does not flicker (hysteresis);
+- a **chart you can reshape** (Perspective's chart and its settings panel, saved back into the report) and a **wall of Python** tiles.
 
 ## Step 1 · Live data moves together
 
@@ -225,6 +226,24 @@ The **YAML** tab shows the same board as text; edit either and the other follows
 ![The YAML tab: the board written the way you would write it, one tile to a line](img/t12/14-board-yaml.jpg)
 
 **Save** stores a draft (nothing is published by saving); **View** opens it as a wall; **Publish...** goes to the board's page, where publishing is reviewed like any other item (tutorial 13).
+
+## Step 9 · A chart you can reshape, and a wall of Python
+
+The **Live trading desk** report has a fourth page, **Chart**: the same rows as the pivot, drawn by Perspective's chart plugin (`type: perspective-chart`, `format: { plugin: Y Bar }`), and it moves with the trades like the grid does.
+
+![The Chart page: net MTM by desk, split by currency, as stacked bars](img/t12/15-perspective-chart.jpg)
+
+Press the sliders button in the corner of the visual. Perspective's own **settings panel** opens: *Group by*, *Split by*, *Order by*, *Where*, the aggregates, and at the top the chart (switch to a line, a heatmap or a treemap).
+
+![The settings panel open: group by desk, split by currency, the sum of mtm on the Y axis](img/t12/16-chart-settings.jpg)
+
+You should see `desk` under *Group By*, `currency` under *Split By* and `sum mtm` on the Y axis. What you change is yours: another person opening the report sees the report's own view. If you may **edit** the report (this one is a shipped sample, so you may not; copy it to your workspace and open the copy), a second button, the floppy disk, **saves this view into the report's draft** as `format.view`, and publishing the report shows it to everyone. [REPORTS.md](../guides/REPORTS.md#perspective-charts-and-the-settings-panel) has the keys.
+
+A board tile can be a **Python visual** too. Open the sample board **Python wall** from the catalogue.
+
+![The Python wall: a Python measure (volatility by desk), a Python histogram and a Python visual drawn with Vega-Lite, as tiles](img/t12/17-python-wall.jpg)
+
+You should see three tiles, each with a line under it (`Python · desk-pnl-volatility v1 · server · 241 ms · 60 rows`): they ran for you, on the rows you may see. A Python tile has no amber and red of its own; to be told when a Python measure crosses a limit make an **alert** on it ([tutorial 14](14-python-and-analyse.md), step 11).
 
 ## Next steps
 

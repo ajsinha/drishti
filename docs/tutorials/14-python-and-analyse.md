@@ -34,7 +34,8 @@ About 55 minutes.
 - the two kinds of Python item: a **measure** (`compute(table, params)`, one number per group) and a **visual** (`render(table, params)`, a chart);
 - how a report uses them, where they run, and what the sandbox forbids;
 - **Analyse**: the extract, **Slice**, **SQL** (one read-only SELECT), a **Python** cell that draws a chart, saving a **notebook**, and **promoting** work into BI items.
-- **Python across datasets**: a **Transform** that turns the masked answers of two datasets into a table (a derived dataset), and an Analyse notebook that joins two extracts in pandas and promotes the join to a Transform.
+- **Python across datasets**: a **Transform** that turns the masked answers of two datasets into a table (a derived dataset), and an Analyse notebook that joins two extracts in pandas and promotes the join to a Transform;
+- **Vega-Lite** charts (written in a report, or returned by Python), the **tests** a Python item carries, **Analyse in the browser** and promoting into an **existing** report, **Calc's BI client** with Graphic Walker, and a Python measure in an **alert** (steps 9 to 11).
 
 ## Step 1 · Python in a report: the shipped sample
 
@@ -249,6 +250,48 @@ You should see the cell (`df` is the trades; `extract("exposure")` is the nettin
 ![After promoting: "Python transform draft saved in your workspace: Join of P&L and exposure. Each extract("name") became a parameter of run()..."](img/t14/15-promote-transform.jpg)
 
 You should see the message that a Python Transform draft was saved in your workspace: each `extract("name")` became a parameter of `run(...)`, the cell's `result` is returned, and its inputs are the two datasets, in order. Open the draft, **Check the Python**, publish it, and write the derived dataset that names it (`derived: { transform: ..., inputs: { ... } }`), as the sample does. Nothing is published by promoting.
+
+## Step 9 · Vega-Lite, and tests that ship with the item
+
+A chart does not have to be an ECharts option. A **Vega-Lite** specification can be written in the report itself (a `vega-lite` visual: its data is the rows of its wells) or returned by a Python visual (`output: vega-lite`). Open the sample report **Desk P&L risk (Python)**, its **Vega-Lite** tab.
+
+![A vega-lite visual: net MTM by desk, red where it is negative. The specification is in the report's YAML; the data is the visual's own rows](img/t14/16-vega-lite.jpg)
+
+You should see bars for the desks, red for the negative ones: the colour is the specification's `condition: { test: "datum.MTM < 0" }`, evaluated by the page **without `eval`**, so the page keeps its strict content security policy. On the first tab, the bottom visual is a Python visual that returns a specification: a dot for each trade's one-day P&L by desk, a tick for each median.
+
+![A Python visual that returns Vega-Lite: dots of one-day P&L for each desk and each desk's median as a tick](img/t14/17-python-vega.jpg)
+
+A Python item can also carry **tests**. Open the item **Desk P&L volatility** (the Python measure), and press **Check the Python**.
+
+![Check on the Python measure: the manifest and source checks, then its three tests, each run in the sandbox](img/t14/18-python-tests.jpg)
+
+You should see `Tests: 3 of 3 passed.` and a line for each (`passed · the standard deviation of one desk · 1.2909944487358056`). The sample is shipped (read-only); in a copy of it in your own workspace, change a number in an `expect:` and check again: that test says `FAILED` with what it expected and got, and **publishing** through the console is refused (`DRS-9076`) until it passes. [PYTHON_BI.md](../guides/PYTHON_BI.md) sections 14 and 15 have the rules.
+
+## Step 10 · Analyse in the browser, and promote into a report you already have
+
+Open **Analyse**, open the trades extract and slice it (desk in *Rows*, notional in *Values*). The line under the table now says *Worked out by DuckDB in this browser*: Slice and SQL run on the extract your page already holds, with DuckDB-Wasm, and the console is only the fallback.
+
+![The Slice tab: the choice of engine, the line under the table that says where the pivot was worked out, and the pivot](img/t14/19-analyse-browser.jpg)
+
+Above the tabs, **Promote a slice or a SQL cell to** a *new report draft* or to one of your report drafts. Choose one, write a SQL cell and press **Promote to a report visual**.
+
+![A SQL cell promoted into the report draft "Desk views": the note says what a report cannot say (the ORDER BY) and that the report was written again](img/t14/20-promote-existing.jpg)
+
+You should see `Visual sql added to the report draft: Desk views.` and notes: the `ORDER BY` was left out (a visual sorts in its own settings). Open the draft in the designer: a new `matrix` of the dataset's measures, below what was there. [ANALYSE.md](../guides/ANALYSE.md) sections 13 and 14 have the details, including what the SQL reader understands.
+
+## Step 11 · Calc: the BI engine as a DataFrame, and Graphic Walker; a Python measure in an alert
+
+In **Calc** (`Alt+C` on any view) the module `drishti_bi` asks the BI engine, **as you**:
+
+![Calc: drishti_bi.query in the editor, and the DataFrame it returned, shown as a table](img/t14/21-calc-bi.jpg)
+
+You should see ten desks with their MTM and trade counts: the same numbers a report shows, with the same masks. `drishti_bi.walk(df)` explores a frame with **Graphic Walker** (PygWalker's front end, vendored):
+
+![Graphic Walker over the frame: fields on the left, shelves for the axes, colour and size, and the chart builder](img/t14/22-calc-walker.jpg)
+
+Drag `trade.desk` to the X axis and `MTM` to the Y axis. The chart is drawn in a **sandboxed frame** that cannot reach the network or the console: the rows went in by message and nothing goes out ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#19-the-bi-client-and-graphic-walker)).
+
+Last, a **Python measure in an alert**. In *Alerts* make an alert on the dataset measure **Desk P&L volatility**, above a limit, after every load. The server builds your rows (your row rules and masks), runs the item in the sandbox and judges the number; if a column is masked for you the alert says so and judges nothing ([DISTRIBUTION.md](../guides/DISTRIBUTION.md#python-measures-in-alerts)).
 
 ## Next steps
 

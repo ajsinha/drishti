@@ -17,7 +17,8 @@
 
 **Analyse** (`/bi/explore`, the rail's *Analyse*) is the analyst's bench of Drishti BI. You open a dataset as an **extract**, the rows *you* may see (masked columns stay masked, row rules
 apply), and work on it three ways: **Slice** (a drag-and-drop pivot), **SQL** (cells over the extract) and **Python** (pandas cells, with charts). You save the work as a **notebook**
-(a BI item with versions and review like any other) and **promote** what is good: a Python cell becomes a Python Measure or Visual draft, a slice becomes a report draft.
+(a BI item with versions and review like any other) and **promote** what is good: a Python cell becomes a Python Measure or Visual draft, a slice or a SQL cell becomes a **visual in a new or an existing report draft**.
+**Slice and SQL run in your browser** (DuckDB-Wasm) on the extract the page already holds, with the console as the fallback ([section 13](#13-in-the-browser-duckdb-wasm)).
 
 This is the reference. A short walk-through is [tutorial 10](../tutorials/10-first-bi-report.md) chapter 25; the design is [RUPAKA.md](../architecture/RUPAKA.md) section 20.9; the quant engine behind
 `quant.price(...)` is [QUANT_SERVICE.md](../architecture/QUANT_SERVICE.md#16-the-consoles-quantengine-slot-built-lean).
@@ -36,6 +37,8 @@ This is the reference. A short walk-through is [tutorial 10](../tutorials/10-fir
 10. [Errors](#10-errors)
 11. [The routes](#11-the-routes)
 12. [Built and not built](#12-built-and-not-built)
+13. [In the browser: DuckDB-Wasm](#13-in-the-browser-duckdb-wasm)
+14. [Promote to a report visual](#14-promote-to-a-report-visual)
 
 ## 1. At a glance
 
@@ -44,8 +47,9 @@ This is the reference. A short walk-through is [tutorial 10](../tutorials/10-fir
                                                                                     │
         ┌──────────────────────────────┬────────────────────────────────────────────┤
      Slice                           SQL                                         Python
-  pivot in the page             console, SQLite in memory,                console's sandboxed worker (server)
-  (plain JavaScript)            one read-only SELECT                      or Pyodide in the page (browser)
+  DuckDB-Wasm in the page       DuckDB-Wasm in the page                   console's sandboxed worker (server)
+  (else plain JavaScript)       (else the console: SQLite,                or Pyodide in the page (browser)
+                                one read-only SELECT)
 ```
 
 The extract is **rebuilt for you on every run** and never kept: the console holds nothing between calls, so a mask or a row rule changed on the server applies the next time you run a cell.
@@ -84,8 +88,10 @@ form opens datasets, and a link from a report is planned (section 12).
 
 Fields appear as chips. Add one to **Rows**, **Columns**, **Values** or **Filters** with its small buttons (`R`, `C`, `V`, `F`, which work from the keyboard and on a phone) or drag it to a zone.
 A value takes an aggregation (`sum`, `avg`, `count`, `min`, `max`; a text field starts as `count`); a filter keeps rows where the field equals one of its values. The pivot redraws at once.
-It is plain JavaScript over the extract the page holds; **DuckDB-Wasm is not vendored**, so there is no WebAssembly on this page and nothing to configure
-(its slot is in section 12). The table shows the first 500 pivot rows.
+The pivot is worked out by **DuckDB-Wasm in your browser** over the extract the page holds (one `GROUP BY`; [section 13](#13-in-the-browser-duckdb-wasm)), or, when it is not installed or cannot start, by plain JavaScript over the same
+rows: the two give the same table (a Chromium test compares them). The line under the table says which: *Worked out by DuckDB in this browser* or *Worked out in this page*. The table shows the first 500 pivot rows.
+
+![The Slice tab worked out in the browser: the line under the choice of engine and under the table says so](../tutorials/img/t14/19-analyse-browser.jpg)
 
 ## 4. SQL
 
@@ -96,10 +102,11 @@ SELECT desk, COUNT(*) AS trades, SUM(notional) AS notional
 FROM extract GROUP BY desk ORDER BY notional DESC
 ```
 
-It runs on the console in an in-memory SQLite database that is **read-only by construction**: an authorizer refuses everything but `SELECT`, reads and plain functions (so `INSERT`,
+It runs **in your browser** in DuckDB-Wasm when that is installed (section 13), else on the console in an in-memory SQLite database that is **read-only by construction**: an authorizer refuses everything but `SELECT`, reads and plain functions (so `INSERT`,
 `UPDATE`, `DELETE`, `DROP`, `CREATE`, `ATTACH`, `PRAGMA` and `load_extension` are `DRS-9073`), a second statement is `DRS-9070`, text over `bi.explore.sql_max_chars` (20,000) and a query
-running past `bi.explore.sql_max_seconds` (5) are `DRS-9072`, and at most `bi.explore.sql_max_rows` (5,000) rows come back (more are cut, and the result says so). Dialect: SQLite's
-(`date()`, `strftime`, `||`, `LIMIT`). *Run all* runs the cells in order.
+running past `bi.explore.sql_max_seconds` (5) are `DRS-9072`, and at most `bi.explore.sql_max_rows` (5,000) rows come back (more are cut, and the result says so). **The dialect depends on where it ran**: the console's is SQLite's
+(`date()`, `strftime`, `||`, `LIMIT`), the browser's is DuckDB's (`strftime(date, '%Y-%m')`, `date_trunc`, `list_agg`, `QUALIFY`, window functions, `FROM extract` without a `SELECT`); the line under the result says which engine ran it
+(`DuckDB in this browser` or `run by the console (SQLite)`), and the engine choice above the tabs forces one. A query that uses a dialect feature only one of them has fails on the other: write for the engine you run. *Run all* runs the cells in order.
 
 ![A SQL cell](img/analyse/sql.png)
 
@@ -172,9 +179,7 @@ Promoting writes a **draft** item in your workspace; nothing is published.
 * **A Python cell to a Measure or a Visual** (the cell's buttons): the cell's `df` becomes the function's `table`, `result` is returned, the packages the cell imports go into the manifest
   ([PYTHON_BI.md](PYTHON_BI.md) section 3). Check it with *Check the Python* on the item page, edit the entry's contract (a measure returns one number per group, a visual an
   ECharts option, SVG or PNG), then publish. A measure also needs a dataset measure `{ python, inputs, by }` that names it.
-* **A slice to a report draft** ("Promote to a report draft"): a one-page report on the same dataset with a **matrix** (rows, one column field, values) or, when no value matches a dataset
-  measure, a **table** of the fields. A value becomes a dataset *measure* only when one exists with the same expression (`sum(trade.notional)`); the rest are listed in the notes so
-  you add the measure to the dataset. Open it in the designer to finish.
+* **A slice or a SQL cell to a report visual** (section 14): a visual, with its dataset, wells and filters, in a new report draft or added to one you already have.
 
 ## 8. Who sees what
 
@@ -195,6 +200,8 @@ The console's `bi.explore.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)):
 | `max_cells` | `60` | most cells in a notebook |
 | `max_extracts` | `6` | most further extracts in a notebook, besides the first (`DRS-9072`) |
 | `quant_engine` | `stand-in` | the engine behind `quant.price` |
+| `browser_engine` | `auto` | `auto`: Slice and SQL run in the browser with DuckDB-Wasm when it is installed (`tools/fetch-duckdb-wasm.sh`), the console otherwise; `server`: always on the console (and the choice of engine is not offered) |
+| `browser_start_seconds` | `30` | how long DuckDB-Wasm has to start in the browser (the first use fetches about 36 MB of WebAssembly) before the console takes over; 3 to 300 |
 
 The Python runner's own `bi.python.*` settings (workers, packages, limits) apply to cells too. **The server's `drishti.bi.report.python-packages` and the console's
 `bi.python.packages` must list the same packages** (a test, `test_python_packages_agree_between_the_server_and_the_console`, fails the build otherwise).
@@ -227,10 +234,41 @@ uses the existing `POST /api/v1/bi/workspaces/me/items` and `PUT /api/v1/bi/item
 
 **Not built, and not faked.**
 
-* **DuckDB-Wasm in the page.** The design (RUPAKA 20.9) wanted Slice and SQL in the browser; DuckDB-Wasm is not vendored in this build (`tools/fetch-duckdb-wasm.sh` fetches it for the phase 0 proof of
-  concept only), so Slice is plain JavaScript and SQL runs on the console over the same extract (SQLite, not DuckDB: a different dialect). Moving them in-browser needs the narrow wasm
-  policy on this page; it is the planned next step, not done.
-* **Extracts of a million rows**, Perspective in Analyse, Graphic Walker, a *Data* tab (editing the extract), *Notes* cells, outputs saved with a notebook, scheduled notebook runs, parameters
+* **Further extracts in the browser engine.** The page holds the first extract only; a notebook with further extracts (a SQL cell that joins them) runs on the console. A SQL cell the page cannot read as a query over `extract` is promoted as far as it can be read (section 14).
+* **Extracts of a million rows**, Perspective in Analyse, Graphic Walker over an extract (it is in Calc: [PYTHON_CALC.md](PYTHON_CALC.md#19-the-bi-client-and-graphic-walker)), a *Data* tab (editing the extract), *Notes* cells, outputs saved with a notebook, scheduled notebook runs, parameters
   and widgets, sharing a notebook's outputs, a link *Analyse this* from a report visual or from a terminal view, cell tests, further extracts in the **browser** target (they need the server's sandbox), and an `extract(...)` of a **report visual** (further extracts are datasets).
 * **Pivot extras**: grand totals and subtotals in the Slice (use a matrix in a report for true totals), sorting by a value, number formats.
 * **Quant:** the real engine (QLRisk); `quant` in the browser target.
+
+## 13. In the browser: DuckDB-Wasm
+
+Slice and SQL run on the extract **your page already holds**, with [DuckDB-Wasm](https://duckdb.org/docs/api/wasm/overview) (MIT, vendored; the build is 36 MB, so it is installed by `tools/fetch-duckdb-wasm.sh` and not committed:
+[VENDOR.md](../../drishti-console/web/static/vendor/VENDOR.md)). The rows are the ones the server built for you (row rules and masks applied); DuckDB runs on a copy in the tab's memory and nothing is sent back.
+
+**The policy.** The page keeps the **strict** content security policy (no `unsafe-eval`, no `wasm-unsafe-eval`, no inline style): the page only imports DuckDB's script and starts its worker, and **the worker** is what compiles WebAssembly, under the policy the console puts on that one file
+(`script-src 'self' 'wasm-unsafe-eval'`, `connect-src` to the console's static files only: `core/app.py`, `worker_csp`). A Chromium test loads the page, runs both tabs and asserts that no violation was reported.
+
+**What DuckDB is allowed to do.** The extract is the only table. Once it is loaded, `SET enable_external_access = false` and `SET lock_configuration = true` close the doors: a query cannot read a file or a URL (`read_csv('http://...')` fails) or change a setting. The page also refuses what is not one read-only statement
+(`SELECT`, `WITH`, `FROM`, `VALUES`, `DESCRIBE`, `SUMMARIZE`; `COPY`, `ATTACH`, `INSTALL` and a second statement are `DRS-9073`, as on the console; DuckDB's own errors are `DRS-9070`). A query cannot be interrupted inside DuckDB, so one that runs past `bi.explore.sql_max_seconds` has its worker **ended** (`DRS-9072`) and the next run starts a fresh one. Reading a file counts as external access, so a different extract starts a new engine.
+
+**When the console does it instead.** DuckDB-Wasm not installed, `bi.explore.browser_engine: server`, a browser without WebAssembly, an engine that did not start within `bi.explore.browser_start_seconds`, or a notebook with further extracts. Slice then uses the JavaScript pivot and SQL the console's SQLite route; nothing else changes
+(a Chromium test blocks the engine and checks both fall back). A refusal of the query itself (`DRS-9070`, `9072`, `9073`) is **not** a reason to fall back: it is shown.
+
+## 14. Promote to a report visual
+
+*Promote to a report draft* on the Slice tab and *Promote to a report visual* on a SQL cell make a **visual** from what you did. Choose where first, in the line above the tabs: **a new report draft**, or one of the report drafts you may edit (your workspace and the shared ones you contribute to), and optionally the page.
+
+![A SQL cell promoted into an existing report draft: the note says what was left out and that the report was written again](../tutorials/img/t14/20-promote-existing.jpg)
+
+| From | The visual |
+|---|---|
+| a **slice** | a **matrix** (rows, one column field, values) when a value matches a dataset measure, else a **table** of the fields, else a **card**; the slice's **filters** become the visual's `filters` (`field`, `op: in`, `values`) |
+| a **SQL cell** | read by a small reader (`core/promote_report.py`), not a SQL engine: the plain columns and `GROUP BY` columns become *rows* (or the table's columns), the aggregates `sum`, `avg`, `count`, `min`, `max` of a column become *values*, and simple `WHERE` conditions (`col = 'x'`, `<>`, `<`, `<=`, `>`, `>=`, `IN (...)`, `NOT IN`, `BETWEEN a AND b`, `IS [NOT] NULL`, joined by `AND`) become *filters* |
+
+* **Values are measures.** A report shows the dataset's measures, so an aggregate becomes a value only when the dataset has a measure that is exactly that (`sum(trade.mtm)`; `count(*)` is the measure `count(trade)`); the notes name each one that is missing so you add it to the dataset. Names are mapped from the extract's (`desk`) back to the dataset's (`trade.desk`).
+* **What cannot be said is said.** A join or a sub-query, an expression (`notional * 2`), `LIKE`, `OR`, `HAVING`, `count(distinct ...)` are left out and listed in the notes; `ORDER BY` and `LIMIT` are left out too (a visual sorts and limits in its own settings). Nothing is guessed.
+* **The dataset.** The visual reads the dataset the extract was opened from. In an existing report that reads another one, the visual names its own `dataset:` and the note says so (a `link` in the report connects their slicers: [REPORTS.md](REPORTS.md)).
+* **An existing report** is read through the server's checker (`POST /bi/api/reports/validate`), the visual is added **below** what the page holds with a free id (`slice`, `sql`, then `slice-2` ...), and the report is written again by the designer's writer (`/reports/format`) and saved as the item's **draft** (`PUT /bi/api/items/<id>`). Comments in the report's YAML are **not kept** (the note says so); nothing is published. The target must be a report item you may edit: a shipped one, or one that is not a report, is `DRS-9070`.
+* In both cases the draft is yours to finish in the designer, then check and publish like any report.
+
+The route is the console's `POST /bi/explore/promote` with `{to: report, name, dataset, slice, filters}` or `{to: report, name, dataset, sql}`, plus `columns` and `qualified` (the extract's names and the dataset's), and `target` and `page` for an existing report; it answers `{kind: report, title, yaml, notes, target, visual}`.

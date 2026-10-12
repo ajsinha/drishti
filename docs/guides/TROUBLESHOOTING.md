@@ -1107,6 +1107,34 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 - **Fix:** read `GET /bi/python/status` (`enabled`, `ready`, `missing`, `installed`, `running`, `isolation`); `pip install -r drishti-console/requirements.txt` in the console's environment; raise `workers`; for the browser target run `tools/fetch-pyodide.sh`. With `network_namespace: require` the machine must allow `unshare --user --net`, else use `auto`.
 
 
+### A Vega-Lite visual is empty, says it could not draw, or a Python visual's Vega-Lite is refused
+
+* **"Vega-Lite could not draw this: ..."** The text is Vega's: an invalid specification (a field that is not in the rows: the rows are keyed by the text after the table's dot, `desk` not `trade.desk`, and a measure by its name; Check warns about a field no well supplies). Open the visual's YAML and the **Show the rows** button together to compare the names.
+* **"may not load anything from a URL or name a loader".** `data.url`, `url` or `loader` in a specification: remove it; the data is the rows of the wells, or `data.values` for a Python visual. A Python visual that returns one is `DRS-9073` from the sandbox.
+* **Nothing is drawn and the console shows no error.** The four scripts under `/static/vendor/vega/6.4.0/` load on first use; a proxy that blocks them (or a stale cache after an upgrade) leaves the frame empty. Reload with the cache off.
+* **The page reports a policy violation naming `style-src`.** Not from Vega: vega-embed is called with `defaultStyle: false`. A violation from an `unsafe-eval` means a different Vega build was vendored: it must be the bundle with `vega-interpreter` ([VENDOR.md](../../drishti-console/web/static/vendor/VENDOR.md)).
+
+### A Perspective chart or its settings panel
+
+* **The settings panel logs "refused to apply inline style".** Expected: the viewer sets a dozen `style` attributes the policy does not allow; the panel works. Nothing else is refused ([REPORTS.md](REPORTS.md#perspective-charts-and-the-settings-panel)).
+* **The floppy button is not there.** It shows for the people who may edit the report, and not on a shipped report: copy it to your workspace.
+* **"Not valid ... format.view".** A saved view has the keys `plugin`, `plugin_config`, `columns`, `group_by`, `split_by`, `aggregates`, `sort`, `filter`, `expressions`, `columns_config`; `plugin` is Datagrid or a chart (`Y Bar`, `Y Line`, `X/Y Scatter`, `Heatmap`, `Treemap` ...).
+
+### Analyse in the browser: the line says "Worked out in this page" or "run by the console"
+
+* **DuckDB-Wasm is not installed.** `tools/fetch-duckdb-wasm.sh` installs it (36 MB, from the npm package, checked by SHA-256); until then Slice is the page's JavaScript and SQL is the console's SQLite. `data-duckdb` on the page's `#bx` is empty when it is not found.
+* **It started once and then fell back.** The first use downloads the WebAssembly: `bi.explore.browser_start_seconds` (30) may be too short on a slow link. The page remembers a failed start until it is reloaded (`data-duck-failed` on the body says why).
+* **The same SQL works in one engine and not the other.** The browser's is DuckDB (`date_trunc`, `QUALIFY`, `strftime(date, fmt)`), the console's SQLite (`date()`, `strftime(fmt, date)`). Choose the engine above the tabs, and write for it.
+* **`DRS-9072` "ran longer than ... and was stopped".** DuckDB cannot be interrupted, so its worker was ended and the next run starts a new one (a second or two).
+* **"Promote ... the target is not a report draft you can edit" (`DRS-9070`).** The target must be a report item in a workspace you contribute to (not a shipped sample and not another kind). Comments in its YAML are not kept when the visual is added.
+
+### Calc: `drishti_bi` or Graphic Walker
+
+* **`ModuleNotFoundError: No module named 'drishti_bi'`.** The module is fetched into the worker when a cell **names** `drishti_bi`; write `import drishti_bi` in the cell that uses it (a cell that only calls `walk` through another name does not trigger it).
+* **`needs JavaScript Promise Integration`.** Write `await drishti_bi.query_async(...)` (also `datasets_async`, `describe_async`).
+* **`DRS-9002` or an empty frame.** The call is a BI read as you: you need the `bi` power, and a masked column comes back masked (`df.attrs["masked"]`).
+* **The Graphic Walker frame stays blank.** Open the browser console: a refusal of `/static/calc/walker.html` or of its script means a proxy rewrote the policy header (the page needs the console's own `Content-Security-Policy` for that path, [PYTHON_CALC.md section 19](PYTHON_CALC.md#19-the-bi-client-and-graphic-walker)). A refused stylesheet and image from `blocked.invalid` is expected and harmless.
+
 ### Analyse: the extract is short, a SQL cell is refused, a Python cell will not run
 
 * **"60 rows of 4,000 (cut to the row limit)".** The extract holds the first `bi.explore.max_rows` (10,000) of the rows *you* may see. Pick fewer fields, add a filter in the Slice or in SQL, or ask an administrator to raise the limit. Slice and SQL work on the cut extract, so their totals are the extract's, not the dataset's (use a report for true totals).
@@ -1276,6 +1304,8 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 | `DRS-9073` | the Python sandbox refused something (HTTP 403): an import that is not on the item's list, the network, a file outside the scratch folder, a process |
 | `DRS-9074` | the Python runner is not available (HTTP 503): all workers busy, switched off, `pandas` or `pyarrow` missing in the console, a package not installed, or no Pyodide for a browser run; for a derived dataset also `drishti.bi.transform.enabled: false`, the console's `core/transform_cli.py` or its Python not found (`drishti.bi.transform.runner`, `python`), or `drishti.bi.transform.max-concurrent` runs already going |
 | `DRS-9075` | a Python Transform returned what a derived dataset cannot use (HTTP 422): a column the dataset declares is missing from its frame, or the Transform's inputs differ from the dataset's |
+| `DRS-9076` | a Python item's own tests failed, so it is not published (HTTP 422, raised by the console): Check shows each test (`passed`, `FAILED` with expected and got, or `could not run` with the DRS code); fix the item or the `expect:`, or a bi-admin publishes with `force`. A call made straight to the server is not gated |
+| `DRS-9077` | a Vega-Lite specification could not be drawn (shown in the visual's frame): it names a `url` or a `loader` (the data is the rows of the wells, or `data.values`), or the library did not load (check `/static/vendor/vega/6.4.0/` answers) |
 | `DRS-9404` | raised by the console only (HTTP 404): an embedding page asked for a Drishti Elements module or enhancer script the console does not ship (`/embed/v1/m/<name>.js`, or `/embed/v1/js/<name>.js` for a script that is not one of the console's enhancers); check the file name and the library version in the `<script>` tag |
 | `DRS-7016` | the picture could not be made (HTTP 503): it took longer than `snapshots.timeout`, is over `snapshots.max-bytes`, or the JDK has no font libraries (a minimal image: install the JDK's fontconfig and freetype packages); the message says which. Send without a picture, or raise the limit |
 

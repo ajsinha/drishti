@@ -290,6 +290,27 @@ On a phone the form is one column, with finger-sized controls:
 *Alert me* is on every visual that shows numbers (not text, image, button or slicer), and in the dialog that opens when you click a number on a view (*Alert me*, beside *Discuss*): that is the Sutra
 field, with its path. A number that is a **metric tile** or a cell of the view's summary strip is a field too.
 
+#### Python measures in alerts
+
+The `measure` of a dataset source may be a **Python measure** (a dataset measure written `{ python: <item>, inputs, by }`: [PYTHON_BI.md](PYTHON_BI.md)); so may the visual of a visual source, when it is a **python visual** that shows one. It is read **for each person it is judged for**, in the console's sandbox, on the alert's schedule, after a load or by hand, like any other number:
+
+1. the server builds **that person's rows** (their row rules and masks applied by the engine) for the measure's `inputs` and `by` columns, up to `drishti.bi.report.python-rows`;
+2. it writes the Python item and the rows to a scratch folder and starts the console's runner (`transform_cli.py`, in `measure` mode: the same sandbox as a report's Python: no network, a scratch folder, CPU, memory and time limits), the way it runs a Transform (`drishti.bi.transform.python`, `.runner`, `.timeout`, `.work-dir`; [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibitransform--python-transforms-and-composed-datasets));
+3. the item's number for each group comes back and is reduced to **one number**: for a dataset source the whole input is one group (no grouping); for a visual source `reduce` (`first` by default; `sum`, `min`, `max`, `avg`, `last`, `count`) is applied to the groups, as for any visual with many rows.
+
+* A column **masked for the person** makes the reading *masked*: nothing is run and no figure is shown. The alert never judges a figure the person cannot see.
+* A run that fails (the code raised, a limit, the sandbox refused something, no Python on the machine the server runs on, the runner switched off) is an **error reading** with the DRS code and its words in the history; an error reading never fires and never clears.
+* A python visual that draws a **chart** (no `measure` in its wells) has no number to watch: the alert reads as an error that says to watch a Python measure.
+* *Live* is as for the dataset behind it. A Python alert is not cheap (it starts a process for each person each time): prefer `schedule` or `after-load` to `live`.
+
+```
+PUT /api/v1/me/measure-alerts/Vol
+{"title": "Desk P&L volatility", "source": {"type": "dataset", "dataset": "file:dataset:trades-basic", "measure": "Desk P&L volatility"},
+ "condition": {"type": "threshold", "op": "above", "value": 5000}, "trigger": {"mode": "after-load"}}
+```
+
+A **board tile** that is a Python visual has no threshold alert of its own ([BOARDS.md](BOARDS.md#python-tiles)); an alert like the one above is how to be told. [PYTHON_BI.md section 16](PYTHON_BI.md#16-python-in-alerts-and-on-boards) has the rest, and the tests that read it against the real runner.
+
 ### 4.2 When it fires: the condition
 
 | Condition | Keys | Fires when |
