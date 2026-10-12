@@ -268,6 +268,7 @@ plugins:
       - { name: id-field, desc: "Field holding the entity id", group: mapping }
       - { name: rescan-seconds, type: int, desc: "Rescan interval", group: tuning }
       - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
+      - { name: business-zone, default: "America/New_York", desc: "Time zone whose today is the business date the health check compares the folders with (the 0-rows warning)", group: tuning }
       - { name: max-load-rows, type: int, desc: "Documents to load at most", group: tuning }
       - { name: max-document-mb, type: int, desc: "Largest document", group: tuning }
       - { name: max-nesting-depth, type: int, desc: "Deepest nesting", group: tuning }

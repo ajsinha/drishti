@@ -384,6 +384,7 @@ The file is applied to the running server within seconds, without a restart, and
 | `layout.<kind>.columns` | none | the promoted paths |
 | `id-field` | `id` | the id of a plain document per line |
 | `rescan-seconds` | `30` | how often the folders are listed again |
+| `business-zone` | `America/New_York` | the time zone whose today the health check compares the dated folders with ("0 rows served for <date>" warning) |
 | `index-cache-mb` | `1024` | memory for days' indexes |
 | `max-load-rows` | `200000` | lines a reverse lookup reads for a kind without promoted link fields |
 | `max-document-mb` | `64` | the longest line (and so document, or string in it); a longer line is skipped and counted |
