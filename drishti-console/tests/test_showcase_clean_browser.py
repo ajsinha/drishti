@@ -50,7 +50,7 @@ def test_an_example_opens_as_a_copy_with_no_problems(browser, live_console, exam
         deadline = time.monotonic() + 25
         while time.monotonic() < deadline and not page.evaluate("window.drishtiWorkbench && window.drishtiWorkbench.store.state.id"):
             page.wait_for_timeout(100)
-        page.locator("[data-preview] [data-panel]").first.wait_for(timeout=BROWSER_WAIT_MS)
+        page.locator("[data-preview] [data-panel]").first.wait_for(timeout=max(BROWSER_WAIT_MS, 120_000))   # the first example on a worker meets a cold server under the drill's load
         page.wait_for_timeout(2500)                          # the check runs on idle: give its matrix time to arrive
         items = page.evaluate("[...document.querySelectorAll('[data-problems] .wb-problem-b')].map(b => b.textContent)")
         if example != SHOWCASE:                              # the others match kinds of the banking packs and link to their entities: not on this plain server
