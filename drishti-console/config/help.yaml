@@ -27,7 +27,7 @@ categories:
     blurb: "Install it, run it, and learn it by doing."
     guides:
       - { slug: install-and-run, doc: guides/GETTING_STARTED.md, title: Install and run, icon: download, summary: "Prerequisites, build, start the server and the console, sign-in, Docker, other ways to build, a different configuration, and everything that differs on Windows." }
-      - { slug: tutorials, doc: tutorials/README.md, title: Tutorials, icon: mortarboard, kind: tutorial, summary: "Eighteen hands-on tutorials with real screenshots, one worked example each: from your first 15 minutes to BI, AI, embedding and running it in production." }
+      - { slug: tutorials, doc: tutorials/README.md, title: Tutorials, icon: mortarboard, kind: tutorial, summary: "{tutorials} hands-on tutorials with real screenshots, one worked example each: from your first 15 minutes to BI, AI, embedding and running it in production." }
   - id: use
     name: Use
     icon: terminal

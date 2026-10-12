@@ -49,3 +49,9 @@
   .pnl-h { flex-wrap: wrap; row-gap: .25rem; }
   .pnl-code { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .25rem; white-space: normal; min-width: 0; max-width: 100%; }
 }
+
+/* a phone is finger-sized by its width too, not only by a coarse pointer (a narrow desktop window, a phone emulation): the top bar's buttons are 44 px */
+@media (max-width: 640px) {
+  .tbar .tbar-brand, .tbar .asof-live, .tbar-menu-btn, .tbar-tools .tool, .tbar-tools .theme-btn, .tbar .tool, .tbar .theme-btn { min-width: 44px; min-height: 44px; justify-content: center; }
+  .tbar .cmd-input, .tbar .asof-date { height: 44px; min-height: 44px; }
+}

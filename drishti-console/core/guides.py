@@ -52,6 +52,16 @@ _DOC_CATEGORY = {"connectors": "data", "admin": "operate", "guides": "use", "arc
                  "qa": "build", "": "operate"}
 
 
+_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
+          "seventeen", "eighteen", "nineteen", "twenty"]
+
+
+def tutorial_count_word(docs_dir: Path) -> str:
+    """How many written tutorials the docs hold (``docs/tutorials/NN-*.md``), in a capitalised word ("Eighteen"): the cards that name the number read it from here."""
+    n = len(list((Path(docs_dir) / "tutorials").glob("[0-9][0-9]-*.md"))) if docs_dir else 0
+    return (_WORDS[n] if n < len(_WORDS) else str(n)).capitalize()
+
+
 def github_slug(text: str) -> str:
     """A heading's anchor as GitHub writes it: lower case, punctuation dropped, each space a hyphen.
 
@@ -102,7 +112,7 @@ class Library:
             for g in cat.get("guides", []):
                 src = g.get("doc")
                 path = (docs_dir / src) if src else (console_dir / "web" / "guides" / f"{g['slug']}.md")
-                guide = Guide(g["slug"], g["title"], g.get("summary", ""), g.get("icon", "journal-text"),
+                guide = Guide(g["slug"], g["title"], g.get("summary", "").replace("{tutorials}", tutorial_count_word(docs_dir)), g.get("icon", "journal-text"),
                               g.get("kind", "reference" if src else "guide"), cat["id"], path)
                 if path.exists():
                     self.guides[guide.slug] = guide

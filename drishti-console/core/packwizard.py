@@ -40,6 +40,9 @@ from core.schemakit.resolve import SchemaError
 
 NAME_RE = re.compile(r"[a-z0-9][a-z0-9-]*")
 # a pack's version is semantic: X.Y.Z, optionally -pre-release and +build (the same rule as `pack bundle` and the server's deploy check)
+# The oldest server a wizard-made pack runs on: what its features need, not the version that built it (a pack of plain kinds, forms and Sutras loads on 2.0.0). Raise it
+# when the wizard starts writing something only a newer server reads.
+MIN_SERVER = "2.0.0"
 VERSION_RE = re.compile(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?")
 
 
@@ -341,7 +344,7 @@ class Jobs:
             root = pathlib.Path(tmp)
             pack_dir = root / plan.pack["name"]
             built = build.assemble(plan, job.items, job.drafts, pack_dir)
-            res = build.make_bundle(pack_dir, root / "bundle", PB, {"generator": "console Build -> New pack"}, PB.server_version(self.tools_dir.parent))
+            res = build.make_bundle(pack_dir, root / "bundle", PB, {"generator": "console Build -> New pack"}, MIN_SERVER)
             archive = pathlib.Path(res["archive"])
             job.bundle = {"tar": archive.read_bytes(), "sha256": res["sha256"], "name": archive.name, "pack": res["pack"], "version": res["version"],
                           "files": res["files"], "manifest": (root / "bundle" / f"{res['pack']}-{res['version']}.manifest.json").read_bytes(),

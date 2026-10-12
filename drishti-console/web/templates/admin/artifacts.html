@@ -60,7 +60,8 @@
             data-text="{{ (a.name ~ ' ' ~ a.title ~ ' ' ~ (a.problems | join(' '))) | lower }}">
           <th scope="row" class="conn-name"><a class="mono" href="{{ a.link }}" title="Open {{ a.name }}">{{ a.name }}</a>{% if a.title and a.title != a.name %}<br><span class="text-muted-d">{{ a.title }}</span>{% endif %}</th>
           <td><span class="art-kind">{{ what }}</span></td>
-          <td><span class="st {{ {'on': 'st-ok', 'problem': 'st-bad', 'not loaded': 'st-warn'}.get(a.state, '') }}">{{ {'on': 'on', 'off': 'disabled', 'problem': 'problem', 'not loaded': 'not loaded'}.get(a.state, a.state) }}</span></td>
+          {% if a.kind == 'connector' and a.label and a.state != 'off' %}<td><span class="st {{ {'ok': 'st-ok', 'down': 'st-bad', 'warn': 'st-warn'}.get(a.level, '') }}" data-connector-level="{{ a.level }}">{{ a.label }}</span></td>
+          {% else %}<td><span class="st {{ {'on': 'st-ok', 'problem': 'st-bad', 'not loaded': 'st-warn'}.get(a.state, '') }}">{{ {'on': 'on', 'off': 'disabled', 'problem': 'problem', 'not loaded': 'not loaded'}.get(a.state, a.state) }}</span></td>{% endif %}
           <td><span class="st" title="{{ ORIGINS.get(a.origin, a.origin) }}">{{ a.origin }}</span></td>
           <td class="mono">{{ a.version or '—' }}</td>
           <td class="mono">{{ when_local(a.modified) if a.modified else '—' }}</td>

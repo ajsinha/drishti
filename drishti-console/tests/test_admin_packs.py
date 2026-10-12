@@ -134,7 +134,7 @@ def test_the_packs_list_shows_sutra_problems_connectors_the_change_time_and_poll
     page = client.get("/admin/packs").text
     assert "1 Sutra problem" in page and "sutras/trade.v1.sutra.yaml:7:3 DRS-2010" in page            # file and line, on the row itself
     assert ">trading-store<" in page                                                                    # a connector the pack names by template or route
-    assert "2026-10-05 10:00" in page and "files on disk" in page                                      # Changed is filled after a deploy
+    assert "2026-10-05 06:00 New York" in page and "files on disk" in page                                      # Changed is filled after a deploy
     assert "Needed by credit: switch those off first" in page and 'data-needed-note' in page          # visible text, not only a tooltip
     assert 'data-watch="/admin/api/packs/stamp"' in page and "admin-watch.js" in page
     assert "data-ask-dialog" in page                                                                   # Switch off, Unload and Load use the styled dialog

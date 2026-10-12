@@ -82,7 +82,9 @@
       yes.textContent = opts.ok || 'Go ahead';
       input.value = '';
       msg.textContent = '';
-      function finish(v) { yes.onclick = null; typedDlg.querySelector('[data-typed-no]').onclick = null; typedDlg.onclose = null; hide(typedDlg); resolve(v); }
+      yes.disabled = true;                                                                  // until the exact name is typed
+      input.oninput = function () { yes.disabled = input.value.trim() !== opts.name; };
+      function finish(v) { yes.onclick = null; input.oninput = null; typedDlg.querySelector('[data-typed-no]').onclick = null; typedDlg.onclose = null; hide(typedDlg); resolve(v); }
       yes.onclick = function () {
         if (input.value.trim() !== opts.name) { msg.textContent = 'The name does not match.'; msg.classList.add('t-bad'); input.focus(); return; }
         finish(input.value.trim());
