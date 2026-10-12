@@ -346,25 +346,25 @@ class BiReportApiTest {
                   - id: p
                     visuals:
                       - { id: a, type: bar, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trades.desk], values: [Notional, trades.mtm] } }
-                      - { id: b, type: entity-view, at: { x: 6, y: 0, w: 6, h: 4 } }
+                      - { id: b, type: shape, at: { x: 6, y: 0, w: 6, h: 4 } }
                 """;
         refused(call("POST", "/api/v1/bi/reports/validate", rita(), Map.of("yaml", yaml)), 403, "DRS-9002");
         JsonNode v = ok(call("POST", "/api/v1/bi/reports/validate", wes(), Map.of("yaml", yaml, "quality", true)));
         assertThat(v.path("valid").asBoolean()).isFalse();
         assertThat(v.path("problems").toString()).contains("DRS-9032").contains("DRS-9033").contains("A11Y");
-        JsonNode good = ok(call("POST", "/api/v1/bi/reports/validate", wes(), Map.of("yaml", yaml.replace(", trades.mtm", "").replace("type: entity-view", "type: card, wells: { values: [MTM] }"))));
+        JsonNode good = ok(call("POST", "/api/v1/bi/reports/validate", wes(), Map.of("yaml", yaml.replace(", trades.mtm", "").replace("type: shape", "type: card, wells: { values: [MTM] }"))));
         assertThat(good.path("valid").asBoolean()).isTrue();
         JsonNode written = ok(call("POST", "/api/v1/bi/reports/format", wes(), Map.of("report", good.path("report"))));
         assertThat(written.path("yaml").asText()).contains("report: draft").contains("pages:");
         JsonNode again = ok(call("POST", "/api/v1/bi/reports/validate", wes(), Map.of("yaml", written.path("yaml").asText())));
         assertThat(again.path("report")).isEqualTo(good.path("report"));
-        String goodYaml = yaml.replace(", trades.mtm", "").replace("type: entity-view", "type: card, wells: { values: [MTM] }");
+        String goodYaml = yaml.replace(", trades.mtm", "").replace("type: shape", "type: card, wells: { values: [MTM] }");
         JsonNode preview = ok(call("POST", "/api/v1/bi/reports/query", wes(), Map.of("yaml", goodYaml, "page", "p", "visual", "a", "state", Map.of("dates", Map.of("from", "2026-10-08")))));
         assertThat(preview.path("rowCount").asInt()).isGreaterThan(0);
         refused(call("POST", "/api/v1/bi/reports/query", rita(), Map.of("yaml", goodYaml, "page", "p", "visual", "a")), 403, "DRS-9002");
         JsonNode cat = ok(call("GET", "/api/v1/bi/reports/catalogue", rita(), null));
         assertThat(cat.path("visuals").has("waterfall")).isTrue();
-        assertThat(cat.path("reserved").toString()).contains("entity-view").doesNotContain("python");
+        assertThat(cat.path("reserved").toString()).contains("shape").doesNotContain("python").doesNotContain("entity-view");
         assertThat(ok(call("GET", "/api/v1/bi/reports/dataset?ref=lake-report", wes(), null)).path("measures")).hasSize(6);
         refused(call("GET", "/api/v1/bi/reports/dataset?ref=lake-report", rita(), null), 403, "DRS-9002");
         refused(call("GET", "/api/v1/bi/reports/dataset?ref=nope", wes(), null), 422, "DRS-9034");
