@@ -277,7 +277,25 @@
   "generation": 1,
   "live": false,
   "walk": {
-   "mtm": 2723
+   "mtm": 2723,
+   "derive": [
+    {
+     "set": "valuation.npv",
+     "expr": "$.mtm"
+    },
+    {
+     "set": "valuation.cleanPv",
+     "expr": "$.mtm - valuation.accrued"
+    },
+    {
+     "set": "pnl1d",
+     "expr": "$.mtm - pnlExplain.0.pnl"
+    },
+    {
+     "set": "pnlExplain.3.pnl",
+     "expr": "pnlExplain.3.pnl + ($.mtm - sum(pnlExplain.*.pnl))"
+    }
+   ]
   }
  }
 }

@@ -73,7 +73,31 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "front": 0.05
+   "front": {
+    "step": 0.7,
+    "places": 3,
+    "min": 0.01,
+    "jitter": 0.2,
+    "with": [
+     "points.*.price"
+    ]
+   },
+   "derive": [
+    {
+     "set": "front",
+     "expr": "points.0.price",
+     "places": 3
+    },
+    {
+     "set": "roll",
+     "expr": "(points.1.price / points.0.price - 1) * 100",
+     "places": 2
+    },
+    {
+     "set": "shape",
+     "expr": "points.1.price < points.0.price ? 'backwardation' : 'contango'"
+    }
+   ]
   }
  }
 }

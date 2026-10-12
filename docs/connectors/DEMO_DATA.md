@@ -175,6 +175,38 @@ python3 tools/packgen/banking/make_data.py
 
 which every script above also runs first, along with the sample feed file `data/feeds/fixing/SOFR-HISTORY.csv`.
 
+### Live walks by kind
+
+A live sample ticks while someone watches it (the `demo` source, [DEMO_CONNECTOR.md](DEMO_CONNECTOR.md#74-coherent-walks-a-group-that-moves-together)).
+Its `_meta.walk` moves a headline **and everything that must agree with it**, so a table, a chart and a headline never
+disagree. The specs are written by `tools/packgen/common/walks.py`; `DemoPackWalksTest` ticks every sample of every kind
+below 40 times and checks the identities in the second column.
+
+| Kind (pack) | Moves together, and the identity that holds after any tick | Stays still, and why |
+|---|---|---|
+| `ir-curve` (market-data) | one shift for the curve (a small tilt and per-tenor blur): every zero rate (%), every quote, every forward (%); each `df = exp(-zero/100 x tenor)`; `tenY` is the 10Y zero rate; `slope2s10s` is 10Y less 2Y in bp | `maturity`, instruments, conventions |
+| `fx-spot` | `mid` with `bid` and `ask` by the same amount (the spread is constant); `change1d = mid / previous close - 1`; today's history point is `mid` | the earlier history |
+| `equity` | `price`; `marketCap = price x shares x fx`; `change1d`; today's history point and today's bar (close is the price, high and low stretch, volume builds) | the 60-day bars before today, identifiers, beta |
+| `equity-index` | `level`; `change1d`; today's history point | constituents and weights (a rebalance, not a tick) |
+| `commodity` | `front`; today's bar (close, high, low, volume) | contract specification |
+| `commodity-curve` | `front` with every month (parallel, a little blur); `front` is the first month; `roll`; `shape` flips between backwardation and contango when the first two months swap | open interest (end of day) |
+| `credit-curve` | `spread5y` with every tenor's spread; `hazard = spread / 1e4 / (1 - recovery)`; `survival = exp(-hazard x tenor)`; `spread5y` is the 5Y point; `pd1y = 1 - survival(1Y)` | recovery, clause (terms) |
+| `bond` | `price`; `yield = coupon - (price - 100) / (duration x 100)`; `zSpread` moves against the price by 100/duration bp a point; today's history point | the coupon schedule, the terms |
+| `trade` (trading) | with leg PVs that add up to the MTM (96 swaps, exotics and options): the floating leg's PV walks, the other legs move against it a little, **`mtm` is the sum of the leg PVs** and each leg's cashflow PVs are rescaled to add up to their leg; otherwise `mtm` walks and the leg PVs follow in proportion (cross-currency swaps and swaptions, whose legs are in another currency or are the underlying); always `valuation.npv` is `mtm`, `pnl1d = mtm - opening MTM`, and the P&L explain still adds up (its biggest driver absorbs the move) | risk, sensitivities, schedules, the P&L history, execution and lifecycle (end of day) |
+| `netting-set` (counterparty-risk) | each listed trade's MTM walks; each asset class's total is its trades (plus the unlisted ones, fixed) and `netMtm` is the sum; the exposure profile (`ee`, `pfe`) scales as one; `eePeak` and `pfePeak` are its maxima; `utilisation = pfePeak / limit` | collateral (moves on margin calls), the agreement |
+| `book` (banking-core) | each of the ten largest trades' MTM walks; `mtm` is those plus the rest (fixed) | trade count and DV01 (end of day) |
+| `key-risk-indicator` (operational-risk) | `value` (never below 0); `status` re-judged against `amber` and `red`; today's history point | thresholds and the definition (policy) |
+| `card-account` (retail-banking) | `balance`; `utilisation = balance / limit` | statements and the category spend (closed periods) |
+| `deposit-account` (retail-banking) | `balance`; the latest ledger line carries it as its running balance and its amount is how it got there (`amount = balance - previous line's balance`); this month's history point | the ledger before the latest line |
+| `lcr` (liquidity-risk) | HQLA and each run-off balance walk; every flow is `balance x rate` (signs kept); `netOutflows = outflows - min(inflows, 75% of outflows)`; `lcr = hqla / netOutflows`; `buffer = hqla - netOutflows`; today's trend point | the minimum, the as-of date |
+| `intraday-liquidity` (liquidity-risk) | the latest hour's usage; `peakUsage` is the highest hour of the day; `usagePct = peakUsage / available` | the large-payment log (what already happened) |
+| `container` (logistics) | `currentC`; the reading of the current clock hour (`H1` to `H24`) is `currentC` | set point, humidity, power (settings) |
+| `port`, `vessel`, `shipment` (logistics) | single readings (a congestion index, a berth wait, a position, a speed, an ETA delay): there is no detail list to keep in step | route and milestones (what has happened) |
+
+Samples that are not `live` keep the same walk, so switching one to live needs no other change. To see it, open
+`/v/ir-curve/CRV-USD-BASIS` with the demo source live: the 10Y cell, the other zero rates, the discount factors, the
+forwards and the curve in the chart all change at each tick.
+
 ## JSON lines: one format for every loader
 
 Every loader except Delta Lake's reads the same JSON lines, one per entity per business day:

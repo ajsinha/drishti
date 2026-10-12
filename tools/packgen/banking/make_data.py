@@ -44,6 +44,8 @@ import taxonomy as T
 ROOT = Path(__file__).resolve().parents[3]
 PACKS = ROOT / "config" / "packs"
 sys.path.insert(0, str(ROOT / "tools"))
+sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
+import walks  # noqa: E402
 
 LIVE_WALK = {"ir-curve": {"tenY": 0.0003}, "fx-spot": {"mid": 0.0004}, "equity": {"price": 0.3}, "equity-index": {"level": 4.0},
              "commodity": {"front": 0.05}, "commodity-curve": {"front": 0.05}, "credit-curve": {"spread5y": 0.4}, "bond": {"price": 0.02}}
@@ -63,6 +65,9 @@ def build() -> dict[str, dict[str, dict]]:
         for d in ds.values():
             for k in [k for k, v in d.items() if v is None]:
                 del d[k]
+    for kind, ds in docs.items():                       # the coherent live walk of each kind (tools/packgen/common/walks.py)
+        for d in ds.values():
+            walks.apply(kind, d)
     return docs
 
 

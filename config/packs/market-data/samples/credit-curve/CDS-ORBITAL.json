@@ -57,7 +57,42 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "spread5y": 0.4
+   "spread5y": {
+    "step": 2.0,
+    "places": 1,
+    "min": 0.5,
+    "jitter": 0.2,
+    "with": [
+     "points.*.spread"
+    ]
+   },
+   "derive": [
+    {
+     "set": "points.*.spread",
+     "expr": "max(spread, 0.5)",
+     "places": 1
+    },
+    {
+     "set": "points.*.hazard",
+     "expr": "spread / 10000 / (1 - $.recovery)",
+     "places": 6
+    },
+    {
+     "set": "points.*.survival",
+     "expr": "exp(-hazard * tenor(tenor))",
+     "places": 6
+    },
+    {
+     "set": "spread5y",
+     "expr": "points.tenor=5Y.spread",
+     "places": 1
+    },
+    {
+     "set": "pd1y",
+     "expr": "1 - points.tenor=1Y.survival",
+     "places": 6
+    }
+   ]
   }
  }
 }

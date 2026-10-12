@@ -31,6 +31,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "common"))
 sys.path.insert(0, str(HERE.parent / "banking"))
 import packbuild as PB  # noqa: E402
+import walks as WALKS  # noqa: E402
 import make_data as BANK  # noqa: E402
 import taxonomy as T  # noqa: E402
 from risk_model import Kind, Panel as P  # noqa: E402
@@ -235,6 +236,9 @@ def build(bank: dict) -> dict[str, dict[str, dict]]:
                                                      "collateral": "Government bonds" if typ == "Repo funding" else "Unsecured",
                                                      "withdrawable": typ == "Operational deposit"},
                                            "counterparty": cp["counterpartyId"], "legalEntity": le, "_meta": {"source": "treasury-alm", "generation": 1}}
+    for kind, ds in docs.items():                       # the coherent live walk of each kind (common/walks.py)
+        for d in ds.values():
+            WALKS.apply(kind, d)
     return docs
 
 

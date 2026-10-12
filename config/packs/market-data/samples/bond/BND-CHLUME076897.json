@@ -170,7 +170,28 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "price": 0.02
+   "price": {
+    "step": 0.02,
+    "places": 3,
+    "min": 1
+   },
+   "derive": [
+    {
+     "set": "yield",
+     "expr": "coupon - (price - 100) / (modDuration * 100)",
+     "places": 5
+    },
+    {
+     "set": "zSpread",
+     "expr": "60.8 + (105.177 - price) * 100 / modDuration",
+     "places": 1
+    },
+    {
+     "set": "history.-1.price",
+     "expr": "$.price",
+     "places": 3
+    }
+   ]
   }
  }
 }

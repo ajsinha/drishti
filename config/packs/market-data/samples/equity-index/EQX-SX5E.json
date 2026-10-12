@@ -144,7 +144,23 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "level": 4.0
+   "level": {
+    "step": 0.8,
+    "places": 2,
+    "min": 1
+   },
+   "derive": [
+    {
+     "set": "change1d",
+     "expr": "level / history.-2.close - 1",
+     "places": 5
+    },
+    {
+     "set": "history.-1.close",
+     "expr": "$.level",
+     "places": 2
+    }
+   ]
   }
  }
 }

@@ -503,7 +503,32 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "front": 0.05
+   "front": {
+    "step": 0.05,
+    "places": 3,
+    "min": 0.01
+   },
+   "derive": [
+    {
+     "set": "ohlc.-1.close",
+     "expr": "$.front",
+     "places": 2
+    },
+    {
+     "set": "ohlc.-1.high",
+     "expr": "max(high, $.front)",
+     "places": 2
+    },
+    {
+     "set": "ohlc.-1.low",
+     "expr": "min(low, $.front)",
+     "places": 2
+    },
+    {
+     "set": "ohlc.-1.volume",
+     "expr": "volume + abs(noise(volume * 0.0004))"
+    }
+   ]
   }
  }
 }

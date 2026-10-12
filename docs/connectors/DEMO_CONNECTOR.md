@@ -152,7 +152,7 @@ A vessel of the logistics pack, complete, which walks three fields:
 | `source` | text | `provenance.source`: the name users see (`murex-credit`, `aero-risk`, `port-ops`), not `demo` |
 | `generation` | a number, truncated to a whole number | `provenance.generation`; each tick adds 1 |
 | `live` | boolean | `provenance.live`; only live samples can be subscribed to and tick |
-| `walk` | object `{field: step}` | the fields that move on each tick ([section 7](#7-live-ticks)); optional |
+| `walk` | object `{field: step}`, or coherent entries, `derive` and `append` | the fields that move on each tick, and what moves with them ([sections 7.3 and 7.4](#74-coherent-walks-a-group-that-moves-together)); optional |
 
 A document without `_meta` still loads: its source is empty, its generation 0 and it is not live. The document must be a
 JSON object; anything else stops the connector from starting.
@@ -275,9 +275,9 @@ The steps are random draws from a normal distribution (Box–Muller over a `Spli
 the whole connector, so a run's sequence of draws is repeatable but depends on which entities are watched).
 
 **With `walk`** (`{"mtm": 1258}`): each named field that is a **top-level number** gets `value + N(0, step)` (the step
-is the standard deviation, not a bound). A step of 1 or more rounds the result to a whole number; a smaller step keeps
-the step's own precision: the result is rounded to two more decimal places than the step has (at least two), so a step
-of 0.0004 keeps six decimals and a step of 0.3 keeps three. A named field that is missing or not a number is left
+is the standard deviation, not a bound). A field that holds a whole number stays whole when its step is 1 or more
+(`mtm`, a count of hours); any other value keeps the step's own precision: the result is rounded to two more decimal
+places than the step has (at least two), so a step of 0.0004 keeps six decimals and a step of 0.3 keeps three. A named field that is missing or not a number is left
 alone. A field may also be a **path into the document**: `legs.1.cashflows.0.fixings.3.rate` is the rate of the fourth fixing of the first cashflow of the
 second leg (names step into objects, whole numbers into lists, counting from 0). A path that leaves the document, or ends at something that is not a
 number, is left alone. The trading pack's deep trades use it to move one still-projected fixing, so a nested cell ticks (the walked path is the last
@@ -297,9 +297,124 @@ Any other kind without `walk` ticks with an unchanged document and a higher gene
 
 **Two consequences of the rounding rule** worth knowing when you write samples:
 
-- the market-data FX spots walk `mid` with a step of 0.0004, and keep six decimals, so `FX-EURGBP` moves from 0.871 by
-  typically about 0.0004 a tick, as a spot should;
+- the market-data FX spots walk `mid` with a step of about 0.06% of the spot (0.0004 for `FX-AUDUSD` at 0.661, 0.09 for
+  USD/JPY at 150) and keep five decimals, so a spot moves by about a pip a tick, as a spot should;
 - whole-number fields with a fractional step (`speedKnots: 0.3`) become decimals after the first tick.
+
+### 7.4 Coherent walks: a group that moves together
+
+A plain walk moves one number. A real market does not: when the 10-year rate ticks, the whole curve, its forwards, its
+discount factors and its slope tick with it. A coherent walk says so, in the sample, with no code. A `walk` object has
+three kinds of entry:
+
+| Entry | Form | Does |
+|---|---|---|
+| a step | `"field": 0.0003` | the original form: that one number, by N(0, step) |
+| a group step | `"field": {"step": …, "with": […], …}` | ONE random draw moves the field **and** every path in `with` |
+| `derive` | `[{"set": path, "expr": "…", "places": n}]` | after the steps, recomputes what depends on the moved numbers |
+| `append` | `[{"to": path, "key": field, "format": "…", "row": {…}, "keep": n}]` | keeps a time series current |
+
+Steps run first, then `derive` entries in the order written (a later one sees an earlier one's result), then `append`.
+Every entry stands alone: one that cannot be applied (a path that left the document, an expression that does not parse)
+is skipped, and the others still run.
+
+**Paths** are the dotted paths of section 7.3 with three additions:
+
+| Path | Means |
+|---|---|
+| `points.*.zeroRate` | the `zeroRate` of **every** element of `points` |
+| `history.-1.close`, `history.-2.close` | the last row, the one before it |
+| `points.tenor=10Y.zeroRate` | the element whose `tenor` is `10Y` |
+
+**A group step** takes these options (all but `step` optional):
+
+| Option | Default | Meaning |
+|---|---|---|
+| `step` | required | the standard deviation of the one draw |
+| `with` | none | the other paths that move with it: a path, or `{"path": …, "scale": …, "places": …}` |
+| `scale` | 1 | each `with` path moves by the draw times its scale, so a rate held as a decimal (`tenY: 0.0382`) and the same rate in percent (`zeroRate: 3.82`) move together with `scale: 100`; a negative scale moves against (a bond's spread against its price); a path's own `scale` wins |
+| `shape` | `parallel` | `parallel`: every element of a `*` path gets the same shift; `twist`: also a random tilt, small at one end of the list and large at the other, so a curve steepens or flattens |
+| `jitter` | 0 | an independent extra draw for every element, as a fraction of `step` (0.15 is a blur of 15%) |
+| `mode` | absolute | `rel`: `step` is a fraction, and every value moves by its own size times the draw (an exposure profile scaling as one, an LCR's balances) |
+| `places` | from the step | decimals kept; a `with` path may set its own |
+| `min`, `max` | none | clamp the walked field (a reading never below zero) |
+
+**`derive`** evaluates `expr` for every place `set` reaches (for `points.*.df`, once per point, with that point as the
+current element). A name is looked up in the current element first, then in the document; `$.name` is always the
+document, and the way to name the document's field from inside a list. The language is small on purpose:
+
+| Part | Forms |
+|---|---|
+| numbers, text | `0.75`, `1e-4`, `'Red'` |
+| arithmetic | `+ - * /`, parentheses, unary minus |
+| comparison, choice | `>= <= == != > <`, `test ? a : b` (nests) |
+| a list | a path with `*`: `sum(legs.*.pv)` |
+| functions | `exp ln sqrt abs pow round clamp min max sum sumpos sumneg avg count tenor noise` |
+
+`tenor('1M')` is 1/12, `tenor('10Y')` is 10; `sumneg` and `sumpos` add the negative or the positive entries;
+`noise(sd)` is a draw. A number is stored with `places` decimals, else the old value's, and a whole number stays
+whole. A second form, `{"set": "legs.0.cashflows.*.pv", "scaleTo": "$.legs.0.pv"}`, rescales every number the path
+reaches by one factor so that they add up to the target: the cashflow PVs follow their leg.
+
+**`append`** keeps a series current by a clock label. The label is the current time in `format` (a Java
+`DateTimeFormatter` pattern: `HH:mm`, `yyyy-MM-dd`, `'H'k` for the hour 1 to 24). If a row of `to` already carries that
+label in its `key`, the row is updated; otherwise a new row is added at the end and the oldest rows fall off at `keep`.
+Each `row` field is an expression, with `last.name` the previous version of that row (or the row before it, for a new
+one): `"used": "max(0, last.used + noise(2000000))"`.
+
+**An example**, the cross-currency basis curve `CRV-USD-BASIS`, whose headline `tenY` is 0.0382 (decimal) while its
+zero rates are in percent, its quotes decimal and its forwards in percent:
+
+```json
+"walk": {
+  "tenY": {"step": 0.0003, "scale": 100, "shape": "twist", "jitter": 0.15,
+           "with": ["points.*.zeroRate", {"path": "points.*.quote", "scale": 1}, "forwards.*.rate"]},
+  "derive": [
+    {"set": "points.*.df", "expr": "exp(-zeroRate / 100 * tenor(tenor))", "places": 6},
+    {"set": "tenY", "expr": "points.tenor=10Y.zeroRate / 100", "places": 6},
+    {"set": "slope2s10s", "expr": "(points.tenor=10Y.zeroRate - points.tenor=2Y.zeroRate) * 100", "places": 1}
+  ]
+}
+```
+
+One draw of N(0, 0.0003) moves every zero rate by that times 100, every quote by that, and every forward by that times
+100, each with a tilt along the curve and 15% of per-tenor blur; then each discount factor is recomputed from its zero
+rate, the headline becomes the 10-year point, and the 2s10s slope is recomputed in basis points. In the table and the
+chart of `/v/ir-curve/CRV-USD-BASIS` every row now changes, not only the 10Y cell.
+
+Captured from Chromium on `/v/ir-curve/CRV-USD-BASIS` (the table's tenor, instrument, zero rate, quote and discount
+factor), six seconds apart with the page live: all 12 rows changed and the chart's series changed with them.
+
+```text
+1M | Deposit / future | 3.7959% | 3.81 | 0.9968   ->   1M | Deposit / future | 3.9281% | 3.97 | 0.9967
+3M | Deposit / future | 3.7828% | 3.80 | 0.9905   ->   3M | Deposit / future | 3.9564% | 3.96 | 0.9902
+6M | Deposit / future | 3.7495% | 3.78 | 0.9813   ->   6M | Deposit / future | 3.8870% | 3.92 | 0.9806
+1Y | Basis swap       | 3.6853% | 3.74 | 0.9633   ->   1Y | Basis swap       | 3.8046% | 3.90 | 0.9617
+2Y | Basis swap       | 3.5694% | 3.69 | 0.9288   ->   2Y | Basis swap       | 3.6644% | 3.84 | 0.9260
+3Y | Basis swap       | 3.5227% | 3.69 | 0.8951   ->   3Y | Basis swap       | 3.6447% | 3.83 | 0.8915
+```
+
+The short end moved more than the long end (the tilt), and every discount factor fell as its zero rate rose.
+
+More examples, one per idea (each is in a shipped sample; [DEMO_DATA.md](DEMO_DATA.md#live-walks-by-kind) lists all of them):
+
+| Idea | Entry |
+|---|---|
+| a status re-judged against its thresholds | `{"set": "status", "expr": "value >= red ? 'Red' : value >= amber ? 'Amber' : 'Green'"}` |
+| a total | `{"set": "mtm", "expr": "sum(legs.*.pv)"}` |
+| a ratio | `{"set": "lcr", "expr": "hqla / netOutflows", "places": 4}` |
+| today's row of a history follows the price | `{"set": "history.-1.close", "expr": "$.price", "places": 2}` |
+| a series keyed by the clock hour | `{"to": "readings", "key": "hour", "format": "'H'k", "keep": 24, "row": {"celsius": "$.currentC"}}` |
+
+**Where the specs come from.** Never by hand: `tools/packgen/common/walks.py` builds each kind's walk from the finished
+sample (so it names exactly the paths that sample has), and every generator calls it (`make_data.py` for the banking packs,
+and the retail, liquidity and operational-risk generators; the logistics pack's `make_samples.py` writes its own).
+`python3 tools/packgen/banking/make_data.py --check` fails when the samples differ from what the generators write.
+
+**What stays still on purpose** (a bond's coupon schedule, a closed card statement, a day's large payments, risk and
+sensitivities, end-of-day figures) is listed per kind in DEMO_DATA.md and in `walks.py`; the test
+`DemoPackWalksTest` fails on a walked headline whose declared dependents never move, and on a walk that names a path
+its sample does not have.
 
 ## 8. Its place in routing
 
@@ -407,7 +522,9 @@ curl -s "$B/command/suggest?q=TRD%20IRS" | jq .
 | an edited sample shows the old content | samples are read once at start | restart the server |
 | a parent's sample shows instead of the child's (or the reverse) | the later folder in `dirs` wins; folders run from most general to most specific | put the override in the more specific pack |
 | a live view does not tick | the sample's `_meta.live` is false; or `ticking: false`; or a real stream holds the entity and ticks instead | set `live: true`; check the settings; check `provenance.source` |
-| a walked field does not move | it is nested, or not a number, or the sample is not live | walk top-level numbers only |
+| a walked field does not move | the path leaves the document, or ends at something that is not a number, or the sample is not live | check the path against the sample (`legs.1.pv`, not `leg.1.pv`) |
+| a detail list does not follow its headline | the sample walks the headline alone (the plain `{field: step}` form) | use a coherent walk, [section 7.4](#74-coherent-walks-a-group-that-moves-together); the pack test `DemoPackWalksTest` flags a declared dependent that never moves |
+| a `derive` or `append` entry has no effect | its expression does not parse, or names a field the sample does not have: that one entry is skipped, silently, so the others keep walking | run `DemoPackWalksTest` (it parses every expression and resolves every path of every shipped sample) |
 | one sample never ticks, the others do | it cannot tick (a `curve` without `points` and without `walk`) and is skipped | fix the sample, or give it a `walk`; restart |
 | real ids answer with sample data, or a picked old date shows a sample | the demo is on beside real stores | `DRISHTI_DEMO_ENABLED=false` |
 | `DRS-1002 no source serves kind 'x'` after switching it off | the demo (and `file`) served that kind | configure a connector for the kind |

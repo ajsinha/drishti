@@ -215,7 +215,50 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "lcr": 0.004
+   "hqla": {
+    "step": 0.0006,
+    "mode": "rel",
+    "jitter": 0.5,
+    "with": [
+     "hqlaByLevel.*.value"
+    ]
+   },
+   "netOutflows": {
+    "step": 0.0008,
+    "mode": "rel",
+    "jitter": 1.0,
+    "with": [
+     "flows.*.balance"
+    ]
+   },
+   "derive": [
+    {
+     "set": "hqla",
+     "expr": "sum(hqlaByLevel.*.value)"
+    },
+    {
+     "set": "flows.*.flow",
+     "expr": "(flow < 0 ? -1 : 1) * balance * rate"
+    },
+    {
+     "set": "netOutflows",
+     "expr": "-sumneg(flows.*.flow) - min(sumpos(flows.*.flow), 0.75 * -sumneg(flows.*.flow))"
+    },
+    {
+     "set": "buffer",
+     "expr": "hqla - netOutflows"
+    },
+    {
+     "set": "lcr",
+     "expr": "hqla / netOutflows",
+     "places": 4
+    },
+    {
+     "set": "trend.-1.lcr",
+     "expr": "$.lcr",
+     "places": 4
+    }
+   ]
   }
  }
 }

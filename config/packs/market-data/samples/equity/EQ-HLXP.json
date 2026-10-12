@@ -627,7 +627,46 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "price": 0.3
+   "price": {
+    "step": 0.08,
+    "places": 2,
+    "min": 0.01
+   },
+   "derive": [
+    {
+     "set": "change1d",
+     "expr": "price / history.-2.close - 1",
+     "places": 5
+    },
+    {
+     "set": "history.-1.close",
+     "expr": "$.price",
+     "places": 2
+    },
+    {
+     "set": "marketCap",
+     "expr": "$.price * 1526000000.0"
+    },
+    {
+     "set": "ohlc.-1.close",
+     "expr": "$.price",
+     "places": 2
+    },
+    {
+     "set": "ohlc.-1.high",
+     "expr": "max(high, $.price)",
+     "places": 2
+    },
+    {
+     "set": "ohlc.-1.low",
+     "expr": "min(low, $.price)",
+     "places": 2
+    },
+    {
+     "set": "ohlc.-1.volume",
+     "expr": "volume + abs(noise(volume * 0.0004))"
+    }
+   ]
   }
  }
 }

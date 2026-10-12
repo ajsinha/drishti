@@ -501,8 +501,39 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 1580,
-   "legs.0.cashflows.4.fixings.0.rate": 7.9e-05
+   "legs.0.cashflows.4.fixings.0.rate": 7.9e-05,
+   "legs.0.pv": {
+    "step": 1580,
+    "places": 2,
+    "with": []
+   },
+   "derive": [
+    {
+     "set": "mtm",
+     "expr": "sum(legs.*.pv)"
+    },
+    {
+     "set": "legs.0.cashflows.*.pv",
+     "scaleTo": "$.legs.0.pv",
+     "places": 2
+    },
+    {
+     "set": "valuation.npv",
+     "expr": "$.mtm"
+    },
+    {
+     "set": "valuation.cleanPv",
+     "expr": "$.mtm - valuation.accrued"
+    },
+    {
+     "set": "pnl1d",
+     "expr": "$.mtm - pnlExplain.0.pnl"
+    },
+    {
+     "set": "pnlExplain.6.pnl",
+     "expr": "pnlExplain.6.pnl + ($.mtm - sum(pnlExplain.*.pnl))"
+    }
+   ]
   }
  }
 }

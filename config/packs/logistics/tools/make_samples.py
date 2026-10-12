@@ -48,7 +48,10 @@ readings = [{"hour": f"H{h}", "celsius": round(4.6 + 0.5 * math.sin(h / 3.2) + (
 put("container", "CTR-MSKU1234567", {"containerId": "CTR-MSKU1234567", "type": "40' reefer", "setpointC": 5.0,
                                      "currentC": 4.6, "humidityPct": 0.78, "alarms": 1, "powerOn": True,
                                      "shipment": "SHP-10042", "vessel": "VSL-9811000", "readings": readings},
-    "CTR-MSKU1234567", "Container · 40' reefer · set 5.0 °C", walk={"currentC": 0.15})
+    "CTR-MSKU1234567", "Container · 40' reefer · set 5.0 °C", walk={"currentC": 0.15,
+                                                  # the current hour's reading is the box temperature (the readings are H1..H24, one per clock hour)
+                                                  "append": [{"to": "readings", "key": "hour", "format": "'H'k", "keep": 24, "places": 1,
+                                                              "row": {"celsius": "$.currentC"}}]})
 
 put("shipment", "SHP-10042", {
     "shipmentId": "SHP-10042", "status": "In transit", "customer": {"id": "CUS-ACME", "name": "Acme Pharma BV"},
