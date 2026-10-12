@@ -48,6 +48,11 @@
           bar.appendChild(b);
         });
       }
+      if (kind === 'sql') {
+        var pb = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-promote-report': '' }, 'Promote to a report visual');
+        pb.addEventListener('click', function () { X.promoteReport({ sql: cell.source }, 'SQL'); });
+        bar.appendChild(pb);
+      }
       var del = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'aria-label': 'Delete cell ' + (i + 1) }, B.icon('trash'));
       del.addEventListener('click', function () { X.cells[kind].splice(i, 1); draw(kind); });
       bar.appendChild(del);

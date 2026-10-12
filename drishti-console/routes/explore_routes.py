@@ -32,6 +32,7 @@ from core.backend import BackendError
 from core.csrf import json_body
 from core.explore import (ExploreError, Extract, Limits, check_extracts, check_fields, from_arrow, from_json, parse_notebook, promote_python, promote_transform, query_body,
                           run_sql)
+from core.promote_report import add_to_report, sql_to_slice, visual_for
 from core.pyrunner import PyError
 from core.quant import get_engine
 from routes.bi_routes import _page
@@ -212,14 +213,6 @@ async def notebook_check(request: Request):
     return JSONResponse({"valid": True, "problems": [], "cells": len(doc.get("cells") or []), "notebook": doc, "yaml": text}, headers={"Cache-Control": "no-store"})
 
 
-def _matching_measure(model: dict, agg: str, column: str) -> str | None:
-    want = f"{agg}({column})".replace(" ", "").lower()
-    for m in model.get("measures") or []:
-        if str(m.get("expr") or "").replace(" ", "").lower() == want:
-            return m["name"]
-    return None
-
-
 @router.post("/bi/explore/promote")
 async def promote(request: Request):
     """Body ``{to: measure|visual, name, source, columns}`` (a Python cell to a Python item draft) or ``{to: report, name, dataset, slice}`` (a slice to a report
@@ -254,30 +247,47 @@ async def promote(request: Request):
 
 
 async def _slice_report(request: Request, body: dict, name: str) -> dict:
+    """A slice, or a SQL cell, as a visual (core/promote_report.py) in a new report draft, or added to the existing report draft ``target``.
+    Body: ``{dataset, slice: {rows, columns, values}, filters?}`` or ``{dataset, sql, columns}``; ``columns``/``qualified`` map the extract's short names to table.column;
+    ``target`` (an item id) and ``page`` say where in an existing report."""
     import re
     import yaml
-    dataset, sl = str(body.get("dataset") or ""), body.get("slice") or {}
-    if not dataset or not isinstance(sl, dict):
-        raise ExploreError("DRS-9070", 422, "send {dataset, slice: {rows, columns, values: [{field, agg}]}}")
-    model = await request.app.state.backend.bi("GET", "/datasets/" + quote(dataset, safe=":"), ident(request))
-    rows, cols = [str(f) for f in sl.get("rows") or []], [str(f) for f in sl.get("columns") or []]
-    notes, measures = [], []
-    for v in sl.get("values") or []:
-        field, agg = str(v.get("field", "")), str(v.get("agg", "sum"))
-        found = _matching_measure(model, agg, field)
-        if found:
-            measures.append(found)
-        else:
-            notes.append(f"No dataset measure is {agg}({field}); add one to the dataset, then put it in the visual's values.")
-    if measures and rows:
-        visual = {"id": "slice", "type": "matrix", "title": name, "at": {"x": 0, "y": 0, "w": 12, "h": 6}, "wells": {"rows": rows, "columns": cols[:1], "values": measures}}
-    elif rows or cols:
-        visual = {"id": "slice", "type": "table", "title": name, "at": {"x": 0, "y": 0, "w": 12, "h": 6}, "wells": {"columns": rows + cols}}
+    dataset = str(body.get("dataset") or "")
+    sl, sql = body.get("slice"), body.get("sql")
+    if not dataset or not (isinstance(sl, dict) or isinstance(sql, str)):
+        raise ExploreError("DRS-9070", 422, "send {dataset, slice: {rows, columns, values: [{field, agg}]}} or {dataset, sql, columns}")
+    backend, me = request.app.state.backend, ident(request)
+    model = await backend.bi("GET", "/datasets/" + quote(dataset, safe=":"), me)
+    shorts, quals = [str(c) for c in body.get("columns") or []], [str(c) for c in body.get("qualified") or []]
+    mapping = dict(zip(shorts, quals))
+    qualify = lambda f: mapping.get(f, f)  # noqa: E731
+    notes: list[str] = []
+    if isinstance(sql, str):
+        if len(sql) > _limits(request).sql_max_chars:
+            raise ExploreError("DRS-9070", 422, "the SQL is too long to promote")
+        read = sql_to_slice(sql, shorts)
+        notes += read.pop("notes")
+        sl, vid = read, "sql"
     else:
-        raise ExploreError("DRS-9070", 422, "the slice has no rows or columns to build a visual from")
-    if not visual["wells"].get("columns"):
-        visual["wells"].pop("columns", None)
-    slug = re.sub(r"[^A-Za-z0-9_-]", "-", name).strip("-")[:48] or "from-analyse"
-    report = {"rachana": 1, "report": slug, "version": 1, "title": name, "description": "Started from an Analyse slice.", "dataset": model.get("name") or dataset,
-              "pages": [{"id": "slice", "title": "Slice", "visuals": [visual]}]}
-    return {"kind": "report", "title": name, "yaml": yaml.safe_dump(report, sort_keys=False, default_flow_style=None, width=200), "notes": notes}
+        vid = "slice"
+        sl = {**sl, "filters": [{"field": f.get("field"), "op": f.get("op") or "in", "values": f.get("values") if f.get("values") is not None else [f.get("value")]}
+                                 for f in (body.get("filters") or sl.get("filters") or []) if f.get("field") and (f.get("values") or f.get("value") not in (None, ""))]}
+    visual = visual_for(model, sl, name, vid, qualify, notes)
+    if visual is None:
+        raise ExploreError("DRS-9070", 422, "the " + ("SQL" if vid == "sql" else "slice") + " has no fields or measures to build a visual from")
+    target = str(body.get("target") or "")
+    if not target:
+        slug = re.sub(r"[^A-Za-z0-9_-]", "-", name).strip("-")[:48] or "from-analyse"
+        report = {"rachana": 1, "report": slug, "version": 1, "title": name, "description": "Started from an Analyse " + ("SQL cell." if vid == "sql" else "slice."),
+                  "dataset": model.get("name") or dataset, "pages": [{"id": vid, "title": "Slice" if vid == "slice" else "SQL", "visuals": [visual]}]}
+        return {"kind": "report", "title": name, "yaml": yaml.safe_dump(report, sort_keys=False, default_flow_style=None, width=200), "notes": notes, "target": None}
+    item = await backend.bi("GET", "/items/" + quote(target, safe=":"), me)
+    if item.get("kind") != "report" or not (item.get("can") or {}).get("edit"):
+        raise ExploreError("DRS-9070", 422, "the target is not a report draft you can edit")
+    checked = await backend.bi("POST", "/reports/validate", me, {"yaml": item.get("body") or ""})
+    if not checked.get("report"):
+        raise ExploreError("DRS-9070", 422, "the report cannot be read, so a visual cannot be added: " + "; ".join(p.get("message", "") for p in (checked.get("problems") or [])[:2]))
+    report = add_to_report(checked["report"], visual, str(body.get("page") or ""), model.get("name") or dataset, notes)
+    written = await backend.bi("POST", "/reports/format", me, {"report": report})
+    notes.append("The report was written again by the designer's writer: comments in its YAML are not kept.")
+    return {"kind": "report", "title": item.get("title") or name, "yaml": written["yaml"], "notes": notes, "target": target, "visual": visual["id"]}

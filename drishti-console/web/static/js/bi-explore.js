@@ -253,13 +253,26 @@
   // ---- promote a slice -------------------------------------------------------------------------------------------------------------
   X.qualified = function (name) { var i = X.ex.columns.findIndex(function (c) { return c.name === name; }); return X.qual[i] || name; };
   X.createItem = function (kind, title, body) { return B.api('POST', '/workspaces/me/items', { kind: kind, title: title, description: 'Started in Analyse.', body: body }); };
+  var targetSel = q('[data-promote-target]', root), pageIn = q('[data-promote-page]', root);
+  /** A slice or a SQL cell (`extra`: {slice, filters} or {sql}) as a visual in a new report draft, or added to the report chosen above (its draft is saved with the new visual). */
+  X.promoteReport = function (extra, label) {
+    if (!X.spec || !X.ex) { say('Open an extract first.', true); return Promise.resolve(); }
+    var title = (q('input[name=title]', root).value || label + ' of ' + (X.spec.dataset || 'data')).slice(0, 80);
+    var target = targetSel.value;
+    var body = Object.assign({ to: 'report', name: title, dataset: X.spec.dataset, columns: X.ex.columns.map(function (c) { return c.name; }), qualified: X.qual, target: target || undefined, page: pageIn.value.trim() || undefined }, extra);
+    return X.post('/bi/explore/promote', body).then(function (d) {
+      var saved = target ? B.api('PUT', '/items/' + B.id2path(target), { body: d.yaml }) : X.createItem('report', d.title, d.yaml);
+      return saved.then(function (it) { say((target ? 'Visual ' + d.visual + ' added to the report draft: ' : 'Report draft saved in your workspace: ') + it.title + '. ' + d.notes.join(' ')); link(it); X.lastPromoted = { item: it.id, visual: d.visual || (extra.sql ? 'sql' : 'slice') }; });
+    }).catch(function (e) { say(e.message, true); });
+  };
   q('[data-promote-slice]', root).addEventListener('click', function () {
-    var s = X.slice, title = (q('input[name=title]', root).value || 'Slice of ' + (X.spec && X.spec.dataset || 'data')).slice(0, 80);
-    var map = function (a) { return a.map(X.qualified); };
-    X.post('/bi/explore/promote', { to: 'report', name: title, dataset: X.spec.dataset, slice: { rows: map(s.rows), columns: map(s.columns), values: s.values.map(function (v) { return { field: X.qualified(v.field), agg: v.agg }; }) } })
-      .then(function (d) { return X.createItem('report', d.title, d.yaml).then(function (it) { say('Report draft saved in your workspace: ' + it.title + '. ' + d.notes.join(' ')); link(it); }); })
-      .catch(function (e) { say(e.message, true); });
+    var s = X.slice;
+    X.promoteReport({ slice: { rows: s.rows, columns: s.columns, values: s.values.map(function (v) { return { field: v.field, agg: v.agg }; }) },
+      filters: s.filters.filter(function (f) { return f.value !== '' && f.value != null; }).map(function (f) { return { field: f.field, op: 'in', values: [f.value] }; }) }, 'Slice');
   });
+  B.api('GET', '/catalogue?kind=report').then(function (d) {
+    (d.items || []).filter(function (it) { return !it.shipped; }).forEach(function (it) { targetSel.appendChild(h('option', { value: it.id, text: 'the report: ' + it.title })); });
+  }).catch(function () {});
   function link(it) { var a = q('[data-saved]', root); a.href = '/bi/i/' + B.id2path(it.id); a.hidden = false; }
   X.link = link;
 
