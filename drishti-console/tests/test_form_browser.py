@@ -272,8 +272,8 @@ def test_the_forms_and_reports_icons_in_the_top_bar_open_the_forms_home_and_a_ki
     assert forms.count() == 1 and reports.count() == 1 and forms.get_attribute("title") == "Forms — query by form"
     assert reports.get_attribute("title").startswith("Reports — saved and scheduled")
     assert forms.locator("i.bi").count() == 1 and "active" not in (forms.get_attribute("class") or "")
+    assert forms.evaluate("e => e.tagName") == "A" and forms.get_attribute("href") == "/forms"    # a link, not a menu: one per pack ran off the screen
     forms.click()
-    page.click('.mega-item:has-text("All forms")')
     page.wait_for_url("**/forms")
     assert "active" in page.locator('.tbar-menu-btn[aria-label^="Forms"]').get_attribute("class")      # active on the forms home
     assert "active" not in page.locator('.tbar-menu-btn[aria-label^="Reports"]').get_attribute("class")
@@ -289,16 +289,12 @@ def test_the_forms_and_reports_icons_in_the_top_bar_open_the_forms_home_and_a_ki
     assert "active" in page.locator('.tbar-menu-btn[aria-label^="Reports"]').get_attribute("class")
 
 
-def test_the_forms_menu_by_keyboard_and_the_icons_fit_a_laptop_and_a_phone(browser, url):
+def test_the_forms_link_by_keyboard_and_the_icons_fit_a_laptop_and_a_phone(browser, url):
     ctx = browser.new_context(viewport={"width": 1280, "height": 800}, bypass_csp=True)
     pg = ctx.new_page()
     pg.goto(url + "/t", wait_until="load")
     pg.focus('.tbar-menu-btn[aria-label^="Forms"]')
-    pg.keyboard.press("Enter")
-    assert pg.locator('.tbar-menu-btn[aria-label^="Forms"]').get_attribute("aria-expanded") == "true"
-    pg.keyboard.press("Tab")
-    assert pg.evaluate("document.activeElement.textContent").strip().startswith("All forms")
-    pg.keyboard.press("Enter")
+    pg.keyboard.press("Enter")                                                       # the Forms link opens the forms home
     pg.wait_for_url("**/forms")
     assert pg.evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth")
     assert pg.evaluate("document.querySelector('.tbar-row1').getBoundingClientRect().height") < 70      # one row: no worse than before

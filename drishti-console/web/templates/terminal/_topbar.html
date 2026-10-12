@@ -67,6 +67,7 @@
   ('/alerts/all', 'bell-fill', 'All alerts', 'Administrators: everyone\'s alerts on numbers and the board tiles that notify', '/alerts/all')] %}{% endif %}
 {% if bi_me and bi_me.enabled %}{% set REPORT_ITEMS = REPORT_ITEMS + [('/bi/catalogue?kind=report', 'bar-chart-line', 'BI reports', 'Published reports and boards you may open. Also: RUPAKA CATALOGUE', None)] %}
 {% for r in bi_me.recent if r.kind == 'report' %}{% set nsf.rep = nsf.rep + [('/bi/i/' ~ r.id, 'clock-history', r.title, 'BI report you opened recently', '/bi/i/' ~ r.id)] %}{% endfor %}{% set REPORT_ITEMS = REPORT_ITEMS + nsf.rep %}{% endif %}
+{# Forms opens the forms home: a menu of every pack's forms would run off the screen #}{% set MENU_LINKS = {'Forms': '/forms'} %}
 {% set TIPS = {'Forms': 'Forms — query by form', 'Reports': 'Reports — saved and scheduled reports, subscriptions, and BI reports'} %}
 {% set POS = 2 if (bi_me and bi_me.enabled) else 1 %}
 {% set MENU = MENU[:POS] + [('Forms', 'card-checklist', FORM_COLS), ('Reports', 'file-earmark-bar-graph', [('Reports', REPORT_ITEMS)])] + MENU[POS:] %}
@@ -137,6 +138,10 @@
   {% for label, icon, columns in MENU %}
     {% set ns = namespace(active=False) %}
     {% for _t, items in columns %}{% for href, _i, _l, _d, match in items %}{% if _on(href, match) %}{% set ns.active = True %}{% endif %}{% endfor %}{% endfor %}
+    {% if label in MENU_LINKS %}{% set href = MENU_LINKS[label] %}{% set on = path == href or path.startswith('/form') %}
+    <a class="tbar-menu-btn{% if on %} active{% endif %}" href="{{ href }}"{% if on %} aria-current="page"{% endif %} title="{{ TIPS[label] if label in TIPS else label }}"{% if label in TIPS %} aria-label="{{ TIPS[label] }}"{% endif %}>
+      <i class="bi bi-{{ icon }}" aria-hidden="true"></i><span class="tbar-menu-l">{{ label }}</span></a>
+    {% else %}
     <div class="dropdown tbar-menu">
       <button class="tbar-menu-btn{% if ns.active %} active{% endif %}" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false"
               {% if ns.active %}aria-current="true"{% endif %} title="{{ TIPS[label] if label in TIPS else label }}"{% if label in TIPS %} aria-label="{{ TIPS[label] }}"{% endif %}>
@@ -154,6 +159,7 @@
         {% endfor %}
       </div>
     </div>
+    {% endif %}
   {% endfor %}
   </nav>
 

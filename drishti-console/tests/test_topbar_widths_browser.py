@@ -62,3 +62,18 @@ def test_top_bar_controls_never_overlap(browser, console_url, width):
     finally:
         ctx.close()
     assert not problems, "\n".join(problems)
+
+
+@pytest.mark.parametrize("url", ["/t", "/v/trade/IRS-48213", "/bi"])
+def test_a_top_bar_menu_stays_open_until_the_person_closes_it(browser, console_url, url):
+    """A menu opened with a click stays open (a page's own refresh, a live tick or a stray click handler must not close it)."""
+    page = browser.new_page(viewport={"width": 1366, "height": 900})
+    try:
+        page.goto(console_url + url, wait_until="load")
+        btn = page.locator('.tbar-menu-btn[data-bs-toggle="dropdown"]').first
+        btn.click()
+        page.wait_for_timeout(3000)
+        assert btn.get_attribute("aria-expanded") == "true", "the menu closed by itself"
+        assert page.locator(".tbar .dropdown-menu.show").count() == 1
+    finally:
+        page.close()
