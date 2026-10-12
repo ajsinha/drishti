@@ -18,7 +18,7 @@
   const LIBS = ['vega.min.js', 'vega-lite.min.js', 'vega-embed.min.js', 'vega-interpreter.min.js'];
   let loading = null;
 
-  const failure = (detail) => Object.assign(new Error('DRS-9075 ' + detail), { code: 'DRS-9075', detail });
+  const failure = (detail) => Object.assign(new Error('DRS-9077 ' + detail), { code: 'DRS-9077', detail });
 
   /** Loads the four scripts once, in order (each needs the one before); scripts of this origin, so the strict policy allows them. */
   function libs() {

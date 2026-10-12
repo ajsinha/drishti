@@ -390,6 +390,11 @@ public final class DatasetService {
         return queryItem(p, datasetItem(p, id), q, explain);
     }
 
+    /** The parsed dataset with this id, name or file name, as the caller reads it, or DRS-9010 when it has errors. */
+    public Dataset parsed(Principal p, String id) {
+        return parsedDataset(p, datasetItem(p, id));
+    }
+
     /** The parsed dataset of an item, or DRS-9010 when it has errors. */
     public Dataset parsedDataset(Principal p, BiStore.Item item) {
         return loaded(p, item).dataset();

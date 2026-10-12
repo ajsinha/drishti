@@ -30,9 +30,23 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from core.pyrunner import PyError, PyRunner  # noqa: E402
 
 
+def run_measure(req: dict, runner: PyRunner) -> dict:
+    """A Python measure over rows the server built for one person (an alert): ``{ok, by, rows}``, the group values then the number."""
+    from core.pytests import arrow_of
+    try:
+        answer = asyncio.run(runner.run({"manifest": req["manifest"]}, arrow_of(req["columns"], req["rows"]), group_by=list(req.get("group_by") or []), params=req.get("params") or {}))
+    except PyError as e:
+        return {"ok": False, "code": e.code, "status": e.status, "detail": e.detail}
+    except Exception as e:  # noqa: BLE001 - whatever went wrong is the server's answer, never a stack trace on a pipe
+        return {"ok": False, "code": "DRS-9074", "status": 503, "detail": f"the Python runner failed: {type(e).__name__}: {e}"[:500]}
+    return {"ok": True, "by": answer.get("by") or [], "rows": answer.get("rows") or [], "ms": answer.get("ms")}
+
+
 def run(folder: Path) -> dict:
     req = json.loads((folder / "req.json").read_text(encoding="utf-8"))
     runner = PyRunner(dict(req.get("settings") or {}))            # a dict answers .get(key, default), which is all the runner asks of its settings
+    if req.get("mode") == "measure":
+        return run_measure(req, runner)
     arrows = [(folder / name).read_bytes() for name in req["inputs"]]
     try:
         answer = asyncio.run(runner.run_transform(req["manifest"], arrows, params=req.get("params") or {}, dest=req["output"], max_rows=int(req["max_rows"])))

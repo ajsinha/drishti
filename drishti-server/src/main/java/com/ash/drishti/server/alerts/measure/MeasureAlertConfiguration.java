@@ -62,8 +62,14 @@ public class MeasureAlertConfiguration {
     }
 
     @Bean
-    public BiValueReader biValueReader(BiReportService reports, DatasetService datasets, BiBoardService boards) {
-        return new BiValueReader(reports, datasets, boards);
+    public PythonAlertReader pythonAlertReader(DatasetService datasets, BiReportService reports, com.ash.drishti.server.bi.python.PythonItems items,
+            com.ash.drishti.server.bi.transform.TransformRunner runner, com.ash.drishti.server.bi.report.BiReportProperties report) {
+        return new PythonAlertReader(datasets, reports, items, runner, report.pythonRows());
+    }
+
+    @Bean
+    public BiValueReader biValueReader(BiReportService reports, DatasetService datasets, BiBoardService boards, PythonAlertReader python) {
+        return new BiValueReader(reports, datasets, boards, python);
     }
 
     @Bean(destroyMethod = "close")

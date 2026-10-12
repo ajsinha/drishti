@@ -163,6 +163,11 @@ async def proxy(request: Request, path: str):
     if head not in _ALLOWED or ".." in path:
         return JSONResponse({"code": "DRS-9001", "detail": "no such BI path"}, status_code=404)
     body = None if request.method in _NO_BODY else await json_body(request)
+    if request.method == "POST" and head == "items" and path.rsplit("/", 1)[-1] in ("publish", "approve"):
+        from routes.python_routes import publish_gate
+        refused = await publish_gate(request, path, body)          # a Python item whose own tests fail is not published (a bi-admin may force it)
+        if refused is not None:
+            return refused
     params = {k: v for k, v in request.query_params.items()}
     if request.method == "POST" and head == "reports" and path.endswith("/query") and params.get("format") == "arrow":
         try:                                                  # a Perspective visual's rows: the server's Arrow bytes, passed through unchanged

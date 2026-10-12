@@ -26,6 +26,7 @@ from fastapi.responses import JSONResponse
 from core.backend import BackendError
 from core.csrf import json_body
 from core.pyrunner import PyError, check_source
+from core.pytests import limit_arrow, run_tests
 from routes.common import ident
 
 router = APIRouter(include_in_schema=False)
@@ -88,10 +89,51 @@ async def run(request: Request):
     return JSONResponse(answer, headers={"Cache-Control": "no-store"})
 
 
+async def run_item_tests(request: Request, manifest: dict) -> dict:
+    """Runs the tests an item ships with, in the same sandbox a report uses. A test that reads a dataset gets the rows the signed-in person may see."""
+    async def sample(spec: dict) -> bytes:
+        from routes.explore_routes import extract_for
+        ex = await extract_for(request, {"dataset": spec["dataset"], "fields": spec["fields"]})
+        return limit_arrow(ex.arrow or b"", int(spec.get("limit") or 200))
+    return await run_tests(request.app.state.pyrunner, manifest, sample)
+
+
+def _failures(result: dict, limit: int = 3) -> str:
+    bad = [r for r in result["results"] if r["status"] != "pass"]
+    return "; ".join(f"{r['name']}: {r['message']}" for r in bad[:limit]) + ("; ..." if len(bad) > limit else "")
+
+
+async def publish_gate(request: Request, path: str, body: dict | None):
+    """The refusal (a response) when ``path`` publishes a Python item whose own tests fail, else None. ``path`` is ``items/<id>/publish`` or ``items/<id>/approve``.
+    The tests run in the console's sandbox, the only place with Python: a bi-admin may publish anyway with ``force``, as for the server's own tests."""
+    backend, me = request.app.state.backend, ident(request)
+    try:
+        item = await backend.bi("GET", "/" + path.rsplit("/", 1)[0], me)
+        if item.get("kind") != "python" or "tests:" not in (item.get("body") or ""):
+            return None
+        checked = await backend.bi("POST", "/python/validate", me, {"yaml": item.get("body") or ""})
+    except BackendError:
+        return None                                          # the server's own answer comes when the call is forwarded
+    m = checked.get("manifest")
+    if not checked.get("valid") or not m or not m.get("tests"):
+        return None
+    result = await run_item_tests(request, m)
+    if result["ok"]:
+        return None
+    if (body or {}).get("force") is True:
+        powers = (await request.app.state.bi_me.get(backend, me) or {}).get("powers") or []
+        if "bi-admin" in powers:
+            return None
+    n = result["failed"] + result["errors"]
+    return JSONResponse({"code": "DRS-9076", "detail": f"'{item.get('title')}' cannot be published: {n} of its {result['total']} tests {'fails' if n == 1 else 'fail'} ({_failures(result)}). "
+                         "Fix the item or the test; a bi-admin may publish it anyway with force."}, status_code=422)
+
+
 @router.post("/bi/python/check")
 async def check(request: Request):
-    """Checks a Python item's body: the server's manifest checks (DRS-9070) and the console's source checks (it parses, defines its entry, imports only what it lists).
-    Body ``{yaml}``; answers ``{valid, problems, manifest}``. Needs the BI power (the server decides)."""
+    """Checks a Python item's body: the server's manifest checks (DRS-9070), the console's source checks (it parses, defines its entry, imports only what it
+    lists) and the tests the item ships with, run in the sandbox. Body ``{yaml, tests?}`` (``tests: false`` skips the tests); answers
+    ``{valid, problems, manifest, tests?}``. Needs the BI power (the server decides)."""
     body = await json_body(request)
     try:
         answer = await request.app.state.backend.bi("POST", "/python/validate", ident(request), {"yaml": str(body.get("yaml", ""))})
@@ -103,4 +145,6 @@ async def check(request: Request):
         problems += check_source(m, request.app.state.pyrunner.packages)
     answer["problems"] = problems
     answer["valid"] = not any(p.get("level") == "error" for p in problems)
+    if answer["valid"] and m and m.get("tests") and body.get("tests", True) is not False:
+        answer["tests"] = await run_item_tests(request, m)
     return JSONResponse(answer, headers={"Cache-Control": "no-store"})

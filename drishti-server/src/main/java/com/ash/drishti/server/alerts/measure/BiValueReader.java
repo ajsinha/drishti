@@ -46,11 +46,18 @@ public final class BiValueReader {
     private final BiReportService reports;
     private final DatasetService datasets;
     private final BiBoardService boards;
+    private final PythonAlertReader python;
 
     public BiValueReader(BiReportService reports, DatasetService datasets, BiBoardService boards) {
+        this(reports, datasets, boards, null);
+    }
+
+    /** @param python reads Python measures (their rows go to the console's runner); null: a Python measure reads as an error */
+    public BiValueReader(BiReportService reports, DatasetService datasets, BiBoardService boards, PythonAlertReader python) {
         this.reports = reports;
         this.datasets = datasets;
         this.boards = boards;
+        this.python = python;
     }
 
     public Reading read(AlertSpec spec, Principal who, LocalDate date) {
@@ -79,8 +86,17 @@ public final class BiValueReader {
 
     private Reading visual(AlertSpec.Source s, Principal who, LocalDate date) {
         String page = s.page().isBlank() ? pageOf(who, s.report(), s.visual()) : s.page();
+        if (python != null && "python".equals(typeOf(who, s.report(), page, s.visual()))) {
+            return python.ofVisual(who, s.report(), page, s.visual(), stateOf(s.state(), date), s.reduce(), date);
+        }
         Map<String, Object> answer = reports.query(who, s.report(), null, page, s.visual(), stateOf(s.state(), date), false);
         return reduce(answer, s.measure(), s.reduce());
+    }
+
+    private String typeOf(Principal who, String report, String page, String visual) {
+        Report.Page p = reports.open(who, report).report().page(page);
+        Report.Visual v = p == null ? null : p.visual(visual);
+        return v == null ? "" : v.type();
     }
 
     private String pageOf(Principal who, String report, String visual) {
@@ -104,6 +120,12 @@ public final class BiValueReader {
     // ---- a dataset measure ---------------------------------------------------------------------------------------------------
 
     private Reading dataset(AlertSpec.Source s, Principal who, LocalDate date) {
+        if (python != null) {
+            com.ash.drishti.server.bi.dataset.Dataset.Measure pm = python.pythonMeasure(who, s.dataset(), s.measure());
+            if (pm != null) {
+                return python.ofDataset(who, s.dataset(), pm, s.filters(), date);
+            }
+        }
         ObjectNode q = JSON.createObjectNode();
         q.putArray("measures").add(s.measure());
         if (s.filters() != null) {

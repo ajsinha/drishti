@@ -229,7 +229,9 @@ public enum ErrorCode {
     /** Python in BI: the runner has no free worker (bi.python.workers) or is switched off or not installed. */
     PYTHON_BUSY("DRS-9074", 503),
     /** Python in BI: a Transform returned something a derived dataset cannot use (not a frame, a declared column missing, too many rows) or its inputs do not match the dataset's. */
-    TRANSFORM_FAILED("DRS-9075", 422);
+    TRANSFORM_FAILED("DRS-9075", 422),
+    /** Python in BI: a test shipped with a Python item failed, so the item is not published (a bi-admin may force it). */
+    PYTHON_TESTS("DRS-9076", 422);
 
     private final String code;
     private final int httpStatus;

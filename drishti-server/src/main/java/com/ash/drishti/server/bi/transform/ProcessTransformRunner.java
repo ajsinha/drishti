@@ -133,6 +133,53 @@ public final class ProcessTransformRunner implements TransformRunner {
         }
     }
 
+    @Override
+    public JsonNode measure(Map<String, Object> manifest, Map<String, Object> params, List<String> groupBy, List<String> columns, List<List<Object>> rows) {
+        if (!props.enabled()) {
+            throw new DrishtiException(ErrorCode.PYTHON_BUSY, "the Python runner is switched off for the server (drishti.bi.transform.enabled)");
+        }
+        Path script = script();
+        Path dir = null;
+        try {
+            Files.createDirectories(scratch);
+            dir = com.ash.drishti.common.TempFiles.createDir(scratch, "measure-");
+            Map<String, Object> req = new LinkedHashMap<>();
+            req.put("mode", "measure");
+            req.put("manifest", manifest);
+            req.put("params", params);
+            req.put("group_by", groupBy);
+            req.put("columns", columns);
+            req.put("rows", rows);
+            req.put("settings", Map.of("bi.python.packages", packages, "bi.python.max_timeout_seconds", Math.min(maxSeconds, (int) props.timeout().toSeconds()),
+                    "bi.python.max_memory_mb", maxMemoryMb, "bi.python.workers", 1, "bi.python.queue_seconds", 1));
+            Files.writeString(dir.resolve("req.json"), JSON.writeValueAsString(req));
+            Process p = new ProcessBuilder(python(script), script.toString(), dir.toString()).redirectErrorStream(true).redirectOutput(dir.resolve("cli.log").toFile()).start();
+            if (!p.waitFor(props.timeout().toSeconds() + 15, TimeUnit.SECONDS)) {
+                p.destroyForcibly();
+                throw new DrishtiException(ErrorCode.PYTHON_LIMIT, "the Python measure ran longer than " + props.timeout().toSeconds() + " s and was stopped (drishti.bi.transform.timeout)");
+            }
+            Path out = dir.resolve("result.json");
+            if (!Files.isRegularFile(out)) {
+                String log = Files.isRegularFile(dir.resolve("cli.log")) ? Files.readString(dir.resolve("cli.log")) : "";
+                throw new DrishtiException(ErrorCode.PYTHON_BUSY, "the Python runner gave no answer (exit " + p.exitValue() + "): " + tail(log));
+            }
+            JsonNode a = JSON.readTree(out.toFile());
+            if (!a.path("ok").asBoolean(false)) {
+                throw failure(a);
+            }
+            return a;
+        } catch (IOException e) {
+            throw new DrishtiException(ErrorCode.PYTHON_BUSY, "the Python runner could not be started: " + e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new DrishtiException(ErrorCode.PYTHON_BUSY, "the Python measure was interrupted");
+        } finally {
+            if (dir != null) {
+                delete(dir);
+            }
+        }
+    }
+
     private static DrishtiException failure(JsonNode a) {
         String code = a.path("code").asText("DRS-9071");
         ErrorCode ec = ErrorCode.PYTHON_FAILED;

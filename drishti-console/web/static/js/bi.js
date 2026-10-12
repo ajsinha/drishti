@@ -300,6 +300,10 @@
           var list = d.problems || (d.code ? [{ level: 'error', code: d.code, path: '', message: d.detail }] : []);
           if (!list.length) { w.appendChild(h('p', { 'data-py-check': 'ok', text: 'The Python item checks out: the manifest is valid and the source parses.' })); }
           list.forEach(function (p) { w.appendChild(h('p', { 'data-py-check': p.level, text: p.level + ' ' + p.code + (p.path ? ' ' + p.path : '') + ': ' + p.message })); });
+          if (d.tests) {                                                  // the tests the item ships with, run in the sandbox
+            w.appendChild(h('p', { 'data-py-tests': d.tests.ok ? 'ok' : 'failed', text: 'Tests: ' + d.tests.passed + ' of ' + d.tests.total + ' passed' + (d.tests.failed ? ', ' + d.tests.failed + ' failed' : '') + (d.tests.errors ? ', ' + d.tests.errors + ' could not run' : '') + '.' }));
+            d.tests.results.forEach(function (r) { w.appendChild(h('p', { 'data-py-test': r.status, text: (r.status === 'pass' ? 'passed' : r.status === 'fail' ? 'FAILED' : 'could not run') + ' · ' + r.name + (r.message ? ' · ' + r.message : '') })); });
+          }
         }).catch(fail);
     }
     function actions() {

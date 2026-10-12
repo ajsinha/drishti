@@ -44,6 +44,17 @@ public interface TransformRunner {
     /** What came back: the file, the columns typed from the frame, the rows, and the time the run took. */
     record Result(Path file, List<Column> columns, long rows, long millis) {}
 
+    /**
+     * Runs a Python <em>measure</em> over rows the server built for one person (an alert on a Python measure has no browser to run it in): the answer has
+     * {@code by} (the group columns) and {@code rows} (the group values, then the number). The default refuses: only {@link ProcessTransformRunner} runs Python.
+     *
+     * @param groupBy the group columns; empty: the whole input is one group
+     */
+    default com.fasterxml.jackson.databind.JsonNode measure(Map<String, Object> manifest, Map<String, Object> params, List<String> groupBy, List<String> columns,
+            List<List<Object>> rows) {
+        throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.PYTHON_BUSY, "this runner runs Transforms only");
+    }
+
     /** Runs it; a failure is a {@code DrishtiException} with the Python code (DRS-9071 to 9074) or {@code DRS-9075}. */
     Result run(Request request);
 }

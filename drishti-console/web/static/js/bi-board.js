@@ -76,6 +76,7 @@
     const qpath = '/reports/' + B.id2path(rid) + '/query';
     if (['text', 'image', 'button'].indexOf(spec.type) >= 0) { entry.frame.result(null, (host) => B.visuals.draw(host, spec, ctxFor(entry), null)); return Promise.resolve(); }
     if (['perspective-grid', 'perspective-pivot'].indexOf(spec.type) >= 0) { return loadPerspective(entry, token, quiet, qpath); }
+    if (spec.type === 'python') { return loadPython(entry, token, quiet); }
     if (!quiet) { entry.frame.busy(); }
     return B.enqueue(() => B.api('POST', qpath, { page: entry.info.page, visual: spec.id, state: {} })).then((res) => {
       if (token !== entry.token) { return; }
@@ -90,6 +91,25 @@
     }, (e) => {
       if (token !== entry.token) { return; }
       if (quiet && entry.res) { B.live.markStale(entry.frame, true, e.code ? e.code + ' ' + e.detail : e.message); } else { entry.frame.error(e); }
+    });
+  }
+
+  /** A tile that is a Python visual (bi-python.js): the item runs for the person looking, on the rows they may see, on the server or in the browser; no threshold alert (watch a Python measure with an alert instead). */
+  function loadPython(entry, token, quiet) {
+    const spec = entry.spec;
+    if (!B.python) { entry.frame.error({ code: 'DRS-9074', detail: 'The Python visual script did not load.' }); return Promise.resolve(); }
+    if (!quiet) { entry.frame.busy(); }
+    return B.python.run(spec, { report: entry.info.report, page: entry.info.page, state: {} }).then((res) => {
+      if (token !== entry.token) { return; }
+      entry.frame.result(null, (host) => B.python.draw(host, spec, ctxFor(entry), res), quiet ? { keep: true } : undefined);
+      B.python.footer(entry.frame.foot, res);
+      B.live.markStale(entry.frame, false);
+      entry.frame.el.setAttribute('data-updated', new Date().toISOString());
+    }, (e) => {
+      if (token !== entry.token) { return; }
+      if (quiet && entry.frame.body.querySelector('.bi-py-chart,.bi-py-img,.bi-vega')) { B.live.markStale(entry.frame, true, e.code ? e.code + ' ' + e.detail : e.message); return; }
+      entry.frame.error(e);
+      if (e.traceback) { entry.frame.body.appendChild(h('pre', { class: 'bi-py-trace', 'data-py-trace': '', text: e.traceback })); }
     });
   }
 

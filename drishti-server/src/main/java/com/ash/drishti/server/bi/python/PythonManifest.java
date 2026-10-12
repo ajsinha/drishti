@@ -41,6 +41,8 @@ import java.util.regex.Pattern;
  * target: server                # server, browser or both
  * timeout: 10                   # seconds
  * memory: 256                   # megabytes
+ * tests:                        # optional: checked in the console's sandbox by Check, and a failing one refuses a publish (see {@link PythonTests})
+ *   - { name: sums, input: { columns: [pnl1d], rows: [[1.0], [2.0]] }, expect: 3.0 }
  * source: |
  *   def compute(table, params):
  *       return float(table["pnl1d"].std())
@@ -58,7 +60,7 @@ public final class PythonManifest {
     private static final Pattern DATASET_REF = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}");
     private static final Pattern NAME = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_-]{0,63}");
     private static final Set<String> TOP = Set.of("rachana", "python", "version", "title", "description", "sample", "owner", "tags", "endorsement", "audience", "interface",
-            "entry", "inputs", "packages", "target", "timeout", "memory", "output", "params", "source");
+            "entry", "inputs", "packages", "target", "timeout", "memory", "output", "params", "tests", "source");
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -71,7 +73,7 @@ public final class PythonManifest {
 
     /** The parsed manifest. */
     public record Manifest(String name, String interfaceKind, String entry, List<String> inputs, List<String> packages, String target, int timeout, int memory, String output,
-            Map<String, Object> params, String source) {
+            Map<String, Object> params, List<Map<String, Object>> tests, String source) {
         public Map<String, Object> toMap() {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("name", name);
@@ -84,6 +86,7 @@ public final class PythonManifest {
             m.put("memory", memory);
             m.put("output", output);
             m.put("params", params);
+            m.put("tests", tests);
             m.put("source", source);
             return m;
         }
@@ -194,7 +197,8 @@ public final class PythonManifest {
             packages.stream().filter(p -> !Set.of("pandas", "numpy", "scipy", "statsmodels").contains(p))
                     .forEach(p -> out.add(new Problem("error", "packages", "'" + p + "' is not in the browser's Python (Pyodide here has numpy, pandas, scipy and statsmodels): target server")));
         }
-        Manifest m = new Manifest(name, iface, entry, inputs, packages, target, timeout, memory, output, params, source);
+        List<Map<String, Object>> tests = PythonTests.parse(root.path("tests"), iface, out);
+        Manifest m = new Manifest(name, iface, entry, inputs, packages, target, timeout, memory, output, params, tests, source);
         return new Result(m, out);
     }
 
