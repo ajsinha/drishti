@@ -13,7 +13,43 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 2.0.0 — release notes
+# Drishti 2.1.0 — release notes
+
+*2026-10-12.* **The BI long tail closed, a multi-day type-ahead index, and safe install and uninstall in Admin.**
+
+- **Measures and reports:** window functions (`lag`, `lead`, ranks, moving and running figures), several unrelated fact
+  tables in one query, every measure aggregated at its own table's grain (no fan-out, also in mixed-grain expressions),
+  incremental live measures, dataset refresh state and history that survive a restart with **Refresh now**, the
+  relative-date slicer, tablet layouts, expected-value tests in Check, the entity-view visual and a region economics sample.
+- **Governance, live data and boards:** renames recognised as renames, BI items in pack archives, import rollback, impact
+  of type and meaning changes, lineage past the connector, history of a live table, tile hysteresis and the **board
+  designer**.
+- **Python, Analyse and Perspective:** Vega-Lite visuals, Python on boards and in alerts, tests shipped with a Python item,
+  Calc's `drishti_bi` client with Graphic Walker, Slice and SQL in the browser with DuckDB-Wasm, promote a notebook cell to
+  a report visual, Perspective charts and its settings panel.
+- **AI and distribution** (AI off by default, through the AI policy): narrative summaries in subscriptions written from
+  each recipient's own figures, the designer copilot (suggestions and plain-words Check explanations), the dataset helper;
+  native charts in Excel exports, alert delivery retries, **webhook** (signed, allow-listed hosts) and **SMS** (any HTTP
+  gateway, never figures) channels.
+- **Embedding:** `<drishti-about>` and `<drishti-search>` (token scope `embed:search`, read-only, masked, rate-limited),
+  Elements 1.4.0, and React, Vue and Angular sample host pages.
+- **Multi-day type-ahead index:** per connector `index.days`; every lookup by a concrete business date; closed days in
+  compressed files under `drishti.index.dir` (`./data/index`) with a disk cap and their space freed at once; an automatic
+  check every 10 minutes (`index.reload-every`) and **Reload** per day, kind or connector in Admin.
+- **Admin → Artifacts:** every installed pack, connector file and shipped BI file in one list; what depends on it before
+  anything changes; **Disable**, or **Uninstall** (refused while anything depends on it) into an archive with **Restore**;
+  install from the same page; all audited.
+- **Temp folders:** the server (`drishti.tmp-dir`) and the console (`DRISHTI_CONSOLE_TMP_DIR`) each keep one folder per
+  process, cleaned at exit and at the next start.
+- **Documentation:** the BI guides read as one set with no stale "not built" markers; tutorials 10–17 re-followed with
+  new pictures where screens changed.
+
+**Upgrading from 2.0.0:** nothing to migrate by hand; what is new is created at start. The type-ahead index keeps today's behaviour (`index.days: 1`) until you raise it; plan heap and disk with
+docs/admin/OPERATIONS.md §12.2. Webhook hosts must be allow-listed by an admin before use. The Angular sample page needs a
+looser policy on its own path (it compiles in the browser). Pending alert retries are kept in memory, so a restart drops
+them.
+
+# Previous release: Drishti 2.0.0 — release notes
 
 *2026-10-12.* **BI complete, maps, coherent live data, seventeen hands-on tutorials and one consistent look.**
 
@@ -50,7 +86,7 @@ database's `max_connections` against pools × instances (docs/admin/OPERATIONS.m
 redirect. The BI menu no longer lists report names, and Forms and Reports moved into Views. Pyodide (browser Python) is
 installed by `tools/fetch-pyodide.sh`, as for Calc.
 
-# Previous release: Drishti 1.22.0 — release notes
+# Older release: Drishti 1.22.0 — release notes
 
 *2026-10-11.* **Distribution: export, subscriptions, alerts and embedded reports.**
 
