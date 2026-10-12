@@ -99,7 +99,7 @@ def expected():
 
 
 def settled(page, timeout=90000):
-    page.wait_for_function("() => document.querySelectorAll('.bi-vis-python').length === 2 && !document.querySelector('.bi-vis-busy') && "
+    page.wait_for_function("() => document.querySelectorAll('.bi-vis-python').length === 3 && !document.querySelector('.bi-vis-busy') && "
                            "[...document.querySelectorAll('.bi-vis-python')].every(v => v.querySelector('.bi-py-foot') || v.classList.contains('bi-vis-failed'))", timeout=timeout)
 
 
@@ -112,7 +112,7 @@ def check_figures(page, target):
     hist = page.evaluate(HIST)
     assert hist["title"] == f"One-day P&L of {len(pnl):,} trades" and sum(hist["counts"]) == len(pnl) and len(hist["counts"]) == 24
     feet = page.eval_on_selector_all(".bi-py-foot", "els => els.map(e => e.dataset.target)")
-    assert feet == [target, target]
+    assert feet == [target, target, "server"]            # the third visual (Vega-Lite) is pinned to the server
     text = page.locator(".bi-py-foot").first.inner_text()
     assert "desk-pnl-volatility" in text and "rows" in text
 
@@ -131,7 +131,7 @@ def test_the_sample_as_shipped_asks_the_server_first(stack, browser):
     page.goto(f"{CONSOLE_URL}/bi/r/file:report:python-desk-risk")
     page.wait_for_selector("[data-ready=yes]", timeout=30000)
     settled(page)
-    assert page.eval_on_selector_all(".bi-py-foot", "els => els.map(e => e.dataset.target)") == ["server", "server"]
+    assert page.eval_on_selector_all(".bi-py-foot", "els => els.map(e => e.dataset.target)") == ["server", "server", "server"]
     clean(page)
     page.close()
 

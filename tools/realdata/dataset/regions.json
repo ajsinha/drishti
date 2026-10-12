@@ -1,5 +1,6 @@
 {
  "note": "Illustrative, rounded from public figures, not for reporting. Population to the nearest 10,000, GDP to the nearest US$ billion. Australian GDP is shown in US dollars at a rounded rate. Replace with a fetched series (ABS, US Census Bureau, BEA) before any reporting use.",
+ "compiledAt": "2026-10-12",
  "regions": [
   {
    "country": "AUS",

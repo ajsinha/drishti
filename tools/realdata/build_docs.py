@@ -223,7 +223,7 @@ def _regions(docs: dict[str, dict]) -> None:
     ds = json.loads((N.dataset_dir() / "regions.json").read_text(encoding="utf-8"))
     for r in ds["regions"]:
         rid = f"REGE-{r['code']}"
-        prov = {"source": r["source"], "dataset": "Region economics (illustrative sample)", "retrievedAt": "", "licence": "Illustrative, rounded from public figures; not for reporting",
+        prov = {"source": r["source"], "dataset": "Region economics (illustrative sample)", "retrievedAt": ds["compiledAt"], "licence": "Illustrative, rounded from public figures; not for reporting",
                 "attribution": ds["note"], "url": ""}
         docs["region-economy"][rid] = {
             "regionId": rid, "name": r["name"], "regionCode": r["code"], "iso3": r["country"], "countryName": r["countryName"], "year": str(r["year"]),
@@ -231,7 +231,7 @@ def _regions(docs: dict[str, dict]) -> None:
             "gdpPerCapita": round(r["gdpUsdBn"] * 1e9 / r["population"]), "source": r["source"], "facts": {"status": "Illustrative, rounded from public figures, not for reporting", "regionCode": r["code"], "population": "to the nearest 10,000",
                       "gdp": "to the nearest US$ billion"},
             "economy": f"ECON-{r['country']}" if f"ECON-{r['country']}" in docs["economy"] else None,
-            "provenance": prov, "_meta": {"source": r["source"], "dataset": prov["dataset"], "retrievedAt": "", "licence": prov["licence"], "generation": 1}}
+            "provenance": prov, "_meta": {"source": r["source"], "dataset": prov["dataset"], "retrievedAt": prov["retrievedAt"], "licence": prov["licence"], "generation": 1}}
 
 
 # =================================================================== politics and society
