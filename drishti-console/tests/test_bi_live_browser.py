@@ -110,7 +110,7 @@ def test_the_live_report_redraws_in_place_as_the_trades_tick_and_says_when(stack
     wait_state(page, "live")
     page.wait_for_selector('[data-visual="by-desk"] .bi-chart')
     assert card(page, "trades") == 750
-    assert page.inner_text('[data-visual="trades"] .bi-vis-foot').strip().endswith("live")                 # the layer that answered
+    assert re.search(r"· live( \(\w+\))?$", page.inner_text('[data-visual="trades"] .bi-vis-foot').strip())                 # the layer that answered
     mtm = card(page, "mtm")
     page.evaluate("document.querySelector('[data-visual=\"by-desk\"] .bi-chart').setAttribute('data-mark', 'same-element')")
     page.evaluate("document.querySelector('[data-visual=\"mtm\"] .bi-card-value').closest('.bi-vis').setAttribute('data-mark', 'same-frame')")

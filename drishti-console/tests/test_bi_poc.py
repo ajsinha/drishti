@@ -65,7 +65,7 @@ def test_the_libraries_load_on_this_page_only(on):
     assert not re.search(r"<script[^>]*vendor/(perspective|duckdb-wasm|apache-arrow)", page)       # bi-poc.js imports them, on demand
     for other in ("/t", "/s", "/help", "/about", "/"):
         text = on.get(other).text
-        assert "bi-poc" not in text.replace('href="/bi/poc"', "") and "vendor/perspective" not in text and "duckdb-wasm" not in text, other
+        assert "bi-poc" not in text.replace('href="/bi/poc"', "") and "vendor/perspective" not in text and "vendor/duckdb-wasm" not in text, other   # the Analyse help card names DuckDB-Wasm in prose; the library path must not appear
 
 
 def test_webassembly_is_allowed_on_the_poc_page_and_its_workers_only(on):

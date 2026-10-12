@@ -171,7 +171,7 @@ def test_a_host_page_under_a_strict_policy_draws_the_report_live_and_masked(stac
     page = host_page(browser)
     ready(page)
     rep = page.locator("#rep")
-    expect(rep.locator("[data-page]")).to_have_count(3)                                           # Desk, All trades, Pivot
+    expect(rep.locator("[data-page]")).to_have_count(4)                                           # Desk, All trades, Pivot, Chart
     expect(rep.locator('[data-visual="trades"] .bi-card-value')).not_to_have_text("")
     assert page.evaluate("document.getElementById('rep').state") in ("live", "static")
     loaded = events(page, "loaded")
@@ -266,7 +266,7 @@ def test_the_report_at_390_pixels_uses_its_phone_layout_in_the_element_and_in_th
     wide = host_page(browser)
     ready(wide)
     assert wide.locator("#rep [data-grid]").get_attribute("data-phone") == "auto"
-    assert wide.locator("#rep [data-visual]").count() == 9
+    assert wide.locator("#rep [data-visual]").count() == 10
     wide.set_viewport_size({"width": 390, "height": 844})                                           # the element's width follows: it swaps to the phone layout by itself
     wide.wait_for_function("() => document.querySelector('#rep').shadowRoot.querySelector('[data-grid]').getAttribute('data-phone') === 'layout'", timeout=20000)
     ready(wide)
@@ -297,20 +297,20 @@ def test_the_designers_phone_tab_arranges_a_page_with_a_390_pixel_preview(stack,
     page.wait_for_selector("[data-design-root][data-ready=yes]", state="attached", timeout=30000)
     page.click('[data-tab="phone"]')
     rows = page.locator("[data-phone-visual]")
-    expect(rows).to_have_count(9)
-    assert page.locator('[data-phone-preview] [data-phone-card]').count() == 9
+    expect(rows).to_have_count(10)
+    assert page.locator('[data-phone-preview] [data-phone-card]').count() == 10
     assert page.evaluate("document.querySelector('[data-phone-preview]').getBoundingClientRect().width") <= 390
     # hide three visuals; move one up with the keyboard-reachable button; drag one; give one a height
     for vis in ("rolling", "losses", "latest"):
         page.check(f'[data-phone-hide="{vis}"]')
-    expect(page.locator("[data-phone-preview] [data-phone-card]")).to_have_count(6)
+    expect(page.locator("[data-phone-preview] [data-phone-card]")).to_have_count(7)
     page.click('[data-phone-up="mtm"]')
     page.click('[data-phone-up="mtm"]')
     page.drag_and_drop('[data-phone-visual="trades"]', '[data-phone-visual="by-desk"]')
     page.fill('[data-phone-rows="by-desk"]', "5")
     page.press('[data-phone-rows="by-desk"]', "Tab")
     order = page.evaluate("[...document.querySelectorAll('[data-phone-visual][data-hidden=no]')].map(r => r.dataset.phoneVisual)")
-    assert order[0] == "mtm" and set(order) == {"mtm", "trades", "by-desk", "movers", "notional", "pnl"}, order
+    assert order[0] == "mtm" and set(order) == {"mtm", "trades", "by-desk", "movers", "notional", "pnl", "last-hour"}, order
     card = page.locator('[data-phone-card="by-desk"]')
     assert card.get_attribute("data-rows") == "5" and abs(card.evaluate("e => e.getBoundingClientRect().height") - 320) <= 2
     page.click('[data-tab="yaml"]')

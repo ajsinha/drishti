@@ -157,6 +157,7 @@ def test_a_board_of_python_tiles_runs_them_for_the_person_looking(stack, browser
     page.goto(CONSOLE_URL + "/bi/b/file:board:python-wall")
     page.wait_for_function("() => document.querySelectorAll('[data-tile] .bi-py-foot').length === 3", timeout=120000)
     assert page.locator('[data-tile="vol"] .bi-py-chart').count() == 1 and page.locator('[data-tile="hist"] .bi-py-chart').count() == 1
+    page.wait_for_selector('[data-tile="strip"] .bi-vega[data-ready="1"] canvas', timeout=30000)                   # Vega-Lite draws after the footer shows: wait for its ready mark
     assert page.locator('[data-tile="strip"] .bi-vega[data-ready="1"] canvas').count() == 1
     assert "desk-pnl-volatility" in page.locator('[data-tile="vol"] .bi-py-foot').inner_text()
     quiet(page)
