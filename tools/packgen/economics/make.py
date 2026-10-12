@@ -94,6 +94,12 @@ KINDS = [
             ("Growth, %", "@.growth", "pc2", "sign", False)], key="F3"),
           P("line", "gdpPath", "GDP, USD bn", "$.gdpPath", x="year", y="gdp", fmt="amount0", area="right"), SRC],
          links={"memberEconomies": ("economy", "Economies")}),
+    Kind("region-economy", "REGE", "REGE-", "Region economy", G, "A state or territory (ISO 3166-2): population, GDP and GDP per head. An illustrative sample, rounded from public figures, not for reporting.", "regionId",
+         [("Region", "$.name", None, None, False), ("Code", "$.regionCode", None, None, False), ("Country", "$.countryName", None, None, False),
+          ("Population (m)", "$.populationM", "price2", None, False), ("GDP (USD bn)", "$.gdpUsdBn", "amount0", None, False),
+          ("GDP per capita (USD)", "$.gdpPerCapita", "amount0", None, True)],
+         [P("kv", "facts", "About these figures", "$.facts"), SRC],
+         links={"economy": ("economy", "Economy")}),
 ]
 
 COLUMNS = {
@@ -102,7 +108,8 @@ COLUMNS = {
     "economic-forecast": ["economyName", "vintage", "growth2027", "inflation2027", "debt2030"],
     "labour-market": ["economyName", "unemployment", "participation", "youthUnemployment", "employmentRatio"],
     "fiscal-position": ["economyName", "debt", "balance", "revenue", "spending", "military"],
-    "country-group": ["name", "groupType", "economies", "gdpUsdBn", "populationM", "growth"]}
+    "country-group": ["name", "groupType", "economies", "gdpUsdBn", "populationM", "growth"],
+    "region-economy": ["name", "regionCode", "iso3", "countryName", "population", "gdpUsdBn", "gdpPerCapita", "year", "source"]}
 FORM = {
     "economy": {"name": {"type": "text", "label": "Name"}, "iso3": {"type": "text", "label": "ISO3 code"}, "regionName": {"type": "enum", "label": "Region"},
                 "incomeName": {"type": "enum", "label": "Income group"}, "gdpUsdBn": {"type": "number", "label": "GDP (USD bn)"},
@@ -120,7 +127,10 @@ FORM = {
                         "revenue": {"type": "number", "label": "Revenue / GDP (%)"}, "spending": {"type": "number", "label": "Expense / GDP (%)"},
                         "military": {"type": "number", "label": "Military / GDP (%)"}},
     "country-group": {"name": {"type": "text", "label": "Name"}, "groupType": {"type": "enum", "label": "Type"}, "economies": {"type": "number", "label": "Economies"},
-                      "gdpUsdBn": {"type": "number", "label": "GDP (USD bn)"}, "populationM": {"type": "number", "label": "Population (m)"}, "growth": {"type": "number", "label": "Real growth (%)"}}}
+                      "gdpUsdBn": {"type": "number", "label": "GDP (USD bn)"}, "populationM": {"type": "number", "label": "Population (m)"}, "growth": {"type": "number", "label": "Real growth (%)"}},
+    "region-economy": {"name": {"type": "text", "label": "Region"}, "regionCode": {"type": "text", "label": "Region code (ISO 3166-2)"}, "iso3": {"type": "text", "label": "Country (ISO3)"},
+                       "countryName": {"type": "text", "label": "Country"}, "population": {"type": "number", "label": "Population"}, "gdpUsdBn": {"type": "number", "label": "GDP (USD bn)"},
+                       "gdpPerCapita": {"type": "number", "label": "GDP per capita (USD)"}, "year": {"type": "text", "label": "Year"}, "source": {"type": "text", "label": "Source"}}}
 
 
 def _without_imf() -> None:
@@ -172,7 +182,7 @@ def spec() -> PB.PackSpec:
         domains={"macro": KINDS},
         examples=[e for e in [("ECON ECON-IND", "India · growth path, output by sector"), ("ECON ECON-USA", "United States · the same view"), ("MACRO MACRO-BRA-GDP-GROWTH", "Brazil · one indicator with history and rank"),
                   ("FCST FCST-JPN-WEO", "Japan · IMF outlook to 2031"), ("LABR LABR-NGA", "Nigeria · labour market"), ("FISC FISC-USA", "United States · debt and balance"),
-                  ("ECG ECG-SAS", "South Asia · a World Bank region")] if not (NO_IMF and e[0].startswith("FCST"))],
+                  ("ECG ECG-SAS", "South Asia · a World Bank region"), ("REGE REGE-AU-NSW", "New South Wales · an illustrative regional sample")] if not (NO_IMF and e[0].startswith("FCST"))],
         overview=("The figures are published data, not samples: World Bank World Development Indicators (CC BY 4.0) and the CIA World Factbook (public domain). This build has no IMF data. "
                   "Every document names its source, dataset, retrieval date and licence in its Data source panel. An economy links to its region and income "
                   "group, labour market, fiscal position and its headline indicators; the groups link back to their economies. Refresh with `tools/realdata/realdata.py` "

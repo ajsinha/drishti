@@ -54,7 +54,7 @@ derived: { ... }            # a derived dataset: a Python Transform that returns
 columns: { ... }            #   ... and the columns it returns, typed
 ```
 
-Unknown top-level keys are a warning. Five complete, commented examples ship in `config/bi/datasets/`: `trades-basic` (one table), `trading-risk` (five tables across three packs, a row rule, masks, a rollup) and `trading-cashflows` (nested arrays as tables), which the tutorial reads in chapters 2 to 5, and the live `live-trading` and `live-exposure` (section 7.1, tutorial chapter 18).
+Unknown top-level keys are a warning. Five complete, commented examples ship in `config/bi/datasets/`: `trades-basic` (one table), `trading-risk` (five tables across three packs, a row rule, masks, a rollup) and `trading-cashflows` (nested arrays as tables), which the tutorial reads in chapters 2 to 5, and the live `live-trading` and `live-exposure` (section 7.1, tutorial chapter 18); `world-economics` (real World Bank data by country) and `region-economics` (Australian and US states, illustrative figures rounded from public figures, not for reporting) feed the map reports.
 
 ## 2. Tables and columns
 

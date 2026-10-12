@@ -264,7 +264,7 @@ open item page says so on its next load (`404 DRS-9001`). A file that does not p
 as a problem, with the message, in *Admin, BI settings* and on *Health* (`bi.problems`); fixing the file clears it. A bad file that never parsed has no item, only the
 problem. Shipped items cannot be edited here: change the file. Details: [config/bi/README.md](../../config/bi/README.md).
 
-Drishti ships **five datasets** (`trades-basic`, `trading-risk`, `trading-cashflows`, and the live `live-trading` and `live-exposure`), **six reports** (`trades-overview`, `counterparty-risk`, `cashflow-ladder`, `live-trading-desk`, `live-exposure` and `python-desk-risk`), **two Python items** (`desk-pnl-volatility`, `pnl-histogram`) and **one board** (`desk-wall`), each commented line by line and marked `sample: true`. A sample is hidden from the people who may not see sample packs
+Drishti ships **five datasets** (`trades-basic`, `trading-risk`, `trading-cashflows`, and the live `live-trading` and `live-exposure`), **six reports** (`trades-overview`, `counterparty-risk`, `cashflow-ladder`, `live-trading-desk`, `live-exposure` and `python-desk-risk`), **two Python items** (`desk-pnl-volatility`, `pnl-histogram`) and **one board** (`desk-wall`), each commented line by line and marked `sample: true`. Two map samples sit beside them: `world-economics` (real World Bank data) and `region-economics` (Australian and US states: illustrative figures, rounded from public figures, not for reporting). A sample is hidden from the people who may not see sample packs
 (*Admin, Packs, Hide samples from business users* or *from everyone*), exactly as a sample pack is.
 
 ```yaml

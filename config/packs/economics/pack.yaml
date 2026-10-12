@@ -28,6 +28,7 @@ kinds:
 - labour-market
 - fiscal-position
 - country-group
+- region-economy
 sutras: sutras
 mnemonics:
   ECON:
@@ -48,6 +49,9 @@ mnemonics:
   ECG:
     kind: country-group
     label: Country group
+  REGE:
+    kind: region-economy
+    label: Region economy
 graph:
   id-patterns:
   - pattern: ^ECON-
@@ -62,6 +66,8 @@ graph:
     kind: fiscal-position
   - pattern: ^ECG-
     kind: country-group
+  - pattern: ^REGE-
+    kind: region-economy
   fields:
     economy:
       kind: economy
@@ -101,6 +107,7 @@ connectors:
     - labour-market
     - fiscal-position
     - country-group
+    - region-economy
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: macro
@@ -111,6 +118,7 @@ routes:
   labour-market: macro-store
   fiscal-position: macro-store
   country-group: macro-store
+  region-economy: macro-store
 console:
   examples:
   - - ECON ECON-IND
@@ -127,6 +135,8 @@ console:
     - United States · debt and balance
   - - ECG ECG-SAS
     - South Asia · a World Bank region
+  - - REGE REGE-AU-NSW
+    - New South Wales · an illustrative regional sample
   help: config/help.yaml
 columns:
   economy:
@@ -173,6 +183,16 @@ columns:
   - gdpUsdBn
   - populationM
   - growth
+  region-economy:
+  - name
+  - regionCode
+  - iso3
+  - countryName
+  - population
+  - gdpUsdBn
+  - gdpPerCapita
+  - year
+  - source
 form:
   economy:
   - path: economyId
@@ -312,6 +332,37 @@ form:
   - path: growth
     label: Real growth (%)
     type: number
+  region-economy:
+  - path: regionId
+    label: Region id
+    type: id
+  - path: name
+    label: Region
+    type: text
+  - path: regionCode
+    label: Region code (ISO 3166-2)
+    type: text
+  - path: iso3
+    label: Country (ISO3)
+    type: text
+  - path: countryName
+    label: Country
+    type: text
+  - path: population
+    label: Population
+    type: number
+  - path: gdpUsdBn
+    label: GDP (USD bn)
+    type: number
+  - path: gdpPerCapita
+    label: GDP per capita (USD)
+    type: number
+  - path: year
+    label: Year
+    type: text
+  - path: source
+    label: Source
+    type: text
 roles:
   economist:
     kinds:
@@ -321,4 +372,5 @@ roles:
     - labour-market
     - fiscal-position
     - country-group
+    - region-economy
     raw: true

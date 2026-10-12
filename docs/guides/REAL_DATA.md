@@ -67,6 +67,7 @@ credits; the *About this series* panel shows the World Bank code to look it up.
 | economics | `labour-market` | `LABR` | 185 | unemployment, participation, youth and female labour, jobs and output by sector |
 | economics | `fiscal-position` | `FISC` | 192 | IMF debt and net lending, World Bank revenue, expense, military spending |
 | economics | `country-group` | `ECG` | 12 | a World Bank region, income group or the world, with aggregate series and its largest economies |
+| economics | `region-economy` | `REGE` | 59 | a state or territory (ISO 3166-2, `AU-NSW`, `US-CA`) with population and GDP: an **illustrative sample, rounded from public figures, not for reporting** (`tools/realdata/dataset/regions.json`, not fetched), behind the BI sample report *Region economics* |
 | politics-society | `jurisdiction` | `JUR` | 216 | a country: government type, capital, legislature seats by party, indicators, links to office holders, elections, parties and region |
 | politics-society | `office-holder` | `OFFC` | 430 | the chief of state and head of government as the Factbook publishes them |
 | politics-society | `election` | `ELEC` | 378 | the most recent lower-chamber, upper-chamber and executive election: system, term, seats by party, next election |

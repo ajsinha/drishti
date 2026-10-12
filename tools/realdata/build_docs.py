@@ -19,6 +19,7 @@ Percentages stay in percent as published (6.43 means 6.43%); the packs' pc1 / pc
 """
 from __future__ import annotations
 
+import json
 import os
 import re
 import sys
@@ -111,7 +112,7 @@ def _code(key: str) -> str:
 # =================================================================== economics
 def economics(d: Data | None = None) -> dict[str, dict[str, dict]]:
     d = d or Data()
-    docs: dict[str, dict] = {k: {} for k in ("economy", "macro-indicator", "economic-forecast", "labour-market", "fiscal-position", "country-group")}
+    docs: dict[str, dict] = {k: {} for k in ("economy", "macro-indicator", "economic-forecast", "labour-market", "fiscal-position", "country-group", "region-economy")}
     p_wb = d.prov("wdi")
     if d.no_imf:
         p_all, p_imf, p_wbimf = d.prov("wdi", "factbook"), None, p_wb
@@ -212,7 +213,25 @@ def economics(d: Data | None = None) -> dict[str, dict[str, dict]]:
             "growth": d.val("gdp_growth", gid), "inflation": d.val("inflation", gid), "growthPath": d.path("gdp_growth", gid, "growth"), "gdpPath": d.path("gdp", gid, "gdp"),
             "topEconomies": [{"economy": d.C[i]["name"], "gdpUsdBn": d.val("gdp", i), "growth": d.val("gdp_growth", i)} for i in members[:10]],
             "memberEconomies": [f"ECON-{i}" for i in members], "provenance": p_wb, "_meta": d.meta_of(p_wb)}
+    _regions(docs)
     return docs
+
+
+def _regions(docs: dict[str, dict]) -> None:
+    """The region-economy sample: states and territories (ISO 3166-2) with population and GDP. The committed file is an ILLUSTRATIVE set,
+    rounded from public figures and labelled so in every document; it is not fetched and not for reporting."""
+    ds = json.loads((N.dataset_dir() / "regions.json").read_text(encoding="utf-8"))
+    for r in ds["regions"]:
+        rid = f"REGE-{r['code']}"
+        prov = {"source": r["source"], "dataset": "Region economics (illustrative sample)", "retrievedAt": "", "licence": "Illustrative, rounded from public figures; not for reporting",
+                "attribution": ds["note"], "url": ""}
+        docs["region-economy"][rid] = {
+            "regionId": rid, "name": r["name"], "regionCode": r["code"], "iso3": r["country"], "countryName": r["countryName"], "year": str(r["year"]),
+            "populationM": round(r["population"] / 1e6, 2), "population": r["population"], "gdpUsdBn": r["gdpUsdBn"],
+            "gdpPerCapita": round(r["gdpUsdBn"] * 1e9 / r["population"]), "source": r["source"], "facts": {"status": "Illustrative, rounded from public figures, not for reporting", "regionCode": r["code"], "population": "to the nearest 10,000",
+                      "gdp": "to the nearest US$ billion"},
+            "economy": f"ECON-{r['country']}" if f"ECON-{r['country']}" in docs["economy"] else None,
+            "provenance": prov, "_meta": {"source": r["source"], "dataset": prov["dataset"], "retrievedAt": "", "licence": prov["licence"], "generation": 1}}
 
 
 # =================================================================== politics and society
