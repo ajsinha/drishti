@@ -207,7 +207,6 @@ def test_the_perspective_chart_its_settings_and_the_saved_view(stack, browser):
     s, again = api(page, "GET", "/items/" + rid)
     assert s == 200 and "view:" in again["body"] and "Y Line" in again["body"] and "group_by" in again["body"], again["body"]
     assert page.errors == []
-    clean(page)
     page.close()
 
 
