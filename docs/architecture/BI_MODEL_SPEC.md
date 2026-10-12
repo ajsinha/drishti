@@ -1419,3 +1419,242 @@ in the same model, and the model cannot be published until that dataset gets a r
 | 6 | **Old query API**: keep `POST /datasets/{id}/query` translated until W4, or remove in W1? | Keep until W4 (the console, Python `drishti_bi` and scripts move in W4), then `410` with the MQ equivalent |
 | 7 | **Converter on stored items**: republish published items automatically as the bi-admin, or leave them as drafts for owners to publish? | Republish automatically (audited, reversible by restoring the saved state): a half-migrated catalogue is a dead end for readers |
 | 8 | **MQ in YAML and JSON**, both forever, and the name "model query" (`mq: 1`) for users? | Both (YAML in files and tests, JSON on the wire); users see "query" in the UI, "model query" in the docs |
+
+## 12. Query execution tiers *(planner: W3; tiers 1 and 2 exist in W1)*
+
+A model is a small database rooted in packs: its datasets are the tables, references and relationships are the keys and
+joins, measures are its stored calculations, row rules and masks are its grants, and the **model query (MQ, section 5)**
+is its query language. Every panel, card, table, chart, slicer, alert, tile, export and Analyse slice is one MQ. An MQ
+names **fields and measures only**; the joins come from the model's relationships, so a report says *what*, the model
+knows *how*.
+
+Each MQ is split by a **planner** across three tiers. The report author does not choose; a design may hint.
+
+| Tier | Runs | Typical work | Why there |
+|---|---|---|---|
+| **1. Source** (through the pack's connector) | DuckDB over a Delta or Parquet lake, SQL to PostgreSQL, a stream's own rollups | column choice, row filters (including the reader's row rules on that dataset), aggregation by the dataset's own grain when the source can do it | the data does not move; the source scans its own data fastest |
+| **2. Server** (the Drishti engine) | the Java server | joins between datasets of **different** connectors, per-grain aggregation the source cannot do, the meeting of facts through shared dimensions, fan-out refusal, the currency guard, **security** (row rules and masks applied per dataset before any join), Python datasets in the sandbox, caches and refresh layers, **standing queries** kept current incrementally | the only place that sees every dataset of the query and can enforce security |
+| **3. Browser** (JavaScript, DuckDB-Wasm, Pyodide) | the reader's browser | work on the **delivered, already-masked answer**: sort, filter within it, pivot, format, cross-highlight within one answer, what-if arithmetic on delivered numbers, Python visuals, Analyse slicing a masked extract | instant interaction without a round trip; no load on the server |
+
+**Rules.**
+
+1. **Security never runs in the browser.** The browser receives only what the reader may see; tier 3 is an
+   optimisation, never a boundary.
+2. **The browser never holds more than the answer needs.** An interaction that needs data not delivered (a slicer value
+   outside the answer, a drill below the delivered grain) sends a new MQ to the server.
+3. **A design may hint, the planner decides.** A visual may say `compute: client` (a Python visual, an exploratory panel
+   that wants instant re-slicing) or `compute: server`. The planner overrides a hint when the answer would exceed the
+   reader's row cap for the browser (`drishti.bi.query.client-max-rows`), when the data is live (deltas stay on the server
+   path), or when the calculation needs columns the reader sees masked.
+4. **The same answer wherever it runs.** Equivalence tests compare tier-3 and tier-2 answers for the same MQ.
+5. **Live:** a subscribed MQ stays on the server, which pushes only the **changes** (rows added, changed, removed in the
+   answer) to the browser, which applies them to what is on screen (section 5.8).
+6. **`options.explain: true`** returns the plan: which parts ran at which tier, the source queries, rows moved, time per
+   part. The designer shows it under each visual.
+
+```yaml
+# a visual's hint (report YAML)
+- id: concentration
+  type: python
+  compute: client            # run the Python in the browser (Pyodide) on the delivered rows
+```
+
+## 13. Worked example, end to end: two packs, five datasets, one model, one report
+
+The whole architecture in one example, using two shipped packs: **trading** (kind `trade`) and **counterparty-risk**
+(kinds `netting-set`, `credit-limit`, `collateral-balance`). Field names are the packs' real ones.
+
+### 13.1 The picture
+
+```
+ PACKS (kinds + connectors; the data stays here)
+ ┌──────────────── trading ────────────────┐     ┌────────────────────── counterparty-risk ──────────────────────┐
+ │ kind trade  (trading-store: Delta lake) │     │ netting-set, credit-limit (credit-store)                      │
+ │                                         │     │ collateral-balance (collateral-store)                         │
+ └───────────────────┬─────────────────────┘     └──────────────┬───────────────┬──────────────────┬─────────────┘
+                     │                                          │               │                  │
+ DATASETS (one per kind, automatic; plus one derived)           │               │                  │
+   trades ◄─ pack.trading.trade                 netting-sets ◄──┘   limits ◄────┘    collateral ◄──┘
+   (fact)                                       (fact)             (fact)            (fact)
+                                         counterparties ◄─ derived from credit-limit: one row per counterparty
+                                         (dimension, shared)
+                     │
+ DATA MODEL  counterparty-cockpit@1  (datasets + relationships + measures + security; versioned; owned by risk-analytics)
+                     │
+ CONSUMERS (each references the model; none owns it)
+   report "Counterparty cockpit"   board "Risk wall"   alert "Headroom below 10%"   Analyse notebook   subscription
+```
+
+### 13.2 The five datasets
+
+Three are generated by the packs and used as they are (section 7); you never write them. Their essentials:
+
+| Dataset | From | Grain (one row per) | Columns used | Role |
+|---|---|---|---|---|
+| `pack.trading.trade` | trading / `trade` | trade per business date | `tradeId` key, `nettingSet` → netting-set, `counterpartyId` → counterparty, `desk`, `productType`, `currency`, `notional`, `mtm`, `pnl1d`, `tradeDate` | fact |
+| `pack.counterparty-risk.netting-set` | counterparty-risk / `netting-set` | netting set | `nettingSetId` key, `counterparty`, `eePeak`, `pfePeak`, `netMtm`, `cva` | fact |
+| `pack.counterparty-risk.collateral-balance` | counterparty-risk / `collateral-balance` | collateral balance | `balanceId` key, `nettingSet` → netting-set, `held`, `posted`, `net` | fact |
+
+Two are written by a person (in the wizard, which writes this YAML):
+
+```yaml
+# 4. limits: the PFE credit limits only, with a derived headroom column
+rachana: 2
+dataset: pfe-limits
+title: PFE credit limits
+extends: pack.counterparty-risk.credit-limit@^1
+where: measure = 'PFE'                                 # row filter: one measure of limit
+columns: [limitId, counterparty, counterpartyName, limit, used, utilisation, status]
+derive:
+  headroom: { expr: "limit - used", type: decimal, meaning: amount, unit: { currency: USD }, additive: true, format: amount0 }
+grain: { says: One row per PFE limit, keys: [limitId] }
+```
+
+```yaml
+# 5. counterparties: a shared dimension derived from the limits, with explicit de-duplication
+rachana: 2
+dataset: counterparties
+title: Counterparties
+extends: pack.counterparty-risk.credit-limit@^1
+columns: [counterparty, counterpartyName, reviewDue]
+grain: { says: One row per counterparty, one-row-per: counterparty, keep: latest by reviewDue }   # never a silent distinct
+columns-meta:
+  counterparty:     { role: key, meaning: counterparty-id }
+  counterpartyName: { role: attribute, of: counterparty }
+security:
+  masked: [counterpartyName]                           # names are sensitive: shown as ••• without the raw power
+```
+
+### 13.3 The model
+
+```yaml
+rachana: 2
+model: counterparty-cockpit
+version: 1.0.0
+title: Counterparty cockpit
+owner: risk-analytics
+datasets:
+  trades:         { dataset: pack.trading.trade@^1,                         role: fact }
+  netting_sets:   { dataset: pack.counterparty-risk.netting-set@^1,         role: fact }
+  collateral:     { dataset: pack.counterparty-risk.collateral-balance@^1,  role: fact }
+  limits:         { dataset: pfe-limits@^1,                                 role: fact }
+  counterparties: { dataset: counterparties@^1,                             role: dimension }
+relationships:                                          # suggested from the packs' references; accepted with one click
+  - { from: trades.counterpartyId,       to: counterparties.counterparty }   # many-to-one, crosses the two packs
+  - { from: netting_sets.counterparty,   to: counterparties.counterparty }
+  - { from: limits.counterparty,         to: counterparties.counterparty }
+  - { from: trades.nettingSet,           to: netting_sets.nettingSetId }      # trades roll up to netting sets
+  - { from: collateral.nettingSet,       to: netting_sets.nettingSetId }
+measures:
+  MTM:               { expr: "sum(trades.mtm)",           format: signed0 }
+  "P&L 1d":          { expr: "sum(trades.pnl1d)",         format: signed0 }
+  Trades:            { expr: "count(trades)" }
+  EE peak:           { expr: "sum(netting_sets.eePeak)",  format: amount0 }
+  PFE peak:          { expr: "sum(netting_sets.pfePeak)", format: amount0 }
+  Collateral held:   { expr: "sum(collateral.held)",      format: amount0 }
+  PFE limit:         { expr: "sum(limits.limit)",         format: amount0 }
+  Headroom:          { expr: "sum(limits.headroom)",      format: amount0 }
+  Limit used:        { expr: "ratio(sum(limits.used), sum(limits.limit))", format: pct1 }
+  Collateral cover:  { expr: "[Collateral held] / [EE peak]", format: pct0 }   # two facts, each at its own grain
+hierarchies:
+  Counterparty: [counterparties.counterpartyName, netting_sets.nettingSetId]
+security:
+  rows:
+    trades:
+      - { role: desk-head, where: "trades.desk in user.desks" }
+      - { role: [risk, analyst, admin], where: "true" }
+  may-see-all: { netting_sets: [desk-head], collateral: [desk-head], limits: [desk-head], counterparties: [desk-head] }
+                                                       # the safeguard (2.6): exposure is shared across desks by policy; audited
+tests:
+  - { name: Headroom is limit minus used, measure: Headroom, expect-equals: "[PFE limit] - sum(limits.used)" }
+ai:
+  synonyms: { Headroom: [room under the limit, spare limit], "P&L 1d": [daily P&L] }
+```
+
+What the model guarantees, without anyone writing a join:
+
+* **MTM and PFE peak per counterparty in one visual** are each aggregated at their own grain (trades, netting sets),
+  then meet through `counterparties`. Summing a joined trade-by-netting-set table instead would repeat each netting
+  set's exposure once per trade (the trap of tutorial 18).
+* **A filter on a shared dimension filters every fact;** a filter on one fact's own column filters **only that fact**.
+  `trades.currency = USD` narrows MTM and P&L, not exposure or limits; the visual's footnote says so.
+* **Security per dataset:** a desk-head's rule cuts `trades` to their desks before any join; exposure, collateral and
+  limits are shown in full to them because the model says so explicitly (`may-see-all`, audited); `counterpartyName` is
+  `•••` for readers without the raw power, in every report on this model.
+
+### 13.4 The report (it references the model; it owns nothing but its layout and local measures)
+
+```yaml
+rachana: 2
+report: counterparty-cockpit-report
+title: Counterparty cockpit
+model: counterparty-cockpit@1          # the one model it is rooted in
+measures:                               # local, "this report only"; can be moved into the model
+  Headroom after collateral: { expr: "[Headroom] + [Collateral held]", format: amount0 }
+pages:
+  - name: Overview
+    visuals:
+      - { id: total-mtm, type: card,  wells: { value: [MTM] } }
+      - { id: total-headroom, type: card, wells: { value: [Headroom] } }
+      - { id: by-cpty, type: bar,    wells: { axis: [counterparties.counterpartyName], values: [MTM, PFE peak] } }
+      - { id: limits, type: table,   wells: { columns: [counterparties.counterpartyName, PFE limit, Limit used, Headroom, Headroom after collateral] },
+          filters: [{ field: counterparties.counterparty, op: top, n: 10, by: Limit used, dir: desc }] }
+      - { id: ccy, type: slicer,     wells: { field: [trades.currency] }, format: { mode: dropdown } }
+      - { id: concentration, type: python, compute: client, wells: { values: [counterparties.counterpartyName, PFE peak] } }
+```
+
+Other consumers on the **same model** (none owns it; the model's *Used by* lists them all):
+
+```yaml
+alert: headroom-low
+source: { type: model, model: counterparty-cockpit@1,
+          query: { select: { measures: [Limit used] }, where: [{ field: counterparties.counterparty, op: eq, values: [CPTY-ALDERSHOT] }] },
+          reduce: value }
+rule: { above: 0.9 }                    # tell me when Aldershot uses more than 90% of its PFE limit
+```
+
+A board tile, a subscription of the report, and an Analyse notebook (`model: counterparty-cockpit@1`, `shape: rows`
+extracts) are written the same way.
+
+### 13.5 What happens when Rita (risk) and Hana (desk head, rates desk) open the report
+
+**The bar `by-cpty`** sends this MQ (the designer shows it under the visual):
+
+```yaml
+mq: 1
+model: counterparty-cockpit@1
+select: { fields: [counterparties.counterpartyName], measures: [MTM, PFE peak] }
+where:  [{ field: trades.currency, op: in, values: [USD] }]       # Hana picked USD in the slicer
+time:   { as-of: 2026-10-09 }
+```
+
+The planner splits it:
+
+| Step | Tier | What runs |
+|---|---|---|
+| 1 | source: trading-store (DuckDB over the Delta lake) | `select counterpartyId, sum(mtm) from trades where businessDate = '2026-10-09' and currency = 'USD' and desk in ('DESK-RATES') group by counterpartyId` — Hana's row rule is pushed down as part of the scan; for Rita the `desk in` clause is absent |
+| 2 | source: credit-store | `sum(pfePeak) group by counterparty` over netting sets (no currency filter: a fact's own filter does not reach other facts) |
+| 3 | source: credit-store | counterparties: one row per counterparty, latest by `reviewDue` |
+| 4 | server | join the two aggregates to `counterparties` on the counterparty key (each already at counterparty grain: no fan-out possible); mask `counterpartyName` for Hana (no raw power) → `•••`; apply the visual's sort and limit |
+| 5 | browser | draw the bars; hovering, sorting the legend and cross-highlighting **within** this answer need no new query |
+
+**What each sees:** Rita gets every counterparty, names shown, MTM over all desks. Hana gets the same PFE peaks
+(`may-see-all`), MTM only from the rates desk's USD trades, and `•••` instead of names. Both answers come from the same
+model and the same MQ; only the reader differs.
+
+**The table `limits`** runs entirely on credit-store plus the server (no trades are read); its local measure
+`Headroom after collateral` is computed on the server after `Headroom` and `Collateral held` are aggregated at their
+own grains. **The Python visual** runs in the browser (`compute: client`) on the delivered, masked rows; for Hana it
+receives `•••` names, never the real ones. **The alert** runs the same MQ path on the server as its owner, every check.
+
+**Live:** if the trading pack's connector streams (time mode `live`), the bar's MQ is subscribed: the server keeps the
+MTM aggregate current by applying each new trade as a difference to its counterparty's sum, and pushes only the changed
+bars to the browser. PFE peak, from a snapshot dataset, stays as of the business date until the next load.
+
+### 13.6 What you did, and what you did not have to do
+
+* You chose four pack datasets, wrote two small datasets in a wizard (a filter, a derived column, an explicit
+  de-duplication), accepted suggested relationships, named ten measures, and built a report by dragging fields.
+* You did **not** write a join, copy any data, write security per report, or decide where anything runs. The packs gave
+  the keys, meanings and references; the model gave the joins and the measures; the planner chose the tiers; security
+  followed the data from the pack to every consumer.
