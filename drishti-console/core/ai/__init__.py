@@ -70,6 +70,16 @@ class AiRuntime:
     def _audit(self, record: dict) -> None:
         self.audit_log.append(record)
         del self.audit_log[:-500]
+        import json
+        import logging
+        log = logging.getLogger("drishti.ai.audit")
+        if not log.handlers:                                              # its own handler: the console's default logging shows warnings only
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+            log.addHandler(handler)
+            log.setLevel(logging.INFO)
+            log.propagate = False
+        log.info("ai-audit %s", json.dumps(record, default=str, sort_keys=True))     # the console log keeps what the memory list forgets
 
     def backend(self):
         if self._backend is None:

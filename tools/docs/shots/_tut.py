@@ -106,6 +106,7 @@ def wait_until(fn, seconds: int = 30):
 
 def page_shot(c: Ctx, name: str, region: dict, extra: int = 0, pad: int = 12):
     """A picture of a region (a bounding box) of the whole page, even where it lies below the window."""
+    c.hush()
     d = out_dir(c.guide)
     d.mkdir(parents=True, exist_ok=True)
     c.page.screenshot(path=str(d / name), full_page=True, type="jpeg", quality=84,

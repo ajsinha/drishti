@@ -28,14 +28,14 @@
   <h2>{{ title }}</h2>
   <p class="mono">AI layer: <b>{{ 'ON' if d.enabled else 'OFF' }}</b> · folder <span class="mono">{{ d.dir }}</span> · provider types: {{ d.types | join(', ') or '—' }}</p>
   <div class="tbl-wrap"><table class="tbl">
-    <thead><tr><th>Provider</th><th>Type</th><th>Status</th><th>Models</th><th>Detail</th>{% if where == 'console' %}<th>Test</th>{% endif %}</tr></thead>
+    <thead><tr><th>Provider</th><th>Type</th><th>Status</th><th>Models</th><th>Detail</th></tr></thead>
     <tbody>{% for p in d.providers %}<tr data-provider="{{ p.name }}">
       <td class="mono">{{ p.name }}</td><td>{{ p.type }}</td><td><b>{{ p.health.status }}</b></td>
       <td class="mono">{% for m in p.models %}<div>{{ m.ref }} <span class="text-muted-d">({{ m.capabilities | join(', ') }})</span></div>{% else %}—{% endfor %}</td>
-      <td>{{ retry_note(p.retry) }}{{ p.health.detail }}{% if p.baseUrl %} · <span class="mono">{{ p.baseUrl }}</span>{% endif %}{% if p.keySet %} · key set{% endif %}</td>
-      {% if where == 'console' %}<td><button type="button" class="fk" data-ai-test="{{ p.name }}" title="Make one live call to this provider (its model list) and show the answer here">Test connection</button>
-        <div class="t-note" data-ai-test-result="{{ p.name }}" role="status" aria-live="polite"></div></td>{% endif %}</tr>
-    {% else %}<tr><td colspan="6">No providers.{% if not d.enabled %} The layer is off (<span class="mono">enabled: false</span>).{% endif %}</td></tr>{% endfor %}</tbody>
+      <td>{{ retry_note(p.retry) }}{{ p.health.detail }}{% if p.baseUrl %} · <span class="mono">{{ p.baseUrl }}</span>{% endif %}{% if p.keySet %} · key set{% endif %}
+        {% if where == 'console' %}<div class="ai-test"><button type="button" class="fk" data-ai-test="{{ p.name }}" title="Make one live call to this provider (its model list) and show the answer here">Test connection</button>
+          <div class="t-note" data-ai-test-result="{{ p.name }}" role="status" aria-live="polite"></div></div>{% endif %}</td></tr>
+    {% else %}<tr><td colspan="5">No providers.{% if not d.enabled %} The layer is off (<span class="mono">enabled: false</span>).{% endif %}</td></tr>{% endfor %}</tbody>
   </table></div>
   {% for f, why in (d.fileErrors or {}).items() %}<p class="adm-warn" role="alert"><span class="mono">{{ f }}</span>: {{ why }}</p>{% endfor %}
   <p class="mono">MCP client: <b>{{ 'ON' if d.mcpEnabled else 'OFF' }}</b> · folder <span class="mono">{{ d.mcpDir }}</span></p>

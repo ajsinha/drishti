@@ -1,0 +1,50 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Tutorial 15: the MOCK provider. It has no network, no key and no model behind it: it answers from the rules below, the first rule whose regular expression is
+# found in the last message wins. That makes the AI features of BI repeatable (and safe to try), and lets you see exactly what Drishti does with an answer.
+# Copy it to config/ai/mock.yaml (the server and the console read the same folder) and switch the layer on: DRISHTI_AI_ENABLED=true DRISHTI_AI_DEFAULT_MODEL=mock/m
+type: mock
+default-model: m
+models:
+  - name: m
+mock:
+  rules:
+    # "Describe a report": the designer asks for YAML; Drishti checks it with the report checker before you see it (and pins the dataset)
+    - match: "TASK: draft-report"
+      reply: |
+        ```yaml
+        rachana: 1
+        report: gdp-by-region
+        version: 1
+        title: GDP by region
+        dataset: world-economics
+        pages:
+          - id: main
+            title: Main
+            visuals:
+              - { id: gdp, type: card, title: GDP (USD bn), at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [GDP (USD bn)] }, alt: Card with the total GDP in billions of dollars }
+              - { id: by-region, type: bar, title: GDP by region, at: { x: 0, y: 2, w: 8, h: 5 }, wells: { axis: [economies.regionName], values: [GDP (USD bn)] }, alt: Bar chart of GDP for each region }
+        ```
+    # "Ask the data": the model answers with a query (names only); the engine checks every name and runs it as you
+    - match: "(?i)QUESTION: [^\\n]*per capita"
+      reply: '{"fields":["economies.regionName"],"measures":["GDP per capita (USD)"],"orderBy":[{"by":"GDP per capita (USD)","desc":true}]}'
+    - match: "(?i)QUESTION: [^\\n]*growth"
+      reply: '{"fields":["economies.incomeName"],"measures":["Average growth"],"orderBy":[{"by":"Average growth","desc":true}]}'
+    - match: "(?i)QUESTION: [^\\n]*(gdp|economy)"
+      reply: '{"fields":["economies.regionName"],"measures":["GDP (USD bn)"],"orderBy":[{"by":"GDP (USD bn)","desc":true}]}'
+    - match: "(?i)QUESTION: [^\\n]*(how many|count)"
+      reply: '{"fields":[],"measures":["Economies"]}'
+    - match: "(?i)QUESTION: [^\\n]*(mtm|notional|desk)"
+      reply: '{"fields":["trade.desk"],"measures":["Notional"],"orderBy":[{"by":"Notional","desc":true}]}'
