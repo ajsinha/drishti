@@ -89,7 +89,7 @@ def test_no_generated_picture_is_left_over_that_no_guide_shows():
         assert files == shown_in(d), f"{d.relative_to(ROOT)}: unused {sorted(files - shown_in(d))}, missing {sorted(shown_in(d) - files)}"
 
 
-@pytest.mark.parametrize("guide", sorted(p.stem for p in (ROOT / "tools" / "docs" / "shots").glob("*.py")))
+@pytest.mark.parametrize("guide", sorted(p.stem for p in (ROOT / "tools" / "docs" / "shots").glob("*.py") if not p.stem.startswith("_")))
 def test_the_screenshot_script_makes_every_picture_of_its_guide(guide):
     out = subprocess.run([sys.executable, str(SHOTS), "--list", "--guide", guide], capture_output=True, text=True, timeout=60)
     assert out.returncode == 0, out.stderr
