@@ -81,6 +81,8 @@ public final class VisualCatalogue {
         put("perspective-pivot", "perspective", "rows", new Well(Kind.FIELD, true, 0), "columns", new Well(Kind.FIELD, false, 0), "values", new Well(Kind.FIELD, true, 0));
         // Python (RUPAKA.md section 20.8): the rows of one table (or a Python measure) go to the Python runner; the visual draws what the item returns
         put("python", "python", "columns", new Well(Kind.FIELD, false, 0), "values", new Well(Kind.MEASURE, false, 1));
+        // a Vega-Lite specification written in the report (format.spec), its data the rows of these wells (wave C, RUPAKA.md section 20.13)
+        put("vega-lite", "chart", "axis", new Well(Kind.FIELD, false, 0), "legend", legend, "values", new Well(Kind.MEASURE, false, 0));
         put("live-chart", "live", "values", new Well(Kind.MEASURE, true, 4));
         // an entity view (RUPAKA.md section 20.3): draws no query of its own; it shows the Drishti view of the entity whose key is selected on the page
         put("entity-view", "entity", "key", new Well(Kind.FIELD, true, 1));

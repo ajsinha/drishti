@@ -27,8 +27,8 @@
 
   const ICONS = { bar: 'bar-chart-steps', column: 'bar-chart-line', line: 'graph-up', area: 'graph-up-arrow', combo: 'bar-chart', scatter: 'diagram-3', pie: 'pie-chart', donut: 'pie-chart-fill',
     waterfall: 'reception-4', treemap: 'grid-1x2', heatmap: 'grid-3x3', card: 'card-heading', 'multirow-card': 'list-columns', kpi: 'speedometer2', gauge: 'speedometer', table: 'table',
-    matrix: 'grid-3x3-gap', bubble: 'record-circle', funnel: 'filter-circle', histogram: 'bar-chart-fill', box: 'distribute-vertical', map: 'globe2', slicer: 'funnel', python: 'filetype-py', text: 'fonts', image: 'image', button: 'hand-index' };
-  const GROUPS = [['Charts', ['bar', 'column', 'line', 'area', 'combo', 'scatter', 'bubble', 'pie', 'donut', 'funnel', 'waterfall', 'treemap', 'heatmap', 'histogram', 'box', 'map']], ['Cards', ['card', 'multirow-card', 'kpi', 'gauge']],
+    matrix: 'grid-3x3-gap', bubble: 'record-circle', funnel: 'filter-circle', histogram: 'bar-chart-fill', box: 'distribute-vertical', map: 'globe2', slicer: 'funnel', python: 'filetype-py', 'vega-lite': 'bezier2', text: 'fonts', image: 'image', button: 'hand-index' };
+  const GROUPS = [['Charts', ['bar', 'column', 'line', 'area', 'combo', 'scatter', 'bubble', 'pie', 'donut', 'funnel', 'waterfall', 'treemap', 'heatmap', 'histogram', 'box', 'map', 'vega-lite']], ['Cards', ['card', 'multirow-card', 'kpi', 'gauge']],
     ['Tables', ['table', 'matrix']], ['Python', ['python']], ['Filter and other', ['slicer', 'text', 'image', 'button']]];
   const TYPE_ICON = { string: 'fonts', integer: '123', decimal: '123', boolean: 'check2-square', date: 'calendar3', timestamp: 'clock' };
   const PARTS = ['year', 'quarter', 'month', 'week', 'day'];
@@ -274,7 +274,22 @@
           try { const o = JSON.parse(x); if (o && typeof o === 'object' && !Array.isArray(o)) { setFmt(v, 'params', o); } } catch (e) { /* keep what was there until it parses */ }
         }, { 'data-format-params': '', placeholder: '{"bins": 24}' }), 'Handed to the function as its params; they override the item\'s defaults.'));
       }
-      if (group === 'chart') {
+      if (v.type === 'vega-lite') {
+        const box = h('textarea', { class: 'studio-in bi-vega-spec', rows: '10', spellcheck: 'false', 'data-format-vega-spec': '', 'aria-label': 'Vega-Lite specification (JSON)' });
+        box.value = f.spec ? JSON.stringify(f.spec, null, 2) : '';
+        const note = h('small', { class: 'text-muted-d', 'data-vega-note': '', text: 'The data is the rows of the wells: put no data in it. Refer to fields by the name after the table (desk, not trades.desk) and to measures by their name.' });
+        box.addEventListener('change', () => {
+          if (box.value.trim() === '') { setFmt(v, 'spec', ''); note.textContent = ''; return; }
+          try {
+            const o = JSON.parse(box.value);
+            if (!o || typeof o !== 'object' || Array.isArray(o)) { throw new Error('not an object'); }
+            setFmt(v, 'spec', o);
+            note.textContent = 'Saved in the report.';
+          } catch (e) { note.textContent = 'Not valid JSON yet (' + e.message + '); the last good specification is kept.'; }
+        });
+        fmt.appendChild(h('label', { class: 'bi-frow' }, h('span', { text: 'Vega-Lite specification (JSON)' }), box, note));
+      }
+      if (group === 'chart' && v.type !== 'vega-lite') {
         fmt.appendChild(checkbox('Data labels', f.labels, (x) => setFmt(v, 'labels', x), { 'data-format-labels': '' }));
         if (['bar', 'column', 'area'].indexOf(v.type) >= 0) { fmt.appendChild(checkbox('Stacked', f.stacked, (x) => setFmt(v, 'stacked', x), { 'data-format-stacked': '' })); }
         if (['line', 'area', 'combo'].indexOf(v.type) >= 0) { fmt.appendChild(checkbox('Smooth lines', f.smooth, (x) => setFmt(v, 'smooth', x))); }

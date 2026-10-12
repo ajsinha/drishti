@@ -222,6 +222,7 @@
   P.draw = function (host, spec, ctx, res) {
     if (res.kind === 'measure') { return bars(host, res, spec, ctx); }
     if (res.kind === 'echarts') { return chart(host, res.option, spec, ctx.t); }
+    if (res.kind === 'vega-lite') { return B.vega ? B.vega.drawSpec(host, res.spec, spec, ctx) : note(host, 'The Vega-Lite script did not load.'); }
     if (res.kind === 'svg') { return image(host, 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(res.svg), spec, 'svg'); }
     if (res.kind === 'png') { return image(host, 'data:image/png;base64,' + res.png, spec, 'png'); }
     return note(host, 'The Python item returned something this page cannot draw.');

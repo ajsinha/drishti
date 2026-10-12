@@ -171,6 +171,23 @@ def _clean(o):
     return o
 
 
+def _vega_forbidden(o, path="$"):
+    """The path of the first ``url`` or ``loader`` that is a plain value in a Vega-Lite specification (the page loads nothing from a URL), else None."""
+    if isinstance(o, dict):
+        for k, v in o.items():
+            if k in ("url", "loader") and not isinstance(v, (dict, list)):
+                return f"{path}.{k}"
+            found = _vega_forbidden(v, f"{path}.{k}")
+            if found:
+                return found
+    elif isinstance(o, list):
+        for i, v in enumerate(o):
+            found = _vega_forbidden(v, f"{path}[{i}]")
+            if found:
+                return found
+    return None
+
+
 def _number(v, where: str):
     if v is None:
         return None
@@ -377,8 +394,14 @@ def _run(req: dict, tmp: str) -> dict:
     shown = df[[c for c in df.columns if c != "id"]] if "id" in df.columns else df
     result = fn(shown.copy(), dict(params))
     if isinstance(result, dict):
+        if req["output"] == "vega-lite":
+            spec = json.loads(json.dumps(result, default=_plain, allow_nan=False))
+            bad = _vega_forbidden(spec)
+            if bad:
+                raise Denied(f"a Vega-Lite specification may not load anything from a URL or name a loader ({bad}): put the data in data.values")
+            return {"kind": "vega-lite", "spec": spec}
         if req["output"] != "echarts":
-            raise TypeError(f"the manifest says output: {req['output']} but the function returned a dict (an ECharts option)")
+            raise TypeError(f"the manifest says output: {req['output']} but the function returned a dict (an ECharts option or a Vega-Lite specification)")
         return {"kind": "echarts", "option": _clean(json.loads(json.dumps(result, default=_plain, allow_nan=False)))}
     if isinstance(result, str) and result.lstrip().startswith("<svg"):
         low = result.lower()
@@ -387,7 +410,7 @@ def _run(req: dict, tmp: str) -> dict:
         return {"kind": "svg", "svg": result}
     if isinstance(result, (bytes, bytearray)) and bytes(result[:8]) == b"\x89PNG\r\n\x1a\n":
         return {"kind": "png", "png": base64.b64encode(bytes(result)).decode("ascii")}
-    raise TypeError("a visual returns an ECharts option (dict), SVG text or PNG bytes, not " + type(result).__name__)
+    raise TypeError("a visual returns an ECharts option or a Vega-Lite specification (dict), SVG text or PNG bytes, not " + type(result).__name__)
 
 
 def main(tmp: str) -> int:

@@ -180,7 +180,7 @@
       B.live.markStale(entry.frame, false);
     }, (e) => {
       if (token !== entry.token) { return; }
-      if (quiet && entry.frame.body.querySelector('.bi-py-chart,.bi-py-img')) { B.live.markStale(entry.frame, true, e.code ? e.code + ' ' + e.detail : e.message); return; }
+      if (quiet && entry.frame.body.querySelector('.bi-py-chart,.bi-py-img,.bi-vega')) { B.live.markStale(entry.frame, true, e.code ? e.code + ' ' + e.detail : e.message); return; }
       entry.frame.error(e);
       if (e.traceback) { entry.frame.body.appendChild(B.h('pre', { class: 'bi-py-trace', 'data-py-trace': '', text: e.traceback })); }
     });

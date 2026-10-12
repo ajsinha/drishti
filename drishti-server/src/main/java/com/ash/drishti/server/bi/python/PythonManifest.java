@@ -50,7 +50,7 @@ public final class PythonManifest {
 
     public static final Set<String> INTERFACES = Set.of("measure", "visual", "transform");
     public static final Set<String> TARGETS = Set.of("server", "browser", "both");
-    public static final Set<String> OUTPUTS = Set.of("echarts", "svg", "png");
+    public static final Set<String> OUTPUTS = Set.of("echarts", "vega-lite", "svg", "png");
     /** The most characters of source one item holds. */
     public static final int MAX_SOURCE = 65_536;
     private static final Pattern IDENT = Pattern.compile("[A-Za-z_][A-Za-z0-9_]{0,63}");
@@ -163,7 +163,7 @@ public final class PythonManifest {
         int memory = number(root, "memory", 256, 32, maxMemory, out);
         String output = root.path("output").asText("visual".equals(iface) ? "echarts" : "number").toLowerCase(Locale.ROOT);
         if ("visual".equals(iface) && !OUTPUTS.contains(output)) {
-            out.add(new Problem("error", "output", "a visual's output is echarts (an option), svg or png"));
+            out.add(new Problem("error", "output", "a visual's output is echarts (an option), vega-lite (a specification), svg or png"));
         }
         if ("measure".equals(iface)) {
             output = "number";

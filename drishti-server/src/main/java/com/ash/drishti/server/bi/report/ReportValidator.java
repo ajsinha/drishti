@@ -243,6 +243,32 @@ public final class ReportValidator {
         }
     }
 
+    /** A vega-lite visual holds its Vega-Lite specification in {@code format.spec}: an object, inline, loading nothing from a URL, over the rows of its wells. */
+    private void vegaLiteVisual(Report.Visual v, String p) {
+        if (v.well("axis").isEmpty() && v.well("values").isEmpty()) {
+            err(ReportParser.VISUAL, p + ".wells", "a vega-lite visual needs at least one field in its axis well or one measure in its values well");
+        }
+        Object spec = v.format().get("spec");
+        if (!(spec instanceof Map<?, ?>)) {
+            err(ReportParser.VISUAL, p + ".format.spec", "a vega-lite visual holds its Vega-Lite specification in format: { spec: { mark: ..., encoding: ... } }");
+            return;
+        }
+        String bad = VegaSpecs.forbidden(spec, "format.spec");
+        if (bad != null) {
+            err(ReportParser.VISUAL, p + "." + bad, "a vega-lite specification loads nothing from a URL and names no loader: its data is the rows of the visual's wells (remove it)");
+        }
+        if (VegaSpecs.size(spec) > VegaSpecs.MAX_CHARS) {
+            err(ReportParser.VISUAL, p + ".format.spec", "the Vega-Lite specification is over " + VegaSpecs.MAX_CHARS + " characters");
+        }
+        Set<String> columns = VegaSpecs.keys(v, ds);
+        for (String field : VegaSpecs.fieldsOf(spec)) {
+            if (!columns.contains(field)) {
+                out.add(new Problem("warning", ReportParser.REFERENCE, p + ".format.spec", "the specification names the field '" + field + "', which is not a column of this visual's wells (columns: "
+                        + String.join(", ", columns) + ")"));
+            }
+        }
+    }
+
     private void visual(Report.Visual v, String p, Set<String> pageIds) {
         VisualCatalogue.Type spec = VisualCatalogue.type(v.type());
         for (var e : spec.wells().entrySet()) {
@@ -290,6 +316,9 @@ public final class ReportValidator {
         }
         if ("python".equals(v.type())) {
             pythonVisual(v, p);
+        }
+        if ("vega-lite".equals(v.type())) {
+            vegaLiteVisual(v, p);
         }
         if ("histogram".equals(v.type()) && v.format().get("bins") != null) {
             Object b = v.format().get("bins");

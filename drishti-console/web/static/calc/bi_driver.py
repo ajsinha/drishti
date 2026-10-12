@@ -101,6 +101,22 @@ def _bi_cell(p, df):
     return answer
 
 
+def _bi_vega_forbidden(o, path="$"):
+    if isinstance(o, dict):
+        for k, v in o.items():
+            if k in ("url", "loader") and not isinstance(v, (dict, list)):
+                return f"{path}.{k}"
+            found = _bi_vega_forbidden(v, f"{path}.{k}")
+            if found:
+                return found
+    elif isinstance(o, list):
+        for i, v in enumerate(o):
+            found = _bi_vega_forbidden(v, f"{path}[{i}]")
+            if found:
+                return found
+    return None
+
+
 def _bi_main(payload):
     p = _json.loads(_b64.b64decode(payload).decode("utf-8"))
     df = _pd.DataFrame(p["rows"], columns=p["columns"])
@@ -129,7 +145,13 @@ def _bi_main(payload):
     else:
         shown = df[[c for c in df.columns if c != "id"]]
         result = fn(shown.copy(), dict(params))
-        if isinstance(result, dict):
+        if isinstance(result, dict) and p.get("output") == "vega-lite":
+            spec = _json.loads(_json.dumps(result, default=_bi_plain, allow_nan=False))
+            bad = _bi_vega_forbidden(spec)
+            if bad:
+                raise ValueError(f"a Vega-Lite specification may not load anything from a URL or name a loader ({bad}): put the data in data.values")
+            out = {"kind": "vega-lite", "spec": spec}
+        elif isinstance(result, dict):
             out = {"kind": "echarts", "option": _bi_clean(_json.loads(_json.dumps(result, default=_bi_plain, allow_nan=False)))}
         elif isinstance(result, str) and result.lstrip().startswith("<svg"):
             low = result.lower()
