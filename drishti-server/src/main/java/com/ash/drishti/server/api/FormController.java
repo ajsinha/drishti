@@ -80,11 +80,14 @@ public class FormController {
     private final SearchProperties searchProps;
     private final FormDefinitions definitions;
     private final int sampleRows;
+    /** Rows read to find the values of a dropdown: the first {@code sampleRows} of a kind can all be one product group (rates before FX), so the dropdown looked narrower than the data. */
+    private final int enumScanRows;
 
     public FormController(PackRegistry registry, PackAccess access, Entitlements entitlements, Mnemonics mnemonics, SourceRouter router,
             StructuredSearch search, SearchProperties searchProps, FormDefinitions definitions, SutraRegistry sutras, AboutCatalog about, BusinessDates dates,
             @Value("${drishti.search.form.max-values:500}") int maxValues, @Value("${drishti.search.form.max-inferred-fields:14}") int maxInferred,
-            @Value("${drishti.search.form.enum-max:12}") int enumMax, @Value("${drishti.search.form.sample-rows:200}") int sampleRows) {
+            @Value("${drishti.search.form.enum-max:12}") int enumMax, @Value("${drishti.search.form.sample-rows:200}") int sampleRows,
+            @Value("${drishti.search.form.enum-scan-rows:1000}") int enumScanRows) {
         this.registry = registry;
         this.access = access;
         this.entitlements = entitlements;
@@ -99,6 +102,7 @@ public class FormController {
         this.compiler = new FormCompiler(maxValues);
         this.inference = new FormInference(maxInferred, enumMax);
         this.sampleRows = Math.max(20, Math.min(1000, sampleRows));
+        this.enumScanRows = Math.max(this.sampleRows, Math.min(SearchQuery.MAX_LIMIT, enumScanRows));
     }
 
     /**
@@ -197,7 +201,7 @@ public class FormController {
         if (found.isEmpty()) {                                        // not one of the key columns: read it from the data
             try {
                 String code = mnemonics.codeFor(kind);
-                StructuredSearch.Result r = search.run(SearchQuery.parse((code == null ? kind : code) + " where " + f.path() + " != '' limit " + sampleRows), asOf,
+                StructuredSearch.Result r = search.run(SearchQuery.parse((code == null ? kind : code) + " where " + f.path() + " != '' limit " + enumScanRows), asOf,
                         data -> entitlements.redact(principal, data));
                 r.rows().forEach(row -> Optional.ofNullable(row.values().get("$." + f.path())).ifPresent(v -> found.add(String.valueOf(v))));
             } catch (RuntimeException e) {
@@ -235,7 +239,7 @@ public class FormController {
         Map<String, List<Object>> out = new LinkedHashMap<>();
         try {
             String code = mnemonics.codeFor(kind);
-            StructuredSearch.Result r = search.run(SearchQuery.parse((code == null ? kind : code) + " limit " + sampleRows), asOf,
+            StructuredSearch.Result r = search.run(SearchQuery.parse((code == null ? kind : code) + " limit " + enumScanRows), asOf,
                     data -> entitlements.redact(principal, data));
             for (StructuredSearch.Row row : r.rows()) {
                 row.values().forEach((k, v) -> out.computeIfAbsent(k.startsWith("$.") ? k.substring(2) : k, x -> new ArrayList<>()).add(v));

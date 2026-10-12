@@ -29,6 +29,7 @@ shows a picture that is not there, or a picture file no guide shows."""
 from __future__ import annotations
 
 import argparse
+import os
 import importlib
 from pathlib import Path
 import shutil
@@ -73,7 +74,10 @@ def main() -> int:
         sys.exit(f"refusing {a.base}: screenshots are made on the scratch console (:{CONSOLE_PORT}), never on the usual one")
     from playwright.sync_api import sync_playwright
 
-    started, work = [], Path(tempfile.mkdtemp(prefix="drishti-shots-"))
+    started = []
+    kept = os.environ.get("DRISHTI_SHOTS_WORK", "")          # a plainly named folder (so no scratch path shows in a picture); it is kept
+    work = Path(kept) if kept else Path(tempfile.mkdtemp(prefix="drishti-shots-"))
+    work.mkdir(parents=True, exist_ok=True)
     try:
         if not listening(port):
             # a guide that needs its own scratch server (its own plugins and configuration) supplies start_servers(work);
@@ -109,7 +113,8 @@ def main() -> int:
     finally:
         for proc in started:
             proc.terminate()
-        shutil.rmtree(work, ignore_errors=True)
+        if not kept:
+            shutil.rmtree(work, ignore_errors=True)
 
 
 if __name__ == "__main__":
