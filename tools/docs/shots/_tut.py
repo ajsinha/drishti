@@ -43,6 +43,11 @@ _people = {"done": False}
 
 def login(c: Ctx, user: str = ADMIN, password: str | None = None, width: int = WIDE, height: int = HIGH):
     """Signs in as `user` (clearing any other person's session first), on a 1280 px window."""
+    try:                                                           # a picture before this one may have left kiosk (full screen) on: a window cannot be resized then
+        c.page.evaluate("() => document.fullscreenElement && document.exitFullscreen()")
+        c.page.wait_for_timeout(300)
+    except Exception:  # noqa: BLE001 - no page yet, or nothing to leave
+        pass
     c.page.set_viewport_size({"width": width, "height": height})
     c.page.context.clear_cookies()
     c.page.goto(c.base + "/login")

@@ -17,30 +17,33 @@
 
 Rūpaka is Drishti's business-intelligence layer, called **BI** in the top bar and on the command line (`RUPAKA` is an alias). This guide is the tour of its pages and of who may do what: the menu, the rail, workspaces, the catalogue, items and their lifecycle, and, in sections 13 to 18, datasets, reports, the designer, the Model view, publishing and live reports and boards. The detail of each lives in a reference of its own (below); this guide shows you where things are and how they fit.
 
-**What a person can do today (phases 1 to 5):** open BI, keep drafts in a personal workspace, share workspaces with roles, put typed items in them, publish them through versions (with an optional second-person review), certify them and find what they may open in a catalogue. A **dataset** is parsed, validated and **queried**: tables from pack kinds through connectors, relationships, measures, row rules and masks, answered by an embedded DuckDB. A **report** is **drawn**: pages of visuals that query the dataset as the person looking, with cross-filtering, drill-down and drill-through; the **designer** builds one by dragging fields onto a canvas and the **Model view** draws a dataset's relationships. Datasets can be **live** (kept in memory as the source ticks), reports then redraw in place, Perspective shows a grid or a pivot, and a **board** is a wall of live tiles with alert colours and a kiosk mode. **Python** (phase 6) writes measures and visuals as typed items, run sandboxed on the console or in the browser on the rows the person may see ([PYTHON_BI.md](PYTHON_BI.md); section 20 below). A **notebook** item is only stored, versioned and published: it is not run or drawn (section 11 says exactly what is and is not there).
+**What a person can do today:** open BI, keep drafts in a personal workspace, share workspaces with roles, put typed items in them, publish them through versions (with an optional second-person review), certify them and find what they may open in a catalogue. A **dataset** is parsed, validated and **queried**: tables from pack kinds through connectors, relationships, measures, row rules and masks, answered by an embedded DuckDB. A **report** is **drawn**: pages of visuals that query the dataset as the person looking, with cross-filtering, drill-down and drill-through; the **designer** builds one by dragging fields onto a canvas and the **Model view** draws a dataset's relationships. Datasets can be **live** (kept in memory as the source ticks), reports then redraw in place, Perspective shows a grid or a pivot, and a **board** is a wall of live tiles with alert colours and a kiosk mode. **Python** (phase 6) writes measures and visuals as typed items, run sandboxed on the console or in the browser on the rows the person may see ([PYTHON_BI.md](PYTHON_BI.md); section 20 below). **Analyse** opens a dataset as a masked extract with Slice, SQL and Python cells and saves them as a **notebook** item (section 21). Reports can be **exported and subscribed to**, carry **alerts**, be **embedded** in another application and use **Vega-Lite**, **Perspective** charts and Python visuals; AI helpers (describe a report, ask the data, explain a number, a designer copilot, a dataset helper, narrative summaries) are there when an administrator switches the AI layer on. Section 11 lists the little that is not built.
 
 ## Start here
 
 | You want to | Read |
 |---|---|
-| **Learn by doing** | [tutorial 10](../tutorials/10-first-bi-report.md): chapter 0 sets up a stack and five people; chapters 1 to 9 datasets, 10 to 15 reports, 17 publishing and governance, 18 and 19 live reports and a wall |
+| **Learn by doing** | [tutorial 10](../tutorials/10-first-bi-report.md) (a first report in twelve steps: map, bar, slicer, publish, filters, two datasets, relative dates, a tablet). Then [11](../tutorials/11-bi-that-runs-itself.md) (refresh, subscriptions, alerts, export, expected values), [12](../tutorials/12-live-bi-and-boards.md) (live BI and the board designer), [13](../tutorials/13-govern-bi.md) (governance), [14](../tutorials/14-python-and-analyse.md) (Python, Vega-Lite and Analyse), [15](../tutorials/15-ai-in-drishti.md) (AI) and [16](../tutorials/16-embed-drishti.md) (embedding) |
+| Try each step with real answers | [BI_RECIPES.md](BI_RECIPES.md): a stack with four people, querying datasets, row rules and masks at work |
 | Find your way round the pages, powers and workspaces | this guide, sections 2 to 12 |
 | Write or read a dataset (tables, relationships, measures, row rules, masks, live tables) | [DATASETS.md](DATASETS.md) |
 | Write or read a report (visuals, filters, slicers, live visuals, Perspective) | [REPORTS.md](REPORTS.md) |
 | Put a wall of live tiles on a screen | [BOARDS.md](BOARDS.md) |
 | Export a report or view as PDF, PNG, Excel or CSV; subscribe people by email | [DISTRIBUTION.md](DISTRIBUTION.md) |
+| Write measures, visuals and tests in Python; explore a dataset as an extract; ask the AI helpers | [PYTHON_BI.md](PYTHON_BI.md), [ANALYSE.md](ANALYSE.md), [BI_AI.md](BI_AI.md); Calc's `drishti_bi` and Graphic Walker: [PYTHON_CALC.md](PYTHON_CALC.md#19-the-bi-client-and-graphic-walker) |
+| Show a report in another web application | [ELEMENTS.md](ELEMENTS.md) (`<drishti-report>`, with `<drishti-search>` and `<drishti-about>`), [tutorial 16](../tutorials/16-embed-drishti.md) |
 | Publish, review, certify, trace lineage, move content between servers | [BI_GOVERNANCE.md](BI_GOVERNANCE.md) |
 | See what ships in `config/bi` and how the folder is read | [config/bi/README.md](../../config/bi/README.md) |
 | Grant the powers, set the limits | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md#bi-powers-rupaka), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
 | Call it from a program or the command line | [API_GUIDE.md](API_GUIDE.md#business-intelligence-rupaka-apiv1bi), [CLI_GUIDE.md](CLI_GUIDE.md#bi-workspaces-and-the-catalogue-rupaka) |
-| Understand the design and what each phase built | [RUPAKA.md](../architecture/RUPAKA.md) (section 20: phases 1 to 5 as built, 6 to 9 planned), [RUPAKA_POC.md](../architecture/RUPAKA_POC.md) (the measurements behind it), [LIVE_BI.md](../architecture/LIVE_BI.md) (heavy continuous aggregation belongs in a producer), [QUANT_SERVICE.md](../architecture/QUANT_SERVICE.md) (server-side pricing, proposed) |
+| Understand the design and what each phase built | [RUPAKA.md](../architecture/RUPAKA.md) (section 20: every phase and wave as built, ending in the one list of what is not built), [RUPAKA_POC.md](../architecture/RUPAKA_POC.md) (the measurements behind it), [LIVE_BI.md](../architecture/LIVE_BI.md) (heavy continuous aggregation belongs in a producer), [QUANT_SERVICE.md](../architecture/QUANT_SERVICE.md) (server-side pricing, proposed) |
 | Fix a problem | section 12 here, [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
 
-A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), then do the tutorial's chapters 0 to 2 and 10.
+A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), then set up a stack with [BI_RECIPES.md](BI_RECIPES.md) (the *Set up* section) and do tutorial 10.
 
 ## Contents
 
-1. [What phases 1 to 5 are, and are not](#1-what-phases-1-to-5-are-and-are-not)
+1. [What BI is, and is not](#1-what-bi-is-and-is-not)
 2. [Getting in: the BI menu and RUPAKA](#2-getting-in-the-bi-menu-and-rupaka)
 3. [Who may do what: the four powers](#3-who-may-do-what-the-four-powers)
 4. [The page and its rail](#4-the-page-and-its-rail)
@@ -59,7 +62,7 @@ A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), t
 17. [Publishing and governance (phase 4)](#17-publishing-and-governance-phase-4)
 18. [Live reports and boards (phase 5)](#18-live-reports-and-boards-phase-5)
 
-## 1. What phases 1 to 5 are, and are not
+## 1. What BI is, and is not
 
 **You can**
 
@@ -70,12 +73,10 @@ A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), t
 * open a report over a **live table** and watch it redraw as the data ticks, with a last-update time, pause and resume; open a **Perspective** grid or pivot; open a **board**, a wall of live tiles with alert colours, in kiosk mode (section 18);
 * search, filter and sort a catalogue that shows each person only what they may open; read shipped, read-only content from the BI folder.
 
-**Not built yet** (each is marked where it would matter, and listed in section 11)
+**Not built** (each is marked where it would matter, and listed in section 11)
 
-* running a `notebook` body (it is stored as text); a Perspective chart;
-* time intelligence and window functions in measures; a cron refresh of a layer (a data-load signal or the refresh call does it); a history of a live table (it holds current state);
-* BI content inside a pack archive (a bundle is its own file); threaded comments on a line of a diff; approval chains of several reviewers;
-* a report that suggests itself from words, and any other AI feature (stage 2).
+* threaded comments on a line of a diff; approval chains of several reviewers; escalation of an alert; the Python Source interface;
+* "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses.
 
 Everything the page does, the server decides: the page is a shell that asks the server's `/api/v1/bi` under your identity.
 
@@ -330,7 +331,7 @@ audience-based visibility; shipped files, watched live; Admin, BI settings; four
 **Phase 2, datasets and the query engine.** The dataset YAML with its parser and validation (`DRS-9010` to `9013`); the expression language with aggregation; a dataset started from pack kinds, the packs' links across packs, relationships proposed from the data; the connector SPI `scan` and `sqlTarget` (Delta, DuckDB, PostgreSQL, file); the query engine (an `AnalyticEngine` interface, embedded DuckDB, compiled parameterised SQL), the columns and
 rollup layers rebuilt per business date on data-load signals, `direct` tables pushed to a SQL store; row rules and masks; Arrow and JSON answers; the result cache; limits (`DRS-9020` to `9027`); the Datasets list and dataset pages; compressed static files. Reference: [DATASETS.md](DATASETS.md).
 
-**Phase 3, reports, the designer and the Model view.** The report YAML with its parser, validator and writer (`DRS-9030` to `9035`); the viewer with 21 visual types, three levels of filters with top-N, slicers, cross-filter and highlight, drill-down,
+**Phase 3, reports, the designer and the Model view.** The report YAML with its parser, validator and writer (`DRS-9030` to `9035`); the viewer with 21 visual types (30 today: see REPORTS.md section 3), three levels of filters with top-N, slicers, cross-filter and highlight, drill-down,
 drill-through, show the rows, bookmarks and palettes; the designer (Fields, Visualizations with Build and Format, Filters, pages, the canvas on the 12-column grid with the keyboard, the YAML tab,
 real data and query time while designing, Check, undo and redo, save and save a copy); the Model view; `BI <report> <GO>`; `drishti.bi.report.*`. Reference: [REPORTS.md](REPORTS.md).
 
@@ -351,7 +352,9 @@ and the sample *Region economics* drills from the world map to Australian and US
 
 **Several datasets.** Composed datasets (`from:` / `join:`), derived datasets made by a Python Transform, per-visual datasets and links in reports, several extracts in an Analyse notebook, impact and lineage across all of them (`DRS-9014` to `9017`, `9075`; [DATASETS.md section 11](DATASETS.md#11-composed-and-derived-datasets), [RUPAKA.md section 20.10](../architecture/RUPAKA.md)).
 
-**Not built (and not faked).** Everything of phases 8 and 9 and part of 6: the Python Source interface and a warm worker pool ([PYTHON_BI.md](PYTHON_BI.md) section 12); the rest of the analyst workbench (phase 9: DuckDB-Wasm in the page, Data, Notes, large extracts: [ANALYSE.md](ANALYSE.md) section 12); importing BI content by deploying a pack archive; *Analyse in BI* from a terminal view; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses; AI features (stage 2).
+**Governance, Python, AI and embedding (waves B to D).** A field renamed with the same meaning is recognised as a rename and the reports are rewritten with the dataset; a changed type or meaning is listed as an impact; every import is kept and can be **rolled back**; BI content travels **inside a pack archive**; lineage goes past the connector to the table or topic; a live table keeps a **history** of its measures; a board tile has alert **hysteresis**; boards have a **designer** ([BI_GOVERNANCE.md](BI_GOVERNANCE.md), [BOARDS.md section 11](BOARDS.md)). **Vega-Lite** visuals, **Python** on boards and in alerts, tests shipped with a Python item, Calc's `drishti_bi` with Graphic Walker, **Perspective charts** and the settings panel ([REPORTS.md](REPORTS.md), [PYTHON_BI.md](PYTHON_BI.md), [PYTHON_CALC.md](PYTHON_CALC.md)). The designer copilot, the dataset helper and narrative summaries ([BI_AI.md](BI_AI.md)); charts in Excel exports, retries of alert email, webhook and text channels ([DISTRIBUTION.md](DISTRIBUTION.md)); `<drishti-about>` and `<drishti-search>` with React, Vue and Angular samples ([ELEMENTS.md](../architecture/ELEMENTS.md)). Measures that mix grains (`[MTM] / [Exposure]`) are worked out at each measure's own grain.
+
+**Not built (and not faked).** The consolidated list is [RUPAKA.md section 20.15](../architecture/RUPAKA.md#2015-as-built-at-210-and-what-is-still-not-built): the Python Source interface and a warm worker pool ([PYTHON_BI.md](PYTHON_BI.md) section 12); a Data tab, Notes and million-row extracts in Analyse ([ANALYSE.md](ANALYSE.md) section 12); escalation of alerts; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses.
 
 ## 12. Problems
 
@@ -473,7 +476,7 @@ authors expect them: the canvas on the left, then **Filters**, **Visualizations*
 * **Fields.** The dataset's tables, their columns (a date opens into its parts: year, quarter, month, week, day), its measures and its hierarchies, with a search box. **Drag a field onto the canvas** and the best
   visual for it appears: a measure is a card, a column is a table; **drag another onto that visual** and it improves: a category with a measure becomes a bar, a date with a measure a line, two categories with a
   measure a matrix. Without a mouse, the field's button adds it to the selected visual (or makes a new one). A hierarchy added to a chart makes it drillable.
-* **Visualizations.** The 21 types the designer offers (the rolling chart and the two Perspective visuals of phase 5 are written in the YAML tab: [REPORTS.md section 3](REPORTS.md#3-the-visuals-and-their-wells)); choosing one changes the selected visual (its fields follow where they fit) or adds a new one. **Build** shows the wells of the selected visual: each takes fields or measures, with
+* **Visualizations.** The 26 types the designer offers (`bar` to `button`; the rolling chart, the three Perspective visuals and the entity view are written in the YAML tab and `vega-lite` has a box for its specification: [REPORTS.md section 3](REPORTS.md#3-the-visuals-and-their-wells)); choosing one changes the selected visual (its fields follow where they fit) or adds a new one. **Build** shows the wells of the selected visual: each takes fields or measures, with
   chips you can remove or reorder and a select that adds without dragging; drill down along a hierarchy and drill through to a page are set here too. **Format**: title and alt text, data labels, stacking, legend,
   axis titles, **colours from the theme** (swatches of the report's palette), number format, conditional colours, data bars, subtotals, gauge range, slicer mode and scope, whether other visuals filter it, most rows,
   sort. With no visual selected, Format is the **page** (title, move, delete, the fields it takes as a drill-through target) and the **report** (title, description, palette, business dates, bookmarks).
@@ -498,7 +501,7 @@ authors expect them: the canvas on the left, then **Filters**, **Visualizations*
 * **Undo and redo** (`Ctrl+Z`, `Ctrl+Y`) walk the last 100 changes; **Save** (`Ctrl+S`) keeps the draft in your workspace; the page warns before you leave with unsaved changes. **Publish** is on the item page
   (review, versions and audience as for any item); a report with errors is refused (`DRS-9030`).
 
-The designer needs the `bi-author` power. Its step-by-step use is [tutorial 10](../tutorials/10-first-bi-report.md) chapter 13.
+The designer needs the `bi-author` power. Its step-by-step use is [tutorial 10](../tutorials/10-first-bi-report.md) (steps 2 to 5).
 
 **The new visuals (wave 3).** The Charts group of the Visualizations pane also offers `bubble`, `funnel`, `histogram`, `box` and `map`; Build shows each one's wells (a map needs a `location`, or a `latitude` and a `longitude`); Format has **Bars**, for a map **Level** and **Drill into countries** (a histogram's number of bands) and, for a table, **Total row**; a
 measure that uses time intelligence carries a small badge (`ytd`, `running total`, ...) in the Fields pane. Reference: [REPORTS.md section 3.1](REPORTS.md#31-the-map-funnel-histogram-box-plot-and-bubble).
@@ -531,7 +534,7 @@ The Model view calls the dataset checks (`POST /api/v1/bi/datasets/validate`, wh
 
 ## 17. Publishing and governance (phase 4)
 
-The reference is [BI_GOVERNANCE.md](BI_GOVERNANCE.md); the walk-through is [tutorial 10](../tutorials/10-first-bi-report.md) chapter 17. On an item's page (`/bi/i/<id>`) four sections are new, and the rail has **Environments**.
+The reference is [BI_GOVERNANCE.md](BI_GOVERNANCE.md); the walk-through is [tutorial 13](../tutorials/13-govern-bi.md). On an item's page (`/bi/i/<id>`) four sections are new, and the rail has **Environments**.
 
 * **History** (people who may edit the item). Every save of the body is a saved state with who, when and the message you wrote in *What changed* in the Edit form. Pick two (or press *Compare with draft*) and *Show the differences* for the side-by-side diff; *Restore as draft* makes a state the draft again as a new state, so nothing is lost. Below the table is the review record: requests, decisions with their comments, certifications, revocations, imports.
 * **Review** (shown while an item is proposed, to the people who may decide, including any bi-steward). The request and its note, what changed, Check, what it does to reports, and a data preview answered with the reviewer's own rows and masks. Write your comment in the note box above and press *Approve and publish* or *Reject*. The author is told in the inbox; four-eyes still applies.
@@ -544,7 +547,7 @@ A phone shows the same sections one column wide with finger-sized buttons; the t
 
 ## 18. Live reports and boards (phase 5)
 
-The references are [DATASETS.md](DATASETS.md#71-live-tables-phase-5) (live tables), [REPORTS.md](REPORTS.md#13-live-visuals-and-perspective-phase-5) (live visuals, Perspective) and [BOARDS.md](BOARDS.md); the walk-through is [tutorial 10](../tutorials/10-first-bi-report.md) chapters 18 and 19.
+The references are [DATASETS.md](DATASETS.md#71-live-tables-phase-5) (live tables), [REPORTS.md](REPORTS.md#13-live-visuals-and-perspective-phase-5) (live visuals, Perspective) and [BOARDS.md](BOARDS.md); the walk-through is [tutorial 12](../tutorials/12-live-bi-and-boards.md).
 
 **A live report.** Open **Live trading desk** from the catalogue (the samples are shipped with the site; a business user sees them unless *Hide samples* is on). Above the pages is the **live indicator**: a dot and a word (**Live**, **Paused**, **Stale**, **Feed failing**,
 **Disconnected**, **Paused (tab in background)**), *Last update 07:49:57* (when the table last changed), and **Pause** / **Resume**. The visuals redraw in place as the table changes, at most four times a second; Pause holds the picture, Resume catches up at once.
@@ -562,8 +565,8 @@ under it. **Kiosk** (button, `k`, or `?kiosk=1`) hides the menus, fills the scre
 **Admin.** *Admin, BI settings* is unchanged; the engine page counts live tables and rows (`GET /api/v1/bi/engine`); a dataset's page says how each live table is doing (state, rows, entities that push, last change). Settings: the server's `drishti.bi.live.*` and the console's `bi.live.*`, `bi.board.rotate_seconds`
 ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
 
-**Not built, and not faked.** Interaction between tiles; running totals by group maintained as changes arrive (a live table is maintained incrementally, its measures are recomputed over it); a history of every update of a live table (a bounded history of its aggregates is built: [DATASETS.md section 7.1](DATASETS.md#71-live-tables-phase-5); the rolling chart's
-points live in the browser from the moment the page opened); Perspective charts and its settings panel; live tables over arrays and in `direct` queries; boards in bundles, in lineage and in impact analysis. If a live table's feed is quiet, the page says **Stale** only when the source
+**Not built, and not faked.** Interaction between tiles; a history of every update of a live table (a bounded, sampled history of its measures is built: [DATASETS.md section 7.1](DATASETS.md#71-live-tables-phase-5); the rolling chart's
+points live in the browser from the moment the page opened); live tables over arrays and in `direct` queries; boards in bundles, in lineage and in impact analysis. If a live table's feed is quiet, the page says **Stale** only when the source
 that pushes has gone silent for 30 s: a source that changes rarely is quiet, not stale, when it does not push at all (its state then reads `pushes: false` and the table is read again every 30 s).
 
 ## 19. Export, subscriptions and alerts (phase 7)
@@ -601,7 +604,7 @@ The rail's **Analyse** (`/bi/explore`) opens a dataset as an **extract**: the ro
 
 **Save as a notebook** keeps the extract's definition and the cells as a BI item of kind `notebook` (versions, review and publishing like any item; *Open in Analyse* on its page reopens it, rebuilt for whoever
 opens it). **Promote** turns a Python cell into a Python Measure or Visual draft (or, for a cell that joins several extracts, a Python Transform draft) and a slice into a report draft; nothing is published. Slice and SQL totals are the *extract's*, not the dataset's: use a
-report for true totals. Reference: [ANALYSE.md](ANALYSE.md); tutorial chapter 25. Not built: DuckDB-Wasm in the page (Slice is JavaScript and SQL runs on the console), a *Data* tab, *Notes*,
+report for true totals. Reference: [ANALYSE.md](ANALYSE.md); walk-through: [tutorial 14](../tutorials/14-python-and-analyse.md). Slice and SQL run in the browser in DuckDB-Wasm on the extract the page holds (the console's engines are the fallback) and a slice or a SQL cell can be **promoted into a visual** of a report draft ([ANALYSE.md sections 13 and 14](ANALYSE.md#13-in-the-browser-duckdb-wasm)). Not built: a *Data* tab, *Notes*,
 million-row extracts, scheduled notebooks (ANALYSE.md section 12).
 
 ## 22. With AI: describe a report, ask the data, explain a number (stage 2)

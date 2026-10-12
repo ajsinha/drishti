@@ -248,7 +248,7 @@ You should see three tiles, each with a line under it (`Python · desk-pnl-volat
 ## Next steps
 
 - [Tutorial 13](13-govern-bi.md): publish with a review, certify, and see what a change would break.
-- [BOARDS.md](../guides/BOARDS.md): every tile option, alerts on tiles and notifications, the API. [tutorial 10](10-first-bi-report.md) chapters 18 and 19 go deeper on live tables and Perspective.
+- [BOARDS.md](../guides/BOARDS.md): every tile option, alerts on tiles and notifications, the API. [DATASETS.md section 7.1](../guides/DATASETS.md#71-live-tables-phase-5) is the live-table reference.
 - [DEMO_CONNECTOR.md](../connectors/DEMO_CONNECTOR.md) and [DEMO_DATA.md](../connectors/DEMO_DATA.md) say exactly what ticks and how.
 
 ## If something goes wrong

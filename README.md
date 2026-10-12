@@ -37,7 +37,7 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
 **Look things up**
 - A command line with type-ahead, as on a Bloomberg terminal: mnemonics, recent entities and matches from every
   source as you type. One match opens; several give a **pick list** with each kind's key fields
-  (`TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`).
+  (`TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`). The index behind it keeps several business days, can sit on disk (`DRISHTI_INDEX_DIR`) and reloads by itself or from Admin.
 - **Views** of any entity: a header strip, panels (tables, curves, ladders, surfaces, maps, key-value, links), function
   keys, linked entities with badges, and the raw document (F9). Every table sorts, filters, pages and walks with
   the keyboard; id columns link to their entities.
@@ -86,15 +86,15 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
 - The **BI** menu and the `BI <GO>` keyword (`RUPAKA` still works): a catalogue and workspaces with roles, **datasets** (tables from pack
   kinds, relationships, measures, row rules and masks) on an embedded query engine, and **several datasets in one report** (composed
   datasets that join others as the reader, derived ones, a Transform in Python); **reports** with a designer, a Model view, a **map** you
-  drill from the world to a country and its regions, **dropdown slicers**, cross-filtering, drill-through and a phone layout of their own
+  drill from the world to a country and its regions, **dropdown slicers**, cross-filtering, drill-through, a relative-date slicer, **window functions** and measures that stay correct across several fact tables, **Vega-Lite** and Perspective charts, expected-value tests that stop a bad publish, and a phone and a tablet layout of their own
   ([BI_GUIDE.md](docs/guides/BI_GUIDE.md), [tutorial 10](docs/tutorials/10-first-bi-report.md), [REPORTS.md](docs/guides/REPORTS.md)).
 - **Live BI**: live tables, data that moves together (**coherent walks**), reports that follow the ticks with pause and resume,
-  Perspective grids and **boards** of live tiles in kiosk mode ([BOARDS.md](docs/guides/BOARDS.md), [tutorial 12](docs/tutorials/12-live-bi-and-boards.md)).
+  incremental live measures and a history of a live table, Perspective grids and **boards** of live tiles in kiosk mode, built in a **board designer** ([BOARDS.md](docs/guides/BOARDS.md), [tutorial 12](docs/tutorials/12-live-bi-and-boards.md)).
 - **Distribution**: export a report, page or visual as PDF, PNG, Excel or CSV; **subscriptions** by email; **alerts** on a number, each person on
-  their own masks; a report **embedded** in another application ([DISTRIBUTION.md](docs/guides/DISTRIBUTION.md), [tutorial 11](docs/tutorials/11-bi-that-runs-itself.md)).
-- **Govern it**: versions and diffs, review with four eyes, certification, lineage, impact of a change, bundles between environments
-  ([BI_GOVERNANCE.md](docs/guides/BI_GOVERNANCE.md), [tutorial 13](docs/tutorials/13-govern-bi.md)). **Python** measures and visuals, and
-  **Analyse** (slice, SQL and Python on your masked extract) ([tutorial 14](docs/tutorials/14-python-and-analyse.md)). **AI in BI**
+  their own masks, with **charts in Excel**, retries and **webhook and text** channels, and **narrative summaries**; a report **embedded** in another application ([DISTRIBUTION.md](docs/guides/DISTRIBUTION.md), [tutorial 11](docs/tutorials/11-bi-that-runs-itself.md)).
+- **Govern it**: versions and diffs, review with four eyes, certification, lineage past the connector, impact of a change (renames, types), bundles between environments and inside pack archives, with rollback of an import
+  ([BI_GOVERNANCE.md](docs/guides/BI_GOVERNANCE.md), [tutorial 13](docs/tutorials/13-govern-bi.md)). **Python** measures, visuals and tests, on boards and in alerts, and
+  **Analyse** (slice, SQL in the browser and Python on your masked extract, promoted to a visual); Calc's `drishti_bi` with Graphic Walker ([tutorial 14](docs/tutorials/14-python-and-analyse.md)). **AI in BI** (report from words, ask the data, explain a number, a designer copilot, a dataset helper)
   ([BI_AI.md](docs/guides/BI_AI.md), [tutorial 15](docs/tutorials/15-ai-in-drishti.md)).
 
 **Shape it**
@@ -111,7 +111,7 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
   Packs inherit from each other, load and unload from Admin → Packs, and install from a **signed, versioned
   registry** with rollback ([PACKS.md](docs/guides/PACKS.md)).
 - **Drishti Elements**: show live views, panels and published BI reports inside another web application as `<drishti-view>`,
-  `<drishti-panel>` and `<drishti-report>` Web Components, without iframes ([ELEMENTS.md](docs/guides/ELEMENTS.md), [tutorial 16](docs/tutorials/16-embed-drishti.md)).
+  `<drishti-panel>`, `<drishti-report>`, `<drishti-about>` and `<drishti-search>` Web Components, without iframes (React, Vue and Angular samples) ([ELEMENTS.md](docs/guides/ELEMENTS.md), [tutorial 16](docs/tutorials/16-embed-drishti.md)).
 - **An AI layer and an MCP client**, both **off by default** (`drishti.ai.enabled`, `drishti.mcp.enabled`): pluggable
   model providers (OpenAI, Anthropic and seventeen more vendor types, each with TLS and a **Test connection** button) and *Ask about this page* ([AI_PROVIDERS.md](docs/architecture/AI_PROVIDERS.md), [MCP_CLIENT.md](docs/architecture/MCP_CLIENT.md)).
 - **Derived kinds**: entities computed from others, declared in a pack, such as each desk's P&L summed from its

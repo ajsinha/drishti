@@ -15,9 +15,9 @@
 -->
 # Drishti Elements: Drishti's views inside other web applications, without iframes
 
-Status: steps 0 to 15 of [the build plan](#16-build-plan) are built or stated as not built (each has an "as built" note there, saying what differs from this design; steps 11 to 15 are in [one note](#steps-11-to-15-as-built-2026-10-11)):
+Status: steps 0 to 15 of [the build plan](#16-build-plan) are built except step 15 (each has an "as built" note there, saying what differs from this design; steps 11 to 15 are in [one note](#steps-11-to-15-as-built-2026-10-11)):
 `<drishti-view>`, `<drishti-panel>` and `<drishti-report>` ([section 18](#18-drishti-report-a-published-report-in-another-web-application)) are built, the library is versioned with an `integrity.json` and an npm package folder with TypeScript declarations, and the developer guide ([guides/ELEMENTS.md](../guides/ELEMENTS.md)) and
-[ADR-021](adr/021-embedding-is-html-over-the-wire.md) are written. **Not built:** `<drishti-about>`, `<drishti-search>`, the frameworks smoke test (React, Angular, Vue), workspaces on `<drishti-view>` and the SharedWorker (step 15). This document is the design and the as-built record; the guide is the reference for a developer using the elements. The decisions marked **Decision:** were taken as recommended unless an "as built" note says
+[ADR-021](adr/021-embedding-is-html-over-the-wire.md) are written. `<drishti-about>`, `<drishti-search>` and the React, Vue and Angular sample pages with their smoke test came with library 1.4.0 ([step 14](#steps-11-to-15-as-built-2026-10-11)). **Not built:** workspaces on `<drishti-view>` and the SharedWorker (step 15). This document is the design and the as-built record; the guide is the reference for a developer using the elements. The decisions marked **Decision:** were taken as recommended unless an "as built" note says
 otherwise. Owner: the console (`drishti-console/`), the server's security layer and view pipeline.
 
 Contents
@@ -969,8 +969,7 @@ console it talks to.
   rapid switches with out-of-order responses paint only the last; `refresh()` keeps a table's sort; killing the scratch server shows `reconnecting` then repaints; hiding the
   page gives the subscription back; two elements share one connection (count requests); token expiry mid-stream renews
   without a repaint; another origin is refused (`DRS-8002`); a CSP violation report endpoint receives nothing.
-- **Frameworks smoke**: three static pages (React 19, Angular, Vue 3) built once into `tests/elements/frameworks/`
-  (vendored builds, no CDN), each binding `entity`, `tokenProvider` and one event; run in Chromium, Firefox and WebKit.
+- **Frameworks smoke** (built: `test_embed_frameworks_browser.py`): sample pages for React 18, Vue 3 and Angular 18 (`docs/guides/examples/embed/`, builds fetched once and not committed), each binding `entity`, `tokenProvider` and one event.
 - **Load (local, small, per the house rule)**: 20 elements, 10 entities, one page; then 50 pages: upstream stream count,
   console memory, frame latency (`p99Ms`) against the console-only baseline.
 
@@ -1298,7 +1297,7 @@ provider is asked again, renewals go to the open channel, one channel only, stil
 browsers: adopted sheets under the host CSP, icon font via `FontFace`, streamed fetch with `Authorization`, composed events, ECharts in
 the shadow root, no style leak either way.
 
-**Not built:** the `toolbar` slot, `openAbout(panelId)` and `focusPanel(id)` methods, `<drishti-panel>` (phase 2), a `locale` attribute
+**Not built:** the `toolbar` slot, `openAbout(panelId)` and `focusPanel(id)` methods, a `locale` attribute
 (the sheet has no locale yet); `live.js`/`view-panels.js` splits of step 6 remain not done (the element applies frames itself in `frames.js`).
 
 #### Step 10 as built: Admin → Embedding (2026-10-06)
@@ -1316,8 +1315,7 @@ the shadow root, no style leak either way.
 **Step 11, tests.** The foreign-origin host application exists since step 0 and is what the browser tests run against: `tools/elements-demo` on its own port, its own sign-in and backend doing the RFC 8693 exchange, the page served with a strict policy (no inline, no frames, only the console beyond itself;
 `/?tt=1` also enforces Trusted Types). The tests of section 14 are in `test_embed_elements_browser.py` and `test_embed_controls_browser.py` (Chromium, Firefox and WebKit): the live trade, masks per user, the search box, recent list, as-of picker, `drishti:navigate`, rapid switching, two elements on one connection, token
 expiry and renewal, a console restart, the sanitiser, Trusted Types, slots. New in this step: the **small load test** (`test_twenty_elements_on_ten_entities_cost_the_page_one_connection`: 20 elements, 10 entities, one channel stream, every element live, frame latency recorded) and the host page of `<drishti-report>`
-(`tools/elements-demo/static/report.html`, `test_embed_report_browser.py`). **Not built: the frameworks smoke** (React 19, Angular and Vue 3 pages, built once into `tests/elements/frameworks/`): it needs the three frameworks' production builds vendored, and this build environment has no network and no copy of them to vendor;
-the elements are plain custom elements with events on `addEventListener`, which the developer guide shows for each framework, but no framework page runs in a test yet.
+(`tools/elements-demo/static/report.html`, `test_embed_report_browser.py`). The frameworks smoke test was first not built (the builds were not vendored); it is built now as the React 18, Vue 3 and Angular 18 sample pages with `test_embed_frameworks_browser.py` (builds fetched by `fetch-vendor.sh`, never committed: [guides/ELEMENTS.md](../guides/ELEMENTS.md#react-angular-and-vue-sample-pages)).
 
 **Step 12, distribution.** `core/element_dist.py` holds the library's **semantic version** (`VERSION`, `1.3.0`; the entry reports it as `DrishtiElements.version`). The console serves it **exactly and immutably** at `/embed/v1/elements/1.3.0/drishti-elements.js` and `.../m/<name>.js`
 (`Cache-Control: public, max-age=31536000, immutable`, `ETag` = the file's SRI value) with `.../integrity.json` (`{"name", "version", "api", "files": {<path>: {"integrity": "sha384-…", "bytes"}}}`); a partial version (`/embed/v1/elements/1/…`, `/1.1/…`) answers `302` to the exact one (`max-age=60`, with CORS, so a module graph follows it);
@@ -1330,8 +1328,7 @@ the package: they are versioned with the console that serves the data and the li
 **Step 13, documentation.** The developer guide [guides/ELEMENTS.md](../guides/ELEMENTS.md) (also in the help centre): the five-minute start, the element reference (generated tables), the token exchange for the host backend, CSP and SRI, theming, a cookbook, troubleshooting by DRS code; `CONFIGURATION.md` (`embed.lifecycle`, the scope),
 `API_GUIDE.md` (the report paths), the help-centre entry, and [ADR-021](adr/021-embedding-is-html-over-the-wire.md) for Decision 1 (and what `<drishti-report>` does instead, where there is no server-rendered HTML to put over the wire).
 
-**Step 14, phase 2 elements.** **`<drishti-panel>`** is built: `<drishti-view>` with the `panel` attribute (`panel="legs"` is `panels="legs"`) and the header off unless asked for (`web/embed/panel.js`, 40 lines; a Chromium test). **`<drishti-about>` and `<drishti-search>` are not built.** The About body needs the console's `about.js`
-and `about-hints.js` started on its own root with a drawer the element does not have yet; the type-ahead needs a **search scope** (`embed:search`) and an embed-safe suggestion endpoint, neither of which the server has (`DrishtiElements.resolve` covers the exact command today).
+**Step 14, phase 2 elements.** **`<drishti-panel>`** is built: `<drishti-view>` with the `panel` attribute (`panel="legs"` is `panels="legs"`) and the header off unless asked for (`web/embed/panel.js`, 40 lines; a Chromium test). **`<drishti-about>` (scope `embed:about`) and `<drishti-search>` (scope `embed:search`, `GET /api/v1/embed/search`, masked and cut to the application's kinds) are built** in library 1.4.0 (wave D: [RUPAKA.md section 20.14](RUPAKA.md#2014-ai-distribution-and-embedding-wave-d-as-built)).
 
 **Step 15, optional.** Not built: workspaces on `<drishti-view>` in place of iframes, and a host-served SharedWorker for HTTP/1.1 hosts. Neither is needed by anything else, and both are larger than their value until a host asks.
 

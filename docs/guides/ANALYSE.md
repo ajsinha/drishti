@@ -20,7 +20,7 @@ apply), and work on it three ways: **Slice** (a drag-and-drop pivot), **SQL** (c
 (a BI item with versions and review like any other) and **promote** what is good: a Python cell becomes a Python Measure or Visual draft, a slice or a SQL cell becomes a **visual in a new or an existing report draft**.
 **Slice and SQL run in your browser** (DuckDB-Wasm) on the extract the page already holds, with the console as the fallback ([section 13](#13-in-the-browser-duckdb-wasm)).
 
-This is the reference. A short walk-through is [tutorial 10](../tutorials/10-first-bi-report.md) chapter 25; the design is [RUPAKA.md](../architecture/RUPAKA.md) section 20.9; the quant engine behind
+This is the reference. A walk-through is [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [RUPAKA.md](../architecture/RUPAKA.md) section 20.9; the quant engine behind
 `quant.price(...)` is [QUANT_SERVICE.md](../architecture/QUANT_SERVICE.md#16-the-consoles-quantengine-slot-built-lean).
 
 ## Contents
@@ -82,7 +82,7 @@ Every extract is the reader's, so a join of two extracts shows **their** rows: t
 Because the extract is cut, **Slice and SQL give the extract's totals, not the dataset's**. For true totals use a report.
 
 An extract can also be a **report visual's data** (`POST /bi/explore/extract` with `{report, page, visual, state}`), the same rows the visual drew, masked the same way; the page's
-form opens datasets, and a link from a report is planned (section 12).
+form opens datasets, and a link *Analyse this* from a report is not built (section 12).
 
 ## 3. Slice
 

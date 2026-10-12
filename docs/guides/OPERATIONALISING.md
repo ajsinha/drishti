@@ -46,7 +46,7 @@ needs only a shell: `tar` and `cp` are enough to do by hand what `pack deploy` d
 
 | Artifact | What it is | Made by | Goes to (on the server) | Server notices it |
 |---|---|---|---|---|
-| **Pack bundle** `<name>-<version>.tar.gz` (+ `.sha256`) | one pack, versioned, with a manifest of every file's checksum | `pack bundle` | unpacked by `pack deploy` into the **packs folder**: `drishti.packs.dir` (`DRISHTI_PACKS_DIR`, default `./config/packs`) or `drishti.packs.installed-dir` (`./data/packs/installed`, searched first) | `DRISHTI_PACKS` + restart, or Admin → Packs → Load |
+| **Pack bundle** `<name>-<version>.tar.gz` (+ `.sha256`) | one pack, versioned, with a manifest of every file's checksum | `pack bundle` | unpacked by `pack deploy` into the **packs folder**: `drishti.packs.dir` (`DRISHTI_PACKS_DIR`, default `./config/packs`) or `drishti.packs.installed-dir` (`./data/packs/installed`, searched first) | the server checks and loads the copied folder by itself (`drishti.packs.watch`); `DRISHTI_PACKS` keeps it for every start; Admin → Packs → Load does it at once |
 | **Pack folder** `config/packs/<name>/` | the same content, unpacked (what git holds) | you, `pack new` | the same places, as `<packs folder>/<name>/` | the same |
 | **Sutra files** `sutras/**/*.sutra.yaml` | one screen each; inside a pack's `sutras/` or a site folder | `sutra design`, `sutra gen`, the Screen Designer's export | `<pack>/sutras/` (or the site Sutra folder, `drishti.rachana.dirs`) | **hot reload**: seconds, no restart |
 | **`config/about.yaml`** (+ `about.<lang>.yaml`, `help.yaml`, `formats.yaml`) | glossary text and formats of a pack | you | `<pack>/config/` | on pack load / restart; Sutra help follows hot reload |
@@ -384,8 +384,7 @@ volumes:
   - /srv/lake:/opt/drishti/data/delta:ro
 ```
 
-On the host, deploy as usual (`pack deploy ... --to /srv/drishti/packs`), then `docker compose restart drishti-server`
-(or Admin → Packs → Load). A `:ro` mount is fine: the server only reads.
+On the host, deploy as usual (`pack deploy ... --to /srv/drishti/packs`), the server (which watches the folder) checks and loads the pack by itself; `docker compose restart drishti-server` is needed only to put it in `DRISHTI_PACKS` for every start (or use Admin → Packs → Load). A `:ro` mount is fine: the server only reads.
 
 **Kubernetes: an init container copies the bundle in.** The bundle is the artifact; keep it in an object store or an image layer:
 
