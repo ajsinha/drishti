@@ -82,50 +82,64 @@
   color-scheme: light;
 }
 
+/* Blue: Sajha's (and Maya's) blue palette, the same roles as every theme */
 :root[data-theme="blue"] {
-  --d-bg: #0a1830;
-  --d-bg-2: #0d1f3d;
-  --d-surface: #11264a;
-  --d-surface-2: #152d57;
-  --d-border: #23407a;
-  --d-ink: #e8f0ff;
-  --d-muted: #9db1d6;
-  --d-faint: #8697b8;
-  --d-accent: #5cc8ff;
-  --d-accent-strong: #8ad8ff;
-  --d-accent-tint: rgba(92, 200, 255, .14);
-  --d-link: #9fc2ff;
-  --d-pos: #9fc2ff;
-  --d-neg: #ff9d6b;
-  --d-emph-bg: rgba(92, 200, 255, .22);
-  --d-glow: rgba(92, 200, 255, .35);
-  --d-grad-from: #5cc8ff;
-  --d-grad-to: #b59cff;
-  --d-nav: rgba(10, 24, 48, .86);
-  color-scheme: dark;
+  --d-bg: #f0f5fa;
+  --d-bg-2: #e6edf5;
+  --d-surface: #ffffff;
+  --d-surface-2: #f7fafd;
+  --d-border: #dce4ee;
+  --d-ink: #1e293b;
+  --d-muted: #536578;
+  --d-faint: #536578;
+  --d-accent: #006dae;                 /* Sajha's #0079c1 is too light for text (4.0:1); kept for the bar and gradients */
+  --d-accent-strong: #00609a;
+  --d-accent-tint: rgba(0, 121, 193, .08);
+  --d-on-accent: #ffffff;
+  --d-link: #003168;
+  --d-pos: #003168;
+  --d-neg: #b42318;
+  --d-ok: #1e6b3a;
+  --d-warn: #7a5200;
+  --d-bad: #b42318;
+  --d-highlight: rgba(0, 121, 193, .05);
+  --d-emph-bg: rgba(205, 232, 247, .8);
+  --d-glow: rgba(0, 121, 193, .22);
+  --d-grad-from: #0079c1;
+  --d-grad-to: #003168;
+  --d-nav: rgba(240, 245, 250, .92);
+  --d-shadow: 0 10px 30px rgba(0, 121, 193, .12);
+  color-scheme: light;
 }
 
+/* Green: Sajha's (and Maya's) green palette, the same roles as every theme */
 :root[data-theme="green"] {
-  --d-bg: #0b1a17;
-  --d-bg-2: #0f221e;
-  --d-surface: #132a25;
-  --d-surface-2: #17332d;
-  --d-border: #24483f;
-  --d-ink: #e6f4ef;
-  --d-muted: #9dbdb3;
-  --d-faint: #789f93;
-  --d-accent: #4fd6a0;
-  --d-accent-strong: #7be6bb;
-  --d-accent-tint: rgba(79, 214, 160, .14);
-  --d-link: #8cc9ff;
-  --d-pos: #8cc9ff;
-  --d-neg: #ffa36b;
-  --d-emph-bg: rgba(79, 214, 160, .22);
-  --d-glow: rgba(79, 214, 160, .35);
-  --d-grad-from: #4fd6a0;
-  --d-grad-to: #8cc9ff;
-  --d-nav: rgba(11, 26, 23, .86);
-  color-scheme: dark;
+  --d-bg: #f7f5ef;
+  --d-bg-2: #efebe0;
+  --d-surface: #ffffff;
+  --d-surface-2: #fbfaf6;
+  --d-border: #e3decf;
+  --d-ink: #1a1a1a;
+  --d-muted: #5e6a64;
+  --d-faint: #5e6a64;
+  --d-accent: #006039;
+  --d-accent-strong: #004d2e;
+  --d-accent-tint: rgba(0, 96, 57, .08);
+  --d-on-accent: #ffffff;
+  --d-link: #1c3a2e;
+  --d-pos: #1c3a2e;
+  --d-neg: #a4161a;
+  --d-ok: #3a6b1e;
+  --d-warn: #7a5200;
+  --d-bad: #a4161a;
+  --d-highlight: rgba(0, 96, 57, .05);
+  --d-emph-bg: rgba(235, 221, 178, .8);
+  --d-glow: rgba(0, 96, 57, .22);
+  --d-grad-from: #006039;
+  --d-grad-to: #1c3a2e;
+  --d-nav: rgba(247, 245, 239, .92);
+  --d-shadow: 0 10px 30px rgba(0, 96, 57, .12);
+  color-scheme: light;
 }
 
 /* Wall Street: colour scheme after the Bloomberg Terminal — black ground, amber data, yellow

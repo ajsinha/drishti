@@ -62,9 +62,9 @@ a:hover { text-decoration: underline; }
 .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: .5rem; vertical-align: -1px; border: 1px solid rgba(128,128,128,.4); }
 .swatch-terminal { background: linear-gradient(135deg, #0e1628 50%, #e8a33a 50%); }
 .swatch-light { background: linear-gradient(135deg, #f7f5f0 50%, #b86e0c 50%); }
-.swatch-blue { background: linear-gradient(135deg, #0a1830 50%, #5cc8ff 50%); }
+.swatch-blue { background: linear-gradient(135deg, #f0f5fa 50%, #0079c1 50%); }
 .swatch-wallstreet { background: linear-gradient(135deg, #000 50%, #fb8b1e 50%); }
-.swatch-green { background: linear-gradient(135deg, #0b1a17 50%, #4fd6a0 50%); }
+.swatch-green { background: linear-gradient(135deg, #f7f5ef 50%, #006039 50%); }
 .swatch-crimson { background: linear-gradient(135deg, #f7f5f2 50%, #a51c30 50%); }
 .swatch-crimson-dark { background: linear-gradient(135deg, #151517 50%, #de6b81 50%); }
 
