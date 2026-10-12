@@ -140,8 +140,8 @@ def test_export_subscribe_run_now_and_the_list(stack, browser, smtp, tmp_path):
     expect(page.locator('tr[data-row-name="Morning desk pack"]')).to_contain_text("paused")
     page.locator('tr[data-row-name="Morning desk pack"]').get_by_role("button", name="Resume").click()
     expect(page.locator(".adm-msg")).to_contain_text("Resumed Morning desk pack")
-    page.click('.tbar-menu-btn[title^="Reports"]')
-    expect(page.locator(".mega-panel.show, .dropdown-menu.show").get_by_text("My subscriptions")).to_be_visible()
+    page.click('.tbar-menu-btn[title^="Views"]')               # Reports lives in Views (one top bar)
+    expect(page.locator(".mega-panel.show, .dropdown-menu.show").locator('a[href="/reports"]').first).to_be_visible()
     clean(page)
 
     # -- a PDF subscription mails the PDF
