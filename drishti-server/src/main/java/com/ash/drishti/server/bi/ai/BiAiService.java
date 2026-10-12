@@ -53,6 +53,8 @@ public final class BiAiService {
     public static final String DRAFT = "bi-draft";
     public static final String ASK = "bi-ask";
     public static final String EXPLAIN = "bi-explain";
+    /** The feature name of a subscription's narrative summary (the AI policy's per-feature roles and limits apply under it). */
+    public static final String NARRATE = "subscription-narrative";
 
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final Pattern FENCE = Pattern.compile("(?s)```[a-zA-Z]*\\s*\\n?(.*?)```");
@@ -85,6 +87,7 @@ public final class BiAiService {
         m.put("draft", ai.enabled() && bi.mayAuthor(p));
         m.put("ask", ai.enabled());
         m.put("explain", ai.enabled());
+        m.put("assist", ai.enabled() && bi.mayAuthor(p));          // designer copilot, check explanations, dataset helper
         return m;
     }
 
@@ -96,25 +99,35 @@ public final class BiAiService {
         bi.requirePower(p, BiAccess.AUTHOR);
         String text = text(request, "describe the report you want");
         Map<String, Object> model = reports.datasetModel(p, datasetRef);                    // authors; the fields masked for this author are left out of the prompt
+        Map<String, Object> checked = checkedYaml(p, DRAFT, "bi-ai-draft", datasetRef, BiAiPrompts.draftSystem(), problems -> BiAiPrompts.draftUser(model, text, problems));
+        audit.record(p.user(), "bi-ai-draft", datasetRef, "ok");
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("yaml", checked.get("yaml"));
+        out.put("valid", true);
+        out.put("problems", checked.get("problems"));
+        out.put("dataset", datasetRef);
+        out.put("saved", false);
+        return out;
+    }
+
+    /**
+     * Asks the model for report YAML (one more try when the report checker refuses the first answer, with its problems in the prompt) and returns the checker's answer
+     * with {@code yaml} added. Nothing the checker refuses is returned: the second refusal is DRS-4020.
+     */
+    Map<String, Object> checkedYaml(Principal p, String feature, String auditAction, String datasetRef, String system, java.util.function.Function<String, String> userPrompt) {
         String problems = "";
         List<String> last = List.of();
         for (int attempt = 0; attempt < 2; attempt++) {
-            String yaml = pinDataset(unfence(call(p, DRAFT, BiAiPrompts.draftSystem(), BiAiPrompts.draftUser(model, text, problems), false)), datasetRef);
-            Map<String, Object> checked = reports.validate(p, yaml, true);
+            String yaml = pinDataset(unfence(call(p, feature, system, userPrompt.apply(problems), false)), datasetRef);
+            Map<String, Object> checked = new LinkedHashMap<>(reports.validate(p, yaml, true));
             if (Boolean.TRUE.equals(checked.get("valid"))) {
-                audit.record(p.user(), "bi-ai-draft", datasetRef, "ok");
-                Map<String, Object> out = new LinkedHashMap<>();
-                out.put("yaml", yaml);
-                out.put("valid", true);
-                out.put("problems", checked.get("problems"));
-                out.put("dataset", datasetRef);
-                out.put("saved", false);
-                return out;
+                checked.put("yaml", yaml);
+                return checked;
             }
             last = errors(checked);
             problems = String.join("; ", last);
         }
-        audit.record(p.user(), "bi-ai-draft", datasetRef, "refused");
+        audit.record(p.user(), auditAction, datasetRef, "refused");
         throw new DrishtiException(ErrorCode.AI_ANSWER, "the model's draft did not pass the report check, so it is not shown: " + String.join("; ", last.stream().limit(3).toList()));
     }
 
@@ -203,13 +216,53 @@ public final class BiAiService {
 
     // ---- pieces ---------------------------------------------------------------------------------------------------
 
-    private void on() {
+    /**
+     * Words a recipient's own figures (a subscription's narrative summary): {@code facts} was made from what that person may see, masked columns left out. Only when the
+     * AI policy lets the model see values ({@code drishti.bi.ai.values: aggregates}); otherwise, or when the AI layer is off or the policy refuses the recipient, this
+     * throws and the caller leaves the summary out.
+     */
+    public String narrate(Principal p, String facts) {
+        on();
+        if (!props.aggregates()) {
+            throw new DrishtiException(ErrorCode.AI_OFF, "the AI policy lets the model see labels only (drishti.bi.ai.values), so it writes no summary of figures");
+        }
+        String text = call(p, NARRATE, BiAiPrompts.summariseSystem(), "TASK: summarise\n" + facts, false).strip();
+        audit.record(p.user(), "ai-" + NARRATE, "-", "ok");
+        return text;
+    }
+
+    /** Whether the AI layer is on, for the callers that ask before they build a prompt. */
+    public boolean enabled() {
+        return ai.enabled();
+    }
+
+    BiAiProperties props() {
+        return props;
+    }
+
+    BiReportService reports() {
+        return reports;
+    }
+
+    DatasetService datasets() {
+        return datasets;
+    }
+
+    BiService bi() {
+        return bi;
+    }
+
+    AuditLog audit() {
+        return audit;
+    }
+
+    void on() {
         if (!ai.enabled()) {
             throw new DrishtiException(ErrorCode.AI_OFF, "the AI layer is switched off (drishti.ai.enabled)");
         }
     }
 
-    private String text(String s, String hint) {
+    String text(String s, String hint) {
         String t = s == null ? "" : s.strip();
         if (t.isEmpty()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, hint);
@@ -220,14 +273,15 @@ public final class BiAiService {
         return t;
     }
 
-    private String call(Principal p, String feature, String system, String user, boolean jsonMode) {
+    /** One model call as {@code p} under {@code feature} (the policy's name for it). Package-visible for the designer helpers. */
+    String call(Principal p, String feature, String system, String user, boolean jsonMode) {
         ChatCompletionRequest req = new ChatCompletionRequest(props.model().isEmpty() ? null : props.model(),
                 List.of(Canonical.ChatMessage.system(system), Canonical.ChatMessage.user(user)), null, null, null,
                 jsonMode ? new Canonical.ResponseFormat("json_object", null) : null, 0.0, null, props.maxTokens(), null, null, null, null, null, null, null, null, null, null);
         try {
             return gateway.model(props.model(), "chat", new CallContext(p.user(), Set.copyOf(p.roles()), feature)).chatCompletionsCreate(req).text();
         } catch (LlmException e) {
-            audit.record(p.user(), "bi-ai-" + feature.substring(3), "-", e.kind().name().toLowerCase(java.util.Locale.ROOT));
+            audit.record(p.user(), feature.startsWith("bi-") ? "bi-ai-" + feature.substring(3) : "ai-" + feature, "-", e.kind().name().toLowerCase(java.util.Locale.ROOT));
             throw AiController.map(e);
         }
     }
@@ -242,12 +296,12 @@ public final class BiAiService {
         return (m.find() ? m.group(1) : s).strip() + "\n";
     }
 
-    private static String pinDataset(String yaml, String ref) {
+    static String pinDataset(String yaml, String ref) {
         return DATASET_LINE.matcher(yaml).find() ? DATASET_LINE.matcher(yaml).replaceFirst(Matcher.quoteReplacement("dataset: " + ref)) : yaml;
     }
 
     @SuppressWarnings("unchecked")
-    private static List<String> errors(Map<String, Object> checked) {
+    static List<String> errors(Map<String, Object> checked) {
         List<String> out = new ArrayList<>();
         for (Object o : (List<Object>) checked.get("problems")) {
             Map<String, Object> pm = (Map<String, Object>) o;

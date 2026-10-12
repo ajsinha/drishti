@@ -53,9 +53,11 @@ DRISHTI_AI_ENABLED=true  DRISHTI_AI_DEFAULT_MODEL=mock/m
 | `ask-rows` | `200` | most rows an answer holds, and the most the model sees of them in `aggregates` mode |
 | `explain-dimensions` | `3` | dimensions a number is broken down by |
 | `explain-members` | `5` | members listed per dimension |
+| `suggestions` | `6` | most visuals the designer copilot proposes at once (section 10) |
+| `helper-items` | `8` | most items the dataset helper proposes per kind (section 11) |
 
 The policy settings are the AI layer's (`drishti.ai.policy.*`, [CONFIGURATION.md](../admin/CONFIGURATION.md#ai-and-mcp-policy-settings)). The features are named **`bi-draft`**, **`bi-ask`**
-and **`bi-explain`**, so `drishti.ai.policy.features."[bi-ask]": {roles: [analyst], per-user-per-minute: 10}` limits who asks and how often.
+and **`bi-explain`**, and for the helpers of sections 9 to 11 **`subscription-narrative`**, **`bi-suggest`**, **`bi-explain-checks`** and **`bi-helper`**, so `drishti.ai.policy.features."[bi-ask]": {roles: [analyst], per-user-per-minute: 10}` limits who asks and how often.
 
 ## 2. Who may
 
@@ -180,7 +182,7 @@ Explain explains **what a number is made of**, not why it moved over time (no co
 | `DRS-4015` (404) | the AI layer is off |
 | `DRS-4016` (502 / 504) | the provider failed or did not answer in time |
 | `DRS-4017` (429) | over a per-user, per-feature or cost limit of the AI policy |
-| `DRS-4018` (403) | the AI policy does not open `bi-draft` / `bi-ask` / `bi-explain` to your role |
+| `DRS-4018` (403) | the AI policy does not open `bi-draft` / `bi-ask` / `bi-explain` / `bi-suggest` / `bi-explain-checks` / `bi-helper` to your role (for a subscription's narrative, `subscription-narrative` to the recipient: the summary is left out and the delivery says so) |
 | `DRS-4019` (404) | the configured model is not found |
 | **`DRS-4020`** (422) | the model's answer could not be used: a draft that did not pass the report check after one repair, or an answer that is not a query. Nothing was changed |
 | `DRS-9002` (403) | no BI power for the hook (`bi-author` to draft, `bi` to ask and explain) |
@@ -193,9 +195,58 @@ Explain explains **what a number is made of**, not why it moved over time (no co
 `DRS-4020`); an author the policy does not list is refused; two readers asking the same question get different answers; a masked measure stays masked; the ask prompt in `labels-only` has no
 row and in `aggregates` only the reader's own unmasked aggregates; explain's lineage, sources and breakdown; the hooks off with the layer. `tests/test_bi_ai.py` (console routes and the script's
 hygiene: no `innerHTML`, no inline handler, same origin) and `tests/test_bi_ai_browser.py` (Chromium, real server and console, the mock provider: ask, explain, describe).
+Sections 9 to 11 are tested in `BiAiTest` (suggestions are checked and rename taken ids, explanations pair with the checker's problems and no problem means no model call, the helper drops a name that is
+not in the model, a relationship inside one table, a measure over an unknown column and a duplicate; the narrative needs `aggregates`), `SubscriptionServiceTest` (a narrative from each recipient's own
+render, left out for a masked one, refused at save while the AI layer is off) and `tests/test_wave_d.py` (the routes and the scripts' hygiene); `tests/test_wave_d_browser.py` runs the
+copilot and the helper in Chromium.
 
-## 9. Not built
+## 9. A written summary at the top of a subscription's email
 
-Stage 2's other hooks stay unbuilt ([RUPAKA.md](../architecture/RUPAKA.md) section 20.1): a **narrative summary** for subscriptions, the **designer copilot** (suggestions as diffs), and the
-**dataset helper**. Not built either: "why did it move" between two dates, follow-up questions that remember the last (each question is alone), streaming answers, and a model that calls Drishti's
+A subscription with `narrative: true` (a checkbox on the Subscribe form: *Open the email with a short written summary*) opens each email with two or three sentences that word the report for **that
+recipient**. It is the same model call as the others, under the feature name **`subscription-narrative`**, made **as the recipient** (their roles, their per-user limits, `features."[subscription-narrative]".roles`),
+and the facts it is given are the recipient's own render of the report: the title, the as-of date and the tables as they see them, **every column masked for them left out**, at most
+`drishti.distribution.subscriptions.narrative-rows` (15) rows of each. The prompt asks for three sentences at most and no number that is not in the facts.
+
+It is written only when the AI policy lets the model see values: **`drishti.bi.ai.values: aggregates`**. Under `labels-only` the model never sees a figure, so the email goes without a summary and the delivery
+in the run's history says `summary: skipped: the AI policy lets the model see labels only`. It is the same when the AI layer is off, when the policy refuses the feature to the recipient, or when
+the provider fails: the email is sent without it (a summary is never a reason to hold a report back) and the history says why. A saved subscription with `narrative: true` is refused while the AI layer is
+off (`422 DRS-9061`). The summary is marked as written by an AI model; it is not stored anywhere but in the email, and the audit row (`ai-subscription-narrative`) holds no text.
+
+![Subscribe form with the summary and the channels](img/bi-dist/subscribe-form-channels.png)
+
+## 10. Designer copilot
+
+In the report designer, **Suggest visuals** (beside *Check*; hidden unless the AI layer is on and you have `bi-author`) takes a goal in your words ("where the exposure sits, and a way to filter it by
+desk") and the dataset the report reads, and proposes visuals, their wells and filters. The model is sent the dataset's model (names, types and descriptions, never a row) and the titles of what the report
+already has; it writes a report in YAML, the report checker runs on it as it does on a hand-written one (one repair attempt, then `DRS-4020`), and each visual in it comes back as a card with its type, its
+title, a sentence on why it is useful (the visual's `alt`) and **the YAML that would be added**. A slicer is a *filter*. Nothing is applied: **Add to this page** puts that visual at the bottom of the
+page you are on as one undoable edit of the draft (`Ctrl+Z` takes it back), and Save is still yours. An id the report already uses is renamed (`by-desk-2`). `POST /api/v1/bi/ai/suggest`,
+feature `bi-suggest`.
+
+**Explain in plain words** is a button in the Check panel. The checker's own problems (codes, paths and messages, nothing else; the dataset's names help the explanation) go to the model, which answers
+each with what it means and what to change, using the dataset's names. They are shown under the problems, marked as written by a model, and change nothing. With no problem the model is not called.
+`POST /api/v1/bi/ai/explain-checks`, feature `bi-explain-checks`.
+
+![Suggest visuals in the designer](img/bi-ai/designer-suggest.jpg)
+
+![The Check panel explained in plain words](img/bi-ai/check-explained.jpg)
+
+## 11. Dataset helper
+
+On the Model view of a dataset, **Ask the AI helper** proposes what a model usually lacks, from its names, types and descriptions alone (a column masked for you is left out; no value, no row):
+
+* **relationships** between columns of the same type in different tables, with a cardinality and a reason;
+* **measures** with a name, an expression (one aggregate over a column the model has, or `count(table)`) and a one-sentence description;
+* **descriptions** for the columns that have none.
+
+Each item is checked against the model before it is shown, and a name that is not there, a relationship inside one table or one that exists, a measure over an unknown column or with a name taken, and a
+description for a column that has one are all dropped. Each is shown with the YAML it would add and an **Accept** button of its own: a relationship is added to the diagram and the `relationships:` block, a
+measure to the `measures:` block, a description into the column's line (whichever of the three ways it is written; when the line cannot be found the item says *Place it by hand* and the YAML is shown
+to copy). Nothing is saved until you press Save, and the draft is checked as you type like any other edit. `POST /api/v1/bi/ai/dataset-helper`, feature `bi-helper`.
+
+![The dataset helper on the Model view](img/bi-ai/dataset-helper.jpg)
+
+## 12. Not built
+
+The narrative, the designer copilot and the dataset helper are built (sections 9 to 11). Not built: "why did it move" between two dates, follow-up questions that remember the last (each question is alone), streaming answers, and a model that calls Drishti's
 tools itself (the MCP client exists; no BI hook uses it).

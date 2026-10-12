@@ -113,6 +113,8 @@ public final class MeasureAlertService implements AutoCloseable {
     private final AtomicLong ids = new AtomicLong(System.currentTimeMillis());
     private final Executor executor;
     private final ScheduledExecutorService timer;
+    private final Map<String, Instant> hookAt = new ConcurrentHashMap<>();
+    private volatile DeliveryRetry retries;
     private volatile List<AlertSpec> boardSpecs = List.of();
     private volatile long boardSpecsAt;
 
@@ -130,6 +132,7 @@ public final class MeasureAlertService implements AutoCloseable {
         this.props = props;
         this.dates = dates;
         this.clock = clock;
+        this.retries = new DeliveryRetry(com.ash.drishti.common.RetryPolicy.defaults(), props.maxAttempts());
         reindex();
         if (schedule && props.enabled()) {
             this.executor = Executors.newVirtualThreadPerTaskExecutor();
@@ -266,6 +269,24 @@ public final class MeasureAlertService implements AutoCloseable {
         }
         if (spec.delivery().bridge() && !props.bridges()) {
             throw AlertSpec.invalid("chat bridge delivery is turned off on this server (drishti.alerts.measure.bridges)");
+        }
+        if (!spec.delivery().webhooks().isEmpty()) {
+            if (!props.webhooks()) {
+                throw AlertSpec.invalid("webhook delivery is turned off on this server (drishti.alerts.measure.webhooks)");
+            }
+            for (String hook : spec.delivery().webhooks()) {
+                if (!channels.webhookNames().contains(hook)) {
+                    throw AlertSpec.invalid("no webhook named '" + hook + "' is defined; an administrator defines them (drishti.notify.webhooks)");
+                }
+            }
+        }
+        if (spec.delivery().sms()) {
+            if (!props.sms() || !channels.smsConfigured()) {
+                throw AlertSpec.invalid("text messages are not set up on this server (drishti.notify.sms.url, drishti.alerts.measure.sms)");
+            }
+            if (!channels.hasPhone(owner)) {
+                throw AlertSpec.invalid("give your mobile number first (PUT /api/v1/me/phone, or Reports, Text messages) so a text can reach you");
+            }
         }
         ObjectNode doc = spec.toJson();
         doc.put("createdAt", old.map(o -> o.path("createdAt").asText()).orElse(clock.instant().toString()));
@@ -604,9 +625,19 @@ public final class MeasureAlertService implements AutoCloseable {
         AlertChannels.Fired f = new AlertChannels.Fired(id, now, spec, person, spec.key(), message, spec.severity(), link(spec));
         ObjectNode delivered = JSON.createObjectNode();
         delivered.put("inbox", spec.delivery().inbox() ? safe(() -> channels.inbox(f)) : "off");
-        delivered.put("email", spec.delivery().email() && props.email() ? safe(() -> channels.email(f)) : "off");
+        deliver(spec, f, delivered, "email", spec.delivery().email() && props.email(), () -> channels.email(f));
         boolean bridgeOn = spec.delivery().bridge() && props.bridges();
         delivered.put("bridge", !bridgeOn ? "off" : claimBridge(spec, now) ? safe(() -> channels.bridge(f)) : "skipped: already posted for this alert within its cooldown");
+        if (props.webhooks()) {
+            for (String hook : spec.delivery().webhooks()) {                      // a webhook is a shared endpoint: once per alert within its cooldown, not once per person
+                if (claim(hookAt, spec.key() + "|" + hook, spec, now)) {
+                    deliver(spec, f, delivered, "webhook:" + hook, true, () -> channels.webhook(f, hook));
+                } else {
+                    delivered.put("webhook:" + hook, "skipped: already posted for this alert within its cooldown");
+                }
+            }
+        }
+        deliver(spec, f, delivered, "sms", spec.delivery().sms() && props.sms(), () -> channels.sms(f));
         audit.record(person.username(), "alert.fire", "alert/" + spec.key(), spec.title() + " · " + trigger);
         ObjectNode e = entry(spec, now, person, "fired", spec.severity(), cur, o, message, trigger);
         e.put("id", id);
@@ -616,9 +647,13 @@ public final class MeasureAlertService implements AutoCloseable {
 
     /** A bridge is a shared room: the first firing of an alert posts, and the others within its cooldown (one minute at least) do not. */
     private boolean claimBridge(AlertSpec spec, Instant now) {
+        return claim(bridgeAt, spec.key(), spec, now);
+    }
+
+    private boolean claim(Map<String, Instant> at, String key, AlertSpec spec, Instant now) {
         Duration hold = spec.cooldown().compareTo(Duration.ofMinutes(1)) < 0 ? Duration.ofMinutes(1) : spec.cooldown();
         boolean[] won = {false};
-        bridgeAt.compute(spec.key(), (k, last) -> {
+        at.compute(key, (k, last) -> {
             if (last == null || !now.isBefore(last.plus(hold))) {
                 won[0] = true;
                 return now;
@@ -670,6 +705,48 @@ public final class MeasureAlertService implements AutoCloseable {
             return Reading.noData("the latest data is of " + r.asOf() + ", the business date is " + dates.current());
         }
         return r;
+    }
+
+    /** Delivers on a channel that can fail and be tried again: the first attempt now, the later ones by the shared retry policy; the history shows the attempts. */
+    private void deliver(AlertSpec spec, AlertChannels.Fired f, ObjectNode delivered, String channel, boolean on, java.util.function.Supplier<String> attempt) {
+        if (!on) {
+            delivered.put(channel, "off");
+            return;
+        }
+        DeliveryRetry.First r = retries.run(channel, () -> safe(attempt), (ch, text, n) -> amend(spec, f, ch, text, n));
+        delivered.put(channel, r.text());
+        delivered.put(channel + "Attempts", r.attempts());
+    }
+
+    /** Writes the outcome of a later attempt into the history entry of the firing (waiting a moment if the entry is still being written). */
+    private void amend(AlertSpec spec, AlertChannels.Fired f, String channel, String text, int attempts) {
+        for (int i = 0; i < 40; i++) {
+            boolean[] found = {false};
+            update(spec, h -> {
+                for (JsonNode e : array(h, "history")) {
+                    if (e.path("id").asLong(-1) == f.id() && e.path("user").asText().equals(f.person().username()) && e.path("delivered").isObject()) {
+                        ((ObjectNode) e.get("delivered")).put(channel, text).put(channel + "Attempts", attempts);
+                        found[0] = true;
+                    }
+                }
+            });
+            if (found[0]) {
+                return;
+            }
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+    }
+
+    /** Replaces the retry policy (tests use a short one); {@code drishti.retry.alerts.*} in production. */
+    public void retryWith(com.ash.drishti.common.RetryPolicy policy) {
+        DeliveryRetry old = this.retries;
+        this.retries = new DeliveryRetry(policy, props.maxAttempts());
+        old.close();
     }
 
     private static String safe(java.util.function.Supplier<String> s) {
@@ -859,6 +936,7 @@ public final class MeasureAlertService implements AutoCloseable {
 
     @Override
     public void close() {
+        retries.close();
         if (timer != null) {
             timer.shutdownNow();
         }

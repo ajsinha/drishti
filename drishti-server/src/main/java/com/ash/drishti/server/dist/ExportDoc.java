@@ -39,10 +39,17 @@ public record ExportDoc(String title, String subtitle, List<String> notes, List<
      *
      * @param note a line under the title: rows left out, or why the visual has no data
      * @param masked column names whose values are masks for this reader
+     * @param kind the visual type a chart section came from ({@code bar}, {@code column}, {@code line}, {@code pie}, ...), blank when unknown; the Excel writer draws a native chart from it
      */
-    public record Section(String id, String title, String type, List<String> columns, List<List<Object>> rows, String note, List<String> masked) {
+    public record Section(String id, String title, String type, List<String> columns, List<List<Object>> rows, String note, List<String> masked, String kind) {
+
+        /** A section with no chart kind (the writers draw a chart section as bars unless a kind says otherwise). */
+        public Section(String id, String title, String type, List<String> columns, List<List<Object>> rows, String note, List<String> masked) {
+            this(id, title, type, columns, rows, note, masked, null);
+        }
 
         public Section {
+            kind = kind == null ? "" : kind;
             columns = columns == null ? List.of() : List.copyOf(columns);
             rows = rows == null ? List.of() : rows;
             masked = masked == null ? List.of() : List.copyOf(masked);

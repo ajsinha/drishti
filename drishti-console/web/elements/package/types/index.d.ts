@@ -19,6 +19,15 @@ export type ReportErrorDetail = { code: string; status: number; detail: string; 
 export type ReportTokenNeededDetail = { reason: 'missing' | 'refused' | 'provider-failed' };
 export type ReportMaskedDetail = { count?: number; panels?: string[]; columns?: string[] };
 export type ReportTickDetail = { generation: number; seq?: number; latencyMs?: number; changed?: { strip: number[]; panels: string[] }; at?: string };
+export type AboutLoadedDetail = { kind: string; entity: string };
+export type AboutStateDetail = { state: string; previous: string };
+export type AboutErrorDetail = { code: string; status: number; detail: string; fatal?: boolean; retryInMs?: number };
+export type AboutTokenNeededDetail = { reason: 'missing' | 'refused' | 'provider-failed' };
+export type SearchResultsDetail = { query: string; results: { kind: string; id: string; mnemonic: string; title: string; subtitle: string }[] };
+export type SearchSelectDetail = { kind: string; id: string; mnemonic: string; title: string; type: string };
+export type SearchStateDetail = { state: string; previous: string };
+export type SearchErrorDetail = { code: string; status: number; detail: string; fatal?: boolean; retryInMs?: number };
+export type SearchTokenNeededDetail = { reason: 'missing' | 'refused' | 'provider-failed' };
 
 /** A live Drishti view of one entity. */
 export class DrishtiView extends HTMLElement {
@@ -110,6 +119,62 @@ export class DrishtiReport extends HTMLElement {
   resume(): void;
 }
 
+/** The "About this page" layers of one view (sources, lineage, the masks and rules that applied to this reader) in a panel of the host's own. */
+export class DrishtiAbout extends HTMLElement {
+  /** the console's base URL; default: the origin the module was loaded from */
+  server: string;
+  /** an entity kind (`trade`, `counterparty`, ...); required */
+  kind: string;
+  /** the entity id; change it to show another entity's About; required */
+  entity: string;
+  /** as `<drishti-view>` */
+  theme: string;
+  /** the element's accessible name (default `About this page`) */
+  label: string;
+  /** as `<drishti-view>` (the application's scopes must include `embed:about`) */
+  tokenProvider: () => string | { token: string; expiresAt?: number } | Promise<string | { token: string; expiresAt?: number }>;
+  /** the state machine */
+  readonly state: 'idle' | 'loading' | 'loaded' | 'error';
+  /** the last error */
+  readonly lastError: { code: string; status: number; detail: string } | null;
+  /** ask the console for the About body again */
+  reload(): Promise<void>;
+}
+
+/** Search across Drishti from a host page: a box and the entities that match, masked for the signed-in user. */
+export class DrishtiSearch extends HTMLElement {
+  /** the console's base URL; default: the origin the module was loaded from */
+  server: string;
+  /** as `<drishti-view>` */
+  theme: string;
+  /** the box's placeholder (default `Search`) */
+  placeholder: string;
+  /** the box's accessible name (default the placeholder) */
+  label: string;
+  /** most results asked for (1 to 50, default 10; the server caps it at `drishti.embed.search.max-results`) */
+  limit: number;
+  /** shortest query searched (default 2) */
+  minChars: number;
+  /** milliseconds of quiet after the last key before a search is made (default 250) */
+  delay: number;
+  /** a CSS selector of a `<drishti-view>` or `<drishti-panel>`: picking a result points it at that entity (unless `drishti:select` is cancelled) */
+  target: string;
+  /** as `<drishti-view>` (the application's scopes must include `embed:search`) */
+  tokenProvider: () => string | { token: string; expiresAt?: number } | Promise<string | { token: string; expiresAt?: number }>;
+  /** the text in the box (assign to search for it) */
+  value: string;
+  /** the results now shown */
+  readonly results: { type: string; kind: string; id: string; mnemonic: string; title: string; subtitle: string }[];
+  /** the state machine */
+  readonly state: 'idle' | 'loading' | 'error';
+  /** the last error */
+  readonly lastError: { code: string; status: number; detail: string } | null;
+  /** search now (the box shows `q`); resolves with the results */
+  search(q?: string): Promise<unknown[]>;
+  /** empty the list, and the box unless `box` is false */
+  clear(box?: boolean): void;
+}
+
 export interface DrishtiElementsGlobal {
   readonly version: string;
   configure(options: { server?: string; tokenProvider?: TokenProvider }): void;
@@ -125,18 +190,22 @@ declare global {
     'drishti-view': DrishtiView;
     'drishti-panel': DrishtiPanel;
     'drishti-report': DrishtiReport;
+    'drishti-about': DrishtiAbout;
+    'drishti-search': DrishtiSearch;
   }
   interface HTMLElementEventMap {
-    'drishti:loaded': CustomEvent<ViewLoadedDetail | ReportLoadedDetail>;
+    'drishti:loaded': CustomEvent<ViewLoadedDetail | ReportLoadedDetail | AboutLoadedDetail>;
     'drishti:paint': CustomEvent<ViewPaintDetail>;
     'drishti:navigate': CustomEvent<ViewNavigateDetail>;
     'drishti:controls': CustomEvent<ViewControlsDetail>;
-    'drishti:state': CustomEvent<ViewStateDetail | ReportStateDetail>;
-    'drishti:error': CustomEvent<ViewErrorDetail | ReportErrorDetail>;
-    'drishti:token-needed': CustomEvent<ViewTokenNeededDetail | ReportTokenNeededDetail>;
+    'drishti:state': CustomEvent<ViewStateDetail | ReportStateDetail | AboutStateDetail | SearchStateDetail>;
+    'drishti:error': CustomEvent<ViewErrorDetail | ReportErrorDetail | AboutErrorDetail | SearchErrorDetail>;
+    'drishti:token-needed': CustomEvent<ViewTokenNeededDetail | ReportTokenNeededDetail | AboutTokenNeededDetail | SearchTokenNeededDetail>;
     'drishti:masked': CustomEvent<ViewMaskedDetail | ReportMaskedDetail>;
     'drishti:tick': CustomEvent<ViewTickDetail | ReportTickDetail>;
     'drishti:page-changed': CustomEvent<ReportPageChangedDetail>;
     'drishti:filter-changed': CustomEvent<ReportFilterChangedDetail>;
+    'drishti:results': CustomEvent<SearchResultsDetail>;
+    'drishti:select': CustomEvent<SearchSelectDetail>;
   }
 }

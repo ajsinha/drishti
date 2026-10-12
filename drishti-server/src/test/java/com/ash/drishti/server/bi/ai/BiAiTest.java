@@ -169,6 +169,26 @@ class BiAiTest {
                       rules:
                         - match: "INVALIDDRAFT"
                           reply: "report: bad\\ndataset: lake-report\\npages:\\n  - id: p\\n    visuals:\\n      - { id: v, type: bar, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { axis: [trades.nope], values: [Nothing] } }\\n"
+                        - match: "TASK: suggest-visuals"
+                          reply: |
+                            rachana: 1
+                            report: suggestions
+                            version: 1
+                            title: Suggestions
+                            dataset: something-else
+                            pages:
+                              - id: main
+                                title: Main
+                                visuals:
+                                  - { id: by-desk, type: bar, title: Notional by desk, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trades.desk], values: [Notional] }, alt: Which desks carry the notional }
+                                  - { id: desk-filter, type: slicer, title: Desk, at: { x: 6, y: 0, w: 3, h: 4 }, wells: { field: [trades.desk] }, alt: Filter the page to one desk }
+                                  - { id: total-card, type: card, title: Total notional, at: { x: 9, y: 0, w: 3, h: 2 }, wells: { values: [Notional] }, alt: The total at a glance }
+                        - match: "TASK: explain-checks"
+                          reply: '{"items":[{"n":1,"explain":"The bar chart reads a field the dataset does not have.","fix":"Use trades.desk instead."},{"n":2,"explain":"Second one.","fix":"Fix it."}]}'
+                        - match: "TASK: dataset-helper"
+                          reply: '{"relationships":[{"from":"trades.currency","to":"trades.desk","why":"same table"},{"from":"trades.nope","to":"x.y"}],"measures":[{"name":"Average notional","expr":"avg(trades.notional)","description":"Mean notional of a trade"},{"name":"Bad","expr":"sum(trades.nothing)","description":"x"},{"name":"MTM","expr":"sum(trades.mtm)","description":"already there"}],"columns":[{"field":"trades.book","description":"The book the trade sits in"},{"field":"trades.desk","description":"already described"},{"field":"trades.ghost","description":"not a column"}]}'
+                        - match: "TASK: summarise\\nREPORT"
+                          reply: "Notional stands at 300,000 across three desks."
                         - match: "TASK: draft-report"
                           reply: |
                             ```yaml
@@ -242,7 +262,7 @@ class BiAiTest {
             @Override public void after(CallContext ctx, ModelInfo model, ChatRequest request, ChatResponse response, LlmException failure, long millis) {}
         };
         return new BiAiService(new LLMFactory(new LlmGateway(registry, capture), null), new AiProperties(true, null, null, null, null, null),
-                new BiAiProperties(null, values, null, null, null, null, null, null), bi, reports, datasets, audit);
+                new BiAiProperties(null, values, null, null, null, null, null, null, null, null), bi, reports, datasets, audit);
     }
 
     @Test
@@ -335,5 +355,76 @@ class BiAiTest {
         mvc.perform(get("/api/v1/bi/ai/status").header("Authorization", as("wes", "report-author"))).andExpect(status().isOk()).andExpect(jsonPath("$.enabled").value(true))
                 .andExpect(jsonPath("$.values").value("labels-only")).andExpect(jsonPath("$.draft").value(true));
         mvc.perform(get("/api/v1/bi/ai/status").header("Authorization", as("ann", "bi-analyst"))).andExpect(jsonPath("$.draft").value(false));
+    }
+
+    // ---- designer copilot, check explanations, dataset helper, narrative (wave D) ----------------------------------------------------
+
+    @Test
+    void theCopilotSuggestsCheckedVisualsAndSlicersFromTheModelAloneAndAppliesNothing() throws Exception {
+        List<String> prompts = new ArrayList<>();
+        Principal wes = new Principal("wes", List.of("report-author"));
+        Map<String, Object> r = new BiAiCopilot(spying(prompts, "labels-only")).suggest(wes, "lake-report", "what drives notional", "pages:\n  - id: main\n    visuals:\n      - { id: by-desk }\n");
+        String prompt = String.join("\n", prompts);
+        assertThat(prompt).contains("trades.desk string - The desk that owns the trade").contains("what drives notional").doesNotContain("DESK-A").doesNotContain("24000");
+        assertThat(r.get("applied")).isEqualTo(false);
+        JsonNode http = ok(send("/api/v1/bi/ai/suggest", as("wes", "report-author"), Map.of("dataset", "lake-report", "goal", "what drives notional", "yaml", "visuals:\n  - id: by-desk\n    type: bar\n")));
+        assertThat(http.path("suggestions")).hasSize(3);
+        assertThat(http.path("suggestions").get(0).path("id").asText()).isEqualTo("by-desk-2");           // the id the report already has is not reused
+        assertThat(http.path("suggestions").get(0).path("kind").asText()).isEqualTo("visual");
+        assertThat(http.path("suggestions").get(0).path("yaml").asText()).startsWith("- id: by-desk-2").contains("type: bar").contains("trades.desk");
+        assertThat(http.path("suggestions").get(1).path("kind").asText()).isEqualTo("filter");
+        assertThat(http.path("suggestions").get(2).path("visual").path("type").asText()).isEqualTo("card");
+        assertThat(http.path("applied").asBoolean()).isFalse();
+        send("/api/v1/bi/ai/suggest", as("ann", "bi-analyst"), Map.of("dataset", "lake-report", "goal", "x")).andExpect(status().isForbidden());
+        send("/api/v1/bi/ai/suggest", as("wes", "report-author"), Map.of("dataset", "lake-report", "goal", " ")).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void checkFailuresAreExplainedInPlainWordsAndNothingIsAskedWhenThereAreNone() throws Exception {
+        String bad = "rachana: 1\nreport: bad\nversion: 1\ntitle: Bad\ndataset: lake-report\npages:\n  - id: p\n    title: P\n    visuals:\n"
+                + "      - { id: v, type: bar, title: V, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { axis: [trades.nope], values: [Nothing] } }\n";
+        JsonNode r = ok(send("/api/v1/bi/ai/explain-checks", as("wes", "report-author"), Map.of("yaml", bad)));
+        assertThat(r.path("valid").asBoolean()).isFalse();
+        assertThat(r.path("problems").size()).isGreaterThan(0);
+        assertThat(r.path("problems").get(0).path("explain").asText()).contains("does not have");
+        assertThat(r.path("problems").get(0).path("fix").asText()).contains("trades.desk");
+        assertThat(r.path("explained").asInt()).isGreaterThan(0);
+        String good = "rachana: 1\nreport: ok\nversion: 1\ntitle: Ok\ndataset: lake-report\npages:\n  - id: p\n    title: P\n    visuals:\n"
+                + "      - { id: v, type: bar, title: V, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trades.desk], values: [Notional] }, alt: Notional by desk }\n";
+        List<String> prompts = new ArrayList<>();
+        Map<String, Object> clean = new BiAiCopilot(spying(prompts, "labels-only")).explainChecks(new Principal("wes", List.of("report-author")), good);
+        assertThat(clean.get("valid")).isEqualTo(true);
+        assertThat(prompts).as("no problem, no model call").isEmpty();
+        send("/api/v1/bi/ai/explain-checks", as("ann", "bi-analyst"), Map.of("yaml", bad)).andExpect(status().isForbidden());
+        send("/api/v1/bi/ai/explain-checks", as("wes", "report-author"), Map.of("yaml", "")).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void theDatasetHelperProposesOnlyItemsThatCheckAgainstTheModelAndAppliesNothing() throws Exception {
+        List<String> prompts = new ArrayList<>();
+        Map<String, Object> r = new BiAiCopilot(spying(prompts, "labels-only")).helper(new Principal("wes", List.of("report-author")), "file:dataset:lake-report");
+        assertThat(String.join("\n", prompts)).contains("trades.desk string").contains("COLUMNS WITHOUT A DESCRIPTION").doesNotContain("DESK-A").doesNotContain("24000").doesNotContain("sum(trades.notional)");
+        JsonNode h = ok(send("/api/v1/bi/ai/dataset-helper", as("wes", "report-author"), Map.of("dataset", "file:dataset:lake-report")));
+        List<String> ids = new ArrayList<>();
+        h.path("items").forEach(i -> ids.add(i.path("id").asText()));
+        assertThat(ids).containsExactly("measure:Average notional", "column:trades.book");           // the same-table relationship, the unknown column, the duplicate measure and the described column are all dropped
+        assertThat(h.path("items").get(0).path("yaml").asText()).isEqualTo("Average notional: { expr: \"avg(trades.notional)\", description: \"Mean notional of a trade\" }");
+        assertThat(h.path("items").get(1).path("yaml").asText()).isEqualTo("book: { type: string, description: \"The book the trade sits in\" }");
+        assertThat(h.path("applied").asBoolean()).isFalse();
+        assertThat(r.get("items")).isNotNull();
+        send("/api/v1/bi/ai/dataset-helper", as("ann", "bi-analyst"), Map.of("dataset", "file:dataset:lake-report")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void aNarrativeIsWrittenOnlyInAggregatesModeAndOnlyThroughThePolicy() throws Exception {
+        Principal rita = new Principal("rita", List.of("bi-risk"));
+        List<String> prompts = new ArrayList<>();
+        assertThat(spying(prompts, "aggregates").narrate(rita, "REPORT: Daily\nSECTION Notional\n  Desk | Notional\n  DESK-A | 100000\n")).isEqualTo("Notional stands at 300,000 across three desks.");
+        assertThat(prompts.get(0)).contains("TASK: summarise").contains("DESK-A | 100000");
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> spying(new ArrayList<>(), "labels-only").narrate(rita, "REPORT: Daily\n")).isInstanceOf(DrishtiException.class)
+                .hasMessageContaining("labels only");
+        BiAiService off = new BiAiService(new LLMFactory(new LlmGateway(registry, LlmPolicy.none()), null), new AiProperties(null, null, null, null, null, null),
+                BiAiProperties.defaults(), bi, reports, datasets, audit);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> off.narrate(rita, "x")).hasMessageContaining("switched off");
     }
 }

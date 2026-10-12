@@ -89,6 +89,10 @@ class MeasureAlertServiceTest {
     final List<String> inbox = new CopyOnWriteArrayList<>();
     final List<String> emails = new CopyOnWriteArrayList<>();
     final List<String> bridge = new CopyOnWriteArrayList<>();
+    final AtomicInteger emailTries = new AtomicInteger();
+    volatile java.util.function.IntFunction<String> emailRule = n -> "sent";       // what the n-th email attempt answers
+    final List<String> hooks = new CopyOnWriteArrayList<>();
+    final List<String> texts = new CopyOnWriteArrayList<>();
     final List<String> audit = new CopyOnWriteArrayList<>();
     final List<AlertSpec> boardSpecs = new CopyOnWriteArrayList<>();
     final List<Person> boardAudience = new CopyOnWriteArrayList<>();
@@ -154,7 +158,34 @@ class MeasureAlertServiceTest {
             @Override
             public String email(Fired f) {
                 emails.add(f.person().username());
-                return f.person().email().isBlank() ? "skipped: no email address on file" : "sent";
+                return f.person().email().isBlank() ? "skipped: no email address on file" : emailRule.apply(emailTries.incrementAndGet());
+            }
+
+            @Override
+            public List<String> webhookNames() {
+                return List.of("ops");
+            }
+
+            @Override
+            public boolean smsConfigured() {
+                return true;
+            }
+
+            @Override
+            public boolean hasPhone(String username) {
+                return username.equals("alice");
+            }
+
+            @Override
+            public String webhook(Fired f, String name) {
+                hooks.add(name + ": " + f.spec().title() + " " + f.severity());
+                return "sent";
+            }
+
+            @Override
+            public String sms(Fired f) {
+                texts.add(f.person().username() + ": " + f.spec().title());
+                return "sent";
             }
 
             @Override
@@ -552,5 +583,64 @@ class MeasureAlertServiceTest {
         Board.Alert a = new Board.Alert("exposure", new Board.Rule("lt", 0), new Board.Rule("lt", -5), new Board.Notify("crit", List.of("inbox", "email", "chat"), "1h", "live", null));
         assertThat(a.tell().channels()).contains("chat");
         assertThat(Optional.of(service.all())).isPresent();
+    }
+
+    // ---- retries, webhooks and texts (wave D) --------------------------------------------------------------------------------------
+
+    private String awaitEmail(String owner, String name, java.util.function.Predicate<String> done) throws InterruptedException {
+        String last = "";
+        for (int i = 0; i < 100; i++) {
+            last = history(owner, name).get(0).path("delivered").path("email").asText();
+            if (done.test(last)) {
+                return last;
+            }
+            Thread.sleep(50);
+        }
+        return last;
+    }
+
+    @Test
+    void aFailedEmailIsTriedAgainByTheSharedPolicyAndTheHistoryShowsTheAttempts() throws Exception {
+        service.retryWith(new com.ash.drishti.common.RetryPolicy(true, Duration.ofMillis(150), 1.0, Duration.ofMillis(150), 0, 3));
+        emailRule = n -> n < 3 ? "failed: connection refused" : "sent";
+        readings.put("alice", ok(120));
+        service.save("alice", "Retry", body(alert(ABOVE_100, HOURLY, "\"delivery\":{\"inbox\":true,\"email\":true}")));
+        assertThat(history("alice", "Retry").get(0).path("delivered").path("email").asText()).startsWith("retrying: attempt 1 of 4 failed (connection refused)");
+        String end = awaitEmail("alice", "Retry", t -> t.startsWith("sent"));
+        assertThat(end).isEqualTo("sent (attempt 3 of 4)");
+        assertThat(history("alice", "Retry").get(0).path("delivered").path("emailAttempts").asInt()).isEqualTo(3);
+        assertThat(emailTries.get()).isEqualTo(3);
+    }
+
+    @Test
+    void aRefusedAddressIsNotRetriedAndAnEmailThatNeverWorksStopsAtMaxAttempts() throws Exception {
+        service.retryWith(new com.ash.drishti.common.RetryPolicy(true, Duration.ofMillis(10), 1.0, Duration.ofMillis(20), 0, 3));
+        emailRule = n -> "failed (permanent): 550 no such user";
+        readings.put("alice", ok(120));
+        service.save("alice", "Perm", body(alert(ABOVE_100, HOURLY, "\"delivery\":{\"email\":true}")));
+        assertThat(history("alice", "Perm").get(0).path("delivered").path("email").asText()).isEqualTo("failed (permanent): 550 no such user (not retried)");
+        Thread.sleep(150);
+        assertThat(emailTries.get()).isEqualTo(1);
+        emailTries.set(0);
+        emailRule = n -> "failed: timeout";
+        service.save("alice", "Never", body(alert(ABOVE_100, HOURLY, "\"delivery\":{\"email\":true}")));
+        assertThat(awaitEmail("alice", "Never", t -> t.startsWith("failed after"))).isEqualTo("failed after 4 attempts: timeout");
+        assertThat(emailTries.get()).isEqualTo(4);
+    }
+
+    @Test
+    void webhooksAndTextsAreDeliveredAndOnlyDefinedOnesAreAccepted() {
+        readings.put("alice", ok(120));
+        service.save("alice", "Out", body(alert(ABOVE_100, HOURLY, "\"severity\":\"critical\",\"delivery\":{\"inbox\":true,\"webhooks\":[\"ops\"],\"sms\":true}")));
+        assertThat(hooks).containsExactly("ops: Out critical");
+        assertThat(texts).containsExactly("alice: Out");
+        JsonNode d = history("alice", "Out").get(0).path("delivered");
+        assertThat(d.path("webhook:ops").asText()).isEqualTo("sent");
+        assertThat(d.path("sms").asText()).isEqualTo("sent");
+        assertThatThrownBy(() -> service.save("alice", "Bad", body(alert(ABOVE_100, HOURLY, "\"delivery\":{\"webhooks\":[\"nope\"]}")))).hasMessageContaining("no webhook named 'nope'");
+        assertThatThrownBy(() -> service.save("bob", "NoPhone", body(alert(ABOVE_100, HOURLY, "\"delivery\":{\"sms\":true}")))).hasMessageContaining("mobile number");
+        MeasureAlertService off = build(new MeasureAlertProperties(true, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 4, false, false));
+        assertThatThrownBy(() -> off.save("alice", "x", body(alert(ABOVE_100, HOURLY, "\"delivery\":{\"webhooks\":[\"ops\"]}")))).hasMessageContaining("webhook delivery is turned off");
+        assertThatThrownBy(() -> off.save("alice", "y", body(alert(ABOVE_100, HOURLY, "\"delivery\":{\"sms\":true}")))).hasMessageContaining("text messages are not set up");
     }
 }

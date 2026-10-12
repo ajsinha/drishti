@@ -42,8 +42,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent / "static"
+SAMPLES = Path(__file__).resolve().parents[2] / "docs" / "guides" / "examples" / "embed"      # the React, Vue and Angular sample pages, served at /samples/
 USERS = ("viewer", "author")                              # the host's demo users: they must also exist in Drishti (the exchange refuses a stranger)
-SCOPES = ("embed:view", "embed:about", "embed:report")
+SCOPES = ("embed:view", "embed:about", "embed:report", "embed:search")
 REPORTS: list = []
 
 
@@ -83,14 +84,15 @@ class Host(BaseHTTPRequestHandler):
         name = jar["demo_user"].value if "demo_user" in jar else ""
         return name if name in USERS else ""
 
-    def send(self, status, body: bytes, media="application/json", headers=None, trusted_types=False):
+    def send(self, status, body: bytes, media="application/json", headers=None, trusted_types=False, jit=False):
         self.send_response(status)
         self.send_header("Content-Type", media)
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
+        relax = " 'unsafe-inline' 'unsafe-eval'" if jit else ""       # only the Angular JIT sample
         # what a strict host page sends: nothing inline, no frames, and only the Drishti console beyond itself
         self.send_header("Content-Security-Policy", (
-            f"default-src 'self'; script-src 'self' {self.console}; style-src 'self'; font-src {self.console}; "
+            f"default-src 'self'; script-src 'self' {self.console}{relax}; style-src 'self'; font-src {self.console}; "
             f"connect-src 'self' {self.console}; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self'; "
             "report-uri /api/csp-report" + ("; require-trusted-types-for 'script'; trusted-types drishti-elements" if trusted_types else "")))
         for k, v in (headers or {}).items():
@@ -121,6 +123,18 @@ class Host(BaseHTTPRequestHandler):
         if path in ("/", "/index.html"):
             html = (HERE / "index.html").read_text(encoding="utf-8").replace("__CONSOLE__", self.console)
             return self.send(200, html.encode(), "text/html; charset=utf-8", trusted_types="tt=1" in self.path)     # /?tt=1: a host that enforces Trusted Types (names only drishti-elements)
+        if path.startswith("/samples/"):                    # the framework sample pages (docs/guides/examples/embed); the Angular one runs the JIT compiler, so only it gets 'unsafe-eval'
+            rel = path[len("/samples/"):]
+            target = (SAMPLES / (rel + "index.html" if rel.endswith("/") or not rel else rel)).resolve()
+            if SAMPLES in target.parents and not target.is_file() and rel.startswith("vendor/"):      # RxJS's ES modules import "./internal/Observable": Node style, no extension
+                target = next((c for c in (target.with_name(target.name + ".js"), target / "index.js") if c.is_file()), target)
+            if SAMPLES in target.parents and target.is_file():
+                data = target.read_bytes()
+                media = mimetypes.guess_type(target.name)[0] or "application/octet-stream"
+                if target.suffix == ".html":
+                    data, media = data.replace(b"__CONSOLE__", self.console.encode()), "text/html; charset=utf-8"
+                return self.send(200, data, media, jit=rel.startswith("angular/"))
+            return self.json(404, {"error": "not found (did you run docs/guides/examples/embed/fetch-vendor.sh?)"})
         target = (HERE / path.lstrip("/")).resolve()
         if HERE in target.parents and target.is_file():
             return self.send(200, target.read_bytes(), mimetypes.guess_type(target.name)[0] or "application/octet-stream")

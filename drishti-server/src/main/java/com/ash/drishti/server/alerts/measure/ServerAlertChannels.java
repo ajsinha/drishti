@@ -44,6 +44,15 @@ public final class ServerAlertChannels implements AlertChannels {
     private final String from;
     private final String consoleUrl;
     private final BridgeNotifier bridges;
+    private com.ash.drishti.server.notify.NotifyChannels notify;
+    private com.ash.drishti.server.notify.PhoneBook phones;
+
+    /** Adds the webhook and text-message channels. */
+    public ServerAlertChannels with(com.ash.drishti.server.notify.NotifyChannels notify, com.ash.drishti.server.notify.PhoneBook phones) {
+        this.notify = notify;
+        this.phones = phones;
+        return this;
+    }
 
     public ServerAlertChannels(InboxService inbox, InboxHub hub, MailRenderer mail, MailTransport transport, String from, String consoleUrl, BridgeNotifier bridges) {
         this.inbox = inbox;
@@ -81,7 +90,56 @@ public final class ServerAlertChannels implements AlertChannels {
             transport.send(m, from);
             return "sent";
         } catch (RuntimeException e) {
-            return "failed: " + clip(MailFailures.describe(e), 160);
+            return (MailFailures.permanent(e) ? "failed (permanent): " : "failed: ") + clip(MailFailures.describe(e), 160);
+        }
+    }
+
+    @Override
+    public java.util.List<String> webhookNames() {
+        return notify == null ? List.of() : notify.webhookNames();
+    }
+
+    @Override
+    public boolean smsConfigured() {
+        return notify != null && notify.smsConfigured();
+    }
+
+    @Override
+    public boolean hasPhone(String username) {
+        return phones != null && phones.phone(username).isPresent();
+    }
+
+    @Override
+    public String webhook(Fired f, String name) {
+        if (notify == null) {
+            return "skipped: webhooks are not set up";
+        }
+        com.fasterxml.jackson.databind.node.ObjectNode body = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        body.put("event", "alert").put("id", f.id()).put("at", f.at().toString()).put("alert", f.spec().title()).put("key", f.key()).put("severity", f.severity())
+                .put("watching", f.spec().source().label()).put("condition", f.spec().describe()).put("link", consoleUrl + f.link());
+        try {
+            notify.webhook(name, "alert", body);
+            return "sent";
+        } catch (com.ash.drishti.server.notify.NotifyException e) {
+            return (e.permanent() ? "failed (permanent): " : "failed: ") + clip(e.getMessage(), 160);
+        }
+    }
+
+    @Override
+    public String sms(Fired f) {
+        if (notify == null || !notify.smsConfigured()) {
+            return "skipped: text messages are not set up";
+        }
+        java.util.Optional<String> phone = phones == null ? java.util.Optional.empty() : phones.phone(f.person().username());
+        if (phone.isEmpty()) {
+            return "skipped: no phone number on file";
+        }
+        String line = notify.settings().smsIncludeValues() ? f.message() : f.spec().title();
+        try {
+            notify.sms(phone.get(), "Alert (" + f.severity() + "): " + line + " " + consoleUrl + f.link());
+            return "sent";
+        } catch (com.ash.drishti.server.notify.NotifyException e) {
+            return (e.permanent() ? "failed (permanent): " : "failed: ") + clip(e.getMessage(), 160);
         }
     }
 

@@ -101,6 +101,52 @@ def ask_and_explain(c: Ctx):
     elem_shot(c, "06-ask-query.jpg", "[data-ai-ask]", pad=10, extra=40)
 
 
+@shot("09-suggest.jpg", also=("10-check-explained.jpg",))
+def suggest_and_check(c: Ctx):
+    """Suggest visuals in the designer (nothing is added until Add), then Check on a broken draft, explained in plain words."""
+    login(c, height=900)
+    quiet_inbox(c)
+    clean_items(c, "Suggested visuals")
+    start_design(c, WORLD, "Suggested visuals")
+    submit_design(c)
+    c.page.click("[data-ai-suggest]")
+    c.page.fill("[data-ai-goal]", "where the GDP sits, and a way to filter by income group")
+    c.page.click("[data-ai-suggest-go]")
+    c.page.wait_for_selector("[data-ai-suggestion]", timeout=30000)
+    c.page.wait_for_timeout(900)
+    c.save("09-suggest.jpg")
+    c.page.reload()                                              # a fresh page, so the YAML tab holds what is typed
+    c.page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
+    c.page.wait_for_selector("[data-ai-suggest]:not([hidden])", timeout=15000)
+    broken = ("rachana: 1\nreport: broken\nversion: 1\ntitle: Broken\ndataset: world-economics\npages:\n  - id: p\n    title: P\n    visuals:\n"
+              "      - { id: v, type: bar, title: V, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { axis: [economies.nope], values: [Nothing] } }\n")
+    c.page.evaluate("(t) => window.drishtiBi.design.loadYaml(t)", broken)
+    c.page.wait_for_timeout(900)
+    c.page.click("[data-check]")
+    c.page.wait_for_selector("[data-check-box]:not([hidden])")
+    c.page.click("[data-ai-explain-checks]")
+    c.page.wait_for_selector("[data-ai-checks] li", timeout=30000)
+    c.page.wait_for_timeout(600)
+    c.save("10-check-explained.jpg")
+
+
+@shot("11-dataset-helper.jpg")
+def dataset_helper(c: Ctx):
+    """The dataset helper on the Model view of a copy of the world dataset: a measure and two descriptions, each with its own Accept."""
+    login(c, height=900)
+    quiet_inbox(c)
+    clean_items(c, "World economics (helper)")
+    shipped = bi(c, "GET", "/items/" + WORLD)
+    made = bi(c, "POST", "/workspaces/me/items", {"kind": "dataset", "title": "World economics (helper)", "body": shipped["body"]})
+    c.page.set_viewport_size({"width": 1280, "height": 1180})
+    c.page.goto(c.base + "/bi/m/" + made["id"])
+    c.page.wait_for_selector("[data-model-root][data-ready=yes]", timeout=30000)
+    c.page.click("[data-ai-helper]")
+    c.page.wait_for_selector("[data-ai-item]", timeout=30000)
+    c.page.wait_for_timeout(800)
+    c.save("11-dataset-helper.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 1100})
+
+
 @shot("08-policy-refusal.jpg")
 def policy_refusal(c: Ctx):
     people(c)

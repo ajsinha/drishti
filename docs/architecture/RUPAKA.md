@@ -666,7 +666,7 @@ OpenAI-compatible endpoints, Anthropic, and on-premises models; configured by an
 > ([MCP_CLIENT.md](MCP_CLIENT.md)). "Ask about this page" already runs on it. The hooks in this table are stage 2 and build on that layer: a hook calls
 > the `LlmGateway` with its own feature name, so masking, audit, limits and "which roles may use which hook" come from the policy.
 > **Built (stage 2, first slice):** *report from words*, *ask the data* and *explain this number* (section 20.1, "Stage 2 as built"; [BI_AI.md](../guides/BI_AI.md)).
-> Narrative summaries, the designer copilot and the dataset helper are not built.
+> Narrative summaries, the designer copilot and the dataset helper are built (section 20.14).
 Every feature below has a non-AI equivalent that works out of the box.
 
 | Hook | What it does | Guardrails | Without AI |
@@ -926,7 +926,7 @@ Phase 7 (distribution) is built in parts. Part 1 is **export and subscriptions**
 
 **Not built, and not faked.**
 
-* **Embedding** and the hand-made **phone layout** are built (section 20.6, part 3); **narrative summaries** are not.
+* **Embedding** and the hand-made **phone layout** are built (section 20.6, part 3); **narrative summaries** are built (20.14).
 * **Pixel-faithful pages**: the PDF and PNG draw the tables and, for a chart, bars of its first measure; colours, heatmaps, scatters and maps are shown as their data. A view is drawn by the snapshot layout (charts included).
 * **Charts or pivot tables inside the Excel workbook**; **a notice in the inbox when a delivery fails for good** (the history and the audit have it).
 * **A real-mail test**: tests use a local fake SMTP (GreenMail in Java; a small server in the Chromium test), by design.
@@ -1068,7 +1068,7 @@ Reference: [BI_AI.md](../guides/BI_AI.md); the layer under it: [AI_PROVIDERS.md]
 * **Explain this number.** `BiReportService.base` rebuilds the visual's query under the page's state; lineage comes from the parsed dataset (measure, columns read, table kind and connector);
   the breakdown is the engine's (the visual's own fields, then the text columns of the tables the measure reads; a dimension masked for the reader is dropped); in `aggregates` mode one call words
   it.
-* **Not built:** stage 2's narrative summary for subscriptions, designer copilot (diffs) and dataset helper (A4); change-over-time explanations; follow-up questions; streaming.
+* **Not built:** change-over-time explanations; follow-up questions; streaming. (Stage 2's narrative summary for subscriptions, designer copilot and dataset helper are built: section 20.14.)
 
 ## 21. Open decisions
 
@@ -1169,3 +1169,13 @@ Nine items that the earlier phases listed as not built, now built; each is descr
 * **Codes.** `DRS-9076` (a Python item's tests failed; console), `DRS-9077` (a Vega-Lite specification not drawn; in the frame).
 
 **Not built, and not faked.** A measure with aggregates of its own beside another table's measure in one expression is still one aggregate (use measures); Vega-Lite and Python visuals in `<drishti-report>`; a Python tile's threshold alert (use an alert on the measure); a gate on a publish made straight to the server's API (the sandbox is the console's); Python alerts are not cheap (a process for each person and look: prefer a schedule or a load to live); Graphic Walker's map chart; Graphic Walker over an Analyse extract or a report visual; a further extract in the browser SQL engine; a style-attribute-clean settings panel (the viewer sets inline sizes).
+
+### 20.14 AI, distribution and embedding (wave D), as built
+
+* **Narrative summaries.** `narrative: true` on a subscription. `SubscriptionService.Narrator` (implemented by `AiNarrator` over `BiAiService.narrate`) is asked per recipient with the facts of **that recipient's own render** (`AiNarrator.facts`: title, as-of, each section with the columns masked for them left out, at most `narrative-rows` rows), through the LLM layer under the feature `subscription-narrative` and as the recipient, so the AI policy's masks, roles, limits and audit apply; `drishti.bi.ai.values` must be `aggregates` (else the mail is sent without it, the delivery records `narrative: skipped: …`). Refused at save while the AI layer is off. The mock provider is the test double.
+* **Designer copilot and dataset helper** (`BiAiCopilot`): `POST /bi/ai/suggest` (the draft machinery of report-from-words with a suggestion prompt, run through `reports.validate`; each visual comes back as the YAML `ReportYaml.visual` writes; taken ids are renamed), `explain-checks` (the checker's problems paired with explanations and fixes; no model call when there is no problem) and `dataset-helper` (relationships of the same type across tables, measures that read only known columns, descriptions for undescribed columns; each checked against the model). Nothing is applied by the server: the designer adds a visual with `D.change` (undoable), the Model view writes accepted items into the YAML.
+* **Charts in Excel.** `XlsxCharts` writes DrawingML (`xl/drawings`, `xl/charts`, the sheet's relationship and content types) for a chart section (`ExportDoc.Section.kind` carries the visual type): bar, column, line, area, pie, doughnut; masked columns are not series; first column the category (a date column a date axis); at most 500 points and 6 series. `XlsxChartsTest` parses every part as XML and (with `-Ddrishti.test.soffice=true`) converts the workbook with LibreOffice.
+* **Alert delivery retries** (`DeliveryRetry`, the shared `RetryPolicy` area `alerts`, `drishti.alerts.measure.max-attempts`): the first attempt is made at once, later ones on virtual threads that rewrite the history entry (`email: sent (attempt 3 of 4)`, `emailAttempts`); permanent failures are not retried; pending retries are in memory only.
+* **Webhook and text channels** (`com.ash.drishti.server.notify`): `NotifySettings` (`drishti.notify.*`), `NotifyChannels` (the JDK HTTP client with the connectors' TLS and proxy settings, no redirects, no URL in a message; webhook HMAC-SHA256 signature over `timestamp.body`; an SMS gateway described by templates), `PhoneBook` (the person's own number in their preferences), `GET /notify/options` and `PUT /me/phone`. Alerts: `delivery.webhooks`, `delivery.sms`; subscriptions: `webhooks`, `sms`; a webhook is one post per alert per cooldown / per run and holds no figure; a text holds a title and a link (an alert's one-line message only with `sms.include-values`). **Escalation is not built.**
+* **Embedding.** Elements 1.4.0 adds `<drishti-about>` (the sanitised About body, scope `embed:about`) and `<drishti-search>` (scope `embed:search`: `GET /api/v1/embed/search`, the type-ahead masked and cut to the application's kinds, `limits.searches-per-user-per-minute`), `core/element_api.py` and the guide's tables regenerated, the package rebuilt; React 18, Vue 3 and Angular 18 sample host pages (`docs/guides/examples/embed/`, framework builds fetched by `fetch-vendor.sh`, never committed).
+* **Codes.** None new: the AI hooks keep `DRS-4015..4020`, subscriptions `DRS-9061`, alerts `DRS-9062`, embedding `DRS-8001..8006`.

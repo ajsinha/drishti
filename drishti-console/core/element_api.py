@@ -101,6 +101,54 @@ REPORT_EVENTS = {
                        "a reader (or the host, `source: 'api'`) changed a slicer, a selection, the date or the page"),
 }
 
+ABOUT_ATTRS = [
+    ("server", "string", "the console's base URL; default: the origin the module was loaded from"),
+    ("kind", "string", "an entity kind (`trade`, `counterparty`, ...); required"),
+    ("entity", "string", "the entity id; change it to show another entity's About; required"),
+    ("theme", "string", "as `<drishti-view>`"),
+    ("label", "string", "the element's accessible name (default `About this page`)"),
+]
+ABOUT_PROPS = [
+    ("tokenProvider", "() => " + TOKEN, "as `<drishti-view>` (the application's scopes must include `embed:about`)", False),
+    ("state", "'idle' | 'loading' | 'loaded' | 'error'", "the state machine", True),
+    ("lastError", "{ code: string; status: number; detail: string } | null", "the last error", True),
+]
+ABOUT_EVENTS = {
+    "loaded": ("{ kind: string; entity: string }", "the About body was drawn"),
+    "state": SHARED_EVENTS["state"],
+    "error": SHARED_EVENTS["error"],
+    "token-needed": SHARED_EVENTS["token-needed"],
+}
+
+SEARCH_ATTRS = [
+    ("server", "string", "the console's base URL; default: the origin the module was loaded from"),
+    ("theme", "string", "as `<drishti-view>`"),
+    ("placeholder", "string", "the box's placeholder (default `Search`)"),
+    ("label", "string", "the box's accessible name (default the placeholder)"),
+    ("limit", "number", "most results asked for (1 to 50, default 10; the server caps it at `drishti.embed.search.max-results`)"),
+    ("min-chars", "number", "shortest query searched (default 2)"),
+    ("delay", "number", "milliseconds of quiet after the last key before a search is made (default 250)"),
+    ("target", "string", "a CSS selector of a `<drishti-view>` or `<drishti-panel>`: picking a result points it at that entity (unless `drishti:select` is cancelled)"),
+]
+SEARCH_PROPS = [
+    ("tokenProvider", "() => " + TOKEN, "as `<drishti-view>` (the application's scopes must include `embed:search`)", False),
+    ("value", "string", "the text in the box (assign to search for it)", False),
+    ("results", "{ type: string; kind: string; id: string; mnemonic: string; title: string; subtitle: string }[]", "the results now shown", True),
+    ("state", "'idle' | 'loading' | 'error'", "the state machine", True),
+    ("lastError", "{ code: string; status: number; detail: string } | null", "the last error", True),
+]
+SEARCH_METHODS = [
+    ("search", "(q?: string): Promise<unknown[]>", "search now (the box shows `q`); resolves with the results"),
+    ("clear", "(box?: boolean): void", "empty the list, and the box unless `box` is false"),
+]
+SEARCH_EVENTS = {
+    "results": ("{ query: string; results: { kind: string; id: string; mnemonic: string; title: string; subtitle: string }[] }", "a search answered"),
+    "select": ("{ kind: string; id: string; mnemonic: string; title: string; type: string }", "**cancellable**: the user picked a result; not cancelled, the `target` view (if any) is pointed at it"),
+    "state": SHARED_EVENTS["state"],
+    "error": SHARED_EVENTS["error"],
+    "token-needed": SHARED_EVENTS["token-needed"],
+}
+
 ELEMENTS = {
     "drishti-view": {"cls": "DrishtiView", "summary": "A live Drishti view of one entity.", "attributes": VIEW_ATTRS, "properties": VIEW_PROPS, "methods": VIEW_METHODS,
                      "events": {**VIEW_EVENTS, **SHARED_EVENTS}},
@@ -109,6 +157,10 @@ ELEMENTS = {
                       "methods": [], "events": {}},
     "drishti-report": {"cls": "DrishtiReport", "summary": "A published BI report, or one page or visual of it, with its slicers, cross-filter and live updates.",
                        "attributes": REPORT_ATTRS, "properties": REPORT_PROPS, "methods": REPORT_METHODS, "events": {**REPORT_EVENTS, **SHARED_EVENTS}},
+    "drishti-about": {"cls": "DrishtiAbout", "summary": "The \"About this page\" layers of one view (sources, lineage, the masks and rules that applied to this reader) in a panel of the host's own.",
+                      "attributes": ABOUT_ATTRS, "properties": ABOUT_PROPS, "methods": [("reload", "(): Promise<void>", "ask the console for the About body again")], "events": ABOUT_EVENTS},
+    "drishti-search": {"cls": "DrishtiSearch", "summary": "Search across Drishti from a host page: a box and the entities that match, masked for the signed-in user.",
+                       "attributes": SEARCH_ATTRS, "properties": SEARCH_PROPS, "methods": SEARCH_METHODS, "events": SEARCH_EVENTS},
 }
 
 
@@ -132,7 +184,7 @@ def typescript() -> str:
            "export type TokenResult = string | { token: string; expiresAt?: number };",
            "export type TokenProvider = () => TokenResult | Promise<TokenResult>;", ""]
     by_event: dict[str, list[str]] = {}
-    for el in ("drishti-view", "drishti-report"):
+    for el in ("drishti-view", "drishti-report", "drishti-about", "drishti-search"):
         for ev, (detail, _when) in ELEMENTS[el]["events"].items():
             out.append(f"export type {detail_type(el, ev)} = {detail};")
             by_event.setdefault(ev, []).append(detail_type(el, ev))

@@ -93,3 +93,7 @@ Results and what they changed in the plan are in the *Step 0 results* section of
 | `static/index.html` | the host page: search, recent, as-of, two `<drishti-view>` elements, and the one script line that loads the element |
 | `static/app.js` | the host's own code: token provider, search through `DrishtiElements.resolve`, `drishti:navigate` handler |
 | `static/host.css` | the host's own styles (they must not leak into the element, nor the element's into the host) |
+
+## Framework samples
+
+The host also serves the React, Vue and Angular sample pages of `docs/guides/examples/embed/` at `/samples/<framework>/` (a search box, a view, its About body and a report in each). Fetch the framework builds first (`bash docs/guides/examples/embed/fetch-vendor.sh`); register the application with the scopes `embed:view embed:about embed:report embed:search`. The Angular page runs the JIT compiler, so only `/samples/angular/` is served with `'unsafe-eval'`.

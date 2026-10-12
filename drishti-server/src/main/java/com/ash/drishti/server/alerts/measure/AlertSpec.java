@@ -80,7 +80,17 @@ public record AlertSpec(String name, String owner, String title, String severity
     /** {@code schedule} (with a schedule text), {@code after-load} (with an optional load kind) or {@code live} (on change, after a quiet time). */
     public record Trigger(String mode, String schedule, String loadKind, Duration debounce) {}
 
-    public record Delivery(boolean inbox, boolean email, boolean bridge) {}
+    /** Where a firing goes: the inbox, mail, the chat bridges, the named webhooks an administrator defined, and a text message to the owner's own number. */
+    public record Delivery(boolean inbox, boolean email, boolean bridge, java.util.List<String> webhooks, boolean sms) {
+
+        public Delivery(boolean inbox, boolean email, boolean bridge) {
+            this(inbox, email, bridge, java.util.List.of(), false);
+        }
+
+        public Delivery {
+            webhooks = webhooks == null ? java.util.List.of() : java.util.List.copyOf(webhooks);
+        }
+    }
 
     /** The board, page and tile an alert was derived from. */
     public record BoardRef(String board, String page, String tile) {}
@@ -115,9 +125,26 @@ public record AlertSpec(String name, String owner, String title, String severity
             cooldown = span(body.get("cooldown").asText(), "cooldown");
         }
         JsonNode d = body.path("delivery");
-        Delivery delivery = new Delivery(d.path("inbox").asBoolean(true), d.path("email").asBoolean(false), d.path("bridge").asBoolean(false));
-        if (!delivery.inbox() && !delivery.email() && !delivery.bridge()) {
-            throw invalid("delivery names at least one of inbox, email, bridge");
+        java.util.List<String> hooks = new java.util.ArrayList<>();
+        if (d.has("webhooks") && !d.get("webhooks").isArray()) {
+            throw invalid("delivery.webhooks is a list of webhook names");
+        }
+        for (JsonNode w : d.path("webhooks")) {
+            String hook = w.asText("").strip();
+            if (!hook.matches("[A-Za-z0-9][A-Za-z0-9._-]{0,63}") || hooks.contains(hook)) {
+                if (hook.isEmpty() || hooks.contains(hook)) {
+                    continue;
+                }
+                throw invalid("'" + hook + "' is not a webhook name");
+            }
+            hooks.add(hook);
+        }
+        if (hooks.size() > 5) {
+            throw invalid("at most 5 webhooks per alert");
+        }
+        Delivery delivery = new Delivery(d.path("inbox").asBoolean(true), d.path("email").asBoolean(false), d.path("bridge").asBoolean(false), hooks, d.path("sms").asBoolean(false));
+        if (!delivery.inbox() && !delivery.email() && !delivery.bridge() && delivery.webhooks().isEmpty() && !delivery.sms()) {
+            throw invalid("delivery names at least one of inbox, email, bridge, webhooks, sms");
         }
         String title = body.path("title").asText("").strip();
         return new AlertSpec(name, owner, title.isEmpty() ? name : title, severity, body.path("enabled").asBoolean(true), source, condition, trigger,
@@ -302,7 +329,10 @@ public record AlertSpec(String name, String owner, String title, String severity
         }
         n.put("hysteresis", hysteresis);
         n.put("cooldown", cooldown.isZero() ? "0" : cooldown.toSeconds() % 3600 == 0 ? cooldown.toHours() + "h" : cooldown.toSeconds() % 60 == 0 ? cooldown.toMinutes() + "m" : cooldown.toSeconds() + "s");
-        n.putObject("delivery").put("inbox", delivery.inbox()).put("email", delivery.email()).put("bridge", delivery.bridge());
+        com.fasterxml.jackson.databind.node.ObjectNode dn = n.putObject("delivery");
+        dn.put("inbox", delivery.inbox()).put("email", delivery.email()).put("bridge", delivery.bridge()).put("sms", delivery.sms());
+        com.fasterxml.jackson.databind.node.ArrayNode wn = dn.putArray("webhooks");
+        delivery.webhooks().forEach(wn::add);
         if (board != null) {
             n.putObject("board").put("board", board.board()).put("page", board.page()).put("tile", board.tile());
         }

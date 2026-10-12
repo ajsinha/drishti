@@ -107,6 +107,11 @@
         <label class="al-check"><input type="checkbox" name="d_inbox" {% if f.d_inbox %}checked{% endif %}> my inbox and the bell</label>
         <label class="al-check"><input type="checkbox" name="d_email" {% if f.d_email %}checked{% endif %}> email (to the address on my account)</label>
         <label class="al-check"><input type="checkbox" name="d_bridge" {% if f.d_bridge %}checked{% endif %}> the chat bridges that list alerts (a post that names the alert, with no number)</label>
+        {% for w in (opts.webhooks or []) %}<label class="al-check"><input type="checkbox" name="w_{{ w }}" data-webhook {% if w in (f.webhooks or []) %}checked{% endif %}> the webhook <b>{{ w }}</b> (a signed post that names the alert, with no number)</label>
+        {% endfor %}
+        {% if opts.sms %}<label class="al-check"><input type="checkbox" name="d_sms" {% if f.d_sms %}checked{% endif %}> a text message to my mobile number (the alert's title and a link; no number)</label>
+        <label class="al-phone">My mobile number<input name="phone" class="studio-in" type="tel" autocomplete="tel" maxlength="24" placeholder="{{ opts.phone or '+44 20 7946 0000' }}"></label>
+        {% if opts.phone %}<span class="text-muted-d">On file for you: {{ opts.phone }}</span>{% endif %}{% endif %}
         <label class="al-check"><input type="checkbox" name="enabled" {% if f.enabled %}checked{% endif %}> Active</label>
       </fieldset>
 

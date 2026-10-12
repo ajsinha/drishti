@@ -349,10 +349,16 @@ drishti:
         - GET /api/v1/bi/reports/*              # the definition (and /catalogue, the visual types)
         - POST /api/v1/bi/reports/*/query       # a read: one visual's rows under the page's slicers and selections
         - GET /api/v1/bi/reports/*/live         # the report's live tables: ticks and status, no data
+      "[embed:search]":                        # <drishti-search>: the type-ahead across Drishti, masked, cut to the application's kinds
+        - GET /api/v1/embed/search
+    search:
+      max-results: 10                         # most results one search returns
+      min-chars: 2                            # shortest query searched
     limits:
       tokens-per-minute: 120                  # exchanges per host application
       views-per-minute: 600                   # calls per host application (the default for a new registration)
       views-per-user-per-minute: 60           # calls per user (the default for a new registration)
+      searches-per-user-per-minute: 30        # searches per user and application through <drishti-search>, on top of the call rates
     apps: []                                  # host applications declared here (GitOps): read-only in Admin → Embedding ("from config"), see docs/admin/CONFIGURATION.md
   retry:                             # what failed is tried again by itself (docs/admin/OPERATIONS.md, "Retries"): packs refused, connectors, AI providers, MCP servers
     enabled: true
@@ -498,6 +504,8 @@ drishti:
       ask-rows: 200                  # most rows an answer holds (and the model sees, in aggregates mode)
       explain-dimensions: 3          # explain this number: dimensions broken down
       explain-members: 5             # members listed per dimension
+      suggestions: 6                 # designer copilot: most visuals proposed at once
+      helper-items: 8                # dataset helper: most items proposed per kind (relationships, measures, column descriptions)
     usage-days: 30                   # days of views counted as usage
     recent: 12                       # rows under Recent, Certified and Shared on Home
     list-limit: 200                  # most rows one catalogue or workspace page returns

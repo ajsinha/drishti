@@ -471,6 +471,75 @@
     B.api('POST', '/workspaces/me/items', { kind: 'dataset', title: (item.title || 'Dataset') + ' (copy)', description: item.description || '', body: text() }).then((it) => { window.location.href = '/bi/m/' + B.id2path(it.id); }).catch((e) => say(e.message, true));
   }
 
+  // ---- the AI helper: relationships, measures and column descriptions, proposed from the model (names, types, descriptions; no value) and accepted one by one ----
+  /** Adds one line at the end of the top-level block `key` (made when there is none). */
+  function addToBlock(key, line) {
+    const lines = text().split('\n');
+    const at = findBlock(lines, key);
+    if (at) { lines.splice(at.end, 0, line); setText(lines.join('\n')); } else { setText(putBlock(text(), key, [key + ':', line])); }
+    afterEdit();
+  }
+  /** Gives a column a description in the YAML, in whichever of the three shapes it is written; false when its line cannot be found. */
+  function describeColumn(field, description) {
+    const [tn, cn] = [field.slice(0, field.indexOf('.')), field.slice(field.indexOf('.') + 1)];
+    const lines = text().split('\n');
+    const tb = findBlock(lines, 'tables');
+    if (!tb) { return false; }
+    const indentOf = (l) => l.length - l.trimStart().length;
+    const quoted = JSON.stringify(description);
+    let t = -1;
+    for (let i = tb.start + 1; i < tb.end; i++) { if (new RegExp('^\\s+' + tn + '\\s*:\\s*(#.*)?$').test(lines[i])) { t = i; break; } }
+    if (t < 0) { return false; }
+    const tIndent = indentOf(lines[t]);
+    let end = t + 1;
+    while (end < tb.end && (lines[end].trim() === '' || indentOf(lines[end]) > tIndent)) { end++; }
+    for (let i = t + 1; i < end; i++) {
+      const m = new RegExp('^(\\s+)' + cn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*:\\s*(.*?)\\s*$').exec(lines[i]);
+      if (!m || indentOf(lines[i]) <= tIndent + 0 || /^\s*(columns|source)\s*:/.test(lines[i])) { continue; }
+      const split = /^(.*?)(\s+#.*)?$/.exec(m[2]);                        // the value, and a comment after it that stays where it is
+      const val = split[1], note = split[2] || '';
+      if (val === '') { lines.splice(i + 1, 0, m[1] + '  description: ' + quoted); } else if (/^\{.*\}$/.test(val)) {
+        if (/\bdescription\s*:/.test(val)) { return false; }
+        lines[i] = m[1] + cn + ': ' + val.slice(0, -1).replace(/\s+$/, '') + ', description: ' + quoted + ' }' + note;
+      } else if (/^[A-Za-z]+$/.test(val)) { lines[i] = m[1] + cn + ': { type: ' + val + ', description: ' + quoted + ' }' + note; } else { return false; }
+      setText(lines.join('\n'));
+      afterEdit();
+      return true;
+    }
+    return false;
+  }
+  function aiHelper() {
+    const btn = q('[data-ai-helper]');
+    if (!btn) { return; }
+    B.api('GET', '/ai/status').then((s) => { btn.hidden = !(s.enabled && s.assist) || readOnly; }).catch(() => {});
+    btn.addEventListener('click', () => {
+      const list = B.clear(q('[data-ai-items]'));
+      q('[data-ai-box]').hidden = false;
+      say('Asking the AI helper (it sees names, types and descriptions, never a value)…');
+      btn.disabled = true;
+      B.api('POST', '/ai/dataset-helper', { dataset: itemId }).then((d) => {
+        say(d.items.length ? d.items.length + ' proposed. Nothing changes until you accept one.' : 'Nothing to propose: the model is already described.');
+        d.items.forEach((it) => {
+          const acc = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-ai-accept': it.id, text: 'Accept', disabled: readOnly });
+          const li = h('li', { class: 'bi-rel', 'data-ai-item': it.kind }, h('span', { class: 'bi-badge', text: it.kind }), ' ', h('strong', { text: it.label }), it.why ? h('small', { class: 'text-muted-d', text: ' ' + it.why }) : null,
+            h('pre', { class: 'mono bi-ai-yaml', text: it.yaml }), acc);
+          acc.addEventListener('click', () => {
+            let done = true;
+            if (it.kind === 'relationship') {
+              const r = it.data;
+              if (rels.some((x) => x.from === r.from && x.to === r.to)) { done = false; } else { rels.push({ from: r.from, to: r.to, cardinality: r.cardinality, direction: 'single', active: true }); writeRels(); draw(); }
+            } else if (it.kind === 'measure') { addToBlock('measures', '  ' + it.yaml); } else { done = describeColumn(it.data.field, it.data.description); }
+            acc.disabled = true;
+            acc.textContent = done ? 'Accepted' : 'Place it by hand';
+            say(done ? 'Added to the YAML; Save keeps it.' : 'Could not place that line automatically: copy the YAML shown into the dataset.', !done);
+          });
+          list.appendChild(li);
+        });
+      }).catch((e) => say((e.code ? e.code + ' ' : '') + (e.message || 'the helper failed'), true)).then(() => { btn.disabled = false; });
+    });
+    q('[data-ai-close]').addEventListener('click', () => { q('[data-ai-box]').hidden = true; });
+  }
+
   // ---- start ---------------------------------------------------------------------------------------------------------
   B.api('GET', '/items/' + B.id2path(itemId)).then((it) => {
     if (it.kind !== 'dataset') { throw new Error('This item is not a dataset.'); }
@@ -491,6 +560,7 @@
     q('[data-save]').addEventListener('click', save);
     q('[data-save-copy]').addEventListener('click', saveCopy);
     bindForm();
+    aiHelper();
     window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
     window.addEventListener('resize', lines);
     dirty = false;

@@ -21,7 +21,7 @@
     <dt><kbd>Tab</kbd></dt><dd>Walk the columns of the tables</dd>
     <dt><kbd>Enter</kbd></dt><dd>On a column: choose it; press Enter on a second column to relate the two</dd>
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-design.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-design.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-ai.css?v={{ ASSET_V }}">{% endblock %}
 {% block bi_main %}
 <div class="bi-design" data-model-root data-ready="">
   <header class="bi-dbar">
@@ -29,6 +29,7 @@
       <h1 data-title>Model view</h1><span class="bi-badge" data-state>Loading</span><span class="bi-badge" data-valid></span></div>
     <div class="bi-dactions" role="toolbar" aria-label="Model actions">
       <button type="button" class="btn-pill btn-ghost" data-infer><i class="bi bi-search" aria-hidden="true"></i> Look for relationships in the data</button>
+      <button type="button" class="btn-pill btn-ghost" data-ai-helper hidden><i class="bi bi-stars" aria-hidden="true"></i> Ask the AI helper</button>
       <button type="button" class="btn-pill btn-ghost" data-save-copy hidden><i class="bi bi-files" aria-hidden="true"></i> Save a copy</button>
       <button type="button" class="btn-pill btn-accent" data-save><i class="bi bi-floppy" aria-hidden="true"></i> Save</button>
     </div>
@@ -54,6 +55,9 @@
           <button type="button" class="btn-pill btn-accent" data-nr-add>Add relationship</button>
         </div>
       </div>
+      <section class="bi-ai-box" data-ai-box hidden aria-labelledby="mAiH"><h3 id="mAiH">Proposed by the AI helper</h3>
+        <p class="text-muted-d bi-small-note">From the names, types and descriptions of this dataset (no row, no value). Each item is checked against the model; accept the ones you want, then Save.</p>
+        <ul class="bi-rellist" data-ai-items></ul><button type="button" class="btn-pill btn-ghost bi-small" data-ai-close>Close</button></section>
       <h3>Proposed from the data</h3>
       <ul class="bi-rellist" data-proposals></ul>
       <h3>Problems</h3>

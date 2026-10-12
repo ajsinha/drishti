@@ -23,7 +23,7 @@
   const h = B.h;
   const listeners = [];
   const ai = B.ai = { enabled: false, draft: false, values: 'labels-only', on(fn) { listeners.push(fn); if (ai.loaded) { fn(); } }, loaded: false };
-  B.api('GET', '/ai/status').then((s) => { ai.enabled = !!s.enabled; ai.draft = !!s.draft; ai.values = s.values; }).catch(() => {}).then(() => { ai.loaded = true; listeners.forEach((f) => f()); });
+  B.api('GET', '/ai/status').then((s) => { ai.enabled = !!s.enabled; ai.draft = !!s.draft; ai.assist = !!s.assist; ai.values = s.values; }).catch(() => {}).then(() => { ai.loaded = true; listeners.forEach((f) => f()); });
 
   const fail = (el, e) => B.say(el, (e && e.code ? e.code + ' ' : '') + ((e && (e.detail || e.message)) || 'The AI call failed.'), true);
   const canvas = document.getElementById('biCanvas');
@@ -170,4 +170,5 @@
 
   if (page === 'report') { ai.on(() => { if (ai.enabled) { reportAsk(); } }); }
   if (page === 'designer') { designer(); }
+  ai.fail = fail;
 })();

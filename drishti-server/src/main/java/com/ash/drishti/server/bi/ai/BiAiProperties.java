@@ -30,10 +30,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param askRows most rows an "ask the data" answer returns, and the most the model sees of them in aggregates mode
  * @param explainDimensions most dimensions "explain this number" breaks a value down by
  * @param explainMembers most members listed per dimension
+ * @param suggestions most visuals the designer copilot proposes at once
+ * @param helperItems most items the dataset helper proposes per kind (relationships, measures, column descriptions)
  */
 @ConfigurationProperties("drishti.bi.ai")
 public record BiAiProperties(String model, String values, Integer maxQuestionChars, Integer maxTokens, Integer timeoutSeconds, Integer askRows, Integer explainDimensions,
-        Integer explainMembers) {
+        Integer explainMembers, Integer suggestions, Integer helperItems) {
 
     public BiAiProperties {
         model = model == null ? "" : model.strip();
@@ -44,6 +46,8 @@ public record BiAiProperties(String model, String values, Integer maxQuestionCha
         askRows = askRows == null || askRows <= 0 ? 200 : askRows;
         explainDimensions = explainDimensions == null || explainDimensions <= 0 ? 3 : explainDimensions;
         explainMembers = explainMembers == null || explainMembers <= 0 ? 5 : explainMembers;
+        suggestions = suggestions == null || suggestions <= 0 ? 6 : suggestions;
+        helperItems = helperItems == null || helperItems <= 0 ? 8 : helperItems;
     }
 
     public boolean aggregates() {
@@ -51,6 +55,6 @@ public record BiAiProperties(String model, String values, Integer maxQuestionCha
     }
 
     public static BiAiProperties defaults() {
-        return new BiAiProperties(null, null, null, null, null, null, null, null);
+        return new BiAiProperties(null, null, null, null, null, null, null, null, null, null);
     }
 }

@@ -193,7 +193,7 @@ You should see one entry per firing, clearing or skipped look with the time, wha
 
 ![The inbox, Alerts tab: MTM floor - now 138,562,638 (below 200,000,000)](img/t11/13-inbox-alert.jpg)
 
-You should see the row (and one more for every firing); it opens what the alert is about. With the mail server of step 4 and an address on your account, tick **Email** in the form and the same message arrives as `Drishti alert: MTM floor`. Alerts do not retry mail: the next firing is a new mail.
+You should see the row (and one more for every firing); it opens what the alert is about. With the mail server of step 4 and an address on your account, tick **Email** in the form and the same message arrives as `Drishti alert: MTM floor`. A mail that fails is tried again by the shared retry policy (the history shows `retrying: attempt 1 of 4 …`, then `sent (attempt 3 of 4)`).
 
 ## Step 6 · Export: PDF, PNG, Excel, CSV
 
@@ -253,6 +253,20 @@ You should see two `pass` and one `fail` that says what it expected and what it 
 ![The publish refused: DRS-9043 names the failing test, the figure expected and the figure found](img/t11/17-publish-refused.jpg)
 
 You should see `DRS-9043 'Trades with expected values' cannot be published: 1 of its tests fails (Close to 100 trades: expected 100 +- 1%, got 750).` Mend the expectation (or the data) and publish again; a `bi-admin` may publish anyway with `force`, and the audit log says so. The same words work in a report, where a test can also name a visual (`visual: trades`). [REPORTS.md section 17](../guides/REPORTS.md#17-expected-values-tests).
+
+## Step 8 · Charts in the workbook, a summary in the mail, a webhook and a text
+
+Four small things make what leaves Drishti more useful; none changes how you work.
+
+**Charts in Excel.** Export the *Overview* page as Excel again: a bar, column, line, area, pie or donut visual now has a **native Excel chart** beside its data (open it in Excel or LibreOffice and edit it as any chart). It reads the sheet's own cells, so a column masked for the reader is text and never plotted.
+
+![The Excel export of the Overview page, opened in LibreOffice: the data sheet with its native chart](img/t11/18-excel-chart.jpg)
+
+**A written summary.** On the Subscribe form (step 2) tick *Open the email with a short written summary*. It needs the AI layer ([tutorial 15](15-ai-in-drishti.md)) and **`drishti.bi.ai.values: aggregates`**; each recipient's email then opens with two or three sentences that word *their own* figures, never a masked one. With anything else the mail goes without it and the run's history says why.
+
+**A webhook and a text.** An administrator defines webhooks and one text gateway (`drishti.notify.*`, [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtinotify--webhooks-and-text-messages-for-alerts-and-subscriptions)); the form then offers them by name, plus a field for your own mobile number:
+
+You should see a webhook per defined name and, once a gateway is set up, *Text each recipient who has given a number a link to it* (the picture is in [DISTRIBUTION.md section 6](../guides/DISTRIBUTION.md#6-webhooks-and-text-messages)). A webhook post is signed (`X-Drishti-Signature`) and holds the title and a link, never a figure; so does a text. The alert form has the same two boxes. [DISTRIBUTION.md section 6](../guides/DISTRIBUTION.md#6-webhooks-and-text-messages).
 
 ## Next steps
 

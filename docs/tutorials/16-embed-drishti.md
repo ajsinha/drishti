@@ -210,6 +210,22 @@ If an element stays in `loading` with no event at all, the token provider never 
 The console serves the library at an **exact semantic version**, immutably, with the SHA-384 of every file at `/embed/v1/elements/<version>/integrity.json`. A production page pins the version and puts the `integrity` on the script line, so the bytes it runs are the bytes it reviewed; `/embed/v1/drishti-elements.js` follows the console and is for development. Keep the client secret in the backend's environment, rotate it
 from the row's **Rotate** button (with a grace period so a rolling restart does not fail), and make the application's origins, scopes and kinds as narrow as the page needs: **a registered application can show exactly the kinds and reports it lists and nothing else**, whatever the user's roles allow. You should see the file list and its hashes by opening `/embed/v1/elements/<version>/integrity.json` on the console (the version is in the address of the script line).
 
+## Step 10 · Search and About in the host's page, and the framework samples
+
+Two more elements put more of Drishti in the host's page. **`<drishti-search>`** is a search box across Drishti for the signed-in user (scope `embed:search`: read-only, masked, cut to the kinds the application may show, rate-limited); **`<drishti-about>`** is the *About this page* body of a view (scope `embed:about`). Register the scopes (tick *embed:search* in the form of step 3, as the picture there shows) and put them on the page:
+
+```html
+<drishti-search placeholder="Find a trade" target="#v"></drishti-search>
+<drishti-view id="v" kind="trade" entity="END-1000008"></drishti-view>
+<drishti-about kind="trade" entity="END-1000008"></drishti-about>
+```
+
+The repository has the same page as **React, Vue and Angular** samples in `docs/guides/examples/embed/`. Fetch the framework builds once (`bash docs/guides/examples/embed/fetch-vendor.sh`; they are not in the repository) and open `http://127.0.0.1:17968/samples/react/` on the host of step 4:
+
+![The React sample: a search box, the view, its About body and the report, in one host page](img/t16/11-react-sample.jpg)
+
+You should see the search box above the view; type `END-1000` and pick a result, and the view and the About body follow. The page keeps the strict policy of step 7. [ELEMENTS.md](../guides/ELEMENTS.md#react-angular-and-vue-sample-pages).
+
 ## Next steps
 
 - [Tutorial 17](17-run-it-in-production.md): the production checklist (security on, users, tokens, backups).

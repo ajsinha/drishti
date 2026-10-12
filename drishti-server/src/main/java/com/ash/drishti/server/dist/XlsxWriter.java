@@ -32,7 +32,8 @@ import java.util.zip.ZipOutputStream;
 /**
  * An Excel workbook (.xlsx, Office Open XML) written with the JDK's zip and nothing else: a sheet "About" (title, as-of, the filters, who
  * it was made for) and one sheet per section, with a bold frozen header row, numbers as numbers (whole and decimal formats), dates as dates,
- * booleans as booleans and text as inline strings (never a formula, whatever it starts with). Sheet names are made valid and unique.
+ * booleans as booleans and text as inline strings (never a formula, whatever it starts with). A chart section also gets a native Excel chart
+ * ({@link XlsxCharts}) next to its data. Sheet names are made valid and unique.
  */
 public final class XlsxWriter {
 
@@ -59,7 +60,11 @@ public final class XlsxWriter {
         }
         ByteArrayOutputStream out = new ByteArrayOutputStream(32 * 1024);
         try (ZipOutputStream z = new ZipOutputStream(out)) {
-            entry(z, "[Content_Types].xml", contentTypes(names.size()));
+            List<XlsxCharts.Plan> plans = new ArrayList<>();
+            for (ExportDoc.Section sec : doc.sections()) {
+                plans.add(XlsxCharts.plan(sec));
+            }
+            entry(z, "[Content_Types].xml", contentTypes(names.size(), plans));
             entry(z, "_rels/.rels", XML + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
                     + "<Relationship Id=\"rId1\" Type=\"" + REL + "officeDocument\" Target=\"xl/workbook.xml\"/></Relationships>");
             entry(z, "xl/workbook.xml", workbook(names));
@@ -67,7 +72,17 @@ public final class XlsxWriter {
             entry(z, "xl/styles.xml", styles());
             entry(z, "xl/worksheets/sheet1.xml", about(doc));
             for (int i = 0; i < doc.sections().size(); i++) {
-                entry(z, "xl/worksheets/sheet" + (i + 2) + ".xml", sheet(doc.sections().get(i)));
+                XlsxCharts.Plan plan = plans.get(i);
+                int n = i + 2;
+                entry(z, "xl/worksheets/sheet" + n + ".xml", sheet(doc.sections().get(i), plan != null));
+                if (plan != null) {                                       // the chart sits next to the data: sheet -> drawing -> chart
+                    entry(z, "xl/worksheets/_rels/sheet" + n + ".xml.rels", XML + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
+                            + "<Relationship Id=\"rId1\" Type=\"" + REL + "drawing\" Target=\"../drawings/drawing" + n + ".xml\"/></Relationships>");
+                    entry(z, "xl/drawings/drawing" + n + ".xml", XlsxCharts.drawing(doc.sections().get(i).columns().size() + 1));
+                    entry(z, "xl/drawings/_rels/drawing" + n + ".xml.rels", XML + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
+                            + "<Relationship Id=\"rId1\" Type=\"" + REL + "chart\" Target=\"../charts/chart" + n + ".xml\"/></Relationships>");
+                    entry(z, "xl/charts/chart" + n + ".xml", XlsxCharts.chart(doc.sections().get(i), plan, names.get(n - 1)));
+                }
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -83,7 +98,7 @@ public final class XlsxWriter {
         z.closeEntry();
     }
 
-    private static String contentTypes(int sheets) {
+    private static String contentTypes(int sheets, List<XlsxCharts.Plan> plans) {
         StringBuilder b = new StringBuilder(XML).append("<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">")
                 .append("<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>")
                 .append("<Default Extension=\"xml\" ContentType=\"application/xml\"/>")
@@ -92,6 +107,12 @@ public final class XlsxWriter {
         for (int i = 1; i <= sheets; i++) {
             b.append("<Override PartName=\"/xl/worksheets/sheet").append(i)
                     .append(".xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>");
+        }
+        for (int i = 0; i < plans.size(); i++) {
+            if (plans.get(i) != null) {
+                b.append("<Override PartName=\"/xl/drawings/drawing").append(i + 2).append(".xml\" ContentType=\"application/vnd.openxmlformats-officedocument.drawing+xml\"/>")
+                        .append("<Override PartName=\"/xl/charts/chart").append(i + 2).append(".xml\" ContentType=\"application/vnd.openxmlformats-officedocument.drawingml.chart+xml\"/>");
+            }
         }
         return b.append("</Types>").toString();
     }
@@ -157,8 +178,11 @@ public final class XlsxWriter {
         return XML + "<worksheet " + MAIN + "><cols><col min=\"1\" max=\"1\" width=\"60\" customWidth=\"1\"/></cols><sheetData>" + rows + "</sheetData></worksheet>";
     }
 
-    private static String sheet(ExportDoc.Section s) {
-        StringBuilder b = new StringBuilder(XML).append("<worksheet ").append(MAIN).append('>');
+    private static String sheet(ExportDoc.Section s, boolean chart) {
+        StringBuilder b = new StringBuilder(XML).append("<worksheet ").append(MAIN).append(chart ? " xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"" : "").append('>');
+        if (chart) {
+            b.append("<sheetPr><pageSetUpPr fitToPage=\"1\"/></sheetPr>");                       // printed or saved as PDF, the table and its chart share one page's width
+        }
         b.append("<sheetViews><sheetView workbookViewId=\"0\"><pane ySplit=\"1\" topLeftCell=\"A2\" activePane=\"bottomLeft\" state=\"frozen\"/></sheetView></sheetViews>");
         b.append("<cols>");
         for (int c = 0; c < s.columns().size(); c++) {
@@ -178,7 +202,7 @@ public final class XlsxWriter {
             }
             b.append(row(r++, cells.toString()));
         }
-        return b.append("</sheetData></worksheet>").toString();
+        return b.append("</sheetData>").append(chart ? "<pageSetup orientation=\"landscape\" fitToHeight=\"0\"/><drawing r:id=\"rId1\"/>" : "").append("</worksheet>").toString();
     }
 
     private static int width(ExportDoc.Section s, int c) {
@@ -245,7 +269,7 @@ public final class XlsxWriter {
         return name;
     }
 
-    private static String esc(String s) {
+    static String esc(String s) {
         StringBuilder b = new StringBuilder(s.length() + 8);
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);

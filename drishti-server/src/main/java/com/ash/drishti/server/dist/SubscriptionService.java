@@ -100,6 +100,48 @@ public final class SubscriptionService implements AutoCloseable {
         void check(ContentExporter.Target target, Principal who);
     }
 
+    /**
+     * Writes the short summary a subscription with {@code narrative: true} opens with, from the figures of ONE recipient's own render (their masks and row
+     * rules already applied). It answers a text, or the reason there is none; it never throws.
+     */
+    public interface Narrator {
+
+        /** Why a narrative cannot be written at all right now (the AI layer is off), or null. Checked when the subscription is saved. */
+        String unavailable();
+
+        Narration write(Principal recipient, ExportDoc doc);
+    }
+
+    /** A narrative, or the reason it was left out (the policy allows labels only, the recipient may not use the feature, the model failed). */
+    public record Narration(String text, String skipped) {
+
+        public static Narration of(String text) {
+            return new Narration(text, null);
+        }
+
+        public static Narration skipped(String why) {
+            return new Narration(null, why);
+        }
+    }
+
+    /** Webhook and text-message sending for subscriptions; implemented over the {@code drishti.notify} channels. Nothing here is ever given a figure. */
+    public interface Outbound {
+
+        /** The webhooks an administrator defined (names). */
+        List<String> webhookNames();
+
+        boolean smsConfigured();
+
+        /** The person's own number for texts, if they gave one. */
+        Optional<String> phone(String username);
+
+        /** Posts {@code payload} to the named webhook; throws {@link com.ash.drishti.server.notify.NotifyException}. */
+        void webhook(String name, ObjectNode payload);
+
+        /** Sends the text to the number (cut to the gateway's limit); throws {@link com.ash.drishti.server.notify.NotifyException}. */
+        void sms(String phone, String text);
+    }
+
     private record Recipient(String address, String user, Principal principal, String label) {}
 
     private final PreferenceStore store;
@@ -117,6 +159,8 @@ public final class SubscriptionService implements AutoCloseable {
     private final Clock clock;
     private final ObjectMapper json = new ObjectMapper();
     private final Set<String> running = ConcurrentHashMap.newKeySet();
+    private volatile Narrator narrator;
+    private volatile Outbound outbound;
     private final ScheduledExecutorService ticker = Executors.newSingleThreadScheduledExecutor(Thread.ofVirtual().name("drishti-subscriptions").factory());
 
     @SuppressWarnings("java:S107")
@@ -139,6 +183,13 @@ public final class SubscriptionService implements AutoCloseable {
             long ms = props.tick().toMillis();
             ticker.scheduleWithFixedDelay(this::tick, ms, ms, TimeUnit.MILLISECONDS);
         }
+    }
+
+    /** Gives the service its narrative writer and its webhook and text-message senders (each may be null: the option is then refused when saved, skipped when run). */
+    public SubscriptionService with(Narrator narrator, Outbound outbound) {
+        this.narrator = narrator;
+        this.outbound = outbound;
+        return this;
     }
 
     // ---- reading -----------------------------------------------------------------------------------------------------
@@ -192,6 +243,18 @@ public final class SubscriptionService implements AutoCloseable {
             throw invalid("date is today (the latest business date), previous (the business day before) or load (the date of the load that triggered it)");
         }
         List<String> recipients = recipients(owner, body.path("recipients"));
+        boolean narrative = body.path("narrative").asBoolean(false);
+        if (narrative) {
+            String why = narrator == null ? "no AI layer is wired in" : narrator.unavailable();
+            if (why != null) {
+                throw invalid("a narrative summary needs the AI layer: " + why);
+            }
+        }
+        List<String> hooks = webhooks(body.path("webhooks"));
+        boolean sms = body.path("sms").asBoolean(false);
+        if (sms && (outbound == null || !outbound.smsConfigured())) {
+            throw invalid("text messages are not set up on this server (drishti.notify.sms.url)");
+        }
         Optional<JsonNode> old = get(owner, name);
         if (old.isEmpty() && store.keys(owner, NS).size() >= props.perUser()) {
             throw invalid("at most " + props.perUser() + " subscriptions per person (drishti.distribution.subscriptions.per-user)");
@@ -210,6 +273,9 @@ public final class SubscriptionService implements AutoCloseable {
         s.put("schedule", scheduleText).put("format", format).put("date", date);
         ArrayNode r = s.putArray("recipients");
         recipients.forEach(r::add);
+        s.put("narrative", narrative).put("sms", sms);
+        ArrayNode hk = s.putArray("webhooks");
+        hooks.forEach(hk::add);
         s.put("enabled", body.path("enabled").asBoolean(true));
         s.put("createdAt", old.map(o -> o.path("createdAt").asText()).orElse(clock.instant().toString()));
         s.set("runs", old.<JsonNode>map(o -> o.path("runs").deepCopy()).orElse(json.createArrayNode()));
@@ -335,6 +401,14 @@ public final class SubscriptionService implements AutoCloseable {
             for (Recipient r : who) {
                 deliveries.add(deliver(s, r, 1, trigger));
             }
+            for (JsonNode hook : s.path("webhooks")) {
+                deliveries.add(deliverWebhook(s, hook.asText(), 1, trigger, who.size()));
+            }
+            if (s.path("sms").asBoolean(false)) {
+                for (Recipient r : who) {
+                    deliveries.add(deliverSms(s, r, 1));
+                }
+            }
             run.set("deliveries", deliveries);
             summarise(run);
         } catch (RuntimeException e) {
@@ -373,6 +447,18 @@ public final class SubscriptionService implements AutoCloseable {
                 JsonNode d = ds.get(i);
                 if ("retry".equals(d.path("status").asText()) && d.hasNonNull("nextAttempt") && !Instant.parse(d.path("nextAttempt").asText()).isAfter(now)) {
                     String to = d.path("to").asText();
+                    String channel = d.path("channel").asText("email");
+                    if (channel.equals("webhook")) {
+                        ds.set(i, deliverWebhook(s, to.substring(to.indexOf(':') + 1), d.path("attempts").asInt(1) + 1, run.path("trigger").asText("schedule"), known.size()));
+                        continue;
+                    }
+                    if (channel.equals("sms")) {
+                        String who = d.path("user").asText();
+                        Recipient sr = known.stream().filter(x -> who.equals(x.user())).findFirst().orElse(null);
+                        ds.set(i, sr == null ? ((ObjectNode) d.deepCopy()).put("status", "skipped").put("error", "no longer a recipient")
+                                : deliverSms(s, sr, d.path("attempts").asInt(1) + 1));
+                        continue;
+                    }
                     Recipient r = known.stream().filter(x -> x.address() != null && x.address().equalsIgnoreCase(to)).findFirst().orElse(null);
                     if (r == null) {
                         ds.set(i, ((ObjectNode) d.deepCopy()).put("status", "skipped").put("error", "no longer a recipient"));
@@ -401,22 +487,85 @@ public final class SubscriptionService implements AutoCloseable {
         }
         RenderedMail m;
         try {
-            m = build(s, r, trigger);
+            m = build(s, r, trigger, d);
         } catch (DrishtiException e) {
             return d.put("status", "skipped").put("error", clip(e.getMessage()));
         } catch (RuntimeException e) {
-            return failure(d, e, attempt, false);
+            return failure(d, clip(MailFailures.describe(e)), attempt, false);
         }
         try {
             transport.send(m, from);
             return d.put("status", "sent").put("at", clock.instant().toString()).put("bytes", m.files().stream().mapToInt(f -> f.bytes().length).sum());
         } catch (RuntimeException e) {
-            return failure(d, e, attempt, MailFailures.permanent(e));
+            return failure(d, clip(MailFailures.describe(e)), attempt, MailFailures.permanent(e));
         }
     }
 
-    private ObjectNode failure(ObjectNode d, RuntimeException e, int attempt, boolean permanent) {
-        String why = clip(MailFailures.describe(e));
+    /** One post to a webhook for the whole run: the event, the subscription's title and where it opens. No figure, no recipient name. */
+    private ObjectNode deliverWebhook(JsonNode s, String hook, int attempt, String trigger, int recipients) {
+        ObjectNode d = json.createObjectNode().put("to", "webhook:" + hook).put("label", hook).put("channel", "webhook").put("attempts", attempt);
+        Outbound out = outbound;
+        if (out == null || !out.webhookNames().contains(hook)) {
+            return d.put("status", "skipped").put("error", "no webhook named '" + hook + "' is defined (drishti.notify.webhooks)");
+        }
+        ContentExporter.Target t = target(s.path("target"), null);
+        ObjectNode body = json.createObjectNode().put("event", "subscription").put("subscription", s.path("name").asText()).put("title", s.path("title").asText())
+                .put("owner", s.path("owner").asText()).put("trigger", trigger).put("at", clock.instant().toString()).put("recipients", recipients).put("link", link(t));
+        body.putObject("target").put("type", t.type()).put("id", t.id()).put("page", nz(t.page())).put("visual", nz(t.visual()));
+        try {
+            out.webhook(hook, body);
+            return d.put("status", "sent").put("at", clock.instant().toString());
+        } catch (com.ash.drishti.server.notify.NotifyException e) {
+            return failure(d, clip(e.getMessage()), attempt, e.permanent());
+        }
+    }
+
+    /** One text to one recipient who gave a number and may open the target: the title and the link, never a figure. */
+    private ObjectNode deliverSms(JsonNode s, Recipient r, int attempt) {
+        ObjectNode d = json.createObjectNode().put("to", "sms:" + r.user()).put("label", r.label()).put("channel", "sms").put("attempts", attempt);
+        if (r.user() != null) {
+            d.put("user", r.user());
+        }
+        Outbound out = outbound;
+        if (out == null || !out.smsConfigured()) {
+            return d.put("status", "skipped").put("error", "text messages are not set up (drishti.notify.sms.url)");
+        }
+        Optional<String> phone = r.user() == null ? Optional.empty() : out.phone(r.user());
+        if (r.principal() == null || phone.isEmpty()) {
+            return d.put("status", "skipped").put("error", "no phone number on file");
+        }
+        ContentExporter.Target t = target(s.path("target"), null);
+        try {
+            checker.check(t, r.principal());
+        } catch (DrishtiException e) {
+            return d.put("status", "skipped").put("error", clip(e.getMessage()));
+        }
+        try {
+            out.sms(phone.get(), s.path("title").asText() + " is ready: " + link(t));
+            return d.put("status", "sent").put("at", clock.instant().toString());
+        } catch (com.ash.drishti.server.notify.NotifyException e) {
+            return failure(d, clip(e.getMessage()), attempt, e.permanent());
+        }
+    }
+
+    private List<String> webhooks(JsonNode list) {
+        List<String> out = new ArrayList<>();
+        if (list.isArray()) {
+            for (JsonNode n : list) {
+                String name = n.asText("").strip();
+                if (name.isEmpty() || out.contains(name)) {
+                    continue;
+                }
+                if (outbound == null || !outbound.webhookNames().contains(name)) {
+                    throw invalid("no webhook named '" + name + "' is defined; an administrator defines them (drishti.notify.webhooks)");
+                }
+                out.add(name);
+            }
+        }
+        return out;
+    }
+
+    private ObjectNode failure(ObjectNode d, String why, int attempt, boolean permanent) {
         d.put("error", why);
         if (permanent || !retry.enabled() || attempt >= props.maxAttempts()) {
             return d.put("status", "failed");
@@ -427,7 +576,7 @@ public final class SubscriptionService implements AutoCloseable {
     }
 
     /** The message for one recipient: rendered as them (their masks and row rules), the body inline or the file attached. */
-    private RenderedMail build(JsonNode s, Recipient r, String trigger) {
+    private RenderedMail build(JsonNode s, Recipient r, String trigger, ObjectNode delivery) {
         String format = s.path("format").asText("html");
         ContentExporter.Target t = target(s.path("target"), dateOf(s, trigger));
         ContentExporter.Output o = renderer.render(t, "html".equals(format) ? ContentExporter.Format.HTML : ContentExporter.Format.of(format), r.principal());
@@ -445,6 +594,18 @@ public final class SubscriptionService implements AutoCloseable {
             files.add(new RenderedMail.Attachment(o.filename(), o.contentType(), o.bytes()));
             bodyHtml = DocHtml.summaryHtml(doc, o.filename());
             bodyText = DocHtml.summaryText(doc, o.filename());
+        }
+        if (s.path("narrative").asBoolean(false)) {
+            Narration n = narrator == null ? Narration.skipped("no AI layer is wired in") : narrator.write(r.principal(), doc);
+            if (n.text() != null && !n.text().isBlank()) {
+                String text = n.text().strip();
+                bodyHtml = "<p style=\"margin:0 0 14px 0;padding:8px 12px;background:#eef1f5;border-radius:4px;\"><span style=\"color:#6b7686;font-size:12px;\">Summary, written by an AI model from your figures below</span><br>"
+                        + DocHtml.esc(text) + "</p>" + bodyHtml;
+                bodyText = "Summary (written by an AI model from your figures below): " + text + "\n\n" + bodyText;
+                delivery.put("narrative", "written");
+            } else {
+                delivery.put("narrative", "skipped: " + (n.skipped() == null ? "nothing was written" : n.skipped()));
+            }
         }
         String id = "<sub." + UUID.randomUUID().toString().replace("-", "") + "@" + mail.host() + ">";
         return mail.renderBody("subscription", headline, bodyText, bodyHtml, link, r.address(), id, files);

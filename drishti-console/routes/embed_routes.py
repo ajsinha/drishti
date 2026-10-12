@@ -284,6 +284,19 @@ async def about(request: Request, kind: str, id_: str, generation: int = 0):
     return await reply(request, html, "text/html", status)
 
 
+@router.get("/search")
+async def search(request: Request, q: str = "", limit: int = 0):
+    """``<drishti-search>``: the type-ahead across Drishti for the embed caller (scope ``embed:search``; read-only, masked, cut to the application's kinds by the server)."""
+    try:
+        me, _claims = await identity(request)
+        out = await request.app.state.backend.embed_search(q[:200], me, min(max(limit, 0), 50) or None)
+    except EmbedError as e:
+        return await refuse(request, e.status, e.code, e.detail, e.retry_after)
+    except BackendError as e:
+        return await refuse(request, e.page_status, e.code, e.detail, e.retry_after)
+    return await reply(request, json.dumps(out, ensure_ascii=False), "application/json")
+
+
 @router.get("/resolve")
 async def resolve(request: Request, text: str = ""):
     try:

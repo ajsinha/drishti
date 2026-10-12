@@ -105,13 +105,20 @@ def test_the_element_api_data_matches_the_real_elements():
     page = (dist.EMBED / "report-page.js").read_text(encoding="utf-8")
     for name in api.event_names("drishti-report"):
         assert f"'{name}'" in report + page, f"<drishti-report> never emits drishti:{name}"
+    about, search = (dist.EMBED / "about.js").read_text(encoding="utf-8"), (dist.EMBED / "search.js").read_text(encoding="utf-8")
+    assert {n for n, _t, _d in api.ELEMENTS["drishti-about"]["attributes"]} == attrs(about)
+    assert {n for n, _t, _d in api.ELEMENTS["drishti-search"]["attributes"]} == attrs(search)
+    for name in api.event_names("drishti-about"):
+        assert f"'{name}'" in about, f"<drishti-about> never emits drishti:{name}"
+    for name in api.event_names("drishti-search"):
+        assert f"'{name}'" in search, f"<drishti-search> never emits drishti:{name}"
     for el, spec in api.ELEMENTS.items():
-        src = {"drishti-view": view, "drishti-report": report, "drishti-panel": (dist.EMBED / "panel.js").read_text(encoding="utf-8")}[el]
+        src = {"drishti-view": view, "drishti-report": report, "drishti-panel": (dist.EMBED / "panel.js").read_text(encoding="utf-8"), "drishti-about": about, "drishti-search": search}[el]
         assert f"class {spec['cls']} extends" in src, el
         for name, _sig, _doc in spec["methods"]:
             assert re.search(rf"\b{name}\(", src) or el == "drishti-panel", f"{el} has no method {name}"
     entry = (dist.EMBED / dist.ENTRY).read_text(encoding="utf-8")
-    assert all(f"./m/{m}.js" in entry for m in ("element", "report", "panel"))
+    assert all(f"./m/{m}.js" in entry for m in ("element", "report", "panel", "about", "search"))
 
 
 def test_the_declarations_name_every_element_and_event():

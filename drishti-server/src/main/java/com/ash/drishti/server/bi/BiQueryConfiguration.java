@@ -153,8 +153,13 @@ public class BiQueryConfiguration {
     }
 
     @Bean
-    public com.ash.drishti.server.bi.ai.BiAiController biAiController(com.ash.drishti.server.bi.ai.BiAiService service) {
-        return new com.ash.drishti.server.bi.ai.BiAiController(service);
+    public com.ash.drishti.server.bi.ai.BiAiCopilot biAiCopilot(com.ash.drishti.server.bi.ai.BiAiService service) {
+        return new com.ash.drishti.server.bi.ai.BiAiCopilot(service);
+    }
+
+    @Bean
+    public com.ash.drishti.server.bi.ai.BiAiController biAiController(com.ash.drishti.server.bi.ai.BiAiService service, com.ash.drishti.server.bi.ai.BiAiCopilot copilot) {
+        return new com.ash.drishti.server.bi.ai.BiAiController(service, copilot);
     }
 
     @Bean

@@ -49,6 +49,13 @@ public final class ReportYaml {
         return w.out.toString();
     }
 
+    /** One visual of a report model as the list item the report YAML has it ({@code - id: ...} then its keys), for a suggestion to paste in. */
+    public static String visual(Map<String, ?> visual) {
+        ReportYaml w = new ReportYaml();
+        w.item(0, new LinkedHashMap<>(visual), VISUAL, 2);
+        return w.out.toString();
+    }
+
     // ---- block style -------------------------------------------------------------------------------------------------
 
     @SuppressWarnings("unchecked")

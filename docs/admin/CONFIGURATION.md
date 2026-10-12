@@ -383,7 +383,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 What failed is tried again by itself, with exponential backoff and jitter; see [OPERATIONS.md](OPERATIONS.md#retries-what-failed-is-tried-again-by-itself).
 The server reads `drishti.retry.*` (packs refused, connectors, AI providers, MCP servers) and the console reads `retry.*` (its own AI
 providers and MCP servers; server names with hyphens, console names with underscores). A per-area override replaces any key for one
-area: `drishti.retry.<area>.<key>` on the server (areas `packs`, `connectors`, `ai`, `mcp`, `distribution`, `bi`) and `retry.<area>.<key>` in the console
+area: `drishti.retry.<area>.<key>` on the server (areas `packs`, `connectors`, `ai`, `mcp`, `distribution`, `bi`, `alerts`) and `retry.<area>.<key>` in the console
 (areas `ai`, `mcp`).
 
 | Server | Console | Default | Meaning |
@@ -395,6 +395,7 @@ area: `drishti.retry.<area>.<key>` on the server (areas `packs`, `connectors`, `
 | `drishti.retry.jitter` | `retry.jitter` | `0.2` | Each wait varies by up to this fraction either way (`0` = none), so many failing things do not retry together |
 | `drishti.retry.permanent-after` | `retry.permanent_after` | `3` | A failure waiting cannot fix (refused credentials, a setting that is wrong) seen this many times in a row is treated as permanent and retried only every `max` |
 | `drishti.retry.<area>.<key>` | `retry.<area>.<key>` | the general value | Per-area override of any key above |
+| `drishti.retry.alerts.*` | (none) | the general value | The retries of an alert's email, webhook and text; how many tries is `drishti.alerts.measure.max-attempts` (below). A pending retry is kept in memory: a restart drops it and the alert's history keeps the last text it was given |
 | (none) | `ai.poll_seconds` | `5` | How often the console looks at `config/ai` and `config/mcp` for a changed file and for a retry that is due |
 
 ### `drishti.db.pool` — database connection pools
@@ -829,10 +830,13 @@ Off by default. A host application's backend buys a short embed token at the ser
 | `mask` | `always` | Embed calls mask the fields in `drishti.security.redact` whatever the user's roles say. Only `always` exists. |
 | `allow-wildcard-origins` | `false` | Let an application register `https://*.suffix` origins (review apps). |
 | `assertion-max-age` | `60s` | The longest life (`exp` minus `iat`) of a client assertion or user assertion a host signs. |
-| `scopes` | `embed:view`, `embed:about`, `embed:report` | Each embed scope with the `METHOD path` patterns it opens. A token calls nothing else, and nothing writes (the one POST that reads, `POST /api/v1/bi/reports/*/query`, is listed in `embed:report`). Keys keep their colon in brackets: `[embed:view]`, `[embed:about]`, `[embed:report]`. `embed:report` opens a published BI report for `<drishti-report>` and only for a host application whose `kinds` list names `report:<id>` or `report:*`. |
+| `scopes` | `embed:view`, `embed:about`, `embed:report`, `embed:search` | Each embed scope with the `METHOD path` patterns it opens. A token calls nothing else, and nothing writes (the one POST that reads, `POST /api/v1/bi/reports/*/query`, is listed in `embed:report`). Keys keep their colon in brackets: `[embed:view]`, `[embed:about]`, `[embed:report]`, `[embed:search]`. `embed:search` opens `GET /api/v1/embed/search` for `<drishti-search>` (a masked, read-only search across Drishti, cut to the application's kinds). `embed:report` opens a published BI report for `<drishti-report>` and only for a host application whose `kinds` list names `report:<id>` or `report:*`. |
 | `limits.tokens-per-minute` | `120` | Token requests per host application per minute (`429 DRS-8004`). |
 | `limits.views-per-minute` | `600` | The default `callsPerMinute` of a new application: calls per application per minute. |
 | `limits.views-per-user-per-minute` | `60` | The default `userCallsPerMinute` of a new application. |
+| `limits.searches-per-user-per-minute` | `30` | Searches one user may make per application per minute through `<drishti-search>` (scope `embed:search`), on top of the call rates (`429 DRS-8004`). |
+| `search.max-results` | `10` | Most results one search returns (1 to 50). |
+| `search.min-chars` | `2` | Shortest query that is searched; a shorter one gets an empty answer and a note. |
 | `apps` | empty | Host applications declared in configuration (GitOps), shown in Admin → Embedding as *from config* and read-only; see below. |
 
 **Declaring applications in configuration** (`application.yaml`, a pack's settings or the environment). Each entry takes the fields of a registration; the client secret is never written, only its hash, `printf '%s' "$SECRET" | sha256sum`. An entry is checked like a registration when the server starts, and an invalid one stops the start with its id and the problem. A configured application cannot be changed, rotated, disabled or deleted through the API or the page (`409`); an id in both places is the configured one.
@@ -1229,8 +1233,8 @@ Times are in `drishti.business-date.zone`, business days by `drishti.business-da
 
 ### `drishti.bi.ai` — BI with AI (stage 2)
 
-The three BI hooks on the AI layer ([BI_AI.md](../guides/BI_AI.md)). They also need `drishti.ai.enabled` (off by default) and a provider ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md));
-the policy's feature names are `bi-draft`, `bi-ask` and `bi-explain` (`drishti.ai.policy.features`, above).
+The BI hooks on the AI layer ([BI_AI.md](../guides/BI_AI.md)). They also need `drishti.ai.enabled` (off by default) and a provider ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md));
+the policy's feature names are `bi-draft`, `bi-ask`, `bi-explain`, the authoring helpers `bi-suggest`, `bi-explain-checks` and `bi-helper`, and a subscription's narrative summary `subscription-narrative` (`drishti.ai.policy.features`, above).
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -1242,6 +1246,8 @@ the policy's feature names are `bi-draft`, `bi-ask` and `bi-explain` (`drishti.a
 | `ask-rows` | `200` | Most rows an Ask answer holds, and the most the model sees of them in `aggregates` mode |
 | `explain-dimensions` | `3` | Dimensions Explain breaks a number down by |
 | `explain-members` | `5` | Members listed per dimension |
+| `suggestions` | `6` | Most visuals the designer copilot proposes at once |
+| `helper-items` | `8` | Most items the dataset helper proposes per kind (relationships, measures, column descriptions) |
 
 ### `drishti.bi.live` — streaming BI (phase 5)
 
@@ -1295,6 +1301,7 @@ Under `drishti.distribution.subscriptions`:
 | `max-attempts` | `4` | Tries for one delivery, with the shared retry policy between them |
 | `email-rows` | `25` | Most rows per table in an email whose body holds the report (`html` format) |
 | `load-delay` | `5s` | After a data load, wait this long before an `after-load` subscription runs, so the BI layers rebuild |
+| `narrative-rows` | `15` | Most rows per table the model is shown when it writes a subscription's narrative summary (`narrative: true`; only in `drishti.bi.ai.values: aggregates`, and only from the recipient's own unmasked columns) |
 
 ### `drishti.alerts.measure` — alerts on numbers and board notifications
 
@@ -1318,6 +1325,51 @@ change one in `application.yaml` or with `DRISHTI_ALERTS_MEASURE_*`.
 | `max-audience` | `300` | Most people one board tile notifies; a board with more readers tells nobody and says so in the history |
 | `email` | `true` | `false` stops alert email (a save that asks for it is refused). Mail goes through the server's mail settings, as subscriptions do (`spring.mail.*`, `drishti.collab.email.from`, `drishti.collab.console-url`) |
 | `bridges` | `true` | `false` stops chat bridge posts for alerts (the routes in `drishti.collab.bridges.webhooks` must also list the event `alert`) |
+| `max-attempts` | `4` | Tries in all for one alert delivery (email, webhook, text), with the shared retry policy `drishti.retry.alerts.*` between them; a refused address, a refused host or a 4xx answer is not retried. `1` turns alert retries off |
+| `webhooks` | `true` | `false` stops webhook posts for alerts whatever an alert asks for (a save that asks for one is refused); the webhooks themselves are `drishti.notify.webhooks` |
+| `sms` | `true` | `false` stops text messages for alerts (a save that asks for one is refused); the gateway is `drishti.notify.sms` |
+
+### `drishti.notify` — webhooks and text messages for alerts and subscriptions
+
+Where an alert or a subscription may send besides the inbox, mail and the chat bridges ([DISTRIBUTION.md section 6](../guides/DISTRIBUTION.md#6-webhooks-and-text-messages)). Nothing here is on until an administrator defines it: a person can pick only the **names** of the webhooks defined here, never type a URL, and a text goes only to a number its owner gave. Neither carries a figure
+(a webhook post names the alert or subscription and where it opens; a text holds its title and a link, and only with `sms.include-values: true` the alert's one-line message). A `${ENV}` reference in a secret or a header is resolved from the process environment when the message is sent; a variable that is not set is a permanent failure that names the variable, never the value.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `webhook.allowed-hosts` | empty | The only hosts a webhook may point at: exact names, or `*.corp.example` for any name under a suffix, separated by commas. Empty: no webhook is sent. Checked at every send, so changing a webhook's URL to another host stops it |
+| `webhook.allow-http` | `false` | `true` lets a webhook use `http://` (testing only); otherwise `https://` is required |
+| `webhook.timeout` | `10s` | One post |
+| `webhooks.<name>.url` | none | The URL of the webhook called `<name>` (the name an alert or subscription picks) |
+| `webhooks.<name>.secret` | none | `${ENV}` reference to the signing secret. Every post carries `X-Drishti-Timestamp` (epoch seconds) and `X-Drishti-Signature: sha256=<hex>`, the HMAC-SHA256 of `<timestamp>.<body>` keyed with the secret, so the receiver can check who sent it and refuse a replay. Without a secret the post is unsigned |
+| `webhooks.<name>.header.<Header>` | none | A fixed header (`${ENV}` allowed), for example an API key |
+| `webhooks.<name>.tls.*`, `.proxy.*` | the site defaults | The same TLS (`tls.ca-file`, `tls.truststore`, `tls.cert-file`, ... [TLS.md](../connectors/TLS.md)) and proxy (`proxy.url`, `proxy.username`, `proxy.password`, `proxy.no-proxy`, `drishti.http.proxy.*`) keys as a connector |
+| `sms.url` | none | The HTTP gateway's URL; `{to}`, `{text}` and `{sender}` are replaced by the number, the text and `sms.sender`, URL-encoded. No vendor is built in: any HTTP SMS gateway fits |
+| `sms.method` | `POST` | `POST` or `GET` |
+| `sms.body` | `{"to":"{to}","message":"{text}"}` | The POST body template (the same placeholders, escaped for the content type: JSON-escaped for `application/json`, form-encoded for `application/x-www-form-urlencoded`) |
+| `sms.content-type` | `application/json` | The body's content type |
+| `sms.header.<Header>` | none | A header, for example `sms.header.Authorization: Bearer ${SMS_TOKEN}` |
+| `sms.sender` | blank | The sender id for `{sender}` |
+| `sms.max-chars` | `160` | A text is cut to this many characters (20 to 1000) with an ellipsis; line breaks become spaces |
+| `sms.include-values` | `false` | `true` lets an alert's text carry its one-line message (with the person's own figure). A masked figure is never judged or sent whatever this says |
+| `sms.timeout` | `10s` | One call |
+| `sms.tls.*`, `sms.proxy.*` | the site defaults | As for a webhook |
+
+```yaml
+drishti:
+  notify:
+    webhook:
+      allowed-hosts: hooks.corp.example, "*.ops.example"
+    webhooks:
+      ops-room:
+        url: https://hooks.corp.example/drishti
+        secret: ${OPS_HOOK_SECRET}
+        header: { X-Team: risk }
+    sms:
+      url: https://sms.example/v1/send
+      body: '{"to":"{to}","from":"{sender}","body":"{text}"}'
+      sender: Drishti
+      header: { Authorization: "Bearer ${SMS_TOKEN}" }
+```
 
 ### `drishti.bi.governance` — publishing and governance (phase 4)
 

@@ -29,7 +29,7 @@ public record DistProperties(Export export, Subscriptions subscriptions) {
 
     public DistProperties {
         export = export == null ? new Export(null, null, null, null, null, null, null, null, null) : export;
-        subscriptions = subscriptions == null ? new Subscriptions(null, null, null, null, null, null, null, null) : subscriptions;
+        subscriptions = subscriptions == null ? new Subscriptions(null, null, null, null, null, null, null, null, null) : subscriptions;
     }
 
     /**
@@ -68,9 +68,16 @@ public record DistProperties(Export export, Subscriptions subscriptions) {
      * @param maxAttempts a failed delivery is tried this many times in all, with the shared retry policy ({@code drishti.retry.distribution.*}) between tries
      * @param emailRows most rows per table in an inline HTML email
      * @param loadDelay after a data load, wait this long for the BI layers to rebuild before an after-load subscription runs
+     * @param narrativeRows most rows per table the model is shown when it writes a narrative summary
      */
-    public record Subscriptions(Boolean enabled, Integer perUser, Integer maxRecipients, Duration tick, Integer keepRuns, Integer maxAttempts, Integer emailRows, Duration loadDelay) {
+    public record Subscriptions(Boolean enabled, Integer perUser, Integer maxRecipients, Duration tick, Integer keepRuns, Integer maxAttempts, Integer emailRows, Duration loadDelay,
+            Integer narrativeRows) {
 
+        public Subscriptions(Boolean enabled, Integer perUser, Integer maxRecipients, Duration tick, Integer keepRuns, Integer maxAttempts, Integer emailRows, Duration loadDelay) {
+            this(enabled, perUser, maxRecipients, tick, keepRuns, maxAttempts, emailRows, loadDelay, null);
+        }
+
+        @org.springframework.boot.context.properties.bind.ConstructorBinding
         public Subscriptions {
             enabled = enabled == null ? Boolean.TRUE : enabled;
             perUser = perUser == null ? 20 : Math.max(1, perUser);
@@ -80,6 +87,7 @@ public record DistProperties(Export export, Subscriptions subscriptions) {
             maxAttempts = maxAttempts == null ? 4 : Math.max(1, maxAttempts);
             emailRows = emailRows == null ? 25 : Math.max(1, emailRows);
             loadDelay = loadDelay == null ? Duration.ofSeconds(5) : loadDelay;
+            narrativeRows = narrativeRows == null ? 15 : Math.max(1, narrativeRows);
         }
     }
 }

@@ -18,7 +18,8 @@
 Rūpaka phase 7 ([RUPAKA.md section 20.6](../architecture/RUPAKA.md#206-phase-7-part-1-as-built)). Part 1: two things leave Drishti as files and mail: an **export** (a BI report, a page, one
 visual, or a Sutra view, saved as PDF, a picture, an Excel workbook or CSV) and a **subscription** (the same content sent by email on a schedule, or after the day's data lands).
 Part 2 (section 4 here): **alerts** on a number, and notifications from a board tile, to the inbox, email and the chat bridges.
-Part 3 (section 5): a report **embedded** in another web application (`<drishti-report>`), and the report's own phone layout ([REPORTS.md](REPORTS.md#14-phone-and-tablet-layouts)).
+Part 3 (section 5): a report **embedded** in another web application (`<drishti-report>`, with `<drishti-about>` and `<drishti-search>`), and the report's own phone layout ([REPORTS.md](REPORTS.md#14-phone-and-tablet-layouts)).
+Wave D: charts in Excel exports (section 1), a written summary at the top of a subscription's email (section 2), retries of a failed alert delivery (section 4.6), and webhook and text-message channels for alerts and subscriptions (section 6).
 The walk-throughs with pictures are [tutorial 11](../tutorials/11-bi-that-runs-itself.md) (export, subscribe and alerts); this is the reference.
 
 **One rule runs through all of it: the file or the mail is made for the person who gets it.** The numbers are asked of the data engine *as that person*, so their row rules and their
@@ -28,7 +29,7 @@ masks apply; nothing is copied from the sender's screen. A desk head's export ho
 
 | Format | What it is | Made from |
 |---|---|---|
-| **Excel** (`.xlsx`) | a sheet `About` (title, as-of date, the filters, how many rows each sheet holds) and **one sheet per visual** (BI) or per table-like panel (a view); a bold header row that stays in view when you scroll; numbers are numbers (whole, decimal), dates are dates, text is text (never a formula, whatever it starts with) | the tables |
+| **Excel** (`.xlsx`) | a sheet `About` (title, as-of date, the filters, how many rows each sheet holds) and **one sheet per visual** (BI) or per table-like panel (a view); a bold header row that stays in view when you scroll; numbers are numbers (whole, decimal), dates are dates, text is text (never a formula, whatever it starts with); a **chart visual** also gets a **native Excel chart** next to its data (below) | the tables |
 | **CSV** | the same tables; with several, each under its title and a blank line between; UTF-8 with a byte-order mark; text a spreadsheet would run as a formula gets a leading apostrophe | the tables |
 | **PDF** | landscape A4 (a setting), **paged**: no table row is split by a page edge, a table that continues repeats its header row, a running header (title; as-of date) and a footer (who it was made for, when, "Page n of m") on every page | the tables and bars |
 | **PNG** | one picture, as tall as the content needs (to a limit) | the tables and bars |
@@ -37,6 +38,14 @@ For a **BI report** the PDF and PNG draw each visual as what it holds: a *card* 
 measure above its data, every other type (table, matrix, Perspective grid, gauge, KPI, heatmap, scatter, combo) as its data table. Static visuals (text, image, button) and slicers are not exported: the
 slicers' choices are written in the header as the filters. A **Sutra view** is drawn the way a share's picture is (the panels as the view draws them, charts included) with the sentence "Exported by …"
 in the band and across the page; Excel and CSV hold its table-like panels (tables, fields, pivots, metrics, tabs); a note says which graphic panels they leave out.
+
+**Charts in the workbook.** A bar, column, line, area, pie or donut visual is written with a real Excel chart (DrawingML parts in the .xlsx, drawn by Excel and LibreOffice, editable there) on its data sheet, to the right
+of the table, reading the sheet's own cells: the first column is the category (a date column is a date axis), each numeric column after it is a series (at most 6; a pie or donut draws the first), and at most 500
+categories are plotted. A *bar* is horizontal, a *column* vertical; every other chart type (waterfall, treemap, funnel, histogram, ...) is drawn as columns, and a map, a gauge, a table or a card gets the data
+sheet alone. **A column masked for the reader is text (`•••`) in the sheet, so it is never a series**; a visual with nothing numeric left to plot has no chart. The chart is part of the file the reader's own render makes, so
+each person of a subscription gets charts of their own figures. The chart sheet is set to print on one page's width. This is the sheet of one visual (*MTM by desk*) of the export in LibreOffice:
+
+![A native Excel chart in the export, opened in LibreOffice](img/bi-dist/export-excel-chart.jpg)
 
 **Where.** On a BI report: the *Export* bar under the page tabs (a choice of *this page* or one visual, then PDF, PNG, Excel, CSV). On a view: *Export* in the view's header. Both pass the state of the
 screen: a report's slicers, selected marks, drill path, carried values and business date; a view's control values and column filters (`ctl.*`, `f.*`) and its business date.
@@ -237,6 +246,13 @@ Ask the owner of the subscription, o
 * **Who may subscribe whom.** Anyone may subscribe **themselves**. Subscribing other people or a role needs a BI author (power `bi-author`) or an administrator (`DRS-9061` otherwise). The subscriber
   must be able to open the target themselves.
 
+### A written summary at the top (`narrative`)
+
+Tick *Open the email with a short written summary* (or send `narrative: true`). Each recipient's email then opens with two or three sentences by an AI model that word **their own** figures: the model is called **as that recipient**
+under the feature `subscription-narrative`, from the tables as that recipient's render holds them with every masked column left out, and **only when the AI policy lets the model see values**
+(`drishti.bi.ai.values: aggregates`, [BI_AI.md section 9](BI_AI.md#9-a-written-summary-at-the-top-of-a-subscriptions-email)). Otherwise (labels-only, the AI layer off, the policy refusing the recipient, the provider failing) the mail
+is sent as usual **without** it and the delivery says `summary: skipped: <why>` in the history. The summary is labelled as AI-written.
+
 ### Running, pausing, history
 
 ![Subscriptions](img/bi-dist/subscriptions-list.png)
@@ -247,6 +263,8 @@ catch up on what it missed. *History* keeps the last runs (`keep-runs`, 30; the 
 **Reports, All subscriptions** (`/reports/all`) and can pause, resume or delete any; only the owner can change what one sends.
 
 ### Retries and failures
+
+A subscription can also **post to webhooks** and **text** its recipients (section 6), and can open each email with a **written summary** by an AI model (below); both are checked at save and recorded in the run's history, a webhook post and a text as deliveries of their own (`webhook:NAME`, `sms:USER`) that retry like a mail.
 
 A mail that could not be sent (the server unreachable, a timeout) is **retried with the shared retry policy** (`drishti.retry.distribution.*`, falling back to `drishti.retry.*`: 5 s, doubling, to 5 min, 20 % jitter)
 up to `max-attempts` (4) in all; the delivery says `retry`, its attempt count and when it will next try, and the history shows each outcome. A refused address or an SMTP 5xx is **permanent** at once.
@@ -361,7 +379,9 @@ An alert is **evaluated as the person it is for**: for your own alert, you. The 
 | Channel | What | Rules |
 |---|---|---|
 | **Inbox** (always on unless you turn it off) | a row of type `alert` in your inbox (the *Alerts* tab) and a toast and a count on the bell, live. The row is the one line, cut to 100 characters (the full text is in the history), and opens what the alert is about | the same inbox as shares ([COLLABORATION.md](../architecture/COLLABORATION.md)) |
-| **Email** | one mail to **the address on your account**, `Drishti alert: <title>` | users only: an alert cannot name an address. No address, no mail (the history says `skipped: no email address on file`). A send that fails is recorded as `failed: …` (alerts do not retry: the next firing is a new mail). Off for the server with `drishti.alerts.measure.email` |
+| **Email** | one mail to **the address on your account**, `Drishti alert: <title>` | users only: an alert cannot name an address. No address, no mail (the history says `skipped: no email address on file`). **A send that fails is tried again** by the shared retry policy (`drishti.retry.alerts.*`; `drishti.alerts.measure.max-attempts`, 4 in all): the history says `retrying: attempt 1 of 4 failed (connection refused); next try in 5 s`, then `sent (attempt 3 of 4)` or `failed after 4 attempts: …` (and `emailAttempts: 3`); a refused address is `failed (permanent): … (not retried)`. A pending retry is in memory, so a restart drops it. Off for the server with `drishti.alerts.measure.email` |
+| **Webhook** (`delivery.webhooks: [name]`) | a signed JSON post to a webhook an administrator defined | section 6. One post per alert per cooldown (a minute at least), not one per person; it names the alert, its severity, what it watches and the condition and where it opens, **never a number**. Retried like the email; `webhook:NAME` in the history |
+| **Text** (`delivery.sms: true`) | a text to **your own** number | section 6. The title, severity and a link; a figure only if the administrator set `sms.include-values`. Retried like the email; `sms` in the history |
 | **Chat bridges** | a post to every bridge whose route lists the event `alert` and covers the kind: a Sutra kind for a field alert, `bi` for everything else | the post names the alert, what it watches and the condition, the owner and a link, **never a number**, because a bridge is a room, not a person. At most one post per alert per cooldown (a minute at least), however many people it fired for. Configure with `events: [alert]` in a route ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishticollab--share-with-a-note-and-the-inbox)); off with `drishti.alerts.measure.bridges` |
 
 The **history** (on the edit page; the last `keep-history`, 50) has an entry for each firing, clearing, held breach and skipped reason, with the time, what triggered it (`saved`, `schedule`, `load`, `live`, `by hand`,
@@ -597,7 +617,7 @@ The Alerts page, the form, the history and the inbox keep to the screen at 390 p
 **What the host writes.**
 
 ```html
-<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.3.0/drishti-elements.js" crossorigin="anonymous"></script>
+<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.4.0/drishti-elements.js" crossorigin="anonymous"></script>
 
 <drishti-report id="rep" report="file:report:live-trading-desk" theme="light"></drishti-report>
 <drishti-report id="one" report="file:report:live-trading-desk" visual="by-desk" chrome="bare"></drishti-report>
@@ -648,16 +668,51 @@ empty list everything the user's roles open. A host whose list names only entity
 **Not in the element.** Drill down and through, *Alert me*, *Show the rows behind this visual*, Export and Subscribe (use the console for those), and Perspective grids and pivots, which need WebAssembly under a policy of their own: the element shows the note the designer shows. Two elements of one report do not cross-filter each other.
 The full list is in [RUPAKA.md section 20.6, part 3](../architecture/RUPAKA.md#206-part-3-embedding-and-phone-layouts-as-built-phase-7-complete).
 
-## 6. What is not built
+**Also in the library (1.4.0).** `<drishti-about kind entity>` shows the *About this page* layers of a view (sources, lineage, the masks and rules that applied to the reader) in a panel of the host's own; the application needs the scope `embed:about`.
+`<drishti-search>` is a search box across Drishti for the host's page: the console's own type-ahead for the signed-in user, **read-only and always masked** (masked fields are neither shown nor matched), cut to the kinds the application may show, at most
+`drishti.embed.search.max-results` results, and **rate-limited** per user and application (`drishti.embed.limits.searches-per-user-per-minute`, 30 a minute, `DRS-8004` with `Retry-After`). It needs the scope **`embed:search`**, which opens
+`GET /api/v1/embed/search` and nothing else. React, Vue and Angular sample host pages that embed all four elements are in `docs/guides/examples/embed/` ([ELEMENTS.md](ELEMENTS.md#react-angular-and-vue-sample-pages)).
 
-* **Narrative summaries** in a subscription (needs the AI stage).
+## 6. Webhooks and text messages
+
+*Wave D.* Alerts and subscriptions can also **post to a webhook** and **send a text**. Both are set up by an administrator (`drishti.notify.*`,
+[CONFIGURATION.md](../admin/CONFIGURATION.md#drishtinotify--webhooks-and-text-messages-for-alerts-and-subscriptions)); a person only picks from what exists. Nothing is on until it is defined.
+
+**Webhooks.** An administrator defines a webhook by a **name**, a URL and a secret (`drishti.notify.webhooks.<name>.*`) and lists the hosts webhooks may reach (`drishti.notify.webhook.allowed-hosts`, exact names or `*.suffix`; empty means
+none is sent, and the host is checked at every send). A person ticks the names on the alert or Subscribe form (`delivery.webhooks`, `webhooks`); they cannot type a URL. A post is `POST` JSON with
+`X-Drishti-Event` (`alert` or `subscription`), `X-Drishti-Timestamp` and **`X-Drishti-Signature: sha256=<hex>`**, the HMAC-SHA256 of `<timestamp>.<body>` with the secret, which the receiver recomputes to check the sender and reject
+an old timestamp. TLS and proxy settings are the connectors' (`webhooks.<name>.tls.*`, `.proxy.*`, the site default); redirects are never followed; the answer's body is never read; an error never contains the URL. A
+2xx is sent; a timeout, a connection failure, 408, 429 and 5xx are retried by the shared retry policy; any other answer, a host off the allow-list, `http://` without `allow-http`, and a secret whose `${ENV}` variable is not set are permanent.
+
+```
+POST https://hooks.corp.example/drishti
+X-Drishti-Event: alert
+X-Drishti-Timestamp: 1782000000
+X-Drishti-Signature: sha256=3c3b0f6c0b6e7f2a0d5c...
+{"event":"alert","id":1782000000123,"at":"2026-10-12T14:00:00Z","alert":"Exposure over limit","key":"alice/Exposure","severity":"critical",
+ "watching":"Exposure (trading-risk)","condition":"above 100","link":"https://drishti.bank.example/bi/r/file:report:daily/main"}
+```
+
+A subscription's post is `{"event":"subscription","subscription","title","owner","trigger","at","recipients","link","target":{type,id,page,visual}}`: the title and where it opens, with the number of recipients and no name or figure.
+
+**Text messages.** The gateway is any HTTP SMS service, described by templates (`drishti.notify.sms.url`, `method`, `body`, `content-type`, headers with `${ENV}` credentials, `sender`): `{to}`, `{text}` and `{sender}` are filled in and
+escaped for where they land. No vendor is built in. A person gives **their own** mobile number (the alert or Subscribe form, or `PUT /api/v1/me/phone`; only its last two digits are shown back) and ticks *text me* / *text each
+recipient*. A text is cut to `sms.max-chars` (160) with an ellipsis and holds the title, severity or a link, **never a figure** (an alert's own one-line message with the person's number only if the administrator sets
+`sms.include-values`; a masked number is never judged or sent). A recipient with no number is skipped with the reason in the history, as is someone who cannot open the report.
+
+![The Subscribe form with the summary and the channels](img/bi-dist/subscribe-form-channels.png)
+
+Both channels are in the history: an alert's `delivered` has `webhook:NAME` and `sms` (and the attempts), a subscription's run has a delivery for each (`webhook:NAME`, `sms:USER`).
+
+## 7. What is not built
+
 * **In an embedded report** (section 5): drill, alerts, Export and Subscribe, Perspective, and cross-filtering between two elements. Embedding and the hand-made phone layout are built.
-* **For alerts**: a **webhook** channel of its own (use a chat bridge), **SMS**, **retries** of a failed alert mail, **escalation** (tell someone else if no one reacts), alerts that are **shared** between people (a board's
+* **For alerts**: **escalation** (tell someone else if no one reacts; not built), alerts that are **shared** between people (a board's
   audience is the only way an alert reaches more than its owner), a **calendar of quiet hours**, an alert on **several numbers at once** (make one alert each), and **forecast** conditions. An alert on a visual's *number* is a
   threshold on one value: per-row thresholds ("any desk below zero") are a board tile with `crit`, which judges the worst row.
 * **A headless-browser rendering** of the page: the PDF and PNG are drawn by the server from the tables (and, for a view, the snapshot layout); they are faithful to the numbers, not to every pixel of the screen
   (chart colours, a heatmap, a scatter, a map are shown as their data).
-* **Excel charts and pivot tables** inside the workbook; **XLSX styling** beyond the header, number and date formats.
+* **Excel pivot tables** inside the workbook, and charts other than bar, column, line, area, pie and donut (they are drawn as columns); **XLSX styling** beyond the header, number and date formats.
 * **Notifying the owner in the inbox** when a delivery fails for good: the history and the audit say so; the bell does not.
 * **Subscribing a Perspective visual's live state**; a subscription reads the data as of the run.
 * **Per-recipient pictures of a view with charts in the email body**: a view is sent as its tables (html) or as a PDF.

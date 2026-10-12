@@ -100,7 +100,8 @@ def body_from(f: dict) -> dict:
     elif mode == "live" and f.get("debounce", "").strip():
         trigger["debounce"] = f["debounce"].strip()
     body = {"title": f.get("title", "").strip(), "severity": f.get("severity", "warn"), "source": source, "condition": cond, "trigger": trigger,
-            "delivery": {"inbox": f.get("d_inbox") == "on", "email": f.get("d_email") == "on", "bridge": f.get("d_bridge") == "on"},
+            "delivery": {"inbox": f.get("d_inbox") == "on", "email": f.get("d_email") == "on", "bridge": f.get("d_bridge") == "on",
+                         "webhooks": sorted(k[2:] for k, v in f.items() if k.startswith("w_") and v == "on"), "sms": f.get("d_sms") == "on"},
             "enabled": f.get("enabled", "on") == "on"}
     if (h := _num(f.get("hysteresis", ""))) is not None:
         body["hysteresis"] = h
@@ -123,7 +124,8 @@ def form_from(a: dict) -> dict:
          "change_value": c.get("value", "") if c.get("type") == "change" else "", "against": c.get("against", "previous-run"), "by": c.get("by", ""),
          "trigger_mode": t.get("mode", "schedule"), "schedule": t.get("schedule", "hourly"), "load_kind": t.get("kind", ""), "debounce": t.get("debounce", ""),
          "hysteresis": a.get("hysteresis", 0), "cooldown": a.get("cooldown", ""), "d_inbox": "on" if d.get("inbox", True) else "", "d_email": "on" if d.get("email") else "",
-         "d_bridge": "on" if d.get("bridge") else "", "enabled": "on" if a.get("enabled", True) else ""}
+         "d_bridge": "on" if d.get("bridge") else "", "d_sms": "on" if d.get("sms") else "", "webhooks": list(d.get("webhooks") or []),
+         "enabled": "on" if a.get("enabled", True) else ""}
     return f
 
 
@@ -151,7 +153,8 @@ def decorate(alerts: list[dict], user: str = "") -> list[dict]:
 
 
 async def _page(request: Request, f: dict, *, alert: dict | None = None, error: str = "", status_code: int = 200, msg: str = ""):
-    return render(request, "alert_form.html", status_code=status_code, f=f, alert=alert, error=error, msg=msg, schedules=SCHEDULES, screen="alerts",
+    from routes.dist_routes import _options
+    return render(request, "alert_form.html", status_code=status_code, f=f, alert=alert, error=error, msg=msg, schedules=SCHEDULES, screen="alerts", opts=await _options(request),
                   standing=standing(alert, getattr(request.state.identity, "user", "")) if alert else "")
 
 
@@ -166,7 +169,7 @@ async def new_alert(request: Request, source: str = "visual", report: str = "", 
          "report": report, "page": page, "visual": visual, "measure": measure, "reduce": q.get("reduce", "first"), "state": state if _state(state) else "",
          "dataset": dataset, "ds_measure": measure, "filters": "", "kind": kind, "id": id, "field": field, "condition_type": "threshold", "op": "above", "value": "", "high": "",
          "change_mode": "pct", "change_op": "moves", "change_value": "", "against": "previous-run", "by": "09:00", "trigger_mode": "schedule", "schedule": "hourly",
-         "load_kind": "", "debounce": "", "hysteresis": 0, "cooldown": "", "d_inbox": "on", "d_email": "", "d_bridge": "", "enabled": "on"}
+         "load_kind": "", "debounce": "", "hysteresis": 0, "cooldown": "", "d_inbox": "on", "d_email": "", "d_bridge": "", "d_sms": "", "webhooks": [], "enabled": "on"}
     return await _page(request, f)
 
 
@@ -175,6 +178,8 @@ async def create_alert(request: Request):
     f = _fields(await request.body())
     name = f.get("name", "").strip()
     try:
+        if f.get("phone", "").strip():                               # the person's own number for texts
+            await request.app.state.backend.set_phone(f["phone"].strip(), ident(request))
         await request.app.state.backend.save_measure_alert(name, body_from(f), ident(request))
     except BackendError as e:
         return await _page(request, f, error=drs_message(e.code, e.detail, " "), status_code=e.page_status)
@@ -186,7 +191,7 @@ async def edit_alert(request: Request, name: str, msg: str = ""):
     try:
         a = await request.app.state.backend.measure_alert(name, ident(request))
     except BackendError as e:
-        return render(request, "alert_form.html", status_code=e.page_status, f={}, alert=None, error=drs_message(e.code, e.detail, " "), msg="", schedules=SCHEDULES,
+        return render(request, "alert_form.html", status_code=e.page_status, f={}, alert=None, error=drs_message(e.code, e.detail, " "), msg="", schedules=SCHEDULES, opts={},
                       screen="alerts", standing="")
     return await _page(request, form_from(a), alert=a, msg=msg)
 
@@ -197,6 +202,8 @@ async def update_alert(request: Request, name: str):
     f["name"] = name
     backend = request.app.state.backend
     try:
+        if f.get("phone", "").strip():
+            await backend.set_phone(f["phone"].strip(), ident(request))
         await backend.save_measure_alert(name, body_from(f), ident(request))
     except BackendError as e:
         try:
