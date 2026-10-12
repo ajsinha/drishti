@@ -196,14 +196,22 @@ public record Dataset(String name, int version, String title, String description
     /**
      * One input of a composed dataset or a Python Transform: another dataset asked a question as the reader. {@code by} are the columns the answer is grouped by
      * (each {@code table.column}, optionally {@code table.column as name}), {@code measures} the measures computed ({@code Name} or {@code Name as other}),
-     * {@code fields} the columns of a row-level extract instead (no measures), {@code filters} extra conditions of the same form a report's filter has.
+     * {@code fields} the columns of a row-level extract instead (no measures), {@code filters} extra conditions of the same form a report's filter has, and
+     * {@code key} (optional) the frame names of the columns that identify one row, when the others are attributes of them (a counterparty's name, say): the
+     * fan-out check then takes the answer to have one row per key, not per combination of every grouping column.
      *
      * @param alias the name the join and the frame use
      * @param dataset the dataset: a catalogue id, a file name or the dataset's own name
      */
-    public record Input(String alias, String dataset, List<Named> by, List<Named> measures, List<Named> fields, List<InputFilter> filters) {
+    public record Input(String alias, String dataset, List<Named> by, List<Named> measures, List<Named> fields, List<InputFilter> filters, List<String> key) {
+
+        /** An input with no declared key: its grouping columns together identify a row. */
+        public Input(String alias, String dataset, List<Named> by, List<Named> measures, List<Named> fields, List<InputFilter> filters) {
+            this(alias, dataset, by, measures, fields, filters, List.of());
+        }
 
         public Input {
+            key = List.copyOf(key);
             by = List.copyOf(by);
             measures = List.copyOf(measures);
             fields = List.copyOf(fields);

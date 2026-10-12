@@ -96,7 +96,8 @@ class VisualQueriesTest {
         assertThat(self.measures()).isEmpty();
         assertThat(self.limit()).isEqualTo(1000);
         // a page-scope slicer does not filter another page; a report-scope one does
-        assertThat(build(r, "products", "share", s, "trades-basic").query().filters()).isEmpty();
+        assertThat(build(r, "products", "share", s, "trades-basic").query().filters())                        // only the donut's own top-12 filter: the currency slicer is not of this page
+                .containsExactly(new QueryRequest.Filter("trade.productType", "in", List.of("CP-1", "CP-2")));
         Report c = report("cashflow-ladder");
         assertThat(build(c, "legs", "legs-count", "{\"slicers\":{\"desk\":[\"DESK-FX\"]}}", "trading-cashflows").query().filters())
                 .containsExactly(new QueryRequest.Filter("trades.desk", "in", List.of("DESK-FX")));

@@ -31,6 +31,7 @@ import base64
 import json
 import math
 import os
+import re
 import resource
 import sys
 import time
@@ -245,12 +246,88 @@ def _cell(req: dict, df, ns: dict, quant) -> dict:
     return answer
 
 
+_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]{0,62}")
+
+
+def _arrow_type(t) -> str:
+    """The dataset type a column of an Arrow table has: string, integer, decimal, boolean, date or timestamp."""
+    import pyarrow as pa
+    if pa.types.is_boolean(t):
+        return "boolean"
+    if pa.types.is_integer(t):
+        return "integer"
+    if pa.types.is_floating(t) or pa.types.is_decimal(t):
+        return "decimal"
+    if pa.types.is_timestamp(t):
+        return "timestamp"
+    if pa.types.is_date(t):
+        return "date"
+    return "string"
+
+
+def _transform(req: dict, frames: list, ns: dict, tmp: str) -> dict:
+    """A Transform of a derived dataset: ``run(*frames)`` (a top-level function, or the method of a class named ``Transform``, which gets ``self.params``) returns a
+    pandas DataFrame; it is checked, typed from its columns and written as Parquet in the scratch folder for the parent to collect."""
+    import inspect
+    import pandas as pd
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    exec(compile(req["source"], FILE, "exec"), ns)
+    params = dict(req["params"])
+    cls = ns.get("Transform")
+    if isinstance(cls, type) and callable(getattr(cls, req["entry"], None)):
+        inst = cls()
+        inst.params = params
+        fn = getattr(inst, req["entry"])
+    else:
+        fn = ns.get(req["entry"])
+        if not callable(fn):
+            raise ValueError(f"the source defines no function '{req['entry']}' (nor a class Transform with that method)")
+    wants_params = "params" in inspect.signature(fn).parameters
+    result = fn(*frames, params=params) if wants_params else fn(*frames)
+    if not isinstance(result, pd.DataFrame):
+        raise TypeError(f"a transform returns a pandas DataFrame, not {type(result).__name__}")
+    if len(result) > int(req["max_rows"]):
+        raise Limit(f"the frame has {len(result)} rows; the limit is {req['max_rows']}")
+    result = result.reset_index(drop=True)
+    names = [str(c) for c in result.columns]
+    bad = [c for c in names if not _NAME.fullmatch(c)]
+    if bad:
+        raise ValueError(f"column name(s) {bad} are not usable: a dataset column is letters, digits and underscore, not starting with a digit")
+    if len(set(names)) != len(names):
+        raise ValueError("the frame has two columns of one name")
+    result.columns = names
+    try:
+        table = pa.Table.from_pandas(result, preserve_index=False)
+    except (pa.ArrowInvalid, pa.ArrowTypeError):
+        for c in names:
+            if result[c].dtype == object:
+                result[c] = result[c].map(lambda v: None if v is None or v != v else str(v))
+        table = pa.Table.from_pandas(result, preserve_index=False)
+    columns = [{"name": f.name, "type": _arrow_type(f.type)} for f in table.schema]
+    for f in table.schema:                                         # lists, structs and the like are not columns of a dataset
+        if _arrow_type(f.type) == "string" and not (pa.types.is_string(f.type) or pa.types.is_large_string(f.type)):
+            table = table.set_column(table.schema.get_field_index(f.name), f.name, table[f.name].cast(pa.string()))
+    pq.write_table(table, os.path.join(tmp, "out.parquet"))
+    return {"kind": "transform", "columns": columns, "rows": int(table.num_rows)}
+
+
 def _run(req: dict, tmp: str) -> dict:
     import pyarrow as pa
     import pandas as pd
     allowed = set(req["packages"]) | SAFE_STDLIB
     for p in req["packages"]:
         __import__(p)                                      # imported before the hook, so a lazy import later has nothing left to load
+    if req["interface"] == "transform":
+        import pyarrow.parquet  # noqa: F401 - loaded before the hook
+        frames = []
+        for name in req["inputs_files"]:
+            with open(os.path.join(tmp, name), "rb") as f:
+                frames.append(pa.ipc.open_stream(f).read_all().to_pandas())
+        _limits(req)
+        sys.dont_write_bytecode = True
+        _install_hook(tmp)
+        return _transform(req, frames, {"__name__": "python_item", "__builtins__": _builtins(allowed)}, tmp)
     with open(os.path.join(tmp, "in.arrow"), "rb") as f:
         df = pa.ipc.open_stream(f).read_all().to_pandas()
     df = df.drop(columns=[c for c in ("id",) if c in df.columns and c not in req["inputs"] and c not in (req["group_by"] or [])])

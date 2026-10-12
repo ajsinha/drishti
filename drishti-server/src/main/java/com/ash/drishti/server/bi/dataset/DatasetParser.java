@@ -452,8 +452,8 @@ public final class DatasetParser {
                 return;
             }
             v.fieldNames().forEachRemaining(k -> {
-                if (!Set.of("dataset", "by", "measures", "fields", "filters").contains(k)) {
-                    out.add(new Problem("warning", Composition.COMPOSE, p + "." + k, "unknown key '" + k + "' is ignored (dataset, by, measures, fields, filters)"));
+                if (!Set.of("dataset", "by", "measures", "fields", "filters", "key").contains(k)) {
+                    out.add(new Problem("warning", Composition.COMPOSE, p + "." + k, "unknown key '" + k + "' is ignored (dataset, by, measures, fields, filters, key)"));
                 }
             });
             List<Dataset.InputFilter> filters = new ArrayList<>();
@@ -478,8 +478,10 @@ public final class DatasetParser {
                     filters.add(new Dataset.InputFilter(f.path("field").asText(), op, values));
                 }
             }
+            List<String> key = new ArrayList<>();
+            v.path("key").forEach(x -> key.add(x.asText()));
             inputs.put(alias, new Dataset.Input(alias, v.path("dataset").asText(), namedList(v.path("by"), p + ".by", out), namedList(v.path("measures"), p + ".measures", out),
-                    namedList(v.path("fields"), p + ".fields", out), filters));
+                    namedList(v.path("fields"), p + ".fields", out), filters, key));
         });
         return inputs;
     }

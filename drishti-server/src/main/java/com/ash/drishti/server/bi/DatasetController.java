@@ -113,6 +113,16 @@ public class DatasetController {
         return datasets.refresh(p, id);
     }
 
+    /**
+     * Runs the Python Transform of a derived dataset now, as the caller, and keeps its result for them (BI authors): the columns it returned are remembered, so a
+     * dataset that declares none gets a typed table. Answers the columns, rows, whether the result was already kept, and the time the run took.
+     */
+    @PostMapping("/datasets/{id}/transform/run")
+    public Map<String, Object> runTransform(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        bi.requirePower(p, BiAccess.AUTHOR);
+        return datasets.runTransform(p, id);
+    }
+
     /** When the dataset refreshes and how the last refresh went: schedule, status, last run, next run, rows, duration, failures (a reader of the dataset). */
     @GetMapping("/datasets/{id}/refresh")
     public Map<String, Object> refreshState(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {

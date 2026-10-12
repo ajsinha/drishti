@@ -57,8 +57,10 @@ public final class VisualQueries {
     private final Resolver resolver;
     private final BiReportProperties props;
     private final TopValues topValues;
+    private final DatasetSet sets;
+    private final String myRef;
 
-    private VisualQueries(Report report, Report.Page page, Report.Visual visual, ReportState state, Dataset ds, BiReportProperties props, TopValues topValues) {
+    private VisualQueries(Report report, Report.Page page, Report.Visual visual, ReportState state, Dataset ds, BiReportProperties props, TopValues topValues, DatasetSet sets) {
         this.report = report;
         this.page = page;
         this.visual = visual;
@@ -67,10 +69,29 @@ public final class VisualQueries {
         this.resolver = new Resolver(ds);
         this.props = props;
         this.topValues = topValues;
+        this.sets = sets;
+        this.myRef = report.datasetOf(visual);
     }
 
     public static Built build(Report report, Report.Page page, Report.Visual visual, ReportState state, Dataset ds, BiReportProperties props, TopValues top) {
-        return new VisualQueries(report, page, visual, state, ds, props, top).build();
+        return new VisualQueries(report, page, visual, state, ds, props, top, null).build();
+    }
+
+    /**
+     * As above for a report that reads several datasets: {@code ds} is the visual's own dataset, and a choice made on a field of another dataset (a slicer, a
+     * selection, a filter of the report or the page) reaches this visual only through a {@code link} of the report that names the field (see {@link DatasetSet}).
+     */
+    public static Built build(Report report, Report.Page page, Report.Visual visual, ReportState state, Dataset ds, BiReportProperties props, TopValues top, DatasetSet sets) {
+        return new VisualQueries(report, page, visual, state, ds, props, top, sets).build();
+    }
+
+    /** The field a choice made on {@code field} of the dataset {@code originRef} is on in this visual's dataset; null when it does not reach this visual. */
+    private String tr(String field, String originRef) {
+        return sets == null ? field : sets.translate(report, field, originRef, myRef);
+    }
+
+    private boolean sameDataset(String originRef) {
+        return sets == null || sets.same(originRef, myRef);
     }
 
     private Built build() {
@@ -82,9 +103,9 @@ public final class VisualQueries {
         LocalDate to = date(state.to() != null ? state.to() : report.dates() == null ? null : report.dates().to());
         List<QueryRequest.Filter> base = new ArrayList<>();
         List<Report.Filter> tops = new ArrayList<>();
-        add(base, tops, report.filters());
-        add(base, tops, page.filters());
-        add(base, tops, visual.filters());
+        add(base, tops, report.filters(), report.dataset());
+        add(base, tops, page.filters(), report.dataset());
+        add(base, tops, visual.filters(), myRef);
         slicers(base);
         carried(base);
         List<String> fields = fieldsOf();
@@ -101,11 +122,15 @@ public final class VisualQueries {
                 if (from0 == null) {
                     throw new DrishtiException(ErrorCode.REPORT_STATE, "the page has no visual '" + s.visual() + "' to take a selection from");
                 }
+                String field = tr(s.field(), report.datasetOf(from0));
+                if (field == null) {
+                    continue;                                   // a mark of another dataset that no link connects to this one
+                }
                 if (s.highlight() && HIGHLIGHTS.contains(visual.type()) && state.rows() == null) {
                     highlight = true;
-                    marks.add(new QueryRequest.Filter(s.field(), "in", s.values()));
+                    marks.add(new QueryRequest.Filter(field, "in", s.values()));
                 } else {
-                    base.add(new QueryRequest.Filter(s.field(), "in", s.values()));
+                    base.add(new QueryRequest.Filter(field, "in", s.values()));
                 }
             }
         }
@@ -229,12 +254,17 @@ public final class VisualQueries {
         return new ArrayList<>(m);
     }
 
-    private void add(List<QueryRequest.Filter> base, List<Report.Filter> tops, List<Report.Filter> list) {
+    private void add(List<QueryRequest.Filter> base, List<Report.Filter> tops, List<Report.Filter> list, String originRef) {
         for (Report.Filter f : list) {
             if ("top".equals(f.op())) {
-                tops.add(f);
-            } else {
-                base.add(new QueryRequest.Filter(f.field(), f.op(), f.values()));
+                if (sameDataset(originRef)) {
+                    tops.add(f);                                // a top-N ranks by a measure of the dataset it was written for: it does not carry to another
+                }
+                continue;
+            }
+            String field = tr(f.field(), originRef);
+            if (field != null) {
+                base.add(new QueryRequest.Filter(field, f.op(), f.values()));
             }
         }
     }
@@ -258,7 +288,10 @@ public final class VisualQueries {
             if (s.id().equals(visual.id()) || s.well("field").isEmpty() || !(onThisPage || "report".equals(s.format().get("scope")))) {
                 continue;
             }
-            String field = s.well("field").get(0);
+            String field = tr(s.well("field").get(0), report.datasetOf(s));
+            if (field == null) {
+                continue;                                       // the slicer is on a dataset that no link connects to this visual's
+            }
             JsonNode v = e.getValue();
             if (v.isArray() && !v.isEmpty()) {
                 base.add(new QueryRequest.Filter(field, "in", ReportState.values(v)));
@@ -276,7 +309,10 @@ public final class VisualQueries {
     private void carried(List<QueryRequest.Filter> base) {
         for (ReportState.Carry c : state.carry()) {
             if (!c.values().isEmpty() || c.op().contains("null")) {
-                base.add(new QueryRequest.Filter(c.field(), c.op(), c.values()));
+                String field = tr(c.field(), report.dataset());
+                if (field != null) {
+                    base.add(new QueryRequest.Filter(field, c.op(), c.values()));
+                }
             }
         }
     }

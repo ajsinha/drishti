@@ -1,0 +1,59 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# STORED SAMPLE (multi-dataset, built the Python way): "Desk P&L vs counterparty exposure" as a DERIVED DATASET. The two sources are asked as the reader,
+# exactly as in the composed dataset desk-pnl-vs-exposure; but the join is not YAML, it is a Python Transform (config/bi/python/pnl-vs-exposure.python.yaml)
+# that receives the two answers as masked pandas frames and returns one. The frame is the dataset's table `result`; its columns are declared here (a contract
+# the run is checked against; leave `columns:` out and the columns of the first successful run are kept instead). Measures are YAML over it, as always.
+# The result is kept per reader and version of the inputs and is rebuilt when a source is reloaded. Reference: docs/guides/DATASETS.md section 11.
+
+rachana: 1
+dataset: desk-pnl-vs-exposure-py
+version: 1
+title: Desk P&L vs counterparty exposure (Python)
+description: >-
+  The same table as desk-pnl-vs-exposure, made by a Python Transform from the P&L of trading-risk and the exposure of counterparty-exposure.
+sample: true
+endorsement: promoted
+tags: [sample, multi-dataset, derived, python, counterparty-risk]
+
+derived:
+  transform: pnl-vs-exposure            # the Python item (interface: transform), by catalogue id, file name or title
+  inputs:                               # the frames it receives, in this order; each is a question put to a dataset as the reader
+    pnl:
+      dataset: trading-risk
+      by: ["counterparties.id as counterparty", "counterparties.name as name"]
+      measures: ["P&L 1d as Desk P&L", Trades]
+    exposure:
+      dataset: counterparty-exposure
+      by: ["counterparties.id as counterparty", "counterparties.sector as sector"]
+      measures: [Exposure (EE peak), Exposure (PFE peak)]
+  params: { floor: 1.0 }                # overrides the item's own defaults
+
+columns:                                # what the Transform returns, typed (a declared column the frame lacks is DRS-9075)
+  counterparty: string
+  name: string
+  sector: string
+  desk_pnl: decimal
+  trades: integer
+  ee_peak: decimal
+  pfe_peak: decimal
+  pnl_per_exposure: decimal
+  exposure_rank: decimal
+
+measures:
+  Desk P&L:           { expr: "sum(result.desk_pnl)", format: signed0 }
+  Exposure (EE peak): { expr: "sum(result.ee_peak)", format: amount0 }
+  P&L per exposure:   { expr: "ratio(sum(result.desk_pnl), sum(result.ee_peak))", format: signed2, description: "Computed in YAML over the frame the Transform returned." }
+  Counterparties:     { expr: "count(result)" }

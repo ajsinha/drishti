@@ -37,26 +37,46 @@ public final class ReportValidator {
     private static final Pattern HEX = Pattern.compile("#([0-9a-fA-F]{6})");
 
     private final Report report;
-    private final Dataset ds;
-    private final Resolver resolver;
+    private final Dataset home;
+    private final DatasetSet sets;
+    private Dataset ds;
+    private Resolver resolver;
     private final List<Problem> out = new ArrayList<>();
 
-    private ReportValidator(Report report, Dataset ds) {
+    private ReportValidator(Report report, Dataset ds, DatasetSet sets) {
         this.report = report;
-        this.ds = ds;
-        this.resolver = new Resolver(ds);
+        this.home = ds;
+        this.sets = sets;
+        use(ds);
+    }
+
+    private void use(Dataset d) {
+        this.ds = d;
+        this.resolver = new Resolver(d);
     }
 
     /** What the report names inside its dataset, and the shape of every visual. */
     public static List<Problem> validate(Report report, Dataset ds) {
-        ReportValidator v = new ReportValidator(report, ds);
+        return validate(report, ds, null);
+    }
+
+    /**
+     * As above for a report whose visuals may name a dataset of their own: each visual is checked against its own dataset ({@code sets}), the report's and the
+     * pages' filters and the bookmarks against the report's, and every {@code link} against the datasets it connects.
+     */
+    public static List<Problem> validate(Report report, Dataset ds, DatasetSet sets) {
+        ReportValidator v = new ReportValidator(report, ds, sets);
         v.run();
         return v.out;
     }
 
     /** {@link #validate} plus the accessibility and layout checks (warnings). */
     public static List<Problem> check(Report report, Dataset ds) {
-        List<Problem> all = new ArrayList<>(validate(report, ds));
+        return check(report, ds, null);
+    }
+
+    public static List<Problem> check(Report report, Dataset ds, DatasetSet sets) {
+        List<Problem> all = new ArrayList<>(validate(report, ds, sets));
         all.addAll(accessibility(report));
         return all;
     }
@@ -73,9 +93,17 @@ public final class ReportValidator {
                 page.drillThrough().fields().forEach(f -> field(f, pp + ".drillthrough.fields", true));
             }
             for (int vi = 0; vi < page.visuals().size(); vi++) {
-                visual(page.visuals().get(vi), pp + ".visuals[" + vi + "]", pageIds);
+                Report.Visual v = page.visuals().get(vi);
+                DatasetSet.Entry own = sets == null ? null : sets.of(report.datasetOf(v));
+                use(own == null ? home : own.dataset());
+                if (own == null && sets != null && v.dataset() != null) {
+                    err(ReportParser.REFERENCE, pp + ".visuals[" + vi + "].dataset", "no dataset '" + v.dataset() + "' (a catalogue id, a file name such as trades-basic, or the dataset's name)");
+                }
+                visual(v, pp + ".visuals[" + vi + "]", pageIds);
+                use(home);
             }
         }
+        links();
         phoneLayouts(pageIds);
         for (int bi = 0; bi < report.bookmarks().size(); bi++) {
             Report.Bookmark b = report.bookmarks().get(bi);
@@ -92,6 +120,45 @@ public final class ReportValidator {
                 }
             }
             filters(b.filters(), p + ".filters");
+        }
+    }
+
+    /**
+     * Each link connects fields of different datasets: every field is {@code table.column} of at least one dataset the report reads, no two fields of a link are
+     * the same dataset's, and a link that no pair of datasets meets is of no use (a warning).
+     */
+    private void links() {
+        for (int i = 0; i < report.links().size(); i++) {
+            Report.Link link = report.links().get(i);
+            String p = "links[" + i + "].fields";
+            List<String> where = new ArrayList<>();
+            for (String f : link.fields()) {
+                List<String> in = new ArrayList<>();
+                if (sets != null) {
+                    sets.all().forEach((ref, e) -> {
+                        if (resolvesIn(e.dataset(), f) && in.stream().noneMatch(x -> sets.same(x, ref))) {
+                            in.add(ref);
+                        }
+                    });
+                } else if (resolvesIn(home, f)) {
+                    in.add(report.dataset());
+                }
+                if (in.isEmpty()) {
+                    err(ReportParser.REFERENCE, p, "'" + f + "' is not a field (table.column) of any dataset the report reads (" + String.join(", ", sets == null ? List.of(report.dataset()) : report.datasets()) + ")");
+                }
+                where.addAll(in);
+            }
+            if (where.size() > 1 && sets != null && where.stream().distinct().count() == 1) {
+                out.add(new Problem("warning", ReportParser.REFERENCE, p, "every field of this link is in one dataset (" + where.get(0) + "): a link connects fields of different datasets"));
+            }
+        }
+    }
+
+    private static boolean resolvesIn(Dataset d, String field) {
+        try {
+            return new Resolver(d).resolve(List.of(field.split("\\.")), null).column() != null;
+        } catch (IllegalArgumentException e) {
+            return false;
         }
     }
 

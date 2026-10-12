@@ -221,6 +221,12 @@ public final class Composition {
                 }
             }
         }
+        for (String k : in.key()) {
+            if (cols.stream().noneMatch(c -> c.name().equals(k) && !c.measure())) {
+                out.add(error(COMPOSE, path + ".key", "'" + k + "' is not one of the grouping columns of this source (" + String.join(", ", cols.stream().filter(c -> !c.measure()).map(Dataset.FrameColumn::name).toList()) + ")"));
+                ok = false;
+            }
+        }
         Set<String> names = new LinkedHashSet<>();
         for (Dataset.FrameColumn c : cols) {
             if (!names.add(c.name())) {
@@ -396,10 +402,15 @@ public final class Composition {
         return r.columns().stream().filter(c -> c.name().equals(name)).findFirst().orElse(null);
     }
 
+    /** The columns that identify one row of a source's answer: the declared {@code key}, else every grouping column. */
+    private static List<String> identity(Resolved r) {
+        return r.input().key().isEmpty() ? r.columns().stream().filter(c -> !c.measure()).map(Dataset.FrameColumn::name).toList() : r.input().key();
+    }
+
     /** A join repeats rows when its keys do not identify one row on each side; say so, because a sum over the repeated rows overstates. */
     private static void fanOut(String path, Dataset.Join j, Resolved l, Resolved r, Set<String> leftKeys, Set<String> rightKeys, List<Problem> out) {
-        boolean leftUnique = l.grouped() && leftKeys.containsAll(l.columns().stream().filter(c -> !c.measure()).map(Dataset.FrameColumn::name).toList());
-        boolean rightUnique = r.grouped() && rightKeys.containsAll(r.columns().stream().filter(c -> !c.measure()).map(Dataset.FrameColumn::name).toList());
+        boolean leftUnique = l.grouped() && leftKeys.containsAll(identity(l));
+        boolean rightUnique = r.grouped() && rightKeys.containsAll(identity(r));
         if (!leftUnique && !rightUnique) {
             out.add(warning(FANOUT, path, "many-to-many: neither '" + j.left() + "' nor '" + j.right() + "' has one row per " + String.join(", ", leftKeys)
                     + ", so every row matches several and the measures of both repeat; add the missing grouping columns to the join, or group a source by the key alone"));

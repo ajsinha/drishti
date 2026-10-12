@@ -47,7 +47,7 @@ import java.util.TreeSet;
  * gone. A derived dataset hands the same kind of answers to its Python Transform, in the console's sandbox, and keeps the frame it returns for that reader until
  * the inputs change. A join on a column that is masked for the reader is refused (it would match every row to every row).
  */
-public final class FrameService {
+public final class FrameService implements DatasetRefresher.FramedHooks {
 
     /** How deep a source of a source is followed when the inputs' version is worked out. */
     private static final int DEPTH = 6;
@@ -107,7 +107,7 @@ public final class FrameService {
 
                 @Override
                 public Rows load() {
-                    return derived(p, ds, outer);
+                    return derived(p, ds, outer, new ArrayList<>());
                 }
             };
         }
@@ -203,7 +203,16 @@ public final class FrameService {
 
     // ---- derived: the Transform --------------------------------------------------------------------------------------
 
-    private Frames.Rows derived(Principal p, QueryService.Loaded ds, QueryRequest outer) {
+    private Frames.Rows derived(Principal p, QueryService.Loaded ds, QueryRequest outer, List<String> warnings) {
+        return Frames.Rows.ofParquet(derivedOutput(p, ds, outer, warnings).file(), warnings.stream().distinct().toList());
+    }
+
+    /** Runs (or finds kept) the Transform of a derived dataset for the reader, with no dates: the author's "run now". */
+    public TransformService.Output runTransform(Principal p, QueryService.Loaded ds) {
+        return derivedOutput(p, ds, new QueryRequest(List.of(), List.of("-"), List.of(), null, null, List.of(), null, "auto"), new ArrayList<>());
+    }
+
+    private TransformService.Output derivedOutput(Principal p, QueryService.Loaded ds, QueryRequest outer, List<String> warnings) {
         Dataset d = ds.dataset();
         Dataset.Derived dv = d.derived();
         PythonItems.TransformItem t = pythons.transform(dv.transform());
@@ -225,7 +234,6 @@ public final class FrameService {
         String key = readerKey(p) + "|" + ds.key() + "|" + ds.hash() + "|" + versionOf(d, 0) + "|" + transformVersion(d) + "|" + outer.from() + "|" + outer.to();
         Map<String, String> declared = new LinkedHashMap<>();
         d.tables().get(Dataset.RESULT).columns().values().stream().filter(c -> !Composition.LEARNED.equals(c.description())).forEach(c -> declared.put(c.name(), c.type()));
-        List<String> warnings = new ArrayList<>();
         TransformService.Output out = transforms.ensure(ds.key(), d.name(), key, declared, () -> {
             List<String> dates = new ArrayList<>();
             int max = props.maxInputRows();
@@ -245,7 +253,35 @@ public final class FrameService {
             }
             return new TransformService.Prepared(t.manifest().toMap(), frames, params);
         });
-        return Frames.Rows.ofParquet(out.file(), warnings.stream().distinct().toList());
+        return out;
+    }
+
+    @Override
+    public java.util.Set<String> kinds(Dataset d) {
+        return kinds(d, 0);
+    }
+
+    private java.util.Set<String> kinds(Dataset d, int depth) {
+        java.util.Set<String> out = new java.util.LinkedHashSet<>();
+        for (Dataset.Input in : Composition.sources(d)) {
+            bi.datasetNamed(in.dataset()).ifPresent(item -> {
+                Dataset sub = DatasetParser.parse(bi.sourceBody(item)).dataset();
+                if (sub == null) {
+                    return;
+                }
+                if (sub.framed() && depth < DEPTH) {
+                    out.addAll(kinds(sub, depth + 1));
+                } else {
+                    sub.tables().values().forEach(t -> out.add(t.kind()));
+                }
+            });
+        }
+        return out;
+    }
+
+    @Override
+    public void refreshed(QueryService.Loaded ds) {
+        transforms.invalidate(ds.key());
     }
 
     /** Who the kept result is for: the user and what decides their rows and masks (roles, the raw power). */

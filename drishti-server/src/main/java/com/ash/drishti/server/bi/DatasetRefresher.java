@@ -122,6 +122,34 @@ public final class DatasetRefresher implements AutoCloseable {
     private final Clock clock;
     private final AuditLog audit;
     private final Map<String, State> states = new ConcurrentHashMap<>();
+    private volatile FramedHooks framed = new FramedHooks() {
+        @Override
+        public Set<String> kinds(Dataset d) {
+            return Set.of();
+        }
+
+        @Override
+        public void refreshed(QueryService.Loaded ds) {
+            // nothing is kept for a dataset without frames
+        }
+    };
+
+    /**
+     * What a composed or derived dataset adds to refresh (RUPAKA.md section 20.10): it keeps no layers of its own, so what it reads is the kinds of the datasets it
+     * is built from (an {@code after-load} refresh follows their loads), and a refresh drops what was kept for it (a Transform's result).
+     */
+    public interface FramedHooks {
+
+        /** The pack kinds the sources of a composed or derived dataset read, through any depth of composition. */
+        Set<String> kinds(Dataset d);
+
+        /** Called after a refresh of a composed or derived dataset: drop the results kept for it. */
+        void refreshed(QueryService.Loaded ds);
+    }
+
+    public void attach(FramedHooks hooks) {
+        this.framed = hooks;
+    }
     private final ScheduledExecutorService ticker = Executors.newSingleThreadScheduledExecutor(Thread.ofVirtual().name("drishti-bi-refresh").factory());
 
     public DatasetRefresher(QueryService queries, Supplier<List<QueryService.Loaded>> published, BiRefreshProperties props, RetryPolicy retry, BusinessDates dates,
@@ -235,6 +263,9 @@ public final class DatasetRefresher implements AutoCloseable {
         Instant started = clock.instant();
         try {
             QueryService.Refreshed r = queries.refresh(j.ds(), j.tables(), date);
+            if (j.ds().dataset().framed()) {
+                framed.refreshed(j.ds());
+            }
             st.lastRun = started;
             st.millis = r.millis();
             st.rows = r.rows();
@@ -290,7 +321,11 @@ public final class DatasetRefresher implements AutoCloseable {
                     continue;
                 }
                 Set<String> kinds = new java.util.HashSet<>();
-                ds.dataset().tables().values().stream().filter(t -> j.table() == null || t.name().equals(j.table())).forEach(t -> kinds.add(t.kind()));
+                if (ds.dataset().framed()) {
+                    kinds.addAll(framed.kinds(ds.dataset()));
+                } else {
+                    ds.dataset().tables().values().stream().filter(t -> j.table() == null || t.name().equals(j.table())).forEach(t -> kinds.add(t.kind()));
+                }
                 if (!kinds.contains(kind)) {
                     continue;
                 }

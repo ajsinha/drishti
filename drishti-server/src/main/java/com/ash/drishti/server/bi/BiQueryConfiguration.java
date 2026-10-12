@@ -84,9 +84,10 @@ public class BiQueryConfiguration {
     @Bean
     public FrameService frameService(BiService bi, QueryService queries, com.ash.drishti.server.bi.python.PythonItems pythonItems,
             com.ash.drishti.server.bi.transform.TransformService transforms, com.ash.drishti.server.bi.transform.TransformProperties props, Entitlements entitlements,
-            DatasetService datasets) {
+            DatasetService datasets, DatasetRefresher refresher) {
         FrameService frames = new FrameService(bi, queries, pythonItems, transforms, props, entitlements);
         datasets.attach(frames);
+        refresher.attach(frames);
         return frames;
     }
 

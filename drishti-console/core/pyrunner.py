@@ -70,9 +70,12 @@ def check_source(m: dict, allowed: list[str]) -> list[dict]:
     except SyntaxError as e:
         bad("source", f"line {e.lineno}: {e.msg}")
         return out
-    entry = m.get("entry") or ("compute" if m.get("interface") == "measure" else "render")
-    if not any(isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == entry for n in tree.body):
-        bad("source", f"no top-level function '{entry}'")
+    entry = m.get("entry") or ("compute" if m.get("interface") == "measure" else "run" if m.get("interface") == "transform" else "render")
+    has_function = any(isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == entry for n in tree.body)
+    has_method = m.get("interface") == "transform" and any(
+        isinstance(n, ast.ClassDef) and n.name == "Transform" and any(isinstance(f, ast.FunctionDef) and f.name == entry for f in n.body) for n in tree.body)
+    if not has_function and not has_method:
+        bad("source", f"no top-level function '{entry}'" + (" (nor a class Transform with a method of that name)" if m.get("interface") == "transform" else ""))
     ok = set(m.get("packages") or []) | SAFE_STDLIB
     for n in ast.walk(tree):
         names = [a.name for a in n.names] if isinstance(n, ast.Import) else [n.module or ""] if isinstance(n, ast.ImportFrom) and n.level == 0 else []
@@ -149,6 +152,27 @@ class PyRunner:
             self.running -= 1
             self._sem.release()
 
+    async def run_transform(self, m: dict, arrows: list[bytes], *, params: dict | None = None, dest: str, max_rows: int = 100_000) -> dict:
+        """Runs a Transform (``interface: transform``) on frames (Arrow IPC streams, one per input, already masked for the reader) and leaves the frame it returns,
+        as Parquet, at ``dest``. Answers ``{columns: [{name, type}], rows, ms}``; raises :class:`PyError`."""
+        self._check(m, b"".join(arrows))
+        if self._sem is None:
+            self._sem = asyncio.Semaphore(self.workers)
+        try:
+            await asyncio.wait_for(self._sem.acquire(), self.queue_seconds)
+        except asyncio.TimeoutError:
+            raise PyError("DRS-9074", 503, f"all {self.workers} Python workers are busy; try again in a moment") from None
+        self.running += 1
+        self.calls += 1
+        try:
+            return await self._spawn(m, arrows, None, {**(m.get("params") or {}), **(params or {})}, dest=dest, max_rows=max_rows)
+        except PyError:
+            self.failures += 1
+            raise
+        finally:
+            self.running -= 1
+            self._sem.release()
+
     def _check(self, m: dict, arrow: bytes) -> None:
         if not self.enabled:
             raise PyError("DRS-9074", 503, "the Python runner is switched off (bi.python.enabled)")
@@ -167,16 +191,23 @@ class PyRunner:
         if len(arrow) > self.max_input:
             raise PyError("DRS-9072", 413, f"the rows handed to Python are {len(arrow):,} bytes; the limit is {self.max_input:,} (bi.python.max_input_bytes)")
 
-    async def _spawn(self, m: dict, arrow: bytes, group_by, params: dict) -> dict:
+    async def _spawn(self, m: dict, arrow, group_by, params: dict, *, dest: str | None = None, max_rows: int = 0) -> dict:
         timeout = min(int(m.get("timeout") or 10), self.max_timeout)
         memory = min(int(m.get("memory") or 256), self.max_memory)
         tmp = tempfile.mkdtemp(prefix="drishti-py-", dir=self.scratch)
         t0 = time.monotonic()
         proc = None
         try:
-            (Path(tmp) / "in.arrow").write_bytes(arrow)
-            req = {"interface": m["interface"], "entry": m.get("entry") or ("compute" if m["interface"] == "measure" else "render"), "source": m["source"],
-                   "inputs": list(m.get("inputs") or []), "group_by": group_by, "params": params, "packages": list(m.get("packages") or []),
+            files: list[str] = []
+            if isinstance(arrow, list):                                  # a transform: one stream per input dataset
+                for i, blob in enumerate(arrow):
+                    (Path(tmp) / f"in_{i}.arrow").write_bytes(blob)
+                    files.append(f"in_{i}.arrow")
+            else:
+                (Path(tmp) / "in.arrow").write_bytes(arrow)
+            req = {"interface": m["interface"], "entry": m.get("entry") or ("compute" if m["interface"] == "measure" else "run" if m["interface"] == "transform" else "render"),
+                   "source": m["source"], "inputs_files": files, "max_rows": max_rows,
+                   "inputs": [] if m["interface"] == "transform" else list(m.get("inputs") or []), "group_by": group_by, "params": params, "packages": list(m.get("packages") or []),
                    "output": m.get("output") or "echarts", "quant_root": m.get("quant_root"), "quant_engine": m.get("quant_engine"),
                    "table_rows": m.get("table_rows"), "timeout": timeout, "memory": memory, "max_output_bytes": self.max_output, "max_groups": self.max_groups}
             (Path(tmp) / "req.json").write_text(json.dumps(req), encoding="utf-8")
@@ -206,6 +237,13 @@ class PyRunner:
                 raise PyError(code, status, answer.get("error") or "the Python item failed", answer.get("traceback") or "")
             answer.pop("ok", None)
             answer["ms"] = round((time.monotonic() - t0) * 1000)
+            if answer.get("kind") == "transform":
+                produced = Path(tmp) / "out.parquet"
+                if not produced.exists():
+                    raise PyError("DRS-9071", 422, "the Transform returned no frame")
+                if produced.stat().st_size > self.max_output:
+                    raise PyError("DRS-9072", 413, f"the frame is {produced.stat().st_size:,} bytes; the limit is {self.max_output:,} (drishti.bi.transform.max-bytes)")
+                shutil.move(str(produced), dest)
             return answer
         finally:
             if proc is not None and proc.returncode is None:

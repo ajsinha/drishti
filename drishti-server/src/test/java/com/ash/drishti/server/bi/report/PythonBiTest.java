@@ -61,7 +61,7 @@ class PythonBiTest {
     void everyKindOfMistakeIsDrs9070WithThePathOfTheKey() {
         String base = "python: x\ninterface: measure\ninputs: [a]\nsource: |\n  def compute(table, params):\n      return 1\n";
         assertThat(manifest(base).ok()).isTrue();
-        assertThat(manifest(base.replace("interface: measure", "interface: transform")).problems()).anyMatch(p -> p.path().equals("interface"));
+        assertThat(manifest(base.replace("interface: measure", "interface: widget")).problems()).anyMatch(p -> p.path().equals("interface"));
         assertThat(manifest(base.replace("inputs: [a]", "inputs: []")).problems()).anyMatch(p -> p.path().equals("inputs"));
         assertThat(manifest(base + "packages: [requests]\n").problems()).anyMatch(p -> p.path().equals("packages") && p.message().contains("not an allowed package"));
         assertThat(manifest(base + "target: cloud\n").problems()).anyMatch(p -> p.path().equals("target"));
@@ -162,5 +162,22 @@ class PythonBiTest {
         assertThat(problems).noneMatch(p -> p.path().contains("visuals[3]"));
         assertThat(VisualCatalogue.RESERVED).doesNotContain("python");
         assertThat(VisualCatalogue.type("python").group()).isEqualTo("python");
+    }
+
+    @Test
+    void aTransformListsDatasetsNotColumnsAndDefinesRunAsAFunctionOrAClassMethod() throws IOException {
+        PythonManifest.Manifest shipped = manifest(sample("pnl-vs-exposure")).manifest();
+        assertThat(manifest(sample("pnl-vs-exposure")).ok()).isTrue();
+        assertThat(shipped.interfaceKind()).isEqualTo("transform");
+        assertThat(shipped.entry()).isEqualTo("run");
+        assertThat(shipped.inputs()).containsExactly("trading-risk", "counterparty-exposure");
+        assertThat(shipped.output()).isEqualTo("frame");
+        String base = "python: t\ninterface: transform\ninputs: [trading-risk, file:dataset:counterparty-exposure]\nsource: |\n  def run(a, b):\n      return a\n";
+        assertThat(manifest(base).ok()).as(manifest(base).problems().toString()).isTrue();
+        assertThat(manifest("python: t\ninterface: transform\ninputs: [x]\nsource: |\n  class Transform:\n      def run(self, *frames):\n          return frames[0]\n").ok()).isTrue();
+        assertThat(manifest(base.replace("inputs: [trading-risk, file:dataset:counterparty-exposure]", "inputs: []")).problems()).anyMatch(p -> p.path().equals("inputs") && p.message().contains("datasets it reads"));
+        assertThat(manifest(base.replace("trading-risk", "bad name")).problems()).anyMatch(p -> p.path().equals("inputs") && p.message().contains("not a dataset"));
+        assertThat(manifest(base.replace("def run(a, b)", "def other(a, b)")).problems()).anyMatch(p -> p.path().equals("source") && p.message().contains("'run'"));
+        assertThat(manifest(base + "target: browser\n").problems()).anyMatch(p -> p.path().equals("target") && p.message().contains("runs on the server"));
     }
 }

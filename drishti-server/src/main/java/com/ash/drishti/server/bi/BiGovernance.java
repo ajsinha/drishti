@@ -20,6 +20,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.bi.BiStore;
 import com.ash.drishti.packs.Pack;
 import com.ash.drishti.packs.PackRegistry;
+import com.ash.drishti.server.bi.dataset.Composition;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.engine.QueryRequest;
@@ -27,6 +28,7 @@ import com.ash.drishti.server.bi.engine.QueryService;
 import com.ash.drishti.server.bi.gov.ImpactAnalyzer;
 import com.ash.drishti.server.bi.gov.LineDiff;
 import com.ash.drishti.server.bi.gov.Surface;
+import com.ash.drishti.server.bi.report.DatasetSet;
 import com.ash.drishti.server.bi.report.Report;
 import com.ash.drishti.server.bi.report.ReportParser;
 import com.ash.drishti.server.bi.report.ReportValidator;
@@ -237,7 +239,7 @@ public final class BiGovernance {
                 BiStore.Item dsItem = impact.datasetOf(i.body());
                 Dataset ds = dsItem == null ? null : DatasetParser.parse(impact.publishedBody(dsItem) != null ? impact.publishedBody(dsItem) : dsItem.body()).dataset();
                 if (ds != null) {
-                    all.addAll(ReportValidator.check(r.report(), ds));
+                    all.addAll(ReportValidator.check(r.report(), ds, setsOf(r.report(), dsItem, ds)));
                 } else {
                     all.add(new ReportParser.Problem("error", ErrorCode.REPORT_DATASET.code(), "dataset", "no dataset '" + r.report().dataset() + "' to check the report against"));
                 }
@@ -276,7 +278,7 @@ public final class BiGovernance {
                     m.put("reason", "the report's dataset cannot be found");
                     return m;
                 }
-                Surface.Refs refs = Surface.refs(rep, ds.tables().keySet());
+                Surface.Refs refs = Surface.refs(rep, ds.tables().keySet(), ref -> impact.refersTo(ref, dsItem));
                 List<String> fields = refs.fields().stream().map(Surface.Use::name).distinct().limit(3).toList();
                 List<String> measures = refs.measures().stream().map(Surface.Use::name).distinct().filter(ds.measures()::containsKey).limit(2).toList();
                 if (fields.isEmpty() && measures.isEmpty()) {
@@ -400,8 +402,46 @@ public final class BiGovernance {
         return packs.packs().stream().filter(x -> x.kinds().contains(kind)).map(Pack::name).sorted().toList();
     }
 
+    /** The datasets a report reads, for checking it: the report's own ({@code home}) and the ones its visuals name, as published (else the draft). */
+    private DatasetSet setsOf(Report report, BiStore.Item homeItem, Dataset home) {
+        DatasetSet sets = DatasetSet.single(report.dataset(), homeItem, home);
+        for (String ref : report.datasets()) {
+            if (sets.of(ref) == null) {
+                impact.datasetNamed(ref).ifPresent(item -> {
+                    Dataset d = DatasetParser.parse(bi.sourceBody(item)).dataset();
+                    if (d != null) {
+                        sets.put(ref, new DatasetSet.Entry(item, d));
+                    }
+                });
+            }
+        }
+        return sets;
+    }
+
+    /** What a composed or derived dataset is built from: its source datasets and what it takes of each. */
+    private List<Map<String, Object>> sourcesOf(Principal p, Dataset ds) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Dataset.Input in : Composition.sources(ds)) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("table", in.alias());
+            m.put("kind", "dataset");
+            m.put("dataset", in.dataset());
+            BiStore.Item item = impact.datasetNamed(in.dataset()).orElse(null);
+            m.put("id", item == null ? null : item.id());
+            m.put("title", item == null || !bi.canRead(p, item) && !item.isPublished() ? null : item.title());
+            m.put("by", in.by().stream().map(Dataset.Named::source).toList());
+            m.put("fields", in.fields().stream().map(Dataset.Named::source).toList());
+            m.put("measures", in.measures().stream().map(Dataset.Named::source).toList());
+            out.add(m);
+        }
+        return out;
+    }
+
     private List<Map<String, Object>> tables(Dataset ds, Set<String> only) {
         List<Map<String, Object>> out = new ArrayList<>();
+        if (ds.framed()) {
+            return out;                                                        // its one table is built from datasets: see sourcesOf
+        }
         for (Dataset.Table t : ds.tables().values()) {
             if (only != null && !only.contains(t.name())) {
                 continue;
@@ -437,7 +477,7 @@ public final class BiGovernance {
         if ("dataset".equals(i.kind())) {
             String body = impact.publishedBody(i) != null ? impact.publishedBody(i) : i.body();
             Dataset ds = DatasetParser.parse(body).dataset();
-            m.put("upstream", ds == null ? List.of() : tables(ds, null));
+            m.put("upstream", ds == null ? List.of() : ds.framed() ? sourcesOf(p, ds) : tables(ds, null));
             List<Map<String, Object>> down = new ArrayList<>();
             int hidden = 0;
             Set<String> tablesAll = ds == null ? Set.of() : ds.tables().keySet();
@@ -449,8 +489,19 @@ public final class BiGovernance {
                 Map<String, Object> rm = itemRef(p, r);
                 String rb = impact.publishedBody(r) != null ? impact.publishedBody(r) : r.body();
                 Report rep = ReportParser.parse(rb).report();
-                rm.put("uses", rep == null ? Map.of() : Surface.used(Surface.refs(rep, tablesAll)));
+                rm.put("uses", rep == null ? Map.of() : Surface.used(Surface.refs(rep, tablesAll, ref -> impact.refersTo(ref, i))));
                 down.add(rm);
+            }
+            for (BiStore.Item d : impact.dependentsOn(i)) {                 // composed and derived datasets built from this one
+                if (!bi.canRead(p, d)) {
+                    hidden++;
+                    continue;
+                }
+                Map<String, Object> dm = itemRef(p, d);
+                String db = impact.publishedBody(d) != null ? impact.publishedBody(d) : d.body();
+                Dataset dd = DatasetParser.parse(db).dataset();
+                dm.put("uses", dd == null ? Map.of() : Surface.used(Surface.refs(dd, ref -> impact.refersTo(ref, i), tablesAll)));
+                down.add(dm);
             }
             m.put("downstream", down);
             m.put("hidden", hidden);
@@ -466,7 +517,7 @@ public final class BiGovernance {
                 String dsBody = impact.publishedBody(dsItem) != null ? impact.publishedBody(dsItem) : dsItem.body();
                 Dataset ds = DatasetParser.parse(dsBody).dataset();
                 m.put("dataset", bi.canRead(p, dsItem) || dsItem.isPublished() ? itemRef(p, dsItem) : null);
-                Surface.Refs refs = Surface.refs(rep, ds == null ? Set.of() : ds.tables().keySet());
+                Surface.Refs refs = Surface.refs(rep, ds == null ? Set.of() : ds.tables().keySet(), ref -> impact.refersTo(ref, dsItem));
                 Map<String, List<String>> used = Surface.used(refs);
                 m.put("uses", used);
                 Set<String> tableNames = used.get("fields").stream().map(f -> f.substring(0, f.indexOf('.'))).collect(Collectors.toSet());

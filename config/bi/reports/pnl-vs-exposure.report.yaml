@@ -1,0 +1,74 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# SAMPLE REPORT (multi-dataset): "Desk P&L vs counterparty exposure". Most visuals read the COMPOSED dataset desk-pnl-vs-exposure (P&L from trading-risk joined to
+# exposure from counterparty-exposure). Two visuals name a dataset of their own: a sector slicer and a donut read counterparty-exposure directly. They are
+# connected by `links`: a field of one dataset and the field of another that means the same. Choose a sector in the slicer, or click a slice of the donut, and the
+# visuals of the other dataset are filtered by it, because the link says counterparties.sector (exposure) is joined.sector (the composed dataset).
+# Every query is still run as the person looking: each dataset applies its own row rules and masks. Reference: docs/guides/REPORTS.md section 15.
+
+rachana: 1
+report: pnl-vs-exposure
+version: 1
+title: Desk P&L vs counterparty exposure
+description: >-
+  One-day P&L of the desks' trades next to counterparty exposure, per counterparty, from two datasets joined in YAML; a sector chosen on the slicer or the donut
+  (which read the exposure dataset directly) filters every visual of the composed dataset too.
+sample: true
+endorsement: promoted
+tags: [sample, multi-dataset, counterparty-risk]
+dataset: desk-pnl-vs-exposure            # the default dataset of the report: a visual with no `dataset:` of its own reads this one
+theme: { palette: default }
+
+links:                                   # fields of different datasets that mean the same thing (table.column on each side)
+  - fields: [counterparties.sector, joined.sector]
+
+pages:
+  - id: overview
+    title: P&L and exposure
+    visuals:
+      - { id: pnl,    type: card, title: Desk P&L,           at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Desk P&L] } }
+      - { id: ee,     type: card, title: Exposure (EE peak), at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [Exposure (EE peak)] } }
+      - { id: ratio,  type: card, title: P&L per exposure,   at: { x: 6, y: 0, w: 3, h: 2 }, wells: { values: [P&L per exposure] } }
+      - id: sector                        # a visual with a dataset of its own: it reads counterparty-exposure, not the report's dataset
+        type: slicer
+        title: Sector
+        dataset: counterparty-exposure
+        at: { x: 9, y: 0, w: 3, h: 2 }
+        wells: { field: [counterparties.sector] }
+        format: { mode: dropdown, scope: report }
+
+      - id: by-counterparty
+        type: bar
+        title: P&L and exposure by counterparty (top 10 by EE peak)
+        at: { x: 0, y: 2, w: 8, h: 6 }
+        wells: { axis: [joined.name], values: [Desk P&L, Exposure (EE peak)] }
+        filters: [{ field: joined.counterparty, op: top, n: 10, by: Exposure (EE peak) }]
+        alt: Bars of one-day P&L and expected exposure for the ten counterparties with the most exposure
+
+      - id: exposure-by-sector            # the second dataset again: a click on a slice filters the composed visuals through the link
+        type: donut
+        title: Exposure by sector (counterparty-exposure)
+        dataset: counterparty-exposure
+        at: { x: 8, y: 2, w: 4, h: 6 }
+        wells: { axis: [counterparties.sector], values: [Exposure (EE peak)] }
+        format: { labels: true }
+        alt: Donut chart of expected exposure for each counterparty sector
+
+      - id: table
+        type: table
+        title: Counterparties (joined)
+        at: { x: 0, y: 8, w: 12, h: 6 }
+        wells: { columns: [joined.name, joined.sector, Desk P&L, Exposure (EE peak), P&L per exposure] }
+        format: { conditional: [{ measure: Desk P&L, op: lt, value: 0, colour: "#b3261e" }] }

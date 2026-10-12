@@ -508,6 +508,24 @@ public final class DatasetService {
         return out;
     }
 
+    /** Runs a derived dataset's Transform now for the caller (see {@link DatasetController#runTransform}). */
+    public Map<String, Object> runTransform(Principal p, String id) {
+        BiStore.Item item = datasetItem(p, id);
+        QueryService.Loaded ds = loaded(p, item);
+        if (!ds.dataset().derivedFrame() || frames == null) {
+            throw new DrishtiException(ErrorCode.QUERY_INVALID, "dataset '" + item.title() + "' is not a derived dataset: it has no Transform to run");
+        }
+        com.ash.drishti.server.bi.transform.TransformService.Output out = frames.runTransform(p, ds);
+        audit.record(p.user(), "bi-transform-run", id, out.rows() + " rows" + (out.cached() ? " (kept)" : " in " + out.millis() + " ms"));
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("dataset", id);
+        m.put("rows", out.rows());
+        m.put("cached", out.cached());
+        m.put("millis", out.millis());
+        m.put("columns", out.columns().stream().map(c -> Map.of("name", c.name(), "type", c.type())).toList());
+        return m;
+    }
+
     /** The refresh state of a dataset the caller may read: its schedule, last run, status, next run, failures. */
     public Map<String, Object> refreshState(Principal p, String id) {
         QueryService.Loaded ds = loaded(p, datasetItem(p, id));
@@ -539,6 +557,9 @@ public final class DatasetService {
         m.put("engine", "duckdb");
         m.put("storeDir", queries.layers().root().toString());
         m.put("live", queries.live().stats());
+        if (frames != null) {
+            m.put("transforms", frames.transforms().stats());
+        }
         m.put("limits", Map.of("timeoutSeconds", props.timeout().toSeconds(), "maxRows", props.maxRows(), "maxBytes", props.maxBytes(), "maxConcurrent", props.maxConcurrent(),
                 "maxConcurrentPerUser", props.maxConcurrentPerUser(), "jsonMaxRows", props.jsonMaxRows()));
         return m;

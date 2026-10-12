@@ -46,7 +46,13 @@ public final class BiReportService {
     private static final ObjectMapper JSON = new ObjectMapper();
 
     /** A report with what is needed to use it. */
-    private record Loaded(BiStore.Item item, ReportParser.Result parsed, BiStore.Item datasetItem, Dataset dataset, List<ReportParser.Problem> problems) {}
+    private record Loaded(BiStore.Item item, ReportParser.Result parsed, BiStore.Item datasetItem, Dataset dataset, List<ReportParser.Problem> problems, DatasetSet sets) {
+
+        /** The dataset one visual reads: its own when it names one, else the report's. */
+        DatasetSet.Entry of(Report.Visual v) {
+            return sets.of(parsed.report().datasetOf(v));
+        }
+    }
 
     private final BiService bi;
     private final DatasetService datasets;
@@ -109,18 +115,31 @@ public final class BiReportService {
         List<ReportParser.Problem> problems = new ArrayList<>(parsed.problems());
         BiStore.Item dsItem = null;
         Dataset ds = null;
+        DatasetSet sets = new DatasetSet();
         if (parsed.report() != null && !parsed.report().dataset().isBlank()) {
             try {
                 dsItem = datasetFor(p, parsed.report().dataset(), viaPublished);
                 ds = datasets.parsedDataset(p, dsItem);
+                sets.put(parsed.report().dataset(), new DatasetSet.Entry(dsItem, ds));
             } catch (DrishtiException e) {
                 problems.add(ReportParser.error(e.errorCode().code(), "dataset", e.getMessage()));
             }
         }
         if (ds != null) {
-            problems.addAll(ReportValidator.validate(parsed.report(), ds));
+            for (String ref : parsed.report().datasets()) {                      // the datasets visuals name for themselves
+                if (sets.of(ref) != null) {
+                    continue;
+                }
+                try {
+                    BiStore.Item other = datasetFor(p, ref, viaPublished);
+                    sets.put(ref, new DatasetSet.Entry(other, datasets.parsedDataset(p, other)));
+                } catch (DrishtiException e) {
+                    problems.add(ReportParser.error(e.errorCode().code(), "dataset", "visual dataset '" + ref + "': " + e.getMessage()));
+                }
+            }
+            problems.addAll(ReportValidator.validate(parsed.report(), ds, sets));
         }
-        return new Loaded(item, parsed, dsItem, ds, problems);
+        return new Loaded(item, parsed, dsItem, ds, problems, sets);
     }
 
     private Loaded loadItem(Principal p, String id) {
@@ -152,6 +171,15 @@ public final class BiReportService {
         }
         if (l.datasetItem() != null && l.dataset() != null) {
             m.put("dataset", datasetSummary(p, l.datasetItem()));
+            if (l.sets().all().size() > 1) {                                    // a report of several datasets: the Fields pane needs each one's model
+                Map<String, Object> others = new LinkedHashMap<>();
+                l.sets().all().forEach((ref, e) -> {
+                    if (!ref.equals(l.parsed().report().dataset()) && !l.sets().same(ref, l.parsed().report().dataset())) {
+                        others.put(ref, datasetSummary(p, e.item()));
+                    }
+                });
+                m.put("datasets", others);
+            }
         }
         m.put("mayEdit", bi.mayAuthor(p));
         return m;
@@ -376,9 +404,11 @@ public final class BiReportService {
             throw new DrishtiException(ErrorCode.REPORT_STATE, "page '" + pageId + "' has no visual '" + visualId + "'");
         }
         ReportState state = ReportState.of(stateJson);
-        BiStore.Item dsItem = l.datasetItem();
-        VisualQueries.Built built = VisualQueries.build(report, page, visual, state, l.dataset(), props, (field, n, by, desc, context, from, to) -> top(p, dsItem, field, n, by, desc, context, from, to));
-        return new Prepared(report, visual, dsItem, l.dataset(), built);
+        DatasetSet.Entry own = l.of(visual) == null ? new DatasetSet.Entry(l.datasetItem(), l.dataset()) : l.of(visual);       // the visual's own dataset, else the report's
+        BiStore.Item dsItem = own.item();
+        VisualQueries.Built built = VisualQueries.build(report, page, visual, state, own.dataset(), props, (field, n, by, desc, context, from, to) -> top(p, dsItem, field, n, by, desc, context, from, to),
+                l.sets());
+        return new Prepared(report, visual, dsItem, own.dataset(), built);
     }
 
     private volatile com.ash.drishti.server.bi.python.PythonItems pythonItems;
@@ -407,11 +437,12 @@ public final class BiReportService {
         if (visual == null || !"python".equals(visual.type()) || l.dataset() == null) {
             throw new DrishtiException(ErrorCode.REPORT_STATE, "page '" + pageId + "' has no python visual '" + visualId + "'");
         }
+        Dataset visualDataset = l.of(visual) == null ? l.dataset() : l.of(visual).dataset();
         if (!ok(l.problems())) {
             throw new DrishtiException(ErrorCode.REPORT_INVALID, "the report has errors: " + l.problems().stream().filter(ReportParser.Problem::error).findFirst().map(ReportParser.Problem::message).orElse(""));
         }
         List<String> values = visual.well("values");
-        Dataset.Measure pm = values.isEmpty() ? null : l.dataset().measures().get(values.get(0));
+        Dataset.Measure pm = values.isEmpty() ? null : visualDataset.measures().get(values.get(0));
         String ref = pm != null && pm.python() != null ? pm.python() : String.valueOf(visual.format().get("python"));
         Map<String, Object> out = new LinkedHashMap<>(pythonItems.describe(p, ref, true));
         if (pm != null) {

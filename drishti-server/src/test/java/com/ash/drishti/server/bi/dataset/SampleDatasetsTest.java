@@ -21,13 +21,42 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /** The sample datasets shipped in config/bi/datasets parse and validate with no errors, and say what the tutorial says they say. */
 class SampleDatasetsTest {
 
     private static final Path DIR = Path.of("../config/bi/datasets");
+
+    /** The shipped folder as the directory composed and derived datasets find their sources in. */
+    private static final Composition.Directory FOLDER = ref -> {
+        try (Stream<Path> s = Files.list(DIR)) {
+            for (Path f : s.filter(p -> p.getFileName().toString().endsWith(".dataset.yaml")).toList()) {
+                String body = Files.readString(f);
+                String file = f.getFileName().toString().replace(".dataset.yaml", "");
+                if (file.equals(ref) || Composition.declaredName(body).equals(ref)) {
+                    return Optional.of(new Composition.Found("file:dataset:" + file, body));
+                }
+            }
+        } catch (IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+        return Optional.empty();
+    };
+
+    @BeforeAll
+    static void sources() {
+        Composition.install(FOLDER);
+    }
+
+    @AfterAll
+    static void noSources() {
+        Composition.uninstall(FOLDER);
+    }
 
     private static DatasetParser.Result load(String name) throws IOException {
         return DatasetParser.parse(Files.readString(DIR.resolve(name + ".dataset.yaml")));
@@ -74,5 +103,42 @@ class SampleDatasetsTest {
         assertThat(d.tables().get("legs").each()).isEqualTo("legs");
         assertThat(d.tables().get("cashflows").each()).isEqualTo("schedule");
         assertThat(d.relationships()).extracting(Dataset.Relationship::fromTable).containsExactly("legs", "cashflows");
+    }
+
+    @Test
+    void theExposureSampleHasNoRowRuleSoEveryoneSeesTheNettingSets() throws IOException {
+        Dataset d = load("counterparty-exposure").dataset();
+        assertThat(d.tables()).containsOnlyKeys("netting_sets", "counterparties");
+        assertThat(d.security().rows()).isEmpty();
+        assertThat(d.security().masked()).contains("counterparties.name");
+        assertThat(d.measures().keySet()).contains("Exposure (EE peak)", "Exposure (PFE peak)");
+    }
+
+    @Test
+    void theComposedSampleJoinsTwoDatasetsOnTheCounterpartyAndAddsAMeasureOfItsOwn() throws IOException {
+        DatasetParser.Result r = load("desk-pnl-vs-exposure");
+        assertThat(r.problems()).as("no problem at all, not even the fan-out warning").isEmpty();
+        Dataset d = r.dataset();
+        assertThat(d.composed()).isTrue();
+        assertThat(d.compose().from().values()).extracting(Dataset.Input::dataset).containsExactly("trading-risk", "counterparty-exposure");
+        assertThat(d.compose().joins()).hasSize(1);
+        assertThat(d.compose().joins().get(0).on()).containsExactly("counterparty");
+        assertThat(d.compose().joins().get(0).type()).isEqualTo("left");
+        assertThat(d.compose().frame()).extracting(Dataset.FrameColumn::name).containsExactly("counterparty", "name", "Desk P&L", "Trades", "sector", "Exposure (EE peak)", "Exposure (PFE peak)");
+        assertThat(d.tables().get(Dataset.JOINED).columns().keySet()).containsExactly("counterparty", "name", "Desk_P_L", "Trades", "sector", "Exposure_EE_peak", "Exposure_PFE_peak");
+        assertThat(d.measures().keySet()).containsExactly("Desk P&L", "Trades", "Exposure (EE peak)", "Exposure (PFE peak)", "P&L per exposure");
+        assertThat(d.measures().get("P&L per exposure").expr()).isEqualTo("[Desk P&L] / [Exposure (EE peak)]");
+    }
+
+    @Test
+    void theDerivedSampleDeclaresTheColumnsOfItsTransformAndMeasuresOverThem() throws IOException {
+        DatasetParser.Result r = load("desk-pnl-vs-exposure-py");
+        assertThat(r.problems()).isEmpty();
+        Dataset d = r.dataset();
+        assertThat(d.derivedFrame()).isTrue();
+        assertThat(d.derived().transform()).isEqualTo("pnl-vs-exposure");
+        assertThat(d.derived().inputs().values()).extracting(Dataset.Input::dataset).containsExactly("trading-risk", "counterparty-exposure");
+        assertThat(d.tables().get(Dataset.RESULT).columns().keySet()).contains("counterparty", "desk_pnl", "ee_peak", "pnl_per_exposure");
+        assertThat(d.measures().keySet()).contains("P&L per exposure");
     }
 }

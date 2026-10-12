@@ -62,7 +62,8 @@ import org.springframework.test.web.servlet.ResultActions;
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.test-lake.plugin=file", "drishti.sources.connectors.test-lake.kinds[0]=trade",
         "drishti.sources.connectors.test-lake.settings.rescan-seconds=3600",
-        "drishti.sources.connectors.test-lake.settings.layout.trade.columns=desk,book,currency,notional,mtm,counterparty.id,tradeDate"})
+        "drishti.sources.connectors.test-lake.settings.layout.trade.columns=desk,book,currency,notional,mtm,counterparty.id,tradeDate",
+        "drishti.bi.transform.python=../drishti-console/.venv/bin/python", "drishti.bi.transform.runner=../drishti-console/core/transform_cli.py"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -92,13 +93,21 @@ class ComposedDatasetApiTest {
             """;
 
     static void write(String file, String text) {
+        writeIn("datasets", file + ".dataset.yaml", text);
+    }
+
+    static void writeIn(String folder, String file, String text) {
         try {
-            Path datasets = Path.of("target/bi-compose-folder/datasets");
-            Files.createDirectories(datasets);
-            Files.writeString(datasets.resolve(file + ".dataset.yaml"), text);
+            Path dir = Path.of("target/bi-compose-folder/" + folder);
+            Files.createDirectories(dir);
+            Files.writeString(dir.resolve(file), text);
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }
+    }
+
+    static boolean pythonInstalled() {
+        return Files.isExecutable(Path.of("../drishti-console/.venv/bin/python"));
     }
 
     static {
@@ -113,6 +122,7 @@ class ComposedDatasetApiTest {
                     - { role: bi-risk, where: "true" }
                     - { role: bi-analyst, where: "true" }
                     - { role: admin, where: "true" }
+                    - { role: raw-author, where: "true" }
                 """);
         // source two: gross notional, every reader sees every row
         write("lake-b", "dataset: lake-b\n" + HEAD.formatted("Lake B") + """
@@ -124,6 +134,7 @@ class ComposedDatasetApiTest {
                     - { role: bi-risk, where: "true" }
                     - { role: bi-analyst, where: "true" }
                     - { role: admin, where: "true" }
+                    - { role: raw-author, where: "true" }
                 """);
         // composed on the counterparty (a column the server masks for a reader without raw)
         write("lake-ab", """
@@ -162,6 +173,55 @@ class ComposedDatasetApiTest {
                 join:
                   - { left: a, right: b, on: [desk], type: inner }
                 """);
+        writeIn("python", "merge-ab.python.yaml", """
+                rachana: 1
+                python: merge-ab
+                interface: transform
+                inputs: [lake-a, lake-b]
+                packages: [pandas]
+                target: server
+                timeout: 20
+                memory: 512
+                source: |
+                  def run(a, b):
+                      m = a.merge(b, on="desk", how="left").rename(columns={"MTM": "mtm", "Gross": "gross"})
+                      m["share"] = m["mtm"] / m["gross"]
+                      return m[["desk", "mtm", "gross", "share"]]
+                """);
+        // the same Transform, columns declared (a contract) and not declared (learned from the first result)
+        String derived = """
+                rachana: 1
+                dataset: %s
+                title: Derived
+                derived:
+                  transform: merge-ab
+                  inputs:
+                    a: { dataset: lake-a, by: ["trades.desk"], measures: [MTM] }
+                    b: { dataset: lake-b, by: ["trades.desk"], measures: [Gross] }
+                """;
+        write("lake-derived", derived.formatted("lake-derived") + """
+                columns: { desk: string, mtm: decimal, gross: decimal, share: decimal }
+                measures:
+                  Share: "ratio(sum(result.mtm), sum(result.gross))"
+                """);
+        write("lake-derived-learned", derived.formatted("lake-derived-learned"));
+        String multi = """
+                rachana: 1
+                report: %s
+                title: Several datasets
+                dataset: lake-ab-desk
+                %s
+                pages:
+                  - id: p
+                    title: P
+                    visuals:
+                      - { id: by-desk, type: bar, title: MTM and gross by desk, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [joined.desk], values: [MTM, Gross] } }
+                      - { id: pick, type: slicer, title: Desk, dataset: lake-b, at: { x: 6, y: 0, w: 3, h: 2 }, wells: { field: [trades.desk] }, format: { mode: list, scope: report } }
+                      - { id: b-bar, type: bar, title: Gross by desk (lake-b), dataset: lake-b, at: { x: 0, y: 4, w: 6, h: 4 }, wells: { axis: [trades.desk], values: [Gross] } }
+                """;
+        writeIn("reports", "lake-multi.report.yaml", multi.formatted("lake-multi", "links:\n  - fields: [trades.desk, joined.desk]"));
+        writeIn("reports", "lake-multi-nolink.report.yaml", multi.formatted("lake-multi-nolink", ""));
+        writeIn("reports", "lake-multi-bad.report.yaml", multi.formatted("lake-multi-bad", "links:\n  - fields: [trades.desk, nothing.here]").replace("dataset: lake-b,", "dataset: no-such-dataset,"));
         write("lake-cycle-1", "rachana: 1\ndataset: lake-cycle-1\nfrom:\n  x: { dataset: lake-cycle-2, by: [\"joined.k\"], measures: [M] }\n");
         write("lake-cycle-2", "rachana: 1\ndataset: lake-cycle-2\nfrom:\n  x: { dataset: lake-cycle-1, by: [\"joined.k\"], measures: [M] }\n");
         write("lake-types", """
@@ -408,5 +468,139 @@ class ComposedDatasetApiTest {
         assertThat(second.path("meta").path("cached").asBoolean()).isTrue();
         assertThat(second.path("rows")).isEqualTo(first.path("rows"));
         assertThat(query("lake-ab-desk", hana(), body).path("meta").path("cached").asBoolean()).isFalse();
+    }
+
+    // ---- derived: a Python Transform ---------------------------------------------------------------------------------
+
+    long transformRuns() throws Exception {
+        return ok(call("GET", "/api/v1/bi/engine", admin(), null)).path("transforms").path("runs").asLong();
+    }
+
+    @Test @Order(8)
+    void aDerivedDatasetIsMadeByAPythonTransformFromTheReadersOwnAnswersAndKeptPerReader() throws Exception {
+        org.junit.jupiter.api.Assumptions.assumeTrue(pythonInstalled(), "the console's Python environment (drishti-console/.venv) is needed");
+        long before = transformRuns();
+        JsonNode risk = query("lake-derived", rita(), "{\"fields\":[\"result.desk\",\"result.share\"],\"dates\":{\"from\":\"2026-10-08\"}}");
+        assertThat(byFirst(risk, 1).keySet()).containsExactly("DESK-A", "DESK-B", "DESK-C");
+        for (String desk : byFirst(risk, 1).keySet()) {
+            assertThat(byFirst(risk, 1).get(desk)).isCloseTo(mtm(null, desk) / gross(null, desk), org.assertj.core.data.Offset.offset(1e-12));
+        }
+        assertThat(risk.path("meta").path("layer").asText()).isEqualTo("derived");
+        assertThat(transformRuns()).isEqualTo(before + 1);
+        // another query by the same reader, on the same inputs and dates: the frame is kept, the Transform does not run again
+        JsonNode share = query("lake-derived", rita(), "{\"measures\":[\"Share\"],\"dates\":{\"from\":\"2026-10-08\"}}");
+        assertThat(share.path("rows").get(0).get(0).asDouble()).isCloseTo(mtm(null, null) / gross(null, null), org.assertj.core.data.Offset.offset(1e-12));
+        assertThat(transformRuns()).isEqualTo(before + 1);
+        // another reader: the Transform is given that reader's rows (the desk-head's rule cuts source A to DESK-A), so it runs for them and the frame differs
+        JsonNode head = query("lake-derived", hana(), "{\"fields\":[\"result.desk\",\"result.share\"],\"dates\":{\"from\":\"2026-10-08\"}}");
+        assertThat(byFirst(head, 1).keySet()).containsExactly("DESK-A");
+        assertThat(transformRuns()).isEqualTo(before + 2);
+        // another business date is another version of the inputs
+        query("lake-derived", rita(), "{\"fields\":[\"result.desk\"],\"dates\":{\"from\":\"2026-10-07\"}}");
+        assertThat(transformRuns()).isEqualTo(before + 3);
+    }
+
+    @Test @Order(9)
+    void aDerivedDatasetWithoutDeclaredColumnsLearnsThemFromTheFirstRun() throws Exception {
+        org.junit.jupiter.api.Assumptions.assumeTrue(pythonInstalled(), "the console's Python environment (drishti-console/.venv) is needed");
+        JsonNode m = ok(call("GET", "/api/v1/bi/datasets/file:dataset:lake-derived-learned", rae(), null));
+        assertThat(m.path("problems").toString()).contains("DRS-9017").contains("not known yet");
+        refused(call("POST", "/api/v1/bi/datasets/file:dataset:lake-derived-learned/transform/run", rita(), "{}"), 403, "DRS-9002");           // authors only
+        JsonNode run = ok(call("POST", "/api/v1/bi/datasets/file:dataset:lake-derived-learned/transform/run", rae(), "{}"));
+        assertThat(run.path("columns").toString()).contains("\"desk\"").contains("\"share\"").contains("decimal");
+        JsonNode after = ok(call("GET", "/api/v1/bi/datasets/file:dataset:lake-derived-learned", rae(), null));
+        assertThat(after.path("tables").get(0).path("columns").toString()).contains("share");
+        assertThat(after.path("problems").toString()).doesNotContain("not known yet");
+        JsonNode rows = query("lake-derived-learned", rae(), "{\"fields\":[\"result.desk\",\"result.gross\"]}");
+        assertThat(rows.path("rowCount").asInt()).isEqualTo(3);
+        refused(call("POST", "/api/v1/bi/datasets/file:dataset:lake-a/transform/run", rae(), "{}"), 422, "DRS-9020");                          // an ordinary dataset has no Transform
+    }
+
+    @Test @Order(10)
+    void aTransformThatIsNotOneOrDisagreesWithItsInputsIsRefused() throws Exception {
+        org.junit.jupiter.api.Assumptions.assumeTrue(pythonInstalled(), "the console's Python environment (drishti.console/.venv) is needed");
+        writeIn("datasets", "lake-derived-wrong.dataset.yaml", """
+                rachana: 1
+                dataset: lake-derived-wrong
+                derived:
+                  transform: merge-ab
+                  inputs:
+                    a: { dataset: lake-b, by: ["trades.desk"], measures: [Gross] }
+                    b: { dataset: lake-a, by: ["trades.desk"], measures: [MTM] }
+                columns: { desk: string }
+                """);
+        writeIn("datasets", "lake-derived-notransform.dataset.yaml", """
+                rachana: 1
+                dataset: lake-derived-notransform
+                derived:
+                  transform: lake-a
+                  inputs:
+                    a: { dataset: lake-b, by: ["trades.desk"], measures: [Gross] }
+                columns: { desk: string }
+                """);
+        Thread.sleep(2500);                                                                                                  // the folder is re-read every second
+        refused(call("POST", "/api/v1/bi/datasets/file:dataset:lake-derived-wrong/query", rita(), "{\"fields\":[\"result.desk\"]}"), 422, "DRS-9075");
+        refused(call("POST", "/api/v1/bi/datasets/file:dataset:lake-derived-notransform/query", rita(), "{\"fields\":[\"result.desk\"]}"), 422, "DRS-9070");
+    }
+
+    // ---- reports over several datasets -------------------------------------------------------------------------------
+
+    JsonNode visual(String report, String who, String visual, String state) throws Exception {
+        return ok(call("POST", "/api/v1/bi/reports/file:report:" + report + "/query", who, "{\"page\":\"p\",\"visual\":\"" + visual + "\",\"state\":" + state + "}"));
+    }
+
+    @Test @Order(11)
+    void aVisualMayNameItsOwnDatasetAndTheReportShowsEachDatasetsModel() throws Exception {
+        JsonNode r = ok(call("GET", "/api/v1/bi/reports/file:report:lake-multi", rita(), null));
+        assertThat(r.path("valid").asBoolean()).as(r.path("problems").toString()).isTrue();
+        assertThat(r.path("report").path("links").get(0).path("fields").toString()).contains("trades.desk").contains("joined.desk");
+        assertThat(r.path("report").path("pages").get(0).path("visuals").get(1).path("dataset").asText()).isEqualTo("lake-b");
+        assertThat(r.path("datasets").has("lake-b")).isTrue();                                 // the designer's Fields pane needs the other dataset's model
+        assertThat(r.path("datasets").path("lake-b").path("tables").get(0).path("name").asText()).isEqualTo("trades");
+        JsonNode own = visual("lake-multi", rita(), "b-bar", "{}");
+        assertThat(byFirst(own, 1).keySet()).containsExactly("DESK-A", "DESK-B", "DESK-C");
+        assertThat(own.path("meta").path("layer").asText()).isNotEqualTo("composed");          // lake-b is an ordinary dataset
+        assertThat(visual("lake-multi", rita(), "by-desk", "{}").path("meta").path("layer").asText()).isEqualTo("composed");
+    }
+
+    @Test @Order(12)
+    void aSlicerOfOneDatasetFiltersTheVisualsOfAnotherOnlyThroughALink() throws Exception {
+        String state = "{\"slicers\":{\"pick\":[\"DESK-B\"]}}";
+        assertThat(byFirst(visual("lake-multi", rita(), "by-desk", state), 1).keySet()).containsExactly("DESK-B");            // the link maps trades.desk to joined.desk
+        assertThat(byFirst(visual("lake-multi", rita(), "b-bar", state), 1).keySet()).containsExactly("DESK-B");               // its own dataset needs no link
+        assertThat(byFirst(visual("lake-multi-nolink", rita(), "by-desk", state), 1).keySet()).containsExactly("DESK-A", "DESK-B", "DESK-C");   // no link: the choice does not reach it
+        // a click on a mark of the other dataset's visual is a selection, mapped the same way
+        String click = "{\"selections\":[{\"visual\":\"b-bar\",\"field\":\"trades.desk\",\"values\":[\"DESK-C\"]}]}";
+        assertThat(byFirst(visual("lake-multi", rita(), "by-desk", click), 1).keySet()).containsExactly("DESK-C");
+    }
+
+    @Test @Order(13)
+    void everyQueryOfAMultiDatasetReportIsRunAsTheReader() throws Exception {
+        // the desk-head's source A holds DESK-A only; lake-b lets them see all desks, so the two visuals differ for them
+        assertThat(byFirst(visual("lake-multi", hana(), "by-desk", "{}"), 1).keySet()).containsExactly("DESK-A");
+        assertThat(byFirst(visual("lake-multi", hana(), "b-bar", "{}"), 1).keySet()).containsExactly("DESK-A", "DESK-B", "DESK-C");
+        // a choice that the reader's rows do not contain leaves nothing, it does not widen them
+        assertThat(visual("lake-multi", hana(), "by-desk", "{\"slicers\":{\"pick\":[\"DESK-B\"]}}").path("rowCount").asInt()).isZero();
+    }
+
+    @Test @Order(14)
+    void aReportThatNamesAMissingDatasetOrALinkToNothingIsRefusedWithItsCodes() throws Exception {
+        JsonNode bad = ok(call("GET", "/api/v1/bi/reports/file:report:lake-multi-bad", rita(), null));
+        assertThat(bad.path("valid").asBoolean()).isFalse();
+        assertThat(bad.path("problems").toString()).contains("DRS-9034").contains("no-such-dataset").contains("DRS-9031").contains("nothing.here");
+        refused(call("POST", "/api/v1/bi/reports/file:report:lake-multi-bad/query", rita(), "{\"page\":\"p\",\"visual\":\"by-desk\",\"state\":{}}"), 422, "DRS-9034");
+    }
+
+    @Test @Order(15)
+    void lineageAndImpactSeeAReportReadingSeveralDatasets() throws Exception {
+        BiStore.Item b = bi.datasetNamed("lake-b").orElseThrow();
+        String before = bi.sourceBody(b);
+        ImpactAnalyzer.Result res = impact.impact(b, before, before.replace("  Gross: { expr: \"sum(trades.notional)\" }\n", ""));
+        List<String> broken = res.published().stream().map(h -> h.report().id()).toList();
+        assertThat(broken).contains("file:report:lake-multi", "file:dataset:lake-ab", "file:dataset:lake-ab-desk");       // reports by a visual's own dataset, and composed datasets
+        String uses = res.published().stream().filter(h -> h.report().id().equals("file:report:lake-multi")).findFirst().orElseThrow().uses().toString();
+        assertThat(uses).contains("measure Gross").doesNotContain("measure MTM");                                          // only what is read from lake-b
+        JsonNode lineage = ok(call("GET", "/api/v1/bi/items/file:dataset:lake-ab/lineage", admin(), null));
+        assertThat(lineage.path("upstream").toString()).contains("lake-a").contains("lake-b");
     }
 }
