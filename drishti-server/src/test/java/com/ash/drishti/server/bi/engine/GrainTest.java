@@ -48,7 +48,7 @@ class GrainTest {
         lake = new TestLake(true);
         QueryProperties props = QueryProperties.defaults(store.toString());
         service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC());
-        String yaml = TestLake.yaml().replace("measures:\n", "measures:\n  DeskCount: { expr: \"count(desks)\" }\n");
+        String yaml = TestLake.yaml().replace("measures:\n", "measures:\n  DeskCount: { expr: \"count(desks)\" }\n  PerDesk: { expr: \"[Trades] / [DeskCount]\" }\n  Twice: { expr: \"[PerDesk] * 2\" }\n");
         DatasetParser.Result r = DatasetParser.parse(yaml);
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"), r.dataset(), "h1");
@@ -98,5 +98,36 @@ class GrainTest {
         QueryService.Result r = run("{\"fields\":[\"desks.region\"],\"measures\":[\"DeskCount\"]}");
         assertThat(r.rows()).isEqualTo(2);
         assertThat(((Number) r.columns().get(1).values()[0]).doubleValue() + ((Number) r.columns().get(1).values()[1]).doubleValue()).isEqualTo(3.0);
+    }
+
+    @Test
+    void aMeasureThatMixesTwoGrainsIsWorkedOutOverEachMeasureAtItsOwnGrain() throws Exception {
+        QueryService.Result r = run("{\"fields\":[\"desks.region\"],\"measures\":[\"PerDesk\",\"Twice\"],\"dates\":{\"from\":\"2026-10-09\"}}");
+        Map<String, Double> trades = new TreeMap<>();
+        for (TestLake.Trade t : lake.trades.get(TestLake.DAY2)) {
+            trades.merge(t.desk().equals("DESK-A") ? "EMEA" : "AMER", 1.0, Double::sum);
+        }
+        Map<String, Double> desks = Map.of("EMEA", 1.0, "AMER", 2.0);
+        assertThat(r.rows()).isEqualTo(2);
+        for (int i = 0; i < r.rows(); i++) {
+            String region = String.valueOf(r.columns().get(0).values()[i]);
+            double expected = trades.get(region) / desks.get(region);
+            assertThat(((Number) r.columns().get(1).values()[i]).doubleValue()).as(region + " trades per desk").isCloseTo(expected, org.assertj.core.data.Offset.offset(1e-9));
+            assertThat(((Number) r.columns().get(2).values()[i]).doubleValue()).as(region + " twice").isCloseTo(2 * expected, org.assertj.core.data.Offset.offset(1e-9));
+        }
+        QueryService.Result f = run("{\"fields\":[\"desks.region\"],\"measures\":[\"Trades\"],\"filters\":[{\"field\":\"PerDesk\",\"op\":\"gt\",\"values\":[" + (trades.get("EMEA") / 1.0 - 0.5) + "]}],\"dates\":{\"from\":\"2026-10-09\"}}");
+        assertThat(f.rows()).as("the filter on the mixed measure is worked out the same way").isBetween(0, 2);
+    }
+
+    @Test
+    void theTradingRiskSampleMixedRatioIsMultiFact() throws Exception {
+        String yaml = java.nio.file.Files.readString(Path.of("../config/bi/datasets/trading-risk.dataset.yaml"))
+                .replace("measures:\n", "measures:\n  MtmPerExposure: { expr: \"[MTM] / [Exposure (EE peak)]\" }\n");
+        com.ash.drishti.server.bi.dataset.Dataset d = DatasetParser.parse(yaml).dataset();
+        SqlCompiler.Reader reader = new SqlCompiler.Reader(false, Set.of("risk"), Map.of(), SqlCompiler.Masks.NONE);
+        SqlCompiler.Plan p = new SqlCompiler(d, Dialect.DUCKDB).plan(QueryRequest.of(json.readTree("{\"fields\":[\"counterparties.sector\"],\"measures\":[\"MtmPerExposure\"]}")), reader);
+        assertThat(p.multiFact()).isTrue();
+        assertThat(p.parts()).extracting(SqlCompiler.Plan::base).containsExactlyInAnyOrder("trades", "netting_sets");
+        assertThat(p.derived()).containsKey("MtmPerExposure");
     }
 }

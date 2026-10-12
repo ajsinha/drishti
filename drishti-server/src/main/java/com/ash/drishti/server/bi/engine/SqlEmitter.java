@@ -75,6 +75,14 @@ final class SqlEmitter {
     }
 
     private boolean planning;
+    /** When set, a measure is read from a column of the joined parts of a several-facts query (null: not a column, so its own expression is written). */
+    private java.util.function.Function<String, String> joinedColumn;
+
+    /** Writes measure names as the given function says (a column of an already-aggregated result); the expression of a name it answers null for is written in place. */
+    SqlEmitter overJoined(java.util.function.Function<String, String> column) {
+        this.joinedColumn = column;
+        return this;
+    }
 
     /** An emitter that only finds out which tables an expression touches (the planner's probe): the windows are placeholders and a running total needs no field. */
     SqlEmitter planning() {
@@ -163,6 +171,12 @@ final class SqlEmitter {
     }
 
     private String measure(String name) {
+        if (joinedColumn != null) {
+            String column = joinedColumn.apply(name);
+            if (column != null) {
+                return column;
+            }
+        }
         Dataset.Measure m = ds.measures().get(name);
         if (m == null) {
             throw new DrishtiException(ErrorCode.QUERY_INVALID, "no measure '" + name + "' in this dataset");

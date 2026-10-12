@@ -69,7 +69,13 @@ public final class SqlCompiler {
 
     /** The query resolved against the model. */
     public record Plan(Dataset dataset, QueryRequest query, List<Field> fields, List<Use> measures, List<FilterUse> filters, List<Node> rules, boolean denied,
-            Set<String> tables, String base, List<Join> joins, List<Plan> parts) {
+            Set<String> tables, String base, List<Join> joins, List<Plan> parts, Map<String, Node> derived) {
+
+        /** A plan with no measure that is worked out over the joined parts. */
+        public Plan(Dataset dataset, QueryRequest query, List<Field> fields, List<Use> measures, List<FilterUse> filters, List<Node> rules, boolean denied,
+                Set<String> tables, String base, List<Join> joins, List<Plan> parts) {
+            this(dataset, query, fields, measures, filters, rules, denied, tables, base, joins, parts, Map.of());
+        }
 
         /** The distinct columns of {@code table} the query reads (dimensions, filters, rules, measures), for rollup routing. */
         public Set<String> columnsOf(String table) {
@@ -162,6 +168,8 @@ public final class SqlCompiler {
             measures.add(new Use(name, new Node.MeasureRef(name), masked));
         }
         tables.addAll(aggTables);
+        Map<String, Node> derived = new LinkedHashMap<>();
+        expandMixed(measureTables, derived, reader);
         List<FilterUse> filters = new ArrayList<>();
         for (QueryRequest.Filter f : q.filters()) {
             Dataset.Measure m = ds.measures().get(f.field());
@@ -172,6 +180,7 @@ public final class SqlCompiler {
                 aggTables.addAll(probe.tables());
                 measureTables.put(f.field(), new LinkedHashSet<>(probe.tables()));
                 tables.addAll(probe.tables());
+                expandMixed(measureTables, derived, reader);
                 continue;
             }
             Resolver.ColRef ref = resolve(f.field());
@@ -205,7 +214,7 @@ public final class SqlCompiler {
         if (tables.isEmpty()) {
             throw invalid("the query names no table");
         }
-        Plan whole = new Plan(ds, q, fields, measures, filters, rules, denied, tables, null, List.of(), null);
+        Plan whole = new Plan(ds, q, fields, measures, filters, rules, denied, tables, null, List.of(), null, derived);
         Plan joined;
         try {
             joined = join(whole, aggTables);
@@ -228,6 +237,69 @@ public final class SqlCompiler {
                     + "another's rows; but a table the query groups, filters or applies a row rule on is not reachable many-to-one from each of them: ask for them in separate queries");
         }
         return joined;
+    }
+
+
+    // ---- a measure that mixes grains --------------------------------------------------------------------------------------
+
+    /**
+     * A measure whose expression only combines other measures ({@code [MTM] / [Exposure]}) and whose components have different grains cannot be one aggregate of
+     * one base table (the one-side figure would be repeated by the many side). Each such measure in {@code measureTables} is replaced by the measures it is made of
+     * (those with aggregates of their own), which are then computed at their own grains and joined; the expression is kept in {@code derived} and worked out over
+     * the joined results.
+     */
+    private void expandMixed(Map<String, Set<String>> measureTables, Map<String, Node> derived, Reader reader) {
+        for (String name : new ArrayList<>(measureTables.keySet())) {
+            if (pureParts(name) == null) {
+                continue;
+            }
+            Map<String, Set<String>> leaves = new LinkedHashMap<>();
+            Set<String> pure = new LinkedHashSet<>();
+            leavesOf(name, leaves, pure, reader);
+            if (grains(leaves).size() < 2) {
+                continue;
+            }
+            measureTables.remove(name);
+            measureTables.putAll(leaves);
+            for (String p : pure) {
+                derived.put(p, ExprParser.parse(ds.measures().get(p).expr()));
+            }
+        }
+    }
+
+    private void leavesOf(String name, Map<String, Set<String>> leaves, Set<String> pure, Reader reader) {
+        List<String> parts = pureParts(name);
+        if (parts == null) {
+            SqlEmitter probe = new SqlEmitter(ds, dialect, "", null, reader.user()).planning();
+            probe.emit(new Node.MeasureRef(name), false);
+            leaves.put(name, new LinkedHashSet<>(probe.tables()));
+            return;
+        }
+        if (!pure.add(name)) {
+            return;
+        }
+        parts.forEach(p -> leavesOf(p, leaves, pure, reader));
+    }
+
+    /** The measures a measure is made of when its expression has no aggregate, column or window of its own, only arithmetic over other measures; null otherwise. */
+    private List<String> pureParts(String name) {
+        Dataset.Measure m = ds.measures().get(name);
+        if (m == null || m.expr() == null) {
+            return null;
+        }
+        Set<String> refs = new LinkedHashSet<>();
+        boolean[] own = {false};
+        Node.walk(ExprParser.parse(m.expr()), n -> {
+            if (n instanceof Node.MeasureRef r) {
+                refs.add(r.name());
+            } else if (n instanceof Node.Ref) {
+                own[0] = true;
+            } else if (n instanceof Node.Call c && (Node.AGGREGATES.contains(c.function()) && !"ratio".equals(c.function()) || Node.TIME.contains(c.function())
+                    || Node.isWindow(c.function()))) {
+                own[0] = true;
+            }
+        });
+        return own[0] || refs.isEmpty() ? null : new ArrayList<>(refs);
     }
 
     /** The table each measure is aggregated at (its own grain): the first of its tables that reaches the rest many-to-one; the distinct grains of the query. */
@@ -296,7 +368,7 @@ public final class SqlCompiler {
             parts.add(new Plan(ds, pq, whole.fields(), uses, dims, whole.rules(), whole.denied(), allOf(base, joins), base, joins, null));
             all.addAll(allOf(base, joins));
         }
-        return new Plan(ds, q, whole.fields(), whole.measures(), whole.filters(), whole.rules(), whole.denied(), all, parts.get(0).base(), List.of(), parts);
+        return new Plan(ds, q, whole.fields(), whole.measures(), whole.filters(), whole.rules(), whole.denied(), all, parts.get(0).base(), List.of(), parts, whole.derived());
     }
 
     private static Set<String> union(Set<String> a, Set<String> b) {
@@ -371,14 +443,14 @@ public final class SqlCompiler {
         for (String base : candidates) {
             List<Join> joins = tree(base, tables, edges, true);
             if (joins != null) {
-                return new Plan(p.dataset(), p.query(), p.fields(), p.measures(), p.filters(), p.rules(), p.denied(), allOf(base, joins), base, joins, null);
+                return new Plan(p.dataset(), p.query(), p.fields(), p.measures(), p.filters(), p.rules(), p.denied(), allOf(base, joins), base, joins, null, p.derived());
             }
         }
         if (!measures) {
             String base = tables.iterator().next();
             List<Join> joins = tree(base, tables, edges, false);
             if (joins != null) {
-                return new Plan(p.dataset(), p.query(), p.fields(), p.measures(), p.filters(), p.rules(), p.denied(), allOf(base, joins), base, joins, null);
+                return new Plan(p.dataset(), p.query(), p.fields(), p.measures(), p.filters(), p.rules(), p.denied(), allOf(base, joins), base, joins, null, p.derived());
             }
         }
         Set<String> ruleTables = new LinkedHashSet<>();
@@ -606,6 +678,7 @@ public final class SqlCompiler {
             }
         }
         List<Object> params = new ArrayList<>();
+        List<Object> selectParams = new ArrayList<>();
         StringBuilder from = new StringBuilder();
         List<Out> outs = new ArrayList<>();
         for (int i = 0; i < cs.size(); i++) {
@@ -639,9 +712,10 @@ public final class SqlCompiler {
         Set<String> wanted = new LinkedHashSet<>();
         for (Use m : p.measures()) {
             wanted.add(m.name());
-            inner.add(alias(holder.get(m.name()), m.name()) + " AS " + Dialect.quote(m.name()));
+            boolean derived = p.derived().containsKey(m.name());
+            inner.add((derived ? joinedExpr(p, m.name(), holder, reader, selectParams) : alias(holder.get(m.name()), m.name())) + " AS " + Dialect.quote(m.name()));
             names.add(m.name());
-            outs.add(outOf.get(m.name()));
+            outs.add(derived ? new Out(m.name(), true, m.masked(), null) : outOf.get(m.name()));
         }
         List<String> preds = new ArrayList<>();
         for (FilterUse f : p.filters()) {
@@ -650,7 +724,7 @@ public final class SqlCompiler {
             }
             String name = f.filter().field();
             if (wanted.add(name)) {
-                inner.add(alias(holder.get(name), name) + " AS " + Dialect.quote(name));
+                inner.add((p.derived().containsKey(name) ? joinedExpr(p, name, holder, reader, selectParams) : alias(holder.get(name), name)) + " AS " + Dialect.quote(name));
             }
             preds.add(measureCompare(Dialect.quote(name), f.filter(), params));
         }
@@ -678,7 +752,20 @@ public final class SqlCompiler {
         List<String> notes = new ArrayList<>();
         cs.forEach(c -> notes.addAll(c.notes()));
         notes.add(p.parts().size() + " fact tables, each aggregated alone at the query's fields and then joined: " + p.tables());
+        if (!p.derived().isEmpty()) {
+            notes.add("a measure that combines measures of different grains is worked out over the joined results: " + String.join(", ", p.derived().keySet()));
+        }
+        selectParams.addAll(params);
+        params = selectParams;
         return new Compiled(sql.toString(), params, outs, p.tables(), p.base(), notes.stream().distinct().toList());
+    }
+
+    /** A measure that combines other measures, written over the joined parts: each measure it names is the column its own part computed at its own grain. */
+    private String joinedExpr(Plan p, String name, Map<String, Integer> holder, Reader reader, List<Object> params) {
+        SqlEmitter e = new SqlEmitter(ds, dialect, p.base(), null, reader.user()).overJoined(n -> p.derived().containsKey(n) ? null : alias(holder.get(n), n));
+        String sql = e.emit(new Node.MeasureRef(name), false);
+        params.addAll(e.params());
+        return sql;
     }
 
     private static String alias(int part, String column) {

@@ -173,8 +173,11 @@ class MultiFactTest {
     void aFieldOneFactCannotReachAMixedMeasureAWindowAndARuleOnAFactAreRefused() {
         assertThatThrownBy(() -> run("{\"fields\":[\"trades.desk\"],\"measures\":[\"Trades\",\"LimitTotal\"]," + DAY + "}", who(true, "", "risk")))
                 .isInstanceOf(DrishtiException.class).hasMessageContaining("no many-to-one path");
-        assertThatThrownBy(() -> run("{\"fields\":[\"desks.desk\"],\"measures\":[\"Mixed\"]," + DAY + "}", who(true, "", "risk")))
-                .isInstanceOf(DrishtiException.class);
+        // a measure that combines the two facts is now worked out over the joined parts (the same figure as the two measures divided)
+        Map<String, Object[]> both = rows(run("{\"fields\":[\"desks.desk\"],\"measures\":[\"MTM\",\"LimitTotal\"]," + DAY + "}", who(true, "", "risk")));
+        Map<String, Object[]> mixed = rows(run("{\"fields\":[\"desks.desk\"],\"measures\":[\"Mixed\"]," + DAY + "}", who(true, "", "risk")));
+        assertThat(mixed.keySet()).isEqualTo(both.keySet());
+        both.forEach((desk, v) -> assertThat(((Number) mixed.get(desk)[0]).doubleValue()).isCloseTo(((Number) v[0]).doubleValue() / ((Number) v[1]).doubleValue(), org.assertj.core.data.Offset.offset(1e-9)));
         // the desk-head's row rule reads trades.desk: the limits cannot honour it, so the query is refused rather than shown unrestricted
         assertThatThrownBy(() -> run("{\"fields\":[\"desks.desk\"],\"measures\":[\"Trades\",\"LimitTotal\"]," + DAY + "}", who(true, "DESK-A", "desk-head")))
                 .isInstanceOf(DrishtiException.class);
