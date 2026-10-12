@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **Fixed:** the public pages' bar (landing, About, Help signed out) now follows the Crimson, Crimson dark, Blue and Green themes like the top bar: the theme's gradient, white text and logo, the Terminal button white with the accent as its text.
 - **Changed:** the Trades overview sample's "By product" page has dropdown slicers for product type, desk and currency (`type: slicer`, `format.mode: dropdown`: a checkbox list with a search box, Select all and Clear), and its donut shows the twelve largest product types (`op: top`).
 - **Fixed:** a dropdown slicer's list was cut off by its visual's frame; it now floats over the page while open.
 - **Changed:** **Reports** is an entry of **Views** (the Reports page: every scheduled report and subscription, a box to find one, and links to your alerts, everyone's subscriptions for administrators, and the BI reports); the BI menu lists no report names (with hundreds of reports a menu cannot hold them).
