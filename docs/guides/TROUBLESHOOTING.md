@@ -26,7 +26,7 @@ same machine. Replace `localhost` if yours run elsewhere.
 | [First checks](#first-checks-run-these-first) | four commands that locate most problems |
 | [Building and starting](#building-and-starting) | wrong JDK, port in use, packs not found, old version runs, console will not start |
 | [Signing in](#signing-in) | no sign-in page, wrong password, locked, signed in but bounced back |
-| [The console and the server](#the-console-and-the-server) | backend unreachable, `/readyz` says 503, the live dot is amber, typing does nothing |
+| [The console and the server](#the-console-and-the-server) | backend unreachable, `/readyz` says 503, the Live button has an amber ring, typing does nothing |
 | [Commands and views](#commands-and-views) | cannot read command, *Nothing matches*, DRS-1001, may not open, no suggestions, No data available, pending links, blank charts |
 | [Pick lists and tables](#pick-lists-and-tables) | a pick list instead of the entity, only ids in the list, only 25 rows, keys do nothing |
 | [Live and dates](#live-updates-and-business-dates) | view does not tick, no data held for a date, DRS-4003, known at has no effect, DRS-1007, DRS-1001 naming a store that holds the date |
@@ -360,7 +360,7 @@ The log gets the first failure and failures number 2, 4, 8, ... of each thing, n
   Kubernetes, use `/healthz` for the liveness probe and `/readyz` for the readiness probe (see
   [OPERATIONS.md](../admin/OPERATIONS.md)).
 
-### The live dot is amber ("Reconnecting…")
+### The Live button has an amber ring ("Reconnecting…")
 
 - **What you see:** the dot among the round tools of the top bar turns amber, and values stop changing.
   Hover over it, or use a screen reader, to read *Reconnecting…*.
@@ -370,7 +370,7 @@ The log gets the first failure and failures number 2, 4, 8, ... of each thing, n
   recovers, run the first checks. If only an older tab stays amber after you signed in again (or picked another
   server) in another tab, that tab belongs to the previous session: reload it.
 
-### The live dot is amber after the tab was in the background ("Paused while hidden")
+### The Live button has an amber ring after the tab was in the background ("Paused while hidden")
 
 - **Cause:** the tab was hidden for 10 seconds and gave its live subscriptions back, to save resources.
 - **Fix:** show the tab: it takes them back and repaints.
@@ -1053,7 +1053,7 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 
 ### A report over a live dataset shows no live indicator, or a tile does not update
 
-- **Cause:** the report's dataset has no table with `mode: live` (the indicator appears only then), or the console's live channel could not be opened (see "The live dot is amber"), or `drishti.bi.live.enabled` is `false` on the server (live tables are then a 5-second snapshot and nothing is streamed).
+- **Cause:** the report's dataset has no table with `mode: live` (the indicator appears only then), or the console's live channel could not be opened (see "The Live button has an amber ring"), or `drishti.bi.live.enabled` is `false` on the server (live tables are then a 5-second snapshot and nothing is streamed).
 - **Fix:** open the dataset's page: its Layers table says `in memory, live` for a live table. Check `GET /api/v1/bi/datasets/{id}/layers` (`live.state`) and, as a BI administrator, `GET /api/v1/bi/engine` (`live.enabled`).
 
 ### The indicator says **Stale**

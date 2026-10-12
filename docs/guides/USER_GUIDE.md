@@ -81,21 +81,22 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 
 ## The top bar
 
-Every page after the landing page has the same top bar, on one row.
+Every page has the same top bar, on one row: the terminal, the views, BI, Build, Admin, Help and the landing page when you are signed in, and the public pages (signed out) in the same height, logo and
+wordmark (set in Cinzel; the slogan is in the footer, which also carries Help, About, the competitive analysis and the release notes).
 
 The **Drishti name and logo** at its left end always lead to the landing page, also when you are signed in. The
 landing page then shows **← Back to …** (the view, Build, Admin or Help page you came from; `Alt+B`), so one click
 takes you back where you were; *Open the terminal* goes to the terminal instead.
 
 ```text
-◉ Drishti  > TRD MX-20000001, CPTY north …  [2026-09-30] ● Live   Views ▾  BI ▾  Forms ▾  Reports ▾  Build ▾  Admin ▾  Help ▾   ● [bell] [box 12] [palette] (A) Ash ▾
+◉ Drishti  > TRD MX-20000001, CPTY north …  [2026-09-30]   Views ▾  BI ▾  Build ▾  Admin ▾  Help ▾   [bell] [box 12] [palette] (Live) (A) Ash ▾
 ```
 
 **Beside the brand** (click it to go back to `/`) are the [command line](#the-command-line), which takes the
-free space, and the [business date](#business-dates-live-or-a-day-in-the-past) box with its **Live** button.
+free space, and the [business date](#business-dates-live-or-a-day-in-the-past) box.
 Below 1100 pixels wide they move to a line of their own.
 
-**Then six menus** (seven with **BI**, below; **Admin** only for administrators). Below 1280 pixels they show as icons only. Each opens a wide panel
+**Then the menus**: **Views**, **Build** and **Help** for everyone, **BI** where you hold the `bi` power, **Admin** only for administrators. Below 1280 pixels they show as icons only. Each opens a wide panel
 (a *mega menu*) in which every entry has an icon and one line saying what it does. The menu holding the page
 you are on is highlighted.
 
@@ -1759,13 +1760,14 @@ The palette among the round tools of the top bar offers seven themes:
 | Theme | Look |
 |---|---|
 | Terminal (default) | dark, amber accents |
-| Parchment | light |
-| Blue | dark, cyan to violet |
-| Wall Street | the Bloomberg colours: black, amber, yellow |
-| Green | dark, green accents |
-| Crimson / Crimson dark | Harvard crimson with indigo |
+| Parchment | light, warm paper |
+| Blue | light page; Sajha's blue: a navy-to-blue top bar with white text |
+| Wall Street | dark, the Bloomberg colours: black, amber, yellow |
+| Green | light page; Sajha's green: a deep-green top bar with white text |
+| Crimson | light page; a crimson-deep to crimson to indigo top bar with white text, deep-crimson headings |
+| Crimson dark | the same crimson on a dark page |
 
-Each theme's two colours shade the page, the top bar, view and panel headers and accent buttons; panel
+Each theme's colours shade the page, the top bar, view and panel headers and accent buttons; panel
 bodies, tables and figures stay on solid colours so they read clearly. If your system asks for more
 contrast or less transparency, the solid look is used. Signed in, your choice is saved to your account;
 otherwise the browser remembers it.

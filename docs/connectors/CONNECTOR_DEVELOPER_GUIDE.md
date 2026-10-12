@@ -1374,7 +1374,7 @@ settings: { mode: ticks, bootstrap-servers: "${DRISHTI_KAFKA_BOOTSTRAP}", topics
 
 The view is live because a connector *pushes* the kind (the plugin answers `pushes(ref)` with true in ticks mode),
 not because the document that answered is live: `TRD MX-20000001` reads from `trading-store` (its provenance names the
-lake), shows the green live dot, and each message for MX-20000001 on the topic repaints it within a frame. A picked
+lake), shows the green Live button, and each message for MX-20000001 on the topic repaints it within a frame. A picked
 business date stays a static snapshot either way.
 
 ### Several domains

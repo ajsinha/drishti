@@ -33,10 +33,10 @@ curl -s -H "Authorization: Bearer $DRISHTI_METRICS_TOKEN" http://localhost:18480
 Any of these:
 
 - `p99Ms` from `GET /api/v1/health/live` stays above 40 for more than a minute (normal: single digits). (The
-  console's live dot does not show the p99 on screen; screen readers announce it as `Live, p99 N ms`.)
+  console's Live button does not show the p99 on screen; screen readers announce it as `Live, p99 N ms`.)
 - The Grafana panel or alert on `drishti_live_latency_p99_milliseconds` is above 40.
 - Values change in bursts, or seconds late, compared with the source.
-- The live dot in the top bar stays **amber** (*Reconnecting…*), or values stop changing although the source
+- The Live button in the top bar keeps an **amber** ring (*Reconnecting…*), or values stop changing although the source
   is ticking.
 - New live views fail to open with `DRS-5001 too many live streams on this server`.
 
@@ -132,7 +132,7 @@ A healthy server with some viewers:
 
    Only sources listed here can tick. If yours is missing or not `UP`, follow [source-down.md](source-down.md).
 
-2. Is the user on today's business date? A picked past date never streams; the live dot is then grey
+2. Is the user on today's business date? A picked past date never streams; the Live button is then red with pause bars
    (*Static*), and the date box is amber.
 
 3. Stream the entity straight from the server, bypassing the console:
@@ -216,6 +216,6 @@ Every change to the server's configuration needs a restart of the server. Live v
 
 1. Within one 30 s window after the fix, `curl -s http://localhost:18480/api/v1/health/live` shows `p99Ms`
    below 40 (normally single digits).
-2. In the console, the live dot glows (not amber) on `TRD END-1000008`, and `MTM (USD)` changes every few hundred
+2. In the console, the Live button glows (no amber ring) on `TRD END-1000008`, and `MTM (USD)` changes every few hundred
    milliseconds.
 3. `drishti_live_latency_p99_milliseconds` in Prometheus stays below 40 for the next hour.

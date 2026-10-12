@@ -47,7 +47,7 @@ the tutorials say what to do first.
 ## What you need once
 
 Tutorials 1 to 3 need only [tutorial 1](01-first-15-minutes.md): Java 21 or newer, Python 3.11 or newer, `uv`, git, and the server and console started with sign-in on. Later tutorials say what else they need.
-Run commands from the repository root. Where a tutorial shows output, it was captured from a real server of this version (1.22.0); numbers that depend on the generated sample data (counts, MTM) may differ a little on your machine.
+Run commands from the repository root. Where a tutorial shows output, it was captured from a real server of this version (2.0.0); numbers that depend on the generated sample data (counts, MTM) may differ a little on your machine.
 
 The pictures are made, not drawn: `tools/docs/screenshots.py --guide t01` (to `t17`) drives a scratch stack with a real browser and writes them to `img/`. When the screens change, run it again.
 

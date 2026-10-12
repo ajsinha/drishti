@@ -6,27 +6,38 @@
 
 # Drishti documentation
 
-Most of these documents are also the console's in-app help (`/help`). They are rendered there as they
-are, so fixing a file here fixes the help.
+Most of these documents are also the console's in-app help (`/help`). The help centre lists **about forty pages in six sections**: *Start* (install and run, the tutorials), *Use*, *BI*, *Data*, *Build* and *Operate*.
+**The tutorials teach, the guides are reference:** every step-by-step walk-through lives in [tutorials/](tutorials/README.md); a guide says what a feature is, every option and every code, and points to the tutorial that
+shows it. The architecture documents, the per-plugin connector documents, the runbooks and the QA records stay in the repository (and open in the help centre when a page links to them), listed below. An address from
+before the consolidation (for example `/help/quickstart` or `/help/connector-kafka`) redirects to the page or section that took the subject over.
 
 ## New here? Read these, in order
 
-1. **[GETTING_STARTED.md](guides/GETTING_STARTED.md)**: ten minutes from a fresh clone to your first live view, commands only.
-2. **[USER_GUIDE.md](guides/USER_GUIDE.md)**: every feature of the console, each with a worked example.
-3. **[PACKS.md](guides/PACKS.md)**: which industries are available, the commands each one adds, and how to load them; building your own is [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md).
+1. **[GETTING_STARTED.md](guides/GETTING_STARTED.md)** (*Install and run*): prerequisites, build, start the server and the console, sign-in, Docker, other ways to build, and Windows.
+2. **[tutorials/](tutorials/README.md)**: seventeen hands-on tutorials on the shipped demo data, with the exact commands, real output and real screenshots. Start with [your first 15 minutes](tutorials/01-first-15-minutes.md).
+3. **[USER_GUIDE.md](guides/USER_GUIDE.md)**: every feature of the console, as a reference. **[PACKS.md](guides/PACKS.md)**: which industries are available and how to load them; building your own is [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md).
 
-Prefer to learn by doing? **[tutorials/](tutorials/README.md)** has hands-on tutorials, each a worked example on the shipped demo data with the exact commands, real output and real screenshots: your first fifteen minutes, looking things up, querying by form, connecting your data, building a pack, designing a screen, loading data daily, sharing, and reports.
+If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md).
 
-If the quickstart goes too fast, [GETTING_STARTED.md](guides/GETTING_STARTED.md) walks the same ground with every step
-explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md).
+## The help centre, section by section
+
+| Section | Pages |
+|---|---|
+| **Start** | [Install and run](guides/GETTING_STARTED.md) · [Tutorials](tutorials/README.md) |
+| **Use** | [User guide](guides/USER_GUIDE.md) · [Query by form](guides/QUERY_BY_FORM.md) · [Reports and subscriptions](guides/SCHEDULED_REPORTS.md) · Sharing and collaboration (console guide) · [Calc](guides/PYTHON_CALC.md) · [Scripts, notebooks and Excel](guides/CLIENTS.md) |
+| **BI** | [BI guide](guides/BI_GUIDE.md) · [BI recipes](guides/BI_RECIPES.md) · [Datasets](guides/DATASETS.md) · [Reports](guides/REPORTS.md) · [Boards](guides/BOARDS.md) · [Governance](guides/BI_GOVERNANCE.md) · [Distribution](guides/DISTRIBUTION.md) · [Python in BI](guides/PYTHON_BI.md) · [Analyse](guides/ANALYSE.md) · [AI in BI](guides/BI_AI.md) |
+| **Data** | [Connectors](connectors/CONNECTORS.md) (a section per plugin) · [Connector files](connectors/CONNECTOR_FILES.md) · [TLS and proxy](connectors/TLS.md) · [Data loads](guides/DATA_LOADS.md) |
+| **Build** | [Packs](guides/PACKS.md) · [Pack developer guide](guides/PACK_DEVELOPER_GUIDE.md) · [Schema to pack](guides/SCHEMA_TO_PACK.md) · [Rachana guide](guides/SUTRA_DEVELOPER_GUIDE.md) · [Rachana reference](guides/RACHANA_REFERENCE.md) · [Panels](guides/PANELS.md) · [Examples](guides/examples/README.md) · [Build workbench](guides/SCREEN_DESIGNER.md) · [Connector developer guide](connectors/CONNECTOR_DEVELOPER_GUIDE.md) · [Developer guide](guides/DEVELOPER_GUIDE.md) · [Embedding](guides/ELEMENTS.md) |
+| **Operate** | [Configuration](admin/CONFIGURATION.md) · [Operations](admin/OPERATIONS.md) · [Users and roles](admin/USER_MANAGEMENT.md) · [API](guides/API_GUIDE.md) · [Command line](guides/CLI_GUIDE.md) · [AI providers](architecture/AI_PROVIDERS.md) · [Troubleshooting](guides/TROUBLESHOOTING.md) · [Release notes](../RELEASE_NOTES.md) |
+| In the repository only | [architecture/](architecture/ARCHITECTURE.md) (design notes and [decision records](architecture/adr/README.md)), the per-plugin [connector documents](connectors/), the [runbooks](admin/runbooks/source-down.md), [qa/](qa/) |
 
 ## How these documents are organised
 
 | Folder | What is in it |
 |---|---|
-| [tutorials/](tutorials/README.md) | hands-on tutorials 1 to 9 (more to come): a worked example each, on the demo data, with commands, real output and screenshots |
-| [guides/](guides/) | getting started, the user guide, business intelligence (Rūpaka), packs and the command line, the Sutra and Rachana guides, clients, API and troubleshooting; `examples/` holds working Sutras |
-| [connectors/](connectors/) | connecting your data: the connector and plugin guides, a design document per store (Delta Lake, PostgreSQL, Aerospike, files …) and demo data |
+| [tutorials/](tutorials/README.md) | the seventeen hands-on tutorials: a worked example each, on the demo data, with commands, real output and screenshots |
+| [guides/](guides/) | install and run, the user guide, business intelligence (Rūpaka), packs and the command line, the Sutra and Rachana guides, panels, clients, API and troubleshooting; `examples/` holds working Sutras |
+| [connectors/](connectors/) | connecting your data: the Connectors reference, the connector files, TLS and proxy, the developer guide, a design document per store (Delta Lake, PostgreSQL, Aerospike, files …) and demo data |
 | [admin/](admin/) | running Drishti: operations, configuration, users and roles, performance, and the runbooks |
 | [qa/](qa/) | quality assurance runs: each with its activity logs, findings by severity, and the scripts that reproduce them |
 | [architecture/](architecture/) | how Drishti is built: the architecture, design notes (inference, live updates, Rūpaka, Elements, collaboration, the AI layer), the implementation plan and the decision records (ADRs) |
@@ -38,19 +49,19 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 
 | If you want to… | Read |
 |---|---|
-| Get it running in ten minutes | [GETTING_STARTED.md](guides/GETTING_STARTED.md) |
-| Install and start it with every step explained | [GETTING_STARTED.md](guides/GETTING_STARTED.md) |
+| Install and start it, from a clean machine | [GETTING_STARTED.md](guides/GETTING_STARTED.md) |
+| Learn it by doing, from your first 15 minutes | [tutorials/](tutorials/README.md) |
 | Tell Drishti a batch of data has landed (API, CLI, Airflow, cron, DishtaYantra), flag late data | [DATA_LOADS.md](guides/DATA_LOADS.md) |
 | Open business intelligence: `RUPAKA <GO>`, the catalogue, workspaces, publish and review, certify | [BI_GUIDE.md](guides/BI_GUIDE.md) |
-| Learn BI from three sample datasets on the trades: read a model, query it, row rules and masks, start a model from the packs | [tutorial 10](tutorials/10-first-bi-report.md) |
+| Learn BI by building a report, then making it run itself, live, governed, in Python and with AI | [tutorials 10 to 15](tutorials/README.md) |
+| Read a dataset model, query it, see row rules and masks at work with four people, start a model from the packs | [BI_RECIPES.md](guides/BI_RECIPES.md) |
 | Write or read a report: pages, visuals, wells, filters, slicers, drill-down and drill-through, the viewer, how a visual becomes a query, DRS-9030 to 9035 | [REPORTS.md](guides/REPORTS.md) |
 | Publish BI safely: versions and diffs, review, certification, lineage, impact of a dataset change, bundles between environments, DRS-9040 to 9042 | [BI_GOVERNANCE.md](guides/BI_GOVERNANCE.md) |
 | Export a report or view as PDF, PNG, Excel or CSV; subscribe people by email, each with their own masks, DRS-9060 and 9061 | [DISTRIBUTION.md](guides/DISTRIBUTION.md) |
-| Build live BI: boards (a wall of live tiles, kiosk, tile alerts), live tables, live visuals, Perspective, DRS-9050 to 9053 | [DISTRIBUTION.md](guides/DISTRIBUTION.md) | export (PDF, PNG, Excel, CSV), subscriptions (schedules, per-recipient renders, retries, history), the console list, limits, what is not built |
-| [BOARDS.md](guides/BOARDS.md) |
+| Build live BI: boards (a wall of live tiles, kiosk, tile alerts), live tables, live visuals, Perspective, DRS-9050 to 9053 | [BOARDS.md](guides/BOARDS.md) |
 | Write or read a dataset: tables, relationships, measures, the expression language, row rules, masks, layers | [DATASETS.md](guides/DATASETS.md) |
 | Ship packs, Sutras and data to servers by copying: bundle, verify, deploy, promote, roll back | [OPERATIONALISING.md](guides/OPERATIONALISING.md) |
-| Install and run it on Windows (PowerShell, no Hadoop) | [GETTING_STARTED.md (Windows)](guides/GETTING_STARTED.md#drishti-on-windows) |
+| Install and run it on Windows (PowerShell, no Hadoop) | [GETTING_STARTED.md: Windows](guides/GETTING_STARTED.md#drishti-on-windows) |
 | Run and debug the server in IntelliJ IDEA and the console in PyCharm | [IDE_GUIDE.md](guides/IDE_GUIDE.md) |
 | Build a pack from JSON Lines, check it in CI, load data and drive the Screen Designer's review from a terminal | [CLI_GUIDE.md](guides/CLI_GUIDE.md) |
 | Find your way around the top bar and its menus | [USER_GUIDE.md › The top bar](guides/USER_GUIDE.md#the-top-bar) |
@@ -62,7 +73,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Filter a table like Excel: tick values, conditions, dates, top 10 | [USER_GUIDE.md › Filter a table like Excel](guides/USER_GUIDE.md#filter-a-table-like-excel) |
 | Understand what a view is showing you | [USER_GUIDE.md › Reading a view](guides/USER_GUIDE.md#reading-a-view) |
 | Find entities by value (`TRD where mtm > 1m …`) | [USER_GUIDE.md › Search by value](guides/USER_GUIDE.md#search-by-value) |
-| Fill in a form instead of writing a search (`FORM trading <GO>`, the Forms menu) | [USER_GUIDE.md › Search with a form](guides/USER_GUIDE.md#search-with-a-form-form-pack) |
+| Fill in a form instead of writing a search (`FORM trading <GO>`, Forms in the Views menu) | [QUERY_BY_FORM.md](guides/QUERY_BY_FORM.md) |
 | Choose what a panel shows with dropdowns, toggles and sliders; read a trade down to its fixings | [USER_GUIDE.md › Controls](guides/USER_GUIDE.md#controls-on-a-screen-choose-what-a-panel-shows), [A deep trade](guides/USER_GUIDE.md#a-deep-trade-legs-cashflows-and-fixings) |
 | Read what is in the economics and politics-society packs, where it comes from and under what licence (IMF data: internal demonstrations only) | [REAL_DATA.md](guides/REAL_DATA.md) |
 | Look at a past date, or compare two dates | [USER_GUIDE.md › Business dates](guides/USER_GUIDE.md#business-dates-live-or-a-day-in-the-past), [Compare](guides/USER_GUIDE.md#compare-what-changed) |
@@ -84,11 +95,11 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Learn to build screens in the workbench, step by step, with a picture of each step | [tutorial 6](tutorials/06-design-a-screen.md) |
 | Learn what a Sutra is and write one, from the first panel to a tested screen | [SUTRA_DEVELOPER_GUIDE.md](guides/SUTRA_DEVELOPER_GUIDE.md) |
 | Choose or configure a panel kind | [PANELS.md](guides/PANELS.md) |
-| Add a new panel kind to Drishti | [PANELS.md (developing a panel kind)](guides/PANELS.md#developing-a-panel-kind) |
+| Add a new panel kind to Drishti | [PANELS.md: developing a panel kind](guides/PANELS.md#developing-a-panel-kind) |
 | Edit a Sutra with live preview and submit it for review | [Screen designer guide](guides/SCREEN_DESIGNER.md) |
 | Lay out nested documents (lists inside lists) | [Nested documents tutorial](guides/NESTED_DOCUMENTS.md) |
 | Choose the right panel kind | [PANELS.md](guides/PANELS.md) |
-| Build a new panel kind, end to end (grammar, engine, console, workbench, tests) | [PANELS.md (developing a panel kind)](guides/PANELS.md#developing-a-panel-kind) |
+| Build a new panel kind, end to end (grammar, engine, console, workbench, tests) | [PANELS.md: developing a panel kind](guides/PANELS.md#developing-a-panel-kind) |
 | Look up a key, format, expression or problem code | [RACHANA_REFERENCE.md](guides/RACHANA_REFERENCE.md) |
 | Get completion for Sutras in your own editor (the JSON Schema of the language) | [API_GUIDE.md](guides/API_GUIDE.md#catalogue-about-packs-sources-sutras) (`GET /api/v1/rachana/schema`) |
 | Convert Markdown Sutras (`*.sutra.md`) from before 1.11 | [runbooks/sutra-broken.md](admin/runbooks/sutra-broken.md#step-1a-a-sutramd-or-plain-yaml-file-drs-2004-drs-2009) |
@@ -113,7 +124,8 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Generate a full pack from Python (Sutras, samples, guide, lake) | [PACK_DEVELOPER_GUIDE.md › Generators](guides/PACK_DEVELOPER_GUIDE.md) |
 | Define a connector as a file, change it without a restart, manage it in Admin → Connectors | [CONNECTOR_FILES.md](connectors/CONNECTOR_FILES.md) |
 | Choose a connector, write a new plugin and test it | [CONNECTOR_DEVELOPER_GUIDE.md](connectors/CONNECTOR_DEVELOPER_GUIDE.md) |
-| Connect your data, step by step, with every setting of the connector | the per-connector docs under [connectors/](connectors/), one per store |
+| Choose a connector and see a connector file for each plugin | [CONNECTORS.md](connectors/CONNECTORS.md) (a section per plugin; each links to its full document under [connectors/](connectors/)) |
+| Connect your own data by doing it once | [tutorial 4](tutorials/04-connect-your-data.md) |
 | Understand live updates (SSE, frames, reconnects) | [LIVE.md](architecture/LIVE.md) |
 
 ### Run and administer it
@@ -130,14 +142,14 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Know how many users a server holds, whether memory stays flat over a day, and how to load-test it | [LOAD_AND_MEMORY.md](admin/LOAD_AND_MEMORY.md) |
 | Compare the stores at several sizes, see how each scales, and run the scale benchmark yourself | [SCALE_BENCHMARK.md](admin/SCALE_BENCHMARK.md) |
 | Serve millions of entities a day for years from Delta Lake | [DELTA_CONNECTOR.md](connectors/DELTA_CONNECTOR.md) |
-| Run the server on Windows, or choose the Delta engine (native or Hadoop) | [GETTING_STARTED.md (Windows)](guides/GETTING_STARTED.md#drishti-on-windows), [DELTA_CONNECTOR.md › Engines](connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop) |
+| Run the server on Windows, or choose the Delta engine (native or Hadoop) | [GETTING_STARTED.md: Windows](guides/GETTING_STARTED.md#drishti-on-windows), [DELTA_CONNECTOR.md › Engines](connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop) |
 | Serve millions of entities a day from Aerospike, with recent history there and years in Delta Lake | [AEROSPIKE_CONNECTOR.md](connectors/AEROSPIKE_CONNECTOR.md) |
 | Serve millions of entities a day from PostgreSQL | [POSTGRES_CONNECTOR.md](connectors/POSTGRES_CONNECTOR.md) |
 | Serve data from plain JSON-lines files, the simplest store | [FILE_CONNECTOR.md](connectors/FILE_CONNECTOR.md) |
 | Serve documents kept as JSON objects in S3, MinIO or another S3-compatible store | [S3_CONNECTOR.md](connectors/S3_CONNECTOR.md) |
 | Read entities from an in-house HTTP/JSON service, one request per view | [REST_CONNECTOR.md](connectors/REST_CONNECTOR.md) |
 | Show live entities from Kafka topics, with history from a lake | [KAFKA_CONNECTOR.md](connectors/KAFKA_CONNECTOR.md) |
-| Send connectors, AI providers and MCP servers through an outbound HTTP proxy (login, no-proxy list, https via CONNECT) | [TLS.md (proxy)](connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) |
+| Send connectors, AI providers and MCP servers through an outbound HTTP proxy (login, no-proxy list, https via CONNECT) | [TLS.md: proxy](connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) |
 | Connect a connector over TLS: private CA, PEM or PKCS12/JKS files, mutual TLS, Confluent Cloud, SASL | [TLS.md](connectors/TLS.md), [KAFKA_CONNECTOR.md › Security](connectors/KAFKA_CONNECTOR.md#11-security-tls-sasl-and-confluent) |
 | Show live entities from ActiveMQ queues or topics | [ACTIVEMQ_CONNECTOR.md](connectors/ACTIVEMQ_CONNECTOR.md) |
 | Show live entities from RabbitMQ queues | [RABBITMQ_CONNECTOR.md](connectors/RABBITMQ_CONNECTOR.md) |
@@ -178,7 +190,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [GETTING_STARTED.md](guides/GETTING_STARTED.md) | you want Drishti running in ten minutes and need only the commands |
 | [GETTING_STARTED.md](guides/GETTING_STARTED.md) | you are installing for the first time and want each step explained, with what you should see |
 | [IDE_GUIDE.md](guides/IDE_GUIDE.md) | you run the server from IntelliJ IDEA and the console from PyCharm: JDK and interpreter setup, run configurations, debugging, reloading changes, tests in the IDE |
-| [GETTING_STARTED.md (Windows)](guides/GETTING_STARTED.md#drishti-on-windows) | you run Drishti on Windows: a JDK 21 or newer (production runs 21) and Python, building or copying the jar, the native Delta engine (no Hadoop, no `winutils.exe`), the PowerShell scripts, what does not work there, troubleshooting |
+| [GETTING_STARTED.md: Windows](guides/GETTING_STARTED.md#drishti-on-windows) | you run Drishti on Windows: a JDK 21 or newer (production runs 21) and Python, building or copying the jar, the native Delta engine (no Hadoop, no `winutils.exe`), the PowerShell scripts, what does not work there, troubleshooting |
 | [USER_GUIDE.md](guides/USER_GUIDE.md) | you use the console: top bar, command line, pick lists, tables, views, dates, search, export, monitors, alerts, workspaces, settings, the Build workbench, administration |
 | [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md) | something is not working: each problem has what you see, how to check and the fix |
 | [CLIENTS.md](guides/CLIENTS.md) | you read Drishti from a script, a notebook or Excel: personal API tokens and scopes, the Python client, Power Query |
@@ -201,7 +213,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [SUTRA_DEVELOPER_GUIDE.md](guides/SUTRA_DEVELOPER_GUIDE.md) | you are learning to write Sutras: anatomy, matching, labels, paths, source, row groups, testing and CI, the checklist |
 | [RACHANA_REFERENCE.md](guides/RACHANA_REFERENCE.md) | you are writing a Sutra and need the exact key, panel option, format, expression or problem code |
 | [PANELS.md](guides/PANELS.md) | you choose, configure or debug a panel: all twenty-two kinds, what each means, how it behaves, an example and a picture |
-| [PANELS.md (developing a panel kind)](guides/PANELS.md#developing-a-panel-kind) | you add a new panel kind to Drishti |
+| [PANELS.md: developing a panel kind](guides/PANELS.md#developing-a-panel-kind) | you add a new panel kind to Drishti |
 | [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md) | you change Drishti's code: layout, build, tests, gates, and recipes |
 | [API_GUIDE.md](guides/API_GUIDE.md) | you call the REST API from a program, or need the ViewModel contract |
 
@@ -243,7 +255,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [CONNECTOR_DEVELOPER_GUIDE.md](connectors/CONNECTOR_DEVELOPER_GUIDE.md) | you choose a connector, write a new source plugin, or test one with the testkit contracts; each connector's settings and walk-through are in its own `*_CONNECTOR.md` |
 | [CONNECTOR_FILES.md](connectors/CONNECTOR_FILES.md) | you define connectors: one YAML file each in `config/connectors`, an example per store, how packs and files fit, live reload, Admin → Connectors, the API and CLI, moving off `application.yaml` |
 | [TLS.md](connectors/TLS.md) | a connector must talk TLS: the shared `tls.*` settings, PEM, PKCS12 and JKS, mutual TLS, converting certificates, expiry warnings, rotation, troubleshooting |
-| [TLS.md (proxy)](connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) | a site reaches the internet only through a forward proxy: `proxy:` per connector, AI provider or MCP server, the site default `drishti.http.proxy.*`, no-proxy, https via CONNECT, masking, what each connector does, troubleshooting |
+| [TLS.md: proxy](connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) | a site reaches the internet only through a forward proxy: `proxy:` per connector, AI provider or MCP server, the site default `drishti.http.proxy.*`, no-proxy, https via CONNECT, masking, what each connector does, troubleshooting |
 | [DEMO_CONNECTOR.md](connectors/DEMO_CONNECTOR.md) | you want to know what the sample connector serves, how it ticks, how packs supply samples, and how to switch it off |
 | [DEMO_DATA.md](connectors/DEMO_DATA.md) | you need demo data in Delta Lake, PostgreSQL or Aerospike, small for a laptop or a million trades a day |
 | [FILE_CONNECTOR.md](connectors/FILE_CONNECTOR.md) | you serve data from JSON-lines files: the layout, one file per kind per day, the index of a day, loading, sizes, measurements |
@@ -282,7 +294,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 |---|---|
 | [source-down.md](admin/runbooks/source-down.md) | a connector is down, slow, idle or failed to start; views fail with `DRS-1003`/`DRS-1004`; links say *pending* |
 | [sutra-broken.md](admin/runbooks/sutra-broken.md) | a Sutra has problems, an edit does not show, or a view says `inference only` where you expected a Sutra |
-| [live-latency-high.md](admin/runbooks/live-latency-high.md) | live views are slow, late or frozen, or the live dot stays amber |
+| [live-latency-high.md](admin/runbooks/live-latency-high.md) | live views are slow, late or frozen, or the Live button keeps its amber ring |
 | [sign-in.md](admin/runbooks/sign-in.md) | users cannot sign in, are locked out, or are refused (`DRS-5010`, `DRS-5002`) |
 
 ### In-app guides (`../drishti-console/web/guides/`, also under *Help*)
