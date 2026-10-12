@@ -417,6 +417,7 @@ public final class BiService {
         m.put("workspace", i.workspace());
         m.put("workspaceName", w.name());
         m.put("personal", w.personal());
+        m.put("workspaceReviewRequired", w.reviewRequired());
         m.put("kind", i.kind());
         m.put("title", i.title());
         m.put("description", i.description());
@@ -463,6 +464,10 @@ public final class BiService {
             m.put("body", body);
             m.put("bodyIs", draft ? "draft" : "published");
             m.put("draftChanges", !shipped && i.isPublished() && !i.status().equals("published"));
+            if (!shipped && i.status().equals("proposed")) {
+                m.put("approvers", notifier.reviewers(i, i.proposedBy()).stream().sorted().toList());          // who can decide it (told when it was proposed)
+                m.put("approveRule", "a bi-steward, or a member of " + w.name() + " whose role has the approve power" + (fourEyes() ? "; not " + i.proposedBy() + ", who proposed it (four-eyes)" : ""));
+            }
         }
         return m;
     }

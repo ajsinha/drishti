@@ -409,7 +409,7 @@ public final class BiReportService {
             l = loadItem(p, id);
         }
         Report report = l.parsed().report();
-        if (report == null || l.dataset() == null || !ok(l.problems())) {
+        if (report == null || l.dataset() == null) {
             String why = l.problems().stream().filter(ReportParser.Problem::error).findFirst().map(x -> x.code() + " " + x.path() + ": " + x.message()).orElse("the report cannot be read");
             throw new DrishtiException(ErrorCode.REPORT_DATASET, "the report has errors, so it cannot be drawn: " + why);
         }
@@ -421,12 +421,35 @@ public final class BiReportService {
         if (visual == null) {
             throw new DrishtiException(ErrorCode.REPORT_STATE, "page '" + pageId + "' has no visual '" + visualId + "'");
         }
+        String blocked = blocking(l, report, page, visual);
+        if (blocked != null) {
+            throw new DrishtiException(ErrorCode.REPORT_DATASET, "this visual has errors, so it cannot be drawn (the others are not affected): " + blocked);
+        }
         ReportState state = relative(report, ReportState.of(stateJson));
         DatasetSet.Entry own = l.of(visual) == null ? new DatasetSet.Entry(l.datasetItem(), l.dataset()) : l.of(visual);       // the visual's own dataset, else the report's
         BiStore.Item dsItem = own.item();
         VisualQueries.Built built = VisualQueries.build(report, page, visual, state, own.dataset(), props, (field, n, by, desc, context, from, to) -> top(p, dsItem, field, n, by, desc, context, from, to),
                 l.sets());
         return new Prepared(report, visual, dsItem, own.dataset(), built);
+    }
+
+    /**
+     * The first error that stops this one visual being drawn, else null: an error in the report as a whole, or in this visual (or its page's filters). An error in
+     * another visual never blanks this one - one bad visual is one error card.
+     */
+    private static String blocking(Loaded l, Report report, Report.Page page, Report.Visual visual) {
+        int pi = report.pages().indexOf(page);
+        int vi = page.visuals().indexOf(visual);
+        String mine = "pages[" + pi + "].visuals[" + vi + "]";
+        String ofPage = "pages[" + pi + "]";
+        String own = report.datasetOf(visual);
+        return l.problems().stream().filter(ReportParser.Problem::error).filter(x -> {
+            String path = x.path() == null ? "" : x.path();
+            if (path.startsWith("pages[")) {
+                return path.equals(mine) || path.startsWith(mine + ".") || path.startsWith(mine + "[") || path.startsWith(ofPage + ".filters");
+            }
+            return !x.message().startsWith("visual dataset '") || x.message().startsWith("visual dataset '" + own + "'");
+        }).findFirst().map(x -> x.code() + " " + x.path() + ": " + x.message()).orElse(null);
     }
 
     /** Works out the relative-date slicers of the report under the state ({@link RelativeDates#apply}). */

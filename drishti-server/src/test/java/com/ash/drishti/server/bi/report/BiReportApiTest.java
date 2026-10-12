@@ -158,6 +158,9 @@ class BiReportApiTest {
                     .replace("title: Lake for reports", "title: Restricted\naudience: { roles: [bi-risk] }"));
             Files.writeString(reports.resolve("uses-restricted.report.yaml"), "report: uses-restricted\ndataset: restricted\npages:\n  - id: p\n    visuals:\n"
                     + "      - { id: n, type: card, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n");
+            Files.writeString(reports.resolve("one-bad.report.yaml"), "report: one-bad\ndataset: lake-report\npages:\n  - id: p\n    visuals:\n"
+                    + "      - { id: good, type: card, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }\n"
+                    + "      - { id: bad, type: card, at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [NoSuchMeasure] } }\n");
             Files.writeString(reports.resolve("broken.report.yaml"), "report: broken\ndataset: no-such-dataset\npages:\n  - { id: p, visuals: [] }\n");
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
@@ -472,6 +475,13 @@ class BiReportApiTest {
         JsonNode v = ok(call("POST", "/api/v1/bi/reports/validate", wes(), Map.of("yaml", DRAFT_HEAD + "      - { id: m, type: map" + AT + ", wells: { values: [Trades] } }\n")));
         assertThat(v.path("valid").asBoolean()).isFalse();
         assertThat(v.path("problems").toString()).contains("a country code");
+    }
+
+    @Test @Order(98)
+    void oneBadVisualIsOneErrorAndTheOthersStillDraw() throws Exception {
+        String base = "/api/v1/bi/reports/file:report:one-bad/query";
+        assertThat(ok(call("POST", base, rita(), "{\"page\":\"p\",\"visual\":\"good\"}")).path("rows").get(0).get(0).asDouble()).isPositive();
+        refused(call("POST", base, rita(), "{\"page\":\"p\",\"visual\":\"bad\"}"), 422, "DRS-9034");
     }
 
     @Test @Order(11)
