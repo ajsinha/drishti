@@ -137,7 +137,7 @@ public final class DatasetRefresher implements AutoCloseable {
     private final AuditLog audit;
     private final Map<String, State> states = new ConcurrentHashMap<>();
     private final java.nio.file.Path stateFile;
-    private final Object saving = new Object();
+    private final java.util.concurrent.locks.ReentrantLock saving = new java.util.concurrent.locks.ReentrantLock(); // file I/O under it: not synchronized (virtual threads)
     private volatile FramedHooks framed = new FramedHooks() {
         @Override
         public Set<String> kinds(Dataset d) {
@@ -347,7 +347,8 @@ public final class DatasetRefresher implements AutoCloseable {
         if (stateFile == null) {
             return;
         }
-        synchronized (saving) {
+        saving.lock();
+        try {
             try {
                 Map<String, Object> jobs = new LinkedHashMap<>();
                 states.forEach((k, s) -> jobs.put(k, s.toMap()));
@@ -358,6 +359,8 @@ public final class DatasetRefresher implements AutoCloseable {
             } catch (java.io.IOException | RuntimeException e) {
                 LOG.warn("BI refresh state could not be saved to {}: {}", stateFile, e.toString());
             }
+        } finally {
+            saving.unlock();
         }
     }
 

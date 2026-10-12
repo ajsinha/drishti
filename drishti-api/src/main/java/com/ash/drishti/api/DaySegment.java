@@ -87,12 +87,7 @@ public final class DaySegment {
         this.channel = channel;
         this.bytes = bytes;
         this.cacheBlocks = Math.max(0, cacheBlocks);
-        this.cache = new LinkedHashMap<>(16, 0.75f, true) {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<Integer, List<EntityHit>> e) {
-                return size() > DaySegment.this.cacheBlocks;
-            }
-        };
+        this.cache = new LinkedHashMap<>(16, 0.75f, true); // access order: the eldest is the least recently used
     }
 
     /** The decoded blocks a segment keeps unless told otherwise ({@code index.block-cache}). */
@@ -369,6 +364,11 @@ public final class DaySegment {
         if (cacheBlocks > 0) {
             synchronized (cache) {
                 cache.put(b, decoded);
+                var it = cache.keySet().iterator(); // bounded: drop the least recently used blocks (no Serializable subclass)
+                while (cache.size() > cacheBlocks && it.hasNext()) {
+                    it.next();
+                    it.remove();
+                }
             }
         }
         return decoded;
