@@ -272,7 +272,7 @@
     var START = {
       report: { hint: 'A report draws one dataset: choose it, and the report opens in the designer.', go: 'Create and open in the designer' },
       board: { hint: 'A board is laid out in the board designer: it opens there.', go: 'Create and open in the board designer' },
-      dataset: { hint: 'A dataset is defined from packs or a model: the Datasets page starts one.', go: 'Go to Datasets', href: '/bi/datasets' },
+      dataset: { hint: 'A dataset is built in the wizard: pick a source, tick columns, add measures. It opens there, and is saved as a draft in this workspace.', go: 'Open the dataset wizard', href: '/bi/datasets/new?workspace=' },
       notebook: { hint: 'A notebook is started in Analyse (SQL and Python cells).', go: 'Go to Analyse', href: '/bi/explore' },
       python: { hint: 'A Python item is started in Analyse (Python tab) and saved from there.', go: 'Go to Analyse', href: '/bi/explore' }
     };
@@ -292,7 +292,7 @@
     q('[data-new-item]').addEventListener('submit', function (e) {
       e.preventDefault();
       var f = e.target, kind = f.elements.kind.value, st = START[kind];
-      if (st.href) { window.location.href = st.href; return; }
+      if (st.href) { window.location.href = st.href + (kind === 'dataset' ? encodeURIComponent(id) : ''); return; }
       var title = f.elements.title.value.trim() || defaultTitle(kind), body, to;
       var name = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || kind;
       if (kind === 'report') {

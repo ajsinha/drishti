@@ -23,7 +23,8 @@
   <p class="bi-facts" data-meta></p>
   <p class="bi-badges" data-badges></p>
   <p><a class="btn-pill btn-ghost" data-model-view href="/bi/datasets" hidden><i class="bi bi-diagram-2" aria-hidden="true"></i> Model view</a>
-    <a class="btn-pill btn-ghost" data-new-report href="/bi/designer" hidden><i class="bi bi-bar-chart-line" aria-hidden="true"></i> New report on this dataset</a></p></header>
+    <a class="btn-pill btn-ghost" data-new-report href="/bi/designer" hidden><i class="bi bi-bar-chart-line" aria-hidden="true"></i> New report on this dataset</a>
+    <a class="btn-pill btn-ghost" data-edit-wizard href="/bi/datasets/new" hidden><i class="bi bi-magic" aria-hidden="true"></i> Edit in the wizard</a></p></header>
 <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
 <section class="bi-sec" aria-labelledby="dProb" data-problems-sec hidden><h2 id="dProb">Problems</h2><ul class="bi-warn" data-problems></ul></section>
 <section class="bi-sec" aria-labelledby="dPrev"><h2 id="dPrev">Preview a query</h2>
@@ -76,6 +77,11 @@
   <p class="bi-facts" data-refresh-when></p>
   <p><button type="button" class="btn-pill btn-ghost" data-refresh-now hidden><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Refresh now</button>
     <span class="text-muted-d" data-refresh-msg role="status" aria-live="polite"></span></p>
+  <form class="bi-form bi-inline" data-set-schedule hidden aria-label="Set a refresh schedule">
+    <label>Refresh<select name="kind" class="studio-select"><option value="daily">Every day at</option><option value="weekdays">Weekdays at</option><option value="business-days">Business days at</option><option value="hourly">Every hour</option><option value="after-load">After a data load finishes</option></select></label>
+    <label>Time<input name="time" type="time" value="06:00" class="studio-in"></label>
+    <button type="submit" class="btn-pill btn-accent">Set a schedule</button>
+    <p class="text-muted-d">Writes <code>refresh:</code> into a new saved state of the draft; publish it to start the schedule.</p></form>
   <div class="tbl-wrap"><table class="tbl bi-tbl" data-refresh data-plain><caption class="visually-hidden">Scheduled refresh</caption>
     <thead><tr><th scope="col">What</th><th scope="col">Schedule</th><th scope="col">Status</th><th scope="col">Last refresh</th><th scope="col">Next</th><th scope="col">Rows</th><th scope="col">Took</th><th scope="col">Failures</th></tr></thead><tbody></tbody></table></div>
   <h3 data-refresh-history-head hidden>Recent refreshes</h3>

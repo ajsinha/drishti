@@ -78,7 +78,7 @@
       q('[data-empty]').hidden = d.datasets.length > 0;
     }).catch(fail);
     api('GET', '/me').then(function (me) {
-      if (me.powers.indexOf('bi-author') >= 0) { q('[data-start]').hidden = false; startPanel(); }
+      if (me.powers.indexOf('bi-author') >= 0) { q('[data-start]').hidden = false; q('[data-new-wizard-wrap]').hidden = false; startPanel(); }
     }).catch(fail);
   }
 
@@ -121,7 +121,7 @@
 
   // -- one dataset --------------------------------------------------------------------------------------------------------
   function one() {
-    var id = canvas.getAttribute('data-item'), model = null;
+    var id = canvas.getAttribute('data-item'), model = null, editItem = null;
     var path = '/datasets/' + id2path(id);
 
     function draw(m) {
@@ -254,6 +254,7 @@
         ? 'Layers are rebuilt on the schedule (' + r.zone + ' time, ' + r.calendar + ' calendar for business days); a failed run is tried again with the shared retry policy.'
         : 'No refresh schedule: the layers are rebuilt when a data load for a kind this dataset reads arrives, or when an author asks for a refresh (POST /datasets/{id}/refresh).';
       sec.querySelector('table').hidden = tb.children.length === 0;
+      if (editItem) { scheduleForm(editItem); }
     }
 
     /** Expected values (BI authors): run the dataset's tests as yourself or a role you hold, and list each as passed, failed or could not run. */
@@ -320,6 +321,23 @@
       }).catch(function () {});
     }
 
+    /** No schedule yet: an author who may edit the draft sets one with two controls; the page writes refresh: into a new saved state (the wizard's conversion keeps every other key). */
+    function scheduleForm(it) {
+      var f = q('[data-set-schedule]');
+      f.hidden = !(it.can && it.can.edit) || (model && model.refresh && model.refresh.scheduled);
+      f.onsubmit = function (e) {
+        e.preventDefault();
+        var k = f.elements.kind.value, text = (k === 'hourly' || k === 'after-load') ? k : k + ' ' + f.elements.time.value;
+        post('/bi/wizard/parse', { yaml: it.body || '' }).then(function (r) { r.doc.refresh = text; return post('/bi/wizard/yaml', { doc: r.doc }); })
+          .then(function (y) { return api('PUT', '/items/' + id2path(id), { body: y.yaml, message: 'Set the refresh schedule: ' + text }); })
+          .then(function () { say('Saved refresh: ' + text + ' in the draft. Publish the dataset to start the schedule.'); f.hidden = true; }).catch(fail);
+      };
+    }
+    function post(url, body) {
+      return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { if (!r.ok) { throw new Error((d.code ? d.code + ' ' : '') + (d.detail || r.statusText)); } return d; }); });
+    }
+
     function preview(m) {
       var form = q('[data-preview]'), fields = q('[data-fields]'), meas = q('[data-measures]'), ff = q('[data-ffield]');
       clear(fields); clear(meas); clear(ff); ff.appendChild(h('option', { value: '', text: 'none' }));
@@ -375,6 +393,9 @@
       var nr = q('[data-new-report]');
       nr.href = '/bi/designer?dataset=' + encodeURIComponent(id.replace(/^file:dataset:/, ''));
       api('GET', '/me').then(function (me) { mv.hidden = me.powers.indexOf('bi-author') < 0; nr.hidden = mv.hidden; }).catch(function () {});
+      var ew = q('[data-edit-wizard]');
+      ew.href = '/bi/datasets/new?edit=' + encodeURIComponent(id);
+      api('GET', '/items/' + id2path(id)).then(function (it) { editItem = it; ew.hidden = !(it.can && it.can.edit); scheduleForm(it); }).catch(function () {});
     }
   }
 
