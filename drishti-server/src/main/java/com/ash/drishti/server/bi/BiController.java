@@ -161,7 +161,7 @@ public class BiController {
 
     @PostMapping("/items/{id}/approve")
     public Map<String, Object> approve(@PathVariable String id, @RequestBody(required = false) Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return bi.approve(p, id, note(body), force(body));
+        return bi.approve(p, id, note(body), force(body), renames(body));
     }
 
     @PostMapping("/items/{id}/reject")
@@ -171,7 +171,7 @@ public class BiController {
 
     @PostMapping("/items/{id}/publish")
     public Map<String, Object> publish(@PathVariable String id, @RequestBody(required = false) Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return bi.publish(p, id, note(body), force(body));
+        return bi.publish(p, id, note(body), force(body), renames(body));
     }
 
     @PostMapping("/items/{id}/endorse")
@@ -197,6 +197,10 @@ public class BiController {
     @PostMapping("/items/{id}/versions/{n}/restore")
     public Map<String, Object> restore(@PathVariable String id, @PathVariable int n, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         return bi.restore(p, id, n);
+    }
+
+    private static boolean renames(Map<String, Object> body) {
+        return body != null && Boolean.TRUE.equals(body.get("applyRenames"));
     }
 
     private static boolean force(Map<String, Object> body) {

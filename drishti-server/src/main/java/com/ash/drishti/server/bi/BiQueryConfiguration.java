@@ -158,8 +158,15 @@ public class BiQueryConfiguration {
     }
 
     @Bean
-    public BiGovernance biGovernance(BiService bi, BiStore store, BiAccess access, ImpactAnalyzer impact, BiGovProperties gov, PackRegistry packs, DatasetService datasets) {
-        return new BiGovernance(bi, store, access, impact, gov, packs, datasets);
+    public ConnectorSource connectorSource(org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.connectors.ConnectorManager> connectors,
+            com.ash.drishti.server.security.Entitlements entitlements) {
+        return new ConnectorSource(connectors.getIfAvailable(), entitlements);
+    }
+
+    @Bean
+    public BiGovernance biGovernance(BiService bi, BiStore store, BiAccess access, ImpactAnalyzer impact, BiGovProperties gov, PackRegistry packs, DatasetService datasets,
+            ConnectorSource sources) {
+        return new BiGovernance(bi, store, access, impact, gov, packs, datasets, sources);
     }
 
     @Bean

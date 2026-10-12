@@ -65,9 +65,11 @@ public final class BiBundles {
     private final UserService users;
     private final RoleCatalog roles;
     private final PackAccess packs;
+    private final ImportLog log;
 
     public BiBundles(BiService bi, BiStore store, BiAccess access, ImpactAnalyzer impact, BiGovProperties props, BiProperties biProps, AuditLog audit, UserService users,
-            RoleCatalog roles, PackAccess packs) {
+            RoleCatalog roles, PackAccess packs, ImportLog log) {
+        this.log = log;
         this.bi = bi;
         this.store = store;
         this.access = access;
@@ -191,6 +193,63 @@ public final class BiBundles {
         return n;
     }
 
+    // ---- a pack's BI content --------------------------------------------------------------------------------------------------
+
+    /** One BI file of a pack: a stable id, its kind, the title and description it declares, and its text. */
+    public record PackItem(String id, String kind, String title, String description, String body) {}
+
+    /**
+     * A bundle of a pack's BI items for the import: each is published (version 1, or the next one when the text differs from what an earlier version of the pack
+     * left; the same version when it does not, so an unchanged item stays unchanged), has the pack as its audience, is owned by the importer and is never certified.
+     */
+    public ObjectNode packBundle(Principal p, String pack, String version, String workspace, List<PackItem> items) {
+        ArrayNode nodes = JSON.createArrayNode();
+        List<String> lines = new ArrayList<>();
+        Instant now = Instant.now();
+        for (PackItem it : items) {
+            BiStore.Item here = store.item(it.id()).orElse(null);
+            String have = here == null ? null : impact.publishedBody(here);
+            int pv = here == null ? 1 : it.body().equals(have) ? here.publishedVersion() : here.publishedVersion() + 1;
+            ObjectNode n = JSON.createObjectNode();
+            n.put("id", it.id());
+            n.put("kind", it.kind());
+            n.put("title", it.title());
+            n.put("description", it.description());
+            n.put("owner", p.user());
+            n.put("workspace", workspace);
+            n.put("workspaceName", workspace);
+            n.set("tags", JSON.valueToTree(List.of("pack:" + pack)));
+            n.put("sample", false);
+            n.put("endorsement", "none");
+            ObjectNode a = n.putObject("audience");
+            a.set("roles", JSON.createArrayNode());
+            a.set("users", JSON.createArrayNode());
+            a.set("packs", JSON.valueToTree(List.of(pack)));
+            n.put("status", "published");
+            n.put("publishedVersion", pv);
+            n.put("body", it.body());
+            n.put("sha256", PackArchive.sha256(it.body().getBytes(StandardCharsets.UTF_8)));
+            ArrayNode versions = n.putArray("versions");
+            ObjectNode vn = versions.addObject();
+            vn.put("version", pv);
+            vn.put("note", "pack " + pack + " " + version);
+            vn.put("createdBy", p.user());
+            vn.put("createdAt", now.toString());
+            vn.put("body", it.body());
+            vn.put("sha256", n.get("sha256").asText());
+            lines.add(it.id() + "|" + n.get("sha256").asText() + "|" + pv + "|" + pv + ":" + n.get("sha256").asText());
+            nodes.add(n);
+        }
+        ObjectNode root = JSON.createObjectNode();
+        root.put("format", FORMAT);
+        root.put("formatVersion", FORMAT_VERSION);
+        root.put("createdAt", now.toString());
+        root.put("createdBy", "pack " + pack + " " + version);
+        root.set("items", nodes);
+        root.put("checksum", PackArchive.sha256(String.join("\n", lines).getBytes(StandardCharsets.UTF_8)));
+        return root;
+    }
+
     // ---- import ------------------------------------------------------------------------------------------------------------
 
     /** The choices of an import. */
@@ -200,6 +259,11 @@ public final class BiBundles {
 
     /** Reads a bundle: a dry run reports; a real run applies when nothing blocks it. Needs {@code bi-steward} (an environment's governance act). */
     public Map<String, Object> imports(Principal p, JsonNode bundle, Options o) {
+        return imports(p, bundle, o, "bundle");
+    }
+
+    /** As {@link #imports(Principal, JsonNode, Options)}, saying where the content came from ({@code bundle}, {@code pack <name> <version>}) for the import log. */
+    public Map<String, Object> imports(Principal p, JsonNode bundle, Options o, String source) {
         bi.requirePower(p, BiAccess.STEWARD);
         verify(bundle);
         List<Plan> plans = new ArrayList<>();
@@ -231,14 +295,18 @@ public final class BiBundles {
                     + "': " + first.blocks().get(0) + " (run it as a dry run to see them all)");
         }
         int done = 0;
+        ObjectNode record = log.begin(p.user(), source, bundle.path("createdBy").asText(""));
         for (Plan x : plans) {
             if (x.action().equals("create") || x.action().equals("update")) {
-                apply(p, x, bundle.path("createdBy").asText(""));
+                ImportLog.entries(record).add(apply(p, x, bundle.path("createdBy").asText("")));
                 done++;
             }
         }
-        audit.record(p.user(), "bi-bundle-imported", "bundle", done + " item(s) written from a bundle made by " + bundle.path("createdBy").asText("?") + " at " + bundle.path("createdAt").asText("?"));
+        log.save(record);
+        audit.record(p.user(), "bi-bundle-imported", "bundle", done + " item(s) written from a bundle made by " + bundle.path("createdBy").asText("?") + " at " + bundle.path("createdAt").asText("?")
+                + "; import " + record.path("id").asText());
         out.put("applied", true);
+        out.put("importId", record.path("id").asText());
         return out;
     }
 
@@ -485,10 +553,18 @@ public final class BiBundles {
         return strings(a).stream().filter(exists).toList();
     }
 
-    private void apply(Principal p, Plan x, String madeBy) {
+    private ObjectNode apply(Principal p, Plan x, String madeBy) {
         JsonNode n = x.src();
         Instant now = Instant.now();
         BiStore.Item here = store.item(x.id()).orElse(null);
+        ObjectNode entry = JSON.createObjectNode();
+        entry.put("itemId", x.id());
+        entry.put("title", n.path("title").asText());
+        entry.put("kind", n.path("kind").asText());
+        entry.put("created", here == null);
+        if (here != null) {
+            entry.set("before", snapshot(here));
+        }
         int pv = n.path("publishedVersion").asInt(0);
         String body = n.path("body").asText();
         String pub = publishedBody(n);
@@ -515,7 +591,157 @@ public final class BiBundles {
         BiStore.Revision r = revise(item, body, "imported from a bundle made by " + madeBy, p.user(), "import");
         store.addEvent(x.id(), "import", p.user(), "from a bundle made by " + madeBy + (x.warnings().isEmpty() ? "" : "; " + String.join("; ", x.warnings())), r.seq(), now);
         audit.record(p.user(), "bi-item-imported", x.id(), n.path("kind").asText() + " '" + n.path("title").asText() + "' in " + x.workspace() + (here == null ? " (created)" : " (overwritten)"));
+        entry.put("afterRevision", r.seq());
+        entry.put("afterVersion", pv);
+        return entry;
     }
+
+    // ---- rolling an import back ---------------------------------------------------------------------------------------------
+
+    /** Everything about an item that an import can change: its row, its published versions. */
+    private ObjectNode snapshot(BiStore.Item i) {
+        ObjectNode n = JSON.createObjectNode();
+        n.put("id", i.id());
+        n.put("workspace", i.workspace());
+        n.put("kind", i.kind());
+        n.put("title", i.title());
+        n.put("description", i.description());
+        n.put("owner", i.owner());
+        n.set("tags", JSON.valueToTree(i.tags()));
+        n.put("body", i.body());
+        n.put("status", i.status());
+        n.put("publishedVersion", i.publishedVersion());
+        n.put("endorsement", i.endorsement());
+        n.put("endorsedBy", i.endorsedBy());
+        n.set("audienceRoles", JSON.valueToTree(i.audienceRoles()));
+        n.set("audienceUsers", JSON.valueToTree(i.audienceUsers()));
+        n.set("audiencePacks", JSON.valueToTree(i.audiencePacks()));
+        n.put("proposedBy", i.proposedBy());
+        n.put("proposedAt", i.proposedAt() == null ? null : i.proposedAt().toString());
+        n.put("createdAt", i.createdAt() == null ? null : i.createdAt().toString());
+        n.put("publishedAt", i.publishedAt() == null ? null : i.publishedAt().toString());
+        n.put("publishedBy", i.publishedBy());
+        ArrayNode versions = n.putArray("versions");
+        for (BiStore.Version v : store.versions(i.id())) {
+            ObjectNode vn = versions.addObject();
+            vn.put("version", v.version());
+            vn.put("body", v.body());
+            vn.put("note", v.note());
+            vn.put("createdBy", v.createdBy());
+            vn.put("createdAt", v.createdAt() == null ? null : v.createdAt().toString());
+        }
+        return n;
+    }
+
+    private static Instant instant(JsonNode n) {
+        return n.isTextual() ? Instant.parse(n.asText()) : null;
+    }
+
+    /** The imports whose replaced states are kept, newest first (a steward). */
+    public Map<String, Object> imported(Principal p) {
+        bi.requirePower(p, BiAccess.STEWARD);
+        return Map.of("imports", log.all().stream().map(ImportLog::summary).toList());
+    }
+
+    /** One import with the items it wrote and whether each is still as the import left it. */
+    public Map<String, Object> importDetail(Principal p, String id) {
+        bi.requirePower(p, BiAccess.STEWARD);
+        ObjectNode r = record(id);
+        Map<String, Object> out = new LinkedHashMap<>(JSON.convertValue(ImportLog.summary(r), new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {}));
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (JsonNode e : r.path("entries")) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", e.path("itemId").asText());
+            m.put("title", e.path("title").asText());
+            m.put("kind", e.path("kind").asText());
+            m.put("created", e.path("created").asBoolean());
+            m.put("restoresVersion", e.path("before").path("publishedVersion").asInt(0));
+            m.put("changedSince", changedSince(e));
+            items.add(m);
+        }
+        out.put("entries", items);
+        return out;
+    }
+
+    private ObjectNode record(String id) {
+        ObjectNode r = log.get(id);
+        if (r == null) {
+            throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "no import '" + id + "' is kept (drishti.bi.governance.imports-keep says how many)");
+        }
+        return r;
+    }
+
+    /** True when the item is no longer as the import left it (edited or published since), or has gone. */
+    private boolean changedSince(JsonNode e) {
+        BiStore.Item now = store.item(e.path("itemId").asText()).orElse(null);
+        if (now == null) {
+            return true;
+        }
+        int latest = store.revisions(now.id()).stream().findFirst().map(BiStore.Revision::seq).orElse(0);
+        return latest != e.path("afterRevision").asInt() || now.publishedVersion() != e.path("afterVersion").asInt();
+    }
+
+    /**
+     * Puts back what an import replaced: an item it created is removed, an item it overwrote gets its earlier row and published versions again (as a new saved
+     * state, so nothing in the history is lost). An item edited since the import is not touched, and the roll back stops with nothing changed, unless
+     * {@code force} (a bi-admin) says to restore it anyway. Audited.
+     */
+    public Map<String, Object> rollback(Principal p, String id, boolean force) {
+        bi.requirePower(p, BiAccess.STEWARD);
+        ObjectNode r = record(id);
+        if (r.path("rolledBackAt").isTextual()) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "import " + id + " was already rolled back by " + r.path("rolledBackBy").asText() + " at " + r.path("rolledBackAt").asText());
+        }
+        List<String> changed = new ArrayList<>();
+        for (JsonNode e : r.path("entries")) {
+            if (changedSince(e) && store.item(e.path("itemId").asText()).isPresent()) {
+                changed.add("'" + e.path("title").asText() + "'");
+            }
+        }
+        if (!changed.isEmpty() && !force) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, changed.size() + " item(s) were edited or published since the import: " + String.join(", ", changed)
+                    + ". Rolling back would lose that work; nothing was changed." + (access.has(p, BiAccess.ADMIN) ? " A bi-admin may roll back with force." : " Ask a bi-admin to roll back with force."));
+        }
+        if (!changed.isEmpty()) {
+            access.require(p, BiAccess.ADMIN);
+        }
+        Instant now = Instant.now();
+        int restored = 0;
+        int removed = 0;
+        for (JsonNode e : r.path("entries")) {
+            String itemId = e.path("itemId").asText();
+            if (e.path("created").asBoolean()) {
+                if (store.deleteItem(itemId)) {
+                    removed++;
+                }
+                continue;
+            }
+            JsonNode b = e.path("before");
+            store.dropVersionsAbove(itemId, b.path("publishedVersion").asInt(0));
+            for (JsonNode v : b.path("versions")) {
+                store.addVersion(new BiStore.Version(itemId, v.path("version").asInt(), v.path("body").asText(), v.path("note").asText(), v.path("createdBy").asText(), instant(v.path("createdAt"))),
+                        biProps.versionsKeep());
+            }
+            store.saveItem(new BiStore.Item(itemId, b.path("workspace").asText(), b.path("kind").asText(), b.path("title").asText(), b.path("description").asText(), b.path("owner").asText(),
+                    strings(b.path("tags")), b.path("body").asText(), b.path("status").asText(), b.path("publishedVersion").asInt(0), b.path("endorsement").asText("none"),
+                    b.path("endorsedBy").asText(), strings(b.path("audienceRoles")), strings(b.path("audienceUsers")), strings(b.path("audiencePacks")), b.path("proposedBy").asText(),
+                    instant(b.path("proposedAt")), instant(b.path("createdAt")) == null ? now : instant(b.path("createdAt")), now, p.user(), instant(b.path("publishedAt")), b.path("publishedBy").asText()));
+            BiStore.Revision rev = revise(store.item(itemId).orElseThrow(), b.path("body").asText(), "rolled back import " + id, p.user(), "rollback");
+            store.addEvent(itemId, "rollback", p.user(), "import " + id + " rolled back", rev.seq(), now);
+            restored++;
+        }
+        r.put("rolledBackAt", now.toString());
+        r.put("rolledBackBy", p.user());
+        log.save(r);
+        audit.record(p.user(), "bi-import-rolled-back", id, restored + " item(s) restored, " + removed + " created item(s) removed" + (changed.isEmpty() ? "" : "; FORCED over " + changed.size() + " edited since"));
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("id", id);
+        out.put("restored", restored);
+        out.put("removed", removed);
+        out.put("forced", !changed.isEmpty());
+        return out;
+    }
+
 
     private BiStore.Revision revise(BiStore.Item i, String body, String message, String actor, String origin) {
         return store.addRevision(i.id(), body, message, actor, Instant.now(), origin, 0, props.revisionsKeep());

@@ -28,10 +28,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param revokeCertification take certification away automatically from a certified item whose dataset changed incompatibly (and from a certified
  *     dataset that changed incompatibly itself)
  * @param bundleMaxBytes largest BI bundle that is imported
+ * @param importsDir where the state every import replaced is kept, so the import can be rolled back; blank: {@code <data dir>/bi/imports}
+ * @param importsKeep imports whose replaced states are kept (the oldest go first)
+ * @param packWorkspace the shared workspace that holds the BI content of deployed packs (made if absent)
  * @param tellPeople tell reviewers and authors in the inbox (the bell) when a review is asked for, decided, or a certification is revoked
  */
 @ConfigurationProperties("drishti.bi.governance")
-public record BiGovProperties(Integer revisionsKeep, Integer previewRows, Boolean refuseBreaking, Boolean refuseFailingTests, Boolean revokeCertification, Integer bundleMaxBytes, Boolean tellPeople) {
+public record BiGovProperties(Integer revisionsKeep, Integer previewRows, Boolean refuseBreaking, Boolean refuseFailingTests, Boolean revokeCertification, Integer bundleMaxBytes, Boolean tellPeople, String importsDir, Integer importsKeep, String packWorkspace) {
 
     public BiGovProperties {
         revisionsKeep = revisionsKeep == null || revisionsKeep <= 1 ? 200 : revisionsKeep;
@@ -41,9 +44,12 @@ public record BiGovProperties(Integer revisionsKeep, Integer previewRows, Boolea
         revokeCertification = revokeCertification == null || revokeCertification;
         bundleMaxBytes = bundleMaxBytes == null || bundleMaxBytes <= 0 ? 8_388_608 : bundleMaxBytes;
         tellPeople = tellPeople == null || tellPeople;
+        importsDir = importsDir == null ? "" : importsDir.strip();
+        importsKeep = importsKeep == null || importsKeep <= 0 ? 20 : importsKeep;
+        packWorkspace = packWorkspace == null || packWorkspace.isBlank() ? "packs" : packWorkspace;
     }
 
     public static BiGovProperties defaults() {
-        return new BiGovProperties(null, null, null, null, null, null, null);
+        return new BiGovProperties(null, null, null, null, null, null, null, null, null, null);
     }
 }

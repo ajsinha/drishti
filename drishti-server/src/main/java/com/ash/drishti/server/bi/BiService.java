@@ -77,12 +77,14 @@ public final class BiService {
     private final BiGovProperties gov;
     private final ImpactAnalyzer impact;
     private final BiNotifier notifier;
+    private final BiRenames renames;
 
     public BiService(BiProperties props, BiStore store, BiFolder folder, BiAccess access, AuditLog audit, UserService users, RoleCatalog roles,
             PackAccess packs, Entitlements entitlements, GovernanceProperties governance, SecurityProperties security, BiGovProperties gov, ImpactAnalyzer impact,
             BiNotifier notifier) {
         this.gov = gov;
         this.impact = impact;
+        this.renames = new BiRenames(store, audit, props, gov);
         this.notifier = notifier;
         this.props = props;
         this.store = store;
@@ -757,6 +759,10 @@ public final class BiService {
     }
 
     public Map<String, Object> approve(Principal p, String id, String note, boolean force) {
+        return approve(p, id, note, force, false);
+    }
+
+    public Map<String, Object> approve(Principal p, String id, String note, boolean force, boolean applyRenames) {
         open(p);
         BiStore.Item i = readable(p, id);
         BiStore.Workspace w = workspaceOf(i.workspace());
@@ -769,7 +775,7 @@ public final class BiService {
         if (fourEyes() && i.proposedBy().equals(p.user())) {
             throw new DrishtiException(ErrorCode.BI_FOUR_EYES, "four-eyes: " + p.user() + " proposed this and may not approve it");
         }
-        Map<String, Object> out = publishNow(p, i, "approved: " + note(note), force);
+        Map<String, Object> out = publishNow(p, i, "approved: " + note(note), force, applyRenames);
         store.addEvent(id, "approve", p.user(), note(note), latestRevision(id), Instant.now());
         notifier.tell(List.of(i.proposedBy()), BiNotifier.DECISION, id, p.user() + " approved " + i.kind() + " '" + i.title() + "'" + (note(note).isBlank() ? "" : ": " + note(note)), p.user());
         audit.record(p.user(), "bi-item-approved", id, "proposed by " + i.proposedBy() + "; " + note(note));
@@ -803,6 +809,11 @@ public final class BiService {
     }
 
     public Map<String, Object> publish(Principal p, String id, String note, boolean force) {
+        return publish(p, id, note, force, false);
+    }
+
+    /** @param applyRenames when the dataset renames a field or measure the same way (same path or expression), rewrite the reports that use the old name in the same act */
+    public Map<String, Object> publish(Principal p, String id, String note, boolean force, boolean applyRenames) {
         BiStore.Item i = editable(p, id, "publishing");
         BiStore.Workspace w = workspaceOf(i.workspace());
         if (w.personal()) {
@@ -815,10 +826,10 @@ public final class BiService {
         if (i.status().equals("published")) {
             throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + i.title() + "' has no changes since version " + i.publishedVersion());
         }
-        return publishNow(p, i, note(note), force);
+        return publishNow(p, i, note(note), force, applyRenames);
     }
 
-    private Map<String, Object> publishNow(Principal p, BiStore.Item i, String note, boolean force) {
+    private Map<String, Object> publishNow(Principal p, BiStore.Item i, String note, boolean force, boolean applyRenames) {
         if ("dataset".equals(i.kind()) && !i.body().isBlank()) {
             com.ash.drishti.server.bi.dataset.DatasetParser.Result r = com.ash.drishti.server.bi.dataset.DatasetParser.parse(i.body());
             if (!r.ok()) {
@@ -858,8 +869,13 @@ public final class BiService {
         }
         // what this publish does to the reports that read a dataset (docs/guides/BI_GOVERNANCE.md, Impact)
         ImpactAnalyzer.Result damage = null;
+        ImpactAnalyzer.Result renaming = null;
         if ("dataset".equals(i.kind()) && i.isPublished()) {
             damage = impact.impact(i, impact.publishedBody(i), i.body());
+            if (applyRenames && !damage.change().renames().isEmpty()) {                       // the renames are applied to the reports after the checks below pass
+                renaming = damage;
+                damage = withoutRenamed(damage);
+            }
             if (damage.change().breaking() && damage.breaksPublished() && gov.refuseBreaking()) {
                 if (!force) {
                     throw new DrishtiException(ErrorCode.BI_IMPACT, impactMessage(p, i, damage) + (access.has(p, BiAccess.ADMIN)
@@ -872,6 +888,7 @@ public final class BiService {
         Instant now = Instant.now();
         boolean revoke = gov.revokeCertification() && damage != null && damage.change().breaking();
         boolean ownRevoked = revoke && i.endorsement().equals("certified");
+        List<String> renamed = renaming == null ? List.of() : renames.apply(p, impact, renaming, version, i.title());
         store.addVersion(new BiStore.Version(i.id(), version, i.body(), note, p.user(), now), props.versionsKeep());
         store.saveItem(new BiStore.Item(i.id(), i.workspace(), i.kind(), i.title(), i.description(), i.owner(), i.tags(), i.body(), "published", version,
                 ownRevoked ? "none" : i.endorsement(), ownRevoked ? "" : i.endorsedBy(), i.audienceRoles(), i.audienceUsers(), i.audiencePacks(), "", null, i.createdAt(), now,
@@ -885,7 +902,7 @@ public final class BiService {
         audit.record(p.user(), "bi-item-published", i.id(), "version " + version + "; " + note
                 + (failing.isEmpty() ? "" : "; FORCED over " + failing.size() + " failing test(s)")
                 + (damage != null && damage.breaksPublished() ? "; FORCED over " + damage.published().size() + " published report(s)" : ""));
-        List<String> warnings = new ArrayList<>();
+        List<String> warnings = new ArrayList<>(renamed);
         if (damage != null && damage.change().breaking()) {
             warnings.add("This version removes or renames " + String.join(", ", damage.change().removed()) + ".");
             damage.published().forEach(h -> warnings.add("Published report '" + h.report().title() + "' uses " + String.join("; ", h.uses()) + " and is broken."));
@@ -908,6 +925,14 @@ public final class BiService {
         Map<String, Object> out = new LinkedHashMap<>(viewOrStub(p, i.id()));
         out.put("warnings", warnings);
         return out;
+    }
+
+    /** The damage left once the reports that only lose renamed names are counted as repaired. */
+    private ImpactAnalyzer.Result withoutRenamed(ImpactAnalyzer.Result res) {
+        List<BiStore.Item> fixed = renames.renamable(res);
+        List<ImpactAnalyzer.Hit> published = res.published().stream().filter(h -> fixed.stream().noneMatch(f -> f.id().equals(h.report().id()))).toList();
+        List<ImpactAnalyzer.Hit> drafts = res.drafts().stream().filter(h -> fixed.stream().noneMatch(f -> f.id().equals(h.report().id()))).toList();
+        return new ImpactAnalyzer.Result(res.change(), published, drafts, res.altered());
     }
 
     /** The item as the caller sees it now; a reviewer who may not open it afterwards (a draft sent back, a publication outside their audience) gets its id and status only. */

@@ -263,6 +263,14 @@ public final class BiStore {
         }));
     }
 
+    /** Removes the published versions numbered above {@code n} (an import that is rolled back takes the versions it added with it). */
+    public void dropVersionsAbove(String item, int n) {
+        locked(() -> tx.execute(s -> {
+            versions.findByItemIdOrderByVersionDesc(item).stream().filter(v -> v.version > n).forEach(versions::delete);
+            return null;
+        }));
+    }
+
     // -- revisions: every save ----------------------------------------------------------------------------------------
     /** Newest first. */
     public List<Revision> revisions(String item) {

@@ -46,7 +46,11 @@ public final class ImpactAnalyzer implements Composition.Directory, AutoCloseabl
     public record Hit(BiStore.Item report, boolean published, List<String> uses) {}
 
     /** The change to a dataset and the reports it breaks: those readers see, and drafts in progress. */
-    public record Result(Surface.Change change, List<Hit> published, List<Hit> drafts) {
+    public record Result(Surface.Change change, List<Hit> published, List<Hit> drafts, List<Hit> altered) {
+
+        public Result(Surface.Change change, List<Hit> published, List<Hit> drafts) {
+            this(change, published, drafts, List.of());
+        }
 
         public boolean breaksPublished() {
             return !published.isEmpty();
@@ -212,7 +216,8 @@ public final class ImpactAnalyzer implements Composition.Directory, AutoCloseabl
         Surface.Change change = unreadable ? new Surface.Change(List.of(), List.of(), List.of(), List.of(), List.of()) : Surface.change(was, now);
         List<Hit> published = new ArrayList<>();
         List<Hit> drafts = new ArrayList<>();
-        if (!change.breaking()) {
+        List<Hit> altered = new ArrayList<>();
+        if (!change.breaking() && !change.altering()) {
             return new Result(change, published, drafts);
         }
         Set<String> tables = new HashSet<>(was.tables());
@@ -223,6 +228,10 @@ public final class ImpactAnalyzer implements Composition.Directory, AutoCloseabl
                 List<String> uses = broken(pub, dataset, tables, change);
                 if (uses != null && !uses.isEmpty()) {
                     published.add(new Hit(r, true, uses));
+                }
+                List<String> changed = alteredUses(pub, dataset, tables, change);
+                if (!changed.isEmpty()) {
+                    altered.add(new Hit(r, true, changed));
                 }
             }
             if (!BiFolder.isShipped(r.id()) && (pub == null || !pub.equals(r.body()))) {
@@ -250,7 +259,15 @@ public final class ImpactAnalyzer implements Composition.Directory, AutoCloseabl
                 }
             }
         }
-        return new Result(change, published, drafts);
+        return new Result(change, published, drafts, altered);
+    }
+
+    private List<String> alteredUses(String body, BiStore.Item dataset, Set<String> tables, Surface.Change change) {
+        Report report = ReportParser.parse(body).report();
+        if (report == null || report.datasets().stream().noneMatch(ref -> refersTo(ref, dataset))) {
+            return List.of();
+        }
+        return Surface.altered(Surface.refs(report, tables, ref -> refersTo(ref, dataset)), change);
     }
 
     /** The composed or derived datasets (stored or shipped) that take something from {@code dataset}: what a change to it can break, and what lineage shows below it. */

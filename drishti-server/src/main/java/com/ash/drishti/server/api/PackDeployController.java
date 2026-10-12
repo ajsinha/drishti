@@ -54,8 +54,11 @@ public class PackDeployController {
     private final PackAdminController admin;
     private final Entitlements entitlements;
     private final AuditLog audit;
+    private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.PackBi> packBi;
 
-    public PackDeployController(PackDeployService deploy, ConnectorManager connectors, PackAdminController admin, Entitlements entitlements, AuditLog audit) {
+    public PackDeployController(PackDeployService deploy, ConnectorManager connectors, PackAdminController admin, Entitlements entitlements, AuditLog audit,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.PackBi> packBi) {
+        this.packBi = packBi;
         this.deploy = deploy;
         this.connectors = connectors;
         this.admin = admin;
@@ -86,6 +89,12 @@ public class PackDeployController {
         }
         Map<String, Object> out = deploy.stage(data, clean(req.getHeader("X-Drishti-Filename")), req.getHeader("X-Drishti-Sha256"),
                 req.getHeader("X-Drishti-Signature"), req.getHeader("X-Drishti-Publisher"), p.user());
+        if (out.get("uploadId") != null && packBi.getIfAvailable() != null && out.get("bi") instanceof Map<?, ?> bi && ((Number) bi.get("items")).intValue() > 0) {
+            Map<String, Object> shown = new LinkedHashMap<>();
+            bi.forEach((k, v) -> shown.put(String.valueOf(k), v));
+            shown.putAll(packBi.getObject().preview(p, deploy.stagedRoot(String.valueOf(out.get("uploadId"))), String.valueOf(out.get("pack")), String.valueOf(out.get("version"))));
+            out.put("bi", shown);                              // what loading the pack's BI content would do, as a dry run of the import
+        }
         audit.record(p.user(), "pack-upload-checked", String.valueOf(out.getOrDefault("pack", "")),
                 (Boolean.TRUE.equals(out.get("ok")) ? "passed" : "refused") + " " + out.get("file") + " sha256 " + out.get("sha256"));
         return out;
@@ -109,6 +118,12 @@ public class PackDeployController {
         }
         out.put("deployed", d.version());
         out.put("previous", d.previous());
+        if (packBi.getIfAvailable() != null) {                    // the pack's BI content goes through the bundle import, with its impact checks; a refusal does not undo the deploy
+            Map<String, Object> bi = packBi.getObject().load(p, deploy.installedDir(d.name()), d.name(), d.version(), acceptBreaking);
+            if (((Number) bi.get("items")).intValue() > 0) {
+                out.put("bi", bi);
+            }
+        }
         return out;
     }
 

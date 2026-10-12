@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -33,20 +34,46 @@ import java.util.TreeSet;
  */
 public final class Surface {
 
-    /** What a dataset offers. */
-    public record Offer(Set<String> fields, Set<String> measures, Set<String> hierarchies, Set<String> tables) {
+    /**
+     * What a dataset offers.
+     *
+     * @param fieldMeaning for a field read through a {@code path} or computed by an {@code expr}: what it is read from, so a renamed field is recognised
+     * @param fieldType the declared type of a field, so a changed type is seen
+     * @param measureMeaning the expression of a measure, so a renamed or redefined measure is seen
+     */
+    public record Offer(Set<String> fields, Set<String> measures, Set<String> hierarchies, Set<String> tables, Map<String, String> fieldMeaning, Map<String, String> fieldType,
+            Map<String, String> measureMeaning) {
+
+        public Offer(Set<String> fields, Set<String> measures, Set<String> hierarchies, Set<String> tables) {
+            this(fields, measures, hierarchies, tables, Map.of(), Map.of(), Map.of());
+        }
 
         public static Offer of(Dataset d) {
             Set<String> fields = new TreeSet<>();
+            Map<String, String> meaning = new LinkedHashMap<>();
+            Map<String, String> type = new LinkedHashMap<>();
             for (Dataset.Table t : d.tables().values()) {
                 fields.add(t.name() + "." + Dataset.ID);
                 fields.add(t.name() + "." + Dataset.DATE);
                 if (t.each() != null) {
                     fields.add(t.name() + "." + Dataset.INDEX);
                 }
-                t.columns().keySet().forEach(c -> fields.add(t.name() + "." + c));
+                for (Dataset.Column c : t.columns().values()) {
+                    String name = t.name() + "." + c.name();
+                    fields.add(name);
+                    if (c.expr() != null && !c.expr().isBlank()) {
+                        meaning.put(name, "expr " + c.expr().strip().replaceAll("\\s+", " "));
+                    } else if (c.path() != null && !c.path().isBlank() && !c.path().equals(c.name())) {
+                        meaning.put(name, "path " + c.path().strip());
+                    }
+                    if (c.type() != null && !c.type().isBlank()) {
+                        type.put(name, c.type());
+                    }
+                }
             }
-            return new Offer(fields, new TreeSet<>(d.measures().keySet()), new TreeSet<>(d.hierarchies().keySet()), new TreeSet<>(d.tables().keySet()));
+            Map<String, String> measureMeaning = new LinkedHashMap<>();
+            d.measures().values().forEach(m -> measureMeaning.put(m.name(), m.expr() != null ? "expr " + m.expr().strip().replaceAll("\\s+", " ") : "python " + m.python()));
+            return new Offer(fields, new TreeSet<>(d.measures().keySet()), new TreeSet<>(d.hierarchies().keySet()), new TreeSet<>(d.tables().keySet()), meaning, type, measureMeaning);
         }
 
         public static Offer empty() {
@@ -54,12 +81,32 @@ public final class Surface {
         }
     }
 
-    /** What changed between two offers: the names that were there and are not, and the names that are new. */
-    public record Change(List<String> removedFields, List<String> removedMeasures, List<String> removedHierarchies, List<String> addedFields, List<String> addedMeasures) {
+    /** A name that went and another that took its place with the same meaning (the same path or expression): offered as a rename, not a removal and an addition. */
+    public record Rename(String kind, String from, String to) {}
+
+    /** A name that stayed but now means something else: another declared type, or another path or expression. */
+    public record Alter(String kind, String name, String what, String from, String to) {}
+
+    /**
+     * What changed between two offers: the names that were there and are not, and the names that are new. {@code renames} are removed names whose
+     * meaning reappears under an added name (they are also in the removed list: a report using the old name still breaks until it is updated);
+     * {@code alters} are names that stayed with a changed type or meaning.
+     */
+    public record Change(List<String> removedFields, List<String> removedMeasures, List<String> removedHierarchies, List<String> addedFields, List<String> addedMeasures,
+            List<Rename> renames, List<Alter> alters) {
+
+        public Change(List<String> removedFields, List<String> removedMeasures, List<String> removedHierarchies, List<String> addedFields, List<String> addedMeasures) {
+            this(removedFields, removedMeasures, removedHierarchies, addedFields, addedMeasures, List.of(), List.of());
+        }
 
         /** True when something a report could name has gone. */
         public boolean breaking() {
             return !removedFields.isEmpty() || !removedMeasures.isEmpty() || !removedHierarchies.isEmpty();
+        }
+
+        /** True when a name a report could use stayed but changed type or meaning. */
+        public boolean altering() {
+            return !alters.isEmpty();
         }
 
         public List<String> removed() {
@@ -67,6 +114,11 @@ public final class Surface {
             all.addAll(removedMeasures);
             all.addAll(removedHierarchies);
             return all;
+        }
+
+        /** The new name for a removed one, or null. */
+        public String renamedTo(String from) {
+            return renames.stream().filter(r -> r.from().equals(from)).map(Rename::to).findFirst().orElse(null);
         }
 
         public Map<String, Object> toMap() {
@@ -77,6 +129,8 @@ public final class Surface {
             m.put("removedHierarchies", removedHierarchies);
             m.put("addedFields", addedFields);
             m.put("addedMeasures", addedMeasures);
+            m.put("renames", renames.stream().map(r -> Map.of("kind", r.kind(), "from", r.from(), "to", r.to())).toList());
+            m.put("alters", alters.stream().map(a -> Map.of("kind", a.kind(), "name", a.name(), "what", a.what(), "from", a.from(), "to", a.to())).toList());
             return m;
         }
     }
@@ -90,8 +144,70 @@ public final class Surface {
     private Surface() {}
 
     public static Change change(Offer before, Offer after) {
-        return new Change(minus(before.fields(), after.fields()), minus(before.measures(), after.measures()), minus(before.hierarchies(), after.hierarchies()),
-                minus(after.fields(), before.fields()), minus(after.measures(), before.measures()));
+        List<String> removedFields = minus(before.fields(), after.fields());
+        List<String> removedMeasures = minus(before.measures(), after.measures());
+        List<String> addedFields = minus(after.fields(), before.fields());
+        List<String> addedMeasures = minus(after.measures(), before.measures());
+        List<Rename> renames = new ArrayList<>();
+        Set<String> taken = new LinkedHashSet<>();
+        for (String r : removedFields) {
+            String was = before.fieldMeaning().get(r);
+            if (was == null) {
+                continue;
+            }
+            for (String a : addedFields) {
+                if (!taken.contains(a) && tableOf(a).equals(tableOf(r)) && was.equals(after.fieldMeaning().get(a)) && Objects.equals(before.fieldType().get(r), after.fieldType().get(a))) {
+                    renames.add(new Rename("field", r, a));
+                    taken.add(a);
+                    break;
+                }
+            }
+        }
+        for (String r : removedMeasures) {
+            String was = before.measureMeaning().get(r);
+            if (was == null) {
+                continue;
+            }
+            for (String a : addedMeasures) {
+                if (!taken.contains(a) && was.equals(after.measureMeaning().get(a))) {
+                    renames.add(new Rename("measure", r, a));
+                    taken.add(a);
+                    break;
+                }
+            }
+        }
+        List<Alter> alters = new ArrayList<>();
+        for (String f : before.fields()) {
+            if (!after.fields().contains(f)) {
+                continue;
+            }
+            String t0 = before.fieldType().get(f);
+            String t1 = after.fieldType().get(f);
+            if (t0 != null && t1 != null && !t0.equals(t1)) {
+                alters.add(new Alter("field", f, "type", t0, t1));
+            }
+            String m0 = before.fieldMeaning().get(f);
+            String m1 = after.fieldMeaning().get(f);
+            if (!Objects.equals(m0, m1) && (m0 != null || m1 != null)) {
+                alters.add(new Alter("field", f, "meaning", m0 == null ? "the column itself" : m0, m1 == null ? "the column itself" : m1));
+            }
+        }
+        for (String m : before.measures()) {
+            if (!after.measures().contains(m)) {
+                continue;
+            }
+            String m0 = before.measureMeaning().get(m);
+            String m1 = after.measureMeaning().get(m);
+            if (m0 != null && m1 != null && !m0.equals(m1)) {
+                alters.add(new Alter("measure", m, "meaning", m0, m1));
+            }
+        }
+        return new Change(removedFields, removedMeasures, minus(before.hierarchies(), after.hierarchies()), addedFields, addedMeasures, renames, alters);
+    }
+
+    private static String tableOf(String field) {
+        int dot = field.indexOf('.');
+        return dot < 0 ? field : field.substring(0, dot);
     }
 
     private static List<String> minus(Set<String> a, Set<String> b) {
@@ -195,22 +311,41 @@ public final class Surface {
         return new Refs(fields, measures, List.of());
     }
 
-    /** The uses of removed names: a report that names none of them is not in the answer. */
+    /** The uses of removed names: a report that names none of them is not in the answer. A name that was renamed says to what. */
     public static List<String> broken(Refs refs, Change change) {
         Set<String> out = new LinkedHashSet<>();
         for (Use u : refs.fields()) {
             if (change.removedFields().contains(u.name())) {
-                out.add(u.name() + " (" + u.where() + ")");
+                out.add(u.name() + renamed(change, u.name()) + " (" + u.where() + ")");
             }
         }
         for (Use u : refs.measures()) {
             if (change.removedMeasures().contains(u.name())) {
-                out.add("measure " + u.name() + " (" + u.where() + ")");
+                out.add("measure " + u.name() + renamed(change, u.name()) + " (" + u.where() + ")");
             }
         }
         for (Use u : refs.hierarchies()) {
             if (change.removedHierarchies().contains(u.name())) {
                 out.add("hierarchy " + u.name() + " (" + u.where() + ")");
+            }
+        }
+        return new ArrayList<>(out);
+    }
+
+    private static String renamed(Change change, String name) {
+        String to = change.renamedTo(name);
+        return to == null ? "" : " [renamed to " + to + "]";
+    }
+
+    /** The uses of names that stayed but changed type or meaning: the report still draws, but means something else (or fails at run time). */
+    public static List<String> altered(Refs refs, Change change) {
+        Set<String> out = new LinkedHashSet<>();
+        for (Alter a : change.alters()) {
+            List<Use> uses = "measure".equals(a.kind()) ? refs.measures() : refs.fields();
+            for (Use u : uses) {
+                if (u.name().equals(a.name())) {
+                    out.add(("measure".equals(a.kind()) ? "measure " : "") + a.name() + ": " + a.what() + " " + a.from() + " -> " + a.to() + " (" + u.where() + ")");
+                }
             }
         }
         return new ArrayList<>(out);

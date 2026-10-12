@@ -65,8 +65,19 @@ public class BiConfiguration {
     }
 
     @Bean
+    public PackBi packBi(BiBundles bundles, BiStore store, BiGovProperties gov, AuditLog audit) {
+        return new PackBi(bundles, store, gov, audit);
+    }
+
+    @Bean
+    public ImportLog importLog(BiGovProperties gov, org.springframework.core.env.Environment env) {
+        String dir = gov.importsDir().isBlank() ? java.nio.file.Path.of(env.getProperty("drishti.data.dir", "./data"), "bi", "imports").toString() : gov.importsDir();
+        return new ImportLog(java.nio.file.Path.of(dir), gov.importsKeep());
+    }
+
+    @Bean
     public BiBundles biBundles(BiService bi, BiStore store, BiAccess access, ImpactAnalyzer impact, BiGovProperties gov, BiProperties props, AuditLog audit, UserService users,
-            RoleCatalog roles, PackAccess packs) {
-        return new BiBundles(bi, store, access, impact, gov, props, audit, users, roles, packs);
+            RoleCatalog roles, PackAccess packs, ImportLog importLog) {
+        return new BiBundles(bi, store, access, impact, gov, props, audit, users, roles, packs, importLog);
     }
 }

@@ -85,6 +85,7 @@
             <drishti.governance.dir>${project.build.directory}/fork${surefire.forkNumber}/governance</drishti.governance.dir>
             <DRISHTI_CACHE_ROOT>${project.build.directory}/fork${surefire.forkNumber}/cache</DRISHTI_CACHE_ROOT>
             <drishti.sources.connectors-dir>${project.build.directory}/fork${surefire.forkNumber}/connectors</drishti.sources.connectors-dir>
+            <drishti.bi.governance.imports-dir>${project.build.directory}/fork${surefire.forkNumber}/bi-imports</drishti.bi.governance.imports-dir>
           </systemPropertyVariables>
         </configuration>
       </plugin>

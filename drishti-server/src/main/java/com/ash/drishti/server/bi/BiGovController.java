@@ -132,6 +132,23 @@ public class BiGovController {
         return bundles.imports(p, body.path("bundle"), o);
     }
 
+    /** The imports whose replaced states are kept (a steward). */
+    @GetMapping("/imports")
+    public Map<String, Object> imported(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return bundles.imported(p);
+    }
+
+    @GetMapping("/imports/{id}")
+    public Map<String, Object> importDetail(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return bundles.importDetail(p, id);
+    }
+
+    /** Puts back what the import replaced; {@code {force: true}} (a bi-admin) restores items edited since. */
+    @PostMapping("/imports/{id}/rollback")
+    public Map<String, Object> rollback(@PathVariable String id, @RequestBody(required = false) Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return bundles.rollback(p, id, body != null && Boolean.TRUE.equals(body.get("force")));
+    }
+
     private static Map<String, String> map(JsonNode n) {
         Map<String, String> m = new LinkedHashMap<>();
         if (n != null && n.isObject()) {

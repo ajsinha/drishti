@@ -182,6 +182,7 @@ public final class PackDeployService {
             out.put("kinds", meta.get("kinds") instanceof List<?> l ? l : List.of());
             checks.add(Check.ok("pack.yaml", name + " " + version));
             out.put("connectors", connectorsOf(meta, name, version, ex.root()));
+            out.put("bi", com.ash.drishti.server.bi.PackBi.summary(ex.root(), name));
             manifestCheck(ex, name, version, checks);
             if (checks.stream().anyMatch(c -> !c.ok())) {
                 return finish(out, checks, null, null);
@@ -322,6 +323,17 @@ public final class PackDeployService {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    /** The unpacked folder of a staged upload, or null when there is none (it expired, was deployed or discarded). */
+    public Path stagedRoot(String uploadId) {
+        Staged s = staged.get(uploadId);
+        return s == null ? null : s.root();
+    }
+
+    /** The folder an installed pack lives in. */
+    public Path installedDir(String name) {
+        return installed.resolve(name);
     }
 
     /** The difference from the running version (or the copy on disk when the pack is not loaded). */

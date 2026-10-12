@@ -56,8 +56,11 @@ public final class BiGovernance {
     private final BiGovProperties props;
     private final PackRegistry packs;
     private final DatasetService datasets;
+    private final ConnectorSource sources;
 
-    public BiGovernance(BiService bi, BiStore store, BiAccess access, ImpactAnalyzer impact, BiGovProperties props, PackRegistry packs, DatasetService datasets) {
+    public BiGovernance(BiService bi, BiStore store, BiAccess access, ImpactAnalyzer impact, BiGovProperties props, PackRegistry packs, DatasetService datasets,
+            ConnectorSource sources) {
+        this.sources = sources;
         this.bi = bi;
         this.store = store;
         this.access = access;
@@ -329,8 +332,14 @@ public final class BiGovernance {
             hierarchies.remove(r);
             fields.removeIf(f -> f.startsWith(r + "."));                       // naming a table removes its columns
         }
-        Surface.Offer now = new Surface.Offer(fields, measures, hierarchies, was.tables());
+        Surface.Offer now = new Surface.Offer(fields, measures, hierarchies, was.tables(), was.fieldMeaning(), was.fieldType(), was.measureMeaning());
         return impact.impact(dataset, was, now, false);
+    }
+
+    /** True when every published item that loses a name is a report, and every name it loses is a detected rename: applying the renames to those reports leaves nothing broken. */
+    private static boolean renamable(ImpactAnalyzer.Result res) {
+        return !res.change().renames().isEmpty() && res.change().breaking() && !res.published().isEmpty()
+                && res.published().stream().allMatch(h -> "report".equals(h.report().kind()) && h.uses().stream().allMatch(u -> u.contains("[renamed to ")));
     }
 
     private Map<String, Object> hitMap(Principal p, ImpactAnalyzer.Hit h) {
@@ -352,6 +361,9 @@ public final class BiGovernance {
         m.put("breaksPublished", res.breaksPublished());
         m.put("published", res.published().stream().map(h -> hitMap(p, h)).toList());
         m.put("drafts", res.drafts().stream().map(h -> hitMap(p, h)).toList());
+        m.put("altered", res.altered().stream().map(h -> hitMap(p, h)).toList());
+        m.put("renames", res.change().renames().stream().map(r -> Map.of("kind", r.kind(), "from", r.from(), "to", r.to())).toList());
+        m.put("renamable", renamable(res));
         boolean refused = props.refuseBreaking() && res.change().breaking() && res.breaksPublished();
         m.put("refused", refused);
         m.put("canForce", refused && access.has(p, BiAccess.ADMIN));
@@ -437,7 +449,7 @@ public final class BiGovernance {
         return out;
     }
 
-    private List<Map<String, Object>> tables(Dataset ds, Set<String> only) {
+    private List<Map<String, Object>> tables(Principal p, Dataset ds, Set<String> only) {
         List<Map<String, Object>> out = new ArrayList<>();
         if (ds.framed()) {
             return out;                                                        // its one table is built from datasets: see sourcesOf
@@ -451,6 +463,7 @@ public final class BiGovernance {
             m.put("kind", t.kind());
             m.put("packs", packsOfKind(t.kind()));
             m.put("connector", t.connector().isBlank() ? null : t.connector());
+            m.put("source", t.connector().isBlank() || sources == null ? null : sources.of(p, t.connector()));      // past the connector: the table, topic or path it reads
             m.put("each", t.each());
             m.put("mode", t.mode());
             out.add(m);
@@ -477,7 +490,7 @@ public final class BiGovernance {
         if ("dataset".equals(i.kind())) {
             String body = impact.publishedBody(i) != null ? impact.publishedBody(i) : i.body();
             Dataset ds = DatasetParser.parse(body).dataset();
-            m.put("upstream", ds == null ? List.of() : ds.framed() ? sourcesOf(p, ds) : tables(ds, null));
+            m.put("upstream", ds == null ? List.of() : ds.framed() ? sourcesOf(p, ds) : tables(p, ds, null));
             List<Map<String, Object>> down = new ArrayList<>();
             int hidden = 0;
             Set<String> tablesAll = ds == null ? Set.of() : ds.tables().keySet();
@@ -521,7 +534,7 @@ public final class BiGovernance {
                 Map<String, List<String>> used = Surface.used(refs);
                 m.put("uses", used);
                 Set<String> tableNames = used.get("fields").stream().map(f -> f.substring(0, f.indexOf('.'))).collect(Collectors.toSet());
-                m.put("upstream", ds == null ? List.of() : tables(ds, tableNames.isEmpty() ? null : tableNames));
+                m.put("upstream", ds == null ? List.of() : tables(p, ds, tableNames.isEmpty() ? null : tableNames));
             }
         } else {
             m.put("note", "boards and notebooks are not built yet, so they have no lineage");
