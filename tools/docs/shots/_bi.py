@@ -53,6 +53,11 @@ def clean_everywhere(c: Ctx, *titles: str, workspace_names: tuple = ()):
             bi(c, "DELETE", "/workspaces/" + w["id"])
 
 
+def quiet_inbox(c: Ctx):
+    """Marks the inbox read, so old notifications do not toast over a picture."""
+    call(c, "POST", "/api/inbox/read", {"upTo": 1000000000})
+
+
 def settled(page, timeout: int = 30000):
     """Every visual of a report has answered (no frame busy) and shows its rows-and-milliseconds line, or its error."""
     page.wait_for_function("() => !document.querySelector('.bi-vis-busy') && document.querySelectorAll('.bi-vis').length > 0 && "
