@@ -79,7 +79,7 @@
           v.at.w = w;
           v.at.h = hh;
           v.at.x = Math.min(v.at.x, 12 - w);
-          if (v.id.indexOf(was + '-') === 0) { const old = v.id; v.id = D.newVisualId(type); D.auto.delete(old); D.auto.add(v.id); }
+          D.followType(v, type);
           D.settle(D.page(), v);
         }
       }

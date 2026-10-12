@@ -221,6 +221,7 @@ On a phone the wall is **one column** in reading order, the buttons are 44 px, a
 * To open `/bi/b/<id>` a person needs the `bi` power and the right to read the board (workspace role, audience, shipped file), like any item. Without the power the page is the refusal.
 * Each tile's data is the report's, so **row rules and masks are the reader's own, on every update**. Two people on one wall see two answers.
 * A tile never reveals the existence of a report the reader cannot open: it says "You cannot open the report this tile shows, or it does not exist."
+* **A draft report shows only for its author.** In the designer a board can name a report that is still a draft (your own, or one in a workspace you belong to): the tile draws for you and the people who can open that draft, and for nobody else, so a board that shows one **cannot be published or proposed** until the report is published (below). Once a board is published every report it names is published too.
 * The board's stream is the **reports'** streams (one per distinct report): a board of ten tiles over two reports holds two subscriptions on the browser's one channel, not ten.
 
 ## 7. Checking a board: DRS-9052 and DRS-9053
@@ -232,6 +233,15 @@ On a phone the wall is **one column** in reading order, the buttons are 44 px, a
 | `DRS-9052` | 422 | the YAML is malformed, a key or id is wrong, a tile is off the grid, an alert threshold is not `{ op, value }`, a tile names a report the caller cannot open or a page or visual it does not have, or the visual is a slicer |
 | `DRS-9052` | 422 | (also) a `notify:` with a `level` that is not `crit` or `warn`, a channel that is not `inbox`, `email` or `chat`, a `cooldown` or a `trigger` that is not readable, a `severity` that is not `info`, `warn` or `critical`, or a level the tile has no threshold for |
 | `DRS-9053` | 501 | the board uses a setting the grammar reserves and this server does not build: `notifications` or `subscriptions` (on the board or an alert). `notify` is built |
+
+**A board over a draft report is refused at publish.** Publishing or proposing a board whose tile names an unpublished report is `DRS-9052` (force does not help: readers could not open the report), and the message names the report. A real answer, from a server (the board's one tile names the draft report *Draft KPIs*):
+
+```json
+{"status": 422, "code": "DRS-9052", "title": "board invalid",
+ "detail": "DRS-9052 'KPI board' cannot be published: it shows the report 'Draft KPIs', which is still a draft that only its author can open. Publish it first, or choose a published report."}
+```
+
+A page with no tile is also `DRS-9052`, in plain words: `this page has no tiles yet: add a tile (a report and one of its visuals; in YAML { report: <report>, visual: <visual id>, at: { x, y, w, h } })`.
 
 A real answer, for a board with a reserved key and `notify` settings that cannot work (from a real server; the model the server read is cut):
 
@@ -285,7 +295,9 @@ The same call for a tile off the grid, a visual that does not exist and a report
 | Method and path | Body, answer |
 |---|---|
 | `GET /api/v1/bi/boards/{id}` | `{id, title, description, status, shipped, sample, valid, problems, board, tiles, mayEdit}`; `board` is the model (defaults filled in), `tiles` maps `"<page id>/<tile id>"` to `{report, reportTitle, page, type, live}` (`report` is null for a tile the caller cannot resolve) |
+| `GET /api/v1/bi/boards/reports` | authors; the reports a tile can name: `[{id, title, draft, status}]`, the published ones you may open and then your own drafts (`draft: true`), e.g. `{"id": "bi-1f912abc30", "title": "Draft KPIs", "draft": true, "status": "draft"}` |
 | `POST /api/v1/bi/boards/validate` | `{yaml}`; authors; `{valid, problems, board, tiles}`: the model and what each tile resolves to, as the designer needs it |
+| any `GET`/`POST` under `/api/v1/bi/boards/{id}` and `/bi/reports/{id}` with `?as=published` | reads the **published** version of what it opens even for an author who has a newer draft (the viewer's *View as readers see it*; data still masked for the person asking). Without it an author gets the draft |
 | `POST /api/v1/bi/boards/format` | `{board}` (the model); `{yaml}`: the model written the way a person writes it, one tile to a line (the designer's YAML tab; what it writes is read back to the same board) |
 
 A real answer for the sample board (abridged):
@@ -318,10 +330,12 @@ The tiles' data comes from the report endpoints (`POST /api/v1/bi/reports/{id}/q
 
 * **The grid.** A 12-column grid of the board's tiles for the current page. Drag a tile by its header to move it, drag the corner to resize it, or focus it and use the arrow keys (Shift with the arrows resizes) and Delete; tiles never overlap (the ones in the way move down). Each tile shows the report, visual and type it names and its alert in words; one that names a report or visual you cannot open is marked.
 * **Pages.** The page tabs add a page (up to 20), and *This page* renames, moves earlier or later, or deletes it.
-* **Add a tile.** Choose a report (the ones you may open) and one of its visuals (slicers are not offered), then *Add tile*: it lands at the bottom of the page in a size that suits its type. If the report has the same visual id on two pages the tile says which.
+* **Add a tile.** Choose a report (the ones you may open, then **your own drafts, each marked *(draft)***) and one of its visuals (slicers are not offered), then *Add tile*: it lands at the bottom of the page in a size that suits its type. If the report has the same visual id on two pages the tile says which. A tile on a draft report says so on its face, and **Check** warns that the board cannot be published until that report is. Adding a visual that is already on the board is allowed, with a note beside *Add tile* ("already on the board": two tiles of one visual show the same thing); it is a warning, never a block.
+* **Place and size by hand or by the numbers.** Dragging a tile by its header or its corner and the *Column / Row / Wide / High* fields are the same edit: after a drag the fields show where the tile is, and a number typed there moves the tile (Undo steps either back).
 * **The selected tile** (right pane): its title, its place on the grid (column, row, wide, high) and its **alert**: the number it watches, amber and red thresholds, the **hysteresis**, and whether to tell the people who read the board when it turns (red, or amber or red). *Apply to the tile* writes it; *Remove the alert* clears it.
 * **Kiosk.** *Turn the pages every (seconds)* sets `rotate:`, 5 to 3600; blank turns no pages by itself (the kiosk button still fills the screen).
 * **YAML.** The YAML tab shows the same draft as text, written by the server (`POST /boards/format`), and a change there shows on the grid once it parses; each is the other's view. Board-wide settings the designer has no field for (`notify:` defaults) are kept as they are.
-* **Check, Save, Publish.** *Check* lists the problems (a tile that names a report or visual that is not there, a bad threshold, `DRS-9052`/`9053`); *Save* stores the draft (Ctrl+S); undo and redo (Ctrl+Z, Ctrl+Y) step through the changes. A board is **published like any other item**, from its item page (*Publish...*): in a workspace that needs review it is proposed, reviewed and approved, and the audit trail records it ([BI_GOVERNANCE.md](BI_GOVERNANCE.md)). Nothing is published by saving.
+* **Check, Save, Publish.** *Check* lists the problems (a tile that names a report or visual that is not there, a bad threshold, `DRS-9052`/`9053`); on a board with no tile at all it says **"This board has no tiles yet: add a tile"** and how, not a count of errors. Check and Save answer **beside their own button** as well as in the line at the top (*Saved as a draft at 14:02...*, *1 error: see the list*). *Save* stores the draft (Ctrl+S); undo and redo (Ctrl+Z, Ctrl+Y) step through the changes. A board is **published like any other item**, from its item page (*Publish...*): in a workspace that needs review it is proposed, reviewed and approved, and the audit trail records it ([BI_GOVERNANCE.md](BI_GOVERNANCE.md)). Nothing is published by saving.
+* **View: my draft, or as readers see it.** The *View* menu beside the *View* button chooses which version the page opens: **my draft** (what you are editing, as saved) or **as readers see it (published)**, which is greyed until the board has been published. The published page shows a banner (*Showing the published version 3, the way readers see it; your draft has changes that are not shown*) and a link *Back to my draft*; the data on it is drawn with your own masks and row rules, standing in for the reader's.
 
 On a phone every control is at least 44 px and the panes stack under the grid.

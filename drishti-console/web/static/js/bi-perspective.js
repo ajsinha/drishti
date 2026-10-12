@@ -225,7 +225,7 @@
 
   /** The Arrow answer of a visual: the bytes, the table's live state (X-Bi-Live) and the rows. Rejects like B.api (code, status, detail). */
   B.arrow = function (path, body) {
-    return fetch('/bi/api' + path, { method: 'POST', headers: { Accept: 'application/vnd.apache.arrow.stream', 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) })
+    return fetch('/bi/api' + B.viewPath(path), { method: 'POST', headers: { Accept: 'application/vnd.apache.arrow.stream', 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) })
       .then((r) => {
         if (!r.ok) {
           return r.json().catch(() => ({})).then((data) => {

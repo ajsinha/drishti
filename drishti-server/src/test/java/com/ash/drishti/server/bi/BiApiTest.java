@@ -377,6 +377,39 @@ class BiApiTest {
         assertThat(audit.recent(500, null).stream().map(e -> e.action() + ":" + e.detail()).reduce("", (a, b) -> a + "\n" + b)).contains("FORCED over 1 drawing error");
     }
 
+    @Test @Order(15)
+    void aBoardCanShowItsAuthorsDraftReportButCannotBePublishedUntilThatReportIs() throws Exception {
+        ok(call("PUT", "/api/v1/bi/workspaces/" + workspace, ann(), Map.of("reviewRequired", false)));
+        String body = "report: kpis\ndataset: trades-basic\npages:\n  - id: main\n    title: Main\n    visuals:\n"
+                + "      - { id: n, type: card, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n";
+        String rid = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", ann(), Map.of("kind", "report", "title", "Draft KPIs", "body", body))).path("id").asText();
+        // the author's board designer lists the draft, labelled; a reader's list never has it
+        JsonNode mine = ok(call("GET", "/api/v1/bi/boards/reports", ann(), null));
+        assertThat(mine.toString()).contains("Draft KPIs").contains("\"draft\":true");
+        refused(call("GET", "/api/v1/bi/boards/reports", cat(), null), 403, "DRS-9002");
+        String yaml = "rachana: 1\nboard: kpi-board\npages:\n  - id: p1\n    tiles:\n      - { id: n, report: \"Draft KPIs\", visual: n, at: { x: 0, y: 0, w: 3, h: 2 } }\n";
+        JsonNode check = ok(call("POST", "/api/v1/bi/boards/validate", ann(), Map.of("yaml", yaml)));
+        assertThat(check.path("valid").asBoolean()).as(check.toString()).isTrue();
+        String bid = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", ann(), Map.of("kind", "board", "title", "KPI board", "body", yaml))).path("id").asText();
+        assertThat(ok(call("GET", "/api/v1/bi/boards/" + bid, ann(), null)).path("tiles").toString()).contains(rid);
+        // publishing (or proposing) the board is refused in plain words while the report is a draft; force does not help
+        call("POST", "/api/v1/bi/items/" + bid + "/publish", ann(), Map.of("force", true)).andExpect(status().is(422)).andExpect(jsonPath("$.code").value("DRS-9052"))
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("'Draft KPIs'")))
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("Publish it first")));
+        ok(call("POST", "/api/v1/bi/items/" + rid + "/publish", ann(), Map.of("note", "v1")));
+        assertThat(ok(call("POST", "/api/v1/bi/items/" + bid + "/publish", ann(), Map.of())).path("status").asText()).isEqualTo("published");
+        // view as readers see it: the published body of an item that has newer draft changes
+        ok(call("PUT", "/api/v1/bi/items/" + rid, ann(), Map.of("body", body.replace("title: Main", "title: Edited"))));
+        JsonNode published = ok(call("GET", "/api/v1/bi/items/" + rid + "/published", ann(), null));
+        assertThat(published.path("body").asText()).isEqualTo(body);
+        assertThat(published.path("version").asInt()).isEqualTo(1);
+        assertThat(published.path("draftDiffers").asBoolean()).isTrue();
+        assertThat(ok(call("GET", "/api/v1/bi/reports/" + rid, ann(), null)).path("report").toString()).contains("Edited");
+        assertThat(ok(call("GET", "/api/v1/bi/reports/" + rid + "?as=published", ann(), null)).path("report").toString()).contains("Main").doesNotContain("Edited");
+        String never = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", ann(), Map.of("kind", "report", "title", "Never out", "body", body))).path("id").asText();
+        refused(call("GET", "/api/v1/bi/items/" + never + "/published", ann(), null), 404, "DRS-9001");
+    }
+
     @Test @Order(99)
     void anInvalidDatasetCannotBePublishedAndSaysWhy() throws Exception {
         JsonNode i = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", ann(), Map.of("kind", "dataset", "title", "Broken", "body", "dataset: x\ntables:\n  t:\n    source: { kind: trade }\n    columns: { a: strng }\n")));

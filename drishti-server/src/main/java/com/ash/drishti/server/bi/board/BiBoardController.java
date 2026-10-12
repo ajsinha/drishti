@@ -53,6 +53,12 @@ public class BiBoardController {
         return boards.format(p, body.path("board"));
     }
 
+    /** The reports a tile can name for this author: the published ones and their own drafts (each with {@code draft}). */
+    @GetMapping("/reports")
+    public java.util.List<Map<String, Object>> reports(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return boards.reportChoices(p);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> get(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "no-store").body(boards.get(p, id));

@@ -1704,6 +1704,7 @@ Item ids are `bi-<10 hex>` (shipped files: `file:<kind>:<name>`); `me` stands fo
 | `POST` | `/bi/items/{id}/move` | `{workspace}`: move to another workspace (`me` for personal) |
 | `POST` | `/bi/items/{id}/endorse` | `{level: none\|promoted\|certified}` on a published item |
 | `PUT` | `/bi/items/{id}/favourite` | `{on: true\|false}` for the caller |
+| `GET` | `/bi/items/{id}/published` | the published version as readers get it, for an author looking at a newer draft: `{id, kind, title, version, publishedAt, body, draftDiffers}`; `DRS-9001` when the item was never published. Any `/bi/reports/...` or `/bi/boards/...` call with `?as=published` reads the published version of what it opens (masks and row rules still the caller's) |
 | `GET` | `/bi/items/{id}/versions`, `/versions/{n}` | the published versions (newest first), one with its `body` |
 | `POST` | `/bi/items/{id}/versions/{n}/restore` | makes version `n` the draft |
 
@@ -1891,6 +1892,7 @@ report's (`POST /bi/reports/{id}/query`, `GET /bi/reports/{id}/live`).
 | Method | Path | What it does |
 |---|---|---|
 | `GET` | `/bi/boards/{id}` | `{id, title, description, status, shipped, sample, valid, problems[{level, code, path, message}], board, tiles, mayEdit}`; `board` is the model (pages, tiles with `at` and `alert`, `rotate`), `tiles` maps `"<page id>/<tile id>"` to `{report, reportTitle, page, type, live}` (`report` is the item id the tile resolved to for **this caller**, or null) |
+| `GET` | `/bi/boards/reports` | (needs `bi-author`) the reports a tile can name: the published ones you may open and your own drafts, `[{id, title, draft, status}]`. A board that names a draft report cannot be published or proposed (`DRS-9052`) |
 | `POST` | `/bi/boards/validate` | `{yaml}` (needs `bi-author`): `{valid, problems[], board, tiles}`: the structure and what each tile names inside its report (`tiles` maps `"<page>/<tile>"` to `{report, reportTitle, page, type}`) |
 | `POST` | `/bi/boards/format` | `{board}` (the model, as `board` in the answers above): `{yaml}`, the board written the way a person writes it, one tile to a line; read back by `validate` to the same board. A tile's `alert` may carry `hysteresis` (a number of 0 or more): how far back inside a threshold the value must be before the tile drops a level ([BOARDS.md section 4](BOARDS.md#4-alerts-a-tile-changes-colour)) |
 

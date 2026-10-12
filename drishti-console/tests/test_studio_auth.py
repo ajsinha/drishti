@@ -93,6 +93,19 @@ def test_sign_in_goes_through_the_server(backend):
     assert c.get("/t", follow_redirects=False).status_code == 303
 
 
+def test_the_sign_in_form_sends_a_signed_in_visitor_on_and_is_never_cached(backend):
+    c = TestClient(_secure_app(backend))
+    form = c.get("/login?next=/bi/catalogue", follow_redirects=False)
+    assert form.status_code == 200 and "no-store" in form.headers["cache-control"] and 'value="/bi/catalogue"' in form.text      # Back refetches it
+    done = c.post("/login", content="user=drishti-dev-admin&password=drishti-dev-admin123&next=/bi/catalogue", follow_redirects=False, headers=FORM)
+    assert done.status_code == 303 and done.headers["location"] == "/bi/catalogue"                                             # 303, not a replayable POST
+    again = c.get("/login?next=/bi/catalogue", follow_redirects=False)
+    assert again.status_code == 303 and again.headers["location"] == "/bi/catalogue"                                           # signed in: sent to the page asked for
+    assert c.get("/login", follow_redirects=False).headers["location"] == "/"                                                  # none asked for: home
+    assert c.get("/login?next=//evil.example", follow_redirects=False).headers["location"] == "/t"                              # never off the console
+    assert c.get("/login?error=Single%20sign-on%20failed", follow_redirects=False).status_code == 200                           # an error is still shown
+
+
 def test_admin_pages_and_actions(client, backend):
     page = client.get("/admin/users")
     assert page.status_code == 200 and "drishti-dev-admin" in page.text and "default password" in page.text

@@ -472,6 +472,20 @@ public final class BiService {
         return m;
     }
 
+    /** A board is shown to everyone who may open it, so it may name only reports that are published: a draft report is its author's alone (BOARD_INVALID). */
+    private void requirePublishedReports(BiStore.Item board, String verb) {
+        if (!"board".equals(board.kind())) {
+            return;
+        }
+        List<String> drafts = impact.draftReportsOf(board.body()).stream().map(r -> "'" + r.title() + "'").distinct().toList();
+        if (!drafts.isEmpty()) {
+            boolean one = drafts.size() == 1;
+            throw new DrishtiException(ErrorCode.BOARD_INVALID, "'" + board.title() + "' cannot be " + verb + ": it shows " + (one ? "the report " : "the reports ")
+                    + String.join(", ", drafts) + ", which " + (one ? "is" : "are") + " still " + (one ? "a draft" : "drafts")
+                    + " that only its author can open. Publish " + (one ? "it" : "them") + " first, or choose a published report.");
+        }
+    }
+
     private boolean fourEyes() {
         return governance.fourEyes() && security.enabled();
     }
@@ -554,8 +568,29 @@ public final class BiService {
     /** The body of an item as this caller reads it: the working draft for those who may edit, else the published version. */
     public String bodyFor(Principal p, BiStore.Item i) {
         boolean shipped = BiFolder.isShipped(i.id());
-        boolean draft = !shipped && BiAccess.rank(roleIn(workspaceOf(i.workspace()), p)) >= BiAccess.rank("contributor");
+        boolean draft = !shipped && BiAccess.rank(roleIn(workspaceOf(i.workspace()), p)) >= BiAccess.rank("contributor") && !BiReaderView.published();
         return draft || shipped ? i.body() : publishedBody(i);
+    }
+
+    /**
+     * The published version of an item as its readers get it, for an author who is looking at a draft ("View as readers see it"): the body, the version and when
+     * it was published. The data an author then draws from it is masked for the author, who stands in for the reader. DRS-9001 when it was never published.
+     */
+    public Map<String, Object> publishedView(Principal p, String id) {
+        open(p);
+        BiStore.Item i = readable(p, id);
+        if (!i.isPublished() && !BiFolder.isShipped(i.id())) {
+            throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "'" + i.title() + "' has not been published, so readers see nothing of it yet");
+        }
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", i.id());
+        m.put("kind", i.kind());
+        m.put("title", i.title());
+        m.put("version", BiFolder.isShipped(i.id()) ? 1 : i.publishedVersion());
+        m.put("publishedAt", i.publishedAt());
+        m.put("body", publishedBody(i));
+        m.put("draftDiffers", !publishedBody(i).equals(i.body()));
+        return m;
     }
 
     /** The body everyone with access reads: the shipped file, or the published version. */
@@ -580,6 +615,17 @@ public final class BiService {
     public List<BiStore.Item> reportItems(Principal p) {
         open(p);
         return catalogueItems(p).stream().filter(i -> "report".equals(i.kind())).toList();
+    }
+
+    /**
+     * The reports a board can name for this caller: the published ones they may see, then their own unpublished ones (they own them, or belong to the workspace),
+     * which only they and their workspace's members can open until they are published.
+     */
+    public List<BiStore.Item> reportItemsWithDrafts(Principal p) {
+        List<BiStore.Item> out = new ArrayList<>(reportItems(p));
+        Set<String> mine = myWorkspaces(p);
+        store.items().stream().filter(i -> "report".equals(i.kind()) && !i.isPublished() && (i.owner().equals(p.user()) || mine.contains(i.workspace()))).forEach(out::add);
+        return out;
     }
 
     /** Every published dataset, whoever may read it (no caller): what a data-load signal concerns. */
@@ -772,6 +818,7 @@ public final class BiService {
         if (i.status().equals("published")) {
             throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + i.title() + "' has no changes since version " + i.publishedVersion());
         }
+        requirePublishedReports(i, "proposed");
         List<String> forced = undrawable(p, i, force, "proposed");
         store.saveItem(withStatus(i, "proposed", p.user(), Instant.now(), p.user()));
         store.addEvent(id, "request", p.user(), note(note), latestRevision(id), Instant.now());
@@ -898,6 +945,7 @@ public final class BiService {
             if (!r.ok()) {
                 throw new DrishtiException(ErrorCode.BOARD_INVALID, "'" + i.title() + "' cannot be published: " + r.firstError());
             }
+            requirePublishedReports(i, "published");
         }
         List<String> undrawn = undrawable(p, i, force, "published");
         // the expected values the item declares (docs/guides/REPORTS.md section 14): a failing one stops a publish unless a bi-admin forces it

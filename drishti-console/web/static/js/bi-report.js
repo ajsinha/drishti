@@ -116,14 +116,17 @@
   }
   /** Opens the alert form for this visual with the report, page, visual and the filters on the screen filled in. */
   function alertButton(spec, mk) {
-    return mk('bi-alert', 'bell', 'Alert me about this visual', () => {
+    return mk('bi-alert', 'bell', 'Alert me about this visual', (ev) => {
       const p = new URLSearchParams({ source: 'visual', report: reportId, page: pageId, visual: spec.id, title: (rep.title || reportId) + ': ' + (spec.title || spec.id) });
       const keep = stateFor(spec);
       delete keep.dates;                                                         // an alert follows the data's own date, not the day pinned on the screen
       delete keep.rows;
       const st = JSON.stringify(keep);
-      if (st.length <= 15000) { p.set('state', st); }
-      window.location.assign('/alerts/new?' + p.toString());
+      const long = st.length > 15000;
+      if (!long) { p.set('state', st); }
+      const btn = ev && ev.currentTarget;
+      if (long && btn) { B.near(btn, 'The filters on the screen were too long to carry, so the alert starts without them.', false); }
+      window.setTimeout(() => window.location.assign('/alerts/new?' + p.toString()), long ? 1800 : 0);
     }, { 'data-act': 'alert-me' });
   }
   const VGROUP = {};
@@ -470,6 +473,7 @@
       errors.forEach((p) => ul.appendChild(h('li', {}, h('strong', { text: p.code + ' ' }), h('code', { text: p.path }), ': ' + p.message)));
       if (!r.report || !r.dataset) { q('[data-report]').hidden = true; return; }
     }
+    B.publishedBanner(reportId, document.getElementById('biCanvas'));
     B.api('POST', '/items/' + B.id2path(reportId) + '/open', {}).catch(() => {});             // a view is counted, and the report goes under Recent
     idx = B.index(r.dataset);
     tokens = B.tokens();

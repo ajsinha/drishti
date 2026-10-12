@@ -190,6 +190,26 @@ public final class ImpactAnalyzer implements Composition.Directory, AutoCloseabl
         return out;
     }
 
+    /** The unpublished report items a board body names in its tiles, each once: a tile whose report has a published item of that name is not counted. */
+    public List<BiStore.Item> draftReportsOf(String boardBody) {
+        com.ash.drishti.server.bi.board.Board b = com.ash.drishti.server.bi.board.BoardParser.parse(boardBody).board();
+        List<BiStore.Item> out = new ArrayList<>();
+        if (b == null) {
+            return out;
+        }
+        List<BiStore.Item> pool = reports();
+        for (com.ash.drishti.server.bi.board.Board.Page pg : b.pages()) {
+            for (com.ash.drishti.server.bi.board.Board.Tile t : pg.tiles()) {
+                List<BiStore.Item> named = pool.stream().filter(i -> reportNamed(t.report(), i)).toList();
+                boolean published = named.stream().anyMatch(i -> i.isPublished() || com.ash.drishti.server.bi.BiFolder.isShipped(i.id()));
+                if (!published && !named.isEmpty() && !out.contains(named.get(0))) {
+                    out.add(named.get(0));
+                }
+            }
+        }
+        return out;
+    }
+
     /** True when {@code ref} (a tile's {@code report:}) names this report item: its id, its file name or its title. */
     public static boolean reportNamed(String ref, BiStore.Item report) {
         return ref != null && !ref.isBlank() && (report.id().equals(ref) || report.id().equals("file:report:" + ref) || report.title().equalsIgnoreCase(ref));

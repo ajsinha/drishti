@@ -99,7 +99,7 @@
   function card(it, onChange) {
     var fav = h('button', { type: 'button', class: 'bi-fav', 'aria-pressed': it.favourite ? 'true' : 'false', 'aria-label': (it.favourite ? 'Remove favourite: ' : 'Favourite: ') + it.title, title: 'Favourite' }, icon(it.favourite ? 'star-fill' : 'star'));
     fav.addEventListener('click', function () {
-      api('PUT', '/items/' + encodeURIComponent(it.id) + '/favourite', { on: !it.favourite }).then(function (n) { it.favourite = n.favourite; if (onChange) { onChange(); } else { fav.setAttribute('aria-pressed', it.favourite ? 'true' : 'false'); clear(fav); fav.appendChild(icon(it.favourite ? 'star-fill' : 'star')); } }).catch(fail);
+      api('PUT', '/items/' + encodeURIComponent(it.id) + '/favourite', { on: !it.favourite }).then(function (n) { it.favourite = n.favourite; if (onChange) { onChange(); } else { fav.setAttribute('aria-pressed', it.favourite ? 'true' : 'false'); clear(fav); fav.appendChild(icon(it.favourite ? 'star-fill' : 'star')); near(fav, it.favourite ? 'Added to your favourites.' : 'Removed from your favourites.', false); } }).catch(function (e) { near(fav, e.message, true); });
     });
     var meta = [it.owner, it.workspaceName];
     if (it.publishedVersion) { meta.push('v' + it.publishedVersion); }
@@ -238,7 +238,9 @@
       return list.reduce(function (p, it) {
         return p.then(function () { return api('DELETE', '/items/' + encodeURIComponent(it.id)).then(function () { done.push(it.title); }, function (e) { skipped.push(it.title + ': ' + e.message); }); });
       }, Promise.resolve()).then(function () {
-        say((done.length ? 'Deleted ' + done.length + (done.length === 1 ? ' item' : ' items') + ': ' + done.join(', ') + '. ' : '') + (skipped.length ? 'Skipped ' + skipped.length + ' - ' + skipped.join(' | ') : ''), skipped.length > 0);
+        var told = ((done.length ? 'Deleted ' + done.length + (done.length === 1 ? ' item' : ' items') + ': ' + done.join(', ') + '. ' : '') + (skipped.length ? 'Skipped ' + skipped.length + ' - ' + skipped.join(' | ') : ''));
+        say(told, skipped.length > 0);
+        near(q('[data-delete-selected]'), told, skipped.length > 0);
         load();
       });
     }
@@ -342,12 +344,12 @@
     });
     q('[data-add-member]').addEventListener('submit', function (e) {
       e.preventDefault();
-      var f = e.target;
+      var f = e.target, go = f.querySelector('[type=submit]');
       api('PUT', '/workspaces/' + encodeURIComponent(ws.id) + '/members/' + encodeURIComponent(f.elements.user.value.trim()), { role: f.elements.role.value })
-        .then(function () { say('Saved ' + f.elements.user.value + ' as ' + f.elements.role.value + '.'); f.reset(); load(); }).catch(fail);
+        .then(function () { var told = 'Saved ' + f.elements.user.value + ' as ' + f.elements.role.value + '.'; say(told); near(go, told, false); f.reset(); load(); }).catch(function (err) { near(go, err.message, true); });
     });
     q('[data-review]').addEventListener('change', function (e) {
-      api('PUT', '/workspaces/' + encodeURIComponent(ws.id), { reviewRequired: e.target.checked }).then(function () { say('Review before publishing is ' + (e.target.checked ? 'on' : 'off') + '.'); load(); }).catch(fail);
+      api('PUT', '/workspaces/' + encodeURIComponent(ws.id), { reviewRequired: e.target.checked }).then(function () { say('Review before publishing is ' + (e.target.checked ? 'on' : 'off') + '.'); near(e.target, 'Review before publishing is ' + (e.target.checked ? 'on' : 'off') + '.', false); load(); }).catch(function (err) { e.target.checked = !e.target.checked; near(e.target, err.message, true); });
     });
     q('[data-delete-workspace]').addEventListener('click', function (e) {
       var b = e.target;
@@ -396,9 +398,14 @@
       b.addEventListener('click', function () { run(b); });
       return b;
     }
-    function post(sub, body, done) {
-      return api('POST', path + '/' + sub, body || {}).then(function (n) { say(done || 'Done.'); show(n); return n; })
-        .catch(function (e) { fail(e); document.dispatchEvent(new CustomEvent('bi:refused', { detail: { code: e.code, message: e.message, sub: sub } })); });
+    function post(sub, body, done, anchor) {
+      var box = q('[data-actions]'), at = anchor ? Array.prototype.indexOf.call(qa('.btn-pill', box), anchor) : -1;
+      return api('POST', path + '/' + sub, body || {}).then(function (n) {
+        say(done || 'Done.'); show(n);
+        var now = qa('.btn-pill', q('[data-actions]'));                              // the actions were drawn again: the message goes beside the button now in the same place
+        if (now.length) { near(now[Math.max(0, Math.min(at < 0 ? 0 : at, now.length - 1))], done || 'Done.', false); }
+        return n;
+      }).catch(function (e) { fail(e); if (anchor && anchor.isConnected) { near(anchor, e.message, true); } document.dispatchEvent(new CustomEvent('bi:refused', { detail: { code: e.code, message: e.message, sub: sub } })); });
     }
     /** A Python item's manifest checks (the server's) and source checks (the console's): every problem, in the warnings box. */
     function checkPython() {
@@ -421,18 +428,18 @@
       if (any) { box.appendChild(note); }
       if (it.kind === 'python') { box.appendChild(act('Check the Python', checkPython)); }
       if (c.edit && it.status !== 'proposed') { box.appendChild(act('Edit', function () { var f = q('[data-edit]'); f.hidden = !f.hidden; if (!f.hidden) { f.elements.title.focus(); } })); }
-      if (c.propose) { box.appendChild(act('Propose for review', function () { post('propose', { note: note.value }, 'Proposed. A second person approves it.'); })); }
-      if (c.publish) { box.appendChild(act('Publish', function () { post('publish', { note: note.value }, 'Published.'); }, 'btn-accent')); }
+      if (c.propose) { box.appendChild(act('Propose for review', function (b) { post('propose', { note: note.value }, 'Proposed. A second person approves it.', b); })); }
+      if (c.publish) { box.appendChild(act('Publish', function (b) { post('publish', { note: note.value }, 'Published.', b); }, 'btn-accent')); }
       if (it.status === 'proposed') {
         box.appendChild(h('p', { class: 'bi-approvers', 'data-approvers': '' }, h('strong', { text: 'Waiting for review. ' }), 'Frozen until decided or withdrawn. Who can approve: ' + (it.approveRule || 'a reviewer') + (it.approvers && it.approvers.length ? '. Told by notification: ' + it.approvers.join(', ') : '. Nobody is eligible yet: ask a steward, or give a member of the workspace a role with the approve power') + '.'));
       }
-      if (c.withdraw) { box.appendChild(act('Withdraw proposal', function () { post('withdraw', null, 'Withdrawn: a draft again.'); })); }
+      if (c.withdraw) { box.appendChild(act('Withdraw proposal', function (b) { post('withdraw', null, 'Withdrawn: a draft again.', b); })); }
       if (c.approve) {
-        box.appendChild(act('Approve and publish', function () { post('approve', { note: note.value }, 'Approved and published.'); }, 'btn-accent'));
-        box.appendChild(act('Reject', function () { post('reject', { reason: note.value }, 'Rejected: a draft again.'); }));
+        box.appendChild(act('Approve and publish', function (b) { post('approve', { note: note.value }, 'Approved and published.', b); }, 'btn-accent'));
+        box.appendChild(act('Reject', function (b) { post('reject', { reason: note.value }, 'Rejected: a draft again.', b); }));
       }
-      if (c.promote) { box.appendChild(act(it.endorsement === 'promoted' ? 'Remove promotion' : 'Promote', function () { post('endorse', { level: it.endorsement === 'promoted' ? 'none' : 'promoted' }, 'Endorsement changed.'); })); }
-      if (c.certify) { box.appendChild(act(it.endorsement === 'certified' ? 'Remove certification' : 'Certify', function () { post('endorse', { level: it.endorsement === 'certified' ? 'none' : 'certified' }, 'Endorsement changed.'); })); }
+      if (c.promote) { box.appendChild(act(it.endorsement === 'promoted' ? 'Remove promotion' : 'Promote', function (b) { post('endorse', { level: it.endorsement === 'promoted' ? 'none' : 'promoted' }, it.endorsement === 'promoted' ? 'Promotion removed.' : 'Promoted: it is listed first for others.', b); })); }
+      if (c.certify) { box.appendChild(act(it.endorsement === 'certified' ? 'Remove certification' : 'Certify', function (b) { post('endorse', { level: it.endorsement === 'certified' ? 'none' : 'certified' }, it.endorsement === 'certified' ? 'Certification removed.' : 'Certified.', b); })); }
       if (c.move) { box.appendChild(act('Move to workspace…', function (b) { moveTo(b); })); }
       box.appendChild(act('Duplicate…', function (b) { duplicate(b); }));
       if (c.delete) {
@@ -442,7 +449,7 @@
             impactOf(it.id, null, it.publishedVersion).then(function (t) { var w = h('span', { class: 'bi-delete-impact', 'data-delete-impact': '' }, t); b.after(w); });
             return;
           }
-          api('DELETE', path).then(function () { window.location.href = '/bi/w/' + encodeURIComponent(it.workspace); }).catch(fail);
+          api('DELETE', path).then(function () { window.location.href = '/bi/w/' + encodeURIComponent(it.workspace); }).catch(function (e) { near(b, e.message, true); });
         }, 'btn-ghost bi-danger'));
       }
     }
@@ -454,7 +461,7 @@
       if (!B || !B.askWorkspace) { say('Reload the page to duplicate.', true); return; }
       B.askWorkspace(b, 'Duplicate here', 'Duplicate into').then(function (to) {
         return api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: it.kind, title: it.title + ' (copy)', description: it.description || '', tags: (it.tags || []).join(', '), body: it.shipped && B.copyBody ? B.copyBody(it.body || '') : it.body || '' });
-      }).then(function (n) { window.location.href = '/bi/i/' + encodeURIComponent(n.id).replace(/%3A/g, ':'); }).catch(function (e) { if (!e.cancelled) { fail(e); } });
+      }).then(function (n) { window.location.href = '/bi/i/' + encodeURIComponent(n.id).replace(/%3A/g, ':'); }).catch(function (e) { if (!e.cancelled) { near(b, e.message, true); } });
     }
     function moveTo(b) {
       closePanels();

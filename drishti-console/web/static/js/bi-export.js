@@ -40,20 +40,44 @@
     scope.value = Array.prototype.some.call(scope.options, (o) => o.value === keep) ? keep : '';
   }
 
+  /** The address query of the screen's state; `dropped` is set when the state was too long to carry, so the file or the subscription starts without the filters. */
   function query() {
     const rv = B.reportView;
     const p = new URLSearchParams();
     p.set('page', rv.page());
     if (scope.value) { p.set('visual', scope.value); }
     const st = JSON.stringify(rv.state());
-    if (st.length <= LIMIT) { p.set('state', st); }
+    if (st.length <= LIMIT) { p.set('state', st); } else { p.dropped = true; }
     return p;
   }
+  /** The file name of a Content-Disposition: `filename*=UTF-8''..` or a plain or RFC 2047 (`=?UTF-8?Q?..?=`) `filename=`; empty when none. */
+  function fileName(cd) {
+    let m = /filename\*=(?:UTF-8'')?([^;]+)/i.exec(cd);
+    if (m) { try { return decodeURIComponent(m[1].trim()); } catch (e) { return m[1].trim(); } }
+    m = /filename="?([^";]+)"?/i.exec(cd);
+    if (!m) { return ''; }
+    const q = /^=\?utf-8\?q\?(.*)\?=$/i.exec(m[1]);
+    if (!q) { return m[1]; }
+    const bytes = q[1].replace(/_/g, ' ').replace(/=([0-9A-F]{2})/gi, (all, hex) => '%' + hex);
+    try { return decodeURIComponent(bytes); } catch (e) { return bytes; }
+  }
+  const DROPPED = ' The filters on the screen were too long to carry, so this does not include them.';
 
   box.querySelectorAll('[data-export-fmt]').forEach((a) => {
     a.addEventListener('click', (e) => {
       e.preventDefault();
-      window.location.assign('/dist/bi/' + B.id2path(B.reportView.id) + '.' + a.getAttribute('data-export-fmt') + '?' + query().toString());
+      const fmt = a.getAttribute('data-export-fmt'), p = query();
+      B.near(a, 'Preparing the ' + fmt.toUpperCase() + '...', false);
+      // fetched, not navigated to, so a refusal (switched off, over a limit, a visual that cannot be drawn) is said beside the button instead of replacing the report
+      fetch('/dist/bi/' + B.id2path(B.reportView.id) + '.' + fmt + '?' + p.toString(), { credentials: 'same-origin' }).then((r) => {
+        if (!r.ok) { return r.json().catch(() => ({})).then((d) => { throw new Error((d.code ? d.code + ' ' : '') + (d.detail || d.title || r.statusText)); }); }
+        return r.blob().then((blob) => ({ blob, name: fileName(r.headers.get('Content-Disposition') || '') || (B.reportView.id.replace(/[^\w.-]+/g, '-') + '.' + fmt) }));
+      }).then(({ blob, name }) => {
+        const url = URL.createObjectURL(blob), dl = document.createElement('a');
+        dl.href = url; dl.download = name; document.body.appendChild(dl); dl.click(); dl.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 10000);
+        B.near(a, 'Downloaded ' + name + '.' + (p.dropped ? DROPPED : ''), false);
+      }).catch((err) => B.near(a, err.message, true));
     });
   });
   const sub = box.querySelector('[data-subscribe]');
@@ -63,7 +87,8 @@
     p.set('type', 'report');
     p.set('id', B.reportView.id);
     p.set('title', B.reportView.title);
-    window.location.assign('/reports/subscribe?' + p.toString());
+    B.near(sub, 'Opening the subscription form...' + (p.dropped ? DROPPED : ''), false);
+    window.setTimeout(() => window.location.assign('/reports/subscribe?' + p.toString()), p.dropped ? 1800 : 0);
   });
 
   /** Export and Subscribe appear only when they work for this person; when they do not, a line says why (the administrator's switches, or the person's own limit). */

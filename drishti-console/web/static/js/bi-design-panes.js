@@ -164,7 +164,6 @@
       if (v.type === type) { return; }
       const dropped = lostIn(v, type);
       if (dropped.length && !window.confirm('Change "' + (v.title || v.id) + '" to a ' + type + '? ' + dropped.map(B.label).join(', ') + (dropped.length === 1 ? ' does' : ' do') + ' not fit its wells and will be removed from it (Undo brings it back). Choose Cancel and use Add visual to make a new ' + type + ' instead.')) { return; }
-      const was = v.type;
       D.curIdx = D.idxOf(v);
       D.change('Change to a ' + type, () => {
         const old = v.wells;
@@ -176,7 +175,7 @@
         Object.keys(specs).forEach((w) => { if (v.wells[w] && !v.wells[w].length) { delete v.wells[w]; } });
         D.auto.delete(v.id);
         if (type === 'slicer') { v.format = Object.assign({ mode: 'list', scope: 'page' }, v.format); }
-        if (/^[a-z][a-z-]*-\d+$/.test(v.id) && D.catalogue.visuals[v.id.replace(/-\d+$/, '')] && was !== 'slicer' && type !== 'slicer') { v.id = D.newVisualId(type); }          // the id says what the visual is
+        D.followType(v, type);                                   // the id says what the visual is, and the bookmarks and layouts that named the old one follow
       });
       D.curIdx = null;
       D.select(v.id);

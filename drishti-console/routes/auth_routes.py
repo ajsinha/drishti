@@ -33,6 +33,7 @@ from core.nextpath import safe_next
 from routes.common import ident, render
 
 router = APIRouter(include_in_schema=False)
+NO_STORE = {"Cache-Control": "no-store"}
 
 
 def _safe_next(target: str | None) -> str:
@@ -40,8 +41,16 @@ def _safe_next(target: str | None) -> str:
 
 
 @router.get("/login")
-async def login_form(request: Request, next: str = "/t", error: str | None = None):
-    return render(request, "auth/login.html", next=_safe_next(next), error=error)
+async def login_form(request: Request, next: str | None = None, error: str | None = None):
+    """The sign-in form. Someone already signed in never sees it: they are sent on (303, so the address of the form is replaced) to the page asked for, else home,
+    which is also what Back from the landing page does after a sign-in, since the form is never kept in the browser's cache. No sign-in model changes."""
+    me = getattr(request.state, "identity", None)
+    if request.app.state.auth.enabled and me is not None and not error:
+        target = "/account?must=1" if getattr(me, "must_change", False) else (_safe_next(next) if next else "/")
+        return RedirectResponse(target, status_code=303, headers=NO_STORE)
+    r = render(request, "auth/login.html", next=_safe_next(next), error=error)
+    r.headers.update(NO_STORE)
+    return r
 
 
 @router.post("/login")

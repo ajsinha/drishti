@@ -55,7 +55,7 @@ public final class BiBoardService {
 
     /** The report a tile names: by catalogue id, shipped file name, the report's own name or its title, among the reports the caller may see. */
     BiStore.Item reportFor(Principal p, String ref) {
-        List<BiStore.Item> pool = bi.reportItems(p);
+        List<BiStore.Item> pool = bi.reportItemsWithDrafts(p);
         for (BiStore.Item i : pool) {
             if (i.id().equals(ref) || i.id().equals("file:report:" + ref)) {
                 return i;
@@ -67,6 +67,21 @@ public final class BiBoardService {
             }
         }
         return null;
+    }
+
+    /** The reports the designer offers for a tile: the published ones, then the caller's own drafts (marked {@code draft}); a draft shows for its author only. */
+    public List<Map<String, Object>> reportChoices(Principal p) {
+        bi.requirePower(p, BiAccess.AUTHOR);
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (BiStore.Item i : bi.reportItemsWithDrafts(p)) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", i.id());
+            m.put("title", i.title());
+            m.put("draft", !i.isPublished() && !BiFolder.isShipped(i.id()));
+            m.put("status", i.status());
+            out.add(m);
+        }
+        return out;
     }
 
     /** Where a tile's visual is for one person: the report item and the page that holds the visual. */

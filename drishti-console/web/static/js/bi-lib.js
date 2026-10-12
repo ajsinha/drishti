@@ -43,8 +43,16 @@
   B.clone = (o) => JSON.parse(JSON.stringify(o));
   B.same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
+  /**
+   * "View as readers see it": a page opened with ?as=published asks the server for the published version of every report and board it draws, and (the data
+   * still being drawn as the person looking) masks it for them. The parameter is added to those calls and to nothing else.
+   */
+  B.asPublished = /[?&]as=published(&|$)/.test(window.location.search);
+  B.viewPath = (path) => (B.asPublished && /^\/(reports|boards)\//.test(path) ? path + (path.indexOf('?') < 0 ? '?' : '&') + 'as=published' : path);
+
   /** A call to the server: rejects with an Error carrying .code (DRS-nnnn), .status and .detail. */
   B.api = function (method, path, body) {
+    path = B.viewPath(path);
     const opt = { method, headers: { Accept: 'application/json' }, credentials: 'same-origin' };
     if (body !== undefined && method !== 'GET') { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
     return fetch('/bi/api' + path, opt).then((r) => r.json().catch(() => ({})).then((data) => {
@@ -55,6 +63,19 @@
       }
       return data;
     }));
+  };
+
+  /** On a page opened with ?as=published: says which version is shown, or that nothing is published, with a way back to the draft. */
+  B.publishedBanner = function (id, canvas) {
+    if (!B.asPublished || !canvas) { return; }
+    const back = B.h('a', { href: window.location.pathname, text: 'Back to my draft' });
+    const box = B.h('p', { class: 'bi-warn', role: 'status', 'data-published-banner': '' }, 'Loading the published version... ');
+    canvas.insertBefore(box, canvas.firstChild);
+    B.api('GET', '/items/' + B.id2path(id) + '/published').then((p) => {
+      B.clear(box).appendChild(document.createTextNode('Showing the published version ' + p.version + (p.publishedAt ? ' (' + String(p.publishedAt).replace('T', ' ').slice(0, 16) + ')' : '') + ', the way readers see it'
+        + (p.draftDiffers ? '; your draft has changes that are not shown' : '') + '. Data is masked for you, as it would be for them. '));
+      box.appendChild(back);
+    }).catch((e) => { B.clear(box).appendChild(document.createTextNode(e.detail || e.message)); box.appendChild(document.createTextNode(' ')); box.appendChild(back); });
   };
 
   /** Announces a message in a status element (class bi-bad when it is a problem). */

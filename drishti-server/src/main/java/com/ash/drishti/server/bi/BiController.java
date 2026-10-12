@@ -127,6 +127,12 @@ public class BiController {
         return bi.item(p, id, false);
     }
 
+    /** The published version of an item as its readers get it (for an author viewing a draft); DRS-9001 when never published. */
+    @GetMapping("/items/{id}/published")
+    public Map<String, Object> published(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return bi.publishedView(p, id);
+    }
+
     /** Opens the item for the caller: counts a view and puts it under Recent. */
     @PostMapping("/items/{id}/open")
     public Map<String, Object> open(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {

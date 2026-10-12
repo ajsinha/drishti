@@ -131,7 +131,7 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
   .bi-dactions .btn-pill { flex: 1 1 8rem; }
 }
 @media (pointer: coarse) {
-  .bi-vtype, .bi-field, .bi-chipbtn { min-height: 44px; min-width: 44px; }
+  .bi-vtype, .bi-field, .bi-chipbtn, .bi-viewas { min-height: 44px; min-width: 44px; }
 }
 
 /* the Model view (RUPAKA.md section 6.2): tables as boxes with their columns, relationships as lines */

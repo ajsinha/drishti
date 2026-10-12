@@ -145,7 +145,11 @@ public final class BoardParser {
 
     private static List<Board.Tile> tiles(JsonNode n, String path, List<Problem> out, Board.Notify defaults) {
         List<Board.Tile> list = new ArrayList<>();
-        if (!n.isArray() || n.isEmpty()) {
+        if (n.isArray() && n.isEmpty()) {
+            out.add(error(path, "this page has no tiles yet: add a tile (a report and one of its visuals; in YAML `{ report: <report>, visual: <visual id>, at: { x, y, w, h } }`)"));
+            return list;
+        }
+        if (!n.isArray()) {
             out.add(error(path, "`tiles:` is a list of tiles: { report: <report>, visual: <visual id>, at: { x, y, w, h } }"));
             return list;
         }

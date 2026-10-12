@@ -24,6 +24,8 @@
   const B = window.drishtiBi;
   const h = B.h, q = (s, sc) => B.q(s, sc || canvas), qa = (s, sc) => B.qa(s, sc || canvas);
   const say = (t, bad) => B.say(q('[data-msg]'), t, bad);
+  /** A message in words beside the control that caused it (the shared helper), as well as the top line. */
+  const near = (anchor, t, bad) => { if (anchor && B.near) { B.near(anchor, t, bad); } else { say(t, bad); } };
 
   // ---- the Designer start page: board drafts and a new board ---------------------------------------------------------------------------
   const start = q('[data-board-start]');
@@ -49,6 +51,8 @@
   const shell = canvas.closest('.bi-shell');
   if (shell) { shell.classList.add('bi-shell-design'); }
   const itemId = canvas.getAttribute('data-item');
+  const viewAs = q('[data-view-as]');
+  const drafts = new Set();                            // ids of the author's unpublished reports the Add form offers
 
   // ---- the draft and its history -------------------------------------------------------------------------------------------------------
   const S = { model: null, pageId: null, selected: null, dirty: false, readOnly: false, resolved: {}, problems: [], yaml: '' };
@@ -197,6 +201,7 @@
     f.el.querySelector('[data-tile-title]').textContent = t.title || t.visual;
     B.clear(f.body).appendChild(h('div', { class: 'bi-btile-sub' }, B.icon(TYPE_ICON[i.type] || 'bar-chart'), ' ', i.reportTitle ? i.reportTitle + ' · ' + t.visual + (i.type ? ' (' + i.type + ')' : '') : (t.report + ' · ' + t.visual)));
     if (missing && Object.keys(S.resolved).length > 0) { f.body.appendChild(h('div', { class: 'bi-btile-warn', role: 'status' }, B.icon('exclamation-triangle'), ' This tile names a report or visual you cannot open.')); }
+    if (i.report && drafts.has(i.report)) { f.body.appendChild(h('div', { class: 'bi-btile-alert', 'data-draft-tile': '' }, B.icon('pencil-square'), ' Draft report: only you see this tile until the report is published.')); }
     if (t.alert) { f.body.appendChild(h('div', { class: 'bi-btile-alert' }, B.icon('bell'), ' ' + alertWords(t.alert))); }
     f.el.setAttribute('aria-label', (t.title || t.visual) + ', column ' + (t.at.x + 1) + ' row ' + (t.at.y + 1) + ', ' + t.at.w + ' wide, ' + t.at.h + ' high. Arrow keys move it, Shift with arrows resizes it, Delete removes it.');
     place(f.el, t.at);
@@ -383,11 +388,14 @@
     if (reportCache.has(id)) { done(reportCache.get(id)); return; }
     B.api('GET', '/reports/' + B.id2path(id)).then((r) => { const rep = r.report || {}; reportCache.set(id, rep); done(rep); }).catch((e) => say(e.message, true));
   }
-  repSel.addEventListener('change', () => loadReport(repSel.value));
+  /** Whether a tile's `report:` names the report item the Add form has chosen (by id, or by its title when the board was typed by hand). */
+  const sameReport = (ref, id) => ref === id || (repSel.querySelector('option[value="' + id + '"]') || {}).textContent === ref;
+  repSel.addEventListener('change', () => { loadReport(repSel.value); near(q('[data-add-btn]'), ''); });
   q('[data-add-form]').addEventListener('submit', (e) => {
     e.preventDefault();
-    if (!repSel.value || !visSel.value) { say('Choose a report and one of its visuals.', true); return; }
+    if (!repSel.value || !visSel.value) { near(q('[data-add-btn]'), 'Choose a report and one of its visuals.', true); return; }
     const [pg, vis] = visSel.value.split('/');
+    const twice = S.model.pages.filter((x) => x.tiles.some((t) => t.visual === vis && sameReport(t.report, repSel.value))).map((x) => x.title || x.id);
     const type = visSel.selectedOptions[0].getAttribute('data-type');
     const [w, hh] = SIZE[type] || [6, 5];
     let made = null;
@@ -398,7 +406,11 @@
       if (onPages > 1) { made.page = pg; }                      // the same visual id on two pages of the report: say which
       p.tiles.push(made);
     });
-    if (made) { S.selected = made.id; render(); const f = frames.get(made.id); if (f) { f.el.focus(); } say('Tile added at the bottom of the page.'); }
+    if (made) {
+      S.selected = made.id; render(); const f = frames.get(made.id); if (f) { f.el.focus(); }
+      near(q('[data-add-btn]'), twice.length ? 'Added, but this visual is already on the board (' + twice.join(', ') + '): two tiles of one visual show the same thing.' : 'Tile added at the bottom of the page.', twice.length > 0);
+      q('[data-add-btn]').setAttribute('data-twice', twice.length ? '1' : '');
+    }
   });
 
   // ---- board and page settings, tabs -------------------------------------------------------------------------------------------------
@@ -445,9 +457,17 @@
     box.hidden = false;
     showProblems(q('[data-check-list]'), S.problems);
     const errors = S.problems.filter((p) => p.level === 'error').length;
-    q('[data-check-sum]').textContent = S.problems.length ? errors + ' error' + (errors === 1 ? '' : 's') + ', ' + (S.problems.length - errors) + ' warning' + (S.problems.length - errors === 1 ? '' : 's') + '.' : 'No problems: every tile names a report and visual you can open.';
+    const empty = S.model.pages.every((pg) => !pg.tiles.length) && S.problems.every((p) => /no tiles yet/.test(p.message || ''));
+    q('[data-check-sum]').textContent = empty ? 'This board has no tiles yet: add a tile. Choose a report and one of its visuals on the right, then press Add tile.' : S.problems.length ? errors + ' error' + (errors === 1 ? '' : 's') + ', ' + (S.problems.length - errors) + ' warning' + (S.problems.length - errors === 1 ? '' : 's') + '.' : 'No problems: every tile names a report and visual you can open.';
+    const draftTiles = [];
+    S.model.pages.forEach((pg) => pg.tiles.forEach((t) => { const r = (S.resolved[pg.id + '/' + t.id] || {}); if (r.report && drafts.has(r.report)) { draftTiles.push(pg.title || pg.id, t.title || t.visual, r.reportTitle); } }));
+    for (let k = 0; k < draftTiles.length; k += 3) {
+      q('[data-check-list]').appendChild(h('li', { class: 'bi-problem bi-problem-warning', 'data-draft-warning': '' }, h('strong', { text: 'WARNING ' }), 'Page ' + draftTiles[k] + ', tile ' + draftTiles[k + 1] + ': the report \'' + draftTiles[k + 2] + '\' is a draft, so this board cannot be published until that report is.'));
+      q('[data-check-list]').hidden = false;
+    }
     q('[data-check-sum]').focus();
-  }));
+    near(q('[data-check]'), (empty ? 'No tiles yet: add a tile.' : errors ? errors + ' error' + (errors === 1 ? '' : 's') : 'Checked: no errors.'), errors > 0 || empty);
+  }).catch((e) => near(q('[data-check]'), e.message, true)));
   q('[data-check-close]').addEventListener('click', () => { q('[data-check-box]').hidden = true; });
   function save() {
     if (S.readOnly) { return Promise.resolve(); }
@@ -457,8 +477,10 @@
       S.dirty = false;
       S.etag = it.etag;
       render();
-      say('Saved as a draft at ' + new Date().toTimeString().slice(0, 8) + '. Publish it from its item page when it is ready.');
-    }).catch((e) => { if (!e.cancelled) { say(e.message, true); } });
+      const word = 'Saved as a draft at ' + new Date().toTimeString().slice(0, 8) + '. Publish it from its item page when it is ready.';
+      say(word);
+      near(btn, word, false);
+    }).catch((e) => { if (!e.cancelled) { say(e.message, true); near(btn, e.message, true); } });
   }
   q('[data-save]').addEventListener('click', save);
   q('[data-save-copy]').addEventListener('click', () => B.askWorkspace(q('[data-save-copy]'), 'Save the copy', 'Save the copy into').then((to) => flush().then((yaml) => B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: 'board', title: (S.model.title || 'Board') + ' (copy)', description: S.model.description || '', body: yaml })))
@@ -476,13 +498,19 @@
     editor.on('change', onYamlEdit);
   } else { ta.addEventListener('input', onYamlEdit); }
 
-  Promise.all([B.api('GET', '/items/' + B.id2path(itemId)), B.api('GET', '/catalogue?kind=report&limit=500')]).then(([item, cat]) => {
+  Promise.all([B.api('GET', '/items/' + B.id2path(itemId)), B.api('GET', '/boards/reports')]).then(([item, reps]) => {
     if (item.kind !== 'board') { say('This is not a board.', true); return null; }
     S.etag = item.etag;
     S.readOnly = !(item.can && item.can.edit) || item.status === 'proposed';
-    q('[data-view-link]').href = '/bi/b/' + B.id2path(itemId);
+    const viewHref = () => '/bi/b/' + B.id2path(itemId) + (viewAs.value === 'published' ? '?as=published' : '');
+    q('[data-view-link]').href = viewHref();
+    viewAs.addEventListener('change', () => { q('[data-view-link]').href = viewHref(); });
     q('[data-item-link]').href = '/bi/i/' + B.id2path(itemId);
-    (cat.items || []).forEach((i) => repSel.appendChild(h('option', { value: i.id, text: i.title })));
+    (reps || []).forEach((i) => repSel.appendChild(h('option', { value: i.id, text: i.title + (i.draft ? ' (draft)' : ''), 'data-draft': i.draft ? '1' : '' })));
+    (reps || []).forEach((i) => { if (i.draft) { drafts.add(i.id); } });
+    q('[data-draft-note]').hidden = !drafts.size;
+    if (item.publishedVersion > 0 || item.shipped) { viewAs.querySelector('option[value=published]').disabled = false; }
+    viewAs.hidden = false;
     q('[data-readonly]').hidden = !S.readOnly;
     if (item.status === 'proposed') { q('[data-readonly]').textContent = 'Proposed for review: it is frozen. Withdraw the proposal on its item page to edit it, or save a copy.'; }
     return B.api('POST', '/boards/validate', { yaml: item.body });

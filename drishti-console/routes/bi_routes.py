@@ -180,7 +180,7 @@ async def proxy(request: Request, path: str):
     params = {k: v for k, v in request.query_params.items()}
     if request.method == "POST" and head == "reports" and path.endswith("/query") and params.get("format") == "arrow":
         try:                                                  # a Perspective visual's rows: the server's Arrow bytes, passed through unchanged
-            content, headers = await request.app.state.backend.bi_arrow("/" + path, ident(request), body, format="arrow")
+            content, headers = await request.app.state.backend.bi_arrow("/" + path, ident(request), body, **params)
         except BackendError as e:
             return _problem(e)
         kept = {k: v for k, v in headers.items() if k.lower() in ("x-bi-rows", "x-bi-masked", "x-bi-live")}

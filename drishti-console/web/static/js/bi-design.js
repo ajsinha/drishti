@@ -163,6 +163,30 @@
     return type + '-' + n;
   };
 
+  /**
+   * Gives a visual a new id and keeps everything that named the old one pointing at it: the bookmarks' slicer selections and the phone and tablet layouts of its page
+   * (order, hidden, wide and row spans), and the report's expected values (`tests:`). Call it inside a change so Undo brings the old id and its references back.
+   */
+  D.renameVisual = function (v, next) {
+    const old = v.id, m = D.model, pageId = D.pageId;
+    if (old === next) { return; }
+    v.id = next;
+    (m.bookmarks || []).filter((b) => b.page === pageId && b.slicers && Object.prototype.hasOwnProperty.call(b.slicers, old)).forEach((b) => { b.slicers[next] = b.slicers[old]; delete b.slicers[old]; });
+    Object.keys(m.layouts || {}).forEach((device) => {
+      const lay = (m.layouts[device] || {})[pageId];
+      if (!lay) { return; }
+      ['order', 'hide', 'wide'].forEach((k) => { if (Array.isArray(lay[k])) { lay[k] = lay[k].map((x) => (x === old ? next : x)); } });
+      if (lay.span && Object.prototype.hasOwnProperty.call(lay.span, old)) { lay.span[next] = lay.span[old]; delete lay.span[old]; }
+    });
+    (m.tests || []).forEach((t) => { if (t && t.visual === old && (!t.page || t.page === pageId)) { t.visual = next; } });
+    if (D.auto && D.auto.has(old)) { D.auto.delete(old); D.auto.add(next); }
+    if (D.selected === old) { D.selected = next; }
+  };
+  /** The id a visual of `was` type gets when it becomes `type`: a made-up id (`card-1`, `slicer-2`, `visual-3`) follows the type; an id its author chose is kept. */
+  D.followType = function (v, type) {
+    if (/^[a-z][a-z0-9]*(-[a-z0-9]+)*-\d+$/.test(v.id) && v.id.replace(/-\d+$/, '') !== type) { D.renameVisual(v, D.newVisualId(type)); }
+  };
+
   /** Moves others down so nothing overlaps `moved` (and, in turn, each other). */
   D.settle = function (page, moved) {
     const hit = (a, b) => a.at.x < b.at.x + b.at.w && b.at.x < a.at.x + a.at.w && a.at.y < b.at.y + b.at.h && b.at.y < a.at.y + a.at.h;
@@ -415,7 +439,9 @@
       const slow = [...(D.timings || new Map()).entries()].filter(([, ms]) => ms > 1000);
       slow.forEach(([id, ms]) => list.appendChild(h('li', { class: 'bi-problem bi-problem-warning', 'data-code': 'PERF' }, h('strong', { text: 'PERF ' }), id + ' took ' + Math.round(ms) + ' ms: a visual over one second is worth a rollup or a filter.')));
       q('[data-check-sum]').focus();
-    }).catch((e) => say(e.message, true));
+      const n = (r.problems || []).filter((p) => p.level === 'error').length;
+      B.near(q('[data-check]'), n ? n + ' error' + (n === 1 ? '' : 's') + ': see the list.' : 'Checked: no errors.', n > 0);
+    }).catch((e) => { say(e.message, true); B.near(q('[data-check]'), e.message, true); });
   }
 
   function save() {
@@ -426,8 +452,10 @@
       D.item = it;
       updateButtons();
       const pub = it.workspaceReviewRequired;
-      say('Saved. It is a draft until you ' + (pub ? 'propose it for review' : 'publish it') + ' (the Publish button).');
-    })).catch((e) => { if (!e.cancelled) { say(e.message, true); } });
+      const word = 'Saved. It is a draft until you ' + (pub ? 'propose it for review' : 'publish it') + ' (the Publish button).';
+      say(word);
+      B.near(btn, word, false);
+    })).catch((e) => { if (!e.cancelled) { say(e.message, true); B.near(btn, e.message, true); } });
   }
 
   function saveCopy(fromStale) {
@@ -532,7 +560,12 @@
     D.readOnly = !!item.shipped || frozen || !(item.can && item.can.edit);
     q('[data-title]').textContent = item.title;
     q('[data-item-link]').href = '/bi/i/' + B.id2path(itemId);
-    q('[data-view-link]').href = '/bi/r/' + B.id2path(itemId);
+    const viewAs = q('[data-view-as]');
+    const viewHref = () => '/bi/r/' + B.id2path(itemId) + (viewAs.value === 'published' ? '?as=published' : '');
+    q('[data-view-link]').href = viewHref();
+    if (item.publishedVersion > 0 || item.shipped) { viewAs.querySelector('option[value=published]').disabled = false; }
+    viewAs.hidden = false;
+    viewAs.addEventListener('change', () => { q('[data-view-link]').href = viewHref(); });
     q('[data-save-copy]').hidden = !D.readOnly;
     q('[data-publish-label]').textContent = item.workspaceReviewRequired ? 'Propose' : 'Publish';
     q('[data-publish]').hidden = D.readOnly || !(item.can && (item.can.publish || item.can.propose));

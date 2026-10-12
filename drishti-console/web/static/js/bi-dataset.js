@@ -57,6 +57,8 @@
     });
   }
   function fail(e) { say(e.message, true); }
+  /** A message beside the control that caused it (bi-lib.js draws it); the top line when that script is absent. */
+  function near(anchor, text, bad) { var B = window.drishtiBi; if (B && B.near && anchor) { B.near(anchor, text, bad); } else { say(text, bad); } }
   function id2path(id) { return encodeURIComponent(id).replace(/%3A/g, ':'); }
   function badge(text, cls, ic) { return h('span', { class: 'bi-badge ' + (cls || '') }, ic ? icon(ic) : null, ' ' + text); }
   function num(v) { return typeof v === 'number' ? (Number.isInteger(v) ? v.toLocaleString('en-US') : v.toLocaleString('en-US', { maximumFractionDigits: 2 })) : String(v); }
@@ -304,7 +306,7 @@
         if (me.powers.indexOf('bi-author') < 0) { return; }
         btn.hidden = false;
         btn.onclick = function () {
-          btn.disabled = true; msg.textContent = 'Refreshing...';
+          btn.disabled = true; msg.classList.remove('bi-bad'); msg.textContent = 'Refreshing...';
           api('POST', path + '/refresh', {}).then(function () {
             var tries = 0;
             (function poll() {
@@ -313,10 +315,11 @@
                 if (d.status === 'running' && tries++ < 120) { setTimeout(poll, 1000); return; }
                 btn.disabled = false;
                 msg.textContent = d.status === 'ok' ? 'Refreshed ' + num(d.lastRows) + ' rows in ' + num(d.lastDurationMs) + ' ms.' : 'Refresh ' + (d.status || 'did not finish') + (d.error ? ': ' + d.error : '') + '.';
+                msg.classList.toggle('bi-bad', d.status !== 'ok');
                 api('GET', path).then(draw);
-              }).catch(function (e) { btn.disabled = false; msg.textContent = e.message; });
+              }).catch(function (e) { btn.disabled = false; msg.textContent = e.message; msg.classList.add('bi-bad'); });
             })();
-          }).catch(function (e) { btn.disabled = false; msg.textContent = e.message; });
+          }).catch(function (e) { btn.disabled = false; msg.textContent = e.message; msg.classList.add('bi-bad'); });
         };
       }).catch(function () {});
     }
@@ -327,10 +330,11 @@
       f.hidden = !(it.can && it.can.edit) || (model && model.refresh && model.refresh.scheduled);
       f.onsubmit = function (e) {
         e.preventDefault();
+        var go = f.querySelector('[type=submit]');
         var k = f.elements.kind.value, text = (k === 'hourly' || k === 'after-load') ? k : k + ' ' + f.elements.time.value;
         post('/bi/wizard/parse', { yaml: it.body || '' }).then(function (r) { r.doc.refresh = text; return post('/bi/wizard/yaml', { doc: r.doc }); })
           .then(function (y) { return api('PUT', '/items/' + id2path(id), { body: y.yaml, message: 'Set the refresh schedule: ' + text }); })
-          .then(function () { say('Saved refresh: ' + text + ' in the draft. Publish the dataset to start the schedule.'); f.hidden = true; }).catch(fail);
+          .then(function () { var told = 'Saved refresh: ' + text + ' in the draft. Publish the dataset to start the schedule.'; say(told); near(q('[data-refresh-now]').hidden ? q('[data-refresh-msg]') : q('[data-refresh-now]'), told, false); f.hidden = true; }).catch(function (e) { near(go, e.message, true); });
       };
     }
     function post(url, body) {
@@ -355,7 +359,8 @@
       form.onsubmit = function (e) {
         e.preventDefault();
         var body = { fields: sel(fields), measures: sel(meas), filters: [], limit: parseInt(form.elements.limit.value, 10) || 100 };
-        if (!body.fields.length && !body.measures.length) { say('Choose at least one field or measure.', true); return; }
+        var runBtn = form.querySelector('[type=submit]');
+        if (!body.fields.length && !body.measures.length) { say('Choose at least one field or measure.', true); near(runBtn, 'Choose at least one field or measure.', true); return; }
         if (form.elements.ffield.value && form.elements.fvalue.value !== '') {
           var op = form.elements.fop.value, v = form.elements.fvalue.value;
           var values = op === 'in' ? v.split(',').map(function (x) { return x.trim(); }) : [isNaN(Number(v)) ? v : Number(v)];
@@ -363,7 +368,8 @@
         }
         if (form.elements.from.value) { body.dates = { from: form.elements.from.value }; if (form.elements.to.value) { body.dates.to = form.elements.to.value; } }
         say('Running...');
-        api('POST', path + '/query' + (form.elements.explain.checked ? '?explain=true' : ''), body).then(grid).catch(function (e) { say(e.message, true); });
+        near(runBtn, '');
+        api('POST', path + '/query' + (form.elements.explain.checked ? '?explain=true' : ''), body).then(grid).catch(function (e) { say(e.message, true); near(runBtn, e.message, true); });
       };
     }
 

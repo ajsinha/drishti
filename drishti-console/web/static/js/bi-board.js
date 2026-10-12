@@ -252,6 +252,7 @@
     if (!m.board) { q('[data-board]').hidden = true; return; }
     board = m.board;
     tokens = B.tokens();
+    B.publishedBanner(boardId, document.getElementById('biCanvas'));
     B.api('POST', '/items/' + B.id2path(boardId) + '/open', {}).catch(() => {});
     const ids = [];
     Object.keys(m.tiles || {}).forEach((k) => { const r = m.tiles[k].report; if (r && ids.indexOf(r) < 0) { ids.push(r); } });

@@ -434,3 +434,147 @@ def test_a_new_report_takes_a_main_dataset_and_more_and_greys_out_what_cannot_be
     pg.wait_for_selector("[data-new-also] option", timeout=20000)
     clean(pg)
     pg.context.close()
+
+
+# ---- board designer: a draft report, drag, a twice-added visual, an empty Check; view as readers see it; ids follow the type; Back after sign-in ----------------------
+
+REPORT_BODY = ("report: kpis\ndataset: trades-basic\npages:\n  - id: main\n    title: Main\n    visuals:\n"
+               "      - { id: card-1, type: card, title: Trades, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n")
+EMPTY_BOARD = "rachana: 1\nboard: kpi-board\ntitle: KPI board\npages:\n  - id: page1\n    title: Page 1\n    tiles: []\n"
+
+
+def shared_workspace(name):
+    s, ws = api("POST", "/bi/workspaces", *WES, {"name": name, "description": ""})
+    assert s in (200, 201), ws
+    return ws["id"]
+
+
+def make(ws, kind, title, body):
+    s, it = api("POST", f"/bi/workspaces/{ws}/items", *WES, {"kind": kind, "title": title, "body": body})
+    assert s in (200, 201), it
+    return it["id"]
+
+
+def test_the_board_designer_lists_a_draft_report_drags_tiles_warns_on_a_twice_added_visual_and_refuses_to_publish_over_the_draft(stack, page):
+    ws = shared_workspace("Board Lab")
+    rep, brd = make(ws, "report", "Draft KPIs", REPORT_BODY), make(ws, "board", "KPI board", EMPTY_BOARD)
+    page.goto(f"{CONSOLE_URL}/bi/design/board/{brd}")
+    page.wait_for_selector("[data-board-design-root][data-ready='1']", timeout=30000)
+    page.click("[data-check]")                                                                           # a fresh empty board: plain words, not "no problems"
+    expect(page.locator("[data-check-sum]")).to_contain_text(re.compile("add a tile", re.I))
+    expect(page.locator("[data-check] + .bi-near")).to_contain_text(re.compile("add a tile", re.I))      # and beside the button
+    option = page.locator(f'[data-add-report] option[value="{rep}"]')
+    assert option.inner_text() == "Draft KPIs (draft)"                                                   # the author's own draft is offered, labelled
+    expect(page.locator("[data-draft-note]")).to_be_visible()
+    page.select_option("[data-add-report]", rep)
+    page.wait_for_function("() => document.querySelectorAll('[data-add-visual] option').length > 0")
+    page.click("[data-add-btn]")
+    page.wait_for_selector("[data-tile]")
+    expect(page.locator("[data-draft-tile]")).to_have_count(1)                                           # the tile says it is a draft's
+    page.click("[data-add-btn]")                                                                         # the same visual again: allowed, with a warning
+    expect(page.locator("[data-tile]")).to_have_count(2)
+    expect(page.locator("[data-add-btn] + .bi-near")).to_contain_text("already on the board")
+    # drag the first tile by its head to the right, then by its corner to make it wider; the number fields follow
+    tile = page.locator("[data-tile]").first
+    tile.click()
+    x0, w0 = int(page.input_value('[data-tile-edit] [name="x"]')), int(page.input_value('[data-tile-edit] [name="w"]'))
+    head = tile.locator(".bi-btile-head").bounding_box()
+    page.mouse.move(head["x"] + 30, head["y"] + 8)
+    page.mouse.down()
+    page.mouse.move(head["x"] + 330, head["y"] + 8, steps=10)
+    page.mouse.up()
+    assert int(page.input_value('[data-tile-edit] [name="x"]')) > x0, "dragging moved the tile and the Column field shows it"
+    grip = page.locator("[data-tile].bi-selected [data-resize]").bounding_box()
+    page.mouse.move(grip["x"] + 8, grip["y"] + 8)
+    page.mouse.down()
+    page.mouse.move(grip["x"] + 108, grip["y"] + 8, steps=10)
+    page.mouse.up()
+    assert int(page.input_value('[data-tile-edit] [name="w"]')) > w0, "dragging the corner made it wider and the Wide field shows it"
+    page.click("[data-check]")
+    expect(page.locator("[data-draft-warning]").first).to_contain_text("a draft")
+    page.click("[data-save]")
+    expect(page.locator("[data-save] + .bi-near")).to_contain_text("Saved as a draft")                   # the answer beside the button
+    # publishing the board is refused, in words, while the report it shows is a draft
+    page.goto(f"{CONSOLE_URL}/bi/i/{brd}")
+    page.get_by_role("button", name="Publish", exact=True).click()
+    expect(page.locator("[data-actions] .bi-near.bi-bad")).to_contain_text("Publish it first")
+    s, r = api("POST", f"/bi/items/{rep}/publish", *WES, {})
+    assert s == 200, r
+    page.get_by_role("button", name="Publish", exact=True).click()
+    expect(page.locator("[data-actions] .bi-near").first).to_contain_text("Published")                   # and the success is beside the same button
+    assert item(brd)["status"] == "published"
+    clean(page)
+
+
+def test_view_as_readers_see_it_shows_the_published_version_not_the_draft(stack, page):
+    ws = shared_workspace("Reader Lab")
+    rep = make(ws, "report", "Two views", REPORT_BODY)
+    never = make(ws, "report", "Never out", REPORT_BODY)
+    s, r = api("POST", f"/bi/items/{rep}/publish", *WES, {})
+    assert s == 200, r
+    two = REPORT_BODY + "      - { id: card-2, type: card, title: Notional, at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }\n"
+    s, r = api("PUT", f"/bi/items/{rep}", *WES, {"body": two})
+    assert s == 200, r
+    page.goto(f"{CONSOLE_URL}/bi/design/{never}")
+    page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
+    assert page.locator('[data-view-as] option[value="published"]').get_attribute("disabled") is not None       # never published: nothing to look at
+    page.goto(f"{CONSOLE_URL}/bi/design/{rep}")
+    page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
+    assert page.locator('[data-view-as] option[value="published"]').get_attribute("disabled") is None
+    page.select_option("[data-view-as]", "published")
+    assert "as=published" in page.get_attribute("[data-view-link]", "href")
+    page.click("[data-view-link]")
+    page.wait_for_selector("[data-published-banner]")
+    expect(page.locator("[data-published-banner]")).to_contain_text(re.compile("published version 1.*draft has changes"))
+    page.wait_for_selector("[data-ready=yes]", timeout=30000)
+    expect(page.locator(".bi-vis")).to_have_count(1)                                                     # the published report has one visual
+    page.goto(f"{CONSOLE_URL}/bi/r/{rep}")
+    page.wait_for_selector("[data-ready=yes]", timeout=30000)
+    expect(page.locator(".bi-vis")).to_have_count(2)                                                     # the draft has two
+    assert page.locator("[data-published-banner]").count() == 0
+    clean(page)
+
+
+def test_a_visual_id_follows_its_type_and_what_named_it_follows_the_id(stack, page):
+    ws = shared_workspace("Id Lab")
+    body = ("report: ids\ndataset: trades-basic\nbookmarks:\n  - { name: USD only, page: main, slicers: { slicer-1: [USD] } }\n"
+            "layouts:\n  phone:\n    main: { order: [card-1, slicer-1], hide: [slicer-1], span: { card-1: 3 } }\n"
+            "pages:\n  - id: main\n    title: Main\n    visuals:\n"
+            "      - { id: slicer-1, type: slicer, title: Currency, at: { x: 0, y: 0, w: 3, h: 3 }, wells: { field: [trade.currency] } }\n"
+            "      - { id: card-1, type: card, title: Trades, at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n")
+    rep = make(ws, "report", "Ids", body)
+    page.on("dialog", lambda d: d.accept())
+    page.goto(f"{CONSOLE_URL}/bi/design/{rep}")
+    page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
+    page.evaluate("window.drishtiBi.design.select('card-1')")
+    page.click('.bi-vtype[data-type="bar"]')
+    m = page.evaluate("window.drishtiBi.design.model")
+    ids = [v["id"] for v in m["pages"][0]["visuals"]]
+    assert "bar-1" in ids and "card-1" not in ids, ids
+    phone = m["layouts"]["phone"]["main"]
+    assert "bar-1" in phone["order"] and "card-1" not in phone["order"] and "bar-1" in phone["span"] and "card-1" not in phone["span"], phone
+    page.evaluate("window.drishtiBi.design.select('slicer-1')")
+    page.click('.bi-vtype[data-type="table"]')
+    m = page.evaluate("window.drishtiBi.design.model")
+    assert "table-1" in [v["id"] for v in m["pages"][0]["visuals"]]
+    assert list(m["bookmarks"][0]["slicers"]) == ["table-1"] and "table-1" in m["layouts"]["phone"]["main"]["hide"], m["bookmarks"]
+    page.click("[data-undo]")                                                                            # Undo brings the old id and its references back together
+    m = page.evaluate("window.drishtiBi.design.model")
+    assert list(m["bookmarks"][0]["slicers"]) == ["slicer-1"] and "slicer-1" in m["layouts"]["phone"]["main"]["hide"], m
+    clean(page)
+
+
+def test_back_from_the_landing_page_does_not_show_the_sign_in_form_again(stack, browser):
+    ctx = browser.new_context()
+    pg = ctx.new_page()
+    pg.goto(CONSOLE_URL + "/login?next=/bi/catalogue")
+    pg.fill("#lu", "wes")
+    pg.fill("#lp", bi_report_stack.PASSWORD)
+    pg.click("button[type=submit]")
+    pg.wait_for_url("**/bi/catalogue")
+    pg.go_back()                                                                                         # the form is never kept: signed in, it sends you on
+    pg.wait_for_url("**/bi/catalogue")
+    assert pg.locator("#lu").count() == 0
+    pg.goto(CONSOLE_URL + "/login?next=/bi/workspaces")                                                  # asking for it signed in goes straight on
+    pg.wait_for_url("**/bi/workspaces")
+    ctx.close()
