@@ -144,7 +144,7 @@ public final class BiExporter {
             Map<String, Object> meta = (Map<String, Object>) a.get("meta");
             Object dates = meta == null ? null : meta.get("dates");
             String asOf = dates instanceof List<?> l && !l.isEmpty() ? String.valueOf(l.get(l.size() - 1)) : null;
-            return new Built(new ExportDoc.Section(v.id(), name, type, names, typed(kept), note, masked), asOf);
+            return new Built(new ExportDoc.Section(v.id(), name, type, names, typed(kept), note, masked, v.type()), asOf);
         } catch (DrishtiException e) {
             return new Built(new ExportDoc.Section(v.id(), name, ExportDoc.TABLE, List.of(), List.of(), "Not available: " + e.getMessage(), List.of()), null);
         }
