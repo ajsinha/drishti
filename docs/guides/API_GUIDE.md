@@ -1671,6 +1671,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9076 | 422 | Python tests failed | A Python item that ships `tests:` is published (or approved) through the console while one of them fails or cannot run; a bi-admin may send `force: true` ([PYTHON_BI.md section 15](PYTHON_BI.md#15-tests-shipped-with-an-item)). Raised by the console only |
 | DRS-9077 | 422 | Vega-Lite not drawn | Shown in the visual's frame by the page, not an HTTP answer: a Vega-Lite specification that names a `url` or a `loader`, or a library that did not load ([REPORTS.md section 3.5](REPORTS.md#35-vega-lite-visuals)) |
 | DRS-9100 | 422 | Layer dataset invalid | Publishing a `rachana: 2` dataset whose Check has an error (the problem list uses `DRS-9100` to `DRS-9108`, [BI_MODEL_SPEC.md section 1.11](../architecture/BI_MODEL_SPEC.md#111-dataset-problems)) |
+| DRS-9102 | 422 | Dataset source | A dataset's source cannot run when it is read: its connector is not running or has no SQL target (connector queries run in DuckDB or PostgreSQL connectors), or the query failed |
 | DRS-9107 | 409 | Generated dataset | Saving a dataset that a pack generates (`pack.<pack>.<kind>`, or one with `generated:`): it is read-only; save one that `extends` it |
 | DRS-9108 | 422 | Source query | The query of a dataset whose source is a model does not validate (Check: its own code follows), or its answer lacks a column the dataset declares |
 | DRS-9109 | 422 | Source cycle | A model that reaches itself through a dataset whose source is a model (Check, the bind of a query, or at run time): `model:a -> dataset:x -> model:a` |
@@ -1838,6 +1839,11 @@ POST /api/v1/bi/datasets/file:dataset:acc-trades/query  as ann (no raw)   {"meas
      "fix":{"with":["trades.id"],"replace":"where[0].field"},"problems":[{"code":"DRS-9161","path":"where[0].field",...}],"also":"DRS-9021"}
 ```
 
+**A report bound to a model** (`model: trades@1` in place of `dataset:`) is read by every report endpoint: validate, query (with `mq`), publish, exports,
+subscriptions, board tiles and embeds. Publishing it needs the model published and passing its Check and the security safeguard (`422 DRS-9030` naming why
+otherwise). **Connector-query and Python datasets** are read too: the SQL runs in its SQL-capable connector with only the four named dates bound (`DRS-9102`
+when the connector is not running or has no SQL target), the Transform over its input model queries asked as the reader.
+
 **A dataset whose source is another model's answer** (`source: { model: acc-model@1, query: { select: ... } }`, spec section 1.2 D) is filled, for each query that
 reads it, by its inner query asked **as the reader** (at the outer query's date when it names none); its declared columns are filled by name (`path:` naming a field
 or measure of the inner query, else the column's name). A model that reaches itself through such datasets is refused by Check, by the bind and at run time
@@ -1857,7 +1863,7 @@ POST /api/v1/bi/mq  {"mq":1,"model":"loop-model@1","select":{"measures":["Total"
 | `POST` | `/bi/mq` | asks a model a model query (the body is the query, or `{yaml: "<the query as YAML>"}`); `?format=json` (default) or `arrow` (also `options.format`); `options.explain: true` adds the SQL for BI authors. Answers the shape below; refusals are `422`/`403`/`404` with `code`, `path`, `fix` and `problems` |
 | `POST` | `/bi/models/{id}/query` | the same with the model in the path (the body has no `model`; `mq` may be left out) |
 | `POST` | `/bi/mq/validate` | validation steps 1 to 9 without reading data: `{valid, model, warnings, currencyGuard, query, request, totals}` (`request` is the engine request it would run: a drill already a field and `eq` filters) or the refusal |
-| `GET` | `/bi/models` | the models the caller may read: `{models: [{id, name, version, title, status, kind: model \| implicit \| compat, query?}]}` (`query` is what to put in `model:` for a dataset) |
+| `GET` | `/bi/models` | the models the caller may read, their own draft models included: `{models: [{id, name, version, title, status, kind: model \| implicit \| compat, draft?, owner?, workspace?, query?}]}` (`draft`, `owner` and `workspace` for model items; `query` is what to put in `model:` for a dataset) |
 | `GET` | `/bi/models/{id}/describe` | what a designer, an AI or a client needs to write a query, as the caller sees it: `{id, name, version, implicit, compat, title, lifecycle, datasets[{alias, dataset, version, role, mode, fields[{field, id, type, role, meaning, references, unit, format, masked, description}]}], relationships[], measures[{name, id, expr, format, additive, currency, implicit, masked}], hierarchies, contract, ai}`; masked fields marked, hidden ones (`hidden-for`) absent |
 | `POST` | `/bi/models/validate` | (needs `bi-author`) body `{yaml}` of a model or a `rachana: 2` dataset: Check without storing: `{kind, name, version, valid, problems[{level, code, path, message}], datasets[], measures[], exposures[{dataset, role}]}` (`exposures`: the security safeguard's findings) |
 | `GET` | `/bi/pack-datasets` | the pack-generated datasets of the kinds the caller may open: `{datasets: [{name, id, title, pack, kind, version, mode, endorsement, columns, query}]}` |

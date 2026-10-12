@@ -860,7 +860,10 @@ columns:
   limit_amount: {type: decimal, role: amount, unit: {currency: currency}, additive: {over-time: last}}
 ```
 
-Check (`POST /api/v1/bi/models/validate` with `{yaml}`) answers the problems with codes `DRS-9100` to `DRS-9108` (BI_MODEL_SPEC.md section 1.11). In W1 the
-server answers queries over pack and narrowed datasets; connector-query, Python and model-answer datasets are checked and saved, and answer once the
-server's source package (S4) lands (a query reading one is refused with `DRS-9013`, 501, until then). Models, the model designer and reports on a model:
+Check (`POST /api/v1/bi/models/validate` with `{yaml}`) answers the problems with codes `DRS-9100` to `DRS-9108` (BI_MODEL_SPEC.md section 1.11). Every source
+answers: a **connector query** runs its SQL in its SQL-capable connector (DuckDB, PostgreSQL) with only the four named dates bound, the reader needing the
+right to open the connector's kinds; a **Python** dataset runs its Transform over its input model queries asked as the reader (kept per reader and inputs);
+a **model-answer** dataset asks its inner query as the reader. Each answer becomes the dataset's rows for the one query that reads it, under the dataset's own
+rules and masks. A declared column the answer lacks is `DRS-9108`, a model that reaches itself `DRS-9109`, a connector that is not running or has no SQL
+target `DRS-9102`. Models, the model designer and reports on a model:
 [BI_GUIDE.md section 23](BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1) and [REPORTS.md section 18](REPORTS.md#18-a-report-on-a-model-wave-w1).

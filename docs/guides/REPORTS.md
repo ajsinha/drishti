@@ -766,7 +766,9 @@ on the browser test's lake (two days of 60 trades), the model query
 answers `["Equity derivatives", 425000], ["Bonds and securitised", -75000], ["G10 and EM FX", -575000]`, and the version-1 query
 `{"fields": ["trade.desk"], "measures": ["MTM"]}` on `trades-basic` answers `["DESK-EQD", 425000], ["DESK-FI", -75000], ["DESK-FX", -575000]`.
 
-**Not yet in W1.** The server's report endpoints (validate, the report query, publish, exports, subscriptions, boards, embeds) still bind to `dataset:`;
-the console bridges the designer and the report page by asking `/mq` itself and by not counting the missing `dataset:` as a problem. Until the server's
-consumer package binds reports to models, a report on a model is a **draft you design and view**; publishing it is refused with `DRS-9030`
-(*`dataset:` names the dataset the report reads*), and the sample reports keep `dataset:` (the migration wave W4 moves them).
+**On the server.** The report endpoints read `model:` as they read `dataset:`: Check (`POST /bi/reports/validate`), the report query (its answer's `mq`
+names the model), exports, subscriptions, board tiles and embeds ask each visual as one model query on the model, as the reader. A report names `model:` or
+`dataset:`, never both (`DRS-9140`). **Publishing** a report on a model needs that model **published** (a draft model is read by its author only) and
+passing its Check and the security safeguard; otherwise publish is refused with `DRS-9030`, for example *the model 'wes-draft@1' is not published (a draft
+model is read by its author only): publish the model first, where its Check and security safeguard run*. The sample reports keep `dataset:` (the migration
+wave W4 moves them).

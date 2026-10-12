@@ -725,9 +725,8 @@ pack dimensions with their relationships, the default measures) and moves the re
 dataset narrowed or with extra columns, a query in a SQL connector (its only parameter is the as-of date), a Python Transform, or the answer of a model
 (tick its fields and measures); (2) the table: each column's type, role, meaning, referenced kind, currency and additivity (the base's columns are kept
 for a narrowed dataset), the grain keys as chips, time and refresh, with the server's Check below; (3) title, name, workspace, masked columns, the YAML for
-review, **Save draft** or **Save and publish**, then *Open the dataset*, *Start a report on it* or *Use it in a new model*. In W1 the server answers queries
-on pack and narrowed datasets; connector-query, Python and model-answer datasets are saved and checked, and answer once the server's wave W1 package S4
-lands (until then a query that reads one is answered `DRS-9013`, 501).
+review, **Save draft** or **Save and publish**, then *Open the dataset*, *Start a report on it* or *Use it in a new model*. Every kind of dataset answers
+queries: pack and narrowed datasets, connector queries, Python Transforms and other models' answers, each asked as the reader ([DATASETS.md section 13](DATASETS.md)).
 
 **Analyse** opens a model's rows as one model query of shape `rows` (`{model, fields}` on `/bi/explore/extract`); a dataset extract is unchanged.
 

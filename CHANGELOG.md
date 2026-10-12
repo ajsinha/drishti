@@ -23,7 +23,11 @@
   reader; the endpoints keep their answers and codes (a refusal also carries the model query's `problems` with codes, paths and fixes), and the report query answer adds
   `mq`, the query it ran. Alerts get a `model` source (`{type: model, model, query, reduce?}`: a model query that selects one measure). A `rachana: 2` dataset whose
   source is another model's answer is now read (the inner query as the reader, staged for the one query); a model that reaches itself that way is refused (`DRS-9109`),
-  an answer without a declared column is `DRS-9108`. Fixed: a model source's `query:` was taken for a connector query. The W1 acceptance test (a report, an alert
+  an answer without a declared column is `DRS-9108`. Connector-query and Python-Transform datasets answer too (the SQL in its
+  SQL-capable connector with only the named dates bound, `DRS-9102` when it cannot run; the Transform over its input model queries as the reader). **Reports
+  bound with `model:`** are read by every report endpoint (validate, query, publish, exports, subscriptions, boards, embeds); publishing one needs its model
+  published and passing its Check and safeguard (`DRS-9030` otherwise). `GET /bi/models` lists the caller's draft models with `draft`, `owner`, `workspace`.
+  Fixed: a model source's `query:` was taken for a connector query. The W1 acceptance test (a report, an alert
   and an Analyse slice give the same masked answers per reader) and standing-query parity are in `ModelAcceptanceTest`.
 
 - **Added: the BI model layer, wave W1 console package** ([BI_GUIDE.md section 23](docs/guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1)).
