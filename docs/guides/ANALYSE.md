@@ -170,9 +170,11 @@ A notebook may also carry the catalogue's keys (`sample`, `tags`, `endorsement`,
 
 ## 7. Promote
 
+Every promotion answers **beside the button you pressed** (one message, with an *Open the draft* link), not at the top of the page. Pressing the same promotion again for the same cell or slice does not make a duplicate: it offers **Update that draft** (the draft is written again) or **Save another**. A SQL cell promoted to a new report is titled *<dataset title> SQL* and gets a readable lower-case id. A notebook has one title: the item's title and the `title:` of its YAML always agree, whichever you rename; opening a notebook restores the Dataset and Notebook choices and the ticked fields.
+
 Promoting writes a **draft** item in your workspace; nothing is published.
 
-* **A Python cell that joins extracts to a Transform** (*Promote to a Transform*, shown when the notebook has further extracts): each `extract("name")` becomes a parameter of `run(...)`, a use of `df` becomes the first extract, the cell's `result` is returned, and the draft's `inputs` are the extracts' datasets, in order. It is a draft **Python item with `interface: transform`** ([PYTHON_BI.md section 13](PYTHON_BI.md#13-transforms-a-table-in-a-table-out)); check it, publish it, then write the derived dataset that names it ([DATASETS.md section 11.2](DATASETS.md#112-derived-datasets-a-python-transform)): the promotion says so in its notes. `result` must be a pandas DataFrame with column names of letters, digits and underscore.
+* **A Python cell that joins extracts to a Transform** (*Promote to a Transform*, shown greyed with "Add a second extract first" until the notebook has further extracts): each `extract("name")` becomes a parameter of `run(...)`, a use of `df` becomes the first extract, the cell's `result` is returned, and the draft's `inputs` are the extracts' datasets, in order. It is a draft **Python item with `interface: transform`** ([PYTHON_BI.md section 13](PYTHON_BI.md#13-transforms-a-table-in-a-table-out)); check it, publish it, then write the derived dataset that names it ([DATASETS.md section 11.2](DATASETS.md#112-derived-datasets-a-python-transform)): the promotion says so in its notes. `result` must be a pandas DataFrame with column names of letters, digits and underscore.
 
 ![After promoting the join cell: "Python transform draft saved in your workspace: ..."](../tutorials/img/t14/15-promote-transform.jpg)
 

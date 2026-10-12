@@ -26,6 +26,14 @@ About 60 minutes.
 - [Tutorial 10](10-first-bi-report.md) done (reports, workspaces, the shipped *Desk P&L vs counterparty exposure* sample) and [tutorial 14](14-python-and-analyse.md) for Python and Analyse. You sign in as the development administrator, who holds `bi-author`.
 - A token for the command line with the `bi:write` scope ([tutorial 1, step 9](01-first-15-minutes.md#step-9--make-a-token-for-the-command-line)); the commands below read it from `DRISHTI_TOKEN`. Step 7 also uses two colleagues; make them in **Admin → Users** ([tutorial 17](17-run-it-in-production.md)): `rita` with a role `risk` (raw power on, BI power `bi`), and `hana` with a role `desk-head` (raw power **off**, BI power `bi`) and **Desk** `DESK-FX`. The shipped `trading-risk` dataset has a row rule for each of those two role names; nothing else about them is special.
 - The console's Python environment from tutorial 1 (it carries `pandas` and `pyarrow`), for steps 6 and 8.
+- **The one-day lake.** Every number below (`P&L 2671113  MTM 138562638  EE 1447544943`, 750 trades, the sector and counterparty rows) was taken on a lake of **one business day**. Tutorial 1 builds ten days, and then the sums are about ten times larger and the trade counts differ. To get the same numbers, make a one-day lake and point the server at it:
+
+  ```bash
+  uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta-1day --days 1
+  DRISHTI_DELTA_ROOT=data/delta-1day  # then restart the server
+  ```
+
+  With ten days every step still works and every check (the fan-out, the totals that agree, the refusal) holds; only the digits differ.
 - Files in [data/](data/): [two-datasets.report.yaml](data/two-datasets.report.yaml), [wrong-link.report.yaml](data/wrong-link.report.yaml), [cp-pnl-exposure.dataset.yaml](data/cp-pnl-exposure.dataset.yaml), [counterparty-view.report.yaml](data/counterparty-view.report.yaml), [mtm-vs-exposure.python.yaml](data/mtm-vs-exposure.python.yaml), [cp-pnl-exposure-py.dataset.yaml](data/cp-pnl-exposure-py.dataset.yaml) and [two-extracts.notebook.yaml](data/two-extracts.notebook.yaml). Put them in a shared workspace called **Exposure desk** (a report reads *published* datasets; a draft in your private workspace cannot be published).
 
 ## What you will learn
@@ -69,7 +77,7 @@ Open the **Designer**. The start form asks for a **Main dataset** (the report's 
 
 ![The designer's start form: title Side by side, main dataset Trading and counterparty risk, Also add: Counterparty exposure](img/t18/03-new-report.jpg)
 
-A dataset that cannot be used is listed greyed with the reason (*a draft: publish it first*, *has errors: open it*) instead of hidden. Press **Start designing**.
+A dataset that cannot be used is listed greyed with the reason (*a draft: publish it first*, *has errors: open it*) instead of hidden, and **Also add** never offers the dataset you chose as the main one. The form also asks **Workspace**: choose **Exposure desk**. A report you save in **My workspace** is private; it can be drawn and checked there, but a private workspace cannot publish, so its item page shows **Publish** greyed with *Move it to a shared workspace to publish* and a **Move** button, and the designer's **Publish...** says the same in place. Press **Start designing**.
 
 ![The designer with two cards: P&L 1d of the main dataset, and Exposure (EE peak) with a small tag naming the other dataset](img/t18/04-two-cards.jpg)
 
@@ -107,6 +115,8 @@ $ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: ap
     http://localhost:18480/api/v1/bi/items/bi-82bf63b602/publish
 {"id":"bi-82bf63b602","status":"published","publishedVersion":1, ...}
 ```
+
+**Saving and publishing in the designer.** **Save** (or Ctrl+S, also from the YAML tab) stores the draft and says so beside the button, once. A report in a shared workspace is published from the designer's **Publish...** (it saves first if there are unsaved changes) or from its item page; **neither asks for a note**: the note box is on the item page only (the REST call below sends one). A report you started in **My workspace** is moved first: item page, **Move...**, choose **Exposure desk**, **Move**; then **Publish**. On the command line the workspace is part of the URL, so there is nothing to move.
 
 The id is yours to receive; the commands that follow use `bi-fd0d0420d0`, the id this report had on the stack the outputs came from. Find yours with `python3 tools/drishti.py bi catalogue list --workspace exposure-desk`.
 
@@ -215,7 +225,7 @@ This is also why this tutorial's composed dataset is **per counterparty** and no
 
 ## Step 5 · A composed dataset: MTM and exposure in one visual
 
-A **composed dataset** asks each source dataset a question *as the reader*, grouped to the grain you choose, and joins the answers. Here the shared grain is the **counterparty**. In **My workspace** (or your shared workspace) choose **New item**, kind *dataset*, and paste [cp-pnl-exposure.dataset.yaml](data/cp-pnl-exposure.dataset.yaml); or open the dataset wizard ([tutorial 10, step 13](10-first-bi-report.md#step-13--a-dataset-of-your-own-in-the-wizard)). Publish it, then open its page.
+A **composed dataset** asks each source dataset a question *as the reader*, grouped to the grain you choose, and joins the answers. Here the shared grain is the **counterparty**. In **My workspace** (or your shared workspace) choose **New item**, kind *dataset*, press **Paste YAML** (next to *Open the dataset wizard*, which is the default for everyone else), paste [cp-pnl-exposure.dataset.yaml](data/cp-pnl-exposure.dataset.yaml) and press **Create from the YAML**; or open the dataset wizard ([tutorial 10, step 13](10-first-bi-report.md#step-13--a-dataset-of-your-own-in-the-wizard)). Publish it, then open its page.
 
 ![The Built from other datasets section: source pnl is trading-risk by counterparty id, name and sector with MTM, P&L 1d and Trades; source exposure is counterparty-exposure by counterparty id; a left join on counterparty](img/t18/14-composed-dataset.jpg)
 
@@ -259,7 +269,7 @@ The totals are step 1's, to the unit. Now the report [counterparty-view.report.y
 
 ![A report over the composed dataset: cards for MTM, exposure and MTM per exposure, one bar chart with MTM and exposure by sector, and a table of counterparties](img/t18/16-composed-report.jpg)
 
-You should see MTM and exposure **in one visual**, which step 3 could not give you, and the ratio. Without the ids, in the designer, **Make a composed dataset from these** (the Links panel, step 3) writes a first draft of this YAML on the first linked pair for you to read; **Create the draft and review it** is the only thing that saves it.
+You should see MTM and exposure **in one visual**, which step 3 could not give you, and the ratio. Without the ids, in the designer, **Make a composed dataset from these** (the Links panel, step 3) writes a first draft on the first linked pair for you to read; **Create the draft and review it** is the only thing that saves it (into **My workspace**, a private draft you open in the Model view). Be exact about what it drafts: step 3 linked `counterparties.sector`, so the draft is **per sector**, not per counterparty. It names the two sources `trading_risk_1` and `counterparty_exposure_2`, groups each by `sector`, takes **only the first measure** of each dataset, sets `key: [sector]` and joins them left on `sector`. To reach the counterparty YAML above, open the draft's item page, **Edit** its body (or the YAML in the Model view) and: change each `by:` to the counterparty id (and, for the first source, name and sector), set `key: [counterparty]`, list the measures you want (`MTM`, `P&L 1d as Desk P&L`, `Trades`; `Exposure (EE peak)`, `Exposure (PFE peak)`), rename the sources `pnl` and `exposure` and the dataset `cp-pnl-exposure`, and add the `MTM per exposure` measure. Or skip the editing and paste [cp-pnl-exposure.dataset.yaml](data/cp-pnl-exposure.dataset.yaml) with **Paste YAML**. Then move it to **Exposure desk** and publish it, as for a report.
 
 **The checks.** A composed dataset is checked on the dataset page, by `POST /datasets/validate`, and when you publish. Change the join to the sector and make the second source finer than the first (the draft is in the picture below): the page marks it **has errors** and prints the refusal, so it cannot be saved as a good dataset or published:
 
@@ -373,7 +383,7 @@ When you do not yet know the question, work it out in **Analyse** before you bui
 
 ![After promoting: Python visual draft saved in your workspace: Two extracts, joined the wrong way and the right way (visual)](img/t18/21-promote-visual.jpg)
 
-You should see `Python visual draft saved in your workspace`, with the note that the cell's `df` became the function's `table`, that a visual must return an ECharts option, SVG or PNG, and that nothing is published for you. Check it with **Check the Python** on the item page and publish it ([tutorial 14](14-python-and-analyse.md)). Be exact about what was kept: a visual reads **the one table** of its dataset, so the draft keeps `df` (the first extract); a cell that reads `extract("exposure")` as well belongs in a Transform instead. The cell has three promotions, all drafts you review: *a measure*, *a visual* and **Promote to a Transform** (it becomes the function of step 6, each `extract("name")` a parameter of `run(...)`, the inputs the extracts' datasets in order). The path from an idea to a shared number is therefore: explore in Analyse, **promote to a Transform**, publish, write the derived dataset (or rewrite the join in YAML as a composed one), build the report. Analyse itself is the console's (the first extract and further extracts, [ANALYSE.md section 2](../guides/ANALYSE.md#2-the-extract)); there is no `tools/drishti.py` command for it, and step 4 shows the REST call.
+You should see `Python visual draft saved in your workspace` **beside the button you pressed** (with an *Open the draft* link; pressing the same promotion again offers **Update that draft** or **Save another**), with the note that the cell's `df` became the function's `table`, that a visual must return an ECharts option, SVG or PNG, and that nothing is published for you. Check it with **Check the Python** on the item page and publish it ([tutorial 14](14-python-and-analyse.md)). Be exact about what was kept: a visual reads **the one table** of its dataset, so the draft keeps `df` (the first extract); a cell that reads `extract("exposure")` as well belongs in a Transform instead. The cell has three promotions, all drafts you review: *a measure*, *a visual* and **Promote to a Transform** (it becomes the function of step 6, each `extract("name")` a parameter of `run(...)`, the inputs the extracts' datasets in order). The path from an idea to a shared number is therefore: explore in Analyse, **promote to a Transform**, publish, write the derived dataset (or rewrite the join in YAML as a composed one), build the report. Analyse itself is the console's (the first extract and further extracts, [ANALYSE.md section 2](../guides/ANALYSE.md#2-the-extract)); there is no `tools/drishti.py` command for it, and step 4 shows the REST call.
 
 ## Step 9 · How this compares with Power BI
 
