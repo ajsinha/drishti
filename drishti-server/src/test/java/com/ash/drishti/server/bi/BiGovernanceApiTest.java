@@ -361,4 +361,18 @@ class BiGovernanceApiTest {
         assertThat(dry.toString()).contains("is not a valid board").contains("DRS-905");
         assertThat(dry.path("applied").asBoolean()).isFalse();
     }
+    // ---- what depends on an item (the delete confirmation) ---------------------------------------------------------------------
+
+    @Test @Order(9)
+    void dependantsCountTheReportsOnADatasetAndTheBoardsOnAReport() throws Exception {
+        String body = "board: dep-wall\npages:\n  - id: p\n    tiles:\n      - { report: " + rep + ", page: main, visual: n, at: { x: 0, y: 0, w: 4, h: 3 } }\n";
+        String board = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", ann(), Map.of("kind", "board", "title", "Dep wall", "body", body))).path("id").asText();
+        JsonNode onDataset = ok(call("GET", itemPath(ds) + "/dependants", ann(), null));
+        assertThat(onDataset.path("count").asInt()).isGreaterThanOrEqualTo(1);
+        assertThat(onDataset.path("dependants").toString()).contains("Governed report");
+        JsonNode onReport = ok(call("GET", itemPath(rep) + "/dependants", ann(), null));
+        assertThat(onReport.path("count").asInt()).isEqualTo(2);                       // the board of the previous test, and this one
+        assertThat(onReport.path("dependants").toString()).contains("\"id\":\"" + board + "\"");
+        assertThat(ok(call("GET", itemPath(board) + "/dependants", ann(), null)).path("count").asInt()).isZero();     // nothing depends on a board
+    }
 }
