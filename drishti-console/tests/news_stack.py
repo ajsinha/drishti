@@ -33,8 +33,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CONSOLE = ROOT / "drishti-console"
-SERVER_PORT = int(os.environ.get("DRISHTI_NEWS_SERVER_PORT", 18993))
-CONSOLE_PORT = int(os.environ.get("DRISHTI_NEWS_CONSOLE_PORT", 17993))
+# Each pytest-xdist worker collects every test file first, so the first file's setdefault of the ports wins on every worker:
+# without an offset two workers would start (or reuse) one server on the same ports. gw0 keeps the ports, gw1 adds 100, …
+_WORKER = int((os.environ.get("PYTEST_XDIST_WORKER") or "gw0")[2:] or 0)
+SERVER_PORT = int(os.environ.get("DRISHTI_NEWS_SERVER_PORT", 18993)) + 100 * _WORKER
+CONSOLE_PORT = int(os.environ.get("DRISHTI_NEWS_CONSOLE_PORT", 17993)) + 100 * _WORKER
 SERVER = f"http://127.0.0.1:{SERVER_PORT}"
 CONSOLE_URL = f"http://127.0.0.1:{CONSOLE_PORT}"
 FORBIDDEN = {5432, 9092, 5672, 61616, 6379, 2181, 18480, 17480}

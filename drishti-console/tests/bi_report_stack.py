@@ -35,8 +35,11 @@ from bi_stack import FORBIDDEN, call, listening, wait  # noqa: F401  (call is re
 
 ROOT = Path(__file__).resolve().parents[2]
 CONSOLE = ROOT / "drishti-console"
-SERVER_PORT = int(os.environ.get("DRISHTI_BI_REPORT_SERVER_PORT", 18990))
-CONSOLE_PORT = int(os.environ.get("DRISHTI_BI_REPORT_CONSOLE_PORT", 17990))
+# Each pytest-xdist worker collects every test file first, so the first file's setdefault of the ports wins on every worker:
+# without an offset two workers would start (or reuse) one server on the same ports. gw0 keeps the ports, gw1 adds 100, …
+_WORKER = int((os.environ.get("PYTEST_XDIST_WORKER") or "gw0")[2:] or 0)
+SERVER_PORT = int(os.environ.get("DRISHTI_BI_REPORT_SERVER_PORT", 18990)) + 100 * _WORKER
+CONSOLE_PORT = int(os.environ.get("DRISHTI_BI_REPORT_CONSOLE_PORT", 17990)) + 100 * _WORKER
 SERVER = f"http://127.0.0.1:{SERVER_PORT}"
 CONSOLE_URL = f"http://127.0.0.1:{CONSOLE_PORT}"
 SECRET = "bi-report-scratch-secret-0123456789abcdef"
