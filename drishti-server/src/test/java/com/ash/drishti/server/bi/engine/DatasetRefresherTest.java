@@ -118,6 +118,7 @@ class DatasetRefresherTest {
     TestClock clock;
     DatasetRefresher refresher;
     QueryService.Loaded ds;
+    Path stateFile;
 
     @BeforeEach
     void setUp() {
@@ -152,7 +153,7 @@ class DatasetRefresherTest {
                 return List.of();
             }
         };
-        refresher = new DatasetRefresher(service, () -> List.of(ds), props, retry, dates, clock, audit, false);
+        refresher = new DatasetRefresher(service, () -> List.of(ds), props, retry, dates, clock, audit, false, stateFile);
     }
 
     @SuppressWarnings("unchecked")
@@ -184,6 +185,51 @@ class DatasetRefresherTest {
         int scans = lake.scans.get();
         refresher.tick();
         assertThat(lake.scans.get()).as("not due again before its next time").isEqualTo(scans);
+    }
+
+    @Test
+    void theStateAndTheHistoryOfARunSurviveARestart() throws Exception {
+        stateFile = store.resolve("refresh").resolve("state.json");
+        start("daily 06:00", BiRefreshProperties.defaults());
+        refresher.tick();
+        clock.now = java.time.ZonedDateTime.of(2026, 10, 9, 6, 1, 0, 0, NY).toInstant();
+        refresher.tick();
+        awaitStatus("ok");
+        Map<String, Object> before = dataset();
+        refresher.close();
+        assertThat(java.nio.file.Files.isRegularFile(stateFile)).isTrue();
+        start("daily 06:00", BiRefreshProperties.defaults());                       // a new process reads the file
+        Map<String, Object> after = dataset();
+        assertThat(after.get("status")).isEqualTo("ok");
+        assertThat(after.get("lastRun")).isEqualTo(before.get("lastRun"));
+        assertThat(after.get("nextRun")).isEqualTo(before.get("nextRun")).isEqualTo(java.time.ZonedDateTime.of(2026, 10, 10, 6, 0, 0, 0, NY).toInstant().toString());
+        assertThat(after.get("lastRows")).isEqualTo(43L);
+        assertThat(after.get("runs")).isEqualTo(1L);
+        @SuppressWarnings("unchecked") List<Map<String, Object>> history = (List<Map<String, Object>>) after.get("history");
+        assertThat(history).hasSize(1);
+        assertThat(history.get(0)).containsEntry("trigger", "schedule").containsEntry("status", "ok").containsEntry("rows", 43L);
+        refresher.runNow(ds, "wes");                                                // the next run adds to the history, newest first
+        awaitStatus("ok");
+        for (int i = 0; i < 100 && ((List<?>) dataset().get("history")).size() < 2; i++) {
+            Thread.sleep(25);
+        }
+        @SuppressWarnings("unchecked") List<Map<String, Object>> two = (List<Map<String, Object>>) dataset().get("history");
+        assertThat(two).hasSize(2);
+        assertThat(String.valueOf(two.get(0).get("trigger"))).startsWith("manual (wes)");
+    }
+
+    @Test
+    void aRunInProgressWhenTheServerStoppedIsShownInterruptedAndAnUnreadableFileIsIgnored() throws Exception {
+        stateFile = store.resolve("refresh").resolve("state.json");
+        java.nio.file.Files.createDirectories(stateFile.getParent());
+        java.nio.file.Files.writeString(stateFile, "{\"jobs\":{\"file:dataset:lake-test\":{\"schedule\":\"daily 06:00\",\"status\":\"running\",\"runs\":3,\"history\":[]}}}");
+        start("daily 06:00", BiRefreshProperties.defaults());
+        assertThat(dataset().get("status")).isEqualTo("interrupted");
+        assertThat(dataset().get("runs")).isEqualTo(3L);
+        refresher.close();
+        java.nio.file.Files.writeString(stateFile, "not json at all");
+        start("daily 06:00", BiRefreshProperties.defaults());
+        assertThat(dataset().get("status")).isNotEqualTo("interrupted");
     }
 
     @Test
@@ -221,7 +267,7 @@ class DatasetRefresherTest {
 
     @Test
     void whenTheAttemptsAreUsedTheRefreshIsLeftFailedUntilItsNextTime() throws Exception {
-        start("daily 06:00", new BiRefreshProperties(null, null, 2, null));
+        start("daily 06:00", new BiRefreshProperties(null, null, 2, null, null));
         refresher.tick();
         gateway.failures.set(100);
         clock.now = java.time.ZonedDateTime.of(2026, 10, 9, 6, 1, 0, 0, NY).toInstant();
@@ -236,7 +282,7 @@ class DatasetRefresherTest {
 
     @Test
     void afterLoadRunsWhenTheLoadOfAKindTheDatasetReadsArrivesAndNotForOthers() throws Exception {
-        start("after-load", new BiRefreshProperties(null, null, null, Duration.ofMillis(10)));
+        start("after-load", new BiRefreshProperties(null, null, null, Duration.ofMillis(10), null));
         refresher.tick();
         clock.now = clock.now.plusSeconds(86_400);
         refresher.tick();

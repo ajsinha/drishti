@@ -137,7 +137,7 @@
       q('[data-problems-sec]').hidden = m.problems.length === 0;
       if (!m.tables) { return; }
       q('[data-meta]').textContent = 'dataset ' + m.name + ' · version ' + m.version + ' · engine ' + m.engine + ' · ' + m.tables.length + ' tables · ' + m.measures.length + ' measures';
-      built(m); tables(m); relationships(m); measures(m); security(m); layers(m); refresh(m); preview(m);
+      built(m); tables(m); relationships(m); measures(m); security(m); layers(m); refresh(m); refreshNow(); preview(m);
     }
 
     /** A composed or derived dataset (RUPAKA.md section 20.10): the datasets it asks as you and how the answers are joined, or the Python Transform that reads them. */
@@ -246,10 +246,51 @@
       };
       if (r.dataset) { line('dataset', r.dataset); }
       (r.tables || []).forEach(function (t) { line('table ' + t.table, t); });
+      var own = r.dataset || {};
+      q('[data-refresh-when]').textContent = 'Last refresh: ' + when(own.lastRun) + ' · Next: ' + (own.retryAt ? 'retry ' + when(own.retryAt) : own.nextRun ? when(own.nextRun) : r.scheduled ? 'worked out at the next scheduler look' : 'no schedule');
+      history(own.history || []);
       note.textContent = r.scheduled
         ? 'Layers are rebuilt on the schedule (' + r.zone + ' time, ' + r.calendar + ' calendar for business days); a failed run is tried again with the shared retry policy.'
         : 'No refresh schedule: the layers are rebuilt when a data load for a kind this dataset reads arrives, or when an author asks for a refresh (POST /datasets/{id}/refresh).';
       sec.querySelector('table').hidden = tb.children.length === 0;
+    }
+
+    /** The recent runs of the dataset's refresh, newest first (kept across a restart by the server). */
+    function history(list) {
+      var tb = q('[data-refresh-history] tbody'); clear(tb);
+      list.forEach(function (x) {
+        var bad = x.status !== 'ok';
+        tb.appendChild(h('tr', { 'data-history-row': x.status }, h('th', { scope: 'row', text: new Date(x.at).toLocaleString() }), h('td', { text: x.trigger || '' }),
+          h('td', {}, badge(x.status, bad ? 'bi-status' : 'bi-promoted', bad ? 'exclamation-triangle' : 'check-circle')), h('td', { text: x.date || '' }),
+          h('td', { text: x.status === 'ok' ? num(x.rows) : '–' }), h('td', { text: x.status === 'ok' ? num(x.durationMs) + ' ms' : '–' }), h('td', { text: x.error || '' })));
+      });
+      q('[data-refresh-history]').hidden = list.length === 0;
+      q('[data-refresh-history-head]').hidden = list.length === 0;
+    }
+
+    /** Refresh now (BI authors): the server refreshes in the background; this page asks for the state until it is no longer running. */
+    function refreshNow() {
+      var btn = q('[data-refresh-now]'), msg = q('[data-refresh-msg]');
+      btn.hidden = true;
+      api('GET', '/me').then(function (me) {
+        if (me.powers.indexOf('bi-author') < 0) { return; }
+        btn.hidden = false;
+        btn.onclick = function () {
+          btn.disabled = true; msg.textContent = 'Refreshing...';
+          api('POST', path + '/refresh', {}).then(function () {
+            var tries = 0;
+            (function poll() {
+              api('GET', path + '/refresh').then(function (st) {
+                var d = st.dataset || {};
+                if (d.status === 'running' && tries++ < 120) { setTimeout(poll, 1000); return; }
+                btn.disabled = false;
+                msg.textContent = d.status === 'ok' ? 'Refreshed ' + num(d.lastRows) + ' rows in ' + num(d.lastDurationMs) + ' ms.' : 'Refresh ' + (d.status || 'did not finish') + (d.error ? ': ' + d.error : '') + '.';
+                api('GET', path).then(draw);
+              }).catch(function (e) { btn.disabled = false; msg.textContent = e.message; });
+            })();
+          }).catch(function (e) { btn.disabled = false; msg.textContent = e.message; });
+        };
+      }).catch(function () {});
     }
 
     function preview(m) {

@@ -78,6 +78,7 @@ public final class DatasetRefresher implements AutoCloseable {
         volatile List<String> tables = List.of();
         final java.util.concurrent.atomic.AtomicInteger failures = new java.util.concurrent.atomic.AtomicInteger();
         volatile Instant retryAt;
+        final java.util.concurrent.ConcurrentLinkedDeque<Map<String, Object>> history = new java.util.concurrent.ConcurrentLinkedDeque<>();
         final java.util.concurrent.atomic.AtomicLong runs = new java.util.concurrent.atomic.AtomicLong();
         final java.util.concurrent.atomic.AtomicBoolean running = new java.util.concurrent.atomic.AtomicBoolean();
 
@@ -92,6 +93,16 @@ public final class DatasetRefresher implements AutoCloseable {
                 date = previous.date;
                 tables = previous.tables;
                 runs.set(previous.runs.get());
+                trigger = previous.trigger;
+                history.addAll(previous.history);
+            }
+        }
+
+        /** Remembers one run, newest last, keeping at most {@code keep}. */
+        void remember(Map<String, Object> run, int keep) {
+            history.addLast(run);
+            while (history.size() > keep) {
+                history.pollFirst();
             }
         }
 
@@ -110,6 +121,9 @@ public final class DatasetRefresher implements AutoCloseable {
             m.put("retryAt", retryAt == null ? null : retryAt.toString());
             m.put("error", error);
             m.put("runs", runs.get());
+            List<Map<String, Object>> past = new ArrayList<>(history);
+            java.util.Collections.reverse(past);
+            m.put("history", past);
             return m;
         }
     }
@@ -122,6 +136,8 @@ public final class DatasetRefresher implements AutoCloseable {
     private final Clock clock;
     private final AuditLog audit;
     private final Map<String, State> states = new ConcurrentHashMap<>();
+    private final java.nio.file.Path stateFile;
+    private final Object saving = new Object();
     private volatile FramedHooks framed = new FramedHooks() {
         @Override
         public Set<String> kinds(Dataset d) {
@@ -154,6 +170,13 @@ public final class DatasetRefresher implements AutoCloseable {
 
     public DatasetRefresher(QueryService queries, Supplier<List<QueryService.Loaded>> published, BiRefreshProperties props, RetryPolicy retry, BusinessDates dates,
             Clock clock, AuditLog audit, boolean schedule) {
+        this(queries, published, props, retry, dates, clock, audit, schedule, null);
+    }
+
+    /** @param stateFile where the state and history of every job are kept so they survive a restart; null keeps them in memory only */
+    public DatasetRefresher(QueryService queries, Supplier<List<QueryService.Loaded>> published, BiRefreshProperties props, RetryPolicy retry, BusinessDates dates,
+            Clock clock, AuditLog audit, boolean schedule, java.nio.file.Path stateFile) {
+        this.stateFile = stateFile;
         this.queries = queries;
         this.published = published;
         this.props = props;
@@ -161,6 +184,7 @@ public final class DatasetRefresher implements AutoCloseable {
         this.dates = dates;
         this.clock = clock;
         this.audit = audit;
+        load();
         if (schedule && props.enabled()) {
             long ms = props.tick().toMillis();
             ticker.scheduleWithFixedDelay(this::tick, ms, ms, TimeUnit.MILLISECONDS);
@@ -232,9 +256,11 @@ public final class DatasetRefresher implements AutoCloseable {
         }
         if (st.nextRun == null) {
             st.nextRun = next(sch, now);
+            save();
         } else if (!now.isBefore(st.nextRun)) {
+            Instant due = st.nextRun;
             st.nextRun = next(sch, now);
-            start(j, st, sch, "schedule", sources());
+            start(j, st, sch, java.time.Duration.between(due, now).compareTo(props.tick().multipliedBy(2).plusMinutes(5)) > 0 ? "schedule (catch-up)" : "schedule", sources());
         }
     }
 
@@ -276,6 +302,7 @@ public final class DatasetRefresher implements AutoCloseable {
             st.error = r.warnings().isEmpty() ? null : String.join("; ", r.warnings());
             st.status = "ok";
             st.runs.incrementAndGet();
+            st.remember(entry(started, trigger, "ok", r.rows(), r.millis(), r.date(), st.error), props.history());
             LOG.info("BI refresh {} {}: {} rows in {} ms ({})", j.key(), r.date(), r.rows(), r.millis(), trigger);
             audit.record("system", "bi-dataset-refresh", j.ds().id(), trigger + ": " + r.rows() + " rows of " + r.tables() + " for " + r.date());
         } catch (RuntimeException e) {
@@ -291,9 +318,96 @@ public final class DatasetRefresher implements AutoCloseable {
                 st.retryAt = null;
                 st.status = "failed";
             }
+            st.remember(entry(started, trigger, st.status, 0, 0, date.toString(), st.error), props.history());
             LOG.warn("BI refresh {} failed (attempt {}): {}", j.key(), failed, st.error);
         } finally {
             st.running.set(false);
+            save();
+        }
+    }
+
+    private static Map<String, Object> entry(Instant at, String trigger, String status, long rows, long millis, String date, String error) {
+        Map<String, Object> e = new LinkedHashMap<>();
+        e.put("at", at.toString());
+        e.put("trigger", trigger);
+        e.put("status", status);
+        e.put("rows", rows);
+        e.put("durationMs", millis);
+        e.put("date", date);
+        e.put("error", error);
+        return e;
+    }
+
+    // ---- keeping the state across a restart --------------------------------------------------------------------------
+
+    private static final com.fasterxml.jackson.databind.ObjectMapper JSON = new com.fasterxml.jackson.databind.ObjectMapper();
+
+    /** Writes every job's state and history (atomically); a failure to write is logged, never thrown into a refresh. */
+    private void save() {
+        if (stateFile == null) {
+            return;
+        }
+        synchronized (saving) {
+            try {
+                Map<String, Object> jobs = new LinkedHashMap<>();
+                states.forEach((k, s) -> jobs.put(k, s.toMap()));
+                java.nio.file.Files.createDirectories(stateFile.getParent());
+                java.nio.file.Path tmp = stateFile.resolveSibling(stateFile.getFileName() + ".tmp");
+                java.nio.file.Files.writeString(tmp, JSON.writeValueAsString(Map.of("saved", clock.instant().toString(), "jobs", jobs)), java.nio.charset.StandardCharsets.UTF_8);
+                java.nio.file.Files.move(tmp, stateFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            } catch (java.io.IOException | RuntimeException e) {
+                LOG.warn("BI refresh state could not be saved to {}: {}", stateFile, e.toString());
+            }
+        }
+    }
+
+    /** Reads the saved state back: a run that was in progress when the server stopped is shown as interrupted. */
+    private void load() {
+        if (stateFile == null || !java.nio.file.Files.isRegularFile(stateFile)) {
+            return;
+        }
+        try {
+            com.fasterxml.jackson.databind.JsonNode root = JSON.readTree(java.nio.file.Files.readString(stateFile, java.nio.charset.StandardCharsets.UTF_8));
+            root.path("jobs").fields().forEachRemaining(e -> {
+                com.fasterxml.jackson.databind.JsonNode n = e.getValue();
+                State s = new State(n.path("schedule").asText(""), null);
+                s.lastRun = instant(n.path("lastRun"));
+                s.nextRun = instant(n.path("nextRun"));
+                s.retryAt = instant(n.path("retryAt"));
+                s.status = n.path("status").asText("never");
+                s.trigger = n.path("trigger").asText("");
+                s.error = n.path("error").isNull() ? null : n.path("error").asText(null);
+                s.millis = n.path("lastDurationMs").asLong();
+                s.rows = n.path("lastRows").asLong();
+                s.date = n.path("lastDate").isNull() ? null : n.path("lastDate").asText(null);
+                List<String> tables = new ArrayList<>();
+                n.path("tables").forEach(t -> tables.add(t.asText()));
+                s.tables = tables;
+                s.failures.set(n.path("failures").asInt());
+                s.runs.set(n.path("runs").asLong());
+                List<Map<String, Object>> past = new ArrayList<>();
+                n.path("history").forEach(h -> past.add(JSON.convertValue(h, new com.fasterxml.jackson.core.type.TypeReference<LinkedHashMap<String, Object>>() { })));
+                java.util.Collections.reverse(past);
+                past.forEach(h -> {
+                    h.replaceAll((k, v) -> v instanceof Integer i ? (Object) i.longValue() : v);
+                    s.remember(h, props.history());
+                });
+                if ("running".equals(s.status) || "waiting".equals(s.status)) {
+                    s.status = "interrupted";
+                    s.error = "the server stopped before this refresh finished";
+                }
+                states.put(e.getKey(), s);
+            });
+        } catch (java.io.IOException | RuntimeException e) {
+            LOG.warn("BI refresh state in {} could not be read, starting without it: {}", stateFile, e.toString());
+        }
+    }
+
+    private static Instant instant(com.fasterxml.jackson.databind.JsonNode n) {
+        try {
+            return n.isTextual() ? Instant.parse(n.asText()) : null;
+        } catch (RuntimeException e) {
+            return null;
         }
     }
 

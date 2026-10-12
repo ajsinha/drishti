@@ -101,9 +101,9 @@ public class BiQueryConfiguration {
 
     @Bean(destroyMethod = "close")
     public DatasetRefresher datasetRefresher(QueryService queries, DatasetService datasets, BiRefreshProperties props, BusinessDates dates, AuditLog audit,
-            org.springframework.core.env.Environment env) {
+            org.springframework.core.env.Environment env, QueryProperties queryProps) {
         DatasetRefresher refresher = new DatasetRefresher(queries, datasets::published, props, com.ash.drishti.common.RetryPolicy.of(env::getProperty, "bi"), dates, Clock.systemUTC(),
-                audit, true);
+                audit, true, java.nio.file.Path.of(queryProps.storeDir()).resolve("refresh").resolve("state.json"));
         datasets.attach(refresher);
         return refresher;
     }

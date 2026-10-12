@@ -26,18 +26,20 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param tick how often the scheduler looks for a refresh that is due or a retry whose wait is over
  * @param maxAttempts tries for one scheduled refresh, the first included, before it is left failed until its next scheduled time
  * @param loadDelay for {@code after-load}: how long after the data-load signal the refresh starts
+ * @param history how many past runs of each job are kept (and shown on the dataset page); the state and history survive a restart
  */
 @ConfigurationProperties("drishti.bi.refresh")
-public record BiRefreshProperties(Boolean enabled, Duration tick, Integer maxAttempts, Duration loadDelay) {
+public record BiRefreshProperties(Boolean enabled, Duration tick, Integer maxAttempts, Duration loadDelay, Integer history) {
 
     public BiRefreshProperties {
         enabled = enabled == null || enabled;
         tick = tick == null || tick.isNegative() || tick.isZero() ? Duration.ofSeconds(30) : tick;
         maxAttempts = maxAttempts == null || maxAttempts <= 0 ? 4 : Math.min(maxAttempts, 20);
         loadDelay = loadDelay == null || loadDelay.isNegative() ? Duration.ofSeconds(2) : loadDelay;
+        history = history == null || history < 0 ? 25 : Math.min(history, 500);
     }
 
     public static BiRefreshProperties defaults() {
-        return new BiRefreshProperties(null, null, null, null);
+        return new BiRefreshProperties(null, null, null, null, null);
     }
 }
