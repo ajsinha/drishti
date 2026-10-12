@@ -92,7 +92,7 @@ public final class ModelDefParser {
         }
         measures.values().stream().filter(m -> m.via() != null).forEach(m -> y.error("DRS-9129", "measures." + m.name() + ".via",
                 "`via:` (a measure along an inactive relationship) arrives in wave W7"));
-        String lifecycle = LayerYaml.text(root, "lifecycle", "draft");
+        String lifecycle = LayerYaml.text(root, "lifecycle", "published");
         if (!ModelDef.LIFECYCLES.contains(lifecycle)) {
             y.error("DRS-9120", "lifecycle", "lifecycle is one of " + ModelDef.LIFECYCLES);
         }

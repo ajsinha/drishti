@@ -1271,6 +1271,25 @@ Live tables kept in memory by the engine and the streams that tell browsers they
 | `max-streams-per-user` | `10` | Live report streams open at once for one person (`429 DRS-9051`). A browser holds one per distinct report on its open reports and boards. |
 | `incremental-aggregates` | `true` | The rollups a dataset declares over a live table are kept by group as rows change (sums and counts by difference; a lost minimum or maximum is read again for its group alone), and a query a rollup can answer reads them ([DATASETS.md section 7.1](../guides/DATASETS.md#71-live-tables-phase-5)). `false`: every measure of a live table is computed over its rows on each query. |
 
+### `drishti.bi.mq` — the model layer and the model query language (2.2, wave W1)
+
+Data models, pack-generated datasets and the model query language (`mq: 1`) of [BI_MODEL_SPEC.md](../architecture/BI_MODEL_SPEC.md): the bounds of one query and of
+standing queries (`POST /api/v1/bi/mq`, `/mq/subscribe`, [API_GUIDE.md](../guides/API_GUIDE.md#models-and-the-model-query-language-apiv1bi-wave-w1)). A standing query's
+default throttle is `drishti.bi.live.frame`; its stream's heartbeat is `drishti.bi.live.status`.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `max-days` | `400` | The longest date window one model query may read (`time.window`), in days; longer is `422 DRS-9157`. |
+| `grouped-limit` | `500` | The rows a grouped query answers when it gives no `limit`. |
+| `rows-limit` | `10000` | The rows a `shape: rows` extract answers when it gives no `limit`. |
+| `max-limit` | `100000` | The most rows any model query may ask for (a larger `limit` is cut to it; the engine's own `drishti.bi.query.max-rows` still applies). |
+| `max-subscriptions` | `500` | Standing queries open at once on the server (`429 DRS-9181`). |
+| `max-subscriptions-per-user` | `20` | Standing queries open at once for one person (`429 DRS-9182`). |
+| `min-throttle` | `100ms` | The shortest throttle a subscription may ask for (a shorter one is raised to it). |
+| `poll` | `100ms` | How often a stream looks for a new data generation of its subscriptions' models. |
+| `idle-close` | `10m` | A subscription that no stream has read for this long is dropped. |
+| `pack-live` | `true` | A pack-generated dataset (`pack.<pack>.<kind>`) is `live` when the kind's connector pushes (decision D6), else `snapshot`; `false` keeps every one a snapshot. |
+
 ### `drishti.distribution`: export and subscriptions
 
 Export of a BI report, page, visual or Sutra view as PDF, PNG, Excel or CSV, and subscriptions (email on a schedule), [DISTRIBUTION.md](../guides/DISTRIBUTION.md). Mail goes through the server's

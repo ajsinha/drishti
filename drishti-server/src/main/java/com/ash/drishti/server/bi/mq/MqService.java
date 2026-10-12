@@ -93,7 +93,8 @@ public final class MqService {
         }
         QueryService.Meta mm = r.meta();
         Map<String, Object> meta = new LinkedHashMap<>();
-        meta.put("asOf", compiled.asOf() == null ? null : compiled.asOf().toString());
+        boolean timed = q.time().asOf() != null || q.time().from() != null;
+        meta.put("asOf", !timed && mm != null && !mm.dates().isEmpty() ? mm.dates().get(mm.dates().size() - 1) : compiled.asOf() == null ? null : compiled.asOf().toString());
         meta.put("dates", mm == null ? List.of() : mm.dates());
         meta.put("layer", mm == null ? null : mm.layer());
         meta.put("rollup", mm == null ? null : mm.rollup());

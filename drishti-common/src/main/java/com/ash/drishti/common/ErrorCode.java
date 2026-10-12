@@ -246,11 +246,11 @@ public enum ErrorCode {
     PYTHON_TESTS("DRS-9076", 422),
     /** BI: a Vega-Lite specification could not be drawn (a url or loader in it, a library that did not load); raised by the page, in the visual's frame, and listed here so the code has one home. */
     VEGA_FAILED("DRS-9077", 422),
-    /** The model layer: a {@code rachana: 2} dataset that is not valid (its Check lists the DRS-9100 to DRS-9108 problems); publishing it is refused. */
+    /** The model layer: a {@code rachana: 2} dataset that is not valid (its Check lists every problem); publishing it is refused. */
     LAYER_DATASET_INVALID("DRS-9100", 422),
     /** The model layer: a pack-generated dataset is read-only (narrow it with {@code extends}). */
     LAYER_DATASET_GENERATED("DRS-9107", 409),
-    /** The model layer: a data model that is not valid (its Check lists the DRS-9120 to DRS-9130 problems); publishing it is refused. */
+    /** The model layer: a data model that is not valid (its Check lists every problem); publishing it is refused. */
     LAYER_MODEL_INVALID("DRS-9120", 422),
     /** The model layer: a breaking change (a measure, column or relationship removed) published without a new major version, or a version that goes down. */
     LAYER_MODEL_BREAKING("DRS-9126", 409),
