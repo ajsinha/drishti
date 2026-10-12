@@ -552,7 +552,7 @@ reads everything under its prefix, and the server decides what each user may see
 
 ## Outbound proxy
 
-The settings and rules are shared by every HTTP-based connector: [PROXY.md](PROXY.md). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
+The settings and rules are shared by every HTTP-based connector: [TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
 
 The AWS SDK's proxy configuration is used, for AWS and for an S3-compatible `endpoint`. With a proxy the connector uses the Apache HTTP client (the
 URL-connection client cannot answer a proxy's login when it tunnels `https://`, so it is used only without one); `https://` endpoints are tunnelled with
@@ -602,7 +602,7 @@ In the connector file's `settings:`, or for the plugin as itself
 | `cache-entries` | `10000` | the most reads and misses kept |
 | `lookback-days` | `10` | the oldest date folder used: the date asked minus this many calendar days |
 | `source-name` | `s3` (a named connector: its name) | the name in provenance and type-ahead subtitles |
-| `proxy.*` | none | the outbound HTTP proxy ([PROXY.md](PROXY.md)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none` |
+| `proxy.*` | none | the outbound HTTP proxy ([TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none` |
 
 Connector keys (`plugin`, `enabled`, `kinds`) are as for every connector
 ([CONNECTOR_DEVELOPER_GUIDE.md, Configuration binding](CONNECTOR_DEVELOPER_GUIDE.md#configuration-binding)). Fixed in the code, not settings: connection timeout 5 s, socket

@@ -25,7 +25,7 @@ Drishti has two programs, and each has an IDE that suits it:
 Start the server first, then the console: the console calls the server for everything it shows. You can use one IDE for
 both (IntelliJ IDEA Ultimate with the Python plugin runs the console too); the settings below are the same.
 
-For the command-line way to build and run, see [QUICKSTART.md](QUICKSTART.md). For every server and console setting, see
+For the command-line way to build and run, see [GETTING_STARTED.md](GETTING_STARTED.md). For every server and console setting, see
 [CONFIGURATION.md](../admin/CONFIGURATION.md).
 
 ## 1. Before you open the IDE
@@ -90,7 +90,7 @@ To build the runnable jar as well (what `java -jar` and the Docker image use), o
 | **Working directory** | **the repository root** (the default is the `drishti-server` folder: change it) | the server reads `./config/packs`, `./data`, `./sutras` and `./application.local.yaml` relative to it |
 | VM options | Java 25 or newer: `-XX:+UseCompactObjectHeaders`; Java 21: leave empty. Optionally `-Xmx2g` | the flag saves heap and exists only from Java 25 |
 | Environment variables | e.g. `DRISHTI_PACKS=market-risk,counterparty-risk,retail-banking;DRISHTI_STUDIO_SAVE=true` (separate with `;`) | which packs load, and whether the Build workbench may save Sutras; every `DRISHTI_*` variable is in [CONFIGURATION.md](../admin/CONFIGURATION.md#placeholders-namedefault) |
-| Program arguments | optional, e.g. `--spring.config.additional-location=file:/home/you/drishti-site.yaml` | a settings file of your own on top of the defaults ([QUICKSTART.md](QUICKSTART.md#supplying-a-different-application-config)) |
+| Program arguments | optional, e.g. `--spring.config.additional-location=file:/home/you/drishti-site.yaml` | a settings file of your own on top of the defaults ([GETTING_STARTED.md](GETTING_STARTED.md)) |
 
 The packs the quickstart loads, to paste into **Environment variables**:
 
@@ -166,7 +166,7 @@ it must not share `./data`. Point a console at it with `DRISHTI_BACKEND_URL=http
 
 The console reads `drishti-console/config/application.yaml`, then `drishti-console/config/application.local.yaml` if it exists, then
 `DRISHTI_CONSOLE__…` environment variables, then `--key=value` parameters; later wins
-([QUICKSTART.md](QUICKSTART.md#the-console)).
+([GETTING_STARTED.md](GETTING_STARTED.md)).
 
 ### 4.4 Run it
 

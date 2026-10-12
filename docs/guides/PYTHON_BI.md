@@ -22,7 +22,7 @@ report, and a report names it. It runs **sandboxed on the console**, or **in the
 
 A third interface, the **Transform**, turns the frames of several datasets into a table that a **derived dataset** publishes (section 13): it is how Python joins datasets.
 
-This is the reference. For a walk-through see [BI_TUTORIAL.md](BI_TUTORIAL.md) chapter 24 and [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [RUPAKA.md](../architecture/RUPAKA.md) section 13, what is built is its section 20.8.
+This is the reference. For a walk-through see [tutorial 10](../tutorials/10-first-bi-report.md) chapter 24 and [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [RUPAKA.md](../architecture/RUPAKA.md) section 13, what is built is its section 20.8.
 Python in the *terminal* (Calc) is a different thing: [PYTHON_CALC.md](PYTHON_CALC.md).
 
 ## Contents

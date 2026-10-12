@@ -633,7 +633,7 @@ drishti:
       leak-threshold: 60s            # a connection borrowed longer than this is logged with the borrower's stack (0 = off)
       statement-timeout: 5m          # longest one statement may run (PostgreSQL, MongoDB and Aerospike operations; 0 = none)
   http:
-    proxy:                           # the site's outbound HTTP proxy (docs/connectors/PROXY.md): OFF unless url is set (or from-environment is true)
+    proxy:                           # the site's outbound HTTP proxy (docs/connectors/TLS.md): OFF unless url is set (or from-environment is true)
       url: ${DRISHTI_HTTP_PROXY_URL:}                 # http://host:port; http and https targets both go through it (https via CONNECT)
       username: ${DRISHTI_HTTP_PROXY_USERNAME:}       # Basic proxy authentication
       password: ${DRISHTI_HTTP_PROXY_PASSWORD:}       # only a ${ENV} placeholder (a literal in this file is refused at start)

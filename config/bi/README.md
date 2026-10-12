@@ -42,7 +42,7 @@ Where to read more, in the order a newcomer wants it:
 
 | For | Read |
 |---|---|
-| a tour of the pages and a walk-through with the samples in this folder | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md) (start here), [docs/guides/BI_TUTORIAL.md](../../docs/guides/BI_TUTORIAL.md) |
+| a tour of the pages and a walk-through with the samples in this folder | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md) (start here), [docs/tutorials/10-first-bi-report.md](../../docs/tutorials/10-first-bi-report.md) |
 | the dataset format (`datasets/`) | [docs/guides/DATASETS.md](../../docs/guides/DATASETS.md) |
 | the report format (`reports/`): a report names its dataset with `dataset:` (a catalogue id, a file name such as `trades-basic`, or the dataset's name) | [docs/guides/REPORTS.md](../../docs/guides/REPORTS.md) |
 | the board format (`boards/`) | [docs/guides/BOARDS.md](../../docs/guides/BOARDS.md) |

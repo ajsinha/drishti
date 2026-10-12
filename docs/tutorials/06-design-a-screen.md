@@ -27,7 +27,7 @@ About 40 minutes.
 
 - [Tutorial 1](01-first-15-minutes.md) done; the server started with `DRISHTI_STUDIO_SAVE=true`; signed in. Anyone may design; saving a Sutra for everyone needs an author and a reviewer, which this tutorial does not do.
 - The data: three desk documents in `docs/tutorials/data/desks/` (`desk-rates.json`, `desk-fx.json`, `desk-credit.json`: each a desk with its currencies and their trades), and the Sutra itself,
-  `docs/tutorials/data/desk-book.sutra.yaml`. The workbench guide ([SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md)) and the earlier [workbench tutorial](../guides/BUILD_WORKBENCH_TUTORIAL.md) go further; this one is the shortest route to a finished screen.
+  `docs/tutorials/data/desk-book.sutra.yaml`. The workbench guide ([SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md)) and the earlier [workbench tutorial]() go further; this one is the shortest route to a finished screen.
 
 ## What you will learn
 
@@ -200,19 +200,19 @@ You should see the canvas with **two map panels** (the world with Australia in t
 
 ![The palette: metric, map, kv, status, provenance, markdown, table, ladder, pivot, tabs, line, area, each with an Add button](img/t06/15-map-palette.jpg)
 
-You should see `map` among the kinds with an **Add** button (or drag it onto the canvas); the **YAML** tab shows the lines above, and the **Inspector** takes `highlight`, `region`, `link` and `shade` as boxes. In the example's YAML the two panels are `highlight: $.iso3` and `region: $.iso3`: the same field, two views of it. [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) and [PANEL_KINDS.md](../guides/PANEL_KINDS.md) have the rest of the options, and the reports have a map visual of their own ([tutorial 10](10-first-bi-report.md)).
+You should see `map` among the kinds with an **Add** button (or drag it onto the canvas); the **YAML** tab shows the lines above, and the **Inspector** takes `highlight`, `region`, `link` and `shade` as boxes. In the example's YAML the two panels are `highlight: $.iso3` and `region: $.iso3`: the same field, two views of it. [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) and [PANELS.md](../guides/PANELS.md) have the rest of the options, and the reports have a map visual of their own ([tutorial 10](10-first-bi-report.md)).
 
 ## Step 8 · What you have, and what comes next
 
 The design is yours (see **My designs** under Build). To make it live for everyone: **Submit for review**, a reviewer with the approve power reads the diff and the evidence, and approves; or export it as a pack
-fragment (**Ship**) and put it in a pack. [BUILD_WORKBENCH_TUTORIAL.md](../guides/BUILD_WORKBENCH_TUTORIAL.md) walks through proposing and approving as two people.
+fragment (**Ship**) and put it in a pack. []() walks through proposing and approving as two people.
 
 You should see, under **Build → My designs**, `Desk book` with the status *draft* and your edits listed.
 
 ## Next steps
 
 - [Tutorial 7 · Load data daily](07-load-data-daily.md) keeps the screens' data fresh.
-- [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) is the workbench reference; [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) lists every option of every panel and control; [PANEL_KINDS.md](../guides/PANEL_KINDS.md)
+- [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) is the workbench reference; [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) lists every option of every panel and control; [PANELS.md](../guides/PANELS.md)
   shows each of the 21 panel kinds with a picture; [SUTRA_DEVELOPER_GUIDE.md](../guides/SUTRA_DEVELOPER_GUIDE.md) is the language guide.
 
 ## If something goes wrong

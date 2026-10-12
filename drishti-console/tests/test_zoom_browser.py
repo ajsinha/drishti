@@ -108,7 +108,7 @@ def test_every_panel_has_a_labelled_zoom_button_next_to_the_help_link(page):
     b = btn(page)
     assert b.get_attribute("aria-label") == "Expand " + page.inner_text("#h-curve").strip()
     assert b.get_attribute("aria-pressed") == "false"
-    assert page.evaluate("""(() => { const b = document.querySelector('#p-curve .pnl-zoom-btn'), h = document.querySelector('#p-curve a[href*="/help/panel-kinds"]');
+    assert page.evaluate("""(() => { const b = document.querySelector('#p-curve .pnl-zoom-btn'), h = document.querySelector('#p-curve a[href*="/help/panels"]');
         return b.parentNode === h.parentNode && !!(b.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING); })()""")
 
 

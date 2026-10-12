@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: a vendor's HTTPS API reached through the company's forward proxy with a login. Copy to config/connectors/rest-via-proxy.yaml.
 # The https target is tunnelled with CONNECT and keeps its own TLS (tls.* below is optional). Leave the proxy: block out to use the site
-# default (drishti.http.proxy.*), or write `proxy: none` to go direct. See docs/connectors/PROXY.md.
+# default (drishti.http.proxy.*), or write `proxy: none` to go direct. See docs/connectors/TLS.md.
 plugin: rest
 kinds: [price]
 description: Prices from a vendor API through the corporate proxy

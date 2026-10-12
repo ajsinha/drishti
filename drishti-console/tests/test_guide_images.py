@@ -130,7 +130,7 @@ def test_the_help_centre_serves_the_guide_with_its_pictures(client):
     page = client.get("/help/screen-designer")
     assert page.status_code == 200 and "Screen designer" in page.text and "data-unavailable" not in page.text
     srcs = re.findall(r'<img[^>]*\bsrc="([^"]+)"', page.text)
-    srcs = [s for s in srcs if "/img/form/" not in s and "/img/controls/" not in s]     # the Form and Controls tabs' pictures are made by their own guides' scripts
+    srcs = [s for s in srcs if "/img/form/" not in s and "/img/controls/" not in s and "/img/tutorial/" not in s]     # the Form and Controls tabs' and the rebase pictures are made by their own guides' scripts
     assert len(srcs) == len(pictures()) and all(s.startswith("/help/files/guides/img/designer/") for s in srcs)
     for s in srcs:
         r = client.get(s)
@@ -150,11 +150,11 @@ def test_f1_on_every_build_page_opens_the_guide(client):
         assert 'data-screen="build"' in client.get(url).text, url
 
 
-def test_the_build_menu_help_centre_quickstart_and_the_architecture_note_link_to_it(client):
+def test_the_build_menu_help_centre_getting_started_and_the_architecture_note_link_to_it(client):
     menu = client.get("/build").text
     assert "/help/screen-designer" in menu and "Screen designer guide" in menu
     assert "/help/screen-designer" in client.get("/build/new").text
-    assert "SCREEN_DESIGNER.md" in (ROOT / "docs" / "guides" / "QUICKSTART.md").read_text()
+    assert "SCREEN_DESIGNER.md" in (ROOT / "docs" / "guides" / "GETTING_STARTED.md").read_text() or "SCREEN_DESIGNER.md" in (ROOT / "docs" / "guides" / "USER_GUIDE.md").read_text()
     assert "SCREEN_DESIGNER.md" in (ROOT / "docs" / "architecture" / "SCREEN_BUILDER.md").read_text()
     index = client.get("/help").text
     assert "/help/screen-designer" in index

@@ -636,7 +636,7 @@ time of the last successful fetch:
 
 ## Outbound proxy
 
-The settings and rules are shared by every HTTP-based connector: [PROXY.md](PROXY.md). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
+The settings and rules are shared by every HTTP-based connector: [TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
 
 The built-in feeds (NY Fed, ECB, US Treasury, FRED) and a mirror `url` both go through the proxy; `file:` URLs never do. Health:
 `UP via proxy proxy.corp.example:3128 (site default)`, and a failure keeps the proxy in the message (`DOWN: IOException: cannot connect to the proxy 10.1.2.3:3128
@@ -676,7 +676,7 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 | `user-agent` | `public-data-feed-connector` | the `User-Agent` header; the pack sets `<product> public data feed connector` |
 | `source-name` | the connector's name (as itself: the `feed` value) | the name in provenance, health and search subtitles |
 | `stale-after` | none (the pack sets `4d`) | an engine setting: mark the connector stale when no refresh has brought data for this long |
-| `proxy.*` | none | the outbound HTTP proxy ([PROXY.md](PROXY.md)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none` |
+| `proxy.*` | none | the outbound HTTP proxy ([TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none` |
 
 And on the connector itself: `plugin: feed`, `enabled` (the pack uses `${DRISHTI_FEED_<NAME>:false}`), and `kinds`.
 

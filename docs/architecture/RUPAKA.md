@@ -21,7 +21,7 @@ Companion notes: [LIVE_BI.md](LIVE_BI.md) (streaming result producers: the heavy
 design adopts and adapts.
 
 **How to read this document.** Sections 1 to 19 are the **design**: they say what Rūpaka should be and, where building changed the design, say **As built** in place. Section 20 is the build plan and, for each of phases 1 to 5, a **"as built"** subsection that lists exactly what exists and what does not; when a design section and an "as built" subsection differ, the subsection is right. The user documents are
-[BI_GUIDE.md](../guides/BI_GUIDE.md) (start here), [BI_TUTORIAL.md](../guides/BI_TUTORIAL.md), [DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [BOARDS.md](../guides/BOARDS.md) and [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md). The module names of section 17 (`drishti-bi-core`, `-query`, `-live`, `-ai`) are the design's: the code is one server package, with the same one-way dependencies.
+[BI_GUIDE.md](../guides/BI_GUIDE.md) (start here), [tutorial 10](../tutorials/10-first-bi-report.md), [DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [BOARDS.md](../guides/BOARDS.md) and [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md). The module names of section 17 (`drishti-bi-core`, `-query`, `-live`, `-ai`) are the design's: the code is one server package, with the same one-way dependencies.
 
 **The goal.** Drishti becomes a business-intelligence platform as nimble and as capable as commercial BI products, with
 **Power BI** as the benchmark, while keeping what Drishti already does that they do not: live data at
@@ -794,7 +794,7 @@ since the server started and only the current body is kept. (Phases 2 to 5, belo
 ### 20.2 Phase 2, as built
 
 Phase 2 (datasets and the query engine) is built; the references are [DATASETS.md](../guides/DATASETS.md) (the YAML, the expression language, security), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 13, the walk-through
-[BI_TUTORIAL.md](../guides/BI_TUTORIAL.md), [API_GUIDE.md](../guides/API_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) (`drishti.bi.query`). Measurements are in [RUPAKA_POC.md](RUPAKA_POC.md) section 11.
+[tutorial 10](../tutorials/10-first-bi-report.md), [API_GUIDE.md](../guides/API_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) (`drishti.bi.query`). Measurements are in [RUPAKA_POC.md](RUPAKA_POC.md) section 11.
 
 **Built.**
 
@@ -825,7 +825,7 @@ and reports (built in phase 3, section 20.3). The columns layer is **per dataset
 ### 20.3 Phase 3, as built
 
 Phase 3 (reports, the visual catalogue, filters and interactions, the designer, the Model view) is built; the reference is [REPORTS.md](../guides/REPORTS.md), the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) sections 14 to 16, the walk-through
-is [BI_TUTORIAL.md](../guides/BI_TUTORIAL.md) chapters 10 to 15, the API is [API_GUIDE.md](../guides/API_GUIDE.md) and the settings are `drishti.bi.report.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md).
+is [tutorial 10](../tutorials/10-first-bi-report.md) chapters 10 to 15, the API is [API_GUIDE.md](../guides/API_GUIDE.md) and the settings are `drishti.bi.report.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md).
 
 **Built.**
 
@@ -862,7 +862,7 @@ relationships used by a measure (the engine joins as written, 20.2); several fac
 
 ### 20.4 Phase 4, as built
 
-Phase 4 (publishing and governance) is built; the reference is [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md), the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) section 17, the walk-through is [BI_TUTORIAL.md](../guides/BI_TUTORIAL.md) chapter 17, the API is [API_GUIDE.md](../guides/API_GUIDE.md) and the settings are `drishti.bi.governance.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md). It extends the phase 1 publish-with-review rather than replacing it.
+Phase 4 (publishing and governance) is built; the reference is [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md), the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) section 17, the walk-through is [tutorial 10](../tutorials/10-first-bi-report.md) chapter 17, the API is [API_GUIDE.md](../guides/API_GUIDE.md) and the settings are `drishti.bi.governance.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md). It extends the phase 1 publish-with-review rather than replacing it.
 
 **Built (sections 10 and 11).**
 
@@ -878,7 +878,7 @@ Phase 4 (publishing and governance) is built; the reference is [BI_GOVERNANCE.md
 ### 20.5 Phase 5, as built
 
 Phase 5 (streaming BI) is built; the references are [DATASETS.md 7.1](../guides/DATASETS.md#71-live-tables-phase-5), [REPORTS.md 13](../guides/REPORTS.md#13-live-visuals-and-perspective-phase-5), [BOARDS.md](../guides/BOARDS.md), [LIVE.md](LIVE.md#live-bi-a-reports-live-tables),
-[BI_GUIDE.md](../guides/BI_GUIDE.md) section 18, the walk-through [BI_TUTORIAL.md](../guides/BI_TUTORIAL.md) chapters 18 and 19, the API [API_GUIDE.md](../guides/API_GUIDE.md), the settings `drishti.bi.live.*` and the console's `bi.live.*`, `bi.board.rotate_seconds` in [CONFIGURATION.md](../admin/CONFIGURATION.md),
+[BI_GUIDE.md](../guides/BI_GUIDE.md) section 18, the walk-through [tutorial 10](../tutorials/10-first-bi-report.md) chapters 18 and 19, the API [API_GUIDE.md](../guides/API_GUIDE.md), the settings `drishti.bi.live.*` and the console's `bi.live.*`, `bi.board.rotate_seconds` in [CONFIGURATION.md](../admin/CONFIGURATION.md),
 and the Perspective retest [RUPAKA_POC.md](RUPAKA_POC.md) section 12. Codes `DRS-9050` to `9053`.
 
 **Built.**
@@ -908,7 +908,7 @@ and the Perspective retest [RUPAKA_POC.md](RUPAKA_POC.md) section 12. Codes `DRS
 ### 20.6 Phase 7, part 1, as built
 
 Phase 7 (distribution) is built in parts. Part 1 is **export and subscriptions**; part 2, **alerts and board notifications**, follows below it; the references are [DISTRIBUTION.md](../guides/DISTRIBUTION.md), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 19, the walk-through
-[BI_TUTORIAL.md](../guides/BI_TUTORIAL.md#20-export-and-subscribe), the API [API_GUIDE.md](../guides/API_GUIDE.md#export-and-subscriptions-apiv1), the settings `drishti.distribution.*` and the retry area
+[tutorial 11](../tutorials/11-bi-that-runs-itself.md), the API [API_GUIDE.md](../guides/API_GUIDE.md#export-and-subscriptions-apiv1), the settings `drishti.distribution.*` and the retry area
 `drishti.retry.distribution.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md). Codes `DRS-9060` and `DRS-9061`.
 
 **Built.**
@@ -934,7 +934,7 @@ Phase 7 (distribution) is built in parts. Part 1 is **export and subscriptions**
 #### 20.6, part 2: alerts on measures, fields and board tiles, as built
 
 References: [DISTRIBUTION.md section 4](../guides/DISTRIBUTION.md#4-alerts-on-numbers), [BOARDS.md](../guides/BOARDS.md#notifications-a-tile-tells-people-when-it-turns-red), the walk-through
-[BI_TUTORIAL.md chapter 21](../guides/BI_TUTORIAL.md#21-alerts-on-a-number), the API [API_GUIDE.md](../guides/API_GUIDE.md#alerts-on-numbers-apiv1), the settings `drishti.alerts.measure.*` in
+[tutorial 11](../tutorials/11-bi-that-runs-itself.md), the API [API_GUIDE.md](../guides/API_GUIDE.md#alerts-on-numbers-apiv1), the settings `drishti.alerts.measure.*` in
 [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtialertsmeasure--alerts-on-numbers-and-board-notifications). Code `DRS-9062`; `DRS-9053` now refuses only `notifications` and `subscriptions`.
 
 **Built.**
@@ -962,7 +962,7 @@ References: [DISTRIBUTION.md section 4](../guides/DISTRIBUTION.md#4-alerts-on-nu
 #### 20.6, part 3: embedding and phone layouts, as built (phase 7 complete)
 
 References: [DISTRIBUTION.md section 5](../guides/DISTRIBUTION.md#5-embedding-a-report-in-another-web-application) (embedding), [REPORTS.md](../guides/REPORTS.md#14-phone-layouts) (`layouts.phone`), [ELEMENTS.md section 18](ELEMENTS.md#18-drishti-report-a-published-report-in-another-web-application)
-(the element), the developer guide [ELEMENTS.md of the guides](../guides/ELEMENTS.md), the walk-through [BI_TUTORIAL.md chapter 22](../guides/BI_TUTORIAL.md#22-a-report-on-a-phone-and-in-another-application), the API [API_GUIDE.md](../guides/API_GUIDE.md#embedding-a-report-embedv1reports),
+(the element), the developer guide [ELEMENTS.md of the guides](../guides/ELEMENTS.md), the walk-through [tutorial 16](../tutorials/16-embed-drishti.md), the API [API_GUIDE.md](../guides/API_GUIDE.md#embedding-a-report-embedv1reports),
 the settings `drishti.embed.scopes` (`[embed:report]`) and the console's `embed.lifecycle` in [CONFIGURATION.md](../admin/CONFIGURATION.md). No new code: a refused report is `DRS-8005`, a retired API `DRS-8006`.
 
 **Built.**
@@ -991,7 +991,7 @@ the settings `drishti.embed.scopes` (`[embed:report]`) and the console's `embed.
 
 ### 20.7 BI essentials (wave 3), as built
 
-References: [DATASETS.md](../guides/DATASETS.md) (section 4.1 time intelligence, 7.2 scheduled refresh), [REPORTS.md](../guides/REPORTS.md) (3.1 the new visuals, 3.2 true totals), [BI_GUIDE.md](../guides/BI_GUIDE.md) sections 13 and 15, [BI_TUTORIAL.md chapter 23](../guides/BI_TUTORIAL.md#23-time-totals-and-a-map),
+References: [DATASETS.md](../guides/DATASETS.md) (section 4.1 time intelligence, 7.2 scheduled refresh), [REPORTS.md](../guides/REPORTS.md) (3.1 the new visuals, 3.2 true totals), [BI_GUIDE.md](../guides/BI_GUIDE.md) sections 13 and 15, [tutorial 10](../tutorials/10-first-bi-report.md),
 [API_GUIDE.md](../guides/API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2), the settings `drishti.bi.refresh.*`, `drishti.bi.report.distribution-rows` and `totals-max-rows` in [CONFIGURATION.md](../admin/CONFIGURATION.md). It moves five items from "not built" to built.
 
 **Built.**
@@ -1012,7 +1012,7 @@ References: [DATASETS.md](../guides/DATASETS.md) (section 4.1 time intelligence,
 
 ### 20.8 Python in BI (phase 6), as built
 
-References: [PYTHON_BI.md](../guides/PYTHON_BI.md) (the reference), [DATASETS.md](../guides/DATASETS.md) section 4.2, [REPORTS.md](../guides/REPORTS.md) section 3.3, [BI_TUTORIAL.md](../guides/BI_TUTORIAL.md) chapter 24,
+References: [PYTHON_BI.md](../guides/PYTHON_BI.md) (the reference), [DATASETS.md](../guides/DATASETS.md) section 4.2, [REPORTS.md](../guides/REPORTS.md) section 3.3, [tutorial 10](../tutorials/10-first-bi-report.md) chapter 24,
 [API_GUIDE.md](../guides/API_GUIDE.md#reports-apiv1bireports-phase-3), the settings `drishti.bi.report.python-*` and the console's `bi.python.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `PythonBiTest`, `PythonBiApiTest`, `test_pyrunner.py`,
 `test_bi_python.py`, `test_bi_python_browser.py`.
 
@@ -1084,7 +1084,7 @@ Reference: [BI_AI.md](../guides/BI_AI.md); the layer under it: [AI_PROVIDERS.md]
 
 ### 20.9 Analyse (phase 9, lean), as built
 
-References: [ANALYSE.md](../guides/ANALYSE.md) (the reference), [QUANT_SERVICE.md](QUANT_SERVICE.md) section 16 (the console's `QuantEngine`), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 21, [BI_TUTORIAL.md](../guides/BI_TUTORIAL.md) chapter 25,
+References: [ANALYSE.md](../guides/ANALYSE.md) (the reference), [QUANT_SERVICE.md](QUANT_SERVICE.md) section 16 (the console's `QuantEngine`), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 21, [tutorial 10](../tutorials/10-first-bi-report.md) chapter 25,
 the console's `bi.explore.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `test_bi_explore.py` and `test_bi_explore_browser.py`.
 
 **Built (a lean slice of the phase).**

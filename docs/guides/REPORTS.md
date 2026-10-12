@@ -16,7 +16,7 @@
 # Reports: the YAML, the visuals and how they behave
 
 A **report** is pages of **visuals** on a 12-column grid, bound to the fields and measures of one **dataset** ([DATASETS.md](DATASETS.md)). This is the reference for the file, for the visual
-catalogue, for how a visual becomes a query, and for what people can do with a report on the page. To read or build one step by step see [BI_TUTORIAL.md](BI_TUTORIAL.md) (chapters 10 to 15, and 18 for a live report); for the
+catalogue, for how a visual becomes a query, and for what people can do with a report on the page. To read or build one step by step see [tutorial 10](../tutorials/10-first-bi-report.md) (chapters 10 to 15, and 18 for a live report); for the
 pages (viewer, designer, Model view) see [BI_GUIDE.md](BI_GUIDE.md) sections 14 to 16 and 18. The design is [RUPAKA.md](../architecture/RUPAKA.md) sections 8 and 9; what is built is its sections 20.3 and 20.5.
 
 Three sample reports ship in `config/bi/reports/` (and a fourth for Python, **Desk P&L risk (Python)**, section 3.3), each marked `sample: true` and commented line by line: **Trades overview** (on `trades-basic`), **Counterparty risk** (cross-pack, on
@@ -218,7 +218,7 @@ In the designer the five are in the Charts group of the Visualizations pane; the
 
 The region files are made by `tools/maps/build_regions.py` (download once, simplify with Douglas-Peucker in pure Python, write the files and `regions/README.md` with the source, licence and sizes; a country across the antimeridian such as Russia, Fiji or the United States is shifted so it draws as one block). They are served by
 the console from its static folder and, for `<drishti-report>` and `<drishti-panel>`, from `/embed/v1/world-countries.json`, `/embed/v1/world-points.json` and `/embed/v1/regions/<ISO3>.json`. Natural Earth is public domain: [VENDOR.md](../../drishti-console/web/static/vendor/VENDOR.md), [THIRD-PARTY-NOTICES.md](../../THIRD-PARTY-NOTICES.md).
-The same shapes draw the Sutra `map` panel ([PANEL_KINDS.md](PANEL_KINDS.md#map)).
+The same shapes draw the Sutra `map` panel ([PANELS.md](PANELS.md#map)).
 
 ### 3.2 True totals
 
@@ -482,7 +482,7 @@ Mistakes are `DRS-9031` with the path (`layouts.phone.desk.order: page 'desk' ha
 **Where it applies.** The console's viewer uses it when the **screen** is 640 px wide or narrower (and swaps back to the grid when the window grows, with no reload); `<drishti-report>` uses it when the **element** is that narrow, whatever the host page's width, so a report in a narrow card of a desktop page gets it too
 (section 15). Between 641 and 760 px the automatic single column applies. The designer's **Phone tab** edits it: for the page being edited it lists the visuals in phone order (drag a row or use its arrows to reorder, *Hide*, *Rows* for the height) beside a 390 px preview drawn to scale; each change is a step of
 the undo history, *Back to automatic* removes the page's entry, and a visual or page deleted later is dropped from the layouts by the designer. The sample *Live trading desk* ships with one (`config/bi/reports/live-trading-desk.report.yaml`); the picture of the tab and of the result is in the tutorial
-([BI_TUTORIAL.md chapter 22](BI_TUTORIAL.md#22-a-report-on-a-phone-and-in-another-application)).
+([tutorial 16](../tutorials/16-embed-drishti.md)).
 
 ![The designer's Phone tab](img/bi-elements/designer-phone-tab.png)
 

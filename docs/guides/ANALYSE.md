@@ -19,7 +19,7 @@
 apply), and work on it three ways: **Slice** (a drag-and-drop pivot), **SQL** (cells over the extract) and **Python** (pandas cells, with charts). You save the work as a **notebook**
 (a BI item with versions and review like any other) and **promote** what is good: a Python cell becomes a Python Measure or Visual draft, a slice becomes a report draft.
 
-This is the reference. A short walk-through is [BI_TUTORIAL.md](BI_TUTORIAL.md) chapter 25; the design is [RUPAKA.md](../architecture/RUPAKA.md) section 20.9; the quant engine behind
+This is the reference. A short walk-through is [tutorial 10](../tutorials/10-first-bi-report.md) chapter 25; the design is [RUPAKA.md](../architecture/RUPAKA.md) section 20.9; the quant engine behind
 `quant.price(...)` is [QUANT_SERVICE.md](../architecture/QUANT_SERVICE.md#16-the-consoles-quantengine-slot-built-lean).
 
 ## Contents

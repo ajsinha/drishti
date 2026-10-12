@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Makes the pictures and the captured output of docs/guides/BI_TUTORIAL.md (chapters 18 and 19), BOARDS.md, REPORTS.md and DATASETS.md from the real stack (not a
+"""Makes the pictures and the captured output of docs/tutorials/10-first-bi-report.md (chapters 18 and 19), BOARDS.md, REPORTS.md and DATASETS.md from the real stack (not a
 test: run it by hand).
 
     drishti-console/.venv/bin/python drishti-console/tests/bi_live_shots.py <pictures dir> <captures.json>

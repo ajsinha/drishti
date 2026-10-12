@@ -689,7 +689,7 @@ Rules worth knowing when you write a plugin:
 ## An outbound HTTP proxy for a connector: the shared module
 
 A connector that makes HTTP requests gets proxy support from `com.ash.drishti.api.proxy` in `drishti-api` (pure JDK, no Spring), next to the TLS module: operators learn
-the `proxy.*` keys once ([PROXY.md](PROXY.md)). In `start(ctx)`:
+the `proxy.*` keys once ([TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)). In `start(ctx)`:
 
 ```java
 ProxySettings proxy = ProxySettings.resolve(ctx.settings(), baseUrl);          // the connector's proxy:, else the site default, else the environment, else none
@@ -789,7 +789,7 @@ Other shapes the shipped connectors show, for a library that wants something oth
 
 A plugin that speaks HTTP should honour the site's forward proxy the same way every shipped one does. The settings (`proxy.url`, `proxy.username`, `proxy.password`,
 `proxy.password-file`, `proxy.no-proxy`, `proxy.enabled`, or the bare `proxy: none`), the site default `drishti.http.proxy.*` and the rules are in
-[PROXY.md](PROXY.md); the code is `com.ash.drishti.api.proxy.ProxySettings` in `drishti-api` (Spring-free, like the TLS module). In `start`:
+[TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers); the code is `com.ash.drishti.api.proxy.ProxySettings` in `drishti-api` (Spring-free, like the TLS module). In `start`:
 
 ```java
 ProxySettings proxy = ProxySettings.resolve(ctx.settings(), baseUrl);   // connector block, else site default, else environment, else none

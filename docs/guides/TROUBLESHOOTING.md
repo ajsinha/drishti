@@ -136,7 +136,7 @@ instead. Edits are still picked up. To use file events again, raise the limit an
 
 A Delta connector is running on Hadoop's engine, which needs Hadoop's `winutils.exe` on Windows. Use the native
 engine: unset `DRISHTI_DELTA_ENGINE` (it defaults to `native`) or set it to `native`, and remove any `engine: hadoop`
-from the connector's settings. Admin → Health then shows `UP (engine: native)`. See [WINDOWS.md](WINDOWS.md).
+from the connector's settings. Admin → Health then shows `UP (engine: native)`. See [GETTING_STARTED.md (Windows)](GETTING_STARTED.md#drishti-on-windows).
 
 ### "Web server failed to start. Port 18480 was already in use."
 
@@ -900,7 +900,7 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
   `curl -v -x http://proxy:3128 --proxy-user svc:… https://target/` (a `407` there is the same 407) and `curl -v --proxytunnel -x http://proxy:3128 https://target/` (the CONNECT).
 - **Fix:** correct `proxy.username` and the environment variable or file behind `proxy.password`; ask for the target on the proxy's allow-list (usually port 443); correct `proxy.url`
   (`http://host:port`, never `https://`); add the host to `proxy.no-proxy` if it should go direct, or write `proxy: none`. A `PKIX` error through a proxy is the target's (or a
-  re-signing proxy's) certificate: `tls.ca-file`. Full table: [PROXY.md, section 11](../connectors/PROXY.md#11-troubleshooting).
+  re-signing proxy's) certificate: `tls.ca-file`. Full table: [PROXY.md, section 11](../connectors/TLS.md#proxy-11-troubleshooting).
 
 ### A connector will not connect over TLS, or stops at start with a `tls.` message
 

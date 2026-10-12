@@ -675,7 +675,7 @@ Any other key in a column is `DRS-2011 unknown key 'x' in column`.
 ### Panel kinds
 
 There are 22 kinds (`PanelKind`). Required and accepted options, at a glance (each kind in depth, with when to use it,
-what it does when empty, masked or live, and a screenshot: [PANEL_KINDS.md](PANEL_KINDS.md)):
+what it does when empty, masked or live, and a screenshot: [PANELS.md](PANELS.md)):
 
 | Kind | Required options | Optional options | Renders | Uses `columns` |
 |---|---|---|---|---|
@@ -1449,7 +1449,7 @@ works as for any panel.
 ```
 
 The runnable version is the [metric example](examples/metric.md); its catalogue entry is
-[PANEL_KINDS.md](PANEL_KINDS.md#metric).
+[PANELS.md](PANELS.md#metric).
 
 #### map
 
@@ -1483,7 +1483,7 @@ keyboard, a screen reader or a phone).
     height: 11
 ```
 
-The runnable version is the [map example](examples/map.md); its catalogue entry is [PANEL_KINDS.md](PANEL_KINDS.md#map). A BI report's map
+The runnable version is the [map example](examples/map.md); its catalogue entry is [PANELS.md](PANELS.md#map). A BI report's map
 visual draws with the same shapes and drills from the world to a country and its regions: [REPORTS.md](REPORTS.md#31-the-map-funnel-histogram-box-plot-and-bubble).
 
 ## Controls

@@ -120,13 +120,13 @@ not JSON is an error, never a half-empty quote.
 | `retry-initial`, `retry-max`, `retry-factor`, `retry-jitter` | `400ms`, `4s`, `2`, `0.2` | the shared backoff shape between repeats |
 | `source-name` | `yfinance` | the name shown as the document's source |
 | `tls.*` | none | the shared [TLS settings](TLS.md) |
-| `proxy.*` | none | the outbound HTTP proxy ([PROXY.md](PROXY.md)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none` |
+| `proxy.*` | none | the outbound HTTP proxy ([TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none` |
 
 A bad value (a range or interval not in the lists, a non-HTTP address, a number out of range) fails at start with the setting's name.
 
 ## Outbound proxy
 
-The settings and rules are shared by every HTTP-based connector: [PROXY.md](PROXY.md). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
+The settings and rules are shared by every HTTP-based connector: [TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
 
 Yahoo's chart endpoint is reached through the proxy when one applies. Health ends `via proxy host:port (source)`. Tested in `YFinanceProxyTest`
 against a fake proxy and the fake Yahoo server.

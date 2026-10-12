@@ -23,7 +23,7 @@ view pipeline, the pack format, the console's help centre and view page, the Bui
 
 Drishti's help today is about **the product**: `F1` goes to a guide chosen by the screen name
 (`drishti-console/web/static/js/app.js`, `/help/context/{screen}` in `drishti-console/routes/help_routes.py`, the `contextual:` map in
-`drishti-console/config/help.yaml`), and each panel's `?` is a plain link to its kind in [PANEL_KINDS.md](../guides/PANEL_KINDS.md)
+`drishti-console/config/help.yaml`), and each panel's `?` is a plain link to its kind in [PANELS.md](../guides/PANELS.md)
 (`_macros/panels.html`, `a.pnl-help`). Nothing answers the questions a person has while looking at a screen:
 
 - *What is this thing?* "VAR-COMM" is a result id. That it is a 1-day 99% historical VaR over 500 days is known to the pack
@@ -114,7 +114,7 @@ missing in this document." · "1 field hidden for your role: *Trader*." · "*Cur
 The existing `a.pnl-help` link (`_macros/panels.html`) becomes a button that opens a small popover (not the drawer)
 with: the panel's description, the glossary entries for the fields this panel shows, why it is empty / inferred /
 denied if so, and two links: *About this page* (opens the drawer scrolled to the panel) and *The <kind> panel*
-(`/help/panel-kinds#<kind>`, today's target, so the existing link check keeps passing). With JavaScript off it stays
+(`/help/panels#<kind>`, today's target, so the existing link check keeps passing). With JavaScript off it stays
 today's link.
 
 ### Field level
@@ -563,7 +563,7 @@ drishti:
 | [SUTRA_DEVELOPER_GUIDE.md](../guides/SUTRA_DEVELOPER_GUIDE.md) | a short note: `description` is now shown in *About this page*; link to the pack guide section (no duplication) |
 | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) | `description` paragraph updated ("shown to users, never evaluated"); problem codes `DRS-2040`–`2047` |
 | [API_GUIDE.md](../guides/API_GUIDE.md) | the explain endpoints and PageContext contract; add explain to the §Field masks list of masked answers; codes `DRS-4006`–`4009` |
-| [PANEL_KINDS.md](../guides/PANEL_KINDS.md) | `provenance`: points to *About this page* for the full story; anchors unchanged |
+| [PANELS.md](../guides/PANELS.md) | `provenance`: points to *About this page* for the full story; anchors unchanged |
 | `drishti-console/web/guides/using-the-terminal.md` | *About this page*: keys, layers, panel and field help |
 | [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) | the workbench *About* tab |
 | [CONFIGURATION.md](../admin/CONFIGURATION.md) | `drishti.explain.*`, `drishti.about.*` |

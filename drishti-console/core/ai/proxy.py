@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The outbound HTTP proxy of an AI provider or an MCP server, with the same rules as the server's connectors (``docs/connectors/PROXY.md``).
+"""The outbound HTTP proxy of an AI provider or an MCP server, with the same rules as the server's connectors (``docs/connectors/TLS.md``).
 
 A provider or MCP file may carry a ``proxy:`` block (``url``, ``username``, ``password`` as an ``${ENV}`` placeholder, ``no-proxy``, ``enabled``)
 or ``proxy: none``. Without either, the site default applies: the ``DRISHTI_HTTP_PROXY_URL`` / ``_USERNAME`` / ``_PASSWORD`` / ``_NO_PROXY`` /

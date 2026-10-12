@@ -1712,7 +1712,7 @@ Exists only while `drishti.bi.poc.enabled` is true (default `false`: `404`); nev
 
 ## Datasets and the query engine: `/api/v1/bi` (phase 2)
 
-Phase 2 of Rūpaka ([BI_GUIDE.md](BI_GUIDE.md) section 13, [DATASETS.md](DATASETS.md), [BI_TUTORIAL.md](BI_TUTORIAL.md)). A dataset is a BI item of kind `dataset` (id `bi-<hex>`, or `file:dataset:<name>` for a shipped file); who may read the item is
+Phase 2 of Rūpaka ([BI_GUIDE.md](BI_GUIDE.md) section 13, [DATASETS.md](DATASETS.md), [tutorial 10](../tutorials/10-first-bi-report.md)). A dataset is a BI item of kind `dataset` (id `bi-<hex>`, or `file:dataset:<name>` for a shipped file); who may read the item is
 decided as for any item (`404 DRS-9001` otherwise), what the answer shows is decided by the dataset's row rules and Drishti's masks for the caller. A personal token reaches the queries and the model reads (they change nothing); `POST .../refresh` needs `bi:write` (it is in the `bi:write` scope's allow-list; `GET .../refresh` only reads).
 
 | Method | Path | What it does |
@@ -1753,7 +1753,7 @@ Every query is audited (`bi-query`: the counts, the rows, the layer). From the c
 
 ## Reports: `/api/v1/bi/reports` (phase 3)
 
-Phase 3 of Rūpaka ([BI_GUIDE.md](BI_GUIDE.md) sections 14 to 16, [REPORTS.md](REPORTS.md), [BI_TUTORIAL.md](BI_TUTORIAL.md)). A report is a BI item of kind `report` (id `bi-<hex>`, or `file:report:<name>` for a shipped file). Who may read the item is decided as for
+Phase 3 of Rūpaka ([BI_GUIDE.md](BI_GUIDE.md) sections 14 to 16, [REPORTS.md](REPORTS.md), [tutorial 10](../tutorials/10-first-bi-report.md)). A report is a BI item of kind `report` (id `bi-<hex>`, or `file:report:<name>` for a shipped file). Who may read the item is decided as for
 any item (`404 DRS-9001` otherwise); what a visual shows is the dataset engine's answer for the caller (their row rules and masks). A personal token reaches the reads and the queries (they change nothing).
 
 | Method | Path | What it does |

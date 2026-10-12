@@ -25,7 +25,7 @@ About 15 minutes, plus the first build (a few minutes, once).
 ## Before you start
 
 You need a Linux, macOS or Windows machine with Java 21 or newer, Python 3.11 or newer, [uv](https://docs.astral.sh/uv/) and git. Nothing else: no database, no
-Docker. On Windows follow [WINDOWS.md](../guides/WINDOWS.md) for the same steps in PowerShell.
+Docker. On Windows follow [GETTING_STARTED.md (Windows)](../guides/GETTING_STARTED.md#drishti-on-windows) for the same steps in PowerShell.
 
 In these tutorials `<GO>` means "press Enter", commands are run from the repository root (the folder called `drishti`), and the server and the console are the two
 programs from [GETTING_STARTED.md](../guides/GETTING_STARTED.md): the **server** reads the data (port 18480), the **console** is the web pages you open (port 17480).
@@ -244,7 +244,7 @@ Click the **BI** icon (or type `BI` and press Enter).
 ![The BI home: a menu on the left (Home, Catalogue, My workspace and more) and the sections Recent, Favourites, Certified for you and Shared with me](img/t01/09-bi-home.jpg)
 
 You should see the BI home: a menu on the left (Home, Catalogue, My workspace, Datasets, Insights and so on) and, in the middle, the sections *Recent*, *Favourites*, *Certified for you* and *Shared with me*, which fill as you use BI. Business intelligence is Drishti's second front: reports and boards built on datasets, with their own guide ([BI_GUIDE.md](../guides/BI_GUIDE.md)) and tutorial
-([BI_TUTORIAL.md](../guides/BI_TUTORIAL.md)). Later tutorials come back to it for reports and alerts.
+([tutorial 10](10-first-bi-report.md)). Later tutorials come back to it for reports and alerts.
 
 ## Step 9 · Make a token for the command line
 

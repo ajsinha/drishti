@@ -19,7 +19,7 @@ Rūpaka phase 7 ([RUPAKA.md section 20.6](../architecture/RUPAKA.md#206-phase-7-
 visual, or a Sutra view, saved as PDF, a picture, an Excel workbook or CSV) and a **subscription** (the same content sent by email on a schedule, or after the day's data lands).
 Part 2 (section 4 here): **alerts** on a number, and notifications from a board tile, to the inbox, email and the chat bridges.
 Part 3 (section 5): a report **embedded** in another web application (`<drishti-report>`), and the report's own phone layout ([REPORTS.md](REPORTS.md#14-phone-layouts)).
-The walk-throughs with pictures are [BI_TUTORIAL.md chapter 20](BI_TUTORIAL.md#20-export-and-subscribe) (export and subscribe) and [chapter 21](BI_TUTORIAL.md#21-alerts-on-a-number) (alerts); this is the reference.
+The walk-throughs with pictures are [tutorial 11](../tutorials/11-bi-that-runs-itself.md) (export and subscribe) and [chapter 21](../tutorials/11-bi-that-runs-itself.md) (alerts); this is the reference.
 
 **One rule runs through all of it: the file or the mail is made for the person who gets it.** The numbers are asked of the data engine *as that person*, so their row rules and their
 masks apply; nothing is copied from the sender's screen. A desk head's export holds her desk; an analyst whose column is masked gets the mask.
@@ -105,7 +105,7 @@ A subscription says **what** (a report, a page or one visual, with the view stat
 
 ### Schedules
 
-Everything a [scheduled report](USER_GUIDE.md#scheduled-reports) takes (`daily HH:MM`, `weekdays HH:MM`, `business-days HH:MM`, `hourly`, `cron` and six fields), and:
+Everything a [scheduled report](SCHEDULED_REPORTS.md#scheduled-reports) takes (`daily HH:MM`, `weekdays HH:MM`, `business-days HH:MM`, `hourly`, `cron` and six fields), and:
 
 | Text | Runs |
 |---|---|

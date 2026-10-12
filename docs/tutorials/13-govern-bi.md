@@ -215,7 +215,7 @@ You should see the same sections stacked in one column, the tables scrolling ins
 ## Next steps
 
 - [Tutorial 14](14-python-and-analyse.md): Python in a measure, a visual and a notebook.
-- [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md): every rule, setting (`drishti.governance.four-eyes`, `drishti.bi.governance.refuse-breaking`) and error code of this tutorial. [BI_TUTORIAL.md](../guides/BI_TUTORIAL.md) chapter 17 is the longer version.
+- [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md): every rule, setting (`drishti.governance.four-eyes`, `drishti.bi.governance.refuse-breaking`) and error code of this tutorial. [tutorial 10](10-first-bi-report.md) chapter 17 is the longer version.
 - [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md): roles and users in depth; tutorial 17 summarises them.
 
 ## If something goes wrong

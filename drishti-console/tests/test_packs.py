@@ -35,7 +35,7 @@ def test_without_packs_the_console_stays_neutral(client, backend):
         assert "No domain pack is enabled" in home and "TRD IRS-48213" not in home
         assert "Credit desk" not in client.get("/w").text
         assert client.get("/help/getting-started").status_code == 404
-        assert client.get("/help/context/terminal", follow_redirects=False).headers["location"] == "/help/using-the-terminal"
+        assert client.get("/help/context/terminal", follow_redirects=False).headers["location"] == "/help/user-guide"
     finally:
         backend.enabled_packs = saved
         client.app.state.packs._cache = {}

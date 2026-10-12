@@ -146,7 +146,7 @@ the status tone. Every enumerated top-level field is also listed as a **dropdown
 
 The auto-designer decides the panel kinds from the shape of the samples; the schema makes sure the samples have that shape:
 
-- an **array of objects** (`legs`) gets 2 or 3 rows in every sample, so it becomes a **table**, a ladder or tabs by the inference rules ([Panel kinds](PANEL_KINDS.md));
+- an **array of objects** (`legs`) gets 2 or 3 rows in every sample, so it becomes a **table**, a ladder or tabs by the inference rules ([Panel kinds](PANELS.md));
 - a **nested object** (`terms`) becomes a group of fields; its numbers can reach the strip (`terms.spread`);
 - a **map of numbers** (`additionalProperties: {type: number}`, a curve by tenor) gets keys from `propertyNames.enum` or `x-drishti-keys`, else the tenors
   `1M 3M 6M 1Y 2Y 5Y 10Y`, so it can become a curve or bars;

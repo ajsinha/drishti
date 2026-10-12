@@ -14,169 +14,172 @@
 
 # The help centre catalogue. A guide is a console guide (web/guides/<slug>.md) or, with `doc:`, a repository
 # document rendered as-is (so the in-app reference is the repository's docs). Order here is display order.
+# Six sections, one page per subject: the tutorials teach (docs/tutorials), the guides are reference.
 # Every other document under docs/ (and the top-level *.md) is reachable unlisted at a slug made from its path
 # (docs/architecture/adr/016-one-console-many-servers.md -> /help/docs-architecture-adr-016-one-console-many-servers),
 # so a link between documents always opens in the help centre (DOC-18; tests/test_help_links.py crawls them all).
+# The architecture documents, the per-plugin connector documents and the runbooks live there: in the repository,
+# linked from docs/README.md and from the pages that need them, not in this list.
 categories:
   - id: start
-    name: Getting started
+    name: Start
     icon: flag
-    blurb: Open your first view, learn the command line and the keys, and read what a view is telling you.
+    blurb: "Install it, run it, and learn it by doing."
     guides:
-      - { slug: quickstart, doc: guides/QUICKSTART.md, title: Quickstart, icon: lightning, summary: "Ten minutes from a fresh clone to a live view: build, start, and eight commands to try." }
-      - { slug: windows, doc: guides/WINDOWS.md, title: Drishti on Windows, icon: windows, summary: "Building, starting and running Drishti on Windows: the PowerShell scripts, paths and what differs." }
-      - { slug: ide-guide, doc: guides/IDE_GUIDE.md, title: "IntelliJ IDEA and PyCharm", icon: code-square, summary: "Run and debug the server in IntelliJ IDEA and the console in PyCharm: JDK and interpreter, run configurations, reloading changes, tests, common problems." }
-      - { slug: install-and-run, doc: guides/GETTING_STARTED.md, title: Install and run, icon: download, summary: "From nothing to your first view: build, start, sign in, and the first commands to type, step by step." }
-      - { slug: impact, title: F8 · Impact, icon: diagram-3, summary: "What depends on an entity: its dependents, what they roll into, and the amount at stake." }
-      - { slug: sharing-and-discussion, title: Sharing and discussion, icon: chat-square-text, summary: "Send a view with a note, read your inbox, discuss a number: what travels is your words and a link, and everyone sees the view with their own permissions." }
-      - { slug: monitors-and-alerts, title: Monitors and alerts, icon: bell, summary: "Live watchlists, and rules the server checks on every change: alerted once, re-armed when clear." }
-      - { slug: workspaces, title: Workspaces, icon: grid-1x2, summary: "Several live views on one screen, panes that follow each other, views dragged into panes, dividers to resize, saved per user." }
-      - { slug: layout-mode, title: "Layout mode · arrange a view", icon: grid-3x3-gap, summary: "Alt+L: drag, resize and hide a view's panels for yourself, kept as your layout of its Sutra; authors promote it for review." }
-      - { slug: pivot-tab, title: "The Pivot tab · slice a table", icon: table, summary: "Where a Sutra or pack offers it: drag fields into rows, columns, values and filters; totals, drill-down, chart, Excel; saved for you." }
+      - { slug: getting-started, doc: guides/GETTING_STARTED.md, title: Install and run, icon: download, summary: "Prerequisites, build, start the server and the console, sign-in, Docker, other ways to build, a different configuration, and everything that differs on Windows." }
+      - { slug: tutorials, doc: tutorials/README.md, title: Tutorials, icon: mortarboard, kind: tutorial, summary: "Seventeen hands-on tutorials with real screenshots, one worked example each: from your first 15 minutes to BI, AI, embedding and running it in production." }
+  - id: use
+    name: Use
+    icon: terminal
+    blurb: "Working in the console: commands, views, forms, reports, sharing, and Python on any screen."
+    guides:
+      - { slug: user-guide, doc: guides/USER_GUIDE.md, title: User guide, icon: terminal, summary: "The top bar, commands, type-ahead, every key, tables, filters, controls, layout mode, the Pivot tab, business dates, Compare, workspaces, monitors, alerts, themes and settings." }
+      - { slug: query-by-form, doc: guides/QUERY_BY_FORM.md, title: Query by form, icon: card-checklist, summary: "Fill in boxes instead of writing a search: the forms home, the inputs, the search it writes, saving and scheduling it." }
+      - { slug: reports-page, doc: guides/SCHEDULED_REPORTS.md, title: Reports and subscriptions, icon: file-earmark-bar-graph, summary: "The Reports page: scheduled searches, when they run and where the file goes, export, and subscriptions by email." }
+      - { slug: sharing-and-discussion, title: Sharing and collaboration, icon: chat-square-text, summary: "Send a view with a note, read your inbox, discuss a number: what travels is your words and a link, and everyone sees the view with their own permissions." }
       - { slug: python-calc, doc: guides/PYTHON_CALC.md, title: "Calc · Python on any view", icon: filetype-py, summary: "Alt+C: Python in your browser on the screen you are on. The drishti module, tables and charts, packs' snippets, roles, limits." }
-
-      - { slug: bi-guide, doc: guides/BI_GUIDE.md, title: "Business intelligence (Rupaka) · the BI page", icon: bar-chart-line, summary: "RUPAKA <GO> and the BI menu, the catalogue, workspaces with roles, typed items, publish and review, certify, audiences, shipped files and BI settings, and how phases 2 to 5 (datasets, reports and the designer, governance and bundles, boards and live BI) build on them." }
-      - { slug: bi-tutorial, doc: guides/BI_TUTORIAL.md, title: "Business intelligence tutorial", icon: map, summary: "Learn BI from the sample datasets and reports on the trades: read a model, query it, row rules and masks, build a report in the designer." }
-      - { slug: datasets, doc: guides/DATASETS.md, title: "BI datasets", icon: database, summary: "Tables, relationships, measures, the expression language, row rules, masks, layers and rollups, live tables." }
-      - { slug: python-bi, doc: guides/PYTHON_BI.md, title: "Python in BI", icon: filetype-py, summary: "Measures and visuals written in Python as BI items: the manifest, the sandboxed runner on the console, the browser target, the settings and the codes." }
-      - { slug: analyse, doc: guides/ANALYSE.md, title: "Analyse: slice, SQL and Python", icon: binoculars, summary: "Open a dataset as your masked extract, then slice it, query it with SQL, work on it in Python, save a notebook and promote cells and slices." }
-      - { slug: reports, doc: guides/REPORTS.md, title: "BI reports", icon: bar-chart, summary: "Pages, visuals, wells, filters, slicers, drill-down and drill-through, the viewer and the designer, checks and codes." }
-      - { slug: bi-governance, doc: guides/BI_GOVERNANCE.md, title: "Publishing BI safely", icon: shield-check, summary: "Versions and diffs, review, certification, lineage, impact of a change, bundles between environments." }
-      - { slug: distribution, doc: guides/DISTRIBUTION.md, title: "Export, subscriptions, alerts and embedding", icon: envelope-paper, summary: "A report or view as PDF, PNG, Excel or CSV; subscriptions by email; alerts on a number, each person on their own masks; a report embedded in another application." }
-      - { slug: boards, doc: guides/BOARDS.md, title: "BI boards and live BI", icon: speedometer2, summary: "A wall of live tiles, kiosk mode, tile alerts and notifications, live tables, live visuals and Perspective." }
-      - { slug: using-the-terminal, doc: guides/USER_GUIDE.md, title: Using the terminal, icon: terminal, summary: "Commands, type-ahead, every key, and how to read the strip, panels, links and provenance." }
-  - id: layouts
-    name: Layouts, Rachana and Sutras
-    icon: braces
-    blurb: How screens are described instead of coded. Rachana is the grammar; each Sutra is one layout written in it.
-    guides:
-      - { slug: sutra-developer-guide, doc: guides/SUTRA_DEVELOPER_GUIDE.md, title: Sutra developer guide, icon: mortarboard, summary: "Writing Sutras end to end: anatomy, matching and priority, labels, paths and expressions, source, row groups, inference, testing and CI, the Build workbench, a checklist and the common mistakes with their codes." }
-      - { slug: screen-designer, doc: guides/SCREEN_DESIGNER.md, title: "Screen designer · build a screen from JSON files", icon: bounding-box, summary: "New? Start with the tutorial. The workbench step by step with screenshots: bring data, drop panels and fields on the canvas, size them on the grid, fill options in the inspector, edit the YAML, read the problems and the tests, undo, work by keyboard; a worked example per panel family." }
-      - { slug: schema-to-pack, doc: guides/SCHEMA_TO_PACK.md, title: "Schema to pack · generate a pack from JSON Schema", icon: diagram-3, summary: "Schema files (and a folder of JSON Lines) in, a pack out: every rule for the kind, key, links, labels, match column, strip and About text, the x-drishti annotations, the New pack page step by step and the command line twin." }
-      - { slug: build-workbench-tutorial, doc: guides/BUILD_WORKBENCH_TUTORIAL.md, title: "Build workbench tutorial", icon: map, summary: "Four complete projects, each with a picture of every step: from JSON files, by hand, changing a live Sutra, keyboard only." }
-      - { slug: screen-builder, title: "Screen Builder · JSON files to a shape", icon: signpost-split, summary: "Upload sample JSON files and get one JSON Schema with what each field is; then open it in the workbench. Steps 1 and 2 of the builder." }
-      - { slug: panel-kinds, doc: guides/PANEL_KINDS.md, title: The twenty-two panel kinds, icon: grid-1x2, summary: "Every panel kind: meaning, when to use it, key options, behaviour when empty, masked, without access, live and on a phone, and an example with a picture." }
-      - { slug: panel-developer-guide, doc: guides/PANEL_DEVELOPER_GUIDE.md, title: "Developing a panel kind", icon: tools, summary: "Add a panel kind to Drishti end to end, with the metric tile as the worked example: grammar, binder, console, workbench, export, tests." }
-      - { slug: examples, doc: guides/examples/README.md, title: Examples, icon: collection, summary: "Eleven working Sutras with their data, covering all twenty-two panel kinds, nested pivots and tree rows: read them here, open each as a copy in the workbench." }
-      - { slug: nested-data, title: "Tutorial 4 · Nested documents", kind: tutorial, icon: diagram-2, summary: "Paths of any depth, tables over nested arrays, tabs per element, and a whole Sutra over a real trade." }
-      - { slug: rachana-reference, doc: guides/RACHANA_REFERENCE.md, title: Rachana reference, icon: book, summary: "Every key, panel option, format, tone, Rachana-EL expression and problem code." }
-      - { slug: inference, doc: architecture/INFERENCE.md, title: Inference, icon: diagram-3, summary: "The rules that lay out data with no Sutra, how they are scored, and how they fill a Sutra's gaps." }
-  - id: data
-    name: Data and live updates
-    icon: activity
-    blurb: Where entities come from, how they tick, and how fast.
-    guides:
-      - { slug: live, doc: architecture/LIVE.md, title: Live updates, icon: broadcast, summary: "Topics, frames, patches, slow clients and reconnects." }
-      - { slug: performance, doc: admin/PERFORMANCE.md, title: Performance, icon: speedometer2, summary: "Measured numbers and why the pipeline is fast." }
-      - { slug: scale-benchmark, doc: admin/SCALE_BENCHMARK.md, title: Scale benchmark, icon: speedometer, summary: "A million trades a day in each store: how it is run, and the numbers." }
-  - id: connectors
-    name: Connectors
-    icon: plug
-    blurb: One guide per store or stream Drishti reads from, each with a worked set-up, every setting and its troubleshooting.
-    guides:
-      - { slug: connector-developer-guide, doc: connectors/CONNECTOR_DEVELOPER_GUIDE.md, title: Connector developer guide, icon: plug, summary: "Which connector to use, the source SPI (manifest, capabilities, fetch, search, subscribe, health, settings), testing with the testkit contracts, a worked teaching plugin, and a short summary of each of the 17 plugins; every setting lives in the per-connector docs." }
-      - { slug: connector-files, doc: connectors/CONNECTOR_FILES.md, title: Connector files and Admin → Connectors, icon: plug, summary: "One YAML file per connector in config/connectors: the format and an example per store, how packs refer to connectors by name, live reload, the Admin page, the CLI, and moving off application.yaml." }
-      - { slug: connector-tls, doc: connectors/TLS.md, title: "TLS for connectors", icon: lock, summary: "The shared tls settings: private CA, PEM, PKCS12 and JKS, mutual TLS, expiry warnings, rotation." }
-      - { slug: connector-proxy, doc: connectors/PROXY.md, title: "Outbound HTTP proxy", icon: arrow-left-right, summary: "Reach the internet through a forward proxy: per connector, AI provider or MCP server, the site default, no-proxy, https via CONNECT." }
-      - { slug: connector-demo, doc: connectors/DEMO_CONNECTOR.md, title: Demo, icon: play-circle, summary: "Every pack's samples, in memory, ticking." }
-      - { slug: demo-data, doc: connectors/DEMO_DATA.md, title: Demo data, icon: hdd-stack, summary: "Building the demo book in each store, small to a million trades a day." }
-      - { slug: connector-file, doc: connectors/FILE_CONNECTOR.md, title: File, icon: file-earmark, summary: "JSON lines on disk, from a demo to a large book." }
-      - { slug: connector-delta, doc: connectors/DELTA_CONNECTOR.md, title: Delta Lake, icon: layers, summary: "Business dates in a Delta lake, at a million trades a day for seven years." }
-      - { slug: connector-iceberg, doc: connectors/ICEBERG_CONNECTOR.md, title: Apache Iceberg, icon: layers, summary: "Business dates in Iceberg tables, at scale." }
-      - { slug: connector-duckdb, doc: connectors/DUCKDB_CONNECTOR.md, title: DuckDB, icon: hdd, summary: "A book in one embedded file." }
-      - { slug: connector-postgres, doc: connectors/POSTGRES_CONNECTOR.md, title: PostgreSQL, icon: hdd, summary: "A database through JDBC, at scale." }
-      - { slug: jdbc-queries, doc: connectors/JDBC_QUERIES.md, title: Connector queries, icon: code, summary: "Reading your own database with your own SQL." }
-      - { slug: connector-mongodb, doc: connectors/MONGODB_CONNECTOR.md, title: MongoDB, icon: hdd, summary: "A document per entity per day, read as columns." }
-      - { slug: connector-redis, doc: connectors/REDIS_CONNECTOR.md, title: Redis, icon: memory, summary: "A million trades a day, in memory." }
-      - { slug: connector-aerospike, doc: connectors/AEROSPIKE_CONNECTOR.md, title: Aerospike, icon: hdd, summary: "A million trades a day, for years." }
-      - { slug: connector-s3, doc: connectors/S3_CONNECTOR.md, title: S3, icon: bucket, summary: "One JSON object per entity in a bucket." }
-      - { slug: connector-rest, doc: connectors/REST_CONNECTOR.md, title: REST, icon: globe, summary: "One HTTP GET per entity." }
-      - { slug: connector-feeds, doc: connectors/FEEDS_CONNECTOR.md, title: Public feeds, icon: rss, summary: "SOFR, €STR, ECB FX, the Treasury curve and FRED." }
-      - { slug: connector-news, doc: connectors/NEWS.md, title: News, icon: newspaper, summary: "Headlines for a named entity, computed on demand." }
-      - { slug: connector-yfinance, doc: connectors/YFINANCE.md, title: Yahoo Finance, icon: graph-up, summary: "A quote and price history for a ticker (samples only)." }
-      - { slug: connector-kafka, doc: connectors/KAFKA_CONNECTOR.md, title: Kafka, icon: broadcast, summary: "Live entities from a topic." }
-      - { slug: connector-activemq, doc: connectors/ACTIVEMQ_CONNECTOR.md, title: ActiveMQ, icon: broadcast, summary: "Live entities from queues and topics, kept on local disk." }
-      - { slug: connector-rabbitmq, doc: connectors/RABBITMQ_CONNECTOR.md, title: RabbitMQ, icon: broadcast, summary: "Live entities from AMQP queues." }
-  - id: packs
-    name: Domain packs
-    icon: box-seam
-    blurb: The industries plugged in, what each pack holds, its data model and its example commands.
-    guides:
-      - { slug: packs, doc: guides/PACKS.md, title: Domain packs, icon: box-seam, summary: "How industries plug in: what a pack contains, dependencies, connectors and routes, enabling packs, and writing your own." }
-      - { slug: pack-developer-guide, doc: guides/PACK_DEVELOPER_GUIDE.md, title: Pack developer guide, icon: hammer, summary: "Build a domain pack end to end: pack.yaml, kinds, links, roles and masks, Sutras, samples, tests, extends, generators, signing, hot load; worked example, a help-desk pack." }
-      - { slug: operationalising, doc: guides/OPERATIONALISING.md, title: "Operationalising: ship by copying", icon: box-arrow-in-right, summary: "Bundles, checksums and verify; deploy by copying with a backup; promote the same artifact dev to test to prod; data lakes and files; CI, permissions, Docker and Kubernetes, rollback and troubleshooting. No server API needed." }
-      - { slug: cli-guide, doc: guides/CLI_GUIDE.md, title: "The drishti command line", icon: command, summary: "One program for the terminal and CI: JSON Lines to a pack, pack check with JUnit, loading data and packs into a running server, and the Screen Designer's propose and approve over REST; every command with real output, and running it from PyCharm." }
-      - { slug: data-loads, doc: guides/DATA_LOADS.md, title: "Telling Drishti new data has landed", icon: cloud-arrow-down, summary: "Your ETL loads the data; Drishti acts on it. One call (API or drishti.py data landed) makes Drishti refresh, verify the data is readable, evaluate alert rules and tell the right people; expectations flag late data on Health. With curl, Airflow, cron and DishtaYantra recipes." }
-      - { slug: real-data, doc: guides/REAL_DATA.md, title: "Real public data", icon: globe2, summary: "The economics and politics-society packs: sources, licences (IMF data: internal demonstrations only), regenerating them." }
-  - id: admin
-    name: Administration
-    icon: shield-lock
-    blurb: Users and roles, running Drishti, and what to do when something goes wrong.
-    guides:
-      - { slug: user-management, doc: admin/USER_MANAGEMENT.md, title: Users and roles, icon: people, summary: "The seeded admin, managing users, password rules, lockout and the audit log." }
-      - { slug: operations, doc: admin/OPERATIONS.md, title: Operations, icon: hdd-stack, summary: "Deploying, the security checklist, monitoring and capacity." }
-      - { slug: configuration, doc: admin/CONFIGURATION.md, title: Configuration, icon: sliders, summary: "Every server and console setting with its default." }
-      - { slug: troubleshooting, doc: guides/TROUBLESHOOTING.md, title: Troubleshooting, icon: life-preserver, summary: "Symptoms, likely causes and fixes." }
-      - { slug: runbook-source-down, doc: admin/runbooks/source-down.md, title: "Runbook · Source down", icon: exclamation-triangle, summary: "Views fail or links stay pending." }
-      - { slug: runbook-sutra-broken, doc: admin/runbooks/sutra-broken.md, title: "Runbook · A Sutra is broken", icon: exclamation-triangle, summary: "Problems after an edit; the last good version stays live." }
-      - { slug: runbook-live-latency, doc: admin/runbooks/live-latency-high.md, title: "Runbook · Live latency high", icon: exclamation-triangle, summary: "The top bar p99 is above target." }
-      - { slug: runbook-sign-in, doc: admin/runbooks/sign-in.md, title: "Runbook · Sign-in problems", icon: exclamation-triangle, summary: "Wrong password, locked, disabled, no admin." }
-  - id: developers
-    name: Developers
-    icon: code-square
-    blurb: The API, the design, and why it is the way it is.
-    guides:
       - { slug: clients, doc: guides/CLIENTS.md, title: Scripts, notebooks and Excel, icon: filetype-py, summary: "Personal API tokens, the Python client, and Excel through Power Query: read anything you may open, from code." }
-      - { slug: developer-guide, doc: guides/DEVELOPER_GUIDE.md, title: Developer guide, icon: tools, summary: "Repository map, building and testing, project rules, the request path, and recipes for endpoints, plugins, panel kinds, packs and pages." }
-      - { slug: api, doc: guides/API_GUIDE.md, title: API guide, icon: braces-asterisk, summary: "REST endpoints, the ViewModel contract and error codes." }
-      - { slug: how-it-fits, doc: architecture/HOW_IT_FITS.md, title: How Drishti fits together, icon: diagram-3, summary: "Connectors, packs and Sutras, and how a command becomes a live screen, with real files and outputs." }
-      - { slug: elements-guide, doc: guides/ELEMENTS.md, title: "Drishti Elements: developer guide", icon: window-stack, summary: "Put views, panels and BI reports in your own web application: a five-minute start, the token exchange, versions and npm, the element reference, a cookbook." }
-      - { slug: elements, doc: architecture/ELEMENTS.md, title: "Drishti Elements", icon: window-stack, summary: "Live views inside other web applications as Web Components, without iframes: the embed API, token exchange, registering a host." }
-      - { slug: ai-providers, doc: architecture/AI_PROVIDERS.md, title: "AI providers", icon: stars, summary: "Model providers, one file each, off by default; the admin page and API." }
-      - { slug: mcp-client, doc: architecture/MCP_CLIENT.md, title: "MCP client", icon: plug, summary: "Other servers tools behind Drishti policy, off by default." }
-      - { slug: rupaka, doc: architecture/RUPAKA.md, title: "Rupaka design", icon: bar-chart-line, summary: "The design of BI inside Drishti and what each phase built." }
-      - { slug: about-this-page-design, doc: architecture/CONTEXT_HELP.md, title: "About this page: design", icon: info-circle, summary: "How About this page explains a view: page data, pack glossaries, the explain API." }
-      - { slug: collaboration, doc: architecture/COLLABORATION.md, title: "Collaboration design", icon: chat-square-text, summary: "Share with a note, threads anchored to the data, the inbox, email, retention and legal hold." }
-      - { slug: architecture, doc: architecture/ARCHITECTURE.md, title: Architecture, icon: diagram-2, summary: "The pipeline, grammar, inference, live updates, modules and UX." }
-      - { slug: quant-service, doc: architecture/QUANT_SERVICE.md, title: The quant service, icon: calculator, summary: "Server-side pricing: a QuantLib service behind the server (planned)." }
-      - { slug: decisions, doc: architecture/adr/README.md, title: Decision records, icon: signpost-split, summary: "The architecture decisions, each with its context and consequences." }
-      - { slug: plan, doc: architecture/IMPLEMENTATION_PLAN.md, title: Implementation plan, icon: map, summary: "The waves, their exit gates, and the roadmap." }
-  - id: releases
-    name: Releases and legal
-    icon: tag
-    blurb: What changed, what each release is, and the third-party components Drishti uses.
+  - id: bi
+    name: BI
+    icon: bar-chart-line
+    blurb: "Rupaka, business intelligence inside Drishti, and one reference for each part of it."
     guides:
-      - { slug: release-notes, doc: ../RELEASE_NOTES.md, title: Release notes, icon: tag, summary: "What each release contains and its known limits." }
-      - { slug: changelog, doc: ../CHANGELOG.md, title: Changelog, icon: clock-history, summary: "Every change, wave by wave." }
-      - { slug: notices, doc: ../THIRD-PARTY-NOTICES.md, title: Third-party notices, icon: file-earmark-text, summary: "Components and their licences." }
-# F1 opens the guide for the current screen.
-moved:                      # retired guides: the address keeps working and lands on the guide that took the subject over
-  panels: panel-kinds
+      - { slug: bi-guide, doc: guides/BI_GUIDE.md, title: "Business intelligence (Rupaka)", icon: bar-chart-line, summary: "RUPAKA <GO> and the BI menu, the catalogue, workspaces with roles, typed items, publish and review, certify, audiences, shipped files and BI settings." }
+      - { slug: bi-recipes, doc: guides/BI_RECIPES.md, title: "BI recipes", icon: journal-check, summary: "A stack with four people, reading and querying the stored datasets, row rules and masks at work, a model started from the packs, the Model view." }
+      - { slug: datasets, doc: guides/DATASETS.md, title: "Datasets", icon: database, summary: "Tables, relationships, measures, the expression language, composed and derived datasets, row rules, masks, layers and rollups, live tables." }
+      - { slug: reports, doc: guides/REPORTS.md, title: "BI reports", icon: bar-chart, summary: "Pages, visuals, maps, wells, filters, dropdown slicers, drill-down and drill-through, several datasets, phone layouts, the viewer and the designer, checks and codes." }
+      - { slug: boards, doc: guides/BOARDS.md, title: "Boards and live BI", icon: speedometer2, summary: "A wall of live tiles, kiosk mode, tile alerts and notifications, live tables, live visuals and Perspective." }
+      - { slug: bi-governance, doc: guides/BI_GOVERNANCE.md, title: "Governance", icon: shield-check, summary: "Versions and diffs, review, certification, lineage, impact of a change, bundles between environments." }
+      - { slug: distribution, doc: guides/DISTRIBUTION.md, title: "Distribution: export, subscriptions, alerts, embedding", icon: envelope-paper, summary: "A report or view as PDF, PNG, Excel or CSV; subscriptions by email; alerts on a number, each person on their own masks; a report embedded in another application." }
+      - { slug: python-bi, doc: guides/PYTHON_BI.md, title: "Python in BI", icon: filetype-py, summary: "Measures and visuals written in Python as BI items: the manifest, the sandboxed runner on the console, the browser target, the settings and the codes." }
+      - { slug: analyse, doc: guides/ANALYSE.md, title: "Analyse: slice, SQL and Python", icon: binoculars, summary: "Open a dataset, or several, as your masked extract, then slice it, query it with SQL, work on it in Python, save a notebook and promote cells and slices." }
+      - { slug: bi-ai, doc: guides/BI_AI.md, title: "AI in BI", icon: stars, summary: "Report from words, ask the data, explain this number: what is sent to the model, the AI policy and the providers." }
+  - id: data
+    name: Data
+    icon: plug
+    blurb: "Where entities come from, how to connect them, and how to tell Drishti new data has landed."
+    guides:
+      - { slug: connectors, doc: connectors/CONNECTORS.md, title: Connectors, icon: plug, summary: "One reference with a section per plugin (file, Delta, Iceberg, DuckDB, PostgreSQL, MongoDB, Redis, Aerospike, S3, REST, feeds, news, Kafka, ActiveMQ, RabbitMQ, demo): when to use it and a connector file." }
+      - { slug: connector-files, doc: connectors/CONNECTOR_FILES.md, title: Connector files and Admin → Connectors, icon: file-earmark-code, summary: "One YAML file per connector in config/connectors: the format, how packs suggest templates, precedence, live reload, the Admin page, the API and the CLI." }
+      - { slug: connector-tls, doc: connectors/TLS.md, title: "TLS and proxy", icon: lock, summary: "The shared tls settings (private CA, PEM, PKCS12 and JKS, mutual TLS, expiry, rotation) and the outbound HTTP proxy for connectors, AI providers and MCP servers." }
+      - { slug: data-loads, doc: guides/DATA_LOADS.md, title: "Data loads", icon: cloud-arrow-down, summary: "Your ETL loads the data; Drishti acts on it. One call (API or drishti.py data landed) makes Drishti refresh, check expectations and alert on a missing load." }
+  - id: build
+    name: Build
+    icon: braces
+    blurb: "Packs, Rachana layouts (Sutras), panels, the Build workbench, connectors of your own, and putting Drishti in other applications."
+    guides:
+      - { slug: packs, doc: guides/PACKS.md, title: Packs, icon: box-seam, summary: "How industries plug in: what a pack contains, dependencies, connectors and routes, enabling packs, and writing your own." }
+      - { slug: pack-developer-guide, doc: guides/PACK_DEVELOPER_GUIDE.md, title: Pack developer guide, icon: hammer, summary: "Build a domain pack end to end: pack.yaml, kinds, links, roles and masks, Sutras, samples, tests, extending a parent pack." }
+      - { slug: schema-to-pack, doc: guides/SCHEMA_TO_PACK.md, title: "Schema to pack", icon: diagram-3, summary: "Schema files (and a folder of JSON Lines) in, a pack out: every rule, the x-drishti annotations, the New pack page and the command line twin." }
+      - { slug: sutra-developer-guide, doc: guides/SUTRA_DEVELOPER_GUIDE.md, title: "Rachana guide: writing Sutras", icon: mortarboard, summary: "Writing Sutras end to end: anatomy, matching and priority, labels, paths and expressions, source, row groups, inference, testing and CI, the Build workbench, and the common mistakes with their codes." }
+      - { slug: rachana-reference, doc: guides/RACHANA_REFERENCE.md, title: Rachana reference, icon: book, summary: "Every key, panel option, format, tone, Rachana-EL expression and problem code." }
+      - { slug: panels, doc: guides/PANELS.md, title: Panels, icon: grid-1x2, summary: "Every panel kind (meaning, options, behaviour when empty, masked, live and on a phone, an example), and developing a new kind end to end." }
+      - { slug: examples, doc: guides/examples/README.md, title: Sutra examples, icon: collection, summary: "Working Sutras with their data, covering every panel kind, nested pivots and tree rows: read them here, open each as a copy in the workbench." }
+      - { slug: screen-designer, doc: guides/SCREEN_DESIGNER.md, title: "Build workbench", icon: bounding-box, summary: "Bring data, drop panels and fields on the canvas, size them on the grid, fill the inspector, edit the YAML, read problems and tests, versions, rebase, ship; by mouse or keyboard." }
+      - { slug: connector-developer-guide, doc: connectors/CONNECTOR_DEVELOPER_GUIDE.md, title: Connector developer guide, icon: plug, summary: "Which connector to use, the source SPI (manifest, capabilities, fetch, search, subscribe), the shared TLS and proxy modules, testing and a worked plugin." }
+      - { slug: developer-guide, doc: guides/DEVELOPER_GUIDE.md, title: Developer guide, icon: tools, summary: "Repository map, building and testing, project rules, the request path, and recipes for endpoints, plugins, panel kinds and pages; IDE setup is in IDE_GUIDE.md." }
+      - { slug: elements-guide, doc: guides/ELEMENTS.md, title: "Embedding: Drishti Elements", icon: window-stack, summary: "Put views, panels and BI reports in your own web application: a five-minute start, the token exchange, the registered host, the elements, theming and limits." }
+  - id: operate
+    name: Operate
+    icon: shield-lock
+    blurb: "Configure it, run it, give people access, call it, and fix it when something goes wrong."
+    guides:
+      - { slug: configuration, doc: admin/CONFIGURATION.md, title: Configuration, icon: sliders, summary: "Every server and console setting with its default." }
+      - { slug: operations, doc: admin/OPERATIONS.md, title: Operations, icon: hdd-stack, summary: "Deploying, the security checklist, monitoring, capacity, connection pools and shipping by copying; the runbooks." }
+      - { slug: user-management, doc: admin/USER_MANAGEMENT.md, title: Users and roles, icon: people, summary: "The seeded admin, managing users, roles and BI powers, password rules, lockout and the audit log." }
+      - { slug: api, doc: guides/API_GUIDE.md, title: API, icon: braces-asterisk, summary: "REST endpoints, the ViewModel contract and error codes." }
+      - { slug: cli-guide, doc: guides/CLI_GUIDE.md, title: "Command line", icon: command, summary: "One program for the terminal and CI: JSON Lines to a pack, pack check with JUnit, loading data and packs into a running server, and the headless Sutra tool." }
+      - { slug: ai-providers, doc: architecture/AI_PROVIDERS.md, title: "AI providers", icon: stars, summary: "Model providers (seventeen vendor types), one file each, off by default; TLS and Test connection; the admin page and API." }
+      - { slug: troubleshooting, doc: guides/TROUBLESHOOTING.md, title: Troubleshooting, icon: life-preserver, summary: "Symptoms, likely causes and fixes." }
+      - { slug: release-notes, doc: ../RELEASE_NOTES.md, title: Release notes, icon: tag, summary: "What each release contains and its known limits; the changelog and the third-party notices are linked from it." }
+
+# Retired addresses: the old slug redirects (301) to the page, and the section of it, that took the subject over. A target is a
+# slug or slug#anchor. Documents that left the list (architecture, the per-plugin connector pages, the runbooks) are still in
+# the help centre at their path slug, so the old addresses keep working.
+moved:
+  quickstart: getting-started
+  windows: getting-started#drishti-on-windows
+  ide-guide: docs-guides-ide-guide
+  install-and-run: getting-started
+  impact: user-guide#f8--impact
+  monitors-and-alerts: user-guide#monitors
+  workspaces: user-guide#workspaces
+  layout-mode: user-guide#layout-mode-arrange-a-view-your-way
+  pivot-tab: user-guide#the-pivot-tab-slice-a-table-your-way
+  using-the-terminal: user-guide
+  bi-tutorial: docs-tutorials-10-first-bi-report
+  build-workbench-tutorial: docs-tutorials-06-design-a-screen
+  screen-builder: screen-designer
+  panel-kinds: panels
+  panel-developer-guide: panels#developing-a-panel-kind
+  nested-data: docs-guides-nested-documents
+  inference: docs-architecture-inference
+  live: docs-architecture-live
+  performance: docs-admin-performance
+  scale-benchmark: docs-admin-scale-benchmark
+  connector-proxy: connector-tls#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers
+  connector-demo: connectors#demo
+  demo-data: connectors#demo-data
+  connector-file: connectors#file
+  connector-delta: connectors#delta-lake
+  connector-iceberg: connectors#apache-iceberg
+  connector-duckdb: connectors#duckdb
+  connector-postgres: connectors#postgresql-and-jdbc
+  jdbc-queries: connectors#postgresql-and-jdbc
+  connector-mongodb: connectors#mongodb
+  connector-redis: connectors#redis
+  connector-aerospike: connectors#aerospike
+  connector-s3: connectors#s3
+  connector-rest: connectors#rest
+  connector-feeds: connectors#public-feeds
+  connector-news: connectors#news
+  connector-yfinance: connectors#yahoo-finance
+  connector-kafka: connectors#kafka
+  connector-activemq: connectors#activemq
+  connector-rabbitmq: connectors#rabbitmq
+  operationalising: docs-guides-operationalising
+  real-data: docs-guides-real-data
+  runbook-source-down: docs-admin-runbooks-source-down
+  runbook-sutra-broken: docs-admin-runbooks-sutra-broken
+  runbook-live-latency: docs-admin-runbooks-live-latency-high
+  runbook-sign-in: docs-admin-runbooks-sign-in
+  how-it-fits: docs-architecture-how-it-fits
+  elements: docs-architecture-elements
+  mcp-client: docs-architecture-mcp-client
+  rupaka: docs-architecture-rupaka
+  about-this-page-design: docs-architecture-context-help
+  collaboration: docs-architecture-collaboration
+  architecture: docs-architecture-architecture
+  quant-service: docs-architecture-quant-service
+  decisions: docs-architecture-adr-readme
+  plan: docs-architecture-implementation-plan
+  notices: third-party-notices
   sutra-guide: sutra-developer-guide
   rachana-guide: sutra-developer-guide
   plugins: connector-developer-guide
-  connectors: connector-developer-guide
   build-a-pack: pack-developer-guide
   sutra-studio: screen-designer
+
+# F1 opens the guide for the current screen.
 contextual:
-  landing: using-the-terminal
+  landing: user-guide
   bi: bi-guide
-  terminal: using-the-terminal
-  view: using-the-terminal
+  terminal: user-guide
+  view: user-guide
   studio: screen-designer
   build: screen-designer
   admin: user-management
   account: user-management
-  help: using-the-terminal
-  workspace: workspaces
-  monitor: monitors-and-alerts
-  alerts: monitors-and-alerts
+  help: user-guide
+  workspace: user-guide#workspaces
+  monitor: user-guide#monitors
+  alerts: user-guide#alerts
   inbox: sharing-and-discussion
-  impact: impact
-  form: using-the-terminal
+  impact: user-guide#f8--impact
+  form: query-by-form
   pack: packs
   admin-collab: sharing-and-discussion
   bi-poc: bi-guide
-  reports: using-the-terminal
-  search: using-the-terminal
-  compare: using-the-terminal
+  reports: reports-page
+  search: user-guide
+  compare: user-guide

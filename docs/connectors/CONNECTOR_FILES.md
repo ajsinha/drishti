@@ -23,7 +23,7 @@ several packs may name the same one.
 
 This page is the reference for the folder, the file format (with an example for every store), how a pack and a file fit
 together, live reload, the **Admin → Connectors** page, the REST API, the `drishti.py connector` commands, and moving off
-`application.yaml`. The settings each plugin reads are in its own page ([CONNECTOR_GUIDE.md](CONNECTOR_GUIDE.md) lists them).
+`application.yaml`. The settings each plugin reads are in its own page ([CONNECTORS.md](CONNECTORS.md) lists them).
 
 Contents: [1](#1-the-model-in-one-minute) the model · [2](#2-the-folder) the folder · [3](#3-the-file) the file ·
 [4](#4-examples-one-per-store) examples · [5](#5-credentials-and-tls) credentials and TLS · [6](#6-how-packs-and-files-fit-together) packs and files ·
@@ -234,7 +234,7 @@ a path, so it is not itself a secret. A password written in a file is an environ
 The Kafka connector also has `flavour`, `security.protocol`, `sasl.*` and `schema-registry.*` (with `schema-registry.tls.*` for the
 registry's own certificate); the form lists them in a **Security** and a **Schema Registry** section.
 
-**Outbound proxy.** Every connector that speaks HTTP also takes a `proxy:` block in `settings:` (shown as a **Proxy** section of the form, generated from `ProxySettings`, the class that reads the keys): `proxy.url` (`http://host:port`), `proxy.username`, `proxy.password` (an `${ENV}` reference, like every credential), `proxy.no-proxy` (names, suffixes, addresses, CIDR blocks) and `proxy.enabled`; the bare `proxy: none` goes direct whatever the site default (`drishti.http.proxy.*`) says. The connector's page shows the effective proxy, masked, and where it came from (connector, site default, environment), and **Test connection** goes through it and says so. The reference is [PROXY.md](PROXY.md).
+**Outbound proxy.** Every connector that speaks HTTP also takes a `proxy:` block in `settings:` (shown as a **Proxy** section of the form, generated from `ProxySettings`, the class that reads the keys): `proxy.url` (`http://host:port`), `proxy.username`, `proxy.password` (an `${ENV}` reference, like every credential), `proxy.no-proxy` (names, suffixes, addresses, CIDR blocks) and `proxy.enabled`; the bare `proxy: none` goes direct whatever the site default (`drishti.http.proxy.*`) says. The connector's page shows the effective proxy, masked, and where it came from (connector, site default, environment), and **Test connection** goes through it and says so. The reference is [TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers).
 
 **Test connection** turns a TLS failure into words: an untrusted certificate points you at `tls.ca-file` or `tls.truststore`, a name
 mismatch tells you to connect by a name the certificate carries, an expired certificate says so, and a wrong store password points at

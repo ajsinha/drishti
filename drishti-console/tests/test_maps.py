@@ -116,7 +116,7 @@ def test_first_paint_holds_the_codes_a_named_picture_the_places_list_and_the_fig
     assert data["highlight"] == "AUS" and data["link"]["codes"] == ["AUS", "NZL"]
     assert 'class="links xmap-list"' in html and "Open a country" in html                     # the way in for a keyboard, a reader and a phone
     assert "<td" in html and ">65,130<" in html and ">NZL<" in html                           # the same figures as a table
-    assert "style=" not in html and 'href="/help/panel-kinds#map"' in html and 'data-export-panel="geography"' in html
+    assert "style=" not in html and 'href="/help/panels#map"' in html and 'data-export-panel="geography"' in html
 
 
 def test_a_region_map_names_the_country_and_an_unreachable_one_says_no_data(client):

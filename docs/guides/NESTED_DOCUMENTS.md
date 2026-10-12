@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 4 · Nested documents
+# Nested documents
 
 Real documents are trees. A trade from a booking system holds a counterparty object, legs that each hold their
 own list of cashflows, an execution block, a lifecycle with a list of events, a regulatory block, and so on,

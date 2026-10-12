@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: documents in an S3 bucket reached through the company's forward proxy. Copy to config/connectors/s3-via-proxy.yaml.
-# The same proxy: block works for delta and iceberg on S3. See docs/connectors/PROXY.md and docs/connectors/S3_CONNECTOR.md.
+# The same proxy: block works for delta and iceberg on S3. See docs/connectors/TLS.md and docs/connectors/S3_CONNECTOR.md.
 plugin: s3
 kinds: [trade]
 description: Trade documents in S3, through the corporate proxy

@@ -15,7 +15,7 @@
 -->
 # Datasets: the YAML, the expression language and the security rules
 
-Reference for the **dataset** of Drishti Rūpaka (BI), as built in phase 2 (live tables, section 7.1, are phase 5). For the walk-through see [BI_TUTORIAL.md](BI_TUTORIAL.md) (chapters 1 to 9, and 18 for a live table); for the pages that show a dataset see [BI_GUIDE.md](BI_GUIDE.md) sections 13 and 16; for datasets built from other datasets (joined in YAML, or made by a Python Transform) see
+Reference for the **dataset** of Drishti Rūpaka (BI), as built in phase 2 (live tables, section 7.1, are phase 5). For the walk-through see [tutorial 10](../tutorials/10-first-bi-report.md) (chapters 1 to 9, and 18 for a live table); for the pages that show a dataset see [BI_GUIDE.md](BI_GUIDE.md) sections 13 and 16; for datasets built from other datasets (joined in YAML, or made by a Python Transform) see
 [section 11](#11-composed-and-derived-datasets); for the design see [RUPAKA.md](../architecture/RUPAKA.md) sections 6 and 7, "20.2 Phase 2, as built" and "20.10 Several datasets, as built"; for the HTTP API see
 [API_GUIDE.md](API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2); for the settings see
 [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibiquery--the-dataset-query-engine-phase-2).

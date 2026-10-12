@@ -909,7 +909,7 @@ Everything not about security (offsets, topics that do not exist, slow catch-up)
 
 ## Outbound proxy
 
-The settings and rules are shared by every HTTP-based connector: [PROXY.md](PROXY.md). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
+The settings and rules are shared by every HTTP-based connector: [TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
 
 Kafka's brokers speak the Kafka protocol, not HTTP, and are **not** proxied. The one HTTP part, the **Schema Registry** (`schema-registry.url`), goes through the proxy
 when one applies (plain forwarding, or `CONNECT` for an `https://` registry with `schema-registry.tls.*` kept); a refused proxy login surfaces as a message that names the
@@ -972,7 +972,7 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 | `disk-cache.reset-at` | `02:00` | daily clearing time; `never` or blank: never |
 | `disk-cache.zone` | `America/New_York` | the zone of `reset-at` |
 | `stale-after` | none | engine setting: Health marks the connector stale after this long without a new message |
-| `proxy.*` | none | the outbound HTTP proxy ([PROXY.md](PROXY.md)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none`; the Schema Registry only |
+| `proxy.*` | none | the outbound HTTP proxy ([TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none`; the Schema Registry only |
 
 Set by the connector and not to be overridden: `key.deserializer` and `value.deserializer` (a string deserializer; with the Confluent wire format, one that also strips and decodes it),
 `enable.auto.commit` (`false`), `client.id` (`drishti-<source-name>`; the reader `drishti-<source-name>-reader`, with

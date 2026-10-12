@@ -77,8 +77,8 @@ async def help_file(request: Request, path: str):
 @router.get("/help/{slug}")
 async def help_guide(request: Request, slug: str):
     lib = await library(request)
-    if slug not in lib.guides and lib.moved.get(slug) in lib.guides:
-        return RedirectResponse(f"/help/{lib.moved[slug]}", status_code=302)
+    if slug not in lib.guides and lib.moved.get(slug, "").partition("#")[0] in lib.guides:
+        return RedirectResponse(f"/help/{lib.moved[slug]}", status_code=301)       # permanent: the address was retired, the target may carry an #anchor
     if slug not in lib.guides:
         return render(request, "help/search.html", status_code=404, q=slug.replace("-", " "),
                       hits=lib.search(slug.replace("-", " ")), missing=slug, screen="help")
@@ -103,4 +103,4 @@ async def about(request: Request):
         info = await request.app.state.backend.about(getattr(request.state, "identity", None) or request.app.state.auth.service())
     except BackendError as e:
         info = {"error": drs_message(e.code, e.detail, " ")}
-    return render(request, "help/about.html", info=info, notices=(await library(request)).guides.get("notices"), screen="about")
+    return render(request, "help/about.html", info=info, notices=(await library(request)).guides.get("third-party-notices"), screen="about")

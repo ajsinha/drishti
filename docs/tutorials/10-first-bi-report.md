@@ -305,7 +305,7 @@ You should see a chip `Sector: Banking`, the cards narrowed to the banks (`Desk 
 
 - [Tutorial 11](11-bi-that-runs-itself.md): refresh, subscribe people to this report, alert on a number, export to PDF, PNG, Excel and CSV.
 - [BI_GUIDE.md](../guides/BI_GUIDE.md) for every page of the BI area, [REPORTS.md](../guides/REPORTS.md) for every visual and its wells (sections 3 and 6 are the map and the slicers), [DATASETS.md](../guides/DATASETS.md) for writing a dataset, and the longer
-  chapter-by-chapter [BI_TUTORIAL.md](../guides/BI_TUTORIAL.md).
+  chapter-by-chapter []().
 
 ## If something goes wrong
 

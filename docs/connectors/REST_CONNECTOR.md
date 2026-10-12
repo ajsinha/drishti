@@ -455,7 +455,7 @@ To see the request the connector sends, build it by hand: `<base-url without tra
 
 ## Outbound proxy
 
-The settings and rules are shared by every HTTP-based connector: [PROXY.md](PROXY.md). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
+The settings and rules are shared by every HTTP-based connector: [TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
 
 ```yaml
 settings:
@@ -509,7 +509,7 @@ In the connector file's `settings:`, or for the plugin as itself
 | `timeout-ms` | `2000` | connect timeout and request timeout, in milliseconds |
 | `generation-header` | `ETag` | response header holding a numeric version (quotes removed); otherwise the fetch time in milliseconds |
 | `header.<Name>` | none | a request header `<Name>` sent with every request |
-| `proxy.*` | none | the outbound HTTP proxy ([PROXY.md](PROXY.md)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none` |
+| `proxy.*` | none | the outbound HTTP proxy ([TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none` |
 
 Server settings that bear on it: `drishti.sources.fetch-timeout` (2 s), `drishti.sources.routes.<kind>`,
 `drishti.graph.link-budget` (40 ms). Shipped environment variables for the plugin as itself: `DRISHTI_REST_ENABLED`

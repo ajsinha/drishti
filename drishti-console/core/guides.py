@@ -48,8 +48,8 @@ _IMG = re.compile(r'(<a\b[^>]*>\s*)?(<img\b[^>]*?\bsrc="([^"]+)"[^>]*>)')
 _LINK = re.compile(r'<a href="([^"]*)"([^>]*)>(.*?)</a>', re.S)
 _EXTERNAL = re.compile(r"^(?:[a-z][a-z0-9+.-]*:|/|#)", re.I)
 # Where an unlisted repository document sits in the help centre, by its top folder.
-_DOC_CATEGORY = {"connectors": "connectors", "admin": "admin", "guides": "start", "architecture": "developers",
-                 "qa": "developers", "": "releases"}
+_DOC_CATEGORY = {"connectors": "data", "admin": "operate", "guides": "use", "architecture": "build", "tutorials": "start",
+                 "qa": "build", "": "operate"}
 
 
 def github_slug(text: str) -> str:
@@ -146,7 +146,7 @@ class Library:
             if slug in self.guides:
                 continue
             top = rel.parts[1] if len(rel.parts) > 2 and rel.parts[0] == self.docs_dir.name else ""
-            cat = cats.get(_DOC_CATEGORY.get(top, "developers")) or self.categories[0]
+            cat = cats.get(_DOC_CATEGORY.get(top, "build")) or self.categories[0]
             title = next((ln[2:].strip() for ln in path.read_text(encoding="utf-8").splitlines() if ln.startswith("# ")),
                          rel.stem)
             self.guides[slug] = Guide(slug, title, "", "file-earmark-text", "document", cat["id"], path, listed=False)

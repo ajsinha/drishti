@@ -15,7 +15,7 @@
 -->
 # Boards: a wall of live tiles
 
-A **board** is a wall of tiles for a screen on the wall of a trading desk, a risk team or an operations room. Each tile is one visual of a report; the board lays them out, keeps them up to date as the data ticks, turns its pages by itself in **kiosk** mode, and colours a tile amber or red when its number crosses a threshold. This is the reference for boards in Rūpaka **phase 5**. For the live tables behind them see [DATASETS.md](DATASETS.md#71-live-tables-phase-5); for the visuals see [REPORTS.md](REPORTS.md#13-live-visuals-and-perspective-phase-5); for the pages see [BI_GUIDE.md](BI_GUIDE.md) section 18 (and section 1 for the whole picture); for a walk-through with pictures see [BI_TUTORIAL.md](BI_TUTORIAL.md) chapters 18 and 19; the design is [RUPAKA.md](../architecture/RUPAKA.md) section 12 and what is built is its section 20.5.
+A **board** is a wall of tiles for a screen on the wall of a trading desk, a risk team or an operations room. Each tile is one visual of a report; the board lays them out, keeps them up to date as the data ticks, turns its pages by itself in **kiosk** mode, and colours a tile amber or red when its number crosses a threshold. This is the reference for boards in Rūpaka **phase 5**. For the live tables behind them see [DATASETS.md](DATASETS.md#71-live-tables-phase-5); for the visuals see [REPORTS.md](REPORTS.md#13-live-visuals-and-perspective-phase-5); for the pages see [BI_GUIDE.md](BI_GUIDE.md) section 18 (and section 1 for the whole picture); for a walk-through with pictures see [tutorial 10](../tutorials/10-first-bi-report.md) chapters 18 and 19; the design is [RUPAKA.md](../architecture/RUPAKA.md) section 12 and what is built is its section 20.5.
 
 ## Contents
 

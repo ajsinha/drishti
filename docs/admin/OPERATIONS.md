@@ -841,7 +841,7 @@ Work through this list for every shared installation. Each item says how to chec
     `GET /api/v1/bi/poc/bench` answers `404`.
 17. **AI and MCP stay off unless wanted.** `drishti.ai.enabled` and `drishti.mcp.enabled` are `false` by default; switch them on only with
     provider files in `config/ai` whose keys are `${ENV}` references, the policy limits set (`drishti.ai.policy`: `per-user-per-day`,
-    `cost-per-user-per-day`, `mask-redacted: true`) and an outbound proxy if the host needs one ([PROXY.md](../connectors/PROXY.md)).
+    `cost-per-user-per-day`, `mask-redacted: true`) and an outbound proxy if the host needs one ([TLS.md (proxy)](../connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)).
     Check: `GET /api/v1/admin/ai` shows `enabled` as you intend and `keySet` for each provider, never a key.
 18. **Embedding stays off unless wanted.** `drishti.embed.enabled` is `false` by default. When it is on, each host application is registered with exact
     origins (`drishti.embed.allow-wildcard-origins` stays `false`), the narrowest scopes and kinds it needs, and a secret or key kept by its backend

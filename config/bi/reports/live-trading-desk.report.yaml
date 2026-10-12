@@ -14,7 +14,7 @@
 
 # SAMPLE REPORT (streaming): "Live trading desk". Cards, a bar chart, a rolling line and two small tables that redraw in place as the trades tick, and two
 # Perspective pages: every trade in a grid, and a pivot of mark-to-market by desk and currency that the browser re-pivots as rows arrive.
-# It reads the live dataset live-trading (config/bi/datasets/live-trading.dataset.yaml). Tutorial: docs/guides/BI_TUTORIAL.md, chapter 18 "A live desk".
+# It reads the live dataset live-trading (config/bi/datasets/live-trading.dataset.yaml). Tutorial: docs/tutorials/10-first-bi-report.md "A live desk".
 # Reference: docs/guides/REPORTS.md (live visuals, Perspective).
 #
 # Nothing in a report says "live": a visual over a live table is live. The viewer opens one stream for the report, asks for each visual again when the

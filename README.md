@@ -85,7 +85,7 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
 - The **BI** menu and the `BI <GO>` keyword (`RUPAKA` still works): a catalogue and workspaces with roles, **datasets**
   (tables from pack kinds, relationships, measures, row rules and masks) on an embedded query engine, **reports** with a
   designer and a Model view, publishing with review, versions and certification, live tables, Perspective grids and
-  **boards** of live tiles ([BI_GUIDE.md](docs/guides/BI_GUIDE.md), [BI_TUTORIAL.md](docs/guides/BI_TUTORIAL.md),
+  **boards** of live tiles ([BI_GUIDE.md](docs/guides/BI_GUIDE.md), [tutorial 10](docs/tutorials/10-first-bi-report.md),
   [REPORTS.md](docs/guides/REPORTS.md), [BOARDS.md](docs/guides/BOARDS.md)).
 
 **Shape it**
@@ -114,7 +114,7 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
   SOFR, ECB €STR and FX, US Treasury, FRED), and computed ones such as news headlines for a name and Yahoo Finance quotes.
   Each connector is **one YAML file** in `config/connectors`, changed live in **Admin -> Connectors** with no restart;
   TLS (private CA, mutual TLS) and an outbound HTTP proxy are settings of the file
-  ([CONNECTOR_FILES.md](docs/connectors/CONNECTOR_FILES.md), [TLS.md](docs/connectors/TLS.md), [PROXY.md](docs/connectors/PROXY.md)).
+  ([CONNECTOR_FILES.md](docs/connectors/CONNECTOR_FILES.md), [TLS.md](docs/connectors/TLS.md), [TLS.md (proxy)](docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)).
   Connectors reconnect by themselves, with backoff, and report their health
   ([CONNECTOR_DEVELOPER_GUIDE.md](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md)).
 - Data lands from your ETL; one call tells Drishti to refresh, verify and flag late data ([DATA_LOADS.md](docs/guides/DATA_LOADS.md)).
@@ -132,7 +132,7 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
 
 ## Try it
 
-New to Drishti? **[QUICKSTART.md](docs/guides/QUICKSTART.md)** gets you to a live view in ten minutes;
+New to Drishti? **[GETTING_STARTED.md](docs/guides/GETTING_STARTED.md)** gets you to a live view in ten minutes;
 **[GETTING_STARTED.md](docs/guides/GETTING_STARTED.md)** explains every step from a clean machine; **[IDE_GUIDE.md](docs/guides/IDE_GUIDE.md)** runs the server in IntelliJ IDEA and the console in PyCharm. The short version,
 from the repository root (Java 21 or newer, production runs 21; Python 3.11 or newer, [uv](https://docs.astral.sh/uv/)):
 
@@ -203,27 +203,27 @@ drishti/
 
 ## Documentation
 
-Start with the **[quickstart](docs/guides/QUICKSTART.md)**, then the **[user guide](docs/guides/USER_GUIDE.md)**. The
+Start with the **[quickstart](docs/guides/GETTING_STARTED.md)**, then the **[user guide](docs/guides/USER_GUIDE.md)**. The
 **[documentation map](docs/README.md)** lists every document by what you want to do.
 
 | Read this when… | Document |
 |---|---|
-| you want it running in ten minutes | [QUICKSTART.md](docs/guides/QUICKSTART.md) |
+| you want it running in ten minutes | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) |
 | you run the server in IntelliJ IDEA and the console (UX) in PyCharm | [IDE_GUIDE.md](docs/guides/IDE_GUIDE.md) |
 | you build, check, load and ship packs and Sutras from a terminal or a pipeline (`tools/drishti.py`) | [CLI_GUIDE.md](docs/guides/CLI_GUIDE.md) |
 | your ETL has loaded a batch and Drishti should refresh, verify, check alerts, tell people and flag late data | [DATA_LOADS.md](docs/guides/DATA_LOADS.md) |
 | you ship what you built to servers by copying: bundles, checksums, promotion, rollback (no API) | [OPERATIONALISING.md](docs/guides/OPERATIONALISING.md) |
 | you install for the first time, every step explained | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) |
 | you use the console | [USER_GUIDE.md](docs/guides/USER_GUIDE.md) |
-| you use or build business intelligence (Rūpaka) | [BI_GUIDE.md](docs/guides/BI_GUIDE.md), [BI_TUTORIAL.md](docs/guides/BI_TUTORIAL.md), [DATASETS.md](docs/guides/DATASETS.md), [REPORTS.md](docs/guides/REPORTS.md), [PYTHON_BI.md](docs/guides/PYTHON_BI.md), [BI_AI.md](docs/guides/BI_AI.md), [BI_GOVERNANCE.md](docs/guides/BI_GOVERNANCE.md), [BOARDS.md](docs/guides/BOARDS.md) |
-| you run on Windows, or read from a script or Excel | [WINDOWS.md](docs/guides/WINDOWS.md), [CLIENTS.md](docs/guides/CLIENTS.md) |
+| you use or build business intelligence (Rūpaka) | [BI_GUIDE.md](docs/guides/BI_GUIDE.md), [tutorial 10](docs/tutorials/10-first-bi-report.md), [DATASETS.md](docs/guides/DATASETS.md), [REPORTS.md](docs/guides/REPORTS.md), [PYTHON_BI.md](docs/guides/PYTHON_BI.md), [BI_AI.md](docs/guides/BI_AI.md), [BI_GOVERNANCE.md](docs/guides/BI_GOVERNANCE.md), [BOARDS.md](docs/guides/BOARDS.md) |
+| you run on Windows, or read from a script or Excel | [GETTING_STARTED.md (Windows)](docs/guides/GETTING_STARTED.md#drishti-on-windows), [CLIENTS.md](docs/guides/CLIENTS.md) |
 | you use or refresh the real public data (economics, politics-society) | [REAL_DATA.md](docs/guides/REAL_DATA.md) |
-| you define connectors as files, with TLS or a proxy | [CONNECTOR_FILES.md](docs/connectors/CONNECTOR_FILES.md), [TLS.md](docs/connectors/TLS.md), [PROXY.md](docs/connectors/PROXY.md) |
+| you define connectors as files, with TLS or a proxy | [CONNECTOR_FILES.md](docs/connectors/CONNECTOR_FILES.md), [TLS.md](docs/connectors/TLS.md), [TLS.md (proxy)](docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) |
 | you load, assign or install a domain pack | [PACKS.md](docs/guides/PACKS.md) |
 | you build a domain pack | [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md) |
-| you learn to build screens in the Build workbench, step by step | [BUILD_WORKBENCH_TUTORIAL.md](docs/guides/BUILD_WORKBENCH_TUTORIAL.md) |
+| you learn to build screens in the Build workbench, step by step | [tutorial 6](docs/tutorials/06-design-a-screen.md) |
 | you learn to write a Sutra | [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md) |
-| you choose or add a panel kind | [PANEL_KINDS.md](docs/guides/PANEL_KINDS.md), [PANEL_DEVELOPER_GUIDE.md](docs/guides/PANEL_DEVELOPER_GUIDE.md) |
+| you choose or add a panel kind | [PANELS.md](docs/guides/PANELS.md), [PANELS.md (developing a panel kind)](docs/guides/PANELS.md#developing-a-panel-kind) |
 | you need an exact Sutra key, format or expression | [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md) |
 | a view is laid out by inference and you want to know why | [INFERENCE.md](docs/architecture/INFERENCE.md) |
 | you connect your own data | [CONNECTOR_DEVELOPER_GUIDE.md](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) and the per-connector docs |

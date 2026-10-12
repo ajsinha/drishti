@@ -2482,3 +2482,9 @@ environment `DRISHTI_JAR=...` (the tests that run `sutra lint` are skipped witho
 
 [IDE_GUIDE.md](IDE_GUIDE.md) runs the server and the console; [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and
 [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md) are the references for what these commands produce and check.
+
+## 15. The headless Sutra tool
+
+`sutra lint|test|preview|shape|design` is the Java tool behind `drishti.py sutra` (section 4): it needs no running server and is what CI runs. The `tests/<sutra>/` convention, `expect.yaml`, the exit codes and
+CI wiring are section 15 of the [Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci); the workbench's own use of the same command is in
+[SCREEN_DESIGNER.md](SCREEN_DESIGNER.md#26-the-command-line-and-ci). This section replaces the former `SUTRA_CLI.md`.

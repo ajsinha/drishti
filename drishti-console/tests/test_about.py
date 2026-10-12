@@ -39,7 +39,7 @@ def test_the_partial_shows_data_layout_next_and_the_sutra_description(client, ba
     assert "References" in h and "table-of-objects, score 0.82" in h
     assert "<code>$.curve</code> is missing in this document" in h
     assert "1 field hidden for your role: <b>Trader</b>" in h and "Swaption" in h and "not shown" in h
-    assert "/v/counterparty/CP-1" in h and "/impact/trade/IRS-48213" in h and "/help/panel-kinds#table" in h   # layer 5
+    assert "/v/counterparty/CP-1" in h and "/impact/trade/IRS-48213" in h and "/help/panels#table" in h   # layer 5
     assert ("explain", "trade", "IRS-48213", 7) in backend.calls
 
 

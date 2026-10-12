@@ -20,7 +20,7 @@ run and test it, which rules the build enforces, how a request travels through t
 worked recipes for the changes people make most often. Every class, path and command here exists in the
 repository; the recipes follow the idioms of the real classes they imitate.
 
-If you only want to run Drishti, read [QUICKSTART.md](QUICKSTART.md) or [GETTING_STARTED.md](GETTING_STARTED.md).
+If you only want to run Drishti, read [GETTING_STARTED.md](GETTING_STARTED.md) or [GETTING_STARTED.md](GETTING_STARTED.md).
 For the design and its reasons, read [ARCHITECTURE.md](../architecture/ARCHITECTURE.md) and the [decision records](../architecture/adr/README.md).
 
 **Contents**
@@ -135,7 +135,7 @@ The reactor also builds `docs/guides/examples/connector`, the worked example plu
 | `tools/lake/` | `maintain.py`: Delta Lake retention, compaction (layout-preserving for laid-out tables), checkpoints, vacuum and `relayout`; `test_maintain.py` |
 | `tools/drishti.py` | The one command line over the tools below and the server's REST: `sutra`, `pack ...` (`new`, `make`, `check`, `about-check`, `diff`, `i18n`, `publish`, `install`, `regenerate`, `catalogue`), `data ingest|load|profile`, `server health|packs|smoke`, `connector ...`, `bi ...`, `view get|explain`, `design ...`, `doctor`, `completion`, `docs shots`; the `test_cli_*.py` and `test_drishti_cli.py` suites cover it (not all run in the drill; see §2.6). See [CLI_GUIDE.md](CLI_GUIDE.md) |
 | `tools/packgen/pack_from_jsonl.py`, `tools/packmake.py`, `tools/schemapack.py`, `tools/packbundle.py`, `tools/packform.py`, `tools/packdiff.py`, `tools/packi18n.py`, `tools/sutragen.py`, `tools/authoring.py` | Pack authoring: a pack from JSON lines or from schemas, bundles, the `form:` section, `pack diff`, `pack i18n`; the `tools/drishti.py` commands call them (see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md), [SCHEMA_TO_PACK.md](SCHEMA_TO_PACK.md), [CLI_GUIDE.md](CLI_GUIDE.md)) |
-| `tools/realdata/`, `tools/docs/`, `tools/elements-demo/`, `tools/windows/` | The real-data builds of the economics and politics-society packs ([REAL_DATA.md](REAL_DATA.md)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`); a sample host page for Drishti Elements; the PowerShell starters ([WINDOWS.md](WINDOWS.md)) |
+| `tools/realdata/`, `tools/docs/`, `tools/elements-demo/`, `tools/windows/` | The real-data builds of the economics and politics-society packs ([REAL_DATA.md](REAL_DATA.md)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`); a sample host page for Drishti Elements; the PowerShell starters ([GETTING_STARTED.md (Windows)](GETTING_STARTED.md#drishti-on-windows)) |
 | `tools/packreg/` | `packreg.py`: signing keys, publishing packs to a signed registry, verifying one (ADR-018); `test_packreg.py` |
 | `tools/` (files) | `drill.sh` (verify and publish), `fetch-pyodide.sh` (installs Calc's Python runtime, pinned and verified, into `drishti-console/web/static/vendor/pyodide/`), `fetch-duckdb-wasm.sh` (DuckDB-Wasm for the BI engine, into `vendor/duckdb-wasm/`), `elements_sheet.py` (regenerates the Elements stylesheet), `make_icons.py` (favicon and app icons), `ingest_jsonl.py` and `ingest_watch.py` (load JSON lines), `serverpacks.py` (`server packs deploy|history|rollback|datasource`), `serverconnectors.py` (`connector list|get|apply|delete|test|plugins|enable|disable|reset|history`), `doctor.py` (`drishti.py doctor`), `completion.py` (shell completion), `viewcmd.py` (`view get|explain`), `dataprofile.py` (`data profile`), `license_headers.py` (check or insert the copyright header), `rachana/md_to_yaml.py` (converts Markdown Sutras, `*.sutra.md`, read before 1.11, to `*.sutra.yaml`: `python3 tools/rachana/md_to_yaml.py <file-or-folder> --delete`), `load-aerospike.sh` |
 | `deploy/` | `server.Dockerfile`, `console.Dockerfile`, `compose.yaml`, `compose.data.yaml`, `lake-maintenance.yaml`, `grafana/` |
@@ -927,7 +927,7 @@ over the test document (`notional` is 50,000,000):
 
 ### 5.4 Add a panel kind
 
-See [PANEL_DEVELOPER_GUIDE.md](PANEL_DEVELOPER_GUIDE.md): the complete, tested walk-through (the `metric` tile end to end:
+See [PANELS.md (developing a panel kind)](PANELS.md#developing-a-panel-kind): the complete, tested walk-through (the `metric` tile end to end:
 grammar, binder, console, workbench, export, accessibility and the guard tests).
 
 ### 5.5 Add a pack
@@ -1598,7 +1598,7 @@ The release commit for 1.9.0 (`Release 1.9.0`) shows every file a bump touches.
    `RELEASE_NOTES.md` (`# Drishti X.Y.Z — release notes`, a short, user-facing summary; the previous release's heading
    becomes `# Previous release: Drishti …`). Add upgrade notes when the identity schema, configuration keys or
    on-disk formats change.
-4. **Verify locally.** `./mvnw -q package -DskipTests`, start the new jar, and run through [QUICKSTART.md](QUICKSTART.md):
+4. **Verify locally.** `./mvnw -q package -DskipTests`, start the new jar, and run through [GETTING_STARTED.md](GETTING_STARTED.md):
    `curl -s localhost:18480/api/v1/about` should report the new `version`.
 5. **Commit** as `Release X.Y.Z` on `develop`.
 6. **Drill:** `tools/drill.sh`. Nothing reaches `main` unless the whole build, every test, the console tests, the

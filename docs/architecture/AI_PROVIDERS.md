@@ -90,7 +90,7 @@ A site that reaches the model endpoint only through a forward proxy puts a `prox
 sets the site default once: `drishti.http.proxy.*` on the server, `DRISHTI_HTTP_PROXY_URL` and friends in the console. `proxy: none` in a file goes direct whatever the site says.
 `http://` and `https://` endpoints both go through an `http://` proxy; an https endpoint is tunnelled with `CONNECT`, so `tls.*` (a private CA, a client certificate) still applies to the
 endpoint itself. OpenAI-compatible and Anthropic providers use it on the server (the JDK HTTP client) and in the console (`httpx`). A literal `proxy.password` refuses the file without
-repeating it; a wrong proxy login is reported as a failure of the call without the password. Everything is in [PROXY.md](../connectors/PROXY.md#9-the-console-ai-and-mcp-clients). Tested in
+repeating it; a wrong proxy login is reported as a failure of the call without the password. Everything is in [TLS.md (proxy)](../connectors/TLS.md#proxy-9-the-console-ai-and-mcp-clients). Tested in
 `AiProxyTest` (Java) and `tests/test_ai_proxy.py` (console) against a fake proxy on loopback. Admin -> AI does not display the proxy yet.
 
 ### A provider that cannot be set up is retried
@@ -318,7 +318,7 @@ limits, roles, labels-only: section 4). **Every one is off until you copy its ex
 * **`describe_config()`** shows the file with every secret as `********` (the key, `header.*` credentials, `proxy.password`, `aws-*`, `client-secret`, `tls.*` passwords); the file's other settings are shown as written.
 * **Keys only as `${ENV}`.** `api-key`, `aws-access-key-id`, `aws-secret-access-key`, `aws-session-token`, `client-secret` and the `tls.*` passwords accept an `${ENV_NAME}` placeholder or nothing; a literal is
   refused at load, naming the setting. When `api-key` is left out, a preset reads the vendor's own variable (the table below).
-* **Proxy.** The shared `proxy.*` block (or the site default) applies to every call, an `https://` target tunnelled with CONNECT: [PROXY.md](../connectors/PROXY.md).
+* **Proxy.** The shared `proxy.*` block (or the site default) applies to every call, an `https://` target tunnelled with CONNECT: [TLS.md (proxy)](../connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers).
 * **TLS.** The shared `tls.*` block of the connectors applies to every provider type (section 11.9).
 * **Errors** name the cause and never carry the response body: HTTP 401/403 `(authentication failed ...)`, 404 `(not found: check base-url, the path and the model id)`, 429 kind `RATE_LIMITED`, a slow
   endpoint kind `TIMEOUT`, anything else `FAILED`. `retries: n` tries again after a 5xx, a 429 or a connection failure.

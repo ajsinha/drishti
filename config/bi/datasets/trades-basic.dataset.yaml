@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # STORED SAMPLE 1 of 3 (two live samples follow): "hello world". One table, four measures, one hierarchy. Read it top to bottom; every part is explained.
-# Tutorial: docs/guides/BI_TUTORIAL.md, chapters 1 and 2. Reference: docs/guides/DATASETS.md. Start with docs/guides/BI_GUIDE.md.
+# Tutorial: docs/tutorials/../guides/BI_RECIPES.md and 2. Reference: docs/guides/DATASETS.md. Start with docs/guides/BI_GUIDE.md.
 #
 # A dataset is a MODEL that reports sit on: tables (from pack kinds, read through a connector by its logical name), the
 # relationships between them, measures (named calculations) and the rules about who sees which rows and fields.

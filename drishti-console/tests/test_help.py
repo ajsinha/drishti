@@ -37,11 +37,11 @@ def test_every_catalogued_guide_exists_and_renders(client):
 def test_guides_render_examples_boxes_toc_and_internal_links(client):
     page = client.get("/help/getting-started").text
     assert 'class="help-example"' in page and "data-copy" in page
-    assert 'class="help-box tip"' in page and "On this page" in page
-    assert 'href="/help/using-the-terminal"' in page
+    assert "On this page" in page and 'href="/help/user-guide"' in page
+    assert 'class="help-box tip"' in client.get("/help/docs-guides-nested-documents").text
     ref = client.get("/help/rachana-reference").text
     assert "DRS-2101" in ref and "panel kinds" in ref.lower()
-    arch = client.get("/help/architecture").text
+    arch = client.get("/help/docs-architecture-architecture").text
     assert 'href="/help/rachana-reference"' in arch
 
 
@@ -53,11 +53,11 @@ def test_search_and_missing_guides(client):
 
 
 def test_f1_context_and_panel_help(client):
-    assert client.get("/help/context/view", follow_redirects=False).headers["location"] == "/help/using-the-terminal"
+    assert client.get("/help/context/view", follow_redirects=False).headers["location"] == "/help/user-guide"
     assert client.get("/help/context/studio", follow_redirects=False).headers["location"] == "/help/screen-designer"
     view = client.get("/v/trade/IRS-48213").text
-    assert 'data-screen="view"' in view and 'href="/help/panel-kinds#table"' in view
-    kinds = client.get("/help/panel-kinds").text
+    assert 'data-screen="view"' in view and 'href="/help/panels#table"' in view
+    kinds = client.get("/help/panels").text
     for kind in ("kv", "table", "tabs", "line", "area", "hbar", "ladder", "links", "status", "provenance", "markdown", "gauge"):
         assert f'id="{kind}"' in kinds, kind
 
@@ -66,7 +66,7 @@ def test_about_page(client):
     r = client.get("/about")
     assert r.status_code == 200
     for text in ("1.2.0", 'id="what"', 'id="problem"', 'id="features"', 'id="performance"', 'id="capabilities"', 'id="competitive"',
-                 'id="stack"', 'id="use-cases"', 'id="author"', 'id="legal"', "Ashutosh Sinha", "Documentation", "/help/notices",
+                 'id="stack"', 'id="use-cases"', 'id="author"', 'id="legal"', "Ashutosh Sinha", "Documentation", "/help/third-party-notices",
                  "docs/admin/PERFORMANCE.md", "System details for admins", 'href="/admin/health"'):
         assert text in r.text, text
     # a product page: no Sutra, source or pack listing
@@ -116,23 +116,25 @@ def test_the_sutra_developer_guide_teaches_writing_end_to_end_and_links_the_cata
               "Sutra and inference together", "Testing: `expect.yaml`", "The Build workbench", "Checklist", "Common mistakes"):
         assert re.search(rf"^## \d+\. .*{re.escape(s)}", text, re.M), s
     for kind in KINDS:
-        assert f"](PANEL_KINDS.md#{kind})" in text, kind
+        assert f"](PANELS.md#{kind})" in text, kind
     assert "/studio?" not in text and "Open Studio" not in text and "twenty panel" not in text
-    assert "BUILD_WORKBENCH_TUTORIAL.md" in text and "SCREEN_DESIGNER.md" in text
+    assert "SCREEN_DESIGNER.md" in text
     assert len(text.splitlines()) < 1500
 
 
-def test_the_moved_sutra_guides_are_stubs_and_the_old_in_app_copy_is_gone():
+def test_the_retired_sutra_guides_are_gone_and_their_addresses_redirect(client):
     docs = SUTRA_GUIDE.parent
     for old in ("RACHANA_GUIDE.md", "SUTRA_CLI.md"):
-        stub = (docs / old).read_text()
-        assert "SUTRA_DEVELOPER_GUIDE.md" in stub and len(stub.split("-->")[-1].strip().splitlines()) <= 6, old
+        assert not (docs / old).exists(), old
+    for old in ("sutra-guide", "rachana-guide"):
+        r = client.get(f"/help/{old}", follow_redirects=False)
+        assert r.status_code == 301 and r.headers["location"] == "/help/sutra-developer-guide", old
     assert not (SUTRA_GUIDE.parents[2] / "drishti-console" / "web" / "guides" / "sutra-guide.md").exists()
 
 
 def test_no_sutra_guide_tells_the_reader_to_open_studio():
     root = SUTRA_GUIDE.parents[2]
-    for f in (SUTRA_GUIDE, root / "docs" / "guides" / "RACHANA_REFERENCE.md", root / "drishti-console" / "web" / "guides" / "nested-data.md"):
+    for f in (SUTRA_GUIDE, root / "docs" / "guides" / "RACHANA_REFERENCE.md", root / "docs" / "guides" / "NESTED_DOCUMENTS.md"):
         text = f.read_text()
         assert "Open Studio" not in text and "(`/studio`)" not in text and "twenty panel" not in text, f.name
 
@@ -158,3 +160,56 @@ def test_a_help_page_has_one_h1_whatever_the_guide_headings_are(client):
     for slug in ("release-notes", "plugins"):
         html = client.get(f"/help/{slug}").text
         assert html.count("<h1") == 1, slug
+
+
+# The 90 slugs of the help centre before it was consolidated into six sections (2.0.0): every one still opens something.
+OLD_SLUGS = """quickstart windows ide-guide install-and-run impact sharing-and-discussion monitors-and-alerts workspaces layout-mode pivot-tab python-calc bi-guide
+bi-tutorial datasets python-bi analyse reports bi-governance distribution boards using-the-terminal sutra-developer-guide screen-designer schema-to-pack
+build-workbench-tutorial screen-builder panel-kinds panel-developer-guide examples nested-data rachana-reference inference live performance scale-benchmark
+connector-developer-guide connector-files connector-tls connector-proxy connector-demo demo-data connector-file connector-delta connector-iceberg
+connector-duckdb connector-postgres jdbc-queries connector-mongodb connector-redis connector-aerospike connector-s3 connector-rest connector-feeds
+connector-news connector-yfinance connector-kafka connector-activemq connector-rabbitmq packs pack-developer-guide operationalising cli-guide data-loads
+real-data user-management operations configuration troubleshooting runbook-source-down runbook-sutra-broken runbook-live-latency runbook-sign-in clients
+developer-guide api how-it-fits elements-guide elements ai-providers mcp-client rupaka about-this-page-design collaboration architecture quant-service
+decisions plan release-notes changelog notices sutra-guide rachana-guide plugins build-a-pack sutra-studio""".split()
+
+
+def test_the_help_centre_has_six_sections_and_about_forty_pages():
+    catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
+    assert [c["id"] for c in catalogue["categories"]] == ["start", "use", "bi", "data", "build", "operate"]
+    total = sum(len(c["guides"]) for c in catalogue["categories"])
+    assert 30 <= total <= 45, total
+
+
+def test_every_old_help_address_still_opens_something(client):
+    """A retired slug answers 301 to the page, and the section of it, that took the subject over; a slug still listed answers 200."""
+    catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
+    listed = {g["slug"] for c in catalogue["categories"] for g in c["guides"]}
+    moved = 0
+    for slug in OLD_SLUGS:
+        r = client.get(f"/help/{slug}", follow_redirects=False)
+        if slug in listed or slug == "changelog":
+            assert r.status_code == 200, slug
+            continue
+        assert r.status_code == 301, (slug, r.status_code)
+        moved += 1
+        target = r.headers["location"]
+        page, _, anchor = target.removeprefix("/help/").partition("#")
+        final = client.get(f"/help/{page}")
+        assert final.status_code == 200 and "data-unavailable" not in final.text, target
+        if anchor:
+            assert f'id="{anchor}"' in final.text, f"{slug} -> {target}: no such section"
+    assert moved >= 50
+
+
+def test_the_tutorials_page_renders_the_tutorials_index_and_each_tutorial_opens_with_its_pictures(client):
+    page = client.get("/help/tutorials")
+    assert page.status_code == 200 and "Your first 15 minutes" in page.text and "Run it in production" in page.text
+    links = sorted(set(re.findall(r'href="(/help/docs-tutorials-[0-9a-z-]+)"', page.text)))
+    assert len(links) == 17, links
+    shots = 0
+    for href in links:
+        t = client.get(href)
+        assert t.status_code == 200 and "data-unavailable" not in t.text, href
+        shots += len(re.findall(r'src="/help/files/tutorials/img/', t.text))
+    assert shots >= 100

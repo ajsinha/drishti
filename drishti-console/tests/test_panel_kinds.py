@@ -15,7 +15,7 @@
 
 """The panel kinds catalogue (docs/guides/PANEL_KINDS.md) and the panel developer guide (docs/guides/PANEL_DEVELOPER_GUIDE.md).
 
-Every panel's ``?`` icon, the workbench inspector's "About <kind>" and F1 open ``/help/panel-kinds#<kind>``, so the catalogue needs a heading whose
+Every panel's ``?`` icon, the workbench inspector's "About <kind>" and F1 open ``/help/panels#<kind>``, so the catalogue needs a heading whose
 GitHub slug is exactly the kind, and it must be the first heading with that slug (a second ``kv`` heading would be ``kv-1``). Each kind has a
 picture, a YAML example cut verbatim from docs/guides/examples, and a link into the Rachana reference."""
 from pathlib import Path
@@ -26,8 +26,21 @@ from core.guides import GithubSlugger
 
 ROOT = CONSOLE.parent
 DOCS = ROOT / "docs" / "guides"
-KINDS_DOC = DOCS / "PANEL_KINDS.md"
-DEV_DOC = DOCS / "PANEL_DEVELOPER_GUIDE.md"
+PANELS = DOCS / "PANELS.md"                  # the catalogue (first part) and developing a kind (last part, from "## Developing a panel kind")
+DEV_MARK = "\n## Developing a panel kind"
+
+
+class _Part:
+    def __init__(self, dev: bool):
+        self.dev, self.name = dev, "PANELS.md"
+
+    def read_text(self) -> str:
+        text = PANELS.read_text()
+        head, _, tail = text.partition(DEV_MARK)
+        return (DEV_MARK + tail) if self.dev else head
+
+
+KINDS_DOC, DEV_DOC = _Part(False), _Part(True)
 KINDS = ["kv", "status", "provenance", "metric", "map", "table", "ladder", "tabs", "pivot", "line", "area", "hbar", "gauge", "surface", "candlestick",
          "histogram", "scatter", "waterfall", "graph", "links", "timeline", "markdown"]
 HEADING = re.compile(r"^(#{2,3}) (.+?)\s*$", re.M)          # the help centre's table of contents covers levels 2 and 3
@@ -47,7 +60,7 @@ def test_the_catalogue_lists_all_twenty_two_kinds_each_with_its_own_anchor():
     found = anchors(KINDS_DOC.read_text())
     for kind in KINDS:
         assert found.get(kind) == kind, f"### {kind} must be the first heading that slugs to '{kind}': got {found.get(kind)!r}"
-    assert "# The twenty-two panel kinds" in KINDS_DOC.read_text()
+    assert "# Panels: the twenty-two kinds" in PANELS.read_text()
 
 
 def test_the_kinds_of_the_grammar_are_exactly_these_twenty_two():
@@ -76,15 +89,14 @@ def test_the_help_links_into_the_catalogue_use_headings_that_exist():
     found = anchors(KINDS_DOC.read_text())
     macro = (CONSOLE / "web" / "templates" / "_macros" / "panels.html").read_text()
     inspector = (CONSOLE / "web" / "static" / "js" / "build" / "inspector.js").read_text()
-    assert "/help/panel-kinds#{{ p.kind }}" in macro and "'/help/panel-kinds#' + kind" in inspector
+    assert "/help/panels#{{ p.kind }}" in macro and "'/help/panels#' + kind" in inspector
     assert set(KINDS) <= set(found)
 
 
 def test_no_guide_still_says_twenty_panel_kinds():
     for doc in (KINDS_DOC, DEV_DOC):
         assert not re.search(r"(?i)\btwenty (panel )?kinds\b|\bthe twenty panel", doc.read_text()), doc.name
-    stub = (DOCS / "PANELS.md").read_text()
-    assert "PANEL_KINDS.md" in stub and len(stub.splitlines()) <= 20
+    assert not (DOCS / "PANEL_KINDS.md").exists() and not (DOCS / "PANEL_DEVELOPER_GUIDE.md").exists()
 
 
 def test_the_catalogue_does_not_copy_option_tables_from_the_reference():
@@ -118,15 +130,15 @@ def test_the_developer_guide_walks_through_metric_with_the_real_code():
 
 
 def test_the_help_centre_serves_the_catalogue_with_an_anchor_per_kind_and_its_pictures(client):
-    """Needs the help.yaml entry ``panel-kinds`` (doc: guides/PANEL_KINDS.md); ``panels`` moves to it."""
-    page = client.get("/help/panel-kinds")
-    assert page.status_code == 200 and "The twenty-two panel kinds" in page.text and "data-unavailable" not in page.text
+    """The help.yaml entry ``panels`` (doc: guides/PANELS.md); the retired ``panel-kinds`` and ``panel-developer-guide`` redirect to it."""
+    page = client.get("/help/panels")
+    assert page.status_code == 200 and "twenty-two kinds" in page.text and "data-unavailable" not in page.text
     for kind in KINDS:
         assert f'id="{kind}"' in page.text, kind
     srcs = re.findall(r'<img[^>]*\bsrc="([^"]+)"', page.text)
     assert len(srcs) >= 21 and all(s.startswith("/help/files/guides/img/panels/") for s in srcs)
     for s in srcs[:5]:
         assert client.get(s).status_code == 200, s
-    assert client.get("/help/panels", follow_redirects=False).headers["location"] == "/help/panel-kinds"
-    guide = client.get("/help/panel-developer-guide")
-    assert guide.status_code == 200 and "metric" in guide.text and "Developing a panel kind" in guide.text
+    assert client.get("/help/panel-kinds", follow_redirects=False).headers["location"] == "/help/panels"
+    assert client.get("/help/panel-developer-guide", follow_redirects=False).headers["location"] == "/help/panels#developing-a-panel-kind"
+    assert "metric" in page.text and "Developing a panel kind" in page.text

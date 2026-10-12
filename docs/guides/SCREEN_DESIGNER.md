@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-New to the workbench? Follow [the step-by-step tutorial](BUILD_WORKBENCH_TUTORIAL.md): four complete projects, a picture of almost every step.
+New to the workbench? Follow [the step-by-step tutorial](../tutorials/06-design-a-screen.md): four complete projects, a picture of almost every step.
 
 # Screen designer: from JSON files to a screen, without writing YAML
 
@@ -515,6 +515,23 @@ The diff is the one the reviewers see: panels that only **moved** are named in w
 
 **Restore** puts the version you picked back **as an operation**: it is a new step in the log, so it is in the revision history, Undo takes it back, and nothing is lost. Restoring the base replaces the design's Sutra with the live one. A design that was not made from a Sutra has no base; its earlier versions are still there.
 
+### Changing a live Sutra when a colleague changed it first
+
+Open an existing Sutra from the registry (**Build → New screen**, *An existing Sutra*): the design is a **copy**, and the header says *edits rates-trade@1*, its **base**. If a colleague proposes and an
+administrator approves a change to the same Sutra while you work, the live Sutra moves on and the header shows **base moved to rates-trade@2**; **Problems** says *The base rates-trade@1 has a newer live version, rates-trade@2.
+Ship, Rebase replays your steps on it.*
+
+![The header says base moved to rates-trade@2, and Problems explains](img/tutorial/p3-06-base-moved.jpg)
+
+Proposing now would be refused as stale. Open **Ship** and choose **Rebase onto rates-trade@2**: your steps are applied again on top of version 2, so the design has your change **and** the colleague's.
+
+![The Ship menu: Rebase onto rates-trade@2 first](img/tutorial/p3-07-rebase.jpg)
+
+![Rebased: one step replayed on version 2](img/tutorial/p3-08-rebased.jpg)
+
+A step that no longer applies (the panel it changes was removed) is listed as a problem; change the design to match the new version and go on. Undo does not go back past a rebase. Proposing then publishes the next
+version (v3 here), and the diff the reviewer sees is only your change against version 2. Versions are never overwritten; views use the highest approved one, and rolling back is a new proposal of the older text.
+
 ## 22. Saving and proposing
 
 Designing is open to everyone: the design is yours, kept by the server, and you need no right to make or edit one. **Saving to the registry** is the author right with Studio saving switched on (`DRISHTI_STUDIO_SAVE`), and where governance is on, saving is a **proposal** an approver must approve.
@@ -657,4 +674,4 @@ If you edit Sutras in an IDE and keep them in git, bind the design to a file so 
 
 The shared page has no editing keys: the *Preview with a file…*, *Preview a stored entity* and *Copy the Sutra* controls are real buttons and fields in reading order.
 
-See also: [the Sutra command](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci), [Screen Builder design](../architecture/SCREEN_BUILDER.md), [the examples](examples/README.md), [the Rachana reference](RACHANA_REFERENCE.md), [panels in depth](PANEL_KINDS.md).
+See also: [the Sutra command](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci), [Screen Builder design](../architecture/SCREEN_BUILDER.md), [the examples](examples/README.md), [the Rachana reference](RACHANA_REFERENCE.md), [panels in depth](PANELS.md).

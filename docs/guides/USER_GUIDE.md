@@ -18,7 +18,7 @@
 This guide explains every part of the Drishti console, one feature at a time. Each section says what
 the feature is for, then walks through an example: the exact text to type and what you should see.
 
-If Drishti is not running yet, start with [QUICKSTART.md](QUICKSTART.md) (ten minutes) or
+If Drishti is not running yet, start with [GETTING_STARTED.md](GETTING_STARTED.md) (ten minutes) or
 [GETTING_STARTED.md](GETTING_STARTED.md) (every step explained).
 
 The examples use the banking packs (`trading`, `counterparty-risk` and the others) with their sample
@@ -70,7 +70,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | Alerts | `/alerts` | Your alerts on numbers, your alert rules and recent alerts (also **Reports**, *My alerts*) |
 | Workspaces | `/w` | Several live views on one screen |
 | Inbox | `/inbox` | Views and comments sent to you ([Your inbox](#your-inbox)) |
-| Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](#export-and-subscriptions)) |
+| Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](SCHEDULED_REPORTS.md#export-and-subscriptions)) |
 | BI | `/bi`, `/bi/catalogue`, `/bi/w/me`, `/bi/r/<id>`, `/bi/b/<id>`, `/bi/datasets`, `/bi/designer` | Rūpaka business intelligence, for people with the `bi` power ([BI_GUIDE.md](BI_GUIDE.md)) |
 | Build | `/build`, `/build/new`, `/build/pack/new`, `/build/reviews` | Design layouts (Sutras) in the workbench, make a pack from schemas, approve proposed Sutras |
 | My account | `/account` | Your profile, settings and password |
@@ -101,12 +101,12 @@ you are on is highlighted.
 
 | Menu | Column | Entries |
 |---|---|---|
-| **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](#the-forms-home), query by form), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
+| **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](QUERY_BY_FORM.md#the-forms-home), query by form), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`) |
 | **BI** (people with the `bi` power) | Rupaka: business intelligence | *BI home* (`/bi`), *My workspace* (`/bi/w/me`), *Catalogue* (`/bi/catalogue`), then *Recent*: the three items you opened last. Administrators with `bi-admin` also see *BI settings* ([BI_GUIDE.md](BI_GUIDE.md)) |
 | **Build** | Create | *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](SCHEMA_TO_PACK.md)), *My designs* (`/build`), *Examples* |
 | | Govern | *Reviews* (`/build/reviews`, with the number waiting) |
-| | Learn | *Build workbench tutorial*, *Schema to pack*, *Screen designer guide*, *Sutra developer guide*, *Panel kinds*, *Rachana reference*, *Pack developer guide* |
+| | Learn | *Tutorials*, *Schema to pack*, *Screen designer guide*, *Sutra developer guide*, *Panel kinds*, *Rachana reference*, *Pack developer guide* |
 | **Admin** (admins only) | People & access | *Users*, *Roles*, *Audit log* |
 | | Operations | *Packs*, *Connectors*, *Data loads*, *Collaboration*, *Embedding*, *Health*, *Caches* |
 | **Help** | Learn | *Help centre* (`/help`, also `F1`), *Install and run*, *About* |
@@ -116,7 +116,7 @@ word `BI` goes there from the command line, in any case: `BI <GO>` the BI home, 
 catalogue, `BI SETTINGS <GO>` the BI settings (administrators with `bi-admin`), `BI <report-or-board> <GO>` a published item by id or title (a **report opens drawn**, with its slicers, drill-down and drill-through; type-ahead completes after `BI `; `RUPAKA` still works as an alias). Without the power the menu is not there and `BI <GO>`
 says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA` or `FORM`. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
 [BI_GUIDE.md](BI_GUIDE.md). **Using a report:** click a bar and the page filters to it, the buttons in a visual's header drill down, drill through to another page, show the rows behind it or open a trade in the terminal, and a slicer filters
-what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas ([BI_GUIDE.md](BI_GUIDE.md) section 15, [BI_TUTORIAL.md](BI_TUTORIAL.md) chapter 13); the YAML reference is [REPORTS.md](REPORTS.md).
+what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas ([BI_GUIDE.md](BI_GUIDE.md) section 15, [tutorial 10](../tutorials/10-first-bi-report.md) chapter 13); the YAML reference is [REPORTS.md](REPORTS.md).
 
 **On the right:** round tools, from left to right.
 
@@ -673,7 +673,7 @@ Panel kinds you will meet:
 | `links` | linked entities with badges | *Linked entities* everywhere |
 | `provenance` | how the view was built | *How this view was built* |
 
-The [panel kinds catalogue](PANEL_KINDS.md) shows each one in detail.
+The [panel kinds catalogue](PANELS.md) shows each one in detail.
 
 **No data available.** A panel whose data is missing, or not in the expected shape, says *No data
 available*. The rest of the view still renders. Real feeds are often incomplete; this is normal.
@@ -1167,7 +1167,7 @@ You should see *Impact of MX-20000001*:
 
 Each group has a total. Click any id to open it. With [masked fields](#masked-fields), Impact lists only what you
 could find yourself, and a masked measure and its total read `•••`. See the
-[Impact guide](../../drishti-console/web/guides/impact.md).
+[Impact guide](#f8--impact).
 
 ## Live updates
 
@@ -1405,103 +1405,7 @@ without `where` opens a single match directly.
 
 ## Search with a form (`FORM <pack>`)
 
-If you would rather fill in boxes than write a search, type `FORM` and a pack on the command line. The page is a form for the pack's
-kinds: one input for each field people search by, each suited to what the field holds. When you press **Search** the form writes the search
-for you, shows it, and runs it as any other search ([Search by value](#search-by-value)), so what you may see is exactly what it was.
-
-```text
-FORM trading <GO>
-```
-
-Type-ahead helps: `FORM tra` completes to `FORM trading`, and after a space it lists the kinds you may open in that pack
-(`FORM trading trade`). Only the packs and kinds you may open are offered. A pack with several kinds shows a row of them under its title;
-pick one to switch forms. `FORM <GO>` alone, or the **Forms** icon in the top bar, opens the forms home.
-
-### The forms home
-
-`/forms` (the **Forms** icon in the top bar, then *All forms*; or `FORM <GO>`) lists every pack that is switched on for you and declares a
-`form:` section, each with its description and its kinds as links to `/form/<pack>?kind=<kind>` with the number of fields the form has. Only
-what you may open is listed: the server leaves out kinds your roles cannot open and packs hidden by the sample-content policy. The
-**filter box** (focused when you arrive, except on a phone) narrows packs and kinds as you type; `Esc` clears it. **Recent forms** are the
-last eight forms you opened in this browser (kept in browser storage, per person); **Your saved searches** are the searches you saved from forms.
-In the top bar the **Forms** icon is lit on `/forms` and on any form. The old address `/form` leads here.
-
-![The trading pack's form for trades: a text field with its operator, an amount, a relative date, choices, a pasted list of ids and the Search button](img/form/01-form.jpg)
-
-### The inputs
-
-| The field holds | The input | What you can ask |
-|---|---|---|
-| text (a name, a description) | a box, an operator and *Match case* | equals, contains, starts with, matches a regular expression (case is ignored unless you tick *Match case*) |
-| a number or an amount | one box, or two for *between* | `=`, between, `>`, `<`, `≥`, `≤`; amounts take `250k`, `1.5m`, `2bn` |
-| a date | a date picker, two for *between*, or text for *relative* | on, between, before, after, or a range on the business-day calendar: `last 5 business days`, `next 10 business days`, `last 30 days`, `this week`, `month to date`, `year to date` |
-| one of a few values (up to 6: direction, status) | a row of tick boxes, one for each value the data holds | is one of the ticked values |
-| one of many values (asset class, product type, book, desk, currency) | **one dropdown the size of a select**, showing "All", the one value, or "3 selected: ABS, REPO, +1"; open it (`Enter` or `Space`) for a search box (type to filter), *Select all* / *Clear* (they act on the values the search leaves), and a tick box per value (`↓` `↑` move, `Space` ticks, a letter jumps, `Enter` or `Esc` closes). 44 pixels a row on a touch screen | is one of the ticked values; the address is the same as for tick boxes (`v.productType=BOND&v.productType=REPO`) |
-| an identifier | a box to paste a list: spaces, commas or lines | is one of them; `MX-2*` is any id starting `MX-2` |
-| yes or no | Any, Yes, No | is |
-
-Leave a field empty and it takes no part. A field marked **slower: not indexed** is not kept by the source as a column, so the documents are read to answer it:
-fine for a few thousand, slow for a million. Below the fields choose how to **sort** and how many results to **show**.
-
-### The search it made
-
-![The results: the command the form made with a Copy button, the count, and the table of trades with its column funnels](img/form/02-results.jpg)
-
-The line under the form is the search, in the grammar of [Search by value](#search-by-value). For the form above, on the real server:
-
-```text
-TRD where (currency = 'EUR' or currency = 'USD') and notional >= 100m and mtm > 0 order by mtm desc limit 25
-```
-
-**Copy** puts it on the clipboard (paste it into the command line or the search box); **Edit as text** opens it in the search box. The table is the
-console's table: sort by a heading, filter each column with its funnel ([Filter a table like Excel](#filter-a-table-like-excel)), page and walk it by keyboard. The key
-cell opens the view; **Alt+Left** brings you back to the form with your criteria in place and the results again, because everything you filled in is in the
-page's address (`/form/trading?kind=trade&op.mtm=>&v.mtm=1m&run=1`): bookmark it or send it.
-
-### Give the results the room: hide the form
-
-![After Search the form folds to one line of what you asked, above the command and the results](img/form/06-form-folded.jpg)
-
-When results arrive the form folds to **one line of your criteria** (`Trade id in IRS-48213 · Mark to market > 1m · +2 more`) so the table gets the screen.
-Click the line, press **Show form**, or press **Alt+F** to open it again with every box as you left it; **Hide form** (or Alt+F again) folds it. The button
-carries `aria-expanded` and `aria-controls`, and on a phone it is a 44 px target. The state is in the page's address (`&form=hidden` or `&form=shown`), so a
-link or **Alt+←** from a result returns to the form as it was; and in this tab a form you opened by hand stays open for the next Search. An administrator who
-would rather the form stayed open sets `form.collapse_on_submit: false` in `config/application.yaml` (default `true`).
-
-| Key | What it does on the form page |
-|---|---|
-| `Enter` | Search |
-| `Esc` | Clear every field |
-| `Ctrl+Enter` | Search from a list box |
-| `Alt+F` | Hide the form or show it again |
-| `Alt+←` | Back to the form from a result, criteria kept |
-
-### Keep it: name it, watch it, schedule it, send it
-
-Under the results: **Save as named search** (it appears under *Your saved searches* here and on `FORM`), **Watch as a monitor** (the first 50 results, live),
-**Schedule a report** (the search delivered as CSV on a schedule, see [Scheduled reports](#scheduled-reports)) and **Share link** (copies the form's address, which
-opens the same form with the same criteria for whoever has the right to see the pack).
-
-### Regular expressions
-
-*matches regex* uses a safe engine: it cannot be made to run for ever, whatever the pattern. It reads classes (`[A-Z]`, `\d`, `\w`), groups, `|`, `* + ? {n,m}`,
-`^` and `$`. It refuses what cannot be done in linear time (back-references such as `(a)\1`, look-around such as `(?=x)`, atomic groups, possessive quantifiers, `\b`),
-patterns over 200 characters, and anything too large once expanded, with a message that says which and the code `DRS-4010`; a pattern that takes over 50 ms on one value
-stops with `DRS-4011`.
-
-![A regular expression the search refused: the message names the back-reference and the code DRS-4010](img/form/04-regex-refused.jpg)
-
-### Keyboard and phone
-
-Tab walks the fields in reading order; **Enter** searches (in the list of ids, **Ctrl+Enter**); **Esc** clears every field. Everything is labelled for a screen reader.
-On a phone the fields stack in one column and every control is at least 44 px.
-
-![The form on a phone, 390 px wide](img/form/03-phone.jpg)
-
-### Who decides what the form offers
-
-The pack's author writes the form (`form:` in `pack.yaml`, see the [Pack developer guide](PACK_DEVELOPER_GUIDE.md#form-the-search-form-of-a-kind)); a pack that does not gets one
-inferred from its search columns and screen. Authors can shape a kind's form in the workbench's [Form tab](SCREEN_DESIGNER.md#the-form-tab).
+Type `FORM <pack>` (or open **Forms** in the Views menu) to fill in boxes instead of writing a search: the form writes the search, shows it and runs it. The reference is [QUERY_BY_FORM.md](QUERY_BY_FORM.md); the walk-through is [tutorial 3](../tutorials/03-query-by-form.md).
 
 ## Export, print and share
 
@@ -1628,39 +1532,7 @@ one live connection.
 
 ## Scheduled reports
 
-A report is a search that runs on its own, on a schedule, and delivers its result as a CSV file. On the search page,
-after a search, press **Schedule…** (or open **Reports** in the top bar). Give it a name, check the search, and say when:
-
-| When | Runs |
-|---|---|
-| `business-days 18:30` | at 18:30 on weekdays that are not holidays in the server's calendar |
-| `weekdays 07:00` | at 07:00 Monday to Friday |
-| `daily 06:00` | every day at 06:00 |
-| `hourly` | on the hour |
-| `cron 0 0 8,12,16 * * MON-FRI` | a cron expression: second, minute, hour, day, month, weekday |
-
-Times are in the business-date zone (New York by default). **Data for** chooses the current business day or the
-one before (for a morning report on yesterday's close). **Deliver to** is the server's reports folder, or a
-webhook (a URL your administrator allows; the CSV is posted with `X-Drishti-Report` and `X-Drishti-Business-Date`
-headers). Email needs SMTP settings on the server and is not offered until then.
-
-A report runs **as you**: it sees what your roles let you see when it runs, with the same masked fields. If your
-account is disabled or deleted, it stops. The list shows each report's next run and its last run (rows, where the
-file went, or the error); **Run now** runs one at once. Worked example: name `Big losers`, search
-`TRD where mtm < -10000000`, when `business-days 18:30`, deliver to the folder. At 18:30 on each business day a file
-such as `data/reports/ash/Big_losers/Big_losers-2026-10-01-1830.csv` appears, starting
-`kind,id,title,MTM (USD),…`.
-
-### Export, and subscriptions
-
-**Export.** On a BI report, *Export* under the page tabs saves **this page** or one visual as **PDF**, a **PNG** picture, an **Excel** workbook (a sheet per visual, numbers as numbers) or **CSV**. On a
-view, *Export* in the header does the same for the view. What you save is what **you** may see: your masks and your row rules apply, and the slicers, controls and filters you set are in it, written in the header with the
-business date. A file made for you can be shared; it holds no one else's numbers.
-
-**Subscribe.** *Subscribe* (next to Export) sends the report or view to you by email, on a schedule: every business day at 07:30, every Monday, the last business day of the month, or **after the day's data
-lands**. You choose the form (the tables in the email, a PDF or an Excel file attached). A BI author or an administrator can also subscribe other people or a role; each of them receives a render made for
-them. Your subscriptions are on **Reports** in the top bar, in one list with your scheduled reports: *Run now*, *Pause*, *Resume*, *Delete*, and *History* (who was sent what, and if it failed, why). Reference:
-[DISTRIBUTION.md](DISTRIBUTION.md); walk-through: [BI_TUTORIAL.md chapter 20](BI_TUTORIAL.md#20-export-and-subscribe).
+A report is a search that runs on its own, on a schedule, and delivers its result as a CSV file; **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [SCHEDULED_REPORTS.md](SCHEDULED_REPORTS.md); the walk-through is [tutorial 9](../tutorials/09-reports.md).
 
 ## Alerts
 
@@ -1709,7 +1581,7 @@ on the Alerts page and fill the form when clicked.
 
 Rules are kept with your account, and so are the alerts they fire: the newest 1,000 per user
 (`drishti.alerts.keep`) are kept in the identity database, so they are still there after a server restart. More in the
-[Monitors and alerts guide](../../drishti-console/web/guides/monitors-and-alerts.md).
+[Monitors and alerts guide](#monitors).
 
 
 ### Alerts on numbers
@@ -1721,7 +1593,7 @@ after a data load, or when it changes), and how to tell you: your **inbox** and 
 **It is your number.** The alert reads the number as you: with your row rules and your masks. If a number is masked for you the alert never judges it and never shows it. Once it fires it stays quiet until the number is back
 inside the limit (by the *hysteresis* you set, if any) and does not fire again within the *cooldown* (30 minutes by default). Your alerts are on the **Alerts** page (also **Reports**, *My alerts*): *Look now*, *Pause*, *Resume*,
 *Edit and history* (what every look did, and what was sent where) and *Delete*. What fired is in the **Alerts** tab of your inbox. If a board's author has made a tile notify, you are told when it turns red, on your own number.
-Reference: [DISTRIBUTION.md section 4](DISTRIBUTION.md#4-alerts-on-numbers); walk-through: [BI_TUTORIAL.md chapter 21](BI_TUTORIAL.md#21-alerts-on-a-number).
+Reference: [DISTRIBUTION.md section 4](DISTRIBUTION.md#4-alerts-on-numbers); walk-through: [tutorial 11](../tutorials/11-bi-that-runs-itself.md).
 
 ## Workspaces
 
@@ -1777,7 +1649,7 @@ templates:
       - { ref: { kind: ir-curve, id: CRV-USD-OIS }, title: Discount curve }
 ```
 
-`follows: 0` means "follow the first pane". See the [Workspaces guide](../../drishti-console/web/guides/workspaces.md).
+`follows: 0` means "follow the first pane". See the [Workspaces guide](#workspaces).
 
 ### Sharing a workspace
 

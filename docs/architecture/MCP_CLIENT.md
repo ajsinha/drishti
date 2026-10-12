@@ -59,7 +59,7 @@ proxy: {url: http://proxy.corp.example:3128, username: svc-drishti, password: ${
 A Streamable HTTP server is reached through the file's `proxy:` block, the site default (`drishti.http.proxy.*`; in the console the `DRISHTI_HTTP_PROXY_*` environment
 variables) or directly, exactly as an AI provider and a connector are: `http://` proxy, https servers tunnelled with `CONNECT` and keeping `tls.*`, the password an `${ENV}` placeholder
 (a literal refuses the file), a wrong login reported without the password. The initialize handshake, `tools/list`, calls and the closing DELETE all use it. Reference:
-[PROXY.md](../connectors/PROXY.md#9-the-console-ai-and-mcp-clients). The `mock` transport has no network and ignores it.
+[TLS.md (proxy)](../connectors/TLS.md#proxy-9-the-console-ai-and-mcp-clients). The `mock` transport has no network and ignores it.
 
 A server is **connected on first use**. Two things can go wrong, and both are retried by themselves (`drishti.retry.mcp.*`, defaults: 5 s,
 doubling, up to 5 min, jitter; the console has `retry.mcp.*`):

@@ -28,11 +28,11 @@ running sample server.
 | For | Go to |
 |---|---|
 | every key, option, format, tone, function and problem code | [Rachana reference](RACHANA_REFERENCE.md) |
-| each of the 22 panel kinds: when to use it, its options, what it does when empty, masked or live | [Panel kinds](PANEL_KINDS.md) |
+| each of the 22 panel kinds: when to use it, its options, what it does when empty, masked or live | [Panel kinds](PANELS.md) |
 | the Build workbench: canvas, inspector, YAML tab, tests, proposing | [Screen designer](SCREEN_DESIGNER.md) |
 | what Drishti does with no Sutra, and how inference fills a Sutra's gaps | [Inference](../architecture/INFERENCE.md) |
 | how a view keeps itself up to date | [Live updates](../architecture/LIVE.md) |
-| adding a new panel kind | [Panel developer guide](PANEL_DEVELOPER_GUIDE.md) |
+| adding a new panel kind | [Panel developer guide](PANELS.md#developing-a-panel-kind) |
 | shipping Sutras in a pack | [Pack developer guide](PACK_DEVELOPER_GUIDE.md) |
 
 Eleven small working Sutras, each with a self-contained JSON document and a note, are in [examples](examples/README.md):
@@ -768,7 +768,7 @@ amber because its status is *Pending*.
 total, the closing bar, the sort by date), so the console only draws. Five more kinds work the same way:
 `histogram` (a VaR scenario vector with VaR and ES lines), `scatter` (books' VaR against P&L), `candlestick` (daily
 bars), `graph` (a counterparty's group, agreement and netting sets) and `pivot` (MTM by book and currency, with
-totals). [Section 10](#10-the-panel-kinds) links to the entry of each of the 22 kinds in [PANEL_KINDS.md](PANEL_KINDS.md), which
+totals). [Section 10](#10-the-panel-kinds) links to the entry of each of the 22 kinds in [PANELS.md](PANELS.md), which
 explains every kind: its options, what the server computes and what it does when empty, masked or live.
 
 Put the blocks of 4.2 to 4.7 together under one `panels:` and you have a complete trade view. The
@@ -1020,24 +1020,24 @@ and `GET /api/v1/sutras/problems` give `<file>:<line>:<column> <code> <message>`
 
 ## 10. The panel kinds
 
-There are 22 panel kinds. Each has one catalogue entry in [PANEL_KINDS.md](PANEL_KINDS.md): what it shows, when to use
+There are 22 panel kinds. Each has one catalogue entry in [PANELS.md](PANELS.md): what it shows, when to use
 it, its key options, what it does when its data is empty, in error, masked or live, a complete YAML and a screenshot.
 The exhaustive option tables are in the [Rachana reference](RACHANA_REFERENCE.md#panel-kinds). This guide does not
 repeat either; pick a kind by what you need to show.
 
 | You want to show | Kind | You want to show | Kind |
 |---|---|---|---|
-| fields as label/value pairs | [`kv`](PANEL_KINDS.md#kv) | one number against a maximum | [`gauge`](PANEL_KINDS.md#gauge) |
-| one big figure with its change | [`metric`](PANEL_KINDS.md#metric) | a grid over two axes | [`surface`](PANEL_KINDS.md#surface) |
-| rows, with totals and "N more" | [`table`](PANEL_KINDS.md#table) | steps from a start to an end | [`waterfall`](PANEL_KINDS.md#waterfall) |
-| a dated schedule, the next row lit | [`ladder`](PANEL_KINDS.md#ladder) | a distribution with marker lines | [`histogram`](PANEL_KINDS.md#histogram) |
-| one layout per element, as tabs | [`tabs`](PANEL_KINDS.md#tabs) | two measures per row | [`scatter`](PANEL_KINDS.md#scatter) |
-| a curve over an axis | [`line`](PANEL_KINDS.md#line) | daily bars with volume | [`candlestick`](PANEL_KINDS.md#candlestick) |
-| bands against a limit | [`area`](PANEL_KINDS.md#area) | entities and their relations | [`graph`](PANEL_KINDS.md#graph) |
-| bars scaled to the largest | [`hbar`](PANEL_KINDS.md#hbar) | dated events in order | [`timeline`](PANEL_KINDS.md#timeline) |
-| the entities the document points to | [`links`](PANEL_KINDS.md#links) | a total by one field across another | [`pivot`](PANEL_KINDS.md#pivot) |
-| states coloured by meaning | [`status`](PANEL_KINDS.md#status) | a note with values in it | [`markdown`](PANEL_KINDS.md#markdown) |
-| how the view was built | [`provenance`](PANEL_KINDS.md#provenance) | | |
+| fields as label/value pairs | [`kv`](PANELS.md#kv) | one number against a maximum | [`gauge`](PANELS.md#gauge) |
+| one big figure with its change | [`metric`](PANELS.md#metric) | a grid over two axes | [`surface`](PANELS.md#surface) |
+| rows, with totals and "N more" | [`table`](PANELS.md#table) | steps from a start to an end | [`waterfall`](PANELS.md#waterfall) |
+| a dated schedule, the next row lit | [`ladder`](PANELS.md#ladder) | a distribution with marker lines | [`histogram`](PANELS.md#histogram) |
+| one layout per element, as tabs | [`tabs`](PANELS.md#tabs) | two measures per row | [`scatter`](PANELS.md#scatter) |
+| a curve over an axis | [`line`](PANELS.md#line) | daily bars with volume | [`candlestick`](PANELS.md#candlestick) |
+| bands against a limit | [`area`](PANELS.md#area) | entities and their relations | [`graph`](PANELS.md#graph) |
+| bars scaled to the largest | [`hbar`](PANELS.md#hbar) | dated events in order | [`timeline`](PANELS.md#timeline) |
+| the entities the document points to | [`links`](PANELS.md#links) | a total by one field across another | [`pivot`](PANELS.md#pivot) |
+| states coloured by meaning | [`status`](PANELS.md#status) | a note with values in it | [`markdown`](PANELS.md#markdown) |
+| how the view was built | [`provenance`](PANELS.md#provenance) | | |
 
 To see the kinds working together, open an [example](examples/README.md) in the workbench: the all-panels showcase
 uses every kind on one bond trade, and the layout keys (`area`, `span`, `height`) that arrange them are in the
@@ -1156,7 +1156,7 @@ Which to use: a pivot **aggregates** rows by fields you name (the data is flat a
 kind** with the **`pivot:` option** that gives a table a user-driven Pivot tab ([the option](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)).
 
 For documents that are trees all the way down (legs holding cashflows holding fixings), the
-[nested documents tutorial](../../drishti-console/web/guides/nested-data.md) shows how paths, tables and tabs go as deep as the data.
+[nested documents tutorial](NESTED_DOCUMENTS.md) shows how paths, tables and tabs go as deep as the data.
 
 ## 13. Dates, live data and imperfect data
 
@@ -1364,7 +1364,7 @@ You can write every Sutra in this guide in a text editor. The **Build workbench*
 language with the engine in the loop: the screen you see is the real one, every edit is an operation the server applies
 to the Sutra text (your comments and key order are kept), and the checks run as you type. Its full manual is
 [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md); for a guided build of four complete screens, follow the
-[Build workbench tutorial](BUILD_WORKBENCH_TUTORIAL.md). What matters for a Sutra author:
+[Build workbench tutorial](../tutorials/06-design-a-screen.md). What matters for a Sutra author:
 
 | You are doing | In the workbench | Section |
 |---|---|---|
@@ -1416,9 +1416,9 @@ twice; `DRS-2029` an option value of the wrong kind; `DRS-2030` bad `span`; `DRS
 ## Where next
 
 - [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md): every key, panel kind, format, function and problem code.
-- [PANEL_KINDS.md](PANEL_KINDS.md): the 22 panel kinds, one entry each.
-- [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md) and the [Build workbench tutorial](BUILD_WORKBENCH_TUTORIAL.md): build screens visually.
+- [PANELS.md](PANELS.md): the 22 panel kinds, one entry each.
+- [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md) and the [Build workbench tutorial](../tutorials/06-design-a-screen.md): build screens visually.
 - [INFERENCE.md](../architecture/INFERENCE.md): what Drishti does without a Sutra, and how to start a Sutra from inference.
 - [LIVE.md](../architecture/LIVE.md): how a view you laid out keeps itself up to date.
 - [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md): packaging Sutras with mnemonics, links, formats and samples.
-- [PANEL_DEVELOPER_GUIDE.md](PANEL_DEVELOPER_GUIDE.md): adding a panel kind of your own.
+- [PANELS.md (developing a panel kind)](PANELS.md#developing-a-panel-kind): adding a panel kind of your own.

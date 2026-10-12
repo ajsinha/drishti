@@ -39,11 +39,11 @@
     ('Govern', [
       ('/build/reviews', 'patch-check', 'Reviews', 'Proposed Sutras waiting for approval', '/build/reviews')]),
     ('Learn', [
-      ('/help/build-workbench-tutorial', 'map', 'Build workbench tutorial', 'Four complete projects, a picture of every step', None),
+      ('/help/tutorials', 'mortarboard', 'Tutorials', 'Seventeen hands-on tutorials, a picture of every step', None),
       ('/help/schema-to-pack', 'diagram-3', 'Schema to pack', 'Every rule that turns a JSON Schema into a pack, with examples', None),
       ('/help/screen-designer', 'bounding-box', 'Screen designer guide', 'From JSON files to a screen: the canvas, step by step', None),
       ('/help/sutra-developer-guide', 'journal-code', 'Sutra developer guide', 'Writing a layout end to end, by example', None),
-      ('/help/panel-kinds', 'grid-1x2', 'Panel kinds', 'The 22 panel kinds, one entry each', None),
+      ('/help/panels', 'grid-1x2', 'Panel kinds', 'The 22 panel kinds, one entry each', None),
       ('/help/rachana-reference', 'book', 'Rachana reference', 'Every key, panel option, format and problem code', None),
       ('/help/pack-developer-guide', 'box-seam', 'Pack developer guide', 'Bring a new domain in, step by step', None)])]),
 ] %}
@@ -77,7 +77,7 @@
   ('Help', 'question-circle', [
     ('Learn', [
       ('/help', 'question-circle', 'Help centre', 'Guides, concepts and reference (F1)', '/help'),
-      ('/help/install-and-run', 'flag', 'Install and run', 'From nothing to your first view', None),
+      ('/help/getting-started', 'flag', 'Install and run', 'From nothing to your first view', None),
       ('/about', 'info-circle', 'About ' ~ PRODUCT, 'Version, licence and credits', '/about')])])] %}
 {% macro _on(href, match) -%}{{ 'yes' if (path == href) or (match and path.startswith(match)) else '' }}{%- endmacro %}
 

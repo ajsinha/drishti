@@ -87,7 +87,7 @@ def test_the_panel_question_mark_opens_a_popover_with_its_fields_and_two_links_a
     open_view(page, live_console)
     help_link = page.locator("section[data-panel='scenarios'] a.pnl-help[data-about-help]")
     assert help_link.get_attribute("role") == "button" and help_link.get_attribute("aria-expanded") == "false"
-    assert help_link.get_attribute("href").startswith("/help/panel-kinds#")      # without the script it is still today's link
+    assert help_link.get_attribute("href").startswith("/help/panels#")      # without the script it is still today's link
     help_link.focus()
     page.keyboard.press("Enter")
     pop = page.locator(".about-pop")
@@ -96,7 +96,7 @@ def test_the_panel_question_mark_opens_a_popover_with_its_fields_and_two_links_a
     assert page.evaluate("document.activeElement.classList.contains('about-pop')")
     text = pop.inner_text()
     assert "The markers are -VaR" in text                                         # the pack's own text for this panel
-    assert pop.locator("a", has_text="panel").get_attribute("href").startswith("/help/panel-kinds#")
+    assert pop.locator("a", has_text="panel").get_attribute("href").startswith("/help/panels#")
     assert pop.locator("button", has_text="About this page").count() == 1
     page.keyboard.press("Escape")
     assert pop.is_hidden() and page.evaluate("document.activeElement.hasAttribute('data-about-help')")

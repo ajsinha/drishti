@@ -36,6 +36,6 @@ and the colleague sees the view **with their own permissions**.
 ![A shared view: the banner, the note, and a masked value](/help/files/guides/img/collab/05-shared-view.jpg)
 
 Everything else (the recipient rules, the no-access page, edit and retract, resolve and follow, the email opt-outs on the account page,
-moderation) is in the user guide: [Share a view with a note](/help/using-the-terminal#share-a-view-with-a-note),
-[Your inbox](/help/using-the-terminal#your-inbox), [Discussion](/help/using-the-terminal#discussion). If something did not arrive or
+moderation) is in the user guide: [Share a view with a note](/help/user-guide#share-a-view-with-a-note),
+[Your inbox](/help/user-guide#your-inbox), [Discussion](/help/user-guide#discussion). If something did not arrive or
 opened the wrong data, see [Troubleshooting](/help/troubleshooting).

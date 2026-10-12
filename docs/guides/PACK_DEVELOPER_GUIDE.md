@@ -110,7 +110,7 @@ It is not in `config/packs/`, so no server loads it by accident. To follow along
 **A scratch server to try things on.** Every step ends with something you can see. Use a scratch server and console on
 ports of their own, so that nothing of yours is touched: the QUICKSTART packs, plus the one you are writing
 (`DRISHTI_PACKS` is explained in [PACKS.md](PACKS.md#turning-packs-on); the start-up recipe is in
-[QUICKSTART.md](QUICKSTART.md)):
+[GETTING_STARTED.md](GETTING_STARTED.md)):
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
@@ -282,7 +282,7 @@ level 2  client  CLI-ACME, CLI-GLOBEX                         via "client"
 Tickets depend on the agent directly (they name her in `assignee`), with their ages summed; the clients roll up
 through the tickets' `client` field. That answers *which clients are affected if Priya is off sick?* Impact finds
 dependents through the sources' reverse lookups; the demo source has them, as do the lake and database connectors.
-See the [Impact guide](../../drishti-console/web/guides/impact.md).
+See the [Impact guide](USER_GUIDE.md#f8--impact).
 
 ### Step 8. Pick-list columns and a Pivot tab
 
@@ -1902,7 +1902,7 @@ pack by hand ([above](#build-it-step-by-step)) is simpler.
 #### What you need
 
 - the repository checked out, and Python 3 with `pyyaml` (or `uv`, which can supply it);
-- the server and console running (see [QUICKSTART.md](QUICKSTART.md)), so you can open the result.
+- the server and console running (see [GETTING_STARTED.md](GETTING_STARTED.md)), so you can open the result.
 
 #### Generator step 1. Create the generator script
 
@@ -2030,7 +2030,7 @@ if __name__ == "__main__":
 | `domains` | Data domain → kinds. Each domain becomes a Delta Lake connector `<domain>-store`. |
 | `examples` | Commands shown on the landing page and in the pack's guide. |
 | `roles` | Roles the pack adds: which kinds they may open, and whether they see raw JSON. |
-| `impact=` | Optional F8 configuration (`follow`, `measures`, `formats`); see [F8 · Impact](../../drishti-console/web/guides/impact.md). |
+| `impact=` | Optional F8 configuration (`follow`, `measures`, `formats`); see [F8 · Impact](USER_GUIDE.md#f8--impact). |
 | `external_ids=` | Ids that live in a required pack, so links to them pass the check. |
 | `overview=` | Extra prose for the generated guide. |
 

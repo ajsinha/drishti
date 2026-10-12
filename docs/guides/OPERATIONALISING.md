@@ -419,7 +419,7 @@ tar -xzf dist\finance-1.0.1.tar.gz -C D:\drishti\packs\.stage   # tar.exe ships 
 
 Keep the packs folder on the **same drive** as the backup folder so the swap is a rename; antivirus or an open Explorer window
 on a pack folder can block the rename ("Access is denied"): close it and retry, the old version is put back automatically.
-More in [WINDOWS.md](WINDOWS.md).
+More in [GETTING_STARTED.md (Windows)](GETTING_STARTED.md#drishti-on-windows).
 
 ## 15. Troubleshooting
 

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Makes the pictures of the Analyse chapter (docs/guides/BI_TUTORIAL.md chapter 25, ANALYSE.md) from the real stack (not a test: run it by hand).
+"""Makes the pictures of the Analyse chapter (docs/tutorials/10-first-bi-report.md chapter 25, ANALYSE.md) from the real stack (not a test: run it by hand).
 
     drishti-console/.venv/bin/python drishti-console/tests/analyse_shots.py <pictures dir>
 

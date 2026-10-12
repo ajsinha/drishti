@@ -682,7 +682,7 @@ a missing client certificate, and a host name the certificate does not carry.
 
 ## Outbound proxy
 
-The settings and rules are shared by every HTTP-based connector: [PROXY.md](PROXY.md). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
+The settings and rules are shared by every HTTP-based connector: [TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
 
 For a lake on S3 or an S3-compatible store (`s3.endpoint`, or AWS): the **native** engine uses the AWS SDK's proxy configuration, the **Hadoop** engine gets
 `fs.s3a.proxy.host`, `.port`, `.username` and `.password` from the same settings (S3A has no no-proxy list: the proxy is set only when the endpoint is not on
@@ -746,7 +746,7 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 | `s3.endpoint` | none | an S3-compatible store (MinIO, Ceph); also sets path-style access and TLS by scheme |
 | `s3.path-style` | `true` | path-style addressing, only with `s3.endpoint` |
 | `s3.access-key`, `s3.secret-key` | none | static credentials; otherwise the AWS chain |
-| `proxy.*` | none | the outbound HTTP proxy ([PROXY.md](PROXY.md)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none`; for the S3 store |
+| `proxy.*` | none | the outbound HTTP proxy ([TLS.md (proxy)](TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none`; for the S3 store |
 | `hadoop.<key>` | none | passed to Hadoop as `<key>` (see [CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake)) |
 
 ## 15. Checklist for production

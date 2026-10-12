@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The console's AI providers and MCP client through an outbound proxy (``docs/connectors/PROXY.md``): a small fake forward proxy on loopback
+"""The console's AI providers and MCP client through an outbound proxy (``docs/connectors/TLS.md``): a small fake forward proxy on loopback
 (HTTP forwarding and CONNECT) counts what it serves and checks ``Proxy-Authorization``. The ``proxy:`` block, the site default from the
 environment, ``proxy: none``, the no-proxy list, a literal password refused, the password never in a description. No real network."""
 import asyncio

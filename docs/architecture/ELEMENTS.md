@@ -136,7 +136,7 @@ The direction was checked against the code. The parts the element reuses, and th
 
 | Piece | Where | What it gives | Gap for embedding |
 |---|---|---|---|
-| Panel HTML | `_macros/panels.html` `panel(p)` | every panel kind, server-rendered, no inline styles or scripts (the console's CSP is `style-src 'self'; script-src 'self'`) | links are relative (`/v/…`, `/help/panel-kinds#…`, `/export/…`); some affordances need cookies |
+| Panel HTML | `_macros/panels.html` `panel(p)` | every panel kind, server-rendered, no inline styles or scripts (the console's CSP is `style-src 'self'; script-src 'self'`) | links are relative (`/v/…`, `/help/panels#…`, `/export/…`); some affordances need cookies |
 | Live frames as HTML | `api_routes.py` `_view_event`, `CHART_KINDS = {"line", "area"}` | `frame` patches: `strip`, `panel` (with `html`, or chart `data` for line/area), `provenance`, `deleted`, `restored` | none: reused unchanged |
 | The `view` event | `_view_event` | on a (re)connection, reduced to `{"generation": n}`; pages repaint by reloading (`live.js`: `location.reload()`) | the element must fetch a fresh view itself: the embed API's `GET view` (no replay) |
 | One channel per browser | `api_routes.py` `channel()`, `channel_change()`, `CHANNELS` | `{ch, d}` multiplexing, add/remove without reconnecting, heartbeat `: hb`, `end`, `gone` with DRS code, per-channel cap (`live.max_subscriptions`) | cookie identity (`ident(request)`), owner check by user only; the logic is one 160-line closure |
@@ -632,7 +632,7 @@ Panel HTML holds console-relative links. One click (and `keydown` Enter) listene
 | Link | Becomes |
 |---|---|
 | `/v/{kind}/{id}` (strip cells, tables, graph nodes, chart points: `charts.js` `open()`) | `drishti:navigate`; default: reload in place on that entity |
-| `/help/panel-kinds#…` (the panel `?`) | the panel's About popover (`about-hints.js`), not a console page |
+| `/help/panels#…` (the panel `?`) | the panel's About popover (`about-hints.js`), not a console page |
 | anything else console-relative | absolute console URL, `target="_blank" rel="noopener"` |
 | console-only affordances (export, layout, share, pin) | not rendered: the macros get `embed=True` and leave them out |
 
@@ -1177,7 +1177,7 @@ told (not silent) limit, the registry clean-up and `change(add, remove)`. The em
 embedded view), `panels(items, embed)` and `provenance_banners(vm, asof, business_date, embed, back_href)` (no data held for the
 date, the date actually shown, a late source). `terminal/view.html` calls them and `routes/embed_routes.py` `_render` calls the
 same macros, so there is no second template (`templates/embed/vhead.html` is gone). `panel(p, embed=false)` in `panels.html`
-drops, for `embed=true`, the two things that mean nothing in a host page: the help link to the console's `/help/panel-kinds`
+drops, for `embed=true`, the two things that mean nothing in a host page: the help link to the console's `/help/panels`
 and the CSV download. The console page itself still renders with `embed=false` (also in its `?embed` iframe mode, unchanged).
 The payload's `banners` is now filled (it was `[]`) and the head carries no console-only affordances (alert, pin, share, JSON,
 print, About, Discussion, Compare stay in `view.html`). `tests/test_view_macros.py` proves a panel's HTML is the same on the

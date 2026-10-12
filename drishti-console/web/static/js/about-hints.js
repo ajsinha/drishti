@@ -231,7 +231,7 @@
 
   var lastIndex = null;
   function wire() {
-    root.querySelectorAll('section[data-panel] a.pnl-help[href*="/help/panel-kinds"]:not([data-about-help])').forEach(function (a) {
+    root.querySelectorAll('section[data-panel] a.pnl-help[href*="/help/panels"]:not([data-about-help])').forEach(function (a) {
       a.setAttribute('data-about-help', '');
       a.setAttribute('role', 'button'); a.setAttribute('aria-haspopup', 'dialog'); a.setAttribute('aria-expanded', 'false');
       a.setAttribute('title', 'About this panel');

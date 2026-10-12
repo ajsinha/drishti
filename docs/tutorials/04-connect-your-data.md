@@ -233,7 +233,7 @@ settings:
     no-proxy: [localhost, .internal.example.com]
 ```
 
-The page then shows the effective proxy, masked, and where it came from; **Test connection** goes through it and says so. [PROXY.md](../connectors/PROXY.md) is the reference.
+The page then shows the effective proxy, masked, and where it came from; **Test connection** goes through it and says so. [TLS.md (proxy)](../connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) is the reference.
 
 ## Step 7 · Look at all of it, then tidy up
 

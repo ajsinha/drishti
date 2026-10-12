@@ -87,7 +87,7 @@ def test_where_next_labels_do_not_repeat_the_kind(client, backend, monkeypatch):
 def test_the_view_loads_the_hints_script_and_the_panel_help_stays_a_link_without_javascript(client):
     h = client.get("/v/trade/IRS-48213").text
     assert "/static/js/about-hints.js" in h
-    assert 'class="pnl-help" href="/help/panel-kinds#table"' in h                                # today's link, enhanced by the script only
+    assert 'class="pnl-help" href="/help/panels#table"' in h                                # today's link, enhanced by the script only
     js = (WEB / "static" / "js" / "about-hints.js").read_text()
     assert "innerHTML" not in js and "insertAdjacentHTML" not in js                              # every word of an entry goes in as text
     assert js.count("\n") < 300 and (WEB / "static" / "js" / "about.js").read_text().count("\n") < 300
