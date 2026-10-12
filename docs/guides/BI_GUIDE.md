@@ -334,7 +334,7 @@ real data and query time while designing, Check, undo and redo, save and save a 
 **Phase 5, streaming BI.** `mode: live` tables kept in memory and updated by key from the same live machinery as the terminal (with retention and per-reader rows and masks on every update); a live stream per report and visuals that redraw in place (coalesced, with a live indicator, pause and resume, stale and disconnected states); the rolling chart (`live-chart`); the Perspective grid and pivot over masked Arrow with streaming rows, under the narrowest policy; boards with pages, tile alerts, kiosk and rotation; the two live datasets, two live reports and the board shipped as samples; `drishti.bi.live.*`; `DRS-9050` to `9053`. References: [DATASETS.md section 7.1](DATASETS.md#71-live-tables-phase-5), [REPORTS.md section 13](REPORTS.md#13-live-visuals-and-perspective-phase-5), [BOARDS.md](BOARDS.md).
 
 **Wave 3, the BI essentials.** Scheduled refresh of datasets (`refresh:` with a clock, the pack's business-day calendar or `after-load`, retried with the shared policy, its state on the dataset page: [DATASETS.md section 7.2](DATASETS.md#72-scheduled-refresh));
-time intelligence in the measure language (`ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year`, `running`: [DATASETS.md section 4.1](DATASETS.md#41-time-intelligence)), badged in the designer's Fields pane; the visuals **map** (countries by ISO code, or points by latitude and longitude, from a vendored
+time intelligence in the measure language (`ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year`, `running`: [DATASETS.md section 4.1](DATASETS.md#41-time-intelligence)), badged in the designer's Fields pane; the visuals **map** (countries by ISO code, regions by ISO 3166-2 code with a click that drills from the world to a country and its regions, or points by latitude and longitude, from a vendored
 country file: no tiles, no CDN), **funnel**, **histogram**, **box plot** and **bubble** in the visual catalogue, the designer, exports and `<drishti-report>`; and **true totals** for the measures of a matrix or table that do not add up, worked out by the engine
 ([REPORTS.md sections 3.1 and 3.2](REPORTS.md#31-the-map-funnel-histogram-box-plot-and-bubble)). Walk-through: [BI_TUTORIAL.md chapter 23](BI_TUTORIAL.md#23-time-totals-and-a-map); settings `drishti.bi.refresh.*` and `drishti.bi.report.distribution-rows` and `totals-max-rows`.
 
@@ -484,7 +484,7 @@ authors expect them: the canvas on the left, then **Filters**, **Visualizations*
 
 The designer needs the `bi-author` power. Its step-by-step use is [BI_TUTORIAL.md](BI_TUTORIAL.md) chapter 13.
 
-**The new visuals (wave 3).** The Charts group of the Visualizations pane also offers `bubble`, `funnel`, `histogram`, `box` and `map`; Build shows each one's wells (a map needs a `location`, or a `latitude` and a `longitude`); Format has **Bars** (a histogram's number of bands) and, for a table, **Total row**; a
+**The new visuals (wave 3).** The Charts group of the Visualizations pane also offers `bubble`, `funnel`, `histogram`, `box` and `map`; Build shows each one's wells (a map needs a `location`, or a `latitude` and a `longitude`); Format has **Bars**, for a map **Level** and **Drill into countries** (a histogram's number of bands) and, for a table, **Total row**; a
 measure that uses time intelligence carries a small badge (`ytd`, `running total`, ...) in the Fields pane. Reference: [REPORTS.md section 3.1](REPORTS.md#31-the-map-funnel-histogram-box-plot-and-bubble).
 
 

@@ -200,7 +200,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [SCREEN_DESIGNER.md](guides/SCREEN_DESIGNER.md) | you design or edit a Sutra in the browser, save it and submit it for review |
 | [SUTRA_DEVELOPER_GUIDE.md](guides/SUTRA_DEVELOPER_GUIDE.md) | you are learning to write Sutras: anatomy, matching, labels, paths, source, row groups, testing and CI, the checklist |
 | [RACHANA_REFERENCE.md](guides/RACHANA_REFERENCE.md) | you are writing a Sutra and need the exact key, panel option, format, expression or problem code |
-| [PANEL_KINDS.md](guides/PANEL_KINDS.md) | you choose, configure or debug a panel: all twenty-one kinds, what each means, how it behaves, an example and a picture |
+| [PANEL_KINDS.md](guides/PANEL_KINDS.md) | you choose, configure or debug a panel: all twenty-two kinds, what each means, how it behaves, an example and a picture |
 | [PANEL_DEVELOPER_GUIDE.md](guides/PANEL_DEVELOPER_GUIDE.md) | you add a new panel kind to Drishti |
 | [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md) | you change Drishti's code: layout, build, tests, gates, and recipes |
 | [API_GUIDE.md](guides/API_GUIDE.md) | you call the REST API from a program, or need the ViewModel contract |
@@ -304,7 +304,7 @@ Eleven working Sutras with their data, introduced in [guides/examples/README.md]
 
 | Note | Shows |
 |---|---|
-| [all-panels-showcase.md](guides/examples/all-panels-showcase.md) | All twenty-one panel kinds on one screen, reading one self-contained bond trade. |
+| [all-panels-showcase.md](guides/examples/all-panels-showcase.md) | All twenty-two panel kinds on one screen, reading one self-contained bond trade. |
 | [exposure-profile.md](guides/examples/exposure-profile.md) | Expected and potential future exposure over tenor, against a limit. |
 | [linked-sources.md](guides/examples/linked-sources.md) | Panels that read other entities with `source: "link(id, kind)"`: the counterparty's netting sets, a netting set's exposure and a desk's pivot, all fetched live. |
 | [market-charts.md](guides/examples/market-charts.md) | Market data: daily bars, a line of closes and a volatility surface. |

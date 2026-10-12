@@ -29,12 +29,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param pivotRows row keys a {@code pivot} shows (default 200); the rest are counted in {@code more}
  * @param treeDepth levels a table or ladder with {@code children} descends (default 12); deeper rows are left out
  * @param treeRows rows in all (every level) one such table builds (default 10,000); further ones are left out
+ * @param mapEntities entities of a kind a {@code map} panel reads to shade or to know which countries have a page (default 1,000)
+ * @param mapCacheSeconds how long those entities are kept for the next map (default 60)
+ * @param mapBudgetMillis the time a map gives its entities to arrive (default 5,000); a slower read leaves the map unshaded
  * @param pivotColumns column keys a {@code pivot} shows (default 40); values under further keys are left out of the grid
  *     but still counted in the row totals
  */
 @ConfigurationProperties("drishti.panels")
 public record PanelLimits(Integer maxValues, Integer maxPoints, Integer maxNodes, Integer maxEvents, Integer pivotRows,
-        Integer pivotColumns, Integer treeDepth, Integer treeRows) {
+        Integer pivotColumns, Integer treeDepth, Integer treeRows, Integer mapEntities, Integer mapCacheSeconds, Integer mapBudgetMillis) {
 
     @org.springframework.boot.context.properties.bind.ConstructorBinding
     public PanelLimits {
@@ -46,11 +49,14 @@ public record PanelLimits(Integer maxValues, Integer maxPoints, Integer maxNodes
         pivotColumns = positive(pivotColumns, 40);
         treeDepth = positive(treeDepth, 12);
         treeRows = positive(treeRows, 10_000);
+        mapEntities = positive(mapEntities, 1_000);
+        mapCacheSeconds = positive(mapCacheSeconds, 60);
+        mapBudgetMillis = positive(mapBudgetMillis, 5_000);
     }
 
     /** The defaults. */
     public static PanelLimits defaults() {
-        return new PanelLimits(null, null, null, null, null, null, null, null);
+        return new PanelLimits(null, null, null, null, null, null, null, null, null, null, null);
     }
 
     private static int positive(Integer v, int fallback) {

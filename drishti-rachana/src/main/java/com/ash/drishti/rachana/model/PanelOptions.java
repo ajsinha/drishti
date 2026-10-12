@@ -100,6 +100,12 @@ public final class PanelOptions {
         if (items != null && !(value instanceof List<?>)) {
             return Optional.of(what + " must be a list of " + items + ", not '" + value + "'");
         }
+        if (kind == PanelKind.MAP) {
+            Optional<String> bad = mapProblem(what, option, value);
+            if (bad.isPresent()) {
+                return bad;
+            }
+        }
         List<String> allowed = choices(kind, option);
         if (!allowed.isEmpty() && !allowed.contains(String.valueOf(value))) {
             return Optional.of("option '" + option + "' of '" + kind.id() + "' panels must be one of " + String.join(", ", allowed)
@@ -118,10 +124,40 @@ public final class PanelOptions {
         return Optional.empty();
     }
 
+    /** What a link template may hold: the country's ISO 3166-1 alpha-3 or alpha-2 code, or a region's ISO 3166-2 code. */
+    public static final List<String> MAP_TOKENS = List.of("{iso3}", "{iso2}", "{code}");
+    private static final Set<String> SHADE_KEYS = Set.of("kind", "field", "by", "fmt", "label");
+
+    private static Optional<String> mapProblem(String what, String option, Object value) {
+        switch (option) {
+            case "highlight", "region" -> {
+                if (!(value instanceof String)) {
+                    return Optional.of(what + " is an expression written as text (such as $.iso3), not '" + value + "'");
+                }
+            }
+            case "link" -> {
+                if (!(value instanceof Map<?, ?> m) || !(m.get("kind") instanceof String) || !(m.get("id") instanceof String id)
+                        || MAP_TOKENS.stream().noneMatch(id::contains) || !m.keySet().stream().allMatch(k -> "kind".equals(k) || "id".equals(k))) {
+                    return Optional.of(what + " is { kind: <entity kind>, id: <template> } where the template holds one of " + String.join(", ", MAP_TOKENS)
+                            + " (for example id: \"JUR-{iso3}\")");
+                }
+            }
+            case "shade" -> {
+                if (!(value instanceof Map<?, ?> m) || !(m.get("kind") instanceof String) || !(m.get("field") instanceof String)
+                        || !m.keySet().stream().allMatch(k -> SHADE_KEYS.contains(String.valueOf(k)))) {
+                    return Optional.of(what + " is { kind: <entity kind>, field: <expression>, by: <expression naming the country>, fmt, label }");
+                }
+            }
+            default -> { }
+        }
+        return Optional.empty();
+    }
+
     /** Whether {@code option} of {@code kind} panels is written as a list or a mapping (every other option is one value). */
     public static boolean takesContainer(PanelKind kind, String option) {
         return "columns".equals(option) || Panel.PIVOT.equals(option) || "body".equals(option) || "panels".equals(option) || "by".equals(option) && kind == PanelKind.PIVOT
-                || "markers".equals(option) && kind == PanelKind.HISTOGRAM || LISTS.getOrDefault(kind, Map.of()).containsKey(option);
+                || "markers".equals(option) && kind == PanelKind.HISTOGRAM
+                || kind == PanelKind.MAP && ("link".equals(option) || "shade".equals(option)) || LISTS.getOrDefault(kind, Map.of()).containsKey(option);
     }
 
     private static boolean byFields(Object value) {

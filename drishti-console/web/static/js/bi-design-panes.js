@@ -273,7 +273,11 @@
           fmt.appendChild(frow('Bars', textInput(f.bins, (x) => setFmt(v, 'bins', x === '' ? '' : Number(x)), { type: 'number', min: '2', max: '100', 'data-format-bins': '' }), 'Equal-width bands between the smallest and the largest value (2 to 100, default 10).'));
         }
         if (v.type === 'map') {
-          fmt.appendChild(h('p', { class: 'bi-vis-note', text: (v.wells.location || []).length ? 'Shades countries by the code in the location well (ISO alpha-2 or alpha-3, or the English name).' : 'Marks points at the latitude and longitude of the rows.' }));
+          fmt.appendChild(h('p', { class: 'bi-vis-note', text: (v.wells.location || []).length ? 'Shades countries by the code in the location well (ISO alpha-2 or alpha-3, or the English name) and regions by an ISO 3166-2 code such as AU-NSW.' : 'Marks points at the latitude and longitude of the rows.' }));
+          if ((v.wells.location || []).length) {
+            fmt.appendChild(frow('Level', textInput(f.level, (x) => setFmt(v, 'level', x.trim() === 'world' ? '' : x.trim()), { 'data-format-level': '', placeholder: 'world' }), 'World (the default), or the country the map opens at: an ISO code such as AUS or its English name.'));
+            fmt.appendChild(checkbox('Drill into countries', f.drill !== false, (x) => setFmt(v, 'drill', x ? '' : false), { 'data-format-drill': '' }));
+          }
         }
         if (['map', 'histogram', 'box', 'funnel', 'bubble'].indexOf(v.type) < 0) fmt.appendChild(frow('Legend', selectInput([['', 'default'], ['bottom', 'bottom'], ['top', 'top'], ['right', 'right'], ['none', 'none']], f.legend, (x) => setFmt(v, 'legend', x))));
         if (['bar', 'column', 'line', 'area', 'combo'].indexOf(v.type) >= 0) {

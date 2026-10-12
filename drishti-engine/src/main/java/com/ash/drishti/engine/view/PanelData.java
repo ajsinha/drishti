@@ -155,6 +155,42 @@ public sealed interface PanelData {
      */
     record Metric(Cell value, Cell delta, String unit, String caption) implements PanelData {}
 
+    /**
+     * {@code map}: the world, or one country's regions, with a place highlighted, shaded by a measure, and clickable.
+     *
+     * @param mode {@code world} or {@code region}
+     * @param highlight the country to highlight as the document names it (an ISO code or a name), or null
+     * @param region for {@code region} mode, the country whose regions are drawn, as the document names it
+     * @param link what a click opens, or null when the map is only a picture
+     * @param shade the per-country figures that colour the map, or null
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    record GeoMap(String mode, String highlight, String region, GeoLink link, GeoShade shade, String unit) implements PanelData {}
+
+    /**
+     * What a click on the map opens.
+     *
+     * @param kind the entity kind
+     * @param template the id template ({@code JUR-{iso3}})
+     * @param codes the codes (of the template's token) for which an entity exists: the others are not clickable
+     * @param note why nothing is clickable (no access to the kind, or none listed), or null
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    record GeoLink(String kind, String template, List<String> codes, String note) {}
+
+    /**
+     * The figures that shade a map.
+     *
+     * @param label the legend's title
+     * @param items one figure per place that has one
+     * @param note why the map is not shaded (masked, no access, not read in time), or null
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    record GeoShade(String label, String unit, List<ShadeItem> items, String note) {}
+
+    /** One place's figure: its code, the number and the formatted text. */
+    record ShadeItem(String code, double value, String text) {}
+
     /** {@code gauge}. */
     record Gauge(double value, double max, String text, String label) implements PanelData {}
 

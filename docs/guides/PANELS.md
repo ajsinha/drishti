@@ -15,4 +15,4 @@
 -->
 # Panels in depth
 
-This guide moved. The catalogue of all twenty-one panel kinds (what each means, when to use it, its behaviour and an example) is [PANEL_KINDS.md](PANEL_KINDS.md); every option of every kind is in the [Rachana reference](RACHANA_REFERENCE.md#panels); adding a kind to Drishti is [PANEL_DEVELOPER_GUIDE.md](PANEL_DEVELOPER_GUIDE.md).
+This guide moved. The catalogue of all twenty-two panel kinds (what each means, when to use it, its behaviour and an example) is [PANEL_KINDS.md](PANEL_KINDS.md); every option of every kind is in the [Rachana reference](RACHANA_REFERENCE.md#panels); adding a kind to Drishti is [PANEL_DEVELOPER_GUIDE.md](PANEL_DEVELOPER_GUIDE.md).

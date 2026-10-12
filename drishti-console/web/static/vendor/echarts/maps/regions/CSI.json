@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","properties":{"iso3":"CSI","bbox":[147.88,-22.203,155.801,-16.133]},"features":[{"type":"Feature","properties":{"code":"CS-I00","name":"Coral Sea Islands","iso3":"CSI","point":true},"geometry":{"type":"Point","coordinates":[148.43,-17.655]}}]}

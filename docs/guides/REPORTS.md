@@ -174,10 +174,21 @@ visual that says `•••`, a masked field is one bar or box. Real pictures fr
 
 ![The new visuals on one page](img/bi-visuals/report-all.png)
 
-**Map.** `wells: { location: [counterparties.country], values: [Exposure (EE peak)] }` shades each country by the measure. `location` holds **ISO 3166 codes** (alpha-2 `US` or alpha-3 `USA`) or the English name; it is matched against a vendored country file
-(Natural Earth, 1:110m, **countries only**: `static/vendor/echarts/maps/world-countries.json`, 177 features; no tiles, no map service, no CDN, nothing leaves the network). A value the file does not know is **named under the map** (`Not on the map: KY (it holds countries only)`,
-which is what the Cayman Islands and Bermuda do in the sample) and never dropped silently. A click on a country filters the other visuals by its code. **Points:** `wells: { latitude: [trade.lat], longitude: [trade.lon], details: [trade.desk], values: [Trades] }` puts a point at each position, as large
-as the measure; `details` names it. The two modes are not mixed.
+**Map.** `wells: { location: [counterparties.country], values: [Exposure (EE peak)] }` shades each country by the measure. `location` holds **ISO 3166-1 codes** (alpha-2 `US` or alpha-3 `USA`) or the English name, or, below the country, **ISO 3166-2 region codes** (`AU-NSW`); it is matched against vendored Natural Earth shapes: the countries at 1:110m
+(`static/vendor/echarts/maps/world-countries.json`, 177 shapes) and, for a country the map opens, its regions at 1:10m (`static/vendor/echarts/maps/regions/<ISO3>.json`, one small file per country, loaded when the map first opens that country; [the files](#the-map-shapes)). No tiles, no map service, no CDN: nothing leaves the network.
+A country too small for the world shapes (the Cayman Islands, Bermuda ...) is a **clickable dot**, so it is on the map. A value no shape knows is **named under the map** (`Not on the map: CHI, XKX (a country or region code is expected).`) and never dropped silently. A click on a country filters the other visuals by its code, as ever.
+**Points:** `wells: { latitude: [trade.lat], longitude: [trade.lon], details: [trade.desk], values: [Trades] }` puts a point at each position, as large as the measure; `details` names it. The two modes are not mixed.
+
+**Drilling.** A map opens at the world. A click on a country **selects it** (the cross-filter) **and opens its regions**: the shapes of its states, provinces or counties, shaded by the rows whose `location` is a region code of that country, with the breadcrumb **World › Australia** above it (the *World* button goes back; the selection stays). A click on a region selects it in turn.
+Rows that name only countries leave the regions blank, and the map says so under it (*No figures at region level for Australia*); rows that name only regions shade their country at the world level with the **sum** of their regions (the tooltip says *all regions*), so use a field with both, or an additive measure, when that matters. A country the files have no regions for stays at the world with a note. In the designer's **Format** pane a map has two settings:
+
+| `format` | Meaning |
+|---|---|
+| `level` | `world` (the default) or the country the map opens at (`AUS`, `AU` or `Australia`): the report opens already drilled in. |
+| `drill` | `true` (the default): a click on a country opens its regions. `false`: the world only (with `level` set, the one country, with no way back). |
+
+`drill` not true or false, or a `level` that is not text, is `DRS-9032`. The sample report **World economics** (`config/bi/reports/world-economics.report.yaml`, dataset `world-economics`, over the economics pack's real World Bank data: GDP per head by country, the largest economies, the economies table) is the one to adopt and expand; the counterparty-risk
+sample's *Exposure by country* is the same visual over counterparties.
 
 ![A map shaded by country](img/bi-visuals/report-map.png) ![Points on the map](img/bi-visuals/report-points.png)
 
@@ -195,6 +206,18 @@ into equal-width bands between the smallest and the largest value (default 10, 2
 In the designer the five are in the Charts group of the Visualizations pane; the Build pane shows their wells (the map's four place wells are all optional, the validator asks for a place), and Format has **Bars** for a histogram.
 
 ![The Charts group](img/bi-visuals/designer-types.png) ![The map's wells](img/bi-visuals/designer-build-map.png)
+
+#### The map shapes
+
+| File | What | Size |
+|---|---|---|
+| `static/vendor/echarts/maps/world-countries.json` | the countries: Natural Earth 1:110m, 177 shapes, properties `name`, `iso2`, `iso3` | 176 KB |
+| `static/vendor/echarts/maps/world-points.json` | the countries and territories too small for those shapes (Cayman Islands, Bermuda, Monaco ...): one point each, drawn as clickable dots | 6 KB |
+| `static/vendor/echarts/maps/regions/<ISO3>.json` | one country's regions: Natural Earth 1:10m admin-1 (states, provinces, counties), simplified, features coded by ISO 3166-2 (`AU-NSW`), regions that are tiny at the country's scale as points; 251 files, about 7 MB in all, none over 200 KB | per country |
+
+The region files are made by `tools/maps/build_regions.py` (download once, simplify with Douglas-Peucker in pure Python, write the files and `regions/README.md` with the source, licence and sizes; a country across the antimeridian such as Russia, Fiji or the United States is shifted so it draws as one block). They are served by
+the console from its static folder and, for `<drishti-report>` and `<drishti-panel>`, from `/embed/v1/world-countries.json`, `/embed/v1/world-points.json` and `/embed/v1/regions/<ISO3>.json`. Natural Earth is public domain: [VENDOR.md](../../drishti-console/web/static/vendor/VENDOR.md), [THIRD-PARTY-NOTICES.md](../../THIRD-PARTY-NOTICES.md).
+The same shapes draw the Sutra `map` panel ([PANEL_KINDS.md](PANEL_KINDS.md#map)).
 
 ### 3.2 True totals
 
@@ -344,7 +367,7 @@ Built in phase 6 (section 3.3): the `python` visual, run on the server in a sand
 
 Built in phase 5 (section 13): visuals over live tables redraw in place with a live indicator, pause and resume, stale and disconnected states; the rolling chart; the Perspective grid and pivot; the sample live reports.
 
-Not built, and not faked: Perspective **charts** (the d3fc plugin) and the Perspective settings panel (the viewer's configuration is the YAML); a Perspective visual over **several tables**; a `perspective-*` visual in the designer's canvas (it shows a note: the designer's page has no WebAssembly); `entity-view` and `shape` visuals; a python visual on a **board**, in an **alert** or a **subscription** (section 3.3; [PYTHON_BI.md](PYTHON_BI.md) section 12); the relative-date slicer; a map of **regions below the country** (states, counties: the vendored file holds countries), a **tile** map or a map service (nothing is fetched from outside), a
+Not built, and not faked: Perspective **charts** (the d3fc plugin) and the Perspective settings panel (the viewer's configuration is the YAML); a Perspective visual over **several tables**; a `perspective-*` visual in the designer's canvas (it shows a note: the designer's page has no WebAssembly); `entity-view` and `shape` visuals; a python visual on a **board**, in an **alert** or a **subscription** (section 3.3; [PYTHON_BI.md](PYTHON_BI.md) section 12); the relative-date slicer; a **tile** map or a map service (nothing is fetched from outside; the shapes are the vendored files), regions **below the first level** (counties inside a state), a
 shape-file import, a **choropleth by a field that is not a country code or name**; a histogram with bands of your own (equal-width only), a box plot of **summary** data you already have (it summarises the members the query returns); true totals for a **table's subtotals by group** (a table has one total row); the window functions `lag` and `rank` (the dataset refuses them); highlight for charts other than bar and column; capturing a bookmark's slicer choices from the page (they are
 written in the YAML); a phone layout is the only per-device layout (no tablet or large-screen variant); a *Check* that runs expected values on sample data; embedding is built for the report's visuals but not for its drill, alert and export chrome (section 15; export, subscriptions and alerts: [DISTRIBUTION.md](DISTRIBUTION.md)); Explore to visual (phase 9);
 report-level security beyond the catalogue and the dataset's rules.

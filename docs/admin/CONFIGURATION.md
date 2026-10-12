@@ -1320,6 +1320,9 @@ cannot make a view slow or a page heavy. A panel that stops short says so (*N mo
 | `pivot-columns` | `40` | Column keys a pivot shows; values under further keys still count in the row totals. |
 | `tree-depth` | `12` | Levels a table or ladder with `children` descends; deeper rows are left out. |
 | `tree-rows` | `10000` | Rows in all (every level) one such table builds; further rows are left out. |
+| `map-entities` | `1000` | Entities of a kind a `map` panel reads to know which countries have a page (`link`) and to shade them (`shade`). |
+| `map-cache-seconds` | `60` | How long those entities are kept for the next map (the shapes themselves are static files). |
+| `map-budget-millis` | `5000` | The time a map gives its entities to arrive; a slower read leaves it unshaded, with the reason under it. |
 
 ### `drishti.loads` — data loads (a batch landed)
 

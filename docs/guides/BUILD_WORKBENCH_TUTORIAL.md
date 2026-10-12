@@ -274,7 +274,7 @@ No auto-design this time. You choose every panel and bind it from the shape. The
 
 Press **+ Add panel**, type `metr`.
 
-![The Add panel chooser: all 21 kinds with a line each, filtered as you type](img/tutorial/p2-02-chooser.jpg)
+![The Add panel chooser: all 22 kinds with a line each, filtered as you type](img/tutorial/p2-02-chooser.jpg)
 
 Press Enter.
 
@@ -638,7 +638,7 @@ More tables of this kind are in [the guide's troubleshooting](SCREEN_DESIGNER.md
 ## Where to read more
 
 - [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md): every workbench feature, every key, limits.
-- [PANEL_KINDS.md](PANEL_KINDS.md): the 21 panel kinds, when to use each, what they do when empty, masked or on a phone. Developing a kind: [PANEL_DEVELOPER_GUIDE.md](PANEL_DEVELOPER_GUIDE.md).
+- [PANEL_KINDS.md](PANEL_KINDS.md): the 22 panel kinds, when to use each, what they do when empty, masked or on a phone. Developing a kind: [PANEL_DEVELOPER_GUIDE.md](PANEL_DEVELOPER_GUIDE.md).
 - [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md): every key, option, format, tone and the expression language of a Sutra.
 - [HOW_IT_FITS.md](../architecture/HOW_IT_FITS.md): how kinds, Sutras, packs, the lake and the console fit together.
 - [Examples](examples/README.md): ready-made Sutras with their data; each opens in the workbench as a copy.

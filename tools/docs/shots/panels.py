@@ -15,7 +15,7 @@
 
 """The pictures of the panel guides (docs/guides/PANEL_KINDS.md and PANEL_DEVELOPER_GUIDE.md), written to docs/guides/img/panels/.
 
-  kind-<kind>.jpg          each of the 21 kinds, light theme, from the all-panels showcase opened in the workbench (the real page and scripts)
+  kind-<kind>.jpg          each of the 22 kinds, light theme, from the all-panels showcase opened in the workbench (the real page and scripts)
   state-<kind>-<state>.jpg empty, error, masked and phone width for one kind of each family (kv, table, line, metric), and dark for three
   metric-*.jpg             the worked example: palette tile, inspector, the suggestion menu
 
@@ -37,7 +37,7 @@ MASK = "•••"
 KIND_PANEL = {"kv": "terms", "status": "ops", "waterfall": "explain", "line": "pnl", "hbar": "dv01", "gauge": "dv01use", "ladder": "coupons",
               "timeline": "life", "table": "versions", "tabs": "sets", "area": "exposure", "graph": "group", "pivot": "grid", "scatter": "books",
               "histogram": "scenarios", "candlestick": "bars", "surface": "smile", "provenance": "built", "markdown": "note", "links": "refs",
-              "metric": "headline"}
+              "metric": "headline", "map": "where"}
 # one kind per family for the states: the panel in the showcase, and a Sutra line of the same kind over a document that lacks its data
 FAMILIES = {"kv": "terms", "table": "versions", "line": "pnl", "metric": "headline"}
 DARK = ("kv", "table", "metric")

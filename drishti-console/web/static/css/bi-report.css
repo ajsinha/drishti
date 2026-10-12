@@ -54,6 +54,12 @@
 .bi-vis-empty, .bi-vis-note { color: var(--d-muted); font-size: .85rem; padding: .5rem; margin: 0; }
 .bi-chart { width: 100%; height: 100%; min-height: 80px; }
 .bi-map-note { margin: .25rem .5rem; font-size: .75rem; color: var(--d-muted); overflow-wrap: anywhere; }
+.bi-vis-map .bi-vis-body { display: flex; flex-direction: column; }
+.bi-vis-map .bi-chart { flex: 1 1 auto; height: auto; }
+.bi-map-crumb { flex: none; display: flex; align-items: center; gap: .15rem; padding: 0 .4rem; font-size: .85rem; color: var(--d-muted); }
+.bi-map-crumb .bi-vis-btn { color: var(--d-link); text-decoration: underline; }
+.bi-map-here { color: var(--d-ink); font-weight: 600; }
+@media (max-width: 640px) { .bi-map-crumb .bi-vis-btn { min-height: 44px; min-width: 44px; } }
 .bi-vis-map .bi-chart, .bi-vis-funnel .bi-chart, .bi-vis-histogram .bi-chart, .bi-vis-box .bi-chart { min-height: 160px; }
 .bi-chart:focus-visible { outline: 2px solid var(--d-link); outline-offset: -2px; }
 

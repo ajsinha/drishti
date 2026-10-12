@@ -35,6 +35,7 @@ import java.util.Map;
  * @param linked linked documents fetched within the budget (absent ones are pending or missing)
  * @param pending linked entities not fetched in time
  * @param denied sourced entities the caller may not open: never fetched, their panels show "no access"
+ * @param maps per {@code map} panel id, what its link and shade read across a kind
  */
 public record BindContext(
         EntityDocument doc,
@@ -44,15 +45,25 @@ public record BindContext(
         List<LinkRef> links,
         Map<EntityRef, EntityDocument> linked,
         java.util.Set<EntityRef> pending,
-        java.util.Set<EntityRef> denied) {
+        java.util.Set<EntityRef> denied,
+        Map<String, MapSupport.Lookup> maps) {
+
+    public BindContext {
+        maps = maps == null ? Map.of() : maps;
+    }
 
     public BindContext(EntityDocument doc, EffectiveLayout layout, Fingerprint fingerprint, EvalContext eval, List<LinkRef> links,
             Map<EntityRef, EntityDocument> linked, java.util.Set<EntityRef> pending) {
-        this(doc, layout, fingerprint, eval, links, linked, pending, java.util.Set.of());
+        this(doc, layout, fingerprint, eval, links, linked, pending, java.util.Set.of(), Map.of());
+    }
+
+    public BindContext(EntityDocument doc, EffectiveLayout layout, Fingerprint fingerprint, EvalContext eval, List<LinkRef> links,
+            Map<EntityRef, EntityDocument> linked, java.util.Set<EntityRef> pending, java.util.Set<EntityRef> denied) {
+        this(doc, layout, fingerprint, eval, links, linked, pending, denied, Map.of());
     }
 
     /** The same binding read in another evaluation context (a tab's element is {@code @}). */
     public BindContext withEval(EvalContext next) {
-        return new BindContext(doc, layout, fingerprint, next, links, linked, pending, denied);
+        return new BindContext(doc, layout, fingerprint, next, links, linked, pending, denied, maps);
     }
 }

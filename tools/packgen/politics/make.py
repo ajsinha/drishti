@@ -45,7 +45,8 @@ KINDS = [
     Kind("jurisdiction", "JUR", "JUR-", "Jurisdiction", G, "A country: government type, capital, legislature and seats by party, office holders, elections and governance indicators, from the CIA World Factbook, World Bank and UNDP.", "jurisdictionId",
          [("Country", "$.name", None, None, True), ("Capital", "$.capital", None, None, False), ("Government", "$.governmentType", None, None, False),
           ("Population (m)", "$.populationM", "price2", None, False), ("Area (km2)", "$.areaKm2", "amount0", None, False), ("Currency", "$.currency", None, None, False)],
-         [P("table", "legislature", "Seats by party, lower chamber", "$.legislature", [("Party", "@.party", None, None, False), ("Seats", "@.seats", "amount0", None, True)], key="F2"),
+         [P("map", "geography", "Where it is", None, opts={"highlight": "$.iso3", "link": {"kind": "jurisdiction", "id": "JUR-{iso3}"}, "height": 11}),
+          P("table", "legislature", "Seats by party, lower chamber", "$.legislature", [("Party", "@.party", None, None, False), ("Seats", "@.seats", "amount0", None, True)], key="F2"),
           P("table", "indicators", "Society and governance (latest)", "$.indicators", [("Indicator", "@.indicator", None, None, False), ("Value", "@.value", "price2", None, True),
             ("Year", "@.year", None, None, False), ("Unit", "@.unit", None, None, False)], key="F3"),
           P("kv", "profile", "Profile", "$.profile", area="right"),
@@ -135,7 +136,9 @@ def spec() -> PB.PackSpec:
         overview="The data is published data, not samples: the CIA World Factbook (public domain) for governments, office holders, elections and parties, the World Bank World Development "
                  "Indicators and Worldwide Governance Indicators (CC BY 4.0), and the UNDP Human Development Index (CC BY 3.0 IGO). Texts are shown as the sources publish them; every "
                  "document names its source, dataset, retrieval date and licence in its Data source panel. Opinion polls and bills have no open global dataset, so this pack has no such "
-                 "kinds. Refresh with `tools/realdata/realdata.py` (see docs/guides/REAL_DATA.md).",
+                 "kinds. A jurisdiction's page opens with a map: the country is highlighted on the world and a click on any other country opens that country's page (a country the pack holds "
+                 "no jurisdiction for is not clickable and says so on hover); the shapes ship with the console, nothing is fetched from the internet. Refresh with "
+                 "`tools/realdata/realdata.py` (see docs/guides/REAL_DATA.md).",
         roles={"analyst": {"kinds": [k.kind for k in KINDS], "raw": True}})
 
 

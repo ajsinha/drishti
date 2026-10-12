@@ -160,7 +160,7 @@ means nothing fails and a human has to look, which is why those steps say what t
 | 13 | `drishti-rachana/.../design/ops/Bind.java` | new bindable option names into `BINDABLE` | a field dropped on the panel can fill them | **no guard**: add a test beside the `Bind` op tests |
 | 14 | `drishti-engine/.../design/PanelChooser.java` | `scalarChoices` (or the list/object choices) | what the field-drop menu and the alternatives offer | `AutoDesignerTest.suggestReturnsTheExpectedFirstChoicePerRole` (changed by yours) |
 | 15 | `drishti-engine/.../design/AutoDesigner.java` | `Collector.scalar` (or the list branch) | what the first draft contains | `AutoDesignerTest` |
-| 16 | `drishti-console/web/static/js/build/palette.js`, `actions.js` | a `KINDS` row; seeding in `actions.js` | the kind in the palette and the Add-panel chooser; a new panel starts with a sensible `value` | `test_workbench_add_browser.py` (21 kinds), `test_workbench_metric_browser.py` (yours) |
+| 16 | `drishti-console/web/static/js/build/palette.js`, `actions.js` | a `KINDS` row; seeding in `actions.js` | the kind in the palette and the Add-panel chooser; a new panel starts with a sensible `value` | `test_workbench_add_browser.py` (22 kinds), `test_workbench_metric_browser.py` (yours) |
 | 17 | `drishti-console/tests/test_terminal.py` | the kind in `KINDS` | the macro against broken data | itself |
 | 18 | `docs/guides/examples/` | the kind in the showcase **and** an example of its own; the examples README | the examples are the source of the docs and the tests | `test_examples.py`, `ExamplePreviewTest`, `test_build_designs.py` |
 | 19 | `drishti-console/tests/fixtures/view_sutra_all-panels-showcase.json` | the panel, by hand, as the server returns it | the fake backend's showcase | `test_build_designs*.py`, `test_workbench_model.py` |
@@ -182,7 +182,7 @@ Then run the whole set: [15.4](#154-how-to-run-them). The sections that follow t
      * One large formatted, toned figure (a KPI tile), with an optional small change beside it ({@code delta}, with its own
      * format and tone), a {@code unit} and a {@code caption} under it.
      */
-    METRIC(Set.of("value"), Set.of("label", "fmt", "tone", "delta", "deltaFmt", "deltaTone", "unit", "caption"));
+    METRIC(Set.of("value"), Set.of("label", "fmt", "tone", "delta", "deltaFmt", "deltaTone", "unit", "caption")),
 ```
 
 The two sets are the **required** and the **optional** options. The parser rejects a kind it does not know
@@ -199,7 +199,7 @@ hang on this one line:
   (today `kv`, `status`, `table`, `ladder`, `hbar`, `markdown`, `metric`); any other kind there is `DRS-2023`. Add yours only if
   the console draws it in a tab body.
 
-Also update the class Javadoc ("The twenty-one panel kinds of the grammar"): it is one of the counts in
+Also update the class Javadoc ("The twenty-two panel kinds of the grammar"): it is one of the counts in
 [14.3](#143-the-counts).
 
 ### 5.2 `PanelOptions`: restricted values and shape rules
@@ -620,7 +620,7 @@ one of them, and `roles(kind)` (what the drop menu offers) is derived from this 
 
 ```java
     private static final Set<String> BINDABLE = Set.of("rows", "x", "y", "value", "label", "size", "group", "open", "high", "low", "close",
-            "volume", "date", "detail", "status", "tone", "by", "across", "nodes", "edges", "source", "each", "max", "total", "sum", "delta");
+            "volume", "date", "detail", "status", "tone", "by", "across", "nodes", "edges", "source", "each", "max", "total", "sum", "delta", "highlight", "region");
 ```
 
 `metric` already had `value`; it needed `delta` added. A new option name is not bindable until it is here. **No guard
@@ -742,14 +742,14 @@ Adding a kind changes a number written in several places. They are the most comm
 code works. Find them all:
 
 ```bash
-grep -rniE "twenty|twenty-one|[^0-9]20 (panel )?kinds|hasSize\(2[01]\)|== 2[01]" --include=*.java --include=*.py --include=*.js \
+grep -rniE "twenty|twenty-two|[^0-9]20 (panel )?kinds|hasSize\(2[01]\)|== 2[01]" --include=*.java --include=*.py --include=*.js \
   --include=*.html --include=*.md --include=*.yaml . | grep -v "\.venv\|target/\|docs/qa/\|CHANGELOG\|RELEASE_NOTES"
 ```
 
-What it found for `metric`: `PanelKind`'s Javadoc, `StudioTest` (`hasSize(21)` on the schema's kind enum),
+What it found for `metric`: `PanelKind`'s Javadoc, `StudioTest` (`hasSize(22)` on the schema's kind enum),
 `ExamplePreviewTest` (the showcase's panel count), `palette.js` and `canvas.js` comments, `design.html` (the filter's
 placeholder), `landing.html` (the statistic and the tooltip that lists the kinds), `competitive.yaml`,
-`test_examples.py`, `test_workbench_add_browser.py`, `test_workbench_options_browser.py` (`len(kinds) == 21`),
+`test_examples.py`, `test_workbench_add_browser.py`, `test_workbench_options_browser.py` (`len(kinds) == 22`),
 `test_build_designs*.py`, `test_workbench_model.py`, and the prose in the guides. History in `CHANGELOG.md` and
 `RELEASE_NOTES.md` stays as written.
 
@@ -781,11 +781,11 @@ Always write the Sutra with `rachana: 1` first (`DRS-2009` otherwise) and a lowe
 
 | Guard | File | Fails when |
 |---|---|---|
-| the schema counts the kinds | `StudioTest` (`/$defs/panel/properties/kind/enum` `hasSize(21)`) | the constant is missing, or the number was not updated |
+| the schema counts the kinds | `StudioTest` (`/$defs/panel/properties/kind/enum` `hasSize(22)`) | the constant is missing, or the number was not updated |
 | every example together covers every kind | `drishti-console/tests/test_examples.py` (`KINDS`) | a kind is in no example, or the showcase lacks it |
 | every example previews on the server | `ExamplePreviewTest` | an example's Sutra does not bind; the panel count is stale |
-| every option of every kind has a labelled editor | `drishti-console/tests/test_workbench_options_browser.py` (reads the showcase; `len(kinds) == 21`) | an option has no editor; the kind is not in the showcase |
-| the palette offers all kinds | `drishti-console/tests/test_workbench_add_browser.py` (a filterable grid of all twenty-one kinds) | `palette.js` lacks the row |
+| every option of every kind has a labelled editor | `drishti-console/tests/test_workbench_options_browser.py` (reads the showcase; `len(kinds) == 22`) | an option has no editor; the kind is not in the showcase |
+| the palette offers all kinds | `drishti-console/tests/test_workbench_add_browser.py` (a filterable grid of all twenty-two kinds) | `palette.js` lacks the row |
 | the macro survives broken data | `drishti-console/tests/test_terminal.py` (`KINDS`) | the macro cannot render null, empty or mistyped data |
 | the showcase copy previews | `drishti-console/tests/test_build_designs.py`, `test_build_designs_browser.py`, `test_workbench_model.py` | the panel count of the showcase changed |
 | the suggest/first-choice contract | `AutoDesignerTest` (`suggestReturnsTheExpectedFirstChoicePerRole`, `everyExampleDrawsATitleAStripAndPanelsWithReasonsAndAlternatives`) | a new scalar choice changes a first choice; an example gives no alternatives |

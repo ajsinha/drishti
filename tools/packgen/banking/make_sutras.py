@@ -148,6 +148,8 @@ class Writer:
                 a(f"    {k}:")
                 for item in v:
                     a(f"      - {flow(item)}")
+            elif isinstance(v, dict):                        # a map panel's link and shade
+                a(f"    {k}: {yflow(v)}")
             else:
                 a(f"    {k}: {q(v)}")
         if p.pivot:

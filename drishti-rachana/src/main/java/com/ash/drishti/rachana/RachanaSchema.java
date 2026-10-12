@@ -217,6 +217,28 @@ public final class RachanaSchema {
             return Map.of("type", "string", "description", o.equals("unit") ? "A short unit shown small beside the figure (USD, bp)"
                     : "Small text under the figure (may hold ${…})");
         }
+        if (k == PanelKind.MAP) {
+            switch (o) {
+                case "highlight" -> {
+                    return Map.of("type", "string", "description", EL + " for the country to highlight: an ISO alpha-2 or alpha-3 code, or the English name ($.iso3)");
+                }
+                case "region" -> {
+                    return Map.of("type", "string", "description", EL + " for a country: the map then shows that country's regions (ISO 3166-2 codes such as AU-NSW) instead of the world");
+                }
+                case "link" -> {
+                    return Map.of("type", "object", "description", "A click on a country opens an entity: { kind: jurisdiction, id: \"JUR-{iso3}\" }. The id template holds {iso3}, {iso2} "
+                            + "or (for regions) {code}; a country with no such entity is not clickable and says so on hover");
+                }
+                case "shade" -> {
+                    return Map.of("type", "object", "description", "Shade each country by a field of every entity of a kind: { kind: economy, field: $.gdpUsdBn, by: $.iso3, fmt: amount0, label: GDP (USD bn) }. "
+                            + "by defaults to $.iso3; the field is read as the caller may see it (a masked field shades nothing)");
+                }
+                case "unit" -> {
+                    return Map.of("type", "string", "description", "A short unit shown with the shade values in the legend and the tooltip");
+                }
+                default -> { }
+            }
+        }
         if (k == PanelKind.HISTOGRAM && o.equals("markers")) {
             return Map.of("type", "array", "description", "Vertical marker lines: { label, value: <expression>, tone }");
         }

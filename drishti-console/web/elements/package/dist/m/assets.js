@@ -59,7 +59,7 @@ const script = (url) => memo('script:' + url, () => new Promise((resolve, reject
 }));
 
 // the console's own scripts, in order: the engine before the grid before the pivot (served from the allow-list in routes/embed_routes.py)
-export const ENHANCERS = ['pivot-engine', 'pivot-grid', 'view', 'charts', 'colfilter', 'tables', 'tree-rows', 'pivot', 'about', 'about-hints', 'zoom', 'multiselect', 'controls'];
+export const ENHANCERS = ['pivot-engine', 'pivot-grid', 'view', 'geomap', 'charts', 'colfilter', 'tables', 'tree-rows', 'pivot', 'about', 'about-hints', 'zoom', 'multiselect', 'controls'];
 export const chartLibs = (server) => memo('charts:' + server, async () => {
   await script(server + API + '/echarts.js');
   quietDispose();
@@ -67,7 +67,7 @@ export const chartLibs = (server) => memo('charts:' + server, async () => {
 });
 
 /** What <drishti-report> draws with: ECharts, then the console's report code (window.drishtiBi), in order. */
-export const REPORT_LIBS = ['lib', 'phone', 'visuals', 'grids', 'frame', 'live'].map((n) => 'bi-' + n);
+export const REPORT_LIBS = ['geomap'].concat(['lib', 'phone', 'visuals', 'grids', 'frame', 'live'].map((n) => 'bi-' + n));
 export const reportLibs = (server) => memo('rlibs:' + server, async () => {
   await script(server + API + '/echarts.js');
   quietDispose();

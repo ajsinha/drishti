@@ -144,6 +144,9 @@ class NewVisualsTest {
         assertThat(problems("{ id: m, type: map" + at + ", wells: { values: [Trades] } }")).extracting(ReportParser.Problem::message).anyMatch(m -> m.contains("a country code"));
         assertThat(problems("{ id: m, type: map" + at + ", wells: { location: [counterparties.country], latitude: [trades.dv01], longitude: [trades.dv01], values: [Trades] } }"))
                 .extracting(ReportParser.Problem::message).anyMatch(m -> m.contains("not both"));
+        assertThat(problems("{ id: m, type: map" + at + ", wells: { location: [counterparties.country], values: [Trades] }, format: { level: AUS, drill: false } }")).isEmpty();
+        assertThat(problems("{ id: m, type: map" + at + ", wells: { location: [counterparties.country], values: [Trades] }, format: { level: 5 } }")).extracting(ReportParser.Problem::message).anyMatch(m -> m.contains("level"));
+        assertThat(problems("{ id: m, type: map" + at + ", wells: { location: [counterparties.country], values: [Trades] }, format: { drill: sometimes } }")).extracting(ReportParser.Problem::message).anyMatch(m -> m.contains("drill"));
         assertThat(problems("{ id: m, type: map" + at + ", wells: { latitude: [trades.dv01], values: [Trades] } }")).extracting(ReportParser.Problem::message).anyMatch(m -> m.contains("both a latitude"));
         assertThat(problems("{ id: m, type: map" + at + ", wells: { latitude: [trades.status], longitude: [trades.dv01], values: [Trades] } }")).extracting(ReportParser.Problem::message).anyMatch(m -> m.contains("is a number"));
         assertThat(problems("{ id: h, type: histogram" + at + ", wells: { axis: [trades.tradeId], values: [MTM] }, format: { bins: 1 } }")).extracting(ReportParser.Problem::path).anyMatch(p -> p.endsWith("format.bins"));

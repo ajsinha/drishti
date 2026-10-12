@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","properties":{"iso3":"VAT","bbox":[12.453,41.903,12.454,41.904]},"features":[{"type":"Feature","properties":{"code":"VA-X01","name":"Vatican","iso3":"VAT"},"geometry":{"type":"Polygon","coordinates":[[[12.453,41.904],[12.454,41.904],[12.454,41.903],[12.453,41.903],[12.453,41.904]]]}}]}

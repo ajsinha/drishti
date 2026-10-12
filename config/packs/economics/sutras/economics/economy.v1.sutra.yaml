@@ -29,6 +29,13 @@ strip:
   - { label: Unemployment, bind: $.unemployment, fmt: pc2 }
   - { label: Debt / GDP, bind: $.debtToGdp, fmt: pc1 }
 panels:
+  - id: geography
+    kind: map
+    title: Where it is
+    highlight: $.iso3
+    link: { kind: economy, id: "ECON-{iso3}" }
+    shade: { kind: economy, field: $.gdpPerCapita, by: $.iso3, fmt: amount0, label: GDP per capita (USD) }
+    height: 11
   - id: growthPath
     kind: line
     title: "Real GDP growth, % a year"

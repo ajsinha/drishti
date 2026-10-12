@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","properties":{"iso3":"ATC","bbox":[123.575,-12.439,123.598,-12.427]},"features":[{"type":"Feature","properties":{"code":"AU-X04","name":"Ashmore and Cartier Islands","iso3":"ATC"},"geometry":{"type":"Polygon","coordinates":[[[123.597,-12.428],[123.598,-12.439],[123.576,-12.437],[123.575,-12.427],[123.597,-12.428]]]}}]}

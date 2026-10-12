@@ -3,11 +3,11 @@
   "files": {
     "drishti-elements.js": {
       "bytes": 2500,
-      "integrity": "sha384-PgpgBX3SsOXgLZPcw0CLv0ze5Vuv7XLAjld/bprJxIOocMCO3gMcSFiHVb3VUy/3"
+      "integrity": "sha384-QqoAw47fsh9tjRGAPOGY9ZtzDgKVI4h4Cbim1+ekOC6uCES87yWSYka4HFAX820D"
     },
     "m/assets.js": {
-      "bytes": 5142,
-      "integrity": "sha384-pipTIggMN49n/TXhEDqZ8S1UANKwaZ6clqWVjJ6uxfF8xSyupZzjhQsrMzU/tSWC"
+      "bytes": 5171,
+      "integrity": "sha384-+oztqj/7JwIHnQleVCk9rO0k82A3+K94ZlUBI52v3LVni/P/Rt/4IpSfhePS7Fl1"
     },
     "m/config.js": {
       "bytes": 1526,
@@ -51,5 +51,5 @@
     }
   },
   "name": "@drishti/elements",
-  "version": "1.1.0"
+  "version": "1.2.0"
 }

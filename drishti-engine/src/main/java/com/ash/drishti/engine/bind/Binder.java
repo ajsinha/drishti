@@ -56,7 +56,13 @@ public final class Binder {
     private final Mnemonics mnemonics;
     private final ChartBinder charts;
     private final PivotBinder pivots;
+    private final MapBinder maps;
     private final PanelLimits limits;
+
+    /** The limits this binder applies (the map support reads its own from them). */
+    public PanelLimits limits() {
+        return limits;
+    }
 
     public Binder(ElCompiler el, Formats formats, ReferenceCatalog catalog, BadgeRenderer badges, Mnemonics mnemonics) {
         this(el, formats, catalog, badges, mnemonics, PanelLimits.defaults());
@@ -76,6 +82,7 @@ public final class Binder {
         this.limits = limits;
         this.charts = new ChartBinder(this, formats, catalog, limits);
         this.pivots = new PivotBinder(el, catalog, this, pivot);
+        this.maps = new MapBinder(el);
     }
 
     /**
@@ -119,6 +126,7 @@ public final class Binder {
                 case TIMELINE -> charts.timeline(p, c);
                 case PIVOT -> charts.pivot(p, c);
                 case METRIC -> metric(p, c);
+                case MAP -> maps.map(p, c);
             };
             return new PanelView(p.id(), p.kind().id(), title, p.code(), p.key(), area(p), p.infer() || explanation != null,
                     explanation, data, null, com.ash.drishti.engine.view.Emptiness.of(data), p.span().orElse(null), p.height().orElse(null));
