@@ -15,7 +15,11 @@
 -->
 # Rūpaka model layer: design specification for wave W1 (and what W2 to W5 need from it)
 
-*Status: design, for review by the product owner. Nothing here is built.* This is the specification behind wave **W1
+*Status: agreed by the product owner on 2026-10-12 (all eight open questions of section 11 accepted with the recommended
+answers, question 1 with the security safeguard of section 2.6). Wave W1's server package is built (the item kinds and their
+checks, pack-generated datasets, implicit models, the model query language with its API and standing queries, the
+compatibility reader; packages S1, S2, S3, S6 and the implicit models of S5); the connector-query, Python and model sources
+(S4), the consumers on MQ (S5), the console (C1, C2), the converter (M1) and the guides (D1) follow.* This is the specification behind wave **W1
 "Layers and the query language"** of [BI_MODEL_ARCHITECTURE.md](BI_MODEL_ARCHITECTURE.md) (decisions D1 to D6, the
 experience rules of its section 3). It fixes the **formats** W1 introduces so that W2 to W5 extend them without a
 second breaking change: every key that a later wave fills is already named here, marked with the wave that gives it
@@ -478,6 +482,7 @@ security:
       - { role: [risk, analyst, admin], where: "true" }
   masked: [counterparties.rating]                    # adds masks; cannot unmask
   propagate: dimension-to-fact                       # the default and only W1 value
+  may-see-all: { netting_sets: [desk-head] }         # the safeguard's explicit note (below): desk-heads see every netting set
 ```
 
 * **Dataset rules first, always.** For each reader, every dataset in a query is filtered by **its own** rules and
@@ -495,6 +500,16 @@ security:
   deliberate change of answer, listed in section 8.5.
 * A row rule naming `user.*` attributes is evaluated on the server as today; the reader's rule set is part of the
   cache key as today.
+* **The safeguard** (the product owner's condition for accepting security per dataset, Open question 1). A role is
+  *restricted* in a model when a row rule of the model, or of one of its datasets, names it with a condition other than
+  `true`. Every dataset of the model that **no row rule restricts at all** (neither its own nor the model's) is open to
+  such a role, which then sees every one of its rows. **Check flags** each such dataset and role (`DRS-9130`, a warning,
+  and the list `exposures` in the Check answer), and **the model cannot be published** (`409 DRS-9130`) until that dataset
+  gets a rule (in the dataset, or under the model's `security.rows.<alias>`) **or** the model carries an explicit note
+  `security.may-see-all: { <alias>: [<role>, ...] }`. The publish that relies on a note records it in the audit log
+  (`bi-model-may-see-all`, naming the model version, the datasets and the roles). A dataset whose rules simply do not
+  mention a role is not flagged: that role sees none of its rows (no matching rule, no rows). The sample of section 2.10
+  therefore says `may-see-all` for `netting_sets`, `counterparties`, `desks` and `books` for `desk-head`.
 
 ### 2.7 Hierarchies, rollups, tests
 
@@ -591,6 +606,7 @@ security:
       - { role: desk-head, where: "trades.desk in user.desks" }
       - { role: [risk, analyst, admin], where: "true" }
   masked: [counterparties.name, counterparties.rating]     # trades.counterpartyName is masked by the pack dataset already
+  may-see-all: { netting_sets: [desk-head], counterparties: [desk-head], desks: [desk-head], books: [desk-head] }   # the safeguard (2.6), audited on publish
 tests:
   - { name: The book holds 750 trades, measure: Trades, expect: 750 }
 ```
@@ -613,6 +629,7 @@ trades writes it once in a dataset that `extends` the pack's (1.9) and uses that
 | `DRS-9127` | a measure: today's `DRS-9011`/`9012`/`9013` conditions, reported with the model path |
 | `DRS-9128` | a contract naming a field or measure the model lacks |
 | `DRS-9129` | a W6/W7 placeholder (`calc-groups`, `parameters`, `via`) used before its wave |
+| `DRS-9130` | the security safeguard (2.6): a dataset no row rule restricts, in a model where a role is restricted elsewhere, with no `may-see-all` note for that role (a warning in Check; the publish is refused) |
 
 ---
 
@@ -1176,9 +1193,16 @@ bi:
 ### 8.4 The W1 compatibility reader
 
 So that W1 can be accepted before W4 migrates the files, a `rachana: 1` dataset with `tables:` is **read as a model**
-whose datasets are inline (one anonymous dataset per table, security split as the converter would split it) and a
-composed or derived `rachana: 1` dataset as an implicit model of one dataset. Reports, alerts and Analyse then ask it
-through MQ. The reader is deleted in W4 with the old shapes.
+whose datasets are inline (one anonymous dataset per table, under the table's name) and a composed or derived
+`rachana: 1` dataset as an implicit model of one dataset. Reports, alerts and Analyse then ask it through MQ. The reader
+is deleted in W4 with the old shapes.
+
+**Security in the compatibility reader is not split** (decided with the safeguard of 2.6): the old file's rules keep their
+version-1 meaning (joined into every query, refusing what they cannot reach), and the query runs through the same engine
+path as the old dataset query, so an old file answers **exactly** as before through either path (the equivalence test
+asserts it for every shipped sample, as `rita`, `hana` and `ann`). Binding the rules per dataset changes answers (8.5) and
+needs the safeguard's review of every open dataset, so it happens when the converter (M1/W4) writes the model, never
+silently when an old file is read.
 
 ### 8.5 What breaks (on purpose)
 
@@ -1379,9 +1403,14 @@ WP (written by the builder of the WP, reviewed in the experience wave). S3 publi
 
 ## 11. Open questions for the product owner
 
+**Decided on 2026-10-12: all eight accepted with the recommended answer.** Question 1 is accepted **with the security
+safeguard** of section 2.6: Check flags any dataset of a model that has no row rule while a role is restricted elsewhere
+in the same model, and the model cannot be published until that dataset gets a rule or an explicit, audited
+`may-see-all: [role]` note (`DRS-9130`).
+
 | # | Question | Recommended answer |
 |---|---|---|
-| 1 | **Security binding.** With rules at the dataset, a desk-head sees **all** netting-set exposure (today refused). Accept that, or keep a "fact rule hides other facts" option? | Accept; it is D-consistent and explainable. Offer a model rule on the other fact when a site wants it, and have the converter keep the composed sample's meaning with `having` |
+| 1 | **Security binding.** With rules at the dataset, a desk-head sees **all** netting-set exposure (today refused). Accept that, or keep a "fact rule hides other facts" option? | Accept; it is D-consistent and explainable. Offer a model rule on the other fact when a site wants it, and have the converter keep the composed sample's meaning with `having`. **Accepted with the safeguard (2.6, `DRS-9130`)** |
 | 2 | **Implicit models bring pack dimensions** (one hop by pack reference). Always, or only when asked? | Always, one hop, dimensions only: it is what makes the first report useful with no model step |
 | 3 | **Boards over two models** (`desk-wall`). One model per board strictly, or one model per board **page**? | One model per board, with islands allowed in a model (warning); convert `desk-wall` to a `live-desk` model. Revisit if real boards need more |
 | 4 | **Generated dataset ids** `pack.<pack>.<kind>`: is the pack name stable enough, or use the pack code (`TRDS`)? | The pack name: readable in YAML and MQ; a pack rename is a major anyway |

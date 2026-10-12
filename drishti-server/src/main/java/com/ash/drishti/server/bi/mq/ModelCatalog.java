@@ -429,7 +429,7 @@ public final class ModelCatalog {
             d.put("dataset", r == null ? u.dataset() : r.def().name());
             d.put("version", r == null ? null : r.def().version());
             d.put("role", u.role());
-            d.put("mode", t == null ? null : t.mode());
+            d.put("mode", r != null && r.def().time() != null ? r.def().time().mode() : t == null ? null : "live".equals(t.mode()) ? "live" : "snapshot");
             List<Map<String, Object>> cols = new ArrayList<>();
             if (t != null) {
                 List<String> hidden = r == null || r.def().security().hiddenRoles().stream().noneMatch(who.roles()::contains) ? List.of() : r.def().security().hiddenColumns();
