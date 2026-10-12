@@ -127,4 +127,4 @@ body {
 :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-menu-btn:focus-visible, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tool:focus-visible { outline-color: #fff; }
 :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) main h1, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) main h2 { color: var(--d-accent-strong); }
 :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-menu-btn.active::after, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-menu-btn.show::after { background: #fff; }
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-name small { color: rgba(255, 255, 255, .82); -webkit-text-fill-color: rgba(255, 255, 255, .82); }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .tbar .tbar-name small { color: #fff; -webkit-text-fill-color: #fff; opacity: .95; }
