@@ -1420,7 +1420,7 @@ in the same model, and the model cannot be published until that dataset gets a r
 | 7 | **Converter on stored items**: republish published items automatically as the bi-admin, or leave them as drafts for owners to publish? | Republish automatically (audited, reversible by restoring the saved state): a half-migrated catalogue is a dead end for readers |
 | 8 | **MQ in YAML and JSON**, both forever, and the name "model query" (`mq: 1`) for users? | Both (YAML in files and tests, JSON on the wire); users see "query" in the UI, "model query" in the docs |
 
-## 12. Query execution tiers *(planner: W3; tiers 1 and 2 exist in W1)*
+## 12. Query execution tiers *(planner: W3; the source and Java tiers exist in W1)*
 
 A model is a small database rooted in packs: its datasets are the tables, references and relationships are the keys and
 joins, measures are its stored calculations, row rules and masks are its grants, and the **model query (MQ, section 5)**
@@ -1428,36 +1428,36 @@ is its query language. Every panel, card, table, chart, slicer, alert, tile, exp
 names **fields and measures only**; the joins come from the model's relationships, so a report says *what*, the model
 knows *how*.
 
-Each MQ is split by a **planner** across three tiers. The report author does not choose; a design may hint.
+**The servers do the work; the browser draws.** Product-owner decision (2026-10-12): computing in the browser risks
+different answers on different devices (an iPhone's Safari is not a PC's Chrome), so every number is computed on the
+servers, and the browser only renders the answer it is given. The one exception is a person's own **Python console**
+for just-in-time analytics (below).
 
-| Tier | Runs | Typical work | Why there |
+| Tier | Runs | Work | Why there |
 |---|---|---|---|
-| **1. Source** (through the pack's connector) | DuckDB over a Delta or Parquet lake, SQL to PostgreSQL, a stream's own rollups | column choice, row filters (including the reader's row rules on that dataset), aggregation by the dataset's own grain when the source can do it | the data does not move; the source scans its own data fastest |
-| **2. Server** (the Drishti engine) | the Java server | joins between datasets of **different** connectors, per-grain aggregation the source cannot do, the meeting of facts through shared dimensions, fan-out refusal, the currency guard, **security** (row rules and masks applied per dataset before any join), Python datasets in the sandbox, caches and refresh layers, **standing queries** kept current incrementally | the only place that sees every dataset of the query and can enforce security |
-| **3. Browser** (JavaScript, DuckDB-Wasm, Pyodide) | the reader's browser | work on the **delivered, already-masked answer**: sort, filter within it, pivot, format, cross-highlight within one answer, what-if arithmetic on delivered numbers, Python visuals, Analyse slicing a masked extract | instant interaction without a round trip; no load on the server |
+| **1. Source** (through the pack's connector) | DuckDB over a Delta or Parquet lake, SQL to PostgreSQL, a stream's own rollups | column choice, row filters (including the reader's row rules on that dataset), aggregation at the dataset's own grain when the source can do it | the data does not move; the source scans its own data fastest |
+| **2. Java server** (the Drishti engine) | the Spring Boot server | the MQ planner; joins between datasets of different connectors; per-grain aggregation the source cannot do; the meeting of facts through shared dimensions; fan-out refusal; the currency guard; **security** (row rules and masks per dataset before any join); totals; sort, limit, top-N; **standing queries** kept current incrementally; caches and refresh layers | the only place that sees every dataset of a query and can enforce security |
+| **3. Console backend** (FastAPI, Python) | the console server | Python datasets, Python measures and **Python visuals** in the sandboxed runner (masked input only, CPU/memory/time limits); rendering of exports (PDF, PNG, Excel, CSV); narrative text; shaping the answer for the page (formats, labels, chart specification) | Python and rendering run the same way for every reader, whatever their device |
+| **4. Browser** | the reader's browser | **presentation only**: draw the chart or table it is given, hover tooltips, scroll; every interaction that changes numbers (a slicer, a sort, a drill, a cross-filter, a what-if value) sends a new MQ to the servers | no number is computed here, so every device shows the same answer |
 
 **Rules.**
 
-1. **Security never runs in the browser.** The browser receives only what the reader may see; tier 3 is an
-   optimisation, never a boundary.
-2. **The browser never holds more than the answer needs.** An interaction that needs data not delivered (a slicer value
-   outside the answer, a drill below the delivered grain) sends a new MQ to the server.
-3. **A design may hint, the planner decides.** A visual may say `compute: client` (a Python visual, an exploratory panel
-   that wants instant re-slicing) or `compute: server`. The planner overrides a hint when the answer would exceed the
-   reader's row cap for the browser (`drishti.bi.query.client-max-rows`), when the data is live (deltas stay on the server
-   path), or when the calculation needs columns the reader sees masked.
-4. **The same answer wherever it runs.** Equivalence tests compare tier-3 and tier-2 answers for the same MQ.
-5. **Live:** a subscribed MQ stays on the server, which pushes only the **changes** (rows added, changed, removed in the
-   answer) to the browser, which applies them to what is on screen (section 5.8).
-6. **`options.explain: true`** returns the plan: which parts ran at which tier, the source queries, rows moved, time per
+1. **Every number comes from tiers 1–3.** The browser never sums, filters, sorts, pivots or recalculates; the same MQ
+   gives the same answer on any device. (Answers are cached per reader on the server, so interactions stay fast.)
+2. **Security never leaves the servers;** the browser receives only what the reader may see, already masked.
+3. **Python runs on the console backend** (sandboxed), never in a report's browser page. A design does not choose
+   where code runs.
+4. **Live:** a subscribed MQ stays on the Java server, which pushes the **changed rows of the answer** to the page; the
+   browser replaces them on screen (it does not recompute).
+5. **`options.explain: true`** returns the plan: which parts ran at which tier, the source queries, rows moved, time per
    part. The designer shows it under each visual.
 
-```yaml
-# a visual's hint (report YAML)
-- id: concentration
-  type: python
-  compute: client            # run the Python in the browser (Pyodide) on the delivered rows
-```
+**The exception: the Python console (Analyse).** A person may open a **Python console in the browser** (Pyodide) for
+just-in-time analytics: it connects to a data model, pulls a **masked extract** through an MQ (`shape: rows`, as that
+person, capped in rows), and lets them explore it with pandas. It is personal and exploratory: nothing in a report,
+board, alert or subscription depends on it, and to share a result the person **promotes** it (a cell becomes a Python
+measure, visual or dataset), after which it runs on the console backend like any other Python item. The same console
+can also run on the console backend for large extracts; the person chooses.
 
 ## 13. Worked example, end to end: two packs, five datasets, one model, one report
 
@@ -1600,7 +1600,7 @@ pages:
       - { id: limits, type: table,   wells: { columns: [counterparties.counterpartyName, PFE limit, Limit used, Headroom, Headroom after collateral] },
           filters: [{ field: counterparties.counterparty, op: top, n: 10, by: Limit used, dir: desc }] }
       - { id: ccy, type: slicer,     wells: { field: [trades.currency] }, format: { mode: dropdown } }
-      - { id: concentration, type: python, compute: client, wells: { values: [counterparties.counterpartyName, PFE peak] } }
+      - { id: concentration, type: python, wells: { values: [counterparties.counterpartyName, PFE peak] } }   # runs on the console backend
 ```
 
 Other consumers on the **same model** (none owns it; the model's *Used by* lists them all):
@@ -1614,7 +1614,7 @@ rule: { above: 0.9 }                    # tell me when Aldershot uses more than 
 ```
 
 A board tile, a subscription of the report, and an Analyse notebook (`model: counterparty-cockpit@1`, `shape: rows`
-extracts) are written the same way.
+extracts) are written the same way; a person can also open the Python console on this model for their own analysis.
 
 ### 13.5 What happens when Rita (risk) and Hana (desk head, rates desk) open the report
 
@@ -1636,7 +1636,8 @@ The planner splits it:
 | 2 | source: credit-store | `sum(pfePeak) group by counterparty` over netting sets (no currency filter: a fact's own filter does not reach other facts) |
 | 3 | source: credit-store | counterparties: one row per counterparty, latest by `reviewDue` |
 | 4 | server | join the two aggregates to `counterparties` on the counterparty key (each already at counterparty grain: no fan-out possible); mask `counterpartyName` for Hana (no raw power) → `•••`; apply the visual's sort and limit |
-| 5 | browser | draw the bars; hovering, sorting the legend and cross-highlighting **within** this answer need no new query |
+| 5 | console backend | shape the answer for the bar chart (labels, formats, the chart specification) |
+| 6 | browser | draw the bars and show tooltips; a click on a bar (cross-filter) or a new slicer value sends a new MQ |
 
 **What each sees:** Rita gets every counterparty, names shown, MTM over all desks. Hana gets the same PFE peaks
 (`may-see-all`), MTM only from the rates desk's USD trades, and `•••` instead of names. Both answers come from the same
@@ -1644,17 +1645,17 @@ model and the same MQ; only the reader differs.
 
 **The table `limits`** runs entirely on credit-store plus the server (no trades are read); its local measure
 `Headroom after collateral` is computed on the server after `Headroom` and `Collateral held` are aggregated at their
-own grains. **The Python visual** runs in the browser (`compute: client`) on the delivered, masked rows; for Hana it
-receives `•••` names, never the real ones. **The alert** runs the same MQ path on the server as its owner, every check.
+own grains. **The Python visual** runs on the console backend in the sandbox on the masked rows; for Hana it
+receives `•••` names, never the real ones, and every device shows the same picture. **The alert** runs the same MQ path on the server as its owner, every check.
 
 **Live:** if the trading pack's connector streams (time mode `live`), the bar's MQ is subscribed: the server keeps the
 MTM aggregate current by applying each new trade as a difference to its counterparty's sum, and pushes only the changed
-bars to the browser. PFE peak, from a snapshot dataset, stays as of the business date until the next load.
+bars to the page, which redraws them. PFE peak, from a snapshot dataset, stays as of the business date until the next load.
 
 ### 13.6 What you did, and what you did not have to do
 
 * You chose four pack datasets, wrote two small datasets in a wizard (a filter, a derived column, an explicit
   de-duplication), accepted suggested relationships, named ten measures, and built a report by dragging fields.
 * You did **not** write a join, copy any data, write security per report, or decide where anything runs. The packs gave
-  the keys, meanings and references; the model gave the joins and the measures; the planner chose the tiers; security
-  followed the data from the pack to every consumer.
+  the keys, meanings and references; the model gave the joins and the measures; the servers computed every number;
+  security followed the data from the pack to every consumer.
