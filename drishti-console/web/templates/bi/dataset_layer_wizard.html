@@ -1,0 +1,62 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The new-dataset wizard of the model layer (docs/architecture/BI_MODEL_SPEC.md section 9.2): only for what a pack does not give. Three steps (the source,
+   the table, save), the draft kept across refresh and Back, the server's Check beside each step. Drawn by static/js/bi-dataset-layer.js. #}
+{% extends "bi/shell.html" %}
+{% block bi_title %}New dataset{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-layer.css?v={{ ASSET_V }}">{% endblock %}
+{% block bi_main %}
+<div data-lw-root data-ready="" data-workspace="{{ workspace }}">
+<header class="bi-head"><p class="bi-crumb"><a href="/bi/models">Models and datasets</a></p><h1>New dataset</h1>
+  <p class="text-muted-d">A dataset is one table: what one row is, its columns with their meanings, and how it keeps time. Every pack kind is one already; make one here only for a SQL query in a connector, a Python table, the answer of a model, or a pack dataset narrowed with extra columns.</p></header>
+<ol class="bi-lw-steps" aria-label="Steps"><li data-step-mark="1">1 · Where the table comes from</li><li data-step-mark="2">2 · Check the table</li><li data-step-mark="3">3 · Save</li></ol>
+<p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+<p class="bi-warn" data-lw-restore hidden></p>
+<section class="bi-sec bi-form bi-layer-form" data-step="1" aria-labelledby="lw1"><h2 id="lw1">Where does the table come from?</h2>
+  <div class="bi-lw-source" role="radiogroup" aria-label="Source">
+    <label class="bi-checkrow"><input type="radio" name="lwsrc" value="extends" data-src="extends"> <span><strong>A pack dataset, narrowed or with extra columns</strong><br><select class="studio-select" data-src-extends aria-label="Pack dataset"></select></span></label>
+    <label class="bi-checkrow"><input type="radio" name="lwsrc" value="connector" data-src="connector"> <span><strong>A query in a SQL connector</strong> (DuckDB, PostgreSQL); its only parameter is the as-of date<br>
+      <input class="studio-in" data-src-connector placeholder="risk-warehouse" aria-label="Connector name"><textarea class="studio-in mono" rows="4" data-src-query aria-label="SQL query" placeholder="SELECT desk_id, limit_type, limit_amount, currency FROM limits WHERE as_of = :asOf"></textarea></span></label>
+    <label class="bi-checkrow"><input type="radio" name="lwsrc" value="python" data-src="python"> <span><strong>A Python Transform</strong> (its inputs are model queries, asked as the reader)<br><select class="studio-select" data-src-python aria-label="Python item"></select> <a href="/bi/catalogue?kind=python" data-src-python-new>Write one</a></span></label>
+    <label class="bi-checkrow"><input type="radio" name="lwsrc" value="model" data-src="model"> <span><strong>The answer of a model</strong>: pick fields and measures<br><select class="studio-select" data-src-model aria-label="Model"></select>
+      <span class="bi-layer-picks" data-src-model-fields role="group" aria-label="Fields and measures"></span></span></label>
+  </div>
+  <p class="bi-actions"><button type="button" class="btn-pill btn-accent" data-next="2">Next</button></p></section>
+<section class="bi-sec bi-form bi-layer-form" data-step="2" hidden aria-labelledby="lw2"><h2 id="lw2">Check the table</h2>
+  <p class="text-muted-d bi-small-note" data-cols-note></p>
+  <div class="tbl-wrap"><table class="tbl bi-tbl bi-lw-cols" data-plain><caption class="visually-hidden">Columns</caption>
+    <thead><tr><th scope="col">Column</th><th scope="col">Type</th><th scope="col">Role</th><th scope="col">Meaning</th><th scope="col">References</th><th scope="col">Currency (column or code)</th><th scope="col">Adds up</th><th scope="col">Formula</th><th scope="col"></th></tr></thead>
+    <tbody data-cols></tbody></table></div>
+  <p><button type="button" class="btn-pill btn-ghost bi-small" data-col-add><i class="bi bi-plus-lg" aria-hidden="true"></i> Add a column</button></p>
+  <fieldset data-grain><legend>One row per</legend><span class="bi-chips" data-keys></span>
+    <label>In words <input class="studio-in" data-grain-says placeholder="One row per desk and limit type per date"></label></fieldset>
+  <label data-where-row hidden>Only the rows where (a filter of the base, not a security rule) <input class="studio-in mono" data-where placeholder="currency in ('EUR', 'GBP')"></label>
+  <label>Time <select class="studio-select" data-time><option value="snapshot">snapshot: one per business date</option><option value="history">history: a time window</option></select></label>
+  <label>Refresh <select class="studio-select" data-refresh><option value="on-load">when new data loads</option><option value="business-days 06:30">business days at 06:30</option><option value="">never by itself</option></select></label>
+  <ul class="bi-warn" data-problems-2></ul>
+  <p class="bi-actions"><button type="button" class="btn-pill btn-ghost" data-back="1">Back</button> <button type="button" class="btn-pill btn-accent" data-next="3">Next</button></p></section>
+<section class="bi-sec bi-form bi-layer-form" data-step="3" hidden aria-labelledby="lw3"><h2 id="lw3">Save</h2>
+  <label>Title <input class="studio-in" data-title placeholder="Desk limits"></label>
+  <label>Name (what models use) <input class="studio-in mono" data-name placeholder="desk-limits"></label>
+  <label>Workspace <select class="studio-select" data-ws></select></label>
+  <fieldset><legend>Masked columns (readers without raw access read •••)</legend><span class="bi-layer-picks" data-masks></span></fieldset>
+  <details><summary>The YAML (for review)</summary><pre class="bi-body mono" data-yaml tabindex="0"></pre></details>
+  <ul class="bi-warn" data-problems-3></ul>
+  <p class="bi-actions"><button type="button" class="btn-pill btn-ghost" data-back="2">Back</button> <button type="button" class="btn-pill btn-accent" data-save>Save draft</button> <button type="button" class="btn-pill btn-ghost" data-save-publish>Save and publish</button></p>
+  <p class="bi-actions" data-after hidden></p></section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-dataset-layer.js?v={{ ASSET_V }}"></script>{% endblock %}

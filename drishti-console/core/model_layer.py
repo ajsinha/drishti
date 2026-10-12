@@ -279,9 +279,15 @@ def _block(key: str, value, out: list[str]) -> None:
                 out.extend(f"    {_key(k)}: {_flow(v)}" for k, v in sv.items())
             else:
                 out.append(f"  {_key(sk)}: {_flow(sv)}")
+    elif isinstance(value, (dict, list)) and value:
+        text = yaml.safe_dump(value, sort_keys=False, default_flow_style=None, width=200, allow_unicode=True).rstrip()
+        if text.startswith(("{", "[")):                                # a small leaf: one line
+            out.append(f"{_key(key)}: {text}")
+        else:
+            out.append(f"{_key(key)}:")
+            out.extend(("  " + line) if line else line for line in text.split("\n"))
     else:
-        text = yaml.safe_dump({key: value}, sort_keys=False, default_flow_style=None, width=200, allow_unicode=True).rstrip()
-        out.extend(text.split("\n"))
+        out.append(f"{_key(key)}: {_flow(value)}")
 
 
 def _clean(doc: dict) -> dict:

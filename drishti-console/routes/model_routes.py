@@ -220,11 +220,14 @@ async def new_model(request: Request):
         if body.get("from"):
             doc = await _implicit(request, str(body["from"]), title)
         else:
-            doc = ml.new_doc(ml.slug(title), title)
-            for name in body.get("datasets") or []:
-                info = await _dataset_info(request, str(name))
+            doc = ml.new_doc(await _free_name(request, ml.slug(title)), title)
+            infos = [await _dataset_info(request, str(name)) for name in body.get("datasets") or []]
+            referenced = {c["references"] for i in infos for c in i["columns"] if c.get("references")}
+            for info in infos:                                  # a dataset another one references is a dimension (spec 2.2), whatever amounts it carries
                 alias = info["alias"] if info["alias"] not in doc["datasets"] else info["alias"] + "_2"
-                doc["datasets"][alias] = {"dataset": f"{info['name']}@^{(info['version'] or '1').split('.')[0]}", "role": info["role"]}
+                role = "dimension" if ml.kind_of(info) in referenced else info["role"]
+                doc["datasets"][alias] = {"dataset": f"{info['name']}@^{(info['version'] or '1').split('.')[0]}", "role": role}
+            doc["layout"] = {"positions": {a: [24 + (i % 3) * 270, 24 + (i // 3) * 240] for i, a in enumerate(doc["datasets"])}}
         text = ml.to_yaml(doc)
         it = await _bi(request, "POST", "/workspaces/" + quote(workspace, safe="") + "/items", {"kind": "model", "title": title, "description": "", "body": text})
     except BackendError as e:
@@ -232,6 +235,18 @@ async def new_model(request: Request):
     except ml.LayerError as e:
         return _refuse(str(e))
     return _ok({"id": it["id"], "href": "/bi/md/" + it["id"]})
+
+
+async def _free_name(request: Request, name: str) -> str:
+    """A model name nobody the person can see uses yet (``trades``, else ``trades-2``...): a query names a model by name, so two must not share one."""
+    try:
+        taken = {m.get("name") for m in (await _bi(request, "GET", "/models")).get("models") or []}
+    except BackendError:
+        return name
+    out, n = name, 2
+    while out in taken:
+        out, n = f"{name}-{n}", n + 1
+    return out
 
 
 async def _implicit(request: Request, name: str, title: str) -> dict:
@@ -246,7 +261,7 @@ async def _implicit(request: Request, name: str, title: str) -> dict:
                     dims.append(await _dataset_info(request, p["name"]))
                 except (BackendError, ml.LayerError):
                     continue
-    return ml.implicit_doc(info, dims, name=ml.slug(title), title=title)
+    return ml.implicit_doc(info, dims, name=await _free_name(request, ml.slug(title)), title=title)
 
 
 # ---- reports on a model -------------------------------------------------------------------------------------------------

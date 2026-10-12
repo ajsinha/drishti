@@ -1,3 +1,17 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
 """Wave W1 of the model layer in Chromium (docs/architecture/BI_MODEL_SPEC.md section 9), over the real server and console on scratch ports 18918 and
 17918 (security on, the trading and banking-core packs, a small file lake of trades and desks): a pack-generated dataset is listed and browsable (grain,
 keys, meanings, time mode); a new model takes it and the desks, the pack reference is suggested and accepted in one click; a measure gets its default
@@ -127,3 +141,154 @@ class Stack:
                 p.wait(20)
             except subprocess.TimeoutExpired:
                 p.kill()
+
+
+@pytest.fixture(scope="module")
+def stack(tmp_path_factory):
+    for port in (SERVER_PORT, CONSOLE_PORT):
+        if listening(port):
+            pytest.skip(f"port {port} is in use: stop whatever listens there")
+    try:
+        s = Stack(tmp_path_factory.mktemp("w1model")).start()
+    except FileNotFoundError as e:
+        pytest.skip(str(e))
+    yield s
+    s.close()
+
+
+@pytest.fixture(scope="module")
+def browser(stack):
+    with sync_playwright() as p:
+        try:
+            b = p.chromium.launch()
+        except Exception as e:  # noqa: BLE001
+            pytest.skip(f"needs Playwright's Chromium: {str(e)[:100]}")
+        yield b
+        b.close()
+
+
+VIOLATIONS = "window.__csp = []; document.addEventListener('securitypolicyviolation', e => window.__csp.push(e.violatedDirective + ' ' + e.blockedURI));"
+
+
+def sign_in(browser, user, width=1400):
+    context = browser.new_context(viewport={"width": width, "height": 900})
+    context.add_init_script(VIOLATIONS)
+    page = context.new_page()
+    page.errors = []
+    page.on("pageerror", lambda e: page.errors.append(str(e)))
+    page.goto(CONSOLE_URL + "/login?next=/bi/models")
+    page.fill("#lu", user)
+    page.fill("#lp", PASSWORD)
+    page.click("button[type=submit]")
+    page.wait_for_url("**/bi/models")
+    return page
+
+
+def clean(page):
+    assert page.evaluate("window.__csp") == [], "a policy violation"
+    assert page.errors == [], page.errors
+
+
+def fetch(page, method, path, body=None):
+    return page.evaluate("""([m, p, b]) => fetch(p, {method: m, credentials: 'same-origin', headers: {'Content-Type': 'application/json', Accept: 'application/json'},
+                              body: b === null ? undefined : JSON.stringify(b)}).then(r => r.json().then(j => ({status: r.status, body: j})))""", [method, path, body])
+
+
+def yaml_tab(page) -> str:
+    page.click('[data-tab="yaml"]')
+    return page.evaluate("document.querySelector('.CodeMirror') ? document.querySelector('.CodeMirror').CodeMirror.getValue() : document.querySelector('[data-yaml]').value")
+
+
+def test_pack_dataset_to_model_to_report(browser):
+    page = sign_in(browser, "wes")
+    # 1. the pack-generated datasets are listed, read-only and certified; one opens with its grain, keys, meanings and time mode
+    expect(page.locator('[data-models-root][data-ready="yes"]')).to_have_count(1, timeout=30000)
+    card = page.locator('[data-layer-card="pack.trading.trade"]')
+    expect(card).to_be_visible()
+    expect(card).to_contain_text("certified")
+    card.locator("h3 a").click()
+    expect(page.locator('[data-layer-dataset][data-ready="yes"]')).to_have_count(1, timeout=20000)
+    expect(page.locator('[data-fact="grain"]')).to_contain_text("One row per trade per business date")
+    expect(page.locator('[data-fact="keys"]')).to_contain_text("id")
+    expect(page.locator('[data-fact="time"]')).to_contain_text("snapshot")
+    expect(page.locator('[data-column="desk"]')).to_contain_text("desk →")
+    expect(page.locator('[data-column="notional"]')).to_contain_text("notional")
+    expect(page.locator("[data-yaml]")).to_contain_text("dataset: pack.trading.trade")
+    clean(page)
+
+    # 2. a new model over trades and desks: the desks dataset is inferred a dimension (trades reference it)
+    page.goto(CONSOLE_URL + "/bi/models")
+    expect(page.locator('[data-models-root][data-ready="yes"]')).to_have_count(1, timeout=30000)
+    page.click("[data-new-model]")
+    page.fill("[data-nm-title]", "Trades and desks")
+    page.check('[data-nm-pick="pack.trading.trade"]')
+    page.check('[data-nm-pick="pack.banking-core.desk"]')
+    page.click("[data-nm-go]")
+    page.wait_for_url("**/bi/md/**")
+    expect(page.locator('[data-md-root][data-ready="yes"]')).to_have_count(1, timeout=30000)
+    expect(page.locator('[data-role-of="desk"]')).to_have_value("dimension")
+    expect(page.locator('[data-role-of="trade"]')).to_have_value("fact")
+
+    # 3. the pack reference is suggested; one click accepts it
+    sugg = page.locator('[data-suggestion="trade.desk->desk.id"]')
+    expect(sugg).to_be_visible(timeout=15000)
+    sugg.locator("[data-accept]").click()
+    expect(page.locator('[data-rel="trade.desk → desk.id"]')).to_be_visible(timeout=15000)
+    expect(page.locator('[data-suggestion="trade.desk->desk.id"]')).to_have_count(0)
+    page.click('[data-rel-open="0"]')
+    expect(page.locator("[data-insp-card]")).to_have_value("many-to-one")
+
+    # 4. a measure from a column gets its default (sum, additive) from the dataset
+    page.click('[data-tab="measures"]')
+    page.select_option("[data-nm-alias]", "trade")
+    page.select_option("[data-nm-column]", "mtm")
+    page.click("[data-nm-add]")
+    row = page.locator('[data-measure="Sum of mtm"]')
+    expect(row).to_be_visible(timeout=15000)
+    expect(row.locator('[data-m-expr="Sum of mtm"]')).to_have_value("sum(trade.mtm)")
+    expect(row.locator('[data-m-additive="Sum of mtm"]')).to_have_value("yes")
+
+    # 5. security: a desk-head rule on trades raises the safeguard on desks; one click resolves it
+    page.click('[data-tab="security"]')
+    page.select_option("[data-rule-alias]", "trade")
+    page.fill("[data-rule-roles]", "desk-head")
+    page.select_option("[data-rule-field]", "trade.desk")
+    page.click("[data-rule-add]")
+    expect(page.locator('[data-exposure="desk:desk-head"]')).to_be_visible(timeout=15000)
+    expect(page.locator("[data-count-security]")).to_be_visible()
+    page.click('[data-safeguard-all="desk:desk-head"]')
+    expect(page.locator("[data-safeguard-clear]")).to_be_visible(timeout=15000)
+    expect(page.locator('[data-allowed="desk:desk-head"]')).to_be_visible()
+    page.fill("[data-rule-roles]", "bi-writer")                       # a reader with no matching rule gets no rows: the author sees every trade
+    page.select_option("[data-rule-kind]", "all")
+    page.click("[data-rule-add]")
+    expect(page.locator('[data-rule="trade:1"]')).to_contain_text("true", timeout=15000)
+    expect(page.locator("[data-safeguard-clear]")).to_be_visible(timeout=15000)
+    text = yaml_tab(page)                                             # the designer wrote the YAML; nobody typed it
+    assert "trade.desk in user.desks" in text and "may-see-all:" in text and "suggested: {from: pack-reference}" in text, text
+
+    # 6. save (checked clean), then start a report on the model: its Fields pane reads the model, its visuals ask the model
+    page.click("[data-save]")
+    expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
+    expect(page.locator("[data-valid]")).to_have_text("Valid")
+    name = page.evaluate("window.drishtiModel.doc.model")
+    assert name.startswith("trades-and-desks"), name
+    page.click("[data-report]")
+    page.click("[data-ask-go]")
+    page.wait_for_url("**/bi/design/**", timeout=20000)
+    expect(page.locator('[data-model-header="model"]')).to_be_visible(timeout=30000)
+    expect(page.locator('[data-field="Sum of mtm"]')).to_be_visible()
+    expect(page.locator('[data-field="desk.name"]')).to_be_visible()
+    page.drag_and_drop('[data-field="Sum of mtm"]', "[data-canvas-grid]", target_position={"x": 80, "y": 40})
+    page.drag_and_drop('[data-field="trade.desk"]', ".bi-dvis")
+    page.locator(".bi-dvis").first.click()
+    expect(page.locator("[data-visual-query-text]")).to_contain_text(f"model: {name}@1", timeout=15000)
+    expect(page.locator(".bi-dvis").first).to_contain_text("3 rows", timeout=15000)           # three desks, drawn from the model query
+
+    # 7. the model query's answer equals the old dataset query over the same rows
+    new = fetch(page, "POST", "/bi/api/mq", {"mq": 1, "model": f"{name}@1", "select": {"fields": ["trade.desk"], "measures": ["Sum of mtm"]}})
+    old = fetch(page, "POST", "/bi/api/datasets/file:dataset:trades-basic/query", {"fields": ["trade.desk"], "measures": ["MTM"]})
+    assert new["status"] == 200 and old["status"] == 200, (new, old)
+    assert sorted(map(tuple, new["body"]["rows"])) == sorted(map(tuple, old["body"]["rows"]))
+    clean(page)
+    page.context.close()

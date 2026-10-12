@@ -85,7 +85,7 @@
     return kind.charAt(0).toUpperCase() + kind.slice(1) + ' ' + d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + ' ' + z(d.getHours()) + ':' + z(d.getMinutes());
   }
   function stamp(iso) { return iso ? iso.replace('T', ' ').replace(/\.\d+Z?$|Z$/, '') : ''; }
-  var KIND_ICON = { report: 'bar-chart-line', dataset: 'hdd-stack', board: 'speedometer2', notebook: 'journal-code', python: 'filetype-py' };
+  var KIND_ICON = { report: 'bar-chart-line', dataset: 'hdd-stack', model: 'boxes', board: 'speedometer2', notebook: 'journal-code', python: 'filetype-py' };
   var RANK = { viewer: 0, contributor: 1, member: 2, admin: 3 };
 
   function badge(text, cls, ic) { return h('span', { class: 'bi-badge ' + (cls || '') }, ic ? icon(ic) : null, ' ' + text); }
@@ -304,6 +304,7 @@
       report: { hint: 'A report draws one dataset: choose it, and the report opens in the designer.', go: 'Create and open in the designer' },
       board: { hint: 'A board is laid out in the board designer: it opens there.', go: 'Create and open in the board designer' },
       dataset: { hint: 'A dataset is built in the wizard: pick a source, tick columns, add measures. It opens there, and is saved as a draft in this workspace. Or paste a dataset YAML document you already have.', go: 'Open the dataset wizard', href: '/bi/datasets/new?workspace=' },
+      model: { hint: 'A model puts datasets in a star with relationships, measures and security. It is made on the Models page (New model) and edited in the model designer.', go: 'Go to Models', href: '/bi/models' },
       notebook: { hint: 'A notebook is started in Analyse (SQL and Python cells); Analyse saves it here with Save as a notebook.', go: 'Go to Analyse', href: '/bi/explore' },
       python: { hint: 'Choose what the Python item makes. It is created with a valid, commented starter body and opens in its editor, ready to change and Check.', go: 'Create and open the editor' }
     };
@@ -418,6 +419,8 @@
       var wiz = q('[data-open-wizard]');
       if (wiz) { wiz.hidden = !(it.kind === 'dataset' && it.can && it.can.edit && it.status !== 'proposed'); wiz.href = '/bi/datasets/new?edit=' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }
       if (mod) { mod.hidden = !(it.kind === 'dataset' && ((it.can && it.can.edit) || it.shipped)); mod.href = '/bi/m/' + enc; }
+      if (mod && it.kind === 'model') { mod.hidden = false; mod.href = '/bi/md/' + enc; }           // a data model opens in the model designer
+      if (open && it.kind === 'dataset' && /^rachana:\s*2\b/m.test(it.body || '')) { open.href = '/bi/ds/' + enc; }   // a model-layer dataset has its own page
       document.dispatchEvent(new CustomEvent('bi:item', { detail: x }));          // bi-govern.js draws history, review, impact and lineage
     }
     function act(label, run, cls) {
