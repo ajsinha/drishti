@@ -64,6 +64,7 @@ a:hover { text-decoration: underline; }
 .nav-public .inner { display: flex; align-items: center; gap: 1.5rem; padding: .7rem 1.25rem; max-width: 1240px; margin: 0 auto; }
 .nav-public .links { display: flex; gap: 1.25rem; margin-left: auto; align-items: center; }
 .nav-public .links a { color: var(--d-muted); font-size: .92rem; }
+.nav-public .links a.btn-accent, .nav-public .links a.btn-accent:hover { color: var(--d-on-accent); }   /* a button in the links row keeps its own text colour */
 .nav-public .links a:hover { color: var(--d-ink); text-decoration: none; }
 .theme-btn { background: transparent; border: 1px solid var(--d-border); color: var(--d-muted); border-radius: 999px; padding: .25rem .7rem; }
 .theme-btn:hover { color: var(--d-ink); border-color: var(--d-accent); }

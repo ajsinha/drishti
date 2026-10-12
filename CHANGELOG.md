@@ -16,6 +16,8 @@
 # Changelog
 
 ## Unreleased
+- **Changed:** a view's function-key bar is one row of key chips (it scrolls sideways when it does not fit, instead of wrapping), on its own surface; its note says only when the data was updated, the generation and the date (the full source is its tooltip and in "How this view was built") and a short copyright linking to About.
+- **Fixed:** the landing page's **Terminal** button read amber on amber (the links row's colour won over the button's).
 - **Changed:** the top bar shows the logo and a larger wordmark only; the slogan moves to the footer, now laid out as in Sajha: one centred closing block with the slogan (Playfair, the heading colour), the product and version with Help, About, Competitive analysis and Release notes, then the fine print.
 - **Changed:** the wordmark is set in Cinzel and the tagline in Playfair Display (both SIL OFL, vendored in `static/vendor/fonts`, Latin, 38 KB), in the top bar, the public pages and the About hero; the tagline is larger and on two lines, white on the coloured bars, and the logo's eye is white there too.
 - **Changed:** the Crimson, Crimson dark, Blue and Green themes are Maya's and Sajha's (Sajha's Dark is Drishti's Crimson dark; Blue and Green take Sajha's palettes, the blue accent one step darker for text contrast): a solid navigation gradient (crimson-deep → crimson → indigo) with white text and icons in the top bar, and deep-crimson page headings.

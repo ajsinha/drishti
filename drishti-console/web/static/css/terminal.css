@@ -153,14 +153,19 @@ body.terminal { font-size: 14px; }
 @keyframes flash { from { background: var(--d-emph-bg); } to { background: transparent; } }
 
 /* ---- function keys and raw drawer ---- */
-.fkeys { position: sticky; bottom: 0; display: flex; justify-content: space-between; align-items: center; gap: 1rem;
-  padding: .45rem 1.25rem; background: var(--d-bg); border-top: 1px solid var(--d-border); font-size: .85rem; }
-.fkeys nav { display: flex; flex-wrap: wrap; gap: .3rem 1.3rem; }
-.fk { background: none; border: 0; padding: 0; color: var(--d-muted); }
-.fk b { color: var(--d-accent); font-weight: 500; }
-.fk-t { display: inline-block; max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }   /* the whole title shows on hover and focus (title, aria-label) */
-.fk:hover { color: var(--d-ink); }
-.fk-note { color: var(--d-faint); font-size: .75rem; }
+.fkeys { position: sticky; bottom: 0; display: flex; justify-content: space-between; align-items: center; gap: 1.2rem;
+  padding: .45rem 1.25rem; background: var(--d-surface-2); border-top: 1px solid var(--d-border); box-shadow: 0 -4px 14px rgba(0, 0, 0, .06); font-size: .85rem; }
+/* one row of key chips; a row that does not fit scrolls sideways instead of wrapping */
+.fkeys nav { display: flex; flex-wrap: nowrap; gap: .4rem; min-width: 0; overflow-x: auto; scrollbar-width: thin; }
+.fk { flex: 0 0 auto; display: inline-flex; align-items: center; gap: .35rem; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 6px;
+  padding: .15rem .55rem .15rem .2rem; color: var(--d-ink); white-space: nowrap; }
+.fk b { color: var(--d-on-accent); background: var(--d-accent); font-weight: 600; font-size: .75rem; border-radius: 4px; padding: 0 .35rem; }
+.fk-t { display: inline-block; max-width: 20ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }   /* the whole title shows on hover and focus (title, aria-label) */
+.fk:hover { border-color: var(--d-accent); }
+.fk:disabled { opacity: .55; }
+.fk-note { flex: 0 0 auto; color: var(--d-muted); font-size: .78rem; white-space: nowrap; }
+.fk-note .fk-copy { color: var(--d-muted); text-decoration: none; }
+.fk-note .fk-copy:hover { color: var(--d-link); text-decoration: underline; }
 .raw { position: fixed; top: 0; right: 0; bottom: 0; width: min(640px, 92vw); z-index: 1200; background: var(--d-surface);
   border-left: 1px solid var(--d-border); box-shadow: var(--d-shadow); display: flex; flex-direction: column; }
 .raw header { display: flex; gap: .8rem; align-items: center; padding: .6rem .9rem; border-bottom: 1px solid var(--d-border); }
