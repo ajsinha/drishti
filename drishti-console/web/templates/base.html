@@ -49,7 +49,7 @@
 </head>
 <body class="{% block body_class %}{% endblock %}{% if (settings or {}).density == 'compact' %} density-compact{% endif %}{% if (settings or {}).flash == false %} no-flash{% endif %}" data-product="{{ PRODUCT }}" data-screen="{% block screen %}{{ screen | default('landing') }}{% endblock %}">
   <a class="skip-link" href="#main">Skip to content</a>
-  {% block nav %}{% include "_nav_public.html" %}{% endblock %}
+  {% block nav %}{% if me %}{% include "terminal/_topbar.html" %}{% else %}{% include "_nav_public.html" %}{% endif %}{% endblock %}{# one top bar for anyone signed in, on every page #}
   <main id="main">{% block content %}{% endblock %}</main>
   {% block footer %}{% include "_footer.html" %}{% endblock %}
   <script src="/static/vendor/bootstrap/js/bootstrap.bundle.min.js?v={{ ASSET_V }}"></script>

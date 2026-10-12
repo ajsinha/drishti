@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **Changed:** one top bar everywhere: signed in, every page (the landing page, About, Help) shows the terminal's top bar; signed out, the public bar has the same height, logo and wordmark, the theme as an icon before the person.
 - **Fixed:** the public pages' bar (landing, About, Help signed out) now follows the Crimson, Crimson dark, Blue and Green themes like the top bar: the theme's gradient, white text and logo, the Terminal button white with the accent as its text.
 - **Changed:** the Trades overview sample's "By product" page has dropdown slicers for product type, desk and currency (`type: slicer`, `format.mode: dropdown`: a checkbox list with a search box, Select all and Clear), and its donut shows the twelve largest product types (`op: top`).
 - **Fixed:** a dropdown slicer's list was cut off by its visual's frame; it now floats over the page while open.

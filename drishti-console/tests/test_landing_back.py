@@ -38,4 +38,4 @@ def test_labels_name_the_page():
 
 def test_every_header_logo_carries_the_page(client):
     assert 'class="tbar-brand" href="/?from=/help"' in client.get("/help").text      # Help, signed in: the terminal header
-    assert 'class="brand" href="/"' in client.get("/").text, "the landing page's own logo needs no way back to itself"
+    assert 'class="tbar-brand" href="/"' in client.get("/").text, "the landing page's own logo needs no way back to itself"   # signed in: the one top bar
