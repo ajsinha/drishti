@@ -430,6 +430,7 @@ public final class BiService {
         m.put("audience", Map.of("roles", i.audienceRoles(), "users", i.audienceUsers(), "packs", i.audiencePacks()));
         m.put("publishedAt", i.publishedAt());
         m.put("freshness", i.publishedAt() == null ? null : i.publishedAt());
+        m.put("createdAt", i.createdAt());
         m.put("updatedAt", i.updatedAt());
         m.put("proposedBy", i.proposedBy());
         m.put("proposedAt", i.proposedAt());

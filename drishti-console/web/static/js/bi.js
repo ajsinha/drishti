@@ -76,6 +76,11 @@
     if (s < 129600) { return Math.round(s / 3600) + ' h ago'; }
     return Math.round(s / 86400) + ' days ago';
   }
+  function shortId(id) { return String(id).replace(/^bi-/, '').slice(0, 8); }
+  function defaultTitle(kind) {
+    var d = new Date(), z = function (n) { return (n < 10 ? '0' : '') + n; };
+    return kind.charAt(0).toUpperCase() + kind.slice(1) + ' ' + d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + ' ' + z(d.getHours()) + ':' + z(d.getMinutes());
+  }
   function stamp(iso) { return iso ? iso.replace('T', ' ').replace(/\.\d+Z?$|Z$/, '') : ''; }
   var KIND_ICON = { report: 'bar-chart-line', dataset: 'hdd-stack', board: 'speedometer2', notebook: 'journal-code', python: 'filetype-py' };
   var RANK = { viewer: 0, contributor: 1, member: 2, admin: 3 };
@@ -193,7 +198,33 @@
 
   function workspace() {
     var id = canvas.getAttribute('data-workspace'), ws = null;
-    var tbody = q('[data-items] tbody');
+    var tbody = q('[data-items] tbody'), rows = {};
+    function picks() { return Array.prototype.slice.call(tbody.querySelectorAll('[data-pick]')); }
+    function syncBulk() {
+      var all = picks(), on = all.filter(function (c) { return c.checked; }), b = q('[data-delete-selected]');
+      q('[data-bulk]').hidden = all.length === 0;
+      b.disabled = on.length === 0; b.textContent = 'Delete selected (' + on.length + ')';
+      var sa = q('[data-select-all]'); sa.checked = all.length > 0 && on.length === all.length; sa.disabled = all.length === 0;
+    }
+    function askDelete(list) {
+      var box = q('[data-confirm]'), ul = q('[data-confirm-list]'); clear(ul);
+      q('[data-confirm-head]').textContent = list.length === 1 ? 'Delete this item?' : 'Delete these ' + list.length + ' items?';
+      list.forEach(function (it) { ul.appendChild(h('li', { text: it.title + ' (' + it.kind + ', ' + shortId(it.id) + ')' })); });
+      box.hidden = false; box._list = list; q('[data-confirm-no]').focus();
+    }
+    function runDelete(list) {
+      var done = [], skipped = [];
+      return list.reduce(function (p, it) {
+        return p.then(function () { return api('DELETE', '/items/' + encodeURIComponent(it.id)).then(function () { done.push(it.title); }, function (e) { skipped.push(it.title + ': ' + e.message); }); });
+      }, Promise.resolve()).then(function () {
+        say((done.length ? 'Deleted ' + done.length + (done.length === 1 ? ' item' : ' items') + ': ' + done.join(', ') + '. ' : '') + (skipped.length ? 'Skipped ' + skipped.length + ' - ' + skipped.join(' | ') : ''), skipped.length > 0);
+        load();
+      });
+    }
+    q('[data-select-all]').addEventListener('change', function (e) { picks().forEach(function (c) { c.checked = e.target.checked; }); syncBulk(); });
+    q('[data-delete-selected]').addEventListener('click', function () { askDelete(picks().filter(function (c) { return c.checked; }).map(function (c) { return rows[c.getAttribute('data-pick')]; })); });
+    q('[data-confirm-no]').addEventListener('click', function () { q('[data-confirm]').hidden = true; });
+    q('[data-confirm-yes]').addEventListener('click', function () { var box = q('[data-confirm]'); box.hidden = true; runDelete(box._list || []); });
     function load() {
       Promise.all([api('GET', '/workspaces/' + encodeURIComponent(id)), api('GET', '/workspaces/' + encodeURIComponent(id) + '/items')]).then(function (r) {
         ws = r[0];
@@ -203,12 +234,20 @@
         document.title = ws.name + ' · BI';
         var rank = RANK[ws.role], authors = (me.powers || []).indexOf('bi-author') >= 0;
         q('[data-new-item]').hidden = !(authors && rank >= RANK.contributor && !ws.shipped);
+        q('[data-need-author]').hidden = !(!authors && rank >= RANK.contributor && !ws.shipped);
         clear(tbody);
         r[1].forEach(function (it) {
-          tbody.appendChild(h('tr', { 'data-id': it.id }, h('th', { scope: 'row' }, h('a', { href: '/bi/i/' + encodeURIComponent(it.id).replace(/%3A/g, ':'), text: it.title })),
-            h('td', { text: it.kind }), h('td', { text: it.status }), h('td', { text: it.publishedVersion ? 'v' + it.publishedVersion : '' }),
-            h('td', {}, endorsement(it) || ''), h('td', { text: ago(it.updatedAt) })));
+          var may = !!(it.can && it.can.delete);
+          var pick = may ? h('input', { type: 'checkbox', 'data-pick': it.id, 'aria-label': 'Select ' + it.title }) : null;
+          var del = may ? h('button', { type: 'button', class: 'btn-pill btn-ghost bi-danger', 'data-row-delete': it.id, 'aria-label': 'Delete ' + it.title }, 'Delete') : null;
+          if (pick) { pick.addEventListener('change', syncBulk); }
+          if (del) { del.addEventListener('click', function () { askDelete([it]); }); }
+          tbody.appendChild(h('tr', { 'data-id': it.id }, h('td', { class: 'bi-pick' }, pick || ''), h('th', { scope: 'row' }, h('a', { href: '/bi/i/' + encodeURIComponent(it.id).replace(/%3A/g, ':'), text: it.title })),
+            h('td', { class: 'bi-shortid', title: it.id, text: shortId(it.id) }), h('td', { text: it.kind }), h('td', { text: it.status }), h('td', { text: it.publishedVersion ? 'v' + it.publishedVersion : '' }),
+            h('td', {}, endorsement(it) || ''), h('td', { text: stamp(it.createdAt).slice(0, 16) }), h('td', { text: ago(it.updatedAt) }), h('td', {}, del || '')));
+          rows[it.id] = it;
         });
+        syncBulk();
         q('[data-empty]').hidden = r[1].length > 0;
         members();
       }).catch(fail);
@@ -228,11 +267,44 @@
       q('[data-add-member]').hidden = !admin;
       q('[data-review]').checked = !!ws.reviewRequired;
     }
+    // What each kind needs before it is useful: a report needs a dataset (then opens in the designer), a board opens the board designer; datasets, notebooks and
+    // Python items start where they are authored (the Datasets page and Analyse), so this form sends you there rather than create an empty item.
+    var START = {
+      report: { hint: 'A report draws one dataset: choose it, and the report opens in the designer.', go: 'Create and open in the designer' },
+      board: { hint: 'A board is laid out in the board designer: it opens there.', go: 'Create and open in the board designer' },
+      dataset: { hint: 'A dataset is defined from packs or a model: the Datasets page starts one.', go: 'Go to Datasets', href: '/bi/datasets' },
+      notebook: { hint: 'A notebook is started in Analyse (SQL and Python cells).', go: 'Go to Analyse', href: '/bi/explore' },
+      python: { hint: 'A Python item is started in Analyse (Python tab) and saved from there.', go: 'Go to Analyse', href: '/bi/explore' }
+    };
+    function kindChanged() {
+      var f = q('[data-new-item]'), k = f.elements.kind.value, s = START[k];
+      q('[data-dataset-row]').hidden = k !== 'report';
+      q('[data-kind-hint]').textContent = s.hint;
+      q('[data-create]').textContent = s.go;
+      f.elements.title.closest('label').hidden = !!s.href; f.elements.description.closest('label').hidden = !!s.href;
+    }
+    q('[data-new-item]').elements.kind.addEventListener('change', kindChanged);
+    kindChanged();
+    api('GET', '/datasets').then(function (d) {
+      var sel = q('[data-new-dataset]');
+      (d.datasets || []).filter(function (x) { return x.valid; }).forEach(function (x) { sel.appendChild(h('option', { value: x.id, text: x.title })); });
+    }).catch(function () {});
     q('[data-new-item]').addEventListener('submit', function (e) {
       e.preventDefault();
-      var f = e.target;
-      api('POST', '/workspaces/' + encodeURIComponent(id) + '/items', { kind: f.elements.kind.value, title: f.elements.title.value, description: f.elements.description.value })
-        .then(function (it) { window.location.href = '/bi/i/' + encodeURIComponent(it.id); }).catch(fail);
+      var f = e.target, kind = f.elements.kind.value, st = START[kind];
+      if (st.href) { window.location.href = st.href; return; }
+      var title = f.elements.title.value.trim() || defaultTitle(kind), body, to;
+      var name = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || kind;
+      if (kind === 'report') {
+        if (!f.elements.dataset.value) { say('Choose a dataset: a report draws one.', true); f.elements.dataset.focus(); return; }
+        body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify(title) + '\ndataset: ' + f.elements.dataset.value + '\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n';
+        to = '/bi/design/';
+      } else {
+        body = 'rachana: 1\nboard: ' + name + '\ntitle: ' + JSON.stringify(title) + '\npages:\n  - id: page1\n    title: Page 1\n    tiles: []\n';
+        to = '/bi/design/board/';
+      }
+      api('POST', '/workspaces/' + encodeURIComponent(id) + '/items', { kind: kind, title: title, description: f.elements.description.value, body: body })
+        .then(function (it) { window.location.href = to + encodeURIComponent(it.id).replace(/%3A/g, ':'); }).catch(fail);
     });
     q('[data-add-member]').addEventListener('submit', function (e) {
       e.preventDefault();
