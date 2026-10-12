@@ -25,6 +25,7 @@
   const h = B.h;
   const strip = (r) => String(r || '').replace(/^file:dataset:/, '');
 
+  let all = [];                        // every dataset the person can see, usable or not (the picker greys the unusable with the reason)
   let list = [];                       // the readable datasets: [{id, name, title, valid}]
   const cache = new Map();             // canonical id -> {ref, id, title, dataset, idx}
   let extra = [];                      // canonical ids shown in the Fields pane besides the main one
@@ -98,7 +99,10 @@
     if (!sel) { return; }
     B.clear(sel);
     sel.appendChild(h('option', { value: '', text: 'Choose a dataset' }));
-    list.filter((d) => d.id !== D.dataset.id && extra.indexOf(d.id) < 0).forEach((d) => sel.appendChild(h('option', { value: strip(d.id), text: d.title })));
+    all.filter((d) => d.id !== D.dataset.id && extra.indexOf(d.id) < 0).forEach((d) => {
+      const why = B.datasetWhy(d);
+      sel.appendChild(h('option', { value: strip(d.id), text: d.title + (why ? ' (' + why + ')' : ''), disabled: !!why }));
+    });
   }
 
   // ---- links ---------------------------------------------------------------------------------------------------------
@@ -219,10 +223,12 @@
         D.addDataset(sel.value).then(() => { form.hidden = true; });
       });
     }
-    B.api('GET', '/datasets').then((r) => {
-      list = (r.datasets || []).filter((d) => d.valid);
+    B.api('GET', '/datasets?drafts=1').then((r) => {
+      all = r.datasets || [];
+      list = all.filter((d) => !B.datasetWhy(d));
       const refs = [];
       D.model.pages.forEach((p) => p.visuals.forEach((v) => { if (v.dataset && D.isOtherRef(v.dataset) && refs.indexOf(D.canon(v.dataset)) < 0) { refs.push(D.canon(v.dataset)); } }));
+      (new URLSearchParams(window.location.search).get('also') || '').split(',').map((x) => x.trim()).filter(Boolean).forEach((x) => { const id = D.canon(x); if (id !== D.dataset.id && refs.indexOf(id) < 0 && list.some((d) => d.id === id)) { refs.push(id); } });          // New report: Also add
       return Promise.all(refs.map((id) => load(id).then(() => { if (extra.indexOf(id) < 0) { extra.push(id); } }).catch(() => {})));
     }).catch(() => {}).then(() => { refresh(); });
   });

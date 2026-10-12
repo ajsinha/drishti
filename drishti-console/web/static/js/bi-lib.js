@@ -200,6 +200,89 @@
     }));
   };
 
+
+  /** Announces `text` in a live region right beside `anchor` (created once, after the control) and brings it into view: an error or a success is next to what caused it. */
+  B.near = function (anchor, text, bad) {
+    if (!anchor) { return null; }
+    let box = anchor.parentNode.querySelector('[data-near="' + (anchor.getAttribute('data-near-for') || '') + '"]');
+    if (!box && !text) { return null; }
+    if (!box) {
+      const key = 'n' + Math.random().toString(36).slice(2, 8);
+      anchor.setAttribute('data-near-for', key);
+      box = B.h('span', { class: 'bi-near', 'data-near': key, role: bad ? 'alert' : 'status', 'aria-live': bad ? 'assertive' : 'polite' });
+      anchor.after(box);
+    }
+    box.setAttribute('role', bad ? 'alert' : 'status');
+    box.textContent = text || '';
+    box.classList.toggle('bi-bad', !!bad);
+    if (text && box.scrollIntoView) { box.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+    return box;
+  };
+
+  /** Runs `fn()` (returns a promise) with `btn` disabled and marked busy until it settles, so a second click cannot send a second request. */
+  B.busy = function (btn, fn) {
+    if (btn.disabled && btn.getAttribute('aria-busy') === 'true') { return Promise.resolve(); }
+    const was = btn.disabled;
+    btn.disabled = true;
+    btn.setAttribute('aria-busy', 'true');
+    const done = () => { btn.disabled = was; btn.removeAttribute('aria-busy'); };
+    let p;
+    try { p = Promise.resolve(fn()); } catch (e) { done(); throw e; }
+    return p.then((v) => { done(); return v; }, (e) => { done(); throw e; });
+  };
+
+  /**
+   * Saves an item from the saved state the editor opened (`etag`, sent as baseEtag). When someone saved since (409 DRS-9007) it offers Reload, Save as a copy and
+   * Overwrite beside `anchor`; Overwrite sends the same save with no base. Resolves with the saved item; a Reload or a copy leaves the page, a refusal rejects.
+   */
+  B.saveItem = function (id, payload, etag, anchor, onCopy) {
+    const old = document.querySelector('[data-stale-choice]');
+    if (old) { old.remove(); }
+    const put = (withBase) => B.api('PUT', '/items/' + B.id2path(id), Object.assign({}, payload, withBase && etag ? { baseEtag: etag } : {}));
+    return put(true).catch((e) => {
+      if (e.code !== 'DRS-9007' || !anchor) { throw e; }
+      return new Promise((resolve, reject) => {
+        const reload = B.h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-stale-reload': '', text: 'Reload theirs' });
+        const copy = onCopy ? B.h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-stale-copy': '', text: 'Save mine as a copy' }) : null;
+        const over = B.h('button', { type: 'button', class: 'btn-pill btn-accent', 'data-stale-overwrite': '', text: 'Overwrite with mine' });
+        const box = B.h('span', { class: 'bi-ask bi-stale', 'data-stale-choice': '', role: 'alert' },
+          B.h('strong', { text: 'Saved elsewhere since you opened it. ' }), e.detail + ' ', reload, copy, over);
+        anchor.after(box);
+        box.scrollIntoView({ block: 'nearest' });
+        reload.addEventListener('click', () => { window.location.reload(); });
+        if (copy) { copy.addEventListener('click', () => { box.remove(); Promise.resolve(onCopy()).then(() => reject(Object.assign(new Error('copied'), { cancelled: true })), reject); }); }
+        over.addEventListener('click', () => { box.remove(); put(false).then(resolve, reject); });
+      });
+    });
+  };
+
+  /** The body of a copy of a shipped file: without the licence header and the sample's own explanation (the comments before the first key), and no longer marked as a sample. */
+  B.copyBody = function (body) {
+    const lines = String(body || '').split('\n');
+    let i = 0;
+    while (i < lines.length && (/^\s*#/.test(lines[i]) || !lines[i].trim())) { i++; }
+    return lines.slice(i).filter((l) => !/^sample:\s*true\b/.test(l)).join('\n').replace(/^tags:\s*\[(.*)\]/m, (m, t) => 'tags: [' + t.split(',').map((x) => x.trim()).filter((x) => x && x !== 'sample' && x !== 'tutorial').join(', ') + ']');
+  };
+
+  /** Why a dataset of GET /datasets cannot be used for a new report yet, or '' when it can: shown beside the greyed entry instead of hiding it. */
+  B.datasetWhy = function (d) {
+    if (!d.valid) { return 'has errors: open it' + (d.errors ? ' (' + d.errors + ')' : ''); }
+    if (d.status && d.status !== 'published') { return d.personal ? 'draft in a private workspace: publish it first' : 'a draft: publish it first'; }
+    return '';
+  };
+  /** Fills the Main dataset <select> and the Also add <select multiple> from GET /datasets; datasets that cannot be used are greyed with the reason. */
+  B.fillDatasetPickers = function (main, also, want) {
+    return B.api('GET', '/datasets?drafts=1').then((d) => {
+      (d.datasets || []).forEach((x) => {
+        const why = B.datasetWhy(x), text = x.title + (why ? ' (' + why + ')' : '');
+        main.appendChild(B.h('option', { value: x.id, text, disabled: !!why }));
+        if (also) { also.appendChild(B.h('option', { value: x.id, text, disabled: !!why })); }
+      });
+      if (want) { const o = Array.prototype.find.call(main.options, (x) => !x.disabled && (x.value === want || x.value === 'file:dataset:' + want)); if (o) { main.value = o.value; } }
+      return d.datasets || [];
+    });
+  };
+
   B.ROW_PX = 56;                 // the height of one grid row of a report, in pixels (also in bi-report.css)
   B.GAP_PX = 10;
 })();

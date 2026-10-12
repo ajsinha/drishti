@@ -25,7 +25,9 @@
   <section class="bi-sec" aria-labelledby="dNew"><h2 id="dNew">New report</h2>
     <form class="bi-form" data-new autocomplete="off">
       <label>Title<input class="studio-in" data-new-title maxlength="200" placeholder="Left empty: Report with the date and time"></label>
-      <label>Dataset<select class="studio-select" data-new-dataset required><option value="">Choose a dataset</option></select></label>
+      <label>Main dataset<select class="studio-select" data-new-dataset required><option value="">Choose a dataset</option></select></label>
+      <label>Also add (optional)<select class="studio-select" data-new-also multiple size="4" aria-label="More datasets to open in the Fields pane"></select>
+        <small class="text-muted-d">Hold Ctrl or Shift to choose several. They open beside the main dataset in the Fields pane; link them there.</small></label>
       <label>Workspace<select class="studio-select" data-new-workspace aria-label="Save the draft in this workspace"></select></label>
       <button type="submit" class="btn-pill btn-accent">Start designing</button>
     </form>
@@ -33,7 +35,7 @@
   <section class="bi-sec" aria-labelledby="dMine"><h2 id="dMine">Your report drafts</h2>
     <p class="text-muted-d">Drafts in every workspace where you may add items.</p>
     <ul class="bi-warn" data-drafts></ul>
-    <p class="bi-empty" data-no-drafts hidden>No report drafts in your workspace yet. Open a shipped report and use <strong>Open a copy in the designer</strong>, or start a new one above.</p></section>
+    <p class="bi-empty" data-no-drafts hidden>No report drafts in your workspace yet. Use <strong>Copy and design</strong> on a sample below, or start a new report above.</p></section>
   <section class="bi-sec" data-board-start aria-labelledby="dBoard"><h2 id="dBoard">Boards</h2>
     <p class="text-muted-d">A board is a wall of tiles from your reports, page by page, for a screen. Lay it out here: tiles, pages, the kiosk rotation and a threshold alert for each tile.</p>
     <form class="bi-form" data-new-board autocomplete="off">

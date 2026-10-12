@@ -450,12 +450,15 @@
   }));
   q('[data-check-close]').addEventListener('click', () => { q('[data-check-box]').hidden = true; });
   function save() {
-    if (S.readOnly) { return; }
-    flush().then((yaml) => B.api('PUT', '/items/' + B.id2path(itemId), { body: yaml })).then(() => {
+    if (S.readOnly) { return Promise.resolve(); }
+    const btn = q('[data-save]');
+    return B.busy(btn, () => flush().then((yaml) => B.saveItem(itemId, { body: yaml }, S.etag, btn, () => B.askWorkspace(btn, 'Save the copy', 'Save the copy into').then((to) => B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: 'board', title: (S.model.title || 'Board') + ' (copy)', description: S.model.description || '', body: yaml }))
+      .then((it) => { S.dirty = false; window.location.href = '/bi/design/board/' + B.id2path(it.id); })))).then((it) => {
       S.dirty = false;
+      S.etag = it.etag;
       render();
       say('Saved as a draft at ' + new Date().toTimeString().slice(0, 8) + '. Publish it from its item page when it is ready.');
-    }).catch((e) => say(e.message, true));
+    }).catch((e) => { if (!e.cancelled) { say(e.message, true); } });
   }
   q('[data-save]').addEventListener('click', save);
   q('[data-save-copy]').addEventListener('click', () => B.askWorkspace(q('[data-save-copy]'), 'Save the copy', 'Save the copy into').then((to) => flush().then((yaml) => B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: 'board', title: (S.model.title || 'Board') + ' (copy)', description: S.model.description || '', body: yaml })))
@@ -475,11 +478,13 @@
 
   Promise.all([B.api('GET', '/items/' + B.id2path(itemId)), B.api('GET', '/catalogue?kind=report&limit=500')]).then(([item, cat]) => {
     if (item.kind !== 'board') { say('This is not a board.', true); return null; }
-    S.readOnly = !(item.can && item.can.edit);
+    S.etag = item.etag;
+    S.readOnly = !(item.can && item.can.edit) || item.status === 'proposed';
     q('[data-view-link]').href = '/bi/b/' + B.id2path(itemId);
     q('[data-item-link]').href = '/bi/i/' + B.id2path(itemId);
     (cat.items || []).forEach((i) => repSel.appendChild(h('option', { value: i.id, text: i.title })));
     q('[data-readonly]').hidden = !S.readOnly;
+    if (item.status === 'proposed') { q('[data-readonly]').textContent = 'Proposed for review: it is frozen. Withdraw the proposal on its item page to edit it, or save a copy.'; }
     return B.api('POST', '/boards/validate', { yaml: item.body });
   }).then((r) => {
     if (!r) { return; }

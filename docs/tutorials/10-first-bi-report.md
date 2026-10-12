@@ -456,6 +456,12 @@ $ curl -s -X POST ... -d '{"note":"from the wizard"}' http://localhost:18480/api
 
 You should see `"valid": true` and, after the publish, `published` at version 1. (Ids differ on your machine.) A report on it is then `dataset: bi-f67d899fb7` in its YAML, which the designer writes when you start one on the dataset.
 
+### Notes: saving safely, and more than one dataset (2.1.0)
+
+- **UI.** *New report* on the designer's start page asks for a **Main dataset** and an optional **Also add** (Ctrl or Shift for several): the designer opens with all of them in the **Fields** pane. A dataset you cannot use yet is greyed with the reason (for example *draft in a private workspace: publish it first*). **+ Add visual** makes an empty visual; the **Publish** button (Propose where review is required) saves first. Open the same draft in two tabs and save in both: the second is refused with **Reload theirs / Save mine as a copy / Overwrite with mine**.
+- **CLI.** `drishti.py bi catalogue get <id>` shows the item with its `etag`; a propose, approve or publish of a report that cannot be drawn is refused with `DRS-9030` and the errors (a bi-admin may force it).
+- **YAML.** Nothing new to write: the extra datasets are named in each visual's `dataset:` and the report's `links:` (REPORTS.md section 16); `?also=a,b` on the designer URL opens extra datasets in the Fields pane.
+
 ## Next steps
 
 - [Tutorial 11](11-bi-that-runs-itself.md): refresh, subscribe people to this report, alert on a number, export to PDF, PNG, Excel and CSV.

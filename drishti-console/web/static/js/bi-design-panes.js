@@ -128,22 +128,42 @@
     const types = q('[data-types]');
     function drawTypes() {
       B.clear(types);
+      const add = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-add-visual': '', title: 'Add an empty visual of the type chosen below' }, B.icon('plus-lg'), ' Add visual');
+      const pick = h('select', { class: 'studio-select', 'data-add-visual-type': '', 'aria-label': 'Type of the visual to add' });
+      Object.keys(D.catalogue.visuals).forEach((t) => pick.appendChild(h('option', { value: t, text: t })));
+      pick.value = 'table';
+      add.addEventListener('click', () => D.addVisual(pick.value));
+      types.appendChild(h('p', { class: 'bi-addvisual' }, add, ' ', pick));
       GROUPS.forEach(([title, list]) => {
         types.appendChild(h('p', { class: 'bi-type-group', text: title }));
         const row = h('div', { class: 'bi-typegrid', role: 'group', 'aria-label': title });
         list.forEach((t) => {
-          const b = h('button', { type: 'button', class: 'bi-vtype', 'data-type': t, 'aria-label': t, title: t, 'aria-pressed': 'false' }, B.icon(ICONS[t]), h('span', { text: t }));
+          const b = h('button', { type: 'button', class: 'bi-vtype', 'data-type': t, 'aria-label': t, title: t + ' (click to use it; drag onto the canvas to add one there)', 'aria-pressed': 'false', draggable: 'true' }, B.icon(ICONS[t]), h('span', { text: t }));
           b.addEventListener('click', () => chooseType(t));
+          b.addEventListener('dragstart', (e) => { e.dataTransfer.setData(D.MIME, JSON.stringify({ vtype: t })); e.dataTransfer.effectAllowed = 'copy'; });
           row.appendChild(b);
         });
         types.appendChild(row);
       });
     }
 
+    /** What would be lost turning `v` into `type`: the wells' items no well of the new type takes (or takes beyond its room). */
+    function lostIn(v, type) {
+      D.curIdx = D.idxOf(v);
+      const probe = { type, wells: {} };
+      const items = Object.keys(v.wells).reduce((a, k) => a.concat(v.wells[k]), []);
+      const lost = items.filter((x) => !D.addToVisual(probe, x));
+      const kept = Object.keys(probe.wells).reduce((a, k) => a.concat(probe.wells[k]), []);
+      D.curIdx = null;
+      return lost.concat(items.filter((x) => lost.indexOf(x) < 0 && kept.indexOf(x) < 0));
+    }
+
     function chooseType(type) {
       const v = D.sel();
       if (!v) { D.addVisual(type); return; }
       if (v.type === type) { return; }
+      const dropped = lostIn(v, type);
+      if (dropped.length && !window.confirm('Change "' + (v.title || v.id) + '" to a ' + type + '? ' + dropped.map(B.label).join(', ') + (dropped.length === 1 ? ' does' : ' do') + ' not fit its wells and will be removed from it (Undo brings it back). Choose Cancel and use Add visual to make a new ' + type + ' instead.')) { return; }
       const was = v.type;
       D.curIdx = D.idxOf(v);
       D.change('Change to a ' + type, () => {
@@ -156,7 +176,7 @@
         Object.keys(specs).forEach((w) => { if (v.wells[w] && !v.wells[w].length) { delete v.wells[w]; } });
         D.auto.delete(v.id);
         if (type === 'slicer') { v.format = Object.assign({ mode: 'list', scope: 'page' }, v.format); }
-        if (v.id.indexOf(was + '-') === 0 && was !== 'slicer' && type !== 'slicer') { v.id = D.newVisualId(type); }          // the id says what the visual is
+        if (/^[a-z][a-z-]*-\d+$/.test(v.id) && D.catalogue.visuals[v.id.replace(/-\d+$/, '')] && was !== 'slicer' && type !== 'slicer') { v.id = D.newVisualId(type); }          // the id says what the visual is
       });
       D.curIdx = null;
       D.select(v.id);
@@ -224,7 +244,7 @@
           fs.classList.remove('bi-drop');
           let p = null;
           try { p = JSON.parse(e.dataTransfer.getData(D.MIME)); } catch (err) { p = null; }
-          if (!p) { return; }
+          if (!p || p.vtype) { return; }
           e.preventDefault();
           e.stopPropagation();
           const clash = D.dsConflict(v, p.dataset || '');
@@ -309,7 +329,7 @@
       fmt.appendChild(frow('Alt text', textInput(v.alt, (x) => setTop(v, 'alt', x.trim()), { 'data-format-alt': '' }), 'What a screen reader says about it.'));
       if (group !== 'static') {                                                                    // a visual may read a dataset of its own (RUPAKA.md section 20.10)
         fmt.appendChild(frow('Dataset', textInput(v.dataset, (x) => setTop(v, 'dataset', x.trim()), { 'data-format-dataset': '', list: 'biDatasetNames', placeholder: D.model.dataset }),
-          'Blank: the report\'s dataset (' + D.model.dataset + '). Another dataset: its fields are written in the wells in the YAML tab, and a link (Report, below the page) connects its slicers to the others.'));
+          'Blank: the report\'s dataset (' + (D.dataset && D.dataset.title ? D.dataset.title + ', ' : '') + D.model.dataset + '). Another dataset: its fields are written in the wells in the YAML tab, and a link (Report, below the page) connects its slicers to the others.'));
       }
       if (group === 'python') {
         fmt.appendChild(frow('Python item', textInput(f.python, (x) => setFmt(v, 'python', x.trim()), { 'data-format-python': '', placeholder: 'pnl-histogram' }), 'The Python item (catalogue id, file name or title) that draws this from the columns. Leave it empty when the values well holds a Python measure of the dataset.'));
@@ -459,7 +479,12 @@
       fmt.appendChild(frow('Page title', textInput(p.title, (x) => D.change('Rename the page', () => { p.title = x.trim() || p.title; }), { 'data-page-title': '' })));
       const ix = m.pages.indexOf(p);
       const acts = h('div', { class: 'bi-actions' });
-      const mk = (label, fn, dis, attr) => { const b = h('button', Object.assign({ type: 'button', class: 'btn-pill btn-ghost bi-small', disabled: !!dis }, attr || {}), label); b.addEventListener('click', fn); return b; };
+      const mk = (label, fn, dis, attr) => { const b = h('button', Object.assign({ type: 'button', class: 'btn-pill btn-ghost bi-small', disabled: !!dis }, attr || {}), label);
+        // a title being edited commits (and the pane redraws) when the pointer goes down on a button: act then, or the click lands on a button that is gone
+        let fired = false;
+        b.addEventListener('pointerdown', (e) => { if (e.button === 0 && e.pointerType !== 'touch') { const a = document.activeElement; if (a && a !== b && a.tagName === 'INPUT') { e.preventDefault(); a.blur(); } fired = true; fn(); } });
+        b.addEventListener('click', (e) => { if (fired) { fired = false; e.preventDefault(); return; } fn(); });
+        return b; };
       acts.appendChild(mk('Move earlier', () => D.change('Move the page', () => { m.pages.splice(ix - 1, 0, m.pages.splice(ix, 1)[0]); }), ix === 0));
       acts.appendChild(mk('Move later', () => D.change('Move the page', () => { m.pages.splice(ix + 1, 0, m.pages.splice(ix, 1)[0]); }), ix === m.pages.length - 1));
       acts.appendChild(mk('Delete the page', () => { if (window.confirm('Delete the page "' + p.title + '" and its visuals?')) { D.change('Delete the page', () => { m.pages.splice(ix, 1); }); D.setPage(m.pages[0].id); } }, m.pages.length < 2, { 'data-delete-page': '' }));
@@ -595,7 +620,9 @@
       const cur = index >= 0 ? scopeFilters(scope, false)[index] : null;
       const form = h('form', { class: 'bi-feditor', 'data-filter-editor': '', autocomplete: 'off' });
       const field = h('select', { class: 'studio-select', 'aria-label': 'Field to filter', name: 'field' }, optionsFor('any'));
-      field.value = cur ? cur.field : (D.dataset.tables[0] ? D.dataset.tables[0].name + '.' + D.dataset.tables[0].columns[0].name : '');
+      const sv = D.sel(), svField = sv && Object.keys(sv.wells || {}).reduce((a, k) => a.concat(sv.wells[k]), []).find((x) => D.kindOf(x) === 'field');           // a new filter starts on the selected visual's own field
+      field.value = cur ? cur.field : svField || (D.dataset.tables[0] ? D.dataset.tables[0].name + '.' + D.dataset.tables[0].columns[0].name : '');
+      if (!cur && svField && field.value !== svField) { field.value = D.dataset.tables[0] ? D.dataset.tables[0].name + '.' + D.dataset.tables[0].columns[0].name : ''; }
       const mode = h('select', { class: 'studio-select', 'aria-label': 'Kind of filter', name: 'mode' }, h('option', { value: 'basic', text: 'Basic: pick values' }), h('option', { value: 'advanced', text: 'Advanced: a condition' }), h('option', { value: 'top', text: 'Top N' }));
       mode.value = !cur ? 'basic' : cur.op === 'top' ? 'top' : (cur.op === 'in' || cur.op === 'not-in') ? 'basic' : 'advanced';
       const body = h('div', { class: 'bi-fbody' });

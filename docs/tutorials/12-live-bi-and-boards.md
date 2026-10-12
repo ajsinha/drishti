@@ -245,6 +245,10 @@ A board tile can be a **Python visual** too. Open the sample board **Python wall
 
 You should see three tiles, each with a line under it (`Python · desk-pnl-volatility v1 · server · 241 ms · 60 rows`): they ran for you, on the rows you may see. A Python tile has no amber and red of its own; to be told when a Python measure crosses a limit make an **alert** on it ([tutorial 14](14-python-and-analyse.md), step 11).
 
+### Note: boards and saving (2.1.0)
+
+- **UI.** The board designer saves from the state it opened: when someone else saved the board first you get **Reload theirs / Save mine as a copy / Overwrite with mine**, and a proposed board opens read-only with a banner. **CLI.** `drishti.py bi catalogue get <id>` shows the board's `etag`. **YAML.** Unchanged (BOARDS.md).
+
 ## Next steps
 
 - [Tutorial 13](13-govern-bi.md): publish with a review, certify, and see what a change would break.

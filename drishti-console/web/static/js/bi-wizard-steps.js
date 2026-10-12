@@ -350,7 +350,7 @@
 
   // ---- refresh and security ----------------------------------------------------------------------------------------------------------------------------
   const KINDS = [['none', 'No schedule: refresh on a data load or by hand'], ['daily', 'Every day at'], ['weekdays', 'Weekdays at'], ['business-days', 'Business days at (the pack\'s calendar)'], ['weekly', 'Every week on'],
-    ['hourly', 'Every hour'], ['after-load', 'After a data load finishes'], ['custom', 'A schedule I write (cron or the words of section 7.2)']];
+    ['hourly', 'Every hour'], ['after-load', 'After a data load finishes'], ['custom', 'A schedule I write (cron, or words such as daily 07:30)']];
   function parseSchedule(s) {
     s = String(s || '').trim();
     let m;
@@ -404,15 +404,31 @@
     const pre = h('pre', { class: 'bi-body mono wiz-yaml', 'data-wiz-yaml': '', tabindex: '0' }), area = h('textarea', { class: 'studio-in mono', rows: '18', spellcheck: 'false', 'data-wiz-yaml-edit': '', hidden: true, 'aria-label': 'The dataset YAML' });
     const problems = h('ul', { class: 'bi-problems', 'data-wiz-problems': '' }), saved = h('div', { 'data-wiz-saved': '' });
     const wsSel = h('select', { class: 'studio-select', 'data-wiz-workspace': '', 'aria-label': 'Save into this workspace' });
+    const privateNote = h('p', { class: 'wiz-note', 'data-wiz-private-note': '', hidden: true, text: 'This is your private workspace: only you can see the draft, and it cannot be published from here. Choose a shared workspace to publish it, or move it later from its item page.' });
     body.appendChild(h('h2', { text: 'Review' }));
     body.appendChild(h('p', { class: 'text-muted-d', text: 'This is the dataset the wizard wrote. It is saved as a draft: nothing is published until you propose or publish it from its item page. Comments in an original file are not kept when a dataset is round-tripped through the wizard.' }));
     body.appendChild(pre); body.appendChild(area); body.appendChild(problems);
+    /** The wizard step that holds what a problem path names. */
+    const stepOf = (path) => { const k = String(path || '').split(/[.[]/)[0]; return { tables: 'columns', columns: 'columns', relationships: 'relationships', measures: 'measures', hierarchies: 'hierarchies', refresh: 'refresh', security: 'refresh', rowSecurity: 'refresh' }[k] || null; };
+    W.lastProblems = [];
     const run = () => {
       B.clear(problems);
-      B.api('POST', '/datasets/validate', { yaml: currentYaml(area) }).then((v) => {
-        (v.problems || []).forEach((p) => problems.appendChild(h('li', { class: 'bi-problem bi-problem-' + p.level, 'data-code': p.code }, h('strong', { text: p.code + ' ' }), h('code', { text: p.path || '' }), ': ' + p.message)));
-        problems.appendChild(h('li', { class: v.valid ? 'wiz-ok' : 'bi-bad', 'data-wiz-valid': v.valid ? 'yes' : 'no', text: v.valid ? 'Valid.' : 'The dataset has errors: fix them in the earlier steps, or edit the YAML.' }));
-      }).catch((e) => say(e.message, true));
+      return B.api('POST', '/datasets/validate', { yaml: currentYaml(area) }).then((v) => {
+        W.lastProblems = (v.problems || []).filter((p) => p.level === 'error');
+        (v.problems || []).forEach((p) => {
+          const li = h('li', { class: 'bi-problem bi-problem-' + p.level, 'data-code': p.code }, h('strong', { text: p.code + ' ' }), h('code', { text: p.path || '' }), ': ' + p.message);
+          const st = stepOf(p.path), at = W.steps.indexOf(st);
+          if (p.level === 'error' && at >= 0) {
+            const jump = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-jump-error': st, text: 'Fix it in step ' + (at + 1) + ', ' + st });
+            jump.addEventListener('click', () => W.show(at));
+            li.appendChild(document.createTextNode(' '));
+            li.appendChild(jump);
+          }
+          problems.appendChild(li);
+        });
+        problems.appendChild(h('li', { class: v.valid ? 'wiz-ok' : 'bi-bad', 'data-wiz-valid': v.valid ? 'yes' : 'no', text: v.valid ? 'Valid.' : 'The dataset has errors: fix them in the earlier steps (the links above), or edit the YAML.' }));
+        return v;
+      }).catch((e) => { say(e.message, true); return null; });
     };
     const edit = btn('Edit as YAML', () => {
       area.hidden = !area.hidden; pre.hidden = !area.hidden; edit.textContent = area.hidden ? 'Edit as YAML' : 'Use the wizard\'s text';
@@ -426,20 +442,36 @@
       ok.forEach((w) => wsSel.appendChild(h('option', { value: w.personal ? 'me' : w.id, text: w.name + (w.personal ? ' (private)' : '') })));
       const want = W.root.getAttribute('data-workspace-id') || '';
       const mine = W.editItem && ok.find((w) => w.id === W.editItem.workspace);
-      wsSel.value = mine ? (mine.personal ? 'me' : mine.id) : want && ok.some((w) => w.id === want || (want === 'me' && w.personal)) ? want : 'me';
+      let last = '';
+      try { last = window.localStorage.getItem('drishti.bi.lastWorkspace') || ''; } catch (e) { last = ''; }
+      const canPublish = ok.filter((w) => !w.personal && ['member', 'admin'].indexOf(w.role) >= 0);
+      const pick = last && canPublish.find((w) => w.id === last) || canPublish[canPublish.length - 1];
+      wsSel.value = mine ? (mine.personal ? 'me' : mine.id) : want && ok.some((w) => w.id === want || (want === 'me' && w.personal)) ? want : pick ? pick.id : 'me';
+      const note = () => { privateNote.hidden = wsSel.value !== 'me'; };
+      wsSel.addEventListener('change', () => { note(); try { window.localStorage.setItem('drishti.bi.lastWorkspace', wsSel.value); } catch (e) { /* not kept */ } });
+      note();
     }).catch(() => {});
     W.post('/bi/wizard/yaml', { doc: W.doc }).then((y) => { yamlOf = y.yaml; pre.textContent = y.yaml; run(); }).catch((e) => say(e.message, true));
     const go = btn(W.editItem && !W.editItem.shipped ? 'Save the changes as the draft' : 'Save as a draft', () => save(go, area, wsSel, saved, title), 'btn-accent');
     go.setAttribute('data-wiz-save', '');
-    body.appendChild(h('div', { class: 'bi-form' }, W.editItem && !W.editItem.shipped ? h('p', { class: 'wiz-note', text: 'Saving writes a new saved state of ' + W.editItem.title + '; the published version is not touched.' }) : field('Save into', wsSel),
+    body.appendChild(h('div', { class: 'bi-form' }, W.editItem && !W.editItem.shipped ? h('p', { class: 'wiz-note', text: 'Saving writes a new saved state of ' + W.editItem.title + '; the published version is not touched.' }) : [field('Save into', wsSel), privateNote],
       h('div', { class: 'wiz-row' }, edit, btn('Check again', run), go)));
     body.appendChild(saved);
   };
-  function save(go, area, wsSel, saved, title) {
+  function save(go, area, wsSel, saved, title, confirmed) {
     const text = currentYaml(area);
+    if (!confirmed && W.lastProblems && W.lastProblems.length) {
+      const steps = Array.from(new Set(W.lastProblems.map((p) => W.steps[W.steps.findIndex((s) => s === ({ tables: 'columns', relationships: 'relationships', measures: 'measures', hierarchies: 'hierarchies', refresh: 'refresh' })[String(p.path || '').split(/[.[]/)[0]])]).filter(Boolean)));
+      const sure = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-wiz-save-anyway': '', text: 'Save the draft with errors anyway' });
+      sure.addEventListener('click', () => save(go, area, wsSel, saved, title, true));
+      B.clear(saved).appendChild(h('div', { class: 'bi-warn', role: 'alert', 'data-wiz-save-warn': '' }, h('p', { text: W.lastProblems.length + ' error' + (W.lastProblems.length === 1 ? '' : 's') + ' in this dataset' + (steps.length ? ' (steps: ' + steps.join(', ') + ')' : '') + '. It can be saved as a draft, but it cannot be proposed or published until they are fixed. Use the links in the list above to fix each one.' }), sure));
+      saved.scrollIntoView({ block: 'nearest' });
+      return;
+    }
     go.disabled = true;
     const done = (it) => {
-      go.disabled = false; W.savedId = it.id;
+      go.disabled = false; W.savedId = it.id; W.editEtag = it.etag; W.clean = true; W.discardDraft();
+      try { window.localStorage.setItem('drishti.bi.lastWorkspace', it.personal ? 'me' : it.workspace); } catch (e) { /* not kept */ }
       const reportLink = () => h('a', { class: 'btn-pill btn-accent', href: '/bi/designer?dataset=' + encodeURIComponent(it.id), 'data-wiz-new-report': '', text: 'New report on this dataset' });
       const box = h('div', { class: 'wiz-after', 'data-wiz-after': '' }, h('p', { class: 'wiz-ok', text: 'Saved as a draft: ' + (it.title || title) + '.' }),
         h('a', { class: 'btn-pill btn-accent', href: '/bi/m/' + B.id2path(it.id), 'data-wiz-open-model': '', text: 'Open the Model view' }));
@@ -460,9 +492,10 @@
       B.clear(saved).appendChild(box);
       say('Saved as a draft.');
     };
-    const fail = (e) => { go.disabled = false; say(e.message, true); };
+    const fail = (e) => { go.disabled = false; if (!e.cancelled) { say(e.message, true); B.near(go, e.message, true); } };
     if (W.savedId || (W.editItem && !W.editItem.shipped)) {
-      B.api('PUT', '/items/' + B.id2path(W.savedId || W.editItem.id), { body: text, message: 'Edited in the dataset wizard' }).then(done).catch(fail);
+      const copy = () => B.askWorkspace(go, 'Save mine as a copy', 'Save a copy into').then((to) => B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: 'dataset', title: (W.doc.title || title) + ' (copy)', description: W.doc.description || '', body: text.replace(/^dataset:\s*(\S+)/m, (m, n) => 'dataset: ' + n + '-copy') })).then((it) => { W.clean = true; window.location.href = '/bi/i/' + B.id2path(it.id); });
+      B.saveItem(W.savedId || W.editItem.id, { body: text, message: 'Edited in the dataset wizard' }, W.savedId ? W.editEtag : W.editItem.etag, go, copy).then(done).catch(fail);
       return;
     }
     let body = text;

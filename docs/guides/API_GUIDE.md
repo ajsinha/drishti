@@ -1628,6 +1628,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9004 | 409 | BI conflict | Business intelligence: the state forbids it: workspace id taken, nothing new to publish, already proposed, edit while proposed, personal workspace (private: cannot publish, be shared or deleted this way), last admin, workspace not empty, shipped content is read-only |
 | DRS-9005 | 403 | BI four-eyes | Business intelligence: with `drishti.governance.four-eyes` on (and security on), the proposer may not approve or reject their own proposal |
 | DRS-9006 | 403 | BI off | Business intelligence is switched off on this server (`drishti.bi.enabled`) |
+| DRS-9007 | 409 | BI stale save | `PUT /api/v1/bi/items/{id}` named a `baseEtag` that is no longer the item's `etag`: someone saved since. Read the item again, or send the update without `baseEtag` to overwrite |
 | DRS-9010 | 422 | Dataset invalid | The dataset YAML or one of its structures is not valid (the problem names the path of the key) |
 | DRS-9011 | 422 | Dataset expression | A measure, calculated column or row rule does not parse, names something the model lacks, misuses an aggregate or refers to measures in a circle |
 | DRS-9012 | 422 | Dataset reference | A relationship, hierarchy, masked column, row rule or rollup points at something that does not exist |
@@ -1683,6 +1684,8 @@ on every call; with `drishti.bi.enabled` off, `403 DRS-9006`. Items and workspac
 personal token need the scopes `bi:write`, `bi:approve` and `bi:admin` (the table under [tokens](#personal-api-tokens)). Every change is audited
 (`bi-*`). Bodies are JSON; an item's `body` is a YAML string (at most `drishti.bi.max-body-bytes`, a mapping at the top, or empty).
 Item ids are `bi-<10 hex>` (shipped files: `file:<kind>:<name>`); `me` stands for the caller's personal workspace.
+
+**Saving safely (since 2.1.0).** `GET /api/v1/bi/items/{id}` carries `etag` (the saved state the reader has). An update may send it back as `baseEtag`: when the item has been saved since, the answer is `409 DRS-9007` and nothing is written; send the update without `baseEtag` to overwrite on purpose. Every editor does this for you (the report and board designers, the Model view, the wizard in edit mode, the item page's Edit form): it offers **Reload theirs**, **Save mine as a copy** and **Overwrite with mine**. `POST /items/{id}/propose`, `/approve` and `/publish` refuse a **report that cannot be drawn** (its dataset is missing, a visual names a field that is gone) with `422 DRS-9030` listing the errors; a bi-admin may send `"force": true` (the audit trail records `FORCED over n drawing error(s)`). A draft that cannot be drawn can still be saved. `GET /api/v1/bi/datasets?drafts=1` also lists the caller's own unpublished datasets, each with its `status` and `personal`, so a picker can grey them out with the reason. A visual that has an error of its own answers `422 DRS-9034` for itself only: the other visuals of the report are still drawn.
 
 | Method | Path | What it does |
 |---|---|---|

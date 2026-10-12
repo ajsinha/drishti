@@ -162,6 +162,8 @@ public enum ErrorCode {
     BI_FOUR_EYES("DRS-9005", 403),
     /** Business intelligence is switched off on this server (drishti.bi.enabled). */
     BI_OFF("DRS-9006", 403),
+    /** An update names a saved state that is no longer the latest: someone saved since. */
+    BI_STALE("DRS-9007", 409),
     /** Datasets: the YAML is malformed or a key, name, type, mode or cardinality is not valid (the problem names the path). */
     DATASET_INVALID("DRS-9010", 422),
     /** Datasets: a measure, calculated column or row rule does not parse, names something the model lacks, or misuses an aggregate. */

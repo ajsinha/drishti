@@ -82,3 +82,8 @@
 .rep-links a:hover, .rep-links a:focus-visible { text-decoration: underline; }
 .rep-find { display: block; max-width: 34rem; margin: 0 0 .8rem; }
 .rep-find input { width: 100%; }
+
+.dist-form .dist-check { flex-direction: row; align-items: center; gap: .5rem; align-self: end; }
+.dist-form .bi-people { position: relative; }
+.dist-binav { display: flex; flex-wrap: wrap; gap: .75rem; margin: 0 0 .5rem; }
+@media (max-width: 640px), (pointer: coarse) { .dist-binav a { display: inline-flex; align-items: center; min-height: 44px; } }

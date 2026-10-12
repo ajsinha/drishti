@@ -148,11 +148,11 @@ def test_the_delete_controls_are_finger_sized_on_a_phone(stack, browser):
 def test_a_new_report_from_the_workspace_asks_for_its_dataset_and_a_new_title_is_distinct(stack, browser):
     page = sign_in(browser, "wes", "/bi/w/me")
     page.wait_for_selector("[data-new-item]")
-    expect(page.locator("[data-dataset-row]")).to_be_visible()                                          # report is the first kind: it needs a dataset
+    expect(page.locator("[data-dataset-row]").first).to_be_visible()                                          # report is the first kind: it needs a dataset
     page.click("[data-create]")
-    assert "Choose a dataset" in page.inner_text("[data-msg]")
+    assert "Choose a main dataset" in page.inner_text("[data-msg]")
     page.wait_for_function("() => document.querySelector('[data-new-dataset]').options.length > 1")
-    page.select_option("[data-new-dataset]", index=1)
+    page.select_option("[data-new-dataset]", page.evaluate("[...document.querySelector('[data-new-dataset]').options].find(o => o.value && !o.disabled).value"))      # a greyed one cannot be chosen
     page.click("[data-create]")                                                                         # the title is empty
     page.wait_for_url("**/bi/design/**")
     page.wait_for_selector("[data-design-root][data-ready=yes]")

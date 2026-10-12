@@ -38,7 +38,9 @@
   <form class="bi-form" data-new-item hidden aria-label="New item">
     <h3>New item</h3>
     <label>Kind<select name="kind" class="studio-select"><option value="report">report</option><option value="dataset">dataset</option><option value="board">board</option><option value="notebook">notebook</option><option value="python">python</option></select></label>
-    <label data-dataset-row>Dataset<select name="dataset" class="studio-select" data-new-dataset><option value="">Choose a dataset</option></select></label>
+    <label data-dataset-row>Main dataset<select name="dataset" class="studio-select" data-new-dataset><option value="">Choose a dataset</option></select></label>
+    <label data-dataset-row>Also add (optional)<select name="also" class="studio-select" data-new-also multiple size="4" aria-label="More datasets to open in the Fields pane"></select>
+      <small class="text-muted-d">Hold Ctrl or Shift to choose several. They open beside the main dataset in the designer's Fields pane.</small></label>
     <fieldset class="bi-pyrow" data-python-row hidden><legend>What does it make?</legend>
       <label>It makes<select name="pyinterface" class="studio-select"><option value="measure">a measure (one number per group)</option><option value="visual">a visual (a chart drawn by Python)</option><option value="transform">a table (a Transform, joins datasets)</option></select></label>
       <label>Columns it reads, or for a table the datasets it reads (comma separated)<input name="pyinputs" class="studio-in" autocomplete="off" value="value" aria-label="Columns or datasets it reads"></label></fieldset>
