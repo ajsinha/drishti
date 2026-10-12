@@ -216,6 +216,8 @@
     draw(); sug();
   };
 
+  W.leave.relationships = function () { if (W.doc.relationships && !W.doc.relationships.length) { delete W.doc.relationships; } return true; };
+
   // ---- measures --------------------------------------------------------------------------------------------------------------------------------
   const AGG = ['sum', 'avg', 'min', 'max', 'count', 'distinct'];
   const FORMATS = ['', 'amount0', 'amount2', 'signed0', 'signed2', 'percent1', 'integer'];
@@ -438,12 +440,24 @@
     go.disabled = true;
     const done = (it) => {
       go.disabled = false; W.savedId = it.id;
-      const name = (/^dataset:\s*(\S+)/m.exec(text) || [])[1] || W.doc.dataset;
-      B.clear(saved).appendChild(h('div', { class: 'wiz-after', 'data-wiz-after': '' }, h('p', { class: 'wiz-ok', text: 'Saved as a draft: ' + (it.title || title) + '.' }),
-        h('a', { class: 'btn-pill btn-accent', href: '/bi/m/' + B.id2path(it.id), 'data-wiz-open-model': '', text: 'Open the Model view' }),
-        h('a', { class: 'btn-pill btn-accent', href: '/bi/designer?dataset=' + encodeURIComponent(name), 'data-wiz-new-report': '', text: 'New report on this dataset' }),
-        h('a', { class: 'btn-pill btn-ghost', href: '/bi/d/' + B.id2path(it.id), text: 'Open the dataset page' }),
-        h('a', { class: 'btn-pill btn-ghost', href: '/bi/i/' + B.id2path(it.id), text: 'Open the item (publish, share)' })));
+      const reportLink = () => h('a', { class: 'btn-pill btn-accent', href: '/bi/designer?dataset=' + encodeURIComponent(it.id), 'data-wiz-new-report': '', text: 'New report on this dataset' });
+      const box = h('div', { class: 'wiz-after', 'data-wiz-after': '' }, h('p', { class: 'wiz-ok', text: 'Saved as a draft: ' + (it.title || title) + '.' }),
+        h('a', { class: 'btn-pill btn-accent', href: '/bi/m/' + B.id2path(it.id), 'data-wiz-open-model': '', text: 'Open the Model view' }));
+      const rest = [h('a', { class: 'btn-pill btn-ghost', href: '/bi/d/' + B.id2path(it.id), text: 'Open the dataset page' }), h('a', { class: 'btn-pill btn-ghost', href: '/bi/i/' + B.id2path(it.id), text: 'Open the item (propose, share)' })];
+      if (it.publishedVersion) { box.appendChild(reportLink()); }
+      else if (it.can && it.can.publish) {
+        const pub = btn('Publish it, then start a report', () => {
+          pub.disabled = true;
+          B.api('POST', '/items/' + B.id2path(it.id) + '/publish', { note: 'Published from the dataset wizard' }).then(() => { pub.replaceWith(reportLink()); say('Published. A report can read it now.'); }).catch((e) => { pub.disabled = false; say(e.message, true); });
+        }, 'btn-accent');
+        pub.setAttribute('data-wiz-publish', '');
+        box.appendChild(pub);
+        box.appendChild(h('p', { class: 'wiz-note', text: 'A report reads a published dataset, so publish first. You can keep it as a draft and publish later from its item page.' }));
+      } else {
+        box.appendChild(h('p', { class: 'wiz-note', text: it.personal ? 'A report reads a published dataset, and a draft in your private workspace cannot be published: use Move to workspace on its item page, then publish it there.' : 'A report reads a published dataset. This one is a draft: propose it for review from its item page, and start the report once it is published.' }));
+      }
+      rest.forEach((a) => box.appendChild(a));
+      B.clear(saved).appendChild(box);
       say('Saved as a draft.');
     };
     const fail = (e) => { go.disabled = false; say(e.message, true); };
