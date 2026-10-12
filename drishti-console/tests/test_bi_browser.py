@@ -179,6 +179,14 @@ def test_the_catalogue_shows_only_what_the_audience_allows_and_searches_filters_
     clean(cat)
 
 
+def new_item(page, workspace="credit-desk"):
+    """Adds an item the way the form used to (an empty notebook: the form now sends a report to the designer for a dataset first), then opens its page."""
+    title = page.input_value('[data-new-item] [name="title"]')
+    status, made = bi_stack.call("POST", f"/bi/workspaces/{workspace}/items", "ann", ["bi-writer"], {"kind": "notebook", "title": title, "description": ""})
+    assert status in (200, 201), made
+    page.goto(CONSOLE_URL + "/bi/i/" + made["id"])
+
+
 def test_a_workspace_is_created_and_shared_from_the_page(stack, browser):
     ann = sign_in(browser, "ann")
     ann.goto(CONSOLE_URL + "/bi/workspaces")
@@ -194,8 +202,7 @@ def test_a_workspace_is_created_and_shared_from_the_page(stack, browser):
     ann.click('[data-add-member] button[type="submit"]')
     expect(ann.locator('[data-members] tr[data-user="cat"]')).to_contain_text("viewer")
     ann.fill('[data-new-item] [name="title"]', "Exposure by name")
-    ann.click('[data-new-item] button[type="submit"]')
-    ann.wait_for_url("**/bi/i/*")
+    new_item(ann)
     expect(ann.locator("[data-title]")).to_have_text("Exposure by name")
     ann.click('[data-actions] button:text-is("Publish")')
     expect(ann.locator("[data-meta]")).to_contain_text("published v1")
@@ -215,8 +222,7 @@ def test_review_before_publish_needs_a_second_person(stack, browser):
     ann.check("[data-review]")
     expect(ann.locator("[data-msg]")).to_contain_text("Review before publishing is on")
     ann.fill('[data-new-item] [name="title"]', "Limits report")
-    ann.click('[data-new-item] button[type="submit"]')
-    ann.wait_for_url("**/bi/i/*")
+    new_item(ann)
     expect(ann.locator('[data-actions] button:has-text("Publish")')).to_have_count(0)
     ann.fill(".bi-note", "please check the limits")
     ann.click("text=Propose for review")

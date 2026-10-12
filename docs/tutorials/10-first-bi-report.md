@@ -19,6 +19,10 @@ Business intelligence in Drishti (it is called **Rūpaka**; type `BI <GO>` or ch
 (pages of **visuals** that ask the dataset questions), and the **catalogue** where published reports are found. In this tutorial you build a report of your own on the **World economics** sample: two cards, a **map** you can drill from the world to a country
 and its regions, a bar, and a slicer. You look at it, cross-filter it, publish it, learn the slicers in detail on the **Trades overview** sample, and meet the cross-filter and drill-through of **Counterparty risk**.
 
+### In the designer
+
+You can build the same report yourself with two datasets (pictures to follow). Open **Designer**, start a report on `trading-risk`, and in the Fields pane press **Add dataset** and choose `counterparty-exposure`: a second tree appears, labelled. Drag `counterparties.sector` of the *second* tree onto the canvas: the new visual reads that dataset and carries a small tag with its name. Drag a field of the second tree onto a visual of the first and you are told *this visual reads ...; put ... fields in another visual, or make a composed dataset*. Under the tree the **Links between datasets** panel offers fields that mean the same; tick one and the report's `links:` has it, so a slicer on one dataset filters the other. **Make a composed dataset from these** shows the `from:` / `join:` draft for you to read before anything is saved.
+
 ## Time to complete
 
 About 60 minutes.
