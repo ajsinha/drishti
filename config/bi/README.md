@@ -19,6 +19,8 @@ This folder is the one home of BI content shipped with a site. It is read by the
 (environment variable `DRISHTI_BI_DIR`, default `./config/bi`). BI files are never placed inside a pack: a pack
 describes data (Sutras, links, vocabulary); BI content may combine kinds from many packs and is deployed on its own.
 
+Disabling, uninstalling (to an archive that can be restored) and uploading files here is **Admin → Artifacts**; see [docs/admin/ARTIFACTS.md](../../docs/admin/ARTIFACTS.md).
+
 ```
 config/bi/
   datasets/   <id>.dataset.yaml   the semantic model: tables over connectors (by logical name), relationships, measures, row rules and masks; queried since phase 2

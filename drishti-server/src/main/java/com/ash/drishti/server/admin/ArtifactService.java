@@ -206,7 +206,7 @@ public final class ArtifactService {
             }
             if (im.blocked() && !cascade) {
                 audit.record(actor, "artifact-refused", subject(kind, name), "uninstall refused: " + im.summary());
-                throw new ArtifactRefused(kind + " '" + name + "' is used by " + im.summary() + "; disable it instead, or choose to take the dependants along", im);
+                throw new ArtifactRefused(kind + " '" + name + "' has dependants: " + im.summary() + "; disable it instead, or choose to take the dependants along", im);
             }
             if (cascade && im.blocked() && !name.equals(confirm)) {
                 audit.record(actor, "artifact-refused", subject(kind, name), "uninstall with dependants refused: the name was not typed");

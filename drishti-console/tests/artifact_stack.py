@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """A real scratch stack for the Admin → Artifacts browser test and the documentation pictures: the built server jar on :18936 and the console on :17936
-(sign-in off, so the page opens as the development administrator), over a scratch site that holds exactly what the page needs to show:
+(sign-in off, so the page opens as the development administrator), over a scratch site (the server runs in its folder, so ``./data`` is the site's own data folder) that holds exactly what the page needs to show:
 
 * the pack ``lab-core`` named in ``DRISHTI_PACKS`` (a *configured* pack: it can be disabled here, not uninstalled), and three packs installed from archives:
   ``lab-base`` (kind ``lab-item``), ``lab-child`` which extends it (kind ``lab-part``), and ``lab-solo`` which nothing depends on;
@@ -116,7 +116,7 @@ class Stack:
             raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
         packs = build(self.work)
         env = dict(os.environ, DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS="lab-core", DRISHTI_PACKS_DIR=str(packs), DRISHTI_CONNECTORS_DIR=str(self.work / "connectors"),
-                   DRISHTI_BI_DIR=str(self.work / "bi"), DRISHTI_DATA_DIR=str(self.work / "data"), DRISHTI_DEMO_ENABLED="false", DRISHTI_BI_STORE=str(self.tmp / "store"))
+                   DRISHTI_BI_DIR=str(self.work / "bi"), DRISHTI_DEMO_ENABLED="false", DRISHTI_BI_STORE=str(self.tmp / "store"))
         self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0]], cwd=self.work, env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
         wait(SERVER + "/actuator/health", 150)
         cenv = dict(os.environ, DRISHTI_BACKEND_URL=SERVER, DRISHTI_CONSOLE_PORT=str(CONSOLE_PORT), DRISHTI_PACKS_DIR=str(packs))

@@ -136,6 +136,7 @@
         if (action === 'disable' && res.status === 409 && mode === 'uninstall') {   // a pack others build on: offer to switch those off too
           mode = 'disable';
           title.textContent = 'Disable ' + what + ' ' + name;
+          text.textContent = 'Disabling keeps ' + name + ' on disk and switches it off. The packs that build on it have to be switched off with it.';
           casLabel.textContent = 'Also disable the packs that build on it';
           casRow.hidden = false; cas.checked = false; dis.hidden = true; go.hidden = false;
         }

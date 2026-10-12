@@ -252,6 +252,13 @@ class ArtifactApiTest {
         assertThat(done.path("also").findValuesAsText("").toString() + done.path("also")).contains("artchild");
         assertThat(root.resolve("installed/artbase")).doesNotExist();
         assertThat(root.resolve("installed/artchild")).doesNotExist();
+        // taking the dependants along hid the BI files that depend on the pack's kinds (kept on disk), and left people's own documents alone
+        assertThat(Files.readString(root.resolve("hidden.txt"))).contains("file:dataset:art-trades", "file:dataset:art-composed", "file:report:art-overview", "file:board:art-wall");
+        assertThat(root.resolve("bi/reports/art-overview.report.yaml")).exists();
+        assertThat(prefs.get("tester", "monitors", "art-mon")).isPresent();
+        for (String[] f : new String[][] {{"dataset", "art-trades"}, {"dataset", "art-composed"}, {"report", "art-overview"}, {"board", "art-wall"}}) {
+            act("/enable", "{\"kind\":\"bi\",\"subtype\":\"" + f[0] + "\",\"name\":\"" + f[1] + "\"}");
+        }
         assertThat(root.resolve("uninstalled").resolve(done.path("archive").asText()).resolve("payload/artbase/pack.yaml")).exists();
         // the watcher is nudged at once: the packs are no longer loaded
         mvc.perform(get("/api/v1/admin/packs")).andExpect(jsonPath("$[?(@.name=='artbase')].loaded").value(org.hamcrest.Matchers.not(hasItem(true))));

@@ -347,6 +347,11 @@ runs at a time.
 | **Make a bad edit** (invalid YAML, a kind another pack owns, a missing parent) | **The last good version keeps running.** The problem is shown on the pack's row in Admin → Packs and on the Health page (status DEGRADED), and in the audit log (`pack-problem`). Fix the file and the problem clears. |
 | **Delete** a pack folder | The pack is unloaded; connectors only it used stop; open views of its kinds say *pack removed*. If another loaded pack extends it, it is **not** unloaded: the problem says which pack needs it, and it stays as last loaded until that one goes. If `DRISHTI_PACKS` still names a deleted pack the server will not start until that is changed, and the problem says so. |
 
+**Taking a pack out safely.** Deleting the folder works, but **Admin → Artifacts** (and the *Uninstall…* button on each pack in Admin → Packs) first lists what depends on
+the pack (packs that extend it, connectors only it uses, BI datasets and reports over its kinds, monitors, alert rules, subscriptions, workspaces, shares, embed hosts),
+refuses while anything does and offers *Disable instead*, and otherwise moves the folder to `data/uninstalled/` where it can be restored for 30 days. See
+[ARTIFACTS.md](../admin/ARTIFACTS.md).
+
 ### A pack that was refused is tried again by itself
 
 A pack can be refused (a clash over a kind or mnemonic with another pack, an `extends` that is not loaded, a bad file, a setting that

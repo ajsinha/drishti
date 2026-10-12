@@ -410,6 +410,10 @@ What is **not** live: a connector defined in the server's own configuration (`ap
 
 ![Admin → Connectors: every connector with origin, plugin, kinds, status, who uses it and when it changed](img/connector_files/01-connectors-list.jpg)
 
+**Uninstalling safely.** *Delete* keeps the previous text in `.history/`; **Uninstall…** (on a connector that has a file) goes further: it asks what depends on the connector (the
+packs and kinds that read through it, BI datasets that scan it, whether a pack's template would write it back), refuses while anything does, and otherwise **moves the file**
+to `data/uninstalled/` where **Admin → Artifacts → Uninstalled** restores it. A connector a pack's template names is only disabled or reset. See [ARTIFACTS.md](../admin/ARTIFACTS.md).
+
 The list shows each connector's **origin** (`file`, `pack` for a template with no file yet, `application` for the deprecated
 configuration), plugin, kinds, **status** with the plugin's own health beside it, which packs use it (and for which kinds), and when
 it last changed. Filter by text, status or origin. `n` creates a connector and `/` focuses the filter. A connector defined in

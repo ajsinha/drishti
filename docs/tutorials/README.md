@@ -42,7 +42,7 @@ the tutorials say what to do first.
 | 14 | [Python and Analyse](14-python-and-analyse.md) | a Python measure and a Python visual, then Analyse: slice, SQL, a Python cell, a notebook, promote | 40 min | written |
 | 15 | [AI in Drishti](15-ai-in-drishti.md) | turn on the mock provider safely, the AI policy, report from words, ask the data, explain this number, Test connection; the provider types | 30 min | written |
 | 16 | [Embed Drishti](16-embed-drishti.md) | register a host application, show a view and a report in its page under a strict CSP, tokens, limits | 40 min | written |
-| 17 | [Run it in production](17-run-it-in-production.md) | security on, your own administrator, roles and BI powers, tokens, backups, heap and connection pools, health, upgrades | 60 min | written |
+| 17 | [Run it in production](17-run-it-in-production.md) | security on, your own administrator, roles and BI powers, tokens, backups, heap and connection pools, health, upgrades, taking a pack, connector or BI file out safely | 60 min | written |
 
 ## What you need once
 

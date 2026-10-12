@@ -112,7 +112,7 @@ def test_uninstalling_a_pack_with_dependants_is_refused_and_disabling_is_the_way
     # disable instead: kept on disk, switched off; the child that builds on it must go too
     dlg.locator("[data-art-disable]").click()
     expect(dlg.locator("[data-art-msg]")).to_contain_text("DRS-5041")
-    expect(dlg.locator("[data-art-text]")).to_contain_text("Disable")
+    expect(dlg.locator("[data-art-text]")).to_contain_text("Disabling keeps lab-base")
     dlg.locator("[data-art-cascade]").check()
     dlg.locator("[data-art-go]").click()
     page.wait_for_selector("tr[data-artifact][data-name='lab-base'][data-state='off']")

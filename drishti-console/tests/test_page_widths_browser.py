@@ -51,7 +51,7 @@ def _pages(views: list[str] | None = None) -> list[str]:
              "/bi/r/file:report:trades-overview", "/bi/r/file:report:counterparty-risk/counterparty", "/bi/design/bi-draft", "/bi/m/file:dataset:trades-basic",
              # Rupaka phase 5: a live report (and its Perspective pages) and a board, in kiosk too (their shells: no data behind the stand-in server)
              "/bi/r/file:report:live-trading-desk", "/bi/r/file:report:live-trading-desk/grid", "/bi/b/file:board:desk-wall", "/bi/b/file:board:desk-wall?kiosk=1",
-             "/admin/loads", f"/admin/packs/{PACK}/loads", f"/admin/packs/{PACK}", "/admin/connectors", "/admin/connectors/trading-store", "/admin/collab", "/admin/embedding", "/inbox", "/inbox?tab=mentions&unread=1", f"/share/{NO_SHARE}",
+             "/admin/loads", f"/admin/packs/{PACK}/loads", f"/admin/packs/{PACK}", "/admin/connectors", "/admin/connectors/trading-store", "/admin/artifacts", "/admin/collab", "/admin/embedding", "/inbox", "/inbox?tab=mentions&unread=1", f"/share/{NO_SHARE}",
              f"/?from=/v/{first}", "/?from=/admin/loads"]
     catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
     pages += [f"/help/{g['slug']}" for cat in catalogue["categories"] for g in cat.get("guides", [])]

@@ -49,7 +49,7 @@
       <select class="studio-in" id="artOrigin" data-origin-filter>
         <option value="">Any origin</option><option value="shipped">Shipped</option><option value="archive">Archive</option><option value="file">File</option><option value="ui">Console</option><option value="template">Pack template</option><option value="application">application.yaml</option></select>
     </div>
-    <div class="tbl-wrap"><table class="tbl adm-tbl" data-list>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-list data-plain>
       <caption class="visually-hidden">Installed packs, connectors and BI files</caption>
       <thead><tr><th scope="col">Name</th><th scope="col">Kind</th><th scope="col">Status</th><th scope="col">Origin</th><th scope="col">Version</th><th scope="col">Modified</th><th scope="col">Problems</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
       <tbody data-rows>{% for a in artifacts %}
@@ -91,7 +91,7 @@
   <div role="tabpanel" id="artPaneUninstalled" aria-labelledby="artTabUninstalled" data-pane="uninstalled"{% if tab != 'uninstalled' %} hidden{% endif %}>
     <p class="text-muted-d">Uninstalled artifacts are kept in <span class="mono">{{ uninstalled_dir }}</span> for {{ keep_days }} days, then removed (<span class="mono">drishti.admin.uninstalled-keep</span>).
       <b>Restore</b> moves one back where it came from; if one of that name exists again it is refused unless you choose to replace it (the one in the way is archived first).</p>
-    <div class="tbl-wrap"><table class="tbl adm-tbl" data-archives>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-archives data-plain>
       <caption class="visually-hidden">Uninstalled artifacts</caption>
       <thead><tr><th scope="col">Name</th><th scope="col">Kind</th><th scope="col">Uninstalled</th><th scope="col">By</th><th scope="col">What depended on it</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
       <tbody>{% for r in archives %}

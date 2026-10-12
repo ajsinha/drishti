@@ -36,7 +36,8 @@ About 60 minutes (most of it waiting for a restart or a backup you then read).
 - users, roles and BI powers; what a token can and cannot do; why `DRISHTI_TOKEN_SECRET` is a master key and how to rotate it;
 - what to back up, a backup script, and how to look inside the archive;
 - how to set the heap, and what to look at to know it is enough; how to size database connection pools;
-- the health endpoints and the **Admin → Health** page; the steps of an upgrade and of a rollback; troubleshooting.
+- the health endpoints and the **Admin → Health** page; the steps of an upgrade and of a rollback;
+- how to take a pack, a connector or a BI file out without losing anything: **Admin → Artifacts**; troubleshooting.
 
 ## Step 1 · Security on, and proof that it is
 
@@ -298,6 +299,29 @@ $ curl -s localhost:18480/actuator/health/readiness
 
 You should see the new version and `UP`. **Rollback** is the reverse: stop, put the old jar (or image tag) back, restore the backup **if** the new version changed stored data (the release notes say), start. Some upgrades make people sign in once more (after an upgrade that moved sessions to the server, cookies from before carry no session); the notes say so.
 
+## Step 9 · Take something out, safely
+
+Sooner or later you retire a pack, a connector or a BI file. Deleting the folder works, and Drishti notices; **Admin → Artifacts** is the careful way, because it first tells
+you what would stop working and never deletes anything. (The pictures below are from a small scratch site: a pack `lab-base` that a second pack builds on, a connector the pack
+reads, a dataset over its data and a report on that dataset, and a connector nothing uses; ports 18936 and 17936.)
+
+![Admin, Artifacts: every pack, connector and BI file with its status, origin and version; Disable and Uninstall on each row](../admin/img/artifacts/01-list.jpg)
+
+Press **Uninstall…** on `lab-base`:
+
+![The uninstall dialog for lab-base: the child pack, the connector only it uses, the dataset and the report; Disable instead is the button offered](../admin/img/artifacts/02-refused.jpg)
+
+You should see the list of what depends on the pack, and **no Uninstall button**: only **Disable instead**. (A script that asks the server to uninstall gets `409 DRS-5041` with
+the same list.) Choose **Disable instead**; the server says the child pack builds on it, so tick *Also disable the packs that build on it* and **Disable**: both rows read
+*disabled*, the folders are untouched, and **Enable** puts them back. Now press **Uninstall…** on the connector nothing uses:
+
+![The uninstall dialog for scratch-conn: nothing depends on it; it is moved to the archive and can be restored](../admin/img/artifacts/04-uninstall-unused.jpg)
+
+You should see *Nothing depends on scratch-conn*. **Uninstall** moves its file to `data/uninstalled/<time>-connector-scratch-conn/`; the connector stops, and the **Uninstalled** tab
+lists it with who did it and what depended on it. **Restore** moves it back and the connector starts again. Archives older than 30 days (`drishti.admin.uninstalled-keep`) are removed
+once a day; **Delete permanently** needs the name typed. Everything above is in the audit log as `artifact-*` events, refusals included. The whole page, the API and the codes
+(`DRS-5040` to `DRS-5044`) are in [ARTIFACTS.md](../admin/ARTIFACTS.md); no API token can do any of it.
+
 ## Next steps
 
 - [OPERATIONS.md](../admin/OPERATIONS.md) for everything above in full, and [CONFIGURATION.md](../admin/CONFIGURATION.md) for every setting. [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) for users, roles, single sign-on and embedding.
@@ -309,6 +333,7 @@ You should see the new version and `UP`. **Rollback** is the reverse: stop, put 
 | You see | Meaning and the first thing to do |
 |---|---|
 | everyone gets `401 DRS-5010` from the console | the two processes have different `DRISHTI_TOKEN_SECRET` values, or the server restarted with a new one and the console did not; make them equal and restart both |
+| `DRS-5041` uninstalling a pack, connector or BI file | other things depend on it: read the list, **Disable instead**, or take the dependants along and type the name ([ARTIFACTS.md](../admin/ARTIFACTS.md)) |
 | `DRS-6006` disabling a user | they are the last enabled administrator: make another first |
 | the console is blank after sign-in | the server is unreachable: `curl localhost:17480/readyz` says `503`; start the server, check the address in the console's environment |
 | users are signed out every few minutes | `DRISHTI_SESSION_SECRET` differs between console instances, or the proxy drops the cookie (`DRISHTI_SECURE_COOKIE=true` needs https) |
