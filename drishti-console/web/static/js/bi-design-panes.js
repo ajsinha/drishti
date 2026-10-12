@@ -281,6 +281,21 @@
       s.addEventListener('change', () => onChange(s.value));
       return s;
     }
+    /** The relative-date slicer's default window and the windows it offers (REPORTS.md 6.1): a choice of named windows, none typed. */
+    function relativeEditor(v, f) {
+      const all = B.visuals.RELATIVE, now = f.options && f.options.length ? f.options : all;
+      fmt.appendChild(frow('Starts as', selectInput([['', 'no default (all dates)']].concat(now.map((o) => [o, B.visuals.relativeLabel(o)])), f.default || '', (x) => setFmt(v, 'default', x), { 'data-format-default': '' })));
+      const set = h('fieldset', { class: 'bi-fieldset', 'data-format-options': '' }, h('legend', { text: 'Windows it offers' }));
+      all.forEach((o) => {
+        set.appendChild(checkbox(B.visuals.relativeLabel(o), now.indexOf(o) >= 0, (on) => {
+          const cur = (f.options && f.options.length ? f.options : all).filter((x) => x !== o).concat(on ? [o] : []);
+          const ordered = all.filter((x) => cur.indexOf(x) >= 0);
+          setFmt(v, 'options', ordered.length === all.length ? '' : ordered);
+          if (f.default && ordered.length && ordered.indexOf(f.default) < 0) { setFmt(v, 'default', ''); }
+        }, { 'data-option': o }));
+      });
+      fmt.appendChild(set);
+    }
     const setFmt = (v, key, val) => D.change('Format ' + key, () => { v.format = v.format || {}; if (val === '' || val === false || val == null) { delete v.format[key]; } else { v.format[key] = val; } if (!Object.keys(v.format).length) { delete v.format; } });
     const setTop = (v, key, val) => D.change('Set ' + key, () => { if (val === '' || val == null) { delete v[key]; } else { v[key] = val; } });
 
@@ -363,7 +378,8 @@
       if (v.type === 'table') { fmt.appendChild(checkbox('Total row (worked out over all the rows)', f.totals, (x) => setFmt(v, 'totals', x), { 'data-format-totals': '' })); }
       if (['card', 'kpi', 'gauge', 'table', 'matrix', 'bar', 'column', 'multirow-card'].indexOf(v.type) >= 0) { conditionalEditor(v, f); }
       if (v.type === 'slicer') {
-        fmt.appendChild(frow('Mode', selectInput([['list', 'list'], ['dropdown', 'dropdown'], ['range', 'range (numbers and dates)']], f.mode || 'list', (x) => { setFmt(v, 'mode', x); if (x !== 'list' && v.at.h > 2) { D.change('Resize a slicer', () => { v.at.h = 2; }); } }, { 'data-format-mode': '' })));
+        fmt.appendChild(frow('Mode', selectInput([['list', 'list'], ['dropdown', 'dropdown'], ['range', 'range (numbers and dates)'], ['relative-date', 'relative date (a date field)']], f.mode || 'list', (x) => { setFmt(v, 'mode', x); if (x !== 'relative-date') { setFmt(v, 'default', ''); setFmt(v, 'options', ''); } if (x !== 'list' && v.at.h > 2) { D.change('Resize a slicer', () => { v.at.h = 2; }); } }, { 'data-format-mode': '' })));
+        if (f.mode === 'relative-date') { relativeEditor(v, f); }
         fmt.appendChild(frow('Filters', selectInput([['page', 'this page'], ['report', 'every page']], f.scope || 'page', (x) => setFmt(v, 'scope', x), { 'data-format-scope': '' })));
       }
       if (v.type === 'text') {
@@ -480,20 +496,47 @@
       lk.appendChild(addL);
       lk.appendChild(h('small', { class: 'text-muted-d', text: 'Fields of different datasets that mean the same thing: a slicer or a click on one filters the visuals of the other.' }));
       fmt.appendChild(lk);
-      const bm = h('fieldset', { class: 'bi-fieldset' }, h('legend', { text: 'Bookmarks' }));
+      const bm = h('fieldset', { class: 'bi-fieldset', 'data-bookmarks': '' }, h('legend', { text: 'Bookmarks' }));
+      const pageOf = (id) => D.model.pages.find((x) => x.id === id) || p;
+      const snapshot = (pg) => (pg.filters || []).map((f) => B.clone(f));
+      const summary = (b) => ((b.filters || []).length ? (b.filters || []).length + ' filter' + (b.filters.length === 1 ? '' : 's') : 'no filters') + (Object.keys(b.slicers || {}).length ? ', ' + Object.keys(b.slicers).length + ' slicer choice' + (Object.keys(b.slicers).length === 1 ? '' : 's') : '');
       (m.bookmarks || []).forEach((b, i) => {
-        const li = h('div', { class: 'bi-cond' }, h('span', { text: b.name + ' → ' + b.page }));
+        const nm = h('input', { type: 'text', class: 'studio-in', value: b.name, 'aria-label': 'Name of bookmark ' + b.name, 'data-bookmark-rename': String(i) });
+        nm.addEventListener('change', () => { const n = nm.value.trim(); if (n && n !== b.name) { D.change('Rename a bookmark', () => { const was = b.name; b.name = n; D.model.pages.forEach((pg) => pg.visuals.forEach((v) => { if (v.action && v.action.bookmark === was) { v.action.bookmark = n; } })); }); } });
+        const upd = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-bookmark-update': String(i), 'aria-label': 'Update bookmark ' + b.name + ' from the filters of ' + b.page }, 'Update from the page\'s filters');
+        upd.addEventListener('click', () => D.change('Update a bookmark', () => { const f = snapshot(pageOf(b.page)); if (f.length) { b.filters = f; } else { delete b.filters; } }));
         const x = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Remove bookmark ' + b.name }, B.icon('x-lg'));
         x.addEventListener('click', () => D.change('Remove a bookmark', () => { m.bookmarks.splice(i, 1); if (!m.bookmarks.length) { delete m.bookmarks; } }));
-        li.appendChild(x);
-        bm.appendChild(li);
+        bm.appendChild(h('div', { class: 'bi-cond', 'data-bookmark': b.name }, nm, h('span', { class: 'text-muted-d', text: ' on ' + b.page + ': ' + summary(b) + ' ' }), upd, x));
       });
       const name = h('input', { type: 'text', class: 'studio-in', placeholder: 'Bookmark name', 'aria-label': 'Bookmark name', 'data-bookmark-name': '' });
-      const addB = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', text: 'Bookmark this page', 'data-add-bookmark': '' });
-      addB.addEventListener('click', () => { if (name.value.trim()) { D.change('Add a bookmark', () => { (m.bookmarks = m.bookmarks || []).push({ name: name.value.trim(), page: p.id }); }); } });
+      const choices = {};
+      const slicers = p.visuals.filter((v) => v.type === 'slicer');
+      const picks = h('div', { 'data-bookmark-slicers': '' });
+      slicers.forEach((v) => {
+        const rel = (v.format || {}).mode === 'relative-date', label = v.title || B.label((v.wells.field || [''])[0]);
+        const inp = rel ? selectInput([['', 'not set']].concat(((v.format || {}).options || B.visuals.RELATIVE).map((o) => [o, B.visuals.relativeLabel(o)])), '', (val) => { choices[v.id] = val ? { relative: val } : null; }, { 'data-bookmark-slicer': v.id })
+          : h('input', { type: 'text', class: 'studio-in', 'aria-label': 'Values of ' + label + ', separated by commas', 'data-bookmark-slicer': v.id });
+        if (!rel) { inp.addEventListener('change', () => { const vals = inp.value.split(',').map((t) => t.trim()).filter(Boolean); choices[v.id] = vals.length ? vals : null; }); }
+        picks.appendChild(frow('Slicer ' + label, inp));
+      });
+      const addB = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', text: 'Save this page as a bookmark', 'data-add-bookmark': '' });
+      addB.addEventListener('click', () => {
+        const n = name.value.trim();
+        if (!n) { D.say('Name the bookmark first.', true); return; }
+        if ((m.bookmarks || []).some((b) => b.name === n)) { D.say('There is a bookmark called ' + n + ' already.', true); return; }
+        D.change('Add a bookmark', () => {
+          const b = { name: n, page: p.id }, f = snapshot(p), sl = {};
+          Object.keys(choices).forEach((k) => { if (choices[k]) { sl[k] = choices[k]; } });
+          if (Object.keys(sl).length) { b.slicers = sl; }
+          if (f.length) { b.filters = f; }
+          (m.bookmarks = m.bookmarks || []).push(b);
+        });
+      });
       bm.appendChild(name);
+      bm.appendChild(picks);
       bm.appendChild(addB);
-      bm.appendChild(h('small', { class: 'text-muted-d', text: 'Slicer choices in a bookmark are set in the YAML tab.' }));
+      bm.appendChild(h('small', { class: 'text-muted-d', text: 'A bookmark keeps this page, its filters (the Filters pane) and the slicer choices you set here. Choosing it in the viewer applies them.' }));
       fmt.appendChild(bm);
     }
     function setDates(part) {

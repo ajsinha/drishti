@@ -166,6 +166,40 @@
   /** Escapes nothing: text goes in with textContent. A stable id fragment for data-* attributes and test selectors. */
   B.slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
+  /** The workspaces the signed-in person may add items to (contributor and above, not the shipped folder), personal first. Asked once per page. */
+  let writableP = null;
+  B.writable = function () {
+    if (!writableP) {
+      writableP = B.api('GET', '/workspaces').then((list) => list.filter((w) => !w.shipped && ['contributor', 'member', 'admin'].indexOf(w.role) >= 0)
+        .sort((a, b) => (b.personal ? 1 : 0) - (a.personal ? 1 : 0)));
+    }
+    return writableP;
+  };
+  /** Fills a <select> with those workspaces (value `me` for the personal one, the id otherwise); `want` picks one when it is among them. */
+  B.fillWorkspaces = function (select, want) {
+    return B.writable().then((list) => {
+      list.forEach((w) => select.appendChild(B.h('option', { value: w.personal ? 'me' : w.id, text: w.name + (w.personal ? ' (private)' : '') })));
+      if (want && list.some((w) => w.id === want)) { select.value = want; }
+      return list;
+    });
+  };
+  /** Asks which workspace, in place beside `anchor`: a select, an OK button and Cancel. Resolves with the workspace to post to; rejects with {cancelled: true}. */
+  B.askWorkspace = function (anchor, okText, label) {
+    const old = document.querySelector('[data-ask-workspace]');
+    if (old) { old.remove(); }
+    return B.writable().then((list) => new Promise((resolve, reject) => {
+      const sel = B.h('select', { class: 'studio-select', 'aria-label': label || 'Into this workspace', 'data-ask-target': '' },
+        list.map((w) => B.h('option', { value: w.personal ? 'me' : w.id, text: w.name + (w.personal ? ' (private)' : '') })));
+      const go = B.h('button', { type: 'button', class: 'btn-pill btn-accent', 'data-ask-go': '', text: okText || 'Copy here' });
+      const no = B.h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-ask-cancel': '', text: 'Cancel' });
+      const box = B.h('span', { class: 'bi-ask', 'data-ask-workspace': '', role: 'group', 'aria-label': label || 'Choose a workspace' }, sel, go, no);
+      anchor.after(box);
+      sel.focus();
+      go.addEventListener('click', () => { box.remove(); resolve(sel.value); });
+      no.addEventListener('click', () => { box.remove(); reject(Object.assign(new Error('cancelled'), { cancelled: true })); });
+    }));
+  };
+
   B.ROW_PX = 56;                 // the height of one grid row of a report, in pixels (also in bi-report.css)
   B.GAP_PX = 10;
 })();

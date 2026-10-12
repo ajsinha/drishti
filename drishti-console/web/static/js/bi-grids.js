@@ -214,6 +214,7 @@
   /** The names a relative-date slicer offers when the report lists none (the server works each out: business-day aware). */
   const RELATIVE = ['last-7-days', 'last-30-days', 'last-90-days', 'last-5-business-days', 'last-4-weeks', 'last-3-months', 'last-12-months', 'this-week', 'this-month', 'this-quarter',
     'this-year', 'previous-week', 'previous-month', 'previous-quarter', 'previous-year', 'all'];
+  V.RELATIVE = RELATIVE;
   V.relativeLabel = function (name) {
     if (name === 'all') { return 'All dates'; }
     const m = /^last-(\d+)-(days|business-days|weeks|months)$/.exec(name);

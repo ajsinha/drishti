@@ -39,6 +39,9 @@
     <h3>New item</h3>
     <label>Kind<select name="kind" class="studio-select"><option value="report">report</option><option value="dataset">dataset</option><option value="board">board</option><option value="notebook">notebook</option><option value="python">python</option></select></label>
     <label data-dataset-row>Dataset<select name="dataset" class="studio-select" data-new-dataset><option value="">Choose a dataset</option></select></label>
+    <fieldset class="bi-pyrow" data-python-row hidden><legend>What does it make?</legend>
+      <label>It makes<select name="pyinterface" class="studio-select"><option value="measure">a measure (one number per group)</option><option value="visual">a visual (a chart drawn by Python)</option><option value="transform">a table (a Transform, joins datasets)</option></select></label>
+      <label>Columns it reads, or for a table the datasets it reads (comma separated)<input name="pyinputs" class="studio-in" autocomplete="off" value="value" aria-label="Columns or datasets it reads"></label></fieldset>
     <label>Title<input name="title" class="studio-in" maxlength="200" autocomplete="off" placeholder="Left empty: a title with the kind and the time"></label>
     <label>Description<input name="description" class="studio-in" maxlength="2000" autocomplete="off"></label>
     <p class="text-muted-d" data-kind-hint></p>
@@ -52,7 +55,8 @@
     <thead><tr><th scope="col">User</th><th scope="col">Role</th><th scope="col">Added by</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
     <tbody></tbody></table></div>
   <form class="bi-form bi-inline" data-add-member hidden aria-label="Add a member">
-    <label>User<input name="user" class="studio-in" required autocomplete="off" placeholder="username"></label>
+    <label class="bi-people">User<input name="user" class="studio-in" required autocomplete="off" placeholder="type a name to search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="wMemberList" data-member-user>
+      <ul class="shr-list" id="wMemberList" role="listbox" aria-label="Known people" hidden></ul></label>
     <label>Role<select name="role" class="studio-select"><option>viewer</option><option>contributor</option><option>member</option><option>admin</option></select></label>
     <button type="submit" class="btn-pill btn-accent">Add or change</button>
   </form>
@@ -62,3 +66,5 @@
   <button type="button" class="btn-pill btn-ghost bi-danger" data-delete-workspace>Delete workspace</button>
 </section>
 {% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/collab.css?v={{ ASSET_V }}">{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/people.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-extras.js?v={{ ASSET_V }}"></script>{% endblock %}

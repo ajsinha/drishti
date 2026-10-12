@@ -76,3 +76,27 @@ def test_a_text_that_is_not_a_dataset_is_refused_with_a_code():
     assert client.post("/bi/wizard/yaml", json={"doc": []}).status_code == 422
     assert client.post("/bi/wizard/yaml", json={}).json()["code"] == "DRS-9003"
     assert client.post("/bi/wizard/parse", json={"yaml": "x: " + "y" * 500_000}).status_code == 413
+
+
+def test_the_designer_start_lets_the_author_choose_where_drafts_go_and_lists_samples():
+    client, _ = make()
+    page = client.get("/bi/designer").text
+    for hook in ("data-new-workspace", "data-new-board-workspace", "data-samples", "data-no-samples"):
+        assert hook in page
+    script = (WEB / "static/js/bi-design.js").read_text()
+    assert "data-sample-copy" in script and "askWorkspace" in script           # Copy and design, and Save a copy ask for the workspace
+    assert "askWorkspace" in (WEB / "static/js/bi-design-board.js").read_text()
+
+
+def test_the_workspace_page_offers_a_python_starter_and_known_people():
+    client, _ = make()
+    page = client.get("/bi/w/me").text
+    assert "data-python-row" in page and "pyinterface" in page and "data-member-user" in page and "people.js" in page and "bi-extras.js" in page
+    assert "bi-extras.js" in client.get("/bi/i/bi-1").text
+
+
+def test_the_distribution_status_is_passed_on_for_the_report_bar():
+    client, _ = make()
+    st = client.get("/dist/status").json()
+    assert st["export"]["enabled"] is True and st["subscriptions"]["perUser"] == 20
+    assert "data-export-why" in client.get("/bi/r/bi-1").text

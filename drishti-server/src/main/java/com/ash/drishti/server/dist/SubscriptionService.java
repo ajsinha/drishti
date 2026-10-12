@@ -194,6 +194,16 @@ public final class SubscriptionService implements AutoCloseable {
 
     // ---- reading -----------------------------------------------------------------------------------------------------
 
+    /** Whether subscriptions are on ({@code drishti.distribution.subscriptions.enabled}). */
+    public boolean enabled() {
+        return props.enabled();
+    }
+
+    /** Most subscriptions one person may own ({@code drishti.distribution.subscriptions.per-user}). */
+    public int perUser() {
+        return props.perUser();
+    }
+
     public List<JsonNode> of(String owner) {
         List<JsonNode> out = new ArrayList<>();
         store.keys(owner, NS).forEach(k -> store.get(owner, NS, k).ifPresent(out::add));

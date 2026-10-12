@@ -36,25 +36,42 @@
 
   // ---- the start page ------------------------------------------------------------------------------------------------
   if (q('[data-design-start]')) {
-    const list = q('[data-drafts]');
-    Promise.all([B.api('GET', '/workspaces/me/items'), B.api('GET', '/datasets')]).then(([items, ds]) => {
-      items.filter((i) => i.kind === 'report').forEach((i) => {
-        list.appendChild(h('li', { 'data-id': i.id }, h('a', { href: '/bi/design/' + B.id2path(i.id), text: i.title }), ' ', h('span', { class: 'text-muted-d', text: i.status })));
-      });
-      q('[data-no-drafts]').hidden = list.children.length > 0;
+    const list = q('[data-drafts]'), wsSel = q('[data-new-workspace]');
+    const want = new URLSearchParams(window.location.search).get('dataset');             // from a dataset page: New report on this dataset
+    B.fillWorkspaces(wsSel).then((wss) => Promise.all(wss.map((w) => B.api('GET', '/workspaces/' + encodeURIComponent(w.id) + '/items').then((items) => items.filter((i) => i.kind === 'report').map((i) => ({ i, w }))))))
+      .then((groups) => {
+        [].concat.apply([], groups).forEach(({ i, w }) => {
+          list.appendChild(h('li', { 'data-id': i.id }, h('a', { href: '/bi/design/' + B.id2path(i.id), text: i.title }), ' ', h('span', { class: 'text-muted-d', text: i.status + ' · ' + w.name })));
+        });
+        q('[data-no-drafts]').hidden = list.children.length > 0;
+      }).catch((e) => say(e.message, true));
+    B.api('GET', '/datasets').then((ds) => {
       const sel = q('[data-new-dataset]');
       ds.datasets.filter((d) => d.valid).forEach((d) => sel.appendChild(h('option', { value: d.id, text: d.title })));
       q('[data-no-datasets]').hidden = sel.options.length > 1;
-      const want = new URLSearchParams(window.location.search).get('dataset');             // from a dataset page: New report on this dataset
       if (want) { const o = Array.prototype.find.call(sel.options, (x) => x.value === want || x.value === 'file:dataset:' + want); if (o) { sel.value = o.value; } }
     }).catch((e) => say(e.message, true));
+    B.api('GET', '/workspaces').then((all) => {
+      const shipped = all.find((w) => w.shipped);
+      return shipped ? B.api('GET', '/workspaces/' + encodeURIComponent(shipped.id) + '/items') : [];
+    }).then((items) => {
+      const box = q('[data-samples]');
+      items.filter((i) => i.kind === 'report').forEach((i) => {
+        const copy = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-sample-copy': i.id, 'aria-label': 'Copy and design ' + i.title, text: 'Copy and design' });
+        copy.addEventListener('click', () => B.askWorkspace(copy, 'Copy and open', 'Copy ' + i.title + ' into').then((to) => B.api('GET', '/items/' + B.id2path(i.id)).then((full) =>
+          B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: 'report', title: i.title, description: i.description || '', body: full.body })))
+          .then((it) => { window.location.href = '/bi/design/' + B.id2path(it.id); }).catch((e) => { if (!e.cancelled) { say(e.message, true); } }));
+        box.appendChild(h('li', { 'data-sample': i.id }, h('a', { href: '/bi/r/' + B.id2path(i.id), text: i.title }), ' ', h('span', { class: 'text-muted-d', text: i.description || '' }), ' ', copy));
+      });
+      q('[data-no-samples]').hidden = box.children.length > 0;
+    }).catch(() => { q('[data-no-samples]').hidden = false; });
     q('[data-new]').addEventListener('submit', (e) => {
       e.preventDefault();
       const ref = q('[data-new-dataset]').value, title = q('[data-new-title]').value.trim() || defaultTitle();
       if (!ref) { say('Choose a dataset.', true); return; }
       const name = B.slug(title) || 'my-report';
       const body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify(title) + '\ndataset: ' + ref + '\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n';
-      B.api('POST', '/workspaces/me/items', { kind: 'report', title, description: '', body }).then((it) => { window.location.href = '/bi/design/' + B.id2path(it.id); }).catch((err) => say(err.message, true));
+      B.api('POST', '/workspaces/' + encodeURIComponent(wsSel.value || 'me') + '/items', { kind: 'report', title, description: '', body }).then((it) => { window.location.href = '/bi/design/' + B.id2path(it.id); }).catch((err) => say(err.message, true));
     });
     return;
   }
@@ -360,10 +377,10 @@
   }
 
   function saveCopy() {
-    D.flushYaml().then((yaml) => B.api('POST', '/workspaces/me/items', { kind: 'report', title: (D.model.title || 'Report') + ' (copy)', description: D.model.description || '', body: yaml })).then((it) => {
+    B.askWorkspace(q('[data-save-copy]'), 'Save the copy', 'Save the copy into').then((to) => D.flushYaml().then((yaml) => B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: 'report', title: (D.model.title || 'Report') + ' (copy)', description: D.model.description || '', body: yaml }))).then((it) => {
       D.dirty = false;
       window.location.href = '/bi/design/' + B.id2path(it.id);
-    }).catch((e) => say(e.message, true));
+    }).catch((e) => { if (!e.cancelled) { say(e.message, true); } });
   }
 
   // ---- start ---------------------------------------------------------------------------------------------------------

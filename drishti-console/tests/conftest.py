@@ -702,6 +702,9 @@ class FakeBackend:
             return dict(self.ai_status)
         raise BackendError(404, "DRS-9001", "no BI in this stand-in")
 
+    async def distribution_status(self, ident):
+        return {"export": {"enabled": True}, "subscriptions": {"enabled": True, "perUser": 20, "mine": 0}}
+
     async def notify_options(self, ident):
         return json.loads(json.dumps(self.notify_kept))
 
