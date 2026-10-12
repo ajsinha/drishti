@@ -21,7 +21,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse, Response
 
 from core.backend import BackendError, drs_message
-from routes.common import ident, library, packs, render
+from routes.common import ident, library, render
 
 router = APIRouter(include_in_schema=False)
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -96,10 +96,6 @@ async def competitive(request: Request):
     return render(request, "help/competitive.html", c=data, screen="about")
 
 
-def _read(path: Path) -> str:
-    return path.read_text(encoding="utf-8") if path.exists() else ""
-
-
 @router.get("/about")
 async def about(request: Request):
     info = {}
@@ -107,7 +103,4 @@ async def about(request: Request):
         info = await request.app.state.backend.about(getattr(request.state, "identity", None) or request.app.state.auth.service())
     except BackendError as e:
         info = {"error": drs_message(e.code, e.detail, " ")}
-    licence = _read(ROOT / "LICENSE")
-    return render(request, "help/about.html", info=info, licence_intro="\n".join(licence.splitlines()[:5]),
-                  notices=(await library(request)).guides.get("notices"), packs=await packs(request), screen="about",
-                  python_runtime=request.app.state.calc.runtime.describe())
+    return render(request, "help/about.html", info=info, notices=(await library(request)).guides.get("notices"), screen="about")

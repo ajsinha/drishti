@@ -65,8 +65,14 @@ def test_f1_context_and_panel_help(client):
 def test_about_page(client):
     r = client.get("/about")
     assert r.status_code == 200
-    for text in ("1.2.0", "21.0.12", "1h 2m", "irs-vanilla v3", "demo", "DRISHTI SOFTWARE LICENCE", "Copyright", "/help/notices"):
+    for text in ("1.2.0", 'id="what"', 'id="problem"', 'id="features"', 'id="performance"', 'id="capabilities"', 'id="competitive"',
+                 'id="stack"', 'id="use-cases"', 'id="author"', 'id="legal"', "Ashutosh Sinha", "Documentation", "/help/notices",
+                 "docs/admin/PERFORMANCE.md", "System details for admins", 'href="/admin/health"'):
         assert text in r.text, text
+    # a product page: no Sutra, source or pack listing
+    for text in ("irs-vanilla v3", "Sutras loaded", "Domain packs</dt>", "<dt>Java</dt>", "pnl-code"):
+        assert text not in r.text, text
+    assert client.get("/about/competitive").status_code == 200 and 'href="/about/competitive"' in r.text
 
 
 def test_competitive_landscape(client):

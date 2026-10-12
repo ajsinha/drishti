@@ -86,15 +86,13 @@
 .help-results { padding-left: 1.2rem; }
 .help-results li { margin: .8rem 0; }
 .help-results p { color: var(--d-muted); margin: .2rem 0; font-size: .9rem; }
-.about-hero .about-mark { width: 120px; height: 72px; color: var(--d-accent); }
-.about-hero .about-mark .eye { stroke: var(--d-ink); }
+.ab-hero .about-mark { width: 120px; height: 72px; color: var(--d-accent); }
+.ab-hero .about-mark .eye { stroke: var(--d-ink); }
 .about-tag { font-size: 1.15rem; color: var(--d-accent) !important; margin-bottom: .6rem !important; }
-.about-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; margin-bottom: .9rem; }
 .about-list { margin: 0; padding-left: 1.1rem; } .about-list li { margin: .25rem 0; }
-.about-licence { white-space: pre-wrap; background: var(--d-bg-2); padding: .7rem; border-radius: 6px; font-size: .8rem; color: var(--d-muted); }
 .pnl-help { margin-left: .5rem; color: var(--d-faint); font-size: .8rem; }
 .pnl-help:hover { color: var(--d-accent); text-decoration: none; }
-@media (max-width: 1000px) { .help-cards, .about-grid { grid-template-columns: 1fr; } .help-layout { grid-template-columns: 1fr; } .help-toc { position: static; max-height: none; } }
+@media (max-width: 1000px) { .help-cards { grid-template-columns: 1fr; } .help-layout { grid-template-columns: 1fr; } .help-toc { position: static; max-height: none; } }
 /* Competitive landscape */
 .cmp-page .pnl { margin-bottom: .9rem; }
 .cmp-tbl caption { caption-side: top; color: var(--d-muted); font-size: .85rem; padding-bottom: .4rem; }
@@ -106,3 +104,21 @@
 .cmp-note { font-size: .82rem; margin: .8rem 0 0; }
 .cmp-problem { color: var(--d-muted); font-style: italic; }
 .cmp-problem .bi { color: var(--d-warn); font-style: normal; }
+/* About page (product page) */
+.ab-hero .about-mark { width: 120px; height: 72px; color: var(--d-accent); }
+.ab-hero .about-mark .eye { stroke: var(--d-ink); }
+.ab-ver { display: inline-block; padding: .1rem .6rem; border: 1px solid var(--d-border); border-radius: 999px; color: var(--d-muted); font-size: .85rem; }
+.ab-cta { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; margin-top: .8rem; }
+.ab-sec { margin: 0 0 1.6rem; }
+.ab-sec h2 { font-size: 1.25rem; margin: 0 0 .6rem; padding-bottom: .3rem; border-bottom: 1px solid var(--d-border); }
+.ab-cards, .ab-stats, .ab-areas { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: .7rem; }
+.ab-card, .ab-stat, .ab-area { border: 1px solid var(--d-border); border-radius: 8px; background: var(--d-surface); padding: .7rem .85rem; min-width: 0; }
+.ab-card .bi { color: var(--d-accent); font-size: 1.3rem; }
+.ab-card h3, .ab-area h3 { font-size: .95rem; margin: .25rem 0; }
+.ab-card p, .ab-area p { margin: 0; font-size: .85rem; color: var(--d-muted); }
+.ab-stat b { display: block; font-size: 1.4rem; color: var(--d-accent); }
+.ab-stat span { display: block; font-size: .85rem; }
+.ab-stat code { font-size: .72rem; color: var(--d-muted); overflow-wrap: anywhere; }
+.ab-compete { border: 1px solid var(--d-accent); border-radius: 10px; padding: 1rem; }
+.ab-admin a, .ab-sec p a:not(.btn-pill) { display: inline-block; min-height: 44px; line-height: 44px; }
+.ab { overflow-wrap: anywhere; }

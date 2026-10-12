@@ -160,7 +160,7 @@ default `./config/packs`, relative to the directory you start the server in).
        "name": "logistics",
    ```
 
-   In the console, **About** (`/about`) lists the loaded packs, and *Admin → Health* (`/admin/health`) shows each
+   In the console, *Admin → Packs* lists the loaded packs, and *Admin → Health* (`/admin/health`) shows each
    pack with its status, what it extends, its kinds, its Sutras, its connectors and any problems.
 4. Open the terminal (`/t`) and type a command from the new pack, for example `SHP SHP-10042 <GO>`.
 

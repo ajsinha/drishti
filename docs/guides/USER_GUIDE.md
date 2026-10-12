@@ -77,7 +77,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | Servers | `/servers` | The Drishti servers this console may talk to ([Working with several servers](#working-with-several-servers)) |
 | Admin | `/admin/users`, `/admin/roles`, `/admin/audit`, `/admin/packs`, `/admin/connectors`, `/admin/loads`, `/admin/collab`, `/admin/embedding`, `/admin/health`, `/admin/caches` (and `/admin/ai`, `/admin/bi`, `/admin/tokens`, `/admin/access` where those features are on) | Users, roles, audit log, packs, connectors, data loads, collaboration moderation, embedding, health and caches (admins only) |
 | Help | `/help` | Tutorials, guides and every reference |
-| About | `/about` | Version, licence, loaded Sutras and the health of each source |
+| About | `/about` | The product page: features, measured performance, competitive analysis, technology, licence (system details for admins: `/admin/health`) |
 
 ## The top bar
 
@@ -2182,7 +2182,7 @@ Managing users and roles is explained in [USER_MANAGEMENT.md](../admin/USER_MANA
   document and each pack's guides, with search (`/help/search?q=`). On a page, `F1` opens the guide for that page
   (`/help/context/<page>`: Build opens the screen designer guide, BI the BI guide, Admin the users and roles guide, Workspaces, Monitors, Alerts and the inbox their own guides); on a view, `F1` opens [About this page](#about-this-page).
 - The **?** in each panel header explains that panel kind.
-- **About** (`/about`) shows the version, the Sutras loaded and the health of each source.
+- **About** (`/about`) is the product page (features, measured performance, competitive analysis, licence); loaded Sutras and source health are in *Admin → Health* (`/admin/health`).
 
 ## On a phone
 

@@ -430,7 +430,7 @@ wrong passwords in a row lock an account for 15 minutes.
 - **Help** in the top bar (or `F1` on any page) opens the help centre at `/help`, with tutorials, every
   reference document and a search box. `F1` opens the help for the page you are on.
 - The **?** in each panel's header explains that kind of panel.
-- **About** (`/about`, linked in the footer) shows the version, the loaded Sutras and the health of each source.
+- **About** (`/about`, linked in the footer) is the product page: what Drishti is, its features, measured performance, the competitive analysis, the technology and the licence. Versions and source health for admins are in *Admin → Health* (`/admin/health`).
 - Each pack has its own guide under *Help → Domain packs*, with example commands.
 
 ## Stopping and starting again

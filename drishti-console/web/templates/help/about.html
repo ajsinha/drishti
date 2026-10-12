@@ -19,48 +19,84 @@
 {% block body_class %}terminal help-page{% endblock %}
 {% block nav %}{% include "help/_nav.html" %}{% endblock %}
 {% block content %}
-<section class="help-hero about-hero">
+<section class="help-hero ab-hero" id="top">
   {{ brand_mark("about-mark") }}
   <h1>{{ PRODUCT }}{% if PRODUCT_NATIVE %} <span class="lp-grad">{{ PRODUCT_NATIVE }}</span>{% endif %}</h1>
   <p class="about-tag">{{ TAGLINE }}</p>
-  <p>{{ PRODUCT }} is a live, keyboard-driven terminal. It renders any entity from any system as a
-     dense, linked, ticking view without a coded screen per product: <b>Rachana</b>, a declarative screen grammar,
-     describes views; each product family gets a <b>Sutra</b> written in it; <b>inference</b> fills whatever a Sutra leaves out.</p>
-</section>
-<div class="help-wrap about">
-  <div class="about-grid">
-    <section class="pnl"><header class="pnl-h"><h3>This installation</h3><span class="pnl-code">ABOUT</span></header>
-      <div class="pnl-b"><dl class="prov">
-        {% if info.error %}<div><dt>Server</dt><dd class="t-warn">{{ info.error }}</dd></div>{% else %}
-        <div><dt>Server version</dt><dd class="mono">{{ info.version }}</dd></div>
-        <div><dt>Built</dt><dd class="mono">{{ (info.built or '')[:19] | replace('T', ' ') }}</dd></div>
-        <div><dt>Java</dt><dd class="mono">{{ info.java }}</dd></div>
-        <div><dt>Up for</dt><dd class="mono">{{ (info.uptimeSeconds // 3600) }}h {{ (info.uptimeSeconds % 3600) // 60 }}m</dd></div>
-        <div><dt>Security</dt><dd>{{ 'on' if info.securityEnabled else 'off (development)' }}</dd></div>{% endif %}
-        <div><dt>Console version</dt><dd class="mono">{{ ASSET_V }}</dd></div>
-        <div><dt>Python runtime (Calc)</dt><dd>{% if python_runtime.installed %}<span class="mono">Pyodide {{ python_runtime.version }}</span> · {{ python_runtime.sizeMb }} MB, served by this console{% else %}<span class="t-warn">{{ python_runtime.message }}</span>{% endif %}</dd></div>
-        <div><dt>Domain packs</dt><dd>{% for p in packs %}<span class="role" title="{{ p.description }}">{{ p.title }} {{ p.version }}</span>{% else %}none{% endfor %}</dd></div>
-      </dl></div></section>
-    <section class="pnl"><header class="pnl-h"><h3>Sources</h3><span class="pnl-code">SRC</span></header>
-      <div class="pnl-b"><ul class="links">{% for s in info.sources or [] %}<li><span class="lk-label">{{ s.name }} <span class="text-muted-d">v{{ s.version }}</span></span>
-        <span class="lk-target"><span class="{{ 't-ok' if s.health.startswith('UP') else 't-bad' }}">{{ s.health }}</span>
-        <span class="lk-badge">{{ ('live ' if s.live else '') ~ ('search ' if s.search else '') }}</span></span></li>{% endfor %}</ul></div></section>
-    <section class="pnl"><header class="pnl-h"><h3>Sutras loaded</h3><span class="pnl-code">RACHANA</span></header>
-      <div class="pnl-b"><ul class="about-list mono">{% for s in info.sutras or [] %}<li>{{ s }}</li>{% endfor %}</ul>
-        <p class="text-muted-d">Entities without a matching Sutra are laid out by inference.</p></div></section>
-    <section class="pnl"><header class="pnl-h"><h3>How it is built</h3><span class="pnl-code">ARCH</span></header>
-      <div class="pnl-b"><ul class="about-list">
-        <li>One Spring Boot application on Java 21 or newer (production runs 21; 25 also supported) and virtual threads: grammar, inference, entity graph, view pipeline, live hub, identity.</li>
-        <li>A FastAPI console with every asset vendored: it works air-gapped under a strict CSP.</li>
-        <li>Layouts are cached per data shape; live views receive only what changed.</li>
-      </ul><p><a href="/about/competitive">Competitive landscape</a> · <a href="/help/architecture">Architecture</a> · <a href="/help/decisions">Decision records</a> · <a href="/help/performance">Measured performance</a></p></div></section>
+  <p>A live, keyboard-driven terminal and BI workbench that shows any record from any system as a dense, linked, ticking view, without a screen coded for each product.</p>
+  <p><span class="ab-ver mono" data-version>Version {{ (info.version if info and info.version else ASSET_V) }}</span></p>
+  <div class="ab-cta">
+    {% if AUTH_ENABLED and not me %}<a class="btn-pill btn-accent" href="/login"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Sign in</a>
+    {% else %}<a class="btn-pill btn-accent" href="/t"><i class="bi bi-terminal" aria-hidden="true"></i> Open the terminal</a>{% endif %}
+    <a class="btn-pill btn-ghost" href="/help"><i class="bi bi-book" aria-hidden="true"></i> Documentation</a>
   </div>
-  <section class="pnl about-legal"><header class="pnl-h"><h3>Legal</h3><span class="pnl-code">LICENCE</span></header>
-    <div class="pnl-b"><p><b>{{ COPYRIGHT }}</b></p>
-      <pre class="mono about-licence">{{ licence_intro }}</pre>
-      <p>This software is proprietary and confidential. Copying, use, modification, distribution or disclosure without the express prior written
-         permission of the copyright holder is prohibited. {% if notices %}Third-party components and their licences: <a href="/help/notices">notices</a>.{% endif %}
-         <a href="/help/release-notes">Release notes</a> · <a href="/help/changelog">Changelog</a></p></div></section>
+</section>
+<div class="help-wrap ab">
+  <section class="ab-sec" id="what"><h2>What is {{ PRODUCT }}</h2>
+    <p>{{ PRODUCT }} ({{ PRODUCT_NATIVE or 'दृष्टि' }}, Sanskrit for <em>sight</em>) lets a person see a trade, a patient, a gene or an economy the same way: one live page, linked to what it relates to, showing only what that person may see.
+       A short screen grammar called <b>Rachana</b> describes a view, a <b>Sutra</b> is a screen written in it, and <b>inference</b> completes whatever a Sutra leaves out.</p></section>
+  <section class="ab-sec" id="problem"><h2>The problem it solves</h2>
+    <p>Every system has its own screens, built one by one, in their own style, with their own access rules. Adding a source means a project, and the figures on a page rarely say what they mean or where they came from.
+       {{ PRODUCT }} replaces the per-product screen with a grammar: connect the data, and views, search, reports and alerts come with it, masked the same way everywhere.</p></section>
+  <section class="ab-sec" id="features"><h2>Key features</h2>
+  <div class="ab-cards">
+    <article class="ab-card"><i class="bi bi-terminal" aria-hidden="true"></i><h3>The command line</h3><p>Type a mnemonic and a key (TRD IRS-48213, PNL, HELP) with suggestions as you type; every screen is reachable from the keyboard.</p></article>
+    <article class="ab-card"><i class="bi bi-grid-1x2" aria-hidden="true"></i><h3>Sutras and the Build workbench</h3><p>A screen is a short Rachana (Sutra) file; the Build workbench designs, tests, versions and ships them without code.</p></article>
+    <article class="ab-card"><i class="bi bi-funnel" aria-hidden="true"></i><h3>Query by form</h3><p>Filter, sort and pick from a form with the same power as the command line.</p></article>
+    <article class="ab-card"><i class="bi bi-broadcast" aria-hidden="true"></i><h3>Live updates</h3><p>Views tick as the data changes; only what changed is sent.</p></article>
+    <article class="ab-card"><i class="bi bi-plug" aria-hidden="true"></i><h3>Any connector as a file</h3><p>Add a database, lake or message source from a file: TLS, proxy and secrets are settings and no restart is needed.</p></article>
+    <article class="ab-card"><i class="bi bi-boxes" aria-hidden="true"></i><h3>Domain packs</h3><p>Trading, risk, banking, health, genomics, economics and more arrive as packs with their own Sutras, words and sample data.</p></article>
+    <article class="ab-card"><i class="bi bi-shield-lock" aria-hidden="true"></i><h3>Masks and roles everywhere</h3><p>One mask decides what each person sees, in views, search, exports, reports, notebooks and the AI layer.</p></article>
+    <article class="ab-card"><i class="bi bi-share" aria-hidden="true"></i><h3>Share, discuss, inbox</h3><p>Send a view or a finding, comment on it, and keep an inbox of what concerns you.</p></article>
+    <article class="ab-card"><i class="bi bi-calendar-check" aria-hidden="true"></i><h3>Reports and subscriptions</h3><p>Scheduled and on-demand reports, with subscriptions per person.</p></article>
+    <article class="ab-card"><i class="bi bi-bar-chart-line" aria-hidden="true"></i><h3>Rupaka BI</h3><p>Datasets, reports, a designer, governance and review, live boards, Python measures and visuals, and Analyse for notebooks.</p></article>
+    <article class="ab-card"><i class="bi bi-bell" aria-hidden="true"></i><h3>Alerts</h3><p>Rules over live data raise alerts that reach the inbox, with history.</p></article>
+    <article class="ab-card"><i class="bi bi-stars" aria-hidden="true"></i><h3>AI layer</h3><p>Off by default; when on, it sees only what the person may see and answers with masked data.</p></article>
+    <article class="ab-card"><i class="bi bi-window-stack" aria-hidden="true"></i><h3>Drishti Elements</h3><p>Embed a view, a report or a panel in another web page with one tag.</p></article>
+    <article class="ab-card"><i class="bi bi-globe2" aria-hidden="true"></i><h3>Real public data</h3><p>Economics, politics and other packs load real public series, with their sources named in the glossary.</p></article>
+  </div></section>
+  <section class="ab-sec" id="performance"><h2>Measured performance</h2>
+  <div class="ab-stats">
+    <div class="ab-stat"><b>0.57 to 0.62 ms</b><span>warm view build on the server (gate: p99 under 50 ms)</span><code>docs/admin/PERFORMANCE.md</code></div>
+    <div class="ab-stat"><b>3.0 ms</b><span>warm view over HTTP, p99 (p50 1.7 ms)</span><code>docs/admin/PERFORMANCE.md</code></div>
+    <div class="ab-stat"><b>11.2 ms</b><span>live tick to frame built, p99 (p50 2.4 ms)</span><code>docs/admin/PERFORMANCE.md</code></div>
+    <div class="ab-stat"><b>134 ms</b><span>search over 1,000,000 trades (2,017 matches)</span><code>docs/admin/PERFORMANCE.md</code></div>
+    <div class="ab-stat"><b>1.9 ms</b><span>a search on the first scale-benchmark store, median</span><code>docs/admin/SCALE_BENCHMARK.md</code></div>
+    <div class="ab-stat"><b>60 fps</b><span>with 1,000 row updates a second in the BI table; nothing dropped</span><code>docs/architecture/RUPAKA_POC.md</code></div>
+  </div>
+  <p class="text-muted-d">Recorded on a developer workstation; method and conditions are in <a href="/help/performance">Measured performance</a>.</p></section>
+  <section class="ab-sec" id="capabilities"><h2>Capabilities by area</h2>
+  <div class="ab-areas">
+    <section class="ab-area"><h3>Explore</h3><p>Command line and mnemonics; query by form; search and pick lists; linked entities; a past business date.</p></section>
+    <section class="ab-area"><h3>Build</h3><p>The Rachana screen grammar; Sutras and the Build workbench; inference for shapes with no Sutra; packs from a schema or a JSONL file.</p></section>
+    <section class="ab-area"><h3>Analyse</h3><p>Rupaka datasets with measures and time intelligence; reports and a designer; live boards; Python measures and visuals; Analyse notebooks.</p></section>
+    <section class="ab-area"><h3>Operate</h3><p>Connectors as files; data loads; caches; health; packs; roles and masks; tokens and audit.</p></section>
+    <section class="ab-area"><h3>Collaborate</h3><p>Share, discussion and inbox; reports and subscriptions; alerts; embedding with Drishti Elements.</p></section>
+  </div></section>
+  <section class="ab-sec ab-compete" id="competitive"><h2>Competitive advantage</h2>
+    <p>Terminals show market data, platform screens show one vendor's trades, low-code tools need a screen built per table, and BI tools stop at the chart.
+       {{ PRODUCT }} is one grammar for all of them: live, linked, masked, self-hosted and keyboard-first.</p>
+    <p><a class="btn-pill btn-accent" href="/about/competitive"><i class="bi bi-diagram-3" aria-hidden="true"></i> Read the competitive analysis</a></p></section>
+  <section class="ab-sec" id="stack"><h2>Technology stack</h2>
+    <ul class="about-list">
+      <li><b>Server:</b> one Spring Boot 3.5 application on Java 21 or newer with virtual threads; a Spring-free plugin SPI for sources; DuckDB for BI queries.</li>
+      <li><b>Console:</b> FastAPI and server-rendered pages; Bootstrap, Bootstrap Icons, ECharts, Perspective, CodeMirror and Pyodide, all vendored.</li>
+      <li><b>Security:</b> a strict content-security policy with no inline script or style, so it runs air-gapped; roles and masks enforced on the server.</li>
+    </ul></section>
+  <section class="ab-sec" id="use-cases"><h2>Use cases</h2>
+    <ul class="about-list">
+      <li><b>Trading desks.</b> Trades, positions and P&amp;L as linked live views, with the netting set one key away.</li>
+      <li><b>Risk.</b> Limits, VaR and exposure with the figures explained in the page's own words.</li>
+      <li><b>Operations.</b> Loads, breaks and queues watched live, with alerts and an inbox.</li>
+      <li><b>Public data.</b> Economics and politics series for research, with sources named.</li>
+      <li><b>Anywhere data lives.</b> Point a connector at a system and get views the same day, with no screen coded.</li>
+    </ul></section>
+  <section class="ab-sec" id="author"><h2>Author</h2>
+    <p><b>Ashutosh Sinha</b> · <a href="mailto:ajsinha@gmail.com">ajsinha@gmail.com</a></p></section>
+  <section class="ab-sec" id="legal"><h2>Legal and licence</h2>
+    <p><b>{{ COPYRIGHT }}</b> {{ PRODUCT }} is proprietary and confidential software. Copying, use, modification, distribution or disclosure without the express prior written permission of the copyright holder is prohibited; the full terms are in the LICENSE file.
+       {% if notices %}Third-party components and their licences: <a href="/help/notices">notices</a>. {% endif %}<a href="/help/release-notes">Release notes</a> · <a href="/help/changelog">Changelog</a></p>
+    <p class="ab-admin"><a href="/admin/health"><i class="bi bi-hdd-stack" aria-hidden="true"></i> System details for admins</a></p></section>
 </div>
 {% endblock %}
 {% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script>{% endblock %}

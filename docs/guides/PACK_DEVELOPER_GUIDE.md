@@ -2274,7 +2274,7 @@ After any change, one minute on a scratch server tells you the pack is sound.
 |---|---|
 | *Admin → Packs* (`/admin/packs`) | the pack, its version, **on**; *Needed by* shows what builds on it |
 | *Admin → Health* (`/admin/health`) | the pack **OK**, with its kinds, Sutras and connectors; **no Sutra problems**, no connector down or not configured, and the *Overrides* you expect and no others |
-| *About* (`/about`) | the pack among the loaded packs |
+| *Admin → Packs* (`/admin/packs`) | the pack among the loaded packs |
 | `HELP` (the pack's `code`) typed on the command line | the pack's overview: every kind you may open, its mnemonic, how many entities the sources hold, an example, the key fields |
 | *Help → Help centre* | the pack's guide card |
 
