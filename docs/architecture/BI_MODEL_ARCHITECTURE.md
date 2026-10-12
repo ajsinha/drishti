@@ -58,6 +58,23 @@ AI never reads raw data: it writes model queries (D5), checked like a person's a
 always come from the engine. AI drafts datasets, models, measures, reports and Transforms as YAML that go through Check,
 tests and four-eyes review with their provenance recorded. Models are exposed to outside agents as MCP tools.
 
+## 2b. A model is a mini database, always rooted in packs
+
+Think of a data model as a small database: its datasets are the tables, their keys and references are primary and
+foreign keys, relationships are the joins it allows, measures and calculation groups are its stored calculations,
+perspectives are its views, row rules and masks are its grants, and the model query language is its query language.
+Unlike a free-standing database, **every model is rooted in packs**: every dataset traces back to pack kinds, so it
+inherits the kinds' keys, meanings, units, references, connectors, business-date calendar and security.
+
+- A dataset from a pack kind is rooted directly.
+- A connector-query dataset must name the pack and connector it reads and the **kind it represents** (or the kinds its
+  columns come from), so its meanings and security come from the pack, not from free text.
+- A Python dataset's inputs are pack-rooted datasets or models, and its output columns declare their meanings.
+- A model built on another model's answer inherits that model's roots.
+
+Check refuses a dataset whose roots cannot be traced to a loaded pack, and lineage always runs from a report back to
+the pack kinds and their connectors. (Enforced from W2.)
+
 ## 2a. Shared models, the way Power BI does it — and further
 
 A report **references** a model; it never owns it. One model is the root of many reports, boards, notebooks, alerts,
@@ -109,7 +126,7 @@ updates its docs and tutorials with UI, CLI and YAML (never thinner) and migrate
 | Wave | Scope | Accepted when |
 |---|---|---|
 | **W1 Layers and the query language** | the dataset and model item types; pack-generated datasets (D3); connector and Python datasets; implicit models; the model query language v1 (spec, validator, compiler to the engine) and its API; security at the dataset, model security only tighter | a report, an alert and an Analyse slice ask the same model through the same query language and get identical, per-reader masked answers |
-| **W2 The star, shared models and correctness** | Used-by lists, delete/unpublish impact, Build-like read right, move a local measure to the model; field properties inherited by every report (display name, description, format, folder, hidden, sort-by, data category, default summarisation); perspectives; several facts with shared dimensions in one visual; additivity declarations; the currency guard; relationship suggestions from pack entity references; fan-out refusal at model level; model contracts with semver and breaking-change detection; stable ids | MTM and exposure per counterparty in one visual equal an independent per-grain computation; a breaking model change is refused without a major version |
+| **W2 The star, shared models and correctness** | every dataset rooted in packs (Check refuses an untraceable root; lineage report → pack kinds); Used-by lists, delete/unpublish impact, Build-like read right, move a local measure to the model; field properties inherited by every report (display name, description, format, folder, hidden, sort-by, data category, default summarisation); perspectives; several facts with shared dimensions in one visual; additivity declarations; the currency guard; relationship suggestions from pack entity references; fan-out refusal at model level; model contracts with semver and breaking-change detection; stable ids | MTM and exposure per counterparty in one visual equal an independent per-grain computation; a breaking model change is refused without a major version |
 | **W3 Time modes and standing queries** | `live`/`snapshot`/`history` datasets; standing queries for every consumer; incremental rules per measure; throttling and back-pressure; as-of time travel; live and snapshot mixed in one model | a board, a report and an alert over one model tick live, answer as of a past date, and match a full recompute |
 | **W4 Consumers, designers and migration** | reports, boards, notebooks, alerts, subscriptions, exports and embeds bound to models; the dataset wizard (mostly automatic) and the **model designer** (the Model view becomes the editor of relationships, measures, security, tests); composed and derived datasets migrated into models and Python datasets; report links reduced (D2); every sample and tutorial 10–18 migrated | every shipped sample and tutorial runs on the new layers in the UI alone; nothing needs hand-written YAML |
 | **W5 AI grounding** | `ai:` metadata (synonyms, units, examples, hints); golden questions run as tests; AI ask/explain through the query language only; MCP tools `describe_model`, `query_model`, `explain_change` | golden questions pass on the mock and on one real provider; an AI answer can only use measures the user may see |
