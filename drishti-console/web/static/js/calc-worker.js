@@ -34,9 +34,12 @@ let seq = 0;
 const pending = new Map();
 const CORE = ['numpy', 'pandas'];
 // code that will want numpy and pandas: they load before it runs ("numpy/pandas on first use"), once per worker
-const DATA = /\b(pandas|pd|numpy|np|DataFrame|view\s*\.\s*(tables|table)|(search|columns|history)(_async)?|show|chart|quant)\b/;
+const DATA = /\b(pandas|pd|numpy|np|DataFrame|view\s*\.\s*(tables|table)|(search|columns|history)(_async)?|show|chart|quant|drishti_bi)\b/;
 // drishti.quant: fetched and written beside drishti.py the first time a cell names it (it needs numpy, loaded by DATA)
 const QUANT = /\bquant\b/;
+// drishti_bi (the BI client): written to /home/pyodide beside drishti.py the first time a cell names it, and needs pandas
+const BI = /\bdrishti_bi\b/;
+let biLoaded = false;
 
 function post(msg) { self.postMessage(msg); }
 
@@ -83,6 +86,13 @@ async function packagesFor(code) {
     if (r.ok) {
       pyodide.FS.writeFile('/home/pyodide/drishti_pkg/quant.py', await r.text());
       quantLoaded = true;
+    }
+  }
+  if (!biLoaded && BI.test(code)) {
+    const r = await fetch(new URL('drishti_bi.py', moduleBase).href, { credentials: 'same-origin' });
+    if (r.ok) {
+      pyodide.FS.writeFile('/home/pyodide/drishti_bi.py', await r.text());
+      biLoaded = true;
     }
   }
   await pyodide.loadPackagesFromImports(code, { messageCallback: messages, errorCallback: problems });

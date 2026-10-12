@@ -69,6 +69,12 @@ WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-
 _HOST = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$|^\[[0-9A-Fa-f:.]+\](:\d{1,5})?$")
 WORKER = "/static/js/calc-worker.js"
 PYODIDE = "/pyodide/"
+# Calc's Graphic Walker frame (drishti_bi.walk, docs/guides/PYTHON_CALC.md): a third-party UI that needs eval (Vega compiles chart expressions) and writes its own styles
+# (styled-components, a shadow root). So the one page that holds it, and only it, has this narrow policy, and it is a sandboxed frame: `sandbox allow-scripts` (no same-origin, so
+# no cookie and no console API), `connect-src 'none'` and no navigation or forms, so the rows it is given by message cannot leave it. Calc's own page keeps the strict policy.
+WALKER_PAGE = "/static/calc/walker.html"
+WALKER_CSP = ("default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src data: blob:; font-src data:; worker-src blob:; connect-src 'none'; "
+              "base-uri 'none'; form-action 'none'; frame-ancestors 'self'; sandbox allow-scripts")
 # Rupaka phase 0 proof of concept (docs/architecture/RUPAKA_POC.md), only when bi.poc_enabled: /bi/poc, and only it, may compile
 # WebAssembly on its main thread (Perspective's viewer): 'wasm-unsafe-eval', never 'unsafe-eval'. The two vendored workers
 # (Perspective's engine, DuckDB-Wasm) are scripts of this origin with the worker policy above; neither is a blob.
@@ -181,7 +187,7 @@ class SecurityHeaders(BaseHTTPMiddleware):
         path = request.url.path
         poc_worker = path in POC_WORKERS or (path.startswith("/static/vendor/duckdb-wasm/") and path.endswith(POC_WORKER_SUFFIX))
         policy = (worker_csp(request.headers.get("host", "")) if path == WORKER or poc_worker
-                  else POC_CSP if path == POC_PAGE else CSP)
+                  else WALKER_CSP if path == WALKER_PAGE else POC_CSP if path == POC_PAGE else CSP)
         response.headers.setdefault("Content-Security-Policy", policy)
         if path.startswith(PYODIDE) and response.status_code == 200:
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"   # the URL names the version

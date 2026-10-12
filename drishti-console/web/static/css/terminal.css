@@ -752,6 +752,7 @@ table.tbl tr.tbl-filter th::after { content: none; }
 .calc-foot { font-size: .72rem; margin: .2rem 0 .6rem; }
 .calc-chart { height: 280px; width: 100%; }
 .calc-img { max-width: 100%; background: #fff; border-radius: 4px; padding: 4px; margin-bottom: .6rem; }
+.calc-walker { display: block; width: 100%; height: 560px; border: 1px solid var(--border, #444); border-radius: 6px; margin-bottom: .6rem; background: transparent; }
 .calc-err { border-left: 3px solid var(--d-bad); padding: .45rem .75rem; background: var(--d-bg-2); margin: .5rem 0; }
 .calc-err strong { color: var(--d-bad); font-weight: 600; }
 .calc-drawer .calc-err pre { white-space: pre-wrap; font-size: .78rem; margin: .4rem 0 0; padding: 0; overflow: visible; color: var(--d-ink); }

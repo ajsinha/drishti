@@ -172,6 +172,9 @@
     else if (op === 'search') { path = '/api/calc/search'; add('q', a.q); }
     else if (op === 'columns') { path = '/api/calc/columns/' + encodeURIComponent(a.kind); add('paths', a.paths); add('limit', a.limit); }
     else if (op === 'history') { path = '/api/series/' + encodeURIComponent(a.kind) + '/' + encodeURIComponent(a.id); add('path', a.path); add('days', a.days); }
+    else if (op === 'bi.datasets') { return '/bi/api/datasets'; }                       // drishti_bi: the BI engine, as this person (the console passes the session on)
+    else if (op === 'bi.model') { return '/bi/api/datasets/' + encodeURIComponent(a.dataset).replace(/%3A/g, ':'); }
+    else if (op === 'bi.query') { return '/bi/api/datasets/' + encodeURIComponent(a.dataset).replace(/%3A/g, ':') + '/query'; }
     else { return null; }
     add('asOf', a.asOf);
     return path + (q.length ? '?' + q.join('&') : '');
@@ -183,7 +186,9 @@
     var reply = function (body) { if (worker) { worker.postMessage({ type: 'reply', rid: m.rid, body: JSON.stringify(body) }); } };
     if (!url) { reply({ ok: false, code: 'DRS-5001', detail: 'unknown read ' + m.op }); return; }
     if (running) { running.reads++; status('Reading ' + m.op + '…'); }
-    fetch(url, { credentials: 'same-origin' }).then(function (r) {
+    var init = { credentials: 'same-origin' };
+    if (m.op === 'bi.query') { init = { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(a.body || {}) }; }
+    fetch(url, init).then(function (r) {
       return r.text().then(function (t) {
         if (running) { running.bytes += t.length; }
         var b = {};
@@ -303,6 +308,23 @@
     });
     charts.push(c);
   }
+  /** Graphic Walker over a DataFrame (drishti_bi.walk): in a frame of its own that is sandboxed (no same-origin, no network), given the rows by message. */
+  function walker(item) {
+    heading(item.title);
+    var frame = el('iframe', 'calc-walker');
+    frame.setAttribute('sandbox', 'allow-scripts');
+    frame.setAttribute('title', item.title || 'Graphic Walker');
+    frame.setAttribute('data-calc-walker', '');
+    frame.src = '/static/calc/walker.html';
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var onMessage = function (e) {
+      if (e.source !== frame.contentWindow || !e.data || e.data.type !== 'walker-ready') { return; }
+      frame.contentWindow.postMessage({ type: 'walker-data', fields: item.fields, data: item.rows, dark: dark }, '*');
+      window.removeEventListener('message', onMessage);
+    };
+    window.addEventListener('message', onMessage);
+    out.appendChild(frame);
+  }
   function render(item) {
     if (item.kind === 'table') { table(item); }
     else if (item.kind === 'chart') { chart(item); }
@@ -313,6 +335,7 @@
       img.src = 'data:image/png;base64,' + item.png;
       out.appendChild(img);
     } else if (item.kind === 'note') { out.appendChild(el('p', 'calc-note', item.text)); }
+    else if (item.kind === 'walker') { walker(item); }
     else { heading(item.title); out.appendChild(el('pre', 'calc-text mono', item.text)); }
   }
   window.addEventListener('resize', function () { charts.forEach(function (c) { c.resize(); }); });
