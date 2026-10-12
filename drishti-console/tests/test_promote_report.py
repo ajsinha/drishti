@@ -40,6 +40,12 @@ def test_a_group_by_query_reads_as_rows_values_and_filters():
     assert any("ORDER BY and LIMIT were left out" in n for n in r["notes"])
 
 
+def test_an_implicit_alias_is_accepted_like_as():
+    r = sql_to_slice("SELECT desk d, sum(notional) n, count(*) c FROM extract GROUP BY desk", COLS)
+    assert r["rows"] == ["desk"] and r["values"] == [{"field": "notional", "agg": "sum"}, {"field": "*", "agg": "count"}]
+    assert not any("sum(notional) n" in n for n in r["notes"])
+
+
 def test_a_plain_select_is_a_table_and_star_is_every_column():
     r = sql_to_slice("select desk, mtm from extract where mtm between 1 and 5 and desk is not null", COLS)
     assert r["rows"] == ["desk", "mtm"] and r["values"] == [] and [f["op"] for f in r["filters"]] == ["between", "not-null"]

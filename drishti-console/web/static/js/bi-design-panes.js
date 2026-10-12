@@ -163,10 +163,19 @@
       if (!v) { D.addVisual(type); return; }
       if (v.type === type) { return; }
       const dropped = lostIn(v, type);
-      if (dropped.length && !window.confirm('Change "' + (v.title || v.id) + '" to a ' + type + '? ' + dropped.map(B.label).join(', ') + (dropped.length === 1 ? ' does' : ' do') + ' not fit its wells and will be removed from it (Undo brings it back). Choose Cancel and use Add visual to make a new ' + type + ' instead.')) { return; }
+      const anchor = B.q('[data-type="' + type + '"]', types) || B.q('[data-type]', types);
+      const proceed = dropped.length ? B.confirm(anchor, 'Change "' + (v.title || v.id) + '" to a ' + type + '? ' + dropped.map(B.label).join(', ') + (dropped.length === 1 ? ' does' : ' do') + ' not fit its wells and will be removed from it (Undo brings it back). Choose Cancel and use Add visual to make a new ' + type + ' instead.', 'Change it') : Promise.resolve(true);
+      proceed.then((yes) => { if (yes) { convert(v, type); } });
+    }
+
+    /** Format keys only one kind of visual reads; they go when the visual becomes a kind that does not read them (a slicer's `mode` on a column chart is noise). */
+    const OWN_KEYS = { slicer: ['mode', 'scope', 'default', 'relative'], perspective: ['view', 'plugin'], vega: ['spec'], table: ['conditional', 'dataBars', 'subtotals', 'totals'], matrix: ['conditional', 'dataBars', 'subtotals', 'totals'] };
+
+    function convert(v, type) {
       D.curIdx = D.idxOf(v);
       D.change('Change to a ' + type, () => {
         const old = v.wells;
+        const old0 = v.type;
         const specs = D.wellSpecs(type);
         const items = Object.keys(old).reduce((a, k) => a.concat(old[k]), []);
         v.type = type;
@@ -174,6 +183,10 @@
         items.forEach((x) => D.addToVisual(v, x));
         Object.keys(specs).forEach((w) => { if (v.wells[w] && !v.wells[w].length) { delete v.wells[w]; } });
         D.auto.delete(v.id);
+        if (v.format) {
+          (OWN_KEYS[old0] || []).forEach((k) => { if ((OWN_KEYS[type] || []).indexOf(k) < 0) { delete v.format[k]; } });
+          if (!Object.keys(v.format).length) { delete v.format; }
+        }
         if (type === 'slicer') { v.format = Object.assign({ mode: 'list', scope: 'page' }, v.format); }
         D.followType(v, type);                                   // the id says what the visual is, and the bookmarks and layouts that named the old one follow
       });
@@ -486,7 +499,7 @@
         return b; };
       acts.appendChild(mk('Move earlier', () => D.change('Move the page', () => { m.pages.splice(ix - 1, 0, m.pages.splice(ix, 1)[0]); }), ix === 0));
       acts.appendChild(mk('Move later', () => D.change('Move the page', () => { m.pages.splice(ix + 1, 0, m.pages.splice(ix, 1)[0]); }), ix === m.pages.length - 1));
-      acts.appendChild(mk('Delete the page', () => { if (window.confirm('Delete the page "' + p.title + '" and its visuals?')) { D.change('Delete the page', () => { m.pages.splice(ix, 1); }); D.setPage(m.pages[0].id); } }, m.pages.length < 2, { 'data-delete-page': '' }));
+      acts.appendChild(mk('Delete the page', () => { B.confirm(B.q('[data-delete-page]'), 'Delete the page "' + p.title + '" and its visuals?', 'Delete the page').then((yes) => { if (yes) { D.change('Delete the page', () => { m.pages.splice(ix, 1); }); D.setPage(m.pages[0].id); } }); }, m.pages.length < 2, { 'data-delete-page': '' }));
       fmt.appendChild(acts);
       const dt = (p.drillthrough || {}).fields || [];
       const fieldSel = h('select', { class: 'studio-select', 'aria-label': 'Take this field as a drill-through filter', 'data-page-drill': '' }, h('option', { value: '', text: 'Add a drill-through field…' }), optionsFor('field'));

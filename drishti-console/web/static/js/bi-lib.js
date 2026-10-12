@@ -204,6 +204,25 @@
       return list;
     });
   };
+  /**
+   * Asks a yes/no question in place beside `anchor` (the page's own styling, no browser dialog): the text, a button for the action and Cancel. Resolves true for the
+   * action and false for Cancel or Escape; Cancel has the focus, so Enter does not do the harm by accident.
+   */
+  B.confirm = function (anchor, text, yesText) {
+    const old = document.querySelector('[data-ask-confirm]');
+    if (old) { old.remove(); }
+    return new Promise((resolve) => {
+      const go = B.h('button', { type: 'button', class: 'btn-pill btn-accent', 'data-confirm-go': '', text: yesText || 'Go ahead' });
+      const no = B.h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-confirm-cancel': '', text: 'Cancel' });
+      const box = B.h('span', { class: 'bi-ask', 'data-ask-confirm': '', role: 'alertdialog', 'aria-label': text }, B.h('span', { class: 'bi-ask-text', text }), go, no);
+      const done = (v) => { box.remove(); resolve(v); };
+      box.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); done(false); } });
+      go.addEventListener('click', () => done(true));
+      no.addEventListener('click', () => done(false));
+      if (anchor) { anchor.after(box); } else { document.body.appendChild(box); }
+      no.focus();
+    });
+  };
   /** Asks which workspace, in place beside `anchor`: a select, an OK button and Cancel. Resolves with the workspace to post to; rejects with {cancelled: true}. */
   B.askWorkspace = function (anchor, okText, label) {
     const old = document.querySelector('[data-ask-workspace]');

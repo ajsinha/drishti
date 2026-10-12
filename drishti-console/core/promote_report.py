@@ -27,8 +27,8 @@ import re
 
 AGGS = ("sum", "avg", "count", "min", "max")
 _CLAUSE = re.compile(r"\b(from|where|group\s+by|having|order\s+by|limit)\b", re.I)
-_AGG = re.compile(r"^(sum|avg|count|min|max)\s*\(\s*(\*|distinct\s+)?\s*([A-Za-z_][A-Za-z0-9_]*)?\s*\)(?:\s+as\s+\S+)?$", re.I)
-_COL = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)(?:\s+as\s+\S+)?$", re.I)
+_AGG = re.compile(r"^(sum|avg|count|min|max)\s*\(\s*(\*|distinct\s+)?\s*([A-Za-z_][A-Za-z0-9_]*)?\s*\)(?:\s+(?:as\s+)?\S+)?$", re.I)
+_COL = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)(?:\s+(?:as\s+)?\S+)?$", re.I)
 _OPS = {"=": "eq", "==": "eq", "<>": "ne", "!=": "ne", "<": "lt", "<=": "le", ">": "gt", ">=": "ge"}
 
 

@@ -478,8 +478,8 @@
       }).catch((e) => { B.near(btn, e.message, true); });
     };
     if (D.dirty) {
-      if (!window.confirm('There are unsaved changes. Save them first, then ' + ((D.item && D.item.workspaceReviewRequired) ? 'propose' : 'publish') + '?')) { return Promise.resolve(); }
-      return B.busy(btn, () => save().then(() => (D.dirty ? null : go())));
+      return B.confirm(btn, 'There are unsaved changes. Save them first, then ' + ((D.item && D.item.workspaceReviewRequired) ? 'propose' : 'publish') + '?', 'Save and continue')
+        .then((yes) => (yes ? B.busy(btn, () => save().then(() => (D.dirty ? null : go()))) : null));
     }
     return B.busy(btn, go);
   }

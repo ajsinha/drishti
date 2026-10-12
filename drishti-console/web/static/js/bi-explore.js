@@ -262,7 +262,7 @@
     var body = Object.assign({ to: 'report', name: title, dataset: X.spec.dataset, columns: X.ex.columns.map(function (c) { return c.name; }), qualified: X.qual, target: target || undefined, page: pageIn.value.trim() || undefined }, extra);
     return X.post('/bi/explore/promote', body).then(function (d) {
       var saved = target ? B.api('PUT', '/items/' + B.id2path(target), { body: d.yaml }) : X.createItem('report', d.title, d.yaml);
-      return saved.then(function (it) { say((target ? 'Visual ' + d.visual + ' added to the report draft: ' : 'Report draft saved in your workspace: ') + it.title + '. ' + d.notes.join(' ')); link(it); X.lastPromoted = { item: it.id, visual: d.visual || (extra.sql ? 'sql' : 'slice') }; });
+      return saved.then(function (it) { say((target ? 'Visual ' + d.visual + ' added to the report draft: ' : 'Report draft saved in your workspace: ') + it.title + '. ' + d.notes.join(' ')); link(it); var m = q('[data-msg]'); if (m) { m.appendChild(document.createTextNode(' ')); m.appendChild(h('a', { class: 'lnk', href: '/bi/i/' + B.id2path(it.id), 'data-promoted-link': '', text: 'Open the draft' })); } X.lastPromoted = { item: it.id, visual: d.visual || (extra.sql ? 'sql' : 'slice') }; });
     }).catch(function (e) { say(e.message, true); });
   };
   q('[data-promote-slice]', root).addEventListener('click', function () {
