@@ -130,6 +130,13 @@ class Stack:
         self.tmp, self.procs, self.ids = tmp, {}, {}
 
     def start(self) -> "Stack":
+        try:
+            return self._start()
+        except BaseException:
+            self.close()                                             # a failed start must not leave a server holding the ports for the next file
+            raise
+
+    def _start(self) -> "Stack":
         for port in (SERVER_PORT, CONSOLE_PORT):
             assert port not in FORBIDDEN and not listening(port), f"port {port} is in use: stop whatever listens there"
         jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)  # newest build first: target may hold older versions
@@ -141,6 +148,8 @@ class Stack:
         for rel, text in SHIPPED.items():
             (work / "config" / "bi" / rel).parent.mkdir(parents=True, exist_ok=True)
             (work / "config" / "bi" / rel).write_text(text)
+        sample = ROOT / "config" / "bi" / "datasets" / "trades-basic.dataset.yaml"           # publishing checks a report can be drawn: the dataset it names must exist
+        (work / "config" / "bi" / "datasets" / sample.name).write_text(sample.read_text())
         env = dict(os.environ, DRISHTI_PACKS="trading", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_SECURITY_ENABLED="true", DRISHTI_TOKEN_SECRET=SECRET,
                    DRISHTI_BI_DIR=str(work / "config" / "bi"))
         self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false"], cwd=work,

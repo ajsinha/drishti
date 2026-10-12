@@ -467,6 +467,7 @@ def test_a_shipped_report_opens_read_only_and_can_be_saved_as_a_copy(stack, brow
     settled_design(page)
     assert page.locator(".bi-dvis").count() == 8                                                           # the whole first page, with data
     page.click("[data-save-copy]")
+    page.click("[data-ask-go]")                                                                            # the copy asks which workspace first
     page.wait_for_url("**/bi/design/bi-**")
     page.wait_for_selector("[data-design-root][data-ready=yes]")
     expect(page.locator("[data-readonly]")).to_be_hidden()

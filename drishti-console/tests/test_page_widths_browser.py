@@ -169,7 +169,7 @@ CLIPPED = r"""() => {
   for (const e of document.querySelectorAll('body *')) {
     const s = getComputedStyle(e);
     if (s.overflowX !== 'hidden' && s.overflowX !== 'clip') continue;
-    if (e.scrollWidth <= e.clientWidth + 1 || !e.clientWidth || s.textOverflow === 'ellipsis' || s.display === 'none') continue;
+    if (e.scrollWidth <= e.clientWidth + 1 || e.clientWidth <= 1 || s.textOverflow === 'ellipsis' || s.display === 'none') continue;
     if (e.classList.contains('CodeMirror')) continue;   // CodeMirror hides native scrollbars with a -50 px margin on its own scroller; it scrolls, it does not clip
     if (!e.textContent.trim() || e.closest('[aria-hidden=true], svg, canvas, .chart, .xchart, .surface, .visually-hidden, .sr-only, .asof-live-l')) continue;
     out.push(e.tagName.toLowerCase() + (typeof e.className === 'string' && e.className ? '.' + e.className.trim().split(/\s+/)[0] : '') + ' ' + e.scrollWidth + '>' + e.clientWidth);

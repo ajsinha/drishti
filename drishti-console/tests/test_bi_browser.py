@@ -374,12 +374,12 @@ def test_the_bi_folder_is_live_a_file_added_changed_and_deleted_needs_no_restart
     expect(admin.locator("[data-problems]")).to_contain_text("last good version is kept")
     page.reload()
     expect(page.locator("[data-title]")).to_have_text("Live demo two")
-    f.unlink()                                                                               # deleted: open pages say it is gone
+    f.unlink()                                                                               # deleted: open pages say it does not exist (the not-found wording)
     deadline = time.time() + 20
-    while time.time() < deadline and "gone" not in (page.locator("[data-msg]").inner_text() or ""):
+    while time.time() < deadline and "does not exist" not in (page.locator("[data-msg]").inner_text() or ""):
         page.reload()
         page.wait_for_timeout(700)
-    expect(page.locator("[data-msg]")).to_contain_text("gone")
+    expect(page.locator("[data-msg]")).to_contain_text("does not exist")
 
 
 def test_the_bi_keyword_types_ahead_opens_an_item_and_alone_opens_home(stack, browser):

@@ -136,11 +136,11 @@ def test_refresh_now_runs_in_the_background_and_its_history_survives_a_reload(st
     button.click()
     page.wait_for_function("() => /Refreshed|Refresh /.test(document.querySelector('[data-refresh-msg]').textContent)", timeout=60000)
     assert "Refreshed" in page.locator("[data-refresh-msg]").inner_text()
-    expect(page.locator('[data-refresh-history] tbody tr[data-history-row="ok"]')).to_have_count(1)
+    expect(page.locator('[data-refresh-history] tbody tr[data-history-row="warning"]')).to_have_count(1)   # the sample has no data for today: the refresh falls back to the latest date and says so
     assert "manual (wes)" in page.locator("[data-refresh-history] tbody tr").first.inner_text()
     assert "Last refresh:" in page.locator("[data-refresh-when]").inner_text()
     page.reload()
-    page.wait_for_selector('[data-refresh-history] tbody tr[data-history-row="ok"]', timeout=30000)        # the server kept it
+    page.wait_for_selector('[data-refresh-history] tbody tr[data-history-row="warning"]', timeout=30000)        # the server kept it
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
     clean(page)
     page.context.close()

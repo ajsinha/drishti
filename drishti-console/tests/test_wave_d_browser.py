@@ -262,6 +262,7 @@ def test_the_designer_copilot_suggests_checks_and_adds_on_accept(stack, browser)
     page = sign_in(browser, "wes", "/bi/design/" + REPORT)
     page.wait_for_selector("[data-ready=yes]", timeout=30000)
     page.click("[data-save-copy]")                                      # the sample report is shipped, read-only: work on a draft copy of it
+    page.click("[data-ask-go]")                                         # the copy asks which workspace first
     page.wait_for_url(lambda u: "/bi/design/" in u and REPORT not in u, timeout=30000)
     page.wait_for_selector("[data-ready=yes]", timeout=30000)
     expect(page.locator("[data-ai-suggest]")).to_be_visible(timeout=15000)
