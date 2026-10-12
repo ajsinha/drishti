@@ -127,7 +127,7 @@ public final class QueryService implements AutoCloseable {
         if (keepsLive(ds.dataset())) {
             for (Dataset.Table t : ds.dataset().tables().values()) {
                 if (t.isLive()) {
-                    liveTables.ensure(ds.key(), ds.dataset(), t);
+                    liveTables.ensure(ds.key(), ds.dataset(), t, sampler(ds));
                 }
             }
             liveTables.touch(ds.key());
@@ -207,6 +207,12 @@ public final class QueryService implements AutoCloseable {
         }
     }
 
+    /** What the history of a live table asks the engine with: the system, no row rules, no masks (the history holds raw values and readers' masks apply when they read it). */
+    private LiveTables.Sampler sampler(Loaded ds) {
+        Caller system = new Caller("history", Set.of(), false, Map.of(), SqlCompiler.Masks.NONE);
+        return q -> query(ds, q, system, false);
+    }
+
     private String cacheKey(Loaded ds, QueryRequest q, Caller who) {
         StringBuilder masked = new StringBuilder();
         for (Dataset.Table t : ds.dataset().tables().values()) {
@@ -223,7 +229,7 @@ public final class QueryService implements AutoCloseable {
 
     private Result run(Loaded ds, QueryRequest q, Caller who, boolean explain) {
         Dataset d = ds.dataset();
-        SqlCompiler.Reader reader = new SqlCompiler.Reader(who.enforce(), who.roles(), who.attributes(), who.masks());
+        SqlCompiler.Reader reader = new SqlCompiler.Reader(who.enforce(), who.roles(), who.attributes(), HistoryMasks.over(d, who.masks()));
         Set<String> modes = new LinkedHashSet<>();
         SqlCompiler probe = new SqlCompiler(d, Dialect.DUCKDB);
         SqlCompiler.Plan plan = probe.plan(q, reader);
@@ -239,6 +245,7 @@ public final class QueryService implements AutoCloseable {
         List<String> warnings = new ArrayList<>();
         Map<String, Layers.Layer> cols = new LinkedHashMap<>();
         Map<String, LiveTable> inMemory = new LinkedHashMap<>();
+        Map<String, LiveHistory> histories = new LinkedHashMap<>();
         for (String t : plan.tables()) {
             Dataset.Table table = d.tables().get(t);
             if (who.denied().contains(t)) {
@@ -246,8 +253,17 @@ public final class QueryService implements AutoCloseable {
                 warnings.add("you may not open " + table.kind() + ": " + t + " has no rows for you");
                 continue;
             }
+            if (table.isHistory()) {
+                if (!liveTables.properties().enabled()) {
+                    throw new DrishtiException(ErrorCode.QUERY_INVALID, "table '" + t + "' is the history of the live table " + table.of() + ", and live tables are off (drishti.bi.live.enabled)");
+                }
+                LiveTable lt = liveTables.ensure(ds.key(), d, d.tables().get(table.of()), sampler(ds));
+                histories.put(t, lt.history().orElseThrow(() -> new DrishtiException(ErrorCode.QUERY_INVALID, "the history of " + table.of() + " is not running")));
+                cols.put(t, new Layers.Layer(List.of(), List.of(), 0));
+                continue;
+            }
             if (table.isLive() && liveTables.properties().enabled()) {
-                LiveTable lt = liveTables.ensure(ds.key(), d, table);
+                LiveTable lt = liveTables.ensure(ds.key(), d, table, sampler(ds));
                 inMemory.put(t, lt);
                 cols.put(t, new Layers.Layer(List.of(), List.of(), 0));
                 if (lt.state() == LiveTable.State.FAILED) {
@@ -267,7 +283,7 @@ public final class QueryService implements AutoCloseable {
         }
         Map<String, SqlCompiler.Source> from = new LinkedHashMap<>();
         Map<String, String> components = null;
-        String layerName = modes.contains("live") ? "live" : "columns";
+        String layerName = modes.contains("live") || modes.contains("history") ? "live" : "columns";
         if (rollup != null && inMemory.get(rollup.table()) != null) {
             LiveAggregate kept = inMemory.get(rollup.table()).aggregate(rollup.name()).orElseThrow();
             components = Layers.componentColumns(d, rollup);
@@ -281,7 +297,8 @@ public final class QueryService implements AutoCloseable {
         } else {
             for (String t : plan.tables()) {
                 LiveTable lt = inMemory.get(t);
-                from.put(t, lt != null ? lt.source(d, Dialect.DUCKDB) : TableRelations.cached(d, d.tables().get(t), cols.get(t).files(), Dialect.DUCKDB));
+                LiveHistory hh = histories.get(t);
+                from.put(t, hh != null ? hh.source(d, Dialect.DUCKDB) : lt != null ? lt.source(d, Dialect.DUCKDB) : TableRelations.cached(d, d.tables().get(t), cols.get(t).files(), Dialect.DUCKDB));
             }
         }
         int cap = q.limit() != null ? Math.min(q.limit(), props.maxRows()) : props.maxRows() + 1;

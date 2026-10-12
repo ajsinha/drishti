@@ -44,7 +44,17 @@ public final class LiveTables implements AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(LiveTables.class);
 
-    private record Entry(String signature, LiveTable table, LiveFeed feed, java.util.concurrent.atomic.AtomicReference<Instant> used) {}
+    private record Entry(String signature, LiveTable table, LiveFeed feed, java.util.concurrent.atomic.AtomicReference<Instant> used,
+            java.util.concurrent.atomic.AtomicReference<java.util.concurrent.ScheduledFuture<?>> sampling) {}
+
+    /** Asks the query engine for the sampled measures of a live table, as the system (no row rules, no masks: the history holds raw values, readers' masks apply on reading). */
+    @FunctionalInterface
+    public interface Sampler {
+        QueryService.Result run(QueryRequest q);
+    }
+
+    /** True on the sampler's own thread: its queries must not count as somebody using the table, or an idle table would never close. */
+    private static final ThreadLocal<Boolean> SAMPLING = ThreadLocal.withInitial(() -> false);
 
     private final AnalyticEngine engine;
     private final SourceGateway sources;
@@ -75,11 +85,16 @@ public final class LiveTables implements AutoCloseable {
      * @throws DrishtiException DRS-9050 for a table that cannot be live, DRS-9026 when no running connector serves its kind
      */
     public LiveTable ensure(String dsKey, Dataset ds, Dataset.Table t) {
+        return ensure(dsKey, ds, t, null);
+    }
+
+    /** As {@link #ensure(String, Dataset, Dataset.Table)}; with a {@code sampler} a table whose dataset asks for a history samples it while it runs. */
+    public LiveTable ensure(String dsKey, Dataset ds, Dataset.Table t, Sampler sampler) {
         String key = dsKey + "|" + t.name();
         String signature = t.toString() + ds.rollups().stream().filter(r -> r.table().equals(t.name())).toList() + props.incrementalAggregates();
         Entry e = entries.get(key);
         if (e != null && e.signature().equals(signature)) {
-            e.used().set(clock.instant());
+            touchUsed(e);
             return e.table();
         }
         LiveTable.check(t);
@@ -88,7 +103,7 @@ public final class LiveTables implements AutoCloseable {
         try {
             e = entries.get(key);
             if (e != null && e.signature().equals(signature)) {
-                e.used().set(clock.instant());
+                touchUsed(e);
                 return e.table();
             }
             if (e != null) {
@@ -110,13 +125,56 @@ public final class LiveTables implements AutoCloseable {
             }
             LiveTable table = new LiveTable(sqlName, t, engine, props, clock, kept);
             LiveFeed feed = new LiveFeed(table, t, sources, props, scheduler, io);
-            Entry made = new Entry(signature, table, feed, new java.util.concurrent.atomic.AtomicReference<>(clock.instant()));
+            Entry made = new Entry(signature, table, feed, new java.util.concurrent.atomic.AtomicReference<>(clock.instant()), new java.util.concurrent.atomic.AtomicReference<>());
             feed.start();
             entries.put(key, made);
+            Dataset.History h = t.live() == null ? null : t.live().history();
+            if (h != null && sampler != null && ds.tables().get(h.table()) != null) {
+                table.history(new LiveHistory(sqlName + "_hist", h, ds.tables().get(h.table()), engine));
+                long ms = Math.max(1_000, h.every().toMillis());
+                made.sampling().set(scheduler.scheduleWithFixedDelay(() -> sample(made, h, t, sampler), ms, ms, java.util.concurrent.TimeUnit.MILLISECONDS));
+            }
             LOG.info("live table {}.{} started over {} ({} rows, {} entities pushed)", dsKey, t.name(), t.kind(), table.status().rows(), table.status().subscribed());
             return table;
         } finally {
             lock.unlock();
+        }
+    }
+
+    private void touchUsed(Entry e) {
+        if (!SAMPLING.get()) {
+            e.used().set(clock.instant());
+        }
+    }
+
+    /** Takes one history sample: the sampled measures over the live table, by the history's groups, appended with the time. A failing sample is kept as the history's error. */
+    private void sample(Entry e, Dataset.History h, Dataset.Table t, Sampler sampler) {
+        LiveHistory hist = e.table().history().orElse(null);
+        LiveTable.State s = e.table().state();
+        if (hist == null || s == LiveTable.State.STARTING || s == LiveTable.State.FAILED || s == LiveTable.State.CLOSED) {
+            return;
+        }
+        SAMPLING.set(true);
+        try {
+            List<String> fields = h.by().stream().map(b -> t.name() + "." + b).toList();
+            QueryService.Result r = sampler.run(new QueryRequest(fields, h.measures(), List.of(), null, null, List.of(), null, "auto"));
+            List<Object[]> rows = new ArrayList<>();
+            int width = h.by().size() + h.measures().size();
+            for (int i = 0; i < r.rows(); i++) {
+                Object[] row = new Object[width];
+                for (int c = 0; c < width && c < r.columns().size(); c++) {
+                    row[c] = r.columns().get(c).values()[i];
+                }
+                rows.add(row);
+            }
+            if (hist.append(clock.instant(), rows) > 0) {
+                e.table().historyChanged();
+            }
+        } catch (RuntimeException ex) {
+            hist.error(String.valueOf(ex.getMessage()));
+            LOG.warn("history sample of {} failed: {}", t.name(), ex.getMessage());
+        } finally {
+            SAMPLING.set(false);
         }
     }
 
@@ -171,6 +229,7 @@ public final class LiveTables implements AutoCloseable {
             LiveTable.Status s = t.status();
             Map<String, Object> one = s.toMap();
             one.put("aggregates", t.aggregateStats());
+            t.history().ifPresent(hh -> one.put("history", hh.stats()));
             tables.add(one);
             if (s.lastUpdate() != null && (newest == null || s.lastUpdate().isAfter(newest))) {
                 newest = s.lastUpdate();
@@ -221,6 +280,10 @@ public final class LiveTables implements AutoCloseable {
 
     private void closeEntry(String key, Entry e) {
         entries.remove(key, e);
+        java.util.concurrent.ScheduledFuture<?> sampling = e.sampling().get();
+        if (sampling != null) {
+            sampling.cancel(false);
+        }
         e.feed().close();
         e.table().close();
         LOG.info("live table {} closed", key);

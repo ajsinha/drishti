@@ -36,12 +36,21 @@ public final class AlertLogic {
     private AlertLogic() {}
 
     /** What the reader found. */
-    public record Reading(Status status, double value, LocalDate asOf, String note) {
+    public record Reading(Status status, double value, LocalDate asOf, String note, double relaxed) {
 
         public enum Status { OK, MASKED, NO_DATA, ERROR }
 
+        public Reading(Status status, double value, LocalDate asOf, String note) {
+            this(status, value, asOf, note, value);
+        }
+
         public static Reading ok(double value, LocalDate asOf) {
             return new Reading(Status.OK, value, asOf, "");
+        }
+
+        /** A tile's level, with the level it would have if its thresholds were loosened by its hysteresis: the tile clears only when that is below the level. */
+        public static Reading tile(double level, double relaxed, LocalDate asOf) {
+            return new Reading(Status.OK, level, asOf, "", relaxed);
         }
 
         public static Reading masked(String note) {
@@ -177,7 +186,7 @@ public final class AlertLogic {
             }
             default -> {                                                       // level: a board tile's level (0 none, 1 warn, 2 crit)
                 double need = c.level().equals("crit") ? 2 : 1;
-                yield step(spec, state, at, v >= need, v < need, v, null, Double.NaN);
+                yield step(spec, state, at, v >= need, now.relaxed() < need, v, null, Double.NaN);
             }
         };
     }

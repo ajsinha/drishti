@@ -57,7 +57,7 @@ public final class BoardParser {
     private static final Set<String> RESERVED_TOP = Set.of("notifications", "subscriptions");
     private static final Set<String> PAGE = Set.of("id", "title", "tiles");
     private static final Set<String> TILE = Set.of("id", "report", "page", "visual", "title", "at", "alert");
-    private static final Set<String> ALERT = Set.of("on", "warn", "crit", "notify");
+    private static final Set<String> ALERT = Set.of("on", "warn", "crit", "notify", "hysteresis");
     private static final Set<String> NOTIFY = Set.of("level", "channels", "cooldown", "trigger", "severity");
     private static final Set<String> CHANNELS = Set.of("inbox", "email", "chat");
     private static final Set<String> OPS = Set.of("lt", "le", "gt", "ge", "eq", "ne");
@@ -214,7 +214,7 @@ public final class BoardParser {
             if (RESERVED_TOP.contains(k)) {
                 out.add(new Problem("error", NOT_BUILT, path + "." + k, "'" + k + "' is reserved and not built: a tile notifies with `notify:`"));
             } else if (!ALERT.contains(k)) {
-                out.add(new Problem("warning", INVALID, path + "." + k, "unknown alert key '" + k + "' is ignored (on, warn, crit)"));
+                out.add(new Problem("warning", INVALID, path + "." + k, "unknown alert key '" + k + "' is ignored (on, warn, crit, hysteresis, notify)"));
             }
         });
         Board.Rule warn = rule(n.path("warn"), path + ".warn", out);
@@ -222,6 +222,14 @@ public final class BoardParser {
         if (warn == null && crit == null) {
             out.add(error(path, "an alert needs a warn or a crit threshold"));
             return null;
+        }
+        double hysteresis = 0;
+        if (n.has("hysteresis") && !n.get("hysteresis").isNull()) {
+            if (n.get("hysteresis").isNumber() && n.get("hysteresis").asDouble() >= 0 && Double.isFinite(n.get("hysteresis").asDouble())) {
+                hysteresis = n.get("hysteresis").asDouble();
+            } else {
+                out.add(error(path + ".hysteresis", "hysteresis is a number of 0 or more: how far back inside a threshold the value must be before the tile drops a level"));
+            }
         }
         Board.Notify notify = null;
         if (n.has("notify") && !n.get("notify").isNull() && !(n.get("notify").isBoolean() && !n.get("notify").asBoolean())) {
@@ -234,7 +242,7 @@ public final class BoardParser {
                 out.add(error(path + ".notify", "notify level warn needs a warn threshold on this tile"));
             }
         }
-        return new Board.Alert(text(n, "on", ""), warn, crit, notify);
+        return new Board.Alert(text(n, "on", ""), warn, crit, notify, hysteresis);
     }
 
     /** Reads a {@code notify:} mapping; a key it leaves out comes from {@code base} (the board's defaults), else the built-in default. */

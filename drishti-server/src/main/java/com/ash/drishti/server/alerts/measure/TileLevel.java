@@ -42,12 +42,45 @@ public final class TileLevel {
         return level;
     }
 
+    /**
+     * The level the values would have if every threshold were {@code hysteresis} looser: the highest level a value near an edge could still be held at. A tile
+     * that is red stays red until this drops below red, so a value hovering at the threshold does not flip the colour (same as a measure alert re-arming only
+     * once the value is back inside the limit by its hysteresis). Equals {@link #rank} when the alert has none.
+     */
+    public static double relaxed(Board.Alert alert, List<Double> values) {
+        if (alert == null) {
+            return 0;
+        }
+        double h = alert.hysteresis();
+        double level = 0;
+        for (double v : values) {
+            if (alert.crit() != null && test(alert.crit(), v, h)) {
+                return 2;
+            }
+            if (alert.warn() != null && test(alert.warn(), v, h)) {
+                level = 1;
+            }
+        }
+        return level;
+    }
+
+    /** As {@link #rank}, for a tile that was at {@code previous}: it drops only as far as the relaxed thresholds allow. */
+    public static double rank(Board.Alert alert, List<Double> values, double previous) {
+        double strict = rank(alert, values);
+        return Math.max(strict, Math.min(previous, relaxed(alert, values)));
+    }
+
     static boolean test(Board.Rule r, double v) {
+        return test(r, v, 0);
+    }
+
+    /** The rule with its threshold moved {@code h} the way that makes it easier to meet ({@code lt}/{@code le} up, {@code gt}/{@code ge} down; equality is unchanged). */
+    static boolean test(Board.Rule r, double v, double h) {
         return switch (r.op()) {
-            case "lt" -> v < r.value();
-            case "le" -> v <= r.value();
-            case "gt" -> v > r.value();
-            case "ge" -> v >= r.value();
+            case "lt" -> v < r.value() + h;
+            case "le" -> v <= r.value() + h;
+            case "gt" -> v > r.value() - h;
+            case "ge" -> v >= r.value() - h;
             case "eq" -> v == r.value();
             case "ne" -> v != r.value();
             default -> false;

@@ -40,7 +40,7 @@ layouts:
   phone:
     desk:
       order: [mtm, trades, by-desk, movers]
-      hide: [rolling, losses, latest]
+      hide: [rolling, losses, latest, last-hour]
       span: { by-desk: 5 }
 
 pages:
@@ -89,6 +89,13 @@ pages:
         wells: { columns: [trade.tradeId, trade.updatedAt, MTM] }
         sort: { by: trade.updatedAt, desc: true }
         limit: 8
+
+      - id: last-hour
+        type: line                     # the history of the table (see the dataset): net MTM and losses every 10 s for the last hour, drawn from the server, so it is there when the page opens
+        title: Net MTM and losses, last hour
+        at: { x: 0, y: 12, w: 12, h: 5 }
+        wells: { axis: [history.ts], values: [MTM history, Losses history] }
+        alt: Line chart of net mark to market and of the negative marks, sampled every ten seconds for the last hour
 
   - id: grid
     title: Every trade

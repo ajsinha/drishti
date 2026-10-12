@@ -113,6 +113,7 @@ public final class DatasetParser {
         Dataset.Derived derivedSpec = derived && !composed ? derived(root.path("derived"), out) : null;
         Dataset ds = new Dataset(name, root.path("version").asInt(1), text(root, "title", name), text(root, "description", ""), root.path("sample").asBoolean(false),
                 engine, tables, rels, measures, hierarchies, security, rollups, refresh(root.path("refresh"), "refresh", out), compose, derivedSpec, tests);
+        ds = Histories.expand(ds, out);
         if (!"duckdb".equals(engine)) {
             out.add(error("engine", "only the embedded engine `duckdb` is built; '" + engine + "' is planned (RUPAKA.md section 7.1)"));
         }
@@ -571,8 +572,8 @@ public final class DatasetParser {
             return null;
         }
         n.fieldNames().forEachRemaining(k -> {
-            if (!Set.of("rows", "age").contains(k)) {
-                out.add(new Problem("warning", INVALID, path + ".live." + k, "unknown live key '" + k + "' is ignored (rows, age)"));
+            if (!Set.of("rows", "age", "history").contains(k)) {
+                out.add(new Problem("warning", INVALID, path + ".live." + k, "unknown live key '" + k + "' is ignored (rows, age, history)"));
             }
         });
         Integer rows = null;
@@ -590,7 +591,51 @@ public final class DatasetParser {
                 out.add(error(path + ".live.age", "age is a time such as 90s, 15m, 2h, 1d or PT15M: rows that have not changed for that long are dropped"));
             }
         }
-        return new Dataset.Live(rows, age);
+        return new Dataset.Live(rows, age, history(path + ".live.history", n.path("history"), out));
+    }
+
+    /** {@code history: { table: history, every: 10s, keep: 360, by: [symbol], measures: [Volume] }} of a live table. */
+    private static Dataset.History history(String path, JsonNode n, List<Problem> out) {
+        if (n.isMissingNode() || n.isNull()) {
+            return null;
+        }
+        if (!n.isObject()) {
+            out.add(new Problem("error", LIVE_TABLE, path, "history is a mapping: { every: 10s, keep: 360, by: [symbol], measures: [Volume] }"));
+            return null;
+        }
+        n.fieldNames().forEachRemaining(k -> {
+            if (!Set.of("table", "every", "keep", "by", "measures").contains(k)) {
+                out.add(new Problem("warning", INVALID, path + "." + k, "unknown history key '" + k + "' is ignored (table, every, keep, by, measures)"));
+            }
+        });
+        String table = text(n, "table", "history");
+        if (!IDENT.matcher(table).matches()) {
+            out.add(new Problem("error", LIVE_TABLE, path + ".table", "'" + table + "' is not a table name (letters, digits, underscore; not starting with a digit)"));
+        }
+        java.time.Duration every = n.has("every") ? span(n.get("every").asText()) : java.time.Duration.ofSeconds(10);
+        if (every == null || every.compareTo(Histories.MIN_EVERY) < 0) {
+            out.add(new Problem("error", LIVE_TABLE, path + ".every", "every is the time between samples, 1s or more: 10s, 1m, 5m"));
+            every = java.time.Duration.ofSeconds(10);
+        }
+        int keep = 360;
+        if (n.has("keep")) {
+            if (n.get("keep").canConvertToInt() && n.get("keep").asInt() >= 2 && n.get("keep").asInt() <= 100000) {
+                keep = n.get("keep").asInt();
+            } else {
+                out.add(new Problem("error", LIVE_TABLE, path + ".keep", "keep is how many samples are kept, 2 to 100000"));
+            }
+        }
+        return new Dataset.History(table, every, keep, strings(n.path("by")), strings(n.path("measures")));
+    }
+
+    private static List<String> strings(JsonNode n) {
+        List<String> out = new ArrayList<>();
+        if (n.isArray()) {
+            n.forEach(x -> out.add(x.asText()));
+        } else if (n.isTextual()) {
+            out.add(n.asText());
+        }
+        return out;
     }
 
     /** {@code 90s}, {@code 15m}, {@code 2h}, {@code 1d} or an ISO-8601 duration; null when it is none of those. */

@@ -112,6 +112,7 @@ public final class LiveTable implements AutoCloseable {
     private volatile LocalDate fallbackDate = LocalDate.now(ZoneOffset.UTC);
 
     private final List<LiveAggregate> aggregates;
+    private volatile LiveHistory history;
 
     LiveTable(String sqlName, Dataset.Table def, AnalyticEngine engine, BiLiveProperties props, Clock clock) {
         this(sqlName, def, engine, props, clock, List.of());
@@ -153,6 +154,20 @@ public final class LiveTable implements AutoCloseable {
         sql.append(", \"updateSeq\" BIGINT, \"updatedAt\" TIMESTAMP)");
         engine.execute(sql.toString(), List.of());
         aggregates.forEach(a -> a.create(engine));
+    }
+
+    /** The history of this table's aggregates, when its dataset asks for one and the table runs with a sampler. */
+    java.util.Optional<LiveHistory> history() {
+        return java.util.Optional.ofNullable(history);
+    }
+
+    void history(LiveHistory h) {
+        this.history = h;
+    }
+
+    /** A history sample was added: the dataset's data changed, so every open visual asks again. */
+    void historyChanged() {
+        generation.incrementAndGet();
     }
 
     /** The incremental aggregate of the rollup, when this table keeps one. */
@@ -545,6 +560,9 @@ public final class LiveTable implements AutoCloseable {
                 engine.execute("DROP TABLE IF EXISTS " + sqlName, List.of());
                 for (LiveAggregate a : aggregates) {
                     engine.execute("DROP TABLE IF EXISTS " + a.table(), List.of());
+                }
+                if (history != null) {
+                    history.close();
                 }
             } catch (DrishtiException e) {
                 // the engine is shutting down

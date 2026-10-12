@@ -38,6 +38,10 @@ tables:
     mode: live
     live:                       # retention keeps the table bounded: the most rows it holds, and how long a row may go without changing
       rows: 5000
+      history:                  # every 10 s the measures below are worked out over the table and added to a bounded history, the dataset table `history`
+        every: 10s              #   (ts, then one column per measure); the newest 360 samples are kept, an hour. A line of "MTM history" by history.ts is the
+        keep: 360               #   net MTM over the last hour, and it survives a browser refresh. Add `by: [desk]` for one row per desk and sample.
+        measures: [MTM, Losses, Trades]
     columns:
       tradeId:     { type: string, key: true }
       desk:        string

@@ -79,6 +79,10 @@ public record Dataset(String name, int version, String title, String description
 
     public static final Set<String> TYPES = Set.of("string", "integer", "decimal", "boolean", "date", "timestamp");
     public static final Set<String> MODES = Set.of("live", "cached", "direct");
+    /** The mode of the table the engine makes from a live table's history. */
+    public static final String HISTORY = "history";
+    /** The column of a history table: when the sample was taken. */
+    public static final String TS = "ts";
     public static final Set<String> CARDINALITIES = Set.of("many-to-one", "one-to-many", "one-to-one", "many-to-many");
     /** The column every table has: the entity's id. */
     public static final String ID = "id";
@@ -103,12 +107,23 @@ public record Dataset(String name, int version, String title, String description
      * @param schedule cron text, stored (not scheduled: see RUPAKA.md section 20.2)
      * @param columns by column name, in file order
      * @param live for {@code mode: live}: how many rows to keep and for how long (null: the server's defaults)
+     * @param of for a history table ({@code mode: history}): the live table whose measures it samples; else null
      */
     public record Table(String name, String connector, String kind, String each, String mode, boolean onLoad, String schedule, String description, Map<String, Column> columns,
-            Live live) {
+            Live live, String of) {
+
+        public Table(String name, String connector, String kind, String each, String mode, boolean onLoad, String schedule, String description, Map<String, Column> columns,
+                Live live) {
+            this(name, connector, kind, each, mode, onLoad, schedule, description, columns, live, null);
+        }
 
         public Table(String name, String connector, String kind, String each, String mode, boolean onLoad, String schedule, String description, Map<String, Column> columns) {
-            this(name, connector, kind, each, mode, onLoad, schedule, description, columns, null);
+            this(name, connector, kind, each, mode, onLoad, schedule, description, columns, null, null);
+        }
+
+        /** True for the table the engine makes from a live table's {@code history:}: samples of its measures over time (the live table it belongs to is {@code of}). */
+        public boolean isHistory() {
+            return HISTORY.equals(mode);
         }
 
         public boolean isLive() {
@@ -125,7 +140,30 @@ public record Dataset(String name, int version, String title, String description
      * What a live table keeps (RUPAKA.md section 12): at most {@code rows} rows (the oldest updated go first) and none that has not changed for {@code age}.
      * Either may be null: the server's {@code drishti.bi.live.max-rows} and no age limit.
      */
-    public record Live(Integer rows, java.time.Duration age) {}
+    public record Live(Integer rows, java.time.Duration age, History history) {
+
+        public Live(Integer rows, java.time.Duration age) {
+            this(rows, age, null);
+        }
+    }
+
+    /**
+     * A live table's history (docs/guides/LIVE_BI.md, "History"): every {@code every} the listed measures are worked out over the live table, grouped by
+     * {@code by}, and appended to a bounded in-memory table queryable as the dataset table {@code table}; the newest {@code keep} samples are kept.
+     *
+     * @param table the name of the history table in the dataset ({@code history} when not given)
+     * @param every the time between samples
+     * @param keep samples kept (the oldest go first)
+     * @param by columns of the live table the samples are grouped by (none: one row per sample)
+     * @param measures the measures of the dataset that are sampled (they aggregate the live table only; no window or time-intelligence measure)
+     */
+    public record History(String table, java.time.Duration every, int keep, List<String> by, List<String> measures) {
+
+        public History {
+            by = by == null ? List.of() : List.copyOf(by);
+            measures = measures == null ? List.of() : List.copyOf(measures);
+        }
+    }
 
     /**
      * A column.

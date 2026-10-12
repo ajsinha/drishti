@@ -147,20 +147,33 @@
     if (on) { frame.foot.setAttribute('data-stale', why || 'the last update failed'); } else { frame.foot.removeAttribute('data-stale'); }
   };
 
-  /** The value a tile's alert is judged by, and the level it reaches: 'crit', 'warn' or ''. A card or KPI by its first row; any other visual by the worst of its rows. */
-  L.level = function (alert, res) {
+  /**
+   * The value a tile's alert is judged by, and the level it reaches: 'crit', 'warn' or ''. A card or KPI by its first row; any other visual by the worst of its rows.
+   * With a hysteresis (how far back inside a threshold the value must be before the tile drops a level) and the level the tile had before, a value hovering at the
+   * edge keeps the level it had: the level drops only as far as the thresholds loosened by the hysteresis allow. The same rule as TileLevel.java.
+   */
+  const RANK = { '': 0, warn: 1, crit: 2 };
+  const NAME = ['', 'warn', 'crit'];
+  L.level = function (alert, res, previous) {
     if (!alert || !res || !res.rows || !res.columns) { return ''; }
     const cols = res.columns.map((c) => c.name);
     let ci = alert.on ? cols.indexOf(alert.on) : -1;
     if (ci < 0) { ci = res.columns.findIndex((c) => c.type === 'decimal' || c.type === 'integer'); }
     if (ci < 0) { return ''; }
-    const test = (r, v) => ({ lt: v < r.value, le: v <= r.value, gt: v > r.value, ge: v >= r.value, eq: v === r.value, ne: v !== r.value }[r.op]);
-    let level = '';
-    res.rows.forEach((row) => {
-      const v = row[ci];
-      if (typeof v !== 'number') { return; }
-      if (alert.crit && test(alert.crit, v)) { level = 'crit'; } else if (alert.warn && level !== 'crit' && test(alert.warn, v)) { level = 'warn'; }
-    });
-    return level;
+    const test = (r, v, hy) => ({ lt: v < r.value + hy, le: v <= r.value + hy, gt: v > r.value - hy, ge: v >= r.value - hy, eq: v === r.value, ne: v !== r.value }[r.op]);
+    const rank = (hy) => {
+      let level = 0;
+      for (const row of res.rows) {
+        const v = row[ci];
+        if (typeof v !== 'number') { continue; }
+        if (alert.crit && test(alert.crit, v, hy)) { return 2; }
+        if (alert.warn && test(alert.warn, v, hy)) { level = 1; }
+      }
+      return level;
+    };
+    const strict = rank(0);
+    const hy = Number(alert.hysteresis) || 0;
+    if (!hy || !previous) { return NAME[strict]; }
+    return NAME[Math.max(strict, Math.min(RANK[previous] || 0, rank(hy)))];
   };
 })();

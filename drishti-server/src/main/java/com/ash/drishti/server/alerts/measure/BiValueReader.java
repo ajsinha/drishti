@@ -158,7 +158,7 @@ public final class BiValueReader {
         if (values.isEmpty()) {
             return Reading.noData("the tile has no rows");
         }
-        return Reading.ok(TileLevel.rank(alert, values), asOf(answer));
+        return Reading.tile(TileLevel.rank(alert, values), TileLevel.relaxed(alert, values), asOf(answer));
     }
 
     @SuppressWarnings("unchecked")

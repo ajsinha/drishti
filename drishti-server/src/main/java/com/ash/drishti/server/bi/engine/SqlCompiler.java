@@ -305,6 +305,11 @@ public final class SqlCompiler {
         return out;
     }
 
+    /** True when the measure reads a column that is masked: the measure then reads as masked too. */
+    public boolean measureMasked(String name, Masks masks) {
+        return columnsOfMeasure(name).stream().anyMatch(c -> c.column() != null && masks.masked(c.table(), c.column()));
+    }
+
     private List<Resolver.ColRef> columnsOfMeasure(String name) {
         List<Resolver.ColRef> out = new ArrayList<>();
         collect(new Node.MeasureRef(name), out, new LinkedHashSet<>());

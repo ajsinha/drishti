@@ -72,12 +72,17 @@ public record Board(String name, int version, String title, String description, 
 
     /**
      * The colour a tile takes when its value crosses a threshold: {@code crit} first, then {@code warn}. {@code on} names the measure (or column) whose values
-     * are compared; empty means the first number the tile shows.
+     * are compared; empty means the first number the tile shows. {@code hysteresis} is how far back inside a threshold the value must be before the tile drops
+     * to a lower level (the same idea as a measure alert's hysteresis): a value hovering at the edge does not flip the colour; 0 is none.
      */
-    public record Alert(String on, Rule warn, Rule crit, Notify tell) {
+    public record Alert(String on, Rule warn, Rule crit, Notify tell, double hysteresis) {
+
+        public Alert(String on, Rule warn, Rule crit, Notify tell) {
+            this(on, warn, crit, tell, 0);
+        }
 
         public Alert(String on, Rule warn, Rule crit) {
-            this(on, warn, crit, null);
+            this(on, warn, crit, null, 0);
         }
 
         public Map<String, Object> toMap() {
@@ -90,6 +95,9 @@ public record Board(String name, int version, String title, String description, 
             }
             if (crit != null) {
                 m.put("crit", crit.toMap());
+            }
+            if (hysteresis > 0) {
+                m.put("hysteresis", hysteresis);
             }
             if (tell != null) {
                 m.put("notify", tell.toMap());

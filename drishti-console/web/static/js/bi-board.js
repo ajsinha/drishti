@@ -59,7 +59,8 @@
 
   /** Colours the tile by its alert rule and says it in words in the line under it (not by colour alone). */
   function alertTile(entry) {
-    const level = entry.tile.alert ? B.live.level(entry.tile.alert, entry.res) : '';
+    const level = entry.tile.alert ? B.live.level(entry.tile.alert, entry.res, entry.level || '') : '';
+    entry.level = level;                                 // remembered, so a value hovering at a threshold does not flip the colour when the alert has a hysteresis
     entry.frame.el.classList.toggle('bi-tile-warn', level === 'warn');
     entry.frame.el.classList.toggle('bi-tile-crit', level === 'crit');
     entry.frame.el.setAttribute('data-alert', level);
