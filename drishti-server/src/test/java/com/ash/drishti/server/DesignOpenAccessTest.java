@@ -166,10 +166,8 @@ class DesignOpenAccessTest {
             assertThat(p.path("data").isNull() || p.path("data").isMissingNode()).as(id).isTrue();
             assertThat(p.path("empty").asBoolean()).as(id).isTrue();
         }
-        var shown = view.deepCopy();                     // the view minus its timings: a millisecond figure such as 3.93 is not a curve value
-        if (shown instanceof com.fasterxml.jackson.databind.node.ObjectNode o) {
-            o.remove("timings");
-        }
+        var shown = view.deepCopy();                     // the view minus every timing: a millisecond figure such as 3.93 is not a curve value
+        dropTimings(shown);
         assertThat(shown.toString()).doesNotContain("3.93", "3.54", "USD-SOFR");
     }
 
@@ -216,5 +214,19 @@ class DesignOpenAccessTest {
                 .contentType(MediaType.APPLICATION_JSON).content(preview(missing, "sample", "{\"nettingSetId\":\"X-1\",\"trades\":2}")))
                 .andExpect(status().isOk()));
         assertThat(view.toString()).contains("NOPE-1 not found").doesNotContain("waiting for");
+    }
+
+    /** Removes, at any depth, the timing fields of a view ({@code timings} and any field ending in {@code Ms} or {@code Millis}). */
+    private static void dropTimings(JsonNode node) {
+        if (node instanceof com.fasterxml.jackson.databind.node.ObjectNode o) {
+            java.util.List<String> drop = new java.util.ArrayList<>();
+            o.fieldNames().forEachRemaining(f -> {
+                if (f.equals("timings") || f.endsWith("Ms") || f.endsWith("Millis") || f.equals("ms")) {
+                    drop.add(f);
+                }
+            });
+            o.remove(drop);
+        }
+        node.forEach(DesignOpenAccessTest::dropTimings);
     }
 }
