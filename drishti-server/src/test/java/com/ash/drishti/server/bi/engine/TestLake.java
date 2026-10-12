@@ -204,6 +204,32 @@ class TestLake implements SourceGateway {
         }
     };
 
+    /** A second fact table, undated: seven limits over the three desks (four, two and one), so a join to the trades would repeat rows. */
+    static final String[] LIMIT_DESKS = {"DESK-A", "DESK-A", "DESK-A", "DESK-A", "DESK-B", "DESK-B", "DESK-C"};
+    static final double[] LIMIT_AMOUNTS = {10, 20, 30, 40, 5, 6, 7};
+
+    final SourcePlugin limitLake = new Base() {
+        @Override
+        public PluginManifest manifest() {
+            return new PluginManifest("limit-lake", "1", Set.of("limit"), new SourceCapabilities(false, false, false, false));
+        }
+
+        @Override
+        public Set<String> columnar(String kind) {
+            return Set.of("desk", "amount");
+        }
+
+        @Override
+        public Optional<ColumnSet> columns(String kind, Collection<String> paths, AsOf asOf) {
+            return Optional.of(new ColumnSet(new String[] {"L1", "L2", "L3", "L4", "L5", "L6", "L7"}, Map.of("amount", LIMIT_AMOUNTS), Map.of("desk", LIMIT_DESKS), null));
+        }
+
+        @Override
+        public Optional<ArrowScan> scan(ScanRequest request) {
+            return ColumnScans.over(this, request);
+        }
+    };
+
     // ---- the gateway -------------------------------------------------------------------------------------------------
 
     @Override
@@ -211,6 +237,7 @@ class TestLake implements SourceGateway {
         return switch (connector.isBlank() ? kind : connector) {
             case "trading-lake", "trade" -> Optional.of(tradingLake);
             case "desk-lake", "desk" -> Optional.of(deskLake);
+            case "limit-lake", "limit" -> Optional.of(limitLake);
             default -> Optional.empty();
         };
     }

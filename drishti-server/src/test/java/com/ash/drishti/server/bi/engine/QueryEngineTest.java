@@ -181,12 +181,15 @@ class QueryEngineTest {
     }
 
     @Test
-    void measuresFromTwoUnconnectedTablesAreRefused() {
+    void measuresFromTwoUnconnectedTablesAreAskedSeparatelyAndShownSideBySide() {
         DatasetParser.Result two = DatasetParser.parse(TestLake.yaml().replace("relationships:", "  curves:\n    source: { connector: desk-lake, kind: desk }\n    columns: { point: string }\nrelationships:")
                 .replace("  Names:", "  RegionCount: { expr: \"count(curves)\" }\n  Names:"));
         assertThat(two.ok()).as(two.firstError()).isTrue();
         QueryService.Loaded d2 = new QueryService.Loaded("x", "x", two.dataset(), "h");
-        assertThatThrownBy(() -> service.query(d2, q("{\"measures\":[\"Trades\",\"RegionCount\"]}"), risk(), false))
+        QueryService.Result both = service.query(d2, q("{\"measures\":[\"Trades\",\"RegionCount\"]}"), risk(), false);
+        assertThat(both.rows()).isEqualTo(1);                                                    // two totals side by side: neither table is repeated by the other
+        assertThat(((Number) both.columns().get(0).values()[0]).longValue()).isEqualTo(lake.trades.get(TestLake.DAY2).size());
+        assertThatThrownBy(() -> service.query(d2, q("{\"fields\":[\"trades.desk\"],\"measures\":[\"Trades\",\"RegionCount\"]}"), risk(), false))
                 .isInstanceOf(DrishtiException.class).hasMessageContaining("no many-to-one path");
     }
 

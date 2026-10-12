@@ -69,7 +69,7 @@ public final class SqlCompiler {
 
     /** The query resolved against the model. */
     public record Plan(Dataset dataset, QueryRequest query, List<Field> fields, List<Use> measures, List<FilterUse> filters, List<Node> rules, boolean denied,
-            Set<String> tables, String base, List<Join> joins) {
+            Set<String> tables, String base, List<Join> joins, List<Plan> parts) {
 
         /** The distinct columns of {@code table} the query reads (dimensions, filters, rules, measures), for rollup routing. */
         public Set<String> columnsOf(String table) {
@@ -83,6 +83,11 @@ public final class SqlCompiler {
             if (r != null && r.table().equals(table) && r.column() != null) {
                 into.add(r.column());
             }
+        }
+
+        /** True for a query whose measures aggregate unrelated fact tables: each fact is a part, aggregated alone at the shared grain, and the parts are joined. */
+        public boolean multiFact() {
+            return parts != null;
         }
 
         public List<String> measureNames() {
@@ -135,7 +140,12 @@ public final class SqlCompiler {
         List<Use> measures = new ArrayList<>();
         Set<String> tables = new LinkedHashSet<>();
         Set<String> aggTables = new LinkedHashSet<>();
-        fields.forEach(f -> tables.add(f.ref().table()));
+        Map<String, Set<String>> measureTables = new LinkedHashMap<>();
+        Set<String> dimTables = new LinkedHashSet<>();
+        fields.forEach(f -> {
+            tables.add(f.ref().table());
+            dimTables.add(f.ref().table());
+        });
         for (String name : q.measures()) {
             Dataset.Measure m = ds.measures().get(name);
             if (m == null) {
@@ -147,6 +157,7 @@ public final class SqlCompiler {
             SqlEmitter probe = new SqlEmitter(ds, dialect, "", null, reader.user()).planning();
             probe.emit(new Node.MeasureRef(name), false);
             aggTables.addAll(probe.tables());
+            measureTables.put(name, new LinkedHashSet<>(probe.tables()));
             boolean masked = columnsOfMeasure(name).stream().anyMatch(c -> c.column() != null && reader.masks().masked(c.table(), c.column()));
             measures.add(new Use(name, new Node.MeasureRef(name), masked));
         }
@@ -159,6 +170,7 @@ public final class SqlCompiler {
                 SqlEmitter probe = new SqlEmitter(ds, dialect, "", null, reader.user()).planning();
                 probe.emit(new Node.MeasureRef(f.field()), false);
                 aggTables.addAll(probe.tables());
+                measureTables.put(f.field(), new LinkedHashSet<>(probe.tables()));
                 tables.addAll(probe.tables());
                 continue;
             }
@@ -170,6 +182,7 @@ public final class SqlCompiler {
                 throw new DrishtiException(ErrorCode.QUERY_MASKED, "'" + f.field() + "' is masked for you: it cannot be filtered on");
             }
             tables.add(ref.table());
+            dimTables.add(ref.table());
             filters.add(new FilterUse(f, ref, null));
         }
         List<Node> rules = new ArrayList<>();
@@ -182,6 +195,7 @@ public final class SqlCompiler {
                     Node.walk(n, x -> {
                         if (x instanceof Node.Ref ref) {
                             tables.add(resolver.resolve(ref.parts(), null).table());
+                            dimTables.add(resolver.resolve(ref.parts(), null).table());
                         }
                     });
                 }
@@ -191,7 +205,90 @@ public final class SqlCompiler {
         if (tables.isEmpty()) {
             throw invalid("the query names no table");
         }
-        return join(new Plan(ds, q, fields, measures, filters, rules, denied, tables, null, List.of()), aggTables);
+        Plan whole = new Plan(ds, q, fields, measures, filters, rules, denied, tables, null, List.of(), null);
+        try {
+            return join(whole, aggTables);
+        } catch (DrishtiException e) {
+            if (e.errorCode() == ErrorCode.QUERY_INVALID && measureTables.size() > 1) {
+                Plan several = factParts(whole, measureTables, dimTables, reader);
+                if (several != null) {
+                    return several;
+                }
+            }
+            throw e;
+        }
+    }
+
+    // ---- several fact tables ------------------------------------------------------------------------------------------
+
+    /**
+     * Measures that aggregate unrelated fact tables (trades and a table of limits that share only the desk): the measures are grouped by the fact they
+     * aggregate, each group becomes a part that is aggregated alone at the query's grain (so no fact is repeated by another's rows), and
+     * {@link #compileMulti} joins the parts on the grain. Returns null when the measures cannot be grouped that way, so the caller reports the original problem.
+     */
+    private Plan factParts(Plan whole, Map<String, Set<String>> measureTables, Set<String> dimTables, Reader reader) {
+        for (String name : measureTables.keySet()) {
+            if (usesWindow(name, new LinkedHashSet<>())) {
+                throw invalid("'" + name + "' is a window measure (a running total, rank or lag): it is worked out inside one fact table, so it cannot be asked together with measures of another fact table in one query");
+            }
+        }
+        List<Edge> edges = edges();
+        List<Set<String>> groupTables = new ArrayList<>();
+        List<List<String>> groups = new ArrayList<>();
+        for (Map.Entry<String, Set<String>> e : measureTables.entrySet()) {
+            boolean placed = false;
+            for (int i = 0; i < groups.size() && !placed; i++) {
+                Set<String> merged = union(groupTables.get(i), e.getValue());
+                if (partBase(merged, dimTables, edges) != null) {
+                    groupTables.set(i, merged);
+                    groups.get(i).add(e.getKey());
+                    placed = true;
+                }
+            }
+            if (!placed) {
+                if (partBase(e.getValue(), dimTables, edges) == null) {
+                    return null;
+                }
+                groupTables.add(new LinkedHashSet<>(e.getValue()));
+                groups.add(new ArrayList<>(List.of(e.getKey())));
+            }
+        }
+        if (groups.size() < 2) {
+            return null;
+        }
+        List<Plan> parts = new ArrayList<>();
+        Set<String> all = new LinkedHashSet<>();
+        QueryRequest q = whole.query();
+        List<FilterUse> dims = whole.filters().stream().filter(f -> f.measure() == null).toList();
+        for (int i = 0; i < groups.size(); i++) {
+            String base = partBase(groupTables.get(i), dimTables, edges);
+            List<Join> joins = tree(base, union(groupTables.get(i), dimTables), edges, true);
+            List<Use> uses = new ArrayList<>();
+            for (String name : groups.get(i)) {
+                Use u = whole.measures().stream().filter(x -> x.name().equals(name)).findFirst().orElse(null);
+                uses.add(u != null ? u : new Use(name, new Node.MeasureRef(name), columnsOfMeasure(name).stream().anyMatch(c -> c.column() != null && reader.masks().masked(c.table(), c.column()))));
+            }
+            QueryRequest pq = new QueryRequest(q.fields(), groups.get(i), dims.stream().map(FilterUse::filter).toList(), q.from(), q.to(), List.of(), null, q.layer());
+            parts.add(new Plan(ds, pq, whole.fields(), uses, dims, whole.rules(), whole.denied(), allOf(base, joins), base, joins, null));
+            all.addAll(allOf(base, joins));
+        }
+        return new Plan(ds, q, whole.fields(), whole.measures(), whole.filters(), whole.rules(), whole.denied(), all, parts.get(0).base(), List.of(), parts);
+    }
+
+    private static Set<String> union(Set<String> a, Set<String> b) {
+        Set<String> out = new LinkedHashSet<>(a);
+        out.addAll(b);
+        return out;
+    }
+
+    /** The table one part aggregates from: the first fact that reaches the other facts of the part and every dimension of the query many-to-one; null if none does. */
+    private String partBase(Set<String> facts, Set<String> dims, List<Edge> edges) {
+        for (String base : facts) {
+            if (tree(base, union(facts, dims), edges, true) != null) {
+                return base;
+            }
+        }
+        return null;
     }
 
     private List<Resolver.ColRef> columnsOfMeasure(String name) {
@@ -255,14 +352,14 @@ public final class SqlCompiler {
         for (String base : candidates) {
             List<Join> joins = tree(base, tables, edges, true);
             if (joins != null) {
-                return new Plan(p.dataset(), p.query(), p.fields(), p.measures(), p.filters(), p.rules(), p.denied(), allOf(base, joins), base, joins);
+                return new Plan(p.dataset(), p.query(), p.fields(), p.measures(), p.filters(), p.rules(), p.denied(), allOf(base, joins), base, joins, null);
             }
         }
         if (!measures) {
             String base = tables.iterator().next();
             List<Join> joins = tree(base, tables, edges, false);
             if (joins != null) {
-                return new Plan(p.dataset(), p.query(), p.fields(), p.measures(), p.filters(), p.rules(), p.denied(), allOf(base, joins), base, joins);
+                return new Plan(p.dataset(), p.query(), p.fields(), p.measures(), p.filters(), p.rules(), p.denied(), allOf(base, joins), base, joins, null);
             }
         }
         Set<String> ruleTables = new LinkedHashSet<>();
@@ -358,6 +455,9 @@ public final class SqlCompiler {
 
     /** As {@link #compile(Plan, Reader, Map, int, Map)}, with the as-of date and calendar the time-intelligence measures are worked out from. */
     public Compiled compile(Plan p, Reader reader, Map<String, Source> sources, int rowCap, Map<String, String> components, TimeWindows.Context time) {
+        if (p.multiFact()) {
+            return compileMulti(p, reader, sources, rowCap, time);
+        }
         QueryRequest q = p.query();
         SqlEmitter select = new SqlEmitter(ds, dialect, p.base(), components, reader.user()).time(time);
         SqlEmitter where = new SqlEmitter(ds, dialect, p.base(), null, reader.user());
@@ -467,6 +567,105 @@ public final class SqlCompiler {
         return new Compiled(sql.toString(), params, outs, p.tables(), p.base(), notes);
     }
 
+    /**
+     * The several-facts query: every part is the ordinary single-fact SELECT (its own row rules, filters and masks), aggregated at the query's fields; the parts are
+     * full-outer-joined on those fields (null equals null, so a group one fact lacks still shows with the other's figures), the measures are picked from their part,
+     * and the measure filters, sort and limit are applied to the joined rows.
+     */
+    private Compiled compileMulti(Plan p, Reader reader, Map<String, Source> sources, int rowCap, TimeWindows.Context time) {
+        List<Compiled> cs = new ArrayList<>();
+        for (Plan part : p.parts()) {
+            cs.add(compile(part, reader, sources, Integer.MAX_VALUE, null, time));
+        }
+        Map<String, Integer> holder = new LinkedHashMap<>();
+        Map<String, Out> outOf = new LinkedHashMap<>();
+        for (int i = 0; i < cs.size(); i++) {
+            for (Out o : cs.get(i).columns()) {
+                if (o.measure() && holder.putIfAbsent(o.name(), i) == null) {
+                    outOf.put(o.name(), o);
+                }
+            }
+        }
+        List<Object> params = new ArrayList<>();
+        StringBuilder from = new StringBuilder();
+        List<Out> outs = new ArrayList<>();
+        for (int i = 0; i < cs.size(); i++) {
+            if (i > 0) {
+                List<String> on = new ArrayList<>();
+                for (Field f : p.fields()) {
+                    List<String> left = new ArrayList<>();
+                    for (int j = 0; j < i; j++) {
+                        left.add(alias(j, f.text()));
+                    }
+                    on.add((left.size() == 1 ? left.get(0) : "coalesce(" + String.join(", ", left) + ")") + " IS NOT DISTINCT FROM " + alias(i, f.text()));
+                }
+                from.append(" FULL OUTER JOIN (").append(cs.get(i).sql()).append(") AS ").append(Dialect.quote("p" + i)).append(" ON ")
+                        .append(on.isEmpty() ? "1 = 1" : String.join(" AND ", on));
+            } else {
+                from.append("(").append(cs.get(0).sql()).append(") AS ").append(Dialect.quote("p0"));
+            }
+            params.addAll(cs.get(i).params());
+        }
+        List<String> inner = new ArrayList<>();
+        List<String> names = new ArrayList<>();
+        for (Field f : p.fields()) {
+            List<String> all = new ArrayList<>();
+            for (int j = 0; j < cs.size(); j++) {
+                all.add(alias(j, f.text()));
+            }
+            inner.add("coalesce(" + String.join(", ", all) + ") AS " + Dialect.quote(f.text()));
+            names.add(f.text());
+            outs.add(cs.get(0).columns().stream().filter(o -> !o.measure() && o.name().equals(f.text())).findFirst().orElseThrow());
+        }
+        Set<String> wanted = new LinkedHashSet<>();
+        for (Use m : p.measures()) {
+            wanted.add(m.name());
+            inner.add(alias(holder.get(m.name()), m.name()) + " AS " + Dialect.quote(m.name()));
+            names.add(m.name());
+            outs.add(outOf.get(m.name()));
+        }
+        List<String> preds = new ArrayList<>();
+        for (FilterUse f : p.filters()) {
+            if (f.measure() == null) {
+                continue;
+            }
+            String name = f.filter().field();
+            if (wanted.add(name)) {
+                inner.add(alias(holder.get(name), name) + " AS " + Dialect.quote(name));
+            }
+            preds.add(measureCompare(Dialect.quote(name), f.filter(), params));
+        }
+        List<String> order = new ArrayList<>();
+        for (QueryRequest.Sort s : p.query().orderBy()) {
+            Out o = outs.stream().filter(x -> x.name().equals(s.by())).findFirst().orElseThrow(
+                    () -> invalid("cannot sort by '" + s.by() + "': it is not one of the query's fields or measures"));
+            if (o.masked()) {
+                throw new DrishtiException(ErrorCode.QUERY_MASKED, "'" + s.by() + "' is masked for you: it cannot be sorted on");
+            }
+            order.add(Dialect.quote(o.name()) + (s.desc() ? " DESC" : " ASC") + " NULLS LAST");
+        }
+        if (order.isEmpty()) {
+            p.fields().stream().filter(f -> !f.masked()).forEach(f -> order.add(Dialect.quote(f.text()) + " ASC"));
+        }
+        StringBuilder sql = new StringBuilder("SELECT ").append(String.join(", ", names.stream().map(Dialect::quote).toList())).append(" FROM (SELECT ")
+                .append(String.join(", ", inner)).append(" FROM ").append(from).append(") AS ").append(Dialect.quote("q"));
+        if (!preds.isEmpty()) {
+            sql.append(" WHERE ").append(String.join(" AND ", preds));
+        }
+        if (!order.isEmpty()) {
+            sql.append(" ORDER BY ").append(String.join(", ", order));
+        }
+        sql.append(" LIMIT ").append(Math.max(1, rowCap));
+        List<String> notes = new ArrayList<>();
+        cs.forEach(c -> notes.addAll(c.notes()));
+        notes.add(p.parts().size() + " fact tables, each aggregated alone at the query's fields and then joined: " + p.tables());
+        return new Compiled(sql.toString(), params, outs, p.tables(), p.base(), notes.stream().distinct().toList());
+    }
+
+    private static String alias(int part, String column) {
+        return Dialect.quote("p" + part) + "." + Dialect.quote(column);
+    }
+
     private String filter(SqlEmitter e, QueryRequest.Filter f, Resolver.ColRef ref) {
         String col = e.column(ref);
         String type = ref.part() != null ? "integer" : resolver.column(ref.table(), ref.column()).type();
@@ -561,7 +760,11 @@ public final class SqlCompiler {
         if (usesWindow(f.field(), new java.util.HashSet<>())) {
             throw invalid("'" + f.field() + "' is a running total, which is worked out along the visual's date field: it cannot be filtered on");
         }
-        String expr = e.emit(new Node.MeasureRef(f.field()), false);
+        return measureCompare(e.emit(new Node.MeasureRef(f.field()), false), f, e.params());
+    }
+
+    /** A measure compared to one number: the comparison text, with the number added to {@code params}. */
+    private String measureCompare(String expr, QueryRequest.Filter f, List<Object> params) {
         List<Object> v = f.values();
         if (v.size() != 1 || !(v.get(0) instanceof Number n)) {
             throw invalid("a filter on a measure compares it to one number");
@@ -575,7 +778,7 @@ public final class SqlCompiler {
             case "ge" -> ">=";
             default -> throw invalid("a filter on a measure uses eq, ne, lt, le, gt or ge");
         };
-        e.params().add(n.doubleValue());
+        params.add(n.doubleValue());
         return "(" + expr + " " + op + " ?)";
     }
 
