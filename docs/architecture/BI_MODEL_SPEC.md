@@ -112,7 +112,7 @@ source:
     pnl:      { model: trading-risk@1, select: { fields: [counterparties.id, counterparties.name], measures: ["P&L 1d", Trades] } }
     exposure: { model: counterparty-exposure@1, select: { fields: [counterparties.id, counterparties.sector], measures: [Exposure (EE peak), Exposure (PFE peak)] } }
   params: { floor: 1.0 }
-  where: server                 # server (sandboxed runner) | browser (Pyodide) | auto (experience rule: same item, either place)
+  where: server                 # always the console backend's sandboxed runner (no browser computation, section 12)
 
 # D. Another model's output: one model query, its answer is the table (replaces simple "composed" sources)
 source:
