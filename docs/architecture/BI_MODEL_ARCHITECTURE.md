@@ -125,10 +125,8 @@ and one model serves live and as-of answers.
 
 Every number is computed by the Java server, the console backend (FastAPI, Python) or the source behind a pack's
 connector; the browser only draws the answer it receives, so every device (an iPhone's Safari, a PC's Chrome) shows the
-same answer. The only browser computation is a person's own **Python console** in Analyse, for just-in-time analytics
-on a masked extract of a model; anything shared from it is promoted and then runs on the console backend. Today's
-browser paths for report items (Python visuals and measures through Pyodide, DuckDB-Wasm slicing) move to the servers
-in W3; Pyodide and DuckDB-Wasm stay for the personal console only. Details: BI_MODEL_SPEC.md section 12.
+same answer. Today's browser paths (Python visuals, measures and Analyse cells through Pyodide, DuckDB-Wasm slicing)
+move to the servers in W3. A personal Python console in the browser is future work, not scheduled. Details: BI_MODEL_SPEC.md section 12.
 
 ## 3. The experience comes first
 
@@ -137,7 +135,7 @@ rules, and judged by power users before it ships:
 
 - **No dead ends:** every page says what to do next; nothing a person can start is impossible to finish in the UI.
 - **No YAML typing needed:** the designers write the YAML; the YAML tab is for experts and review. Python runs on the
-  servers (the console backend's sandbox); the browser runs Python only in a person's own Python console (Analyse).
+  servers (the console backend's sandbox); the browser runs no Python.
 - **Direct manipulation:** drag fields, visuals and tiles; edit titles in place; suggestions from the packs (datasets,
   relationships, measures, links) one click away; undo everywhere.
 - **Never lose work:** drafts kept across refresh and Back; stale saves detected; leaving asks first.
@@ -160,7 +158,7 @@ updates its docs and tutorials with UI, CLI and YAML (never thinner) and migrate
 |---|---|---|
 | **W1 Layers and the query language** | the dataset and model item types; pack-generated datasets (D3); connector and Python datasets; implicit models; the model query language v1 (spec, validator, compiler to the engine) and its API; security at the dataset, model security only tighter | a report, an alert and an Analyse slice ask the same model through the same query language and get identical, per-reader masked answers |
 | **W2 The star, shared models and correctness** | dataset derivation: column subsets, row filters, explicit grain and de-duplication rules, per-row Drishti expressions and Python-derived columns (console backend) with declared meanings, grouping to a coarser grain; every dataset rooted in packs (Check refuses an untraceable root; lineage report → pack kinds); Used-by lists, delete/unpublish impact, Build-like read right, move a local measure to the model; field properties inherited by every report (display name, description, format, folder, hidden, sort-by, data category, default summarisation); perspectives; several facts with shared dimensions in one visual; additivity declarations; the currency guard; relationship suggestions from pack entity references; fan-out refusal at model level; model contracts with semver and breaking-change detection; stable ids | MTM and exposure per counterparty in one visual equal an independent per-grain computation; a breaking model change is refused without a major version |
-| **W3 Time modes, standing queries and the planner** | the MQ planner across source, Java server and console backend (browser draws only; report Python and Wasm slicing moved to the servers; Pyodide kept for the personal Python console); `live`/`snapshot`/`history` datasets; standing queries for every consumer; incremental rules per measure; throttling and back-pressure; as-of time travel; live and snapshot mixed in one model | a board, a report and an alert over one model tick live, answer as of a past date, and match a full recompute |
+| **W3 Time modes, standing queries and the planner** | the MQ planner across source, Java server and console backend (browser draws only; report and Analyse Python and Wasm slicing moved to the servers); `live`/`snapshot`/`history` datasets; standing queries for every consumer; incremental rules per measure; throttling and back-pressure; as-of time travel; live and snapshot mixed in one model | a board, a report and an alert over one model tick live, answer as of a past date, and match a full recompute |
 | **W4 Consumers, designers and migration** | reports, boards, notebooks, alerts, subscriptions, exports and embeds bound to models; the dataset wizard (mostly automatic) and the **model designer** (the Model view becomes the editor of relationships, measures, security, tests); composed and derived datasets migrated into models and Python datasets; report links reduced (D2); every sample and tutorial 10–18 migrated | every shipped sample and tutorial runs on the new layers in the UI alone; nothing needs hand-written YAML |
 | **W5 AI grounding** | `ai:` metadata (synonyms, units, examples, hints); golden questions run as tests; AI ask/explain through the query language only; MCP tools `describe_model`, `query_model`, `explain_change` | golden questions pass on the mock and on one real provider; an AI answer can only use measures the user may see |
 

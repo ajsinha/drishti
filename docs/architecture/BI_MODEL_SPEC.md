@@ -1430,8 +1430,7 @@ knows *how*.
 
 **The servers do the work; the browser draws.** Product-owner decision (2026-10-12): computing in the browser risks
 different answers on different devices (an iPhone's Safari is not a PC's Chrome), so every number is computed on the
-servers, and the browser only renders the answer it is given. The one exception is a person's own **Python console**
-for just-in-time analytics (below).
+servers, and the browser only renders the answer it is given.
 
 | Tier | Runs | Work | Why there |
 |---|---|---|---|
@@ -1452,12 +1451,9 @@ for just-in-time analytics (below).
 5. **`options.explain: true`** returns the plan: which parts ran at which tier, the source queries, rows moved, time per
    part. The designer shows it under each visual.
 
-**The exception: the Python console (Analyse).** A person may open a **Python console in the browser** (Pyodide) for
-just-in-time analytics: it connects to a data model, pulls a **masked extract** through an MQ (`shape: rows`, as that
-person, capped in rows), and lets them explore it with pandas. It is personal and exploratory: nothing in a report,
-board, alert or subscription depends on it, and to share a result the person **promotes** it (a cell becomes a Python
-measure, visual or dataset), after which it runs on the console backend like any other Python item. The same console
-can also run on the console backend for large extracts; the person chooses.
+**Future work, not scheduled: a Python console in the browser.** A person's own Pyodide console connected to a model
+for just-in-time analytics is a possible later addition. Until then there is no browser computation at all: Analyse's
+Python cells run on the console backend's sandbox like every other Python item.
 
 ## 13. Worked example, end to end: two packs, five datasets, one model, one report
 
@@ -1614,7 +1610,7 @@ rule: { above: 0.9 }                    # tell me when Aldershot uses more than 
 ```
 
 A board tile, a subscription of the report, and an Analyse notebook (`model: counterparty-cockpit@1`, `shape: rows`
-extracts) are written the same way; a person can also open the Python console on this model for their own analysis.
+extracts) are written the same way.
 
 ### 13.5 What happens when Rita (risk) and Hana (desk head, rates desk) open the report
 
