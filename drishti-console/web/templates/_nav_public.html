@@ -26,6 +26,7 @@
       <a class="hide-sm" href="/help">Help</a>
       <a class="hide-sm" href="/about">About</a>
       <a href="/t" class="btn-pill btn-accent btn-sm-pill">Terminal</a>
+      {% include "_theme_menu.html" %}{# the theme before the person, as in the top bar #}
       {# Sign-in off: nothing new here (Terminal opens at once, the top bar says so once you are in). #}
       {% if AUTH_ENABLED and not me and request.url.path not in ("/login", "/logout") %}
       <a href="{{ SIGN_IN_URL }}" class="btn-pill btn-ghost btn-sm-pill" data-sign-in>Sign in</a>
@@ -43,7 +44,6 @@
         </div>
       </div>
       {% endif %}
-      {% include "_theme_menu.html" %}
     </div>
   </div>
 </nav>

@@ -135,10 +135,10 @@ body {
 /* The public pages' bar (landing, About, Help signed out) in the same colours as the top bar: the theme's gradient, white text,
    the logo white; the accent button turns white with the accent as its text so it stands out on the band. */
 :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public { background: linear-gradient(90deg, var(--d-nav-from), var(--d-nav-via) 55%, var(--d-nav-to)); backdrop-filter: none; border-bottom-color: transparent; color: #fff; }
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public :is(.brand, .brand > span, .links a, .pub-user-btn, .uname, .theme-btn) { color: #fff; -webkit-text-fill-color: #fff; }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public :is(.brand, .brand > span, .links > a, .pub-user-btn, .uname, .theme-btn) { color: #fff; -webkit-text-fill-color: #fff; }
 :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public .brand-mark, :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public .brand-mark .eye { color: #fff; stroke: #fff; }
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public .links a:hover { color: #fff; opacity: .85; }
-:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public .links a.btn-accent { background: #fff; color: var(--d-accent-strong); -webkit-text-fill-color: var(--d-accent-strong); }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public .links > a:hover { color: #fff; opacity: .85; }
+:root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public .links > a.btn-accent { background: #fff; color: var(--d-accent-strong); -webkit-text-fill-color: var(--d-accent-strong); }
 :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public :is(.btn-ghost, .theme-btn) { border-color: rgba(255, 255, 255, .7); background: transparent; }
 :root:is([data-theme^="crimson"], [data-theme="blue"], [data-theme="green"]) .nav-public .pub-user-btn:hover { background: rgba(255, 255, 255, .16); }
-:root[data-theme="crimson-dark"] .nav-public .links a.btn-accent { color: #6e1120; -webkit-text-fill-color: #6e1120; }   /* the dark theme's accent is light pink: too faint on white */
+:root[data-theme="crimson-dark"] .nav-public .links > a.btn-accent { color: #6e1120; -webkit-text-fill-color: #6e1120; }   /* the dark theme's accent is light pink: too faint on white */
