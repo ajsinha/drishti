@@ -76,4 +76,14 @@ class ArchitectureRulesTest {
             .and().areNotAssignableTo("org.apache.iceberg.util.SerializableSupplier")
             .should().implement(java.io.Serializable.class)
             .allowEmptyShould(true);
+
+    /** Every temporary file or folder of the server is made by TempFiles (one per-process folder, cleaned up), never by the JDK directly. */
+    @ArchTest
+    static final ArchRule temporaryFilesComeFromTempFiles = noClasses()
+            .that().doNotHaveFullyQualifiedName("com.ash.drishti.common.TempFiles")
+            .and().resideOutsideOfPackage("com.ash.drishti.testkit..")
+            .should().callMethodWhere(com.tngtech.archunit.core.domain.JavaCall.Predicates.target(
+                    com.tngtech.archunit.base.DescribedPredicate.describe("is Files.createTempFile, Files.createTempDirectory or File.createTempFile",
+                            (com.tngtech.archunit.core.domain.AccessTarget.CodeUnitCallTarget t) -> (t.getOwner().isEquivalentTo(java.nio.file.Files.class)
+                                    || t.getOwner().isEquivalentTo(java.io.File.class)) && t.getName().startsWith("createTemp"))));
 }

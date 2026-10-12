@@ -52,7 +52,7 @@ public final class CliLauncher {
         }
         java.nio.file.Path scratch;
         try {
-            scratch = java.nio.file.Files.createTempDirectory("sutra-cli");   // the CLI keeps nothing: identity, governance and designs go here
+            scratch = com.ash.drishti.common.TempFiles.createDir("sutra-cli");   // the CLI keeps nothing: identity, governance and designs go here
         } catch (java.io.IOException e) {
             err.println("sutra: cannot make a scratch directory: " + e.getMessage());
             return SutraCli.PROBLEMS;

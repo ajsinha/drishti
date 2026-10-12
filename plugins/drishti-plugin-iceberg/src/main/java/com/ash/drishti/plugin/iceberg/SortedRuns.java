@@ -127,7 +127,7 @@ final class SortedRuns implements Closeable {
         List<Row> sorted = dedupe(t.rows());
         try {
             Files.createDirectories(dir);
-            Path file = Files.createTempFile(dir, name + "-", ".run");
+            Path file = dir.resolve(name + "-" + java.util.UUID.randomUUID() + ".run");   // a run file in the plugin's own state folder (new names only)
             try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(Files.newOutputStream(file), 1 << 20))) {
                 for (Row r : sorted) {
                     writeRow(out, r);

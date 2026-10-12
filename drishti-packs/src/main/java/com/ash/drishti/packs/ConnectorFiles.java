@@ -293,7 +293,7 @@ public final class ConnectorFiles {
         try {
             Files.createDirectories(dir);
             backup(name);
-            Path tmp = Files.createTempFile(dir, "." + name + "-", ".tmp");
+            Path tmp = com.ash.drishti.common.TempFiles.createFile(dir, "." + name + "-", ".tmp");
             Files.writeString(tmp, text, StandardCharsets.UTF_8);
             Files.move(tmp, f, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         } catch (IOException e) {

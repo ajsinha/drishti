@@ -30,7 +30,7 @@ import os
 import shutil
 import signal
 import sys
-import tempfile
+from core import tmpdir
 import time
 from pathlib import Path
 
@@ -194,7 +194,7 @@ class PyRunner:
     async def _spawn(self, m: dict, arrow, group_by, params: dict, *, dest: str | None = None, max_rows: int = 0, extracts: dict[str, bytes] | None = None) -> dict:
         timeout = min(int(m.get("timeout") or 10), self.max_timeout)
         memory = min(int(m.get("memory") or 256), self.max_memory)
-        tmp = tempfile.mkdtemp(prefix="drishti-py-", dir=self.scratch)
+        tmp = tmpdir.mkdtemp("drishti-py-", dir=self.scratch)
         t0 = time.monotonic()
         proc = None
         try:

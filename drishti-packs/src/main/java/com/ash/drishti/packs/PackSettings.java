@@ -125,7 +125,7 @@ public final class PackSettings {
                 return;
             }
             Files.createDirectories(dir);
-            Path tmp = Files.createTempFile(dir, "." + pack + "-", ".tmp");
+            Path tmp = com.ash.drishti.common.TempFiles.createFile(dir, "." + pack + "-", ".tmp");
             Files.writeString(tmp, text, StandardCharsets.UTF_8);
             Files.move(tmp, f, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         } catch (IOException e) {

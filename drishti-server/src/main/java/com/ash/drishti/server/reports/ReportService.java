@@ -218,7 +218,7 @@ public final class ReportService implements AutoCloseable {
         Path dir = Path.of(props.folder()).toAbsolutePath().normalize().resolve(owner).resolve(safe);
         Files.createDirectories(dir);
         Path file = dir.resolve(safe + "-" + day + "-" + ZonedDateTime.now(dates.zone()).format(STAMP) + ".csv");
-        Path tmp = Files.createTempFile(dir, ".", ".part");
+        Path tmp = com.ash.drishti.common.TempFiles.createFile(dir, ".", ".part");
         Files.writeString(tmp, csv, StandardCharsets.UTF_8);
         Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         return file.toString();

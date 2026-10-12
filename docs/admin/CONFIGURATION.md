@@ -208,6 +208,19 @@ The `./data/...` defaults shown in this page are the defaults of this setting.
 **Moved:** the packs folder was `./packs` and is now `./config/packs` (`git mv packs config/packs`). For one release a server
 whose packs folder does not exist, and that finds `./packs`, uses `./packs` and logs a warning; the console does the same with `../packs`.
 
+### Temporary folders: `drishti.tmp-dir` and the console's `tmp_dir`
+
+Both processes keep **one folder of their own** for everything temporary, so a crash or a full `/tmp` can be traced to a process and nothing is left behind.
+
+| Process | Setting | Variable | Default | The folder |
+|---|---|---|---|---|
+| Server | `drishti.tmp-dir` (or `--drishti.tmp-dir=` on the command line) | `DRISHTI_TMP_DIR` | the system temp folder (`/tmp`) | `<base>/drishti-<pid>` |
+| Console | `tmp_dir` | `DRISHTI_CONSOLE_TMP_DIR`, then `DRISHTI_TMP_DIR` | the system temp folder | `<base>/drishti-console-<pid>` |
+
+At start each process (1) removes the folders of **dead** processes it finds under the base (only folders that hold its marker file and whose pid is not running, so another program's `drishti-1234` folder is never touched), (2) makes its own, and (3) points the language's temp setting at it before anything loads: the server sets `java.io.tmpdir` (so DuckDB's spill files, the sqlite, snappy and CatBoost native libraries unpack there), the console sets `tempfile.tempdir` (so uploads, exports, the static-file compression cache, the Python runner's scratch and the new-pack wizard land there). On a clean shutdown the folder is removed. The server reads the setting before Spring starts, so it comes from the command line, the system property or the variable, not from `application.yaml`. Files that are written and then moved over a target (atomic saves) are made in the target's own folder, since a move across disks is not atomic; they are made by the same helper.
+
+Admin, Health shows both folders (path, size and file count). All main code makes temporary files through one helper (`TempFiles` in the server, `core/tmpdir.py` in the console); an architecture test and a console test fail the build if anything else calls `Files.createTempFile`, `Files.createTempDirectory`, `File.createTempFile` or `tempfile.*`.
+
 ### Every placeholder in the server's `application.yaml`
 
 Generated from `drishti-server/src/main/resources/application.yaml` (and checked against it by
@@ -315,6 +328,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_CONSOLE_HOST` | `server.host` | `0.0.0.0` | The address the console listens on (every interface; `127.0.0.1` keeps it to this machine). |
 | `DRISHTI_CONSOLE_PORT` | `server.port` | `17480` | The console's port. |
 | `DRISHTI_BACKEND_URL` | `backend.url` | `http://127.0.0.1:18480` | Where the server is. |
+| `DRISHTI_CONSOLE_TMP_DIR` | `tmp_dir` | blank (then `DRISHTI_TMP_DIR`, then the system temp folder) | Base of the console's temp folder `drishti-console-<pid>`, removed on exit; stale ones are removed at start. |
 | `DRISHTI_PRODUCT` | `ui.product` | `Drishti` | The product name shown in pages. |
 | `DRISHTI_USER` | `ui.user` | `ash` | The acting user while sign-in is off. |
 | `DRISHTI_ABOUT_PREFETCH` | `ui.about_prefetch` | `true` | Fetch *About this page* when a view goes idle, so labels with a glossary entry are underlined at once; costs one explain per page view. |

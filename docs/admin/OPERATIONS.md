@@ -1326,6 +1326,10 @@ A purge is `POST /api/v1/admin/caches/{name}/purge` (or `all`); it is audited as
 Documents of entities nobody is viewing are not held: Kafka messages for them are indexed from their key without
 being parsed, and a later view reads that one message back by its offset.
 
+### 12.1 Temporary folders
+
+The server's temporary files (DuckDB spill, native libraries, atomic-save scratch, Python transform runs) live in `drishti-<pid>` under `DRISHTI_TMP_DIR` (default `/tmp`); the console's (uploads, exports, the static-file cache, Python runner scratch) in `drishti-console-<pid>` under `DRISHTI_CONSOLE_TMP_DIR`. Each is removed on a clean stop, and the next start removes the folders of processes that are no longer running (a `kill -9` or a power cut leaves one). Put the base on a disk with room when DuckDB spills big queries: `DRISHTI_TMP_DIR=/var/tmp/drishti`. Admin, Health lists both with their size, so a growing folder is seen before the disk fills. Details: [CONFIGURATION.md](CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir).
+
 ## 13. Monitoring
 
 ### 13.1 The endpoints

@@ -32,10 +32,25 @@ import org.springframework.context.annotation.Import;
 public class DrishtiApplication {
 
     /**
+     * Makes the per-process temp folder before anything else loads: {@code --drishti.tmp-dir=}, the {@code drishti.tmp-dir} property or {@code DRISHTI_TMP_DIR}
+     * name the base (default the system temp folder); {@code java.io.tmpdir} then points into it so DuckDB, sqlite and the compression libraries unpack there.
+     */
+    static void startTempFolder(String[] args) {
+        String base = null;
+        for (String a : args) {
+            if (a.startsWith("--drishti.tmp-dir=")) {
+                base = a.substring("--drishti.tmp-dir=".length());
+            }
+        }
+        com.ash.drishti.common.TempFiles.start(base);
+    }
+
+    /**
      * Runs the server; when an administrator loads or unloads a pack ({@link Restarter}), closes it and runs it again in
      * the same process, so the new configuration (the pack overlay) is read as at start-up.
      */
     public static void main(String[] args) throws InterruptedException {
+        startTempFolder(args);
         if (com.ash.drishti.server.cli.CliLauncher.isCli(args)) {            // `sutra lint|test|shape|design|preview <path>`: no web server
             System.exit(com.ash.drishti.server.cli.CliLauncher.launch(args, System.out, System.err));
         }

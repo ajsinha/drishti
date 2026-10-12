@@ -30,7 +30,7 @@ import importlib.util
 import pathlib
 import re
 import secrets
-import tempfile
+from core import tmpdir
 import time
 from dataclasses import dataclass, field
 
@@ -331,7 +331,7 @@ class Jobs:
             raise WizardError(409, "the preview is not finished, or some Sutra could not be drafted: fix it and preview again", "DRS-5001")
         PB = load_tool(self.tools_dir, "packbundle")
         plan = job.plan
-        with tempfile.TemporaryDirectory(prefix="drishti-newpack-") as tmp:
+        with tmpdir.temp_dir("drishti-newpack-") as tmp:
             root = pathlib.Path(tmp)
             pack_dir = root / plan.pack["name"]
             built = build.assemble(plan, job.items, job.drafts, pack_dir)

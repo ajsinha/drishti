@@ -88,7 +88,7 @@ public final class ProcessTransformRunner implements TransformRunner {
         Path dir = null;
         try {
             Files.createDirectories(scratch);
-            dir = Files.createTempDirectory(scratch, "run-");
+            dir = com.ash.drishti.common.TempFiles.createDir(scratch, "run-");
             List<String> files = new ArrayList<>();
             for (int i = 0; i < r.frames().size(); i++) {
                 Files.write(dir.resolve("in_" + i + ".arrow"), r.frames().get(i));

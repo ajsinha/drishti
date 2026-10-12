@@ -238,7 +238,7 @@ public final class PackRegistryClient {
         Path staging;
         try {
             Files.createDirectories(installed);
-            staging = Files.createTempDirectory(installed, ".staging-" + name + "-");
+            staging = com.ash.drishti.common.TempFiles.createDir(installed, ".staging-" + name + "-");
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

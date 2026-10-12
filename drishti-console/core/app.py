@@ -192,6 +192,9 @@ class SecurityHeaders(BaseHTTPMiddleware):
 
 
 def create_app(settings: Settings) -> FastAPI:
+    from core import tmpdir
+
+    tmpdir.start(str(settings.get("tmp_dir", "") or ""))      # the console's own temp folder, before anything makes a temporary file
     from core.backend import BackendClient
     from core.auth import Auth
     from core.servers import Servers, Switch

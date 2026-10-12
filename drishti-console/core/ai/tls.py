@@ -213,8 +213,8 @@ def build(settings: dict, url: str, env=os.environ.get) -> TlsResult:
 
 def _load_chain(ctx: ssl.SSLContext, cert_pem: str, key_pem: str) -> None:
     """``load_cert_chain`` wants files: write both to a private temporary folder, load, and remove them at once."""
-    import tempfile
-    with tempfile.TemporaryDirectory(prefix="drishti-tls-") as d:
+    from core import tmpdir
+    with tmpdir.temp_dir("drishti-tls-") as d:
         c, k = Path(d, "c.pem"), Path(d, "k.pem")
         for p, t in ((c, cert_pem), (k, key_pem)):
             fd = os.open(p, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)

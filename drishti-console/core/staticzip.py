@@ -25,7 +25,7 @@ from __future__ import annotations
 import gzip
 import hashlib
 import os
-import tempfile
+from core import tmpdir
 import threading
 from pathlib import Path
 
@@ -49,7 +49,7 @@ class CompressedStatic(StaticFiles):
         self.min_bytes = max(0, int(min_bytes))
         self.brotli_quality = brotli_quality
         self.gzip_level = gzip_level
-        self.cache = Path(cache_dir) if cache_dir else Path(tempfile.gettempdir()) / "drishti-console-static"
+        self.cache = Path(cache_dir) if cache_dir else tmpdir.sub_dir("static")
         self._locks: dict[str, threading.Lock] = {}
         self._guard = threading.Lock()
         self.compressed = 0             # files compressed since start (for tests and Health)

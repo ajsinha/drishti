@@ -421,7 +421,9 @@ async def health(request: Request, partial: int = 0):
         connectors = {c.get("name") for c in items or [] if isinstance(c, dict)}
     except BackendError:
         connectors = set()
-    return render(request, "admin/_health_body.html" if partial else "admin/health.html", h=data, connectors=connectors)
+    from core import tmpdir
+
+    return render(request, "admin/_health_body.html" if partial else "admin/health.html", h=data, connectors=connectors, console_tmp=tmpdir.info())
 
 
 @router.get("/caches")

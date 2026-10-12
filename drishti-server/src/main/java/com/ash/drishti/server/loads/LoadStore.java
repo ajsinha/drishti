@@ -91,7 +91,7 @@ public final class LoadStore {
     private void save(String pack) {
         try {
             Files.createDirectories(dir);
-            Path tmp = Files.createTempFile(dir, "." + pack + "-", ".tmp");
+            Path tmp = com.ash.drishti.common.TempFiles.createFile(dir, "." + pack + "-", ".tmp");
             json.writeValue(tmp.toFile(), doc(pack));
             Files.move(tmp, file(pack), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         } catch (IOException e) {

@@ -150,6 +150,7 @@ public class HealthController {
         out.put("summary", Map.of("sources", sources.size(), "sourcesDown", down, "sourcesDegraded", degraded, "failedToStart", failures.size(),
                 "packs", packRows.size(), "packsWithProblems", packProblems));
         out.put("server", server());
+        out.put("tmp", com.ash.drishti.common.TempFiles.info());
         out.put("sources", sources);
         Map<String, Object> identityPool = PoolReport.identity(identityDataSource.getIfAvailable(), identity.sqlite()).map(com.ash.drishti.api.pool.PoolStats::toMap).orElse(null);
         out.put("identityPool", identityPool);                        // the identity database's pool (SQLite: embedded, exempt)

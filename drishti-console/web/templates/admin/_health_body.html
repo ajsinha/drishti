@@ -30,6 +30,12 @@
     heap {{ h.server.heapUsedMb }}/{{ h.server.heapMaxMb }} MB · {{ h.server.threads }} threads · Java {{ h.server.java }}</span>
 </div>
 
+<div class="hl-sum" data-tmp-folders aria-label="Temporary folders">
+  <span><b>Temp folders</b></span>
+  <span class="mono" data-tmp-server title="The server's folder drishti-&lt;pid&gt; (drishti.tmp-dir / DRISHTI_TMP_DIR): removed on shutdown, stale ones at start">server {{ (h.tmp or {}).get('path') or '—' }} · {{ (((h.tmp or {}).get('bytes') or 0) / 1048576) | round(1) }} MB · {{ (h.tmp or {}).get('files') or 0 }} files</span>
+  <span class="mono" data-tmp-console title="The console's folder drishti-console-&lt;pid&gt; (tmp_dir / DRISHTI_CONSOLE_TMP_DIR)">console {{ console_tmp.path or '—' }} · {{ ((console_tmp.bytes or 0) / 1048576) | round(1) }} MB · {{ console_tmp.files or 0 }} files</span>
+</div>
+
 {% if h.dataLate %}
 <section class="pnl" aria-label="Data that is late"><div class="pnl-b"><ul class="hl-late">{% for d in h.dataLate %}
   <li class="t-neg" data-data-late><i class="bi bi-clock-history" aria-hidden="true"></i> <b>{{ d.line }}</b> <span class="text-muted-d">(expected by {{ d.by }})</span>

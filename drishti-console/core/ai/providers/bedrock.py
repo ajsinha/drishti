@@ -26,7 +26,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
-import tempfile
+from core import tmpdir
 import threading
 
 from core.ai import proxy as proxy_mod
@@ -128,7 +128,7 @@ class BedrockProvider(BaseProvider):
         if t.insecure:
             return False, None
         if self._tmp is None and (t.ca_pem or t.cert_pem):
-            self._tmp = tempfile.mkdtemp(prefix="drishti-tls-")
+            self._tmp = tmpdir.mkdtemp("drishti-tls-")
             os.chmod(self._tmp, 0o700)
             import atexit
             import shutil

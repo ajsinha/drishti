@@ -68,7 +68,7 @@ public final class DuckDbEngine implements AnalyticEngine {
         lock.lock();                              // opening DuckDB does I/O: a ReentrantLock (synchronized pins a virtual thread)
         try {
             if (root == null) {
-                Path tmp = Path.of(props.storeDir()).toAbsolutePath().resolve("duckdb-tmp");
+                Path tmp = com.ash.drishti.common.TempFiles.subDir("duckdb");           // DuckDB spills here: inside the process temp folder, removed on shutdown
                 try {
                     Files.createDirectories(tmp);
                 } catch (java.io.IOException e) {
