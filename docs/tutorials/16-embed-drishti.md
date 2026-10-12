@@ -212,7 +212,7 @@ from the row's **Rotate** button (with a grace period so a rolling restart does 
 
 ## Step 10 · Search and About in the host's page, and the framework samples
 
-Two more elements put more of Drishti in the host's page. **`<drishti-search>`** is a search box across Drishti for the signed-in user (scope `embed:search`: read-only, masked, cut to the kinds the application may show, rate-limited); **`<drishti-about>`** is the *About this page* body of a view (scope `embed:about`). Register the scopes (tick *embed:search* in the form of step 3) and put them on the page:
+Two more elements put more of Drishti in the host's page. **`<drishti-search>`** is a search box across Drishti for the signed-in user (scope `embed:search`: read-only, masked, cut to the kinds the application may show, rate-limited); **`<drishti-about>`** is the *About this page* body of a view (scope `embed:about`). Register the scopes (tick *embed:search* in the form of step 3, as the picture there shows) and put them on the page:
 
 ```html
 <drishti-search placeholder="Find a trade" target="#v"></drishti-search>
@@ -222,7 +222,7 @@ Two more elements put more of Drishti in the host's page. **`<drishti-search>`**
 
 The repository has the same page as **React, Vue and Angular** samples in `docs/guides/examples/embed/`. Fetch the framework builds once (`bash docs/guides/examples/embed/fetch-vendor.sh`; they are not in the repository) and open `http://127.0.0.1:17968/samples/react/` on the host of step 4:
 
-![The React sample: a search box, the view, its About body and the report, in one host page](img/t16/10-react-sample.jpg)
+![The React sample: a search box, the view, its About body and the report, in one host page](img/t16/11-react-sample.jpg)
 
 You should see the search box above the view; type `END-1000` and pick a result, and the view and the About body follow. The page keeps the strict policy of step 7. [ELEMENTS.md](../guides/ELEMENTS.md#react-angular-and-vue-sample-pages).
 

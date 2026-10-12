@@ -266,9 +266,7 @@ Four small things make what leaves Drishti more useful; none changes how you wor
 
 **A webhook and a text.** An administrator defines webhooks and one text gateway (`drishti.notify.*`, [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtinotify--webhooks-and-text-messages-for-alerts-and-subscriptions)); the form then offers them by name, plus a field for your own mobile number:
 
-![The Subscribe form with the summary, a webhook and text messages](img/t11/19-subscribe-channels.jpg)
-
-You should see a webhook per defined name and, once a gateway is set up, *Text each recipient who has given a number a link to it*. A webhook post is signed (`X-Drishti-Signature`) and holds the title and a link, never a figure; so does a text. The alert form has the same two boxes. [DISTRIBUTION.md section 6](../guides/DISTRIBUTION.md#6-webhooks-and-text-messages).
+You should see a webhook per defined name and, once a gateway is set up, *Text each recipient who has given a number a link to it* (the picture is in [DISTRIBUTION.md section 6](../guides/DISTRIBUTION.md#6-webhooks-and-text-messages)). A webhook post is signed (`X-Drishti-Signature`) and holds the title and a link, never a figure; so does a text. The alert form has the same two boxes. [DISTRIBUTION.md section 6](../guides/DISTRIBUTION.md#6-webhooks-and-text-messages).
 
 ## Next steps
 

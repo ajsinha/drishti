@@ -177,7 +177,6 @@ def test_a_subscription_with_a_summary_a_webhook_and_texts(stack, browser, smtp,
     page.locator('input[name="webhooks"][value="ops"]').check()
     page.locator('input[name="sms"]').check()
     page.fill('input[name="phone"]', "+44 20 7946 0000")
-    shot(page, "tutorials/img/t11", "19-subscribe-channels.jpg", type="jpeg", quality=85)
     shot(page, "guides/img/bi-dist", "subscribe-form-channels.png")
     page.click("[data-subscribe-form] button[type=submit]")
     page.wait_for_url("**/reports?msg=**")
@@ -253,9 +252,9 @@ def test_the_excel_export_has_native_charts_and_a_masked_column_is_never_plotted
             shutil.copytree(out, keep, dirs_exist_ok=True, ignore=shutil.ignore_patterns("profile"))
         pages = sorted(out.glob("page-*.png"), key=lambda p: int(p.stem.split("-")[1]))[1:2]       # the sheet after About: the data and its chart beside it, fitted to one page's width
         if pages:
-            target = ROOT / "docs" / "tutorials" / "img" / "t11"
+            target = ROOT / "docs" / "guides" / "img" / "bi-dist"
             target.mkdir(parents=True, exist_ok=True)
-            subprocess.run(["convert", *map(str, pages), "+append", "-trim", "-bordercolor", "white", "-border", "14", "-quality", "85", str(target / "18-excel-chart.jpg")],
+            subprocess.run(["convert", *map(str, pages), "+append", "-trim", "-bordercolor", "white", "-border", "14", "-quality", "85", str(target / "export-excel-chart.jpg")],
                            check=True, timeout=60)
 
 
@@ -276,7 +275,7 @@ def test_the_designer_copilot_suggests_checks_and_adds_on_accept(stack, browser)
     assert cards.nth(1).get_attribute("data-ai-suggestion") == "filter"
     assert "- id: by-desk" in cards.nth(0).inner_text() or "id: by-desk" in cards.nth(0).inner_text()
     page.wait_for_timeout(500)
-    shot(page, "tutorials/img/t15", "09-suggest.jpg", type="jpeg", quality=85)
+    shot(page, "guides/img/bi-ai", "designer-suggest.jpg", type="jpeg", quality=85)
     assert page.evaluate("window.drishtiBi.design.page().visuals.length") == before, "nothing is added until Add is pressed"
     page.locator('[data-ai-add="total-card"]').click()
     assert page.evaluate("window.drishtiBi.design.page().visuals.length") == before + 1
@@ -300,7 +299,7 @@ def test_the_designer_copilot_suggests_checks_and_adds_on_accept(stack, browser)
     expect(page.locator("[data-ai-checks] li").first).to_contain_text("does not have", timeout=30000)
     expect(page.locator("[data-ai-checks] li").first).to_contain_text("To fix")
     page.wait_for_timeout(400)
-    shot(page, "tutorials/img/t15", "10-check-explained.jpg", type="jpeg", quality=85)
+    shot(page, "guides/img/bi-ai", "check-explained.jpg", type="jpeg", quality=85)
     assert page.evaluate("window.__csp") == [] and page.errors == []
     page.context.close()
 
@@ -320,7 +319,7 @@ def test_the_dataset_helper_items_are_accepted_one_by_one_into_the_yaml(stack, b
     yaml_before = page.evaluate("document.querySelector('.CodeMirror') ? document.querySelector('.CodeMirror').CodeMirror.getValue() : document.querySelector('[data-yaml]').value")
     assert "Average notional" not in yaml_before
     page.wait_for_timeout(400)
-    shot(page, "tutorials/img/t15", "11-dataset-helper.jpg", type="jpeg", quality=85)
+    shot(page, "guides/img/bi-ai", "dataset-helper.jpg", type="jpeg", quality=85)
     page.locator('[data-ai-accept="measure:Average notional"]').click()
     page.locator('[data-ai-accept="column:trade.book"]').click()
     got = page.evaluate("document.querySelector('.CodeMirror') ? document.querySelector('.CodeMirror').CodeMirror.getValue() : document.querySelector('[data-yaml]').value")

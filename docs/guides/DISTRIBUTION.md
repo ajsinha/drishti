@@ -43,7 +43,9 @@ in the band and across the page; Excel and CSV hold its table-like panels (table
 of the table, reading the sheet's own cells: the first column is the category (a date column is a date axis), each numeric column after it is a series (at most 6; a pie or donut draws the first), and at most 500
 categories are plotted. A *bar* is horizontal, a *column* vertical; every other chart type (waterfall, treemap, funnel, histogram, ...) is drawn as columns, and a map, a gauge, a table or a card gets the data
 sheet alone. **A column masked for the reader is text (`•••`) in the sheet, so it is never a series**; a visual with nothing numeric left to plot has no chart. The chart is part of the file the reader's own render makes, so
-each person of a subscription gets charts of their own figures.
+each person of a subscription gets charts of their own figures. The chart sheet is set to print on one page's width. This is the sheet of one visual (*MTM by desk*) of the export in LibreOffice:
+
+![A native Excel chart in the export, opened in LibreOffice](img/bi-dist/export-excel-chart.jpg)
 
 **Where.** On a BI report: the *Export* bar under the page tabs (a choice of *this page* or one visual, then PDF, PNG, Excel, CSV). On a view: *Export* in the view's header. Both pass the state of the
 screen: a report's slicers, selected marks, drill path, carried values and business date; a view's control values and column filters (`ctl.*`, `f.*`) and its business date.

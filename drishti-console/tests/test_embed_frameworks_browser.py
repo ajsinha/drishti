@@ -122,7 +122,7 @@ def browser(stack):
 def shot(page, name):
     """The documentation picture, only when DRISHTI_SHOTS is set."""
     if os.environ.get("DRISHTI_SHOTS"):
-        folder = ROOT / "docs" / "tutorials" / "img" / "t16"
+        folder = ROOT / "docs" / "guides" / "img" / "bi-elements"
         folder.mkdir(parents=True, exist_ok=True)
         page.evaluate("window.scrollTo(0, 0)")
         page.screenshot(path=str(folder / name), type="jpeg", quality=85)
@@ -155,7 +155,7 @@ def test_a_framework_page_draws_the_elements_follows_a_search_and_keeps_its_poli
     ids = [hits.nth(i).get_attribute("data-id") for i in range(hits.count())]
     pick = next((i for i in ids if i != start), None)
     assert pick, ids
-    shot(page, "10-react-sample.jpg") if framework == "react" else None
+    shot(page, "react-sample.jpg") if framework == "react" else None
     page.locator(f'drishti-search button.ds-hit[data-id="{pick}"]').click()
     expect(view).to_have_attribute("entity", pick, timeout=30000)
     expect(about).to_have_attribute("entity", pick, timeout=30000)

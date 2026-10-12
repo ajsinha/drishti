@@ -46,6 +46,37 @@ def scheduled_dataset(c: Ctx) -> str:
     return made["id"]
 
 
+@shot("18-excel-chart.jpg")
+def excel_chart(c: Ctx):
+    """The Excel export of one visual of the Overview page, opened in LibreOffice: the data sheet and its native chart (needs soffice and pdftoppm; skipped without them)."""
+    import shutil
+    import subprocess
+    import tempfile
+    from pathlib import Path
+
+    if not (shutil.which("soffice") and shutil.which("pdftoppm") and shutil.which("convert")):
+        print("  (skipped: needs soffice, pdftoppm and convert)")
+        return
+    login(c, height=900)
+    open_report(c, OVERVIEW)
+    c.page.select_option("[data-export-scope]", "by-desk")
+    with c.page.expect_download() as d:
+        c.page.click('[data-export-fmt="xlsx"]')
+    work = Path(tempfile.mkdtemp(prefix="drishti-t11-"))
+    try:
+        xlsx = work / "chart.xlsx"
+        d.value.save_as(xlsx)
+        subprocess.run(["soffice", "--headless", f"-env:UserInstallation=file://{work / 'profile'}", "--convert-to", "pdf", "--outdir", str(work), str(xlsx)], check=True, capture_output=True, timeout=180)
+        subprocess.run(["pdftoppm", "-r", "70", "-png", "-f", "2", "-l", "2", str(work / "chart.pdf"), str(work / "page")], check=True, timeout=60)
+        page = sorted(work.glob("page-*.png"))[0]
+        out = OUT / "t11"
+        out.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["convert", str(page), "-trim", "-bordercolor", "white", "-border", "14", "-quality", "84", str(out / "18-excel-chart.jpg")], check=True, timeout=60)
+        print("  wrote", (out / "18-excel-chart.jpg").relative_to(ROOT))
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
 @shot("01-refresh.jpg", also=("02-refresh-now.jpg",))
 def refresh(c: Ctx):
     login(c, height=900)

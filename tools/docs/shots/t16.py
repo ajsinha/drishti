@@ -82,6 +82,7 @@ def registering(c: Ctx):
     d.locator("input[name=scope][value='embed:about']").check()          # the demo host asks for view and about (the page's About text) together
     d.locator("input[name=scope][value='embed:view']").check()
     d.locator("input[name=scope][value='embed:report']").check()
+    d.locator("input[name=scope][value='embed:search']").check()         # <drishti-search> of the sample pages
     d.locator("input[name=kinds]").fill(f"trade, {REPORT}")
     d.locator("input[name=callsPerMinute]").fill("6000")                 # a live report asks again at every tick: the defaults (600 and 60 a minute) are for a quiet page
     d.locator("input[name=userCallsPerMinute]").fill("600")
@@ -159,7 +160,7 @@ def reregister(c: Ctx, per_user: int) -> None:
     """Registers the host again (a new secret, written to the secret file) with a per-user call limit."""
     login(c)
     call(c, "DELETE", f"/admin/embedding/api/apps/{APP}")
-    made = call(c, "POST", "/admin/embedding/api/apps", {"id": APP, "name": "Harbour CRM", "origins": [HOST], "kinds": ["trade", REPORT], "scopes": ["embed:view", "embed:about", "embed:report"],
+    made = call(c, "POST", "/admin/embedding/api/apps", {"id": APP, "name": "Harbour CRM", "origins": [HOST], "kinds": ["trade", REPORT], "scopes": ["embed:view", "embed:about", "embed:report", "embed:search"],
                                                        "secret": True, "jwks": jwks(), "callsPerMinute": 6000, "userCallsPerMinute": per_user, "tokenSeconds": 300})
     SECRET_FILE.write_text(made["secret"])
 
@@ -186,3 +187,34 @@ def rate_limited(c: Ctx):
         proc.terminate()
         proc.wait(10)
         reregister(c, 600)
+
+
+@shot("11-react-sample.jpg")
+def react_sample(c: Ctx):
+    """The React 18 sample host page (docs/guides/examples/embed/react): search, view, About body and report in one page of the host (needs the framework builds: fetch-vendor.sh)."""
+    import time
+    import urllib.request
+    if not (ROOT / "docs" / "guides" / "examples" / "embed" / "vendor" / "react" / "react.production.min.js").exists():
+        raise FileNotFoundError("the framework builds are not fetched: bash docs/guides/examples/embed/fetch-vendor.sh --only react")
+    reregister(c, 600)
+    host_users(c)
+    proc = start_host()
+    try:
+        for _ in range(40):
+            try:
+                urllib.request.urlopen(HOST + "/api/me", timeout=1).read()
+                break
+            except OSError:
+                time.sleep(0.25)
+        c.page.set_viewport_size({"width": 1280, "height": 1100})
+        c.page.context.clear_cookies()
+        c.page.goto(HOST + "/samples/react/index.html")
+        c.page.wait_for_function("() => { const e = document.querySelector('#view'); return e && /^(live|static)$/.test(e.getAttribute('data-state') || '') }", timeout=60000)
+        c.page.wait_for_function("() => { const e = document.querySelector('#about'); return e && e.getAttribute('data-state') === 'loaded' }", timeout=60000)
+        c.page.locator("drishti-search input").fill("END-1000")
+        c.page.locator("drishti-search button.ds-hit").first.wait_for(timeout=30000)
+        c.page.wait_for_timeout(1500)
+        c.save("11-react-sample.jpg")
+    finally:
+        proc.terminate()
+        proc.wait(10)

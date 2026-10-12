@@ -411,7 +411,9 @@ The framework builds are **not in the repository**. `bash docs/guides/examples/e
 comments. Angular has no UMD build either, so its page uses an import map and Angular's JIT compiler, which needs `'unsafe-eval'` and an inline import map: the demo host relaxes its policy for `/samples/angular/` only. A real Angular application is compiled ahead of time (`ng build`) and needs neither; the component is the same.
 
 Events with a colon (`drishti:select`) are bound with `addEventListener` in all three, because Vue and Angular read the colon in a template; the samples bind in `onMounted` / `ngAfterViewInit` / a ref effect. `tests/test_embed_frameworks_browser.py` loads the React and Vue pages (and the Angular one) in Chromium against a real server and checks that each draws the view, the report and the About body, that a search pick changes the view, and that the policy reports no violation;
-it skips when the vendor folder is not there.
+it skips when the vendor folder is not there. The React page, drawn in Chromium against a real server:
+
+![The React sample page: a search box with its results, the view and its About body](img/bi-elements/react-sample.jpg)
 
 ## Theming and sizing
 
