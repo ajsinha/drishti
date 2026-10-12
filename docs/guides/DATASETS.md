@@ -15,7 +15,7 @@
 -->
 # Datasets: the YAML, the expression language and the security rules
 
-Reference for the **dataset** of Drishti Rūpaka (BI), as built (live tables are section 7.1; window functions 4.3; several facts 3.1). For the walk-through see [tutorial 10](../tutorials/10-first-bi-report.md) (chapters 1 to 9, and 18 for a live table); for the pages that show a dataset see [BI_GUIDE.md](BI_GUIDE.md) sections 13 and 16; for datasets built from other datasets (joined in YAML, or made by a Python Transform) see
+Reference for the **dataset** of Drishti Rūpaka (BI), as built (live tables are section 7.1; window functions 4.3; several facts 3.1). For the walk-through see [tutorial 10](../tutorials/10-first-bi-report.md) (step 1, [BI_RECIPES.md](BI_RECIPES.md) for the stored datasets, and [tutorial 12](../tutorials/12-live-bi-and-boards.md) for a live table); for the pages that show a dataset see [BI_GUIDE.md](BI_GUIDE.md) sections 13 and 16; for datasets built from other datasets (joined in YAML, or made by a Python Transform) see
 [section 11](#11-composed-and-derived-datasets); for the design see [RUPAKA.md](../architecture/RUPAKA.md) sections 6 and 7, "20.2 Phase 2, as built" and "20.10 Several datasets, as built"; for the HTTP API see
 [API_GUIDE.md](API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2); for the settings see
 [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibiquery--the-dataset-query-engine-phase-2).
@@ -54,7 +54,7 @@ derived: { ... }            # a derived dataset: a Python Transform that returns
 columns: { ... }            #   ... and the columns it returns, typed
 ```
 
-Unknown top-level keys are a warning. Five complete, commented examples ship in `config/bi/datasets/`: `trades-basic` (one table), `trading-risk` (five tables across three packs, a row rule, masks, a rollup) and `trading-cashflows` (nested arrays as tables), which the tutorial reads in chapters 2 to 5, and the live `live-trading` and `live-exposure` (section 7.1, tutorial chapter 18); `world-economics` (real World Bank data by country) and `region-economics` (Australian and US states, illustrative figures rounded from public figures, not for reporting) feed the map reports.
+Unknown top-level keys are a warning. Five complete, commented examples ship in `config/bi/datasets/`: `trades-basic` (one table), `trading-risk` (five tables across three packs, a row rule, masks, a rollup) and `trading-cashflows` (nested arrays as tables), which [BI_RECIPES.md](BI_RECIPES.md) reads, and the live `live-trading` and `live-exposure` (section 7.1, [tutorial 12](../tutorials/12-live-bi-and-boards.md)); `world-economics` (real World Bank data by country) and `region-economics` (Australian and US states, illustrative figures rounded from public figures, not for reporting) feed the map reports.
 
 ## 2. Tables and columns
 

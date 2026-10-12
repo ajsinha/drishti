@@ -825,7 +825,7 @@ and reports (built in phase 3, section 20.3). The columns layer is **per dataset
 ### 20.3 Phase 3, as built
 
 Phase 3 (reports, the visual catalogue, filters and interactions, the designer, the Model view) is built; the reference is [REPORTS.md](../guides/REPORTS.md), the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) sections 14 to 16, the walk-through
-is [tutorial 10](../tutorials/10-first-bi-report.md) chapters 10 to 15, the API is [API_GUIDE.md](../guides/API_GUIDE.md) and the settings are `drishti.bi.report.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md).
+is [tutorial 10](../tutorials/10-first-bi-report.md), the API is [API_GUIDE.md](../guides/API_GUIDE.md) and the settings are `drishti.bi.report.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md).
 
 **Built.**
 
@@ -862,7 +862,7 @@ relationships used by a measure (the engine joins as written, 20.2); several fac
 
 ### 20.4 Phase 4, as built
 
-Phase 4 (publishing and governance) is built; the reference is [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md), the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) section 17, the walk-through is [tutorial 10](../tutorials/10-first-bi-report.md) chapter 17, the API is [API_GUIDE.md](../guides/API_GUIDE.md) and the settings are `drishti.bi.governance.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md). It extends the phase 1 publish-with-review rather than replacing it.
+Phase 4 (publishing and governance) is built; the reference is [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md), the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) section 17, the walk-through is [tutorial 13](../tutorials/13-govern-bi.md), the API is [API_GUIDE.md](../guides/API_GUIDE.md) and the settings are `drishti.bi.governance.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md). It extends the phase 1 publish-with-review rather than replacing it.
 
 **Built (sections 10 and 11).**
 
@@ -878,7 +878,7 @@ Phase 4 (publishing and governance) is built; the reference is [BI_GOVERNANCE.md
 ### 20.5 Phase 5, as built
 
 Phase 5 (streaming BI) is built; the references are [DATASETS.md 7.1](../guides/DATASETS.md#71-live-tables-phase-5), [REPORTS.md 13](../guides/REPORTS.md#13-live-visuals-and-perspective-phase-5), [BOARDS.md](../guides/BOARDS.md), [LIVE.md](LIVE.md#live-bi-a-reports-live-tables),
-[BI_GUIDE.md](../guides/BI_GUIDE.md) section 18, the walk-through [tutorial 10](../tutorials/10-first-bi-report.md) chapters 18 and 19, the API [API_GUIDE.md](../guides/API_GUIDE.md), the settings `drishti.bi.live.*` and the console's `bi.live.*`, `bi.board.rotate_seconds` in [CONFIGURATION.md](../admin/CONFIGURATION.md),
+[BI_GUIDE.md](../guides/BI_GUIDE.md) section 18, the walk-through [tutorial 12](../tutorials/12-live-bi-and-boards.md), the API [API_GUIDE.md](../guides/API_GUIDE.md), the settings `drishti.bi.live.*` and the console's `bi.live.*`, `bi.board.rotate_seconds` in [CONFIGURATION.md](../admin/CONFIGURATION.md),
 and the Perspective retest [RUPAKA_POC.md](RUPAKA_POC.md) section 12. Codes `DRS-9050` to `9053`.
 
 **Built.**
@@ -891,7 +891,7 @@ and the Perspective retest [RUPAKA_POC.md](RUPAKA_POC.md) section 12. Codes `DRS
 * **Perspective.** `perspective-grid` and `perspective-pivot` over the rows of one table: first read as **masked Arrow**, updates as the rows whose `updateSeq` is above the last answer's (JSON, by key; the whole set again when rows left), Perspective pivoting in the browser; a plain-table fallback when WebAssembly cannot start. **CSP resolved properly**: a report or board page that holds a Perspective visual
   gets, in its own response only, `'wasm-unsafe-eval'` and the SHA-256 of the **four** styles Perspective 3.8.0 writes (`core/perspective_csp.py`); every other BI page keeps `style-src 'self'` and no WebAssembly; the engine's worker is a script of this origin; the hash list is measured on the real pages by `tools/perspective-style-hashes.py` and checked by a Chromium test. The retest: RUPAKA_POC.md section 12.
 * **Boards.** `config/bi/boards/<id>.board.yaml` and `board` items: pages of tiles, each a visual of a report on the report grid, per-tile **alert colouring** by threshold (warn and crit, in words as well as colour), **kiosk** (full screen, menus hidden) with **auto-rotating pages**, the live indicator and pause, Perspective and rolling-chart tiles; a parser with every problem coded (`DRS-9052`, reserved `notify` as `DRS-9053`); the publish check; the API (`GET /bi/boards/{id}`, `POST /bi/boards/validate`). No external notifications.
-* **Samples.** The live datasets `live-trading` and `live-exposure` (over the demo ticker's trades and netting sets), the reports **Live trading desk** and **Live exposure**, the board **Desk wall**; BI_TUTORIAL chapters 18 and 19 with real screenshots.
+* **Samples.** The live datasets `live-trading` and `live-exposure` (over the demo ticker's trades and netting sets), the reports **Live trading desk** and **Live exposure**, the board **Desk wall**; tutorial 12 with real screenshots.
 * **Measured** (this machine, the demo source changing 360 of 750 trades about twice a second, so about 800 row changes a second into one live table with queries answered at p50 15 ms and p95 24 ms over HTTP meanwhile; Perspective at 10,000 rows): RUPAKA_POC.md section 12.
 
 **Not built, and not faked.**
@@ -1011,7 +1011,7 @@ References: [DATASETS.md](../guides/DATASETS.md) (section 4.1 time intelligence,
 
 ### 20.8 Python in BI (phase 6), as built
 
-References: [PYTHON_BI.md](../guides/PYTHON_BI.md) (the reference), [DATASETS.md](../guides/DATASETS.md) section 4.2, [REPORTS.md](../guides/REPORTS.md) section 3.3, [tutorial 10](../tutorials/10-first-bi-report.md) chapter 24,
+References: [PYTHON_BI.md](../guides/PYTHON_BI.md) (the reference), [DATASETS.md](../guides/DATASETS.md) section 4.2, [REPORTS.md](../guides/REPORTS.md) section 3.3, [tutorial 14](../tutorials/14-python-and-analyse.md),
 [API_GUIDE.md](../guides/API_GUIDE.md#reports-apiv1bireports-phase-3), the settings `drishti.bi.report.python-*` and the console's `bi.python.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `PythonBiTest`, `PythonBiApiTest`, `test_pyrunner.py`,
 `test_bi_python.py`, `test_bi_python_browser.py`.
 
@@ -1082,7 +1082,7 @@ Reference: [BI_AI.md](../guides/BI_AI.md); the layer under it: [AI_PROVIDERS.md]
 
 ### 20.9 Analyse (phase 9, lean), as built
 
-References: [ANALYSE.md](../guides/ANALYSE.md) (the reference), [QUANT_SERVICE.md](QUANT_SERVICE.md) section 16 (the console's `QuantEngine`), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 21, [tutorial 10](../tutorials/10-first-bi-report.md) chapter 25,
+References: [ANALYSE.md](../guides/ANALYSE.md) (the reference), [QUANT_SERVICE.md](QUANT_SERVICE.md) section 16 (the console's `QuantEngine`), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 21, [tutorial 14](../tutorials/14-python-and-analyse.md),
 the console's `bi.explore.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `test_bi_explore.py` and `test_bi_explore_browser.py`.
 
 **Built (a lean slice of the phase).**
