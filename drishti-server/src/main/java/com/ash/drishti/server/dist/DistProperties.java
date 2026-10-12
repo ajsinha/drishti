@@ -28,7 +28,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record DistProperties(Export export, Subscriptions subscriptions) {
 
     public DistProperties {
-        export = export == null ? new Export(null, null, null, null, null, null, null, null, null) : export;
+        export = export == null ? new Export(null, null, null, null, null, null, null, null, null, null) : export;
         subscriptions = subscriptions == null ? new Subscriptions(null, null, null, null, null, null, null, null, null) : subscriptions;
     }
 
@@ -42,9 +42,10 @@ public record DistProperties(Export export, Subscriptions subscriptions) {
      * @param width the width of the page layout in pixels (the PDF scales it to the page)
      * @param landscape PDF pages are landscape A4 (false: portrait)
      * @param pngMaxHeight tallest PNG in pixels
+     * @param pdfChartRows most rows of the table that follows a chart in a PDF or PNG (the chart shows the shape; Excel holds the rows)
      */
     public record Export(Boolean enabled, Integer maxRows, Integer pdfMaxRows, Long maxBytes, Duration timeout, Integer maxVisuals, Integer width, Boolean landscape,
-            Integer pngMaxHeight) {
+            Integer pngMaxHeight, Integer pdfChartRows) {
 
         public Export {
             enabled = enabled == null ? Boolean.TRUE : enabled;
@@ -56,6 +57,7 @@ public record DistProperties(Export export, Subscriptions subscriptions) {
             width = width == null ? 1000 : Math.max(600, width);
             landscape = landscape == null ? Boolean.TRUE : landscape;
             pngMaxHeight = pngMaxHeight == null ? 12_000 : Math.max(400, pngMaxHeight);
+            pdfChartRows = pdfChartRows == null ? 15 : Math.max(1, pdfChartRows);
         }
     }
 

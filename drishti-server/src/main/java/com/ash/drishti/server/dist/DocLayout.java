@@ -39,6 +39,7 @@ public final class DocLayout {
     private final int width;
     private final int slice;
     private final int maxRows;
+    private final int chartRows;
     private final int maxHeight;
 
     /**
@@ -48,6 +49,12 @@ public final class DocLayout {
      * @param maxHeight the tallest continuous picture (ignored with a slice)
      */
     public DocLayout(int width, int slice, int maxRows, int maxHeight) {
+        this(width, slice, maxRows, maxRows, maxHeight);
+    }
+
+    /** @param chartRows most rows of the table that follows a chart (the chart shows the shape; the table is a reference, and Excel holds the rest) */
+    public DocLayout(int width, int slice, int maxRows, int chartRows, int maxHeight) {
+        this.chartRows = Math.max(1, chartRows);
         this.width = width;
         this.slice = slice;
         this.maxRows = Math.max(1, maxRows);
@@ -105,10 +112,15 @@ public final class DocLayout {
         if (ExportDoc.CARD.equals(s.type())) {
             cards(pen, s);
         } else {
-            if (ExportDoc.CHART.equals(s.type())) {
-                bars(pen, s);
+            boolean chart = ExportDoc.CHART.equals(s.type());
+            if (chart) {
+                if ("line".equals(s.kind()) || "area".equals(s.kind())) {
+                    lines(pen, s);
+                } else {
+                    bars(pen, s);
+                }
             }
-            return table(pen, s);
+            return table(pen, s, chart ? Math.min(maxRows, chartRows) : maxRows);
         }
         return true;
     }
@@ -154,13 +166,91 @@ public final class DocLayout {
             pen.text(M + labelW + w + 6, pen.y + 11, DocFmt.cell(r.get(value)), 10, false, GREY);
             pen.y += 16;
         }
+        if (s.rows().size() > n) {
+            pen.text(M + 6, pen.y + 10, "the first " + n + " of " + s.rows().size() + " rows are drawn as bars", 10, false, GREY);
+            pen.y += 14;
+        }
         pen.y += 8;
     }
 
-    private boolean table(Pen pen, ExportDoc.Section s) {
+    private static final int[] SERIES = {0x4F7CAC, 0xE07B39, 0x3C9D6B, 0x8E6BB5};
+    private static final int LINE_POINTS = 200;
+
+    /** A line or area chart: every numeric column (up to four) as a line over the whole series, sampled to {@value #LINE_POINTS} points, with the range and the ends of the axis. */
+    private void lines(Pen pen, ExportDoc.Section s) {
+        List<Integer> cols = new ArrayList<>();
+        for (int c = 1; c < s.columns().size() && cols.size() < SERIES.length; c++) {
+            if (s.isNumeric(c)) {
+                cols.add(c);
+            }
+        }
+        int total = s.rows().size();
+        int h = 110;
+        if (cols.isEmpty() || total < 2 || !room(pen, h + 44)) {
+            return;
+        }
+        double lo = Double.MAX_VALUE;
+        double hi = -Double.MAX_VALUE;
+        for (List<Object> r : s.rows()) {
+            for (int c : cols) {
+                if (c < r.size() && r.get(c) instanceof Number n) {
+                    lo = Math.min(lo, n.doubleValue());
+                    hi = Math.max(hi, n.doubleValue());
+                }
+            }
+        }
+        if (lo == Double.MAX_VALUE) {
+            return;
+        }
+        if (hi == lo) {
+            hi = lo + 1;
+        }
+        int left = M + 70;
+        int right = width - M - 6;
+        int top = pen.y + 4;
+        int bottom = top + h;
+        pen.items.add(new SnapshotModel.Line(left, bottom, right, bottom, RULE));
+        pen.items.add(new SnapshotModel.Line(left, top, left, bottom, RULE));
+        pen.text(M + 6, top + 9, fit(DocFmt.cell(hi), 62, 10), 10, false, GREY);
+        pen.text(M + 6, bottom, fit(DocFmt.cell(lo), 62, 10), 10, false, GREY);
+        int points = Math.min(total, LINE_POINTS);
+        for (int k = 0; k < cols.size(); k++) {
+            int px = -1;
+            int py = -1;
+            for (int i = 0; i < points; i++) {
+                int idx = points == total ? i : (int) Math.round(i * (total - 1) / (double) (points - 1));
+                List<Object> r = s.rows().get(idx);
+                int col = cols.get(k);
+                if (col >= r.size() || !(r.get(col) instanceof Number n)) {
+                    px = -1;
+                    continue;
+                }
+                int x = left + (int) Math.round((right - left) * i / (double) (points - 1));
+                int y = bottom - (int) Math.round((n.doubleValue() - lo) / (hi - lo) * (h - 6)) - 2;
+                if (px >= 0) {
+                    pen.items.add(new SnapshotModel.Line(px, py, x, y, SERIES[k]));
+                }
+                px = x;
+                py = y;
+            }
+        }
+        pen.text(left, bottom + 13, fit(DocFmt.cell(s.rows().get(0).get(0)), (right - left) / 2 - 10, 10), 10, false, GREY);
+        String last = fit(DocFmt.cell(s.rows().get(total - 1).get(0)), (right - left) / 2 - 10, 10);
+        pen.text(right - (int) (last.length() * 10 * 0.56), bottom + 13, last, 10, false, GREY);
+        int lx = left;
+        for (int k = 0; k < cols.size(); k++) {
+            String name = fit(s.columns().get(cols.get(k)), 120, 10);
+            pen.items.add(new SnapshotModel.Box(lx, bottom + 20, 10, 4, SERIES[k], true));
+            pen.text(lx + 14, bottom + 25, name, 10, false, INK);
+            lx += 24 + (int) (name.length() * 10 * 0.56);
+        }
+        pen.y = bottom + 34;
+    }
+
+    private boolean table(Pen pen, ExportDoc.Section s, int cap) {
         int n = s.columns().size();
         int[] w = widths(s);
-        int shown = Math.min(s.rows().size(), maxRows);
+        int shown = Math.min(s.rows().size(), cap);
         header(pen, s, w);
         for (int r = 0; r < shown; r++) {
             if (slice > 0 && pen.y % slice + ROW > slice - 8) {
@@ -181,7 +271,7 @@ public final class DocLayout {
             pen.y += ROW;
         }
         if (s.rows().size() > shown) {
-            pen.text(M + 6, pen.y + 12, "… " + (s.rows().size() - shown) + " more rows not shown (the first " + shown + " are drawn; Excel holds them all)", 10, false, GREY);
+            pen.text(M + 6, pen.y + 12, "… " + (s.rows().size() - shown) + " more rows in the Excel/CSV export (the first " + shown + " are drawn here)", 10, false, GREY);
             pen.y += ROW;
         }
         pen.y += 12;

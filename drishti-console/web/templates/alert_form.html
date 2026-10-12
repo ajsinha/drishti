@@ -32,7 +32,7 @@
     <span class="text-muted-d">{{ alert.label }} · {{ alert.describe }}</span> <a class="lnk" href="{{ alert.link }}">Open it</a></p>{% endif %}
   <section class="pnl"><header class="pnl-h"><h3>{{ 'Change it' if editing else 'What to watch, and when to tell you' }}</h3></header><div class="pnl-b">
     <form class="alert-form al-form" method="post" action="{{ '/alerts/measure/' ~ (alert.name | urlencode) if editing else '/alerts/new' }}" data-alert-form>
-      <label>Name<input name="name" class="studio-in" value="{{ f.name or '' }}" required maxlength="64"{% if editing %} readonly{% endif %}></label>
+      <label>Name<input name="name" class="studio-in" value="{{ f.name or '' }}" required maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9 ._\-]*" aria-describedby="alert-name-rule"{% if editing %} readonly{% endif %}><small id="alert-name-rule" class="text-muted-d" data-name-rule>Letters, digits, spaces, dots, dashes and underscores; start with a letter or digit; up to 64 characters.</small></label>
       <label class="wide">Title (optional)<input name="title" class="studio-in" value="{{ f.title or '' }}" maxlength="200" placeholder="defaults to the name; the message starts with it"></label>
       <label>Severity<select name="severity" class="studio-select">{% for s in ['info', 'warn', 'critical'] %}<option{% if f.severity == s %} selected{% endif %}>{{ s }}</option>{% endfor %}</select></label>
 

@@ -102,6 +102,12 @@
 .bi-slicer-list { display: flex; flex-direction: column; gap: .05rem; overflow: auto; }
 .bi-slicer-list label { display: flex; align-items: center; gap: .45rem; font-size: .85rem; padding: .1rem .2rem; }
 .bi-range { display: flex; flex-direction: column; font-size: .75rem; color: var(--d-muted); }
+/* From and To side by side, so a short (two-row) slicer shows both fields; the note takes a line of its own and drops away when there is no room */
+.bi-slicer[data-mode="range"] { flex-direction: row; flex-wrap: wrap; align-items: flex-start; align-content: flex-start; gap: .35rem .5rem; }
+.bi-slicer[data-mode="range"] .bi-range { flex: 1 1 7rem; min-width: 0; }
+.bi-slicer[data-mode="range"] .bi-range input { width: 100%; min-height: 36px; }
+.bi-slicer[data-mode="range"] .bi-vis-note { flex: 1 0 100%; margin: 0; }
+@media (pointer: coarse) { .bi-slicer[data-mode="range"] .bi-range input { min-height: 44px; } }
 .bi-dropdown summary { cursor: pointer; border: 1px solid var(--d-border); border-radius: 6px; padding: .3rem .5rem; background: var(--d-surface-2); min-height: 2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bi-text { margin: 0; padding: .3rem .4rem; overflow-wrap: anywhere; }
 h3.bi-text { font-size: 1.1rem; }

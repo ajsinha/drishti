@@ -134,13 +134,29 @@ class ExportWritersTest {
     }
 
     @Test
+    void aLineChartIsDrawnAsLinesOverTheWholeSeriesAndItsTableIsCapped() throws IOException {
+        List<List<Object>> series = new java.util.ArrayList<>();
+        for (int i = 0; i < 300; i++) {
+            series.add(List.of("2026-01-" + i, Math.sin(i / 20.0) * 100));
+        }
+        ExportDoc.Section line = new ExportDoc.Section("l", "MTM over time", ExportDoc.CHART, List.of("Day", "MTM"), series, null, List.of(), "line");
+        ExportDoc d = new ExportDoc("Daily risk", "", List.of(), List.of(line));
+        PdfWriter.Geometry g = PdfWriter.Geometry.of(true, 1000);
+        SnapshotModel model = new DocLayout(g.width(), g.slice(), 500, 15, 0).build(d);
+        long segments = model.items().stream().filter(i -> i instanceof SnapshotModel.Line).count();
+        assertThat(segments).as("a polyline over the sampled series, not a 12-bar chart").isGreaterThan(150);
+        assertThat(model.allText()).contains("285 more rows in the Excel/CSV export");
+        assertThat(model.height() / g.slice()).as("one page, not fifteen").isEqualTo(1);
+    }
+
+    @Test
     void pngIsDrawnAndALongTableIsCutAtTheHeightLimitWithASaying() throws IOException {
         SnapshotModel tall = new DocLayout(1000, 0, 500, 700).build(doc(100));
         assertThat(tall.height()).isLessThanOrEqualTo(700);
         assertThat(tall.allText()).contains("height limit");
         byte[] png = new SnapshotPainter().png(new DocLayout(1000, 0, 5, 12000).build(doc(40)));
         assertThat(png).startsWith(new byte[] {(byte) 0x89, 'P', 'N', 'G'});
-        assertThat(new DocLayout(1000, 0, 5, 12000).build(doc(40)).allText()).contains("more rows not shown");
+        assertThat(new DocLayout(1000, 0, 5, 12000).build(doc(40)).allText()).contains("more rows in the Excel/CSV export");
     }
 
     @Test

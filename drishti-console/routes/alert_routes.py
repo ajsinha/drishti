@@ -19,6 +19,7 @@ administrators' overview. The list of a person's alerts is on ``/alerts`` (monit
 from __future__ import annotations
 
 import json
+import re
 from urllib.parse import parse_qs, quote
 
 from fastapi import APIRouter, Request
@@ -160,12 +161,20 @@ async def _page(request: Request, f: dict, *, alert: dict | None = None, error: 
 
 # -- the form ---------------------------------------------------------------------------------------------------------
 
+def alert_name(text: str) -> str:
+    """A suggested name inside the rule the server keeps (letters, digits, space . _ -, starting with a letter or digit, at most 64): ``Risk: MTM`` becomes ``Risk - MTM``."""
+    t = re.sub(r"\s*[:/\\|]+\s*", " - ", text or "")
+    t = re.sub(r"[^A-Za-z0-9 ._-]+", "", t)
+    t = re.sub(r"\s{2,}", " ", t).strip(" ._-")
+    return t[:64].strip(" ._-")
+
+
 @router.get("/alerts/new")
 async def new_alert(request: Request, source: str = "visual", report: str = "", page: str = "", visual: str = "", state: str = "", measure: str = "", dataset: str = "",
                     kind: str = "", id: str = "", field: str = "", title: str = ""):
     """The form, filled from the thing the person pressed *Alert me* on: a visual (with the filters on the screen), a dataset measure or a field."""
     q = request.query_params
-    f = {"name": (title or field or visual or measure or "My alert").strip()[:64], "title": "", "severity": "warn", "source_type": source if source in ("visual", "dataset", "field") else "visual",
+    f = {"name": alert_name(title or field or visual or measure) or "My alert", "title": "", "severity": "warn", "source_type": source if source in ("visual", "dataset", "field") else "visual",
          "report": report, "page": page, "visual": visual, "measure": measure, "reduce": q.get("reduce", "first"), "state": state if _state(state) else "",
          "dataset": dataset, "ds_measure": measure, "filters": "", "kind": kind, "id": id, "field": field, "condition_type": "threshold", "op": "above", "value": "", "high": "",
          "change_mode": "pct", "change_op": "moves", "change_value": "", "against": "previous-run", "by": "09:00", "trigger_mode": "schedule", "schedule": "hourly",

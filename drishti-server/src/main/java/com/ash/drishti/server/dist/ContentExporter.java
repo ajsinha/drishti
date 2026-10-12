@@ -180,13 +180,13 @@ public final class ContentExporter implements AutoCloseable {
 
     private byte[] pdf(ExportDoc doc, ViewExporter.Built view, Principal who, String footer, String stamp, Target t) {
         PdfWriter.Geometry g = PdfWriter.Geometry.of(limits.landscape(), limits.width());
-        SnapshotModel model = view == null ? new DocLayout(g.width(), g.slice(), limits.pdfMaxRows(), 0).build(doc)
+        SnapshotModel model = view == null ? new DocLayout(g.width(), g.slice(), limits.pdfMaxRows(), limits.pdfChartRows(), 0).build(doc)
                 : new SnapshotLayout(g.width(), 80_000, 80, limits.pdfMaxRows()).build(view.view(), null, watermark(view, who, stamp, t));
         return PdfWriter.write(model, g, doc.title(), doc.subtitle(), footer);
     }
 
     private byte[] png(ExportDoc doc, ViewExporter.Built view, Principal who, String stamp, Target t) throws IOException {
-        SnapshotModel model = view == null ? new DocLayout(limits.width(), 0, limits.pdfMaxRows(), limits.pngMaxHeight()).build(doc)
+        SnapshotModel model = view == null ? new DocLayout(limits.width(), 0, limits.pdfMaxRows(), limits.pdfChartRows(), limits.pngMaxHeight()).build(doc)
                 : new SnapshotLayout(limits.width(), limits.pngMaxHeight(), 40, limits.pdfMaxRows()).build(view.view(), null, watermark(view, who, stamp, t));
         return new SnapshotPainter().png(model);
     }
