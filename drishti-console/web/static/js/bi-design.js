@@ -537,7 +537,7 @@
 
   /** A report draft that names no dataset has nothing to draw: ask for one (the datasets the person may read) and write `dataset:` into the draft. */
   function ensureDataset(item) {
-    if (/^dataset:\s*\S/m.test(item.body || '')) { return Promise.resolve(); }
+    if (/^(dataset|model):\s*\S/m.test(item.body || '')) { return Promise.resolve(); }      // a report on a model (bi-design-model.js) reads the model
     return B.api('GET', '/datasets').then((r) => new Promise((resolve) => {
       const sel = h('select', { class: 'studio-select', 'data-pick-dataset': '', 'aria-label': 'Dataset for this report' }, h('option', { value: '', text: 'Choose a dataset' }));
       (r.datasets || []).filter((d) => d.valid).forEach((d) => sel.appendChild(h('option', { value: d.id.replace(/^file:dataset:/, ''), text: d.title })));

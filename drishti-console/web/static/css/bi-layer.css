@@ -1,0 +1,94 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* The model layer's pages: start, dataset, model designer, new-dataset wizard (docs/architecture/BI_MODEL_SPEC.md section 9). */
+.bi-layer-next { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.bi-layer-search { max-width: 28rem; margin: 0 0 .7rem; }
+.bi-layer-picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: .2rem .8rem; max-height: 18rem; overflow: auto; }
+.bi-layer-form { max-width: 60rem; }
+.bi-layer-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .3rem 1rem; margin: .5rem 0 1rem; }
+.bi-layer-facts dt { color: var(--d-muted); font-size: .85rem; }
+.bi-layer-facts dd { margin: 0; overflow-wrap: anywhere; }
+.bi-layer-list { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: .25rem; }
+.bi-crumb { margin: 0 0 .25rem; font-size: .85rem; }
+.bi-chip.mono { font-family: var(--d-font-mono); margin-right: .25rem; }
+
+/* the model designer */
+.bi-md-tabs { display: flex; flex-wrap: wrap; gap: .25rem; border-bottom: 1px solid var(--d-border); margin: .6rem 0 .6rem; }
+.bi-md-tab { background: none; border: 1px solid transparent; border-bottom: 0; border-radius: var(--d-radius) var(--d-radius) 0 0; padding: .45rem .9rem; color: var(--d-muted); cursor: pointer; min-height: 2.75rem; font: inherit; }
+.bi-md-tab[aria-selected="true"] { color: var(--d-ink); border-color: var(--d-border); background: var(--d-surface); font-weight: 600; }
+.bi-md-alert { color: var(--d-bad); font-weight: 700; margin-left: .25rem; }
+.bi-md-count { color: var(--d-muted); font-size: .8rem; margin-left: .2rem; }
+.bi-md-main { display: grid; grid-template-columns: 15rem minmax(0, 1fr) 18rem; gap: .8rem; align-items: start; }
+.bi-md-side, .bi-md-inspector { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .6rem .7rem; min-width: 0; }
+.bi-md-side h2, .bi-md-inspector h2 { font-size: 1rem; margin: 0 0 .4rem; }
+.bi-md-dslist { list-style: none; margin: .4rem 0; padding: 0; max-height: 60vh; overflow: auto; display: flex; flex-direction: column; gap: .15rem; }
+.bi-md-dsitem { display: flex; align-items: center; justify-content: space-between; gap: .3rem; padding: .2rem .3rem; border-radius: 6px; cursor: grab; }
+.bi-md-dsitem:hover { background: var(--d-highlight); }
+.bi-md-dsitem .bi-chipbtn { min-width: 2.75rem; min-height: 2.75rem; }
+.bi-md-dsname { display: flex; flex-direction: column; min-width: 0; font-size: .85rem; }
+.bi-md-dsname small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .72rem; }
+.bi-md-used strong::after { content: " ✓"; color: var(--d-ok); }
+.bi-md-pane { min-width: 0; }
+.bi-md-diagram { min-height: 26rem; }
+.bi-md-diagram.bi-drop { border-color: var(--d-accent); }
+.bi-md-box { width: 15rem; padding: 0; }
+.bi-md-box:focus { outline: 2px solid var(--d-accent); outline-offset: 2px; }
+.bi-md-box.bi-md-sel { border-color: var(--d-accent); box-shadow: 0 0 0 2px var(--d-accent); }
+.bi-md-box.bi-md-bad { border-color: var(--d-bad); }
+.bi-md-fact .bi-md-boxhead { border-top: 4px solid var(--d-accent); }
+.bi-md-dimension .bi-md-boxhead { border-top: 4px solid var(--d-link); }
+.bi-md-boxhead { display: flex; justify-content: space-between; align-items: center; gap: .3rem; padding: .35rem .5rem; cursor: move; border-bottom: 1px solid var(--d-border); touch-action: none; }
+.bi-md-role { font-size: .75rem; padding: .1rem .2rem; min-width: 0 !important; }
+.bi-md-boxsub { margin: .2rem .5rem; font-size: .72rem; overflow-wrap: anywhere; }
+.bi-md-pin { margin: .2rem .5rem; font-size: .72rem; color: var(--d-bad); }
+.bi-md-cols { list-style: none; margin: 0; padding: .2rem .5rem .4rem; font-size: .78rem; }
+.bi-md-cols li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bi-md-cols-all li { white-space: normal; margin: .1rem 0; }
+.bi-md-sugg { margin: .7rem 0; }
+.bi-md-suggest { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; }
+.bi-md-suggest code { display: inline !important; }
+.bi-rel-sel { border-color: var(--d-accent); }
+.bi-md-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem; }
+.bi-md-row label { display: flex; flex-direction: column; gap: .15rem; font-size: .8rem; color: var(--d-muted); }
+.bi-md-grow { flex: 1 1 18rem; }
+.bi-md-grow input { width: 100%; }
+.bi-md-measures input.studio-in { min-width: 9rem; width: 100%; }
+.bi-md-badrow td { background: color-mix(in srgb, var(--d-bad) 8%, transparent); }
+.bi-md-preview { margin-top: .3rem; }
+.bi-md-mini { font-size: .78rem; }
+.bi-md-safeguard { border: 1px solid var(--d-bad); border-radius: var(--d-radius); padding: .6rem .8rem; background: color-mix(in srgb, var(--d-bad) 7%, var(--d-surface)); }
+.bi-md-safeguard h3 { color: var(--d-bad); margin-top: 0; }
+.bi-md-check { max-width: 60rem; }
+.bi-md-byhand summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: center; }
+
+/* the new-dataset wizard */
+.bi-lw-steps { display: flex; flex-wrap: wrap; gap: .4rem; list-style: none; padding: 0; margin: .5rem 0 1rem; }
+.bi-lw-steps li { padding: .3rem .7rem; border: 1px solid var(--d-border); border-radius: 999px; font-size: .85rem; color: var(--d-muted); }
+.bi-lw-steps li[aria-current="step"] { color: var(--d-ink); border-color: var(--d-accent); font-weight: 600; }
+.bi-lw-cols input.studio-in, .bi-lw-cols select { min-width: 7rem; width: 100%; }
+.bi-lw-source { display: flex; flex-direction: column; gap: .5rem; }
+.bi-lw-source label.bi-checkrow { align-items: flex-start; }
+
+@media (max-width: 1100px) {
+  .bi-md-main { grid-template-columns: minmax(0, 1fr); }
+  .bi-md-side { order: 2; }
+  .bi-md-inspector { order: 3; }
+}
+@media (max-width: 600px) {
+  .bi-layer-facts { grid-template-columns: minmax(0, 1fr); }
+  .bi-md-box { width: 12rem; }
+  .bi-md-tab { padding: .4rem .55rem; }
+}

@@ -1,0 +1,39 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# One model-layer dataset (docs/architecture/BI_MODEL_SPEC.md sections 1 and 7): what one row is (grain and keys), the columns with their roles, meanings
+   and units, the time mode, the security, the YAML (read-only for a pack's), and the next steps. Drawn by static/js/bi-models.js. #}
+{% extends "bi/shell.html" %}
+{% block bi_title %}Dataset{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-layer.css?v={{ ASSET_V }}">{% endblock %}
+{% block bi_main %}
+<div data-layer-dataset data-ready="">
+<header class="bi-head"><p class="bi-crumb"><a href="/bi/models">Models and datasets</a></p>
+  <h1 data-title>Dataset</h1><p class="bi-card-badges" data-badges></p><p class="text-muted-d" data-desc></p></header>
+<p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+<p class="bi-actions bi-layer-next" data-actions>
+  <button type="button" class="btn-pill btn-accent" data-use><i class="bi bi-bar-chart-line" aria-hidden="true"></i> Start a report on it</button>
+  <button type="button" class="btn-pill btn-ghost" data-make-model><i class="bi bi-diagram-3" aria-hidden="true"></i> Make it a model</button>
+  <a class="btn-pill btn-ghost" data-narrow href="/bi/datasets/new-layer"><i class="bi bi-funnel" aria-hidden="true"></i> Narrow it</a>
+</p>
+<dl class="bi-layer-facts" data-facts></dl>
+<section class="bi-sec" aria-labelledby="dcH"><h2 id="dcH">Columns</h2>
+  <div class="tbl-wrap"><table class="tbl bi-tbl" data-columns data-plain><caption class="visually-hidden">The dataset's columns</caption>
+    <thead><tr><th scope="col">Column</th><th scope="col">Type</th><th scope="col">Role</th><th scope="col">Meaning</th><th scope="col">References</th><th scope="col">Unit</th><th scope="col">Adds up</th><th scope="col">Default measure</th></tr></thead><tbody></tbody></table></div></section>
+<section class="bi-sec" aria-labelledby="dsH"><h2 id="dsH">Security</h2><ul class="bi-layer-list" data-security></ul></section>
+<section class="bi-sec" aria-labelledby="dyH"><h2 id="dyH">YAML</h2><p class="text-muted-d" data-yaml-note></p><pre class="bi-body mono" data-yaml tabindex="0"></pre></section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-models.js?v={{ ASSET_V }}"></script>{% endblock %}

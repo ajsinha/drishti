@@ -1,0 +1,51 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The model layer, start (docs/architecture/BI_MODEL_SPEC.md section 9.1): "what do you want to see?" The datasets the packs give (certified, nothing to
+   build), the models, and the next steps. Drawn by static/js/bi-models.js from /bi/model-api/datasets. #}
+{% extends "bi/shell.html" %}
+{% block bi_title %}Models and datasets{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-layer.css?v={{ ASSET_V }}">{% endblock %}
+{% block bi_main %}
+<div data-models-root data-ready="">
+<header class="bi-head"><h1>Start from your data</h1>
+  <p class="text-muted-d">Every kind of every pack you may open is already a dataset: certified, read-only, kept current with its pack. <strong>Use</strong> one to start a report straight away, or put several in a <strong>model</strong> (a star of datasets with relationships, measures and security) that many reports share.</p></header>
+<p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+<p class="bi-actions bi-layer-next">
+  <button type="button" class="btn-pill btn-accent" data-new-model><i class="bi bi-diagram-3" aria-hidden="true"></i> New model</button>
+  <a class="btn-pill btn-ghost" data-new-dataset href="/bi/datasets/new-layer"><i class="bi bi-plus-lg" aria-hidden="true"></i> New dataset</a>
+  <span class="text-muted-d bi-small-note">A dataset is for what a pack does not give: a connector query, a Python table, a model's answer, or a narrowed pack dataset.</span>
+</p>
+<section class="bi-sec bi-form bi-layer-form" data-new-model-form hidden aria-labelledby="nmH"><h2 id="nmH">New model</h2>
+  <label>Title <input class="studio-in" data-nm-title value="" placeholder="Trading and counterparty risk" autocomplete="off"></label>
+  <label>Workspace <select class="studio-select" data-nm-ws></select></label>
+  <p class="text-muted-d bi-small-note">Tick the datasets to start with; you can add more in the designer. The relationships the packs know are suggested there, one click each.</p>
+  <input type="search" class="studio-in" data-nm-search placeholder="Search datasets" aria-label="Search the datasets to tick">
+  <div class="bi-layer-picks" data-nm-picks role="group" aria-label="Datasets for the new model"></div>
+  <p class="bi-actions"><button type="button" class="btn-pill btn-accent" data-nm-go>Create and open the designer</button> <button type="button" class="btn-pill btn-ghost" data-nm-cancel>Cancel</button></p>
+</section>
+<section class="bi-sec" aria-labelledby="pdH"><h2 id="pdH"><i class="bi bi-box-seam" aria-hidden="true"></i> Datasets from the packs</h2>
+  <input type="search" class="studio-in bi-layer-search" data-search placeholder="Search datasets (name, pack, kind)" aria-label="Search datasets">
+  <div class="bi-cards" data-packs></div>
+  <p class="bi-empty" data-packs-empty hidden>No pack dataset you may open: ask an administrator for a pack, or make a dataset from a connector query.</p></section>
+<section class="bi-sec" aria-labelledby="udH"><h2 id="udH"><i class="bi bi-hdd-stack" aria-hidden="true"></i> Your datasets</h2>
+  <div class="bi-cards" data-items></div>
+  <p class="bi-empty" data-items-empty hidden>None yet. <a href="/bi/datasets/new-layer">New dataset</a> makes one from a connector query, a Python table, a model's answer or a narrowed pack dataset.</p></section>
+<section class="bi-sec" aria-labelledby="mdH"><h2 id="mdH"><i class="bi bi-diagram-3" aria-hidden="true"></i> Models</h2>
+  <div class="bi-cards" data-models></div>
+  <p class="bi-empty" data-models-empty hidden>No model yet. <strong>New model</strong> above, or <strong>Make it a model</strong> on any dataset.</p></section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-models.js?v={{ ASSET_V }}"></script>{% endblock %}

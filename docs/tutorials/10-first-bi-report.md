@@ -44,6 +44,7 @@ About 60 minutes.
 - the **Counterparty risk** sample: slicers that reach across packs, a selected bar, and drill-through;
 - **two datasets in one report**: a dataset composed of two others, joined in YAML, and a slicer of one dataset that filters the visuals of the other;
 - (step 13) **a dataset of your own, built in the wizard**: pick a connector, tick columns, add a measure, set a refresh, save a draft, publish it and start a report on it, with no YAML typed.
+- (preview, 2.2.0) **models**: a pack dataset with nothing to build, a report on it at once, then a model of trades and desks with a suggested relationship, a measure, a row rule and the security safeguard, in the UI, over the API and as YAML.
 
 ## Step 1 · Look at the dataset
 
@@ -461,6 +462,74 @@ You should see `"valid": true` and, after the publish, `published` at version 1.
 - **UI.** *New report* on the designer's start page asks for a **Main dataset** and an optional **Also add** (Ctrl or Shift for several): the designer opens with all of them in the **Fields** pane. A dataset you cannot use yet is greyed with the reason (for example *draft in a private workspace: publish it first*). **+ Add visual** makes an empty visual; the **Publish** button (Propose where review is required) saves first. Open the same draft in two tabs and save in both: the second is refused with **Reload theirs / Save mine as a copy / Overwrite with mine**.
 - **CLI.** `drishti.py bi catalogue get <id>` shows the item with its `etag`; a propose, approve or publish of a report that cannot be drawn is refused with `DRS-9030` and the errors (a bi-admin may force it).
 - **YAML.** Nothing new to write: the extra datasets are named in each visual's `dataset:` and the report's `links:` (REPORTS.md section 16); `?also=a,b` on the designer URL opens extra datasets in the Fields pane.
+
+## Preview · Models: from a pack dataset to a report (wave W1)
+
+Release 2.2.0 brings the **model layer** ([BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1)). The steps
+above stay valid; this is a short look at the new way, which the migration wave (W4) turns into the main walk-through. The numbers below are from the
+browser test's small lake (two days of 60 trades over three desks); yours differ.
+
+**UI.**
+
+1. **BI → Models** in the rail. Under *Datasets from the packs* every kind is already a dataset: find **Trade** (`pack.trading.trade`, certified,
+   read-only). Its title opens its page: *One row per trade per business date*, keys `id`, time *snapshot*, and `desk` marked `desk →` (it holds desk ids).
+2. Press **Use** on the Trade card and choose your workspace: a report opens in the designer on the **implicit model of Trade**. Fields lists `trade`
+   and, brought along by the pack reference, `desk`; drag **Sum of mtm** onto the canvas, then **desk → name** onto the card: a bar of MTM by desk name,
+   with nothing modelled by hand. *Query of the selected visual* shows the model query it asked.
+3. Back on **Models**, press **New model**, title it *Trades and desks*, tick **Trade** and **Desk**, **Create and open the designer**. Desk is placed as
+   a **dimension** (Trade references it). Under the canvas, *Suggested relationships* offers `trade.desk → desk.id` (*trade.desk holds desk ids (from the
+   pack)*): press **Add**.
+4. **Measures**: dataset `trade`, column `mtm`, **Add measure**: `Sum of mtm`, `sum(trade.mtm)`, adds up: yes.
+5. **Security**: on `trade`, roles `desk-head`, *the column matches the reader*, column `desk`, *the reader's desks*, **Add the rule**. The tab shows ⚠ 1:
+   *The role desk-head is restricted elsewhere in this model, but desk has no rule*. Press **desk-head may see every row of desk** (desks are not
+   secret); the ⚠ goes. Add a second rule so you see every trade yourself: your role, *every row*.
+6. **Save** (the badge says *Valid*), then **Start a report**: the Fields pane's header says *Model Trades and desks*.
+
+**CLI.** The same through the REST API, with the token of tutorial 1. The pack datasets, then a question to the implicit model of Trade:
+
+```
+$ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" http://localhost:18480/api/v1/bi/pack-datasets
+{"datasets":[{"name":"pack.banking-core.agreement","id":"ds_pack_banking_core_agreement","title":"Master agreement","pack":"banking-core","kind":"agreement",
+ "version":"1.0.0","mode":"snapshot","endorsement":"certified","columns":14,"query":"dataset:pack.banking-core.agreement"}, ...]}
+$ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
+    -d '{"mq":1,"model":"dataset:pack.trading.trade","select":{"fields":["desk.name"],"measures":["Sum of mtm","Count of trade"]}}' \
+    http://localhost:18480/api/v1/bi/mq
+{"mq":1,"model":{"id":"implicit:ds_pack_trading_trade@1","name":"pack.trading.trade","version":"1.0.0","implicit":true,"compat":false},
+ "columns":[{"name":"desk.name","kind":"field","type":"string",...},{"name":"Sum of mtm","kind":"measure","type":"decimal","additive":true,...},
+            {"name":"Count of trade","kind":"measure","type":"integer",...}],
+ "rows":[["Bonds and securitised",-75000.0,20],["Equity derivatives",425000.0,20],["G10 and EM FX",-575000.0,20]],"rowCount":3,
+ "meta":{"asOf":"2026-10-09","dates":["2026-10-08","2026-10-09"],"layer":"columns","tables":["trade","desk"],...}}
+```
+
+and Check of a model's YAML without storing it (`POST /api/v1/bi/models/validate` with `{"yaml": "..."}`): before step 5's **may see every row**, it
+answers `"valid": true` with the warning `DRS-9130` and `"exposures": [{"dataset": "desk", "role": "desk-head"}]`, which a publish refuses.
+
+**YAML.** What the designer wrote in steps 3 to 5 (you typed none of it; the server added `id` on save):
+
+```yaml
+rachana: 2
+model: trades-and-desks
+version: 1.0.0
+id: md_84db68c3
+title: Trades and desks
+datasets:
+  trade: {dataset: pack.trading.trade@^1, role: fact}
+  desk: {dataset: pack.banking-core.desk@^1, role: dimension}
+relationships:
+  - {from: trade.desk, to: desk.id, suggested: {from: pack-reference}}
+measures:
+  Sum of mtm: {expr: sum(trade.mtm)}
+security:
+  rows:
+    trade:
+      - {role: desk-head, where: trade.desk in user.desks}
+      - {role: bi-writer, where: 'true'}
+  may-see-all:
+    desk: [desk-head]
+```
+
+and the report of step 6 says `model: trades-and-desks@1` where the reports above say `dataset:`. In W1 such a report is designed and viewed; publishing
+it waits for the server to bind reports to models ([REPORTS.md section 18](../guides/REPORTS.md#18-a-report-on-a-model-wave-w1)).
 
 ## Next steps
 

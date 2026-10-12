@@ -61,6 +61,8 @@ A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), t
 16. [The Model view (phase 3)](#16-the-model-view-phase-3)
 17. [Publishing and governance (phase 4)](#17-publishing-and-governance-phase-4)
 18. [Live reports and boards (phase 5)](#18-live-reports-and-boards-phase-5)
+19. Export, subscriptions and alerts · 20. Python · 21. Analyse · 22. With AI (below)
+23. [Models and pack datasets: the model layer (wave W1)](#23-models-and-pack-datasets-the-model-layer-wave-w1)
 
 ## 1. What BI is, and is not
 
@@ -636,3 +638,96 @@ When your administrator has switched the AI layer on ([BI_AI.md](BI_AI.md)), thr
 
 The model is told the names, types and descriptions of the dataset and your words; **never a row**, a value, a measure's definition or a field masked for you (unless an administrator chose
 `aggregates`, which also lets it word *your own* masked results). It can choose a wrong query: that is why the query is shown. Reference, settings, codes and tests: [BI_AI.md](BI_AI.md).
+
+## 23. Models and pack datasets: the model layer (wave W1)
+
+The model layer ([BI_MODEL_SPEC.md](../architecture/BI_MODEL_SPEC.md)) splits what a version-1 dataset did in one file into two items: a **dataset** is one
+governed table (what one row is, its columns with roles and meanings, how it keeps time, its own security), and a **model** puts datasets in a star with
+relationships, measures and tighter security. Reports, Analyse and the API ask a model with **one request shape**, the model query (`mq: 1`). Everything in
+sections 13 to 22 still works as written: version-1 datasets are read as models by a compatibility reader until the migration wave (W4).
+
+**Models in the rail** (`/bi/models`, "Start from your data"):
+
+* **Datasets from the packs.** Every kind of every pack you may open is already a dataset, named `pack.<pack>.<kind>`, certified by its pack, read-only,
+  versioned with the pack. Nobody builds them. A card shows the pack, the time mode and the number of columns; **Use** starts a report on it straight away;
+  the title opens the dataset's page.
+* **Your datasets**: the `rachana: 2` datasets you may read (a connector query, a Python table, a model's answer, a narrowed pack dataset).
+* **Models**: model items, and the version-1 datasets the compatibility reader serves as models. **Open the designer** edits one; **Use** starts a report.
+* **New model** asks a title and a workspace and offers every dataset as a tick box; the model opens in the designer. **New dataset** opens the wizard below.
+
+**A dataset's page** (`/bi/ds/<name>`) says what one row is (*One row per trade per business date*), the keys (`id`), the time mode (*snapshot: a query
+without a date reads the latest business date with rows*), the source (*the trade kind of the trading pack, through trading-store*), every column with its
+type, role, meaning, the kind it references (`desk →`), its unit, whether it adds up and its default measure, the security, and the YAML. Its buttons:
+**Start a report on it**, **Make it a model** (its implicit model written out as a draft model, below) and **Narrow it** (a dataset of your own that
+`extends` this one: extra calculated columns, a row filter, more masks).
+
+**The model designer** (`/bi/md/<item>`; the item page's *Model view* opens it for a model):
+
+| Part | What it does |
+|---|---|
+| Datasets list | every dataset you may use; **+** adds one (or drag it onto the canvas). Its alias comes from its name (`pack.trading.trade` is `trade`), its role is inferred: a dataset another one references is a **dimension**, one with amounts a **fact**; the select on its box changes it |
+| Canvas | the datasets as boxes (fact: accent bar, dimension: link-coloured bar), relationships as lines (`* → 1`, dashed when inactive). Drag a box by its header, or focus it and use the arrow keys; Enter opens it in the inspector. A problem Check found on a dataset is pinned on its box |
+| Suggested relationships | from the packs' entity references: `trade.desk holds desk ids (from the pack)` with **Add** (one click) and **Dismiss**. A second path between two datasets, or one between two facts, is offered **Add as inactive** with the reason |
+| Relationships | the list (keyboard-friendly) with **Edit**; *Relate two columns by hand* adds any other |
+| Inspector | a dataset: alias (renaming rewrites every field, measure and rule that uses it), grain, keys, time, columns, *Open the dataset*, *Remove from the model*. A relationship: cardinality, filter direction (*both ways* arrives in W2), active, where it came from, *Remove* |
+| Measures | **New measure from a column**: pick the dataset and the column; the aggregation, format, additivity and currency come from the dataset (amounts sum, ratios average and never add up, a balance takes its last value over time, `notional` is in `trade.currency`). **Write a formula** offers the fields and `[measures]` as you type. Each row edits name, formula, format and *adds up*; Check's problem shows under the row; **Preview** asks the saved draft by a suggested dimension, as you. The default measures (one per column with an aggregation, and `Count of <alias>`) are listed: reports may use them without anyone writing them |
+| Security | each dataset's own rules (read-only), the model's rules, the masks. **Add a rule for this model**: the dataset, the roles, and *the column matches the reader* (`trade.desk in user.desks`), *the column equals a value* or *every row*: no typing of conditions. Rules here can only remove rows. **The safeguard**: when a role is restricted on one dataset but no rule restricts another, the tab shows a ⚠ count and says so, with **Add a rule for desk-head on desk** and **desk-head may see every row of desk** (an audited `may-see-all` note). Until it is answered the model cannot be published (`DRS-9130`) |
+| Contract | title, description, version (**Next patch / minor / major**), lifecycle, and what consumers may use (everything, or only the ticked fields and measures). A published model refuses a breaking change without a new major (`DRS-9126`) |
+| YAML | the same draft as text; editing it moves the canvas when it parses, else the problem is shown and the canvas keeps the last good version |
+
+Every action is one edit that **Undo** and **Redo** (Ctrl Z, Ctrl Y) take back. After each edit the console writes the YAML and the server checks it (the
+*Valid* / *Has errors* badge); **Check** lists every problem with its code and path. Unsaved changes are kept in this browser: a refresh, a crash or Back
+offers **Restore my changes**; leaving asks first; a save over someone else's newer save offers *Reload theirs*, *Save mine as a copy* or *Overwrite*.
+**Publish** (or **Propose** where the workspace reviews) saves first; a refusal shows beside the button and opens the tab that can fix it. **Start a
+report** makes a report on the model. A model's name is unique among the models you can see (`trades-and-desks`, then `trades-and-desks-2`).
+
+What the designer wrote for a model of trades and desks with one accepted suggestion, one measure from a column, a desk-head rule and the safeguard
+answered (the server added the stable `id` on save):
+
+```yaml
+rachana: 2
+model: trades-and-desks
+version: 1.0.0
+id: md_84db68c3
+title: Trades and desks
+datasets:
+  trade: {dataset: pack.trading.trade@^1, role: fact}
+  desk: {dataset: pack.banking-core.desk@^1, role: dimension}
+relationships:
+  - {from: trade.desk, to: desk.id, suggested: {from: pack-reference}}
+measures:
+  Sum of mtm: {expr: sum(trade.mtm)}
+security:
+  rows:
+    trade:
+      - {role: desk-head, where: trade.desk in user.desks}
+      - {role: bi-writer, where: 'true'}
+  may-see-all:
+    desk: [desk-head]
+```
+
+Before `may-see-all` was added, Check answered (as a warning; the publish refuses it):
+
+```
+DRS-9130 security: the role 'desk-head' is restricted elsewhere in this model, but no row rule restricts 'desk' (pack.banking-core.desk): that role sees
+every one of its rows. Add a rule for it on 'desk', or say so with `may-see-all: { desk: [desk-head] }` under security; until then the model cannot be published
+```
+
+A reader no rule matches gets no rows of that dataset (the second rule above lets the author see every trade).
+
+**Reports on a model.** A report started from a dataset or a model says `model:` instead of `dataset:` ([REPORTS.md](REPORTS.md#18-a-report-on-a-model-wave-w1)).
+The designer's Fields pane reads the model as you see it (masked fields marked); its header says *Implicit model of Trade* with **Make it a model**, or
+*Model Trades and desks* with **Open the model**; *Add dataset* is gone (a report reads one model: add datasets to the model). Every visual's data is one
+model query, shown under **Query of the selected visual**. **Make it a model** writes the implicit model out as a draft model (the dataset as the fact, its
+pack dimensions with their relationships, the default measures) and moves the report onto it.
+
+**New dataset** (`/bi/datasets/new-layer`), for what a pack does not give, in three steps that keep their draft across a refresh: (1) the source: a pack
+dataset narrowed or with extra columns, a query in a SQL connector (its only parameter is the as-of date), a Python Transform, or the answer of a model
+(tick its fields and measures); (2) the table: each column's type, role, meaning, referenced kind, currency and additivity (the base's columns are kept
+for a narrowed dataset), the grain keys as chips, time and refresh, with the server's Check below; (3) title, name, workspace, masked columns, the YAML for
+review, **Save draft** or **Save and publish**, then *Open the dataset*, *Start a report on it* or *Use it in a new model*. In W1 the server answers queries
+on pack and narrowed datasets; connector-query, Python and model-answer datasets are saved and checked, and answer once the server's wave W1 package S4
+lands (until then a query that reads one is answered `DRS-9013`, 501).
+
+**Analyse** opens a model's rows as one model query of shape `rows` (`{model, fields}` on `/bi/explore/extract`); a dataset extract is unchanged.
+
