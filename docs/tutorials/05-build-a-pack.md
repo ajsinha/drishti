@@ -100,8 +100,8 @@ QUO Q-EURUSD <GO>
 
 ![The view of a quote: mid, bid and ask with four decimals, and the details](img/t05/09-quote.jpg)
 
-You should see the quote's view: `Q-EURUSD` with the title pill `Quote · USD`, the strip (mid, bid, ask), the panel of details (instrument, currency, venue, when it was struck). The data came from the connector
-of tutorial 4 through the pack you just made. Type `QP` alone to see the pack at a glance.
+You should see the quote's view: `Q-EURUSD` with the title pill `Quote · USD`, the strip (mid, bid, ask), the panel of details (instrument, currency, venue, when it was struck). The panel *How this view was built* names the layout and the source that served the view: here `demo, gen 0`, because the demo source also holds the sample of the pack (a source that gives
+its documents no name is shown under its connector's name, never as an empty `Source:`). The figures are the ones of the desk's quotes of tutorial 4. Type `QP` alone to see the pack at a glance.
 
 ## Step 6 · Deploy again, and roll back
 
