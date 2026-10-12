@@ -13,22 +13,31 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 7 (RUPAKA.md section 20.6): per-report phone layouts. A report may say, per page, how it is arranged at 640 px and narrower:
-   `layouts: { phone: { <page id>: { order: [visual ids], hide: [visual ids], span: { <visual id>: rows } } } }`. Without one the page keeps the automatic
-   single column in the grid's reading order. This file only decides WHAT to draw and in which order and height; the viewer, the embedded element and the
-   designer's 390 px preview all use it, so they agree. Exposes window.drishtiBi.phone. */
+/* Rupaka phase 7 (RUPAKA.md section 20.6): per-report device layouts. A report may say, per page, how it is arranged on a phone (640 px and narrower) and on a
+   tablet (1024 px and narrower): `layouts: { phone: { <page id>: { order, hide, span } }, tablet: { <page id>: { order, hide, span, wide } } }`, where `order` and
+   `hide` are visual ids, `span` maps a visual id to its height in grid rows, and `wide` (tablet only) lists the visuals that take the whole width instead of half.
+   Without a layout a phone keeps the automatic single column in the grid's reading order and a tablet the 12-column grid. This file only decides WHAT to draw and
+   in which order, width and height; the viewer, the embedded element and the designer's previews all use it, so they agree. Exposes window.drishtiBi.phone. */
 (function () {
   'use strict';
   const B = (window.drishtiBi = window.drishtiBi || {});
   const P = (B.phone = {});
 
   P.MAX = 640;                                   // a screen or element this narrow (or narrower) uses the phone layout
+  P.TABLET_MAX = 1024;                           // wider than a phone and up to this: the tablet layout
 
-  /** The phone layout the report declares for a page, or null. */
-  P.layoutOf = function (report, pageId) {
-    const l = report && report.layouts && report.layouts.phone && report.layouts.phone[pageId];
-    return l && (((l.order || []).length) || ((l.hide || []).length) || Object.keys(l.span || {}).length) ? l : null;
+  /** The device class of a width in pixels: 'phone', 'tablet' or null (a desktop). */
+  P.device = (px) => (px > 0 && px <= P.MAX ? 'phone' : px > P.MAX && px <= P.TABLET_MAX ? 'tablet' : null);
+
+  /** The layout the report declares for a page on a device ('phone' unless said), or null. */
+  P.layoutOf = function (report, pageId, device) {
+    const l = report && report.layouts && report.layouts[device || 'phone'] && report.layouts[device || 'phone'][pageId];
+    return l && (((l.order || []).length) || ((l.hide || []).length) || ((l.wide || []).length) || Object.keys(l.span || {}).length) ? l : null;
   };
+
+  /** Where a tablet puts a visual on its 12-column grid: half the width, or all of it when the layout lists it as wide; its height is its rows, else the grid's own. */
+  P.tabletColumn = (spec, lay) => (((lay && lay.wide) || []).indexOf(spec.id) >= 0 ? '1 / -1' : 'span 6');
+  P.tabletRow = (spec, rows) => 'span ' + (rows || spec.at.h);
 
   /** The page's visuals in the grid's reading order (top to bottom, then left to right). */
   P.reading = (page) => page.visuals.slice().sort((a, b) => a.at.y - b.at.y || a.at.x - b.at.x);
@@ -61,6 +70,7 @@
     const span = {};
     Object.keys(lay.span || {}).forEach((k) => { if (lay.span[k]) { span[k] = lay.span[k]; } });
     if (Object.keys(span).length) { out.span = span; }
+    if ((lay.wide || []).length) { out.wide = lay.wide.slice(); }
     return Object.keys(out).length ? out : null;
   };
 })();

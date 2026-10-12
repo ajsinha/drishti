@@ -55,6 +55,7 @@
         <div class="bi-viewtabs" role="tablist" aria-label="View">
           <button type="button" class="bi-tab" role="tab" data-tab="canvas" aria-selected="true">Canvas</button>
           <button type="button" class="bi-tab" role="tab" data-tab="phone" aria-selected="false">Phone</button>
+          <button type="button" class="bi-tab" role="tab" data-tab="tablet" aria-selected="false">Tablet</button>
           <button type="button" class="bi-tab" role="tab" data-tab="yaml" aria-selected="false">YAML</button>
         </div>
       </div>
@@ -73,6 +74,17 @@
             <p class="bi-phone-actions"><button type="button" class="btn-pill btn-ghost" data-phone-reset><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Back to automatic</button></p>
           </div>
           <div class="bi-phone-frame" aria-label="Preview at 390 pixels"><div class="bi-phone-screen" data-phone-preview></div></div>
+        </div>
+      </div>
+      <div data-view="tablet" class="bi-dview" hidden>
+        <p class="text-muted-d">How this page looks on a tablet (1024 px and narrower, wider than a phone). Each visual takes half the width; tick Wide for the whole width. Drag the rows, or use the arrows, to change the order;
+          hide what a tablet does not need; set a height in rows. Without a tablet layout the page keeps the grid.</p>
+        <div class="bi-phone-edit bi-tablet-edit">
+          <div class="bi-phone-list-wrap">
+            <ul class="bi-phone-list" data-tablet-list aria-label="Visuals in tablet order"></ul>
+            <p class="bi-phone-actions"><button type="button" class="btn-pill btn-ghost" data-tablet-reset><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Back to automatic</button></p>
+          </div>
+          <div class="bi-tablet-frame" aria-label="Preview at 768 pixels"><div class="bi-tablet-screen" data-tablet-preview></div></div>
         </div>
       </div>
       <div data-view="yaml" class="bi-dview" hidden>

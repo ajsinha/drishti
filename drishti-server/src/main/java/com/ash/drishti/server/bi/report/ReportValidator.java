@@ -162,10 +162,16 @@ public final class ReportValidator {
         }
     }
 
-    /** Every page and visual a phone layout names exists, and a visual is not both ordered twice nor ordered and hidden. */
+    /** Every page and visual a phone or tablet layout names exists, and a visual is not ordered twice nor both ordered and hidden. */
     private void phoneLayouts(Set<String> pageIds) {
-        report.layouts().getOrDefault("phone", Map.of()).forEach((pageId, lay) -> {
-            String p = "layouts.phone." + pageId;
+        for (String device : Report.DEVICES) {
+            deviceLayouts(device, pageIds);
+        }
+    }
+
+    private void deviceLayouts(String device, Set<String> pageIds) {
+        report.layouts().getOrDefault(device, Map.of()).forEach((pageId, lay) -> {
+            String p = "layouts." + device + "." + pageId;
             Report.Page page = report.page(pageId);
             if (page == null) {
                 err(ReportParser.REFERENCE, p, "the report has no page '" + pageId + "' (pages: " + String.join(", ", pageIds) + ")");
@@ -188,6 +194,8 @@ public final class ReportValidator {
             }
             lay.span().keySet().stream().filter(id -> page.visual(id) == null)
                     .forEach(id -> err(ReportParser.REFERENCE, p + ".span." + id, "page '" + pageId + "' has no visual '" + id + "'"));
+            lay.wide().stream().filter(id -> page.visual(id) == null)
+                    .forEach(id -> err(ReportParser.REFERENCE, p + ".wide", "page '" + pageId + "' has no visual '" + id + "'"));
         });
     }
 

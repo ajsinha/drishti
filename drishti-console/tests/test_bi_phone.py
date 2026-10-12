@@ -63,3 +63,17 @@ def test_a_layout_applies_only_to_a_phone_width_and_only_when_it_says_something(
 def test_a_row_height_is_whole_rows_and_their_gaps_and_tidy_drops_what_says_nothing():
     got = run("console.log(JSON.stringify([P.height(1), P.height(5), P.tidy({ order: [], hide: [], span: { a: 0 } }), P.tidy({ order: ['a'], hide: [], span: { a: 3, b: 0 } }), P.tidy(null)]))")
     assert got == [56, 5 * 56 + 4 * 10, None, {"order": ["a"], "span": {"a": 3}}, None]
+
+
+def test_a_width_is_a_phone_a_tablet_or_a_desktop_and_each_has_its_own_layout():
+    report = {"layouts": {"phone": {"desk": {"order": ["a"]}}, "tablet": {"desk": {"wide": ["e"]}, "only": {"span": {"a": 3}}}}}
+    got = run("const r = %s; console.log(JSON.stringify([P.device(390), P.device(640), P.device(641), P.device(1024), P.device(1025), P.device(0), "
+              "P.layoutOf(r, 'desk', 'phone'), P.layoutOf(r, 'desk', 'tablet'), P.layoutOf(r, 'desk'), P.layoutOf(r, 'only', 'phone'), P.layoutOf(r, 'only', 'tablet')]))" % json.dumps(report))
+    assert got == ["phone", "phone", "tablet", "tablet", None, None, {"order": ["a"]}, {"wide": ["e"]}, {"order": ["a"]}, None, {"span": {"a": 3}}]
+
+
+def test_a_tablet_visual_takes_half_the_width_unless_it_is_wide_and_its_height_is_its_rows_or_its_own():
+    lay = {"wide": ["e"], "span": {"c": 3}}
+    got = run("const lay = %s; const v = (id, h) => ({ id, at: { h } }); console.log(JSON.stringify([P.tabletColumn(v('c', 5), lay), P.tabletColumn(v('e', 4), lay), P.tabletColumn(v('c', 5), null), "
+              "P.tabletRow(v('c', 5), 3), P.tabletRow(v('d', 5), null), P.tidy({ order: [], hide: [], span: {}, wide: ['e'] }), P.tidy({ wide: [] })]))" % json.dumps(lay))
+    assert got == ["span 6", "1 / -1", "span 6", "span 3", "span 5", {"wide": ["e"]}, None]

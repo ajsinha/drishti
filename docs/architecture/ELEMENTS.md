@@ -214,7 +214,7 @@ Three rules hold the design together:
 ### 5.1 Loading the library
 
 ```html
-<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.2.0/drishti-elements.js"
+<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.3.0/drishti-elements.js"
         integrity="sha384-…" crossorigin="anonymous"></script>
 ```
 
@@ -1319,7 +1319,7 @@ expiry and renewal, a console restart, the sanitiser, Trusted Types, slots. New 
 (`tools/elements-demo/static/report.html`, `test_embed_report_browser.py`). **Not built: the frameworks smoke** (React 19, Angular and Vue 3 pages, built once into `tests/elements/frameworks/`): it needs the three frameworks' production builds vendored, and this build environment has no network and no copy of them to vendor;
 the elements are plain custom elements with events on `addEventListener`, which the developer guide shows for each framework, but no framework page runs in a test yet.
 
-**Step 12, distribution.** `core/element_dist.py` holds the library's **semantic version** (`VERSION`, `1.2.0`; the entry reports it as `DrishtiElements.version`). The console serves it **exactly and immutably** at `/embed/v1/elements/1.2.0/drishti-elements.js` and `.../m/<name>.js`
+**Step 12, distribution.** `core/element_dist.py` holds the library's **semantic version** (`VERSION`, `1.3.0`; the entry reports it as `DrishtiElements.version`). The console serves it **exactly and immutably** at `/embed/v1/elements/1.3.0/drishti-elements.js` and `.../m/<name>.js`
 (`Cache-Control: public, max-age=31536000, immutable`, `ETag` = the file's SRI value) with `.../integrity.json` (`{"name", "version", "api", "files": {<path>: {"integrity": "sha384-…", "bytes"}}}`); a partial version (`/embed/v1/elements/1/…`, `/1.1/…`) answers `302` to the exact one (`max-age=60`, with CORS, so a module graph follows it);
 a version this console does not hold is `410 DRS-8006` (it says which one it serves), a malformed one `404`. `web/elements/integrity.json` is the committed record and `tests/test_element_package.py` fails when a module changed and `VERSION` did not, so **a version names the same bytes for ever**. The unversioned
 `/embed/v1/drishti-elements.js` (revalidated each time) stays for hosts that follow the console. **The npm package** `@drishti/elements` is a folder, `drishti-console/web/elements/package/`, made by `python3 tools/elements_package.py` (no network, no Node): `package.json` (an `exports` map, `type: module`), `dist/` (the same modules byte for byte,

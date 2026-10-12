@@ -290,11 +290,11 @@
   }
 
   function showTab(name) {
-    ['canvas', 'phone', 'yaml'].forEach((t) => {
+    ['canvas', 'phone', 'tablet', 'yaml'].forEach((t) => {
       q('[data-view="' + t + '"]').hidden = t !== name;
       q('[data-tab="' + t + '"]').setAttribute('aria-selected', t === name ? 'true' : 'false');
     });
-    if (name === 'yaml') { D.flushYaml().then(() => { if (editor) { editor.refresh(); editor.focus(); } else { ta.focus(); } suggest(); }); } else if (name === 'phone') { D.emit('phone', 'show'); } else { D.emit('model', 'show'); }
+    if (name === 'yaml') { D.flushYaml().then(() => { if (editor) { editor.refresh(); editor.focus(); } else { ta.focus(); } suggest(); }); } else if (name === 'phone' || name === 'tablet') { D.emit(name, 'show'); } else { D.emit('model', 'show'); }
   }
 
   // ---- Check, Save ---------------------------------------------------------------------------------------------------
@@ -339,6 +339,7 @@
     q('[data-save-copy]').addEventListener('click', saveCopy);
     q('[data-tab="canvas"]').addEventListener('click', () => showTab('canvas'));
     q('[data-tab="phone"]').addEventListener('click', () => showTab('phone'));
+    q('[data-tab="tablet"]').addEventListener('click', () => showTab('tablet'));
     q('[data-tab="yaml"]').addEventListener('click', () => showTab('yaml'));
     q('[data-preview]').addEventListener('change', (e) => { D.preview = e.target.checked; D.emit('preview', D.preview); });
     D.preview = true;

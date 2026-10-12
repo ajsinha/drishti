@@ -212,6 +212,27 @@ class ReportParserTest {
     }
 
     @Test
+    void aTabletLayoutIsAPhoneLayoutPlusTheVisualsThatTakeTheWholeWidth() throws IOException {
+        String yaml = PHONE.replace("layouts:\n", "layouts:\n  tablet:\n    p:\n      order: [w, v]\n      wide: [v]\n      span: { w: 3 }\n");
+        ReportParser.Result r = ReportParser.parse(yaml);
+        assertThat(r.problems().stream().filter(Problem::error).toList()).isEmpty();
+        Report.PhonePage t = r.report().layouts().get("tablet").get("p");
+        assertThat(t.order()).containsExactly("w", "v");
+        assertThat(t.wide()).containsExactly("v");
+        assertThat(r.report().layouts().get("phone").get("p").wide()).isEmpty();
+        assertThat(ReportValidator.validate(r.report(), dataset("trades-basic")).stream().filter(Problem::error).toList()).isEmpty();
+        String back = ReportYaml.write(r.report().toMap());
+        assertThat(back).contains("  tablet:").contains("wide:");
+        assertThat(ReportParser.parse(back).report().toMap()).isEqualTo(r.report().toMap());
+        // a bad one is refused with its path; "wide" means nothing on a phone and is ignored with a warning; an unknown device is ignored
+        String bad = yaml.replace("wide: [v]", "wide: [nope]").replace("hide: [w]", "hide: [w]\n      wide: [v]").replace("layouts:\n", "layouts:\n  watch:\n    p: { order: [v] }\n");
+        List<Problem> all = ReportParser.parse(bad).problems();
+        assertThat(all).extracting(Problem::path).contains("layouts.watch", "layouts.phone.p.wide");
+        assertThat(all.stream().filter(Problem::error)).isEmpty();
+        assertThat(errors(yaml.replace("wide: [v]", "wide: [nope]"), "trades-basic")).extracting(Problem::path).contains("layouts.tablet.p.wide");
+    }
+
+    @Test
     void aPhoneLayoutNamingAMissingPageVisualOrABadSpanIsRefused() throws IOException {
         String bad = PHONE.replace("order: [v]", "order: [v, v, nope]").replace("hide: [w]", "hide: [v]").replace("span: { v: 5 }", "span: { v: 99, zz: 2 }")
                 .replace("  phone:\n    p:", "  phone:\n    ghost: { order: [v] }\n    p:");

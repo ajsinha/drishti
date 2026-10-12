@@ -3,7 +3,7 @@
   "files": {
     "drishti-elements.js": {
       "bytes": 2500,
-      "integrity": "sha384-QqoAw47fsh9tjRGAPOGY9ZtzDgKVI4h4Cbim1+ekOC6uCES87yWSYka4HFAX820D"
+      "integrity": "sha384-cDsyYzeSRsWbSXvEUFudkzcDsoAelqcNBsUgwt0bhliGWRRWyTsmZ3tfPW5RnMI0"
     },
     "m/assets.js": {
       "bytes": 5171,
@@ -34,8 +34,8 @@
       "integrity": "sha384-0nyphhKJRVPuSYdiW9W6dEA2u/aLQz1mTt0HPJU4VzWqdyANgjIQIs5cT/1jgSL3"
     },
     "m/report-page.js": {
-      "bytes": 17948,
-      "integrity": "sha384-OX4t2PfET4o5yweHpidIu9bRWQnkc1a5Wf5D5WqL0dz58JuHdeCCgxyplURSLUEQ"
+      "bytes": 18412,
+      "integrity": "sha384-Bh7RFe6SUUXZ5EDdQzQBi6SUg+DL9tuxqw9k/MctMNu/P6RHeq9bOTqLi61CRXvX"
     },
     "m/report.js": {
       "bytes": 14915,
@@ -51,5 +51,5 @@
     }
   },
   "name": "@drishti/elements",
-  "version": "1.2.0"
+  "version": "1.3.0"
 }

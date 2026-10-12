@@ -513,37 +513,41 @@ public final class ReportParser {
         return list;
     }
 
-    /** {@code layouts: { phone: { <page id>: { order: [visual ids], hide: [visual ids], span: { <visual id>: rows } } } }}; references are checked by the validator. */
+    /**
+     * {@code layouts: { phone: { <page id>: { order, hide, span } }, tablet: { <page id>: { order, hide, span, wide } } }}; references are checked by the validator.
+     * {@code wide} (visuals that take the whole width instead of half) belongs to a tablet.
+     */
     private static Map<String, Map<String, Report.PhonePage>> layouts(JsonNode n, List<Problem> out) {
         Map<String, Map<String, Report.PhonePage>> all = new LinkedHashMap<>();
         if (n.isMissingNode() || n.isNull()) {
             return all;
         }
         if (!n.isObject()) {
-            out.add(error(INVALID, "layouts", "layouts is { phone: { <page id>: { order, hide, span } } }"));
+            out.add(error(INVALID, "layouts", "layouts is { phone: { <page id>: { order, hide, span } }, tablet: { <page id>: { order, hide, span, wide } } }"));
             return all;
         }
         n.fields().forEachRemaining(dev -> {
             String dp = "layouts." + dev.getKey();
-            if (!"phone".equals(dev.getKey())) {
-                out.add(new Problem("warning", INVALID, dp, "unknown layout '" + dev.getKey() + "' is ignored (phone)"));
+            if (!Report.DEVICES.contains(dev.getKey())) {
+                out.add(new Problem("warning", INVALID, dp, "unknown layout '" + dev.getKey() + "' is ignored (phone, tablet)"));
                 return;
             }
             if (!dev.getValue().isObject()) {
-                out.add(error(INVALID, dp, "phone maps a page's id to { order, hide, span }"));
+                out.add(error(INVALID, dp, dev.getKey() + " maps a page's id to { order, hide, span" + ("tablet".equals(dev.getKey()) ? ", wide" : "") + " }"));
                 return;
             }
+            Set<String> keys = "tablet".equals(dev.getKey()) ? Set.of("order", "hide", "span", "wide") : Set.of("order", "hide", "span");
             Map<String, Report.PhonePage> pages = new LinkedHashMap<>();
             dev.getValue().fields().forEachRemaining(pg -> {
                 String pp = dp + "." + pg.getKey();
                 JsonNode v = pg.getValue();
                 if (!v.isObject()) {
-                    out.add(error(INVALID, pp, "a page's phone layout is { order: [visual ids], hide: [visual ids], span: { <visual id>: rows } }"));
+                    out.add(error(INVALID, pp, "a page's " + dev.getKey() + " layout is { order: [visual ids], hide: [visual ids], span: { <visual id>: rows }" + ("tablet".equals(dev.getKey()) ? ", wide: [visual ids]" : "") + " }"));
                     return;
                 }
                 v.fieldNames().forEachRemaining(k -> {
-                    if (!Set.of("order", "hide", "span").contains(k)) {
-                        out.add(new Problem("warning", INVALID, pp + "." + k, "unknown key '" + k + "' is ignored (order, hide, span)"));
+                    if (!keys.contains(k)) {
+                        out.add(new Problem("warning", INVALID, pp + "." + k, "unknown key '" + k + "' is ignored (" + String.join(", ", keys.stream().sorted().toList()) + ")"));
                     }
                 });
                 Map<String, Integer> span = new LinkedHashMap<>();
@@ -560,7 +564,7 @@ public final class ReportParser {
                 } else if (!sp.isMissingNode() && !sp.isNull()) {
                     out.add(error(INVALID, pp + ".span", "span maps a visual's id to its height in grid rows"));
                 }
-                pages.put(pg.getKey(), new Report.PhonePage(strings(v.path("order")), strings(v.path("hide")), span));
+                pages.put(pg.getKey(), new Report.PhonePage(strings(v.path("order")), strings(v.path("hide")), span, strings(v.path("wide"))));
             });
             all.put(dev.getKey(), pages);
         });

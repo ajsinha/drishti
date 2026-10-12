@@ -222,19 +222,22 @@ export class ReportPage {
     mk('bi-astable', 'table', st.asTable[spec.id] ? 'Show as a chart' : 'Show as a table', () => { st.asTable[spec.id] = !st.asTable[spec.id]; this.draw(spec.id); }, { 'data-act': 'as-table', 'aria-pressed': st.asTable[spec.id] ? 'true' : 'false' });
     if (st.selections.find((s) => s.visual === spec.id)) { mk('bi-clear', 'x-circle', 'Clear the selection', () => this.clearSelection(spec.id), { 'data-act': 'clear' }); }
   }
-  /** Phone width (640 px and narrower, measured on the element) and the report's own layout for the page, or null for the automatic single column. */
-  phoneLayout() { return B().phone.narrow(this.host.width) ? B().phone.layoutOf(this.report, this.pageId) : null; }
+  /** The device class of the element's width (a phone, 640 px and narrower; a tablet, 1024 px and narrower) and the report's own layout for the page on it: {device, lay}, or null. */
+  deviceLayout() { const device = B().phone.device(this.host.width), lay = device ? B().phone.layoutOf(this.report, this.pageId, device) : null; return lay ? { device, lay } : null; }
   drawGrid() {
     this.frames.forEach((e) => e.frame.dispose());
     this.frames.clear();
     const grid = B().clear(this.q('[data-grid]')), page = this.current, o = this.options;
-    const lay = this.phoneLayout();
-    grid.setAttribute('data-phone', lay ? 'layout' : 'auto');
+    const dl = this.deviceLayout(), lay = dl && dl.lay;
+    grid.setAttribute('data-phone', dl && dl.device === 'phone' ? 'layout' : 'auto');
+    grid.setAttribute('data-device', dl ? dl.device : 'desktop');
     let list = B().phone.arrange(page, lay);
     if (o.visual) { list = list.filter((x) => x.spec.id === o.visual); }
     list.forEach(({ spec, rows }) => {
       const frame = B().frame(spec, { buttons: this.drawn(spec) ? [B().h('span', { class: 'bi-vis-slot' })] : [], onRetry: () => this.load(spec) });      // the slot makes the header; buttons() fills it
-      if (o.visual) { frame.el.style.gridColumn = '1 / -1'; frame.el.style.height = Math.max(180, spec.at.h * 56) + 'px'; } else if (lay) {
+      if (o.visual) { frame.el.style.gridColumn = '1 / -1'; frame.el.style.height = Math.max(180, spec.at.h * 56) + 'px'; } else if (dl && dl.device === 'tablet') {
+        frame.el.style.gridColumn = B().phone.tabletColumn(spec, lay); frame.el.style.gridRow = B().phone.tabletRow(spec, rows);
+      } else if (lay) {
         frame.el.style.height = rows ? B().phone.height(rows) + 'px' : '';
       } else { frame.el.style.gridColumn = (spec.at.x + 1) + ' / span ' + spec.at.w; frame.el.style.gridRow = (spec.at.y + 1) + ' / span ' + spec.at.h; }
       frame.el.tabIndex = 0;
@@ -243,7 +246,7 @@ export class ReportPage {
     });
     list.forEach(({ spec }) => { const e = this.frames.get(spec.id); e.pending = this.load(spec); this.buttons(spec); });
     this.tabs(); this.chips(); this.syncBar();
-    this.emit('page-changed', { page: this.pageId, title: page.title, visuals: list.map((x) => x.spec.id), phone: !!lay });
+    this.emit('page-changed', { page: this.pageId, title: page.title, visuals: list.map((x) => x.spec.id), phone: !!dl && dl.device === 'phone', device: dl ? dl.device : 'desktop' });
   }
   go(pageId, carry, source) {
     this.pageId = pageId;
@@ -254,8 +257,8 @@ export class ReportPage {
   }
   /** The element's width changed: swap between the report's phone layout and the grid when the page has a phone layout. */
   resized() {
-    const was = this.frames.size ? this.q('[data-grid]').getAttribute('data-phone') : null;
-    const now = this.phoneLayout() ? 'layout' : 'auto';
+    const was = this.frames.size ? this.q('[data-grid]').getAttribute('data-device') : null;
+    const dl = this.deviceLayout(), now = dl ? dl.device : 'desktop';
     if (was && was !== now) { this.drawGrid(); } else { this.frames.forEach((e) => e.frame.resize()); }
   }
   start() {

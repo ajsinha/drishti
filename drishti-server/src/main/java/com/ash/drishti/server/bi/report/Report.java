@@ -30,7 +30,8 @@ import java.util.Map;
  * @param dataset the dataset it reads: a catalogue id, a shipped file's name, or the dataset's own name
  * @param theme the colours the visuals use: {@code palette} (a name the console knows) and optional {@code background}
  * @param dates the business dates the report reads (null: each query reads the latest date)
- * @param layouts per device class (today only {@code phone}), per page id, how the page is arranged at 640 px and narrower; empty: the automatic one column
+ * @param layouts per device class ({@code phone}: 640 px and narrower; {@code tablet}: 1024 px and narrower), per page id, how the page is arranged; empty: the automatic
+ *        one column on a phone and the grid on a tablet
  * @param links which fields of different datasets mean the same thing, so a slicer or a selection on one filters the visuals of the others (RUPAKA.md section 20.10)
  */
 public record Report(String name, int version, String title, String description, boolean sample, String dataset, Map<String, String> theme, Dates dates, List<Filter> filters,
@@ -50,6 +51,8 @@ public record Report(String name, int version, String title, String description,
 
     /** The grid is always this many columns wide. */
     public static final int COLUMNS = 12;
+    /** The device classes a report may arrange a page for: a phone (640 px and narrower) and a tablet (1024 px and narrower). */
+    public static final List<String> DEVICES = List.of("phone", "tablet");
 
     /** Inclusive business dates, yyyy-mm-dd; either may be null. */
     public record Dates(String from, String to) {}
@@ -132,9 +135,14 @@ public record Report(String name, int version, String title, String description,
 
     /**
      * How one page is arranged on a phone (at most 640 px wide): the visuals in {@code order} first (others follow in the grid's reading order), those in
-     * {@code hide} not drawn, and {@code span} the height in grid rows of a visual (1 to 40; the width is always the whole screen).
+     * {@code hide} not drawn, and {@code span} the height in grid rows of a visual (1 to 40). On a phone the width is always the whole screen; on a tablet a visual
+     * takes half the width unless it is listed in {@code wide} (the whole width). The same record serves both device classes.
      */
-    public record PhonePage(List<String> order, List<String> hide, Map<String, Integer> span) {
+    public record PhonePage(List<String> order, List<String> hide, Map<String, Integer> span, List<String> wide) {
+
+        public PhonePage(List<String> order, List<String> hide, Map<String, Integer> span) {
+            this(order, hide, span, List.of());
+        }
 
         public Map<String, Object> toMap() {
             Map<String, Object> m = new LinkedHashMap<>();
@@ -146,6 +154,9 @@ public record Report(String name, int version, String title, String description,
             }
             if (!span.isEmpty()) {
                 m.put("span", span);
+            }
+            if (!wide.isEmpty()) {
+                m.put("wide", wide);
             }
             return m;
         }
