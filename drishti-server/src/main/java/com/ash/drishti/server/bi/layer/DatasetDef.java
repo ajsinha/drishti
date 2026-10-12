@@ -124,6 +124,12 @@ public record DatasetDef(String name, String version, String id, String title, S
     public record Col(String name, String type, String path, String expr, String role, String meaning, String references, String of, String unitCurrency,
             String unitOf, String additive, String aggregate, String format, String id, String description) {
 
+        public Col {
+            id = id == null ? "" : id;
+            description = description == null ? "" : description;
+            additive = additive == null ? ("amount".equals(role) || "quantity".equals(role) ? "true" : "false") : additive;
+        }
+
         /** The document path: the name when none is given. */
         public String pathOrName() {
             return path == null || path.isBlank() ? name : path;

@@ -146,7 +146,7 @@ public final class Flattener {
                     default -> "Distinct " + c.name();
                 };
                 String additive = "sum".equals(c.aggregate()) || "count".equals(c.aggregate()) ? c.additive() : "false";
-                String currency = c.perRowCurrency(r.def().columns()) ? use.alias() + "." + c.unitCurrency() : c.unitCurrency();
+                String currency = c.perRowCurrency(r.def().columns()) ? use.alias() + "." + c.unitCurrency() : null;          // a fixed currency always adds
                 add(out, name, c.aggregate() + "(" + use.alias() + "." + c.name() + ")", use.alias(), additive, c.format(), "sum".equals(c.aggregate()) ? currency : null);
             }
         }

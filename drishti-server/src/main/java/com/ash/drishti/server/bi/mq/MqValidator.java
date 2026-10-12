@@ -172,7 +172,7 @@ public final class MqValidator {
         List<String> semi = new ArrayList<>();
         for (String m : q.measures()) {
             ModelView.MeasureInfo info = v.info(ds, m);
-            if (info.currency() != null && !fields.contains(info.currency()) && !pinned(q, info.currency())) {
+            if (info.currency() != null && info.currency().contains(".") && !fields.contains(info.currency()) && !pinned(q, info.currency())) {
                 currency.put(m, info.currency());
             }
             if (info.semiAdditive() && window && !dated) {
