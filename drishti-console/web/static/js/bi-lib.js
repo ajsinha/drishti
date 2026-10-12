@@ -113,21 +113,23 @@
     if (v == null) { return masked ? '•••' : '–'; }
     if (typeof v !== 'number') { return String(v); }
     if (!isFinite(v)) { return String(v); }
-    const sign = (x) => (x < 0 ? MINUS : '+');
+    const shows = (x, d) => Math.round(Math.abs(x) * Math.pow(10, d)) > 0;                        // a value that rounds to zero is zero: never "-0.00"
+    const sign = (x, d) => (!shows(x, d) ? '' : x < 0 ? MINUS : '+');
+    const minus = (x, d) => (x < 0 && shows(x, d) ? MINUS : '');
     switch (name) {
-      case 'amount0': return (v < 0 ? MINUS : '') + GROUP.format(Math.abs(v));
-      case 'signed0': return sign(v) + GROUP.format(Math.abs(v));
-      case 'signed2': return sign(v) + GROUP2.format(Math.abs(v));
-      case 'pct': return (Math.abs(v) <= 1 ? FREE.format(v * 100) : FREE.format(v)) + '%';
+      case 'amount0': return minus(v, 0) + GROUP.format(Math.abs(v));
+      case 'signed0': return sign(v, 0) + GROUP.format(Math.abs(v));
+      case 'signed2': return sign(v, 2) + GROUP2.format(Math.abs(v));
+      case 'pct': return (Math.abs(v) <= 1 ? minus(v * 100, 2) + FREE.format(Math.abs(v * 100)) : minus(v, 2) + FREE.format(Math.abs(v))) + '%';
       case 'compact': return B.compact(v);
-      default: return (v < 0 ? MINUS : '') + (Number.isInteger(v) ? GROUP.format(Math.abs(v)) : FREE.format(Math.abs(v)));
+      default: return minus(v, 2) + (Number.isInteger(v) ? GROUP.format(Math.abs(v)) : FREE.format(Math.abs(v)));
     }
   };
 
   /** 1.2k, 3.4m, 5bn: for axes and tight places. */
   B.compact = function (v) {
     if (typeof v !== 'number' || !isFinite(v)) { return ''; }
-    const a = Math.abs(v), s = v < 0 ? MINUS : '';
+    const a = Math.abs(v), s = v < 0 && Math.round(a * 100) > 0 ? MINUS : '';
     const t = (x, d) => String(Number(x.toFixed(d)));
     if (a >= 1e12) { return s + t(a / 1e12, 2) + 'tn'; }
     if (a >= 1e9) { return s + t(a / 1e9, 2) + 'bn'; }
@@ -321,6 +323,13 @@
       if (want) { const o = Array.prototype.find.call(main.options, (x) => !x.disabled && (x.value === want || x.value === 'file:dataset:' + want)); if (o) { main.value = o.value; } }
       return d.datasets || [];
     });
+  };
+
+  /** "Also add" never offers the main dataset: the option of the chosen main one is hidden and unselected, and follows the choice. */
+  B.excludeMain = function (main, also) {
+    const apply = () => Array.prototype.forEach.call(also.options, (o) => { const same = !!main.value && o.value === main.value; o.hidden = same; if (same) { o.selected = false; } });
+    main.addEventListener('change', apply);
+    return apply;
   };
 
   B.ROW_PX = 56;                 // the height of one grid row of a report, in pixels (also in bi-report.css)

@@ -22,6 +22,7 @@ import json
 import pytest
 
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
+from playwright.sync_api import expect  # noqa: E402
 
 import bi_live_stack as S  # noqa: E402
 from bi_live_stack import CONSOLE_URL, PASSWORD, REPORT  # noqa: E402
@@ -80,7 +81,8 @@ def test_the_board_designer_builds_a_board_with_an_alert_and_a_hysteresis(stack,
     page.wait_for_function("() => document.querySelector('[data-tile] .bi-btile-title').textContent === 'Renamed in YAML'", timeout=10000)
     # save, then the draft is what the board's page shows
     page.click("[data-save]")
-    page.wait_for_function("() => /Saved as a draft/.test(document.querySelector('[data-msg]').textContent)")
+    expect(page.locator("[data-save] + .bi-near")).to_contain_text("Saved as a draft")
+    assert page.inner_text("[data-msg]").strip() == ""                                    # one message, beside the button
     item = page.get_attribute("#biCanvas", "data-item")
     page.reload()
     page.wait_for_selector("[data-board-design-root][data-ready='1']")

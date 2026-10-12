@@ -246,7 +246,7 @@
     return group(parts[0]) + (parts[1] ? '.' + parts[1] : '');
   }
   function compact(v) {
-    var a = Math.abs(v), sign = v < 0 ? '−' : '';
+    var a = Math.abs(v), sign = v < 0 && Math.round(a * 100) > 0 ? '−' : '';
     var t = function (x, dp) { return String(Number(x.toFixed(dp))); };
     if (a >= 1e12) { return sign + t(a / 1e12, 1) + 'tn'; }
     if (a >= 1e9) { return sign + t(a / 1e9, 1) + 'bn'; }
@@ -261,18 +261,18 @@
   function format(v, fmt) {
     if (v === null || v === undefined || (typeof v === 'number' && !isFinite(v))) { return '—'; }
     if (typeof v !== 'number') { return String(v); }
-    var neg = v < 0 ? '−' : '';
-    if (fmt === 'pct') { return neg + fixed(v * 100, 1) + '%'; }
-    if (fmt === 'int') { return neg + fixed(v, 0); }
+    var neg = function (x, dp) { return x < 0 && Math.round(Math.abs(x) * Math.pow(10, dp)) > 0 ? '−' : ''; };      // a value that rounds to zero is zero: never "-0.00"
+    if (fmt === 'pct') { return neg(v * 100, 1) + fixed(v * 100, 1) + '%'; }
+    if (fmt === 'int') { return neg(v, 0) + fixed(v, 0); }
     if (fmt === 'compact') { return compact(v); }
     var m = /^(pct|signed|amount|price|rate|df|pips)(\d)$/.exec(fmt || '');
     if (m) {
       var dp = +m[2];
-      if (m[1] === 'pct') { return neg + fixed(v * 100, dp) + '%'; }
-      return (m[1] === 'signed' ? (v < 0 ? '−' : v > 0 ? '+' : '') : neg) + fixed(v, dp);
+      if (m[1] === 'pct') { return neg(v * 100, dp) + fixed(v * 100, dp) + '%'; }
+      return (m[1] === 'signed' ? (neg(v, dp) || (Math.round(Math.abs(v) * Math.pow(10, dp)) > 0 ? '+' : '')) : neg(v, dp)) + fixed(v, dp);
     }
-    var whole = Math.abs(v - Math.round(v)) < 1e-9;
-    return neg + fixed(v, whole || Math.abs(v) >= 100 ? 0 : 2);
+    var whole = Math.abs(v - Math.round(v)) < 1e-9, dps = whole || Math.abs(v) >= 100 ? 0 : 2;
+    return neg(v, dps) + fixed(v, dps);
   }
   /** The format a value cell uses: counts as whole numbers, show-as as percentages, other aggregates as the field's. */
   function valueFormat(v, fields) {

@@ -324,9 +324,9 @@ def test_a_slice_and_a_sql_cell_become_visuals_in_a_new_and_an_existing_report(s
     page.wait_for_selector("[data-pivot] table")
     # a new report draft
     page.click("[data-promote-slice]")
-    page.wait_for_selector("[data-saved]:not([hidden])", timeout=30000)
-    page.wait_for_function("() => /Report draft saved/.test(document.querySelector('[data-msg]').textContent)")
-    href = page.get_attribute("[data-saved]", "href")
+    page.wait_for_selector("[data-promote-slice] + .bi-near [data-promoted-link]", timeout=30000)
+    page.wait_for_function("() => /Report draft saved/.test(document.querySelector('[data-promote-slice] + .bi-near').textContent)")
+    href = page.get_attribute("[data-promoted-link]", "href")
     s, made = api(page, "GET", "/items/" + href.split("/bi/i/")[1].replace("%3A", ":"))
     assert "type: matrix" in made["body"] and "trade.currency" in made["body"] and "USD" in made["body"] and "MTM" in made["body"]
     # an existing one, from a SQL cell
@@ -337,7 +337,7 @@ def test_a_slice_and_a_sql_cell_become_visuals_in_a_new_and_an_existing_report(s
     page.click("#bxT-sql")
     page.fill("[data-cells=sql] textarea", "SELECT desk, SUM(mtm) FROM extract WHERE currency = 'EUR' GROUP BY desk")
     page.click("[data-promote-report]")
-    page.wait_for_function("() => /added to the report draft/.test(document.querySelector('[data-msg]').textContent)", timeout=30000)
+    page.wait_for_function("() => /added to the report draft/.test(document.querySelector('[data-promote-report] + .bi-near').textContent)", timeout=30000)
     s, edited = api(page, "GET", "/items/" + mine["id"])
     assert s == 200 and edited["body"].count("- id:") >= 3 and "type: matrix" in edited["body"] and "EUR" in edited["body"] and "mtm-chart" in edited["body"], edited["body"]
     clean(page)

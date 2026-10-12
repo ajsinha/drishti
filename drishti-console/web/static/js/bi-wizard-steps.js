@@ -435,6 +435,7 @@
       if (!area.hidden) { area.value = yamlOf; area.focus(); } else { W.yamlText = null; }
     });
     area.addEventListener('input', () => { W.yamlText = area.value; });
+    area.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); go.click(); } });      // Ctrl+S saves the draft, not the page
     area.addEventListener('change', run);
     const title = W.doc.title || W.doc.dataset || 'Dataset';
     B.api('GET', '/workspaces').then((list) => {

@@ -113,10 +113,12 @@
           }
           let fits = true;
           const done = D.change('Add ' + B.label(name), () => {
+            const was = target.dataset;
             if (!has) { setDs(target, from); }
             D.curIdx = D.idxForRef(from);
             const handled = D.auto.has(target.id) && autoRetype(target, name);
             if (!handled) { fits = D.addToVisual(target, name); }
+            if (!handled && !fits) { if (was === undefined) { delete target.dataset; } else { target.dataset = was; } }      // a refused drop changes nothing: the draft is not marked unsaved
           });
           if (!done) {
             const present = Object.keys(target.wells || {}).some((w) => (target.wells[w] || []).indexOf(name) >= 0);
