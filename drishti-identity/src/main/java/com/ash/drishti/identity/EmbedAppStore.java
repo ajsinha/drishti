@@ -391,7 +391,7 @@ public final class EmbedAppStore {
         if (d.scopes() != null || creating) {
             List<String> scopes = d.scopes() == null ? List.of() : d.scopes().stream().map(String::trim).filter(s -> !s.isEmpty()).distinct().toList();
             if (scopes.isEmpty()) {
-                throw bad("choose at least one scope (embed:view, embed:about, embed:report)");
+                throw bad("choose at least one scope (embed:view, embed:about, embed:report, embed:search)");
             }
             e.scopes = String.join(",", scopes);
         }

@@ -428,6 +428,12 @@ public final class EmbedTokenService {
         if (wait > 0) {
             throw new EmbedException(ErrorCode.EMBED_RATE_LIMITED, 429, "slow_down", "over the embed call rate; retry in " + wait + " s", wait);
         }
+        if (wait == 0 && EmbedProperties.SEARCH_PATH.equals(path)) {                 // a search is asked of the people index: its own, tighter rate per user
+            wait = rates.take("search:" + app.id() + ":" + u.username(), props.limits().searchesPerUserPerMinute());
+            if (wait > 0) {
+                throw new EmbedException(ErrorCode.EMBED_RATE_LIMITED, 429, "slow_down", "over the embed search rate; retry in " + wait + " s", wait);
+            }
+        }
         apps.touch(app.id());
         return new Authorized(new Principal(u.username(), List.copyOf(u.roles()), app.id()), app.id(), c.path("jti").asText(""), granted,
                 Instant.ofEpochSecond(c.path("exp").asLong()));

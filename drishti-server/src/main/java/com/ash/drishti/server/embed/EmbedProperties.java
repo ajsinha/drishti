@@ -36,11 +36,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param limits call rates
  * @param allowWildcardOrigins let an application register {@code https://*.suffix} origins (review apps)
  * @param assertionMaxAge longest life of a client or subject assertion a host signs (its {@code exp} minus its {@code iat})
+ * @param search the limits of {@code <drishti-search>} (scope {@code embed:search})
  * @param apps host applications declared in configuration (GitOps): read-only in Admin → Embedding, marked "from config"
  */
 @ConfigurationProperties("drishti.embed")
 public record EmbedProperties(Boolean enabled, String issuer, List<String> audiences, String signingKey, Integer tokenMaxSeconds, String mask,
-        Map<String, List<String>> scopes, Limits limits, Boolean allowWildcardOrigins, Duration assertionMaxAge, List<ConfiguredApp> apps) {
+        Map<String, List<String>> scopes, Limits limits, Boolean allowWildcardOrigins, Duration assertionMaxAge, List<ConfiguredApp> apps, Search search) {
 
     /** The scope that opens views, the live stream and a panel's rows. */
     public static final String VIEW = "embed:view";
@@ -48,17 +49,40 @@ public record EmbedProperties(Boolean enabled, String issuer, List<String> audie
     public static final String ABOUT = "embed:about";
     /** The scope that opens a published BI report: its definition, its visuals' queries and its live stream (the app's {@code kinds} then name {@code report:<id>} or {@code report:*}). */
     public static final String REPORT = "embed:report";
+    /** The scope that opens the search across Drishti ({@code GET /api/v1/embed/search}): read-only, masked, rate-limited. */
+    public static final String SEARCH = "embed:search";
+    /** The path the search scope opens. */
+    public static final String SEARCH_PATH = "/api/v1/embed/search";
 
     /**
      * @param tokensPerMinute exchanges per application per minute
      * @param viewsPerMinute calls per application per minute (the default of a new registration)
      * @param viewsPerUserPerMinute calls per user per minute (the default of a new registration)
+     * @param searchesPerUserPerMinute searches per user per minute (and application) through {@code <drishti-search>}, on top of the call rates
      */
-    public record Limits(Integer tokensPerMinute, Integer viewsPerMinute, Integer viewsPerUserPerMinute) {
+    public record Limits(Integer tokensPerMinute, Integer viewsPerMinute, Integer viewsPerUserPerMinute, Integer searchesPerUserPerMinute) {
+
+        public Limits(Integer tokensPerMinute, Integer viewsPerMinute, Integer viewsPerUserPerMinute) {
+            this(tokensPerMinute, viewsPerMinute, viewsPerUserPerMinute, null);
+        }
+
+        @org.springframework.boot.context.properties.bind.ConstructorBinding
         public Limits {
             tokensPerMinute = tokensPerMinute == null ? 120 : Math.max(1, tokensPerMinute);
             viewsPerMinute = viewsPerMinute == null ? 600 : Math.max(1, viewsPerMinute);
             viewsPerUserPerMinute = viewsPerUserPerMinute == null ? 60 : Math.max(1, viewsPerUserPerMinute);
+            searchesPerUserPerMinute = searchesPerUserPerMinute == null ? 30 : Math.max(1, searchesPerUserPerMinute);
+        }
+    }
+
+    /**
+     * @param maxResults most results one search returns
+     * @param minChars shortest query that is searched (shorter: an empty answer)
+     */
+    public record Search(Integer maxResults, Integer minChars) {
+        public Search {
+            maxResults = maxResults == null ? 10 : Math.max(1, Math.min(50, maxResults));
+            minChars = minChars == null ? 2 : Math.max(1, minChars);
         }
     }
 
@@ -89,8 +113,10 @@ public record EmbedProperties(Boolean enabled, String issuer, List<String> audie
                 VIEW, List.of("GET /api/v1/views/*/*", "GET /api/v1/views/*/*/stream", "GET /api/v1/views/*/*/panels/*/records",
                         "GET /api/v1/embed/check", "POST /api/v1/command"),
                 ABOUT, List.of("GET /api/v1/views/*/*/explain"),
-                REPORT, List.of("GET /api/v1/bi/reports/*", "POST /api/v1/bi/reports/*/query", "GET /api/v1/bi/reports/*/live")) : Map.copyOf(scopes);
-        limits = limits == null ? new Limits(null, null, null) : limits;
+                REPORT, List.of("GET /api/v1/bi/reports/*", "POST /api/v1/bi/reports/*/query", "GET /api/v1/bi/reports/*/live"),
+                SEARCH, List.of("GET " + SEARCH_PATH)) : Map.copyOf(scopes);
+        limits = limits == null ? new Limits(null, null, null, null) : limits;
+        search = search == null ? new Search(null, null) : search;
         allowWildcardOrigins = allowWildcardOrigins != null && allowWildcardOrigins;
         assertionMaxAge = assertionMaxAge == null ? Duration.ofSeconds(60) : assertionMaxAge;
         apps = apps == null ? List.of() : List.copyOf(apps);
