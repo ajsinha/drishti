@@ -111,7 +111,7 @@ public final class ArtifactImpact {
                 return "nothing depends on it";
             }
             List<String> parts = new ArrayList<>();
-            groups.forEach(g -> parts.add(g.count() + " " + g.label().toLowerCase(Locale.ROOT)));
+            groups.forEach(g -> parts.add(g.label() + " (" + g.count() + ")"));
             return String.join(", ", parts);
         }
     }
@@ -163,7 +163,7 @@ public final class ArtifactImpact {
             for (String c : pack.connectorRefs()) {
                 boolean shared = packs.packs().stream().anyMatch(p -> !p.name().equals(name) && p.connectorRefs().contains(c));
                 if (!shared && connectors.defined(c)) {
-                    add(found, "connectors", c, connectors.origin(c), "stops serving " + name + " when the pack goes");
+                    add(found, "connectors", c, "", connectors.origin(c) + " connector; stops serving " + name + " when the pack goes");
                 }
             }
         }
@@ -431,6 +431,6 @@ public final class ArtifactImpact {
 
     private static BiRow row(BiStore.Item i, boolean shipped) {
         String name = shipped ? i.id().substring(i.id().lastIndexOf(':') + 1) : i.title();
-        return new BiRow(i.id(), i.kind(), name, i.owner(), shipped, i.isPublished(), BiBodies.pairs(YAML, i.body(), i.kind()));
+        return new BiRow(i.id(), i.kind(), name, shipped ? "" : i.owner(), shipped, i.isPublished(), BiBodies.pairs(YAML, i.body(), i.kind()));
     }
 }

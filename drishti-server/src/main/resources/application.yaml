@@ -470,6 +470,12 @@ drishti:
       cache-size: 50                            # pictures kept by view, generation and rights profile
       cache-ttl: 10m
       recipients: count                         # the watermark names: count | names
+  admin:                             # Admin, Artifacts: uninstalling packs, connector files and shipped BI files safely (docs/admin/ARTIFACTS.md)
+    uninstalled-dir: ${DRISHTI_UNINSTALLED_DIR:${drishti.data.dir:./data}/uninstalled}   # an uninstall MOVES the artifact here; nothing is deleted
+    uninstalled-keep: ${DRISHTI_UNINSTALLED_KEEP:30d}      # archives older than this are removed, once a day; 0 keeps them for ever
+    uninstalled-prune-interval: 1d                        # how often the archive is pruned
+    hidden-bi-file: ${drishti.data.dir:./data}/admin/bi-hidden.txt   # the shipped BI files an administrator disabled (hidden from the catalogue)
+    bi-upload-max-bytes: 1048576                          # the largest BI file Admin, Artifacts accepts
   reports:                           # scheduled reports: a search delivered as CSV on a schedule
     enabled: ${DRISHTI_REPORTS_ENABLED:true}   # the scheduler; run it on one server of a group (reports still run by hand)
     folder: ${DRISHTI_REPORTS_DIR:${drishti.data.dir}/reports}

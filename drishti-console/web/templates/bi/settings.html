@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}BI settings · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-artifacts.css?v={{ ASSET_V }}">{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
@@ -37,7 +37,22 @@
     <caption class="visually-hidden">Roles and their BI powers</caption>
     <thead><tr><th scope="col">Role</th><th scope="col">bi</th><th scope="col">bi-author</th><th scope="col">bi-steward</th><th scope="col">bi-admin</th><th scope="col"><span class="visually-hidden">Save</span></th></tr></thead>
     <tbody></tbody></table></div>
+  {% if bi_files is not none %}
+  <h2 class="ws-h" id="shipped">Shipped files <span class="text-muted-d">({{ bi_files | length }} in config/bi)</span></h2>
+  <p class="text-muted-d">The datasets, reports, boards, notebooks and Python items that ship in <span class="mono">config/bi</span>. <b>Disable</b> hides one from the catalogue and keeps the file;
+    <b>Uninstall</b> shows what depends on it first, then moves the file to the archive. The whole list, with packs and connectors, is Admin, <a href="/admin/artifacts">Artifacts</a>.</p>
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-shipped>
+    <caption class="visually-hidden">Shipped BI files</caption>
+    <thead><tr><th scope="col">File</th><th scope="col">Kind</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody>{% for f in bi_files %}
+      <tr data-file="{{ f.subtype }}:{{ f.name }}"><th scope="row"><a class="mono" href="{{ f.link }}">{{ f.name }}</a></th><td><span class="art-kind">{{ f.subtype }}</span></td>
+        <td><span class="st {{ {'on': 'st-ok', 'problem': 'st-bad'}.get(f.state, '') }}">{{ {'on': 'on', 'off': 'disabled', 'problem': 'problem'}.get(f.state, f.state) }}</span></td>
+        <td class="adm-actions"><button type="button" class="fk" data-uninstall data-mode="disable" data-kind="bi" data-subtype="{{ f.subtype }}" data-name="{{ f.name }}" aria-label="Disable {{ f.name }}">{{ 'Disable' if f.state != 'off' else 'Disabled' }}</button>
+          <button type="button" class="fk emb-danger" data-uninstall data-kind="bi" data-subtype="{{ f.subtype }}" data-name="{{ f.name }}" aria-label="Uninstall {{ f.name }}">Uninstall…</button></td></tr>
+    {% else %}<tr><td colspan="4" class="text-muted-d">No file in config/bi.</td></tr>{% endfor %}</tbody></table></div>
+  {% include "admin/_uninstall_dialog.html" %}
+  {% endif %}
   <p class="text-muted-d">Built-in roles come from configuration (<span class="mono">drishti.security.roles.&lt;role&gt;.bi</span>) and are read-only here; roles you define in Admin, Roles are editable.</p>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script>{% if bi_files is not none %}<script src="/static/js/artifact-uninstall.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}

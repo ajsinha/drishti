@@ -75,6 +75,7 @@ class ArtifactApiTest {
         write("bi/datasets/art-composed.dataset.yaml", "dataset: art-composed\ntitle: Art composed\nsources:\n  - dataset: art-trades\n");
         write("bi/reports/art-overview.report.yaml", "report: art-overview\ntitle: Art overview\ndataset: art-trades\n");
         write("bi/boards/art-wall.board.yaml", "board: art-wall\ntitle: Art wall\ntiles:\n  - { id: t1, report: art-overview, visual: v1 }\n");
+        write("connectors/art-boot.yaml", "plugin: file\nkinds: [artboot]\nsettings:\n  root: " + root.resolve("bootdata") + "\n");
         write("bi/python/art-free.python.yaml", "python: art-free\ntitle: Art free\n");
         r.add("drishti.packs.installed-dir", () -> root.resolve("installed").toString());
         r.add("drishti.packs.overlay", () -> root.resolve("added.yaml").toString());
@@ -320,6 +321,19 @@ class ArtifactApiTest {
     }
 
     @Test
+    @Order(85)
+    void aConnectorThatWasThereAtStartIsGoneAfterItsUninstallNotListedAsApplicationDefined() throws Exception {
+        assertThat(find(json("/api/v1/admin/artifacts").path("artifacts"), "connector", "art-boot").path("origin").asText()).isEqualTo("file");
+        JsonNode done = JSON.readTree(act("/uninstall", "{\"kind\":\"connector\",\"name\":\"art-boot\"}"));
+        assertThat(done.path("ok").asBoolean()).isTrue();
+        assertThat(json("/api/v1/admin/artifacts").path("artifacts").findValuesAsText("name")).doesNotContain("art-boot");
+        mvc.perform(get("/api/v1/admin/connectors/art-boot")).andExpect(status().isNotFound());
+        mvc.perform(post("/api/v1/admin/artifacts/uninstalled/" + done.path("archive").asText() + "/restore").contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isOk());
+        assertThat(find(json("/api/v1/admin/artifacts").path("artifacts"), "connector", "art-boot").path("origin").asText()).isEqualTo("file");
+    }
+
+    @Test
     @Order(9)
     void aConnectorDatasetsScanIsRefusedUntilDependantsAreTakenAlong() throws Exception {
         mvc.perform(post("/api/v1/admin/artifacts/uninstall").contentType(MediaType.APPLICATION_JSON).content("{\"kind\":\"connector\",\"name\":\"art-used\"}"))
@@ -369,7 +383,7 @@ class ArtifactApiTest {
         assertThat(root.resolve("bi/datasets/art-new.dataset.yaml")).exists();
         assertThat(folder.item("file:dataset:art-new")).isPresent();
         mvc.perform(post("/api/v1/admin/artifacts/bi/check?file=art-new.dataset.yaml").contentType(MediaType.APPLICATION_OCTET_STREAM).content(good))
-                .andExpect(jsonPath("$.exists").value(true)).andExpect(jsonPath("$.replacesImpact").value(containsString("embed host")));
+                .andExpect(jsonPath("$.exists").value(true)).andExpect(jsonPath("$.replacesImpact").value(containsString("Embed hosts (1)")));
         mvc.perform(post("/api/v1/admin/artifacts/bi?file=art-new.dataset.yaml").contentType(MediaType.APPLICATION_OCTET_STREAM).content(good))
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-5042"));
         mvc.perform(post("/api/v1/admin/artifacts/bi?file=art-new.dataset.yaml&replace=true&confirm=art-new").contentType(MediaType.APPLICATION_OCTET_STREAM).content(good + "# v2\n"))

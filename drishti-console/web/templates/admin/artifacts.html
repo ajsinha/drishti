@@ -1,0 +1,114 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Artifacts · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-embedding.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-connectors.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-artifacts.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+{% set ORIGINS = {'shipped': 'Ships with the product', 'archive': 'Deployed from an archive', 'file': 'A file placed in the folder', 'ui': 'Saved from the console', 'template': 'Written from a pack\'s connector template', 'application': 'Defined in the server\'s own configuration (deprecated)'} %}
+<div class="adm" data-artifacts data-tab="{{ tab }}">
+  {% with tab='artifacts' %}{% include "admin/_nav.html" %}{% endwith %}
+  <h1 class="ws-h">Artifacts <a class="emb-help" href="/help/admin-artifacts" aria-label="Help: installing and uninstalling packs, connectors and BI files" title="Help: installing and uninstalling packs, connectors and BI files">?</a></h1>
+  <p class="text-muted-d">Everything installed, in one list: domain packs, connector files and the BI files in <span class="mono">config/bi</span>. <b>Disable</b> keeps
+    an artifact and switches it off. <b>Uninstall</b> asks first what depends on it, then <em>moves</em> it to <span class="mono">{{ uninstalled_dir }}</span>; nothing is deleted
+    for {{ keep_days }} days, and <b>Restore</b> puts it back. <span class="mono">/</span> focuses the filter.</p>
+  <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
+  <div class="conn-tabs" role="tablist" aria-label="Artifacts" data-art-tabs>
+    <button type="button" role="tab" id="artTabInstalled" aria-controls="artPaneInstalled" aria-selected="{{ 'true' if tab == 'installed' else 'false' }}"{% if tab != 'installed' %} tabindex="-1"{% endif %} data-tab="installed">Installed ({{ artifacts | length }})</button>
+    <button type="button" role="tab" id="artTabUninstalled" aria-controls="artPaneUninstalled" aria-selected="{{ 'true' if tab == 'uninstalled' else 'false' }}"{% if tab != 'uninstalled' %} tabindex="-1"{% endif %} data-tab="uninstalled">Uninstalled ({{ archives | length }})</button>
+  </div>
+
+  <div role="tabpanel" id="artPaneInstalled" aria-labelledby="artTabInstalled" data-pane="installed"{% if tab != 'installed' %} hidden{% endif %}>
+    <p data-summary>{{ counts.pack }} pack{{ '' if counts.pack == 1 else 's' }}, {{ counts.connector }} connector{{ '' if counts.connector == 1 else 's' }}, {{ counts.bi }} BI file{{ '' if counts.bi == 1 else 's' }}.
+      {% if attention %}<span class="t-warn">{{ attention }} with a problem.</span>{% endif %}</p>
+    <div class="adm-bar">
+      <input class="studio-in" type="search" data-filter placeholder="Filter by name, title or problem" aria-label="Filter the artifacts" autocomplete="off">
+      <label class="visually-hidden" for="artKind">Show</label>
+      <select class="studio-in" id="artKind" data-kind-filter>
+        <option value="">All kinds</option><option value="pack">Packs</option><option value="connector">Connectors</option>
+        <option value="dataset">BI datasets</option><option value="report">BI reports</option><option value="board">BI boards</option><option value="notebook">BI notebooks</option><option value="python">BI Python items</option></select>
+      <label class="visually-hidden" for="artState">Status</label>
+      <select class="studio-in" id="artState" data-state-filter>
+        <option value="">Any status</option><option value="on">On</option><option value="off">Disabled</option><option value="problem">With a problem</option><option value="not loaded">Not loaded</option></select>
+      <label class="visually-hidden" for="artOrigin">Origin</label>
+      <select class="studio-in" id="artOrigin" data-origin-filter>
+        <option value="">Any origin</option><option value="shipped">Shipped</option><option value="archive">Archive</option><option value="file">File</option><option value="ui">Console</option><option value="template">Pack template</option><option value="application">application.yaml</option></select>
+    </div>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-list>
+      <caption class="visually-hidden">Installed packs, connectors and BI files</caption>
+      <thead><tr><th scope="col">Name</th><th scope="col">Kind</th><th scope="col">Status</th><th scope="col">Origin</th><th scope="col">Version</th><th scope="col">Modified</th><th scope="col">Problems</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody data-rows>{% for a in artifacts %}
+        {% set what = a.subtype or a.kind %}
+        <tr data-artifact data-kind="{{ a.kind }}" data-what="{{ what }}" data-subtype="{{ a.subtype }}" data-name="{{ a.name }}" data-state="{{ a.state }}" data-origin="{{ a.origin }}"
+            data-text="{{ (a.name ~ ' ' ~ a.title ~ ' ' ~ (a.problems | join(' '))) | lower }}">
+          <th scope="row" class="conn-name"><a class="mono" href="{{ a.link }}" title="Open {{ a.name }}">{{ a.name }}</a>{% if a.title and a.title != a.name %}<br><span class="text-muted-d">{{ a.title }}</span>{% endif %}</th>
+          <td><span class="art-kind">{{ what }}</span></td>
+          <td><span class="st {{ {'on': 'st-ok', 'problem': 'st-bad', 'not loaded': 'st-warn'}.get(a.state, '') }}">{{ {'on': 'on', 'off': 'disabled', 'problem': 'problem', 'not loaded': 'not loaded'}.get(a.state, a.state) }}</span></td>
+          <td><span class="st" title="{{ ORIGINS.get(a.origin, a.origin) }}">{{ a.origin }}</span></td>
+          <td class="mono">{{ a.version or '—' }}</td>
+          <td class="mono">{{ when_local(a.modified) if a.modified else '—' }}</td>
+          <td class="art-problems">{% for p in a.problems %}<div class="t-bad">{{ p }}</div>{% else %}<span class="text-muted-d">none</span>{% endfor %}</td>
+          <td class="adm-actions">
+            {% if a.state == 'off' %}<button type="button" class="fk" data-act="enable" aria-label="Enable {{ a.name }}">Enable</button>
+            {% elif a.state != 'not loaded' and not (a.kind == 'connector' and a.origin == 'application' and not a.hasFile) %}<button type="button" class="fk" data-uninstall data-mode="disable" data-kind="{{ a.kind }}" data-subtype="{{ a.subtype }}" data-name="{{ a.name }}" aria-label="Disable {{ a.name }}">Disable</button>{% endif %}
+            {% if not (a.kind == 'connector' and (a.origin == 'template' or a.origin == 'application')) %}<button type="button" class="fk emb-danger" data-uninstall data-kind="{{ a.kind }}" data-subtype="{{ a.subtype }}" data-name="{{ a.name }}" aria-label="Uninstall {{ a.name }}">Uninstall…</button>{% endif %}</td></tr>
+      {% else %}<tr data-none><td colspan="8" class="text-muted-d">Nothing is installed.</td></tr>{% endfor %}</tbody>
+    </table></div>
+    <p class="text-muted-d" data-filter-none hidden>No artifact matches the filter.</p>
+
+    <h2 class="ws-h" id="install">Install</h2>
+    <div class="art-install">
+      <section class="art-card"><h3>A pack</h3>
+        <p class="text-muted-d">Upload a pack archive (<span class="mono">.tar.gz</span> or <span class="mono">.zip</span>); it is verified and previewed before anything changes.</p>
+        <a class="btn-pill btn-ghost" href="/admin/packs#deploy">Deploy a pack archive</a></section>
+      <section class="art-card"><h3>A connector</h3>
+        <p class="text-muted-d">One YAML file per connector, edited with a form, tested before it is saved.</p>
+        <a class="btn-pill btn-ghost" href="/admin/connectors">Open Connectors, then New connector</a></section>
+      <section class="art-card" data-bi-install><h3>A BI file</h3>
+        <p class="text-muted-d">A dataset, report, board, notebook or Python item as <span class="mono">&lt;name&gt;.&lt;kind&gt;.yaml</span>. It is checked and its impact shown first; then it is placed in <span class="mono">config/bi</span>.</p>
+        <label class="art-file">Choose a file <input type="file" accept=".yaml,.yml" data-bi-file></label>
+        <div data-bi-result aria-live="polite"></div>
+        <label class="chk" data-bi-replace-row hidden><input type="checkbox" data-bi-replace> Replace the file that is there (it is archived first)</label>
+        <button type="button" class="btn-pill btn-accent" data-bi-place hidden>Place in config/bi</button></section>
+    </div>
+  </div>
+
+  <div role="tabpanel" id="artPaneUninstalled" aria-labelledby="artTabUninstalled" data-pane="uninstalled"{% if tab != 'uninstalled' %} hidden{% endif %}>
+    <p class="text-muted-d">Uninstalled artifacts are kept in <span class="mono">{{ uninstalled_dir }}</span> for {{ keep_days }} days, then removed (<span class="mono">drishti.admin.uninstalled-keep</span>).
+      <b>Restore</b> moves one back where it came from; if one of that name exists again it is refused unless you choose to replace it (the one in the way is archived first).</p>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-archives>
+      <caption class="visually-hidden">Uninstalled artifacts</caption>
+      <thead><tr><th scope="col">Name</th><th scope="col">Kind</th><th scope="col">Uninstalled</th><th scope="col">By</th><th scope="col">What depended on it</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody>{% for r in archives %}
+        <tr data-archive="{{ r.id }}" data-name="{{ r.name }}">
+          <th scope="row" class="conn-name"><span class="mono">{{ r.name }}</span><br><span class="text-muted-d mono">{{ r.id }}</span></th>
+          <td><span class="art-kind">{{ r.subtype or r.kind }}</span></td>
+          <td class="mono">{{ when_local(r.at) }}</td>
+          <td>{{ r.by }}</td>
+          <td>{{ r.summary }}</td>
+          <td class="adm-actions"><button type="button" class="fk" data-restore aria-label="Restore {{ r.name }}">Restore</button>
+            <button type="button" class="fk emb-danger" data-purge aria-label="Delete {{ r.name }} permanently">Delete permanently…</button></td></tr>
+      {% else %}<tr data-none><td colspan="6" class="text-muted-d">Nothing has been uninstalled (or it has been removed after {{ keep_days }} days).</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+
+  {% include "admin/_uninstall_dialog.html" %}
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/artifact-uninstall.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-artifacts.js?v={{ ASSET_V }}"></script>{% endblock %}

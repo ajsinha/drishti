@@ -211,6 +211,8 @@ def create_app(settings: Settings) -> FastAPI:
                         workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes,
                         ai_routes)
 
+    from routes import artifact_routes
+
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         if getattr(app.state, "backend", None) is None:      # one pooled client per server (tests bring their own)
@@ -361,6 +363,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(collab_admin_routes.router)
     app.include_router(embed_admin_routes.router)
     app.include_router(connector_routes.router)
+    app.include_router(artifact_routes.router)
     app.include_router(form_routes.router)
     app.include_router(ai_routes.router)
     if app.state.bi_on:

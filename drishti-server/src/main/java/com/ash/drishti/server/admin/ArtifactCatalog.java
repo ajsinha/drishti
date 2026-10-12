@@ -128,7 +128,7 @@ public final class ArtifactCatalog {
             boolean fileProblem = connectors.fileProblems().containsKey(name);
             String state = !on ? "off" : fileProblem || !problems.isEmpty() && !"RUNNING".equals(String.valueOf(c.get("state"))) && !"IDLE".equals(String.valueOf(c.get("state"))) ? "problem" : "on";
             Object updated = c.get("updated");
-            Map<String, Object> r = row("connector", "", name, c.get("plugin") == null ? "" : c.get("plugin") + " connector", state, origin, "", updated == null ? null : updated.toString(),
+            Map<String, Object> r = row("connector", "", name, title(c), state, origin, "", updated == null ? null : updated.toString(),
                     problems, "/admin/connectors/" + name);
             r.put("plugin", c.get("plugin"));
             r.put("connectorState", c.get("state"));
@@ -169,6 +169,14 @@ public final class ArtifactCatalog {
             }
         });
         return out;
+    }
+
+    private static String title(Map<String, Object> c) {
+        Object d = c.get("description");
+        if (d != null && !d.toString().isBlank()) {
+            return d.toString();
+        }
+        return c.get("plugin") == null ? "" : c.get("plugin") + " connector";
     }
 
     private static Map<String, Object> row(String kind, String subtype, String name, String title, String state, String origin, String version, String modified,

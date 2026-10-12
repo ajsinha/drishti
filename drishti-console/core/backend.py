@@ -52,6 +52,7 @@ def _error(r: httpx.Response, text: str) -> "BackendError":
         body = {}
     err = BackendError(r.status_code, body.get("code", f"HTTP-{r.status_code}"), body.get("detail", text[:200]))
     err.problems = body.get("problems", [])
+    err.extra = body
     err.retry_after = r.headers.get("retry-after")
     return err
 
@@ -67,6 +68,7 @@ class BackendError(Exception):
         # the code is told once: the server's detail often starts with it ("DRS-7003 too many shares"), and callers put the code in front
         self.detail = re.sub(rf"^{re.escape(code_text)}[:\s]*", "", str(detail or "")).strip() or detail if code_text else detail
         self.retry_after: str | None = None            # the server's Retry-After (seconds), passed on to the browser by the JSON routes
+        self.extra: dict = {}                           # the whole problem body (a refusal of an uninstall carries its impact)
 
     @property
     def page_status(self) -> int:

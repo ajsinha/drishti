@@ -155,7 +155,14 @@ async def settings_page(request: Request):
     me = getattr(request.state, "bi_me", None) or {}
     if "bi-admin" not in (me.get("powers") or []):
         return render(request, "admin/forbidden.html", status_code=403)
-    return render(request, "bi/settings.html", screen="admin")
+    files = None
+    if ident(request).is_admin:                    # the shipped files and their safe uninstall are the system administrator's (Admin → Artifacts)
+        try:
+            listing = await request.app.state.backend.admin("GET", "/artifacts", ident(request))
+            files = [a for a in listing.get("artifacts", []) if a.get("kind") == "bi"]
+        except BackendError:
+            files = None
+    return render(request, "bi/settings.html", screen="admin", bi_files=files)
 
 
 @router.api_route("/bi/api/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
