@@ -151,7 +151,7 @@ public class BiController {
 
     @PostMapping("/items/{id}/propose")
     public Map<String, Object> propose(@PathVariable String id, @RequestBody(required = false) Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return bi.propose(p, id, note(body));
+        return bi.propose(p, id, note(body), force(body));
     }
 
     @PostMapping("/items/{id}/withdraw")

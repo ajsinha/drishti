@@ -125,6 +125,9 @@ class BiApiTest {
             Path reports = Path.of("target/bi-api-folder/reports");
             Files.createDirectories(reports);
             Files.writeString(reports.resolve("desk-pnl.report.yaml"), "title: Desk profit (shipped)\ndescription: From the BI folder\ntags: [pnl, desk]\nendorsement: certified\npages: []\n");
+            Path datasets = Path.of("target/bi-api-folder/datasets");
+            Files.createDirectories(datasets);
+            Files.copy(Path.of("../config/bi/datasets/trades-basic.dataset.yaml"), datasets.resolve("trades-basic.dataset.yaml"), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             Files.writeString(reports.resolve("risk-only.report.yaml"), "title: Risk only\naudience:\n  roles: [steward]\n");
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
@@ -352,6 +355,26 @@ class BiApiTest {
             assertThat(all).as(action).contains(action + ":");
         }
         assertThat(all).contains("bi-item-endorsed:" + item + ":sue");
+    }
+
+    @Test @Order(14)
+    void aStaleSaveIsRefusedAndAReportThatCannotBeDrawnCannotBeProposedUnlessAnAdminForcesIt() throws Exception {
+        JsonNode i = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", ann(), Map.of("kind", "report", "title", "Two tabs")));
+        String id = i.path("id").asText();
+        String etag = ok(call("GET", "/api/v1/bi/items/" + id, ann(), null)).path("etag").asText();
+        assertThat(etag).isNotBlank();
+        JsonNode first = ok(call("PUT", "/api/v1/bi/items/" + id, ann(), Map.of("description", "tab one", "baseEtag", etag)));
+        assertThat(first.path("etag").asText()).isNotEqualTo(etag);
+        refused(call("PUT", "/api/v1/bi/items/" + id, ann(), Map.of("description", "tab two", "baseEtag", etag)), 409, "DRS-9007");     // saved from the old state
+        assertThat(ok(call("PUT", "/api/v1/bi/items/" + id, ann(), Map.of("description", "overwrite"))).path("description").asText()).isEqualTo("overwrite");     // no base: overwrite
+        // a draft that cannot be drawn is saved, but not proposed
+        String broken = "report: nowhere\ndataset: no-such-dataset\npages:\n  - { id: main, title: Main, visuals: [] }\n";
+        ok(call("PUT", "/api/v1/bi/items/" + id, ann(), Map.of("body", broken)));
+        call("POST", "/api/v1/bi/items/" + id + "/propose", ann(), Map.of()).andExpect(status().is(422)).andExpect(jsonPath("$.code").value("DRS-9030"))
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("no-such-dataset")));
+        refused(call("POST", "/api/v1/bi/items/" + id + "/propose", ann(), Map.of("force", true)), 403, "DRS-9002");     // only a bi-admin forces
+        assertThat(ok(call("POST", "/api/v1/bi/items/" + id + "/propose", admin(), Map.of("force", true))).path("status").asText()).isEqualTo("proposed");
+        assertThat(audit.recent(500, null).stream().map(e -> e.action() + ":" + e.detail()).reduce("", (a, b) -> a + "\n" + b)).contains("FORCED over 1 drawing error");
     }
 
     @Test @Order(99)

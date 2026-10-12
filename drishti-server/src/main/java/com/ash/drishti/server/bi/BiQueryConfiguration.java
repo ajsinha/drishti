@@ -176,6 +176,7 @@ public class BiQueryConfiguration {
 
     @Bean
     public ExpectedValueRunner expectedValueRunner(BiService bi, DatasetService datasets, BiReportService reports, AuditLog audit) {
+        bi.drawCheck(reports::errors);                                  // propose, approve and publish refuse a report that cannot be drawn
         ExpectedValueRunner runner = new ExpectedValueRunner(bi, datasets, reports, audit);
         bi.testGate(runner::failures);                                   // publishing runs the item's tests (docs/guides/REPORTS.md section 14)
         return runner;

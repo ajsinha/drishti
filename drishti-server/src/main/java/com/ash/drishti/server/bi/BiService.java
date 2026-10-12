@@ -432,6 +432,7 @@ public final class BiService {
         m.put("freshness", i.publishedAt() == null ? null : i.publishedAt());
         m.put("createdAt", i.createdAt());
         m.put("updatedAt", i.updatedAt());
+        m.put("etag", i.updatedAt() == null ? "" : i.updatedAt().toString());                 // the saved state a designer saved from; an update names it back (baseEtag)
         m.put("proposedBy", i.proposedBy());
         m.put("proposedAt", i.proposedAt());
         m.put("views", views.getOrDefault(i.id(), 0));
@@ -596,6 +597,28 @@ public final class BiService {
 
     private volatile java.util.function.Function<String, String> pythonCheck;
     private volatile java.util.function.BiFunction<Principal, BiStore.Item, List<String>> testGate;
+    private volatile java.util.function.BiFunction<Principal, BiStore.Item, List<String>> drawCheck;
+
+    /** Registers the check that lists why a report cannot be drawn (its dataset, a field it names); propose, approve and publish refuse it unless a bi-admin forces. */
+    public void drawCheck(java.util.function.BiFunction<Principal, BiStore.Item, List<String>> check) {
+        this.drawCheck = check;
+    }
+
+    private List<String> undrawable(Principal p, BiStore.Item i, boolean force, String what) {
+        if (drawCheck == null || !"report".equals(i.kind()) || i.body().isBlank()) {
+            return List.of();
+        }
+        List<String> errors = drawCheck.apply(p, i);
+        if (!errors.isEmpty()) {
+            if (!force) {
+                throw new DrishtiException(ErrorCode.REPORT_INVALID, "'" + i.title() + "' cannot be " + what + ": it cannot be drawn (" + errors.size() + " error" + (errors.size() == 1 ? "" : "s") + "): "
+                        + String.join("; ", errors.stream().limit(5).toList()) + (errors.size() > 5 ? "; ..." : "") + ". Fix them in the designer (Check)"
+                        + (access.has(p, BiAccess.ADMIN) ? ", or go on anyway with force." : "; a bi-admin may force it."));
+            }
+            access.require(p, BiAccess.ADMIN);
+        }
+        return errors;
+    }
 
     /** Set once by the expected-values runner: what publishing a report or dataset runs its tests with (a line per test that fails or cannot run; empty when all pass). */
     public void testGate(java.util.function.BiFunction<Principal, BiStore.Item, List<String>> gate) {
@@ -670,6 +693,10 @@ public final class BiService {
         if (i.status().equals("proposed")) {
             throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + i.title() + "' is proposed for review; withdraw it to edit");
         }
+        Object base = body.get("baseEtag");
+        if (base != null && !String.valueOf(base).isBlank() && !String.valueOf(base).equals(i.updatedAt() == null ? "" : i.updatedAt().toString())) {
+            throw new DrishtiException(ErrorCode.BI_STALE, "'" + i.title() + "' was saved by " + i.updatedBy() + " since you opened it: reload it, save yours as a copy, or overwrite");
+        }
         String newBody = body.containsKey("body") ? checkedBody(body.get("body")) : i.body();
         boolean bodyChanged = !newBody.equals(i.body());
         boolean catalogueOnly = !bodyChanged;
@@ -718,6 +745,10 @@ public final class BiService {
 
     // -- lifecycle: draft, proposed, published -------------------------------------------------------------------------
     public Map<String, Object> propose(Principal p, String id, String note) {
+        return propose(p, id, note, false);
+    }
+
+    public Map<String, Object> propose(Principal p, String id, String note, boolean force) {
         BiStore.Item i = editable(p, id, "proposing");
         BiStore.Workspace w = workspaceOf(i.workspace());
         if (w.personal()) {
@@ -729,10 +760,11 @@ public final class BiService {
         if (i.status().equals("published")) {
             throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + i.title() + "' has no changes since version " + i.publishedVersion());
         }
+        List<String> forced = undrawable(p, i, force, "proposed");
         store.saveItem(withStatus(i, "proposed", p.user(), Instant.now(), p.user()));
         store.addEvent(id, "request", p.user(), note(note), latestRevision(id), Instant.now());
         notifier.tell(notifier.reviewers(i, p.user()), BiNotifier.REVIEW, id, p.user() + " asks for review of " + i.kind() + " '" + i.title() + "'", p.user());
-        audit.record(p.user(), "bi-item-proposed", id, note(note));
+        audit.record(p.user(), "bi-item-proposed", id, note(note) + (forced.isEmpty() ? "" : "; FORCED over " + forced.size() + " drawing error(s)"));
         return item(p, id, false);
     }
 
@@ -855,6 +887,7 @@ public final class BiService {
                 throw new DrishtiException(ErrorCode.BOARD_INVALID, "'" + i.title() + "' cannot be published: " + r.firstError());
             }
         }
+        List<String> undrawn = undrawable(p, i, force, "published");
         // the expected values the item declares (docs/guides/REPORTS.md section 14): a failing one stops a publish unless a bi-admin forces it
         List<String> failing = List.of();
         if (testGate != null && gov.refuseFailingTests() && ("report".equals(i.kind()) || "dataset".equals(i.kind())) && i.body().contains("tests:")) {
@@ -902,6 +935,7 @@ public final class BiService {
         }
         audit.record(p.user(), "bi-item-published", i.id(), "version " + version + "; " + note
                 + (failing.isEmpty() ? "" : "; FORCED over " + failing.size() + " failing test(s)")
+                + (undrawn.isEmpty() ? "" : "; FORCED over " + undrawn.size() + " drawing error(s)")
                 + (damage != null && damage.breaksPublished() ? "; FORCED over " + damage.published().size() + " published report(s)" : ""));
         List<String> warnings = new ArrayList<>(renamed);
         if (damage != null && damage.change().breaking()) {

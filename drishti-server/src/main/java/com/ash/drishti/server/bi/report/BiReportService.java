@@ -229,6 +229,11 @@ public final class BiReportService {
         return m;
     }
 
+    /** The messages of the errors that stop a stored report being drawn (its dataset is missing, a visual names a field that is gone); empty when it draws. */
+    public List<String> errors(Principal p, BiStore.Item item) {
+        return load(p, item, item.body(), false).problems().stream().filter(ReportParser.Problem::error).map(ReportParser.Problem::message).toList();
+    }
+
     /** Writes a report model (the structure {@link Report#toMap} has) as YAML. */
     public Map<String, Object> format(Principal p, JsonNode model) {
         bi.requirePower(p, BiAccess.BI);
