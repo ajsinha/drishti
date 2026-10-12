@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""BI over several datasets (docs/guides/DATASETS.md section 11, docs/guides/REPORTS.md section 15, docs/guides/ANALYSE.md section 2, RUPAKA.md section 20.10), in Chromium
+"""BI over several datasets (docs/guides/DATASETS.md section 11, docs/guides/REPORTS.md section 16, docs/guides/ANALYSE.md section 2, RUPAKA.md section 20.10), in Chromium
 over the real server and console (tests/bi_report_stack.py on ports 18944 and 17944, security on, a small Delta lake: trades, counterparties and netting sets across three
 packs). The sample "Desk P&L vs counterparty exposure" is built both ways, a composed dataset in YAML and a derived dataset made by a Python Transform, and both give the
 numbers an independent join of the two source datasets gives; each source is asked as the reader (a desk head sees fewer counterparties, an analyst sees the name masked); the
@@ -204,7 +204,7 @@ def test_the_model_view_draws_the_sources_the_join_and_the_table_they_make(stack
     assert "trading-risk" in page.locator('.bi-tbox[data-table="pnl"] header').inner_text()
     cols = page.eval_on_selector_all('.bi-tbox[data-table="joined"] [data-column]', "els => els.map(e => e.getAttribute('data-column'))")
     assert "joined.counterparty" in cols and "joined.Desk_P_L" in cols and "joined.Exposure_EE_peak" in cols
-    assert page.locator('.bi-lines g[data-rel] text', has_text="left join").count() == 1                  # the join, labelled with its type
+    assert page.locator('.bi-lines g[data-rel] text', has_text="left").count() == 1                       # the join, labelled with its type
     assert page.locator(".bi-lines .bi-line-feed").count() == 2                                           # each source feeds the table
     assert "left join" in page.locator("[data-rels]").inner_text()
     expect(page.locator("[data-add-wrap]")).to_be_hidden()                                                 # the joins are written in the YAML, not drawn into it

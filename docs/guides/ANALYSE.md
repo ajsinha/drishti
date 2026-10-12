@@ -59,6 +59,22 @@ Choose a dataset, tick the fields (columns of its tables; `id` is added for you 
 (10,000); a cut says so (`60 rows of 4,000 (cut to the row limit)`). Columns are named for the table's column (`desk`, not `trade.desk`); two columns of the same name keep their
 table (`trade_desk`).
 
+**More than one extract.** *More extracts: join several datasets* (under the form) adds further extracts to the notebook, each a name, a dataset and fields, built for you by the server exactly as the first is (your row rules, your masks; `bi.explore.max_extracts`, 6, besides the first). A **Python** cell reads one as `extract("name")` (a pandas DataFrame; a copy, so changing it changes nothing else), or by the dataset it came from, and joins them in pandas; a **SQL** cell reads each as a table of that name. Real output of the sample notebook (below), with two extracts, the trades of `trading-risk` as `df` and the netting sets of `counterparty-exposure` as `exposure`, joined in a Python cell:
+
+![The notebook's extracts: the first extract opened, and the second, exposure, under More extracts](../tutorials/img/t14/13-analyse-extracts.jpg)
+
+```python
+pnl = df.groupby("counterpartyId", as_index=False)["pnl1d"].sum().rename(columns={"counterpartyId": "counterparty", "pnl1d": "desk_pnl"})
+ee = extract("exposure").groupby("counterparty", as_index=False)["eePeak"].sum().rename(columns={"eePeak": "ee_peak"})
+joined = pnl.merge(ee, on="counterparty", how="left")
+joined["pnl_per_exposure"] = joined["desk_pnl"] / joined["ee_peak"]
+result = joined.sort_values("ee_peak", ascending=False).head(15)
+```
+
+![The join cell's result: counterparties with their P&L, expected exposure and P&L per exposure; the line says Python, server, 220 ms, 750 rows](../tutorials/img/t14/14-analyse-join.jpg)
+
+Every extract is the reader's, so a join of two extracts shows **their** rows: the join key that the server masks for them (the counterparty id, for a reader without the raw power) arrives masked and the join finds nothing, which is the mask doing its job. Each extract counts toward the answer's `masked`, and each is cut to `bi.explore.max_rows` separately. Python in the browser cannot read further extracts (Pyodide gets the first only): a cell that calls `extract(...)` runs on the server.
+
 Because the extract is cut, **Slice and SQL give the extract's totals, not the dataset's**. For true totals use a report.
 
 An extract can also be a **report visual's data** (`POST /bi/explore/extract` with `{report, page, visual, state}`), the same rows the visual drew, masked the same way; the page's
@@ -73,7 +89,7 @@ It is plain JavaScript over the extract the page holds; **DuckDB-Wasm is not ven
 
 ## 4. SQL
 
-A SQL cell is **one `SELECT`** (or `WITH ... SELECT`) over the table **`extract`**:
+A SQL cell is **one `SELECT`** (or `WITH ... SELECT`) over the table **`extract`** (and over a table for each further extract of the notebook, named as it is, so `SELECT ... FROM extract JOIN exposure ON ...`):
 
 ```sql
 SELECT desk, COUNT(*) AS trades, SUM(notional) AS notional
@@ -94,6 +110,7 @@ A Python cell sees three names:
 | Name | What |
 |---|---|
 | `df` | the extract as a pandas DataFrame |
+| `extract(name)` | any other extract of the notebook (by its name, or by the dataset it came from) as a pandas DataFrame, for the same reader; `KeyError` names the extracts there are. **Server target only** |
 | `params` | a dict (empty unless the call sends some) |
 | `quant` | `quant.price(instrument, **parameters)`, `quant.instruments()`: the console's quant engine ([QUANT_SERVICE.md](../architecture/QUANT_SERVICE.md#16-the-consoles-quantengine-slot-built-lean)). **Server target only** |
 
@@ -129,6 +146,8 @@ notebook: desk-notional-first-look
 title: Desk notional, first look
 dataset: file:dataset:trades-basic
 fields: [trade.tradeId, trade.desk, trade.book, trade.notional, trade.mtm]
+extracts:                       # optional: further extracts, read by a cell as extract("name") and in SQL as a table of that name
+  - { name: exposure, dataset: file:dataset:counterparty-exposure, fields: [netting_sets.counterparty, netting_sets.eePeak] }
 cells:
   - type: slice
     slice: { rows: [desk], columns: [], values: [{ field: notional, agg: sum }], filters: [] }
@@ -140,11 +159,15 @@ cells:
     target: server
 ```
 
-Notebooks are **not run by the server** and have no lineage ([BI_GOVERNANCE.md](BI_GOVERNANCE.md) section 10); at most `bi.explore.max_cells` (60) cells.
+A notebook may also carry the catalogue's keys (`sample`, `tags`, `endorsement`, `owner`, `audience`); a shipped one is `config/bi/notebooks/pnl-vs-exposure-pandas.notebook.yaml`. Notebooks are **not run by the server** and have no lineage ([BI_GOVERNANCE.md](BI_GOVERNANCE.md) section 10); at most `bi.explore.max_cells` (60) cells.
 
 ## 7. Promote
 
 Promoting writes a **draft** item in your workspace; nothing is published.
+
+* **A Python cell that joins extracts to a Transform** (*Promote to a Transform*, shown when the notebook has further extracts): each `extract("name")` becomes a parameter of `run(...)`, a use of `df` becomes the first extract, the cell's `result` is returned, and the draft's `inputs` are the extracts' datasets, in order. It is a draft **Python item with `interface: transform`** ([PYTHON_BI.md section 13](PYTHON_BI.md#13-transforms-a-table-in-a-table-out)); check it, publish it, then write the derived dataset that names it ([DATASETS.md section 11.2](DATASETS.md#112-derived-datasets-a-python-transform)): the promotion says so in its notes. `result` must be a pandas DataFrame with column names of letters, digits and underscore.
+
+![After promoting the join cell: "Python transform draft saved in your workspace: ..."](../tutorials/img/t14/15-promote-transform.jpg)
 
 * **A Python cell to a Measure or a Visual** (the cell's buttons): the cell's `df` becomes the function's `table`, `result` is returned, the packages the cell imports go into the manifest
   ([PYTHON_BI.md](PYTHON_BI.md) section 3). Check it with *Check the Python* on the item page, edit the entry's contract (a measure returns one number per group, a visual an
@@ -170,6 +193,7 @@ The console's `bi.explore.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)):
 | `sql_max_rows`, `sql_max_seconds`, `sql_max_chars` | `5000`, `5`, `20000` | the SQL cell's limits |
 | `cell_timeout_seconds`, `cell_memory_mb`, `cell_max_chars` | `20`, `512`, `65536` | a Python cell's limits (also capped by `bi.python.max_timeout_seconds`, `max_memory_mb`) |
 | `max_cells` | `60` | most cells in a notebook |
+| `max_extracts` | `6` | most further extracts in a notebook, besides the first (`DRS-9072`) |
 | `quant_engine` | `stand-in` | the engine behind `quant.price` |
 
 The Python runner's own `bi.python.*` settings (workers, packages, limits) apply to cells too. **The server's `drishti.bi.report.python-packages` and the console's
@@ -199,12 +223,14 @@ uses the existing `POST /api/v1/bi/workspaces/me/items` and `PUT /api/v1/bi/item
 
 **Built (phase 9, lean).** The extract, Slice, SQL cells, Python cells on the server and in the browser, notebooks as items, promotion of cells and slices, the `QuantEngine` slot with a stand-in.
 
+**Built with several datasets (section 2, RUPAKA.md section 20.10).** Several masked extracts in one notebook, `extract("name")` in a Python cell and a table per extract in SQL, the notebook's `extracts:`, and the promotion of a join cell to a Python Transform draft.
+
 **Not built, and not faked.**
 
 * **DuckDB-Wasm in the page.** The design (RUPAKA 20.9) wanted Slice and SQL in the browser; DuckDB-Wasm is not vendored in this build (`tools/fetch-duckdb-wasm.sh` fetches it for the phase 0 proof of
   concept only), so Slice is plain JavaScript and SQL runs on the console over the same extract (SQLite, not DuckDB: a different dialect). Moving them in-browser needs the narrow wasm
   policy on this page; it is the planned next step, not done.
 * **Extracts of a million rows**, Perspective in Analyse, Graphic Walker, a *Data* tab (editing the extract), *Notes* cells, outputs saved with a notebook, scheduled notebook runs, parameters
-  and widgets, sharing a notebook's outputs, a link *Analyse this* from a report visual or from a terminal view, a "promote to a Transform", cell tests.
+  and widgets, sharing a notebook's outputs, a link *Analyse this* from a report visual or from a terminal view, cell tests, further extracts in the **browser** target (they need the server's sandbox), and an `extract(...)` of a **report visual** (further extracts are datasets).
 * **Pivot extras**: grand totals and subtotals in the Slice (use a matrix in a report for true totals), sorting by a value, number formats.
 * **Quant:** the real engine (QLRisk); `quant` in the browser target.

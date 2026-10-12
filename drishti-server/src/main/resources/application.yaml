@@ -221,6 +221,7 @@ drishti:
           - POST /api/v1/bi/items/*/history/*/restore
           - POST /api/v1/bi/items/*/impact
           - POST /api/v1/bi/datasets/*/refresh
+          - POST /api/v1/bi/datasets/*/transform/run
           - PUT /api/v1/bi/items/*
           - PUT /api/v1/bi/items/*/favourite
           - DELETE /api/v1/bi/items/*

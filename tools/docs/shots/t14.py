@@ -130,3 +130,46 @@ def analyse(c: Ctx):
     c.page.wait_for_selector("[data-saved]:not([hidden])", timeout=30000)
     c.page.wait_for_timeout(600)
     c.save("09-saved.jpg", clip={"x": 240, "y": 56, "width": 1040, "height": 844})
+
+
+DERIVED = "file:dataset:desk-pnl-vs-exposure-py"
+NOTEBOOK = "file:notebook:pnl-vs-exposure-pandas"
+
+
+@shot("12-derived-dataset.jpg")
+def derived_dataset(c: Ctx):
+    """The derived sample dataset: its sources, the Python Transform that reads them, and Run the Transform now with the columns it returned."""
+    login(c, height=900)
+    quiet_inbox(c)
+    go(c, "/bi/d/" + DERIVED, wait="[data-built-sec]:not([hidden])", settle=1500)
+    c.page.click("[data-run-transform]")
+    c.page.wait_for_function("() => /rows/.test(document.querySelector('[data-run-result]').textContent)", timeout=90000)
+    c.page.wait_for_timeout(600)
+    elem_shot(c, "12-derived-dataset.jpg", "[data-built-sec]", pad=10)
+
+
+@shot("13-analyse-extracts.jpg", also=("14-analyse-join.jpg", "15-promote-transform.jpg"))
+def analyse_extracts(c: Ctx):
+    """The sample notebook: two extracts of two datasets, joined in pandas in one cell, and the cell promoted to a Python Transform draft."""
+    login(c, height=900)
+    quiet_inbox(c)
+    listing = bi(c, "GET", "/workspaces/me/items")
+    for it in (listing if isinstance(listing, list) else listing.get("items", [])):
+        if it["title"].startswith("Join of P&L and exposure"):
+            bi(c, "DELETE", "/items/" + it["id"])
+    c.page.set_viewport_size({"width": 1280, "height": 900})
+    c.page.goto(c.base + "/bi/explore?item=" + NOTEBOOK)
+    c.page.wait_for_selector("[data-extra='exposure']", timeout=60000)
+    c.page.wait_for_function("() => /rows/.test(document.querySelector('[data-info]').textContent)", timeout=60000)
+    c.page.evaluate("window.scrollTo(0, 0)")
+    c.save("13-analyse-extracts.jpg", clip={"x": 240, "y": 56, "width": 1040, "height": 844})
+    c.page.click("#bxT-python")
+    c.page.click("[data-cells=python] [data-run]")
+    c.page.wait_for_selector("[data-cells=python] .bx-out table", timeout=90000)
+    c.page.wait_for_timeout(800)
+    elem_shot(c, "14-analyse-join.jpg", "[data-pane=python]", pad=6)
+    c.page.fill("input[name=title]", "Join of P&L and exposure")
+    c.page.click('[data-cells=python] [data-promote="transform"]')
+    c.page.wait_for_function("() => /Python transform draft saved/.test(document.querySelector('[data-msg]').textContent)", timeout=30000)
+    c.page.evaluate("window.scrollTo(0, 0)")
+    c.save("15-promote-transform.jpg", clip={"x": 240, "y": 56, "width": 1040, "height": 300})

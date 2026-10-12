@@ -1128,6 +1128,17 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 - **Cause:** the SQL engine cannot run Python (`DRS-9013`).
 - **Fix:** show the measure in a **python visual** (`wells: { values: [<the measure>] }`); see [PYTHON_BI.md](PYTHON_BI.md) section 5.
 
+### A composed or derived dataset will not answer
+
+* **`DRS-9014` or `DRS-9016` on the dataset page, and every query `DRS-9010`.** A composed dataset is checked against the datasets it is built from. `no dataset 'x'`: a source is named by catalogue id, file name or the dataset's own name; `source dataset 'x' has errors`: fix that one first; `the key 'k' of 'a' is date but 'k' of 'b' is string`: both sides of a join are of one type; `'k' is not a column of 'a'`: a join is made on the names the frame gives (`trade.desk as d` is `d`). `DRS-9016` names the loop.
+* **`DRS-9021` "the join key 'counterparty' ... is masked for you".** A source masks the column you join on (the server's redact list or the source's `masked:`). Join on an unmasked key (an id), or ask for the raw power. The refusal is the safe answer: joined on a mask, every row would meet every row.
+* **A composed measure is far too high.** `DRS-9015` on the dataset: a join repeats rows. Declare `key:` on each source, or group a source by the join key alone.
+* **A visual of a composed dataset shows less than the other datasets say.** Each source is asked as you, before the join: a desk-head's row rule cuts the trades first, and an inner join then drops the counterparties they have none with. A `left` join keeps the left source's rows.
+* **`DRS-9022` "source 'x' answers more than ... rows".** A source returned over `drishti.bi.transform.compose-source-max-rows`: group it by less in `from`, or filter it.
+* **A derived dataset answers `DRS-9074`.** The server starts the console's runner itself: set `drishti.bi.transform.python` to the Python with pandas and pyarrow (the console's `.venv/bin/python`) and `drishti.bi.transform.runner` to the console's `core/transform_cli.py`; with neither set it looks for `drishti-console/` from the working directory upwards. `DRS-9071`/`9072`/`9073` are the sandbox's, as for any Python item ([PYTHON_BI.md](PYTHON_BI.md) section 10); `DRS-9075` is a frame that lacks a declared column.
+* **A derived dataset says "the columns of the result are not known yet" and no field resolves.** It declares no `columns:` and has never run: press **Run the Transform now** on its page (or `POST /datasets/{id}/transform/run`); the columns of that result are kept, and the page checks again.
+* **The Transform runs again for every person.** Its result is kept per reader and version of the inputs (`drishti.bi.transform.cache-ttl`, `cache-entries`): a different person has different rows and masks, so a different frame. After a data load the inputs' version changes and the next reader runs it again.
+
 ## Error codes
 
 | Code | Meaning |
@@ -1215,8 +1226,12 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 | `DRS-9011` | a measure, calculated column or row rule does not parse, names a table or column the dataset does not have, aggregates where it must not (or does not where it must), uses an unknown function, or refers to measures in a circle (HTTP 422) |
 | `DRS-9012` | a relationship, hierarchy, masked column, row rule or rollup points at a table or column that does not exist, or a rollup lists a measure it cannot hold (a distinct count, a percentile, a condition inside an aggregate) |
 | `DRS-9013` | the dataset uses a window function (`lag`, `rank`) or a Python measure: reserved, **not built** (HTTP 501 as a query; a warning for a stored Python measure). Time intelligence (`ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year`, `running`) is built; one with the wrong arguments is `DRS-9011` (it names what it needs), a `running` total whose date is not a field of the visual is `DRS-9020` |
+| `DRS-9014` | a composed dataset (`from:` / `join:`) names a source dataset, column, measure or join key that does not exist, joins keys of different types, or leaves a source unjoined (HTTP 422); the problem names the path ([DATASETS.md section 11](DATASETS.md#11-composed-and-derived-datasets)) |
+| `DRS-9015` | a warning on a composed dataset: a join repeats rows (many-to-many, or the source with one row per key is on the wrong end), so the measures of the repeated side add up too high; declare the `key:` of each source, group a source by the key alone, or put the unique source on the right |
+| `DRS-9016` | a dataset reads itself, directly or through the datasets it is composed of or derived from (HTTP 422): break the loop by taking the column from the underlying dataset |
+| `DRS-9017` | a derived dataset has no `transform:` or no `inputs:`, or declares a column that is not a usable name or type (HTTP 422); as a warning: its columns are not known yet (declare `columns:`, or press Run the Transform now on its page) |
 | `DRS-9020` | a query names a field, measure, filter operator, value or date the dataset cannot take, or the model has no many-to-one path joining what it asks for (HTTP 422; a row rule's tables are joined into every query a reader runs, so a rule can make a question unanswerable: the message names it) |
-| `DRS-9021` | a query filters on or sorts by a column masked for you, or reads a `direct` table of a kind you may not open (HTTP 403) |
+| `DRS-9021` | a query filters on or sorts by a column masked for you, reads a `direct` table of a kind you may not open, or (a composed dataset) joins on a column that one of its sources masks for you (HTTP 403): a masked column holds one constant, so the join would match everything to everything |
 | `DRS-9022` | the answer is over `drishti.bi.query.max-rows` (or, as JSON, `json-max-rows`) (HTTP 413): group by less, filter, set a `limit`, or ask for Arrow |
 | `DRS-9023` | the Arrow answer is over `drishti.bi.query.max-bytes` (HTTP 413) |
 | `DRS-9024` | the query ran longer than `drishti.bi.query.timeout` and was cancelled (HTTP 504) |
@@ -1243,7 +1258,8 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 | `DRS-9071` | the Python code failed (HTTP 422): an exception, a measure that did not return one number per group, a visual that returned neither an ECharts option, SVG nor PNG. The traceback is shown to `bi-author` only |
 | `DRS-9072` | a Python limit stopped it (HTTP 504 for time, 413 for memory, input or output size) |
 | `DRS-9073` | the Python sandbox refused something (HTTP 403): an import that is not on the item's list, the network, a file outside the scratch folder, a process |
-| `DRS-9074` | the Python runner is not available (HTTP 503): all workers busy, switched off, `pandas` or `pyarrow` missing in the console, a package not installed, or no Pyodide for a browser run |
+| `DRS-9074` | the Python runner is not available (HTTP 503): all workers busy, switched off, `pandas` or `pyarrow` missing in the console, a package not installed, or no Pyodide for a browser run; for a derived dataset also `drishti.bi.transform.enabled: false`, the console's `core/transform_cli.py` or its Python not found (`drishti.bi.transform.runner`, `python`), or `drishti.bi.transform.max-concurrent` runs already going |
+| `DRS-9075` | a Python Transform returned what a derived dataset cannot use (HTTP 422): a column the dataset declares is missing from its frame, or the Transform's inputs differ from the dataset's |
 | `DRS-9404` | raised by the console only (HTTP 404): an embedding page asked for a Drishti Elements module or enhancer script the console does not ship (`/embed/v1/m/<name>.js`, or `/embed/v1/js/<name>.js` for a script that is not one of the console's enhancers); check the file name and the library version in the `<script>` tag |
 | `DRS-7016` | the picture could not be made (HTTP 503): it took longer than `snapshots.timeout`, is over `snapshots.max-bytes`, or the JDK has no font libraries (a minimal image: install the JDK's fontconfig and freetype packages); the message says which. Send without a picture, or raise the limit |
 

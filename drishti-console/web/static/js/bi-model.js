@@ -275,10 +275,11 @@
         g.appendChild(path);
         if (r.join) {
           const t = document.createElementNS(NS, 'text');
-          t.setAttribute('x', (a.x + b.x) / 2);
-          t.setAttribute('y', (a.y + b.y) / 2 - 8);
-          t.setAttribute('text-anchor', 'middle');
-          t.textContent = r.join + ' join';
+          const side = a.right === b.right;                                       // both keys on the same edge: the label sits at the curve's far side, clear of the boxes
+          t.setAttribute('x', side ? Math.max(a.x, b.x) + (a.right ? dx * 0.75 + 8 : -(dx * 0.75 + 8)) : (a.x + b.x) / 2);
+          t.setAttribute('y', (a.y + b.y) / 2);
+          t.setAttribute('text-anchor', side ? (a.right ? 'start' : 'end') : 'middle');
+          t.textContent = r.join;                                                  // the list beside the diagram and the line's tooltip say "left join"
           g.appendChild(t);
         }
         const title = document.createElementNS(NS, 'title');

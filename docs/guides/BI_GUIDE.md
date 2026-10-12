@@ -338,7 +338,9 @@ time intelligence in the measure language (`ytd`, `mtd`, `qtd`, `prior_period`, 
 country file: no tiles, no CDN), **funnel**, **histogram**, **box plot** and **bubble** in the visual catalogue, the designer, exports and `<drishti-report>`; and **true totals** for the measures of a matrix or table that do not add up, worked out by the engine
 ([REPORTS.md sections 3.1 and 3.2](REPORTS.md#31-the-map-funnel-histogram-box-plot-and-bubble)). Walk-through: [BI_TUTORIAL.md chapter 23](BI_TUTORIAL.md#23-time-totals-and-a-map); settings `drishti.bi.refresh.*` and `drishti.bi.report.distribution-rows` and `totals-max-rows`.
 
-**Not built (and not faked).** Everything of phases 8 and 9 and part of 6: the Python Transform and Source interfaces and a warm worker pool ([PYTHON_BI.md](PYTHON_BI.md) section 12); the rest of the analyst workbench (phase 9: DuckDB-Wasm in the page, Data, Notes, large extracts: [ANALYSE.md](ANALYSE.md) section 12); importing BI content by deploying a pack archive; *Analyse in BI* from a terminal view; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses; AI features (stage 2).
+**Several datasets.** Composed datasets (`from:` / `join:`), derived datasets made by a Python Transform, per-visual datasets and links in reports, several extracts in an Analyse notebook, impact and lineage across all of them (`DRS-9014` to `9017`, `9075`; [DATASETS.md section 11](DATASETS.md#11-composed-and-derived-datasets), [RUPAKA.md section 20.10](../architecture/RUPAKA.md)).
+
+**Not built (and not faked).** Everything of phases 8 and 9 and part of 6: the Python Source interface and a warm worker pool ([PYTHON_BI.md](PYTHON_BI.md) section 12); the rest of the analyst workbench (phase 9: DuckDB-Wasm in the page, Data, Notes, large extracts: [ANALYSE.md](ANALYSE.md) section 12); importing BI content by deploying a pack archive; *Analyse in BI* from a terminal view; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses; AI features (stage 2).
 
 ## 12. Problems
 
@@ -382,7 +384,9 @@ columns, and the layers on disk) and a **query preview**: choose fields, measure
   datasets by everyone who may read them.
 * **Refresh.** Layers are rebuilt per business date when a data-load signal names the date ([DATA_LOADS.md](DATA_LOADS.md)); an author can also clear and rebuild the current date from the API
   (`POST /api/v1/bi/datasets/{id}/refresh`). Settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibiquery--the-dataset-query-engine-phase-2).
-* **API.** [API_GUIDE.md](API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2). Problems: DRS-9010 to 9013 (the dataset) and 9020 to 9027 (the query) in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+* **API.** [API_GUIDE.md](API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2). Problems: DRS-9010 to 9017 (the dataset, composed and derived datasets included) and 9020 to 9027 (the query) in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+
+**Several datasets in BI.** A dataset need not come from a connector: it may be **composed** of other datasets (`from:` and `join:`: each source is asked as the person reading, with *its own* row rules and masks, and the answers are joined, with measures of the dataset's own over the joined columns) or **derived** by a **Python Transform** that receives the sources' answers as masked pandas frames and returns the table. Either is used wherever a dataset is (reports, alerts, subscriptions, refresh, Analyse); its page lists **Built from other datasets** and the Model view draws the sources, the join and the table. A **report** may name a dataset per visual and link fields across datasets, so a slicer on one filters the visuals of another ([REPORTS.md section 16](REPORTS.md#16-reports-over-several-datasets)); **Analyse** loads several extracts in one notebook and joins them in pandas or SQL, and promotes the join to a Transform. A join on a column a source masks for you is refused. The sample *Desk P&L vs counterparty exposure* is built both ways. Reference: [DATASETS.md section 11](DATASETS.md#11-composed-and-derived-datasets); tutorials [10](../tutorials/10-first-bi-report.md) and [14](../tutorials/14-python-and-analyse.md).
 
 **Refresh and time (wave 3).** A dataset page has a **Refresh** section: the dataset's `refresh:` schedule (a clock such as `daily 06:00`, `business-days 07:30` by the pack's holiday calendar, a cron, or `after-load`), its status, the last and next refresh, the rows, the time taken and the failures; a failed refresh is retried
 by the shared retry policy. Measures may use `ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year` and `running` over a date column. Reference: [DATASETS.md sections 4.1 and 7.2](DATASETS.md#41-time-intelligence); walk-through: [BI_TUTORIAL.md chapter 23](BI_TUTORIAL.md#23-time-totals-and-a-map).
@@ -581,10 +585,10 @@ The rail's **Analyse** (`/bi/explore`) opens a dataset as an **extract**: the ro
 
 * **Slice**: drag fields (or use each chip's R, C, V, F buttons) into Rows, Columns, Values and Filters for an instant pivot in the page;
 * **SQL**: cells that run one read-only `SELECT` over the table `extract` (limits on text, time and rows);
-* **Python**: pandas cells over `df`, with charts in `result` and `quant.price(...)`; they run in the console's sandbox (or in the browser, Pyodide) and need the `bi-author` power.
+* **Python**: pandas cells over `df` (and `extract("name")` for any further extract of the notebook), with charts in `result` and `quant.price(...)`; they run in the console's sandbox (or in the browser, Pyodide) and need the `bi-author` power.
 
 **Save as a notebook** keeps the extract's definition and the cells as a BI item of kind `notebook` (versions, review and publishing like any item; *Open in Analyse* on its page reopens it, rebuilt for whoever
-opens it). **Promote** turns a Python cell into a Python Measure or Visual draft and a slice into a report draft; nothing is published. Slice and SQL totals are the *extract's*, not the dataset's: use a
+opens it). **Promote** turns a Python cell into a Python Measure or Visual draft (or, for a cell that joins several extracts, a Python Transform draft) and a slice into a report draft; nothing is published. Slice and SQL totals are the *extract's*, not the dataset's: use a
 report for true totals. Reference: [ANALYSE.md](ANALYSE.md); tutorial chapter 25. Not built: DuckDB-Wasm in the page (Slice is JavaScript and SQL runs on the console), a *Data* tab, *Notes*,
 million-row extracts, scheduled notebooks (ANALYSE.md section 12).
 

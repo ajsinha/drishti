@@ -20,7 +20,9 @@ Drishti Rūpaka runs **typed Python** where the expression language and the visu
 regression plot). Authors do not paste scripts into a visual: a Python function is a **BI item** of its own, with a manifest, versions, review and publishing like a dataset or a
 report, and a report names it. It runs **sandboxed on the console**, or **in the viewer's browser** (Pyodide), always on **the rows the person looking may see**.
 
-This is the reference. For a walk-through see [BI_TUTORIAL.md](BI_TUTORIAL.md) chapter 24; the design is [RUPAKA.md](../architecture/RUPAKA.md) section 13, what is built is its section 20.8.
+A third interface, the **Transform**, turns the frames of several datasets into a table that a **derived dataset** publishes (section 13): it is how Python joins datasets.
+
+This is the reference. For a walk-through see [BI_TUTORIAL.md](BI_TUTORIAL.md) chapter 24 and [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [RUPAKA.md](../architecture/RUPAKA.md) section 13, what is built is its section 20.8.
 Python in the *terminal* (Calc) is a different thing: [PYTHON_CALC.md](PYTHON_CALC.md).
 
 ## Contents
@@ -37,6 +39,7 @@ Python in the *terminal* (Calc) is a different thing: [PYTHON_CALC.md](PYTHON_CA
 10. [Errors: DRS-9070 to DRS-9074](#10-errors-drs-9070-to-drs-9074)
 11. [Measured](#11-measured)
 12. [Built and not built](#12-built-and-not-built)
+13. [Transforms: a table in, a table out](#13-transforms-a-table-in-a-table-out)
 
 ## 1. At a glance
 
@@ -121,15 +124,15 @@ The body of a `python` item is YAML:
 | Key | Required | Meaning |
 |---|---|---|
 | `python` | yes | the item's name (letters, digits, hyphen, underscore) |
-| `interface` | yes | `measure` or `visual` (a Transform is not built) |
+| `interface` | yes | `measure`, `visual` or `transform` (section 13) |
 | `source` | yes | the code; up to 65,536 characters; it must define the entry function |
-| `entry` | no | the function's name: `compute` for a measure, `render` for a visual |
-| `inputs` | measure: yes | the columns the function reads, as the table names them (`pnl1d`, not `trade.pnl1d`) |
+| `entry` | no | the function's name: `compute` for a measure, `render` for a visual, `run` for a transform (a top-level function, or a method of a class `Transform`) |
+| `inputs` | measure: yes; transform: yes | a measure: the columns the function reads, as the table names them (`pnl1d`, not `trade.pnl1d`); a transform: the **datasets** it reads, in the order its function receives their frames (section 13) |
 | `packages` | no | what the source imports; each must be on the allow-list (`drishti.bi.report.python-packages`, console `bi.python.packages`) |
 | `target` | no | `server` (default), `browser` or `both`. A browser target cannot need a package Pyodide lacks (it has numpy, pandas, scipy, statsmodels, not pyarrow) |
 | `timeout` | no | seconds, 1 to `drishti.bi.report.python-max-seconds` (60); default 10 |
 | `memory` | no | megabytes the code may add to what Python needs to start, 32 to `python-max-memory-mb` (1024); default 256 |
-| `output` | visual | `echarts` (default), `svg` or `png`; a measure's output is `number` |
+| `output` | visual | `echarts` (default), `svg` or `png`; a measure's output is `number`, a transform's `frame` |
 | `params` | no | defaults the function reads from `params`; a visual of a report overrides them in `format.params` |
 | `title`, `description`, `owner`, `tags`, `endorsement`, `audience`, `sample`, `version` | no | the catalogue's keys, as for any item |
 
@@ -270,6 +273,7 @@ container with the usual limits. `GET /bi/python/status` says which isolation is
 | `DRS-9071` | 422 | the code failed | an exception (the message names it; authors also get the traceback), a measure that returned something that is not a number, a visual that returned neither an option, an SVG nor a PNG |
 | `DRS-9072` | 413 or 504 | a limit stopped it | over `timeout` (504), over `memory`, input or output size (413) |
 | `DRS-9073` | 403 | the sandbox refused something | an `import` that is not on the list, the network, a file outside the scratch folder, a process |
+| `DRS-9075` | 422 | a Transform's result is not usable | a column the derived dataset declares is missing from the frame, or the Transform's `inputs` are not the derived dataset's inputs (a Transform only: section 13) |
 | `DRS-9074` | 503 | no runner | all workers busy for `queue_seconds`, the runner switched off, `pandas` or `pyarrow` not installed in the console's environment, a package not installed, Pyodide not installed for a browser run |
 
 Real output (a measure on 60 trades, then the failures, from `core/pyrunner.py`):
@@ -302,7 +306,57 @@ runs themselves are the same code as the server's, on 60 rows). The Chromium tes
 Built: the Measure and Visual interfaces; Python items as BI items (versions, review, publish, shipped files, bundles); the manifest and its checks (server and console); Python measures in datasets; the
 `python` visual in reports and the designer; the sandboxed server runner with a pool; the browser target in Calc's Pyodide worker; the shipped samples.
 
-Not built, and not faked: **Transform** and **Source** interfaces (RUPAKA.md section 13.1; a Python-made table as a dataset source); a Python measure **inside** a SQL query or a bar chart's measures (a query that names one is `DRS-9013`);
+Built with several datasets (section 13): the **Transform** interface, run on the server as the reader's masked frames and published as a derived dataset ([DATASETS.md section 11.2](DATASETS.md#112-derived-datasets-a-python-transform)), kept per reader and version of the inputs; Analyse promotes a join cell to one.
+
+Not built, and not faked: the **Source** interface (RUPAKA.md section 13.1; rows from a Python-only source such as an API); a Python measure **inside** a SQL query or a bar chart's measures (a query that names one is `DRS-9013`);
 **tests shipped with an item** and run by the check (the check parses and lints, it does not run your examples); **Vega-Lite** specs; Python on **boards**, in **alerts**, **subscriptions** and **embedded** reports (an export of a python visual is the table of rows handed to Python); a
 **warm worker pool** and a **separate runner service** (`bi.python.runner-url`: RUPAKA.md section 17); a **kernel-level** sandbox (seccomp, containers: use the platform's); the `drishti_bi` client, **PygWalker** and notebooks in Calc; **R**; `scikit-learn` and `polars` in the
 allow-list (add them to `bi.python.packages` and the server's `python-packages` when installed).
+
+
+## 13. Transforms: a table in, a table out
+
+The third interface, after the Measure and the Visual, is the **Transform**: Python that turns the frames of one or more datasets into **a table**, which a **derived dataset** ([DATASETS.md section 11.2](DATASETS.md#112-derived-datasets-a-python-transform)) publishes as its one table, with measures declared in YAML over it. Use it where a join or a reshaping is easier in pandas than in the dataset language (a merge with a tolerance, a rank, a fitted column, a pivot), and you still want the result to be a dataset every report, alert and subscription can use. The design is [RUPAKA.md sections 13.1 and 20.10](../architecture/RUPAKA.md).
+
+```yaml
+rachana: 1
+python: pnl-vs-exposure
+interface: transform            # a table in, a table out
+inputs: [trading-risk, counterparty-exposure]     # the DATASETS it reads, in the order its function receives their frames
+packages: [pandas]
+target: server                  # a Transform runs on the server and its result is kept for the reader
+timeout: 20
+memory: 512
+params: { floor: 1.0 }          # defaults; the derived dataset may override them (derived.params)
+source: |
+  def run(pnl, exposure, params):
+      m = pnl.merge(exposure, on="counterparty", how="left")
+      m = m.rename(columns={"Desk P&L": "desk_pnl", "Exposure (EE peak)": "ee_peak"})
+      m["pnl_per_exposure"] = m["desk_pnl"] / m["ee_peak"].clip(lower=float(params.get("floor", 1.0)))
+      return m[["counterparty", "name", "sector", "desk_pnl", "ee_peak", "pnl_per_exposure"]]
+```
+
+**The contract.**
+
+| | |
+|---|---|
+| function | `run(*frames)`: one **pandas DataFrame** per input, in the order of `inputs`. A function that has a parameter named `params` receives the parameters (the manifest's `params` over the derived dataset's); or a class named `Transform` with a method `run(self, *frames)`, which finds the parameters in `self.params` |
+| frames | what the reader may see: each input is a question put to a dataset **as the reader** (`by` + `measures`, or `fields`), so row rules and masks are already applied and a masked column is null. Columns are named by the derived dataset's `inputs` (`as`, else the last part of the field) |
+| returns | a DataFrame: no more than `drishti.bi.transform.max-rows` rows; column names of letters, digits and underscore; no duplicate names. Anything else is `DRS-9071` |
+| column types | typed from the frame: `int` is `integer`, `float` and decimals are `decimal`, `bool` is `boolean`, dates and timestamps are `date` and `timestamp`, everything else `string` |
+| `inputs` (manifest) | datasets (a catalogue id, a file name, the dataset's name), not columns: the derived dataset's inputs must be the same datasets in the same order (`DRS-9075` otherwise) |
+| `target` | `server` only: the browser has no business making a table the server keeps |
+
+**Where it runs, and who sees what.** The server asks each input as the reader, writes the answers as Arrow files and starts the console's runner (`drishti-console/core/transform_cli.py`, which uses `core/pyrunner.py` exactly as a Python measure does): `python -I`, an empty environment, a scratch folder, no network, CPU, memory, wall-clock and output limits, an audit hook, the import guard. The frame comes back as a Parquet file the server keeps for **that reader** and the version of the inputs (`drishti.bi.transform.cache-ttl`, `cache-entries`). The code never sees anything the reader may not, and the result is derived only from it; another reader gets their own run. Real output of the sample's first and second run (an author who may read every row):
+
+```
+Python Transform pnl-vs-exposure: 18 rows in 218 ms (first run); the same reader again: kept, 0 ms
+```
+
+**Checks.** The server checks the manifest on validate and publish (`DRS-9070`): `interface` is `measure`, `visual` or `transform`; a transform needs `inputs` naming datasets, defines `run` (a top-level function or the method of a class `Transform`), and `target` is `server`. The console adds the source checks (`POST /bi/python/check`: it parses, defines its entry, imports only what it lists). `DRS-9071` to `9074` are the run's, as for any Python item (section 10); `DRS-9075` is a frame that lacks a column the derived dataset declares or inputs that do not match.
+
+**From Analyse.** A notebook that joins several extracts in pandas ([ANALYSE.md section 2](ANALYSE.md#2-the-extract)) can **Promote to a Transform**: each `extract("name")` becomes a parameter of `run`, the cell's `result` is returned, and the inputs are the extracts' datasets in order; the draft is then checked and published, and a derived dataset is written over it.
+
+![The derived sample dataset: its sources, Run the Transform now and the columns it returned](../tutorials/img/t14/12-derived-dataset.jpg)
+
+Settings: `drishti.bi.transform.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibitransform--python-transforms-and-composed-datasets). The sample is `config/bi/python/pnl-vs-exposure.python.yaml` with the derived dataset `desk-pnl-vs-exposure-py`.

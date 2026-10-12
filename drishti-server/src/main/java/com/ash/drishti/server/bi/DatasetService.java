@@ -265,13 +265,18 @@ public final class DatasetService {
             tm.put("description", t.description());
             tm.put("access", entitlements.mayOpen(p, t.kind()) ? "ok" : "no-access");
             List<Map<String, Object>> cols = new ArrayList<>();
-            cols.add(column("id", "id", "string", true, null, false, "the entity id"));
+            boolean frame = Dataset.FRAME.equals(t.mode());                    // a composed or derived dataset's table has the columns it was built with and no more
+            if (!frame) {
+                cols.add(column("id", "id", "string", true, null, false, "the entity id"));
+            }
             for (Dataset.Column c : t.columns().values()) {
                 Map<String, Object> cm = column(c.name(), c.path(), c.type(), c.key(), c.expr(), masks.masked(t.name(), c.name()), c.description());
                 cm.put("format", c.format());
                 cols.add(cm);
             }
-            cols.add(column("businessDate", "businessDate", "date", false, null, false, "the business date of the row"));
+            if (!frame) {
+                cols.add(column("businessDate", "businessDate", "date", false, null, false, "the business date of the row"));
+            }
             if (t.each() != null) {
                 cols.add(column("index", "index", "integer", false, null, false, "the position in the array"));
             }

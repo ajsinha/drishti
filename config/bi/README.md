@@ -22,13 +22,13 @@ describes data (Sutras, links, vocabulary); BI content may combine kinds from ma
 ```
 config/bi/
   datasets/   <id>.dataset.yaml   the semantic model: tables over connectors (by logical name), relationships, measures, row rules and masks; queried since phase 2
-                                  (five commented samples ship: trades-basic, trading-risk, trading-cashflows, and the live live-trading and live-exposure)
+                                  (commented samples ship: trades-basic, trading-risk, trading-cashflows, the live live-trading and live-exposure, and for several datasets counterparty-exposure, the composed desk-pnl-vs-exposure and the derived desk-pnl-vs-exposure-py: DATASETS.md section 11)
   reports/    <id>.report.yaml    pages of visuals over a dataset: filters, bookmarks, drill-through, theme; drawn since phase 3
-                                  (six commented samples: trades-overview, counterparty-risk, cashflow-ladder, live-trading-desk, live-exposure, python-desk-risk)
+                                  (seven commented samples: trades-overview, counterparty-risk, cashflow-ladder, live-trading-desk, live-exposure, python-desk-risk, and pnl-vs-exposure over two datasets: REPORTS.md section 16)
   boards/     <id>.board.yaml     a wall of live tiles from several reports, with alerts and kiosk mode; drawn since phase 5 (one commented sample: desk-wall)
-  notebooks/  <id>.notebook.yaml  an analyst notebook: stored, versioned and published like any item, but not run (phase 9)
+  notebooks/  <id>.notebook.yaml  an analyst notebook: stored, versioned and published like any item, but not run (phase 9; one sample: pnl-vs-exposure-pandas, two extracts joined in pandas)
   python/     <id>.python.yaml    a Python Measure or Visual with its manifest (inputs, packages, target, limits, source); run by the console's sandboxed runner or in the browser, since phase 6
-                                  (two commented samples: desk-pnl-volatility, pnl-histogram; docs/guides/PYTHON_BI.md)
+                                  (commented samples: desk-pnl-volatility, pnl-histogram, and the Transform pnl-vs-exposure behind the derived dataset desk-pnl-vs-exposure-py; docs/guides/PYTHON_BI.md)
 ```
 
 Every file is a **published, read-only item of the catalogue** (workspace "Shipped content", id `file:<kind>:<name>`). The keys `title`, `description`, `owner`, `tags`, `endorsement` (none, promoted,

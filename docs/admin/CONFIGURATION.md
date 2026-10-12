@@ -288,6 +288,8 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `./data/governance` | Where proposals are kept. |
 | `DRISHTI_DATA_DIR` | `drishti.data.dir` | `./data` | The data folder: the umbrella every runtime path below defaults under (see [The data folder](#the-data-folder-and-the-config-folder)). |
 | `DRISHTI_BI_DIR` | `drishti.bi.dir` | `./config/bi` | Where Rupaka (BI) files live: `datasets/`, `reports/`, `boards/`, `notebooks/`, `python/`. Never inside a pack. |
+| `DRISHTI_BI_TRANSFORM_PYTHON` | `drishti.bi.transform.python` | empty | The Python that runs a derived dataset's Transform: it needs `pandas` and `pyarrow`, normally the console's `drishti-console/.venv/bin/python`. Empty: that file when it exists, else `python3`. |
+| `DRISHTI_BI_TRANSFORM_RUNNER` | `drishti.bi.transform.runner` | empty | The console's `core/transform_cli.py`, which the server starts to run a Transform in the sandboxed runner. Empty: looked for in `drishti-console/core` from the working directory and its parents. |
 | `DRISHTI_BI_STORE` | `drishti.bi.query.store-dir` | `./data/bi-store` | The BI store: the typed Parquet layers (columns, rollups, live snapshots) the dataset query engine writes and reads, and DuckDB's spill folder. Rebuildable from the connectors; never commit it. |
 | `DRISHTI_PACKS_DIR` | `drishti.packs.dir` | `./config/packs` | The packs directory. If it does not exist and the old `./packs` does, `./packs` is used with a warning (one release). |
 | `DRISHTI_PACKS_OVERLAY` | `drishti.packs.overlay` | `./data/packs/added.yaml` | The file of packs an administrator loaded from Admin → Packs; imported at start (`spring.config.import`) and named again by `drishti.packs.overlay`. Written by the server, not by hand. |
@@ -345,6 +347,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | (no variable) | `bi.python.max_groups`, `network_namespace`, `scratch_dir` | `5000`, `auto`, system temp | Most groups a measure is called for; `auto`, `require` or `off` for the no-network namespace (the audit hook is always on); where scratch folders are made. |
 | `DRISHTI_BI_EXPLORE_MAX_ROWS` | `bi.explore.max_rows` | `10000` | Rupaka phase 9 ([ANALYSE.md](../guides/ANALYSE.md)): the most rows of an Analyse extract (the reader's rows, cut here; 10 to 100000). Without `pyarrow` on the console the server's JSON limit (`drishti.bi.query.json-max-rows`, 5000) also applies. |
 | (no variable) | `bi.explore.max_fields`, `sql_max_rows`, `sql_max_seconds`, `sql_max_chars` | `60`, `5000`, `5`, `20000` | Most columns of an extract; most rows a SQL cell returns; a SQL cell running longer is stopped; longest SQL text (`DRS-9072` for each). |
+| (no variable) | `bi.explore.max_extracts` | `6` | Most further extracts in one notebook, besides the first (`extract("name")` in a cell, a table of that name in SQL; `DRS-9072`). See [ANALYSE.md section 2](../guides/ANALYSE.md#2-the-extract). |
 | (no variable) | `bi.explore.cell_timeout_seconds`, `cell_memory_mb`, `cell_max_chars`, `max_cells` | `20`, `512`, `65536`, `60` | A Python cell's time and memory on the server (also capped by `bi.python.max_timeout_seconds` and `max_memory_mb`); longest cell; most cells in a notebook. |
 | (no variable) | `bi.explore.quant_engine` | `stand-in` | The engine behind `quant.price(...)` in a Python cell ([QUANT_SERVICE.md](../architecture/QUANT_SERVICE.md#16-the-consoles-quantengine-slot-built-lean)); only `stand-in` is built in. |
 | `DRISHTI_LAYOUTS_ENABLED` | `layouts.enabled` | `true` | Offer layout mode. |
@@ -1138,6 +1141,26 @@ How many rows each kind of visual asks the engine for ([REPORTS.md](../guides/RE
 | `python-packages` | `pandas, numpy, pyarrow, scipy, statsmodels` | The packages a Python item's manifest may list (publishing refuses another: `DRS-9070`). Keep it equal to the console's `bi.python.packages`, which is what the runner enforces. |
 | `python-max-seconds` | `60` | The largest `timeout` a Python manifest may ask for. |
 | `python-max-memory-mb` | `1024` | The largest `memory` a Python manifest may ask for, in megabytes. |
+
+### `drishti.bi.transform` — Python Transforms and composed datasets
+
+A **derived dataset** is made by a Python Transform; the server starts the console's sandboxed runner (`drishti-console/core/transform_cli.py`, which uses `core/pyrunner.py`) for each run, hands it the inputs as Arrow files and reads the frame back as Parquet ([DATASETS.md section 11](../guides/DATASETS.md#112-derived-datasets-a-python-transform), [PYTHON_BI.md section 13](../guides/PYTHON_BI.md#13-transforms-a-table-in-a-table-out)). The result is kept per reader and version of the inputs. The package allow-list, `timeout` and `memory` limits are the Python items' own (`drishti.bi.report.python-*`, and the console's `bi.python.*` inside the runner). `compose-source-max-rows` also limits a **composed** dataset's sources.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` | `false`: a derived dataset answers `DRS-9074`. |
+| `python` (`DRISHTI_BI_TRANSFORM_PYTHON`) | empty | The Python that has `pandas` and `pyarrow`, normally the console's `.venv/bin/python`. Empty: `drishti-console/.venv/bin/python` when it exists, else `python3`. |
+| `runner` (`DRISHTI_BI_TRANSFORM_RUNNER`) | empty | The console's `core/transform_cli.py`. Empty: looked for in `drishti-console/core` from the working directory and its parents; not found is `DRS-9074`. |
+| `work-dir` | empty | Where each run's scratch folder is made (removed afterwards). Empty: `<drishti.bi.query.store-dir>/transform-tmp`. |
+| `cache-ttl` | `30m` | How long a Transform's result is served to the reader it was made for (and only while the inputs are unchanged). |
+| `cache-entries` | `20` | Results kept per derived dataset (a reader and a version of the inputs each); the oldest go first. |
+| `max-input-rows` | `50000` | Most rows of one input frame handed to a Transform (`DRS-9072`). |
+| `max-rows` | `100000` | Most rows a Transform may return (`DRS-9072`). |
+| `max-bytes` | `33554432` | Largest result file (`DRS-9072`). |
+| `timeout` | `60s` | Longest a run may take (the item's own `timeout` may be shorter; `DRS-9072`, HTTP 504). |
+| `max-concurrent` | `2` | Transforms running at once on the server. |
+| `queue-wait` | `5s` | How long a run waits for a place before `DRS-9074`. |
+| `compose-source-max-rows` | `50000` | Most rows one source of a composed dataset may answer (`DRS-9022`): group it by less or filter it in `from`. |
 
 ### `drishti.bi.refresh` — scheduled dataset refresh
 

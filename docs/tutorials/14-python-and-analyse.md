@@ -20,7 +20,7 @@ an extract of a dataset to **slice**, query with **SQL**, work on in **Python**,
 
 ## Time to complete
 
-About 40 minutes.
+About 55 minutes.
 
 ## Before you start
 
@@ -34,6 +34,7 @@ About 40 minutes.
 - the two kinds of Python item: a **measure** (`compute(table, params)`, one number per group) and a **visual** (`render(table, params)`, a chart);
 - how a report uses them, where they run, and what the sandbox forbids;
 - **Analyse**: the extract, **Slice**, **SQL** (one read-only SELECT), a **Python** cell that draws a chart, saving a **notebook**, and **promoting** work into BI items.
+- **Python across datasets**: a **Transform** that turns the masked answers of two datasets into a table (a derived dataset), and an Analyse notebook that joins two extracts in pandas and promotes the join to a Transform.
 
 ## Step 1 · Python in a report: the shipped sample
 
@@ -227,10 +228,32 @@ You should see `Python visual draft saved in your workspace: Analyse cell (visua
 
 You should see `Report draft saved in your workspace: Slice of file:dataset:trades-basic.` The draft is a one-page report on the same dataset with a **matrix** (rows, the column field, the values), which you open in the designer to finish ([tutorial 10](10-first-bi-report.md)).
 
+## Step 8 · Two datasets: a Python Transform and a join in Analyse
+
+Steps 1 to 7 used Python on one dataset. Python can also **join datasets**. The sample **Desk P&L vs counterparty exposure** ([tutorial 10](10-first-bi-report.md), step 11) joins the one-day P&L of `trading-risk` and the exposure of `counterparty-exposure` in YAML; the same table is also made by a **Python Transform**: a Python item with `interface: transform` whose function `run(pnl, exposure, params)` receives the two answers as pandas frames, **masked for you**, and returns a table. Open **Datasets** and **Desk P&L vs counterparty exposure (Python)**, and as an author press **Run the Transform now**.
+
+![The derived dataset's page: the two sources, the Python Transform that reads them, and the result of Run the Transform now: 18 rows and the nine typed columns it returned, in 237 ms](img/t14/12-derived-dataset.jpg)
+
+You should see the two sources and, after a moment, `18 rows, counterparty (string), name (string), sector (string), desk_pnl (decimal), trades (integer), ee_peak (decimal), pfe_peak (decimal), pnl_per_exposure (decimal), exposure_rank (decimal)` and the time the run took. The server asked both datasets as you, started the console's sandboxed Python runner (no network, a scratch folder, limits), and kept the frame **for you** until a source changes: press the button again and it says it was already kept. A report can use `result.counterparty`, `Desk P&L` and `P&L per exposure` of this dataset as of any other; a colleague with other rows and masks gets a frame of their own. The item is `config/bi/python/pnl-vs-exposure.python.yaml`; the reference is [PYTHON_BI.md section 13](../guides/PYTHON_BI.md#13-transforms-a-table-in-a-table-out).
+
+How would you write such a Transform? In **Analyse**, with **two extracts**. Open the notebook **Desk P&L vs counterparty exposure, in pandas** (the Notebook box in the Extract card).
+
+![Analyse with the sample notebook: the first extract is the trades of trading-risk (750 rows, 3 columns); under More extracts, the second is called exposure and comes from counterparty-exposure](img/t14/13-analyse-extracts.jpg)
+
+You should see `750 rows, 3 columns.` for the first extract and, in **More extracts: join several datasets**, a second one called `exposure` (3 fields) of the other dataset. Each is built for you by the server, with your row rules and masks. Open the **Python** tab and **Run** its cell.
+
+![The join cell: df and extract("exposure") grouped and merged; the result is a table of counterparties with their P&L, exposure and P&L per exposure, largest exposure first](img/t14/14-analyse-join.jpg)
+
+You should see the cell (`df` is the trades; `extract("exposure")` is the netting sets) and a table of counterparties: `CP-HALCYON` with P&L `-1194728` and exposure `133327214`, then `CP-MERIDIAN` and the rest. The same join works in SQL: the second extract is a table called `exposure` (`SELECT ... FROM extract JOIN exposure ON ...`). When the pandas join is what you want to keep, press **Promote to a Transform**.
+
+![After promoting: "Python transform draft saved in your workspace: Join of P&L and exposure. Each extract("name") became a parameter of run()..."](img/t14/15-promote-transform.jpg)
+
+You should see the message that a Python Transform draft was saved in your workspace: each `extract("name")` became a parameter of `run(...)`, the cell's `result` is returned, and its inputs are the two datasets, in order. Open the draft, **Check the Python**, publish it, and write the derived dataset that names it (`derived: { transform: ..., inputs: { ... } }`), as the sample does. Nothing is published by promoting.
+
 ## Next steps
 
 - [Tutorial 15](15-ai-in-drishti.md): ask the data in words.
-- [PYTHON_BI.md](../guides/PYTHON_BI.md): the manifest, where Python runs, the sandbox in full, `DRS-9070` to `9074`. [ANALYSE.md](../guides/ANALYSE.md): the page, limits and notebooks. [PYTHON_CALC.md](../guides/PYTHON_CALC.md) is Calc, the Python panel inside a screen.
+- [PYTHON_BI.md](../guides/PYTHON_BI.md): the manifest, where Python runs, the sandbox in full, `DRS-9070` to `9075`, and section 13 for the Transform. [ANALYSE.md](../guides/ANALYSE.md): the page, limits and notebooks. [PYTHON_CALC.md](../guides/PYTHON_CALC.md) is Calc, the Python panel inside a screen.
 
 ## If something goes wrong
 

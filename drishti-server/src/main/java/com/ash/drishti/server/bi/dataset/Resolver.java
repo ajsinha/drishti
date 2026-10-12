@@ -51,6 +51,9 @@ public final class Resolver {
         if (c != null) {
             return c;
         }
+        if (Dataset.FRAME.equals(t.mode())) {
+            return null;                                   // the one table of a composed or derived dataset is a frame: it has the columns it was built with, no entity id or business date
+        }
         if (Dataset.ID.equals(name)) {
             return new Dataset.Column(Dataset.ID, Dataset.ID, "string", null, true, null, "the entity id");
         }

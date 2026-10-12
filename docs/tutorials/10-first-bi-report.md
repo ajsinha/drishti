@@ -21,7 +21,7 @@ and its regions, a bar, and a slicer. You look at it, cross-filter it, publish i
 
 ## Time to complete
 
-About 45 minutes.
+About 60 minutes.
 
 ## Before you start
 
@@ -36,7 +36,8 @@ About 45 minutes.
 - how the map drills **world, country, region** with a breadcrumb, and how a click on a map or a bar **cross-filters** the rest of the page;
 - how to publish: your own workspace, a shared workspace, the catalogue;
 - **filter like Power BI**: list, dropdown and range slicers, page and report scope, a top-N filter that tames a busy donut, bookmarks, and when to use a slicer instead of a click;
-- the **Counterparty risk** sample: slicers that reach across packs, a selected bar, and drill-through.
+- the **Counterparty risk** sample: slicers that reach across packs, a selected bar, and drill-through;
+- **two datasets in one report**: a dataset composed of two others, joined in YAML, and a slicer of one dataset that filters the visuals of the other.
 
 ## Step 1 · Look at the dataset
 
@@ -274,6 +275,32 @@ Open your report on a phone-width window (390 px).
 
 You should see one column in reading order, the map at the full width, targets at least 44 pixels high and no sideways scroll. A report can also have a **phone layout** of its own (which visuals, in what order): [tutorial 16](16-embed-drishti.md) and the designer's **Phone** tab.
 
+## Step 11 · Two datasets in one report
+
+Everything so far read **one** dataset. The question "what is each counterparty's P&L next to its exposure?" needs two: P&L is in `trading-risk` (trades) and exposure is in `counterparty-exposure` (netting sets). In `trading-risk` alone a desk head's row rule on trades makes exposure by counterparty unanswerable for them (`DRS-9020`, step 9); here each dataset keeps its **own** rules and a third dataset **joins** what each lets you see.
+
+Open **Datasets** and **Desk P&L vs counterparty exposure**.
+
+![The Built from other datasets section: two sources, trading-risk as pnl and counterparty-exposure as exposure, each grouped by the counterparty id, and the left join between them](img/t10/26-composed-dataset.jpg)
+
+You should see a section **Built from other datasets**: this dataset has no tables of its own. The source `pnl` asks `trading-risk` for the one-day P&L by counterparty, the source `exposure` asks `counterparty-exposure` for the expected and potential future exposure by counterparty, and one join line says `pnl left join exposure on counterparty`. Each source is asked **as you**, with that dataset's row rules and masks, and only then are the answers joined. Run a preview as in step 1: group by `joined.name` and `joined.sector`, and choose the measures `Desk P&L`, `Exposure (EE peak)` and `P&L per exposure`.
+
+![The preview: a row per counterparty with its sector, its P&L, its expected exposure and P&L per exposure; the line says it was answered from the composed layer](img/t10/27-composed-preview.jpg)
+
+You should see a row per counterparty (Aldershot Pension Trust, Pensions: P&L `946,326`, exposure `98,882,895`) and `answered from the composed layer`. `P&L per exposure` is a measure of the composed dataset itself, `[Desk P&L] / [Exposure (EE peak)]`: the ratio of the two sums, whatever the grouping. As an author press **Model view** to see how it is put together.
+
+![The Model view of the composed dataset: the source pnl, the source exposure, a line between their counterparty columns labelled left, and the joined table both feed](img/t10/28-model-view.jpg)
+
+You should see the two sources as boxes (their grouping columns and measures, the join key marked), the join between the `counterparty` columns and the table `joined` that they make. Now open the report **Desk P&L vs counterparty exposure** from the catalogue.
+
+![The report: three cards, a Sector slicer, bars of P&L and exposure for the ten counterparties with the most exposure, a donut of exposure by sector, and a table](img/t10/29-two-datasets-report.jpg)
+
+You should see `Desk P&L` `2,671,113`, `Exposure (EE peak)` `1,447,544,943` and the ratio. Two visuals of this report read a **different dataset** from the rest: the **Sector** slicer and the donut read `counterparty-exposure` directly, while the cards, the bars and the table read the composed one. The report's `links:` say that the exposure dataset's `counterparties.sector` and the composed dataset's `joined.sector` are the same thing. In the Sector slicer choose **Banking**.
+
+![Banking chosen: the cards read -1,456,152 and 240,271,956, the bars keep only banks, the donut is Banking 100%](img/t10/30-sector-chosen.jpg)
+
+You should see a chip `Sector: Banking`, the cards narrowed to the banks (`Desk P&L` `-1,456,152`, exposure `240,271,956`), three banks in the bar chart and the donut a single slice: the slicer's choice reached the visuals of the *other* dataset through the link. Click a slice of the donut instead and the same happens. Open the report as a desk head and the numbers shrink to the counterparties your desk trades with; open it as an analyst and the names read `•••` (the join is on the counterparty's **id**, which is not masked, so the report still works). The same table made by a Python Transform is in [tutorial 14](14-python-and-analyse.md); the reference is [DATASETS.md section 11](../guides/DATASETS.md#11-composed-and-derived-datasets) and [REPORTS.md section 16](../guides/REPORTS.md#16-reports-over-several-datasets).
+
 ## Next steps
 
 - [Tutorial 11](11-bi-that-runs-itself.md): refresh, subscribe people to this report, alert on a number, export to PDF, PNG, Excel and CSV.
@@ -291,3 +318,6 @@ You should see one column in reading order, the map at the full width, targets a
 | Publish is not offered | the report is in **My workspace**: move it to a shared workspace first |
 | a visual says `DRS-9020` | a slicer or a selection cannot reach that visual through the dataset's relationships |
 | a number is `•••` | the dataset masks it for your role; the report is working as it should |
+| `DRS-9014` or `DRS-9016` on a dataset made of others | a source, column, measure or join key does not exist, key types differ, or the dataset reads itself ([DATASETS.md section 11](../guides/DATASETS.md#11-composed-and-derived-datasets)) |
+| `DRS-9021` "the join key ... is masked for you" | a source masks the column the join is made on; join on an unmasked key such as an id |
+| a slicer does not filter a visual of another dataset | no `link` in the report says the two fields are the same ([REPORTS.md section 16](../guides/REPORTS.md#16-reports-over-several-datasets)) |

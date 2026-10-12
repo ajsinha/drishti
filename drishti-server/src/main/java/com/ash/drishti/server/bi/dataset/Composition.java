@@ -299,6 +299,7 @@ public final class Composition {
             }
             Set<String> leftKeys = new LinkedHashSet<>();
             Set<String> rightKeys = new LinkedHashSet<>();
+            boolean keysOk = true;
             for (String on : j.on()) {
                 String[] sides = on.contains("=") ? on.split("=", 2) : new String[] {on, on};
                 String lk = sides[0].trim();
@@ -309,16 +310,18 @@ public final class Composition {
                     boolean leftMissing = lc == null;
                     out.add(error(COMPOSE, path + ".on", "'" + (leftMissing ? lk : rk) + "' is not a column of '" + (leftMissing ? j.left() : j.right()) + "' (its columns: "
                             + String.join(", ", (leftMissing ? l : r).columns().stream().map(Dataset.FrameColumn::name).toList()) + ")"));
+                    keysOk = false;
                     continue;
                 }
                 if (lc.measure() || rc.measure()) {
                     out.add(error(COMPOSE, path + ".on", "'" + (lc.measure() ? lk : rk) + "' is a measure: a join is made on the columns a source is grouped by"));
+                    keysOk = false;
                     continue;
                 }
                 if (!lc.type().equals(rc.type())) {
                     out.add(error(COMPOSE, path + ".on", "the key '" + lk + "' of '" + j.left() + "' is " + lc.type() + " but '" + rk + "' of '" + j.right() + "' is " + rc.type()
                             + ": both sides of a join are of one type"));
-                    continue;
+                    keysOk = false;
                 }
                 leftKeys.add(lk);
                 rightKeys.add(rk);
@@ -327,7 +330,9 @@ public final class Composition {
                     dropped.add(j.right() + "." + rk);
                 }
             }
-            fanOut(path, j, l, r, leftKeys, rightKeys, out);
+            if (keysOk) {
+                fanOut(path, j, l, r, leftKeys, rightKeys, out);
+            }
         }
         for (String alias : c.from().keySet()) {
             if (!joined.contains(alias)) {

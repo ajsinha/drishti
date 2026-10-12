@@ -40,6 +40,7 @@ Three sample reports ship in `config/bi/reports/` (and a fourth for Python, **De
 13. [Live visuals and Perspective (phase 5)](#13-live-visuals-and-perspective-phase-5)
 14. [Phone layouts](#14-phone-layouts)
 15. [A report in another web application](#15-a-report-in-another-web-application)
+16. [Reports over several datasets](#16-reports-over-several-datasets)
 
 ## 1. Where a report lives
 
@@ -59,7 +60,7 @@ version: 1
 title: Trades overview
 description: The day's trades at a glance.
 sample: true
-dataset: trades-basic          # a catalogue id, a shipped file's name, or the dataset's own name
+dataset: trades-basic          # a catalogue id, a shipped file's name, or the dataset's own name (a visual may name another: section 16)
 theme: { palette: default }    # default, colour-blind or mono
 dates: { from: 2026-10-01, to: 2026-10-08 }   # optional; without it each query reads the latest business date
 filters: []                    # report filters: see section 4
@@ -303,6 +304,7 @@ row rules, their masks, the layer the planner chooses.
 | dates | the person's business date, else the report's `dates`, else the latest business date |
 | selections | a selected mark on another visual filters this one (`in` on the mark's field); with highlight on, a bar or column chart asks twice, the whole answer and the highlighted one; other types are filtered. A visual with `interacts: false`, and a slicer, is not touched |
 | drill-down | the first axis field moves down the visual's hierarchy one level per value clicked, and the values clicked become `eq` filters (past the last level: `DRS-9035`) |
+| dataset | the visual's own `dataset:` if it has one, else the report's; a choice made on another dataset reaches the visual only through a `link` (section 16) |
 | show the rows | the visual's own filters and selection, and every column of the table it reads (`id` and `index` too), up to the "show rows" limit |
 
 A visual whose query is refused shows the server's code and words in its frame, with a Retry button, and the others carry on.
@@ -362,6 +364,8 @@ colour with a contrast ratio under 3 against the theme's background), `LAYOUT` (
 
 Built: the report model and its parser, validator and writer (DRS-9030 to 9035); the visual catalogue above; filters at three levels with top-N; slicers (list, dropdown, range); cross-filter, highlight (bar and
 column), drill-down, drill-through, show the rows, show as a table, open in the terminal; bookmarks; palettes; the viewer, the designer and the Model view; the three stored sample reports; the API.
+
+Built with several datasets (section 16): a visual's own `dataset:`, `links` across datasets for slicers, cross-filter and carried values, impact analysis and lineage over them, a Dataset and Links field in the designer.
 
 Built in phase 6 (section 3.3): the `python` visual, run on the server in a sandboxed worker or in the browser.
 
@@ -487,3 +491,47 @@ the undo history, *Back to automatic* removes the page's entry, and a visual or 
 `<drishti-report report="file:report:live-trading-desk">` shows a **published** report, one page (`page="grid"`) or one visual (`visual="by-desk"`) in another application's page, signed in as that application's user, masked, with its slicers, cross-filter and live redraws. The attributes, events and the allow-list
 (Admin → Embedding: `report:<id>` or `report:*` in the host application's `kinds`) are in [DISTRIBUTION.md section 5](DISTRIBUTION.md#5-embedding-a-report-in-another-web-application) and the developer guide ([ELEMENTS.md](ELEMENTS.md#drishti-report)); what the element does not do (drill down and through, alerts, Export,
 Perspective) is listed there.
+
+
+## 16. Reports over several datasets
+
+A report reads **one dataset** by default (`dataset:`). A visual may name **another** with its own `dataset:`, and the report's `links:` say which fields of different datasets mean the same, so a slicer or a click on one dataset's visual filters the visuals of another. Each visual's query is still run **as the reader** against its own dataset, with that dataset's row rules and masks. (To put the facts of several datasets in *one* table, build a composed or derived dataset: [DATASETS.md section 11](DATASETS.md#11-composed-and-derived-datasets). The design is [RUPAKA.md section 20.10](../architecture/RUPAKA.md).)
+
+```yaml
+report: pnl-vs-exposure
+dataset: desk-pnl-vs-exposure           # the default: a visual with no `dataset:` reads this one
+links:                                  # fields (table.column) of different datasets that mean the same thing
+  - fields: [counterparties.sector, joined.sector]
+pages:
+  - id: overview
+    visuals:
+      - { id: pnl, type: card, wells: { values: [Desk P&L] }, at: { x: 0, y: 0, w: 3, h: 2 } }                       # reads desk-pnl-vs-exposure
+      - id: sector
+        type: slicer
+        dataset: counterparty-exposure                                                                                # reads its own dataset
+        wells: { field: [counterparties.sector] }
+        format: { mode: dropdown, scope: report }
+        at: { x: 9, y: 0, w: 3, h: 2 }
+```
+
+| Key | Meaning |
+|---|---|
+| visual `dataset` | the dataset this visual reads: a catalogue id, a file name or the dataset's name; omitted, the report's. Its wells, filters, sort and hierarchy name fields and measures of **that** dataset |
+| `links` | a list of `{ fields: [a, b, ...] }`: two or more `table.column`, each a field of at least one dataset the report reads. A link is the author's statement that they mean the same thing (a counterparty's sector, a desk's id) |
+
+**How a choice reaches another dataset.** A choice is made on a field of the dataset of the visual it was made on: a slicer, a click on a mark (the cross-filter), a drill-through's carried value, the report's and the page's filters (those belong to the report's dataset), a bookmark. For each other visual the server asks: does this visual read the same dataset? Then the field is used as it is. Otherwise it looks for a **link** that names the field and, in it, a field the visual's dataset has; that field takes the choice. If there is none, **the choice does not reach that visual** (it is not an error: a visual that no link connects keeps showing everything). A `top` filter ranks by a measure of its own dataset and is not carried to another. Fields of the same name in two datasets are not assumed to be the same: say so with a link (the sample links `counterparties.sector` of the exposure dataset to `joined.sector` of the composed one).
+
+Real query (the sample as `rita`, with the sector slicer, which reads `counterparty-exposure`, set to Banking, for the card that reads the composed dataset; the answer's `query` is what was asked of its dataset):
+
+```
+POST /api/v1/bi/reports/file:report:pnl-vs-exposure/query?explain=true   {"page": "overview", "visual": "pnl", "state": {"slicers": {"sector": ["Banking"]}}}
+{"query": {"fields": [], "measures": ["Desk P&L"], "filters": ["joined.sector IN [Banking]"], "orderBy": [], "limit": 500}, "rows": [[-1456152.0]]}
+```
+
+![The sample report with Banking chosen on the slicer: the cards and bars of the composed dataset follow it, and so does the donut, which reads the same dataset as the slicer](../tutorials/img/t10/30-sector-chosen.jpg)
+
+**Checks.** Each visual is checked against its own dataset (`DRS-9031` for a name that dataset lacks, `DRS-9032` for a well built wrongly, as ever). `no dataset 'x'` for a visual's `dataset:` that cannot be found is `DRS-9034`; a link naming a field no dataset of the report has is `DRS-9031` (`links[0].fields: 'nothing.here' is not a field (table.column) of any dataset the report reads`); a link whose fields are all in one dataset is a warning. `GET /bi/reports/{id}` returns `datasets`: the model of each dataset a visual names (the viewer indexes each visual's fields, formats and hierarchies by it).
+
+**Everywhere else.** Alerts, subscriptions, exports, boards and the embedded report ask each visual through the same server code, so they work over several datasets; a Perspective visual shows the rows of one table of its dataset. Governance: **impact analysis** counts only what a report reads of the dataset being changed (a visual's own dataset, else the report's), so a change to `counterparty-exposure` is set against the visuals that read it; lineage shows the report below each dataset it reads. **The designer** has a **Dataset** field in a visual's Format tab (with the catalogue's datasets to choose from) and a **Links between datasets** box under Report; its Fields pane lists the report's own dataset, so the wells of a visual of another dataset are written in the YAML tab, where the Check button tells you if a name is wrong.
+
+Not built: a visual that reads **two datasets at once** (compose them: DATASETS.md section 11); links **with a transformation** (a code to a name); the designer's **Fields pane for another dataset** and drag-and-drop of its fields.

@@ -239,3 +239,45 @@ def slicer_kinds(c: Ctx):
     open_report(c, made["id"])
     c.page.evaluate("window.scrollTo(0, 0)")
     c.save("25-slicer-kinds.jpg", clip={"x": 240, "y": 230, "width": 1040, "height": 670})
+
+
+COMPOSED = "file:dataset:desk-pnl-vs-exposure"
+PNL_REPORT = "file:report:pnl-vs-exposure"
+
+
+@shot("26-composed-dataset.jpg", also=("27-composed-preview.jpg", "28-model-view.jpg"))
+def composed(c: Ctx):
+    """The composed sample dataset: what it is built from, a query preview of the joined table, and the Model view that draws the two sources, the join and the table."""
+    login(c, height=900)
+    go(c, "/bi/d/" + COMPOSED, wait="[data-built-sec]:not([hidden])", settle=1500)
+    element_shot(c, "26-composed-dataset.jpg", "[data-built-sec]", pad=10)
+    c.page.wait_for_selector("[data-fields] option", state="attached", timeout=30000)
+    c.page.select_option("[data-fields]", ["joined.name", "joined.sector"])
+    c.page.select_option("[data-measures]", ["Desk P&L", "Exposure (EE peak)", "P&L per exposure"])
+    c.page.fill("[data-limit]", "8")
+    c.page.click("[data-run]")
+    c.page.wait_for_selector("[data-grid] tbody tr", timeout=60000)
+    c.page.wait_for_timeout(800)
+    c.page.evaluate("document.querySelector('[data-result-meta]').scrollIntoView()")
+    c.page.wait_for_timeout(300)
+    elem_shot(c, "27-composed-preview.jpg", "[data-grid-wrap]", pad=14)
+    go(c, "/bi/m/" + COMPOSED, wait="[data-model-root][data-ready=yes]", settle=1500)
+    c.save("28-model-view.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 560})
+
+
+@shot("29-two-datasets-report.jpg", also=("30-sector-chosen.jpg",))
+def two_datasets(c: Ctx):
+    """The sample report over two datasets, then a sector chosen in the slicer that reads the second dataset: the cards and the bars of the composed one follow it."""
+    login(c, height=900)
+    open_report(c, PNL_REPORT)
+    c.page.evaluate("window.scrollTo(0, 0)")
+    c.save("29-two-datasets-report.jpg")
+    c.page.locator('[data-visual="sector"] summary.ms-sum').click()
+    c.page.locator('[data-visual="sector"] .ms-pop label', has_text="Banking").first.click()
+    c.page.wait_for_timeout(600)
+    c.page.keyboard.press("Escape")
+    c.page.locator("h1").first.click()
+    settled(c.page)
+    c.page.wait_for_timeout(1500)
+    c.page.evaluate("window.scrollTo(0, 0)")
+    c.save("30-sector-chosen.jpg")
