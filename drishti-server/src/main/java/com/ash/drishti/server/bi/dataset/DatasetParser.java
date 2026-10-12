@@ -511,7 +511,7 @@ public final class DatasetParser {
                 out.add(new Problem("error", Composition.COMPOSE, "join[" + i + "]", "a join is { left: <alias>, right: <alias>, on: [fields], type: inner|left|full }"));
                 continue;
             }
-            list.add(new Dataset.Join(j.path("left").asText(), j.path("right").asText(), on, text(j, "type", "inner").toLowerCase(java.util.Locale.ROOT)));
+            list.add(new Dataset.Join(j.path("left").asText(), j.path("right").asText(), on, text(j, "type", "inner").toLowerCase(java.util.Locale.ROOT), j.path("allow-repeat").asBoolean(false)));
         }
         return list;
     }

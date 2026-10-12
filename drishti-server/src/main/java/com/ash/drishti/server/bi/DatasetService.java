@@ -390,6 +390,7 @@ public final class DatasetService {
                 jm.put("right", j.right());
                 jm.put("on", j.on());
                 jm.put("type", j.type());
+                jm.put("allowRepeat", j.allowRepeat());
                 return jm;
             }).toList());
             m.put("frame", d.compose().frame().stream().map(f -> Map.of("name", f.name(), "from", f.alias(), "type", f.type(), "measure", f.measure())).toList());

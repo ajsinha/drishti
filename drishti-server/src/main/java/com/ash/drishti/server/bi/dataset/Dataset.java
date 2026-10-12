@@ -276,7 +276,11 @@ public record Dataset(String name, int version, String title, String description
     public record InputFilter(String field, String op, List<Object> values) {}
 
     /** A join of two sources on columns of their frames; {@code on} entries are {@code name} (same on both sides) or {@code left = right}. */
-    public record Join(String left, String right, List<String> on, String type) {
+    public record Join(String left, String right, List<String> on, String type, boolean allowRepeat) {
+
+        public Join(String left, String right, List<String> on, String type) {
+            this(left, right, on, type, false);
+        }
 
         public static final Set<String> TYPES = Set.of("inner", "left", "full");
     }

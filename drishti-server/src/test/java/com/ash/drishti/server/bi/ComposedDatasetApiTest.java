@@ -174,6 +174,16 @@ class ComposedDatasetApiTest {
                 join:
                   - { left: a, right: b, on: [desk], type: inner }
                 """);
+        write("lake-fanout-ok", """
+                rachana: 1
+                dataset: lake-fanout-ok
+                title: Fan out accepted
+                from:
+                  a: { dataset: lake-a, by: ["trades.desk", "trades.currency"], measures: [MTM] }
+                  b: { dataset: lake-b, by: ["trades.desk", "trades.currency as ccy"], measures: [Gross] }
+                join:
+                  - { left: a, right: b, on: [desk], type: inner, allow-repeat: true }
+                """);
         writeIn("python", "merge-ab.python.yaml", """
                 rachana: 1
                 python: merge-ab
@@ -429,10 +439,15 @@ class ComposedDatasetApiTest {
     }
 
     @Test @Order(5)
-    void aJoinThatRepeatsRowsIsWarnedAboutAndACycleKeyTypesAndMissingSourcesAreRefused() throws Exception {
+    void aJoinThatRepeatsRowsIsRefusedUnlessAllowedAndACycleKeyTypesAndMissingSourcesAreRefused() throws Exception {
         JsonNode fan = ok(call("GET", "/api/v1/bi/datasets/file:dataset:lake-fanout", rita(), null));
         assertThat(fan.path("problems").toString()).contains("DRS-9015").contains("many-to-many");
-        assertThat(fan.path("valid").asBoolean()).isTrue();                                     // a warning: the dataset still works
+        assertThat(fan.path("valid").asBoolean()).isFalse();                                    // an error: Check and publish refuse it
+        assertThat(fan.path("problems").toString()).contains("aggregate the many side").contains("allow-repeat: true");
+        JsonNode accepted = ok(call("GET", "/api/v1/bi/datasets/file:dataset:lake-fanout-ok", rita(), null));
+        assertThat(accepted.path("valid").asBoolean()).isTrue();                                // opted in: a warning, and the join is marked
+        assertThat(accepted.path("problems").toString()).contains("DRS-9015").contains("\"level\":\"warning\"");
+        assertThat(accepted.path("composition").path("joins").get(0).path("allowRepeat").asBoolean()).isTrue();
         JsonNode cycle = ok(call("GET", "/api/v1/bi/datasets/file:dataset:lake-cycle-1", rita(), null));
         assertThat(cycle.path("valid").asBoolean()).isFalse();
         assertThat(cycle.path("problems").toString()).contains("DRS-9016");

@@ -38,8 +38,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * builds the table's rows at query time, as the reader.
  *
  * <p>This class resolves the sources by name through a {@link Directory} (installed by the BI service: the stored and shipped datasets), types the columns of the
- * frame from the sources' models, and checks: sources exist, columns and measures exist, join keys are of one type, a join that repeats rows is warned about
- * ({@code DRS-9015}), and a dataset that reads itself, directly or through others, is refused ({@code DRS-9016}).
+ * frame from the sources' models, and checks: sources exist, columns and measures exist, join keys are of one type, a join that repeats rows is refused
+ * ({@code DRS-9015}) unless it says {@code allow-repeat: true} (then it is a warning), and a dataset that reads itself, directly or through others, is refused ({@code DRS-9016}).
  */
 public final class Composition {
 
@@ -417,12 +417,18 @@ public final class Composition {
         boolean leftUnique = l.grouped() && leftKeys.containsAll(identity(l));
         boolean rightUnique = r.grouped() && rightKeys.containsAll(identity(r));
         if (!leftUnique && !rightUnique) {
-            out.add(warning(FANOUT, path, "many-to-many: neither '" + j.left() + "' nor '" + j.right() + "' has one row per " + String.join(", ", leftKeys)
-                    + ", so every row matches several and the measures of both repeat; add the missing grouping columns to the join, or group a source by the key alone"));
+            out.add(fan(j, path, "many-to-many: neither '" + j.left() + "' nor '" + j.right() + "' has one row per " + String.join(", ", leftKeys)
+                    + ", so every row matches several and the measures of both repeat; aggregate the many side by the key (add the missing grouping columns to the join, or group a source by the key alone), or swap the ends"));
         } else if (leftUnique && !rightUnique) {
-            out.add(warning(FANOUT, path, "one-to-many: '" + j.left() + "' has one row per " + String.join(", ", leftKeys) + " but '" + j.right()
-                    + "' has several, so the measures of '" + j.left() + "' repeat for each and add up too high; put the source with several rows on the left"));
+            out.add(fan(j, path, "one-to-many: '" + j.left() + "' has one row per " + String.join(", ", leftKeys) + " but '" + j.right()
+                    + "' has several, so the measures of '" + j.left() + "' repeat for each and add up too high; aggregate the many side by the key, or swap the ends so the source with several rows is on the left"));
         }
+    }
+
+    /** A repeating join is an error, unless the join says {@code allow-repeat: true}: then the author has accepted repeated measures and it is a warning. */
+    private static Problem fan(Dataset.Join j, String path, String message) {
+        return j.allowRepeat() ? warning(FANOUT, path, message + " (accepted by allow-repeat: true)")
+                : error(FANOUT, path, message + "; or accept repeated measures with allow-repeat: true on the join");
     }
 
     // ---- derived -----------------------------------------------------------------------------------------------------
