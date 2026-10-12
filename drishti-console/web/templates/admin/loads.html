@@ -21,7 +21,7 @@
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm" data-loads data-pack="{{ pack }}">
-  <h1>Data loads <span class="mono text-muted-d">{{ pack }}</span></h1>
+  <h1>Data loads <a class="mono" href="/admin/packs/{{ pack | urlencode }}" title="Open pack {{ pack }}">{{ pack }}</a></h1>
   {% with tab='packs' %}{% include "admin/_nav.html" %}{% endwith %}
   <p><a href="/admin/packs">&larr; Packs</a></p>
   <p class="text-muted-d">Your ETL tells Drishti when a batch has landed (<a href="/help/data-loads">Telling Drishti new data has landed</a>);

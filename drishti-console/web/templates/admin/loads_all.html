@@ -32,7 +32,7 @@
     <caption class="visually-hidden">Every loaded pack: today's expectations and its latest loads</caption>
     <thead><tr><th scope="col">Pack</th><th scope="col">Today's expectations</th><th scope="col">Latest loads</th><th scope="col"></th></tr></thead>
     <tbody>{% for p in packs %}
-      <tr><td><b>{{ p.title }}</b><br><span class="mono text-muted-d">{{ p.name }}</span></td>
+      <tr><td><a href="/admin/packs/{{ p.name | urlencode }}" title="Open pack {{ p.name }}"><b>{{ p.title }}</b></a><br><span class="mono text-muted-d">{{ p.name }}</span></td>
         <td>{% if p.error %}<span class="st st-bad">{{ p.error }}</span>
           {% else %}{% for x in p.expectations %}<span class="st {% if states[x.state] %}st-{{ states[x.state] }}{% endif %}" title="{{ x.kind }} for {{ x.businessDate }}, due by {{ x.by }} {{ x.zone }}">{{ x.kind }}: {{ x.state }}</span> {% else %}<span class="text-muted-d">nothing expected</span>{% endfor %}{% endif %}</td>
         <td>{% for l in p.loads %}<div class="mono">{{ l.kind }} {{ l.businessDate }} · <span class="st {{ 'st-bad' if l.status == 'failed' or l.verified == 'not-found' else 'st-ok' if l.status == 'ready' else '' }}">{{ l.status }}{% if l.verified == 'not-found' %}, not found{% endif %}</span>{% if l.rows is defined and l.rows is not none %} · {{ '{:,}'.format(l.rows) }} rows{% endif %}</div>{% else %}<span class="text-muted-d">no loads announced yet</span>{% endfor %}</td>

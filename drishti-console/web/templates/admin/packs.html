@@ -118,7 +118,7 @@
     <caption class="sr-only">Deployments and rollbacks</caption>
     <thead><tr><th>When (UTC)</th><th>What</th><th>Pack</th><th>Version</th><th>Replaced</th><th>By</th><th>Detail</th></tr></thead>
     <tbody>{% for r in history.history %}
-      <tr><td class="mono">{{ r.at[:19] | replace('T', ' ') }}</td><td>{{ r.action }}</td><td class="mono">{{ r.pack }}</td><td class="mono">{{ r.version }}</td>
+      <tr><td class="mono">{{ r.at[:19] | replace('T', ' ') }}</td><td>{{ r.action }}</td><td class="mono"><a href="/admin/packs/{{ r.pack | urlencode }}">{{ r.pack }}</a></td><td class="mono">{{ r.version }}</td>
         <td class="mono">{{ r.previous or '—' }}</td><td>{{ r.by }}</td><td class="cmp-path">{{ r.detail }}</td></tr>
     {% else %}<tr><td colspan="7" class="text-muted-d">Nothing has been deployed from here yet.</td></tr>{% endfor %}</tbody></table></div>
 
