@@ -72,6 +72,30 @@ inherits the kinds' keys, meanings, units, references, connectors, business-date
 - A Python dataset's inputs are pack-rooted datasets or models, and its output columns declare their meanings.
 - A model built on another model's answer inherits that model's roots.
 
+**What a dataset can do** (rows and columns; aggregations that people slice belong in the model):
+
+- **select** a subset of a kind's attributes (renamed for display, with descriptions; types, keys and meanings from the pack);
+- **filter** rows (`where:`);
+- **remove duplicates only explicitly**: `grain: { one-row-per: <key>, keep: latest by <column> | first | highest <column> }` —
+  never a silent distinct, because de-duplication changes the grain;
+- **derive attributes** per row with a Drishti expression (the measure language applied per row: arithmetic, `case`,
+  date parts, strings, FX conversion, a lookup through a reference) or a **Python function** (vectorised; sandboxed on
+  the server or in the browser through WebAssembly); each derived column declares its type and meaning;
+- **group** to a coarser grain when needed, declaring the new grain.
+
+Masks and row rules of the source columns carry into derived ones, and Python only ever sees masked input.
+
+```yaml
+dataset: live-trades
+from: pack.trading.trade
+columns: [tradeId, desk, currency, notional, mtm, updatedAt]
+where: status = 'LIVE'
+grain: { one-row-per: tradeId, keep: latest by updatedAt }
+derive:
+  notionalUsd: { expr: "notional * fx(currency, 'USD')", meaning: amount, currency: USD }
+  bucket:      { python: buckets.by_tenor, meaning: category }
+```
+
 Check refuses a dataset whose roots cannot be traced to a loaded pack, and lineage always runs from a report back to
 the pack kinds and their connectors. (Enforced from W2.)
 
@@ -126,7 +150,7 @@ updates its docs and tutorials with UI, CLI and YAML (never thinner) and migrate
 | Wave | Scope | Accepted when |
 |---|---|---|
 | **W1 Layers and the query language** | the dataset and model item types; pack-generated datasets (D3); connector and Python datasets; implicit models; the model query language v1 (spec, validator, compiler to the engine) and its API; security at the dataset, model security only tighter | a report, an alert and an Analyse slice ask the same model through the same query language and get identical, per-reader masked answers |
-| **W2 The star, shared models and correctness** | every dataset rooted in packs (Check refuses an untraceable root; lineage report → pack kinds); Used-by lists, delete/unpublish impact, Build-like read right, move a local measure to the model; field properties inherited by every report (display name, description, format, folder, hidden, sort-by, data category, default summarisation); perspectives; several facts with shared dimensions in one visual; additivity declarations; the currency guard; relationship suggestions from pack entity references; fan-out refusal at model level; model contracts with semver and breaking-change detection; stable ids | MTM and exposure per counterparty in one visual equal an independent per-grain computation; a breaking model change is refused without a major version |
+| **W2 The star, shared models and correctness** | dataset derivation: column subsets, row filters, explicit grain and de-duplication rules, per-row Drishti expressions and Python-derived columns (server or WebAssembly) with declared meanings, grouping to a coarser grain; every dataset rooted in packs (Check refuses an untraceable root; lineage report → pack kinds); Used-by lists, delete/unpublish impact, Build-like read right, move a local measure to the model; field properties inherited by every report (display name, description, format, folder, hidden, sort-by, data category, default summarisation); perspectives; several facts with shared dimensions in one visual; additivity declarations; the currency guard; relationship suggestions from pack entity references; fan-out refusal at model level; model contracts with semver and breaking-change detection; stable ids | MTM and exposure per counterparty in one visual equal an independent per-grain computation; a breaking model change is refused without a major version |
 | **W3 Time modes and standing queries** | `live`/`snapshot`/`history` datasets; standing queries for every consumer; incremental rules per measure; throttling and back-pressure; as-of time travel; live and snapshot mixed in one model | a board, a report and an alert over one model tick live, answer as of a past date, and match a full recompute |
 | **W4 Consumers, designers and migration** | reports, boards, notebooks, alerts, subscriptions, exports and embeds bound to models; the dataset wizard (mostly automatic) and the **model designer** (the Model view becomes the editor of relationships, measures, security, tests); composed and derived datasets migrated into models and Python datasets; report links reduced (D2); every sample and tutorial 10–18 migrated | every shipped sample and tutorial runs on the new layers in the UI alone; nothing needs hand-written YAML |
 | **W5 AI grounding** | `ai:` metadata (synonyms, units, examples, hints); golden questions run as tests; AI ask/explain through the query language only; MCP tools `describe_model`, `query_model`, `explain_change` | golden questions pass on the mock and on one real provider; an AI answer can only use measures the user may see |
