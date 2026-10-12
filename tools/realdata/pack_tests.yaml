@@ -24,6 +24,7 @@ economics:
     fiscal-position: 1
     labour-market: 1
     macro-indicator: 1
+    region-economy: 1
   kinds:
     country-group:
       samples:
@@ -67,6 +68,12 @@ economics:
       - MACRO-USA-INFLATION
       nonEmpty:
       - history
+    region-economy:
+      samples:
+      - REGE-AU-NSW
+      - REGE-US-CA
+      nonEmpty:
+      - facts
 politics-society:
   helpCoverage:
     election: 1

@@ -20,7 +20,7 @@ Real public economic data for about 200 economies: output, growth, prices, jobs,
 
 The figures are published data, not samples: World Bank World Development Indicators (CC BY 4.0), the IMF World Economic Outlook (reuse with attribution), and the CIA World Factbook (public domain). Every document names its source, dataset, retrieval date and licence in its Data source panel. An economy links to its region and income group, labour market, fiscal position, IMF forecast and its headline indicators; the groups link back to their economies. Refresh with `tools/realdata/realdata.py` (see docs/guides/REAL_DATA.md). The IMF figures (the forecasts, and the debt and net lending behind each fiscal position) are for **internal demonstrations only**: the IMF requires its permission for commercial use, so raise it before any client or external use (docs/guides/REAL_DATA.md, licence note).
 
-**Extends:** nothing · **Kinds:** 6
+**Extends:** nothing · **Kinds:** 7
 
 Enable it with `DRISHTI_PACKS=economics` (the packs it extends come with it).
 
@@ -41,7 +41,7 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 
 | Connector | Folder | Kinds |
 |---|---|---|
-| `macro-store` | `data/delta/macro/` | `economy`, `macro-indicator`, `economic-forecast`, `labour-market`, `fiscal-position`, `country-group` |
+| `macro-store` | `data/delta/macro/` | `economy`, `macro-indicator`, `economic-forecast`, `labour-market`, `fiscal-position`, `country-group`, `region-economy` |
 
 ## Kinds
 
@@ -53,6 +53,7 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 | `labour-market` | Labour market | `LABR` | `LABR-…` | Unemployment, participation, youth and female labour, and employment and output by sector. |
 | `fiscal-position` | Fiscal position | `FISC` | `FISC-…` | Government debt and net lending (IMF) with revenue, expense and military spending (World Bank), as shares of GDP. |
 | `country-group` | Country group | `ECG` | `ECG-…` | A World Bank region or income group (or the world): output, population, growth and its largest economies. |
+| `region-economy` | Region economy | `REGE` | `REGE-…` | A state or territory (ISO 3166-2): population, GDP and GDP per head. An illustrative sample, rounded from public figures, not for reporting. |
 
 ### Economy (`economy`)
 
@@ -102,6 +103,14 @@ A World Bank region or income group (or the world): output, population, growth a
 
 **Links:** `memberEconomies` → Economies (`economy`).
 
+### Region economy (`region-economy`)
+
+A state or territory (ISO 3166-2): population, GDP and GDP per head. An illustrative sample, rounded from public figures, not for reporting.
+
+**Fields its Sutra reads:** `name`, `regionCode`, `countryName`, `populationM`, `gdpUsdBn`, `gdpPerCapita`, `facts`, `provenance`.
+
+**Links:** `economy` → Economy (`economy`).
+
 ## Who can see it
 
-Role `economist`: kinds `economy`, `macro-indicator`, `economic-forecast`, `labour-market`, `fiscal-position`, `country-group`, raw JSON.
+Role `economist`: kinds `economy`, `macro-indicator`, `economic-forecast`, `labour-market`, `fiscal-position`, `country-group`, `region-economy`, raw JSON.

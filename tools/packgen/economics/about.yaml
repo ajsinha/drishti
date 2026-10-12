@@ -575,3 +575,32 @@ kinds:
       provenance.url:
         term: Source address
         means: The web page of the dataset.
+  region-economy:
+    title: Region economy
+    about: ${$.name} (${$.regionCode}) has about ${fmt($.populationM, 'price2')} million people and GDP of ${fmt($.gdpUsdBn, 'amount0')} billion USD. Illustrative, rounded from public figures, not for reporting.
+    guide: economics
+    glossary:
+      name:
+        term: Region
+        means: The state or territory.
+      regionCode:
+        term: Region code
+        means: The ISO 3166-2 code of the region (AU-NSW, US-CA); the BI map shades the region it names.
+      countryName:
+        term: Country
+        means: The country the region belongs to.
+      populationM:
+        term: Population
+        means: People living in the region, rounded to the nearest 10,000 and shown in millions. Illustrative.
+        unit: millions
+      gdpUsdBn:
+        term: Gross domestic product
+        means: The region's output in US dollars, rounded to the nearest billion. Illustrative, not for reporting.
+        unit: USD billions
+      gdpPerCapita:
+        term: GDP per capita
+        means: GDP over population, in US dollars. Illustrative.
+        unit: USD
+      provenance.source:
+        term: Source
+        means: The public figures the illustrative numbers were rounded from.

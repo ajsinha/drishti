@@ -1,0 +1,595 @@
+{
+ "note": "Illustrative, rounded from public figures, not for reporting. Population to the nearest 10,000, GDP to the nearest US$ billion. Australian GDP is shown in US dollars at a rounded rate. Replace with a fetched series (ABS, US Census Bureau, BEA) before any reporting use.",
+ "regions": [
+  {
+   "country": "AUS",
+   "countryName": "Australia",
+   "code": "AU-NSW",
+   "name": "New South Wales",
+   "population": 8340000,
+   "gdpUsdBn": 510,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting"
+  },
+  {
+   "country": "AUS",
+   "countryName": "Australia",
+   "code": "AU-VIC",
+   "name": "Victoria",
+   "population": 6820000,
+   "gdpUsdBn": 370,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting"
+  },
+  {
+   "country": "AUS",
+   "countryName": "Australia",
+   "code": "AU-QLD",
+   "name": "Queensland",
+   "population": 5460000,
+   "gdpUsdBn": 310,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting"
+  },
+  {
+   "country": "AUS",
+   "countryName": "Australia",
+   "code": "AU-WA",
+   "name": "Western Australia",
+   "population": 2870000,
+   "gdpUsdBn": 330,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting"
+  },
+  {
+   "country": "AUS",
+   "countryName": "Australia",
+   "code": "AU-SA",
+   "name": "South Australia",
+   "population": 1840000,
+   "gdpUsdBn": 105,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting"
+  },
+  {
+   "country": "AUS",
+   "countryName": "Australia",
+   "code": "AU-TAS",
+   "name": "Tasmania",
+   "population": 570000,
+   "gdpUsdBn": 26,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting"
+  },
+  {
+   "country": "AUS",
+   "countryName": "Australia",
+   "code": "AU-ACT",
+   "name": "Australian Capital Territory",
+   "population": 460000,
+   "gdpUsdBn": 33,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting"
+  },
+  {
+   "country": "AUS",
+   "countryName": "Australia",
+   "code": "AU-NT",
+   "name": "Northern Territory",
+   "population": 250000,
+   "gdpUsdBn": 23,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-AL",
+   "name": "Alabama",
+   "population": 5100000,
+   "gdpUsdBn": 305,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-AK",
+   "name": "Alaska",
+   "population": 730000,
+   "gdpUsdBn": 78,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-AZ",
+   "name": "Arizona",
+   "population": 7430000,
+   "gdpUsdBn": 510,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-AR",
+   "name": "Arkansas",
+   "population": 3070000,
+   "gdpUsdBn": 188,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-CA",
+   "name": "California",
+   "population": 38970000,
+   "gdpUsdBn": 3870,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-CO",
+   "name": "Colorado",
+   "population": 5880000,
+   "gdpUsdBn": 490,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-CT",
+   "name": "Connecticut",
+   "population": 3620000,
+   "gdpUsdBn": 340,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-DE",
+   "name": "Delaware",
+   "population": 1020000,
+   "gdpUsdBn": 95,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-DC",
+   "name": "District of Columbia",
+   "population": 680000,
+   "gdpUsdBn": 160,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-FL",
+   "name": "Florida",
+   "population": 22600000,
+   "gdpUsdBn": 1740,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-GA",
+   "name": "Georgia",
+   "population": 11000000,
+   "gdpUsdBn": 840,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-HI",
+   "name": "Hawaii",
+   "population": 1440000,
+   "gdpUsdBn": 100,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-ID",
+   "name": "Idaho",
+   "population": 1960000,
+   "gdpUsdBn": 110,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-IL",
+   "name": "Illinois",
+   "population": 12500000,
+   "gdpUsdBn": 1090,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-IN",
+   "name": "Indiana",
+   "population": 6860000,
+   "gdpUsdBn": 520,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-IA",
+   "name": "Iowa",
+   "population": 3200000,
+   "gdpUsdBn": 270,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-KS",
+   "name": "Kansas",
+   "population": 2940000,
+   "gdpUsdBn": 215,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-KY",
+   "name": "Kentucky",
+   "population": 4500000,
+   "gdpUsdBn": 270,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-LA",
+   "name": "Louisiana",
+   "population": 4570000,
+   "gdpUsdBn": 280,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-ME",
+   "name": "Maine",
+   "population": 1400000,
+   "gdpUsdBn": 100,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-MD",
+   "name": "Maryland",
+   "population": 6180000,
+   "gdpUsdBn": 520,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-MA",
+   "name": "Massachusetts",
+   "population": 7000000,
+   "gdpUsdBn": 740,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-MI",
+   "name": "Michigan",
+   "population": 10000000,
+   "gdpUsdBn": 710,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-MN",
+   "name": "Minnesota",
+   "population": 5740000,
+   "gdpUsdBn": 510,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-MS",
+   "name": "Mississippi",
+   "population": 2940000,
+   "gdpUsdBn": 150,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-MO",
+   "name": "Missouri",
+   "population": 6200000,
+   "gdpUsdBn": 430,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-MT",
+   "name": "Montana",
+   "population": 1130000,
+   "gdpUsdBn": 70,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-NE",
+   "name": "Nebraska",
+   "population": 1980000,
+   "gdpUsdBn": 165,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-NV",
+   "name": "Nevada",
+   "population": 3200000,
+   "gdpUsdBn": 240,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-NH",
+   "name": "New Hampshire",
+   "population": 1400000,
+   "gdpUsdBn": 105,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-NJ",
+   "name": "New Jersey",
+   "population": 9290000,
+   "gdpUsdBn": 800,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-NM",
+   "name": "New Mexico",
+   "population": 2110000,
+   "gdpUsdBn": 130,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-NY",
+   "name": "New York",
+   "population": 19570000,
+   "gdpUsdBn": 2150,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-NC",
+   "name": "North Carolina",
+   "population": 10800000,
+   "gdpUsdBn": 740,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-ND",
+   "name": "North Dakota",
+   "population": 780000,
+   "gdpUsdBn": 70,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-OH",
+   "name": "Ohio",
+   "population": 11800000,
+   "gdpUsdBn": 880,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-OK",
+   "name": "Oklahoma",
+   "population": 4050000,
+   "gdpUsdBn": 270,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-OR",
+   "name": "Oregon",
+   "population": 4230000,
+   "gdpUsdBn": 310,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-PA",
+   "name": "Pennsylvania",
+   "population": 12960000,
+   "gdpUsdBn": 1000,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-RI",
+   "name": "Rhode Island",
+   "population": 1100000,
+   "gdpUsdBn": 80,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-SC",
+   "name": "South Carolina",
+   "population": 5400000,
+   "gdpUsdBn": 340,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-SD",
+   "name": "South Dakota",
+   "population": 920000,
+   "gdpUsdBn": 70,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-TN",
+   "name": "Tennessee",
+   "population": 7050000,
+   "gdpUsdBn": 540,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-TX",
+   "name": "Texas",
+   "population": 30500000,
+   "gdpUsdBn": 2700,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-UT",
+   "name": "Utah",
+   "population": 3400000,
+   "gdpUsdBn": 300,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-VT",
+   "name": "Vermont",
+   "population": 650000,
+   "gdpUsdBn": 45,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-VA",
+   "name": "Virginia",
+   "population": 8700000,
+   "gdpUsdBn": 700,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-WA",
+   "name": "Washington",
+   "population": 7800000,
+   "gdpUsdBn": 800,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-WV",
+   "name": "West Virginia",
+   "population": 1770000,
+   "gdpUsdBn": 110,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-WI",
+   "name": "Wisconsin",
+   "population": 5900000,
+   "gdpUsdBn": 410,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  },
+  {
+   "country": "USA",
+   "countryName": "United States",
+   "code": "US-WY",
+   "name": "Wyoming",
+   "population": 580000,
+   "gdpUsdBn": 50,
+   "year": 2023,
+   "source": "Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting"
+  }
+ ]
+}
