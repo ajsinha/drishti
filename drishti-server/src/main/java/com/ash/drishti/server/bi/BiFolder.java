@@ -58,7 +58,7 @@ public final class BiFolder implements AutoCloseable {
     /** The tag a shipped file with {@code sample: true} carries; the sample-visibility setting hides tagged items from those who may not see samples. */
     public static final String SAMPLE_TAG = "sample";
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
-    private static final Map<String, String> KINDS = Map.of("datasets", "dataset", "reports", "report", "boards", "board", "notebooks", "notebook", "python", "python");
+    private static final Map<String, String> KINDS = Map.of("datasets", "dataset", "models", "model", "reports", "report", "boards", "board", "notebooks", "notebook", "python", "python");
 
     /** One file as last read: its stamp, the last good item (null until one parses) and the problem with the latest content, if any. */
     private record Entry(long modified, long size, BiStore.Item item, String problem, Instant problemSince) {}

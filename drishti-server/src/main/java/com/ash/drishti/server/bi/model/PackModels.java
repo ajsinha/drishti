@@ -103,6 +103,11 @@ public final class PackModels {
         return out;
     }
 
+    /** One kind of a pack as a table with its columns (promoted by its connector, else from the pack's samples), whoever may open it: what a pack-generated dataset is made of. */
+    public TableInfo describe(Pack pack, String kind) {
+        return info(pack, kind, new HashSet<>());
+    }
+
     private TableInfo info(Pack pack, String kind, Set<String> taken) {
         String connector = pack.routes().getOrDefault(kind, "");
         Optional<SourcePlugin> plugin = sources.plugin(connector, kind);
@@ -197,7 +202,7 @@ public final class PackModels {
     }
 
     /** A column name from a document path: {@code counterparty.id} is {@code counterpartyId}. */
-    static String columnName(String path) {
+    public static String columnName(String path) {
         StringBuilder sb = new StringBuilder();
         boolean up = false;
         for (char c : path.toCharArray()) {

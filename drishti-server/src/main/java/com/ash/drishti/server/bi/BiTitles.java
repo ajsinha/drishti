@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 final class BiTitles {
 
     /** The kinds whose body has a top-level {@code title:}. */
-    static final Set<String> KINDS = Set.of("dataset", "report", "board", "notebook");
+    static final Set<String> KINDS = Set.of("dataset", "model", "report", "board", "notebook");
 
     private static final Pattern LINE = Pattern.compile("^title:[ \\t]*(.*?)[ \\t]*$", Pattern.MULTILINE);
 
