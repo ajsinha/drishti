@@ -81,3 +81,63 @@ def board(c: Ctx):
     c.page.click("[data-kiosk]")
     c.page.wait_for_timeout(5000)
     c.save("10-kiosk.jpg")
+
+
+# ---- wave B: the history of a live table, and the board designer ---------------------------------------------------------------------
+
+DESIGN_BOARD = """rachana: 1
+board: night-desk
+title: Night desk
+rotate: 30s
+pages:
+  - id: desk
+    title: Trading desk
+    tiles:
+      - { id: net-mtm, report: live-trading-desk, visual: mtm, title: Net MTM, at: { x: 0, y: 0, w: 4, h: 3 },
+          alert: { on: MTM, warn: { op: lt, value: 150000000 }, crit: { op: lt, value: 100000000 }, hysteresis: 5000000 } }
+      - { id: trades, report: live-trading-desk, visual: trades, at: { x: 4, y: 0, w: 2, h: 3 } }
+      - { id: by-desk, report: live-trading-desk, visual: by-desk, at: { x: 0, y: 3, w: 6, h: 5 } }
+"""
+
+
+@shot("11-history-line.jpg")
+def history_line(c: Ctx):
+    login(c, height=1000)
+    open_report(c, LIVE_REPORT)
+    c.page.wait_for_function("() => /Last update/.test(document.querySelector('[data-live-bar]').textContent)", timeout=30000)
+    c.page.wait_for_timeout(75000)                                  # a sample every ten seconds: a line of seven or eight points
+    c.page.evaluate("document.querySelector('[data-visual=last-hour]').scrollIntoView({block: 'center'})")
+    c.page.wait_for_function("() => { const c = document.querySelector('[data-visual=last-hour] .bi-chart'); const i = c && echarts.getInstanceByDom(c); return i && i.getOption().series[0].data.length >= 5; }", timeout=30000)
+    c.page.wait_for_timeout(1500)
+    box = c.page.locator("[data-visual=last-hour]").bounding_box()          # a window picture, not a full-page one: the chart is not redrawn by a resize
+    c.save("11-history-line.jpg", clip={"x": max(0, box["x"] - 12), "y": max(0, box["y"] - 12), "width": box["width"] + 24, "height": box["height"] + 24})
+
+
+@shot("12-board-designer.jpg", also=("13-tile-alert.jpg", "14-board-yaml.jpg"))
+def board_designer(c: Ctx):
+    import json
+
+    login(c, height=900)
+    mine = c.page.request.get(c.base + "/bi/api/workspaces/me/items").json()
+    for it in mine if isinstance(mine, list) else mine.get("items", []):
+        if it.get("title") == "Night desk":
+            c.page.request.delete(c.base + "/bi/api/items/" + it["id"])
+    made = c.page.request.post(c.base + "/bi/api/workspaces/me/items", data=json.dumps({"kind": "board", "title": "Night desk", "body": DESIGN_BOARD}),
+                               headers={"Content-Type": "application/json"}).json()
+    c.page.set_viewport_size({"width": 1400, "height": 900})
+    c.page.goto(c.base + "/bi/design/board/" + made["id"])
+    c.page.wait_for_selector("[data-board-design-root][data-ready='1']")
+    c.page.wait_for_selector("[data-tile='net-mtm']")
+    c.page.wait_for_timeout(1500)
+    c.page.click("[data-tile='net-mtm'] .bi-btile-title")
+    c.page.wait_for_selector("[data-tile-edit]")
+    c.page.wait_for_timeout(500)
+    c.save("12-board-designer.jpg", clip={"x": 0, "y": 56, "width": 1400, "height": 844})
+    c.page.locator("[data-tile-form]").locator("xpath=ancestor::aside").evaluate("e => { e.scrollTop = e.scrollHeight; }")      # down to the hysteresis and the notify choice
+    c.page.wait_for_timeout(400)
+    pane = c.page.locator("[data-tile-form]").locator("xpath=ancestor::aside").bounding_box()
+    c.save("13-tile-alert.jpg", clip={"x": pane["x"] - 6, "y": max(0, pane["y"] - 6), "width": pane["width"] + 12, "height": min(900 - max(0, pane["y"] - 6), pane["height"] + 12)})
+    c.page.click("[data-tab=yaml]")
+    c.page.wait_for_function("() => /Night desk/.test(document.querySelector('[data-view=yaml]').innerText)")
+    c.page.wait_for_timeout(800)
+    c.save("14-board-yaml.jpg", clip={"x": 0, "y": 56, "width": 1400, "height": 640})

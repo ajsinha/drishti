@@ -29,6 +29,7 @@ A **board** is a wall of tiles for a screen on the wall of a trading desk, a ris
 8. [Settings](#8-settings)
 9. [API](#9-api)
 10. [Built and not built](#10-built-and-not-built)
+11. [Designing a board](#11-designing-a-board)
 
 ## 1. What a board is, and is not
 
@@ -96,8 +97,11 @@ alert: { on: MTM, warn: { op: lt, value: 150000000 }, crit: { op: lt, value: 100
 |---|---|
 | `on` | the measure or column whose values are compared; empty means the first number column the tile shows |
 | `warn`, `crit` | `{ op, value }` with `op` one of `lt le gt ge eq ne` and a number; at least one of them |
+| `hysteresis` | a number of 0 or more (default 0): how far back inside a threshold the value must be before the tile **drops a level**. A tile that turned red at 100 000 000 stays red until the value is 5 000 000 back inside the threshold, so a value hovering at the edge does not flip the colour (the same idea as a measure alert's hysteresis, [DISTRIBUTION.md](DISTRIBUTION.md)). Without it a tile follows the value exactly |
 
 The browser evaluates the rule on every redraw against the tile's rows: a card or KPI by its one value, a chart or table by **the worst of its rows**. `crit` is tested first, then `warn`. A tile that reaches a level gets a **coloured border** (amber for warn, red for crit, from the theme's tokens), its number takes the colour, and the line under it says **warning** or **critical** in words: the state never depends on colour alone. `data-alert="warn"` or `"crit"` on the tile's element is what tests and scripts read. Nothing is sent.
+
+**Hysteresis, exactly.** With `hysteresis: h` the thresholds are also tried `h` looser (`lt` and `le` thresholds up by `h`, `gt` and `ge` down by `h`; `eq` and `ne` are not moved). A tile's level is the strict level of the value, or the level it had before as far as the looser thresholds still hold it, whichever is higher. So with `warn: lt 100`, `crit: lt 50`, `hysteresis: 10`: a value of 49 is red; 55 is still red; 60 is amber; 105 is still amber; 110 is normal; and a tile that was normal at 105 stays normal. The browser remembers the level of each tile between redraws; the **notification** uses the same rule (the tile's alert is active until the looser level drops below the level it fired at), so a tile that hovers at the edge neither flickers nor sends a message each time. (The browser's rule is `bi-live.js` `level`, the server's `TileLevel`; a test runs both.)
 
 Thresholds are compared with the value the reader's own query returns, so a reader whose row rules show only their desk sees a tile turn colour on **their** numbers. A masked value (a number the reader may not see) is `null` and never crosses a threshold.
 
@@ -267,7 +271,8 @@ The same call for a tile off the grid, a visual that does not exist and a report
 | Method and path | Body, answer |
 |---|---|
 | `GET /api/v1/bi/boards/{id}` | `{id, title, description, status, shipped, sample, valid, problems, board, tiles, mayEdit}`; `board` is the model (defaults filled in), `tiles` maps `"<page id>/<tile id>"` to `{report, reportTitle, page, type, live}` (`report` is null for a tile the caller cannot resolve) |
-| `POST /api/v1/bi/boards/validate` | `{yaml}`; authors; `{valid, problems, board}` |
+| `POST /api/v1/bi/boards/validate` | `{yaml}`; authors; `{valid, problems, board, tiles}`: the model and what each tile resolves to, as the designer needs it |
+| `POST /api/v1/bi/boards/format` | `{board}` (the model); `{yaml}`: the model written the way a person writes it, one tile to a line (the designer's YAML tab; what it writes is read back to the same board) |
 
 A real answer for the sample board (abridged):
 
@@ -286,9 +291,23 @@ The tiles' data comes from the report endpoints (`POST /api/v1/bi/reports/{id}/q
 **Not built, and not faked:**
 
 * **A webhook or SMS channel** for a tile (use a chat bridge), **a notification when a tile leaves red** (it only re-arms), and the board-wide keys `notifications` and `subscriptions`, which stay refused (`DRS-9053`), not ignored.
-* **A designer for boards**: edit the YAML (the item's Edit form, or the file); the report designer does not place tiles.
+* **A visual preview of the data in the designer's tiles**: the designer lays tiles out and shows what each is (report, visual, type) and its alert; the numbers are in the viewer (**View**).
 * **Interaction between tiles** (clicking a mark filters other tiles), slicers on a board, drill-down and drill-through from a tile.
 * **Lineage and impact for boards**: a report change that removes a visual a board uses is found when the board is read (the tile says so), not at the report's publish; boards are not in the lineage panel. A board item can be put in a bundle (by name, or with its workspace), but the reports it shows are not added as dependencies and its body is not checked on import: export the reports with it ([BI_GOVERNANCE.md section 7](BI_GOVERNANCE.md#7-environments-bundles)).
 * **Per-tile refresh settings**: a board redraws its live tiles together, at the console's `min_interval_ms`.
 * **A tile of a report that has no live table** is drawn once; it is not re-read on a timer.
 * **Per-screen layouts**: a phone stacks the grid in reading order; there are no different layouts per device.
+
+## 11. Designing a board
+
+*Designer* in the BI rail starts one (**Boards**: a new board, and your board drafts); a board's page has **Design** (when you may edit it; a shipped board opens read-only, and *Save a copy* makes a draft of your own) and so has its item page (*Open in the designer*). The page is `/bi/design/board/<id>`.
+
+* **The grid.** A 12-column grid of the board's tiles for the current page. Drag a tile by its header to move it, drag the corner to resize it, or focus it and use the arrow keys (Shift with the arrows resizes) and Delete; tiles never overlap (the ones in the way move down). Each tile shows the report, visual and type it names and its alert in words; one that names a report or visual you cannot open is marked.
+* **Pages.** The page tabs add a page (up to 20), and *This page* renames, moves earlier or later, or deletes it.
+* **Add a tile.** Choose a report (the ones you may open) and one of its visuals (slicers are not offered), then *Add tile*: it lands at the bottom of the page in a size that suits its type. If the report has the same visual id on two pages the tile says which.
+* **The selected tile** (right pane): its title, its place on the grid (column, row, wide, high) and its **alert**: the number it watches, amber and red thresholds, the **hysteresis**, and whether to tell the people who read the board when it turns (red, or amber or red). *Apply to the tile* writes it; *Remove the alert* clears it.
+* **Kiosk.** *Turn the pages every (seconds)* sets `rotate:`, 5 to 3600; blank turns no pages by itself (the kiosk button still fills the screen).
+* **YAML.** The YAML tab shows the same draft as text, written by the server (`POST /boards/format`), and a change there shows on the grid once it parses; each is the other's view. Board-wide settings the designer has no field for (`notify:` defaults) are kept as they are.
+* **Check, Save, Publish.** *Check* lists the problems (a tile that names a report or visual that is not there, a bad threshold, `DRS-9052`/`9053`); *Save* stores the draft (Ctrl+S); undo and redo (Ctrl+Z, Ctrl+Y) step through the changes. A board is **published like any other item**, from its item page (*Publish...*): in a workspace that needs review it is proposed, reviewed and approved, and the audit trail records it ([BI_GOVERNANCE.md](BI_GOVERNANCE.md)). Nothing is published by saving.
+
+On a phone every control is at least 44 px and the panes stack under the grid.

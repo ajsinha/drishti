@@ -72,7 +72,7 @@ A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), t
 
 **Not built yet** (each is marked where it would matter, and listed in section 11)
 
-* running a `notebook` body (it is stored as text); a designer for boards (edit the YAML); a Perspective chart;
+* running a `notebook` body (it is stored as text); a Perspective chart;
 * time intelligence and window functions in measures; a cron refresh of a layer (a data-load signal or the refresh call does it); a history of a live table (it holds current state);
 * BI content inside a pack archive (a bundle is its own file); threaded comments on a line of a diff; approval chains of several reviewers;
 * a report that suggests itself from words, and any other AI feature (stage 2).
@@ -557,7 +557,7 @@ under it. **Kiosk** (button, `k`, or `?kiosk=1`) hides the menus, fills the scre
 **Admin.** *Admin, BI settings* is unchanged; the engine page counts live tables and rows (`GET /api/v1/bi/engine`); a dataset's page says how each live table is doing (state, rows, entities that push, last change). Settings: the server's `drishti.bi.live.*` and the console's `bi.live.*`, `bi.board.rotate_seconds`
 ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
 
-**Not built, and not faked.** A designer for boards; interaction between tiles; running totals by group maintained as changes arrive (a live table is maintained incrementally, its measures are recomputed over it); a history of a live table (it holds current state; the rolling chart's
+**Not built, and not faked.** Interaction between tiles; running totals by group maintained as changes arrive (a live table is maintained incrementally, its measures are recomputed over it); a history of every update of a live table (a bounded history of its aggregates is built: [DATASETS.md section 7.1](DATASETS.md#71-live-tables-phase-5); the rolling chart's
 points live in the browser from the moment the page opened); Perspective charts and its settings panel; live tables over arrays and in `direct` queries; boards in bundles, in lineage and in impact analysis. If a live table's feed is quiet, the page says **Stale** only when the source
 that pushes has gone silent for 30 s: a source that changes rarely is quiet, not stale, when it does not push at all (its state then reads `pushes: false` and the table is read again every 30 s).
 

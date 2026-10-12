@@ -36,7 +36,8 @@ About 45 minutes.
 - **certified** and **promoted**, and where they show;
 - **lineage**: where a dataset comes from and which reports read it;
 - **impact**: what breaks if a field goes, the refusal `DRS-9040`, and the administrator's override, which revokes certification;
-- **environments**: a bundle, a dry run, a conflict, an overwrite.
+- **environments**: a bundle, a dry run, a conflict, an overwrite;
+- **renames** that rewrite the reports, an import you can **roll back**, and lineage that reaches the connector's source.
 
 ## Step 1 · Powers, roles and two people
 
@@ -212,6 +213,40 @@ You should see `Trades report` as an **update** and the **Import** button enable
 
 You should see the same sections stacked in one column, the tables scrolling inside their own frames and every button at least 44 pixels high.
 
+## Step 10 · A rename is not a breakage
+
+Step 7 refused a publish that removed a field a report used. But often a field is only **renamed**. Say the *Orders desk* dataset reads `book` from the document path `book.name`, and a report charts `orders.book`. Ann renames the column to `desk_book` (the same `path:`) and the measure `Gross` to `Notional total` (the same expression), saves and proposes. Sue opens the dataset to review it.
+
+![The review: orders.book and Gross recognised as renames, and the button Approve and update the reports](img/t13/20-rename-impact.jpg)
+
+You should see, in the review under *What it does to reports*, **Recognised as renames (same path or expression)**: `orders.book → orders.desk_book; Gross → Notional total`, the report that uses them with `[renamed to ...]` beside each, and the button **Approve and update the reports** (an author who may publish directly sees **Publish and update the reports** under *Impact on reports*). A name is recognised as a rename only when the new one has the **same `path:` or `expr:`** (and type); a column with neither has only its name to go by. Press the button.
+
+![The report's history: a saved state with the origin rename](img/t13/21-renamed-report.jpg)
+
+You should see, in the *Orders report*'s history, a new published version (`published v2`) whose saved state says `renamed [...]` (its origin is `rename`), and a `rename` line in the review record: the report's wells now name `orders.desk_book` and `Notional total` (titles are never touched), and the dataset's new version is published in the same step. If the same change had also **changed a type or an expression** (a column from `decimal` to `integer`, a measure from `count(orders)` to `count(orders) * 2`), the impact would list it under *Changed type or meaning* with the reports that use it; that is shown, not refused.
+
+## Step 11 · Roll an import back
+
+An import is not final. **Environments** now lists every import under *Imports you can roll back*. Ann retitled a visual of the report after exporting it; Sue imports the older bundle over it (the overwrite of step 8) and looks at the list.
+
+![Imports you can roll back: who ran it, from what, how many items, and Roll back this import](img/t13/22-imports-rollback.jpg)
+
+You should see one row for the import (`bundle`, one item, one replaced) and the button **Roll back this import**. Press it.
+
+![After the roll back: the row says rolled back by sue, and the report has Ann's retitled draft again](img/t13/23-rolled-back.jpg)
+
+You should see the row say it was rolled back, and the report's draft is Ann's again (as a new saved state with the origin `rollback`; nothing was lost). Had the report been edited **after** the import, the roll back would have stopped with nothing changed and named it; an administrator can force it. A pack deployed from **Admin, Packs** that carries BI files (`config/bi/` in the archive) is imported the same way, so it appears in this list with the source `pack <name> <version>` and rolls back the same way.
+
+## Step 12 · Where does the data really come from?
+
+Step 6's lineage stopped at the connector's name. Now it goes one step further: it shows what the connector's file says it reads. Ann's *Lake orders* dataset reads through the connector `orders-lake`; the administrator looks first, then Ann.
+
+![Lineage as the administrator: the connector and its root /srv/lake/orders](img/t13/24-lineage-source.jpg)
+
+![Lineage as Ann: the same keys, the values replaced by dots](img/t13/25-lineage-source-reader.jpg)
+
+You should see, as the administrator, `reads from (file): root /srv/lake/orders`; as Ann, `root •••`. Only an administrator reads where a connector reads from (a table, a topic, a path, a bucket, a host); everybody else sees that there is a source and what kind of setting names it. Credentials never appear in either.
+
 ## Next steps
 
 - [Tutorial 14](14-python-and-analyse.md): Python in a measure, a visual and a notebook.
@@ -224,7 +259,8 @@ You should see the same sections stacked in one column, the tables scrolling ins
 |---|---|
 | `DRS-9002` | the person lacks the power the step needs (`bi-author` to publish or propose, `bi-steward` to approve or certify, `bi-admin` to force) |
 | `DRS-9005` | four-eyes: the person who proposed tried to approve or reject; they may only withdraw |
-| `DRS-9040` | the change would break published reports: fix the reports, keep the old names, or ask a `bi-admin` to force it |
+| `DRS-9040` | the change would break published reports: fix the reports, keep the old names, **publish and update the reports** when the impact shows every lost name as a rename, or ask a `bi-admin` to force it |
+| the roll back says `DRS-9004` | an item was edited or published after the import: nothing was changed; a `bi-admin` may force it, losing that work |
 | Propose for review is not offered | the workspace does not require review: publish directly; or you are not a member of it |
 | no email about a review | the **inbox** (the bell) is always told; email needs the mail settings of [tutorial 11](11-bi-that-runs-itself.md) |
 | the dry run says `conflict` | the item exists on the target and differs: tick *Overwrite* or rename it; read the reason first |

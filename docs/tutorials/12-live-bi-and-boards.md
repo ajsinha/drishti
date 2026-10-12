@@ -32,7 +32,8 @@ About 30 minutes.
 - what "live" means for data (a source that **pushes**) and why the demo's live data is **coherent**: related numbers move together;
 - the `mode: live` table of a dataset and how to see how it is doing;
 - the live indicator of a report, **Pause** and **Resume**, and what redraws;
-- a **board**: tiles from several reports, amber and red tiles from their alert rules, pages that turn on their own, and **kiosk mode**.
+- a **board**: tiles from several reports, amber and red tiles from their alert rules, pages that turn on their own, and **kiosk mode**;
+- the **history** of a live table (a line that is there when the page opens) and the **board designer**, with a tile alert that does not flicker (hysteresis).
 
 ## Step 1 · Live data moves together
 
@@ -186,6 +187,45 @@ You should see the menus gone and the wall filling the screen: the Net MTM and L
 
 You should see, once the screen is signed in as that user, the wall with the figures of that user's roles, and nothing the roles mask.
 
+## Step 7 · A line that remembers: the history of a live table
+
+A live table holds only **now**. The rolling line of step 3 collects its points in the browser from the moment the page opened, so a refresh empties it. For a line that is there when the page opens, the dataset can **keep a history**: every ten seconds it works out a few measures over the live table and appends them to a bounded table of its own. The sample dataset says so in its `live:` block:
+
+```yaml
+    live:
+      rows: 5000
+      history:
+        every: 10s
+        keep: 360                 # an hour of samples
+        measures: [MTM, Losses, Trades]
+```
+
+Open the **Live trading desk** report again, wait a minute, and scroll to the bottom of the **Desk** page.
+
+![The last-hour line: net MTM and losses, one point every ten seconds, drawn from the server](img/t12/11-history-line.jpg)
+
+You should see a line titled *Net MTM and losses, last hour* with a point for every ten seconds the dataset has been open (the sample dataset is sampled only while someone has it open, so on a freshly started server the line begins when you opened the page; reload it and the points are still there). The line is an ordinary `line` visual over the dataset table `history`: its axis is `history.ts` and its values are the generated measures `MTM history` and `Losses history`. [DATASETS.md](../guides/DATASETS.md#71-live-tables-phase-5) has the rest (grouping by a column, masks, the limits).
+
+## Step 8 · Lay out your own board
+
+So far the board was a file. **Designer** in the BI rail starts one too: type a title under **Boards** and press **Start a board**, then pick a report and one of its visuals and press **Add tile**. Here is a board of three tiles from the live desk, with the *Net MTM* tile selected.
+
+![The board designer: a 12-column grid of tiles, the page tabs, the board settings and the selected tile on the right](img/t12/12-board-designer.jpg)
+
+You should see the grid with the three tiles (each says which report and visual it shows), the tabs of the pages above it, **Board** settings on the right (title, the seconds between page turns in kiosk mode) and the **Tile** pane. Drag a tile by its header to move it, drag its corner to resize it, or focus it and use the arrow keys (with Shift to resize).
+
+The selected tile's pane holds its alert:
+
+![The tile pane: the number it watches, amber and red thresholds, the hysteresis and whether to tell the readers](img/t12/13-tile-alert.jpg)
+
+*Net MTM* turns amber below 150 million and red below 100 million. The **hysteresis** of 5 million means a red tile stays red until the number is 5 million back above 100 million, so a number hovering at the edge does not flip the colour (and does not send a message each time). Press **Apply to the tile**.
+
+The **YAML** tab shows the same board as text; edit either and the other follows.
+
+![The YAML tab: the board written the way you would write it, one tile to a line](img/t12/14-board-yaml.jpg)
+
+**Save** stores a draft (nothing is published by saving); **View** opens it as a wall; **Publish...** goes to the board's page, where publishing is reviewed like any other item (tutorial 13).
+
 ## Next steps
 
 - [Tutorial 13](13-govern-bi.md): publish with a review, certify, and see what a change would break.
@@ -198,6 +238,8 @@ You should see, once the screen is signed in as that user, the wall with the fig
 |---|---|
 | the indicator says `Disconnected` | the page lost its stream (the console or the network stopped); it keeps what it has and recovers by itself |
 | `Paused` and nothing moves | you paused it (or the browser tab was hidden); press **Resume** |
+| the last-hour line is empty or has one point | the dataset samples only while it is open; keep a report open for a minute |
+| a tile stays red after the number looks normal | the tile has a hysteresis: it drops a level only when the number is back inside by that much |
 | the live table says `state: error` | its connector is down: see Admin → Connectors; the table recovers when the connector does |
 | the wall shows `•••` | the screen's user has a role that masks the field |
 | an amber tile you did not expect | the tile's `alert` in the board file; the footer names the condition's word (`warning` or `critical`) |

@@ -130,6 +130,17 @@ GET /api/v1/bi/items/bi-f99d2f18d5/lineage
 
 ![Lineage of a dataset: where it comes from and which report reads it](img/bi-governance/lineage.png)
 
+**Past the connector.** Each table under *Comes from* also says what the connector reads: the settings of its connector file that name the place, in this order: `table`, `schema`, `topic`, `topics`, `queue`, `exchange`, `subject`, `path`, `root`, `directory`, `file`, `bucket`, `prefix`, `container`, `collection`, `keyspace`, `namespace`, `set`, `database`, `dbname`, `index`, `url`, `uri`, `host`, `hosts`, `bootstrap-servers`, `brokers`, as the file declares them. Credentials never appear: a setting whose name holds `password`, `secret`, `token`, `key` or `credential` is left out, and a `user:password@` in a URL is dropped. **An administrator reads the values; everybody else sees the keys with the values replaced by dots**, so lineage shows the *shape* of the source (a table, a topic, a path) without saying where the system is. The same dataset, as an administrator and as a reader (a real answer, a connector `orders-lake` of the `file` plugin):
+
+```
+GET /api/v1/bi/items/{id}/lineage            (as the administrator)
+"upstream": [ { "table": "o", "kind": "trade", "packs": ["trading"], "connector": "orders-lake", "mode": "cached", "each": null,
+                "source": { "connector": "orders-lake", "plugin": "file", "masked": false, "declared": { "root": "/srv/lake/orders" } } } ]
+
+GET /api/v1/bi/items/{id}/lineage            (as a reader)
+"upstream": [ { ..., "source": { "connector": "orders-lake", "plugin": "file", "masked": true, "declared": { "root": "\u2022\u2022\u2022" } } } ]
+```
+
 ## 6. Impact: what breaks if I change this
 
 Names are compared, not meanings: a field is `table.column`, and a measure or hierarchy is its name. A report names them in its wells, filters, sorts, drill-through and bookmarks; each place is recorded so the answer says *where* ("trade.book (page overview, visual rows)").
@@ -158,6 +169,42 @@ POST /api/v1/bi/items/bi-f99d2f18d5/publish  { "note": "drop book" }
 ![The bi-admin's page after the refusal: Publish anyway](img/bi-governance/force-offer.png)
 
 ![After the forced publish: the warnings, and the certification gone](img/bi-governance/forced-warnings.png)
+
+### Renames
+
+Names are compared, but a renamed field or measure is **recognised as a rename** when the new name has the same meaning as the old one: a column with the same `path:` or the same `expr:` (and the same type) in the same table, or a measure with the same expression. A column declared without a `path:` (it reads the document field of its own name) has no meaning besides its name, so renaming it is a removal and an addition, as before. A recognised rename is still a removal for the reports that use the old name (they break until they are changed), but the impact now says *to what*, and offers to change them:
+
+```
+GET /api/v1/bi/items/bi-501131a408/impact          (the draft renames orders.book to orders.desk_book and Gross to Notional total)
+{ "breaksPublished": true, "refused": true, "renamable": true,
+  "renames": [ { "kind": "field", "from": "orders.book", "to": "orders.desk_book" }, { "kind": "measure", "from": "Gross", "to": "Notional total" } ],
+  "published": [ { "title": "Orders report", "uses": [ "orders.book [renamed to orders.desk_book] (page main, visual by-book)",
+                                                         "measure Gross [renamed to Notional total] (page main, visual n)" ] } ], ... }
+```
+
+`renamable` is true when every published item that loses a name is a **stored report** (not a shipped file, not a composed or derived dataset) that loses only renamed names. Then *Publish and update the reports* (the dataset's page, under *Impact on reports*; `POST /items/{id}/publish` or `/approve` with `{"applyRenames": true}`) does it in one step, after every other check has passed: each such report gets its **published text rewritten** to the new names as its next published version, and its **draft** too (when the draft was the published text it moves with it; a draft with unsaved work of its own is rewritten separately), each as a saved state with origin `rename` and an event `rename` in its review record; then the dataset's new version is published. Without `applyRenames` the publish is refused as before (`DRS-9040`, now saying `[renamed to ...]`).
+
+```
+POST /api/v1/bi/items/bi-501131a408/publish  { "note": "rename", "applyRenames": true }
+200 { "publishedVersion": 2,
+      "warnings": [ "Report 'Orders report': 2 name(s) updated, published as version 2", "This version removes or renames orders.book, Gross." ] }
+```
+
+Only the places a report **names** a field or measure are rewritten (the wells of a visual, the `field` and `by` of a filter in the report, a page, a visual or a bookmark, a visual's sort, hierarchy and drill-through, a page's drill-through fields); titles, descriptions and ids are not. A date part after a field (`orders.tradeDate.year`) is kept. The report is written back the way the designer writes one, so **comments in its old text are not kept** and a bare `n` or `y` id is quoted. A report that still breaks for another reason (it also uses a name that was removed outright) is not rewritten and still blocks the publish; a bi-admin may force it.
+
+### A changed type or meaning
+
+A name that stays but means something else is no longer invisible. Between the published dataset and the draft the impact lists **alters**: a column whose declared `type:` changed, a column whose `path:` or `expr:` changed (or that gained or lost one), and a measure whose expression changed. Each published report that uses such a name is listed with where and what changed. It is **not refused** (the report still draws), it is shown so a reviewer sees that the figures will differ:
+
+```
+GET /api/v1/bi/items/bi-501131a408/impact          (the draft counts twice as many orders and makes notional an integer)
+"change": { "breaking": false, "alters": [ { "kind": "field",   "name": "orders.notional", "what": "type",    "from": "decimal",           "to": "integer" },
+                                           { "kind": "measure", "name": "Orders",          "what": "meaning", "from": "expr count(orders)", "to": "expr count(orders) * 2" } ] },
+"altered": [ { "title": "Orders report", "uses": [ "measure Orders: meaning expr count(orders) -> expr count(orders) * 2 (page main, visual by-book)" ] } ],
+"refused": false
+```
+
+Relationships and row rules are still not compared.
 
 ## 7. Environments: bundles
 
@@ -197,6 +244,43 @@ POST /api/v1/bi/bundle/import  { "bundle": {...}, "dryRun": true }          (as 
                "reasons": ["the draft differs"], "blocks": ["it exists here and differs (the draft differs): import with overwrite to replace it"] }, ... ] }
 ```
 
+### Rolling back an import
+
+Every real import keeps what it replaced, in `drishti.bi.governance.imports-dir` (default `<data dir>/bi/imports`, one JSON file per import, the newest `imports-keep`, 20, are kept): who ran it, from what (a bundle, or a pack deploy), and for each item either *created* or the whole earlier state (the row and its published versions), and the saved state and published version the import left it in. *Environments* in the BI rail lists them under **Imports you can roll back**; each row has **Roll back this import** (needs bi-steward).
+
+```
+GET /api/v1/bi/imports
+{ "imports": [ { "id": "mv543kh5-7a48ae", "at": "2026-10-12T10:31:18Z", "by": "drishti-dev-admin", "source": "bundle", "madeBy": "drishti-dev-admin",
+                 "items": 1, "created": 0, "replaced": 1, "rolledBack": false } ] }
+
+GET /api/v1/bi/imports/mv543kh5-7a48ae           { ..., "entries": [ { "id": "bi-e26c13885c", "title": "Orders report", "kind": "report", "created": false, "restoresVersion": 2, "changedSince": false } ] }
+
+POST /api/v1/bi/imports/mv543kh5-7a48ae/rollback  {}
+200 { "id": "mv543kh5-7a48ae", "restored": 1, "removed": 0, "forced": false }
+```
+
+A roll back puts an overwritten item's row and published versions back (versions the import added are dropped) as a **new saved state** with origin `rollback`, so nothing in the history is lost, and removes an item the import created. If any item was **edited or published since** the import (`changedSince`), the roll back stops with nothing changed (`409 DRS-9004`, naming the items); a **bi-admin** may roll back with `{"force": true}`, which restores them anyway and is audited as `FORCED over N edited since`. An import can be rolled back once (`409 DRS-9004` the second time). Audited as `bi-import-rolled-back`.
+
+### BI content in a pack archive
+
+A pack archive may carry BI content: `config/bi/datasets/`, `reports/`, `boards/`, `notebooks/` and `python/` inside the pack folder, one file per item, named `<name>.<kind>.yaml` (the shapes of the BI folder, [BI_GUIDE.md](BI_GUIDE.md)). Deploying the pack does **not** copy them where readers could use them unchecked: they become a bundle and go through the same import, so the same rules apply.
+
+* **The upload check** adds a `bi` block: how many items by kind, and a dry run of the import (what would be created, changed, left alone or held back, and the published reports a changed dataset would break), so the administrator reads the impact before confirming.
+* **The deploy** loads the files as a real import into the shared workspace `packs` (`drishti.bi.governance.pack-workspace`, made if absent), one item per file with a stable id `pk-<pack>-<kind>-<name>`, **published** (version 1; the next version of the pack makes the next published version, and an unchanged file stays unchanged), with **the pack as its audience** (people who have the pack see it), owned by the administrator, tagged `pack:<name>`, never certified. The import is kept like any other, so *Roll back this import* undoes it; the deploy's own roll back of the pack files does not touch it.
+* **A refusal does not undo the deploy.** If the import is held back (a file does not parse, or a changed dataset would break a report somebody else published and `acceptBreaking` was not given) the pack is deployed and loaded and the answer says `"bi": { "loaded": false, "problem": "..." }`; the content waits, and the audit log has `pack-bi-held`. Confirming the deploy with `acceptBreaking=true` forces the breaking dataset change (needs bi-admin, as any force).
+
+The upload of that version already said what the deploy would do (a real answer; version 1.0.0 had made both items): the dataset changed (it gained a `format`), the report did not.
+
+```
+POST /api/v1/admin/packs/deploy                                                  (the archive as the body)
+200 { "ok": true, ..., "bi": { "items": 2, "kinds": { "dataset": 1, "report": 1 }, "counts": { "create": 0, "update": 1, "unchanged": 1, "conflict": 0, "invalid": 0 }, "ok": true,
+      "plan": [ { "title": "Desk orders", "action": "update", ... }, { "title": "Desk orders report", "action": "unchanged", ... } ] } }
+
+POST /api/v1/admin/packs/deploy/{uploadId}                                       (the pack bi-demo 1.0.1 carries a dataset and a report)
+200 { "deployed": "1.0.1", ...,
+      "bi": { "items": 2, "loaded": true, "importId": "mv5494v3-06ad1e", "counts": { "create": 0, "update": 1, "unchanged": 1, "conflict": 0, "invalid": 0 } } }
+```
+
 ## 8. The audit trail
 
 Every governance act is in the audit log (Admin, Audit log), with the actor and the item:
@@ -210,6 +294,9 @@ Every governance act is in the audit log (Admin, Audit log), with the actor and 
 | `bi-item-endorsed` | promoted, certified or an endorsement removed (the level is the detail) |
 | `bi-certification-revoked` | certification fell automatically (the detail says why) |
 | `bi-bundle-exported`, `bi-bundle-imported`, `bi-item-imported` | a bundle left or entered; each item an import wrote |
+| `bi-import-rolled-back` | an import was rolled back (the detail says how many items were restored and removed, and `FORCED over N edited since` when forced) |
+| `bi-item-renamed-names` | a dataset publish rewrote a report's names to the dataset's renames (the detail lists the renames and the count) |
+| `pack-bi-loaded`, `pack-bi-held`, `bi-workspace-created` | the BI content of a deployed pack was imported, or held back (with the reason); the `packs` workspace was made |
 | `bi-query` | the reviewer's data preview (`review preview: N rows ...`) and every other dataset query |
 
 The item's own **review record** (under History) lists requests, decisions with comments, certifications, revocations and imports with who and when.
@@ -226,7 +313,9 @@ All under `/api/v1/bi`; answers are as the caller. Token scopes: writes need `bi
 | `GET /items/{id}/review` | request, diff, Check, impact, data preview | 9002, 9001 |
 | `GET /items/{id}/lineage` | upstream, downstream, uses | 9001 |
 | `GET /items/{id}/impact[?remove=a,b]`, `POST /items/{id}/impact {yaml}` | what breaks | 9001 |
-| `POST /items/{id}/publish`, `/approve` with `{note, force}` | publish; `force` is for bi-admin | **9040**, 9002, 9004, 9005 |
+| `POST /items/{id}/publish`, `/approve` with `{note, force, applyRenames}` | publish; `force` is for bi-admin; `applyRenames` rewrites the reports that use renamed names (section 6) | **9040**, 9002, 9004, 9005 |
+| `GET /imports`, `/imports/{id}` | the imports whose replaced states are kept; one with its items and whether each changed since (bi-steward) | 9002, 9001 |
+| `POST /imports/{id}/rollback {force}` | put back what the import replaced; `force` (bi-admin) restores items edited since | 9004, 9002, 9001 |
 | `GET /bundle?items=&workspace=&dependencies=` | the bundle | 9002, 9001 |
 | `POST /bundle/import {bundle, dryRun, overwrite, force, workspace, workspaces, owners}` | dry run or import | **9041**, **9042**, 9002 |
 
@@ -245,10 +334,10 @@ Built: saved states for every save, restore, publish and import, the history lis
 
 **Not built, and not faked:**
 
-* **A bundle inside a pack archive.** A BI bundle is its own file. Deploying a pack (Admin, Packs, Deploy) does not import BI content, and there is no rollback of an import beyond restoring the saved state it kept (*before import by ...*).
-* **Renames are not recognised as renames.** A renamed field is a removed field plus a new one; nothing offers to rewrite the reports that use it.
-* **Impact is by name.** Changes that keep a name but change its meaning or type (a column's type, a measure's expression, a row rule) are not flagged; relationships are not compared. A report's names are read from its wells, filters, sorts, drill-through, hierarchy and bookmarks.
-* **Lineage stops at the connector.** It does not follow a connector to the system behind it, and boards and notebooks have no lineage. (A board item does travel in a bundle when you name it or export its workspace, but the reports it shows are not added as dependencies and its body is not checked on import: export the reports with it.)
+* **Renames are recognised only from a path or an expression.** A column with no `path:` or `expr:` has only its name for meaning, so its rename is a removal and an addition. A rename is offered for **stored reports** only (a shipped report is a file; a composed or derived dataset that reads the old name is listed as broken, not rewritten), and a rewritten report loses the comments of its old text.
+* **A roll back undoes an import, not what happened after it.** An item edited or published since is left alone unless a bi-admin forces it; the imports kept are the newest `imports-keep`. Rolling back a pack's BI content does not roll back the pack files, nor the other way round.
+* **Impact is by name, type and meaning.** A changed type, path or expression is shown (not refused); relationships and row rules are not compared. A report's names are read from its wells, filters, sorts, drill-through, hierarchy and bookmarks.
+* **Lineage stops at what the connector file declares.** It shows the table, topic, path or bucket the connector's settings name (masked for people who are not administrators), not the system behind it, and boards and notebooks have no lineage. (A board item does travel in a bundle when you name it or export its workspace, but the reports it shows are not added as dependencies and its body is not checked on import: export the reports with it.)
 * **Saved states before the upgrade.** History starts at the upgrade; older published versions are in Versions.
 * **No comments on a line.** A review has one comment per decision, not threaded comments on diff lines.
 * **No scheduled re-certification or expiry**, and no approval chains of more than one reviewer.

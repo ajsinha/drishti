@@ -328,7 +328,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_CONSOLE_HOST` | `server.host` | `0.0.0.0` | The address the console listens on (every interface; `127.0.0.1` keeps it to this machine). |
 | `DRISHTI_CONSOLE_PORT` | `server.port` | `17480` | The console's port. |
 | `DRISHTI_BACKEND_URL` | `backend.url` | `http://127.0.0.1:18480` | Where the server is. |
-| `DRISHTI_CONSOLE_TMP_DIR` | `tmp_dir` | blank (then `DRISHTI_TMP_DIR`, then the system temp folder) | Base of the console's temp folder `drishti-console-<pid>`, removed on exit; stale ones are removed at start. |
+| `DRISHTI_CONSOLE_TMP_DIR` | `tmp_dir` | empty | Base of the console's temp folder `drishti-console-<pid>` (empty: `DRISHTI_TMP_DIR`, then the system temp folder), removed on exit; stale ones are removed at start. |
 | `DRISHTI_PRODUCT` | `ui.product` | `Drishti` | The product name shown in pages. |
 | `DRISHTI_USER` | `ui.user` | `ash` | The acting user while sign-in is off. |
 | `DRISHTI_ABOUT_PREFETCH` | `ui.about_prefetch` | `true` | Fetch *About this page* when a view goes idle, so labels with a glossary entry are underlined at once; costs one explain per page view. |
@@ -1293,6 +1293,9 @@ Saved states, review, certification, impact analysis and bundles ([BI_GOVERNANCE
 | `revoke-certification` | `true` | Take certification away automatically from a certified dataset that changed incompatibly, and from certified reports broken by such a change; the owner and whoever certified are told. |
 | `refuse-failing-tests` | `true` | Refuse (`409 DRS-9043`) publishing or approving a report or dataset whose expected values (`tests:`) fail or cannot run; a `bi-admin` can publish with `force`. Off: Check still shows the results, a publish goes ahead ([REPORTS.md section 17](../guides/REPORTS.md#17-expected-values-tests)). |
 | `bundle-max-bytes` | `8388608` | Largest BI bundle an import reads (`422 DRS-9041` above it). |
+| `imports-dir` | blank: `<drishti.data.dir>/bi/imports` | Where each import keeps what it replaced, one JSON file per import, so *Roll back this import* can put it back ([BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md#rolling-back-an-import)). Back it up with the identity database. |
+| `imports-keep` | `20` | Imports whose replaced states are kept (the oldest go first). |
+| `pack-workspace` | `packs` | The shared workspace that holds the BI content of deployed packs (`config/bi` inside a pack archive); made at the first deploy that carries some ([BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md#bi-content-in-a-pack-archive)). |
 | `tell-people` | `true` | Tell people in the inbox (the bell) when a review is asked for (reviewers), decided (the author) or a certification is revoked (the owner and whoever certified). Off: no inbox rows; the audit log and the item's history still record everything. |
 
 ### `drishti.bi.poc` — Rupaka phase 0 proof of concept

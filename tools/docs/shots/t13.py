@@ -261,3 +261,137 @@ def phone(c: Ctx):
     c.page.evaluate("document.querySelector('[data-sec-history]').scrollIntoView()")
     c.page.wait_for_timeout(600)
     c.save("17-phone-history.jpg")
+
+
+# ---- wave B: renames, rolling an import back, lineage past the connector ------------------------------------------------------------
+
+ORDERS = ("Orders desk", "Orders report")
+ORDERS_DS = """rachana: 1
+dataset: orders-desk
+title: Orders desk
+description: Orders by desk and book, for the rates desk
+tables:
+  orders:
+    source: { kind: trade }
+    columns:
+      desk: string
+      book: { path: book.name, type: string }
+      notional: { path: notional, type: decimal }
+measures:
+  Orders: { expr: "count(orders)" }
+  Gross: { expr: "sum(orders.notional)" }
+"""
+ORDERS_REPORT = """rachana: 1
+report: orders-report
+title: Orders report
+dataset: {dataset}
+pages:
+  - id: main
+    title: Main
+    visuals:
+      - { id: gross, type: card, title: Gross, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Gross] } }
+      - { id: by-book, type: bar, title: Orders by book, at: { x: 3, y: 0, w: 6, h: 4 }, wells: { axis: [orders.book], values: [Orders] } }
+"""
+
+
+def rates_desk(c: Ctx):
+    """The workspace of this tutorial (review before publishing, sue a member), made if an earlier run of the other pictures did not."""
+    as_(c, "ann")
+    if not any(w["id"] == WS for w in bi(c, "GET", "/workspaces")):
+        bi(c, "POST", "/workspaces", {"name": "Rates desk", "description": "Rates trading: models and reports", "reviewRequired": True})
+    bi(c, "PUT", f"/workspaces/{WS}/members/sue", {"role": "member"})
+
+
+def publish_as_sue(c: Ctx, item: str):
+    as_(c, "ann")
+    bi(c, "POST", f"/items/{item}/propose", {"note": "for review"})
+    as_(c, "sue")
+    bi(c, "POST", f"/items/{item}/approve", {"note": "good"})
+
+
+@shot("20-rename-impact.jpg", also=("21-renamed-report.jpg",))
+def rename(c: Ctx):
+    people(c)
+    login(c)
+    for title in ORDERS:
+        for it in bi(c, "GET", "/catalogue").get("items", []):
+            if it["title"] == title and not it.get("shipped"):
+                bi(c, "DELETE", "/items/" + it["id"])
+    rates_desk(c)
+    as_(c, "ann")
+    audience = ["bi-steward", "bi-writer", "viewer"]
+    ds = bi(c, "POST", f"/workspaces/{WS}/items", {"kind": "dataset", "title": ORDERS[0], "body": ORDERS_DS, "audienceRoles": audience})["id"]
+    rep = bi(c, "POST", f"/workspaces/{WS}/items", {"kind": "report", "title": ORDERS[1], "body": ORDERS_REPORT.replace("{dataset}", ds), "audienceRoles": audience})["id"]
+    STATE["orders_ds"], STATE["orders_report"] = ds, rep
+    publish_as_sue(c, ds)
+    publish_as_sue(c, rep)
+    as_(c, "ann")
+    renamed = ORDERS_DS.replace("      book: { path: book.name, type: string }", "      desk_book: { path: book.name, type: string }").replace("  Gross:", "  Notional total:")
+    bi(c, "PUT", f"/items/{ds}", {"body": renamed, "message": "rename book and Gross"})
+    bi(c, "POST", f"/items/{ds}/propose", {"note": "renamed two names"})
+    show("rename_impact", bi(c, "GET", f"/items/{ds}/impact"))
+    as_(c, "sue")
+    open_item(c, ds)
+    c.page.wait_for_selector("[data-review-body] [data-renamable]")
+    c.page.wait_for_timeout(600)
+    head = c.page.locator("[data-review-body] h3:has-text('What it does to reports')")
+    head.evaluate("e => window.scrollTo(0, Math.max(0, e.getBoundingClientRect().top + window.scrollY - 70))")
+    c.page.wait_for_timeout(400)
+    top = head.bounding_box()
+    bottom = c.page.get_by_role("button", name="Approve and update the reports").bounding_box()
+    y0 = max(0, top["y"] - 12)
+    c.save("20-rename-impact.jpg", clip={"x": max(0, top["x"] - 12), "y": y0, "width": 1010, "height": min(900 - y0, bottom["y"] + bottom["height"] + 12 - y0)})
+    c.page.get_by_role("button", name="Approve and update the reports").click()
+    c.page.wait_for_function("() => document.querySelector('[data-msg]').textContent.includes('now use the new ones')", timeout=30000)
+    c.page.wait_for_timeout(800)
+    show("report_after", bi(c, "GET", f"/items/{rep}")["body"])
+    as_(c, "ann")
+    open_item(c, rep)
+    c.page.wait_for_timeout(600)
+    region(c, "21-renamed-report.jpg", "[data-sec-history]")
+
+
+@shot("22-imports-rollback.jpg", also=("23-rolled-back.jpg",))
+def rollback(c: Ctx):
+    rep = STATE.get("orders_report") or item_id(c, ORDERS[1])
+    as_(c, "ann")
+    bundle = bi(c, "GET", f"/bundle?items={rep}&dependencies=false")
+    body = bi(c, "GET", f"/items/{rep}")["body"]
+    bi(c, "PUT", f"/items/{rep}", {"body": body.replace("Orders by book", "Orders per book"), "message": "retitle a visual"})
+    as_(c, "sue")
+    done = bi(c, "POST", "/bundle/import", {"bundle": bundle, "dryRun": False, "overwrite": True})
+    show("import", {k: done.get(k) for k in ("applied", "counts", "importId")})
+    c.page.goto(c.base + "/bi/environments")
+    c.page.wait_for_selector("[data-imports] tbody tr")
+    c.page.wait_for_timeout(600)
+    region(c, "22-imports-rollback.jpg", "[data-imports-sec]")
+    show("imports", bi(c, "GET", "/imports"))
+    c.page.locator(f"[data-rollback='{done['importId']}']").click()
+    c.page.wait_for_function("() => document.querySelector('[data-msg]').textContent.includes('Rolled back')")
+    c.page.wait_for_timeout(900)
+    region(c, "23-rolled-back.jpg", "[data-imports-sec]")
+
+
+@shot("24-lineage-source.jpg", also=("25-lineage-source-reader.jpg",))
+def lineage_source(c: Ctx):
+    login(c)
+    call(c, "PUT", "/admin/connectors/api/orders-lake", {"plugin": "file", "kinds": ["trade"], "settings": {"root": "/srv/lake/orders"}})
+    rates_desk(c)
+    as_(c, "ann")
+    for it in bi(c, "GET", "/catalogue").get("items", []):
+        if it["title"] == "Lake orders" and not it.get("shipped"):
+            bi(c, "DELETE", "/items/" + it["id"])
+    body = ("rachana: 1\ndataset: lake-orders\ntitle: Lake orders\ndescription: Orders read from the order lake\ntables:\n  o:\n    source: { connector: orders-lake, kind: trade }\n"
+            "    columns: { code: string }\nmeasures:\n  Orders: { expr: \"count(o)\" }\n")
+    ds = bi(c, "POST", f"/workspaces/{WS}/items", {"kind": "dataset", "title": "Lake orders", "body": body, "audienceRoles": ["bi-steward", "bi-writer", "viewer"]})["id"]
+    publish_as_sue(c, ds)
+    login(c)
+    open_item(c, ds)
+    c.page.wait_for_selector("[data-upstream] [data-source]")
+    region(c, "24-lineage-source.jpg", "[data-sec-lineage]")
+    show("lineage_admin", bi(c, "GET", f"/items/{ds}/lineage")["upstream"])
+    as_(c, "ann")
+    open_item(c, ds)
+    c.page.wait_for_selector("[data-upstream] [data-source]")
+    region(c, "25-lineage-source-reader.jpg", "[data-sec-lineage]")
+    show("lineage_reader", bi(c, "GET", f"/items/{ds}/lineage")["upstream"])
