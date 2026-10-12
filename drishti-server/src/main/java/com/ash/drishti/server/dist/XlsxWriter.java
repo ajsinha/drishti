@@ -180,6 +180,9 @@ public final class XlsxWriter {
 
     private static String sheet(ExportDoc.Section s, boolean chart) {
         StringBuilder b = new StringBuilder(XML).append("<worksheet ").append(MAIN).append(chart ? " xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"" : "").append('>');
+        if (chart) {
+            b.append("<sheetPr><pageSetUpPr fitToPage=\"1\"/></sheetPr>");                       // printed or saved as PDF, the table and its chart share one page's width
+        }
         b.append("<sheetViews><sheetView workbookViewId=\"0\"><pane ySplit=\"1\" topLeftCell=\"A2\" activePane=\"bottomLeft\" state=\"frozen\"/></sheetView></sheetViews>");
         b.append("<cols>");
         for (int c = 0; c < s.columns().size(); c++) {
@@ -199,7 +202,7 @@ public final class XlsxWriter {
             }
             b.append(row(r++, cells.toString()));
         }
-        return b.append("</sheetData>").append(chart ? "<drawing r:id=\"rId1\"/>" : "").append("</worksheet>").toString();
+        return b.append("</sheetData>").append(chart ? "<pageSetup orientation=\"landscape\" fitToHeight=\"0\"/><drawing r:id=\"rId1\"/>" : "").append("</worksheet>").toString();
     }
 
     private static int width(ExportDoc.Section s, int c) {

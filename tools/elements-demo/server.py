@@ -126,6 +126,8 @@ class Host(BaseHTTPRequestHandler):
         if path.startswith("/samples/"):                    # the framework sample pages (docs/guides/examples/embed); the Angular one runs the JIT compiler, so only it gets 'unsafe-eval'
             rel = path[len("/samples/"):]
             target = (SAMPLES / (rel + "index.html" if rel.endswith("/") or not rel else rel)).resolve()
+            if SAMPLES in target.parents and not target.is_file() and rel.startswith("vendor/"):      # RxJS's ES modules import "./internal/Observable": Node style, no extension
+                target = next((c for c in (target.with_name(target.name + ".js"), target / "index.js") if c.is_file()), target)
             if SAMPLES in target.parents and target.is_file():
                 data = target.read_bytes()
                 media = mimetypes.guess_type(target.name)[0] or "application/octet-stream"

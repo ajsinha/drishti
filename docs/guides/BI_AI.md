@@ -227,7 +227,7 @@ feature `bi-suggest`.
 each with what it means and what to change, using the dataset's names. They are shown under the problems, marked as written by a model, and change nothing. With no problem the model is not called.
 `POST /api/v1/bi/ai/explain-checks`, feature `bi-explain-checks`.
 
-![Suggest visuals in the designer](img/bi-ai/designer-suggest.png)
+![Suggest visuals in the designer](../tutorials/img/t15/09-suggest.jpg)
 
 ## 11. Dataset helper
 
@@ -242,7 +242,7 @@ description for a column that has one are all dropped. Each is shown with the YA
 measure to the `measures:` block, a description into the column's line (whichever of the three ways it is written; when the line cannot be found the item says *Place it by hand* and the YAML is shown
 to copy). Nothing is saved until you press Save, and the draft is checked as you type like any other edit. `POST /api/v1/bi/ai/dataset-helper`, feature `bi-helper`.
 
-![The dataset helper on the Model view](img/bi-ai/dataset-helper.png)
+![The dataset helper on the Model view](../tutorials/img/t15/11-dataset-helper.jpg)
 
 ## 12. Not built
 

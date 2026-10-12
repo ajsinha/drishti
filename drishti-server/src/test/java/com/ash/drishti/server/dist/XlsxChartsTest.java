@@ -76,7 +76,7 @@ class XlsxChartsTest {
             Map<String, String> parts = write(section(kind, List.of("Desk", "Notional", "Rate"), rows(), List.of()));
             assertThat(parts).containsKeys("xl/worksheets/_rels/sheet2.xml.rels", "xl/drawings/drawing2.xml", "xl/drawings/_rels/drawing2.xml.rels", "xl/charts/chart2.xml");
             assertThat(parts.get("[Content_Types].xml")).contains("drawingml.chart+xml").contains("officedocument.drawing+xml");
-            assertThat(parts.get("xl/worksheets/sheet2.xml")).contains("<drawing r:id=\"rId1\"/>");
+            assertThat(parts.get("xl/worksheets/sheet2.xml")).contains("<drawing r:id=\"rId1\"/>").contains("fitToPage=\"1\"").contains("fitToHeight=\"0\"");
             String chart = parts.get("xl/charts/chart2.xml");
             assertThat(chart).contains("<c:f>'Notional by desk'!$B$2:$B$3</c:f>").contains("<c:f>'Notional by desk'!$A$2:$A$3</c:f>").contains("Notional by desk");
         }

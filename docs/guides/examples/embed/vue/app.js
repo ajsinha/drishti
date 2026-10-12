@@ -1,3 +1,18 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
 /* <drishti-search>, <drishti-view>, <drishti-about> and <drishti-report> in a Vue 3 page, without a build step: render functions (h) stand in for the template, which is
    written in the comments. With a build step (Vite) the template is compiled ahead and you add `app.config.compilerOptions.isCustomElement = (t) => t.startsWith('drishti-')`. */
 import { configureDrishti, demoSignIn, START } from '../host.js';

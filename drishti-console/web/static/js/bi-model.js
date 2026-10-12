@@ -488,7 +488,7 @@
     const indentOf = (l) => l.length - l.trimStart().length;
     const quoted = JSON.stringify(description);
     let t = -1;
-    for (let i = tb.start + 1; i < tb.end; i++) { if (new RegExp('^\\s+' + tn + '\\s*:\\s*$').test(lines[i])) { t = i; break; } }
+    for (let i = tb.start + 1; i < tb.end; i++) { if (new RegExp('^\\s+' + tn + '\\s*:\\s*(#.*)?$').test(lines[i])) { t = i; break; } }
     if (t < 0) { return false; }
     const tIndent = indentOf(lines[t]);
     let end = t + 1;
@@ -496,11 +496,12 @@
     for (let i = t + 1; i < end; i++) {
       const m = new RegExp('^(\\s+)' + cn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*:\\s*(.*?)\\s*$').exec(lines[i]);
       if (!m || indentOf(lines[i]) <= tIndent + 0 || /^\s*(columns|source)\s*:/.test(lines[i])) { continue; }
-      const val = m[2];
+      const split = /^(.*?)(\s+#.*)?$/.exec(m[2]);                        // the value, and a comment after it that stays where it is
+      const val = split[1], note = split[2] || '';
       if (val === '') { lines.splice(i + 1, 0, m[1] + '  description: ' + quoted); } else if (/^\{.*\}$/.test(val)) {
         if (/\bdescription\s*:/.test(val)) { return false; }
-        lines[i] = m[1] + cn + ': ' + val.slice(0, -1).replace(/\s+$/, '') + ', description: ' + quoted + ' }';
-      } else if (/^[A-Za-z]+$/.test(val)) { lines[i] = m[1] + cn + ': { type: ' + val + ', description: ' + quoted + ' }'; } else { return false; }
+        lines[i] = m[1] + cn + ': ' + val.slice(0, -1).replace(/\s+$/, '') + ', description: ' + quoted + ' }' + note;
+      } else if (/^[A-Za-z]+$/.test(val)) { lines[i] = m[1] + cn + ': { type: ' + val + ', description: ' + quoted + ' }' + note; } else { return false; }
       setText(lines.join('\n'));
       afterEdit();
       return true;

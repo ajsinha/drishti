@@ -35,4 +35,5 @@
 .bi-ai-yaml { white-space: pre-wrap; overflow-wrap: anywhere; margin: .3rem 0; font-size: .8rem; }
 .bi-ai-checks { margin: .5rem 0; }
 .bi-ai-box[hidden] { display: none; }
+.bi-ai-box textarea { width: 100%; box-sizing: border-box; }
 @media (pointer: coarse), (max-width: 640px) { .bi-ai-suggestion .btn-pill, .bi-ai-checks .btn-pill, .bi-ai-box .btn-pill { min-height: 44px; } }

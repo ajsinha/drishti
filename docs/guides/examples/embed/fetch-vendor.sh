@@ -1,4 +1,18 @@
 #!/usr/bin/env bash
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
 # Fetches the framework builds the three sample host pages run on into ./vendor/ (never committed: .gitignore). Needs node and npm and the npm registry once;
 # afterwards the samples run offline. Pinned versions (all MIT): React 18.3.1 (UMD), Vue 3.5.43 (runtime-only global build), Angular 18.2.14 (ES modules),
 # RxJS 7.8.2 and tslib 2.8.1 (Angular's two imports).
