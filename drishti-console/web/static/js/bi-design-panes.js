@@ -128,22 +128,42 @@
     const types = q('[data-types]');
     function drawTypes() {
       B.clear(types);
+      const add = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-add-visual': '', title: 'Add an empty visual of the type chosen below' }, B.icon('plus-lg'), ' Add visual');
+      const pick = h('select', { class: 'studio-select', 'data-add-visual-type': '', 'aria-label': 'Type of the visual to add' });
+      Object.keys(D.catalogue.visuals).forEach((t) => pick.appendChild(h('option', { value: t, text: t })));
+      pick.value = 'table';
+      add.addEventListener('click', () => D.addVisual(pick.value));
+      types.appendChild(h('p', { class: 'bi-addvisual' }, add, ' ', pick));
       GROUPS.forEach(([title, list]) => {
         types.appendChild(h('p', { class: 'bi-type-group', text: title }));
         const row = h('div', { class: 'bi-typegrid', role: 'group', 'aria-label': title });
         list.forEach((t) => {
-          const b = h('button', { type: 'button', class: 'bi-vtype', 'data-type': t, 'aria-label': t, title: t, 'aria-pressed': 'false' }, B.icon(ICONS[t]), h('span', { text: t }));
+          const b = h('button', { type: 'button', class: 'bi-vtype', 'data-type': t, 'aria-label': t, title: t + ' (click to use it; drag onto the canvas to add one there)', 'aria-pressed': 'false', draggable: 'true' }, B.icon(ICONS[t]), h('span', { text: t }));
           b.addEventListener('click', () => chooseType(t));
+          b.addEventListener('dragstart', (e) => { e.dataTransfer.setData(D.MIME, JSON.stringify({ vtype: t })); e.dataTransfer.effectAllowed = 'copy'; });
           row.appendChild(b);
         });
         types.appendChild(row);
       });
     }
 
+    /** What would be lost turning `v` into `type`: the wells' items no well of the new type takes (or takes beyond its room). */
+    function lostIn(v, type) {
+      D.curIdx = D.idxOf(v);
+      const probe = { type, wells: {} };
+      const items = Object.keys(v.wells).reduce((a, k) => a.concat(v.wells[k]), []);
+      const lost = items.filter((x) => !D.addToVisual(probe, x));
+      const kept = Object.keys(probe.wells).reduce((a, k) => a.concat(probe.wells[k]), []);
+      D.curIdx = null;
+      return lost.concat(items.filter((x) => lost.indexOf(x) < 0 && kept.indexOf(x) < 0));
+    }
+
     function chooseType(type) {
       const v = D.sel();
       if (!v) { D.addVisual(type); return; }
       if (v.type === type) { return; }
+      const dropped = lostIn(v, type);
+      if (dropped.length && !window.confirm('Change "' + (v.title || v.id) + '" to a ' + type + '? ' + dropped.map(B.label).join(', ') + (dropped.length === 1 ? ' does' : ' do') + ' not fit its wells and will be removed from it (Undo brings it back). Choose Cancel and use Add visual to make a new ' + type + ' instead.')) { return; }
       const was = v.type;
       D.curIdx = D.idxOf(v);
       D.change('Change to a ' + type, () => {
@@ -156,7 +176,7 @@
         Object.keys(specs).forEach((w) => { if (v.wells[w] && !v.wells[w].length) { delete v.wells[w]; } });
         D.auto.delete(v.id);
         if (type === 'slicer') { v.format = Object.assign({ mode: 'list', scope: 'page' }, v.format); }
-        if (v.id.indexOf(was + '-') === 0 && was !== 'slicer' && type !== 'slicer') { v.id = D.newVisualId(type); }          // the id says what the visual is
+        if (/^[a-z][a-z-]*-\d+$/.test(v.id) && D.catalogue.visuals[v.id.replace(/-\d+$/, '')] && was !== 'slicer' && type !== 'slicer') { v.id = D.newVisualId(type); }          // the id says what the visual is
       });
       D.curIdx = null;
       D.select(v.id);
@@ -224,7 +244,7 @@
           fs.classList.remove('bi-drop');
           let p = null;
           try { p = JSON.parse(e.dataTransfer.getData(D.MIME)); } catch (err) { p = null; }
-          if (!p) { return; }
+          if (!p || p.vtype) { return; }
           e.preventDefault();
           e.stopPropagation();
           const clash = D.dsConflict(v, p.dataset || '');
@@ -459,7 +479,12 @@
       fmt.appendChild(frow('Page title', textInput(p.title, (x) => D.change('Rename the page', () => { p.title = x.trim() || p.title; }), { 'data-page-title': '' })));
       const ix = m.pages.indexOf(p);
       const acts = h('div', { class: 'bi-actions' });
-      const mk = (label, fn, dis, attr) => { const b = h('button', Object.assign({ type: 'button', class: 'btn-pill btn-ghost bi-small', disabled: !!dis }, attr || {}), label); b.addEventListener('click', fn); return b; };
+      const mk = (label, fn, dis, attr) => { const b = h('button', Object.assign({ type: 'button', class: 'btn-pill btn-ghost bi-small', disabled: !!dis }, attr || {}), label);
+        // a title being edited commits (and the pane redraws) when the pointer goes down on a button: act then, or the click lands on a button that is gone
+        let fired = false;
+        b.addEventListener('pointerdown', (e) => { if (e.button === 0 && e.pointerType !== 'touch') { const a = document.activeElement; if (a && a !== b && a.tagName === 'INPUT') { e.preventDefault(); a.blur(); } fired = true; fn(); } });
+        b.addEventListener('click', (e) => { if (fired) { fired = false; e.preventDefault(); return; } fn(); });
+        return b; };
       acts.appendChild(mk('Move earlier', () => D.change('Move the page', () => { m.pages.splice(ix - 1, 0, m.pages.splice(ix, 1)[0]); }), ix === 0));
       acts.appendChild(mk('Move later', () => D.change('Move the page', () => { m.pages.splice(ix + 1, 0, m.pages.splice(ix, 1)[0]); }), ix === m.pages.length - 1));
       acts.appendChild(mk('Delete the page', () => { if (window.confirm('Delete the page "' + p.title + '" and its visuals?')) { D.change('Delete the page', () => { m.pages.splice(ix, 1); }); D.setPage(m.pages[0].id); } }, m.pages.length < 2, { 'data-delete-page': '' }));

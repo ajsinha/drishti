@@ -249,7 +249,7 @@
       f.el.addEventListener('drop', (e) => {
         f.el.classList.remove('bi-drop');
         const p = payload(e);
-        if (p) { e.preventDefault(); e.stopPropagation(); D.addField(p.name, p.kind, { visual: v.id, dataset: p.dataset || '' }); }
+        if (p && !p.vtype) { e.preventDefault(); e.stopPropagation(); D.addField(p.name, p.kind, { visual: v.id, dataset: p.dataset || '' }); }
       });
       return f;
     }
@@ -391,7 +391,9 @@
       if (!p) { return; }
       e.preventDefault();
       const r = grid.getBoundingClientRect(), m = metrics();
-      D.addField(p.name, p.kind, { dataset: p.dataset || '', x: Math.max(0, Math.min(11, Math.floor((e.clientX - r.left) / m.stepX))), y: Math.max(0, Math.floor((e.clientY - r.top) / m.stepY)) });
+      const at = { x: Math.max(0, Math.min(11, Math.floor((e.clientX - r.left) / m.stepX))), y: Math.max(0, Math.floor((e.clientY - r.top) / m.stepY)) };
+      if (p.vtype) { D.addVisual(p.vtype, at.x, at.y); return; }                  // a visual type dragged from the palette: a new, empty visual of that type at the cell
+      D.addField(p.name, p.kind, Object.assign({ dataset: p.dataset || '' }, at));
     });
     D.MIME = MIME;
   });

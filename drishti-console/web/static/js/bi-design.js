@@ -107,7 +107,7 @@
 
   /** Changes the draft: `fn` edits D.model; the change is one step of the undo history, and everything redraws. */
   D.change = function (label, fn) {
-    if (D.readOnly) { say('This is shipped content: save a copy to change it.', true); return false; }
+    if (D.readOnly) { say('This is read-only: save a copy to change it, or withdraw the proposal.', true); return false; }
     const before = JSON.stringify(D.model);
     fn(D.model);
     if (before === JSON.stringify(D.model)) { return false; }
@@ -193,7 +193,7 @@
     q('[data-undo]').disabled = !undo.length;
     q('[data-redo]').disabled = !redo.length;
     q('[data-save]').disabled = D.readOnly;
-    q('[data-state]').textContent = D.readOnly ? 'Read-only (shipped)' : D.dirty ? 'Unsaved changes' : 'Saved';
+    q('[data-state]').textContent = D.readOnly ? (D.item && D.item.status === 'proposed' ? 'Read-only (proposed)' : 'Read-only') : D.dirty ? 'Unsaved changes' : 'Saved';
   }
 
   // ---- page tabs -----------------------------------------------------------------------------------------------------
@@ -202,6 +202,23 @@
     D.model.pages.forEach((p, i) => {
       const b = h('button', { type: 'button', class: 'bi-tab', role: 'tab', 'data-page': p.id, 'aria-selected': p.id === D.pageId ? 'true' : 'false', text: p.title });
       b.addEventListener('click', () => D.setPage(p.id));
+      b.title = 'Double-click to rename';
+      b.addEventListener('dblclick', () => {
+        if (D.readOnly) { return; }
+        const inp = h('input', { type: 'text', class: 'studio-in bi-tab-rename', value: p.title, 'aria-label': 'Page title', 'data-rename-page': p.id });
+        b.replaceWith(inp);
+        inp.focus();
+        inp.select();
+        let done = false;
+        const commit = (keep) => {
+          if (done) { return; }
+          done = true;
+          const t = inp.value.trim();
+          if (keep && t && t !== p.title) { D.change('Rename the page', (m) => { const pg = m.pages.find((x) => x.id === p.id); if (pg) { pg.title = t; } }); } else { renderTabs(); }
+        };
+        inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { commit(true); } else if (e.key === 'Escape') { commit(false); } });
+        inp.addEventListener('blur', () => commit(true));
+      });
       nav.appendChild(b);
     });
     const add = h('button', { type: 'button', class: 'bi-tab bi-tab-add', 'aria-label': 'Add a page', title: 'Add a page', 'data-add-page': '' }, B.icon('plus-lg'));
@@ -248,6 +265,25 @@
   /** Puts YAML in the tab as if typed (the Describe a report draft): the draft model follows it once it checks. */
   D.loadYaml = (text) => { setYamlText(text); onYamlEdit(); showTab('yaml'); };
 
+  /** The YAML parsed: the draft follows it (one undo step). */
+  function onYamlApply(r, text) {
+    if (!B.same(r.report, D.model)) {
+      const before = JSON.stringify(D.model);
+      undo.push(before);
+      redo.length = 0;
+      D.model = D.normalize(r.report);
+      D.dirty = true;
+      yamlStale = false;
+      D.lastYaml = text;
+      if (!D.model.pages.some((p) => p.id === D.pageId)) { D.pageId = D.model.pages[0].id; }
+      if (D.selected && !D.visual(D.selected)) { D.selected = null; }
+      D.emit('model', 'yaml');
+      updateButtons();
+      renderTabs();
+    } else { D.lastYaml = text; }
+    return Promise.resolve();
+  }
+
   function onYamlEdit() {
     if (ignoreChange) { return; }
     clearTimeout(textTimer);
@@ -255,22 +291,7 @@
       const text = D.yamlText();
       B.api('POST', '/reports/validate', { yaml: text }).then((r) => {
         showProblems(r.problems || []);
-        if (r.report && (r.problems || []).every((p) => p.level !== 'error' || p.code === 'DRS-9034')) {
-          if (!B.same(r.report, D.model)) {
-            const before = JSON.stringify(D.model);
-            undo.push(before);
-            redo.length = 0;
-            D.model = D.normalize(r.report);
-            D.dirty = true;
-            yamlStale = false;
-            D.lastYaml = text;
-            if (!D.model.pages.some((p) => p.id === D.pageId)) { D.pageId = D.model.pages[0].id; }
-            if (D.selected && !D.visual(D.selected)) { D.selected = null; }
-            D.emit('model', 'yaml');
-            updateButtons();
-            renderTabs();
-          }
-        }
+        if (r.report && (r.problems || []).every((p) => p.level !== 'error' || p.code === 'DRS-9034')) { onYamlApply(r, text); }
       }).catch((e) => showProblems([{ level: 'error', code: e.code || '', path: '', message: e.detail || e.message }]));
     }, 450);
   }
@@ -321,7 +342,31 @@
     });
   }
 
-  function showTab(name) {
+  let tabNow = 'canvas';
+  /** Leaving the YAML tab with YAML that does not parse would silently drop the edits: stop, name the error and offer to discard the YAML edits. */
+  function leaveYaml(name) {
+    clearTimeout(textTimer);
+    const text = D.yamlText();
+    if (text === D.lastYaml) { return Promise.resolve(true); }
+    return B.api('POST', '/reports/validate', { yaml: text }).then((r) => {
+      const errors = (r.problems || []).filter((p) => p.level === 'error' && p.code !== 'DRS-9034');
+      if (r.report && !errors.length) { return onYamlApply(r, text).then(() => true); }
+      showProblems(r.problems || []);
+      const box = q('[data-yaml-problems]');
+      const discard = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-yaml-discard': '', text: 'Discard my YAML edits and go to ' + name });
+      discard.addEventListener('click', () => { yamlStale = true; D.lastYaml = null; refreshYaml().then(() => showTab(name, true)); });
+      box.appendChild(h('li', { class: 'bi-problem bi-problem-error', 'data-yaml-blocked': '' }, 'The YAML has ' + errors.length + ' error' + (errors.length === 1 ? '' : 's') + ', so the ' + name + ' cannot show it. Fix them here, or ', discard, '.'));
+      say('The YAML has errors: fix them, or discard the YAML edits to leave this tab.', true);
+      return false;
+    }).catch((e) => { say(e.message, true); return false; });
+  }
+
+  function showTab(name, forced) {
+    if (tabNow === 'yaml' && name !== 'yaml' && !forced && editor !== undefined) {
+      leaveYaml(name).then((ok) => { if (ok) { showTab(name, true); } });
+      return;
+    }
+    tabNow = name;
     ['canvas', 'phone', 'tablet', 'yaml'].forEach((t) => {
       q('[data-view="' + t + '"]').hidden = t !== name;
       q('[data-tab="' + t + '"]').setAttribute('aria-selected', t === name ? 'true' : 'false');
@@ -367,20 +412,41 @@
   }
 
   function save() {
-    if (D.readOnly) { return; }
-    D.flushYaml().then((yaml) => B.api('PUT', '/items/' + B.id2path(itemId), { body: yaml })).then((it) => {
+    if (D.readOnly) { return Promise.resolve(); }
+    const btn = q('[data-save]');
+    return B.busy(btn, () => D.flushYaml().then((yaml) => B.saveItem(itemId, { body: yaml }, D.item && D.item.etag, btn, () => saveCopy(true))).then((it) => {
       D.dirty = false;
       D.item = it;
       updateButtons();
-      say('Saved. It is a draft until you publish it from the item page.');
-    }).catch((e) => say(e.message, true));
+      const pub = it.workspaceReviewRequired;
+      say('Saved. It is a draft until you ' + (pub ? 'propose it for review' : 'publish it') + ' (the Publish button).');
+    })).catch((e) => { if (!e.cancelled) { say(e.message, true); } });
   }
 
-  function saveCopy() {
-    B.askWorkspace(q('[data-save-copy]'), 'Save the copy', 'Save the copy into').then((to) => D.flushYaml().then((yaml) => B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: 'report', title: (D.model.title || 'Report') + ' (copy)', description: D.model.description || '', body: yaml }))).then((it) => {
+  function saveCopy(fromStale) {
+    return B.askWorkspace(q('[data-save-copy]').hidden ? q('[data-save]') : q('[data-save-copy]'), 'Save the copy', 'Save the copy into').then((to) => D.flushYaml().then((yaml) => B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: 'report', title: (D.model.title || 'Report') + ' (copy)', description: D.model.description || '', body: yaml }))).then((it) => {
       D.dirty = false;
       window.location.href = '/bi/design/' + B.id2path(it.id);
-    }).catch((e) => { if (!e.cancelled) { say(e.message, true); } });
+    }).catch((e) => { if (!e.cancelled) { say(e.message, true); } if (fromStale) { throw e; } });
+  }
+
+  /** Publish...: saves first (asking when there are unsaved changes), then proposes for review where the workspace requires it, else publishes. Draft errors are named, and a bi-admin may force. */
+  function publishNow() {
+    const btn = q('[data-publish]');
+    const go = () => {
+      const review = D.item && D.item.workspaceReviewRequired;
+      const verb = review ? 'propose' : 'publish';
+      return B.api('POST', '/items/' + B.id2path(itemId) + '/' + verb, {}).then((it) => {
+        D.item = it;
+        say(review ? 'Proposed for review. Open the item page to follow it; this draft is now frozen until it is approved or withdrawn.' : 'Published.');
+        window.setTimeout(() => { window.location.href = '/bi/i/' + B.id2path(itemId); }, 900);
+      }).catch((e) => { B.near(btn, e.message, true); });
+    };
+    if (D.dirty) {
+      if (!window.confirm('There are unsaved changes. Save them first, then ' + ((D.item && D.item.workspaceReviewRequired) ? 'propose' : 'publish') + '?')) { return Promise.resolve(); }
+      return B.busy(btn, () => save().then(() => (D.dirty ? null : go())));
+    }
+    return B.busy(btn, go);
   }
 
   // ---- start ---------------------------------------------------------------------------------------------------------
@@ -390,7 +456,8 @@
     q('[data-check]').addEventListener('click', check);
     q('[data-check-close]').addEventListener('click', () => { q('[data-check-box]').hidden = true; });
     q('[data-save]').addEventListener('click', save);
-    q('[data-save-copy]').addEventListener('click', saveCopy);
+    q('[data-save-copy]').addEventListener('click', () => saveCopy(false));
+    q('[data-publish]').addEventListener('click', publishNow);
     q('[data-tab="canvas"]').addEventListener('click', () => showTab('canvas'));
     q('[data-tab="phone"]').addEventListener('click', () => showTab('phone'));
     q('[data-tab="tablet"]').addEventListener('click', () => showTab('tablet'));
@@ -436,12 +503,30 @@
     D.item = item;
     D.catalogue = cat;
     if (item.kind !== 'report') { throw new Error('This item is not a report.'); }
-    D.readOnly = !!item.shipped || !(item.can && item.can.edit);
+    const frozen = item.status === 'proposed';
+    D.readOnly = !!item.shipped || frozen || !(item.can && item.can.edit);
     q('[data-title]').textContent = item.title;
     q('[data-item-link]').href = '/bi/i/' + B.id2path(itemId);
     q('[data-view-link]').href = '/bi/r/' + B.id2path(itemId);
     q('[data-save-copy]').hidden = !D.readOnly;
-    if (D.readOnly) { q('[data-readonly]').hidden = false; }
+    q('[data-publish-label]').textContent = item.workspaceReviewRequired ? 'Propose' : 'Publish';
+    q('[data-publish]').hidden = D.readOnly || !(item.can && (item.can.publish || item.can.propose));
+    const ro = q('[data-readonly]');
+    if (D.readOnly) {
+      ro.hidden = false;
+      B.clear(ro);
+      if (item.shipped) {
+        ro.appendChild(B.h('span', {}, 'This is shipped, read-only content. You can look, try changes and check them; ', B.h('strong', { text: 'Save a copy' }), ' makes a draft of your own.'));
+      } else if (frozen) {
+        const w = B.h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-withdraw': '', text: 'Withdraw to edit' });
+        w.hidden = !(item.can && item.can.withdraw);
+        w.addEventListener('click', () => B.busy(w, () => B.api('POST', '/items/' + B.id2path(itemId) + '/withdraw', {}).then(() => window.location.reload()).catch((e) => B.near(w, e.message, true))));
+        ro.appendChild(B.h('span', {}, 'Proposed for review by ' + (item.proposedBy || 'someone') + ': it is frozen. Withdraw the proposal to edit it (or save a copy). ', w));
+      } else {
+        ro.appendChild(B.h('span', { text: 'You can look at this report but not change it: you need to be a contributor in its workspace with the bi-author power. You can still save a copy.' }));
+      }
+    }
+    q('[data-published-note]').hidden = D.readOnly || item.status !== 'published';
     bindToolbar();
     return ensureDataset(item).then(() => B.api('POST', '/reports/validate', { yaml: item.body }));
   }).then((r) => {
