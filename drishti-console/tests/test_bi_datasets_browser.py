@@ -92,7 +92,7 @@ def test_the_list_shows_the_sample_and_its_page_shows_the_model(stack, browser):
     card.locator("h3 a").click()
     page.wait_for_url("**/bi/d/**")
     expect(page.locator("[data-title]")).to_have_text("Trades, the basics")
-    expect(page.locator("[data-meta]")).to_contain_text("1 tables")
+    expect(page.locator("[data-meta]")).to_contain_text("1 table")
     expect(page.locator('[data-table="trade"]')).to_be_visible()
     expect(page.locator('[data-measure="Notional"] td').nth(0)).to_have_text("sum(trade.notional)")
     expect(page.locator("[data-empty-rel]")).to_be_visible()

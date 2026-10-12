@@ -53,6 +53,8 @@ def make_pack(page, base, name, version, data, download_to=None):
     """Runs the five steps for the three schemas and the folder, with this pack name and version; returns the output step's text."""
     page.on("response", lambda r: PLANS.append((r.status, r.text()[:300])) if r.url.endswith("/build/pack/api/plan") and r.status != 200 else None)
     page.goto(base + "/build/pack/new")
+    page.evaluate("sessionStorage.clear()")                          # the wizard restores unsaved work in this tab: a new pack starts clean
+    page.goto(base + "/build/pack/new")
     page.set_input_files("[data-files]", [str(FIX / n) for n in ("trade.schema.json", "counterparty.schema.json", "book.schema.json")])
     page.locator("[data-total]:has-text('3 schemas')").wait_for()
     page.set_input_files("[data-folder]", str(data))
@@ -126,6 +128,7 @@ def test_schemas_and_a_folder_to_a_verified_bundle_a_deploy_and_a_rollback(brows
     assert "sutra lint" in result and "sg-deploy 1.0.0" in result and "new pack" in result.lower()
     assert "FAIL" not in result
     page.click("[data-deploy-go]")
+    page.click("[data-ask-yes]")                                    # the page's own styled confirm
     page.wait_for_function("() => document.querySelector('[data-history]').innerText.includes('sg-deploy')")
     assert "deploy" in page.locator("[data-history]").inner_text()
 
@@ -136,7 +139,9 @@ def test_schemas_and_a_folder_to_a_verified_bundle_a_deploy_and_a_rollback(brows
     page.locator("[data-result]:not([hidden])").wait_for()
     assert "1.0.0" in page.locator("[data-result]").inner_text()                       # what it replaces
     page.click("[data-deploy-go]")
+    page.click("[data-ask-yes]")                                    # the page's own styled confirm
     page.wait_for_function("() => document.querySelector('[data-history]').innerText.includes('1.0.1')")
     page.locator("[data-kept] button, [data-kept] [data-rollback]").first.click()
+    page.click("[data-ask-yes]")
     page.wait_for_function("() => document.querySelector('[data-history]').innerText.toLowerCase().includes('rollback')")
     ctx.close()
