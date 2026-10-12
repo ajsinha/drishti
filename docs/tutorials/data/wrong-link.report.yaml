@@ -1,0 +1,34 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Tutorial 18, the mistake: a link between fields whose VALUES differ. World economics names a country by its ISO 3166-1 alpha-3 code (GBR); the
+# counterparties of trading-risk carry the alpha-2 code (GB). Drishti trusts the author's statement and carries the chosen value as it is, so choosing
+# GBR on the slicer asks the trades for the country "GBR" and finds none: the bar comes back empty, and the report's checker cannot know why.
+rachana: 1
+report: two-datasets-wrong-link
+version: 1
+title: P&L and GDP, with a wrong link
+dataset: file:dataset:trading-risk
+links:
+  - fields: [economies.iso3, counterparties.country]
+pages:
+  - id: wrong
+    title: A wrong link
+    visuals:
+      - { id: iso, type: slicer, title: Country (ISO-3, world economics), dataset: file:dataset:world-economics, at: { x: 0, y: 0, w: 4, h: 2 },
+          wells: { field: [economies.iso3] }, format: { mode: dropdown, scope: report } }
+      - { id: gdp, type: card, title: "GDP (USD bn)", dataset: file:dataset:world-economics, at: { x: 4, y: 0, w: 3, h: 2 }, wells: { values: [GDP (USD bn)] } }
+      - { id: pnl, type: card, title: "P&L 1d", at: { x: 7, y: 0, w: 3, h: 2 }, wells: { values: [P&L 1d] } }
+      - { id: pnl-by-country, type: bar, title: "P&L 1d by counterparty country (trades)", at: { x: 0, y: 2, w: 12, h: 6 },
+          wells: { axis: [counterparties.country], values: [P&L 1d] } }
