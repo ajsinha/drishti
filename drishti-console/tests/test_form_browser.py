@@ -268,34 +268,31 @@ def test_the_dropdown_has_finger_sized_rows_on_a_phone(browser, url):
 
 def test_the_forms_and_reports_icons_in_the_top_bar_open_the_forms_home_and_a_kind_opens_its_form(page, url, be):
     page.goto(url + "/t", wait_until="load")
-    forms, reports = page.locator('.tbar-menu-btn[aria-label^="Forms"]'), page.locator('.tbar-menu-btn[aria-label^="Reports"]')
-    assert forms.count() == 1 and reports.count() == 1 and forms.get_attribute("title") == "Forms — query by form"
+    views, reports = page.locator('.tbar-menu-btn', has_text="Views"), page.locator('.tbar-menu-btn[aria-label^="Reports"]')
+    assert page.locator('.tbar-menu-btn[aria-label^="Forms"]').count() == 0 and reports.count() == 1   # Forms is an entry of Views
     assert reports.get_attribute("title").startswith("Reports — saved and scheduled")
-    assert forms.locator("i.bi").count() == 1 and "active" not in (forms.get_attribute("class") or "")
-    assert forms.evaluate("e => e.tagName") == "A" and forms.get_attribute("href") == "/forms"    # a link, not a menu: one per pack ran off the screen
-    forms.click()
+    views.click()
+    page.click('.mega-item[href="/forms"]')
     page.wait_for_url("**/forms")
-    assert "active" in page.locator('.tbar-menu-btn[aria-label^="Forms"]').get_attribute("class")      # active on the forms home
+    assert "active" in page.locator('.tbar-menu-btn', has_text="Views").get_attribute("class")         # Views is lit on the forms home
     assert "active" not in page.locator('.tbar-menu-btn[aria-label^="Reports"]').get_attribute("class")
     page.fill("[data-forms-filter]", "zzz")
     assert page.locator("[data-forms-none]").is_visible() and not page.locator("[data-forms-pack]").first.is_visible()
     page.fill("[data-forms-filter]", "trade")
     page.click('a.qh-kind[href="/form/trading?kind=trade"]')
     page.wait_for_url("**/form/trading?kind=trade")
-    assert "active" in page.locator('.tbar-menu-btn[aria-label^="Forms"]').get_attribute("class")      # and on a form
+    assert "active" in page.locator('.tbar-menu-btn', has_text="Views").get_attribute("class")          # and on a form
     page.goto(url + "/forms", wait_until="load")
     assert "Trading" in page.locator("[data-forms-recent-list]").inner_text()                             # the form just opened is a recent form
     page.goto(url + "/reports", wait_until="load")
     assert "active" in page.locator('.tbar-menu-btn[aria-label^="Reports"]').get_attribute("class")
 
 
-def test_the_forms_link_by_keyboard_and_the_icons_fit_a_laptop_and_a_phone(browser, url):
+def test_the_forms_home_and_the_icons_fit_a_laptop_and_a_phone(browser, url):
     ctx = browser.new_context(viewport={"width": 1280, "height": 800}, bypass_csp=True)
     pg = ctx.new_page()
     pg.goto(url + "/t", wait_until="load")
-    pg.focus('.tbar-menu-btn[aria-label^="Forms"]')
-    pg.keyboard.press("Enter")                                                       # the Forms link opens the forms home
-    pg.wait_for_url("**/forms")
+    pg.goto(url + "/forms", wait_until="load")                                       # Views → Forms, the forms home
     assert pg.evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth")
     assert pg.evaluate("document.querySelector('.tbar-row1').getBoundingClientRect().height") < 70      # one row: no worse than before
     ctx.close()

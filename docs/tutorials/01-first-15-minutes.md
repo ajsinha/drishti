@@ -133,7 +133,7 @@ under **My account** before you ever put real data in; tutorials here leave it s
 ![The home page: the command line, the date box, the menus and a list of commands to try](img/t01/02-home.jpg)
 
 You should see, from left to right in the top bar: the **command line** (the rounded box, `> TRD MX-20000001, CPTY ...` is its hint), the **business date** box, the menu icons
-(Views, BI, Forms, Reports, Build, Admin, Help), the bell for your inbox, the packs icon with a count, the theme button, the green round **Live** button and your name.
+(Views, with Forms inside it, then BI, Reports, Build, Admin, Help), the bell for your inbox, the packs icon with a count, the theme button, the green round **Live** button and your name.
 Below it is a list of commands you can click.
 
 The command line is the heart of Drishti. A command is a **mnemonic** (a short code for a kind of thing: `TRD` is a trade) and an **identifier**:

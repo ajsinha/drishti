@@ -101,10 +101,8 @@ you are on is highlighted.
 
 | Menu | Column | Entries |
 |---|---|---|
-| **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`) |
+| **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](#the-forms-home), query by form) |
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`) |
-| **Forms** (icon: a checklist card; tooltip *Forms — query by form*) | Query by form | *All forms* (`/forms`: the [forms home](#the-forms-home)) |
-| | Packs with forms | one entry per switched-on pack that declares a `form:` section, opening `/form/<pack>` |
 | **Reports** (icon: a bar-chart page; tooltip *Reports — saved and scheduled reports, subscriptions, and BI reports*) | Reports | *Saved and scheduled reports* (`/reports`, [Scheduled reports](#scheduled-reports)); with the `bi` power also *BI reports* (the BI catalogue filtered to reports) and the BI reports you opened last |
 | **BI** (people with the `bi` power) | Rupaka: business intelligence | *BI home* (`/bi`), *My workspace* (`/bi/w/me`), *Catalogue* (`/bi/catalogue`), then *Recent*: the three items you opened last. Administrators with `bi-admin` also see *BI settings* ([BI_GUIDE.md](BI_GUIDE.md)) |
 | **Build** | Create | *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](SCHEMA_TO_PACK.md)), *My designs* (`/build`), *Examples* |
