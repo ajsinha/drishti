@@ -88,7 +88,10 @@ def test_every_picture_a_tutorial_shows_is_there_and_is_an_image(doc):
 def test_every_picture_file_under_the_tutorials_is_shown_by_a_tutorial():
     shown = {(d.parent / rel).resolve() for d in WRITTEN for rel in IMAGE.findall(d.read_text())}
     files = {p.resolve() for p in (TUTORIALS / "img").rglob("*.jpg")}
-    assert files == shown, f"unused: {sorted(p.name for p in files - shown)}; missing: {sorted(p.name for p in shown - files)}"
+    own = TUTORIALS.resolve() / "img"
+    assert not [p for p in shown if not p.is_file()], f"missing: {sorted(p.name for p in shown if not p.is_file())}"
+    shown_here = {p for p in shown if own in p.parents}       # a tutorial may also show a guide's own picture (../admin/img/...)
+    assert files == shown_here, f"unused: {sorted(p.name for p in files - shown_here)}; missing: {sorted(p.name for p in shown_here - files)}"
 
 
 @pytest.mark.parametrize("doc", WRITTEN, ids=lambda p: p.name)
