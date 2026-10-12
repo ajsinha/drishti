@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Makes the dataset tables behind live-table history (docs/guides/LIVE_BI.md, "History"). A live table with {@code live.history} gets a second table in the
+ * Makes the dataset tables behind live-table history (docs/guides/DATASETS.md, section 7.1 "History of a live table"). A live table with {@code live.history} gets a second table in the
  * model, named by {@code history.table} ({@code history} by default): a {@code ts} column (when the sample was taken), one column for each column it is grouped
  * by (the live table's own type) and one {@code decimal} column for each sampled measure. For each sampled measure it adds a measure {@code <name> history} that
  * adds up that column, so a line of the measure over time is {@code axis: history.ts, values: <name> history}. Nothing here reads data: the engine fills the table.

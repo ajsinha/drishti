@@ -69,7 +69,7 @@ class TileLevelHysteresisTest {
         assertThat(ok.ok()).as(ok.firstError()).isTrue();
         Board.Alert a = ok.board().pages().get(0).tiles().get(0).alert();
         assertThat(a.hysteresis()).isEqualTo(10.0);
-        assertThat(a.toMap()).containsEntry("hysteresis", 10.0);
+        assertThat(a.toMap()).containsEntry("hysteresis", 10L);
         assertThat(BoardParser.parse(yaml.replace("hysteresis: 10", "hysteresis: -1")).ok()).isFalse();
         assertThat(BoardParser.parse(yaml.replace(", hysteresis: 10", "")).board().pages().get(0).tiles().get(0).alert().toMap()).doesNotContainKey("hysteresis");
     }

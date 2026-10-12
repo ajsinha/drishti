@@ -253,6 +253,11 @@ public final class PackDeployService {
 
     private void lintAndTest(Path root, List<Check> checks) {
         SutraCli.Services services = new SutraCli.Services(sutras, pipeline, shapes, designer, codec);
+        if (!Files.isDirectory(root.resolve("sutras"))) {                      // a pack of connectors, mnemonics or BI content only has no Sutra to check
+            checks.add(Check.ok("sutra lint", "nothing to lint: the pack has no sutras folder"));
+            checks.add(Check.ok("sutra test", "nothing to test: the pack has no sutras folder"));
+            return;
+        }
         for (String cmd : List.of("lint", "test")) {
             ByteArrayOutputStream so = new ByteArrayOutputStream();
             ByteArrayOutputStream se = new ByteArrayOutputStream();

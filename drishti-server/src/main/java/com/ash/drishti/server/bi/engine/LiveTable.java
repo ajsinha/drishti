@@ -161,6 +161,12 @@ public final class LiveTable implements AutoCloseable {
         return java.util.Optional.ofNullable(history);
     }
 
+    /** What the history holds (samples, the newest, the limits), or null when this table keeps none. */
+    public Map<String, Object> historyStats() {
+        LiveHistory hh = history;
+        return hh == null ? null : hh.stats();
+    }
+
     void history(LiveHistory h) {
         this.history = h;
     }

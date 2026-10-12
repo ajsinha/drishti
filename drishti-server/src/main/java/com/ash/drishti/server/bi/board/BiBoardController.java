@@ -47,6 +47,12 @@ public class BiBoardController {
         return boards.validate(p, String.valueOf(body.getOrDefault("yaml", "")));
     }
 
+    /** Body {@code {board}}: the board model written as YAML, the way the designer's YAML tab shows it. */
+    @PostMapping("/format")
+    public Map<String, Object> format(@RequestBody com.fasterxml.jackson.databind.JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return boards.format(p, body.path("board"));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> get(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "no-store").body(boards.get(p, id));

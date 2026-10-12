@@ -148,7 +148,7 @@ public record Dataset(String name, int version, String title, String description
     }
 
     /**
-     * A live table's history (docs/guides/LIVE_BI.md, "History"): every {@code every} the listed measures are worked out over the live table, grouped by
+     * A live table's history (docs/guides/DATASETS.md, section 7.1 "History of a live table"): every {@code every} the listed measures are worked out over the live table, grouped by
      * {@code by}, and appended to a bounded in-memory table queryable as the dataset table {@code table}; the newest {@code keep} samples are kept.
      *
      * @param table the name of the history table in the dataset ({@code history} when not given)

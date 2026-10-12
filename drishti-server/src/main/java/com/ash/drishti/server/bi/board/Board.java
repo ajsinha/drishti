@@ -59,13 +59,18 @@ public record Board(String name, int version, String title, String description, 
         }
     }
 
+    /** A whole number is written as one (150000000, not 1.5E8). */
+    static Object number(double v) {
+        return v == Math.rint(v) && Math.abs(v) < 1e15 ? (Object) (long) v : (Object) v;
+    }
+
     /** A comparison against a number: {@code lt le gt ge eq ne}. */
     public record Rule(String op, double value) {
 
         public Map<String, Object> toMap() {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("op", op);
-            m.put("value", value);
+            m.put("value", number(value));
             return m;
         }
     }
@@ -97,7 +102,7 @@ public record Board(String name, int version, String title, String description, 
                 m.put("crit", crit.toMap());
             }
             if (hysteresis > 0) {
-                m.put("hysteresis", hysteresis);
+                m.put("hysteresis", number(hysteresis));
             }
             if (tell != null) {
                 m.put("notify", tell.toMap());

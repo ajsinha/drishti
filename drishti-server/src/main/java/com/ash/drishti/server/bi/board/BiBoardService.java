@@ -177,8 +177,9 @@ public final class BiBoardService {
         bi.requirePower(p, BiAccess.AUTHOR);
         BoardParser.Result parsed = BoardParser.parse(yaml);
         List<ReportParser.Problem> problems = new ArrayList<>(parsed.problems());
+        Map<String, Map<String, Object>> resolved = new LinkedHashMap<>();
         if (parsed.board() != null) {
-            problems.addAll(tiles(p, parsed.board(), new LinkedHashMap<>()));
+            problems.addAll(tiles(p, parsed.board(), resolved));
         }
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("valid", problems.stream().noneMatch(ReportParser.Problem::error));
@@ -186,6 +187,21 @@ public final class BiBoardService {
         if (parsed.board() != null) {
             m.put("board", parsed.board().toMap());
         }
+        m.put("tiles", resolved);
         return m;
+    }
+
+    /**
+     * Writes a board model as the YAML a person writes (the designer's text, the same writer as reports): block style for the board and its pages, one flow-style
+     * line for each tile. What it writes is read back by {@link BoardParser} to the same model.
+     */
+    public Map<String, Object> format(Principal p, com.fasterxml.jackson.databind.JsonNode model) {
+        bi.requirePower(p, BiAccess.BI);
+        if (model == null || !model.isObject()) {
+            throw new DrishtiException(ErrorCode.BOARD_INVALID, "send the board as an object");
+        }
+        @SuppressWarnings("unchecked")
+        Map<String, Object> m = new com.fasterxml.jackson.databind.ObjectMapper().convertValue(model, LinkedHashMap.class);
+        return Map.of("yaml", com.ash.drishti.server.bi.report.ReportYaml.write(m));
     }
 }

@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * The history of a live table's aggregates (docs/guides/LIVE_BI.md, "History"): an in-memory table of the analytic engine with one row per sample and group,
+ * The history of a live table's aggregates (docs/guides/DATASETS.md, section 7.1 "History of a live table"): an in-memory table of the analytic engine with one row per sample and group,
  * {@code ts}, the group columns and one column per sampled measure, bounded to the newest {@code keep} samples. It holds raw values, like the live table:
  * nothing here knows a reader, row rules and masks are applied by the query compiler.
  */
@@ -102,7 +102,7 @@ final class LiveHistory implements AutoCloseable {
         }
         write.lock();
         try {
-            LocalDateTime ts = LocalDateTime.ofInstant(at, ZoneOffset.UTC);
+            LocalDateTime ts = LocalDateTime.ofInstant(at.truncatedTo(java.time.temporal.ChronoUnit.SECONDS), ZoneOffset.UTC);        // a sample is stamped to the second: readable on an axis
             engine.with(c -> {
                 c.setAutoCommit(false);
                 try {

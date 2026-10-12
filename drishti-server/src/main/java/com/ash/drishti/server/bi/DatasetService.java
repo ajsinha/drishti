@@ -558,6 +558,9 @@ public final class DatasetService {
         for (Map<String, Object> e : inventory) {
             Map<String, Object> m = new LinkedHashMap<>(e);
             Dataset.Table t = d.tables().get(String.valueOf(e.get("table")));
+            if (t != null && t.isHistory() && queries.keepsLive(d)) {
+                m.put("history", queries.live().find(key, t.of()).map(x -> x.historyStats()).orElse(Map.of("state", "not started", "table", t.name())));
+            }
             if (t != null && t.isLive() && queries.keepsLive(d)) {
                 m.put("live", queries.live().find(key, t.name()).map(x -> {
                     Map<String, Object> st = new LinkedHashMap<>(x.status().toMap());

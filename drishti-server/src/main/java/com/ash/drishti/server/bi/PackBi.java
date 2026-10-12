@@ -136,7 +136,10 @@ public final class PackBi {
                 out.put("note", "workspace '" + gov.packWorkspace() + "' does not exist yet; the deploy creates it");
                 return out;
             }
-            out.putAll(bundles.imports(p, bundle, new BiBundles.Options(true, true, false, w.id(), Map.of(), Map.of()), "pack " + pack + " " + version));
+            Map<String, Object> dry = bundles.imports(p, bundle, new BiBundles.Options(true, true, false, w.id(), Map.of(), Map.of()), "pack " + pack + " " + version);
+            out.put("counts", dry.get("counts"));
+            out.put("ok", dry.get("ok"));
+            out.put("plan", dry.get("items"));                       // each item: what the import would do with it, and why
         } catch (DrishtiException e) {
             out.put("problem", e.getMessage());
         }
