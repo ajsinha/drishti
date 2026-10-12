@@ -59,6 +59,11 @@ plugins:
       - { name: "columns.*", desc: "A day's id and promoted fields, one row per entity: columns.<kind>, SQL with :asOf", group: mapping }
       - { name: "reverse.*", desc: "Ids of the kind's entities that reference :target: reverse.<kind>", group: mapping }
       - { name: "part-shape.*", desc: "part-shape.<kind>.<part>: object takes the first row of a part query as an object", group: mapping }
+      - { name: index.days, type: int, default: "1", desc: "Business days of ids kept for type-ahead (1 = the newest day only)", group: tuning }
+      - { name: index.max-memory, default: "600MB", desc: "Most memory the kept days may use; older days drop early above it (600MB, 2GB; 0 = no cap)", group: tuning }
+      - { name: index.warm, type: "enum:background|lazy", default: "background", desc: "Build past days in the background after start, or on the first search for them", group: tuning }
+      - { name: index.any-recent-day, type: boolean, default: "false", desc: "A bare id on the newest day also suggests ids seen only on earlier kept days (marked last seen)", group: tuning }
+      - { name: "index.kinds.*", desc: "Per-kind override of any index setting (index.kinds.<kind>.days)", group: tuning }
   duckdb:
     settings:
       - { name: "layout.*", desc: "Per-kind promoted columns: layout.<kind>.columns: a, b, c", group: mapping }
@@ -75,6 +80,11 @@ plugins:
       - { name: columns-cache-mb, type: int, desc: "Column cache size", group: tuning }
       - { name: columns-seconds, type: int, desc: "Column cache lifetime", group: tuning }
       - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
+      - { name: index.days, type: int, default: "1", desc: "Business days of ids kept for type-ahead (1 = the newest day only)", group: tuning }
+      - { name: index.max-memory, default: "600MB", desc: "Most memory the kept days may use; older days drop early above it (600MB, 2GB; 0 = no cap)", group: tuning }
+      - { name: index.warm, type: "enum:background|lazy", default: "background", desc: "Build past days in the background after start, or on the first search for them", group: tuning }
+      - { name: index.any-recent-day, type: boolean, default: "false", desc: "A bare id on the newest day also suggests ids seen only on earlier kept days (marked last seen)", group: tuning }
+      - { name: "index.kinds.*", desc: "Per-kind override of any index setting (index.kinds.<kind>.days)", group: tuning }
   delta:
     tls: true
     proxy: true
@@ -104,6 +114,11 @@ plugins:
       - { name: s3.path-style, type: boolean, desc: "Path-style S3 addressing", group: s3 }
       - { name: s3.access-key, secret: true, desc: "S3 access key: ${ENV_VAR} or file:/path", group: s3 }
       - { name: s3.secret-key, secret: true, desc: "S3 secret key: ${ENV_VAR} or file:/path", group: s3 }
+      - { name: index.days, type: int, default: "1", desc: "Business days of ids kept for type-ahead (1 = the newest day only)", group: tuning }
+      - { name: index.max-memory, default: "600MB", desc: "Most memory the kept days may use; older days drop early above it (600MB, 2GB; 0 = no cap)", group: tuning }
+      - { name: index.warm, type: "enum:background|lazy", default: "background", desc: "Build past days in the background after start, or on the first search for them", group: tuning }
+      - { name: index.any-recent-day, type: boolean, default: "false", desc: "A bare id on the newest day also suggests ids seen only on earlier kept days (marked last seen)", group: tuning }
+      - { name: "index.kinds.*", desc: "Per-kind override of any index setting (index.kinds.<kind>.days)", group: tuning }
   iceberg:
     tls: true
     proxy: true
@@ -131,6 +146,11 @@ plugins:
       - { name: s3.path-style, type: boolean, desc: "Path-style S3 addressing", group: s3 }
       - { name: s3.access-key, secret: true, desc: "S3 access key: ${ENV_VAR} or file:/path", group: s3 }
       - { name: s3.secret-key, secret: true, desc: "S3 secret key: ${ENV_VAR} or file:/path", group: s3 }
+      - { name: index.days, type: int, default: "1", desc: "Business days of ids kept for type-ahead (1 = the newest day only)", group: tuning }
+      - { name: index.max-memory, default: "600MB", desc: "Most memory the kept days may use; older days drop early above it (600MB, 2GB; 0 = no cap)", group: tuning }
+      - { name: index.warm, type: "enum:background|lazy", default: "background", desc: "Build past days in the background after start, or on the first search for them", group: tuning }
+      - { name: index.any-recent-day, type: boolean, default: "false", desc: "A bare id on the newest day also suggests ids seen only on earlier kept days (marked last seen)", group: tuning }
+      - { name: "index.kinds.*", desc: "Per-kind override of any index setting (index.kinds.<kind>.days)", group: tuning }
   aerospike:
     tls: true
     settings:
@@ -236,6 +256,11 @@ plugins:
       - { name: max-document-mb, type: int, desc: "Largest document", group: tuning }
       - { name: max-nesting-depth, type: int, desc: "Deepest nesting", group: tuning }
       - { name: index-cache-mb, type: int, desc: "Index cache size", group: tuning }
+      - { name: index.days, type: int, default: "1", desc: "Business days of ids kept for type-ahead (1 = the newest day only)", group: tuning }
+      - { name: index.max-memory, default: "600MB", desc: "Most memory the kept days may use; older days drop early above it (600MB, 2GB; 0 = no cap)", group: tuning }
+      - { name: index.warm, type: "enum:background|lazy", default: "background", desc: "Build past days in the background after start, or on the first search for them", group: tuning }
+      - { name: index.any-recent-day, type: boolean, default: "false", desc: "A bare id on the newest day also suggests ids seen only on earlier kept days (marked last seen)", group: tuning }
+      - { name: "index.kinds.*", desc: "Per-kind override of any index setting (index.kinds.<kind>.days)", group: tuning }
   demo:
     settings:
       - { name: dirs, type: list, desc: "Sample folders", group: connection }
@@ -321,6 +346,11 @@ plugins:
       - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
       - { name: cache-entries, type: int, desc: "Cache entries", group: tuning }
       - { name: cache-seconds, type: int, desc: "Cache lifetime", group: tuning }
+      - { name: index.days, type: int, default: "1", desc: "Business days of ids kept for type-ahead (1 = the newest day only)", group: tuning }
+      - { name: index.max-memory, default: "600MB", desc: "Most memory the kept days may use; older days drop early above it (600MB, 2GB; 0 = no cap)", group: tuning }
+      - { name: index.warm, type: "enum:background|lazy", default: "background", desc: "Build past days in the background after start, or on the first search for them", group: tuning }
+      - { name: index.any-recent-day, type: boolean, default: "false", desc: "A bare id on the newest day also suggests ids seen only on earlier kept days (marked last seen)", group: tuning }
+      - { name: "index.kinds.*", desc: "Per-kind override of any index setting (index.kinds.<kind>.days)", group: tuning }
   kafka:
     tls: true
     proxy: true

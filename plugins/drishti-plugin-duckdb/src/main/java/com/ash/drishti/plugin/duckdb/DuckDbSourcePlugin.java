@@ -115,7 +115,7 @@ public final class DuckDbSourcePlugin implements SourcePlugin {
         this.file = DuckDbFile.attach(Path.of(path), ctx.setting("memory-limit", "1GB"), Integer.parseInt(ctx.setting("threads", "0")), poolSize);
         this.catalog = new DuckDbCatalog(file, table.substring(0, table.indexOf('.')), sourceName, k -> "effective".equals(modes.get(k)), lookbackDays,
                 promoted, Integer.parseInt(ctx.setting("scan-threads", "4")), Long.parseLong(ctx.setting("columns-cache-mb", "1024")),
-                Duration.ofSeconds(Long.parseLong(ctx.setting("columns-seconds", "300"))));
+                Duration.ofSeconds(Long.parseLong(ctx.setting("columns-seconds", "300"))), ctx.settings());
         String configured = ctx.setting("kinds", "");
         List<String> fixed = configured.isBlank() ? List.of() : Arrays.stream(configured.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList();
         if (!fixed.isEmpty()) {
@@ -297,6 +297,11 @@ public final class DuckDbSourcePlugin implements SourcePlugin {
     }
 
     @Override
+    public List<EntityHit> search(String kind, String text, int limit, com.ash.drishti.api.AsOf asOf) {
+        return catalog == null ? List.of() : catalog.search(kind, text, limit, asOf);
+    }
+
+    @Override
     public List<EntityHit> search(String kind, String text, int limit) {
         return catalog == null ? List.of() : catalog.search(kind, text, limit);   // in memory: the newest day's ids
     }
@@ -380,7 +385,11 @@ public final class DuckDbSourcePlugin implements SourcePlugin {
             return "UP (" + file.problem() + ")";
         }
         List<String> notLaidOut = catalog.notLaidOut();
-        return notLaidOut.isEmpty() ? "UP" : "UP (not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents)";
+        String index = catalog.dated().enabled() ? catalog.dated().summary() : null;
+        if (notLaidOut.isEmpty()) {
+            return index == null ? "UP" : "UP (" + index + ")";
+        }
+        return "UP (not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents)";
     }
 
     @Override

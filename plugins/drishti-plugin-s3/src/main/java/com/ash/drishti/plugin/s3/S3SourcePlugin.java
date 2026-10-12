@@ -19,6 +19,8 @@ import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityHit;
 import com.ash.drishti.api.EntityRef;
+import com.ash.drishti.api.AsOf;
+import com.ash.drishti.api.DatedHitIndex;
 import com.ash.drishti.api.HitIndex;
 import com.ash.drishti.api.PluginManifest;
 import com.ash.drishti.api.Provenance;
@@ -88,6 +90,7 @@ public final class S3SourcePlugin implements SourcePlugin {
     private int lookbackDays;
     private SourceContext context;
     private final HitIndex index = new HitIndex();
+    private volatile DatedHitIndex dated = new DatedHitIndex(Map.of(), null);   // past days (index.days > 1), set at start
     private volatile List<LocalDate> dates = List.of();            // dated folders, newest first
     private volatile Set<String> kinds = Set.of();
     private volatile String lastError;
@@ -105,6 +108,7 @@ public final class S3SourcePlugin implements SourcePlugin {
     public void start(SourceContext ctx) {
         this.context = ctx;
         this.sourceName = ctx.setting("source-name", "s3");
+        this.dated = new DatedHitIndex(ctx.settings(), null);
         this.bucket = ctx.setting("bucket", "");
         if (bucket.isBlank()) {
             throw new IllegalStateException("s3 plugin needs settings.bucket");
@@ -205,6 +209,11 @@ public final class S3SourcePlugin implements SourcePlugin {
             found.sort(Comparator.reverseOrder());
             Map<EntityRef, EntityHit> hits = new LinkedHashMap<>();
             Set<String> ks = new HashSet<>();
+            // the dated folders inside the widest window: their ids per kind and day, from this one listing
+            Map<String, Map<LocalDate, List<EntityHit>>> window = new java.util.TreeMap<>();
+            Set<String> windowDays = dated.enabled()
+                    ? found.subList(0, Math.min(found.size(), dated.maxDays())).stream().map(LocalDate::toString).collect(java.util.stream.Collectors.toSet())
+                    : Set.of();
             for (var page : s3.listObjectsV2Paginator(ListObjectsV2Request.builder().bucket(bucket).prefix(prefix).build())) {
                 for (S3Object o : page.contents()) {
                     String[] parts = o.key().substring(prefix.length()).split("/");
@@ -216,11 +225,19 @@ public final class S3SourcePlugin implements SourcePlugin {
                     EntityRef ref = EntityRef.of(kindAndFile[0], kindAndFile[1].substring(0, kindAndFile[1].length() - 5));
                     ks.add(ref.kind());
                     hits.putIfAbsent(ref, new EntityHit(ref, ref.id(), ref.kind() + " · " + sourceName));
+                    if (!windowDays.isEmpty() && parts.length == 3 && windowDays.contains(parts[0])) {
+                        window.computeIfAbsent(ref.kind(), k -> new java.util.TreeMap<>()).computeIfAbsent(LocalDate.parse(parts[0]), d -> new ArrayList<>())
+                                .add(hits.get(ref));
+                    }
                 }
             }
             dates = List.copyOf(found);
             kinds = Set.copyOf(ks);
             index.replaceAll(new ArrayList<>(hits.values()));
+            window.forEach((kind, byDay) -> {
+                byDay.forEach((day, list) -> dated.putDay(kind, day, list));        // a rewritten past day is rebuilt by this listing
+                dated.plan(kind, new java.util.TreeSet<>(byDay.keySet()));
+            });
             listingError = null;
         } catch (RuntimeException e) {
             listingError = e.getClass().getSimpleName() + ": " + e.getMessage();
@@ -280,8 +297,23 @@ public final class S3SourcePlugin implements SourcePlugin {
     }
 
     @Override
+    public List<EntityHit> search(String kind, String text, int limit, AsOf asOf) {
+        if (asOf != null && asOf.businessDate() != null && dated.enabled()) {
+            var hits = dated.search(kind, text, limit, asOf.businessDate());
+            if (hits.isPresent()) {
+                return hits.get();
+            }
+        }
+        return index.search(kind, text, limit);
+    }
+
+    @Override
     public Map<String, Object> cacheStats() {
-        return Map.of("cachedObjects", cache.estimatedSize(), "indexed", index.size(), "datedFolders", dates.size());
+        Map<String, Object> m = new java.util.LinkedHashMap<>(Map.of("cachedObjects", cache.estimatedSize(), "indexed", index.size(), "datedFolders", dates.size()));
+        if (dated.enabled()) {
+            m.putAll(dated.health());
+        }
+        return m;
     }
 
     @Override
@@ -295,7 +327,8 @@ public final class S3SourcePlugin implements SourcePlugin {
         if (e != null) {
             return proxy.annotate("DOWN: " + e + " (retrying)", proxyTarget);
         }
-        return proxy.annotate(tls == null ? "UP" : tls.annotate("UP", java.time.Instant.now()), proxyTarget);
+        String up = dated.enabled() ? "UP (" + dated.summary() + ")" : "UP";
+        return proxy.annotate(tls == null ? up : tls.annotate(up, java.time.Instant.now()), proxyTarget);
     }
 
     @Override

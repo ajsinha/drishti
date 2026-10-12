@@ -191,6 +191,14 @@ public final class JdbcSourcePlugin implements SourcePlugin {
     }
 
     @Override
+    public java.util.List<com.ash.drishti.api.EntityHit> search(String kind, String text, int limit, com.ash.drishti.api.AsOf asOf) {
+        if (table == null) {
+            return search(kind, text, limit);
+        }
+        return catalog.search(kind, text, limit, asOf);          // the date's own ids when the kept days hold them
+    }
+
+    @Override
     public void start(SourceContext ctx) throws SQLException {
         this.context = ctx;
         this.url = ctx.setting("url", "");
@@ -238,7 +246,7 @@ public final class JdbcSourcePlugin implements SourcePlugin {
             this.reverseIndex = Boolean.parseBoolean(ctx.setting("reverse-index", "true"));
             catalog = new TableCatalog(table, db, sourceName, k -> "effective".equals(modes.get(k)), Integer.parseInt(ctx.setting("lookback-days", "10")), promoted,
                     Integer.parseInt(ctx.setting("scan-threads", "4")), Long.parseLong(ctx.setting("columns-cache-mb", "1024")),
-                    java.time.Duration.ofSeconds(Long.parseLong(ctx.setting("columns-seconds", "300"))));
+                    java.time.Duration.ofSeconds(Long.parseLong(ctx.setting("columns-seconds", "300"))), ctx.settings());
             String configured = ctx.setting("kinds", "");
             java.util.List<String> fixed = configured.isBlank() ? java.util.List.of()
                     : java.util.Arrays.stream(configured.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList();
@@ -382,7 +390,11 @@ public final class JdbcSourcePlugin implements SourcePlugin {
             return queryMode.degraded() ? "DEGRADED: " + queries : "UP (" + queries + ")";
         }
         java.util.List<String> notLaidOut = catalog == null ? java.util.List.of() : catalog.notLaidOut();
-        return notLaidOut.isEmpty() ? "UP" : "UP (not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents)";
+        String index = catalog != null && catalog.dated().enabled() ? catalog.dated().summary() : null;
+        if (notLaidOut.isEmpty()) {
+            return index == null ? "UP" : "UP (" + index + ")";
+        }
+        return "UP (not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents)";
     }
 
     @Override

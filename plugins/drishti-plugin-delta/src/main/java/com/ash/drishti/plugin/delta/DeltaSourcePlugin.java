@@ -20,6 +20,7 @@ import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityHit;
 import com.ash.drishti.api.EntityRef;
+import com.ash.drishti.api.DatedHitIndex;
 import com.ash.drishti.api.HitIndex;
 import com.ash.drishti.api.PluginManifest;
 import com.ash.drishti.api.Provenance;
@@ -89,6 +90,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     /** True when no {@code kinds} are configured: every table in the domain is served, including new ones. */
     private boolean discover;
     private final HitIndex index = new HitIndex();
+    private volatile DatedHitIndex dated = new DatedHitIndex(Map.of(), null);   // past days (index.days > 1), set at start
     // Async caches: a load (the Delta log, a Parquet partition) runs on a virtual thread, and callers wanting the same
     // key wait on its future without holding any lock. A synchronous Caffeine load would run inside the map's
     // compute and pin the carrier thread for the whole read. One read still serves every caller of a key.
@@ -178,6 +180,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 promoted.put(k.substring(7, k.length() - 8), java.util.Arrays.stream(v.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList());
             }
         });
+        this.dated = new DatedHitIndex(ctx.settings(), this::dayHits);
         reindex();
         ctx.scheduler().scheduleWithFixedDelay(this::reindex, refresh * 6, refresh * 6, TimeUnit.SECONDS);
         int warm = Integer.parseInt(ctx.setting("warm-dates", "3"));
@@ -422,6 +425,30 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return index.search(kind, text, limit);
     }
 
+    @Override
+    public List<EntityHit> search(String kind, String text, int limit, AsOf asOf) {
+        if (asOf != null && asOf.businessDate() != null && dated.enabled()) {
+            var hits = dated.search(kind, text, limit, asOf.businessDate());
+            if (hits.isPresent()) {
+                return hits.get();
+            }
+        }
+        return index.search(kind, text, limit);
+    }
+
+    /** A day's ids from the id column alone, for the multi-day type-ahead. */
+    private List<EntityHit> dayHits(String kind, LocalDate day) {
+        Optional<DeltaTable.Layout> l = layout(kind, null);
+        List<EntityHit> out = new ArrayList<>();
+        if (l.isPresent() && l.get().files().containsKey(day)) {
+            String subtitle = kind + " · " + sourceName;
+            for (String id : idMap(kind, l.get(), day).ids()) {
+                out.add(new EntityHit(EntityRef.of(kind, id), id, subtitle));
+            }
+        }
+        return out;
+    }
+
     /** The newest commit time among the domain's tables (data loaded, appended or restated). */
     private volatile java.time.Instant lastUpdate;
     private final Map<String, Long> versions = new java.util.concurrent.ConcurrentHashMap<>();
@@ -497,6 +524,13 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             String subtitle = kind + " · " + sourceName;
             for (String id : idMap(kind, l, l.files().lastKey()).ids()) {
                 hits.add(new EntityHit(EntityRef.of(kind, id), id, subtitle));
+            }
+            if (dated.enabled()) {
+                dated.putDay(kind, l.files().lastKey(), hits);
+                dated.plan(kind, l.files().navigableKeySet());
+                if (was != null && was != l.version()) {
+                    dated.restatedAll(kind);                    // a commit: a past day may have been restated
+                }
             }
             Map<String, String> cols = promotedColumns(kind, l);
             if (!cols.isEmpty() && !l.deletionVectors()) {       // the newest day's columns, ready before the first search
@@ -574,9 +608,13 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     @Override
     public Map<String, Object> cacheStats() {
-        return Map.of("engine", lake.engineName(), "partitions", parts.synchronous().estimatedSize(), "tables",
+        Map<String, Object> m = new java.util.LinkedHashMap<>(Map.of("engine", lake.engineName(), "partitions", parts.synchronous().estimatedSize(), "tables",
                 latest.synchronous().estimatedSize(), "timeTravel", travelled.synchronous().estimatedSize(), "idMaps",
-                idMaps.synchronous().estimatedSize(), "columnSets", columnSets.synchronous().estimatedSize(), "documents", docs.estimatedSize());
+                idMaps.synchronous().estimatedSize(), "columnSets", columnSets.synchronous().estimatedSize(), "documents", docs.estimatedSize()));
+        if (dated.enabled()) {
+            m.putAll(dated.health());
+        }
+        return m;
     }
 
     @Override
@@ -627,6 +665,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             // it serves, but reads of these tables and dates failed the last time they were tried: say which, and why
             return "DEGRADED: cannot read " + problems.summary(5) + " (" + engineName + laidOut + ")";
         }
-        return "UP (" + engineName + laidOut + (tlsNote.isEmpty() ? "" : "; " + tlsNote) + ")";
+        String indexNote = dated.enabled() ? "; " + dated.summary() : "";
+        return "UP (" + engineName + laidOut + indexNote + (tlsNote.isEmpty() ? "" : "; " + tlsNote) + ")";
     }
 }

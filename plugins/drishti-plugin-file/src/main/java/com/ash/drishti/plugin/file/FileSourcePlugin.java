@@ -67,6 +67,7 @@ public final class FileSourcePlugin implements SourcePlugin {
     private static final java.util.regex.Pattern DATE = java.util.regex.Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
 
     private final HitIndex index = new HitIndex();
+    private volatile FileDatedIndex datedIdx;                // past days (index.days > 1), set at start
     private volatile List<LocalDate> dates = List.of();   // dated folders, newest first
     private SourceContext context;
     private Path root;
@@ -119,6 +120,13 @@ public final class FileSourcePlugin implements SourcePlugin {
                     }
                 }).build();
         this.sourceName = ctx.setting("source-name", "file");
+        this.datedIdx = new FileDatedIndex(root, sourceName, ctx.settings(), (kind, d) -> {
+            List<String> ids = new ArrayList<>();
+            for (String id : day(kind, d).ids()) {
+                ids.add(id);
+            }
+            return ids;
+        });
         long rescan = Long.parseLong(ctx.setting("rescan-seconds", "30"));
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
         rescan();
@@ -499,6 +507,9 @@ public final class FileSourcePlugin implements SourcePlugin {
         m.put("jsonlDays", jsonl.values().stream().mapToInt(Set::size).sum());
         m.put("indexedDays", days == null ? 0 : days.estimatedSize());
         m.put("ids", index.size());
+        if (datedIdx.enabled()) {
+            m.putAll(datedIdx.index().health());
+        }
         m.put("indexBuilds", indexBuilds.sum());
         m.put("unreadableLines", problems.values().stream().mapToLong(JsonlDay.Report::unreadable).sum());
         m.put("duplicateIds", problems.values().stream().mapToLong(JsonlDay.Report::duplicates).sum());
@@ -609,6 +620,8 @@ public final class FileSourcePlugin implements SourcePlugin {
             }
         });
         index.replaceAll(new ArrayList<>(unique.values()));
+        datedIdx.refresh(found, lines, modes.entrySet().stream().filter(e -> "effective".equals(e.getValue())).map(java.util.Map.Entry::getKey)
+                .collect(java.util.stream.Collectors.toSet()));
     }
 
     /** Adds the newest dated folder's entities to the search index (ids are stable across dates). */
@@ -634,6 +647,11 @@ public final class FileSourcePlugin implements SourcePlugin {
         return index.search(kind, text, limit);
     }
 
+    @Override
+    public List<EntityHit> search(String kind, String text, int limit, AsOf asOf) {
+        return datedIdx.search(kind, text, limit, asOf).orElseGet(() -> index.search(kind, text, limit));
+    }
+
     /**
      * UP, and what is wrong with the files indexed so far: "UP (3 unreadable lines in trading/2026-09-30/trade.jsonl
      * (line 201: ...))". The rest of each such file is served.
@@ -646,9 +664,11 @@ public final class FileSourcePlugin implements SourcePlugin {
         List<String> said = problems.entrySet().stream()
                 .sorted(java.util.Map.Entry.comparingByKey(java.util.Comparator.comparing(DayKey::day).reversed().thenComparing(DayKey::kind)))
                 .map(e -> e.getValue().describe(where(e.getKey()))).toList();
+        String indexNote = datedIdx.enabled() ? datedIdx.index().summary() : null;
         if (said.isEmpty()) {
-            return "UP";
+            return indexNote == null ? "UP" : "UP (" + indexNote + ")";
         }
-        return "UP (" + String.join("; ", said.subList(0, Math.min(3, said.size()))) + (said.size() > 3 ? "; and " + (said.size() - 3) + " more files" : "") + ")";
+        return "UP (" + String.join("; ", said.subList(0, Math.min(3, said.size()))) + (said.size() > 3 ? "; and " + (said.size() - 3) + " more files" : "")
+                + (indexNote == null ? "" : "; " + indexNote) + ")";
     }
 }

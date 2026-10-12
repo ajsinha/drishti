@@ -18,6 +18,8 @@ package com.ash.drishti.plugin.duckdb;
 import com.ash.drishti.api.ColumnSet;
 import com.ash.drishti.api.EntityHit;
 import com.ash.drishti.api.EntityRef;
+import com.ash.drishti.api.AsOf;
+import com.ash.drishti.api.DatedHitIndex;
 import com.ash.drishti.api.HitIndex;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -69,6 +71,7 @@ final class DuckDbCatalog {
     private final Map<String, List<String>> promoted;                  // kind -> paths the pack declares
     private final int scanThreads;
     private final HitIndex index = new HitIndex();
+    private final DatedHitIndex dated;                                 // past days' ids by business date (index.days > 1)
     private final Cache<DayKey, ColumnSet> columnSets;
     private final Semaphore dayReads = new Semaphore(2);
     private volatile Map<String, NavigableSet<LocalDate>> dates = Map.of();
@@ -78,7 +81,7 @@ final class DuckDbCatalog {
     private volatile long readGeneration;
 
     DuckDbCatalog(DuckDbFile file, String schema, String sourceName, Predicate<String> effective, int lookbackDays,
-            Map<String, List<String>> promoted, int scanThreads, long columnsCacheMb, Duration columnsTtl) {
+            Map<String, List<String>> promoted, int scanThreads, long columnsCacheMb, Duration columnsTtl, Map<String, String> settings) {
         this.file = file;
         this.schema = schema;
         this.table = schema + "." + DuckDbLayout.TABLE;                // fully qualified once the file is open
@@ -87,6 +90,14 @@ final class DuckDbCatalog {
         this.lookbackDays = lookbackDays;
         this.promoted = Map.copyOf(promoted);
         this.scanThreads = Math.max(1, scanThreads);
+        this.dated = new DatedHitIndex(settings, (kind, day) -> {
+            List<EntityHit> list = new ArrayList<>();
+            file.with(c -> {
+                ids(c, kind, day, id -> list.add(new EntityHit(EntityRef.of(kind, id), id, kind + " · " + sourceName)));
+                return null;
+            });
+            return list;
+        });
         this.columnSets = Caffeine.newBuilder().maximumWeight(columnsCacheMb * 1024 * 1024)
                 .weigher((DayKey k, ColumnSet v) -> (int) Math.min(Integer.MAX_VALUE, weight(v))).expireAfterWrite(columnsTtl).build();
     }
@@ -155,6 +166,18 @@ final class DuckDbCatalog {
         List<EntityHit> all = new ArrayList<>();
         hits.values().forEach(all::addAll);
         index.replaceAll(all);
+        if (dated.enabled()) {
+            boolean replaced = readGeneration != 0 && generation != readGeneration;     // a load replaced the file
+            for (var e : ds.entrySet()) {
+                if (!effective.test(e.getKey()) && !e.getValue().isEmpty()) {
+                    dated.putDay(e.getKey(), e.getValue().last(), hits.get(e.getKey()));
+                    dated.plan(e.getKey(), e.getValue());
+                    if (replaced) {
+                        dated.restatedAll(e.getKey());
+                    }
+                }
+            }
+        }
         readGeneration = generation;
         problem = null;
         warm();
@@ -206,6 +229,21 @@ final class DuckDbCatalog {
 
     List<EntityHit> search(String kind, String text, int limit) {
         return index.search(kind, text, limit);
+    }
+
+    /** Type-ahead for a business date: the day's own bitmap when the kept days hold it, else the newest day's ids. */
+    List<EntityHit> search(String kind, String text, int limit, AsOf asOf) {
+        if (asOf != null && asOf.businessDate() != null && dated.enabled()) {
+            var hits = dated.search(kind, text, limit, asOf.businessDate());
+            if (hits.isPresent()) {
+                return hits.get();
+            }
+        }
+        return index.search(kind, text, limit);
+    }
+
+    DatedHitIndex dated() {
+        return dated;
     }
 
     /** The kind's newest business date on or before {@code asked}, within the lookback (snapshot kinds). */
@@ -458,8 +496,13 @@ final class DuckDbCatalog {
     }
 
     Map<String, Object> stats() {
-        return Map.of("kinds", dates.size(), "datesIndexed", dates.values().stream().mapToInt(Set::size).sum(), "ids", index.size(),
-                "columnSets", columnSets.estimatedSize(), "generation", readGeneration);
+        Map<String, Object> m = new java.util.LinkedHashMap<>(Map.of("kinds", dates.size(), "datesIndexed",
+                dates.values().stream().mapToInt(Set::size).sum(), "ids", index.size(), "columnSets", columnSets.estimatedSize(),
+                "generation", readGeneration));
+        if (dated.enabled()) {
+            m.putAll(dated.health());
+        }
+        return m;
     }
 
     void clear() {

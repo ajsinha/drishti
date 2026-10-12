@@ -86,6 +86,17 @@ public final class DatedHitIndex {
         return DayIndexSettings.of(settings, kind);
     }
 
+    /** The most days any kind keeps (the connector default or a kind's override). */
+    public int maxDays() {
+        int max = DayIndexSettings.of(settings, null).days();
+        for (String k : settings.keySet()) {
+            if (k.startsWith("index.kinds.") && k.endsWith(".days")) {
+                max = Math.max(max, DayIndexSettings.of(settings, k.substring(12, k.length() - 5)).days());
+            }
+        }
+        return max;
+    }
+
     /** True when any kind keeps more than one day (so a connector can skip all of this at the default). */
     public boolean enabled() {
         return DayIndexSettings.of(settings, null).multiDay()
@@ -516,6 +527,12 @@ public final class DatedHitIndex {
         int pending = warmPending.get();
         String warm = pending > 0 ? "warming (" + pending + " days to build)" : "warm";
         return new Stats(kinds.size(), days, ids, mem, warm, new ArrayList<>(all.descendingSet()));
+    }
+
+    /** One line for a connector's health: {@code type-ahead index: 5 days, 500,000 ids, 12.3 MB, warm}. */
+    public String summary() {
+        Stats st = stats();
+        return String.format(Locale.ROOT, "type-ahead index: %d days, %,d ids, %.1f MB, %s", st.days(), st.ids(), st.memoryBytes() / 1048576.0, st.warm());
     }
 
     /** The stats as a plain map for health and the connector page. */

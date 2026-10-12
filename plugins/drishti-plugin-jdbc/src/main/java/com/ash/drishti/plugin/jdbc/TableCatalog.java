@@ -18,6 +18,8 @@ package com.ash.drishti.plugin.jdbc;
 import com.ash.drishti.api.ColumnSet;
 import com.ash.drishti.api.EntityHit;
 import com.ash.drishti.api.EntityRef;
+import com.ash.drishti.api.AsOf;
+import com.ash.drishti.api.DatedHitIndex;
 import com.ash.drishti.api.HitIndex;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -76,6 +78,7 @@ final class TableCatalog {
     private final Map<String, List<String>> promoted;                  // kind -> paths the pack declares
     private final int scanThreads;
     private final HitIndex index = new HitIndex();
+    private final DatedHitIndex dated;                                 // past days' ids by business date (index.days > 1)
     private final Map<String, List<EntityHit>> hitsByKind = new ConcurrentHashMap<>();
     private final Map<String, Object> indexedFrom = new ConcurrentHashMap<>();   // kind -> the day (or load) its ids came from
     private final Cache<DayKey, ColumnSet> columnSets;
@@ -89,7 +92,8 @@ final class TableCatalog {
     private volatile boolean catalogued;
 
     TableCatalog(EntityTable table, Db db, String sourceName, Predicate<String> effective, int lookbackDays, Map<String, List<String>> promoted,
-            int scanThreads, long columnsCacheMb, Duration columnsTtl) {
+            int scanThreads, long columnsCacheMb, Duration columnsTtl,
+            Map<String, String> settings) {
         this.table = table;
         this.db = db;
         this.sourceName = sourceName;
@@ -97,6 +101,14 @@ final class TableCatalog {
         this.lookbackDays = lookbackDays;
         this.promoted = Map.copyOf(promoted);
         this.scanThreads = Math.max(1, scanThreads);
+        this.dated = new DatedHitIndex(settings, (kind, day) -> {
+            List<EntityHit> hits = new ArrayList<>();
+            db.with(c -> {
+                table.ids(c, kind, day, id -> hits.add(new EntityHit(EntityRef.of(kind, id), id, kind + " · " + sourceName)));
+                return null;
+            });
+            return hits;
+        });
         this.columnSets = Caffeine.newBuilder().maximumWeight(columnsCacheMb * 1024 * 1024)
                 .weigher((DayKey k, ColumnSet v) -> (int) Math.min(Integer.MAX_VALUE, weight(v))).expireAfterWrite(columnsTtl).build();
     }
@@ -131,6 +143,7 @@ final class TableCatalog {
         if (!configuredKinds.isEmpty()) {
             ds.keySet().retainAll(configuredKinds);
         }
+        boolean loadSignal = loadedAt != null && !Objects.equals(loaded, loadedAt);
         if (!Objects.equals(loaded, loadedAt)) {
             columnSets.invalidateAll();                                 // a load replaced days: read them again
         }
@@ -159,10 +172,23 @@ final class TableCatalog {
                     continue;
                 }
                 hitsByKind.put(kind, hits);
+                if (day != null && dated.enabled()) {
+                    dated.putDay(kind, day, hits);                      // the newest day, as the type-ahead of today
+                }
                 if (from != null) {
                     indexedFrom.put(kind, from);
                 }
                 changed = true;
+            }
+        }
+        if (dated.enabled()) {
+            for (var e : ds.entrySet()) {
+                if (!effective.test(e.getKey())) {
+                    dated.plan(e.getKey(), e.getValue());               // roll the window; build past days in the background
+                    if (loadSignal) {
+                        dated.restatedAll(e.getKey());                  // a data load: rebuild the kept days (a past day may be restated)
+                    }
+                }
             }
         }
         if (changed) {
@@ -215,6 +241,24 @@ final class TableCatalog {
 
     List<EntityHit> search(String kind, String text, int limit) {
         return index.search(kind, text, limit);
+    }
+
+    /**
+     * Type-ahead for a business date: from the day's own bitmap when the kept days hold it (a past day is never mixed
+     * with another), else the newest day's ids as before.
+     */
+    List<EntityHit> search(String kind, String text, int limit, AsOf asOf) {
+        if (asOf != null && asOf.businessDate() != null && dated.enabled()) {
+            var hits = dated.search(kind, text, limit, asOf.businessDate());
+            if (hits.isPresent()) {
+                return hits.get();
+            }
+        }
+        return index.search(kind, text, limit);
+    }
+
+    DatedHitIndex dated() {
+        return dated;
     }
 
     /** The kind's newest business date on or before {@code asked}, within the lookback (snapshot kinds). */
@@ -426,8 +470,12 @@ final class TableCatalog {
     }
 
     Map<String, Object> stats() {
-        return Map.of("kinds", dates.size(), "datesIndexed", dates.values().stream().mapToInt(Set::size).sum(), "ids", index.size(),
-                "columnSets", columnSets.estimatedSize());
+        Map<String, Object> m = new java.util.LinkedHashMap<>(Map.of("kinds", dates.size(), "datesIndexed",
+                dates.values().stream().mapToInt(Set::size).sum(), "ids", index.size(), "columnSets", columnSets.estimatedSize()));
+        if (dated.enabled()) {
+            m.putAll(dated.health());
+        }
+        return m;
     }
 
     void clear() {

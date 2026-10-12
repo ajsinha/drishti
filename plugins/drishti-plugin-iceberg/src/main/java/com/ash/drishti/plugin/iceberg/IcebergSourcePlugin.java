@@ -21,6 +21,7 @@ import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityHit;
 import com.ash.drishti.api.EntityRef;
+import com.ash.drishti.api.DatedHitIndex;
 import com.ash.drishti.api.HitIndex;
 import com.ash.drishti.api.PluginManifest;
 import com.ash.drishti.api.Provenance;
@@ -96,6 +97,8 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     private final Map<String, Long> current = new ConcurrentHashMap<>();
     private final Map<String, List<String>> promoted = new ConcurrentHashMap<>();
     private final HitIndex index = new HitIndex();
+    private volatile DatedHitIndex dated = new DatedHitIndex(Map.of(), null);   // past days (index.days > 1), set at start
+    private final Map<String, Long> datedSnapshots = new java.util.concurrent.ConcurrentHashMap<>();
     // loads run on virtual threads and callers of the same key wait on its future without holding a lock
     private final ExecutorService loaders = Executors.newVirtualThreadPerTaskExecutor();
     private final ReentrantLock refreshing = new ReentrantLock();
@@ -138,6 +141,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         this.maxLoadRows = Integer.parseInt(ctx.setting("max-load-rows", "200000"));
         this.reverseIndex = Boolean.parseBoolean(ctx.setting("reverse-index", "true"));
         this.lake = IcebergLake.of(ctx.settings());
+        this.dated = new DatedHitIndex(ctx.settings(), this::dayHits);
         this.layouts = Caffeine.newBuilder().executor(loaders).maximumSize(Long.parseLong(ctx.setting("layout-cache", "64"))).buildAsync();
         this.idMaps = Caffeine.newBuilder().executor(loaders).maximumWeight(mb(ctx, "id-map-mb", "1024"))
                 .weigher((DayKey k, IdMap v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes())).buildAsync();
@@ -234,11 +238,20 @@ public final class IcebergSourcePlugin implements SourcePlugin {
                     String subtitle = kind + " · " + sourceName;
                     Collection<Day> days = effective(kind) ? l.days().values() : List.of(l.days().lastEntry().getValue());
                     Set<String> seen = new HashSet<>();
+                    int before = hits.size();
                     for (Day d : days) {
                         for (String id : idMap(kind, l, d).ids()) {
                             if (seen.add(id)) {
                                 hits.add(new EntityHit(EntityRef.of(kind, id), id, subtitle));
                             }
+                        }
+                    }
+                    if (!effective(kind) && dated.enabled()) {
+                        dated.putDay(kind, l.days().lastKey(), hits.subList(before, hits.size()));
+                        dated.plan(kind, l.days().navigableKeySet());
+                        Long was = datedSnapshots.put(kind, l.snapshotId());
+                        if (was != null && was != l.snapshotId()) {
+                            dated.restatedAll(kind);            // a new snapshot: a past day may have been restated
                         }
                     }
                     Map<String, String> cols = promotedColumns(kind, l);
@@ -452,6 +465,30 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     }
 
     @Override
+    public List<EntityHit> search(String kind, String text, int limit, AsOf asOf) {
+        if (asOf != null && asOf.businessDate() != null && dated.enabled()) {
+            var hits = dated.search(kind, text, limit, asOf.businessDate());
+            if (hits.isPresent()) {
+                return hits.get();
+            }
+        }
+        return index.search(kind, text, limit);
+    }
+
+    /** A day's ids from the id column alone, for the multi-day type-ahead. */
+    private List<EntityHit> dayHits(String kind, java.time.LocalDate day) {
+        List<EntityHit> out = new ArrayList<>();
+        Optional<Layout> l = layout(kind, null);
+        if (l.isPresent() && l.get().days().containsKey(day)) {
+            String subtitle = kind + " · " + sourceName;
+            for (String id : idMap(kind, l.get(), l.get().days().get(day)).ids()) {
+                out.add(new EntityHit(EntityRef.of(kind, id), id, subtitle));
+            }
+        }
+        return out;
+    }
+
+    @Override
     public Instant lastUpdate() {
         return lastUpdate;
     }
@@ -508,9 +545,13 @@ public final class IcebergSourcePlugin implements SourcePlugin {
                 // not readable now
             }
         }
-        return Map.of("tables", tables.size(), "snapshots", layouts.synchronous().estimatedSize(), "idMaps", idMaps.synchronous().estimatedSize(),
+        Map<String, Object> m = new java.util.LinkedHashMap<>(Map.of("tables", tables.size(), "snapshots", layouts.synchronous().estimatedSize(), "idMaps", idMaps.synchronous().estimatedSize(),
                 "columnSets", columnSets.synchronous().estimatedSize(), "documents", docs.estimatedSize(),
-                "partitions", parts.synchronous().estimatedSize(), "daysWithDeletes", deletes, "ids", index.size());
+                "partitions", parts.synchronous().estimatedSize(), "daysWithDeletes", deletes, "ids", index.size()));
+        if (dated.enabled()) {
+            m.putAll(dated.health());
+        }
+        return m;
     }
 
     @Override
@@ -554,7 +595,10 @@ public final class IcebergSourcePlugin implements SourcePlugin {
                 // reported by reads
             }
         });
-        String up = notLaidOut.isEmpty() ? "UP" : "UP (not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents)";
+        String indexNote = dated.enabled() ? dated.summary() : null;
+        String up = notLaidOut.isEmpty() ? (indexNote == null ? "UP" : "UP (" + indexNote + ")")
+                : "UP (not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents"
+                        + (indexNote == null ? "" : "; " + indexNote) + ")";
         return lake.proxy().annotate(lake.tls() == null ? up : lake.tls().annotate(up, java.time.Instant.now()));
     }
 }
