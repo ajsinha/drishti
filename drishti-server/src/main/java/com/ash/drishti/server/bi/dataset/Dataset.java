@@ -39,10 +39,17 @@ import java.util.Set;
  * @param refresh when the dataset's layers are rebuilt without a person asking (blank schedule: only by a data-load signal or on demand)
  * @param compose for a composed dataset: the sources it reads as the reader and how they are joined (its {@code tables} then hold the one joined frame); else null
  * @param derived for a derived dataset: the Python Transform that makes its table and the inputs it is given; else null
+ * @param tests expected values Check and publishing run ({@link ExpectedValue}); empty when the dataset declares none
  */
 public record Dataset(String name, int version, String title, String description, boolean sample, String engine, Map<String, Table> tables,
         List<Relationship> relationships, Map<String, Measure> measures, Map<String, List<String>> hierarchies, Security security, List<Rollup> rollups, Refresh refresh,
-        Compose compose, Derived derived) {
+        Compose compose, Derived derived, List<ExpectedValue> tests) {
+
+    /** A dataset without tests. */
+    public Dataset(String name, int version, String title, String description, boolean sample, String engine, Map<String, Table> tables, List<Relationship> relationships,
+            Map<String, Measure> measures, Map<String, List<String>> hierarchies, Security security, List<Rollup> rollups, Refresh refresh, Compose compose, Derived derived) {
+        this(name, version, title, description, sample, engine, tables, relationships, measures, hierarchies, security, rollups, refresh, compose, derived, List.of());
+    }
 
     /** An ordinary dataset: tables from pack kinds, neither composed nor derived. */
     public Dataset(String name, int version, String title, String description, boolean sample, String engine, Map<String, Table> tables, List<Relationship> relationships,

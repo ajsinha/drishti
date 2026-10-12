@@ -54,6 +54,7 @@ final class DatasetValidator {
         v.security();
         v.hierarchies();
         v.rollups();
+        v.tests();
         return v.out;
     }
 
@@ -438,6 +439,40 @@ final class DatasetValidator {
                     }
                 } catch (IllegalArgumentException e) {
                     err(RELATION, "hierarchies." + h.getKey(), "level '" + level + "': " + e.getMessage());
+                }
+            }
+        }
+    }
+
+    /** A test names a measure the dataset has (and can run), and the fields it groups, picks and filters by exist. */
+    private void tests() {
+        int i = 0;
+        for (ExpectedValue t : ds.tests()) {
+            String path = "tests[" + i++ + "]";
+            Dataset.Measure m = t.measure() == null ? null : ds.measures().get(t.measure());
+            if (m == null) {
+                err(RELATION, path + ".measure", "the dataset has no measure '" + t.measure() + "' (measures: " + String.join(", ", ds.measures().keySet()) + ")");
+            } else if (m.expr() == null) {
+                err(RELATION, path + ".measure", "'" + t.measure() + "' is a Python measure: a query does not run it, so a test cannot check it");
+            }
+            java.util.List<String> fields = new java.util.ArrayList<>(t.by());
+            fields.addAll(t.row().keySet());
+            t.filters().forEach(f -> fields.add(f.field()));
+            for (String f : fields) {
+                if (ds.measures().containsKey(f)) {
+                    continue;
+                }
+                try {
+                    if (resolver.resolve(java.util.List.of(f.split("\\.", -1)), null).column() == null) {
+                        err(RELATION, path, "'" + f + "' is a table; a test names table.column");
+                    }
+                } catch (IllegalArgumentException e) {
+                    err(RELATION, path, e.getMessage());
+                }
+            }
+            for (String r : t.row().keySet()) {
+                if (!t.by().contains(r)) {
+                    err(RELATION, path + ".row", "row picks by '" + r + "', which the test does not group by: add it to by");
                 }
             }
         }

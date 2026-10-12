@@ -137,7 +137,7 @@
       q('[data-problems-sec]').hidden = m.problems.length === 0;
       if (!m.tables) { return; }
       q('[data-meta]').textContent = 'dataset ' + m.name + ' · version ' + m.version + ' · engine ' + m.engine + ' · ' + m.tables.length + ' tables · ' + m.measures.length + ' measures';
-      built(m); tables(m); relationships(m); measures(m); security(m); layers(m); refresh(m); refreshNow(); preview(m);
+      built(m); tables(m); relationships(m); measures(m); security(m); layers(m); refresh(m); refreshNow(); testsSection(); preview(m);
     }
 
     /** A composed or derived dataset (RUPAKA.md section 20.10): the datasets it asks as you and how the answers are joined, or the Python Transform that reads them. */
@@ -253,6 +253,32 @@
         ? 'Layers are rebuilt on the schedule (' + r.zone + ' time, ' + r.calendar + ' calendar for business days); a failed run is tried again with the shared retry policy.'
         : 'No refresh schedule: the layers are rebuilt when a data load for a kind this dataset reads arrives, or when an author asks for a refresh (POST /datasets/{id}/refresh).';
       sec.querySelector('table').hidden = tb.children.length === 0;
+    }
+
+    /** Expected values (BI authors): run the dataset's tests as yourself or a role you hold, and list each as passed, failed or could not run. */
+    function testsSection() {
+      var sec = q('[data-tests-sec]'), sel = q('[data-tests-role]'), btn = q('[data-tests-run]'), msg = q('[data-tests-sum]'), tb = q('[data-tests-table] tbody');
+      api('GET', '/me').then(function (me) {
+        if (me.powers.indexOf('bi-author') < 0) { return; }
+        sec.hidden = false;
+        if (!sel.options.length) {
+          sel.appendChild(h('option', { value: '', text: 'yourself' }));
+          (me.roles || []).forEach(function (r) { sel.appendChild(h('option', { value: r, text: r })); });
+        }
+        btn.onclick = function () {
+          btn.disabled = true; msg.textContent = 'Running...'; clear(tb);
+          api('POST', '/items/' + id2path(id) + '/tests', { role: sel.value || undefined }).then(function (r) {
+            btn.disabled = false;
+            q('[data-tests-table]').hidden = r.total === 0;
+            msg.textContent = r.total === 0 ? 'This dataset declares no tests.' : r.passed + ' passed, ' + r.failed + ' failed' + (r.errors ? ', ' + r.errors + ' could not run' : '') + '.';
+            r.results.forEach(function (x) {
+              var bad = x.status !== 'pass';
+              tb.appendChild(h('tr', { 'data-test': x.status }, h('th', { scope: 'row', text: x.name }), h('td', { class: 'mono', text: x.target }), h('td', { text: x.expect }),
+                h('td', { text: x.actual == null ? '–' : num(x.actual) }), h('td', {}, badge(x.status, bad ? 'bi-status' : 'bi-promoted', bad ? 'exclamation-triangle' : 'check-circle'), x.message ? h('small', { class: 'text-muted-d', text: ' ' + x.message }) : null)));
+            });
+          }).catch(function (e) { btn.disabled = false; msg.textContent = e.message; });
+        };
+      }).catch(function () {});
     }
 
     /** The recent runs of the dataset's refresh, newest first (kept across a restart by the server). */

@@ -107,6 +107,7 @@ public final class BiService {
         m.put("enabled", on);
         m.put("powers", on ? access.powers(p) : Set.of());
         m.put("user", p.user());
+        m.put("roles", p.roles());
         m.put("personalWorkspace", personalId(p.user()));
         m.put("workspaceCreation", creationPolicy());
         m.put("mayCreateWorkspace", on && mayCreateWorkspace(p));
@@ -531,6 +532,11 @@ public final class BiService {
         }
     }
 
+    /** True when the caller holds the power (a bi-admin holds them all); no failure when not. */
+    public boolean hasPower(Principal p, String power) {
+        return access.has(p, power);
+    }
+
     /** True when the caller holds the {@code bi-author} power (no failure when not). */
     public boolean mayAuthor(Principal p) {
         return access.has(p, BiAccess.AUTHOR);
@@ -586,6 +592,12 @@ public final class BiService {
     }
 
     private volatile java.util.function.Function<String, String> pythonCheck;
+    private volatile java.util.function.BiFunction<Principal, BiStore.Item, List<String>> testGate;
+
+    /** Set once by the expected-values runner: what publishing a report or dataset runs its tests with (a line per test that fails or cannot run; empty when all pass). */
+    public void testGate(java.util.function.BiFunction<Principal, BiStore.Item, List<String>> gate) {
+        this.testGate = gate;
+    }
 
     /** Set once by the Python items service: what publishing a Python item checks its manifest with (the first error, or an empty text). */
     public void pythonCheck(java.util.function.Function<String, String> check) {
@@ -831,6 +843,19 @@ public final class BiService {
                 throw new DrishtiException(ErrorCode.BOARD_INVALID, "'" + i.title() + "' cannot be published: " + r.firstError());
             }
         }
+        // the expected values the item declares (docs/guides/REPORTS.md section 14): a failing one stops a publish unless a bi-admin forces it
+        List<String> failing = List.of();
+        if (testGate != null && gov.refuseFailingTests() && ("report".equals(i.kind()) || "dataset".equals(i.kind())) && i.body().contains("tests:")) {
+            failing = testGate.apply(p, i);
+            if (!failing.isEmpty()) {
+                if (!force) {
+                    throw new DrishtiException(ErrorCode.BI_TESTS, "'" + i.title() + "' cannot be published: " + failing.size() + " of its tests " + (failing.size() == 1 ? "fails" : "fail") + " ("
+                            + String.join("; ", failing.stream().limit(3).toList()) + (failing.size() > 3 ? "; ..." : "") + "). Fix the item or the expected value"
+                            + (access.has(p, BiAccess.ADMIN) ? ", or publish anyway with force." : "; a bi-admin may publish it with force."));
+                }
+                access.require(p, BiAccess.ADMIN);
+            }
+        }
         // what this publish does to the reports that read a dataset (docs/guides/BI_GOVERNANCE.md, Impact)
         ImpactAnalyzer.Result damage = null;
         if ("dataset".equals(i.kind()) && i.isPublished()) {
@@ -858,6 +883,7 @@ public final class BiService {
             revise(i, i.body(), note, p.user(), "publish", version);
         }
         audit.record(p.user(), "bi-item-published", i.id(), "version " + version + "; " + note
+                + (failing.isEmpty() ? "" : "; FORCED over " + failing.size() + " failing test(s)")
                 + (damage != null && damage.breaksPublished() ? "; FORCED over " + damage.published().size() + " published report(s)" : ""));
         List<String> warnings = new ArrayList<>();
         if (damage != null && damage.change().breaking()) {

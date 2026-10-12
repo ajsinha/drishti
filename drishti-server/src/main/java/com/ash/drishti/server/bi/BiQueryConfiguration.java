@@ -163,7 +163,14 @@ public class BiQueryConfiguration {
     }
 
     @Bean
-    public BiGovController biGovController(BiGovernance gov, BiBundles bundles, BiService bi) {
-        return new BiGovController(gov, bundles, bi);
+    public ExpectedValueRunner expectedValueRunner(BiService bi, DatasetService datasets, BiReportService reports, AuditLog audit) {
+        ExpectedValueRunner runner = new ExpectedValueRunner(bi, datasets, reports, audit);
+        bi.testGate(runner::failures);                                   // publishing runs the item's tests (docs/guides/REPORTS.md section 14)
+        return runner;
+    }
+
+    @Bean
+    public BiGovController biGovController(BiGovernance gov, BiBundles bundles, BiService bi, ExpectedValueRunner tests) {
+        return new BiGovController(gov, bundles, bi, tests);
     }
 }

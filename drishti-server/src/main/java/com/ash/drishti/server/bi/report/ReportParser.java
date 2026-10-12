@@ -72,7 +72,7 @@ public final class ReportParser {
     private static final Pattern NAME = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_.-]{0,63}");
     private static final Pattern ID = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_-]{0,39}");
     private static final Pattern DAY = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
-    private static final Set<String> TOP = Set.of("rachana", "report", "version", "title", "description", "sample", "dataset", "theme", "dates", "filters", "bookmarks", "layouts", "links", "pages",
+    private static final Set<String> TOP = Set.of("rachana", "report", "version", "title", "description", "sample", "dataset", "theme", "dates", "filters", "bookmarks", "layouts", "links", "tests", "pages",
             "owner", "tags", "endorsement", "endorsedBy", "audience");
     private static final Set<String> PAGE = Set.of("id", "title", "filters", "drillthrough", "visuals");
     private static final Set<String> VISUAL_KEYS = Set.of("id", "type", "title", "at", "wells", "filters", "sort", "limit", "hierarchy", "drillthrough", "format", "text", "src", "alt",
@@ -120,8 +120,11 @@ public final class ReportParser {
         List<Report.Filter> filters = filters(root.path("filters"), "filters", out);
         List<Report.Page> pages = pages(root.path("pages"), out);
         List<Report.Bookmark> bookmarks = bookmarks(root.path("bookmarks"), out);
+        List<com.ash.drishti.server.bi.dataset.ExpectedValue.Problem> testProblems = new ArrayList<>();
+        List<com.ash.drishti.server.bi.dataset.ExpectedValue> tests = com.ash.drishti.server.bi.dataset.ExpectedValue.parse(root.path("tests"), "tests", true, testProblems);
+        testProblems.forEach(tp -> out.add(error(INVALID, tp.path(), tp.message())));
         Report r = new Report(name, root.path("version").asInt(1), text(root, "title", name), text(root, "description", ""), root.path("sample").asBoolean(false), dataset, theme, dates,
-                filters, pages, bookmarks, layouts(root.path("layouts"), out), links(root.path("links"), out));
+                filters, pages, bookmarks, layouts(root.path("layouts"), out), links(root.path("links"), out), tests);
         return new Result(r, out);
     }
 

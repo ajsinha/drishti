@@ -202,6 +202,8 @@ public enum ErrorCode {
     BI_BUNDLE("DRS-9041", 422),
     /** Governance: an import would overwrite content that changed since it was exported (conflicts), or names a workspace or owner that cannot be mapped. */
     BI_IMPORT("DRS-9042", 409),
+    /** A report or dataset declares expected values (tests) and one fails or cannot run: publishing is refused unless a bi-admin forces it. */
+    BI_TESTS("DRS-9043", 409),
     /** Streaming BI: a live table cannot be kept (a table over an array, a kind no running connector serves, or its feed is failing and holds no rows). */
     LIVE_TABLE("DRS-9050", 422),
     /** Streaming BI: too many live streams are open for the server or for this user (drishti.bi.live.max-streams, max-streams-per-user). */

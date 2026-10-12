@@ -184,6 +184,7 @@ drishti:
       - /api/v1/bi/reports/validate     # checks a report's YAML without storing it
       - /api/v1/bi/boards/validate      # checks a board's YAML without storing it
       - /api/v1/bi/reports/format       # writes a report model as YAML
+      - /api/v1/bi/items/*/tests        # runs the expected values (tests:) of a report or dataset as the caller or a role they hold: queries only, stores nothing
       - /api/v1/export/*                # Rupaka phase 7: a report, visual or view rendered as PDF, PNG, Excel or CSV for the caller (masked), stores nothing
       - /api/v1/subscriptions/preview   # renders what a subscription would send, for the caller, stores nothing
     # WRITE SCOPES (TOKEN_SCOPES in docs/guides/API_GUIDE.md): a token is made with `read` (the default: all of the above) or with

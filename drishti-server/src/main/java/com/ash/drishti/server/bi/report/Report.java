@@ -32,10 +32,17 @@ import java.util.Map;
  * @param dates the business dates the report reads (null: each query reads the latest date)
  * @param layouts per device class ({@code phone}: 640 px and narrower; {@code tablet}: 1024 px and narrower), per page id, how the page is arranged; empty: the automatic
  *        one column on a phone and the grid on a tablet
+ * @param tests expected values Check and publishing run ({@link com.ash.drishti.server.bi.dataset.ExpectedValue}); empty when the report declares none
  * @param links which fields of different datasets mean the same thing, so a slicer or a selection on one filters the visuals of the others (RUPAKA.md section 20.10)
  */
 public record Report(String name, int version, String title, String description, boolean sample, String dataset, Map<String, String> theme, Dates dates, List<Filter> filters,
-        List<Page> pages, List<Bookmark> bookmarks, Map<String, Map<String, PhonePage>> layouts, List<Link> links) {
+        List<Page> pages, List<Bookmark> bookmarks, Map<String, Map<String, PhonePage>> layouts, List<Link> links, List<com.ash.drishti.server.bi.dataset.ExpectedValue> tests) {
+
+    /** Compatibility: a report without tests. */
+    public Report(String name, int version, String title, String description, boolean sample, String dataset, Map<String, String> theme, Dates dates, List<Filter> filters,
+            List<Page> pages, List<Bookmark> bookmarks, Map<String, Map<String, PhonePage>> layouts, List<Link> links) {
+        this(name, version, title, description, sample, dataset, theme, dates, filters, pages, bookmarks, layouts, links, List.of());
+    }
 
     /** Compatibility: a report without links. */
     public Report(String name, int version, String title, String description, boolean sample, String dataset, Map<String, String> theme, Dates dates, List<Filter> filters,
@@ -225,6 +232,9 @@ public record Report(String name, int version, String title, String description,
                 }
                 return x;
             }).toList());
+        }
+        if (!tests.isEmpty()) {
+            m.put("tests", tests.stream().map(com.ash.drishti.server.bi.dataset.ExpectedValue::toMap).toList());
         }
         if (!links.isEmpty()) {
             m.put("links", links.stream().map(l -> Map.of("fields", l.fields())).toList());

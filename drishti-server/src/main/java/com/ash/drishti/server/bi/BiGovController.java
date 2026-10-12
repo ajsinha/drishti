@@ -44,11 +44,24 @@ public class BiGovController {
     private final BiGovernance gov;
     private final BiBundles bundles;
     private final BiService bi;
+    private final ExpectedValueRunner tests;
 
-    public BiGovController(BiGovernance gov, BiBundles bundles, BiService bi) {
+    public BiGovController(BiGovernance gov, BiBundles bundles, BiService bi, ExpectedValueRunner tests) {
         this.gov = gov;
         this.bundles = bundles;
         this.bi = bi;
+        this.tests = tests;
+    }
+
+    /**
+     * Runs the expected values (<code>tests:</code>) of a report or dataset, as the caller or as a role they hold (a bi-steward as any): {@code {role, yaml}}, both
+     * optional ({@code yaml} is a report draft an author has not saved). Answers each test as pass, fail or error with the figure it found. Stores nothing.
+     */
+    @PostMapping("/items/{id}/tests")
+    public Map<String, Object> runTests(@PathVariable String id, @RequestBody(required = false) Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        Object role = body == null ? null : body.get("role");
+        Object yaml = body == null ? null : body.get("yaml");
+        return tests.run(p, id, yaml instanceof String s && !s.isBlank() ? s : null, role instanceof String r && !r.isBlank() ? r : null).toMap();
     }
 
     @GetMapping("/items/{id}/history")

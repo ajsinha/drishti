@@ -59,7 +59,7 @@ public final class DatasetParser {
     /** Measure names may hold spaces and punctuation: they are labels, never SQL. */
     static final Pattern LABEL = Pattern.compile("[^\\p{Cntrl}\\[\\]]{1,80}");
     private static final Set<String> TOP = Set.of("rachana", "dataset", "version", "title", "description", "sample", "engine", "tables", "relationships", "measures",
-            "hierarchies", "security", "rollups", "refresh", "layout", "owner", "tags", "endorsement", "endorsedBy", "audience", "from", "join", "derived", "columns");
+            "hierarchies", "security", "rollups", "refresh", "layout", "owner", "tags", "endorsement", "endorsedBy", "audience", "from", "join", "derived", "columns", "tests");
 
     private DatasetParser() {}
 
@@ -106,10 +106,13 @@ public final class DatasetParser {
         Dataset.Security security = security(root.path("security"), out);
         List<Dataset.Rollup> rollups = rollups(root.path("rollups"), out);
         String engine = text(root, "engine", "duckdb");
+        List<ExpectedValue.Problem> testProblems = new ArrayList<>();
+        List<ExpectedValue> tests = ExpectedValue.parse(root.path("tests"), "tests", false, testProblems);
+        testProblems.forEach(tp -> out.add(error(tp.path(), tp.message())));
         Dataset.Compose compose = composed && !derived ? new Dataset.Compose(inputs(root.path("from"), "from", out), joins(root.path("join"), out), List.of()) : null;
         Dataset.Derived derivedSpec = derived && !composed ? derived(root.path("derived"), out) : null;
         Dataset ds = new Dataset(name, root.path("version").asInt(1), text(root, "title", name), text(root, "description", ""), root.path("sample").asBoolean(false),
-                engine, tables, rels, measures, hierarchies, security, rollups, refresh(root.path("refresh"), "refresh", out), compose, derivedSpec);
+                engine, tables, rels, measures, hierarchies, security, rollups, refresh(root.path("refresh"), "refresh", out), compose, derivedSpec, tests);
         if (!"duckdb".equals(engine)) {
             out.add(error("engine", "only the embedded engine `duckdb` is built; '" + engine + "' is planned (RUPAKA.md section 7.1)"));
         }

@@ -377,7 +377,7 @@ public final class Composition {
         Dataset.Table table = new Dataset.Table(Dataset.JOINED, "", Dataset.FRAME, null, Dataset.FRAME, false, "", "the joined answers of " + String.join(", ", c.from().keySet()), columns);
         Dataset.Compose done = new Dataset.Compose(c.from(), c.joins(), frame);
         return new Dataset(ds.name(), ds.version(), ds.title(), ds.description(), ds.sample(), ds.engine(), Map.of(Dataset.JOINED, table), List.of(), measures, ds.hierarchies(),
-                ds.security(), List.of(), ds.refresh(), done, null);
+                ds.security(), List.of(), ds.refresh(), done, null, ds.tests());
     }
 
     /** The name a frame column has as a table column: an identifier (a name with a space or an ampersand becomes underscores), unique among {@code taken}. */
@@ -461,7 +461,7 @@ public final class Composition {
         }
         Dataset.Table table = new Dataset.Table(Dataset.RESULT, "", Dataset.FRAME, null, Dataset.FRAME, false, "", "the frame " + d.transform() + " returns", columns);
         return new Dataset(ds.name(), ds.version(), ds.title(), ds.description(), ds.sample(), ds.engine(), Map.of(Dataset.RESULT, table), List.of(), ds.measures(), ds.hierarchies(),
-                ds.security(), List.of(), ds.refresh(), null, d);
+                ds.security(), List.of(), ds.refresh(), null, d, ds.tests());
     }
 
     private static Problem error(String code, String path, String message) {

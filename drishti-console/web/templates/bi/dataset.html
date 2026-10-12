@@ -80,5 +80,12 @@
   <h3 data-refresh-history-head hidden>Recent refreshes</h3>
   <div class="tbl-wrap"><table class="tbl bi-tbl" data-refresh-history data-plain hidden><caption class="visually-hidden">Recent refreshes of this dataset</caption>
     <thead><tr><th scope="col">When</th><th scope="col">Started by</th><th scope="col">Result</th><th scope="col">Date</th><th scope="col">Rows</th><th scope="col">Took</th><th scope="col">Error</th></tr></thead><tbody></tbody></table></div></section>
+<section class="bi-sec" aria-labelledby="dTests" data-tests-sec hidden><h2 id="dTests">Expected values</h2>
+  <p class="text-muted-d">Tests the dataset declares (<code>tests:</code>): a measure, optionally grouped and filtered, and the number it should come to. Publishing is refused while one fails.</p>
+  <p><label>Run as <select class="studio-select" data-tests-role aria-label="Run the tests as a role"></select></label>
+    <button type="button" class="btn-pill btn-ghost" data-tests-run><i class="bi bi-clipboard-check" aria-hidden="true"></i> Run the tests</button>
+    <span class="text-muted-d" data-tests-sum role="status" aria-live="polite"></span></p>
+  <div class="tbl-wrap"><table class="tbl bi-tbl" data-tests-table data-plain hidden><caption class="visually-hidden">Expected values</caption>
+    <thead><tr><th scope="col">Test</th><th scope="col">Measure</th><th scope="col">Expected</th><th scope="col">Found</th><th scope="col">Result</th></tr></thead><tbody></tbody></table></div></section>
 {% endblock %}
 {% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-dataset.js?v={{ ASSET_V }}"></script>{% endblock %}

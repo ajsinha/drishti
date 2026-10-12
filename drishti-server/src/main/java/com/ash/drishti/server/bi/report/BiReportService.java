@@ -367,13 +367,26 @@ public final class BiReportService {
     public record Base(BiStore.Item dsItem, Dataset dataset, Map<String, Object> model, Report.Visual visual, QueryRequest query) {}
 
     public Base base(Principal p, String id, String pageId, String visualId, JsonNode stateJson) {
-        Prepared pre = prepare(p, id, null, pageId, visualId, stateJson);
+        return base(p, id, null, pageId, visualId, stateJson);
+    }
+
+    /** As above for a draft held as text ({@code yaml}, an author's), else the stored report. */
+    public Base base(Principal p, String id, String yaml, String pageId, String visualId, JsonNode stateJson) {
+        Prepared pre = prepare(p, id, yaml, pageId, visualId, stateJson);
         return new Base(pre.dsItem(), pre.dataset(), datasetSummary(p, pre.dsItem()), pre.visual(), pre.built().query());
     }
 
     /** The dataset a stored report reads, for "ask the data" (read with the report's grants, queried as the caller). */
     public Base target(Principal p, String id) {
-        Loaded l = loadItem(p, id);
+        return target(p, id, null);
+    }
+
+    /** As above for a draft held as text ({@code yaml}, an author's), else the stored report. */
+    public Base target(Principal p, String id, String yaml) {
+        if (yaml != null) {
+            bi.requirePower(p, BiAccess.AUTHOR);
+        }
+        Loaded l = yaml != null ? load(p, null, yaml, false) : loadItem(p, id);
         if (l.dataset() == null || !ok(l.problems())) {
             throw new DrishtiException(ErrorCode.REPORT_DATASET, "the report has errors, so its dataset cannot be asked");
         }

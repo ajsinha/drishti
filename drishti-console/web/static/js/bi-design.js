@@ -298,8 +298,30 @@
   }
 
   // ---- Check, Save ---------------------------------------------------------------------------------------------------
+  /** Runs the report's expected values (tests:) as the chosen role and lists each as passed, failed or could not run. Hidden when the report declares none. */
+  function runTests(yaml) {
+    const tests = (D.model.tests || []);
+    const head = q('[data-tests-head]'), run = q('[data-tests-run]'), sum = q('[data-tests-sum]'), list = B.clear(q('[data-tests-list]'));
+    head.hidden = run.hidden = sum.hidden = !tests.length;
+    if (!tests.length || !itemId) { return; }
+    const sel = q('[data-tests-role]');
+    if (!sel.options.length) {
+      B.api('GET', '/me').then((me) => {
+        sel.appendChild(h('option', { value: '', text: 'yourself' }));
+        (me.roles || []).forEach((r) => sel.appendChild(h('option', { value: r, text: r })));
+      }).catch(() => {});
+    }
+    q('[data-tests-again]').onclick = () => D.flushYaml().then(runTests);
+    sum.textContent = 'Running ' + tests.length + ' test' + (tests.length === 1 ? '' : 's') + '...';
+    B.api('POST', '/items/' + B.id2path(itemId) + '/tests', { yaml, role: sel.value || undefined }).then((r) => {
+      sum.textContent = r.passed + ' passed, ' + r.failed + ' failed' + (r.errors ? ', ' + r.errors + ' could not run' : '') + (r.role ? ' (as ' + r.role + ')' : '') + '.';
+      r.results.forEach((x) => list.appendChild(h('li', { class: 'bi-problem bi-problem-' + (x.status === 'pass' ? 'info' : x.status === 'fail' ? 'error' : 'warning'), 'data-test': x.status },
+        h('strong', { text: x.status.toUpperCase() + ' ' }), x.name + ': ' + (x.status === 'pass' ? x.expect + ' (' + x.actual + ')' : x.message))));
+    }).catch((e) => { sum.textContent = e.message; });
+  }
+
   function check() {
-    D.flushYaml().then((yaml) => B.api('POST', '/reports/validate', { yaml, quality: true })).then((r) => {
+    D.flushYaml().then((yaml) => { runTests(yaml); return B.api('POST', '/reports/validate', { yaml, quality: true }); }).then((r) => {
       const dlg = q('[data-check-box]');
       dlg.hidden = false;
       const list = q('[data-check-list]');

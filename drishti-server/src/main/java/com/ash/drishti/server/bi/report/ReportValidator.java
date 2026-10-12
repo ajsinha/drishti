@@ -105,6 +105,7 @@ public final class ReportValidator {
         }
         links();
         phoneLayouts(pageIds);
+        tests();
         for (int bi = 0; bi < report.bookmarks().size(); bi++) {
             Report.Bookmark b = report.bookmarks().get(bi);
             String p = "bookmarks[" + bi + "]";
@@ -159,6 +160,30 @@ public final class ReportValidator {
             return new Resolver(d).resolve(List.of(field.split("\\.")), null).column() != null;
         } catch (IllegalArgumentException e) {
             return false;
+        }
+    }
+
+    /** A test names a visual of the report or a measure of its dataset, and the fields it groups, picks and filters by exist. */
+    private void tests() {
+        int i = 0;
+        for (com.ash.drishti.server.bi.dataset.ExpectedValue t : report.tests()) {
+            String p = "tests[" + i++ + "]";
+            if (t.visual() != null) {
+                Report.Visual v = report.pages().stream().flatMap(x -> x.visuals().stream()).filter(x -> x.id().equals(t.visual())).findFirst().orElse(null);
+                if (v == null) {
+                    err(ReportParser.REFERENCE, p + ".visual", "the report has no visual '" + t.visual() + "'");
+                } else if (!VisualCatalogue.type(v.type()).group().equals("static") && v.well("values").isEmpty() && v.well("field").isEmpty()) {
+                    err(ReportParser.VISUAL, p + ".visual", "'" + t.visual() + "' shows no measure, so there is no number to check");
+                }
+                continue;
+            }
+            if (!ds.measures().containsKey(t.measure())) {
+                err(ReportParser.REFERENCE, p + ".measure", "the dataset has no measure '" + t.measure() + "' (measures: " + String.join(", ", ds.measures().keySet()) + ")");
+            }
+            java.util.List<String> fields = new ArrayList<>(t.by());
+            fields.addAll(t.row().keySet());
+            t.filters().forEach(f -> fields.add(f.field()));
+            fields.stream().filter(f -> !ds.measures().containsKey(f)).forEach(f -> field(f, p, true));
         }
     }
 
