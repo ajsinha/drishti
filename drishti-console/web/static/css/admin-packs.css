@@ -51,3 +51,10 @@
   .ds-tbl input { min-width: 8rem; font-size: 16px; }
   .ds-actions .btn-pill, .dep-actions .btn-pill { flex: 1 1 100%; min-height: 44px; }
 }
+/* The packs list: long text wraps so the actions column stays on screen (a 4,800 px row hid it past the right edge). */
+.adm-tbl[data-packs] th, .adm-tbl[data-packs] td { white-space: normal; vertical-align: top; }
+.adm-tbl[data-packs] .pk-desc { min-width: 16rem; max-width: 30rem; }
+.adm-tbl[data-packs] td.mono { overflow-wrap: break-word; max-width: 14rem; }
+.adm-tbl[data-packs] .pk-name { min-width: 11rem; }
+.adm-tbl[data-packs] .adm-actions { white-space: normal; min-width: 9rem; }
+.adm-tbl[data-packs] .adm-actions .fk { display: inline-flex; margin: 0 .4rem .3rem 0; }

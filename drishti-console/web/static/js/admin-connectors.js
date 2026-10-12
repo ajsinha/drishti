@@ -92,7 +92,14 @@
   function reloadSoon(gone) { setTimeout(function () { if (gone && onDetail) { location.href = '/admin/connectors'; } else { location.reload(); } }, 600); }
   function fetchDetail(name) { return call('GET', '/' + q(name)); }
 
-  function toggle(name, on) {
+  // Feedback on the button itself: stopping a connector takes a few seconds, and the page message may be scrolled out of view.
+  function busy(btn, text) {
+    if (!btn) { return function () {}; }
+    var was = btn.textContent;
+    btn.disabled = true; btn.setAttribute('aria-busy', 'true'); btn.textContent = text;
+    return function (after) { btn.disabled = false; btn.removeAttribute('aria-busy'); btn.textContent = after || was; };
+  }
+  function toggle(name, on, btn) {
     fetchDetail(name).then(function (d) {
       if (!d.ok) { say(msg, why(d), true); return; }
       var uses = usesOf(d.body);
@@ -101,8 +108,12 @@
       go.then(function (yes) {
         if (!yes) { return; }
         say(msg, (on ? 'Enabling ' : 'Disabling ') + name + '…');
+        var done = busy(btn, on ? 'Enabling…' : 'Disabling…');
         call('POST', '/' + q(name) + '/enabled', { enabled: on }, d.body.etag ? { 'If-Match': d.body.etag } : {}, uses.length && !on ? '?confirm=true' : '').then(function (r) {
-          if (!r.ok) { say(msg, why(r), true); return; }
+          if (!r.ok) { done(); say(msg, why(r), true); if (btn) { btn.title = why(r); } return; }
+          done(on ? 'Disable' : 'Enable');
+          if (btn && btn.hasAttribute('data-toggle')) { btn.setAttribute('data-toggle', on ? 'disable' : 'enable'); }
+          if (btn && btn.hasAttribute('data-act')) { btn.setAttribute('data-act', on ? 'disable' : 'enable'); }
           say(msg, name + (on ? ' is on.' : ' is off.'));
           reloadSoon();
         });
@@ -142,7 +153,7 @@
     if (!b || !tr) { return; }
     var name = tr.getAttribute('data-conn');
     if (b.hasAttribute('data-edit')) { openExisting(name, b); }
-    else if (b.hasAttribute('data-toggle')) { toggle(name, b.getAttribute('data-toggle') === 'enable'); }
+    else if (b.hasAttribute('data-toggle')) { toggle(name, b.getAttribute('data-toggle') === 'enable', b); }
     else if (b.hasAttribute('data-reset')) { reset(name); }
     else if (b.hasAttribute('data-delete')) { remove(name); }
   });
@@ -567,7 +578,7 @@
       if (act === 'edit') { openExisting(me, b); }
       else if (act === 'history') { openExisting(me, b).then(function () { go('history'); }); }
       else if (act === 'test') { openExisting(me, b).then(function () { $('[data-test]').click(); }); }
-      else if (act === 'enable' || act === 'disable') { toggle(me, act === 'enable'); }
+      else if (act === 'enable' || act === 'disable') { toggle(me, act === 'enable', b); }
       else if (act === 'reset') { reset(me); }
       else if (act === 'delete') { remove(me); }
     });
