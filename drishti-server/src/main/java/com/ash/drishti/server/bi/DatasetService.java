@@ -124,6 +124,39 @@ public final class DatasetService {
         return all;
     }
 
+    /**
+     * Adds an error for every table that names a connector no one has configured (a typing slip, a deleted connector file): such a dataset is "has errors",
+     * not a good one that fails at its first query. A connector that exists but is stopped is a warning (it may come back).
+     */
+    DatasetParser.Result withConnectors(DatasetParser.Result r) {
+        if (r.dataset() == null) {
+            return r;
+        }
+        List<DatasetParser.Problem> more = new ArrayList<>();
+        for (Dataset.Table t : r.dataset().tables().values()) {
+            if (Dataset.FRAME.equals(t.mode()) || t.connector() == null || t.connector().isBlank()) {
+                continue;
+            }
+            try {
+                if (sources.plugin(t.connector(), t.kind()).isEmpty()) {
+                    more.add(new DatasetParser.Problem("error", "DRS-9010", "tables." + t.name() + ".source.connector", "connector '" + t.connector() + "' does not exist: check Admin, Connectors"));
+                }
+            } catch (DrishtiException e) {
+                boolean missing = String.valueOf(e.getMessage()).contains("no such connector");
+                more.add(new DatasetParser.Problem(missing ? "error" : "warning", "DRS-9010", "tables." + t.name() + ".source.connector",
+                        missing ? "connector '" + t.connector() + "' does not exist: check Admin, Connectors" : e.getMessage()));
+            } catch (RuntimeException e) {
+                // the gateway cannot say: leave the dataset as the parser found it
+            }
+        }
+        if (more.isEmpty()) {
+            return r;
+        }
+        List<DatasetParser.Problem> all = new ArrayList<>(r.problems());
+        all.addAll(more);
+        return new DatasetParser.Result(r.dataset(), all);
+    }
+
     // ---- resolving ---------------------------------------------------------------------------------------------------
 
     private static String hash(String text) {
@@ -207,7 +240,7 @@ public final class DatasetService {
             seen.addAll(bi.draftDatasets(p));
         }
         for (BiStore.Item i : seen) {
-            DatasetParser.Result r = parse(i.id(), bi.bodyFor(p, i));
+            DatasetParser.Result r = withConnectors(parse(i.id(), bi.bodyFor(p, i)));
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("id", i.id());
             m.put("title", i.title());
@@ -239,7 +272,7 @@ public final class DatasetService {
     public Map<String, Object> modelOf(Principal p, BiStore.Item item) {
         String id = item.id();
         String body = bi.bodyFor(p, item);
-        DatasetParser.Result r = parse(id, body);
+        DatasetParser.Result r = withConnectors(parse(id, body));
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id", id);
         m.put("title", item.title());
@@ -382,7 +415,7 @@ public final class DatasetService {
 
     /** Checks YAML without storing it. */
     public Map<String, Object> validate(Principal p, String yaml) {
-        DatasetParser.Result r = DatasetParser.parse(yaml);
+        DatasetParser.Result r = withConnectors(DatasetParser.parse(yaml));
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("valid", r.ok());
         m.put("problems", r.problems().stream().map(x -> Map.of("level", x.level(), "code", x.code(), "path", x.path(), "message", x.message())).toList());

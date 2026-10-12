@@ -296,6 +296,10 @@ class DatasetApiTest {
         JsonNode bad = ok(call("POST", "/api/v1/bi/datasets/validate", wes(), Map.of("yaml", "dataset: x\ntables:\n  t:\n    source: { kind: trade }\n    columns: { a: string }\nmeasures:\n  N: { expr: \"sum(t.nope)\" }\n  M: { expr: \"lag(sum(t.a))\" }\n")));
         assertThat(bad.path("valid").asBoolean()).isFalse();
         assertThat(bad.path("problems").toString()).contains("DRS-9011").contains("measures.N").contains("measures.M");
+        // a table over a connector nobody configured is "has errors", not a good dataset that fails at its first query
+        JsonNode ghost = ok(call("POST", "/api/v1/bi/datasets/validate", wes(), Map.of("yaml", "dataset: x\ntables:\n  t:\n    source: { connector: no-such-lake, kind: trade }\n    columns: { a: string }\nmeasures:\n  N: { expr: \"count(t)\" }\n")));
+        assertThat(ghost.path("valid").asBoolean()).isFalse();
+        assertThat(ghost.path("problems").toString()).contains("no-such-lake").contains("does not exist");
     }
 
     @Test @Order(4)
