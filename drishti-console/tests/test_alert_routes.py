@@ -35,7 +35,7 @@ def test_the_form_is_filled_from_the_visual_the_person_pressed_alert_me_on(clien
     state = json.dumps({"slicers": {"ccy": ["USD"]}, "selections": [], "drill": []})
     page = client.get("/alerts/new", params={"source": "visual", "report": "file:report:daily", "page": "main", "visual": "net", "state": state, "title": "Daily risk: Net"}).text
     assert 'name="report" class="studio-in mono" value="file:report:daily"' in page and 'name="visual" class="studio-in mono" value="net"' in page
-    assert 'name="name" class="studio-in" value="Daily risk: Net"' in page
+    assert 'name="name" class="studio-in" value="Daily risk - Net"' in page and "data-name-rule" in page and 'pattern="[A-Za-z0-9]' in page          # ':' is outside the server's name rule
     assert "With the filters you had set on the screen" in page and "&#34;ccy&#34;" in page                         # the state rides in a hidden field
     assert "The number is read as you" in page.replace("\n", " ").replace("  ", " ") or "The number is read as you" in page
     for word in ("crosses a limit", "changes by too much", "has no data by a time", "on a schedule", "after a data load", "when it changes", "my inbox and the bell",

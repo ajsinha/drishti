@@ -143,6 +143,20 @@ def test_create_an_alert_fire_it_with_a_load_and_see_it_in_the_inbox(stack, brow
     page.context.close()
 
 
+def test_the_prefilled_name_is_inside_the_allowed_characters_and_the_form_shows_titles(stack, browser):
+    page = sign_in(browser, "rita")
+    open_report(page, REPORT)
+    settled(page)
+    page.locator('[data-visual="mtm"] [data-act="alert-me"]').click()
+    page.wait_for_url("**/alerts/new**")
+    name = page.input_value('input[name="name"]')
+    assert ":" not in name and name[0].isalnum(), name                                                       # "Trades overview: MTM" became "Trades overview - MTM"
+    expect(page.locator("[data-name-rule]")).to_contain_text("Letters, digits")
+    expect(page.locator("[data-visual-titles]")).to_contain_text("Report: ", timeout=15000)                  # titles beside the ids
+    assert page.evaluate("document.querySelector('input[name=name]').checkValidity()") is True
+    page.close()
+
+
 def test_a_number_masked_for_a_person_is_never_judged_or_shown(stack, browser):
     page = sign_in(browser, "ann")                                          # ann's MTM is masked
     make_alert(page, "Ann MTM floor")

@@ -578,3 +578,24 @@ def test_back_from_the_landing_page_does_not_show_the_sign_in_form_again(stack, 
     pg.goto(CONSOLE_URL + "/login?next=/bi/workspaces")                                                  # asking for it signed in goes straight on
     pg.wait_for_url("**/bi/workspaces")
     ctx.close()
+
+
+def test_a_range_slicer_two_rows_high_shows_both_from_and_to_and_hints_at_an_inverted_range(stack, browser):
+    ws = shared_workspace("Range Lab")
+    body = ("report: range\ndataset: trades-basic\npages:\n  - id: main\n    title: Main\n    visuals:\n"
+            "      - { id: slicer-1, type: slicer, title: Notional, at: { x: 0, y: 0, w: 4, h: 2 }, format: { mode: range }, wells: { field: [trade.notional] } }\n"
+            "      - { id: card-1, type: card, title: Trades, at: { x: 4, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n")
+    rep = make(ws, "report", "Range", body)
+    page = sign_in(browser, "wes")
+    page.goto(f"{CONSOLE_URL}/bi/r/{rep}")
+    page.wait_for_selector("[data-ready=yes]", timeout=30000)
+    expect(page.locator('[data-range="to"]')).to_be_visible(timeout=30000)
+    box = page.locator(".bi-vis-slicer").bounding_box()
+    for which in ("from", "to"):
+        b = page.locator(f'[data-range="{which}"]').bounding_box()
+        assert b["y"] >= box["y"] and b["y"] + b["height"] <= box["y"] + box["height"] + 1, (which, b, box)      # inside the visual: nothing is clipped
+    page.fill('[data-range="from"]', "9000")
+    page.fill('[data-range="to"]', "100")
+    page.press('[data-range="to"]', "Tab")
+    expect(page.locator("[data-range-hint]")).to_contain_text("From is after To")
+    page.close()

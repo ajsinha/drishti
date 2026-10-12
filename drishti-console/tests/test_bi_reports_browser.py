@@ -452,8 +452,8 @@ def test_designer_pages_the_report_settings_and_a_drillthrough_target(stack, bro
     page.fill("[data-bookmark-name]", "Start")
     page.click("[data-add-bookmark]")
     assert model(page)["bookmarks"] == [{"name": "Start", "page": "page2"}]
-    page.once("dialog", lambda d: d.accept())
     page.click("[data-delete-page]")
+    page.click("[data-confirm-go]")                                                                          # the styled confirm, not a browser dialog
     expect(page.locator("[data-ptabs] [role=tab]")).to_have_count(1)
     clean(page)
 

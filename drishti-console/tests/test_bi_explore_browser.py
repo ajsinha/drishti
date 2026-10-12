@@ -26,7 +26,7 @@ os.environ.setdefault("DRISHTI_BI_REPORT_CONSOLE_PORT", "17956")
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 pytest.importorskip("pandas")
 pytest.importorskip("pyarrow")
-from playwright.sync_api import sync_playwright  # noqa: E402
+from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 import bi_report_stack  # noqa: E402
 from bi_report_helpers import clean, sign_in  # noqa: E402
@@ -91,6 +91,12 @@ def test_slice_sql_and_python_agree_and_the_notebook_saves(stack, browser):
     page.wait_for_selector("[data-cells=sql] table")
     sql = {r[0]: float(r[1]) for r in grid(page, "[data-cells=sql]")}
     assert sql == pytest.approx(pivot)
+    # promoting a query with implicit aliases (no AS) works, and the message links the draft
+    page.fill('[data-cells=sql] textarea', "SELECT desk d, SUM(notional) n FROM extract GROUP BY desk")
+    page.click('[data-cells=sql] [data-promote-report]')
+    expect(page.locator("[data-promoted-link]")).to_be_visible(timeout=30000)
+    assert "not read" not in page.inner_text("[data-msg]") and "left out" not in page.inner_text("[data-msg]").replace("ORDER BY and LIMIT were left out", "")
+    page.fill('[data-cells=sql] textarea', "SELECT desk, SUM(notional) AS n FROM extract GROUP BY desk ORDER BY desk")
 
     # PYTHON on the server: pandas over df, quant through the stand-in engine
     page.click("#bxT-python")
