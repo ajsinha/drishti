@@ -36,6 +36,8 @@ def test_the_health_page_shows_connectors_packs_and_live(client, backend, monkey
             "live": {"streams": 2, "topics": 3, "frames": 120, "droppedFrames": 0, "p50Ms": 3.1, "p99Ms": 11.0}}
 
     async def admin(method, path, ident, body=None, **params):
+        if path == "/connectors":                                       # the connector files; "demo" is a plugin's own source
+            return {"connectors": [{"name": "trading-store"}, {"name": "feed-fred"}]}
         assert path == "/health"
         return data
     monkeypatch.setattr(backend, "admin", admin)
@@ -45,6 +47,7 @@ def test_the_health_page_shows_connectors_packs_and_live(client, backend, monkey
     assert "feed-fred" in page and "no API key" in page and "unknown panel kind" in page and "open streams" in page
     assert 'href="/admin/connectors/trading-store"' in page and 'href="/admin/connectors/feed-fred"' in page   # names open their pages
     assert 'href="/admin/packs/trading"' in page
+    assert 'href="/admin/connectors/demo"' not in page                                   # no page for a source that is not a connector
     body = client.get("/admin/health", params={"partial": 1}).text
     assert "<html" not in body and "trading-store" in body
     assert "data-health-body" not in body and "setInterval" in client.get("/static/js/admin.js").text

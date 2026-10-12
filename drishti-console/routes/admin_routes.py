@@ -414,7 +414,14 @@ async def health(request: Request, partial: int = 0):
         data = await request.app.state.backend.admin("GET", "/health", me)
     except BackendError as e:
         return render(request, "admin/forbidden.html", status_code=e.status, error=e)
-    return render(request, "admin/_health_body.html" if partial else "admin/health.html", h=data)
+    # Only a connector (a file under config/connectors) has a page: a source a plugin runs on its own (file, demo) does not.
+    try:
+        rows = await request.app.state.backend.admin("GET", "/connectors", me)
+        items = rows.get("connectors", rows) if isinstance(rows, dict) else rows
+        connectors = {c.get("name") for c in items or [] if isinstance(c, dict)}
+    except BackendError:
+        connectors = set()
+    return render(request, "admin/_health_body.html" if partial else "admin/health.html", h=data, connectors=connectors)
 
 
 @router.get("/caches")
