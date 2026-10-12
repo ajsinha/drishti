@@ -28,7 +28,14 @@
 .bi-checkpanel { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .6rem .9rem; background: var(--d-surface); }
 .bi-checkpanel h2 { font-size: 1rem; margin: 0 0 .3rem; }
 .bi-readonly { border: 1px solid var(--d-warn); border-radius: var(--d-radius); padding: .4rem .8rem; list-style: none; color: var(--d-ink); }
-.bi-dmain { display: grid; grid-template-columns: minmax(0, 1fr) 13.5rem 15.5rem 14rem; gap: .75rem; align-items: start; }
+.bi-dmain { display: grid; grid-template-columns: minmax(0, 1fr) 12rem 15rem 13rem; gap: .75rem; align-items: start; }
+.bi-dmain.bi-nofilters { grid-template-columns: minmax(0, 1fr) 0 15rem 13rem; }
+.bi-dmain.bi-nofilters .bi-pane-filters { display: none; }
+.bi-pane-vis { resize: vertical; min-height: 30rem; }
+.bi-pane-head { display: flex; align-items: center; justify-content: space-between; gap: .4rem; }
+.bi-pane-head h2 { margin: 0; }
+.bi-mpanes { display: none; }
+.bi-tab-rename { width: 9rem; }
 .bi-dleft { min-width: 0; }
 .bi-dtabs { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: .4rem; border-bottom: 1px solid var(--d-border); margin-bottom: .5rem; }
 .bi-viewtabs { display: flex; gap: .15rem; }
@@ -207,3 +214,17 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
   .bi-fieldset[data-format-options] label.bi-checkrow, [data-bookmarks] .btn-pill, [data-bookmarks] .studio-in { min-height: 44px; }
   [data-bookmarks] .bi-chipbtn { min-height: 44px; min-width: 44px; }
 }
+
+/* a phone: the toolbar shows icons, and the panes are reached through tabs under the canvas */
+@media (max-width: 760px) {
+  .bi-dactions .bi-lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .bi-dactions .btn-pill, .bi-dactions .bi-checkrow { flex: 0 0 auto; min-width: 44px; min-height: 44px; justify-content: center; }
+  .bi-dactions .bi-preview-toggle { display: none; }
+  .bi-mpanes { display: flex; gap: .25rem; overflow-x: auto; margin: .4rem 0; }
+  .bi-mpanes .bi-tab { min-height: 44px; flex: 0 0 auto; }
+  .bi-dmain[data-mpane="canvas"] .bi-pane, .bi-dmain[data-mpane="vis"] .bi-pane:not(.bi-pane-vis), .bi-dmain[data-mpane="fields"] .bi-pane:not(.bi-pane-fields), .bi-dmain[data-mpane="filters"] .bi-pane:not(.bi-pane-filters) { display: none; }
+  .bi-dmain:not([data-mpane="canvas"]) .bi-dleft { display: none; }
+  .bi-dmain { grid-template-columns: minmax(0, 1fr); }
+  .bi-pane-vis { resize: none; min-height: 0; }
+}
+@media (pointer: coarse) { .bi-pane-head button, .bi-addvisual .btn-pill, .bi-addvisual select, .bi-chipbtn, .bi-vtype { min-height: 44px; min-width: 44px; } }

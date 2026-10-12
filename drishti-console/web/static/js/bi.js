@@ -67,6 +67,9 @@
     });
   }
   function fail(e) { say(e.message, true); }
+  /** A message beside the control that caused it (bi-lib.js draws it, in a live region, and scrolls it into view); the top line when that script is absent. */
+  function near(anchor, text, bad) { var B = window.drishtiBi; if (B && B.near && anchor) { B.near(anchor, text, bad); } else { say(text, bad); } }
+  function busy(btn, fn) { var B = window.drishtiBi; return B && B.busy ? B.busy(btn, fn) : fn(); }
 
   function ago(iso) {
     if (!iso) { return ''; }
@@ -190,18 +193,23 @@
     form.hidden = !me.mayCreateWorkspace;
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      api('POST', '/workspaces', { name: form.elements.name.value, description: form.elements.description.value, reviewRequired: form.elements.reviewRequired.checked })
-        .then(function (w) { say('Created ' + w.name + '.'); form.reset(); load(); }).catch(fail);
+      var go = form.querySelector('[type=submit]');
+      busy(go, function () {
+        return api('POST', '/workspaces', { name: form.elements.name.value, description: form.elements.description.value, reviewRequired: form.elements.reviewRequired.checked })
+          .then(function (w) { near(go, 'Created ' + w.name + '.', false); form.reset(); load(); }).catch(function (err) { near(go, err.message, true); });
+      });
     });
     load();
   }
 
   /** What depends on an item, as a line for a delete confirmation: how many items and which (the server counts those the person may read). */
-  function impactOf(id) {
+  function impactOf(id, alsoGoing, published) {
+    var lose = published ? ' Readers lose it: it is published (version ' + published + ').' : '';
     return api('GET', '/items/' + encodeURIComponent(id).replace(/%3A/g, ':') + '/dependants').then(function (d) {
-      if (!d.count) { return h('small', { class: 'text-muted-d', 'data-impact': '0', text: ' · nothing depends on it' }); }
-      var names = d.dependants.slice(0, 5).map(function (x) { return x.title + ' (' + x.kind + ')'; }).join(', ');
-      return h('strong', { class: 'bi-impact-count', 'data-impact': String(d.count), text: ' · ' + d.count + (d.count === 1 ? ' item depends' : ' items depend') + ' on it: ' + names + (d.count > 5 ? ', and ' + (d.count - 5) + ' more' : '') });
+      var left = (d.dependants || []).filter(function (x) { return !alsoGoing || alsoGoing.indexOf(x.id) < 0; });          // an item deleted in the same selection does not count: it goes too
+      if (!left.length) { return h('small', { class: 'text-muted-d', 'data-impact': '0', text: ' · nothing else depends on it.' + lose }); }
+      var names = left.slice(0, 5).map(function (x) { return x.title + ' (' + x.kind + ')'; }).join(', ');
+      return h('strong', { class: 'bi-impact-count', 'data-impact': String(left.length), text: ' · ' + left.length + (left.length === 1 ? ' item depends' : ' items depend') + ' on it: ' + names + (left.length > 5 ? ', and ' + (left.length - 5) + ' more' : '') + '.' + lose });
     }).catch(function () { return document.createTextNode(''); });
   }
 
@@ -221,7 +229,7 @@
       list.forEach(function (it) {
         var li = h('li', { 'data-confirm-item': it.id }, it.title + ' (' + it.kind + ', ' + shortId(it.id) + ')');
         ul.appendChild(li);
-        impactOf(it.id).then(function (t) { li.appendChild(t); });
+        impactOf(it.id, list.map(function (x) { return x.id; }), it.publishedVersion).then(function (t) { li.appendChild(t); });
       });
       box.hidden = false; box._list = list; q('[data-confirm-no]').focus();
     }
@@ -274,7 +282,15 @@
       clear(tb);
       (ws.members || []).forEach(function (m) {
         var del = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'aria-label': 'Remove ' + m.username }, 'Remove');
-        del.addEventListener('click', function () { api('DELETE', '/workspaces/' + encodeURIComponent(ws.id) + '/members/' + encodeURIComponent(m.username)).then(function () { say('Removed ' + m.username + '.'); load(); }).catch(fail); });
+        var self = m.username === me.user;
+        del.addEventListener('click', function () {
+          if (!del.getAttribute('data-sure')) {
+            del.setAttribute('data-sure', '1'); del.textContent = self ? 'Confirm: remove me' : 'Confirm: remove';
+            near(del, self ? 'This removes you from ' + ws.name + ': you lose access to it' + (ws.role === 'admin' ? ' and may leave it with no administrator' : '') + '. Click again to confirm.' : 'Click again to remove ' + m.username + '.', true);
+            return;
+          }
+          busy(del, function () { return api('DELETE', '/workspaces/' + encodeURIComponent(ws.id) + '/members/' + encodeURIComponent(m.username)).then(function () { say('Removed ' + m.username + '.'); if (self) { window.location.href = '/bi/workspaces'; } else { load(); } }).catch(function (err) { near(del, err.message, true); }); });
+        });
         tb.appendChild(h('tr', { 'data-user': m.username }, h('th', { scope: 'row', text: m.username }), h('td', { text: m.role }), h('td', { text: m.addedBy }), h('td', {}, admin ? del : '')));
       });
       q('[data-add-member]').hidden = !admin;
@@ -359,7 +375,7 @@
       var star = q('[data-favourite]');
       star.setAttribute('aria-pressed', it.favourite ? 'true' : 'false'); clear(star); star.appendChild(icon(it.favourite ? 'star-fill' : 'star'));
       q('[data-body]').textContent = it.body || '(empty)';
-      q('[data-body-is]').textContent = it.bodyIs === 'draft' ? 'draft' : 'published version';
+      q('[data-body-is]').textContent = it.bodyIs !== 'draft' ? 'published version' : it.status === 'proposed' ? 'draft, proposed for review (frozen)' : it.status === 'published' ? 'draft, the same as the published version' : it.draftChanges ? 'draft, with changes not yet published' : 'draft';
       actions(); form(); versions();
       var open = q('[data-open-dataset]');
       if (open) { open.hidden = it.kind !== 'dataset'; open.href = '/bi/d/' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }
@@ -371,6 +387,8 @@
       var brd = q('[data-open-board]');
       if (brd) { brd.hidden = it.kind !== 'board'; brd.href = '/bi/b/' + enc; }
       if (des) { const designable = it.kind === 'report' || it.kind === 'board'; des.hidden = !(designable && it.can && it.can.edit) && !(designable && it.shipped); des.href = (it.kind === 'board' ? '/bi/design/board/' : '/bi/design/') + enc; des.lastChild.textContent = it.shipped ? ' Open a copy in the designer' : ' Open in the designer'; }
+      var wiz = q('[data-open-wizard]');
+      if (wiz) { wiz.hidden = !(it.kind === 'dataset' && it.can && it.can.edit && it.status !== 'proposed'); wiz.href = '/bi/datasets/new?edit=' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }
       if (mod) { mod.hidden = !(it.kind === 'dataset' && ((it.can && it.can.edit) || it.shipped)); mod.href = '/bi/m/' + enc; }
       document.dispatchEvent(new CustomEvent('bi:item', { detail: x }));          // bi-govern.js draws history, review, impact and lineage
     }
@@ -403,9 +421,12 @@
       var any = c.propose || c.publish || c.approve || c.withdraw;
       if (any) { box.appendChild(note); }
       if (it.kind === 'python') { box.appendChild(act('Check the Python', checkPython)); }
-      if (c.edit) { box.appendChild(act('Edit', function () { var f = q('[data-edit]'); f.hidden = !f.hidden; if (!f.hidden) { f.elements.title.focus(); } })); }
+      if (c.edit && it.status !== 'proposed') { box.appendChild(act('Edit', function () { var f = q('[data-edit]'); f.hidden = !f.hidden; if (!f.hidden) { f.elements.title.focus(); } })); }
       if (c.propose) { box.appendChild(act('Propose for review', function () { post('propose', { note: note.value }, 'Proposed. A second person approves it.'); })); }
       if (c.publish) { box.appendChild(act('Publish', function () { post('publish', { note: note.value }, 'Published.'); }, 'btn-accent')); }
+      if (it.status === 'proposed') {
+        box.appendChild(h('p', { class: 'bi-approvers', 'data-approvers': '' }, h('strong', { text: 'Waiting for review. ' }), 'Frozen until decided or withdrawn. Who can approve: ' + (it.approveRule || 'a reviewer') + (it.approvers && it.approvers.length ? '. Told by notification: ' + it.approvers.join(', ') : '. Nobody is eligible yet: ask a steward, or give a member of the workspace a role with the approve power') + '.'));
+      }
       if (c.withdraw) { box.appendChild(act('Withdraw proposal', function () { post('withdraw', null, 'Withdrawn: a draft again.'); })); }
       if (c.approve) {
         box.appendChild(act('Approve and publish', function () { post('approve', { note: note.value }, 'Approved and published.'); }, 'btn-accent'));
@@ -419,7 +440,7 @@
         box.appendChild(act('Delete', function (b) {
           if (!b.getAttribute('data-sure')) {
             b.setAttribute('data-sure', '1'); b.textContent = 'Confirm: delete';
-            impactOf(it.id).then(function (t) { var w = h('span', { class: 'bi-delete-impact', 'data-delete-impact': '' }, t); b.after(w); });
+            impactOf(it.id, null, it.publishedVersion).then(function (t) { var w = h('span', { class: 'bi-delete-impact', 'data-delete-impact': '' }, t); b.after(w); });
             return;
           }
           api('DELETE', path).then(function () { window.location.href = '/bi/w/' + encodeURIComponent(it.workspace); }).catch(fail);
@@ -427,19 +448,29 @@
       }
     }
     /** A copy of this item in a workspace the person chooses (they need to be a contributor there): same kind, body and description, "(copy)" on the title, a draft. */
+    function closePanels() { qa('[data-ask-workspace], [data-move-ui]').forEach(function (n) { n.remove(); }); }
     function duplicate(b) {
       var B = window.drishtiBi;
+      closePanels();
       if (!B || !B.askWorkspace) { say('Reload the page to duplicate.', true); return; }
       B.askWorkspace(b, 'Duplicate here', 'Duplicate into').then(function (to) {
-        return api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: it.kind, title: it.title + ' (copy)', description: it.description || '', tags: (it.tags || []).join(', '), body: it.body || '' });
+        return api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: it.kind, title: it.title + ' (copy)', description: it.description || '', tags: (it.tags || []).join(', '), body: it.shipped && B.copyBody ? B.copyBody(it.body || '') : it.body || '' });
       }).then(function (n) { window.location.href = '/bi/i/' + encodeURIComponent(n.id).replace(/%3A/g, ':'); }).catch(function (e) { if (!e.cancelled) { fail(e); } });
     }
     function moveTo(b) {
+      closePanels();
       api('GET', '/workspaces').then(function (list) {
-        var sel = h('select', { class: 'studio-select', 'aria-label': 'Move to' }, list.filter(function (w) { return !w.shipped && RANK[w.role] >= RANK.contributor && w.id !== it.workspace; })
-          .map(function (w) { return h('option', { value: w.personal ? 'me' : w.id, text: w.name }); }));
-        var go = act('Move', function () { post('move', { workspace: sel.value }, 'Moved.'); });
-        b.replaceWith(sel); sel.after(go);
+        var targets = list.filter(function (w) { return !w.shipped && RANK[w.role] >= RANK.contributor && w.id !== it.workspace; });
+        var sel = h('select', { class: 'studio-select', 'aria-label': 'Move to' }, targets.map(function (w) { return h('option', { value: w.personal ? 'me' : w.id, text: w.name + (w.personal ? ' (private)' : '') }); }));
+        var go = act('Move', function (g) {
+          busy(g, function () {
+            return api('POST', path + '/move', { workspace: sel.value }).then(function (n) { say('Moved to ' + n.workspaceName + '.'); show(n); near(q('[data-actions] .btn-pill'), 'Moved to ' + n.workspaceName + '.', false); }).catch(function (err) { near(g, err.message, true); });
+          });
+        });
+        var no = act('Cancel', function () { closePanels(); });
+        var ui = h('span', { class: 'bi-ask', 'data-move-ui': '', role: 'group', 'aria-label': 'Move to a workspace' }, targets.length ? [sel, go, no] : [h('small', { text: 'You are a contributor in no other workspace. ' }), no]);
+        b.after(ui);
+        if (targets.length) { sel.focus(); }
       }).catch(fail);
     }
     var opened = false;
@@ -454,9 +485,14 @@
     q('[data-edit]').addEventListener('submit', function (e) {
       e.preventDefault();
       var f = e.target;
-      api('PUT', path, { title: f.elements.title.value, description: f.elements.description.value, tags: f.elements.tags.value, audienceRoles: f.elements.audienceRoles.value,
-        audienceUsers: f.elements.audienceUsers.value, audiencePacks: f.elements.audiencePacks.value, body: f.elements.body.value, message: f.elements.message.value })
-        .then(function (n) { say('Draft saved.'); f.hidden = true; f.elements.message.value = ''; return api('GET', path).then(show); }).catch(fail);
+      var B = window.drishtiBi, go = f.querySelector('[type=submit]');
+      var payload = { title: f.elements.title.value, description: f.elements.description.value, tags: f.elements.tags.value, audienceRoles: f.elements.audienceRoles.value,
+        audienceUsers: f.elements.audienceUsers.value, audiencePacks: f.elements.audiencePacks.value, body: f.elements.body.value, message: f.elements.message.value };
+      var copy = function () { return B.askWorkspace(go, 'Save mine as a copy', 'Save a copy into').then(function (to) { return api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: it.kind, title: payload.title + ' (copy)', description: payload.description, tags: payload.tags, body: payload.body }); }).then(function (n) { window.location.href = '/bi/i/' + encodeURIComponent(n.id).replace(/%3A/g, ':'); }); };
+      var save = B && B.saveItem ? function () { return B.saveItem(id, payload, it.etag, go, copy); } : function () { return api('PUT', path, payload); };
+      busy(go, function () {
+        return save().then(function () { say('Draft saved.'); f.hidden = true; f.elements.message.value = ''; return api('GET', path).then(show); }).catch(function (err) { if (!err.cancelled) { near(go, err.message, true); } });
+      });
     });
     function versions() {
       api('GET', path + '/versions').then(function (list) {

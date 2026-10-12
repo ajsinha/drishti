@@ -205,6 +205,7 @@
   B.near = function (anchor, text, bad) {
     if (!anchor) { return null; }
     let box = anchor.parentNode.querySelector('[data-near="' + (anchor.getAttribute('data-near-for') || '') + '"]');
+    if (!box && !text) { return null; }
     if (!box) {
       const key = 'n' + Math.random().toString(36).slice(2, 8);
       anchor.setAttribute('data-near-for', key);
@@ -253,6 +254,14 @@
         over.addEventListener('click', () => { box.remove(); put(false).then(resolve, reject); });
       });
     });
+  };
+
+  /** The body of a copy of a shipped file: without the licence header and the sample's own explanation (the comments before the first key), and no longer marked as a sample. */
+  B.copyBody = function (body) {
+    const lines = String(body || '').split('\n');
+    let i = 0;
+    while (i < lines.length && (/^\s*#/.test(lines[i]) || !lines[i].trim())) { i++; }
+    return lines.slice(i).filter((l) => !/^sample:\s*true\b/.test(l)).join('\n').replace(/^tags:\s*\[(.*)\]/m, (m, t) => 'tags: [' + t.split(',').map((x) => x.trim()).filter((x) => x && x !== 'sample' && x !== 'tutorial').join(', ') + ']');
   };
 
   B.ROW_PX = 56;                 // the height of one grid row of a report, in pixels (also in bi-report.css)

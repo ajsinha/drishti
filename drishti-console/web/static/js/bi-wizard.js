@@ -28,7 +28,12 @@
     doc: null, mode: 'tables', offer: [], proposals: [], step: 0, steps: [], editId: root.getAttribute('data-edit') || '', editItem: null, rows: {}, yamlText: null,
     types: ['string', 'integer', 'decimal', 'boolean', 'date', 'timestamp'], renderers: {}
   });
-  const say = (t, bad) => B.say(q('[data-msg]'), t, bad);
+  /** A message at the top and, for a problem, beside the Next button (where the person is looking) in a live region. */
+  const say = (t, bad) => {
+    B.say(q('[data-msg]'), t, bad);
+    const next = q('[data-wiz-next]');
+    if (next && !next.hidden) { B.near(next, bad ? t : '', true); }
+  };
   W.say = say;
   W.slug = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64);
   W.ident = (s) => String(s || '').replace(/[^A-Za-z0-9_]+/g, '_').replace(/^_+|_+$/g, '') || 'col';
@@ -40,13 +45,27 @@
   function bar() {
     const ol = B.clear(q('[data-wiz-steps]'));
     W.steps.forEach((s, i) => ol.appendChild(h('li', { 'data-step': s, class: i < W.step ? 'wiz-done' : '', 'aria-current': i === W.step ? 'step' : false, text: (i + 1) + '. ' + LABELS[s] })));
-    q('[data-wiz-back]').hidden = W.step === 0 || (W.editId && W.step === 1 && W.steps[0] === 'source' && W.skipSource);
+    q('[data-wiz-back]').hidden = W.step === 0;
     const last = W.step === W.steps.length - 1;
     q('[data-wiz-next]').hidden = last;
   }
-  W.show = function (n) {
+  const draftKey = () => 'drishti-wizard-draft:' + (W.editId || 'new');
+  W.clean = true;
+  /** The unfinished dataset is kept in this tab's session storage after every step, so a refresh gives it back (Discard draft throws it away). */
+  W.keepDraft = function () {
+    if (!W.doc) { return; }
+    try {
+      W.commitColumns();
+      window.sessionStorage.setItem(draftKey(), JSON.stringify({ doc: W.doc, mode: W.mode, step: W.step, name: W.name, title: W.title, description: W.description, source: W.source, picked: W.picked, connector: W.connector, rows: W.rows, skipSource: W.skipSource }));
+    } catch (e) { /* storage full or off: the draft is only lost on a refresh */ }
+  };
+  W.discardDraft = function () { try { window.sessionStorage.removeItem(draftKey()); } catch (e) { /* nothing kept */ } };
+  W.show = function (n, fromHistory) {
     W.step = Math.max(0, Math.min(W.steps.length - 1, n));
     say('');
+    if (!fromHistory) { window.history.pushState({ wizardStep: W.step }, '', window.location.pathname + window.location.search + '#' + W.steps[W.step]); }
+    W.clean = false;
+    W.keepDraft();
     bar();
     const body = B.clear(q('[data-wiz-body]'));
     body.setAttribute('data-step', W.steps[W.step]);
@@ -54,10 +73,13 @@
     window.scrollTo(0, 0);
   };
   W.setMode = function (mode) { W.mode = mode; W.steps = STEPS[mode].slice(); };
+  window.addEventListener('popstate', (e) => { if (W.doc || W.steps.length) { W.show(e.state && e.state.wizardStep != null ? e.state.wizardStep : 0, true); } });
+  window.addEventListener('beforeunload', (e) => { if (W.doc && !W.clean) { e.preventDefault(); e.returnValue = ''; } });
   q('[data-wiz-back]').addEventListener('click', () => W.show(W.step - 1));
   q('[data-wiz-next]').addEventListener('click', () => {
     const leave = W.leave[W.steps[W.step]];
-    Promise.resolve(leave ? leave() : true).then((ok) => { if (ok !== false) { W.show(W.step + 1); } }).catch((e) => say(e.message, true));
+    const next = q('[data-wiz-next]');
+    B.busy(next, () => Promise.resolve(leave ? leave() : true).then((ok) => { if (ok !== false) { W.show(W.step + 1); } }).catch((e) => say(e.message, true)));
   });
   W.leave = {};
 
@@ -122,7 +144,17 @@
   }
   W.renderers.source = function (body) {
     if (W.editId && W.doc) {
-      body.appendChild(h('p', { text: 'This dataset is open for editing. Its tables are ' + (W.tables().join(', ') || 'none') + '. Use the next steps to change columns, relationships, measures, hierarchies and the refresh.' }));
+      const it = W.editItem || {};
+      body.appendChild(h('h2', { text: 'Overview' }));
+      body.appendChild(h('p', { text: (it.title || W.doc.title || W.doc.dataset || 'This dataset') + ' is open for editing. Its tables are ' + (W.tables().join(', ') || 'none') + '. Go to a step to change it, or press Next to go through them in order.' }));
+      const ol = h('ol', { class: 'wiz-stepjump', 'data-wiz-stepjump': '' });
+      W.steps.forEach((s, i) => {
+        if (s === 'source') { return; }
+        const b = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-jump': s, text: LABELS[s] });
+        b.addEventListener('click', () => W.show(i));
+        ol.appendChild(h('li', { value: i + 1 }, b));
+      });
+      body.appendChild(ol);
       return;
     }
     const meta = h('div', { class: 'bi-form' },
@@ -282,14 +314,35 @@
     }).then((ok) => {
       if (!ok) { return null; }
       W.setMode('tables');
-      if (!W.editId) { W.show(0); return null; }
+      let kept = null;
+      try { kept = JSON.parse(window.sessionStorage.getItem(draftKey()) || 'null'); } catch (e) { kept = null; }
+      const restore = () => {
+        if (!kept || !kept.doc) { return false; }
+        Object.assign(W, { doc: kept.doc, name: kept.name, title: kept.title, description: kept.description, source: kept.source, picked: kept.picked || {}, connector: kept.connector, rows: kept.rows || {}, skipSource: kept.skipSource });
+        W.setMode(kept.mode || 'tables');
+        W.show(kept.step || 0, true);
+        window.history.replaceState({ wizardStep: W.step }, '', window.location.pathname + window.location.search + '#' + W.steps[W.step]);
+        const bar = h('p', { class: 'bi-warn', 'data-wiz-restored': '' }, 'Your unfinished draft from this tab was restored. ');
+        const drop = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-wiz-discard': '', text: 'Discard draft' });
+        drop.addEventListener('click', () => { W.discardDraft(); W.clean = true; window.location.reload(); });
+        bar.appendChild(drop);
+        q('[data-wiz-body]').before(bar);
+        return true;
+      };
+      if (!W.editId) {
+        if (!restore()) { window.history.replaceState({ wizardStep: 0 }, '', window.location.pathname + window.location.search + '#source'); W.show(0, true); }
+        return null;
+      }
       q('[data-wiz-title]').textContent = 'Edit the dataset in the wizard';
       return B.api('GET', '/items/' + B.id2path(W.editId)).then((it) => {
         W.editItem = it;
+        if (it.status === 'proposed') { say('This dataset is proposed for review, so it is frozen: withdraw the proposal on its item page to edit it. You can still look and save a copy.', true); }
         return post('/bi/wizard/parse', { yaml: it.body || '' });
       }).then((r) => {
+        if (kept && kept.doc && restore()) { return; }
         W.doc = r.doc; W.setMode(r.mode); W.skipSource = true; W.rows = {};
-        W.show(1);
+        window.history.replaceState({ wizardStep: 0 }, '', window.location.pathname + window.location.search + '#overview');
+        W.show(0, true);
       });
     }).catch((e) => say(e.message, true));
   };

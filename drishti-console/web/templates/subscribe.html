@@ -15,11 +15,12 @@
 #}
 {% extends "base.html" %}
 {% block title %}Subscribe · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/dist.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/dist.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/collab.css?v={{ ASSET_V }}">{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm">
+  {% if form.target and form.target.type == 'report' %}<nav class="dist-binav" aria-label="Business intelligence"><a href="/bi">BI home</a> <a href="/bi/catalogue">Catalogue</a> <a href="/bi/workspaces">Workspaces</a> <a href="/bi/designer">Designer</a> <a href="/reports">All subscriptions</a></nav>{% endif %}
   <h1>Subscribe</h1>
   <p class="text-muted-d">Send this by email on a schedule. <b>Each recipient gets their own render</b>: the figures are asked of the data as that person, with their
     row rules and masks, never copied from yours. Someone who may not open it is skipped and the history says why.</p>
@@ -41,6 +42,9 @@
         <option value="xlsx"{% if form.format == 'xlsx' %} selected{% endif %}>an Excel workbook attached</option></select></label>
       <label class="wide">To (user names, <code>role:NAME</code> for everyone with a role, separated by commas)
         <input name="recipients" class="studio-in mono" value="{{ form.recipients or '' }}" required placeholder="alice, role:risk"></label>
+      <label class="wide bi-people">Find people or roles to add
+        <input class="studio-in" data-find-people autocomplete="off" placeholder="type a name or a role to search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="subFindList">
+        <ul class="shr-list" id="subFindList" role="listbox" aria-label="Known people and roles" data-find-list hidden></ul></label>
       {% if opts.ai %}<label class="wide"><input type="checkbox" name="narrative" data-narrative{% if form.narrative %} checked{% endif %}> Open the email with a short written summary
         <span class="text-muted-d">Written by an AI model from <b>each recipient's own</b> figures (what they may see, masked values left out), through your administrator's AI policy.
         {% if opts.mode != 'aggregates' %}The policy here lets the model see labels only, so the summary is left out of every email until an administrator sets <code>drishti.bi.ai.values: aggregates</code>.{% endif %}</span></label>{% endif %}
@@ -51,7 +55,7 @@
         <label><input type="checkbox" name="sms"{% if form.sms %} checked{% endif %}> Text each recipient who has given a number a link to it</label>
         <label>Your own mobile number<input name="phone" class="studio-in" type="tel" autocomplete="tel" placeholder="{{ opts.phone or '+44 20 7946 0000' }}" maxlength="24"></label>
         <span class="text-muted-d">{% if opts.phone %}On file for you: {{ opts.phone }}. {% endif %}A text carries the title and a link, never a figure. Everyone gives their own number (here, or in their own subscription).</span></fieldset>{% endif %}
-      <label><input type="checkbox" name="enabled" checked> Active</label>
+      <label class="dist-check"><input type="checkbox" name="enabled" checked> Active</label>
       <button type="submit" class="btn-pill btn-accent dist-act">Subscribe</button>
       <a class="btn-pill btn-ghost dist-act" href="/reports">Cancel</a>
     </form>
@@ -62,3 +66,4 @@
   </div></section>
 </div>
 {% endblock %}
+{% block scripts %}<script src="/static/js/people.js?v={{ ASSET_V }}"></script><script src="/static/js/subscribe-recipients.js?v={{ ASSET_V }}"></script>{% endblock %}

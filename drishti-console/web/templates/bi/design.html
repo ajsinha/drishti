@@ -33,15 +33,15 @@
     <div class="bi-dtitle"><a class="bi-dback" href="/bi/designer" aria-label="Back to the designer start"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
       <h1 data-title>Report</h1><span class="bi-badge" data-state>Loading</span></div>
     <div class="bi-dactions" role="toolbar" aria-label="Designer actions">
-      <button type="button" class="btn-pill btn-ghost" data-undo disabled><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Undo</button>
-      <button type="button" class="btn-pill btn-ghost" data-redo disabled><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Redo</button>
+      <button type="button" class="btn-pill btn-ghost" data-undo disabled><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> <span class="bi-lbl">Undo</span></button>
+      <button type="button" class="btn-pill btn-ghost" data-redo disabled><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> <span class="bi-lbl">Redo</span></button>
       <label class="bi-checkrow bi-preview-toggle"><input type="checkbox" data-preview checked> Preview with data</label>
-      <button type="button" class="btn-pill btn-ghost" data-check><i class="bi bi-clipboard-check" aria-hidden="true"></i> Check</button>
+      <button type="button" class="btn-pill btn-ghost" data-check><i class="bi bi-clipboard-check" aria-hidden="true"></i> <span class="bi-lbl">Check</span></button>
       <a class="btn-pill btn-ghost" data-view-link href="/bi" title="Open the report page: authors see the saved draft"><i class="bi bi-eye" aria-hidden="true"></i> <span class="bi-lbl">View</span></a>
       <a class="btn-pill btn-ghost" data-item-link href="/bi" aria-label="Item page"><i class="bi bi-card-text" aria-hidden="true"></i> <span class="bi-lbl">Item page</span></a>
       <button type="button" class="btn-pill btn-ghost" data-publish title="Save, then publish (or propose for review where the workspace requires it)"><i class="bi bi-send" aria-hidden="true"></i> <span class="bi-lbl" data-publish-label>Publish</span></button>
-      <button type="button" class="btn-pill btn-ghost" data-save-copy hidden><i class="bi bi-files" aria-hidden="true"></i> Save a copy</button>
-      <button type="button" class="btn-pill btn-accent" data-save><i class="bi bi-floppy" aria-hidden="true"></i> Save</button>
+      <button type="button" class="btn-pill btn-ghost" data-save-copy hidden><i class="bi bi-files" aria-hidden="true"></i> <span class="bi-lbl">Save a copy</span></button>
+      <button type="button" class="btn-pill btn-accent" data-save><i class="bi bi-floppy" aria-hidden="true"></i> <span class="bi-lbl">Save</span></button>
     </div>
   </header>
   <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
@@ -54,7 +54,12 @@
       <button type="button" class="btn-pill btn-ghost" data-tests-again>Run again</button></p>
     <p data-tests-sum role="status" hidden></p><ul class="bi-warn" data-tests-list></ul>
     <button type="button" class="btn-pill btn-ghost" data-check-close>Close</button></section>
-  <div class="bi-dmain">
+  <nav class="bi-mpanes" data-mpanes role="tablist" aria-label="Designer panes (phone)">
+  <button type="button" class="bi-tab" role="tab" data-mpane-tab="canvas" aria-selected="true">Canvas</button>
+  <button type="button" class="bi-tab" role="tab" data-mpane-tab="vis" aria-selected="false">Visuals</button>
+  <button type="button" class="bi-tab" role="tab" data-mpane-tab="fields" aria-selected="false">Fields</button>
+  <button type="button" class="bi-tab" role="tab" data-mpane-tab="filters" aria-selected="false">Filters</button></nav>
+  <div class="bi-dmain" data-dmain data-mpane="canvas">
     <div class="bi-dleft">
       <div class="bi-dtabs">
         <nav class="bi-tabs" data-ptabs role="tablist" aria-label="Pages"></nav>
@@ -100,7 +105,7 @@
         <ul class="bi-warn" data-yaml-problems role="status"></ul>
       </div>
     </div>
-    <aside class="bi-pane bi-pane-filters" aria-labelledby="pfH"><h2 id="pfH">Filters</h2><div data-filters></div></aside>
+    <aside class="bi-pane bi-pane-filters" aria-labelledby="pfH"><div class="bi-pane-head"><h2 id="pfH">Filters</h2><button type="button" class="btn-pill btn-ghost bi-small" data-hide-filters aria-label="Hide the Filters pane">Hide</button></div><div data-filters></div></aside>
     <aside class="bi-pane bi-pane-vis" aria-labelledby="pvH"><h2 id="pvH">Visualizations</h2>
       <div data-types class="bi-types"></div>
       <div class="bi-ptabs" role="tablist" aria-label="Visual settings">

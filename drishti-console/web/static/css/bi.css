@@ -73,6 +73,15 @@ h1 .bi-soon, h2 .bi-soon { margin-left: .5rem; vertical-align: middle; }
 .bi-note { min-width: 14rem; flex: 1 1 14rem; }
 .bi-body { background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .75rem; max-height: 26rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
 .bi-danger { color: var(--d-bad) !important; border-color: var(--d-bad) !important; }
+.bi-danger[data-sure] { background: var(--d-bad) !important; color: var(--d-on-bad, #fff) !important; font-weight: 600; }
+.bi-near { display: inline-block; margin-left: .5rem; font-size: .85rem; color: var(--d-ink); vertical-align: middle; }
+.bi-near.bi-bad { color: var(--d-bad); font-weight: 600; }
+.bi-ask { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-left: .5rem; }
+.bi-stale { padding: .4rem .6rem; border: 1px solid var(--d-bad); border-radius: var(--d-radius); background: var(--d-surface-2); }
+.bi-form input:not([type="checkbox"]):not([type="color"]), .bi-form select { min-width: min(24rem, 100%); }
+.bi-people .shr-list { z-index: 20; min-width: 100%; }
+.bi-approvers { flex: 1 1 100%; margin: 0; }
+.bi-count { font-size: .75rem; color: var(--d-muted); }
 .bi-empty, .bi-placeholder { color: var(--d-muted); padding: .75rem 0; }
 .bi-placeholder { border: 1px dashed var(--d-border); border-radius: var(--d-radius); padding: 1rem; }
 .bi-tbl th[scope="row"] { text-align: left; font-weight: 600; }

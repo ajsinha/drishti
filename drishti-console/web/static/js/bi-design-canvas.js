@@ -183,6 +183,13 @@
         e.frame.el.classList.remove('bi-vis-busy');
         return;
       }
+      if (v.type === 'vega-lite' && !(v.format && v.format.spec) && !(v.wells && Object.keys(v.wells).some((w) => (v.wells[w] || []).length))) {
+        B.clear(e.frame.body).appendChild(h('div', { class: 'bi-vis-empty bi-dropnote', role: 'status', 'data-vega-placeholder': '' }, B.icon('code-slash'), ' Vega-Lite visual needs a specification and a field', h('br'),
+          'Drop a field or a measure on it for its data, and write the specification in Format (spec) or the YAML tab.'));
+        e.frame.foot.textContent = '';
+        e.frame.el.classList.remove('bi-vis-busy');
+        return;
+      }
       const missing = Object.keys(D.wellSpecs(v.type)).filter((w) => D.wellSpecs(v.type)[w].required && !(v.wells[w] || []).length);
       if (missing.length) {
         B.clear(e.frame.body).appendChild(h('div', { class: 'bi-vis-empty bi-dropnote', role: 'status' }, B.icon('plus-circle'), ' Add a ' + (D.wellSpecs(v.type)[missing[0]].kind === 'measure' ? 'measure' : 'field') + ' to the ' + missing[0] + ' well', h('br'), describe(v)));
@@ -211,8 +218,7 @@
     }
 
     /** The preview asks for one visual, with the incomplete visuals left out, so one unfinished visual does not blank the others. If the server names another
-        visual's problem (a field its dataset lacks), that visual is left out too and the question is asked again. The published view is unchanged: it keeps
-        refusing a report with errors. */
+        visual's problem (a field its dataset lacks), that visual is left out too and the question is asked again. The published view draws every visual that has no error of its own. */
     function previewQuery(id) {
       const skipped = new Set();
       const attempt = (n) => {

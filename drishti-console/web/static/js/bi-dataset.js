@@ -73,7 +73,7 @@
           x.description ? h('p', { class: 'bi-card-desc', text: x.description }) : null,
           h('p', { class: 'bi-card-badges' }, x.endorsement === 'promoted' ? badge('promoted', 'bi-promoted', 'bookmark-star') : x.endorsement === 'certified' ? badge('certified', 'bi-certified', 'patch-check') : null,
             x.sample ? badge('sample', '', 'mortarboard') : null, x.valid ? null : badge(x.errors + ' error' + (x.errors === 1 ? '' : 's'), 'bi-status', 'exclamation-triangle')),
-          h('p', { class: 'bi-card-meta', text: x.tables + ' table' + (x.tables === 1 ? '' : 's') + ' · ' + x.relationships + ' relationship' + (x.relationships === 1 ? '' : 's') + ' · ' + x.measures + ' measures' })));
+          h('p', { class: 'bi-card-meta', text: x.tables + ' table' + (x.tables === 1 ? '' : 's') + ' · ' + x.relationships + ' relationship' + (x.relationships === 1 ? '' : 's') + ' · ' + x.measures + (x.measures === 1 ? ' measure' : ' measures') })));
       });
       q('[data-empty]').hidden = d.datasets.length > 0;
     }).catch(fail);
@@ -96,7 +96,7 @@
       if (!chosen.length) { say('Choose at least one kind.', true); return; }
       say('Reading the packs and the data...');
       api('POST', '/model/start', { kinds: chosen, name: chosen.join('-') }).then(function (d) {
-        say('Draft ready: ' + d.tables.length + ' tables, ' + d.relationships.length + ' relationships from the packs, ' + d.proposals.length + ' proposed from the data.');
+        say('Draft ready: ' + d.tables.length + (d.tables.length === 1 ? ' table, ' : ' tables, ') + d.relationships.length + (d.relationships.length === 1 ? ' relationship' : ' relationships') + ' from the packs, ' + d.proposals.length + ' proposed from the data.');
         q('[data-draft]').hidden = false;
         var tb = q('[data-draft-links] tbody'); clear(tb);
         d.relationships.forEach(function (l) { tb.appendChild(h('tr', {}, h('td', { class: 'mono', text: l.fromTable + '.' + l.fromColumn }), h('td', { class: 'mono', text: l.toTable + '.' + l.toColumn }), h('td', { text: l.cardinality }), h('td', { text: l.crossPack ? 'yes' : 'no' }))); });
@@ -136,7 +136,7 @@
       m.problems.forEach(function (p) { pr.appendChild(h('li', {}, h('b', { class: 'mono', text: p.code + ' ' + (p.path || '') }), ' ' + p.message + (p.level === 'warning' ? ' (warning)' : ''))); });
       q('[data-problems-sec]').hidden = m.problems.length === 0;
       if (!m.tables) { return; }
-      q('[data-meta]').textContent = 'dataset ' + m.name + ' · version ' + m.version + ' · engine ' + m.engine + ' · ' + m.tables.length + ' tables · ' + m.measures.length + ' measures';
+      q('[data-meta]').textContent = 'dataset ' + m.name + ' · version ' + m.version + ' · engine ' + m.engine + ' · ' + m.tables.length + (m.tables.length === 1 ? ' table · ' : ' tables · ') + m.measures.length + (m.measures.length === 1 ? ' measure' : ' measures');
       built(m); tables(m); relationships(m); measures(m); security(m); layers(m); refresh(m); refreshNow(); testsSection(); preview(m);
     }
 

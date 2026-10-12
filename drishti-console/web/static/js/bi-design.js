@@ -37,6 +37,14 @@
   // ---- the start page ------------------------------------------------------------------------------------------------
   if (q('[data-design-start]')) {
     const list = q('[data-drafts]'), wsSel = q('[data-new-workspace]');
+    B.api('GET', '/me').then((me) => {                                  // the power is explained before anyone fills a form that cannot be saved
+      if ((me.powers || []).indexOf('bi-author') < 0) {
+        const note = h('p', { class: 'bi-warn', role: 'alert', 'data-need-author': '' }, h('strong', { text: 'You need the bi-author power to design. ' }), 'Your roles give you ' + ((me.powers || []).join(', ') || 'no BI power') + '. Ask an administrator to add bi-author to one of your roles (Admin, BI settings). You can still open published reports from the ', h('a', { href: '/bi/catalogue', text: 'catalogue' }), '.');
+        q('[data-design-start]').before(note);
+        B.qa('form button[type=submit], form input, form select', q('[data-design-start]')).forEach((el) => { el.disabled = true; });
+        B.qa('[data-sample-copy]', q('[data-design-start]')).forEach((el) => { el.disabled = true; });
+      }
+    }).catch(() => {});
     const want = new URLSearchParams(window.location.search).get('dataset');             // from a dataset page: New report on this dataset
     B.fillWorkspaces(wsSel).then((wss) => Promise.all(wss.map((w) => B.api('GET', '/workspaces/' + encodeURIComponent(w.id) + '/items').then((items) => items.filter((i) => i.kind === 'report').map((i) => ({ i, w }))))))
       .then((groups) => {
@@ -59,7 +67,7 @@
       items.filter((i) => i.kind === 'report').forEach((i) => {
         const copy = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-sample-copy': i.id, 'aria-label': 'Copy and design ' + i.title, text: 'Copy and design' });
         copy.addEventListener('click', () => B.askWorkspace(copy, 'Copy and open', 'Copy ' + i.title + ' into').then((to) => B.api('GET', '/items/' + B.id2path(i.id)).then((full) =>
-          B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: 'report', title: i.title, description: i.description || '', body: full.body })))
+          B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: 'report', title: i.title, description: i.description || '', body: B.copyBody(full.body) })))
           .then((it) => { window.location.href = '/bi/design/' + B.id2path(it.id); }).catch((e) => { if (!e.cancelled) { say(e.message, true); } }));
         box.appendChild(h('li', { 'data-sample': i.id }, h('a', { href: '/bi/r/' + B.id2path(i.id), text: i.title }), ' ', h('span', { class: 'text-muted-d', text: i.description || '' }), ' ', copy));
       });
@@ -71,7 +79,8 @@
       if (!ref) { say('Choose a dataset.', true); return; }
       const name = B.slug(title) || 'my-report';
       const body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify(title) + '\ndataset: ' + ref + '\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n';
-      B.api('POST', '/workspaces/' + encodeURIComponent(wsSel.value || 'me') + '/items', { kind: 'report', title, description: '', body }).then((it) => { window.location.href = '/bi/design/' + B.id2path(it.id); }).catch((err) => say(err.message, true));
+      const go = q('[data-new] [type=submit]');
+      B.busy(go, () => B.api('POST', '/workspaces/' + encodeURIComponent(wsSel.value || 'me') + '/items', { kind: 'report', title, description: '', body }).then((it) => { window.location.href = '/bi/design/' + B.id2path(it.id); }).catch((err) => B.near(go, err.message, true)));
     });
     return;
   }
@@ -450,7 +459,25 @@
   }
 
   // ---- start ---------------------------------------------------------------------------------------------------------
+  function bindPanes() {
+    const main = q('[data-dmain]'), hide = q('[data-hide-filters]');
+    const shown = () => !main.classList.contains('bi-nofilters');
+    const set = (on) => { main.classList.toggle('bi-nofilters', !on); hide.textContent = on ? 'Hide' : 'Show'; };
+    let was = false;
+    try { was = window.localStorage.getItem('drishti.bi.designer.hideFilters') === '1'; } catch (e) { was = false; }
+    set(!was);
+    hide.addEventListener('click', () => {
+      set(!shown());
+      try { window.localStorage.setItem('drishti.bi.designer.hideFilters', shown() ? '0' : '1'); } catch (e) { /* not kept */ }
+    });
+    B.qa('[data-mpane-tab]').forEach((b) => b.addEventListener('click', () => {
+      main.setAttribute('data-mpane', b.getAttribute('data-mpane-tab'));
+      B.qa('[data-mpane-tab]').forEach((x) => x.setAttribute('aria-selected', x === b ? 'true' : 'false'));
+    }));
+  }
+
   function bindToolbar() {
+    bindPanes();
     q('[data-undo]').addEventListener('click', D.undo);
     q('[data-redo]').addEventListener('click', D.redo);
     q('[data-check]').addEventListener('click', check);
@@ -550,5 +577,13 @@
       if (D.pickedDataset) { D.dirty = true; updateButtons(); }
       root.setAttribute('data-ready', 'yes');
     });
-  }).catch((e) => { say(e.message, true); });
+  }).catch((e) => {
+    if (e.status === 404 || e.status === 403) {                      // not there, or not yours to open: a page that says so, not a half-drawn designer
+      B.clear(root).appendChild(h('section', { class: 'bi-sec', 'data-design-denied': '' }, h('h1', { text: e.status === 404 ? 'This report is not available' : 'You cannot open this report' }),
+        h('p', { text: e.status === 404 ? 'There is no report here, or it is in a workspace you cannot see.' : 'You do not have the BI power or the workspace role this needs.' }),
+        h('p', {}, h('a', { class: 'btn-pill btn-accent', href: '/bi/designer', text: 'Back to the designer' }), ' ', h('a', { class: 'btn-pill btn-ghost', href: '/bi/catalogue', text: 'Open the catalogue' }))));
+      return;
+    }
+    say(e.message, true);
+  });
 })();

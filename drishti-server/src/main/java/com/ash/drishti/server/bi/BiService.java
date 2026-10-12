@@ -192,7 +192,7 @@ public final class BiService {
 
     BiStore.Workspace workspaceOf(String id) {
         if (BiFolder.WORKSPACE.equals(id)) {
-            return new BiStore.Workspace(BiFolder.WORKSPACE, "Shipped content", "Read-only content shipped in the BI folder (" + props.dir() + ").", false, "", false, Instant.EPOCH, "");
+            return new BiStore.Workspace(BiFolder.WORKSPACE, "Shipped content", "Read-only content shipped in the BI folder (its place on the server is under Admin, BI settings).", false, "", false, Instant.EPOCH, "");
         }
         return store.workspace(id).orElseThrow(() -> new DrishtiException(ErrorCode.BI_NOT_FOUND, "no workspace '" + id + "'"));
     }

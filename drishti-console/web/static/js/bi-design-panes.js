@@ -329,7 +329,7 @@
       fmt.appendChild(frow('Alt text', textInput(v.alt, (x) => setTop(v, 'alt', x.trim()), { 'data-format-alt': '' }), 'What a screen reader says about it.'));
       if (group !== 'static') {                                                                    // a visual may read a dataset of its own (RUPAKA.md section 20.10)
         fmt.appendChild(frow('Dataset', textInput(v.dataset, (x) => setTop(v, 'dataset', x.trim()), { 'data-format-dataset': '', list: 'biDatasetNames', placeholder: D.model.dataset }),
-          'Blank: the report\'s dataset (' + D.model.dataset + '). Another dataset: its fields are written in the wells in the YAML tab, and a link (Report, below the page) connects its slicers to the others.'));
+          'Blank: the report\'s dataset (' + (D.dataset && D.dataset.title ? D.dataset.title + ', ' : '') + D.model.dataset + '). Another dataset: its fields are written in the wells in the YAML tab, and a link (Report, below the page) connects its slicers to the others.'));
       }
       if (group === 'python') {
         fmt.appendChild(frow('Python item', textInput(f.python, (x) => setFmt(v, 'python', x.trim()), { 'data-format-python': '', placeholder: 'pnl-histogram' }), 'The Python item (catalogue id, file name or title) that draws this from the columns. Leave it empty when the values well holds a Python measure of the dataset.'));
@@ -620,7 +620,9 @@
       const cur = index >= 0 ? scopeFilters(scope, false)[index] : null;
       const form = h('form', { class: 'bi-feditor', 'data-filter-editor': '', autocomplete: 'off' });
       const field = h('select', { class: 'studio-select', 'aria-label': 'Field to filter', name: 'field' }, optionsFor('any'));
-      field.value = cur ? cur.field : (D.dataset.tables[0] ? D.dataset.tables[0].name + '.' + D.dataset.tables[0].columns[0].name : '');
+      const sv = D.sel(), svField = sv && Object.keys(sv.wells || {}).reduce((a, k) => a.concat(sv.wells[k]), []).find((x) => D.kindOf(x) === 'field');           // a new filter starts on the selected visual's own field
+      field.value = cur ? cur.field : svField || (D.dataset.tables[0] ? D.dataset.tables[0].name + '.' + D.dataset.tables[0].columns[0].name : '');
+      if (!cur && svField && field.value !== svField) { field.value = D.dataset.tables[0] ? D.dataset.tables[0].name + '.' + D.dataset.tables[0].columns[0].name : ''; }
       const mode = h('select', { class: 'studio-select', 'aria-label': 'Kind of filter', name: 'mode' }, h('option', { value: 'basic', text: 'Basic: pick values' }), h('option', { value: 'advanced', text: 'Advanced: a condition' }), h('option', { value: 'top', text: 'Top N' }));
       mode.value = !cur ? 'basic' : cur.op === 'top' ? 'top' : (cur.op === 'in' || cur.op === 'not-in') ? 'basic' : 'advanced';
       const body = h('div', { class: 'bi-fbody' });

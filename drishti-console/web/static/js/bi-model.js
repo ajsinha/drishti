@@ -465,10 +465,11 @@
   }
 
   function save() {
-    B.api('PUT', '/items/' + B.id2path(itemId), { body: text() }).then((it) => { item = it; dirty = false; q('[data-state]').textContent = 'Saved'; say('Saved as a draft. Publish it from the item page.'); }).catch((e) => say(e.message, true));
+    const btn = q('[data-save]');
+    B.busy(btn, () => B.saveItem(itemId, { body: text() }, item && item.etag, btn, saveCopy)).then((it) => { item = it; dirty = false; q('[data-state]').textContent = 'Saved'; say('Saved as a draft. Publish it from the item page.'); }).catch((e) => { if (!e.cancelled) { say(e.message, true); } });
   }
   function saveCopy() {
-    B.api('POST', '/workspaces/me/items', { kind: 'dataset', title: (item.title || 'Dataset') + ' (copy)', description: item.description || '', body: text() }).then((it) => { window.location.href = '/bi/m/' + B.id2path(it.id); }).catch((e) => say(e.message, true));
+    return B.api('POST', '/workspaces/me/items', { kind: 'dataset', title: (item.title || 'Dataset') + ' (copy)', description: item.description || '', body: text() }).then((it) => { window.location.href = '/bi/m/' + B.id2path(it.id); }).catch((e) => say(e.message, true));
   }
 
   // ---- the AI helper: relationships, measures and column descriptions, proposed from the model (names, types, descriptions; no value) and accepted one by one ----
