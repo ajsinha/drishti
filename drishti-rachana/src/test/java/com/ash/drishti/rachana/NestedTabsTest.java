@@ -139,4 +139,15 @@ class NestedTabsTest {
         var schema = RachanaSchema.build(List.of("date"), List.of("trade"));
         assertThat(schema.toString()).contains("panels=").contains("tabs only: panels shown inside each tab");
     }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void theEditorsOptionListForTabsNamesBodyAndPanelsSoItDoesNotCallThemUnknown() {
+        var schema = RachanaSchema.build(List.of("date"), List.of("trade"));
+        var panel = (java.util.Map<String, Object>) ((java.util.Map<String, Object>) schema.get("$defs")).get("panel");
+        var tabs = ((List<java.util.Map<String, Object>>) panel.get("allOf")).stream()
+                .map(m -> (java.util.Map<String, Object>) m.get("then"))
+                .filter(t -> ((List<String>) t.get("required")).contains("each")).findFirst().orElseThrow();
+        assertThat((List<String>) tabs.get("x-rachana-options")).contains("each", "tabTitle", "layout", "body", "panels");
+    }
 }

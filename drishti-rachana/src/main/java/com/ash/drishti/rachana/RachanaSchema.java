@@ -150,6 +150,12 @@ public final class RachanaSchema {
                 props.put(o, forKind(k, o, schema));
                 allOptions.putIfAbsent(o, schema);
             }
+            if (k == PanelKind.TABS) {
+                opts.add("body");       // the parser reads the panel drawn per tab as `body`, or several as `panels`; the workbench's editor must not call them unknown
+                opts.add("panels");
+                props.put("body", common.get("body"));
+                props.put("panels", common.get("panels"));
+            }
             // the options as THIS kind takes them (one name can mean different things on two kinds, so the shared definition above stays loose)
             perKind.add(Map.of("if", Map.of("properties", Map.of("kind", Map.of("const", k.id()))),
                     "then", Map.of("required", List.copyOf(k.required()), "x-rachana-options", List.copyOf(opts), "properties", props)));
