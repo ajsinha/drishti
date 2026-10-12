@@ -399,6 +399,21 @@ Java 21 give the server a little more `-Xmx`.
   cells and panels; a busy entity costs at most one frame per 50 ms however fast it ticks ([LIVE.md](../architecture/LIVE.md)).
 - **Responses are compressed** (`server.compression`, JSON and event streams).
 
+## Multi-day type-ahead
+
+`index.days` above 1 keeps several business days of ids per connector ([ARCHITECTURE.md section 9.1](../architecture/ARCHITECTURE.md#91-several-business-days)).
+Measured on a development laptop with `DatedHitIndexTest` and `DaySegmentTest` (100,000 ids a day, five days, the prefix `mx-300x`, limit 10,
+averaged over 5,000 lookups after warm-up):
+
+| Tier | Prefix lookup | Notes |
+|---|---|---|
+| Heap (dictionary and bitmap) | 0.002 ms | lock-free; the day is a bitmap test |
+| Memory-mapped segment file | 0.03 ms | 548 KB on disk for 100,000 ids; one or two 128-entry blocks decoded |
+| Day not indexed yet | the newest day's ids as before | the day builds in the background |
+
+Both are far below the 30 ms type-ahead budget; the cost of several days is memory or disk, not latency
+([OPERATIONS.md section 12.2](OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)).
+
 ## Tuning knobs
 
 Set any of these in `application.local.yaml` next to the server jar, as an environment variable, or as a

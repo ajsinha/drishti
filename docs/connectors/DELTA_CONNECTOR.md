@@ -346,6 +346,11 @@ it never could), the failure is logged and shown in Health, and searches of the 
 reason ("its list of trade entities could not be rebuilt (…); it lists those of 2026-10-01T…"); the next rebuild tries
 again.
 
+
+**Several days.** With `index.days: 5` (and, for a lake you search often by past date, `index.storage: mmap`) the
+connector also keeps the ids of the last five business days, so a type-ahead for a past date answers from that date's own
+ids ([ARCHITECTURE.md section 9.1](../architecture/ARCHITECTURE.md#91-several-business-days)). A new Delta commit is the data-load signal: the kept past days are rebuilt from the id column in the background, and a segment file left by an earlier run is reused only while the table version it was built at is unchanged.
+
 ### 6.5 The column set of a day
 
 The first search of a business day reads the day's **column set**: the id and every promoted column, nothing else.

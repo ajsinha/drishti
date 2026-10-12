@@ -85,6 +85,13 @@ $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" 'http://localhost:18480/api/
 ]
 ```
 
+### Type-ahead for a past date
+
+Pick a past business date (Step 5 shows how) and type `TRD ` again: the dropdown now offers the ids that existed **on that
+date**, not today's. A connector that keeps several days (an administrator's `index.days: 5`) answers this from memory
+at once; one that keeps only the newest day offers today's ids and opening one that was not held then says so. The
+subtitle `last seen <date>` marks an id offered only because it existed on an earlier day (`index.any-recent-day`).
+
 ## Step 3 · Open one entity, or pick from many
 
 Press Enter on `CPTY north`.

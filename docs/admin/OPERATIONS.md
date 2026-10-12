@@ -1331,6 +1331,28 @@ being parsed, and a later view reads that one message back by its offset.
 
 The server's temporary files (DuckDB spill, native libraries, atomic-save scratch, Python transform runs) live in `drishti-<pid>` under `DRISHTI_TMP_DIR` (default `/tmp`); the console's (uploads, exports, the static-file cache, Python runner scratch) in `drishti-console-<pid>` under `DRISHTI_CONSOLE_TMP_DIR`. Each is removed on a clean stop, and the next start removes the folders of processes that are no longer running (a `kill -9` or a power cut leaves one). Put the base on a disk with room when DuckDB spills big queries: `DRISHTI_TMP_DIR=/var/tmp/drishti`. Admin, Health lists both with their size, so a growing folder is seen before the disk fills. Details: [CONFIGURATION.md](CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir).
 
+### 12.2 Sizing the multi-day type-ahead index
+
+Each connector with `index.days` above 1 (see [CONFIGURATION.md](CONFIGURATION.md#drishtiindex--the-multi-day-type-ahead-index))
+holds, per kind, one dictionary of its distinct ids and one bitmap per kept day.
+
+- **Heap.** About 150 bytes per distinct id (the id twice, its hit and the sort order) plus one bit per id per kept day.
+  A kind with a million distinct ids over ten days is about 150 MB plus 1.2 MB of bitmaps; the dictionary is shared by
+  the days, so ids that repeat from day to day are paid for once. `index.max-memory` (600MB) caps the estimate for the
+  whole connector.
+- **Disk.** A closed day in a segment file is about 5 bytes per id compressed (548 KB for 100,000 ids of the shape
+  `MX-30000001`). Ten days of a million ids is about 50 MB. `index.max-disk` (2GB) caps a connector; the oldest
+  days are dropped above it and searches for them fall back to the newest day's ids. Put `drishti.index.dir` on a local
+  disk that is kept across restarts; a file is reused after a restart only when its source is unchanged, otherwise it is
+  rebuilt in the background.
+- **Reading the state.** Admin, Health shows, per connector, `type-ahead index: 5 days (4 on disk, 0.1 MB), 1,200 ids,
+  0.3 MB, warm`. `warming (N days to build)` means the background build is still running: searches for those dates
+  answer from the newest day's ids until it finishes. A memory figure close to the cap with all days on disk is normal
+  with `index.storage: mmap`.
+- **Cleaning.** Segment files of days that left the window are deleted at the roll; files from an earlier run that no
+  longer match their source, and temporary files left by a crash, are deleted at the next start. The folder can be
+  deleted at any time: the days are rebuilt.
+
 ## 13. Monitoring
 
 ### 13.1 The endpoints

@@ -296,6 +296,11 @@ for the query itself.
 
 From memory: the newest day's ids, sorted, searched by prefix; no query per keystroke. 18 ms over HTTP.
 
+
+**Several days.** With `index.days: 5` (and, for a lake you search often by past date, `index.storage: mmap`) the
+connector also keeps the ids of the last five business days, so a type-ahead for a past date answers from that date's own
+ids ([ARCHITECTURE.md section 9.1](../architecture/ARCHITECTURE.md#91-several-business-days)). A load that replaces the file is the signal: the kept past days are rebuilt in the background, and a segment file survives a restart only while the file's `loaded_at` is unchanged.
+
 ### 5.5 A day's columns
 
 Searches, pick lists, derived kinds, impact and reverse lookups need a few fields of every trade of a day. The

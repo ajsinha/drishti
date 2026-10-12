@@ -1055,6 +1055,39 @@ drishti:
       SHP: { kind: shipment, label: Shipment }
 ```
 
+### `drishti.index` — the multi-day type-ahead index
+
+A connector keeps the newest business day's ids for type-ahead. These **connector settings** (in a connector's
+`settings:`, for the Delta, Iceberg, DuckDB, PostgreSQL/JDBC, file and S3 connectors) keep several days, each answering
+only for its own date ([ARCHITECTURE.md section 9.1](../architecture/ARCHITECTURE.md#91-several-business-days)). A kind
+overrides any of them with `index.kinds.<kind>.<setting>`.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `index.days` | `1` | Business days kept. 1 is today's behaviour. |
+| `index.max-memory` | `600MB` | Most the kept days may use on the heap (an estimate, summed over the connector's kinds). Above it the oldest closed days move to disk (or are dropped when there is no disk). `0` = no cap. |
+| `index.storage` | `heap` | `heap`: closed days stay in memory until `max-memory`. `mmap`: closed days go to memory-mapped files at once; only the newest day stays on the heap. |
+| `index.max-disk` | `2GB` | Most disk the connector's segment files may use; the oldest days drop above it. `0` = no cap. |
+| `index.warm` | `background` | `background`: past days are built after start, newest first. `lazy`: a day is built on the first search for it. |
+| `index.any-recent-day` | `false` | A bare id on the newest date also suggests ids seen only on earlier kept days, marked `last seen <date>`. |
+
+| Server setting | Default | Meaning |
+|---|---|---|
+| `drishti.index.dir` (system property; `-Ddrishti.index.dir=/var/lib/drishti/index`) | `<data dir>/index` | Where segment files live, one folder per connector. Never the temporary folder, so they survive a restart and are reused when the source is unchanged. |
+
+```yaml
+# config/connectors/trading-lake.yaml
+plugin: delta
+settings:
+  root: s3a://lake/trading
+  index:
+    days: 5
+    max-memory: 600MB
+    storage: mmap
+    kinds:
+      trade: { days: 10 }
+```
+
 ### `drishti.search` — structured search
 
 Not in the bundled file; the defaults apply until you set them.

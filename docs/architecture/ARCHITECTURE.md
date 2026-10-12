@@ -396,6 +396,47 @@ As in the Bloomberg terminal, the command line suggests while the user types, in
 - **Console:** `command.js` debounces by 60 ms and cancels stale requests with `AbortController`. ↑/↓ move, `Tab`
   completes, `Enter` (`<GO>`) opens, `Esc` closes; matched characters are highlighted; ARIA `combobox`/`listbox`.
 
+### 9.1 Several business days
+
+A connector keeps the newest business day's ids by default. With `index.days` above 1 it keeps that many days, and a
+type-ahead for a past business date answers from that day's own ids, never from another day's.
+
+- **Date keys everywhere.** The index is a map of business date to day segment, for every query, today included. "Live"
+  or "current" is resolved to a concrete business date (the kind's newest date) before the lookup and the day is found by
+  that date; there is no "empty" or "current" key. A kind that has no dates uses the explicit key `UNDATED`.
+- **Structure** (`DatedHitIndex`, `drishti-api`). Per kind: one dictionary of ids, each stored once, sorted for prefix
+  binary search, with title and subtitle; and one compact bitmap per business day marking which ids existed that day. A
+  prefix search is a binary search in the dictionary and a membership test in the day's bitmap.
+- **Tiers.** The newest day and, by default, the closed days are on the heap. When the connector's `index.max-memory` is
+  reached (or `index.storage: mmap` is set) a closed day is written once to a **segment file** (`DaySegment`): ids sorted
+  and compressed in blocks of 128, read through a memory map (`FileChannel.map`). A prefix search binary-searches the
+  block index and decodes one or two blocks. A day neither tier holds is built on demand: the connector answers as it
+  always did (the newest day's ids) while the day is built in the background.
+- **Files.** Under `drishti.index.dir` (default `<data dir>/index`, never the temporary folder), one folder per
+  connector, capped by `index.max-disk`. A file is written under a temporary name in its folder and moved into place
+  atomically, ends in a CRC, and records the **watermark** of its source (a load time, a table version, a snapshot, a
+  folder's modification time). After a restart a file is reused only if the source's watermark is unchanged; otherwise
+  the day is rebuilt. A truncated or corrupt file is deleted and treated as absent, and temporary files left by a crash
+  are removed at the next start.
+- **Freshness.** The newest day updates as before (streams on arrival; tables on `refresh-seconds`). A data-load signal
+  (the loader's load time, a Delta commit, an Iceberg snapshot, a replaced DuckDB file, a changed folder or file) rebuilds
+  the kept past days in the background. On a business-date roll the new date's segment is added, the "today" pointer
+  moves (one immutable snapshot swap, so readers are lock-free and never see a half-rolled index), the oldest day's
+  bitmap or file is dropped, and dictionary ids no kept day holds are purged: memory and disk stay flat. `max-memory` moves
+  the oldest closed days to disk (or drops them without a disk) early; `index.max-disk` drops the oldest segments.
+- **Warm-up.** After start, past days are built in the background, newest first; start-up is not delayed.
+  `index.warm: lazy` builds a day on the first search for it instead.
+- **`index.any-recent-day: true`.** A bare id on the newest date may also suggest ids seen only on earlier kept days,
+  marked `last seen <date>` in the subtitle.
+- **Health.** Admin, Health and the connector page show per connector: `type-ahead index: 5 days (4 on disk, 0.1 MB),
+  1,200 ids, 0.3 MB, warm`. The connector's cache statistics add `indexDays`, `indexDaysOnDisk`, `indexIds`,
+  `indexMemoryMb`, `indexDiskMb`, `indexWarm`.
+
+The settings are in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiindex--the-multi-day-type-ahead-index). Streaming
+connectors keep the newest day only. Measured: a prefix lookup over 100,000 ids a day for five days takes 0.002 ms on
+the heap and 0.03 ms from a mapped file (548 KB on disk for 100,000 ids)
+([PERFORMANCE.md](../admin/PERFORMANCE.md#multi-day-type-ahead)).
+
 ---
 
 ## 10. Live updates

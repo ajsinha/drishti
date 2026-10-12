@@ -271,6 +271,11 @@ newest row on or before the date (`ORDER BY business_date DESC LIMIT 1`).
 From memory: the newest day's ids, sorted, searched by prefix. **46 ms** over HTTP with a million ids; no query per
 keystroke.
 
+
+**Several days.** With `index.days: 5` (and, for a lake you search often by past date, `index.storage: mmap`) the
+connector also keeps the ids of the last five business days, so a type-ahead for a past date answers from that date's own
+ids ([ARCHITECTURE.md section 9.1](../architecture/ARCHITECTURE.md#91-several-business-days)). The table mode reads a day's ids with the same index-only query as the newest day, in the background on a pooled connection; a change of the loader's `loaded_at` rebuilds the kept past days, and a segment file survives a restart only while `loaded_at` is unchanged. Query mode (your own SQL) keeps the newest day only.
+
 ### 5.4 A day's columns
 
 Searches, pick lists, derived kinds, impact and reverse lookups need a few fields of every trade of a day. The connector

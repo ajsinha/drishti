@@ -248,6 +248,11 @@ Type-ahead does not look at the business date: it offers every id the bucket hol
 that exist only on dates other than the one picked (opening one then says it is not held, or falls through to
 another store).
 
+
+**Several days.** With `index.days: 5` (and, for a lake you search often by past date, `index.storage: mmap`) the
+connector also keeps the ids of the last five business days, so a type-ahead for a past date answers from that date's own
+ids ([ARCHITECTURE.md section 9.1](../architecture/ARCHITECTURE.md#91-several-business-days)). The listing that already runs every `rescan-seconds` fills the kept days (dated folders `<date>/<kind>/<id>.json`), so a day rewritten in the bucket is picked up at the next rescan; the S3 connector keeps its days on the heap (no segment files).
+
 ### 5.3 Dated reads
 
 See [section 6](#6-dates). A picked date is a static snapshot; the connector has no live push, so a view it answers

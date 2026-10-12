@@ -210,6 +210,11 @@ least 1 MB against `index-cache-mb`, so at most 1,024 files are open by default)
 From memory: the newest day's ids of every kind (all days' ids for effective kinds), in Drishti's sorted type-ahead
 index.
 
+
+**Several days.** With `index.days: 5` (and, for a lake you search often by past date, `index.storage: mmap`) the
+connector also keeps the ids of the last five business days, so a type-ahead for a past date answers from that date's own
+ids ([ARCHITECTURE.md section 9.1](../architecture/ARCHITECTURE.md#91-several-business-days)). The days are the dated folders (`<date>/<kind>/<id>.json`, `<date>/<kind>.jsonl`); a folder or file whose modification time changes is a restated day and is rebuilt in the background at the next `rescan-seconds`; a segment file survives a restart only while that time is unchanged.
+
 ### 6.5 Searches, pick lists, derived kinds and impact
 
 From the day's promoted columns in the index, exactly as on Delta Lake: a search is exact over every entity of the day

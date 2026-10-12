@@ -336,6 +336,11 @@ about 3 MB of documents), 40–50 ms over HTTP; the footer is the larger part, a
 The newest day's ids (for an `effective` kind, every day's, deduplicated) in Drishti's sorted `HitIndex`, rebuilt only
 when a snapshot changes; no document is read. Measured: `TRD CLY-4000` in 4–13 ms with 10,000 ids.
 
+
+**Several days.** With `index.days: 5` (and, for a lake you search often by past date, `index.storage: mmap`) the
+connector also keeps the ids of the last five business days, so a type-ahead for a past date answers from that date's own
+ids ([ARCHITECTURE.md section 9.1](../architecture/ARCHITECTURE.md#91-several-business-days)). A new snapshot of a table is the signal: the kept past days are rebuilt from the id column in the background, and a segment file survives a restart only while the snapshot id is unchanged.
+
 ### 7.5 The column set of a day
 
 `id` and every promoted column of the day's files, each file on its own virtual thread, repeated text shared. Kept by
