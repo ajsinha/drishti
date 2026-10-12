@@ -72,6 +72,8 @@ public final class BiFolder implements AutoCloseable {
     private final AtomicBoolean loading = new AtomicBoolean();
     private volatile Map<String, Entry> entries = Map.of();
     private volatile List<BiStore.Item> items = List.of();
+    private volatile List<BiStore.Item> everything = List.of();
+    private volatile Set<String> hidden = Set.of();
     private volatile long loadedAt = Long.MIN_VALUE;
     private volatile DirectoryWatcher watcher;
 
@@ -117,6 +119,26 @@ public final class BiFolder implements AutoCloseable {
         return items;
     }
 
+    /** Every file's item, hidden ones included (Admin, Artifacts reads this to count dependants; the catalogue never does). */
+    public List<BiStore.Item> allItems() {
+        items();
+        return everything;
+    }
+
+    /** Hides the files with these catalogue ids from the catalogue (Admin, Artifacts, Disable); the files stay on disk. */
+    public void hide(Set<String> ids) {
+        hidden = Set.copyOf(ids);
+        items = visible(everything, hidden);
+    }
+
+    public Set<String> hidden() {
+        return hidden;
+    }
+
+    private static List<BiStore.Item> visible(List<BiStore.Item> all, Set<String> hide) {
+        return hide.isEmpty() ? all : all.stream().filter(i -> !hide.contains(i.id())).toList();
+    }
+
     public Optional<BiStore.Item> item(String id) {
         return items().stream().filter(i -> i.id().equals(id)).findFirst();
     }
@@ -159,7 +181,8 @@ public final class BiFolder implements AutoCloseable {
             }
             entries.keySet().stream().filter(x -> !next.containsKey(x)).forEach(x -> LOG.info("BI folder: {} removed", x));
             entries = Map.copyOf(next);
-            items = next.values().stream().map(Entry::item).filter(Objects::nonNull).toList();
+            everything = next.values().stream().map(Entry::item).filter(Objects::nonNull).toList();
+            items = visible(everything, hidden);
             loadedAt = System.nanoTime();
         } finally {
             loading.set(false);

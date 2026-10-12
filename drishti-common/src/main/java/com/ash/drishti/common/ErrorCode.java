@@ -92,6 +92,16 @@ public enum ErrorCode {
     /** A connector changed since it was read (ETag mismatch), already exists, or is in use and the change was not confirmed. */
     CONNECTOR_CONFLICT("DRS-5032", 409),
     CONNECTOR_NOT_FOUND("DRS-5033", 404),
+    /** Admin, Artifacts: no installed artifact (pack, connector or BI file) or no archive of that name. */
+    ARTIFACT_NOT_FOUND("DRS-5040", 404),
+    /** Admin, Artifacts: an uninstall or disable was refused because other things depend on the artifact; the answer lists them. */
+    ARTIFACT_IN_USE("DRS-5041", 409),
+    /** Admin, Artifacts: a restore or an install found an artifact of that name already in place (replace it explicitly). */
+    ARTIFACT_CONFLICT("DRS-5042", 409),
+    /** Admin, Artifacts: a destructive action needs the artifact's name typed as confirmation. */
+    ARTIFACT_CONFIRM("DRS-5043", 422),
+    /** Admin, Artifacts: the action does not apply to this artifact (a pack template's connector is only disabled or reset) or an uploaded file is not valid. */
+    ARTIFACT_INVALID("DRS-5044", 422),
     USER_NOT_FOUND("DRS-6001", 404),
     USER_EXISTS("DRS-6002", 409),
     WEAK_PASSWORD("DRS-6003", 422),
