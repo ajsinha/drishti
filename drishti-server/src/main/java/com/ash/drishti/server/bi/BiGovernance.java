@@ -395,6 +395,34 @@ public final class BiGovernance {
         return m;
     }
 
+    /**
+     * What depends on an item, for the confirmation before it is deleted: a dataset has the reports that read it and the composed or derived datasets built on it;
+     * a report has the boards that show it. Only items the caller may read are named; the count is of those. Nothing else in BI depends on a board or a notebook.
+     */
+    public Map<String, Object> dependants(Principal p, String id) {
+        BiStore.Item i = bi.readableForGovernance(p, id);
+        List<BiStore.Item> found = new ArrayList<>();
+        if ("dataset".equals(i.kind())) {
+            found.addAll(impact.reportsOn(i));
+            found.addAll(impact.dependentsOn(i));
+        } else if ("report".equals(i.kind())) {
+            for (BiStore.Item b : impact.boards()) {
+                String body = impact.publishedBody(b) != null ? impact.publishedBody(b) : b.body();
+                if (impact.reportsOf(body).stream().anyMatch(r -> r.id().equals(i.id())) || impact.reportsOf(b.body()).stream().anyMatch(r -> r.id().equals(i.id()))) {
+                    found.add(b);
+                }
+            }
+        }
+        List<Map<String, Object>> named = found.stream().filter(x -> !x.id().equals(i.id())).filter(x -> bi.canRead(p, x)).distinct()
+                .map(x -> Map.<String, Object>of("id", x.id(), "kind", x.kind(), "title", x.title(), "status", x.status())).toList();
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", i.id());
+        m.put("kind", i.kind());
+        m.put("count", named.size());
+        m.put("dependants", named);
+        return m;
+    }
+
     /** The dataset change a draft of this item would make, for the dataset's Check (the Model view): same answer as {@link #impact} for the saved draft with a given text. */
     public Map<String, Object> impactOfText(Principal p, String id, String yaml) {
         BiStore.Item i = bi.readableForGovernance(p, id);

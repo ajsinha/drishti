@@ -233,3 +233,24 @@ def expected_values(c: Ctx):
     c.page.wait_for_timeout(500)
     c.save("17-publish-refused.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 480})
     clean_everywhere(c, TESTED_TITLE)
+
+
+UNSCHEDULED = "Trades without a schedule"
+
+
+@shot("19-set-schedule.jpg")
+def set_schedule(c: Ctx):
+    """A dataset with no schedule: the Refresh section says so and an author sets one with two controls, no YAML."""
+    login(c, height=900)
+    clean_items(c, UNSCHEDULED)
+    body = (DATA / "trades-daily.dataset.yaml").read_text().replace('refresh: "business-days 06:30"', "").replace("Trades refreshed daily", UNSCHEDULED)
+    made = bi(c, "POST", "/workspaces/me/items", {"kind": "dataset", "title": UNSCHEDULED, "body": body})
+    go(c, "/bi/d/" + made["id"], wait="h1", settle=1500)
+    c.page.wait_for_selector("[data-set-schedule]:not([hidden])", timeout=20000)
+    c.page.select_option('[data-set-schedule] [name="kind"]', "business-days")
+    c.page.fill('[data-set-schedule] [name="time"]', "06:30")
+    c.page.evaluate("document.querySelector('[data-refresh-sec]').scrollIntoView()")
+    c.page.wait_for_timeout(500)
+    box = c.page.locator("[data-refresh-sec]").bounding_box()
+    c.save("19-set-schedule.jpg", clip={"x": 240, "y": max(0, box["y"] - 20), "width": 1040, "height": min(560, 900 - max(0, box["y"] - 20))})
+    clean_items(c, UNSCHEDULED)

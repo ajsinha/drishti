@@ -274,3 +274,30 @@ def calc_bi(c: Ctx):
     frame.locator("#walker[data-ready='1']").wait_for(timeout=60000)
     c.page.wait_for_timeout(2500)
     c.save("22-calc-walker.jpg", "#calcDrawer")
+
+
+STARTER = "Mean notional (starter)"
+
+
+@shot("23-python-starter.jpg", also=("24-python-starter-editor.jpg",))
+def python_starter(c: Ctx):
+    """New item, kind python: a form that asks what it makes (a measure, a visual or a table) and opens the new item in its editor with a valid, commented body."""
+    login(c, height=900)
+    clean_items(c, STARTER)
+    p = c.page
+    go(c, "/bi/w/me", wait="[data-new-item]:not([hidden])", settle=800)
+    p.select_option('[data-new-item] [name="kind"]', "python")
+    p.select_option('[data-new-item] [name="pyinterface"]', "measure")
+    p.fill('[data-new-item] [name="title"]', STARTER)
+    p.fill('[data-new-item] [name="pyinputs"]', "notional")
+    p.evaluate("document.querySelector('[data-new-item]').scrollIntoView({block: 'center'})")
+    p.wait_for_timeout(400)
+    c.save("23-python-starter.jpg", locator="[data-new-item]")
+    p.click("[data-create]")
+    p.wait_for_selector("[data-edit]:not([hidden])", timeout=30000)
+    p.get_by_role("button", name="Check the Python").click()
+    p.wait_for_selector("[data-py-check]", timeout=30000)
+    p.evaluate("document.querySelector('[data-edit] textarea').scrollIntoView({block: 'center'})")
+    p.wait_for_timeout(500)
+    c.save("24-python-starter-editor.jpg", locator="[data-edit] label:has(textarea)")
+    clean_items(c, STARTER)

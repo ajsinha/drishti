@@ -29,15 +29,17 @@
   const start = q('[data-board-start]');
   if (start) {
     const list = q('[data-board-drafts]');
-    B.api('GET', '/workspaces/me/items').then((items) => {
-      items.filter((i) => i.kind === 'board').forEach((i) => list.appendChild(h('li', { 'data-id': i.id }, h('a', { href: '/bi/design/board/' + B.id2path(i.id), text: i.title }), ' ', h('span', { class: 'text-muted-d', text: i.status }))));
-      q('[data-no-board-drafts]').hidden = list.children.length > 0;
-    }).catch((e) => say(e.message, true));
+    const wsSel = q('[data-new-board-workspace]');
+    B.fillWorkspaces(wsSel).then((wss) => Promise.all(wss.map((w) => B.api('GET', '/workspaces/' + encodeURIComponent(w.id) + '/items').then((items) => items.filter((i) => i.kind === 'board').map((i) => ({ i, w }))))))
+      .then((groups) => {
+        [].concat.apply([], groups).forEach(({ i, w }) => list.appendChild(h('li', { 'data-id': i.id }, h('a', { href: '/bi/design/board/' + B.id2path(i.id), text: i.title }), ' ', h('span', { class: 'text-muted-d', text: i.status + ' · ' + w.name }))));
+        q('[data-no-board-drafts]').hidden = list.children.length > 0;
+      }).catch((e) => say(e.message, true));
     q('[data-new-board]').addEventListener('submit', (e) => {
       e.preventDefault();
       const title = q('[data-new-board-title]').value.trim() || 'My board';
       const body = 'rachana: 1\nboard: ' + (B.slug(title) || 'my-board') + '\ntitle: ' + JSON.stringify(title) + '\npages:\n  - id: page1\n    title: Page 1\n    tiles: []\n';
-      B.api('POST', '/workspaces/me/items', { kind: 'board', title, description: '', body }).then((it) => { window.location.href = '/bi/design/board/' + B.id2path(it.id); }).catch((err) => say(err.message, true));
+      B.api('POST', '/workspaces/' + encodeURIComponent(wsSel.value || 'me') + '/items', { kind: 'board', title, description: '', body }).then((it) => { window.location.href = '/bi/design/board/' + B.id2path(it.id); }).catch((err) => say(err.message, true));
     });
     return;
   }
@@ -456,8 +458,8 @@
     }).catch((e) => say(e.message, true));
   }
   q('[data-save]').addEventListener('click', save);
-  q('[data-save-copy]').addEventListener('click', () => flush().then((yaml) => B.api('POST', '/workspaces/me/items', { kind: 'board', title: (S.model.title || 'Board') + ' (copy)', description: S.model.description || '', body: yaml }))
-    .then((it) => { window.location.href = '/bi/design/board/' + B.id2path(it.id); }).catch((e) => say(e.message, true)));
+  q('[data-save-copy]').addEventListener('click', () => B.askWorkspace(q('[data-save-copy]'), 'Save the copy', 'Save the copy into').then((to) => flush().then((yaml) => B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: 'board', title: (S.model.title || 'Board') + ' (copy)', description: S.model.description || '', body: yaml })))
+    .then((it) => { window.location.href = '/bi/design/board/' + B.id2path(it.id); }).catch((e) => { if (!e.cancelled) { say(e.message, true); } }));
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); save(); }
     else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !(e.target.closest && e.target.closest('textarea, .CodeMirror'))) { e.preventDefault(); stepHistory(undo, redo, 'Undone'); }

@@ -22,7 +22,7 @@ import json
 from urllib.parse import parse_qs, quote, urlencode
 
 from fastapi import APIRouter, Request
-from fastapi.responses import RedirectResponse, Response
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 
 from core import asof
 from core.backend import BackendError, drs_message
@@ -65,6 +65,16 @@ def _state(raw: str) -> dict | None:
     except ValueError:
         return None
     return value if isinstance(value, dict) else None
+
+
+@router.get("/dist/status")
+async def status(request: Request):
+    """What the signed-in person can do here, for the report page's Export and Subscribe: whether exports and subscriptions are on, and their subscription count and limit."""
+    try:
+        out = await request.app.state.backend.distribution_status(ident(request))
+    except BackendError as e:
+        return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.page_status)
+    return JSONResponse(out, headers={"Cache-Control": "no-store"})
 
 
 @router.get("/dist/bi/{rest:path}")

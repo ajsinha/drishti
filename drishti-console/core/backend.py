@@ -465,6 +465,10 @@ class BackendClient:
     async def save_subscription(self, name: str, body: dict, ident) -> dict:
         return await self._send("PUT", f"/me/subscriptions/{quote(name)}", ident, json=body)
 
+    async def distribution_status(self, ident) -> dict:
+        """Whether exports and subscriptions are on, and how many subscriptions the caller owns of the most they may."""
+        return await self._get("/distribution/status", ident)
+
     async def notify_options(self, ident) -> dict:
         """What alerts and subscriptions may use besides mail: the webhooks an administrator defined (names) and the text-message gateway."""
         return await self._get("/notify/options", ident)

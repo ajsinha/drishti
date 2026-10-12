@@ -243,6 +243,13 @@ class DistApiTest {
 
     // ---- export -------------------------------------------------------------------------------------------------------
 
+    @Test @Order(0)
+    void theStatusSaysWhatTheCallerCanDo() throws Exception {
+        mvc.perform(get("/api/v1/distribution/status").header("Authorization", as("rita", "bi-risk"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.export.enabled").value(true)).andExpect(jsonPath("$.subscriptions.enabled").value(true))
+                .andExpect(jsonPath("$.subscriptions.perUser").isNumber()).andExpect(jsonPath("$.subscriptions.mine").isNumber());
+    }
+
     @Test @Order(1)
     void aPageIsExportedAsExcelWithOneTypedSheetPerVisualAndTheReadersOwnRowsAndMasks() throws Exception {
         String body = target("\"page\":\"main\",\"state\":{" + DATES + "}");

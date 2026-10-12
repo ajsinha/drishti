@@ -369,3 +369,111 @@ def tablet(c: Ctx):
     c.page.wait_for_timeout(800)
     c.save("34-tablet-view.jpg", clip={"x": 0, "y": 0, "width": 820, "height": 900})
     clean_items(c, "Tablet demo")
+
+
+# ---- the dataset wizard and the designer controls that used to need YAML ---------------------------------------------------------------------
+
+WIZ_TITLE = "Economies by region"
+
+
+def wiz_step(c: Ctx, step: str):
+    c.page.click("[data-wiz-next]")
+    c.page.wait_for_selector(f'[data-wiz-body][data-step="{step}"]')
+    c.page.wait_for_timeout(400)
+
+
+@shot("35-wizard-source.jpg", also=("36-wizard-columns.jpg", "37-wizard-measures.jpg", "38-wizard-refresh.jpg", "39-wizard-review.jpg"))
+def wizard(c: Ctx):
+    """The dataset wizard on the economics pack's connector: source, columns, a measure, the refresh and the review (the YAML it wrote)."""
+    login(c, height=900)
+    clean_everywhere(c, WIZ_TITLE)
+    p = c.page
+    go(c, "/bi/datasets", wait="[data-new-wizard]", settle=800)
+    p.click("[data-new-wizard]")
+    p.wait_for_selector('[data-wiz-body][data-step="source"]')
+    p.check('[data-wiz-mode="connector"]')
+    p.wait_for_selector("[data-wiz-connector]")
+    p.select_option("[data-wiz-connector]", "macro-store")
+    p.check('[data-kind="economy"]')
+    p.fill("[data-wiz-name]", "economies-by-region")
+    p.fill("[data-wiz-title-in]", WIZ_TITLE)
+    p.fill("[data-wiz-desc]", "Economies of the world with their region and income group")
+    p.wait_for_timeout(400)
+    c.save("35-wizard-source.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 760})
+    wiz_step(c, "columns")
+    p.evaluate("window.scrollTo(0, 0)")
+    c.save("36-wizard-columns.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 780})
+    wiz_step(c, "relationships")
+    wiz_step(c, "measures")
+    p.get_by_role("button", name="Add a measure").click()
+    last = p.locator("[data-measure-row]").count() - 1
+    p.fill(f'[data-m-name="{last}"]', "Total GDP")
+    numeric = p.eval_on_selector(f'[data-m-field="{last}"]', "s => [...s.options].map(o => o.value).find(v => /gdp/i.test(v)) || ''")
+    if numeric:
+        p.select_option(f'[data-m-field="{last}"]', numeric)
+    p.click(f"[data-measure-row] >> nth={last} >> text=Check")
+    p.wait_for_timeout(2000)
+    p.evaluate("(i) => document.querySelectorAll('[data-measure-row]')[i].scrollIntoView({block: 'center'})", last)
+    p.wait_for_timeout(400)
+    c.save("37-wizard-measures.jpg", locator=f"[data-measure-row] >> nth={last}")
+    wiz_step(c, "hierarchies")
+    wiz_step(c, "refresh")
+    p.select_option("[data-refresh-kind]", "daily")
+    p.fill("[data-refresh-time]", "06:30")
+    p.evaluate("window.scrollTo(0, 0)")
+    c.save("38-wizard-refresh.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 560})
+    wiz_step(c, "review")
+    p.wait_for_selector("[data-wiz-valid]", timeout=30000)
+    p.wait_for_timeout(600)
+    c.save("39-wizard-review.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 900})
+    clean_everywhere(c, WIZ_TITLE)
+
+
+CONTROLS = """rachana: 1
+report: controls-demo
+title: Controls demo
+dataset: trades-basic
+pages:
+  - id: main
+    title: Main
+    visuals:
+      - { id: when, type: slicer, title: When, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { field: [trade.tradeDate] }, format: { mode: list } }
+      - { id: count, type: card, title: Trades, at: { x: 4, y: 0, w: 4, h: 3 }, wells: { values: [Trades] } }
+      - { id: desk, type: bar, title: MTM by desk, at: { x: 0, y: 3, w: 12, h: 6 }, wells: { axis: [trade.desk], values: [MTM] } }
+"""
+
+
+@shot("40-slicer-relative.jpg", also=("41-top-filter.jpg", "42-bookmarks.jpg"))
+def controls(c: Ctx):
+    """The designer's own controls: a slicer's relative-date mode with its default and windows, a top filter in the Filters pane, a bookmark of the page."""
+    login(c, height=900)
+    clean_items(c, "Controls demo")
+    made = bi(c, "POST", "/workspaces/me/items", {"kind": "report", "title": "Controls demo", "body": CONTROLS})
+    p = c.page
+    p.set_viewport_size({"width": 1280, "height": 1180})
+    p.goto(c.base + "/bi/design/" + made["id"])
+    p.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
+    settled_design(p)
+    p.click('[data-visual="when"] .bi-dhandle')
+    p.click('[data-ptab="format"]')
+    p.select_option("[data-format-mode]", "relative-date")
+    p.select_option("[data-format-default]", "last-30-days")
+    p.uncheck('[data-format-options] [data-option="last-90-days"]')
+    p.uncheck('[data-format-options] [data-option="last-12-months"]')
+    p.wait_for_timeout(900)
+    c.save("40-slicer-relative.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 1100})
+    p.click('[data-add-filter="report"]')
+    p.select_option('[data-filter-editor] [name="field"]', "trade.desk")
+    p.select_option('[data-filter-editor] [name="mode"]', "top")
+    p.fill('[data-filter-editor] [name="n"]', "3")
+    p.wait_for_timeout(500)
+    p.evaluate("document.querySelector('[data-filters]').scrollIntoView({block: 'center'})")
+    c.save("41-top-filter.jpg", locator="[data-filters]")
+    p.click('[data-filter-editor] button[type=submit]')
+    p.evaluate("window.drishtiBi.design.select(null)")
+    p.click('[data-ptab="format"]')
+    p.fill("[data-bookmark-name]", "Top desks")
+    p.evaluate("document.querySelector('[data-bookmarks]').scrollIntoView({block: 'center'})")
+    p.wait_for_timeout(400)
+    c.save("42-bookmarks.jpg", locator="[data-bookmarks]")
+    clean_items(c, "Controls demo")

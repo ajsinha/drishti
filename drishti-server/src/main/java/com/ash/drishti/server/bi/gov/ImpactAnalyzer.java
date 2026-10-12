@@ -144,6 +144,14 @@ public final class ImpactAnalyzer implements Composition.Directory, AutoCloseabl
         return all;
     }
 
+    /** Every board item, stored and shipped. */
+    public List<BiStore.Item> boards() {
+        List<BiStore.Item> all = new ArrayList<>();
+        store.items().stream().filter(i -> "board".equals(i.kind())).forEach(all::add);
+        folder.items().stream().filter(i -> "board".equals(i.kind())).forEach(all::add);
+        return all;
+    }
+
     /** Every dataset item, stored and shipped. */
     public List<BiStore.Item> datasets() {
         List<BiStore.Item> all = new ArrayList<>();

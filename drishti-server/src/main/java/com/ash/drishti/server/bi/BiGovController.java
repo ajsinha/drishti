@@ -104,6 +104,12 @@ public class BiGovController {
         return gov.impact(p, id, names);
     }
 
+    /** What depends on the item (reports on a dataset, boards showing a report): the count and the names the caller may read, for the delete confirmation. */
+    @GetMapping("/items/{id}/dependants")
+    public Map<String, Object> dependants(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return gov.dependants(p, id);
+    }
+
     /** The impact of a dataset text on the reports that read the stored dataset (the Model view's Check). */
     @PostMapping("/items/{id}/impact")
     public Map<String, Object> impactOfText(@PathVariable String id, @RequestBody Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {

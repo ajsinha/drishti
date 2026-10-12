@@ -66,6 +66,29 @@
     window.location.assign('/reports/subscribe?' + p.toString());
   });
 
-  document.addEventListener('drishti:report-ready', () => { box.hidden = false; fillScope(); });
+  /** Export and Subscribe appear only when they work for this person; when they do not, a line says why (the administrator's switches, or the person's own limit). */
+  function entitlements() {
+    const why = box.querySelector('[data-export-why]'), says = [];
+    return fetch('/dist/status', { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then((r) => (r.ok ? r.json() : null)).then((st) => {
+      if (!st) { return; }
+      const fmts = box.querySelectorAll('[data-export-fmt]');
+      if (!st.export.enabled) {
+        fmts.forEach((a) => { a.hidden = true; });
+        scope.closest('label').hidden = true;
+        says.push('Export is switched off on this server (drishti.distribution.export.enabled).');
+      }
+      if (!st.subscriptions.enabled) {
+        sub.hidden = true;
+        says.push('Subscriptions are switched off on this server (drishti.distribution.subscriptions.enabled).');
+      } else if (st.subscriptions.mine >= st.subscriptions.perUser) {
+        sub.hidden = true;
+        says.push('You own ' + st.subscriptions.mine + ' subscriptions, the most allowed (' + st.subscriptions.perUser + '): delete one under My subscriptions to add another.');
+      }
+      why.textContent = says.join(' ');
+      why.hidden = !says.length;
+    }).catch(() => {});
+  }
+
+  document.addEventListener('drishti:report-ready', () => { box.hidden = false; fillScope(); entitlements(); });
   document.addEventListener('drishti:report-page', () => { if (B.reportView) { fillScope(); } });
 })();

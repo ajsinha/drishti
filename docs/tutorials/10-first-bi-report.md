@@ -42,7 +42,8 @@ About 60 minutes.
 - how to publish: your own workspace, a shared workspace, the catalogue;
 - **filter like Power BI**: list, dropdown and range slicers, page and report scope, a top-N filter that tames a busy donut, bookmarks, and when to use a slicer instead of a click;
 - the **Counterparty risk** sample: slicers that reach across packs, a selected bar, and drill-through;
-- **two datasets in one report**: a dataset composed of two others, joined in YAML, and a slicer of one dataset that filters the visuals of the other.
+- **two datasets in one report**: a dataset composed of two others, joined in YAML, and a slicer of one dataset that filters the visuals of the other;
+- (step 13) **a dataset of your own, built in the wizard**: pick a connector, tick columns, add a measure, set a refresh, save a draft, publish it and start a report on it, with no YAML typed.
 
 ## Step 1 · Look at the dataset
 
@@ -72,6 +73,8 @@ $ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: ap
 ```
 
 You should see one row per region and a `meta` block that says which layer answered and how long it took. Everything a report draws is a question like this, asked **as you**: your row rules and masks apply, which is why two people can open one report and see different figures.
+
+**In the UI.** The page above has no YAML on it, and neither does making a dataset of your own: **Datasets → New dataset (guided)** opens the dataset wizard (step 13 builds one end to end). **Edit in the wizard** on a dataset's page opens an existing draft in it, and a dataset with no schedule has **Set a schedule** ([tutorial 11](11-bi-that-runs-itself.md)).
 
 ## Step 2 · Start a report
 
@@ -104,7 +107,7 @@ are dots so they can be clicked. The shapes are Natural Earth, shipped with the 
 ## Step 5 · A bar, a slicer, and where everything sits
 
 Add a bar: with nothing selected click **bar**, put `economies.name` in **axis** and `GDP (USD bn)` in **values**. Add a slicer: click **slicer**, put `economies.regionName` in **field**, then open **Format** and set the mode to **dropdown**.
-The visuals are stacked wherever there was room, so now place them. Open the **YAML** tab: the report is text, and each visual has `at: { x, y, w, h }` on the 12-column grid. Give each one a title and a place, and give the bar a **top 10** filter
+The visuals are stacked wherever there was room, so now place them. **In the UI**, drag a visual by its header and resize it by its corner (the places snap to the 12-column grid), and give the bar its **top 10** in the **Filters** pane: under *On this visual* press **Add a filter**, choose the field `economies.name`, the filter type **Top N**, *Keep the top* `10`, *with the* `highest`, *by measure* `GDP (USD bn)`, and press **Add the filter**. **From the YAML** (the exact way, and what both of these write), open the **YAML** tab: the report is text, and each visual has `at: { x, y, w, h }` on the 12-column grid. Give each one a title and a place, and give the bar a **top 10** filter
 (a filter on the visual, `op: top`: the ten economies with the largest GDP):
 
 ![The YAML tab: each visual with its title and its at: place](img/t10/06-yaml-places.jpg)
@@ -201,7 +204,7 @@ You should see the report with `published v1` and the workspace with one item. (
 
 The sample **Trades overview** has a second page, **By product**, built to show slicers. Open it from the Catalogue (or type `BI trades overview <GO>`) and choose the tab **By product**.
 
-A **slicer** is a visual that holds choices and filters other visuals. It has a mode and a scope, set in the report:
+A **slicer** is a visual that holds choices and filters other visuals. It has a mode and a scope. **In the UI** select the slicer and open **Format**: **Mode** is a choice of *list*, *dropdown*, *range* and *relative date*, and **Filters** is *this page* or *every page*. **In the YAML** the same two settings are:
 
 ```yaml
 - { id: pick-product, type: slicer, title: Product type, wells: { field: [trade.productType] }, format: { mode: dropdown, scope: page } }
@@ -232,7 +235,11 @@ You should see the list **floating over** the visuals below it (it does not push
 
 You should see `2 selected: AMORT_SWAP, BASIS_SWAP` in the box, a **chip** `Product type: AMORT_SWAP, BASIS_SWAP` under the toolbar, the Desk and Currency slicers narrowed to values that still exist (a slicer never filters itself; **other** slicers filter it), a donut of two rings and a matrix of one desk. **Reset** clears all of it.
 
-**Taming a busy donut.** The donut on this page could have about forty product types. It does not draw forty slices: it carries a **top filter**.
+**Taming a busy donut.** The donut on this page could have about forty product types. It does not draw forty slices: it carries a **top filter**. **In the UI** that is the **Filters** pane: *On this visual*, **Add a filter**, filter type **Top N**, how many, highest or lowest, and the measure to rank by:
+
+![The Filters pane's top filter: field desk, Top N, keep the top 3, highest, by measure Notional](img/t10/41-top-filter.jpg)
+
+**In the YAML** it is one line (both write the same):
 
 ```yaml
 - { id: share, type: donut, title: "Notional by product type (top 12)", wells: { axis: [trade.productType], values: [Notional] },
@@ -243,11 +250,15 @@ You should see `2 selected: AMORT_SWAP, BASIS_SWAP` in the box, a **chip** `Prod
 
 You should see twelve slices and the title `(top 12)`. The server ranks the product types **in the context of the slicers**, so the top twelve of the swaps you chose is a different twelve from the top twelve overall. `n` is how many, `by` the measure to rank by.
 
-**Bookmarks** save a state. They are in the report's YAML (`bookmarks:`, with a name, a page, slicer choices and filters) and appear in the **Bookmarks** box of the toolbar. On the **Overview** page choose the bookmark `FX desk only`.
+**Bookmarks** save a state. **In the UI**, in the designer, select nothing (click the empty canvas) and open **Format**: under **Bookmarks** type a name, set the slicer choices you want kept (a relative-date slicer offers its windows), and press **Save this page as a bookmark**; it keeps the page, the filters of the Filters pane and those slicer choices. Each saved bookmark can be renamed in place, updated from the page's filters again, or removed:
+
+![The designer's Bookmarks box: a name, a choice for each slicer of the page, and Save this page as a bookmark](img/t10/42-bookmarks.jpg)
+
+**In the YAML** they are `bookmarks:` (a name, a page, slicer choices and filters). Either way they appear in the **Bookmarks** box of the viewer's toolbar. On the **Overview** page choose the bookmark `FX desk only`.
 
 ![The Overview page after choosing the bookmark: a chip trade.desk: DESK-FX, all visuals answering for that desk](img/t10/19-bookmark.jpg)
 
-You should see the page filtered to `DESK-FX` (84 trades, notional `8,485,000,000`) with a chip, as if you had made the choice yourself. A bookmark does not capture what you have chosen on screen (that is not built; the YAML carries it).
+You should see the page filtered to `DESK-FX` (84 trades, notional `8,485,000,000`) with a chip, as if you had made the choice yourself. A bookmark is written in the designer, not captured from what a reader has chosen on screen in the viewer.
 
 **Slicer or click?** Both filter. A **slicer** is a choice you make on purpose from a list, it stays visible, and it can be page or report wide. A **click on a mark** (a bar, a slice, a country) is exploring: it filters the **other** visuals of the page, it highlights what you picked, and it is gone when you click again.
 Click the `DESK-FX` bar on the Overview page:
@@ -308,9 +319,15 @@ You should see a chip `Sector: Banking`, the cards narrowed to the banks (`Desk 
 
 ## Step 12 · Relative dates, a tablet, and a view inside a report
 
-Three things a real report needs, each a few lines of YAML (open **My workspace → New item**, kind *report*, paste, **Save draft**, then **View**).
+Three things a real report needs. Each is a few controls in the designer, and each is also a few lines of YAML (**In the UI**: build it in the designer; **in the YAML**: open **My workspace → New item**, kind *report*, paste, **Save draft**, then **View**; the two write the same text).
 
-**A slicer that says "last 4 weeks".** A slicer on a date column can offer named windows instead of values. The server works them out from the report's date and the business-day calendar, so the same name means the same dates on the screen, in an export and in a subscription:
+**A slicer that says "last 4 weeks".** A slicer on a date column can offer named windows instead of values. The server works them out from the report's date and the business-day calendar, so the same name means the same dates on the screen, in an export and in a subscription.
+
+**In the UI:** drag the date field (`trade.tradeDate`) onto the canvas, choose **slicer**, open **Format** and set **Mode** to *relative date (a date field)*. Two more controls appear: **Starts as** (the window used until a reader chooses; it is the `default`) and **Windows it offers** (a tick for each of the sixteen names; unticking one narrows the list, the `options`).
+
+![The designer's Format tab for a slicer set to relative date: Starts as Last 30 days, and the windows it offers ticked, with Last 90 days and Last 12 months off](img/t10/40-slicer-relative.jpg)
+
+**In the YAML:**
 
 ```yaml
 rachana: 1
@@ -343,7 +360,7 @@ layouts:
       span: { desk: 5, rows: 4 }                    # heights in grid rows
 ```
 
-Open the draft in the designer and press the **Tablet** tab:
+**In the UI** open the draft in the designer and press the **Tablet** tab (the **Phone** tab is the same for a phone). Every key above has a control there: the arrows or a drag set the `order`, **Hide** hides a visual, **Wide** is `wide` (tablet only) and **Rows** is `span`:
 
 ![The designer's Tablet tab: five visuals in tablet order, the bar and the table ticked Wide, a row-height box for each](img/t10/33-tablet-tab.jpg)
 
@@ -358,6 +375,86 @@ You should see the bar the whole width, then the cards in two columns. A phone, 
 ![Counterparty lookup: a bar of ten counterparties with CP-HALCYON selected, and its Drishti view beside it with the netting sets](img/t10/32-entity-view.jpg)
 
 You should see the counterparty's own **Drishti view** (its name, rating, net MTM and netting sets) in the frame beside the bar, with a chip `counterparties.id: CP-HALCYON`. It is the view page built **for you**: someone who may not see a field does not see it here either. [REPORTS.md section 3.4](../guides/REPORTS.md#34-the-entity-view).
+
+## Step 13 · A dataset of your own, in the wizard
+
+Everything so far read datasets that ship with Drishti. A business user can make one without typing YAML. This step builds **Economies by region** from the **macro-store** connector, then publishes it and starts a report on it.
+
+**In the UI.** Choose **Datasets**, then **New dataset (guided)** (it is also behind **My workspace → New item → dataset** and the designer's *build a dataset in the wizard* link when no dataset exists). The wizard has seven steps along the top; you can go back at any time.
+
+**1 · Source.** Choose where the data comes from: *the packs' kinds*, *a connector* (choose it, then its kinds), *combine datasets* (a composed dataset) or *a Python Transform* (a derived dataset; [tutorial 14](14-python-and-analyse.md)). Choose **A connector**, `macro-store`, tick the kind `economy`, and give the dataset a name, a title and a description.
+
+![The wizard's source step: a connector chosen, its kinds listed, the economy kind ticked, and the name, title and description filled in](img/t10/35-wizard-source.jpg)
+
+**2 · Tables and columns.** Every column the kind offers is a row: tick the ones to keep, rename what reports and formulas will call it (the *Name*; the *Source* column is where it comes from), check the type, mark a key, and add a description so others know what it means.
+
+![The columns step: one row for each column of the economy kind, with its source path, name, type, key and description](img/t10/36-wizard-columns.jpg)
+
+**3 · Relationships.** With one table there is nothing to join. With several, the wizard lists what the packs declare, relationships the values suggest (with how well they match) and columns with the same name and type, each with **Add**; every relationship is editable (the *many* side is "from", the *one* side "to").
+
+**4 · Measures.** A measure is a number computed over rows. Add one by choosing an aggregation (`sum`, `avg`, `min`, `max`, `count`, `distinct`) and a column, or switch **Built as** to *Formula* and type one: as you type a table or column name a list of fields appears to pick from. **Check** asks the server whether the whole draft is valid and shows the problems that belong to that measure.
+
+![A measure row: Total GDP, built as an aggregate, sum of economy.gdpUsdBn, and the line "This measure checks out."](img/t10/37-wizard-measures.jpg)
+
+**5 · Hierarchies** (optional): an ordered list of fields, coarse to fine, that a visual can drill down. **6 · Refresh and security.** Choose when the layers rebuild on their own (every day at, weekdays, business days, weekly, hourly, after a data load, or a schedule you write); row rules the dataset already has are shown here, read-only.
+
+![The refresh step: Every day at 06:30, written as refresh: daily 06:30, and the security note](img/t10/38-wizard-refresh.jpg)
+
+**7 · Review and save.** The wizard shows the YAML it wrote, with the server's check of it. **Edit as YAML** turns the text into a box for an expert; **Save as a draft** stores it in the workspace you choose.
+
+![The review step: the YAML of the dataset, ready to save](img/t10/39-wizard-review.jpg)
+
+After saving you can open the **Model view**, open the dataset's page, or (when you may publish) **Publish it, then start a report**: a report reads a *published* dataset, and a draft in your private workspace cannot be published, so choose a shared workspace in the last step (step 7 above) or use **Move to workspace** later. **New report on this dataset** opens the designer's start with the dataset already chosen. To change it later, open the dataset and choose **Edit in the wizard**: it opens the saved text in the same steps, and a key the wizard has no control for (a `security:` block, `tests:`, a `layout:`) is kept as it was. Comments in the original file are not kept.
+
+**From the command line.** The wizard writes with the same REST calls anyone can make. There is no `tools/drishti.py` command for datasets (the `bi` group lists workspaces and the catalogue and publishes), so these are the calls it makes; the token is the one of tutorial 1. First the draft of a dataset from a kind (this is what step 1 does when you press **Next**):
+
+```text
+$ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
+    -d '{"kinds":["trade"],"name":"wiz-trades"}' http://localhost:18480/api/v1/bi/model/start
+{"yaml":"rachana: 1\ndataset: wiz-trades\nversion: 1\ntitle: New model from trade\n...","tables":[...],"relationships":[],"proposals":[],"warnings":[]}
+```
+
+The YAML in that answer, which is also what steps 1 to 4 build up and step 7 shows (the tutorial's `trade` kind from the `trading-store` connector; the macro-store version has the economy columns):
+
+```yaml
+rachana: 1
+dataset: wiz-trades
+version: 1
+title: New model from trade
+description: "Started from the packs' kinds. Edit the columns, relationships and measures; nothing here changes a pack."
+tables:
+  trade:
+    source: { connector: trading-store, kind: trade }
+    columns:
+      book: string
+      currency: string
+      desk: string
+      mtm: decimal
+      notional: decimal
+      pnl1d: decimal
+      productType: string
+      status: string
+      tradeDate: date
+      tradeId: string
+measures:
+  Count of trade: { expr: "count(trade)" }
+  Total trade mtm: { expr: "sum(trade.mtm)" }
+  Total trade notional: { expr: "sum(trade.notional)" }
+refresh: daily 06:30
+```
+
+Check it, store it as a draft in a shared workspace, publish it (the same calls as the wizard's **Check**, **Save as a draft** and **Publish it**):
+
+```text
+$ curl -s -X POST ... -d '{"yaml":"...the text above..."}' http://localhost:18480/api/v1/bi/datasets/validate
+{"valid":true,"problems":[], ...}
+$ curl -s -X POST ... -d '{"kind":"dataset","title":"Wizard trades","body":"...the text above..."}' http://localhost:18480/api/v1/bi/workspaces/<workspace>/items
+{"id":"bi-f67d899fb7","status":"draft", ...}
+$ curl -s -X POST ... -d '{"note":"from the wizard"}' http://localhost:18480/api/v1/bi/items/bi-f67d899fb7/publish
+{"status":"published","publishedVersion":1, ...}
+```
+
+You should see `"valid": true` and, after the publish, `published` at version 1. (Ids differ on your machine.) A report on it is then `dataset: bi-f67d899fb7` in its YAML, which the designer writes when you start one on the dataset.
 
 ## Next steps
 

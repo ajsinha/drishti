@@ -82,6 +82,16 @@ public class DistController {
                 .body(o.bytes());
     }
 
+    /**
+     * What the caller can do here, so a page shows Export and Subscribe only when they work and says why when they do not: whether exports are on, whether
+     * subscriptions are on, how many subscriptions the caller owns and how many they may.
+     */
+    @GetMapping("/api/v1/distribution/status")
+    public Map<String, Object> status(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return Map.of("export", Map.of("enabled", exports.limits().enabled()),
+                "subscriptions", Map.of("enabled", subscriptions.enabled(), "perUser", subscriptions.perUser(), "mine", subscriptions.of(p.user()).size()));
+    }
+
     @GetMapping("/api/v1/me/subscriptions")
     public List<JsonNode> mine(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         return subscriptions.of(p.user());

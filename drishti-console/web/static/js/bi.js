@@ -196,6 +196,15 @@
     load();
   }
 
+  /** What depends on an item, as a line for a delete confirmation: how many items and which (the server counts those the person may read). */
+  function impactOf(id) {
+    return api('GET', '/items/' + encodeURIComponent(id).replace(/%3A/g, ':') + '/dependants').then(function (d) {
+      if (!d.count) { return h('small', { class: 'text-muted-d', 'data-impact': '0', text: ' · nothing depends on it' }); }
+      var names = d.dependants.slice(0, 5).map(function (x) { return x.title + ' (' + x.kind + ')'; }).join(', ');
+      return h('strong', { class: 'bi-impact-count', 'data-impact': String(d.count), text: ' · ' + d.count + (d.count === 1 ? ' item depends' : ' items depend') + ' on it: ' + names + (d.count > 5 ? ', and ' + (d.count - 5) + ' more' : '') });
+    }).catch(function () { return document.createTextNode(''); });
+  }
+
   function workspace() {
     var id = canvas.getAttribute('data-workspace'), ws = null;
     var tbody = q('[data-items] tbody'), rows = {};
@@ -209,7 +218,11 @@
     function askDelete(list) {
       var box = q('[data-confirm]'), ul = q('[data-confirm-list]'); clear(ul);
       q('[data-confirm-head]').textContent = list.length === 1 ? 'Delete this item?' : 'Delete these ' + list.length + ' items?';
-      list.forEach(function (it) { ul.appendChild(h('li', { text: it.title + ' (' + it.kind + ', ' + shortId(it.id) + ')' })); });
+      list.forEach(function (it) {
+        var li = h('li', { 'data-confirm-item': it.id }, it.title + ' (' + it.kind + ', ' + shortId(it.id) + ')');
+        ul.appendChild(li);
+        impactOf(it.id).then(function (t) { li.appendChild(t); });
+      });
       box.hidden = false; box._list = list; q('[data-confirm-no]').focus();
     }
     function runDelete(list) {
@@ -272,13 +285,14 @@
     var START = {
       report: { hint: 'A report draws one dataset: choose it, and the report opens in the designer.', go: 'Create and open in the designer' },
       board: { hint: 'A board is laid out in the board designer: it opens there.', go: 'Create and open in the board designer' },
-      dataset: { hint: 'A dataset is defined from packs or a model: the Datasets page starts one.', go: 'Go to Datasets', href: '/bi/datasets' },
-      notebook: { hint: 'A notebook is started in Analyse (SQL and Python cells).', go: 'Go to Analyse', href: '/bi/explore' },
-      python: { hint: 'A Python item is started in Analyse (Python tab) and saved from there.', go: 'Go to Analyse', href: '/bi/explore' }
+      dataset: { hint: 'A dataset is built in the wizard: pick a source, tick columns, add measures. It opens there, and is saved as a draft in this workspace.', go: 'Open the dataset wizard', href: '/bi/datasets/new?workspace=' },
+      notebook: { hint: 'A notebook is started in Analyse (SQL and Python cells); Analyse saves it here with Save as a notebook.', go: 'Go to Analyse', href: '/bi/explore' },
+      python: { hint: 'Choose what the Python item makes. It is created with a valid, commented starter body and opens in its editor, ready to change and Check.', go: 'Create and open the editor' }
     };
     function kindChanged() {
       var f = q('[data-new-item]'), k = f.elements.kind.value, s = START[k];
       q('[data-dataset-row]').hidden = k !== 'report';
+      q('[data-python-row]').hidden = k !== 'python';
       q('[data-kind-hint]').textContent = s.hint;
       q('[data-create]').textContent = s.go;
       f.elements.title.closest('label').hidden = !!s.href; f.elements.description.closest('label').hidden = !!s.href;
@@ -292,19 +306,24 @@
     q('[data-new-item]').addEventListener('submit', function (e) {
       e.preventDefault();
       var f = e.target, kind = f.elements.kind.value, st = START[kind];
-      if (st.href) { window.location.href = st.href; return; }
+      if (st.href) { window.location.href = st.href + (kind === 'dataset' ? encodeURIComponent(id) : ''); return; }
       var title = f.elements.title.value.trim() || defaultTitle(kind), body, to;
       var name = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || kind;
       if (kind === 'report') {
         if (!f.elements.dataset.value) { say('Choose a dataset: a report draws one.', true); f.elements.dataset.focus(); return; }
         body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify(title) + '\ndataset: ' + f.elements.dataset.value + '\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n';
         to = '/bi/design/';
+      } else if (kind === 'python') {
+        var py = window.drishtiBi && window.drishtiBi.pythonStarter;
+        if (!py) { say('The starter is not loaded: reload the page.', true); return; }
+        body = py(f.elements.pyinterface.value, name, title, f.elements.pyinputs.value);
+        to = '/bi/i/';
       } else {
         body = 'rachana: 1\nboard: ' + name + '\ntitle: ' + JSON.stringify(title) + '\npages:\n  - id: page1\n    title: Page 1\n    tiles: []\n';
         to = '/bi/design/board/';
       }
       api('POST', '/workspaces/' + encodeURIComponent(id) + '/items', { kind: kind, title: title, description: f.elements.description.value, body: body })
-        .then(function (it) { window.location.href = to + encodeURIComponent(it.id).replace(/%3A/g, ':'); }).catch(fail);
+        .then(function (it) { window.location.href = to + encodeURIComponent(it.id).replace(/%3A/g, ':') + (kind === 'python' ? '?edit=1' : ''); }).catch(fail);
     });
     q('[data-add-member]').addEventListener('submit', function (e) {
       e.preventDefault();
@@ -395,12 +414,25 @@
       if (c.promote) { box.appendChild(act(it.endorsement === 'promoted' ? 'Remove promotion' : 'Promote', function () { post('endorse', { level: it.endorsement === 'promoted' ? 'none' : 'promoted' }, 'Endorsement changed.'); })); }
       if (c.certify) { box.appendChild(act(it.endorsement === 'certified' ? 'Remove certification' : 'Certify', function () { post('endorse', { level: it.endorsement === 'certified' ? 'none' : 'certified' }, 'Endorsement changed.'); })); }
       if (c.move) { box.appendChild(act('Move to workspace…', function (b) { moveTo(b); })); }
+      box.appendChild(act('Duplicate…', function (b) { duplicate(b); }));
       if (c.delete) {
         box.appendChild(act('Delete', function (b) {
-          if (!b.getAttribute('data-sure')) { b.setAttribute('data-sure', '1'); b.textContent = 'Confirm: delete'; return; }
+          if (!b.getAttribute('data-sure')) {
+            b.setAttribute('data-sure', '1'); b.textContent = 'Confirm: delete';
+            impactOf(it.id).then(function (t) { var w = h('span', { class: 'bi-delete-impact', 'data-delete-impact': '' }, t); b.after(w); });
+            return;
+          }
           api('DELETE', path).then(function () { window.location.href = '/bi/w/' + encodeURIComponent(it.workspace); }).catch(fail);
         }, 'btn-ghost bi-danger'));
       }
+    }
+    /** A copy of this item in a workspace the person chooses (they need to be a contributor there): same kind, body and description, "(copy)" on the title, a draft. */
+    function duplicate(b) {
+      var B = window.drishtiBi;
+      if (!B || !B.askWorkspace) { say('Reload the page to duplicate.', true); return; }
+      B.askWorkspace(b, 'Duplicate here', 'Duplicate into').then(function (to) {
+        return api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: it.kind, title: it.title + ' (copy)', description: it.description || '', tags: (it.tags || []).join(', '), body: it.body || '' });
+      }).then(function (n) { window.location.href = '/bi/i/' + encodeURIComponent(n.id).replace(/%3A/g, ':'); }).catch(function (e) { if (!e.cancelled) { fail(e); } });
     }
     function moveTo(b) {
       api('GET', '/workspaces').then(function (list) {
@@ -410,12 +442,14 @@
         b.replaceWith(sel); sel.after(go);
       }).catch(fail);
     }
+    var opened = false;
     function form() {
       var f = q('[data-edit]');
       if (!it.can.edit) { f.hidden = true; return; }
       f.elements.title.value = it.title; f.elements.description.value = it.description || ''; f.elements.tags.value = (it.tags || []).join(', ');
       f.elements.audienceRoles.value = (it.audience.roles || []).join(', '); f.elements.audienceUsers.value = (it.audience.users || []).join(', ');
       f.elements.audiencePacks.value = (it.audience.packs || []).join(', '); f.elements.body.value = it.body || '';
+      if (!opened && /[?&]edit=1/.test(window.location.search)) { opened = true; f.hidden = false; f.elements.body.focus(); }
     }
     q('[data-edit]').addEventListener('submit', function (e) {
       e.preventDefault();
