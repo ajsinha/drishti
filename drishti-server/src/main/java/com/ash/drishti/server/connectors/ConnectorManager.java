@@ -83,6 +83,8 @@ public final class ConnectorManager {
     private final Map<String, String> fileProblems = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, Instant> updated = new java.util.concurrent.ConcurrentHashMap<>();
     private final Set<String> applicationDefined;
+    /** Connectors whose file was there at start (so the start-up properties still hold them) and has since been removed: they are gone, not "defined in application.yaml". */
+    private final Set<String> goneFiles = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private final List<String> bootstrapMessages;
     private final ReentrantLock scanLock = new ReentrantLock();   // file reads and writes: a ReentrantLock, not synchronized (Java 21 pins virtual threads)
     /** Connectors that must not run: the ones only unloaded packs, or hidden sample packs, used. Their files stay on disk. */
@@ -255,6 +257,7 @@ public final class ConnectorManager {
         try {
             List<String> acted = new ArrayList<>();
             Set<String> present = new LinkedHashSet<>(files.names());
+            goneFiles.removeAll(present);                                   // a file that is back is no longer gone
             for (String name : present) {
                 String text;
                 try {
@@ -325,7 +328,15 @@ public final class ConnectorManager {
         return true;
     }
 
+    /** What the start-up properties say about the connector, unless its file has been removed since. */
+    private Optional<SourcesProperties.ConnectorSettings> startup(String name) {
+        return goneFiles.contains(name) ? Optional.empty() : Optional.ofNullable(props.connectors().get(name));
+    }
+
     private void fileGone(String name) {
+        if (!applicationDefined.contains(name)) {
+            goneFiles.add(name);
+        }
         Optional<Map<String, Object>> template = template(name).map(Template::definition);
         if (template.isPresent()) {
             LOG.info("connector file {}.yaml was removed; the pack's template applies", name);
@@ -404,7 +415,7 @@ public final class ConnectorManager {
     public Set<String> names() {
         Set<String> out = new TreeSet<>(files.names());
         out.addAll(fileProblems.keySet());
-        out.addAll(props.connectors().keySet());
+        props.connectors().keySet().stream().filter(n -> !goneFiles.contains(n)).forEach(out::add);
         out.addAll(registry.connectorStatuses().keySet());
         for (Pack p : packs.packs()) {
             out.addAll(p.connectorTemplates().keySet());
@@ -415,7 +426,7 @@ public final class ConnectorManager {
 
     /** True when something defines this connector (a file, a template, the server's configuration). */
     public boolean defined(String name) {
-        return files.exists(name) || fileProblems.containsKey(name) || props.connectors().containsKey(name)
+        return files.exists(name) || fileProblems.containsKey(name) || (props.connectors().containsKey(name) && !goneFiles.contains(name))
                 || registry.connectorStatuses().containsKey(name) || template(name).isPresent();
     }
 
@@ -486,7 +497,7 @@ public final class ConnectorManager {
         Map<String, Object> m = new LinkedHashMap<>();
         ConnectorFiles.Definition d = safeRead(name);
         Optional<SourcesProperties.ConnectorSettings> live = registry.applied(name);
-        Optional<SourcesProperties.ConnectorSettings> startup = Optional.ofNullable(props.connectors().get(name));
+        Optional<SourcesProperties.ConnectorSettings> startup = startup(name);
         Optional<Template> t = template(name);
         String plugin = d != null ? d.plugin() : live.map(SourcesProperties.ConnectorSettings::plugin).orElse(startup.map(SourcesProperties.ConnectorSettings::plugin)
                 .orElse(t.map(x -> String.valueOf(x.definition().get("plugin"))).orElse(null)));
@@ -567,7 +578,7 @@ public final class ConnectorManager {
             settings = d.settings();
         } else {
             settings = registry.applied(name).map(SourcesProperties.ConnectorSettings::settings).orElse(
-                    Optional.ofNullable(props.connectors().get(name)).map(SourcesProperties.ConnectorSettings::settings).orElse(Map.of()));
+                    startup(name).map(SourcesProperties.ConnectorSettings::settings).orElse(Map.of()));
         }
         Map<String, String> shown = new LinkedHashMap<>();
         settings.forEach((k, v) -> shown.put(k, ConnectorSecrets.secretKey(k) && !v.isBlank() && !ConnectorSecrets.reference(v) ? "***" : v));
@@ -923,7 +934,7 @@ public final class ConnectorManager {
         if (t.isPresent()) {
             return templateText(t.get());
         }
-        SourcesProperties.ConnectorSettings cs = registry.applied(name).orElse(props.connectors().get(name));
+        SourcesProperties.ConnectorSettings cs = registry.applied(name).or(() -> startup(name)).orElse(null);
         if (cs == null) {
             throw new DrishtiException(ErrorCode.CONNECTOR_NOT_FOUND, "no connector named '" + name + "'");
         }

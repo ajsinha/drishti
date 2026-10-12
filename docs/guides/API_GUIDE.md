@@ -48,6 +48,7 @@ covered in depth in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
    - [Deploying a pack archive and the pack's connectors](#deploying-a-pack-archive-and-the-packs-connectors)
    - [Packs from a signed registry](#packs-from-a-signed-registry)
    - [Connectors (`/api/v1/admin/connectors`)](#connectors-apiv1adminconnectors)
+   - [Administration: Artifacts (`/api/v1/admin/artifacts`)](#administration-artifacts-apiv1adminartifacts)
    - [Data loads: telling Drishti a batch landed](#data-loads-telling-drishti-a-batch-landed)
    - [Administration: health and caches](#administration-health-and-caches)
    - [Outside /api/v1: OpenAPI and actuator](#outside-apiv1-openapi-and-actuator)
@@ -1341,6 +1342,26 @@ HTTP/1.1 404
 {"title":"connector not configured","status":404,"detail":"DRS-1011 connector desk-archive is not configured: kind 'quote-archive' is routed to it, but no connector file desk-archive.yaml exists (create it in Admin -> Connectors)","instance":"/api/v1/views/quote-archive/Q-1","code":"DRS-1011"}
 ```
 
+### Administration: Artifacts (`/api/v1/admin/artifacts`)
+
+Everything installed (packs, connector files, shipped BI files) in one list, what depends on each, and the safe ways out: disable, uninstall to an archive, restore,
+delete for good, and a BI file upload with a dry run. Guide: [ARTIFACTS.md](../admin/ARTIFACTS.md). Every call needs an administrator, and **no personal token may call
+any of it** (`* /api/v1/admin/artifacts/**` is in `drishti.security.token-never`). Every action and every refusal is audited (`artifact-disabled`, `artifact-enabled`,
+`artifact-uninstalled`, `artifact-restored`, `artifact-purged`, `artifact-pruned`, `artifact-installed`, `artifact-refused`).
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/admin/artifacts` | `{artifacts[], uninstalledDir, keepDays}`; each `{kind (pack, connector, bi), subtype (BI: dataset, report, board, notebook, python), name, title, state (on, off, not loaded, problem), origin (shipped, archive, file, ui, template, application), version, modified, problems[], link}` |
+| `GET` | `/admin/artifacts/impact?kind=&subtype=&name=` | What depends on it: `{total, blocked, summary, templated, templatePack, notes[], groups[{category, label, count, more, items[{name, owner, detail}]}]}`; the first 25 names per group, the counts complete. `404 DRS-5040` |
+| `POST` | `/admin/artifacts/disable` `{kind, subtype, name, cascade}` | Switches it off and keeps it (a pack off for everyone, a connector `enabled: false`, a BI file hidden from the catalogue). `409 DRS-5041` with `impact` for a pack that enabled packs extend, unless `cascade` (they go off first) |
+| `POST` | `/admin/artifacts/enable` `{kind, subtype, name}` | Switches it back on |
+| `POST` | `/admin/artifacts/uninstall` `{kind, subtype, name, cascade, confirm}` | Moves it to `drishti.admin.uninstalled-dir`. `409 DRS-5041` (with `impact`) while anything depends on it; `cascade` takes the dependants along (extending packs uninstalled, connectors and BI files switched off) and needs `confirm` = the name (`422 DRS-5043`); `422 DRS-5044` for a connector a pack's template names, a connector with no file, or a pack named in `drishti.packs.enabled`. `{ok, impact, archive, also[], note}` |
+| `GET` | `/admin/artifacts/uninstalled` | `{archives[{id, kind, subtype, name, area, rel, at, by, summary, bytes}], directory, keepDays}`, newest first |
+| `POST` | `/admin/artifacts/uninstalled/{id}/restore` `{replace, confirm}` | Moves it back. `409 DRS-5042` when the name exists; `replace` archives the one in the way first and needs `confirm` = the name |
+| `DELETE` | `/admin/artifacts/uninstalled/{id}?confirm=<name>` | Deletes the archive for good; `422 DRS-5043` without the name |
+| `POST` | `/admin/artifacts/bi/check?file=<name>.<kind>.yaml` | The file as the raw body. The dry run: `{valid, name, subtype, problems[], warnings[], exists, replacesImpact}`; writes nothing |
+| `POST` | `/admin/artifacts/bi?file=&replace=false&confirm=` | The same body: checks, archives what it replaces (`replace=true`, `confirm` = the name), places the file atomically in `config/bi`. `422 DRS-5044` invalid, `409 DRS-5042` name in use |
+
 ### Data loads: telling Drishti a batch landed
 
 Your ETL loads the data; one call makes Drishti act on it (refresh, verify, evaluate alert rules, tell people) and expectations flag a batch
@@ -1564,6 +1585,11 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-5031 | 422 | connector invalid | a connector file or body is not valid: bad name, unknown plugin or top-level key, missing required setting, wrong type, a `name:` that is not the file name, or a credential that is not an `${ENV_VAR}` or `file:` reference; `detail` names the setting |
 | DRS-5032 | 409 | connector conflict | the `If-Match` version is stale (someone changed it since you read it), a file of that name exists and no `If-Match` was sent, or the change switches off or deletes a connector packs use and `confirm=true` was not sent; also deleting a connector a pack's template names |
 | DRS-5033 | 404 | no such connector | no connector of that name (a file, a pack template or the server's configuration) |
+| DRS-5040 | 404 | artifact not found | Admin → Artifacts: no such installed pack, connector or BI file, or no such archive |
+| DRS-5041 | 409 | artifact in use | an uninstall (or a pack's disable) was refused because other things depend on the artifact; the answer carries the `impact`. Disable it instead, or choose to take the dependants along |
+| DRS-5042 | 409 | artifact conflict | a restore or an upload found an artifact of that name already in place; choose *replace* |
+| DRS-5043 | 422 | name not typed | a destructive step (uninstall with dependants, replace, delete an archive for good) needs the artifact's name typed |
+| DRS-5044 | 422 | artifact invalid | does not apply: a connector a pack's template names, a pack named in `drishti.packs.enabled`, a connector with no file, or an uploaded BI file that is not valid |
 | DRS-6001 | 404 | user not found | no such user |
 | DRS-6002 | 409 | user exists | a user with that name already exists |
 | DRS-6003 | 422 | weak password | the password does not meet the password rules |
@@ -2182,7 +2208,7 @@ patterns, and the server decides in one filter (`TokenScopes`):
 | `ai:admin` | `POST /admin/ai/test` | `admin` |
 
 There is no `admin` scope and no `data:admin`: the server has no data-loading endpoint (data is loaded by your ETL, or staged by
-`drishti.py data`; `loads:write` only *announces* that a batch landed), and users, roles, tokens, sign-in, caches, the audit log, shares, comments, notes, workspaces and
+`drishti.py data`; `loads:write` only *announces* that a batch landed), and users, roles, tokens, sign-in, caches, installing and uninstalling artifacts (`/admin/artifacts`), the audit log, shares, comments, notes, workspaces and
 every `/me/**` write are **never** open to a token (`drishti.security.token-never`). A write that no scope opens answers
 `403 DRS-5002 this token lacks the scope design:write` (or `API tokens only read`); one that is never open, `API tokens may not
 call this endpoint`. The effective right is the scope **and** the user's roles at the time of the call, so a token never exceeds

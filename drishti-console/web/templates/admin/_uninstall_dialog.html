@@ -1,0 +1,44 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The safe uninstall: shown by Admin → Artifacts, Packs, Connectors and BI settings (driven by /static/js/artifact-uninstall.js). A button with
+   data-uninstall data-kind="pack|connector|bi" [data-subtype] data-name opens it; it asks the server what depends on the artifact first. #}
+<dialog class="adm-dialog art-dialog" data-uninstall-dialog aria-labelledby="artTitle">
+  <h2 id="artTitle" data-art-title>Uninstall</h2>
+  <p data-art-text></p>
+  <div data-art-impact aria-live="polite"></div>
+  <ul class="art-notes" data-art-notes></ul>
+  <label class="chk art-cascade" data-art-cascade-row hidden><input type="checkbox" data-art-cascade> <span data-art-cascade-label>Also disable or uninstall what depends on it</span></label>
+  <label class="art-typed" data-art-typed-row hidden>Type <b class="mono" data-art-name></b> to confirm
+    <input class="studio-in mono" data-art-typed autocomplete="off" spellcheck="false"></label>
+  <p class="adm-msg" data-art-msg role="status" aria-live="polite"></p>
+  <div class="adm-dlg-actions ds-actions">
+    <button type="button" class="btn-pill btn-ghost" data-art-keep>Keep it as it is</button>
+    <button type="button" class="btn-pill btn-accent" data-art-disable hidden>Disable instead</button>
+    <button type="button" class="btn-pill btn-accent emb-danger-btn" data-art-go>Uninstall</button>
+  </div>
+</dialog>
+
+<dialog class="adm-dialog art-dialog" data-typed-dialog aria-labelledby="artTypedTitle">
+  <h2 id="artTypedTitle" data-typed-title>Are you sure?</h2>
+  <p data-typed-text></p>
+  <label class="art-typed">Type <b class="mono" data-typed-name></b> to confirm
+    <input class="studio-in mono" data-typed-input autocomplete="off" spellcheck="false"></label>
+  <p class="adm-msg" data-typed-msg role="status" aria-live="polite"></p>
+  <div class="adm-dlg-actions ds-actions">
+    <button type="button" class="btn-pill btn-ghost" data-typed-no>Cancel</button>
+    <button type="button" class="btn-pill btn-accent emb-danger-btn" data-typed-yes>Go ahead</button>
+  </div>
+</dialog>

@@ -315,6 +315,11 @@ bi-cd5f8b2cc5   board    promoted  published v1   Counterparty exposure  (Rates 
 **The API.** [API_GUIDE.md](API_GUIDE.md#business-intelligence-rupaka-apiv1bi) lists every endpoint and the token scopes
 `bi:write`, `bi:approve` and `bi:admin`.
 
+**Disabling and uninstalling a shipped file.** **Admin → Artifacts** (and *Shipped files* on *Admin → BI*) lists the files of `config/bi`. **Disable** hides a file from the catalogue and keeps
+it; **Uninstall…** shows the reports, boards, composed datasets, alerts and subscriptions that depend on it, refuses while any do, and otherwise moves the file to
+`data/uninstalled/`, from where it is restored. An administrator can also upload a `<name>.<kind>.yaml` file there: it is checked and its impact shown before it is placed. See
+[ARTIFACTS.md](../admin/ARTIFACTS.md).
+
 ## 11. Built and not built
 
 What each phase built, in one paragraph each, with where the detail is. The authoritative list, with what is **not** built in each phase, is [RUPAKA.md](../architecture/RUPAKA.md) section 20; the references end with their own "built and not built" ([DATASETS.md section 10](DATASETS.md#10-what-is-not-built), [REPORTS.md section 12](REPORTS.md#12-built-and-not-built), [BI_GOVERNANCE.md section 10](BI_GOVERNANCE.md#10-built-and-not-built), [BOARDS.md section 10](BOARDS.md#10-built-and-not-built)).

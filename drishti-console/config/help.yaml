@@ -86,6 +86,7 @@ categories:
     guides:
       - { slug: configuration, doc: admin/CONFIGURATION.md, title: Configuration, icon: sliders, summary: "Every server and console setting with its default." }
       - { slug: operations, doc: admin/OPERATIONS.md, title: Operations, icon: hdd-stack, summary: "Deploying, the security checklist, monitoring, capacity, connection pools and shipping by copying; the runbooks." }
+      - { slug: admin-artifacts, doc: admin/ARTIFACTS.md, title: "Artifacts: install and uninstall safely", icon: archive, summary: "Admin → Artifacts: every installed pack, connector file and BI file in one list; what depends on each; disable, uninstall to an archive, restore, install a BI file." }
       - { slug: user-management, doc: admin/USER_MANAGEMENT.md, title: Users and roles, icon: people, summary: "The seeded admin, managing users, roles and BI powers, password rules, lockout and the audit log." }
       - { slug: api, doc: guides/API_GUIDE.md, title: API, icon: braces-asterisk, summary: "REST endpoints, the ViewModel contract and error codes." }
       - { slug: cli-guide, doc: guides/CLI_GUIDE.md, title: "Command line", icon: command, summary: "One program for the terminal and CI: JSON Lines to a pack, pack check with JUnit, loading data and packs into a running server, and the headless Sutra tool." }

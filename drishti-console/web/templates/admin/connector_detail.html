@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}{{ c.name }} · Connectors · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-embedding.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-connectors.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-detail.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-embedding.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-connectors.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-detail.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-artifacts.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -68,7 +68,8 @@
       <button type="button" class="fk" data-act="test" aria-label="Test the connection of {{ c.name }}">Test connection</button>
       <button type="button" class="fk" data-act="{{ 'disable' if c.enabled else 'enable' }}" aria-label="{{ 'Disable' if c.enabled else 'Enable' }} {{ c.name }}">{{ 'Disable' if c.enabled else 'Enable' }}</button>
       {% if c.template %}<button type="button" class="fk" data-act="reset" aria-label="Reset {{ c.name }} to the default of pack {{ c.template }}">Reset to pack default</button>
-      {% elif c.origin == 'file' %}<button type="button" class="fk emb-danger" data-act="delete" aria-label="Delete {{ c.name }}">Delete</button>{% endif %}
+      {% elif c.origin == 'file' %}<button type="button" class="fk emb-danger" data-act="delete" aria-label="Delete {{ c.name }}">Delete</button>
+      <button type="button" class="fk emb-danger" data-uninstall data-kind="connector" data-name="{{ c.name }}" aria-label="Uninstall {{ c.name }}">Uninstall…</button>{% endif %}
     </p>
   </section>
 
@@ -122,7 +123,8 @@
   </section>
 
   {% include "admin/_connector_dialogs.html" %}
+  {% include "admin/_uninstall_dialog.html" %}
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-connectors.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-retry.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-index.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/artifact-uninstall.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-connectors.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-retry.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-index.js?v={{ ASSET_V }}"></script>{% endblock %}
