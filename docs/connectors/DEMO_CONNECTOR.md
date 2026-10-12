@@ -382,6 +382,20 @@ One draw of N(0, 0.0003) moves every zero rate by that times 100, every quote by
 rate, the headline becomes the 10-year point, and the 2s10s slope is recomputed in basis points. In the table and the
 chart of `/v/ir-curve/CRV-USD-BASIS` every row now changes, not only the 10Y cell.
 
+Captured from Chromium on `/v/ir-curve/CRV-USD-BASIS` (the table's tenor, instrument, zero rate, quote and discount
+factor), six seconds apart with the page live: all 12 rows changed and the chart's series changed with them.
+
+```text
+1M | Deposit / future | 3.7959% | 3.81 | 0.9968   ->   1M | Deposit / future | 3.9281% | 3.97 | 0.9967
+3M | Deposit / future | 3.7828% | 3.80 | 0.9905   ->   3M | Deposit / future | 3.9564% | 3.96 | 0.9902
+6M | Deposit / future | 3.7495% | 3.78 | 0.9813   ->   6M | Deposit / future | 3.8870% | 3.92 | 0.9806
+1Y | Basis swap       | 3.6853% | 3.74 | 0.9633   ->   1Y | Basis swap       | 3.8046% | 3.90 | 0.9617
+2Y | Basis swap       | 3.5694% | 3.69 | 0.9288   ->   2Y | Basis swap       | 3.6644% | 3.84 | 0.9260
+3Y | Basis swap       | 3.5227% | 3.69 | 0.8951   ->   3Y | Basis swap       | 3.6447% | 3.83 | 0.8915
+```
+
+The short end moved more than the long end (the tilt), and every discount factor fell as its zero rate rose.
+
 More examples, one per idea (each is in a shipped sample; [DEMO_DATA.md](DEMO_DATA.md#live-walks-by-kind) lists all of them):
 
 | Idea | Entry |
