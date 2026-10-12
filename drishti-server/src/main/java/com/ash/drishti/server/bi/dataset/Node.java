@@ -34,9 +34,19 @@ public sealed interface Node {
      */
     Set<String> TIME = Set.of("ytd", "mtd", "qtd", "prior_period", "same_period_last_year");
     /** {@code running(agg, table.dateColumn)}: a running total of a sum, count, min or max along the date field of the query. */
-    Set<String> WINDOW = Set.of("running");
-    /** Grammar the language reserves for later (RUPAKA.md section 6): parsed, then refused with DRS-9013. */
-    Set<String> RESERVED = Set.of("lag", "rank");
+    Set<String> WINDOW = Set.of("running", "cumulative");
+    /**
+     * Window functions over the query's grouped rows (DuckDB window SQL, worked out after the row rules and filters): {@code lag(agg, n, order [, partition...])},
+     * {@code lead}, {@code moving_avg|moving_sum|moving_min|moving_max(agg, n, order [, partition...])}, {@code rank|dense_rank|percent_rank(agg [, 'asc'|'desc' [, partition...]])}.
+     */
+    Set<String> ANALYTIC = Set.of("lag", "lead", "rank", "dense_rank", "percent_rank", "moving_avg", "moving_sum", "moving_min", "moving_max");
+    /** The analytic functions that run along an order column (the rest rank by the aggregate itself). */
+    Set<String> ORDERED = Set.of("lag", "lead", "moving_avg", "moving_sum", "moving_min", "moving_max");
+
+    /** Whether the function is worked out over the result rows, not inside the group. */
+    static boolean isWindow(String f) {
+        return WINDOW.contains(f) || ANALYTIC.contains(f);
+    }
 
     record Num(double value, boolean integral) implements Node {}
 

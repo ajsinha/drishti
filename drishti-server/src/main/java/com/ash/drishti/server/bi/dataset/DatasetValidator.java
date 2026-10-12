@@ -185,8 +185,8 @@ final class DatasetValidator {
             }
             String f = c.function();
             int a = c.args().size();
-            if (Node.RESERVED.contains(f)) {
-                err(NOT_BUILT, path, "'" + f + "' is reserved for window functions and is not built yet (time intelligence ytd, mtd, qtd, prior_period, same_period_last_year and running are built)");
+            if (Node.ANALYTIC.contains(f)) {
+                analyticCall(path, c);
             } else if (Node.TIME.contains(f) || Node.WINDOW.contains(f)) {
                 timeCall(path, c);
             } else if (!Node.AGGREGATES.contains(f) && !Node.SCALARS.contains(f)) {
@@ -207,6 +207,61 @@ final class DatasetValidator {
         });
     }
 
+    /**
+     * {@code lag(agg, n, order [, partition...])}, {@code moving_avg(agg, n, order [, partition...])} and {@code rank(agg ['desc' [, partition...]])} and kin: a window
+     * over the rows the query returns. {@code n} is a whole number from 1 to 1000; the order and partition arguments are columns of the dataset.
+     */
+    private void analyticCall(String path, Node.Call c) {
+        String f = c.function();
+        List<Node> a = c.args();
+        boolean ordered = Node.ORDERED.contains(f);
+        int fixed = ordered ? 3 : 1;
+        if (a.size() < fixed) {
+            err(EXPRESSION, path, ordered
+                    ? f + "(aggregate, n, order column [, partition columns]) takes at least three arguments, for example " + f + "(sum(trades.mtm), 1, trades.tradeDate)"
+                    : f + "(aggregate ['asc'|'desc' [, partition columns]]) takes an aggregate, for example " + f + "(sum(trades.mtm), 'desc')");
+            return;
+        }
+        Node agg = a.get(0);
+        if (!Node.hasAggregate(agg)) {
+            err(EXPRESSION, path, f + "() works over an aggregate: its first argument must aggregate, for example sum(trades.mtm)");
+        }
+        if (Node.anyMatch(agg, x -> x instanceof Node.MeasureRef || x instanceof Node.Call k && (Node.TIME.contains(k.function()) || Node.isWindow(k.function())))) {
+            err(EXPRESSION, path, f + "() cannot hold another window or time function or a measure reference; write the aggregate itself");
+        }
+        int first = 1;
+        if (ordered) {
+            first = 3;
+            if (!(a.get(1) instanceof Node.Num n) || !n.integral() || n.value() < 1 || n.value() > 1000) {
+                err(EXPRESSION, path, f + "()'s second argument is a whole number of rows from 1 to 1000");
+            }
+            columnArg(path, f, a.get(2), "order");
+        } else if (a.size() > 1) {
+            first = 2;
+            if (!(a.get(1) instanceof Node.Str s) || !Set.of("asc", "desc").contains(s.value().toLowerCase(java.util.Locale.ROOT))) {
+                err(EXPRESSION, path, f + "()'s second argument is 'asc' or 'desc'");
+            }
+        }
+        for (int i = first; i < a.size(); i++) {
+            columnArg(path, f, a.get(i), "partition");
+        }
+    }
+
+    private void columnArg(String path, String f, Node arg, String what) {
+        if (!(arg instanceof Node.Ref ref)) {
+            err(EXPRESSION, path, f + "()'s " + what + " argument is a column, for example trades.tradeDate");
+            return;
+        }
+        try {
+            Resolver.ColRef col = resolver.resolve(ref.parts(), null);
+            if (col.column() == null) {
+                err(EXPRESSION, path, f + "()'s " + what + " argument must be a column; '" + ref.text() + "' is a table");
+            }
+        } catch (IllegalArgumentException e) {
+            err(EXPRESSION, path, e.getMessage());
+        }
+    }
+
     /** {@code ytd(sum(x), table.date)}: an aggregate expression and a date column; {@code running} takes one sum, count, min or max. */
     private void timeCall(String path, Node.Call c) {
         String f = c.function();
@@ -219,7 +274,7 @@ final class DatasetValidator {
         if (!Node.hasAggregate(agg)) {
             err(EXPRESSION, path, f + "() restricts an aggregate: its first argument must aggregate, for example sum(trades.mtm)");
         }
-        boolean nested = Node.anyMatch(agg, x -> x instanceof Node.Call k && (Node.TIME.contains(k.function()) || Node.WINDOW.contains(k.function())));
+        boolean nested = Node.anyMatch(agg, x -> x instanceof Node.Call k && (Node.TIME.contains(k.function()) || Node.isWindow(k.function())));
         if (nested || Node.anyMatch(agg, x -> x instanceof Node.MeasureRef)) {
             err(EXPRESSION, path, f + "() cannot hold another time function or a measure reference; write the aggregate itself");
         }
@@ -263,6 +318,12 @@ final class DatasetValidator {
                 }
             }
             case Node.UserRef u -> err(EXPRESSION, path, "user." + u.attribute() + " is for row rules; a measure does not depend on the reader");
+            case Node.Call c when Node.ANALYTIC.contains(c.function()) && !c.args().isEmpty() -> {
+                if (inAggregate) {
+                    err(EXPRESSION, path, c.function() + "() cannot be inside an aggregate");
+                }
+                refs(path, c.args().get(0), false, current);               // the other arguments are columns and numbers, checked by analyticCall
+            }
             case Node.Call c when (Node.TIME.contains(c.function()) || Node.WINDOW.contains(c.function())) && c.args().size() == 2 -> {
                 if (inAggregate) {
                     err(EXPRESSION, path, c.function() + "() cannot be inside an aggregate");

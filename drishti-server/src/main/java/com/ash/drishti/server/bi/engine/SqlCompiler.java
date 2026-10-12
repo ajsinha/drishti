@@ -586,7 +586,7 @@ public final class SqlCompiler {
         }
         boolean[] hit = {false};
         Node.walk(ExprParser.parse(m.expr()), n -> {
-            if (n instanceof Node.Call c && Node.WINDOW.contains(c.function())) {
+            if (n instanceof Node.Call c && Node.isWindow(c.function())) {
                 hit[0] = true;
             } else if (n instanceof Node.MeasureRef r && usesWindow(r.name(), seen)) {
                 hit[0] = true;

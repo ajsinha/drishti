@@ -187,6 +187,9 @@ final class SqlEmitter {
             sawAggregate = true;
             return aggregate(c);
         }
+        if (Node.ANALYTIC.contains(f)) {
+            return analytic(c);
+        }
         if (Node.TIME.contains(f) || Node.WINDOW.contains(f)) {
             return timeCall(c, inAgg);
         }
@@ -280,6 +283,18 @@ final class SqlEmitter {
         Node.Call agg = (Node.Call) c.args().get(0);
         String inner = emit(agg, false);
         sawAggregate = true;
+        WindowField order = orderField(date, "a running total");
+        if (order == null) {
+            return "NULL";
+        }
+        List<String> partition = partitionOf(order);
+        String fn = "count".equals(agg.function()) || "sum".equals(agg.function()) ? "sum" : agg.function();
+        String over = fn + "(" + inner + ") OVER (" + (partition.isEmpty() ? "" : "PARTITION BY " + String.join(", ", partition) + " ") + "ORDER BY " + order.sql() + ")";
+        return "count".equals(agg.function()) ? "CAST(" + over + " AS BIGINT)" : over;
+    }
+
+    /** The finest field of the query on the date/order column, for a window to order by; null while only planning. */
+    private WindowField orderField(Resolver.ColRef date, String what) {
         List<WindowField> same = windowFields.getOrDefault(date.table() + "." + date.column(), List.of());
         List<String> rank = List.of("year", "quarter", "month", "week", "day");
         WindowField order = null;
@@ -289,23 +304,68 @@ final class SqlEmitter {
             }
         }
         if (order == null && planning) {
-            return "NULL";
+            return null;
         }
         if (order == null) {
-            throw new DrishtiException(ErrorCode.QUERY_INVALID, "a running total of " + date.table() + "." + date.column() + " needs that date as a field of the visual (its axis): the total runs along it");
+            throw new DrishtiException(ErrorCode.QUERY_INVALID, what + " along " + date.table() + "." + date.column() + " needs that column as a field of the visual (its axis): the window runs along it");
         }
         if (order.masked()) {
-            throw new DrishtiException(ErrorCode.QUERY_MASKED, "'" + date.table() + "." + date.column() + "' is masked for you: a running total cannot run along it");
+            throw new DrishtiException(ErrorCode.QUERY_MASKED, "'" + date.table() + "." + date.column() + "' is masked for you: " + what + " cannot run along it");
         }
+        return order;
+    }
+
+    /** Every other unmasked field of the query: the groups a window restarts in. */
+    private List<String> partitionOf(WindowField order) {
         List<String> partition = new ArrayList<>();
         for (WindowField w : windowFields.getOrDefault("*", List.of())) {
             if (!w.masked() && !w.sql().equals(order.sql())) {
                 partition.add(w.sql());
             }
         }
-        String fn = "count".equals(agg.function()) || "sum".equals(agg.function()) ? "sum" : agg.function();
-        String over = fn + "(" + inner + ") OVER (" + (partition.isEmpty() ? "" : "PARTITION BY " + String.join(", ", partition) + " ") + "ORDER BY " + order.sql() + ")";
-        return "count".equals(agg.function()) ? "CAST(" + over + " AS BIGINT)" : over;
+        return partition;
+    }
+
+    /** The listed partition columns, each of which must be a field of the query; a masked one is left out, so a window never splits on a hidden value. */
+    private List<String> partitionOf(List<Node> cols) {
+        List<String> out = new ArrayList<>();
+        for (Node n : cols) {
+            Resolver.ColRef ref = resolver.resolve(((Node.Ref) n).parts(), null);
+            List<WindowField> fs = windowFields.getOrDefault(ref.table() + "." + ref.column(), List.of());
+            if (fs.isEmpty()) {
+                if (planning) {
+                    continue;
+                }
+                throw new DrishtiException(ErrorCode.QUERY_INVALID, "a window partitioned by " + ref.table() + "." + ref.column() + " needs that column as a field of the visual");
+            }
+            fs.stream().filter(w -> !w.masked()).forEach(w -> out.add(w.sql()));
+        }
+        return out;
+    }
+
+    /** {@code lag}, {@code lead}, {@code moving_*}, {@code rank}, {@code dense_rank}, {@code percent_rank}: window SQL over the grouped rows (the validator checked the shape). */
+    private String analytic(Node.Call c) {
+        String f = c.function();
+        List<Node> a = c.args();
+        sawAggregate = true;
+        String inner = emit(a.get(0), false);
+        if (Node.ORDERED.contains(f)) {
+            int n = (int) ((Node.Num) a.get(1)).value();
+            Resolver.ColRef ocol = resolver.resolve(((Node.Ref) a.get(2)).parts(), null);
+            WindowField order = orderField(ocol, f + "()");
+            if (order == null) {
+                return "NULL";
+            }
+            List<String> partition = a.size() > 3 ? partitionOf(a.subList(3, a.size())) : partitionOf(order);
+            String over = (partition.isEmpty() ? "" : "PARTITION BY " + String.join(", ", partition) + " ") + "ORDER BY " + order.sql();
+            return switch (f) {
+                case "lag", "lead" -> f + "(" + inner + ", " + n + ") OVER (" + over + ")";
+                default -> f.substring("moving_".length()) + "(" + inner + ") OVER (" + over + " ROWS BETWEEN " + (n - 1) + " PRECEDING AND CURRENT ROW)";
+            };
+        }
+        boolean desc = a.size() < 2 || !"asc".equalsIgnoreCase(((Node.Str) a.get(1)).value());
+        List<String> partition = a.size() > 2 ? partitionOf(a.subList(2, a.size())) : List.of();
+        return f + "() OVER (" + (partition.isEmpty() ? "" : "PARTITION BY " + String.join(", ", partition) + " ") + "ORDER BY " + inner + (desc ? " DESC" : " ASC") + " NULLS LAST)";
     }
 
     /** Answers an aggregate from a rollup's stored components: a sum of sums, a sum of counts, a minimum of minimums. */

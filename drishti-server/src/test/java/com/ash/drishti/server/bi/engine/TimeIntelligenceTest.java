@@ -225,7 +225,7 @@ class TimeIntelligenceTest {
     @Test
     void aRunningTotalWithoutItsDateFieldOrAsAFilterIsRefused() {
         assertThatThrownBy(() -> run("{\"fields\":[\"trades.desk\"],\"measures\":[\"Running\"],\"dates\":{\"from\":\"2026-07-07\"}}", risk()))
-                .isInstanceOf(DrishtiException.class).hasMessageContaining("needs that date as a field");
+                .isInstanceOf(DrishtiException.class).hasMessageContaining("needs that column as a field");
         assertThatThrownBy(() -> run("{\"fields\":[\"trades.tradeDate\"],\"measures\":[\"Running\"],\"filters\":[{\"field\":\"Running\",\"op\":\"gt\",\"values\":[1]}],\"dates\":{\"from\":\"2026-07-07\"}}", risk()))
                 .isInstanceOf(DrishtiException.class).hasMessageContaining("cannot be filtered on");
     }
@@ -238,7 +238,7 @@ class TimeIntelligenceTest {
             DatasetParser.Result r = DatasetParser.parse(base.replace("measures:\n", "measures:\n  Bad: { expr: \"" + bad + "\" }\n"));
             assertThat(r.problems()).as(bad).anyMatch(DatasetParser.Problem::error);
         }
-        assertThat(DatasetParser.parse(base.replace("measures:\n", "measures:\n  Bad: { expr: \"lag(sum(trades.mtm))\" }\n")).problems()).anyMatch(p -> p.code().equals("DRS-9013"));
+        assertThat(DatasetParser.parse(base.replace("measures:\n", "measures:\n  Bad: { expr: \"lag(sum(trades.mtm))\" }\n")).problems()).anyMatch(DatasetParser.Problem::error);
     }
 
     @Test

@@ -60,8 +60,9 @@
 
     /** The time-intelligence function a measure uses (year to date, month to date, ... running total), or null: shown as a badge in the Fields pane. */
     function timeKind(expr) {
-      const m = /\b(ytd|mtd|qtd|prior_period|same_period_last_year|running)\s*\(/.exec(expr || '');
-      return m ? ({ prior_period: 'prior period', same_period_last_year: 'last year', running: 'running total' })[m[1]] || m[1] : null;
+      const m = /\b(ytd|mtd|qtd|prior_period|same_period_last_year|running|cumulative|lag|lead|rank|dense_rank|percent_rank|moving_avg|moving_sum|moving_min|moving_max)\s*\(/.exec(expr || '');
+      return m ? ({ prior_period: 'prior period', same_period_last_year: 'last year', running: 'running total', cumulative: 'running total', lag: 'previous row', lead: 'next row',
+        rank: 'rank', dense_rank: 'dense rank', percent_rank: 'percent rank', moving_avg: 'moving average', moving_sum: 'moving sum', moving_min: 'moving min', moving_max: 'moving max' })[m[1]] || m[1] : null;
     }
 
     function drawFields() {

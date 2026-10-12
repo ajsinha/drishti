@@ -295,7 +295,7 @@ class DatasetApiTest {
         assertThat(good.path("valid").asBoolean()).isTrue();
         JsonNode bad = ok(call("POST", "/api/v1/bi/datasets/validate", wes(), Map.of("yaml", "dataset: x\ntables:\n  t:\n    source: { kind: trade }\n    columns: { a: string }\nmeasures:\n  N: { expr: \"sum(t.nope)\" }\n  M: { expr: \"lag(sum(t.a))\" }\n")));
         assertThat(bad.path("valid").asBoolean()).isFalse();
-        assertThat(bad.path("problems").toString()).contains("DRS-9011").contains("measures.N").contains("DRS-9013");
+        assertThat(bad.path("problems").toString()).contains("DRS-9011").contains("measures.N").contains("measures.M");
     }
 
     @Test @Order(4)
