@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","properties":{"iso3":"GIB","bbox":[-5.358,36.111,-5.339,36.141]},"features":[{"type":"Feature","properties":{"code":"GI-X01","name":"Gibraltar","iso3":"GIB"},"geometry":{"type":"Polygon","coordinates":[[[-5.358,36.141],[-5.339,36.141],[-5.34,36.13],[-5.339,36.124],[-5.342,36.111],[-5.35,36.119],[-5.358,36.141]]]}}]}
