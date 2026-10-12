@@ -82,8 +82,23 @@ def roles_tokens(c: Ctx):
 def health(c: Ctx):
     login(c, height=900)
     go(c, "/admin/health", wait="table", settle=2500)
-    c.save("08-health.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 330})
+    c.save("08-health.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 380})
     go(c, "/admin/caches", wait="table", settle=1500)
     c.save("09-caches.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 560})
     go(c, "/admin/audit?subject=drishti-dev-admin", wait="table", settle=1500)
     c.save("10-audit.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 640})
+
+
+@shot("11-index-reload.jpg")
+def index_reload(c: Ctx):
+    """Needs a stack that reads the demo lake (DRISHTI_DELTA_ROOT) with `index.days: 3` on the trading-store connector and a DRISHTI_INDEX_DIR of its own;
+    on the plain scratch stack the connector is down, so the picture is skipped and the one in the repository stays."""
+    import os
+    if not os.environ.get("DRISHTI_SHOTS_INDEX"):
+        print("  skipped: set DRISHTI_SHOTS_INDEX=1 on a stack with the lake and index.days: 3 on trading-store")
+        return
+    login(c, height=900)
+    go(c, "/admin/connectors/trading-store", wait="[data-index-panel] tbody tr", settle=1000)
+    c.page.locator("[data-index-panel] tbody tr").nth(1).locator("[data-index-reload]").click()
+    c.page.wait_for_timeout(2500)
+    elem_shot(c, "11-index-reload.jpg", "[data-index-panel]", pad=0)

@@ -204,10 +204,9 @@ Shipped files are read-only. Copy one and edit the copy, which is private to you
 ## A dataset that is wrong
 
 ```
-POST /api/v1/bi/datasets/validate   {"yaml": "... measures:\n  N: { expr: \"sum(t.nope)\" }\n  M: { expr: \"lag(sum(t.a))\" }"}
+POST /api/v1/bi/datasets/validate   {"yaml": "... measures:\n  N: { expr: \"sum(t.nope)\" }"}
 {"valid": false, "problems": [
-  {"level":"error","code":"DRS-9011","path":"measures.N","message":"table 't' has no column 'nope' (it has a)"},
-  {"level":"error","code":"DRS-9013","path":"measures.M","message":"'lag' is reserved for window functions and is not built yet (time intelligence ytd, mtd, qtd, prior_period, same_period_last_year and running are built)"}]}
+  {"level":"error","code":"DRS-9011","path":"measures.N","message":"table 't' has no column 'nope' (it has a)"}]}
 ```
 
 ## Start a model from the packs

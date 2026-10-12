@@ -240,9 +240,17 @@ $ curl -s localhost:17480/readyz                         # the console can reach
 
 You should see `UP` four times. (`pythonRuntime` says whether Calc's browser Python is installed: only a Calc panel needs it.) For **people**, **Admin → Health**:
 
-![Admin, Health: the overall status DEGRADED, "4 of 17 connectors up", the version, uptime, heap 630/2048 MB, threads and Java; and "13 things failed and will be tried again by themselves"](img/t17/08-health.jpg)
+![Admin, Health: the overall status DEGRADED, "17 of 19 connectors up", the version, uptime, heap 418/15576 MB, threads and Java; the temp folders of the server and the console; and "1 thing failed and will be tried again by themselves"](img/t17/08-health.jpg)
 
 You should see the status (`OK`, `DEGRADED` when any source is down, stale or a pack has a problem, `DOWN` when no source is up), the version and the heap against its ceiling, and what is being retried: below it each connector with its state, last update, read latency and last error. (On this stack the lake of the banking demo was never built, so thirteen connectors are `DOWN` and retried with growing waits: a fresh install looks like this until you build it, as tutorial 1 said. The heap figure is the 2 GB ceiling you set above.)
+Under the status line, **Temp folders** names the one folder each process keeps (`drishti-<pid>` for the server, `drishti-console-<pid>` for the console, under `drishti.tmp-dir` / `DRISHTI_TMP_DIR` and `tmp_dir` / `DRISHTI_CONSOLE_TMP_DIR`) with its size and file count: DuckDB's spill, exports, uploads and Python scratch all live there, a clean stop removes it and the next start removes the folders of processes that died. If a figure there keeps growing, something is holding files open; the folder is the first place to look and is safe to leave alone.
+
+**The type-ahead index.** A connector that serves search keeps the ids it suggests as you type. With `index.days` above 1 it keeps several business days, so a past date suggests the ids of that day, and it can keep closed days on disk (`DRISHTI_INDEX_DIR`). Each connector's row on this page says how it is doing (`type-ahead index: 3 days (2 on disk, 0.1 MB), 30,000 ids, 1.6 MB, warm`), and the index follows its source by itself: a data-load signal rebuilds past days and every `index.reload-every` (10 minutes) a changed day is rebuilt. When you cannot wait (a past day was corrected with no signal), open **Admin → Connectors → the connector → Index** and press **Reload** on the day, **Reload kind**, or **Reload all**:
+
+![Admin, a connector's Index panel: the automatic check times, and the days of trade with where each is kept, its ids, size, build time and state; the second day was just reloaded](img/t17/11-index-reload.jpg)
+
+You should see the day you reloaded get a new *Built* time and stay *fresh*; the old day answered type-ahead until the new one replaced it, and one reload runs per connector at a time. Each reload is in the audit log. Sizing and the settings: [OPERATIONS.md section 12.2](../admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index) and [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiindex--the-multi-day-type-ahead-index). (This picture was made on a stack that reads the demo lake with `index.days: 3` on the `trading-store` connector.)
+
 For **monitoring**, Prometheus scrapes `/actuator/prometheus` with `Authorization: Bearer $DRISHTI_METRICS_TOKEN` (with security on every `/actuator` endpoint but health needs it), and there is a Grafana dashboard and a list of suggested alerts in [OPERATIONS.md section 13](../admin/OPERATIONS.md#13-monitoring). The one-call summary for a script is `GET /api/v1/admin/health`:
 
 ```text
