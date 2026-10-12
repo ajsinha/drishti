@@ -78,7 +78,7 @@ def seed() -> None:
     for user, role in USERS.items():
         s, r = admin("POST", "/admin/users", {"username": user, "displayName": user.capitalize(), "email": f"{user}@desk.test", "roles": [role],
                                             "packs": ["trading", "counterparty-risk"], "password": PASSWORD, "mustChangePassword": False})
-        assert s in (200, 201), r
+        assert s in (200, 201, 409), r                                # 409: already seeded (a server the previous file left running)
 
 
 class LiveStack:

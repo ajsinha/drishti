@@ -102,7 +102,7 @@ def seed(packs: list) -> None:
     for user, role, desk in [("wes", "bi-writer", ""), ("rita", "risk", ""), ("hana", "desk-head", "DESK-FX"), ("ann", "analyst", ""), ("nobi", "bi-none", "")]:
         s, r = admin("POST", "/admin/users", {"username": user, "displayName": user.capitalize(), "email": f"{user}@desk.test", "desk": desk, "roles": [role],
                                             "packs": packs, "password": PASSWORD, "mustChangePassword": False})
-        assert s in (200, 201), r
+        assert s in (200, 201, 409), r                                # 409: already seeded (a server the previous file left running)
 
 
 class DataStack:

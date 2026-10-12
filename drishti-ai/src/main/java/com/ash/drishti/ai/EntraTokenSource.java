@@ -80,7 +80,20 @@ final class EntraTokenSource {
         return new LlmProvider.Readiness(true, "entra (" + m + ")");
     }
 
-    synchronized String token() {
+    /** A token, fetched again a minute before it expires. A lock, not {@code synchronized}: the fetch reads a file and calls the
+     *  token endpoint, and blocking under {@code synchronized} pins a virtual thread on Java 21. */
+    String token() {
+        lock.lock();
+        try {
+            return fetchToken();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private final java.util.concurrent.locks.ReentrantLock lock = new java.util.concurrent.locks.ReentrantLock();
+
+    private String fetchToken() {
         if (!token.isEmpty() && System.currentTimeMillis() < expiresAtMillis - 60_000) {
             return token;
         }

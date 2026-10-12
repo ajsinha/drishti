@@ -96,7 +96,7 @@ def seed() -> dict:
     for user, role in USERS.items():
         s, r = admin("POST", "/admin/users", {"username": user, "displayName": user.capitalize(), "email": f"{user}@desk.test", "roles": [role], "packs": ["trading"],
                                             "password": PASSWORD, "mustChangePassword": False})
-        assert s in (200, 201), r
+        assert s in (200, 201, 409), r                                # 409: already seeded (a server the previous file left running)
     ann = lambda m, p, b=None: call(m, p, "ann", ["bi-writer"], b)          # noqa: E731
     sue = lambda m, p, b=None: call(m, p, "sue", ["bi-steward"], b)         # noqa: E731
     s, ws = ann("POST", "/bi/workspaces", {"name": "Rates Desk", "description": "Rates trading: P&L, exposure and liquidity"})
