@@ -86,7 +86,7 @@ class PythonAlertReaderTest {
     PythonAlertReader reader() {
         Dataset ds = DatasetParser.parse(DATASET).dataset();
         when(datasets.parsed(any(), anyString())).thenReturn(ds);
-        when(datasets.query(any(), anyString(), any(), anyBoolean())).thenReturn(mock(QueryService.Result.class));
+        when(datasets.ask(any(), anyString(), any(), anyBoolean())).thenReturn(mock(QueryService.Result.class));
         when(datasets.json(any())).thenAnswer(i -> answer);
         Map<String, Object> manifest = new LinkedHashMap<>(Map.of("name", "vol", "interface", "measure", "inputs", List.of("pnl1d"), "source", "def compute(t, p): return 1"));
         when(items.describe(any(), eq("vol"), eq(true))).thenReturn(Map.of("manifest", manifest, "params", Map.of("k", 2)));
@@ -123,7 +123,7 @@ class PythonAlertReaderTest {
         assertThat((List<Object>) call[3]).containsExactly("pnl1d", "desk", "id");
         assertThat((Map<Object, Object>) call[1]).containsEntry("k", 2);
         ArgumentCaptor<QueryRequest> q = ArgumentCaptor.forClass(QueryRequest.class);
-        org.mockito.Mockito.verify(datasets).query(any(), eq("d"), q.capture(), eq(false));
+        org.mockito.Mockito.verify(datasets).ask(any(), eq("d"), q.capture(), eq(false));
         assertThat(q.getValue().fields()).containsExactly("trade.desk", "trade.pnl1d", "trade.id");
         assertThat(q.getValue().measures()).isEmpty();
     }
