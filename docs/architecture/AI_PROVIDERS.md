@@ -19,7 +19,7 @@ Drishti talks to language models through its **own** interfaces. Which vendor, l
 `config/ai/`, not a decision in a feature. Spring AI (`spring-ai-starter-model-openai`) is an implementation detail behind the
 `openai` provider type; no feature sees it. The layer is **off by default** (`drishti.ai.enabled=false`): while off, no
 provider file is read and no model is called. The same shape exists in the console (`drishti-console/core/ai/`, section 8).
-MCP servers (tools a model or a feature can call) have a sibling layer: [MCP_CLIENT.md](MCP_CLIENT.md).
+MCP servers (tools a model or a feature can call) have a sibling layer: [MCP_CLIENT.md](MCP_CLIENT.md). Beyond `openai`, `anthropic` and `mock`, sixteen more provider types (Groq, Together, Fireworks, DeepSeek, xAI, OpenRouter, Perplexity, Hugging Face, vLLM, LM Studio, Mistral, any OpenAI-compatible server, Azure OpenAI, Gemini, Cohere, Ollama, AWS Bedrock) come from sajhamcpserver: [section 11](#11-more-providers-the-way-sajhamcpserver-has-them).
 
 ## 1. The pieces (server, module `drishti-ai`)
 
@@ -235,7 +235,7 @@ models, MCP servers and (one server at a time, by link) their tools. The console
 `drishti-ai`: `AiProxyTest` (the proxy: credentials from the environment, the site default, `proxy: none`, no-proxy, a literal password refused), `LlmLayerTest` (mock, files, registry and reload, a stub OpenAI-compatible server incl. headers, cost and error
 handling, a stub Anthropic server, policy), `McpLayerTest`. `drishti-server`: `AiApiTest` (REST end to end with the mock),
 `AskEndToEndTest` and friends (Ask on the layer, incl. the legacy settings), `AskOffByDefaultTest`. Console:
-`tests/test_ai_layer.py`. None touches a network beyond loopback.
+`tests/test_ai_layer.py`. None touches a network beyond loopback. The providers of section 11 have their own tests ([11.10](#1110-tests)).
 
 ## 10. One design in two languages: the sajhamcpserver abstractions
 
@@ -285,3 +285,223 @@ environment overrides (`SAJHA_AI_*`) are Drishti's own `DRISHTI_AI_*` and the pr
 
 **Tests.** One shared scenario file, `drishti-ai/src/test/resources/contract/llm_contract.json` (catalogue, chat, tool call, a scripted failure, a stream, embeddings, refusals), is run against the mock
 by `LLMContractTest` (Java) and `tests/test_llm_contract.py` (Python); `BaseMcpToolTest` and the last test of the Python file cover the tool base.
+
+## 11. More providers, the way sajhamcpserver has them
+
+Sixteen provider types joined `openai`, `anthropic`, `server` and `mock`, mirroring `sajha/ai/llm/providers/*.py` of sajhamcpserver: the type names, the settings (sajha's `snake_case` fields are
+`kebab-case` keys of the provider file), the model catalogue and the presets. They sit on the same abstractions (section 10), in **both** languages, behind the same policy (masks, audit,
+limits, roles, labels-only: section 4). **Every one is off until you copy its example from `config/ai/<type>.yaml.example` to `config/ai/<name>.yaml`, set `enabled: true`** and
+`drishti.ai.enabled=true`. A provider file is the same in the server and the console.
+
+| `type:` | Vendor and API | Server (Java, `com.ash.drishti.ai`) | Console (Python, `core/ai/providers`) |
+|---|---|---|---|
+| `groq`, `together`, `fireworks`, `deepseek`, `xai`, `openrouter`, `perplexity`, `huggingface`, `vllm`, `lmstudio`, `mistral`, `openai_compatible` | OpenAI Chat Completions | `OpenAiCompatProvider` | `openai_compat.py` |
+| `azure_openai` | Azure OpenAI: api key, bearer or Microsoft Entra ID | `AzureOpenAiProvider`, `EntraTokenSource` | `azure.py`, `cloud_auth.py` |
+| `gemini` | Google Gemini API (AI Studio) | `GeminiProvider` | `gemini.py` |
+| `cohere` | Cohere v2 | `CohereProvider` | `cohere.py` |
+| `ollama` | a local Ollama server, no key | `OllamaProvider` | `ollama.py` |
+| `bedrock` | Amazon Bedrock: Converse, InvokeModel, ListFoundationModels | `BedrockProvider` (AWS SDK v2) | `bedrock.py` (boto3) |
+
+**What every one of them does.**
+
+* **Chat** with text turns, a system text, tools (OpenAI-style `tool_calls` mapped to and from the vendor's shape), JSON mode, temperature and the max-token limit; **embeddings** where the API has them
+  (OpenAI-compatible, Azure, Gemini, Cohere, Ollama, Bedrock); the cost of a call from the catalogue prices.
+* **Streaming** is the layer's emulation (section 10): the signature is final, the wire call is one request.
+* **Model listing.** `models()` is the catalogue (`ai/llm_catalog.json`, mirrored from sajha's `catalog.py`, prices per million tokens) plus the file's `models:`; a file model with the same name wins, and
+  `catalogue: false` keeps only the file's. `live_models()` (Python) / `liveModels()` (Java) asks the endpoint what it serves now and returns the ones not already listed, with source `live`: `GET /models`
+  for the keyless OpenAI-compatible servers (`vllm`, `lmstudio`, `openai_compatible`; `live-models: true` turns it on for others), `/api/tags` for Ollama, `/v1beta/models` for Gemini, `/v1/models` for Cohere,
+  `ListFoundationModels` for Bedrock. A vendor's new model id is a line in `models:`, never a code change. A logical name is the id with characters outside `A-Za-z0-9._-` replaced by `_`
+  (`openai/gpt-oss-20b` is `openai_gpt-oss-20b`); `groq/llama-3.3-70b-versatile` addresses a model as `<provider>/<logical name>`.
+* **Health.** `health()` never calls the network: it is *down* for `enabled: false` and for a missing key, credential or region (with the variable to set), else *ok*; once a certificate given by `tls.*` is
+  less than 30 days from expiry the text carries the sentence of [TLS.md](../connectors/TLS.md#9-certificate-expiry). `probe()` (Python also `aprobe()`) makes one cheap live call (the model list; Ollama
+  `/api/tags`) and answers the same shape; Admin shows both.
+* **`describe_config()`** shows the file with every secret as `********` (the key, `header.*` credentials, `proxy.password`, `aws-*`, `client-secret`, `tls.*` passwords); the file's other settings are shown as written.
+* **Keys only as `${ENV}`.** `api-key`, `aws-access-key-id`, `aws-secret-access-key`, `aws-session-token`, `client-secret` and the `tls.*` passwords accept an `${ENV_NAME}` placeholder or nothing; a literal is
+  refused at load, naming the setting. When `api-key` is left out, a preset reads the vendor's own variable (the table below).
+* **Proxy.** The shared `proxy.*` block (or the site default) applies to every call, an `https://` target tunnelled with CONNECT: [PROXY.md](../connectors/PROXY.md).
+* **TLS.** The shared `tls.*` block of the connectors applies to every provider type (section 11.9).
+* **Errors** name the cause and never carry the response body: HTTP 401/403 `(authentication failed ...)`, 404 `(not found: check base-url, the path and the model id)`, 429 kind `RATE_LIMITED`, a slow
+  endpoint kind `TIMEOUT`, anything else `FAILED`. `retries: n` tries again after a 5xx, a 429 or a connection failure.
+
+### 11.1 OpenAI-compatible presets
+
+A preset is a base URL, a key variable and a catalogue; the code is the same. `openai_compatible` has none of them: give `base-url`.
+
+| `type:` | Default `base-url` | Key read from (when `api-key` is left out) | Needs a key | Embeddings |
+|---|---|---|---|---|
+| `groq` | `https://api.groq.com/openai/v1` | `GROQ_API_KEY` | yes | no |
+| `together` | `https://api.together.xyz/v1` | `TOGETHER_API_KEY` | yes | yes |
+| `fireworks` | `https://api.fireworks.ai/inference/v1` | `FIREWORKS_API_KEY` | yes | yes |
+| `deepseek` | `https://api.deepseek.com/v1` | `DEEPSEEK_API_KEY` | yes | no |
+| `xai` | `https://api.x.ai/v1` | `XAI_API_KEY` | yes | no |
+| `openrouter` | `https://openrouter.ai/api/v1` | `OPENROUTER_API_KEY` | yes | no |
+| `perplexity` | `https://api.perplexity.ai` | `PERPLEXITY_API_KEY`, `PPLX_API_KEY` | yes | no |
+| `huggingface` | `https://router.huggingface.co/v1` | `HF_TOKEN`, `HUGGING_FACE_HUB_TOKEN` | yes | no |
+| `vllm` | `http://localhost:8000/v1` | `VLLM_API_KEY` | no | yes |
+| `lmstudio` | `http://localhost:1234/v1` | `LMSTUDIO_API_KEY` | no | yes |
+| `mistral` | `https://api.mistral.ai/v1` | `MISTRAL_API_KEY` | yes | yes (`mistral-embed`) |
+| `openai_compatible` | none (required) | `api-key` only | no | yes |
+
+```yaml
+# config/ai/fast.yaml
+type: groq
+enabled: true
+api-key: ${GROQ_API_KEY}
+timeout: 60s
+default-model: llama-3.3-70b-versatile
+models:                                  # optional: add to or override the catalogue
+  - {name: gpt-oss, id: openai/gpt-oss-20b, capabilities: [chat, tool-calls, json-mode], cost-per-1k-input: 0.000075, cost-per-1k-output: 0.0003}
+```
+
+Settings: `base-url`, `completions-path` / `chat-path` (`/chat/completions`), `embeddings-path` (`/embeddings`), `max-tokens-param` (`max_tokens`; `max_completion_tokens` for a server that wants it; Mistral
+declares `max_tokens`), `live-models`, `models-path` (`/models`), `header.<Name>` (extra headers; a credential as `${ENV}`), `retries`, `proxy.*`, `tls.*`. A request goes to
+`POST {base-url}/chat/completions` with `Authorization: Bearer <key>`:
+
+```json
+{"model": "llama-3.3-70b-versatile", "messages": [{"role": "user", "content": "ping"}], "max_tokens": 1024, "stream": false}
+```
+
+Built: chat, tools, JSON object mode, embeddings, model list. Not built (the layer's request type does not carry them yet): `tool_choice` and the vendor spellings of it (`tool-choice-required`),
+`seed`, `parallel_tool_calls`, `reasoning_effort`, `strict` JSON schemas, images.
+
+### 11.2 Azure OpenAI
+
+```yaml
+# config/ai/azure.yaml
+type: azure_openai
+enabled: true
+base-url: https://my-resource.openai.azure.com        # also AZURE_OPENAI_ENDPOINT
+api-style: v1                                          # v1: /openai/v1/chat/completions, the deployment as "model"
+auth: api_key                                          # api_key: the api-key header | bearer | entra
+api-key: ${AZURE_OPENAI_API_KEY}
+deployments:                                           # model id: deployment name; each is also a model of this provider
+  gpt-4o: my-gpt4o-deployment
+  text-embedding-3-small: my-embedding-deployment
+```
+
+`api-style: deployments` addresses `/openai/deployments/<deployment>/chat/completions?api-version=<api-version>` (`api-version` defaults to 2024-10-21). The limit is sent as
+`max_completion_tokens`. **Microsoft Entra ID** (`auth: entra`): `tenant-id`, `client-id`, `client-secret: ${AZURE_CLIENT_SECRET}` (the client-credentials grant) or `federated-token-file` (workload identity, the
+grant with a client assertion); `entra-mode: auto | client_secret | workload_identity`, `entra-scope` (`https://cognitiveservices.azure.com/.default`), `entra-authority`
+(`https://login.microsoftonline.com`). The token is cached until a minute before it expires and is fetched through the provider's own proxy and TLS settings. **Built in both languages without an SDK; managed identity
+(the instance metadata endpoint) is not built**, and a file that asks for it (`entra` with no secret and no federated file) is *down* with that sentence. Azure has no model-list call every key may make: the models
+are the `deployments` (and `models:`).
+
+### 11.3 Gemini
+
+```yaml
+# config/ai/gemini.yaml
+type: gemini
+enabled: true
+api-key: ${GEMINI_API_KEY}              # GEMINI_API_KEY or GOOGLE_API_KEY is also read when this line is left out
+```
+
+`POST {base-url}/v1beta/models/<id>:generateContent` with `x-goog-api-key`; embeddings by `:batchEmbedContents` (`embedding-task-type`, default `RETRIEVAL_DOCUMENT`). `schema-mode: json_schema`
+sends tool schemas as `parametersJsonSchema`; `openapi` sends the OpenAPI subset as `parameters`. `api-version` (v1beta), `base-url` (also `GEMINI_BASE_URL`). **Vertex AI (`platform: vertex`) is not built**
+and is refused at load.
+
+### 11.4 Mistral
+
+`type: mistral` is the OpenAI-compatible provider with Mistral's declarations (`max_tokens`, key `MISTRAL_API_KEY`, `mistral-embed`). Copy `config/ai/mistral.yaml.example`; the settings are those of 11.1.
+
+### 11.5 Cohere
+
+```yaml
+type: cohere
+enabled: true
+api-key: ${COHERE_API_KEY}              # COHERE_API_KEY or CO_API_KEY is also read when this line is left out
+```
+
+`POST /v2/chat` and `/v2/embed` with a bearer key (`chat-path`, `embed-path`, `embedding-input-type` default `search_document`); the model list is `GET /v1/models`. The `document` tool-result format is not built.
+
+### 11.6 Ollama
+
+```yaml
+type: ollama
+enabled: true
+base-url: http://localhost:11434         # also OLLAMA_HOST; a bare host:port gets http://
+timeout: 300s                            # a model that is not loaded yet is slow to answer
+options: {top_k: 40}
+```
+
+No key. `POST /api/chat` (`stream: false`; tool-call ids are made up as `call_<n>`), `/api/embed`; `options.<name>` (any runtime option), `num-ctx`, `keep-alive`, `think`. An optional `api-key` is sent as a bearer
+token, for a proxy in front of Ollama. `live_models()` lists what is pulled (`/api/tags`); `probe()` says `http://host:11434: 2 model(s) pulled`, or that it is not answering, without raising. `/api/show` capability
+detection is not built: declare `capabilities` in `models:`.
+
+### 11.7 AWS Bedrock
+
+Built in **both** languages on the AWS SDKs, so the whole AWS credential chain works: environment keys, a shared-credentials `profile`, SSO, container and instance roles, web identity (IRSA). Java uses the
+SDK v2 modules `bedrockruntime` and `bedrock` (with the JDK's HTTP clients only, as the S3 connector does: no Netty); Python uses `boto3` (in `requirements.txt`).
+
+```yaml
+# config/ai/bedrock.yaml
+type: bedrock
+enabled: true
+region: us-east-1                        # also AWS_REGION / AWS_DEFAULT_REGION
+# profile: my-profile                    # else the default chain
+# aws-access-key-id: ${AWS_ACCESS_KEY_ID}
+# aws-secret-access-key: ${AWS_SECRET_ACCESS_KEY}
+# aws-session-token: ${AWS_SESSION_TOKEN}
+default-model: anthropic.claude-sonnet-5-5
+```
+
+Chat is the **Converse** API (`POST /model/<id>/converse`, system, messages, `inferenceConfig`, `toolConfig`); embeddings are **InvokeModel** (`/model/<id>/invoke`: Titan `inputText`, one call per text; Cohere Embed
+`texts`); the live list is `ListFoundationModels`. Settings: `region`, `profile`, the three `aws-*` keys as `${ENV}`, `base-url` (an endpoint override: a VPC endpoint, or a fake in a test), `control-url` (the
+same for the model list), `embedding-input-type`, `timeout`, `retries` (SDK standard retries), `proxy.*`, `tls.*`. Every request is signed with SigV4 by the SDK (the tests check the `Authorization` header's
+`AWS4-HMAC-SHA256 Credential=<key>/<date>/<region>/bedrock/aws4_request`, the date and the session token). Not built: guardrails, `additional-model-request-fields`, the `document` and image content blocks,
+and `tls.verify-hostname: false` (both AWS clients always check the name; the file is refused with that reason).
+
+### 11.8 Keys, environment variables and what `describe_config()` shows
+
+```json
+{
+  "name": "fast",
+  "type": "groq",
+  "enabled": true,
+  "baseUrl": "https://api.groq.com/openai/v1",
+  "apiKey": "********",
+  "timeoutSeconds": 60.0,
+  "defaultModel": "llama-3.3-70b-versatile",
+  "models": ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "..."],
+  "settings": {"catalogue": "true", "header.Authorization": "********", "header.X-Team": "red",
+               "proxy.password": "********", "proxy.url": "http://proxy.corp:3128", "proxy.username": "svc"},
+  "tls": []
+}
+```
+
+With the key variable unset, `health()` says `down` and what to set (captured): `{'status': 'down', 'detail': 'no api key: set GROQ_API_KEY (or api-key: ${ENV_NAME})'}`.
+
+### 11.9 TLS: the same block as the connectors
+
+Every provider type (and the console's MCP client) reads the connectors' `tls:` block ([TLS.md](../connectors/TLS.md) is the reference; in a provider file `tls:` is flattened to `tls.*` as everywhere):
+trust (`ca-file` as a PEM file or the PEM text, `truststore`, `trust-jvm-default`), a client identity for mutual TLS (`cert-file` + `key-file` + `key-password`, or `keystore`), `protocols`, `cipher-suites`,
+`verify-hostname` (on by default), `insecure-trust-all` (refused unless `DRISHTI_ALLOW_INSECURE_TLS=true`). Passwords are `${ENV}` placeholders or `...-password-file`, never literals. A `tls.*` key against an
+`http://` address is an error at load, never a silent downgrade. Through an HTTP proxy the same settings hold (CONNECT tunnel, TLS end to end). The expiry of every certificate given is read at start and shown in
+`health()` and `describe_config()["tls"]` (Admin → AI) as the connectors show it.
+
+```yaml
+type: vllm
+base-url: https://llm.bank.example:8443/v1
+tls:
+  ca-file: /etc/drishti/tls/bank-ca.pem
+  cert-file: /etc/drishti/tls/drishti.pem        # mutual TLS
+  key-file: /etc/drishti/tls/drishti.key
+  key-password-file: /run/secrets/drishti-key-password
+```
+
+Differences by language and type, honestly: the **server** reads the full set (PEM, PKCS12, JKS, all keys). The **console** reads PEM and **PKCS12** (a JKS store is refused with the `keytool -importkeystore` command that
+converts it), `protocols` as `TLSv1.2` / `TLSv1.3`, `cipher-suites` in OpenSSL names, and `trust-jvm-default` means the system's authorities. **Bedrock** takes the CA, the truststore and the client identity (both
+SDKs accept a trust and key manager or a bundle) but not `verify-hostname: false` or `protocols`. Hostname verification uses the address you connect to, so a private-CA certificate needs it as a SAN.
+
+### 11.10 Tests
+
+No test touches a network beyond loopback.
+
+* Per provider, in both languages, against a fake server that speaks that API (`drishti-ai/src/test/java/com/ash/drishti/ai/FakeLlmServer.java`, `drishti-console/tests/llm_fakes.py`; the same rules: the last user text is
+  echoed, `weather` asks for the tool, `boom` is 500, `limit` is 429, `slow` sleeps): the request (path, auth header, body fields), a reply with usage and cost, a tool call, embeddings, the model list, 401, 429,
+  500 (the body never appears in the message), a timeout, retries, health, masking, the proxy, Azure's three auth modes and both address styles, Bedrock's SigV4 header and session token. `HttpProvidersTest` and
+  `test_llm_providers.py`.
+* The **shared contract** `llm_contract_http.json` (catalogue, chat, tool call, system turn, 500, 429, stream, embeddings, refusals) runs against an OpenAI-compatible preset, Ollama, Gemini, Cohere and Bedrock in
+  `HttpProvidersContractTest` and `test_llm_providers.py`; the older `llm_contract.json` still runs against the mock.
+* **TLS** with a test CA (`TestPki` in Java, `cryptography` in Python): the private CA is trusted only when configured, mutual TLS is refused without the client certificate and accepted with it (PEM, encrypted
+  key, PKCS12, JKS), the expiry note, the plain-address error, a CONNECT proxy tunnel, every provider type and Bedrock: `ProviderTlsTest`, `test_ai_tls.py`.
+* The catalogue file is the same in `drishti-ai/src/main/resources/ai/` and `drishti-console/core/ai/providers/`; both languages' tests fail if the copies differ.

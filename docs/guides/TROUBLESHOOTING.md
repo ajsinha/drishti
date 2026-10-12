@@ -253,6 +253,27 @@ ERROR: the provider or server could not be set up (type or transport not install
 DOWN: the last call failed; the MCP client is closed and connected afresh on the schedule, and a provider is simply tried again by the next call. With `drishti.ai.watch: off` (or
 `drishti.mcp.watch: off`) the folder is not looked at and nothing is retried: use Retry now.
 
+### An AI provider answers "authentication failed" (HTTP 401) or "access denied" (HTTP 403)
+
+The message is `the model endpoint answered HTTP 401 (authentication failed: check the api key and where it is read from)`; the body of the answer is never shown. Check, in this order: the
+variable the file names is set **in the process that runs Drishti** (`api-key: ${GROQ_API_KEY}`; a preset also reads the vendor's own variable, and Admin → AI says `no api key: set GROQ_API_KEY` while it is
+missing); the key belongs to the vendor and base URL in the file (`base-url` of an Azure resource, not a key for another); for Azure with `auth: entra` the token request is refused (`entra: the token request
+was refused (HTTP 401)`: tenant, client id and secret); for Bedrock `HTTP 403 ... (authentication failed or access denied)` is the credentials, the region or the account's model access (enable the model in the
+Bedrock console), and `no AWS credentials` means the SDK's chain found none (set `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`, a `profile`, or run with a role). `TLS certificate CN=… (tls.cert-file) expires in N days` in the health text is
+the nudge to rotate `tls.cert-file`.
+
+### An AI provider answers "rate limited" (HTTP 429)
+
+The call fails with kind `RATE_LIMITED` (a model-layer error, shown by the feature that called, not a DRS code of its own). It is the vendor's limit for the key, not Drishti's: raise the vendor limit, spread features over
+two providers, add `retries: 2` to the provider file (a 429 is tried again, a 401 is not), or lower Drishti's own per-user limits so one person cannot use the quota
+([AI_PROVIDERS.md section 4](../architecture/AI_PROVIDERS.md#4-policy)). Bedrock throttling (`ThrottlingException`) is the account's tokens-per-minute quota for the model in that region.
+
+### An AI provider says "could not be reached" with a private CA, or "the proxy refused the request"
+
+`tls.ca-file` names the CA that signed the **server's** certificate (not the client's); with mutual TLS add `tls.cert-file` and `tls.key-file`; a certificate with only a Common Name fails the name check, so
+re-issue it with the host as a subject alternative name ([TLS.md section 11](../connectors/TLS.md#11-troubleshooting)). Behind a proxy, `proxy.url`, `proxy.username` and `proxy.password` (an `${ENV}`) are the
+file's or the site's; the proxy must allow `CONNECT` to the vendor's host.
+
 ### Too many retry lines in the log
 
 The log gets the first failure and failures number 2, 4, 8, ... of each thing, never one line per try. To retry less often, raise `drishti.retry.max`
