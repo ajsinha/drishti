@@ -22,7 +22,7 @@ def test_examples_starters_and_guides_come_from_packs(client, backend):
     assert "Credit desk" in starters and "Shipment tracker" in starters
     assert client.get("/help/getting-started").status_code == 200
     assert client.get("/help/logistics-pack").status_code == 200
-    assert "Domain packs" in client.get("/help").text and client.get("/help/packs").status_code == 200
+    assert "/help/packs" in client.get("/help").text and client.get("/help/packs").status_code == 200
     assert "Finance · capital markets" in client.get("/about").text
 
 

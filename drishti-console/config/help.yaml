@@ -26,7 +26,7 @@ categories:
     icon: flag
     blurb: "Install it, run it, and learn it by doing."
     guides:
-      - { slug: getting-started, doc: guides/GETTING_STARTED.md, title: Install and run, icon: download, summary: "Prerequisites, build, start the server and the console, sign-in, Docker, other ways to build, a different configuration, and everything that differs on Windows." }
+      - { slug: install-and-run, doc: guides/GETTING_STARTED.md, title: Install and run, icon: download, summary: "Prerequisites, build, start the server and the console, sign-in, Docker, other ways to build, a different configuration, and everything that differs on Windows." }
       - { slug: tutorials, doc: tutorials/README.md, title: Tutorials, icon: mortarboard, kind: tutorial, summary: "Seventeen hands-on tutorials with real screenshots, one worked example each: from your first 15 minutes to BI, AI, embedding and running it in production." }
   - id: use
     name: Use
@@ -97,10 +97,9 @@ categories:
 # slug or slug#anchor. Documents that left the list (architecture, the per-plugin connector pages, the runbooks) are still in
 # the help centre at their path slug, so the old addresses keep working.
 moved:
-  quickstart: getting-started
-  windows: getting-started#drishti-on-windows
+  quickstart: install-and-run
+  windows: install-and-run#drishti-on-windows
   ide-guide: docs-guides-ide-guide
-  install-and-run: getting-started
   impact: user-guide#f8--impact
   monitors-and-alerts: user-guide#monitors
   workspaces: user-guide#workspaces

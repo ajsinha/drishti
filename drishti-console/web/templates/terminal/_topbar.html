@@ -77,7 +77,7 @@
   ('Help', 'question-circle', [
     ('Learn', [
       ('/help', 'question-circle', 'Help centre', 'Guides, concepts and reference (F1)', '/help'),
-      ('/help/getting-started', 'flag', 'Install and run', 'From nothing to your first view', None),
+      ('/help/install-and-run', 'flag', 'Install and run', 'From nothing to your first view', None),
       ('/about', 'info-circle', 'About ' ~ PRODUCT, 'Version, licence and credits', '/about')])])] %}
 {% macro _on(href, match) -%}{{ 'yes' if (path == href) or (match and path.startswith(match)) else '' }}{%- endmacro %}
 

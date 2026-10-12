@@ -35,7 +35,7 @@ def test_every_catalogued_guide_exists_and_renders(client):
 
 
 def test_guides_render_examples_boxes_toc_and_internal_links(client):
-    page = client.get("/help/getting-started").text
+    page = client.get("/help/install-and-run").text
     assert 'class="help-example"' in page and "data-copy" in page
     assert "On this page" in page and 'href="/help/user-guide"' in page
     assert 'class="help-box tip"' in client.get("/help/docs-guides-nested-documents").text
