@@ -843,11 +843,13 @@ model already has is refused (a report measure cannot shadow one of the model's)
 asked) or as **SQL** (Drishti SQL: the model's aliases as tables, `MEASURE('name')` for a measure, `JOIN` without `ON` along the model's relationships),
 one switch. **Run as SQL** sends the statement to the server (`POST /api/v1/bi/sql`) and shows its rows, its time and its plan, saying whether the plan is
 the one the visual's query ran: one question, one plan, one cache entry, whichever language asks it. The SQL text is written by the console from the
-model query (a printer: the server parses, binds and checks it). Captured for the bar above (a desk axis and the report's own measure):
+model query (a printer: the server parses, binds and checks it). A report's own measure is written in its SQL form when it has one (`measure('x')`
+is `MEASURE('x')`, `sum` is `SUM`, `distinct(x)` is `COUNT(DISTINCT x)`); one with no SQL form (a `where=`, a conditional, a time function) is named
+`MEASURE('…')` with its DEL in a comment above. Captured for the bar above (a desk axis and the report's own measure):
 
 ```sql
 SELECT trade.desk,
-       (measure('Sum of mtm') / 1000) AS "MTM in thousands"
+       MEASURE('Sum of mtm') / 1000 AS "MTM in thousands"
 FROM   trade
 GROUP  BY trade.desk
 ```

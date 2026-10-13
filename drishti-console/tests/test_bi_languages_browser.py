@@ -322,7 +322,7 @@ def test_a_report_on_a_model_has_its_own_measures_and_the_query_as_mq_or_sql(bro
     page.click('[data-qp-view="sql"]')
     sql = page.locator("[data-visual-query-text]").text_content()
     capture("query-panel.sql", sql)
-    assert sql.startswith("SELECT trade.desk") and "FROM   trade" in sql and "GROUP  BY trade.desk" in sql and "measure('Sum of mtm') / 1000" in sql, sql
+    assert sql.startswith("SELECT trade.desk") and "FROM   trade" in sql and "GROUP  BY trade.desk" in sql and "MEASURE('Sum of mtm') / 1000 AS" in sql, sql
     shoot(page, "[data-visual-query]", "query-panel-sql")
     page.click("[data-save]")
     expect(page.locator(".bi-near").first).to_contain_text("Saved", timeout=15000)

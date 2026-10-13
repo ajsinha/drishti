@@ -54,6 +54,33 @@
   }
 
   /**
+   * A DEL measure in its SQL form, for the SQL view, or null when it has none (a where=, a conditional, a time or window function, ratio, ...):
+   * measure('x') is MEASURE('x'), sum/avg/min/max/count are SUM/AVG/MIN/MAX/COUNT, distinct(x) is COUNT(DISTINCT x), == is =, != is <>, and/or/not and
+   * True/False/None are AND/OR/NOT and TRUE/FALSE/NULL. A token printer over the text; the server parses what it is sent.
+   */
+  function delToSql(expr) {
+    const text = String(expr || '');
+    if (/\bwhere\s*=|\bby\s*=|\bdesc\s*=|\bif\b|\belse\b|\bin\b|\bis\b|\*\*|\/\//.test(text)) { return null; }
+    const FN = { sum: 'SUM', avg: 'AVG', min: 'MIN', max: 'MAX', count: 'COUNT', abs: 'ABS', round: 'ROUND', coalesce: 'COALESCE', upper: 'UPPER', lower: 'LOWER', measure: 'MEASURE' };
+    const WORD = { and: 'AND', or: 'OR', not: 'NOT', True: 'TRUE', False: 'FALSE', None: 'NULL' };
+    let out = '', ok = true;
+    const re = /\s+|'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|[A-Za-z_][A-Za-z0-9_.]*|\d[\d_]*(?:\.\d+)?(?:e[+-]?\d+)?|==|!=|<=|>=|[-+*/%(),<>]/g;
+    let m, last = 0;
+    while ((m = re.exec(text))) {
+      if (m.index !== last) { ok = false; break; }
+      last = re.lastIndex;
+      const t = m[0], next = text.slice(last).match(/^\s*\(/);
+      if (/^\s+$/.test(t)) { out += ' '; } else if (t[0] === '"') { out += '\'' + t.slice(1, -1).replace(/'/g, '\'\'') + '\''; } else if (/^[A-Za-z_]/.test(t) && next) {
+        if (t === 'distinct') { out += 'COUNT(DISTINCT '; re.lastIndex = last + next[0].length; last = re.lastIndex; continue; }
+        if (!FN[t]) { ok = false; break; }
+        out += FN[t];
+      } else if (WORD[t]) { out += WORD[t]; } else if (t === '==') { out += '='; } else if (t === '!=') { out += '<>'; } else if (/^\d/.test(t)) { out += t.replace(/_/g, ''); } else { out += t; }
+    }
+    return ok && last === text.length ? out.trim() : null;
+  }
+  B.mq.delToSql = delToSql;
+
+  /**
    * Drishti SQL for a model query: SELECT fields and MEASURE('…'), FROM the fact the query reads with JOINs to the other aliases (the model's
    * relationships; no ON), WHERE, GROUP BY, HAVING, ORDER BY, LIMIT, and AS OF for a past date. `fields` is the model in the Fields shape (tables, measures).
    */
@@ -71,9 +98,16 @@
     (mq.where || []).forEach((w) => use(String(w.field || '').split('.')[0]));
     if (!used.length) { const fact = tables.find((t) => t.kind === 'fact') || tables[0]; if (fact) { used.push(fact.name); } }
     used.sort((a, b) => ((tables.find((t) => t.name === a) || {}).kind === 'fact' ? 0 : 1) - ((tables.find((t) => t.name === b) || {}).kind === 'fact' ? 0 : 1));
+    const notes = [];
     const sel = (mq.select.fields || []).map((f) => col(f) + (String(f).split('.').length === 3 ? ' AS ' + ident(String(f).split('.').slice(1).join('_')) : ''))
-      .concat((mq.select.measures || []).map((m) => (mq.define && mq.define[m] ? '(' + mq.define[m] + ')' : measureRef(m)) + ' AS ' + ident(m)));
-    const lines = ['SELECT ' + (sel.join(',\n       ') || '*')];
+      .concat((mq.select.measures || []).map((m) => {
+        if (!(mq.define && mq.define[m])) { return measureRef(m) + ' AS ' + ident(m); }
+        const sql = delToSql(mq.define[m]);                         // a local measure in its SQL form, when it has one (SUM, MEASURE, arithmetic)
+        if (sql) { return sql + ' AS ' + ident(m); }
+        notes.push('-- ' + m + ' is this report\'s own measure, written in DEL: ' + mq.define[m]);
+        return measureRef(m) + ' AS ' + ident(m);
+      }));
+    const lines = notes.concat(['SELECT ' + (sel.join(',\n       ') || '*')]);
     const asOf = mq.time && mq.time['as-of'] ? ' AS OF ' + lit(mq.time['as-of'], 'date') : mq.time && mq.time.live ? ' FOR LIVE' : '';
     lines.push('FROM   ' + (used[0] || 'model') + asOf);
     used.slice(1).forEach((a) => lines.push('JOIN   ' + a));
