@@ -17,6 +17,17 @@
 
 ## Unreleased
 
+- **Server: the dataset-to-model converter, and the shipped samples converted (wave A, task 6).** `drishti.py bi migrate --models DIR [--dry-run]
+  [--out D] [--keep-old] [--report F]` (`POST /api/v1/bi/migrate/models/convert`) turns every `rachana: 1` dataset into one dataset per table
+  (`<old>-<table>`, its source, columns, time mode, refresh, masks and row rules) and a model of the old name (tables as aliases, so fields read as
+  before); composed datasets fold into the model that reads their sources (`desk-pnl-vs-exposure` into `trading-risk`, `joined.*` and `as` names
+  renamed in the reports, a left join kept as `Trades > 0`), derived ones become a Python dataset and a model; reports are rebound (`rachana: 2`,
+  `model: <name>@<major>`, comments kept, same-model `links:` removed). Row rules move to the datasets; a role restricted on one table is never widened
+  silently (`may-see-all` noted for the shipped samples, `False` kept for stored items). The same runs at start for stored items (the dataset item
+  becomes the model, same id; audited; history kept) and by `drishti.py bi migrate --models [--dry-run]` (`POST /api/v1/bi/migrate/models`). Every shipped
+  sample is converted under `config/bi/models` and `config/bi/datasets` and proven to answer as the 2.1 dataset did for risk, a desk-head and a reader
+  without raw (`ConvertedSamplesTest`, BI_MODEL_SPEC.md 8.3.1 and 8.6). The two live reports stay on their live datasets until W3; the 2.1 dataset files
+  stay until the removal commit. Report YAML accepts `rachana: 2` (a report on a model).
 - **Server: stored items in the old expression syntax are converted at start (wave A, task 6).** So that refusing the old syntax breaks nothing a person
   saved, the server converts every stored BI item (draft, proposal and published text) to DEL v2 once at start (`drishti.bi.migrate.on-start`, default
   on; idempotent): the text before is a saved state of the item's history (restorable), a changed published text becomes the next published version, a

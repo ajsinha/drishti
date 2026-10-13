@@ -1,0 +1,52 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# STORED SAMPLE (multi-dataset, built the YAML way): "Desk P&L vs counterparty exposure". A COMPOSED DATASET: it has no tables of its own. It asks two other
+# datasets a question each, AS THE READER (so each source applies its own row rules and masks BEFORE the join), joins the two answers on the counterparty,
+# and has a measure of its own over the joined columns: P&L per unit of exposure. In trading-risk alone this cannot be asked (a desk-head's row rule on
+# trades is refused for exposure by counterparty); here each source keeps its own rules and the question is a join.
+# The same question, built the Python way, is the derived dataset desk-pnl-vs-exposure-py. Reference: docs/guides/DATASETS.md section 11.
+
+rachana: 1
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+dataset: desk-pnl-vs-exposure
+version: 1
+title: Desk P&L vs counterparty exposure
+description: >-
+  One row per counterparty with the one-day P&L of the desks' trades with it (from trading-risk) next to its expected and potential future exposure
+  (from counterparty-exposure), and P&L per unit of exposure. Composed in YAML from two datasets; compare desk-pnl-vs-exposure-py, the same table made by Python.
+sample: true
+endorsement: promoted
+tags: [sample, multi-dataset, composed, counterparty-risk]
+
+from:                                   # each entry is a question put to another dataset, as the person reading
+  pnl:                                  # the alias: used by `join` below
+    dataset: trading-risk               # a catalogue id, a file name or the dataset's name
+    by: ["counterparties.id as counterparty", "counterparties.name as name"]     # the grouping columns, and the name each has in the joined table
+    measures: ["P&L 1d as Desk P&L", Trades]                                     # measures of that dataset; "as" renames
+    key: [counterparty]                 # one row per counterparty (the name is an attribute of it): lets the join check know nothing is repeated
+  exposure:
+    dataset: counterparty-exposure
+    by: ["counterparties.id as counterparty", "counterparties.sector as sector"]
+    measures: [Exposure (EE peak), Exposure (PFE peak)]
+    key: [counterparty]
+
+join:
+  - { left: pnl, right: exposure, on: [counterparty], type: left }       # inner, left or full; a counterparty with no exposure keeps its P&L
+
+measures:                               # the dataset's own measures, over the measures of its sources: [Name] works as in any dataset
+  P&L per exposure:
+    expr: "measure('Desk P&L') / measure('Exposure (EE peak)')"
+    format: signed2
+    description: One-day P&L divided by the expected exposure peak, the sums taken over the rows of the visual.

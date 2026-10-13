@@ -1,0 +1,95 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# SAMPLE (streaming): the live trading desk. One table whose rows are the trades the live feed pushes, kept in memory by the BI engine and
+# updated in place as each trade ticks. Reports and boards over it redraw as the numbers move.
+# Tutorial: docs/tutorials/10-first-bi-report.md "A live desk". Reference: docs/guides/DATASETS.md (live tables), docs/guides/BOARDS.md.
+#
+# `mode: live` is the whole difference from the other samples: nothing is copied per business date; the engine subscribes to the kind through the same live
+# machinery the terminal's live views use (the demo ticker out of the box; Kafka, Redis and the other streaming connectors in a real setup) and applies each
+# update to its table by key. Row rules and masks apply to every answer, as the reader.
+
+rachana: 1
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+dataset: live-trading
+version: 1
+title: Live trading desk
+description: >-
+  The trades as they tick: counts, notional, mark-to-market and P&L by desk, book, product and currency, kept up to date by the live feed. Traders are masked
+  for readers without the raw power.
+sample: true
+endorsement: promoted
+tags: [sample, trading, live, streaming, tutorial]
+
+tables:
+  trade:
+    source:
+      kind: trade               # no connector named: whichever running connector serves trades and can push them (the demo ticker in this installation)
+    mode: live
+    live:                       # retention keeps the table bounded: the most rows it holds, and how long a row may go without changing
+      rows: 5000
+      history:                  # every 10 s the measures below are worked out over the table and added to a bounded history, the dataset table `history`
+        every: 10s              #   (ts, then one column per measure); the newest 360 samples are kept, an hour. A line of "MTM history" by history.ts is the
+        keep: 360               #   net MTM over the last hour, and it survives a browser refresh. Add `by: [desk]` for one row per desk and sample.
+        measures: [MTM, Losses, Trades]
+    columns:
+      tradeId:     { type: string, key: true }
+      desk:        string
+      book:        string
+      productType: string
+      assetClass:  string
+      currency:    string
+      status:      string
+      direction:   string
+      trader:      string
+      notional:    { type: decimal, format: amount0 }
+      mtm:         { type: decimal, format: signed0 }
+      pnl1d:       { type: decimal, format: signed0 }
+      # Every live table also has two columns you never declare: updateSeq (a counter that grows with each change) and updatedAt (when the row last changed).
+
+measures:
+  Trades:
+    expr: "count(trade)"
+    description: Number of trades followed.
+  Notional:
+    expr: "sum(trade.notional)"
+    format: amount0
+  MTM:
+    expr: "sum(trade.mtm)"
+    format: signed0
+    description: Net mark-to-market in USD.
+  PnL 1d:
+    expr: "sum(trade.pnl1d)"
+    format: signed0
+  Losses:
+    expr: "sum(trade.mtm, where=trade.mtm < 0)"
+    format: signed0
+    description: The negative marks only.
+  Worst trade:
+    expr: "min(trade.mtm)"
+    format: signed0
+  Best trade:
+    expr: "max(trade.mtm)"
+    format: signed0
+
+hierarchies:
+  Desk and book: [trade.desk, trade.book]
+
+# Kept by group as trades change (docs/guides/DATASETS.md section 7.1): a sum, count, minimum or maximum of a stored column moves by the difference, so the cards and the
+# bar read these few rows, not every trade. Losses (a condition inside the aggregate) is not here: it is computed over the rows, as before.
+rollups:
+  - { name: byDeskBook, table: trade, by: [desk, book, productType, currency], measures: [Trades, Notional, MTM, PnL 1d, Worst trade, Best trade] }
+
+security:
+  masked: [trader]              # readers without the raw power see the mask in the trader column

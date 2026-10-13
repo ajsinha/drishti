@@ -1,0 +1,75 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# SAMPLE REPORT 3 of 3: "Cashflow ladder". Deep trades: each trade document holds a list of legs and a payment schedule, and the dataset trading-cashflows
+# makes both of them tables (`each: legs`, `each: schedule`). This report lays the scheduled cashflows out by pay date (click a column's drill button to go
+# from year to quarter to month to day) and shows the legs as a matrix.
+# Tutorial: docs/tutorials/10-first-bi-report.md. Reference: docs/guides/REPORTS.md.
+
+rachana: 1
+report: cashflow-ladder
+version: 1
+title: Cashflow ladder
+description: >-
+  Scheduled cashflows of the swaps by pay date, drillable from year down to the day, by desk; and the trades' legs by pay or receive and rate type.
+sample: true
+endorsement: promoted
+tags: [sample, trading, nested, cashflows, tutorial]
+dataset: trading-cashflows
+theme: { palette: default }
+
+pages:
+  - id: ladder
+    title: Ladder
+    visuals:
+      - { id: amount,    type: card, title: Cashflow amount,       at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Cashflow amount] } }
+      - { id: count,     type: card, title: Cashflows,             at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [Cashflows] } }
+      - { id: trades,    type: card, title: Trades with cashflows, at: { x: 6, y: 0, w: 3, h: 2 }, wells: { values: [Trades with cashflows] } }
+      - { id: largest,   type: card, title: Largest cashflow,      at: { x: 9, y: 0, w: 3, h: 2 }, wells: { values: [Largest cashflow] } }
+
+      - id: by-pay-date
+        type: column
+        title: Cashflows by pay date (use the drill button to go from year to day)
+        at: { x: 0, y: 2, w: 8, h: 6 }
+        wells: { axis: [cashflows.payDate.year], values: [Cashflow amount] }
+        hierarchy: Pay date
+        filters: [{ field: cashflows.payDate, op: not-null }]         # a cashflow with no pay date has no place on the ladder
+        format: { labels: false }
+        alt: Columns of scheduled cashflow amount by pay date
+
+      - id: desk
+        type: slicer
+        title: Desk
+        at: { x: 8, y: 2, w: 4, h: 6 }
+        wells: { field: [trades.desk] }
+        format: { mode: list, scope: report }
+
+      - id: by-desk
+        type: table
+        title: Cashflows by desk
+        at: { x: 0, y: 8, w: 12, h: 4 }
+        wells: { columns: [trades.desk, Cashflows, Cashflow amount, Average cashflow, Largest cashflow] }
+        format: { dataBars: [Cashflow amount] }
+
+  - id: legs
+    title: Legs
+    visuals:
+      - { id: legs-count,    type: card, title: Legs,          at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Legs] } }
+      - { id: legs-notional, type: card, title: Leg notional,  at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [Leg notional] } }
+      - id: leg-matrix
+        type: matrix
+        title: Legs and notional by pay or receive and rate type
+        at: { x: 0, y: 2, w: 12, h: 6 }
+        wells: { rows: [legs.payReceive], columns: [legs.rateType], values: [Legs, Leg notional] }
+        format: { subtotals: true }

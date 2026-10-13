@@ -20,7 +20,7 @@
 # WHAT it shows (`wells`: the fields it groups by and the measures it adds up, all names of the dataset). Nothing here is SQL: the server turns each visual into
 # a query on the dataset, as the person looking, so their row rules and masks apply.
 
-rachana: 1
+rachana: 2
 report: trades-overview          # the report's name: letters, digits, hyphen, underscore
 version: 1
 title: Trades overview
@@ -30,7 +30,7 @@ description: >-
 sample: true                     # sample content: hidden from business users when "Hide samples" is on (like sample packs)
 endorsement: promoted
 tags: [sample, trading, tutorial]
-dataset: trades-basic            # the dataset it reads: its catalogue id, its file name or its name
+model: trades-basic@1            # the dataset it reads: its catalogue id, its file name or its name
 theme: { palette: default }      # default (the console's colours), colour-blind or mono
 
 pages:

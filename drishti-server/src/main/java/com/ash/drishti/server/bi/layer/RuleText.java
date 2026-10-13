@@ -25,19 +25,19 @@ import java.util.Set;
  * String literals, {@code user.*} attributes, function names and keywords are left alone. The rule was checked to name only its own columns, so the result
  * names only the alias.
  */
-final class RuleText {
+public final class RuleText {
 
     private static final Set<String> WORDS = Set.of("in", "not", "and", "or", "true", "false", "null", "user", "is", "if", "else", "none", "all");
 
     private RuleText() {}
 
     /** True for a rule that lets every row through: {@code True} (DEL v2) or {@code true} (the old syntax). */
-    static boolean everyRow(String where) {
+    public static boolean everyRow(String where) {
         String w = where == null ? "" : where.strip();
         return "True".equals(w) || "true".equals(w);
     }
 
-    static String qualify(String text, String datasetName, Set<String> columns, String alias) {
+    public static String qualify(String text, String datasetName, Set<String> columns, String alias) {
         List<String> prefixes = java.util.stream.Stream.of(datasetName, datasetName.substring(datasetName.lastIndexOf('.') + 1)).distinct()
                 .sorted(Comparator.comparingInt(String::length).reversed()).toList();
         StringBuilder out = new StringBuilder();

@@ -102,8 +102,11 @@ public final class ReportParser {
                 out.add(new Problem("warning", INVALID, k, "unknown key '" + k + "' is ignored"));
             }
         });
-        if (root.path("rachana").asInt(1) != 1) {
-            out.add(error(INVALID, "rachana", "this server reads Rachana version 1, not " + root.path("rachana").asInt()));
+        int rachana = root.path("rachana").asInt(1);
+        if (rachana != 1 && rachana != 2) {
+            out.add(error(INVALID, "rachana", "this server reads Rachana version 1 or 2 (a report on a model), not " + root.path("rachana").asInt()));
+        } else if (rachana == 2 && !root.hasNonNull("model")) {
+            out.add(error("DRS-9140", "model", "a rachana: 2 report reads a model (`model: <name>@<major>`), not a dataset (docs/architecture/BI_MODEL_SPEC.md section 4.1)"));
         }
         String name = text(root, "report", "");
         if (name.isBlank()) {

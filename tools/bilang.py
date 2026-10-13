@@ -20,6 +20,8 @@ over REST, as the token's user. Loaded by drishti.py; every command talks to the
   bi expr convert EXPR                                 the DEL v2 form of an old-syntax expression
   bi migrate --expressions FILE... [--write] [--check] convert every expression of BI item files (comments kept); --check exits 1 when a file would change
   bi migrate --expressions [--dry-run]                 the same for the server's STORED items (bi-admin): audited, the text before kept in each item's history
+  bi migrate --models DIR [--dry-run] [--out D] [--keep-old] [--report F]   rachana: 1 datasets of a BI folder to datasets and models, reports rebound
+  bi migrate --models [--dry-run]                      the same for the server's stored items (bi-admin)
   bi sql "SELECT ..." --model M [--explain] [--format json|csv]   run Drishti SQL over a model (wave A)
 """
 import argparse
@@ -61,12 +63,20 @@ def register(bi, srv, ctx) -> None:
                       epilog="examples:\n  drishti.py bi migrate --expressions config/bi/datasets/*.yaml\n  drishti.py bi migrate --expressions config/bi --write\n"
                              "  drishti.py bi migrate --expressions config/bi --check     # CI: exit 1 when a file is still in the old syntax\n"
                              "  drishti.py bi migrate --expressions --dry-run            # the server's stored items: what would change\n"
-                             "  drishti.py bi migrate --expressions                      # ... and convert them (bi-admin)")
+                             "  drishti.py bi migrate --expressions                      # ... and convert them (bi-admin)\n"
+                             "  drishti.py bi migrate --models config/bi --dry-run --report /tmp/plan.md   # datasets to models: the plan\n"
+                             "  drishti.py bi migrate --models config/bi                  # write it (old dataset files removed; --keep-old keeps them)\n"
+                             "  drishti.py bi migrate --models --dry-run                  # the server's stored items")
     m.add_argument("files", nargs="*", metavar="FILE", help="item files or folders (searched for *.dataset|model|report|board|notebook.yaml); none: the stored items")
-    m.add_argument("--expressions", action="store_true", required=True, help="convert the expressions")
+    what = m.add_mutually_exclusive_group(required=True)
+    what.add_argument("--expressions", action="store_true", help="convert the expressions to DEL v2")
+    what.add_argument("--models", action="store_true", help="convert rachana: 1 datasets to datasets and models, and rebind their reports (BI_MODEL_SPEC.md 8.3)")
     m.add_argument("--write", action="store_true", help="FILEs: write the converted files")
     m.add_argument("--check", action="store_true", help="FILEs: change nothing; exit 1 when a file would change or cannot be converted")
-    m.add_argument("--dry-run", action="store_true", help="change nothing, show what would change (stored items; for FILEs it is the default)")
+    m.add_argument("--dry-run", action="store_true", help="change nothing, show what would change (stored items, and --models; for --expressions FILEs it is the default)")
+    m.add_argument("--out", metavar="DIR", help="--models: write the converted files under DIR instead of in place (the old files are then left alone)")
+    m.add_argument("--keep-old", action="store_true", help="--models in place: keep the old dataset files (they are removed by default)")
+    m.add_argument("--report", metavar="FILE", help="--models: write the plan report (Markdown) to FILE")
     m.set_defaults(func=lambda a, extra: migrate(a, ctx))
 
     s = bi.add_parser("sql", help="bi sql \"SELECT ...\" --model M: Drishti SQL over a model, as you", parents=[srv],
@@ -157,6 +167,8 @@ def item_files(paths, ctx) -> list:
 
 def migrate(a, ctx) -> int:
     api = ctx["Api"].from_args(a)
+    if a.models:
+        return migrate_models(a, api, ctx)
     if not a.files:
         return migrate_stored(a, api, ctx)
     if a.dry_run:
@@ -190,6 +202,66 @@ def migrate(a, ctx) -> int:
     if failed or (a.check and changed):
         return 1
     return 0
+
+
+MODEL_DIRS = ("datasets", "models", "reports", "boards", "notebooks", "python")
+
+
+def migrate_models(a, api, ctx) -> int:
+    """--models: FILE is a BI folder (config/bi) converted by the server's converter; without it, the server's stored items (bi-admin)."""
+    if a.write or a.check:
+        raise ctx["CliError"]("--write and --check are for --expressions; --models writes unless --dry-run", 2)
+    if not a.files:
+        r = api.json("POST", "/api/v1/bi/migrate/models", {"dryRun": bool(a.dry_run)})
+        if a.report:
+            pathlib.Path(a.report).write_text(r.get("report", ""), encoding="utf-8")
+        if a.json:
+            ctx["say_json"](r)
+            return 1 if r.get("problems") else 0
+        for i in r.get("items", []):
+            print(f"{i['kind']} '{i['name']}' ({i['key']}): {i['state']}" + (f" -> {i['became']}" if i.get("became") else "") + (f": {i['problem']}" if i.get("problem") else ""))
+            for line in i.get("manual", []):
+                print(f"    manual: {line}")
+        done = r.get("wouldConvert" if a.dry_run else "converted", 0)
+        print(f"{r.get('scanned', 0)} stored item(s) scanned, {done} " + ("would be converted" if a.dry_run else "converted")
+              + (f", {r['problems']} cannot be converted (they keep their text; Admin, BI settings lists them)" if r.get("problems") else ""))
+        return 1 if r.get("problems") else 0
+    if len(a.files) != 1 or not pathlib.Path(a.files[0]).is_dir():
+        raise ctx["CliError"]("--models takes one BI folder (config/bi): its datasets, reports, boards, notebooks and python items are read together", 2)
+    root = pathlib.Path(a.files[0])
+    files = []
+    for d in MODEL_DIRS:
+        for f in sorted((root / d).glob("*.yaml")) if (root / d).is_dir() else []:
+            files.append({"path": f"{d}/{f.name}", "yaml": f.read_text(encoding="utf-8")})
+    r = api.json("POST", "/api/v1/bi/migrate/models/convert", {"files": files})
+    if a.report:
+        pathlib.Path(a.report).write_text(r.get("report", ""), encoding="utf-8")
+    out = pathlib.Path(a.out) if a.out else root
+    removed = 0
+    if not a.dry_run:
+        for path, text in r.get("writes", {}).items():
+            target = out / path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(text, encoding="utf-8")
+        if not a.out and not a.keep_old:
+            for path in r.get("removes", []):
+                (root / path).unlink(missing_ok=True)
+                removed += 1
+    if a.json:
+        ctx["say_json"](r)
+        return 1 if r.get("problems") else 0
+    for i in r.get("items", []):
+        if i["state"] == "unchanged":
+            continue
+        print(f"{i['key']}: {i['state']}" + (f" -> {i['became']}" if i.get("became") else "") + (f": {i['problem']}" if i.get("problem") else ""))
+        for o in i.get("outputs", []):
+            print(f"    writes {o['path']}")
+        for line in i.get("manual", []):
+            print(f"    manual: {line}")
+    verb = "would write" if a.dry_run else "wrote"
+    print(f"{len(files)} file(s) read, {r.get('converted', 0)} converted, {r.get('problems', 0)} refused; {verb} {len(r.get('writes', {}))} file(s)"
+          + (f", removed {removed} old dataset file(s)" if removed else "") + (f"; the report is {a.report}" if a.report else ""))
+    return 1 if r.get("problems") else 0
 
 
 def migrate_stored(a, api, ctx) -> int:

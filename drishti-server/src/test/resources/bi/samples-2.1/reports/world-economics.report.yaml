@@ -1,0 +1,67 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# SAMPLE REPORT 7: "World economics". The first map you can drill: shade the world by GDP per capita, click a country to filter the rest of the page and open its
+# regions (the breadcrumb "World > Australia" goes back). `location` holds ISO 3166-1 alpha-3 codes; a field of ISO 3166-2 codes (AU-NSW) shades regions, and
+# `format: { level: AUS }` opens the map at a country. The shapes are Natural Earth, shipped with the console: nothing is fetched from outside.
+# The data is World Bank (CC BY 4.0), through the economics pack. Reference: docs/guides/REPORTS.md (the map), docs/guides/BI_GUIDE.md.
+
+rachana: 1
+report: world-economics
+version: 1
+title: World economics
+description: >-
+  Output, growth and prices around the world: a map you can drill from the world to a country and its regions, cards for the totals, and a table of the economies.
+  Real World Bank data through the economics pack.
+sample: true
+endorsement: promoted
+tags: [sample, economics, real-data, map]
+dataset: world-economics
+theme: { palette: default }
+
+pages:
+  - id: world
+    title: World
+    visuals:
+      - { id: economies, type: card, title: Economies,        at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Economies] } }
+      - { id: gdp,       type: card, title: GDP (USD bn),     at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [GDP (USD bn)] } }
+      - { id: pop,       type: card, title: Population (m),   at: { x: 6, y: 0, w: 3, h: 2 }, wells: { values: [Population (m)] } }
+      - { id: growth,    type: card, title: Average growth,   at: { x: 9, y: 0, w: 3, h: 2 }, wells: { values: [Average growth] } }
+      - { id: region,    type: slicer, title: Region,       at: { x: 0, y: 2, w: 6, h: 2 }, wells: { field: [economies.regionName] }, format: { mode: dropdown, scope: report } }
+      - { id: income,    type: slicer, title: Income group, at: { x: 6, y: 2, w: 6, h: 2 }, wells: { field: [economies.incomeName] }, format: { mode: dropdown, scope: report } }
+
+      - id: gdp-map
+        type: map
+        title: "GDP per capita (USD): click a country to filter and to open its regions"
+        at: { x: 0, y: 4, w: 8, h: 8 }
+        wells: { location: [economies.iso3], values: [GDP per capita (USD)] }
+        format: { drill: true }
+        alt: World map shading each economy by its GDP per capita; a click filters the page and opens the country's regions
+
+      - id: top-gdp
+        type: bar
+        title: Largest economies (GDP, USD bn)
+        at: { x: 8, y: 4, w: 4, h: 8 }
+        wells: { axis: [economies.name], values: [GDP (USD bn)] }
+        filters: [{ field: economies.name, op: top, n: 10, by: GDP (USD bn) }]
+        format: { labels: true }
+        alt: Bars of GDP for the ten largest economies
+
+      - id: table
+        type: table
+        title: The economies
+        at: { x: 0, y: 12, w: 12, h: 8 }
+        wells: { columns: [economies.name, economies.regionName, GDP (USD bn), GDP per capita (USD), Average growth, Average inflation, Average unemployment] }
+        sort: { by: GDP (USD bn), desc: true }
+        limit: 250

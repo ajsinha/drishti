@@ -32,6 +32,10 @@ params: { floor: 1.0 }          # the dataset may override these (derived.params
 source: |
   def run(pnl, exposure, params):
       """pnl: counterparty, name, Desk P&L, Trades.  exposure: counterparty, sector, Exposure (EE peak), Exposure (PFE peak)."""
+      # Since 2.2 the Python dataset desk-pnl-vs-exposure-py-result hands over model-query answers, whose columns are the field and measure names;
+      # the 2.1 derived dataset renamed them with `as`. Both shapes are accepted (a name that is not there is left alone).
+      pnl = pnl.rename(columns={"counterparties.id": "counterparty", "counterparties.name": "name", "P&L 1d": "Desk P&L"})
+      exposure = exposure.rename(columns={"counterparties.id": "counterparty", "counterparties.sector": "sector"})
       m = pnl.merge(exposure, on="counterparty", how="left")
       m = m.rename(columns={"Desk P&L": "desk_pnl", "Exposure (EE peak)": "ee_peak", "Exposure (PFE peak)": "pfe_peak"})
       floor = float(params.get("floor", 1.0))

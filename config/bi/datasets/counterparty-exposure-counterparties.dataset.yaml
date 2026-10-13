@@ -1,0 +1,41 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# STORED SAMPLE: the SECOND dataset of the multi-dataset samples. Counterparty exposure on its own: the netting sets of the counterparty-risk pack with
+# the counterparty they belong to. It has no trades, so (unlike trading-risk) it has no row rule on trades: everyone with BI sees all exposure, and the
+# names stay masked for readers without the raw power.
+# It is the right-hand source of the composed dataset desk-pnl-vs-exposure and of the Python Transform behind desk-pnl-vs-exposure-py: P&L comes from
+# trading-risk, exposure from here, and BI joins them. Read docs/guides/DATASETS.md section 11 and docs/tutorials/10-first-bi-report.md chapter 10.
+
+# CONVERTED from datasets/counterparty-exposure.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
+# docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
+
+rachana: 2
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+dataset: counterparty-exposure-counterparties
+version: 1.0.0
+title: "Counterparty exposure: counterparties"
+description: "The counterparties table of the model counterparty-exposure."
+sample: true
+endorsement: "promoted"
+tags: [sample, counterparty-risk, multi-dataset]
+source: { connector: reference-store, kind: counterparty }
+refresh: { on-load: true }
+columns:
+  name:    { type: string }
+  rating:  { type: string }
+  sector:  { type: string }
+  country: { type: string }
+security:
+  masked: [name, rating]

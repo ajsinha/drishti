@@ -1,0 +1,42 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# SAMPLE (streaming): live counterparty exposure. The counterparty-risk pack's netting sets as they tick, kept in memory like live-trading. It is the second
+# dataset of the "Desk wall" board, to show a wall of tiles from several reports over several datasets.
+# Tutorial: docs/tutorials/10-first-bi-report.md. Reference: docs/guides/DATASETS.md (live tables), docs/guides/BOARDS.md.
+
+# CONVERTED from datasets/live-exposure.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
+# docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
+
+rachana: 2
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+model: live-exposure
+version: 1.0.0
+title: "Live exposure"
+description: "Netting sets with their net mark-to-market, collateral, expected and potential future exposure and limit utilisation, updated as they tick."
+sample: true
+endorsement: "promoted"
+tags: [sample, counterparty-risk, live, streaming]
+
+datasets:                       # alias: the dataset it reads, and its role (a fact is added up; a dimension groups and filters)
+  netting: { dataset: live-exposure-netting, role: fact }
+
+measures:
+  Netting sets:    { expr: "count(netting)" }
+  Net MTM:         { expr: "sum(netting.netMtm)", format: signed0 }
+  Collateral:      { expr: "sum(netting.collateral)", format: signed0 }
+  EE peak:         { expr: "sum(netting.eePeak)", format: amount0 }
+  PFE peak:        { expr: "sum(netting.pfePeak)", format: amount0 }
+  Max utilisation: { expr: "max(netting.utilisation)" }
+  Worst net MTM:   { expr: "min(netting.netMtm)", format: signed0 }

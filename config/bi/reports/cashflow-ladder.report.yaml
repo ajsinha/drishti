@@ -17,7 +17,7 @@
 # from year to quarter to month to day) and shows the legs as a matrix.
 # Tutorial: docs/tutorials/10-first-bi-report.md. Reference: docs/guides/REPORTS.md.
 
-rachana: 1
+rachana: 2
 report: cashflow-ladder
 version: 1
 title: Cashflow ladder
@@ -26,7 +26,7 @@ description: >-
 sample: true
 endorsement: promoted
 tags: [sample, trading, nested, cashflows, tutorial]
-dataset: trading-cashflows
+model: trading-cashflows@1
 theme: { palette: default }
 
 pages:

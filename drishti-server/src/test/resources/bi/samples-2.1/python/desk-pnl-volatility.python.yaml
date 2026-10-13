@@ -1,0 +1,55 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# SAMPLE PYTHON MEASURE: the standard deviation of one-day P&L, per desk. Reference: docs/guides/PYTHON_BI.md.
+#
+# A Python item is a BI item like a dataset or a report: stored, versioned, reviewed and published. A MEASURE is a function
+# compute(table, params) that is called once per group (here, per desk: the dataset measure that uses it says `by: [trade.desk]`)
+# with a pandas table of that group's rows, holding only the columns listed in `inputs`, and returns ONE number.
+# The code runs in a sandboxed worker of the console (no network, a scratch folder only, CPU, memory and time limits), or in
+# the viewer's browser (Pyodide) when `target` allows it. It only ever sees the rows the person looking may see.
+rachana: 1
+python: desk-pnl-volatility
+title: Desk P&L volatility
+description: Standard deviation of the one-day P&L of a group of trades (a desk, for the dataset's measure).
+sample: true
+endorsement: promoted
+tags: [sample, trading, python]
+interface: measure
+inputs: [pnl1d]                  # the columns the function reads, as the table names them
+packages: [pandas]               # what the source imports (must be on the allow-list)
+target: both                     # server, browser or both
+timeout: 10                      # seconds
+memory: 256                      # megabytes
+params: { min_trades: 2 }        # defaults the function reads; a visual may override them in format.params
+tests:                           # shipped with the item: Check runs them in the console's sandbox, and a publish through the console is refused while one fails
+  - name: the standard deviation of one desk
+    input: { columns: [pnl1d], rows: [[1.0], [2.0], [3.0], [4.0]] }
+    expect: 1.2909944
+    tolerance: 0.000001
+  - name: too few trades is zero
+    input: { columns: [pnl1d], rows: [[5.0]] }
+    expect: 0.0
+  - name: a desk of its own in a grouped call
+    input: { columns: [desk, pnl1d], rows: [[FX, 1.0], [FX, 3.0], [RATES, 10.0], [RATES, 14.0]] }
+    by: [desk]
+    expect: { FX: 1.4142136, RATES: 2.8284271 }
+    tolerance: 0.000001
+source: |
+  def compute(table, params):
+      """One number for the rows of one group."""
+      pnl = table["pnl1d"].dropna()
+      if len(pnl) < int(params.get("min_trades", 2)):
+          return 0.0
+      return float(pnl.std(ddof=1))

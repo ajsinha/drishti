@@ -1,0 +1,52 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# SAMPLE (streaming): the live trading desk. One table whose rows are the trades the live feed pushes, kept in memory by the BI engine and
+# updated in place as each trade ticks. Reports and boards over it redraw as the numbers move.
+# Tutorial: docs/tutorials/10-first-bi-report.md "A live desk". Reference: docs/guides/DATASETS.md (live tables), docs/guides/BOARDS.md.
+#
+# `mode: live` is the whole difference from the other samples: nothing is copied per business date; the engine subscribes to the kind through the same live
+# machinery the terminal's live views use (the demo ticker out of the box; Kafka, Redis and the other streaming connectors in a real setup) and applies each
+# update to its table by key. Row rules and masks apply to every answer, as the reader.
+
+# CONVERTED from datasets/live-trading.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
+# docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
+
+rachana: 2
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+dataset: live-trading-trade
+version: 1.0.0
+title: "Live trading desk: trade"
+description: "The trade table of the model live-trading."
+sample: true
+endorsement: "promoted"
+tags: [sample, trading, live, streaming, tutorial]
+source: { kind: trade }
+time: { mode: live, live: { rows: 5000 }, history: { every: 10s, keep: 360, measures: [MTM, Losses, Trades] } }
+refresh: { on-load: true }
+columns:
+  tradeId:     { type: string, role: key }
+  desk:        { type: string }
+  book:        { type: string }
+  productType: { type: string }
+  assetClass:  { type: string }
+  currency:    { type: string }
+  status:      { type: string }
+  direction:   { type: string }
+  trader:      { type: string }
+  notional:    { type: decimal, format: amount0 }
+  mtm:         { type: decimal, format: signed0 }
+  pnl1d:       { type: decimal, format: signed0 }
+security:
+  masked: [trader]

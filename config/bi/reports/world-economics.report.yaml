@@ -17,7 +17,7 @@
 # `format: { level: AUS }` opens the map at a country. The shapes are Natural Earth, shipped with the console: nothing is fetched from outside.
 # The data is World Bank (CC BY 4.0), through the economics pack. Reference: docs/guides/REPORTS.md (the map), docs/guides/BI_GUIDE.md.
 
-rachana: 1
+rachana: 2
 report: world-economics
 version: 1
 title: World economics
@@ -27,7 +27,7 @@ description: >-
 sample: true
 endorsement: promoted
 tags: [sample, economics, real-data, map]
-dataset: world-economics
+model: world-economics@1
 theme: { palette: default }
 
 pages:

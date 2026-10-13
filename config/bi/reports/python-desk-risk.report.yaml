@@ -17,7 +17,7 @@
 # specification; and a second page with a vega-lite visual written in the report itself (REPORTS.md, "Vega-Lite visuals").
 # Each visual hands the Python runner the rows the person looking may see; the runner is the console's sandboxed worker, or the
 # browser's Pyodide (format.run: server, browser or auto).
-rachana: 1
+rachana: 2
 report: python-desk-risk
 version: 1
 title: Desk P&L risk (Python)
@@ -25,7 +25,7 @@ description: A Python measure (P&L volatility per desk) and a Python visual (a P
 sample: true
 endorsement: none
 tags: [sample, trading, python]
-dataset: trades-basic
+model: trades-basic@1
 theme: { palette: default }
 
 pages:

@@ -16,7 +16,7 @@
 # their country with the sum, so the map shows an additive measure); a click opens that country's states, shaded by GDP, and filters the table and the bar. THE FIGURES ARE ILLUSTRATIVE,
 # ROUNDED FROM PUBLIC FIGURES, NOT FOR REPORTING; the text on the page says so. Reference: docs/guides/REPORTS.md (the map, "Sample: Region economics").
 
-rachana: 1
+rachana: 2
 report: region-economics
 version: 1
 title: Region economics
@@ -26,7 +26,7 @@ description: >-
 sample: true
 endorsement: promoted
 tags: [sample, economics, illustrative, map]
-dataset: region-economics
+model: region-economics@1
 theme: { palette: default }
 
 pages:

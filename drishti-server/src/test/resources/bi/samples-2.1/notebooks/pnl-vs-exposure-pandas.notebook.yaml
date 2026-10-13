@@ -1,0 +1,48 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# SAMPLE NOTEBOOK (multi-dataset): the join of "Desk P&L vs counterparty exposure" done by hand, in pandas, over TWO masked extracts. `dataset`/`fields` is the
+# first extract (the trades of trading-risk, the table `extract` and the frame `df`); `extracts` lists the others, which a Python cell reads as extract("name") and a
+# SQL cell as a table of that name. Every extract is the rows the person opening the notebook may see (row rules and masks applied by the server), so a notebook
+# shared with someone else shows their rows. When the pandas join is what you want to keep, "Promote to a Transform" on the Python cell writes it as a Python
+# Transform draft; a derived dataset then makes it a table reports can use (config/bi/datasets/desk-pnl-vs-exposure-py.dataset.yaml).
+# Reference: docs/guides/ANALYSE.md section 2.
+
+rachana: 1
+notebook: pnl-vs-exposure-pandas
+title: Desk P&L vs counterparty exposure, in pandas
+description: One-day P&L of the trades by counterparty joined to expected exposure by counterparty, from two datasets, in a Python cell and again in a SQL cell.
+sample: true
+endorsement: promoted
+tags: [sample, multi-dataset, python, counterparty-risk]
+dataset: file:dataset:trading-risk
+fields: [trades.counterpartyId, trades.desk, trades.pnl1d]
+extracts:
+  - { name: exposure, dataset: file:dataset:counterparty-exposure, fields: [netting_sets.counterparty, netting_sets.eePeak, netting_sets.pfePeak] }
+cells:
+  - type: python
+    source: |
+      # df is the trades (first extract); extract("exposure") is the netting sets of the second dataset: both are what YOU may see.
+      pnl = df.groupby("counterpartyId", as_index=False)["pnl1d"].sum().rename(columns={"counterpartyId": "counterparty", "pnl1d": "desk_pnl"})
+      ee = extract("exposure").groupby("counterparty", as_index=False)["eePeak"].sum().rename(columns={"eePeak": "ee_peak"})
+      joined = pnl.merge(ee, on="counterparty", how="left")
+      joined["pnl_per_exposure"] = joined["desk_pnl"] / joined["ee_peak"]
+      result = joined.sort_values("ee_peak", ascending=False).head(15)
+    target: server
+  - type: sql
+    source: |
+      SELECT p.counterparty, p.desk_pnl, e.ee_peak
+      FROM (SELECT counterpartyId AS counterparty, SUM(pnl1d) AS desk_pnl FROM extract GROUP BY counterpartyId) AS p
+      JOIN (SELECT counterparty, SUM(eePeak) AS ee_peak FROM exposure GROUP BY counterparty) AS e ON e.counterparty = p.counterparty
+      ORDER BY e.ee_peak DESC LIMIT 10

@@ -1,0 +1,75 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# STORED SAMPLE 6: "World economics". One table over the economics pack's economy kind (real, public data for about 200 economies: World Bank, World Development
+# Indicators, CC BY 4.0). Only World Bank fields are used here; the pack's IMF fields (debt, forecasts) are left out on purpose, because the IMF's terms limit
+# reuse. Ratio measures are worked out from sums, so a region's GDP per capita is its GDP over its population, not an average of averages.
+# Report: config/bi/reports/world-economics.report.yaml. Reference: docs/guides/DATASETS.md.
+
+rachana: 1
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+dataset: world-economics
+version: 1
+title: World economics
+description: >-
+  Output, growth, prices, jobs and population for about 200 economies (World Bank, latest year published), by country, World Bank region and income group.
+  The country is an ISO 3166-1 alpha-3 code, so a map visual can shade it.
+sample: true
+endorsement: promoted
+tags: [sample, economics, real-data, map]
+
+tables:
+  economies:
+    source: { connector: macro-store, kind: economy }          # pack: economics
+    mode: cached
+    columns:
+      name:         string
+      iso3:         string                                      # the country's ISO 3166-1 alpha-3 code: a map's location
+      regionName:   string                                      # the World Bank region
+      incomeName:   string                                      # the World Bank income group
+      gdpUsdBn:     { type: decimal, format: amount0 }
+      gdpPerCapita: { type: decimal, format: amount0 }
+      growth:       { type: decimal, format: pc2 }
+      inflation:    { type: decimal, format: pc2 }
+      unemployment: { type: decimal, format: pc2 }
+      populationM:  { type: decimal, format: price2 }
+
+measures:
+  Economies:
+    expr: "count(economies)"
+    description: How many economies.
+  GDP (USD bn):
+    expr: "sum(economies.gdpUsdBn)"
+    format: amount0
+    description: Gross domestic product at current prices, USD billions.
+  Population (m):
+    expr: "sum(economies.populationM)"
+    format: price2
+    description: Population, millions.
+  GDP per capita (USD):
+    expr: "ratio(sum(economies.gdpUsdBn), sum(economies.populationM)) * 1000"
+    format: amount0
+    description: "GDP over population: for a region, its total GDP over its total population."
+  Average growth:
+    expr: "avg(economies.growth)"
+    format: pc2
+    description: "The simple average of the economies' real GDP growth, % a year."
+  Average inflation:
+    expr: "avg(economies.inflation)"
+    format: pc2
+    description: "The simple average of consumer-price inflation, % a year."
+  Average unemployment:
+    expr: "avg(economies.unemployment)"
+    format: pc2
+    description: "The simple average of the unemployment rate, % of the labour force."

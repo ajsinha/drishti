@@ -18,6 +18,9 @@ package com.ash.drishti.server.bi.migrate;
 import com.ash.drishti.server.bi.BiAccess;
 import com.ash.drishti.server.bi.BiService;
 import com.ash.drishti.server.security.Principal;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,6 +50,44 @@ public class BiMigrateController {
     public Map<String, Object> expressions(@RequestBody(required = false) Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.ADMIN);
         return migration.expressions(p.user(), dryRun(body));
+    }
+
+    /** The stored {@code rachana: 1} datasets to datasets and models, their reports rebound ({@code {"dryRun": true}} plans and changes nothing). */
+    @PostMapping("/models")
+    public Map<String, Object> models(@RequestBody(required = false) Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        bi.requirePower(p, BiAccess.ADMIN);
+        return migration.models(p.user(), dryRun(body));
+    }
+
+    /**
+     * The converter over files (what {@code drishti.py bi migrate --models DIR} sends): body {@code {files: [{path, yaml}], exposure?}} with paths under the BI
+     * folder ({@code datasets/x.dataset.yaml}); the answer says what to write, what to remove, every item and the report. Reads and stores nothing.
+     */
+    @PostMapping("/models/convert")
+    public Map<String, Object> convert(@RequestBody Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        bi.requirePower(p, BiAccess.BI);
+        List<ModelConverter.Source> sources = new ArrayList<>();
+        Object files = body == null ? null : body.get("files");
+        if (files instanceof List<?> list) {
+            for (Object o : list) {
+                if (o instanceof Map<?, ?> f && f.get("path") != null && f.get("yaml") != null) {
+                    String path = String.valueOf(f.get("path"));
+                    String kind = path.replaceAll("^.*\\.([a-z]+)\\.yaml$", "$1");
+                    sources.add(new ModelConverter.Source(path, kind, String.valueOf(f.get("yaml"))));
+                }
+            }
+        }
+        ModelConverter.Exposure exposure = "closed".equalsIgnoreCase(String.valueOf(body == null ? "" : body.get("exposure"))) ? ModelConverter.Exposure.CLOSED
+                : ModelConverter.Exposure.NOTE;
+        ModelConverter.Result r = ModelConverter.convert(sources, exposure);
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("writes", r.writes());
+        m.put("removes", r.removes());
+        m.put("items", r.items().stream().map(i -> i.toMap(false)).toList());
+        m.put("converted", r.count("converted"));
+        m.put("problems", r.count("problem"));
+        m.put("report", r.report());
+        return m;
     }
 
     @GetMapping("/problems")

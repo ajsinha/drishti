@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The BI migrations of stored items (docs/architecture/BI_MODEL_SPEC.md section 8.3; docs/guides/TROUBLESHOOTING.md "Migration problems"): old-syntax
- * expressions to DEL v2 ({@link ExpressionUpgrade}). Run once at start-up ({@code drishti.bi.migrate.on-start}), and by a bi-admin from the API or
+ * expressions to DEL v2 ({@link ExpressionUpgrade}), then {@code rachana: 1} datasets to datasets and models ({@link ModelUpgrade}). Run once at start-up ({@code drishti.bi.migrate.on-start}), and by a bi-admin from the API or
  * {@code drishti.py bi migrate --expressions [--dry-run]}. Runs are serialised; each is idempotent; what a run could not convert is listed in
  * {@link MigrationProblems}, shown in Admin, BI settings and on the item's page.
  */
@@ -37,6 +37,7 @@ public final class BiMigration {
     private final MigrateProperties props;
     private final MigrationProblems problems = new MigrationProblems();
     private final ExpressionUpgrade expressions;
+    private final ModelUpgrade models;
     private final AuditLog audit;
     private final Object running = new Object();
 
@@ -45,6 +46,7 @@ public final class BiMigration {
         this.audit = audit;
         StoredRewrite rewrite = new StoredRewrite(store, audit, versionsKeep, revisionsKeep);
         this.expressions = new ExpressionUpgrade(store, rewrite, problems);
+        this.models = new ModelUpgrade(store, rewrite, problems, audit, versionsKeep, revisionsKeep);
         bi.migrationProblems(item -> item == null ? problems.view() : problems.of(item).stream().map(MigrationProblems.Problem::toMap).toList());
     }
 
@@ -59,6 +61,11 @@ public final class BiMigration {
         } catch (RuntimeException e) {
             LOG.error("BI expression migration at start-up failed; stored items are unchanged where it stopped: {}", e.toString(), e);
         }
+        try {
+            models(props.actor(), false);                                          // after the expressions: the converter reads DEL v2
+        } catch (RuntimeException e) {
+            LOG.error("BI model migration at start-up failed; stored items are unchanged where it stopped: {}", e.toString(), e);
+        }
     }
 
     /** Converts (or, with {@code dryRun}, lists) the stored items in the old expression syntax. */
@@ -68,6 +75,18 @@ public final class BiMigration {
             if (!dryRun) {
                 audit.record(actor, "bi-migration-run", ExpressionUpgrade.STEP, r.get("converted") + " converted, " + r.get("problems") + " with problems, "
                         + r.get("scanned") + " scanned");
+            }
+            return r;
+        }
+    }
+
+    /** Converts (or, with {@code dryRun}, plans) the stored {@code rachana: 1} datasets to datasets and models, and rebinds their reports. */
+    public Map<String, Object> models(String actor, boolean dryRun) {
+        synchronized (running) {
+            Map<String, Object> r = models.run(actor, dryRun);
+            if (!dryRun) {
+                audit.record(actor, "bi-migration-run", ModelUpgrade.STEP, r.get("converted") + " converted, " + r.get("problems") + " with problems, " + r.get("scanned")
+                        + " scanned");
             }
             return r;
         }

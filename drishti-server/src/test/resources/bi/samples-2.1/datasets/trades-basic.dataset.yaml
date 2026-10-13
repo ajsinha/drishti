@@ -1,0 +1,83 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# STORED SAMPLE 1 of 3 (two live samples follow): "hello world". One table, four measures, one hierarchy. Read it top to bottom; every part is explained.
+# Tutorial: docs/tutorials/../guides/BI_RECIPES.md and 2. Reference: docs/guides/DATASETS.md. Start with docs/guides/BI_GUIDE.md.
+#
+# A dataset is a MODEL that reports sit on: tables (from pack kinds, read through a connector by its logical name), the
+# relationships between them, measures (named calculations) and the rules about who sees which rows and fields.
+
+rachana: 1                       # the language version this file is written in (always 1 today)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+dataset: trades-basic            # the model's name: letters, digits, hyphen, underscore
+version: 1                       # your own version number; bump it when you change the model
+
+# The next five keys describe the entry in the BI catalogue (they are not part of the model).
+title: Trades, the basics
+description: >-
+  The simplest useful model: one table (the trading pack's trade) with four measures (Notional, MTM, Trades and
+  average MTM per trade) and a desk-to-book hierarchy. Start here.
+sample: true                     # sample content: hidden from business users when "Hide samples" is on (like sample packs)
+endorsement: promoted            # none, promoted or certified (certified needs a steward)
+tags: [sample, trading, tutorial]
+
+tables:
+  trade:                         # the table's name in this model (the pack calls the kind "trade")
+    source:
+      connector: trading-store   # a connector by its LOGICAL name (config/connectors/trading-store.yaml): the same one the terminal reads
+      kind: trade                # the pack kind
+    mode: cached                 # cached: copied once per business date into a typed Parquet file (fast to query, rebuilt when a load lands)
+    refresh:
+      on-load: true              # rebuild the date when a data-load signal for "trade" arrives (DATA_LOADS.md)
+    columns:                     # the columns you want; each is a path into the trade document, and a type
+      tradeId:     { type: string, key: true }   # key: the column other tables join to (no path given: the path is the name, tradeId)
+      desk:        string                         # shorthand: just the type
+      book:        string
+      productType: string
+      currency:    string
+      status:      string
+      notional:    { type: decimal, format: amount0 }   # format: how a visual shows it (a format name of the trading pack)
+      mtm:         { type: decimal, format: signed0 }
+      pnl1d:       { type: decimal, format: signed0 }
+      tradeDate:   date
+      # Every table also has two columns you never declare: id (the entity's id) and businessDate (the date the row is for).
+      # Calculated column: a row-level expression, computed at query time. It may use the table's own stored columns.
+      mtmInMillions: { type: decimal, expr: "mtm / 1000000", description: "MTM in millions of USD" }
+
+measures:                        # a measure is an AGGREGATE: sum, avg, min, max, count, distinct, ratio, percentile
+  Notional:
+    expr: "sum(trade.notional)"  # table.column names the column; sum() adds it up over the rows the visual is grouped by
+    format: amount0
+    description: Total notional of the trades, in the trade's own currency units.
+  MTM:
+    expr: "sum(trade.mtm)"
+    format: signed0
+    description: Mark-to-market in USD, signed.
+  Trades:
+    expr: "count(trade)"         # count(table) counts rows
+    description: Number of trades.
+  Average MTM per trade:
+    expr: "measure('MTM') / measure('Trades')"     # [Name] uses another measure; the result is a ratio of two aggregates
+    format: signed0
+    description: MTM divided by the number of trades (a measure built from measures).
+  Desk P&L volatility:           # a PYTHON measure: not an expression but a Python item (config/bi/python/), run by the console's sandboxed runner
+    python: desk-pnl-volatility  # the item (catalogue id, file name or title); it is called once per group with a table of that group's rows
+    inputs: [trade.pnl1d]        # the columns the function reads
+    by: [trade.desk]             # the groups: one number per desk
+    description: Standard deviation of the one-day P&L per desk, computed in Python. Shown by a python visual (docs/guides/PYTHON_BI.md); a query cannot use it.
+
+hierarchies:                     # an order to drill through: coarse first
+  Desk and book: [trade.desk, trade.book]
+
+# No relationships, no security, no rollups: one table needs none. The next samples add them.

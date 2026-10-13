@@ -25,6 +25,10 @@ Disabling, uninstalling (to an archive that can be restored) and uploading files
 config/bi/
   datasets/   <id>.dataset.yaml   the semantic model: tables over connectors (by logical name), relationships, measures, row rules and masks; queried since phase 2
                                   (commented samples ship: trades-basic, trading-risk, trading-cashflows, the live live-trading and live-exposure, and for several datasets counterparty-exposure, the composed desk-pnl-vs-exposure and the derived desk-pnl-vs-exposure-py: DATASETS.md section 11)
+                                  2.2: rachana: 2 datasets, one table each (<model>-<table>.dataset.yaml), made from those by drishti.py bi migrate --models (BI_MODEL_SPEC.md 8.3.1);
+                                  the rachana: 1 files stay until the 2.1 reader is removed
+  models/     <id>.model.yaml     2.2 data models: datasets as aliases, relationships, measures, hierarchies, rollups (BI_MODEL_SPEC.md section 2); every sample
+                                  dataset above converted, under the same name; the reports (except the two live ones, until W3) read them with `model: <name>@1`
   reports/    <id>.report.yaml    pages of visuals over a dataset: filters, bookmarks, drill-through, theme; drawn since phase 3
                                   (seven commented samples: trades-overview, counterparty-risk, cashflow-ladder, live-trading-desk, live-exposure, python-desk-risk, and pnl-vs-exposure over two datasets: REPORTS.md section 16)
   boards/     <id>.board.yaml     a wall of live tiles from several reports, with alerts and kiosk mode; drawn since phase 5 (one commented sample: desk-wall)

@@ -1148,6 +1148,11 @@ bi:
 
 ### 8.2 Every shipped sample
 
+*As built (2.2 wave A): the samples are converted by the converter itself (8.3.1) and committed under `config/bi/models` and `config/bi/datasets`.
+Where it differs from this plan: the datasets are user datasets `<old>-<table>` (not pack datasets), the derived sample is `desk-pnl-vs-exposure-py-result`
+plus the model `desk-pnl-vs-exposure-py`, the composed sample's `Collateral` measure joins `trading-risk` too, the two live reports stay on their live
+datasets until W3, the boards are unchanged (they name reports), and the notebook and the Transform's `inputs:` are manual steps for the console.*
+
 | File (config/bi) | Becomes |
 |---|---|
 | `datasets/trades-basic` | model `trades-basic` over `pack.trading.trade` (alias `trade`); the calculated column `mtmInMillions` moves to a user dataset `trades-basic-trade` (`extends: pack.trading.trade@^1`); measures (with the Python measure), hierarchy as written |
@@ -1190,6 +1195,71 @@ bi:
    where the key survives (the converter edits a YAML tree that keeps comments), and dropped with the key otherwise.
 7. Refuses (`DRS-9190`) an item whose old form is invalid, and (`DRS-9191`) a composed join it cannot express as
    relationships (a join on non-key columns of both sides): the report lists it with the Python-dataset alternative.
+
+#### 8.3.1 As built (2.2 wave A, task 6)
+
+The converter is `com.ash.drishti.server.bi.migrate.ModelConverter` (pure; `DatasetSplitter`, `Folding`, `ReportRewrite`), reached three ways:
+
+| Way | What it converts | Security of the restricted roles (below) |
+|---|---|---|
+| `drishti.py bi migrate --models DIR [--dry-run] [--out D] [--keep-old] [--report F]` (`POST /api/v1/bi/migrate/models/convert`, `bi`) | a BI folder's files; written in place (old dataset files removed unless `--keep-old`) or under `--out` | `NOTE` |
+| `drishti.py bi migrate --models [--dry-run]` (`POST /api/v1/bi/migrate/models`, `bi-admin`) | the server's stored items | `CLOSED` |
+| the start-up run (`drishti.bi.migrate.on-start`, after the expression migration) | the server's stored items, as `system` | `CLOSED` |
+
+Decisions taken while building it, against the plan above:
+
+* **Datasets are user datasets, never a pack dataset.** Every table becomes `<old>-<table>` (`_` written `-`) with the table's own `source`
+  (`connector`, `kind`, `each`), columns (`path`, `type`, `format`, `description`, calculated `expr` with bare columns, `key: true` as `role: key`),
+  time (`cached` is the default snapshot, `direct` is `storage: direct`, `live` with `live.rows/age` and `history`), refresh and masks. Step 2's "use
+  the pack dataset when every column matches" would give a model every column of the pack dataset, including columns the old file never showed; the
+  converter never widens what a model shows, so a site that wants the pack datasets rebinds by hand (`dataset: pack.trading.trade`).
+* **Security moves to the datasets.** A rule naming one table is that dataset's rule (its columns bare, `desk in user.desks`); a `True` rule is given to
+  every dataset, so a role the old file did not name still sees nothing; a rule naming two tables is refused (`DRS-9190`). A role restricted on one
+  table and named nowhere else (the desk-head on `netting_sets`) asked a question 2.1 **refused**. `NOTE` (the shipped samples, section 8.2) gives it
+  every row of the other datasets and writes `security.may-see-all` (the allow-listed change of 8.5); `CLOSED` (stored items, converted unattended)
+  gives it `{ role: desk-head, where: "False" }` there, so it keeps seeing nothing, and the report says how to open it. Nothing is widened silently.
+* **Two facts joined by a relationship** (`trades.nettingSet -> netting_sets.id`): kept **inactive**, so the facts meet on their shared dimensions.
+* **Composed** datasets fold into a *host*: a source whose model already reads every table the other sources use (same connector, kind, `each`, and
+  at least their columns with the same paths and types). The composed dataset's own measures (not the engine's generated frame measures) and any source
+  measure the host lacks move into the host (renamed `<name> (<source>)` when the name means something else there); consumers bind to the host with the
+  frame's names renamed (`joined.name` to `counterparties.name`, `Desk P&L` to `P&L 1d`); a visual that read another source of the composed dataset reads
+  the host too, so the report's `links:` go. A `left` (or `inner`) join adds the report filter `{ field: <left count measure>, op: gt, value: 0 }`.
+  No host: `DRS-9191`.
+* **Derived** datasets become a Python dataset `<old>-result` (`source.python`, each input a model query `{ model, select }` on the converted input's
+  model) and a model of the old name over it under the alias `result`, so its measures and `result.*` fields keep their meaning. The Transform now
+  receives the model query's column names (`counterparties.id`, `P&L 1d`), not the `as` names: a manual step (the shipped `pnl-vs-exposure` accepts both).
+* **Reports** are rewritten in their text (comments kept): `rachana: 2`, `dataset:` to `model: <name>@<major>`, renames in wells, filters, sorts,
+  formats and bookmarks (never in titles or texts). A report on a dataset with a **live** table stays on the dataset (manual step) until a report on a
+  model follows live data (standing queries, W3), and that dataset's file is kept. **Boards** name reports and are unchanged; **notebooks** and Python
+  Transforms that name datasets are manual steps until the console reads them from models.
+* **Stored items**: the dataset item **becomes** the model item (same id, so references by id hold; its 2.1 text is a saved state of its history); each
+  new dataset is an item of the same workspace, owner and audience, published when the old dataset was; reports are rebound through the same rewrite as
+  the expression migration (text before kept, a published report published again). A dataset whose draft is ahead of its published version, a name already
+  taken, or a refused item is never changed and is listed (Admin, BI settings; `GET /bi/migrate/problems`, step `models`).
+* **Idempotent**: a `rachana: 2` item is skipped; a converted folder converted again writes the same text.
+
+Captured (`drishti.py bi migrate --models config/bi --dry-run`, the shipped samples; the report's table, abridged):
+
+```
+datasets/desk-pnl-vs-exposure.dataset.yaml: removed -> folded into the model trading-risk@1
+datasets/counterparty-exposure.dataset.yaml: converted -> model counterparty-exposure@1 over [counterparty-exposure-netting-sets, counterparty-exposure-counterparties]
+    writes datasets/counterparty-exposure-netting-sets.dataset.yaml
+    writes datasets/counterparty-exposure-counterparties.dataset.yaml
+    writes models/counterparty-exposure.model.yaml
+...
+reports/live-trading-desk.report.yaml: manual
+    manual: the report reads the live dataset live-trading (now also the model live-trading@1): it stays on the dataset until a report on a model follows live data (standing queries, wave W3); then bind it with model: live-trading@1
+reports/pnl-vs-exposure.report.yaml: converted -> trading-risk@1
+...
+26 file(s) read, 16 converted, 0 refused; would write 32 file(s)
+```
+
+**Equivalence (8.6) as built:** `ConvertedSamplesTest` converts the 2.1 samples (kept under `drishti-server/src/test/resources/bi/samples-2.1`) and
+asks every converted model what the 2.1 dataset was asked (each measure alone and by each hierarchy's first level, sorted, as of a date, with a measure
+filter and a field filter) as `rita`, `hana` (desk-head) and `ann` (no raw power: masked): row for row equal, with one allow-list entry (8.5: a
+desk-head's question about another fact is answered as risk sees it instead of refused). The composed sample is compared with the left join of its two
+sources' 2.1 answers, asked of the host with `Trades > 0`; the derived sample is a Python dataset, which only the console runs. The test also asserts that
+the files under `config/bi` are exactly the converter's output.
 
 ### 8.4 The W1 compatibility reader
 

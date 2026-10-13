@@ -20,7 +20,7 @@
 #   * an analyst (no raw power) sees the counterparty name as ••• because the dataset masks it, so every counterparty is one bar.
 # Reference: docs/guides/REPORTS.md.
 
-rachana: 1
+rachana: 2
 report: counterparty-risk
 version: 1
 title: Counterparty risk
@@ -30,7 +30,7 @@ description: >-
 sample: true
 endorsement: promoted
 tags: [sample, counterparty-risk, cross-pack, tutorial]
-dataset: trading-risk
+model: trading-risk@1
 theme: { palette: default }
 
 pages:

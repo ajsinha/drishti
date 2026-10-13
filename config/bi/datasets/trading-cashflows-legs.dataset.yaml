@@ -1,0 +1,44 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# STORED SAMPLE 3 of 3: a nested model. A trade document holds ARRAYS: its legs and its payment schedule. A table with `each:` has one row
+# per array element, so legs and cashflows become tables in their own right, one-to-many from the trade.
+# Tutorial: docs/tutorials/../guides/BI_RECIPES.md. Reference: docs/guides/DATASETS.md.
+
+# CONVERTED from datasets/trading-cashflows.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
+# docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
+
+rachana: 2
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+dataset: trading-cashflows-legs
+version: 1.0.0
+title: "Trade legs and cashflows: legs"
+description: "The legs table of the model trading-cashflows."
+sample: true
+endorsement: "promoted"
+tags: [sample, trading, nested, cashflows]
+source: { connector: trading-store, kind: trade, each: legs }
+refresh: { on-load: true }
+columns:
+  leg:        { type: integer }
+  label:      { type: string }
+  payReceive: { type: string }
+  rateType:   { type: string }
+  index_name: { type: string, path: index }
+  rate:       { type: decimal, format: pct }
+  spread:     { type: decimal }
+  frequency:  { type: string }
+  dayCount:   { type: string }
+  currency:   { type: string }
+  notional:   { type: decimal, format: amount0 }

@@ -146,7 +146,7 @@ class ExpressionMigrationApiTest {
 
     @Test @Order(2)
     void theStartUpRunConvertsDraftsAndPublishedTextsKeepingHistoryAndAuditing() throws Exception {
-        migration.start();                                                       // what the next start of the server does
+        migration.expressions("system", false);                                  // what the next start does first (its model step is ModelMigrationApiTest)
         BiStore.Item pub = store.item("it-published").orElseThrow();
         assertThat(pub.body()).contains("expressions: 2").contains("# a comment the migration keeps")
                 .contains("sum(trades.mtm, where=trades.status == 'Live')").contains("measure('MTM') / measure('Live')").contains("where: \"True\"");

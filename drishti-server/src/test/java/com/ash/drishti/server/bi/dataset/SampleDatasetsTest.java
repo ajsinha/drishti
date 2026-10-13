@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 /** The sample datasets shipped in config/bi/datasets parse and validate with no errors, and say what the tutorial says they say. */
 class SampleDatasetsTest {
 
-    private static final Path DIR = Path.of("../config/bi/datasets");
+    private static final Path DIR = Path.of("src/test/resources/bi/samples-2.1/datasets");         // the 2.1 datasets (config/bi has their models)
 
     /** The shipped folder as the directory composed and derived datasets find their sources in. */
     private static final Composition.Directory FOLDER = ref -> {

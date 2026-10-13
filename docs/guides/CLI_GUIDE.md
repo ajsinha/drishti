@@ -1903,6 +1903,8 @@ drishti.py bi expr validate EXPR [--scope S] [--model M] [--alias A]       check
 drishti.py bi expr convert EXPR                                           the DEL v2 form of an old-syntax expression
 drishti.py bi migrate --expressions FILE|DIR... [--write] [--check]      convert every expression of BI item files (comments kept, expressions: 2 set)
 drishti.py bi migrate --expressions [--dry-run]                          the same for the server's STORED items (bi-admin; audited, history kept)
+drishti.py bi migrate --models DIR [--dry-run] [--out D] [--keep-old] [--report F]   rachana: 1 datasets of a BI folder to datasets and models, reports rebound
+drishti.py bi migrate --models [--dry-run] [--report F]                  the same for the server's stored items (bi-admin)
 drishti.py bi sql "SELECT ..." --model M [--explain] [--format table|json|csv] [--file F]   Drishti SQL over a model
 ```
 
@@ -1915,6 +1917,32 @@ each item with old-syntax expressions (draft and published changes, and what can
 the way the server does at start (`drishti.bi.migrate.on-start`): the text before kept as a saved state, a changed published text published again as the
 next version, each change audited. It exits `1` while an item cannot be converted (it keeps its text; Admin, BI settings lists it). The captured output
 is in [EXPRESSIONS.md section 10](EXPRESSIONS.md#10-the-old-syntax-and-the-converter).
+
+`bi migrate --models DIR` is the dataset-to-model converter ([BI_MODEL_SPEC.md section 8.3](../architecture/BI_MODEL_SPEC.md#83-the-converter)) over a
+BI folder: it sends every `datasets|models|reports|boards|notebooks|python/*.yaml` to the server's converter together (a report needs its dataset's
+plan) and writes what comes back: per `rachana: 1` dataset, one `datasets/<old>-<table>.dataset.yaml` per table and `models/<old>.model.yaml`; reports
+rebound (`model: <old>@<major>`, comments kept). In place it removes the old dataset files (`--keep-old` keeps them; a live dataset's file is always
+kept, its reports stay on it until W3); `--out D` writes under another folder and removes nothing; `--dry-run` writes nothing; `--report F` writes the
+plan (every item, every rename, every behaviour difference and manual step) as Markdown. It exits `1` when an item is refused. Captured over the shipped
+samples:
+
+```
+$ drishti.py bi migrate --models config/bi --dry-run
+datasets/desk-pnl-vs-exposure.dataset.yaml: removed -> folded into the model trading-risk@1
+datasets/counterparty-exposure.dataset.yaml: converted -> model counterparty-exposure@1 over [counterparty-exposure-netting-sets, counterparty-exposure-counterparties]
+    writes datasets/counterparty-exposure-netting-sets.dataset.yaml
+    writes datasets/counterparty-exposure-counterparties.dataset.yaml
+    writes models/counterparty-exposure.model.yaml
+...
+notebooks/pnl-vs-exposure-pandas.notebook.yaml: manual
+    manual: the notebook reads the dataset file:dataset:trading-risk, now the model trading-risk@1: rebind it (`model: trading-risk@1`, extracts as model queries) when the console's notebooks read models
+...
+26 file(s) read, 16 converted, 0 refused; would write 32 file(s)
+```
+
+Without DIR, `bi migrate --models` converts the server's **stored** datasets and rebinds their reports (`POST /api/v1/bi/migrate/models`, bi-admin), as
+the server does at start: a dataset item becomes the model item (same id), each table a new dataset item, reports are published again; restricted roles
+are never given rows they did not see ([TROUBLESHOOTING.md](TROUBLESHOOTING.md#bi-migrations-22-wave-a)).
 
 ### Shell completion
 

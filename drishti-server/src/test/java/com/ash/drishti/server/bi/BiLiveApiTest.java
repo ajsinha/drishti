@@ -71,7 +71,7 @@ class BiLiveApiTest {
 
     static {
         try {
-            for (String kind : List.of("datasets", "reports", "boards")) {
+            for (String kind : List.of("datasets", "models", "reports", "boards")) {
                 Path to = Path.of("target/bi-live-folder/" + kind);
                 Files.createDirectories(to);
                 try (var files = Files.list(Path.of("../config/bi/" + kind))) {

@@ -97,7 +97,7 @@ final class StoredRewrite {
     }
 
     /** Makes sure the draft text before the change is a saved state (the latest one, when it already is), and returns its number. */
-    private int keepBefore(BiStore.Item i, String draft, String actor, Instant at) {
+    int keepBefore(BiStore.Item i, String draft, String actor, Instant at) {
         List<BiStore.Revision> revs = store.revisions(i.id());
         if (!revs.isEmpty() && revs.get(0).body().equals(draft)) {
             return revs.get(0).seq();

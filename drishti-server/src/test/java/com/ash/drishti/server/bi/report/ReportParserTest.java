@@ -30,8 +30,8 @@ import org.junit.jupiter.api.Test;
 /** The report parser and validator: the shipped samples are clean, and every kind of mistake comes back with its DRS code and the path of the key. */
 class ReportParserTest {
 
-    static final Path REPORTS = Path.of("../config/bi/reports");
-    static final Path DATASETS = Path.of("../config/bi/datasets");
+    static final Path REPORTS = Path.of("src/test/resources/bi/samples-2.1/reports");            // the 2.1 reports on datasets (config/bi has them on models)
+    static final Path DATASETS = Path.of("src/test/resources/bi/samples-2.1/datasets");
 
     static String report(String name) throws IOException {
         return Files.readString(REPORTS.resolve(name + ".report.yaml"));

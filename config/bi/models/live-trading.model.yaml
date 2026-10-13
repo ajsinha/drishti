@@ -1,0 +1,55 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# SAMPLE (streaming): the live trading desk. One table whose rows are the trades the live feed pushes, kept in memory by the BI engine and
+# updated in place as each trade ticks. Reports and boards over it redraw as the numbers move.
+# Tutorial: docs/tutorials/10-first-bi-report.md "A live desk". Reference: docs/guides/DATASETS.md (live tables), docs/guides/BOARDS.md.
+#
+# `mode: live` is the whole difference from the other samples: nothing is copied per business date; the engine subscribes to the kind through the same live
+# machinery the terminal's live views use (the demo ticker out of the box; Kafka, Redis and the other streaming connectors in a real setup) and applies each
+# update to its table by key. Row rules and masks apply to every answer, as the reader.
+
+# CONVERTED from datasets/live-trading.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
+# docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
+
+rachana: 2
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+model: live-trading
+version: 1.0.0
+title: "Live trading desk"
+description: "The trades as they tick: counts, notional, mark-to-market and P&L by desk, book, product and currency, kept up to date by the live feed. Traders are masked for readers without the raw power."
+sample: true
+endorsement: "promoted"
+tags: [sample, trading, live, streaming, tutorial]
+
+datasets:                       # alias: the dataset it reads, and its role (a fact is added up; a dimension groups and filters)
+  trade: { dataset: live-trading-trade, role: fact }
+
+measures:
+  Trades:         { expr: "count(trade)", description: "Number of trades followed." }
+  Notional:       { expr: "sum(trade.notional)", format: amount0 }
+  MTM:            { expr: "sum(trade.mtm)", format: signed0, description: "Net mark-to-market in USD." }
+  PnL 1d:         { expr: "sum(trade.pnl1d)", format: signed0 }
+  Losses:         { expr: "sum(trade.mtm, where=trade.mtm < 0)", format: signed0, description: "The negative marks only." }
+  Worst trade:    { expr: "min(trade.mtm)", format: signed0 }
+  Best trade:     { expr: "max(trade.mtm)", format: signed0 }
+  MTM history:    { expr: "sum(history.MTM)", format: signed0, description: "the sampled values of MTM added up at each sample time; chart it by history.ts" }
+  Losses history: { expr: "sum(history.Losses)", format: signed0, description: "the sampled values of Losses added up at each sample time; chart it by history.ts" }
+  Trades history: { expr: "sum(history.Trades)", description: "the sampled values of Trades added up at each sample time; chart it by history.ts" }
+
+hierarchies:
+  Desk and book: [trade.desk, trade.book]
+
+rollups:
+  - { name: byDeskBook, table: trade, by: [desk, book, productType, currency], measures: [Trades, Notional, MTM, PnL 1d, Worst trade, Best trade] }

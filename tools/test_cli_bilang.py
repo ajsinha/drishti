@@ -127,6 +127,30 @@ class BiLang(unittest.TestCase):
         self.assertEqual(2, code)
         self.assertIn("--write and --check are for FILEs", err)
 
+    def test_migrate_models_writes_the_converted_folder_and_removes_old_datasets(self):
+        (self.tmp / "datasets").mkdir()
+        (self.tmp / "reports").mkdir()
+        (self.tmp / "datasets" / "x.dataset.yaml").write_text("rachana: 1\ndataset: x\n", encoding="utf-8")
+        (self.tmp / "reports" / "r.report.yaml").write_text("rachana: 1\nreport: r\ndataset: x\n", encoding="utf-8")
+        FakeServer.routes[("POST", "/api/v1/bi/migrate/models/convert")] = (200, {
+            "writes": {"datasets/x-t.dataset.yaml": "rachana: 2\n", "models/x.model.yaml": "rachana: 2\nmodel: x\n", "reports/r.report.yaml": "rachana: 2\nmodel: x@1\n"},
+            "removes": ["datasets/x.dataset.yaml"], "converted": 2, "problems": 0, "report": "# report\n",
+            "items": [{"key": "datasets/x.dataset.yaml", "kind": "dataset", "name": "x", "state": "converted", "became": "model x@1 over [x-t]",
+                       "outputs": [{"kind": "dataset", "name": "x-t", "path": "datasets/x-t.dataset.yaml"}], "manual": [], "problem": None}]})
+        code, out, _ = self.go("bi", "migrate", "--models", str(self.tmp), "--dry-run")
+        self.assertEqual(0, code)
+        self.assertIn("would write 3 file(s)", out)
+        self.assertTrue((self.tmp / "datasets" / "x.dataset.yaml").exists())
+        sent = json.loads(FakeServer.requests[0][5])["files"]
+        self.assertEqual({"datasets/x.dataset.yaml", "reports/r.report.yaml"}, {f["path"] for f in sent})
+        report = self.tmp / "plan.md"
+        code, out, _ = self.go("bi", "migrate", "--models", str(self.tmp), "--report", str(report))
+        self.assertEqual(0, code)
+        self.assertIn("removed 1 old dataset file(s)", out)
+        self.assertFalse((self.tmp / "datasets" / "x.dataset.yaml").exists())
+        self.assertEqual("rachana: 2\nmodel: x@1\n", (self.tmp / "reports" / "r.report.yaml").read_text())
+        self.assertEqual("# report\n", report.read_text())
+
     def test_sql_prints_a_table(self):
         FakeServer.routes[("POST", "/api/v1/bi/sql")] = (200, {"columns": [{"name": "desk"}, {"name": "mtm"}], "rows": [["RATES", 1234.5], ["FX", None]],
                                                               "meta": {"shape": "mq", "plan": "p_1"}})

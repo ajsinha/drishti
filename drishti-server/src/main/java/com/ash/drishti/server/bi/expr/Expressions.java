@@ -196,6 +196,42 @@ public final class Expressions {
         return DelPrinter.print(renamed(p.node(), idToName));
     }
 
+    /**
+     * The text with tables renamed ({@code tables}: the first part of a dotted name, {@code count(trades)}) and measures renamed ({@code measures}), printed
+     * as DEL v2: what the dataset-to-model converter (docs/architecture/BI_MODEL_SPEC.md section 8.3) writes when a measure moves into another model.
+     * Unchanged when nothing is renamed. A text that does not parse is returned as it is.
+     */
+    public static String withRenames(String text, Map<String, String> tables, Map<String, String> measures) {
+        if (text == null || tables.isEmpty() && measures.isEmpty()) {
+            return text;
+        }
+        Node n;
+        try {
+            n = parse(text);
+        } catch (RuntimeException e) {
+            return text;
+        }
+        Node out = renamedRefs(n, tables, measures);
+        return out.equals(n) ? text : DelPrinter.print(out);
+    }
+
+    private static Node renamedRefs(Node n, Map<String, String> tables, Map<String, String> measures) {
+        return switch (n) {
+            case Node.MeasureRef m -> new Node.MeasureRef(measures.getOrDefault(m.name(), m.name()));
+            case Node.Ref r -> {
+                java.util.List<String> parts = new java.util.ArrayList<>(r.parts());
+                parts.set(0, tables.getOrDefault(parts.get(0), parts.get(0)));
+                yield new Node.Ref(java.util.List.copyOf(parts));
+            }
+            case Node.Call c -> new Node.Call(c.function(), c.args().stream().map(a -> renamedRefs(a, tables, measures)).toList());
+            case Node.Bin b -> new Node.Bin(b.op(), renamedRefs(b.left(), tables, measures), renamedRefs(b.right(), tables, measures));
+            case Node.Un u -> new Node.Un(u.op(), renamedRefs(u.operand(), tables, measures));
+            case Node.In i -> new Node.In(renamedRefs(i.value(), tables, measures), i.items().stream().map(x -> renamedRefs(x, tables, measures)).toList(), i.negated());
+            case Node.Cond c -> new Node.Cond(renamedRefs(c.test(), tables, measures), renamedRefs(c.yes(), tables, measures), renamedRefs(c.no(), tables, measures));
+            default -> n;
+        };
+    }
+
     private static Node renamed(Node n, Map<String, String> ids) {
         return switch (n) {
             case Node.MeasureRef m -> new Node.MeasureRef(ids.getOrDefault(m.name(), m.name()));
