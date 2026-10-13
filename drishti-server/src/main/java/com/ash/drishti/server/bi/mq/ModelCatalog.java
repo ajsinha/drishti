@@ -193,7 +193,15 @@ public final class ModelCatalog {
                 return datasets.queryModel(p, v.id(), v.key(), ds, v.hash() + "|" + salt(v.flat(), ds), q, explain, staged);
             };
         }
-        return new MqService.Bound(v, run, ctx);
+        java.util.Set<String> hidden = new java.util.LinkedHashSet<>();
+        v.datasets().forEach((alias, r) -> {
+            if (r != null && r.def().security().hiddenRoles().stream().anyMatch(who.roles()::contains)) {
+                r.def().security().hiddenColumns().forEach(col -> hidden.add(alias + "." + col));
+            }
+        });
+        com.ash.drishti.server.bi.plan.SecuritySignature.Reader security = new com.ash.drishti.server.bi.plan.SecuritySignature.Reader(who.user(), who.enforce(), who.roles(),
+                who.attributes(), who.masks(), who.denied(), hidden);
+        return new MqService.Bound(v, run, ctx, security, () -> generation(p, v));
     }
 
     /** The generation the model's data is at (its layers and live tables), for a standing query. */

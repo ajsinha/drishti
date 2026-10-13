@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Configuration;
 
 /** The model layer's beans (docs/architecture/BI_MODEL_SPEC.md): the pack-generated datasets, the model catalogue, the query language and standing queries. */
 @Configuration
-@EnableConfigurationProperties(MqProperties.class)
+@EnableConfigurationProperties({MqProperties.class, com.ash.drishti.server.bi.plan.PlanProperties.class})
 public class MqConfiguration {
 
     @Bean
@@ -67,8 +67,8 @@ public class MqConfiguration {
     }
 
     @Bean
-    public MqService mqService(MqProperties props) {
-        return new MqService(props);
+    public MqService mqService(MqProperties props, com.ash.drishti.server.bi.plan.PlanProperties plan) {
+        return new MqService(props, plan);
     }
 
     @Bean

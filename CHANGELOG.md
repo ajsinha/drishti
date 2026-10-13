@@ -17,6 +17,15 @@
 
 ## Unreleased
 
+- **Server: the logical plan (wave A, task 2).** Every question (MQ, a report visual, an alert, an Analyse slice; Drishti SQL next) becomes one plan
+  (`bi/plan`: `SecureScan`, `SemiJoin`, `Filter`, `Aggregate`, `Meet`, `Window`, `Having`, `Sort`, `Limit`, `Answer`; `Derive`, `Dedup`, `Regroup`, `Rel`
+  reserved for the dataset derivation and composite SQL). The security rewriter runs before the optimiser (predicate pushdown, top-N as a grouped
+  sub-plan, projection pruning, rollup matching only when the rollup holds the row rules' columns); lowering hands the SQL compiler the same request as
+  before. `meta.plan` (plan hash: one per question, any language), `meta.signature` (the reader's effective security, opaque), `options.explain` gives
+  `meta.explain` (rules counted, never shown). An **L1 result cache** keyed by plan, signature and generation: readers with identical security share
+  answers (`drishti.bi.plan.*`). The guards refuse from A: sums across currencies `DRS-9158`, balances added across dates `DRS-9159` (`guards: warn`
+  keeps W1). Property tests: no optimiser rule touches a scan's security (1,000 random plans), ANDing a rule never adds a row, a rollup answers as the
+  columns layer.
 - **Server: DEL v2, the Python-like expression language (wave A, task 1).** Measures, derived columns, filters and row rules are written in a safe subset
   of Python's expression grammar (`sum(trades.mtm, where=trades.status == 'Live')`, `measure('P&L 1d') / measure('Exposure (EE peak)')`, `a if c else b`,
   `x is None`), parsed by one hand-written parser on the server (`bi/expr`), checked against its scope (row, rule, aggregate), types and a function

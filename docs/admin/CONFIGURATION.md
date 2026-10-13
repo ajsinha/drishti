@@ -1290,6 +1290,18 @@ default throttle is `drishti.bi.live.frame`; its stream's heartbeat is `drishti.
 | `idle-close` | `10m` | A subscription that no stream has read for this long is dropped. |
 | `pack-live` | `true` | A pack-generated dataset (`pack.<pack>.<kind>`) is `live` when the kind's connector pushes (decision D6), else `snapshot`; `false` keeps every one a snapshot. |
 
+### `drishti.bi.plan` — the logical plan, the result cache and the guards
+
+Every question becomes one logical plan ([BI_DESIGN.md §3.6 and §4](../architecture/BI_DESIGN.md#4-query-architecture)); answers are cached by plan hash,
+security signature and data generation (the L1 cache of §6.1: readers with identical effective security share an entry).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `cache-entries` | `2000` | Answers the result cache keeps; `0` turns it off (the engine's own cache, `drishti.bi.query.cache-*`, still applies). |
+| `cache-ttl` | `15m` | How long an answer for the current state is served before it is asked again, even when no data generation moved (a `direct` table's source can change unseen). An as-of answer has no time to live. |
+| `cache-idle` | `1h` | An answer nobody asked for this long is dropped. |
+| `guards` | `refuse` | `refuse`: a sum across currencies (`DRS-9158`) and a balance added across dates (`DRS-9159`) are refused (wave A); `warn`: answered with a warning, as in W1. |
+
 ### `drishti.bi.expr` — the expression language
 
 The Drishti expression language (DEL v2, [EXPRESSIONS.md](../guides/EXPRESSIONS.md)): how the old expression syntax is treated, and the parse cache.

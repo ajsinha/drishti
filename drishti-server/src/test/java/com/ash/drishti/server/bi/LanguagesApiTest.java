@@ -161,7 +161,7 @@ class LanguagesApiTest {
         role("bi-risk", true);
         role("desk-head", true);
         role("bi-analyst", false);
-        for (String u : List.of("rita:bi-risk:", "hana:desk-head:DESK-A", "ann:bi-analyst:")) {
+        for (String u : List.of("rita:bi-risk:", "hana:desk-head:DESK-A", "hugo:desk-head:DESK-A", "ann:bi-analyst:")) {
             String[] n = u.split(":", -1);
             mvc.perform(post("/api/v1/admin/users").header("Authorization", admin()).contentType(MediaType.APPLICATION_JSON)
                     .content(json.writeValueAsString(Map.of("username", n[0], "displayName", n[0], "email", n[0] + "@desk.test", "desk", n[2], "roles", List.of(n[1]),
@@ -198,6 +198,33 @@ class LanguagesApiTest {
         List<String> out = new ArrayList<>();
         v.path("problems").forEach(p -> out.add(p.path("code").asText()));
         return out;
+    }
+
+    // ---- the plan ------------------------------------------------------------------------------------------------------
+
+    @Test @Order(10)
+    void anAnswerNamesItsPlanAndSignatureAndIsSharedByReadersOfTheSameSecurity() throws Exception {
+        Map<String, Object> q = Map.of("mq", 1, "model", "lang-model@1", "select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional", "Trades")),
+                "time", Map.of("as-of", DAY));
+        JsonNode first = ok(call("POST", "/api/v1/bi/mq", reader("hana"), q));
+        JsonNode again = ok(call("POST", "/api/v1/bi/mq", as("hugo", "desk-head"), q));      // another desk-head of DESK-A: the same effective security
+        JsonNode rita = ok(call("POST", "/api/v1/bi/mq", reader("rita"), q));
+        assertThat(first.path("meta").path("plan").asText()).startsWith("p_").isEqualTo(rita.path("meta").path("plan").asText());
+        assertThat(again.path("meta").path("signature").asText()).isEqualTo(first.path("meta").path("signature").asText());
+        assertThat(again.path("meta").path("cached").asBoolean()).isTrue();
+        assertThat(again.path("rows")).isEqualTo(first.path("rows"));
+        assertThat(rita.path("meta").path("signature").asText()).isNotEqualTo(first.path("meta").path("signature").asText());
+        assertThat(rita.path("rows").size()).isEqualTo(3);
+        JsonNode explained = ok(call("POST", "/api/v1/bi/mq", reader("hana"), Map.of("mq", 1, "model", "lang-model@1", "select", Map.of("fields", List.of("trades.desk"),
+                "measures", List.of("Notional")), "where", List.of(Map.of("field", "trades.currency", "op", "eq", "value", "USD")), "time", Map.of("as-of", DAY),
+                "options", Map.of("explain", true))));
+        String tree = explained.path("meta").path("explain").toString();
+        assertThat(tree).contains("SecureScan").contains("\"rules\":1").contains("\"pushed\"").doesNotContain("DESK-A");
+        if (System.getProperty("capture") != null) {
+            System.out.println("CAPTURE6 " + first.path("meta"));
+            System.out.println("CAPTURE7 " + again.path("meta"));
+            System.out.println("CAPTURE8 " + explained.path("meta").path("explain"));
+        }
     }
 
     // ---- DEL ---------------------------------------------------------------------------------------------------------
