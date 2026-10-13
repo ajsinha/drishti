@@ -165,6 +165,18 @@ class QueryEngineTest {
         assertThat(r.meta().tables()).contains("trades", "desks");
     }
 
+    /** Over two business dates a trade meets its desk of the same day only: the join matches the date too, so nothing is counted once per day of the window. */
+    @Test
+    void aJoinOverAWindowOfDatesCountsEachRowOnce() {
+        QueryService.Result one = run("{\"fields\":[\"desks.region\"],\"measures\":[\"Trades\"],\"dates\":{\"from\":\"2026-10-08\"}}", risk());
+        QueryService.Result other = run("{\"fields\":[\"desks.region\"],\"measures\":[\"Trades\"],\"dates\":{\"from\":\"2026-10-09\"}}", risk());
+        QueryService.Result both = run("{\"fields\":[\"desks.region\"],\"measures\":[\"Trades\"],\"dates\":{\"from\":\"2026-10-08\",\"to\":\"2026-10-09\"}}", risk());
+        Map<String, Object> a = rows(one, "desks.region", "Trades");
+        Map<String, Object> b = rows(other, "desks.region", "Trades");
+        rows(both, "desks.region", "Trades").forEach((region, n) -> assertThat((Long) n).as(region)
+                .isEqualTo((Long) a.getOrDefault(region, 0L) + (Long) b.getOrDefault(region, 0L)));
+    }
+
     @Test
     void aListOfValuesWithNoMeasureIsDistinct() {
         QueryService.Result r = run("{\"fields\":[\"trades.desk\",\"desks.region\"],\"dates\":{\"from\":\"2026-10-09\"}}", risk());

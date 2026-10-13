@@ -561,6 +561,19 @@ public final class SqlCompiler {
      * @param rowCap the most rows to ask for (the caller passes one more than its limit to see an overflow)
      * @param components for a rollup, the stored column of each component; null otherwise
      */
+    /**
+     * True when a join of a query over more than one business date also matches the business date: both tables are snapshots read per date (not live, not a
+     * history), so without it each fact row would meet its dimension row once per date of the window and be counted that many times.
+     */
+    private boolean overDates(QueryRequest q, Join j) {
+        if (q.from() == null || q.to() == null || q.from().equals(q.to())) {
+            return false;
+        }
+        Dataset.Table a = ds.tables().get(j.fromTable());
+        Dataset.Table b = ds.tables().get(j.toTable());
+        return a != null && b != null && !a.isLive() && !b.isLive() && !a.isHistory() && !b.isHistory() && !Dataset.FRAME.equals(a.mode()) && !Dataset.FRAME.equals(b.mode());
+    }
+
     public Compiled compile(Plan p, Reader reader, Map<String, Source> sources, int rowCap, Map<String, String> components) {
         return compile(p, reader, sources, rowCap, components, TimeWindows.Context.weekends(java.time.LocalDate.now(java.time.ZoneOffset.UTC)));
     }
@@ -614,6 +627,10 @@ public final class SqlCompiler {
             Source s = sources.get(j.toTable());
             from.append(" LEFT JOIN ").append(s.sql()).append(" ON ").append(Dialect.quote(j.fromTable())).append('.').append(Dialect.quote(j.fromColumn()))
                     .append(" = ").append(Dialect.quote(j.toTable())).append('.').append(Dialect.quote(j.toColumn()));
+            if (overDates(q, j)) {                                              // a row of one day meets the other table's row of the same day, never each day's
+                from.append(" AND ").append(Dialect.quote(j.fromTable())).append('.').append(Dialect.quote(Dataset.DATE)).append(" = ").append(Dialect.quote(j.toTable()))
+                        .append('.').append(Dialect.quote(Dataset.DATE));
+            }
             fromParams.addAll(s.params());
         }
         // WHERE: filters, then the row rules
