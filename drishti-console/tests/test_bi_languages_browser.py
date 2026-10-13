@@ -497,6 +497,34 @@ def test_the_wizards_preview_answers_a_grouped_dataset_with_a_worked_out_column(
     page.context.close()
 
 
+SMALL_TARGETS = """(sel) => [...document.querySelectorAll(sel)].filter(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.height < 43.5; })
+    .map(e => (e.getAttribute('data-xe-opt') || e.getAttribute('data-tab') || e.textContent || e.tagName).trim().slice(0, 30) + ' ' + Math.round(e.getBoundingClientRect().height))"""
+
+
+def test_the_new_designer_parts_fit_a_phone(browser):
+    page = sign_in(browser, "wes", width=390)
+    new_model(page, "Phone model")
+    for tab in ("measures", "fields", "security", "contract"):
+        page.click(f'[data-tab="{tab}"]')
+        page.wait_for_timeout(400)
+        wide = page.evaluate("document.documentElement.scrollWidth - window.innerWidth")
+        assert wide <= 1, f"the {tab} tab scrolls sideways by {wide} px"
+    page.click('[data-tab="measures"]')
+    page.click("[data-nf] summary")
+    ed = page.locator("[data-nf-expr]")
+    ed.click()
+    ed.type("trade.")
+    expect(page.locator(".bi-xe-opt").first).to_be_visible(timeout=10000)
+    small = page.evaluate(SMALL_TARGETS, "[data-nf] .bi-xe-opt, [data-nf] .bi-xe-help, [data-nf] .bi-xe-try, [data-nf] button")
+    assert not small, small
+    page.keyboard.press("Escape")
+    page.click('[data-tab="fields"]')
+    small = page.evaluate(SMALL_TARGETS, "[data-fields-pane] input:not([type=checkbox]), [data-fields-pane] select, [data-fields-pane] summary, [data-fields-pane] button")
+    assert not small, small
+    clean(page)
+    page.context.close()
+
+
 def test_the_wizard_fits_a_phone(browser):
     page = sign_in(browser, "wes", width=390)
     page.evaluate("window.sessionStorage.clear()")

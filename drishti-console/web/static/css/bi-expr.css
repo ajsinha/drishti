@@ -51,7 +51,7 @@ textarea.bi-xe-in { resize: vertical; min-height: 2.4rem; }
 .bi-sql-editor { width: 100%; min-height: 8rem; font-family: var(--d-font-mono); font-size: .85rem; }
 .bi-sql-meta { color: var(--d-muted); font-size: .8rem; }
 @media (pointer: coarse), (max-width: 640px) {
-  .bi-xe-opt, .bi-xe-help, .bi-xe-try, .bi-xe-chip, .bi-qp-view, .bi-xe-problems .btn-pill { min-height: 44px; }
+  .bi-xe-opt, .bi-xe-help, .bi-xe .btn-pill.bi-xe-try, .bi-xe-chip, .bi-qp-view, .bi-xe-problems .btn-pill, .bi-md-query .btn-pill { min-height: 44px; }
   .bi-xe-help { min-width: 44px; }
   .bi-xe-row { flex-wrap: wrap; }
 }
