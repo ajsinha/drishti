@@ -24,8 +24,10 @@ About 30 minutes.
 
 ## Before you start
 
-- [Tutorial 10](10-first-bi-report.md) done (the World economics report), [tutorial 13](13-govern-bi.md) for the people `ann` (a writer) and `sue` (a steward).
-- Nothing to buy and no key: the mock provider is part of Drishti. The two files used are in [data/ai/](data/ai/): `mock.yaml` and `local-model.yaml`.
+- [Tutorial 10](10-first-bi-report.md) done (the World economics report, which reads the model `world-economics@1`), [tutorial 13](13-govern-bi.md) for the people `ann` (a writer) and `sue` (a steward).
+- Nothing to buy and no key: the mock provider is part of Drishti. The files used are in [data/ai/](data/ai/) (`mock.yaml` and `local-model.yaml`) and
+  [data/world-economics-21.dataset.yaml](data/world-economics-21.dataset.yaml) (steps 4 and 8).
+- The command line token of tutorial 1 (`DRISHTI_TOKEN`); the AI features have no `drishti.py` command, so the command line here is `curl` on the API.
 
 ## What you will learn
 
@@ -103,7 +105,7 @@ You should see one line for each press. (The same page shows the **server's** la
 
 ## Step 3 · What the model is sent, and who may ask
 
-Before using a feature, know the two gates and the contents. **Gate one**: the BI power (`bi-author` to describe a report, `bi` to ask or explain). **Gate two**: the **AI policy**, per feature and role. And the prompt carries **the dataset's model and the person's own words, nothing else**:
+Before using a feature, know the two gates and the contents. **Gate one**: the BI power (`bi-author` to describe a report, `bi` to ask or explain). **Gate two**: the **AI policy**, per feature and role. And the prompt carries **the names of what the report reads (its model, here `world-economics@1`) and the person's own words, nothing else**:
 
 ```text
 DATASET world-economics: World economics
@@ -134,11 +136,22 @@ You should see it work in step 6: a person the policy does not list is refused b
 
 ## Step 4 · Report from words
 
-Open **Designer**, start a report on **World economics** (as in tutorial 10) and press **Describe a report**.
+**Describe a report**, **Suggest visuals** and the **dataset helper** (step 8) are the **authoring** hooks. In 2.2 they still read a **version 1
+dataset**: asked about a model they answer `DRS-9034` (captured below) until the server's hooks read models. So this step uses the World economics dataset
+in its 2.1 form, [data/world-economics-21.dataset.yaml](data/world-economics-21.dataset.yaml) (one table, the same measures as the model). Add it to your
+workspace: **New item**, kind *dataset*, paste the file, **Create**; or
+
+```text
+$ python3 tools/drishti.py bi item new me docs/tutorials/data/world-economics-21.dataset.yaml
+bi-2d5bf64d9d  dataset  World economics (2.1)  draft in My workspace
+```
+
+(The id differs on your machine.) Open **Designer**, choose **World economics (2.1)** under *Other datasets (version 1)* in **Model or dataset**, give a title and press **Start designing**, then
+**Describe a report**.
 
 ![Describe a report: the box with "GDP by region as a bar chart and the total as a card", the line "The draft passed the report check. Nothing is saved.", the YAML, and Draft it, Use this draft and Close](img/t15/03-describe.jpg)
 
-Type `GDP by region as a bar chart and the total as a card` and press **Draft it**. You should see `The draft passed the report check. Nothing is saved.` and the **YAML of the draft**. What happened: the model (the mock here) was told the report grammar and the dataset model and answered with YAML; Drishti **stripped a code fence, pinned `dataset:` to your dataset, and ran
+Type `GDP by region as a bar chart and the total as a card` and press **Draft it**. You should see `The draft passed the report check. Nothing is saved.` and the **YAML of the draft** (its `dataset:` is your item's id). What happened: the model (the mock here) was told the report grammar and the dataset's names and answered with YAML; Drishti **stripped a code fence, pinned `dataset:` to your dataset, and ran
 the report checker** on it, the same one **Check** and **Save** use. A draft that fails is repaired once (the model is told the problems, names only) and, if it still fails, refused as `DRS-4020` and **not shown**. Press **Use this draft**.
 
 ![The designer after using the draft: a GDP card with 117,327 and a bar chart of GDP for each region](img/t15/04-draft-used.jpg)
@@ -147,13 +160,19 @@ You should see the draft in the designer as a card (`117,327`) and a bar of GDP 
 The API behind the button:
 
 ```text
-POST /api/v1/bi/ai/draft  {"dataset": "file:dataset:world-economics", "request": "GDP by region"}
-200 {"yaml": "rachana: 1\nreport: gdp-by-region\nversion: 1\ntitle: GDP by region\ndataset: file:dataset:world-economics\npages:\n  - id: main\n ...", "valid": true, "problems": [], "dataset": "file:dataset:world-economics", "saved": false}
+$ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
+    -d '{"dataset": "bi-2d5bf64d9d", "request": "GDP by region"}' "$DRISHTI_SERVER/api/v1/bi/ai/draft"
+200 {"yaml":"rachana: 1\nreport: gdp-by-region\nversion: 1\ntitle: GDP by region\ndataset: bi-2d5bf64d9d\npages:\n  - id: main\n    title: Main\n ...", "valid": true, "problems": [], "saved": false}
+$ curl ... -d '{"dataset": "world-economics@1", "request": "GDP by region"}' "$DRISHTI_SERVER/api/v1/bi/ai/draft"
+422 {"code":"DRS-9034","detail":"DRS-9034 no dataset 'world-economics@1' (a catalogue id, a file name such as trades-basic, or the dataset's name)"}
 ```
+
+The second call is the 2.2 limit above: a model is not a dataset to the authoring hooks yet. A draft you use is an ordinary report: point it at a model
+when you finish it (`rachana: 2`, `model: world-economics@1`, the same field and measure names).
 
 ## Step 5 · Ask the data, and explain this number
 
-Open the **World economics** report. Under the toolbar is the question box. Type `GDP by region` and press **Ask**.
+Open the **World economics** report (it reads the model `world-economics@1`). Under the toolbar is the question box. Type `GDP by region` and press **Ask**.
 
 ![Ask the data: the answer as a bar chart and a table of seven regions, "Shown as bar, 7 rows, answered by the engine for you", and a disclosure "The query the model chose"](img/t15/05-ask.jpg)
 
@@ -161,23 +180,59 @@ You should see the answer as a **table** and **the visual that suits it** (Drish
 
 ![The query the model chose, as JSON: fields economies.regionName, measures GDP (USD bn), orderBy GDP descending, limit 200](img/t15/06-ask-query.jpg)
 
-You should see the query: `fields`, `measures`, `filters`, `orderBy`, `limit`. The model chose **names**; the **engine** validated every name, bound every value and ran the query **as you**: your row rules and your masks applied, so two people asking the same question get the answers they may each see. A query the model got wrong is refused by the engine with its code (`DRS-9020`) and shown as "the query the model chose was refused"; a question the model cannot turn into a query is `DRS-4020`, not a guess.
+You should see the query: `fields`, `measures`, `filters`, `orderBy`, `limit`. The model chose **names** (of the report's model); the **engine** validated every name, bound every value and ran it as a **model query** of `world-economics@1` **as you**: your row rules and your masks applied, so two people asking the same question get the answers they may each see. A query the model got wrong is refused by the engine with its code (`DRS-9020`) and shown as "the query the model chose was refused"; a question the model cannot turn into a query is `DRS-4020`, not a guess.
 
 ```text
-POST /api/v1/bi/ai/ask  {"report": "file:report:world-economics", "question": "GDP per capita by region"}
+$ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
+    -d '{"report": "file:report:world-economics", "question": "GDP per capita by region"}' "$DRISHTI_SERVER/api/v1/bi/ai/ask"
 200 {"columns": [{"name": "economies.regionName", ...}, {"name": "GDP per capita (USD)", ...}],
      "rows": [["North America", 86306.87], ["Europe & Central Asia", 34597.99], ["East Asia & Pacific", 13973.21], ...], "rowCount": 7,
+     "meta": {"layer": "columns", "rows": 7, "tables": ["economies"], "masked": [], ...},
      "query": {"fields": ["economies.regionName"], "measures": ["GDP per capita (USD)"], "filters": [], "orderBy": [{"desc": true, "by": "GDP per capita (USD)"}], "limit": 200},
      "visual": "bar", "values": "labels-only", "summary": null}
-POST /api/v1/bi/ai/ask  {"report": "...", "question": "something the mock has no rule for"}
-422 {"code": "DRS-4020", "detail": "the model did not answer with a query"}
+$ curl ... -d '{"report": "file:report:world-economics", "question": "something odd"}' "$DRISHTI_SERVER/api/v1/bi/ai/ask"
+422 {"code": "DRS-4020", "detail": "DRS-4020 the model did not answer with a query"}
 ```
 
-You should see the answer, the query and `"summary": null` (in `labels-only` the model never saw the answer, so it wrote nothing about it). Now **Explain this number**: press the light bulb in the header of the **GDP (USD bn)** card.
+You should see the answer, the query and `"summary": null` (in `labels-only` the model never saw the answer, so it wrote nothing about it). The query
+is an ordinary model query: the same question **without** AI, on the command line, gives the same numbers:
+
+```text
+$ python3 tools/drishti.py bi mq --model world-economics@1 --select economies.regionName --measures "GDP per capita (USD)" --limit 3
+economies.regionName       GDP per capita (USD)
+-------------------------  --------------------
+East Asia & Pacific        13,973.22
+Europe & Central Asia      34,598.00
+Latin America & Caribbean  10,993.23
+3 row(s)  as of 2026-10-13  plan p_eda8a5a73862ba70
+```
+
+and **as YAML** (`bi mq that.yaml`):
+
+```yaml
+mq: 1
+model: world-economics@1
+select: { fields: [economies.regionName], measures: [GDP per capita (USD)] }
+sort: [{ by: GDP per capita (USD), desc: true }]
+limit: 200
+``` Now **Explain this number**: press the light bulb in the header of the **GDP (USD bn)** card.
 
 ![Explain this number: GDP (USD bn) = 117,326.82; Dataset World economics, Measure GDP (USD bn) = sum(economies.gdpUsdBn), Reads economies.gdpUsdBn, Sources economies (economy, macro-store); then the top members by name with their share](img/t15/07-explain.jpg)
 
-You should see the **lineage** (the dataset, the measure's definition, the columns it reads, the sources: the pack kind and connector) and the **breakdown** the engine computed for you: the total, then its main dimensions with their top members and **share** (United States 30,769.7, 26.2%; China 19,498.0, 16.6%). In `labels-only` mode no model is called at all for Explain: it is lineage and arithmetic. Explain says **what a number is made of**, not why it moved over time.
+You should see the **lineage** (what the report reads, the measure's definition in the model, the columns it reads, the sources: the pack kind and connector) and the **breakdown** the engine computed for you: the total, then its main dimensions with their top members and **share** (United States 30,769.7, 26.2%; China 19,498.0, 16.6%). In `labels-only` mode no model is called at all for Explain: it is lineage and arithmetic. Explain says **what a number is made of**, not why it moved over time. The API behind the light bulb, captured:
+
+```text
+$ curl ... -d '{"report": "file:report:world-economics", "page": "world", "visual": "gdp", "measure": "GDP (USD bn)", "state": {}}' "$DRISHTI_SERVER/api/v1/bi/ai/explain"
+200 {"measure": "GDP (USD bn)",
+     "lineage": {"dataset": {"name": "world-economics", "version": 1, "title": "World economics"},
+                 "measure": {"name": "GDP (USD bn)", "expr": "sum(economies.gdpUsdBn)", "description": "Gross domestic product at current prices, USD billions."},
+                 "columns": [{"name": "economies.gdpUsdBn", "type": "decimal", "calculated": false, "expr": null}],
+                 "sources": [{"table": "economies", "kind": "economy", "connector": "macro-store", "mode": "cached"}]},
+     "value": 117326.8175073999,
+     "breakdown": [{"dimension": "economies.name", "members": [{"member": "United States", "value": 30769.7, "share": 26.2}, ...]}, ...]}
+```
+
+(A page that is not the report's is `DRS-9035 the report has no page 'main'`; the World economics report's page is `world`.)
 
 ## Step 6 · The policy says no
 
@@ -229,19 +284,37 @@ before anyone asks the data a question. You should see `OK` or the reason on the
 
 ## Step 8 · Suggestions, plain-words checks and the dataset helper
 
-Three more hooks help an **author** (they need `bi-author`, and the policy features `bi-suggest`, `bi-explain-checks` and `bi-helper`). In the designer, **Suggest visuals** takes a goal in your words and proposes visuals, wells and filters for the report's dataset. Each has passed the report checker and shows the YAML it would add; nothing is applied until you press **Add to this page** (one undoable edit):
+Three more hooks help an **author** (they need `bi-author`, and the policy features `bi-suggest`, `bi-explain-checks` and `bi-helper`). In the designer, on **World economics (2.1)** (step 4: Suggest visuals and the helper read a version 1 dataset in 2.2), **Suggest visuals** takes a goal in your words and proposes visuals, wells and filters for the report's dataset. Each has passed the report checker and shows the YAML it would add; nothing is applied until you press **Add to this page** (one undoable edit):
 
 ![Suggest visuals: three suggestions with their YAML and an Add button](img/t15/09-suggest.jpg)
 
-You should see a bar, a slicer marked *filter* and a card, each with a sentence on why. Press **Add to this page** on one and it appears at the bottom of the canvas, selected; **Undo** takes it back. In the **Check** panel, **Explain in plain words** answers each problem with what it means and what to change:
+You should see a bar, a slicer marked *filter* and a card, each with a sentence on why. Press **Add to this page** on one and it appears at the bottom of the canvas, selected; **Undo** takes it back. In the **Check** panel, **Explain in plain words** answers each problem with what it means and what to change. It works on any report, a report on a
+model too: the picture checks this draft on `world-economics@1`, with a column and a measure the model does not have:
 
-![Check, explained in plain words](img/t15/10-check-explained.jpg)
+```yaml
+rachana: 2
+report: broken
+version: 1
+title: Broken
+model: world-economics@1
+pages:
+  - id: p
+    title: P
+    visuals:
+      - { id: v, type: bar, title: V, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { axis: [economies.nope], values: [Nothing] } }
+```
 
-On the **Model view** of a dataset, **Ask the AI helper** proposes relationships, measures (with descriptions) and column descriptions from the dataset's names and types, never a value. Accept the items one by one; each is written into the YAML and you Save when you are done:
+![Check, explained in plain words: two DRS-9031 problems (no column nope, no measure Nothing), each with what it means and what to change](img/t15/10-check-explained.jpg)
+
+You should see the two `DRS-9031` problems the checker found and, under **Explain in plain words**, a sentence and a fix for each. The API is
+`POST /api/v1/bi/ai/explain-checks {"yaml": "..."}`, which answers `{"valid": false, "problems": [{"code": "DRS-9031", "path": "pages[0].visuals[0].wells.axis", "message": "...", "explain": "...", "fix": "..."}, ...]}`.
+
+On the **Model view** of a version 1 dataset (open **World economics (2.1)**, then *Model view*), **Ask the AI helper** proposes relationships, measures (with descriptions) and column descriptions from the dataset's names and types, never a value. Accept the items one by one; each is written into the YAML and you Save when you are done:
 
 ![The dataset helper: a measure and a column description, each with Accept](img/t15/11-dataset-helper.jpg)
 
-You should see only items that fit the model: a name that is not in it is never offered. The same layer writes the **summary at the top of a subscription's email** ([tutorial 11](11-bi-that-runs-itself.md), step 8). [BI_AI.md sections 9 to 11](../guides/BI_AI.md#9-a-written-summary-at-the-top-of-a-subscriptions-email).
+You should see only items that fit the model: a name that is not in it is never offered. (Asked of a dataset of the model layer, the helper offers nothing,
+`{"items": [], "applied": false}`: in 2.2 measures live in the model, and the model designer has no helper yet.) The same layer writes the **summary at the top of a subscription's email** ([tutorial 11](11-bi-that-runs-itself.md), step 8). [BI_AI.md sections 9 to 11](../guides/BI_AI.md#9-a-written-summary-at-the-top-of-a-subscriptions-email).
 
 ## Next steps
 
@@ -258,4 +331,5 @@ You should see only items that fit the model: a name that is not in it is never 
 | Test connection says `Not OK: ... is not answering` | the address, the port or the network is wrong, or the server is down |
 | Test connection says `(authentication failed ...)` | the key is wrong or missing; the message names the variable to set |
 | `DRS-4020` on Describe | the draft did not pass the report check even after one repair; nothing was changed |
+| `DRS-9034` on Describe or Suggest | the designer is on a model: in 2.2 the authoring hooks read a version 1 dataset (step 4) |
 | a question is answered with a different column than you expect | read **The query the model chose**: the model maps words to names, and you can see which |

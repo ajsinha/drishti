@@ -1,0 +1,73 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Tutorial 15: the World economics dataset in its 2.1 form (a version 1 dataset), for the AI layer's AUTHORING hooks. In 2.2 Describe a report, Suggest
+# visuals and the dataset helper still read a version 1 dataset (on a model they answer DRS-9034 until the server's hooks read models); Ask the data and
+# Explain this number work on the model world-economics@1. Add it to your workspace as a dataset item (New item, kind dataset), or:
+#   python3 tools/drishti.py bi item new <your workspace> docs/tutorials/data/world-economics-21.dataset.yaml
+
+rachana: 1
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
+dataset: world-economics-21
+version: 1
+title: World economics (2.1)
+description: >-
+  Output, growth, prices, jobs and population for about 200 economies (World Bank, latest year published), by country, World Bank region and income group.
+  The country is an ISO 3166-1 alpha-3 code, so a map visual can shade it.
+tags: [tutorial, economics, real-data]
+
+tables:
+  economies:
+    source: { connector: macro-store, kind: economy }          # pack: economics
+    mode: cached
+    columns:
+      name:         string
+      iso3:         string                                      # the country's ISO 3166-1 alpha-3 code: a map's location
+      regionName:   string                                      # the World Bank region
+      incomeName:   string                                      # the World Bank income group
+      gdpUsdBn:     { type: decimal, format: amount0 }
+      gdpPerCapita: { type: decimal, format: amount0 }
+      growth:       { type: decimal, format: pc2 }
+      inflation:    { type: decimal, format: pc2 }
+      unemployment: { type: decimal, format: pc2 }
+      populationM:  { type: decimal, format: price2 }
+
+measures:
+  Economies:
+    expr: "count(economies)"
+    description: How many economies.
+  GDP (USD bn):
+    expr: "sum(economies.gdpUsdBn)"
+    format: amount0
+    description: Gross domestic product at current prices, USD billions.
+  Population (m):
+    expr: "sum(economies.populationM)"
+    format: price2
+    description: Population, millions.
+  GDP per capita (USD):
+    expr: "ratio(sum(economies.gdpUsdBn), sum(economies.populationM)) * 1000"
+    format: amount0
+    description: "GDP over population: for a region, its total GDP over its total population."
+  Average growth:
+    expr: "avg(economies.growth)"
+    format: pc2
+    description: "The simple average of the economies' real GDP growth, % a year."
+  Average inflation:
+    expr: "avg(economies.inflation)"
+    format: pc2
+    description: "The simple average of consumer-price inflation, % a year."
+  Average unemployment:
+    expr: "avg(economies.unemployment)"
+    format: pc2
+    description: "The simple average of the unemployment rate, % of the labour force."

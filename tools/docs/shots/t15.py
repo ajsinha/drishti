@@ -19,7 +19,7 @@ Admin, AI with a Test connection for each provider, a report drafted from words,
 person it does not list."""
 from __future__ import annotations
 
-from _bi import WORLD, bi, clean_items, open_report, quiet_inbox, start_design, submit_design
+from _bi import bi, clean_items, open_report, quiet_inbox, start_design, submit_design
 from _tut import OUT, ROOT, SERVER_ENV, elem_shot, go, login  # noqa: F401
 from shotlib import Ctx, register
 from t13 import as_, people
@@ -42,6 +42,15 @@ def start_servers(work):
     (ai / "fast.yaml").write_text((ROOT / "config" / "ai" / "groq.yaml.example").read_text().replace("enabled: true", "enabled: false"))
     return shotlib.start_servers(work, {**SERVER_ENV, "DRISHTI_AI_ENABLED": "true", "DRISHTI_AI_DIR": str(ai), "DRISHTI_AI_DEFAULT_MODEL": "mock/m", "SPRING_APPLICATION_JSON": AI_POLICY})
 WORLD_REPORT = "file:report:world-economics"
+WORLD_V1 = "World economics (2.1)"
+WORLD_21 = ROOT / "docs" / "tutorials" / "data" / "world-economics-21.dataset.yaml"
+
+
+def world_v1(c: Ctx) -> str:
+    """The authoring hooks (describe, suggest, the dataset helper) still read a version 1 dataset in 2.2: the 2.1 World economics dataset as an item of
+    the workspace, made afresh; returns its id."""
+    clean_items(c, WORLD_V1)
+    return bi(c, "POST", "/workspaces/me/items", {"kind": "dataset", "title": WORLD_V1, "body": WORLD_21.read_text()})["id"]
 
 
 @shot("01-admin-ai.jpg", also=("02-test-connection.jpg",))
@@ -63,7 +72,7 @@ def describe(c: Ctx):
     login(c, height=900)
     quiet_inbox(c)
     clean_items(c, "Drafted from words")
-    start_design(c, WORLD, "Drafted from words")
+    start_design(c, world_v1(c), "Drafted from words")
     submit_design(c)
     c.page.click("[data-ai-draft]")
     c.page.fill("[data-ai-request]", "GDP by region as a bar chart and the total as a card")
@@ -107,7 +116,7 @@ def suggest_and_check(c: Ctx):
     login(c, height=900)
     quiet_inbox(c)
     clean_items(c, "Suggested visuals")
-    start_design(c, WORLD, "Suggested visuals")
+    start_design(c, world_v1(c), "Suggested visuals")
     submit_design(c)
     c.page.click("[data-ai-suggest]")
     c.page.fill("[data-ai-goal]", "where the GDP sits, and a way to filter by income group")
@@ -118,7 +127,7 @@ def suggest_and_check(c: Ctx):
     c.page.reload()                                              # a fresh page, so the YAML tab holds what is typed
     c.page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
     c.page.wait_for_selector("[data-ai-suggest]:not([hidden])", timeout=15000)
-    broken = ("rachana: 1\nreport: broken\nversion: 1\ntitle: Broken\ndataset: world-economics\npages:\n  - id: p\n    title: P\n    visuals:\n"
+    broken = ("rachana: 2\nreport: broken\nversion: 1\ntitle: Broken\nmodel: world-economics@1\npages:\n  - id: p\n    title: P\n    visuals:\n"
               "      - { id: v, type: bar, title: V, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { axis: [economies.nope], values: [Nothing] } }\n")
     c.page.evaluate("(t) => window.drishtiBi.design.loadYaml(t)", broken)
     c.page.wait_for_timeout(900)
@@ -135,9 +144,7 @@ def dataset_helper(c: Ctx):
     """The dataset helper on the Model view of a copy of the world dataset: a measure and two descriptions, each with its own Accept."""
     login(c, height=900)
     quiet_inbox(c)
-    clean_items(c, "World economics (helper)")
-    shipped = bi(c, "GET", "/items/" + WORLD)
-    made = bi(c, "POST", "/workspaces/me/items", {"kind": "dataset", "title": "World economics (helper)", "body": shipped["body"]})
+    made = {"id": world_v1(c)}
     c.page.set_viewport_size({"width": 1280, "height": 1180})
     c.page.goto(c.base + "/bi/m/" + made["id"])
     c.page.wait_for_selector("[data-model-root][data-ready=yes]", timeout=30000)
