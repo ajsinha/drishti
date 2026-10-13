@@ -132,6 +132,6 @@ def test_the_sample_data_the_tutorials_use_is_in_the_repository():
     for name in ("schemas/quote.schema.json", "connectors/desk-quotes.yaml", "connectors/desk-ledger.yaml", "desk-book.sutra.yaml", "desks/desk-rates.json"):
         assert (data / name).is_file(), name
     for name in ("slicer-kinds.report.yaml", "trades-daily.dataset.yaml", "smtp-catcher.py", "trades-model.dataset.yaml", "trades-report.report.yaml", "notional-by-desk.python.yaml",
-                 "desk-python.report.yaml", "two-datasets.report.yaml", "wrong-link.report.yaml", "cp-pnl-exposure.dataset.yaml", "counterparty-view.report.yaml", "mtm-vs-exposure.python.yaml",
-                 "cp-pnl-exposure-py.dataset.yaml", "two-extracts.notebook.yaml", "ai/mock.yaml", "ai/local-model.yaml", "pools.py"):
+                 "desk-python.report.yaml", "cp-risk.model.yaml", "cp-risk-view.report.yaml", "cp-risk-extracts.notebook.yaml", "cp-table.python.yaml",
+                 "cp-table.dataset.yaml", "ai/mock.yaml", "ai/local-model.yaml", "pools.py"):
         assert (data / name).is_file(), name

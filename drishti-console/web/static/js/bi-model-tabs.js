@@ -72,6 +72,7 @@
   /** The ExpressionEditor on a measure's formula: the model's fields and measures, the server's check against this draft, Try it on the saved draft. */
   M.exprEditor = (input, onCommit) => B.exprEditor(input, {
     scope: 'aggregate', label: 'Formula', fields: M.exprFields, measures: M.exprMeasures, onCommit,
+    known: () => new Set(Object.keys(M.doc.measures || {}).concat(M.exprFields().map((f) => f.name))),
     target: () => ({ model: M.doc.model + '@' + major(), yaml: M.yaml }),
     tryIt: (expr) => {
       if (M.dirty) { return Promise.reject(new Error('Try it reads the saved draft: Save first (Ctrl+S), then Try it.')); }

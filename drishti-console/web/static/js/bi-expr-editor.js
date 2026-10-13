@@ -235,7 +235,11 @@
     }
     function drawProblems(r) {
       B.clear(probs);
-      const list2 = (r && r.problems) || [];
+      // the server checks against the saved item: a measure or field this page has but has not saved yet is not "not found" (opts.known names them)
+      const known = opts.known ? opts.known() : null;
+      const unsaved = (p) => p.code === 'DRS-9152' && known && /'([^']+)'/.test(p.message || '') && known.has(/'([^']+)'/.exec(p.message)[1]);
+      const list2 = ((r && r.problems) || []).filter((p) => !unsaved(p));
+      if (r && r.problems && list2.length < r.problems.length && !list2.some((p) => (p.level || 'error') === 'error')) { r = Object.assign({}, r, { valid: true, pending: true }); }
       input.setAttribute('aria-invalid', list2.some((p) => (p.level || 'error') === 'error') ? 'true' : 'false');
       list2.forEach((p) => {
         const repl = p.replacement || (p.fix && typeof p.fix === 'object' ? p.fix.expr || p.fix.text : '') || fixed(r, p);
@@ -249,7 +253,7 @@
           p.code ? h('strong', { text: p.code + ' ' }) : null, p.message || '', fixWords ? h('span', { class: 'text-muted-d', text: ' ' + fixWords }) : null, btn ? ' ' : null, btn));
       });
       if (r && r.valid && !list2.length) {
-        probs.appendChild(h('li', { class: 'bi-ok bi-xe-ok', 'data-xe-ok': '' }, B.icon('check2'), ' Checks clean' + (r.type ? ': gives ' + (r.type.name || r.type) : '') + '.'));
+        probs.appendChild(h('li', { class: 'bi-ok bi-xe-ok', 'data-xe-ok': '' }, B.icon('check2'), (r.pending ? ' Checks clean as far as the saved draft goes: save to check the names you added since' : ' Checks clean' + (r.type ? ': gives ' + (r.type.name || r.type) : '')) + '.'));
       }
     }
     function changed() { drawChips(); validate(); if (opts.onInput) { opts.onInput(input.value); } }

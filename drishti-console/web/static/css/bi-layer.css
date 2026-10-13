@@ -142,7 +142,7 @@
 .bi-md-persp { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .3rem .6rem; margin: 0 0 .5rem; }
 .bi-md-persp summary { cursor: pointer; min-height: 2.2rem; display: flex; align-items: center; gap: .4rem; }
 .bi-md-persp fieldset { border: 0; padding: 0; margin: .4rem 0; min-width: 0; }
-.bi-md-persp legend, .bi-lw-derive fieldset legend { font-size: .85rem; font-weight: 600; color: var(--d-muted); padding: 0; }
+.bi-md-persp legend, .bi-lw-derive fieldset legend, .bi-roles-box legend, [data-hidden-for] legend { font-size: .85rem; font-weight: 600; color: var(--d-muted); padding: 0; }
 /* the dataset wizard, version 2: the step bar's buttons, worked-out columns, the navigation */
 .bi-lw-steps li { padding: 0; }
 .bi-lw-stepbtn { background: none; border: 0; color: inherit; font: inherit; padding: .3rem .7rem; cursor: pointer; min-height: 2rem; border-radius: 999px; }

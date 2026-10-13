@@ -65,6 +65,29 @@
       return f;
     });
   }
+  /**
+   * A reader who may view the report but not read its model (BI_DESIGN.md 5.3, the consumer envelope): the model's description is not theirs to see, so the
+   * report's own envelope (`GET /reports/{id}/envelope`: the fields, measures and filters its visuals can ask) stands in for it, and every visual asks the
+   * server's report query, which answers only inside the envelope (as the reader: their rules and masks).
+   */
+  function fieldsOrEnvelope() {
+    return fields().catch((e) => {
+      if (!S.reportId || !/DRS-9151/.test(String(e.code || '') + ' ' + String(e.message || ''))) { throw e; }
+      return api('GET', '/reports/' + B.id2path(S.reportId) + '/envelope').then((env) => {
+        const tables = {};
+        (env.fields || []).concat(env.filters || []).forEach((f) => {
+          const [alias, ...rest] = String(f).split('.');
+          const t = (tables[alias] = tables[alias] || { name: alias, kind: 'fact', columns: [] });
+          if (rest.length && !t.columns.some((c) => c.name === rest.join('.'))) { t.columns.push({ name: rest.join('.'), type: 'string' }); }
+        });
+        S.viaReport = true;
+        S.fields = { id: '', title: 'This report', tables: Object.values(tables), measures: (env.measures || []).map((n) => ({ name: n })), hierarchies: {}, perspectives: {},
+          model: { ref: S.ref, implicit: false, envelope: true } };
+        S.idx = B.index(S.fields);
+        return S.fields;
+      });
+    });
+  }
   /** The report's own measures (`measures:` in its YAML, spec 4.2) in the Fields shape, marked local, so wells, the index and the queries know them. */
   function withLocal(report) {
     if (!S.fields) { return; }
@@ -125,7 +148,7 @@
           if (!S.ref) { return r; }
           S.reportId = it.id;
           S.report = r.report;
-          return localOf(it.body).then((m) => { S.report.measures = m; return fields(); }).then((f) => { withLocal(S.report); return Object.assign(clean(r), { dataset: f }); });
+          return localOf(it.body).then((m) => { S.report.measures = m; return fieldsOrEnvelope(); }).then((f) => { withLocal(S.report); return Object.assign(clean(r), { dataset: f }); });
         }).catch(() => r) : r));
       }
       return p;
@@ -134,7 +157,7 @@
     if (path === '/reports/validate') { return api(method, path, body).then((r) => (r.report && body && /^(measures|perspective):/m.test(body.yaml || '') ? localOf(body.yaml).then((m) => { r.report.measures = m; if (S.perspective) { r.report.perspective = S.perspective; } return clean(r); }) : clean(r))); }
     if (/^\/reports\/dataset\?ref=/.test(path)) { return fields(); }
     if (path === '/reports/query') { return ask(body.report, body.page, body.visual, body.state); }
-    if (/^\/reports\/[^/]+\/query$/.test(path) && S.report) { return ask(S.report, body.page, body.visual, body.state); }
+    if (/^\/reports\/[^/]+\/query$/.test(path) && S.report) { return S.viaReport ? api.apply(this, arguments) : ask(S.report, body.page, body.visual, body.state); }
     if (/^\/datasets\/.*\/query$/.test(path) && body && (body.fields || []).length === 1 && !(body.measures || []).length) {
       return B.mq.values(S.ref, body.fields[0], body.limit).then((a) => ({ columns: a.columns, rows: a.rows, rowCount: a.rowCount }));
     }
