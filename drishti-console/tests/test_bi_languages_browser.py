@@ -23,6 +23,7 @@ Skipped when Playwright, Chromium or the built server jar is missing, or a scrat
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -35,8 +36,14 @@ from bi_stack import listening  # noqa: E402
 w1.SERVER_PORT, w1.CONSOLE_PORT = 18912, 17912
 w1.SERVER, w1.CONSOLE_URL = f"http://127.0.0.1:{w1.SERVER_PORT}", f"http://127.0.0.1:{w1.CONSOLE_PORT}"
 CONSOLE_URL = w1.CONSOLE_URL
+CAPTURES = os.environ.get("DRISHTI_CAPTURES", "")                 # a folder: the texts the guides quote (YAML written, SQL shown) are kept there
 SHOTS = os.environ.get("DRISHTI_SHOTS", "")                       # a folder: the documentation's pictures are taken there too (docs/guides/EXPRESSIONS.md)
 sign_in, clean, fetch = w1.sign_in, w1.clean, w1.fetch
+
+
+def capture(name, text):
+    if CAPTURES:
+        Path(CAPTURES, name).write_text(text)
 
 
 def shoot(page, selector, name, max_height=760):
@@ -127,9 +134,11 @@ def test_the_dataset_wizard_makes_a_derived_dataset_without_yaml(browser):
     page.fill("[data-title]", "Live trades by desk")
     page.locator("[data-title]").press("Tab")
     page.click("details:has([data-yaml]) summary")
+    expect(page.locator("[data-yaml]")).to_contain_text("dataset: live-trades-by-desk", timeout=10000)        # the name follows the title until it is typed
     shoot(page, '[data-step="save"]', "wizard-save")
     text = page.locator("[data-yaml]").text_content()
-    for line in ("extends: pack.trading.trade@^1", "where: status == 'Live'", "keep: latest by tradeDate", "notionalM: {", "group:", "trades: count"):
+    capture("wizard.yaml", text)
+    for line in ("dataset: live-trades-by-desk", "extends: pack.trading.trade@^1", "where: status == 'Live'", "keep: latest by tradeDate", "notionalM: {", "group:", "trades: count"):
         assert line in text, (line, text)
     assert "book" not in text.split("where:")[0]                                               # the unticked column is not in the subset
     page.click("[data-save]")
@@ -193,6 +202,7 @@ def test_the_model_designer_writes_expressions_field_properties_and_perspectives
     shoot(page, "[data-fields-pane]", "model-fields-tab")
     page.wait_for_function("() => window.drishtiModel.yaml.indexOf('measures: [Sum of mtm]') >= 0", timeout=10000)          # the YAML follows each edit once Check has run
     text = w1.yaml_tab(page)
+    capture("model-fields.yaml", text)
     for line in ("trade.mtm: {description:", "folder: Risk", "trade.book: {hidden: true}", "desk-view: {title: Desk view, fields: [trade.desk], measures: [Sum of mtm]}",
                  "MTM per trade: {expr: measure('Sum of mtm') / count(trade.tradeId)}"):
         assert line in text, (line, text)
@@ -311,6 +321,7 @@ def test_a_report_on_a_model_has_its_own_measures_and_the_query_as_mq_or_sql(bro
     expect(page.locator("[data-visual-query-text]")).to_contain_text("define:")
     page.click('[data-qp-view="sql"]')
     sql = page.locator("[data-visual-query-text]").text_content()
+    capture("query-panel.sql", sql)
     assert sql.startswith("SELECT trade.desk") and "FROM   trade" in sql and "GROUP  BY trade.desk" in sql and "measure('Sum of mtm') / 1000" in sql, sql
     shoot(page, "[data-visual-query]", "query-panel-sql")
     page.click("[data-save]")

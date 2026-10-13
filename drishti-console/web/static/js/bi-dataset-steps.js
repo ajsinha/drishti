@@ -332,8 +332,8 @@
       box.appendChild(h('label', { class: 'bi-checkrow' }, x, ' ' + n));
     });
   };
-  q('[data-title]').addEventListener('change', (e) => { L.W.title = e.target.value.trim(); if (!q('[data-name]').value) { q('[data-name]').value = B.slug(L.W.title); L.W.name = q('[data-name]').value; } L.keep(); L.check('save').catch(() => {}); });
-  q('[data-name]').addEventListener('change', (e) => { L.W.name = e.target.value.trim(); L.keep(); L.check('save').catch(() => {}); });
+  q('[data-title]').addEventListener('change', (e) => { L.W.title = e.target.value.trim(); if (!q('[data-name]').value || !L.W.nameTouched) { q('[data-name]').value = B.slug(L.W.title); L.W.name = q('[data-name]').value; } L.keep(); L.check('save').catch(() => {}); });
+  q('[data-name]').addEventListener('change', (e) => { L.W.name = e.target.value.trim(); L.W.nameTouched = !!L.W.name; L.keep(); L.check('save').catch(() => {}); });
 
   L.start();
 })();
