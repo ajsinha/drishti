@@ -469,6 +469,17 @@ class LanguagesApiTest {
         JsonNode envelope = ok(call("GET", "/api/v1/bi/reports/file:report:lang-guarded-report/envelope", reader("rita"), null));
         assertThat(envelope.path("fields").toString()).contains("trades.desk");
         assertThat(envelope.path("measures").toString()).contains("Notional").doesNotContain("Trades");
+        var notOwner = call("POST", "/api/v1/bi/models/lang-model@1/preview-as", reader("rita"), Map.of("role", "bi-analyst")).andReturn().getResponse();
+        assertThat(notOwner.getStatus()).as("only a bi-admin or the owner previews as another role").isEqualTo(403);
+        JsonNode asAnalyst = ok(call("POST", "/api/v1/bi/models/lang-model@1/preview-as", admin(), Map.of("role", "bi-analyst",
+                "query", Map.of("select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional", "MTM"))))));
+        assertThat(asAnalyst.path("previewAs").path("role").asText()).isEqualTo("bi-analyst");
+        assertThat(asAnalyst.path("rows").size()).as(asAnalyst.toString()).isEqualTo(3);
+        assertThat(asAnalyst.path("meta").path("masked").toString()).as("the analyst lacks raw: MTM (over the masked mtm) masked").contains("MTM");
+        JsonNode asDeskHead = ok(call("POST", "/api/v1/bi/models/lang-model@1/preview-as", admin(), Map.of("role", "desk-head",
+                "query", Map.of("select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional"))))));
+        assertThat(asDeskHead.path("rows").size()).as("no user attributes: desk in user.desks gives no rows").isZero();
+        assertThat(ok(call("GET", "/api/v1/admin/audit?limit=50", admin(), null)).findValuesAsText("action")).contains("bi-model-preview-as");
         JsonNode opened = ok(call("GET", "/api/v1/bi/reports/file:report:lang-guarded-report", reader("hana"), null));
         assertThat(opened.path("valid").asBoolean()).as("a reader of the report opens it without read on the model: " + opened.path("problems")).isTrue();
         assertThat(opened.path("dataset").path("envelope").asBoolean()).as("the Fields pane shows the report's envelope").isTrue();
