@@ -413,6 +413,12 @@ class LanguagesApiTest {
             hanaTrades += r.get(1).asInt();
         }
         assertThat(hanaTrades).as("the base's rows were asked as hana: DESK-A only").isEqualTo(8);
+        // one as-of rule: without a date, the Python dataset's answer is as of the date its base was asked at, as the base model's own answer is
+        Map<String, Object> latest = Map.of("mq", 1, "model", "lang-bucket-view@1", "select", Map.of("fields", List.of("trades.bucket"), "measures", List.of("Trades")));
+        String pyAsOf = ok(call("POST", "/api/v1/bi/mq", reader("rita"), latest)).path("meta").path("asOf").asText();
+        String baseAsOf = ok(call("POST", "/api/v1/bi/mq", reader("rita"), Map.of("mq", 1, "model", "lang-model@1", "select", Map.of("measures", List.of("Trades")))))
+                .path("meta").path("asOf").asText();
+        assertThat(pyAsOf).as("the Python dataset and its base agree on the as-of date").isEqualTo(baseAsOf).isEqualTo(DAY);
         JsonNode lineage = ok(call("GET", "/api/v1/bi/lineage/lang-bucket-view@1", reader("rita"), null));
         assertThat(lineage.path("datasets").path("trades").toString()).contains("lang-bucketed").contains("lang-trade").contains("pack-kind").contains("trade");
         assertThat(lineage.path("problems").size()).isZero();

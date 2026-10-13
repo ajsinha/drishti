@@ -188,14 +188,37 @@ final class DatasetSources implements StagedTables {
     private Answer fromPython(String table, DatasetDef d) {
         DatasetDef.Source s = d.source();
         Map<String, QueryService.Result> inputs = new LinkedHashMap<>();
+        java.time.LocalDate[] asOf = {null};
         for (Map.Entry<String, JsonNode> e : s.inputs().entrySet()) {
             MqService.Bound inner = inner(table + "/" + e.getKey(), modelOf(e.getValue()));
-            inputs.put(e.getKey(), guarded(d, inner, () -> catalog.mq().run(inner, query(e.getValue(), modelOf(e.getValue())), false, false).shown()));
+            inputs.put(e.getKey(), guarded(d, inner, () -> {
+                MqService.Ran ran = catalog.mq().run(inner, query(e.getValue(), modelOf(e.getValue())), false, false);
+                asOf[0] = later(asOf[0], asOfOf(ran));
+                return ran.shown();
+            }));
         }
         Map<String, String> declared = new LinkedHashMap<>();
         d.columns().values().forEach(c -> declared.put(c.name(), c.type()));
         QueryService.Result r = catalog.datasets().transform(reader, view.key() + "/" + table, d.name(), s.python(), inputs, s.pythonParams(), declared, fingerprint());
-        return new Answer(r, columns(table, d, r, "the Transform"), outerDate());
+        return new Answer(r, columns(table, d, r, "the Transform"), asOf[0] != null ? asOf[0] : outerDate());   // one as-of rule: the date its inputs were asked at
+    }
+
+    /** The date an inner answer is as of, by the rule a model's own answer uses (MqService meta.asOf): the last date its rows came from, else the asked date. */
+    private static java.time.LocalDate asOfOf(MqService.Ran ran) {
+        QueryService.Meta m = ran.shown().meta();
+        if (m != null && !m.dates().isEmpty()) {
+            Object last = m.dates().get(m.dates().size() - 1);
+            try {
+                return last instanceof java.time.LocalDate l ? l : java.time.LocalDate.parse(String.valueOf(last));
+            } catch (java.time.format.DateTimeParseException e) {
+                // not a day: the asked date
+            }
+        }
+        return ran.compiled().asOf();
+    }
+
+    private static java.time.LocalDate later(java.time.LocalDate a, java.time.LocalDate b) {
+        return a == null ? b : b == null || !b.isAfter(a) ? a : b;
     }
 
     private static String modelOf(JsonNode q) {
@@ -249,7 +272,12 @@ final class DatasetSources implements StagedTables {
         }
         ModelQuery q = new ModelQuery(1, baseRef(d), Map.of(), fields, List.of(), List.of(), List.of(), timeOf(), List.of(), catalog.datasets().maxRows(), null, null, ModelQuery.ROWS,
                 Map.of(), ModelQuery.Options.DEFAULT);
-        QueryService.Result rows = guarded(d, base, () -> catalog.mq().run(base, q, false, false).shown());
+        java.time.LocalDate[] asOf = {null};
+        QueryService.Result rows = guarded(d, base, () -> {
+            MqService.Ran ran = catalog.mq().run(base, q, false, false);
+            asOf[0] = asOfOf(ran);
+            return ran.shown();
+        });
         rows = renamed(rows, alias);
         QueryService.Result r = rows;
         for (Map.Entry<String, DatasetDef.PyColumn> e : d.derivation().python().entrySet()) {
@@ -258,7 +286,7 @@ final class DatasetSources implements StagedTables {
             r = catalog.datasets().transform(reader, view.key() + "/" + table + "/" + e.getKey(), d.name(), e.getValue().item(), inputs, Map.of("column", e.getKey(),
                     "inputs", e.getValue().inputs()), new LinkedHashMap<>(declared), fingerprint());
         }
-        return new Answer(r, columns(table, d, r, "the Python columns"), outerDate());
+        return new Answer(r, columns(table, d, r, "the Python columns"), asOf[0] != null ? asOf[0] : outerDate());
     }
 
     private ModelQuery.Time timeOf() {
