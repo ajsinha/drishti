@@ -56,8 +56,7 @@ public final class ModelFields implements Fields {
     /** The fields of a model bound to the reader; {@code alias} is the dataset whose row is in context (row and rule scope), or null. */
     public static ModelFields of(MqService.Bound b, String alias, Set<String> roles) {
         ModelView v = b.view();
-        Set<String> hidden = new LinkedHashSet<>();
-        v.datasets().forEach((a, r) -> hiddenOf(a, r, roles, hidden));
+        Set<String> hidden = new LinkedHashSet<>(b.security().hidden().isEmpty() ? ObjectSecurity.hidden(v, roles) : b.security().hidden());
         String current = alias != null && v.flat().tables().containsKey(alias) ? alias : null;
         if (current == null && alias == null && v.flat().tables().size() == 1) {
             current = v.flat().tables().keySet().iterator().next();
@@ -99,10 +98,8 @@ public final class ModelFields implements Fields {
 
     @Override
     public Optional<String> measure(String nameOrId) {
-        if (flat.measures().containsKey(nameOrId)) {
-            return Optional.of(nameOrId);
-        }
-        return Optional.ofNullable(ids.get(nameOrId));
+        String name = flat.measures().containsKey(nameOrId) ? nameOrId : ids.get(nameOrId);
+        return name == null || hidden.contains(ObjectSecurity.MEASURE + name) ? Optional.empty() : Optional.of(name);
     }
 
     @Override
@@ -116,7 +113,7 @@ public final class ModelFields implements Fields {
                 }
             }
         }));
-        out.addAll(flat.measures().keySet());
+        flat.measures().keySet().stream().filter(m -> !hidden.contains(ObjectSecurity.MEASURE + m)).forEach(out::add);
         return out;
     }
 }

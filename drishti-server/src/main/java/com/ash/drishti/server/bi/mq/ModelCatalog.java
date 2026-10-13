@@ -187,6 +187,101 @@ public final class ModelCatalog {
     }
 
     /**
+     * The model a published consumer (a report) is bound to, for its reader (docs/architecture/BI_DESIGN.md section 5.3): with read on the model, free; without
+     * it, a reader who may view the published report gets the model limited to the report's {@link Envelope} (their own row rules and masks still apply).
+     */
+    public MqService.Bound bindVia(Principal p, String ref, String consumerId) {
+        try {
+            return bind(p, ref);
+        } catch (MqException e) {
+            if (consumerId == null || consumerId.isBlank() || !"DRS-9151".equals(e.problems().get(0).code())) {
+                throw e;
+            }
+            BiStore.Item c;
+            try {
+                c = bi.readableItem(p, consumerId);
+            } catch (DrishtiException x) {
+                throw e;
+            }
+            if (!"report".equals(c.kind()) || !c.isPublished()) {
+                throw e;
+            }
+            com.ash.drishti.server.bi.report.Report rep = com.ash.drishti.server.bi.report.ReportParser.parse(bi.publishedBody(c)).report();
+            Found f = rep == null || rep.model() == null ? null : findPublished(ref);
+            if (f == null) {
+                throw e;
+            }
+            return bound(p, f).within(Envelope.of(c.id(), rep, f.view()));
+        }
+    }
+
+    /** The published model a reference names, whoever reads it (only a consumer's envelope uses it). */
+    private Found findPublished(String ref) {
+        Semver.Ref r = Semver.Ref.parse(ref);
+        if (r == null) {
+            return null;
+        }
+        Found best = null;
+        for (BiStore.Item i : bi.publishedOfKind("model")) {
+            String body = bi.publishedBody(i);
+            ModelDefParser.Result parsed = ModelDefParser.parse(body);
+            ModelDef m = parsed.model();
+            if (m == null || !(i.id().equals(r.name()) || i.id().equals("file:model:" + r.name()) || m.name().equals(r.name())) || !r.range().matches(Semver.parse(m.version()))
+                    || "retired".equals(m.lifecycle())) {
+                continue;
+            }
+            if (best == null || Semver.parse(m.version()).compareTo(Semver.parse(best.view().def().version())) > 0) {
+                best = new Found(view(i.id(), m, parsed, body), i);
+            }
+        }
+        return best;
+    }
+
+    /**
+     * Impact analysis from envelopes (docs/architecture/BI_DESIGN.md sections 5.3 and 7): the consumers of the model that use a field or a measure (reports by
+     * their envelopes; other consumers are listed as {@code unknown} use), as far as the caller may see them.
+     */
+    public Map<String, Object> impact(Principal p, String ref, String fieldOrMeasure) {
+        Found f = find(p, ref);
+        List<Map<String, Object>> uses = new ArrayList<>();
+        List<Map<String, Object>> unknown = new ArrayList<>();
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> consumersSeen = (List<Map<String, Object>>) usedBy(p, ref).get("consumers");
+        for (Map<String, Object> c : consumersSeen) {
+            if (!"report".equals(c.get("kind"))) {
+                unknown.add(c);
+                continue;
+            }
+            BiStore.Item item = bi.readableItem(p, String.valueOf(c.get("id")));
+            String body = item.isPublished() ? bi.publishedBody(item) : bi.bodyFor(p, item);
+            com.ash.drishti.server.bi.report.Report rep = com.ash.drishti.server.bi.report.ReportParser.parse(body).report();
+            if (rep != null && Envelope.of(item.id(), rep, f.view()).uses(fieldOrMeasure)) {
+                uses.add(c);
+            }
+        }
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("model", f.view().id());
+        m.put("target", fieldOrMeasure);
+        m.put("consumers", uses);
+        m.put("unknown", unknown);
+        return m;
+    }
+
+    /** The envelope of a report the caller may read ({@code GET /bi/reports/{id}/envelope}): what its readers without read on the model may ask. */
+    public Map<String, Object> envelope(Principal p, String reportId) {
+        BiStore.Item item = bi.readableItem(p, reportId);
+        if (!"report".equals(item.kind())) {
+            throw new DrishtiException(ErrorCode.BI_INVALID, "'" + reportId + "' is not a report");
+        }
+        com.ash.drishti.server.bi.report.Report rep = com.ash.drishti.server.bi.report.ReportParser.parse(item.isPublished() ? bi.publishedBody(item) : bi.bodyFor(p, item)).report();
+        if (rep == null) {
+            throw new DrishtiException(ErrorCode.REPORT_INVALID, "the report has errors");
+        }
+        ModelView v = rep.model() == null ? null : find(p, rep.model()).view();
+        return Envelope.of(item.id(), rep, v).toMap();
+    }
+
+    /**
      * The model of a dataset item a consumer already holds (a report's dataset, an extract's, an alert's), bound to the caller: the implicit model of a
      * {@code rachana: 2} dataset, else the compatibility reader's model. Whether the caller may reach the item was the consumer's decision (a published report
      * reads its dataset with its publisher's grants); the caller's own row rules and masks still apply.
@@ -209,12 +304,7 @@ public final class ModelCatalog {
                 return datasets.queryModel(p, v.id(), v.key(), ds, v.hash() + "|" + salt(v.flat(), ds), q, explain, staged);
             };
         }
-        java.util.Set<String> hidden = new java.util.LinkedHashSet<>();
-        v.datasets().forEach((alias, r) -> {
-            if (r != null && r.def().security().hiddenRoles().stream().anyMatch(who.roles()::contains)) {
-                r.def().security().hiddenColumns().forEach(col -> hidden.add(alias + "." + col));
-            }
-        });
+        java.util.Set<String> hidden = ObjectSecurity.hidden(v, who.roles());
         com.ash.drishti.server.bi.plan.SecuritySignature.Reader security = new com.ash.drishti.server.bi.plan.SecuritySignature.Reader(who.user(), who.enforce(), who.roles(),
                 who.attributes(), who.masks(), who.denied(), hidden);
         return new MqService.Bound(v, run, ctx, security, () -> generation(p, v));
@@ -578,7 +668,7 @@ public final class ModelCatalog {
         }
         if (published != null) {
             ModelDef was = ModelDefParser.parse(published).model();
-            String why = was == null ? null : Contracts.models(was, r.model()).refusal();
+            String why = was == null ? null : Contracts.models(was, r.model(), resolveAll(was, new ArrayList<>()), resolved).refusal();
             if (why != null) {
                 throw new DrishtiException(ErrorCode.LAYER_MODEL_BREAKING, "'" + i.title() + "' cannot be published: " + why);
             }
@@ -700,9 +790,26 @@ public final class ModelCatalog {
 
     /** What a designer, an AI or a client needs to write a query on the model, as the caller sees it: masked fields marked, hidden ones absent. */
     public Map<String, Object> describe(Principal p, String ref) {
+        return describe(p, ref, null);
+    }
+
+    /**
+     * As {@link #describe(Principal, String)}; {@code perspective}: only the fields and measures of that perspective of the model (an unknown one is
+     * {@code DRS-9153}). Fields and measures hidden from the caller ({@code hidden-for}) are absent; each carries the model's field properties.
+     */
+    public Map<String, Object> describe(Principal p, String ref, String perspective) {
         Found f = find(p, ref);
         ModelView v = f.view();
         QueryService.Caller who = datasets.caller(p, v.flat());
+        Set<String> hiddenFor = ObjectSecurity.hidden(v, who.roles());
+        ModelDef.Perspective view = null;
+        if (perspective != null && !perspective.isBlank()) {
+            view = v.def().semantics().perspectives().get(perspective);
+            if (view == null) {
+                throw new MqException(MqException.Problem.of("DRS-9153", "perspective", "the model has no perspective '" + perspective + "' (it has "
+                        + v.def().semantics().perspectives().keySet() + ")"));
+            }
+        }
         Map<String, Object> m = new LinkedHashMap<>(MqService.model(v));
         m.put("title", v.def().title());
         m.put("description", v.def().description());
@@ -719,9 +826,9 @@ public final class ModelCatalog {
             d.put("mode", r != null && r.def().time() != null ? r.def().time().mode() : t == null ? null : "live".equals(t.mode()) ? "live" : "snapshot");
             List<Map<String, Object>> cols = new ArrayList<>();
             if (t != null) {
-                List<String> hidden = r == null || r.def().security().hiddenRoles().stream().noneMatch(who.roles()::contains) ? List.of() : r.def().security().hiddenColumns();
                 for (Dataset.Column c : t.columns().values()) {
-                    if (hidden.contains(c.name())) {
+                    String fieldName = u.alias() + "." + c.name();
+                    if (hiddenFor.contains(fieldName) || view != null && !view.shows(fieldName)) {
                         continue;
                     }
                     DatasetDef.Col def = r == null ? null : r.def().columns().get(c.name());
@@ -736,6 +843,22 @@ public final class ModelCatalog {
                     cm.put("format", c.format());
                     cm.put("masked", who.masks().masked(u.alias(), c.name()));
                     cm.put("description", c.description());
+                    ModelDef.FieldProps props = v.def().semantics().fields().get(fieldName);
+                    if (props != null) {                                      // the model's field properties: every consumer inherits them
+                        Map<String, Object> pm = props.toMap();
+                        cm.put("display", pm.get("display"));
+                        cm.put("folder", pm.get("folder"));
+                        cm.put("hidden", pm.get("hidden"));
+                        cm.put("sortBy", pm.get("sortBy"));
+                        cm.put("category", pm.get("category"));
+                        cm.put("summarise", pm.get("summarise"));
+                        if (props.format() != null) {
+                            cm.put("format", props.format());
+                        }
+                        if (props.description() != null) {
+                            cm.put("description", props.description());
+                        }
+                    }
                     cols.add(cm);
                 }
             }
@@ -747,6 +870,9 @@ public final class ModelCatalog {
                 "cardinality", r.cardinality(), "active", r.active())).toList());
         List<Map<String, Object>> measures = new ArrayList<>();
         for (ModelDef.Meas x : v.measureDefs().values()) {
+            if (hiddenFor.contains(ObjectSecurity.MEASURE + x.name()) || view != null && !view.measures().contains(x.name()) && !view.measures().contains(x.id())) {
+                continue;
+            }
             ModelView.MeasureInfo info = v.info(v.flat(), x.name());
             Map<String, Object> mm = new LinkedHashMap<>();
             mm.put("name", x.name());
@@ -759,10 +885,18 @@ public final class ModelCatalog {
             mm.put("implicit", x.implicit());
             mm.put("masked", maskedMeasure(v, who, x.name()));
             mm.put("description", x.description());
+            ModelDef.FieldProps mp = v.def().semantics().measures().get(x.name());
+            mm.put("display", mp == null ? null : mp.display());
+            mm.put("folder", mp == null ? null : mp.folder());
+            mm.put("hidden", mp != null && mp.hidden() != null && mp.hidden());
             measures.add(mm);
         }
         m.put("measures", measures);
         m.put("hierarchies", v.def().hierarchies());
+        m.put("perspectives", v.def().semantics().perspectives().values().stream().map(x -> Map.of("name", x.name(), "title", x.title(), "description", x.description())).toList());
+        if (view != null) {
+            m.put("perspective", view.name());
+        }
         m.put("contract", Map.of("exposes", v.def().contract().exposes(), "fields", v.def().contract().fields(), "measures", v.def().contract().measures(),
                 "deprecated", v.def().contract().deprecated()));
         m.put("ai", v.def().ai());

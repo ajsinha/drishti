@@ -47,8 +47,10 @@ public final class ModelDefParser {
 
     static final Set<String> TOP = Set.of("rachana", "expressions", "model", "version", "id", "datasets", "relationships", "measures", "calc-groups", "hierarchies", "parameters",
             "calendars", "security", "contract", "ai", "golden", "tests", "rollups", "lifecycle", "replaced-by", "layout", "title", "description", "owner", "tags",
-            "endorsement", "endorsedBy", "audience", "sample", "implicit-from");
-    private static final Set<String> MEASURE_KEYS = Set.of("id", "expr", "format", "description", "currency", "additive", "python", "inputs", "by", "via", "implicit", "title");
+            "endorsement", "endorsedBy", "audience", "sample", "implicit-from", "fields", "perspectives");
+    private static final Set<String> MEASURE_KEYS = Set.of("id", "expr", "format", "description", "currency", "additive", "python", "inputs", "by", "via", "implicit", "title",
+            "display", "folder", "hidden");
+    private static final Set<String> FIELD_KEYS = Set.of("display", "description", "format", "folder", "hidden", "sort-by", "category", "summarise", "summarize");
     private static final Set<String> CARDINALITIES = Set.of("many-to-one", "one-to-many", "one-to-one", "many-to-many");
     private static final java.util.regex.Pattern LABEL = java.util.regex.Pattern.compile("[^\\p{Cntrl}\\[\\]]{1,80}");
 
@@ -88,11 +90,11 @@ public final class ModelDefParser {
         for (String k : List.of("calc-groups", "parameters")) {
             if (LayerYaml.nonEmpty(root.path(k))) {
                 placeholders.add(k);
-                y.error("DRS-9129", k, "`" + k + ":` arrives in wave W6; it is kept but refused until then: remove it to use the model now");
+                y.error("DRS-9129", k, "`" + k + ":` arrives in wave B; it is kept but refused until then: remove it to use the model now");
             }
         }
         measures.values().stream().filter(m -> m.via() != null).forEach(m -> y.error("DRS-9129", "measures." + m.name() + ".via",
-                "`via:` (a measure along an inactive relationship) arrives in wave W7"));
+                "`via:` (a measure along an inactive relationship) arrives in wave B: calc(measure, via=...)"));
         String lifecycle = LayerYaml.text(root, "lifecycle", "published");
         if (!ModelDef.LIFECYCLES.contains(lifecycle)) {
             y.error("DRS-9120", "lifecycle", "lifecycle is one of " + ModelDef.LIFECYCLES);
@@ -112,10 +114,113 @@ public final class ModelDefParser {
         root.path("tests").forEach(tests::add);
         List<JsonNode> golden = new ArrayList<>();
         root.path("golden").forEach(golden::add);
+        ModelDef.Semantics semantics = semantics(root, datasets, measures, y);
         return new ModelDef(name, version, LayerYaml.text(root, "id", ""), LayerYaml.text(root, "title", name), LayerYaml.text(root, "description", ""),
                 LayerYaml.text(root, "owner", ""), root.path("sample").asBoolean(false), LayerYaml.text(root, "endorsement", "none"), datasets, rels, measures, hierarchies,
                 security, contract, lifecycle, root.has("replaced-by") ? LayerYaml.text(root, "replaced-by", "") : null, rollups, tests, golden,
-                root.has("ai") ? root.get("ai") : null, root.has("implicit-from") ? LayerYaml.text(root, "implicit-from", "") : null, placeholders);
+                root.has("ai") ? root.get("ai") : null, root.has("implicit-from") ? LayerYaml.text(root, "implicit-from", "") : null, placeholders, semantics);
+    }
+
+    // ---- field properties, perspectives, object-level security (docs/architecture/BI_DESIGN.md sections 2.2 and 5.1) ----------
+
+    private static ModelDef.Semantics semantics(JsonNode root, Map<String, ModelDef.Use> datasets, Map<String, ModelDef.Meas> measures, LayerYaml y) {
+        Map<String, ModelDef.FieldProps> fields = new LinkedHashMap<>();
+        JsonNode f = root.path("fields");
+        if (!f.isMissingNode() && !f.isObject()) {
+            y.error("DRS-9120", "fields", "`fields:` maps alias.column to its properties { display, description, format, folder, hidden, sort-by, category, summarise }");
+        }
+        f.fields().forEachRemaining(e -> {
+            String path = "fields." + e.getKey();
+            String[] p = field(e.getKey());
+            if (p == null || !datasets.containsKey(p[0])) {
+                y.error("DRS-9120", path, "a field is alias.column of this model; not '" + e.getKey() + "'");
+            }
+            fields.put(e.getKey(), props(e.getValue(), path, true, y));
+        });
+        Map<String, ModelDef.FieldProps> measureProps = new LinkedHashMap<>();
+        JsonNode m = root.path("measures");
+        m.fields().forEachRemaining(e -> {
+            JsonNode v = e.getValue();
+            if (v.isObject() && (v.has("display") || v.has("folder") || v.has("hidden") || v.has("title"))) {
+                measureProps.put(e.getKey(), new ModelDef.FieldProps(v.has("display") ? LayerYaml.text(v, "display", "") : v.has("title") ? LayerYaml.text(v, "title", "") : null,
+                        null, null, v.has("folder") ? LayerYaml.text(v, "folder", "") : null, v.has("hidden") ? v.path("hidden").asBoolean(false) : null, null, null, null));
+            }
+        });
+        Map<String, ModelDef.Perspective> perspectives = new LinkedHashMap<>();
+        JsonNode ps = root.path("perspectives");
+        if (!ps.isMissingNode() && !ps.isObject()) {
+            y.error("DRS-9120", "perspectives", "`perspectives:` maps a name to { title, fields: [alias.column | alias.*], measures: [...] }");
+        }
+        ps.fields().forEachRemaining(e -> {
+            String path = "perspectives." + e.getKey();
+            JsonNode v = e.getValue();
+            y.unknownKeys(v, Set.of("title", "description", "fields", "measures"), "DRS-9120", path);
+            List<String> pf = y.strings(v.path("fields"), path + ".fields", "DRS-9120");
+            List<String> pm = y.strings(v.path("measures"), path + ".measures", "DRS-9120");
+            for (String x : pf) {
+                String[] p = field(x);
+                if (p == null || !datasets.containsKey(p[0])) {
+                    y.error("DRS-9120", path + ".fields", "'" + x + "' is not alias.column or alias.* of this model");
+                }
+            }
+            for (String x : pm) {
+                if (!measures.containsKey(x) && measures.values().stream().noneMatch(mm -> x.equals(mm.id()))) {
+                    y.warning("DRS-9120", path + ".measures", "'" + x + "' is not a measure the model declares (a default measure is fine)");
+                }
+            }
+            if (pf.isEmpty() && pm.isEmpty()) {
+                y.error("DRS-9120", path, "a perspective lists the fields and measures it shows");
+            }
+            perspectives.put(e.getKey(), new ModelDef.Perspective(e.getKey(), LayerYaml.text(v, "title", e.getKey()), LayerYaml.text(v, "description", ""), pf, pm));
+        });
+        List<ModelDef.HiddenFor> hidden = new ArrayList<>();
+        JsonNode h = root.path("security").path("hidden-for");
+        if (!h.isMissingNode() && !h.isNull()) {
+            List<JsonNode> entries = new ArrayList<>();
+            if (h.isArray()) {
+                h.forEach(entries::add);
+            } else {
+                entries.add(h);
+            }
+            for (int i = 0; i < entries.size(); i++) {
+                String path = "security.hidden-for" + (h.isArray() ? "[" + i + "]" : "");
+                JsonNode x = entries.get(i);
+                y.unknownKeys(x, Set.of("roles", "fields", "measures"), "DRS-9125", path);
+                List<String> roles = y.strings(x.path("roles"), path + ".roles", "DRS-9125");
+                List<String> hf = y.strings(x.path("fields"), path + ".fields", "DRS-9125");
+                List<String> hm = y.strings(x.path("measures"), path + ".measures", "DRS-9125");
+                if (roles.isEmpty()) {
+                    y.error("DRS-9125", path + ".roles", "hidden-for names the roles the fields and measures are hidden from");
+                }
+                for (String fx : hf) {
+                    String[] p = field(fx);
+                    if (p == null || !datasets.containsKey(p[0])) {
+                        y.error("DRS-9125", path + ".fields", "'" + fx + "' is not alias.column of this model");
+                    }
+                }
+                hidden.add(new ModelDef.HiddenFor(roles, hf, hm));
+            }
+        }
+        return new ModelDef.Semantics(fields, measureProps, perspectives, hidden);
+    }
+
+    private static ModelDef.FieldProps props(JsonNode v, String path, boolean field, LayerYaml y) {
+        if (!v.isObject()) {
+            y.error("DRS-9120", path, "field properties are { display, description, format, folder, hidden, sort-by, category, summarise }");
+            return new ModelDef.FieldProps(null, null, null, null, null, null, null, null);
+        }
+        y.unknownKeys(v, FIELD_KEYS, "DRS-9120", path);
+        String category = v.has("category") ? LayerYaml.text(v, "category", "") : null;
+        if (category != null && !ModelDef.CATEGORIES.contains(category)) {
+            y.error("DRS-9120", path + ".category", "category is one of " + new java.util.TreeSet<>(ModelDef.CATEGORIES) + ", not '" + category + "'");
+        }
+        String summarise = v.has("summarise") ? LayerYaml.text(v, "summarise", "") : v.has("summarize") ? LayerYaml.text(v, "summarize", "") : null;
+        if (summarise != null && !ModelDef.SUMMARISE.contains(summarise)) {
+            y.error("DRS-9120", path + ".summarise", "summarise is one of " + new java.util.TreeSet<>(ModelDef.SUMMARISE) + ", not '" + summarise + "'");
+        }
+        return new ModelDef.FieldProps(v.has("display") ? LayerYaml.text(v, "display", "") : null, v.has("description") ? LayerYaml.text(v, "description", "") : null,
+                v.has("format") ? LayerYaml.text(v, "format", "") : null, v.has("folder") ? LayerYaml.text(v, "folder", "") : null,
+                v.has("hidden") ? v.path("hidden").asBoolean(false) : null, v.has("sort-by") ? LayerYaml.text(v, "sort-by", "") : null, category, summarise);
     }
 
     private static Map<String, ModelDef.Use> datasets(JsonNode n, LayerYaml y) {
@@ -232,7 +337,7 @@ public final class ModelDefParser {
         if (s.isMissingNode() || s.isNull()) {
             return ModelDef.Security.NONE;
         }
-        y.unknownKeys(s, Set.of("rows", "masked", "propagate", "may-see-all", "unmask", "unmasked"), "DRS-9125", "security");
+        y.unknownKeys(s, Set.of("rows", "masked", "propagate", "may-see-all", "unmask", "unmasked", "hidden-for"), "DRS-9125", "security");
         for (String k : List.of("unmask", "unmasked")) {
             if (s.has(k)) {
                 y.error("DRS-9125", "security." + k, "a model cannot unmask: its security is only ever tighter than its datasets'");

@@ -71,6 +71,23 @@ public final class ConsumerQueries implements DatasetService.ModelGateway {
     }
 
     @Override
+    public Dataset dataset(Principal p, String model, String consumer) {
+        return catalog.bindVia(p, model, consumer).view().flat();
+    }
+
+    @Override
+    public DatasetService.Asked askModel(Principal p, String model, String consumer, QueryRequest q, boolean explain) {
+        try {
+            MqService.Bound b = catalog.bindVia(p, model, consumer);
+            ModelQuery mq0 = of(b.view(), q).withModel(model);
+            MqService.Ran ran = mq.run(b, mq0, explain, true);
+            return new DatasetService.Asked(ran.withWarnings(), ran.canonical());
+        } catch (MqException e) {
+            throw e.legacy();
+        }
+    }
+
+    @Override
     public Map<String, Object> describe(Principal p, String model) {
         return catalog.describe(p, model);
     }

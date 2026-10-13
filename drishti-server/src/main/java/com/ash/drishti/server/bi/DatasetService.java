@@ -122,6 +122,16 @@ public final class DatasetService {
         /** As {@link #ask} on a model named by reference ({@code trades@1}, {@code dataset:<name>}): a report bound with {@code model:}. */
         Asked askModel(Principal p, String model, QueryRequest q, boolean explain);
 
+        /** As {@link #askModel(Principal, String, QueryRequest, boolean)} through a published consumer (its envelope for a reader without model read). */
+        default Asked askModel(Principal p, String model, String consumer, QueryRequest q, boolean explain) {
+            return askModel(p, model, q, explain);
+        }
+
+        /** As {@link #dataset(Principal, String)} through a published consumer. */
+        default Dataset dataset(Principal p, String model, String consumer) {
+            return dataset(p, model);
+        }
+
         /** The model's engine dataset as the caller reads it (what a model-bound report's visuals are built against). */
         Dataset dataset(Principal p, String model);
 
@@ -142,7 +152,18 @@ public final class DatasetService {
 
     /** A stand-in item for a model reference, so a consumer bound to a model ({@code model:} on a report) asks it through the same calls as a dataset item. */
     public static BiStore.Item modelRef(String model) {
-        return new BiStore.Item(model, "", MODEL_REF, model, "", "", List.of(), "", "published", 1, "none", "", List.of(), List.of(), List.of(), "", null, null, null, "", null, "");
+        return modelRef(model, "");
+    }
+
+    /** As {@link #modelRef(String)} for a published consumer: a reader without read on the model asks within the consumer's envelope. */
+    public static BiStore.Item modelRef(String model, String consumer) {
+        return new BiStore.Item(model, "", MODEL_REF, model, consumer == null ? "" : consumer, "", List.of(), "", "published", 1, "none", "", List.of(), List.of(), List.of(), "",
+                null, null, null, "", null, "");
+    }
+
+    /** The consumer a model reference was taken through, or null. */
+    public static String consumerOf(BiStore.Item modelRef) {
+        return modelRef == null || modelRef.description() == null || modelRef.description().isBlank() ? null : modelRef.description();
     }
 
     public static boolean isModelRef(BiStore.Item item) {
@@ -160,6 +181,11 @@ public final class DatasetService {
     /** The engine dataset of a model, as the caller reads it. */
     public Dataset modelDataset(Principal p, String model) {
         return requireGateway().dataset(p, model);
+    }
+
+    /** As {@link #modelDataset(Principal, String)} through a published consumer (its envelope for a reader without model read). */
+    public Dataset modelDataset(Principal p, String model, String consumer) {
+        return requireGateway().dataset(p, model, consumer);
     }
 
     /**
@@ -248,7 +274,7 @@ public final class DatasetService {
      */
     public Asked asked(Principal p, BiStore.Item item, QueryRequest q, boolean explain) {
         if (isModelRef(item)) {
-            return requireGateway().askModel(p, item.id(), q, explain);
+            return requireGateway().askModel(p, item.id(), consumerOf(item), q, explain);
         }
         ModelGateway g = gateway;
         return g == null ? new Asked(queryItem(p, item, q, explain), null) : g.ask(p, item, q, explain);

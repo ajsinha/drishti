@@ -127,6 +127,13 @@ class LanguagesApiTest {
                       Trades:   { id: m_trades, expr: "count(trades)" }
                       Open MTM: { id: m_open, expr: "sum(trades.mtm, where=trades.currency == 'USD')" }
                       Per trade: { id: m_per, expr: "measure('m_notional') / measure('Trades')" }
+                    fields:
+                      trades.desk:     { display: Desk, folder: Organisation, description: The trading desk, category: none }
+                      trades.notional: { display: Notional amount, format: amount0, folder: Amounts, summarise: sum }
+                    perspectives:
+                      desk-view: { title: Desk view, fields: [trades.desk, trades.notional], measures: [Notional, Trades] }
+                    security:
+                      hidden-for: { roles: [bi-analyst], fields: [trades.currency], measures: [Open MTM] }
                     tests:
                       - { name: DESK-A notional, sql: "SELECT MEASURE('Notional') FROM trades WHERE trades.desk = 'DESK-A' AS OF DATE '2026-10-08'", expect: 92000, role: bi-risk }
                       - { name: by desk, sql: "SELECT trades.desk, MEASURE('Trades') AS n FROM trades GROUP BY trades.desk AS OF DATE '2026-10-08'", row: { trades.desk: DESK-B }, column: n, expect: 8, role: bi-risk }
@@ -181,6 +188,29 @@ class LanguagesApiTest {
                     measures:
                       Trades: { expr: "count(trades)" }
                       K:      { expr: "sum(trades.notionalK)" }
+                    """);
+            Files.writeString(models.resolve("lang-guarded.model.yaml"), """
+                    rachana: 2
+                    expressions: 2
+                    model: lang-guarded
+                    version: 1.0.0
+                    audience: { roles: [bi-risk, admin] }
+                    datasets:
+                      trades: { dataset: lang-trade, role: fact }
+                    measures:
+                      Notional: { id: m_notional, expr: "sum(trades.notional)" }
+                      Trades:   { id: m_trades, expr: "count(trades)" }
+                    """);
+            Path reports = Files.createDirectories(folder.resolve("reports"));
+            Files.writeString(reports.resolve("lang-guarded-report.report.yaml"), """
+                    report: lang-guarded-report
+                    title: Guarded report
+                    model: lang-guarded@1
+                    pages:
+                      - id: main
+                        title: Main
+                        visuals:
+                          - { id: by-desk, type: bar, title: By desk, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trades.desk], values: [Notional] } }
                     """);
             Files.writeString(models.resolve("lang-desk-view.model.yaml"), """
                     rachana: 2
@@ -374,6 +404,80 @@ class LanguagesApiTest {
         assertThat(lineage.path("problems").size()).isZero();
         if (System.getProperty("capture") != null) {
             System.out.println("CAPTURE13 " + lineage);
+        }
+    }
+
+    // ---- model semantics and access ------------------------------------------------------------------------------------
+
+    static JsonNode field(JsonNode describe, String name) {
+        for (JsonNode d : describe.path("datasets")) {
+            for (JsonNode f : d.path("fields")) {
+                if (name.equals(f.path("field").asText())) {
+                    return f;
+                }
+            }
+        }
+        return null;
+    }
+
+    static List<String> measureNames(JsonNode describe) {
+        List<String> out = new ArrayList<>();
+        describe.path("measures").forEach(m -> out.add(m.path("name").asText()));
+        return out;
+    }
+
+    @Test @Order(30)
+    void describeCarriesFieldPropertiesPerspectivesAndHidesWhatIsHiddenForTheReader() throws Exception {
+        JsonNode rita = ok(call("GET", "/api/v1/bi/models/lang-model@1/describe", reader("rita"), null));
+        assertThat(field(rita, "trades.desk").path("display").asText()).isEqualTo("Desk");
+        assertThat(field(rita, "trades.desk").path("folder").asText()).isEqualTo("Organisation");
+        assertThat(field(rita, "trades.notional").path("format").asText()).isEqualTo("amount0");
+        assertThat(field(rita, "trades.notional").path("summarise").asText()).isEqualTo("sum");
+        assertThat(rita.path("perspectives").toString()).contains("desk-view");
+        assertThat(field(rita, "trades.currency")).isNotNull();
+        JsonNode persp = ok(call("GET", "/api/v1/bi/models/lang-model@1/describe?perspective=desk-view", reader("rita"), null));
+        assertThat(field(persp, "trades.currency")).isNull();
+        assertThat(measureNames(persp)).containsExactlyInAnyOrder("Notional", "Trades");
+        JsonNode ann = ok(call("GET", "/api/v1/bi/models/lang-model@1/describe", reader("ann"), null));
+        assertThat(field(ann, "trades.currency")).as("hidden-for ann's role: absent").isNull();
+        assertThat(measureNames(ann)).doesNotContain("Open MTM").contains("Notional");
+        var refused = call("POST", "/api/v1/bi/mq", reader("ann"), Map.of("mq", 1, "model", "lang-model@1", "select", Map.of("fields", List.of("trades.currency"),
+                "measures", List.of("Trades")))).andReturn().getResponse();
+        assertThat(refused.getStatus()).isEqualTo(422);
+        assertThat(refused.getContentAsString()).contains("DRS-9152").contains("no field 'trades.currency'");
+        var measure = call("POST", "/api/v1/bi/mq", reader("ann"), Map.of("mq", 1, "model", "lang-model@1", "select", Map.of("measures", List.of("Open MTM"))))
+                .andReturn().getResponse();
+        assertThat(measure.getContentAsString()).contains("DRS-9152").contains("no measure 'Open MTM'");
+        assertThat(codes(validate("ann", "sum(trades.notional, where=trades.currency == 'USD')", "aggregate"))).contains("DRS-9152");
+    }
+
+    @Test @Order(31)
+    void aReportOnlyReaderAsksWithinTheReportsEnvelope() throws Exception {
+        var direct = call("POST", "/api/v1/bi/mq", reader("hana"), Map.of("mq", 1, "model", "lang-guarded@1", "select", Map.of("measures", List.of("Notional"))))
+                .andReturn().getResponse();
+        assertThat(direct.getContentAsString()).as("no read on the model: no free querying").contains("DRS-9151");
+        String visual = "{\"page\":\"main\",\"visual\":\"by-desk\",\"state\":{\"dates\":{\"from\":\"" + DAY + "\",\"to\":\"" + DAY + "\"}}}";
+        JsonNode viaReport = ok(call("POST", "/api/v1/bi/reports/file:report:lang-guarded-report/query", reader("hana"), visual));
+        assertThat(viaReport.path("rows").size()).as(viaReport.toString()).isEqualTo(1);
+        assertThat(viaReport.path("rows").get(0).get(0).asText()).as("her own row rule still applies").isEqualTo("DESK-A");
+        String outside = "{\"page\":\"main\",\"visual\":\"by-desk\",\"state\":{\"carry\":[{\"field\":\"trades.currency\",\"op\":\"eq\",\"values\":[\"USD\"]}],"
+                + "\"dates\":{\"from\":\"" + DAY + "\",\"to\":\"" + DAY + "\"}}}";
+        var out = call("POST", "/api/v1/bi/reports/file:report:lang-guarded-report/query", reader("hana"), outside).andReturn().getResponse();
+        assertThat(out.getContentAsString()).as("a filter the report never makes").contains("DRS-9151").contains("this report cannot ask that");
+        JsonNode rita = ok(call("POST", "/api/v1/bi/reports/file:report:lang-guarded-report/query", reader("rita"), outside));
+        assertThat(rita.path("rows").size()).as("with read on the model: free").isEqualTo(3);
+        JsonNode envelope = ok(call("GET", "/api/v1/bi/reports/file:report:lang-guarded-report/envelope", reader("rita"), null));
+        assertThat(envelope.path("fields").toString()).contains("trades.desk");
+        assertThat(envelope.path("measures").toString()).contains("Notional").doesNotContain("Trades");
+        JsonNode impact = ok(call("GET", "/api/v1/bi/models/lang-guarded@1/impact?target=Notional", reader("rita"), null));
+        assertThat(impact.path("consumers").toString()).contains("lang-guarded-report");
+        JsonNode none = ok(call("GET", "/api/v1/bi/models/lang-guarded@1/impact?target=Trades", reader("rita"), null));
+        assertThat(none.path("consumers").size()).isZero();
+        if (System.getProperty("capture") != null) {
+            System.out.println("CAPTURE14 " + out.getContentAsString());
+            System.out.println("CAPTURE15 " + envelope);
+            System.out.println("CAPTURE16 " + impact);
+            System.out.println("CAPTURE17 " + field(ok(call("GET", "/api/v1/bi/models/lang-model@1/describe", reader("rita"), null)), "trades.notional"));
         }
     }
 

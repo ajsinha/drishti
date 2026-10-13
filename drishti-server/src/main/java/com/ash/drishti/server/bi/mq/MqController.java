@@ -150,9 +150,9 @@ public class MqController {
     }
 
     @GetMapping("/models/{id}/describe")
-    public Map<String, Object> describe(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public Map<String, Object> describe(@PathVariable String id, @RequestParam(required = false) String perspective, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.BI);
-        return catalog.describe(p, id);
+        return catalog.describe(p, id, perspective);
     }
 
     /** The roles a model's row rules can name (the security tab's role picker): each with what it is for and the pack kinds it opens ({@code *}: all). */
@@ -176,6 +176,20 @@ public class MqController {
     public Map<String, Object> layerDataset(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.BI);
         return catalog.layerDataset(p, id);
+    }
+
+    /** Which consumers of the model use a field ({@code alias.column}) or a measure, from their envelopes. */
+    @GetMapping("/models/{id}/impact")
+    public Map<String, Object> impact(@PathVariable String id, @RequestParam String target, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        bi.requirePower(p, BiAccess.BI);
+        return catalog.impact(p, id, target);
+    }
+
+    /** What a report's readers without read on its model may ask: the fields, measures and filters its visuals can produce. */
+    @GetMapping("/reports/{id}/envelope")
+    public Map<String, Object> envelope(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        bi.requirePower(p, BiAccess.BI);
+        return catalog.envelope(p, id);
     }
 
     /** Report to model to datasets to their roots (pack kind and connector, connector query, Python, model, SQL view), as far as the caller may read. */

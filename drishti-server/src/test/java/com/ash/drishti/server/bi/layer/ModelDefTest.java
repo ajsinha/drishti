@@ -288,4 +288,17 @@ class ModelDefTest {
         assertThat(m.relationships()).hasSize(1);
         assertThat(m.security()).isEqualTo(ModelDef.Security.NONE);                          // the old rules stay in the old dataset, with their old meaning
     }
+
+    @Test
+    void theFullContractDetectionOfWaveACatchesMeaningsFieldsAndGrains() {
+        ModelDef was = ModelDefParser.parse(MODEL).model();
+        Map<String, ResolvedDataset> data = resolved();
+        ModelDef sameMeaning = ModelDefParser.parse(MODEL.replace("expr: \"sum(trades.mtm)\"", "expr: \"sum( trades.mtm )\"")).model();
+        assertThat(Contracts.models(was, sameMeaning, data, data).breaking()).as("a reformatted expression is the same tree").isEmpty();
+        ModelDef otherMeaning = ModelDefParser.parse(MODEL.replace("expr: \"sum(trades.mtm)\"", "expr: \"sum(trades.mtm, where=trades.mtm > 0)\"")).model();
+        assertThat(Contracts.models(was, otherMeaning, data, data).refusal()).contains("changes meaning").contains("new major version");
+        Map<String, ResolvedDataset> fewer = new java.util.LinkedHashMap<>(data);
+        fewer.put("trades", ResolvedDataset.of(DatasetDefParser.parse(TRADES.replace("  mtm:", "  mtmX:")).dataset()));
+        assertThat(Contracts.models(was, was, data, fewer).breaking()).anyMatch(x -> x.contains("trades.mtm is removed"));
+    }
 }
