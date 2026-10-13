@@ -120,7 +120,7 @@ def test_the_wizard_builds_a_dataset_from_a_connector_without_typing_yaml(stack,
     expr = page.locator(f'[data-m-expr="{last}"]')
     expr.click()
     expr.press_sequentially("avg(trade.notio")
-    page.click('[data-suggestions] button:has-text("trade.notional")')
+    page.click('[data-xe-opt="trade.notional"]')                                 # the shared expression editor completes the field
     expr.press("End")
     expr.press_sequentially(")")
     expr.press("Tab")
