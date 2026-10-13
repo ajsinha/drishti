@@ -1425,7 +1425,7 @@ A bare column in a measure is the most common slip. The server answers `DRS-9127
 
 ![trade.mtm * 2 in the editor, the problem DRS-9127 under it and a button Use sum(trade.mtm) * 2](img/bi-languages/expr-editor-problem.jpg)
 
-The old syntax is read with a `DRS-9100` warning until the end of wave A; its fix button writes the converter's text (`[Sum of mtm] * 2` becomes
+The old syntax is refused with `DRS-9100` (a warning only where a site sets `legacy: warn`); its fix button writes the converter's text (`[Sum of mtm] * 2` becomes
 `measure('Sum of mtm') * 2`). **Try it** then asks the server, as you, on the saved draft:
 
 ![measure('Sum of mtm') * 2 with the chip Sum of mtm, Checks clean, and the Try it table: Bonds and securitised -150,000, Equity derivatives 850,000, G10 and EM FX -1,150,000](img/bi-languages/expr-editor-try.jpg)

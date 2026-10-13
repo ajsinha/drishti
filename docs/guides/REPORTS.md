@@ -862,4 +862,4 @@ checks it).
 ![The query panel with SQL chosen: the statement above, Run as SQL, and the line 3 rows from the server ... the same plan as the visual's query](img/bi-languages/query-panel-sql.jpg)
 
 **Expressions are DEL v2.** Every formula the designer writes uses the Python-like syntax ([EXPRESSIONS.md](EXPRESSIONS.md)); a report saved before
-2.2.0 with the older syntax still reads, with a `DRS-9100` warning, until the end of wave A.
+2.2.0 with the older syntax is refused (`DRS-9100`, with the DEL v2 text as the fix; stored items are converted when the server starts, and `drishti.py bi migrate --expressions` converts files).
