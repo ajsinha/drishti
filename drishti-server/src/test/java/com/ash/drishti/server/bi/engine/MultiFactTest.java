@@ -65,7 +65,7 @@ class MultiFactTest {
                   LimitTotal: { expr: "sum(limits.amount)" }
                   Limits: { expr: "count(limits)" }
                   MaxLimit: { expr: "max(limits.amount)" }
-                  Mixed: { expr: "[MTM] / [LimitTotal]" }
+                  Mixed: { expr: "measure('MTM') / measure('LimitTotal')" }
                 """);
         DatasetParser.Result r = DatasetParser.parse(yaml);
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();

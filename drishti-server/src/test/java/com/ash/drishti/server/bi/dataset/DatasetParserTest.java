@@ -53,9 +53,9 @@ class DatasetParserTest {
               MTM: "sum(trades.mtm)"
               Trades: { expr: "count(trades)" }
               MTM per 1m: { expr: "ratio(sum(trades.mtm), sum(trades.notional)) * 1000000" }
-              BuyMtm: { expr: "sum(trades.mtm, trades.desk == 'A')" }
+              BuyMtm: { expr: "sum(trades.mtm, where=trades.desk == 'A')" }
               P95: { expr: "percentile(trades.mtm, 0.95)" }
-              Share: { expr: "[MTM] / [Notional]" }
+              Share: { expr: "measure('MTM') / measure('Notional')" }
             hierarchies:
               Date: [trades.tradeDate.year, trades.tradeDate.month, trades.tradeDate]
               Desk: [desks.region, desks.desk]
@@ -106,11 +106,11 @@ class DatasetParserTest {
         assertThat(errors(GOOD.replace("sum(trades.notional)", "sum(trades.nope)"))).extracting(Problem::code).contains("DRS-9011");
         assertThat(errors(GOOD.replace("sum(trades.notional)\"", "trades.notional\""))).extracting(Problem::message).anyMatch(m -> m.contains("outside an aggregate"));
         assertThat(errors(GOOD.replace("count(trades)", "frobnicate(trades)"))).extracting(Problem::message).anyMatch(m -> m.contains("unknown function 'frobnicate'"));
-        assertThat(errors(GOOD.replace("sum(trades.notional)\"", "sum(sum(trades.notional))\""))).extracting(Problem::message).anyMatch(m -> m.contains("do not nest"));
+        assertThat(errors(GOOD.replace("sum(trades.notional)\"", "sum(sum(trades.notional))\""))).extracting(Problem::message).anyMatch(m -> m.contains("inside an aggregate"));
         assertThat(errors(GOOD.replace("percentile(trades.mtm, 0.95)", "percentile(trades.mtm, 7)"))).extracting(Problem::code).contains("DRS-9011");
         assertThat(errors(GOOD.replace("sum(trades.notional)\"", "sum(trades.notional\""))).extracting(Problem::message).anyMatch(m -> m.contains("expected ')'"));
-        assertThat(errors(GOOD.replace("[MTM] / [Notional]", "[Nope] / [Notional]"))).extracting(Problem::message).anyMatch(m -> m.contains("measure('Nope') names no measure"));
-        assertThat(errors(GOOD.replace("MTM: \"sum(trades.mtm)\"", "MTM: \"[Share]\""))).extracting(Problem::message).anyMatch(m -> m.contains("circle"));
+        assertThat(errors(GOOD.replace("measure('MTM') / measure('Notional')", "measure('Nope') / measure('Notional')"))).extracting(Problem::message).anyMatch(m -> m.contains("measure('Nope') names no measure"));
+        assertThat(errors(GOOD.replace("MTM: \"sum(trades.mtm)\"", "MTM: \"measure('Share')\""))).extracting(Problem::message).anyMatch(m -> m.contains("circle"));
         assertThat(errors(GOOD.replace("notional / 1000", "sum(notional)"))).extracting(Problem::message).anyMatch(m -> m.contains("cannot aggregate"));
         assertThat(errors(GOOD.replace("trades.desk in user.desks", "trades.desk in user.planet"))).extracting(Problem::message).anyMatch(m -> m.contains("not an attribute"));
         assertThat(errors(GOOD.replace("count(trades)", "count(trades) + user.name"))).extracting(Problem::message).anyMatch(m -> m.contains("does not depend on the reader"));

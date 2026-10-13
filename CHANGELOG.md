@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+- **Server: the old expression syntax is refused (wave A, task 6).** `drishti.bi.expr.legacy` now defaults to `refuse`: an expression in the old syntax
+  is `DRS-9100` with the DEL v2 text as the fix (`drishti.py bi migrate --expressions` converts files; `legacy: warn` reads it while a site converts its
+  own items). A text that is already DEL v2 but wrong gets its DEL v2 problem, and a rule written as a YAML boolean (`where: true`) reads as `True`.
+  Every shipped sample, tutorial dataset and test fixture is in DEL v2.
 - **Server: model semantics and access (wave A, task 5).** Models carry field properties every consumer inherits (`fields: { alias.column: { display,
   description, format, folder, hidden, sort-by, category, summarise } }`, and `display`/`folder`/`hidden` on measures), perspectives (`perspectives:`;
   `describe?perspective=`), and object-level security (`security.hidden-for: { roles, fields, measures }`): a hidden field or measure, and every measure that

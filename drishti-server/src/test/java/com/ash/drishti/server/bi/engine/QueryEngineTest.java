@@ -505,7 +505,7 @@ class QueryEngineTest {
                     columns: { desk: string, currency: { path: ccy, type: string }, notional: decimal, mtm: decimal }
                 measures:
                   Notional: { expr: "sum(trades.notional)" }
-                  MTM: { expr: "sum(trades.mtm, trades.currency == 'EUR')" }
+                  MTM: { expr: "sum(trades.mtm, where=trades.currency == 'EUR')" }
                 security:
                   rows: [ { role: desk-head, where: "trades.desk in user.desks" } ]
                 """;
@@ -520,7 +520,7 @@ class QueryEngineTest {
         // a connector that is not a SQL store cannot serve a direct table
         QueryService.Loaded bad = new QueryService.Loaded("bad", "bad", DatasetParser.parse(yaml.replace("connector: trading-lake", "connector: desk-lake").replace("kind: trade", "kind: desk")
                 .replace("columns: { desk: string, currency: { path: ccy, type: string }, notional: decimal, mtm: decimal }", "columns: { desk: string }")
-                .replace("sum(trades.notional)", "count(trades)").replace("sum(trades.mtm, trades.currency == 'EUR')", "count(trades)")).dataset(), "h");
+                .replace("sum(trades.notional)", "count(trades)").replace("sum(trades.mtm, where=trades.currency == 'EUR')", "count(trades)")).dataset(), "h");
         assertThatThrownBy(() -> service.query(bad, q("{\"measures\":[\"Notional\"]}"), risk(), false)).isInstanceOf(DrishtiException.class).hasMessageContaining("not a SQL store");
         engine.close();
     }

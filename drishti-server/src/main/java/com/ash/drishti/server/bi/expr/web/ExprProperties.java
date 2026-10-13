@@ -29,7 +29,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record ExprProperties(String legacy, Integer parseCache) {
 
     public ExprProperties {
-        legacy = legacy == null || legacy.isBlank() ? "warn" : legacy.strip().toLowerCase(Locale.ROOT);
+        legacy = legacy == null || legacy.isBlank() ? "refuse" : legacy.strip().toLowerCase(Locale.ROOT);
         if (!legacy.equals("warn") && !legacy.equals("refuse")) {
             throw new IllegalArgumentException("drishti.bi.expr.legacy is warn or refuse, not '" + legacy + "'");
         }

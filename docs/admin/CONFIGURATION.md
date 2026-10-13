@@ -1339,7 +1339,7 @@ The Drishti expression language (DEL v2, [EXPRESSIONS.md](../guides/EXPRESSIONS.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `legacy` | `warn` | The old expression syntax (`[Measure]`, `&&`, `c ? a : b`): `warn` reads it with a `DRS-9100` warning in Check (wave A); `refuse` refuses it with `DRS-9100`, the DEL v2 text as the fix. An item with `expressions: 2` refuses it whatever this says. |
+| `legacy` | `refuse` | The old expression syntax (`[Measure]`, `&&`, `c ? a : b`): `refuse` (the default since the end of wave A) refuses it with `DRS-9100`, the DEL v2 text as the fix; `warn` reads it with a `DRS-9100` warning in Check, for a site converting its own items (`drishti.py bi migrate --expressions`). An item with `expressions: 2` refuses it whatever this says. A rule written as a YAML boolean (`where: true`) is DEL's `True`. |
 | `parse-cache` | `10000` | Parsed expressions kept in memory (keyed by text); `0` turns the cache off. |
 
 ### `drishti.distribution`: export and subscriptions

@@ -92,7 +92,7 @@ class MqEngineTest {
               Trades:   { id: m_trades, expr: "count(trades)" }
               AvgMTM:   { id: m_avg, expr: "avg(trades.mtm)" }
               Limit:    { id: m_limit, expr: "sum(limits.amount)" }
-              Usage:    { id: m_usage, expr: "[Notional] / [Limit]" }
+              Usage:    { id: m_usage, expr: "measure('Notional') / measure('Limit')" }
               Vol:      { id: m_vol, python: desk-vol, inputs: [trades.mtm], by: [trades.desk] }
             hierarchies:
               Desk: [desks.region, desks.desk]
@@ -225,7 +225,7 @@ class MqEngineTest {
         for (int i = 0; i < 12; i++) {
             int a = random.nextInt(3);
             int b = random.nextInt(4);
-            String rule = "trades.notional > " + (a * 1000) + (b == 0 ? "" : " || trades.desk == 'DESK-" + (char) ('A' + b - 1) + "'");
+            String rule = "trades.notional > " + (a * 1000) + (b == 0 ? "" : " or trades.desk == 'DESK-" + (char) ('A' + b - 1) + "'");
             ModelView tighter = MqHarness.model(MODEL.replace("- { role: [risk, analyst, emea], where: \"true\" }", "- { role: [risk, analyst, emea], where: \"" + rule + "\" }"),
                     TRADES, DESKS, LIMITS);
             Map<String, Object> got = mq.ask(h.bind(tighter, MqHarness.RITA, "t" + i), MqParser.parse("{ mq: 1, model: x, select: { measures: [Trades] } }"), false).body();
@@ -275,7 +275,7 @@ class MqEngineTest {
 
     @Test
     void aLocalMeasureTravelsInsideTheQuery() {
-        Map<String, Object> a = ask(MqHarness.RITA, "{ mq: 1, model: desk-risk, define: { Share: \"[MTM] / [Notional]\" }, select: { measures: [Share] } }");
+        Map<String, Object> a = ask(MqHarness.RITA, "{ mq: 1, model: desk-risk, define: { Share: \"measure('MTM') / measure('Notional')\" }, select: { measures: [Share] } }");
         assertThat(((Number) rows(a).get(0).get(0)).doubleValue()).isEqualTo(sum(null, true) / sum(null, false), org.assertj.core.data.Offset.offset(1e-12));
     }
 

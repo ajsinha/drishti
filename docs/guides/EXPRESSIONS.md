@@ -1358,7 +1358,7 @@ These are the codes an expression can raise:
 | `DRS-9129` | a function or value of a later wave | `calc(measure('MTM'), ignore=ALL)`: *calc() arrives in wave B (filter context)* | — |
 | `DRS-9152` | a field or measure that does not exist for you (a hidden column is "not found", on purpose) | `sum(trades.mtx)`: *no field 'trades.mtx'; did you mean trades.mtm?* | the suggested name |
 | `DRS-9161` | a filter, sort or `in` on a field masked for you | `count(trades, where=trades.mtm < 0)` as a reader without raw | filter on a field that is not masked |
-| `DRS-9100` | the old expression syntax: a warning in wave A, refused once `drishti.bi.expr.legacy: refuse` (or on an item with `expressions: 2`) | `[MTM] / [Trades]` | `write: measure('MTM') / measure('Trades')` |
+| `DRS-9100` | the old expression syntax: refused (the default `drishti.bi.expr.legacy: refuse`); a warning only while a site sets `legacy: warn` | `[MTM] / [Trades]` | `write: measure('MTM') / measure('Trades')` |
 | `DRS-9190` | the converter could not keep the meaning of an old expression (it then leaves it as it was) | — | rewrite it by hand |
 | `DRS-9158` | (at query time) a sum across currencies | `sum(trades.notional)` by desk, several currencies | group or filter by the currency |
 
@@ -1434,9 +1434,10 @@ There is no context transition: iteration is explicit (`avg_by`, wave B), so a m
 
 ## 10. The old syntax and the converter
 
-Until 2.2.0, expressions used a Rachana-EL-flavoured syntax. It is read with a `DRS-9100` warning while `drishti.bi.expr.legacy: warn` (wave A);
-with `legacy: refuse` (the end of wave A) it is refused, with the DEL v2 text as the fix. An item that declares `expressions: 2` refuses it
-whatever the setting.
+Until 2.2.0, expressions used a Rachana-EL-flavoured syntax. From the end of wave A it is refused (`drishti.bi.expr.legacy: refuse`, the default),
+with the DEL v2 text as the fix; a site still converting its own items may set `legacy: warn` to read it with a `DRS-9100` warning meanwhile. An item
+that declares `expressions: 2` refuses it whatever the setting. A text that is already DEL v2 but wrong (say `rank(trades.mtm)`) gets its DEL v2 problem,
+not `DRS-9100`. A rule written as a YAML boolean (`where: true`) is read as `True`.
 
 | Old syntax | DEL v2 |
 |---|---|

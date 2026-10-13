@@ -537,7 +537,7 @@ class LanguagesApiTest {
         assertThat(old.path("syntax").asText()).isEqualTo("legacy");
         assertThat(old.path("converted").asText()).isEqualTo("measure('Notional') / measure('Trades')");
         assertThat(codes(old)).containsExactly("DRS-9100");
-        assertThat(old.path("valid").asBoolean()).isTrue();
+        assertThat(old.path("valid").asBoolean()).as("refused since the end of wave A").isFalse();
     }
 
     @Test @Order(3)

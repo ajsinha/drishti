@@ -148,7 +148,7 @@ class DatasetDefParserTest {
                 dataset: trades-eu
                 version: 1.0.0
                 extends: pack.trading.trade@1
-                where: "currency in ('EUR', 'GBP')"
+                where: "currency in ['EUR', 'GBP']"
                 columns:
                   notionalM: { type: decimal, expr: "notional / 1000000", role: amount }
                 security: { masked: [trader] }
