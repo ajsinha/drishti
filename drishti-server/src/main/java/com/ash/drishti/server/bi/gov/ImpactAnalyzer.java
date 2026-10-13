@@ -17,7 +17,7 @@ package com.ash.drishti.server.bi.gov;
 
 import com.ash.drishti.identity.bi.BiStore;
 import com.ash.drishti.server.bi.BiFolder;
-import com.ash.drishti.server.bi.dataset.Composition;
+import com.ash.drishti.server.bi.dataset.LegacySources;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.report.Report;
@@ -35,7 +35,7 @@ import java.util.function.Function;
  * directly and decides nothing about who may see what: the caller filters what it shows. A report names its dataset by catalogue id, shipped file
  * name, the dataset's own name or its title (the viewer's rule); the same rule is used here.
  */
-public final class ImpactAnalyzer implements Composition.Directory, AutoCloseable {
+public final class ImpactAnalyzer implements AutoCloseable {
 
     /**
      * A report affected by a change.
@@ -65,12 +65,11 @@ public final class ImpactAnalyzer implements Composition.Directory, AutoCloseabl
     public ImpactAnalyzer(BiStore store, BiFolder folder) {
         this.store = store;
         this.folder = folder;
-        Composition.install(this);                       // composed and derived datasets find their sources through this analyzer's view of the store
     }
 
     @Override
     public void close() {
-        Composition.uninstall(this);
+        // nothing is held since the composed and derived datasets were removed (2.2)
     }
 
     /** Where the columns a derived dataset's Transform last returned are looked up (set once by the Transform service). */
@@ -78,7 +77,6 @@ public final class ImpactAnalyzer implements Composition.Directory, AutoCloseabl
         this.learned = f;
     }
 
-    @Override
     public Map<String, String> learned(String datasetName) {
         return learned.apply(datasetName);
     }
@@ -100,11 +98,6 @@ public final class ImpactAnalyzer implements Composition.Directory, AutoCloseabl
         return Optional.ofNullable(draft);
     }
 
-    @Override
-    public Optional<Composition.Found> find(String ref) {
-        return datasetNamed(ref).map(d -> new Composition.Found(d.id(), publishedBody(d) != null ? publishedBody(d) : d.body()));
-    }
-
     /** The offer of a dataset body; empty when it does not parse. */
     public static Surface.Offer offer(String body) {
         if (body == null || body.isBlank()) {
@@ -116,7 +109,7 @@ public final class ImpactAnalyzer implements Composition.Directory, AutoCloseabl
 
     /** The declared {@code dataset:} name of a dataset body, or an empty string. */
     public static String declaredName(String body) {
-        return Composition.declaredName(body);
+        return LegacySources.declaredName(body);
     }
 
     /** The text readers see: the published version of a stored item, the file of a shipped one; null when the item is not published. */
@@ -306,7 +299,7 @@ public final class ImpactAnalyzer implements Composition.Directory, AutoCloseabl
                 continue;
             }
             String body = publishedBody(d) != null ? publishedBody(d) : d.body();
-            if (Composition.dependsOnOthers(body) && readsFrom(body, dataset) || !body.equals(d.body()) && Composition.dependsOnOthers(d.body()) && readsFrom(d.body(), dataset)) {
+            if (LegacySources.dependsOnOthers(body) && readsFrom(body, dataset) || !body.equals(d.body()) && LegacySources.dependsOnOthers(d.body()) && readsFrom(d.body(), dataset)) {
                 out.add(d);
             }
         }
@@ -315,15 +308,15 @@ public final class ImpactAnalyzer implements Composition.Directory, AutoCloseabl
 
     private boolean readsFrom(String body, BiStore.Item dataset) {
         Dataset parsed = DatasetParser.parse(body).dataset();
-        return parsed != null && Composition.sources(parsed).stream().anyMatch(in -> refersTo(in.dataset(), dataset));
+        return parsed != null && LegacySources.sources(parsed).stream().anyMatch(in -> refersTo(in.dataset(), dataset));
     }
 
     private List<String> brokenSource(String body, BiStore.Item dataset, Set<String> tables, Surface.Change change) {
-        if (!Composition.dependsOnOthers(body)) {
+        if (!LegacySources.dependsOnOthers(body)) {
             return null;
         }
         Dataset parsed = DatasetParser.parse(body).dataset();
-        if (parsed == null || Composition.sources(parsed).stream().noneMatch(in -> refersTo(in.dataset(), dataset))) {
+        if (parsed == null || LegacySources.sources(parsed).stream().noneMatch(in -> refersTo(in.dataset(), dataset))) {
             return null;
         }
         return Surface.broken(Surface.refs(parsed, ref -> refersTo(ref, dataset), tables), change);

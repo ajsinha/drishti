@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -84,26 +85,61 @@ public class DatasetController {
      * small result as JSON; {@code format=arrow} answers an Arrow IPC stream with the layer, rows and masked columns in {@code X-Bi-*} headers.
      * {@code explain=true} (BI authors) adds the compiled SQL (values are placeholders) and skips the result cache.
      */
+    /**
+     * Removed in 2.2 (docs/architecture/BI_MODEL_SPEC.md sections 5.9 and 8.5): a dataset is asked through the model query language. Answers {@code 410} with
+     * the equivalent model query ({@code mq}) to send to {@code POST /api/v1/bi/mq}: on the model the converter made of a 2.1 dataset (same name), or on a
+     * {@code rachana: 2} dataset's implicit model ({@code dataset:<name>}).
+     */
     @PostMapping("/datasets/{id}/query")
-    public ResponseEntity<?> query(@PathVariable String id, @RequestBody JsonNode body, @RequestParam(defaultValue = "json") String format,
-            @RequestParam(defaultValue = "false") boolean explain, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        QueryService.Result r = datasets.ask(p, id, QueryRequest.of(body), explain && bi.mayAuthor(p));         // the SQL names server paths: authors only
-        if ("arrow".equalsIgnoreCase(format)) {
-            byte[] bytes = datasets.arrow(r);
-            return ResponseEntity.ok().contentType(MediaType.parseMediaType(ARROW))
-                    .header("X-Bi-Layer", r.meta().layer())
-                    .header("X-Bi-Rollup", r.meta().rollup() == null ? "" : r.meta().rollup())
-                    .header("X-Bi-Rows", Integer.toString(r.rows()))
-                    .header("X-Bi-Cached", Boolean.toString(r.meta().cached()))
-                    .header("X-Bi-Masked", String.join(",", r.meta().masked()))
-                    .header("Server-Timing", "query;dur=" + r.meta().millis())
-                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
-                    .body(bytes);
+    public ResponseEntity<Map<String, Object>> query(@PathVariable String id, @RequestBody JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        bi.requirePower(p, BiAccess.BI);
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("type", "about:blank");
+        m.put("title", "dataset query removed");
+        m.put("status", 410);
+        m.put("code", "DRS-9150");
+        m.put("detail", "POST /api/v1/bi/datasets/{id}/query was removed in 2.2: ask the model with POST /api/v1/bi/mq (the query is in `mq`); "
+                + "drishti.py bi mq FILE does the same from a shell");
+        m.put("mq", mqEquivalent(p, id, body));
+        return ResponseEntity.status(HttpStatus.GONE).header(HttpHeaders.CACHE_CONTROL, "no-store").body(m);
+    }
+
+    /** The model query a 2.1 dataset query asked: its fields, measures, filters, dates, sort and limit, on the dataset's model. */
+    private Map<String, Object> mqEquivalent(Principal p, String id, JsonNode body) {
+        String model = id.startsWith("file:dataset:") ? id.substring("file:dataset:".length()) + "@1" : id;     // a 2.1 file converted: the model of its name
+        try {
+            com.ash.drishti.identity.bi.BiStore.Item item = bi.readableItem(p, id);
+            String text = bi.bodyFor(p, item);
+            String name = com.ash.drishti.server.bi.dataset.LegacySources.declaredName(text);
+            if (!name.isBlank()) {
+                model = com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(text) ? "dataset:" + name : name + "@1";
+            }
+        } catch (DrishtiException e) {
+            // not one the caller may read: the reference as given
         }
-        if (!"json".equalsIgnoreCase(format)) {
-            throw new DrishtiException(ErrorCode.QUERY_INVALID, "format is json or arrow");
+        Map<String, Object> mq = new LinkedHashMap<>();
+        mq.put("mq", 1);
+        mq.put("model", model);
+        QueryRequest q;
+        try {
+            q = QueryRequest.of(body);
+        } catch (DrishtiException e) {
+            return mq;
         }
-        return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "no-store").body(datasets.json(r));
+        mq.put("select", Map.of("fields", q.fields(), "measures", q.measures()));
+        if (!q.filters().isEmpty()) {
+            mq.put("where", q.filters().stream().map(f -> Map.of("field", f.field(), "op", f.op(), "values", f.values())).toList());   // a filter on a measure goes to `having`
+        }
+        if (q.from() != null) {
+            mq.put("time", q.to() == null || q.from().equals(q.to()) ? Map.of("as-of", q.from().toString()) : Map.of("window", Map.of("from", q.from().toString(), "to", q.to().toString())));
+        }
+        if (!q.orderBy().isEmpty()) {
+            mq.put("sort", q.orderBy().stream().map(x -> Map.of("by", x.by(), "desc", x.desc())).toList());
+        }
+        if (q.limit() != null) {
+            mq.put("limit", q.limit());
+        }
+        return mq;
     }
 
     /** Clears the dataset's layers for the current business date and reads them again from the connectors. */

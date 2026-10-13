@@ -22,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.ash.drishti.server.bi.migrate.ModelConverter;
 import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -70,6 +71,8 @@ import org.springframework.test.web.servlet.ResultActions;
 class ModelAcceptanceTest {
 
     static final String DS = "file:dataset:acc-trades";
+    /** What a visual of the converted report names: the model the converter made of the 2.1 dataset. */
+    static final String MODEL = "acc-trades@1";
     static final String REPORT = "file:report:acc-report";
     static final String DAY = "2026-10-08";
     static Path root;
@@ -144,6 +147,17 @@ class ModelAcceptanceTest {
                           - { id: mtm, type: card, title: MTM, at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [MTM] } }
                           - { id: by-desk, type: bar, title: By desk, at: { x: 0, y: 2, w: 6, h: 4 }, wells: { axis: [trades.desk], values: [Notional, MTM] } }
                     """);
+            // since 2.2 the 2.1 dataset and its report are converted (BI_MODEL_SPEC.md 8.3): the model acc-trades and its dataset, the report on the model
+            ModelConverter.Result converted = ModelConverter.convert(List.of(
+                    new ModelConverter.Source("datasets/acc-trades.dataset.yaml", "dataset", Files.readString(datasets.resolve("acc-trades.dataset.yaml"))),
+                    new ModelConverter.Source("reports/acc-report.report.yaml", "report", Files.readString(reports.resolve("acc-report.report.yaml")))),
+                    ModelConverter.Exposure.NOTE);
+            for (Map.Entry<String, String> w : converted.writes().entrySet()) {
+                Files.writeString(folder.resolve(w.getKey()), w.getValue());
+            }
+            for (String gone : converted.removes()) {
+                Files.deleteIfExists(folder.resolve(gone));
+            }
             // a model of the model layer over the same lake, and a dataset whose source is that model's answer (wave W1 package S4)
             Files.writeString(datasets.resolve("acc-trade.dataset.yaml"), """
                     rachana: 2
@@ -316,13 +330,14 @@ class ModelAcceptanceTest {
         for (String who : List.of("rita", "hana", "ann")) {
             // the report visual: its model query is the one the other two send
             JsonNode visual = reportVisual(who, "by-desk");
-            assertThat(visual.path("mq").path("model").asText()).as("the visual ran as a model query").isEqualTo(DS);
+            assertThat(visual.path("mq").path("model").asText()).as("the visual ran as a model query").isEqualTo(MODEL);
             assertThat(visual.path("mq").path("select").path("measures").toString()).contains("Notional").contains("MTM");
             Map<String, List<Object>> fromReport = byDesk(visual);
 
-            // Analyse: the extract-and-slice path (the dataset query, translated) and the slice as a model query of its own
-            JsonNode extract = ok(call("POST", "/api/v1/bi/datasets/" + DS + "/query", reader(who),
-                    "{\"fields\":[\"trades.desk\"],\"measures\":[\"Notional\",\"MTM\"],\"dates\":{\"from\":\"" + DAY + "\"}}"));
+            // Analyse: the 2.1 extract path answers 410 with the model query it is now, which answers as the report; and the slice as a model query of its own
+            var gone = call("POST", "/api/v1/bi/datasets/" + DS + "/query", reader(who),
+                    "{\"fields\":[\"trades.desk\"],\"measures\":[\"Notional\",\"MTM\"],\"dates\":{\"from\":\"" + DAY + "\"}}").andExpect(status().isGone()).andReturn().getResponse();
+            JsonNode extract = ok(call("POST", "/api/v1/bi/mq", reader(who), json.readTree(gone.getContentAsString()).path("mq").toString()));
             JsonNode slice = ok(call("POST", "/api/v1/bi/mq", reader(who), Map.of("mq", 1, "model", "acc-trades", "select",
                     Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional", "MTM")), "time", Map.of("as-of", DAY))));
             assertThat(byDesk(extract)).as(who + ": extract = report").isEqualTo(fromReport);
@@ -361,10 +376,11 @@ class ModelAcceptanceTest {
 
     @Test @Order(2)
     void aConsumerRefusalKeepsItsEndpointsCodeAndCarriesTheModelQueryProblem() throws Exception {
-        call("POST", "/api/v1/bi/datasets/" + DS + "/query", reader("ann"), "{\"measures\":[\"Trades\"],\"filters\":[{\"field\":\"trades.mtm\",\"op\":\"gt\",\"values\":[0]}]}")
-                .andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DRS-9021")).andExpect(jsonPath("$.problems[0].code").value("DRS-9161"));
-        call("POST", "/api/v1/bi/datasets/" + DS + "/query", reader("rita"), "{\"fields\":[\"trades.nope\"],\"measures\":[\"Trades\"]}")
-                .andExpect(status().isUnprocessableEntity()).andExpect(jsonPath("$.code").value("DRS-9020")).andExpect(jsonPath("$.problems[0].code").value("DRS-9152"));
+        call("POST", "/api/v1/bi/mq", reader("ann"), Map.of("mq", 1, "model", MODEL, "select", Map.of("measures", List.of("Trades")), "where",
+                List.of(Map.of("field", "trades.mtm", "op", "gt", "values", List.of(0)))))
+                .andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DRS-9161")).andExpect(jsonPath("$.problems[0].code").value("DRS-9161"));
+        call("POST", "/api/v1/bi/mq", reader("rita"), Map.of("mq", 1, "model", MODEL, "select", Map.of("fields", List.of("trades.nope"), "measures", List.of("Trades"))))
+                .andExpect(status().isUnprocessableEntity()).andExpect(jsonPath("$.code").value("DRS-9152")).andExpect(jsonPath("$.problems[0].code").value("DRS-9152"));
     }
 
     // ---- standing queries --------------------------------------------------------------------------------------------

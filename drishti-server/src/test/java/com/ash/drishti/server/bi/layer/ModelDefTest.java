@@ -282,17 +282,6 @@ class ModelDefTest {
     }
 
     @Test
-    void theCompatibilityReaderKeepsTheOldFileAsItIs() {
-        Dataset old = DatasetParser.parse(com.ash.drishti.server.bi.engine.TestLake.yaml()).dataset();
-        ModelDef m = CompatReader.read(old, "file:dataset:lake-test");
-        assertThat(m.datasets().get("trades").role()).isEqualTo("fact");
-        assertThat(m.datasets().get("desks").role()).isEqualTo("dimension");
-        assertThat(m.measures()).containsKeys("MTM", "Share");
-        assertThat(m.relationships()).hasSize(1);
-        assertThat(m.security()).isEqualTo(ModelDef.Security.NONE);                          // the old rules stay in the old dataset, with their old meaning
-    }
-
-    @Test
     void theFullContractDetectionOfWaveACatchesMeaningsFieldsAndGrains() {
         ModelDef was = ModelDefParser.parse(MODEL).model();
         Map<String, ResolvedDataset> data = resolved();

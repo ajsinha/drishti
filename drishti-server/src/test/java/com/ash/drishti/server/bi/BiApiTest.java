@@ -127,7 +127,7 @@ class BiApiTest {
             Files.writeString(reports.resolve("desk-pnl.report.yaml"), "title: Desk profit (shipped)\ndescription: From the BI folder\ntags: [pnl, desk]\nendorsement: certified\npages: []\n");
             Path datasets = Path.of("target/bi-api-folder/datasets");
             Files.createDirectories(datasets);
-            Files.copy(Path.of("../config/bi/datasets/trades-basic.dataset.yaml"), datasets.resolve("trades-basic.dataset.yaml"), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(Path.of("src/test/resources/bi/samples-2.1/datasets/trades-basic.dataset.yaml"), datasets.resolve("trades-basic.dataset.yaml"), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             Files.writeString(reports.resolve("risk-only.report.yaml"), "title: Risk only\naudience:\n  roles: [steward]\n");
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);

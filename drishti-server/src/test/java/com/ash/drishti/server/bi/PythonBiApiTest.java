@@ -63,7 +63,7 @@ class PythonBiApiTest {
 
     static {
         try {
-            for (String f : List.of("datasets/trades-basic.dataset.yaml", "python/desk-pnl-volatility.python.yaml", "python/pnl-histogram.python.yaml",
+            for (String f : List.of("datasets/trades-basic-trade.dataset.yaml", "models/trades-basic.model.yaml", "python/desk-pnl-volatility.python.yaml", "python/pnl-histogram.python.yaml",
                     "reports/python-desk-risk.report.yaml")) {
                 Path to = FOLDER.resolve(f);
                 Files.createDirectories(to.getParent());

@@ -23,7 +23,7 @@ import com.ash.drishti.identity.User;
 import com.ash.drishti.identity.UserService;
 import com.ash.drishti.identity.bi.BiStore;
 import com.ash.drishti.packs.PackRegistry;
-import com.ash.drishti.server.bi.dataset.Composition;
+import com.ash.drishti.server.bi.dataset.LegacySources;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.dataset.UserAttributes;
@@ -415,7 +415,7 @@ public final class DatasetService {
 
     private DatasetParser.Result parse(String id, String body) {
         String h = hash(body);
-        if (Composition.dependsOnOthers(body)) {
+        if (LegacySources.dependsOnOthers(body)) {
             return DatasetParser.parse(body);                      // its model depends on the datasets it is made of, which may have changed: never served from the cache
         }
         Parsed p = parsed.get(id);
@@ -618,7 +618,7 @@ public final class DatasetService {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("kind", d.composed() ? "composed" : "derived");
         List<Map<String, Object>> sources = new ArrayList<>();
-        for (Dataset.Input in : Composition.sources(d)) {
+        for (Dataset.Input in : LegacySources.sources(d)) {
             Map<String, Object> s = new LinkedHashMap<>();
             s.put("alias", in.alias());
             s.put("dataset", in.dataset());
@@ -853,19 +853,8 @@ public final class DatasetService {
     /** Runs a derived dataset's Transform now for the caller (see {@link DatasetController#runTransform}). */
     public Map<String, Object> runTransform(Principal p, String id) {
         BiStore.Item item = datasetItem(p, id);
-        QueryService.Loaded ds = loaded(p, item);
-        if (!ds.dataset().derivedFrame() || frames == null) {
-            throw new DrishtiException(ErrorCode.QUERY_INVALID, "dataset '" + item.title() + "' is not a derived dataset: it has no Transform to run");
-        }
-        com.ash.drishti.server.bi.transform.TransformService.Output out = frames.runTransform(p, ds);
-        audit.record(p.user(), "bi-transform-run", id, out.rows() + " rows" + (out.cached() ? " (kept)" : " in " + out.millis() + " ms"));
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("dataset", id);
-        m.put("rows", out.rows());
-        m.put("cached", out.cached());
-        m.put("millis", out.millis());
-        m.put("columns", out.columns().stream().map(c -> Map.of("name", c.name(), "type", c.type())).toList());
-        return m;
+        throw new DrishtiException(ErrorCode.QUERY_INVALID, "'" + item.title() + "': derived datasets were removed in 2.2; a Python dataset (source.python) runs its "
+                + "Transform when it is asked (drishti.py bi migrate --models converts a derived dataset; docs/architecture/BI_MODEL_SPEC.md section 8.3)");
     }
 
     /** The refresh state of a dataset the caller may read: its schedule, last run, status, next run, failures. */

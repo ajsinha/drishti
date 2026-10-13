@@ -24,7 +24,6 @@ import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.engine.Layers;
 import com.ash.drishti.server.bi.engine.QueryService;
-import com.ash.drishti.server.bi.layer.CompatReader;
 import com.ash.drishti.server.bi.layer.Contracts;
 import com.ash.drishti.server.bi.layer.DatasetDef;
 import com.ash.drishti.server.bi.layer.DatasetDefParser;
@@ -489,17 +488,19 @@ public final class ModelCatalog {
             }
             return implicitOf(d);
         }
-        Dataset ds;
-        try {
-            ds = datasets.parsedDataset(p, readable);
-        } catch (DrishtiException e) {
-            if (consumer) {
-                throw e;                                               // a consumer keeps the dataset's own refusal (DRS-9010)
-            }
-            throw new MqException(MqException.Problem.of("DRS-9151", "model", e.getMessage().replaceFirst("^DRS-\\d+ ", "")));
-        }
-        ModelDef def = CompatReader.read(ds, readable.id());
-        return new Found(new ModelView(readable.id(), Layers.key(readable.id()), "", def, ds, Map.of(), Set.of(), true), readable);
+        // the compatibility reader is gone (2.2, docs/architecture/BI_MODEL_SPEC.md section 8.4): a 2.1 dataset is never read as a model
+        throw new MqException(MqException.Problem.of("DRS-9151", "model", "'" + readable.title() + "' is a rachana: 1 dataset, no longer read as a model: "
+                + "drishti.py bi migrate --models converts it to datasets and a model of the same name (docs/architecture/BI_MODEL_SPEC.md section 8.3)"));
+    }
+
+    /** True for a {@code rachana: 1} dataset item (a live report's dataset until wave W3): asked through the engine as before, never as a model. */
+    public boolean isVersion1(Principal p, BiStore.Item item) {
+        return "dataset".equals(item.kind()) && !DatasetDefParser.isVersion2(bi.bodyFor(p, item));
+    }
+
+    /** A {@code rachana: 1} dataset's answer through the engine, as the caller (its rules joined into the query, as in 2.1). */
+    public QueryService.Result askVersion1(Principal p, BiStore.Item item, com.ash.drishti.server.bi.engine.QueryRequest q, boolean explain) {
+        return datasets.queryItem(p, item, q, explain);
     }
 
     // ---- datasets ----------------------------------------------------------------------------------------------------

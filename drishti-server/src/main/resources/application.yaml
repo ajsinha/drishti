@@ -177,7 +177,6 @@ drishti:
       - /api/v1/search/pivot/**
       - /api/v1/command
       - /api/v1/forms/*/*/compile        # query by form: writes the criteria out as a search command, nothing else
-      - /api/v1/bi/poc/query            # Rupaka phase 0 proof of concept: a read (an Arrow answer), only when drishti.bi.poc.enabled
       - /api/v1/bi/datasets/*/query     # Rupaka phase 2: a dataset query (fields, measures, filters in the body), masked and row-ruled, changes nothing
       - /api/v1/bi/datasets/validate    # checks a dataset's YAML without storing it
       - /api/v1/bi/mq                   # the model query language (docs/architecture/BI_MODEL_SPEC.md section 5): one query of a model as the caller, changes nothing
@@ -579,16 +578,6 @@ drishti:
     migrate:                         # migrations of STORED BI items (docs/architecture/BI_MODEL_SPEC.md 8.3; docs/guides/TROUBLESHOOTING.md "Migration problems")
       on-start: ${DRISHTI_BI_MIGRATE_ON_START:true}   # at start: old-syntax expressions to DEL v2, audited, the text before kept in each item's history; idempotent
       actor: system                  # the name the history, the item's events and the audit log give the start-up run
-    poc:                             # Rupaka phase 0 PROOF OF CONCEPT (docs/architecture/RUPAKA_POC.md): throw-away endpoints under /api/v1/bi/poc
-      enabled: ${DRISHTI_BI_POC_ENABLED:false}   # off: they answer 404 as if the code were absent
-      rows: 10000                    # trades per day in the generated sample lake (at most 10,000: local-safe)
-      days: 2                        # days in the sample lake (at most 5)
-      lake-dir: ${DRISHTI_BI_POC_LAKE:}   # where the Parquet sample lake is written (empty: the system temp folder); never under data/
-      bi-dir: ${drishti.bi.dir}      # where the POC looks for dataset files
-      max-group-by: 4                # most dimensions one query may group by
-      feed-trades: []                # live demo trades the row feed follows (empty: 24 trades of the trading pack)
-      feed-batch: 100ms              # how often the feed sends the rows that changed
-      bench-runs: 30                 # default runs of the JSON / typed / rollup comparison
   layouts:                           # layout mode: each user's arrangement of a Sutra's panels (USER_GUIDE.md, Layout mode)
     enabled: ${DRISHTI_LAYOUTS_ENABLED:true}   # also needs a role with layout (every role but viewer, unless configured)
   explain:                           # About this page (docs/architecture/CONTEXT_HELP.md): GET /api/v1/views/{kind}/{id}/explain

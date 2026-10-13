@@ -17,6 +17,12 @@
 
 ## Unreleased
 
+- **Server: the 2.1 dataset paths are removed (wave A, task 6).** The compatibility reader is gone (a `rachana: 1` dataset is no longer read as a model:
+  `DRS-9151` names `drishti.py bi migrate --models`); composed and derived datasets are removed (`dataset/Composition` and their `FrameService` code; a
+  `from:` or `derived:` text parses with `DRS-9190` and is still read by the converter); `POST /api/v1/bi/datasets/{id}/query` answers `410` with the
+  equivalent model query (`mq`); `POST /datasets/{id}/transform/run` is refused; the phase 0 proof of concept (`/api/v1/bi/poc`, `drishti.bi.poc`) is
+  removed. The 2.1 sample dataset files are gone (their models ship), except the two live ones, whose reports stay on them until W3; the sample notebook
+  reads `mq:trading-risk@1` and the sample Transform's inputs are the Python dataset's (`pnl`, `exposure`).
 - **Server: what the wave A console lane found (wave A).** DEL `round(x, n)` runs (the digits cast to INTEGER; recipe R16). A dataset's `where` with
   `group` filters the rows before they are grouped (it was applied to the groups: `DRS-9020`). A reader of a published report opens it and its envelope
   without read on the model (`GET /reports/{id}` describes the model within the envelope, `envelope: true`). `POST /bi/models/{ref}/preview-as {role,

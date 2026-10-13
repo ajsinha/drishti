@@ -26,7 +26,7 @@ import java.util.Set;
 /**
  * A data model (docs/architecture/BI_MODEL_SPEC.md section 2): datasets in a star under aliases, relationships, measures, hierarchies, model security (only
  * tighter than the datasets'), a contract with semver and stable ids, and a lifecycle. It never copies data. Produced by {@link ModelDefParser}, made for a
- * consumer of one dataset by {@link ImplicitModels}, or read from a version-1 dataset by {@link CompatReader}. Immutable.
+ * consumer of one dataset by {@link ImplicitModels}, (the version-1 compatibility reader was removed in 2.2). Immutable.
  *
  * @param implicitFrom for an implicit model (or one written out from it), the dataset it was made from; else null
  * @param placeholders the later-wave keys that are used though their wave has not come ({@code calc-groups}, {@code parameters}): refused with DRS-9129

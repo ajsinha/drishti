@@ -26,10 +26,10 @@ description: One-day P&L of the trades by counterparty joined to expected exposu
 sample: true
 endorsement: promoted
 tags: [sample, multi-dataset, python, counterparty-risk]
-dataset: file:dataset:trading-risk
+dataset: mq:trading-risk@1          # the model trading-risk (2.2): the trades of the first extract
 fields: [trades.counterpartyId, trades.desk, trades.pnl1d]
 extracts:
-  - { name: exposure, dataset: file:dataset:counterparty-exposure, fields: [netting_sets.counterparty, netting_sets.eePeak, netting_sets.pfePeak] }
+  - { name: exposure, dataset: mq:trading-risk@1, fields: [netting_sets.counterparty, netting_sets.eePeak, netting_sets.pfePeak] }   # the netting sets of the same model
 cells:
   - type: python
     source: |

@@ -1263,6 +1263,11 @@ the files under `config/bi` are exactly the converter's output.
 
 ### 8.4 The W1 compatibility reader
 
+*Removed in 2.2 (wave A, task 6), with `dataset/Composition`, the composed and derived datasets' code in `FrameService` and the phase 0 proof of
+concept: a `rachana: 1` dataset is no longer read as a model (`DRS-9151` names the converter), a `from:` or `derived:` dataset parses with `DRS-9190` (its text
+is still read, for the converter), and `POST /datasets/{id}/query` answers `410` with the equivalent model query. A 2.1 dataset with a live table keeps
+serving its live reports through the engine until W3. What follows is the design as it was.*
+
 So that W1 can be accepted before W4 migrates the files, a `rachana: 1` dataset with `tables:` is **read as a model**
 whose datasets are inline (one anonymous dataset per table, under the table's name) and a composed or derived
 `rachana: 1` dataset as an implicit model of one dataset. Reports, alerts and Analyse then ask it through MQ. The reader

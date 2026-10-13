@@ -131,12 +131,21 @@ public final class DatasetParser {
             out.add(error("engine", "only the embedded engine `duckdb` is built; '" + engine + "' is planned (RUPAKA.md section 7.1)"));
         }
         if (ds.framed()) {
-            if (!rollups.isEmpty() || !rels.isEmpty()) {
-                out.add(error(rollups.isEmpty() ? "relationships" : "rollups", "a composed or derived dataset has one table built at query time: it takes no " + (rollups.isEmpty() ? "relationships" : "rollups")));
+            // removed in 2.2 (docs/architecture/BI_MODEL_SPEC.md section 8): the text is read, for the converter, never run
+            out.add(new Problem("error", LegacySources.REMOVED, composed ? "from" : "derived", (composed ? "composed" : "derived") + " datasets were removed in 2.2: "
+                    + (composed ? "their sources' datasets belong in one model with relationships to shared dimensions" : "a Python dataset (source.python) replaces them")
+                    + "; drishti.py bi migrate --models converts this one (docs/architecture/BI_MODEL_SPEC.md section 8.3)"));
+            if (derived) {
+                Map<String, Dataset.Column> columns = new LinkedHashMap<>();
+                declaredColumns(root.path("columns"), out).forEach((k, v) -> columns.put(k, new Dataset.Column(k, k, v, null, false, null, "")));
+                Dataset.Table table = new Dataset.Table(Dataset.RESULT, "", Dataset.FRAME, null, Dataset.FRAME, false, "", "the frame " + derivedSpec.transform() + " returned",
+                        columns);
+                ds = new Dataset(ds.name(), ds.version(), ds.title(), ds.description(), ds.sample(), ds.engine(), Map.of(Dataset.RESULT, table), List.of(), ds.measures(),
+                        ds.hierarchies(), ds.security(), List.of(), ds.refresh(), null, derivedSpec, ds.tests());
             }
-            ds = Composition.expand(ds, declaredColumns(root.path("columns"), out), out);
+            return new Result(ds, out);
         } else if (tables.isEmpty() && root.path("tables").isMissingNode()) {
-            out.add(error("tables", "a dataset needs `tables:` (or `from:` to be composed of other datasets, or `derived:` to be made by a Python Transform)"));
+            out.add(error("tables", "a dataset needs `tables:`; 2.2 models and datasets are rachana: 2 (docs/architecture/BI_MODEL_SPEC.md)"));
         }
         out.addAll(DatasetValidator.validate(ds));
         return new Result(ds, out);
@@ -453,7 +462,7 @@ public final class DatasetParser {
     private static Map<String, Dataset.Input> inputs(JsonNode n, String path, List<Problem> out) {
         Map<String, Dataset.Input> inputs = new LinkedHashMap<>();
         if (!n.isObject()) {
-            out.add(new Problem("error", Composition.COMPOSE, path, "this is a mapping from an alias to a source: alias: { dataset: trades-basic, by: [...], measures: [...] }"));
+            out.add(new Problem("error", LegacySources.COMPOSE, path, "this is a mapping from an alias to a source: alias: { dataset: trades-basic, by: [...], measures: [...] }"));
             return inputs;
         }
         n.fields().forEachRemaining(e -> {
@@ -461,27 +470,27 @@ public final class DatasetParser {
             String p = path + "." + alias;
             JsonNode v = e.getValue();
             if (!IDENT.matcher(alias).matches()) {
-                out.add(new Problem("error", Composition.COMPOSE, p, "'" + alias + "' is not an alias (letters, digits, underscore; not starting with a digit)"));
+                out.add(new Problem("error", LegacySources.COMPOSE, p, "'" + alias + "' is not an alias (letters, digits, underscore; not starting with a digit)"));
                 return;
             }
             if (!v.isObject() || !v.path("dataset").isTextual() || v.path("dataset").asText().isBlank()) {
-                out.add(new Problem("error", Composition.COMPOSE, p, "a source is { dataset: <dataset>, by: [...], measures: [...] } (or `fields: [...]` for rows)"));
+                out.add(new Problem("error", LegacySources.COMPOSE, p, "a source is { dataset: <dataset>, by: [...], measures: [...] } (or `fields: [...]` for rows)"));
                 return;
             }
             v.fieldNames().forEachRemaining(k -> {
                 if (!Set.of("dataset", "by", "measures", "fields", "filters", "key").contains(k)) {
-                    out.add(new Problem("warning", Composition.COMPOSE, p + "." + k, "unknown key '" + k + "' is ignored (dataset, by, measures, fields, filters, key)"));
+                    out.add(new Problem("warning", LegacySources.COMPOSE, p + "." + k, "unknown key '" + k + "' is ignored (dataset, by, measures, fields, filters, key)"));
                 }
             });
             List<Dataset.InputFilter> filters = new ArrayList<>();
             JsonNode fs = v.path("filters");
             if (!fs.isMissingNode() && !fs.isNull() && !fs.isArray()) {
-                out.add(new Problem("error", Composition.COMPOSE, p + ".filters", "filters is a list of { field, op, values }"));
+                out.add(new Problem("error", LegacySources.COMPOSE, p + ".filters", "filters is a list of { field, op, values }"));
             } else {
                 for (JsonNode f : fs) {
                     String op = f.path("op").asText("in").toLowerCase(java.util.Locale.ROOT);
                     if (!f.path("field").isTextual() || !com.ash.drishti.server.bi.engine.QueryRequest.OPS.contains(op)) {
-                        out.add(new Problem("error", Composition.COMPOSE, p + ".filters", "a filter is { field, op, values }; op is one of "
+                        out.add(new Problem("error", LegacySources.COMPOSE, p + ".filters", "a filter is { field, op, values }; op is one of "
                                 + new java.util.TreeSet<>(com.ash.drishti.server.bi.engine.QueryRequest.OPS)));
                         continue;
                     }
@@ -509,7 +518,7 @@ public final class DatasetParser {
             return list;
         }
         if (!n.isArray()) {
-            out.add(new Problem("error", Composition.COMPOSE, "join", "join is a list: - { left: a, right: b, on: [field], type: inner }"));
+            out.add(new Problem("error", LegacySources.COMPOSE, "join", "join is a list: - { left: a, right: b, on: [field], type: inner }"));
             return list;
         }
         for (int i = 0; i < n.size(); i++) {
@@ -521,7 +530,7 @@ public final class DatasetParser {
                 on.add(j.path("on").asText());
             }
             if (!j.path("left").isTextual() || !j.path("right").isTextual()) {
-                out.add(new Problem("error", Composition.COMPOSE, "join[" + i + "]", "a join is { left: <alias>, right: <alias>, on: [fields], type: inner|left|full }"));
+                out.add(new Problem("error", LegacySources.COMPOSE, "join[" + i + "]", "a join is { left: <alias>, right: <alias>, on: [fields], type: inner|left|full }"));
                 continue;
             }
             list.add(new Dataset.Join(j.path("left").asText(), j.path("right").asText(), on, text(j, "type", "inner").toLowerCase(java.util.Locale.ROOT), j.path("allow-repeat").asBoolean(false)));
@@ -531,12 +540,12 @@ public final class DatasetParser {
 
     private static Dataset.Derived derived(JsonNode n, List<Problem> out) {
         if (!n.isObject()) {
-            out.add(new Problem("error", Composition.DERIVED, "derived", "derived is { transform: <python item>, inputs: { alias: { dataset, ... } }, params: {...} }"));
+            out.add(new Problem("error", LegacySources.DERIVED, "derived", "derived is { transform: <python item>, inputs: { alias: { dataset, ... } }, params: {...} }"));
             return new Dataset.Derived("", new LinkedHashMap<>(), Map.of());
         }
         n.fieldNames().forEachRemaining(k -> {
             if (!Set.of("transform", "inputs", "params").contains(k)) {
-                out.add(new Problem("warning", Composition.DERIVED, "derived." + k, "unknown key '" + k + "' is ignored (transform, inputs, params)"));
+                out.add(new Problem("warning", LegacySources.DERIVED, "derived." + k, "unknown key '" + k + "' is ignored (transform, inputs, params)"));
             }
         });
         Map<String, Object> params = new LinkedHashMap<>();
