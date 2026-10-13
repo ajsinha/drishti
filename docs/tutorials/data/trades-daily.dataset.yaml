@@ -15,6 +15,7 @@
 # Tutorial 11: a small dataset over the trades that rebuilds itself every business morning. The `refresh:` line is the point; the rest is the
 # trades-basic sample cut down to what a desk page needs.
 rachana: 1
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
 dataset: trades-daily
 version: 1
 title: Trades refreshed daily

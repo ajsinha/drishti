@@ -260,6 +260,10 @@ public enum ErrorCode {
     LAYER_MODEL_INVALID("DRS-9120", 422),
     /** The model layer: a breaking change (a measure, column or relationship removed) published without a new major version, or a version that goes down. */
     LAYER_MODEL_BREAKING("DRS-9126", 409),
+    /** The expression language (DEL): an expression that is not DEL v2 or does not fit its scope, its types or the catalogue (a measure that does not compile). */
+    EXPR_INVALID("DRS-9127", 422),
+    /** A key, function or value of a later wave used before that wave (filter context, parameters, calculation groups: wave B). */
+    LATER_WAVE("DRS-9129", 422),
     /** The model layer's security safeguard: a dataset a restricted role would see in full, with neither a row rule nor a {@code may-see-all} note. */
     LAYER_MODEL_SAFEGUARD("DRS-9130", 409),
     /** Model Check warning: readers of a dataset that no row rule of the model names; they see no rows (never refuses a publish). */
@@ -290,6 +294,8 @@ public enum ErrorCode {
     MQ_MASKED("DRS-9161", 403),
     /** Model query: a Python measure in a grouped query (a python visual runs it). */
     MQ_PYTHON("DRS-9162", 422),
+    /** The expression converter could not keep the meaning of an old-syntax expression (it is left as it was). */
+    EXPR_CONVERT("DRS-9190", 422),
     /** Standing query: no such subscription for the caller. */
     SQ_NOT_FOUND("DRS-9180", 404),
     /** Standing query: the server holds {@code drishti.bi.mq.max-subscriptions} already. */

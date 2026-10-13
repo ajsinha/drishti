@@ -16,7 +16,6 @@
 package com.ash.drishti.server.bi.mq;
 
 import com.ash.drishti.server.bi.dataset.Dataset;
-import com.ash.drishti.server.bi.dataset.ExprParser;
 import com.ash.drishti.server.bi.dataset.Node;
 import com.ash.drishti.server.bi.layer.DatasetDef;
 import com.ash.drishti.server.bi.layer.Flattener;
@@ -82,7 +81,7 @@ public record ModelView(String id, String key, String hash, ModelDef def, Datase
         if ((additive == null || currency == null) && em != null && em.expr() != null) {
             Node n;
             try {
-                n = ExprParser.parse(em.expr());
+                n = com.ash.drishti.server.bi.expr.Expressions.parse(em.expr());
             } catch (RuntimeException e) {
                 n = null;
             }
@@ -122,7 +121,7 @@ public record ModelView(String id, String key, String hash, ModelDef def, Datase
             m.inputs().forEach(i -> out.add(i.substring(0, Math.max(0, i.indexOf('.')))));
             return;
         }
-        Node.walk(ExprParser.parse(m.expr()), n -> {
+        Node.walk(com.ash.drishti.server.bi.expr.Expressions.parse(m.expr()), n -> {
             if (n instanceof Node.Ref r && ds.tables().containsKey(r.parts().get(0))) {
                 out.add(r.parts().get(0));
             } else if (n instanceof Node.MeasureRef x) {

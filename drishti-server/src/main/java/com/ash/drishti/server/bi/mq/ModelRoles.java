@@ -95,7 +95,7 @@ public final class ModelRoles {
     public List<DatasetParser.Problem> warnings(ModelDef m, Map<String, ResolvedDataset> datasets) {
         List<DatasetParser.Problem> out = new ArrayList<>();
         uncovered(m, datasets).forEach((alias, roles) -> out.add(new DatasetParser.Problem("warning", "DRS-9131", "security.rows." + alias,
-                "roles without a rule see no rows of '" + alias + "': " + String.join(", ", roles) + ". Add a rule for them (where: \"true\" lets a role see "
+                "roles without a rule see no rows of '" + alias + "': " + String.join(", ", roles) + ". Add a rule for them (where: \"True\" lets a role see "
                         + "every row), or leave them out on purpose: they get \"you have no access to rows of " + alias + " in this model\"")));
         return out;
     }

@@ -106,13 +106,13 @@ public final class ModelChecker {
     public static List<Exposure> exposures(ModelDef m, Map<String, ResolvedDataset> datasets) {
         Set<String> restricted = new LinkedHashSet<>();
         m.security().rows().values().forEach(rules -> rules.forEach(r -> {
-            if (!"true".equals(r.where().trim())) {
+            if (!RuleText.everyRow(r.where())) {
                 restricted.addAll(r.roles());
             }
         }));
         for (ResolvedDataset r : datasets.values()) {
             r.layers().forEach(l -> l.forEach(rule -> {
-                if (!"true".equals(rule.where().trim())) {
+                if (!RuleText.everyRow(rule.where())) {
                     restricted.addAll(rule.roles());
                 }
             }));

@@ -17,6 +17,7 @@
 # Tutorial: docs/tutorials/../guides/BI_RECIPES.md. Reference: docs/guides/DATASETS.md.
 
 rachana: 1
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
 dataset: trading-cashflows
 version: 1
 title: Trade legs and cashflows

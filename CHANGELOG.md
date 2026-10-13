@@ -17,6 +17,17 @@
 
 ## Unreleased
 
+- **Server: DEL v2, the Python-like expression language (wave A, task 1).** Measures, derived columns, filters and row rules are written in a safe subset
+  of Python's expression grammar (`sum(trades.mtm, where=trades.status == 'Live')`, `measure('P&L 1d') / measure('Exposure (EE peak)')`, `a if c else b`,
+  `x is None`), parsed by one hand-written parser on the server (`bi/expr`), checked against its scope (row, rule, aggregate), types and a function
+  catalogue (`bi/expr/functions.yaml`, 59 functions; wave B's refused with `DRS-9129`), and lowered to the same compiler tree as before, so the SQL is
+  unchanged. New: `endswith`, `week`, `date('…')`, `timestamp('…')`, `days_between`, `business_days_between`, `//`, `**`, chained comparisons;
+  `/` `//` `%` give `None` on a zero divisor. `GET /api/v1/bi/expr/functions`, `POST /api/v1/bi/expr/validate` (as the caller: masked `DRS-9161`,
+  hidden `DRS-9152`, fixes and positions), `POST /api/v1/bi/expr/convert` (one expression, or a whole item's YAML with comments kept). The old syntax is
+  read with a `DRS-9100` warning (`drishti.bi.expr.legacy: warn`; `refuse` at the end of A; `expressions: 2` on an item refuses it now); every shipped
+  expression converts to identical SQL (tested). CLI: `drishti.py bi expr functions|validate|convert`, `drishti.py bi migrate --expressions`. New guide
+  [EXPRESSIONS.md](docs/guides/EXPRESSIONS.md) (its function reference is generated from the catalogue; a test keeps them equal). New codes `DRS-9127`,
+  `DRS-9129`, `DRS-9190` in `ErrorCode`.
 - **Server: the W1 QA findings.** A model **rows** extract (`shape: rows`, Analyse, *Show the rows*) keeps one row per fact row (it was `DISTINCT`: 9 rows
   for 60 trades); its sums equal the measures. **Make it a model** reads the designer's quoted `model: "dataset:..."`, reuses a model already written out
   from the dataset in the workspace, and lists the other reports on the dataset to move. **Models are shared by reference**: `GET /bi/models/{ref}/consumers`

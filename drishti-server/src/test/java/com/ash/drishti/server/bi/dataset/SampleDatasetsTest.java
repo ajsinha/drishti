@@ -127,7 +127,7 @@ class SampleDatasetsTest {
         assertThat(d.compose().frame()).extracting(Dataset.FrameColumn::name).containsExactly("counterparty", "name", "Desk P&L", "Trades", "sector", "Exposure (EE peak)", "Exposure (PFE peak)");
         assertThat(d.tables().get(Dataset.JOINED).columns().keySet()).containsExactly("counterparty", "name", "Desk_P_L", "Trades", "sector", "Exposure_EE_peak", "Exposure_PFE_peak");
         assertThat(d.measures().keySet()).containsExactly("Desk P&L", "Trades", "Exposure (EE peak)", "Exposure (PFE peak)", "P&L per exposure");
-        assertThat(d.measures().get("P&L per exposure").expr()).isEqualTo("[Desk P&L] / [Exposure (EE peak)]");
+        assertThat(d.measures().get("P&L per exposure").expr()).isEqualTo("measure('Desk P&L') / measure('Exposure (EE peak)')");
     }
 
     @Test

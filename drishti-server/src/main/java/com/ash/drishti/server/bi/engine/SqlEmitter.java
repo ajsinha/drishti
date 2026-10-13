@@ -18,7 +18,6 @@ package com.ash.drishti.server.bi.engine;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.server.bi.dataset.Dataset;
-import com.ash.drishti.server.bi.dataset.ExprParser;
 import com.ash.drishti.server.bi.dataset.Node;
 import com.ash.drishti.server.bi.dataset.Resolver;
 import com.ash.drishti.server.bi.dataset.Rollups;
@@ -115,7 +114,7 @@ final class SqlEmitter {
     String calculated(Dataset.Table table, String expr) {
         current = table.name();
         try {
-            return emit(ExprParser.parse(expr), false);
+            return emit(com.ash.drishti.server.bi.expr.Expressions.parse(expr), false);
         } finally {
             current = null;
         }
@@ -188,7 +187,7 @@ final class SqlEmitter {
             throw new DrishtiException(ErrorCode.DATASET_EXPRESSION, "measures refer to each other in a circle at '" + name + "'");
         }
         try {
-            return "(" + emit(ExprParser.parse(m.expr()), false) + ")";
+            return "(" + emit(com.ash.drishti.server.bi.expr.Expressions.parse(m.expr()), false) + ")";
         } finally {
             trail.remove(name);
         }
@@ -218,8 +217,37 @@ final class SqlEmitter {
             case "if" -> "(CASE WHEN " + emit(a.get(0), inAgg) + " THEN " + emit(a.get(1), inAgg) + " ELSE " + emit(a.get(2), inAgg) + " END)";
             case "contains" -> "(position(lower(" + emit(a.get(1), inAgg) + ") IN lower(" + emit(a.get(0), inAgg) + ")) > 0)";
             case "startsWith" -> "starts_with(lower(" + emit(a.get(0), inAgg) + "), lower(" + emit(a.get(1), inAgg) + "))";
+            case "endswith" -> {
+                String s1 = emit(a.get(0), inAgg);
+                String len = emit(a.get(1), inAgg);
+                yield "(right(lower(" + s1 + "), length(" + len + ")) = lower(" + emit(a.get(1), inAgg) + "))";
+            }
+            case "week" -> dialect.part("week", emit(a.get(0), inAgg));
+            case "power" -> "power(CAST(" + emit(a.get(0), inAgg) + " AS " + dialect.doubleType() + "), " + emit(a.get(1), inAgg) + ")";
+            case "date" -> "CAST(" + emit(a.get(0), inAgg) + " AS DATE)";
+            case "timestamp" -> "CAST(" + emit(a.get(0), inAgg) + " AS TIMESTAMP)";
+            case "days_between" -> {
+                String to = emit(a.get(1), inAgg);                             // parameters bind in the order they appear in the text
+                yield "(CAST(" + to + " AS DATE) - CAST(" + emit(a.get(0), inAgg) + " AS DATE))";
+            }
+            case "business_days_between" -> {
+                String to = weekdays(a.get(1), inAgg);
+                yield "(" + to + " - " + weekdays(a.get(0), inAgg) + ")";
+            }
             default -> throw new DrishtiException(ErrorCode.DATASET_NOT_BUILT, "'" + f + "' is not built yet");
         };
+    }
+
+    /**
+     * The weekdays (Monday to Friday) from Monday 1970-01-05 up to the date, included: {@code 5 * weeks + min(day of week + 1, 5)}, so the difference of two
+     * is the business days from the first, excluded, to the second, included. The date is written three times (each with its own parameters, in text order).
+     */
+    private String weekdays(Node d, boolean inAgg) {
+        String n1 = "(CAST(" + emit(d, inAgg) + " AS DATE) - DATE '1970-01-05')";
+        String n2 = "(CAST(" + emit(d, inAgg) + " AS DATE) - DATE '1970-01-05')";
+        String n3 = "(CAST(" + emit(d, inAgg) + " AS DATE) - DATE '1970-01-05')";
+        String weeks = "floor(CAST(" + n1 + " AS " + dialect.doubleType() + ") / 7)";
+        return "(5 * " + weeks + " + least(" + n2 + " - 7 * floor(CAST(" + n3 + " AS " + dialect.doubleType() + ") / 7) + 1, 5))";
     }
 
     private String aggregate(Node.Call c) {
@@ -419,6 +447,13 @@ final class SqlEmitter {
         }
         if ("/".equals(op)) {
             return "(CAST(" + emit(b.left(), inAgg) + " AS " + dialect.doubleType() + ") / NULLIF(" + emit(b.right(), inAgg) + ", 0))";
+        }
+        if ("//".equals(op)) {                                                  // DEL: floor division, None on a zero divisor
+            return "floor(CAST(" + emit(b.left(), inAgg) + " AS " + dialect.doubleType() + ") / NULLIF(" + emit(b.right(), inAgg) + ", 0))";
+        }
+        if ("%".equals(op)) {                                                   // None on a zero divisor, never an error
+            String l = emit(b.left(), inAgg);
+            return "(" + l + " % NULLIF(" + emit(b.right(), inAgg) + ", 0))";
         }
         String l = emit(b.left(), inAgg);
         return "(" + l + " " + op + " " + emit(b.right(), inAgg) + ")";

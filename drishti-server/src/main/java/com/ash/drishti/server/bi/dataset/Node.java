@@ -27,7 +27,8 @@ public sealed interface Node {
     /** The aggregate functions. */
     Set<String> AGGREGATES = Set.of("sum", "avg", "min", "max", "count", "distinct", "ratio", "percentile");
     /** Row-level functions. */
-    Set<String> SCALARS = Set.of("abs", "coalesce", "upper", "lower", "round", "year", "quarter", "month", "day", "if", "contains", "startsWith", "length");
+    Set<String> SCALARS = Set.of("abs", "coalesce", "upper", "lower", "round", "year", "quarter", "month", "day", "if", "contains", "startsWith", "length", "endswith", "week",
+            "power", "date", "timestamp", "days_between", "business_days_between");
     /**
      * Time intelligence: {@code ytd(agg, table.dateColumn)} and its kin restrict the aggregate to the rows whose date falls in a window that ends at the query's
      * as-of date (the end of its dates); the windows are worked out in Java from the pack's business-day calendar and bound as parameters.

@@ -109,7 +109,7 @@ class DatasetParserTest {
         assertThat(errors(GOOD.replace("sum(trades.notional)\"", "sum(sum(trades.notional))\""))).extracting(Problem::message).anyMatch(m -> m.contains("do not nest"));
         assertThat(errors(GOOD.replace("percentile(trades.mtm, 0.95)", "percentile(trades.mtm, 7)"))).extracting(Problem::code).contains("DRS-9011");
         assertThat(errors(GOOD.replace("sum(trades.notional)\"", "sum(trades.notional\""))).extracting(Problem::message).anyMatch(m -> m.contains("expected ')'"));
-        assertThat(errors(GOOD.replace("[MTM] / [Notional]", "[Nope] / [Notional]"))).extracting(Problem::message).anyMatch(m -> m.contains("[Nope] is not a measure"));
+        assertThat(errors(GOOD.replace("[MTM] / [Notional]", "[Nope] / [Notional]"))).extracting(Problem::message).anyMatch(m -> m.contains("measure('Nope') names no measure"));
         assertThat(errors(GOOD.replace("MTM: \"sum(trades.mtm)\"", "MTM: \"[Share]\""))).extracting(Problem::message).anyMatch(m -> m.contains("circle"));
         assertThat(errors(GOOD.replace("notional / 1000", "sum(notional)"))).extracting(Problem::message).anyMatch(m -> m.contains("cannot aggregate"));
         assertThat(errors(GOOD.replace("trades.desk in user.desks", "trades.desk in user.planet"))).extracting(Problem::message).anyMatch(m -> m.contains("not an attribute"));

@@ -1,0 +1,47 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Tutorial 18: a derived dataset. The same table as cp-pnl-exposure, made by the Python Transform mtm-vs-exposure from the same two questions.
+rachana: 1
+dataset: cp-pnl-exposure-py
+version: 1
+title: Counterparty P&L and exposure (Python)
+description: The table of cp-pnl-exposure made by a Python Transform; the ratio is a measure of this dataset over the frame the Transform returned.
+derived:
+  transform: MTM against exposure   # the Python item (catalogue id or title)
+  inputs:
+    pnl:
+      dataset: trading-risk
+      by: ["counterparties.id as counterparty", "counterparties.name as name", "counterparties.sector as sector"]
+      measures: [MTM, Trades]
+    exposure:
+      dataset: counterparty-exposure
+      by: ["counterparties.id as counterparty"]
+      measures: [Exposure (EE peak), Exposure (PFE peak)]
+  params: { floor: 1.0 }
+columns:
+  counterparty: string
+  name: string
+  sector: string
+  mtm: decimal
+  trades: integer
+  ee_peak: decimal
+  pfe_peak: decimal
+  mtm_per_exposure: decimal
+  exposure_rank: decimal
+measures:
+  MTM:               { expr: "sum(result.mtm)", format: signed0 }
+  Exposure (EE peak): { expr: "sum(result.ee_peak)", format: amount0 }
+  MTM per exposure:  { expr: "ratio(sum(result.mtm), sum(result.ee_peak))", format: signed2 }
+  Counterparties:    { expr: "count(result)" }

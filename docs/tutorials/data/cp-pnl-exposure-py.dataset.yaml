@@ -14,6 +14,7 @@
 
 # Tutorial 18: a derived dataset. The same table as cp-pnl-exposure, made by the Python Transform mtm-vs-exposure from the same two questions.
 rachana: 1
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
 dataset: cp-pnl-exposure-py
 version: 1
 title: Counterparty P&L and exposure (Python)

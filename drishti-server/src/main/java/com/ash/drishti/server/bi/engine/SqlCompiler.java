@@ -19,7 +19,6 @@ import com.ash.drishti.api.DataNode;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.server.bi.dataset.Dataset;
-import com.ash.drishti.server.bi.dataset.ExprParser;
 import com.ash.drishti.server.bi.dataset.Node;
 import com.ash.drishti.server.bi.dataset.Resolver;
 import java.time.LocalDate;
@@ -199,7 +198,7 @@ public final class SqlCompiler {
         if (reader.enforceRows() && !ds.security().rows().isEmpty()) {
             for (Dataset.RowRule r : ds.security().rows()) {
                 if (reader.roles().contains(r.role())) {
-                    Node n = ExprParser.parse(r.where());
+                    Node n = com.ash.drishti.server.bi.expr.Expressions.parse(r.where());
                     rules.add(n);
                     Node.walk(n, x -> {
                         if (x instanceof Node.Ref ref) {
@@ -269,7 +268,7 @@ public final class SqlCompiler {
             measureTables.remove(name);
             measureTables.putAll(leaves);
             for (String p : pure) {
-                derived.put(p, ExprParser.parse(ds.measures().get(p).expr()));
+                derived.put(p, com.ash.drishti.server.bi.expr.Expressions.parse(ds.measures().get(p).expr()));
             }
         }
     }
@@ -296,7 +295,7 @@ public final class SqlCompiler {
         }
         Set<String> refs = new LinkedHashSet<>();
         boolean[] own = {false};
-        Node.walk(ExprParser.parse(m.expr()), n -> {
+        Node.walk(com.ash.drishti.server.bi.expr.Expressions.parse(m.expr()), n -> {
             if (n instanceof Node.MeasureRef r) {
                 refs.add(r.name());
             } else if (n instanceof Node.Ref) {
@@ -417,7 +416,7 @@ public final class SqlCompiler {
             } else if (x instanceof Node.MeasureRef m && trail.add(m.name())) {
                 Dataset.Measure meas = ds.measures().get(m.name());
                 if (meas != null && meas.expr() != null) {
-                    collect(ExprParser.parse(meas.expr()), out, trail);
+                    collect(com.ash.drishti.server.bi.expr.Expressions.parse(meas.expr()), out, trail);
                 }
             }
         });
@@ -918,7 +917,7 @@ public final class SqlCompiler {
             return false;
         }
         boolean[] hit = {false};
-        Node.walk(ExprParser.parse(m.expr()), n -> {
+        Node.walk(com.ash.drishti.server.bi.expr.Expressions.parse(m.expr()), n -> {
             if (n instanceof Node.Call c && Node.isWindow(c.function())) {
                 hit[0] = true;
             } else if (n instanceof Node.MeasureRef r && usesWindow(r.name(), seen)) {

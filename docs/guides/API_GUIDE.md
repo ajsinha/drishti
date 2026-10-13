@@ -1677,6 +1677,8 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9109 | 422 | Source cycle | A model that reaches itself through a dataset whose source is a model (Check, the bind of a query, or at run time): `model:a -> dataset:x -> model:a` |
 | DRS-9120 | 422 | Model invalid | Publishing a data model whose Check has an error (`DRS-9120` to `DRS-9129` in the problem list, [BI_MODEL_SPEC.md section 2.11](../architecture/BI_MODEL_SPEC.md#211-model-problems)) |
 | DRS-9126 | 409 | Breaking change | A published model or dataset loses a measure, column or relationship (by stable id or name), makes a relationship inactive or changes a grain key without a new major version; or the version goes down |
+| DRS-9127 | 422 | Expression | An expression that is not DEL v2 (a construct Python has and DEL refuses, the old syntax once refused), or that does not fit its scope, its types or the function catalogue; a model measure that does not compile ([EXPRESSIONS.md](EXPRESSIONS.md#7-problems-and-their-fixes)) |
+| DRS-9129 | 422 | Later wave | A key, function or value a later wave builds (`calc`, `share_of`, `param.x`, `ALL`, calculation groups: wave B) |
 | DRS-9131 | (warning) | Roles without a rule | Check names the readers of a dataset that no row rule of the model names: they see no rows (`meta.noAccess` in their answers) |
 | DRS-9130 | 409 | Security safeguard | A model where a role restricted by a row rule elsewhere would see every row of a dataset with no rule: give that dataset a rule, or write `may-see-all: { <alias>: [<role>] }` (audited `bi-model-may-see-all`) |
 | DRS-9150 | 422 | Model query shape | An unknown key, a wrong type, `mq` missing or not 1, two time forms, `params` before wave W6 |
@@ -1692,6 +1694,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9160 | 422 | Repeats rows | A row extract (`shape: rows`) with fields of two facts |
 | DRS-9161 | 403 | Masked field | A filter, sort or `top` on a field masked for the caller (the body also names `DRS-9021`; `fix` offers the dataset's key) |
 | DRS-9162 | 422 | Python measure | A Python measure in a grouped query (a python visual runs it) |
+| DRS-9190 | 422 | Not converted | The expression converter could not keep the meaning of an old-syntax expression; it is left as it was (`POST /bi/expr/convert` lists it under `problems`) |
 | DRS-9180 | 404 | No such subscription | A standing query id the caller does not hold |
 | DRS-9181 | 429 | Server subscriptions | `drishti.bi.mq.max-subscriptions` standing queries are open already |
 | DRS-9182 | 429 | Your subscriptions | `drishti.bi.mq.max-subscriptions-per-user` standing queries of yours are open already |
@@ -1945,6 +1948,45 @@ generation (a load, a refresh, a live batch); the incremental rules are wave W3.
 
 **Tokens.** `POST /bi/mq`, `/bi/models/{id}/query`, `/bi/mq/validate`, `/bi/models/validate` and `/bi/mq/subscribe` are reads (`token-read-posts`); ending a subscription
 (`DELETE /bi/mq/subscribe/{id}`) needs `bi:write`. Every model query is audited: `bi-mq` for a model, `bi-query` for a version-1 file.
+
+## Expressions: `/api/v1/bi/expr`
+
+Release 2.2 wave A ([EXPRESSIONS.md](EXPRESSIONS.md), [BI_DESIGN.md §3.3](../architecture/BI_DESIGN.md#33-del-the-drishti-expression-language-python-like)): the
+Drishti expression language, DEL v2 (Python-like), has **one parser, on the server**; the console's expression editor completes from the catalogue and
+checks through `validate`, it never parses for meaning. All three need the `bi` power; none reads data or stores anything (the two POSTs are open to a
+read-only token).
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/api/v1/bi/expr/functions` | the function catalogue (`?scope=row\|rule\|aggregate` keeps the functions allowed there): each function's `name`, `family`, `signature`, `params` (`name`, `type`, `default`, `keywordOnly`, `variadic`), `returns`, `scopes`, `status` (`built` or the wave that builds it), `since`, `legacy` (its old name), `description`, `examples` (`expr`, `says`), `edgeCases`; plus `keywords`, `operators`, `literals`, `scopes` and `legacy` (the `drishti.bi.expr.legacy` mode) |
+| `POST` | `/api/v1/bi/expr/validate` | body `{expr, scope?, model?, alias?}`: checks one expression. `scope` is `row`, `rule` or `aggregate` (default); `model` a model reference (`name@major`) or `dataset:<name>` — the fields and measures are the model's **as the caller sees them** (hidden columns absent, masked ones marked); `alias` the dataset whose row is in context in row and rule scope (default: the only one). Without `model`, only the language and the catalogue are checked. A measure on a model is also compiled the way publishing would. Always `200` |
+| `POST` | `/api/v1/bi/expr/convert` | body `{expr}`: the expression in DEL v2 (`changed: false` when it already was); or `{yaml}`: a whole item (dataset, model, report, board, notebook) with every expression converted and `expressions: 2` set, comments and layout kept, with `changes` (`path`, `from`, `to`) and `problems` (expressions it could not convert, `DRS-9190`, left as they were) |
+
+The validate answer (captured; `rita` on the test model `lang-model`):
+
+```json
+{"expr": "sum(trades.notional, where=trades.desk == 'DESK-A') / measure('m_trades')", "scope": "aggregate", "type": "decimal",
+ "uses": {"functions": ["sum", "measure"], "fields": ["trades.notional", "trades.desk"], "measures": ["Trades"]},
+ "syntax": "del2", "valid": true, "problems": [],
+ "model": {"id": "file:model:lang-model", "name": "lang-model", "version": "1.0.0", "implicit": false, "compat": false}}
+```
+
+A problem has `code`, `level` (`error` or `warning`), `message`, `fix` (or null) and `at` (`start`, `end`: character offsets into `expr`), so the editor
+underlines it and offers the fix as a button (captured):
+
+```json
+{"expr": "count(trades, where=trades.mtm < 0)", "scope": "aggregate", "type": "integer", "syntax": "del2", "valid": false,
+ "problems": [{"code": "DRS-9161", "level": "error", "message": "'trades.mtm' is masked for you: a filter on it (<) is refused",
+               "fix": "filter on a field that is not masked", "at": {"start": 20, "end": 30}}], ...}
+{"expr": "[Notional] / [Trades]", "scope": "aggregate", "type": "decimal", "syntax": "legacy", "converted": "measure('Notional') / measure('Trades')", "valid": true,
+ "problems": [{"code": "DRS-9100", "level": "warning", "message": "old expression syntax (read until the end of wave A, then refused): run the converter",
+               "fix": "write: measure('Notional') / measure('Trades')", "at": {"start": 0, "end": 21}}], ...}
+```
+
+`syntax` is `del2` or `legacy` (the old syntax, read with the `DRS-9100` warning while `drishti.bi.expr.legacy: warn`; then `converted` holds the DEL v2
+text and the rest of the check runs on it). The codes are in [EXPRESSIONS.md section 7](EXPRESSIONS.md#7-problems-and-their-fixes). The CLI:
+`drishti.py bi expr functions|validate|convert` and `drishti.py bi migrate --expressions FILE... [--write] [--check]`
+([CLI_GUIDE.md](CLI_GUIDE.md)).
 
 ## Reports: `/api/v1/bi/reports` (phase 3)
 

@@ -18,6 +18,7 @@
 # Report: config/bi/reports/world-economics.report.yaml. Reference: docs/guides/DATASETS.md.
 
 rachana: 1
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
 dataset: world-economics
 version: 1
 title: World economics

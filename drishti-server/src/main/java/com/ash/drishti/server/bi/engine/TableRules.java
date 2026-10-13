@@ -16,7 +16,6 @@
 package com.ash.drishti.server.bi.engine;
 
 import com.ash.drishti.server.bi.dataset.Dataset;
-import com.ash.drishti.server.bi.dataset.ExprParser;
 import com.ash.drishti.server.bi.dataset.Node;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -122,7 +121,7 @@ public final class TableRules {
             if (s == null) {
                 continue;
             }
-            s.filters().forEach(f -> all.add(ExprParser.parse(f)));
+            s.filters().forEach(f -> all.add(com.ash.drishti.server.bi.expr.Expressions.parse(f)));
             if (!reader.enforceRows()) {
                 continue;
             }
@@ -133,7 +132,7 @@ public final class TableRules {
                 Node or = null;
                 for (Dataset.RowRule r : layer) {
                     if (reader.roles().contains(r.role())) {
-                        Node n = ExprParser.parse(r.where());
+                        Node n = com.ash.drishti.server.bi.expr.Expressions.parse(r.where());
                         or = or == null ? n : new Node.Bin("||", or, n);
                     }
                 }

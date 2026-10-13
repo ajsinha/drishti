@@ -19,6 +19,7 @@
 # trading-risk, exposure from here, and BI joins them. Read docs/guides/DATASETS.md section 11 and docs/tutorials/10-first-bi-report.md chapter 10.
 
 rachana: 1
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
 dataset: counterparty-exposure
 version: 1
 title: Counterparty exposure

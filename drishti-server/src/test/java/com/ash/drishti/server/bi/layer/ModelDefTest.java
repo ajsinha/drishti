@@ -31,7 +31,7 @@ class ModelDefTest {
             security:
               rows:
                 - { role: desk-head, where: "trades.desk in user.desks" }
-                - { role: [risk, analyst], where: "true" }
+                - { role: [risk, analyst], where: "True" }
               masked: [mtm]
             """, "");
 
@@ -73,14 +73,14 @@ class ModelDefTest {
               Notional: { id: m_notional, expr: "sum(trades.notional)", currency: trades.currency }
               Trades:   { id: m_trades, expr: "count(trades)" }
               Limit:    { id: m_limit, expr: "sum(limits.amount)" }
-              Usage:    { id: m_usage, expr: "[Notional] / [Limit]" }
+              Usage:    { id: m_usage, expr: "measure('Notional') / measure('Limit')" }
             hierarchies:
               Desk: [desks.region, desks.desk]
             security:
               rows:
                 trades:
                   - { role: desk-head, where: "trades.desk in user.desks" }
-                  - { role: [risk, analyst], where: "true" }
+                  - { role: [risk, analyst], where: "True" }
               may-see-all: { limits: [desk-head], desks: [desk-head] }
             """;
 
@@ -128,7 +128,7 @@ class ModelDefTest {
 
     @Test
     void anIslandIsAWarning9121() {
-        String island = MODEL.replace("  - { id: r_2, from: limits.desk, to: desks.desk }\n", "").replace("  Usage:    { id: m_usage, expr: \"[Notional] / [Limit]\" }\n", "");
+        String island = MODEL.replace("  - { id: r_2, from: limits.desk, to: desks.desk }\n", "").replace("  Usage:    { id: m_usage, expr: \"measure('Notional') / measure('Limit')\" }\n", "");
         assertThat(codes(island)).contains("w:DRS-9121").noneMatch(c -> c.startsWith("e:"));
     }
 
@@ -177,11 +177,11 @@ class ModelDefTest {
         assertThat(open).containsExactly(new ModelChecker.Exposure("limits", "desk-head"), new ModelChecker.Exposure("desks", "desk-head"));
         assertThat(codes(noNote)).contains("w:DRS-9130");
         // a rule on the dataset (in the model) or the explicit note answers it, one dataset at a time
-        String oneRule = noNote.replace("  rows:\n", "  rows:\n    limits:\n      - { role: desk-head, where: \"limits.desk in user.desks\" }\n      - { role: [risk, analyst], where: \"true\" }\n");
+        String oneRule = noNote.replace("  rows:\n", "  rows:\n    limits:\n      - { role: desk-head, where: \"limits.desk in user.desks\" }\n      - { role: [risk, analyst], where: \"True\" }\n");
         assertThat(ModelChecker.exposures(ModelDefParser.parse(oneRule).model(), resolved())).containsExactly(new ModelChecker.Exposure("desks", "desk-head"));
         assertThat(ModelChecker.exposures(ModelDefParser.parse(MODEL).model(), resolved())).isEmpty();
         // a role that only has `true` rules is not restricted
-        String allTrue = noNote.replace("- { role: desk-head, where: \"trades.desk in user.desks\" }", "- { role: desk-head, where: \"true\" }");
+        String allTrue = noNote.replace("- { role: desk-head, where: \"trades.desk in user.desks\" }", "- { role: desk-head, where: \"True\" }");
         assertThat(ModelChecker.exposures(ModelDefParser.parse(allTrue).model(), resolved())).isEmpty();
     }
 

@@ -609,6 +609,24 @@ public final class ModelCatalog {
                 .map(x -> x.get("code") + " " + x.get("path") + ": " + x.get("message")).orElse("");
     }
 
+    /**
+     * {@code POST /api/v1/bi/expr/validate}: an expression checked in its scope, against the model (or {@code dataset:<name>}) as the caller sees it when one is
+     * named, else against the language and the catalogue only.
+     */
+    public Map<String, Object> validateExpression(Principal p, String expr, com.ash.drishti.server.bi.expr.Scope scope, String model, String alias) {
+        if (model == null) {
+            return ExpressionCheck.run(expr, scope, com.ash.drishti.server.bi.expr.Fields.NONE, null, Map.of());
+        }
+        MqService.Bound b = bind(p, model);
+        ModelFields f = ModelFields.of(b, alias, b.context().roles());
+        Map<String, Object> out = ExpressionCheck.run(expr, scope, f, b.view().flat(), com.ash.drishti.server.bi.layer.Flattener.measureIds(b.view().measureDefs()));
+        out.put("model", MqService.model(b.view()));
+        if (f.current() != null && scope != com.ash.drishti.server.bi.expr.Scope.AGGREGATE) {
+            out.put("alias", f.current());
+        }
+        return out;
+    }
+
     /** What a designer, an AI or a client needs to write a query on the model, as the caller sees it: masked fields marked, hidden ones absent. */
     public Map<String, Object> describe(Principal p, String ref) {
         Found f = find(p, ref);

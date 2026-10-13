@@ -16,7 +16,6 @@
 package com.ash.drishti.server.bi.layer;
 
 import com.ash.drishti.server.bi.dataset.DatasetParser;
-import com.ash.drishti.server.bi.dataset.ExprParser;
 import com.ash.drishti.server.bi.dataset.Node;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.time.Duration;
@@ -48,7 +47,7 @@ public final class DatasetDefParser {
         }
     }
 
-    static final Set<String> TOP = Set.of("rachana", "dataset", "version", "id", "source", "grain", "columns", "time", "refresh", "security", "ai", "tests", "extends",
+    static final Set<String> TOP = Set.of("rachana", "expressions", "dataset", "version", "id", "source", "grain", "columns", "time", "refresh", "security", "ai", "tests", "extends",
             "where", "rollups", "layout", "title", "description", "owner", "tags", "endorsement", "endorsedBy", "audience", "sample", "generated");
     private static final Set<String> COLUMN_KEYS = Set.of("type", "path", "expr", "role", "meaning", "references", "of", "unit", "additive", "aggregate", "format", "id",
             "description", "title", "term", "means", "sign");
@@ -76,6 +75,7 @@ public final class DatasetDefParser {
 
     static DatasetDef read(JsonNode root, LayerYaml y) {
         y.unknownKeys(root, TOP, "DRS-9100", "");
+        expressionsVersion(root, y);
         if (root.path("rachana").asInt(0) != DatasetDef.RACHANA) {
             y.error("DRS-9100", "rachana", "a dataset of the model layer says `rachana: 2`");
         }
@@ -330,11 +330,39 @@ public final class DatasetDefParser {
 
     static Node expression(String text, String path, String code, LayerYaml y) {
         try {
-            return ExprParser.parse(text);
+            Node n = com.ash.drishti.server.bi.expr.Expressions.parse(text);
+            oldSyntax(text, path, y);
+            return n;
         } catch (RuntimeException e) {
-            y.error(code, path, "the expression does not parse: " + e.getMessage());
+            y.error(e instanceof com.ash.drishti.server.bi.expr.DelException d && com.ash.drishti.server.bi.expr.Expressions.OLD_SYNTAX.equals(d.code()) ? d.code() : code, path,
+                    "the expression does not parse: " + e.getMessage() + (e instanceof com.ash.drishti.server.bi.expr.DelException d && d.fix() != null ? " (" + d.fix() + ")" : ""));
             return null;
         }
+    }
+
+    /** The {@code DRS-9100} warning for the old expression syntax (an error on an item that declares {@code expressions: 2}). */
+    static void oldSyntax(String text, String path, LayerYaml y) {
+        String note = com.ash.drishti.server.bi.expr.Expressions.oldSyntaxNote(text);
+        if (note != null) {
+            if (y.strictExpressions) {
+                y.error(com.ash.drishti.server.bi.expr.Expressions.OLD_SYNTAX, path, note.replace("(read until the end of wave A, then refused)", "(the item declares expressions: 2)"));
+            } else {
+                y.warning(com.ash.drishti.server.bi.expr.Expressions.OLD_SYNTAX, path, note);
+            }
+        }
+    }
+
+    /** Reads {@code expressions:} (1, the old syntax read with a warning, or 2, DEL v2 only). */
+    static void expressionsVersion(JsonNode root, LayerYaml y) {
+        JsonNode e = root.path("expressions");
+        if (e.isMissingNode() || e.isNull()) {
+            return;
+        }
+        if (!e.canConvertToInt() || e.asInt() < 1 || e.asInt() > 2) {
+            y.error("DRS-9100", "expressions", "`expressions:` is 2 (DEL v2, the Python-like language) or 1 (the old syntax, read until the end of wave A)");
+            return;
+        }
+        y.strictExpressions = e.asInt() == 2;
     }
 
     // ---- grain, time, refresh ----------------------------------------------------------------------------------------

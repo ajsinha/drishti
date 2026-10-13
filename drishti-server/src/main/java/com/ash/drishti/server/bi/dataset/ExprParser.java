@@ -42,10 +42,10 @@ import java.util.List;
 public final class ExprParser {
 
     /** A syntax error with its position in the text. */
-    public static final class ExprException extends RuntimeException {
+    public static class ExprException extends RuntimeException {
         private final int position;
 
-        ExprException(String message, int position) {
+        public ExprException(String message, int position) {
             super(message);
             this.position = position;
         }

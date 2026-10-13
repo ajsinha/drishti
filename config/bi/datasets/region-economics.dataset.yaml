@@ -18,6 +18,7 @@
 # is its GDP over its population. Report: config/bi/reports/region-economics.report.yaml. Reference: docs/guides/DATASETS.md, docs/guides/REAL_DATA.md.
 
 rachana: 1
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
 dataset: region-economics
 version: 1
 title: Region economics

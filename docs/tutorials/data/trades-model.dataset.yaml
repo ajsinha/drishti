@@ -15,6 +15,7 @@
 # Tutorial 13: the model of a desk: one table of trades, three measures, a desk-to-book hierarchy. The tutorial edits it, has it reviewed and published,
 # certifies it, and then finds out what dropping the `book` column would break.
 rachana: 1
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
 dataset: trades-model
 version: 1
 title: Trades model
