@@ -189,7 +189,8 @@ public final class StableIds {
             String t = l.stripLeading();
             if (t.startsWith("- {") && !HAS_ID.matcher(t).find()) {
                 int at = l.indexOf("- {") + 3;
-                lines.set(i, l.substring(0, at) + " id: r_" + (++max) + "," + l.substring(at));
+                String rest = l.substring(at);
+                lines.set(i, l.substring(0, at) + " id: r_" + (++max) + "," + (rest.startsWith(" ") ? "" : " ") + rest);     // "- {from: a}" too
             }
         }
     }

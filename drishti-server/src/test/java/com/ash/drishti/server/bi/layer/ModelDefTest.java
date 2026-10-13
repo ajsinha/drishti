@@ -257,6 +257,9 @@ class ModelDefTest {
         assertThat(once).containsPattern("(?m)^id: md_[0-9a-f]{8}$").contains("MTM:      { expr: \"sum(trades.mtm)\", id: m_mtm }   # the mark").contains("- { id: r_3, from: trades.desk");
         assertThat(StableIds.write(once, true)).isEqualTo(once);
         assertThat(ModelDefParser.parse(once).ok()).isTrue();
+        String tight = StableIds.write(model.replace("- { from: trades.desk", "- {from: trades.desk"), true);
+        assertThat(tight).as("a relationship written without a space after the brace").contains("- { id: r_3, from: trades.desk").doesNotContain(",from:");
+        assertThat(ModelDefParser.parse(tight).ok()).isTrue();
         String ds = StableIds.write(DESKS.replace("  region: { type: string }", "  region: string\n  name:\n    type: string"), false);
         assertThat(ds).contains("region: { type: string, id: c_region }").contains("desk:   { type: string, role: key, id: c_desk }").contains("    id: c_name");
         assertThat(DatasetDefParser.parse(ds).dataset().columns().get("name").id()).isEqualTo("c_name");
