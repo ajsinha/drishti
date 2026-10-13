@@ -13,51 +13,84 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# The new-dataset wizard of the model layer (docs/architecture/BI_MODEL_SPEC.md section 9.2): only for what a pack does not give. Three steps (the source,
-   the table, save), the draft kept across refresh and Back, the server's Check beside each step. Drawn by static/js/bi-dataset-layer.js. #}
+{# The dataset wizard, version 2 (docs/architecture/BI_DESIGN.md sections 3.1 and 8.1; docs/guides/DATASETS.md "Make a dataset in the wizard"): pick the
+   root, then the columns, a filter, the grain (one row per, with an explicit de-duplication), derived columns (an expression or a Python item), an optional
+   grouping, a preview the server answers as you, and save; or an SQL view over a model. No YAML typing; the draft is kept across refresh and Back, and the
+   server's Check is beside each step. Drawn by static/js/bi-dataset-layer.js (state, document, navigation, save) and bi-dataset-steps.js (the steps). #}
 {% extends "bi/shell.html" %}
 {% block bi_title %}New dataset{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-layer.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-expr.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-layer.css?v={{ ASSET_V }}">{% endblock %}
 {% block bi_main %}
 <div data-lw-root data-ready="" data-workspace="{{ workspace }}">
 <header class="bi-head"><p class="bi-crumb"><a href="/bi/models">Models and datasets</a></p><h1>New dataset</h1>
-  <p class="text-muted-d">A dataset is one table: what one row is, its columns with their meanings, and how it keeps time. Every pack kind is one already; make one here only for a SQL query in a connector, a Python table, the answer of a model, or a pack dataset narrowed with extra columns.</p></header>
-<ol class="bi-lw-steps" aria-label="Steps"><li data-step-mark="1">1 · Where the table comes from</li><li data-step-mark="2">2 · Check the table</li><li data-step-mark="3">3 · Save</li></ol>
+  <p class="text-muted-d">A dataset is one table: what one row is, its columns with their meanings, and how it keeps time. Every pack kind is one already. Make one here to keep only some columns or rows of a pack dataset, say what one row is (and which duplicate wins), add columns worked out from others (a formula or a Python item), group it to a coarser grain, or read a SQL query, a Python table or the answer of a model.</p></header>
+<ol class="bi-lw-steps" data-lw-steps aria-label="Steps"></ol>
 <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
-<p class="bi-warn" data-lw-restore hidden></p>
-<section class="bi-sec bi-form bi-layer-form" data-step="1" aria-labelledby="lw1"><h2 id="lw1">Where does the table come from?</h2>
+<section class="bi-sec bi-form bi-layer-form" data-step="root" aria-labelledby="lwRoot"><h2 id="lwRoot">Where does the table come from?</h2>
   <div class="bi-lw-source" role="radiogroup" aria-label="Source">
-    <label class="bi-checkrow"><input type="radio" name="lwsrc" value="extends" data-src="extends"> <span><strong>A pack dataset, narrowed or with extra columns</strong><br><select class="studio-select" data-src-extends aria-label="Pack dataset"></select></span></label>
+    <label class="bi-checkrow"><input type="radio" name="lwsrc" value="extends" data-src="extends"> <span><strong>A pack dataset</strong>: keep some of its columns and rows, add columns, group it<br><select class="studio-select" data-src-extends aria-label="Pack dataset"></select></span></label>
+    <label class="bi-checkrow"><input type="radio" name="lwsrc" value="sql" data-src="sql"> <span><strong>An SQL view over a model</strong>: a reviewed Drishti SQL query whose answer is the table (read as the reader, with their rules and masks)<br>
+      <select class="studio-select" data-src-sql-model aria-label="Model the SQL reads"></select><textarea class="studio-in mono bi-sql-editor" rows="6" data-src-sql aria-label="Drishti SQL" spellcheck="false" placeholder="SELECT desk.name AS desk, MEASURE('MTM') AS mtm FROM trade JOIN desk GROUP BY desk.name"></textarea>
+      <span class="bi-actions"><button type="button" class="btn-pill btn-ghost bi-small" data-sql-check><i class="bi bi-check2-square" aria-hidden="true"></i> Check the SQL</button></span><span class="bi-sql-meta" data-sql-out aria-live="polite"></span></span></label>
     <label class="bi-checkrow"><input type="radio" name="lwsrc" value="connector" data-src="connector"> <span><strong>A query in a SQL connector</strong> (DuckDB, PostgreSQL); its only parameter is the as-of date<br>
       <input class="studio-in" data-src-connector placeholder="risk-warehouse" aria-label="Connector name"><textarea class="studio-in mono" rows="4" data-src-query aria-label="SQL query" placeholder="SELECT desk_id, limit_type, limit_amount, currency FROM limits WHERE as_of = :asOf"></textarea></span></label>
     <label class="bi-checkrow"><input type="radio" name="lwsrc" value="python" data-src="python"> <span><strong>A Python Transform</strong> (its inputs are model queries, asked as the reader)<br><select class="studio-select" data-src-python aria-label="Python item"></select> <a href="/bi/catalogue?kind=python" data-src-python-new>Write one</a></span></label>
     <label class="bi-checkrow"><input type="radio" name="lwsrc" value="model" data-src="model"> <span><strong>The answer of a model</strong>: pick fields and measures<br><select class="studio-select" data-src-model aria-label="Model"></select>
       <span class="bi-layer-picks" data-src-model-fields role="group" aria-label="Fields and measures"></span></span></label>
   </div>
-  <p class="text-muted-d bi-small-note" data-guided-note>Want the tables of a pack kind joined, with measures and row rules (a version 1 dataset)? <a data-guided href="/bi/datasets/new{{ '?workspace=' ~ workspace if workspace else '' }}">Use the guided tables builder</a>.</p>
-  <p class="bi-actions"><button type="button" class="btn-pill btn-accent" data-next="2">Next</button></p></section>
-<section class="bi-sec bi-form bi-layer-form" data-step="2" hidden aria-labelledby="lw2"><h2 id="lw2">Check the table</h2>
+  <p class="text-muted-d bi-small-note" data-guided-note>Want the tables of a pack kind joined, with measures and row rules (a version 1 dataset)? <a data-guided href="/bi/datasets/new{{ '?workspace=' ~ workspace if workspace else '' }}">Use the guided tables builder</a>.</p></section>
+<section class="bi-sec bi-form bi-layer-form" data-step="columns" hidden aria-labelledby="lwCols"><h2 id="lwCols">Columns</h2>
   <p class="text-muted-d bi-small-note" data-cols-note></p>
-  <div class="tbl-wrap"><table class="tbl bi-tbl bi-lw-cols" data-plain><caption class="visually-hidden">Columns</caption>
-    <thead><tr><th scope="col">Column</th><th scope="col">Type</th><th scope="col">Role</th><th scope="col">Meaning</th><th scope="col">References</th><th scope="col">Currency (column or code)</th><th scope="col">Adds up</th><th scope="col">Formula</th><th scope="col"></th></tr></thead>
+  <div data-keep-box hidden><p class="bi-actions"><button type="button" class="btn-pill btn-ghost bi-small" data-keep-all>Keep all</button> <button type="button" class="btn-pill btn-ghost bi-small" data-keep-none>Only the keys</button></p>
+    <div class="bi-layer-picks" data-keep role="group" aria-label="Columns to keep"></div></div>
+  <div data-define-box hidden><div class="tbl-wrap"><table class="tbl bi-tbl bi-lw-cols" data-plain><caption class="visually-hidden">Columns</caption>
+    <thead><tr><th scope="col">Column</th><th scope="col">Type</th><th scope="col">Role</th><th scope="col">Meaning</th><th scope="col">References</th><th scope="col">Currency (column or code)</th><th scope="col">Adds up</th><th scope="col"></th></tr></thead>
     <tbody data-cols></tbody></table></div>
   <p><button type="button" class="btn-pill btn-ghost bi-small" data-col-add><i class="bi bi-plus-lg" aria-hidden="true"></i> Add a column</button></p>
-  <fieldset data-grain><legend>One row per</legend><span class="bi-chips" data-keys></span>
-    <label>In words <input class="studio-in" data-grain-says placeholder="One row per desk and limit type per date"></label></fieldset>
-  <label data-where-row hidden>Only the rows where (a filter of the base, not a security rule) <input class="studio-in mono" data-where placeholder="currency in ('EUR', 'GBP')"></label>
   <label>Time <select class="studio-select" data-time><option value="snapshot">snapshot: one per business date</option><option value="history">history: a time window</option></select></label>
-  <label>Refresh <select class="studio-select" data-refresh><option value="on-load">when new data loads</option><option value="business-days 06:30">business days at 06:30</option><option value="">never by itself</option></select></label>
-  <ul class="bi-warn" data-problems-2></ul>
-  <p class="bi-actions"><button type="button" class="btn-pill btn-ghost" data-back="1">Back</button> <button type="button" class="btn-pill btn-accent" data-next="3">Next</button></p></section>
-<section class="bi-sec bi-form bi-layer-form" data-step="3" hidden aria-labelledby="lw3"><h2 id="lw3">Save</h2>
-  <label>Title <input class="studio-in" data-title placeholder="Desk limits"></label>
-  <label>Name (what models use) <input class="studio-in mono" data-name placeholder="desk-limits"></label>
+  <label>Refresh <select class="studio-select" data-refresh><option value="on-load">when new data loads</option><option value="business-days 06:30">business days at 06:30</option><option value="">never by itself</option></select></label></div>
+  <ul class="bi-warn" data-problems-columns></ul></section>
+<section class="bi-sec bi-form bi-layer-form" data-step="filter" hidden aria-labelledby="lwFilter"><h2 id="lwFilter">Only some rows</h2>
+  <p class="text-muted-d bi-small-note">A condition on each row (a filter of the table, not a security rule: row rules are set on the model). Leave it empty to keep every row. Example: <code>status == 'LIVE' and notional &gt; 1_000_000</code>.</p>
+  <div class="bi-frow" data-where-host><span>Keep the rows where</span><input class="studio-in mono" data-where aria-label="Keep the rows where"></div>
+  <ul class="bi-warn" data-problems-filter></ul></section>
+<section class="bi-sec bi-form bi-layer-form" data-step="grain" hidden aria-labelledby="lwGrain"><h2 id="lwGrain">What one row is</h2>
+  <fieldset data-grain><legend>One row per</legend><span class="bi-chips" data-keys></span>
+    <label>In words <input class="studio-in" data-grain-says placeholder="One row per trade"></label></fieldset>
+  <fieldset><legend>Duplicates</legend>
+    <label class="bi-checkrow"><input type="radio" name="lwdedup" value="" data-dedup=""> <span>The source has one row per key already (Check says when it has not)</span></label>
+    <label class="bi-checkrow"><input type="radio" name="lwdedup" value="latest" data-dedup="latest"> <span>Keep the <strong>latest</strong> row of each key, by <select class="studio-select" data-dedup-by aria-label="Latest by"></select></span></label>
+    <label class="bi-checkrow"><input type="radio" name="lwdedup" value="earliest" data-dedup="earliest"> <span>Keep the <strong>earliest</strong> row of each key, by the same column</span></label>
+    <p class="text-muted-d bi-small-note">Never a silent distinct: which duplicate wins is said here and written in the YAML (<code>grain: {one-row-per, keep}</code>).</p></fieldset>
+  <ul class="bi-warn" data-problems-grain></ul></section>
+<section class="bi-sec bi-form bi-layer-form" data-step="derive" hidden aria-labelledby="lwDerive"><h2 id="lwDerive">Columns worked out from others</h2>
+  <p class="text-muted-d bi-small-note">A formula over this table's columns (row by row: <code>notional * fx(currency, 'USD')</code>, <code>'Long' if notional &gt; 0 else 'Short'</code>, <code>related(desk.name)</code>), or a Python column item. Each has a type and a meaning, like any column.</p>
+  <div data-derive></div>
+  <p class="bi-actions"><button type="button" class="btn-pill btn-ghost bi-small" data-derive-add="expr"><i class="bi bi-plus-lg" aria-hidden="true"></i> A formula column</button> <button type="button" class="btn-pill btn-ghost bi-small" data-derive-add="python"><i class="bi bi-filetype-py" aria-hidden="true"></i> A Python column</button></p>
+  <ul class="bi-warn" data-problems-derive></ul></section>
+<section class="bi-sec bi-form bi-layer-form" data-step="group" hidden aria-labelledby="lwGroup"><h2 id="lwGroup">Group to a coarser grain (optional)</h2>
+  <label class="bi-checkrow"><input type="checkbox" data-group-on> <span>Group the rows: one row per the columns below, the others added up</span></label>
+  <div data-group-box hidden>
+    <fieldset><legend>One row per</legend><span class="bi-chips" data-group-by></span></fieldset>
+    <div class="tbl-wrap"><table class="tbl bi-tbl" data-plain><caption class="visually-hidden">How each column is worked out per group</caption><thead><tr><th scope="col">Column</th><th scope="col">Per group</th></tr></thead><tbody data-group-cols></tbody></table></div>
+    <label>In words <input class="studio-in" data-group-says placeholder="One row per desk and currency"></label></div>
+  <ul class="bi-warn" data-problems-group></ul></section>
+<section class="bi-sec bi-form bi-layer-form" data-step="preview" hidden aria-labelledby="lwPreview"><h2 id="lwPreview">Preview</h2>
+  <p class="text-muted-d bi-small-note">The first rows, answered by the server as you (your row rules and masks apply). Preview saves your draft first: it stays a draft, visible only to you, until you publish.</p>
+  <p class="bi-actions"><button type="button" class="btn-pill btn-accent" data-preview-go><i class="bi bi-eye" aria-hidden="true"></i> Preview</button></p>
+  <p class="bi-sql-meta" data-preview-meta aria-live="polite"></p>
+  <div class="tbl-wrap" data-preview></div>
+  <ul class="bi-warn" data-problems-preview></ul></section>
+<section class="bi-sec bi-form bi-layer-form" data-step="save" hidden aria-labelledby="lwSave"><h2 id="lwSave">Save</h2>
+  <label>Title <input class="studio-in" data-title placeholder="Live trades in USD"></label>
+  <label>Name (what models use) <input class="studio-in mono" data-name placeholder="live-trades"></label>
   <label>Workspace <select class="studio-select" data-ws></select></label>
   <fieldset><legend>Masked columns (readers without raw access read •••)</legend><span class="bi-layer-picks" data-masks></span></fieldset>
   <details><summary>The YAML (for review)</summary><pre class="bi-body mono" data-yaml tabindex="0"></pre></details>
-  <ul class="bi-warn" data-problems-3></ul>
-  <p class="bi-actions"><button type="button" class="btn-pill btn-ghost" data-back="2">Back</button> <button type="button" class="btn-pill btn-accent" data-save>Save draft</button> <button type="button" class="btn-pill btn-ghost" data-save-publish>Save and publish</button></p>
+  <ul class="bi-warn" data-problems-save></ul>
+  <p class="bi-actions"><button type="button" class="btn-pill btn-accent" data-save>Save draft</button> <button type="button" class="btn-pill btn-ghost" data-save-publish>Save and publish</button></p>
   <p class="bi-actions" data-after hidden></p></section>
+<p class="bi-actions bi-lw-nav"><button type="button" class="btn-pill btn-ghost" data-back>Back</button> <button type="button" class="btn-pill btn-accent" data-next>Next</button></p>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-dataset-layer.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-expr-editor.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-query-panel.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-dataset-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-dataset-steps.js?v={{ ASSET_V }}"></script>{% endblock %}

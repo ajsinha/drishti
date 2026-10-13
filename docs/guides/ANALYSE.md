@@ -95,7 +95,31 @@ rows: the two give the same table (a Chromium test compares them). The line unde
 
 ## 4. SQL
 
-A SQL cell is **one `SELECT`** (or `WITH ... SELECT`) over the table **`extract`** (and over a table for each further extract of the notebook, named as it is, so `SELECT ... FROM extract JOIN exposure ON ...`):
+**Since 2.2.0 a SQL cell runs on the server by default** ([BI_DESIGN.md §3.4](../architecture/BI_DESIGN.md#34-drishti-sql-dsql-read-only-sql-over-models)):
+the cell's engine choice says *Server: Drishti SQL over the model*, and the statement is **Drishti SQL over the model the extract reads** (a model, or a
+dataset's implicit model), not over the extract. Its tables are the model's aliases, a measure is `MEASURE('name')`, `JOIN` needs no `ON` (the model's
+relationships are used), and the server answers **as you**, with your row rules and masks, through the same plan as the model query it equals. A new
+cell starts with a statement written from the model (the first text field you ticked and the model's first measure). Captured for an extract of the
+model *SQL model* (trades and desks, one measure *Sum of mtm*):
+
+```sql
+SELECT trade.book,
+       MEASURE('Sum of mtm') AS "Sum of mtm"
+FROM   trade
+GROUP  BY trade.book
+LIMIT  20
+```
+
+The cell's footer says *3 rows in 16 ms · Drishti SQL, run by the server over sql-model@1 as you · plan p_a02f4d0f6d*, with the masked columns when
+there are any:
+
+![A SQL cell: the statement above, Run, the engine Server: Drishti SQL over the model, and three books with their Sum of mtm](img/bi-languages/analyse-dsql-cell.jpg) The console sends the cell to
+`POST /bi/explore/dsql` (`{extract, sql}`), which asks the server's `POST /api/v1/bi/sql` with the model and the cell's row limit
+(`bi.explore.sql_max_rows`, one more to say when it was cut); it never reads the SQL itself. A version 1 dataset has no model: its cells run over the
+extract, as below. **Over the extract** stays selectable in each cell until wave B, and a statement that reads the table `extract` (an older notebook)
+still runs there whatever the choice.
+
+Over the extract, a SQL cell is **one `SELECT`** (or `WITH ... SELECT`) over the table **`extract`** (and over a table for each further extract of the notebook, named as it is, so `SELECT ... FROM extract JOIN exposure ON ...`):
 
 ```sql
 SELECT desk, COUNT(*) AS trades, SUM(notional) AS notional

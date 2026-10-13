@@ -1395,6 +1395,46 @@ drishti.py bi expr functions --scope row          # the functions you may use in
 drishti.py bi expr convert "[MTM] / [Trades]"     # measure('MTM') / measure('Trades')
 ```
 
+### 8.1 In the console: the expression editor
+
+Every place the console takes an expression uses one editor: a model's **Measures** tab (*Write a formula* and each measure's formula), a report's
+**New measure for this report** (Fields pane), the dataset wizard's **Rows** filter and **Worked-out columns**, and the guided tables builder's
+formulas. It never parses DEL itself: completion comes from the model and the server's catalogue (`GET /api/v1/bi/expr/functions`, only the
+functions that work now), and every check is the server's (`POST /api/v1/bi/expr/validate`, debounced as you type).
+
+| You do | The editor does |
+|---|---|
+| type part of a name | lists the fields (with type, meaning and format), the measures and the functions that match; ↑ ↓ choose, Enter or Tab take one, Esc closes, Ctrl+Space opens the list anywhere |
+| pick a measure | writes `measure('Sum of mtm')` (a name with spaces or symbols needs nothing more); a word starting with a capital lists measures first |
+| pick a function | writes `sum(` and shows its **card**: the signature, one line, one example, *More in the guide* (this page, at the function) |
+| type inside a call | the card stays; after `,` the call's keyword arguments are offered (`where=`, `by=`, `desc=`) |
+| stop typing | the server's check: *Checks clean: gives decimal*, or each problem with its code, its message and the fix as a button (**Use …**) |
+| press **Try it** | the server's answer for the formula on the saved model, as you, by a suggested field (a table under the editor) |
+| look below the input | the measures the formula uses, as chips; a chip that names no measure is red; clicking one selects it in the text |
+
+A measure picked from the list is written `measure('Sum of mtm')`, and the measures a formula uses show as chips under it:
+
+![MTM per trade: measure('Sum of mtm') / count(trade.tradeId), and the chip Sum of mtm under Measures used](img/bi-languages/expr-editor-measure.jpg)
+
+![A formula being written: sum(trade.mtm, wh typed, the keyword where= offered, and the card of sum below it](img/bi-languages/expr-editor-keyword.jpg)
+
+![The same formula complete: sum(trade.mtm, where=trade.status == 'Live') and the line Checks clean](img/bi-languages/expr-editor-clean.jpg)
+
+A bare column in a measure is the most common slip. The server answers `DRS-9127` *the column trade.mtm is outside an aggregate* with the fix
+*wrap it: sum(trade.mtm)*; the button puts the fix in place of the column (the problem's `at` span), so `trade.mtm * 2` becomes `sum(trade.mtm) * 2`:
+
+![trade.mtm * 2 in the editor, the problem DRS-9127 under it and a button Use sum(trade.mtm) * 2](img/bi-languages/expr-editor-problem.jpg)
+
+The old syntax is refused with `DRS-9100` (a warning only where a site sets `legacy: warn`); its fix button writes the converter's text (`[Sum of mtm] * 2` becomes
+`measure('Sum of mtm') * 2`). **Try it** then asks the server, as you, on the saved draft:
+
+![measure('Sum of mtm') * 2 with the chip Sum of mtm, Checks clean, and the Try it table: Bonds and securitised -150,000, Equity derivatives 850,000, G10 and EM FX -1,150,000](img/bi-languages/expr-editor-try.jpg)
+
+In the dataset wizard the editor is in **row** scope: it completes the table's columns and the row functions, and the server checks against the base
+dataset (its implicit model and alias):
+
+![The wizard's Rows step: Keep the rows where sta, and the list offering the column status and the function startswith](img/bi-languages/wizard-filter-completion.jpg)
+
 ## 9. How DEL differs from Python and from DAX
 
 | | Python | DEL | DAX |
@@ -1513,4 +1553,552 @@ published text, version 2`, `the published text of version 1 before the migratio
 
 ## 11. Recipes
 
-<!-- recipes: the cookbook of finance and risk recipes (each run as a test on the demo lake) -->
+Fifty-odd finance and risk measures, each a DEL expression you can paste into the expression editor (a model's **Measures** tab, a report's
+**New measure for this report**, the dataset wizard's **Worked-out columns**), into `define:` of a model query, or into a YAML item. They are written
+against the shipped **trading-risk** sample (trades, netting sets, counterparties, desks and books across the trading, banking-core and
+counterparty-risk packs; [DATASETS.md](DATASETS.md) shows its YAML) and **every one runs as a test on the demo lake**
+(`drishti-console/tests/test_expression_recipes.py` reads this section: the block under each `####` heading is the expression, its `# by:` line the
+fields the test groups by, `# scope:` the scope when it is not a measure). Change the aliases (`trades`, `netting_sets`, ...) to your model's.
+
+How to read them: each recipe is the question, the expression, and what to watch for. A recipe that needs a function of a later wave is listed at the
+end ([11.10](#1110-arriving-in-wave-b)), with the expression it will take.
+
+### 11.1 Positions and P&L
+
+#### R1 · MTM by desk
+
+```python
+# by: desks.name
+sum(trades.mtm)
+```
+
+The sum of the trades' mark-to-market for each desk, over the trades *you* may see (a desk head sees their desks only). Masked MTM sums to `None`.
+Captured on the demo lake as the risk reader (the first five desks of the answer):
+
+| desks.name | Recipe |
+|---|---|
+| Bonds and securitised | -2,977,676 |
+| Commodities | 16,954,390 |
+| Credit trading | 7,948,456 |
+| Equity derivatives | -6,433,670 |
+| G10 and EM FX | -15,759,419 |
+
+#### R2 · P&L over the last day by desk
+
+```python
+# by: desks.name
+sum(trades.pnl1d)
+```
+
+#### R3 · Open MTM (live trades only)
+
+```python
+# by: desks.name
+sum(trades.mtm, where=trades.status == 'Live')
+```
+
+`where=` filters the rows of this aggregate only; the other measures of the same visual still see every trade. Power BI: `CALCULATE(SUM(...), ...)`.
+
+#### R4 · Matured or closed MTM
+
+```python
+# by: desks.name
+sum(trades.mtm, where=trades.status != 'Live')
+```
+
+#### R5 · Share of MTM that is still open
+
+```python
+# by: desks.name
+ratio(sum(trades.mtm, where=trades.status == 'Live'), sum(trades.mtm))
+```
+
+`ratio` is `None` when the denominator is 0 or `None` (never an error, never infinity); `/` behaves the same.
+
+#### R6 · Gross MTM
+
+```python
+# by: desks.name
+sum(abs(trades.mtm))
+```
+
+The size of the book whatever the sign: `abs` is applied row by row, then summed.
+
+#### R7 · Net to gross
+
+```python
+# by: desks.name
+ratio(sum(trades.mtm), sum(abs(trades.mtm)))
+```
+
+Close to 1 (or −1) for a one-way book, close to 0 for a hedged one.
+
+#### R8 · Receivable MTM (positive trades)
+
+```python
+# by: counterparties.name
+sum(trades.mtm, where=trades.mtm > 0)
+```
+
+#### R9 · Payable MTM (negative trades)
+
+```python
+# by: counterparties.name
+sum(trades.mtm, where=trades.mtm < 0)
+```
+
+#### R10 · P&L in bps of notional
+
+```python
+# by: desks.name
+ratio(sum(trades.pnl1d), sum(trades.notional)) * 10_000
+```
+
+Underscores in numbers are allowed, as in Python: `10_000`, `1_000_000`.
+
+#### R11 · A measure from measures
+
+```python
+# by: desks.name
+measure('MTM') / measure('Notional') * 1_000_000
+```
+
+`measure('…')` takes any name (`measure('P&L 1d')`, `measure('Exposure (EE peak)')`) or a stable id (`measure('m_mtm')`); the editor writes it for
+you when you pick a measure from the list.
+
+### 11.2 Counts and sizes
+
+#### R12 · Trades
+
+```python
+# by: desks.name
+count(trades)
+```
+
+`count(alias)` counts rows; `count(x)` counts the rows where `x` is not `None`.
+
+#### R13 · Live trades
+
+```python
+# by: desks.name
+count(trades, where=trades.status == 'Live')
+```
+
+#### R14 · Counterparties traded with
+
+```python
+# by: desks.name
+distinct(trades.counterpartyId)
+```
+
+#### R15 · Average ticket
+
+```python
+# by: trades.productType
+avg(trades.notional)
+```
+
+#### R16 · Notional in millions, one decimal
+
+```python
+# by: trades.currency
+round(sum(trades.notional) / 1_000_000, 1)
+```
+
+Notional is in each trade's own currency: group by `trades.currency` (as here), or the server refuses a sum across currencies (`DRS-9158`); converting
+arrives with `convert` in wave B ([11.10](#1110-arriving-in-wave-b)).
+
+#### R17 · Largest trade
+
+```python
+# by: desks.name
+max(trades.notional)
+```
+
+#### R18 · Worst trade
+
+```python
+# by: desks.name
+min(trades.mtm)
+```
+
+#### R19 · Swaps only
+
+```python
+# by: desks.name
+count(trades, where=contains(trades.productType, 'SWAP'))
+```
+
+#### R20 · One book family
+
+```python
+# by: desks.name
+sum(trades.notional, where=startswith(trades.book, 'BOOK-FX'))
+```
+
+### 11.3 Market risk
+
+#### R21 · DV01 by currency
+
+```python
+# by: trades.currency
+sum(trades.dv01)
+```
+
+#### R22 · Absolute DV01
+
+```python
+# by: desks.name
+sum(abs(trades.dv01))
+```
+
+The sensitivity regardless of direction, a quick view of how much rate risk a desk runs.
+
+#### R23 · DV01 per million notional
+
+```python
+# by: trades.currency
+ratio(sum(trades.dv01), sum(trades.notional)) * 1_000_000
+```
+
+#### R24 · Notional-weighted tenor in years (a duration proxy)
+
+```python
+# by: desks.name
+ratio(sum(trades.notional * days_between(trades.tradeDate, trades.maturityDate)), sum(trades.notional)) / 365
+```
+
+Arithmetic inside an aggregate is row by row: each trade's notional times its days to maturity, then the sums.
+
+#### R25 · Average business days to maturity
+
+```python
+# by: trades.productType
+avg(business_days_between(trades.tradeDate, trades.maturityDate))
+```
+
+#### R26 · Trades maturing within a year of their trade date
+
+```python
+# by: desks.name
+count(trades, where=days_between(trades.tradeDate, trades.maturityDate) <= 365)
+```
+
+### 11.4 Distribution and VaR-style measures
+
+#### R27 · Median trade MTM
+
+```python
+# by: desks.name
+percentile(trades.mtm, 0.5)
+```
+
+#### R28 · 5th percentile of one-day P&L (a VaR-style number)
+
+```python
+# by: desks.name
+percentile(trades.pnl1d, 0.05)
+```
+
+On the demo lake: Bonds and securitised -104,633.90, Commodities -110,447.55, Credit trading -67,251.90. The trade-level 5% quantile of P&L, over the trades you may see. It is not a portfolio VaR (no aggregation of scenarios); quants use a Python
+measure for that ([PYTHON_BI.md](PYTHON_BI.md)).
+
+#### R29 · Expected shortfall, approximately
+
+```python
+# by: desks.name
+avg(trades.pnl1d, where=trades.pnl1d <= -8_000)
+```
+
+The average of the losses beyond a threshold; put the threshold your desk uses.
+
+#### R30 · 99th percentile notional
+
+```python
+# by: trades.productType
+percentile(trades.notional, 0.99)
+```
+
+### 11.5 Counterparty credit
+
+#### R31 · Exposure (EE peak) by counterparty
+
+```python
+# by: counterparties.name
+sum(netting_sets.eePeak)
+```
+
+Exposure lives on the netting sets: group by what netting sets reach (counterparties), not by desk.
+
+#### R32 · Counterparty rank by PFE
+
+```python
+# by: counterparties.name
+rank(sum(netting_sets.pfePeak))
+```
+
+`rank` is over the rows of the answer, 1 for the highest (`desc=False` for the lowest first). A top 10 is a filter on it (a visual's *Top N*, or MQ
+`having: [{measure: PFE rank, op: le, value: 10}]`).
+
+#### R33 · Dense rank of desks by P&L
+
+```python
+# by: desks.name
+dense_rank(sum(trades.pnl1d), desc=True)
+```
+
+#### R34 · Percent rank of counterparties by MTM
+
+```python
+# by: counterparties.name
+percent_rank(sum(trades.mtm))
+```
+
+#### R35 · Limit utilisation
+
+```python
+# by: counterparties.name
+ratio(sum(netting_sets.pfePeak), sum(netting_sets.limit))
+```
+
+#### R36 · Headroom under the limit
+
+```python
+# by: counterparties.name
+sum(netting_sets.limit) - sum(netting_sets.pfePeak)
+```
+
+#### R37 · Limit breaches
+
+```python
+# by: counterparties.sector
+count(netting_sets, where=netting_sets.pfePeak > netting_sets.limit)
+```
+
+A condition between two columns of the same row is fine inside `where=`.
+
+#### R38 · Netting sets above 80 % utilised
+
+```python
+# by: counterparties.sector
+count(netting_sets, where=netting_sets.utilisation >= 0.8)
+```
+
+#### R39 · Average utilisation
+
+```python
+# by: counterparties.rating
+avg(netting_sets.utilisation)
+```
+
+#### R40 · Collateral cover
+
+```python
+# by: counterparties.name
+ratio(sum(netting_sets.collateral), sum(netting_sets.netMtm, where=netting_sets.netMtm > 0))
+```
+
+The collateral held over the positive (receivable) net MTM: below 1, part of what is owed to you is unsecured. On the demo lake Aldershot Pension
+Trust reads 0.478 and Aurora Sovereign Wealth Fund 0.752; Coral Bay Municipal Authority reads -8.87: its collateral is negative, collateral *you* posted,
+which is worth a look.
+
+#### R41 · Uncollateralised exposure
+
+```python
+# by: counterparties.name
+sum(netting_sets.netMtm, where=netting_sets.netMtm > 0) - sum(netting_sets.collateral)
+```
+
+### 11.6 Time intelligence
+
+#### R42 · MTM year to date
+
+```python
+# by: trades.tradeDate.month
+ytd(sum(trades.mtm), trades.tradeDate)
+```
+
+The trades dated this year up to the as-of date (the end of the report's dates). `mtd` and `qtd` work the same way.
+
+#### R43 · Notional month to date
+
+```python
+# by: trades.tradeDate
+mtd(sum(trades.notional), trades.tradeDate)
+```
+
+#### R44 · P&L quarter to date
+
+```python
+# by: desks.name
+qtd(sum(trades.pnl1d), trades.tradeDate)
+```
+
+#### R45 · P&L of the period before
+
+```python
+# by: trades.tradeDate.month
+prior_period(sum(trades.pnl1d), trades.tradeDate)
+```
+
+The same measure for the period before each row's (the month before, here, because the answer is by month).
+
+#### R46 · Notional, same period last year
+
+```python
+# by: trades.tradeDate.month
+same_period_last_year(sum(trades.notional), trades.tradeDate)
+```
+
+On the business calendar's dates; a holiday-aware version (`fiscal_ytd` and model calendars) arrives in wave B.
+
+#### R47 · Running notional
+
+```python
+# by: trades.tradeDate
+running(sum(trades.notional), trades.tradeDate)
+```
+
+### 11.7 Windows over the answer
+
+#### R48 · Three-day moving average of P&L
+
+```python
+# by: trades.tradeDate
+moving_avg(sum(trades.pnl1d), 3, trades.tradeDate)
+```
+
+The average of this row and the two before it, along the trade date (the visual needs `trades.tradeDate` as a field). `moving_sum`, `moving_min` and
+`moving_max` take the same arguments.
+
+#### R49 · Day-on-day change in P&L
+
+```python
+# by: trades.tradeDate
+sum(trades.pnl1d) - lag(sum(trades.pnl1d), 1, trades.tradeDate)
+```
+
+Captured on the demo lake:
+
+| trades.tradeDate | Recipe |
+|---|---|
+| 2024-04-12 | `None` (no day before) |
+| 2024-04-16 | -135,851 |
+| 2024-04-17 | 133,839 |
+| 2024-04-19 | 184 |
+| 2024-04-22 | 8,124 |
+
+#### R50 · Day-on-day change in MTM, per cent
+
+```python
+# by: trades.tradeDate
+ratio(sum(trades.mtm) - lag(sum(trades.mtm), 1, trades.tradeDate), abs(lag(sum(trades.mtm), 1, trades.tradeDate))) * 100
+```
+
+The first day has no day before: `lag` is `None` there and so is the change.
+
+#### R51 · Day-on-day change per desk
+
+```python
+# by: desks.name, trades.tradeDate
+sum(trades.mtm) - lag(sum(trades.mtm), 1, trades.tradeDate, by=[desks.name])
+```
+
+`by=` restarts the window for each desk.
+
+#### R52 · Cumulative trade count
+
+```python
+# by: trades.tradeDate
+cumulative(count(trades), trades.tradeDate)
+```
+
+### 11.8 Buckets and labels (row by row)
+
+A **row** expression is worked out for each row: a dataset's `derive:` column, its `where:`, a model query's row filter. As a derived column it
+becomes a field you group by; the test runs each one inside `distinct(...)` or `count(..., where=...)` on the demo lake.
+
+#### R53 · Tenor bucket
+
+```python
+# scope: row
+# by: desks.name
+'0-1y' if days_between(trades.tradeDate, trades.maturityDate) <= 365 else '1-5y' if days_between(trades.tradeDate, trades.maturityDate) <= 1825 else '5y+'
+```
+
+As a derived column of a trades dataset (`derive: { tenorBucket: { expr: "…", type: string } }`), then *exposure by tenor bucket* is any measure grouped
+by `tenorBucket`. Conditionals chain like Python's: `a if c1 else b if c2 else d`.
+
+#### R54 · Ageing bucket of a trade
+
+```python
+# scope: row
+# by: desks.name
+'under 30 days' if days_between(trades.tradeDate, date('2026-10-09')) <= 30 else 'under 90 days' if days_between(trades.tradeDate, date('2026-10-09')) <= 90 else 'older'
+```
+
+Dates are written `date('2026-10-09')`.
+
+#### R55 · Long or short
+
+```python
+# scope: row
+# by: desks.name
+'Long' if trades.mtm >= 0 else 'Short'
+```
+
+#### R56 · Rating, with a default
+
+```python
+# scope: row
+# by: counterparties.sector
+coalesce(counterparties.rating, 'NR')
+```
+
+`coalesce` takes the first value that is not `None`.
+
+#### R57 · Big live trades (a row filter)
+
+```python
+# scope: row
+# by: desks.name
+trades.status == 'Live' and trades.notional >= 5_000_000
+```
+
+A dataset's `where:` (keep only these rows) or a condition inside `count(…, where=…)`. `and`, `or` and `not` take booleans only.
+
+### 11.9 Row rules
+
+A **rule** is a row expression that may also name `user.*`, the reader's attributes. The test checks each one with the server (it is evaluated per
+reader at query time, so it is not run as a measure).
+
+#### R58 · Each desk head sees their desks
+
+```python
+# scope: rule
+trades.desk in user.desks
+```
+
+#### R59 · Everyone sees the published books, desk heads also their own
+
+```python
+# scope: rule
+startswith(trades.book, 'BOOK-PUB') or trades.desk in user.desks
+```
+
+### 11.10 Arriving in wave B
+
+These need the filter context, conversion and balances of wave B (BI_DESIGN.md §3.3.5). The server refuses them today with `DRS-9129`, naming the wave.
+
+| Question | DEL (wave B) |
+|---|---|
+| Notional in USD at the trade date | `notional * fx(currency, 'USD', at=tradeDate)` (a derived column) |
+| Notional in USD at the as-of date | `convert(sum(trades.notional), to='USD', at='as-of')` |
+| MTM as a % of its desk | `share_of(measure('MTM'), over=[books.name])` |
+| MTM as a % of the total *you* may see | `share_of(measure('MTM'), over=ALL)` |
+| MTM of all desks, ignoring the desk slicer | `calc(measure('MTM'), ignore=[desks.name])` |
+| Closing balance per month | `closing(sum(netting_sets.collateral), trades.tradeDate, period='month')` |
+| Average daily balance | `avg_over(sum(netting_sets.collateral), trades.tradeDate)` |
+| Year to date on the fiscal calendar | `fiscal_ytd(sum(trades.pnl1d), trades.tradeDate)` |
+| Day-on-day change as of yesterday | `measure('MTM') - as_of(measure('MTM'), shift_date(asof(), -1))` |
+| Average MTM per desk, then averaged | `avg_by(measure('MTM'), by=[desks.name])` |

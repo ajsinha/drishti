@@ -304,7 +304,7 @@ You should see a section **Built from other datasets**: this dataset has no tabl
 
 ![The preview: a row per counterparty with its sector, its P&L, its expected exposure and P&L per exposure; the line says it was answered from the composed layer](img/t10/27-composed-preview.jpg)
 
-You should see a row per counterparty (Aldershot Pension Trust, Pensions: P&L `946,326`, exposure `98,882,895`) and `answered from the composed layer`. `P&L per exposure` is a measure of the composed dataset itself, `[Desk P&L] / [Exposure (EE peak)]`: the ratio of the two sums, whatever the grouping. As an author press **Model view** to see how it is put together.
+You should see a row per counterparty (Aldershot Pension Trust, Pensions: P&L `946,326`, exposure `98,882,895`) and `answered from the composed layer`. `P&L per exposure` is a measure of the composed dataset itself, `measure('Desk P&L') / measure('Exposure (EE peak)')`: the ratio of the two sums, whatever the grouping. As an author press **Model view** to see how it is put together.
 
 ![The Model view of the composed dataset: the source pnl, the source exposure, a line between their counterparty columns labelled left, and the joined table both feed](img/t10/28-model-view.jpg)
 
@@ -518,6 +518,7 @@ answers `"valid": true` with the warning `DRS-9130` and `"exposures": [{"dataset
 
 ```yaml
 rachana: 2
+expressions: 2
 model: trades-and-desks
 version: 1.0.0
 id: md_84db68c3
@@ -533,7 +534,7 @@ security:
   rows:
     trade:
       - {role: desk-head, where: trade.desk in user.desks}
-      - {role: bi-writer, where: 'true'}
+      - {role: bi-writer, where: 'True'}
   may-see-all:
     desk: [desk-head]
 ```

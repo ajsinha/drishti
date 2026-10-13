@@ -1,0 +1,49 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Tutorial 18: one model with two facts. Trades (one row per trade) and netting sets (one row per netting set) are facts; the counterparty and the desk
+# are the dimensions they share or reach. A measure from each fact is aggregated alone at the question's grain, then the answers are joined: the totals
+# stay the true ones. The model designer writes this file when you follow the tutorial in the UI; the CLI path creates it from here.
+rachana: 2
+expressions: 2
+model: cp-risk
+version: 1.0.0
+title: Counterparty P&L and exposure
+datasets:
+  trade: {dataset: pack.trading.trade@^1, role: fact}
+  netting_set: {dataset: pack.counterparty-risk.netting-set@^1, role: fact}
+  counterparty: {dataset: pack.banking-core.counterparty@^1, role: dimension}
+  desk: {dataset: pack.banking-core.desk@^1, role: dimension}
+relationships:
+  - {from: trade.counterpartyId, to: counterparty.id, suggested: {from: pack-reference}}
+  - {from: netting_set.counterparty, to: counterparty.id, suggested: {from: pack-reference}}
+  - {from: trade.desk, to: desk.id, suggested: {from: pack-reference}}
+measures:
+  MTM: {expr: sum(trade.mtm), format: signed0}
+  P&L 1d: {expr: sum(trade.pnl1d), format: signed0}
+  Trades: {expr: count(trade)}
+  Exposure (EE peak): {expr: sum(netting_set.eePeak), format: amount0}
+  Netting sets: {expr: count(netting_set)}
+  MTM per exposure: {expr: "measure('MTM') / measure('Exposure (EE peak)')", format: signed2}
+security:
+  rows:
+    trade:
+      - {role: desk-head, where: trade.desk in user.desks}
+      - {role: risk, where: 'True'}
+      - {role: admin, where: 'True'}
+  masked: [counterparty.name]
+  may-see-all:
+    netting_set: [desk-head]
+    counterparty: [desk-head]
+    desk: [desk-head]

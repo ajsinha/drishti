@@ -1,0 +1,44 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Tutorial 18: the trap and its cure in Analyse, on the model cp-risk. Two extracts of rows, each built by the server for the person opening it (their
+# row rules, their masks): the trades and the netting sets. Cell 1 joins the rows of one to the rows of the other (wrong); cell 2 adds each side up per
+# counterparty first (right), as the model does for you, and draws it.
+rachana: 1
+notebook: cp-risk-extracts
+title: Two extracts, joined the wrong way and the right way
+description: Trades and netting sets of the model cp-risk, joined by counterparty in pandas.
+dataset: mq:cp-risk@1
+fields: [trade.counterpartyId, trade.mtm, trade.pnl1d]
+extracts:
+  - { name: exposure, dataset: mq:cp-risk@1, fields: [netting_set.counterparty, netting_set.eePeak] }
+cells:
+  - type: python
+    source: |
+      ns = extract("exposure")
+      naive = df.merge(ns, left_on="counterpartyId", right_on="counterparty", how="inner")
+      print("trade rows", len(df), " netting-set rows", len(ns), " rows after the row join", len(naive))
+      print("P&L 1d   true %.0f   row join %.0f" % (df["pnl1d"].sum(), naive["pnl1d"].sum()))
+      print("EE peak  true %.0f   row join %.0f" % (ns["eePeak"].sum(), naive["eePeak"].sum()))
+    target: server
+  - type: python
+    source: |
+      mtm = df.groupby("counterpartyId", as_index=False)["mtm"].sum()
+      ee = extract("exposure").groupby("counterparty", as_index=False)["eePeak"].sum()
+      g = mtm.merge(ee, left_on="counterpartyId", right_on="counterparty", how="left").sort_values("eePeak", ascending=False).head(10)
+      result = {"title": {"text": "MTM and expected exposure of the ten largest counterparties"}, "legend": {"top": 24},
+                "xAxis": {"type": "category", "data": list(g["counterpartyId"]), "axisLabel": {"rotate": 30}}, "yAxis": {"type": "value"},
+                "series": [{"name": "MTM", "type": "bar", "data": [float(v) for v in g["mtm"]]},
+                           {"name": "Exposure (EE peak)", "type": "bar", "data": [float(v) for v in g["eePeak"]]}]}
+    target: server

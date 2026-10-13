@@ -280,7 +280,14 @@
         } else {
           const ex = h('input', { class: 'studio-in mono', value: r.expr, 'data-m-expr': String(i), 'aria-label': 'Formula', autocomplete: 'off', spellcheck: 'false', placeholder: 'ratio(sum(trade.mtm), sum(trade.notional))' });
           ex.addEventListener('change', () => { r.expr = ex.value; });
-          how.appendChild(field('Formula', W.suggest(ex, fieldNames)));
+          if (B.exprEditor) {                                     // the shared ExpressionEditor: fields, measure('…'), functions, the server's check as you type
+            const holder = field('Formula', ex);
+            how.appendChild(holder);
+            B.exprEditor(ex, { scope: 'aggregate', label: 'Formula', fields: () => W.fields().filter((f) => !f.part).map((f) => ({ name: f.name, type: f.type })),
+              measures: () => rows.filter((x) => x.name && x !== r).map((x) => ({ name: x.name, description: exprOf(x) })), onCommit: (v) => { r.expr = v; } });
+          } else {
+            how.appendChild(field('Formula', W.suggest(ex, fieldNames)));
+          }
         }
         const fm = h('input', { class: 'studio-in', value: r.fmt, list: 'wizFormats', 'aria-label': 'Format', autocomplete: 'off', 'data-m-format': String(i) });
         fm.addEventListener('change', () => { r.fmt = fm.value.trim(); });

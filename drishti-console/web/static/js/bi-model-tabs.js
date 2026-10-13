@@ -45,12 +45,42 @@
       const el = pane.querySelector('[data-keep] [' + k.key + ']');
       if (!el) { return; }
       if (el.type === 'checkbox') { el.checked = k.value; } else if (el.value !== k.value) { el.value = k.value; if (el.tagName === 'SELECT') { el.dispatchEvent(new Event('change')); } }
-      if (k.focus) { el.focus(); }
+      if (k.focus) { el.focus(); if (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && /^(text|search)$/.test(el.type))) { el.setSelectionRange(el.value.length, el.value.length); } }
+      if (el.drishtiExpr && k.value) { el.drishtiExpr.refresh(); }                    // chips, the check and, while typing, the list again
     });
   }
 
   // ---- measures ------------------------------------------------------------------------------------------------------
-  let preview = {};
+  let preview = {}, formulaOpen = false;
+  /** The model's fields for the ExpressionEditor's completion: alias.column with type, meaning and format. */
+  M.exprFields = () => {
+    const out = [];
+    Object.keys(M.infos).forEach((a) => M.infos[a].columns.forEach((c) => out.push({ name: a + '.' + c.name, type: c.type, meaning: c.meaning || c.role, format: c.format, description: c.description })));
+    return out;
+  };
+  M.exprMeasures = () => Object.keys(M.doc.measures || {}).map((n) => ({ name: n, description: (M.doc.measures[n] || {}).description || (M.doc.measures[n] || {}).expr || '' }))
+    .concat(((M.check && M.check.measures) || []).filter((n) => !(M.doc.measures || {})[n]).map((n) => ({ name: n, description: 'a default measure' })));
+  /** A grouping field for Try it and Preview: the first text column of a dimension the fact reaches, else the fact's first dimension column. */
+  M.tryField = () => {
+    const fact = Object.keys(M.doc.datasets || {}).find((a) => (M.doc.datasets[a] || {}).role !== 'dimension') || Object.keys(M.doc.datasets || {})[0];
+    const rel = (M.doc.relationships || []).find((r) => r.active !== false && r.from.split('.')[0] === fact);
+    const dims = rel && M.infos[rel.to.split('.')[0]] ? M.infos[rel.to.split('.')[0]].columns.filter((c) => c.type === 'string' && c.role !== 'key') : [];
+    if (dims.length) { return rel.to.split('.')[0] + '.' + (dims.find((c) => c.name === 'name') || dims[0]).name; }
+    const col = M.infos[fact] && M.infos[fact].columns.find((c) => c.role === 'dimension');
+    return col ? fact + '.' + col.name : '';
+  };
+  /** The ExpressionEditor on a measure's formula: the model's fields and measures, the server's check against this draft, Try it on the saved draft. */
+  M.exprEditor = (input, onCommit) => B.exprEditor(input, {
+    scope: 'aggregate', label: 'Formula', fields: M.exprFields, measures: M.exprMeasures, onCommit,
+    known: () => new Set(Object.keys(M.doc.measures || {}).concat(M.exprFields().map((f) => f.name))),
+    target: () => ({ model: M.doc.model + '@' + major(), yaml: M.yaml }),
+    tryIt: (expr) => {
+      if (M.dirty) { return Promise.reject(new Error('Try it reads the saved draft: Save first (Ctrl+S), then Try it.')); }
+      const by = M.tryField();
+      return B.mq.ask({ mq: 1, model: M.doc.model + '@' + major(), define: { 'Try it': expr }, select: { fields: by ? [by] : [], measures: ['Try it'] }, limit: 8 })
+        .then((a) => ({ columns: a.columns, rows: a.rows, caption: 'As you' + (a.meta.asOf ? ', as of ' + a.meta.asOf : '') + ', on the saved draft' + (by ? ', by ' + by : '') }));
+    }
+  });
   function addMeasure(name, def) {
     let n = name, i = 2;
     while ((M.doc.measures || {})[n]) { n = name + ' ' + i++; }
@@ -64,7 +94,8 @@
     M.edit((doc) => {
       const next = {};
       Object.keys(doc.measures).forEach((k) => { next[k === from ? to : k] = doc.measures[k]; });
-      Object.values(next).forEach((m) => { if (m && m.expr) { m.expr = m.expr.split('[' + from + ']').join('[' + to + ']'); } });
+      const q1 = "measure('" + from.replace(/'/g, "\\'") + "')", q2 = 'measure("' + from + '")', to1 = "measure('" + to.replace(/'/g, "\\'") + "')";
+      Object.values(next).forEach((m) => { if (m && m.expr) { m.expr = m.expr.split(q1).join(to1).split(q2).join(to1).split('[' + from + ']').join(to1); } });
       doc.measures = next;
     });
   }
@@ -94,8 +125,7 @@
     }).catch((e) => near(add, e.message, true))));
     // a formula
     const fName = h('input', { class: 'studio-in', 'data-nf-name': '', placeholder: 'MTM per 1m notional', 'aria-label': 'Measure name', disabled: M.readOnly });
-    const fExpr = h('input', { class: 'studio-in mono', 'data-nf-expr': '', list: 'mdFormulaWords', placeholder: 'ratio(sum(trade.mtm), sum(trade.notional)) * 1000000', 'aria-label': 'Formula', disabled: M.readOnly });
-    const words = h('datalist', { id: 'mdFormulaWords' }, fieldsOf().concat(Object.keys(M.doc.measures || {}).map((n) => '[' + n + ']')).concat(['sum(', 'avg(', 'count(', 'distinct(', 'ratio(', 'min(', 'max(']).map((w) => h('option', { value: w })));
+    const fExpr = h('input', { class: 'studio-in mono', 'data-nf-expr': '', placeholder: 'ratio(sum(trade.mtm), sum(trade.notional)) * 1000000', 'aria-label': 'Formula', disabled: M.readOnly });
     const fAdd = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-nf-add': '', text: 'Add formula', disabled: M.readOnly });
     fAdd.addEventListener('click', () => {
       if (!fName.value.trim() || !fExpr.value.trim()) { near(fAdd, 'Give the measure a name and a formula.', true); return; }
@@ -105,7 +135,11 @@
     pane.append(h('section', { class: 'bi-sec bi-form bi-md-newmeasure', 'aria-label': 'New measure', 'data-keep': '' }, h('h3', { text: 'New measure from a column' }),
       h('p', { class: 'text-muted-d bi-small-note', text: 'The aggregation, format, additivity and currency come from the dataset: amounts sum, ratios average and never add up, a balance takes its last value over time.' }),
       h('div', { class: 'bi-md-row' }, h('label', {}, 'Dataset ', dsSel), h('label', {}, 'Column ', colSel), h('label', {}, 'Aggregation ', aggSel), add)),
-      h('details', { class: 'bi-sec', 'data-keep': '' }, h('summary', { text: 'Write a formula' }), h('div', { class: 'bi-md-row' }, h('label', {}, 'Name ', fName), h('label', { class: 'bi-md-grow' }, 'Formula ', fExpr), fAdd), words));
+      h('details', { class: 'bi-sec', 'data-keep': '', 'data-nf': '', open: formulaOpen || null }, h('summary', { text: 'Write a formula' }),
+        h('p', { class: 'text-muted-d bi-small-note', text: 'Python-like: sum(trade.mtm, where=trade.status == \'LIVE\'), measure(\'MTM\') / measure(\'Notional\'), a if c else b. Type to see the fields, the measures and the functions; Ctrl+Space lists them.' }),
+        h('div', { class: 'bi-md-row' }, h('label', {}, 'Name ', fName), h('div', { class: 'bi-md-grow' }, fExpr), fAdd)));
+    if (!M.readOnly) { M.exprEditor(fExpr, null); }
+    q('[data-nf]', pane).addEventListener('toggle', (e) => { formulaOpen = e.target.open; });
     // the measures
     const list = h('div', { class: 'tbl-wrap' });
     const tb = h('tbody');
@@ -116,8 +150,10 @@
       const probs = M.problems('measures.' + name);
       const nm = h('input', { class: 'studio-in', value: name, 'aria-label': 'Name of ' + name, 'data-m-name': name, disabled: M.readOnly });
       nm.addEventListener('change', () => renameMeasure(name, nm.value, nm));
-      const ex = h('input', { class: 'studio-in mono', value: m.expr || (m.python ? 'python: ' + m.python : ''), list: 'mdFormulaWords', 'aria-label': 'Formula of ' + name, 'data-m-expr': name, disabled: M.readOnly || !!m.python });
-      ex.addEventListener('change', () => M.edit((doc) => { doc.measures[name].expr = ex.value.trim(); }, true));
+      const ex = h('input', { class: 'studio-in mono', value: m.expr || (m.python ? 'python: ' + m.python : ''), 'aria-label': 'Formula of ' + name, 'data-m-expr': name, disabled: M.readOnly || !!m.python });
+      const exCell = h('td', {}, ex);
+      const commitExpr = (v) => { if (v && v !== (M.doc.measures[name] || {}).expr) { M.edit((doc) => { doc.measures[name].expr = v; }, true); } };
+      if (!M.readOnly && !m.python) { M.exprEditor(ex, commitExpr); } else { ex.addEventListener('change', () => commitExpr(ex.value.trim())); }
       const fm = sel((FORMATS.indexOf(m.format || '') < 0 ? FORMATS.concat([m.format]) : FORMATS).map((f) => (f ? [f, FORMAT_WORDS[f] || f] : ['', 'from the column\'s meaning'])), m.format || '', { 'aria-label': 'Format of ' + name, 'data-m-format': name, disabled: M.readOnly });
       fm.addEventListener('change', () => M.edit((doc) => { if (fm.value) { doc.measures[name].format = fm.value; } else { delete doc.measures[name].format; } }, true));
       const addv = m.additive === false ? 'never' : m.additive && m.additive['over-time'] ? 'last' : 'yes';
@@ -127,9 +163,9 @@
       pv.addEventListener('click', () => previewMeasure(name, pv));
       const rm = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Delete ' + name, 'data-m-delete': name, disabled: M.readOnly }, B.icon('trash'));
       rm.addEventListener('click', () => M.edit((doc) => { delete doc.measures[name]; }));
-      tb.appendChild(h('tr', { 'data-measure': name, class: probs.some((p) => p.level === 'error') ? 'bi-md-badrow' : '' }, h('td', {}, nm), h('td', {}, ex,
-        probs.length ? h('p', { class: 'bi-near bi-bad', 'data-m-problem': name, text: probs[0].code + ' ' + probs[0].message }) : null,
-        preview[name] ? h('div', { class: 'bi-md-preview', 'data-m-previewed': name }, preview[name]) : null), h('td', {}, fm), h('td', {}, ad), h('td', {}, pv), h('td', {}, rm)));
+      exCell.append(probs.length ? h('p', { class: 'bi-near bi-bad', 'data-m-problem': name, text: probs[0].code + ' ' + probs[0].message }) : '',
+        preview[name] ? h('div', { class: 'bi-md-preview', 'data-m-previewed': name }, preview[name]) : '');
+      tb.appendChild(h('tr', { 'data-measure': name, class: probs.some((p) => p.level === 'error') ? 'bi-md-badrow' : '' }, h('td', {}, nm), exCell, h('td', {}, fm), h('td', {}, ad), h('td', {}, pv), h('td', {}, rm)));
     });
     if (!Object.keys(M.doc.measures || {}).length) { tb.appendChild(h('tr', {}, h('td', { colspan: '6', class: 'text-muted-d', text: 'No measure written yet. The default measures below exist anyway; add one above to rename or format it.' }))); }
     pane.appendChild(h('section', { class: 'bi-sec' }, h('h3', { text: 'Measures' }), list));
@@ -242,7 +278,7 @@
       go.addEventListener('click', () => {
         const rs = B.qa('[data-role-pick]', roleBox).filter((c) => c.checked).map((c) => c.value).concat(roles.value.split(',').map((x) => x.trim()).filter(Boolean)).filter((x, i, a) => a.indexOf(x) === i);
         if (!rs.length) { near(go, 'Name the role (or roles) the rule is for.', true); roles.focus(); return; }
-        const where = kind.value === 'all' ? 'true' : kind.value === 'attr' ? field.value + ' in ' + attr.value : field.value + " == '" + val.value.replace(/'/g, '') + "'";
+        const where = kind.value === 'all' ? 'True' : kind.value === 'attr' ? field.value + ' in ' + attr.value : field.value + " == '" + val.value.replace(/'/g, '') + "'";
         if (kind.value === 'value' && !val.value.trim()) { near(go, 'Give the value.', true); val.focus(); return; }
         draft = null;
         roles.value = '';

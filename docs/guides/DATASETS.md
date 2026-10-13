@@ -28,7 +28,9 @@ is executed: it is parsed, validated, compiled to SQL with **bound values**, and
 Contents: [1](#1-the-file) the file · [2](#2-tables-and-columns) tables and columns · [3](#3-relationships-and-how-queries-join) relationships ·
 [4](#4-measures-and-the-expression-language) measures and expressions (4.1: time intelligence, 4.2: Python measures) · [5](#5-hierarchies) hierarchies · [6](#6-security-row-rules-and-masks) security ·
 [7](#7-modes-layers-and-rollups) modes, layers and rollups (7.2: scheduled refresh) · [8](#8-the-query) the query · [9](#9-problems-and-drs-codes) problems and codes ·
-[10](#10-what-is-not-built) what is not built (live tables: [7.1](#71-live-tables-phase-5)) · [11](#11-composed-and-derived-datasets) composed and derived datasets · [12](#12-build-a-dataset-in-the-browser-the-wizard) the wizard · [13](#13-model-layer-datasets-rachana-2-wave-w1) model-layer datasets (W1)
+[10](#10-what-is-not-built) what is not built (live tables: [7.1](#71-live-tables-phase-5)) · [11](#11-composed-and-derived-datasets) composed and derived datasets · [12](#12-build-a-dataset-in-the-browser-the-wizard) the wizard · [13](#13-model-layer-datasets-rachana-2-wave-w1) model-layer datasets (W1) · [14](#14-derivation-subset-filter-grain-derive-group-22-wave-a) derivation: subset, filter, grain, derive, group · [15](#15-the-dataset-wizard-version-2-wave-a) the dataset wizard v2, SQL views (wave A).
+Expressions (measures, derived columns, filters, row rules) are DEL v2 since 2.2.0: [EXPRESSIONS.md](EXPRESSIONS.md); the older syntax in the examples
+below is refused since 2.2.0 (`DRS-9100`, with the DEL v2 text as the fix); `drishti.py bi migrate --expressions` converts a file.
 
 ## 1. The file
 
@@ -104,9 +106,9 @@ relationships:
 `cardinality` is `many-to-one` (default), `one-to-many`, `one-to-one` or `many-to-many`; `direction` `single` or `both`; `active` true or false. Both columns must exist and have
 the same type. **Built:** a query joins along **active** relationships, in the many-to-one direction (and either way for one-to-one), `LEFT JOIN`ed from the table the
 measures aggregate (the *base*), so a measure is never counted twice. A query with **no measure** (a list of values) may also join one-to-many and answers distinct rows.
-**Grain: a measure is aggregated at its own table.** When one query mixes measures of different tables, even tables a many-to-one path connects (`MTM` from `trades` and `Exposure (EE peak)` from `netting_sets`, which trades reach many-to-one), each measure is computed alone at the query's grouping and the answers are joined on it. A "one"-side measure is therefore never repeated by the many side: in `trading-risk`, exposure by counterparty sector beside MTM used to add each netting set once per trade (763M for a sector whose true figure is 59M); it now adds each netting set once. If a field, filter or row rule is not reachable many-to-one from each measure's table, the query is refused (`DRS-9020`) rather than answered with a repeated figure. A single measure (or several of one table) is unchanged. A measure that only combines other measures (`[MTM] / [Exposure (EE peak)]`) is worked out **over each measure at its own grain**, so the ratio is right too; a measure with aggregates of its own beside another table's measure in one expression is aggregated at the table that reaches the others (write it as measures to split it).
+**Grain: a measure is aggregated at its own table.** When one query mixes measures of different tables, even tables a many-to-one path connects (`MTM` from `trades` and `Exposure (EE peak)` from `netting_sets`, which trades reach many-to-one), each measure is computed alone at the query's grouping and the answers are joined on it. A "one"-side measure is therefore never repeated by the many side: in `trading-risk`, exposure by counterparty sector beside MTM used to add each netting set once per trade (763M for a sector whose true figure is 59M); it now adds each netting set once. If a field, filter or row rule is not reachable many-to-one from each measure's table, the query is refused (`DRS-9020`) rather than answered with a repeated figure. A single measure (or several of one table) is unchanged. A measure that only combines other measures (`measure('MTM') / measure('Exposure (EE peak)')`) is worked out **over each measure at its own grain**, so the ratio is right too; a measure with aggregates of its own beside another table's measure in one expression is aggregated at the table that reaches the others (write it as measures to split it).
 
-**Several fact tables in one query:** when the measures of a query aggregate tables that no many-to-one path connects (`trades` and a table of `limits`, both many-to-one to `desks`), each fact is aggregated **alone** at the query's fields and the answers are joined on those fields, so neither fact is repeated by the other's rows (section 3.1). **Refused (`DRS-9020`):** a field one of the facts cannot reach many-to-one, and a measure that mixes the facts in one expression (`[MTM] / [Limit]`).
+**Several fact tables in one query:** when the measures of a query aggregate tables that no many-to-one path connects (`trades` and a table of `limits`, both many-to-one to `desks`), each fact is aggregated **alone** at the query's fields and the answers are joined on those fields, so neither fact is repeated by the other's rows (section 3.1). **Refused (`DRS-9020`):** a field one of the facts cannot reach many-to-one, and a measure that mixes the facts in one expression (`measure('MTM') / measure('Limit')`).
 `direction: both` and many-to-many are stored; a query still joins as written (many-to-many warns). Inactive relationships are skipped and cannot yet be
 turned on by a measure.
 
@@ -146,7 +148,7 @@ SELECT "counterparties.sector", "MTM", "Trades", "Exposure", "Netting sets" FROM
 
 * Each part is the ordinary query of one fact: its own row rules, filters and masks. The parts are **full-outer-joined** on the fields (a null equals a null), so a sector one fact lacks still shows with the other's figures (and an empty cell for the missing one).
 * With **no fields** the totals sit side by side in one row. A **filter on a shared dimension** reaches every fact; a filter on a measure (`LimitTotal gt 50`) is applied to the joined rows, as are the sort and the limit.
-* **Refused, safely:** a field one fact cannot reach many-to-one (`trades.desk` beside a measure of `limits`: `DRS-9020`, no many-to-one path); a measure that mixes the facts (`[MTM] / [LimitTotal]`: combine them in a composed dataset, section 11); a window measure (4.3) with another fact; and a **row rule that reads a fact table** the other fact cannot reach (a desk-head's `trades.desk in user.desks` against limits): the query is refused rather than shown unrestricted.
+* **Refused, safely:** a field one fact cannot reach many-to-one (`trades.desk` beside a measure of `limits`: `DRS-9020`, no many-to-one path); a measure that mixes the facts (`measure('MTM') / measure('LimitTotal')`: combine them in a composed dataset, section 11); a window measure (4.3) with another fact; and a **row rule that reads a fact table** the other fact cannot reach (a desk-head's `trades.desk in user.desks` against limits): the query is refused rather than shown unrestricted.
 * A rollup does not answer a several-facts query; each part reads its own layers.
 
 ## 4. Measures and the expression language
@@ -155,33 +157,37 @@ SELECT "counterparties.sector", "MTM", "Trades", "Exposure", "Netting sets" FROM
 measures:
   Notional:   { expr: "sum(trades.notional)", format: amount0, description: "..." }
   MTM:        "sum(trades.mtm)"                                   # shorthand: just the expression
-  MTM per 1m: { expr: "ratio(sum(trades.mtm), sum(trades.notional)) * 1000000" }
-  Share:      { expr: "[MTM] / [Notional]" }                      # [Name] uses another measure
-  Open MTM:   { expr: "sum(trades.mtm, trades.status == 'Live')" } # a condition inside the aggregate
+  MTM per 1m: { expr: "ratio(sum(trades.mtm), sum(trades.notional)) * 1_000_000" }
+  Share:      { expr: "measure('MTM') / measure('Notional')" }   # measure('Name') uses another measure
+  Open MTM:   { expr: "sum(trades.mtm, where=trades.status == 'Live')" }   # a condition inside the aggregate
   Vol:        { python: desk-pnl-volatility, inputs: [trades.pnl1d], by: [trades.desk] }   # a PYTHON measure: run by the console's runner, shown by a python visual (4.2)
 ```
 
-The expression language is **Rachana-EL's syntax** (operators, literals, `?:`, text in `'...'` or `"..."`) **extended with aggregation**. It is closed and side-effect free;
-it compiles to SQL, it is never evaluated as code. Names: `table.column`, `table.column.part` (a date part), `[Measure name]`, `user.<attribute>` (row rules only),
-and in a calculated column a bare column of its own table.
+The expression language is **DEL** (since 2.2.0): a safe, side-effect-free subset of **Python's expression syntax** extended with aggregation. It compiles
+to SQL on the server and is never run as code. **The full reference is [EXPRESSIONS.md](EXPRESSIONS.md)**: every function with its examples and edge cases,
+the problems with their fixes, and fifty-odd finance and risk recipes; the expression editor completes all of it in the designers. Names: `table.column`,
+`table.column.part` (a date part), `measure('Measure name')`, `user.<attribute>` (row rules only), and in a calculated column a bare column of its own table.
 
 | Aggregates | Meaning |
 |---|---|
-| `sum(x)`, `avg(x)`, `min(x)`, `max(x)` | over the rows of the group; null rows are ignored (SQL) |
-| `count(table)` or `count(x)` | rows, or non-null values of `x` |
+| `sum(x)`, `avg(x)`, `min(x)`, `max(x)` | over the rows of the group; `None` rows are ignored |
+| `count(table)` or `count(x)` | rows, or values of `x` that are not `None` |
 | `distinct(x)` | number of different values |
-| `ratio(a, b)` | `a / b` as a double, null when `b` is 0; `a` and `b` are aggregate expressions |
+| `ratio(a, b)` | `a / b` as a double, `None` when `b` is 0; `a` and `b` are aggregate expressions |
 | `percentile(x, p)` | the `p`-quantile (0 to 1, a literal) with interpolation |
-| second argument | `sum(x, condition)`: only rows where the condition is true (`FILTER (WHERE ...)`) |
+| `where=` | `sum(x, where=condition)`: only rows where the condition is `True` (`FILTER (WHERE ...)`); every aggregate takes it |
 
 | Row functions and operators | |
 |---|---|
-| `+ - * / %`, comparisons `== = != < <= > >=`, `&& \|\| !` and `and or not`, `x in (a, b)`, `x not in (...)`, `c ? a : b` | `/` is always a floating-point division and null on a zero divisor |
-| `abs`, `round(x[, n])`, `coalesce(a, b, ...)`, `upper`, `lower`, `length`, `contains(text, part)`, `startsWith`, `if(c, a, b)` | |
-| `year(d)`, `quarter`, `month`, `day`, and the field form `table.dateColumn.year` (also `quarter`, `month`, `day`, `week`) | date parts of a `date` or `timestamp` column |
+| `+ - * / // % **`, comparisons `== != < <= > >=` (chained: `0 < x <= 10`), `and or not`, `x in [a, b]`, `x not in [...]`, `x is None`, `a if c else b` | `/` is always a floating-point division and `None` on a zero divisor; `and`, `or`, `not` take booleans only |
+| `abs`, `round(x, n=0)`, `coalesce(a, b, ...)`, `upper`, `lower`, `len`, `contains(text, part)`, `startswith`, `endswith`, `date('2026-10-09')`, `days_between(a, b)`, `business_days_between(a, b)` | |
+| `year(d)`, `quarter`, `month`, `week`, `day`, and the field form `table.dateColumn.year` (also `quarter`, `month`, `day`, `week`) | date parts of a `date` or `timestamp` column |
 
-A measure must aggregate (a column outside an aggregate is an error), aggregates do not nest (except `ratio`'s two arguments), and measures may not refer to each other in a circle.
-**Window functions** (`lag`, `lead`, `rank`, `dense_rank`, `percent_rank`, `moving_avg`, `moving_sum`, `moving_min`, `moving_max`, `cumulative`) are built: section 4.3. Time intelligence and running totals: section 4.1.
+A measure must aggregate (a column outside an aggregate is `DRS-9127` with the fix *wrap it: `sum(trades.mtm)`*), aggregates do not nest (except
+`ratio`'s two arguments), and measures may not refer to each other in a circle. **Window functions** (`lag`, `lead`, `rank`, `dense_rank`,
+`percent_rank`, `moving_avg`, `moving_sum`, `moving_min`, `moving_max`, `cumulative`) are built: section 4.3. Time intelligence and running totals:
+section 4.1. The older syntax (`[Measure]`, `&&`, `c ? a : b`, a positional condition) is refused with `DRS-9100` and its DEL text as the fix
+([EXPRESSIONS.md section 10](EXPRESSIONS.md#10-the-old-syntax-and-the-converter)).
 
 Real compiled output (captured from the `trades-basic` sample by a BI author's `?explain=true`; the values are placeholders, never in the text):
 
@@ -255,7 +261,7 @@ FROM (...) AS "trades" WHERE ("trades"."tradeDate" BETWEEN CAST(? AS DATE) AND C
 
 * The functions restrict **the rows the query reads**. With a snapshot lake (every business date holds the whole book) read one date and let the date column do the rest. With a table whose partitions hold only each day's rows,
   the query's dates must reach back to the start of the window (a report's `dates: { from: ... }`), or the earlier days are not there to add up.
-* The first argument holds aggregates and nothing else of this family: no nested time function, no `[Measure]` reference. A time function may sit inside an expression with other measures (`ratio(...)`, `[A] - [B]`) but not inside an aggregate. The date is a column, not a date part.
+* The first argument holds aggregates and nothing else of this family: no nested time function, no `measure('…')` reference. A time function may sit inside an expression with other measures (`ratio(...)`, `measure('A') - measure('B')`) but not inside an aggregate. The date is a column, not a date part.
 * A **rollup** cannot hold a time measure (`DRS-9012`, as for a distinct count); the query runs on the columns layer.
 * `running` takes one `sum`, `count`, `min` or `max` (an average, ratio, distinct count or percentile has no running total: `DRS-9011`), needs the date as a **field** of the query (`422 DRS-9020` otherwise), cannot be filtered on (`DRS-9020`), and a date masked for the reader is `403 DRS-9021`.
 * Masks and row rules apply as for any measure; the as-of date is part of the cached result's key, so a new date is a new answer.
@@ -266,12 +272,12 @@ A window function is worked out **over the rows the query returns**, after the r
 
 | Function | Meaning |
 |---|---|
-| `lag(agg, n, order [, partition...])` / `lead(...)` | the aggregate of the row `n` rows **before** / **after** in `order` (empty at the edge); `n` is 1 to 1000 |
-| `moving_avg(agg, n, order [, partition...])`, `moving_sum`, `moving_min`, `moving_max` | the average, sum, minimum or maximum of the aggregate over this row and the `n - 1` before it |
+| `lag(agg, n, order, by=[fields])` / `lead(...)` | the aggregate of the row `n` rows **before** / **after** in `order` (empty at the edge); `n` is 1 to 1000 |
+| `moving_avg(agg, n, order, by=[fields])`, `moving_sum`, `moving_min`, `moving_max` | the average, sum, minimum or maximum of the aggregate over this row and the `n - 1` before it |
 | `cumulative(agg, date)` | a running total (the same as `running`, 4.1) |
-| `rank(agg ['asc'\|'desc' [, partition...]])`, `dense_rank(...)`, `percent_rank(...)` | the position of the row by the aggregate (default descending); `rank` leaves gaps after a tie, `dense_rank` does not, `percent_rank` is 0 to 1 |
+| `rank(agg, desc=True, by=[fields])`, `dense_rank(...)`, `percent_rank(...)` | the position of the row by the aggregate (`desc=False`: lowest first); `rank` leaves gaps after a tie, `dense_rank` does not, `percent_rank` is 0 to 1 |
 
-`agg` is an aggregate expression (`sum(trades.mtm)`, `ratio(...)`, `count(trades)`). `order` is a **column** of the dataset (`trades.tradeDate`) and must be a **field of the visual** (its axis), as for `running`; the window runs along its finest part (`trades.tradeDate.month` before `trades.tradeDate`). Without partition columns the window **restarts for each combination of the visual's other fields**; with them (`lag(sum(trades.mtm), 1, trades.tradeDate, trades.desk)`) it restarts by those fields, which must be fields of the visual too. `rank` with no partition ranks all rows.
+`agg` is an aggregate expression (`sum(trades.mtm)`, `ratio(...)`, `count(trades)`). `order` is a **column** of the dataset (`trades.tradeDate`) and must be a **field of the visual** (its axis), as for `running`; the window runs along its finest part (`trades.tradeDate.month` before `trades.tradeDate`). Without `by=` the window **restarts for each combination of the visual's other fields**; with it (`lag(sum(trades.mtm), 1, trades.tradeDate, by=[trades.desk])`) it restarts by those fields, which must be fields of the visual too. `rank` with no partition ranks all rows.
 
 ```yaml
 measures:
@@ -296,7 +302,7 @@ DESK-CREDIT    7948456.0  5
 2026-09-21     -79707.0  11413476.33
 ```
 
-**What they refuse.** The shape is checked when the dataset is read (`DRS-9011` for a wrong number of arguments, an `n` that is not a whole number from 1 to 1000, an `agg` that does not aggregate, another window, time function or `[Measure]` inside `agg`, an order or partition that is not a column). A window needs its order column as a **field** of the visual (`422 DRS-9020` otherwise); it cannot be **filtered on** (`DRS-9020`: filter the rows, then rank); a masked order column makes the whole measure read as masked; a **rollup** can hold only a `rank` with no direction or partition (anything else runs on the columns layer); and it cannot be asked together with the measures of another fact table (3.1).
+**What they refuse.** The shape is checked when the dataset is read (`DRS-9011` for a wrong number of arguments, an `n` that is not a whole number from 1 to 1000, an `agg` that does not aggregate, another window, time function or `measure('…')` inside `agg`, an order or partition that is not a column). A window needs its order column as a **field** of the visual (`422 DRS-9020` otherwise); it cannot be **filtered on** (`DRS-9020`: filter the rows, then rank); a masked order column makes the whole measure read as masked; a **rollup** can hold only a `rank` with no direction or partition (anything else runs on the columns layer); and it cannot be asked together with the measures of another fact table (3.1).
 
 A "row" is a row of the visual, not a calendar day: `lag(..., 1, trades.tradeDate)` is the previous *date that has trades* (a weekend with none is not a row), and a moving average of three is three rows. Ask for the dates you want (a date dimension, or a filter) when the gaps matter.
 
@@ -336,7 +342,7 @@ returned with the model for the designer and the viewer (phase 3) to drill with:
 security:
   rows:
     - { role: desk-head, where: "trades.desk in user.desks" }
-    - { role: risk,      where: "true" }
+    - { role: risk,      where: "True" }
   masked: [counterpartyName, counterparties.name]
 ```
 
@@ -676,7 +682,7 @@ measures:                               # the dataset's own measures, over the j
 | `join[].left`, `right` | aliases; the joins are written in order and each starts from a source already joined |
 | `join[].on` | the columns to join on: `name` (the same on both sides) or `"left = right"` when the names differ. Join keys must be columns, not measures, and of one type |
 | `join[].type` | `inner`, `left` (every row of the left source) or `full`. A key named the same on both sides appears once in the joined table (the coalesce of both) |
-| `measures` (own) | expressions over the joined table's measures: `[Desk P&L] / [Exposure (EE peak)]` is the ratio of the two sums, at whatever grain the visual groups by |
+| `measures` (own) | expressions over the joined table's measures: `measure('Desk P&L') / measure('Exposure (EE peak)')` is the ratio of the two sums, at whatever grain the visual groups by |
 
 **What the engine does.** For each query of the dataset it asks every source, as the reader, the question `by` + `measures` + `filters` states (with the query's business dates), stages the answers in the engine and joins them; the dataset's measures, a visual's fields, filters and sorts then run over the joined table, which is called `joined`. A source answer is cut at `drishti.bi.transform.compose-source-max-rows` (`DRS-9022`); the sources run one after another and each counts as a query for the reader's own limit. Real compiled output (the sample, by sector; each `"bi_frame_n_<alias>"` is a source's answer, staged):
 
@@ -948,3 +954,94 @@ GET /api/v1/bi/lineage/lang-bucket-view@1
  "problems": []}
 ```
 
+## 15. The dataset wizard, version 2 (wave A)
+
+**New dataset** (`/bi/datasets/new-layer`; *New dataset* on the Models page and in a workspace) makes a `rachana: 2` dataset without typing YAML, with
+the derivation keys of [section 14](#14-derivation-subset-filter-grain-derive-group-22-wave-a): a column subset, a row filter, an explicit grain
+with its de-duplication, worked-out columns and a grouping. The steps depend on where the table comes from; the step bar lets you go back to any step
+you have seen, Back and Next move one step, and the unfinished dataset is kept in this tab (a refresh brings it back with a note).
+
+| Step | What you do | What it writes |
+|---|---|---|
+| **Source** | a **pack dataset** (to keep some of it, add columns, group it), an **SQL view over a model** (Drishti SQL, *Check the SQL* asks the server), a **query in a SQL connector**, a **Python Transform**, or **the answer of a model** (tick its fields and measures) | `extends: pack.trading.trade@^1`, or `source: {sql, model}`, `{connector, query}`, `{python}`, `{model, query}` |
+| **Columns** | a pack dataset: tick the columns to keep (its keys always stay; *Keep all*, *Only the keys*). Any other source: each column's name, type, role, meaning, referenced kind, currency and whether it adds up; time and refresh | `columns: [tradeId, desk, ...]` (a subset), or `columns: {name: {type, role, ...}}` |
+| **Rows** | a condition on each row in the expression editor (row scope: the table's columns, the row functions) | `where: "status == 'Live'"` |
+| **One row is** | the keys as chips, in words; and **which duplicate wins**: none (the source has one row per key; Check says when it has not), the **latest** or the **earliest** row of each key by a column | `grain: {one-row-per: tradeId, keep: latest by updatedAt}`, or `grain: {says, keys}` |
+| **Worked-out columns** | **A formula column** (a name, a type, a meaning, the formula in the expression editor) or **A Python column** (a name, a type, the Python column item and the columns it reads) | `derive: {notionalUsd: {expr: ..., type: decimal, meaning: amount}, tenorBucket: {python: buckets.by_tenor, inputs: [maturityDate], type: string}}` |
+| **Group** (optional) | *Group the rows*: one row per the columns you tick, each other column summed, averaged, its minimum, maximum, count or distinct count, or left out; a count of the rows under a name | `group: {by: [desk], columns: {mtm: sum, trades: count}, grain: {says, keys}}` |
+| **Preview** | **Preview** saves the draft (visible only to you) and shows its first rows, answered by the server as you (your row rules and masks); for an SQL view, the statement's first rows | — |
+| **Save** | title, name (it follows the title until you type one), workspace, masked columns, the YAML for review; **Save draft** or **Save and publish** | the item |
+
+Never a silent distinct: a dataset whose rows repeat a key says which one wins, and the YAML says it too.
+
+![The Rows step: Keep the rows where, the editor offering the column status and the function startswith](img/bi-languages/wizard-filter-completion.jpg)
+
+![One row is: the key chips, and Keep the latest row of each key by tradeDate chosen](img/bi-languages/wizard-grain.jpg)
+
+![Worked-out columns: a formula column notionalM, decimal, notional / 1000000 checked by the server](img/bi-languages/wizard-derive.jpg)
+
+![Group: one row per desk, mtm, notional, pnl1d and notionalM summed, a count of the rows as trades](img/bi-languages/wizard-group.jpg)
+
+**Preview** saves the draft (under a name nobody you can see uses yet: `trade-narrowed`, else `trade-narrowed-2`) and shows its first rows, answered
+by the server as you. The trade pack dataset with `notionalM` worked out and grouped by desk:
+
+![The preview: the first 3 rows of the draft trade-narrowed, as of 2026-10-08; DESK-EQD, DESK-FI and DESK-FX with mtm, notional, pnl1d and notionalM summed (77, 78, 79); Checks clean](img/bi-languages/wizard-preview-grouped.jpg)
+
+What the wizard wrote for *Live trades by desk*: the trade pack dataset without `book`, the live rows, the latest row of each trade, a notional in
+millions, grouped by desk (captured from the Save step):
+
+```yaml
+rachana: 2
+dataset: live-trades-by-desk
+version: 1.0.0
+title: Live trades by desk
+extends: pack.trading.trade@^1
+columns: [currency, desk, mtm, notional, pnl1d, productType, status, tradeDate, tradeId]
+where: status == 'Live'
+grain: {one-row-per: id, keep: latest by tradeDate, says: One row per trade per business date}
+derive:
+  notionalM: {expr: notional / 1000000, type: decimal}
+group:
+  by: [desk]
+  columns: {mtm: sum, notional: sum, pnl1d: sum, notionalM: sum, trades: count}
+  grain:
+    says: One row per desk
+    keys: [desk]
+```
+
+![The Save step: title Live trades by desk, the name live-trades-by-desk, the workspace, masked columns and the YAML](img/bi-languages/wizard-save.jpg)
+
+The keys are written in the order they apply: `columns`, `where`, `grain`, `derive`, `group`. The dataset's page and the model designer read the result:
+the worked-out columns after the kept ones, and for a grouped dataset the `by` columns then the grouped ones (`desk`, `currency`, `notionalUsd`, `mtm`,
+`trades`). **The same from the command line:** check a row filter or a formula before you save it, against the dataset's implicit model:
+
+```bash
+drishti.py bi expr validate "status == 'Live'" --scope row --model dataset:pack.trading.trade
+drishti.py bi expr validate "notional / 1000000" --scope row --model dataset:pack.trading.trade
+```
+
+and save the YAML as a draft with the API (`POST /api/v1/bi/workspaces/<id>/items` with `{kind: dataset, title, body}`) or put the file under
+`config/bi/datasets/`.
+
+**An SQL view over a model** is a reviewed Drishti SQL statement whose answer is the table ([SQL.md](SQL.md)): choose the model, write the statement,
+**Check the SQL** (the server says what it answers, or what is wrong with the fix), **Preview** (its first rows, as you), **Save**:
+
+![The source step with An SQL view over a model chosen: the model SQL model, the statement, and The SQL checks: desk (string), mtm (decimal)](img/bi-languages/wizard-sql-view.jpg)
+
+![The preview: 3 rows, as you; Bonds and securitised -75,000, Equity derivatives 425,000, G10 and EM FX -575,000](img/bi-languages/wizard-sql-preview.jpg)
+
+What it wrote (captured):
+
+```yaml
+rachana: 2
+dataset: desk-mtm
+version: 1.0.0
+title: Desk MTM
+source: {sql: 'SELECT desk.name AS desk, MEASURE(''Sum of mtm'') AS mtm FROM trade JOIN desk GROUP BY desk.name', model: sql-model@1}
+```
+
+The same statement from the command line, as you: `drishti.py bi sql "SELECT desk.name AS desk, MEASURE('Sum of mtm') AS mtm FROM trade JOIN desk GROUP BY desk.name" --model sql-model@1`.
+
+The console calls: `POST /bi/model-api/dataset-yaml` (the document to YAML and the server's Check, `POST /api/v1/bi/models/validate`),
+`POST /bi/api/expr/validate` (each formula, with `model: dataset:<base>` and `alias`), `POST /bi/api/sql/validate` (the SQL view), and for the preview the
+draft's implicit model asked with `shape: rows` (`POST /bi/api/mq`).

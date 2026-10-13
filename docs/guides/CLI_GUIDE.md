@@ -1944,6 +1944,24 @@ Without DIR, `bi migrate --models` converts the server's **stored** datasets and
 the server does at start: a dataset item becomes the model item (same id), each table a new dataset item, reports are published again; restricted roles
 are never given rows they did not see ([TROUBLESHOOTING.md](TROUBLESHOOTING.md#bi-migrations-22-wave-a)).
 
+### `bi model`, `bi mq`: models and model queries
+
+What the model designer and a report's visuals do, over REST as the token's user (the server checks every model and answers every query with your row
+rules and masks; [BI_GUIDE.md section 23](BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1)). Reads need no scope.
+
+```
+drishti.py bi model list [--kind model|implicit|compat]          the models and datasets you may read, with the name@major a query uses
+drishti.py bi model describe REF                                 a model as you see it: fields with type, meaning, display name, folder, format, masks; measures; perspectives
+drishti.py bi model check FILE                                   the server's Check of a model or dataset YAML; exit 1 on an error (the safeguard's findings listed)
+drishti.py bi model consumers REF                                what reads the model: reports, boards, alerts, notebooks, datasets
+drishti.py bi mq FILE                                            ask one model query written as YAML or JSON
+drishti.py bi mq --model REF --select F,... --measures M,... [--define "Name=DEL"]... [--where field=value]... [--limit N] [--as-of DATE]
+```
+
+`REF` is `name@major` (`trading-risk@1`), a model item id or `dataset:<name>` (a dataset's implicit model). `bi mq --define` adds a measure of this query
+only, in DEL (`--define "Open MTM=sum(trades.mtm, where=trades.status == 'Live')" --measures "Open MTM"`), as a report's own measure travels. The answer is
+a table with its plan, its as-of date and the columns masked for you; `--json` prints the server's answer as it is.
+
 ### Shell completion
 
 `drishti.py completion bash|zsh|powershell` prints a completion script generated from the command tree (groups, commands,

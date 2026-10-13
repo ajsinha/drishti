@@ -136,3 +136,26 @@
 .bi-md-fieldshead p { margin: 0; overflow-wrap: anywhere; }
 .bi-md-fieldshead .btn-pill { align-self: flex-start; white-space: normal; text-align: left; }
 .bi-md-fieldshead [data-rebind-box] { margin: .3rem 0 0; }
+/* the model designer's Fields tab: properties per field, perspectives */
+.bi-md-fields td input.studio-in, .bi-md-fields td select { min-width: 8rem; width: 100%; }
+.bi-md-fields th[scope=row] { white-space: nowrap; font-weight: 400; }
+.bi-md-persp { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .3rem .6rem; margin: 0 0 .5rem; }
+.bi-md-persp summary { cursor: pointer; min-height: 2.2rem; display: flex; align-items: center; gap: .4rem; }
+.bi-md-persp fieldset { border: 0; padding: 0; margin: .4rem 0; min-width: 0; }
+.bi-md-persp legend, .bi-lw-derive fieldset legend, .bi-roles-box legend, [data-hidden-for] legend { font-size: .85rem; font-weight: 600; color: var(--d-muted); padding: 0; }
+/* the dataset wizard, version 2: the step bar's buttons, worked-out columns, the navigation */
+.bi-lw-steps li { padding: 0; }
+.bi-lw-stepbtn { background: none; border: 0; color: inherit; font: inherit; padding: .3rem .7rem; cursor: pointer; min-height: 2rem; border-radius: 999px; }
+.bi-lw-stepbtn:disabled { cursor: default; opacity: .6; }
+.bi-lw-derive { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .5rem .7rem; margin: 0 0 .6rem; min-width: 0; }
+.bi-lw-derive legend { font-weight: 600; font-size: .9rem; padding: 0 .3rem; }
+.bi-lw-nav { padding: .5rem 0; border-top: 1px solid var(--d-border); margin-top: .5rem; }
+.bi-layer-form legend { font-size: .95rem; font-weight: 600; padding: 0; margin: 0 0 .3rem; }
+.bi-md-localm { margin: 0 0 .6rem; border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .3rem .6rem; }
+.bi-md-localm summary { cursor: pointer; min-height: 2.2rem; display: flex; align-items: center; gap: .3rem; }
+.bi-md-localm .bi-frow { display: flex; flex-direction: column; gap: .2rem; margin: .3rem 0; }
+@media (max-width: 640px), (pointer: coarse) {
+  .bi-lw-stepbtn, .bi-md-localm summary, .bi-lw-nav .btn-pill, .bi-md-localm .btn-pill, .bi-md-persp summary, .bi-md-fields input[type=checkbox] { min-height: 44px; }
+  .bi-md-fields th[scope=row] { display: block; padding: .2rem 0; }
+  [data-fields-pane] .studio-in, [data-fields-pane] .studio-select, [data-fields-pane] .btn-pill, [data-security-pane] .studio-in, [data-security-pane] .studio-select, [data-security-pane] .btn-pill, [data-contract-pane] .btn-pill, [data-measures-pane] .studio-in, [data-measures-pane] .studio-select, [data-measures-pane] .btn-pill, [data-measures-pane] summary { min-height: 44px; }
+}

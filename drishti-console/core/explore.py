@@ -222,6 +222,39 @@ def run_sql(extract: Extract, sql: str, limits: Limits, extras: dict[str, Extrac
         db.close()
 
 
+# ---- Drishti SQL on the server (BI_DESIGN.md 3.4: the default engine of a SQL cell) -----------------------------------------
+def model_ref(dataset: str) -> str | None:
+    """The model a notebook's extract reads, for Drishti SQL: ``mq:<model>@<major>`` is that model, ``dataset:<name>`` the dataset's implicit model; a
+    version 1 dataset has none (its SQL cells run over the extract)."""
+    d = str(dataset or "")
+    if d.startswith("mq:") and len(d) > 3:
+        return d[3:]
+    if d.startswith("dataset:") and len(d) > 8:
+        return d
+    return None
+
+
+def dsql_request(sql: str, model: str, limits: Limits) -> dict:
+    """The body of ``POST /api/v1/bi/sql`` for one cell: the statement, the model and one row more than the cell may show (to say it was cut)."""
+    sql = (sql or "").strip().rstrip(";").strip()
+    if not sql:
+        raise ExploreError("DRS-9070", 422, "write one SELECT over the model's tables (its aliases), with MEASURE('name') for a measure")
+    if len(sql) > limits.sql_max_chars:
+        raise ExploreError("DRS-9072", 413, f"the SQL is {len(sql):,} characters; the limit is {limits.sql_max_chars:,} (bi.explore.sql_max_chars)")
+    return {"sql": sql, "model": model, "limit": limits.sql_max_rows + 1}
+
+
+def dsql_answer(answer: dict, limits: Limits, ms: int) -> dict:
+    """The server's answer in the cell's shape: ``{columns, rows, rowCount, truncated, ms, engine, plan, masked, query}`` (column names only, as a cell shows)."""
+    cols = [c.get("name") if isinstance(c, dict) else str(c) for c in answer.get("columns") or []]
+    rows = list(answer.get("rows") or [])
+    meta = answer.get("meta") if isinstance(answer.get("meta"), dict) else {}
+    cut = len(rows) > limits.sql_max_rows
+    rows = rows[:limits.sql_max_rows]
+    return {"columns": cols, "rows": rows, "rowCount": len(rows), "truncated": cut, "ms": int(meta.get("millis") or ms), "engine": "server",
+            "plan": meta.get("plan") or meta.get("planHash") or "", "masked": list(meta.get("masked") or []), "query": meta.get("query")}
+
+
 # ---- notebooks -----------------------------------------------------------------------------------------------------------------
 def parse_notebook(text: str, limits: Limits) -> dict:
     """The body of a ``notebook`` item: YAML ``{rachana: 1, notebook, dataset, fields, cells: [{type, source | slice}]}``. Raises :class:`ExploreError`."""

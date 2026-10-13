@@ -48,7 +48,7 @@
           <label>Visual<input name="visual" class="studio-in mono" value="{{ f.visual or '' }}"></label>
           <p class="text-muted-d wide" data-visual-titles aria-live="polite"></p>
           <label>Which column to watch<input name="measure" class="studio-in mono" value="{{ f.measure or '' }}" placeholder="blank: the first number" data-visual-column></label>
-          <label>A visual with several rows has several cells. Watch<select name="reduce" class="studio-select" data-reduce>{% for r, w in [('first', 'the first row'), ('sum', 'the sum of all rows'), ('max', 'the largest row'), ('min', 'the smallest row'), ('avg', 'the average of the rows'), ('count', 'the number of rows'), ('last', 'the last row')] %}<option value="{{ r }}"{% if f.reduce == r %} selected{% endif %}>{{ w }}</option>{% endfor %}</select></label>
+          <label>A visual with several rows has several cells. Watch<select name="reduce" class="studio-select" data-reduce>{% for r, w in [('', 'one cell'), ('first', 'the first row'), ('sum', 'the sum of all rows'), ('max', 'the largest row'), ('min', 'the smallest row'), ('avg', 'the average of the rows'), ('count', 'the number of rows'), ('last', 'the last row')] %}<option value="{{ r }}"{% if f.reduce == r %} selected{% endif %}>{{ w }}</option>{% endfor %}</select></label>
           <p class="text-muted-d wide" data-visual-cells aria-live="polite"></p>
           <input type="hidden" name="state" value="{{ f.state or '' }}">
           {% if f.state %}<p class="text-muted-d wide">With the filters you had set on the screen (slicers, selections, drill path) when you pressed <b>Alert me</b>.</p>{% endif %}
@@ -59,7 +59,7 @@
           <fieldset class="al-filters wide" data-al-filters-box><legend>Only rows where (optional)</legend>
             <div data-al-filters></div>
             <p><button type="button" class="btn-pill btn-ghost" data-al-addfilter>Add a filter</button></p></fieldset>
-          <label>If it answers with several rows, watch<select name="model_reduce" class="studio-select">{% for r, w in [('first', 'the first row'), ('sum', 'the sum of all rows'), ('max', 'the largest row'), ('min', 'the smallest row'), ('avg', 'the average of the rows'), ('last', 'the last row')] %}<option value="{{ r }}"{% if f.model_reduce == r %} selected{% endif %}>{{ w }}</option>{% endfor %}</select></label>
+          <label>If it answers with several rows, watch<select name="model_reduce" class="studio-select" data-model-reduce>{% for r, w in [('', 'one cell'), ('first', 'the first row'), ('sum', 'the sum of all rows'), ('max', 'the largest row'), ('min', 'the smallest row'), ('avg', 'the average of the rows'), ('last', 'the last row')] %}<option value="{{ r }}"{% if f.model_reduce == r %} selected{% endif %}>{{ w }}</option>{% endfor %}</select></label>
           <input type="hidden" name="model_query" value="{{ f.model_query or '' }}">
           <p class="text-muted-d wide" data-al-model-note>The number is the model's measure read as you, with your row rules and masks.</p>
         </div>

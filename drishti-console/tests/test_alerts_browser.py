@@ -162,15 +162,11 @@ def test_a_number_masked_for_a_person_is_never_judged_or_shown(stack, browser):
     make_alert(page, "Ann MTM floor")
     expect(page.locator("[data-check-out]")).to_contain_text("masked for you", timeout=30000)
     assert "725" not in page.inner_text("[data-check-out]") and "225" not in page.inner_text("[data-check-out]")
-    page.click("[data-alert-form] button[type=submit]")
-    page.wait_for_url("**/alerts?msg=**")
-    stack.announce()
-    time.sleep(4)
-    page.goto(CONSOLE_URL + "/alerts/measure/Ann%20MTM%20floor")
-    hist = page.locator("[data-history] tbody tr").first
-    expect(hist).to_contain_text("skipped")
-    expect(hist).to_contain_text("masked for you")
-    assert "-" not in hist.locator("td").nth(2).inner_text().replace("masked for you, so it cannot be judged", "").strip("() ")
+    page.click("[data-alert-form] button[type=submit]")                    # Save looks first: a number masked for you is never saved as an alert
+    expect(page.locator("[data-check-out]")).to_contain_text("Not saved", timeout=30000)
+    assert "/alerts/new" in page.url
+    page.goto(CONSOLE_URL + "/alerts")
+    expect(page.locator('tr[data-alert-row="Ann MTM floor"]')).to_have_count(0)
     page.goto(CONSOLE_URL + "/inbox?tab=alert")
     assert page.locator(".inbox-row").count() == 0, "a masked number sends nothing, and the board tile is masked for her too"
     page.context.close()

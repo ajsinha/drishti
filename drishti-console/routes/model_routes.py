@@ -188,7 +188,7 @@ async def compose(request: Request):
     if not isinstance(doc, dict):
         return _refuse("doc is the model as an object")
     try:
-        text = ml.to_yaml(doc)
+        text = ml.to_yaml_keeping(str(body.get("base") or ""), doc)            # over the saved text: its comments, order and untouched lines are kept
     except ml.LayerError as e:
         return _refuse(str(e))
     try:
@@ -307,17 +307,78 @@ async def new_report(request: Request):
     return _ok({"id": it["id"], "href": "/bi/design/" + it["id"]})
 
 
+@router.post("/bi/model-api/contract")
+async def contract(request: Request):
+    """``{id, doc}``: what the draft ``doc`` changes against the model item's published version, each change with the semver level it needs, the version
+    to propose, and who is affected (the consumers of the published major). ``published`` is false for a model never published (the first publish sets
+    the contract). When the server's Check already says it (``check.contract``), that answer is used as it is."""
+    body = await json_body(request)
+    iid, doc = str(body.get("id") or ""), body.get("doc")
+    if not iid or not isinstance(doc, dict):
+        return _refuse("send {id: <model item id>, doc: <the model>}")
+    try:
+        item = await _bi(request, "GET", "/items/" + quote(iid, safe=":"))
+        n = int(item.get("publishedVersion") or 0)
+        if not n:
+            return _ok({"published": False, "changes": [], "bump": "none", "consumers": [], "known": False})
+        old = ml.load((await _bi(request, "GET", f"/items/{quote(iid, safe=':')}/versions/{n}")).get("body") or "")
+    except BackendError as e:
+        return _problem(e)
+    except ml.LayerError as e:
+        return _refuse(str(e))
+    out = ml.contract_diff(old, doc)
+    ref = f"{old.get('model') or doc.get('model')}@{str(old.get('version') or '1').split('.')[0]}"
+
+    async def impact(change):                                          # who uses what a breaking change touches (the server's envelopes)
+        try:
+            got = await _bi(request, "GET", "/models/" + quote(iid, safe=":") + "/impact", target=change["target"])
+            change["usedBy"] = [{"kind": str(c.get("kind") or ""), "id": str(c.get("id") or ""), "title": str(c.get("title") or c.get("id") or "")}
+                                for c in got.get("consumers") or [] if isinstance(c, dict)]
+        except BackendError:
+            pass
+    await asyncio.gather(*[impact(c) for c in out["changes"] if c.get("target") and c["level"] == "major"][:10])
+    try:
+        got = await _bi(request, "GET", "/models/" + quote(ref, safe="") + "/consumers")
+        used, known = got.get("consumers") if isinstance(got, dict) else got, True
+    except BackendError:
+        used, known = [], False
+    return _ok({"published": True, "publishedVersion": n, "ref": ref, **out, "known": known,
+                "consumers": [{"kind": str(c.get("kind") or "item"), "id": str(c.get("id") or ""), "title": str(c.get("title") or c.get("id") or "")} for c in used or [] if isinstance(c, dict)]})
+
+
+@router.post("/bi/model-api/report-measures")
+async def report_measures(request: Request):
+    """``{yaml}`` of a report to ``{measures}``: its own measures (``measures:``, spec 4.2) as ``{name: {expr, format?, description?}}``, which the designer and the
+    report page send along as the model query's ``define``. Shape only: the server compiles each one (as the reader) when it is asked."""
+    body = await json_body(request)
+    try:
+        text = str(body.get("yaml") or "")
+        return _ok({"measures": ml.report_measures(text), "perspective": str(ml.load(text).get("perspective") or "")})
+    except ml.LayerError as e:
+        return _refuse(str(e))
+
+
 @router.get("/bi/model-api/fields")
 async def fields(request: Request):
     """The Fields pane of a report on a model: the model as the person sees it (masked fields marked), in the designer's dataset shape."""
     ref = request.query_params.get("ref", "")
     if not ref:
         return _refuse("?ref=<model>@<major> or dataset:<name>", "DRS-9140")
+    perspective = request.query_params.get("perspective", "")
     try:
-        described = await _bi(request, "GET", "/models/" + quote(ref, safe="") + "/describe")
+        described = await _bi(request, "GET", "/models/" + quote(ref, safe="") + "/describe", **({"perspective": perspective} if perspective else {}))
     except BackendError as e:
         return _problem(e)
-    return _ok(ml.fields_shape(described, ref))
+    doc = None
+    if not ref.startswith("dataset:") and ml.needs_model_doc(described):                  # an older server: the properties come from the model's YAML
+        try:
+            listing = (await _bi(request, "GET", "/models")).get("models") or []
+            hit = next((m for m in listing if m.get("kind") == "model" and m.get("name") == ref.split("@", 1)[0]), None)
+            if hit:
+                doc = ml.load((await _bi(request, "GET", "/items/" + quote(str(hit["id"]), safe=":"))).get("body") or "")
+        except (BackendError, ml.LayerError):
+            doc = None
+    return _ok(ml.fields_shape(described, ref, doc))
 
 
 @router.get("/bi/model-api/consumers")

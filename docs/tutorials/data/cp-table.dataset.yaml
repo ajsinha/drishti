@@ -1,0 +1,38 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Tutorial 18: a dataset made by a Python Transform (BI_MODEL_SPEC.md section 1.2 C). Its inputs are model queries on cp-risk, asked as the reader, so the
+# Transform only ever sees the reader's rows and masks; its answer is kept per reader. One row per counterparty.
+rachana: 2
+expressions: 2
+dataset: cp-table
+version: 1.0.0
+title: Counterparty table (Python)
+source:
+  python: Counterparty table          # the Python item, by its title (or its catalogue id)
+  inputs:
+    pnl: {model: cp-risk@1, select: {fields: [counterparty.id, counterparty.name, counterparty.sector], measures: [MTM, Trades]}}
+    exposure: {model: cp-risk@1, select: {fields: [counterparty.id], measures: [Exposure (EE peak)]}}
+  params: {floor: 1.0}
+grain: {says: One row per counterparty, keys: [counterparty]}
+time: {mode: snapshot}
+columns:
+  counterparty: {type: string, role: key, references: counterparty}
+  name: {type: string, role: attribute}
+  sector: {type: string, role: dimension}
+  mtm: {type: decimal, role: amount, additive: true, aggregate: sum, format: signed0}
+  trades: {type: integer, role: quantity, additive: true, aggregate: sum}
+  ee_peak: {type: decimal, role: amount, additive: true, aggregate: sum, format: amount0}
+  mtm_per_exposure: {type: decimal, role: ratio, additive: false, format: signed2}
+  exposure_rank: {type: decimal, role: attribute}

@@ -1,0 +1,57 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* The ExpressionEditor (bi-expr-editor.js), the Query panel's MQ / SQL views and the SQL editor (BI_DESIGN.md sections 3.3.8, 3.4 and 8.1). */
+.bi-xe { position: relative; display: flex; flex-direction: column; gap: .25rem; min-width: 0; flex: 1 1 18rem; }
+.bi-xe-row { display: flex; align-items: flex-start; gap: .3rem; }
+.bi-xe-row .bi-xe-in { flex: 1 1 auto; min-width: 0; }
+textarea.bi-xe-in { resize: vertical; min-height: 2.4rem; }
+.bi-xe-help { display: inline-flex; align-items: center; justify-content: center; min-width: 2.2rem; min-height: 2.2rem; color: var(--d-muted); }
+.bi-xe-help:hover { color: var(--d-link); }
+.bi-xe-list { position: absolute; top: 2.6rem; left: 0; right: 0; z-index: 40; max-height: 16rem; overflow: auto; margin: 0; padding: .2rem 0; list-style: none;
+  background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); box-shadow: var(--d-shadow); }
+.bi-xe-opt { display: grid; grid-template-columns: 1.2rem auto 1fr; align-items: baseline; gap: .1rem .45rem; padding: .3rem .6rem; cursor: pointer; color: var(--d-ink); }
+.bi-xe-opt[aria-selected="true"] { background: var(--d-accent-tint); }
+.bi-xe-opt .bi { color: var(--d-muted); }
+.bi-xe-measure .bi, .bi-xe-chip .bi { color: var(--d-accent); }
+.bi-xe-label { font-size: .85rem; white-space: nowrap; }
+.bi-xe-detail { color: var(--d-muted); font-size: .76rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.bi-xe-card { border: 1px solid var(--d-border); border-left: 3px solid var(--d-accent); border-radius: var(--d-radius); background: var(--d-bg-2); padding: .35rem .6rem; font-size: .82rem; }
+.bi-xe-card p { margin: .15rem 0; }
+.bi-xe-sig { font-family: var(--d-font-mono); font-weight: 600; }
+.bi-xe-chips { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem; margin: 0; }
+.bi-xe-chip { cursor: pointer; font: inherit; font-size: .78rem; }
+.bi-xe-chip-unknown { border-color: var(--d-bad); color: var(--d-bad); }
+.bi-xe-problems { margin: 0; padding: 0 0 0 1rem; }
+.bi-xe-problems:empty { display: none; }
+.bi-xe-problems .bi-ok { list-style: none; margin-left: -1rem; color: var(--d-ok); font-size: .82rem; }
+.bi-xe-problems .btn-pill code { font-size: .78rem; color: inherit; background: transparent; }
+.bi-xe-try { white-space: nowrap; }
+.bi-md-row:has(> .bi-md-grow .bi-xe), .bi-md-row:has(> .bi-xe) { align-items: flex-start; }
+.bi-xe-in[aria-invalid="true"] { border-color: var(--d-bad); }
+.bi-xe-tryout:empty { display: none; }
+.bi-xe-tryout { overflow-x: auto; }
+/* the Query panel: one question as a model query (MQ) or as SQL */
+.bi-qp-views { display: flex; flex-wrap: wrap; gap: .25rem; margin: .25rem 0; }
+.bi-qp-view { background: none; border: 1px solid var(--d-border); border-radius: 999px; padding: .2rem .8rem; color: var(--d-muted); cursor: pointer; font: inherit; font-size: .8rem; min-height: 2rem; }
+.bi-qp-view[aria-pressed="true"] { color: var(--d-ink); background: var(--d-accent-tint); border-color: var(--d-accent); font-weight: 600; }
+.bi-md-query pre { white-space: pre; overflow-x: auto; }
+.bi-sql-editor { width: 100%; min-height: 8rem; font-family: var(--d-font-mono); font-size: .85rem; }
+.bi-sql-meta { color: var(--d-muted); font-size: .8rem; }
+@media (pointer: coarse), (max-width: 640px) {
+  .bi-xe-opt, .bi-xe-help, .bi-xe .btn-pill.bi-xe-try, .bi-xe-chip, .bi-qp-view, .bi-xe-problems .btn-pill, .bi-md-query .btn-pill { min-height: 44px; }
+  .bi-xe-help { min-width: 44px; }
+  .bi-xe-row { flex-wrap: wrap; }
+}

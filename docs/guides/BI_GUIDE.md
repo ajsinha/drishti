@@ -63,6 +63,7 @@ A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), t
 18. [Live reports and boards (phase 5)](#18-live-reports-and-boards-phase-5)
 19. Export, subscriptions and alerts · 20. Python · 21. Analyse · 22. With AI (below)
 23. [Models and pack datasets: the model layer (wave W1)](#23-models-and-pack-datasets-the-model-layer-wave-w1)
+24. [The languages in the console (wave A, 2.2.0)](#24-the-languages-in-the-console-wave-a-220)
 
 ## 1. What BI is, and is not
 
@@ -365,7 +366,7 @@ and the sample *Region economics* drills from the world map to Australian and US
 
 **Several datasets.** Composed datasets (`from:` / `join:`), derived datasets made by a Python Transform, per-visual datasets and links in reports, several extracts in an Analyse notebook, impact and lineage across all of them (`DRS-9014` to `9017`, `9075`; [DATASETS.md section 11](DATASETS.md#11-composed-and-derived-datasets), [RUPAKA.md section 20.10](../architecture/RUPAKA.md)).
 
-**Governance, Python, AI and embedding (waves B to D).** A field renamed with the same meaning is recognised as a rename and the reports are rewritten with the dataset; a changed type or meaning is listed as an impact; every import is kept and can be **rolled back**; BI content travels **inside a pack archive**; lineage goes past the connector to the table or topic; a live table keeps a **history** of its measures; a board tile has alert **hysteresis**; boards have a **designer** ([BI_GOVERNANCE.md](BI_GOVERNANCE.md), [BOARDS.md section 11](BOARDS.md)). **Vega-Lite** visuals, **Python** on boards and in alerts, tests shipped with a Python item, Calc's `drishti_bi` with Graphic Walker, **Perspective charts** and the settings panel ([REPORTS.md](REPORTS.md), [PYTHON_BI.md](PYTHON_BI.md), [PYTHON_CALC.md](PYTHON_CALC.md)). The designer copilot, the dataset helper and narrative summaries ([BI_AI.md](BI_AI.md)); charts in Excel exports, retries of alert email, webhook and text channels ([DISTRIBUTION.md](DISTRIBUTION.md)); `<drishti-about>` and `<drishti-search>` with React, Vue and Angular samples ([ELEMENTS.md](../architecture/ELEMENTS.md)). Measures that mix grains (`[MTM] / [Exposure]`) are worked out at each measure's own grain.
+**Governance, Python, AI and embedding (waves B to D).** A field renamed with the same meaning is recognised as a rename and the reports are rewritten with the dataset; a changed type or meaning is listed as an impact; every import is kept and can be **rolled back**; BI content travels **inside a pack archive**; lineage goes past the connector to the table or topic; a live table keeps a **history** of its measures; a board tile has alert **hysteresis**; boards have a **designer** ([BI_GOVERNANCE.md](BI_GOVERNANCE.md), [BOARDS.md section 11](BOARDS.md)). **Vega-Lite** visuals, **Python** on boards and in alerts, tests shipped with a Python item, Calc's `drishti_bi` with Graphic Walker, **Perspective charts** and the settings panel ([REPORTS.md](REPORTS.md), [PYTHON_BI.md](PYTHON_BI.md), [PYTHON_CALC.md](PYTHON_CALC.md)). The designer copilot, the dataset helper and narrative summaries ([BI_AI.md](BI_AI.md)); charts in Excel exports, retries of alert email, webhook and text channels ([DISTRIBUTION.md](DISTRIBUTION.md)); `<drishti-about>` and `<drishti-search>` with React, Vue and Angular samples ([ELEMENTS.md](../architecture/ELEMENTS.md)). Measures that mix grains (`measure('MTM') / measure('Exposure')`) are worked out at each measure's own grain.
 
 **Not built (and not faked).** The consolidated list is [RUPAKA.md section 20.15](../architecture/RUPAKA.md#2015-as-built-at-210-and-what-is-still-not-built): the Python Source interface and a warm worker pool ([PYTHON_BI.md](PYTHON_BI.md) section 12); a Data tab, Notes and million-row extracts in Analyse ([ANALYSE.md](ANALYSE.md) section 12); escalation of alerts; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses.
 
@@ -673,7 +674,7 @@ type, role, meaning, the kind it references (`desk →`), its unit, whether it a
 | Suggested relationships | from the packs' entity references: `trade.desk holds desk ids (from the pack)` with **Add** (one click) and **Dismiss**. A second path between two datasets, or one between two facts, is offered **Add as inactive** with the reason |
 | Relationships | the list (keyboard-friendly) with **Edit**; *Relate two columns by hand* adds any other |
 | Inspector | a dataset: alias (renaming rewrites every field, measure and rule that uses it), grain, keys, time, columns, *Open the dataset*, *Remove from the model*. A relationship: cardinality, filter direction (*both ways* arrives in W2), active, where it came from, *Remove* |
-| Measures | **New measure from a column**: pick the dataset and the column; the aggregation, format, additivity and currency come from the dataset (amounts sum, ratios average and never add up, a balance takes its last value over time, `notional` is in `trade.currency`). **Write a formula** offers the fields and `[measures]` as you type. Each row edits name, formula, format and *adds up*; Check's problem shows under the row; **Preview** asks the saved draft by a suggested dimension, as you. The default measures (one per column with an aggregation, and `Count of <alias>`) are listed: reports may use them without anyone writing them |
+| Measures | **New measure from a column**: pick the dataset and the column; the aggregation, format, additivity and currency come from the dataset (amounts sum, ratios average and never add up, a balance takes its last value over time, `notional` is in `trade.currency`). **Write a formula** is the expression editor (fields, `measure('…')`, functions, the server's check as you type; [section 24](#24-the-languages-in-the-console-wave-a-220)). Each row edits name, formula, format and *adds up*; Check's problem shows under the row; **Preview** asks the saved draft by a suggested dimension, as you. The default measures (one per column with an aggregation, and `Count of <alias>`) are listed: reports may use them without anyone writing them |
 | Security | each dataset's own rules (read-only), the model's rules, the masks. **Add a rule for this model**: the dataset, the roles, and *the column matches the reader* (`trade.desk in user.desks`), *the column equals a value* or *every row*: no typing of conditions. Rules here can only remove rows. **The safeguard**: when a role is restricted on one dataset but no rule restricts another, the tab shows a ⚠ count and says so, with **Add a rule for desk-head on desk** and **desk-head may see every row of desk** (an audited `may-see-all` note). Until it is answered the model cannot be published (`DRS-9130`) |
 | Contract | title, description, version (**Next patch / minor / major**), lifecycle, and what consumers may use (everything, or only the ticked fields and measures). A published model refuses a breaking change without a new major (`DRS-9126`) |
 | YAML | the same draft as text; editing it moves the canvas when it parses, else the problem is shown and the canvas keeps the last good version |
@@ -704,7 +705,7 @@ security:
   rows:
     trade:
       - {role: desk-head, where: trade.desk in user.desks}
-      - {role: bi-writer, where: 'true'}
+      - {role: bi-writer, where: 'True'}
   may-see-all:
     desk: [desk-head]
 ```
@@ -739,12 +740,11 @@ The designer's Fields pane reads the model as you see it (masked fields marked);
 model query, shown under **Query of the selected visual**. **Make it a model** writes the implicit model out as a draft model (the dataset as the fact, its
 pack dimensions with their relationships, the default measures) and moves the report onto it.
 
-**New dataset** (`/bi/datasets/new-layer`), for what a pack does not give, in three steps that keep their draft across a refresh: (1) the source: a pack
-dataset narrowed or with extra columns, a query in a SQL connector (its only parameter is the as-of date), a Python Transform, or the answer of a model
-(tick its fields and measures); (2) the table: each column's type, role, meaning, referenced kind, currency and additivity (the base's columns are kept
-for a narrowed dataset), the grain keys as chips, time and refresh, with the server's Check below; (3) title, name, workspace, masked columns, the YAML for
-review, **Save draft** or **Save and publish**, then *Open the dataset*, *Start a report on it* or *Use it in a new model*. Every kind of dataset answers
-queries: pack and narrowed datasets, connector queries, Python Transforms and other models' answers, each asked as the reader ([DATASETS.md section 13](DATASETS.md)).
+**New dataset** (`/bi/datasets/new-layer`), for what a pack does not give: since wave A, the wizard of [section 24](#24-the-languages-in-the-console-wave-a-220)
+(the source, the columns kept, the rows kept, what one row is, worked-out columns, a grouping, a preview, save; or an SQL view over a model), its draft kept
+across a refresh, the server's Check beside each step, then *Open the dataset*, *Start a report on it* or *Use it in a new model*. Every kind of dataset
+answers queries: pack and narrowed datasets, connector queries, Python Transforms and other models' answers, each asked as the reader
+([DATASETS.md sections 13 to 15](DATASETS.md#15-the-dataset-wizard-version-2-wave-a)).
 
 **Analyse** (`/bi/explore`) offers a **Model or dataset** picker in groups: *Models* (each with its version and state, so a draft and a published copy of
 one name are told apart), *Your datasets*, one group per pack (a kind with no columns is left out) and *Other datasets (version 1)*. A model or a pack dataset
@@ -778,3 +778,72 @@ The designer's start and a workspace's *New item* offer **Model or dataset** in 
 The Subscribe form's **When** is built from choices (every day, every business day, every week on a day, the last business day of the month, every hour) with the
 schedule text under *Advanced*.
 
+## 24. The languages in the console (wave A, 2.2.0)
+
+Wave A ([BI_DESIGN.md §12.2](../architecture/BI_DESIGN.md#wave-a--foundation-and-languages--220)) gives BI one expression language, DEL (Python-like,
+[EXPRESSIONS.md](EXPRESSIONS.md)), and Drishti SQL over models. In the console that is five things.
+
+**1. One expression editor everywhere.** A model's measures, a report's own measures, the dataset wizard's filter and worked-out columns all use the
+same editor: it completes fields, measures (writing `measure('…')`) and the server's functions with their signature and an example, offers a call's
+keyword arguments (`where=`, `by=`), shows the server's problems as you type with the fix as a button, and **Try it** answers on the saved draft, as
+you ([EXPRESSIONS.md §8.1](EXPRESSIONS.md#81-in-the-console-the-expression-editor)).
+
+**2. The dataset wizard, version 2** (`/bi/datasets/new-layer`): pick the root, keep some columns, keep some rows, say what one row is and which duplicate
+wins, add columns worked out from others (a formula or a Python column item), group to a coarser grain, preview the server's answer, save. Or write an
+**SQL view** over a model. Nobody types YAML ([DATASETS.md §15](DATASETS.md#15-the-dataset-wizard-version-2-wave-a)).
+
+**3. The model designer, complete** (`/bi/md/<item>`):
+
+| Tab | New in wave A |
+|---|---|
+| Measures | the formula is written in the expression editor; renaming a measure rewrites every `measure('…')` that names it |
+| **Fields** | each field's **display name**, **description**, **format**, **folder**, **hidden**, **sort by**, **data category** and **default summarisation**, and each measure's description, format, folder and hidden: written once in the model (`fields:`), inherited by every report, board and answer, never re-declared. **Perspectives**: a named field list for one audience (`perspectives:`) |
+| Security | **Hidden from some roles** (`hidden-for`): for those roles the field or measure does not exist (not in the Fields pane, SQL or AI; naming it is *not found*). **Preview as a role**: the server's answer as that role would get it, rows and masks (`POST /bi/models/{ref}/preview-as`); a server that cannot says so and never shows yours instead |
+| Contract | **Changes since the published version**: each change with the version it needs (removing or redefining a measure, hiding a field, removing a relationship: major; adding: minor; a description or a format: patch; security: none, audited), **Use version 2.0.0** in one click, and the items that read the published major |
+| YAML | the designer patches the text it opened: comments, key order, blank lines and every entry you did not touch stay exactly as written |
+
+The **state badge** follows the item: *Saved draft*, *Published*, *Proposed*, and *Draft changes (v1 published)* after a save on a published model, when
+**Publish** is offered again.
+
+![The Fields tab: a row per field with its display name, description, format, folder, hidden, sort by, category and summarisation; the perspective Desk view below](img/bi-languages/model-fields-tab.jpg)
+
+What the designer wrote for a model of trades and desks with a formula measure, two field properties, a hidden field and a perspective (captured):
+
+```yaml
+rachana: 2
+model: languages-model
+version: 1.0.0
+id: md_8cec9e2f
+title: Languages model
+datasets:
+  trade: {dataset: pack.trading.trade@^1, role: fact}
+  desk: {dataset: pack.banking-core.desk@^1, role: dimension}
+relationships:
+  - {from: trade.desk, to: desk.id, suggested: {from: pack-reference}}
+measures:
+  Sum of mtm: {expr: sum(trade.mtm)}
+  MTM per trade: {expr: measure('Sum of mtm') / count(trade.tradeId)}
+fields:
+  trade.mtm: {description: 'Mark to market, in the trade''s currency', folder: Risk}
+  trade.book: {hidden: true}
+perspectives:
+  desk-view: {title: Desk view, fields: [trade.desk], measures: [Sum of mtm]}
+```
+
+After publishing it, redefining *Sum of mtm* as `sum(trade.pnl1d)` and saving: the badge reads *Draft changes (v1 published)*, Publish is back, and the
+Contract tab says what that change means:
+
+![Changes since the published version: major, changes what Sum of mtm computes; These changes need a new major version: the draft's version 2.0.0 is right](img/bi-languages/model-contract-diff.jpg)
+
+**4. Reports on a model.** The Fields pane shows the model's **display names**, its **folders**, leaves **hidden** fields out, and offers the model's
+**perspectives** (the report keeps its choice as `perspective:`); every visual's labels use the display names. **New measure for this report** writes a
+measure of this report only in the expression editor (`measures:` in the report, sent with each query as `define`; *Move to the model* offers it to the
+model). **Query of the selected visual** shows the question as a **model query (MQ)** or as **SQL**, one switch; **Run as SQL** asks the server and says
+whether the plan is the visual's ([REPORTS.md §19](REPORTS.md#19-languages-in-the-report-designer-wave-a)).
+
+**5. Analyse on the server.** A SQL cell is Drishti SQL over the model the extract reads, run by the server as you (the default); *over the extract*
+stays selectable until wave B ([ANALYSE.md](ANALYSE.md)).
+
+The console calls behind these (same-origin, deciding no access): `GET/POST /bi/api/expr/*` and `/bi/api/sql*` (passed to the server),
+`POST /bi/model-api/contract` (`{id, doc}` to the changes, the version and the consumers), `POST /bi/model-api/report-measures` (a report's own
+measures and perspective from its YAML), `POST /bi/model-api/compose` with `base` (the text to patch), `POST /bi/explore/dsql` (a SQL cell).

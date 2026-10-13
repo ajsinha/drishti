@@ -38,7 +38,7 @@ LIMIT  20
 
 Contents: [1](#1-where-you-use-it) where · [2](#2-the-dialect) the dialect · [3](#3-how-a-statement-compiles) how it compiles ·
 [4](#4-composite-statements) composite statements · [5](#5-time) time · [6](#6-explain) explain · [7](#7-sql-view-datasets) SQL view datasets ·
-[8](#8-sql-tests-of-a-model) SQL tests · [9](#9-problems-drs-9170-to-9179) problems · [10](#10-the-api-and-the-cli) API and CLI
+[8](#8-sql-tests-of-a-model) SQL tests · [9](#9-problems-drs-9170-to-drs-9179) problems · [10](#10-the-api-and-the-cli) API and CLI
 
 Related: [BI_DESIGN.md §3.4](../architecture/BI_DESIGN.md#34-drishti-sql-dsql-read-only-sql-over-models) (the design),
 [EXPRESSIONS.md](EXPRESSIONS.md) (DEL, which measures are written in), [API_GUIDE.md](API_GUIDE.md#drishti-sql-apiv1bisql).

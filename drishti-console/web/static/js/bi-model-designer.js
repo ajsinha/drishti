@@ -41,7 +41,9 @@
   function buttons() {
     q('[data-undo]').disabled = !undo.length || M.readOnly;
     q('[data-redo]').disabled = !redo.length || M.readOnly;
-    q('[data-state]').textContent = M.readOnly ? 'Read-only' : M.dirty ? 'Unsaved changes' : (M.item && M.item.status === 'published' ? 'Published' : 'Saved draft');
+    const it = M.item || {};
+    q('[data-state]').textContent = M.readOnly ? 'Read-only' : M.dirty ? 'Unsaved changes' : it.status === 'published' ? 'Published'
+      : it.status === 'proposed' ? 'Proposed' : it.publishedVersion ? 'Draft changes (v' + it.publishedVersion + ' published)' : 'Saved draft';
     publishState();
   }
   /** Publish (or Propose) shows whenever the person could publish this model once it is saved: a published model with a newer saved or unsaved version included. In a
@@ -105,7 +107,7 @@
     return new Promise((resolve) => {
       timer = window.setTimeout(() => {
         const mine = ++seq;
-        B.layer.post('compose', { doc: M.doc }).then((r) => {
+        B.layer.post('compose', { doc: M.doc, base: M.base || '' }).then((r) => {
           if (mine !== seq) { resolve(); return; }
           M.yaml = r.yaml;
           M.infos = r.datasets || {};
@@ -395,8 +397,8 @@
     B.qa('[data-tab]', canvas).forEach((b) => b.setAttribute('aria-selected', b.getAttribute('data-tab') === name ? 'true' : 'false'));
     B.qa('[data-pane]', canvas).forEach((p) => { p.hidden = p.getAttribute('data-pane') !== name; });
     q('[data-inspector]').hidden = name !== 'canvas';
-    q('.bi-md-side').hidden = name === 'security' || name === 'measures' || name === 'contract';          // the datasets list is for building the canvas
-    q('.bi-md-main').classList.toggle('bi-md-wide', name === 'security' || name === 'measures' || name === 'contract');
+    q('.bi-md-side').hidden = ['security', 'measures', 'contract', 'fields'].indexOf(name) >= 0;          // the datasets list is for building the canvas
+    q('.bi-md-main').classList.toggle('bi-md-wide', ['security', 'measures', 'contract', 'fields'].indexOf(name) >= 0);
     M.tab = name;
     if (name === 'yaml') { setYaml(M.yaml); if (editor) { editor.refresh(); } }
     if (name === 'canvas') { lines(); }
@@ -410,7 +412,7 @@
     window.clearTimeout(yamlTimer);
     yamlTimer = window.setTimeout(() => {
       const text = editor ? editor.getValue() : ta.value;
-      B.layer.post('parse', { yaml: text }).then((r) => { q('[data-yaml-problem]').hidden = true; M.edit((doc) => { Object.keys(doc).forEach((k) => delete doc[k]); Object.assign(doc, r.doc); }, false); })
+      B.layer.post('parse', { yaml: text }).then((r) => { q('[data-yaml-problem]').hidden = true; M.base = text; M.edit((doc) => { Object.keys(doc).forEach((k) => delete doc[k]); Object.assign(doc, r.doc); }, false); })
         .catch((e) => { const p = q('[data-yaml-problem]'); p.hidden = false; p.textContent = e.message + ' The canvas keeps the last version that parsed.'; });
     }, 600);
   }
@@ -431,10 +433,21 @@
     const btn = q('[data-save]');
     if (M.readOnly) { return Promise.resolve(); }
     return B.busy(btn, () => M.compose(true).then(() => B.saveItem(itemId, { body: M.yaml }, M.etag, btn, saveCopy))).then((it) => {
-      M.item = it; M.etag = it.etag; M.dirty = false; forget(); buttons();
-      B.near(btn, 'Saved as a draft. ' + (M.check && M.check.valid ? 'It checks clean: Publish when ready.' : 'Check lists what to fix before it can be published.'), false);
+      M.item = Object.assign({}, M.item, it); M.etag = it.etag; M.dirty = false; forget(); buttons();
+      // a save on a published model makes a draft beside the published version: Publish and the state are worked out again from the item as it now is
+      refreshItem();
+      const wasLive = it.publishedVersion && it.status !== 'published';
+      B.near(btn, 'Saved as a draft' + (wasLive ? ' (version ' + it.publishedVersion + ' stays published until you publish this one)' : '') + '. ' + (M.check && M.check.valid ? 'It checks clean: Publish when ready.' : 'Check lists what to fix before it can be published.'), false);
     }).catch((e) => { if (!e.cancelled) { B.near(btn, e.message, true); } });
   }
+  /** The item read again after a save, a publish or a move, so Publish (or Propose), Move and the state follow what the server now says. */
+  function refreshItem() {
+    return B.api('GET', '/items/' + B.id2path(itemId)).then((fresh) => {
+      if (M.dirty) { return; }
+      M.item = fresh; M.etag = fresh.etag || M.etag; buttons();
+    }).catch(() => { /* the save's own answer already drew the buttons */ });
+  }
+  M.refreshItem = refreshItem;
   function saveCopy() {
     const btn = q('[data-save-copy]').hidden ? q('[data-save]') : q('[data-save-copy]');
     return B.askWorkspace(btn, 'Save the copy', 'Save the copy into').then((to) => M.compose(true).then(() => B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items',
@@ -516,6 +529,7 @@
     q('[data-save-copy]').hidden = !M.readOnly;
     publishState();
     if (M.readOnly) { const ro = q('[data-readonly]'); ro.hidden = false; ro.textContent = it.status === 'proposed' ? 'Proposed for review: frozen until approved or withdrawn (its item page). You can still look and save a copy.' : 'You can look at this model but not change it here; Save a copy makes a draft of your own.'; }
+    M.base = it.body || '';                                      // the text the designer patches: its comments and order survive every edit (BI_DESIGN.md 8.2)
     return B.layer.post('parse', { yaml: it.body || '' });
   }).then((r) => {
     M.doc = r.doc;

@@ -276,7 +276,7 @@ def test_several_datasets_in_the_designer_with_a_link_and_a_slicer_that_filters_
     s, items = api("GET", "/bi/workspaces/me/items", *WES)
     assert not [i for i in items if i["kind"] == "dataset"]                                              # nothing was saved silently
     page.click("[data-save]")
-    page.wait_for_function("() => /Saved/.test(document.querySelector('[data-msg]').textContent)")
+    expect(page.locator(".bi-near").first).to_contain_text("Saved", timeout=15000)               # the save says so beside its button
     # the viewer: the slicer filters both datasets' cards
     page.goto(f"{CONSOLE_URL}/bi/r/{item}")
     page.wait_for_selector("[data-ready=yes]", timeout=30000)

@@ -24,17 +24,19 @@ import re
 
 import yaml
 
+from core import yaml_roundtrip
+
 PACK_PREFIX = "pack."
 NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
 ALIAS = re.compile(r"[A-Za-z_][A-Za-z0-9_]{0,63}")
 SEMVER = re.compile(r"\d+\.\d+\.\d+")
 MEASURE_ROLES = ("amount", "quantity", "ratio")
 AGG_WORD = {"sum": "Sum of", "avg": "Average of", "min": "Minimum of", "max": "Maximum of", "count": "Count of", "distinct": "Distinct"}
-TOP_ORDER = ("rachana", "model", "version", "id", "title", "description", "owner", "tags", "endorsement", "audience", "sample", "lifecycle", "replaced-by",
-             "implicit-from", "datasets", "relationships", "measures", "hierarchies", "security", "contract", "rollups", "tests", "golden", "ai", "calc-groups",
+TOP_ORDER = ("rachana", "expressions", "model", "version", "id", "title", "description", "owner", "tags", "endorsement", "audience", "sample", "lifecycle", "replaced-by",
+             "implicit-from", "datasets", "relationships", "measures", "fields", "hierarchies", "perspectives", "security", "contract", "rollups", "tests", "golden", "ai", "calc-groups",
              "parameters", "calendars", "layout")
-DATASET_ORDER = ("rachana", "dataset", "version", "id", "title", "description", "owner", "tags", "endorsement", "extends", "where", "source", "grain", "time",
-                 "refresh", "columns", "security", "tests", "ai", "rollups", "layout")
+DATASET_ORDER = ("rachana", "expressions", "dataset", "version", "id", "title", "description", "owner", "tags", "endorsement", "extends", "source", "columns", "where", "grain",
+                 "derive", "group", "time", "refresh", "security", "tests", "ai", "rollups", "layout")          # BI_DESIGN.md 3.1: the derivation keys in the order they apply
 
 
 class LayerError(ValueError):
@@ -99,16 +101,50 @@ def dataset_info(text: str, read_only: bool = False, item: str = "") -> dict:
     time = doc.get("time") if isinstance(doc.get("time"), dict) else {}
     sec = doc.get("security") if isinstance(doc.get("security"), dict) else {}
     name = str(doc.get("dataset"))
-    kind = "pack" if "pack" in src or "kind" in src else "connector" if "query" in src else "python" if "python" in src else "model" if "model" in src else \
-        ("extends" if doc.get("extends") else "unknown")
+    kind = "pack" if "pack" in src or "kind" in src else "sql" if "sql" in src else "connector" if "query" in src and "model" not in src else "python" if "python" in src \
+        else "model" if "model" in src else ("extends" if doc.get("extends") else "unknown")
+    columns = _derived(doc, _columns(doc.get("columns") if isinstance(doc.get("columns"), dict) else {}))
     return {"name": name, "item": item, "title": doc.get("title") or name, "description": doc.get("description") or "", "version": str(doc.get("version") or ""),
             "owner": doc.get("owner") or "", "endorsement": doc.get("endorsement") or "none", "generated": bool(doc.get("generated")), "readOnly": bool(read_only),
             "source": {"type": kind, "pack": src.get("pack") or "", "kind": src.get("kind") or "", "connector": src.get("connector") or "",
-                       "python": src.get("python") or "", "model": src.get("model") or "", "query": src.get("query") or "", "each": src.get("each") or ""},
-            "extends": doc.get("extends") or "", "grain": {"says": grain.get("says") or "", "keys": [str(k) for k in grain.get("keys") or []], "date": grain.get("date") or ""},
+                       "python": src.get("python") or "", "model": src.get("model") or "", "query": src.get("query") or "", "each": src.get("each") or "",
+                       "sql": src.get("sql") or ""},
+            "extends": doc.get("extends") or "", "grain": _grain(grain), "where": str(doc.get("where") or ""),
+            "subset": [str(c) for c in doc["columns"]] if isinstance(doc.get("columns"), list) else [],
+            "derive": doc.get("derive") if isinstance(doc.get("derive"), dict) else {}, "group": doc.get("group") if isinstance(doc.get("group"), dict) else {},
             "time": {"mode": time.get("mode") or "snapshot", "asOf": time.get("as-of") or "", "storage": time.get("storage") or ""}, "refresh": doc.get("refresh"),
-            "columns": _columns(doc.get("columns")), "rows": sec.get("rows") or [], "masked": [str(m) for m in sec.get("masked") or []],
-            "alias": default_alias(name), "role": infer_role(_columns(doc.get("columns")))}
+            "columns": columns, "rows": sec.get("rows") or [], "masked": [str(m) for m in sec.get("masked") or []],
+            "alias": default_alias(name), "role": infer_role(columns)}
+
+
+def _grain(grain: dict) -> dict:
+    """The grain as the pages read it: the keys (``keys``, or ``one-row-per`` of an explicit de-duplication), what one row is, and which duplicate wins."""
+    per = grain.get("one-row-per")
+    keys = grain.get("keys") or ([per] if isinstance(per, str) else per) or []
+    return {"says": grain.get("says") or "", "keys": [str(k) for k in keys], "date": grain.get("date") or "", "keep": str(grain.get("keep") or "")}
+
+
+def _derived(doc: dict, columns: list[dict]) -> list[dict]:
+    """The columns with the dataset's worked-out ones (``derive``) after them; a grouped dataset (``group``) has its ``by`` columns and the grouped ones."""
+    out = list(columns)
+    for name, d in (doc.get("derive") or {}).items() if isinstance(doc.get("derive"), dict) else []:
+        d = d if isinstance(d, dict) else {"expr": str(d)}
+        typ = d.get("type") or "decimal"
+        out.append({"name": str(name), "type": typ, "role": d.get("role") or ("amount" if typ in ("decimal", "integer") and d.get("meaning") in ("amount", "notional", "mtm") else "dimension" if typ == "string" else ""),
+                    "meaning": d.get("meaning") or "", "references": "", "currency": ((d.get("unit") or {}).get("currency") if isinstance(d.get("unit"), dict) else "") or "", "unitOf": "",
+                    "additive": None, "aggregate": "", "format": d.get("format") or "", "path": "", "expr": d.get("expr") or "", "of": "", "description": d.get("description") or "",
+                    "python": d.get("python") or "", "derived": True})
+    group = doc.get("group") if isinstance(doc.get("group"), dict) else None
+    if group and group.get("by"):
+        by = [str(b) for b in group.get("by") or []]
+        aggs = group.get("columns") if isinstance(group.get("columns"), dict) else {}
+        known = {c["name"]: c for c in out}
+        grouped = [dict(known.get(b) or {"name": b, "type": "string"}, role="dimension") for b in by]
+        for name, agg in aggs.items():
+            base = known.get(str(name)) or {"name": str(name), "type": "integer" if agg in ("count", "distinct") else "decimal"}
+            grouped.append(dict(base, name=str(name), role="amount" if agg in ("sum", "count") else base.get("role") or "", aggregate="sum" if agg in ("sum", "count") else "avg" if agg == "avg" else agg))
+        out = [dict({"references": "", "currency": "", "unitOf": "", "additive": None, "aggregate": "", "format": "", "path": "", "expr": "", "of": "", "description": "", "meaning": ""}, **c) for c in grouped]
+    return out
 
 
 def infer_role(columns: list[dict]) -> str:
@@ -230,12 +266,12 @@ def implicit_doc(info: dict, dims: list[dict], name: str = "", title: str = "") 
             n, m = default_measure(alias, col)
             measures[n] = m
     slug = name or re.sub(r"[^a-z0-9-]+", "-", (info["name"].replace("pack.", "")).lower()).strip("-") or "model"
-    return {"rachana": 2, "model": slug, "version": "1.0.0", "title": title or f"{info['title']} model", "implicit-from": info["name"],
+    return {"rachana": 2, "expressions": 2, "model": slug, "version": "1.0.0", "title": title or f"{info['title']} model", "implicit-from": info["name"],
             "datasets": datasets, "relationships": rels, "measures": measures}
 
 
 def new_doc(name: str, title: str) -> dict:
-    return {"rachana": 2, "model": name, "version": "1.0.0", "title": title, "datasets": {}, "relationships": [], "measures": {}}
+    return {"rachana": 2, "expressions": 2, "model": name, "version": "1.0.0", "title": title, "datasets": {}, "relationships": [], "measures": {}}
 
 
 # ---- writing YAML -------------------------------------------------------------------------------------------------------
@@ -252,7 +288,7 @@ def _key(k) -> str:
 def _block(key: str, value, out: list[str]) -> None:
     """One top-level key: maps of maps one entry per line (flow), lists of maps one item per line, anything else as PyYAML writes it."""
     if isinstance(value, dict) and value and all(isinstance(v, (dict, list, str, int, float, bool)) or v is None for v in value.values()) \
-            and key in ("datasets", "measures", "hierarchies", "columns", "may-see-all"):
+            and key in ("datasets", "measures", "hierarchies", "columns", "may-see-all", "derive", "fields", "perspectives"):
         out.append(f"{key}:")
         for k, v in value.items():
             out.append(f"  {_key(k)}: {_flow(v)}")
@@ -322,38 +358,190 @@ def to_yaml(doc: dict, order=TOP_ORDER) -> str:
     return text
 
 
+ENTRY_KEYS = ("datasets", "measures", "hierarchies", "columns", "derive", "fields", "perspectives")
+
+
+def to_yaml_keeping(original: str, doc: dict, order=TOP_ORDER) -> str:
+    """``doc`` written over the YAML it was read from (``original``), keeping its comments, key order and untouched lines (BI_DESIGN.md 8.2);
+    without an original it is :func:`to_yaml`."""
+    if not isinstance(doc, dict) or not doc:
+        raise LayerError("the document is empty")
+    if not (original or "").strip():
+        return to_yaml(doc, order)
+    return yaml_roundtrip.merge(original, _clean(doc), order, _block, ENTRY_KEYS, lambda d: to_yaml(d, order))
+
+
 def dataset_yaml(doc: dict) -> str:
     return to_yaml(doc, DATASET_ORDER)
 
 
 # ---- the Fields pane of a report on a model -----------------------------------------------------------------------------
 
-def fields_shape(described: dict, ref: str) -> dict:
-    """A model's description (``/models/{id}/describe``) in the shape the report designer's Fields pane reads (the dataset summary: tables with columns,
-    measures, hierarchies), plus what the pane's header says about the model (implicit or not)."""
+FIELD_PROPS = ("display", "description", "format", "folder", "hidden", "sort-by", "category", "summarise")
+
+
+def fields_shape(described: dict, ref: str, model_doc: dict | None = None) -> dict:
+    """A model's description (``/models/{id}/describe``) in the shape every Fields pane reads (the dataset summary: tables with columns, measures,
+    hierarchies, perspectives), plus what the pane's header says about the model (implicit or not). Each field and measure carries the properties the
+    model gives it (BI_DESIGN.md 8.1: display name, description, format, folder, hidden, sort-by, data category, default summarisation): a consumer
+    inherits them and never re-declares them. ``model_doc`` (the model's YAML, read when the server's description does not carry them yet) fills the gaps;
+    hiding there is presentation only: what a reader may not see the server leaves out of ``describe`` (``hidden-for``)."""
+    props = (model_doc or {}).get("fields") if isinstance((model_doc or {}).get("fields"), dict) else {}
+    mdefs = (model_doc or {}).get("measures") if isinstance((model_doc or {}).get("measures"), dict) else {}
     tables = []
     for d in described.get("datasets") or []:
         alias = d.get("alias")
         cols = []
         for f in d.get("fields") or []:
-            name = str(f.get("field", "")).split(".", 1)[-1]
-            cols.append({"name": name, "type": f.get("type") or "string", "format": f.get("format"), "masked": bool(f.get("masked")),
-                         "description": f.get("description") or "", "meaning": f.get("meaning") or "", "role": f.get("role") or "", "references": f.get("references") or ""})
+            full = str(f.get("field", ""))
+            name = full.split(".", 1)[-1]
+            p = props.get(full) if isinstance(props.get(full), dict) else {}
+            col = {"name": name, "type": f.get("type") or "string", "format": f.get("format") or p.get("format"), "masked": bool(f.get("masked")),
+                   "description": f.get("description") or p.get("description") or "", "meaning": f.get("meaning") or "", "role": f.get("role") or "",
+                   "references": f.get("references") or ""}
+            for k in ("display", "folder", "hidden", "sort-by", "category", "summarise"):
+                v = f.get(k, f.get({"sort-by": "sortBy", "summarise": "summarize"}.get(k, k), p.get(k)))
+                if v not in (None, "", False):
+                    col[k] = v
+            cols.append(col)
         tables.append({"name": alias, "kind": d.get("role") or "fact", "dataset": d.get("dataset"), "version": d.get("version"), "mode": d.get("mode"), "columns": cols})
-    measures = [{"name": m.get("name"), "expr": m.get("expr"), "format": m.get("format"), "masked": bool(m.get("masked")), "implicit": bool(m.get("implicit")), "local": bool(m.get("local")),
-                 "additive": m.get("additive"), "description": m.get("description") or ""} for m in described.get("measures") or []]
+    measures = []
+    for m in described.get("measures") or []:
+        p = mdefs.get(m.get("name")) if isinstance(mdefs.get(m.get("name")), dict) else {}
+        out = {"name": m.get("name"), "expr": m.get("expr"), "format": m.get("format") or p.get("format"), "masked": bool(m.get("masked")), "implicit": bool(m.get("implicit")),
+               "local": bool(m.get("local")), "additive": m.get("additive"), "description": m.get("description") or p.get("description") or ""}
+        for k in ("folder", "hidden", "display"):
+            v = m.get(k, p.get(k))
+            if v not in (None, "", False):
+                out[k] = v
+        measures.append(out)
     model = described.get("model") if isinstance(described.get("model"), dict) else {}
     mid = str(model.get("id") or described.get("id") or "")
     implicit = mid.startswith("implicit:") or ref.startswith("dataset:")
+    persp = described.get("perspectives") if isinstance(described.get("perspectives"), dict) else (model_doc or {}).get("perspectives") or {}
+    if isinstance(described.get("perspectives"), list):                    # the server lists them by name; their fields come with ?perspective=<name>
+        persp = {str(p.get("name")): {"title": p.get("title") or p.get("name"), "description": p.get("description") or "", "fields": None, "measures": None}
+                 for p in described["perspectives"] if isinstance(p, dict) and p.get("name")}
     return {"id": mid, "title": described.get("title") or model.get("name") or ref, "description": described.get("description") or "", "tables": tables,
             "measures": measures, "hierarchies": described.get("hierarchies") or {}, "relationships": described.get("relationships") or [],
+            "perspectives": {str(k): {"title": (v or {}).get("title") or str(k), "description": (v or {}).get("description") or "",
+                                      "fields": None if (v or {}).get("fields", []) is None else list((v or {}).get("fields") or []),
+                                      "measures": None if (v or {}).get("measures", []) is None else list((v or {}).get("measures") or [])}
+                             for k, v in persp.items() if isinstance(v, dict) or v is None},
             "model": {"ref": ref, "id": mid, "name": model.get("name") or "", "version": model.get("version") or "", "implicit": implicit,
                       "dataset": ref[len("dataset:"):] if ref.startswith("dataset:") else ""}}
+
+
+def needs_model_doc(described: dict) -> bool:
+    """Whether the server's description lacks the model's field properties and perspectives (an older server): the console then reads the model's YAML."""
+    if "perspectives" in described:
+        return False
+    return not any(any(k in f for k in ("display", "folder", "hidden", "sortBy", "sort-by", "category")) for d in described.get("datasets") or [] for f in d.get("fields") or [])
 
 
 def report_body(slug: str, title: str, ref: str) -> str:
     """A new report bound to one model (spec 4.1): ``model:`` names it; a visual's query is a model query against it."""
     return yaml.safe_dump({"report": slug, "title": title, "model": ref, "pages": [{"id": "main", "title": "Main", "visuals": []}]}, sort_keys=False, allow_unicode=True)
+
+
+# ---- the contract: what changed since the published version, and the version it needs ---------------------------------
+
+_LEVEL = {"major": 3, "minor": 2, "patch": 1, "none": 0}
+
+
+def _measure_map(doc: dict) -> dict:
+    return {str(k): (v if isinstance(v, dict) else {"expr": str(v)}) for k, v in (doc.get("measures") or {}).items()}
+
+
+def _hidden(doc: dict) -> set:
+    """The fields and measures a model hides from every consumer (``fields.<f>.hidden``, ``measures.<m>.hidden``)."""
+    out = {str(f) for f, p in (doc.get("fields") or {}).items() if isinstance(p, dict) and p.get("hidden")}
+    return out | {str(m) for m, p in _measure_map(doc).items() if p.get("hidden")}
+
+
+def contract_diff(old: dict, new: dict) -> dict:
+    """What a draft changes against the published model (BI_DESIGN.md 12.2, the contract diff), each change with the semver level it needs: a removed or
+    redefined measure, dataset, relationship or exposed field breaks consumers (major); an added one is minor; descriptions, formats, folders and display
+    names are a patch. Security changes need no version (they are audited at publish). ``bump`` is the level, ``next`` the version it proposes, ``ok``
+    whether the draft's own version is already there. The server's publish decides (``DRS-9126``); this is the designer's advance notice."""
+    changes: list[dict] = []
+
+    def add(level, what, text, target=None):
+        changes.append({"level": level, "what": what, "text": text, **({"target": target} if target else {})})
+
+    om, nm = _measure_map(old), _measure_map(new)
+    for name in sorted(set(om) - set(nm)):
+        add("major", "measure", f"removes the measure {name}", name)
+    for name in sorted(set(nm) - set(om)):
+        add("minor", "measure", f"adds the measure {name}")
+    for name in sorted(set(om) & set(nm)):
+        a, b = om[name], nm[name]
+        if (a.get("expr") or a.get("python")) != (b.get("expr") or b.get("python")):
+            add("major", "measure", f"changes what {name} computes ({a.get('expr') or a.get('python')} → {b.get('expr') or b.get('python')})", name)
+        for k in ("format", "description", "folder", "display"):
+            if a.get(k) != b.get(k):
+                add("patch", "measure", f"changes the {k} of {name}")
+    od, nd = old.get("datasets") or {}, new.get("datasets") or {}
+    ref = lambda d: str((d or {}).get("dataset") if isinstance(d, dict) else d or "")  # noqa: E731
+    for alias in sorted(set(od) - set(nd)):
+        add("major", "dataset", f"removes the dataset {alias}")
+    for alias in sorted(set(nd) - set(od)):
+        add("minor", "dataset", f"adds the dataset {alias}")
+    for alias in sorted(set(od) & set(nd)):
+        if ref(od[alias]).split("@")[0] != ref(nd[alias]).split("@")[0] or ref(od[alias]).partition("@")[2] != ref(nd[alias]).partition("@")[2]:
+            add("major", "dataset", f"points {alias} at {ref(nd[alias])} (was {ref(od[alias])})")
+    rk = lambda r: (str(r.get("from")), str(r.get("to")))  # noqa: E731
+    orels = {rk(r): r for r in old.get("relationships") or [] if isinstance(r, dict)}
+    nrels = {rk(r): r for r in new.get("relationships") or [] if isinstance(r, dict)}
+    for k in sorted(set(orels) - set(nrels)):
+        add("major", "relationship", f"removes the relationship {k[0]} → {k[1]}")
+    for k in sorted(set(nrels) - set(orels)):
+        add("minor", "relationship", f"adds the relationship {k[0]} → {k[1]}")
+    for k in sorted(set(orels) & set(nrels)):
+        if (orels[k].get("active", True) is not False) != (nrels[k].get("active", True) is not False) or orels[k].get("cardinality") != nrels[k].get("cardinality"):
+            add("major", "relationship", f"changes how {k[0]} → {k[1]} filters")
+    for f in sorted(_hidden(new) - _hidden(old)):
+        add("major", "field", f"hides {f} from consumers", f)
+    for f in sorted(_hidden(old) - _hidden(new)):
+        add("minor", "field", f"shows {f} to consumers again")
+    of, nf = old.get("fields") or {}, new.get("fields") or {}
+    for f in sorted(set(of) | set(nf)):
+        a, b = of.get(f) or {}, nf.get(f) or {}
+        if any(a.get(k) != b.get(k) for k in ("display", "description", "format", "folder", "sort-by", "category", "summarise")):
+            add("patch", "field", f"changes the properties of {f}")
+    op, np_ = old.get("perspectives") or {}, new.get("perspectives") or {}
+    for p in sorted(set(op) - set(np_)):
+        add("major", "perspective", f"removes the perspective {p}")
+    for p in sorted(set(np_) - set(op)):
+        add("minor", "perspective", f"adds the perspective {p}")
+    for p in sorted(set(op) & set(np_)):
+        gone = set((op[p] or {}).get("fields") or []) - set((np_[p] or {}).get("fields") or []) | set((op[p] or {}).get("measures") or []) - set((np_[p] or {}).get("measures") or [])
+        if gone:
+            add("major", "perspective", f"takes {', '.join(sorted(gone))} out of the perspective {p}")
+    if (old.get("security") or {}) != (new.get("security") or {}):
+        add("none", "security", "changes the security (no version needed: audited at publish)")
+    for k in ("title", "description"):
+        if old.get(k) != new.get(k):
+            add("patch", "model", f"changes the model's {k}")
+    bump = max((c["level"] for c in changes), key=lambda x: _LEVEL[x], default="none")
+    base = str(old.get("version") or "1.0.0")
+    parts = [int(x) if x.isdigit() else 0 for x in (base.split(".") + ["0", "0"])[:3]]
+    nxt = {"major": [parts[0] + 1, 0, 0], "minor": [parts[0], parts[1] + 1, 0], "patch": [parts[0], parts[1], parts[2] + 1]}.get(bump, parts)
+    have = [int(x) if x.isdigit() else 0 for x in (str(new.get("version") or base).split(".") + ["0", "0"])[:3]]
+    return {"from": base, "changes": changes, "bump": bump, "next": ".".join(map(str, nxt)), "ok": have >= nxt, "version": ".".join(map(str, have))}
+
+
+def report_measures(body: str) -> dict:
+    """A report's own measures (``measures:``, spec 4.2) as ``{name: {expr, format?, description?}}``; a bare string is the expression."""
+    raw = load(body).get("measures") or {}
+    if not isinstance(raw, dict):
+        raise LayerError("`measures:` maps a measure's name to its expression")
+    out = {}
+    for name, m in raw.items():
+        m = {"expr": m} if isinstance(m, str) else m if isinstance(m, dict) else {}
+        if m.get("expr"):
+            out[str(name)] = {k: m[k] for k in ("expr", "format", "description") if m.get(k)}
+    return out
 
 
 def implicit_source(body: str) -> str | None:

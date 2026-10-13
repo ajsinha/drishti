@@ -31,6 +31,7 @@
     if (op && high) { high.hidden = op.value !== 'between' && op.value !== 'outside'; }
   }
   form.addEventListener('change', sync);
+  form.addEventListener('change', function (e) { if (e.target.matches && e.target.matches('[data-reduce]')) { e.target.setAttribute('data-touched', '1'); } });
   sync();
 
   /** The report, page and visual by their titles (the fields hold their ids): "Report: Daily risk, Page: Overview, Visual: MTM by desk". */
@@ -51,8 +52,16 @@
     if (keep && names.indexOf(keep) < 0) { var o2 = document.createElement('option'); o2.value = keep; o2.textContent = keep; sel.appendChild(o2); }
     sel.value = keep;
     input.parentNode.replaceChild(sel, input);
-    var dims = names.length > 1;
-    if (note) { note.textContent = dims ? 'This visual lists several values: choose the column to watch, then whether to watch its first row, the sum of all rows, the largest, and so on.' : ''; }
+    // reduce is sent only when the visual can answer several rows and the screen's filters do not leave one: a card or a KPI is one cell, never reduced
+    var single = ['card', 'kpi', 'gauge', 'multi-card'].indexOf(String(vis.type || '')) >= 0;
+    var dims = !single && names.length > 1;
+    var reduce = form.querySelector('[data-reduce]'), state = form.elements.state && form.elements.state.value;
+    if (reduce) {
+      if (single) { reduce.value = ''; }
+      else if (dims && !reduce.value && !state && !reduce.getAttribute('data-touched')) { reduce.value = 'first'; }
+      reduce.closest('label').hidden = single;
+    }
+    if (note) { note.textContent = single ? 'A ' + vis.type + ' answers one cell: it is watched as it is.' : dims ? 'This visual lists several values: choose the column to watch, then one cell (when your filters leave one row), its first row, the sum of all rows, the largest, and so on.' : ''; }
   }
   function showTitles() {
     if (!titles) { return; }
