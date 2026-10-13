@@ -211,10 +211,19 @@
     pick.addEventListener('change', () => {
       D.perspective = pick.value;
       D.change('Perspective', (r) => { if (pick.value) { r.perspective = pick.value; } else { delete r.perspective; } });
-      if (D.drawFields) { D.drawFields(); }
+      lists(f, pick.value).then(() => { if (D.drawFields) { D.drawFields(); } });
     });
     head.appendChild(h('p', {}, h('label', {}, 'Perspective ', pick)));
-    if (D.drawFields) { D.drawFields(); }
+    lists(f, D.perspective).then(() => { if (D.drawFields) { D.drawFields(); } });
+  }
+  /** A perspective's fields and measures: the server says them (`describe?perspective=`) when its list names only the perspectives. */
+  function lists(f, name) {
+    const p = name && f.perspectives && f.perspectives[name];
+    if (!p || (p.fields && p.measures)) { return Promise.resolve(); }
+    return B.layer.get('fields?ref=' + encodeURIComponent(S.ref) + '&perspective=' + encodeURIComponent(name)).then((one) => {
+      p.fields = [].concat(...(one.tables || []).map((t) => t.columns.map((c) => t.name + '.' + c.name)));
+      p.measures = (one.measures || []).map((m) => m.name);
+    }).catch(() => {});
   }
 
   /** A measure of this report only (spec 4.2): a name and a formula in the ExpressionEditor over the model's fields and measures; Try it asks the model. */

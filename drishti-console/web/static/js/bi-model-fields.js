@@ -25,7 +25,7 @@
   if (!M || !B) { return; }
   const h = M.h, q = M.q;
   const FORMATS = ['', 'amount0', 'amount2', 'signed0', 'signed2', 'pct', 'integer', 'decimal2', 'date', 'text'];
-  const CATEGORIES = ['', 'currency', 'country', 'region', 'city', 'latitude', 'longitude', 'postcode', 'url', 'image-url', 'barcode', 'identifier'];
+  const CATEGORIES = ['', 'country', 'region', 'state', 'city', 'postcode', 'address', 'latitude', 'longitude', 'place', 'url', 'image-url', 'currency', 'percentage', 'identifier'];
   const SUMMARISE = [['', 'from the column'], ['sum', 'sum'], ['avg', 'average'], ['min', 'minimum'], ['max', 'maximum'], ['count', 'count'], ['distinct', 'distinct count'], ['none', 'do not summarise']];
   const PROPS = ['display', 'description', 'format', 'folder', 'hidden', 'sort-by', 'category', 'summarise'];
   const sel = (options, value, attrs) => h('select', Object.assign({ class: 'studio-select' }, attrs || {}), options.map((o) => { const [v, t] = Array.isArray(o) ? o : [o, o || '—']; return h('option', { value: v, text: t, selected: String(value == null ? '' : value) === v }); }));
@@ -205,7 +205,7 @@
         B.clear(box).appendChild(head);
         if (!r.published) { box.appendChild(h('p', { class: 'text-muted-d', 'data-contract-first': '', text: 'Never published: the first publish sets the contract. Version ' + (M.doc.version || '1.0.0') + ' is fine.' })); return; }
         if (!r.changes.length) { box.appendChild(h('p', { class: 'bi-ok', 'data-contract-same': '', text: 'No change from the published version ' + r.from + '.' })); return; }
-        box.appendChild(h('ul', { class: 'bi-layer-list', 'data-contract-changes': '' }, r.changes.map((c) => h('li', { 'data-change-level': c.level }, h('span', { class: 'bi-badge' + (c.level === 'major' ? ' bi-warnbadge' : ''), text: c.level === 'none' ? 'no version' : c.level }), ' ' + c.text))));
+        box.appendChild(h('ul', { class: 'bi-layer-list', 'data-contract-changes': '' }, r.changes.map((c) => h('li', { 'data-change-level': c.level }, h('span', { class: 'bi-badge' + (c.level === 'major' ? ' bi-warnbadge' : ''), text: c.level === 'none' ? 'no version' : c.level }), ' ' + c.text, c.usedBy && c.usedBy.length ? h('small', { class: 'text-muted-d', 'data-change-used-by': String(c.usedBy.length), text: ' · used by ' + c.usedBy.slice(0, 5).map((u) => u.title).join(', ') + (c.usedBy.length > 5 ? '…' : '') }) : null))));
         const words = { major: 'a new major version: consumers stay on ' + r.ref + ' until they move', minor: 'a minor version: consumers get the additions', patch: 'a patch', none: 'no new version' };
         const p = h('p', { 'data-contract-bump': r.bump }, 'These changes need ', h('strong', { text: words[r.bump] }), '. ');
         if (r.bump !== 'none' && !r.ok && !M.readOnly) {

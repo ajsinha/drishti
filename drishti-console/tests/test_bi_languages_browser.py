@@ -207,6 +207,21 @@ def test_the_model_designer_writes_expressions_field_properties_and_perspectives
     for line in ("trade.mtm: {description:", "folder: Risk", "trade.book: {hidden: true}", "desk-view: {title: Desk view, fields: [trade.desk], measures: [Sum of mtm]}",
                  "MTM per trade: {expr: measure('Sum of mtm') / count(trade.tradeId)}"):
         assert line in text, (line, text)
+    # Security: a field that does not exist for a role (hidden-for), checked clean by the server; Preview as asks the server, never shows yours
+    page.click('[data-tab="security"]')
+    page.fill("[data-hidden-roles]", "desk-head")
+    page.locator('[data-hidden-pick="trade.notional"]').check()
+    page.click("[data-hidden-add]")
+    expect(page.locator('[data-hidden-entry="0"]')).to_contain_text("desk-head", timeout=15000)
+    page.wait_for_function("() => window.drishtiModel.yaml.indexOf('hidden-for') >= 0", timeout=10000)
+    assert "hidden-for: [{roles: [desk-head], fields: [trade.notional]}]" in page.evaluate("window.drishtiModel.yaml"), page.evaluate("window.drishtiModel.yaml")
+    expect(page.locator("[data-valid]")).to_have_text("Valid", timeout=15000)
+    shoot(page, "[data-hidden-for]", "model-hidden-for")
+    page.click("[data-save]")
+    expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
+    page.select_option("[data-preview-role]", "desk-head")
+    page.click("[data-preview-as]")
+    expect(page.locator("[data-preview-as-error], [data-previewed-as]").first).to_be_visible(timeout=15000)
     clean(page)
     page.context.close()
 

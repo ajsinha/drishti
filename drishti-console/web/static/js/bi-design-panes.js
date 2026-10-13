@@ -66,7 +66,7 @@
     }
 
     /** The model's field properties inherited (BI_DESIGN.md 8.1): hidden fields and measures are left out, a perspective narrows the list, folders group. */
-    const persp = (ds) => { const p = D.perspective && ds.perspectives && ds.perspectives[D.perspective]; return p || null; };
+    const persp = (ds) => { const p = D.perspective && ds.perspectives && ds.perspectives[D.perspective]; return p && p.fields && p.measures ? p : null; };
     const shownMeasure = (ds, m) => !m.hidden && (!persp(ds) || m.local || persp(ds).measures.indexOf(m.name) >= 0);
     const shownField = (ds, t, c) => !c.hidden && (!persp(ds) || persp(ds).fields.indexOf(t.name + '.' + c.name) >= 0);
     /** Items with a folder go in a nested list per folder (sorted), the rest stay at the top. */

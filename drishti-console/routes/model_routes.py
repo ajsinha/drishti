@@ -328,6 +328,15 @@ async def contract(request: Request):
         return _refuse(str(e))
     out = ml.contract_diff(old, doc)
     ref = f"{old.get('model') or doc.get('model')}@{str(old.get('version') or '1').split('.')[0]}"
+
+    async def impact(change):                                          # who uses what a breaking change touches (the server's envelopes)
+        try:
+            got = await _bi(request, "GET", "/models/" + quote(iid, safe=":") + "/impact", target=change["target"])
+            change["usedBy"] = [{"kind": str(c.get("kind") or ""), "id": str(c.get("id") or ""), "title": str(c.get("title") or c.get("id") or "")}
+                                for c in got.get("consumers") or [] if isinstance(c, dict)]
+        except BackendError:
+            pass
+    await asyncio.gather(*[impact(c) for c in out["changes"] if c.get("target") and c["level"] == "major"][:10])
     try:
         got = await _bi(request, "GET", "/models/" + quote(ref, safe="") + "/consumers")
         used, known = got.get("consumers") if isinstance(got, dict) else got, True
@@ -355,8 +364,9 @@ async def fields(request: Request):
     ref = request.query_params.get("ref", "")
     if not ref:
         return _refuse("?ref=<model>@<major> or dataset:<name>", "DRS-9140")
+    perspective = request.query_params.get("perspective", "")
     try:
-        described = await _bi(request, "GET", "/models/" + quote(ref, safe="") + "/describe")
+        described = await _bi(request, "GET", "/models/" + quote(ref, safe="") + "/describe", **({"perspective": perspective} if perspective else {}))
     except BackendError as e:
         return _problem(e)
     doc = None

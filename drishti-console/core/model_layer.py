@@ -419,9 +419,14 @@ def fields_shape(described: dict, ref: str, model_doc: dict | None = None) -> di
     mid = str(model.get("id") or described.get("id") or "")
     implicit = mid.startswith("implicit:") or ref.startswith("dataset:")
     persp = described.get("perspectives") if isinstance(described.get("perspectives"), dict) else (model_doc or {}).get("perspectives") or {}
+    if isinstance(described.get("perspectives"), list):                    # the server lists them by name; their fields come with ?perspective=<name>
+        persp = {str(p.get("name")): {"title": p.get("title") or p.get("name"), "description": p.get("description") or "", "fields": None, "measures": None}
+                 for p in described["perspectives"] if isinstance(p, dict) and p.get("name")}
     return {"id": mid, "title": described.get("title") or model.get("name") or ref, "description": described.get("description") or "", "tables": tables,
             "measures": measures, "hierarchies": described.get("hierarchies") or {}, "relationships": described.get("relationships") or [],
-            "perspectives": {str(k): {"title": (v or {}).get("title") or str(k), "fields": list((v or {}).get("fields") or []), "measures": list((v or {}).get("measures") or [])}
+            "perspectives": {str(k): {"title": (v or {}).get("title") or str(k), "description": (v or {}).get("description") or "",
+                                      "fields": None if (v or {}).get("fields", []) is None else list((v or {}).get("fields") or []),
+                                      "measures": None if (v or {}).get("measures", []) is None else list((v or {}).get("measures") or [])}
                              for k, v in persp.items() if isinstance(v, dict) or v is None},
             "model": {"ref": ref, "id": mid, "name": model.get("name") or "", "version": model.get("version") or "", "implicit": implicit,
                       "dataset": ref[len("dataset:"):] if ref.startswith("dataset:") else ""}}
@@ -461,18 +466,18 @@ def contract_diff(old: dict, new: dict) -> dict:
     whether the draft's own version is already there. The server's publish decides (``DRS-9126``); this is the designer's advance notice."""
     changes: list[dict] = []
 
-    def add(level, what, text):
-        changes.append({"level": level, "what": what, "text": text})
+    def add(level, what, text, target=None):
+        changes.append({"level": level, "what": what, "text": text, **({"target": target} if target else {})})
 
     om, nm = _measure_map(old), _measure_map(new)
     for name in sorted(set(om) - set(nm)):
-        add("major", "measure", f"removes the measure {name}")
+        add("major", "measure", f"removes the measure {name}", name)
     for name in sorted(set(nm) - set(om)):
         add("minor", "measure", f"adds the measure {name}")
     for name in sorted(set(om) & set(nm)):
         a, b = om[name], nm[name]
         if (a.get("expr") or a.get("python")) != (b.get("expr") or b.get("python")):
-            add("major", "measure", f"changes what {name} computes ({a.get('expr') or a.get('python')} → {b.get('expr') or b.get('python')})")
+            add("major", "measure", f"changes what {name} computes ({a.get('expr') or a.get('python')} → {b.get('expr') or b.get('python')})", name)
         for k in ("format", "description", "folder", "display"):
             if a.get(k) != b.get(k):
                 add("patch", "measure", f"changes the {k} of {name}")
@@ -496,7 +501,7 @@ def contract_diff(old: dict, new: dict) -> dict:
         if (orels[k].get("active", True) is not False) != (nrels[k].get("active", True) is not False) or orels[k].get("cardinality") != nrels[k].get("cardinality"):
             add("major", "relationship", f"changes how {k[0]} → {k[1]} filters")
     for f in sorted(_hidden(new) - _hidden(old)):
-        add("major", "field", f"hides {f} from consumers")
+        add("major", "field", f"hides {f} from consumers", f)
     for f in sorted(_hidden(old) - _hidden(new)):
         add("minor", "field", f"shows {f} to consumers again")
     of, nf = old.get("fields") or {}, new.get("fields") or {}

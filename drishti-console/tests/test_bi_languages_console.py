@@ -235,6 +235,30 @@ def test_the_fields_pane_inherits_the_models_field_properties_and_perspectives()
     cols = {c["name"]: c for c in f["tables"][0]["columns"]}
     assert cols["mtm"]["display"] == "Mark to market" and cols["mtm"]["folder"] == "Risk" and cols["mtm"]["description"] == "MTM in the trade's currency"
     assert cols["book"]["hidden"] is True and "hidden" not in cols["desk"]
-    assert f["measures"][0]["folder"] == "Risk" and f["perspectives"] == {"desk-view": {"title": "Desk view", "fields": ["trade.desk"], "measures": ["MTM"]}}
+    assert f["measures"][0]["folder"] == "Risk" and f["perspectives"] == {"desk-view": {"title": "Desk view", "description": "", "fields": ["trade.desk"], "measures": ["MTM"]}}
     described["datasets"][0]["fields"][0]["display"] = "MTM (server)"                      # a server that describes the properties wins
     assert not ml.needs_model_doc(described) and ml.fields_shape(described, "trading-risk@1", doc)["tables"][0]["columns"][0]["display"] == "MTM (server)"
+    described["perspectives"] = [{"name": "desk-view", "title": "Desk view", "description": "For desk heads"}]   # the server names them; ?perspective= lists one
+    assert ml.fields_shape(described, "trading-risk@1")["perspectives"] == {"desk-view": {"title": "Desk view", "description": "For desk heads", "fields": None, "measures": None}}
+
+
+def test_the_fields_route_asks_one_perspective_and_the_contract_names_who_uses_a_breaking_change():
+    client, backend = make()
+    asked = []
+    orig = backend.bi
+
+    async def bi(method, path, ident, body=None, **params):
+        asked.append((path, params))
+        if path.endswith("/impact"):
+            return {"consumers": [{"kind": "report", "id": "bi-r1", "title": "Daily risk"}]}
+        if path == "/items/bi-m9/versions/3":
+            return {"version": 3, "body": ml.to_yaml(PUBLISHED)}
+        return await orig(method, path, ident, body, **params)
+    backend.bi = bi
+    client.get("/bi/model-api/fields?ref=trading-risk@1&perspective=desk-view")
+    assert ("/models/trading-risk%401/describe", {"perspective": "desk-view"}) in asked
+    backend.items["bi-m9"] = {"id": "bi-m9", "kind": "model", "publishedVersion": 3, "body": ml.to_yaml(PUBLISHED)}
+    r = client.post("/bi/model-api/contract", json={"id": "bi-m9", "doc": _with(measures={"MTM": PUBLISHED["measures"]["MTM"]})}).json()
+    removed = next(c for c in r["changes"] if c["text"] == "removes the measure Notional")
+    assert removed["target"] == "Notional" and removed["usedBy"] == [{"kind": "report", "id": "bi-r1", "title": "Daily risk"}]
+    assert ("/models/bi-m9/impact", {"target": "Notional"}) in asked
