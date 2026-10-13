@@ -249,10 +249,51 @@ public final class BiReportService {
         return d;
     }
 
-    /** The dataset a report names, as the designer's Fields pane needs it (authors). */
+    /**
+     * The dataset a report names, as the designer's Fields pane and the authoring hooks need it (authors). A model of the model layer ({@code name@major}, its
+     * item id, or {@code dataset:<name>}) answers its describe, as the caller reads it (masked fields marked, hidden ones absent); a {@code rachana: 2}
+     * dataset answers its implicit model's.
+     */
     public Map<String, Object> datasetModel(Principal p, String ref) {
         bi.requirePower(p, BiAccess.AUTHOR);
-        return datasetSummary(p, datasetFor(p, ref, false));
+        String model = layerRef(p, ref);
+        if (model != null) {
+            return datasets.describeModel(p, model);
+        }
+        BiStore.Item found;
+        try {
+            found = datasetFor(p, ref, false);
+        } catch (DrishtiException e) {
+            try {
+                return datasets.describeModel(p, ref);                         // a model's name without a major: its latest version
+            } catch (DrishtiException notModel) {
+                throw e;
+            }
+        }
+        String body = bi.bodyFor(p, found);
+        if (com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(body)) {
+            com.ash.drishti.server.bi.layer.DatasetDef d = com.ash.drishti.server.bi.layer.DatasetDefParser.parse(body).dataset();
+            if (d != null) {
+                return datasets.describeModel(p, com.ash.drishti.server.bi.layer.ImplicitModels.QUERY_PREFIX + d.name());
+            }
+        }
+        return datasetSummary(p, found);
+    }
+
+    /** The model reference {@code ref} is, when it is one: {@code name@range}, {@code dataset:<name>}, or the id of a model item the caller reads; else null. */
+    public String layerRef(Principal p, String ref) {
+        if (ref == null || ref.isBlank()) {
+            return null;
+        }
+        if (ref.startsWith(com.ash.drishti.server.bi.layer.ImplicitModels.QUERY_PREFIX) || ref.contains("@")) {
+            return ref;
+        }
+        try {
+            BiStore.Item i = bi.readableItem(p, ref);
+            return "model".equals(i.kind()) ? i.id() : null;
+        } catch (DrishtiException e) {
+            return null;
+        }
     }
 
     /** Checks report YAML without storing it: the problems with their codes, the model, and (when {@code quality}) the accessibility and layout warnings. */

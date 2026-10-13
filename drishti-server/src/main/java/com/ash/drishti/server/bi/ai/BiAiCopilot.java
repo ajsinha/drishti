@@ -63,7 +63,7 @@ public final class BiAiCopilot {
         ai.on();
         ai.bi().requirePower(p, BiAccess.AUTHOR);
         String text = ai.text(goal, "say what you want to see");
-        Map<String, Object> model = ai.reports().datasetModel(p, datasetRef);
+        Map<String, Object> model = ai.grounding(p, datasetRef);                            // a model of the model layer, or a version 1 dataset
         String have = currentYaml == null ? "" : currentYaml.length() > 20_000 ? currentYaml.substring(0, 20_000) : currentYaml;
         Set<String> taken = new LinkedHashSet<>();
         Matcher m = ID.matcher(have);
@@ -71,7 +71,7 @@ public final class BiAiCopilot {
             taken.add(m.group(1));
         }
         int max = ai.props().suggestions();
-        Map<String, Object> checked = ai.checkedYaml(p, SUGGEST, "bi-ai-suggest", datasetRef, BiAiPrompts.draftSystem() + SUGGEST_RULES,
+        Map<String, Object> checked = ai.checkedYaml(p, SUGGEST, "bi-ai-suggest", BiAiService.pinOf(model, datasetRef), BiAiPrompts.draftSystem() + SUGGEST_RULES,
                 problems -> "TASK: suggest-visuals\n" + BiAiPrompts.model(model) + "GOAL: " + text + "\nAT MOST " + max + " VISUALS\n"
                         + (have.isBlank() ? "" : "ALREADY IN THE REPORT (do not repeat):\n" + titles(have) + "\n")
                         + (problems.isEmpty() ? "" : "YOUR PREVIOUS ANSWER WAS REFUSED: " + problems + "\nFix those and reply with the whole YAML again.\n"));
@@ -104,6 +104,7 @@ public final class BiAiCopilot {
         ai.audit().record(p.user(), "bi-ai-suggest", datasetRef, "ok " + items.size());
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("dataset", datasetRef);
+        out.put("model", model.get(BiAiService.LAYER_REF));
         out.put("suggestions", items);
         out.put("applied", false);
         return out;
@@ -150,10 +151,10 @@ public final class BiAiCopilot {
         }
         List<Map<String, Object>> shown = problems.size() > 12 ? problems.subList(0, 12) : problems;
         StringBuilder facts = new StringBuilder("TASK: explain-checks\n");
-        Matcher ds = Pattern.compile("(?m)^dataset:\\s*(\\S+)").matcher(yaml);
+        Matcher ds = Pattern.compile("(?m)^(?:model|dataset):\\s*(\\S+)").matcher(yaml);         // a report on a model names it with model:
         if (ds.find()) {
             try {
-                facts.append(BiAiPrompts.model(ai.reports().datasetModel(p, ds.group(1).replaceAll("^['\"]|['\"]$", ""))));
+                facts.append(BiAiPrompts.model(ai.grounding(p, ds.group(1).replaceAll("^['\"]|['\"]$", ""))));
             } catch (DrishtiException e) {
                 // the dataset cannot be read by this author: the problems alone are explained
             }
@@ -197,7 +198,8 @@ public final class BiAiCopilot {
     public Map<String, Object> helper(Principal p, String datasetRef) {
         ai.on();
         ai.bi().requirePower(p, BiAccess.AUTHOR);
-        Map<String, Object> model = ai.datasets().model(p, datasetRef);
+        Map<String, Object> model = ai.reports().layerRef(p, datasetRef) != null ? ai.grounding(p, datasetRef) : ai.datasets().model(p, datasetRef);
+        boolean layer = model.get(BiAiService.LAYER_REF) != null;                          // proposals for a model: its relationships, measures and fields: blocks
         Map<String, String> types = new LinkedHashMap<>();
         Set<String> described = new LinkedHashSet<>();
         for (Object t : (List<Object>) model.getOrDefault("tables", List.of())) {
@@ -277,14 +279,15 @@ public final class BiAiCopilot {
             String desc = c.path("description").asText("").strip();
             if (count < max && types.containsKey(field) && !described.contains(field) && !desc.isEmpty() && desc.length() <= 200) {
                 described.add(field);
-                items.add(item("column", field, desc, field.substring(field.indexOf('.') + 1) + ": { type: " + types.get(field) + ", description: " + quote(desc) + " }",
-                        Map.of("field", field, "description", desc)));
+                items.add(item("column", field, desc, layer ? field + ": { description: " + quote(desc) + " }"      // a model's fields: block
+                        : field.substring(field.indexOf('.') + 1) + ": { type: " + types.get(field) + ", description: " + quote(desc) + " }", Map.of("field", field, "description", desc)));
                 count++;
             }
         }
         ai.audit().record(p.user(), "bi-ai-helper", datasetRef, "ok " + items.size());
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("dataset", datasetRef);
+        out.put("model", model.get(BiAiService.LAYER_REF));
         out.put("items", items);
         out.put("applied", false);
         return out;

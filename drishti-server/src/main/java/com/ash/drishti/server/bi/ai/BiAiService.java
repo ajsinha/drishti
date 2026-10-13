@@ -23,6 +23,7 @@ import com.ash.drishti.ai.LlmException;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
+import com.ash.drishti.identity.bi.BiStore;
 import com.ash.drishti.server.api.AiController;
 import com.ash.drishti.server.bi.BiAccess;
 import com.ash.drishti.server.bi.BiService;
@@ -59,6 +60,8 @@ public final class BiAiService {
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final Pattern FENCE = Pattern.compile("(?s)```[a-zA-Z]*\\s*\\n?(.*?)```");
     private static final Pattern DATASET_LINE = Pattern.compile("(?m)^dataset:.*$");
+    private static final Pattern RACHANA_LINE = Pattern.compile("(?m)^rachana:.*$");
+    private static final Pattern REPORT_LINE = Pattern.compile("(?m)^report:.*$");
 
     private final LLMFactory gateway;
     private final com.ash.drishti.server.ai.AiProperties ai;
@@ -98,14 +101,16 @@ public final class BiAiService {
         on();
         bi.requirePower(p, BiAccess.AUTHOR);
         String text = text(request, "describe the report you want");
-        Map<String, Object> model = reports.datasetModel(p, datasetRef);                    // authors; the fields masked for this author are left out of the prompt
-        Map<String, Object> checked = checkedYaml(p, DRAFT, "bi-ai-draft", datasetRef, BiAiPrompts.draftSystem(), problems -> BiAiPrompts.draftUser(model, text, problems));
+        Map<String, Object> model = grounding(p, datasetRef);                               // authors; the fields masked for this author are left out of the prompt
+        String pin = pinOf(model, datasetRef);
+        Map<String, Object> checked = checkedYaml(p, DRAFT, "bi-ai-draft", pin, BiAiPrompts.draftSystem(), problems -> BiAiPrompts.draftUser(model, text, problems));
         audit.record(p.user(), "bi-ai-draft", datasetRef, "ok");
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("yaml", checked.get("yaml"));
         out.put("valid", true);
         out.put("problems", checked.get("problems"));
         out.put("dataset", datasetRef);
+        out.put("model", model.get(LAYER_REF));
         out.put("saved", false);
         return out;
     }
@@ -146,6 +151,11 @@ public final class BiAiService {
             model = t.model();
             target = String.valueOf(model.get("id"));
             run = q -> datasets.json(datasets.ask(p, t.dsItem(), q, false));
+        } else if (dataset != null && !dataset.isBlank() && reports.layerRef(p, dataset) != null) {
+            model = layered(datasets.describeModel(p, reports.layerRef(p, dataset)));     // a model of the model layer: asked as a model query, as the reader
+            target = dataset;
+            BiStore.Item ref = DatasetService.modelRef(reports.layerRef(p, dataset));
+            run = q -> datasets.json(datasets.ask(p, ref, q, false));
         } else if (dataset != null && !dataset.isBlank()) {
             model = datasets.model(p, dataset);
             target = dataset;
@@ -231,6 +241,69 @@ public final class BiAiService {
         return text;
     }
 
+    /** Where the grounding of a model of the model layer says it came from: the reference a draft is pinned to ({@code name@major}). */
+    static final String LAYER_REF = "layerRef";
+
+    /**
+     * What the hooks are grounded in, for an author: a model of the model layer (or a {@code rachana: 2} dataset's implicit model) as its describe answers it
+     * for this person, reshaped to the tables-and-columns form of the prompts (an alias is a table, its fields the columns; masked fields marked, hidden ones
+     * absent) with {@code layerRef} set; else a version 1 dataset's model.
+     */
+    Map<String, Object> grounding(Principal p, String ref) {
+        return layered(reports.datasetModel(p, ref));
+    }
+
+    /** A describe answer reshaped for the prompts and the helper (unchanged when it is a version 1 dataset's model). */
+    @SuppressWarnings("unchecked")
+    static Map<String, Object> layered(Map<String, Object> d) {
+        if (!(d.get("datasets") instanceof List<?> sets) || d.containsKey("tables")) {
+            return d;
+        }
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("name", d.get("name"));
+        m.put("title", d.get("title"));
+        m.put("description", d.get("description"));
+        m.put("version", d.get("version"));
+        String version = String.valueOf(d.get("version"));
+        String major = version.contains(".") ? version.substring(0, version.indexOf('.')) : version;
+        m.put(LAYER_REF, Boolean.TRUE.equals(d.get("implicit")) ? com.ash.drishti.server.bi.layer.ImplicitModels.QUERY_PREFIX + d.get("name") : d.get("name") + "@" + major);
+        List<Map<String, Object>> tables = new ArrayList<>();
+        for (Object o : sets) {
+            Map<String, Object> s = (Map<String, Object>) o;
+            List<Map<String, Object>> cols = new ArrayList<>();
+            for (Object fo : (List<Object>) s.getOrDefault("fields", List.of())) {
+                Map<String, Object> f = (Map<String, Object>) fo;
+                String field = String.valueOf(f.get("field"));
+                Map<String, Object> c = new LinkedHashMap<>();
+                c.put("name", field.substring(field.indexOf('.') + 1));
+                c.put("type", f.get("type"));
+                c.put("description", f.get("description"));
+                c.put("masked", f.get("masked"));
+                cols.add(c);
+            }
+            Map<String, Object> t = new LinkedHashMap<>();
+            t.put("name", s.get("alias"));
+            t.put("description", "the dataset " + s.get("dataset") + (s.get("version") == null ? "" : " " + s.get("version")) + ", a " + s.get("role"));
+            t.put("columns", cols);
+            tables.add(t);
+        }
+        m.put("tables", tables);
+        m.put("relationships", d.getOrDefault("relationships", List.of()));
+        m.put("measures", ((List<Object>) d.getOrDefault("measures", List.of())).stream().map(x -> (Map<String, Object>) x)
+                .filter(x -> !Boolean.TRUE.equals(x.get("hidden")) && !Boolean.TRUE.equals(x.get("masked"))).toList());
+        m.put("hierarchies", d.getOrDefault("hierarchies", Map.of()));
+        return m;
+    }
+
+    /** What a draft names: the model reference of a model's grounding ({@code model:} in a {@code rachana: 2} report), else the dataset reference. */
+    static String pinOf(Map<String, Object> grounding, String datasetRef) {
+        Object layer = grounding.get(LAYER_REF);
+        return layer == null ? datasetRef : MODEL_PIN + layer;
+    }
+
+    /** The prefix {@link #pinDataset} reads as "pin the report to this model". */
+    static final String MODEL_PIN = "model=";
+
     /** Whether the AI layer is on, for the callers that ask before they build a prompt. */
     public boolean enabled() {
         return ai.enabled();
@@ -297,6 +370,15 @@ public final class BiAiService {
     }
 
     static String pinDataset(String yaml, String ref) {
+        if (ref.startsWith(MODEL_PIN)) {                                     // a report on a model: rachana 2, model: <ref>, no dataset:
+            String model = ref.substring(MODEL_PIN.length());
+            String out = RACHANA_LINE.matcher(yaml).find() ? RACHANA_LINE.matcher(yaml).replaceFirst("rachana: 2") : "rachana: 2\n" + yaml;
+            if (DATASET_LINE.matcher(out).find()) {
+                return DATASET_LINE.matcher(out).replaceFirst(Matcher.quoteReplacement("model: " + model));
+            }
+            Matcher report = REPORT_LINE.matcher(out);
+            return report.find() ? out.substring(0, report.end()) + "\nmodel: " + model + out.substring(report.end()) : out + "\nmodel: " + model + "\n";
+        }
         return DATASET_LINE.matcher(yaml).find() ? DATASET_LINE.matcher(yaml).replaceFirst(Matcher.quoteReplacement("dataset: " + ref)) : yaml;
     }
 
@@ -428,10 +510,22 @@ public final class BiAiService {
         return out.isEmpty() ? new LinkedHashSet<>(d.tables().keySet()) : out;
     }
 
-    /** Where a number comes from: the dataset, the measure's definition, the columns it reads and the pack kinds and connectors under them. No value. */
-    private static Map<String, Object> lineage(Dataset d, Map<String, Object> model, Dataset.Measure m) {
+    /**
+     * Where a number comes from: the dataset (for a report on a model, the model at the version that answered, and each table's dataset by its current name
+     * and version), the measure's definition, the columns it reads and the pack kinds and connectors under them. No value.
+     */
+    @SuppressWarnings("unchecked")
+    static Map<String, Object> lineage(Dataset d, Map<String, Object> model, Dataset.Measure m) {
         Map<String, Object> l = new LinkedHashMap<>();
-        l.put("dataset", Map.of("name", d.name(), "title", String.valueOf(model.getOrDefault("title", d.name())), "version", d.version()));
+        Map<String, Map<String, Object>> byAlias = new LinkedHashMap<>();
+        if (model.get("datasets") instanceof List<?> sets) {                     // a model of the model layer (its describe): what it reads now
+            sets.forEach(o -> byAlias.put(String.valueOf(((Map<String, Object>) o).get("alias")), (Map<String, Object>) o));
+            l.put("dataset", Map.of("name", String.valueOf(model.get("name")), "title", String.valueOf(model.getOrDefault("title", model.get("name"))),
+                    "version", String.valueOf(model.get("version"))));
+            l.put("model", Map.of("name", String.valueOf(model.get("name")), "version", String.valueOf(model.get("version"))));
+        } else {
+            l.put("dataset", Map.of("name", d.name(), "title", String.valueOf(model.getOrDefault("title", d.name())), "version", d.version()));
+        }
         Map<String, Object> def = new LinkedHashMap<>();
         def.put("name", m.name());
         def.put("expr", m.expr());
@@ -449,6 +543,11 @@ public final class BiAiService {
             }
             Map<String, Object> s = new LinkedHashMap<>();
             s.put("table", t.name());
+            Map<String, Object> use = byAlias.get(t.name());
+            if (use != null) {
+                s.put("dataset", use.get("dataset"));
+                s.put("version", use.get("version"));
+            }
             s.put("kind", t.kind());
             s.put("connector", t.connector().isEmpty() ? "(any that serves the kind)" : t.connector());
             s.put("mode", t.mode());

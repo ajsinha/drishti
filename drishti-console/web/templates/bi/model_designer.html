@@ -25,7 +25,7 @@
     <dt><kbd>Arrows</kbd></dt><dd>On a dataset box: move it</dd>
     <dt><kbd>Enter</kbd></dt><dd>On a dataset box or a relationship: open it in the inspector</dd>
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-expr.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-design.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-layer.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-expr.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-design.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-layer.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-ai.css?v={{ ASSET_V }}">{% endblock %}
 {% block bi_main %}
 <div class="bi-md" data-md-root data-ready="">
   <header class="bi-dbar">
@@ -35,6 +35,7 @@
       <button type="button" class="btn-pill btn-ghost" data-undo disabled aria-label="Undo"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button>
       <button type="button" class="btn-pill btn-ghost" data-redo disabled aria-label="Redo"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
       <button type="button" class="btn-pill btn-ghost" data-check><i class="bi bi-check2-square" aria-hidden="true"></i> Check</button>
+      <button type="button" class="btn-pill btn-ghost" data-ai-helper hidden><i class="bi bi-stars" aria-hidden="true"></i> Ask the AI helper</button>
       <button type="button" class="btn-pill btn-ghost" data-report><i class="bi bi-bar-chart-line" aria-hidden="true"></i> New report on this model</button>
       <button type="button" class="btn-pill btn-ghost" data-board><i class="bi bi-speedometer2" aria-hidden="true"></i> New board on this model</button>
       <button type="button" class="btn-pill btn-ghost" data-save-copy hidden><i class="bi bi-files" aria-hidden="true"></i> Save a copy</button>
@@ -48,6 +49,9 @@
   <p class="bi-warn bi-readonly" data-readonly hidden></p>
   <section class="bi-sec bi-md-check" data-check-box hidden aria-labelledby="mdChk"><h2 id="mdChk">Check</h2><ul class="bi-warn" data-problems></ul>
     <button type="button" class="btn-pill btn-ghost bi-small" data-check-close>Close</button></section>
+  <section class="bi-sec bi-ai-box" data-ai-box hidden aria-labelledby="mdAiH"><h2 id="mdAiH">Proposed by the AI helper</h2>
+    <p class="text-muted-d bi-small-note">From the names, types and descriptions of the saved model (no row, no value). Each item is checked against the model; accept the ones you want, then Save.</p>
+    <ul class="bi-rellist" data-ai-items></ul><button type="button" class="btn-pill btn-ghost bi-small" data-ai-close>Close</button></section>
   <details class="bi-sec bi-md-usedby" data-used-box open><summary>Used by <span class="bi-md-count" data-used-count></span></summary>
     <p class="text-muted-d bi-small-note">Reports, boards, alerts, subscriptions and notebooks reference this model; they do not own it. A change to the model reaches all of them.</p>
     <div data-used-by-host></div></details>
@@ -88,4 +92,4 @@
   </div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script><script src="/static/js/cm-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-expr-editor.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-designer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-tabs.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-fields.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script><script src="/static/js/cm-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-expr-editor.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-designer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-tabs.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-fields.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-ai.js?v={{ ASSET_V }}"></script>{% endblock %}
