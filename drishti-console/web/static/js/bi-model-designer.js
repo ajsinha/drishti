@@ -107,7 +107,7 @@
     return new Promise((resolve) => {
       timer = window.setTimeout(() => {
         const mine = ++seq;
-        B.layer.post('compose', { doc: M.doc }).then((r) => {
+        B.layer.post('compose', { doc: M.doc, base: M.base || '' }).then((r) => {
           if (mine !== seq) { resolve(); return; }
           M.yaml = r.yaml;
           M.infos = r.datasets || {};
@@ -412,7 +412,7 @@
     window.clearTimeout(yamlTimer);
     yamlTimer = window.setTimeout(() => {
       const text = editor ? editor.getValue() : ta.value;
-      B.layer.post('parse', { yaml: text }).then((r) => { q('[data-yaml-problem]').hidden = true; M.edit((doc) => { Object.keys(doc).forEach((k) => delete doc[k]); Object.assign(doc, r.doc); }, false); })
+      B.layer.post('parse', { yaml: text }).then((r) => { q('[data-yaml-problem]').hidden = true; M.base = text; M.edit((doc) => { Object.keys(doc).forEach((k) => delete doc[k]); Object.assign(doc, r.doc); }, false); })
         .catch((e) => { const p = q('[data-yaml-problem]'); p.hidden = false; p.textContent = e.message + ' The canvas keeps the last version that parsed.'; });
     }, 600);
   }
@@ -529,6 +529,7 @@
     q('[data-save-copy]').hidden = !M.readOnly;
     publishState();
     if (M.readOnly) { const ro = q('[data-readonly]'); ro.hidden = false; ro.textContent = it.status === 'proposed' ? 'Proposed for review: frozen until approved or withdrawn (its item page). You can still look and save a copy.' : 'You can look at this model but not change it here; Save a copy makes a draft of your own.'; }
+    M.base = it.body || '';                                      // the text the designer patches: its comments and order survive every edit (BI_DESIGN.md 8.2)
     return B.layer.post('parse', { yaml: it.body || '' });
   }).then((r) => {
     M.doc = r.doc;

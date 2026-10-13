@@ -171,3 +171,70 @@ def test_an_analyse_sql_cell_runs_drishti_sql_on_the_server_over_the_extracts_mo
     assert got["columns"] == ["desk", "mtm"] and got["rowCount"] == 3 and got["engine"] == "server" and got["plan"] == "p-1234567890abcdef" and got["ms"] == 7
     legacy = client.post("/bi/explore/dsql", json={"extract": {"dataset": "file:dataset:trading"}, "sql": "SELECT 1"})
     assert legacy.status_code == 422 and "over the extract" in legacy.json()["detail"]
+
+
+HAND_WRITTEN = """# Trading risk: the desk heads' model.
+# Reviewed by the risk committee.
+rachana: 2
+model: trading-risk
+version: 1.0.0
+title: Trading risk
+datasets:
+  trade: {dataset: pack.trading.trade@^1, role: fact}     # the fact
+  desk: {dataset: pack.banking-core.desk@^1, role: dimension}
+relationships:
+  - {from: trade.desk, to: desk.id}
+
+measures:
+  # money
+  MTM: {expr: sum(trade.mtm), format: signed0}
+  # size
+  Notional: {expr: sum(trade.notional)}
+security:
+  masked: [desk.head]   # PII
+"""
+
+
+def test_a_designer_edit_keeps_the_comments_the_order_and_the_untouched_lines():
+    import yaml
+    doc = yaml.safe_load(HAND_WRITTEN)
+    assert ml.to_yaml_keeping(HAND_WRITTEN, doc) == HAND_WRITTEN                        # no edit, no change: byte for byte
+    doc["measures"]["Notional"] = {"expr": "sum(trade.notional)", "format": "amount0"}
+    doc["measures"]["Trades"] = {"expr": "count(trade)"}
+    doc["fields"] = {"trade.mtm": {"description": "Mark to market"}}
+    del doc["relationships"]
+    text = ml.to_yaml_keeping(HAND_WRITTEN, doc)
+    assert yaml.safe_load(text) == doc
+    assert text.startswith("# Trading risk: the desk heads' model.\n# Reviewed by the risk committee.\nrachana: 2\n")
+    assert "  trade: {dataset: pack.trading.trade@^1, role: fact}     # the fact\n" in text      # an untouched entry keeps its own comment
+    assert "  # money\n  MTM: {expr: sum(trade.mtm), format: signed0}\n  # size\n  Notional: {expr: sum(trade.notional), format: amount0}\n  Trades: {expr: count(trade)}\n" in text
+    assert "relationships" not in text and "masked: [desk.head]   # PII" in text
+    assert text.index("measures:") < text.index("fields:") < text.index("security:")          # a new key goes where the spec's order puts it
+    assert ml.to_yaml_keeping("", doc) == ml.to_yaml(doc)
+    assert yaml.safe_load(ml.to_yaml_keeping("{model: x, version: 1.0.0}", {"model": "x", "version": "2.0.0"})) == {"model": "x", "version": "2.0.0"}
+
+
+def test_compose_patches_the_text_it_was_given():
+    import yaml
+    client, _ = make()
+    doc = yaml.safe_load(HAND_WRITTEN)
+    doc["title"] = "Trading risk (desk heads)"
+    r = client.post("/bi/model-api/compose", json={"doc": doc, "base": HAND_WRITTEN}).json()
+    assert r["yaml"].startswith("# Trading risk") and "title: Trading risk (desk heads)\n" in r["yaml"] and "# money" in r["yaml"]
+
+
+def test_the_fields_pane_inherits_the_models_field_properties_and_perspectives():
+    described = {"model": {"id": "bi-m1", "name": "trading-risk", "version": "1.0.0"}, "title": "Trading risk",
+                 "datasets": [{"alias": "trade", "dataset": "pack.trading.trade", "role": "fact",
+                               "fields": [{"field": "trade.mtm", "type": "decimal"}, {"field": "trade.book", "type": "string"}, {"field": "trade.desk", "type": "string"}]}],
+                 "measures": [{"name": "MTM", "expr": "sum(trade.mtm)"}]}
+    doc = {"fields": {"trade.mtm": {"display": "Mark to market", "folder": "Risk", "description": "MTM in the trade's currency"}, "trade.book": {"hidden": True}},
+           "measures": {"MTM": {"expr": "sum(trade.mtm)", "folder": "Risk"}}, "perspectives": {"desk-view": {"title": "Desk view", "fields": ["trade.desk"], "measures": ["MTM"]}}}
+    assert ml.needs_model_doc(described)
+    f = ml.fields_shape(described, "trading-risk@1", doc)
+    cols = {c["name"]: c for c in f["tables"][0]["columns"]}
+    assert cols["mtm"]["display"] == "Mark to market" and cols["mtm"]["folder"] == "Risk" and cols["mtm"]["description"] == "MTM in the trade's currency"
+    assert cols["book"]["hidden"] is True and "hidden" not in cols["desk"]
+    assert f["measures"][0]["folder"] == "Risk" and f["perspectives"] == {"desk-view": {"title": "Desk view", "fields": ["trade.desk"], "measures": ["MTM"]}}
+    described["datasets"][0]["fields"][0]["display"] = "MTM (server)"                      # a server that describes the properties wins
+    assert not ml.needs_model_doc(described) and ml.fields_shape(described, "trading-risk@1", doc)["tables"][0]["columns"][0]["display"] == "MTM (server)"

@@ -259,6 +259,43 @@ def test_a_report_on_a_model_has_its_own_measures_and_the_query_as_mq_or_sql(bro
     page.context.close()
 
 
+def test_a_reports_fields_pane_inherits_the_models_properties_and_perspectives(browser):
+    page = sign_in(browser, "wes")
+    new_model(page, "Inherit model")
+    page.click('[data-tab="measures"]')
+    page.select_option("[data-nm-alias]", "trade")
+    page.select_option("[data-nm-column]", "mtm")
+    page.click("[data-nm-add]")
+    expect(page.locator('[data-measure="Sum of mtm"]')).to_be_visible(timeout=15000)
+    page.click('[data-tab="fields"]')
+    page.locator('[data-field-row="trade.desk"] [data-fp="display"]').fill("Trading desk")
+    page.locator('[data-field-row="trade.desk"] [data-fp="display"]').press("Tab")
+    page.locator('[data-field-row="trade.mtm"] [data-fp="folder"]').fill("Risk")
+    page.locator('[data-field-row="trade.mtm"] [data-fp="folder"]').press("Tab")
+    page.locator('[data-field-row="trade.book"] [data-fp="hidden"]').check()
+    page.fill("[data-persp-new]", "Desk view")
+    page.click("[data-persp-add]")
+    page.locator('[data-persp-pick="desk-view:trade.desk"]').check()
+    page.locator('[data-persp-pick="desk-view:Sum of mtm"]').check()
+    page.wait_for_function("() => window.drishtiModel.yaml.indexOf('measures: [Sum of mtm]') >= 0", timeout=10000)
+    page.click("[data-save]")
+    expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
+    page.click("[data-report]")
+    page.click("[data-ask-go]")
+    page.wait_for_url("**/bi/design/**", timeout=20000)
+    expect(page.locator('[data-model-header="model"]')).to_be_visible(timeout=30000)
+    expect(page.locator('[data-field="trade.desk"]')).to_contain_text("Trading desk")              # the model's display name, not re-declared
+    expect(page.locator('[data-folder="Risk"] [data-field="trade.mtm"]')).to_be_visible()
+    expect(page.locator('[data-field="trade.book"]')).to_have_count(0)                            # hidden by the model
+    page.select_option("[data-perspective-pick]", "desk-view")
+    expect(page.locator('[data-field="trade.currency"]')).to_have_count(0, timeout=10000)
+    expect(page.locator('[data-field="trade.desk"]')).to_be_visible()
+    expect(page.locator('[data-field="Sum of mtm"]')).to_be_visible()
+    page.screenshot(path=SHOTS + "/report-fields-perspective.png") if SHOTS else None
+    clean(page)
+    page.context.close()
+
+
 def test_the_wizard_fits_a_phone(browser):
     page = sign_in(browser, "wes", width=390)
     page.evaluate("window.sessionStorage.clear()")

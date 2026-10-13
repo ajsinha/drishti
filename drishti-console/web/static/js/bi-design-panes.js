@@ -65,10 +65,27 @@
         rank: 'rank', dense_rank: 'dense rank', percent_rank: 'percent rank', moving_avg: 'moving average', moving_sum: 'moving sum', moving_min: 'moving min', moving_max: 'moving max' })[m[1]] || m[1] : null;
     }
 
+    /** The model's field properties inherited (BI_DESIGN.md 8.1): hidden fields and measures are left out, a perspective narrows the list, folders group. */
+    const persp = (ds) => { const p = D.perspective && ds.perspectives && ds.perspectives[D.perspective]; return p || null; };
+    const shownMeasure = (ds, m) => !m.hidden && (!persp(ds) || m.local || persp(ds).measures.indexOf(m.name) >= 0);
+    const shownField = (ds, t, c) => !c.hidden && (!persp(ds) || persp(ds).fields.indexOf(t.name + '.' + c.name) >= 0);
+    /** Items with a folder go in a nested list per folder (sorted), the rest stay at the top. */
+    function foldered(ul, items, draw) {
+      const folders = {};
+      items.forEach((it) => { if (it.folder) { (folders[it.folder] = folders[it.folder] || []).push(it); } else { ul.appendChild(draw(it)); } });
+      Object.keys(folders).sort().forEach((f) => ul.appendChild(h('li', { 'data-search': folders[f].map((it) => (it.name + ' ' + (it.display || '') + ' ' + (it.description || '')).toLowerCase()).join(' ') + ' ' + f.toLowerCase() },
+        h('details', { class: 'bi-fieldfolder', open: true, 'data-folder': f }, h('summary', {}, B.icon('folder2'), ' ' + f), h('ul', { class: 'bi-fieldlist' }, folders[f].map(draw))))));
+    }
     function drawTree(tree, ds, idx, ref) {
       const mixed = (ds.measures || []).some((m) => m.implicit) && (ds.measures || []).some((m) => !m.implicit);   // both kinds in one list: say which is which
       const ms = h('ul', { class: 'bi-fieldlist' });
-      (ds.measures || []).forEach((m) => {
+      const drawMeasure = (m) => {
+        const li = h('li');
+        oneMeasure(m, li);
+        return li;
+      };
+      foldered(ms, (ds.measures || []).filter((m) => shownMeasure(ds, m)), drawMeasure);
+      function oneMeasure(m, host) {
         const time = timeKind(m.expr);
         const btn = fieldButton(m.name, 'measure', m.name, time ? 'calendar-range' : 'calculator', (time ? '[' + time + '] ' : '') + m.name + ': ' + m.expr + (m.description ? ' — ' + m.description : '') + (mixed ? (m.implicit ? ' (a default measure, made from a column)' : ' (defined in the model)') : ''), m.masked, ref);
         if (m.local) {
@@ -76,24 +93,29 @@
         }
         if (mixed) { btn.appendChild(h('small', { class: 'bi-badge', 'data-origin': m.implicit ? 'default' : 'model', text: m.implicit ? 'default' : 'model' })); }
         if (time) { btn.appendChild(h('small', { class: 'bi-badge', 'data-time': time, text: time })); }
-        const move = m.local && D.model && D.model.ref ? h('a', { class: 'bi-small', 'data-move-measure': m.name, href: '/bi/models', text: 'Move to the model' }) : null;
+        const bound = (B.modelBinding && B.modelBinding.ref) || '';
+        const move = m.local && bound && bound.indexOf('dataset:') !== 0 ? h('a', { class: 'bi-small', 'data-move-measure': m.name, href: '/bi/models', text: 'Move to the model' }) : null;
         if (move) {
-          B.layer.get('datasets').then((d) => { const it = (d.models || []).find((x) => x.kind === 'model' && x.name === (D.model.name || '')); if (it) { move.href = '/bi/md/' + B.id2path(it.id) + '?measure=' + encodeURIComponent(m.name) + '&expr=' + encodeURIComponent(m.expr || ''); } else { move.hidden = true; } }).catch(() => { move.hidden = true; });
+          B.layer.get('datasets').then((d) => { const it = (d.models || []).find((x) => x.kind === 'model' && x.name === bound.split('@')[0]); if (it) { move.href = '/bi/md/' + B.id2path(it.id) + '?measure=' + encodeURIComponent(m.name) + '&expr=' + encodeURIComponent(m.expr || ''); } else { move.hidden = true; } }).catch(() => { move.hidden = true; });
         }
-        ms.appendChild(h('li', { 'data-search': (m.name + ' ' + (m.description || '') + ' ' + (time ? 'time ' + time : '')).toLowerCase() }, btn, move));
-      });
+        host.setAttribute('data-search', (m.name + ' ' + (m.description || '') + ' ' + (time ? 'time ' + time : '')).toLowerCase());
+        host.append(btn, move || '');
+      }
       tree.appendChild(h('details', { class: 'bi-fieldtable', open: true, 'data-table': 'measures' }, h('summary', {}, B.icon('calculator'), ' Measures'), ms));
       (ds.tables || []).forEach((t) => {
         const ul = h('ul', { class: 'bi-fieldlist' });
-        t.columns.forEach((c) => {
+        const cols = t.columns.filter((c) => shownField(ds, t, c));
+        if (!cols.length) { return; }
+        foldered(ul, cols, (c) => {
           const name = t.name + '.' + c.name;
-          const li = h('li', { 'data-search': (name + ' ' + (c.description || '')).toLowerCase() }, fieldButton(name, 'field', c.name + (c.key ? ' · key' : ''), TYPE_ICON[c.type] || 'fonts', name + ' (' + c.type + ')' + (c.description ? ': ' + c.description : ''), c.masked, ref));
+          const label = (c.display || c.name) + (c.key ? ' · key' : '');
+          const li = h('li', { 'data-search': (name + ' ' + (c.display || '') + ' ' + (c.description || '')).toLowerCase() }, fieldButton(name, 'field', label, TYPE_ICON[c.type] || 'fonts', (c.display ? c.display + ' (' + name + ')' : name) + ' (' + c.type + ')' + (c.description ? ': ' + c.description : ''), c.masked, ref));
           if (c.type === 'date' || c.type === 'timestamp') {
             const sub = h('ul', { class: 'bi-fieldlist bi-parts' });
             PARTS.forEach((p) => sub.appendChild(h('li', { 'data-search': (name + ' ' + p).toLowerCase() }, fieldButton(name + '.' + p, 'field', p, 'calendar3-week', name + '.' + p, false, ref))));
             li.appendChild(h('details', { class: 'bi-fieldparts' }, h('summary', { text: 'date parts' }), sub));
           }
-          ul.appendChild(li);
+          return li;
         });
         tree.appendChild(h('details', { class: 'bi-fieldtable', open: true, 'data-table': t.name }, h('summary', {}, B.icon('table'), ' ' + t.name, h('small', { class: 'text-muted-d', text: ' ' + (t.kind || '') })), ul));
       });

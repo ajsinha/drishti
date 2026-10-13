@@ -32,20 +32,38 @@
 
   const withModel = (yaml) => (/^model:/m.test(yaml) ? yaml : /^dataset:\s*""\s*$/m.test(yaml) ? yaml.replace(/^dataset:\s*""\s*$/m, 'model: ' + S.ref) : yaml.replace(/^(report:.*)$/m, '$1\nmodel: ' + S.ref));
   /** The report's own measures (`measures:`): read from its YAML by the console (the server's report reader does not keep them yet) and written back. */
-  const localOf = (yaml) => (/^measures:/m.test(yaml || '') ? B.layer.post('report-measures', { yaml }).then((r) => r.measures || {}).catch(() => ({})) : Promise.resolve({}));
-  const withMeasures = (yaml, ms) => {
-    if (!ms || !Object.keys(ms).length || /^measures:/m.test(yaml)) { return yaml; }
+  /** And its perspective (`perspective:`, BI_DESIGN.md 3.1): the Fields pane shows only that perspective's fields. */
+  const extrasOf = (yaml) => (/^(measures|perspective):/m.test(yaml || '') ? B.layer.post('report-measures', { yaml }).then((r) => ({ measures: r.measures || {}, perspective: r.perspective || '' }))
+    .catch(() => ({ measures: {}, perspective: '' })) : Promise.resolve({ measures: {}, perspective: '' }));
+  const localOf = (yaml) => extrasOf(yaml).then((x) => { S.perspective = x.perspective; return x.measures; });
+  const withMeasures = (yaml, ms, perspective) => {
+    let out = yaml;
+    if (perspective && !/^perspective:/m.test(out)) { out = out.replace(/^(model:.*)$/m, '$1\nperspective: ' + JSON.stringify(perspective)); }
+    if (!ms || !Object.keys(ms).length || /^measures:/m.test(out)) { return out; }
     const obj = (m) => (typeof m === 'string' ? { expr: m } : m);
     const lines = Object.keys(ms).map((n) => '  ' + JSON.stringify(n) + ': { ' + Object.keys(obj(ms[n])).map((k) => k + ': ' + JSON.stringify(obj(ms[n])[k])).join(', ') + ' }');
-    return yaml.replace(/^pages:/m, 'measures:\n' + lines.join('\n') + '\npages:');
+    return out.replace(/^pages:/m, 'measures:\n' + lines.join('\n') + '\npages:');
   };
   const clean = (r) => {
-    const problems = (r.problems || []).filter((p) => !(p.code === 'DRS-9030' && (p.path === 'dataset' || p.path === 'model')) && !(p.level === 'warning' && p.path === 'measures'));
+    const problems = (r.problems || []).filter((p) => !(p.code === 'DRS-9030' && (p.path === 'dataset' || p.path === 'model')) && !(p.level === 'warning' && (p.path === 'measures' || p.path === 'perspective')));
     return Object.assign({}, r, { problems, valid: !problems.some((p) => p.level === 'error') });
+  };
+  /** The model's display names, for every label a visual draws (B.label): `trade.mtm` reads as the model says, `MTM`, wherever it appears. */
+  B.displayNames = B.displayNames || {};
+  const label = B.label;
+  B.label = function (name) {
+    const n = String(name), bits = n.split('.');
+    if (B.displayNames[n]) { return B.displayNames[n]; }
+    if (bits.length === 3 && B.displayNames[bits[0] + '.' + bits[1]]) { return B.displayNames[bits[0] + '.' + bits[1]] + ' ' + bits[2]; }
+    return label(name);
   };
   function fields() {
     if (S.fields) { return Promise.resolve(S.fields); }
-    return B.layer.get('fields?ref=' + encodeURIComponent(S.ref)).then((f) => { S.fields = f; S.idx = B.index(f); return f; });
+    return B.layer.get('fields?ref=' + encodeURIComponent(S.ref)).then((f) => {
+      S.fields = f; S.idx = B.index(f);
+      (f.tables || []).forEach((t) => t.columns.forEach((c) => { if (c.display) { B.displayNames[t.name + '.' + c.name] = c.display; } }));
+      return f;
+    });
   }
   /** The report's own measures (`measures:` in its YAML, spec 4.2) in the Fields shape, marked local, so wells, the index and the queries know them. */
   function withLocal(report) {
@@ -112,8 +130,8 @@
       }
       return p;
     }
-    if (path === '/reports/format') { return api(method, path, body).then((r) => Object.assign({}, r, { yaml: withMeasures(withModel(r.yaml), body && body.report && body.report.measures) })); }
-    if (path === '/reports/validate') { return api(method, path, body).then((r) => (r.report && body && /^measures:/m.test(body.yaml || '') ? localOf(body.yaml).then((m) => { r.report.measures = m; return clean(r); }) : clean(r))); }
+    if (path === '/reports/format') { return api(method, path, body).then((r) => Object.assign({}, r, { yaml: withMeasures(withModel(r.yaml), body && body.report && body.report.measures, body && body.report && body.report.perspective) })); }
+    if (path === '/reports/validate') { return api(method, path, body).then((r) => (r.report && body && /^(measures|perspective):/m.test(body.yaml || '') ? localOf(body.yaml).then((m) => { r.report.measures = m; if (S.perspective) { r.report.perspective = S.perspective; } return clean(r); }) : clean(r))); }
     if (/^\/reports\/dataset\?ref=/.test(path)) { return fields(); }
     if (path === '/reports/query') { return ask(body.report, body.page, body.visual, body.state); }
     if (/^\/reports\/[^/]+\/query$/.test(path) && S.report) { return ask(S.report, body.page, body.visual, body.state); }
@@ -174,12 +192,29 @@
         span.textContent = 'Changes to the model affect ' + n + (n === 1 ? ' report' : ' reports') + (r.consumers.length > n ? ' and ' + (r.consumers.length - n) + ' other item' + (r.consumers.length - n === 1 ? '' : 's') : '') + '.';
       });
     }
+    perspectivePicker(head, f);
     localMeasures(pane);
     // Query: the selected visual's question as a model query (MQ) or as SQL (DSQL), one plan either way (bi-query-panel.js)
     if (B.queryPanel) {
       B.queryPanel(pane, { ref: S.ref, current: () => (D.selected && S.last && S.last[D.selected]) || null, fields: () => S.fields, on: D.on,
         lastMeta: () => (D.selected && S.meta && S.meta[D.selected]) || null });
     }
+  }
+
+  /** The perspective the report reads (BI_DESIGN.md 8.1): the Fields pane shows only its fields and measures; the report keeps it (`perspective:`). */
+  function perspectivePicker(head, f) {
+    const names = Object.keys(f.perspectives || {});
+    D.perspective = (D.model && D.model.perspective) || S.perspective || '';
+    if (!names.length) { return; }
+    const pick = h('select', { class: 'studio-select', 'data-perspective-pick': '', 'aria-label': 'Perspective', disabled: D.readOnly },
+      h('option', { value: '', text: 'every field' }), names.map((n) => h('option', { value: n, text: f.perspectives[n].title || n, selected: n === D.perspective })));
+    pick.addEventListener('change', () => {
+      D.perspective = pick.value;
+      D.change('Perspective', (r) => { if (pick.value) { r.perspective = pick.value; } else { delete r.perspective; } });
+      if (D.drawFields) { D.drawFields(); }
+    });
+    head.appendChild(h('p', {}, h('label', {}, 'Perspective ', pick)));
+    if (D.drawFields) { D.drawFields(); }
   }
 
   /** A measure of this report only (spec 4.2): a name and a formula in the ExpressionEditor over the model's fields and measures; Try it asks the model. */

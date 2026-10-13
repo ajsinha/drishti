@@ -188,7 +188,7 @@ async def compose(request: Request):
     if not isinstance(doc, dict):
         return _refuse("doc is the model as an object")
     try:
-        text = ml.to_yaml(doc)
+        text = ml.to_yaml_keeping(str(body.get("base") or ""), doc)            # over the saved text: its comments, order and untouched lines are kept
     except ml.LayerError as e:
         return _refuse(str(e))
     try:
@@ -343,7 +343,8 @@ async def report_measures(request: Request):
     report page send along as the model query's ``define``. Shape only: the server compiles each one (as the reader) when it is asked."""
     body = await json_body(request)
     try:
-        return _ok({"measures": ml.report_measures(str(body.get("yaml") or ""))})
+        text = str(body.get("yaml") or "")
+        return _ok({"measures": ml.report_measures(text), "perspective": str(ml.load(text).get("perspective") or "")})
     except ml.LayerError as e:
         return _refuse(str(e))
 
@@ -358,7 +359,16 @@ async def fields(request: Request):
         described = await _bi(request, "GET", "/models/" + quote(ref, safe="") + "/describe")
     except BackendError as e:
         return _problem(e)
-    return _ok(ml.fields_shape(described, ref))
+    doc = None
+    if not ref.startswith("dataset:") and ml.needs_model_doc(described):                  # an older server: the properties come from the model's YAML
+        try:
+            listing = (await _bi(request, "GET", "/models")).get("models") or []
+            hit = next((m for m in listing if m.get("kind") == "model" and m.get("name") == ref.split("@", 1)[0]), None)
+            if hit:
+                doc = ml.load((await _bi(request, "GET", "/items/" + quote(str(hit["id"]), safe=":"))).get("body") or "")
+        except (BackendError, ml.LayerError):
+            doc = None
+    return _ok(ml.fields_shape(described, ref, doc))
 
 
 @router.get("/bi/model-api/consumers")

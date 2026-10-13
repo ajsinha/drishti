@@ -24,6 +24,8 @@ import re
 
 import yaml
 
+from core import yaml_roundtrip
+
 PACK_PREFIX = "pack."
 NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
 ALIAS = re.compile(r"[A-Za-z_][A-Za-z0-9_]{0,63}")
@@ -356,33 +358,80 @@ def to_yaml(doc: dict, order=TOP_ORDER) -> str:
     return text
 
 
+ENTRY_KEYS = ("datasets", "measures", "hierarchies", "columns", "derive", "fields", "perspectives")
+
+
+def to_yaml_keeping(original: str, doc: dict, order=TOP_ORDER) -> str:
+    """``doc`` written over the YAML it was read from (``original``), keeping its comments, key order and untouched lines (BI_DESIGN.md 8.2);
+    without an original it is :func:`to_yaml`."""
+    if not isinstance(doc, dict) or not doc:
+        raise LayerError("the document is empty")
+    if not (original or "").strip():
+        return to_yaml(doc, order)
+    return yaml_roundtrip.merge(original, _clean(doc), order, _block, ENTRY_KEYS, lambda d: to_yaml(d, order))
+
+
 def dataset_yaml(doc: dict) -> str:
     return to_yaml(doc, DATASET_ORDER)
 
 
 # ---- the Fields pane of a report on a model -----------------------------------------------------------------------------
 
-def fields_shape(described: dict, ref: str) -> dict:
-    """A model's description (``/models/{id}/describe``) in the shape the report designer's Fields pane reads (the dataset summary: tables with columns,
-    measures, hierarchies), plus what the pane's header says about the model (implicit or not)."""
+FIELD_PROPS = ("display", "description", "format", "folder", "hidden", "sort-by", "category", "summarise")
+
+
+def fields_shape(described: dict, ref: str, model_doc: dict | None = None) -> dict:
+    """A model's description (``/models/{id}/describe``) in the shape every Fields pane reads (the dataset summary: tables with columns, measures,
+    hierarchies, perspectives), plus what the pane's header says about the model (implicit or not). Each field and measure carries the properties the
+    model gives it (BI_DESIGN.md 8.1: display name, description, format, folder, hidden, sort-by, data category, default summarisation): a consumer
+    inherits them and never re-declares them. ``model_doc`` (the model's YAML, read when the server's description does not carry them yet) fills the gaps;
+    hiding there is presentation only: what a reader may not see the server leaves out of ``describe`` (``hidden-for``)."""
+    props = (model_doc or {}).get("fields") if isinstance((model_doc or {}).get("fields"), dict) else {}
+    mdefs = (model_doc or {}).get("measures") if isinstance((model_doc or {}).get("measures"), dict) else {}
     tables = []
     for d in described.get("datasets") or []:
         alias = d.get("alias")
         cols = []
         for f in d.get("fields") or []:
-            name = str(f.get("field", "")).split(".", 1)[-1]
-            cols.append({"name": name, "type": f.get("type") or "string", "format": f.get("format"), "masked": bool(f.get("masked")),
-                         "description": f.get("description") or "", "meaning": f.get("meaning") or "", "role": f.get("role") or "", "references": f.get("references") or ""})
+            full = str(f.get("field", ""))
+            name = full.split(".", 1)[-1]
+            p = props.get(full) if isinstance(props.get(full), dict) else {}
+            col = {"name": name, "type": f.get("type") or "string", "format": f.get("format") or p.get("format"), "masked": bool(f.get("masked")),
+                   "description": f.get("description") or p.get("description") or "", "meaning": f.get("meaning") or "", "role": f.get("role") or "",
+                   "references": f.get("references") or ""}
+            for k in ("display", "folder", "hidden", "sort-by", "category", "summarise"):
+                v = f.get(k, f.get({"sort-by": "sortBy", "summarise": "summarize"}.get(k, k), p.get(k)))
+                if v not in (None, "", False):
+                    col[k] = v
+            cols.append(col)
         tables.append({"name": alias, "kind": d.get("role") or "fact", "dataset": d.get("dataset"), "version": d.get("version"), "mode": d.get("mode"), "columns": cols})
-    measures = [{"name": m.get("name"), "expr": m.get("expr"), "format": m.get("format"), "masked": bool(m.get("masked")), "implicit": bool(m.get("implicit")), "local": bool(m.get("local")),
-                 "additive": m.get("additive"), "description": m.get("description") or ""} for m in described.get("measures") or []]
+    measures = []
+    for m in described.get("measures") or []:
+        p = mdefs.get(m.get("name")) if isinstance(mdefs.get(m.get("name")), dict) else {}
+        out = {"name": m.get("name"), "expr": m.get("expr"), "format": m.get("format") or p.get("format"), "masked": bool(m.get("masked")), "implicit": bool(m.get("implicit")),
+               "local": bool(m.get("local")), "additive": m.get("additive"), "description": m.get("description") or p.get("description") or ""}
+        for k in ("folder", "hidden", "display"):
+            v = m.get(k, p.get(k))
+            if v not in (None, "", False):
+                out[k] = v
+        measures.append(out)
     model = described.get("model") if isinstance(described.get("model"), dict) else {}
     mid = str(model.get("id") or described.get("id") or "")
     implicit = mid.startswith("implicit:") or ref.startswith("dataset:")
+    persp = described.get("perspectives") if isinstance(described.get("perspectives"), dict) else (model_doc or {}).get("perspectives") or {}
     return {"id": mid, "title": described.get("title") or model.get("name") or ref, "description": described.get("description") or "", "tables": tables,
             "measures": measures, "hierarchies": described.get("hierarchies") or {}, "relationships": described.get("relationships") or [],
+            "perspectives": {str(k): {"title": (v or {}).get("title") or str(k), "fields": list((v or {}).get("fields") or []), "measures": list((v or {}).get("measures") or [])}
+                             for k, v in persp.items() if isinstance(v, dict) or v is None},
             "model": {"ref": ref, "id": mid, "name": model.get("name") or "", "version": model.get("version") or "", "implicit": implicit,
                       "dataset": ref[len("dataset:"):] if ref.startswith("dataset:") else ""}}
+
+
+def needs_model_doc(described: dict) -> bool:
+    """Whether the server's description lacks the model's field properties and perspectives (an older server): the console then reads the model's YAML."""
+    if "perspectives" in described:
+        return False
+    return not any(any(k in f for k in ("display", "folder", "hidden", "sortBy", "sort-by", "category")) for d in described.get("datasets") or [] for f in d.get("fields") or [])
 
 
 def report_body(slug: str, title: str, ref: str) -> str:
