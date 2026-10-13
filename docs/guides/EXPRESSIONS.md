@@ -1412,6 +1412,10 @@ functions that work now), and every check is the server's (`POST /api/v1/bi/expr
 | press **Try it** | the server's answer for the formula on the saved model, as you, by a suggested field (a table under the editor) |
 | look below the input | the measures the formula uses, as chips; a chip that names no measure is red; clicking one selects it in the text |
 
+A measure picked from the list is written `measure('Sum of mtm')`, and the measures a formula uses show as chips under it:
+
+![MTM per trade: measure('Sum of mtm') / count(trade.tradeId), and the chip Sum of mtm under Measures used](img/bi-languages/expr-editor-measure.jpg)
+
 ![A formula being written: sum(trade.mtm, wh typed, the keyword where= offered, and the card of sum below it](img/bi-languages/expr-editor-keyword.jpg)
 
 ![The same formula complete: sum(trade.mtm, where=trade.status == 'Live') and the line Checks clean](img/bi-languages/expr-editor-clean.jpg)
