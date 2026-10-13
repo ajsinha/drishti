@@ -118,9 +118,10 @@ public final class BiReportService {
         DatasetSet sets = new DatasetSet();
         if (parsed.report() != null && parsed.report().model() != null) {
             String model = parsed.report().model();                             // a report bound to a model: its visuals are model queries on it
+            String consumer = viaPublished && item != null ? item.id() : null;  // the published text: a reader without read on the model asks within its envelope
             try {
-                ds = datasets.modelDataset(p, model);
-                dsItem = DatasetService.modelRef(model);
+                ds = consumer == null ? datasets.modelDataset(p, model) : datasets.modelDataset(p, model, consumer);
+                dsItem = DatasetService.modelRef(model, consumer);
                 sets.put(parsed.report().dataset(), new DatasetSet.Entry(dsItem, ds));
             } catch (DrishtiException e) {
                 problems.add(ReportParser.error(e.errorCode().code(), "model", e.getMessage()));

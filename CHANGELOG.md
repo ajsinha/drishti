@@ -17,6 +17,13 @@
 
 ## Unreleased
 
+- **Server: model semantics and access (wave A, task 5).** Models carry field properties every consumer inherits (`fields: { alias.column: { display,
+  description, format, folder, hidden, sort-by, category, summarise } }`, and `display`/`folder`/`hidden` on measures), perspectives (`perspectives:`;
+  `describe?perspective=`), and object-level security (`security.hidden-for: { roles, fields, measures }`): a hidden field or measure, and every measure that
+  reads a hidden column, is absent from `describe`, DEL and SQL and is `DRS-9152` "not found" in a model query. A published report's readers without read
+  on its model ask within the report's **envelope** (`DRS-9151` "this report cannot ask that" outside it); `GET /bi/reports/{id}/envelope`,
+  `GET /bi/models/{id}/impact?target=`. Full breaking-change detection: a measure whose meaning changes, a field removed or retyped, a grain change
+  (`DRS-9126` without a new major).
 - **Server: dataset derivation and roots (wave A, task 4).** A dataset that `extends` another may keep a subset of its columns (`columns: [a, b]`, keys
   kept), filter (`where`), keep one row per key (`grain: { one-row-per, keep: latest by updatedAt }`, never a silent distinct), derive DEL columns
   (`derive: { x: { expr, type } }`), read a field one hop along a pack reference (`related(desk.name)`), add Python columns through the existing Transform

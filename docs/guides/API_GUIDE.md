@@ -1954,6 +1954,51 @@ hugo: "meta": {"asOf": "2026-10-08", ..., "cached": true,  "plan": "p_2dab3b12b3
 (`drishti.bi.plan.guards: refuse`): a sum adding several currencies in a group (`422 DRS-9158`, fix: add the currency to the fields or filter one) and a
 balance added across dates (`422 DRS-9159`); a balance asked alone over a window is still answered as its last date's value, with the warning.
 
+**Model semantics and access** (wave A, [BI_DESIGN.md §2.2, §5.1, §5.3](../architecture/BI_DESIGN.md#5-security-architecture)). A model may carry
+**field properties** every consumer inherits, **perspectives** and **object-level security**:
+
+```yaml
+fields:
+  trades.desk:     { display: Desk, folder: Organisation, description: The trading desk, category: none, sort-by: trades.deskOrder }
+  trades.notional: { display: Notional amount, format: amount0, folder: Amounts, summarise: sum, hidden: false }
+measures:
+  MTM: { expr: "sum(trades.mtm)", display: Mark to market, folder: Risk, hidden: false }
+perspectives:
+  desk-view: { title: Desk view, fields: [trades.desk, trades.notional, desks.*], measures: [Notional, Trades] }
+security:
+  hidden-for: { roles: [bi-analyst], fields: [trades.currency], measures: [Open MTM] }   # or a list of these
+```
+
+`GET /models/{id}/describe` gives each field its `display`, `folder`, `hidden` (not listed; still usable), `sortBy`, `category` (one of `none`, `country`,
+`region`, `state`, `city`, `postcode`, `address`, `latitude`, `longitude`, `place`, `url`, `image-url`, `currency`, `percentage`, `identifier`), `summarise`
+(`sum`, `avg`, `min`, `max`, `count`, `distinct`, `none`), and `format`/`description` when the model says them; each measure its `display`, `folder` and
+`hidden`; and `perspectives` (`name`, `title`, `description`). `?perspective=<name>` keeps only that perspective's fields and measures (an unknown one is
+`422 DRS-9153`). A field or measure **hidden for** a role the caller holds, and every measure that reads a hidden column, do not exist for them: absent from
+`describe`, unknown to DEL validation and Drishti SQL (`DRS-9171`), and a model query naming one is `422 DRS-9152` "no field" / "no measure", exactly as a
+typo (captured: `{"code": "DRS-9152", "detail": "no field 'trades.currency' in this model"}`). Captured field of `describe`:
+`{"field": "trades.notional", "type": "decimal", "format": "amount0", "display": "Notional amount", "folder": "Amounts", "hidden": false, "sortBy": null,
+"category": null, "summarise": "sum", ...}`.
+
+**Reports shared without the model (the envelope).** A reader who may view a published report but has no read on its model (not in the model's workspace or
+audience) can use the report: its visuals' model queries run as them (their row rules and masks) but only inside the report's **envelope**: the fields,
+measures and filterable fields its visuals, slicers, drills, filters, bookmarks and links can produce. Anything else, such as a carried filter the report
+never makes, is refused (captured):
+
+```
+POST /api/v1/bi/reports/file:report:lang-guarded-report/query   (hana: a viewer of the report, no read on lang-guarded)
+     {"page": "main", "visual": "by-desk", "state": {"carry": [{"field": "trades.currency", "op": "eq", "values": ["USD"]}], ...}}
+404 {"code": "DRS-9151", "path": "where[0].field", "detail": "DRS-9151 this report cannot ask that: it does not filter on 'trades.currency'", ...}
+```
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/api/v1/bi/reports/{id}/envelope` | what the report's readers without read on its model may ask: `{consumer, fields, measures, filters}` (captured: `{"consumer": "file:report:lang-guarded-report", "fields": ["trades.desk"], "measures": ["Notional"], "filters": ["trades.desk"]}`) |
+| `GET` | `/api/v1/bi/models/{id}/impact?target=<field or measure>` | the consumers whose envelopes use it: `{model, target, consumers: [{kind, id, title, status, owner, workspace}], unknown: [...]}` (`unknown`: consumers with no envelope, such as alerts) |
+
+**Breaking changes** (wave A, full): publishing a model needs a new major version (`409 DRS-9126`) when a measure is removed or **changes meaning** (its
+expression compiles to another tree, or its currency or additivity changes; a reformatting or the converter's DEL v2 text does not count), a field
+consumers could use is removed or retyped, a relationship is removed or made inactive, a dataset leaves the model, or a dataset's grain changes.
+
 **Lineage** (wave A): `GET /api/v1/bi/lineage/{ref}` (a report id, a model reference, or `dataset:<name>`): report to model to each dataset by alias,
 down its `extends` chain to its root (a pack kind and its connector, a connector query, a Python item, another model, a SQL view), as far as the caller may
 read; `problems` lists a root that cannot be traced (`DRS-9110`). Example in [DATASETS.md section 14](DATASETS.md#14-derivation-subset-filter-grain-derive-group-22-wave-a).

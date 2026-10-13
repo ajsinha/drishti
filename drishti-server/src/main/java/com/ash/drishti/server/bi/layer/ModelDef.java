@@ -34,7 +34,87 @@ import java.util.Set;
 public record ModelDef(String name, String version, String id, String title, String description, String owner, boolean sample, String endorsement,
         Map<String, Use> datasets, List<Rel> relationships, Map<String, Meas> measures, Map<String, List<String>> hierarchies, Security security, Contract contract,
         String lifecycle, String replacedBy, List<Dataset.Rollup> rollups, List<JsonNode> tests, List<JsonNode> golden, JsonNode ai, String implicitFrom,
-        List<String> placeholders) {
+        List<String> placeholders, Semantics semantics) {
+
+    /** As written before field properties, perspectives and object-level security (none). */
+    public ModelDef(String name, String version, String id, String title, String description, String owner, boolean sample, String endorsement, Map<String, Use> datasets,
+            List<Rel> relationships, Map<String, Meas> measures, Map<String, List<String>> hierarchies, Security security, Contract contract, String lifecycle, String replacedBy,
+            List<Dataset.Rollup> rollups, List<JsonNode> tests, List<JsonNode> golden, JsonNode ai, String implicitFrom, List<String> placeholders) {
+        this(name, version, id, title, description, owner, sample, endorsement, datasets, relationships, measures, hierarchies, security, contract, lifecycle, replacedBy, rollups,
+                tests, golden, ai, implicitFrom, placeholders, Semantics.NONE);
+    }
+
+    /**
+     * What a model says about its fields and measures beyond their computation (docs/architecture/BI_DESIGN.md sections 2.2 and 5.1): display properties
+     * every consumer inherits ({@code fields:} and the measures' own keys), perspectives (named subsets for a team or task: a view, not a security boundary),
+     * and object-level security ({@code security.hidden-for}: a field or measure that does not exist for some roles).
+     */
+    public record Semantics(Map<String, FieldProps> fields, Map<String, FieldProps> measures, Map<String, Perspective> perspectives, List<HiddenFor> hiddenFor) {
+        public static final Semantics NONE = new Semantics(Map.of(), Map.of(), Map.of(), List.of());
+
+        public Semantics {
+            fields = Collections.unmodifiableMap(new LinkedHashMap<>(fields));
+            measures = Collections.unmodifiableMap(new LinkedHashMap<>(measures));
+            perspectives = Collections.unmodifiableMap(new LinkedHashMap<>(perspectives));
+            hiddenFor = List.copyOf(hiddenFor);
+        }
+    }
+
+    /** The data categories a field may carry (what a map, a link or an image visual needs). */
+    public static final Set<String> CATEGORIES = Set.of("none", "country", "region", "state", "city", "postcode", "address", "latitude", "longitude", "place", "url",
+            "image-url", "currency", "percentage", "identifier");
+    /** How a field is summarised when it is dropped on a value well. */
+    public static final Set<String> SUMMARISE = Set.of("sum", "avg", "min", "max", "count", "distinct", "none");
+
+    /**
+     * Field (or measure) properties. Null means "not said" (the dataset's own, or none).
+     *
+     * @param display the name shown in field lists, visuals and answers' headers
+     * @param folder a display folder, {@code A/B} for nesting
+     * @param hidden true: not listed in field lists (still usable; this is not security, see {@link HiddenFor})
+     * @param sortBy another field whose order this one sorts by (a month name by the month number)
+     * @param category a data category ({@link #CATEGORIES})
+     * @param summarise the default summarisation of a field dropped on a value well ({@link #SUMMARISE})
+     */
+    public record FieldProps(String display, String description, String format, String folder, Boolean hidden, String sortBy, String category, String summarise) {
+
+        public Map<String, Object> toMap() {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("display", display);
+            m.put("description", description);
+            m.put("format", format);
+            m.put("folder", folder);
+            m.put("hidden", hidden != null && hidden);
+            m.put("sortBy", sortBy);
+            m.put("category", category);
+            m.put("summarise", summarise);
+            return m;
+        }
+    }
+
+    /** A perspective: its title, description, and the fields ({@code alias.column} or {@code alias.*}) and measures it shows. */
+    public record Perspective(String name, String title, String description, List<String> fields, List<String> measures) {
+        public Perspective {
+            fields = List.copyOf(fields);
+            measures = List.copyOf(measures);
+        }
+
+        /** True when the perspective shows the field. */
+        public boolean shows(String field) {
+            String alias = field.contains(".") ? field.substring(0, field.indexOf('.')) : field;
+            String col = field.contains(".") ? field.split("\\.")[1] : field;
+            return fields.contains(field) || fields.contains(alias + ".*") || fields.contains(alias + "." + col);
+        }
+    }
+
+    /** {@code hidden-for}: for readers holding any of {@code roles}, the fields ({@code alias.column}) and measures do not exist. */
+    public record HiddenFor(List<String> roles, List<String> fields, List<String> measures) {
+        public HiddenFor {
+            roles = List.copyOf(roles);
+            fields = List.copyOf(fields);
+            measures = List.copyOf(measures);
+        }
+    }
 
     public static final Set<String> ROLES = Set.of("fact", "dimension", "bridge");
     public static final Set<String> LIFECYCLES = Set.of("draft", "published", "deprecated", "retired");
@@ -48,6 +128,7 @@ public record ModelDef(String name, String version, String id, String title, Str
         tests = tests == null ? List.of() : List.copyOf(tests);
         golden = golden == null ? List.of() : List.copyOf(golden);
         placeholders = placeholders == null ? List.of() : List.copyOf(placeholders);
+        semantics = semantics == null ? Semantics.NONE : semantics;
     }
 
     public int major() {

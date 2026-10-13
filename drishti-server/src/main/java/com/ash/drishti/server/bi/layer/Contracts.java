@@ -43,8 +43,34 @@ public final class Contracts {
     private Contracts() {}
 
     public static Change models(ModelDef was, ModelDef now) {
+        return models(was, now, Map.of(), Map.of());
+    }
+
+    /**
+     * The full detection of wave A (docs/architecture/BI_DESIGN.md section 7): with the datasets each version reads, also a field consumers could use that is
+     * removed or retyped, a measure whose meaning changes (its expression compiles to another tree, its currency or additivity changes), and a grain change.
+     */
+    public static Change models(ModelDef was, ModelDef now, Map<String, ResolvedDataset> wasData, Map<String, ResolvedDataset> nowData) {
         List<String> breaking = new ArrayList<>();
         List<String> renames = new ArrayList<>();
+        meanings(was, now, breaking);
+        wasData.forEach((alias, w) -> {
+            ResolvedDataset n = nowData.get(alias);
+            if (n == null) {
+                return;
+            }
+            w.def().columns().forEach((name, c) -> {
+                DatasetDef.Col same = n.def().columns().get(name);
+                if (same == null) {
+                    breaking.add("the field " + alias + "." + name + " is removed");
+                } else if (!same.type().equals(c.type())) {
+                    breaking.add("the field " + alias + "." + name + " changes type from " + c.type() + " to " + same.type());
+                }
+            });
+            if (w.def().grain() != null && n.def().grain() != null && !w.def().grain().keys().equals(n.def().grain().keys())) {
+                breaking.add("the grain of " + alias + " changes from " + w.def().grain().keys() + " to " + n.def().grain().keys());
+            }
+        });
         Map<String, String> wasById = new LinkedHashMap<>();
         was.measures().values().forEach(m -> wasById.put(m.id().isBlank() ? "name:" + m.name() : m.id(), m.name()));
         Map<String, String> nowById = new LinkedHashMap<>();
@@ -71,6 +97,36 @@ public final class Contracts {
             }
         }
         return new Change(breaking, renames, versionProblem(was.version(), now.version(), breaking));
+    }
+
+    /** A measure kept (by id, or by name without ids) whose meaning changes: another expression tree, another currency or additivity. */
+    private static void meanings(ModelDef was, ModelDef now, List<String> breaking) {
+        for (ModelDef.Meas w : was.measures().values()) {
+            ModelDef.Meas n = now.measures().values().stream().filter(x -> !w.id().isBlank() ? w.id().equals(x.id()) : w.name().equals(x.name())).findFirst().orElse(null);
+            if (n == null) {
+                continue;
+            }
+            if (!sameTree(w.expr(), n.expr()) || !java.util.Objects.equals(w.python(), n.python())) {
+                breaking.add("the measure '" + w.name() + "' changes meaning (" + (w.expr() == null ? w.python() : w.expr()) + " is now " + (n.expr() == null ? n.python() : n.expr()) + ")");
+            } else if (!java.util.Objects.equals(w.currency(), n.currency()) || !java.util.Objects.equals(w.additive(), n.additive())) {
+                breaking.add("the measure '" + w.name() + "' changes its currency or additivity");
+            }
+        }
+    }
+
+    /** True when two expressions compile to the same tree (a reformatting or the converter's DEL v2 text is not a change of meaning). */
+    static boolean sameTree(String a, String b) {
+        if (java.util.Objects.equals(a, b)) {
+            return true;
+        }
+        if (a == null || b == null) {
+            return false;
+        }
+        try {
+            return com.ash.drishti.server.bi.expr.Expressions.parse(a).equals(com.ash.drishti.server.bi.expr.Expressions.parse(b));
+        } catch (RuntimeException e) {
+            return false;
+        }
     }
 
     public static Change datasets(DatasetDef was, DatasetDef now) {

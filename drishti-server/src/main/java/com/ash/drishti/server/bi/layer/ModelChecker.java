@@ -79,6 +79,7 @@ public final class ModelChecker {
                 }
             }
         }
+        semantics(m, datasets, y);
         if (m.contract().listed()) {
             for (String f : m.contract().fields()) {
                 String[] p = f.split("\\.");
@@ -101,6 +102,30 @@ public final class ModelChecker {
             }
         }
         return y.problems();
+    }
+
+    /** Field properties, perspectives and object-level security name columns the model's datasets have and measures it has. */
+    private static void semantics(ModelDef m, Map<String, ResolvedDataset> datasets, LayerYaml y) {
+        java.util.function.Predicate<String> column = f -> {
+            String[] p = ModelDefParser.field(f);
+            ResolvedDataset r = p == null ? null : datasets.get(p[0]);
+            return r == null || r.def().columns().containsKey(p[1]) || DatasetDef.BUILT_IN.contains(p[1]);
+        };
+        m.semantics().fields().forEach((f, props) -> {
+            if (!column.test(f)) {
+                y.error("DRS-9120", "fields." + f, "'" + f + "' is not a column of the model's datasets");
+            }
+            if (props.sortBy() != null && !column.test(props.sortBy())) {
+                y.error("DRS-9120", "fields." + f + ".sort-by", "'" + props.sortBy() + "' is not a column of the model's datasets");
+            }
+        });
+        java.util.Set<String> measures = Flattener.withDefaults(m, datasets).keySet();
+        m.semantics().perspectives().values().forEach(p -> p.fields().stream().filter(f -> !f.endsWith(".*") && !column.test(f))
+                .forEach(f -> y.error("DRS-9120", "perspectives." + p.name() + ".fields", "'" + f + "' is not a column of the model's datasets")));
+        m.semantics().hiddenFor().forEach(h -> {
+            h.fields().stream().filter(f -> !column.test(f)).forEach(f -> y.error("DRS-9125", "security.hidden-for", "'" + f + "' is not a column of the model's datasets"));
+            h.measures().stream().filter(x -> !measures.contains(x)).forEach(x -> y.error("DRS-9125", "security.hidden-for", "'" + x + "' is not a measure of the model"));
+        });
     }
 
     /** The engine's checks of the flattened model, in the model's codes: measures 9127, relationships 9122, the rest 9120. */

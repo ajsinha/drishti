@@ -48,10 +48,20 @@ public final class MqService {
      * A model bound to one reader: what it is, how its requests run, the reader's side of the checks, their security as the plan and its signature see it,
      * and the generation of the model's data (null: answers are not cached, as in the tests of the engine).
      */
-    public record Bound(ModelView view, Runner runner, MqValidator.Context context, SecuritySignature.Reader security, java.util.function.LongSupplier generation) {
+    public record Bound(ModelView view, Runner runner, MqValidator.Context context, SecuritySignature.Reader security, java.util.function.LongSupplier generation,
+            Envelope envelope) {
 
         public Bound(ModelView view, Runner runner, MqValidator.Context context) {
-            this(view, runner, context, MqPlans.reader(context), null);
+            this(view, runner, context, MqPlans.reader(context), null, null);
+        }
+
+        public Bound(ModelView view, Runner runner, MqValidator.Context context, SecuritySignature.Reader security, java.util.function.LongSupplier generation) {
+            this(view, runner, context, security, generation, null);
+        }
+
+        /** The same reader, limited to what a published consumer can ask (section 5.3: no read on the model). */
+        public Bound within(Envelope e) {
+            return new Bound(view, runner, context, security, generation, e);
         }
 
         /** The reader's security signature on this model (opaque). */
@@ -88,6 +98,7 @@ public final class MqService {
 
     /** Steps 3 to 9 without reading data (top-N is not resolved): {@code valid}, the warnings, and the engine request it would run; a refusal throws. */
     public Map<String, Object> validate(Bound b, ModelQuery q) {
+        ObjectSecurity.check(b.view(), q, b.security().hidden());
         MqValidator.Checked c = MqValidator.validate(b.view(), q, b.context(), props);
         MqCompiler.Compiled compiled = MqCompiler.compile(b.view(), c, b.context(), props, tq -> new QueryService.Result(List.of(), 0, null));
         Map<String, Object> m = new LinkedHashMap<>();
@@ -107,6 +118,7 @@ public final class MqService {
 
     /** The plan of a query as the bound reader would run it, without reading data (a {@code top} filter is not resolved: the plan never holds data). */
     public LogicalPlan plan(Bound b, ModelQuery q) {
+        ObjectSecurity.check(b.view(), q, b.security().hidden());
         MqValidator.Checked c = MqValidator.validate(b.view(), q, b.context(), props);
         MqCompiler.Compiled compiled = MqCompiler.compile(b.view(), c, b.context(), props, tq -> new QueryService.Result(List.of(), 0, null));
         return MqPlans.plan(b.view(), c, compiled, b.security());
@@ -154,6 +166,10 @@ public final class MqService {
      */
     public Ran run(Bound b, ModelQuery q, boolean explain, boolean engineLimit) {
         long t0 = System.nanoTime();
+        ObjectSecurity.check(b.view(), q, b.security().hidden());                    // a hidden field or measure does not exist for the reader
+        if (b.envelope() != null) {
+            b.envelope().check(q, b.view());                                         // a report-only reader: what the report can ask, nothing else
+        }
         MqValidator.Checked c = MqValidator.validate(b.view(), q, b.context(), props);
         MqCompiler.Compiled compiled = MqCompiler.compile(b.view(), c, b.context(), props, tq -> b.runner().run(c.dataset(), tq, false));
         LogicalPlan plan = MqPlans.plan(b.view(), c, compiled, b.security());          // stages 3 to 6: bind, secure, guard, optimise
