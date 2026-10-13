@@ -68,7 +68,7 @@
   <div class="tbl-wrap" data-pivot></div>
 </section>
 <section id="bxP-sql" role="tabpanel" aria-labelledby="bxT-sql" data-pane="sql" hidden>
-  <p class="text-muted-d">One SELECT over the table <code>extract</code> (and a table for each further extract, named as it is), read-only, at most {{ limits.sql_max_rows }} rows back.</p>
+  <p class="text-muted-d" data-sql-help>One read-only SELECT, at most {{ limits.sql_max_rows }} rows back. On the <strong>server</strong> (the default) it is Drishti SQL over the model the extract reads: its tables are the model's aliases, <code>MEASURE('name')</code> is a measure, and the server answers as you (<a href="/help/sql">the SQL guide</a>). <strong>Over the extract</strong> (selectable until wave B) it reads the table <code>extract</code> and one table per further extract.</p>
   <div data-cells="sql"></div>
   <div class="bi-actions"><button type="button" class="btn-pill btn-ghost" data-add="sql"><i class="bi bi-plus-lg" aria-hidden="true"></i> SQL cell</button>
     <button type="button" class="btn-pill btn-ghost" data-run-all="sql"><i class="bi bi-play-fill" aria-hidden="true"></i> Run all</button></div>

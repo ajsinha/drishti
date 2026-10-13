@@ -146,3 +146,28 @@ def test_field_properties_and_perspectives_are_written_one_line_each():
     assert "fields:\n  trade.mtm: {description: Mark to market}\n" in text
     assert "perspectives:\n  desk-view: {fields: [trade.desk], measures: [MTM, Notional]}\n" in text
     assert text.index("measures:") < text.index("fields:") < text.index("perspectives:")
+
+
+def test_an_analyse_sql_cell_runs_drishti_sql_on_the_server_over_the_extracts_model():
+    from core.explore import model_ref
+    assert model_ref("mq:trading-risk@1") == "trading-risk@1" and model_ref("dataset:pack.trading.trade") == "dataset:pack.trading.trade"
+    assert model_ref("file:dataset:trading") is None
+    client, backend = make()
+    sent = []
+    orig = backend.bi
+
+    async def bi(method, path, ident, body=None, **params):
+        if path == "/sql":
+            sent.append(body)
+            return {"columns": [{"name": "desk", "type": "string"}, {"name": "mtm", "type": "decimal"}], "rows": [["FX", 1.0], ["RATES", 2.0], ["EQ", 3.0]],
+                    "meta": {"millis": 7, "plan": "p-1234567890abcdef", "masked": []}}
+        return await orig(method, path, ident, body, **params)
+    backend.bi = bi
+    limits = client.app.state.explore_limits
+    r = client.post("/bi/explore/dsql", json={"extract": {"dataset": "mq:trading-risk@1", "fields": ["trade.desk"]}, "sql": "SELECT desk.name, MEASURE('MTM') FROM trade JOIN desk GROUP BY desk.name;"})
+    assert r.status_code == 200, r.text
+    got = r.json()
+    assert sent[0] == {"sql": "SELECT desk.name, MEASURE('MTM') FROM trade JOIN desk GROUP BY desk.name", "model": "trading-risk@1", "limit": limits.sql_max_rows + 1}
+    assert got["columns"] == ["desk", "mtm"] and got["rowCount"] == 3 and got["engine"] == "server" and got["plan"] == "p-1234567890abcdef" and got["ms"] == 7
+    legacy = client.post("/bi/explore/dsql", json={"extract": {"dataset": "file:dataset:trading"}, "sql": "SELECT 1"})
+    assert legacy.status_code == 422 and "over the extract" in legacy.json()["detail"]

@@ -22,6 +22,18 @@
   if (!X) { return; }
   var h = B.h, q = B.q, qa = B.qa, clear = B.clear, root = document.getElementById('bx');
   var STARTER = { sql: 'SELECT * FROM extract LIMIT 20', python: "print(df.describe())\nresult = df.head(10)" };
+  /** Drishti SQL runs on the server over the model the extract reads (the default, BI_DESIGN.md 3.4); a version 1 dataset only has its extract. */
+  function modelOf() { var d = (X.spec && X.spec.dataset) || ''; return d.indexOf('mq:') === 0 ? d.slice(3) : d.indexOf('dataset:') === 0 ? d : ''; }
+  function sqlEngine() { return modelOf() ? 'server' : 'extract'; }
+  /** A first statement for a new cell: over the model, a field and a measure grouped (written by the Query panel's printer); over the extract, its rows. */
+  function sqlStarter(engine) {
+    var m = X.model;
+    if (engine !== 'server' || !m || !B.mq || !B.mq.sql) { return STARTER.sql; }
+    var field = (X.qual || []).filter(function (f) { var p = f.split('.'); var t = (m.tables || []).filter(function (x) { return x.name === p[0]; })[0]; var c = t && t.columns.filter(function (x) { return x.name === p[1]; })[0]; return c && c.type === 'string' && !c.masked; })[0];
+    var measure = ((m.measures || [])[0] || {}).name;
+    return B.mq.sql({ mq: 1, select: { fields: field ? [field] : [], measures: measure ? [measure] : [] }, limit: 20 }, m) || STARTER.sql;
+  }
+  function newCell(kind) { var engine = kind === 'sql' ? sqlEngine() : ''; return { source: kind === 'sql' ? sqlStarter(engine) : STARTER[kind], target: 'server', engine: engine }; }
 
   function spec() { return X.spec ? { dataset: X.spec.dataset, fields: X.spec.fields, filters: X.spec.filters, dates: X.spec.dates, report: X.spec.report, page: X.spec.page, visual: X.spec.visual, state: X.spec.state } : null; }
 
@@ -55,6 +67,15 @@
         });
       }
       if (kind === 'sql') {
+        var eng = h('select', { class: 'studio-select', 'data-sql-engine': '', 'aria-label': 'Where cell ' + (i + 1) + ' runs' },
+          h('option', { value: 'server', text: 'Server: Drishti SQL over the model', disabled: !modelOf() }), h('option', { value: 'extract', text: 'Over the extract (until wave B)' }));
+        eng.value = cell.engine || sqlEngine();
+        eng.addEventListener('change', function () {
+          var was = cell.engine;
+          cell.engine = eng.value;
+          if (area.value === sqlStarter(was) || area.value === STARTER.sql) { cell.source = area.value = sqlStarter(cell.engine); }       // an untouched starter follows the engine
+        });
+        bar.appendChild(eng);
         var pb = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-promote-report': '' }, 'Promote to a report visual');
         pb.addEventListener('click', function () { X.promoteReport({ sql: cell.source }, 'SQL', pb); });
         bar.appendChild(pb);
@@ -74,11 +95,18 @@
     if (kind === 'sql') {
       var showSql = function (r, engine) {
         clear(cell.out);
-        cell.out.appendChild(h('p', { class: 'bi-result-meta', 'data-engine': engine, text: r.rowCount + ' rows' + (r.truncated ? ' (cut to the SQL row limit)' : '') + ' in ' + r.ms + ' ms · ' + (engine === 'server' ? 'run by the console (SQLite)' : 'DuckDB in this browser') }));
+        var where = engine === 'dsql' ? 'Drishti SQL, run by the server over ' + r.model + ' as you' + (r.plan ? ' · plan ' + String(r.plan).slice(0, 12) : '') + (r.masked && r.masked.length ? ' · masked: ' + r.masked.join(', ') : '')
+          : engine === 'server' ? 'over the extract, run by the console (SQLite)' : 'over the extract, DuckDB in this browser';
+        cell.out.appendChild(h('p', { class: 'bi-result-meta', 'data-engine': engine, text: r.rowCount + ' rows' + (r.truncated ? ' (cut to the SQL row limit)' : '') + ' in ' + r.ms + ' ms · ' + where }));
         var host = h('div', { class: 'tbl-wrap' });
         cell.out.appendChild(host);
         X.table(host, r.columns, r.rows, 200);
       };
+      // the server is the default engine (Drishti SQL over the model); a statement over the table `extract` (an older notebook) still runs over the extract
+      var overExtract = cell.engine === 'extract' || !modelOf() || /\b(from|join)\s+extract\b/i.test(cell.source || '');
+      if (!overExtract) {
+        return X.post('/bi/explore/dsql', { extract: spec(), sql: cell.source }).then(function (r) { showSql(r, 'dsql'); }).catch(function (e) { note(cell.out, e.message, true); });
+      }
       var viaServer = function () { return X.post('/bi/explore/sql', { extract: spec(), extracts: X.extras, sql: cell.source }).then(function (r) { showSql(r, 'server'); }); };
       if (X.duck && X.duck.usable() && X.engine !== 'server') {                                  // DuckDB-Wasm on the extract in this page; the console's SQLite when it cannot start
         return X.duck.sql(cell.source).then(function (r) { showSql(r, 'duckdb-wasm'); }, function (e) {
@@ -123,12 +151,12 @@
   }
 
   ['sql', 'python'].forEach(function (kind) {
-    q('[data-add=' + kind + ']', root).addEventListener('click', function () { X.cells[kind].push({ source: STARTER[kind], target: 'server' }); draw(kind); });
+    q('[data-add=' + kind + ']', root).addEventListener('click', function () { X.cells[kind].push(newCell(kind)); draw(kind); });
     q('[data-run-all=' + kind + ']', root).addEventListener('click', function () { runAll(kind); });
   });
   document.addEventListener('bx:extras', function () { draw('python'); });                        // a cell that reads extract(...) can be promoted to a Transform
   document.addEventListener('bx:extract', function () {
-    ['sql', 'python'].forEach(function (kind) { if (!X.cells[kind].length) { X.cells[kind].push({ source: STARTER[kind], target: 'server' }); } draw(kind); });
+    ['sql', 'python'].forEach(function (kind) { if (!X.cells[kind].length) { X.cells[kind].push(newCell(kind)); } draw(kind); });
   });
   if (!X.mayPython) { qa('[data-pane=python] button', root).forEach(function (b) { b.disabled = true; b.title = 'Running Python needs the bi-author power'; }); }
 })();

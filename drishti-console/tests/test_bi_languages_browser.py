@@ -215,6 +215,50 @@ def test_a_save_on_a_published_model_makes_a_draft_and_publish_follows(browser):
     page.context.close()
 
 
+def test_a_report_on_a_model_has_its_own_measures_and_the_query_as_mq_or_sql(browser):
+    page = sign_in(browser, "wes")
+    new_model(page, "Query model")
+    page.click('[data-tab="measures"]')
+    page.select_option("[data-nm-alias]", "trade")
+    page.select_option("[data-nm-column]", "mtm")
+    page.click("[data-nm-add]")
+    expect(page.locator('[data-measure="Sum of mtm"]')).to_be_visible(timeout=15000)
+    page.click("[data-save]")
+    expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
+    name = page.evaluate("window.drishtiModel.doc.model")
+    page.click("[data-report]")
+    page.click("[data-ask-go]")
+    page.wait_for_url("**/bi/design/**", timeout=20000)
+    expect(page.locator('[data-model-header="model"]')).to_be_visible(timeout=30000)
+    # a measure of this report only, in the ExpressionEditor over the model's measures
+    page.click("[data-local-measure] summary")
+    page.fill("[data-lm-name]", "MTM in thousands")
+    lm = page.locator("[data-lm-expr]")
+    lm.click()
+    lm.type("Sum")
+    page.click('[data-xe-opt="Sum of mtm"]')
+    lm.type(" / 1000")
+    page.click("[data-lm-add]")
+    expect(page.locator('[data-field="MTM in thousands"] [data-origin="report"], [data-field="MTM in thousands"]').first).to_be_visible(timeout=15000)
+    page.drag_and_drop('[data-field="MTM in thousands"]', "[data-canvas-grid]", target_position={"x": 80, "y": 40})
+    page.drag_and_drop('[data-field="trade.desk"]', ".bi-dvis")
+    page.locator(".bi-dvis").first.click()
+    expect(page.locator(".bi-dvis").first).to_contain_text("3 rows", timeout=15000)              # the report's own measure travels with the query as define
+    page.click("[data-visual-query] summary")
+    expect(page.locator("[data-visual-query-text]")).to_contain_text(f"model: {name}@1", timeout=15000)
+    expect(page.locator("[data-visual-query-text]")).to_contain_text("define:")
+    page.click('[data-qp-view="sql"]')
+    sql = page.locator("[data-visual-query-text]").text_content()
+    assert sql.startswith("SELECT trade.desk") and "FROM   trade" in sql and "GROUP  BY trade.desk" in sql and "measure('Sum of mtm') / 1000" in sql, sql
+    page.screenshot(path=SHOTS + "/query-panel-sql.png", full_page=False) if SHOTS else None
+    page.click("[data-save]")
+    expect(page.locator(".bi-near").first).to_contain_text("Saved", timeout=15000)
+    body = fetch(page, "GET", "/bi/api/items/" + page.url.rsplit("/", 1)[-1])["body"]["body"]
+    assert "measures:" in body and "MTM in thousands" in body, body
+    clean(page)
+    page.context.close()
+
+
 def test_the_wizard_fits_a_phone(browser):
     page = sign_in(browser, "wes", width=390)
     page.evaluate("window.sessionStorage.clear()")

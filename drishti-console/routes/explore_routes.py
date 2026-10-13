@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import asyncio
 import ast
+import time
 from pathlib import Path
 from urllib.parse import quote
 
@@ -30,8 +31,8 @@ from fastapi.responses import JSONResponse
 
 from core.backend import BackendError
 from core.csrf import json_body
-from core.explore import (ExploreError, Extract, Limits, check_extracts, check_fields, from_arrow, from_json, parse_notebook, promote_python, promote_transform, query_body,
-                          run_sql)
+from core.explore import (ExploreError, Extract, Limits, check_extracts, check_fields, dsql_answer, dsql_request, from_arrow, from_json, model_ref, parse_notebook,
+                          promote_python, promote_transform, query_body, run_sql)
 from core.promote_report import add_to_report, sql_to_slice, visual_for
 from core.pyrunner import PyError
 from core.quant import get_engine
@@ -158,6 +159,28 @@ async def sql(request: Request):
     except (BackendError, ExploreError) as e:
         return _fail(e)
     return JSONResponse({**out, "inputRows": len(ex.rows), "masked": ex.masked, "truncatedInput": ex.truncated}, headers={"Cache-Control": "no-store"})
+
+
+@router.post("/bi/explore/dsql")
+async def dsql(request: Request):
+    """Body ``{extract: {dataset, ...}, sql}``: one Drishti SQL statement over the model the extract reads (BI_DESIGN.md 3.4), run by the server as the
+    signed-in person (their row rules and masks), the cell's row limit applied; ``{columns, rows, rowCount, truncated, ms, engine: server, plan, masked}``.
+    The console never reads the SQL: the server parses, binds and plans it (the same plan as the model query it is equal to)."""
+    body = await json_body(request)
+    limits = _limits(request)
+    spec = body.get("extract") if isinstance(body.get("extract"), dict) else {}
+    ref = model_ref(str(spec.get("dataset") or body.get("model") or ""))
+    if not ref:
+        return _fail(ExploreError("DRS-9070", 422, "Drishti SQL reads a model or a dataset's implicit model; this extract is a version 1 dataset: "
+                                                   "choose 'over the extract' for this cell"))
+    t0 = time.monotonic()
+    try:
+        out = await request.app.state.backend.bi("POST", "/sql", ident(request), dsql_request(str(body.get("sql", "")), ref, limits))
+    except (BackendError, ExploreError) as e:
+        if isinstance(e, BackendError) and e.status in (404, 405):
+            return _fail(ExploreError("DRS-9070", 501, "this server does not run Drishti SQL yet: choose 'over the extract' for this cell"))
+        return _fail(e)
+    return JSONResponse({**dsql_answer(out, limits, round((time.monotonic() - t0) * 1000)), "model": ref}, headers={"Cache-Control": "no-store"})
 
 
 def cell_packages(source: str, allowed: list[str]) -> list[str]:
