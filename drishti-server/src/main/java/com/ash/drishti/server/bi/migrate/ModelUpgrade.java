@@ -217,7 +217,7 @@ final class ModelUpgrade {
         }
         BiStore.Revision r = store.addRevision(now.id(), model, "the dataset-to-model migration: now the model over " + created.size() + " dataset(s)", actor, at, "migrate",
                 published ? version : 0, revisionsKeep);
-        String note = "dataset became the model " + it.became() + "; new datasets " + created + "; the 2.1 text is saved state " + before;
+        String note = "the dataset became the " + it.became() + "; new datasets " + created + "; the 2.1 text is saved state " + before;   // became: "model x@1 over [...]"
         store.addEvent(now.id(), "migrate", actor, note, r.seq(), at);
         audit.record(actor, "bi-model-migrated", now.id(), note);
         return created;

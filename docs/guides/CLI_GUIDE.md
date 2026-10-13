@@ -1935,7 +1935,7 @@ datasets/counterparty-exposure.dataset.yaml: converted -> model counterparty-exp
     writes models/counterparty-exposure.model.yaml
 ...
 notebooks/pnl-vs-exposure-pandas.notebook.yaml: manual
-    manual: the notebook reads the dataset file:dataset:trading-risk, now the model trading-risk@1: rebind it (`model: trading-risk@1`, extracts as model queries) when the console's notebooks read models
+    manual: the notebook reads the dataset file:dataset:trading-risk, now the model trading-risk@1: rebind it to the model (`dataset: mq:trading-risk@1`, and each extract's `dataset:` the same way, its fields as alias.column), as the sample notebook pnl-vs-exposure-pandas does
 ...
 26 file(s) read, 16 converted, 0 refused; would write 32 file(s)
 ```
