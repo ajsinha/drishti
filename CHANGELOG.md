@@ -23,7 +23,8 @@
   query}` answers as that role would get it (bi-admin or the model's owner; audited `bi-model-preview-as`). `POST /bi/expr/validate` takes the designer's
   unsaved model or dataset (`yaml`) and flags a measure a model query would refuse (`DRS-9156`) while it is written. A report's own measures
   (`measures:`) are checked (`DRS-9154`) and sent as `define` by every visual the server draws; `perspective:` narrows the described model. StableIds
-  writes `{ id: r_1, from:` with its space. A Python dataset is as of the date its inputs were answered at, as its model is.
+  writes `{ id: r_1, from:` with its space. A Python dataset is as of the date its inputs were answered at, as its model is. A join over a window of
+  several business dates matches the date too (a fact row met its dimension once per date and was counted that many times).
 - **Server: the dataset-to-model converter, and the shipped samples converted (wave A, task 6).** `drishti.py bi migrate --models DIR [--dry-run]
   [--out D] [--keep-old] [--report F]` (`POST /api/v1/bi/migrate/models/convert`) turns every `rachana: 1` dataset into one dataset per table
   (`<old>-<table>`, its source, columns, time mode, refresh, masks and row rules) and a model of the old name (tables as aliases, so fields read as
