@@ -1,0 +1,98 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# STORED SAMPLE 3 of 3: a nested model. A trade document holds ARRAYS: its legs and its payment schedule. A table with `each:` has one row
+# per array element, so legs and cashflows become tables in their own right, one-to-many from the trade.
+# Tutorial: docs/tutorials/../guides/BI_RECIPES.md. Reference: docs/guides/DATASETS.md.
+
+rachana: 1
+dataset: trading-cashflows
+version: 1
+title: Trade legs and cashflows
+description: >-
+  Legs and scheduled cashflows of the trading pack's trades as tables (one row per array element), joined to their trade.
+  Shows cashflow amount by pay month, notional by leg direction and a nested model. Reads documents once per business date
+  (arrays cannot come from promoted columns), so it is slower to build than the other samples.
+sample: true
+endorsement: promoted
+tags: [sample, trading, nested, cashflows]
+
+# TABLES. Three tables over the same kind and the same connector. The first has a row per trade; the other two have a row per
+# array element. The connector cannot scan arrays as columns, so each is built by reading the trade documents once per business date
+# (the server says so in the query warnings) and kept as typed Parquet like the other layers.
+tables:
+  trades:
+    source: { connector: trading-store, kind: trade }
+    mode: cached
+    columns:
+      desk:        string
+      productType: string
+      currency:    string
+      status:      string
+      notional:    { type: decimal, format: amount0 }
+      maturityDate: date
+
+  legs:
+    source:
+      connector: trading-store
+      kind: trade
+      each: legs                   # one row per element of the trade's `legs` array. The row's id is the TRADE's id; `index` is its position.
+    mode: cached
+    columns:                       # paths are relative to the array element
+      leg:        integer
+      label:      string
+      payReceive: string
+      rateType:   string
+      index_name: { path: index, type: string }     # the element's own field "index" (the rate index, USCPI): not the column `index`
+      rate:       { type: decimal, format: pct }
+      spread:     decimal
+      frequency:  string
+      dayCount:   string
+      currency:   string
+      notional:   { type: decimal, format: amount0 }
+
+  cashflows:
+    source:
+      connector: trading-store
+      kind: trade
+      each: schedule               # the trade's payment `schedule` array
+    mode: cached
+    columns:
+      payDate: { path: date, type: date }
+      rate:    { type: decimal, format: pct }
+      amount:  { type: decimal, format: amount0 }
+      status:  string
+
+# RELATIONSHIPS. `id` on an array table is the PARENT trade's id, so legs.id and cashflows.id both join to trades.id, many rows to one trade.
+relationships:
+  - { from: legs.id,      to: trades.id, cardinality: many-to-one }     # many legs belong to one trade
+  - { from: cashflows.id, to: trades.id, cardinality: many-to-one }
+
+# MEASURES. Each aggregates one table. Group them by columns of the same table, or of trades (reached many-to-one).
+measures:
+  Cashflow amount:    { expr: "sum(cashflows.amount)", format: amount0, description: "Scheduled cashflow, summed over the rows the visual groups by." }
+  Cashflows:          { expr: "count(cashflows)" }
+  Average cashflow:   { expr: "avg(cashflows.amount)", format: amount0 }
+  Largest cashflow:   { expr: "max(cashflows.amount)", format: amount0 }
+  Legs:               { expr: "count(legs)" }
+  Leg notional:       { expr: "sum(legs.notional)", format: amount0 }
+  Trades with cashflows: { expr: "distinct(cashflows.id)" }
+
+# HIERARCHIES. A date column cut into parts: a visual can drill from year to quarter to month to the day.
+hierarchies:
+  Pay date: [cashflows.payDate.year, cashflows.payDate.quarter, cashflows.payDate.month, cashflows.payDate]
+
+# Ask for "Cashflow amount" by `cashflows.payDate.month` and the answer is cashflow by pay month. Group cashflows by `trades.desk` and the join
+# goes cashflows -> trades (many-to-one), so nothing is counted twice. Legs and cashflows are siblings: one query cannot group cashflows by
+# a leg column (that would repeat each cashflow once per leg), and the engine says so.

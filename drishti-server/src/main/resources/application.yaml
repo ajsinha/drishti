@@ -184,6 +184,8 @@ drishti:
       - /api/v1/bi/models/*/query       # the same with the model in the path
       - /api/v1/bi/mq/validate          # checks a model query without reading data
       - /api/v1/bi/models/validate      # checks a model's or a rachana 2 dataset's YAML without storing it
+      - /api/v1/bi/expr/validate        # checks one expression (DEL) in its scope against a model as the caller sees it, reads no data
+      - /api/v1/bi/expr/convert         # converts an expression or an item's YAML from the old syntax to DEL v2, stores nothing
       - /api/v1/bi/mq/subscribe         # a standing query: the same answer kept current for the caller (ended by DELETE, or when no stream reads it)
       - /api/v1/bi/model/start          # a draft dataset from pack kinds: reads connectors, stores nothing
       - /api/v1/bi/model/infer          # relationships proposed by value matching: reads connectors, stores nothing
@@ -558,6 +560,9 @@ drishti:
       max-concurrent: 2              # Transforms running at once
       queue-wait: 5s                 # how long a run waits for a place before DRS-9074
       compose-source-max-rows: 50000 # most rows one source of a composed dataset may answer (DRS-9022)
+    expr:                            # the Drishti expression language, DEL v2 (docs/guides/EXPRESSIONS.md; docs/admin/CONFIGURATION.md, drishti.bi.expr)
+      legacy: warn                   # the old expression syntax: warn (read with DRS-9100, wave A) or refuse (DRS-9100 with the DEL v2 text as the fix)
+      parse-cache: 10000             # parsed expressions kept (0: off)
     poc:                             # Rupaka phase 0 PROOF OF CONCEPT (docs/architecture/RUPAKA_POC.md): throw-away endpoints under /api/v1/bi/poc
       enabled: ${DRISHTI_BI_POC_ENABLED:false}   # off: they answer 404 as if the code were absent
       rows: 10000                    # trades per day in the generated sample lake (at most 10,000: local-safe)

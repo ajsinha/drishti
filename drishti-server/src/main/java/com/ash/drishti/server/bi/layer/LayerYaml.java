@@ -33,6 +33,8 @@ final class LayerYaml {
     static final Pattern ALIAS = Pattern.compile("[A-Za-z][A-Za-z0-9_]{0,63}");
 
     private final List<DatasetParser.Problem> out = new ArrayList<>();
+    /** {@code expressions: 2} on the item: the old expression syntax is an error, not a warning. */
+    boolean strictExpressions;
 
     List<DatasetParser.Problem> problems() {
         return out;

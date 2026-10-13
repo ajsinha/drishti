@@ -18,7 +18,6 @@ package com.ash.drishti.server.bi.report;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.server.bi.dataset.Dataset;
-import com.ash.drishti.server.bi.dataset.ExprParser;
 import com.ash.drishti.server.bi.dataset.Node;
 import com.ash.drishti.server.bi.dataset.Resolver;
 import com.ash.drishti.server.bi.engine.QueryRequest;
@@ -439,7 +438,7 @@ public final class VisualQueries {
         if (m == null || m.expr() == null || !seen.add(name)) {
             return tables;
         }
-        Node.walk(ExprParser.parse(m.expr()), n -> {
+        Node.walk(com.ash.drishti.server.bi.expr.Expressions.parse(m.expr()), n -> {
             if (n instanceof Node.Ref r && ds.tables().containsKey(r.parts().get(0))) {
                 tables.add(r.parts().get(0));
             } else if (n instanceof Node.MeasureRef mr) {

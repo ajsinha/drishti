@@ -19,6 +19,7 @@
 # The same question, built the Python way, is the derived dataset desk-pnl-vs-exposure-py. Reference: docs/guides/DATASETS.md section 11.
 
 rachana: 1
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
 dataset: desk-pnl-vs-exposure
 version: 1
 title: Desk P&L vs counterparty exposure
@@ -46,6 +47,6 @@ join:
 
 measures:                               # the dataset's own measures, over the measures of its sources: [Name] works as in any dataset
   P&L per exposure:
-    expr: "[Desk P&L] / [Exposure (EE peak)]"
+    expr: "measure('Desk P&L') / measure('Exposure (EE peak)')"
     format: signed2
     description: One-day P&L divided by the expected exposure peak, the sums taken over the rows of the visual.

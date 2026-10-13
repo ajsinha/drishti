@@ -73,8 +73,11 @@ public final class Flattener {
             rels.add(new Dataset.Relationship(r.fromAlias(), r.fromColumn(), r.toAlias(), r.toColumn(), r.cardinality(), r.direction(), r.active()));
         }
         Map<String, Dataset.Measure> measures = new LinkedHashMap<>();
-        for (ModelDef.Meas x : withDefaults(m, datasets).values()) {
-            measures.put(x.name(), new Dataset.Measure(x.name(), x.expr(), x.format(), x.description(), x.python(), x.inputs(), x.by()));
+        Map<String, ModelDef.Meas> all = withDefaults(m, datasets);
+        Map<String, String> ids = measureIds(all);
+        for (ModelDef.Meas x : all.values()) {
+            String expr = com.ash.drishti.server.bi.expr.Expressions.withMeasureNames(x.expr(), ids);
+            measures.put(x.name(), new Dataset.Measure(x.name(), expr, x.format(), x.description(), x.python(), x.inputs(), x.by()));
         }
         Dataset.Security sec = new Dataset.Security(List.of(), masked, security);
         Dataset ds = new Dataset(m.name(), Math.max(1, m.major()), m.title(), m.description(), m.sample(), "duckdb", tables, rels, measures, m.hierarchies(), sec,
@@ -117,6 +120,17 @@ public final class Flattener {
         }
         return new Dataset.Table(alias, pack ? s.connector() : "", pack ? s.kind() : "", pack ? s.each() : null, mode, d.refresh().onLoad(), d.refresh().schedule(),
                 d.description(), cols, live);
+    }
+
+    /** The measures' stable ids to their names (for {@code measure('m_mtm')}). */
+    public static Map<String, String> measureIds(Map<String, ModelDef.Meas> measures) {
+        Map<String, String> out = new LinkedHashMap<>();
+        measures.values().forEach(x -> {
+            if (x.id() != null && !x.id().isBlank() && !x.id().equals(x.name())) {
+                out.put(x.id(), x.name());
+            }
+        });
+        return out;
     }
 
     // ---- default measures --------------------------------------------------------------------------------------------

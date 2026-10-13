@@ -15,6 +15,7 @@
 # Tutorial 18: a composed dataset. Each source is a question put to another dataset, as the person reading, grouped to one row per counterparty; the
 # answers are joined on the counterparty's id (not its name: the name is masked for some readers and a join on a masked column is refused).
 rachana: 1
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
 dataset: cp-pnl-exposure
 version: 1
 title: Counterparty P&L and exposure
@@ -34,6 +35,6 @@ join:
   - { left: pnl, right: exposure, on: [counterparty], type: left }
 measures:
   MTM per exposure:
-    expr: "[MTM] / [Exposure (EE peak)]"
+    expr: "measure('MTM') / measure('Exposure (EE peak)')"
     format: signed2
     description: MTM divided by the expected exposure peak; the two sums are taken over the rows of the visual, then divided.

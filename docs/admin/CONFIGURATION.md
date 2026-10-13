@@ -1290,6 +1290,15 @@ default throttle is `drishti.bi.live.frame`; its stream's heartbeat is `drishti.
 | `idle-close` | `10m` | A subscription that no stream has read for this long is dropped. |
 | `pack-live` | `true` | A pack-generated dataset (`pack.<pack>.<kind>`) is `live` when the kind's connector pushes (decision D6), else `snapshot`; `false` keeps every one a snapshot. |
 
+### `drishti.bi.expr` — the expression language
+
+The Drishti expression language (DEL v2, [EXPRESSIONS.md](../guides/EXPRESSIONS.md)): how the old expression syntax is treated, and the parse cache.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `legacy` | `warn` | The old expression syntax (`[Measure]`, `&&`, `c ? a : b`): `warn` reads it with a `DRS-9100` warning in Check (wave A); `refuse` refuses it with `DRS-9100`, the DEL v2 text as the fix. An item with `expressions: 2` refuses it whatever this says. |
+| `parse-cache` | `10000` | Parsed expressions kept in memory (keyed by text); `0` turns the cache off. |
+
 ### `drishti.distribution`: export and subscriptions
 
 Export of a BI report, page, visual or Sutra view as PDF, PNG, Excel or CSV, and subscriptions (email on a schedule), [DISTRIBUTION.md](../guides/DISTRIBUTION.md). Mail goes through the server's

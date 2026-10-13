@@ -18,6 +18,7 @@
 # Tutorial: docs/tutorials/../guides/BI_RECIPES.md, 4 and 8. Reference: docs/guides/DATASETS.md.
 
 rachana: 1
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
 dataset: trading-risk
 version: 1
 title: Trading and counterparty risk
@@ -115,7 +116,7 @@ measures:
   MTM ytd:            { expr: "ytd(sum(trades.mtm), trades.tradeDate)", format: signed0, description: "MTM of the trades dated this year up to the as-of date (the end of the report's dates). Time intelligence: ytd, mtd, qtd, prior_period, same_period_last_year, running." }
   MTM rank:           { expr: "rank(sum(trades.mtm))", description: "The position of each row of the visual by MTM, 1 for the highest (a window function: rank, dense_rank, percent_rank, lag, lead, moving_avg, moving_sum, moving_min, moving_max, cumulative)." }
   MTM 3-day average:  { expr: "moving_avg(sum(trades.mtm), 3, trades.tradeDate)", format: signed0, description: "The average of MTM over the row and the two before it along the trade date (the visual needs trades.tradeDate as a field)." }
-  Open MTM:           { expr: "sum(trades.mtm, trades.status == 'Live')", format: signed0, description: "MTM of the live trades only (a condition inside the aggregate)." }
+  Open MTM:           { expr: "sum(trades.mtm, where=trades.status == 'Live')", format: signed0, description: "MTM of the live trades only (a condition inside the aggregate)." }
   Exposure (EE peak): { expr: "sum(netting_sets.eePeak)",  format: amount0, description: "Sum of the netting sets' expected-exposure peaks. Group by counterparty, not by desk." }
   Exposure (PFE peak): { expr: "sum(netting_sets.pfePeak)", format: amount0 }
   Netting sets:       { expr: "count(netting_sets)" }
@@ -130,9 +131,9 @@ security:
   # with no matching rule gets no rows. (With server security switched off nobody is restricted.)
   rows:
     - { role: desk-head, where: "trades.desk in user.desks" }   # user.desks: the desk ids on the reader's profile (several: DESK-FI; DESK-FX)
-    - { role: risk,      where: "true" }                        # risk sees everything
-    - { role: analyst,   where: "true" }                        # an analyst sees every row too, but without the raw power the masked columns below read •••
-    - { role: admin,     where: "true" }
+    - { role: risk,      where: "True" }                        # risk sees everything
+    - { role: analyst,   where: "True" }                        # an analyst sees every row too, but without the raw power the masked columns below read •••
+    - { role: admin,     where: "True" }
   # A rule names tables (here trades), and every query of that reader joins them: a desk-head asking only for exposure would need a path
   # from netting sets to trades, which the model does not have, so the question is refused rather than answered with other desks' data.
   # MASKED COLUMNS: shown as ••• to readers without the raw power. A bare name matches that column in any table; table.column names one.

@@ -43,7 +43,7 @@ public final class Rollups {
     public static Map<String, Node.Call> components(Dataset ds, Dataset.Measure m, String table) {
         Map<String, Node.Call> out = new LinkedHashMap<>();
         try {
-            return collect(ds, ExprParser.parse(m.expr()), table, out, 0) ? out : null;
+            return collect(ds, com.ash.drishti.server.bi.expr.Expressions.parse(m.expr()), table, out, 0) ? out : null;
         } catch (ExprParser.ExprException e) {
             return null;
         }
@@ -83,7 +83,7 @@ public final class Rollups {
             }
             case Node.MeasureRef r -> {
                 Dataset.Measure other = ds.measures().get(r.name());
-                return other != null && other.expr() != null && collect(ds, ExprParser.parse(other.expr()), table, out, depth + 1);
+                return other != null && other.expr() != null && collect(ds, com.ash.drishti.server.bi.expr.Expressions.parse(other.expr()), table, out, depth + 1);
             }
             case Node.Call c -> {
                 return c.args().stream().allMatch(a -> collect(ds, a, table, out, depth + 1));

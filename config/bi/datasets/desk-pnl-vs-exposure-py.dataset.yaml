@@ -19,6 +19,7 @@
 # The result is kept per reader and version of the inputs and is rebuilt when a source is reloaded. Reference: docs/guides/DATASETS.md section 11.
 
 rachana: 1
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
 dataset: desk-pnl-vs-exposure-py
 version: 1
 title: Desk P&L vs counterparty exposure (Python)

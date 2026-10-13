@@ -27,9 +27,15 @@ import java.util.Set;
  */
 final class RuleText {
 
-    private static final Set<String> WORDS = Set.of("in", "not", "and", "or", "true", "false", "null", "user");
+    private static final Set<String> WORDS = Set.of("in", "not", "and", "or", "true", "false", "null", "user", "is", "if", "else", "none", "all");
 
     private RuleText() {}
+
+    /** True for a rule that lets every row through: {@code True} (DEL v2) or {@code true} (the old syntax). */
+    static boolean everyRow(String where) {
+        String w = where == null ? "" : where.strip();
+        return "True".equals(w) || "true".equals(w);
+    }
 
     static String qualify(String text, String datasetName, Set<String> columns, String alias) {
         List<String> prefixes = java.util.stream.Stream.of(datasetName, datasetName.substring(datasetName.lastIndexOf('.') + 1)).distinct()

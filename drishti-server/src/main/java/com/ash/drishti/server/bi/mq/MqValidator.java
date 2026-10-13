@@ -108,7 +108,7 @@ public final class MqValidator {
         fail(out);
 
         // ---- 4 local measures
-        Dataset ds = withDefine(base, q, out);
+        Dataset ds = withDefine(base, q, com.ash.drishti.server.bi.layer.Flattener.measureIds(v.measureDefs()), out);
         fail(out);
 
         // ---- 5 filters
@@ -282,7 +282,7 @@ public final class MqValidator {
     }
 
     /** The flattened dataset with the query's local measures, checked like a model's (step 4). */
-    private static Dataset withDefine(Dataset base, ModelQuery q, List<MqException.Problem> out) {
+    private static Dataset withDefine(Dataset base, ModelQuery q, Map<String, String> ids, List<MqException.Problem> out) {
         if (q.define().isEmpty()) {
             return base;
         }
@@ -291,7 +291,7 @@ public final class MqValidator {
             if (base.measures().containsKey(e.getKey())) {
                 out.add(MqException.Problem.of("DRS-9154", "define." + e.getKey(), "'" + e.getKey() + "' is a measure of the model: a local measure takes another name"));
             }
-            measures.put(e.getKey(), new Dataset.Measure(e.getKey(), e.getValue(), null, "local measure", null));
+            measures.put(e.getKey(), new Dataset.Measure(e.getKey(), com.ash.drishti.server.bi.expr.Expressions.withMeasureNames(e.getValue(), ids), null, "local measure", null));
         }
         Dataset ds = new Dataset(base.name(), base.version(), base.title(), base.description(), base.sample(), base.engine(), base.tables(), base.relationships(), measures,
                 base.hierarchies(), base.security(), base.rollups(), base.refresh(), base.compose(), base.derived(), base.tests());

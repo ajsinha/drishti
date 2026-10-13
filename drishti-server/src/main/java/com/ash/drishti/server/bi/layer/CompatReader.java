@@ -47,7 +47,7 @@ public final class CompatReader {
                 continue;
             }
             try {
-                Node.walk(com.ash.drishti.server.bi.dataset.ExprParser.parse(m.expr()), n -> {
+                Node.walk(com.ash.drishti.server.bi.expr.Expressions.parse(m.expr()), n -> {
                     if (n instanceof Node.Call c && Node.AGGREGATES.contains(c.function()) && !c.args().isEmpty() && c.args().get(0) instanceof Node.Ref r) {
                         facts.add(r.parts().get(0));
                     }

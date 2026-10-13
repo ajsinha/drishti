@@ -45,7 +45,7 @@ public final class ModelDefParser {
         }
     }
 
-    static final Set<String> TOP = Set.of("rachana", "model", "version", "id", "datasets", "relationships", "measures", "calc-groups", "hierarchies", "parameters",
+    static final Set<String> TOP = Set.of("rachana", "expressions", "model", "version", "id", "datasets", "relationships", "measures", "calc-groups", "hierarchies", "parameters",
             "calendars", "security", "contract", "ai", "golden", "tests", "rollups", "lifecycle", "replaced-by", "layout", "title", "description", "owner", "tags",
             "endorsement", "endorsedBy", "audience", "sample", "implicit-from");
     private static final Set<String> MEASURE_KEYS = Set.of("id", "expr", "format", "description", "currency", "additive", "python", "inputs", "by", "via", "implicit", "title");
@@ -65,6 +65,7 @@ public final class ModelDefParser {
 
     static ModelDef read(JsonNode root, LayerYaml y) {
         y.unknownKeys(root, TOP, "DRS-9120", "");
+        DatasetDefParser.expressionsVersion(root, y);
         if (root.path("rachana").asInt(0) != DatasetDef.RACHANA) {
             y.error("DRS-9120", "rachana", "a data model says `rachana: 2`");
         }
@@ -204,11 +205,15 @@ public final class ModelDefParser {
                 y.error("DRS-9127", path, "'" + name + "' is not a usable measure name (no brackets, up to 80 characters)");
             }
             if (m.isTextual()) {
+                DatasetDefParser.oldSyntax(m.asText(), path, y);
                 out.put(name, new ModelDef.Meas(name, "", m.asText(), null, "", null, null, null, null, null, null, false));
                 return;
             }
             y.unknownKeys(m, MEASURE_KEYS, "DRS-9127", path);
             String expr = m.has("expr") ? LayerYaml.text(m, "expr", "") : null;
+            if (expr != null && !expr.isBlank()) {
+                DatasetDefParser.oldSyntax(expr, path + ".expr", y);
+            }
             String python = m.has("python") ? LayerYaml.text(m, "python", "") : null;
             if ((expr == null) == (python == null)) {
                 y.error("DRS-9127", path, "a measure has an `expr` or names a `python` item, one of the two");

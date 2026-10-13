@@ -21,6 +21,7 @@
 # update to its table by key. Row rules and masks apply to every answer, as the reader.
 
 rachana: 1
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
 dataset: live-trading
 version: 1
 title: Live trading desk
@@ -72,7 +73,7 @@ measures:
     expr: "sum(trade.pnl1d)"
     format: signed0
   Losses:
-    expr: "sum(trade.mtm, trade.mtm < 0)"
+    expr: "sum(trade.mtm, where=trade.mtm < 0)"
     format: signed0
     description: The negative marks only.
   Worst trade:

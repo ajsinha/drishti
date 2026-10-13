@@ -19,6 +19,7 @@
 # relationships between them, measures (named calculations) and the rules about who sees which rows and fields.
 
 rachana: 1                       # the language version this file is written in (always 1 today)
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
 dataset: trades-basic            # the model's name: letters, digits, hyphen, underscore
 version: 1                       # your own version number; bump it when you change the model
 
@@ -67,7 +68,7 @@ measures:                        # a measure is an AGGREGATE: sum, avg, min, max
     expr: "count(trade)"         # count(table) counts rows
     description: Number of trades.
   Average MTM per trade:
-    expr: "[MTM] / [Trades]"     # [Name] uses another measure; the result is a ratio of two aggregates
+    expr: "measure('MTM') / measure('Trades')"     # [Name] uses another measure; the result is a ratio of two aggregates
     format: signed0
     description: MTM divided by the number of trades (a measure built from measures).
   Desk P&L volatility:           # a PYTHON measure: not an expression but a Python item (config/bi/python/), run by the console's sandboxed runner

@@ -315,7 +315,7 @@ final class DatasetValidator {
             }
             case Node.MeasureRef m -> {
                 if (!ds.measures().containsKey(m.name())) {
-                    err(EXPRESSION, path, "[" + m.name() + "] is not a measure of this dataset (measures: " + String.join(", ", ds.measures().keySet()) + ")");
+                    err(EXPRESSION, path, "measure('" + m.name() + "') names no measure of this dataset (measures: " + String.join(", ", ds.measures().keySet()) + ")");
                 }
             }
             case Node.UserRef u -> err(EXPRESSION, path, "user." + u.attribute() + " is for row rules; a measure does not depend on the reader");
@@ -511,7 +511,12 @@ final class DatasetValidator {
 
     private Node parse(String path, String text) {
         try {
-            return ExprParser.parse(text);
+            Node n = com.ash.drishti.server.bi.expr.Expressions.parse(text);
+            String note = com.ash.drishti.server.bi.expr.Expressions.oldSyntaxNote(text);
+            if (note != null) {
+                out.add(new Problem("warning", com.ash.drishti.server.bi.expr.Expressions.OLD_SYNTAX, path, note));
+            }
+            return n;
         } catch (ExprException e) {
             err(EXPRESSION, path, e.getMessage() + " (at position " + e.position() + " of: " + text + ")");
             return null;
@@ -520,7 +525,7 @@ final class DatasetValidator {
 
     private static Node tryParse(String text) {
         try {
-            return ExprParser.parse(text);
+            return com.ash.drishti.server.bi.expr.Expressions.parse(text);
         } catch (ExprException e) {
             return null;
         }

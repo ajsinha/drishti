@@ -17,6 +17,7 @@
 # Tutorial: docs/tutorials/10-first-bi-report.md. Reference: docs/guides/DATASETS.md (live tables), docs/guides/BOARDS.md.
 
 rachana: 1
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
 dataset: live-exposure
 version: 1
 title: Live exposure

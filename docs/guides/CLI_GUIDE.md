@@ -1892,6 +1892,23 @@ drishti: the server said 403 DRS-9002: DRS-9002 cat does not hold the bi-author 
 
 `drishti.py pack check` also refuses a pack that defines a mnemonic named `RUPAKA` or `FORM` (reserved command words).
 
+### `bi expr`, `bi migrate`, `bi sql`: the BI languages
+
+The Drishti expression language ([EXPRESSIONS.md](EXPRESSIONS.md)) and Drishti SQL over REST, as the token's user (the server owns the one parser of
+each; [API_GUIDE.md](API_GUIDE.md#expressions-apiv1biexpr)). Reads need no scope.
+
+```
+drishti.py bi expr functions [--scope row|rule|aggregate]                 the DEL function catalogue, by family (a later wave's are marked)
+drishti.py bi expr validate EXPR [--scope S] [--model M] [--alias A]       check one expression as you see the model; exit 1 on an error
+drishti.py bi expr convert EXPR                                           the DEL v2 form of an old-syntax expression
+drishti.py bi migrate --expressions FILE|DIR... [--write] [--check]      convert every expression of BI item files (comments kept, expressions: 2 set)
+drishti.py bi sql "SELECT ..." --model M [--explain] [--format table|json|csv] [--file F]   Drishti SQL over a model
+```
+
+`bi migrate` reads `*.dataset|model|report|board|notebook.yaml` under a folder; without `--write` it prints what would change; `--check` changes nothing and
+exits `1` while a file still has the old syntax (for CI). The converter is the server's: the old parser's tree printed as DEL v2 and checked to compile to
+the same SQL; an expression it cannot convert is listed (`DRS-9190`) and left as it was.
+
 ### Shell completion
 
 `drishti.py completion bash|zsh|powershell` prints a completion script generated from the command tree (groups, commands,
