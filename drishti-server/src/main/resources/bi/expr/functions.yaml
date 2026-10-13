@@ -354,7 +354,7 @@ functions:
     params: [{ name: field, type: field }]
     returns: same
     scopes: [row]
-    status: A
+    status: built
     since: A
     description: "A column of the one row a many-to-one pack reference points at: one hop, in a dataset's derive (for example the desk's name on a trade)."
     examples:

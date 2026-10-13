@@ -103,6 +103,9 @@ public final class Expressions {
         DelChecker.Checked c = DelChecker.check(tree, null, Fields.NONE);
         java.util.Optional<DelException.Problem> bad = c.firstError();
         if (bad.isPresent()) {
+            if (DelChecker.LATER.equals(bad.get().code())) {
+                throw new DelException(bad.get());                              // DEL v2 of a later wave: never the old syntax
+            }
             return old(text, new DelException(bad.get()));
         }
         return new Parsed(DelLowering.lower(tree), tree, false, text);

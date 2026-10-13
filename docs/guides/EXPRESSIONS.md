@@ -153,7 +153,7 @@ marked with a later wave is refused with `DRS-9129` until that wave.
 |---|---|
 | scalar | [`abs`](#fn-abs), [`round`](#fn-round), [`coalesce`](#fn-coalesce), [`upper`](#fn-upper), [`lower`](#fn-lower), [`len`](#fn-len), [`contains`](#fn-contains), [`startswith`](#fn-startswith), [`endswith`](#fn-endswith), [`date`](#fn-date), [`timestamp`](#fn-timestamp), [`year`](#fn-year), [`quarter`](#fn-quarter), [`month`](#fn-month), [`week`](#fn-week), [`day`](#fn-day), [`days_between`](#fn-days-between), [`business_days_between`](#fn-business-days-between) |
 | conversion | [`fx`](#fn-fx) *(B)*, [`convert`](#fn-convert) *(B)* |
-| lookup | [`related`](#fn-related) *(A)* |
+| lookup | [`related`](#fn-related) |
 | aggregate | [`sum`](#fn-sum), [`avg`](#fn-avg), [`min`](#fn-min), [`max`](#fn-max), [`count`](#fn-count), [`distinct`](#fn-distinct), [`ratio`](#fn-ratio), [`percentile`](#fn-percentile), [`avg_by`](#fn-avg-by) *(B)* |
 | time intelligence | [`ytd`](#fn-ytd), [`mtd`](#fn-mtd), [`qtd`](#fn-qtd), [`prior_period`](#fn-prior-period), [`same_period_last_year`](#fn-same-period-last-year), [`running`](#fn-running), [`fiscal_ytd`](#fn-fiscal-ytd) *(B)* |
 | windows | [`lag`](#fn-lag), [`lead`](#fn-lead), [`rank`](#fn-rank), [`dense_rank`](#fn-dense-rank), [`percent_rank`](#fn-percent-rank), [`moving_avg`](#fn-moving-avg), [`moving_sum`](#fn-moving-sum), [`moving_min`](#fn-moving-min), [`moving_max`](#fn-moving-max), [`cumulative`](#fn-cumulative) |
@@ -552,7 +552,7 @@ An aggregate of amounts in many currencies, converted to one, at the as-of date 
 <a id="fn-related"></a>
 #### `related(alias.column)`
 
-*Scopes: row · returns: the type of `field` · since A* — **arrives in wave A**: refused with `DRS-9129` until then
+*Scopes: row · returns: the type of `field` · since A*
 
 A column of the one row a many-to-one pack reference points at: one hop, in a dataset's derive (for example the desk's name on a trade).
 

@@ -90,10 +90,8 @@ final class DatasetValidator {
 
     private void calculatedColumns() {
         for (Dataset.Table t : ds.tables().values()) {
-            for (Dataset.Column c : t.columns().values()) {
-                if (c.expr() == null) {
-                    continue;
-                }
+            Resolver resolver = t.shape() != null && t.shape().grouped() ? new Resolver(ds, true) : this.resolver;
+            for (Dataset.Column c : t.calculated()) {
                 String path = "tables." + t.name() + ".columns." + c.name();
                 Node n = parse(path, c.expr());
                 if (n == null) {

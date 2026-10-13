@@ -887,3 +887,64 @@ and Check (`POST /bi/models/validate`) answers it valid with the base's columns 
 `GET /bi/layer-datasets/<item>` returns the item as stored (`yaml`) and **as it reads** (`resolved`: the chain folded in, the base's columns, grain and
 time, every layer's row rules under `security.rows`, `chain`), with Check's `problems`; the dataset page and the model designer show the resolved form. The
 draft is listed under *Your datasets* at once (`draft: true`); a model can use it once it is published.
+
+## 14. Derivation: subset, filter, grain, derive, group (2.2, wave A)
+
+A dataset that `extends` another narrows it with the derivation keys of [BI_DESIGN.md §3.1](../architecture/BI_DESIGN.md#31-yaml-the-structure-language).
+Each answers what the same arithmetic over the base answers, as the reader (the base's rules and masks first), and the plan shows each step above the
+dataset's scan (`Dedup`, `Derive`, `Regroup`; `meta.explain` with `options.explain: true`). Expressions are DEL ([EXPRESSIONS.md](EXPRESSIONS.md)).
+
+```yaml
+rachana: 2
+expressions: 2
+dataset: live-trades
+version: 1.0.0
+extends: pack.trading.trade@^1
+columns: [tradeId, desk, book, currency, notional, mtm, status, updatedAt]   # a subset of the base's columns; its keys cannot be dropped (DRS-9105)
+where: "status == 'LIVE'"                                                    # a row filter (row scope)
+grain: { one-row-per: tradeId, keep: latest by updatedAt }                   # explicit de-duplication: the latest (or earliest) row per key and business date
+derive:
+  notionalK: { expr: "notional / 1000", type: decimal }                      # a DEL column, worked out for each row
+  deskName:  { expr: "related(desk.name)", type: string }                    # one hop along a pack reference (desk references the kind desk)
+  bucket:    { python: notional-bucket, inputs: [notional], type: string }   # a Python column (a transform item, until wave B's column interface)
+```
+
+```yaml
+rachana: 2
+expressions: 2
+dataset: desk-ccy
+version: 1.0.0
+extends: trades@1
+derive:
+  notionalK: { expr: "notional / 1000", type: decimal }
+group:                                                                       # a coarser grain, declared
+  by: [desk, currency]
+  columns: { notional: sum, notionalK: sum, mtm: sum, trades: count }        # sum, avg, min, max, count, distinct of the same-named column; count of a new name counts rows
+  grain: { says: One row per desk and currency }
+security:
+  rows:
+    - { role: desk-head, where: "desk in user.desks" }                       # a grouped dataset's rules name its group-by columns (DRS-9106)
+```
+
+| Key | Does | Rules |
+|---|---|---|
+| `columns: [a, b]` | keeps those columns of the base | the base's grain keys stay (`DRS-9105`); a name the base lacks is `DRS-9105` |
+| `where:` | filters the base's rows | row scope DEL; not a security rule (rules are `security.rows`) |
+| `grain: { one-row-per, keep }` | one row per key within a business date: `keep: latest by <col>` or `earliest by <col>` | key and order columns exist (`DRS-9104`); never by a masked column (`DRS-9106`); no rollups of its own; not on a live dataset (wave B) |
+| `derive: { x: { expr, type } }` | a column worked out per row | `type` is required; no aggregate (a measure); a column derived from a masked one is masked |
+| `derive: { x: { expr: "related(col.field)" } }` | the field of the row a pack reference points at, one hop (None when it points at nothing) | `col` has `references: <kind>` and the kind has `field` (`DRS-9101`); not in a grouped dataset (wave B) |
+| `derive: { x: { python, inputs, type } }` | a Python column: the base's rows (as the reader) go to the item as the frame `rows`; it returns the frame with `x` added | a `transform` item until wave B's `column` interface; the dataset is read by staging (no rollups); not live |
+| `group: { by, columns, grain }` | one row per `by` with the columns aggregated | the dataset's columns become `by` plus the grouped ones (`sum` and `count` add up across groups, `min`/`max` keep their aggregate, `avg` and `distinct` do not add); rules name `by` columns; no rollups; a dataset that is de-duplicated or grouped is not reshaped again (wave B) |
+
+**Roots and lineage.** Check traces every dataset down its `extends` chain to its root (a pack kind and the connector that serves it, a connector query,
+a Python item, another model, a SQL view) and refuses one whose root cannot be traced (`DRS-9110`, for example a kind no enabled pack generates). Check of a
+dataset answers `lineage`; `GET /api/v1/bi/lineage/{ref}` answers it for a report, a model or `dataset:<name>` (captured):
+
+```
+GET /api/v1/bi/lineage/lang-bucket-view@1
+{"ref": "lang-bucket-view@1", "path": [{"kind": "model", "name": "lang-bucket-view", "version": "1.0.0"}],
+ "datasets": {"trades": [{"kind": "dataset", "name": "lang-bucketed"}, {"kind": "dataset", "name": "lang-trade"},
+                         {"kind": "pack-kind", "name": "trade", "pack": "finance", "connector": "lang-lake"}]},
+ "problems": []}
+```
+

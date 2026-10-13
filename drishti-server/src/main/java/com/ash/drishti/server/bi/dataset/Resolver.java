@@ -36,9 +36,17 @@ public final class Resolver {
     }
 
     private final Dataset ds;
+    /** Resolving a calculated column of a shaped table: its names are the columns before the shape. */
+    private final boolean source;
 
     public Resolver(Dataset ds) {
+        this(ds, false);
+    }
+
+    /** {@code source}: names are a shaped table's columns before the shape (what its derived columns are worked out from). */
+    public Resolver(Dataset ds, boolean source) {
         this.ds = ds;
+        this.source = source;
     }
 
     /** The declared or implicit column, or null. */
@@ -47,7 +55,7 @@ public final class Resolver {
         if (t == null) {
             return null;
         }
-        Dataset.Column c = t.columns().get(name);
+        Dataset.Column c = source && t.shape() != null && !t.shape().source().isEmpty() ? t.shape().source().get(name) : t.columns().get(name);
         if (c != null) {
             return c;
         }
@@ -78,6 +86,23 @@ public final class Resolver {
      * @throws IllegalArgumentException with a sentence saying what is wrong
      */
     public ColRef resolve(List<String> parts, String current) {
+        return follow(resolveOwn(parts, current));
+    }
+
+    /** A column read from another table along a reference ({@code related}) resolves to that table's column. */
+    private ColRef follow(ColRef c) {
+        if (c == null || c.column() == null || source) {
+            return c;
+        }
+        Dataset.Column col = column(c.table(), c.column());
+        if (col == null || col.ref() == null) {
+            return c;
+        }
+        int dot = col.ref().indexOf('.');
+        return new ColRef(col.ref().substring(0, dot), col.ref().substring(dot + 1), c.part());
+    }
+
+    private ColRef resolveOwn(List<String> parts, String current) {
         String text = String.join(".", parts);
         if (parts.size() == 1) {
             String one = parts.get(0);

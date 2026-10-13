@@ -240,7 +240,7 @@ public final class MqValidator {
             Resolver.ColRef ref = r.resolve(List.of(f.split("\\.", -1)), null);
             if (ref.column() == null) {
                 out.add(MqException.Problem.of("DRS-9152", path, "'" + f + "' is a dataset; a field is alias.column"));
-            } else if (!f.startsWith(ref.table() + ".")) {
+            } else if (!f.startsWith(ref.table() + ".") && !ds.tables().containsKey(f.split("\\.", -1)[0])) {   // a related() column is read from another table
                 out.add(new MqException.Problem("DRS-9152", path, "a field names its dataset: '" + f + "' is " + ref.table() + "." + f,
                         Map.of("replace", path, "with", List.of(ref.table() + "." + f))));
             }

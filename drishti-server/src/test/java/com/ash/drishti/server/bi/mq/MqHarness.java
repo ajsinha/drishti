@@ -82,6 +82,48 @@ final class MqHarness {
         return new ModelView("m:" + r.model().name(), Layers.key("m:" + r.model().name()), "h1", r.model(), flat.dataset(), resolved, flat.unbuilt(), false);
     }
 
+    /**
+     * As {@link #model(String, String...)}, with {@code extends} chains folded (a base is one of the given datasets, by name) and the pack kinds a
+     * {@code related()} column reads.
+     */
+    static ModelView model(String modelYaml, java.util.function.Function<String, java.util.Optional<com.ash.drishti.server.bi.layer.DatasetDef>> kinds, String... datasetYamls) {
+        ModelDefParser.Result r = ModelDefParser.parse(modelYaml);
+        if (!r.ok()) {
+            throw new IllegalArgumentException(r.problems().toString());
+        }
+        Map<String, com.ash.drishti.server.bi.layer.DatasetDef> byName = new LinkedHashMap<>();
+        for (String y : datasetYamls) {
+            DatasetDefParser.Result d = DatasetDefParser.parse(y);
+            if (!d.ok()) {
+                throw new IllegalArgumentException(d.problems().toString());
+            }
+            byName.put(d.dataset().name(), d.dataset());
+        }
+        Map<String, ResolvedDataset> resolved = new LinkedHashMap<>();
+        java.util.List<com.ash.drishti.server.bi.dataset.DatasetParser.Problem> problems = new java.util.ArrayList<>();
+        for (ModelDef.Use u : r.model().datasets().values()) {
+            resolved.put(u.alias(), fold(byName.get(u.dataset()), byName, kinds, problems));
+        }
+        problems.addAll(ModelChecker.check(r.model(), resolved, kinds).stream().filter(com.ash.drishti.server.bi.dataset.DatasetParser.Problem::error).toList());
+        if (!problems.isEmpty()) {
+            throw new IllegalArgumentException(problems.toString());
+        }
+        Flattener.Flat flat = Flattener.flatten(r.model(), resolved, kinds);
+        return new ModelView("m:" + r.model().name(), Layers.key("m:" + r.model().name()), "h1", r.model(), flat.dataset(), resolved, flat.unbuilt(), false);
+    }
+
+    private static ResolvedDataset fold(com.ash.drishti.server.bi.layer.DatasetDef d, Map<String, com.ash.drishti.server.bi.layer.DatasetDef> byName,
+            java.util.function.Function<String, java.util.Optional<com.ash.drishti.server.bi.layer.DatasetDef>> kinds,
+            java.util.List<com.ash.drishti.server.bi.dataset.DatasetParser.Problem> problems) {
+        if (d.extendsRef() == null) {
+            return ResolvedDataset.of(d);
+        }
+        String base = d.extendsRef().contains("@") ? d.extendsRef().substring(0, d.extendsRef().indexOf('@')) : d.extendsRef();
+        com.ash.drishti.server.bi.layer.DatasetDef b = byName.get(base);
+        problems.addAll(com.ash.drishti.server.bi.layer.Derivations.check(d, b, kinds));
+        return ResolvedDataset.extend(d, fold(b, byName, kinds, problems));
+    }
+
     static SqlCompiler.Masks masks(Dataset ds, boolean raw) {
         return (t, c) -> !raw && (ds.security().masked().contains(c) || ds.security().masked().contains(t + "." + c));
     }

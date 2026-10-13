@@ -307,14 +307,14 @@ public final class ModelCatalog {
         }
         List<DatasetParser.Problem> problems = new ArrayList<>();
         Map<String, ResolvedDataset> resolved = resolveAll(m, problems);
-        problems.addAll(ModelChecker.check(m, resolved));
+        problems.addAll(ModelChecker.check(m, resolved, packs::ofKind));
         problems.stream().filter(DatasetParser.Problem::error).findFirst().ifPresent(x -> {
             throw new MqException(MqException.Problem.of("DRS-9151", "model", "the model '" + m.name() + "' has errors: " + x.code() + " " + x.path() + ": " + x.message()));
         });
         DatasetSources.cycle(this, "model:" + m.name(), resolved).ifPresent(x -> {
             throw new MqException(MqException.Problem.of("DRS-9109", "model", x));
         });
-        Flattener.Flat flat = Flattener.flatten(m, resolved);
+        Flattener.Flat flat = Flattener.flatten(m, resolved, packs::ofKind);
         StringBuilder text = new StringBuilder(body);
         resolved.values().forEach(r -> text.append('|').append(r.def().name()).append('@').append(r.def().version()).append(r.layers()).append(r.masked()));
         return new ModelView(id, Layers.key(id), hash(text.toString()), m, flat.dataset(), resolved, flat.unbuilt(), false);
@@ -340,7 +340,7 @@ public final class ModelCatalog {
             throw new MqException(MqException.Problem.of("DRS-9109", "model", x));
         });
         ImplicitModels.Implicit im = ImplicitModels.of(d, kind -> packs.ofKind(kind).map(ResolvedDataset::of));
-        Flattener.Flat flat = Flattener.flatten(im.model(), im.datasets());
+        Flattener.Flat flat = Flattener.flatten(im.model(), im.datasets(), packs::ofKind);
         String id = im.model().id();
         StringBuilder text = new StringBuilder();
         im.datasets().values().forEach(r -> text.append(r.def().name()).append('@').append(r.def().version()).append(r.def().columns().keySet()).append(r.layers()));
@@ -473,6 +473,7 @@ public final class ModelCatalog {
                 problems.add(new DatasetParser.Problem("error", "DRS-9105", "columns." + c.name(), "a narrowing dataset cannot change the type of '" + c.name() + "'"));
             }
         }
+        problems.addAll(com.ash.drishti.server.bi.layer.Derivations.check(d, b.get().def(), packs::ofKind));
         return ResolvedDataset.extend(d, b.get());
     }
 
@@ -501,6 +502,9 @@ public final class ModelCatalog {
                 if (d.source() != null && DatasetDef.Source.MODEL.equals(d.source().type()) && r.ok()) {
                     DatasetSources.cycle(this, "dataset:" + d.name(), Map.of(d.name(), ResolvedDataset.of(d))).ifPresent(x -> problems.add(new DatasetParser.Problem("error", "DRS-9109", "source.model", x)));
                 }
+                if (r.ok()) {                                                 // the root: Check refuses a dataset whose root cannot be traced (DRS-9110)
+                    m.put("lineage", com.ash.drishti.server.bi.layer.Derivations.lineage(folded != null ? folded : ResolvedDataset.of(d), packs, problems));
+                }
                 m.put("name", d.name());
                 m.put("version", d.version());
                 m.put("columns", d.columns().keySet());
@@ -514,8 +518,13 @@ public final class ModelCatalog {
             m.put("kind", "model");
             if (r.model() != null) {
                 Map<String, ResolvedDataset> resolved = resolveAll(r.model(), problems);
-                problems.addAll(ModelChecker.check(r.model(), resolved));
+                problems.addAll(ModelChecker.check(r.model(), resolved, packs::ofKind));
                 problems.addAll(roles.warnings(r.model(), resolved));
+                for (Map.Entry<String, ResolvedDataset> e : resolved.entrySet()) {
+                    List<DatasetParser.Problem> roots = new ArrayList<>();
+                    com.ash.drishti.server.bi.layer.Derivations.lineage(e.getValue(), packs, roots);
+                    roots.forEach(x -> problems.add(new DatasetParser.Problem(x.level(), x.code(), "datasets." + e.getKey(), x.message())));
+                }
                 DatasetSources.cycle(this, "model:" + r.model().name(), resolved).ifPresent(x -> problems.add(new DatasetParser.Problem("error", "DRS-9109", "datasets", x)));
                 m.put("name", r.model().name());
                 m.put("version", r.model().version());
@@ -556,7 +565,7 @@ public final class ModelCatalog {
         List<DatasetParser.Problem> problems = new ArrayList<>(r.problems());
         Map<String, ResolvedDataset> resolved = r.model() == null ? Map.of() : resolveAll(r.model(), problems);
         if (r.model() != null) {
-            problems.addAll(ModelChecker.check(r.model(), resolved));
+            problems.addAll(ModelChecker.check(r.model(), resolved, packs::ofKind));
         }
         problems.stream().filter(DatasetParser.Problem::error).findFirst().ifPresent(x -> {
             throw new DrishtiException(ErrorCode.LAYER_MODEL_INVALID, "'" + i.title() + "' cannot be published: " + x.code() + " " + x.path() + ": " + x.message());
@@ -648,6 +657,44 @@ public final class ModelCatalog {
         if (f.current() != null && scope != com.ash.drishti.server.bi.expr.Scope.AGGREGATE) {
             out.put("alias", f.current());
         }
+        return out;
+    }
+
+    /**
+     * The lineage of a report, a model or a dataset ({@code dataset:<name>}) as the caller may read it (docs/architecture/BI_DESIGN.md section 7): report to
+     * model, model to each dataset by alias, each dataset down its {@code extends} chain to its root (a pack kind and the connector that serves it, a connector
+     * query, a Python item, another model, a SQL view). {@code problems} lists a root that cannot be traced ({@code DRS-9110}).
+     */
+    public Map<String, Object> lineage(Principal p, String ref) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        List<Map<String, Object>> top = new ArrayList<>();
+        String modelRef = ref;
+        if (!ref.startsWith(ImplicitModels.QUERY_PREFIX)) {
+            BiStore.Item item;
+            try {
+                item = bi.readableItem(p, ref);
+            } catch (RuntimeException e) {
+                item = null;                                                    // not an item id: a model reference
+            }
+            if (item != null && "report".equals(item.kind())) {
+                com.ash.drishti.server.bi.report.Report rep = com.ash.drishti.server.bi.report.ReportParser.parse(bi.bodyFor(p, item)).report();
+                if (rep == null) {
+                    throw new MqException(MqException.Problem.of("DRS-9151", "ref", "the report '" + ref + "' has errors"));
+                }
+                modelRef = rep.model() != null ? rep.model() : ImplicitModels.QUERY_PREFIX + rep.dataset();
+                top.add(Map.of("kind", "report", "name", item.id(), "title", item.title()));
+            }
+        }
+        Found f = find(p, modelRef);
+        ModelView v = f.view();
+        top.add(Map.of("kind", v.def().implicit() ? "implicit-model" : "model", "name", v.def().name(), "version", v.def().version()));
+        List<DatasetParser.Problem> problems = new ArrayList<>();
+        Map<String, Object> aliases = new LinkedHashMap<>();
+        v.datasets().forEach((alias, r) -> aliases.put(alias, r == null ? List.of() : com.ash.drishti.server.bi.layer.Derivations.lineage(r, packs, problems)));
+        out.put("ref", ref);
+        out.put("path", top);
+        out.put("datasets", aliases);
+        out.put("problems", problems.stream().map(x -> Map.of("code", x.code(), "path", x.path(), "message", x.message())).toList());
         return out;
     }
 

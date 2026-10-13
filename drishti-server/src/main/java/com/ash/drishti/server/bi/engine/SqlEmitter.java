@@ -36,7 +36,7 @@ import java.util.Set;
 final class SqlEmitter {
 
     private final Dataset ds;
-    private final Resolver resolver;
+    private Resolver resolver;
     private final Dialect dialect;
     private final Map<String, List<Object>> user;
     private final String base;
@@ -108,6 +108,12 @@ final class SqlEmitter {
 
     boolean sawAggregate() {
         return sawAggregate;
+    }
+
+    /** Names are a shaped table's columns before the shape (its derived columns are worked out from them). */
+    SqlEmitter beforeShape() {
+        this.resolver = new Resolver(ds, true);
+        return this;
     }
 
     /** Emits a calculated column's expression, with unqualified names meaning columns of {@code table}'s own row (alias {@code t}). */

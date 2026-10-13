@@ -145,6 +145,43 @@ class LanguagesApiTest {
                       notional: { type: decimal, aggregate: sum }
                       trades:   { type: integer, aggregate: sum }
                     """);
+            Path python = Files.createDirectories(folder.resolve("python"));
+            Files.writeString(python.resolve("notional-bucket.python.yaml"), """
+                    rachana: 1
+                    python: notional-bucket
+                    title: Notional bucket
+                    version: 1
+                    interface: transform
+                    inputs: [rows]
+                    packages: [pandas]
+                    target: server
+                    source: |
+                      def run(rows, params):
+                          out = rows.copy()
+                          out[params["column"]] = (out["notional"] >= 12000).map({True: "big", False: "small"})
+                          return out
+                    """);
+            Files.writeString(datasets.resolve("lang-bucketed.dataset.yaml"), """
+                    rachana: 2
+                    expressions: 2
+                    dataset: lang-bucketed
+                    version: 1.0.0
+                    extends: lang-trade@1
+                    derive:
+                      bucket:    { python: notional-bucket, inputs: [notional], type: string }
+                      notionalK: { expr: "notional / 1000", type: decimal }
+                    """);
+            Files.writeString(models.resolve("lang-bucket-view.model.yaml"), """
+                    rachana: 2
+                    expressions: 2
+                    model: lang-bucket-view
+                    version: 1.0.0
+                    datasets:
+                      trades: { dataset: lang-bucketed, role: fact }
+                    measures:
+                      Trades: { expr: "count(trades)" }
+                      K:      { expr: "sum(trades.notionalK)" }
+                    """);
             Files.writeString(models.resolve("lang-desk-view.model.yaml"), """
                     rachana: 2
                     expressions: 2
@@ -316,6 +353,28 @@ class LanguagesApiTest {
         JsonNode tests = ok(call("POST", "/api/v1/bi/items/file:model:lang-model/tests", admin(), Map.of()));
         assertThat(tests.path("total").asInt()).as(tests.toString()).isEqualTo(2);
         assertThat(tests.path("passed").asInt()).as(tests.toString()).isEqualTo(2);
+    }
+
+    @Test @Order(22)
+    void aPythonColumnIsComputedOverTheReadersRowsAndTheLineageReachesThePackKind() throws Exception {
+        Map<String, Object> q = Map.of("mq", 1, "model", "lang-bucket-view@1", "select", Map.of("fields", List.of("trades.bucket"), "measures", List.of("Trades", "K")), "time",
+                Map.of("as-of", DAY));
+        JsonNode rita = ok(call("POST", "/api/v1/bi/mq", reader("rita"), q));
+        Map<String, Integer> buckets = new java.util.TreeMap<>();
+        rita.path("rows").forEach(r -> buckets.put(r.get(0).asText(), r.get(1).asInt()));
+        assertThat(buckets).as(rita.toString()).containsEntry("big", 13).containsEntry("small", 11);
+        JsonNode hana = ok(call("POST", "/api/v1/bi/mq", reader("hana"), q));
+        int hanaTrades = 0;
+        for (JsonNode r : hana.path("rows")) {
+            hanaTrades += r.get(1).asInt();
+        }
+        assertThat(hanaTrades).as("the base's rows were asked as hana: DESK-A only").isEqualTo(8);
+        JsonNode lineage = ok(call("GET", "/api/v1/bi/lineage/lang-bucket-view@1", reader("rita"), null));
+        assertThat(lineage.path("datasets").path("trades").toString()).contains("lang-bucketed").contains("lang-trade").contains("pack-kind").contains("trade");
+        assertThat(lineage.path("problems").size()).isZero();
+        if (System.getProperty("capture") != null) {
+            System.out.println("CAPTURE13 " + lineage);
+        }
     }
 
     // ---- DEL ---------------------------------------------------------------------------------------------------------

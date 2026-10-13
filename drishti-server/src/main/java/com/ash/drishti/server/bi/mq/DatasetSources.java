@@ -80,7 +80,13 @@ final class DatasetSources implements StagedTables {
         return out;
     }
 
+    /** The staging of a dataset whose rows come from a pack kind and get Python columns ({@code derive: { x: { python } }}, until wave B). */
+    static final String PYTHON_COLUMNS = "python-columns";
+
     private static String type(ResolvedDataset r) {
+        if (r != null && !r.def().derivation().python().isEmpty()) {
+            return PYTHON_COLUMNS;
+        }
         return r != null && r.def().source() != null && STAGED.contains(r.def().source().type()) ? r.def().source().type() : null;
     }
 
@@ -100,6 +106,11 @@ final class DatasetSources implements StagedTables {
             for (String alias : aliases(view)) {
                 DatasetDef.Source s = view.datasets().get(alias).def().source();
                 b.append('|').append(alias).append('=');
+                if (PYTHON_COLUMNS.equals(type(view.datasets().get(alias)))) {
+                    DatasetDef pd = view.datasets().get(alias).def();
+                    b.append(pd.derivation().python()).append(innerKey(inner(alias + "/rows", baseRef(pd))));
+                    continue;
+                }
                 switch (s.type()) {
                     case DatasetDef.Source.MODEL -> b.append(innerKey(inner(alias, s.model())));
                     case DatasetDef.Source.SQL -> b.append(innerKey(inner(alias, s.model()))).append('#').append(ModelCatalog.hash(s.query()));
@@ -122,6 +133,9 @@ final class DatasetSources implements StagedTables {
     @Override
     public Answer answer(String table) {
         DatasetDef d = view.datasets().get(table).def();
+        if (PYTHON_COLUMNS.equals(type(view.datasets().get(table)))) {
+            return fromPythonColumns(table, d);
+        }
         return switch (d.source().type()) {
             case DatasetDef.Source.MODEL -> fromModel(table, d);
             case DatasetDef.Source.SQL -> fromSql(table, d);
@@ -206,6 +220,60 @@ final class DatasetSources implements StagedTables {
         QueryService.Result result = new QueryService.Result(shown.columns(), shown.rows(), m == null ? null
                 : new QueryService.Meta(m.layer(), m.rollup(), m.rows(), m.millis(), m.cached(), m.dates(), m.tables(), m.masked(), warnings, m.sql(), m.generation()));
         return new Answer(result, columns(table, d, result, "the source query"), ran[0].compiled().asOf());
+    }
+
+    // ---- Python columns ---------------------------------------------------------------------------------------------
+
+    /** The implicit model of the dataset a dataset with Python columns extends (its rows, as the reader). */
+    private static String baseRef(DatasetDef d) {
+        String ref = d.extendsRef() == null ? d.name() : d.extendsRef();
+        int at = ref.indexOf('@');
+        return ImplicitModels.QUERY_PREFIX + (at < 0 ? ref : ref.substring(0, at));
+    }
+
+    /**
+     * A dataset with Python columns (docs/architecture/BI_DESIGN.md section 3.1, "python via the existing Transform runner until B"): the base's rows are asked
+     * as the reader (a row extract of every stored column of the dataset), handed to each Python item as the frame {@code rows} (a Transform that returns the
+     * frame with its column added), and the result is the table. The dataset's own rules, masks and derived expressions then apply to it as to any table.
+     */
+    private Answer fromPythonColumns(String table, DatasetDef d) {
+        MqService.Bound base = inner(table + "/rows", baseRef(d));
+        String alias = base.view().def().datasets().keySet().iterator().next();
+        List<String> fields = new ArrayList<>();
+        Map<String, String> declared = new LinkedHashMap<>();
+        for (DatasetDef.Col c : d.columns().values()) {
+            if (c.expr() == null && base.view().flat().tables().get(alias).columns().containsKey(c.name())) {
+                fields.add(alias + "." + c.name());
+                declared.put(c.name(), c.type());
+            }
+        }
+        ModelQuery q = new ModelQuery(1, baseRef(d), Map.of(), fields, List.of(), List.of(), List.of(), timeOf(), List.of(), catalog.datasets().maxRows(), null, null, ModelQuery.ROWS,
+                Map.of(), ModelQuery.Options.DEFAULT);
+        QueryService.Result rows = guarded(d, base, () -> catalog.mq().run(base, q, false, false).shown());
+        rows = renamed(rows, alias);
+        QueryService.Result r = rows;
+        for (Map.Entry<String, DatasetDef.PyColumn> e : d.derivation().python().entrySet()) {
+            declared.put(e.getKey(), e.getValue().type());
+            Map<String, QueryService.Result> inputs = Map.of("rows", r);
+            r = catalog.datasets().transform(reader, view.key() + "/" + table + "/" + e.getKey(), d.name(), e.getValue().item(), inputs, Map.of("column", e.getKey(),
+                    "inputs", e.getValue().inputs()), new LinkedHashMap<>(declared), fingerprint());
+        }
+        return new Answer(r, columns(table, d, r, "the Python columns"), outerDate());
+    }
+
+    private ModelQuery.Time timeOf() {
+        if (outer.from() == null) {
+            return ModelQuery.Time.DEFAULT;
+        }
+        return outer.from().equals(outer.to()) || outer.to() == null ? new ModelQuery.Time(outer.from(), null, null, null, false) : new ModelQuery.Time(null, outer.from(), outer.to(),
+                null, false);
+    }
+
+    /** An answer's columns without the alias ({@code trade.notional} is {@code notional}): the frame a Python item reads. */
+    private static QueryService.Result renamed(QueryService.Result r, String alias) {
+        List<ArrowIpcWriter.Column> cols = r.columns().stream().map(c -> new ArrowIpcWriter.Column(c.name().startsWith(alias + ".") ? c.name().substring(alias.length() + 1) : c.name(),
+                c.kind(), c.values())).toList();
+        return new QueryService.Result(cols, r.rows(), r.meta());
     }
 
     // ---- a SQL view ---------------------------------------------------------------------------------------------------
