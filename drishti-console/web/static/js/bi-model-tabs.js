@@ -276,7 +276,7 @@
       go.addEventListener('click', () => {
         const rs = B.qa('[data-role-pick]', roleBox).filter((c) => c.checked).map((c) => c.value).concat(roles.value.split(',').map((x) => x.trim()).filter(Boolean)).filter((x, i, a) => a.indexOf(x) === i);
         if (!rs.length) { near(go, 'Name the role (or roles) the rule is for.', true); roles.focus(); return; }
-        const where = kind.value === 'all' ? 'true' : kind.value === 'attr' ? field.value + ' in ' + attr.value : field.value + " == '" + val.value.replace(/'/g, '') + "'";
+        const where = kind.value === 'all' ? 'True' : kind.value === 'attr' ? field.value + ' in ' + attr.value : field.value + " == '" + val.value.replace(/'/g, '') + "'";
         if (kind.value === 'value' && !val.value.trim()) { near(go, 'Give the value.', true); val.focus(); return; }
         draft = null;
         roles.value = '';

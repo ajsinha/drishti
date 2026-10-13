@@ -263,7 +263,7 @@ def test_pack_dataset_to_model_to_report(browser):
     page.fill("[data-rule-roles]", "bi-writer")                       # a reader with no matching rule gets no rows: the author sees every trade
     page.select_option("[data-rule-kind]", "all")
     page.click("[data-rule-add]")
-    expect(page.locator('[data-rule="trade:1"]')).to_contain_text("true", timeout=15000)
+    expect(page.locator('[data-rule="trade:1"]')).to_contain_text("True", timeout=15000)
     expect(page.locator("[data-safeguard-clear]")).to_be_visible(timeout=15000)
     text = yaml_tab(page)                                             # the designer wrote the YAML; nobody typed it
     assert "trade.desk in user.desks" in text and "may-see-all:" in text and "suggested: {from: pack-reference}" in text, text
