@@ -44,6 +44,9 @@ public final class ConsumerQueries implements DatasetService.ModelGateway {
 
     @Override
     public DatasetService.Asked ask(Principal p, BiStore.Item item, QueryRequest q, boolean explain) {
+        if (catalog.isVersion1(p, item)) {
+            return new DatasetService.Asked(catalog.askVersion1(p, item, q, explain), null);   // a 2.1 live dataset's reports, until wave W3
+        }
         try {
             MqService.Bound b = catalog.bindItem(p, item);
             MqService.Ran ran = mq.run(b, of(b.view(), q), explain, true);

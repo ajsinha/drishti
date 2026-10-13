@@ -26,7 +26,6 @@ import com.ash.drishti.server.bi.engine.Layers;
 import com.ash.drishti.server.bi.engine.QueryProperties;
 import com.ash.drishti.server.bi.engine.QueryRequest;
 import com.ash.drishti.server.bi.engine.QueryService;
-import com.ash.drishti.server.bi.layer.CompatReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
@@ -106,57 +105,6 @@ class EquivalenceTest {
 
     static String list(List<String> names) {
         return "[" + String.join(", ", names.stream().map(n -> "\"" + n + "\"").toList()) + "]";
-    }
-
-    @Test
-    void everyShippedSampleAnswersTheSameThroughTheCompatibilityReader() {
-        assertThat(samples.keySet()).contains("trading-risk.dataset.yaml", "trades-basic.dataset.yaml", "trading-cashflows.dataset.yaml", "live-trading.dataset.yaml",
-                "world-economics.dataset.yaml", "counterparty-exposure.dataset.yaml");
-        int compared = 0;
-        int answered = 0;
-        for (Map.Entry<String, Dataset> e : samples.entrySet()) {
-            Dataset ds = e.getValue();
-            String key = "file:dataset:" + ds.name();
-            ModelView v = new ModelView(key, Layers.key(key), "", CompatReader.read(ds, key), ds, Map.of(), Set.of(), true);
-            List<List<String>> groupings = new ArrayList<>();
-            groupings.add(List.of());
-            ds.hierarchies().values().forEach(levels -> groupings.add(List.of(levels.get(0))));
-            for (String m : ds.measures().keySet()) {
-                if (ds.measures().get(m).python() != null) {
-                    continue;
-                }
-                for (List<String> by : groupings) {
-                    for (MqHarness.Reader who : readers()) {
-                        Object a = old(ds, key, new QueryRequest(by, List.of(m), List.of(), null, null, List.of(), 500, "auto"), who);
-                        Object b = viaMq(v, key, "{ mq: 1, model: x, select: { fields: " + list(by) + ", measures: " + list(List.of(m)) + " } }", who);
-                        assertThat(b).as(e.getKey() + " " + m + " by " + by + " as " + who.user()).isEqualTo(a);
-                        compared++;
-                        answered += a instanceof List ? 1 : 0;
-                    }
-                }
-            }
-            String m = ds.measures().keySet().stream().filter(x -> ds.measures().get(x).python() == null).findFirst().orElseThrow();
-            String f = ds.hierarchies().values().stream().map(l -> l.get(0)).filter(x -> !x.matches(".*\\.(year|quarter|month|day|week)$")).findFirst().orElse(null);
-            if (f == null) {
-                continue;
-            }
-            for (MqHarness.Reader who : readers()) {
-                QueryRequest sorted = new QueryRequest(List.of(f), List.of(m), List.of(), null, null, List.of(new QueryRequest.Sort(m, true)), 3, "auto");
-                assertThat(viaMq(v, key, "{ mq: 1, model: x, select: { fields: [" + f + "], measures: [\"" + m + "\"] }, sort: [{ by: \"" + m + "\", desc: true }], limit: 3 }", who))
-                        .as(e.getKey() + " sorted").isEqualTo(old(ds, key, sorted, who));
-                QueryRequest dated = new QueryRequest(List.of(f), List.of(m), List.of(), SampleLake.DAY1, SampleLake.DAY1, List.of(), 500, "auto");
-                assertThat(viaMq(v, key, "{ mq: 1, model: x, select: { fields: [" + f + "], measures: [\"" + m + "\"] }, time: { as-of: 2026-10-08 } }", who))
-                        .as(e.getKey() + " as of").isEqualTo(old(ds, key, dated, who));
-                QueryRequest having = new QueryRequest(List.of(f), List.of(m), List.of(new QueryRequest.Filter(m, "gt", List.of(0.0))), null, null, List.of(), 500, "auto");
-                assertThat(viaMq(v, key, "{ mq: 1, model: x, select: { fields: [" + f + "], measures: [\"" + m + "\"] }, having: [{ measure: \"" + m + "\", op: gt, value: 0 }] }", who))
-                        .as(e.getKey() + " having").isEqualTo(old(ds, key, having, who));
-                QueryRequest filtered = new QueryRequest(List.of(f), List.of(m), List.of(new QueryRequest.Filter(f, "not-null", List.of())), null, null, List.of(), 500, "auto");
-                assertThat(viaMq(v, key, "{ mq: 1, model: x, select: { fields: [" + f + "], measures: [\"" + m + "\"] }, where: [{ field: " + f + ", op: not-null }] }", who))
-                        .as(e.getKey() + " filtered").isEqualTo(old(ds, key, filtered, who));
-            }
-        }
-        assertThat(compared).isGreaterThan(200);
-        assertThat(answered).isGreaterThan(compared / 2);
     }
 
     static final String V2_TRADES = """

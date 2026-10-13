@@ -170,7 +170,7 @@ class PythonBiTest {
         assertThat(manifest(sample("pnl-vs-exposure")).ok()).isTrue();
         assertThat(shipped.interfaceKind()).isEqualTo("transform");
         assertThat(shipped.entry()).isEqualTo("run");
-        assertThat(shipped.inputs()).containsExactly("trading-risk", "counterparty-exposure");
+        assertThat(shipped.inputs()).containsExactly("pnl", "exposure");                     // the Python dataset's model-query inputs (2.2)
         assertThat(shipped.output()).isEqualTo("frame");
         String base = "python: t\ninterface: transform\ninputs: [trading-risk, file:dataset:counterparty-exposure]\nsource: |\n  def run(a, b):\n      return a\n";
         assertThat(manifest(base).ok()).as(manifest(base).problems().toString()).isTrue();

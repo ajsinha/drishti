@@ -48,13 +48,11 @@ class ConnectionDisciplineTest {
     private static final Map<String, String> OPENS_FOR_THE_POOL = Map.of(
             "plugins/drishti-plugin-jdbc/src/main/java/com/ash/drishti/plugin/jdbc/JdbcPool.java", "the pool's connection factory: the pool owns and closes it",
             "plugins/drishti-plugin-duckdb/src/main/java/com/ash/drishti/plugin/duckdb/DuckDbFile.java", "embedded DuckDB: the in-process database handle, closed on detach or replacement",
-            "drishti-server/src/main/java/com/ash/drishti/server/bi/poc/PocQueryService.java", "embedded DuckDB: the in-process database handle, closed on shutdown",
             "drishti-server/src/main/java/com/ash/drishti/server/bi/engine/DuckDbEngine.java", "embedded DuckDB: the in-process database handle, closed on shutdown");
 
     /** Files that keep a connection in a field, and why. */
     private static final Map<String, String> MAY_HOLD_A_CONNECTION = Map.of(
             "plugins/drishti-plugin-duckdb/src/main/java/com/ash/drishti/plugin/duckdb/DuckDbFile.java", "embedded DuckDB: the handle and its duplicates, bounded by pool-size permits",
-            "drishti-server/src/main/java/com/ash/drishti/server/bi/poc/PocQueryService.java", "embedded DuckDB: the in-process database handle",
             "drishti-server/src/main/java/com/ash/drishti/server/bi/engine/DuckDbEngine.java", "embedded DuckDB: the in-process database handle");
 
     private static final Pattern OPEN = Pattern.compile("\\bgetConnection\\(|\\.borrow\\(\\)|\\bcreateStatement\\(|\\bprepareStatement\\(|\\bprepareCall\\(");

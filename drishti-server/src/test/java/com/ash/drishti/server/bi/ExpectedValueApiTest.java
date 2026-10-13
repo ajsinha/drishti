@@ -128,9 +128,12 @@ class ExpectedValueApiTest {
         }
         ws = ok(call("POST", "/api/v1/bi/workspaces", ann(), Map.of("name", "Tests Desk"))).path("id").asText();
         ds = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", ann(), Map.of("kind", "dataset", "title", "Tested", "body", DATASET, "audienceRoles", List.of("steward", "reader")))).path("id").asText();
-        JsonNode r = ok(call("POST", "/api/v1/bi/datasets/" + ds + "/query", ann(), Map.of("measures", List.of("N"))));
-        count = r.path("rows").get(0).get(0).asLong();
-        assertThat(count).isPositive();
+        // the count the tests expect, as the dataset's own test runner sees it (the 2.1 dataset query route answers 410 since 2.2)
+        call("PUT", itemPath(ds), ann(), Map.of("body", withTests("  - { name: probe, measure: N, expect: -1 }\n"))).andExpect(status().isOk());
+        JsonNode probe = ok(call("POST", itemPath(ds) + "/tests", ann(), Map.of()));
+        count = probe.path("results").get(0).path("actual").asLong();
+        assertThat(count).as(probe.toString()).isPositive();
+        call("PUT", itemPath(ds), ann(), Map.of("body", DATASET)).andExpect(status().isOk());
     }
 
     String withTests(String tests) {

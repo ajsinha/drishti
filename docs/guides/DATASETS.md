@@ -644,6 +644,11 @@ honours them (the engine reads through the connector, not the files); **classifi
 
 ## 11. Composed and derived datasets
 
+> **Removed in 2.2.** Composed and derived datasets no longer run: a `from:` or `derived:` dataset parses with `DRS-9190`, and
+> `drishti.py bi migrate --models` (or the server, at start, for stored items) folds a composed one into the model that reads its sources and makes a
+> derived one a Python dataset (`source.python`) with a model of the old name ([BI_MODEL_SPEC.md 8.3.1](../architecture/BI_MODEL_SPEC.md#831-as-built-22-wave-a-task-6)).
+> This section describes them as they were, for the conversion.
+
 A dataset does not have to be read from a connector. It may be **built from other datasets**, asked a question each *as the person reading*, and joined: a **composed** dataset joins them in YAML (11.1), a **derived** dataset hands the answers to a Python Transform that returns the table (11.2). Either way the result is an ordinary dataset with one table and measures of its own, so reports, alerts, subscriptions, refresh, Analyse and governance use it as they use any other. The design is [RUPAKA.md section 20.10](../architecture/RUPAKA.md); the sample, built both ways, is *Desk P&L vs counterparty exposure* (11.5).
 
 Why not one dataset with both facts? Because the facts live in different models with different rules: in `trading-risk` a desk-head's row rule is on trades, so exposure by counterparty (netting sets, which do not reach trades) is refused for them (3). A composed dataset keeps each source's own rules and joins what each lets the reader see.

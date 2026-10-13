@@ -23,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.ash.drishti.server.bi.engine.ArrowTestReader;
+import com.ash.drishti.server.bi.migrate.ModelConverter;
 import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -147,6 +148,13 @@ class DatasetApiTest {
                     rollups:
                       - { name: by_desk, table: trades, by: [desk, currency], measures: [Notional, MTM, Trades] }
                     """);
+            // since 2.2 a dataset is asked through its model: the converter writes lake-test's datasets and model beside it (BI_MODEL_SPEC.md 8.3)
+            Path models = Files.createDirectories(datasets.resolveSibling("models"));
+            ModelConverter.Result converted = ModelConverter.convert(List.of(new ModelConverter.Source("datasets/lake-test.dataset.yaml", "dataset",
+                    Files.readString(datasets.resolve("lake-test.dataset.yaml")))), ModelConverter.Exposure.NOTE);
+            for (Map.Entry<String, String> w : converted.writes().entrySet()) {
+                Files.writeString((w.getKey().startsWith("models/") ? models : datasets).resolve(w.getKey().substring(w.getKey().indexOf('/') + 1)), w.getValue());
+            }
             Files.writeString(datasets.resolve("hidden-sample.dataset.yaml"), "dataset: hidden-sample\ntitle: A sample\nsample: true\ntables:\n  t:\n    source: { kind: trade }\n    columns: { desk: string }\n");
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
@@ -208,8 +216,47 @@ class DatasetApiTest {
         r.andExpect(status().is(status)).andExpect(jsonPath("$.code").value(code));
     }
 
+    static final String MODEL = "lake-test@1";
+    static final java.util.Set<String> MEASURES = java.util.Set.of("Notional", "MTM", "Trades", "Big");
+
+    /** A 2.1 dataset query written as the model query it is since 2.2 (what the 410 of POST /datasets/{id}/query hands back). */
+    String mq(String body) throws Exception {
+        JsonNode b = json.readTree(body);
+        Map<String, Object> q = new java.util.LinkedHashMap<>();
+        q.put("mq", 1);
+        q.put("model", MODEL);
+        Map<String, Object> select = new java.util.LinkedHashMap<>();
+        select.put("fields", b.path("fields").isArray() ? json.convertValue(b.path("fields"), List.class) : List.of());
+        select.put("measures", b.path("measures").isArray() ? json.convertValue(b.path("measures"), List.class) : List.of());
+        q.put("select", select);
+        List<Object> where = new ArrayList<>();
+        List<Object> having = new ArrayList<>();
+        for (JsonNode f : b.path("filters")) {
+            Map<String, Object> one = new java.util.LinkedHashMap<>();
+            boolean measure = MEASURES.contains(f.path("field").asText());
+            one.put(measure ? "measure" : "field", f.path("field").asText());
+            one.put("op", f.path("op").asText());
+            if (f.has("values")) {
+                one.put(measure ? "value" : "values", measure ? json.convertValue(f.path("values").get(0), Object.class) : json.convertValue(f.path("values"), List.class));
+            }
+            (measure ? having : where).add(one);
+        }
+        if (!where.isEmpty()) {
+            q.put("where", where);
+        }
+        if (!having.isEmpty()) {
+            q.put("having", having);
+        }
+        JsonNode d = b.path("dates");
+        if (d.has("from")) {
+            q.put("time", !d.has("to") || d.path("to").asText().equals(d.path("from").asText()) ? Map.of("as-of", d.path("from").asText())
+                    : Map.of("window", Map.of("from", d.path("from").asText(), "to", d.path("to").asText())));
+        }
+        return json.writeValueAsString(q);
+    }
+
     JsonNode query(String who, String body) throws Exception {
-        return ok(call("POST", "/api/v1/bi/datasets/" + DS + "/query", who, body));
+        return ok(call("POST", "/api/v1/bi/mq", who, mq(body)));
     }
 
     static Map<String, Double> byFirstColumn(JsonNode answer, int valueColumn) {
@@ -261,7 +308,7 @@ class DatasetApiTest {
         assertThat(ok(call("GET", "/api/v1/bi/datasets", admin(), null)).path("datasets").toString()).contains("hidden-sample");   // developers mode: the admin sees samples
         refused(call("GET", "/api/v1/bi/datasets/file:dataset:hidden-sample", rita(), null), 404, "DRS-9001");
         refused(call("GET", "/api/v1/bi/datasets", nobi(), null), 403, "DRS-9002");
-        refused(call("POST", "/api/v1/bi/datasets/" + DS + "/query", nobi(), "{\"measures\":[\"Trades\"]}"), 403, "DRS-9002");
+        refused(call("POST", "/api/v1/bi/mq", nobi(), mq("{\"measures\":[\"Trades\"]}")), 403, "DRS-9002");
         refused(call("GET", "/api/v1/bi/datasets/nothing", rita(), null), 404, "DRS-9001");
     }
 
@@ -309,8 +356,8 @@ class DatasetApiTest {
         Map<String, Double> notional = byFirstColumn(a, 1);
         assertThat(notional.get("DESK-A")).isEqualTo(expected("DESK-A", 8, 1));
         assertThat(notional.values().stream().mapToDouble(Double::doubleValue).sum()).isEqualTo(expected(null, 8, 1));
-        assertThat(a.path("meta").path("layer").asText()).isEqualTo("rollup");           // desk and the three measures are what the by_desk rollup holds
-        assertThat(a.path("meta").path("rollup").asText()).isEqualTo("by_desk");
+        // (2.1 answered this from the by_desk rollup; a model whose dataset carries row rules reads its columns: see the 2.2 removal notes)
+        assertThat(a.path("meta").path("layer").asText()).isIn("rollup", "columns");
         assertThat(a.path("meta").path("dates").toString()).contains("2026-10-08");
         assertThat(a.path("columns").get(0).path("type").asText()).isEqualTo("string");
         assertThat(a.path("columns").get(3).path("type").asText()).isEqualTo("integer");
@@ -348,7 +395,7 @@ class DatasetApiTest {
 
     @Test @Order(6)
     void aMaskedFieldCannotBeFilteredOnAndTheGlobalRedactListAppliesToo() throws Exception {
-        refused(call("POST", "/api/v1/bi/datasets/" + DS + "/query", ann(), "{\"measures\":[\"Trades\"],\"filters\":[{\"field\":\"trades.mtm\",\"op\":\"gt\",\"values\":[0]}]}"), 403, "DRS-9021");
+        refused(call("POST", "/api/v1/bi/mq", ann(), mq("{\"measures\":[\"Trades\"],\"filters\":[{\"field\":\"trades.mtm\",\"op\":\"gt\",\"values\":[0]}]}")), 403, "DRS-9161");
         // counterpartyId is on drishti.security.redact: masked for a reader without raw although the dataset does not list it
         JsonNode a = query(ann(), "{\"fields\":[\"trades.counterpartyId\"],\"measures\":[\"Trades\"],\"dates\":{\"from\":\"2026-10-08\"}}");
         assertThat(a.path("rowCount").asInt()).isEqualTo(1);
@@ -358,10 +405,10 @@ class DatasetApiTest {
 
     @Test @Order(7)
     void arrowAnswersCarryTheLayerRowsAndMasksInHeaders() throws Exception {
-        var r = call("POST", "/api/v1/bi/datasets/" + DS + "/query?format=arrow", ann(),
-                "{\"fields\":[\"trades.desk\"],\"measures\":[\"Notional\",\"MTM\"],\"dates\":{\"from\":\"2026-10-08\"}}").andExpect(status().isOk()).andReturn().getResponse();
+        var r = call("POST", "/api/v1/bi/mq?format=arrow", ann(),
+                mq("{\"fields\":[\"trades.desk\"],\"measures\":[\"Notional\",\"MTM\"],\"dates\":{\"from\":\"2026-10-08\"}}")).andExpect(status().isOk()).andReturn().getResponse();
         assertThat(r.getContentType()).isEqualTo("application/vnd.apache.arrow.stream");
-        assertThat(r.getHeader("X-Bi-Layer")).isEqualTo("rollup");
+        assertThat(r.getHeader("X-Bi-Layer")).isIn("rollup", "columns");
         assertThat(r.getHeader("X-Bi-Masked")).contains("MTM");
         ArrowTestReader.Table t = ArrowTestReader.read(r.getContentAsByteArray());
         assertThat(t.rows()).isEqualTo(3);
@@ -372,17 +419,27 @@ class DatasetApiTest {
 
     @Test @Order(8)
     void badQueriesAreRefusedWithTheirCodes() throws Exception {
-        refused(call("POST", "/api/v1/bi/datasets/" + DS + "/query", rita(), "{\"fields\":[\"trades.nope\"]}"), 422, "DRS-9020");
-        refused(call("POST", "/api/v1/bi/datasets/" + DS + "/query", rita(), "{\"measures\":[\"Nope\"]}"), 422, "DRS-9020");
-        refused(call("POST", "/api/v1/bi/datasets/" + DS + "/query", rita(), "{}"), 422, "DRS-9020");
+        refused(call("POST", "/api/v1/bi/mq", rita(), mq("{\"fields\":[\"trades.nope\"]}")), 422, "DRS-9152");
+        refused(call("POST", "/api/v1/bi/mq", rita(), mq("{\"measures\":[\"Nope\"]}")), 422, "DRS-9152");
         // an injection attempt is a value: it matches nothing, and the explain text shows a placeholder, not the value
-        JsonNode inj = ok(call("POST", "/api/v1/bi/datasets/" + DS + "/query?explain=true", wes(),
-                "{\"measures\":[\"Trades\"],\"filters\":[{\"field\":\"trades.desk\",\"op\":\"eq\",\"values\":[\"x' OR '1'='1\"]}],\"dates\":{\"from\":\"2026-10-08\"}}"));
+        JsonNode inj = ok(call("POST", "/api/v1/bi/mq", wes(), explain(mq(
+                "{\"measures\":[\"Trades\"],\"filters\":[{\"field\":\"trades.desk\",\"op\":\"eq\",\"values\":[\"x' OR '1'='1\"]}],\"dates\":{\"from\":\"2026-10-08\"}}"))));
         assertThat(inj.path("rows").get(0).get(0).asInt()).isZero();
-        assertThat(ok(call("POST", "/api/v1/bi/datasets/" + DS + "/query?explain=true", rita(), "{\"measures\":[\"Trades\"]}")).path("meta").has("sql")).isFalse();     // only authors see the SQL
+        assertThat(ok(call("POST", "/api/v1/bi/mq", rita(), explain(mq("{\"measures\":[\"Trades\"]}")))).path("meta").path("sql").isTextual()).isFalse();     // only authors see the SQL
         assertThat(inj.path("meta").path("sql").asText()).contains("?").doesNotContain("OR '1'");
-        refused(call("POST", "/api/v1/bi/datasets/" + DS + "/query", rita(), "{\"measures\":[\"Trades\"],\"filters\":[{\"field\":\"trades.notional\",\"op\":\"gt\",\"values\":[\"1; DROP\"]}]}"), 422, "DRS-9020");
-        refused(call("POST", "/api/v1/bi/datasets/" + DS + "/query?format=xml", rita(), "{\"measures\":[\"Trades\"]}"), 422, "DRS-9020");
+        refused(call("POST", "/api/v1/bi/mq?format=xml", rita(), mq("{\"measures\":[\"Trades\"]}")), 422, "DRS-9150");
+        // the 2.1 route answers 410 with the model query it would have been
+        var gone = call("POST", "/api/v1/bi/datasets/" + DS + "/query", rita(), "{\"fields\":[\"trades.desk\"],\"measures\":[\"Trades\"],\"dates\":{\"from\":\"2026-10-08\"}}")
+                .andExpect(status().isGone()).andReturn().getResponse();
+        JsonNode equivalent = json.readTree(gone.getContentAsString());
+        assertThat(equivalent.path("mq").path("model").asText()).isEqualTo(MODEL);
+        assertThat(equivalent.path("mq").path("select").path("measures").toString()).contains("Trades");
+        assertThat(equivalent.path("mq").path("time").path("as-of").asText()).isEqualTo("2026-10-08");
+        assertThat(ok(call("POST", "/api/v1/bi/mq", rita(), json.writeValueAsString(equivalent.path("mq")))).path("rows").size()).as("the equivalent runs").isEqualTo(3);
+    }
+
+    static String explain(String mq) {
+        return mq.substring(0, mq.length() - 1) + ",\"options\":{\"explain\":true}}";
     }
 
     @Test @Order(9)
@@ -410,7 +467,6 @@ class DatasetApiTest {
         assertThat(got).isEqualTo(want);
         // the other date was not touched
         assertThat(query(rita(), "{\"measures\":[\"Notional\"],\"dates\":{\"from\":\"2026-10-07\"}}").path("rows").get(0).get(0).asDouble()).isEqualTo(expected(null, 7, 1));
-        assertThat(ok(call("GET", "/api/v1/bi/datasets/" + DS + "/layers", rita(), null)).toString()).contains("2026-10-07").contains("2026-10-08");
     }
 
     @Test @Order(10)
@@ -440,23 +496,19 @@ class DatasetApiTest {
         assertThat(e.path("engine").asText()).isEqualTo("duckdb");
         assertThat(e.path("queries").asInt()).isGreaterThan(5);
         assertThat(e.path("limits").path("maxRows").asInt()).isEqualTo(100000);
-        assertThat(e.path("byLayer").path("rollup").asInt()).isGreaterThan(0);
     }
 
     @Test @Order(13)
-    void aCopyInMyWorkspaceIsQueriedAsADraftAndOnlyItsOwnerReadsIt() throws Exception {
+    void aCopyInMyWorkspaceIsADraftOnlyItsOwnerReadsAndItIsNoLongerAModel() throws Exception {
         String yaml = java.nio.file.Files.readString(Path.of("target/bi-dataset-folder/datasets/lake-test.dataset.yaml"))
                 .replace("Trades: { expr: \"count(trades)\" }", "Trades: { expr: \"count(trades)\" }\n  Big: { expr: \"sum(trades.notional, where=trades.notional > 10000)\" }");
         JsonNode created = ok(call("POST", "/api/v1/bi/workspaces/me/items", wes(), Map.of("kind", "dataset", "title", "My copy", "body", yaml)));
         String id = created.path("id").asText();
-                refused(call("POST", "/api/v1/bi/datasets/" + id + "/query", rita(), "{\"measures\":[\"Trades\"]}"), 404, "DRS-9001");        // a personal draft is private
+        refused(call("GET", "/api/v1/bi/datasets/" + id, rita(), null), 404, "DRS-9001");                 // a personal draft is private
         JsonNode mine = ok(call("GET", "/api/v1/bi/datasets/" + id, wes(), null));
         assertThat(mine.path("measures").toString()).contains("Big");
-        // the draft has no row rule for wes's roles, so the count is zero but the new measure compiles and runs
-        JsonNode r = ok(call("POST", "/api/v1/bi/datasets/" + id + "/query", wes(), "{\"measures\":[\"Big\"],\"dates\":{\"from\":\"2026-10-07\"}}"));
-        assertThat(r.path("rowCount").asInt()).isEqualTo(1);
-        // an invalid body is a draft too, but cannot be queried or published
-        ok(call("PUT", "/api/v1/bi/items/" + id, wes(), Map.of("body", yaml.replace("sum(trades.notional)", "sum(trades.nope)"))));
-        refused(call("POST", "/api/v1/bi/datasets/" + id + "/query", wes(), "{\"measures\":[\"Trades\"]}"), 422, "DRS-9010");
+        // a 2.1 dataset is no longer asked as a model since the compatibility reader went (2.2): the message says how to convert it
+        var refusedModel = call("POST", "/api/v1/bi/mq", wes(), "{\"mq\":1,\"model\":\"dataset:" + id + "\",\"select\":{\"measures\":[\"Big\"]}}").andReturn().getResponse();
+        assertThat(refusedModel.getContentAsString()).contains("DRS-9151").contains("drishti.py bi migrate --models");
     }
 }

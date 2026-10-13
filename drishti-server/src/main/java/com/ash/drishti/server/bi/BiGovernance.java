@@ -20,7 +20,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.bi.BiStore;
 import com.ash.drishti.packs.Pack;
 import com.ash.drishti.packs.PackRegistry;
-import com.ash.drishti.server.bi.dataset.Composition;
+import com.ash.drishti.server.bi.dataset.LegacySources;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.engine.QueryRequest;
@@ -463,7 +463,7 @@ public final class BiGovernance {
     /** What a composed or derived dataset is built from: its source datasets and what it takes of each. */
     private List<Map<String, Object>> sourcesOf(Principal p, Dataset ds) {
         List<Map<String, Object>> out = new ArrayList<>();
-        for (Dataset.Input in : Composition.sources(ds)) {
+        for (Dataset.Input in : LegacySources.sources(ds)) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("table", in.alias());
             m.put("kind", "dataset");

@@ -23,40 +23,12 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /** The sample datasets shipped in config/bi/datasets parse and validate with no errors, and say what the tutorial says they say. */
 class SampleDatasetsTest {
 
     private static final Path DIR = Path.of("src/test/resources/bi/samples-2.1/datasets");         // the 2.1 datasets (config/bi has their models)
-
-    /** The shipped folder as the directory composed and derived datasets find their sources in. */
-    private static final Composition.Directory FOLDER = ref -> {
-        try (Stream<Path> s = Files.list(DIR)) {
-            for (Path f : s.filter(p -> p.getFileName().toString().endsWith(".dataset.yaml")).toList()) {
-                String body = Files.readString(f);
-                String file = f.getFileName().toString().replace(".dataset.yaml", "");
-                if (file.equals(ref) || Composition.declaredName(body).equals(ref)) {
-                    return Optional.of(new Composition.Found("file:dataset:" + file, body));
-                }
-            }
-        } catch (IOException e) {
-            throw new java.io.UncheckedIOException(e);
-        }
-        return Optional.empty();
-    };
-
-    @BeforeAll
-    static void sources() {
-        Composition.install(FOLDER);
-    }
-
-    @AfterAll
-    static void noSources() {
-        Composition.uninstall(FOLDER);
-    }
 
     private static DatasetParser.Result load(String name) throws IOException {
         return DatasetParser.parse(Files.readString(DIR.resolve(name + ".dataset.yaml")));
@@ -71,7 +43,8 @@ class SampleDatasetsTest {
         assertThat(files).extracting(p -> p.getFileName().toString()).contains("trades-basic.dataset.yaml", "trading-risk.dataset.yaml", "trading-cashflows.dataset.yaml");
         for (Path f : files) {
             DatasetParser.Result r = DatasetParser.parse(Files.readString(f));
-            assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).as(f.getFileName().toString()).isEmpty();
+            assertThat(r.problems().stream().filter(DatasetParser.Problem::error).filter(x -> !r.dataset().framed() || !"DRS-9190".equals(x.code())).toList())
+                    .as(f.getFileName().toString()).isEmpty();                   // a composed or derived one is refused since 2.2, and only that
             assertThat(r.dataset().sample()).as("sample: true in " + f.getFileName()).isTrue();
             assertThat(r.dataset().description()).isNotBlank();
             assertThat(Files.readString(f).lines().filter(l -> l.stripLeading().startsWith("#")).count()).as("comments in " + f.getFileName()).isGreaterThan(8);
@@ -114,26 +87,22 @@ class SampleDatasetsTest {
         assertThat(d.measures().keySet()).contains("Exposure (EE peak)", "Exposure (PFE peak)");
     }
 
+    /** A 2.1 composed dataset is still read (the converter needs its sources and join) but refused: removed in 2.2 (BI_MODEL_SPEC.md section 8). */
     @Test
-    void theComposedSampleJoinsTwoDatasetsOnTheCounterpartyAndAddsAMeasureOfItsOwn() throws IOException {
+    void theComposedSampleIsReadForTheConverterButRefused() throws IOException {
         DatasetParser.Result r = load("desk-pnl-vs-exposure");
-        assertThat(r.problems()).as("no problem at all, not even the fan-out warning").isEmpty();
+        assertThat(r.problems()).anySatisfy(x -> assertThat(x.code() + " " + x.message()).startsWith("DRS-9190").contains("drishti.py bi migrate --models"));
         Dataset d = r.dataset();
         assertThat(d.composed()).isTrue();
         assertThat(d.compose().from().values()).extracting(Dataset.Input::dataset).containsExactly("trading-risk", "counterparty-exposure");
-        assertThat(d.compose().joins()).hasSize(1);
-        assertThat(d.compose().joins().get(0).on()).containsExactly("counterparty");
         assertThat(d.compose().joins().get(0).type()).isEqualTo("left");
-        assertThat(d.compose().frame()).extracting(Dataset.FrameColumn::name).containsExactly("counterparty", "name", "Desk P&L", "Trades", "sector", "Exposure (EE peak)", "Exposure (PFE peak)");
-        assertThat(d.tables().get(Dataset.JOINED).columns().keySet()).containsExactly("counterparty", "name", "Desk_P_L", "Trades", "sector", "Exposure_EE_peak", "Exposure_PFE_peak");
-        assertThat(d.measures().keySet()).containsExactly("Desk P&L", "Trades", "Exposure (EE peak)", "Exposure (PFE peak)", "P&L per exposure");
-        assertThat(d.measures().get("P&L per exposure").expr()).isEqualTo("measure('Desk P&L') / measure('Exposure (EE peak)')");
+        assertThat(d.measures().keySet()).containsExactly("P&L per exposure");
     }
 
     @Test
-    void theDerivedSampleDeclaresTheColumnsOfItsTransformAndMeasuresOverThem() throws IOException {
+    void theDerivedSampleIsReadForTheConverterButRefused() throws IOException {
         DatasetParser.Result r = load("desk-pnl-vs-exposure-py");
-        assertThat(r.problems()).isEmpty();
+        assertThat(r.problems()).as("read for the converter, refused to run").anySatisfy(x -> assertThat(x.code()).isEqualTo("DRS-9190"));
         Dataset d = r.dataset();
         assertThat(d.derivedFrame()).isTrue();
         assertThat(d.derived().transform()).isEqualTo("pnl-vs-exposure");

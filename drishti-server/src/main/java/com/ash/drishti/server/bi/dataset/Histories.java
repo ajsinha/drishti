@@ -41,7 +41,7 @@ public final class Histories {
 
     /** The column a sampled measure has in the history table. */
     public static String columnName(String measure, java.util.Collection<String> taken) {
-        return Composition.identifier(measure, taken);
+        return LegacySources.identifier(measure, taken);
     }
 
     /** The column each sampled measure has in the history table, in the order of {@code history.measures}. */

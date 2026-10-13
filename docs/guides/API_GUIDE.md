@@ -1774,15 +1774,10 @@ unknown name is `422 DRS-9003`; a `PUT` that does not name `bi` keeps the powers
 `/bi/api/...` (same-origin JSON, passed on under the signed-in user). The command line wraps the reads and publish:
 [CLI_GUIDE.md](CLI_GUIDE.md#bi-workspaces-and-the-catalogue-rupaka).
 
-### The phase 0 proof of concept: `/api/v1/bi/poc` (throw-away)
+### The phase 0 proof of concept: removed
 
-Exists only while `drishti.bi.poc.enabled` is true (default `false`: `404`); never switch it on in production ([RUPAKA_POC.md](../architecture/RUPAKA_POC.md), [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibipoc--rupaka-phase-0-proof-of-concept)).
-
-| Method | Path | Notes |
-|---|---|---|
-| `POST` | `/bi/poc/query` | admin. Body `{groupBy[], layout, date, filter: {column, value}, preview: "masked"}` → a masked aggregation as Apache Arrow (`application/vnd.apache.arrow.stream`), with `X-Poc-Masked` and `Server-Timing` headers. Read-only, so a token may call it |
-| `GET` | `/bi/poc/bench?runs=` | admin. The JSON / typed / rollup comparison |
-| `GET` | `/bi/poc/rows` | server-sent events: a `view` snapshot of the followed trades, then `row` events with the rows that changed (masked as the caller sees them). Needs the `trade` kind |
+The throw-away `/api/v1/bi/poc` endpoints (and `drishti.bi.poc`) were removed in 2.2: the model layer replaced what they proved
+([RUPAKA_POC.md](../architecture/RUPAKA_POC.md) keeps the findings).
 
 ## Datasets and the query engine: `/api/v1/bi` (phase 2)
 
@@ -1794,9 +1789,9 @@ decided as for any item (`404 DRS-9001` otherwise), what the answer shows is dec
 | `GET` | `/bi/datasets` | `{datasets: [{id, title, description, endorsement, tags, sample, shipped, valid, errors, tables, measures, relationships}]}`: the published datasets the caller may see (samples are left out for those who may not see sample content) |
 | `GET` | `/bi/datasets/{id}` | the model for this caller: `{id, title, name, version, valid, problems[{level, code, path, message}], tables[{name, connector, kind, each, mode, access, columns[{name, path, type, key, calculated, expr, masked}]}], relationships[], measures[{name, expr, rollups}], hierarchies, security{rows[{role, where, appliesToYou}], masked, rowRulesEnforced}, rollups, layers}`; a composed or derived dataset ([DATASETS.md section 11](DATASETS.md#11-composed-and-derived-datasets)) also has `composition: {kind, sources[{alias, dataset, by, fields, measures, filters}], joins[{left, right, on, type}], frame[{name, from, type, measure}] \| transform, params}` |
 | `POST` | `/bi/datasets/validate` | `{yaml}` (needs `bi-author`): `{valid, problems[], tables, measures, model}` without storing anything; `model` (when the structure parsed) is the shape the Model view draws: `{tables[{name, kind, columns[...]}], relationships[{from, to, cardinality, direction, active}], measures[], hierarchies}` |
-| `POST` | `/bi/datasets/{id}/query` | runs a query (below); `?format=json` (default) or `arrow`; `?explain=true` adds the SQL (BI authors only) and skips the result cache |
+| `POST` | `/bi/datasets/{id}/query` | **removed in 2.2: `410`** with `code: DRS-9150` and `mq`, the equivalent model query (the fields, measures, filters, dates, sort and limit of the body, on the model the converter made of a 2.1 dataset, `<name>@1`, or `dataset:<name>` for a `rachana: 2` one); send it to `POST /bi/mq` ([BI_MODEL_SPEC.md 8.5](../architecture/BI_MODEL_SPEC.md#85-what-breaks-on-purpose)) |
 | `GET` | `/bi/datasets/{id}/layers` | what the BI store holds per table: dates, rows, how each was read; for a live table (phase 5) `partitions` is empty and `live` holds its counters (below) |
-| `POST` | `/bi/datasets/{id}/transform/run` | (needs `bi-author`; a token needs `bi:write`) of a derived dataset ([DATASETS.md section 11.2](DATASETS.md#112-derived-datasets-a-python-transform)): runs its Python Transform now as the caller (the inputs asked as them), keeps the result for them and remembers its columns; answers `{dataset, rows, cached, millis, columns[{name, type}]}`; `422 DRS-9020` for a dataset that is not derived, `422 DRS-9071`/`9075`, `413 DRS-9072`, `503 DRS-9074`; audits `bi-transform-run` |
+| `POST` | `/bi/datasets/{id}/transform/run` | refused since 2.2 (`422`): derived datasets were removed; a Python dataset (`source.python`) runs its Transform when it is asked |
 | `GET` | `/bi/datasets/{id}/refresh` | the refresh state (any reader of the dataset): `{enabled, scheduled, zone, calendar, dataset: {schedule, status, trigger, lastRun, nextRun, lastDurationMs, lastRows, lastDate, tables[], failures, retryAt, error, runs, history: [{at, trigger, status, rows, durationMs, date, error}]}, tables: [{table, ...the same}]}`; `history` is the last `drishti.bi.refresh.history` runs, newest first, kept in the BI store so it survives a restart; `status` is `never`, `waiting`, `running`, `ok`, `retrying`, `failed`, `invalid` or `interrupted` (the server stopped during the run); the dataset's `refresh:` schedule ([DATASETS.md section 7.2](DATASETS.md#72-scheduled-refresh)) |
 | `POST` | `/bi/datasets/{id}/refresh` | (needs `bi-author`; a token needs `bi:write`) clears the current business date's layers of this dataset and reads them again in the background; answers `{dataset, date, refreshing[], state}` at once (the state is the `GET`'s `dataset` object, `running`) and audits `bi-dataset-refresh` |
 | `GET` | `/bi/model/kinds` | every kind of every pack the caller may open as a table: `{tables: [{table, pack, kind, connector, data, source, columns[{name, path, type, promoted}]}]}` |
@@ -1831,13 +1826,14 @@ Release 2.2 wave W1 ([BI_MODEL_SPEC.md](../architecture/BI_MODEL_SPEC.md)): a **
 datasets in a star with relationships, measures, model security (only tighter) and a semver contract (item kind `model`, shipped files in `config/bi/models/<name>.model.yaml`),
 and the **model query** (`mq: 1`, YAML or JSON) is the one request for data. Every pack kind gets a read-only dataset `pack.<pack>.<kind>` without anyone writing it.
 A query names its model as `name@major` (`desk-trading@1`), a catalogue id, `dataset:<name>` (the **implicit model** of one dataset: its default measures and, for a
-pack dataset, the pack dimensions its columns reference, one hop), or the name of a version-1 dataset file (read as a model by the **compatibility reader**, with its old
-security unchanged, until wave W4 converts the files). The old `POST /bi/datasets/{id}/query` keeps its body and answer until W4.
+pack dataset, the pack dimensions its columns reference, one hop), or the name of a model the converter made of a 2.1 dataset (the same name). A `rachana: 1` dataset is no longer read as a model
+(the compatibility reader was removed in 2.2: `DRS-9151` says to run `drishti.py bi migrate --models`); `POST /bi/datasets/{id}/query` answers `410` with the
+equivalent model query.
 
 **Every consumer asks through the model query language** (section 5.9 of the spec). A report visual (and with it exports, subscriptions, board tiles, live tiles
-and the embedded report element), an Analyse extract (`POST /bi/datasets/{id}/query`), an alert, a dataset test and an AI answer build the request they always
-built; the server turns it into a model query on the dataset's model (the implicit model of a `rachana: 2` dataset, the compatibility reader's model of a
-version-1 one) and runs it through the same validator and compiler as `POST /bi/mq`, as the reader. Their answers keep their shapes; `POST /bi/reports/{id}/query`
+and the embedded report element), an Analyse extract (a model query, `mq:<model>@<major>`), an alert, a dataset test and an AI answer build the request they always
+built; the server turns it into a model query on the dataset's model (the implicit model of a `rachana: 2` dataset; a 2.1 live dataset's reports
+are asked through the engine as before until wave W3) and runs it through the same validator and compiler as `POST /bi/mq`, as the reader. Their answers keep their shapes; `POST /bi/reports/{id}/query`
 adds `mq`, the canonical model query the visual ran, and the query's warnings are added to `meta.warnings`. A refusal keeps the endpoint's code (`DRS-9020` for a
 query the engine would not take, `DRS-9021` for a masked field) and carries the model query's problems with their own codes, paths and fixes (captured):
 

@@ -23,7 +23,7 @@ description: Joins the P&L frame to the exposure frame on the counterparty and a
 sample: true
 version: 1
 interface: transform            # a table in, a table out; the other interfaces are measure and visual
-inputs: [trading-risk, counterparty-exposure]     # the datasets it reads, in the order its function receives their frames
+inputs: [pnl, exposure]         # the inputs of the Python dataset desk-pnl-vs-exposure-py-result (model queries), in the order its function receives them
 packages: [pandas]
 target: server                  # a Transform runs on the server and its result is kept for the reader
 timeout: 20                     # seconds

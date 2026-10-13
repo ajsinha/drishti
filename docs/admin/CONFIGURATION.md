@@ -288,8 +288,6 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_REPORTS_DIR` | `drishti.reports.folder` | `./data/reports` | Where report files are written. |
 | `DRISHTI_SUTRA_WATCH` | `drishti.rachana.watch` | `auto` | How Sutra hot reload notices edits: `auto` (file events, polling when they are unavailable) or `poll`. |
 | `DRISHTI_CALC_ENABLED` | `drishti.calc.enabled` | `true` | Allow Calc (Python in the browser). |
-| `DRISHTI_BI_POC_ENABLED` | `drishti.bi.poc.enabled` | `false` | Rupaka phase 0 proof of concept: switch on the throw-away `/api/v1/bi/poc` endpoints. |
-| `DRISHTI_BI_POC_LAKE` | `drishti.bi.poc.lake-dir` | empty | Where the proof of concept writes its Parquet sample lake (empty: the system temp folder). |
 | `DRISHTI_LAYOUTS_ENABLED` | `drishti.layouts.enabled` | `true` | Allow personal layouts. |
 | `DRISHTI_PIVOT_ENABLED` | `drishti.pivot.enabled` | `true` | Allow the Pivot tab. |
 | `DRISHTI_ASK_ENABLED` | `drishti.explain.ask.enabled` | `false` | Turn on Ask about this page (also list packs in `drishti.explain.ask.packs`). |
@@ -368,7 +366,6 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_LIVE_MAX_SUBSCRIPTIONS` | `live.max_subscriptions` | `32` | Live subscriptions one browser may hold. |
 | `DRISHTI_CALC_ENABLED` | `calc.enabled` | `true` | Offer Calc. |
 | `DRISHTI_BI_ENABLED` | `bi.enabled` | `true` | Rupaka phase 1: the BI top-bar menu, the `/bi` pages and the `RUPAKA` keyword. The server has its own switch, `drishti.bi.enabled`. |
-| `DRISHTI_BI_POC_ENABLED` | `bi.poc_enabled` | `false` | Rupaka phase 0 proof of concept: the `/bi/poc` page, an administrators-only entry under the BI menu. (`RUPAKA <GO>` opens the BI home, not this page.) |
 | `DRISHTI_BI_LIVE_MIN_INTERVAL_MS` | `bi.live.min_interval_ms` | `250` | Rupaka phase 5: a report or board redraws its live visuals at most this often, never two rounds at once; a burst of ticks is one redraw (100 to 5000). |
 | `DRISHTI_BI_LIVE_STALE_SECONDS` | `bi.live.stale_seconds` | `30` | A live report or board that has heard nothing from the server (not even its 5-second status) for this long says **Stale** (5 to 600). |
 | `DRISHTI_BI_BOARD_ROTATE_SECONDS` | `bi.board.rotate_seconds` | `30` | A board in kiosk mode turns to its next page after this long, unless the board sets `rotate:` (3 to 3600). |
@@ -1478,23 +1475,9 @@ Saved states, review, certification, impact analysis and bundles ([BI_GOVERNANCE
 | `pack-workspace` | `packs` | The shared workspace that holds the BI content of deployed packs (`config/bi` inside a pack archive); made at the first deploy that carries some ([BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md#bi-content-in-a-pack-archive)). |
 | `tell-people` | `true` | Tell people in the inbox (the bell) when a review is asked for (reviewers), decided (the author) or a certification is revoked (the owner and whoever certified). Off: no inbox rows; the audit log and the item's history still record everything. |
 
-### `drishti.bi.poc` — Rupaka phase 0 proof of concept
+### `drishti.bi.poc` — removed
 
-**Throw-away code**, off by default, that tests the risky parts of the BI design (`docs/architecture/RUPAKA_POC.md`):
-a masked aggregation answered as Apache Arrow from an embedded DuckDB over a generated Parquet sample lake, and a live row
-feed. Endpoints under `/api/v1/bi/poc` exist only while `enabled` is true (otherwise 404). Never switch it on in production.
-
-| Key | Default | Meaning |
-|---|---|---|
-| `enabled` | `false` (`DRISHTI_BI_POC_ENABLED`) | The endpoints exist. The console has its own switch, `bi.poc_enabled`, read from the same variable. |
-| `rows` | `10000` | Trades per day in the sample lake; never more than 10,000. |
-| `days` | `2` | Days in the sample lake; never more than 5. |
-| `lake-dir` | system temp folder (`DRISHTI_BI_POC_LAKE`) | Where the Parquet files are written on first use (and again when `rows` or `days` change). |
-| `max-group-by` | `4` | Most dimensions one query may group by. |
-| `feed-trades` | 24 trades of the trading pack | The live demo trades the row feed follows. |
-| `feed-batch` | `100ms` | How often the feed sends the rows that changed since the last send. |
-| `bi-dir` | `drishti.bi.dir` | Where the proof of concept looks for dataset files; `bench` lists the ones it finds (`biDatasets`). |
-| `bench-runs` | `30` | Default runs of `GET /api/v1/bi/poc/bench`, the JSON-column / typed-column / rollup comparison. |
+The Rupaka phase 0 proof of concept and its settings were removed in 2.2; a `drishti.bi.poc` block left in a site's configuration is ignored.
 
 ### `drishti.layouts` — personal layouts
 
