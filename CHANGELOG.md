@@ -81,7 +81,11 @@
   pictures retaken. New commands: `drishti.py bi item new|save|tests` (items from files, their expected values; exit 1 on a failure) and
   `drishti.py bi dataset refresh [--now]`; `bi model list` prints a model's name@major. Tutorial 12 (live BI and boards) says what stays on the version 1
   live datasets until W3 and what the model the converter made of them answers (a model query over the live table and its kept groups, with the SQL);
-  `bi mq` prints the layer, the rollup and, with `options: { explain: true }`, the SQL; `bi catalogue get` spaces its columns.
+  `bi mq` prints the layer, the rollup and, with `options: { explain: true }`, the SQL; `bi catalogue get` spaces its columns. Tutorial 13 (Govern BI) on a dataset and a
+  model: history, review, certification, the model's lineage (what each alias reads and who reads the model, now on its item page) and its contract (a field
+  taken out of what consumers may use is a major change with the reports that use it named; listing what consumers may use starts from everything), the
+  dataset's DRS-9126, bundles and roll-back; renames stay a version 1 dataset feature. The console passes `/lineage` on, and the impact box is not shown
+  on a dataset of the model layer (the model's Contract tab says it).
 - **Server: the old expression syntax is refused (wave A, task 6).** `drishti.bi.expr.legacy` now defaults to `refuse`: an expression in the old syntax
   is `DRS-9100` with the DEL v2 text as the fix (`drishti.py bi migrate --expressions` converts files; `legacy: warn` reads it while a site converts its
   own items). A text that is already DEL v2 but wrong gets its DEL v2 problem, and a rule written as a YAML boolean (`where: true`) reads as `True`.

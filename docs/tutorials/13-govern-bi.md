@@ -15,18 +15,27 @@
 -->
 # Tutorial 13 · Govern BI
 
-When other people rely on a model or a report, changing it needs care. Drishti keeps **every saved state**, lets you **compare and restore** them, asks a **second person to review** before something is published, lets a **steward certify** what has been checked, shows **where a dataset comes from and who reads it**, **refuses a change
-that would break a published report**, and moves content between servers as a **bundle** you can try out with a **dry run** first. This tutorial does all of it with three people.
+When other people rely on a model or a report, changing it needs care. Drishti keeps **every saved state**, lets you **compare and restore** them, asks a
+**second person to review** before something is published, lets a **steward certify** what has been checked, shows **where a model comes from and who
+reads it**, tells you **which change needs a new major version and which reports it touches**, refuses a dataset change that would break the models
+reading it, and moves content between servers as a **bundle** you can try out with a **dry run** first. This tutorial does all of it with three people,
+on a **model** of the model layer (2.2) and the dataset it reads.
+
+Every step shows it **in the UI**, **on the command line** (`python3 tools/drishti.py`, or `curl` where the tool has no command) and **as YAML**, or says
+why one of the three does not apply.
 
 ## Time to complete
 
-About 45 minutes.
+About 50 minutes.
 
 ## Before you start
 
 - [Tutorial 10](10-first-bi-report.md) done (you know workspaces and publishing), signed in as the development administrator; the same server and console as before.
-- Three people, because governance is people checking each other: **ann** writes (powers `bi` and `bi-author`), **sue** is a steward (`bi` and `bi-steward`), and the **administrator**, who holds every power and is the only one who can force a publish. Step 1 makes ann and sue.
-- Two small files in [data/](data/): [trades-model.dataset.yaml](data/trades-model.dataset.yaml) (a dataset of trades by desk and book) and [trades-report.report.yaml](data/trades-report.report.yaml) (a report that uses it).
+- Three people, because governance is people checking each other: **ann** writes (powers `bi` and `bi-author`), **sue** is a steward (`bi` and `bi-steward`), and the **administrator**, who holds every power. Step 1 makes ann and sue.
+- Three small files in [data/](data/): [rates-trades.dataset.yaml](data/rates-trades.dataset.yaml) (the rates desk's trades, a dataset of the model
+  layer), [trades-model.model.yaml](data/trades-model.model.yaml) (the model over it) and [trades-report.report.yaml](data/trades-report.report.yaml)
+  (a report on the model).
+- A token for the command line for each person you act as (tutorial 1 makes one; `DRISHTI_TOKEN` holds the one in use).
 
 ## What you will learn
 
@@ -34,10 +43,10 @@ About 45 minutes.
 - **history**: every save is a saved state; compare two; restore one (a new state, nothing lost);
 - **review**: propose, who is told, what the reviewer sees, **four-eyes**, approve and publish;
 - **certified** and **promoted**, and where they show;
-- **lineage**: where a dataset comes from and which reports read it;
-- **impact**: what breaks if a field goes, the refusal `DRS-9040`, and the administrator's override, which revokes certification;
+- **lineage**: what a model reads (datasets, pack kinds, connectors) and what reads it;
+- **the contract**: which change needs a **new major version**, and which reports use what it takes away; the refusal `DRS-9126`;
 - **environments**: a bundle, a dry run, a conflict, an overwrite;
-- **renames** that rewrite the reports, an import you can **roll back**, and lineage that reaches the connector's source.
+- **renames** that rewrite the reports (version 1 datasets), an import you can **roll back**, and lineage that reaches the connector's source.
 
 ## Step 1 · Powers, roles and two people
 
@@ -54,7 +63,21 @@ You should see the table with your two rows at the bottom, ticks as above and a 
 | `bi-steward` | certify, and decide reviews in any workspace |
 | `bi-admin` | manage BI, see every workspace and **force** what a refusal stops |
 
-Then **Admin → Users → New user**: `ann` with role `bi-writer`, `sue` with role `bi-steward`, a password each (`tutorial-pass-2026` is the one the tutorials use) and *Must change at first sign-in* unticked. Use a second browser or a private window to be two people at once; below, the picture says who is signed in.
+Then **Admin → Users → New user**: `ann` with role `bi-writer`, `sue` with role `bi-steward`, a password each (`tutorial-pass-2026` is the one the
+tutorials use) and *Must change at first sign-in* unticked. Use a second browser or a private window to be two people at once; below, the picture says who
+is signed in. **On the command line** the same two calls the page makes (the administrator's token; the BI powers are the `bi` list of a role):
+
+```text
+$ curl -s -X PUT -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
+    -d '{"kinds":["*"],"raw":true,"bi":["bi","bi-author"]}' http://localhost:18480/api/v1/admin/role-definitions/bi-writer
+{"name":"bi-writer","kinds":["*"],"raw":true,"bi":["bi","bi-author"], ...}
+$ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
+    -d '{"username":"ann","displayName":"Ann","roles":["bi-writer"],"password":"tutorial-pass-2026","mustChangePassword":false}' \
+    http://localhost:18480/api/v1/admin/users
+{"username":"ann","displayName":"Ann","roles":["bi-writer"],"enabled":true, ...}
+```
+
+There is no YAML for people: roles and users live in the server's user store ([USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)).
 
 ## Step 2 · A workspace that asks for review
 
@@ -62,30 +85,92 @@ Sign in as **ann**. Choose **Workspaces** and create **Rates desk**, ticking **R
 
 ![New workspace: Rates desk, a description, and the box requiring review ticked](img/t13/02-workspace.jpg)
 
-You should see the form with the box ticked. In a workspace that requires review nobody publishes their own work: the author **proposes** and someone else approves. Add sue as a member of the workspace (its page lists members; over the API: `PUT /api/v1/bi/workspaces/rates-desk/members/sue` with `{"role": "member"}`). Then create the dataset: in **My workspace → New item**
-or over the API, kind *dataset*, the body of `trades-model.dataset.yaml`, in `Rates desk`. (The pictures use the API for the file and the console for everything else.)
+You should see the form with the box ticked. In a workspace that requires review nobody publishes their own work: the author **proposes** and someone else
+approves. Add sue as a member of the workspace (its page lists members; over the API: `PUT /api/v1/bi/workspaces/rates-desk/members/sue` with
+`{"role": "member"}`). Then put the dataset and the model in it. **In the UI** that is **My workspace → New item** (or the workspace's own **New item**),
+kind *dataset* then *model*, **Paste YAML**, in `Rates desk`; **on the command line**, as ann (`bi item new` reads the kind from the file name):
+
+```text
+$ python3 tools/drishti.py bi model check docs/tutorials/data/trades-model.model.yaml
+valid  (model trades-model)
+  warning DRS-9131  security.rows.trade: roles without a rule see no rows of 'trade': approver, author. Add a rule for them (where: "True" lets a role see every row), or leave them out on purpose: they get "you have no access to rows of trade in this model"
+
+$ python3 tools/drishti.py bi item new rates-desk docs/tutorials/data/rates-trades.dataset.yaml --audience bi-steward,bi-writer,viewer
+bi-bebc8f4569  dataset  Rates trades  draft in Rates desk
+$ python3 tools/drishti.py bi item new rates-desk docs/tutorials/data/trades-model.model.yaml --audience bi-steward,bi-writer,viewer
+bi-da510db86e  model  Trades model  draft in Rates desk
+```
+
+**The YAML** of the two (the files above, without their comments): the dataset says what one row is and where it comes from; the model reads it as its
+one fact and adds the measures, a hierarchy and who sees which rows:
+
+```yaml
+rachana: 2
+expressions: 2
+dataset: rates-trades
+version: 1.0.0
+title: Rates trades
+source: { connector: trading-store, kind: trade }
+grain: { says: "One row per trade per business date", keys: [tradeId] }
+columns:
+  tradeId:  { type: string, role: key }
+  desk:     { type: string }
+  book:     { type: string }
+  notional: { type: decimal, format: amount0 }
+  mtm:      { type: decimal, format: signed0 }
+---
+rachana: 2
+expressions: 2
+model: trades-model
+version: 1.0.0
+title: Trades model
+datasets:
+  trade: { dataset: rates-trades, role: fact }
+measures:
+  Notional: { expr: "sum(trade.notional)", format: amount0 }
+  MTM:      { expr: "sum(trade.mtm)", format: signed0 }
+  Trades:   { expr: "count(trade)" }
+hierarchies:
+  Desk and book: [trade.desk, trade.book]
+security:
+  rows:
+    trade:
+      - { role: [admin, bi-writer, bi-steward, bi-reviewer, bi-reader, viewer], where: "True" }
+```
+
+The dataset goes through review first (ann proposes it, sue approves it; not shown, the same as step 4): a model reads published datasets.
 
 ## Step 3 · Save twice, compare, restore
 
-Open the **Trades model** item. Press **Edit**, add a `currency: string` line under the columns, write `add the currency column` in *What changed* and press **Save draft**. Press **Edit** again, rename the measure `Trades` to `Deals`, write `rename the count measure`, **Save draft**. Under **History**:
+Open the **Trades model** item (or its designer: **Models → Trades model**). Press **Edit**, give `trade.book` a display name and a description (in the
+designer that is the **Fields** tab; in the YAML, a `fields:` entry), write `name and describe the book` in *What changed* and press **Save draft**.
+Press **Edit** again, rename the measure `Trades` to `Deals`, write `rename the count measure`, **Save draft**. Under **History**:
 
 ```text
 $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" http://localhost:18480/api/v1/bi/items/<id>/history     (revisions, newest first)
-  #3  rename the count measure   ann  save
-  #2  add the currency column    ann  save
-  #1  first cut                  ann  create
+  #3  rename the count measure      ann  save
+  #2  name and describe the book    ann  save
+  #1  first cut                     ann  create
 ```
 
 Choose *saved state 1* against *the draft* and press **Show the differences**.
 
 ![History and the diff: three saved states, and a side-by-side comparison of saved state 1 and the draft, the changed lines marked](img/t13/03-history-diff.jpg)
 
-You should see the three states with who, when and what changed, and a **side-by-side** comparison: one line added (`currency: string`) and one changed (`Trades` became `Deals`). Over the API: `GET /api/v1/bi/items/<id>/diff?from=r1&to=draft` answers `"added": 1, "removed": 0, "changed": 1` and the lines.
+You should see the three states with who, when and what changed, and a **side-by-side** comparison: two lines added (the `fields:` entry) and one changed
+(`Trades` became `Deals`). Over the API: `GET /api/v1/bi/items/<id>/diff?from=r1&to=draft` answers `"added": 2, "removed": 0, "changed": 1` and the lines.
+**The YAML** the first save added:
+
+```yaml
+fields:
+  trade.book: { display: Book, description: The trading book }
+```
+
 Press **Restore as draft** on state 2. The history now has **four** states:
 
 ```text
-  #4  restored saved state 2    ann  restore
-  #3  rename the count measure  ann  save
+  #4  restored saved state 2        ann  restore
+  #3  rename the count measure      ann  save
   ...
 ```
 
@@ -106,82 +191,123 @@ $ curl -s -X POST -H "Authorization: Bearer $ANN_TOKEN" .../api/v1/bi/items/<id>
 
 Sign in as **sue** and open the item.
 
-![The review page: who asked and what they wrote, what changed (the whole file is new), Check passed, and below it what it does to reports and a data preview](img/t13/05-review.jpg)
+![The review page: who asked and what they wrote, what changed (the whole file is new), and Check passed](img/t13/05-review.jpg)
 
-You should see the **Review** section: who asked and the note, **what changed** against what is published (here all 41 lines are new: nothing is published yet), `Check passed: nothing to fix`, what it does to reports (nothing: no report reads it) and a **data preview**: the first rows read through the file connector **as sue**, with her row rules and masks.
-Write `looks right` and press **Approve and publish**.
+You should see the **Review** section: who asked and the note, **what changed** against what is published (here all 37 lines are new: nothing is
+published yet), `Check passed: nothing to fix` (the server's Check of the model: its datasets, relationships, measures and the security safeguard), and
+*Data preview*, which a model leaves to its designer (*there is no data to preview for a model*: the designer's Query panel and Analyse ask it).
+Write `looks right` and press **Approve and publish**. On the command line the same decision is
+`curl -X POST .../api/v1/bi/items/<id>/approve -d '{"note":"looks right"}'` with sue's token.
 
 ![The item after approval: published, version 1](img/t13/06-approved.jpg)
 
 You should see `published v1`. Ann is told:
 
-![Ann's inbox: sue approved dataset 'Trades model': looks right](img/t13/07-ann-inbox.jpg)
+![Ann's inbox: sue approved model 'Trades model': looks right](img/t13/07-ann-inbox.jpg)
 
-You should see `sue approved dataset 'Trades model': looks right` as the newest row. (A **Reject** with a reason is the other decision; the reason goes to the author.) Now ann makes the report: `trades-report.report.yaml` in the same workspace, proposes it, and sue approves it the same way (not shown).
+You should see `sue approved model 'Trades model': looks right` as the newest row. (A **Reject** with a reason is the other decision; the reason goes to
+the author.) Now ann makes the report, [trades-report.report.yaml](data/trades-report.report.yaml), in the same workspace, proposes it, and sue approves
+it the same way (not shown). It reads the model by reference:
+
+```yaml
+rachana: 2
+report: trades-report
+title: Trades report
+model: trades-model@1
+pages:
+  - id: overview
+    title: Overview
+    visuals:
+      - { id: notional, type: card, title: Notional, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }
+      - { id: by-desk, type: bar, title: Notional by desk, at: { x: 3, y: 0, w: 5, h: 4 }, wells: { axis: [trade.desk], values: [Notional] } }
+      - { id: rows, type: table, title: Desk and book, at: { x: 0, y: 4, w: 8, h: 4 }, wells: { columns: [trade.desk, trade.book, MTM] } }
+```
 
 ## Step 5 · Certify
 
-Published is not the same as checked. **Promoted** is the owner's mark; **certified** can only be set by a steward, and only a steward can remove it. As sue, open the dataset: the action row offers **Promote** and **Certify**.
+Published is not the same as checked. **Promoted** is the owner's mark; **certified** can only be set by a steward, and only a steward can remove it. As sue, open the model: the action row offers **Promote** and **Certify**.
 
 ![The actions of a published item for a steward: Edit, Promote, Certify, Move to workspace, Delete](img/t13/08-certify.jpg)
 
-You should see the buttons. Press **Certify** on the dataset and on the report. Then open the **Catalogue**.
+You should see the buttons. Press **Certify** on the model and on the report (the API is `POST /api/v1/bi/items/<id>/endorse` with
+`{"level": "certified"}`). Then open the **Catalogue**.
 
 ![The catalogue: Trades model and Trades report first, each with a certified badge](img/t13/09-catalogue-certified.jpg)
 
-You should see the two certified items **first** (certified items come first in the default sort), each with the green `certified` badge. The badge also shows in search results and on Home, and the **Endorsement** filter finds them.
+You should see the two certified items **first** (certified items come first in the default sort), each with the green `certified` badge. The badge also
+shows in search results, on Home and on **Models**, and the **Endorsement** filter finds them. **The YAML** says nothing about it: an endorsement is a
+decision about a version, kept by the catalogue (`endorsement: certified` in the item's metadata), never something an author writes; that is why it does not
+travel in a bundle (step 8).
 
 ## Step 6 · Lineage
 
 As ann, open the **Trades model** and scroll to **Lineage**.
 
-![Lineage: comes from the trade table of the trading pack through trading-store; read by Trades report, certified, using four fields and measures](img/t13/10-lineage.jpg)
+![Lineage of the model: the alias trade reads the dataset rates-trades, the kind trade of the pack trading through trading-store; read by Trades report](img/t13/10-lineage.jpg)
 
-You should see **Comes from** (`trade`, kind `trade` of pack `trading`, connector `trading-store`, cached) and **Read by** (`Trades report`, certified, published, uses `trade.book, trade.desk, MTM, Notional`). The same from the API:
+You should see **Comes from** (`trade` · dataset `rates-trades` · kind `trade` of pack `trading` · connector `trading-store`) and **Read by** (`Trades
+report`, a report). The same from the command line and the API:
 
 ```text
-$ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" http://localhost:18480/api/v1/bi/items/<dataset id>/lineage
-{"item": {"title": "Trades model", "kind": "dataset", "status": "published", "endorsement": "certified", "publishedVersion": 1},
- "upstream": [{"table": "trade", "kind": "trade", "packs": ["trading"], "connector": "trading-store", "mode": "cached"}],
- "downstream": [{"title": "Trades report", "kind": "report", "status": "published", "endorsement": "certified",
-                 "uses": {"fields": ["trade.book", "trade.desk"], "measures": ["MTM", "Notional"], "hierarchies": []}}], "hidden": 0}
+$ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" http://localhost:18480/api/v1/bi/lineage/trades-model@1
+{"ref":"trades-model@1","path":[{"kind":"model","name":"trades-model","version":"1.0.0"}],
+ "datasets":{"trade":[{"kind":"dataset","name":"rates-trades"},{"kind":"pack-kind","name":"trade","pack":"trading","connector":"trading-store"}]},"problems":[]}
+
+$ python3 tools/drishti.py bi model consumers trades-model@1
+kind    id             title
+------  -------------  -------------
+report  bi-ba776c0311  Trades report
 ```
 
-You should see the same two lists as data. (A report you may not open is counted under `hidden`, not named.)
+You should see the same two lists as data. (A report you may not open is counted under `hidden`, not named.) **Models → Trades model → Open the
+designer** shows the same consumers above its tabs (**Used by**), and the dataset's own page (`/bi/ds/<id>`) shows where its rows come from. There is no
+YAML for lineage: it is worked out from the files, never written down.
 
 ## Step 7 · What breaks if I remove a field
 
-Before changing a published dataset, ask. In the **Impact on reports** box on the dataset's page type `trade.book` and press **Check**, or ask the API:
+A model is a **contract**: reports bind to its major version (`trades-model@1`), and a change that takes away something they may use needs a **new major
+version** ([BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1)). Before changing a published model, ask.
+As ann open the model's designer, the **Contract** tab, and set **What consumers may use** to *only what is ticked below*: every field and measure
+consumers use today starts ticked. Untick `trade.book`.
+
+![The Contract tab: Changes since the published version, major, takes trade.book out of the contract, used by Trades report; a new major version is needed, Use version 2.0.0](img/t13/11-contract-change.jpg)
+
+You should see, at the top, **Changes since the published version**: `major` *takes trade.book out of the contract · used by Trades report*, then
+*These changes need a new major version: what reads trades-model@1 has to move to it. The draft says 1.0.0.* and **Use version 2.0.0**, and *1 item
+reads trades-model@1: Trades report (report)*. Nothing is saved yet. The impact is the server's answer for that one field:
 
 ```text
-$ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "http://localhost:18480/api/v1/bi/items/<dataset id>/impact?remove=trade.book"
-{"change": {"breaking": true, "removedFields": ["trade.book"], "removedMeasures": [], "removedHierarchies": [], ...},
- "breaksPublished": true,
- "published": [{"title": "Trades report", "workspace": "rates-desk", "endorsement": "certified", "uses": ["trade.book (page overview, visual rows)"]}],
- "refused": true, "canForce": false, "wouldRevokeCertification": ["Trades model", "Trades report"], ...}
+$ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "http://localhost:18480/api/v1/bi/models/trades-model@1/impact?target=trade.book"
+{"model":"bi-da510db86e","target":"trade.book",
+ "consumers":[{"kind":"report","id":"bi-ba776c0311","title":"Trades report","status":"published","owner":"ann","workspace":"rates-desk"}],"unknown":[]}
 ```
 
-You should see `breaksPublished: true`, the report and the visual that reads the field, `refused: true` (the server will say no), and `wouldRevokeCertification` naming both items. Ann goes ahead anyway: she removes the `book` column and the hierarchy that uses it, saves, and proposes the change. As **sue**, open the item and press **Approve and publish**.
+**The YAML** that change writes into the model (`exposes: listed` and the lists; a contract that lists nothing is `exposes: all`, the default):
 
-![The refusal: DRS-9040 publishing 'Trades model' would break 1 published report by removing or renaming trade.book, Desk and book: 'Trades report' (trade.book (page overview, visual rows))](img/t13/11-impact-refused.jpg)
+```yaml
+contract:
+  exposes: listed
+  fields: [trade.tradeId, trade.desk]          # trade.book taken out
+  measures: [Notional, MTM, Trades]
+```
 
-You should see the red banner `DRS-9040 publishing 'Trades model' would break 1 published report by removing or renaming trade.book, Desk and book: 'Trades report' (trade.book (page overview, visual rows)). Ask a bi-admin to publish it with force, or keep the names the reports use.`
-Sue is a steward, not a `bi-admin`: `force` from her answers `DRS-9002 sue does not hold the bi-admin power`. The right ways out are to fix the report first, to publish the dataset with the old names kept beside the new ones, or to ask the administrator. Sign in as the **administrator** and open the item.
+Leave the model as it is (do not save) and try the other way to lose the field: drop the `book` column from the **dataset**. As ann, edit **Rates
+trades**, delete the line `  book: { type: string }`, save and propose; as sue, press **Approve and publish**.
 
-![The administrator's page after the refusal: the same banner, and a button Publish anyway (bi-admin)](img/t13/12-force-offer.jpg)
+![The dataset's publish refused: DRS-9126, a breaking change needs a new major version (2.0.0, not 1.0.0): the column book is removed](img/t13/12-dataset-refused.jpg)
 
-You should see the same refusal and a new button, **Publish anyway (bi-admin)**. Press it.
-
-![After the forced publish: "Published over the warning (forced)", and a Heads up list: the version removes trade.book, the report is broken, both certifications were revoked](img/t13/13-forced.jpg)
-
-You should see `Published over the warning (forced).` and a **Heads up** box: the version removes `trade.book`, the published report `Trades report` **is broken**, and **the certification of both items was revoked**, because nobody has checked the new shape. The steward is told (the **Bi-certification** rows of the inbox: `Certification of dataset 'Trades model' was revoked: the dataset changed incompatibly`),
-and the review record of the dataset says it plainly:
+You should see `DRS-9126 'Rates trades' cannot be published: a breaking change needs a new major version (2.0.0, not 1.0.0): the column 'book' is
+removed`. The server compares the draft with the published version: removing a column, or changing its type, is breaking; adding one is not. The same
+from the command line (sue's token):
 
 ```text
- sue certify   ->   ann request   ->   dev-admin revoke "the dataset changed incompatibly"   ->   dev-admin approve
+$ curl -s -X POST -H "Authorization: Bearer $SUE_TOKEN" -H 'Content-Type: application/json' -d '{"note":"x"}' \
+    http://localhost:18480/api/v1/bi/items/<dataset id>/approve
+{"code": "DRS-9126", "detail": "'Rates trades' cannot be published: a breaking change needs a new major version (2.0.0, not 1.0.0): the column 'book' is removed"}
 ```
 
-A forced publish is audited as such. Fixing the report and having sue certify again puts things right.
+The right ways out are to keep the column, or to publish the change as `version: 2.0.0` once the reports that read `trade.book` have been changed
+first (the model designer's **Used by** and this tab name them). Ann withdraws the proposal and saves the dataset back as it was.
 
 ## Step 8 · Move it to another server: a bundle and a dry run
 
@@ -189,19 +315,28 @@ A forced publish is audited as such. Fixing the report and having sue certify ag
 
 ![Environments: export a bundle of the workspace, and import below](img/t13/14-environments-export.jpg)
 
-You should see the export card (a workspace, *include the datasets the reports read*). The file holds the two items with their draft bodies, owner, audience and **every published version**, each with a checksum, and a checksum over the whole:
+You should see the export card (a workspace, *include the datasets the reports read*). The file holds the items with their draft bodies, owner, audience
+and **every published version**, each with a checksum, and a checksum over the whole (`GET /api/v1/bi/bundle` with `workspace=rates-desk`, or
+`items=<id>,<id>`; captured):
 
 ```text
-{"format": "drishti-bi-bundle", "formatVersion": 1, "createdAt": "2026-10-12T04:00:20Z", "createdBy": "ann", "checksum": "b6882d96...a4144bf"}
-[{"title": "Trades model", "kind": "dataset", "owner": "ann", "status": "published", "publishedVersion": 2, "versions": [1, 2], "endorsement": "none"},
- {"title": "Trades report", "kind": "report", "owner": "ann", "status": "published", "publishedVersion": 1, "versions": [1], "endorsement": "none"}]
+{"format": "drishti-bi-bundle", "formatVersion": 1, "createdAt": "2026-10-13T06:46:50Z", "createdBy": "ann", "checksum": "de0f811f...a20db6"}
+[{"title": "Rates trades", "kind": "dataset", "owner": "ann", "status": "draft", "publishedVersion": 1, "versions": [1], "endorsement": "none"},
+ {"title": "Trades model", "kind": "model", "owner": "ann", "status": "published", "publishedVersion": 1, "versions": [1], "endorsement": "certified"},
+ {"title": "Trades report", "kind": "report", "owner": "ann", "status": "published", "publishedVersion": 1, "versions": [1], "endorsement": "certified"}]
 ```
 
-(`endorsement: none`: **certification does not travel**. A steward of the receiving server certifies after looking.) A bundle is a file: copy it to the other server. Importing needs a **steward** (it is a governance act). Here the "other server" is the same one, and, to make something to see, the report is edited after the export. As **sue** choose the bundle on *Import a bundle* and press **Dry run**, which changes nothing.
+**Certification does not travel**: the dry run says so for each certified item (*certification does not travel: it is promoted here; a bi-steward
+certifies it after the import*), and a steward of the receiving server certifies after looking. A bundle is a file: copy it to the other server.
+Importing needs a **steward** (it is a governance act). Here the "other server" is the same one, and, to make something to see, the report is edited after
+the export. As **sue** choose the bundle on *Import a bundle* and press **Dry run**, which changes nothing.
 
-![The dry run: Trades model unchanged, identical to what is here; Trades report conflict, "it exists here and differs: import with overwrite to replace it"](img/t13/15-environments-conflict.jpg)
+![The dry run: Rates trades and Trades model unchanged, identical to what is here; Trades report conflict, "it exists here and differs: import with overwrite to replace it"](img/t13/15-environments-conflict.jpg)
 
-You should see a table: `Trades model` **unchanged** (`identical to what is here`) and `Trades report` **conflict** with the reason `it exists here and differs (the draft differs): import with overwrite to replace it`. The API gives the same plan: `"counts": {"create": 0, "update": 0, "unchanged": 1, "conflict": 1, "invalid": 0}, "ok": false`. Tick **Overwrite items that exist here and differ** and run the dry run again.
+You should see a table: `Rates trades` and `Trades model` **unchanged** (`identical to what is here`) and `Trades report` **conflict** with the reason
+`it exists here and differs (the draft differs): import with overwrite to replace it`. The API gives the same plan
+(`POST /api/v1/bi/bundle/import` with `{"bundle": ..., "dryRun": true}`): `"counts": {"create": 0, "update": 0, "unchanged": 2, "conflict": 1, "invalid":
+0}, "ok": false`. Tick **Overwrite items that exist here and differ** and run the dry run again.
 
 ![The dry run with overwrite ticked: the report is an update, and Import is enabled](img/t13/16-environments-ready.jpg)
 
@@ -211,11 +346,15 @@ You should see `Trades report` as an **update** and the **Import** button enable
 
 ![The history of the item on a phone: one column, finger-sized buttons](img/t13/17-phone-history.jpg)
 
-You should see the same sections stacked in one column, the tables scrolling inside their own frames and every button at least 44 pixels high.
+You should see the same sections stacked in one column, the tables scrolling inside their own frames and every button at least 44 pixels high. The
+command line and the YAML are the same on any screen.
 
-## Step 10 · A rename is not a breakage
+## Step 10 · A rename is not a breakage (version 1 datasets)
 
-Step 7 refused a publish that removed a field a report used. But often a field is only **renamed**. Say the *Orders desk* dataset reads `book` from the document path `book.name`, and a report charts `orders.book`. Ann renames the column to `desk_book` (the same `path:`) and the measure `Gross` to `Notional total` (the same expression), saves and proposes. Sue opens the dataset to review it.
+Step 7 stopped a change that removed a field a report used. But often a field is only **renamed**. A **version 1 dataset** (`rachana: 1`, the 2.1
+format the live samples still use) recognises a rename and rewrites its reports in the same step. Say the *Orders desk* dataset reads `book` from the
+document path `book.name`, and a report charts `orders.book`. Ann renames the column to `desk_book` (the same `path:`) and the measure `Gross` to
+`Notional total` (the same expression), saves and proposes. Sue opens the dataset to review it.
 
 ![The review: orders.book and Gross recognised as renames, and the button Approve and update the reports](img/t13/20-rename-impact.jpg)
 
@@ -223,7 +362,26 @@ You should see, in the review under *What it does to reports*, **Recognised as r
 
 ![The report's history: a saved state with the origin rename](img/t13/21-renamed-report.jpg)
 
-You should see, in the *Orders report*'s history, a new published version (`published v2`) whose saved state says `renamed [...]` (its origin is `rename`), and a `rename` line in the review record: the report's wells now name `orders.desk_book` and `Notional total` (titles are never touched), and the dataset's new version is published in the same step. If the same change had also **changed a type or an expression** (a column from `decimal` to `integer`, a measure from `count(orders)` to `count(orders) * 2`), the impact would list it under *Changed type or meaning* with the reports that use it; that is shown, not refused.
+You should see, in the *Orders report*'s history, a new published version whose saved state says `renamed [...]` (its origin is `rename`), and a
+`rename` line in the review record: the report's wells now name `orders.desk_book` and `Notional total` (titles are never touched), and the dataset's new
+version is published in the same step. The report as it was rewritten (`GET /api/v1/bi/items/<report id>`, captured):
+
+```yaml
+      - id: gross
+        type: card
+        title: Gross
+        wells: { values: [Notional total] }
+      - id: by-book
+        type: bar
+        title: Orders by book
+        wells: { axis: [orders.desk_book], values: [Orders] }
+```
+
+On the command line the review answer is `GET /api/v1/bi/items/<dataset id>/impact` (`"renames": [{"from": "orders.book", "to": "orders.desk_book",
+"kind": "field"}, {"from": "Gross", "to": "Notional total", "kind": "measure"}], "renamable": true`), and the button is `POST .../approve` with
+`{"applyRenames": true}`. In a **model**, measures and relationships carry **stable ids** the server writes on save (`id: m_notional`); today
+a model's Contract tab lists a renamed measure as one taken away (major) and one added, with the reports that use the old name, so rename a model's
+measure as a new major version, or keep the old name.
 
 ## Step 11 · Roll an import back
 
@@ -231,7 +389,9 @@ An import is not final. **Environments** now lists every import under *Imports y
 
 ![Imports you can roll back: who ran it, from what, how many items, and Roll back this import](img/t13/22-imports-rollback.jpg)
 
-You should see one row for the import (`bundle`, one item, one replaced) and the button **Roll back this import**. Press it.
+You should see one row for the import (`bundle`, one item, one replaced) and the button **Roll back this import**. Press it. On the command line the list is
+`GET /api/v1/bi/imports` (captured: `{"id": "mv6bj6vt-dcb179", "by": "sue", "source": "bundle", "madeBy": "ann", "items": 1, "created": 0, "replaced": 1,
+"rolledBack": false}`) and the button is `POST /api/v1/bi/imports/<id>/rollback`.
 
 ![After the roll back: the row says rolled back by sue, and the report has Ann's retitled draft again](img/t13/23-rolled-back.jpg)
 
@@ -239,18 +399,32 @@ You should see the row say it was rolled back, and the report's draft is Ann's a
 
 ## Step 12 · Where does the data really come from?
 
-Step 6's lineage stopped at the connector's name. Now it goes one step further: it shows what the connector's file says it reads. Ann's *Lake orders* dataset reads through the connector `orders-lake`; the administrator looks first, then Ann.
+Step 6's lineage stopped at the connector's name. A dataset's item page (its **Lineage** section) goes one step further: it shows what the connector's
+file says it reads. Ann's *Lake
+orders* dataset (a dataset of the model layer, `source: { connector: orders-lake, kind: trade }`) reads through the connector `orders-lake`; the
+administrator looks first, then Ann.
 
 ![Lineage as the administrator: the connector and its root /srv/lake/orders](img/t13/24-lineage-source.jpg)
 
 ![Lineage as Ann: the same keys, the values replaced by dots](img/t13/25-lineage-source-reader.jpg)
 
-You should see, as the administrator, `reads from (file): root /srv/lake/orders`; as Ann, `root •••`. Only an administrator reads where a connector reads from (a table, a topic, a path, a bucket, a host); everybody else sees that there is a source and what kind of setting names it. Credentials never appear in either.
+You should see, as the administrator, `reads from (file): root /srv/lake/orders`; as Ann, `root •••`. Only an administrator reads where a connector reads
+from (a table, a topic, a path, a bucket, a host); everybody else sees that there is a source and what kind of setting names it. Credentials never appear in
+either. The API answers the same, masked as you (`GET /api/v1/bi/items/<id>/lineage`, captured as the administrator and as ann):
+
+```text
+"source": {"connector": "orders-lake", "plugin": "file", "masked": false, "declared": {"root": "/srv/lake/orders"}}
+"source": {"connector": "orders-lake", "plugin": "file", "masked": true,  "declared": {"root": "•••"}}
+```
+
+The YAML behind it is the connector's own file (`config/connectors/orders-lake.yaml`: `plugin: file`, `kinds: [trade]`, `settings: { root:
+/srv/lake/orders }`), which only an administrator edits (**Admin → Connectors**).
 
 ## Next steps
 
 - [Tutorial 14](14-python-and-analyse.md): Python in a measure, a visual and a notebook.
 - [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md): every rule, setting (`drishti.governance.four-eyes`, `drishti.bi.governance.refuse-breaking`) and error code of this tutorial.
+- [BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1): models, their contract and their versions.
 - [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md): roles and users in depth; tutorial 17 summarises them.
 
 ## If something goes wrong
@@ -259,7 +433,9 @@ You should see, as the administrator, `reads from (file): root /srv/lake/orders`
 |---|---|
 | `DRS-9002` | the person lacks the power the step needs (`bi-author` to publish or propose, `bi-steward` to approve or certify, `bi-admin` to force) |
 | `DRS-9005` | four-eyes: the person who proposed tried to approve or reject; they may only withdraw |
-| `DRS-9040` | the change would break published reports: fix the reports, keep the old names, **publish and update the reports** when the impact shows every lost name as a rename, or ask a `bi-admin` to force it |
+| `DRS-9126` | a breaking change (a column removed or retyped, something consumers use taken away) needs the next major version; change the reports first, or keep what they read |
+| `DRS-9131` (a warning on Check) | roles without a row rule see no rows of that dataset in the model; add a rule, or leave them out on purpose |
+| `DRS-9040` | (a version 1 dataset) the change would break published reports: fix the reports, keep the old names, **publish and update the reports** when the impact shows every lost name as a rename, or ask a `bi-admin` to force it |
 | the roll back says `DRS-9004` | an item was edited or published after the import: nothing was changed; a `bi-admin` may force it, losing that work |
 | Propose for review is not offered | the workspace does not require review: publish directly; or you are not a member of it |
 | no email about a review | the **inbox** (the bell) is always told; email needs the mail settings of [tutorial 11](11-bi-that-runs-itself.md) |

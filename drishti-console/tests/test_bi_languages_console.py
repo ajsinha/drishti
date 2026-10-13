@@ -304,3 +304,13 @@ def test_an_old_dataset_link_opens_the_page_of_a_model_layer_dataset():
     r = client.get("/bi/d/file:dataset:trades-basic-trade", follow_redirects=False)
     assert r.status_code == 307 and r.headers["location"] == "/bi/ds/file:dataset:trades-basic-trade"
     assert client.get("/bi/d/file:dataset:live-trading", follow_redirects=False).status_code == 200      # a 2.1 (live) dataset keeps its page
+
+
+def test_a_contract_that_starts_listing_takes_out_what_it_does_not_list():
+    old = {"model": "m", "version": "1.0.0", "measures": {"A": {"expr": "sum(t.a)"}, "B": {"expr": "count(t)"}}}
+    new = dict(old, contract={"exposes": "listed", "fields": ["t.desk"], "measures": ["A"]})
+    d = ml.contract_diff(old, new, ["t.desk", "t.book"])
+    assert [c["text"] for c in d["changes"]] == ["takes t.book out of the contract", "takes the measure B out of the contract"]
+    assert d["bump"] == "major" and d["next"] == "2.0.0" and d["changes"][0]["target"] == "t.book"
+    back = ml.contract_diff(new, old, ["t.desk", "t.book"])
+    assert [c["level"] for c in back["changes"]] == ["minor"] and back["changes"][0]["text"] == "adds t.book to the contract"

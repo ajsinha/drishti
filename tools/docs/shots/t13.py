@@ -14,9 +14,11 @@
 
 """Pictures of tutorial 13, Govern BI (docs/tutorials/13-govern-bi.md), written to docs/tutorials/img/t13/.
 
-Three people: ann writes (bi, bi-author), sue is a steward (bi, bi-steward) and the development administrator forces what a refusal stops. A dataset is saved twice,
-compared, restored, proposed, reviewed and published; a report is built on it; both are certified; the lineage and the impact of removing a column are read; a
-publish that would break the report is refused and then forced; the workspace is exported as a bundle and the bundle imported as a dry run.
+Three people: ann writes (bi, bi-author), sue is a steward (bi, bi-steward) and the development administrator. A dataset of the model layer and a model over it
+(2.2): the model is saved twice, compared, restored, proposed, reviewed and published; a report is built on it; both are certified; the model's lineage is read;
+dropping a column a report uses shows in the model's Contract tab as a new major version with the report named, and the dataset's publish is refused
+(DRS-9126); the workspace is exported as a bundle and the bundle imported as a dry run. Renames of a version 1 dataset, rolling an import back and the lineage
+past the connector follow.
 
 The pictures run in order (the first makes what the others use), as ann, sue and the administrator in turn. The captured API answers are printed as they are read."""
 from __future__ import annotations
@@ -33,7 +35,7 @@ from shotlib import Ctx, register
 shot = register("t13", OUT / "t13")
 DATA = ROOT / "docs" / "tutorials" / "data"
 WS = "rates-desk"
-MODEL, REPORT = "Trades model", "Trades report"
+MODEL, REPORT, DATASET = "Trades model", "Trades report", "Rates trades"
 STATE: dict = {}
 
 
@@ -91,7 +93,7 @@ def show(label: str, value):
 def authoring(c: Ctx):
     people(c)
     login(c, height=900)
-    clean_everywhere(c, MODEL, REPORT, workspace_names=("Rates desk",))
+    clean_everywhere(c, REPORT, MODEL, DATASET, workspace_names=("Rates desk",))
     go(c, "/admin/bi", wait="table", settle=1500)
     c.page.locator("tr", has_text="bi-writer").first.evaluate("e => e.scrollIntoView({block: 'center'})")
     c.page.wait_for_timeout(500)
@@ -106,12 +108,18 @@ def authoring(c: Ctx):
     c.page.click("text=Create workspace")
     c.page.wait_for_timeout(1500)
     bi(c, "PUT", f"/workspaces/{WS}/members/sue", {"role": "member"})
-    made = bi(c, "POST", f"/workspaces/{WS}/items", {"kind": "dataset", "title": MODEL, "description": "Trades by desk and book, for the rates desk",
-                                                      "body": (DATA / "trades-model.dataset.yaml").read_text(), "message": "first cut", "tags": ["rates"],
-                                                      "audienceRoles": ["bi-steward", "bi-writer", "viewer"]})
+    audience = ["bi-steward", "bi-writer", "viewer"]
+    ds = bi(c, "POST", f"/workspaces/{WS}/items", {"kind": "dataset", "title": DATASET, "description": "The rates desk's trades", "body": (DATA / "rates-trades.dataset.yaml").read_text(),
+                                                    "message": "first cut", "tags": ["rates"], "audienceRoles": audience})
+    STATE["dataset"] = ds["id"]
+    publish_as_sue(c, ds["id"])                                        # the dataset first: proposed by ann, approved by sue (not shown)
+    as_(c, "ann")
+    made = bi(c, "POST", f"/workspaces/{WS}/items", {"kind": "model", "title": MODEL, "description": "Trades by desk and book, for the rates desk",
+                                                      "body": (DATA / "trades-model.model.yaml").read_text(), "message": "first cut", "tags": ["rates"],
+                                                      "audienceRoles": audience})
     STATE["model"] = made["id"]
     open_item(c, made["id"])
-    edit_body(c, lambda t: t.replace("      book:      string\n", "      book:      string\n      currency:  string\n"), "add the currency column")
+    edit_body(c, lambda t: t.replace("hierarchies:\n", "fields:\n  trade.book: { display: Book, description: The trading book }\nhierarchies:\n"), "name and describe the book")
     edit_body(c, lambda t: t.replace("  Trades:   { expr", "  Deals:    { expr"), "rename the count measure")
     c.page.select_option("[data-diff-from]", "r1")
     c.page.select_option("[data-diff-to]", "draft")
@@ -140,7 +148,7 @@ def review(c: Ctx):
     show("sue_inbox", sue_inbox)
     model = STATE.get("model") or item_id(c, MODEL)
     open_item(c, model)
-    c.page.wait_for_selector("[data-review-body] table.bi-grid")
+    c.page.wait_for_function("() => /Check passed|Check found/.test((document.querySelector('[data-review-body]') || {}).textContent || '')", timeout=30000)
     c.page.wait_for_timeout(500)
     region(c, "05-review.jpg", "[data-sec-review]")
     show("review", bi(c, "GET", f"/items/{model}/review"))
@@ -169,7 +177,8 @@ def certify(c: Ctx):
     report = STATE.get("report") or item_id(c, REPORT)
     open_item(c, model)
     region(c, "08-certify.jpg", "[data-actions]", pad=14)
-    c.page.get_by_role("button", name="Certify").click()
+    if c.page.get_by_role("button", name="Certify").count():          # a second run finds it certified already
+        c.page.get_by_role("button", name="Certify").click()
     c.page.wait_for_timeout(1500)
     bi(c, "POST", f"/items/{report}/endorse", {"level": "certified"})
     go(c, "/bi/catalogue", wait=".bi-card", settle=1500)
@@ -177,42 +186,42 @@ def certify(c: Ctx):
     as_(c, "ann")
     open_item(c, model)
     region(c, "10-lineage.jpg", "[data-sec-lineage]")
-    show("lineage_dataset", bi(c, "GET", f"/items/{model}/lineage"))
+    show("lineage_model", bi(c, "GET", "/lineage/trades-model@1"))
+    show("consumers", bi(c, "GET", "/models/trades-model@1/consumers"))
     show("lineage_report", bi(c, "GET", f"/items/{report}/lineage"))
-    show("impact_hypothetical", bi(c, "GET", f"/items/{model}/impact?remove=trade.book"))
+    show("impact_on_book", bi(c, "GET", "/models/trades-model@1/impact?target=trade.book"))
 
 
-@shot("11-impact-refused.jpg", also=("12-force-offer.jpg", "13-forced.jpg"))
+@shot("11-contract-change.jpg", also=("12-dataset-refused.jpg",))
 def impact(c: Ctx):
+    """Dropping a column a published report uses: the model's Contract tab names the change, the report and the version it needs; the dataset's publish is
+    refused until its version says so (DRS-9126). Nothing is saved in the model."""
     as_(c, "ann")
     model = STATE.get("model") or item_id(c, MODEL)
-    open_item(c, model)
-    edit_body(c, lambda t: re.sub(r"^      book: .*\n", "", t, flags=re.M).replace("Desk and book: [trade.desk, trade.book]", "Desk: [trade.desk]"), "drop the book column")
-    show("impact_draft", bi(c, "GET", f"/items/{model}/impact"))
-    c.page.get_by_role("button", name="Propose for review").click() if False else None
-    c.page.get_by_role("button", name="Propose for review").click()
-    c.page.wait_for_function("() => document.querySelector('[data-msg]').textContent.includes('Proposed')")
-    as_(c, "sue")
-    open_item(c, model)
-    c.page.get_by_role("button", name="Approve and publish").click()
-    c.page.wait_for_selector("[data-force]:not([hidden])")
-    c.page.wait_for_timeout(700)
-    region(c, "11-impact-refused.jpg", ".bi-canvas", pad=0)
-    show("refusal", call(c, "POST", f"/bi/api/items/{model}/publish", {"note": "drop book"}))
-    show("refusal_force_by_non_admin", call(c, "POST", f"/bi/api/items/{model}/approve", {"note": "x", "force": True}))
-    login(c)
-    open_item(c, model)
-    c.page.get_by_role("button", name="Approve and publish").click()
-    c.page.wait_for_selector("[data-force] button")
-    c.page.wait_for_timeout(500)
-    region(c, "12-force-offer.jpg", ".bi-canvas", pad=0)
-    c.page.get_by_role("button", name="Publish anyway (bi-admin)").click()
-    c.page.wait_for_selector("[data-warnings]:not([hidden])")
+    go(c, "/bi/md/" + model, wait="[data-md-root][data-ready=yes]", settle=1500)
+    c.page.click('[data-tab="contract"]')
+    c.page.wait_for_selector("[data-c-exposes]", timeout=20000)
+    c.page.select_option("[data-c-exposes]", "listed")                 # listing starts from everything: untick what to take away
+    c.page.wait_for_selector('[data-c-pick="trade.book"]:checked', timeout=20000)
+    c.page.uncheck('[data-c-pick="trade.book"]')
+    c.page.wait_for_selector("[data-contract-changes] li", timeout=30000)
     c.page.wait_for_timeout(800)
-    region(c, "13-forced.jpg", ".bi-canvas", pad=0)
+    page_shot(c, "11-contract-change.jpg", c.page.evaluate("() => { const b = document.querySelector('[data-contract-pane]').getBoundingClientRect(); return {x: b.x, y: b.y + window.scrollY, width: b.width, height: Math.min(b.height, 640)}; }"), pad=8)
+    # the dataset: the column goes, and the server says the version must say so
+    ds = STATE.get("dataset") or item_id(c, DATASET)
+    body = (DATA / "rates-trades.dataset.yaml").read_text().replace("  book:     { type: string }\n", "")
+    bi(c, "PUT", f"/items/{ds}", {"body": body, "message": "drop the book column"})
+    bi(c, "POST", f"/items/{ds}/propose", {"note": "we no longer split by book"})
     as_(c, "sue")
-    show("sue_inbox_after", bi(c, "GET", "/me/inbox?limit=5"))
-    show("history_model", bi(c, "GET", f"/items/{model}/history"))
+    open_item(c, ds)
+    c.page.get_by_role("button", name="Approve and publish").click()
+    c.page.wait_for_function("() => /DRS-9126/.test(document.querySelector('[data-msg]').textContent)", timeout=30000)
+    c.page.wait_for_timeout(600)
+    region(c, "12-dataset-refused.jpg", ".bi-canvas", pad=0)
+    show("refusal", call(c, "POST", f"/bi/api/items/{ds}/approve", {"note": "x"}))
+    as_(c, "ann")
+    bi(c, "POST", f"/items/{ds}/withdraw", {})
+    bi(c, "PUT", f"/items/{ds}", {"body": (DATA / "rates-trades.dataset.yaml").read_text(), "message": "keep the book column"})
 
 
 @shot("14-environments-export.jpg", also=("15-environments-conflict.jpg", "16-environments-ready.jpg"))
@@ -381,8 +390,8 @@ def lineage_source(c: Ctx):
     for it in bi(c, "GET", "/catalogue").get("items", []):
         if it["title"] == "Lake orders" and not it.get("shipped"):
             bi(c, "DELETE", "/items/" + it["id"])
-    body = ("rachana: 1\ndataset: lake-orders\ntitle: Lake orders\ndescription: Orders read from the order lake\ntables:\n  o:\n    source: { connector: orders-lake, kind: trade }\n"
-            "    columns: { code: string }\nmeasures:\n  Orders: { expr: \"count(o)\" }\n")
+    body = ("rachana: 2\nexpressions: 2\ndataset: lake-orders\nversion: 1.0.0\ntitle: Lake orders\ndescription: Orders read from the order lake\n"
+            "source: { connector: orders-lake, kind: trade }\ncolumns:\n  code: { type: string }\n")
     ds = bi(c, "POST", f"/workspaces/{WS}/items", {"kind": "dataset", "title": "Lake orders", "body": body, "audienceRoles": ["bi-steward", "bi-writer", "viewer"]})["id"]
     publish_as_sue(c, ds)
     login(c)

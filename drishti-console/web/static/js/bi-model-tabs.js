@@ -325,7 +325,14 @@
     life.addEventListener('change', () => M.edit((doc) => { doc.lifecycle = life.value; }, true));
     const c = M.doc.contract || {};
     const exposes = sel([['all', 'everything in the model'], ['listed', 'only what is ticked below']], c.exposes || 'all', { 'data-c-exposes': '', 'aria-label': 'What consumers may use', disabled: M.readOnly });
-    exposes.addEventListener('change', () => M.edit((doc) => { doc.contract = Object.assign({}, doc.contract || {}, { exposes: exposes.value }); if (exposes.value === 'all') { delete doc.contract.fields; delete doc.contract.measures; if (Object.keys(doc.contract).length === 1) { delete doc.contract; } } }));
+    exposes.addEventListener('change', () => M.edit((doc) => {
+      doc.contract = Object.assign({}, doc.contract || {}, { exposes: exposes.value });
+      if (exposes.value === 'all') { delete doc.contract.fields; delete doc.contract.measures; if (Object.keys(doc.contract).length === 1) { delete doc.contract; } return; }
+      if (!doc.contract.fields && !doc.contract.measures) {                       // listing starts from everything consumers use today: untick what to take away
+        doc.contract.measures = Object.keys(doc.measures || {});
+        doc.contract.fields = fieldsOf((col) => col.role !== 'amount');
+      }
+    }));
     const picks = h('div', { class: 'bi-layer-picks', hidden: (c.exposes || 'all') !== 'listed' });
     const tick = (key, name) => {
       const box = h('input', { type: 'checkbox', checked: (c[key] || []).indexOf(name) >= 0, 'data-c-pick': name, disabled: M.readOnly });

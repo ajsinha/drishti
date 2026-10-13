@@ -459,11 +459,12 @@ def _hidden(doc: dict) -> set:
     return out | {str(m) for m, p in _measure_map(doc).items() if p.get("hidden")}
 
 
-def contract_diff(old: dict, new: dict) -> dict:
+def contract_diff(old: dict, new: dict, all_fields: list | None = None) -> dict:
     """What a draft changes against the published model (BI_DESIGN.md 12.2, the contract diff), each change with the semver level it needs: a removed or
     redefined measure, dataset, relationship or exposed field breaks consumers (major); an added one is minor; descriptions, formats, folders and display
     names are a patch. Security changes need no version (they are audited at publish). ``bump`` is the level, ``next`` the version it proposes, ``ok``
-    whether the draft's own version is already there. The server's publish decides (``DRS-9126``); this is the designer's advance notice."""
+    whether the draft's own version is already there. The server's publish decides (``DRS-9126``); this is the designer's advance notice. ``all_fields`` (the
+    model's fields, from its description) is what a contract that exposes everything exposes, so a contract that starts listing is compared with it."""
     changes: list[dict] = []
 
     def add(level, what, text, target=None):
@@ -500,6 +501,19 @@ def contract_diff(old: dict, new: dict) -> dict:
     for k in sorted(set(orels) & set(nrels)):
         if (orels[k].get("active", True) is not False) != (nrels[k].get("active", True) is not False) or orels[k].get("cardinality") != nrels[k].get("cardinality"):
             add("major", "relationship", f"changes how {k[0]} → {k[1]} filters")
+    def exposed(doc):
+        c = doc.get("contract") if isinstance(doc.get("contract"), dict) else {}
+        if c.get("exposes", "all") != "listed":
+            return set(all_fields or []), set(_measure_map(doc))
+        return {str(x) for x in c.get("fields") or []}, {str(x) for x in c.get("measures") or []}
+    if any(isinstance(d.get("contract"), dict) and d["contract"].get("exposes") == "listed" for d in (old, new)):
+        (of_, om_), (nf_, nm_) = exposed(old), exposed(new)
+        for f in sorted(of_ - nf_):
+            add("major", "field", f"takes {f} out of the contract", f)
+        for m in sorted((om_ - nm_) & set(nm)):                       # a measure the draft removes is said once, above
+            add("major", "measure", f"takes the measure {m} out of the contract", m)
+        for f in sorted(nf_ - of_):
+            add("minor", "field", f"adds {f} to the contract")
     for f in sorted(_hidden(new) - _hidden(old)):
         add("major", "field", f"hides {f} from consumers", f)
     for f in sorted(_hidden(old) - _hidden(new)):

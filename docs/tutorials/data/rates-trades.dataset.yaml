@@ -1,0 +1,30 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Tutorial 13: the rates desk's trades, a dataset of the model layer. One row per trade per business date; the model trades-model reads it. The
+# tutorial later tries to drop the `book` column, which a report uses: a change that needs a new major version.
+rachana: 2
+expressions: 2
+dataset: rates-trades
+version: 1.0.0
+title: Rates trades
+description: The trades of the rates desk by desk and book, one row per trade per business date.
+source: { connector: trading-store, kind: trade }
+grain: { says: "One row per trade per business date", keys: [tradeId] }
+columns:
+  tradeId:  { type: string, role: key }
+  desk:     { type: string }
+  book:     { type: string }
+  notional: { type: decimal, format: amount0 }
+  mtm:      { type: decimal, format: signed0 }

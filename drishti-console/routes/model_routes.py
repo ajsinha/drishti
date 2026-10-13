@@ -349,8 +349,15 @@ async def contract(request: Request):
         return _problem(e)
     except ml.LayerError as e:
         return _refuse(str(e))
-    out = ml.contract_diff(old, doc)
     ref = f"{old.get('model') or doc.get('model')}@{str(old.get('version') or '1').split('.')[0]}"
+    every = None
+    if any(isinstance(d.get("contract"), dict) and d["contract"].get("exposes") == "listed" for d in (old, doc)):
+        try:                                                           # what "everything" is: the fields of the published model
+            described = await _bi(request, "GET", "/models/" + quote(iid, safe=":") + "/describe")
+            every = [str(f.get("field")) for d in described.get("datasets") or [] for f in d.get("fields") or [] if f.get("field")]
+        except BackendError:
+            every = None
+    out = ml.contract_diff(old, doc, every)
 
     async def impact(change):                                          # who uses what a breaking change touches (the server's envelopes)
         try:

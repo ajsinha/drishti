@@ -12,30 +12,23 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 13: the model of a desk: one table of trades, three measures, a desk-to-book hierarchy. The tutorial edits it, has it reviewed and published,
-# certifies it, and then finds out what dropping the `book` column would break.
-rachana: 1
-expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
-dataset: trades-model
-version: 1
+# Tutorial 13: the model of the rates desk: the dataset rates-trades as its one fact, three measures, a desk-to-book hierarchy. The tutorial edits
+# it, has it reviewed and published, certifies it, follows its lineage and then asks what dropping `book` would break.
+rachana: 2
+expressions: 2
+model: trades-model
+version: 1.0.0
 title: Trades model
 description: Trades by desk and book, for the rates desk.
-
-tables:
-  trade:
-    source: { connector: trading-store, kind: trade }
-    mode: cached
-    columns:
-      tradeId:   { type: string, key: true }
-      desk:      string
-      book:      string
-      notional:  { type: decimal, format: amount0 }
-      mtm:       { type: decimal, format: signed0 }
-
+datasets:
+  trade: { dataset: rates-trades, role: fact }
 measures:
   Notional: { expr: "sum(trade.notional)", format: amount0 }
   MTM:      { expr: "sum(trade.mtm)", format: signed0 }
   Trades:   { expr: "count(trade)" }
-
 hierarchies:
   Desk and book: [trade.desk, trade.book]
+security:
+  rows:
+    trade:
+      - { role: [admin, bi-writer, bi-steward, bi-reviewer, bi-reader, viewer], where: "True" }

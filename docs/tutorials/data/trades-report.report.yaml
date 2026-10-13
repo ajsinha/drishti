@@ -12,12 +12,12 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 13: a report on the Trades model. It reads trade.book, which is what the tutorial's "what breaks" check finds.
-rachana: 1
+# Tutorial 13: a report on the model trades-model. It reads trade.book, which is what the tutorial's "what breaks" check finds.
+rachana: 2
 report: trades-report
 version: 1
 title: Trades report
-dataset: trades-model
+model: trades-model@1
 pages:
   - id: overview
     title: Overview
