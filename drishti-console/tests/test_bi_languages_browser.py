@@ -135,6 +135,7 @@ def test_the_dataset_wizard_makes_a_derived_dataset_without_yaml(browser):
     page.locator("[data-title]").press("Tab")
     page.click("details:has([data-yaml]) summary")
     expect(page.locator("[data-yaml]")).to_contain_text("dataset: live-trades-by-desk", timeout=10000)        # the name follows the title until it is typed
+    expect(page.locator("[data-problems-save] .bi-ok")).to_contain_text("Checks clean", timeout=10000)        # the server reads every derivation key
     shoot(page, '[data-step="save"]', "wizard-save")
     text = page.locator("[data-yaml]").text_content()
     capture("wizard.yaml", text)
@@ -425,6 +426,58 @@ def test_a_reports_fields_pane_inherits_the_models_properties_and_perspectives(b
     expect(page.locator('[data-field="trade.desk"]')).to_be_visible()
     expect(page.locator('[data-field="Sum of mtm"]')).to_be_visible()
     shoot(page, ".bi-pane-fields", "report-fields-perspective")
+    clean(page)
+    page.context.close()
+
+
+@pytest.mark.xfail(strict=True, reason="server: where: together with group: is applied after the grouping (status == 'Live' over a dataset grouped by "
+                                       "desk answers DRS-9020 'status' is not a column); where alone and group alone answer; remove this mark when the server lane fixes it")
+def test_the_wizards_preview_answers_a_filtered_grouped_dataset(browser):
+    page = sign_in(browser, "wes")
+    page.evaluate("window.sessionStorage.clear()")
+    wizard(page)
+    page.select_option("[data-src-extends]", "pack.trading.trade")
+    next_step(page, "columns")
+    expect(page.locator("[data-keep-col]")).not_to_have_count(0, timeout=15000)
+    next_step(page, "filter")
+    page.fill("[data-where]", "status == 'Live'")
+    page.locator("[data-where]").press("Tab")
+    next_step(page, "grain")
+    next_step(page, "derive")
+    next_step(page, "group")
+    page.check("[data-group-on]")
+    page.click('[data-group-key="desk"]')
+    next_step(page, "preview")
+    page.click("[data-preview-go]")                                                              # the draft saved, then its first rows from the server
+    expect(page.locator("[data-preview-table] tbody tr")).to_have_count(3, timeout=20000)       # grouped by desk: three desks
+    shoot(page, '[data-step="preview"]', "wizard-preview")
+    clean(page)
+    page.context.close()
+
+
+def test_the_wizards_preview_answers_a_grouped_dataset_with_a_worked_out_column(browser):
+    page = sign_in(browser, "wes")
+    page.evaluate("window.sessionStorage.clear()")
+    wizard(page)
+    page.select_option("[data-src-extends]", "pack.trading.trade")
+    next_step(page, "columns")
+    expect(page.locator("[data-keep-col]")).not_to_have_count(0, timeout=15000)
+    next_step(page, "filter")
+    next_step(page, "grain")
+    next_step(page, "derive")
+    page.click('[data-derive-add="expr"]')
+    page.fill('[data-derive-name="0"]', "notionalM")
+    page.locator('[data-derive-name="0"]').press("Tab")
+    page.fill('[data-derive-expr="0"]', "notional / 1000000")
+    page.locator('[data-derive-expr="0"]').press("Tab")
+    next_step(page, "group")
+    page.check("[data-group-on]")
+    page.click('[data-group-key="desk"]')
+    next_step(page, "preview")
+    page.click("[data-preview-go]")
+    expect(page.locator("[data-preview-table] tbody tr")).to_have_count(3, timeout=20000)
+    expect(page.locator("[data-preview-table] thead")).to_contain_text("notionalM")
+    shoot(page, '[data-step="preview"]', "wizard-preview-grouped")
     clean(page)
     page.context.close()
 

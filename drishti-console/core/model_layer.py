@@ -32,10 +32,10 @@ ALIAS = re.compile(r"[A-Za-z_][A-Za-z0-9_]{0,63}")
 SEMVER = re.compile(r"\d+\.\d+\.\d+")
 MEASURE_ROLES = ("amount", "quantity", "ratio")
 AGG_WORD = {"sum": "Sum of", "avg": "Average of", "min": "Minimum of", "max": "Maximum of", "count": "Count of", "distinct": "Distinct"}
-TOP_ORDER = ("rachana", "model", "version", "id", "title", "description", "owner", "tags", "endorsement", "audience", "sample", "lifecycle", "replaced-by",
+TOP_ORDER = ("rachana", "expressions", "model", "version", "id", "title", "description", "owner", "tags", "endorsement", "audience", "sample", "lifecycle", "replaced-by",
              "implicit-from", "datasets", "relationships", "measures", "fields", "hierarchies", "perspectives", "security", "contract", "rollups", "tests", "golden", "ai", "calc-groups",
              "parameters", "calendars", "layout")
-DATASET_ORDER = ("rachana", "dataset", "version", "id", "title", "description", "owner", "tags", "endorsement", "extends", "source", "columns", "where", "grain",
+DATASET_ORDER = ("rachana", "expressions", "dataset", "version", "id", "title", "description", "owner", "tags", "endorsement", "extends", "source", "columns", "where", "grain",
                  "derive", "group", "time", "refresh", "security", "tests", "ai", "rollups", "layout")          # BI_DESIGN.md 3.1: the derivation keys in the order they apply
 
 
@@ -266,12 +266,12 @@ def implicit_doc(info: dict, dims: list[dict], name: str = "", title: str = "") 
             n, m = default_measure(alias, col)
             measures[n] = m
     slug = name or re.sub(r"[^a-z0-9-]+", "-", (info["name"].replace("pack.", "")).lower()).strip("-") or "model"
-    return {"rachana": 2, "model": slug, "version": "1.0.0", "title": title or f"{info['title']} model", "implicit-from": info["name"],
+    return {"rachana": 2, "expressions": 2, "model": slug, "version": "1.0.0", "title": title or f"{info['title']} model", "implicit-from": info["name"],
             "datasets": datasets, "relationships": rels, "measures": measures}
 
 
 def new_doc(name: str, title: str) -> dict:
-    return {"rachana": 2, "model": name, "version": "1.0.0", "title": title, "datasets": {}, "relationships": [], "measures": {}}
+    return {"rachana": 2, "expressions": 2, "model": name, "version": "1.0.0", "title": title, "datasets": {}, "relationships": [], "measures": {}}
 
 
 # ---- writing YAML -------------------------------------------------------------------------------------------------------

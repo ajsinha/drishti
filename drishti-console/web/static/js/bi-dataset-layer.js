@@ -54,7 +54,7 @@
   /** The dataset document, in the spec's keys (BI_DESIGN.md 3.1). */
   L.doc = function () {
     const W = L.W;
-    const d = { rachana: 2, dataset: W.name || 'new-dataset', version: '1.0.0', title: W.title || W.name || 'New dataset' };
+    const d = { rachana: 2, expressions: 2, dataset: W.name || 'new-dataset', version: '1.0.0', title: W.title || W.name || 'New dataset' };
     if (W.src === 'extends') { d.extends = W.extends + '@^1'; } else if (W.src === 'connector') { d.source = { connector: W.connector, query: W.query, params: { asOf: 'as-of' } }; } else if (W.src === 'python') { d.source = { python: W.python, inputs: {} }; } else if (W.src === 'model') {
       d.source = { model: W.model, query: { select: { fields: W.picks.filter((p) => p.kind === 'field').map((p) => p.name), measures: W.picks.filter((p) => p.kind === 'measure').map((p) => p.name) } } };
     } else if (W.src === 'sql') { d.source = { sql: W.sql, model: W.sqlModel }; }
@@ -158,10 +158,22 @@
 
   // ---- saving --------------------------------------------------------------------------------------------------------
   /** Saves the draft (creates the item the first time); resolves with the item. */
+  /** A dataset name nobody you can see uses yet (`trade-narrowed`, else `trade-narrowed-2`...): a model names a dataset by name, so two must not share one.
+   *  Only a name the wizard made up is changed; one you typed is kept (Check says when it is taken). */
+  function freeName() {
+    const W = L.W;
+    if (W.savedId || W.nameTouched) { return Promise.resolve(); }
+    return B.layer.get('datasets').then((d) => {
+      const taken = new Set((d.items || []).map((x) => x.name).concat((d.packs || []).map((x) => x.name)));
+      const base = W.name;
+      let n = 2;
+      while (taken.has(W.name)) { W.name = base + '-' + n++; }
+    }).catch(() => {});
+  }
   L.saveDraft = function () {
     const W = L.W;
     if (!W.name) { W.name = B.slug(W.title || '') || 'new-dataset'; }
-    return B.layer.post('dataset-yaml', { doc: L.doc() }).then((r) => {
+    return freeName().then(() => B.layer.post('dataset-yaml', { doc: L.doc() })).then((r) => {
       const put = W.savedId ? B.api('PUT', '/items/' + B.id2path(W.savedId), { body: r.yaml })
         : B.api('POST', '/workspaces/' + encodeURIComponent(q('[data-ws]').value || root.getAttribute('data-workspace') || 'me') + '/items', { kind: 'dataset', title: W.title || W.name, description: '', body: r.yaml });
       return put.then((it) => { W.savedId = it.id; L.keep(); return Object.assign(it, { check: r.check }); });

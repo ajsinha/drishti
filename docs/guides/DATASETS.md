@@ -978,6 +978,11 @@ Never a silent distinct: a dataset whose rows repeat a key says which one wins, 
 
 ![Group: one row per desk, mtm, notional, pnl1d and notionalM summed, a count of the rows as trades](img/bi-languages/wizard-group.jpg)
 
+**Preview** saves the draft (under a name nobody you can see uses yet: `trade-narrowed`, else `trade-narrowed-2`) and shows its first rows, answered
+by the server as you. The trade pack dataset with `notionalM` worked out and grouped by desk:
+
+![The preview: the first 3 rows of the draft trade-narrowed, as of 2026-10-08; DESK-EQD, DESK-FI and DESK-FX with mtm, notional, pnl1d and notionalM summed (77, 78, 79); Checks clean](img/bi-languages/wizard-preview-grouped.jpg)
+
 What the wizard wrote for *Live trades by desk*: the trade pack dataset without `book`, the live rows, the latest row of each trade, a notional in
 millions, grouped by desk (captured from the Save step):
 
