@@ -15,6 +15,11 @@
 -->
 # Rūpaka next: the model architecture and the wave plan (2.2 to 3.0)
 
+> **Superseded in part by [BI_DESIGN.md](BI_DESIGN.md), the single authoritative BI target design.** Decisions D1–D6
+> and sections 2, 2a, 2b, 2c and 3 below still stand. The **wave plan (section 4) and risks (section 5) are replaced**
+> by BI_DESIGN.md section 12 (waves A = 2.2.0, B = 2.3.0, C = 2.4.0), and the expression language is now Python-like
+> (BI_DESIGN.md section 3.3).
+
 *Agreed with the product owner on 2026-10-12.* This settles the BI architecture before more features are added, and
 replaces the roadmap part of [BI_PARITY_PLAN.md](BI_PARITY_PLAN.md) (its gap analysis still stands). Nothing here is
 built yet. Drishti is not in production, so these are breaking changes on purpose; the foundation stays **YAML,
@@ -148,6 +153,9 @@ Each release adds an **experience wave**: the adversarial QA by power users (des
 connectors) plus a usability review against these rules, and its findings are fixed before the drill.
 
 ## 4. Waves
+
+> **Replaced** by [BI_DESIGN.md section 12](BI_DESIGN.md#12-w1-as-built-against-this-design-and-the-revised-wave-plan).
+> Kept below for the record only.
 
 Each release: builders (at most two at once) → adversarial QA by power users → fixes → one drill → tag. Every wave
 updates its docs and tutorials with UI, CLI and YAML (never thinner) and migrates the shipped samples.
