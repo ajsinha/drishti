@@ -18,7 +18,8 @@ over REST, as the token's user. Loaded by drishti.py; every command talks to the
   bi expr functions [--scope row|rule|aggregate]       the function catalogue
   bi expr validate EXPR [--scope S] [--model M] [--alias A]   check one expression (exit 1 on an error)
   bi expr convert EXPR                                 the DEL v2 form of an old-syntax expression
-  bi migrate --expressions FILE... [--write] [--check] convert every expression of BI items (comments kept); --check exits 1 when a file would change
+  bi migrate --expressions FILE... [--write] [--check] convert every expression of BI item files (comments kept); --check exits 1 when a file would change
+  bi migrate --expressions [--dry-run]                 the same for the server's STORED items (bi-admin): audited, the text before kept in each item's history
   bi sql "SELECT ..." --model M [--explain] [--format json|csv]   run Drishti SQL over a model (wave A)
 """
 import argparse
@@ -49,17 +50,23 @@ def register(bi, srv, ctx) -> None:
     c.add_argument("expr")
     c.set_defaults(func=lambda a, extra: convert(a, ctx))
 
-    m = bi.add_parser("migrate", help="bi migrate --expressions FILE...: convert BI items to DEL v2 (comments kept)", parents=[srv],
-                      description="Converts every expression of BI item files (datasets, models, reports, boards, notebooks) from the old syntax to DEL v2 with the "
-                                  "server's converter: the old parser's tree printed as DEL v2 and checked to compile to the same SQL. Comments, key order and "
-                                  "layout are kept; `expressions: 2` is set. Without --write it prints what would change.",
+    m = bi.add_parser("migrate", help="bi migrate --expressions [FILE...]: convert BI items to DEL v2 (comments kept)", parents=[srv],
+                      description="Converts every expression of BI items from the old syntax to DEL v2 with the server's converter: the old parser's tree "
+                                  "printed as DEL v2 and checked to compile to the same SQL. Comments, key order and layout are kept; `expressions: 2` is set. "
+                                  "With FILEs it converts item files (without --write it prints what would change). Without FILEs it converts the server's "
+                                  "STORED items (drafts, proposals and the published text; bi-admin): each change is audited and the text before stays in the "
+                                  "item's history; an item that cannot be converted keeps its text and is listed in Admin, BI settings. The server also runs this "
+                                  "once at start (drishti.bi.migrate.on-start).",
                       formatter_class=argparse.RawDescriptionHelpFormatter,
                       epilog="examples:\n  drishti.py bi migrate --expressions config/bi/datasets/*.yaml\n  drishti.py bi migrate --expressions config/bi --write\n"
-                             "  drishti.py bi migrate --expressions config/bi --check     # CI: exit 1 when a file is still in the old syntax")
-    m.add_argument("files", nargs="+", metavar="FILE", help="item files or folders (searched for *.dataset|model|report|board|notebook.yaml)")
-    m.add_argument("--expressions", action="store_true", required=True, help="convert the expressions (the only migration so far)")
-    m.add_argument("--write", action="store_true", help="write the converted files")
-    m.add_argument("--check", action="store_true", help="change nothing; exit 1 when a file would change or cannot be converted")
+                             "  drishti.py bi migrate --expressions config/bi --check     # CI: exit 1 when a file is still in the old syntax\n"
+                             "  drishti.py bi migrate --expressions --dry-run            # the server's stored items: what would change\n"
+                             "  drishti.py bi migrate --expressions                      # ... and convert them (bi-admin)")
+    m.add_argument("files", nargs="*", metavar="FILE", help="item files or folders (searched for *.dataset|model|report|board|notebook.yaml); none: the stored items")
+    m.add_argument("--expressions", action="store_true", required=True, help="convert the expressions")
+    m.add_argument("--write", action="store_true", help="FILEs: write the converted files")
+    m.add_argument("--check", action="store_true", help="FILEs: change nothing; exit 1 when a file would change or cannot be converted")
+    m.add_argument("--dry-run", action="store_true", help="change nothing, show what would change (stored items; for FILEs it is the default)")
     m.set_defaults(func=lambda a, extra: migrate(a, ctx))
 
     s = bi.add_parser("sql", help="bi sql \"SELECT ...\" --model M: Drishti SQL over a model, as you", parents=[srv],
@@ -150,6 +157,10 @@ def item_files(paths, ctx) -> list:
 
 def migrate(a, ctx) -> int:
     api = ctx["Api"].from_args(a)
+    if not a.files:
+        return migrate_stored(a, api, ctx)
+    if a.dry_run:
+        a.write = False
     files = item_files(a.files, ctx)
     changed = failed = 0
     report = []
@@ -179,6 +190,28 @@ def migrate(a, ctx) -> int:
     if failed or (a.check and changed):
         return 1
     return 0
+
+
+def migrate_stored(a, api, ctx) -> int:
+    """The stored items, on the server (bi-admin): a dry run lists, a run converts; exit 1 when an item cannot be converted."""
+    if a.write or a.check:
+        raise ctx["CliError"]("--write and --check are for FILEs; for stored items use --dry-run (or nothing, to convert)", 2)
+    r = api.json("POST", "/api/v1/bi/migrate/expressions", {"dryRun": bool(a.dry_run)})
+    if a.json:
+        ctx["say_json"](r)
+        return 1 if r.get("problems") else 0
+    for i in r.get("items", []):
+        print(f"{i['kind']} '{i['title']}' ({i['id']}, {i['status']}): {i['state']}" + (f"; the text before is saved state {i['before']}" if i.get("before") else ""))
+        for c in i.get("draft", []):
+            print(f"    draft {c['path']}: {c['from']}\n      -> {c['to']}")
+        for c in i.get("published", []):
+            print(f"    published {c['path']}: {c['from']}\n      -> {c['to']}")
+        for p in i.get("problems", []):
+            print(f"    {p['path']}: NOT CONVERTED: {p.get('problem')}")
+    done = r.get("wouldConvert" if a.dry_run else "converted", 0)
+    print(f"{r.get('scanned', 0)} stored item(s) scanned, {done} " + ("would be converted" if a.dry_run else "converted")
+          + (f", {r['problems']} cannot be converted (they keep their text; Admin, BI settings lists them)" if r.get("problems") else ""))
+    return 1 if r.get("problems") else 0
 
 
 # ---- sql -------------------------------------------------------------------------------------------------------------

@@ -576,6 +576,9 @@ drishti:
     expr:                            # the Drishti expression language, DEL v2 (docs/guides/EXPRESSIONS.md; docs/admin/CONFIGURATION.md, drishti.bi.expr)
       legacy: refuse                 # the old expression syntax: refuse (DRS-9100 with the DEL v2 text as the fix; the default from the end of wave A) or warn (read with DRS-9100)
       parse-cache: 10000             # parsed expressions kept (0: off)
+    migrate:                         # migrations of STORED BI items (docs/architecture/BI_MODEL_SPEC.md 8.3; docs/guides/TROUBLESHOOTING.md "Migration problems")
+      on-start: ${DRISHTI_BI_MIGRATE_ON_START:true}   # at start: old-syntax expressions to DEL v2, audited, the text before kept in each item's history; idempotent
+      actor: system                  # the name the history, the item's events and the audit log give the start-up run
     poc:                             # Rupaka phase 0 PROOF OF CONCEPT (docs/architecture/RUPAKA_POC.md): throw-away endpoints under /api/v1/bi/poc
       enabled: ${DRISHTI_BI_POC_ENABLED:false}   # off: they answer 404 as if the code were absent
       rows: 10000                    # trades per day in the generated sample lake (at most 10,000: local-safe)

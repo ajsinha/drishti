@@ -17,6 +17,12 @@
 
 ## Unreleased
 
+- **Server: stored items in the old expression syntax are converted at start (wave A, task 6).** So that refusing the old syntax breaks nothing a person
+  saved, the server converts every stored BI item (draft, proposal and published text) to DEL v2 once at start (`drishti.bi.migrate.on-start`, default
+  on; idempotent): the text before is a saved state of the item's history (restorable), a changed published text becomes the next published version, a
+  draft stays a draft, and each change is an item event and an audit record (`bi-expressions-migrated`, `bi-migration-run`). An item the converter cannot
+  convert is never changed: it is listed in Admin, BI settings (`migrationProblems`), on its page and at `GET /api/v1/bi/migrate/problems`, and logged.
+  `POST /api/v1/bi/migrate/expressions` (`dryRun`) and `drishti.py bi migrate --expressions [--dry-run]` (no FILEs: the stored items; bi-admin).
 - **Server: the old expression syntax is refused (wave A, task 6).** `drishti.bi.expr.legacy` now defaults to `refuse`: an expression in the old syntax
   is `DRS-9100` with the DEL v2 text as the fix (`drishti.py bi migrate --expressions` converts files; `legacy: warn` reads it while a site converts its
   own items). A text that is already DEL v2 but wrong gets its DEL v2 problem, and a rule written as a YAML boolean (`where: true`) reads as `True`.

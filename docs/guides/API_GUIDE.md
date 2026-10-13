@@ -2070,6 +2070,26 @@ site sets `drishti.bi.expr.legacy: warn` it is a warning and the rest of the che
 `drishti.py bi expr functions|validate|convert` and `drishti.py bi migrate --expressions FILE... [--write] [--check]`
 ([CLI_GUIDE.md](CLI_GUIDE.md)).
 
+## BI migrations: `/api/v1/bi/migrate`
+
+Release 2.2 wave A ([BI_MODEL_SPEC.md section 8](../architecture/BI_MODEL_SPEC.md#8-migration)): migrations of the server's **stored** BI items. The
+server runs them once at start (`drishti.bi.migrate.on-start`, [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibimigrate--migrations-of-stored-bi-items));
+these endpoints let a **bi-admin** see what would change and run them again. Every run is idempotent and audited; the text before stays in each item's
+history; an item that cannot be converted is never changed and is listed in `problems`.
+
+| Method | Path | What it does |
+|---|---|---|
+| `POST` | `/api/v1/bi/migrate/expressions` | body `{dryRun?}`: converts every stored item whose expressions are in the old syntax to DEL v2 (draft and published text; the published one becomes the next version). Answer: `step`, `dryRun`, `scanned`, `converted` (or `wouldConvert`), `problems` (a count) and `items`: per item `id`, `title`, `kind`, `workspace`, `status`, `state` (`converted`, `would convert`, `problem`), `draft` and `published` (the changes: `path`, `from`, `to`), `problems` (`path`, `from`, `problem`), and after a run `before` (the saved state holding the text before) and `publishedVersion` |
+| `GET` | `/api/v1/bi/migrate/problems` | the stored items a migration left as they were: `count` and `problems` (`step`, `item`, `title`, `kind`, `where`, `problem`, `since`). The same list is `migrationProblems` in `GET /bi/settings` and, for one item, in `GET /bi/items/{id}` |
+
+The problems answer (captured):
+
+```json
+{"count": 1, "problems": [{"step": "expressions", "item": "it-broken", "title": "it-broken", "kind": "dataset", "where": "measures.Per.expr",
+  "problem": "not converted, the item keeps its text: DRS-9127 expected ')' to close the call of sum() but the expression ends (sum(trades.mtm)",
+  "since": "2026-10-13T02:35:52.717930195Z"}]}
+```
+
 ## Drishti SQL: `/api/v1/bi/sql`
 
 Release 2.2 wave A ([SQL.md](SQL.md), [BI_DESIGN.md §3.4](../architecture/BI_DESIGN.md#34-drishti-sql-dsql-read-only-sql-over-models)): one read-only

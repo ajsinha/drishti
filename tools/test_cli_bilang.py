@@ -109,6 +109,24 @@ class BiLang(unittest.TestCase):
         self.assertEqual(0, code)
         self.assertEqual(new, f.read_text())
 
+    def test_migrate_without_files_works_on_the_stored_items(self):
+        FakeServer.routes[("POST", "/api/v1/bi/migrate/expressions")] = (200, {
+            "step": "expressions", "dryRun": True, "scanned": 4, "wouldConvert": 1, "problems": 1, "items": [
+                {"id": "it-1", "title": "Old trades", "kind": "dataset", "workspace": "ws", "status": "published", "state": "would convert",
+                 "draft": [{"path": "measures.Per.expr", "from": "[MTM] / [Live]", "to": "measure('MTM') / measure('Live')"}], "published": [], "problems": []},
+                {"id": "it-2", "title": "Broken", "kind": "dataset", "workspace": "ws", "status": "draft", "state": "problem", "draft": [], "published": [],
+                 "problems": [{"path": "measures.X.expr", "from": "sum(a", "problem": "DRS-9127 expected ')'"}]}]})
+        code, out, _ = self.go("bi", "migrate", "--expressions", "--dry-run")
+        self.assertEqual(1, code)                                               # an item cannot be converted
+        self.assertEqual({"dryRun": True}, json.loads(FakeServer.requests[0][5]))
+        self.assertIn("dataset 'Old trades' (it-1, published): would convert", out)
+        self.assertIn("draft measures.Per.expr: [MTM] / [Live]", out)
+        self.assertIn("measures.X.expr: NOT CONVERTED: DRS-9127", out)
+        self.assertIn("4 stored item(s) scanned, 1 would be converted, 1 cannot be converted", out)
+        code, _, err = self.go("bi", "migrate", "--expressions", "--write")
+        self.assertEqual(2, code)
+        self.assertIn("--write and --check are for FILEs", err)
+
     def test_sql_prints_a_table(self):
         FakeServer.routes[("POST", "/api/v1/bi/sql")] = (200, {"columns": [{"name": "desk"}, {"name": "mtm"}], "rows": [["RATES", 1234.5], ["FX", None]],
                                                               "meta": {"shape": "mq", "plan": "p_1"}})

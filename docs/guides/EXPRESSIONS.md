@@ -1476,8 +1476,40 @@ config/bi/datasets/trading-risk.dataset.yaml: would change (4 of 19 expressions)
     ...
 ```
 
-A stored item is converted through the same endpoint (`POST /api/v1/bi/expr/convert` with `{yaml}`) and saved as a new draft, so its saved states
-make the change reversible.
+**Stored items convert themselves.** Items saved in workspaces before the old syntax was refused are converted by the server **at start**
+(`drishti.bi.migrate.on-start`, [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibimigrate--migrations-of-stored-bi-items)): the draft and the
+published text of every item, with the same converter. The text before becomes a saved state of the item's *History* (so *Restore* brings it back), a
+published text that changes is published again as the next version (the old version stays in the list), a draft stays a draft, and each change is an
+event on the item and an audit record (`bi-expressions-migrated`). An item with an expression the converter cannot convert is **not changed at all**: it
+keeps its text, is listed in Admin, BI settings and on its page, and Check shows the expression with its problem. A bi-admin sees what would change, or
+runs it again after fixing an item, from the CLI:
+
+```bash
+drishti.py bi migrate --expressions --dry-run     # the server's stored items: what would change (nothing is written)
+drishti.py bi migrate --expressions               # convert them (bi-admin); exit 1 while an item cannot be converted
+```
+
+Captured (a store holding three items saved by 2.1, one of them with a typing slip):
+
+```
+dataset 'it-published' (it-published, published): would convert
+    draft measures.Live.expr: sum(trades.mtm, trades.status == 'Live')
+      -> sum(trades.mtm, where=trades.status == 'Live')
+    draft measures.Per.expr: [MTM] / [Live]
+      -> measure('MTM') / measure('Live')
+    draft security.rows[0].where: true
+      -> True
+    published measures.Live.expr: sum(trades.mtm, trades.status == 'Live')
+      -> sum(trades.mtm, where=trades.status == 'Live')
+    ...
+dataset 'it-broken' (it-broken, draft): problem
+    measures.Per.expr: NOT CONVERTED: DRS-9127 expected ')' to close the call of sum() but the expression ends
+4 stored item(s) scanned, 2 would be converted, 1 cannot be converted (they keep their text; Admin, BI settings lists them)
+```
+
+After the run, the item's *History* reads (newest first; captured): `4 expression(s) converted to DEL v2` (origin `migrate`, the draft), `... the
+published text, version 2`, `the published text of version 1 before the migration`, then the person's own saved states; its events: `migrate` by `system`,
+"4 expression(s) converted to DEL v2; the text before is saved state 2; published as version 2".
 
 ## 11. Recipes
 

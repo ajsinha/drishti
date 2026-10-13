@@ -1342,6 +1342,22 @@ The Drishti expression language (DEL v2, [EXPRESSIONS.md](../guides/EXPRESSIONS.
 | `legacy` | `refuse` | The old expression syntax (`[Measure]`, `&&`, `c ? a : b`): `refuse` (the default since the end of wave A) refuses it with `DRS-9100`, the DEL v2 text as the fix; `warn` reads it with a `DRS-9100` warning in Check, for a site converting its own items (`drishti.py bi migrate --expressions`). An item with `expressions: 2` refuses it whatever this says. A rule written as a YAML boolean (`where: true`) is DEL's `True`. |
 | `parse-cache` | `10000` | Parsed expressions kept in memory (keyed by text); `0` turns the cache off. |
 
+Items **saved before** the old syntax was refused are not left broken: at start the server converts them (`drishti.bi.migrate`, below).
+
+### `drishti.bi.migrate` — migrations of stored BI items
+
+What the server does at start with BI items it **stores** (drafts, proposals and the published text of every workspace item; shipped files in
+`drishti.bi.dir` are converted with the CLI instead, [CLI_GUIDE.md](../guides/CLI_GUIDE.md#bi-expr-bi-migrate-bi-sql-the-bi-languages)). Every
+migration is **idempotent** (a converted item has nothing left to convert, so the second start changes nothing), **audited** (`bi-expressions-migrated`
+per item, `bi-migration-run` per run), keeps **the text before as a saved state** of the item's history (*History*, *Restore*), and **never changes an
+item silently**: an item it cannot convert keeps its text and is listed in Admin, BI settings (`migrationProblems`), on the item's page and at
+`GET /api/v1/bi/migrate/problems` ([TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#bi-migrations-22-wave-a)).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `on-start` | `true` (`DRISHTI_BI_MIGRATE_ON_START`) | Run the migrations once at start, before the server takes requests: expressions in the old syntax become DEL v2 ([EXPRESSIONS.md section 10](../guides/EXPRESSIONS.md#10-the-old-syntax-and-the-converter)). A published text that changes becomes the item's next published version (the old version stays in its version list); a draft stays a draft, a proposal stays proposed. `false` leaves stored items as they are: a bi-admin runs the same with `drishti.py bi migrate --expressions [--dry-run]`. |
+| `actor` | `system` | The name the saved states, the item's governance events and the audit log give the start-up run (a run from the API or CLI names the bi-admin who ran it). |
+
 ### `drishti.distribution`: export and subscriptions
 
 Export of a BI report, page, visual or Sutra view as PDF, PNG, Excel or CSV, and subscriptions (email on a schedule), [DISTRIBUTION.md](../guides/DISTRIBUTION.md). Mail goes through the server's

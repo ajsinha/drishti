@@ -143,6 +143,7 @@ public final class BiService {
         m.put("shippedItems", folder.items().size());
         m.put("watch", folder.watchState());
         m.put("folderProblems", folder.problems().stream().map(x -> Map.of("file", x.file(), "message", x.message(), "since", x.since(), "keptLastGood", x.keptLastGood())).toList());
+        m.put("migrationProblems", migrationProblems == null ? List.of() : migrationProblems.apply(null));       // stored items a migration left as they were
         m.put("powers", com.ash.drishti.identity.RoleDefinition.BI_POWERS);
         m.put("roles", roles.all().stream().map(r -> Map.of("name", r.name(), "builtIn", r.builtIn(), "bi", new java.util.TreeSet<>(r.bi()))).toList());
         return m;
@@ -464,6 +465,9 @@ public final class BiService {
             m.put("body", body);
             m.put("bodyIs", draft ? "draft" : "published");
             m.put("draftChanges", !shipped && i.isPublished() && !i.status().equals("published"));
+            if (migrationProblems != null && !shipped) {
+                m.put("migrationProblems", migrationProblems.apply(i.id()));          // what a migration could not convert (the item kept its text)
+            }
             if (!shipped && i.status().equals("proposed")) {
                 m.put("approvers", notifier.reviewers(i, i.proposedBy()).stream().sorted().toList());          // who can decide it (told when it was proposed)
                 m.put("approveRule", "a bi-steward, or a member of " + w.name() + " whose role has the approve power" + (fourEyes() ? "; not " + i.proposedBy() + ", who proposed it (four-eyes)" : ""));
@@ -721,6 +725,13 @@ public final class BiService {
         List<BiStore.Item> all = new ArrayList<>(store.items());
         all.addAll(folder.items());
         return all;
+    }
+
+    /** Set once by the migrations: the stored items they could not convert (all with null, else one item's). */
+    private volatile java.util.function.Function<String, List<Map<String, Object>>> migrationProblems;
+
+    public void migrationProblems(java.util.function.Function<String, List<Map<String, Object>>> problems) {
+        this.migrationProblems = problems;
     }
 
     /** Set once by the model catalogue: why an item may not be deleted (a model that consumers still read), or an empty text. */

@@ -1902,12 +1902,19 @@ drishti.py bi expr functions [--scope row|rule|aggregate]                 the DE
 drishti.py bi expr validate EXPR [--scope S] [--model M] [--alias A]       check one expression as you see the model; exit 1 on an error
 drishti.py bi expr convert EXPR                                           the DEL v2 form of an old-syntax expression
 drishti.py bi migrate --expressions FILE|DIR... [--write] [--check]      convert every expression of BI item files (comments kept, expressions: 2 set)
+drishti.py bi migrate --expressions [--dry-run]                          the same for the server's STORED items (bi-admin; audited, history kept)
 drishti.py bi sql "SELECT ..." --model M [--explain] [--format table|json|csv] [--file F]   Drishti SQL over a model
 ```
 
 `bi migrate` reads `*.dataset|model|report|board|notebook.yaml` under a folder; without `--write` it prints what would change; `--check` changes nothing and
 exits `1` while a file still has the old syntax (for CI). The converter is the server's: the old parser's tree printed as DEL v2 and checked to compile to
 the same SQL; an expression it cannot convert is listed (`DRS-9190`) and left as it was.
+
+Without FILEs, `bi migrate --expressions` works on the server's **stored** items (`POST /api/v1/bi/migrate/expressions`, bi-admin): `--dry-run` lists
+each item with old-syntax expressions (draft and published changes, and what cannot be converted) and writes nothing; without it the items are converted
+the way the server does at start (`drishti.bi.migrate.on-start`): the text before kept as a saved state, a changed published text published again as the
+next version, each change audited. It exits `1` while an item cannot be converted (it keeps its text; Admin, BI settings lists it). The captured output
+is in [EXPRESSIONS.md section 10](EXPRESSIONS.md#10-the-old-syntax-and-the-converter).
 
 ### Shell completion
 
