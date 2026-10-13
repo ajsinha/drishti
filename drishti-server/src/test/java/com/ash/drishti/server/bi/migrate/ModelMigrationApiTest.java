@@ -163,4 +163,25 @@ class ModelMigrationApiTest {
         assertThat(store.items()).hasSize(items);
         assertThat(store.item("it-ds").orElseThrow().publishedVersion()).isEqualTo(2);
     }
+
+    @Test @Order(4)
+    void aDryRunFindsTheNameCollisionsTheRunFinds() throws Exception {
+        // two 2.1 datasets of one name in one workspace: the second would make a second model 'twin' and second datasets 'twin-trades', 'twin-books'
+        published("it-twin-1", "dataset", DATASET.replace("desk-book", "twin"), DATASET.replace("desk-book", "twin"));
+        published("it-twin-2", "dataset", DATASET.replace("desk-book", "twin"), DATASET.replace("desk-book", "twin"));
+        // and one whose table would take the name of a dataset the first run made
+        published("it-again", "dataset", DATASET, DATASET);
+        JsonNode dry = call("POST", "/api/v1/bi/migrate/models", Map.of("dryRun", true));
+        JsonNode real = call("POST", "/api/v1/bi/migrate/models", Map.of());
+        Map<String, String> planned = new java.util.TreeMap<>();
+        dry.path("items").forEach(i -> planned.put(i.path("key").asText(), i.path("state").asText() + " " + i.path("problem").asText("")));
+        Map<String, String> done = new java.util.TreeMap<>();
+        real.path("items").forEach(i -> done.put(i.path("key").asText(), i.path("state").asText() + " " + i.path("problem").asText("")));
+        assertThat(planned).as("the dry run and the run agree").isEqualTo(done);
+        assertThat(dry.path("wouldConvert").asInt()).isEqualTo(real.path("converted").asInt()).isEqualTo(1);
+        assertThat(dry.path("problems").asInt()).isEqualTo(real.path("problems").asInt());
+        assertThat(planned.get("it-again")).contains("problem").contains("a dataset named 'desk-book-trades' exists already");
+        assertThat(planned.values()).anyMatch(v -> v.contains("a dataset named 'twin-trades' exists already") || v.contains("a model named 'twin'"));
+        assertThat(store.items().stream().filter(i -> "model".equals(i.kind()) && "ws-models".equals(i.workspace()) && i.body().contains("model: twin"))).hasSize(1);
+    }
 }
