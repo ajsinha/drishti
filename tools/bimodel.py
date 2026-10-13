@@ -91,13 +91,14 @@ def model_describe(a, ctx) -> int:
         ctx["say_json"](r)
         return 0
     m = r.get("model") or {}
-    print(f"{r.get('title') or m.get('name')}  ({m.get('name')}@{str(m.get('version') or '1').split('.')[0]}" + (", implicit" if m.get("implicit") else "") + ")")
+    ref = a.ref if a.ref.startswith("dataset:") or not m.get("name") else f"{m.get('name')}@{str(m.get('version') or '1').split('.')[0]}"
+    print(f"{r.get('title') or m.get('name') or a.ref}  ({ref}" + (", implicit" if m.get("implicit") or a.ref.startswith("dataset:") else "") + ")")
     for d in r.get("datasets", []):
         print(f"\n{d.get('alias')}  {d.get('role')}  {d.get('dataset')} {d.get('version') or ''}")
         for f in d.get("fields", []):
             props = [p for p in (f.get("display") and f"as {f['display']}", f.get("folder") and f"folder {f['folder']}", f.get("format"),
                                  "masked" if f.get("masked") else None) if p]
-            print(f"  {f.get('field'):<34}{f.get('type') or '':<10}{f.get('meaning') or f.get('role') or '':<14}" + ", ".join(props))
+            print(f"  {f.get('field'):<34} {f.get('type') or '':<9} {f.get('meaning') or f.get('role') or '':<14}" + ", ".join(props))
     print("\nmeasures")
     for x in r.get("measures", []):
         print(f"  {x.get('name'):<34}{x.get('expr') or ''}" + ("  (default)" if x.get("implicit") else ""))
