@@ -94,6 +94,10 @@ public class ExprController {
         if (expr == null) {
             throw new MqException(MqException.Problem.of("DRS-9127", "expr", "the expression to check, as text"));
         }
+        String draft = text(body, "yaml");
+        if (draft != null) {
+            return catalog.validateExpressionDraft(p, expr, scope, draft, text(body, "alias"));       // the designer's unsaved model or dataset
+        }
         return catalog.validateExpression(p, expr, scope, text(body, "model"), text(body, "alias"));
     }
 

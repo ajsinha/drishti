@@ -557,6 +557,35 @@ class LanguagesApiTest {
         assertThat(old.path("valid").asBoolean()).as("refused since the end of wave A").isFalse();
     }
 
+    /** The designer's unsaved model is checked as it stands, and a measure a model query would refuse (two facts with no path) is said while it is written. */
+    @Test @Order(4)
+    void anUnsavedDraftIsCheckedAndAggregatesAcrossUnjoinedFactsAreFlagged() throws Exception {
+        String draft = """
+                rachana: 2
+                expressions: 2
+                model: lang-draft
+                version: 1.0.0
+                datasets:
+                  trades: { dataset: lang-trade, role: fact }
+                  others: { dataset: lang-trade, role: fact }
+                measures:
+                  Notional: { expr: "sum(trades.notional)" }
+                """;
+        JsonNode fine = ok(call("POST", "/api/v1/bi/expr/validate", reader("rita"), Map.of("expr", "sum(trades.notional) / measure('Notional')", "yaml", draft)));
+        assertThat(fine.path("valid").asBoolean()).as(fine.toString()).isTrue();
+        assertThat(fine.path("draft").asBoolean()).isTrue();
+        JsonNode across = ok(call("POST", "/api/v1/bi/expr/validate", reader("rita"), Map.of("expr", "sum(trades.notional, where=others.desk == 'DESK-A')",
+                "yaml", draft)));
+        assertThat(codes(across)).as(across.toString()).contains("DRS-9156");
+        JsonNode dataset = ok(call("POST", "/api/v1/bi/expr/validate", reader("rita"), Map.of("expr", "notional * 2", "scope", "row", "yaml", """
+                rachana: 2
+                dataset: lang-unsaved
+                version: 1.0.0
+                extends: lang-trade@1
+                """)));
+        assertThat(dataset.path("valid").asBoolean()).as(dataset.toString()).isTrue();
+    }
+
     @Test @Order(3)
     void theConverterRewritesOneExpressionOrAWholeItemKeepingComments() throws Exception {
         JsonNode one = ok(call("POST", "/api/v1/bi/expr/convert", reader("rita"), Map.of("expr", "sum(trades.mtm, trades.status == 'Live')")));

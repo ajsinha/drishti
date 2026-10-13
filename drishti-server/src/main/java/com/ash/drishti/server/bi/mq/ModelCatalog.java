@@ -751,7 +751,40 @@ public final class ModelCatalog {
         if (model == null) {
             return ExpressionCheck.run(expr, scope, com.ash.drishti.server.bi.expr.Fields.NONE, null, Map.of());
         }
-        MqService.Bound b = bind(p, model);
+        return validateExpression(expr, scope, bind(p, model), alias);
+    }
+
+    /**
+     * As {@link #validateExpression(Principal, String, com.ash.drishti.server.bi.expr.Scope, String, String)} against an unsaved draft: the YAML of a model
+     * ({@code model:}) or of a {@code rachana: 2} dataset (its implicit model) as the designer holds it, its datasets resolved as published, read as the
+     * caller (their row rules, masks and hidden fields).
+     */
+    public Map<String, Object> validateExpressionDraft(Principal p, String expr, com.ash.drishti.server.bi.expr.Scope scope, String yaml, String alias) {
+        Found f;
+        if (DatasetDefParser.isVersion2(yaml)) {
+            DatasetDefParser.Result r = DatasetDefParser.parse(yaml);
+            if (!r.ok()) {
+                throw new MqException(MqException.Problem.of("DRS-9151", "yaml", "the draft dataset has errors: " + r.firstError()));
+            }
+            List<DatasetParser.Problem> problems = new ArrayList<>();
+            ResolvedDataset d = chain(r.dataset(), new LinkedHashSet<>(), problems);
+            if (d == null) {
+                throw new MqException(MqException.Problem.of("DRS-9151", "yaml", problems.isEmpty() ? "the draft dataset cannot be resolved" : problems.get(0).message()));
+            }
+            f = implicitOf(d);
+        } else {
+            ModelDefParser.Result parsed = ModelDefParser.parse(yaml);
+            if (parsed.model() == null) {
+                throw new MqException(MqException.Problem.of("DRS-9151", "yaml", "the draft is neither a model nor a rachana: 2 dataset: " + parsed.firstError()));
+            }
+            f = new Found(view("draft:" + parsed.model().name(), parsed.model(), parsed, yaml), null);
+        }
+        Map<String, Object> out = validateExpression(expr, scope, bound(p, f), alias);
+        out.put("draft", true);
+        return out;
+    }
+
+    private Map<String, Object> validateExpression(String expr, com.ash.drishti.server.bi.expr.Scope scope, MqService.Bound b, String alias) {
         ModelFields f = ModelFields.of(b, alias, b.context().roles());
         Map<String, Object> out = ExpressionCheck.run(expr, scope, f, b.view().flat(), com.ash.drishti.server.bi.layer.Flattener.measureIds(b.view().measureDefs()));
         out.put("model", MqService.model(b.view()));

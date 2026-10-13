@@ -103,6 +103,19 @@ final class ExpressionCheck {
         for (DatasetParser.Problem p : DatasetParser.check(ds)) {
             if (p.error() && (p.path().equals("measures." + PROBE) || p.path().startsWith("measures." + PROBE + "."))) {
                 problems.add(new DelException.Problem("DRS-9127", DelException.Problem.ERROR, p.message().replace(PROBE, "this measure"), null, 0, length));
+                return;
+            }
+        }
+        // what a model query would refuse (DRS-9156): aggregates of facts with no path between them, said while the measure is written, not when it is asked
+        try {
+            new com.ash.drishti.server.bi.engine.SqlCompiler(ds, com.ash.drishti.server.bi.engine.Dialect.DUCKDB).plan(new com.ash.drishti.server.bi.engine.QueryRequest(
+                    List.of(), List.of(PROBE), List.of(), null, null, List.of(), null, "auto"), new com.ash.drishti.server.bi.engine.SqlCompiler.Reader(false, java.util.Set.of(),
+                    Map.of(), com.ash.drishti.server.bi.engine.SqlCompiler.Masks.NONE));
+        } catch (com.ash.drishti.common.DrishtiException e) {
+            if (e.errorCode() == com.ash.drishti.common.ErrorCode.QUERY_INVALID) {
+                problems.add(new DelException.Problem("DRS-9156", DelException.Problem.ERROR, "a model query would refuse this measure: "
+                        + e.getMessage().replace(PROBE, "this measure").replaceFirst("^DRS-\\d+ ", ""), "aggregate each fact in a measure of its own, or join the facts through a shared dimension",
+                        0, length));
             }
         }
     }
