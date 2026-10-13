@@ -54,7 +54,7 @@ public final class ModelFields implements Fields {
     }
 
     /** The fields of a model bound to the reader; {@code alias} is the dataset whose row is in context (row and rule scope), or null. */
-    static ModelFields of(MqService.Bound b, String alias, Set<String> roles) {
+    public static ModelFields of(MqService.Bound b, String alias, Set<String> roles) {
         ModelView v = b.view();
         Set<String> hidden = new LinkedHashSet<>();
         v.datasets().forEach((a, r) -> hiddenOf(a, r, roles, hidden));

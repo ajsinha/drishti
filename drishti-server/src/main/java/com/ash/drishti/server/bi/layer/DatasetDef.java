@@ -94,6 +94,8 @@ public record DatasetDef(String name, String version, String id, String title, S
         public static final String CONNECTOR = "connector";
         public static final String PYTHON = "python";
         public static final String MODEL = "model";
+        /** A SQL view: a reviewed Drishti SQL statement over a model ({@code source: { sql, model }}); its answer is the table. */
+        public static final String SQL = "sql";
 
         public Source {
             params = params == null ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(params));

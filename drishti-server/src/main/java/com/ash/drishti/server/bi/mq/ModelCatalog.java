@@ -147,6 +147,22 @@ public final class ModelCatalog {
     }
 
     /** The identity roles as the model layer sees them (the security tab's role picker, Check's DRS-9131). */
+    /** How a SQL view dataset's statement is answered (set by the SQL module: the model layer does not depend on it). */
+    public interface SqlViews {
+        /** The answer of {@code sql} over the bound model, as its reader, at {@code date} when the statement names no time (null: its own). */
+        QueryService.Result answer(MqService.Bound bound, String model, String sql, java.time.LocalDate date);
+    }
+
+    private volatile SqlViews sqlViews;
+
+    public void sqlViews(SqlViews views) {
+        this.sqlViews = views;
+    }
+
+    public SqlViews sqlViews() {
+        return sqlViews;
+    }
+
     public ModelRoles roles() {
         return roles;
     }

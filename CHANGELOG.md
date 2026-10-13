@@ -17,6 +17,14 @@
 
 ## Unreleased
 
+- **Server: Drishti SQL (wave A, task 3).** Read-only SQL over one model (`bi/sql`): a hand-written recursive-descent parser for the documented
+  subset (Calcite 1.40's dependencies are not all in the offline cache, and the dialect's table clauses are its own), a binder that resolves names as the
+  caller sees the model, MQ-shaped statements compiled to exactly one model query (same plan hash, same cache entry as the MQ; inline aggregates become DEL
+  local measures), composite statements (`WITH`, `UNION`, subqueries, windows over the answer) run as model-query leaves plus relational work in an
+  in-memory DuckDB that can read nothing else (a join or sort on a masked column `DRS-9161`), one time clause per statement (`AS OF DATE`, `FOR LIVE`,
+  `FOR WINDOW`), `EXPLAIN`. `POST /api/v1/bi/sql` (`json`, `csv`, `arrow`), `POST /api/v1/bi/sql/validate`; SQL view datasets (`source: { sql, model }`,
+  asked as each reader); a model's `tests: [{ sql, expect }]`; `drishti.py bi sql`. Codes `DRS-9170` to `DRS-9179`; settings `drishti.bi.sql.*`;
+  new guide [SQL.md](docs/guides/SQL.md).
 - **Server: the logical plan (wave A, task 2).** Every question (MQ, a report visual, an alert, an Analyse slice; Drishti SQL next) becomes one plan
   (`bi/plan`: `SecureScan`, `SemiJoin`, `Filter`, `Aggregate`, `Meet`, `Window`, `Having`, `Sort`, `Limit`, `Answer`; `Derive`, `Dedup`, `Regroup`, `Rel`
   reserved for the dataset derivation and composite SQL). The security rewriter runs before the optimiser (predicate pushdown, top-N as a grouped

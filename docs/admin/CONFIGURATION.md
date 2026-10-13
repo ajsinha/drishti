@@ -1302,6 +1302,18 @@ security signature and data generation (the L1 cache of §6.1: readers with iden
 | `cache-idle` | `1h` | An answer nobody asked for this long is dropped. |
 | `guards` | `refuse` | `refuse`: a sum across currencies (`DRS-9158`) and a balance added across dates (`DRS-9159`) are refused (wave A); `warn`: answered with a warning, as in W1. |
 
+### `drishti.bi.sql` — Drishti SQL
+
+Read-only SQL over models ([SQL.md](../guides/SQL.md)): `POST /api/v1/bi/sql`, SQL view datasets, models' SQL tests.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` | `false`: `/bi/sql` answers `403 DRS-9006`, and SQL view datasets and SQL tests cannot run. |
+| `max-leaves` | `8` | Model queries one composite statement may ask (its `SELECT`s over the model's tables); more is `DRS-9179`. |
+| `composite-memory` | `256MB` | Memory of the in-memory engine a composite statement's outer query runs in (it reads the leaves' answers and nothing else). |
+| `composite-timeout` | `30s` | Longest the outer query of a composite statement may run. |
+| `max-rows` | `100000` | Most rows a composite statement answers (`DRS-9022` past it). An MQ-shaped statement keeps the model query's limits. |
+
 ### `drishti.bi.expr` — the expression language
 
 The Drishti expression language (DEL v2, [EXPRESSIONS.md](../guides/EXPRESSIONS.md)): how the old expression syntax is treated, and the parse cache.

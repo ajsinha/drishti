@@ -1695,6 +1695,16 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9161 | 403 | Masked field | A filter, sort or `top` on a field masked for the caller (the body also names `DRS-9021`; `fix` offers the dataset's key) |
 | DRS-9162 | 422 | Python measure | A Python measure in a grouped query (a python visual runs it) |
 | DRS-9190 | 422 | Not converted | The expression converter could not keep the meaning of an old-syntax expression; it is left as it was (`POST /bi/expr/convert` lists it under `problems`) |
+| DRS-9170 | 422 | SQL syntax | Not a Drishti SQL statement: a syntax error (with its position), more than one statement, or DDL/DML/`ATTACH`/`COPY`/`PRAGMA`/`SET` (the dialect is read-only) |
+| DRS-9171 | 422 | SQL name | A table that is not an alias of the model, a column it does not have for the caller (a hidden column is not found), a column of a table the statement does not read, or a bare name in two tables |
+| DRS-9172 | 422 | SQL join | A join whose `ON` is not a relationship of the model (or a comma, `RIGHT`, `FULL`, `CROSS` or `NATURAL` join): write `JOIN t` without `ON`, or ask the model owner for a relationship |
+| DRS-9173 | 422 | SQL function | A function the dialect does not take: table functions, user functions, `random()` |
+| DRS-9174 | 422 | SQL measure | An aggregate over a measure (`SUM(MEASURE('x'))`), or a measure or aggregate in `WHERE` (use `HAVING`) |
+| DRS-9175 | 422 | SQL window | A window over a dataset's rows (inside an aggregate, or naming a column the `SELECT` does not select): windows run over the answer |
+| DRS-9176 | 422 | SQL scope | Another model, a connector, a kind, a file or a URL named (`read_parquet`, `pack.x.y`): one model per statement |
+| DRS-9177 | 422 | SQL time | Two different times in one statement, a time clause outside a `SELECT` over the model's tables, or a date that is not `YYYY-MM-DD` |
+| DRS-9178 | 422 | SQL distinct | `SELECT DISTINCT` on a fact without `GROUP BY` (a silent de-duplication changes the grain) |
+| DRS-9179 | 422 | SQL shape | A statement the dialect does not take (yet): `SELECT *`, a computed row column, an `OR` across fields in `WHERE`, aggregating answers again, `IN (SELECT ...)`; the message says what to write |
 | DRS-9180 | 404 | No such subscription | A standing query id the caller does not hold |
 | DRS-9181 | 429 | Server subscriptions | `drishti.bi.mq.max-subscriptions` standing queries are open already |
 | DRS-9182 | 429 | Your subscriptions | `drishti.bi.mq.max-subscriptions-per-user` standing queries of yours are open already |
@@ -2010,6 +2020,29 @@ underlines it and offers the fix as a button (captured):
 text and the rest of the check runs on it). The codes are in [EXPRESSIONS.md section 7](EXPRESSIONS.md#7-problems-and-their-fixes). The CLI:
 `drishti.py bi expr functions|validate|convert` and `drishti.py bi migrate --expressions FILE... [--write] [--check]`
 ([CLI_GUIDE.md](CLI_GUIDE.md)).
+
+## Drishti SQL: `/api/v1/bi/sql`
+
+Release 2.2 wave A ([SQL.md](SQL.md), [BI_DESIGN.md §3.4](../architecture/BI_DESIGN.md#34-drishti-sql-dsql-read-only-sql-over-models)): one read-only
+statement over one model, as the caller. An MQ-shaped statement is exactly one model query (same plan hash, same cache entry as the MQ); a composite one
+(`WITH`, `UNION`, a subquery, a window over the answer) runs its model queries as the caller and the rest over their answers. Both need the `bi` power and
+read on the model; neither changes anything (open to a read-only token). Every statement is audited as `bi-sql` with its text.
+
+| Method | Path | What it does |
+|---|---|---|
+| `POST` | `/api/v1/bi/sql` | body `{model, sql, format?}`: `model` is `name@major` or `dataset:<name>`; `format` `json` (default), `csv` or `arrow`. The answer: `sql: 1`, `model`, `columns` (each with `name`, `type`, `masked`, and for an MQ-shaped statement `kind`, `id`, `source`: the model query's column), `rows`, `rowCount`, `meta` (`shape`: `mq` or `composite`; for `mq` the model query's meta: `query`, `plan`, `signature`, `cached`, `warnings`, `asOf`, ...; for `composite` `leaves`, the leaves' plan hashes). `EXPLAIN SELECT ...` answers `{explain: true, shape, plan, signature, queries, outer (composite), tree, text}` instead |
+| `POST` | `/api/v1/bi/sql/validate` | body `{model, sql}`: `{valid, shape, queries, columns: [{name, source, kind}], plan, signature, problems: []}` without reading data; or `valid: false` with `problems` (`code`, `message`, `fix`, `at: {start, end}`). Always `200` |
+
+A refusal is `422` with `code` (`DRS-9170` to `DRS-9179`, or the model query's own), `path: "sql@<offset>"` and `fix: {at, write}` (captured):
+
+```
+POST /api/v1/bi/sql {"model": "lang-model@1", "sql": "SELECT trades.desk FROM trades JOIN desks ON trades.desk = desks.x"}
+422 {"title": "sql name", "status": 422, "code": "DRS-9171", "path": "sql@36", "fix": {"at": 36, "write": "FROM trades"},
+     "detail": "DRS-9171 no table 'desks' in this model: its tables are [trades]", "problems": [...]}
+```
+
+The answer of an MQ-shaped statement and of a composite one are shown in [SQL.md sections 3 and 4](SQL.md#3-how-a-statement-compiles). The CLI:
+`drishti.py bi sql "SELECT ..." --model M [--explain] [--format table|json|csv]`.
 
 ## Reports: `/api/v1/bi/reports` (phase 3)
 

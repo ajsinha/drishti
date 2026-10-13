@@ -1366,6 +1366,16 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 | `DRS-9161` | a filter, sort or `top` on a field masked for you (HTTP 403, the body also names `DRS-9021`); `fix` offers the dataset's key, which identifies the same rows |
 | `DRS-9162` | a Python measure in a grouped model query (HTTP 422): a python visual runs it |
 | `DRS-9190` | the expression converter (`drishti.py bi migrate --expressions`, `POST /api/v1/bi/expr/convert`) could not keep an old expression's meaning, so it left it as it was: rewrite it in DEL v2 by hand ([EXPRESSIONS.md section 10](EXPRESSIONS.md#10-the-old-syntax-and-the-converter)) |
+| `DRS-9170` | a Drishti SQL statement that is not one (HTTP 422): a syntax error at the position given, two statements, or a write (`INSERT`, `DELETE`, `CREATE`, `ATTACH`, `COPY`, `PRAGMA`, `SET` ...): the dialect is one read-only `SELECT` ([SQL.md](SQL.md)) |
+| `DRS-9171` | a table that is not one of the model's aliases, or a column it lacks for you (a hidden column is not found, on purpose); a bare column in two tables (say which); a column of a table the statement does not read (`JOIN` it) |
+| `DRS-9172` | a join whose `ON` is not a relationship of the model: write `JOIN t` without `ON` (the model's relationship is used), or ask the model owner for one |
+| `DRS-9173` | a function Drishti SQL does not take (`random()`, a table function, a user function); the message lists the ones it does |
+| `DRS-9174` | `SUM(MEASURE('x'))` (a measure is already an aggregate) or a measure in `WHERE` (use `HAVING`) |
+| `DRS-9175` | a window over a dataset's rows: windows run over the answer; select what the window orders by and name it |
+| `DRS-9176` | the statement names something outside its model: another model, a connector, a kind, a file or a URL |
+| `DRS-9177` | two different times in one statement (comparing two dates is DEL `as_of`, wave B), or a time clause that is not valid |
+| `DRS-9178` | `SELECT DISTINCT` without `GROUP BY`: write the `GROUP BY` (the grain changes on purpose, not silently) |
+| `DRS-9179` | a statement the dialect does not take yet; the message says what to write instead (`SELECT *`: name the columns; an `OR` across fields: a derived column; re-aggregating answers: a measure) |
 | `DRS-9180` | no standing query of that id is yours (HTTP 404): it was ended, or dropped after `drishti.bi.mq.idle-close` without a stream reading it |
 | `DRS-9181` | the server holds `drishti.bi.mq.max-subscriptions` standing queries (HTTP 429) |
 | `DRS-9182` | you hold `drishti.bi.mq.max-subscriptions-per-user` standing queries (HTTP 429): end one (`DELETE /api/v1/bi/mq/subscribe/{id}`) |

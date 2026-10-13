@@ -184,6 +184,8 @@ drishti:
       - /api/v1/bi/models/*/query       # the same with the model in the path
       - /api/v1/bi/mq/validate          # checks a model query without reading data
       - /api/v1/bi/models/validate      # checks a model's or a rachana 2 dataset's YAML without storing it
+      - /api/v1/bi/sql                  # one read-only Drishti SQL statement over a model as the caller (or EXPLAIN), changes nothing
+      - /api/v1/bi/sql/validate         # checks a Drishti SQL statement without reading data
       - /api/v1/bi/expr/validate        # checks one expression (DEL) in its scope against a model as the caller sees it, reads no data
       - /api/v1/bi/expr/convert         # converts an expression or an item's YAML from the old syntax to DEL v2, stores nothing
       - /api/v1/bi/mq/subscribe         # a standing query: the same answer kept current for the caller (ended by DELETE, or when no stream reads it)
@@ -565,6 +567,12 @@ drishti:
       cache-ttl: 15m                 # an answer for the current state is asked again after this; as-of answers have no ttl
       cache-idle: 1h                 # an answer nobody asked for this long is dropped
       guards: refuse                 # refuse (wave A) or warn (W1): sums across currencies (DRS-9158), balances added across dates (DRS-9159)
+    sql:                             # Drishti SQL over models (docs/guides/SQL.md; docs/admin/CONFIGURATION.md, drishti.bi.sql)
+      enabled: true                  # false: /bi/sql answers DRS-9006 and SQL view datasets cannot be read
+      max-leaves: 8                  # model queries one composite statement may ask
+      composite-memory: 256MB        # memory of the in-memory engine a composite statement's outer query runs in
+      composite-timeout: 30s         # longest the outer query of a composite statement may run
+      max-rows: 100000               # most rows a composite statement answers
     expr:                            # the Drishti expression language, DEL v2 (docs/guides/EXPRESSIONS.md; docs/admin/CONFIGURATION.md, drishti.bi.expr)
       legacy: warn                   # the old expression syntax: warn (read with DRS-9100, wave A) or refuse (DRS-9100 with the DEL v2 text as the fix)
       parse-cache: 10000             # parsed expressions kept (0: off)
