@@ -138,6 +138,11 @@ public final class DatasetService {
         /** The model as a designer or a reader of a report sees it ({@code GET /models/{id}/describe}). */
         Map<String, Object> describe(Principal p, String model);
 
+        /** As {@link #describe(Principal, String)} through a published consumer: a reader without model read sees the consumer's envelope. */
+        default Map<String, Object> describe(Principal p, String model, String consumer) {
+            return describe(p, model);
+        }
+
         /** Why a report bound to the model cannot be published (a draft model, its Check, the security safeguard); empty when it can. */
         List<String> publishProblems(String model);
 
@@ -257,6 +262,11 @@ public final class DatasetService {
     /** The model as the caller sees it. */
     public Map<String, Object> describeModel(Principal p, String model) {
         return requireGateway().describe(p, model);
+    }
+
+    /** As {@link #describeModel(Principal, String)} through a published consumer (its envelope for a reader without model read). */
+    public Map<String, Object> describeModel(Principal p, String model, String consumer) {
+        return consumer == null ? describeModel(p, model) : requireGateway().describe(p, model, consumer);
     }
 
     /** A consumer's answer: the engine's result (the model query's warnings ahead of the engine's) and the canonical model query that ran (null without the gateway). */

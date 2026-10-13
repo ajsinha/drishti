@@ -220,7 +220,7 @@ public final class BiReportService {
 
     private Map<String, Object> datasetSummary(Principal p, BiStore.Item dsItem) {
         if (DatasetService.isModelRef(dsItem)) {
-            return datasets.describeModel(p, dsItem.id());
+            return datasets.describeModel(p, dsItem.id(), DatasetService.consumerOf(dsItem));
         }
         Map<String, Object> d = new LinkedHashMap<>(datasets.modelOf(p, dsItem));
         d.remove("layers");

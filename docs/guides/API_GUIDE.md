@@ -1992,7 +1992,7 @@ POST /api/v1/bi/reports/file:report:lang-guarded-report/query   (hana: a viewer 
 
 | Method | Path | What it does |
 |---|---|---|
-| `GET` | `/api/v1/bi/reports/{id}/envelope` | what the report's readers without read on its model may ask: `{consumer, fields, measures, filters}` (captured: `{"consumer": "file:report:lang-guarded-report", "fields": ["trades.desk"], "measures": ["Notional"], "filters": ["trades.desk"]}`) |
+| `GET` | `/api/v1/bi/reports/{id}/envelope` | what the report's readers without read on its model may ask (any reader of the published report may get it; `GET /reports/{id}` opens for them too, its `dataset` the model described within this envelope, `envelope: true`): `{consumer, fields, measures, filters}` (captured: `{"consumer": "file:report:lang-guarded-report", "fields": ["trades.desk"], "measures": ["Notional"], "filters": ["trades.desk"]}`) |
 | `GET` | `/api/v1/bi/models/{id}/impact?target=<field or measure>` | the consumers whose envelopes use it: `{model, target, consumers: [{kind, id, title, status, owner, workspace}], unknown: [...]}` (`unknown`: consumers with no envelope, such as alerts) |
 
 **Breaking changes** (wave A, full): publishing a model needs a new major version (`409 DRS-9126`) when a measure is removed or **changes meaning** (its

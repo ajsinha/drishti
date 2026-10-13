@@ -277,7 +277,18 @@ public final class ModelCatalog {
         if (rep == null) {
             throw new DrishtiException(ErrorCode.REPORT_INVALID, "the report has errors");
         }
-        ModelView v = rep.model() == null ? null : find(p, rep.model()).view();
+        ModelView v = null;
+        if (rep.model() != null) {
+            try {
+                v = find(p, rep.model()).view();
+            } catch (MqException e) {
+                Found f = item.isPublished() && "DRS-9151".equals(e.problems().get(0).code()) ? findPublished(rep.model()) : null;   // a reader of the report
+                if (f == null) {
+                    throw e;
+                }
+                v = f.view();
+            }
+        }
         return Envelope.of(item.id(), rep, v).toMap();
     }
 
@@ -798,7 +809,46 @@ public final class ModelCatalog {
      * {@code DRS-9153}). Fields and measures hidden from the caller ({@code hidden-for}) are absent; each carries the model's field properties.
      */
     public Map<String, Object> describe(Principal p, String ref, String perspective) {
-        Found f = find(p, ref);
+        return describe(p, ref, find(p, ref), perspective, null);
+    }
+
+    /**
+     * As {@link #describe(Principal, String)} for a reader of a published consumer (a report): with read on the model, the model; without it, the fields and
+     * measures of the report's envelope only (docs/architecture/BI_DESIGN.md section 5.3), so the report opens and its Fields pane shows what it may ask.
+     */
+    public Map<String, Object> describeVia(Principal p, String ref, String consumerId) {
+        try {
+            return describe(p, ref, null);
+        } catch (MqException e) {
+            if (consumerId == null || !"DRS-9151".equals(e.problems().get(0).code())) {
+                throw e;
+            }
+            com.ash.drishti.server.bi.report.Report rep;
+            try {
+                rep = publishedReport(p, consumerId);
+            } catch (DrishtiException x) {
+                throw e;
+            }
+            Found f = rep == null || rep.model() == null ? null : findPublished(ref);
+            if (f == null) {
+                throw e;
+            }
+            Map<String, Object> m = describe(p, ref, f, null, Envelope.of(consumerId, rep, f.view()));
+            m.put("envelope", true);                                            // what this reader may ask through the report, not the whole model
+            return m;
+        }
+    }
+
+    /** The published text of a report the caller may read, parsed (null when it is no published report). */
+    private com.ash.drishti.server.bi.report.Report publishedReport(Principal p, String consumerId) {
+        BiStore.Item c = bi.readableItem(p, consumerId);
+        if (!"report".equals(c.kind()) || !c.isPublished()) {
+            return null;
+        }
+        return com.ash.drishti.server.bi.report.ReportParser.parse(bi.publishedBody(c)).report();
+    }
+
+    private Map<String, Object> describe(Principal p, String ref, Found f, String perspective, Envelope within) {
         ModelView v = f.view();
         QueryService.Caller who = datasets.caller(p, v.flat());
         Set<String> hiddenFor = ObjectSecurity.hidden(v, who.roles());
@@ -828,7 +878,7 @@ public final class ModelCatalog {
             if (t != null) {
                 for (Dataset.Column c : t.columns().values()) {
                     String fieldName = u.alias() + "." + c.name();
-                    if (hiddenFor.contains(fieldName) || view != null && !view.shows(fieldName)) {
+                    if (hiddenFor.contains(fieldName) || view != null && !view.shows(fieldName) || within != null && !within.uses(fieldName)) {
                         continue;
                     }
                     DatasetDef.Col def = r == null ? null : r.def().columns().get(c.name());
@@ -870,7 +920,8 @@ public final class ModelCatalog {
                 "cardinality", r.cardinality(), "active", r.active())).toList());
         List<Map<String, Object>> measures = new ArrayList<>();
         for (ModelDef.Meas x : v.measureDefs().values()) {
-            if (hiddenFor.contains(ObjectSecurity.MEASURE + x.name()) || view != null && !view.measures().contains(x.name()) && !view.measures().contains(x.id())) {
+            if (hiddenFor.contains(ObjectSecurity.MEASURE + x.name()) || view != null && !view.measures().contains(x.name()) && !view.measures().contains(x.id())
+                    || within != null && !within.uses(x.name())) {
                 continue;
             }
             ModelView.MeasureInfo info = v.info(v.flat(), x.name());
@@ -900,6 +951,10 @@ public final class ModelCatalog {
         m.put("contract", Map.of("exposes", v.def().contract().exposes(), "fields", v.def().contract().fields(), "measures", v.def().contract().measures(),
                 "deprecated", v.def().contract().deprecated()));
         m.put("ai", v.def().ai());
+        if (within != null) {
+            m.put("usedBy", List.of());                                         // a reader within a report's envelope is not shown the model's other consumers
+            return m;
+        }
         try {
             Map<String, Object> used = usedBy(p, ref);
             m.put("usedBy", used.get("consumers"));

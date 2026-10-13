@@ -93,6 +93,11 @@ public final class ConsumerQueries implements DatasetService.ModelGateway {
     }
 
     @Override
+    public Map<String, Object> describe(Principal p, String model, String consumer) {
+        return catalog.describeVia(p, model, consumer);
+    }
+
+    @Override
     public List<String> publishProblems(String model) {
         return catalog.publishProblems(model);
     }

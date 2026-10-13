@@ -469,6 +469,12 @@ class LanguagesApiTest {
         JsonNode envelope = ok(call("GET", "/api/v1/bi/reports/file:report:lang-guarded-report/envelope", reader("rita"), null));
         assertThat(envelope.path("fields").toString()).contains("trades.desk");
         assertThat(envelope.path("measures").toString()).contains("Notional").doesNotContain("Trades");
+        JsonNode opened = ok(call("GET", "/api/v1/bi/reports/file:report:lang-guarded-report", reader("hana"), null));
+        assertThat(opened.path("valid").asBoolean()).as("a reader of the report opens it without read on the model: " + opened.path("problems")).isTrue();
+        assertThat(opened.path("dataset").path("envelope").asBoolean()).as("the Fields pane shows the report's envelope").isTrue();
+        assertThat(opened.path("dataset").path("measures").toString()).contains("Notional").doesNotContain("\"Trades\"");
+        JsonNode hanaEnvelope = ok(call("GET", "/api/v1/bi/reports/file:report:lang-guarded-report/envelope", reader("hana"), null));
+        assertThat(hanaEnvelope.path("measures").toString()).contains("Notional");
         JsonNode impact = ok(call("GET", "/api/v1/bi/models/lang-guarded@1/impact?target=Notional", reader("rita"), null));
         assertThat(impact.path("consumers").toString()).contains("lang-guarded-report");
         JsonNode none = ok(call("GET", "/api/v1/bi/models/lang-guarded@1/impact?target=Trades", reader("rita"), null));
