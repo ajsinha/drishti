@@ -368,6 +368,11 @@ public final class QueryService implements AutoCloseable {
             components = Layers.componentColumns(d, rollup);
             String rel = rl.files().isEmpty() ? emptyRollup(d, rollup, components) : "SELECT * FROM " + files(rl.files());
             from.put(rollup.table(), new SqlCompiler.Source("(" + rel + ") AS " + Dialect.quote(rollup.table()), List.of()));
+            for (String t : plan.tables()) {                                       // a dimension joined for its row rules reads its columns layer
+                if (!t.equals(rollup.table())) {
+                    from.put(t, TableRelations.cached(d, d.tables().get(t), cols.get(t).files(), Dialect.DUCKDB));
+                }
+            }
             layerName = "rollup";
         } else {
             for (String t : plan.tables()) {
@@ -470,12 +475,21 @@ public final class QueryService implements AutoCloseable {
 
     // ---- routing -----------------------------------------------------------------------------------------------------
 
-    /** The first rollup that can answer the plan, or null: one table, only its grouped columns, only measures made of its stored aggregates. */
+    /**
+     * The first rollup that can answer the plan, or null: one fact table, only its grouped columns, only measures made of its stored aggregates. Security-aware:
+     * the columns of the reader's row rules on the fact must be grouped by the rollup, and a dimension joined only for its row rules (a dimension's rules reach
+     * the facts that reference it) may stay when the fact joins it directly, many-to-one, on a column the rollup groups by: each rollup row then belongs to
+     * exactly one row of the dimension, so the rule keeps or drops it whole, as it would each fact row.
+     */
     Dataset.Rollup route(Dataset d, SqlCompiler.Plan plan, QueryRequest q, Map<String, LiveTable> inMemory) {
-        if (d.rollups().isEmpty() || plan.measures().isEmpty() || plan.tables().size() != 1) {
+        if (d.rollups().isEmpty() || plan.measures().isEmpty() || plan.multiFact()) {
             return null;
         }
-        String table = plan.tables().iterator().next();
+        String table = plan.tables().size() == 1 ? plan.tables().iterator().next() : plan.base();
+        Set<String> joinedOn = ruleOnlyJoins(d, plan, table);
+        if (table == null || joinedOn == null) {
+            return null;
+        }
         if (d.tables().get(table).shape() != null) {
             return null;                                                       // a de-duplicated or grouped table: its rollup would add the rows it drops
         }
@@ -488,8 +502,11 @@ public final class QueryService implements AutoCloseable {
         }
         Set<String> used = new LinkedHashSet<>(plan.columnsOf(table));
         for (String rc : plan.ruleColumns(d)) {
-            used.add(rc.substring(rc.indexOf('.') + 1));
+            if (rc.startsWith(table + ".")) {                                     // the fact's own rules read its grouped columns; a dimension's are joined
+                used.add(rc.substring(rc.indexOf('.') + 1));
+            }
         }
+        used.addAll(joinedOn);
         for (Dataset.Rollup r : d.rollups()) {
             if (!r.table().equals(table) || live && inMemory.get(table).aggregate(r.name()).isEmpty()) {
                 continue;
@@ -513,6 +530,33 @@ public final class QueryService implements AutoCloseable {
             }
         }
         return null;
+    }
+
+    /**
+     * The fact's columns that join the plan's other tables, when every other table is a dimension joined directly from the fact (many-to-one) and only for
+     * its row rules (no field or filter reads it); an empty set for a one-table plan; null when a rollup cannot answer the plan.
+     */
+    static Set<String> ruleOnlyJoins(Dataset d, SqlCompiler.Plan plan, String fact) {
+        Set<String> out = new LinkedHashSet<>();
+        if (fact == null || plan.tables().size() == 1) {
+            return out;
+        }
+        if (plan.fields().stream().anyMatch(f -> f.ref() == null || !fact.equals(f.ref().table()))
+                || plan.filters().stream().anyMatch(f -> f.ref() != null && !fact.equals(f.ref().table()))) {
+            return null;
+        }
+        Set<String> joined = new LinkedHashSet<>();
+        for (SqlCompiler.Join j : plan.joins()) {
+            Dataset.TableSecurity s = d.security().tables().get(j.toTable());
+            if (!fact.equals(j.fromTable()) || s == null || !s.dimension() || !plan.tables().contains(j.toTable())) {
+                return null;                                                       // a chain, a fact on the one side, or a table read for more than its rules
+            }
+            joined.add(j.toTable());
+            out.add(j.fromColumn());
+        }
+        Set<String> others = new LinkedHashSet<>(plan.tables());
+        others.remove(fact);
+        return joined.equals(others) ? out : null;
     }
 
     /** No date to read: a rollup-shaped table with no rows, so the aggregates are null (counts 0) instead of an error. */

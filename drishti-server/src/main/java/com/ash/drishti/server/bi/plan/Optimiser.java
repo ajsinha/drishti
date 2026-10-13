@@ -212,9 +212,11 @@ public final class Optimiser {
     // ---- rollup matching -----------------------------------------------------------------------------------------------
 
     /**
-     * An aggregate over one table, with no filter on a measure, is answered from a rollup of that table when the rollup's {@code by} (with the business date)
-     * holds every column the aggregate groups or filters on <em>and every column of the reader's row rules</em> (security first: else no match), and the rollup
-     * stores every component of its measures. The engine makes the same choice when it runs (a live table kept as a snapshot has no rollup to read).
+     * An aggregate over one fact table, with no filter on a measure, is answered from a rollup of that table when the rollup's {@code by} (with the business
+     * date) holds every column the aggregate groups or filters on <em>and every column of the reader's row rules on the fact</em> (security first: else no
+     * match), and the rollup stores every component of its measures. A dimension in the aggregate only for its row rules (its rules reach the fact) does not
+     * stop the match when the fact joins it directly, many-to-one, on a column the rollup groups by: the rule keeps or drops each rollup row whole. The engine
+     * makes the same choice when it runs (QueryService#route; a live table kept as a snapshot has no rollup to read).
      */
     static LogicalPlan rollups(LogicalPlan p, Dataset flat) {
         if (flat.rollups().isEmpty() || PlanNode.all(p.root()).stream().anyMatch(PlanNode.Having.class::isInstance)) {
@@ -226,15 +228,30 @@ public final class Optimiser {
     private static PlanNode rollup(PlanNode n, Dataset flat) {
         if (n instanceof PlanNode.Aggregate a) {
             List<PlanNode.SecureScan> scans = PlanNode.scans(a);
-            if (scans.size() != 1 || a.measures().isEmpty() || PlanNode.all(a).stream().anyMatch(x -> x instanceof PlanNode.Dedup || x instanceof PlanNode.Regroup)) {
+            if (a.measures().isEmpty() || PlanNode.all(a).stream().anyMatch(x -> x instanceof PlanNode.Dedup || x instanceof PlanNode.Regroup)) {
                 return a;
             }
-            PlanNode.SecureScan s = scans.get(0);
+            PlanNode.SecureScan s = scans.stream().filter(x -> x.alias().equals(a.fact())).findFirst().orElse(null);
+            if (s == null) {
+                return a;
+            }
             Map<String, Set<String>> needed = new LinkedHashMap<>();
             a.by().forEach(f -> take(needed, f));
             s.pushed().forEach(c -> take(needed, c.field()));
             s.rules().forEach(r -> ruleColumns(r, needed));
-            Set<String> cols = needed.getOrDefault(s.alias(), Set.of());
+            Set<String> cols = new LinkedHashSet<>(needed.getOrDefault(s.alias(), Set.of()));
+            for (PlanNode.SecureScan o : scans) {
+                if (o == s) {
+                    continue;
+                }
+                Dataset.Relationship rel = flat.relationships().stream().filter(r -> r.active() && r.fromTable().equals(s.alias()) && r.toTable().equals(o.alias())
+                        && !"one-to-many".equals(r.cardinality()) && !"many-to-many".equals(r.cardinality())).findFirst().orElse(null);
+                Dataset.TableSecurity sec = flat.security().tables().get(o.alias());
+                if (rel == null || sec == null || !sec.dimension() || !o.pushed().isEmpty() || needed.containsKey(o.alias())) {
+                    return a;                                                  // a table read for more than its rules, or not joined directly from the fact
+                }
+                cols.add(rel.fromColumn());
+            }
             for (Dataset.Rollup r : flat.rollups()) {
                 if (!r.table().equals(s.alias())) {
                     continue;

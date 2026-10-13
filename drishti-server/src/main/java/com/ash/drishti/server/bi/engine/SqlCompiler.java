@@ -212,7 +212,7 @@ public final class SqlCompiler {
         }
         if (ds.security().perTable()) {
             // a data model: each table's rules bind to that table; a dimension's rules reach the facts that reference it (docs/architecture/BI_MODEL_SPEC.md 2.6)
-            tables.addAll(TableRules.reached(ds, tables));
+            tables.addAll(TableRules.reached(ds, tables, reader));
             TableRules.Bound bound = TableRules.bind(ds, tables, reader);
             rules = new ArrayList<>(bound.rules());
             denied = bound.denied();
@@ -376,7 +376,7 @@ public final class SqlCompiler {
             if (ds.security().perTable()) {
                 // each fact part reads its own tables, so only their rules (and those of the dimensions this fact reaches) apply to it
                 Set<String> partTables = union(union(groupTables.get(i), dimTables), Set.of(base));
-                partTables.addAll(TableRules.reached(ds, partTables));
+                partTables.addAll(TableRules.reached(ds, partTables, reader));
                 List<Join> more = tree(base, partTables, edges, true);
                 if (more == null) {
                     return null;
