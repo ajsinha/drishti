@@ -1962,6 +1962,33 @@ drishti.py bi mq --model REF --select F,... --measures M,... [--define "Name=DEL
 only, in DEL (`--define "Open MTM=sum(trades.mtm, where=trades.status == 'Live')" --measures "Open MTM"`), as a report's own measure travels. The answer is
 a table with its plan, its as-of date and the columns masked for you; `--json` prints the server's answer as it is.
 
+### `bi item`, `bi dataset`: items from files, tests and refresh
+
+What My workspace's **New item**, the item page's **Edit**, **Check**'s expected values and a dataset page's **Refresh now** do, over REST as the token's
+user. A write needs the `bi:write` scope and the `bi-author` power; the server checks every text and decides who may do what.
+
+```
+drishti.py bi item new WORKSPACE FILE [--kind K] [--title T] [--audience ROLE,...]   a draft from a YAML file; the kind is read from the file name (x.model.yaml)
+drishti.py bi item save ID FILE [--message M]                                       a new saved state of the draft (the history shows the message)
+drishti.py bi item tests ID [--role R]                                              run the item's expected values (tests:) as you or a role you hold; exit 1 on a failure
+drishti.py bi dataset refresh ID [--now] [--wait S]                                 the refresh state; --now refreshes and waits until it ends
+```
+
+Publishing is `bi catalogue publish ID` (above). Captured, the steps of [tutorial 11](../tutorials/11-bi-that-runs-itself.md):
+
+```text
+$ python3 tools/drishti.py bi item new economics-desk docs/tutorials/data/trades-daily.dataset.yaml
+bi-03f88abb6f  dataset  Trades refreshed daily  draft in Economics desk
+$ python3 tools/drishti.py bi dataset refresh bi-03f88abb6f --now
+scheduled  (America/New_York, calendar USNY)
+  dataset   business-days 06:30   ok  last run 2026-10-13 06:23:07 UTC by manual (drishti-dev-admin): 750 rows in 13 ms
+$ python3 tools/drishti.py bi item tests bi-6027da28fe
+pass  The book holds 750 trades: expected 750, found 750
+fail  Close to 100 trades: expected 100 ± 1%, found 750
+...
+3 passed, 1 failed
+```
+
 ### Shell completion
 
 `drishti.py completion bash|zsh|powershell` prints a completion script generated from the command tree (groups, commands,

@@ -79,7 +79,8 @@ def model_list(a, ctx) -> int:
     if a.json:
         ctx["say_json"]({"models": rows})
         return 0
-    print(table(["query", "kind", "title", "version", "state"], [[m.get("query") or m.get("name"), m.get("kind"), m.get("title"), m.get("version") or "",
+    ref = lambda m: m.get("query") or (f"{m.get('name')}@{str(m.get('version') or '1').split('.')[0]}" if m.get("kind") == "model" else m.get("name"))  # noqa: E731
+    print(table(["query", "kind", "title", "version", "state"], [[ref(m), m.get("kind"), m.get("title"), m.get("version") or "",
                                                                "draft" if m.get("draft") else m.get("status") or "published"] for m in rows]))
     return 0
 

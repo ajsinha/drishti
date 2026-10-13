@@ -12,28 +12,20 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 11: a small dataset over the trades that rebuilds itself every business morning. The `refresh:` line is the point; the rest is the
-# trades-basic sample cut down to what a desk page needs.
-rachana: 1
+# Tutorial 11: a dataset of the model layer over the trades that rebuilds itself every business morning. The `refresh:` line is the point; the rest
+# says what one row is and which columns a desk page needs. Its measures are in the model trades-daily (trades-daily.model.yaml).
+rachana: 2
 expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
 dataset: trades-daily
-version: 1
+version: 1.0.0
 title: Trades refreshed daily
-description: Trades by desk, rebuilt on its own at 06:30 on business days.
+description: The trades by desk, rebuilt on their own at 06:30 on business days.
+source: { connector: trading-store, kind: trade }
+grain: { says: "One row per trade per business date", keys: [tradeId] }
 refresh: "business-days 06:30"      # a schedule (daily 06:00, hourly, cron ...) or after-load: when the layers are rebuilt without anyone asking
-
-tables:
-  trade:
-    source: { connector: trading-store, kind: trade }
-    mode: cached
-    columns:
-      tradeId:   { type: string, key: true }
-      desk:      string
-      currency:  string
-      notional:  { type: decimal, format: amount0 }
-      mtm:       { type: decimal, format: signed0 }
-
-measures:
-  Notional: { expr: "sum(trade.notional)", format: amount0 }
-  MTM:      { expr: "sum(trade.mtm)", format: signed0 }
-  Trades:   { expr: "count(trade)" }
+columns:
+  tradeId:  { type: string, role: key }
+  desk:     { type: string }
+  currency: { type: string }
+  notional: { type: decimal, format: amount0 }
+  mtm:      { type: decimal, format: signed0 }

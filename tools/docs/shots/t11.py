@@ -14,8 +14,9 @@
 
 """Pictures of tutorial 11, BI that runs itself (docs/tutorials/11-bi-that-runs-itself.md), written to docs/tutorials/img/t11/.
 
-A dataset that rebuilds itself every business morning, a subscription to a report (what Run now says without a mail server, and with one: the pictures marked
-"mail" need the server started with spring.mail.host pointing at a catcher), an alert on a number, and the four export formats."""
+A dataset of the model layer that rebuilds itself every business morning (its page's Refresh), a subscription to a report (what Run now says without a mail
+server, and with one: the pictures marked "mail" need the server started with spring.mail.host pointing at a catcher), an alert on a number of a report and on a
+measure of a model, the four export formats, and expected values: a report's tests that stop a publish, and a model's own tests in the model designer."""
 from __future__ import annotations
 
 import base64
@@ -28,22 +29,34 @@ from shotlib import Ctx, register
 shot = register("t11", OUT / "t11")
 DATA = ROOT / "docs" / "tutorials" / "data"
 DATASET_TITLE = "Trades refreshed daily"
+MODEL_TITLE = "Trades daily"
 WORKSPACE = "economics-desk"
 WORLD_REPORT = "file:report:world-economics"
 OVERVIEW = "file:report:trades-overview"
 
 
-def scheduled_dataset(c: Ctx) -> str:
-    """The published dataset that refreshes itself (made once; found again on later runs)."""
-    cat = bi(c, "GET", "/catalogue")
-    for it in (cat.get("items", []) if isinstance(cat, dict) else cat):
-        if it["title"] == DATASET_TITLE and not it.get("shipped"):
-            return it["id"]
+def ensure_workspace(c: Ctx):
     if not any(w["id"] == WORKSPACE for w in bi(c, "GET", "/workspaces")):
         bi(c, "POST", "/workspaces", {"name": "Economics desk", "description": "Reports on the world economy"})
-    made = bi(c, "POST", f"/workspaces/{WORKSPACE}/items", {"kind": "dataset", "title": DATASET_TITLE, "body": (DATA / "trades-daily.dataset.yaml").read_text()})
-    bi(c, "POST", f"/items/{made['id']}/publish", {"note": "refreshes itself on business mornings"})
+
+
+def published(c: Ctx, title: str, kind: str, body: str, note: str) -> str:
+    """The published item of that title in the workspace (made once; found again on later runs)."""
+    cat = bi(c, "GET", "/catalogue")
+    for it in (cat.get("items", []) if isinstance(cat, dict) else cat):
+        if it["title"] == title and not it.get("shipped"):
+            return it["id"]
+    ensure_workspace(c)
+    made = bi(c, "POST", f"/workspaces/{WORKSPACE}/items", {"kind": kind, "title": title, "body": body})
+    bi(c, "POST", f"/items/{made['id']}/publish", {"note": note})
     return made["id"]
+
+
+def scheduled_dataset(c: Ctx) -> str:
+    """The published dataset that refreshes itself, and the model over it (the model reads the dataset by name)."""
+    ds = published(c, DATASET_TITLE, "dataset", (DATA / "trades-daily.dataset.yaml").read_text(), "refreshes itself on business mornings")
+    published(c, MODEL_TITLE, "model", (DATA / "trades-daily.model.yaml").read_text(), "the measures over the dataset")
+    return ds
 
 
 @shot("18-excel-chart.jpg")
@@ -80,20 +93,16 @@ def excel_chart(c: Ctx):
 @shot("01-refresh.jpg", also=("02-refresh-now.jpg",))
 def refresh(c: Ctx):
     login(c, height=900)
+    clean_everywhere(c, MODEL_TITLE, DATASET_TITLE, workspace_names=("Economics desk",))      # a fresh dataset: it has not run yet
     ds = scheduled_dataset(c)
-    go(c, "/bi/d/" + ds, wait="h1", settle=1500)
-    c.page.locator("[data-refresh-sec]").scroll_into_view_if_needed()
-    c.page.evaluate("document.querySelector('[data-refresh-sec]').scrollIntoView()")
+    go(c, "/bi/ds/" + ds, wait="[data-layer-dataset][data-ready=yes]", settle=1500)
+    c.page.wait_for_selector("[data-refresh] tbody tr", timeout=20000)
     c.page.wait_for_timeout(500)
-    box = c.page.locator("[data-refresh-sec]").bounding_box()
-    c.save("01-refresh.jpg", clip={"x": 240, "y": max(0, box["y"] - 20), "width": 1040, "height": min(760, 900 - max(0, box["y"] - 20))})
+    elem_shot(c, "01-refresh.jpg", "[data-refresh-sec]", pad=14)
     c.page.click("[data-refresh-now]")
     c.page.wait_for_function("() => /Refreshed|Refresh /.test(document.querySelector('[data-refresh-msg]').textContent)", timeout=60000)
     c.page.wait_for_timeout(1500)
-    c.page.evaluate("document.querySelector('[data-refresh-sec]').scrollIntoView()")
-    c.page.wait_for_timeout(400)
-    box = c.page.locator("[data-refresh-sec]").bounding_box()
-    c.save("02-refresh-now.jpg", clip={"x": 240, "y": max(0, box["y"] - 20), "width": 1040, "height": min(760, 900 - max(0, box["y"] - 20))})
+    elem_shot(c, "02-refresh-now.jpg", "[data-refresh-sec]", pad=14)
 
 
 @shot("03-subscribe-form.jpg", also=("04-subscription-saved.jpg", "05-run-no-smtp.jpg", "06-history-no-smtp.jpg"))
@@ -107,7 +116,7 @@ def subscribe_no_mail(c: Ctx):
     c.page.wait_for_selector("[data-subscribe-form]")
     f = c.page.locator("[data-subscribe-form]")
     f.locator('input[name="name"]').fill("Morning economy pack")
-    f.locator('input[name="schedule"]').fill("business-days 07:30")
+    # When: every business day at 07:30 is the form's own default (the schedule builder writes business-days 07:30)
     f.locator('input[name="recipients"]').fill(VERA)
     f.locator('select[name="format"]').select_option("xlsx")
     c.page.wait_for_timeout(500)
@@ -133,7 +142,7 @@ def clean_alerts(c: Ctx, *names: str):
 @shot("07-alert-me.jpg", also=("08-alert-form.jpg", "09-alerts-list.jpg", "10-alert-history.jpg", "13-inbox-alert.jpg"))
 def alerts(c: Ctx):
     login(c, height=900)
-    clean_alerts(c, "MTM floor", "Notional ceiling")
+    clean_alerts(c, "MTM floor", "Notional ceiling", "FX desk MTM floor")
     open_report(c, OVERVIEW, "overview")
     card = c.page.locator('[data-visual="mtm"]')
     card.scroll_into_view_if_needed()
@@ -163,6 +172,31 @@ def alerts(c: Ctx):
     elem_shot(c, "10-alert-history.jpg", "[data-history]", pad=12)
     go(c, "/inbox?tab=alert", wait=".inbox", settle=1500)
     c.save("13-inbox-alert.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 480})
+
+
+@shot("21-alert-model.jpg")
+def alert_on_a_model(c: Ctx):
+    """Alerts, New: Watch a measure of a model, with a filter, below a limit, checked now (not saved)."""
+    login(c, height=900)
+    scheduled_dataset(c)
+    go(c, "/alerts/new", wait="[data-alert-form]", settle=1200)
+    c.page.select_option('select[name="source_type"]', "model")
+    c.page.wait_for_timeout(500)
+    c.page.select_option('select[name="model_ref"]', "trades-daily@1")
+    c.page.wait_for_timeout(1200)
+    c.page.select_option('select[name="model_measure"]', "MTM")
+    c.page.click("[data-al-addfilter]")
+    row = c.page.locator("[data-al-filter]").first
+    row.locator("select").first.select_option("trade.desk")
+    row.locator("input").fill("DESK-FX")
+    c.page.fill('input[name="name"]', "FX desk MTM floor")
+    c.page.select_option('select[name="op"]', "below")
+    c.page.fill('input[name="value"]', "-10000000")
+    c.page.click("[data-check-now]")
+    c.page.wait_for_function("() => document.querySelector('[data-check-out]').textContent.includes('Right now')", timeout=30000)
+    c.page.wait_for_timeout(500)
+    c.page.evaluate("window.scrollTo(0, 0)")
+    c.save("21-alert-model.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 844})
 
 
 @shot("11-export-bar.jpg", also=("12-export-png.jpg",))
@@ -198,32 +232,23 @@ def subscribe_with_mail(c: Ctx):
     c.save("15-history-with-smtp.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 640})
 
 
-TESTED_TITLE = "Trades with expected values"
+TESTED_TITLE = "Desk check"
 
 
-@shot("16-tests.jpg", also=("17-publish-refused.jpg",))
+@shot("16-tests.jpg", also=("17-publish-refused.jpg", "20-model-tests.jpg"))
 def expected_values(c: Ctx):
-    """Expected values (tests:) on a dataset: run from the dataset page, and a publish refused while one fails."""
+    """Expected values (tests:) on a report of the model: run by the designer's Check, and a publish refused while one fails; then the model's own tests in the
+    model designer's Contract tab."""
     login(c, height=900)
     clean_everywhere(c, TESTED_TITLE)
-    if not any(w["id"] == WORKSPACE for w in bi(c, "GET", "/workspaces")):
-        bi(c, "POST", "/workspaces", {"name": "Economics desk", "description": "Reports on the world economy"})
-    base = (DATA / "trades-daily.dataset.yaml").read_text().replace("dataset: trades-daily", "dataset: trades-tested").replace("title: Trades refreshed daily", "title: " + TESTED_TITLE)
-    base = base.replace('refresh: "business-days 06:30"', "# no schedule: this one is about tests")
-    made = bi(c, "POST", f"/workspaces/{WORKSPACE}/items", {"kind": "dataset", "title": TESTED_TITLE, "body": base})
-    got = bi(c, "POST", f"/datasets/{made['id']}/query", {"measures": ["Trades"]})
-    trades = int(got["rows"][0][0])
-    print("trades in the dataset:", trades)
-    tests = (f"\ntests:\n  - {{ name: The book holds {trades} trades, measure: Trades, expect: {trades} }}\n"
-             f"  - {{ name: Trades within a range, measure: Trades, expect: {{ min: {max(1, trades - 5)}, max: {trades + 5} }} }}\n"
-             f"  - {{ name: Close to 100 trades, measure: Trades, expect: 100, tolerance: 1% }}\n")
-    bi(c, "PUT", "/items/" + made["id"], {"body": base + tests})
-    go(c, "/bi/d/" + made["id"], wait="h1", settle=1500)
-    c.page.locator("[data-tests-sec]").wait_for(state="visible")
-    c.page.click("[data-tests-run]")
-    c.page.wait_for_selector("[data-tests-table] tbody tr", timeout=60000)
+    scheduled_dataset(c)
+    ensure_workspace(c)
+    made = bi(c, "POST", f"/workspaces/{WORKSPACE}/items", {"kind": "report", "title": TESTED_TITLE, "body": (DATA / "desk-check.report.yaml").read_text()})
+    go(c, "/bi/design/" + made["id"], wait="[data-design-root][data-ready=yes]", settle=1500)
+    c.page.click("[data-check]")                                         # Check runs the report's tests too
+    c.page.wait_for_selector("[data-check-box] [data-test]", timeout=60000)
     c.page.wait_for_timeout(800)
-    elem_shot(c, "16-tests.jpg", "[data-tests-sec]", pad=14)
+    elem_shot(c, "16-tests.jpg", "[data-check-box]", pad=14)
     c.page.goto(c.base + "/bi/i/" + made["id"])
     c.page.wait_for_selector("h1")
     c.page.wait_for_timeout(1200)
@@ -233,6 +258,20 @@ def expected_values(c: Ctx):
     c.page.wait_for_timeout(500)
     c.save("17-publish-refused.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 480})
     clean_everywhere(c, TESTED_TITLE)
+    # the model's own tests: a Drishti SQL question and the figure it must give, run from the model designer
+    model = next(i for i in bi(c, "GET", f"/workspaces/{WORKSPACE}/items") if i["title"] == MODEL_TITLE)
+    body = (DATA / "trades-daily.model.yaml").read_text() + (
+        "tests:\n  - { name: The book holds 750 trades, sql: \"SELECT MEASURE('Trades') FROM trade\", expect: 750 }\n"
+        "  - { name: Every desk has trades, sql: \"SELECT COUNT(DISTINCT trade.desk) FROM trade\", expect: { min: 1 } }\n")
+    bi(c, "PUT", "/items/" + model["id"], {"body": body, "message": "the figures it must give"})
+    go(c, "/bi/md/" + model["id"], wait="[data-md-root][data-ready=yes]", settle=1500)
+    c.page.click('[data-tab="contract"]')
+    c.page.wait_for_selector("[data-model-tests] [data-tests-run]", timeout=20000)
+    c.page.click("[data-model-tests] [data-tests-run]")
+    c.page.wait_for_selector("[data-model-tests] [data-tests-table] tbody tr", timeout=60000)
+    c.page.wait_for_timeout(600)
+    elem_shot(c, "20-model-tests.jpg", "[data-model-tests]", pad=14)
+    bi(c, "PUT", "/items/" + model["id"], {"body": (DATA / "trades-daily.model.yaml").read_text(), "message": "back to the tutorial's text"})
 
 
 UNSCHEDULED = "Trades without a schedule"
@@ -243,14 +282,13 @@ def set_schedule(c: Ctx):
     """A dataset with no schedule: the Refresh section says so and an author sets one with two controls, no YAML."""
     login(c, height=900)
     clean_items(c, UNSCHEDULED)
-    body = (DATA / "trades-daily.dataset.yaml").read_text().replace('refresh: "business-days 06:30"', "").replace("Trades refreshed daily", UNSCHEDULED)
+    body = (DATA / "trades-daily.dataset.yaml").read_text().replace('refresh: "business-days 06:30"', "refresh: { on-load: true }").replace("Trades refreshed daily", UNSCHEDULED)
+    body = body.replace("dataset: trades-daily", "dataset: trades-unscheduled")
     made = bi(c, "POST", "/workspaces/me/items", {"kind": "dataset", "title": UNSCHEDULED, "body": body})
-    go(c, "/bi/d/" + made["id"], wait="h1", settle=1500)
+    go(c, "/bi/ds/" + made["id"], wait="[data-layer-dataset][data-ready=yes]", settle=1500)
     c.page.wait_for_selector("[data-set-schedule]:not([hidden])", timeout=20000)
     c.page.select_option('[data-set-schedule] [name="kind"]', "business-days")
     c.page.fill('[data-set-schedule] [name="time"]', "06:30")
-    c.page.evaluate("document.querySelector('[data-refresh-sec]').scrollIntoView()")
     c.page.wait_for_timeout(500)
-    box = c.page.locator("[data-refresh-sec]").bounding_box()
-    c.save("19-set-schedule.jpg", clip={"x": 240, "y": max(0, box["y"] - 20), "width": 1040, "height": min(560, 900 - max(0, box["y"] - 20))})
+    elem_shot(c, "19-set-schedule.jpg", "[data-refresh-sec]", pad=14)
     clean_items(c, UNSCHEDULED)

@@ -1219,6 +1219,7 @@ def build_parser() -> argparse.ArgumentParser:
                 p.add_argument("--note", help="why this version")
     load_module("bilang", "bilang.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})   # bi expr, bi migrate, bi sql
     load_module("bimodel", "bimodel.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})  # bi model, bi mq
+    load_module("biitem", "biitem.py").register(bi, srv_b, {"Api": Api, "CliError": CliError, "say_json": say_json})    # bi item, bi dataset
 
     vw = group("view", "A rendered entity view in the terminal, as the caller's token sees it (masks apply)")
     for name, what in (("get", "the strip and every panel as text tables (--json: the raw view)"), ("explain", "the About answer: what you are looking at, glossary, data source, why this layout and its match trace")):

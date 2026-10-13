@@ -133,7 +133,7 @@
       q('[data-yaml]').textContent = d.yaml;
       q('[data-yaml-note]').textContent = i.generated ? 'Written by Drishti from the pack; read-only. To change it, Narrow it: a dataset of your own that extends this one.'
         : i.readOnly ? 'The dataset as stored; you may not change it here (a shipped file, or no edit right in its workspace). Narrow it to make your own.' : 'The dataset as stored.';
-      if (B.layerOps && i.item) { B.layerOps(root, i); }
+      if (B.layerOps && i.item) { B.layerOps(root, Object.assign({}, i, { hasTests: /^tests:/m.test(d.yaml || '') })); }
       q('[data-narrow]').href = '/bi/datasets/new-layer?extends=' + encodeURIComponent(i.name);
       q('[data-use]').addEventListener('click', (e) => startReport(e.currentTarget, { dataset: i.name }, i.title + ' report'));
       q('[data-make-model]').addEventListener('click', (e) => makeModel(e.currentTarget, i.item || i.name, i.title + ' model'));

@@ -24,6 +24,18 @@
   const when = (x) => (x ? new Date(x).toLocaleString() : '–');
   const badge = (text, cls, ic) => h('span', { class: 'bi-badge ' + (cls || '') }, ic ? B.icon(ic) : null, ' ' + text);
 
+  /**
+   * One state for a dataset of one table: the server keeps the schedule on the table and a run someone asked for on the dataset; the page shows them as
+   * one line (the schedule, and the last run whichever started it).
+   */
+  const own = (r) => {
+    const t = (r.tables || [])[0] || {}, d = r.dataset || {};
+    if ((r.tables || []).length > 1 || !r.dataset) { return r.dataset || t; }
+    const later = !t.lastRun || (d.lastRun && d.lastRun > t.lastRun) ? d : t;
+    return Object.assign({}, later, { schedule: t.schedule || d.schedule, nextRun: t.nextRun || d.nextRun, history: d.history || t.history || [],
+      status: ['failed', 'retrying', 'running', 'invalid'].indexOf(t.status) >= 0 ? t.status : later.status });   // a scheduled run that went wrong is the news
+  };
+
   /** The Refresh and Expected values sections of a dataset item's page (`info` is the console's dataset info: item, readOnly, refresh). */
   B.layerOps = function (root, info) {
     const q = (sel) => root.querySelector(sel);
@@ -49,16 +61,15 @@
       const tb = B.clear(q('[data-refresh] tbody'));
       const line = (what, st) => {
         const bad = st.status === 'failed' || st.status === 'retrying' || st.status === 'invalid';
-        tb.appendChild(h('tr', { 'data-refresh-row': what, 'data-status': st.status || '' }, h('th', { scope: 'row', text: what }), h('td', { class: 'mono', text: st.schedule || '' }),
+        tb.appendChild(h('tr', { 'data-refresh-row': what, 'data-status': st.status || '' }, h('th', { scope: 'row', text: what }), h('td', { class: 'mono', text: st.schedule || (info.refresh && info.refresh['on-load'] ? 'when data loads' : '') }),
           h('td', {}, badge(st.status || 'waiting', bad ? 'bi-status' : 'bi-promoted', bad ? 'exclamation-triangle' : 'arrow-repeat'), st.error ? h('small', { class: 'text-muted-d', text: ' ' + st.error }) : null),
           h('td', { text: when(st.lastRun) }), h('td', { text: st.retryAt ? 'retry ' + when(st.retryAt) : /^after-load/.test(st.schedule || '') ? 'at the next data load' : when(st.nextRun) }),
           h('td', { text: st.lastRows == null ? '–' : num(st.lastRows) }), h('td', { text: st.lastDurationMs == null ? '–' : num(st.lastDurationMs) + ' ms' }), h('td', { text: String(st.failures || 0) })));
       };
-      if (r.dataset) { line('dataset', r.dataset); }
-      (r.tables || []).forEach((t) => line('table ' + t.table, t));
-      const own = r.dataset || (r.tables || [])[0] || {};                                    // a dataset of the model layer has one table: its state is the dataset's
-      q('[data-refresh-when]').textContent = 'Last refresh: ' + when(own.lastRun) + ' · Next: ' + (own.retryAt ? 'retry ' + when(own.retryAt) : own.nextRun ? when(own.nextRun) : r.scheduled ? 'worked out at the next scheduler look' : 'no schedule');
-      history(own.history || []);
+      const one = own(r);
+      if ((r.tables || []).length <= 1) { line('dataset', one); } else { if (r.dataset) { line('dataset', r.dataset); } r.tables.forEach((t) => line('table ' + t.table, t)); }
+      q('[data-refresh-when]').textContent = 'Last refresh: ' + when(one.lastRun) + ' · Next: ' + (one.retryAt ? 'retry ' + when(one.retryAt) : one.nextRun ? when(one.nextRun) : r.scheduled ? 'worked out at the next scheduler look' : 'no schedule');
+      history(one.history || []);
       q('[data-refresh-note]').textContent = r.scheduled
         ? 'Layers are rebuilt on the schedule (' + r.zone + ' time, ' + r.calendar + ' calendar for business days); a failed run is tried again with the shared retry policy.'
         : 'No refresh schedule: the layers are rebuilt when a data load for the kind this dataset reads arrives, or when an author asks (Refresh now).';
@@ -80,7 +91,7 @@
           (function poll() {
             B.api('GET', path + '/refresh').then((st) => {
               const d = st.dataset || {};
-              if (d.status === 'running' && tries++ < 120) { setTimeout(poll, 1000); return; }
+              if ((!st.dataset || d.status === 'running') && tries++ < 120) { setTimeout(poll, 1000); return; }   // the run appears, then ends
               btn.disabled = false;
               const ok = d.status === 'ok' || d.status === 'warning';
               msg.textContent = ok ? 'Refreshed ' + num(d.lastRows) + ' rows in ' + num(d.lastDurationMs) + ' ms.' : 'Refresh ' + (d.status || 'did not finish') + (d.error ? ': ' + d.error : '') + '.';
@@ -100,7 +111,7 @@
           f.hidden = true;
         }).catch((err) => B.near(go, err.message, true));
       });
-      if (!tsec || !author) { return; }
+      if (!tsec || !author || !info.hasTests) { return; }                                          // a dataset that declares no tests has nothing to run
       tsec.hidden = false;
       const sel = q('[data-tests-role]'), run = q('[data-tests-run]'), sum = q('[data-tests-sum]');
       sel.appendChild(h('option', { value: '', text: 'yourself' }));
@@ -121,4 +132,5 @@
       });
     });
   };
+  B.layerOps.own = own;
 })();

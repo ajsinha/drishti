@@ -75,6 +75,11 @@
   visual's key opens its entity in the terminal again (the console reads each table's pack kind); the designer's picker lists only version 1 datasets
   under *Other datasets* and offers *Also add* only for those; a model line with a comment is read; Promote to a report reads a Drishti SQL cell
   (aliases and MEASURE('...')); the AI draft and suggest ask with the report's model; refusals passed through the proxy keep their `mq`, problems and fixes.
+- **Tutorials on the model layer (wave A).** Tutorial 11 (BI that runs itself) on a dataset and a model of the model layer: the dataset's page refreshes it
+  (one line for a one-table dataset: its schedule and its last run, whoever started it), an alert on a measure of a model beside the one on a report's
+  visual, a report's tests that stop a publish and a model's own tests (Drishti SQL) run as a role, with UI, command line and YAML in every step and the
+  pictures retaken. New commands: `drishti.py bi item new|save|tests` (items from files, their expected values; exit 1 on a failure) and
+  `drishti.py bi dataset refresh [--now]`; `bi model list` prints a model's name@major.
 - **Server: the old expression syntax is refused (wave A, task 6).** `drishti.bi.expr.legacy` now defaults to `refuse`: an expression in the old syntax
   is `DRS-9100` with the DEL v2 text as the fix (`drishti.py bi migrate --expressions` converts files; `legacy: warn` reads it while a site converts its
   own items). A text that is already DEL v2 but wrong gets its DEL v2 problem, and a rule written as a YAML boolean (`where: true`) reads as `True`.

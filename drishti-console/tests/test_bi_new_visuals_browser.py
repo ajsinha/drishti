@@ -266,7 +266,7 @@ def test_the_dataset_page_shows_the_refresh_schedule_and_the_state(stack, browse
     page.goto(CONSOLE_URL + "/bi/d/file:dataset:" + DATASET)                                       # the old link opens the dataset's page (2.2)
     page.wait_for_url("**/bi/ds/**")
     page.wait_for_selector("[data-refresh] tbody tr", timeout=30000)
-    row = page.locator('[data-refresh] tr[data-refresh-row^="table"]')                            # a model-layer dataset has one table: the schedule is on it
+    row = page.locator('[data-refresh] tr[data-refresh-row="dataset"]')
     expect(row).to_have_count(1)
     assert "daily 06:00" in row.inner_text()                                                       # "daily at 06:00" is read as daily 06:00
     assert row.get_attribute("data-status")
