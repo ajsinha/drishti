@@ -14,9 +14,9 @@
 
 """Rupaka phase 3 in Chromium over the cross-pack samples (tests/bi_report_stack.py: ports 18990 and 17990, security on, a small Delta lake made by
 tools/packgen/banking/make_data.py: trades, counterparties, desks, books and netting sets across three packs): the "Counterparty risk" report with its slicers,
-its top-10 bar and its drill-through to a page about one counterparty; the same report for a desk head (the dataset's row rule shows only her desk and refuses the
-exposure visuals it cannot join) and for an analyst (the counterparty name is masked); the "Cashflow ladder" report over legs and cashflows that are arrays inside the
-trade documents, drilled from year to quarter; and the Model view of the cross-pack dataset: five boxes, five relationships, remove one, drag a column to bring it
+its top-10 bar and its drill-through to a page about one counterparty; the same report for a desk head (her row rule shows only her desk's trades; the netting sets, a fact of
+their own that the model lets her read, are not cut by it) and for an analyst (the counterparty name is masked); the "Cashflow ladder" report over legs and cashflows that are arrays inside the
+trade documents, drilled from year to quarter; and the Model view of the cross-pack 2.1 dataset (a version 1 dataset still has it): five boxes, five relationships, remove one, drag a column to bring it
 back, accept it from the proposals, drag a box.
 
 Skipped when Playwright, Chromium, uv (to make the lake; or DRISHTI_BI_DELTA_ROOT) or the built server jar is missing, or a scratch port is in use. Never run with pytest -n."""
@@ -35,7 +35,13 @@ from bi_report_stack import CONSOLE_URL, api  # noqa: E402
 
 COUNTERPARTY = "file:report:counterparty-risk"
 LADDER = "file:report:cashflow-ladder"
-RISK = "file:dataset:trading-risk"
+RISK = "file:dataset:trading-risk-v1"           # the 2.1 sample, kept as a version 1 dataset: the Model view is for those (a model has its designer)
+
+
+class CrossStack(bi_report_stack.ReportStack):
+    def prepare(self, work):
+        old = (bi_report_stack.ROOT / "drishti-server/src/test/resources/bi/samples-2.1/datasets/trading-risk.dataset.yaml").read_text(encoding="utf-8")
+        (work / "config/bi/datasets/trading-risk-v1.dataset.yaml").write_text(old.replace("dataset: trading-risk", "dataset: trading-risk-v1", 1), encoding="utf-8")
 
 
 @pytest.fixture(scope="module")
@@ -48,7 +54,7 @@ def stack(tmp_path_factory):
     if not lake:
         pytest.skip("needs a Delta lake: DRISHTI_BI_DELTA_ROOT, or uv with deltalake, pyarrow and pyyaml (tools/packgen/banking/make_data.py --lake)")
     try:
-        s = bi_report_stack.ReportStack(tmp, delta_root=lake).start()
+        s = CrossStack(tmp, delta_root=lake).start()
     except FileNotFoundError as e:
         pytest.skip(str(e))
     yield s
@@ -67,7 +73,9 @@ def browser(stack):
 
 
 def engine(user, roles, body, dataset="trading-risk"):
-    s, r = api("POST", f"/bi/datasets/file:dataset:{dataset}/query", user, roles, body)
+    """The engine's answer as ``user``: the 2.1 query body asked as one model query on the sample's model (2.2)."""
+    from bi_samples import as_mq
+    s, r = api("POST", "/bi/mq", user, roles, as_mq(f"{dataset}@1", body))
     assert s == 200, r
     return r
 
@@ -156,7 +164,7 @@ def test_a_trade_row_opens_in_the_terminal_and_an_unknown_counterparty_is_an_emp
     clean(page)
 
 
-def test_a_desk_head_sees_her_desk_and_the_exposure_visuals_say_why_they_cannot_be_drawn(stack, browser):
+def test_a_desk_head_sees_her_desk_and_the_exposure_of_every_counterparty(stack, browser):
     page = sign_in(browser, "hana")
     open_report(page, COUNTERPARTY)
     settled(page)
@@ -166,9 +174,9 @@ def test_a_desk_head_sees_her_desk_and_the_exposure_visuals_say_why_they_cannot_
     rows = page.locator('[data-visual="mtm-by-counterparty"] tbody tr')
     total = sum(int(r.inner_text().split("\t")[1].replace(",", "")) for r in rows.all())
     assert total == mine                                                                                 # the table counts only her desk's trades, whatever she clicks
-    failed = page.locator(".bi-vis-failed")
-    assert failed.count() >= 3 and "DRS-9020" in failed.first.inner_text()                               # a netting set does not reach the trades her rule filters
-    expect(failed.first.locator(".bi-retry")).to_be_visible()
+    assert page.locator(".bi-vis-failed").count() == 0                                                # 2.2: the netting sets are a fact of their own, not cut by her trades' rule
+    ee = engine("hana", ["desk-head"], {"measures": ["Exposure (EE peak)"]})["rows"][0][0]
+    assert ee == engine("rita", ["risk"], {"measures": ["Exposure (EE peak)"]})["rows"][0][0]          # may-see-all: the model says she reads every netting set
     clean(page)
 
 

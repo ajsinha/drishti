@@ -113,7 +113,7 @@ def test_the_live_desk_draws_the_history_line_from_the_server(stack, browser):
     page.wait_for_function("""() => { const c = echarts.getInstanceByDom(document.querySelector('[data-visual="last-hour"] .bi-chart'));
         return c && c.getOption().series.length >= 2 && c.getOption().series[0].data.length >= 2; }""", timeout=60000)
     assert page.inner_text('[data-visual="last-hour"] .bi-vis-title') == "Net MTM and losses, last hour"
-    s, r = S.api("POST", "/bi/datasets/file:dataset:live-trading/query", "rita", ["live-risk"], {"fields": ["history.ts"], "measures": ["MTM history"]})
+    s, r = S.api("POST", f"/bi/reports/{REPORT}/query", "rita", ["live-risk"], {"page": "desk", "visual": "last-hour", "state": {}})    # the 2.1 live dataset, as its report asks it
     assert s == 200 and r["rowCount"] >= 2
     clean(page)
 

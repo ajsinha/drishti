@@ -42,7 +42,9 @@ WES = ("wes", ["bi-writer"])
 
 class Stack(bi_report_stack.ReportStack):
     def prepare(self, work):
-        text = (ROOT / "config/bi/datasets/trades-basic.dataset.yaml").read_text(encoding="utf-8")
+        # reports over several datasets are a version 1 feature (a report on a model reads one model): the 2.1 sample, kept by the server's tests, twice
+        text = (ROOT / "drishti-server/src/test/resources/bi/samples-2.1/datasets/trades-basic.dataset.yaml").read_text(encoding="utf-8")
+        (work / "config/bi/datasets/trades-basic.dataset.yaml").write_text(text, encoding="utf-8")
         text = text.replace("dataset: trades-basic", "dataset: trades-second", 1).replace("title: Trades, the basics", "title: Trades, second copy", 1)
         (work / "config/bi/datasets/trades-second.dataset.yaml").write_text(text, encoding="utf-8")
 

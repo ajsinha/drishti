@@ -25,7 +25,7 @@ from test_bi_explore_browser import browser, open_extract, stack  # noqa: F401  
 from bi_report_helpers import sign_in
 from bi_report_stack import CONSOLE_URL, PASSWORD, admin
 
-REPORT = 'rachana: 1\nreport: pr\ntitle: "Private report"\ndataset: trades-basic\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n'
+REPORT = 'rachana: 1\nreport: pr\ntitle: "Private report"\nmodel: trades-basic@1\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n'
 BOARD = 'rachana: 1\nboard: pb\ntitle: "Private board"\npages:\n  - id: page1\n    title: Page 1\n    tiles: []\n'
 MAKE = "([k, t, b]) => window.drishtiBi.api('POST', '/workspaces/me/items', {kind: k, title: t, description: '', body: b}).then(i => i.id)"
 
@@ -91,7 +91,7 @@ def test_a_notebook_has_one_title_and_analyse_promotes_once_and_fits_a_phone(sta
     page.set_viewport_size({"width": 390, "height": 800})
     page.goto(f"{CONSOLE_URL}/bi/explore?item={item.split('/bi/i/')[1]}")
     page.wait_for_function("() => /rows,/.test(document.querySelector('[data-info]').textContent)", timeout=60000)
-    assert page.evaluate("() => [document.querySelector('[data-dataset]').value, document.querySelector('input[name=title]').value]") == ["file:dataset:trades-basic", "Changed in the YAML"]
+    assert page.evaluate("() => [document.querySelector('[data-dataset]').value, document.querySelector('input[name=title]').value]") == ["mq:trades-basic@1", "Changed in the YAML"]
     assert page.evaluate("() => document.documentElement.scrollWidth <= document.documentElement.clientWidth")
     assert page.evaluate("() => window.drishtiBi.fmt(-0.001, 'signed2')") == "0.00"                         # never "-0.00"
 

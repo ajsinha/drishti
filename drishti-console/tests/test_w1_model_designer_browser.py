@@ -104,8 +104,8 @@ class Stack:
             if not jars or not Path(java).exists():
                 raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
             work = self.tmp / "server"
-            (work / "config" / "bi" / "datasets").mkdir(parents=True)
-            (work / "config" / "bi" / "datasets" / "trades-basic.dataset.yaml").write_text((ROOT / "config/bi/datasets/trades-basic.dataset.yaml").read_text())
+            from bi_samples import copy_samples
+            copy_samples(work / "config" / "bi", ["trades-basic"])         # the shipped sample: the model trades-basic and the dataset it reads
             lake = self.tmp / "lake"
             write_lake(lake)
             (work / "config" / "connectors").mkdir(parents=True)
@@ -286,11 +286,13 @@ def test_pack_dataset_to_model_to_report(browser):
     expect(page.locator("[data-visual-query-text]")).to_contain_text(f"model: {name}@1", timeout=15000)
     expect(page.locator(".bi-dvis").first).to_contain_text("3 rows", timeout=15000)           # three desks, drawn from the model query
 
-    # 7. the model query's answer equals the old dataset query over the same rows
+    # 7. the model query's answer equals the shipped sample model's over the same rows; the 2.1 dataset query is gone (410, naming the model query to send)
     new = fetch(page, "POST", "/bi/api/mq", {"mq": 1, "model": f"{name}@1", "select": {"fields": ["trade.desk"], "measures": ["Sum of mtm"]}})
+    sample = fetch(page, "POST", "/bi/api/mq", {"mq": 1, "model": "trades-basic@1", "select": {"fields": ["trade.desk"], "measures": ["MTM"]}})
+    assert new["status"] == 200 and sample["status"] == 200, (new, sample)
+    assert sorted(map(tuple, new["body"]["rows"])) == sorted(map(tuple, sample["body"]["rows"]))
     old = fetch(page, "POST", "/bi/api/datasets/file:dataset:trades-basic/query", {"fields": ["trade.desk"], "measures": ["MTM"]})
-    assert new["status"] == 200 and old["status"] == 200, (new, old)
-    assert sorted(map(tuple, new["body"]["rows"])) == sorted(map(tuple, old["body"]["rows"]))
+    assert old["status"] == 410 and old["body"]["mq"]["model"] == "trades-basic@1", old
     clean(page)
     page.context.close()
 

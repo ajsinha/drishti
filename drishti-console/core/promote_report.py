@@ -32,6 +32,10 @@ _COL = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)(?:\s+(?:as\s+)?\S+)?$", re.I)
 _OPS = {"=": "eq", "==": "eq", "<>": "ne", "!=": "ne", "<": "lt", "<=": "le", ">": "gt", ">=": "ge"}
 
 
+_MEASURE = re.compile(r"^MEASURE\(\s*'([^']+)'\s*\)(?:\s+(?:AS\s+)?[A-Za-z_\"][^\s]*)?$", re.I)
+_QUALIFIED = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_.]*)(?:\s+(?:AS\s+)?[A-Za-z_\"][^\s]*)?$", re.I)
+
+
 def _split(text: str, sep: str) -> list[str]:
     """``text`` split on ``sep`` where it is outside quotes and brackets."""
     out, depth, quote, cur = [], 0, "", ""
@@ -95,19 +99,20 @@ def _condition(text: str, columns: list[str]):
     t = text.strip()
     while t.startswith("(") and t.endswith(")") and t.count("(") == t.count(")") and _split(t[1:-1], ",") == [t[1:-1].strip()] and "(" not in t[1:-1]:
         t = t[1:-1].strip()                                                       # one pair of brackets around the whole condition
-    m = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)\s*(==|=|<>|!=|<=|>=|<|>)\s*(.+)$", t)
-    if m and m.group(1) in columns and _literal(m.group(3)) is not None:
+    known = lambda n: n in columns or _QUALIFIED.match(n) is not None  # noqa: E731  (a Drishti SQL cell names alias.column)
+    m = re.match(r"^([A-Za-z_][A-Za-z0-9_.]*)\s*(==|=|<>|!=|<=|>=|<|>)\s*(.+)$", t)
+    if m and known(m.group(1)) and _literal(m.group(3)) is not None:
         return {"field": m.group(1), "op": _OPS[m.group(2)], "values": [_literal(m.group(3))]}
-    m = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)\s+(not\s+)?in\s*\((.*)\)$", t, re.I)
-    if m and m.group(1) in columns:
+    m = re.match(r"^([A-Za-z_][A-Za-z0-9_.]*)\s+(not\s+)?in\s*\((.*)\)$", t, re.I)
+    if m and known(m.group(1)):
         vals = [_literal(v) for v in _split(m.group(3), ",")]
         if vals and None not in vals:
             return {"field": m.group(1), "op": "not-in" if m.group(2) else "in", "values": vals}
-    m = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)\s+between\s+(.+?)\s+and\s+(.+)$", t, re.I)
-    if m and m.group(1) in columns and _literal(m.group(2)) is not None and _literal(m.group(3)) is not None:
+    m = re.match(r"^([A-Za-z_][A-Za-z0-9_.]*)\s+between\s+(.+?)\s+and\s+(.+)$", t, re.I)
+    if m and known(m.group(1)) and _literal(m.group(2)) is not None and _literal(m.group(3)) is not None:
         return {"field": m.group(1), "op": "between", "values": [_literal(m.group(2)), _literal(m.group(3))]}
-    m = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)\s+is\s+(not\s+)?null$", t, re.I)
-    if m and m.group(1) in columns:
+    m = re.match(r"^([A-Za-z_][A-Za-z0-9_.]*)\s+is\s+(not\s+)?null$", t, re.I)
+    if m and known(m.group(1)):
         return {"field": m.group(1), "op": "not-null" if m.group(2) else "is-null", "values": []}
     return None
 
@@ -121,13 +126,23 @@ def sql_to_slice(sql: str, columns: list[str]) -> dict:
     if not c or "select" not in c:
         notes.append("The cell is not a SELECT, so nothing could be read from it.")
         return out
-    if c.get("from", "").split(" ")[0].lower() != "extract" or re.search(r"\bjoin\b|\bunion\b|\bselect\b", c.get("from", ""), re.I):
-        notes.append("Only a query over the table extract (no join, no sub-query) is read; the visual shows the fields it could find.")
     items = _split(c["select"], ",")
+    dsql = any(_MEASURE.match(i) or _QUALIFIED.match(i.split(" ")[0]) for i in items)          # Drishti SQL over the model: aliases, MEASURE('...'), joins by relationship
+    if dsql and re.search(r"\bunion\b|\bselect\b", c.get("from", ""), re.I) or not dsql and (
+            c.get("from", "").split(" ")[0].lower() != "extract" or re.search(r"\bjoin\b|\bunion\b|\bselect\b", c.get("from", ""), re.I)):
+        notes.append("Only a query over the table extract (no join, no sub-query), or Drishti SQL over the model, is read; the visual shows the fields it could find.")
     plain, aggs = [], []
     for item in items:
         if item == "*":
             plain = list(columns)
+            continue
+        mm = _MEASURE.match(item)
+        if mm:
+            aggs.append({"measure": mm.group(1)})
+            continue
+        q = _QUALIFIED.match(item)
+        if q:
+            plain.append(q.group(1))
             continue
         a = _AGG.match(item)
         if a:
@@ -146,7 +161,7 @@ def sql_to_slice(sql: str, columns: list[str]) -> dict:
             plain.append(col.group(1))
         else:
             notes.append(f"The expression '{item}' is not a column or an aggregate of one, so it was left out.")
-    groups = [g for g in (_split(c.get("group by", ""), ",") if c.get("group by") else []) if g in columns]
+    groups = [g for g in (_split(c.get("group by", ""), ",") if c.get("group by") else []) if g in columns or _QUALIFIED.match(g)]
     rows = list(dict.fromkeys(groups + [p for p in plain if not aggs or p in groups or not groups]))
     out["rows"] = rows
     out["values"] = aggs
@@ -182,7 +197,14 @@ def visual_for(model: dict, sl: dict, name: str, vid: str, qualify, notes: list[
     rows = [qualify(f) for f in sl.get("rows") or []]
     cols = [qualify(f) for f in sl.get("columns") or []]
     measures = []
+    names = {str(m.get("name")) for m in model.get("measures") or []}
     for v in sl.get("values") or []:
+        if v.get("measure"):                                                     # Drishti SQL names the measure itself: MEASURE('Notional')
+            if str(v["measure"]) in names:
+                measures.append(str(v["measure"]))
+            else:
+                notes.append(f"The model has no measure '{v['measure']}', so it was left out.")
+            continue
         field, agg = str(v.get("field", "")), str(v.get("agg", "sum"))
         table = (qualify(field).split(".")[0] if field and field != "*" else (rows[0].split(".")[0] if rows else ""))
         found = matching_measure(model, agg, qualify(field) if field != "*" else "*", table)

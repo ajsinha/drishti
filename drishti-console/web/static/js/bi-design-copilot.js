@@ -65,7 +65,7 @@
     go.disabled = true;
     B.clear(list);
     B.say(msg, 'Thinking…');
-    D.flushYaml().then((yaml) => B.api('POST', '/ai/suggest', { dataset: D.model.dataset, goal: text, yaml })).then((r) => {
+    D.flushYaml().then((yaml) => B.api('POST', '/ai/suggest', { dataset: D.model.dataset || D.model.model || (B.modelBinding && B.modelBinding.ref) || '', goal: text, yaml })).then((r) => {
       B.say(msg, r.suggestions.length ? r.suggestions.length + ' suggested. Nothing is applied until you press Add.' : 'No suggestion this time: try describing the goal differently.');
       r.suggestions.forEach((s) => {
         const addBtn = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-ai-add': s.id }, 'Add to this page');

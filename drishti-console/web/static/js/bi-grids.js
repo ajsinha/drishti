@@ -56,8 +56,9 @@
 
   function terminalLink(ctx, name, v) {
     const col = ctx.index.columns[name];
-    if (!col || !col.kind || v == null || !(col.key || col.name === 'id')) { return null; }
-    return h('a', { href: '/v/' + encodeURIComponent(col.kind) + '/' + encodeURIComponent(String(v)), class: 'bi-toterm-link', 'data-open-terminal': col.kind, title: 'Open in the terminal', text: String(v) });
+    const kind = col && (col.entity || (['fact', 'dimension', 'bridge'].indexOf(col.kind) < 0 ? col.kind : ''));      // a model's table names its entity; a 2.1 table is one
+    if (!col || !kind || v == null || !(col.key || col.role === 'key' || col.name === 'id')) { return null; }
+    return h('a', { href: '/v/' + encodeURIComponent(kind) + '/' + encodeURIComponent(String(v)), class: 'bi-toterm-link', 'data-open-terminal': kind, title: 'Open in the terminal', text: String(v) });
   }
 
   // ---- table ---------------------------------------------------------------------------------------------------------

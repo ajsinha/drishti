@@ -24,11 +24,8 @@ REPORT = "file:report:trades-overview"
 SECURITY = """
 security:
   rows:
-    - { role: desk-head, where: "trade.desk in user.desks" }
-    - { role: risk, where: "true" }
-    - { role: analyst, where: "true" }
-    - { role: bi-writer, where: "true" }
-    - { role: admin, where: "true" }
+    - { role: desk-head, where: "desk in user.desks" }
+    - { role: [risk, analyst, bi-writer, admin], where: "True" }
   masked: [mtm]
 """
 
@@ -42,5 +39,5 @@ class DistStack(bi_report_stack.ReportStack):
                             "--drishti.collab.email.from=drishti@desk.test", "--drishti.distribution.subscriptions.tick=1h"]
 
     def prepare(self, work):
-        ds = work / "config" / "bi" / "datasets" / "trades-basic.dataset.yaml"
+        ds = work / "config" / "bi" / "datasets" / "trades-basic-trade.dataset.yaml"           # the rules live on the dataset the model trades-basic reads
         ds.write_text(ds.read_text() + SECURITY)

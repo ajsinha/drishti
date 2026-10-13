@@ -167,7 +167,7 @@
     (dataset.measures || []).forEach((m) => { measures[m.name] = m; });
     (dataset.tables || []).forEach((t) => {
       tables[t.name] = t;
-      t.columns.forEach((c) => { columns[t.name + '.' + c.name] = Object.assign({ table: t.name, kind: t.kind }, c); });
+      t.columns.forEach((c) => { columns[t.name + '.' + c.name] = Object.assign({ table: t.name, kind: t.kind, entity: t.entity || '' }, c); });
     });
     return { measures, columns, tables, hierarchies: dataset.hierarchies || {} };
   };
@@ -319,9 +319,15 @@
       grouped.forEach((g) => main.appendChild(B.h('optgroup', { label: g.label }, g.items.map((i) => B.h('option', { value: i.value, text: i.label })))));
       const legacy = B.h('optgroup', { label: grouped.length ? 'Other datasets (version 1)' : 'Datasets' });
       main.appendChild(legacy);
+      // the list of datasets also holds the model layer's (rachana: 2), already offered above as dataset:<name>: only the version 1 ones are left here
+      const layered = new Set();
+      grouped.forEach((g) => g.items.forEach((i) => { if (i.kind === 'dataset') { layered.add('file:dataset:' + i.ref.slice('dataset:'.length)); layered.add('title:' + i.title); } }));
+      const v1 = (d.datasets || []).filter((x) => !layered.has(x.id) && !layered.has('title:' + x.title));
+      legacy.hidden = !v1.length;
+      if (also && also.closest('label')) { also.closest('label').hidden = !v1.length; }   // more datasets in one report exist only for version 1 ones (a report reads one model)
       const same = {};
-      (d.datasets || []).forEach((x) => { same[x.title] = (same[x.title] || 0) + 1; });
-      (d.datasets || []).forEach((x) => {
+      v1.forEach((x) => { same[x.title] = (same[x.title] || 0) + 1; });
+      v1.forEach((x) => {
         const why = B.datasetWhy(x), state = same[x.title] > 1 && x.status ? ', ' + x.status : '', text = x.title + (state || why ? ' (' + [why, state.slice(2)].filter(Boolean).join(', ') + ')' : '');
         legacy.appendChild(B.h('option', { value: x.id, text, disabled: !!why }));
         if (also) { also.appendChild(B.h('option', { value: x.id, text, disabled: !!why })); }

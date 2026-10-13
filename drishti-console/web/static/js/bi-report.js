@@ -142,7 +142,8 @@
   function terminalTarget(spec, sel) {
     if (!sel || sel.values.length !== 1) { return null; }
     const col = idxOf(spec).columns[sel.field];
-    return col && col.kind && (col.key || col.name === 'id') ? { kind: col.kind, value: sel.values[0] } : null;
+    const kind = col && (col.entity || (['fact', 'dimension', 'bridge'].indexOf(col.kind) < 0 ? col.kind : ''));        // a model's table names its entity
+    return kind && (col.key || col.role === 'key' || col.name === 'id') ? { kind, value: sel.values[0] } : null;
   }
 
   function buildFrame(spec) {

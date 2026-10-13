@@ -47,7 +47,7 @@ CHART_REPORT = """rachana: 1
 report: {name}
 version: 1
 title: Chart {name}
-dataset: trades-basic
+model: trades-basic@1
 pages:
   - id: chart
     title: Chart
@@ -65,7 +65,7 @@ pages:
 class Stack(bi_report_stack.ReportStack):
     def prepare(self, work):
         python = work / "config/bi/python"
-        python.mkdir(parents=True)
+        python.mkdir(parents=True, exist_ok=True)
         for f in (ROOT / "config/bi/python").glob("*.python.yaml"):
             (python / f.name).write_text(f.read_text(encoding="utf-8"))
         reports = work / "config/bi/reports"
@@ -216,7 +216,7 @@ def test_the_perspective_chart_its_settings_and_the_saved_view(stack, browser):
 def open_extract(page):
     page.goto(CONSOLE_URL + "/bi/explore")
     page.wait_for_function("() => document.querySelectorAll('[data-dataset] option').length > 1", timeout=30000)
-    page.select_option("[data-dataset]", "file:dataset:trades-basic")
+    page.select_option("[data-dataset]", "mq:trades-basic@1")
     page.wait_for_selector("[data-fields] input[name=f]", timeout=30000)
     page.click("[data-open-go]")
     page.wait_for_function("() => /rows,/.test(document.querySelector('[data-info]').textContent)", timeout=60000)

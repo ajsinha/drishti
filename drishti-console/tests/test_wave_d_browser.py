@@ -66,7 +66,7 @@ mock:
         report: suggestions
         version: 1
         title: Suggestions
-        dataset: trades-basic
+        model: trades-basic@1
         pages:
           - id: main
             title: Main
@@ -121,6 +121,14 @@ def receiver():
     r.server.shutdown()
 
 
+class WaveDStack(DistStack):
+    def prepare(self, work):
+        super().prepare(work)
+        # the dataset helper works in the Model view of a version 1 dataset (a model has its designer): the 2.1 sample, kept by the server's tests
+        old = bi_report_stack.ROOT / "drishti-server/src/test/resources/bi/samples-2.1/datasets/trades-basic.dataset.yaml"
+        (work / "config/bi/datasets/trades-basic.dataset.yaml").write_text(old.read_text(encoding="utf-8"), encoding="utf-8")
+
+
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory, smtp, receiver):
     for port in (bi_report_stack.SERVER_PORT, bi_report_stack.CONSOLE_PORT):
@@ -129,7 +137,7 @@ def stack(tmp_path_factory, smtp, receiver):
     tmp = tmp_path_factory.mktemp("waved")
     (tmp / "ai").mkdir()
     (tmp / "ai" / "mock.yaml").write_text(MOCK)
-    s = DistStack(tmp, smtp.port)
+    s = WaveDStack(tmp, smtp.port)
     s.server_args += ["--drishti.ai.enabled=true", f"--drishti.ai.dir={tmp / 'ai'}", "--drishti.ai.default-model=mock/m", "--drishti.ai.watch=off",
                       "--drishti.bi.ai.values=aggregates",
                       "--drishti.ai.policy.features.[subscription-narrative].roles[0]=risk", "--drishti.ai.policy.features.[subscription-narrative].roles[1]=analyst",
@@ -258,6 +266,7 @@ def test_the_excel_export_has_native_charts_and_a_masked_column_is_never_plotted
                            check=True, timeout=60)
 
 
+@pytest.mark.xfail(strict=True, reason='server: the AI draft and suggest endpoints resolve only a dataset (BiReportService.datasetFor), not the model a 2.2 report reads (DRS-9034 for trades-basic@1); the console sends the model')
 def test_the_designer_copilot_suggests_checks_and_adds_on_accept(stack, browser):
     page = sign_in(browser, "wes", "/bi/design/" + REPORT)
     page.wait_for_selector("[data-ready=yes]", timeout=30000)

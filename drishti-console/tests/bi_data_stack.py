@@ -127,11 +127,10 @@ class DataStack:
         if not jars or not Path(java).exists():
             raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
         work = self.tmp / "server"
-        bi = work / "config" / "bi" / "datasets"
-        bi.mkdir(parents=True)
+        from bi_samples import copy_samples
+        (work / "config" / "bi" / "datasets").mkdir(parents=True)
         wanted = ["trades-basic"] if not self.delta_root else ["trades-basic", "trading-risk", "trading-cashflows", "live-trading", "live-exposure"]   # every shipped sample, as a learner sees them
-        for name in wanted:
-            shutil.copy(ROOT / "config" / "bi" / "datasets" / f"{name}.dataset.yaml", bi)
+        copy_samples(work / "config" / "bi", wanted)                     # a model and its datasets (the two live samples: their 2.1 datasets until W3)
         env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_SECURITY_ENABLED="true", DRISHTI_TOKEN_SECRET=SECRET,
                    DRISHTI_BI_DIR=str(work / "config" / "bi"), DRISHTI_DATA_DIR=str(work / "data"))
         if self.delta_root:

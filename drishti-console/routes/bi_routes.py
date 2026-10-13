@@ -19,6 +19,8 @@ with the signed-in user's identity; the server decides what that person may see 
 nothing about access except what to show (the BI menu needs the ``bi`` power)."""
 from __future__ import annotations
 
+from urllib.parse import quote
+
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, Response
 
@@ -35,8 +37,12 @@ _ALLOWED = ("me", "home", "catalogue", "settings", "workspaces", "items", "datas
 _NO_BODY = {"GET", "DELETE"}
 
 
+_KEPT = ("mq", "problems", "path", "fix", "at")    # what a refusal carries for the page: the model query a 410 names, the problems with their fixes
+
+
 def _problem(e: BackendError) -> JSONResponse:
-    return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
+    extra = {k: e.extra[k] for k in _KEPT if isinstance(e.extra, dict) and k in e.extra}
+    return JSONResponse({"code": e.code, "detail": e.detail, **extra}, status_code=e.status)
 
 
 def _page(request: Request, template: str, page: str, **context):
@@ -85,7 +91,18 @@ async def datasets(request: Request):
 
 @router.get("/bi/d/{item:path}")
 async def dataset(request: Request, item: str):
-    """One dataset: its model (tables, relationships, measures, row rules) and a query preview, drawn by ``bi-dataset.js``."""
+    """One 2.1 dataset (a live sample until wave W3): its model (tables, relationships, measures, row rules) and a query preview, drawn by ``bi-dataset.js``.
+    A ``rachana: 2`` dataset has its own page since 2.2 (grain, keys, columns with meanings, time mode, security): an old link is sent there."""
+    import re
+    from fastapi.responses import RedirectResponse
+    try:
+        got = await request.app.state.backend.bi("GET", "/layer-datasets/" + quote(item, safe=":"), ident(request))
+        text = str((got or {}).get("yaml") or "")
+        name = re.search(r"^dataset:\s*([A-Za-z0-9_.-]+)", text, flags=re.M)
+        if re.search(r"^rachana:\s*2\b", text, flags=re.M) and name:
+            return RedirectResponse("/bi/ds/" + quote(str(got.get("id") or item), safe=":"), status_code=307)
+    except BackendError:
+        pass                                                        # not a dataset of the model layer (or not readable): the 2.1 page says what it can
     return _page(request, "bi/dataset.html", "datasets", item=item)
 
 

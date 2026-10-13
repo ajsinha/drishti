@@ -68,7 +68,13 @@
   made of it (`trades-basic@1`), so an old notebook's SQL cells run on the server too. Promote to a report writes a `rachana: 2` report on that model and
   matches the model's measures; a slice of another model is not added to an existing report (`DRS-9070`). The phase 0 proof of concept is removed from
   the console (`/bi/poc`, `bi.poc_enabled`, its page, script, styles, routes, the `poc:rows` channel and its tests); the dataset page's *Run the
-  Transform now* is gone with derived datasets.
+  Transform now* is gone with derived datasets. With the 2.1 dataset paths removed on the server: the server draws every visual of a report on a model
+  (the console no longer builds its model queries, so carried values, report filters, dates and the report's own measures are the server's; the Query
+  panel shows the model query the server ran); an old /bi/d/ link to a model-layer dataset opens its page, which gains Refresh (the state, Refresh now,
+  Set a schedule, written into the draft with comments kept) and Expected values; the model designer's Contract tab runs the model's tests; a table
+  visual's key opens its entity in the terminal again (the console reads each table's pack kind); the designer's picker lists only version 1 datasets
+  under *Other datasets* and offers *Also add* only for those; a model line with a comment is read; Promote to a report reads a Drishti SQL cell
+  (aliases and MEASURE('...')); the AI draft and suggest ask with the report's model; refusals passed through the proxy keep their `mq`, problems and fixes.
 - **Server: the old expression syntax is refused (wave A, task 6).** `drishti.bi.expr.legacy` now defaults to `refuse`: an expression in the old syntax
   is `DRS-9100` with the DEL v2 text as the fix (`drishti.py bi migrate --expressions` converts files; `legacy: warn` reads it while a site converts its
   own items). A text that is already DEL v2 but wrong gets its DEL v2 problem, and a rule written as a YAML boolean (`where: true`) reads as `True`.

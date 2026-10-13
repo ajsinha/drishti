@@ -270,8 +270,8 @@ def test_a_missing_report_says_so_with_its_code(stack, browser):
 
 def new_draft(page):
     page.goto(CONSOLE_URL + "/bi/designer")
-    page.wait_for_selector("[data-new-dataset] option[value='file:dataset:trades-basic']", state="attached")
-    page.select_option("[data-new-dataset]", "file:dataset:trades-basic")
+    page.wait_for_selector("[data-new-dataset] option[value='mq:trades-basic@1']", state="attached")
+    page.select_option("[data-new-dataset]", "mq:trades-basic@1")
     page.fill("[data-new-title]", "Designer test")
     page.click("[data-new] button[type=submit]")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
@@ -477,7 +477,7 @@ def test_a_shipped_report_opens_read_only_and_can_be_saved_as_a_copy(stack, brow
 
 EVERY_TYPE = """rachana: 1
 report: every-type
-dataset: trades-basic
+model: trades-basic@1
 theme: colour-blind
 pages:
   - id: all

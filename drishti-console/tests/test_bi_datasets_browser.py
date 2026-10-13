@@ -13,8 +13,9 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Rupaka phase 2 in Chromium, over the real server and console (tests/bi_data_stack.py: ports 18989 and 17989, security on, a small file lake read through
-the connector the shipped sample ``trades-basic`` names): the datasets list shows the sample, its page shows the model, a query previewed on the page comes back
-from the real engine with numbers that add up, the second run is a cache hit, a phone (390 px) has no sideways scroll, and no policy violation occurs.
+the connector the shipped sample ``trades-basic`` names): the datasets list shows the sample's dataset, its page (2.2: grain, columns) opens from the old link, a
+model query comes back from the real engine with numbers that add up, the second run is a cache hit, a refusal has its code, a phone (390 px) has no sideways
+scroll, and no policy violation occurs.
 
 Skipped when Playwright, Chromium or the built server jar is missing, or a scratch port is in use. Never run with pytest -n (the ports are fixed)."""
 import pytest
@@ -25,7 +26,8 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import bi_data_stack  # noqa: E402
 from bi_data_stack import CONSOLE_URL, PASSWORD, trade  # noqa: E402
 
-DATASET = "file:dataset:trades-basic"
+DATASET = "file:dataset:trades-basic-trade"       # the dataset the sample model trades-basic reads
+MODEL = "trades-basic@1"
 
 
 @pytest.fixture(scope="module")
@@ -83,68 +85,60 @@ def expected_mtm_by_desk(day="2026-10-08"):
     return out
 
 
-def test_the_list_shows_the_sample_and_its_page_shows_the_model(stack, browser):
+def ask(page, mq):
+    """One model query from the page, as the signed-in person (the console's same-origin proxy)."""
+    return page.evaluate("""async (q) => { const r = await fetch('/bi/api/mq', { method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(q) }); return { status: r.status, body: await r.json() }; }""", mq)
+
+
+def test_the_list_shows_the_sample_and_its_page_shows_the_dataset(stack, browser):
     page = sign_in(browser, "rita")
     card = page.locator(f'[data-datasets] [data-id="{DATASET}"]')
     expect(card).to_be_visible()
     expect(card).to_contain_text("sample")
-    expect(card).to_contain_text("1 table")
     card.locator("h3 a").click()
-    page.wait_for_url("**/bi/d/**")
-    expect(page.locator("[data-title]")).to_have_text("Trades, the basics")
-    expect(page.locator("[data-meta]")).to_contain_text("1 table")
-    expect(page.locator('[data-table="trade"]')).to_be_visible()
-    expect(page.locator('[data-measure="Notional"] td').nth(0)).to_have_text("sum(trade.notional)")
-    expect(page.locator("[data-empty-rel]")).to_be_visible()
+    page.wait_for_url("**/bi/ds/**")                              # a model-layer dataset has its own page since 2.2 (the old link is sent there)
+    expect(page.locator("main h1")).to_contain_text("Trades, the basics: trade")
+    expect(page.locator("main")).to_contain_text("snapshot")
+    for col in ("tradeId", "desk", "notional", "mtm"):
+        expect(page.locator("main table").first).to_contain_text(col)
     clean(page)
 
 
-def test_a_previewed_query_runs_on_the_engine_and_adds_up(stack, browser):
+def test_a_model_query_runs_on_the_engine_and_adds_up(stack, browser):
     page = sign_in(browser, "rita")
-    page.goto(CONSOLE_URL + "/bi/d/" + DATASET)
-    expect(page.locator("[data-fields] option").first).to_be_attached()
-    page.select_option("[data-fields]", "trade.desk")
-    page.select_option("[data-measures]", ["MTM", "Trades"])
-    page.click("[data-run]")
-    rows = page.locator("[data-grid] tbody tr")
-    expect(rows).to_have_count(3)
-    expect(page.locator("[data-result-meta]")).to_contain_text("columns layer")
-    want = expected_mtm_by_desk()
-    got = {}
-    for i in range(3):
-        cells = rows.nth(i).locator("td")
-        got[cells.nth(0).inner_text()] = int(cells.nth(1).inner_text().replace(",", ""))
-    assert got == want
-    page.click("[data-run]")                                      # the same query again: the server's cache answers
-    expect(page.locator("[data-result-meta]")).to_contain_text("from the cache")
+    q = {"mq": 1, "model": MODEL, "select": {"fields": ["trade.desk"], "measures": ["MTM", "Trades"]}}
+    a = ask(page, q)
+    assert a["status"] == 200, a
+    got = {r[0]: int(r[1]) for r in a["body"]["rows"]}
+    assert got == expected_mtm_by_desk() and a["body"]["meta"]["layer"] == "columns"
+    again = ask(page, q)                                          # the same query again: the server's cache answers
+    assert again["body"]["meta"]["cached"] is True
     clean(page)
 
 
-def test_a_filter_and_a_refusal_are_shown_with_their_code(stack, browser):
+def test_a_filter_and_a_refusal_are_answered_with_their_code(stack, browser):
     page = sign_in(browser, "rita")
-    page.goto(CONSOLE_URL + "/bi/d/" + DATASET)
-    expect(page.locator("[data-measures] option").first).to_be_attached()
-    page.select_option("[data-fields]", "trade.currency")
-    page.select_option("[data-measures]", "Trades")
-    page.select_option("[data-ffield]", "trade.desk")
-    page.fill('[name="fvalue"]', "DESK-FX")
-    page.click("[data-run]")
-    expect(page.locator("[data-grid] tbody tr")).to_have_count(1)
-    page.select_option("[data-fields]", [])
-    page.select_option("[data-measures]", [])
-    page.click("[data-run]")
-    expect(page.locator("[data-msg]")).to_contain_text("Choose at least one")
+    one = ask(page, {"mq": 1, "model": MODEL, "select": {"fields": ["trade.currency"], "measures": ["Trades"]},
+                     "where": [{"field": "trade.desk", "op": "in", "values": ["DESK-FX"]}]})
+    assert one["status"] == 200 and one["body"]["rowCount"] >= 1, one
+    bad = ask(page, {"mq": 1, "model": MODEL, "select": {"fields": ["trade.nothing"], "measures": []}})
+    assert bad["status"] == 422 and bad["body"]["code"].startswith("DRS-91"), bad
+    old = page.evaluate("""async () => (await fetch('/bi/api/datasets/file:dataset:trades-basic/query', { method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ measures: ['MTM'] }) })).status""")
+    assert old in (404, 410)                                      # the 2.1 dataset query is gone: 410 names the model query to send
     clean(page)
 
 
 def test_a_phone_has_no_sideways_scroll_and_finger_sized_targets(stack, browser):
     page = sign_in(browser, "rita", viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True)
     page.goto(CONSOLE_URL + "/bi/d/" + DATASET)
-    expect(page.locator('[data-table="trade"]')).to_be_visible()
+    page.wait_for_url("**/bi/ds/**")
+    expect(page.locator("main table").first).to_contain_text("tradeId")
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "the page scrolls sideways"
-    for sel in ("[data-run]", "[data-table] summary"):
-        box = page.locator(sel).first.bounding_box()
-        assert box["height"] >= 43, (sel, box)
+    for b in page.locator("main .btn-pill:visible, main a.btn-pill:visible").all():
+        box = b.bounding_box()
+        assert box["height"] >= 43, box
     clean(page)
 
 

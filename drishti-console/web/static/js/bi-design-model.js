@@ -14,14 +14,14 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* Reports bound to a model (docs/architecture/BI_MODEL_SPEC.md sections 3, 4.1 and 9.4), in the report designer and the report page. A report whose YAML
-   says `model: <name>@<major>` or `model: dataset:<name>` reads that model only: the Fields pane is the model as the person sees it (/models/{id}/describe),
-   every visual's data is ONE model query to the server's /mq, built from its wells, filters, the slicers and the other visuals' selections (B.mq), and a
-   filter's value picker asks the model too. The header of the Fields pane says which model it is; an implicit model offers Make it a model, which writes
-   it out as a draft model and rebinds the report in one step. Each visual's Query panel shows its model query as YAML.
+   says `model: <name>@<major>` or `model: dataset:<name>` reads that model only: the Fields pane is the model as the person sees it (/models/{id}/describe,
+   with the field properties, the perspective and the report's own measures), a filter's value picker asks the model, the header of the Fields pane says
+   which model it is (an implicit model offers Make it a model), and each visual's Query panel shows the model query the server ran for it.
 
-   It sits in front of B.api for the report paths the server still answers for dataset-bound reports (the server's report endpoints bind to models in a
-   later package): /reports/validate (the `dataset:` the model replaces is not a problem), /reports/format (the `model:` line is kept), /reports/dataset
-   (the model's fields), /reports/query and /reports/{id}/query (the visual's model query). A report without `model:` is untouched. */
+   The server draws every visual (/reports/query for the designer's draft, /reports/{id}/query on the page): it turns the visual, its filters, the slicers,
+   the selections, the carried values, the dates and the report's own measures into ONE model query, as the reader. The browser computes nothing. In front
+   of B.api this file only reads what the page needs: /reports/validate and /reports/format keep the report's `measures:` and `perspective:`, and
+   /reports/dataset answers the model's fields. A report without `model:` is untouched. */
 (function () {
   'use strict';
   const B = window.drishtiBi;
@@ -101,40 +101,6 @@
     S.idx = B.index(S.fields);
   }
   B.modelBinding.withLocal = withLocal;
-  function find(report, pageId, visualId) {
-    const pages = (report && report.pages) || [];
-    const page = pages.find((p) => p.id === pageId) || pages.find((p) => (p.visuals || []).some((v) => v.id === visualId)) || pages[0];
-    return { page, v: page && (page.visuals || []).find((x) => x.id === visualId) };
-  }
-  /** The reader's choices on the report page as filters: slicers (their field, their value) and the other visuals' selections. */
-  function choices(report, state, visualId) {
-    const out = [];
-    const st = state || {};
-    Object.keys(st.slicers || {}).forEach((sid) => {
-      const val = st.slicers[sid];
-      if (val == null || (Array.isArray(val) && !val.length)) { return; }
-      const s = find(report, '', sid).v;
-      const field = s && Object.values(s.wells || {}).flat()[0];
-      if (field) { out.push(Array.isArray(val) ? { field, op: 'in', values: val } : { field, op: 'eq', value: val }); }
-    });
-    (st.selections || []).filter((s) => s.visual !== visualId && s.field && (s.values || []).length).forEach((s) => out.push({ field: s.field, op: 'in', values: s.values }));
-    return out;
-  }
-  function ask(report, pageId, visualId, state) {
-    return fields().then(() => {
-      const { page, v } = find(report, pageId, visualId);
-      if (!v) { throw Object.assign(new Error('DRS-9150 no visual ' + visualId + ' on this page'), { code: 'DRS-9150' }); }
-      withLocal(report);
-      const mq = B.mq(S.ref, report, page, v, S.idx, { filters: choices(report, state, visualId) });
-      if (!mq) { throw Object.assign(new Error('Add a field or a measure to this visual.'), { code: 'DRS-9150' }); }
-      const local = (report && report.measures) || {};
-      const used = mq.select.measures.filter((n) => local[n]);
-      if (used.length) { mq.define = {}; used.forEach((n) => { mq.define[n] = typeof local[n] === 'string' ? local[n] : local[n].expr; }); }       // the report's own measures travel with the query
-      S.last = S.last || {};
-      S.last[visualId] = mq;
-      return B.mq.ask(mq).then((a) => { S.meta = S.meta || {}; S.meta[visualId] = a.meta; return Object.assign(a, { visual: visualId, query: mq }); });
-    });
-  }
 
   B.api = function (method, path, body) {
     if (!S.ref) {
@@ -156,8 +122,12 @@
     if (path === '/reports/format') { return api(method, path, body).then((r) => Object.assign({}, r, { yaml: withMeasures(withModel(r.yaml), body && body.report && body.report.measures, body && body.report && body.report.perspective) })); }
     if (path === '/reports/validate') { return api(method, path, body).then((r) => (r.report && body && /^(measures|perspective):/m.test(body.yaml || '') ? localOf(body.yaml).then((m) => { r.report.measures = m; if (S.perspective) { r.report.perspective = S.perspective; } return clean(r); }) : clean(r))); }
     if (/^\/reports\/dataset\?ref=/.test(path)) { return fields(); }
-    if (path === '/reports/query') { return ask(body.report, body.page, body.visual, body.state); }
-    if (/^\/reports\/[^/]+\/query$/.test(path) && S.report) { return S.viaReport ? api.apply(this, arguments) : ask(S.report, body.page, body.visual, body.state); }
+    if (path === '/reports/query' || (/^\/reports\/[^/]+\/query$/.test(path) && S.report)) {   // the server draws a visual of a model-bound report (its own
+      return api.apply(this, arguments).then((a) => {                                             // measures, slicers, carried values, dates): the page keeps its MQ
+        if (a && a.visual) { S.last = S.last || {}; S.meta = S.meta || {}; if (a.mq) { S.last[a.visual] = a.mq; } S.meta[a.visual] = a.meta; }
+        return a;
+      });
+    }
     if (method === 'GET' && /^\/reports\/[^/?]+$/.test(path) && path !== '/reports/catalogue') { return api(method, path, body).then((r) => { S.report = r.report; return fields().then((f) => Object.assign(clean(r), { dataset: f })); }); }
     return api.apply(this, arguments);
   };

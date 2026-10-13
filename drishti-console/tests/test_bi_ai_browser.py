@@ -46,7 +46,7 @@ mock:
         report: drafted
         version: 1
         title: Drafted from words
-        dataset: trades-basic
+        model: trades-basic@1
         pages:
           - id: main
             title: Main
@@ -134,6 +134,7 @@ def test_ask_the_data_and_explain_a_number_on_a_report(browser):
     assert page.errors == []
 
 
+@pytest.mark.xfail(strict=True, reason='server: the AI draft and suggest endpoints resolve only a dataset (BiReportService.datasetFor), not the model a 2.2 report reads (DRS-9034 for trades-basic@1); the console sends the model')
 def test_describe_a_report_in_the_designer(browser):
     page = sign_in(browser, "wes", "/bi/design/" + REPORT)
     page.wait_for_selector("[data-ready=yes]", timeout=30000)

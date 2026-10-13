@@ -413,17 +413,18 @@ def test_a_refresh_gives_the_wizard_its_draft_back_and_discard_draft_throws_it_a
 
 def test_a_new_report_takes_a_main_dataset_and_more_and_greys_out_what_cannot_be_used(stack, browser):
     pg = sign_in(browser, "wes", "/bi/designer")
-    pg.wait_for_selector("[data-new-also] option", timeout=20000)
+    pg.wait_for_selector("[data-new-also] option", state="attached", timeout=20000)
     private = pg.locator('[data-new-dataset] option:has-text("Plain trades")')                              # a draft in the private workspace (made above)
     assert private.count() == 1 and private.get_attribute("disabled") is not None
     assert "private workspace" in private.inner_text() and "publish it first" in private.inner_text()
+    assert pg.locator('[data-new-dataset] option[value="mq:trades-basic@1"]').count() == 1               # models first; a report reads one model
+    pg.select_option("[data-new-dataset]", "mq:trades-basic@1")
+    expect(pg.locator("[data-new-also]")).to_be_disabled()                                                # more datasets are for a version 1 report only
     pg.select_option("[data-new-dataset]", state["dataset"])
-    pg.select_option("[data-new-also]", "file:dataset:trades-basic")
-    pg.fill("[data-new-title]", "Two datasets")
+    expect(pg.locator("[data-new-also]")).to_be_enabled()
+    pg.fill("[data-new-title]", "Two views")
     pg.click("[data-new] button[type=submit]")
     pg.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
-    assert "also=" in pg.url
-    pg.wait_for_function("() => document.querySelectorAll('[data-fields-tree] > *').length >= 2", timeout=20000)      # both datasets are in the Fields pane
     box = pg.locator("[data-add-dataset]").bounding_box()
     tree = pg.locator("[data-fields-tree]").bounding_box()
     assert box["y"] < tree["y"], "Add dataset is above the tree"
@@ -440,7 +441,7 @@ def test_a_new_report_takes_a_main_dataset_and_more_and_greys_out_what_cannot_be
 
 # ---- board designer: a draft report, drag, a twice-added visual, an empty Check; view as readers see it; ids follow the type; Back after sign-in ----------------------
 
-REPORT_BODY = ("report: kpis\ndataset: trades-basic\npages:\n  - id: main\n    title: Main\n    visuals:\n"
+REPORT_BODY = ("report: kpis\nmodel: trades-basic@1\npages:\n  - id: main\n    title: Main\n    visuals:\n"
                "      - { id: card-1, type: card, title: Trades, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n")
 EMPTY_BOARD = "rachana: 1\nboard: kpi-board\ntitle: KPI board\npages:\n  - id: page1\n    title: Page 1\n    tiles: []\n"
 
@@ -539,7 +540,7 @@ def test_view_as_readers_see_it_shows_the_published_version_not_the_draft(stack,
 
 def test_a_visual_id_follows_its_type_and_what_named_it_follows_the_id(stack, page):
     ws = shared_workspace("Id Lab")
-    body = ("report: ids\ndataset: trades-basic\nbookmarks:\n  - { name: USD only, page: main, slicers: { slicer-1: [USD] } }\n"
+    body = ("report: ids\nmodel: trades-basic@1\nbookmarks:\n  - { name: USD only, page: main, slicers: { slicer-1: [USD] } }\n"
             "layouts:\n  phone:\n    main: { order: [card-1, slicer-1], hide: [slicer-1], span: { card-1: 3 } }\n"
             "pages:\n  - id: main\n    title: Main\n    visuals:\n"
             "      - { id: slicer-1, type: slicer, title: Currency, at: { x: 0, y: 0, w: 3, h: 3 }, wells: { field: [trade.currency] } }\n"
@@ -584,7 +585,7 @@ def test_back_from_the_landing_page_does_not_show_the_sign_in_form_again(stack, 
 
 def test_a_range_slicer_two_rows_high_shows_both_from_and_to_and_hints_at_an_inverted_range(stack, browser):
     ws = shared_workspace("Range Lab")
-    body = ("report: range\ndataset: trades-basic\npages:\n  - id: main\n    title: Main\n    visuals:\n"
+    body = ("report: range\nmodel: trades-basic@1\npages:\n  - id: main\n    title: Main\n    visuals:\n"
             "      - { id: slicer-1, type: slicer, title: Notional, at: { x: 0, y: 0, w: 4, h: 2 }, format: { mode: range }, wells: { field: [trade.notional] } }\n"
             "      - { id: card-1, type: card, title: Trades, at: { x: 4, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n")
     rep = make(ws, "report", "Range", body)

@@ -74,7 +74,8 @@ def stack(tmp_path_factory):
     work = tmp / "server"
     for kind in ("datasets", "reports"):
         (work / "config" / "bi" / kind).mkdir(parents=True)
-    shutil.copy(ROOT / "config/bi/datasets/world-economics.dataset.yaml", work / "config/bi/datasets")
+    from bi_samples import copy_samples
+    copy_samples(work / "config/bi", ["world-economics"])               # the model and the dataset it reads
     shutil.copy(ROOT / "config/bi/reports/world-economics.report.yaml", work / "config/bi/reports")
     env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config/packs"), DRISHTI_PACKS="politics-society,economics", DRISHTI_BI_DIR=str(work / "config/bi"),
                DRISHTI_DATA_DIR=str(work / "data"))

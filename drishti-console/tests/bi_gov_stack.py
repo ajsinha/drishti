@@ -98,7 +98,7 @@ def admin(method: str, path: str, body=None):
 
 
 def dataset_body() -> str:
-    text = (ROOT / "config" / "bi" / "datasets" / "trades-basic.dataset.yaml").read_text()
+    text = (ROOT / "drishti-server/src/test/resources/bi/samples-2.1/datasets/trades-basic.dataset.yaml").read_text()   # the 2.1 sample, kept by the server's tests
     text = text.replace("dataset: trades-basic", "dataset: gov-trades").replace("title: Trades, the basics", "title: Trades model")
     text = re.sub(r"^(sample: true|tags: \[sample.*\]|endorsement: promoted).*\n", "", text, flags=re.M)
     text = re.sub(r"^\s*#.*\n", "", text, flags=re.M)                  # the sample's commentary stays in the sample; a desk's own model is shorter

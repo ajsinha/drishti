@@ -222,13 +222,52 @@
     }, 400);
   }
 
+  // ---- expected values: the model's `tests:` (Drishti SQL with the figure it must give), run on the saved model as you or a role you hold -------------
+  function drawTests() {
+    const pane = q('[data-contract-pane]');
+    if (!pane || !M.item) { return; }
+    let box = q('[data-model-tests]', pane);
+    if (!box) {
+      box = h('section', { class: 'bi-sec', 'data-model-tests': '' }, h('h3', { text: 'Expected values' }),
+        h('p', { class: 'text-muted-d', text: 'Tests the model declares (tests: in the YAML): a Drishti SQL question and the figure it must give. Publishing is refused while one fails. They run on the saved model.' }),
+        h('ul', { class: 'bi-layer-list', 'data-model-tests-list': '' }),
+        h('p', {}, h('label', {}, 'Run as ', h('select', { class: 'studio-select', 'data-tests-role': '', 'aria-label': 'Run the tests as a role' }, h('option', { value: '', text: 'yourself' }))), ' ',
+          h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-tests-run': '' }, B.icon('clipboard-check'), ' Run the tests'), ' ',
+          h('span', { class: 'text-muted-d', 'data-tests-sum': '', role: 'status', 'aria-live': 'polite' })),
+        h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl bi-tbl', 'data-tests-table': '', hidden: true },
+          h('caption', { class: 'visually-hidden', text: 'Expected values' }),
+          h('thead', {}, h('tr', {}, ['Test', 'Question', 'Expected', 'Found', 'Result'].map((x) => h('th', { scope: 'col', text: x })))), h('tbody'))));
+      pane.appendChild(box);
+      B.api('GET', '/me').then((me) => { const sel = q('[data-tests-role]', box); (me.roles || []).forEach((r) => sel.appendChild(h('option', { value: r, text: r }))); }).catch(() => {});
+      const run = q('[data-tests-run]', box), sum = q('[data-tests-sum]', box);
+      run.addEventListener('click', () => {
+        run.disabled = true; sum.textContent = M.dirty ? 'Running the saved model (Save to test your changes)…' : 'Running…';
+        const tb = B.clear(q('[data-tests-table] tbody', box));
+        B.api('POST', '/items/' + B.id2path(M.item.id) + '/tests', { role: q('[data-tests-role]', box).value || undefined }).then((r) => {
+          run.disabled = false;
+          q('[data-tests-table]', box).hidden = r.total === 0;
+          sum.textContent = r.total === 0 ? 'The saved model declares no tests.' : r.passed + ' passed, ' + r.failed + ' failed' + (r.errors ? ', ' + r.errors + ' could not run' : '') + '.';
+          r.results.forEach((x) => {
+            const bad = x.status !== 'pass';
+            tb.appendChild(h('tr', { 'data-test': x.status }, h('th', { scope: 'row', text: x.name }), h('td', { class: 'mono', text: x.target }), h('td', { text: x.expect }),
+              h('td', { text: x.actual == null ? '–' : String(x.actual) }), h('td', {}, h('span', { class: 'bi-badge ' + (bad ? 'bi-status' : 'bi-promoted'), text: x.status }), x.message ? h('small', { class: 'text-muted-d', text: ' ' + x.message }) : null)));
+          });
+        }).catch((e) => { run.disabled = false; sum.textContent = e.message; });
+      });
+    }
+    const list = B.clear(q('[data-model-tests-list]', box));
+    const tests = Array.isArray(M.doc.tests) ? M.doc.tests : [];
+    tests.forEach((t) => list.appendChild(h('li', {}, h('strong', { text: t.name || 'a test' }), ': ', h('code', { text: t.sql || '' }), ' should give ' + JSON.stringify(t.expect))));
+    if (!tests.length) { list.appendChild(h('li', { class: 'text-muted-d', text: 'No tests yet: add them in the YAML tab (tests: - { name, sql, expect }).' })); }
+  }
+
   function redraw(fromTab) {
     if (!M.doc) { return; }
     const fp = q('[data-fields-pane]');
     const typing = fp.contains(document.activeElement) && /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName) && document.activeElement.type !== 'checkbox';
     if (M.tab === 'fields' && (fromTab || !typing)) { drawFields(); }        // a Check landing while someone types never redraws under them
     if (M.tab === 'security') { drawSecurityExtras(); }
-    if (M.tab === 'contract') { drawContractExtras(); }
+    if (M.tab === 'contract') { drawContractExtras(); drawTests(); }
   }
   M.on('redraw', () => redraw(false));
   M.on('tab', () => redraw(true));

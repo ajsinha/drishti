@@ -262,3 +262,45 @@ def test_the_fields_route_asks_one_perspective_and_the_contract_names_who_uses_a
     removed = next(c for c in r["changes"] if c["text"] == "removes the measure Notional")
     assert removed["target"] == "Notional" and removed["usedBy"] == [{"kind": "report", "id": "bi-r1", "title": "Daily risk"}]
     assert ("/models/bi-m9/impact", {"target": "Notional"}) in asked
+
+
+DATASET_ITEM = """# the desk's trades, refreshed for the morning
+rachana: 2
+expressions: 2
+dataset: trades-daily
+version: 1.0.0
+source: { connector: trading-store, kind: trade }   # the demo connector
+refresh: { on-load: true }
+columns:
+  desk: { type: string }
+"""
+
+
+def test_set_a_schedule_writes_refresh_into_the_dataset_draft_keeping_its_comments():
+    client, backend = make()
+    backend.items["bi-d1"] = {"id": "bi-d1", "kind": "dataset", "body": DATASET_ITEM, "can": {"edit": True}}
+    r = client.post("/bi/model-api/dataset-refresh", json={"item": "bi-d1", "refresh": "business-days 06:30"})
+    assert r.status_code == 200, r.text
+    body = backend.items["bi-d1"]["body"]
+    assert body.startswith("# the desk's trades, refreshed for the morning\n") and "# the demo connector" in body
+    assert "refresh: {schedule: 'business-days 06:30', on-load: true}" in body                # a rebuild on load is kept beside the schedule
+    assert client.post("/bi/model-api/dataset-refresh", json={"item": "bi-d1"}).status_code == 422
+    backend.items["bi-d2"] = {"id": "bi-d2", "kind": "report", "body": "report: r\npages: []\n"}
+    assert client.post("/bi/model-api/dataset-refresh", json={"item": "bi-d2", "refresh": "hourly"}).status_code == 422
+
+
+def test_an_old_dataset_link_opens_the_page_of_a_model_layer_dataset():
+    client, backend = make()
+    orig = backend.bi
+
+    async def bi(method, path, ident, body=None, **params):
+        if path == "/layer-datasets/file:dataset:trades-basic-trade":
+            return {"id": "file:dataset:trades-basic-trade", "yaml": "rachana: 2\ndataset: trades-basic-trade\n"}
+        if path.startswith("/layer-datasets/"):
+            from core.backend import BackendError
+            raise BackendError(422, "DRS-9102", "a 2.1 dataset")
+        return await orig(method, path, ident, body, **params)
+    backend.bi = bi
+    r = client.get("/bi/d/file:dataset:trades-basic-trade", follow_redirects=False)
+    assert r.status_code == 307 and r.headers["location"] == "/bi/ds/file:dataset:trades-basic-trade"
+    assert client.get("/bi/d/file:dataset:live-trading", follow_redirects=False).status_code == 200      # a 2.1 (live) dataset keeps its page

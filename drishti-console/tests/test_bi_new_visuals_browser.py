@@ -34,50 +34,59 @@ import bi_report_stack  # noqa: E402
 from bi_report_helpers import card_value, clean, open_report, settled, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL, trade  # noqa: E402
 
-DATASET = "nv-demo"
+DATASET = "nv-demo-trade"          # the dataset the model nv-demo reads (2.2: a dataset and a model)
+MODEL = "nv-demo@1"
 REPORT = "file:report:nv-demo"
 DAYS = ("2026-10-07", "2026-10-08")
 COUNTRY = {"DESK-FX": "US", "DESK-FI": "GB", "DESK-EQD": "JP"}
 
-DATASET_YAML = """rachana: 1
-dataset: nv-demo
-version: 1
-title: New visuals demo
+DATASET_YAML = """rachana: 2
+expressions: 2
+dataset: nv-demo-trade
+version: 1.0.0
+title: "New visuals demo: trade"
 sample: true
-refresh: "daily at 06:00"
-tables:
-  trade:
-    source: { connector: trading-store, kind: trade }
-    mode: cached
-    columns:
-      tradeId: { type: string, key: true }
-      desk: string
-      book: string
-      productType: string
-      currency: string
-      status: string
-      notional: decimal
-      mtm: decimal
-      tradeDate: date
-      country: { type: string, expr: "if(desk == 'DESK-FX', 'US', if(desk == 'DESK-FI', 'GB', 'JP'))" }
-      lat: { type: decimal, expr: "if(desk == 'DESK-FX', 40.7, if(desk == 'DESK-FI', 51.5, 35.7))" }
-      lon: { type: decimal, expr: "if(desk == 'DESK-FX', -74.0, if(desk == 'DESK-FI', -0.1, 139.7))" }
-measures:
-  Notional: { expr: "sum(trade.notional)", format: amount0 }
-  MTM: { expr: "sum(trade.mtm)", format: signed0 }
-  Trades: { expr: "count(trade)" }
-  Avg MTM: { expr: "avg(trade.mtm)", format: signed0 }
-  MTM per notional: { expr: "ratio(sum(trade.mtm), sum(trade.notional)) * 1000000", format: signed2 }
-  Largest notional: { expr: "max(trade.notional)", format: amount0 }
-  MTM ytd: { expr: "ytd(sum(trade.mtm), trade.tradeDate)", format: signed0 }
+source: { connector: trading-store, kind: trade }
+refresh: { schedule: "daily 06:00", on-load: true }
+columns:
+  tradeId:     { type: string, role: key }
+  desk:        { type: string }
+  book:        { type: string }
+  productType: { type: string }
+  currency:    { type: string }
+  status:      { type: string }
+  notional:    { type: decimal }
+  mtm:         { type: decimal }
+  tradeDate:   { type: date }
+  country:     { type: string, expr: "'US' if desk == 'DESK-FX' else 'GB' if desk == 'DESK-FI' else 'JP'" }
+  lat:         { type: decimal, expr: "40.7 if desk == 'DESK-FX' else 51.5 if desk == 'DESK-FI' else 35.7" }
+  lon:         { type: decimal, expr: "-74.0 if desk == 'DESK-FX' else -0.1 if desk == 'DESK-FI' else 139.7" }
 """
 
-REPORT_YAML = """rachana: 1
+MODEL_YAML = """rachana: 2
+expressions: 2
+model: nv-demo
+version: 1.0.0
+title: "New visuals demo"
+sample: true
+datasets:
+  trade: { dataset: nv-demo-trade, role: fact }
+measures:
+  Notional:         { expr: "sum(trade.notional)", format: amount0 }
+  MTM:              { expr: "sum(trade.mtm)", format: signed0 }
+  Trades:           { expr: "count(trade)" }
+  Avg MTM:          { expr: "avg(trade.mtm)", format: signed0 }
+  MTM per notional: { expr: "ratio(sum(trade.mtm), sum(trade.notional)) * 1000000", format: signed2 }
+  Largest notional: { expr: "max(trade.notional)", format: amount0 }
+  MTM ytd:          { expr: "ytd(sum(trade.mtm), trade.tradeDate)", format: signed0 }
+"""
+
+REPORT_YAML = """rachana: 2
 report: nv-demo
 version: 1
 title: New visuals demo
 sample: true
-dataset: nv-demo
+model: nv-demo@1
 dates: { from: 2026-10-07, to: 2026-10-08 }
 pages:
   - id: main
@@ -107,7 +116,9 @@ class Stack(bi_report_stack.ReportStack):
         self.server_args += ["--drishti.bi.refresh.tick=2s"]               # the refresh scheduler looks every 2 s here (30 s as shipped)
 
     def prepare(self, work):
-        (work / "config/bi/datasets" / f"{DATASET}.dataset.yaml").write_text(DATASET_YAML)
+        (work / "config/bi/datasets" / "nv-demo-trade.dataset.yaml").write_text(DATASET_YAML)
+        (work / "config/bi/models").mkdir(parents=True, exist_ok=True)
+        (work / "config/bi/models" / "nv-demo.model.yaml").write_text(MODEL_YAML)
         (work / "config/bi/reports" / "nv-demo.report.yaml").write_text(REPORT_YAML)
 
 
@@ -252,9 +263,10 @@ def test_the_year_to_date_card_is_the_time_intelligence_measure(stack, browser):
 
 def test_the_dataset_page_shows_the_refresh_schedule_and_the_state(stack, browser):
     page = sign_in(browser, "wes")
-    page.goto(CONSOLE_URL + "/bi/d/file:dataset:" + DATASET)
+    page.goto(CONSOLE_URL + "/bi/d/file:dataset:" + DATASET)                                       # the old link opens the dataset's page (2.2)
+    page.wait_for_url("**/bi/ds/**")
     page.wait_for_selector("[data-refresh] tbody tr", timeout=30000)
-    row = page.locator('[data-refresh] tr[data-refresh-row="dataset"]')
+    row = page.locator('[data-refresh] tr[data-refresh-row^="table"]')                            # a model-layer dataset has one table: the schedule is on it
     expect(row).to_have_count(1)
     assert "daily 06:00" in row.inner_text()                                                       # "daily at 06:00" is read as daily 06:00
     assert row.get_attribute("data-status")
@@ -267,8 +279,8 @@ def test_the_dataset_page_shows_the_refresh_schedule_and_the_state(stack, browse
 def test_the_designer_offers_the_new_visuals_and_marks_the_time_measure(stack, browser):
     page = sign_in(browser, "wes")
     page.goto(CONSOLE_URL + "/bi/designer")
-    page.wait_for_selector("[data-new-dataset] option[value='file:dataset:" + DATASET + "']", state="attached")
-    page.select_option("[data-new-dataset]", "file:dataset:" + DATASET)
+    page.wait_for_selector("[data-new-dataset] option[value='mq:" + MODEL + "']", state="attached")
+    page.select_option("[data-new-dataset]", "mq:" + MODEL)
     page.fill("[data-new-title]", "New visuals draft")
     page.click("[data-new] button[type=submit]")
     page.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
@@ -315,7 +327,7 @@ def test_a_phone_reads_the_new_visuals_in_one_column_without_sideways_scroll(sta
     clean(page)
     page.context.close()
     ds = sign_in(browser, "wes", viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True)
-    ds.goto(CONSOLE_URL + "/bi/d/file:dataset:" + DATASET)
+    ds.goto(CONSOLE_URL + "/bi/ds/file:dataset:" + DATASET)
     ds.wait_for_selector("[data-refresh] tbody tr", timeout=30000)
     assert ds.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")            # the refresh table scrolls inside its own box
     ds.context.close()

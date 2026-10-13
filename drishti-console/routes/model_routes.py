@@ -177,6 +177,29 @@ async def dataset(request: Request):
     return _ok({"info": info, "yaml": yaml_text})
 
 
+@router.post("/bi/model-api/dataset-refresh")
+async def dataset_refresh(request: Request):
+    """``{item, refresh}``: writes ``refresh:`` (a schedule in words) into a new saved state of a dataset item's draft, every other line, comment and key
+    order kept (the dataset page's Set a schedule). The server checks the text and who may save it."""
+    body = await json_body(request)
+    item, words = str(body.get("item") or ""), str(body.get("refresh") or "").strip()
+    if not item or not words or len(words) > 120:
+        return _refuse("send {item, refresh}: the dataset item and a schedule in words (daily 06:30, business-days 07:00, hourly, after-load)")
+    try:
+        got = await _bi(request, "GET", "/items/" + quote(item, safe=":"))
+        original = got.get("body") or ""
+        doc = ml.load(original)
+        if not isinstance(doc, dict) or doc.get("rachana") != 2 or "dataset" not in doc:
+            return _refuse("not a dataset of the model layer (rachana: 2 with dataset:)")
+        old = doc.get("refresh")
+        new = {"schedule": words, "on-load": True} if isinstance(old, dict) and old.get("on-load") and words != "after-load" else words   # a rebuild on load is kept
+        text = ml.to_yaml_keeping(original, {**doc, "refresh": new}, ml.DATASET_ORDER)
+        saved = await _bi(request, "PUT", "/items/" + quote(item, safe=":"), {"body": text, "message": "Set the refresh schedule: " + words})
+    except BackendError as e:
+        return _problem(e)
+    return _ok({"item": item, "refresh": words, "status": (saved or {}).get("status")})
+
+
 # ---- the model document -------------------------------------------------------------------------------------------------
 
 @router.post("/bi/model-api/compose")
@@ -378,7 +401,26 @@ async def fields(request: Request):
                 doc = ml.load((await _bi(request, "GET", "/items/" + quote(str(hit["id"]), safe=":"))).get("body") or "")
         except (BackendError, ml.LayerError):
             doc = None
-    return _ok(ml.fields_shape(described, ref, doc))
+    shape = ml.fields_shape(described, ref, doc)
+    await _entities(request, shape)
+    return _ok(shape)
+
+
+async def _entities(request: Request, shape: dict) -> None:
+    """Each table's entity kind (the pack kind its dataset reads: ``trade``), so a key column of a table visual opens that entity in the terminal. A pack
+    dataset says it in its name; another dataset in its source (read once each; one that cannot be read keeps no entity)."""
+    for t in shape.get("tables") or []:
+        name = str(t.get("dataset") or "")
+        if name.startswith(ml.PACK_PREFIX):
+            t["entity"] = name.rsplit(".", 1)[-1]
+            continue
+        try:
+            got = await _bi(request, "GET", "/layer-datasets/" + quote(name if ":" in name else "file:dataset:" + name, safe=":"))
+            src = (ml.load(got.get("yaml") or "") or {}).get("source")
+            if isinstance(src, dict) and src.get("kind"):
+                t["entity"] = str(src["kind"])
+        except (BackendError, ml.LayerError):
+            pass
 
 
 @router.get("/bi/model-api/consumers")
@@ -398,7 +440,7 @@ async def consumers(request: Request):
     for c in rows or []:
         if isinstance(c, dict):
             kind, cid = str(c.get("kind") or c.get("type") or "item"), str(c.get("id") or "")
-            href = {"report": "/bi/d/", "board": "/bi/b/", "notebook": "/bi/i/", "alert": "/alerts/measure/", "subscription": "/reports"}.get(kind, "/bi/i/")
+            href = {"report": "/bi/r/", "board": "/bi/b/", "notebook": "/bi/i/", "alert": "/alerts/measure/", "subscription": "/reports"}.get(kind, "/bi/i/")
             out.append({"kind": kind, "id": cid, "title": str(c.get("title") or c.get("name") or cid), "href": href + (quote(cid, safe=":") if kind != "subscription" else "")})
     return _ok({"known": True, "consumers": out})
 

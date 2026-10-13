@@ -145,11 +145,9 @@ class ReportStack:
         if not jars or not Path(java).exists():
             raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
         work = self.tmp / "server"
-        bi = work / "config" / "bi" / "datasets"
-        bi.mkdir(parents=True)
-        wanted = ["trades-basic"] if not self.delta_root else ["trades-basic", "trading-risk", "trading-cashflows"]
-        for name in wanted:
-            shutil.copy(ROOT / "config" / "bi" / "datasets" / f"{name}.dataset.yaml", bi)
+        from bi_samples import copy_samples
+        (work / "config" / "bi" / "datasets").mkdir(parents=True)
+        copy_samples(work / "config" / "bi", ["trades-basic"] if not self.delta_root else ["trades-basic", "trading-risk", "trading-cashflows"])   # each model and its datasets
         reports = work / "config" / "bi" / "reports"
         reports.mkdir(parents=True)
         for name in ["trades-overview"] if not self.delta_root else ["trades-overview", "counterparty-risk", "cashflow-ladder"]:

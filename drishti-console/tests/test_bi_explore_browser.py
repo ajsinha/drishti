@@ -65,7 +65,7 @@ def grid(page, selector):
 def open_extract(page):
     page.goto(CONSOLE_URL + "/bi/explore")
     page.wait_for_function("() => document.querySelectorAll('[data-dataset] option').length > 1", timeout=30000)
-    page.select_option("[data-dataset]", "file:dataset:trades-basic")
+    page.select_option("[data-dataset]", "mq:trades-basic@1")                     # the shipped sample model (2.2)
     page.wait_for_selector("[data-fields] input[name=f]", timeout=30000)
     page.click("[data-open-go]")
     page.wait_for_function("() => /rows,/.test(document.querySelector('[data-info]').textContent)", timeout=60000)

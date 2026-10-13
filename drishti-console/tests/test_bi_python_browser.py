@@ -43,14 +43,14 @@ SAMPLE = ROOT / "config/bi/reports/python-desk-risk.report.yaml"
 def variant(run: str) -> str:
     """The shipped sample report, pinned to one business day and to one place to run."""
     text = SAMPLE.read_text(encoding="utf-8").replace("report: python-desk-risk", f"report: py-{run}").replace("sample: true", "sample: false")
-    text = text.replace("dataset: trades-basic", f"dataset: trades-basic\ndates: {{ from: {DAY}, to: {DAY} }}")
+    text = text.replace("model: trades-basic@1", f"model: trades-basic@1\ndates: {{ from: {DAY}, to: {DAY} }}")
     return text.replace("format: { run: auto }", f"format: {{ run: {run} }}").replace("params: { bins: 24 }, run: auto", f"params: {{ bins: 24 }}, run: {run}")
 
 
 class Stack(bi_report_stack.ReportStack):
     def prepare(self, work):
         python = work / "config/bi/python"
-        python.mkdir(parents=True)
+        python.mkdir(parents=True, exist_ok=True)
         for f in (ROOT / "config/bi/python").glob("*.python.yaml"):
             (python / f.name).write_text(f.read_text(encoding="utf-8"))
         reports = work / "config/bi/reports"

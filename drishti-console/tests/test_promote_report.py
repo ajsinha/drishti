@@ -135,3 +135,12 @@ def test_a_slice_with_filters_promotes_them_and_a_new_report_is_still_the_defaul
     assert r["target"] is None and "type: matrix" in r["yaml"] and "model: trades-basic@1" in r["yaml"] and "rachana: 2" in r["yaml"] and "trade.currency" in r["yaml"] and "EUR" in r["yaml"]
     empty = _client(PromoteBackend()).post("/bi/explore/promote", json={"to": "report", "name": "x", "dataset": DS, "sql": "SELECT 1", "columns": COLS}).json()
     assert empty["code"] == "DRS-9070" and "no fields or measures" in empty["detail"]
+
+
+def test_a_drishti_sql_cell_is_read_with_its_aliases_and_measures():
+    sl = sql_to_slice("SELECT trade.desk, MEASURE('MTM') AS mtm, MEASURE('Nope') FROM trade JOIN desk WHERE trade.currency IN ('USD', 'EUR') GROUP BY trade.desk", COLS)
+    assert sl["rows"] == ["trade.desk"] and sl["values"] == [{"measure": "MTM"}, {"measure": "Nope"}] and sl["notes"] == []      # a join of the model is fine
+    assert sl["filters"] == [{"field": "trade.currency", "op": "in", "values": ["USD", "EUR"]}]
+    notes = []
+    v = visual_for(MODEL, sl, "By desk", "sql", qualify, notes)
+    assert v["type"] == "matrix" and v["wells"] == {"rows": ["trade.desk"], "values": ["MTM"]} and notes == ["The model has no measure 'Nope', so it was left out."]

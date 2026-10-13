@@ -108,10 +108,10 @@ def seed() -> dict:
     ann("PUT", "/bi/workspaces/rates-desk/members/cat", {"role": "viewer"})
     ids = {}
     for key, kind, title, desc, tags, body, publish, audience in [
-        ("pnl", "report", "Desk P&L", "Daily P&L by book and trader, with the day's movers", ["pnl", "daily"], "report: desk-pnl\ndataset: trades-basic\npages:\n  - id: overview\n    title: Overview\n    visuals: []\n", True, ["bi-reader", "bi-steward"]),
+        ("pnl", "report", "Desk P&L", "Daily P&L by book and trader, with the day's movers", ["pnl", "daily"], "report: desk-pnl\nmodel: trades-basic@1\npages:\n  - id: overview\n    title: Overview\n    visuals: []\n", True, ["bi-reader", "bi-steward"]),
         ("exposure", "board", "Counterparty exposure", "Live exposure by counterparty against limits", ["exposure", "credit"], "board: exposure\npages:\n  - id: p\n    tiles:\n      - { report: desk-pnl, visual: v, at: { x: 0, y: 0, w: 4, h: 3 } }\n", True, ["bi-reader"]),
         ("trades", "dataset", "Trades dataset", "The trades table with desk and book relationships", ["trades"], "tables:\n  - trade\n", False, []),
-        ("risk", "report", "Risk ladder", "DV01 ladder by bucket", ["risk", "dv01"], "report: risk-ladder\ndataset: trades-basic\npages:\n  - id: ladder\n    title: Ladder\n    visuals: []\n", True, ["bi-steward"])]:
+        ("risk", "report", "Risk ladder", "DV01 ladder by bucket", ["risk", "dv01"], "report: risk-ladder\nmodel: trades-basic@1\npages:\n  - id: ladder\n    title: Ladder\n    visuals: []\n", True, ["bi-steward"])]:
         s, it = ann("POST", "/bi/workspaces/rates-desk/items", {"kind": kind, "title": title, "description": desc, "tags": tags, "body": body, "audienceRoles": audience})
         assert s == 201, it
         ids[key] = it["id"]
@@ -148,8 +148,8 @@ class Stack:
         for rel, text in SHIPPED.items():
             (work / "config" / "bi" / rel).parent.mkdir(parents=True, exist_ok=True)
             (work / "config" / "bi" / rel).write_text(text)
-        sample = ROOT / "config" / "bi" / "datasets" / "trades-basic.dataset.yaml"           # publishing checks a report can be drawn: the dataset it names must exist
-        (work / "config" / "bi" / "datasets" / sample.name).write_text(sample.read_text())
+        from bi_samples import copy_samples
+        copy_samples(work / "config" / "bi", ["trades-basic"])           # publishing checks a report can be drawn: the model it names must exist
         env = dict(os.environ, DRISHTI_PACKS="trading", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_SECURITY_ENABLED="true", DRISHTI_TOKEN_SECRET=SECRET,
                    DRISHTI_BI_DIR=str(work / "config" / "bi"))
         self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false"], cwd=work,

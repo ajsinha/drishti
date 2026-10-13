@@ -158,7 +158,7 @@
       use.hidden = true;
       yaml.hidden = true;
       B.say(msg, 'Drafting...');
-      B.api('POST', '/ai/draft', { dataset: D.model.dataset, request }).then((r) => {
+      B.api('POST', '/ai/draft', { dataset: D.model.dataset || D.model.model || (B.modelBinding && B.modelBinding.ref) || '', request }).then((r) => {
         yaml.value = r.yaml;
         yaml.hidden = false;
         use.hidden = false;
