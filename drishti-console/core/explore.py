@@ -328,7 +328,8 @@ def transform_name(name: str, used: list[str]) -> str:
 
 def promote_transform(cell_source: str, name: str, extracts: list[dict], packages: list[str]) -> str:
     """A Python cell that joins several extracts as the YAML of a Python Transform draft (PYTHON_BI.md section 13): each ``extract("x")`` becomes the function's
-    parameter for that extract, ``result`` is returned and must be a pandas DataFrame. The inputs are the datasets of the extracts, in order; nothing is published."""
+    parameter for that extract, ``result`` is returned and must be a pandas DataFrame. The inputs are the parameters' names, in order: the inputs of the Python
+    dataset that runs it (2.2: each a model query); nothing is published."""
     if not extracts:
         raise ExploreError("DRS-9070", 422, "a Transform reads datasets: open the extracts the cell uses first")
     params: list[str] = []
@@ -351,7 +352,7 @@ def promote_transform(cell_source: str, name: str, extracts: list[dict], package
     body = "\n".join(("    " + ln) if ln.strip() else "" for ln in lines) or "    pass"
     source = f"def run({', '.join(params)}):\n{body}\n    return result\n"
     doc: dict = {"rachana": 1, "python": re.sub(r"[^A-Za-z0-9_-]", "-", name).strip("-")[:64] or "from-analyse", "title": name, "interface": "transform",
-                 "inputs": [e["dataset"] for e in extracts], "packages": packages, "target": "server", "source": source}
+                 "inputs": params, "packages": packages, "target": "server", "source": source}
     return yaml.safe_dump(doc, sort_keys=False, default_flow_style=None, width=200)
 
 

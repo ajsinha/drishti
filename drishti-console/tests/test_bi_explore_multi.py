@@ -148,7 +148,7 @@ def test_promoting_a_join_cell_writes_a_python_transform_draft_that_runs():
     text = promote_transform(JOIN.replace("df.groupby", 'extract("pnl").groupby'), "pnl vs exposure", extracts, ["pandas"])
     import yaml
     doc = yaml.safe_load(text)
-    assert doc["interface"] == "transform" and doc["inputs"] == [TRADES, EXPOSURE] and doc["python"] == "pnl-vs-exposure"
+    assert doc["interface"] == "transform" and doc["inputs"] == ["pnl", "exposure"] and doc["python"] == "pnl-vs-exposure"
     assert "def run(pnl, exposure):" in doc["source"] and "extract(" not in doc["source"] and doc["source"].rstrip().endswith("return result")
     assert not [p for p in check_source({**doc, "entry": "run"}, ["pandas"]) if p["level"] == "error"]
     # a cell that uses df gets the first extract as df
@@ -169,7 +169,8 @@ def test_the_route_promotes_a_cell_and_refuses_an_extract_the_notebook_does_not_
     client, _ = make()
     src = 'result = extract("exposure")'
     ok = client.post("/bi/explore/promote", json={"to": "transform", "name": "Join", "source": src, "extracts": EXTRA})
-    assert ok.status_code == 200 and "interface: transform" in ok.json()["yaml"] and "derived" in " ".join(ok.json()["notes"])
+    assert ok.status_code == 200 and "interface: transform" in ok.json()["yaml"] and "source: { python:" in " ".join(ok.json()["notes"])
+    assert "inputs: [exposure]" in ok.json()["yaml"]                                                     # the parameter's name: the Python dataset's input
     bad = client.post("/bi/explore/promote", json={"to": "transform", "name": "Join", "source": 'result = extract("nothing")', "extracts": EXTRA})
     assert bad.status_code == 422 and "nothing" in bad.json()["detail"]
     assert client.post("/bi/explore/promote", json={"to": "transform", "name": "Join", "source": src, "extracts": []}).status_code == 422
