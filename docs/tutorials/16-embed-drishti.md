@@ -60,7 +60,7 @@ Open **Admin → Embedding**.
 
 You should see the empty list and **New application**. Press it.
 
-![The New host application form: name Harbour CRM, id harbour-crm, origin http://127.0.0.1:17944, signs in with Both, a JWK set, the scopes embed:about, embed:report, embed:view, the kinds trade and one report, the rates](img/t16/02-register-form.jpg)
+![The New host application form: name Harbour CRM, id harbour-crm, origin http://127.0.0.1:17944, signs in with Both, a JWK set, the scopes embed:about, embed:report, embed:view, the kinds trade and two reports, the rates](img/t16/02-register-form.jpg)
 
 Fill it in:
 
@@ -70,7 +70,7 @@ Fill it in:
 | Origins | `http://127.0.0.1:17944` | the **exact** origin of the host's pages (scheme, host, port, no path). A page on any other origin is refused (`DRS-8002`); `null` and wildcards are refused |
 | How it signs in | **Both** | a **client secret** (shown once) and a **public key** (a JWK set): the host's backend authenticates with the secret and signs a short assertion about its user with its private key. For the sample host paste the JWK set made from `tools/elements-demo/demo-host-key.json` (its public half: `n`, `e`, `kid`) |
 | Scopes | `embed:view`, `embed:about`, `embed:report` | what the host may ask a token for: views, the About text, BI reports |
-| Kinds and reports | `trade, report:file:report:live-trading-desk` | an allow-list: **the kind `trade`** and **one report**. Every report is `report:*`; empty means everything the user's roles open |
+| Kinds and reports | `trade, report:file:report:live-trading-desk, report:file:report:trades-overview` | an allow-list: **the kind `trade`** and **two reports**: the live desk report (step 6) and a report on a model (step 6, last part). Every report is `report:*`; empty means everything the user's roles open |
 | Calls per minute, per user per minute | `6000`, `600` | the defaults (600 and 60) are for a quiet page; a live report asks again at every tick |
 | Token life | `300` seconds | the lifetime of a token; never more than the server's `drishti.embed.token-max-seconds` |
 
@@ -150,7 +150,7 @@ Open `http://127.0.0.1:17944/report` (signed in as `viewer`).
 
 ![The host's report page: a card "The desk report" holding the Live trading desk report with its live indicator, Pause button, page tabs, five cards, bars, a rolling line and tables](img/t16/06-host-report.jpg)
 
-You should see the **Live trading desk** report from tutorial 12 in a card of the host's page: the live indicator and **Pause**, the page tabs *Desk*, *Every trade*, *Pivot*, the cards, the bars, the rolling line and the tables; the `trader` column reads `•••` (masked). It is one element:
+You should see the **Live trading desk** report from tutorial 12 (a live report: in 2.2 it stays on its 2.1 dataset until the live tables join the model layer) in a card of the host's page: the live indicator and **Pause**, the page tabs *Desk*, *Every trade*, *Pivot*, the cards, the bars, the rolling line and the tables; the `trader` column reads `•••` (masked). It is one element:
 
 ```html
 <drishti-report id="rep" report="file:report:live-trading-desk" theme="light"></drishti-report>
@@ -166,6 +166,47 @@ You should see the host's own panel at the bottom, **the events the report told 
 On a phone the report is drawn with the report's **own phone layout** (the designer's *Phone* tab: which visuals, in what order):
 
 ![The host's report page at 390 px: one column, Net MTM first](img/t16/08-host-phone.jpg)
+
+**A report on a model.** Every other sample report reads a **model** (2.2): **Trades overview** says `model: trades-basic@1`. Nothing changes for the
+host: the element names the report, and the server answers each visual from the model, as the reader, masked. The sample host takes the report and the
+single visual from its address, so open `http://127.0.0.1:17944/report?report=file:report:trades-overview&visual=by-desk`:
+
+![The host's report page with Trades overview, a report on the model trades-basic@1: four cards, MTM by desk, notional by trade date, the desk and currency table and the Currency slicer, and no live bar](img/t16/12-host-model-report.jpg)
+
+You should see **Trades overview** in the same card: the tabs *Overview* and *By product*, the cards (`750` trades, `92,558,000,000` of notional), the
+bars, the line, the table and the **Currency** slicer with its values, and **no live bar** (the report has no live table). The host's panel says
+`loaded rep {"title":"Trades overview","page":"overview"}`. The elements are the same two, with the other report:
+
+```html
+<drishti-report id="rep" report="file:report:trades-overview" theme="light"></drishti-report>
+<drishti-report id="one" report="file:report:trades-overview" visual="by-desk" chrome="bare" theme="light"></drishti-report>
+```
+
+What the element asks for one visual, and what it is told (captured from the page; `curl` with an embed token sends the same), shows the model
+query the server ran for it:
+
+```text
+POST http://127.0.0.1:17912/embed/v1/reports/file:report:trades-overview/query
+     {"page":"overview","visual":"by-desk","state":{"carry":[],"slicers":{},"drill":[],"selections":[]}}
+200  {"columns": [{"name": "trade.desk", ...}, {"name": "MTM", ...}],
+      "rows": [["DESK-RATES", 162336641.0], ["DESK-COMM", 16836999.0], ...], "rowCount": 10,
+      "meta": {"layer": "columns", "tables": ["trade"], "masked": [], ...}, "visual": "by-desk",
+      "mq": {"mq": 1, "model": "trades-basic@1", "select": {"fields": ["trade.desk"], "measures": ["MTM"]},
+             "shape": "grouped", "sort": [{"by": "MTM", "desc": true}], "limit": 500, "options": {"format": "json", "layer": "auto"}}}
+```
+
+The same question **from the command line**, as you (`python3 tools/drishti.py bi mq --model trades-basic@1 --select trade.desk --measures MTM`),
+gives the same ten desks. **In YAML** the report's first lines are what make it a report on a model:
+
+```yaml
+rachana: 2
+report: trades-overview
+version: 1
+title: Trades overview
+model: trades-basic@1            # the model it reads, by name and major version
+```
+
+(Elements 1.4.1 asks for a slicer's values as the console does, and leaves the live bar out of a report with no live table.)
 
 ## Step 7 · The strict policy the page keeps
 

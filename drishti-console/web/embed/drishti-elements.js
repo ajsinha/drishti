@@ -36,7 +36,7 @@ async function resolve(text, opts = {}) {
   return res.json();
 }
 window.DrishtiElements = Object.freeze({
-  version: '1.4.0',
+  version: '1.4.1',
   configure: (o) => { Object.assign(cfg, o || {}); if (cfg.tokenProvider) { providerChanged(); } },
   resolve,
   invalidateToken,                                     // the host's user changed: the next call asks the provider again

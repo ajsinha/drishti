@@ -1,6 +1,6 @@
 {
   "name": "@drishti/elements",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Drishti Elements: live views and BI reports in other web applications, as Web Components without iframes",
   "license": "SEE LICENSE IN LICENSE",
   "private": false,

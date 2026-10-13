@@ -40,6 +40,7 @@ APP = "harbour-crm"
 KEY = json.loads((ROOT / "tools" / "elements-demo" / "demo-host-key.json").read_text())
 SECRET_FILE = Path(os.environ.get("DRISHTI_SHOTS_WORK") or "/tmp") / "embed-secret.txt"      # the registration's secret, for the host to read (the work folder is never committed)
 REPORT = "report:file:report:live-trading-desk"
+MODEL_REPORT = "report:file:report:trades-overview"            # a report on a model (trades-basic@1)
 
 
 def start_servers(work):
@@ -83,7 +84,7 @@ def registering(c: Ctx):
     d.locator("input[name=scope][value='embed:view']").check()
     d.locator("input[name=scope][value='embed:report']").check()
     d.locator("input[name=scope][value='embed:search']").check()         # <drishti-search> of the sample pages
-    d.locator("input[name=kinds]").fill(f"trade, {REPORT}")
+    d.locator("input[name=kinds]").fill(f"trade, {REPORT}, {MODEL_REPORT}")
     d.locator("input[name=callsPerMinute]").fill("6000")                 # a live report asks again at every tick: the defaults (600 and 60 a minute) are for a quiet page
     d.locator("input[name=userCallsPerMinute]").fill("600")
     d.locator("input[name=contact]").fill("crm-team@harbour.example")
@@ -117,7 +118,7 @@ def host_page(c: Ctx, path: str, user: str, width: int = 1280, height: int = 900
     c.page.wait_for_timeout(500)
 
 
-@shot("05-host-view.jpg", also=("06-host-report.jpg", "07-host-report-click.jpg", "08-host-phone.jpg", "09-usage.jpg"))
+@shot("05-host-view.jpg", also=("06-host-report.jpg", "07-host-report-click.jpg", "08-host-phone.jpg", "12-host-model-report.jpg", "09-usage.jpg"))
 def host(c: Ctx):
     proc = start_host()
     try:
@@ -145,6 +146,11 @@ def host(c: Ctx):
         host_page(c, "/report", "viewer", width=390, height=844)
         c.page.wait_for_timeout(6000)
         c.save("08-host-phone.jpg")
+        host_page(c, "/report?report=file:report:trades-overview&visual=by-desk", "viewer")
+        c.page.wait_for_function("() => [...document.querySelectorAll('drishti-report')].every(e => e.shadowRoot && e.shadowRoot.querySelector('.bi-vis'))", timeout=45000)
+        c.page.wait_for_timeout(4000)
+        c.save("12-host-model-report.jpg")
+        print("LOG", c.page.locator("#log").inner_text())
 
         login(c, height=900)
         go(c, "/admin/embedding", height=900, wait="table", settle=1500)
@@ -160,7 +166,7 @@ def reregister(c: Ctx, per_user: int) -> None:
     """Registers the host again (a new secret, written to the secret file) with a per-user call limit."""
     login(c)
     call(c, "DELETE", f"/admin/embedding/api/apps/{APP}")
-    made = call(c, "POST", "/admin/embedding/api/apps", {"id": APP, "name": "Harbour CRM", "origins": [HOST], "kinds": ["trade", REPORT], "scopes": ["embed:view", "embed:about", "embed:report", "embed:search"],
+    made = call(c, "POST", "/admin/embedding/api/apps", {"id": APP, "name": "Harbour CRM", "origins": [HOST], "kinds": ["trade", REPORT, MODEL_REPORT], "scopes": ["embed:view", "embed:about", "embed:report", "embed:search"],
                                                        "secret": True, "jwks": jwks(), "callsPerMinute": 6000, "userCallsPerMinute": per_user, "tokenSeconds": 300})
     SECRET_FILE.write_text(made["secret"])
 

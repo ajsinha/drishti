@@ -32,6 +32,7 @@ import base64
 import hashlib
 import json
 import mimetypes
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -45,6 +46,8 @@ HERE = Path(__file__).resolve().parent / "static"
 SAMPLES = Path(__file__).resolve().parents[2] / "docs" / "guides" / "examples" / "embed"      # the React, Vue and Angular sample pages, served at /samples/
 USERS = ("viewer", "author")                              # the host's demo users: they must also exist in Drishti (the exchange refuses a stranger)
 SCOPES = ("embed:view", "embed:about", "embed:report", "embed:search")
+REPORT_ID = re.compile(r"file:report:[a-z0-9][a-z0-9-]{0,63}|bi-[0-9a-f]{6,32}")      # the only report ids /report?report= takes
+VISUAL_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}")
 REPORTS: list = []
 
 
@@ -119,6 +122,12 @@ class Host(BaseHTTPRequestHandler):
             return self.json(200, REPORTS)
         if path in ("/report", "/report.html"):             # the page of <drishti-report> (a host with a report in a card)
             html = (HERE / "report.html").read_text(encoding="utf-8").replace("__CONSOLE__", self.console)
+            q = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            report, visual = (q.get("report") or [""])[0], (q.get("visual") or [""])[0]
+            if REPORT_ID.fullmatch(report):                 # /report?report=file:report:trades-overview&visual=by-desk: another report in the same card
+                html = html.replace('report="file:report:live-trading-desk"', f'report="{report}"')
+                if VISUAL_ID.fullmatch(visual):
+                    html = html.replace('visual="by-desk"', f'visual="{visual}"')
             return self.send(200, html.encode(), "text/html; charset=utf-8")
         if path in ("/", "/index.html"):
             html = (HERE / "index.html").read_text(encoding="utf-8").replace("__CONSOLE__", self.console)

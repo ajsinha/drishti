@@ -3,7 +3,7 @@
   "files": {
     "drishti-elements.js": {
       "bytes": 2708,
-      "integrity": "sha384-pvij64CSRVluHv+fcqDASSyrKMkLEsv2I30yG6N8r0qUhSZ3smt6h1iVuKiIpp3O"
+      "integrity": "sha384-i++7s8ekZKI780YcGkDtBk0+kCiNy0KrU/wUwd5sPmgasjCJOXUST+zJLybERdKA"
     },
     "m/about.js": {
       "bytes": 6408,
@@ -38,12 +38,12 @@
       "integrity": "sha384-0nyphhKJRVPuSYdiW9W6dEA2u/aLQz1mTt0HPJU4VzWqdyANgjIQIs5cT/1jgSL3"
     },
     "m/report-page.js": {
-      "bytes": 18422,
-      "integrity": "sha384-+UycQI+h56loCCjkJdVE9291tKZ5lUOvRmgQY5A0zsJdkaBK3EUmrQmaLRqj5yWw"
+      "bytes": 18619,
+      "integrity": "sha384-MBg4Hz9gxpZyJ04S4V8EWgTTNv69d0JUQRYH2IxdG0/G1Ckq5qSbLnPgHSLQX/mg"
     },
     "m/report.js": {
-      "bytes": 14915,
-      "integrity": "sha384-dXl9/0QUbDGbrqJI/zirzP+PJ66Ry9kUuD96EDb8bsBERTIhwcnEefkllD9W+spp"
+      "bytes": 15109,
+      "integrity": "sha384-H9Vd+kCfXnM3WRrkbcohrcXvIBMvKvvFZSgA6v396T6m1FibfwJP7eiLg1Vo6WPU"
     },
     "m/sanitize.js": {
       "bytes": 4975,
@@ -59,5 +59,5 @@
     }
   },
   "name": "@drishti/elements",
-  "version": "1.4.0"
+  "version": "1.4.1"
 }

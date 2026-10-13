@@ -40,6 +40,8 @@ export class ReportPage {
   page(id) { return this.report.pages.find((p) => p.id === id); }
   get current() { return this.page(this.pageId); }
   drawn(spec) { return ['static', 'entity', 'slicer', 'perspective'].indexOf(this.group[spec.type]) < 0; }
+  /** A visual asked of the server: what is drawn, and a slicer (its values), as the console's report page does. */
+  asked(spec) { return this.drawn(spec) || this.group[spec.type] === 'slicer'; }
 
   /** What the host may read: the filters in force. */
   filters() {
@@ -80,7 +82,7 @@ export class ReportPage {
     const entry = this.frames.get(spec.id);
     if (!entry) { return Promise.resolve(); }
     const token = ++entry.token;
-    if (!this.drawn(spec)) { entry.frame.result(null, (h) => B().visuals.draw(h, spec, this.ctxFor(spec), null)); return Promise.resolve(); }
+    if (!this.asked(spec)) { entry.frame.result(null, (h) => B().visuals.draw(h, spec, this.ctxFor(spec), null)); return Promise.resolve(); }
     if (!quiet) { entry.frame.busy(); }
     return B().enqueue(() => this.api('POST', '/reports/' + B().id2path(this.rep.id) + '/query', { page: this.pageId, visual: spec.id, state: this.stateFor(spec) })).then((res) => {
       if (token !== entry.token) { return; }

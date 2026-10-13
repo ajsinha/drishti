@@ -30,7 +30,7 @@ description: >-
 sample: true                     # sample content: hidden from business users when "Hide samples" is on (like sample packs)
 endorsement: promoted
 tags: [sample, trading, tutorial]
-model: trades-basic@1            # the dataset it reads: its catalogue id, its file name or its name
+model: trades-basic@1            # the model it reads: its name and major version (BI_MODEL_SPEC.md)
 theme: { palette: default }      # default (the console's colours), colour-blind or mono
 
 pages:

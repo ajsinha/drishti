@@ -165,6 +165,7 @@ export class DrishtiReport extends HTMLElement {
       if (seq !== this.#seq) { return; }
       const live = (rep.dataset.tables || []).some((t) => t.mode === 'live') && this.getAttribute('live') !== 'off';
       this.#setState(live ? 'live' : 'static');
+      if (!live) { const bar = page.q('[data-live-bar]'); if (bar) { bar.remove(); } }      // a report with no live table has no live bar (its hidden attribute loses to the bar's display rule)
       this.setAttribute('data-ready', 'yes');
       this.#emit('loaded', { report: this.report, title: rep.title, page: page.pageId, visuals: [...page.frames.keys()], live });
       if (page.masked.size) { this.#emit('masked', { columns: [...page.masked] }); }
