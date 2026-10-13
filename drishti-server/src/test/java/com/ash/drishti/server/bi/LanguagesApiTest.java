@@ -657,4 +657,23 @@ class LanguagesApiTest {
         assertThat(item.path("expressions").asInt()).isEqualTo(4);
         assertThat(item.path("changes").size()).isEqualTo(3);
     }
+
+    /** A data-load signal clears a model's layers for the date as it does a 2.1 dataset's: the next answer reads the reloaded rows (last: it rewrites the lake). */
+    @Test @Order(99)
+    void aDataLoadClearsAModelsLayersForTheDate() throws Exception {
+        Map<String, Object> q = Map.of("mq", 1, "model", "lang-model@1", "select", Map.of("measures", List.of("Notional")), "time", Map.of("as-of", DAY));
+        double before = ok(call("POST", "/api/v1/bi/mq", reader("rita"), q)).path("rows").get(0).get(0).asDouble();
+        Path f = root.resolve("lake").resolve(DAY).resolve("trade.jsonl");
+        Files.write(f, Files.readAllLines(f).stream().map(l -> l.replaceAll("\"notional\":([0-9.]+)", "\"notional\":2$1")).toList(), StandardCharsets.UTF_8);
+        call("POST", "/api/v1/packs/finance/loads", admin(), Map.of("kind", "trade", "businessDate", DAY, "status", "ready", "rows", 24,
+                "batchId", "lang-" + java.util.UUID.randomUUID())).andExpect(status().is2xxSuccessful());
+        double after = before;
+        for (int i = 0; i < 100 && after == before; i++) {
+            after = ok(call("POST", "/api/v1/bi/mq", reader("rita"), q)).path("rows").get(0).get(0).asDouble();
+            if (after == before) {
+                Thread.sleep(100);
+            }
+        }
+        assertThat(after).as("the model answers from the reloaded date").isGreaterThan(before);
+    }
 }

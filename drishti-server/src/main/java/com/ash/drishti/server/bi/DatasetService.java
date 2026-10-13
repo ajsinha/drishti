@@ -140,6 +140,11 @@ public final class DatasetService {
         /** The model's engine dataset as the caller reads it (what a model-bound report's visuals are built against). */
         Dataset dataset(Principal p, String model);
 
+        /** Every published model, flattened, as the scheduler and a data-load signal work over it (its layers are kept under the model's key). */
+        default List<QueryService.Loaded> publishedModels() {
+            return List.of();
+        }
+
         /** The model as a designer or a reader of a report sees it ({@code GET /models/{id}/describe}). */
         Map<String, Object> describe(Principal p, String model);
 
@@ -357,6 +362,10 @@ public final class DatasetService {
             if (res.ok()) {
                 all.add(new QueryService.Loaded(i.id(), Layers.key(i.id()), res.dataset(), hash(body)));
             }
+        }
+        ModelGateway g = gateway;
+        if (g != null) {
+            all.addAll(g.publishedModels());                                  // a model's tables keep layers under the model: a load clears and rebuilds them too
         }
         return all;
     }

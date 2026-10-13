@@ -93,6 +93,11 @@ public final class ConsumerQueries implements DatasetService.ModelGateway {
     }
 
     @Override
+    public List<com.ash.drishti.server.bi.engine.QueryService.Loaded> publishedModels() {
+        return catalog.publishedLoaded();
+    }
+
+    @Override
     public Map<String, Object> describe(Principal p, String model) {
         return catalog.describe(p, model);
     }

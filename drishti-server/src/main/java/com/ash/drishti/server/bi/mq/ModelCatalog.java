@@ -542,6 +542,28 @@ public final class ModelCatalog {
         return best == null ? Optional.empty() : Optional.ofNullable(chain(best, visiting, problems));
     }
 
+    /**
+     * Every published model that resolves, flattened under its own layers key (a model's tables keep their layers there): what a data-load signal clears and
+     * the refresh scheduler rebuilds, as it does a 2.1 dataset's. A model that does not resolve is left out (Check and publish say why).
+     */
+    public List<QueryService.Loaded> publishedLoaded() {
+        List<QueryService.Loaded> out = new ArrayList<>();
+        for (BiStore.Item i : bi.publishedOfKind("model")) {
+            String body = bi.publishedBody(i);
+            ModelDefParser.Result parsed = ModelDefParser.parse(body);
+            if (parsed.model() == null) {
+                continue;
+            }
+            try {
+                ModelView v = view(i.id(), parsed.model(), parsed, body);
+                out.add(new QueryService.Loaded(v.id(), v.key(), v.flat(), v.hash()));
+            } catch (RuntimeException e) {
+                // not resolvable now: nothing of it is kept to clear
+            }
+        }
+        return out;
+    }
+
     /** The published models of this name (or catalogue id), with their datasets resolved as far as they resolve: what the cycle check walks. */
     List<Map<String, ResolvedDataset>> publishedModels(String name) {
         List<Map<String, ResolvedDataset>> out = new ArrayList<>();
