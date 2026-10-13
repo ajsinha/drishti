@@ -27,3 +27,9 @@ docs/qa/2026-10-03/ux/shots/
 
 # the framework builds of the embedding samples: docs/guides/examples/embed/fetch-vendor.sh
 docs/guides/examples/embed/vendor/
+
+# your own libraries (external_lib/README.md): not part of the repository
+external_lib/java/*
+!external_lib/java/.gitkeep
+external_lib/python/*
+!external_lib/python/.gitkeep
