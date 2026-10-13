@@ -41,7 +41,9 @@
   function buttons() {
     q('[data-undo]').disabled = !undo.length || M.readOnly;
     q('[data-redo]').disabled = !redo.length || M.readOnly;
-    q('[data-state]').textContent = M.readOnly ? 'Read-only' : M.dirty ? 'Unsaved changes' : (M.item && M.item.status === 'published' ? 'Published' : 'Saved draft');
+    const it = M.item || {};
+    q('[data-state]').textContent = M.readOnly ? 'Read-only' : M.dirty ? 'Unsaved changes' : it.status === 'published' ? 'Published'
+      : it.status === 'proposed' ? 'Proposed' : it.publishedVersion ? 'Draft changes (v' + it.publishedVersion + ' published)' : 'Saved draft';
     publishState();
   }
   /** Publish (or Propose) shows whenever the person could publish this model once it is saved: a published model with a newer saved or unsaved version included. In a
@@ -431,10 +433,21 @@
     const btn = q('[data-save]');
     if (M.readOnly) { return Promise.resolve(); }
     return B.busy(btn, () => M.compose(true).then(() => B.saveItem(itemId, { body: M.yaml }, M.etag, btn, saveCopy))).then((it) => {
-      M.item = it; M.etag = it.etag; M.dirty = false; forget(); buttons();
-      B.near(btn, 'Saved as a draft. ' + (M.check && M.check.valid ? 'It checks clean: Publish when ready.' : 'Check lists what to fix before it can be published.'), false);
+      M.item = Object.assign({}, M.item, it); M.etag = it.etag; M.dirty = false; forget(); buttons();
+      // a save on a published model makes a draft beside the published version: Publish and the state are worked out again from the item as it now is
+      refreshItem();
+      const wasLive = it.publishedVersion && it.status !== 'published';
+      B.near(btn, 'Saved as a draft' + (wasLive ? ' (version ' + it.publishedVersion + ' stays published until you publish this one)' : '') + '. ' + (M.check && M.check.valid ? 'It checks clean: Publish when ready.' : 'Check lists what to fix before it can be published.'), false);
     }).catch((e) => { if (!e.cancelled) { B.near(btn, e.message, true); } });
   }
+  /** The item read again after a save, a publish or a move, so Publish (or Propose), Move and the state follow what the server now says. */
+  function refreshItem() {
+    return B.api('GET', '/items/' + B.id2path(itemId)).then((fresh) => {
+      if (M.dirty) { return; }
+      M.item = fresh; M.etag = fresh.etag || M.etag; buttons();
+    }).catch(() => { /* the save's own answer already drew the buttons */ });
+  }
+  M.refreshItem = refreshItem;
   function saveCopy() {
     const btn = q('[data-save-copy]').hidden ? q('[data-save]') : q('[data-save-copy]');
     return B.askWorkspace(btn, 'Save the copy', 'Save the copy into').then((to) => M.compose(true).then(() => B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items',

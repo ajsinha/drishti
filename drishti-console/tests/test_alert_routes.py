@@ -56,6 +56,19 @@ def test_saving_builds_the_servers_body_from_the_form(client, backend):
     assert a["delivery"] == {"inbox": True, "email": False, "bridge": False, "webhooks": [], "sms": False} and a["enabled"] is True
 
 
+def test_one_cell_sends_no_reduce(client, backend):
+    """The cell chooser's blank choice (a card, a KPI, or the screen's filters leave one row) is one cell: no ``reduce`` is sent, for a visual or a model."""
+    backend.alerts_kept.clear()
+    client.post("/alerts/new", content=_form(name="Card", reduce=""), headers=FORM)
+    assert "reduce" not in backend.alerts_kept["Card"]["source"]
+    client.post("/alerts/new", content=_form(name="Mod", source_type="model", model_ref="cockpit@1", model_query=json.dumps({"select": {"measures": ["MTM"]}}), model_reduce=""), headers=FORM)
+    assert "reduce" not in backend.alerts_kept["Mod"]["source"]
+    client.post("/alerts/new", content=_form(name="Mod2", source_type="model", model_ref="cockpit@1", model_query=json.dumps({"select": {"measures": ["MTM"]}}), model_reduce="sum"), headers=FORM)
+    assert backend.alerts_kept["Mod2"]["source"]["reduce"] == "sum"
+    page = client.get("/alerts/new", params={"source": "visual", "report": "file:report:daily", "page": "main", "visual": "kpi"}).text
+    assert '<option value="" selected>one cell' in page
+
+
 def test_every_kind_of_source_condition_and_trigger_is_sent_in_the_servers_words(client, backend):
     backend.alerts_kept.clear()
     client.post("/alerts/new", content=_form(name="DS", source_type="dataset", dataset="file:dataset:trading", ds_measure="exposure", filters="desk eq FX, Rates\nccy ne USD",
