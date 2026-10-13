@@ -66,6 +66,14 @@ public class MqConfiguration {
         return catalog;
     }
 
+    /** The model layer's items answer the governance lineage and impact ({@code GET /items/{id}/lineage}, {@code /impact}) from the items as they are now. */
+    @Bean
+    public LayerLineage layerLineage(ModelCatalog catalog, BiService bi, com.ash.drishti.server.bi.BiGovernance gov) {
+        LayerLineage l = new LayerLineage(catalog, bi);
+        gov.layered(l);
+        return l;
+    }
+
     @Bean
     public MqService mqService(MqProperties props, com.ash.drishti.server.bi.plan.PlanProperties plan) {
         return new MqService(props, plan);

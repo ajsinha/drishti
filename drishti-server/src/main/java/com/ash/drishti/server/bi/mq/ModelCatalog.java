@@ -672,6 +672,11 @@ public final class ModelCatalog {
         return out;
     }
 
+    /** A dataset's text with its {@code extends} chain folded in (null when the chain does not resolve; the problems say why). */
+    ResolvedDataset chainOf(DatasetDef d, List<DatasetParser.Problem> problems) {
+        return chain(d, new LinkedHashSet<>(), problems);
+    }
+
     private ResolvedDataset chain(DatasetDef d, Set<String> visiting, List<DatasetParser.Problem> problems) {
         if (d.extendsRef() == null) {
             return ResolvedDataset.of(d);

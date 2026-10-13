@@ -208,35 +208,43 @@
     return h('div', { class: 'text-muted-d', 'data-source': true, title: s.masked ? 'Masked for you: only an administrator reads where the connector reads from' : '' },
       'reads from (' + s.plugin + '): ', keys.map(function (k, i) { return h('span', {}, (i ? ' · ' : '') + k + ' ', h('span', { class: 'mono', text: s.declared[k] })); }));
   }
-  /** A model's lineage (2.2): the datasets each alias reads and what they come from (`GET /lineage/<name@major>`), and what reads the model (its consumers). */
-  function modelLineage(sec, box) {
-    var body = String(item.body || ''), name = /^model:\s*([A-Za-z0-9_.-]+)/m.exec(body), ver = /^version:\s*["']?(\d+)/m.exec(body);
-    if (!name) { sec.hidden = true; return; }
-    var ref = name[1] + '@' + (ver ? ver[1] : '1');
-    Promise.all([B.api('GET', '/lineage/' + encodeURIComponent(ref)), B.api('GET', '/models/' + B.id2path(item.id) + '/consumers').catch(function () { return { consumers: [] }; })]).then(function (r) {
-      var l = r[0], c = r[1]; clear(box);
-      box.appendChild(h('h3', { text: 'Comes from' }));
-      box.appendChild(h('ul', { 'data-upstream': true }, Object.keys(l.datasets || {}).map(function (alias) {
-        var chain = l.datasets[alias] || [];
-        return h('li', {}, h('b', { class: 'mono', text: alias }), chain.map(function (x) {
-          return x.kind === 'pack-kind' ? h('span', {}, ' · kind ', h('span', { class: 'mono', text: x.name }), ' of pack ' + x.pack, ' · connector ', h('span', { class: 'mono', text: x.connector || 'whichever serves the kind' }))
-            : h('span', {}, ' · ' + x.kind + ' ', h('span', { class: 'mono', text: x.name }));
-        }));
-      })));
-      (l.problems || []).forEach(function (p) { box.appendChild(h('p', { class: 'bi-bad-line', text: (p.code ? p.code + ' ' : '') + (p.message || p.detail || '') })); });
+  /** The model layer's lineage (a model, a rachana 2 dataset, a report on a model), computed by the server from the items as they are now: each table's dataset at
+   *  the version read and its chain to the root, then what reads it (with what each report uses). */
+  function layerLineage(l, box) {
+    var chainOf = function (chain) {
+      return (chain || []).map(function (x) {
+        return x.kind === 'pack-kind' ? h('span', {}, ' · kind ', h('span', { class: 'mono', text: x.name }), ' of pack ' + x.pack, ' · connector ', h('span', { class: 'mono', text: x.connector || 'whichever serves the kind' }))
+          : h('span', {}, ' · ' + x.kind + ' ', h('span', { class: 'mono', text: x.name }));
+      });
+    };
+    if (l.model) { box.appendChild(h('p', { 'data-model': true }, 'Model ', h('span', { class: 'mono', text: l.model.name + ' ' + l.model.version }), l.model.ref ? ' (the report names ' + l.model.ref + ')' : '')); }
+    if (l.dataset) { box.appendChild(h('p', { 'data-dataset': true }, 'Dataset ', h('span', { class: 'mono', text: l.dataset.name + ' ' + l.dataset.version }))); }
+    box.appendChild(h('h3', { text: 'Comes from' }));
+    box.appendChild(h('ul', { 'data-upstream': true }, (l.upstream || []).map(function (u) {
+      return h('li', {}, h('b', { class: 'mono', text: u.table }), ' · dataset ', h('span', { class: 'mono', text: u.dataset + (u.version ? ' ' + u.version : '') }), chainOf(u.chain));
+    })));
+    (l.problems || []).forEach(function (p) { box.appendChild(h('p', { class: 'bi-bad-line', text: (p.code ? p.code + ' ' : '') + (p.message || '') })); });
+    if (l.uses) {
+      box.appendChild(h('h3', { text: 'Uses' }));
+      box.appendChild(h('p', { 'data-uses': true }, [['Fields', l.uses.fields], ['Measures', l.uses.measures]].filter(function (x) { return x[1] && x[1].length; })
+        .map(function (x) { return h('span', {}, h('b', { text: x[0] + ': ' }), h('span', { class: 'mono', text: x[1].join(', ') }), h('br')); })));
+    }
+    if (l.downstream) {
       box.appendChild(h('h3', { text: 'Read by' }));
-      var list = c.consumers || [];
-      if (!list.length && !c.hidden) { box.appendChild(h('p', { class: 'bi-empty', text: 'Nothing reads ' + ref + ' yet.' })); }
-      box.appendChild(h('ul', { 'data-downstream': true }, list.map(function (x) { return h('li', {}, link(x), ' ', h('small', { text: x.kind + ' · ' + (x.status || '') })); })));
-      if (c.hidden) { box.appendChild(h('p', { class: 'text-muted-d', text: c.hidden + ' more item' + (c.hidden === 1 ? '' : 's') + ' you cannot open.' })); }
-      sec.hidden = false;
-    }).catch(function () { sec.hidden = true; });
+      if (!l.downstream.length && !l.hidden) { box.appendChild(h('p', { class: 'bi-empty', text: 'Nothing reads it yet.' })); }
+      box.appendChild(h('ul', { 'data-downstream': true }, l.downstream.map(function (r) {
+        var u = r.uses ? r.uses.fields.concat(r.uses.measures) : [];
+        return h('li', {}, link(r), ' ', h('small', { text: r.kind + ' · ' + (r.status || '') + (r.as ? ' · as ' + r.as + (r.reads ? ', reads ' + r.reads : '') : '') }),
+          u.length ? h('span', { class: 'text-muted-d' }, ' uses ', h('span', { class: 'mono', text: u.join(', ') })) : null);
+      })));
+      if (l.hidden) { box.appendChild(h('p', { class: 'text-muted-d', text: l.hidden + ' more item' + (l.hidden === 1 ? '' : 's') + ' you cannot open.' })); }
+    }
   }
   function lineage() {
     var sec = q('[data-sec-lineage]'), box = q('[data-lineage]');
-    if (item && item.kind === 'model') { modelLineage(sec, box); return; }
     B.api('GET', path() + '/lineage').then(function (l) {
       clear(box);
+      if (l.layer) { layerLineage(l, box); sec.hidden = false; return; }
       if (l.note) { box.appendChild(h('p', { class: 'bi-empty', text: l.note })); }
       if (l.upstream && l.upstream.length) {
         box.appendChild(h('h3', { text: 'Comes from' }));

@@ -698,4 +698,48 @@ class ModelAcceptanceTest {
         call("POST", "/api/v1/bi/items/" + twin + "/move", reader("wes"), Map.of("workspace", desk)).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-9004"));
         call("POST", "/api/v1/bi/items/" + other + "/move", reader("wes"), Map.of("workspace", ws2)).andExpect(status().is2xxSuccessful());
     }
+
+    @Test @Order(14)
+    void lineageAndImactOfTheModelLayerAreComputedFromTheItemsAsTheyAreNow() throws Exception {
+        JsonNode model = ok(call("GET", "/api/v1/bi/items/file:model:acc-model/lineage", reader("wes"), null));
+        assertThat(model.path("layer").asBoolean()).isTrue();
+        assertThat(model.path("model").path("version").asText()).isEqualTo("1.0.0");
+        JsonNode up = model.path("upstream").get(0);
+        assertThat(up.path("table").asText()).isEqualTo("trades");
+        assertThat(up.path("dataset").asText() + " " + up.path("version").asText()).isEqualTo("acc-trade 1.0.0");
+        assertThat(up.path("chain").toString()).contains("acc-lake");
+        assertThat(model.path("downstream").findValuesAsText("id")).contains("file:dataset:desk-book");     // a dataset on the model's answer reads it
+        JsonNode ds = ok(call("GET", "/api/v1/bi/items/file:dataset:acc-trade/lineage", reader("wes"), null));
+        assertThat(ds.path("dataset").path("name").asText()).isEqualTo("acc-trade");
+        assertThat(ds.path("downstream").findValuesAsText("id")).contains("file:model:acc-model");
+        assertThat(ds.path("downstream").get(0).path("as").asText()).isEqualTo("trades");
+        JsonNode impact = ok(call("GET", "/api/v1/bi/items/file:dataset:acc-trade/impact?remove=notional", reader("wes"), null));
+        assertThat(impact.path("layer").asBoolean()).isTrue();
+        JsonNode on = impact.path("affected").get(0);
+        assertThat(on.path("id").asText()).isEqualTo("file:model:acc-model");
+        assertThat(on.path("measures").toString()).contains("Notional");
+        assertThat(on.path("consumers").findValuesAsText("target")).contains("trades.notional", "Notional");
+        // a notebook bound with dataset: mq:<model>, and a report pinned to the model's earlier major, are consumers too
+        String desk = null;
+        for (JsonNode w : ok(call("GET", "/api/v1/bi/workspaces", reader("wes"), null))) {
+            if ("Semver Desk".equals(w.path("name").asText())) {
+                desk = w.path("id").asText();
+            }
+        }
+        ok(call("POST", "/api/v1/bi/workspaces/" + desk + "/items", reader("wes"), Map.of("kind", "notebook", "title", "SV notebook",
+                "body", "rachana: 1\nnotebook: sv-notebook\ntitle: SV notebook\ndataset: mq:sv-model@1\nfields: [trades.desk]\ncells: []\n")));
+        ok(call("POST", "/api/v1/bi/workspaces/" + desk + "/items", reader("wes"), Map.of("kind", "report", "title", "SV report",
+                "body", "rachana: 2\nreport: sv-report\nversion: 1\ntitle: SV report\nmodel: sv-model@1\npages:\n  - id: p\n    title: P\n    visuals:\n"
+                        + "      - { id: t, type: card, title: Trades, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n")));
+        String svModel = null;
+        for (JsonNode i : ok(call("GET", "/api/v1/bi/workspaces/" + desk + "/items", reader("wes"), null))) {
+            if ("model".equals(i.path("kind").asText()) && "SV model".equals(i.path("title").asText())) {
+                svModel = i.path("id").asText();
+            }
+        }
+        JsonNode used = ok(call("GET", "/api/v1/bi/models/" + svModel + "/consumers", reader("wes"), null));
+        assertThat(used.path("consumers").findValuesAsText("title")).contains("SV notebook", "SV report");
+        JsonNode svImpact = ok(call("GET", "/api/v1/bi/items/" + svModel + "/impact?remove=Trades", reader("wes"), null));
+        assertThat(svImpact.path("affected").get(0).path("consumers").findValuesAsText("title")).contains("SV report");
+    }
 }

@@ -381,13 +381,31 @@ public final class BiGovernance {
         return m;
     }
 
+    /** Lineage and impact of the model layer's items (a model, a {@code rachana: 2} dataset, a report on a model): null for an item it does not answer. */
+    public interface Layered {
+        Map<String, Object> lineage(Principal p, BiStore.Item i);
+
+        Map<String, Object> impact(Principal p, BiStore.Item i, List<String> remove);
+    }
+
+    private volatile Layered layered;
+
+    /** Set once by the model layer: its items' lineage and impact are computed from the items as they are now, not by the version 1 analysis. */
+    public void layered(Layered l) {
+        this.layered = l;
+    }
+
     /** "What breaks if I remove field X" or, without {@code remove}, "what breaks if I publish this dataset's draft". */
     public Map<String, Object> impact(Principal p, String id, List<String> remove) {
         BiStore.Item i = bi.readableForGovernance(p, id);
+        Map<String, Object> layer = layered == null ? null : layered.impact(p, i, remove);
+        if (layer != null) {
+            return layer;
+        }
         if (!"dataset".equals(i.kind())) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("applies", false);
-            m.put("note", "Nothing in BI is built on a " + i.kind() + " yet; impact analysis answers for datasets (what their reports use).");
+            m.put("note", "Impact analysis answers for datasets and models (what reads them); nothing in BI is built on a " + i.kind() + ".");
             return m;
         }
         Map<String, Object> m = new LinkedHashMap<>(impactMap(p, i, impactOf(i, remove)));
@@ -515,6 +533,10 @@ public final class BiGovernance {
     /** Where an item comes from and what depends on it: a dataset's pack kinds and connectors and the reports that read it; a report's dataset, fields and measures. */
     public Map<String, Object> lineage(Principal p, String id) {
         BiStore.Item i = bi.readableForGovernance(p, id);
+        Map<String, Object> layer = layered == null ? null : layered.lineage(p, i);
+        if (layer != null) {
+            return layer;
+        }
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("item", itemRef(p, i));
         if ("dataset".equals(i.kind())) {
@@ -567,7 +589,7 @@ public final class BiGovernance {
                 m.put("upstream", ds == null ? List.of() : tables(p, ds, tableNames.isEmpty() ? null : tableNames));
             }
         } else {
-            m.put("note", "boards and notebooks are not built yet, so they have no lineage");
+            m.put("note", "a " + i.kind() + " reads its reports or models; open those for their lineage");
         }
         return m;
     }
