@@ -184,6 +184,50 @@ def test_the_model_designer_writes_expressions_field_properties_and_perspectives
     page.context.close()
 
 
+def test_the_editor_offers_functions_and_keywords_and_fixes_what_the_server_finds(browser):
+    page = sign_in(browser, "wes")
+    new_model(page, "Editor model")
+    page.click('[data-tab="measures"]')
+    page.select_option("[data-nm-alias]", "trade")
+    page.select_option("[data-nm-column]", "mtm")
+    page.click("[data-nm-add]")
+    expect(page.locator('[data-measure="Sum of mtm"]')).to_be_visible(timeout=15000)
+    page.click("[data-save]")                                                                   # the server checks names against the saved draft
+    expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
+    page.click("[data-nf] summary")
+    ed = page.locator("[data-nf-expr]")
+    # a function from the server's catalogue, then its card and its keyword arguments
+    ed.click()
+    ed.type("su")
+    expect(page.locator('[data-xe-opt="sum"]')).to_be_visible(timeout=10000)
+    page.click('[data-xe-opt="sum"]')
+    expect(page.locator('[data-xe-card="sum"]')).to_contain_text("sum(x, where=None)", timeout=5000)
+    ed.type("trade.mtm, wh")
+    expect(page.locator('[data-xe-opt="where="]')).to_be_visible(timeout=5000)
+    page.click('[data-xe-opt="where="]')
+    ed.type("trade.status == 'Live')")
+    assert ed.input_value() == "sum(trade.mtm, where=trade.status == 'Live')"
+    expect(page.locator("[data-xe-ok]")).to_be_visible(timeout=10000)                          # the server's check: clean
+    page.screenshot(path=SHOTS + "/expr-editor-keyword.png") if SHOTS else None
+    # a bare column in a measure: the server says wrap it, and the fix is a button
+    ed.fill("trade.mtm * 2")
+    expect(page.locator('[data-xe-problem="DRS-9127"]')).to_be_visible(timeout=10000)
+    page.screenshot(path=SHOTS + "/expr-editor-problem.png") if SHOTS else None
+    page.locator('[data-xe-problem="DRS-9127"] [data-xe-fix]').click()
+    assert ed.input_value() == "sum(trade.mtm) * 2", ed.input_value()
+    # the old syntax: the converter's text is the fix
+    ed.fill("[Sum of mtm] * 2")
+    expect(page.locator('[data-xe-problem="DRS-9100"]')).to_be_visible(timeout=10000)
+    page.locator('[data-xe-problem="DRS-9100"] [data-xe-fix]').click()
+    assert ed.input_value() == "measure('Sum of mtm') * 2", ed.input_value()
+    # Try it: the server's answer on the saved draft, by a suggested field
+    page.click("[data-nf] [data-xe-try]")
+    expect(page.locator("[data-nf] [data-xe-tried]")).to_be_visible(timeout=15000)
+    page.screenshot(path=SHOTS + "/expr-editor-try.png") if SHOTS else None
+    clean(page)
+    page.context.close()
+
+
 def test_a_save_on_a_published_model_makes_a_draft_and_publish_follows(browser):
     page = sign_in(browser, "wes")
     new_model(page, "Contract model")

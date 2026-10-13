@@ -136,6 +136,8 @@
           measureList().filter((m) => m.name.toLowerCase().indexOf(w) === 0).slice(0, 12).forEach((m) => out.push({ kind: 'measure', label: m.name, detail: 'measure(\'' + m.name + '\')', insert: 'measure(\'' + m.name.replace(/'/g, '\\\'') + '\')', from: c.start }));
         }
       }
+      // a capital first letter is a measure's name more often than a function's (functions are lower case): the measures come first then
+      if (/^[A-Z]/.test(c.word)) { out.sort((a, b) => (a.kind === 'measure' ? 0 : 1) - (b.kind === 'measure' ? 0 : 1)); }
       return { c, out: out.slice(0, 60) };
     }
     const ICON = { field: 'fonts', measure: 'calculator', function: 'braces', keyword: 'at', word: 'type' };
@@ -224,11 +226,12 @@
     function fixed(r, p) {
       const text = input.value.trim(), fix = typeof p.fix === 'string' ? p.fix : '', at = p.at || {};
       if (r && r.converted && (p.code === 'DRS-9100' || r.syntax === 'legacy')) { return r.converted; }
-      const whole = /^write:\s*(.+)$/.exec(fix);
-      if (whole && (!at.end || (at.start === 0 && at.end >= text.trim().length))) { return whole[1].trim(); }
-      const frag = /`([^`]+)`/.exec(fix);
-      if (frag && at.end > at.start && at.end <= text.length) { return text.slice(0, at.start) + frag[1] + text.slice(at.end); }
-      return '';
+      // "write: X", "wrap it: X" (or X in backticks): X replaces the problem's span (at.start..at.end), or the whole expression when the span is all of it
+      const said = /`([^`]+)`/.exec(fix) || /^[A-Za-z][A-Za-z ]{0,20}:\s*(.+)$/.exec(fix);
+      if (!said) { return ''; }
+      const frag = said[1].trim();
+      if (!at.end || (at.start === 0 && at.end >= text.length)) { return frag; }
+      return at.end > at.start && at.end <= text.length ? text.slice(0, at.start) + frag + text.slice(at.end) : '';
     }
     function drawProblems(r) {
       B.clear(probs);
