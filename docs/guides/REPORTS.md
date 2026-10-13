@@ -854,7 +854,12 @@ FROM   trade
 GROUP  BY trade.desk
 ```
 
-![The query panel with SQL chosen: the statement above and Run as SQL](img/bi-languages/query-panel-sql.jpg)
+**Run as SQL** answered *3 rows from the server in 6.9 ms. Plan p_c1e3fa03bc: the same plan as the visual's query.* The same holds outside the
+designer: on that model, the model query `{select: {fields: [trade.desk], measures: [Sum of mtm]}}` and the statement
+`SELECT trade.desk, MEASURE('Sum of mtm') AS "Sum of mtm" FROM trade GROUP BY trade.desk` answer the same rows with the same `meta.plan` (a browser test
+checks it).
+
+![The query panel with SQL chosen: the statement above, Run as SQL, and the line 3 rows from the server ... the same plan as the visual's query](img/bi-languages/query-panel-sql.jpg)
 
 **Expressions are DEL v2.** Every formula the designer writes uses the Python-like syntax ([EXPRESSIONS.md](EXPRESSIONS.md)); a report saved before
 2.2.0 with the older syntax still reads, with a `DRS-9100` warning, until the end of wave A.

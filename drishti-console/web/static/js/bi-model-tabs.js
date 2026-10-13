@@ -44,7 +44,7 @@
     kept.forEach((k) => {
       const el = pane.querySelector('[data-keep] [' + k.key + ']');
       if (!el) { return; }
-      if (el.type === 'checkbox') { el.checked = k.value; } else if (el.value !== k.value) { el.value = k.value; if (el.tagName === 'SELECT') { el.dispatchEvent(new Event('change')); } }
+      if (el.type === 'checkbox') { el.checked = k.value; } else if (el.value !== k.value) { el.value = k.value; if (el.tagName === 'SELECT') { el.dispatchEvent(new Event('change')); } if (el.drishtiExpr) { el.drishtiExpr.refresh(); } }
       if (k.focus) { el.focus(); }
     });
   }

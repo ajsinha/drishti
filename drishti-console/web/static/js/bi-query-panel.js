@@ -142,9 +142,11 @@
     const box = h('details', { class: 'bi-md-query', 'data-visual-query': '' }, h('summary', { text: 'Query of the selected visual' }),
       h('p', { class: 'text-muted-d bi-small-note', text: 'One question, two ways to write it: the server compiles both to the same plan and answers them as you.' }), views, pre, run, out);
     host.appendChild(box);
+    let shown = null;
     function draw() {
       const mq = opts.current();
-      B.clear(out);
+      const sig = JSON.stringify(mq) + view;
+      if (sig !== shown) { B.clear(out); shown = sig; }                     // the last run's answer stays while the question is the same
       run.hidden = view !== 'sql' || !mq;
       if (!mq) { pre.textContent = 'Choose a visual: its query (what the server is asked, as you) shows here.'; return; }
       pre.textContent = view === 'mq' ? B.mq.yaml(mq) : B.mq.sql(mq, opts.fields());

@@ -40,7 +40,7 @@
   function draw(kind) {
     var host = clear(q('[data-cells=' + kind + ']', root));
     X.cells[kind].forEach(function (cell, i) {
-      var area = h('textarea', { class: 'studio-in mono bx-code', rows: kind === 'sql' ? 3 : 6, spellcheck: 'false', 'aria-label': kind.toUpperCase() + ' cell ' + (i + 1), maxlength: 65536 });
+      var area = h('textarea', { class: 'studio-in mono bx-code', rows: kind === 'sql' ? Math.min(10, Math.max(3, String(cell.source || '').split('\n').length)) : 6, spellcheck: 'false', 'aria-label': kind.toUpperCase() + ' cell ' + (i + 1), maxlength: 65536 });
       area.value = cell.source || '';
       area.addEventListener('input', function () { cell.source = area.value; });
       var out = h('div', { class: 'bx-out', 'data-out': '', role: 'region', 'aria-label': 'Output of cell ' + (i + 1), 'aria-live': 'polite' });

@@ -287,7 +287,7 @@
     }
     drawChips();
     if (input.value.trim()) { validate(); }
-    const api = { input, wrap, validate: () => validate(true), last: () => lastChecked, refresh: () => { drawChips(); }, close };
+    const api = { input, wrap, validate: () => validate(true), last: () => lastChecked, refresh: () => { drawChips(); validate(); }, close };
     input.drishtiExpr = api;
     return api;
   };

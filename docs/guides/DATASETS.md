@@ -952,15 +952,26 @@ drishti.py bi expr validate "notional / 1000000" --scope row --model dataset:pac
 ```
 
 and save the YAML as a draft with the API (`POST /api/v1/bi/workspaces/<id>/items` with `{kind: dataset, title, body}`) or put the file under
-`config/bi/datasets/`. An **SQL view** over a model is a reviewed Drishti SQL statement whose answer is the table:
+`config/bi/datasets/`.
+
+**An SQL view over a model** is a reviewed Drishti SQL statement whose answer is the table ([SQL.md](SQL.md)): choose the model, write the statement,
+**Check the SQL** (the server says what it answers, or what is wrong with the fix), **Preview** (its first rows, as you), **Save**:
+
+![The source step with An SQL view over a model chosen: the model SQL model, the statement, and The SQL checks: desk (string), mtm (decimal)](img/bi-languages/wizard-sql-view.jpg)
+
+![The preview: 3 rows, as you; Bonds and securitised -75,000, Equity derivatives 425,000, G10 and EM FX -575,000](img/bi-languages/wizard-sql-preview.jpg)
+
+What it wrote (captured):
 
 ```yaml
 rachana: 2
 dataset: desk-mtm
 version: 1.0.0
 title: Desk MTM
-source: {sql: "SELECT desk.name AS desk, MEASURE('Sum of mtm') AS mtm FROM trade JOIN desk GROUP BY desk.name", model: trades-and-desks@1}
+source: {sql: 'SELECT desk.name AS desk, MEASURE(''Sum of mtm'') AS mtm FROM trade JOIN desk GROUP BY desk.name', model: sql-model@1}
 ```
+
+The same statement from the command line, as you: `drishti.py bi sql "SELECT desk.name AS desk, MEASURE('Sum of mtm') AS mtm FROM trade JOIN desk GROUP BY desk.name" --model sql-model@1`.
 
 The console calls: `POST /bi/model-api/dataset-yaml` (the document to YAML and the server's Check, `POST /api/v1/bi/models/validate`),
 `POST /bi/api/expr/validate` (each formula, with `model: dataset:<base>` and `alias`), `POST /bi/api/sql/validate` (the SQL view), and for the preview the

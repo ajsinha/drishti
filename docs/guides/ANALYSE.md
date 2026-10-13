@@ -99,18 +99,21 @@ rows: the two give the same table (a Chromium test compares them). The line unde
 the cell's engine choice says *Server: Drishti SQL over the model*, and the statement is **Drishti SQL over the model the extract reads** (a model, or a
 dataset's implicit model), not over the extract. Its tables are the model's aliases, a measure is `MEASURE('name')`, `JOIN` needs no `ON` (the model's
 relationships are used), and the server answers **as you**, with your row rules and masks, through the same plan as the model query it equals. A new
-cell starts with a statement written from the model (a field you ticked and the model's first measure), for example:
+cell starts with a statement written from the model (the first text field you ticked and the model's first measure). Captured for an extract of the
+model *SQL model* (trades and desks, one measure *Sum of mtm*):
 
 ```sql
-SELECT desks.name,
-       MEASURE('MTM') AS MTM
-FROM   trades
-JOIN   desks
-GROUP  BY desks.name
+SELECT trade.book,
+       MEASURE('Sum of mtm') AS "Sum of mtm"
+FROM   trade
+GROUP  BY trade.book
 LIMIT  20
 ```
 
-The cell's footer says *Drishti SQL, run by the server over trading-risk@1 as you*, with the plan and the masked columns. The console sends the cell to
+The cell's footer says *3 rows in 16 ms · Drishti SQL, run by the server over sql-model@1 as you · plan p_a02f4d0f6d*, with the masked columns when
+there are any:
+
+![A SQL cell: the statement above, Run, the engine Server: Drishti SQL over the model, and three books with their Sum of mtm](img/bi-languages/analyse-dsql-cell.jpg) The console sends the cell to
 `POST /bi/explore/dsql` (`{extract, sql}`), which asks the server's `POST /api/v1/bi/sql` with the model and the cell's row limit
 (`bi.explore.sql_max_rows`, one more to say when it was cut); it never reads the SQL itself. A version 1 dataset has no model: its cells run over the
 extract, as below. **Over the extract** stays selectable in each cell until wave B, and a statement that reads the table `extract` (an older notebook)
