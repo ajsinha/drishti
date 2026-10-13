@@ -22,6 +22,8 @@ model designer; the Query panel's MQ and SQL views; a save on a published model 
 Skipped when Playwright, Chromium or the built server jar is missing, or a scratch port is in use. Never run with pytest -n (the ports are fixed)."""
 from __future__ import annotations
 
+import os
+
 import pytest
 
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
@@ -33,6 +35,7 @@ from bi_stack import listening  # noqa: E402
 w1.SERVER_PORT, w1.CONSOLE_PORT = 18912, 17912
 w1.SERVER, w1.CONSOLE_URL = f"http://127.0.0.1:{w1.SERVER_PORT}", f"http://127.0.0.1:{w1.CONSOLE_PORT}"
 CONSOLE_URL = w1.CONSOLE_URL
+SHOTS = os.environ.get("DRISHTI_SHOTS", "")                       # a folder: the documentation's pictures are taken there too (docs/guides/EXPRESSIONS.md)
 sign_in, clean, fetch = w1.sign_in, w1.clean, w1.fetch
 
 
@@ -115,6 +118,99 @@ def test_the_dataset_wizard_makes_a_derived_dataset_without_yaml(browser):
     assert "book" not in text.split("where:")[0]                                               # the unticked column is not in the subset
     page.click("[data-save]")
     expect(page.locator("[data-after-open]")).to_be_visible(timeout=20000)
+    clean(page)
+    page.context.close()
+
+
+def new_model(page, title):
+    """A shared workspace (a private one cannot publish) and a model over trades and desks in it; the designer opened on it."""
+    ws = fetch(page, "POST", "/bi/api/workspaces", {"name": title + " desk", "description": ""})
+    assert ws["status"] in (200, 201), ws
+    made = fetch(page, "POST", "/bi/model-api/new", {"title": title, "workspace": ws["body"]["id"], "datasets": ["pack.trading.trade", "pack.banking-core.desk"]})
+    assert made["status"] == 200, made
+    page.goto(CONSOLE_URL + made["body"]["href"])
+    expect(page.locator('[data-md-root][data-ready="yes"]')).to_have_count(1, timeout=30000)
+    page.locator('[data-suggestion="trade.desk->desk.id"] [data-accept]').click()
+    expect(page.locator('[data-rel="trade.desk → desk.id"]')).to_be_visible(timeout=15000)
+    return made["body"]["id"]
+
+
+def test_the_model_designer_writes_expressions_field_properties_and_perspectives(browser):
+    page = sign_in(browser, "wes")
+    new_model(page, "Languages model")
+    page.click('[data-tab="measures"]')
+    page.select_option("[data-nm-alias]", "trade")
+    page.select_option("[data-nm-column]", "mtm")
+    page.click("[data-nm-add]")
+    expect(page.locator('[data-measure="Sum of mtm"]')).to_be_visible(timeout=15000)
+    # the ExpressionEditor: a field, then a measure written as measure('…'), then the chips
+    page.click("[data-nf] summary")
+    page.fill("[data-nf-name]", "MTM per trade")
+    ed = page.locator("[data-nf-expr]")
+    ed.click()
+    ed.type("Sum")
+    expect(page.locator('[data-xe-opt="Sum of mtm"]')).to_be_visible(timeout=5000)
+    page.keyboard.press("Enter")
+    assert ed.input_value() == "measure('Sum of mtm')"
+    ed.type(" / count(trade.tra")
+    expect(page.locator('[data-xe-opt="trade.tradeId"]')).to_be_visible(timeout=5000)
+    page.click('[data-xe-opt="trade.tradeId"]')
+    ed.type(")")
+    assert ed.input_value() == "measure('Sum of mtm') / count(trade.tradeId)"
+    expect(page.locator('[data-xe-chip="Sum of mtm"]')).to_be_visible()
+    page.screenshot(path=SHOTS + "/expr-editor-measure.png") if SHOTS else None
+    page.click("[data-nf-add]")
+    expect(page.locator('[data-measure="MTM per trade"]')).to_be_visible(timeout=15000)
+    # field properties and a perspective
+    page.click('[data-tab="fields"]')
+    row = page.locator('[data-field-row="trade.mtm"]')
+    row.locator('[data-fp="description"]').fill("Mark to market, in the trade's currency")
+    row.locator('[data-fp="description"]').press("Tab")
+    row.locator('[data-fp="folder"]').fill("Risk")
+    row.locator('[data-fp="folder"]').press("Tab")
+    page.locator('[data-field-row="trade.book"] [data-fp="hidden"]').check()
+    page.fill("[data-persp-new]", "Desk view")
+    page.click("[data-persp-add]")
+    expect(page.locator('[data-perspective="desk-view"]')).to_be_visible(timeout=15000)
+    page.locator('[data-persp-pick="desk-view:trade.desk"]').check()
+    page.locator('[data-persp-pick="desk-view:Sum of mtm"]').check()
+    page.screenshot(path=SHOTS + "/model-fields-tab.png", full_page=True) if SHOTS else None
+    page.wait_for_function("() => window.drishtiModel.yaml.indexOf('measures: [Sum of mtm]') >= 0", timeout=10000)          # the YAML follows each edit once Check has run
+    text = w1.yaml_tab(page)
+    for line in ("trade.mtm: {description:", "folder: Risk", "trade.book: {hidden: true}", "desk-view: {title: Desk view, fields: [trade.desk], measures: [Sum of mtm]}",
+                 "MTM per trade: {expr: measure('Sum of mtm') / count(trade.tradeId)}"):
+        assert line in text, (line, text)
+    clean(page)
+    page.context.close()
+
+
+def test_a_save_on_a_published_model_makes_a_draft_and_publish_follows(browser):
+    page = sign_in(browser, "wes")
+    new_model(page, "Contract model")
+    page.click('[data-tab="measures"]')
+    page.select_option("[data-nm-alias]", "trade")
+    page.select_option("[data-nm-column]", "mtm")
+    page.click("[data-nm-add]")
+    expect(page.locator('[data-measure="Sum of mtm"]')).to_be_visible(timeout=15000)
+    page.click("[data-save]")
+    expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
+    page.click("[data-publish]")
+    expect(page.locator("[data-state]")).to_have_text("Published", timeout=20000)
+    # change what the measure computes: the save makes a draft beside the published version; Publish is offered again
+    expr = page.locator('[data-m-expr="Sum of mtm"]')
+    expr.fill("sum(trade.pnl1d)")
+    expr.press("Enter")
+    expect(page.locator("[data-state]")).to_have_text("Unsaved changes", timeout=15000)
+    page.click("[data-save]")
+    expect(page.locator("[data-state]")).to_have_text("Draft changes (v1 published)", timeout=15000)
+    expect(page.locator("[data-publish]")).to_be_visible()
+    expect(page.locator("[data-publish]")).to_be_enabled()
+    # the contract tab names the breaking change and proposes the major version
+    page.click('[data-tab="contract"]')
+    expect(page.locator('[data-change-level="major"]').first).to_contain_text("changes what Sum of mtm computes", timeout=15000)
+    page.click('[data-contract-use="2.0.0"]')
+    expect(page.locator("[data-version]")).to_have_text("v2.0.0", timeout=15000)
+    page.screenshot(path=SHOTS + "/model-contract-diff.png", full_page=True) if SHOTS else None
     clean(page)
     page.context.close()
 

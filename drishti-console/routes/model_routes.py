@@ -307,6 +307,36 @@ async def new_report(request: Request):
     return _ok({"id": it["id"], "href": "/bi/design/" + it["id"]})
 
 
+@router.post("/bi/model-api/contract")
+async def contract(request: Request):
+    """``{id, doc}``: what the draft ``doc`` changes against the model item's published version, each change with the semver level it needs, the version
+    to propose, and who is affected (the consumers of the published major). ``published`` is false for a model never published (the first publish sets
+    the contract). When the server's Check already says it (``check.contract``), that answer is used as it is."""
+    body = await json_body(request)
+    iid, doc = str(body.get("id") or ""), body.get("doc")
+    if not iid or not isinstance(doc, dict):
+        return _refuse("send {id: <model item id>, doc: <the model>}")
+    try:
+        item = await _bi(request, "GET", "/items/" + quote(iid, safe=":"))
+        n = int(item.get("publishedVersion") or 0)
+        if not n:
+            return _ok({"published": False, "changes": [], "bump": "none", "consumers": [], "known": False})
+        old = ml.load((await _bi(request, "GET", f"/items/{quote(iid, safe=':')}/versions/{n}")).get("body") or "")
+    except BackendError as e:
+        return _problem(e)
+    except ml.LayerError as e:
+        return _refuse(str(e))
+    out = ml.contract_diff(old, doc)
+    ref = f"{old.get('model') or doc.get('model')}@{str(old.get('version') or '1').split('.')[0]}"
+    try:
+        got = await _bi(request, "GET", "/models/" + quote(ref, safe="") + "/consumers")
+        used, known = got.get("consumers") if isinstance(got, dict) else got, True
+    except BackendError:
+        used, known = [], False
+    return _ok({"published": True, "publishedVersion": n, "ref": ref, **out, "known": known,
+                "consumers": [{"kind": str(c.get("kind") or "item"), "id": str(c.get("id") or ""), "title": str(c.get("title") or c.get("id") or "")} for c in used or [] if isinstance(c, dict)]})
+
+
 @router.post("/bi/model-api/report-measures")
 async def report_measures(request: Request):
     """``{yaml}`` of a report to ``{measures}``: its own measures (``measures:``, spec 4.2) as ``{name: {expr, format?, description?}}``, which the designer and the

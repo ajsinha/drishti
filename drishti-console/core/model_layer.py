@@ -31,7 +31,7 @@ SEMVER = re.compile(r"\d+\.\d+\.\d+")
 MEASURE_ROLES = ("amount", "quantity", "ratio")
 AGG_WORD = {"sum": "Sum of", "avg": "Average of", "min": "Minimum of", "max": "Maximum of", "count": "Count of", "distinct": "Distinct"}
 TOP_ORDER = ("rachana", "model", "version", "id", "title", "description", "owner", "tags", "endorsement", "audience", "sample", "lifecycle", "replaced-by",
-             "implicit-from", "datasets", "relationships", "measures", "hierarchies", "security", "contract", "rollups", "tests", "golden", "ai", "calc-groups",
+             "implicit-from", "datasets", "relationships", "measures", "fields", "hierarchies", "perspectives", "security", "contract", "rollups", "tests", "golden", "ai", "calc-groups",
              "parameters", "calendars", "layout")
 DATASET_ORDER = ("rachana", "dataset", "version", "id", "title", "description", "owner", "tags", "endorsement", "extends", "source", "columns", "where", "grain",
                  "derive", "group", "time", "refresh", "security", "tests", "ai", "rollups", "layout")          # BI_DESIGN.md 3.1: the derivation keys in the order they apply
@@ -388,6 +388,93 @@ def fields_shape(described: dict, ref: str) -> dict:
 def report_body(slug: str, title: str, ref: str) -> str:
     """A new report bound to one model (spec 4.1): ``model:`` names it; a visual's query is a model query against it."""
     return yaml.safe_dump({"report": slug, "title": title, "model": ref, "pages": [{"id": "main", "title": "Main", "visuals": []}]}, sort_keys=False, allow_unicode=True)
+
+
+# ---- the contract: what changed since the published version, and the version it needs ---------------------------------
+
+_LEVEL = {"major": 3, "minor": 2, "patch": 1, "none": 0}
+
+
+def _measure_map(doc: dict) -> dict:
+    return {str(k): (v if isinstance(v, dict) else {"expr": str(v)}) for k, v in (doc.get("measures") or {}).items()}
+
+
+def _hidden(doc: dict) -> set:
+    """The fields and measures a model hides from every consumer (``fields.<f>.hidden``, ``measures.<m>.hidden``)."""
+    out = {str(f) for f, p in (doc.get("fields") or {}).items() if isinstance(p, dict) and p.get("hidden")}
+    return out | {str(m) for m, p in _measure_map(doc).items() if p.get("hidden")}
+
+
+def contract_diff(old: dict, new: dict) -> dict:
+    """What a draft changes against the published model (BI_DESIGN.md 12.2, the contract diff), each change with the semver level it needs: a removed or
+    redefined measure, dataset, relationship or exposed field breaks consumers (major); an added one is minor; descriptions, formats, folders and display
+    names are a patch. Security changes need no version (they are audited at publish). ``bump`` is the level, ``next`` the version it proposes, ``ok``
+    whether the draft's own version is already there. The server's publish decides (``DRS-9126``); this is the designer's advance notice."""
+    changes: list[dict] = []
+
+    def add(level, what, text):
+        changes.append({"level": level, "what": what, "text": text})
+
+    om, nm = _measure_map(old), _measure_map(new)
+    for name in sorted(set(om) - set(nm)):
+        add("major", "measure", f"removes the measure {name}")
+    for name in sorted(set(nm) - set(om)):
+        add("minor", "measure", f"adds the measure {name}")
+    for name in sorted(set(om) & set(nm)):
+        a, b = om[name], nm[name]
+        if (a.get("expr") or a.get("python")) != (b.get("expr") or b.get("python")):
+            add("major", "measure", f"changes what {name} computes ({a.get('expr') or a.get('python')} → {b.get('expr') or b.get('python')})")
+        for k in ("format", "description", "folder", "display"):
+            if a.get(k) != b.get(k):
+                add("patch", "measure", f"changes the {k} of {name}")
+    od, nd = old.get("datasets") or {}, new.get("datasets") or {}
+    ref = lambda d: str((d or {}).get("dataset") if isinstance(d, dict) else d or "")  # noqa: E731
+    for alias in sorted(set(od) - set(nd)):
+        add("major", "dataset", f"removes the dataset {alias}")
+    for alias in sorted(set(nd) - set(od)):
+        add("minor", "dataset", f"adds the dataset {alias}")
+    for alias in sorted(set(od) & set(nd)):
+        if ref(od[alias]).split("@")[0] != ref(nd[alias]).split("@")[0] or ref(od[alias]).partition("@")[2] != ref(nd[alias]).partition("@")[2]:
+            add("major", "dataset", f"points {alias} at {ref(nd[alias])} (was {ref(od[alias])})")
+    rk = lambda r: (str(r.get("from")), str(r.get("to")))  # noqa: E731
+    orels = {rk(r): r for r in old.get("relationships") or [] if isinstance(r, dict)}
+    nrels = {rk(r): r for r in new.get("relationships") or [] if isinstance(r, dict)}
+    for k in sorted(set(orels) - set(nrels)):
+        add("major", "relationship", f"removes the relationship {k[0]} → {k[1]}")
+    for k in sorted(set(nrels) - set(orels)):
+        add("minor", "relationship", f"adds the relationship {k[0]} → {k[1]}")
+    for k in sorted(set(orels) & set(nrels)):
+        if (orels[k].get("active", True) is not False) != (nrels[k].get("active", True) is not False) or orels[k].get("cardinality") != nrels[k].get("cardinality"):
+            add("major", "relationship", f"changes how {k[0]} → {k[1]} filters")
+    for f in sorted(_hidden(new) - _hidden(old)):
+        add("major", "field", f"hides {f} from consumers")
+    for f in sorted(_hidden(old) - _hidden(new)):
+        add("minor", "field", f"shows {f} to consumers again")
+    of, nf = old.get("fields") or {}, new.get("fields") or {}
+    for f in sorted(set(of) | set(nf)):
+        a, b = of.get(f) or {}, nf.get(f) or {}
+        if any(a.get(k) != b.get(k) for k in ("display", "description", "format", "folder", "sort-by", "category", "summarise")):
+            add("patch", "field", f"changes the properties of {f}")
+    op, np_ = old.get("perspectives") or {}, new.get("perspectives") or {}
+    for p in sorted(set(op) - set(np_)):
+        add("major", "perspective", f"removes the perspective {p}")
+    for p in sorted(set(np_) - set(op)):
+        add("minor", "perspective", f"adds the perspective {p}")
+    for p in sorted(set(op) & set(np_)):
+        gone = set((op[p] or {}).get("fields") or []) - set((np_[p] or {}).get("fields") or []) | set((op[p] or {}).get("measures") or []) - set((np_[p] or {}).get("measures") or [])
+        if gone:
+            add("major", "perspective", f"takes {', '.join(sorted(gone))} out of the perspective {p}")
+    if (old.get("security") or {}) != (new.get("security") or {}):
+        add("none", "security", "changes the security (no version needed: audited at publish)")
+    for k in ("title", "description"):
+        if old.get(k) != new.get(k):
+            add("patch", "model", f"changes the model's {k}")
+    bump = max((c["level"] for c in changes), key=lambda x: _LEVEL[x], default="none")
+    base = str(old.get("version") or "1.0.0")
+    parts = [int(x) if x.isdigit() else 0 for x in (base.split(".") + ["0", "0"])[:3]]
+    nxt = {"major": [parts[0] + 1, 0, 0], "minor": [parts[0], parts[1] + 1, 0], "patch": [parts[0], parts[1], parts[2] + 1]}.get(bump, parts)
+    have = [int(x) if x.isdigit() else 0 for x in (str(new.get("version") or base).split(".") + ["0", "0"])[:3]]
+    return {"from": base, "changes": changes, "bump": bump, "next": ".".join(map(str, nxt)), "ok": have >= nxt, "version": ".".join(map(str, have))}
 
 
 def report_measures(body: str) -> dict:

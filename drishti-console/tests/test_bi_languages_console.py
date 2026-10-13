@@ -88,3 +88,61 @@ def test_the_wizard_page_has_every_step_and_the_sql_view():
     for step in ("root", "columns", "filter", "grain", "derive", "group", "preview", "save"):
         assert f'data-step="{step}"' in text
     assert 'data-src="sql"' in text and "bi-dataset-steps.js" in text and "bi-query-panel.js" in text and "data-dedup=\"latest\"" in text
+
+
+PUBLISHED = {"rachana": 2, "model": "trading-risk", "version": "1.2.0", "title": "Trading risk",
+             "datasets": {"trade": {"dataset": "pack.trading.trade@^1", "role": "fact"}, "desk": {"dataset": "pack.banking-core.desk@^1", "role": "dimension"}},
+             "relationships": [{"from": "trade.desk", "to": "desk.id"}],
+             "measures": {"MTM": {"expr": "sum(trade.mtm)", "format": "signed0"}, "Notional": {"expr": "sum(trade.notional)"}},
+             "fields": {"trade.mtm": {"description": "Mark to market"}}, "perspectives": {"desk-view": {"fields": ["trade.desk"], "measures": ["MTM", "Notional"]}}}
+
+
+def _with(**changes):
+    import copy
+    d = copy.deepcopy(PUBLISHED)
+    for k, v in changes.items():
+        d[k] = v
+    return d
+
+
+def test_the_contract_diff_names_each_change_and_the_version_it_needs():
+    same = ml.contract_diff(PUBLISHED, PUBLISHED)
+    assert same["changes"] == [] and same["bump"] == "none" and same["ok"]
+    added = ml.contract_diff(PUBLISHED, _with(measures={**PUBLISHED["measures"], "Trades": {"expr": "count(trade)"}}))
+    assert added["bump"] == "minor" and added["next"] == "1.3.0" and not added["ok"] and "adds the measure Trades" in added["changes"][0]["text"]
+    patch = ml.contract_diff(PUBLISHED, _with(fields={"trade.mtm": {"description": "Mark to market, in the trade's currency", "folder": "Risk"}}))
+    assert patch["bump"] == "patch" and patch["next"] == "1.2.1"
+    broken = ml.contract_diff(PUBLISHED, _with(measures={"MTM": {"expr": "sum(trade.pnl1d)"}}, version="2.0.0"))
+    levels = {c["text"].split(" ")[0] + " " + c["what"]: c["level"] for c in broken["changes"]}
+    assert broken["bump"] == "major" and broken["next"] == "2.0.0" and broken["ok"]
+    assert levels["removes measure"] == "major" and any(c["level"] == "major" and c["text"].startswith("changes what MTM computes") for c in broken["changes"])
+    hidden = ml.contract_diff(PUBLISHED, _with(fields={"trade.mtm": {"description": "Mark to market", "hidden": True}}))
+    assert hidden["bump"] == "major" and "hides trade.mtm from consumers" in [c["text"] for c in hidden["changes"]]
+    sec = ml.contract_diff(PUBLISHED, _with(security={"hidden-for": [{"roles": ["external"], "fields": ["trade.book"]}]}))
+    assert sec["bump"] == "none" and sec["changes"][0]["what"] == "security"
+
+
+def test_the_contract_route_compares_with_the_published_version():
+    client, backend = make()
+    body = ml.to_yaml(PUBLISHED)
+    backend.items["bi-m9"] = {"id": "bi-m9", "kind": "model", "publishedVersion": 3, "body": body}
+    orig = backend.bi
+
+    async def bi(method, path, ident, body=None, **params):
+        if path == "/items/bi-m9/versions/3":
+            return {"version": 3, "body": ml.to_yaml(PUBLISHED)}
+        if path.endswith("/consumers"):
+            return {"consumers": [{"kind": "report", "id": "bi-r1", "title": "Daily risk"}]}
+        return await orig(method, path, ident, body, **params)
+    backend.bi = bi
+    r = client.post("/bi/model-api/contract", json={"id": "bi-m9", "doc": _with(measures={"MTM": PUBLISHED["measures"]["MTM"]})}).json()
+    assert r["published"] and r["bump"] == "major" and r["ref"] == "trading-risk@1" and r["consumers"][0]["title"] == "Daily risk"
+    backend.items["bi-m8"] = {"id": "bi-m8", "kind": "model", "publishedVersion": 0, "body": body}
+    assert client.post("/bi/model-api/contract", json={"id": "bi-m8", "doc": PUBLISHED}).json()["published"] is False
+
+
+def test_field_properties_and_perspectives_are_written_one_line_each():
+    text = ml.to_yaml(PUBLISHED)
+    assert "fields:\n  trade.mtm: {description: Mark to market}\n" in text
+    assert "perspectives:\n  desk-view: {fields: [trade.desk], measures: [MTM, Notional]}\n" in text
+    assert text.index("measures:") < text.index("fields:") < text.index("perspectives:")
