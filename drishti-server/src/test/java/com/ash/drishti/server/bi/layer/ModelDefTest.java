@@ -314,5 +314,10 @@ class ModelDefTest {
         ModelDef renamed = ModelDefParser.parse(MODEL.replace("  Trades:   { id: m_trades", "  Trade count: { id: m_trades").replace("version: 1.0.0", "version: 1.1.0")
                 + listed.replace("measures: [MTM, Trades]", "measures: [MTM, Trade count]")).model();
         assertThat(Contracts.models(listedV1, renamed, data, data).refusal()).as("a rename under the same id is the same measure").isNull();
+        ModelDef retitled = ModelDefParser.parse((MODEL + listed).replace("title: Desk risk", "title: Desk risk (new title)")).model();
+        assertThat(Contracts.models(listedV1, retitled, data, data).refusal()).as("one version string, one content").contains("1.0.0 is published already").contains("1.0.1");
+        DatasetDef d1 = DatasetDefParser.parse(DESKS).dataset();
+        assertThat(Contracts.datasets(d1, DatasetDefParser.parse(DESKS.replace("  region: { type: string }", "  region: { type: string, description: The region }")).dataset())
+                .refusal()).contains("published already");
     }
 }

@@ -202,6 +202,10 @@ public final class Contracts {
         if (!breaking.isEmpty() && b.major() <= a.major()) {
             return "a breaking change needs a new major version (" + (a.major() + 1) + ".0.0, not " + b + "): " + String.join("; ", breaking);
         }
+        if (b.equals(a)) {                                                    // one version string, one content: every publish of a change carries a new version
+            return "version " + a + " is published already with other content: every change is published under a new version (" + a.major() + "." + a.minor() + "."
+                    + (a.patch() + 1) + " for words, formats or hidden fields, " + a.major() + "." + (a.minor() + 1) + ".0 for an addition, " + (a.major() + 1) + ".0.0 for a breaking change)";
+        }
         return null;
     }
 }
