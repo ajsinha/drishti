@@ -44,8 +44,9 @@
     kept.forEach((k) => {
       const el = pane.querySelector('[data-keep] [' + k.key + ']');
       if (!el) { return; }
-      if (el.type === 'checkbox') { el.checked = k.value; } else if (el.value !== k.value) { el.value = k.value; if (el.tagName === 'SELECT') { el.dispatchEvent(new Event('change')); } if (el.drishtiExpr) { el.drishtiExpr.refresh(); } }
-      if (k.focus) { el.focus(); }
+      if (el.type === 'checkbox') { el.checked = k.value; } else if (el.value !== k.value) { el.value = k.value; if (el.tagName === 'SELECT') { el.dispatchEvent(new Event('change')); } }
+      if (k.focus) { el.focus(); if (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && /^(text|search)$/.test(el.type))) { el.setSelectionRange(el.value.length, el.value.length); } }
+      if (el.drishtiExpr && k.value) { el.drishtiExpr.refresh(); }                    // chips, the check and, while typing, the list again
     });
   }
 

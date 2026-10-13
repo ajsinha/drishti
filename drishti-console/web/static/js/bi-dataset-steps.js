@@ -179,7 +179,7 @@
       const inp = q('[data-where]');
       inp.value = L.W.where;
       if (!whereEd) {
-        whereEd = B.exprEditor(inp, { scope: 'row', label: 'Keep the rows where', fields: colFields, measures: [], target, onCommit: (v) => { L.W.where = v; L.keep(); L.check('filter').catch(() => {}); } });
+        whereEd = B.exprEditor(inp, { checkAtStart: true, scope: 'row', label: 'Keep the rows where', fields: colFields, measures: [], target, onCommit: (v) => { L.W.where = v; L.keep(); L.check('filter').catch(() => {}); } });
         inp.addEventListener('input', () => { L.W.where = inp.value; L.keep(); });
       } else { whereEd.refresh(); }
     });
@@ -237,7 +237,7 @@
         } else {
           const ex = h('input', { class: 'studio-in mono', value: d.expr || '', 'data-derive-expr': i, placeholder: "notional * fx(currency, 'USD')" });
           how = h('div', { class: 'bi-frow' }, h('span', { text: 'Formula (row by row)' }), ex);
-          window.setTimeout(() => B.exprEditor(ex, { scope: 'row', label: 'Formula of ' + (d.name || 'the column'), fields: colFields, measures: [], target, onCommit: (v) => { d.expr = v; L.keep(); L.check('derive').catch(() => {}); } }), 0);
+          window.setTimeout(() => B.exprEditor(ex, { checkAtStart: true, scope: 'row', label: 'Formula of ' + (d.name || 'the column'), fields: colFields, measures: [], target, onCommit: (v) => { d.expr = v; L.keep(); L.check('derive').catch(() => {}); } }), 0);
           ex.addEventListener('input', () => { d.expr = ex.value; L.keep(); });
         }
         box.appendChild(h('fieldset', { class: 'bi-lw-derive', 'data-derive-row': d.name || String(i) }, h('legend', { text: (d.kind === 'python' ? 'Python column ' : 'Formula column ') + (d.name || i + 1) }),

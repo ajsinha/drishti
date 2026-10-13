@@ -286,8 +286,8 @@
       });
     }
     drawChips();
-    if (input.value.trim()) { validate(); }
-    const api = { input, wrap, validate: () => validate(true), last: () => lastChecked, refresh: () => { drawChips(); validate(); }, close };
+    if (input.value.trim() && opts.checkAtStart) { validate(); }            // a formula already written is checked by the item's own Check; the editor checks what you type
+    const api = { input, wrap, validate: () => validate(true), last: () => lastChecked, refresh: () => { drawChips(); validate(); if (document.activeElement === input) { open(false); } }, close };
     input.drishtiExpr = api;
     return api;
   };
