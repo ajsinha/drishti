@@ -80,7 +80,7 @@
     const W = L.W, out = B.clear(q('[data-sql-out]'));
     if (!W.sqlModel || !W.sql.trim()) { B.near(anchor, 'Choose the model and write the SQL.', true); return Promise.resolve(false); }
     return B.busy(anchor, () => B.api('POST', '/sql/validate', { sql: W.sql, model: W.sqlModel }).then((r) => {
-      W.sqlColumns = (r.columns || []).map((c) => ({ name: c.name || c, type: c.type || 'string' }));
+      W.sqlColumns = (r.columns || []).map((c) => ({ name: c.name || c, type: c.type || (c.kind === 'measure' ? 'decimal' : 'string') }));
       L.keep();
       if (r.valid === false || (r.problems || []).some((p) => (p.level || 'error') === 'error')) {
         (r.problems || []).forEach((p) => out.appendChild(h('span', { class: 'bi-bad', 'data-sql-problem': p.code || '', text: (p.code ? p.code + ' ' : '') + p.message + (p.fix ? ' ' + p.fix : '') + ' ' })));
@@ -291,7 +291,7 @@
   function table(host, columns, rows) {
     B.clear(host).appendChild(h('table', { class: 'tbl bi-tbl', 'data-plain': '', 'data-preview-table': '' }, h('caption', { class: 'visually-hidden', text: 'The first rows' }),
       h('thead', {}, h('tr', {}, columns.map((c) => h('th', { scope: 'col', text: c.name || c })))),
-      h('tbody', {}, rows.map((r) => h('tr', {}, r.map((v) => h('td', { text: v == null ? '—' : typeof v === 'number' ? B.fmt(v) : String(v) })))))));
+      h('tbody', {}, rows.slice(0, 20).map((r) => h('tr', {}, r.map((v) => h('td', { text: v == null ? '—' : typeof v === 'number' ? B.fmt(v) : String(v) })))))));
   }
   function preview(btn) {
     const W = L.W, meta = q('[data-preview-meta]'), host = q('[data-preview]');
