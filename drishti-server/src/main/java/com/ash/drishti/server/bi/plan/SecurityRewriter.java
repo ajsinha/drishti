@@ -55,7 +55,8 @@ public final class SecurityRewriter {
         PlanNode fact = null;
         List<PlanNode> others = new ArrayList<>();
         for (PlanNode s : f.scans()) {
-            if (s instanceof PlanNode.SecureScan sc && sc.alias().equals(a.fact())) {
+            List<PlanNode.SecureScan> under = PlanNode.scans(s);
+            if (under.size() == 1 && under.get(0).alias().equals(a.fact())) {
                 fact = s;
             } else {
                 others.add(s);
@@ -66,8 +67,10 @@ public final class SecurityRewriter {
         }
         List<PlanNode> kept = new ArrayList<>();
         for (PlanNode o : others) {
-            if (o instanceof PlanNode.SecureScan dim && restricts(flat, dim) && TableRules.reaches(flat, a.fact(), dim.alias())) {
-                fact = new PlanNode.SemiJoin(fact, dim, a.fact() + " -> " + dim.alias());
+            List<PlanNode.SecureScan> under = PlanNode.scans(o);
+            PlanNode.SecureScan dim = under.size() == 1 ? under.get(0) : null;
+            if (dim != null && restricts(flat, dim) && TableRules.reaches(flat, a.fact(), dim.alias())) {
+                fact = new PlanNode.SemiJoin(fact, o, a.fact() + " -> " + dim.alias());
             } else {
                 kept.add(o);
             }

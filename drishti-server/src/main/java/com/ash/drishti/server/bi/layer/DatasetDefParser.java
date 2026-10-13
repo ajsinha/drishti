@@ -48,6 +48,7 @@ public final class DatasetDefParser {
     }
 
     static final Set<String> TOP = Set.of("rachana", "expressions", "dataset", "version", "id", "source", "grain", "columns", "time", "refresh", "security", "ai", "tests", "extends",
+            "derive", "group",
             "where", "rollups", "layout", "title", "description", "owner", "tags", "endorsement", "endorsedBy", "audience", "sample", "generated");
     private static final Set<String> COLUMN_KEYS = Set.of("type", "path", "expr", "role", "meaning", "references", "of", "unit", "additive", "aggregate", "format", "id",
             "description", "title", "term", "means", "sign");
@@ -97,12 +98,24 @@ public final class DatasetDefParser {
             y.error("DRS-9105", "extends", "'" + extendsRef + "' is not a dataset reference (name, or name@version such as pack.trading.trade@1)");
         }
         DatasetDef.Source source = source(root.path("source"), extendsRef != null, y);
-        Map<String, DatasetDef.Col> columns = columns(root.path("columns"), y);
+        List<String> subset = List.of();
+        JsonNode colNode = root.path("columns");
+        if (colNode.isArray()) {                                                // columns: [a, b]: the base's columns kept
+            subset = y.strings(colNode, "columns", "DRS-9101");
+            if (extendsRef == null) {
+                y.error("DRS-9105", "columns", "a list of columns keeps some of the base's: it needs `extends:`; a dataset with its own source maps each column to its type");
+            }
+            colNode = com.fasterxml.jackson.databind.node.MissingNode.getInstance();
+        }
+        Map<String, DatasetDef.Col> columns = columns(colNode, y);
+        Map<String, DatasetDef.PyColumn> python = derive(root.path("derive"), columns, y);
         if (columns.isEmpty() && source != null && !DatasetDef.Source.PACK.equals(source.type()) && extendsRef == null) {
             y.error("DRS-9101", "columns", "a " + source.type() + " dataset declares its columns (its contract)");
         }
         checkColumns(columns, y);
         DatasetDef.Grain grain = grain(root.path("grain"), columns, source, extendsRef != null, y);
+        DatasetDef.Keep keep = keep(root.path("grain"), y);
+        DatasetDef.Group group = group(root.path("group"), extendsRef != null || source != null, y);
         DatasetDef.Time time = time(root.path("time"), source, y);
         DatasetDef.Refresh refresh = refresh(root.path("refresh"), y);
         DatasetDef.Security security = security(root.path("security"), name, columns, extendsRef != null, y);
@@ -121,9 +134,168 @@ public final class DatasetDefParser {
         root.path("rollups").forEach(rollups::add);
         DatasetDef.Generated gen = generated ? new DatasetDef.Generated(LayerYaml.text(root.path("generated"), "by", "pack"),
                 LayerYaml.text(root.path("generated"), "pack", ""), LayerYaml.text(root.path("generated"), "packVersion", "")) : null;
+        if ((keep != null || group != null) && extendsRef == null) {
+            y.error("DRS-9105", keep != null ? "grain.one-row-per" : "group", "one-row-per and group narrow the dataset this one `extends` (a dataset with its own source groups in it)");
+        }
+        if (group != null && columns.values().stream().anyMatch(c -> c.expr() != null && c.expr().contains("related("))) {
+            y.error("DRS-9101", "derive", "related() in a grouped dataset arrives in wave B: group by the referencing column, and relate in the model");
+        }
+        if (group != null) {
+            for (int i = 0; i < security.rows().size(); i++) {
+                Node n = expression(security.rows().get(i).where(), "security.rows[" + i + "].where", "DRS-9106", new LayerYaml());
+                if (n != null) {
+                    int at = i;
+                    Node.walk(n, x -> {
+                        if (x instanceof Node.Ref r && !group.by().contains(r.parts().get(r.parts().size() - 1)) && !group.by().contains(r.parts().get(0))) {
+                            y.error("DRS-9106", "security.rows[" + at + "].where", "a grouped dataset's rule names its group-by columns " + group.by() + ", not '" + r.text() + "'");
+                        }
+                    });
+                }
+            }
+            if (!rollups.isEmpty()) {
+                y.error("DRS-9101", "rollups", "a grouped dataset is already coarse: no rollups of its own");
+            }
+        }
+        if (keep != null && !rollups.isEmpty()) {
+            y.error("DRS-9101", "rollups", "a dataset that keeps one row per key has no rollups of its own (they would add the rows it drops)");
+        }
+        if ((keep != null || group != null || !python.isEmpty()) && time != null && "live".equals(time.mode())) {
+            y.error("DRS-9103", "time.mode", "de-duplicating, grouping or a Python column on a live dataset arrives in wave B (incremental maintenance): keep it a snapshot");
+        }
+        if (keep != null) {
+            grain = new DatasetDef.Grain(grain.says(), keep.keys(), grain.date());
+        }
+        if (group != null) {
+            grain = new DatasetDef.Grain(group.says() == null || group.says().isBlank() ? "One row per " + String.join(" and ", group.by()) : group.says(), group.by(), grain.date());
+        }
         return new DatasetDef(name, version, LayerYaml.text(root, "id", ""), LayerYaml.text(root, "title", name), LayerYaml.text(root, "description", ""),
                 LayerYaml.text(root, "owner", ""), root.path("sample").asBoolean(false), LayerYaml.text(root, "endorsement", "none"), gen, source, grain, columns, time,
-                refresh, security, extendsRef, where, root.has("ai") ? root.get("ai") : null, tests, rollups);
+                refresh, security, extendsRef, where, root.has("ai") ? root.get("ai") : null, tests, rollups, new DatasetDef.Derivation(subset, keep, python, group));
+    }
+
+    // ---- derivation (docs/architecture/BI_DESIGN.md section 3.1) -----------------------------------------------------
+
+    /** {@code derive:} each name to { expr, type, ... } (a row-scope DEL column, added to {@code columns}) or { python, inputs, type } (a Python column). */
+    private static Map<String, DatasetDef.PyColumn> derive(JsonNode n, Map<String, DatasetDef.Col> columns, LayerYaml y) {
+        Map<String, DatasetDef.PyColumn> python = new LinkedHashMap<>();
+        if (n.isMissingNode() || n.isNull()) {
+            return python;
+        }
+        if (!n.isObject()) {
+            y.error("DRS-9101", "derive", "`derive:` maps a new column's name to { expr, type } or { python, inputs, type }");
+            return python;
+        }
+        n.fields().forEachRemaining(e -> {
+            String name = e.getKey();
+            String path = "derive." + name;
+            JsonNode d = e.getValue();
+            if (!LayerYaml.ALIAS.matcher(name).matches() || DatasetDef.BUILT_IN.contains(name)) {
+                y.error("DRS-9101", path, "'" + name + "' is not a usable column name");
+                return;
+            }
+            if (columns.containsKey(name)) {
+                y.error("DRS-9101", path, "'" + name + "' is a column already: a derived column takes a new name");
+                return;
+            }
+            if (d.isTextual()) {
+                y.error("DRS-9101", path, "a derived column says its type: { expr: \"...\", type: decimal }");
+                return;
+            }
+            y.unknownKeys(d, Set.of("expr", "python", "inputs", "type", "role", "meaning", "unit", "format", "description", "title", "additive", "aggregate", "id"), "DRS-9101", path);
+            if (!d.has("type")) {
+                y.error("DRS-9101", path + ".type", "a derived column says its type (" + DatasetDef.TYPES + ")");
+            }
+            String type = LayerYaml.text(d, "type", "string");
+            if (d.has("python") == d.has("expr")) {
+                y.error("DRS-9101", path, "a derived column has an `expr` (DEL) or a `python` item, one of the two");
+                return;
+            }
+            if (d.has("python")) {
+                python.put(name, new DatasetDef.PyColumn(LayerYaml.text(d, "python", ""), y.strings(d.path("inputs"), path + ".inputs", "DRS-9101"), type));
+                return;
+            }
+            String expr = LayerYaml.text(d, "expr", "");
+            Node parsed;
+            try {
+                parsed = com.ash.drishti.server.bi.expr.Expressions.parse(expr);       // its syntax is reported with the columns (columns.<name>.expr)
+            } catch (RuntimeException ex) {
+                parsed = null;
+            }
+            if (parsed != null && Node.hasAggregate(parsed)) {
+                y.error("DRS-9101", path + ".expr", "a derived column is worked out for each row: an aggregate belongs in a measure");
+            }
+            if (parsed != null && Node.anyMatch(parsed, x -> x instanceof Node.Call c && "related".equals(c.function()))
+                    && !(parsed instanceof Node.Call c && "related".equals(c.function()) && c.args().size() == 1 && c.args().get(0) instanceof Node.Ref r && r.parts().size() == 2)) {
+                y.error("DRS-9101", path + ".expr", "related(column.field) is the whole expression of a derived column: one hop along a pack reference");
+            }
+            ObjectCol col = new ObjectCol(d, type, expr);
+            columns.put(name, col.of(name, y, path));
+        });
+        return python;
+    }
+
+    /** A derived column as a column of the dataset. */
+    private record ObjectCol(JsonNode d, String type, String expr) {
+        DatasetDef.Col of(String name, LayerYaml y, String path) {
+            String role = LayerYaml.text(d, "role", defaultRole(type, expr));
+            JsonNode unit = d.path("unit");
+            String currency = unit.isObject() && unit.has("currency") ? unit.get("currency").asText() : null;
+            String unitOf = unit.isObject() && unit.has("of") ? unit.get("of").asText() : unit.isTextual() ? unit.asText() : null;
+            return new DatasetDef.Col(name, type, null, expr, role, d.has("meaning") ? LayerYaml.text(d, "meaning", "") : null, null, null, currency, unitOf,
+                    additive(d.path("additive"), role, path, y), d.has("aggregate") ? LayerYaml.text(d, "aggregate", "") : null, d.has("format") ? LayerYaml.text(d, "format", "") : null,
+                    LayerYaml.text(d, "id", ""), LayerYaml.text(d, "description", ""));
+        }
+    }
+
+    /** {@code grain: { one-row-per: key, keep: latest by updatedAt }}: an explicit de-duplication (never a silent distinct). */
+    private static DatasetDef.Keep keep(JsonNode g, LayerYaml y) {
+        if (!g.isObject() || !g.has("one-row-per") && !g.has("keep")) {
+            return null;
+        }
+        List<String> keys = y.strings(g.path("one-row-per"), "grain.one-row-per", "DRS-9104");
+        String keep = LayerYaml.text(g, "keep", "");
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(?i)\\s*(latest|last|earliest|first)\\s+by\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*").matcher(keep);
+        if (keys.isEmpty()) {
+            y.error("DRS-9104", "grain.one-row-per", "one-row-per names the key columns (one row is kept per value)");
+            return null;
+        }
+        if (!m.matches()) {
+            y.error("DRS-9104", "grain.keep", "keep says which row of a key stays: `latest by <column>` or `earliest by <column>`, not '" + keep + "'");
+            return null;
+        }
+        String which = m.group(1).toLowerCase(java.util.Locale.ROOT);
+        return new DatasetDef.Keep(keys, m.group(2), "latest".equals(which) || "last".equals(which));
+    }
+
+    /** {@code group: { by, columns: { name: sum }, grain: { says } }}: a coarser grain, declared. */
+    private static DatasetDef.Group group(JsonNode g, boolean hasRows, LayerYaml y) {
+        if (g.isMissingNode() || g.isNull()) {
+            return null;
+        }
+        if (!g.isObject()) {
+            y.error("DRS-9101", "group", "`group:` is { by: [columns], columns: { name: sum | avg | min | max | count | distinct } }");
+            return null;
+        }
+        y.unknownKeys(g, Set.of("by", "columns", "grain"), "DRS-9101", "group");
+        List<String> by = y.strings(g.path("by"), "group.by", "DRS-9101");
+        if (by.isEmpty()) {
+            y.error("DRS-9101", "group.by", "group.by names the columns of the coarser grain");
+        }
+        Map<String, String> cols = new LinkedHashMap<>();
+        g.path("columns").fields().forEachRemaining(e -> {
+            String agg = e.getValue().asText();
+            if (!DatasetDef.Group.AGGREGATES.contains(agg)) {
+                y.error("DRS-9101", "group.columns." + e.getKey(), "a grouped column is " + DatasetDef.Group.AGGREGATES + " of the column of the same name (count of a new name counts rows), not '" + agg + "'");
+            }
+            if (by.contains(e.getKey())) {
+                y.error("DRS-9101", "group.columns." + e.getKey(), "'" + e.getKey() + "' is a group-by column");
+            }
+            cols.put(e.getKey(), agg);
+        });
+        if (cols.isEmpty()) {
+            y.error("DRS-9101", "group.columns", "group.columns says what each row of the coarser grain holds: { notional: sum, trades: count }");
+        }
+        return new DatasetDef.Group(by, cols, LayerYaml.text(g.path("grain"), "says", ""));
     }
 
     // ---- source ------------------------------------------------------------------------------------------------------

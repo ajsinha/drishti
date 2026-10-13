@@ -1954,6 +1954,10 @@ hugo: "meta": {"asOf": "2026-10-08", ..., "cached": true,  "plan": "p_2dab3b12b3
 (`drishti.bi.plan.guards: refuse`): a sum adding several currencies in a group (`422 DRS-9158`, fix: add the currency to the fields or filter one) and a
 balance added across dates (`422 DRS-9159`); a balance asked alone over a window is still answered as its last date's value, with the warning.
 
+**Lineage** (wave A): `GET /api/v1/bi/lineage/{ref}` (a report id, a model reference, or `dataset:<name>`): report to model to each dataset by alias,
+down its `extends` chain to its root (a pack kind and its connector, a connector query, a Python item, another model, a SQL view), as far as the caller may
+read; `problems` lists a root that cannot be traced (`DRS-9110`). Example in [DATASETS.md section 14](DATASETS.md#14-derivation-subset-filter-grain-derive-group-22-wave-a).
+
 **Check and the security safeguard.** Security binds to each dataset: a rule on trades no longer hides another dataset of the model. So that this is never a surprise,
 Check flags every dataset that no row rule restricts while a role is restricted elsewhere in the same model (`DRS-9130`, a warning in Check) and publishing the model is
 refused (`409 DRS-9130`) until the dataset gets a rule or the model says `may-see-all: { <alias>: [<role>] }` under `security` (the publish records it, audited

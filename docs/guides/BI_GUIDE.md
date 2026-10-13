@@ -744,7 +744,7 @@ pack dimensions with their relationships, the default measures) and moves the re
 (the source, the columns kept, the rows kept, what one row is, worked-out columns, a grouping, a preview, save; or an SQL view over a model), its draft kept
 across a refresh, the server's Check beside each step, then *Open the dataset*, *Start a report on it* or *Use it in a new model*. Every kind of dataset
 answers queries: pack and narrowed datasets, connector queries, Python Transforms and other models' answers, each asked as the reader
-([DATASETS.md sections 13 and 14](DATASETS.md#14-the-dataset-wizard-version-2-wave-a)).
+([DATASETS.md sections 13 to 15](DATASETS.md#15-the-dataset-wizard-version-2-wave-a)).
 
 **Analyse** (`/bi/explore`) offers a **Model or dataset** picker in groups: *Models* (each with its version and state, so a draft and a published copy of
 one name are told apart), *Your datasets*, one group per pack (a kind with no columns is left out) and *Other datasets (version 1)*. A model or a pack dataset
@@ -790,7 +790,7 @@ you ([EXPRESSIONS.md §8.1](EXPRESSIONS.md#81-in-the-console-the-expression-edit
 
 **2. The dataset wizard, version 2** (`/bi/datasets/new-layer`): pick the root, keep some columns, keep some rows, say what one row is and which duplicate
 wins, add columns worked out from others (a formula or a Python column item), group to a coarser grain, preview the server's answer, save. Or write an
-**SQL view** over a model. Nobody types YAML ([DATASETS.md §14](DATASETS.md#14-the-dataset-wizard-version-2-wave-a)).
+**SQL view** over a model. Nobody types YAML ([DATASETS.md §15](DATASETS.md#15-the-dataset-wizard-version-2-wave-a)).
 
 **3. The model designer, complete** (`/bi/md/<item>`):
 

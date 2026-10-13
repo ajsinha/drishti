@@ -476,6 +476,9 @@ public final class QueryService implements AutoCloseable {
             return null;
         }
         String table = plan.tables().iterator().next();
+        if (d.tables().get(table).shape() != null) {
+            return null;                                                       // a de-duplicated or grouped table: its rollup would add the rows it drops
+        }
         boolean live = "live".equals(d.tables().get(table).mode());
         if (live && inMemory.get(table) == null) {
             return null;                                                       // a live table kept as a snapshot has no aggregates to read

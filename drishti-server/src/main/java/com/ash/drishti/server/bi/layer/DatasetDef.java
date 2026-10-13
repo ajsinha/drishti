@@ -37,10 +37,72 @@ import java.util.Set;
  * @param ai the {@code ai:} block, kept for wave W5
  * @param tests the {@code tests:} entries as written
  * @param rollups the {@code rollups:} entries as written
+ * @param derivation how a narrowing dataset reshapes its base (docs/architecture/BI_DESIGN.md section 3.1): a column subset, an explicit de-duplication,
+ *     Python columns, a coarser grain ({@code group}); the {@code derive} expressions are columns with an {@code expr}
  */
 public record DatasetDef(String name, String version, String id, String title, String description, String owner, boolean sample, String endorsement,
         Generated generated, Source source, Grain grain, Map<String, Col> columns, Time time, Refresh refresh, Security security, String extendsRef, String where,
-        JsonNode ai, List<JsonNode> tests, List<JsonNode> rollups) {
+        JsonNode ai, List<JsonNode> tests, List<JsonNode> rollups, Derivation derivation) {
+
+    /** As written before the derivation keys (none). */
+    public DatasetDef(String name, String version, String id, String title, String description, String owner, boolean sample, String endorsement, Generated generated,
+            Source source, Grain grain, Map<String, Col> columns, Time time, Refresh refresh, Security security, String extendsRef, String where, JsonNode ai,
+            List<JsonNode> tests, List<JsonNode> rollups) {
+        this(name, version, id, title, description, owner, sample, endorsement, generated, source, grain, columns, time, refresh, security, extendsRef, where, ai, tests,
+                rollups, Derivation.NONE);
+    }
+
+    /**
+     * A dataset's derivation keys (section 3.1 of the design). {@code subset}: the base's columns kept ({@code columns: [a, b]}; keys cannot be dropped);
+     * {@code keep}: one row per key within a business date, the latest (or earliest) by a column ({@code grain: { one-row-per, keep }}); {@code python}: the
+     * Python columns of {@code derive}; {@code group}: a coarser grain the dataset declares.
+     */
+    public record Derivation(List<String> subset, Keep keep, Map<String, PyColumn> python, Group group, Map<String, Col> source) {
+        public static final Derivation NONE = new Derivation(List.of(), null, Map.of(), null, Map.of());
+
+        public Derivation(List<String> subset, Keep keep, Map<String, PyColumn> python, Group group) {
+            this(subset, keep, python, group, Map.of());
+        }
+
+        public Derivation {
+            subset = subset == null ? List.of() : List.copyOf(subset);
+            python = python == null ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(python));
+            source = source == null ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(source));
+        }
+
+        /** True for a dataset whose rows are reshaped (de-duplicated or grouped). */
+        public boolean shaped() {
+            return keep != null || group != null;
+        }
+
+        public boolean none() {
+            return subset.isEmpty() && keep == null && python.isEmpty() && group == null;
+        }
+    }
+
+    /** {@code keep: latest by updatedAt}: one row per {@code keys}, the one with the highest ({@code latest}) or lowest {@code by}. */
+    public record Keep(List<String> keys, String by, boolean latest) {
+        public Keep {
+            keys = List.copyOf(keys);
+        }
+    }
+
+    /** A Python column: the item (a Python item with the {@code transform} interface until wave B's {@code column}), its input columns and its type. */
+    public record PyColumn(String item, List<String> inputs, String type) {
+        public PyColumn {
+            inputs = inputs == null ? List.of() : List.copyOf(inputs);
+        }
+    }
+
+    /** {@code group: { by, columns, grain }}: one row per {@code by} with each column aggregated ({@code sum}, {@code avg}, {@code min}, {@code max}, {@code count}, {@code distinct}). */
+    public record Group(List<String> by, Map<String, String> columns, String says) {
+        public static final java.util.Set<String> AGGREGATES = java.util.Set.of("sum", "avg", "min", "max", "count", "distinct");
+
+        public Group {
+            by = List.copyOf(by);
+            columns = Collections.unmodifiableMap(new LinkedHashMap<>(columns));
+        }
+    }
 
     /** The language version of the model layer's items. */
     public static final int RACHANA = 2;
@@ -57,6 +119,7 @@ public record DatasetDef(String name, String version, String id, String title, S
     public static final Set<String> BUILT_IN = Set.of("id", "businessDate", "index", "updateSeq", "updatedAt");
 
     public DatasetDef {
+        derivation = derivation == null ? Derivation.NONE : derivation;
         columns = Collections.unmodifiableMap(new LinkedHashMap<>(columns));
         tests = tests == null ? List.of() : List.copyOf(tests);
         rollups = rollups == null ? List.of() : List.copyOf(rollups);

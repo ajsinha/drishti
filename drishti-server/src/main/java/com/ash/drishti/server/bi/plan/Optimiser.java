@@ -226,7 +226,7 @@ public final class Optimiser {
     private static PlanNode rollup(PlanNode n, Dataset flat) {
         if (n instanceof PlanNode.Aggregate a) {
             List<PlanNode.SecureScan> scans = PlanNode.scans(a);
-            if (scans.size() != 1 || a.measures().isEmpty()) {
+            if (scans.size() != 1 || a.measures().isEmpty() || PlanNode.all(a).stream().anyMatch(x -> x instanceof PlanNode.Dedup || x instanceof PlanNode.Regroup)) {
                 return a;
             }
             PlanNode.SecureScan s = scans.get(0);

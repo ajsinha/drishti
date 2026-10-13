@@ -29,7 +29,13 @@
   hidden fields) and perspectives, has its own measures (`measures:`, sent as `define`), and shows a visual's question as MQ or SQL with *Run as SQL*.
   Analyse SQL cells run Drishti SQL on the server over the extract's model by default (over the extract stays selectable until wave B). The alert cell
   chooser sends `reduce` only when chosen. Guides: [EXPRESSIONS.md](docs/guides/EXPRESSIONS.md) section 11 (59 finance and risk recipes, each run as a
-  test on the demo lake) and 8.1 (the editor), DATASETS.md section 14, REPORTS.md section 19, BI_GUIDE.md section 24, ANALYSE.md section 4.
+  test on the demo lake) and 8.1 (the editor), DATASETS.md section 15, REPORTS.md section 19, BI_GUIDE.md section 24, ANALYSE.md section 4.
+- **Server: dataset derivation and roots (wave A, task 4).** A dataset that `extends` another may keep a subset of its columns (`columns: [a, b]`, keys
+  kept), filter (`where`), keep one row per key (`grain: { one-row-per, keep: latest by updatedAt }`, never a silent distinct), derive DEL columns
+  (`derive: { x: { expr, type } }`), read a field one hop along a pack reference (`related(desk.name)`), add Python columns through the existing Transform
+  runner (`derive: { x: { python, inputs, type } }`, the base's rows asked as the reader), and group to a declared coarser grain (`group: { by, columns }`).
+  The plan shows `Dedup`, `Derive` and `Regroup` above the scan; a column derived from a masked one is masked; shaped datasets never route to a rollup.
+  Check traces every dataset to its root (`DRS-9110` when it cannot) and answers `lineage`; `GET /api/v1/bi/lineage/{ref}` for a report, model or dataset.
 - **Server: Drishti SQL (wave A, task 3).** Read-only SQL over one model (`bi/sql`): a hand-written recursive-descent parser for the documented
   subset (Calcite 1.40's dependencies are not all in the offline cache, and the dialect's table clauses are its own), a binder that resolves names as the
   caller sees the model, MQ-shaped statements compiled to exactly one model query (same plan hash, same cache entry as the MQ; inline aggregates become DEL

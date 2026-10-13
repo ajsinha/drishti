@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.layer;
 
+import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,7 +45,18 @@ public final class ModelChecker {
     private ModelChecker() {}
 
     public static List<DatasetParser.Problem> check(ModelDef m, Map<String, ResolvedDataset> datasets) {
+        return check(m, datasets, kind -> java.util.Optional.empty());
+    }
+
+    /** As {@link #check(ModelDef, Map)}, with the pack kinds {@code related()} columns read. */
+    public static List<DatasetParser.Problem> check(ModelDef m, Map<String, ResolvedDataset> datasets, java.util.function.Function<String, java.util.Optional<DatasetDef>> kinds) {
         LayerYaml y = new LayerYaml();
+        for (Dataset.Rollup r : m.rollups()) {
+            ResolvedDataset d = datasets.get(r.table());
+            if (d != null && (d.def().derivation().shaped() || !d.def().derivation().python().isEmpty())) {
+                y.error("DRS-9120", "rollups." + r.name(), "'" + r.table() + "' is de-duplicated, grouped or has Python columns: a rollup of it arrives in wave B");
+            }
+        }
         relationships(m, datasets, y);
         islands(m, y);
         ambiguity(m, y);
@@ -82,7 +94,7 @@ public final class ModelChecker {
                     + "`may-see-all: { " + x.alias() + ": [" + x.role() + "] }` under security; until then the model cannot be published");
         }
         if (y.problems().stream().noneMatch(DatasetParser.Problem::error)) {
-            Flattener.Flat flat = Flattener.flatten(m, datasets);
+            Flattener.Flat flat = Flattener.flatten(m, datasets, kinds);
             flat.problems().forEach(p -> y.problems().add(p));
             for (DatasetParser.Problem p : DatasetParser.check(flat.dataset())) {
                 y.problems().add(new DatasetParser.Problem(p.level(), modelCode(p), p.path(), p.message()));

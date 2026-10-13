@@ -75,7 +75,7 @@ public final class Planner {
             List<PlanNode> scans = new ArrayList<>();
             for (String t : p.tables()) {
                 Source s = in.sources().getOrDefault(t, new Source(ds.name(), Integer.toString(ds.version())));
-                scans.add(new PlanNode.SecureScan(t, s.dataset(), s.version(), in.time(), List.of(), List.of(), List.of(), List.of(), List.of(), false));
+                scans.add(shaped(ds.tables().get(t), new PlanNode.SecureScan(t, s.dataset(), s.version(), in.time(), List.of(), List.of(), List.of(), List.of(), List.of(), false)));
             }
             List<PlanNode.Cond> conds = in.rowConditions().stream().filter(c -> p.tables().contains(alias(c.field()))).toList();
             PlanNode source = new PlanNode.Filter(scans, conds);
@@ -100,6 +100,28 @@ public final class Planner {
         columns.addAll(measures);
         node = new PlanNode.Answer(node, columns, in.rows() ? "rows" : "grouped");
         return new LogicalPlan(node, in.model(), in.version(), in.time(), in.totals(), in.ids());
+    }
+
+    /** A dataset's own derivation above its scan (section 3.6): de-duplication, derived columns, grouping, as the engine applies them. */
+    static PlanNode shaped(Dataset.Table t, PlanNode.SecureScan scan) {
+        if (t == null) {
+            return scan;
+        }
+        PlanNode node = scan;
+        Dataset.Shape shape = t.shape();
+        if (shape != null && shape.dedup()) {
+            node = new PlanNode.Dedup(node, shape.dedupKeys(), (shape.latest() ? "latest by " : "earliest by ") + shape.dedupBy());
+        }
+        Map<String, String> derived = new LinkedHashMap<>();
+        t.calculated().forEach(c -> derived.put(c.name(), c.expr()));
+        t.columns().values().stream().filter(c -> c.ref() != null).forEach(c -> derived.put(c.name(), "related(" + c.ref() + ")"));
+        if (!derived.isEmpty()) {
+            node = new PlanNode.Derive(node, derived);
+        }
+        if (shape != null && shape.grouped()) {
+            node = new PlanNode.Regroup(node, shape.groupBy(), shape.groupColumns());
+        }
+        return node;
     }
 
     /** A fact part of the question: the fact (the base table), the tables it reads and the measures it computes. */

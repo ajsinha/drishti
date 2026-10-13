@@ -178,6 +178,13 @@ public class MqController {
         return catalog.layerDataset(p, id);
     }
 
+    /** Report to model to datasets to their roots (pack kind and connector, connector query, Python, model, SQL view), as far as the caller may read. */
+    @GetMapping("/lineage/{ref}")
+    public Map<String, Object> lineage(@PathVariable String ref, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        bi.requirePower(p, BiAccess.BI);
+        return catalog.lineage(p, ref);
+    }
+
     /** Who reads the model (reports, boards, notebooks, datasets on its answer, alerts, live subscriptions), as far as the caller may see them. */
     @GetMapping("/models/{id}/consumers")
     public Map<String, Object> consumers(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {

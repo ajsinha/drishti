@@ -38,18 +38,50 @@ public final class Flattener {
     private Flattener() {}
 
     public static Flat flatten(ModelDef m, Map<String, ResolvedDataset> datasets) {
+        return flatten(m, datasets, kind -> java.util.Optional.empty());
+    }
+
+    /**
+     * As {@link #flatten(ModelDef, Map)}, with the pack kinds a {@code related(column.field)} column reads ({@code kinds}: a kind to its generated dataset):
+     * each such column reads the field of the referenced kind's table, joined many-to-one (a hidden table {@code alias__column}).
+     */
+    public static Flat flatten(ModelDef m, Map<String, ResolvedDataset> datasets, java.util.function.Function<String, java.util.Optional<DatasetDef>> kinds) {
         List<DatasetParser.Problem> problems = new ArrayList<>();
         Map<String, Dataset.Table> tables = new LinkedHashMap<>();
         Set<String> unbuilt = new LinkedHashSet<>();
         Map<String, Dataset.TableSecurity> security = new LinkedHashMap<>();
         List<String> masked = new ArrayList<>();
+        List<Dataset.Relationship> hiddenRels = new ArrayList<>();
         for (ModelDef.Use use : m.datasets().values()) {
             ResolvedDataset r = datasets.get(use.alias());
             if (r == null) {
                 continue;
             }
             DatasetDef d = r.def();
-            tables.put(use.alias(), table(use.alias(), d, unbuilt));
+            Dataset.Table table = table(use.alias(), d, unbuilt);
+            for (DatasetDef.Col c : d.columns().values()) {                      // related(x.y): the field y of the kind x references, one hop
+                java.util.Optional<String[]> rel = Derivations.related(c);
+                if (rel.isEmpty()) {
+                    continue;
+                }
+                DatasetDef.Col via = d.columns().get(rel.get()[0]);
+                java.util.Optional<DatasetDef> kind = via == null || via.references() == null ? java.util.Optional.empty() : kinds.apply(via.references());
+                if (kind.isEmpty()) {
+                    problems.add(new DatasetParser.Problem("error", "DRS-9101", "datasets." + use.alias() + "." + c.name(), "related(" + rel.get()[0] + "." + rel.get()[1]
+                            + ") reads a pack kind this server does not have"));
+                    continue;
+                }
+                String hidden = use.alias() + "__" + rel.get()[0];
+                if (!tables.containsKey(hidden)) {
+                    tables.put(hidden, table(hidden, kind.get(), unbuilt));
+                    hiddenRels.add(new Dataset.Relationship(use.alias(), rel.get()[0], hidden, Dataset.ID, "many-to-one", "single", true));
+                }
+                Map<String, Dataset.Column> cols = new LinkedHashMap<>(table.columns());
+                cols.put(c.name(), new Dataset.Column(c.name(), c.name(), c.type(), c.format(), false, null, c.description(), hidden + "." + rel.get()[1]));
+                table = new Dataset.Table(table.name(), table.connector(), table.kind(), table.each(), table.mode(), table.onLoad(), table.schedule(), table.description(), cols,
+                        table.live(), table.of(), table.shape());
+            }
+            tables.put(use.alias(), table);
             Set<String> cols = d.columns().keySet();
             List<List<Dataset.RowRule>> layers = new ArrayList<>();
             for (List<DatasetDef.Rule> layer : r.layers()) {
@@ -72,6 +104,7 @@ public final class Flattener {
         for (ModelDef.Rel r : m.relationships()) {
             rels.add(new Dataset.Relationship(r.fromAlias(), r.fromColumn(), r.toAlias(), r.toColumn(), r.cardinality(), r.direction(), r.active()));
         }
+        rels.addAll(hiddenRels);
         Map<String, Dataset.Measure> measures = new LinkedHashMap<>();
         Map<String, ModelDef.Meas> all = withDefaults(m, datasets);
         Map<String, String> ids = measureIds(all);
@@ -99,15 +132,19 @@ public final class Flattener {
     static Dataset.Table table(String alias, DatasetDef d, Set<String> unbuilt) {
         DatasetDef.Source s = d.source();
         DatasetDef.Time t = d.time() == null ? DatasetDef.Time.SNAPSHOT : d.time();
-        Map<String, Dataset.Column> cols = new LinkedHashMap<>();
         Set<String> keys = new LinkedHashSet<>(d.grain() == null ? List.of() : d.grain().keys());
-        for (DatasetDef.Col c : d.columns().values()) {
-            cols.put(c.name(), new Dataset.Column(c.name(), c.expr() == null ? c.pathOrName() : c.name(), c.type(), c.format(), "key".equals(c.role()) || keys.contains(c.name()),
-                    c.expr(), c.description()));
-        }
+        Map<String, Dataset.Column> cols = columns(d.columns(), keys, d.derivation().group() == null);
+        DatasetDef.Derivation dv = d.derivation();
         boolean pack = s != null && DatasetDef.Source.PACK.equals(s.type());
-        if (!pack) {
-            unbuilt.add(alias);
+        if (!pack || !dv.python().isEmpty()) {
+            unbuilt.add(alias);                                                 // read by staging: a source that is not a pack kind, or Python columns (until wave B)
+        }
+        dv.python().forEach((name, py) -> cols.put(name, new Dataset.Column(name, name, py.type(), null, false, null, "Python column (" + py.item() + ")")));
+        Dataset.Shape shape = null;
+        if (dv.shaped()) {
+            shape = new Dataset.Shape(dv.keep() == null ? List.of() : dv.keep().keys(), dv.keep() == null ? null : dv.keep().by(), dv.keep() == null || dv.keep().latest(),
+                    dv.group() == null ? List.of() : dv.group().by(), dv.group() == null ? Map.of() : dv.group().columns(),
+                    dv.group() == null ? Map.of() : columns(dv.source(), keys, true));
         }
         String mode = switch (t.mode()) {
             case "live" -> "live";
@@ -119,7 +156,21 @@ public final class Flattener {
             live = new Dataset.Live(t.liveRows(), t.liveAge(), h == null ? null : new Dataset.History("history", h.every(), h.keep(), h.by(), h.measures()));
         }
         return new Dataset.Table(alias, pack ? s.connector() : "", pack ? s.kind() : "", pack ? s.each() : null, mode, d.refresh().onLoad(), d.refresh().schedule(),
-                d.description(), cols, live);
+                d.description(), cols, live, null, shape);
+    }
+
+    /** The engine columns of a dataset's columns ({@code withExpr}: calculated columns keep their expression; a grouped dataset's own columns have none). */
+    private static Map<String, Dataset.Column> columns(Map<String, DatasetDef.Col> defs, Set<String> keys, boolean withExpr) {
+        Map<String, Dataset.Column> cols = new LinkedHashMap<>();
+        for (DatasetDef.Col c : defs.values()) {
+            if (Derivations.related(c).isPresent()) {
+                continue;                                                       // added by flatten as a column read from the referenced kind
+            }
+            String expr = withExpr ? c.expr() : null;
+            cols.put(c.name(), new Dataset.Column(c.name(), expr == null && c.expr() == null ? c.pathOrName() : c.name(), c.type(), c.format(),
+                    "key".equals(c.role()) || keys.contains(c.name()), expr, c.description()));
+        }
+        return cols;
     }
 
     /** The measures' stable ids to their names (for {@code measure('m_mtm')}). */

@@ -28,7 +28,7 @@ is executed: it is parsed, validated, compiled to SQL with **bound values**, and
 Contents: [1](#1-the-file) the file · [2](#2-tables-and-columns) tables and columns · [3](#3-relationships-and-how-queries-join) relationships ·
 [4](#4-measures-and-the-expression-language) measures and expressions (4.1: time intelligence, 4.2: Python measures) · [5](#5-hierarchies) hierarchies · [6](#6-security-row-rules-and-masks) security ·
 [7](#7-modes-layers-and-rollups) modes, layers and rollups (7.2: scheduled refresh) · [8](#8-the-query) the query · [9](#9-problems-and-drs-codes) problems and codes ·
-[10](#10-what-is-not-built) what is not built (live tables: [7.1](#71-live-tables-phase-5)) · [11](#11-composed-and-derived-datasets) composed and derived datasets · [12](#12-build-a-dataset-in-the-browser-the-wizard) the wizard · [13](#13-model-layer-datasets-rachana-2-wave-w1) model-layer datasets (W1) · [14](#14-the-dataset-wizard-version-2-wave-a) the dataset wizard v2: subset, rows, grain, worked-out columns, grouping, SQL views (wave A).
+[10](#10-what-is-not-built) what is not built (live tables: [7.1](#71-live-tables-phase-5)) · [11](#11-composed-and-derived-datasets) composed and derived datasets · [12](#12-build-a-dataset-in-the-browser-the-wizard) the wizard · [13](#13-model-layer-datasets-rachana-2-wave-w1) model-layer datasets (W1) · [14](#14-derivation-subset-filter-grain-derive-group-22-wave-a) derivation: subset, filter, grain, derive, group · [15](#15-the-dataset-wizard-version-2-wave-a) the dataset wizard v2, SQL views (wave A).
 Expressions (measures, derived columns, filters, row rules) are DEL v2 since 2.2.0: [EXPRESSIONS.md](EXPRESSIONS.md); the older syntax in the examples
 below is read with a `DRS-9100` warning until the end of wave A, and `drishti.py bi migrate --expressions` converts it.
 
@@ -890,10 +890,70 @@ and Check (`POST /bi/models/validate`) answers it valid with the base's columns 
 time, every layer's row rules under `security.rows`, `chain`), with Check's `problems`; the dataset page and the model designer show the resolved form. The
 draft is listed under *Your datasets* at once (`draft: true`); a model can use it once it is published.
 
-## 14. The dataset wizard, version 2 (wave A)
+## 14. Derivation: subset, filter, grain, derive, group (2.2, wave A)
+
+A dataset that `extends` another narrows it with the derivation keys of [BI_DESIGN.md §3.1](../architecture/BI_DESIGN.md#31-yaml-the-structure-language).
+Each answers what the same arithmetic over the base answers, as the reader (the base's rules and masks first), and the plan shows each step above the
+dataset's scan (`Dedup`, `Derive`, `Regroup`; `meta.explain` with `options.explain: true`). Expressions are DEL ([EXPRESSIONS.md](EXPRESSIONS.md)).
+
+```yaml
+rachana: 2
+expressions: 2
+dataset: live-trades
+version: 1.0.0
+extends: pack.trading.trade@^1
+columns: [tradeId, desk, book, currency, notional, mtm, status, updatedAt]   # a subset of the base's columns; its keys cannot be dropped (DRS-9105)
+where: "status == 'LIVE'"                                                    # a row filter (row scope)
+grain: { one-row-per: tradeId, keep: latest by updatedAt }                   # explicit de-duplication: the latest (or earliest) row per key and business date
+derive:
+  notionalK: { expr: "notional / 1000", type: decimal }                      # a DEL column, worked out for each row
+  deskName:  { expr: "related(desk.name)", type: string }                    # one hop along a pack reference (desk references the kind desk)
+  bucket:    { python: notional-bucket, inputs: [notional], type: string }   # a Python column (a transform item, until wave B's column interface)
+```
+
+```yaml
+rachana: 2
+expressions: 2
+dataset: desk-ccy
+version: 1.0.0
+extends: trades@1
+derive:
+  notionalK: { expr: "notional / 1000", type: decimal }
+group:                                                                       # a coarser grain, declared
+  by: [desk, currency]
+  columns: { notional: sum, notionalK: sum, mtm: sum, trades: count }        # sum, avg, min, max, count, distinct of the same-named column; count of a new name counts rows
+  grain: { says: One row per desk and currency }
+security:
+  rows:
+    - { role: desk-head, where: "desk in user.desks" }                       # a grouped dataset's rules name its group-by columns (DRS-9106)
+```
+
+| Key | Does | Rules |
+|---|---|---|
+| `columns: [a, b]` | keeps those columns of the base | the base's grain keys stay (`DRS-9105`); a name the base lacks is `DRS-9105` |
+| `where:` | filters the base's rows | row scope DEL; not a security rule (rules are `security.rows`) |
+| `grain: { one-row-per, keep }` | one row per key within a business date: `keep: latest by <col>` or `earliest by <col>` | key and order columns exist (`DRS-9104`); never by a masked column (`DRS-9106`); no rollups of its own; not on a live dataset (wave B) |
+| `derive: { x: { expr, type } }` | a column worked out per row | `type` is required; no aggregate (a measure); a column derived from a masked one is masked |
+| `derive: { x: { expr: "related(col.field)" } }` | the field of the row a pack reference points at, one hop (None when it points at nothing) | `col` has `references: <kind>` and the kind has `field` (`DRS-9101`); not in a grouped dataset (wave B) |
+| `derive: { x: { python, inputs, type } }` | a Python column: the base's rows (as the reader) go to the item as the frame `rows`; it returns the frame with `x` added | a `transform` item until wave B's `column` interface; the dataset is read by staging (no rollups); not live |
+| `group: { by, columns, grain }` | one row per `by` with the columns aggregated | the dataset's columns become `by` plus the grouped ones (`sum` and `count` add up across groups, `min`/`max` keep their aggregate, `avg` and `distinct` do not add); rules name `by` columns; no rollups; a dataset that is de-duplicated or grouped is not reshaped again (wave B) |
+
+**Roots and lineage.** Check traces every dataset down its `extends` chain to its root (a pack kind and the connector that serves it, a connector query,
+a Python item, another model, a SQL view) and refuses one whose root cannot be traced (`DRS-9110`, for example a kind no enabled pack generates). Check of a
+dataset answers `lineage`; `GET /api/v1/bi/lineage/{ref}` answers it for a report, a model or `dataset:<name>` (captured):
+
+```
+GET /api/v1/bi/lineage/lang-bucket-view@1
+{"ref": "lang-bucket-view@1", "path": [{"kind": "model", "name": "lang-bucket-view", "version": "1.0.0"}],
+ "datasets": {"trades": [{"kind": "dataset", "name": "lang-bucketed"}, {"kind": "dataset", "name": "lang-trade"},
+                         {"kind": "pack-kind", "name": "trade", "pack": "finance", "connector": "lang-lake"}]},
+ "problems": []}
+```
+
+## 15. The dataset wizard, version 2 (wave A)
 
 **New dataset** (`/bi/datasets/new-layer`; *New dataset* on the Models page and in a workspace) makes a `rachana: 2` dataset without typing YAML, with
-the derivation keys of [BI_DESIGN.md §3.1](../architecture/BI_DESIGN.md#31-yaml-the-structure-language): a column subset, a row filter, an explicit grain
+the derivation keys of [section 14](#14-derivation-subset-filter-grain-derive-group-22-wave-a): a column subset, a row filter, an explicit grain
 with its de-duplication, worked-out columns and a grouping. The steps depend on where the table comes from; the step bar lets you go back to any step
 you have seen, Back and Next move one step, and the unfinished dataset is kept in this tab (a refresh brings it back with a note).
 

@@ -108,17 +108,23 @@ public record Dataset(String name, int version, String title, String description
      * @param columns by column name, in file order
      * @param live for {@code mode: live}: how many rows to keep and for how long (null: the server's defaults)
      * @param of for a history table ({@code mode: history}): the live table whose measures it samples; else null
+     * @param shape for a dataset that de-duplicates or groups its rows (docs/architecture/BI_DESIGN.md section 3.1): how, and the columns read before; else null
      */
     public record Table(String name, String connector, String kind, String each, String mode, boolean onLoad, String schedule, String description, Map<String, Column> columns,
-            Live live, String of) {
+            Live live, String of, Shape shape) {
+
+        public Table(String name, String connector, String kind, String each, String mode, boolean onLoad, String schedule, String description, Map<String, Column> columns,
+                Live live, String of) {
+            this(name, connector, kind, each, mode, onLoad, schedule, description, columns, live, of, null);
+        }
 
         public Table(String name, String connector, String kind, String each, String mode, boolean onLoad, String schedule, String description, Map<String, Column> columns,
                 Live live) {
-            this(name, connector, kind, each, mode, onLoad, schedule, description, columns, live, null);
+            this(name, connector, kind, each, mode, onLoad, schedule, description, columns, live, null, null);
         }
 
         public Table(String name, String connector, String kind, String each, String mode, boolean onLoad, String schedule, String description, Map<String, Column> columns) {
-            this(name, connector, kind, each, mode, onLoad, schedule, description, columns, null, null);
+            this(name, connector, kind, each, mode, onLoad, schedule, description, columns, null, null, null);
         }
 
         /** True for the table the engine makes from a live table's {@code history:}: samples of its measures over time (the live table it belongs to is {@code of}). */
@@ -130,9 +136,39 @@ public record Dataset(String name, int version, String title, String description
             return "live".equals(mode);
         }
 
-        /** The columns read from the source (everything but calculated ones). */
+        /** The columns read from the source (everything but calculated ones and the ones read from another table; for a shaped table, those before the shape). */
         public List<Column> physical() {
-            return columns.values().stream().filter(c -> c.expr() == null).toList();
+            Map<String, Column> from = shape != null && !shape.source().isEmpty() ? shape.source() : columns;
+            return from.values().stream().filter(c -> c.expr() == null && c.ref() == null).toList();
+        }
+
+        /** The calculated columns, worked out on each row before the shape (a dataset's {@code derive}). */
+        public List<Column> calculated() {
+            Map<String, Column> from = shape != null && !shape.source().isEmpty() ? shape.source() : columns;
+            return from.values().stream().filter(c -> c.expr() != null).toList();
+        }
+    }
+
+    /**
+     * How a dataset reshapes its rows, in order: one row per {@code dedupKeys} within a business date, keeping the latest (or earliest) by {@code dedupBy};
+     * then the calculated columns; then, when {@code groupBy} is set, one row per group with {@code groupColumns} (name to {@code sum}, {@code avg},
+     * {@code min}, {@code max}, {@code count}, {@code distinct} of the same-named column; {@code count} of no column counts rows). {@code source} holds the
+     * columns before grouping (what is read and derived); the table's own columns are those after.
+     */
+    public record Shape(List<String> dedupKeys, String dedupBy, boolean latest, List<String> groupBy, Map<String, String> groupColumns, Map<String, Column> source) {
+        public Shape {
+            dedupKeys = dedupKeys == null ? List.of() : List.copyOf(dedupKeys);
+            groupBy = groupBy == null ? List.of() : List.copyOf(groupBy);
+            groupColumns = groupColumns == null ? Map.of() : java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(groupColumns));
+            source = source == null ? Map.of() : java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(source));
+        }
+
+        public boolean dedup() {
+            return !dedupKeys.isEmpty();
+        }
+
+        public boolean grouped() {
+            return !groupBy.isEmpty();
         }
     }
 
@@ -173,8 +209,14 @@ public record Dataset(String name, int version, String title, String description
      * @param format a format name of the pack (display only)
      * @param key true for the column relationships join on
      * @param expr a row-level expression for a calculated column, else null
+     * @param ref for a column read from another table along a many-to-one reference ({@code related(desk.name)}): that table's {@code table.column}; else null
      */
-    public record Column(String name, String path, String type, String format, boolean key, String expr, String description) {}
+    public record Column(String name, String path, String type, String format, boolean key, String expr, String description, String ref) {
+
+        public Column(String name, String path, String type, String format, boolean key, String expr, String description) {
+            this(name, path, type, format, key, expr, description, null);
+        }
+    }
 
     /**
      * A relationship, {@code from} the many side, {@code to} the one side for {@code many-to-one}.
