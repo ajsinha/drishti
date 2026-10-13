@@ -33,8 +33,8 @@ AGG_WORD = {"sum": "Sum of", "avg": "Average of", "min": "Minimum of", "max": "M
 TOP_ORDER = ("rachana", "model", "version", "id", "title", "description", "owner", "tags", "endorsement", "audience", "sample", "lifecycle", "replaced-by",
              "implicit-from", "datasets", "relationships", "measures", "hierarchies", "security", "contract", "rollups", "tests", "golden", "ai", "calc-groups",
              "parameters", "calendars", "layout")
-DATASET_ORDER = ("rachana", "dataset", "version", "id", "title", "description", "owner", "tags", "endorsement", "extends", "where", "source", "grain", "time",
-                 "refresh", "columns", "security", "tests", "ai", "rollups", "layout")
+DATASET_ORDER = ("rachana", "dataset", "version", "id", "title", "description", "owner", "tags", "endorsement", "extends", "source", "columns", "where", "grain",
+                 "derive", "group", "time", "refresh", "security", "tests", "ai", "rollups", "layout")          # BI_DESIGN.md 3.1: the derivation keys in the order they apply
 
 
 class LayerError(ValueError):
@@ -99,16 +99,50 @@ def dataset_info(text: str, read_only: bool = False, item: str = "") -> dict:
     time = doc.get("time") if isinstance(doc.get("time"), dict) else {}
     sec = doc.get("security") if isinstance(doc.get("security"), dict) else {}
     name = str(doc.get("dataset"))
-    kind = "pack" if "pack" in src or "kind" in src else "connector" if "query" in src else "python" if "python" in src else "model" if "model" in src else \
-        ("extends" if doc.get("extends") else "unknown")
+    kind = "pack" if "pack" in src or "kind" in src else "sql" if "sql" in src else "connector" if "query" in src and "model" not in src else "python" if "python" in src \
+        else "model" if "model" in src else ("extends" if doc.get("extends") else "unknown")
+    columns = _derived(doc, _columns(doc.get("columns") if isinstance(doc.get("columns"), dict) else {}))
     return {"name": name, "item": item, "title": doc.get("title") or name, "description": doc.get("description") or "", "version": str(doc.get("version") or ""),
             "owner": doc.get("owner") or "", "endorsement": doc.get("endorsement") or "none", "generated": bool(doc.get("generated")), "readOnly": bool(read_only),
             "source": {"type": kind, "pack": src.get("pack") or "", "kind": src.get("kind") or "", "connector": src.get("connector") or "",
-                       "python": src.get("python") or "", "model": src.get("model") or "", "query": src.get("query") or "", "each": src.get("each") or ""},
-            "extends": doc.get("extends") or "", "grain": {"says": grain.get("says") or "", "keys": [str(k) for k in grain.get("keys") or []], "date": grain.get("date") or ""},
+                       "python": src.get("python") or "", "model": src.get("model") or "", "query": src.get("query") or "", "each": src.get("each") or "",
+                       "sql": src.get("sql") or ""},
+            "extends": doc.get("extends") or "", "grain": _grain(grain), "where": str(doc.get("where") or ""),
+            "subset": [str(c) for c in doc["columns"]] if isinstance(doc.get("columns"), list) else [],
+            "derive": doc.get("derive") if isinstance(doc.get("derive"), dict) else {}, "group": doc.get("group") if isinstance(doc.get("group"), dict) else {},
             "time": {"mode": time.get("mode") or "snapshot", "asOf": time.get("as-of") or "", "storage": time.get("storage") or ""}, "refresh": doc.get("refresh"),
-            "columns": _columns(doc.get("columns")), "rows": sec.get("rows") or [], "masked": [str(m) for m in sec.get("masked") or []],
-            "alias": default_alias(name), "role": infer_role(_columns(doc.get("columns")))}
+            "columns": columns, "rows": sec.get("rows") or [], "masked": [str(m) for m in sec.get("masked") or []],
+            "alias": default_alias(name), "role": infer_role(columns)}
+
+
+def _grain(grain: dict) -> dict:
+    """The grain as the pages read it: the keys (``keys``, or ``one-row-per`` of an explicit de-duplication), what one row is, and which duplicate wins."""
+    per = grain.get("one-row-per")
+    keys = grain.get("keys") or ([per] if isinstance(per, str) else per) or []
+    return {"says": grain.get("says") or "", "keys": [str(k) for k in keys], "date": grain.get("date") or "", "keep": str(grain.get("keep") or "")}
+
+
+def _derived(doc: dict, columns: list[dict]) -> list[dict]:
+    """The columns with the dataset's worked-out ones (``derive``) after them; a grouped dataset (``group``) has its ``by`` columns and the grouped ones."""
+    out = list(columns)
+    for name, d in (doc.get("derive") or {}).items() if isinstance(doc.get("derive"), dict) else []:
+        d = d if isinstance(d, dict) else {"expr": str(d)}
+        typ = d.get("type") or "decimal"
+        out.append({"name": str(name), "type": typ, "role": d.get("role") or ("amount" if typ in ("decimal", "integer") and d.get("meaning") in ("amount", "notional", "mtm") else "dimension" if typ == "string" else ""),
+                    "meaning": d.get("meaning") or "", "references": "", "currency": ((d.get("unit") or {}).get("currency") if isinstance(d.get("unit"), dict) else "") or "", "unitOf": "",
+                    "additive": None, "aggregate": "", "format": d.get("format") or "", "path": "", "expr": d.get("expr") or "", "of": "", "description": d.get("description") or "",
+                    "python": d.get("python") or "", "derived": True})
+    group = doc.get("group") if isinstance(doc.get("group"), dict) else None
+    if group and group.get("by"):
+        by = [str(b) for b in group.get("by") or []]
+        aggs = group.get("columns") if isinstance(group.get("columns"), dict) else {}
+        known = {c["name"]: c for c in out}
+        grouped = [dict(known.get(b) or {"name": b, "type": "string"}, role="dimension") for b in by]
+        for name, agg in aggs.items():
+            base = known.get(str(name)) or {"name": str(name), "type": "integer" if agg in ("count", "distinct") else "decimal"}
+            grouped.append(dict(base, name=str(name), role="amount" if agg in ("sum", "count") else base.get("role") or "", aggregate="sum" if agg in ("sum", "count") else "avg" if agg == "avg" else agg))
+        out = [dict({"references": "", "currency": "", "unitOf": "", "additive": None, "aggregate": "", "format": "", "path": "", "expr": "", "of": "", "description": "", "meaning": ""}, **c) for c in grouped]
+    return out
 
 
 def infer_role(columns: list[dict]) -> str:
@@ -252,7 +286,7 @@ def _key(k) -> str:
 def _block(key: str, value, out: list[str]) -> None:
     """One top-level key: maps of maps one entry per line (flow), lists of maps one item per line, anything else as PyYAML writes it."""
     if isinstance(value, dict) and value and all(isinstance(v, (dict, list, str, int, float, bool)) or v is None for v in value.values()) \
-            and key in ("datasets", "measures", "hierarchies", "columns", "may-see-all"):
+            and key in ("datasets", "measures", "hierarchies", "columns", "may-see-all", "derive", "fields", "perspectives"):
         out.append(f"{key}:")
         for k, v in value.items():
             out.append(f"  {_key(k)}: {_flow(v)}")
