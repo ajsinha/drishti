@@ -284,7 +284,7 @@ final class Folding {
                 String f = Objects.requireNonNullElse(bd.rename(n.source()), n.source());
                 fields.add(f);
                 if (n.as() != null) {
-                    renames.add(f + " -> " + n.as());
+                    renames.add(f.substring(f.lastIndexOf('.') + 1) + " -> " + n.as());
                 }
             }
             List<String> measures = new ArrayList<>();
@@ -300,7 +300,7 @@ final class Folding {
             select.put("measures", measures.isEmpty() ? null : YamlText.list(measures));
             b.append("    ").append(YamlText.key(in.alias())).append(": { model: ").append(bd.model()).append(", select: ").append(YamlText.flow(select)).append(" }\n");
             if (!renames.isEmpty()) {
-                manual.add("the Transform " + spec.transform() + " now receives input '" + in.alias() + "' with the model query's column names; the derived dataset renamed "
+                manual.add("the Transform " + spec.transform() + " now receives input '" + in.alias() + "' with each column named by the last part of its field or measure (counterparties.id is id); the derived dataset renamed "
                         + String.join(", ", renames) + ": rename them at the top of its function");
             }
         }

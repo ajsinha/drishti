@@ -251,7 +251,7 @@ public final class ModelConverter {
         for (String ref : refs) {
             bindings.apply(ref).ifPresent(b -> manual.add("python".equals(s.kind())
                     ? "the Transform reads the dataset " + ref + ", now the model " + b.model() + ": a Python dataset hands it that model's query answers "
-                            + "(its source.inputs), with the model query's column names"
+                            + "(its source.inputs), each column named by the last part of its field or measure name"
                     : "the notebook reads the dataset " + ref + ", now the model " + b.model() + ": rebind it (`model: " + b.model()
                             + "`, extracts as model queries) when the console's notebooks read models"));
         }

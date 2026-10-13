@@ -1227,7 +1227,7 @@ Decisions taken while building it, against the plan above:
   No host: `DRS-9191`.
 * **Derived** datasets become a Python dataset `<old>-result` (`source.python`, each input a model query `{ model, select }` on the converted input's
   model) and a model of the old name over it under the alias `result`, so its measures and `result.*` fields keep their meaning. The Transform now
-  receives the model query's column names (`counterparties.id`, `P&L 1d`), not the `as` names: a manual step (the shipped `pnl-vs-exposure` accepts both).
+  receives each column named by the last part of its field or measure name (`counterparties.id` is `id`, `P&L 1d`), not the `as` names: a manual step (the shipped `pnl-vs-exposure` accepts both).
 * **Reports** are rewritten in their text (comments kept): `rachana: 2`, `dataset:` to `model: <name>@<major>`, renames in wells, filters, sorts,
   formats and bookmarks (never in titles or texts). A report on a dataset with a **live** table stays on the dataset (manual step) until a report on a
   model follows live data (standing queries, W3), and that dataset's file is kept. **Boards** name reports and are unchanged; **notebooks** and Python
