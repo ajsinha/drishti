@@ -262,6 +262,8 @@ public enum ErrorCode {
     LAYER_MODEL_BREAKING("DRS-9126", 409),
     /** The model layer's security safeguard: a dataset a restricted role would see in full, with neither a row rule nor a {@code may-see-all} note. */
     LAYER_MODEL_SAFEGUARD("DRS-9130", 409),
+    /** Model Check warning: readers of a dataset that no row rule of the model names; they see no rows (never refuses a publish). */
+    LAYER_MODEL_ROLES_WITHOUT_RULE("DRS-9131", 200),
     /** Model query: the shape (an unknown key, a wrong type, {@code mq} missing or not 1, two time forms). */
     MQ_SHAPE("DRS-9150", 422),
     /** Model query: the model is not found, not readable by the caller, retired, or a draft the caller may not query. */
