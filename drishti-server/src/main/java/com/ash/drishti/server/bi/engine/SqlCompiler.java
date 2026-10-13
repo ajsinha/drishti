@@ -660,14 +660,15 @@ public final class SqlCompiler {
             }
         }
         StringBuilder sql = new StringBuilder("SELECT ");
-        if (p.measures().isEmpty() && !p.fields().isEmpty() && !q.detail()) {             // shape rows keeps every row of the fact (no DISTINCT)
+        boolean grouped = !p.measures().isEmpty() || !havings.isEmpty();                     // a measure filter on fields alone (a slicer under a report's
+        if (!grouped && !p.fields().isEmpty() && !q.detail()) {                              // `Trades > 0`) groups them; shape rows keeps every row (no DISTINCT)
             sql.append("DISTINCT ");
         }
         sql.append(String.join(", ", items)).append(" FROM ").append(from);
         if (!preds.isEmpty()) {
             sql.append(" WHERE ").append(String.join(" AND ", preds));
         }
-        if (!p.measures().isEmpty() && !group.isEmpty()) {
+        if (grouped && !group.isEmpty()) {
             sql.append(" GROUP BY ").append(String.join(", ", group));
         }
         if (!havings.isEmpty()) {
