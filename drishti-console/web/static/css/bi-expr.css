@@ -37,7 +37,9 @@ textarea.bi-xe-in { resize: vertical; min-height: 2.4rem; }
 .bi-xe-problems { margin: 0; padding: 0 0 0 1rem; }
 .bi-xe-problems:empty { display: none; }
 .bi-xe-problems .bi-ok { list-style: none; margin-left: -1rem; color: var(--d-ok); font-size: .82rem; }
-.bi-xe-problems .btn-pill code { font-size: .78rem; }
+.bi-xe-problems .btn-pill code { font-size: .78rem; color: inherit; background: transparent; }
+.bi-xe-try { white-space: nowrap; }
+.bi-md-row:has(> .bi-md-grow .bi-xe), .bi-md-row:has(> .bi-xe) { align-items: flex-start; }
 .bi-xe-in[aria-invalid="true"] { border-color: var(--d-bad); }
 .bi-xe-tryout:empty { display: none; }
 .bi-xe-tryout { overflow-x: auto; }
@@ -45,6 +47,7 @@ textarea.bi-xe-in { resize: vertical; min-height: 2.4rem; }
 .bi-qp-views { display: flex; flex-wrap: wrap; gap: .25rem; margin: .25rem 0; }
 .bi-qp-view { background: none; border: 1px solid var(--d-border); border-radius: 999px; padding: .2rem .8rem; color: var(--d-muted); cursor: pointer; font: inherit; font-size: .8rem; min-height: 2rem; }
 .bi-qp-view[aria-pressed="true"] { color: var(--d-ink); background: var(--d-accent-tint); border-color: var(--d-accent); font-weight: 600; }
+.bi-md-query pre { white-space: pre; overflow-x: auto; }
 .bi-sql-editor { width: 100%; min-height: 8rem; font-family: var(--d-font-mono); font-size: .85rem; }
 .bi-sql-meta { color: var(--d-muted); font-size: .8rem; }
 @media (pointer: coarse), (max-width: 640px) {

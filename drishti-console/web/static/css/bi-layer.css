@@ -141,13 +141,16 @@
 .bi-md-fields th[scope=row] { white-space: nowrap; font-weight: 400; }
 .bi-md-persp { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .3rem .6rem; margin: 0 0 .5rem; }
 .bi-md-persp summary { cursor: pointer; min-height: 2.2rem; display: flex; align-items: center; gap: .4rem; }
+.bi-md-persp fieldset { border: 0; padding: 0; margin: .4rem 0; min-width: 0; }
+.bi-md-persp legend, .bi-lw-derive fieldset legend { font-size: .85rem; font-weight: 600; color: var(--d-muted); padding: 0; }
 /* the dataset wizard, version 2: the step bar's buttons, worked-out columns, the navigation */
 .bi-lw-steps li { padding: 0; }
 .bi-lw-stepbtn { background: none; border: 0; color: inherit; font: inherit; padding: .3rem .7rem; cursor: pointer; min-height: 2rem; border-radius: 999px; }
 .bi-lw-stepbtn:disabled { cursor: default; opacity: .6; }
 .bi-lw-derive { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .5rem .7rem; margin: 0 0 .6rem; min-width: 0; }
 .bi-lw-derive legend { font-weight: 600; font-size: .9rem; padding: 0 .3rem; }
-.bi-lw-nav { position: sticky; bottom: 0; background: var(--d-bg); padding: .5rem 0; border-top: 1px solid var(--d-border); }
+.bi-lw-nav { padding: .5rem 0; border-top: 1px solid var(--d-border); margin-top: .5rem; }
+.bi-layer-form legend { font-size: .95rem; font-weight: 600; padding: 0; margin: 0 0 .3rem; }
 .bi-md-localm { margin: 0 0 .6rem; border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .3rem .6rem; }
 .bi-md-localm summary { cursor: pointer; min-height: 2.2rem; display: flex; align-items: center; gap: .3rem; }
 .bi-md-localm .bi-frow { display: flex; flex-direction: column; gap: .2rem; margin: .3rem 0; }

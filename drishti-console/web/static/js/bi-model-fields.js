@@ -80,7 +80,7 @@
       tb.appendChild(h('tr', { 'data-field-row': name, 'data-kind': kind }, h('th', { scope: 'row', 'data-label': kind === 'measure' ? 'Measure' : 'Field' }, h('code', { text: name }),
         info && info.col ? h('small', { class: 'text-muted-d', text: ' ' + [info.col.type, info.col.meaning || info.col.role].filter(Boolean).join(' · ') }) : h('small', { class: 'text-muted-d', text: ' measure' })),
       cell('Display name', kind === 'measure' ? h('span', { class: 'text-muted-d', text: '(its name)' }) : txt('display', info.col.name)), cell('Description', txt('description')), cell('Format', pick('format', FORMATS.map((f) => [f, f || 'from the meaning']))),
-      cell('Folder', txt('folder', 'Risk')), cell('Hidden', hid), cell('Sort by', sortBy), cell('Category', kind === 'measure' ? h('span', { text: '—' }) : pick('category', CATEGORIES)),
+      cell('Folder', txt('folder')), cell('Hidden', hid), cell('Sort by', sortBy), cell('Category', kind === 'measure' ? h('span', { text: '—' }) : pick('category', CATEGORIES)),
       cell('Summarise', kind === 'measure' ? h('span', { text: '—' }) : pick('summarise', SUMMARISE))));
     };
     allFields().filter((f) => inP('field', f.name)).forEach((f) => row('field', f.name, (M.doc.fields || {})[f.name] || {}, f));
@@ -98,14 +98,18 @@
       const p = persp[pn] || {};
       const tick = (key, name) => {
         const x = h('input', { type: 'checkbox', checked: (p[key] || []).indexOf(name) >= 0, 'data-persp-pick': pn + ':' + name, disabled: M.readOnly });
-        x.addEventListener('change', () => M.edit((doc) => { const t = doc.perspectives[pn]; t[key] = (t[key] || []).filter((v) => v !== name).concat(x.checked ? [name] : []); }, true));
+        x.addEventListener('change', () => {
+          M.edit((doc) => { const t = doc.perspectives[pn]; t[key] = (t[key] || []).filter((v) => v !== name).concat(x.checked ? [name] : []); }, true);
+          const t = (M.doc.perspectives || {})[pn] || {}, count = q('[data-perspective="' + pn + '"] [data-persp-count]');
+          if (count) { count.textContent = ' ' + ((t.fields || []).length + (t.measures || []).length) + ' items'; }
+        });
         return h('label', { class: 'bi-checkrow' }, x, ' ' + name);
       };
       const title = h('input', { class: 'studio-in', value: p.title || '', 'data-persp-title': pn, 'aria-label': 'Title of ' + pn, disabled: M.readOnly });
       title.addEventListener('change', () => M.edit((doc) => { if (title.value.trim()) { doc.perspectives[pn].title = title.value.trim(); } else { delete doc.perspectives[pn].title; } }, true));
       const rm = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-persp-remove': pn, text: 'Remove', disabled: M.readOnly });
       rm.addEventListener('click', () => M.edit((doc) => { delete doc.perspectives[pn]; if (!Object.keys(doc.perspectives).length) { delete doc.perspectives; } }));
-      const det = h('details', { class: 'bi-md-persp', 'data-perspective': pn, open: openPersp.has(pn) || null }, h('summary', {}, h('strong', { text: p.title || pn }), h('small', { class: 'text-muted-d', text: ' ' + ((p.fields || []).length + (p.measures || []).length) + ' items' })),
+      const det = h('details', { class: 'bi-md-persp', 'data-perspective': pn, open: openPersp.has(pn) || null }, h('summary', {}, h('strong', { text: p.title || pn }), h('small', { class: 'text-muted-d', 'data-persp-count': '', text: ' ' + ((p.fields || []).length + (p.measures || []).length) + ' items' })),
         h('div', { class: 'bi-md-row' }, h('label', {}, 'Title ', title), rm),
         h('fieldset', {}, h('legend', { text: 'Measures' }), h('div', { class: 'bi-layer-picks' }, measureNames().map((n) => tick('measures', n)))),
         h('fieldset', {}, h('legend', { text: 'Fields' }), h('div', { class: 'bi-layer-picks' }, allFields().map((f) => tick('fields', f.name)))));
