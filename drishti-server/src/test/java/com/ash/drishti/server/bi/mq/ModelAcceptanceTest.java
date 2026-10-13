@@ -674,4 +674,28 @@ class ModelAcceptanceTest {
         JsonNode two = ok(call("POST", "/api/v1/bi/mq", reader("wes"), Map.of("mq", 1, "model", "sv-model", "select", Map.of("measures", List.of("Notional")), "time", Map.of("as-of", DAY))));
         assertThat(two.path("model").path("version").asText()).isEqualTo("2.0.0");
     }
+
+    @Test @Order(13)
+    void aModelNameIsHeldOnceInAWorkspaceAndOnceInTheCatalogue() throws Exception {
+        String desk = null;
+        for (JsonNode w : ok(call("GET", "/api/v1/bi/workspaces", reader("wes"), null))) {
+            if ("Semver Desk".equals(w.path("name").asText())) {
+                desk = w.path("id").asText();
+            }
+        }
+        assertThat(desk).isNotNull();
+        call("POST", "/api/v1/bi/workspaces/" + desk + "/items", reader("wes"), Map.of("kind", "model", "title", "Twin", "body", SV_MODEL))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-9004"))
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("already has a model named 'sv-model'")));
+        String other = ok(call("POST", "/api/v1/bi/workspaces/" + desk + "/items", reader("wes"), Map.of("kind", "model", "title", "Other",
+                "body", SV_MODEL.replace("model: sv-model", "model: sv-other")))).path("id").asText();
+        call("PUT", "/api/v1/bi/items/" + other, reader("wes"), Map.of("body", SV_MODEL)).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-9004"));
+        String ws2 = ok(call("POST", "/api/v1/bi/workspaces", reader("wes"), Map.of("name", "Second Desk"))).path("id").asText();
+        String twin = ok(call("POST", "/api/v1/bi/workspaces/" + ws2 + "/items", reader("wes"), Map.of("kind", "model", "title", "Twin",
+                "body", SV_MODEL.replace("version: 1.0.0", "version: 5.0.0")))).path("id").asText();     // another workspace may draft one of the name
+        call("POST", "/api/v1/bi/items/" + twin + "/publish", reader("wes"), Map.of("note", "twin")).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("DRS-9004")).andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("already has a published model named 'sv-model'")));
+        call("POST", "/api/v1/bi/items/" + twin + "/move", reader("wes"), Map.of("workspace", desk)).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-9004"));
+        call("POST", "/api/v1/bi/items/" + other + "/move", reader("wes"), Map.of("workspace", ws2)).andExpect(status().is2xxSuccessful());
+    }
 }

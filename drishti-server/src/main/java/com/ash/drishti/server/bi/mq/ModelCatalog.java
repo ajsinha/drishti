@@ -779,6 +779,7 @@ public final class ModelCatalog {
             return "";
         }
         ModelDefParser.Result r = ModelDefParser.parse(body);
+        com.ash.drishti.server.bi.ModelNames.requireUniqueInCatalogue(bi.publishedOfKind("model"), i.id(), body, bi::publishedBody);   // one published model per name
         List<DatasetParser.Problem> problems = new ArrayList<>(r.problems());
         Map<String, ResolvedDataset> resolved = r.model() == null ? Map.of() : resolveAll(r.model(), problems);
         if (r.model() != null) {

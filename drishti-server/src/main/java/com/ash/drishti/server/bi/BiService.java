@@ -522,6 +522,7 @@ public final class BiService {
         if (BiTitles.KINDS.contains(kind) && BiTitles.of(content) != null && !title.equals(BiTitles.of(content))) {
             content = BiTitles.with(content, title);                                           // one title: the body carries the item's
         }
+        ModelNames.requireUniqueInWorkspace(store.items(), w.id(), "", kind, content);
         BiStore.Item i = new BiStore.Item("bi-" + randomId(), w.id(), kind, title, text(body, "description", 2000, false), p.user(),
                 tags(body.get("tags")), content, "draft", 0, "none", "", audienceList(body, "audienceRoles", true),
                 audienceList(body, "audienceUsers", false), audienceList(body, "audiencePacks", false), "", null, now, now, p.user(), null, "");
@@ -827,6 +828,7 @@ public final class BiService {
             }
         }
         boolean bodyChanged = !newBody.equals(i.body());
+        ModelNames.requireUniqueInWorkspace(store.items(), i.workspace(), i.id(), i.kind(), newBody);
         boolean catalogueOnly = !bodyChanged;
         BiStore.Item n = new BiStore.Item(i.id(), i.workspace(), i.kind(), newTitle,
                 body.containsKey("description") ? text(body, "description", 2000, false) : i.description(), i.owner(),
@@ -868,6 +870,7 @@ public final class BiService {
             throw new DrishtiException(ErrorCode.BI_CONFLICT, "the shipped workspace is read-only");
         }
         requireRole(to, p, "contributor", "adding items");
+        ModelNames.requireUniqueInWorkspace(store.items(), to.id(), i.id(), i.kind(), i.body());
         BiStore.Item n = new BiStore.Item(i.id(), to.id(), i.kind(), i.title(), i.description(), i.owner(), i.tags(), i.body(), i.status(), i.publishedVersion(),
                 i.endorsement(), i.endorsedBy(), i.audienceRoles(), i.audienceUsers(), i.audiencePacks(), i.proposedBy(), i.proposedAt(), i.createdAt(),
                 Instant.now(), p.user(), i.publishedAt(), i.publishedBy());
