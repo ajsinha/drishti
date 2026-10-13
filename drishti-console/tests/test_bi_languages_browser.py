@@ -23,6 +23,7 @@ Skipped when Playwright, Chromium or the built server jar is missing, or a scrat
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 import pytest
@@ -36,6 +37,9 @@ from bi_stack import listening  # noqa: E402
 w1.SERVER_PORT, w1.CONSOLE_PORT = 18912, 17912
 w1.SERVER, w1.CONSOLE_URL = f"http://127.0.0.1:{w1.SERVER_PORT}", f"http://127.0.0.1:{w1.CONSOLE_PORT}"
 CONSOLE_URL = w1.CONSOLE_URL
+# the server runs a Python column through the console's sandboxed runner, started with this Python (it has pandas)
+os.environ.setdefault("DRISHTI_BI_TRANSFORM_PYTHON", sys.executable)
+os.environ.setdefault("DRISHTI_BI_TRANSFORM_RUNNER", str(Path(__file__).resolve().parents[1] / "core" / "transform_cli.py"))
 CAPTURES = os.environ.get("DRISHTI_CAPTURES", "")                 # a folder: the texts the guides quote (YAML written, SQL shown) are kept there
 SHOTS = os.environ.get("DRISHTI_SHOTS", "")                       # a folder: the documentation's pictures are taken there too (docs/guides/EXPRESSIONS.md)
 sign_in, clean, fetch = w1.sign_in, w1.clean, w1.fetch
@@ -493,6 +497,54 @@ def test_the_wizards_preview_answers_a_grouped_dataset_with_a_worked_out_column(
     expect(page.locator("[data-preview-table] tbody tr")).to_have_count(3, timeout=20000)
     expect(page.locator("[data-preview-table] thead")).to_contain_text("notionalM")
     shoot(page, '[data-step="preview"]', "wizard-preview-grouped")
+    clean(page)
+    page.context.close()
+
+
+BUCKET = """rachana: 1
+python: notional-size
+title: Notional size
+description: Big or small, by the trade's notional (a Python column of the dataset wizard).
+version: 1
+interface: transform
+inputs: [rows]
+packages: [pandas]
+target: server
+source: |
+  def run(rows, params):
+      out = rows.copy()
+      out[params["column"]] = (out["notional"] >= 4000000).map({True: "big", False: "small"})
+      return out
+"""
+
+
+def test_the_wizard_adds_a_python_column(browser):
+    page = sign_in(browser, "wes")
+    ws = fetch(page, "POST", "/bi/api/workspaces", {"name": "Python columns desk", "description": ""})["body"]["id"]
+    item = fetch(page, "POST", f"/bi/api/workspaces/{ws}/items", {"kind": "python", "title": "Notional size", "description": "", "body": BUCKET})["body"]
+    assert fetch(page, "POST", f"/bi/api/items/{item['id']}/publish", {"note": "test"})["status"] == 200
+    page.evaluate("window.sessionStorage.clear()")
+    wizard(page)
+    page.select_option("[data-src-extends]", "pack.trading.trade")
+    next_step(page, "columns")
+    expect(page.locator("[data-keep-col]")).not_to_have_count(0, timeout=15000)
+    next_step(page, "filter")
+    next_step(page, "grain")
+    next_step(page, "derive")
+    page.click('[data-derive-add="python"]')
+    page.fill('[data-derive-name="0"]', "size")
+    page.locator('[data-derive-name="0"]').press("Tab")
+    page.select_option('[data-derive-python="0"]', label="Notional size")
+    page.locator('[data-derive-input="notional"]').check()
+    shoot(page, '[data-step="derive"]', "wizard-python-column")
+    next_step(page, "group")
+    next_step(page, "preview")
+    page.click("[data-preview-go]")
+    expect(page.locator("[data-preview-table] thead")).to_contain_text("size", timeout=30000)
+    cells = page.eval_on_selector_all("[data-preview-table] tbody tr", "rows => rows.map(r => [...r.children].map(c => c.textContent))")
+    heads = page.eval_on_selector_all("[data-preview-table] thead th", "hs => hs.map(h => h.textContent)")
+    col = [i for i, h in enumerate(heads) if h.endswith(".size")][0]
+    assert {r[col] for r in cells} <= {"big", "small"} and cells, (heads, cells[:3])
     clean(page)
     page.context.close()
 
