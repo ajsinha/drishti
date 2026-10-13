@@ -146,7 +146,8 @@ $ python3 tools/drishti.py bi item new me docs/tutorials/data/world-economics-21
 bi-2d5bf64d9d  dataset  World economics (2.1)  draft in My workspace
 ```
 
-(The id differs on your machine.) Open **Designer**, choose **World economics (2.1)** under *Other datasets (version 1)* in **Model or dataset**, give a title and press **Start designing**, then
+(The id differs on your machine. The server converts stored version 1 datasets to models when it starts, `drishti.bi.migrate.on-start`, so after a
+restart this item is a model too and the hooks answer `DRS-9034` on it: add the file again.) Open **Designer**, choose **World economics (2.1)** under *Other datasets (version 1)* in **Model or dataset**, give a title and press **Start designing**, then
 **Describe a report**.
 
 ![Describe a report: the box with "GDP by region as a bar chart and the total as a card", the line "The draft passed the report check. Nothing is saved.", the YAML, and Draft it, Use this draft and Close](img/t15/03-describe.jpg)

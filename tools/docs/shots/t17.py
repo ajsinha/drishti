@@ -19,7 +19,7 @@ development one off, roles, API tokens, the health page (heap, connectors), the 
 administrator for a moment and enables it again."""
 from __future__ import annotations
 
-from _bi import quiet_inbox
+from _bi import bi, clean_items, quiet_inbox
 from _tut import ADMIN, ADMIN_PASSWORD, OUT, SERVER_ENV, call, elem_shot, go, login  # noqa: F401
 from shotlib import Ctx, register
 
@@ -102,3 +102,31 @@ def index_reload(c: Ctx):
     c.page.locator("[data-index-panel] tbody tr").nth(1).locator("[data-index-reload]").click()
     c.page.wait_for_timeout(2500)
     elem_shot(c, "11-index-reload.jpg", "[data-index-panel]", pad=0)
+
+
+@shot("12-migrated.jpg")
+def migrated(c: Ctx):
+    """Upgrading to 2.2: a stored version 1 dataset (tutorial 15's World economics in its 2.1 form) converted by the server's migration (what runs once at
+    start, here asked for by a bi-admin as drishti.py bi migrate --models does), then the item's History: the migration is a saved state of its own."""
+    import json
+    import urllib.request
+
+    import shotlib
+    from _tut import ROOT
+    import sys
+    sys.path.insert(0, str(ROOT / "drishti-console"))
+    from core.auth import mint_token
+    login(c, height=1000)
+    quiet_inbox(c)
+    title = "World economics (2.1)"
+    clean_items(c, title, "world-economics-21-economies")      # a run before left the model and the dataset it made
+    made = bi(c, "POST", "/workspaces/me/items", {"kind": "dataset", "title": title,
+                                                  "body": (ROOT / "docs" / "tutorials" / "data" / "world-economics-21.dataset.yaml").read_text()})
+    token = mint_token(ADMIN, ["admin"], SERVER_ENV["DRISHTI_TOKEN_SECRET"], 600)
+    req = urllib.request.Request(f"http://127.0.0.1:{shotlib.SERVER_PORT}/api/v1/bi/migrate/models", data=json.dumps({"dryRun": False}).encode(), method="POST",
+                                 headers={"Authorization": "Bearer " + token, "Content-Type": "application/json"})
+    print("  migrate:", urllib.request.urlopen(req, timeout=120).read().decode()[:300])
+    go(c, "/bi/i/" + made["id"], width=1600, height=1000, wait="[data-sec-history]:not([hidden]) tbody tr", settle=1200)
+    c.page.locator("[data-sec-history]").scroll_into_view_if_needed()
+    c.page.wait_for_timeout(500)
+    elem_shot(c, "12-migrated.jpg", "[data-sec-history]", pad=8)

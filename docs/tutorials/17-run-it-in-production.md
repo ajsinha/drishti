@@ -162,22 +162,28 @@ ls -1t /backup/drishti/drishti-*.tgz | tail -n +15 | xargs -r rm --
 Run it from cron (`30 1 * * * /opt/drishti/backup.sh`) as the service user. A backup you have not read is a hope: look inside the archive.
 
 ```text
-$ tar tzf /backup/drishti/drishti-20261012-0028.tgz | grep -v config/connectors/ | head -12
+$ tar tzf /backup/drishti/drishti-20261013-0130.tgz | grep -E '^(data|sutras)'
 data/identity/
 data/identity/backup.db
 data/governance/
 sutras/
-config/bi/
+$ tar tzf /backup/drishti/drishti-20261013-0130.tgz | grep '^config/bi/[a-z]*/$'
+config/bi/reports/
+config/bi/python/
+config/bi/notebooks/
+config/bi/datasets/
+config/bi/boards/
+config/bi/models/
+$ tar tzf /backup/drishti/drishti-20261013-0130.tgz | grep -E '^config/bi/(models|datasets)/' | head -6
 config/bi/datasets/
 config/bi/datasets/live-trading.dataset.yaml
-config/bi/datasets/world-economics.dataset.yaml
-config/bi/datasets/trades-basic.dataset.yaml
 config/bi/datasets/live-exposure.dataset.yaml
-config/bi/datasets/trading-risk.dataset.yaml
-config/bi/datasets/trading-cashflows.dataset.yaml
+config/bi/datasets/.gitkeep
+config/bi/datasets/world-economics-economies.dataset.yaml
+config/bi/datasets/trading-risk-trades.dataset.yaml
 ```
 
-You should see `data/identity/backup.db` (the consistent copy of the live database; the live `drishti.db` and its `-wal` and `-shm` files are left out on purpose), `data/governance/`, your sutras and your BI folder (this archive is 360,016 bytes). **Restore** is the reverse, and you try it once on another machine: stop the server; move the damaged folders aside; unpack the archive; `mv data/identity/backup.db data/identity/drishti.db`; fix the owner; start; sign in as an administrator and open **Admin → Users** and **Admin → Audit log**: the users and the recent events are there.
+You should see `data/identity/backup.db` (the consistent copy of the live database; the live `drishti.db` and its `-wal` and `-shm` files are left out on purpose), `data/governance/`, your sutras and your BI folder with **`models/`** beside `datasets/` (2.2: a report reads a model, and a model reads datasets; back up both: a model without its datasets cannot answer). This archive, of a fresh site with the samples, is 35,918 bytes; yours grows with your data and audit log. **Restore** is the reverse, and you try it once on another machine: stop the server; move the damaged folders aside; unpack the archive; `mv data/identity/backup.db data/identity/drishti.db`; fix the owner; start; sign in as an administrator and open **Admin → Users** and **Admin → Audit log**: the users and the recent events are there.
 The ActiveMQ and RabbitMQ connectors' state folders (`data/state/`) are the exception: copy them with the server stopped.
 
 ## Step 6 · The heap, the caches and the pools
@@ -305,7 +311,67 @@ $ curl -s localhost:18480/actuator/health/readiness
 {"status":"UP"}
 ```
 
-You should see the new version and `UP`. **Rollback** is the reverse: stop, put the old jar (or image tag) back, restore the backup **if** the new version changed stored data (the release notes say), start. Some upgrades make people sign in once more (after an upgrade that moved sessions to the server, cookies from before carry no session); the notes say so.
+You should see the new version and `UP`.
+
+**Upgrading to 2.2: BI items become models.** In 2.2 a report reads a **model** (`model: name@major`), and a model reads **datasets** of the model
+layer. At its first start the new server **converts what is stored once**, before it takes requests (`drishti.bi.migrate.on-start`, on by default;
+[CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibimigrate--migrations-of-stored-bi-items)): old-syntax expressions become DEL v2, then each
+version 1 dataset becomes a model of the same id over one new dataset per table, and the reports on it are rebound. Every change is audited and the
+text before is kept in the item's history, so it is undone with **Restore as draft**; that is also why step 2 (back up) comes first. Your **files**
+(`config/bi/`) are not touched at start: convert them with the command line, which says what it would write first:
+
+```text
+$ python3 tools/drishti.py bi migrate --models config/bi --dry-run
+datasets/desk-pnl-vs-exposure.dataset.yaml: removed -> folded into the model trading-risk@1
+datasets/counterparty-exposure.dataset.yaml: converted -> model counterparty-exposure@1 over [counterparty-exposure-netting-sets, counterparty-exposure-counterparties]
+    writes datasets/counterparty-exposure-netting-sets.dataset.yaml
+    writes datasets/counterparty-exposure-counterparties.dataset.yaml
+    writes models/counterparty-exposure.model.yaml
+...
+datasets/trades-basic.dataset.yaml: converted -> model trades-basic@1 over [trades-basic-trade]
+    writes datasets/trades-basic-trade.dataset.yaml
+    writes models/trades-basic.model.yaml
+...
+reports/live-trading-desk.report.yaml: manual
+    manual: the report reads the live dataset live-trading (now also the model live-trading@1): it stays on the dataset until a report on a model follows live data (standing queries, wave W3); then bind it with model: live-trading@1
+reports/trades-overview.report.yaml: converted -> trades-basic@1
+...
+26 file(s) read, 16 converted, 0 refused; would write 32 file(s)
+```
+
+(That is the 2.1 sample folder; `--out DIR` writes the result elsewhere, `--report F` writes the list as Markdown, and **manual** lines are what a
+person must finish: a live report, a Python Transform's input names.) To run the stored conversion yourself instead (`DRISHTI_BI_MIGRATE_ON_START=false`),
+a bi-admin asks for it, with `--dry-run` first:
+
+```text
+$ python3 tools/drishti.py bi migrate --models --dry-run
+dataset 'world-economics-21' (bi-70e0b3390a): converted -> model world-economics-21@1 over [world-economics-21-economies]
+1 stored item(s) scanned, 1 would be converted
+$ python3 tools/drishti.py bi migrate --models
+dataset 'world-economics-21' (bi-70e0b3390a): converted -> model world-economics-21@1 over [world-economics-21-economies]
+1 stored item(s) scanned, 1 converted
+```
+
+**In the UI** the migration is a saved state of each item it changed: open the item (here the World economics dataset of
+[tutorial 15](15-ai-in-drishti.md) in its 2.1 form, stored in a workspace before the upgrade) and look at **History**:
+
+![The item's History after the migration: #2 "the dataset-to-model migration: now the model over 1 dataset(s)" by drishti-dev-admin above #1 created, Compare with draft and Restore as draft, and the review record naming the model and the new dataset](img/t17/12-migrated.jpg)
+
+You should see `#2 (draft)` with the message *the dataset-to-model migration: now the model over 1 dataset(s)*, `#1 created` below it with **Restore as
+draft**, and in the review record the model it became and the new dataset's id. **The YAML** of the item now starts with what it is:
+
+```yaml
+# CONVERTED from the stored item bi-70e0b3390a (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
+# docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
+
+rachana: 2
+expressions: 2
+model: world-economics-21
+version: 1.0.0
+title: "World economics (2.1)"
+```
+
+**Rollback** is the reverse: stop, put the old jar (or image tag) back, restore the backup **if** the new version changed stored data (the release notes say; 2.2 does: a 2.1 server cannot read a model, so going back from 2.2 means the backup of step 2), start. Some upgrades make people sign in once more (after an upgrade that moved sessions to the server, cookies from before carry no session); the notes say so.
 
 ## Step 9 · Take something out, safely
 

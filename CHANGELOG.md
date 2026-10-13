@@ -94,7 +94,9 @@
   its 2.1 form (docs/tutorials/data/world-economics-21.dataset.yaml), since in 2.2 they answer DRS-9034 on a model. Tutorial 16 (embed) shows a report on a
   model in the sample host (/report?report=...&visual=...) with the model query the server ran for a visual. Drishti Elements 1.4.1: a slicer in an
   embedded report asks for its values as the console does (a list or dropdown slicer used to fail the whole report with "Cannot read properties of
-  null"), and a report with no live table has no live bar.
+  null"), and a report with no live table has no live bar. Tutorial 17 (production) for 2.2: the backup holds config/bi/models/, and
+  upgrading to 2.2 converts stored BI items once at start (the file and stored dry runs of `bi migrate --models`, the migration in an item's History);
+  a rollback from 2.2 needs the backup.
 - **Server: the old expression syntax is refused (wave A, task 6).** `drishti.bi.expr.legacy` now defaults to `refuse`: an expression in the old syntax
   is `DRS-9100` with the DEL v2 text as the fix (`drishti.py bi migrate --expressions` converts files; `legacy: warn` reads it while a site converts its
   own items). A text that is already DEL v2 but wrong gets its DEL v2 problem, and a rule written as a YAML boolean (`where: true`) reads as `True`.

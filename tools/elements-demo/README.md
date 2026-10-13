@@ -96,4 +96,6 @@ Results and what they changed in the plan are in the *Step 0 results* section of
 
 ## Framework samples
 
+`/report` is the page of `<drishti-report>` (the live desk report and one of its visuals); `/report?report=file:report:trades-overview&visual=by-desk` shows another report in the same card (a catalogue id, `file:report:<name>` or `bi-<hex>`; register it in the application's kinds as `report:<id>`), as tutorial 16 does with a report on a model.
+
 The host also serves the React, Vue and Angular sample pages of `docs/guides/examples/embed/` at `/samples/<framework>/` (a search box, a view, its About body and a report in each). Fetch the framework builds first (`bash docs/guides/examples/embed/fetch-vendor.sh`); register the application with the scopes `embed:view embed:about embed:report embed:search`. The Angular page runs the JIT compiler, so only `/samples/angular/` is served with `'unsafe-eval'`.
