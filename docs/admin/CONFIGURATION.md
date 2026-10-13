@@ -221,6 +221,24 @@ At start each process (1) removes the folders of **dead** processes it finds und
 
 Admin, Health shows both folders (path, size and file count). All main code makes temporary files through one helper (`TempFiles` in the server, `core/tmpdir.py` in the console); an architecture test and a console test fail the build if anything else calls `Files.createTempFile`, `Files.createTempDirectory`, `File.createTempFile` or `tempfile.*`.
 
+### External libraries: `external_lib` (`DRISHTI_EXTERNAL_LIB`)
+
+One folder for your own libraries, loaded at start with no rebuild ([external_lib/README.md](../../external_lib/README.md)):
+
+| Folder | What goes in it | Loaded by |
+|---|---|---|
+| `<base>/java` | jars: JDBC drivers, connector plugins, libraries a plugin needs | the **server**: every jar joins its class path at start (the jar is launched by Spring Boot's `PropertiesLauncher`, whose `loader.properties` names this folder; `-Dloader.path=` overrides it) |
+| `<base>/python` | modules, packages, pure-Python `.whl` / `.zip` / `.egg` files | the **console**: on `sys.path` at start, after the console's own folder; sandboxed Python items see the paths but import a package only when it is on `bi.python.packages` |
+
+| Process | Setting | Variable | Default |
+|---|---|---|---|
+| Server | system property `drishti.external-lib` | `DRISHTI_EXTERNAL_LIB` | `external_lib` in the working directory |
+| Console | `external_lib` | `DRISHTI_EXTERNAL_LIB` | `external_lib` in the repository root |
+
+Restart a process after adding or removing a library. Admin, Health lists the jars and the Python items each process
+found. Only administrators should be able to write to the folder: what is in it runs inside the server and the console.
+The repository keeps the folder empty (`.gitignore`).
+
 ### Every placeholder in the server's `application.yaml`
 
 Generated from `drishti-server/src/main/resources/application.yaml` (and checked against it by
@@ -332,6 +350,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_CONSOLE_PORT` | `server.port` | `17480` | The console's port. |
 | `DRISHTI_BACKEND_URL` | `backend.url` | `http://127.0.0.1:18480` | Where the server is. |
 | `DRISHTI_CONSOLE_TMP_DIR` | `tmp_dir` | empty | Base of the console's temp folder `drishti-console-<pid>` (empty: `DRISHTI_TMP_DIR`, then the system temp folder), removed on exit; stale ones are removed at start. |
+| `DRISHTI_EXTERNAL_LIB` | `external_lib` | empty | Base of the external library folder (empty: `external_lib` in the repository root); `<base>/python` is importable. The server reads the same variable for `<base>/java`. |
 | `DRISHTI_PRODUCT` | `ui.product` | `Drishti` | The product name shown in pages. |
 | `DRISHTI_USER` | `ui.user` | `ash` | The acting user while sign-in is off. |
 | `DRISHTI_ABOUT_PREFETCH` | `ui.about_prefetch` | `true` | Fetch *About this page* when a view goes idle, so labels with a glossary entry are underlined at once; costs one explain per page view. |

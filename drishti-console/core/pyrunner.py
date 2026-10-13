@@ -39,6 +39,13 @@ CODES = {"failed": ("DRS-9071", 422), "sandbox": ("DRS-9073", 403), "limit": ("D
 DEFAULT_PACKAGES = ["pandas", "numpy", "pyarrow", "scipy", "statsmodels"]
 
 
+def _external_paths() -> list[str]:
+    """The external library folder's Python paths (core/external_lib.py); the worker's import guard still applies the allow-list."""
+    from core import external_lib
+
+    return external_lib.paths()
+
+
 class PyError(Exception):
     """A refusal or failure of a Python call, with the DRS code to answer with. ``traceback`` is for authors only."""
 
@@ -216,7 +223,7 @@ class PyRunner:
                    "source": m["source"], "inputs_files": files, "max_rows": max_rows,
                    "inputs": [] if m["interface"] == "transform" else list(m.get("inputs") or []), "group_by": group_by, "params": params, "packages": list(m.get("packages") or []),
                    "output": m.get("output") or "echarts", "quant_root": m.get("quant_root"), "quant_engine": m.get("quant_engine"),
-                   "table_rows": m.get("table_rows"), "timeout": timeout, "memory": memory, "max_output_bytes": self.max_output, "max_groups": self.max_groups}
+                   "table_rows": m.get("table_rows"), "extra_paths": _external_paths(), "timeout": timeout, "memory": memory, "max_output_bytes": self.max_output, "max_groups": self.max_groups}
             (Path(tmp) / "req.json").write_text(json.dumps(req), encoding="utf-8")
             cmd = [sys.executable, "-I", str(WORKER), tmp]
             if self._netns_ok():

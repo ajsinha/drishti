@@ -416,6 +416,9 @@ def _run(req: dict, tmp: str) -> dict:
 def main(tmp: str) -> int:
     with open(os.path.join(tmp, "req.json"), encoding="utf-8") as f:
         req = json.load(f)
+    for p in req.get("extra_paths") or []:                 # the external library folder (core/external_lib.py): importable, and so readable
+        if isinstance(p, str) and os.path.isabs(p) and p not in sys.path:
+            sys.path.append(p)
     out: dict
     try:
         out = {"ok": True, **_run(req, tmp)}
