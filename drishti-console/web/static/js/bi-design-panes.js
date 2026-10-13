@@ -734,10 +734,11 @@
       return form;
     }
 
-    /** Distinct values of the field, from the dataset itself (as the author: the author's rows and masks apply). */
+    /** Distinct values of the field, from the report's model (as the author: the author's rows and masks apply). */
     function loadValues(field, box, state, txt) {
       B.clear(box).appendChild(h('p', { class: 'bi-vis-note', text: 'Reading values…' }));
-      B.enqueue(() => B.api('POST', '/datasets/' + B.id2path(D.dataset.id) + '/query', { fields: [field], limit: 200 })).then((res) => {
+      const ref = (B.modelBinding && B.modelBinding.ref) || B.layer.refOf(D.model.model || D.model.dataset || D.dataset.id);
+      B.enqueue(() => B.mq.values(ref, field, 200)).then((res) => {
         B.clear(box);
         const search = h('input', { type: 'search', class: 'studio-in', placeholder: 'Search', 'aria-label': 'Search the values' });
         const list = h('div', { class: 'bi-picklist', role: 'group', 'aria-label': 'Values' });

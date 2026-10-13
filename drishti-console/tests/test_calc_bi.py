@@ -74,15 +74,18 @@ def test_a_query_is_the_engines_answer_as_a_dataframe_with_what_is_masked_said(b
     assert df["MTM"].dtype.kind == "f" and df.attrs["masked"] == ["trade.book"] and df.attrs["dataset"] == "trades-basic" and df.attrs["asOf"] == "2026-10-09"
     op, args = bi.sent[0]
     assert op == "bi.query" and args["dataset"] == "trades-basic"
-    assert args["body"] == {"fields": ["trade.desk", "trade.book"], "measures": ["MTM"], "filters": [{"field": "trade.desk", "op": "in", "values": ["FX", "RATES"]}], "limit": 50}
+    assert args["body"] == {"mq": 1, "select": {"fields": ["trade.desk", "trade.book"], "measures": ["MTM"]},
+                            "where": [{"field": "trade.desk", "op": "in", "values": ["FX", "RATES"]}], "limit": 50, "model": "trades-basic@1"}   # one model query on the converter's model
 
 
 def test_filters_may_be_written_as_the_engine_takes_them_and_dates_are_one_or_a_range(bi):
     asyncio.run(bi.query_async("d", measures="MTM", filters=[{"field": "trade.desk", "op": "ne", "values": ["FX"]}], dates=("2026-10-01", "2026-10-09")))
     body = bi.sent[0][1]["body"]
-    assert body["measures"] == ["MTM"] and body["filters"][0]["op"] == "ne" and body["dates"] == {"from": "2026-10-01", "to": "2026-10-09"}
+    assert body["select"]["measures"] == ["MTM"] and body["where"][0]["op"] == "ne" and body["time"] == {"window": {"from": "2026-10-01", "to": "2026-10-09"}}
     asyncio.run(bi.query_async("d", by="trade.desk", dates="2026-10-09"))
-    assert bi.sent[1][1]["body"]["dates"] == {"from": "2026-10-09", "to": "2026-10-09"}
+    assert bi.sent[1][1]["body"]["time"] == {"window": {"from": "2026-10-09", "to": "2026-10-09"}}
+    assert bi.model_ref("trading-risk@1") == "trading-risk@1" and bi.model_ref("dataset:pack.trading.trade") == "dataset:pack.trading.trade"
+    assert bi.model_ref("file:dataset:trades-basic") == "trades-basic@1"
     with pytest.raises(ValueError, match="at least one measure"):
         asyncio.run(bi.query_async("d"))
 
@@ -115,7 +118,7 @@ def test_walk_hands_the_frame_to_graphic_walker_with_field_types(bi):
 
 def test_the_page_asks_the_bi_proxy_as_the_person_and_the_worker_loads_the_module_on_demand():
     js = (ROOT / "drishti-console/web/static/js/calc.js").read_text()
-    assert "'/bi/api/datasets'" in js and "/query'" in js and "m.op === 'bi.query'" in js and "walker.html" in js and "'allow-scripts'" in js
+    assert "'/bi/api/datasets'" in js and "'/bi/api/mq'" in js and "m.op === 'bi.query'" in js and "walker.html" in js and "'allow-scripts'" in js
     assert "allow-same-origin" not in js
     worker = (ROOT / "drishti-console/web/static/js/calc-worker.js").read_text()
     assert "drishti_bi.py" in worker and "drishti_bi" in worker.split("const DATA")[1].split("\n")[0]

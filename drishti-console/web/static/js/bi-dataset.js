@@ -157,20 +157,6 @@
       });
       var js = q('[data-built-joins]'); clear(js);
       (c.joins || []).forEach(function (j) { js.appendChild(h('li', {}, h('code', { text: j.left + ' ' + j.type + ' join ' + j.right + ' on ' + j.on.join(', ') }))); });
-      var run = q('[data-run-wrap]');
-      run.hidden = c.kind !== 'derived';
-      if (c.kind === 'derived') {
-        api('GET', '/me').then(function (me) {
-          if (me.powers.indexOf('bi-author') < 0) { run.hidden = true; return; }
-          q('[data-run-transform]').onclick = function () {
-            q('[data-run-result]').textContent = 'Running the Transform...';
-            api('POST', path + '/transform/run', {}).then(function (r) {
-              q('[data-run-result]').textContent = r.rows + ' rows, ' + r.columns.map(function (x) { return x.name + ' (' + x.type + ')'; }).join(', ') + (r.cached ? ' · already kept for you' : ' · ' + r.millis + ' ms');
-              api('GET', path).then(draw);
-            }).catch(function (e) { q('[data-run-result]').textContent = e.message; });
-          };
-        }).catch(function () { run.hidden = true; });
-      }
     }
 
     function tables(m) {
@@ -358,18 +344,20 @@
       m.measures.forEach(function (x) { if (x.expr) { meas.appendChild(h('option', { value: x.name, text: x.name })); } });
       form.onsubmit = function (e) {
         e.preventDefault();
-        var body = { fields: sel(fields), measures: sel(meas), filters: [], limit: parseInt(form.elements.limit.value, 10) || 100 };
+        // one model query on the model of this dataset (since 2.2 the only way to ask for data): the converter's <name>@1 for a 2.1 dataset
+        var body = { mq: 1, model: window.drishtiBi.layer.refOf(id), select: { fields: sel(fields), measures: sel(meas) }, limit: parseInt(form.elements.limit.value, 10) || 100 };
         var runBtn = form.querySelector('[type=submit]');
-        if (!body.fields.length && !body.measures.length) { say('Choose at least one field or measure.', true); near(runBtn, 'Choose at least one field or measure.', true); return; }
+        if (!body.select.fields.length && !body.select.measures.length) { say('Choose at least one field or measure.', true); near(runBtn, 'Choose at least one field or measure.', true); return; }
         if (form.elements.ffield.value && form.elements.fvalue.value !== '') {
           var op = form.elements.fop.value, v = form.elements.fvalue.value;
           var values = op === 'in' ? v.split(',').map(function (x) { return x.trim(); }) : [isNaN(Number(v)) ? v : Number(v)];
-          body.filters.push({ field: form.elements.ffield.value, op: op, values: values });
+          body.where = [{ field: form.elements.ffield.value, op: op, values: values }];
         }
-        if (form.elements.from.value) { body.dates = { from: form.elements.from.value }; if (form.elements.to.value) { body.dates.to = form.elements.to.value; } }
+        if (form.elements.from.value) { body.time = { window: { from: form.elements.from.value, to: form.elements.to.value || form.elements.from.value } }; }
+        if (form.elements.explain.checked) { body.options = { explain: true }; }
         say('Running...');
         near(runBtn, '');
-        api('POST', path + '/query' + (form.elements.explain.checked ? '?explain=true' : ''), body).then(grid).catch(function (e) { say(e.message, true); near(runBtn, e.message, true); });
+        api('POST', '/mq', body).then(grid).catch(function (e) { say(e.message, true); near(runBtn, e.message, true); });
       };
     }
 
@@ -382,7 +370,7 @@
         body.appendChild(h('tr', {}, r.map(function (v, i) { return h('td', { class: a.columns[i].type === 'string' ? '' : 'num', text: v === null ? '' : num(v) }); })));
       });
       q('[data-grid-wrap]').hidden = false;
-      var m = a.meta;
+      var m = Object.assign({ layer: 'columns', millis: 0, dates: [], masked: [], warnings: [] }, a.meta || {});
       say('');
       q('[data-result-meta]').textContent = a.rowCount + ' row' + (a.rowCount === 1 ? '' : 's') + ' · answered from the ' + m.layer + ' layer' + (m.rollup ? ' (rollup ' + m.rollup + ')' : '') + ' · ' + m.millis + ' ms'
         + (m.cached ? ' · from the cache' : '') + (m.dates.length ? ' · dates ' + m.dates.join(', ') : '') + (m.masked.length ? ' · masked: ' + m.masked.join(', ') : '');

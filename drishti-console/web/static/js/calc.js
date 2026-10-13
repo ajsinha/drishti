@@ -174,7 +174,7 @@
     else if (op === 'history') { path = '/api/series/' + encodeURIComponent(a.kind) + '/' + encodeURIComponent(a.id); add('path', a.path); add('days', a.days); }
     else if (op === 'bi.datasets') { return '/bi/api/datasets'; }                       // drishti_bi: the BI engine, as this person (the console passes the session on)
     else if (op === 'bi.model') { return '/bi/api/datasets/' + encodeURIComponent(a.dataset).replace(/%3A/g, ':'); }
-    else if (op === 'bi.query') { return '/bi/api/datasets/' + encodeURIComponent(a.dataset).replace(/%3A/g, ':') + '/query'; }
+    else if (op === 'bi.query') { return '/bi/api/mq'; }                                   // one model query (drishti_bi builds it, with its model)
     else { return null; }
     add('asOf', a.asOf);
     return path + (q.length ? '?' + q.join('&') : '');

@@ -16,11 +16,11 @@
 
 Nothing here runs a query. A slice is already a choice of fields, aggregates and filters; a SQL cell is read (by a small reader, not a SQL engine) for the same three things:
 the columns it selects or groups by, the aggregates it computes, and the simple conditions it filters on. What the reader cannot understand (a join, a sub-query, an
-expression) is said in the notes and left out, never guessed at. The dataset's measures are what a report shows, so an aggregate becomes a visual's value only when the
-dataset has a measure that is exactly that aggregate; otherwise the note says which measure to add.
+expression) is said in the notes and left out, never guessed at. The model's measures are what a report shows, so an aggregate becomes a visual's value only when the
+model has a measure that is exactly that aggregate; otherwise the note says which measure to add.
 
 The visual is a ``matrix`` (rows, columns and values) when there are values, else a ``table`` of the fields; filters become the visual's own ``filters``, so the report
-shows what the cell showed. The dataset of the visual is the one the extract was opened from (the visual names it when the report's own dataset is another)."""
+shows what the cell showed. The report reads the model the extract was opened from; a slice of another model is not added to it."""
 from __future__ import annotations
 
 import re
@@ -133,7 +133,7 @@ def sql_to_slice(sql: str, columns: list[str]) -> dict:
         if a:
             field = a.group(3) or ""
             if a.group(2) and a.group(2).lower().startswith("distinct"):
-                notes.append(f"count(distinct {field}) has no plain dataset measure to match; add a measure for it.")
+                notes.append(f"count(distinct {field}) has no plain measure of the model to match; add a measure for it.")
             elif a.group(1).lower() == "count" and not field:
                 aggs.append({"field": "*", "agg": "count"})
             elif field in columns:
@@ -189,7 +189,7 @@ def visual_for(model: dict, sl: dict, name: str, vid: str, qualify, notes: list[
         if found:
             measures.append(found)
         else:
-            notes.append(f"No dataset measure is {agg}({qualify(field) if field != '*' else '*'}); add one to the dataset, then put it in the visual's values.")
+            notes.append(f"No measure of the model is {agg}({qualify(field) if field != '*' else '*'}); add one to the model, then put it in the visual's values.")
     visual: dict
     at = {"x": 0, "y": 0, "w": 12, "h": 6}
     if measures and rows:
@@ -208,9 +208,13 @@ def visual_for(model: dict, sl: dict, name: str, vid: str, qualify, notes: list[
     return visual
 
 
-def add_to_report(report: dict, visual: dict, page_id: str, dataset_name: str, notes: list[str]) -> dict:
-    """The report model with the visual added to ``page_id`` (the first page when blank; a new page when the id is new), below what is there, with a free id. A visual
-    of a dataset other than the report's names its own."""
+def add_to_report(report: dict, visual: dict, page_id: str, model_ref: str, notes: list[str]) -> dict:
+    """The report model with the visual added to ``page_id`` (the first page when blank; a new page when the id is new), below what is there, with a free id. The
+    slice must be of the report's own model: a report reads one model (BI_MODEL_SPEC.md section 6), so another model's slice is refused (``ValueError``)."""
+    home = str(report.get("model") or "")
+    if model_ref and home != model_ref:
+        raise ValueError(f"the report reads the model '{home or report.get('dataset') or '?'}' and this slice is of '{model_ref}': "
+                         "promote it to a new report, or open the slice on the report's model")
     pages = report.setdefault("pages", [])
     page = next((p for p in pages if p.get("id") == page_id), None) if page_id else (pages[0] if pages else None)
     if page is None:
@@ -223,9 +227,5 @@ def add_to_report(report: dict, visual: dict, page_id: str, dataset_name: str, n
         visual["id"] = f"{base}-{n}"
     bottom = max([(v.get("at") or {}).get("y", 0) + (v.get("at") or {}).get("h", 0) for v in page.get("visuals") or []] or [0])
     visual["at"] = {**visual["at"], "y": bottom}
-    home = str(report.get("dataset") or "")
-    if home and dataset_name and home not in (dataset_name, "file:dataset:" + dataset_name):
-        visual["dataset"] = dataset_name
-        notes.append(f"The report reads '{home}'; this visual names its own dataset '{dataset_name}' (a link in the report can connect their slicers).")
     page.setdefault("visuals", []).append(visual)
     return report

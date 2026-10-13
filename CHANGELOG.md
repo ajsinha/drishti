@@ -56,6 +56,13 @@
   Analyse SQL cells run Drishti SQL on the server over the extract's model by default (over the extract stays selectable until wave B). The alert cell
   chooser sends `reduce` only when chosen. Guides: [EXPRESSIONS.md](docs/guides/EXPRESSIONS.md) section 11 (59 finance and risk recipes, each run as a
   test on the demo lake) and 8.1 (the editor), DATASETS.md section 15, REPORTS.md section 19, BI_GUIDE.md section 24, ANALYSE.md section 4.
+- **Console: off the 2.1 dataset paths (wave A, task 6).** Every read is a model query (`/bi/mq`) or Drishti SQL (`/bi/sql`): Analyse's extracts
+  (shape rows), a dataset page's preview, a filter's value list in the designer and Calc's `drishti_bi.query` (it now sends a model query; `model_ref`
+  says which model a name stands for). A source written before 2.2 (`file:dataset:trades-basic`, or a bare dataset name) reads the model the converter
+  made of it (`trades-basic@1`), so an old notebook's SQL cells run on the server too. Promote to a report writes a `rachana: 2` report on that model and
+  matches the model's measures; a slice of another model is not added to an existing report (`DRS-9070`). The phase 0 proof of concept is removed from
+  the console (`/bi/poc`, `bi.poc_enabled`, its page, script, styles, routes, the `poc:rows` channel and its tests); the dataset page's *Run the
+  Transform now* is gone with derived datasets.
 - **Server: the old expression syntax is refused (wave A, task 6).** `drishti.bi.expr.legacy` now defaults to `refuse`: an expression in the old syntax
   is `DRS-9100` with the DEL v2 text as the fix (`drishti.py bi migrate --expressions` converts files; `legacy: warn` reads it while a site converts its
   own items). A text that is already DEL v2 but wrong gets its DEL v2 problem, and a rule written as a YAML boolean (`where: true`) reads as `True`.

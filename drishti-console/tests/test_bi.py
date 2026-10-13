@@ -24,10 +24,8 @@ from core.app import create_app
 from core.config import load_settings
 
 
-def make(powers=("bi", "bi-author", "bi-admin"), enabled=True, poc=False):
+def make(powers=("bi", "bi-author", "bi-admin"), enabled=True):
     settings = load_settings(CONSOLE / "config")
-    if poc:
-        settings.as_dict().setdefault("bi", {})["poc_enabled"] = True
     app = create_app(settings)
     app.state.backend = BiBackend(powers, enabled)
     return TestClient(app), app.state.backend
@@ -184,12 +182,9 @@ def test_the_command_line_offers_rupaka(bi):
     assert none.get("/api/suggest", params={"q": "rupaka "}).json() == []
 
 
-def test_the_proof_of_concept_stays_off_unless_enabled_and_is_for_administrators(bi):
+def test_the_proof_of_concept_is_gone(bi):
     client, _ = bi
     assert client.get("/bi/poc").status_code == 404 and "/bi/poc" not in client.get("/t").text
-    on, _ = make(poc=True)
-    assert 'href="/bi/poc"' in on.get("/t").text
-    assert on.get("/bi/poc").status_code == 200                                         # the default identity is an administrator
 
 
 def test_the_help_screen_exists(bi):

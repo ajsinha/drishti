@@ -26,7 +26,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from urllib.parse import quote
 
-from core.perspective_csp import CHART_STYLE_HASHES, PERSPECTIVE_WORKERS, STYLE_HASHES, policy as perspective_policy
+from core.perspective_csp import PERSPECTIVE_WORKERS
 
 from fastapi.responses import JSONResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -75,19 +75,10 @@ PYODIDE = "/pyodide/"
 WALKER_PAGE = "/static/calc/walker.html"
 WALKER_CSP = ("default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src data: blob:; font-src data:; worker-src blob:; connect-src 'none'; "
               "base-uri 'none'; form-action 'none'; frame-ancestors 'self'; sandbox allow-scripts")
-# Rupaka phase 0 proof of concept (docs/architecture/RUPAKA_POC.md), only when bi.poc_enabled: /bi/poc, and only it, may compile
-# WebAssembly on its main thread (Perspective's viewer): 'wasm-unsafe-eval', never 'unsafe-eval'. The two vendored workers
-# (Perspective's engine, DuckDB-Wasm) are scripts of this origin with the worker policy above; neither is a blob.
-POC_PAGE = "/bi/poc"
-# Perspective's viewer also writes <style> elements (its shadow roots' own CSS): not allowed by style-src 'self'. The hashes and the policy are in
-# core/perspective_csp.py, shared with the reports and boards of phase 5 that hold a Perspective visual.
-POC_EXTRA_HASHES = CHART_STYLE_HASHES   # the phase 0 page also loads the chart plugin
-POC_STYLE_HASHES = STYLE_HASHES + POC_EXTRA_HASHES
-POC_CSP = perspective_policy(CSP, POC_STYLE_HASHES)
-POC_WORKERS = PERSPECTIVE_WORKERS
-# Rupaka phase 5: a report or board that holds a Perspective visual gets, in its own response only, the same narrow relaxation (routes/bi_routes.py sets
-# the header); every other BI page keeps the strict policy (no wasm, no extra style source).
-POC_WORKER_SUFFIX = "/duckdb-browser-eh.worker.js"
+# The vendored workers (Perspective's engine for the phase 5 visuals, DuckDB-Wasm for Analyse's browser engine) are scripts of this origin
+# served with the worker policy above; neither is a blob.
+VENDOR_WORKERS = PERSPECTIVE_WORKERS
+DUCKDB_WORKER_SUFFIX = "/duckdb-browser-eh.worker.js"
 EMBED = "/embed/"                           # embedded views for other web applications: off unless embed.enabled (routes/embed_routes.py)
 
 
@@ -185,9 +176,9 @@ class SecurityHeaders(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         path = request.url.path
-        poc_worker = path in POC_WORKERS or (path.startswith("/static/vendor/duckdb-wasm/") and path.endswith(POC_WORKER_SUFFIX))
-        policy = (worker_csp(request.headers.get("host", "")) if path == WORKER or poc_worker
-                  else WALKER_CSP if path == WALKER_PAGE else POC_CSP if path == POC_PAGE else CSP)
+        vendor_worker = path in VENDOR_WORKERS or (path.startswith("/static/vendor/duckdb-wasm/") and path.endswith(DUCKDB_WORKER_SUFFIX))
+        policy = (worker_csp(request.headers.get("host", "")) if path == WORKER or vendor_worker
+                  else WALKER_CSP if path == WALKER_PAGE else CSP)
         response.headers.setdefault("Content-Security-Policy", policy)
         if path.startswith(PYODIDE) and response.status_code == 200:
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"   # the URL names the version
@@ -254,7 +245,6 @@ def create_app(settings: Settings) -> FastAPI:
         CLOCK_TZ=settings.get("ui.clock_tz", "America/New_York"),
         CLOCK_LABEL=settings.get("ui.clock_label", "NY"),
         COPYRIGHT=settings.get("ui.copyright", ""),
-        BI_POC=str(settings.get("bi.poc_enabled", False)).lower() in ("true", "1", "yes", "on"),
         BI_LIVE={
             "min_interval_ms": _bounded(settings.get("bi.live.min_interval_ms", 250), 100, 5000, 250),
             "stale_seconds": _bounded(settings.get("bi.live.stale_seconds", 30), 5, 600, 30),
@@ -382,10 +372,6 @@ def create_app(settings: Settings) -> FastAPI:
         app.include_router(model_routes.router)
         app.include_router(python_routes.router)
         app.include_router(explore_routes.router)
-    if str(settings.get("bi.poc_enabled", False)).lower() in ("true", "1", "yes", "on"):   # off by default: no /bi/poc paths exist otherwise
-        from routes import bi_poc_routes
-
-        app.include_router(bi_poc_routes.router)
     from core.ai import AiRuntime
 
     app.state.ai = AiRuntime(settings, backend=lambda: app.state.backend)       # off by default: no file is read, no model or MCP server is called

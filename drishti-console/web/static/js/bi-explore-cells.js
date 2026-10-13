@@ -23,7 +23,7 @@
   var h = B.h, q = B.q, qa = B.qa, clear = B.clear, root = document.getElementById('bx');
   var STARTER = { sql: 'SELECT * FROM extract LIMIT 20', python: "print(df.describe())\nresult = df.head(10)" };
   /** Drishti SQL runs on the server over the model the extract reads (the default, BI_DESIGN.md 3.4); a version 1 dataset only has its extract. */
-  function modelOf() { var d = (X.spec && X.spec.dataset) || ''; return d.indexOf('mq:') === 0 ? d.slice(3) : d.indexOf('dataset:') === 0 ? d : ''; }
+  function modelOf() { return B.layer.refOf((X.spec && X.spec.dataset) || ''); }
   function sqlEngine() { return modelOf() ? 'server' : 'extract'; }
   /** A first statement for a new cell: over the model, a field and a measure grouped (written by the Query panel's printer); over the extract, its rows. */
   function sqlStarter(engine) {

@@ -34,7 +34,7 @@ VISUAL_TYPES = ("perspective-grid", "perspective-pivot", "perspective-chart")
 CHART_TYPE = "perspective-chart"
 
 # the four <style> texts the viewer and the datagrid write for a grid and a pivot (settings panel closed) on the report page, measured on the real page by
-# tools/perspective-style-hashes.py (the phase 0 page, which also loads the chart plugin, needs two more: core/app.py POC_EXTRA_HASHES)
+# tools/perspective-style-hashes.py (the phase 0 page, which also loads the chart plugin, needs two more: CHART_STYLE_HASHES)
 STYLE_HASHES = ("sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=", "sha256-5ZnN0JqHgS1XbqCOd7qSJmy89TJJwbmeYjC8fPeSuwc=",
                 "sha256-TlH50xiDI4R2hMVrktT2rsnuNnNdfvL/RTinBMjapl0=", "sha256-rjC4ta+DkxJjU72hK9nIKZxg1UN00ALy4b/FYtZ7KHc=")
 

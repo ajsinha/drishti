@@ -368,7 +368,6 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_LIVE_MAX_SUBSCRIPTIONS` | `live.max_subscriptions` | `32` | Live subscriptions one browser may hold. |
 | `DRISHTI_CALC_ENABLED` | `calc.enabled` | `true` | Offer Calc. |
 | `DRISHTI_BI_ENABLED` | `bi.enabled` | `true` | Rupaka phase 1: the BI top-bar menu, the `/bi` pages and the `RUPAKA` keyword. The server has its own switch, `drishti.bi.enabled`. |
-| `DRISHTI_BI_POC_ENABLED` | `bi.poc_enabled` | `false` | Rupaka phase 0 proof of concept: the `/bi/poc` page, an administrators-only entry under the BI menu. (`RUPAKA <GO>` opens the BI home, not this page.) |
 | `DRISHTI_BI_LIVE_MIN_INTERVAL_MS` | `bi.live.min_interval_ms` | `250` | Rupaka phase 5: a report or board redraws its live visuals at most this often, never two rounds at once; a burst of ticks is one redraw (100 to 5000). |
 | `DRISHTI_BI_LIVE_STALE_SECONDS` | `bi.live.stale_seconds` | `30` | A live report or board that has heard nothing from the server (not even its 5-second status) for this long says **Stale** (5 to 600). |
 | `DRISHTI_BI_BOARD_ROTATE_SECONDS` | `bi.board.rotate_seconds` | `30` | A board in kiosk mode turns to its next page after this long, unless the board sets `rotate:` (3 to 3600). |

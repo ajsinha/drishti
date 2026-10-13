@@ -596,13 +596,6 @@ class BackendClient:
             kw["json"] = body
         return await self._send("POST", "/bi" + path, ident, **kw)
 
-    # -- Rupaka phase 0 proof of concept (docs/architecture/RUPAKA_POC.md) -------------------------------------
-    async def poc_query(self, body: dict, ident):
-        """The proof of concept's masked aggregation: ``(Arrow IPC stream bytes, response headers)``."""
-        return await self._send("POST", "/bi/poc/query", ident, json=body, raw=True, with_headers=True)
-
-    async def poc_bench(self, runs: int, ident) -> dict:
-        return await self._get("/bi/poc/bench", ident, runs=runs)
 
     # -- identity ---------------------------------------------------------------------------------
     async def login(self, username: str, password: str, service) -> dict:

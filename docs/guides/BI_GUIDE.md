@@ -89,8 +89,7 @@ Everything the page does, the server decides: the page is a shell that asks the 
 
 - **The BI menu** is the second entry of the top bar, right after **Views** (the order is Views, BI, Forms, Reports, Build, then Admin and Help for those who have them), with the icon `bar-chart-line`. It lists *BI home*, *My workspace*,
   *Catalogue*, and under *Recent* the three items you opened most recently. It is shown only to people who hold the `bi` power (section 3), and
-  not at all when BI is switched off. Administrators with `bi-admin` also see *BI settings* (under *Administer*); an administrator also sees the
-  *proof of concept* there when `bi.poc_enabled` is on (section 10).
+  not at all when BI is switched off. Administrators with `bi-admin` also see *BI settings* (under *Administer*).
 - **The Reports menu** (the top bar's fourth entry) holds the saved and scheduled reports of the terminal and, for people with the `bi` power, *BI reports* (the catalogue filtered to reports) and the BI reports you opened last. The **Forms** menu beside it is the terminal's query by form, not BI.
 - **`BI` on the command line** is a reserved keyword (`RUPAKA` is an alias and works the same). Case does not matter.
 
@@ -305,12 +304,11 @@ pages: []
 
 **Settings** (all in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibi--rupaka-business-intelligence-phase-1-the-shell-and-the-catalogue)): `drishti.bi.enabled`,
 `dir`, `watch`, `folder-refresh`, `workspace-creation`, `max-body-bytes`, `versions-keep`, `usage-days`, `recent`, `list-limit`; the
-console's `bi.enabled` (`DRISHTI_BI_ENABLED`) and `bi.poc_enabled`. Each later phase has a group of its own: `drishti.bi.query.*` (the query engine, [DATASETS.md](DATASETS.md#8-the-query)),
+console's `bi.enabled` (`DRISHTI_BI_ENABLED`). Each later phase has a group of its own: `drishti.bi.query.*` (the query engine, [DATASETS.md](DATASETS.md#8-the-query)),
 `drishti.bi.report.*` ([REPORTS.md section 11](REPORTS.md#11-settings)), `drishti.bi.governance.*` ([BI_GOVERNANCE.md](BI_GOVERNANCE.md)) and `drishti.bi.live.*` with the console's `bi.live.*` and `bi.board.rotate_seconds` ([BOARDS.md section 8](BOARDS.md#8-settings)).
 
-**The proof of concept.** The phase 0 page `/bi/poc` is kept for administrators, under the BI menu, and exists only while
-`bi.poc_enabled` (console) and `drishti.bi.poc.enabled` (server) are on. It is throw-away code; see
-[RUPAKA_POC.md](../architecture/RUPAKA_POC.md). `RUPAKA <GO>` no longer opens it.
+**The proof of concept** (the phase 0 page `/bi/poc`, its routes and `bi.poc_enabled`) was removed in 2.2: the model layer replaced what it proved.
+Its findings are kept in [RUPAKA_POC.md](../architecture/RUPAKA_POC.md).
 
 **The command line.** `drishti.py bi workspace list|get` and `drishti.py bi catalogue list|get|publish` talk to the API as the
 token's user ([CLI_GUIDE.md](CLI_GUIDE.md#bi-workspaces-and-the-catalogue-rupaka)):

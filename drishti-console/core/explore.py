@@ -138,15 +138,31 @@ def _type(arrow_type: str) -> str:
     return "integer" if arrow_type.startswith(("int", "uint")) else "decimal" if arrow_type.startswith(("float", "double", "decimal")) else "string"
 
 
-def query_body(fields: list[str], limit: int, filters=None, dates=None) -> dict:
-    """The dataset query for an extract: the fields, then the table's ``id`` so the rows are the table's own, not grouped."""
-    table = fields[0].split(".", 1)[0] if "." in fields[0] else None
-    body: dict = {"fields": list(fields) + ([table + ".id"] if table and (table + ".id") not in fields else []), "limit": limit}
+def model_of(source: str) -> str:
+    """The model an extract's source names: ``mq:<model>@<major>`` is that model, ``dataset:<name>`` the dataset's implicit model, and a bare name
+    (a notebook saved before 2.2, or a shipped file's id ``file:dataset:<name>``) the model the converter made of that 2.1 dataset, ``<name>@1``
+    (BI_MODEL_SPEC.md section 8); a catalogue id (``bi-...``) is sent as it is (a version 2 dataset's implicit model)."""
+    s = str(source or "").strip()
+    if s.startswith("mq:"):
+        return s[3:]
+    if s.startswith("file:dataset:"):
+        s = s[len("file:dataset:"):]
+    if s.startswith(("dataset:", "bi-")) or "@" in s or not s:
+        return s
+    return s + "@1"
+
+
+def mq_rows(model: str, fields: list[str], limit: int, filters=None, dates=None) -> dict:
+    """The model query of an extract: the fields' rows (shape rows, no measures), the filters as ``where``, and the old ``dates``
+    (``{from, to}`` or one date) as the query's ``time``."""
+    mq: dict = {"mq": 1, "model": model, "select": {"fields": list(fields), "measures": []}, "shape": "rows", "limit": limit}
     if filters:
-        body["filters"] = filters
-    if dates:
-        body["dates"] = dates
-    return body
+        mq["where"] = filters
+    if isinstance(dates, dict) and dates.get("from"):
+        mq["time"] = {"window": {"from": str(dates["from"]), "to": str(dates.get("to") or dates["from"])}}
+    elif isinstance(dates, str) and dates:
+        mq["time"] = {"as-of": dates}
+    return mq
 
 
 def check_fields(fields, limits: Limits) -> list[str]:
@@ -224,14 +240,11 @@ def run_sql(extract: Extract, sql: str, limits: Limits, extras: dict[str, Extrac
 
 # ---- Drishti SQL on the server (BI_DESIGN.md 3.4: the default engine of a SQL cell) -----------------------------------------
 def model_ref(dataset: str) -> str | None:
-    """The model a notebook's extract reads, for Drishti SQL: ``mq:<model>@<major>`` is that model, ``dataset:<name>`` the dataset's implicit model; a
-    version 1 dataset has none (its SQL cells run over the extract)."""
-    d = str(dataset or "")
-    if d.startswith("mq:") and len(d) > 3:
-        return d[3:]
-    if d.startswith("dataset:") and len(d) > 8:
-        return d
-    return None
+    """The model a notebook's extract reads, for Drishti SQL (``model_of``); None when the source names nothing."""
+    d = str(dataset or "").strip()
+    if d in ("mq:", "dataset:"):
+        return None
+    return model_of(d) or None
 
 
 def dsql_request(sql: str, model: str, limits: Limits) -> dict:

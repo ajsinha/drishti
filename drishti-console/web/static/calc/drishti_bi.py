@@ -60,12 +60,27 @@ def _body(measures, by, filters, dates, limit) -> dict:
         by = [by]
     if not measures and not by:
         raise ValueError("name at least one measure, or one field in by")
-    body = {"fields": list(by or []), "measures": list(measures or []), "filters": _filters(filters)}
+    body = {"mq": 1, "select": {"fields": list(by or []), "measures": list(measures or [])}}
+    where = _filters(filters)
+    if where:
+        body["where"] = where
     if dates:
-        body["dates"] = {"from": str(dates[0])[:10], "to": str(dates[-1])[:10]} if isinstance(dates, (list, tuple)) else {"from": str(dates)[:10], "to": str(dates)[:10]}
+        first, last = (dates[0], dates[-1]) if isinstance(dates, (list, tuple)) else (dates, dates)
+        body["time"] = {"window": {"from": str(first)[:10], "to": str(last)[:10]}}
     if limit:
         body["limit"] = int(limit)
     return body
+
+
+def model_ref(source: str) -> str:
+    """The model a name stands for (the console's core/explore.py model_of): ``trading-risk@1`` or ``dataset:<name>`` as they are, a 2.1 dataset's name
+    (``trades-basic``) or shipped id (``file:dataset:trades-basic``) the model the converter made of it, ``trades-basic@1``."""
+    s = str(source or "").strip()
+    if s.startswith("mq:"):
+        return s[3:]
+    if s.startswith("file:dataset:"):
+        s = s[len("file:dataset:"):]
+    return s if not s or s.startswith(("dataset:", "bi-")) or "@" in s else s + "@1"
 
 
 def _frame(answer: dict, dataset: str):
@@ -123,13 +138,13 @@ def query(dataset: str, measures=None, by=None, filters=None, dates=None, limit=
 
     ``filters``: ``{"table.column": [values]}`` (an ``in`` filter each) or a list of ``{field, op, values}`` (ops: eq ne lt le gt ge in not-in between contains
     starts-with is-null not-null). ``dates``: a date, or ``(from, to)``; the engine's latest business day when omitted. ``limit``: most rows. The call is the one
-    a report visual makes, as you: row rules and masks are applied by the engine, and the answer says so in ``df.attrs``."""
-    body = _body(measures, by, filters, dates, limit)
+    a report visual makes (one model query on the dataset's model, ``model_ref``), as you: row rules and masks are applied by the engine, and the answer says so in ``df.attrs``."""
+    body = {**_body(measures, by, filters, dates, limit), "model": model_ref(dataset)}
     return _frame(_sync("bi.query", {"dataset": dataset, "body": body}, _call(dataset, measures=measures, by=by, filters=filters, dates=dates, limit=limit)), dataset)
 
 
 async def query_async(dataset: str, measures=None, by=None, filters=None, dates=None, limit=None):
-    body = _body(measures, by, filters, dates, limit)
+    body = {**_body(measures, by, filters, dates, limit), "model": model_ref(dataset)}
     return _frame(await _async("bi.query", {"dataset": dataset, "body": body}), dataset)
 
 

@@ -151,7 +151,7 @@ def test_field_properties_and_perspectives_are_written_one_line_each():
 def test_an_analyse_sql_cell_runs_drishti_sql_on_the_server_over_the_extracts_model():
     from core.explore import model_ref
     assert model_ref("mq:trading-risk@1") == "trading-risk@1" and model_ref("dataset:pack.trading.trade") == "dataset:pack.trading.trade"
-    assert model_ref("file:dataset:trading") is None
+    assert model_ref("file:dataset:trading") == "trading@1" and model_ref("trading-risk") == "trading-risk@1" and model_ref("") is None
     client, backend = make()
     sent = []
     orig = backend.bi
@@ -169,8 +169,8 @@ def test_an_analyse_sql_cell_runs_drishti_sql_on_the_server_over_the_extracts_mo
     got = r.json()
     assert sent[0] == {"sql": "SELECT desk.name, MEASURE('MTM') FROM trade JOIN desk GROUP BY desk.name", "model": "trading-risk@1", "limit": limits.sql_max_rows + 1}
     assert got["columns"] == ["desk", "mtm"] and got["rowCount"] == 3 and got["engine"] == "server" and got["plan"] == "p-1234567890abcdef" and got["ms"] == 7
-    legacy = client.post("/bi/explore/dsql", json={"extract": {"dataset": "file:dataset:trading"}, "sql": "SELECT 1"})
-    assert legacy.status_code == 422 and "over the extract" in legacy.json()["detail"]
+    older = client.post("/bi/explore/dsql", json={"extract": {"dataset": "file:dataset:trading"}, "sql": "SELECT 1"})   # a notebook saved before 2.2: the converter's model
+    assert older.status_code == 200 and sent[-1]["model"] == "trading@1"
 
 
 HAND_WRITTEN = """# Trading risk: the desk heads' model.

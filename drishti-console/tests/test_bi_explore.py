@@ -84,7 +84,8 @@ def test_two_readers_get_different_extracts_and_nothing_is_kept():
     assert extract(client).json()["rowCount"] == 5                                                          # rebuilt for the reader on every call
     assert [c["name"] for c in a["columns"]] == ["desk", "notional", "mtm"]                                 # short names; the row id is dropped
     path, body, _ = backend.queries[0]
-    assert path == "/datasets/" + DS + "/query" and body["fields"][-1] == "trade.id"                         # the table's own rows, not grouped
+    assert path == "/mq" and body["model"] == "trades-basic@1" and body["shape"] == "rows"                   # the table's own rows, as one model query
+    assert body["select"] == {"fields": FIELDS, "measures": []}
 
 
 def test_the_row_limit_cuts_the_extract():
@@ -239,14 +240,14 @@ def test_promote_a_python_cell_to_a_measure_and_a_visual_draft():
 
 def test_promote_a_slice_to_a_report_draft_names_the_measures_it_found():
     client, backend = make()
-    model = {**DATASET_MODEL, "name": "trades-basic", "measures": [{"name": "MTM", "expr": "sum(trade.mtm)"}]}
+    described = {"datasets": [{"alias": "trade", "dataset": "trades-basic-trade"}], "measures": [{"name": "MTM", "expr": "sum(trade.mtm)"}]}
 
     async def bi(method, path, ident, body=None, **params):
-        return model if path == "/datasets/" + DS else await BiBackend.bi(backend, method, path, ident, body, **params)
+        return described if path == "/models/trades-basic@1/describe" else await BiBackend.bi(backend, method, path, ident, body, **params)
     backend.bi = bi
     r = client.post("/bi/explore/promote", json={"to": "report", "name": "Desk slice", "dataset": DS,
                                                   "slice": {"rows": ["trade.desk"], "columns": [], "values": [{"field": "trade.mtm", "agg": "sum"}, {"field": "trade.notional", "agg": "sum"}]}}).json()
-    assert r["kind"] == "report" and "type: matrix" in r["yaml"] and "dataset: trades-basic" in r["yaml"] and "MTM" in r["yaml"]
+    assert r["kind"] == "report" and "type: matrix" in r["yaml"] and "model: trades-basic@1" in r["yaml"] and "MTM" in r["yaml"]
     assert len(r["notes"]) == 1 and "sum(trade.notional)" in r["notes"][0]
     assert client.post("/bi/explore/promote", json={"to": "report", "dataset": DS, "slice": {}}).json()["code"] == "DRS-9070"
 

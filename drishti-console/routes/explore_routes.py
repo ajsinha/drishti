@@ -32,7 +32,7 @@ from fastapi.responses import JSONResponse
 from core.backend import BackendError
 from core.csrf import json_body
 from core.explore import (ExploreError, Extract, Limits, check_extracts, check_fields, dsql_answer, dsql_request, from_arrow, from_json, model_ref, parse_notebook,
-                          promote_python, promote_transform, query_body, run_sql)
+                          model_of, mq_rows, promote_python, promote_transform, run_sql)
 from core.promote_report import add_to_report, sql_to_slice, visual_for
 from core.pyrunner import PyError
 from core.quant import get_engine
@@ -42,7 +42,6 @@ from routes.common import ident
 router = APIRouter(include_in_schema=False)
 CONSOLE = Path(__file__).resolve().parent.parent
 _SQL_SLOTS = asyncio.Semaphore(4)
-MODEL_SOURCE = ("mq:", "dataset:")      # the prefixes of a source Analyse reads through the model query language (shape rows) rather than the version 1 dataset query
 
 
 def _limits(request: Request) -> Limits:
@@ -79,28 +78,15 @@ async def extract_for(request: Request, spec: dict) -> Extract:
                                                   {"page": page, "visual": visual, "state": spec.get("state") or {}}, format="arrow")
         low = {str(k).lower(): v for k, v in headers.items()}
         return from_arrow(content, cap, [x for x in (low.get("x-bi-masked") or "").split(",") if x])
-    source = str(spec.get("dataset") or "")
-    if not spec.get("model") and source.startswith(MODEL_SOURCE):          # Analyse's picker: "mq:<model>@<major>" is a model, "dataset:<name>" a pack or own dataset (its implicit model)
-        spec = {**spec, "model": source[len("mq:"):] if source.startswith("mq:") else source}
-    if spec.get("model"):                                                 # a model (or dataset:<name>): the rows as one model query, shape rows (BI_MODEL_SPEC.md 5.1)
-        mq = {"mq": 1, "model": str(spec["model"]), "select": {"fields": check_fields(spec.get("fields"), limits), "measures": []}, "shape": "rows", "limit": cap}
-        if spec.get("filters"):
-            mq["where"] = spec["filters"]
-        if arrow:
-            content, headers = await backend.bi_arrow("/mq", me, mq, format="arrow")
-            low = {str(k).lower(): v for k, v in headers.items()}
-            return from_arrow(content, cap, [x for x in (low.get("x-bi-masked") or "").split(",") if x])
-        return from_json(await backend.bi("POST", "/mq", me, mq, format="json"), cap)
-    dataset = str(spec.get("dataset") or "")
-    if not dataset:
+    model = str(spec.get("model") or "") or model_of(str(spec.get("dataset") or ""))
+    if not model:
         raise ExploreError("DRS-9070", 422, "send {model, fields}, {dataset, fields} or {report, page, visual}")
-    body = query_body(check_fields(spec.get("fields"), limits), cap, spec.get("filters"), spec.get("dates"))
-    path = "/datasets/" + quote(dataset, safe=":") + "/query"
+    mq = mq_rows(model, check_fields(spec.get("fields"), limits), cap, spec.get("filters"), spec.get("dates"))
     if arrow:
-        content, headers = await backend.bi_arrow(path, me, body, format="arrow")
+        content, headers = await backend.bi_arrow("/mq", me, mq, format="arrow")
         low = {str(k).lower(): v for k, v in headers.items()}
         return from_arrow(content, cap, [x for x in (low.get("x-bi-masked") or "").split(",") if x])
-    return from_json(await backend.bi("POST", path, me, body, format="json"), cap)
+    return from_json(await backend.bi("POST", "/mq", me, mq, format="json"), cap)
 
 
 async def extras_for(request: Request, specs) -> list[tuple[dict, Extract]]:
@@ -117,9 +103,20 @@ async def primary_for(request: Request, spec, extras: list[tuple[dict, Extract]]
     raise ExploreError("DRS-9070", 422, "send {extract: {dataset, fields}} or {extracts: [{name, dataset, fields}]}")
 
 
+DUCKDB_FOLDER = "vendor/duckdb-wasm"
+
+
+def duckdb_base(static: Path) -> str:
+    """The URL folder of the installed DuckDB-Wasm (tools/fetch-duckdb-wasm.sh), or '' when it is not installed."""
+    for stamp in sorted((static / DUCKDB_FOLDER).glob("*/.drishti-duckdb-wasm")):
+        folder = stamp.parent
+        if all((folder / n).exists() for n in ("duckdb-browser.mjs", "duckdb-browser-eh.worker.js", "duckdb-eh.wasm")):
+            return f"/static/{DUCKDB_FOLDER}/{folder.name}"
+    return ""
+
+
 @router.get("/bi/explore")
 async def page(request: Request):
-    from routes.bi_poc_routes import duckdb_base
     limits = _limits(request)
     duck = "" if limits.browser_engine == "server" else duckdb_base(CONSOLE / "web" / "static")
     return _page(request, "bi/explore.html", "explore", limits=limits, may_python="bi-author" in _powers(request),
@@ -290,12 +287,12 @@ async def _slice_report(request: Request, body: dict, name: str) -> dict:
     import yaml
     dataset = str(body.get("dataset") or "")
     sl, sql = body.get("slice"), body.get("sql")
-    if dataset.startswith(MODEL_SOURCE):
-        raise ExploreError("DRS-9070", 422, "a slice of a model or a pack dataset cannot be promoted from here yet: start a report on it from Models and datasets (Use), then build the visual in the designer")
     if not dataset or not (isinstance(sl, dict) or isinstance(sql, str)):
         raise ExploreError("DRS-9070", 422, "send {dataset, slice: {rows, columns, values: [{field, agg}]}} or {dataset, sql, columns}")
     backend, me = request.app.state.backend, ident(request)
-    model = await backend.bi("GET", "/datasets/" + quote(dataset, safe=":"), me)
+    ref = model_of(dataset)
+    described = await backend.bi("GET", "/models/" + quote(ref, safe=":@") + "/describe", me)
+    model = {"tables": [{"name": d.get("alias")} for d in described.get("datasets") or []], "measures": described.get("measures") or []}
     shorts, quals = [str(c) for c in body.get("columns") or []], [str(c) for c in body.get("qualified") or []]
     mapping = dict(zip(shorts, quals))
     qualify = lambda f: mapping.get(f, f)  # noqa: E731
@@ -316,8 +313,8 @@ async def _slice_report(request: Request, body: dict, name: str) -> dict:
     target = str(body.get("target") or "")
     if not target:
         slug = re.sub(r"-{2,}", "-", re.sub(r"[^a-z0-9_-]", "-", name.lower())).strip("-")[:48].strip("-") or "from-analyse"          # a readable id: "trades-the-basics-sql"
-        report = {"rachana": 1, "report": slug, "version": 1, "title": name, "description": "Started from an Analyse " + ("SQL cell." if vid == "sql" else "slice."),
-                  "dataset": model.get("name") or dataset, "pages": [{"id": vid, "title": "Slice" if vid == "slice" else "SQL", "visuals": [visual]}]}
+        report = {"rachana": 2, "report": slug, "version": 1, "title": name, "description": "Started from an Analyse " + ("SQL cell." if vid == "sql" else "slice."),
+                  "model": ref, "pages": [{"id": vid, "title": "Slice" if vid == "slice" else "SQL", "visuals": [visual]}]}
         return {"kind": "report", "title": name, "yaml": yaml.safe_dump(report, sort_keys=False, default_flow_style=None, width=200), "notes": notes, "target": None}
     item = await backend.bi("GET", "/items/" + quote(target, safe=":"), me)
     if item.get("kind") != "report" or not (item.get("can") or {}).get("edit"):
@@ -325,7 +322,10 @@ async def _slice_report(request: Request, body: dict, name: str) -> dict:
     checked = await backend.bi("POST", "/reports/validate", me, {"yaml": item.get("body") or ""})
     if not checked.get("report"):
         raise ExploreError("DRS-9070", 422, "the report cannot be read, so a visual cannot be added: " + "; ".join(p.get("message", "") for p in (checked.get("problems") or [])[:2]))
-    report = add_to_report(checked["report"], visual, str(body.get("page") or ""), model.get("name") or dataset, notes)
+    try:
+        report = add_to_report(checked["report"], visual, str(body.get("page") or ""), ref, notes)
+    except ValueError as e:
+        raise ExploreError("DRS-9070", 422, str(e)) from None
     written = await backend.bi("POST", "/reports/format", me, {"report": report})
     notes.append("The report was written again by the designer's writer: comments in its YAML are not kept.")
     return {"kind": "report", "title": item.get("title") or name, "yaml": written["yaml"], "notes": notes, "target": target, "visual": visual["id"]}

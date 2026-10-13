@@ -95,8 +95,6 @@ class ChannelSession:
             upstream, is_view = self.backend.stream(kind, id_, self.me, opened=responses, **more), True
         elif sub == "alerts":
             upstream, is_view = self.backend.sse("/me/alerts/stream", self.me, opened=responses), False
-        elif sub == "poc:rows":                              # Rupaka phase 0 proof of concept: rows for Perspective (404 on the server unless enabled)
-            upstream, is_view = self.backend.sse("/bi/poc/rows", self.me, opened=responses), False
         elif sub.startswith("bilive:"):                      # Rupaka phase 5: a report's live tables changed (tick), how they are doing (status); no data
             upstream, is_view = self.backend.sse(f"/bi/reports/{quote(sub[7:], safe='')}/live", self.me, opened=responses), False
         elif sub.startswith("monitor:"):

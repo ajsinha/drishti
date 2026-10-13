@@ -16,7 +16,7 @@
 
 # Rūpaka phase 0: the proof of concept, built and measured
 
-Status: built and measured (2026-10-10); the follow-up of phase 2 is section 11, and the Perspective retest of phase 5 is section 12. The page it built is still there for administrators (`/bi/poc`, off by default); everything the real BI pages use was rebuilt in phases 1 to 5 ([RUPAKA.md](RUPAKA.md) section 20) and is documented in [BI_GUIDE.md](../guides/BI_GUIDE.md). **Throw-away code**, off by default, that tests the risky parts of
+Status: built and measured (2026-10-10); the follow-up of phase 2 is section 11, and the Perspective retest of phase 5 is section 12. **Removed in 2.2** (server and console: the `/bi/poc` page, its routes, `drishti.bi.poc` and `bi.poc_enabled`); this document keeps the findings, and the paths and switches below are history. Everything the real BI pages use was rebuilt in phases 1 to 5 ([RUPAKA.md](RUPAKA.md) section 20) and is documented in [BI_GUIDE.md](../guides/BI_GUIDE.md). **Throw-away code**, off by default, that tests the risky parts of
 [RUPAKA.md](RUPAKA.md) before the roadmap (section 20, phase 0) commits to them. Everything is marked `poc`: the server's
 `com.ash.drishti.server.bi.poc` package and `/api/v1/bi/poc/**`, the console's `routes/bi_poc_routes.py`, `/bi/poc`,
 `bi-poc.js`. Switches: server `drishti.bi.poc.enabled`, console `bi.poc_enabled` (both default `false`; see

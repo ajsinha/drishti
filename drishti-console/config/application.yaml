@@ -179,10 +179,8 @@ static:                      # the console's own static files (/static/...), ser
   compress_min_bytes: 1024   # smaller files are sent as they are
   brotli_quality: 5          # 0 to 11; each file is compressed once per version and kept in cache_dir
   cache_dir: ""              # where the compressed copies are kept (empty: the system temp folder, drishti-console-static)
-bi:                          # Rupaka: the BI shell and catalogue (phase 1) and, below, the phase 0 PROOF OF CONCEPT
+bi:                          # Rupaka: the BI shell and catalogue (phase 1)
   enabled: ${DRISHTI_BI_ENABLED:true}   # false: no BI top-bar menu, no /bi pages (the server's drishti.bi.enabled is separate)
-  # Rupaka phase 0 PROOF OF CONCEPT (docs/architecture/RUPAKA_POC.md): the /bi/poc page; also needs the server's drishti.bi.poc.enabled
-  poc_enabled: ${DRISHTI_BI_POC_ENABLED:false}   # false: no page, no top-bar entry, no RUPAKA <GO>; /bi/poc answers 404
   # Rupaka phase 5 (streaming BI): live visuals and boards
   live:
     min_interval_ms: ${DRISHTI_BI_LIVE_MIN_INTERVAL_MS:250}   # a report redraws its live visuals at most this often (a burst of ticks becomes one redraw); 100 to 5000

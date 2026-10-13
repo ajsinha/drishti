@@ -158,9 +158,6 @@
     if (/^\/reports\/dataset\?ref=/.test(path)) { return fields(); }
     if (path === '/reports/query') { return ask(body.report, body.page, body.visual, body.state); }
     if (/^\/reports\/[^/]+\/query$/.test(path) && S.report) { return S.viaReport ? api.apply(this, arguments) : ask(S.report, body.page, body.visual, body.state); }
-    if (/^\/datasets\/.*\/query$/.test(path) && body && (body.fields || []).length === 1 && !(body.measures || []).length) {
-      return B.mq.values(S.ref, body.fields[0], body.limit).then((a) => ({ columns: a.columns, rows: a.rows, rowCount: a.rowCount }));
-    }
     if (method === 'GET' && /^\/reports\/[^/?]+$/.test(path) && path !== '/reports/catalogue') { return api(method, path, body).then((r) => { S.report = r.report; return fields().then((f) => Object.assign(clean(r), { dataset: f })); }); }
     return api.apply(this, arguments);
   };

@@ -26,6 +26,7 @@ from test_bi_explore import DS, make  # noqa: E402
 COLS = ["desk", "currency", "notional", "mtm"]
 MODEL = {**DATASET_MODEL, "name": "trades-basic", "tables": [{"name": "trade"}],
          "measures": [{"name": "MTM", "expr": "sum(trade.mtm)"}, {"name": "Trades", "expr": "count(trade)"}, {"name": "Avg MTM", "expr": "avg(trade.mtm)"}]}
+DESCRIBED = {"datasets": [{"alias": "trade", "dataset": "trades-basic-trade"}], "measures": MODEL["measures"]}
 QUAL = {c: "trade." + c for c in COLS}
 
 
@@ -67,21 +68,23 @@ def test_the_visual_is_a_matrix_of_dataset_measures_a_table_or_a_card():
                            "filters": [{"field": "desk", "op": "in", "values": ["FX"]}]}, "Desks", "slice", qualify, notes)
     assert v["type"] == "matrix" and v["wells"] == {"rows": ["trade.desk"], "values": ["MTM", "Trades"], "columns": ["trade.currency"]}
     assert v["filters"] == [{"field": "trade.desk", "op": "in", "values": ["FX"]}]
-    assert notes == ["No dataset measure is sum(trade.notional); add one to the dataset, then put it in the visual's values."]
+    assert notes == ["No measure of the model is sum(trade.notional); add one to the model, then put it in the visual's values."]
     assert visual_for(MODEL, {"rows": ["desk", "mtm"]}, "T", "sql", qualify, [])["type"] == "table"
     assert visual_for(MODEL, {"values": [{"field": "mtm", "agg": "avg"}]}, "C", "sql", qualify, [])["type"] == "card"
     assert visual_for(MODEL, {}, "none", "sql", qualify, []) is None
     assert matching_measure(MODEL, "count", "*") == "Trades" and matching_measure(MODEL, "sum", "trade.mtm") == "MTM" and matching_measure(MODEL, "min", "trade.mtm") is None
 
 
-def test_adding_to_a_report_places_the_visual_below_gives_it_a_free_id_and_names_another_dataset():
-    report = {"report": "r", "dataset": "other", "pages": [{"id": "p", "title": "P", "visuals": [{"id": "slice", "type": "card", "at": {"x": 0, "y": 0, "w": 4, "h": 3}, "wells": {}}]}]}
+def test_adding_to_a_report_places_the_visual_below_gives_it_a_free_id_and_refuses_another_model():
+    report = {"report": "r", "model": "trades-basic@1", "pages": [{"id": "p", "title": "P", "visuals": [{"id": "slice", "type": "card", "at": {"x": 0, "y": 0, "w": 4, "h": 3}, "wells": {}}]}]}
     notes = []
-    out = add_to_report(report, {"id": "slice", "type": "table", "at": {"x": 0, "y": 0, "w": 12, "h": 6}, "wells": {"columns": ["trade.desk"]}}, "", "trades-basic", notes)
+    out = add_to_report(report, {"id": "slice", "type": "table", "at": {"x": 0, "y": 0, "w": 12, "h": 6}, "wells": {"columns": ["trade.desk"]}}, "", "trades-basic@1", notes)
     added = out["pages"][0]["visuals"][1]
-    assert added["id"] == "slice-2" and added["at"]["y"] == 3 and added["dataset"] == "trades-basic" and "names its own dataset" in notes[0]
-    again = add_to_report(out, {"id": "x", "type": "table", "at": {"x": 0, "y": 0, "w": 1, "h": 1}, "wells": {}}, "fresh", "other", [])
-    assert [p["id"] for p in again["pages"]] == ["p", "fresh"] and "dataset" not in again["pages"][1]["visuals"][0]
+    assert added["id"] == "slice-2" and added["at"]["y"] == 3 and "dataset" not in added and notes == []
+    again = add_to_report(out, {"id": "x", "type": "table", "at": {"x": 0, "y": 0, "w": 1, "h": 1}, "wells": {}}, "fresh", "trades-basic@1", [])
+    assert [p["id"] for p in again["pages"]] == ["p", "fresh"]
+    with pytest.raises(ValueError, match="trading-risk@1"):
+        add_to_report(out, {"id": "y", "type": "table", "at": {"x": 0, "y": 0, "w": 1, "h": 1}, "wells": {}}, "", "trading-risk@1", [])
 
 
 class PromoteBackend(BiBackend):
@@ -90,12 +93,12 @@ class PromoteBackend(BiBackend):
         self.can_edit, self.kind, self.puts = can_edit, kind, []
 
     async def bi(self, method, path, ident, body=None, **params):
-        if path == "/datasets/" + DS:
-            return MODEL
+        if path == "/models/trades-basic@1/describe":
+            return DESCRIBED
         if method == "GET" and path.startswith("/items/file:report:mine"):
-            return {"id": "file:report:mine", "kind": self.kind, "title": "Mine", "body": "report: mine\ndataset: trades-basic\n", "can": {"edit": self.can_edit}}
+            return {"id": "file:report:mine", "kind": self.kind, "title": "Mine", "body": "rachana: 2\nreport: mine\nmodel: trades-basic@1\n", "can": {"edit": self.can_edit}}
         if path == "/reports/validate":
-            return {"valid": True, "problems": [], "report": {"report": "mine", "dataset": "trades-basic",
+            return {"valid": True, "problems": [], "report": {"report": "mine", "model": "trades-basic@1",
                                                               "pages": [{"id": "p", "title": "P", "visuals": [{"id": "a", "type": "card", "at": {"x": 0, "y": 0, "w": 4, "h": 2}, "wells": {"values": ["MTM"]}}]}]}}
         if path == "/reports/format":
             self.puts.append(body)
@@ -129,6 +132,6 @@ def test_a_slice_with_filters_promotes_them_and_a_new_report_is_still_the_defaul
     r = _client(PromoteBackend()).post("/bi/explore/promote", json={"to": "report", "name": "Desk slice", "dataset": DS, "columns": COLS, "qualified": ["trade." + c for c in COLS],
                                                                     "slice": {"rows": ["desk"], "columns": [], "values": [{"field": "mtm", "agg": "sum"}]},
                                                                     "filters": [{"field": "currency", "op": "in", "values": ["EUR"]}]}).json()
-    assert r["target"] is None and "type: matrix" in r["yaml"] and "dataset: trades-basic" in r["yaml"] and "trade.currency" in r["yaml"] and "EUR" in r["yaml"]
+    assert r["target"] is None and "type: matrix" in r["yaml"] and "model: trades-basic@1" in r["yaml"] and "rachana: 2" in r["yaml"] and "trade.currency" in r["yaml"] and "EUR" in r["yaml"]
     empty = _client(PromoteBackend()).post("/bi/explore/promote", json={"to": "report", "name": "x", "dataset": DS, "sql": "SELECT 1", "columns": COLS}).json()
     assert empty["code"] == "DRS-9070" and "no fields or measures" in empty["detail"]

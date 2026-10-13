@@ -115,8 +115,9 @@ there are any:
 
 ![A SQL cell: the statement above, Run, the engine Server: Drishti SQL over the model, and three books with their Sum of mtm](img/bi-languages/analyse-dsql-cell.jpg) The console sends the cell to
 `POST /bi/explore/dsql` (`{extract, sql}`), which asks the server's `POST /api/v1/bi/sql` with the model and the cell's row limit
-(`bi.explore.sql_max_rows`, one more to say when it was cut); it never reads the SQL itself. A version 1 dataset has no model: its cells run over the
-extract, as below. **Over the extract** stays selectable in each cell until wave B, and a statement that reads the table `extract` (an older notebook)
+(`bi.explore.sql_max_rows`, one more to say when it was cut); it never reads the SQL itself. Every source has a model since 2.2: a notebook saved
+earlier that names a 2.1 dataset (`file:dataset:trades-basic`) reads the model the converter made of it (`trades-basic@1`), and so does its extract,
+which is one model query (shape rows) like every other. **Over the extract** stays selectable in each cell until wave B, and a statement that reads the table `extract` (an older notebook)
 still runs there whatever the choice.
 
 Over the extract, a SQL cell is **one `SELECT`** (or `WITH ... SELECT`) over the table **`extract`** (and over a table for each further extract of the notebook, named as it is, so `SELECT ... FROM extract JOIN exposure ON ...`):
@@ -175,10 +176,10 @@ The body is YAML, checked by `POST /bi/explore/notebook/check` (unknown keys and
 rachana: 1
 notebook: desk-notional-first-look
 title: Desk notional, first look
-dataset: file:dataset:trades-basic
+dataset: mq:trades-basic@1       # the model it reads (mq:<model>@<major>, or dataset:<name> for a dataset's implicit model)
 fields: [trade.tradeId, trade.desk, trade.book, trade.notional, trade.mtm]
 extracts:                       # optional: further extracts, read by a cell as extract("name") and in SQL as a table of that name
-  - { name: exposure, dataset: file:dataset:counterparty-exposure, fields: [netting_sets.counterparty, netting_sets.eePeak] }
+  - { name: exposure, dataset: mq:counterparty-exposure@1, fields: [netting_sets.counterparty, netting_sets.eePeak] }
 cells:
   - type: slice
     slice: { rows: [desk], columns: [], values: [{ field: notional, agg: sum }], filters: [] }
@@ -288,12 +289,12 @@ Slice and SQL run on the extract **your page already holds**, with [DuckDB-Wasm]
 
 | From | The visual |
 |---|---|
-| a **slice** | a **matrix** (rows, one column field, values) when a value matches a dataset measure, else a **table** of the fields, else a **card**; the slice's **filters** become the visual's `filters` (`field`, `op: in`, `values`) |
+| a **slice** | a **matrix** (rows, one column field, values) when a value matches a measure of the model, else a **table** of the fields, else a **card**; the slice's **filters** become the visual's `filters` (`field`, `op: in`, `values`) |
 | a **SQL cell** | read by a small reader (`core/promote_report.py`), not a SQL engine: the plain columns and `GROUP BY` columns become *rows* (or the table's columns), the aggregates `sum`, `avg`, `count`, `min`, `max` of a column become *values*, and simple `WHERE` conditions (`col = 'x'`, `<>`, `<`, `<=`, `>`, `>=`, `IN (...)`, `NOT IN`, `BETWEEN a AND b`, `IS [NOT] NULL`, joined by `AND`) become *filters* |
 
-* **Values are measures.** A report shows the dataset's measures, so an aggregate becomes a value only when the dataset has a measure that is exactly that (`sum(trade.mtm)`; `count(*)` is the measure `count(trade)`); the notes name each one that is missing so you add it to the dataset. Names are mapped from the extract's (`desk`) back to the dataset's (`trade.desk`).
+* **Values are measures.** A report shows the model's measures (`GET /models/<ref>/describe`), so an aggregate becomes a value only when the model has a measure that is exactly that (`sum(trade.mtm)`; `count(*)` is the measure `count(trade)`); the notes name each one that is missing so you add it to the model. Names are mapped from the extract's (`desk`) back to the model's (`trade.desk`).
 * **What cannot be said is said.** A join or a sub-query, an expression (`notional * 2`), `LIKE`, `OR`, `HAVING`, `count(distinct ...)` are left out and listed in the notes; `ORDER BY` and `LIMIT` are left out too (a visual sorts and limits in its own settings). Nothing is guessed.
-* **The dataset.** The visual reads the dataset the extract was opened from. In an existing report that reads another one, the visual names its own `dataset:` and the note says so (a `link` in the report connects their slicers: [REPORTS.md](REPORTS.md)).
+* **The model.** A new report draft is `rachana: 2` with `model:` the model the extract was opened from (`trades-basic@1`). A report reads one model, so a slice of another model is not added to an existing report: `DRS-9070` says which model each reads; promote it to a new report instead.
 * **An existing report** is read through the server's checker (`POST /bi/api/reports/validate`), the visual is added **below** what the page holds with a free id (`slice`, `sql`, then `slice-2` ...), and the report is written again by the designer's writer (`/reports/format`) and saved as the item's **draft** (`PUT /bi/api/items/<id>`). Comments in the report's YAML are **not kept** (the note says so); nothing is published. The target must be a report item you may edit: a shipped one, or one that is not a report, is `DRS-9070`.
 * In both cases the draft is yours to finish in the designer, then check and publish like any report.
 

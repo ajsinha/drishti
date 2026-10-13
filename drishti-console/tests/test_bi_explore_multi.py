@@ -57,8 +57,8 @@ class Backend(BiBackend):
         self.reader, self.asked = "ann", []
 
     async def bi_arrow(self, path, ident, body, **params):
-        self.asked.append((path, ident.user))
-        if "counterparty-exposure" in path:
+        self.asked.append((str((body or {}).get("model") or path), ident.user))
+        if "counterparty-exposure" in str((body or {}).get("model") or path):
             rows = EE
             ee = [None if self.reader == "bob" else r[1] for r in rows]
             return (stream(pa.table({"netting_sets.counterparty": [r[0] for r in rows], "netting_sets.eePeak": ee, "netting_sets.id": [str(i) for i in range(len(rows))]})),

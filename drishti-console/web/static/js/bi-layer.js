@@ -38,6 +38,14 @@
     post: (path, body) => call('POST', '/bi/model-api/' + path, body),
     /** The model a report body names (`model: trading-risk@1` or `model: dataset:pack.trading.trade`), or ''. */
     modelOf: (body) => { const m = /^model:\s*(\S+)\s*$/m.exec(body || ''); return m ? m[1].replace(/^["']|["']$/g, '') : ''; },
+    /** The model a source names (core/explore.py model_of): `mq:<ref>` is that model, `dataset:<name>` an implicit one, a catalogue id `bi-...` as it is,
+     *  and a 2.1 dataset's name or shipped id (`file:dataset:<name>`) the model the converter made of it, `<name>@1`. */
+    refOf: (source) => {
+      let s = String(source || '').trim();
+      if (s.indexOf('mq:') === 0) { return s.slice(3); }
+      if (s.indexOf('file:dataset:') === 0) { s = s.slice('file:dataset:'.length); }
+      return !s || s.indexOf('dataset:') === 0 || s.indexOf('bi-') === 0 || s.indexOf('@') >= 0 ? s : s + '@1';
+    },
     /** A short label for a model reference: "Implicit model of Trade" is the server's title; this is for links. */
     href: (ref) => (ref.indexOf('dataset:') === 0 ? '/bi/ds/' + encodeURIComponent(ref.slice(8)) : '')
   };
