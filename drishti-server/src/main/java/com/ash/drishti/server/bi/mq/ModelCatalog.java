@@ -565,6 +565,40 @@ public final class ModelCatalog {
         return out;
     }
 
+    /**
+     * What a refresh of the dataset {@code name} rebuilds: every published model that reads it (directly or through {@code extends}), with the tables (aliases)
+     * that read it, and the dataset's own implicit model ({@code dataset:<name>}).
+     */
+    public List<DatasetService.ModelGateway.Reader> readersOf(String name) {
+        List<DatasetService.ModelGateway.Reader> out = new ArrayList<>();
+        for (BiStore.Item i : bi.publishedOfKind("model")) {
+            String body = bi.publishedBody(i);
+            ModelDefParser.Result parsed = ModelDefParser.parse(body);
+            if (parsed.model() == null) {
+                continue;
+            }
+            try {
+                ModelView v = view(i.id(), parsed.model(), parsed, body);
+                List<String> tables = v.datasets().entrySet().stream().filter(e -> e.getValue().def().name().equals(name) || e.getValue().chain().contains(name))
+                        .map(Map.Entry::getKey).toList();
+                if (!tables.isEmpty()) {
+                    out.add(new DatasetService.ModelGateway.Reader(new QueryService.Loaded(v.id(), v.key(), v.flat(), v.hash()), tables));
+                }
+            } catch (RuntimeException e) {
+                // not resolvable now: nothing of it is kept to refresh
+            }
+        }
+        try {
+            resolveDataset(name, Semver.Range.ANY, new LinkedHashSet<>(), new ArrayList<>()).ifPresent(d -> {
+                ModelView v = implicitOf(d).view();
+                out.add(new DatasetService.ModelGateway.Reader(new QueryService.Loaded(v.id(), v.key(), v.flat(), v.hash()), List.copyOf(v.datasets().keySet())));
+            });
+        } catch (RuntimeException e) {
+            // the dataset does not resolve (Check says why): only the models above
+        }
+        return out;
+    }
+
     /** The published models of this name (or catalogue id), with their datasets resolved as far as they resolve: what the cycle check walks. */
     List<Map<String, ResolvedDataset>> publishedModels(String name) {
         List<Map<String, ResolvedDataset>> out = new ArrayList<>();

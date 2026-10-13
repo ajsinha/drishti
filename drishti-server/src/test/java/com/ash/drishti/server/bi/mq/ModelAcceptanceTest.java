@@ -580,4 +580,29 @@ class ModelAcceptanceTest {
                 .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("rows, so say which number to watch")));
         ok(call("PUT", "/api/v1/me/measure-alerts/by-desk", reader("rita"), visual.formatted(",\"reduce\":\"sum\"")));
     }
+
+    @Test @Order(11)
+    void aDatasetOfTheModelLayerIsRefreshedThroughTheModelsThatReadIt() throws Exception {
+        Map<String, Object> q = Map.of("mq", 1, "model", "acc-model@1", "select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional", "Trades")),
+                "time", Map.of("as-of", "2026-10-07"));
+        JsonNode before = ok(call("POST", "/api/v1/bi/mq", reader("rita"), q)).path("rows");
+        String path = "/api/v1/bi/datasets/file:dataset:acc-trade/refresh";
+        JsonNode never = ok(call("GET", path, reader("wes"), null));
+        assertThat(never.path("dataset").path("status").asText()).isEqualTo("never");
+        JsonNode asked = ok(call("POST", path, reader("wes"), Map.of()));               // was DRS-9102: a rachana 2 dataset is read through the model layer
+        assertThat(asked.path("models").toString()).contains("file:model:acc-model");
+        assertThat(asked.path("refreshing").toString()).contains("file:model:acc-model/trades");
+        JsonNode st = null;
+        for (int i = 0; i < 100; i++) {
+            st = ok(call("GET", path, reader("wes"), null)).path("dataset");
+            if (!"running".equals(st.path("status").asText())) {
+                break;
+            }
+            Thread.sleep(100);
+        }
+        assertThat(st.path("status").asText()).as(st.toString()).isIn("ok", "warning");
+        assertThat(st.path("trigger").asText()).contains("wes");
+        assertThat(ok(call("POST", "/api/v1/bi/mq", reader("rita"), q)).path("rows")).as("the same answer after the rebuild").isEqualTo(before);
+        call("POST", path, reader("ann"), Map.of()).andExpect(status().isForbidden());   // a refresh is an author's
+    }
 }
