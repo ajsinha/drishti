@@ -16,7 +16,7 @@
 {# The dataset wizard (DATASETS.md, "Build a dataset in the browser"): seven steps from a source to a saved draft, no YAML typed. Drawn by static/js/bi-wizard.js. #}
 {% extends "bi/shell.html" %}
 {% block bi_title %}Dataset wizard{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-wizard.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-expr.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-wizard.css?v={{ ASSET_V }}">{% endblock %}
 {% block bi_main %}
 <div data-wizard data-edit="{{ edit }}" data-workspace-id="{{ workspace }}">
 <header class="bi-head"><h1 data-wiz-title>New dataset</h1>
@@ -28,4 +28,4 @@
   <button type="button" class="btn-pill btn-accent" data-wiz-next>Next</button></p>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-wizard.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-wizard-steps.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-expr-editor.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-wizard.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-wizard-steps.js?v={{ ASSET_V }}"></script>{% endblock %}

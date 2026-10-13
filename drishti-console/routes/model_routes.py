@@ -307,6 +307,17 @@ async def new_report(request: Request):
     return _ok({"id": it["id"], "href": "/bi/design/" + it["id"]})
 
 
+@router.post("/bi/model-api/report-measures")
+async def report_measures(request: Request):
+    """``{yaml}`` of a report to ``{measures}``: its own measures (``measures:``, spec 4.2) as ``{name: {expr, format?, description?}}``, which the designer and the
+    report page send along as the model query's ``define``. Shape only: the server compiles each one (as the reader) when it is asked."""
+    body = await json_body(request)
+    try:
+        return _ok({"measures": ml.report_measures(str(body.get("yaml") or ""))})
+    except ml.LayerError as e:
+        return _refuse(str(e))
+
+
 @router.get("/bi/model-api/fields")
 async def fields(request: Request):
     """The Fields pane of a report on a model: the model as the person sees it (masked fields marked), in the designer's dataset shape."""

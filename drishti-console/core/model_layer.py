@@ -356,6 +356,19 @@ def report_body(slug: str, title: str, ref: str) -> str:
     return yaml.safe_dump({"report": slug, "title": title, "model": ref, "pages": [{"id": "main", "title": "Main", "visuals": []}]}, sort_keys=False, allow_unicode=True)
 
 
+def report_measures(body: str) -> dict:
+    """A report's own measures (``measures:``, spec 4.2) as ``{name: {expr, format?, description?}}``; a bare string is the expression."""
+    raw = load(body).get("measures") or {}
+    if not isinstance(raw, dict):
+        raise LayerError("`measures:` maps a measure's name to its expression")
+    out = {}
+    for name, m in raw.items():
+        m = {"expr": m} if isinstance(m, str) else m if isinstance(m, dict) else {}
+        if m.get("expr"):
+            out[str(name)] = {k: m[k] for k in ("expr", "format", "description") if m.get(k)}
+    return out
+
+
 def implicit_source(body: str) -> str | None:
     """The dataset a report's implicit model is made from (``model: dataset:<name>``, quoted or not, as the designer or a hand saves it), else None."""
     try:

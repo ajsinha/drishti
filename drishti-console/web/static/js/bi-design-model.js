@@ -31,14 +31,35 @@
   const S = (B.modelBinding = { ref: '', fields: null, idx: null, report: null, reportId: '' });
 
   const withModel = (yaml) => (/^model:/m.test(yaml) ? yaml : /^dataset:\s*""\s*$/m.test(yaml) ? yaml.replace(/^dataset:\s*""\s*$/m, 'model: ' + S.ref) : yaml.replace(/^(report:.*)$/m, '$1\nmodel: ' + S.ref));
+  /** The report's own measures (`measures:`): read from its YAML by the console (the server's report reader does not keep them yet) and written back. */
+  const localOf = (yaml) => (/^measures:/m.test(yaml || '') ? B.layer.post('report-measures', { yaml }).then((r) => r.measures || {}).catch(() => ({})) : Promise.resolve({}));
+  const withMeasures = (yaml, ms) => {
+    if (!ms || !Object.keys(ms).length || /^measures:/m.test(yaml)) { return yaml; }
+    const obj = (m) => (typeof m === 'string' ? { expr: m } : m);
+    const lines = Object.keys(ms).map((n) => '  ' + JSON.stringify(n) + ': { ' + Object.keys(obj(ms[n])).map((k) => k + ': ' + JSON.stringify(obj(ms[n])[k])).join(', ') + ' }');
+    return yaml.replace(/^pages:/m, 'measures:\n' + lines.join('\n') + '\npages:');
+  };
   const clean = (r) => {
-    const problems = (r.problems || []).filter((p) => !(p.code === 'DRS-9030' && (p.path === 'dataset' || p.path === 'model')));
+    const problems = (r.problems || []).filter((p) => !(p.code === 'DRS-9030' && (p.path === 'dataset' || p.path === 'model')) && !(p.level === 'warning' && p.path === 'measures'));
     return Object.assign({}, r, { problems, valid: !problems.some((p) => p.level === 'error') });
   };
   function fields() {
     if (S.fields) { return Promise.resolve(S.fields); }
     return B.layer.get('fields?ref=' + encodeURIComponent(S.ref)).then((f) => { S.fields = f; S.idx = B.index(f); return f; });
   }
+  /** The report's own measures (`measures:` in its YAML, spec 4.2) in the Fields shape, marked local, so wells, the index and the queries know them. */
+  function withLocal(report) {
+    if (!S.fields) { return; }
+    const local = (report && report.measures) || {};
+    const model = (S.fields.measures || []).filter((m) => !m.local);
+    const mine = Object.keys(local).map((n) => ({ name: n, expr: typeof local[n] === 'string' ? local[n] : local[n].expr, format: (local[n] || {}).format, description: (local[n] || {}).description || '', local: true }));
+    const sig = JSON.stringify(mine);
+    if (sig === S.localSig) { return; }
+    S.localSig = sig;
+    S.fields.measures = model.concat(mine);
+    S.idx = B.index(S.fields);
+  }
+  B.modelBinding.withLocal = withLocal;
   function find(report, pageId, visualId) {
     const pages = (report && report.pages) || [];
     const page = pages.find((p) => p.id === pageId) || pages.find((p) => (p.visuals || []).some((v) => v.id === visualId)) || pages[0];
@@ -62,11 +83,15 @@
     return fields().then(() => {
       const { page, v } = find(report, pageId, visualId);
       if (!v) { throw Object.assign(new Error('DRS-9150 no visual ' + visualId + ' on this page'), { code: 'DRS-9150' }); }
+      withLocal(report);
       const mq = B.mq(S.ref, report, page, v, S.idx, { filters: choices(report, state, visualId) });
       if (!mq) { throw Object.assign(new Error('Add a field or a measure to this visual.'), { code: 'DRS-9150' }); }
+      const local = (report && report.measures) || {};
+      const used = mq.select.measures.filter((n) => local[n]);
+      if (used.length) { mq.define = {}; used.forEach((n) => { mq.define[n] = typeof local[n] === 'string' ? local[n] : local[n].expr; }); }       // the report's own measures travel with the query
       S.last = S.last || {};
       S.last[visualId] = mq;
-      return B.mq.ask(mq).then((a) => Object.assign(a, { visual: visualId, query: mq }));
+      return B.mq.ask(mq).then((a) => { S.meta = S.meta || {}; S.meta[visualId] = a.meta; return Object.assign(a, { visual: visualId, query: mq }); });
     });
   }
 
@@ -82,13 +107,13 @@
           if (!S.ref) { return r; }
           S.reportId = it.id;
           S.report = r.report;
-          return fields().then((f) => Object.assign(clean(r), { dataset: f }));
+          return localOf(it.body).then((m) => { S.report.measures = m; return fields(); }).then((f) => { withLocal(S.report); return Object.assign(clean(r), { dataset: f }); });
         }).catch(() => r) : r));
       }
       return p;
     }
-    if (path === '/reports/format') { return api(method, path, body).then((r) => Object.assign({}, r, { yaml: withModel(r.yaml) })); }
-    if (path === '/reports/validate') { return api(method, path, body).then(clean); }
+    if (path === '/reports/format') { return api(method, path, body).then((r) => Object.assign({}, r, { yaml: withMeasures(withModel(r.yaml), body && body.report && body.report.measures) })); }
+    if (path === '/reports/validate') { return api(method, path, body).then((r) => (r.report && body && /^measures:/m.test(body.yaml || '') ? localOf(body.yaml).then((m) => { r.report.measures = m; return clean(r); }) : clean(r))); }
     if (/^\/reports\/dataset\?ref=/.test(path)) { return fields(); }
     if (path === '/reports/query') { return ask(body.report, body.page, body.visual, body.state); }
     if (/^\/reports\/[^/]+\/query$/.test(path) && S.report) { return ask(S.report, body.page, body.visual, body.state); }
@@ -149,17 +174,45 @@
         span.textContent = 'Changes to the model affect ' + n + (n === 1 ? ' report' : ' reports') + (r.consumers.length > n ? ' and ' + (r.consumers.length - n) + ' other item' + (r.consumers.length - n === 1 ? '' : 's') : '') + '.';
       });
     }
-    // Query: the selected visual's model query
-    const qbox = h('details', { class: 'bi-md-query', 'data-visual-query': '' }, h('summary', { text: 'Query of the selected visual' }), h('pre', { class: 'bi-body mono', 'data-visual-query-text': '', tabindex: '0' }));
-    pane.appendChild(qbox);
-    const showQuery = () => {
-      const pre = qbox.querySelector('pre');
-      const mq = D.selected && S.last && S.last[D.selected];
-      pre.textContent = mq ? B.mq.yaml(mq) : 'Choose a visual: its model query (what the server is asked, as you) shows here.';
-    };
-    D.on('select', showQuery);
-    D.on('model', () => window.setTimeout(showQuery, 600));
-    showQuery();
+    localMeasures(pane);
+    // Query: the selected visual's question as a model query (MQ) or as SQL (DSQL), one plan either way (bi-query-panel.js)
+    if (B.queryPanel) {
+      B.queryPanel(pane, { ref: S.ref, current: () => (D.selected && S.last && S.last[D.selected]) || null, fields: () => S.fields, on: D.on,
+        lastMeta: () => (D.selected && S.meta && S.meta[D.selected]) || null });
+    }
+  }
+
+  /** A measure of this report only (spec 4.2): a name and a formula in the ExpressionEditor over the model's fields and measures; Try it asks the model. */
+  function localMeasures(pane) {
+    withLocal(D.model);
+    D.idx = S.idx; D.dataset = S.fields;
+    if (D.readOnly || !B.exprEditor) { return; }
+    const name = h('input', { class: 'studio-in', 'data-lm-name': '', placeholder: 'MTM per trade', 'aria-label': 'Name of the report measure' });
+    const expr = h('input', { class: 'studio-in mono', 'data-lm-expr': '', placeholder: "measure('MTM') / count(trade)" });
+    const add = h('button', { type: 'button', class: 'btn-pill btn-accent bi-small', 'data-lm-add': '', text: 'Add to this report' });
+    const box = h('details', { class: 'bi-md-localm', 'data-local-measure': '' }, h('summary', {}, B.icon('calculator'), ' New measure for this report'),
+      h('p', { class: 'text-muted-d bi-small-note', text: 'Over the model\'s measures and fields, for this report only. A measure every report needs belongs in the model: use Move to the model on it later.' }),
+      h('label', { class: 'bi-frow' }, h('span', { text: 'Name' }), name), h('div', { class: 'bi-frow' }, h('span', { text: 'Formula' }), expr), add);
+    const search = pane.querySelector('[data-fields-search]');
+    pane.insertBefore(box, search);
+    const fieldsOf = () => ((S.fields && S.fields.tables) || []).flatMap((t) => t.columns.filter((c) => !c.hidden).map((c) => ({ name: t.name + '.' + c.name, type: c.type, meaning: c.meaning, format: c.format, description: c.description })));
+    B.exprEditor(expr, {
+      scope: 'aggregate', label: 'Formula of the report measure', fields: fieldsOf, measures: () => ((S.fields && S.fields.measures) || []).map((m) => ({ name: m.name, description: m.description || m.expr || '' })),
+      target: () => ({ model: S.ref }),
+      tryIt: (text) => B.mq.ask({ mq: 1, model: S.ref, define: { 'Try it': text }, select: { fields: [], measures: ['Try it'] } }).then((a) => ({ columns: a.columns, rows: a.rows, caption: 'As you, over the whole model' + (a.meta.asOf ? ', as of ' + a.meta.asOf : '') }))
+    });
+    add.addEventListener('click', () => {
+      const n = name.value.trim(), x = expr.value.trim();
+      if (!n || !x) { B.near(add, 'Give the measure a name and a formula.', true); return; }
+      if ((S.fields.measures || []).some((m) => m.name === n)) { B.near(add, 'There is already a measure called ' + n + ' (a report measure cannot shadow one of the model).', true); return; }
+      D.change('Add report measure ' + n, (r) => { r.measures = Object.assign({}, r.measures || {}, { [n]: { expr: x } }); });
+      withLocal(D.model);
+      D.idx = S.idx; D.dataset = S.fields;
+      if (D.drawFields) { D.drawFields(); }
+      name.value = ''; expr.value = '';
+      B.near(add, 'Added ' + n + ': drag it from Measures onto a visual.', false);
+    });
+    D.on('model', () => { withLocal(D.model); if (D.idx !== S.idx) { D.idx = S.idx; D.dataset = S.fields; if (D.drawFields) { D.drawFields(); } } });
   }
 
   function promote(btn) {
