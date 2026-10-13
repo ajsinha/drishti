@@ -312,7 +312,7 @@ runs themselves are the same code as the server's, on 60 rows). The Chromium tes
 Built: the Measure and Visual interfaces; Python items as BI items (versions, review, publish, shipped files, bundles); the manifest and its checks (server and console); Python measures in datasets; the
 `python` visual in reports and the designer; the sandboxed server runner with a pool; the browser target in Calc's Pyodide worker; the shipped samples.
 
-Built with several datasets (section 13): the **Transform** interface, run on the server as the reader's masked frames and published as a derived dataset ([DATASETS.md section 11.2](DATASETS.md#112-derived-datasets-a-python-transform)), kept per reader and version of the inputs; Analyse promotes a join cell to one.
+Built with several datasets (section 13): the **Transform** interface, run on the server over the reader's answers and published as a **Python dataset** (2.2: `source.python`, each input a model query; [BI_MODEL_SPEC.md section 1.2](../architecture/BI_MODEL_SPEC.md#12-sources)), kept per reader and version of the inputs; Analyse promotes a join cell to one.
 
 Not built, and not faked: the **Source** interface (RUPAKA.md section 13.1; rows from a Python-only source such as an API); a Python measure **inside** a SQL query or a bar chart's measures (a query that names one is `DRS-9013`);
 Python in **subscriptions** and **embedded** reports (an export of a python visual is the table of rows handed to Python; an embedded report does not draw Vega-Lite or Python visuals); a
@@ -322,7 +322,7 @@ allow-list (add them to `bi.python.packages` and the server's `python-packages` 
 
 ## 13. Transforms: a table in, a table out
 
-The third interface, after the Measure and the Visual, is the **Transform**: Python that turns the frames of one or more datasets into **a table**, which a **derived dataset** ([DATASETS.md section 11.2](DATASETS.md#112-derived-datasets-a-python-transform)) publishes as its one table, with measures declared in YAML over it. Use it where a join or a reshaping is easier in pandas than in the dataset language (a merge with a tolerance, a rank, a fitted column, a pivot), and you still want the result to be a dataset every report, alert and subscription can use. The design is [RUPAKA.md sections 13.1 and 20.10](../architecture/RUPAKA.md).
+The third interface, after the Measure and the Visual, is the **Transform**: Python that turns the frames of one or more answers into **a table**, which a **Python dataset** publishes as its one table (2.2: `source: { python: <item>, inputs: { <name>: <a model query> } }`, [BI_MODEL_SPEC.md section 1.2](../architecture/BI_MODEL_SPEC.md#12-sources); before 2.2 a derived dataset, [DATASETS.md section 11.2](DATASETS.md#112-derived-datasets-a-python-transform)), with measures in a model over it. Use it where a join or a reshaping is easier in pandas than in the dataset language (a merge with a tolerance, a rank, a fitted column, a pivot), and you still want the result to be a dataset every report, alert and subscription can use. The design is [RUPAKA.md sections 13.1 and 20.10](../architecture/RUPAKA.md).
 
 ```yaml
 rachana: 1
@@ -361,11 +361,11 @@ Python Transform pnl-vs-exposure: 18 rows in 218 ms (first run); the same reader
 
 **Checks.** The server checks the manifest on validate and publish (`DRS-9070`): `interface` is `measure`, `visual` or `transform`; a transform needs `inputs` naming datasets, defines `run` (a top-level function or the method of a class `Transform`), and `target` is `server`. The console adds the source checks (`POST /bi/python/check`: it parses, defines its entry, imports only what it lists). `DRS-9071` to `9074` are the run's, as for any Python item (section 10); `DRS-9075` is a frame that lacks a column the derived dataset declares or inputs that do not match.
 
-**From Analyse.** A notebook that joins several extracts in pandas ([ANALYSE.md section 2](ANALYSE.md#2-the-extract)) can **Promote to a Transform**: each `extract("name")` becomes a parameter of `run`, the cell's `result` is returned, and the inputs are the extracts' datasets in order; the draft is then checked and published, and a derived dataset is written over it.
+**From Analyse.** A notebook that joins several extracts in pandas ([ANALYSE.md section 2](ANALYSE.md#2-the-extract)) can **Promote to a Transform**: each `extract("name")` becomes a parameter of `run`, the cell's `result` is returned; the draft is then checked and published, and a Python dataset is written over it (the dataset wizard's source *A Python Transform*), one model query per parameter of `run`.
 
-![The derived sample dataset: its sources, Run the Transform now and the columns it returned](../tutorials/img/t14/12-derived-dataset.jpg)
+![The sample's Python dataset: made by the Python Transform pnl-vs-exposure, keyed by counterparty, and the columns its Transform returns](../tutorials/img/t14/12-python-dataset.jpg)
 
-Settings: `drishti.bi.transform.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibitransform--python-transforms-and-composed-datasets). The sample is `config/bi/python/pnl-vs-exposure.python.yaml` with the derived dataset `desk-pnl-vs-exposure-py`.
+Settings: `drishti.bi.transform.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibitransform--python-transforms-and-composed-datasets). The sample is `config/bi/python/pnl-vs-exposure.python.yaml` with the Python dataset `desk-pnl-vs-exposure-py-result` and the model `desk-pnl-vs-exposure-py` over it ([tutorial 14, step 8](../tutorials/14-python-and-analyse.md#step-8--two-models-a-python-transform-and-a-join-in-analyse)).
 
 ## 14. Vega-Lite output
 

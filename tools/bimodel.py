@@ -102,7 +102,7 @@ def model_describe(a, ctx) -> int:
             print(f"  {f.get('field'):<34} {f.get('type') or '':<9} {f.get('meaning') or f.get('role') or '':<14}" + ", ".join(props))
     print("\nmeasures")
     for x in r.get("measures", []):
-        print(f"  {x.get('name'):<34}{x.get('expr') or ''}" + ("  (default)" if x.get("implicit") else ""))
+        print(f"  {x.get('name'):<34}{x.get('expr') or ('python: ' + x['python'] if x.get('python') else '')}" + ("  (default)" if x.get("implicit") else ""))
     for name, p in (r.get("perspectives") or {}).items():
         print(f"\nperspective {name}: " + ", ".join((p.get("fields") or []) + (p.get("measures") or [])))
     return 0

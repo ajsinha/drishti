@@ -42,6 +42,7 @@
     const path = '/datasets/' + B.id2path(info.item);
     const sec = q('[data-refresh-sec]'), tsec = q('[data-tests-sec]');
     if (!sec || !info.item) { return; }
+    const made = info.source && (info.source.type === 'python' || info.source.type === 'model');   // made when it is asked, for each reader: nothing to refresh
     let me = null;
     const mePromise = B.api('GET', '/me').then((m) => { me = m; return m; }).catch(() => ({ powers: [], roles: [] }));
 
@@ -78,9 +79,9 @@
     }
 
     const load = () => B.api('GET', path + '/refresh').then(draw).catch((e) => { q('[data-refresh-note]').textContent = e.message; });
-    sec.hidden = false;
+    sec.hidden = made;
     mePromise.then((m) => {
-      load();
+      if (!made) { load(); }
       const author = (m.powers || []).indexOf('bi-author') >= 0;
       const btn = q('[data-refresh-now]'), msg = q('[data-refresh-msg]');
       btn.hidden = !author;

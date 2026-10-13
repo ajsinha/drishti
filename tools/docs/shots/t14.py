@@ -14,8 +14,9 @@
 
 """Pictures of tutorial 14, Python and Analyse (docs/tutorials/14-python-and-analyse.md), written to docs/tutorials/img/t14/.
 
-A Python measure and a Python visual in a report (the shipped ones, then one of your own); then Analyse: an extract of a dataset, a slice, a SQL cell, a Python cell
-that draws a chart, a saved notebook, and the promotion of a cell to a visual and of a slice to a report draft."""
+A Python measure and a Python visual in a report (the shipped ones, then one of your own); then Analyse on a model (2.2): an extract, a slice, a SQL cell in Drishti
+SQL on the server, a Python cell that draws a chart, a saved notebook, the promotion of a cell to a visual and of a slice to a report draft; the Python dataset
+of the sample (a Transform over two model queries); a SQL cell promoted into an existing report draft."""
 from __future__ import annotations
 
 from _bi import bi, clean_items, quiet_inbox
@@ -26,6 +27,7 @@ shot = register("t14", OUT / "t14")
 DATA = ROOT / "docs" / "tutorials" / "data"
 ITEM, REPORT = "Notional by desk chart", "Desks in Python"
 WORKSPACE = "economics-desk"
+DSQL = ("SELECT trade.desk, MEASURE('Trades') AS trades, MEASURE('Notional') AS notional\nFROM trade\nGROUP BY trade.desk\nORDER BY notional DESC")
 CHART = ("g = df.groupby('desk', as_index=False)['notional'].sum()\n"
          "result = {'title': {'text': 'Notional by desk'}, 'xAxis': {'type': 'category', 'data': list(g['desk'])}, 'yAxis': {'type': 'value'}, "
          "'series': [{'type': 'bar', 'data': [float(v) for v in g['notional']]}]}")
@@ -83,7 +85,7 @@ def open_extract(c: Ctx):
     c.page.set_viewport_size({"width": 1280, "height": 900})
     c.page.goto(c.base + "/bi/explore")
     c.page.wait_for_function("() => document.querySelectorAll('[data-dataset] option').length > 1", timeout=30000)
-    c.page.select_option("[data-dataset]", "file:dataset:trades-basic")
+    c.page.select_option("[data-dataset]", "mq:trades-basic@1")                     # the model of the sample (2.2)
     c.page.wait_for_selector("[data-fields] input[name=f]", timeout=30000)
 
 
@@ -109,7 +111,7 @@ def analyse(c: Ctx):
     c.page.wait_for_timeout(2500)
     c.save("11-promote-slice.jpg", clip={"x": 240, "y": 56, "width": 1040, "height": 844})
     c.page.click("#bxT-sql")
-    c.page.fill("[data-cells=sql] textarea", "SELECT desk, COUNT(*) AS trades, SUM(notional) AS notional\nFROM extract\nGROUP BY desk\nORDER BY notional DESC")
+    c.page.fill("[data-cells=sql] textarea", DSQL)
     c.page.click("[data-cells=sql] [data-run]")
     c.page.wait_for_selector("[data-cells=sql] table")
     c.page.wait_for_timeout(500)
@@ -132,20 +134,18 @@ def analyse(c: Ctx):
     c.save("09-saved.jpg", clip={"x": 240, "y": 56, "width": 1040, "height": 844})
 
 
-DERIVED = "file:dataset:desk-pnl-vs-exposure-py"
+PY_DATASET = "file:dataset:desk-pnl-vs-exposure-py-result"
 NOTEBOOK = "file:notebook:pnl-vs-exposure-pandas"
 
 
-@shot("12-derived-dataset.jpg")
-def derived_dataset(c: Ctx):
-    """The derived sample dataset: its sources, the Python Transform that reads them, and Run the Transform now with the columns it returned."""
+@shot("12-python-dataset.jpg")
+def python_dataset(c: Ctx):
+    """The sample's Python dataset (2.2): its page says it is made by the Transform pnl-vs-exposure from two model queries; its YAML shows the inputs."""
     login(c, height=900)
     quiet_inbox(c)
-    go(c, "/bi/d/" + DERIVED, wait="[data-built-sec]:not([hidden])", settle=1500)
-    c.page.click("[data-run-transform]")
-    c.page.wait_for_function("() => /rows/.test(document.querySelector('[data-run-result]').textContent)", timeout=90000)
-    c.page.wait_for_timeout(600)
-    elem_shot(c, "12-derived-dataset.jpg", "[data-built-sec]", pad=10)
+    go(c, "/bi/ds/" + PY_DATASET, wait="[data-layer-dataset][data-ready=yes]", settle=1500)
+    c.page.wait_for_timeout(400)
+    span_shot(c, "12-python-dataset.jpg", "[data-layer-dataset] header", "[data-columns]")
 
 
 @shot("13-analyse-extracts.jpg", also=("14-analyse-join.jpg", "15-promote-transform.jpg"))
@@ -170,9 +170,9 @@ def analyse_extracts(c: Ctx):
     elem_shot(c, "14-analyse-join.jpg", "[data-pane=python]", pad=6)
     c.page.fill("input[name=title]", "Join of P&L and exposure")
     c.page.click('[data-cells=python] [data-promote="transform"]')
-    c.page.wait_for_function("() => /Python transform draft saved/.test(document.querySelector('[data-msg]').textContent)", timeout=30000)
-    c.page.evaluate("window.scrollTo(0, 0)")
-    c.save("15-promote-transform.jpg", clip={"x": 240, "y": 56, "width": 1040, "height": 300})
+    c.page.wait_for_function("() => [...document.querySelectorAll('[data-cells=python] .bi-near')].some(e => /Python transform draft saved/.test(e.textContent))", timeout=30000)
+    c.page.wait_for_timeout(500)
+    elem_shot(c, "15-promote-transform.jpg", "[data-cells=python] .bi-near", pad=10)
 
 
 PY_REPORT = "file:report:python-desk-risk"
@@ -218,31 +218,28 @@ def span_shot(c: Ctx, name: str, top: str, bottom: str, pad: int = 10):
     page_shot(c, name, c.page.evaluate(SPAN, [top, bottom]), pad=pad)
 
 
-@shot("19-analyse-browser.jpg", also=("20-promote-existing.jpg",))
-def analyse_in_the_browser(c: Ctx):
-    """Slice and SQL worked out by DuckDB in the browser (the line under each says so), then a SQL cell promoted into an existing report draft."""
+@shot("19-analyse-engines.jpg", also=("20-promote-existing.jpg",))
+def analyse_engines(c: Ctx):
+    """A SQL cell's engine (Drishti SQL on the server, or the extract until wave B), then a SQL cell promoted into an existing report draft."""
     login(c, height=900)
     quiet_inbox(c)
-    clean_items(c, REPORT_DRAFT, "Slice of file:dataset:trades-basic", "SQL of file:dataset:trades-basic")
+    clean_items(c, REPORT_DRAFT)
     bi(c, "POST", "/workspaces/me/items", {"kind": "report", "title": REPORT_DRAFT, "body": (DATA / "desk-python.report.yaml").read_text()})
     open_extract(c)
     c.page.click("[data-open-go]")
     c.page.wait_for_function("() => /rows,/.test(document.querySelector('[data-info]').textContent)", timeout=60000)
-    c.page.click('.bx-chip[data-field="desk"] [data-to="rows"]')
-    c.page.click('.bx-chip[data-field="notional"] [data-to="values"]')
-    c.page.wait_for_function("() => document.querySelector('[data-pivot-meta]').dataset.engine === 'duckdb-wasm'", timeout=120000)
-    c.page.wait_for_timeout(600)
-    span_shot(c, "19-analyse-browser.jpg", ".bx-engine", "[data-pane=slice]")
     c.page.wait_for_function("() => document.querySelectorAll('[data-promote-target] option').length > 1", timeout=30000)
     c.page.locator("[data-promote-target]").select_option(label=f"the report: {REPORT_DRAFT}")
     c.page.click("#bxT-sql")
-    c.page.fill("[data-cells=sql] textarea", "SELECT desk, COUNT(*) AS trades, SUM(notional) AS notional\nFROM extract\nGROUP BY desk\nORDER BY notional DESC")
+    c.page.fill("[data-cells=sql] textarea", "SELECT trade.desk, MEASURE('MTM') AS mtm\nFROM trade\nWHERE trade.currency = 'USD'\nGROUP BY trade.desk\nORDER BY mtm DESC")
     c.page.click("[data-cells=sql] [data-run]")
-    c.page.wait_for_selector('[data-cells=sql] [data-engine="duckdb-wasm"]', timeout=60000)
-    c.page.click("[data-promote-report]")
-    c.page.wait_for_function("() => /added to the report draft/.test(document.querySelector('[data-msg]').textContent)", timeout=30000)
+    c.page.wait_for_selector("[data-cells=sql] table", timeout=60000)
     c.page.wait_for_timeout(600)
-    span_shot(c, "20-promote-existing.jpg", "[data-msg]", "[data-pane=sql]")
+    span_shot(c, "19-analyse-engines.jpg", "[data-pane=sql]", "[data-pane=sql]")
+    c.page.click("[data-promote-report]")
+    c.page.wait_for_function("() => [...document.querySelectorAll('[data-cells=sql] .bi-near')].some(e => /added to the report draft/.test(e.textContent))", timeout=30000)
+    c.page.wait_for_timeout(600)
+    span_shot(c, "20-promote-existing.jpg", "[data-pane=sql]", "[data-pane=sql]")
     clean_items(c, REPORT_DRAFT)
 
 
@@ -264,11 +261,11 @@ def calc_bi(c: Ctx):
     """Calc's BI client (drishti_bi.query: the engine's answer as you, a DataFrame) and Graphic Walker over that frame (drishti_bi.walk)."""
     login(c, height=900)
     quiet_inbox(c)
-    open_calc(c, "import drishti_bi\ndf = await drishti_bi.query_async('file:dataset:trades-basic', measures=['MTM', 'Trades'], by=['trade.desk'])\nshow(df, 'MTM by desk')")
+    open_calc(c, "import drishti_bi\ndf = await drishti_bi.query_async('trades-basic@1', measures=['MTM', 'Trades'], by=['trade.desk'])\nshow(df, 'MTM by desk')")
     assert "Done" in c.page.inner_text("[data-calc-status]"), c.page.inner_text("[data-calc-status]")
     c.page.wait_for_timeout(500)
     c.save("21-calc-bi.jpg", "#calcDrawer")
-    open_calc(c, "import drishti_bi\ndf = await drishti_bi.query_async('file:dataset:trades-basic', measures=['MTM'], by=['trade.desk', 'trade.currency'])\ndrishti_bi.walk(df, 'MTM by desk and currency')")
+    open_calc(c, "import drishti_bi\ndf = await drishti_bi.query_async('trades-basic@1', measures=['MTM'], by=['trade.desk', 'trade.currency'])\ndrishti_bi.walk(df, 'MTM by desk and currency')")
     c.page.wait_for_selector("[data-calc-walker]", timeout=30000)
     frame = c.page.frame_locator("[data-calc-walker]")
     frame.locator("#walker[data-ready='1']").wait_for(timeout=60000)

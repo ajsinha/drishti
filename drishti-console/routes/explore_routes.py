@@ -269,8 +269,8 @@ async def promote(request: Request):
                 raise ExploreError("DRS-9070", 422, "the cell is empty or too long to promote")
             text = promote_transform(source, name, check_extracts(body.get("extracts") or [], limits), cell_packages(source, request.app.state.pyrunner.packages))
             notes = ["Each extract(\"name\") became a parameter of run(); the cell's result is returned and must be a pandas DataFrame with usable column names.",
-                     "Check it (Check the Python on the item page) and publish it, then make a derived dataset: derived: { transform: <this item>, inputs: { alias: { dataset, by, measures } } }, "
-                     "one input per dataset, in this order (docs/guides/DATASETS.md section 11)."]
+                     "Check it (Check the Python on the item page) and publish it, then make a dataset of its table: source: { python: <this item>, inputs: { <name>: <a model query> } }, "
+                     "one input per parameter of run(), in this order (the dataset wizard's source A Python Transform; docs/architecture/BI_MODEL_SPEC.md section 1.2)."]
             return JSONResponse({"kind": "python", "title": name, "yaml": text, "notes": notes}, headers={"Cache-Control": "no-store"})
         if to == "report":
             return JSONResponse(await _slice_report(request, body, name), headers={"Cache-Control": "no-store"})

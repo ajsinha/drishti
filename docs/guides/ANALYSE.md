@@ -91,7 +91,7 @@ A value takes an aggregation (`sum`, `avg`, `count`, `min`, `max`; a text field 
 The pivot is worked out by **DuckDB-Wasm in your browser** over the extract the page holds (one `GROUP BY`; [section 13](#13-in-the-browser-duckdb-wasm)), or, when it is not installed or cannot start, by plain JavaScript over the same
 rows: the two give the same table (a Chromium test compares them). The line under the table says which: *Worked out by DuckDB in this browser* or *Worked out in this page*. The table shows the first 500 pivot rows.
 
-![The Slice tab worked out in the browser: the line under the choice of engine and under the table says so](../tutorials/img/t14/19-analyse-browser.jpg)
+![A SQL cell on the server engine: Drishti SQL over the model, the engine select, and the line naming the model and the plan](../tutorials/img/t14/19-analyse-engines.jpg)
 
 ## 4. SQL
 
@@ -199,7 +199,7 @@ Every promotion answers **beside the button you pressed** (one message, with an 
 
 Promoting writes a **draft** item in your workspace; nothing is published.
 
-* **A Python cell that joins extracts to a Transform** (*Promote to a Transform*, shown greyed with "Add a second extract first" until the notebook has further extracts): each `extract("name")` becomes a parameter of `run(...)`, a use of `df` becomes the first extract, the cell's `result` is returned, and the draft's `inputs` are the extracts' datasets, in order. It is a draft **Python item with `interface: transform`** ([PYTHON_BI.md section 13](PYTHON_BI.md#13-transforms-a-table-in-a-table-out)); check it, publish it, then write the derived dataset that names it ([DATASETS.md section 11.2](DATASETS.md#112-derived-datasets-a-python-transform)): the promotion says so in its notes. `result` must be a pandas DataFrame with column names of letters, digits and underscore.
+* **A Python cell that joins extracts to a Transform** (*Promote to a Transform*, shown greyed with "Add a second extract first" until the notebook has further extracts): each `extract("name")` becomes a parameter of `run(...)`, a use of `df` becomes the first extract, the cell's `result` is returned, and the draft's `inputs` are the extracts' datasets, in order. It is a draft **Python item with `interface: transform`** ([PYTHON_BI.md section 13](PYTHON_BI.md#13-transforms-a-table-in-a-table-out)); check it, publish it, then write the Python dataset that names it (`source: { python: <item>, inputs: { <name>: <a model query> } }`, [BI_MODEL_SPEC.md section 1.2](../architecture/BI_MODEL_SPEC.md#12-sources)): the promotion says so in its notes. `result` must be a pandas DataFrame with column names of letters, digits and underscore.
 
 ![After promoting the join cell: "Python transform draft saved in your workspace: ..."](../tutorials/img/t14/15-promote-transform.jpg)
 

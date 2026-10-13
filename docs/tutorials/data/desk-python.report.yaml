@@ -14,11 +14,11 @@
 
 # Tutorial 14: a report with a Python visual of your own (notional-by-desk.python.yaml) beside the shipped Python measure. `format.python` names the item;
 # the visual is handed the rows of its `columns` well, under the page's slicers and filters.
-rachana: 1
+rachana: 2
 report: desk-python
 version: 1
 title: Desks in Python
-dataset: trades-basic
+model: trades-basic@1
 pages:
   - id: desks
     title: Desks

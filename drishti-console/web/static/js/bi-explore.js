@@ -297,7 +297,7 @@
   X.promoteReport = function (extra, label, anchor) {
     if (!X.spec || !X.ex) { X.tell(anchor, 'Open an extract first.', true); return Promise.resolve(); }
     var typed = q('input[name=title]', root).value;
-    var title = (typed || (label === 'SQL' ? X.datasetTitle() + ' SQL' : label + ' of ' + (X.spec.dataset || 'data'))).slice(0, 80);
+    var title = (typed || (label === 'SQL' ? X.datasetTitle() + ' SQL' : label + ' of ' + (X.datasetTitle() || X.spec.dataset || 'data'))).slice(0, 80);
     var target = targetSel.value;
     var body = Object.assign({ to: 'report', name: title, dataset: X.spec.dataset, columns: X.ex.columns.map(function (c) { return c.name; }), qualified: X.qual, target: target || undefined, page: pageIn.value.trim() || undefined }, extra);
     var make = function (existing) {
