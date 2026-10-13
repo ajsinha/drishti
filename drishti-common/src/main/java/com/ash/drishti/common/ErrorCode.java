@@ -268,6 +268,8 @@ public enum ErrorCode {
     LAYER_MODEL_SAFEGUARD("DRS-9130", 409),
     /** Model Check warning: readers of a dataset that no row rule of the model names; they see no rows (never refuses a publish). */
     LAYER_MODEL_ROLES_WITHOUT_RULE("DRS-9131", 200),
+    /** Model Check (a warning): a measure hidden for some roles whose columns those roles still see, so a default measure or a define reaches the number. */
+    LAYER_MODEL_HIDDEN_REACHABLE("DRS-9132", 200),
     /** Model query: the shape (an unknown key, a wrong type, {@code mq} missing or not 1, two time forms). */
     MQ_SHAPE("DRS-9150", 422),
     /** Model query: the model is not found, not readable by the caller, retired, or a draft the caller may not query. */
@@ -294,6 +296,8 @@ public enum ErrorCode {
     MQ_MASKED("DRS-9161", 403),
     /** Model query: a Python measure in a grouped query (a python visual runs it). */
     MQ_PYTHON("DRS-9162", 422),
+    /** Model query: a field or measure hidden for the caller's roles (hidden-for): the same answer as a name the model lacks, said as not available to them. */
+    MQ_NOT_FOR_ROLE("DRS-9163", 422),
     /** The expression converter could not keep the meaning of an old-syntax expression (it is left as it was). */
     EXPR_CONVERT("DRS-9190", 422),
     /** Drishti SQL: not a statement of the dialect (syntax, more than one statement, DDL or DML: it is read-only). */

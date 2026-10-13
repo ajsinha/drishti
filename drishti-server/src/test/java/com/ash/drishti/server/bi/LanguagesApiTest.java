@@ -464,11 +464,30 @@ class LanguagesApiTest {
         var refused = call("POST", "/api/v1/bi/mq", reader("ann"), Map.of("mq", 1, "model", "lang-model@1", "select", Map.of("fields", List.of("trades.currency"),
                 "measures", List.of("Trades")))).andReturn().getResponse();
         assertThat(refused.getStatus()).isEqualTo(422);
-        assertThat(refused.getContentAsString()).contains("DRS-9152").contains("no field 'trades.currency'");
+        assertThat(refused.getContentAsString()).contains("DRS-9163").contains("the field 'trades.currency' is not available to your role");
         var measure = call("POST", "/api/v1/bi/mq", reader("ann"), Map.of("mq", 1, "model", "lang-model@1", "select", Map.of("measures", List.of("Open MTM"))))
                 .andReturn().getResponse();
-        assertThat(measure.getContentAsString()).contains("DRS-9152").contains("no measure 'Open MTM'");
+        assertThat(measure.getContentAsString()).contains("DRS-9163").contains("the measure 'Open MTM' is not available to your role").doesNotContain("trades.mtm");
         assertThat(codes(validate("ann", "sum(trades.notional, where=trades.currency == 'USD')", "aggregate"))).contains("DRS-9152");
+        // a define over a hidden column is refused for the role; a report's visual on a hidden measure says so (not a raw 'no measure')
+        var define = call("POST", "/api/v1/bi/mq", reader("ann"), Map.of("mq", 1, "model", "lang-model@1", "define", Map.of("Books", "distinct(trades.book)"),
+                "select", Map.of("measures", List.of("Books")))).andReturn().getResponse();
+        assertThat(define.getStatus()).isEqualTo(422);
+        assertThat(define.getContentAsString()).contains("trades.book").doesNotContain("\"rows\"");
+        // a report or another older endpoint keeps the code (it is not turned into a raw DRS-9020 'no measure')
+        assertThat(new com.ash.drishti.server.bi.mq.MqException(com.ash.drishti.server.bi.mq.MqException.Problem.of("DRS-9163", "measures[0]", "x")).legacy().errorCode().code())
+                .isEqualTo("DRS-9163");
+        // Check warns that the hidden measure is still reachable through the columns its roles see
+        JsonNode check = ok(call("POST", "/api/v1/bi/models/validate", admin(), Map.of("yaml", Files.readString(Path.of("target/lang-api-folder/models/lang-model.model.yaml")))));
+        JsonNode warn = null;
+        for (JsonNode pr : check.path("problems")) {
+            if ("DRS-9132".equals(pr.path("code").asText())) {
+                warn = pr;
+            }
+        }
+        assertThat(warn).as(check.toString()).isNotNull();
+        assertThat(warn.path("level").asText()).isEqualTo("warning");
+        assertThat(warn.path("message").asText()).contains("hidden measure 'Open MTM' still reachable through [trades.mtm]").contains("hide the columns too");
     }
 
     @Test @Order(31)

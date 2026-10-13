@@ -744,6 +744,7 @@ public final class ModelCatalog {
                 Map<String, ResolvedDataset> resolved = resolveAll(r.model(), problems);
                 problems.addAll(ModelChecker.check(r.model(), resolved, packs::ofKind));
                 problems.addAll(roles.warnings(r.model(), resolved));
+                problems.addAll(ObjectSecurity.reachable(r.model(), resolved));       // a hidden measure its roles can still work out
                 for (Map.Entry<String, ResolvedDataset> e : resolved.entrySet()) {
                     List<DatasetParser.Problem> roots = new ArrayList<>();
                     com.ash.drishti.server.bi.layer.Derivations.lineage(e.getValue(), packs, roots);

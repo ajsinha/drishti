@@ -29,7 +29,8 @@ import java.util.Set;
 /**
  * Object-level security (docs/architecture/BI_DESIGN.md section 5.1, "hidden-for"): for a reader, a column hidden by its dataset or the model, a measure the
  * model hides, and every measure that reads a hidden column <em>do not exist</em>: absent from {@code describe}, unknown to DEL and Drishti SQL, and a model
- * query naming one is refused {@code DRS-9152} "not found" (indistinguishable from a typo, on purpose). Hidden measures are kept as {@code measure:<name>}.
+ * query naming one is refused {@code DRS-9163} "not available to your role" (never with its definition, its columns or who may see it). Hidden measures are
+ * kept as {@code measure:<name>}.
  */
 public final class ObjectSecurity {
 
@@ -81,6 +82,55 @@ public final class ObjectSecurity {
                     || x instanceof Node.MeasureRef mr && reads(flat, mr.name(), hidden, seen));
         } catch (RuntimeException e) {
             return false;
+        }
+    }
+
+    /**
+     * The measures a model hides for some roles whose columns those roles still see ({@code DRS-9132}, a warning): with the columns visible, a default measure
+     * ({@code sum of notional}) or a query's {@code define} works out the same number, so hiding the measure alone does not keep it from them. The warning
+     * names the columns to hide too (the designer offers it as one click).
+     */
+    public static List<com.ash.drishti.server.bi.dataset.DatasetParser.Problem> reachable(ModelDef m, Map<String, ResolvedDataset> resolved) {
+        List<com.ash.drishti.server.bi.dataset.DatasetParser.Problem> out = new ArrayList<>();
+        List<ModelDef.HiddenFor> all = m.semantics().hiddenFor();
+        for (int i = 0; i < all.size(); i++) {
+            ModelDef.HiddenFor h = all.get(i);
+            Set<String> hiddenToo = new LinkedHashSet<>(h.fields());
+            resolved.forEach((alias, r) -> datasetHidden(alias, r, Set.copyOf(h.roles()), hiddenToo));
+            for (String name : h.measures()) {
+                Set<String> cols = new LinkedHashSet<>();
+                columnsOf(m, name, cols, new LinkedHashSet<>());
+                List<String> open = cols.stream().filter(c -> !hiddenToo.contains(c)).toList();
+                if (!open.isEmpty()) {
+                    out.add(new com.ash.drishti.server.bi.dataset.DatasetParser.Problem("warning", "DRS-9132", "security.hidden-for" + (all.size() > 1 ? "[" + i + "]" : "") + ".measures",
+                            "hidden measure '" + name + "' still reachable through " + open + ": the roles " + h.roles() + " still see those columns, so a default measure or "
+                                    + "a define over them works out the same number; hide the columns too (fields: " + open + ")"));
+                }
+            }
+        }
+        return out;
+    }
+
+    /** The columns ({@code alias.column}) a model measure reads, through the measures it names. */
+    private static void columnsOf(ModelDef m, String measure, Set<String> into, Set<String> seen) {
+        ModelDef.Meas x = m.measures().get(measure);
+        if (x == null || !seen.add(measure)) {
+            return;
+        }
+        x.inputs().stream().filter(c -> c.contains(".")).forEach(into::add);
+        if (x.expr() == null) {
+            return;
+        }
+        try {
+            Node.walk(Expressions.parse(x.expr()), n -> {
+                if (n instanceof Node.Ref r && r.parts().size() >= 2) {
+                    into.add(r.parts().get(0) + "." + r.parts().get(1));
+                } else if (n instanceof Node.MeasureRef mr) {
+                    columnsOf(m, mr.name(), into, seen);
+                }
+            });
+        } catch (RuntimeException e) {
+            // Check reports the expression
         }
     }
 
@@ -136,13 +186,13 @@ public final class ObjectSecurity {
     private static void field(String f, String path, Set<String> hidden, List<MqException.Problem> out) {
         String[] p = f.split("\\.");
         if (p.length >= 2 && hidden.contains(p[0] + "." + p[1])) {
-            out.add(MqException.Problem.of("DRS-9152", path, "no field '" + f + "' in this model"));
+            out.add(MqException.Problem.of("DRS-9163", path, "the field '" + f + "' is not available to your role"));
         }
     }
 
     private static void measure(String m, String path, Set<String> hidden, List<MqException.Problem> out) {
         if (hidden.contains(MEASURE + m)) {
-            out.add(MqException.Problem.of("DRS-9152", path, "no measure '" + m + "' in this model"));
+            out.add(MqException.Problem.of("DRS-9163", path, "the measure '" + m + "' is not available to your role"));
         }
     }
 }
