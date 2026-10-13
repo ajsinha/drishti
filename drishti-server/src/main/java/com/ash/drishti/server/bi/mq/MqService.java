@@ -20,6 +20,12 @@ import com.ash.drishti.server.bi.dataset.Resolver;
 import com.ash.drishti.server.bi.engine.ArrowIpcWriter;
 import com.ash.drishti.server.bi.engine.QueryRequest;
 import com.ash.drishti.server.bi.engine.QueryService;
+import com.ash.drishti.server.bi.plan.Guards;
+import com.ash.drishti.server.bi.plan.LogicalPlan;
+import com.ash.drishti.server.bi.plan.Lowering;
+import com.ash.drishti.server.bi.plan.PlanProperties;
+import com.ash.drishti.server.bi.plan.ResultCache;
+import com.ash.drishti.server.bi.plan.SecuritySignature;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -38,20 +44,46 @@ public final class MqService {
         QueryService.Result run(Dataset ds, QueryRequest q, boolean explain);
     }
 
-    /** A model bound to one reader: what it is, how its requests run, and the reader's side of the checks. */
-    public record Bound(ModelView view, Runner runner, MqValidator.Context context) {}
+    /**
+     * A model bound to one reader: what it is, how its requests run, the reader's side of the checks, their security as the plan and its signature see it,
+     * and the generation of the model's data (null: answers are not cached, as in the tests of the engine).
+     */
+    public record Bound(ModelView view, Runner runner, MqValidator.Context context, SecuritySignature.Reader security, java.util.function.LongSupplier generation) {
+
+        public Bound(ModelView view, Runner runner, MqValidator.Context context) {
+            this(view, runner, context, MqPlans.reader(context), null);
+        }
+
+        /** The reader's security signature on this model (opaque). */
+        public String signature() {
+            return SecuritySignature.of(view.flat(), security, !view.unbuilt().isEmpty() || !DatasetSources.aliases(view).isEmpty());
+        }
+    }
 
     /** An answer: the JSON body, and the main result (without the guard columns) for an Arrow stream. */
     public record Answer(Map<String, Object> body, QueryService.Result result) {}
 
     private final MqProperties props;
+    private final PlanProperties planProps;
+    private final ResultCache<Ran> cache;
 
     public MqService(MqProperties props) {
+        this(props, PlanProperties.off());
+    }
+
+    public MqService(MqProperties props, PlanProperties planProps) {
         this.props = props;
+        this.planProps = planProps;
+        this.cache = new ResultCache<>(planProps);
     }
 
     public MqProperties properties() {
         return props;
+    }
+
+    /** The L1 result cache (section 6.1 of the design): entries, hits and misses for the admin's stats and the tests. */
+    public ResultCache<Ran> results() {
+        return cache;
     }
 
     /** Steps 3 to 9 without reading data (top-N is not resolved): {@code valid}, the warnings, and the engine request it would run; a refusal throws. */
@@ -66,6 +98,10 @@ public final class MqService {
         m.put("query", MqParser.canonical(c.query()));
         m.put("request", request(compiled.main()));
         m.put("totals", compiled.totals().size());
+        LogicalPlan plan = MqPlans.plan(b.view(), c, compiled, b.security());
+        m.put("plan", plan.hash());
+        m.put("signature", b.signature());
+        m.put("explain", plan.tree());
         return m;
     }
 
@@ -74,7 +110,13 @@ public final class MqService {
      * (the validator's and the guard's) and when it started.
      */
     public record Ran(ModelQuery query, MqValidator.Checked checked, MqCompiler.Compiled compiled, QueryService.Result raw, QueryService.Result shown,
-            List<Map<String, Object>> totals, List<String> warnings, long started) {
+            List<Map<String, Object>> totals, List<String> warnings, long started, LogicalPlan plan, String signature, boolean fromCache) {
+
+        /** The same answer, served again from the result cache (started now). */
+        Ran cached(long t0) {
+            return new Ran(query, checked, compiled, raw, shown, totals, warnings, t0, plan, signature, true);
+        }
+
 
         /** The main result with the query's warnings ahead of the engine's: what a consumer that keeps the engine's answer shape shows. */
         public QueryService.Result withWarnings() {
@@ -107,20 +149,48 @@ public final class MqService {
         long t0 = System.nanoTime();
         MqValidator.Checked c = MqValidator.validate(b.view(), q, b.context(), props);
         MqCompiler.Compiled compiled = MqCompiler.compile(b.view(), c, b.context(), props, tq -> b.runner().run(c.dataset(), tq, false));
-        QueryRequest main = compiled.main();
+        LogicalPlan plan = MqPlans.plan(b.view(), c, compiled, b.security());          // stages 3 to 6: bind, secure, guard, optimise
+        String signature = b.signature();
+        QueryRequest main = Lowering.request(plan, compiled.main());
         if (engineLimit && q.limit() == null) {
-            main = new QueryRequest(main.fields(), main.measures(), main.filters(), main.from(), main.to(), main.orderBy(), null, main.layer());
+            main = new QueryRequest(main.fields(), main.measures(), main.filters(), main.from(), main.to(), main.orderBy(), null, main.layer(), main.detail());
+        }
+        ResultCache.Key key = cache.enabled() && b.generation() != null && !explain
+                ? new ResultCache.Key(plan.hash() + (engineLimit ? "|engine-limit" : "") + "|top:" + tops(compiled), signature, b.generation().getAsLong(), plan.immutable()) : null;
+        Ran hit = key == null ? null : cache.get(key);
+        if (hit != null) {
+            return new Ran(q, c, compiled, servedAgain(hit.raw()), servedAgain(hit.shown()), hit.totals(), hit.warnings(), t0, plan, signature, true);
         }
         QueryService.Result r = b.runner().run(compiled.dataset(), main, explain);
         List<String> warnings = new ArrayList<>(c.warnings());
         warnings.addAll(guardWarnings(r, compiled.guards()));
+        List<Guards.Refusal> refused = Guards.refusals(warnings, planProps);           // stage 5: the guards that refuse from wave A
+        if (!refused.isEmpty()) {
+            throw new MqException(refused.stream().map(x -> new MqException.Problem(x.code(), x.path(), x.message() + "; fix: " + x.fix(), null)).toList());
+        }
         QueryService.Result shown = withoutGuards(r);
         List<Map<String, Object>> totals = new ArrayList<>();
         for (MqCompiler.Level level : compiled.totals()) {
             QueryService.Result tr = b.runner().run(compiled.dataset(), level.query(), false);
             totals.add(Map.of("by", level.by(), "measures", level.query().measures(), "rows", rows(tr)));
         }
-        return new Ran(q, c, compiled, r, shown, totals, warnings, t0);
+        Ran ran = new Ran(q, c, compiled, r, shown, totals, warnings, t0, plan, signature, false);
+        if (key != null) {
+            cache.put(key, ran);
+        }
+        return ran;
+    }
+
+    /** An engine result served from the result cache: marked cached, no time spent, no SQL. */
+    private static QueryService.Result servedAgain(QueryService.Result r) {
+        QueryService.Meta m = r.meta();
+        return m == null ? r : new QueryService.Result(r.columns(), r.rows(), new QueryService.Meta(m.layer(), m.rollup(), m.rows(), 0, true, m.dates(), m.tables(), m.masked(),
+                m.warnings(), null, m.generation()));
+    }
+
+    /** The values a {@code top} filter found (data: two generations of the same plan may find others, and they are part of the answer's key). */
+    private static String tops(MqCompiler.Compiled compiled) {
+        return compiled.main().filters().stream().filter(f -> "in".equals(f.op())).map(f -> f.field() + f.values()).toList().toString();
     }
 
     /** The answer of section 5.2 for a query that ran. */
@@ -158,7 +228,12 @@ public final class MqService {
         }
         meta.put("warnings", all);
         meta.put("noAccess", noAccess(all));
-        meta.put("cached", mm != null && mm.cached());
+        meta.put("cached", ran.fromCache() || mm != null && mm.cached());
+        meta.put("plan", ran.plan() == null ? null : ran.plan().hash());
+        meta.put("signature", ran.signature());
+        if (q.options().explain() && ran.plan() != null) {
+            meta.put("explain", ran.plan().tree());
+        }
         meta.put("millis", Math.round((System.nanoTime() - t0) / 1e5) / 10.0);
         meta.put("generation", "g-" + (mm == null ? 0 : mm.generation()));
         meta.put("query", MqParser.canonical(c.query()));

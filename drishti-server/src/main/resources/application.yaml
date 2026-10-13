@@ -560,6 +560,11 @@ drishti:
       max-concurrent: 2              # Transforms running at once
       queue-wait: 5s                 # how long a run waits for a place before DRS-9074
       compose-source-max-rows: 50000 # most rows one source of a composed dataset may answer (DRS-9022)
+    plan:                            # the logical plan: result cache and guards (docs/admin/CONFIGURATION.md, drishti.bi.plan)
+      cache-entries: 2000            # answers cached by plan hash, security signature and data generation (0: off)
+      cache-ttl: 15m                 # an answer for the current state is asked again after this; as-of answers have no ttl
+      cache-idle: 1h                 # an answer nobody asked for this long is dropped
+      guards: refuse                 # refuse (wave A) or warn (W1): sums across currencies (DRS-9158), balances added across dates (DRS-9159)
     expr:                            # the Drishti expression language, DEL v2 (docs/guides/EXPRESSIONS.md; docs/admin/CONFIGURATION.md, drishti.bi.expr)
       legacy: warn                   # the old expression syntax: warn (read with DRS-9100, wave A) or refuse (DRS-9100 with the DEL v2 text as the fix)
       parse-cache: 10000             # parsed expressions kept (0: off)

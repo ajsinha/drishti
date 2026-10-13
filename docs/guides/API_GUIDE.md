@@ -1689,8 +1689,8 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9155 | 422 | Filter | An operator the field's type does not allow, a value of the wrong type, an unknown relative window, a `top` without `n`/`by`, a `having` that is not one number, a drill past the last level |
 | DRS-9156 | 422 | Not reachable | A field, filter or row rule not reachable many-to-one from a measure's fact (with `fix`: fields every fact reaches) |
 | DRS-9157 | 422 | Time | A window over `drishti.bi.mq.max-days`, `live` with no live dataset, a sliding window with no history, an as-of after the business date |
-| DRS-9158 | 422 | Several currencies | A sum adding rows of several currencies in a group: a warning in `meta.warnings` in wave W1, a refusal from W2 |
-| DRS-9159 | 422 | Semi-additive | A balance measure over a window of dates without the date as a field: a warning in W1 (the last date's value is answered), a refusal from W2 |
+| DRS-9158 | 422 | Several currencies | A sum adding rows of several currencies in a group: refused from wave A (fix: add the currency to the fields or filter one); a warning in `meta.warnings` with `drishti.bi.plan.guards: warn` (W1) |
+| DRS-9159 | 422 | Semi-additive | A balance measure added across a window of dates (asked with other measures, without the date as a field): refused from wave A; asked alone it is answered as the last date's value with a warning |
 | DRS-9160 | 422 | Repeats rows | A row extract (`shape: rows`) with fields of two facts |
 | DRS-9161 | 403 | Masked field | A filter, sort or `top` on a field masked for the caller (the body also names `DRS-9021`; `fix` offers the dataset's key) |
 | DRS-9162 | 422 | Python measure | A Python measure in a grouped query (a python visual runs it) |
@@ -1920,6 +1920,29 @@ POST /api/v1/bi/mq   {"mq":1, "model":"desk-trading@1", "select":{"fields":["tra
      "detail": "DRS-9152 table 'trades' has no column 'Desk' (it has book, currency, desk, mtm, notional, pnl1d, productType, status, tradeDate, tradeId)",
      "fix": {"replace": "select.fields[0]", "with": ["trades.desk"]}, "problems": [ ...the same, one per problem of the step... ]}
 ```
+
+**The plan, the security signature and the result cache** (release 2.2 wave A, [BI_DESIGN.md §3.6, §4, §5.4, §6.1](../architecture/BI_DESIGN.md#36-mq-the-one-query-object-and-where-all-four-languages-meet)).
+Every question, whatever asked it (this endpoint, a report visual, an alert, an Analyse slice, Drishti SQL), becomes one **logical plan**: a `SecureScan` per
+dataset read (the reader's row rules ANDed, masks, hidden columns, the query's filters pushed in), a `SemiJoin` where a dimension's security reaches a fact,
+an `Aggregate` per fact grain (met on the shared fields when there are several), then `Window`, `Having`, `Sort`, `Limit`, `Answer`. `meta.plan` is the
+**plan hash**: the same question in any language has the same hash (names as stable ids, keys sorted, relative dates resolved; security is not in it).
+`meta.signature` is the reader's **security signature**, an opaque id of their effective security on the model (resolved predicates, masks, hidden columns,
+kinds they may not open; a model that reads answers asked as the reader is personal). Answers are cached by plan, signature and the data's generation, so
+two readers with identical effective security share an entry and readers with different security never do; `meta.cached` says so. With `options.explain:
+true`, `meta.explain` is the plan as a tree: a scan says *that* rules applied (`rules: 1`) and which columns are masked, never a rule's text. Captured
+(`hana`, then `hugo`, both desk-heads of DESK-A; then `hana` with explain):
+
+```
+hana: "meta": {"asOf": "2026-10-08", ..., "cached": false, "plan": "p_2dab3b12b3d48475", "signature": "s_f82a28ede96c9a86", "millis": 217.2, ...}
+hugo: "meta": {"asOf": "2026-10-08", ..., "cached": true,  "plan": "p_2dab3b12b3d48475", "signature": "s_f82a28ede96c9a86", "millis": 2.2, ...}
+"explain": {"op": "Answer", "columns": ["trades.desk", "Notional"], "shape": "grouped", "inputs": [{"op": "Limit", "n": 500, "inputs": [{"op": "Aggregate",
+  "by": ["trades.desk"], "fact": "trades", "measures": ["Notional"], "inputs": [{"op": "SecureScan", "alias": "trades", "columns": ["currency", "desk", "notional"],
+  "dataset": "lang-trade", "pushed": [["trades.currency", "eq", ["USD"]]], "time": "as-of 2026-10-08", "version": "1.0.0", "rules": 1, "masked": []}]}]}]}
+```
+
+`POST /bi/mq/validate` also returns `plan`, `signature` and `explain` (without reading data). From wave A the guards refuse what W1 only warned about
+(`drishti.bi.plan.guards: refuse`): a sum adding several currencies in a group (`422 DRS-9158`, fix: add the currency to the fields or filter one) and a
+balance added across dates (`422 DRS-9159`); a balance asked alone over a window is still answered as its last date's value, with the warning.
 
 **Check and the security safeguard.** Security binds to each dataset: a rule on trades no longer hides another dataset of the model. So that this is never a surprise,
 Check flags every dataset that no row rule restricts while a role is restricted elsewhere in the same model (`DRS-9130`, a warning in Check) and publishing the model is
