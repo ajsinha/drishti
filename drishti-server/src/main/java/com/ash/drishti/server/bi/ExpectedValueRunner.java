@@ -105,6 +105,20 @@ public final class ExpectedValueRunner {
         this.sqlTests = t;
     }
 
+    /**
+     * Runs a Drishti SQL statement over the implicit model of a {@code rachana: 2} dataset's text ({@code model} null), or over a model named by reference
+     * ({@code dataset:<name>}, for the other side of a references-exist test), as a reader (set by the SQL module).
+     */
+    public interface DatasetTests {
+        QueryService.Result run(Principal as, String body, String model, String sql);
+    }
+
+    private volatile DatasetTests datasetTests;
+
+    public void datasetTests(DatasetTests t) {
+        this.datasetTests = t;
+    }
+
     public ExpectedValueRunner(BiService bi, DatasetService datasets, BiReportService reports, AuditLog audit) {
         this.bi = bi;
         this.datasets = datasets;
@@ -162,6 +176,9 @@ public final class ExpectedValueRunner {
                 }
             }
             return out;
+        }
+        if ("dataset".equals(item.kind()) && com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(body)) {
+            return new LayerDatasetTests(this, datasetTests).run(p, body, chosen);       // the model layer's data tests (BI_MODEL_SPEC.md section 1.8)
         }
         if ("dataset".equals(item.kind())) {
             DatasetParser.Result r = DatasetParser.parse(body);
@@ -263,7 +280,7 @@ public final class ExpectedValueRunner {
     }
 
     /** Picks the figure out of the answer and compares it. */
-    private static Outcome judge(ExpectedValue t, String kind, String target, QueryService.Result r, String column, String role) {
+    static Outcome judge(ExpectedValue t, String kind, String target, QueryService.Result r, String column, String role) {
         ArrowIpcWriter.Column col = r.columns().stream().filter(c -> c.name().equals(column)).findFirst().orElse(null);
         if (col == null) {
             return new Outcome(t.label(), kind, target, t.expectText(), null, "error", "the answer has no column '" + column + "' (columns: "
@@ -308,18 +325,18 @@ public final class ExpectedValueRunner {
         return String.valueOf(cell).equals(String.valueOf(want));
     }
 
-    private static String trim(double d) {
+    static String trim(double d) {
         return d == Math.rint(d) && Math.abs(d) < 1e15 ? String.valueOf((long) d) : String.valueOf(Math.round(d * 1e6) / 1e6);
     }
 
     // ---- the role ----------------------------------------------------------------------------------------------------
 
-    private static String roleOf(ExpectedValue t, String chosen) {
+    static String roleOf(ExpectedValue t, String chosen) {
         return t.role() != null && !t.role().isBlank() ? t.role() : chosen == null || chosen.isBlank() ? null : chosen;
     }
 
     /** The reader a test runs as: the caller, or the caller carrying only {@code role}, which they must hold (a bi-steward may run as any). */
-    private Principal as(Principal p, String role) {
+    Principal as(Principal p, String role) {
         if (role == null) {
             return p;
         }

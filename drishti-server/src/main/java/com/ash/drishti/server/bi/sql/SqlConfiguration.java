@@ -31,6 +31,8 @@ public class SqlConfiguration {
         if (props.enabled()) {
             catalog.sqlViews(sql::answer);                                       // SQL view datasets: their statement answered as the reader
             tests.sqlTests((as, model, text) -> sql.answer(catalog.bind(as, model), model, text, null));      // a model's tests: [{ sql, expect }]
+            tests.datasetTests((as, body, model, text) -> sql.answer(model == null ? catalog.bindText(as, body) : catalog.bind(as, model),   // a dataset's data tests
+                    model == null ? "dataset" : model, text, null));
         }
         return sql;
     }

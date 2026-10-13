@@ -607,6 +607,14 @@ public final class BiService {
         return BiFolder.isShipped(i.id()) ? i.body() : store.version(i.id(), i.publishedVersion()).map(BiStore.Version::body).orElse("");
     }
 
+    /** Every published text of an item kept in its history, newest first (a shipped file has only its own). */
+    public List<String> publishedBodies(BiStore.Item i) {
+        if (BiFolder.isShipped(i.id())) {
+            return List.of(i.body());
+        }
+        return store.versions(i.id()).stream().map(BiStore.Version::body).toList();
+    }
+
     /** The published dataset items the caller may see. */
     public List<BiStore.Item> datasetItems(Principal p) {
         open(p);
@@ -1041,7 +1049,7 @@ public final class BiService {
         List<String> undrawn = undrawable(p, i, force, "published");
         // the expected values the item declares (docs/guides/REPORTS.md section 14): a failing one stops a publish unless a bi-admin forces it
         List<String> failing = List.of();
-        if (testGate != null && gov.refuseFailingTests() && ("report".equals(i.kind()) || "dataset".equals(i.kind())) && i.body().contains("tests:")) {
+        if (testGate != null && gov.refuseFailingTests() && Set.of("report", "dataset", "model").contains(i.kind()) && i.body().contains("tests:")) {
             failing = testGate.apply(p, i);
             if (!failing.isEmpty()) {
                 if (!force) {

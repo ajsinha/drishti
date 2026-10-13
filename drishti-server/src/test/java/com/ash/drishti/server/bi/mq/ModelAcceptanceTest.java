@@ -605,4 +605,73 @@ class ModelAcceptanceTest {
         assertThat(ok(call("POST", "/api/v1/bi/mq", reader("rita"), q)).path("rows")).as("the same answer after the rebuild").isEqualTo(before);
         call("POST", path, reader("ann"), Map.of()).andExpect(status().isForbidden());   // a refresh is an author's
     }
+
+    // ---- publishing: the tests gate, the contract's semver, and readers pinned to a major --------------------------------
+
+    static final String SV_DATASET = """
+            rachana: 2
+            dataset: sv-trade
+            version: 1.0.0
+            source: { connector: acc-lake, kind: trade }
+            grain: { keys: [id] }
+            columns:
+              desk:     { type: string }
+              notional: { type: decimal, aggregate: sum }
+            security:
+              rows:
+                - { role: [bi-risk, report-author, admin], where: "true" }
+            tests:
+              - { name: Rows on the day, agg: count, expect: 24, date: 2026-10-07 }
+              - { name: Notional by desk, agg: sum, column: notional, by: [desk], row: { desk: DESK-A }, expect: 92000, date: 2026-10-07 }
+              - { name: Desk is set, not-null: [desk] }
+              - { name: One row per desk, unique: [desk] }
+            """;
+
+    static final String SV_MODEL = """
+            rachana: 2
+            model: sv-model
+            version: 1.0.0
+            datasets:
+              trades: { dataset: sv-trade, role: fact }
+            measures:
+              Notional: { expr: "sum(trades.notional)" }
+              Trades:   { expr: "count(trades)" }
+            """;
+
+    @Test @Order(12)
+    void aDatasetsAndAModelsTestsGateThePublishAndANewMajorKeepsReadersPinnedToTheOld() throws Exception {
+        String ws = ok(call("POST", "/api/v1/bi/workspaces", reader("wes"), Map.of("name", "Semver Desk"))).path("id").asText();
+        String ds = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", reader("wes"), Map.of("kind", "dataset", "title", "SV trades", "body", SV_DATASET))).path("id").asText();
+        JsonNode run = ok(call("POST", "/api/v1/bi/items/" + ds + "/tests", reader("wes"), Map.of()));
+        Map<String, String> got = new TreeMap<>();
+        run.path("results").forEach(x -> got.put(x.path("name").asText(), x.path("status").asText()));
+        assertThat(got).as(run.toString()).containsEntry("Rows on the day", "pass").containsEntry("Notional by desk", "pass").containsEntry("Desk is set", "pass")
+                .containsEntry("One row per desk", "fail");
+        assertThat(run.toString()).contains("the key is not unique: desk = DESK-");
+        call("POST", "/api/v1/bi/items/" + ds + "/publish", reader("wes"), Map.of("note", "v1")).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-9043"));
+        ok(call("PUT", "/api/v1/bi/items/" + ds, reader("wes"), Map.of("body", SV_DATASET.replace("  - { name: One row per desk, unique: [desk] }\n", "")
+                .replace("version: 1.0.0", "version: 1.0.1"))));
+        ok(call("POST", "/api/v1/bi/items/" + ds + "/publish", reader("wes"), Map.of("note", "v1")));
+        // a model's SQL tests gate its publish too
+        String failing = SV_MODEL + "tests:\n  - { name: Trades, sql: \"SELECT COUNT(*) AS n FROM trades AS OF DATE '2026-10-08'\", expect: 25 }\n";
+        String model = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", reader("wes"), Map.of("kind", "model", "title", "SV model", "body", failing))).path("id").asText();
+        call("POST", "/api/v1/bi/items/" + model + "/publish", reader("wes"), Map.of("note", "v1")).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-9043"));
+        ok(call("PUT", "/api/v1/bi/items/" + model, reader("wes"), Map.of("body", failing.replace("expect: 25", "expect: 24"))));
+        ok(call("POST", "/api/v1/bi/items/" + model + "/publish", reader("wes"), Map.of("note", "v1")));
+        // narrowing the contract is a breaking change: a minor is refused, a major is published
+        String narrow = SV_MODEL + "contract:\n  exposes: listed\n  fields: [trades.desk]\n  measures: [Notional]\n";
+        ok(call("PUT", "/api/v1/bi/items/" + model, reader("wes"), Map.of("body", narrow.replace("version: 1.0.0", "version: 1.1.0"))));
+        call("POST", "/api/v1/bi/items/" + model + "/publish", reader("wes"), Map.of("note", "narrow")).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("DRS-9126")).andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("no longer exposes the measure 'Trades'")));
+        ok(call("PUT", "/api/v1/bi/items/" + model, reader("wes"), Map.of("body", narrow.replace("version: 1.0.0", "version: 2.0.0"))));
+        ok(call("POST", "/api/v1/bi/items/" + model + "/publish", reader("wes"), Map.of("note", "v2")));
+        // a reader pinned to @1 keeps the latest 1.x (with Trades); @2 and the unpinned name read 2.0.0, whose contract leaves Trades out
+        Map<String, Object> trades = Map.of("fields", List.of("trades.desk"), "measures", List.of("Trades"));
+        JsonNode one = ok(call("POST", "/api/v1/bi/mq", reader("wes"), Map.of("mq", 1, "model", "sv-model@1", "select", trades, "time", Map.of("as-of", DAY))));
+        assertThat(one.path("rows")).hasSize(3);
+        assertThat(one.path("model").path("version").asText()).isEqualTo("1.0.0");
+        call("POST", "/api/v1/bi/mq", reader("wes"), Map.of("mq", 1, "model", "sv-model@2", "select", trades)).andExpect(status().is4xxClientError());
+        JsonNode two = ok(call("POST", "/api/v1/bi/mq", reader("wes"), Map.of("mq", 1, "model", "sv-model", "select", Map.of("measures", List.of("Notional")), "time", Map.of("as-of", DAY))));
+        assertThat(two.path("model").path("version").asText()).isEqualTo("2.0.0");
+    }
 }

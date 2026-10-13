@@ -225,12 +225,24 @@ public final class ModelCatalog {
             String body = bi.publishedBody(i);
             ModelDefParser.Result parsed = ModelDefParser.parse(body);
             ModelDef m = parsed.model();
-            if (m == null || !(i.id().equals(r.name()) || i.id().equals("file:model:" + r.name()) || m.name().equals(r.name())) || !r.range().matches(Semver.parse(m.version()))
-                    || "retired".equals(m.lifecycle())) {
+            if (m == null || !(i.id().equals(r.name()) || i.id().equals("file:model:" + r.name()) || m.name().equals(r.name()))) {
+                continue;
+            }
+            boolean older = !r.range().matches(Semver.parse(m.version()));
+            if (older) {
+                String earlier = inEarlierVersion(i, r.range());              // a consumer pinned to an earlier major keeps its latest published version
+                if (earlier == null) {
+                    continue;
+                }
+                body = earlier;
+                parsed = ModelDefParser.parse(body);
+                m = parsed.model();
+            }
+            if ("retired".equals(m.lifecycle())) {
                 continue;
             }
             if (best == null || Semver.parse(m.version()).compareTo(Semver.parse(best.view().def().version())) > 0) {
-                best = new Found(view(i.id(), m, parsed, body), i);
+                best = new Found(older ? earlierView(i.id(), m, parsed, body) : view(i.id(), m, parsed, body), i);
             }
         }
         return best;
@@ -300,6 +312,23 @@ public final class ModelCatalog {
         return bound(p, ofItem(p, item, true));
     }
 
+    /**
+     * The implicit model of a {@code rachana: 2} dataset's text (a draft being checked or published), bound to the caller: what its data tests ask. The text's
+     * own row rules and masks apply, with the caller's roles.
+     */
+    public MqService.Bound bindText(Principal p, String body) {
+        DatasetDefParser.Result r = DatasetDefParser.parse(body);
+        if (!r.ok()) {
+            throw new MqException(MqException.Problem.of("DRS-9151", "model", "the dataset has errors: " + r.firstError()));
+        }
+        List<DatasetParser.Problem> problems = new ArrayList<>();
+        ResolvedDataset d = chain(r.dataset(), new LinkedHashSet<>(), problems);
+        if (d == null) {
+            throw new MqException(MqException.Problem.of("DRS-9151", "model", problems.isEmpty() ? "the dataset cannot be resolved" : problems.get(0).message()));
+        }
+        return bound(p, implicitOf(d));
+    }
+
     private MqService.Bound bound(Principal p, Found f) {
         ModelView v = f.view();
         QueryService.Caller who = datasets.caller(p, v.flat());
@@ -366,16 +395,23 @@ public final class ModelCatalog {
             if (m == null || !(i.id().equals(r.name()) || i.id().equals("file:model:" + r.name()) || m.name().equals(r.name()))) {
                 continue;
             }
-            if (!r.range().matches(Semver.parse(m.version()))) {
+            String earlier = r.range().matches(Semver.parse(m.version())) ? body : inEarlierVersion(i, r.range());
+            if (earlier == null) {
                 problem = "'" + r.name() + "' is at version " + m.version() + ", not in " + r.range().text();
                 continue;
+            }
+            boolean older = !earlier.equals(body);
+            if (older) {                                                     // a reader pinned to an earlier major keeps its latest published version
+                body = earlier;
+                parsed = ModelDefParser.parse(body);
+                m = parsed.model();
             }
             if ("retired".equals(m.lifecycle())) {
                 problem = "'" + r.name() + "' " + m.version() + " is retired" + (m.replacedBy() == null ? "" : ": use " + m.replacedBy());
                 continue;
             }
             if (best == null || Semver.parse(m.version()).compareTo(Semver.parse(best.view().def().version())) > 0) {
-                best = new Found(view(i.id(), m, parsed, body), i);
+                best = new Found(older ? earlierView(i.id(), m, parsed, body) : view(i.id(), m, parsed, body), i);
             }
         }
         if (best != null) {
@@ -401,6 +437,23 @@ public final class ModelCatalog {
         return all;
     }
 
+    /**
+     * The newest published text of a model item whose version is in {@code range}, or null: what a reference pinned to an earlier major reads after a new major
+     * is published (docs/architecture/BI_MODEL_SPEC.md section 2.8; the item's history keeps {@code drishti.bi.versions-keep} versions). A retired one is left.
+     */
+    private String inEarlierVersion(BiStore.Item i, Semver.Range range) {
+        if (i.publishedVersion() <= 0 || range.low() == null) {
+            return null;
+        }
+        for (String b : bi.publishedBodies(i)) {
+            ModelDef m = ModelDefParser.parse(b).model();
+            if (m != null && range.matches(Semver.parse(m.version())) && !"retired".equals(m.lifecycle())) {
+                return b;
+            }
+        }
+        return null;
+    }
+
     private ModelView view(String id, ModelDef m, ModelDefParser.Result parsed, String body) {
         if (!parsed.ok()) {
             throw new MqException(MqException.Problem.of("DRS-9151", "model", "the model '" + m.name() + "' has errors: " + parsed.firstError()));
@@ -418,6 +471,12 @@ public final class ModelCatalog {
         StringBuilder text = new StringBuilder(body);
         resolved.values().forEach(r -> text.append('|').append(r.def().name()).append('@').append(r.def().version()).append(r.layers()).append(r.masked()));
         return new ModelView(id, Layers.key(id), hash(text.toString()), m, flat.dataset(), resolved, flat.unbuilt(), false);
+    }
+
+    /** As {@link #view} for an earlier major's text read after a new major was published: its layers are kept apart from the new major's. */
+    private ModelView earlierView(String id, ModelDef m, ModelDefParser.Result parsed, String body) {
+        ModelView v = view(id, m, parsed, body);
+        return new ModelView(v.id(), v.key() + "@" + m.major(), v.hash(), v.def(), v.flat(), v.datasets(), v.unbuilt(), v.compat());
     }
 
     private Found implicit(Principal p, String name) {
@@ -771,6 +830,10 @@ public final class ModelCatalog {
         ModelDef best = null;
         for (BiStore.Item i : bi.publishedOfKind("model")) {
             ModelDef m = ModelDefParser.parse(bi.publishedBody(i)).model();
+            if (m != null && r != null && (m.name().equals(r.name()) || i.id().equals(r.name())) && !r.range().matches(Semver.parse(m.version()))) {
+                String earlier = inEarlierVersion(i, r.range());              // a report pinned to an earlier major reads its latest published version
+                m = earlier == null ? m : ModelDefParser.parse(earlier).model();
+            }
             if (m != null && r != null && (m.name().equals(r.name()) || i.id().equals(r.name())) && r.range().matches(Semver.parse(m.version())) && !"retired".equals(m.lifecycle())
                     && (best == null || Semver.parse(m.version()).compareTo(Semver.parse(best.version())) > 0)) {
                 best = m;
