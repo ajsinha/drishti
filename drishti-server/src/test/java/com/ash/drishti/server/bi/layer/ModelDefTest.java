@@ -213,10 +213,10 @@ class ModelDefTest {
 
     @Test
     void ruleTextIsRewrittenForTheAliasOnly() {
-        assertThat(RuleText.qualify("pack.trading.trade.desk in user.desks && trade.status == 'Live'", "pack.trading.trade", java.util.Set.of("desk", "status"), "t"))
-                .isEqualTo("t.desk in user.desks && t.status == 'Live'");
-        assertThat(RuleText.qualify("upper(desk) == 'desk' || year(tradeDate) > 2020", "x", java.util.Set.of("desk", "tradeDate"), "a"))
-                .isEqualTo("upper(a.desk) == 'desk' || year(a.tradeDate) > 2020");
+        assertThat(RuleText.qualify("pack.trading.trade.desk in user.desks and trade.status == 'Live'", "pack.trading.trade", java.util.Set.of("desk", "status"), "t"))
+                .isEqualTo("t.desk in user.desks and t.status == 'Live'");
+        assertThat(RuleText.qualify("upper(desk) == 'desk' or year(tradeDate) > 2020", "x", java.util.Set.of("desk", "tradeDate"), "a"))
+                .isEqualTo("upper(a.desk) == 'desk' or year(a.tradeDate) > 2020");
     }
 
     @Test

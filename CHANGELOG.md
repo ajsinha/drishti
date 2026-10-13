@@ -30,6 +30,10 @@
   Analyse SQL cells run Drishti SQL on the server over the extract's model by default (over the extract stays selectable until wave B). The alert cell
   chooser sends `reduce` only when chosen. Guides: [EXPRESSIONS.md](docs/guides/EXPRESSIONS.md) section 11 (59 finance and risk recipes, each run as a
   test on the demo lake) and 8.1 (the editor), DATASETS.md section 15, REPORTS.md section 19, BI_GUIDE.md section 24, ANALYSE.md section 4.
+- **Server: the old expression syntax is refused (wave A, task 6).** `drishti.bi.expr.legacy` now defaults to `refuse`: an expression in the old syntax
+  is `DRS-9100` with the DEL v2 text as the fix (`drishti.py bi migrate --expressions` converts files; `legacy: warn` reads it while a site converts its
+  own items). A text that is already DEL v2 but wrong gets its DEL v2 problem, and a rule written as a YAML boolean (`where: true`) reads as `True`.
+  Every shipped sample, tutorial dataset and test fixture is in DEL v2.
 - **Server: model semantics and access (wave A, task 5).** Models carry field properties every consumer inherits (`fields: { alias.column: { display,
   description, format, folder, hidden, sort-by, category, summarise } }`, and `display`/`folder`/`hidden` on measures), perspectives (`perspectives:`;
   `describe?perspective=`), and object-level security (`security.hidden-for: { roles, fields, measures }`): a hidden field or measure, and every measure that

@@ -110,14 +110,14 @@ public class TestLake implements SourceGateway {
                   MTMperM: { expr: "ratio(sum(trades.mtm), sum(trades.notional)) * 1000000" }
                   Names: { expr: "distinct(trades.cpty)" }
                   P50: { expr: "percentile(trades.mtm, 0.5)" }
-                  EurMTM: { expr: "sum(trades.mtm, trades.currency == 'EUR')" }
+                  EurMTM: { expr: "sum(trades.mtm, where=trades.currency == 'EUR')" }
                   Biggest: { expr: "max(trades.notional)" }
-                  Share: { expr: "[MTM] / [Notional]" }
+                  Share: { expr: "measure('MTM') / measure('Notional')" }
                 security:
                   rows:
                     - { role: desk-head, where: "trades.desk in user.desks" }
                     - { role: risk, where: "true" }
-                    - { role: auditor, where: "trades.desk == 'DESK-B' || trades.desk == 'DESK-C'" }
+                    - { role: auditor, where: "trades.desk == 'DESK-B' or trades.desk == 'DESK-C'" }
                   masked: [cpty, trades.mtm]
                 rollups:
                   - { name: byDesk, table: trades, by: [desk, currency], measures: [Notional, MTM, Trades, AvgMTM, MTMperM, Biggest, Share] }

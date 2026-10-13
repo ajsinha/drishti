@@ -35,9 +35,14 @@ import org.junit.jupiter.params.provider.ValueSource;
  */
 class DelLanguageTest {
 
+    @org.junit.jupiter.api.BeforeEach
+    void readTheOldSyntax() {
+        Expressions.configure(Expressions.Legacy.WARN, 10_000);                 // these tests read the old syntax on purpose
+    }
+
     @AfterEach
     void reset() {
-        Expressions.configure(Expressions.Legacy.WARN, 10_000);
+        Expressions.configure(Expressions.Legacy.REFUSE, 10_000);               // the default since the end of wave A
     }
 
     static Node v2(String text) {

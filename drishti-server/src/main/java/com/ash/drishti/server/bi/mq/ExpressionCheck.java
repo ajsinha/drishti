@@ -66,7 +66,12 @@ final class ExpressionCheck {
             }
         } catch (DelException e) {
             if (Expressions.OLD_SYNTAX.equals(e.code())) {
-                syntax = "legacy";
+                syntax = "legacy";                                              // refused: still say what the converter writes
+                try {
+                    converted = Expressions.convert(expr).to();
+                } catch (DelException ignored) {
+                    // no mechanical conversion: the refusal says so
+                }
             }
             problems.add(e.problem());
         }

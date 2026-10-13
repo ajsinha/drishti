@@ -148,7 +148,7 @@ class ComposedDatasetApiTest {
                 join:
                   - { left: a, right: b, on: [cp], type: inner }
                 measures:
-                  MTM per gross: "[MTM] / [Gross]"
+                  MTM per gross: "measure('MTM') / measure('Gross')"
                 """);
         // composed on the desk: source A is cut to the desk-head's desks, B is not
         write("lake-ab-desk", """
@@ -161,7 +161,7 @@ class ComposedDatasetApiTest {
                 join:
                   - { left: a, right: b, on: [desk], type: left }
                 measures:
-                  MTM per gross: "[MTM] / [Gross]"
+                  MTM per gross: "measure('MTM') / measure('Gross')"
                 """);
         // a join that repeats rows: A by desk and currency, B by desk and currency, joined on desk only
         write("lake-fanout", """

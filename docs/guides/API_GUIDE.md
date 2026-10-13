@@ -2065,8 +2065,8 @@ underlines it and offers the fix as a button (captured):
                "fix": "write: measure('Notional') / measure('Trades')", "at": {"start": 0, "end": 21}}], ...}
 ```
 
-`syntax` is `del2` or `legacy` (the old syntax, read with the `DRS-9100` warning while `drishti.bi.expr.legacy: warn`; then `converted` holds the DEL v2
-text and the rest of the check runs on it). The codes are in [EXPRESSIONS.md section 7](EXPRESSIONS.md#7-problems-and-their-fixes). The CLI:
+`syntax` is `del2` or `legacy` (the old syntax: refused with `DRS-9100` and `valid: false` by default, with `converted` holding the DEL v2 text; while a
+site sets `drishti.bi.expr.legacy: warn` it is a warning and the rest of the check runs on the converted text). The codes are in [EXPRESSIONS.md section 7](EXPRESSIONS.md#7-problems-and-their-fixes). The CLI:
 `drishti.py bi expr functions|validate|convert` and `drishti.py bi migrate --expressions FILE... [--write] [--check]`
 ([CLI_GUIDE.md](CLI_GUIDE.md)).
 

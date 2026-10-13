@@ -48,7 +48,7 @@ class GrainTest {
         lake = new TestLake(true);
         QueryProperties props = QueryProperties.defaults(store.toString());
         service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC());
-        String yaml = TestLake.yaml().replace("measures:\n", "measures:\n  DeskCount: { expr: \"count(desks)\" }\n  PerDesk: { expr: \"[Trades] / [DeskCount]\" }\n  Twice: { expr: \"[PerDesk] * 2\" }\n");
+        String yaml = TestLake.yaml().replace("measures:\n", "measures:\n  DeskCount: { expr: \"count(desks)\" }\n  PerDesk: { expr: \"measure('Trades') / measure('DeskCount')\" }\n  Twice: { expr: \"measure('PerDesk') * 2\" }\n");
         DatasetParser.Result r = DatasetParser.parse(yaml);
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         ds = new QueryService.Loaded("file:dataset:lake-test", Layers.key("file:dataset:lake-test"), r.dataset(), "h1");
@@ -122,7 +122,7 @@ class GrainTest {
     @Test
     void theTradingRiskSampleMixedRatioIsMultiFact() throws Exception {
         String yaml = java.nio.file.Files.readString(Path.of("../config/bi/datasets/trading-risk.dataset.yaml"))
-                .replace("measures:\n", "measures:\n  MtmPerExposure: { expr: \"[MTM] / [Exposure (EE peak)]\" }\n");
+                .replace("measures:\n", "measures:\n  MtmPerExposure: { expr: \"measure('MTM') / measure('Exposure (EE peak)')\" }\n");
         com.ash.drishti.server.bi.dataset.Dataset d = DatasetParser.parse(yaml).dataset();
         SqlCompiler.Reader reader = new SqlCompiler.Reader(false, Set.of("risk"), Map.of(), SqlCompiler.Masks.NONE);
         SqlCompiler.Plan p = new SqlCompiler(d, Dialect.DUCKDB).plan(QueryRequest.of(json.readTree("{\"fields\":[\"counterparties.sector\"],\"measures\":[\"MtmPerExposure\"]}")), reader);

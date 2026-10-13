@@ -44,7 +44,7 @@ public final class Expressions {
     /** A parsed expression: the compiler's tree, the DEL v2 tree (null for the old syntax), and whether it was the old syntax. */
     public record Parsed(Node node, DelAst del, boolean legacy, String text) {}
 
-    private static volatile Legacy legacy = Legacy.WARN;
+    private static volatile Legacy legacy = Legacy.REFUSE;
     private static volatile int cacheSize = 10_000;
     private static final Map<String, Object> CACHE = new ConcurrentHashMap<>();
 
@@ -64,6 +64,18 @@ public final class Expressions {
     /** The compiler's tree of an expression in either syntax (the old one only while it is read); a refusal is a {@link DelException}. */
     public static Node parse(String text) {
         return read(text).node();
+    }
+
+    /**
+     * A rule written as a YAML boolean ({@code where: true}, which YAML reads as the boolean and the parser hands over as {@code true}) is DEL's {@code True}
+     * (or {@code False}): the one spelling of the old syntax that stays, because YAML, not the author, chose it.
+     */
+    static String yamlBoolean(String text) {
+        if (text == null) {
+            return null;
+        }
+        String t = text.strip();
+        return t.equals("true") ? "True" : t.equals("false") ? "False" : text;
     }
 
     /** The expression read: DEL v2, or (while allowed) the old syntax. */
@@ -96,9 +108,9 @@ public final class Expressions {
     private static Parsed readUncached(String text) {
         DelAst tree;
         try {
-            tree = DelParser.parse(text);
+            tree = DelParser.parse(yamlBoolean(text));
         } catch (DelException v2) {
-            return old(text, v2);
+            return old(text, v2, false);
         }
         DelChecker.Checked c = DelChecker.check(tree, null, Fields.NONE);
         java.util.Optional<DelException.Problem> bad = c.firstError();
@@ -106,13 +118,13 @@ public final class Expressions {
             if (DelChecker.LATER.equals(bad.get().code())) {
                 throw new DelException(bad.get());                              // DEL v2 of a later wave: never the old syntax
             }
-            return old(text, new DelException(bad.get()));
+            return old(text, new DelException(bad.get()), true);
         }
         return new Parsed(DelLowering.lower(tree), tree, false, text);
     }
 
     /** The old syntax: read (with the mark) while allowed, refused with the DEL v2 text otherwise; when it is not the old syntax either, the v2 error. */
-    private static Parsed old(String text, DelException v2) {
+    private static Parsed old(String text, DelException v2, boolean v2Parsed) {
         Node n;
         try {
             n = ExprParser.parse(text);
@@ -125,6 +137,9 @@ public final class Expressions {
                 converted = DelPrinter.print(n);
             } catch (RuntimeException ignored) {
                 // no mechanical fix
+            }
+            if (v2Parsed && (converted == null || converted.equals(text))) {
+                throw v2;                                                       // DEL v2 text with a DEL v2 mistake: that mistake, not "old syntax"
             }
             throw new DelException(OLD_SYNTAX, "old expression syntax (refused since wave A): run the converter, drishti.py bi migrate --expressions",
                     converted == null ? null : "write: " + converted, 0, text.length());
@@ -150,10 +165,12 @@ public final class Expressions {
                 + (to == null ? "" : "; in DEL v2: " + to);
     }
 
-    /** True when the text is the old syntax (read while allowed). */
+    /** True when the text is the old syntax (read while allowed, refused with {@code DRS-9100} otherwise). */
     public static boolean isLegacy(String text) {
         try {
             return read(text).legacy();
+        } catch (DelException e) {
+            return OLD_SYNTAX.equals(e.code());
         } catch (RuntimeException e) {
             return false;
         }

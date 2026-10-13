@@ -41,6 +41,16 @@ import org.junit.jupiter.api.Test;
  */
 class ShippedExpressionsTest {
 
+    @org.junit.jupiter.api.BeforeEach
+    void readTheOriginals() {
+        Expressions.configure(Expressions.Legacy.WARN, 10_000);                 // the 2.1 originals are read in the old syntax, to compare
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void reset() {
+        Expressions.configure(Expressions.Legacy.REFUSE, 10_000);
+    }
+
     static final List<Path> ROOTS = List.of(Path.of("..", "config", "bi"), Path.of("..", "docs", "tutorials", "data"));
     static final List<Path> ORIGINALS = List.of(Path.of("src", "test", "resources", "bi", "shipped-2.1"));
 

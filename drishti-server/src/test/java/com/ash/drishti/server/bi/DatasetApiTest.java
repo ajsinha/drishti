@@ -446,7 +446,7 @@ class DatasetApiTest {
     @Test @Order(13)
     void aCopyInMyWorkspaceIsQueriedAsADraftAndOnlyItsOwnerReadsIt() throws Exception {
         String yaml = java.nio.file.Files.readString(Path.of("target/bi-dataset-folder/datasets/lake-test.dataset.yaml"))
-                .replace("Trades: { expr: \"count(trades)\" }", "Trades: { expr: \"count(trades)\" }\n  Big: { expr: \"sum(trades.notional, trades.notional > 10000)\" }");
+                .replace("Trades: { expr: \"count(trades)\" }", "Trades: { expr: \"count(trades)\" }\n  Big: { expr: \"sum(trades.notional, where=trades.notional > 10000)\" }");
         JsonNode created = ok(call("POST", "/api/v1/bi/workspaces/me/items", wes(), Map.of("kind", "dataset", "title", "My copy", "body", yaml)));
         String id = created.path("id").asText();
                 refused(call("POST", "/api/v1/bi/datasets/" + id + "/query", rita(), "{\"measures\":[\"Trades\"]}"), 404, "DRS-9001");        // a personal draft is private

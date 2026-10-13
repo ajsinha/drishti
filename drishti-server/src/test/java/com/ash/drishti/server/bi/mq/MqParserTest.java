@@ -29,7 +29,7 @@ class MqParserTest {
             mq: 1
             model: trading-risk@1
             define:
-              Loss share: "ratio([Open MTM], [MTM])"
+              Loss share: "ratio(measure('Open MTM'), measure('MTM'))"
             select:
               fields:   [counterparties.sector, trades.tradeDate.month]
               measures: [MTM, Exposure (EE peak), Loss share]
