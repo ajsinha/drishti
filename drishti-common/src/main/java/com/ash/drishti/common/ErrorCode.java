@@ -296,6 +296,26 @@ public enum ErrorCode {
     MQ_PYTHON("DRS-9162", 422),
     /** The expression converter could not keep the meaning of an old-syntax expression (it is left as it was). */
     EXPR_CONVERT("DRS-9190", 422),
+    /** Drishti SQL: not a statement of the dialect (syntax, more than one statement, DDL or DML: it is read-only). */
+    SQL_SYNTAX("DRS-9170", 422),
+    /** Drishti SQL: a table or column the model does not have for the caller (a hidden column is not found), or of a table the statement does not read. */
+    SQL_NAME("DRS-9171", 422),
+    /** Drishti SQL: a join on a predicate that is not a relationship of the model. */
+    SQL_JOIN("DRS-9172", 422),
+    /** Drishti SQL: a function the dialect does not take (table functions, user functions, random()). */
+    SQL_FUNCTION("DRS-9173", 422),
+    /** Drishti SQL: an aggregate over a measure, or a measure in WHERE. */
+    SQL_MEASURE("DRS-9174", 422),
+    /** Drishti SQL: a window over the rows of a dataset (windows run over the answer). */
+    SQL_WINDOW("DRS-9175", 422),
+    /** Drishti SQL: another model, a connector, a kind or a file named. */
+    SQL_SCOPE("DRS-9176", 422),
+    /** Drishti SQL: two different times in one statement, or a time clause that is not valid. */
+    SQL_TIME("DRS-9177", 422),
+    /** Drishti SQL: SELECT DISTINCT on a fact without grouping. */
+    SQL_DISTINCT("DRS-9178", 422),
+    /** Drishti SQL: a statement the dialect does not take (yet); the message says what to write. */
+    SQL_SHAPE("DRS-9179", 422),
     /** Standing query: no such subscription for the caller. */
     SQ_NOT_FOUND("DRS-9180", 404),
     /** Standing query: the server holds {@code drishti.bi.mq.max-subscriptions} already. */

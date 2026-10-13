@@ -105,6 +105,13 @@ public final class MqService {
         return m;
     }
 
+    /** The plan of a query as the bound reader would run it, without reading data (a {@code top} filter is not resolved: the plan never holds data). */
+    public LogicalPlan plan(Bound b, ModelQuery q) {
+        MqValidator.Checked c = MqValidator.validate(b.view(), q, b.context(), props);
+        MqCompiler.Compiled compiled = MqCompiler.compile(b.view(), c, b.context(), props, tq -> new QueryService.Result(List.of(), 0, null));
+        return MqPlans.plan(b.view(), c, compiled, b.security());
+    }
+
     /**
      * What one query ran to, before the answer is written: the main result with and without the currency guard's columns, the totals per level, the warnings
      * (the validator's and the guard's) and when it started.

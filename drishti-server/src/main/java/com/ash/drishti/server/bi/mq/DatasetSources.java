@@ -52,7 +52,7 @@ final class DatasetSources implements StagedTables {
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final int DEPTH = 8;
     private static final ThreadLocal<Set<String>> ASKING = ThreadLocal.withInitial(HashSet::new);
-    private static final Set<String> STAGED = Set.of(DatasetDef.Source.MODEL, DatasetDef.Source.CONNECTOR, DatasetDef.Source.PYTHON);
+    private static final Set<String> STAGED = Set.of(DatasetDef.Source.MODEL, DatasetDef.Source.CONNECTOR, DatasetDef.Source.PYTHON, DatasetDef.Source.SQL);
     private static final java.util.regex.Pattern PARAM = java.util.regex.Pattern.compile("(?<![:\\w]):([A-Za-z][A-Za-z0-9_]*)");
 
     private final ModelCatalog catalog;
@@ -85,7 +85,7 @@ final class DatasetSources implements StagedTables {
     }
 
     private static boolean isModel(ResolvedDataset r) {
-        return DatasetDef.Source.MODEL.equals(type(r));
+        return DatasetDef.Source.MODEL.equals(type(r)) || DatasetDef.Source.SQL.equals(type(r));
     }
 
     @Override
@@ -102,6 +102,7 @@ final class DatasetSources implements StagedTables {
                 b.append('|').append(alias).append('=');
                 switch (s.type()) {
                     case DatasetDef.Source.MODEL -> b.append(innerKey(inner(alias, s.model())));
+                    case DatasetDef.Source.SQL -> b.append(innerKey(inner(alias, s.model()))).append('#').append(ModelCatalog.hash(s.query()));
                     case DatasetDef.Source.PYTHON -> {
                         b.append(s.python()).append(s.pythonParams());
                         s.inputs().forEach((name, q) -> b.append(',').append(name).append(':').append(innerKey(inner(alias + "/" + name, modelOf(q)))));
@@ -123,6 +124,7 @@ final class DatasetSources implements StagedTables {
         DatasetDef d = view.datasets().get(table).def();
         return switch (d.source().type()) {
             case DatasetDef.Source.MODEL -> fromModel(table, d);
+            case DatasetDef.Source.SQL -> fromSql(table, d);
             case DatasetDef.Source.PYTHON -> fromPython(table, d);
             default -> fromConnector(table, d);
         };
@@ -204,6 +206,20 @@ final class DatasetSources implements StagedTables {
         QueryService.Result result = new QueryService.Result(shown.columns(), shown.rows(), m == null ? null
                 : new QueryService.Meta(m.layer(), m.rollup(), m.rows(), m.millis(), m.cached(), m.dates(), m.tables(), m.masked(), warnings, m.sql(), m.generation()));
         return new Answer(result, columns(table, d, result, "the source query"), ran[0].compiled().asOf());
+    }
+
+    // ---- a SQL view ---------------------------------------------------------------------------------------------------
+
+    /** A SQL view's answer: its Drishti SQL statement asked of its model as the reader (at the outer query's date when it names none). */
+    private Answer fromSql(String table, DatasetDef d) {
+        ModelCatalog.SqlViews views = catalog.sqlViews();
+        if (views == null) {
+            throw new MqException(MqException.Problem.of("DRS-9108", "source.sql", "Drishti SQL is not available on this server (drishti.bi.sql.enabled)"));
+        }
+        MqService.Bound inner = inner(table, d.source().model());
+        java.time.LocalDate date = outer.from() != null && (outer.to() == null || outer.from().equals(outer.to())) ? outer.from() : null;
+        QueryService.Result r = guarded(d, inner, () -> views.answer(inner, d.source().model(), d.source().query(), date));
+        return new Answer(r, columns(table, d, r, "the SQL view"), date != null ? date : outerDate());
     }
 
     /** Runs an inner query with the run-time cycle guard: a model being asked on this thread is not asked again through itself. */

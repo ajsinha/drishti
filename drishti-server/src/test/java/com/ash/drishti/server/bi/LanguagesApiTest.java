@@ -127,6 +127,33 @@ class LanguagesApiTest {
                       Trades:   { id: m_trades, expr: "count(trades)" }
                       Open MTM: { id: m_open, expr: "sum(trades.mtm, where=trades.currency == 'USD')" }
                       Per trade: { id: m_per, expr: "measure('m_notional') / measure('Trades')" }
+                    tests:
+                      - { name: DESK-A notional, sql: "SELECT MEASURE('Notional') FROM trades WHERE trades.desk = 'DESK-A' AS OF DATE '2026-10-08'", expect: 92000, role: bi-risk }
+                      - { name: by desk, sql: "SELECT trades.desk, MEASURE('Trades') AS n FROM trades GROUP BY trades.desk AS OF DATE '2026-10-08'", row: { trades.desk: DESK-B }, column: n, expect: 8, role: bi-risk }
+                    """);
+            Files.writeString(datasets.resolve("lang-desk-sql.dataset.yaml"), """
+                    rachana: 2
+                    expressions: 2
+                    dataset: lang-desk-sql
+                    version: 1.0.0
+                    source:
+                      model: lang-model@1
+                      sql: "SELECT trades.desk AS desk, MEASURE('Notional') AS notional, MEASURE('Trades') AS trades FROM trades GROUP BY trades.desk"
+                    grain: { keys: [desk] }
+                    columns:
+                      desk:     { type: string, role: key }
+                      notional: { type: decimal, aggregate: sum }
+                      trades:   { type: integer, aggregate: sum }
+                    """);
+            Files.writeString(models.resolve("lang-desk-view.model.yaml"), """
+                    rachana: 2
+                    expressions: 2
+                    model: lang-desk-view
+                    version: 1.0.0
+                    datasets:
+                      desks: { dataset: lang-desk-sql, role: fact }
+                    measures:
+                      Desk notional: { expr: "sum(desks.notional)" }
                     """);
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
@@ -225,6 +252,70 @@ class LanguagesApiTest {
             System.out.println("CAPTURE7 " + again.path("meta"));
             System.out.println("CAPTURE8 " + explained.path("meta").path("explain"));
         }
+    }
+
+    // ---- Drishti SQL --------------------------------------------------------------------------------------------------
+
+    JsonNode sql(String who, String statement) throws Exception {
+        return ok(call("POST", "/api/v1/bi/sql", reader(who), Map.of("model", "lang-model@1", "sql", statement)));
+    }
+
+    @Test @Order(20)
+    void drishtiSqlAnswersAsTheCallerWithTheMqsPlan() throws Exception {
+        String statement = "SELECT trades.desk AS desk, MEASURE('Notional') AS notional, COUNT(*) AS n FROM trades GROUP BY trades.desk ORDER BY desk AS OF DATE '" + DAY + "'";
+        JsonNode rita = sql("rita", statement);
+        JsonNode hana = sql("hana", statement);
+        assertThat(rita.path("rows").size()).isEqualTo(3);
+        assertThat(rita.path("columns").get(1).path("name").asText()).isEqualTo("notional");
+        assertThat(rita.path("meta").path("shape").asText()).isEqualTo("mq");
+        assertThat(hana.path("rows").size()).isEqualTo(1);
+        assertThat(hana.path("rows").get(0).get(0).asText()).isEqualTo("DESK-A");
+        JsonNode viaMq = ok(call("POST", "/api/v1/bi/mq", reader("hana"), Map.of("mq", 1, "model", "lang-model@1", "select", Map.of("fields", List.of("trades.desk"),
+                "measures", List.of("Notional")), "time", Map.of("as-of", DAY))));
+        assertThat(hana.path("rows").get(0).get(1).asDouble()).isEqualTo(viaMq.path("rows").get(0).get(1).asDouble());
+        var csv = call("POST", "/api/v1/bi/sql", reader("rita"), Map.of("model", "lang-model@1", "sql", statement, "format", "csv")).andReturn().getResponse();
+        assertThat(csv.getContentAsString()).startsWith("desk,notional,n\r\nDESK-A,92000.0,8");
+        JsonNode explain = sql("hana", "EXPLAIN " + statement);
+        assertThat(explain.path("text").asText()).contains("SecureScan trades").contains("rules: 1 applied").doesNotContain("DESK-A");
+        JsonNode composite = sql("rita", "WITH d AS (SELECT trades.desk AS desk, MEASURE('Notional') AS notional FROM trades GROUP BY trades.desk AS OF DATE '" + DAY
+                + "') SELECT d.desk, d.notional, RANK() OVER (ORDER BY d.notional DESC) AS r FROM d ORDER BY r");
+        assertThat(composite.path("meta").path("shape").asText()).isEqualTo("composite");
+        assertThat(composite.path("rows").get(0).get(2).asInt()).isEqualTo(1);
+        var refused = call("POST", "/api/v1/bi/sql", reader("rita"), Map.of("model", "lang-model@1", "sql", "SELECT trades.desk FROM trades JOIN desks ON trades.desk = desks.x"))
+                .andReturn().getResponse();
+        assertThat(refused.getStatus()).isEqualTo(422);
+        assertThat(refused.getContentAsString()).contains("DRS-9171");
+        JsonNode v = ok(call("POST", "/api/v1/bi/sql/validate", reader("ann"), Map.of("model", "lang-model@1", "sql", "SELECT trades.book FROM trades")));
+        assertThat(v.path("valid").asBoolean()).isFalse();
+        assertThat(v.path("problems").get(0).path("code").asText()).as("book is hidden from ann: it does not exist").isEqualTo("DRS-9171");
+        JsonNode ok = ok(call("POST", "/api/v1/bi/sql/validate", reader("rita"), Map.of("model", "lang-model@1", "sql", statement)));
+        assertThat(ok.path("valid").asBoolean()).isTrue();
+        assertThat(ok.path("plan").asText()).isEqualTo(viaPlan("rita"));
+        if (System.getProperty("capture") != null) {
+            System.out.println("CAPTURE9 " + rita);
+            System.out.println("CAPTURE10 " + explain.path("text").asText().replace("\n", " || "));
+            System.out.println("CAPTURE11 " + composite);
+            System.out.println("CAPTURE12 " + refused.getContentAsString());
+        }
+    }
+
+    String viaPlan(String who) throws Exception {
+        return ok(call("POST", "/api/v1/bi/mq/validate", reader(who), Map.of("mq", 1, "model", "lang-model@1", "select", Map.of("fields", List.of("trades.desk"),
+                "measures", List.of("Notional", "n")), "define", Map.of("n", "count(trades)"), "sort", List.of(Map.of("by", "trades.desk")), "time",
+                Map.of("as-of", DAY)))).path("plan").asText();
+    }
+
+    @Test @Order(21)
+    void aSqlViewDatasetIsAskedAsTheReaderAndAModelsSqlTestsRun() throws Exception {
+        Map<String, Object> q = Map.of("mq", 1, "model", "lang-desk-view@1", "select", Map.of("fields", List.of("desks.desk"), "measures", List.of("Desk notional")), "time",
+                Map.of("as-of", DAY));
+        JsonNode rita = ok(call("POST", "/api/v1/bi/mq", reader("rita"), q));
+        JsonNode hana = ok(call("POST", "/api/v1/bi/mq", reader("hana"), q));
+        assertThat(rita.path("rows").size()).isEqualTo(3);
+        assertThat(hana.path("rows").size()).as("the view's statement ran as hana: her desk only").isEqualTo(1);
+        JsonNode tests = ok(call("POST", "/api/v1/bi/items/file:model:lang-model/tests", admin(), Map.of()));
+        assertThat(tests.path("total").asInt()).as(tests.toString()).isEqualTo(2);
+        assertThat(tests.path("passed").asInt()).as(tests.toString()).isEqualTo(2);
     }
 
     // ---- DEL ---------------------------------------------------------------------------------------------------------

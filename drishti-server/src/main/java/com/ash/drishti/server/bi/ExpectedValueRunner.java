@@ -94,6 +94,17 @@ public final class ExpectedValueRunner {
     private final BiReportService reports;
     private final AuditLog audit;
 
+    /** Runs a Drishti SQL statement over a model as a reader, for a model's {@code tests: [{ sql, expect }]} (set by the SQL module). */
+    public interface SqlTests {
+        QueryService.Result run(Principal as, String model, String sql);
+    }
+
+    private volatile SqlTests sqlTests;
+
+    public void sqlTests(SqlTests t) {
+        this.sqlTests = t;
+    }
+
     public ExpectedValueRunner(BiService bi, DatasetService datasets, BiReportService reports, AuditLog audit) {
         this.bi = bi;
         this.datasets = datasets;
@@ -108,8 +119,8 @@ public final class ExpectedValueRunner {
      */
     public Run run(Principal p, String id, String yaml, String role) {
         BiStore.Item item = bi.readableItem(p, id);
-        if (!"report".equals(item.kind()) && !"dataset".equals(item.kind())) {
-            throw new DrishtiException(ErrorCode.BI_INVALID, "only a report or a dataset has tests, not a " + item.kind());
+        if (!"report".equals(item.kind()) && !"dataset".equals(item.kind()) && !"model".equals(item.kind())) {
+            throw new DrishtiException(ErrorCode.BI_INVALID, "only a report, a dataset or a model has tests, not a " + item.kind());
         }
         if (yaml != null && !"report".equals(item.kind())) {
             bi.requirePower(p, BiAccess.AUTHOR);
@@ -125,7 +136,7 @@ public final class ExpectedValueRunner {
      * What would stop a publish: one line per test that fails or cannot run, each as its own role or the publisher's. Empty when the item has no tests or all pass.
      */
     public List<String> failures(Principal p, BiStore.Item item) {
-        if (!"report".equals(item.kind()) && !"dataset".equals(item.kind()) || item.body().isBlank()) {
+        if (!"report".equals(item.kind()) && !"dataset".equals(item.kind()) && !"model".equals(item.kind()) || item.body().isBlank()) {
             return List.of();
         }
         List<String> lines = new ArrayList<>();
@@ -139,6 +150,19 @@ public final class ExpectedValueRunner {
 
     private List<Outcome> run(Principal p, BiStore.Item item, String body, boolean draftText, String chosen) {
         List<Outcome> out = new ArrayList<>();
+        if ("model".equals(item.kind())) {
+            com.ash.drishti.server.bi.layer.ModelDefParser.Result r = com.ash.drishti.server.bi.layer.ModelDefParser.parse(body);
+            if (r.model() == null) {
+                throw new DrishtiException(ErrorCode.LAYER_MODEL_INVALID, "the model has errors: " + r.firstError());
+            }
+            String ref = r.model().name() + "@" + Math.max(1, r.model().major());
+            for (com.fasterxml.jackson.databind.JsonNode t : r.model().tests()) {
+                if (t.has("sql")) {
+                    out.add(sqlTest(p, ref, t, chosen));
+                }
+            }
+            return out;
+        }
         if ("dataset".equals(item.kind())) {
             DatasetParser.Result r = DatasetParser.parse(body);
             if (r.dataset() == null) {
@@ -207,6 +231,34 @@ public final class ExpectedValueRunner {
             return judge(t, kind, target, datasets.ask(as, b.dsItem(), b.query(), false), column, role);
         } catch (DrishtiException e) {
             return new Outcome(t.label(), kind, target, t.expectText(), null, "error", e.getMessage(), role);
+        }
+    }
+
+    /** A model's {@code { sql, expect, tolerance, row, column, role }}: the statement answered as the role, one figure read and compared. */
+    private Outcome sqlTest(Principal p, String model, com.fasterxml.jackson.databind.JsonNode node, String chosen) {
+        String text = node.path("sql").asText("");
+        ObjectNode copy = ((ObjectNode) node).deepCopy();
+        copy.remove("sql");
+        copy.put("measure", "SQL");
+        List<ExpectedValue.Problem> problems = new ArrayList<>();
+        List<ExpectedValue> parsed = ExpectedValue.parse(JSON.createArrayNode().add(copy), "tests", false, problems);
+        if (parsed.isEmpty()) {
+            return new Outcome(node.path("name").asText(text), "sql", text, "", null, "error", problems.isEmpty() ? "the test is not valid" : problems.get(0).message(), null);
+        }
+        ExpectedValue t = parsed.get(0);
+        String role = roleOf(t, chosen);
+        String label = t.name() != null && !t.name().isBlank() ? t.name() : text;
+        ExpectedValue named = new ExpectedValue(label, null, null, List.of(), t.row(), t.column(), List.of(), null, t.expect(), t.min(), t.max(), t.absolute(), t.percent(), t.role());
+        if (sqlTests == null) {
+            return new Outcome(label, "sql", text, t.expectText(), null, "error", "Drishti SQL is not available on this server", role);
+        }
+        try {
+            QueryService.Result r = sqlTests.run(as(p, role), model, text);
+            String column = t.column() != null ? t.column() : r.columns().stream().filter(c -> c.kind() != ArrowIpcWriter.Kind.TEXT).map(ArrowIpcWriter.Column::name).findFirst()
+                    .orElse(r.columns().isEmpty() ? "" : r.columns().get(0).name());
+            return judge(named, "sql", text, r, column, role);
+        } catch (RuntimeException e) {
+            return new Outcome(label, "sql", text, t.expectText(), null, "error", e.getMessage(), role);
         }
     }
 

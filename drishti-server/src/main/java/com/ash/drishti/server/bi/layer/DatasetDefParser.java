@@ -143,15 +143,33 @@ public final class DatasetDefParser {
             y.error("DRS-9100", "source", "`source:` is a mapping");
             return null;
         }
-        boolean model = s.has("model");
-        boolean query = s.has("query") && !model;                       // a model source's `query:` is its model query, not a connector's SQL
+        boolean sqlView = s.has("sql");
+        boolean model = s.has("model") && !sqlView;
+        boolean query = s.has("query") && !s.has("model");               // a model source's `query:` is its model query, not a connector's SQL
         boolean python = s.has("python");
         boolean kind = s.has("kind");
-        int n = (query ? 1 : 0) + (python ? 1 : 0) + (model ? 1 : 0) + (kind ? 1 : 0);
+        int n = (query ? 1 : 0) + (python ? 1 : 0) + (model ? 1 : 0) + (kind ? 1 : 0) + (sqlView ? 1 : 0);
         if (n != 1) {
-            y.error("DRS-9100", "source", n == 0 ? "`source:` names a `kind` (with an optional pack and connector), a connector `query`, a `python` Transform or a `model`"
-                    : "a dataset has exactly one source; this one names " + n + " (kind, query, python, model)");
+            y.error("DRS-9100", "source", n == 0 ? "`source:` names a `kind` (with an optional pack and connector), a connector `query`, a `python` Transform, a `model` or a SQL view (`sql` and `model`)"
+                    : "a dataset has exactly one source; this one names " + n + " (kind, query, python, model, sql)");
             return null;
+        }
+        if (sqlView) {
+            y.unknownKeys(s, Set.of("sql", "model"), "DRS-9100", "source");
+            String statement = LayerYaml.text(s, "sql", "");
+            String over = LayerYaml.text(s, "model", "");
+            if (over.isBlank()) {
+                y.error("DRS-9108", "source.model", "a SQL view names the model its statement reads: model: <name>@<major>");
+            }
+            try {
+                com.ash.drishti.server.bi.sql.SqlAst.Statement st = com.ash.drishti.server.bi.sql.DsqlParser.parse(statement);
+                if (st.explain()) {
+                    y.error("DRS-9108", "source.sql", "a SQL view is a SELECT, not an EXPLAIN");
+                }
+            } catch (com.ash.drishti.server.bi.sql.DsqlException e) {
+                y.error("DRS-9108", "source.sql", e.code() + " " + e.getMessage() + " (at " + e.start() + ")" + (e.fix() == null ? "" : "; fix: " + e.fix()));
+            }
+            return new DatasetDef.Source(DatasetDef.Source.SQL, null, null, null, null, statement, null, null, null, null, over, null, null);
         }
         if (kind) {
             y.unknownKeys(s, Set.of("pack", "kind", "connector", "each"), "DRS-9100", "source");
