@@ -170,7 +170,10 @@ def mq(a, ctx) -> int:
     print(table([c["name"] for c in r.get("columns", [])], r.get("rows", [])))
     meta = r.get("meta", {})
     print(f"{len(r.get('rows', []))} row(s)" + (f"  as of {meta.get('asOf')}" if meta.get("asOf") else "") + (f"  plan {meta.get('plan')}" if meta.get("plan") else "")
-          + (f"  masked {', '.join(meta['masked'])}" if meta.get("masked") else "") + ("  (cached)" if meta.get("cached") else ""))
+          + (f"  masked {', '.join(meta['masked'])}" if meta.get("masked") else "") + ("  (cached)" if meta.get("cached") else "")
+          + (f"  layer {meta['layer']}" if meta.get("layer") and meta.get("layer") != "columns" else "") + (f" (rollup {meta['rollup']})" if meta.get("rollup") else ""))
+    if meta.get("sql"):                                                   # options: { explain: true } (BI authors): what ran
+        print("sql: " + meta["sql"])
     for w in meta.get("warnings", []):
         print(f"warning: {w}")
     return 0

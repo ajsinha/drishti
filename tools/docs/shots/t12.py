@@ -41,7 +41,8 @@ def curve(c: Ctx):
 @shot("03-live-dataset.jpg")
 def live_dataset(c: Ctx):
     login(c, height=900)
-    c.page.request.post(c.base + "/bi/api/datasets/" + LIVE_DATASET + "/query", data='{"fields":["trade.desk"],"measures":["Trades"]}', headers={"Content-Type": "application/json"})
+    c.page.request.post(c.base + "/bi/api/mq", data='{"mq":1,"model":"live-trading@1","select":{"fields":["trade.desk"],"measures":["Trades"]}}',
+                        headers={"Content-Type": "application/json"})                     # one question starts the live table
     go(c, "/bi/d/" + LIVE_DATASET, wait="h1", settle=2500)
     elem_shot(c, "03-live-dataset.jpg", "[data-layers]", pad=14)
 

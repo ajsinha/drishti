@@ -646,7 +646,7 @@ def cmd_data_loads(a, extra) -> int:
 # ------------------------------------------------------------------------------------------------ bi (Rupaka phase 1)
 
 def bi_item_line(i, width: int = 16) -> str:
-    return (f"{i['id']:<{width}}{i['kind']:<9}{(i.get('endorsement') or 'none'):<10}{i.get('status', ''):<10}"
+    return (f"{i['id']:<{width}} {i['kind']:<9}{(i.get('endorsement') or 'none'):<10}{i.get('status', ''):<10}"
             f"{('v' + str(i['publishedVersion'])) if i.get('publishedVersion') else '-':<5}{i['title']}  ({i.get('workspaceName') or i.get('workspace')}, {i.get('owner')})")
 
 
