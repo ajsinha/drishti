@@ -640,8 +640,9 @@ public final class ModelCatalog {
                 ModelView v = view(i.id(), parsed.model(), parsed, body);
                 List<String> tables = v.datasets().entrySet().stream().filter(e -> e.getValue().def().name().equals(name) || e.getValue().chain().contains(name))
                         .map(Map.Entry::getKey).toList();
-                if (!tables.isEmpty()) {
-                    out.add(new DatasetService.ModelGateway.Reader(new QueryService.Loaded(v.id(), v.key(), v.flat(), v.hash()), tables));
+                if (!tables.isEmpty()) {                                     // a staged table (Python, a query, a model's answer) has no layer to rebuild
+                    out.add(new DatasetService.ModelGateway.Reader(new QueryService.Loaded(v.id(), v.key(), v.flat(), v.hash()),
+                            tables.stream().filter(t -> !DatasetSources.aliases(v).contains(t)).toList()));
                 }
             } catch (RuntimeException e) {
                 // not resolvable now: nothing of it is kept to refresh
@@ -650,7 +651,8 @@ public final class ModelCatalog {
         try {
             resolveDataset(name, Semver.Range.ANY, new LinkedHashSet<>(), new ArrayList<>()).ifPresent(d -> {
                 ModelView v = implicitOf(d).view();
-                out.add(new DatasetService.ModelGateway.Reader(new QueryService.Loaded(v.id(), v.key(), v.flat(), v.hash()), List.copyOf(v.datasets().keySet())));
+                out.add(new DatasetService.ModelGateway.Reader(new QueryService.Loaded(v.id(), v.key(), v.flat(), v.hash()),
+                        v.datasets().keySet().stream().filter(t -> !DatasetSources.aliases(v).contains(t)).toList()));
             });
         } catch (RuntimeException e) {
             // the dataset does not resolve (Check says why): only the models above
