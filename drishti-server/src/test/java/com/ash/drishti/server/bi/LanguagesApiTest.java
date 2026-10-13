@@ -212,6 +212,20 @@ class LanguagesApiTest {
                         visuals:
                           - { id: by-desk, type: bar, title: By desk, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trades.desk], values: [Notional] } }
                     """);
+            Files.writeString(reports.resolve("lang-local-report.report.yaml"), """
+                    rachana: 2
+                    report: lang-local-report
+                    title: Own measures and a perspective
+                    model: lang-model@1
+                    perspective: desk-view
+                    measures:
+                      Half notional: { expr: "measure('Notional') / 2", format: amount0 }
+                    pages:
+                      - id: main
+                        title: Main
+                        visuals:
+                          - { id: by-desk, type: table, title: By desk, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { columns: [trades.desk, Notional, Half notional] } }
+                    """);
             Files.writeString(models.resolve("lang-desk-view.model.yaml"), """
                     rachana: 2
                     expressions: 2
@@ -555,6 +569,32 @@ class LanguagesApiTest {
         assertThat(old.path("converted").asText()).isEqualTo("measure('Notional') / measure('Trades')");
         assertThat(codes(old)).containsExactly("DRS-9100");
         assertThat(old.path("valid").asBoolean()).as("refused since the end of wave A").isFalse();
+    }
+
+    /** A report's own measures travel as the model query's define, and its perspective narrows its Fields pane. */
+    @Test @Order(5)
+    void aReportsOwnMeasuresAndPerspectiveAreHonoured() throws Exception {
+        JsonNode rep = ok(call("GET", "/api/v1/bi/reports/file:report:lang-local-report", reader("rita"), null));
+        assertThat(rep.path("valid").asBoolean()).as(rep.path("problems").toString()).isTrue();
+        assertThat(rep.path("report").path("measures").has("Half notional")).isTrue();
+        assertThat(rep.path("report").path("perspective").asText()).isEqualTo("desk-view");
+        assertThat(rep.path("dataset").path("perspective").asText()).as("the Fields pane is the perspective").isEqualTo("desk-view");
+        assertThat(rep.path("dataset").path("measures").findValuesAsText("name")).containsExactlyInAnyOrder("Notional", "Trades");
+        String visual = "{\"page\":\"main\",\"visual\":\"by-desk\",\"state\":{\"dates\":{\"from\":\"" + DAY + "\",\"to\":\"" + DAY + "\"}}}";
+        JsonNode rows = ok(call("POST", "/api/v1/bi/reports/file:report:lang-local-report/query", reader("rita"), visual));
+        assertThat(rows.path("rows").size()).as(rows.toString()).isEqualTo(3);
+        for (JsonNode r : rows.path("rows")) {
+            assertThat(r.get(2).asDouble()).as("Half notional = Notional / 2").isEqualTo(r.get(1).asDouble() / 2);
+        }
+        JsonNode clash = ok(call("POST", "/api/v1/bi/reports/validate", admin(), Map.of("yaml", """
+                rachana: 2
+                report: clash
+                model: lang-model@1
+                measures:
+                  Notional: "sum(trades.notional) * 2"
+                pages: [{ id: p, title: P, visuals: [] }]
+                """)));
+        assertThat(clash.path("problems").findValuesAsText("code")).contains("DRS-9154");
     }
 
     /** The designer's unsaved model is checked as it stands, and a measure a model query would refuse (two facts with no path) is said while it is written. */

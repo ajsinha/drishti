@@ -127,6 +127,11 @@ public final class DatasetService {
             return askModel(p, model, q, explain);
         }
 
+        /** As {@link #askModel(Principal, String, String, QueryRequest, boolean)} with a report's own measures sent as the model query's {@code define}. */
+        default Asked askModel(Principal p, String model, String consumer, Map<String, String> define, QueryRequest q, boolean explain) {
+            return askModel(p, model, consumer, q, explain);
+        }
+
         /** As {@link #dataset(Principal, String)} through a published consumer. */
         default Dataset dataset(Principal p, String model, String consumer) {
             return dataset(p, model);
@@ -141,6 +146,11 @@ public final class DatasetService {
         /** As {@link #describe(Principal, String)} through a published consumer: a reader without model read sees the consumer's envelope. */
         default Map<String, Object> describe(Principal p, String model, String consumer) {
             return describe(p, model);
+        }
+
+        /** As {@link #describe(Principal, String, String)} through a report's perspective: only its fields and measures (a report's Fields pane). */
+        default Map<String, Object> describe(Principal p, String model, String consumer, String perspective) {
+            return describe(p, model, consumer);
         }
 
         /** Why a report bound to the model cannot be published (a draft model, its Check, the security safeguard); empty when it can. */
@@ -169,6 +179,40 @@ public final class DatasetService {
     /** The consumer a model reference was taken through, or null. */
     public static String consumerOf(BiStore.Item modelRef) {
         return modelRef == null || modelRef.description() == null || modelRef.description().isBlank() ? null : modelRef.description();
+    }
+
+    /** As {@link #modelRef(String, String)} with a report's own measures ({@code define}) and its perspective, carried in the reference's tags. */
+    public static BiStore.Item modelRef(String model, String consumer, Map<String, String> define, String perspective) {
+        BiStore.Item r = modelRef(model, consumer);
+        List<String> tags = new ArrayList<>();
+        define.forEach((k, v) -> tags.add(DEFINE + k + "=" + v));
+        if (perspective != null) {
+            tags.add(PERSPECTIVE + perspective);
+        }
+        return tags.isEmpty() ? r : new BiStore.Item(r.id(), r.workspace(), r.kind(), r.title(), r.description(), r.owner(), tags, r.body(), r.status(), r.publishedVersion(),
+                r.endorsement(), r.endorsedBy(), r.audienceRoles(), r.audienceUsers(), r.audiencePacks(), r.proposedBy(), r.proposedAt(), r.createdAt(), r.updatedAt(),
+                r.updatedBy(), r.publishedAt(), r.publishedBy());
+    }
+
+    private static final String DEFINE = "define:";
+    private static final String PERSPECTIVE = "perspective:";
+
+    /** The report's own measures a model reference carries (name to DEL), in order. */
+    public static Map<String, String> defineOf(BiStore.Item modelRef) {
+        Map<String, String> out = new LinkedHashMap<>();
+        if (modelRef != null) {
+            modelRef.tags().stream().filter(t -> t.startsWith(DEFINE)).forEach(t -> {
+                String kv = t.substring(DEFINE.length());
+                int eq = kv.indexOf('=');
+                out.put(kv.substring(0, eq), kv.substring(eq + 1));
+            });
+        }
+        return out;
+    }
+
+    /** The perspective a model reference carries, or null. */
+    public static String perspectiveOf(BiStore.Item modelRef) {
+        return modelRef == null ? null : modelRef.tags().stream().filter(t -> t.startsWith(PERSPECTIVE)).map(t -> t.substring(PERSPECTIVE.length())).findFirst().orElse(null);
     }
 
     public static boolean isModelRef(BiStore.Item item) {
@@ -269,6 +313,11 @@ public final class DatasetService {
         return consumer == null ? describeModel(p, model) : requireGateway().describe(p, model, consumer);
     }
 
+    /** As {@link #describeModel(Principal, String, String)} through a report's perspective (null: the whole model). */
+    public Map<String, Object> describeModel(Principal p, String model, String consumer, String perspective) {
+        return perspective == null ? describeModel(p, model, consumer) : requireGateway().describe(p, model, consumer, perspective);
+    }
+
     /** A consumer's answer: the engine's result (the model query's warnings ahead of the engine's) and the canonical model query that ran (null without the gateway). */
     public record Asked(QueryService.Result result, Map<String, Object> query) {}
 
@@ -284,7 +333,7 @@ public final class DatasetService {
      */
     public Asked asked(Principal p, BiStore.Item item, QueryRequest q, boolean explain) {
         if (isModelRef(item)) {
-            return requireGateway().askModel(p, item.id(), consumerOf(item), q, explain);
+            return requireGateway().askModel(p, item.id(), consumerOf(item), defineOf(item), q, explain);
         }
         ModelGateway g = gateway;
         return g == null ? new Asked(queryItem(p, item, q, explain), null) : g.ask(p, item, q, explain);

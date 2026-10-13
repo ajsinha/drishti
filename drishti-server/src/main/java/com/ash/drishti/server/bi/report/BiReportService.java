@@ -121,7 +121,16 @@ public final class BiReportService {
             String consumer = viaPublished && item != null ? item.id() : null;  // the published text: a reader without read on the model asks within its envelope
             try {
                 ds = consumer == null ? datasets.modelDataset(p, model) : datasets.modelDataset(p, model, consumer);
-                dsItem = DatasetService.modelRef(model, consumer);
+                Map<String, String> define = new LinkedHashMap<>();
+                for (Report.LocalMeasure lm : parsed.report().measures().values()) {
+                    if (ds.measures().containsKey(lm.name())) {
+                        problems.add(ReportParser.error("DRS-9154", "measures." + lm.name(), "'" + lm.name() + "' is a measure of the model: a report's own measure takes another name"));
+                    } else {
+                        define.put(lm.name(), lm.expr());
+                    }
+                }
+                ds = withLocal(ds, parsed.report().measures().values().stream().filter(x -> define.containsKey(x.name())).toList());
+                dsItem = DatasetService.modelRef(model, consumer, define, parsed.report().perspective());
                 sets.put(parsed.report().dataset(), new DatasetSet.Entry(dsItem, ds));
             } catch (DrishtiException e) {
                 problems.add(ReportParser.error(e.errorCode().code(), "model", e.getMessage()));
@@ -218,9 +227,20 @@ public final class BiReportService {
         return new Opened(l.item().id(), t == null || t.isBlank() ? l.item().title() : t, l.parsed().report());
     }
 
+    /** The model's engine dataset with the report's own measures added (what the visuals are checked and drawn against). */
+    private static Dataset withLocal(Dataset ds, List<Report.LocalMeasure> local) {
+        if (local.isEmpty()) {
+            return ds;
+        }
+        Map<String, Dataset.Measure> measures = new LinkedHashMap<>(ds.measures());
+        local.forEach(x -> measures.put(x.name(), new Dataset.Measure(x.name(), x.expr(), x.format(), x.description() == null ? "the report's own measure" : x.description(), null)));
+        return new Dataset(ds.name(), ds.version(), ds.title(), ds.description(), ds.sample(), ds.engine(), ds.tables(), ds.relationships(), measures, ds.hierarchies(),
+                ds.security(), ds.rollups(), ds.refresh(), ds.compose(), ds.derived(), ds.tests());
+    }
+
     private Map<String, Object> datasetSummary(Principal p, BiStore.Item dsItem) {
         if (DatasetService.isModelRef(dsItem)) {
-            return datasets.describeModel(p, dsItem.id(), DatasetService.consumerOf(dsItem));
+            return datasets.describeModel(p, dsItem.id(), DatasetService.consumerOf(dsItem), DatasetService.perspectiveOf(dsItem));
         }
         Map<String, Object> d = new LinkedHashMap<>(datasets.modelOf(p, dsItem));
         d.remove("layers");

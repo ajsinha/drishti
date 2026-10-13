@@ -72,7 +72,7 @@ public final class ReportParser {
     private static final Pattern NAME = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_.-]{0,63}");
     private static final Pattern ID = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_-]{0,39}");
     private static final Pattern DAY = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
-    private static final Set<String> TOP = Set.of("rachana", "report", "version", "title", "description", "sample", "dataset", "model", "theme", "dates", "filters", "bookmarks", "layouts", "links", "tests", "pages",
+    private static final Set<String> TOP = Set.of("rachana", "report", "version", "title", "description", "sample", "dataset", "model", "perspective", "measures", "theme", "dates", "filters", "bookmarks", "layouts", "links", "tests", "pages",
             "owner", "tags", "endorsement", "endorsedBy", "audience");
     private static final Set<String> PAGE = Set.of("id", "title", "filters", "drillthrough", "visuals");
     private static final Set<String> VISUAL_KEYS = Set.of("id", "type", "title", "at", "wells", "filters", "sort", "limit", "hierarchy", "drillthrough", "format", "text", "src", "alt",
@@ -131,12 +131,40 @@ public final class ReportParser {
         List<com.ash.drishti.server.bi.dataset.ExpectedValue.Problem> testProblems = new ArrayList<>();
         List<com.ash.drishti.server.bi.dataset.ExpectedValue> tests = com.ash.drishti.server.bi.dataset.ExpectedValue.parse(root.path("tests"), "tests", true, testProblems);
         testProblems.forEach(tp -> out.add(error(INVALID, tp.path(), tp.message())));
+        Map<String, Report.LocalMeasure> local = localMeasures(root.path("measures"), out);
+        String perspective = text(root, "perspective", "");
+        if ((!local.isEmpty() || !perspective.isBlank()) && model.isBlank()) {
+            out.add(error("DRS-9140", local.isEmpty() ? "perspective" : "measures", "a report's own measures and its perspective belong to a report on a model (`model:`)"));
+        }
         Report r = new Report(name, root.path("version").asInt(1), text(root, "title", name), text(root, "description", ""), root.path("sample").asBoolean(false), dataset, theme, dates,
-                filters, pages, bookmarks, layouts(root.path("layouts"), out), links(root.path("links"), out), tests);
+                filters, pages, bookmarks, layouts(root.path("layouts"), out), links(root.path("links"), out), tests, local, perspective);
         return new Result(r, out);
     }
 
     // ---- sections ----------------------------------------------------------------------------------------------------
+
+    /** {@code measures: { Name: "DEL" }} or {@code { Name: { expr, format, description } }}: the report's own measures (a report on a model). */
+    private static Map<String, Report.LocalMeasure> localMeasures(JsonNode n, List<Problem> out) {
+        Map<String, Report.LocalMeasure> m = new LinkedHashMap<>();
+        if (n.isMissingNode() || n.isNull()) {
+            return m;
+        }
+        if (!n.isObject()) {
+            out.add(error(INVALID, "measures", "measures is a mapping: Name: \"DEL expression\" or Name: { expr, format, description }"));
+            return m;
+        }
+        n.fields().forEachRemaining(e -> {
+            JsonNode v = e.getValue();
+            String expr = v.isTextual() ? v.asText() : v.path("expr").asText("");
+            if (expr.isBlank()) {
+                out.add(error(INVALID, "measures." + e.getKey(), "a measure needs `expr:`, a DEL aggregate (docs/guides/EXPRESSIONS.md)"));
+                return;
+            }
+            m.put(e.getKey(), new Report.LocalMeasure(e.getKey(), expr, v.isObject() && v.hasNonNull("format") ? v.path("format").asText() : null,
+                    v.isObject() && v.hasNonNull("description") ? v.path("description").asText() : null));
+        });
+        return m;
+    }
 
     private static Map<String, String> theme(JsonNode n, List<Problem> out) {
         Map<String, String> theme = new LinkedHashMap<>();

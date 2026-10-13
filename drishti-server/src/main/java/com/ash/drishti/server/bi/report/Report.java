@@ -36,7 +36,25 @@ import java.util.Map;
  * @param links which fields of different datasets mean the same thing, so a slicer or a selection on one filters the visuals of the others (RUPAKA.md section 20.10)
  */
 public record Report(String name, int version, String title, String description, boolean sample, String dataset, Map<String, String> theme, Dates dates, List<Filter> filters,
-        List<Page> pages, List<Bookmark> bookmarks, Map<String, Map<String, PhonePage>> layouts, List<Link> links, List<com.ash.drishti.server.bi.dataset.ExpectedValue> tests) {
+        List<Page> pages, List<Bookmark> bookmarks, Map<String, Map<String, PhonePage>> layouts, List<Link> links, List<com.ash.drishti.server.bi.dataset.ExpectedValue> tests,
+        Map<String, LocalMeasure> measures, String perspective) {
+
+    /**
+     * A report's own measure (docs/architecture/BI_MODEL_SPEC.md section 4.2): a DEL aggregate over the model's fields and measures, used by this report only,
+     * sent with each visual's model query as {@code define}; it may not take a model measure's name ({@code DRS-9154}).
+     */
+    public record LocalMeasure(String name, String expr, String format, String description) {}
+
+    public Report {
+        measures = measures == null ? Map.of() : java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(measures));
+        perspective = perspective == null || perspective.isBlank() ? null : perspective;
+    }
+
+    /** Compatibility: a report without local measures or perspective. */
+    public Report(String name, int version, String title, String description, boolean sample, String dataset, Map<String, String> theme, Dates dates, List<Filter> filters,
+            List<Page> pages, List<Bookmark> bookmarks, Map<String, Map<String, PhonePage>> layouts, List<Link> links, List<com.ash.drishti.server.bi.dataset.ExpectedValue> tests) {
+        this(name, version, title, description, sample, dataset, theme, dates, filters, pages, bookmarks, layouts, links, tests, Map.of(), null);
+    }
 
     /** Compatibility: a report without tests. */
     public Report(String name, int version, String title, String description, boolean sample, String dataset, Map<String, String> theme, Dates dates, List<Filter> filters,
@@ -212,6 +230,24 @@ public record Report(String name, int version, String title, String description,
         }
         if (model() != null) {
             m.put("model", model());
+            if (perspective != null) {
+                m.put("perspective", perspective);
+            }
+            if (!measures.isEmpty()) {
+                Map<String, Object> lm = new LinkedHashMap<>();
+                measures.values().forEach(x -> {
+                    Map<String, Object> one = new LinkedHashMap<>();
+                    one.put("expr", x.expr());
+                    if (x.format() != null) {
+                        one.put("format", x.format());
+                    }
+                    if (x.description() != null) {
+                        one.put("description", x.description());
+                    }
+                    lm.put(x.name(), one);
+                });
+                m.put("measures", lm);
+            }
         } else {
             m.put("dataset", dataset);
         }

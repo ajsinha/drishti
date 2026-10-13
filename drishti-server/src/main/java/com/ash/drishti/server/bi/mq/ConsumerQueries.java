@@ -77,9 +77,14 @@ public final class ConsumerQueries implements DatasetService.ModelGateway {
 
     @Override
     public DatasetService.Asked askModel(Principal p, String model, String consumer, QueryRequest q, boolean explain) {
+        return askModel(p, model, consumer, Map.of(), q, explain);
+    }
+
+    @Override
+    public DatasetService.Asked askModel(Principal p, String model, String consumer, Map<String, String> define, QueryRequest q, boolean explain) {
         try {
-            MqService.Bound b = catalog.bindVia(p, model, consumer);
-            ModelQuery mq0 = of(b.view(), q).withModel(model);
+            MqService.Bound b = consumer == null ? catalog.bind(p, model) : catalog.bindVia(p, model, consumer);
+            ModelQuery mq0 = withDefine(of(b.view(), q).withModel(model), define);
             MqService.Ran ran = mq.run(b, mq0, explain, true);
             return new DatasetService.Asked(ran.withWarnings(), ran.canonical());
         } catch (MqException e) {
@@ -95,6 +100,18 @@ public final class ConsumerQueries implements DatasetService.ModelGateway {
     @Override
     public Map<String, Object> describe(Principal p, String model, String consumer) {
         return catalog.describeVia(p, model, consumer);
+    }
+
+    @Override
+    public Map<String, Object> describe(Principal p, String model, String consumer, String perspective) {
+        try {
+            return catalog.describe(p, model, perspective);
+        } catch (MqException e) {
+            if (consumer == null || !"DRS-9151".equals(e.problems().get(0).code())) {
+                throw e;
+            }
+            return catalog.describeVia(p, model, consumer);                    // a reader within the report's envelope: the envelope already narrows it
+        }
     }
 
     @Override
@@ -137,6 +154,17 @@ public final class ConsumerQueries implements DatasetService.ModelGateway {
         List<ModelQuery.Sort> sort = q.orderBy().stream().map(s -> new ModelQuery.Sort(ds.measures().containsKey(s.by()) ? s.by() : qualify(resolver, s.by()), s.desc())).toList();
         return new ModelQuery(1, v.id(), Map.of(), fields, q.measures(), where, having, time, sort, q.limit(), null, null,
                 ModelQuery.GROUPED, Map.of(), new ModelQuery.Options(q.layer(), false, "json"));
+    }
+
+    /** The query with a report's own measures as its {@code define} (the validator refuses one that shadows a model measure, DRS-9154). */
+    static ModelQuery withDefine(ModelQuery q, Map<String, String> define) {
+        if (define.isEmpty()) {
+            return q;
+        }
+        Map<String, String> all = new java.util.LinkedHashMap<>(q.define());
+        all.putAll(define);
+        return new ModelQuery(q.mq(), q.model(), all, q.fields(), q.measures(), q.where(), q.having(), q.time(), q.sort(), q.limit(), q.totals(), q.drill(), q.shape(),
+                q.params(), q.options());
     }
 
     /** A field as {@code table.column[.part]}: as written when it names its table, else with the table that has the column (left as written when none or several do). */
