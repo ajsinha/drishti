@@ -43,6 +43,7 @@ Three sample reports ship in `config/bi/reports/` (and a fourth for Python, **De
 16. [Reports over several datasets](#16-reports-over-several-datasets)
 17. [Expected values: `tests:`](#17-expected-values-tests)
 18. [A report on a model (wave W1)](#18-a-report-on-a-model-wave-w1)
+19. [Languages in the report designer (wave A)](#19-languages-in-the-report-designer-wave-a)
 
 ## 1. Where a report lives
 
@@ -792,3 +793,66 @@ rebind or delete those first (its page lists them under Used by; GET /api/v1/bi/
 `<name>@<major>` or `dataset:<name>`) lists the reports, boards (through the reports they show), notebooks, datasets read from the model's answer, alerts on
 a model query and live subscriptions, as far as the caller may read them (`hidden` counts the rest); the model's `describe` carries the same list as
 `usedBy`.
+
+## 19. Languages in the report designer (wave A)
+
+Wave A ([BI_GUIDE.md section 24](BI_GUIDE.md#24-the-languages-in-the-console-wave-a-220)) adds four things to a report on a model.
+
+**The Fields pane inherits the model.** It is built from the model's description as you see it (`GET /api/v1/bi/models/{ref}/describe`), with the
+properties the model gives each field: its **display name** (*Trading desk* for `trade.desk`; every visual's labels use it too), its **description**
+(the tooltip), its **format**, its **folder** (a collapsible group inside the dataset), and **hidden** fields left out. A report never re-declares them:
+a change in the model reaches every report on it. When the model has **perspectives**, the header offers **Perspective**: the pane then shows only that
+perspective's fields and measures (the report's own measures always show), and the report keeps the choice:
+
+```yaml
+report: inherit-model-report
+title: Inherit model report
+model: inherit-model@1
+perspective: "desk-view"
+pages: [...]
+```
+
+![The Fields pane of a report on Inherit model: the perspective Desk view chosen, Measures with Sum of mtm, the trade group with Trading desk only](img/bi-languages/report-fields-perspective.jpg)
+
+A perspective is a convenience, not security: what a reader may not see the model hides from them (`hidden-for`), and the server leaves it out of
+`describe`, SQL and AI.
+
+**A measure of this report only.** *New measure for this report* (above the field search) takes a name and a formula in the expression editor, over
+the model's measures and fields; **Try it** asks the model. The measure is written into the report (spec 4.2) and sent with every query that uses it as
+`define`, so it never changes the model:
+
+```yaml
+measures:
+  "MTM in thousands": { expr: "measure('Sum of mtm') / 1000" }
+```
+
+```yaml
+mq: 1
+model: query-model@1
+select:
+  fields: [trade.desk]
+  measures: [MTM in thousands]
+define:
+  MTM in thousands: "measure('Sum of mtm') / 1000"
+```
+
+In the Fields pane it is marked *this report only*, with **Move to the model** (the model designer opens with the measure added to its draft). A name the
+model already has is refused (a report measure cannot shadow one of the model's).
+
+**Query of the selected visual: MQ or SQL.** The panel under Fields shows the selected visual's question as a **model query** (the YAML the server is
+asked) or as **SQL** (Drishti SQL: the model's aliases as tables, `MEASURE('name')` for a measure, `JOIN` without `ON` along the model's relationships),
+one switch. **Run as SQL** sends the statement to the server (`POST /api/v1/bi/sql`) and shows its rows, its time and its plan, saying whether the plan is
+the one the visual's query ran: one question, one plan, one cache entry, whichever language asks it. The SQL text is written by the console from the
+model query (a printer: the server parses, binds and checks it). Captured for the bar above (a desk axis and the report's own measure):
+
+```sql
+SELECT trade.desk,
+       (measure('Sum of mtm') / 1000) AS "MTM in thousands"
+FROM   trade
+GROUP  BY trade.desk
+```
+
+![The query panel with SQL chosen: the statement above and Run as SQL](img/bi-languages/query-panel-sql.jpg)
+
+**Expressions are DEL v2.** Every formula the designer writes uses the Python-like syntax ([EXPRESSIONS.md](EXPRESSIONS.md)); a report saved before
+2.2.0 with the older syntax still reads, with a `DRS-9100` warning, until the end of wave A.

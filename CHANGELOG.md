@@ -17,6 +17,19 @@
 
 ## Unreleased
 
+- **Console: the languages in the designers (wave A, console lane).** One **expression editor** for every DEL expression (a model's measures, a report's
+  own measures, the dataset wizard's filter and worked-out columns, the guided builder's formulas): completion of fields, `measure('…')` and the
+  server's functions (signature, example, a link to the guide), keyword arguments, the server's problems as you type with the fix as a button, *Try it*
+  on the saved draft, measure chips. The **dataset wizard v2** (`/bi/datasets/new-layer`): a column subset, a row filter, what one row is with an
+  explicit de-duplication (latest or earliest by a column), formula and Python columns, a grouping, a server preview, and SQL views over a model.
+  The **model designer** gains a *Fields* tab (display name, description, format, folder, hidden, sort by, data category, default summarisation),
+  perspectives, `hidden-for`, *Preview as a role*, the contract diff against the published version with the semver bump in one click and the consumers
+  it affects; a save on a published model shows *Draft changes (v1 published)* and offers Publish again; its YAML is a minimal patch of the saved text
+  (comments, key order and untouched entries kept). A report on a model inherits the model's field properties (display names in every label, folders,
+  hidden fields) and perspectives, has its own measures (`measures:`, sent as `define`), and shows a visual's question as MQ or SQL with *Run as SQL*.
+  Analyse SQL cells run Drishti SQL on the server over the extract's model by default (over the extract stays selectable until wave B). The alert cell
+  chooser sends `reduce` only when chosen. Guides: [EXPRESSIONS.md](docs/guides/EXPRESSIONS.md) section 11 (59 finance and risk recipes, each run as a
+  test on the demo lake) and 8.1 (the editor), DATASETS.md section 14, REPORTS.md section 19, BI_GUIDE.md section 24, ANALYSE.md section 4.
 - **Server: the logical plan (wave A, task 2).** Every question (MQ, a report visual, an alert, an Analyse slice; Drishti SQL next) becomes one plan
   (`bi/plan`: `SecureScan`, `SemiJoin`, `Filter`, `Aggregate`, `Meet`, `Window`, `Having`, `Sort`, `Limit`, `Answer`; `Derive`, `Dedup`, `Regroup`, `Rel`
   reserved for the dataset derivation and composite SQL). The security rewriter runs before the optimiser (predicate pushdown, top-N as a grouped

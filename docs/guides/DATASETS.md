@@ -28,7 +28,9 @@ is executed: it is parsed, validated, compiled to SQL with **bound values**, and
 Contents: [1](#1-the-file) the file · [2](#2-tables-and-columns) tables and columns · [3](#3-relationships-and-how-queries-join) relationships ·
 [4](#4-measures-and-the-expression-language) measures and expressions (4.1: time intelligence, 4.2: Python measures) · [5](#5-hierarchies) hierarchies · [6](#6-security-row-rules-and-masks) security ·
 [7](#7-modes-layers-and-rollups) modes, layers and rollups (7.2: scheduled refresh) · [8](#8-the-query) the query · [9](#9-problems-and-drs-codes) problems and codes ·
-[10](#10-what-is-not-built) what is not built (live tables: [7.1](#71-live-tables-phase-5)) · [11](#11-composed-and-derived-datasets) composed and derived datasets · [12](#12-build-a-dataset-in-the-browser-the-wizard) the wizard · [13](#13-model-layer-datasets-rachana-2-wave-w1) model-layer datasets (W1)
+[10](#10-what-is-not-built) what is not built (live tables: [7.1](#71-live-tables-phase-5)) · [11](#11-composed-and-derived-datasets) composed and derived datasets · [12](#12-build-a-dataset-in-the-browser-the-wizard) the wizard · [13](#13-model-layer-datasets-rachana-2-wave-w1) model-layer datasets (W1) · [14](#14-the-dataset-wizard-version-2-wave-a) the dataset wizard v2: subset, rows, grain, worked-out columns, grouping, SQL views (wave A).
+Expressions (measures, derived columns, filters, row rules) are DEL v2 since 2.2.0: [EXPRESSIONS.md](EXPRESSIONS.md); the older syntax in the examples
+below is read with a `DRS-9100` warning until the end of wave A, and `drishti.py bi migrate --expressions` converts it.
 
 ## 1. The file
 
@@ -887,3 +889,79 @@ and Check (`POST /bi/models/validate`) answers it valid with the base's columns 
 `GET /bi/layer-datasets/<item>` returns the item as stored (`yaml`) and **as it reads** (`resolved`: the chain folded in, the base's columns, grain and
 time, every layer's row rules under `security.rows`, `chain`), with Check's `problems`; the dataset page and the model designer show the resolved form. The
 draft is listed under *Your datasets* at once (`draft: true`); a model can use it once it is published.
+
+## 14. The dataset wizard, version 2 (wave A)
+
+**New dataset** (`/bi/datasets/new-layer`; *New dataset* on the Models page and in a workspace) makes a `rachana: 2` dataset without typing YAML, with
+the derivation keys of [BI_DESIGN.md §3.1](../architecture/BI_DESIGN.md#31-yaml-the-structure-language): a column subset, a row filter, an explicit grain
+with its de-duplication, worked-out columns and a grouping. The steps depend on where the table comes from; the step bar lets you go back to any step
+you have seen, Back and Next move one step, and the unfinished dataset is kept in this tab (a refresh brings it back with a note).
+
+| Step | What you do | What it writes |
+|---|---|---|
+| **Source** | a **pack dataset** (to keep some of it, add columns, group it), an **SQL view over a model** (Drishti SQL, *Check the SQL* asks the server), a **query in a SQL connector**, a **Python Transform**, or **the answer of a model** (tick its fields and measures) | `extends: pack.trading.trade@^1`, or `source: {sql, model}`, `{connector, query}`, `{python}`, `{model, query}` |
+| **Columns** | a pack dataset: tick the columns to keep (its keys always stay; *Keep all*, *Only the keys*). Any other source: each column's name, type, role, meaning, referenced kind, currency and whether it adds up; time and refresh | `columns: [tradeId, desk, ...]` (a subset), or `columns: {name: {type, role, ...}}` |
+| **Rows** | a condition on each row in the expression editor (row scope: the table's columns, the row functions) | `where: "status == 'Live'"` |
+| **One row is** | the keys as chips, in words; and **which duplicate wins**: none (the source has one row per key; Check says when it has not), the **latest** or the **earliest** row of each key by a column | `grain: {one-row-per: tradeId, keep: latest by updatedAt}`, or `grain: {says, keys}` |
+| **Worked-out columns** | **A formula column** (a name, a type, a meaning, the formula in the expression editor) or **A Python column** (a name, a type, the Python column item and the columns it reads) | `derive: {notionalUsd: {expr: ..., type: decimal, meaning: amount}, tenorBucket: {python: buckets.by_tenor, inputs: [maturityDate], type: string}}` |
+| **Group** (optional) | *Group the rows*: one row per the columns you tick, each other column summed, averaged, its minimum, maximum, count or distinct count, or left out; a count of the rows under a name | `group: {by: [desk], columns: {mtm: sum, trades: count}, grain: {says, keys}}` |
+| **Preview** | **Preview** saves the draft (visible only to you) and shows its first rows, answered by the server as you (your row rules and masks); for an SQL view, the statement's first rows | — |
+| **Save** | title, name (it follows the title until you type one), workspace, masked columns, the YAML for review; **Save draft** or **Save and publish** | the item |
+
+Never a silent distinct: a dataset whose rows repeat a key says which one wins, and the YAML says it too.
+
+![The Rows step: Keep the rows where, the editor offering the column status and the function startswith](img/bi-languages/wizard-filter-completion.jpg)
+
+![One row is: the key chips, and Keep the latest row of each key by tradeDate chosen](img/bi-languages/wizard-grain.jpg)
+
+![Worked-out columns: a formula column notionalM, decimal, notional / 1000000 checked by the server](img/bi-languages/wizard-derive.jpg)
+
+![Group: one row per desk, mtm, notional, pnl1d and notionalM summed, a count of the rows as trades](img/bi-languages/wizard-group.jpg)
+
+What the wizard wrote for *Live trades by desk*: the trade pack dataset without `book`, the live rows, the latest row of each trade, a notional in
+millions, grouped by desk (captured from the Save step):
+
+```yaml
+rachana: 2
+dataset: live-trades-by-desk
+version: 1.0.0
+title: Live trades by desk
+extends: pack.trading.trade@^1
+columns: [currency, desk, mtm, notional, pnl1d, productType, status, tradeDate, tradeId]
+where: status == 'Live'
+grain: {one-row-per: id, keep: latest by tradeDate, says: One row per trade per business date}
+derive:
+  notionalM: {expr: notional / 1000000, type: decimal}
+group:
+  by: [desk]
+  columns: {mtm: sum, notional: sum, pnl1d: sum, notionalM: sum, trades: count}
+  grain:
+    says: One row per desk
+    keys: [desk]
+```
+
+![The Save step: title Live trades by desk, the name live-trades-by-desk, the workspace, masked columns and the YAML](img/bi-languages/wizard-save.jpg)
+
+The keys are written in the order they apply: `columns`, `where`, `grain`, `derive`, `group`. The dataset's page and the model designer read the result:
+the worked-out columns after the kept ones, and for a grouped dataset the `by` columns then the grouped ones (`desk`, `currency`, `notionalUsd`, `mtm`,
+`trades`). **The same from the command line:** check a row filter or a formula before you save it, against the dataset's implicit model:
+
+```bash
+drishti.py bi expr validate "status == 'Live'" --scope row --model dataset:pack.trading.trade
+drishti.py bi expr validate "notional / 1000000" --scope row --model dataset:pack.trading.trade
+```
+
+and save the YAML as a draft with the API (`POST /api/v1/bi/workspaces/<id>/items` with `{kind: dataset, title, body}`) or put the file under
+`config/bi/datasets/`. An **SQL view** over a model is a reviewed Drishti SQL statement whose answer is the table:
+
+```yaml
+rachana: 2
+dataset: desk-mtm
+version: 1.0.0
+title: Desk MTM
+source: {sql: "SELECT desk.name AS desk, MEASURE('Sum of mtm') AS mtm FROM trade JOIN desk GROUP BY desk.name", model: trades-and-desks@1}
+```
+
+The console calls: `POST /bi/model-api/dataset-yaml` (the document to YAML and the server's Check, `POST /api/v1/bi/models/validate`),
+`POST /bi/api/expr/validate` (each formula, with `model: dataset:<base>` and `alias`), `POST /bi/api/sql/validate` (the SQL view), and for the preview the
+draft's implicit model asked with `shape: rows` (`POST /bi/api/mq`).

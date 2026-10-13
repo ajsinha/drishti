@@ -1395,6 +1395,42 @@ drishti.py bi expr functions --scope row          # the functions you may use in
 drishti.py bi expr convert "[MTM] / [Trades]"     # measure('MTM') / measure('Trades')
 ```
 
+### 8.1 In the console: the expression editor
+
+Every place the console takes an expression uses one editor: a model's **Measures** tab (*Write a formula* and each measure's formula), a report's
+**New measure for this report** (Fields pane), the dataset wizard's **Rows** filter and **Worked-out columns**, and the guided tables builder's
+formulas. It never parses DEL itself: completion comes from the model and the server's catalogue (`GET /api/v1/bi/expr/functions`, only the
+functions that work now), and every check is the server's (`POST /api/v1/bi/expr/validate`, debounced as you type).
+
+| You do | The editor does |
+|---|---|
+| type part of a name | lists the fields (with type, meaning and format), the measures and the functions that match; ↑ ↓ choose, Enter or Tab take one, Esc closes, Ctrl+Space opens the list anywhere |
+| pick a measure | writes `measure('Sum of mtm')` (a name with spaces or symbols needs nothing more); a word starting with a capital lists measures first |
+| pick a function | writes `sum(` and shows its **card**: the signature, one line, one example, *More in the guide* (this page, at the function) |
+| type inside a call | the card stays; after `,` the call's keyword arguments are offered (`where=`, `by=`, `desc=`) |
+| stop typing | the server's check: *Checks clean: gives decimal*, or each problem with its code, its message and the fix as a button (**Use …**) |
+| press **Try it** | the server's answer for the formula on the saved model, as you, by a suggested field (a table under the editor) |
+| look below the input | the measures the formula uses, as chips; a chip that names no measure is red; clicking one selects it in the text |
+
+![A formula being written: sum(trade.mtm, wh typed, the keyword where= offered, and the card of sum below it](img/bi-languages/expr-editor-keyword.jpg)
+
+![The same formula complete: sum(trade.mtm, where=trade.status == 'Live') and the line Checks clean](img/bi-languages/expr-editor-clean.jpg)
+
+A bare column in a measure is the most common slip. The server answers `DRS-9127` *the column trade.mtm is outside an aggregate* with the fix
+*wrap it: sum(trade.mtm)*; the button puts the fix in place of the column (the problem's `at` span), so `trade.mtm * 2` becomes `sum(trade.mtm) * 2`:
+
+![trade.mtm * 2 in the editor, the problem DRS-9127 under it and a button Use sum(trade.mtm) * 2](img/bi-languages/expr-editor-problem.jpg)
+
+The old syntax is read with a `DRS-9100` warning until the end of wave A; its fix button writes the converter's text (`[Sum of mtm] * 2` becomes
+`measure('Sum of mtm') * 2`). **Try it** then asks the server, as you, on the saved draft:
+
+![measure('Sum of mtm') * 2 with the chip Sum of mtm, Checks clean, and the Try it table: Bonds and securitised -150,000, Equity derivatives 850,000, G10 and EM FX -1,150,000](img/bi-languages/expr-editor-try.jpg)
+
+In the dataset wizard the editor is in **row** scope: it completes the table's columns and the row functions, and the server checks against the base
+dataset (its implicit model and alias):
+
+![The wizard's Rows step: Keep the rows where sta, and the list offering the column status and the function startswith](img/bi-languages/wizard-filter-completion.jpg)
+
 ## 9. How DEL differs from Python and from DAX
 
 | | Python | DEL | DAX |
