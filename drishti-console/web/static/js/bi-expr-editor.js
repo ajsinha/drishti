@@ -30,12 +30,14 @@
   /** The server's function catalogue (bi/expr/functions.yaml), read once per page: [{name, signature, description, example, examples, scopes, keywords, link}]. */
   function functions() {
     if (!catalogue) {
-      catalogue = B.api('GET', '/expr/functions').then((r) => (r.functions || r || []).filter((f) => f && f.name && f.available !== false).map((f) => {
+      // only what works now: a function of a later wave (status B, C) is refused by the server (DRS-9129), so it is not offered
+      catalogue = B.api('GET', '/expr/functions').then((r) => (r.functions || r || []).filter((f) => f && f.name && (f.status || 'built') === 'built').map((f) => {
         const sig = String(f.signature || f.name + '(…)');
-        const kw = f.keywords || (sig.match(/\b([a-z_]+)=/g) || []).map((k) => k.slice(0, -1));
+        const kw = (f.params || []).filter((p) => p.keywordOnly || p.default !== undefined).map((p) => p.name).filter((n) => /^[a-z_]+$/.test(n));
+        if (!kw.length) { (sig.match(/\b([a-z_]+)=/g) || []).forEach((k) => kw.push(k.slice(0, -1))); }
         const ex = [].concat(f.examples || f.example || []).map((e) => (typeof e === 'string' ? e : e && (e.expr || e.text) || '')).filter(Boolean);
         return { name: f.name, signature: sig, description: f.description || '', example: ex[0] || '', examples: ex, scopes: [].concat(f.scopes || []), keywords: kw,
-          returns: f.returns || '', family: f.family || '', link: GUIDE + '#' + (f.anchor || f.name.replace(/[^a-z0-9_]+/gi, '').toLowerCase()) };
+          returns: f.returns || '', family: f.family || '', link: GUIDE + '#fn-' + f.name.replace(/_/g, '-') };
       })).catch(() => []);
     }
     return catalogue;
@@ -217,12 +219,23 @@
         }, now ? 0 : 350);
       });
     }
+    /** The whole expression with the server's fix applied, for the fix button: the converter's text for the old syntax; "write: X" for the whole
+     *  expression; a `fragment` in the fix put in place of the problem's span (at.start..at.end), e.g. "wrap it: `sum(trades.mtm)`". */
+    function fixed(r, p) {
+      const text = input.value.trim(), fix = typeof p.fix === 'string' ? p.fix : '', at = p.at || {};
+      if (r && r.converted && (p.code === 'DRS-9100' || r.syntax === 'legacy')) { return r.converted; }
+      const whole = /^write:\s*(.+)$/.exec(fix);
+      if (whole && (!at.end || (at.start === 0 && at.end >= text.trim().length))) { return whole[1].trim(); }
+      const frag = /`([^`]+)`/.exec(fix);
+      if (frag && at.end > at.start && at.end <= text.length) { return text.slice(0, at.start) + frag[1] + text.slice(at.end); }
+      return '';
+    }
     function drawProblems(r) {
       B.clear(probs);
       const list2 = (r && r.problems) || [];
       input.setAttribute('aria-invalid', list2.some((p) => (p.level || 'error') === 'error') ? 'true' : 'false');
       list2.forEach((p) => {
-        const repl = p.replacement || (p.fix && typeof p.fix === 'object' ? p.fix.expr || p.fix.text : '');
+        const repl = p.replacement || (p.fix && typeof p.fix === 'object' ? p.fix.expr || p.fix.text : '') || fixed(r, p);
         const fixWords = typeof p.fix === 'string' ? p.fix : p.fix && p.fix.label ? p.fix.label : '';
         let btn = null;
         if (repl) {

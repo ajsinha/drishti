@@ -170,7 +170,9 @@
 
   // ---- the rows (a filter) -------------------------------------------------------------------------------------------
   const colFields = () => L.cols().map((c) => ({ name: c.name, type: c.type, meaning: c.meaning || c.role }));
-  const target = () => ({ dataset: L.W.src === 'extends' ? L.W.extends : L.W.name || '', yaml: q('[data-yaml]').textContent || undefined });
+  // the server resolves names against the dataset's implicit model: the base (a narrowed pack dataset) or the saved draft; the row in context is its alias
+  const aliasOf = (name) => String(name || '').split('@')[0].split('.').pop().replace(/[^A-Za-z0-9_]/g, '_');
+  const target = () => { const n = L.W.src === 'extends' ? L.W.extends : L.W.savedId ? L.W.name : ''; return n ? { model: 'dataset:' + n, alias: aliasOf(n) } : {}; };
   let whereEd = null;
   L.draw.filter = function () {
     return seed().then(() => {
