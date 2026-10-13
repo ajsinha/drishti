@@ -155,8 +155,16 @@ public record Dataset(String name, int version, String title, String description
      * {@code min}, {@code max}, {@code count}, {@code distinct} of the same-named column; {@code count} of no column counts rows). {@code source} holds the
      * columns before grouping (what is read and derived); the table's own columns are those after.
      */
-    public record Shape(List<String> dedupKeys, String dedupBy, boolean latest, List<String> groupBy, Map<String, String> groupColumns, Map<String, Column> source) {
+    public record Shape(List<String> dedupKeys, String dedupBy, boolean latest, List<String> groupBy, Map<String, String> groupColumns, Map<String, Column> source,
+            List<String> filters) {
+
+        /** Without row filters before the grouping. */
+        public Shape(List<String> dedupKeys, String dedupBy, boolean latest, List<String> groupBy, Map<String, String> groupColumns, Map<String, Column> source) {
+            this(dedupKeys, dedupBy, latest, groupBy, groupColumns, source, List.of());
+        }
+
         public Shape {
+            filters = filters == null ? List.of() : List.copyOf(filters);
             dedupKeys = dedupKeys == null ? List.of() : List.copyOf(dedupKeys);
             groupBy = groupBy == null ? List.of() : List.copyOf(groupBy);
             groupColumns = groupColumns == null ? Map.of() : java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(groupColumns));

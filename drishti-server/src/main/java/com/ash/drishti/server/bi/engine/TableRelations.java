@@ -157,6 +157,15 @@ public final class TableRelations {
             rel = "SELECT t.*, " + String.join(", ", extra) + " FROM (" + rel + ") AS t";
         }
         all.addAll(params);
+        if (shape != null && shape.grouped() && !shape.filters().isEmpty()) {             // the dataset's where: the rows it groups, before the grouping
+            SqlEmitter e = new SqlEmitter(ds, d, t.name(), null, java.util.Map.of()).beforeShape();
+            List<String> conds = new ArrayList<>();
+            for (String f : shape.filters()) {
+                conds.add("(" + e.calculated(t, f) + ")");
+            }
+            all.addAll(e.params());
+            rel = "SELECT * FROM (" + rel + ") AS t WHERE " + String.join(" AND ", conds);
+        }
         if (shape != null && shape.grouped()) {
             List<String> by = shape.groupBy().stream().map(b -> "t." + Dialect.quote(b)).toList();
             List<String> items = new ArrayList<>();

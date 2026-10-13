@@ -81,6 +81,14 @@ public final class Flattener {
                 table = new Dataset.Table(table.name(), table.connector(), table.kind(), table.each(), table.mode(), table.onLoad(), table.schedule(), table.description(), cols,
                         table.live(), table.of(), table.shape());
             }
+            if (table.shape() != null && table.shape().grouped() && !r.filters().isEmpty()) {            // a grouped dataset's where filters the rows it groups, not the groups
+                Dataset.Shape s = table.shape();
+                Set<String> rowCols = new LinkedHashSet<>(d.columns().keySet());
+                rowCols.addAll(d.derivation().source().keySet());
+                List<String> before = r.filters().stream().map(f -> RuleText.qualify(f, d.name(), rowCols, "")).toList();
+                table = new Dataset.Table(table.name(), table.connector(), table.kind(), table.each(), table.mode(), table.onLoad(), table.schedule(), table.description(),
+                        table.columns(), table.live(), table.of(), new Dataset.Shape(s.dedupKeys(), s.dedupBy(), s.latest(), s.groupBy(), s.groupColumns(), s.source(), before));
+            }
             tables.put(use.alias(), table);
             Set<String> cols = d.columns().keySet();
             List<List<Dataset.RowRule>> layers = new ArrayList<>();
@@ -91,7 +99,8 @@ public final class Flattener {
             if (!modelRules.isEmpty()) {
                 layers.add(rowRules(modelRules, use.alias(), cols, use.alias()));
             }
-            List<String> filters = r.filters().stream().map(f -> RuleText.qualify(f, d.name(), cols, use.alias())).toList();
+            boolean grouped = table.shape() != null && table.shape().grouped() && !r.filters().isEmpty();
+            List<String> filters = grouped ? List.of() : r.filters().stream().map(f -> RuleText.qualify(f, d.name(), cols, use.alias())).toList();
             security.put(use.alias(), new Dataset.TableSecurity(filters, layers, "dimension".equals(use.role())));
             r.masked().forEach(c -> masked.add(use.alias() + "." + c));
         }

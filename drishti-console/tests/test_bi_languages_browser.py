@@ -449,8 +449,6 @@ def test_a_reports_fields_pane_inherits_the_models_properties_and_perspectives(b
     page.context.close()
 
 
-@pytest.mark.xfail(strict=True, reason="server: where: together with group: is applied after the grouping (status == 'Live' over a dataset grouped by "
-                                       "desk answers DRS-9020 'status' is not a column); where alone and group alone answer; remove this mark when the server lane fixes it")
 def test_the_wizards_preview_answers_a_filtered_grouped_dataset(browser):
     page = sign_in(browser, "wes")
     page.evaluate("window.sessionStorage.clear()")

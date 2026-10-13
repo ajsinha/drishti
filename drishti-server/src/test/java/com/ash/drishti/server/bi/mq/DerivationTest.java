@@ -76,6 +76,19 @@ class DerivationTest {
                 - { role: [risk, analyst], where: "True" }
             """;
 
+    /** A where on a column the grouping drops: it filters the rows that are grouped, never the groups (the console's wizard found it applied after). */
+    static final String DESK_USD = """
+            rachana: 2
+            expressions: 2
+            dataset: desk-usd
+            version: 1.0.0
+            extends: trades@1
+            where: "currency == 'USD'"
+            group:
+              by: [desk]
+              columns: { notional: sum, trades: count }
+            """;
+
     static final String MODEL = """
             rachana: 2
             expressions: 2
@@ -85,6 +98,7 @@ class DerivationTest {
               top:    { dataset: top-per-desk, role: fact }
               groups: { dataset: desk-ccy, role: fact }
               trades: { dataset: trades, role: fact }
+              usd:    { dataset: desk-usd, role: fact }
             measures:
               Top notional:    { expr: "sum(top.notional)" }
               Top rows:        { expr: "count(top)" }
@@ -96,8 +110,10 @@ class DerivationTest {
               Notional:        { expr: "sum(trades.notional)" }
               Trades:          { expr: "count(trades)" }
               Biggest:         { expr: "max(trades.notional)" }
+              USD notional:    { expr: "sum(usd.notional)" }
+              USD trades:      { expr: "sum(usd.trades)" }
             security:
-              may-see-all: { top: [desk-head], trades: [desk-head] }
+              may-see-all: { top: [desk-head], trades: [desk-head], usd: [desk-head] }
             """;
 
     @TempDir Path store;
@@ -118,7 +134,7 @@ class DerivationTest {
         QueryProperties props = QueryProperties.defaults(store.toString());
         service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC());
         h = new MqHarness(service, TestLake.DAY2);
-        model = MqHarness.model(MODEL, kinds(), MqEngineTest.TRADES, TOP_PER_DESK, DESK_CCY);
+        model = MqHarness.model(MODEL, kinds(), MqEngineTest.TRADES, TOP_PER_DESK, DESK_CCY, DESK_USD);
     }
 
     @AfterEach
@@ -168,6 +184,19 @@ class DerivationTest {
         });
         Map<String, List<Object>> hana = ask(MqHarness.deskHead("DESK-B"), "{ mq: 1, model: derived, select: { fields: [groups.desk], measures: [Group notional] } }");
         assertThat(hana).as("the grouped dataset's own rule, on a group-by column").containsOnlyKeys("DESK-B");
+    }
+
+    @Test
+    void aWhereWithAGroupFiltersTheRowsBeforeTheyAreGrouped() {
+        Map<String, List<Object>> grouped = ask(MqHarness.RITA, "{ mq: 1, model: derived, select: { fields: [usd.desk], measures: [USD notional, USD trades] } }");
+        Map<String, List<Object>> base = ask(MqHarness.RITA, "{ mq: 1, model: derived, select: { fields: [trades.desk], measures: [Notional, Trades] }, "
+                + "where: [{ field: trades.currency, op: eq, value: USD }] }");
+        assertThat(grouped).isNotEmpty();
+        assertThat(grouped.keySet()).isEqualTo(base.keySet());
+        grouped.forEach((desk, v) -> {
+            assertThat(d(v.get(0))).as(desk + " USD notional").isEqualTo(d(base.get(desk).get(0)));
+            assertThat(d(v.get(1))).as(desk + " USD trades").isEqualTo(d(base.get(desk).get(1)));
+        });
     }
 
     @Test
