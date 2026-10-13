@@ -1048,6 +1048,11 @@ against them.
 6. **Migration and removal.** Convert every `config/bi/**` sample to datasets and models; delete `CompatReader`, v1
    dataset files, `dataset/Composition`, composed-dataset code in `FrameService`, `poc/`; `POST /datasets/{id}/query`
    answers `410` with the MQ equivalent.
+   *As built:* the stored items convert themselves at start (`drishti.bi.migrate.on-start`: old-syntax expressions to DEL v2, then `rachana: 1`
+   datasets to datasets and models; audited, the text before kept, what cannot be converted listed and never changed); the converter is
+   `drishti.py bi migrate --models` ([BI_MODEL_SPEC.md 8.3.1](BI_MODEL_SPEC.md#831-as-built-22-wave-a-task-6)), the samples are converted and proven
+   equivalent per reader (`ConvertedSamplesTest`); the two live reports stay on their 2.1 datasets until W3 (a report on a model follows live data
+   through standing queries). The deletions are one commit applied after the console lane (they take the 2.1 dataset query route away).
 
 **Console lane (paste as the brief):**
 
