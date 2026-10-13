@@ -217,7 +217,7 @@ final class SqlEmitter {
             case "upper" -> "upper(" + emit(a.get(0), inAgg) + ")";
             case "lower" -> "lower(" + emit(a.get(0), inAgg) + ")";
             case "length" -> "length(" + emit(a.get(0), inAgg) + ")";
-            case "round" -> a.size() == 1 ? "round(" + emit(a.get(0), inAgg) + ")" : "round(" + emit(a.get(0), inAgg) + ", " + emit(a.get(1), inAgg) + ")";
+            case "round" -> a.size() == 1 ? "round(" + emit(a.get(0), inAgg) + ")" : "round(" + emit(a.get(0), inAgg) + ", CAST(" + emit(a.get(1), inAgg) + " AS INTEGER))";   // DuckDB has round(DOUBLE, INTEGER), not BIGINT
             case "coalesce" -> "coalesce(" + String.join(", ", a.stream().map(x -> emit(x, inAgg)).toList()) + ")";
             case "year", "quarter", "month", "day" -> dialect.part(f, emit(a.get(0), inAgg));
             case "if" -> "(CASE WHEN " + emit(a.get(0), inAgg) + " THEN " + emit(a.get(1), inAgg) + " ELSE " + emit(a.get(2), inAgg) + " END)";

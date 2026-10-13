@@ -113,6 +113,7 @@ public class TestLake implements SourceGateway {
                   EurMTM: { expr: "sum(trades.mtm, where=trades.currency == 'EUR')" }
                   Biggest: { expr: "max(trades.notional)" }
                   Share: { expr: "measure('MTM') / measure('Notional')" }
+                  NotionalM: { expr: "round(sum(trades.notional) / 1_000_000, 1)" }
                 security:
                   rows:
                     - { role: desk-head, where: "trades.desk in user.desks" }

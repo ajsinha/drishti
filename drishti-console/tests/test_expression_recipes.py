@@ -90,7 +90,7 @@ def ask(expr: str, by: list, scope: str):
 
 
 # server findings, each until the server lane fixes it (then the mark goes): round(x, n) over a sum emits round(DOUBLE, BIGINT), which DuckDB refuses
-KNOWN = {"R16": "server: round(x, n) needs n cast to INTEGER in the emitted SQL (DuckDB has no round(DOUBLE, BIGINT))"}
+KNOWN: dict[str, str] = {}                                                # recipe id -> the server bug a strict xfail waits for (none open)
 
 
 @pytest.mark.parametrize("recipe", [pytest.param(r, marks=pytest.mark.xfail(reason=KNOWN[r["id"]], strict=True)) if r["id"] in KNOWN else r for r in recipes()],

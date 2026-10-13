@@ -138,6 +138,14 @@ class QueryEngineTest {
         assertThat((double) r.columns().get(5).values()[0]).isEqualTo(mtm / notional, org.assertj.core.data.Offset.offset(1e-12));    // a measure of measures
     }
 
+    /** DEL round(x, n): DuckDB has round(DOUBLE, INTEGER) and no BIGINT form, so the digits are cast (recipe R16 of EXPRESSIONS.md). */
+    @Test
+    void roundWithDigitsRuns() {
+        QueryService.Result r = run("{\"fields\":[\"trades.desk\"],\"measures\":[\"NotionalM\"],\"dates\":{\"from\":\"2026-10-09\"}}", risk());
+        double expected = Math.round(expectedSum("DESK-A", false, TestLake.DAY2) / 1_000_000 * 10) / 10.0;
+        assertThat((double) rows(r, "trades.desk", "NotionalM").get("DESK-A")).isEqualTo(expected, org.assertj.core.data.Offset.offset(1e-9));
+    }
+
     @Test
     void aCalculatedColumnAndDatePartsAreFields() {
         QueryService.Result r = run("{\"fields\":[\"trades.tradeDate.month\"],\"measures\":[\"MTM\"],\"dates\":{\"from\":\"2026-10-08\",\"to\":\"2026-10-09\"}}", risk());
