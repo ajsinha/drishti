@@ -94,7 +94,7 @@ public final class TempFiles {
     private static Path make(Path b) {
         try {
             Files.createDirectories(b);
-            removeStale(b);
+            // removeStale(b); disabled 2026-10-17: removing other processes' folders at start is not safe on every machine (see removeStale)
             Path dir = b.resolve(PREFIX + ProcessHandle.current().pid());
             Files.createDirectories(dir);
             Files.writeString(dir.resolve(MARKER), "pid " + ProcessHandle.current().pid() + "\n");
@@ -106,7 +106,11 @@ public final class TempFiles {
         }
     }
 
-    /** Removes {@code drishti-<pid>} folders (with our marker) whose process is not running. Returns how many. */
+    /**
+     * Disabled (2026-10-17): removing other processes' folders at start is not safe on every machine (a reused process id, or a
+     * link inside a folder, can lead a delete to files that are not ours). It is no longer called; left-over folders are only
+     * listed ({@link #staleFolders()}, Admin, Health) for a person to remove by hand. Kept for a test that runs it on purpose.
+     */
     static int removeStale(Path b) {
         int removed = 0;
         try (Stream<Path> s = Files.list(b)) {

@@ -54,21 +54,28 @@ def _alive(pid: int) -> bool:
 
 
 def remove_stale(base: Path) -> int:
-    """Removes ``drishti-console-<pid>`` folders (with our marker) whose process is gone. Returns how many."""
-    removed = 0
-    try:
-        entries = list(base.iterdir())
-    except OSError:
-        return 0
-    for p in entries:
-        n = p.name
-        if not n.startswith(_PREFIX) or not n[len(_PREFIX):].isdigit() or not (p / _MARKER).is_file():
-            continue
-        pid = int(n[len(_PREFIX):])
-        if pid != os.getpid() and not _alive(pid):
-            shutil.rmtree(p, ignore_errors=True)
-            removed += 1
-    return removed
+    """Disabled (2026-10-17): removing other processes' folders at start is not safe on every machine (a reused process id,
+    or a link inside a folder, can lead a delete to files that are not ours). Left-over ``drishti-console-<pid>`` folders
+    are only listed (Admin, Health) for a person to remove by hand. The former code is kept below, commented out."""
+    return 0
+
+
+# def remove_stale(base: Path) -> int:
+#     """Removes ``drishti-console-<pid>`` folders (with our marker) whose process is gone. Returns how many."""
+#     removed = 0
+#     try:
+#         entries = list(base.iterdir())
+#     except OSError:
+#         return 0
+#     for p in entries:
+#         n = p.name
+#         if not n.startswith(_PREFIX) or not n[len(_PREFIX):].isdigit() or not (p / _MARKER).is_file():
+#             continue
+#         pid = int(n[len(_PREFIX):])
+#         if pid != os.getpid() and not _alive(pid):
+#             shutil.rmtree(p, ignore_errors=True)
+#             removed += 1
+#     return removed
 
 
 def start(setting: str = "") -> Path:
@@ -78,7 +85,7 @@ def start(setting: str = "") -> Path:
         return _root
     base = Path(configured_base(setting)).expanduser().resolve()
     base.mkdir(parents=True, exist_ok=True)
-    remove_stale(base)
+    # remove_stale(base)                         # disabled: see remove_stale
     root = base / f"{_PREFIX}{os.getpid()}"
     root.mkdir(exist_ok=True)
     (root / _MARKER).write_text(f"pid {os.getpid()}\n", encoding="utf-8")

@@ -22,7 +22,7 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** The per-process temp folder: made under the base, java.io.tmpdir points into it, stale folders of dead processes go, ours stays until clean-up. */
+/** The per-process temp folder: made under the base, java.io.tmpdir points into it, left-over folders of dead processes go, ours stays until clean-up. */
 class TempFilesTest {
 
     @TempDir Path base;
@@ -39,7 +39,8 @@ class TempFilesTest {
             Path dir = TempFiles.start(base.toString());
             assertThat(dir).isEqualTo(base.toAbsolutePath().resolve("drishti-" + ProcessHandle.current().pid()));
             assertThat(System.getProperty("java.io.tmpdir")).isEqualTo(dir.toString());
-            assertThat(dead).doesNotExist();
+            assertThat(dead.resolve("spill.tmp")).exists();                                   // a left-over folder is never deleted at start
+            assertThat(TempFiles.staleFolders()).anyMatch(f -> f.endsWith("drishti-2147483646"));  // only listed
             assertThat(lookalike).exists();
             assertThat(other).exists();
             Path f = TempFiles.createFile("x-", ".tmp");

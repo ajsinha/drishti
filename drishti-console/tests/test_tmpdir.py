@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""The console's one temp folder: made per process under the configured base, stale ones of dead processes removed, ``tempfile.tempdir`` pointed
+"""The console's one temp folder: made per process under the configured base, left-over ones of dead processes kept (listed, never deleted), ``tempfile.tempdir`` pointed
 at it, removed on exit; and no console code makes a temporary file by any other route."""
 import os
 import re
@@ -36,7 +36,7 @@ def fresh(monkeypatch):
     tmpdir.clean_up()
 
 
-def test_start_makes_the_process_folder_removes_stale_ones_and_cleans_up(tmp_path, fresh):
+def test_start_makes_the_process_folder_keeps_left_over_ones_and_cleans_up(tmp_path, fresh):
     dead = tmp_path / "drishti-console-2147483646"
     dead.mkdir()
     (dead / ".drishti-console-tmp").write_text("x")
@@ -46,7 +46,7 @@ def test_start_makes_the_process_folder_removes_stale_ones_and_cleans_up(tmp_pat
     root = tmpdir.start(str(tmp_path))
     assert root == tmp_path.resolve() / f"drishti-console-{os.getpid()}"
     assert tempfile.tempdir == str(root)
-    assert not dead.exists() and notours.exists()
+    assert dead.exists() and (dead / "spill.bin").exists() and notours.exists()   # left-over folders are never deleted at start
     folder = tmpdir.mkdtemp("x-")
     assert Path(folder).parent == root
     (Path(folder) / "f.bin").write_bytes(b"12345")

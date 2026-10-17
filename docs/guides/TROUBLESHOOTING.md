@@ -1428,7 +1428,7 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 | Lineage shows the connector but dots for its table or path | lineage past the connector is masked for people who are not administrators | by design |
 | The board designer says a tile "names a report or visual you cannot open" | the report is not one you may read, was renamed, or lost the visual | pick the tile's report and visual again (Add a tile), or fix the YAML |
 | A tile with a hysteresis stays red after the number is normal | it drops only when the number is back inside the threshold by the hysteresis | lower `hysteresis`, or wait for the number to move further |
-| A temp folder `drishti-<pid>` or `drishti-console-<pid>` is left in `/tmp` | the process was killed (`kill -9`, a power cut) | the next start removes folders of dead processes under the same base; or delete it by hand when no such process runs ([CONFIGURATION.md](../admin/CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir)) |
+| A temp folder `drishti-<pid>` or `drishti-console-<pid>` is left in `/tmp` | the process was killed (`kill -9`, a power cut) | it is kept (never deleted automatically) and listed on Admin, Health: delete it by hand when no such process runs ([CONFIGURATION.md](../admin/CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir)) |
 | `/tmp` fills up while DuckDB works on a big query | its spill files are in the server's temp folder | point `DRISHTI_TMP_DIR` at a disk with room and restart; Admin, Health shows the folder's size |
 
 ## BI migrations (2.2 wave A)
