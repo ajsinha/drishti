@@ -32,12 +32,12 @@ tags: [sample, trading, counterparty-risk, cross-pack]
 source: { connector: reference-store, kind: counterparty }
 refresh: { on-load: true }
 columns:
-  name:    { type: string }
-  rating:  { type: string }
-  sector:  { type: string }
-  country: { type: string }
-  type:    { type: string }
+  NAME:    { type: string }
+  RATING:  { type: string }
+  SECTOR:  { type: string }
+  COUNTRY: { type: string }
+  TYPE:    { type: string }
 security:
   rows:
     - { role: [risk, analyst, admin, desk-head], where: "True" }
-  masked: [name, rating]
+  masked: [NAME, RATING]

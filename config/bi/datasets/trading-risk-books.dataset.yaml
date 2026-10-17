@@ -32,8 +32,8 @@ tags: [sample, trading, counterparty-risk, cross-pack]
 source: { connector: reference-store, kind: book }
 refresh: { on-load: true }
 columns:
-  name:     { type: string }
-  deskName: { type: string }
+  NAME:      { type: string }
+  DESK_NAME: { type: string }
 security:
   rows:
     - { role: [risk, analyst, admin, desk-head], where: "True" }

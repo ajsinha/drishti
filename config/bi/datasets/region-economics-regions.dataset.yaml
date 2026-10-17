@@ -32,12 +32,12 @@ tags: [sample, economics, illustrative, map]
 source: { connector: macro-store, kind: region-economy }
 refresh: { on-load: true }
 columns:
-  iso3:         { type: string }
-  countryName:  { type: string }
-  regionCode:   { type: string }
-  name:         { type: string }
-  population:   { type: decimal, format: amount0 }
-  gdpUsdBn:     { type: decimal, format: amount0 }
-  gdpPerCapita: { type: decimal, format: amount0 }
-  year:         { type: string }
-  source:       { type: string }
+  ISO3:           { type: string }
+  COUNTRY_NAME:   { type: string }
+  REGION_CODE:    { type: string }
+  NAME:           { type: string }
+  POPULATION:     { type: decimal, format: amount0 }
+  GDP_USD_BN:     { type: decimal, format: amount0 }
+  GDP_PER_CAPITA: { type: decimal, format: amount0 }
+  YEAR:           { type: string }
+  SOURCE:         { type: string }

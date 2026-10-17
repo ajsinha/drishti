@@ -34,11 +34,11 @@ derived:
   inputs:                               # the frames it receives, in this order; each is a question put to a dataset as the reader
     pnl:
       dataset: trading-risk
-      by: ["counterparties.id as counterparty", "counterparties.name as name"]
+      by: ["counterparties.id as counterparty", "counterparties.NAME as name"]
       measures: ["P&L 1d as Desk P&L", Trades]
     exposure:
       dataset: counterparty-exposure
-      by: ["counterparties.id as counterparty", "counterparties.sector as sector"]
+      by: ["counterparties.id as counterparty", "counterparties.SECTOR as sector"]
       measures: [Exposure (EE peak), Exposure (PFE peak)]
   params: { floor: 1.0 }                # overrides the item's own defaults
 

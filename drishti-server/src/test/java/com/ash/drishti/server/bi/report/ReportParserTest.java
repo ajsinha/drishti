@@ -83,8 +83,8 @@ class ReportParserTest {
     @Test
     void theCounterpartyReportDrillsThroughToAPageThatTakesTheCounterparty() throws IOException {
         Report r = ReportParser.parse(report("counterparty-risk")).report();
-        assertThat(r.page("exposure").visual("by-counterparty").drillThrough()).isEqualTo(new Report.DrillThrough("counterparty", "counterparties.name"));
-        assertThat(r.page("counterparty").drillThrough().fields()).containsExactly("counterparties.name");
+        assertThat(r.page("exposure").visual("by-counterparty").drillThrough()).isEqualTo(new Report.DrillThrough("counterparty", "counterparties.NAME"));
+        assertThat(r.page("counterparty").drillThrough().fields()).containsExactly("counterparties.NAME");
         Report.Filter top = r.page("exposure").visual("by-counterparty").filters().get(0);
         assertThat(top.op()).isEqualTo("top");
         assertThat(top.n()).isEqualTo(10);

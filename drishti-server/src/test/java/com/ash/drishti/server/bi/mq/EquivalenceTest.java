@@ -137,28 +137,28 @@ class EquivalenceTest {
             dataset: risk-netting-sets
             version: 1.0.0
             source: { connector: credit-store, kind: netting-set }
-            columns: { counterparty: string, tradeCount: integer, netMtm: decimal, collateral: decimal, eePeak: decimal, pfePeak: decimal, limit: decimal, utilisation: decimal }
+            columns: { COUNTERPARTY: string, TRADE_COUNT: integer, NET_MTM: decimal, COLLATERAL: decimal, EE_PEAK: decimal, PFE_PEAK: decimal, LIMIT: decimal, UTILISATION: decimal }
             """;
     static final String V2_CPTY = """
             rachana: 2
             dataset: risk-counterparties
             version: 1.0.0
             source: { connector: reference-store, kind: counterparty }
-            columns: { name: string, rating: string, sector: string, country: string, type: string }
+            columns: { NAME: string, RATING: string, SECTOR: string, COUNTRY: string, TYPE: string }
             """;
     static final String V2_DESKS = """
             rachana: 2
             dataset: risk-desks
             version: 1.0.0
             source: { connector: reference-store, kind: desk }
-            columns: { name: string, head: string }
+            columns: { NAME: string, HEAD: string }
             """;
     static final String V2_BOOKS = """
             rachana: 2
             dataset: risk-books
             version: 1.0.0
             source: { connector: reference-store, kind: book }
-            columns: { name: string, deskName: string }
+            columns: { NAME: string, DESK_NAME: string }
             """;
 
     /** The trading-risk sample as a W1 model: its measures, hierarchies and rollup as written, the desk-head rule a model rule on trades (section 2.10). */
@@ -180,13 +180,13 @@ class EquivalenceTest {
                   - { from: trades.PORTFOLIO,               to: books.id }
                   - { from: trades.COUNTERPARTY,     to: counterparties.id }
                   - { from: trades.NETTING_SET,         to: netting_sets.id, active: false }
-                  - { from: netting_sets.counterparty, to: counterparties.id }
+                  - { from: netting_sets.COUNTERPARTY, to: counterparties.id }
                 measures:
                 """ + measures + """
                 hierarchies:
                   Trade date:    [trades.TRADE_DATE.year, trades.TRADE_DATE.quarter, trades.TRADE_DATE.month, trades.TRADE_DATE]
-                  Desk and book: [desks.name, books.name]
-                  Counterparty:  [counterparties.sector, counterparties.name]
+                  Desk and book: [desks.NAME, books.NAME]
+                  Counterparty:  [counterparties.SECTOR, counterparties.NAME]
                 rollups:
                   - { name: by_desk_currency, table: trades, by: [DESK, CURRENCY, PRODUCT_GROUP], measures: [MTM, Notional, "P&L 1d", Trades, MTM per 1m notional] }
                 security:
@@ -194,7 +194,7 @@ class EquivalenceTest {
                     trades:
                       - { role: desk-head, where: "trades.DESK in user.desks" }
                       - { role: [risk, analyst, admin], where: "true" }
-                  masked: [counterparties.name, counterparties.rating]
+                  masked: [counterparties.NAME, counterparties.RATING]
                   may-see-all: { netting_sets: [desk-head], counterparties: [desk-head], desks: [desk-head], books: [desk-head] }
                 """;
     }
@@ -206,7 +206,7 @@ class EquivalenceTest {
         ModelView v = MqHarness.model(v2Model(old), V2_TRADES, V2_NETTING, V2_CPTY, V2_DESKS, V2_BOOKS);
         int compared = 0;
         int allowed = 0;
-        List<List<String>> groupings = List.of(List.of(), List.of("desks.name"), List.of("trades.CURRENCY"), List.of("counterparties.sector"));
+        List<List<String>> groupings = List.of(List.of(), List.of("desks.NAME"), List.of("trades.CURRENCY"), List.of("counterparties.SECTOR"));
         for (String m : old.measures().keySet()) {
             for (List<String> by : groupings) {
                 for (MqHarness.Reader who : readers()) {

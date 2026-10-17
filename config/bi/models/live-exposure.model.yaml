@@ -34,9 +34,9 @@ datasets:                       # alias: the dataset it reads, and its role (a f
 
 measures:
   Netting sets:    { expr: "count(netting)" }
-  Net MTM:         { expr: "sum(netting.netMtm)", format: signed0 }
-  Collateral:      { expr: "sum(netting.collateral)", format: signed0 }
-  EE peak:         { expr: "sum(netting.eePeak)", format: amount0 }
-  PFE peak:        { expr: "sum(netting.pfePeak)", format: amount0 }
-  Max utilisation: { expr: "max(netting.utilisation)" }
-  Worst net MTM:   { expr: "min(netting.netMtm)", format: signed0 }
+  Net MTM:         { expr: "sum(netting.NET_MTM)", format: signed0 }
+  Collateral:      { expr: "sum(netting.COLLATERAL)", format: signed0 }
+  EE peak:         { expr: "sum(netting.EE_PEAK)", format: amount0 }
+  PFE peak:        { expr: "sum(netting.PFE_PEAK)", format: amount0 }
+  Max utilisation: { expr: "max(netting.UTILISATION)" }
+  Worst net MTM:   { expr: "min(netting.NET_MTM)", format: signed0 }

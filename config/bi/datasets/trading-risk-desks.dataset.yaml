@@ -32,8 +32,8 @@ tags: [sample, trading, counterparty-risk, cross-pack]
 source: { connector: reference-store, kind: desk }
 refresh: { on-load: true }
 columns:
-  name: { type: string }
-  head: { type: string }
+  NAME: { type: string }
+  HEAD: { type: string }
 security:
   rows:
     - { role: [risk, analyst, admin, desk-head], where: "True" }

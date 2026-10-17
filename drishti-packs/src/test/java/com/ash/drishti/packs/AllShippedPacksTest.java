@@ -42,7 +42,7 @@ class AllShippedPacksTest {
         assertThat(p).containsEntry("drishti.commands.mnemonics.TRD.kind", "trade").containsEntry("drishti.commands.mnemonics.CPTY.kind", "counterparty")
                 .containsEntry("drishti.commands.mnemonics.AGR.kind", "agreement").containsEntry("drishti.commands.mnemonics.ECON.kind", "economy")
                 .containsEntry("drishti.commands.mnemonics.JUR.kind", "jurisdiction").containsEntry("drishti.commands.mnemonics.CO.kind", "listed-company")
-                .containsEntry("drishti.graph.fields.economy.kind", "economy").containsEntry("drishti.graph.fields.newsId.kind", "news");
+                .containsEntry("drishti.graph.fields.ECONOMY.kind", "economy").containsEntry("drishti.graph.fields.NEWS_ID.kind", "news");
     }
 
     @Test

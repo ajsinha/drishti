@@ -32,7 +32,7 @@ dataset: desk-pnl-vs-exposure            # the default dataset of the report: a 
 theme: { palette: default }
 
 links:                                   # fields of different datasets that mean the same thing (table.column on each side)
-  - fields: [counterparties.sector, joined.sector]
+  - fields: [counterparties.SECTOR, joined.sector]
 
 pages:
   - id: overview
@@ -46,7 +46,7 @@ pages:
         title: Sector
         dataset: counterparty-exposure
         at: { x: 9, y: 0, w: 3, h: 2 }
-        wells: { field: [counterparties.sector] }
+        wells: { field: [counterparties.SECTOR] }
         format: { mode: dropdown, scope: report }
 
       - id: by-counterparty
@@ -62,7 +62,7 @@ pages:
         title: Exposure by sector (counterparty-exposure)
         dataset: counterparty-exposure
         at: { x: 8, y: 2, w: 4, h: 6 }
-        wells: { axis: [counterparties.sector], values: [Exposure (EE peak)] }
+        wells: { axis: [counterparties.SECTOR], values: [Exposure (EE peak)] }
         format: { labels: true }
         alt: Donut chart of expected exposure for each counterparty sector
 

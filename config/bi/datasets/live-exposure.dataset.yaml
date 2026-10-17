@@ -33,33 +33,33 @@ tables:
       kind: netting-set         # pack: counterparty-risk
     mode: live
     columns:
-      nettingSetId: { type: string, key: true }
-      counterparty: string
-      tradeCount:   integer
-      netMtm:       { type: decimal, format: signed0 }
-      collateral:   { type: decimal, format: signed0 }
-      eePeak:       { type: decimal, format: amount0 }
-      pfePeak:      { type: decimal, format: amount0 }
-      limit:        { type: decimal, format: amount0 }
-      utilisation:  decimal
+      NETTING_SET_ID: { type: string, key: true }
+      COUNTERPARTY: string
+      TRADE_COUNT:   integer
+      NET_MTM:       { type: decimal, format: signed0 }
+      COLLATERAL:   { type: decimal, format: signed0 }
+      EE_PEAK:       { type: decimal, format: amount0 }
+      PFE_PEAK:      { type: decimal, format: amount0 }
+      LIMIT:        { type: decimal, format: amount0 }
+      UTILISATION:  decimal
 
 measures:
   Netting sets:
     expr: "count(netting)"
   Net MTM:
-    expr: "sum(netting.netMtm)"
+    expr: "sum(netting.NET_MTM)"
     format: signed0
   Collateral:
-    expr: "sum(netting.collateral)"
+    expr: "sum(netting.COLLATERAL)"
     format: signed0
   EE peak:
-    expr: "sum(netting.eePeak)"
+    expr: "sum(netting.EE_PEAK)"
     format: amount0
   PFE peak:
-    expr: "sum(netting.pfePeak)"
+    expr: "sum(netting.PFE_PEAK)"
     format: amount0
   Max utilisation:
-    expr: "max(netting.utilisation)"
+    expr: "max(netting.UTILISATION)"
   Worst net MTM:
-    expr: "min(netting.netMtm)"
+    expr: "min(netting.NET_MTM)"
     format: signed0

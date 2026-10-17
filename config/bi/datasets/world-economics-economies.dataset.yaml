@@ -32,13 +32,13 @@ tags: [sample, economics, real-data, map]
 source: { connector: macro-store, kind: economy }
 refresh: { on-load: true }
 columns:
-  name:         { type: string }
-  iso3:         { type: string }
-  regionName:   { type: string }
-  incomeName:   { type: string }
-  gdpUsdBn:     { type: decimal, format: amount0 }
-  gdpPerCapita: { type: decimal, format: amount0 }
-  growth:       { type: decimal, format: pc2 }
-  inflation:    { type: decimal, format: pc2 }
-  unemployment: { type: decimal, format: pc2 }
-  populationM:  { type: decimal, format: price2 }
+  NAME:           { type: string }
+  ISO3:           { type: string }
+  REGION_NAME:    { type: string }
+  INCOME_NAME:    { type: string }
+  GDP_USD_BN:     { type: decimal, format: amount0 }
+  GDP_PER_CAPITA: { type: decimal, format: amount0 }
+  GROWTH:         { type: decimal, format: pc2 }
+  INFLATION:      { type: decimal, format: pc2 }
+  UNEMPLOYMENT:   { type: decimal, format: pc2 }
+  POPULATION_M:   { type: decimal, format: price2 }

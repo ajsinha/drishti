@@ -34,29 +34,29 @@ tables:
     source: { connector: macro-store, kind: region-economy }   # pack: economics
     mode: cached
     columns:
-      iso3:         string                                      # the country's ISO 3166-1 alpha-3 code
-      countryName:  string
-      regionCode:   string                                      # the region's ISO 3166-2 code: a map's location below the country
-      name:         string                                      # the region's name
-      population:   { type: decimal, format: amount0 }
-      gdpUsdBn:     { type: decimal, format: amount0 }
-      gdpPerCapita: { type: decimal, format: amount0 }
-      year:         string
-      source:       string
+      ISO3:         string                                      # the country's ISO 3166-1 alpha-3 code
+      COUNTRY_NAME:  string
+      REGION_CODE:   string                                      # the region's ISO 3166-2 code: a map's location below the country
+      NAME:         string                                      # the region's name
+      POPULATION:   { type: decimal, format: amount0 }
+      GDP_USD_BN:     { type: decimal, format: amount0 }
+      GDP_PER_CAPITA: { type: decimal, format: amount0 }
+      YEAR:         string
+      SOURCE:       string
 
 measures:
   Population:
-    expr: "sum(regions.population)"
+    expr: "sum(regions.POPULATION)"
     format: amount0
     description: People living in the region, rounded to the nearest 10,000. Illustrative.
   GDP (USD bn):
-    expr: "sum(regions.gdpUsdBn)"
+    expr: "sum(regions.GDP_USD_BN)"
     format: amount0
     description: Output in US dollars, billions, rounded to the nearest billion. Illustrative, not for reporting.
   GDP per head (USD):
-    expr: "ratio(sum(regions.gdpUsdBn), sum(regions.population)) * 1000000000"
+    expr: "ratio(sum(regions.GDP_USD_BN), sum(regions.POPULATION)) * 1000000000"
     format: amount0
     description: "GDP over population: for a country, its regions' total GDP over their total population. Illustrative."
 
 hierarchies:
-  Country and region: [regions.countryName, regions.name]
+  Country and region: [regions.COUNTRY_NAME, regions.NAME]

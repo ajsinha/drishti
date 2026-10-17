@@ -36,13 +36,13 @@ datasets:                       # alias: the dataset it reads, and its role (a f
   counterparties: { dataset: counterparty-exposure-counterparties, role: dimension }
 
 relationships:                  # from the MANY side to the ONE side
-  - { from: netting_sets.counterparty, to: counterparties.id }
+  - { from: netting_sets.COUNTERPARTY, to: counterparties.id }
 
 measures:
-  Exposure (EE peak):  { expr: "sum(netting_sets.eePeak)", format: amount0, description: "Sum of the netting sets' expected-exposure peaks." }
-  Exposure (PFE peak): { expr: "sum(netting_sets.pfePeak)", format: amount0 }
+  Exposure (EE peak):  { expr: "sum(netting_sets.EE_PEAK)", format: amount0, description: "Sum of the netting sets' expected-exposure peaks." }
+  Exposure (PFE peak): { expr: "sum(netting_sets.PFE_PEAK)", format: amount0 }
   Netting sets:        { expr: "count(netting_sets)" }
-  Collateral:          { expr: "sum(netting_sets.collateral)", format: signed0 }
+  Collateral:          { expr: "sum(netting_sets.COLLATERAL)", format: signed0 }
 
 hierarchies:
-  Counterparty: [counterparties.sector, counterparties.name]
+  Counterparty: [counterparties.SECTOR, counterparties.NAME]

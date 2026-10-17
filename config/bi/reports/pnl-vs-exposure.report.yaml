@@ -45,14 +45,14 @@ pages:
         type: slicer
         title: Sector
         at: { x: 9, y: 0, w: 3, h: 2 }
-        wells: { field: [counterparties.sector] }
+        wells: { field: [counterparties.SECTOR] }
         format: { mode: dropdown, scope: report }
 
       - id: by-counterparty
         type: bar
         title: P&L and exposure by counterparty (top 10 by EE peak)
         at: { x: 0, y: 2, w: 8, h: 6 }
-        wells: { axis: [counterparties.name], values: [P&L 1d, Exposure (EE peak)] }
+        wells: { axis: [counterparties.NAME], values: [P&L 1d, Exposure (EE peak)] }
         filters: [{ field: counterparties.id, op: top, n: 10, by: Exposure (EE peak) }]
         alt: Bars of one-day P&L and expected exposure for the ten counterparties with the most exposure
 
@@ -60,7 +60,7 @@ pages:
         type: donut
         title: Exposure by sector (counterparty-exposure)
         at: { x: 8, y: 2, w: 4, h: 6 }
-        wells: { axis: [counterparties.sector], values: [Exposure (EE peak)] }
+        wells: { axis: [counterparties.SECTOR], values: [Exposure (EE peak)] }
         format: { labels: true }
         alt: Donut chart of expected exposure for each counterparty sector
 
@@ -68,5 +68,5 @@ pages:
         type: table
         title: Counterparties (joined)
         at: { x: 0, y: 8, w: 12, h: 6 }
-        wells: { columns: [counterparties.name, counterparties.sector, P&L 1d, Exposure (EE peak), P&L per exposure] }
+        wells: { columns: [counterparties.NAME, counterparties.SECTOR, P&L 1d, Exposure (EE peak), P&L per exposure] }
         format: { conditional: [{ measure: P&L 1d, op: lt, value: 0, colour: "#b3261e" }] }

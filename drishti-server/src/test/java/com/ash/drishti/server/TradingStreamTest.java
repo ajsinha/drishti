@@ -26,7 +26,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -65,8 +64,8 @@ class TradingStreamTest {
         p.put("value.serializer", StringSerializer.class.getName());
         PRODUCER = new KafkaProducer<>(p);
         try {
-            SAMPLE = Files.readString(Path.of("../config/packs/trading/samples/trade/MX-20000001.json"));
-            String streamed = SAMPLE.replaceFirst("\"QUANTITY\": -?[0-9.]+", "\"QUANTITY\": 1234567");
+            SAMPLE = com.ash.drishti.common.PackSamples.document(Path.of("../config/packs/trading/samples"), "trade", "MX-20000001").orElseThrow();
+            String streamed = SAMPLE.replaceFirst("\"QUANTITY\": ?-?[0-9.]+", "\"QUANTITY\":1234567");
             PRODUCER.send(new ProducerRecord<>("drishti.trading.trades", "MX-20000001", streamed)).get(10, TimeUnit.SECONDS);
         } catch (Exception e) {
             throw new IllegalStateException(e);

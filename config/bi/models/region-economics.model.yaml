@@ -34,9 +34,9 @@ datasets:                       # alias: the dataset it reads, and its role (a f
   regions: { dataset: region-economics-regions, role: fact }
 
 measures:
-  Population:         { expr: "sum(regions.population)", format: amount0, description: "People living in the region, rounded to the nearest 10,000. Illustrative." }
-  GDP (USD bn):       { expr: "sum(regions.gdpUsdBn)", format: amount0, description: "Output in US dollars, billions, rounded to the nearest billion. Illustrative, not for reporting." }
-  GDP per head (USD): { expr: "ratio(sum(regions.gdpUsdBn), sum(regions.population)) * 1000000000", format: amount0, description: "GDP over population: for a country, its regions' total GDP over their total population. Illustrative." }
+  Population:         { expr: "sum(regions.POPULATION)", format: amount0, description: "People living in the region, rounded to the nearest 10,000. Illustrative." }
+  GDP (USD bn):       { expr: "sum(regions.GDP_USD_BN)", format: amount0, description: "Output in US dollars, billions, rounded to the nearest billion. Illustrative, not for reporting." }
+  GDP per head (USD): { expr: "ratio(sum(regions.GDP_USD_BN), sum(regions.POPULATION)) * 1000000000", format: amount0, description: "GDP over population: for a country, its regions' total GDP over their total population. Illustrative." }
 
 hierarchies:
-  Country and region: [regions.countryName, regions.name]
+  Country and region: [regions.COUNTRY_NAME, regions.NAME]

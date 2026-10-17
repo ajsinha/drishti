@@ -32,12 +32,12 @@ source: { kind: netting-set }
 time: { mode: live }
 refresh: { on-load: true }
 columns:
-  nettingSetId: { type: string, role: key }
-  counterparty: { type: string }
-  tradeCount:   { type: integer }
-  netMtm:       { type: decimal, format: signed0 }
-  collateral:   { type: decimal, format: signed0 }
-  eePeak:       { type: decimal, format: amount0 }
-  pfePeak:      { type: decimal, format: amount0 }
-  limit:        { type: decimal, format: amount0 }
-  utilisation:  { type: decimal }
+  NETTING_SET_ID: { type: string, role: key }
+  COUNTERPARTY:   { type: string }
+  TRADE_COUNT:    { type: integer }
+  NET_MTM:        { type: decimal, format: signed0 }
+  COLLATERAL:     { type: decimal, format: signed0 }
+  EE_PEAK:        { type: decimal, format: amount0 }
+  PFE_PEAK:       { type: decimal, format: amount0 }
+  LIMIT:          { type: decimal, format: amount0 }
+  UTILISATION:    { type: decimal }

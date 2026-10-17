@@ -172,9 +172,9 @@ class VisualQueriesTest {
     @Test
     void valuesCarriedByADrillThroughFilterEveryVisualOfThePage() throws IOException {
         Report r = report("counterparty-risk");
-        String s = "{\"carry\":[{\"field\":\"counterparties.name\",\"values\":[\"Orbital\"]}]}";
+        String s = "{\"carry\":[{\"field\":\"counterparties.NAME\",\"values\":[\"Orbital\"]}]}";
         for (String v : List.of("c-ee", "c-trades", "c-trades-table")) {
-            assertThat(build(r, "counterparty", v, s, "trading-risk").query().filters()).as(v).containsExactly(new QueryRequest.Filter("counterparties.name", "in", List.of("Orbital")));
+            assertThat(build(r, "counterparty", v, s, "trading-risk").query().filters()).as(v).containsExactly(new QueryRequest.Filter("counterparties.NAME", "in", List.of("Orbital")));
         }
     }
 
@@ -183,7 +183,7 @@ class VisualQueriesTest {
         Report r = report("counterparty-risk");
         QueryRequest q = build(r, "exposure", "by-counterparty", "{\"slicers\":{\"sector\":[\"Banks\"]}}", "trading-risk").query();
         assertThat(topCalls).containsExactly("counterparties.id 10 Exposure (EE peak) desc with 1 filters");
-        assertThat(q.filters()).containsExactly(new QueryRequest.Filter("counterparties.sector", "in", List.of("Banks")), new QueryRequest.Filter("counterparties.id", "in", List.of("CP-1", "CP-2")));
+        assertThat(q.filters()).containsExactly(new QueryRequest.Filter("counterparties.SECTOR", "in", List.of("Banks")), new QueryRequest.Filter("counterparties.id", "in", List.of("CP-1", "CP-2")));
         assertThat(q.measures()).containsExactly("Exposure (EE peak)", "Exposure (PFE peak)");
         assertThat(q.orderBy()).containsExactly(new QueryRequest.Sort("Exposure (EE peak)", true));
     }

@@ -122,7 +122,7 @@ class FieldMaskingTest {
         assertThat(records.toString()).contains(MASK);
         int at = -1;
         for (int i = 0; i < records.path("fields").size(); i++) {
-            if ("mtm".equals(records.path("fields").get(i).path("name").asText())) {
+            if ("MTM".equals(records.path("fields").get(i).path("name").asText())) {
                 at = i;
             }
         }

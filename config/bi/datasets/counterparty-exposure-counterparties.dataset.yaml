@@ -33,9 +33,9 @@ tags: [sample, counterparty-risk, multi-dataset]
 source: { connector: reference-store, kind: counterparty }
 refresh: { on-load: true }
 columns:
-  name:    { type: string }
-  rating:  { type: string }
-  sector:  { type: string }
-  country: { type: string }
+  NAME:    { type: string }
+  RATING:  { type: string }
+  SECTOR:  { type: string }
+  COUNTRY: { type: string }
 security:
-  masked: [name, rating]
+  masked: [NAME, RATING]

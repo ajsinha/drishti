@@ -57,16 +57,16 @@ class BankingPacksTest {
     void theGeneratedSutrasAndTheTradeSearchOfferPivotsWhereTheyHelp() throws Exception {
         String trades = "$.panels[?(@.id == 'trades')].data.pivot";
         mvc.perform(get("/api/v1/views/netting-set/NS-ALDERSHOT-LDN")).andExpect(status().isOk())
-                .andExpect(jsonPath(trades + ".columns[0]").value(hasItem("maturityBucket")))
-                .andExpect(jsonPath(trades + ".values[0].field").value(hasItem("notional")))
+                .andExpect(jsonPath(trades + ".columns[0]").value(hasItem("MATURITY_BUCKET")))
+                .andExpect(jsonPath(trades + ".values[0].field").value(hasItem("NOTIONAL")))
                 .andExpect(jsonPath("$.panels[?(@.id == 'exposure')].data.pivot").value(org.hamcrest.Matchers.empty()));
         mvc.perform(get("/api/v1/views/netting-set/NS-ALDERSHOT-LDN/panels/trades/records")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.fields[4].name").value("maturityBucket"))
+                .andExpect(jsonPath("$.fields[4].name").value("MATURITY_BUCKET"))
                 .andExpect(jsonPath("$.rows[0][4]").value(org.hamcrest.Matchers.oneOf("0-1Y", "1-2Y", "2-5Y", "5-10Y", "10Y+")))
                 .andExpect(jsonPath("$.fields[8].kind").value("trade"));
-        mvc.perform(get("/api/v1/views/clearing-account/CLR-CME-1")).andExpect(jsonPath(trades + ".rows[0]").value(hasItem("product")));
+        mvc.perform(get("/api/v1/views/clearing-account/CLR-CME-1")).andExpect(jsonPath(trades + ".rows[0]").value(hasItem("PRODUCT")));
         mvc.perform(get("/api/v1/views/desk/DESK-RATES"))
-                .andExpect(jsonPath("$.panels[?(@.id == 'positions')].data.pivot.columns[0]").value(hasItem("currency")))
+                .andExpect(jsonPath("$.panels[?(@.id == 'positions')].data.pivot.columns[0]").value(hasItem("CURRENCY")))
                 .andExpect(jsonPath("$.panels[?(@.id == 'positions')].data.pivot.heat").value(hasItem(true)));
         mvc.perform(get("/api/v1/views/trade/MX-20000001")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.panels[?(@.id == 'legs')].data.layout").value(hasItem("columns")));

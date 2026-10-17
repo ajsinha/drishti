@@ -39,7 +39,7 @@ pages:
         type: bar
         title: Most negative net MTM
         at: { x: 0, y: 2, w: 6, h: 6 }
-        wells: { axis: [netting.nettingSetId], values: [Net MTM] }
+        wells: { axis: [netting.NETTING_SET_ID], values: [Net MTM] }
         sort: { by: Net MTM, desc: false }
         limit: 10
         format: { labels: false }
@@ -48,6 +48,6 @@ pages:
         type: table
         title: Highest limit utilisation
         at: { x: 6, y: 2, w: 6, h: 6 }
-        wells: { columns: [netting.nettingSetId, netting.counterparty, Max utilisation, Net MTM] }
+        wells: { columns: [netting.NETTING_SET_ID, netting.COUNTERPARTY, Max utilisation, Net MTM] }
         sort: { by: Max utilisation, desc: true }
         limit: 10

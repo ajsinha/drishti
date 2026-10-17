@@ -38,7 +38,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=market-risk,genomics",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.security.redact=var99,limit,significance",
+        "drishti.security.redact=VAR_99,LIMIT,significance",
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true",
         "drishti.identity.database-url=jdbc:sqlite:target/explainabout-${random.uuid}/identity.db"})

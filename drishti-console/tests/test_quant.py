@@ -231,9 +231,11 @@ def test_curves_reproduce_their_pillars_and_interpolate():
 
 
 def test_a_curve_from_a_documents_points():
-    pts = [{"tenor": "1M", "zeroRate": 3.66, "df": 0.997}, {"tenor": "1Y", "zeroRate": 3.54}, {"tenor": "10Y", "zeroRate": 3.80}]
+    pts = [{"TENOR": "1M", "ZERO_RATE": 3.66, "DF": 0.997}, {"TENOR": "1Y", "ZERO_RATE": 3.54}, {"TENOR": "10Y", "ZERO_RATE": 3.80}]
     c = q.ZeroCurve.from_points(pts)
     assert close(c.zero(1), 0.0354) and len(c.times) == 3
+    camel = q.ZeroCurve.from_points([{"tenor": p["TENOR"], "zeroRate": p["ZERO_RATE"]} for p in pts])        # the short names still read
+    assert close(camel.zero(1), 0.0354)
 
 
 def test_par_rate_annuity_and_swap_pv_on_a_flat_curve():
@@ -313,8 +315,9 @@ def test_vol_estimators_on_a_simulated_path():
 # ---- risk ---------------------------------------------------------------------------------------------------------------
 
 def test_var_and_es_reproduce_the_engine_on_the_sample():
-    doc = json.loads((ROOT / "config/packs/market-risk/samples/var/VAR-RATES.json").read_text())
-    assert round(q.historical_var(doc["scenarioPnl"], 0.99)) == doc["var99"]
+    lines = (ROOT / "config/packs/market-risk/samples/var.jsonl").read_text().splitlines()      # one document a line
+    doc = next(json.loads(x) for x in lines if '"RESULT_ID":"VAR-RATES"' in x)
+    assert round(q.historical_var(doc["SCENARIO_PNL"], 0.99)) == doc["VAR_99"]
     pnl = np.arange(1, 101) - 50.0
     assert q.historical_var(pnl, 0.95) == 45 and q.expected_shortfall(pnl, 0.95) == 47.0
     assert close(q.parametric_var(1e6, 0.99), 2326347.874, 1e-9)

@@ -46,7 +46,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=trading,counterparty-risk",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.security.redact=trader,name,lifecycle.note", "drishti.security.mask-copies=true",
+        "drishti.security.redact=trader,name,NAME,lifecycle.note", "drishti.security.mask-copies=true",
         "drishti.security.mask-copies-max-nodes=5000",
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true"})
@@ -66,9 +66,9 @@ class MaskCopiesTest {
 
     @Test
     void aCopyOfTheMaskedNameInTheHierarchyReadsAsTheMask() throws Exception {
-        assertThat(raw("full").toString()).contains("\"label\":\"Meridian Reinsurance Ltd\"");
+        assertThat(raw("full").toString()).contains("\"LABEL\":\"Meridian Reinsurance Ltd\"");
         String masked = raw("masked").toString();
-        assertThat(masked).contains("\"label\":\"•••\"").doesNotContain("Meridian Reinsurance Ltd");
+        assertThat(masked).contains("\"LABEL\":\"•••\"").doesNotContain("Meridian Reinsurance Ltd");
     }
 
     private DataNode doc(String trader, String text) {

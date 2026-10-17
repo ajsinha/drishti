@@ -328,9 +328,12 @@ class ZeroCurve:
         self._m = _natural_spline(self.times, self.zeros) if method == "cubic" else None
 
     @classmethod
-    def from_points(cls, points, tenor="tenor", rate="zeroRate", pct: bool = True, method: str = "loglinear"):
-        """A curve from a document's points (``view.doc['points']``): a tenor column and a zero rate column (in percent
-        when ``pct``)."""
+    def from_points(cls, points, tenor=None, rate=None, pct: bool = True, method: str = "loglinear"):
+        """A curve from a document's points (``view.doc['POINTS']``): a tenor column and a zero rate column (in percent
+        when ``pct``); by default ``TENOR`` and ``ZERO_RATE`` (the shipped packs' names), or ``tenor`` and ``zeroRate``."""
+        first = points[0] if points else {}
+        tenor = tenor or ("TENOR" if "TENOR" in first else "tenor")
+        rate = rate or ("ZERO_RATE" if "ZERO_RATE" in first else "zeroRate")
         t = [tenor_years(p[tenor]) for p in points]
         z = [float(p[rate]) / (100.0 if pct else 1.0) for p in points]
         keep = [i for i, x in enumerate(t) if x > 0]

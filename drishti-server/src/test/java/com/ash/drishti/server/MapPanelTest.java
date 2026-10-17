@@ -67,7 +67,7 @@ class MapPanelTest {
 
     private static final String WORLD = "{ id: m, kind: map, title: Where, highlight: $.iso3, link: { kind: jurisdiction, id: 'JUR-{iso3}' } }";
     private static final String SHADED = "{ id: m, kind: map, title: Where, highlight: $.iso3, link: { kind: economy, id: 'ECON-{iso3}' },"
-            + " shade: { kind: economy, field: $.gdpPerCapita, by: $.iso3, fmt: amount0, label: GDP per capita } }";
+            + " shade: { kind: economy, field: $.GDP_PER_CAPITA, by: $.ISO3, fmt: amount0, label: GDP per capita } }";
 
     private ViewModel.PanelView panel(String panel, UnaryOperator<DataNode> redact, java.util.function.Predicate<String> may) {
         EntityDocument doc = new EntityDocument(EntityRef.of("jurisdiction", "JUR-AUS"), codec.read("{\"jurisdictionId\":\"JUR-AUS\",\"iso3\":\"AUS\",\"name\":\"Australia\"}"),
@@ -154,9 +154,9 @@ class MapPanelTest {
     @Test
     void aMaskedFieldShadesNothingAndIsNeverRevealed() {
         UnaryOperator<DataNode> mask = n -> {
-            if (n instanceof DataNode.Obj o && o.fields().containsKey("gdpPerCapita")) {
+            if (n instanceof DataNode.Obj o && o.fields().containsKey("GDP_PER_CAPITA")) {
                 Map<String, DataNode> f = new LinkedHashMap<>(o.fields());
-                f.put("gdpPerCapita", DataNode.masked());
+                f.put("GDP_PER_CAPITA", DataNode.masked());
                 return new DataNode.Obj(f);
             }
             return n;

@@ -24,7 +24,6 @@ import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -90,7 +89,7 @@ class ControlsApiTest {
     }
 
     private JsonNode schedule() throws Exception {
-        return json.readTree(Files.readString(Path.of("../config/packs/trading/samples/trade/MX-20000001.json"))).path("EVENTS");
+        return json.readTree(com.ash.drishti.common.PackSamples.document(Path.of("../config/packs/trading/samples"), "trade", "MX-20000001").orElseThrow()).path("EVENTS");
     }
 
     @Test

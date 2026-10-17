@@ -34,13 +34,13 @@ pages:
     title: Regions
     visuals:
       - { id: note, type: text, title: About these figures, at: { x: 0, y: 0, w: 12, h: 2 }, text: "Illustrative, rounded from public figures, not for reporting: population to the nearest 10,000 and GDP to the nearest US$ billion. Sources the numbers were rounded from: ABS Australian Demographic Statistics (December 2023) and State Accounts (2022-23); US Census Bureau Vintage 2023 estimates; BEA state GDP (2023)." }
-      - { id: country, type: slicer, title: Country, at: { x: 0, y: 2, w: 12, h: 2 }, wells: { field: [regions.countryName] }, format: { mode: dropdown, scope: report } }
+      - { id: country, type: slicer, title: Country, at: { x: 0, y: 2, w: 12, h: 2 }, wells: { field: [regions.COUNTRY_NAME] }, format: { mode: dropdown, scope: report } }
 
       - id: gdp-map
         type: map
         title: "GDP (USD bn, illustrative): click a country to open its regions"
         at: { x: 0, y: 4, w: 8, h: 8 }
-        wells: { location: [regions.regionCode], values: [GDP (USD bn)] }
+        wells: { location: [regions.REGION_CODE], values: [GDP (USD bn)] }
         format: { drill: true }
         alt: World map shading Australia and the United States by the sum of their regions' GDP; a click opens the country's states and territories (illustrative figures)
 
@@ -48,8 +48,8 @@ pages:
         type: bar
         title: Top regions by GDP per head (USD, illustrative)
         at: { x: 8, y: 4, w: 4, h: 8 }
-        wells: { axis: [regions.name], values: [GDP per head (USD)] }
-        filters: [{ field: regions.name, op: top, n: 10, by: GDP per head (USD) }]
+        wells: { axis: [regions.NAME], values: [GDP per head (USD)] }
+        filters: [{ field: regions.NAME, op: top, n: 10, by: GDP per head (USD) }]
         format: { labels: true }
         alt: Bars of GDP per head for the ten regions with the highest figure (illustrative)
 
@@ -57,6 +57,6 @@ pages:
         type: table
         title: The regions (illustrative)
         at: { x: 0, y: 12, w: 12, h: 8 }
-        wells: { columns: [regions.countryName, regions.regionCode, regions.name, Population, GDP (USD bn), GDP per head (USD)] }
+        wells: { columns: [regions.COUNTRY_NAME, regions.REGION_CODE, regions.NAME, Population, GDP (USD bn), GDP per head (USD)] }
         sort: { by: GDP (USD bn), desc: true }
         limit: 100

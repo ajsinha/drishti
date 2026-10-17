@@ -33,12 +33,12 @@ tags: [sample, multi-dataset, composed, counterparty-risk]
 from:                                   # each entry is a question put to another dataset, as the person reading
   pnl:                                  # the alias: used by `join` below
     dataset: trading-risk               # a catalogue id, a file name or the dataset's name
-    by: ["counterparties.id as counterparty", "counterparties.name as name"]     # the grouping columns, and the name each has in the joined table
+    by: ["counterparties.id as counterparty", "counterparties.NAME as name"]     # the grouping columns, and the name each has in the joined table
     measures: ["P&L 1d as Desk P&L", Trades]                                     # measures of that dataset; "as" renames
     key: [counterparty]                 # one row per counterparty (the name is an attribute of it): lets the join check know nothing is repeated
   exposure:
     dataset: counterparty-exposure
-    by: ["counterparties.id as counterparty", "counterparties.sector as sector"]
+    by: ["counterparties.id as counterparty", "counterparties.SECTOR as sector"]
     measures: [Exposure (EE peak), Exposure (PFE peak)]
     key: [counterparty]
 

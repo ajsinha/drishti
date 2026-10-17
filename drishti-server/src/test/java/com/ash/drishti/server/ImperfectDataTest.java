@@ -124,7 +124,7 @@ class ImperfectDataTest {
         var m = java.util.regex.Pattern.compile("(?ms)^```yaml\\s*$\\n((?:#[^\\n]*\\n|\\s*\\n)*rachana:.*?)^```\\s*$").matcher(guide);
         assertThat(m.find()).isTrue();
         Sutra s = new com.ash.drishti.rachana.parse.SutraParser().parse(m.group(1), "NESTED_DOCUMENTS.md", "docs");
-        DataNode trade = codec.read(Files.readString(Path.of("../config/packs/trading/samples/trade/MX-20000001.json")));
+        DataNode trade = codec.read(com.ash.drishti.common.PackSamples.document(Path.of("../config/packs/trading/samples"), "trade", "MX-20000001").orElseThrow());
         ViewModel vm = pipeline.preview(Optional.of(s), new EntityDocument(EntityRef.of("trade", "MX-20000001"), trade,
                 new Provenance("test", 1, Instant.now(), false)));
         assertThat(vm.panels()).allSatisfy(p -> assertThat(p.empty()).as(p.id()).isFalse());

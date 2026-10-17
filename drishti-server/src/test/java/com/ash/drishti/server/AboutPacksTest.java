@@ -95,18 +95,14 @@ class AboutPacksTest {
             Path samples = PACKS_DIR.resolve(pack).resolve("samples");
             for (String kind : kindsOf(pack)) {
                 AboutText t = catalog.forKind(kind).orElseThrow();
-                Path dir = samples.resolve(kind);
-                if (!Files.isDirectory(dir)) {
-                    continue;
-                }
-                try (Stream<Path> files = Files.list(dir)) {
-                    for (Path f : files.filter(p -> p.toString().endsWith(".json")).sorted().toList()) {
-                        DataNode doc = codec.read(Files.readString(f));
+                {
+                    for (java.util.Map.Entry<String, String> f : com.ash.drishti.common.PackSamples.documents(samples, kind, java.util.Set.of(), 0).entrySet()) {
+                        DataNode doc = codec.read(f.getValue());
                         AboutText.Rendered r = t.render(EvalContext.of(doc, formats), t.panels().keySet(), catalog.maxRendered());
                         rendered++;
                         if (r.errors() > 0 || r.text() == null || r.text().isBlank() || r.text().contains(AboutText.FAILED)
                                 || r.panels().values().stream().anyMatch(p -> p.contains(AboutText.FAILED))) {
-                            failures.add(pack + "/" + kind + "/" + f.getFileName() + ": " + r.text());
+                            failures.add(pack + "/" + kind + "/" + f.getKey() + ": " + r.text());
                         }
                     }
                 }

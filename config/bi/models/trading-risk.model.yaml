@@ -42,7 +42,7 @@ relationships:                  # from the MANY side to the ONE side
   - { from: trades.PORTFOLIO, to: books.id }
   - { from: trades.COUNTERPARTY, to: counterparties.id }
   - { from: trades.NETTING_SET, to: netting_sets.id, active: false }
-  - { from: netting_sets.counterparty, to: counterparties.id }
+  - { from: netting_sets.COUNTERPARTY, to: counterparties.id }
 
 measures:
   MTM:                 { expr: "sum(trades.MTM)", format: signed0, description: "Mark-to-market in USD, signed." }
@@ -57,16 +57,16 @@ measures:
   MTM rank:            { expr: "rank(sum(trades.MTM))", description: "The position of each row of the visual by MTM, 1 for the highest (a window function: rank, dense_rank, percent_rank, lag, lead, moving_avg, moving_sum, moving_min, moving_max, cumulative)." }
   MTM 3-day average:   { expr: "moving_avg(sum(trades.MTM), 3, trades.TRADE_DATE)", format: signed0, description: "The average of MTM over the row and the two before it along the trade date (the visual needs trades.TRADE_DATE as a field)." }
   Open MTM:            { expr: "sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')", format: signed0, description: "MTM of the trades not yet matured (a condition inside the aggregate)." }
-  Exposure (EE peak):  { expr: "sum(netting_sets.eePeak)", format: amount0, description: "Sum of the netting sets' expected-exposure peaks. Group by counterparty, not by desk." }
-  Exposure (PFE peak): { expr: "sum(netting_sets.pfePeak)", format: amount0 }
+  Exposure (EE peak):  { expr: "sum(netting_sets.EE_PEAK)", format: amount0, description: "Sum of the netting sets' expected-exposure peaks. Group by counterparty, not by desk." }
+  Exposure (PFE peak): { expr: "sum(netting_sets.PFE_PEAK)", format: amount0 }
   Netting sets:        { expr: "count(netting_sets)" }
   P&L per exposure:    { expr: "measure('P&L 1d') / measure('Exposure (EE peak)')", format: signed2, description: "One-day P&L divided by the expected exposure peak, the sums taken over the rows of the visual." }   # from the composed dataset desk-pnl-vs-exposure
-  Collateral:          { expr: "sum(netting_sets.collateral)", format: signed0 }   # from counterparty-exposure
+  Collateral:          { expr: "sum(netting_sets.COLLATERAL)", format: signed0 }   # from counterparty-exposure
 
 hierarchies:
   Trade date: [trades.TRADE_DATE.year, trades.TRADE_DATE.quarter, trades.TRADE_DATE.month, trades.TRADE_DATE]
-  Desk and book: [desks.name, books.name]
-  Counterparty: [counterparties.sector, counterparties.name]
+  Desk and book: [desks.NAME, books.NAME]
+  Counterparty: [counterparties.SECTOR, counterparties.NAME]
 
 rollups:
   - { name: by_desk_currency, table: trades, by: [DESK, CURRENCY, PRODUCT_GROUP], measures: [MTM, Notional, P&L 1d, Trades, MTM per 1m notional] }

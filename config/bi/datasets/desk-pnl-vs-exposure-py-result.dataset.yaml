@@ -33,8 +33,8 @@ tags: [sample, multi-dataset, derived, python, counterparty-risk]
 source:
   python: pnl-vs-exposure
   inputs:                       # each a model query, asked as the reader (their row rules and masks)
-    pnl: { model: trading-risk@1, select: { fields: [counterparties.id, counterparties.name], measures: [P&L 1d, Trades] } }
-    exposure: { model: counterparty-exposure@1, select: { fields: [counterparties.id, counterparties.sector], measures: [Exposure (EE peak), Exposure (PFE peak)] } }
+    pnl: { model: trading-risk@1, select: { fields: [counterparties.id, counterparties.NAME], measures: [P&L 1d, Trades] } }
+    exposure: { model: counterparty-exposure@1, select: { fields: [counterparties.id, counterparties.SECTOR], measures: [Exposure (EE peak), Exposure (PFE peak)] } }
   params: { floor: 1.0 }
 grain: { keys: [counterparty] }   # the converter takes the first column as the key: check it says what one row is
 columns:

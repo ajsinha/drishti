@@ -40,23 +40,23 @@ pages:
       - { id: ee,      type: card, title: Exposure (EE peak),   at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Exposure (EE peak)] } }
       - { id: pfe,     type: card, title: Exposure (PFE peak),  at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [Exposure (PFE peak)] } }
       - { id: sets,    type: card, title: Netting sets,         at: { x: 6, y: 0, w: 2, h: 2 }, wells: { values: [Netting sets] } }
-      - { id: sector,  type: slicer, title: Sector,  at: { x: 8, y: 0, w: 2, h: 2 }, wells: { field: [counterparties.sector] }, format: { mode: dropdown, scope: report } }
-      - { id: country, type: slicer, title: Country, at: { x: 10, y: 0, w: 2, h: 2 }, wells: { field: [counterparties.country] }, format: { mode: dropdown, scope: report } }
+      - { id: sector,  type: slicer, title: Sector,  at: { x: 8, y: 0, w: 2, h: 2 }, wells: { field: [counterparties.SECTOR] }, format: { mode: dropdown, scope: report } }
+      - { id: country, type: slicer, title: Country, at: { x: 10, y: 0, w: 2, h: 2 }, wells: { field: [counterparties.COUNTRY] }, format: { mode: dropdown, scope: report } }
 
       - id: by-counterparty
         type: bar
         title: Exposure by counterparty (top 10 by EE peak)
         at: { x: 0, y: 2, w: 7, h: 6 }
-        wells: { axis: [counterparties.name], values: [Exposure (EE peak), Exposure (PFE peak)] }
+        wells: { axis: [counterparties.NAME], values: [Exposure (EE peak), Exposure (PFE peak)] }
         filters: [{ field: counterparties.id, op: top, n: 10, by: Exposure (EE peak) }]         # keep the 10 counterparties with the highest EE peak (ranked by id, so a masked name cannot break it)
-        drillthrough: { page: counterparty, field: counterparties.name }                        # click a bar, choose "Drill through": opens the counterparty page
+        drillthrough: { page: counterparty, field: counterparties.NAME }                        # click a bar, choose "Drill through": opens the counterparty page
         alt: Bars of expected and potential future exposure for the ten largest counterparties
 
       - id: by-sector
         type: donut
         title: Exposure by sector
         at: { x: 7, y: 2, w: 5, h: 6 }
-        wells: { axis: [counterparties.sector], values: [Exposure (EE peak)] }
+        wells: { axis: [counterparties.SECTOR], values: [Exposure (EE peak)] }
         format: { labels: true }
         alt: Donut chart of expected exposure for each counterparty sector
 
@@ -64,7 +64,7 @@ pages:
         type: table
         title: Trades and MTM by sector (the row rules apply here)
         at: { x: 0, y: 8, w: 12, h: 5 }
-        wells: { columns: [counterparties.sector, Trades, MTM, Counterparties] }
+        wells: { columns: [counterparties.SECTOR, Trades, MTM, Counterparties] }
         format: { conditional: [{ measure: MTM, op: lt, value: 0, colour: "#b3261e" }] }
 
       # A map of the exposure by the country of the counterparty (ISO codes; the map data is vendored, countries only), the year-to-date MTM
@@ -73,7 +73,7 @@ pages:
         type: map
         title: Exposure by country (EE peak)
         at: { x: 0, y: 13, w: 8, h: 7 }
-        wells: { location: [counterparties.country], values: [Exposure (EE peak)] }
+        wells: { location: [counterparties.COUNTRY], values: [Exposure (EE peak)] }
         alt: World map shading each country by the expected-exposure peak of its counterparties
       - { id: mtm-ytd, type: card, title: MTM year to date, at: { x: 8, y: 13, w: 4, h: 2 }, wells: { values: [MTM ytd] } }
       - id: mtm-spread
@@ -86,7 +86,7 @@ pages:
 
   - id: counterparty
     title: Counterparty
-    drillthrough: { fields: [counterparties.name] }      # this page takes a counterparty's name as a filter when another page drills through to it
+    drillthrough: { fields: [counterparties.NAME] }      # this page takes a counterparty's name as a filter when another page drills through to it
     visuals:
       - { id: c-ee,     type: card, title: Exposure (EE peak),  at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Exposure (EE peak)] } }
       - { id: c-trades, type: card, title: Trades,              at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }

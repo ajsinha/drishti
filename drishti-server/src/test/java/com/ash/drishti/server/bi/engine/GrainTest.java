@@ -86,10 +86,10 @@ class GrainTest {
         com.ash.drishti.server.bi.dataset.Dataset d = DatasetParser.parse(yaml).dataset();
         SqlCompiler.Reader reader = new SqlCompiler.Reader(false, Set.of("risk"), Map.of(), SqlCompiler.Masks.NONE);
         SqlCompiler c = new SqlCompiler(d, Dialect.DUCKDB);
-        SqlCompiler.Plan p = c.plan(QueryRequest.of(json.readTree("{\"fields\":[\"counterparties.sector\"],\"measures\":[\"MTM\",\"Exposure (EE peak)\"]}")), reader);
+        SqlCompiler.Plan p = c.plan(QueryRequest.of(json.readTree("{\"fields\":[\"counterparties.SECTOR\"],\"measures\":[\"MTM\",\"Exposure (EE peak)\"]}")), reader);
         assertThat(p.multiFact()).isTrue();
         assertThat(p.parts()).extracting(SqlCompiler.Plan::base).containsExactlyInAnyOrder("trades", "netting_sets");
-        SqlCompiler.Plan one = c.plan(QueryRequest.of(json.readTree("{\"fields\":[\"counterparties.sector\"],\"measures\":[\"MTM\",\"Trades\"]}")), reader);
+        SqlCompiler.Plan one = c.plan(QueryRequest.of(json.readTree("{\"fields\":[\"counterparties.SECTOR\"],\"measures\":[\"MTM\",\"Trades\"]}")), reader);
         assertThat(one.multiFact()).as("two measures of the same table stay one query").isFalse();
     }
 
@@ -125,7 +125,7 @@ class GrainTest {
                 .replace("measures:\n", "measures:\n  MtmPerExposure: { expr: \"measure('MTM') / measure('Exposure (EE peak)')\" }\n");
         com.ash.drishti.server.bi.dataset.Dataset d = DatasetParser.parse(yaml).dataset();
         SqlCompiler.Reader reader = new SqlCompiler.Reader(false, Set.of("risk"), Map.of(), SqlCompiler.Masks.NONE);
-        SqlCompiler.Plan p = new SqlCompiler(d, Dialect.DUCKDB).plan(QueryRequest.of(json.readTree("{\"fields\":[\"counterparties.sector\"],\"measures\":[\"MtmPerExposure\"]}")), reader);
+        SqlCompiler.Plan p = new SqlCompiler(d, Dialect.DUCKDB).plan(QueryRequest.of(json.readTree("{\"fields\":[\"counterparties.SECTOR\"],\"measures\":[\"MtmPerExposure\"]}")), reader);
         assertThat(p.multiFact()).isTrue();
         assertThat(p.parts()).extracting(SqlCompiler.Plan::base).containsExactlyInAnyOrder("trades", "netting_sets");
         assertThat(p.derived()).containsKey("MtmPerExposure");

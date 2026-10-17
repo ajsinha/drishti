@@ -35,36 +35,36 @@ tables:
     source: { connector: credit-store, kind: netting-set }     # pack: counterparty-risk
     mode: cached
     columns:
-      counterparty: string                                      # the counterparty's id: links to counterparties
-      tradeCount:   integer
-      netMtm:       { type: decimal, format: signed0 }
-      collateral:   { type: decimal, format: signed0 }
-      eePeak:       { type: decimal, format: amount0 }          # expected exposure, peak
-      pfePeak:      { type: decimal, format: amount0 }          # potential future exposure, peak
-      limit:        { type: decimal, format: amount0 }
+      COUNTERPARTY: string                                      # the counterparty's id: links to counterparties
+      TRADE_COUNT:   integer
+      NET_MTM:       { type: decimal, format: signed0 }
+      COLLATERAL:   { type: decimal, format: signed0 }
+      EE_PEAK:       { type: decimal, format: amount0 }          # expected exposure, peak
+      PFE_PEAK:      { type: decimal, format: amount0 }          # potential future exposure, peak
+      LIMIT:        { type: decimal, format: amount0 }
 
   counterparties:
     source: { connector: reference-store, kind: counterparty }  # pack: core
     mode: cached
     columns:
-      name:    string
-      rating:  string
-      sector:  string
-      country: string
+      NAME:    string
+      RATING:  string
+      SECTOR:  string
+      COUNTRY: string
 
 relationships:
-  - { from: netting_sets.counterparty, to: counterparties.id, cardinality: many-to-one }
+  - { from: netting_sets.COUNTERPARTY, to: counterparties.id, cardinality: many-to-one }
 
 measures:
-  Exposure (EE peak):  { expr: "sum(netting_sets.eePeak)",  format: amount0, description: "Sum of the netting sets' expected-exposure peaks." }
-  Exposure (PFE peak): { expr: "sum(netting_sets.pfePeak)", format: amount0 }
+  Exposure (EE peak):  { expr: "sum(netting_sets.EE_PEAK)",  format: amount0, description: "Sum of the netting sets' expected-exposure peaks." }
+  Exposure (PFE peak): { expr: "sum(netting_sets.PFE_PEAK)", format: amount0 }
   Netting sets:        { expr: "count(netting_sets)" }
-  Collateral:          { expr: "sum(netting_sets.collateral)", format: signed0 }
+  Collateral:          { expr: "sum(netting_sets.COLLATERAL)", format: signed0 }
 
 hierarchies:
-  Counterparty: [counterparties.sector, counterparties.name]
+  Counterparty: [counterparties.SECTOR, counterparties.NAME]
 
 security:
   # No row rules: every reader with BI sees every netting set. (Rules are per dataset; trading-risk restricts a desk-head to their own desks because its
   # rows are trades. Exposure is about counterparties, not desks.) The same masks as trading-risk keep names and ratings from readers without the raw power.
-  masked: [counterparties.name, counterparties.rating]
+  masked: [counterparties.NAME, counterparties.RATING]

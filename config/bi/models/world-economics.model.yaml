@@ -35,9 +35,9 @@ datasets:                       # alias: the dataset it reads, and its role (a f
 
 measures:
   Economies:            { expr: "count(economies)", description: "How many economies." }
-  GDP (USD bn):         { expr: "sum(economies.gdpUsdBn)", format: amount0, description: "Gross domestic product at current prices, USD billions." }
-  Population (m):       { expr: "sum(economies.populationM)", format: price2, description: "Population, millions." }
-  GDP per capita (USD): { expr: "ratio(sum(economies.gdpUsdBn), sum(economies.populationM)) * 1000", format: amount0, description: "GDP over population: for a region, its total GDP over its total population." }
-  Average growth:       { expr: "avg(economies.growth)", format: pc2, description: "The simple average of the economies' real GDP growth, % a year." }
-  Average inflation:    { expr: "avg(economies.inflation)", format: pc2, description: "The simple average of consumer-price inflation, % a year." }
-  Average unemployment: { expr: "avg(economies.unemployment)", format: pc2, description: "The simple average of the unemployment rate, % of the labour force." }
+  GDP (USD bn):         { expr: "sum(economies.GDP_USD_BN)", format: amount0, description: "Gross domestic product at current prices, USD billions." }
+  Population (m):       { expr: "sum(economies.POPULATION_M)", format: price2, description: "Population, millions." }
+  GDP per capita (USD): { expr: "ratio(sum(economies.GDP_USD_BN), sum(economies.POPULATION_M)) * 1000", format: amount0, description: "GDP over population: for a region, its total GDP over its total population." }
+  Average growth:       { expr: "avg(economies.GROWTH)", format: pc2, description: "The simple average of the economies' real GDP growth, % a year." }
+  Average inflation:    { expr: "avg(economies.INFLATION)", format: pc2, description: "The simple average of consumer-price inflation, % a year." }
+  Average unemployment: { expr: "avg(economies.UNEMPLOYMENT)", format: pc2, description: "The simple average of the unemployment rate, % of the labour force." }

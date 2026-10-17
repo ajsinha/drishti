@@ -52,7 +52,7 @@
       <label>Id<input name="id" class="studio-in mono" value="{{ id }}" required></label>
       <label class="wide">When (Rachana-EL over the entity)<input name="when" class="studio-in mono" placeholder="$.utilisation > 0.8" required></label>
       <label>Severity<select name="severity" class="studio-select"><option>info</option><option selected>warn</option><option>critical</option></select></label>
-      <label class="wide">Message (optional template)<input name="message" class="studio-in mono" placeholder="${$.nettingSetId}: ${fmt($.utilisation, 'pct0')}"></label>
+      <label class="wide">Message (optional template)<input name="message" class="studio-in mono" placeholder="${$.NETTING_SET_ID}: ${fmt($.UTILISATION, 'pct0')}"></label>
       <button type="submit" class="btn-pill btn-accent">Save rule</button>
     </form>
     {% if suggestions %}<p class="text-muted-d">Suggested by the enabled packs{% if kind %} for {{ kind }}{% endif %}:</p>

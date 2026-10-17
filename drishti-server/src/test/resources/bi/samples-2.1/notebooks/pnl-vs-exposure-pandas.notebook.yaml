@@ -29,13 +29,13 @@ tags: [sample, multi-dataset, python, counterparty-risk]
 dataset: file:dataset:trading-risk
 fields: [trades.COUNTERPARTY, trades.DESK, trades.PNL_1D]
 extracts:
-  - { name: exposure, dataset: file:dataset:counterparty-exposure, fields: [netting_sets.counterparty, netting_sets.eePeak, netting_sets.pfePeak] }
+  - { name: exposure, dataset: file:dataset:counterparty-exposure, fields: [netting_sets.COUNTERPARTY, netting_sets.EE_PEAK, netting_sets.PFE_PEAK] }
 cells:
   - type: python
     source: |
       # df is the trades (first extract); extract("exposure") is the netting sets of the second dataset: both are what YOU may see.
       pnl = df.groupby("COUNTERPARTY", as_index=False)["PNL_1D"].sum().rename(columns={"COUNTERPARTY": "counterparty", "PNL_1D": "desk_pnl"})
-      ee = extract("exposure").groupby("counterparty", as_index=False)["eePeak"].sum().rename(columns={"eePeak": "ee_peak"})
+      ee = extract("exposure").groupby("COUNTERPARTY", as_index=False)["EE_PEAK"].sum().rename(columns={"COUNTERPARTY": "counterparty", "EE_PEAK": "ee_peak"})
       joined = pnl.merge(ee, on="counterparty", how="left")
       joined["pnl_per_exposure"] = joined["desk_pnl"] / joined["ee_peak"]
       result = joined.sort_values("ee_peak", ascending=False).head(15)
@@ -44,5 +44,5 @@ cells:
     source: |
       SELECT p.counterparty, p.desk_pnl, e.ee_peak
       FROM (SELECT COUNTERPARTY AS counterparty, SUM(PNL_1D) AS desk_pnl FROM extract GROUP BY COUNTERPARTY) AS p
-      JOIN (SELECT counterparty, SUM(eePeak) AS ee_peak FROM exposure GROUP BY counterparty) AS e ON e.counterparty = p.counterparty
+      JOIN (SELECT COUNTERPARTY AS counterparty, SUM(EE_PEAK) AS ee_peak FROM exposure GROUP BY COUNTERPARTY) AS e ON e.counterparty = p.counterparty
       ORDER BY e.ee_peak DESC LIMIT 10

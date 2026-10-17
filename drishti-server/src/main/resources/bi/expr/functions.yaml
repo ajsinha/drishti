@@ -92,7 +92,7 @@ functions:
     description: The text in capital letters.
     examples:
       - { expr: "upper(trades.currency)", says: "usd becomes USD" }
-      - { expr: "upper(counterparties.name) == 'ACME BANK'", says: "a comparison that ignores case" }
+      - { expr: "upper(counterparties.NAME) == 'ACME BANK'", says: "a comparison that ignores case" }
     edge-cases:
       nulls: "upper(None) is None."
       masked: "A masked column reads as the text ••• and stays •••."
@@ -399,7 +399,7 @@ functions:
     description: The arithmetic mean of x over the rows of the group.
     examples:
       - { expr: "avg(trades.notional)", says: "the average trade size" }
-      - { expr: "avg(economies.growth, where=economies.region == 'Asia')", says: "average growth of the Asian economies" }
+      - { expr: "avg(economies.GROWTH, where=economies.REGION == 'Asia')", says: "average growth of the Asian economies" }
     edge-cases:
       nulls: "None values are skipped (they are not zeros)."
       empty: "None over no rows."
@@ -431,7 +431,7 @@ functions:
     since: W1
     description: The largest value of x in the group (numbers, dates or text).
     examples:
-      - { expr: "max(netting_sets.utilisation)", says: "the highest limit utilisation" }
+      - { expr: "max(netting_sets.UTILISATION)", says: "the highest limit utilisation" }
       - { expr: "max(trades.updatedAt)", says: "when the group last changed" }
     edge-cases:
       nulls: "None values are skipped."
@@ -464,7 +464,7 @@ functions:
     since: W1
     description: How many different values of x the group has.
     examples:
-      - { expr: "distinct(trades.counterpartyId)", says: "how many counterparties" }
+      - { expr: "distinct(trades.COUNTERPARTY)", says: "how many counterparties" }
       - { expr: "distinct(trades.book, where=trades.status == 'Live')", says: "books with live trades" }
     edge-cases:
       nulls: "None is not a value."
@@ -482,7 +482,7 @@ functions:
     description: "num / den as a decimal, None when den is 0. The same as num / den in DEL, kept for readability."
     examples:
       - { expr: "ratio(sum(trades.mtm), sum(trades.notional))", says: "MTM per unit of notional" }
-      - { expr: "ratio(sum(regions.gdpUsdBn), sum(regions.population)) * 1000000000", says: "GDP per head in USD" }
+      - { expr: "ratio(sum(regions.GDP_USD_BN), sum(regions.POPULATION)) * 1000000000", says: "GDP per head in USD" }
     edge-cases:
       nulls: "None when either side is None."
       empty: "None over no rows."
@@ -673,7 +673,7 @@ functions:
     description: "The position of each row of the answer by the aggregate, 1 for the highest (desc=False: 1 for the lowest); ties share a rank and leave gaps."
     examples:
       - { expr: "rank(sum(trades.mtm))", says: "MTM rank, best first" }
-      - { expr: "rank(sum(netting_sets.eePeak), by=[counterparties.sector])", says: "exposure rank within each sector" }
+      - { expr: "rank(sum(netting_sets.EE_PEAK), by=[counterparties.SECTOR])", says: "exposure rank within each sector" }
     edge-cases:
       nulls: "None values rank last."
 
@@ -762,7 +762,7 @@ functions:
     since: W1
     description: The largest value of the aggregate over the row and the n - 1 rows before it.
     examples:
-      - { expr: "moving_max(max(netting_sets.utilisation), 5, netting_sets.businessDate)", says: "peak utilisation over five days" }
+      - { expr: "moving_max(max(netting_sets.UTILISATION), 5, netting_sets.businessDate)", says: "peak utilisation over five days" }
       - { expr: "moving_max(sum(trades.mtm), 20, trades.tradeDate)", says: "the 20-day high of MTM" }
     edge-cases:
       nulls: "None values are skipped."
@@ -871,9 +871,9 @@ functions:
     since: B
     description: "The aggregate in an edited filter context: add conditions (where=, a row condition ANDed to the aggregate's), drop the query's and the group's filters on some fields (ignore=[...]) or on all (ignore=ALL), drop every filter except those on some fields (keep=[...]), or follow an inactive relationship (via='r_5', the active one for the same pair switched off). Security is never in scope: ignore=ALL means everything you may see."
     examples:
-      - { expr: "calc(measure('MTM'), ignore=[desks.name])", says: "MTM ignoring the desk slicer and the desk of the row" }
+      - { expr: "calc(measure('MTM'), ignore=[desks.NAME])", says: "MTM ignoring the desk slicer and the desk of the row" }
       - { expr: "calc(sum(trades.mtm), where=trades.status == 'Live')", says: "MTM of the live trades, whatever else is filtered" }
-      - { expr: "calc(measure('MTM'), keep=[desks.region])", says: "MTM of the whole region of the row" }
+      - { expr: "calc(measure('MTM'), keep=[desks.REGION])", says: "MTM of the whole region of the row" }
       - { expr: "calc(measure('MTM'), via='r_5')", says: "MTM along the settlement-date relationship" }
     edge-cases:
       masked: "ignore=ALL means all the rows you may see, never more; a masked field in ignore= or keep= is never a group (it is not grouped on)."
@@ -888,10 +888,10 @@ functions:
     scopes: [aggregate, context]
     status: built
     since: B
-    description: "The aggregate divided by itself with the fields of over ignored (the same as agg / calc(agg, ignore=over)): over=ALL is the share of the grand total you may see, over=[books.name] a book's share within the rest of its group."
+    description: "The aggregate divided by itself with the fields of over ignored (the same as agg / calc(agg, ignore=over)): over=ALL is the share of the grand total you may see, over=[books.NAME] a book's share within the rest of its group."
     examples:
       - { expr: "share_of(measure('MTM'), over=ALL)", says: "MTM as a share of the total you may see" }
-      - { expr: "share_of(measure('MTM'), over=[books.name])", says: "a book's share within its desk" }
+      - { expr: "share_of(measure('MTM'), over=[books.NAME])", says: "a book's share within its desk" }
     edge-cases:
       nulls: "None when the coarser total is 0 or None."
       masked: "Of what you may see: the total never includes rows your row rules hide."

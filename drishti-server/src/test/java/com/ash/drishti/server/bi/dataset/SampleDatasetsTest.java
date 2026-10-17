@@ -82,7 +82,7 @@ class SampleDatasetsTest {
         Dataset d = load("counterparty-exposure").dataset();
         assertThat(d.tables()).containsOnlyKeys("netting_sets", "counterparties");
         assertThat(d.security().rows()).isEmpty();
-        assertThat(d.security().masked()).contains("counterparties.name");
+        assertThat(d.security().masked()).contains("counterparties.NAME");
         assertThat(d.measures().keySet()).contains("Exposure (EE peak)", "Exposure (PFE peak)");
     }
 

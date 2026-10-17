@@ -38,7 +38,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=market-risk,genomics,trading",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.security.redact=var99,significance",
+        "drishti.security.redact=VAR_99,significance",
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true",
         "drishti.identity.database-url=jdbc:sqlite:target/explainglossary-${random.uuid}/identity.db"})
@@ -68,7 +68,7 @@ class ExplainGlossaryTest {
     @Test
     void theKeyFiguresOfAVarPageAreExplainedFromThePacksVocabulary() throws Exception {
         JsonNode e = explain("full", "var/VAR-COMM");
-        JsonNode v = term(e, "var99");
+        JsonNode v = term(e, "VAR_99");
         assertThat(v).isNotNull();
         assertThat(v.path("term").asText()).isEqualTo("Value at risk, 99%, 1 day");
         assertThat(v.path("unit").asText()).isEqualTo("USD");
@@ -76,8 +76,8 @@ class ExplainGlossaryTest {
         assertThat(v.path("origin").asText()).isEqualTo("market-risk:vocabulary.var99");
         assertThat(v.path("shownIn").toString()).contains("strip");
         assertThat(v.path("label").asText()).isNotBlank();
-        assertThat(term(e, "es975").path("term").asText()).isEqualTo("Expected shortfall, 97.5%");
-        assertThat(term(e, "exceptions").path("note").asText()).startsWith("0-4 is the Basel green zone");
+        assertThat(term(e, "ES_975").path("term").asText()).isEqualTo("Expected shortfall, 97.5%");
+        assertThat(term(e, "EXCEPTIONS").path("note").asText()).startsWith("0-4 is the Basel green zone");
     }
 
     @Test
@@ -120,7 +120,7 @@ class ExplainGlossaryTest {
     @Test
     void aMaskedKeyFigureIsFlaggedAndItsValueIsNowhereInTheGlossary() throws Exception {
         JsonNode e = explain("masked", "var/VAR-COMM");
-        JsonNode v = term(e, "var99");
+        JsonNode v = term(e, "VAR_99");
         assertThat(v.path("masked").asBoolean()).isTrue();
         assertThat(e.path("glossary").toString()).doesNotContain("10.9m", "10949577");
     }
@@ -141,7 +141,7 @@ class ExplainGlossaryTest {
         // pack lint asks by kind alone (no provenance): the derived source's note is found among the sources that serve the kind
         assertThat(router.describeField("portfolio-trades", "NOTIONAL")).get().satisfies(n -> assertThat(n.formula()).startsWith("sum first($.LEGS).NOTIONAL"));
         assertThat(router.describeField("portfolio-trades", "nothing")).isEmpty();
-        assertThat(router.describeField("var", "var99")).isEmpty();
+        assertThat(router.describeField("var", "VAR_99")).isEmpty();
     }
 
     @Test
