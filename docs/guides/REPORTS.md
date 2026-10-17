@@ -330,7 +330,7 @@ Rank by a column that is not masked (`counterparties.id`, not the masked name): 
 | `legend` | charts | `bottom`, `top`, `right`, `none` |
 | `axisTitles` | bar, column, line, area, combo | `{ x, y }` |
 | `colour` | charts with one series | a `#rrggbb`; the designer offers the theme's colours |
-| `numberFormat` | charts, cards, tables | `amount0`, `signed0`, `signed2`, `compact`, `pct`; else the measure's own format from the dataset |
+| `numberFormat` | charts, cards, tables | `amount0`, `signed0`, `signed2`, `compact`, `pct` (a value of at most 1 is a fraction, a larger one already a percent), `share` (always a fraction of 1: `share_of` measures, 2.3.0); else the measure's own format from the dataset |
 | `conditional` | cards, kpis, gauges, tables, matrices, bar, column | `[{ measure, op: lt, le, gt, ge, eq or ne, value, colour }]` |
 | `dataBars` | table, matrix | measures to draw as bars in the cell |
 | `subtotals` | matrix | subtotals and totals |
@@ -511,76 +511,28 @@ and keeps the latest `format.window` points (default 120). The points live **in 
 - { id: rolling, type: live-chart, title: Net MTM and losses, rolling, at: { x: 6, y: 2, w: 6, h: 5 }, wells: { values: [MTM, Losses] }, format: { window: 120 } }
 ```
 
-### Perspective
+### Perspective visuals of 2.1 (since 2.3.0: Drishti's grid)
 
-`perspective-grid` and `perspective-pivot` show the **rows of one table** in [Perspective](https://perspective.finos.org/) (FINOS, Apache-2.0, vendored: `drishti-console/web/static/vendor/perspective/`, no CDN). Perspective runs in the browser as WebAssembly with its engine in a
-worker of this origin; it does the sorting, scrolling and **pivoting** itself, on the rows the person may see.
-
-```yaml
-- { id: all-trades, type: perspective-grid, title: Trades, at: { x: 0, y: 0, w: 12, h: 12 },
-    wells: { columns: [trade.tradeId, trade.desk, trade.book, trade.currency, trade.trader, trade.notional, trade.mtm] } }
-- { id: desk-currency, type: perspective-pivot, title: MTM by desk and currency, at: { x: 0, y: 0, w: 12, h: 12 },
-    wells: { rows: [trade.desk], columns: [trade.currency], values: [trade.mtm, trade.notional] },
-    format: { aggregates: { trade.mtm: sum, trade.notional: sum } } }
-```
-
-![A Perspective grid of 750 live trades](img/bi-live/perspective-grid.png)
-
-![A Perspective pivot: desks down, currencies across, MTM and notional summed, re-pivoted as the trades tick](img/bi-live/perspective-pivot.png)
-
-* **The first read is Arrow.** `POST /api/v1/bi/reports/{id}/query?format=arrow` (the console passes the bytes through unchanged) answers the visual's rows as an Apache Arrow IPC stream, **masked for the reader**: a masked column holds `•••`, never the value. The columns are named as the table names them (`trader`, not `trade.trader`), plus the table's `id` (the key Perspective updates rows by) and, for a live table, `updateSeq`. The headers carry `X-Bi-Rows`, `X-Bi-Masked` and `X-Bi-Live` (the table's counters as JSON).
-* **Then only what changed.** On a tick the page asks the same visual with `state: { since: <seq> }` (JSON): the rows whose `updateSeq` is above the one the last answer ended at, applied to the Perspective table **by key**. When rows have *left* the table (evicted, deleted: its `epoch` changed) the whole set is read again and replaces the table. The line under the visual says the row count and "live".
-* **Masks per reader.** The same visual for a reader without `raw`:
-
-![The grid for a reader without raw: the trader column reads the mask, before and after every update](img/bi-live/perspective-grid-masked.png)
-
-```text
-columns: tradeId, desk, book, productType, currency, direction, trader, notional, mtm, pnl1d, id, updateSeq
-rows:    ["BBG-60000001","DESK-FI","BOOK-FI-3","GOVT_BOND","CHF","Short","•••",198000000.0,-978378.0,-23374.0,"BBG-60000001",1]      masked: ["trader"]
-```
-
-* **Only a page that holds one is given WebAssembly.** The console gives a report or board page that holds a Perspective visual, in its own response, the strict policy plus `script-src 'wasm-unsafe-eval'` and the SHA-256 of the four `<style>` texts Perspective writes
-  (`style-src 'self' 'sha256-...'`): never `'unsafe-eval'`, never `'unsafe-inline'`, no blob worker (the engine's worker is a script of this origin, `worker-src 'self'`). Every other BI page, the designer included, keeps the strict policy with no WebAssembly. The list of hashes is `STYLE_HASHES` in
-  `drishti-console/core/perspective_csp.py`; `python tools/perspective-style-hashes.py --console ... --check` measures the vendored version's styles on the real pages and a Chromium test fails, naming the hash, when a library update writes another. Details and measurements: [RUPAKA_POC.md](../architecture/RUPAKA_POC.md#12-the-perspective-retest-phase-5).
-* **If Perspective cannot start** in a tab (WebAssembly blocked or failing), the visual shows the first 500 rows in Drishti's own table with a line that says so, and keeps following the live table the same way.
-* **Checks.** All the fields of a `perspective-*` visual must be columns **of one table** and not date parts; `format.aggregates` may name only columns of `values` and one of `sum avg count "distinct count" min max first last median dominant unique`; a pivot's `values` must hold a column (`DRS-9031`, `DRS-9032`). Without `title` or `alt` Check warns (`A11Y`).
-* Rows are limited by `drishti.bi.report.perspective-rows` (20,000).
-
-#### Perspective charts and the settings panel
-
-`perspective-chart` draws the same rows as a pivot with Perspective's **chart plugin** (d3fc, in the vendored 3.8.0): `format.plugin` names the chart (`Y Bar`, `X Bar`, `Y Line`, `Y Area`, `Y Scatter`, `X/Y Line`, `X/Y Scatter`, `Heatmap`, `Treemap`, `Sunburst`, `Candlestick`, `OHLC`; the default is `Y Bar`). The plugin is loaded the first time a chart needs it.
+Wave B made the servers compute every number and the browser only draw ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3): no BI page loads
+WebAssembly any more, so Perspective (and its settings panel and saved views) is gone. A report written for 2.1 still opens: its `perspective-grid`,
+`perspective-pivot` and `perspective-chart` visuals are drawn as **Drishti's own grid of the rows the server sends** (masked for the reader, as before),
+under the strict policy. The rows are not pivoted or added up in the browser: for a pivot or a chart, change the visual's type in the designer (or the
+YAML) to a `matrix` (the server groups and totals) or a chart. The live desk sample did so in 2.3.0:
 
 ```yaml
-- { id: mtm-chart, type: perspective-chart, title: Net MTM by desk and currency, at: { x: 0, y: 0, w: 12, h: 12 },
-    wells: { rows: [trade.desk], columns: [trade.currency], values: [trade.mtm] },
-    format: { plugin: Y Bar, aggregates: { trade.mtm: sum } } }
+- id: desk-currency
+  type: matrix                    # was perspective-pivot
+  wells: { rows: [trade.desk], columns: [trade.currency], values: [MTM, Notional] }
+- id: mtm-chart
+  type: column                    # was perspective-chart
+  wells: { axis: [trade.desk], legend: [trade.currency], values: [MTM] }
+  format: { stacked: true, labels: false }
 ```
 
-![The chart page of the live desk report](../tutorials/img/t12/15-perspective-chart.jpg)
+![The live desk's Chart page in 2.3.0: a stacked column per desk, one series per currency, worked out by the server](../tutorials/img/t12/15-chart-page.jpg)
 
-Every Perspective visual (grid, pivot, chart) has two buttons on its frame:
-
-* **Settings** (the sliders icon) opens Perspective's own **settings panel**: the columns, *Group by*, *Split by*, *Order by*, *Where*, the aggregates, the plugin and each plugin's own options. It changes only what *you* see.
-* **Save this view into the report** (the floppy icon; for the people who may edit the report, and not on a shipped report) writes the viewer's current state into the report's **draft** as `format.view`, through the same checker and writer the designer uses (`GET /items/<id>`, `POST /reports/validate`, `POST /reports/format`, `PUT /items/<id>`), and says so. Publish the report for everyone to see it.
-
-![The settings panel open on the chart: group by desk, split by currency, the sum of mtm](../tutorials/img/t12/16-chart-settings.jpg)
-
-```yaml
-format:
-  plugin: Y Bar
-  view:                              # what the settings panel left (Perspective's own save(), less the theme and whether the panel was open)
-    plugin: Y Line
-    group_by: [desk]
-    split_by: []
-    columns: [mtm]
-    aggregates: { mtm: sum }
-    sort: [[mtm, desc]]
-    filter: [[currency, "==", EUR]]
-```
-
-`view` is applied over what the wells say, the next time the report opens. Its keys are `plugin`, `plugin_config`, `columns`, `group_by`, `split_by`, `aggregates`, `sort`, `filter`, `expressions` and `columns_config` (the column names are the **table's own**, `desk`, not `trade.desk`); another key is a warning and is ignored, a `plugin` that is not Datagrid or a chart is `DRS-9032`, and a view over 20,000 characters is refused. The view of a `perspective-grid` and `perspective-pivot` is saved the same way.
-
-**The policy.** A page that holds a **chart** is given, besides the four styles of a grid and a pivot, the two more `<style>` texts the chart plugin writes (`CHART_STYLE_HASHES`, `core/perspective_csp.py`); the Chromium test of the chart page lists every style the viewer, the plugin and the open panel write and fails, naming the hash, if one is missing. Still no `unsafe-eval`, no `unsafe-inline`, no blob worker. **Opening the settings panel logs about a dozen refused `style` attributes** (`style-src-attr`): the viewer's own code sets a few inline sizes with `setAttribute('style', ...)`, which this policy does not allow and which are not worth relaxing it for; the panel works, and the only thing that can differ is some spacing. Nothing else is refused.
+The checks of a `perspective-*` visual are as before (one table, `format.aggregates` from the list), and `drishti.bi.report.perspective-rows` (20,000)
+still caps its rows; `format.view` and `format.plugin` are read and ignored.
 
 ## 14. Phone and tablet layouts
 

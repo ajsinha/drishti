@@ -250,6 +250,57 @@ calendars: { holidays: USNY, fiscal-year-start: 4 }
 fx: { rates: rates, from: base, to: quote, rate: rate, date: day, base: USD }
 ```
 
+### 5.4 In the console: Quick calculation and the Calculations tab (wave B)
+
+Nothing of sections 5.1 to 5.3 needs typing. In the model designer (**Models**, a model, **Edit**):
+
+**Quick calculation** (the **Measures** tab, under *New measure from a column*). Pick a measure you have, a calculation and, when it needs one, a field,
+a date field, a relationship or a parameter; the formula is written below it and the name is proposed. **Add measure** writes it and the server checks it
+like any other. The calculations offered are the ones the server's catalogue has built:
+
+| Calculation | Writes |
+|---|---|
+| % of total | `share_of(measure('MTM'), over=ALL)`, format `share` (a share of 1 shown as a percent: 1.25 is 125 %) |
+| % of the total of a field | `share_of(measure('MTM'), over=[books.name])` |
+| Ignoring a field's filter (a slicer) | `calc(measure('MTM'), ignore=[desks.name])` |
+| Ignoring every filter | `calc(measure('MTM'), ignore=ALL)` |
+| Through another relationship | `calc(measure('MTM'), via='r_5')` (a relationship without an id is given one) |
+| Year, fiscal year, month to date; prior period; running total | `ytd(...)`, `fiscal_ytd(...)`, `mtd(...)`, `prior_period(...)`, `running(...)` over the date field you pick |
+| Closing, opening, average balance; last value | `closing(...)`, `opening(...)`, `avg_over(...)`, `last(...)` over the date field |
+| As of the business day before | `as_of(measure('MTM'), shift_date(asof(), -1))` |
+| What-if: shocked by a parameter | `measure('MTM') * (1 + param.shock)` |
+
+![Quick calculation: Sum of mtm, % of total, the formula written for you](img/bi-wave-b/quick-calculation.jpg)
+
+The formula can then be edited in the measures table, in the ExpressionEditor, which completes `param.<name>` (the model's parameters), the
+relationship ids after `via=` and `ALL` after `over=` or `ignore=`. A measure's **Via** column picks the relationship it follows (`via:` in the YAML).
+
+**The Calculations tab** holds what is not a measure: **calculation groups** (a group's name and precedence, its items as formulas over `SELECTED`, a
+new item from the same templates), **parameters** (name, kind, title, default, min, max, step, the values of a text parameter, the fields of a field
+parameter), the **business calendar** (holidays and the month the fiscal year starts) and **currency conversion** (the rates dataset and its columns).
+
+![The Calculations tab: a calculation group Time, a what-if parameter shock and the business calendar](img/bi-wave-b/calculations-tab.jpg)
+
+What it writes (the YAML tab, unchanged by hand):
+
+```yaml
+measures:
+  Sum of mtm:  { expr: "sum(trade.mtm)", format: signed0 }
+  MTM share:   { expr: "share_of(measure('Sum of mtm'), over=ALL)", format: share }
+  MTM shocked: { expr: "measure('Sum of mtm') * (1 + param.shock)" }
+calc-groups:
+  Time:
+    precedence: 10
+    items: {Current: SELECTED}
+parameters:
+  shock: {kind: number, default: 0, min: -1, max: 1, step: 0.01}
+calendars: {holidays: USNY, fiscal-year-start: 4}
+```
+
+A reader then sets the parameters and picks a calculation group's item on the report itself ([BI_GUIDE.md section 25](BI_GUIDE.md#25-live-answers-and-standing-queries-wave-b-230)).
+From the command line the same model is checked with `drishti.py bi model check <file>` and a query with parameters is `POST /api/v1/bi/mq` with
+`mq: 2`, `params` and `calc` (section 5.2).
+
 ## 6. Functions
 
 The reference below is generated from the server's catalogue (`drishti-server/src/main/resources/bi/expr/functions.yaml`), the same list the
@@ -1697,8 +1748,8 @@ counterparty-risk packs; [DATASETS.md](DATASETS.md) shows its YAML) and **every 
 (`drishti-console/tests/test_expression_recipes.py` reads this section: the block under each `####` heading is the expression, its `# by:` line the
 fields the test groups by, `# scope:` the scope when it is not a measure). Change the aliases (`trades`, `netting_sets`, ...) to your model's.
 
-How to read them: each recipe is the question, the expression, and what to watch for. A recipe that needs a function of a later wave is listed at the
-end ([11.10](#1110-arriving-in-wave-b)), with the expression it will take.
+How to read them: each recipe is the question, the expression, and what to watch for. The filter context, the balances and time travel of wave B are
+[11.10](#1110-filter-context-balances-and-time-wave-b); most of them are also one choice of the model designer's **Quick calculation** (section 5.4).
 
 ### 11.1 Positions and P&L
 
@@ -1843,7 +1894,7 @@ round(sum(trades.notional) / 1_000_000, 1)
 ```
 
 Notional is in each trade's own currency: group by `trades.currency` (as here), or the server refuses a sum across currencies (`DRS-9158`); converting
-arrives with `convert` in wave B ([11.10](#1110-arriving-in-wave-b)).
+is `convert` over the model's `fx:` ([section 5.3](#53-balances-time-travel-calendars-and-currencies-wave-b)).
 
 #### R17 · Largest trade
 
@@ -2223,19 +2274,128 @@ trades.desk in user.desks
 startswith(trades.book, 'BOOK-PUB') or trades.desk in user.desks
 ```
 
-### 11.10 Arriving in wave B
+### 11.10 Filter context, balances and time (wave B)
 
-These need the filter context, conversion and balances of wave B (BI_DESIGN.md §3.3.5). The server refuses them today with `DRS-9129`, naming the wave.
+These change *which rows* an aggregate reads (section 5.1) or *which dates* (section 5.3). Security is never in scope: "all" is always all you may see.
 
-| Question | DEL (wave B) |
-|---|---|
-| Notional in USD at the trade date | `notional * fx(currency, 'USD', at=tradeDate)` (a derived column) |
-| Notional in USD at the as-of date | `convert(sum(trades.notional), to='USD', at='as-of')` |
-| MTM as a % of its desk | `share_of(measure('MTM'), over=[books.name])` |
-| MTM as a % of the total *you* may see | `share_of(measure('MTM'), over=ALL)` |
-| MTM of all desks, ignoring the desk slicer | `calc(measure('MTM'), ignore=[desks.name])` |
-| Closing balance per month | `closing(sum(netting_sets.collateral), trades.tradeDate, period='month')` |
-| Average daily balance | `avg_over(sum(netting_sets.collateral), trades.tradeDate)` |
-| Year to date on the fiscal calendar | `fiscal_ytd(sum(trades.pnl1d), trades.tradeDate)` |
-| Day-on-day change as of yesterday | `measure('MTM') - as_of(measure('MTM'), shift_date(asof(), -1))` |
-| Average MTM per desk, then averaged | `avg_by(measure('MTM'), by=[desks.name])` |
+#### R60 · Share of the total you may see
+
+```python
+# by: desks.name
+share_of(sum(trades.mtm), over=ALL)
+```
+
+Each desk's MTM over the MTM of every desk you may see, whatever the slicers say about desks: the shares of the answer add up to 1 when no other filter
+is set. Format it `share` (always a share of 1: a negative total gives shares above 100 %, which `pct` would misread). Quick calculation: *% of total*.
+
+#### R61 · A book's share of its desk
+
+```python
+# by: desks.name, books.name
+share_of(sum(trades.mtm), over=[books.name])
+```
+
+`over=` names the fields whose filter and group are dropped: here the book, so each book is divided by its desk's MTM. Power BI: `DIVIDE(x, CALCULATE(x, ALL(books[name])))`.
+
+#### R62 · Share of the parent level
+
+```python
+# by: desks.name, books.name
+parent_of(sum(trades.mtm), hierarchy='Desk and book')
+```
+
+The value of the level above in the model's hierarchy (the desk of each book), the denominator of a "% of parent" (`sum(trades.mtm) / parent_of(...)`).
+
+#### R63 · MTM of every desk, ignoring the desk slicer
+
+```python
+# by: desks.name
+calc(sum(trades.mtm), ignore=[desks.name])
+```
+
+The same number on every row: the slicer and the row's own desk are dropped, every other filter stays. Quick calculation: *Ignoring a field's filter*.
+
+#### R64 · Everything you may see
+
+```python
+# by: desks.name
+calc(sum(trades.mtm), ignore=ALL)
+```
+
+Every query filter dropped (the slicers, the page, the drill); your row rules stay. A desk head's "all" is their desks.
+
+#### R65 · Live MTM whatever the slicers say about status
+
+```python
+# by: desks.name
+calc(sum(trades.mtm), where=trades.status == 'Live')
+```
+
+`where=` adds a condition to this aggregate only (it is ANDed with the query's filters, not instead of them).
+
+#### R66 · The average desk
+
+```python
+# by: counterparties.sector
+avg_by(sum(trades.mtm), by=[desks.name])
+```
+
+MTM per desk first, then the average of those numbers for each sector: an explicit iteration, where a plain `avg(trades.mtm)` would average the trades.
+
+#### R67 · Fiscal year to date
+
+```python
+# by: desks.name
+fiscal_ytd(sum(trades.pnl1d), trades.tradeDate)
+```
+
+The P&L of the trades dated from the start of the fiscal year (the model's `calendars: { fiscal-year-start: }`, else January) to the as-of date.
+
+#### R68 · The last day's MTM (a balance)
+
+```python
+# by: desks.name
+last(sum(trades.mtm), trades.tradeDate)
+```
+
+Each desk's MTM on its latest trade date: a balance is read on one date, never added across dates.
+
+#### R69 · Month-end closing
+
+```python
+# by: desks.name
+closing(sum(trades.mtm), trades.tradeDate)
+```
+
+The value on the last **business** day of each month up to the as-of date, on the model's calendar: a month ending on a holiday closes on the business day
+before. `opening` is the closing of the period before.
+
+#### R70 · Opening balance
+
+```python
+# by: desks.name
+opening(sum(trades.mtm), trades.tradeDate)
+```
+
+#### R71 · Average daily balance
+
+```python
+# by: desks.name
+avg_over(sum(trades.mtm), trades.tradeDate)
+```
+
+The aggregate per date, then the average of those dates.
+
+#### R72 · Day on day
+
+```python
+# by: desks.name
+sum(trades.mtm) - as_of(sum(trades.mtm), shift_date(asof(), -1))
+```
+
+`as_of` asks the same aggregate at another business date (same fields, filters and security); `shift_date(asof(), -1)` is the business day before the
+query's as-of date. Quick calculation: *As of the business day before*, then subtract.
+
+The currency recipes need the model's `fx:` (section 5.3), which the trading-risk sample does not declare: `convert(sum(trades.notional), to='USD')` is the
+notional in dollars at the as-of date, `convert(sum(trades.notional), to='EUR', at='trade-date')` at each trade's own date. A what-if shock needs a
+parameter: `sum(trades.mtm) * (1 + param.shock)`, set by the reader with a parameter slicer.

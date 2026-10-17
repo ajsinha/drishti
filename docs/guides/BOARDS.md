@@ -83,7 +83,7 @@ Unknown keys are **warnings** (ignored), never errors. A file that does not pars
 | `at` | `{ x, y, w, h }` on the same **12-column grid** as a report: `x` 0 to 11, `w` 1 to 12 with `x + w` at most 12, `y` 0 or more, `h` 1 to 40 rows of 56 px |
 | `alert` | the thresholds, and `notify:` (section 4) |
 
-Any visual draws as a tile except a **slicer** (a control, not a picture: refused, `DRS-9052`). A tile is not interactive: nothing a person clicks on a tile filters another tile, and there is no drill. Python tiles run Python for you (below). Perspective tiles work, charts included (the page then has the narrow WebAssembly policy, [REPORTS.md](REPORTS.md#13-live-visuals-and-perspective-phase-5)); a **rolling chart** keeps its points in the browser for as long as the board is open.
+Any visual draws as a tile except a **slicer** (a control, not a picture: refused, `DRS-9052`). A tile is not interactive: nothing a person clicks on a tile filters another tile, and there is no drill. Python tiles run Python for you (below). A 2.1 Perspective tile is drawn as Drishti's grid of its rows (2.3.0: no WebAssembly on any BI page, [REPORTS.md](REPORTS.md#13-live-visuals-and-perspective-phase-5)); a tile on a model follows its pushed answers with a state chip, and the board has the time picker ([BI_GUIDE.md section 25.1](BI_GUIDE.md#251-in-the-console-reports-boards-and-alerts-follow-pushed-answers)); a **rolling chart** keeps its points in the browser for as long as the board is open.
 
 A tile whose report the reader may not open, or that has lost its visual, shows **Not available** with the reason; the rest of the wall draws.
 

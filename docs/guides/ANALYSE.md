@@ -18,7 +18,8 @@
 **Analyse** (`/bi/explore`, the rail's *Analyse*) is the analyst's bench of Drishti BI. You open a dataset as an **extract**, the rows *you* may see (masked columns stay masked, row rules
 apply), and work on it three ways: **Slice** (a drag-and-drop pivot), **SQL** (cells over the extract) and **Python** (pandas cells, with charts). You save the work as a **notebook**
 (a BI item with versions and review like any other) and **promote** what is good: a Python cell becomes a Python Measure or Visual draft, a slice or a SQL cell becomes a **visual in a new or an existing report draft**.
-**Slice and SQL run in your browser** (DuckDB-Wasm) on the extract the page already holds, with the console as the fallback ([section 13](#13-in-the-browser-duckdb-wasm)).
+**Nothing runs in your browser** (wave B, 2.3.0): the Slice is worked out by the console, SQL is Drishti SQL run by the server over the model, Python runs in
+the console's sandbox ([section 13](#13-in-the-browser-duckdb-wasm)). The page asks and draws.
 
 This is the reference. A walk-through is [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [RUPAKA.md](../architecture/RUPAKA.md) section 20.9; the quant engine behind
 `quant.price(...)` is [QUANT_SERVICE.md](../architecture/QUANT_SERVICE.md#16-the-consoles-quantengine-slot-built-lean).
@@ -47,9 +48,9 @@ This is the reference. A walk-through is [tutorial 14](../tutorials/14-python-an
                                                                                     │
         ┌──────────────────────────────┬────────────────────────────────────────────┤
      Slice                           SQL                                         Python
-  DuckDB-Wasm in the page       DuckDB-Wasm in the page                   console's sandboxed worker (server)
-  (else plain JavaScript)       (else the console: SQLite,                or Pyodide in the page (browser)
-                                one read-only SELECT)
+  the console                   the server: Drishti SQL over the model    the console's sandbox
+  (POST /bi/explore/pivot)      (a cell over `extract`: the console,       (a fork-server child per call)
+                                one read-only SELECT in SQLite)
 ```
 
 The extract is **rebuilt for you on every run** and never kept: the console holds nothing between calls, so a mask or a row rule changed on the server applies the next time you run a cell.
@@ -88,8 +89,9 @@ form opens datasets, and a link *Analyse this* from a report is not built (secti
 
 Fields appear as chips. Add one to **Rows**, **Columns**, **Values** or **Filters** with its small buttons (`R`, `C`, `V`, `F`, which work from the keyboard and on a phone) or drag it to a zone.
 A value takes an aggregation (`sum`, `avg`, `count`, `min`, `max`; a text field starts as `count`); a filter keeps rows where the field equals one of its values. The pivot redraws at once.
-The pivot is worked out by **DuckDB-Wasm in your browser** over the extract the page holds (one `GROUP BY`; [section 13](#13-in-the-browser-duckdb-wasm)), or, when it is not installed or cannot start, by plain JavaScript over the same
-rows: the two give the same table (a Chromium test compares them). The line under the table says which: *Worked out by DuckDB in this browser* or *Worked out in this page*. The table shows the first 500 pivot rows.
+The pivot is worked out by **the console** over your extract (`POST /bi/explore/pivot`: the extract is rebuilt for you, grouped, and the table and the
+filters' values come back; at most 2,000 row or column keys, `DRS-9072` beyond). The line under the table says *Worked out by the console*. The table shows the
+first 500 pivot rows. (Until 2.2 the pivot was DuckDB-Wasm or JavaScript in the page; the browser computes nothing since wave B.)
 
 ![A SQL cell on the server engine: Drishti SQL over the model, the engine select, and the line naming the model and the plan](../tutorials/img/t14/19-analyse-engines.jpg)
 
@@ -127,11 +129,11 @@ SELECT desk, COUNT(*) AS trades, SUM(notional) AS notional
 FROM extract GROUP BY desk ORDER BY notional DESC
 ```
 
-It runs **in your browser** in DuckDB-Wasm when that is installed (section 13), else on the console in an in-memory SQLite database that is **read-only by construction**: an authorizer refuses everything but `SELECT`, reads and plain functions (so `INSERT`,
+A cell over the model is **Drishti SQL, run by the server** as you (section 4's first half). A cell that reads the table `extract` (a notebook of 2.2) runs
+on the console in an in-memory SQLite database that is **read-only by construction**: an authorizer refuses everything but `SELECT`, reads and plain functions (so `INSERT`,
 `UPDATE`, `DELETE`, `DROP`, `CREATE`, `ATTACH`, `PRAGMA` and `load_extension` are `DRS-9073`), a second statement is `DRS-9070`, text over `bi.explore.sql_max_chars` (20,000) and a query
-running past `bi.explore.sql_max_seconds` (5) are `DRS-9072`, and at most `bi.explore.sql_max_rows` (5,000) rows come back (more are cut, and the result says so). **The dialect depends on where it ran**: the console's is SQLite's
-(`date()`, `strftime`, `||`, `LIMIT`), the browser's is DuckDB's (`strftime(date, '%Y-%m')`, `date_trunc`, `list_agg`, `QUALIFY`, window functions, `FROM extract` without a `SELECT`); the line under the result says which engine ran it
-(`DuckDB in this browser` or `run by the console (SQLite)`), and the engine choice above the tabs forces one. A query that uses a dialect feature only one of them has fails on the other: write for the engine you run. *Run all* runs the cells in order.
+running past `bi.explore.sql_max_seconds` (5) are `DRS-9072`, and at most `bi.explore.sql_max_rows` (5,000) rows come back (more are cut, and the result says so). A cell over `extract` speaks SQLite's dialect (`date()`, `strftime`, `||`, `LIMIT`); the line under the result says which ran it (*Drishti SQL, run by the
+server over …* or *over the extract, run by the console*). *Run all* runs the cells in order.
 
 ![A SQL cell](img/analyse/sql.png)
 
@@ -160,9 +162,9 @@ result = {"title": {"text": "Notional by desk"}, "xAxis": {"type": "category", "
 
 ![A Python cell with a chart](img/analyse/python.png)
 
-**Where it runs** (the cell's selector): **Server (sandbox)**, the default, or **Browser (Pyodide)**, Calc's runtime loaded on first use (needs `tools/fetch-pyodide.sh`; it has numpy, pandas,
-scipy and statsmodels, not pyarrow; `quant` raises a clear `ValueError` there). The Analyse page keeps the **strict content-security policy** (no WebAssembly): browser Python runs in
-Calc's own Web Worker, whose response alone carries `'wasm-unsafe-eval'`, exactly as for a Python visual. **Running Python needs the `bi-author` power**; Slice and SQL need only `bi`.
+**Where it runs:** the console's sandbox, always (the line beside **Run** says *Runs on the console (sandbox)*): a child of the console's fork-server, with no
+network, a scratch folder and CPU, memory, time and output limits. A notebook of 2.2 whose cell says `target: browser` runs there too. The Analyse page keeps
+the **strict content-security policy**, with no WebAssembly. **Running Python needs the `bi-author` power**; Slice and SQL need only `bi`.
 
 ## 6. Notebooks
 
@@ -227,8 +229,6 @@ The console's `bi.explore.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)):
 | `max_cells` | `60` | most cells in a notebook |
 | `max_extracts` | `6` | most further extracts in a notebook, besides the first (`DRS-9072`) |
 | `quant_engine` | `stand-in` | the engine behind `quant.price` |
-| `browser_engine` | `auto` | `auto`: Slice and SQL run in the browser with DuckDB-Wasm when it is installed (`tools/fetch-duckdb-wasm.sh`), the console otherwise; `server`: always on the console (and the choice of engine is not offered) |
-| `browser_start_seconds` | `30` | how long DuckDB-Wasm has to start in the browser (the first use fetches about 36 MB of WebAssembly) before the console takes over; 3 to 300 |
 
 The Python runner's own `bi.python.*` settings (workers, packages, limits) apply to cells too. **The server's `drishti.bi.report.python-packages` and the console's
 `bi.python.packages` must list the same packages** (a test, `test_python_packages_agree_between_the_server_and_the_console`, fails the build otherwise).
@@ -243,7 +243,7 @@ Analyse uses the Python items' codes ([API_GUIDE.md](API_GUIDE.md) table; [TROUB
 | `DRS-9071` | 422 | the Python cell raised (the traceback is shown to `bi-author`) |
 | `DRS-9072` | 413 or 504 | a limit: SQL text, SQL time, cell size, memory, time, output, extract input |
 | `DRS-9073` | 403 | refused: SQL that is not a plain SELECT, Python that needs the network, a file or a package it did not list, or Python without `bi-author` |
-| `DRS-9074` | 503 | the runner is off, busy or lacks `pandas`/`pyarrow`; or no Pyodide for a browser run |
+| `DRS-9074` | 503 | the runner is off, busy or lacks `pandas`/`pyarrow` |
 
 The server's own refusals (`DRS-9001` no such dataset, `DRS-9020` series, a denied dataset) come through unchanged.
 
@@ -265,21 +265,14 @@ uses the existing `POST /api/v1/bi/workspaces/me/items` and `PUT /api/v1/bi/item
 * **Extracts of a million rows**, Perspective in Analyse, Graphic Walker over an extract (it is in Calc: [PYTHON_CALC.md](PYTHON_CALC.md#19-the-bi-client-and-graphic-walker)), a *Data* tab (editing the extract), *Notes* cells, outputs saved with a notebook, scheduled notebook runs, parameters
   and widgets, sharing a notebook's outputs, a link *Analyse this* from a report visual or from a terminal view, cell tests, further extracts in the **browser** target (they need the server's sandbox), and an `extract(...)` of a **report visual** (further extracts are datasets).
 * **Pivot extras**: grand totals and subtotals in the Slice (use a matrix in a report for true totals), sorting by a value, number formats.
-* **Quant:** the real engine (QLRisk); `quant` in the browser target.
+* **Quant:** the real engine (QLRisk).
 
 ## 13. In the browser: DuckDB-Wasm
 
-Slice and SQL run on the extract **your page already holds**, with [DuckDB-Wasm](https://duckdb.org/docs/api/wasm/overview) (MIT, vendored; the build is 36 MB, so it is installed by `tools/fetch-duckdb-wasm.sh` and not committed:
-[VENDOR.md](../../drishti-console/web/static/vendor/VENDOR.md)). The rows are the ones the server built for you (row rules and masks applied); DuckDB runs on a copy in the tab's memory and nothing is sent back.
-
-**The policy.** The page keeps the **strict** content security policy (no `unsafe-eval`, no `wasm-unsafe-eval`, no inline style): the page only imports DuckDB's script and starts its worker, and **the worker** is what compiles WebAssembly, under the policy the console puts on that one file
-(`script-src 'self' 'wasm-unsafe-eval'`, `connect-src` to the console's static files only: `core/app.py`, `worker_csp`). A Chromium test loads the page, runs both tabs and asserts that no violation was reported.
-
-**What DuckDB is allowed to do.** The extract is the only table. Once it is loaded, `SET enable_external_access = false` and `SET lock_configuration = true` close the doors: a query cannot read a file or a URL (`read_csv('http://...')` fails) or change a setting. The page also refuses what is not one read-only statement
-(`SELECT`, `WITH`, `FROM`, `VALUES`, `DESCRIBE`, `SUMMARIZE`; `COPY`, `ATTACH`, `INSTALL` and a second statement are `DRS-9073`, as on the console; DuckDB's own errors are `DRS-9070`). A query cannot be interrupted inside DuckDB, so one that runs past `bi.explore.sql_max_seconds` has its worker **ended** (`DRS-9072`) and the next run starts a fresh one. Reading a file counts as external access, so a different extract starts a new engine.
-
-**When the console does it instead.** DuckDB-Wasm not installed, `bi.explore.browser_engine: server`, a browser without WebAssembly, an engine that did not start within `bi.explore.browser_start_seconds`, or a notebook with further extracts. Slice then uses the JavaScript pivot and SQL the console's SQLite route; nothing else changes
-(a Chromium test blocks the engine and checks both fall back). A refusal of the query itself (`DRS-9070`, `9072`, `9073`) is **not** a reason to fall back: it is shown.
+*Removed in 2.3.0.* Wave B made the servers compute every number and the browser draw ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3): DuckDB-Wasm
+and the browser's Python (Pyodide) are no longer loaded by Analyse or any BI page, `bi.explore.browser_engine` and `browser_start_seconds` are gone (a
+setting left in a configuration is ignored), and `tools/fetch-duckdb-wasm.sh` is gone. The Slice is the console's, SQL the server's (or the console's
+for a cell over `extract`), Python the console's sandbox. Calc (the terminal's Python) still uses Pyodide in its own worker.
 
 ## 14. Promote to a report visual
 

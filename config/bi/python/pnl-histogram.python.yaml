@@ -28,7 +28,7 @@ interface: visual
 output: echarts
 inputs: [pnl1d]
 packages: [numpy]
-target: both
+target: server
 timeout: 10
 memory: 256
 params: { bins: 20 }

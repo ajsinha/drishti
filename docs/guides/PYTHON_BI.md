@@ -18,7 +18,7 @@
 Drishti Rūpaka runs **typed Python** where the expression language and the visual catalogue stop: a **Measure** is a Python function that turns the rows of a group into a number
 (a desk's P&L volatility, a percentile no aggregate gives, a fitted slope), and a **Visual** is a Python function that turns rows into a chart (a histogram with your own bins, a
 regression plot). Authors do not paste scripts into a visual: a Python function is a **BI item** of its own, with a manifest, versions, review and publishing like a dataset or a
-report, and a report names it. It runs **sandboxed on the console**, or **in the viewer's browser** (Pyodide), always on **the rows the person looking may see**.
+report, and a report names it. It runs **sandboxed on the console** (since 2.3.0 never in the browser), always on **the rows the person looking may see**.
 
 A third interface, the **Transform**, turns the frames of several datasets into a table that a **derived dataset** publishes (section 13): it is how Python joins datasets.
 
@@ -49,16 +49,16 @@ Python in the *terminal* (Calc) is a different thing: [PYTHON_CALC.md](PYTHON_CA
 ```
  report visual (type: python) ──asks──▶ console ──▶ server: what to run (item + manifest), and the rows this person may see (masked Arrow)
                                           │
-              ┌───────────────────────────┴───────────────────────────┐
-         server target                                            browser target
-   a short-lived worker process                         Pyodide in a Web Worker of the page
-   (no network, scratch folder, limits)                 (the runtime Calc ships; loaded on first use)
-              └──────────── a number per group, or a chart (data, never HTML) ────────────┘
+                                          │
+                       the console's sandbox: a child of its fork-server per call
+                (no network, scratch folder, CPU, memory, time and output limits)
+                                          │
+                   a number per group, or a chart (data, never HTML)
 ```
 
 | | Python measure | Python visual |
 |---|---|---|
-| function | `compute(table, params)` | `render(table, params)` |
+| function | `compute(table, params)`, or `compute_groups(frame, by, params)` once over every group (2.3.0) | `render(table, params)` |
 | called | once per group, with that group's rows | once, with all the rows handed over |
 | returns | one number (or `None`) | an ECharts option or a Vega-Lite specification (a dict, by `output:`), SVG text or PNG bytes |
 | drawn as | bars, one per group | the chart or image |
@@ -81,7 +81,7 @@ title: Desk P&L volatility
 interface: measure
 inputs: [pnl1d]                  # the columns the function reads, as the table names them
 packages: [pandas]
-target: both                     # server, browser or both
+target: server                   # 2.3.0: always the console (browser and both, from 2.2 items, run there too)
 timeout: 10                      # seconds
 memory: 256                      # megabytes
 params: { min_trades: 2 }
@@ -132,7 +132,7 @@ The body of a `python` item is YAML:
 | `entry` | no | the function's name: `compute` for a measure, `render` for a visual, `run` for a transform (a top-level function, or a method of a class `Transform`) |
 | `inputs` | measure: yes; transform: yes | a measure: the columns the function reads, as the table names them (`pnl1d`, not `trade.pnl1d`); a transform: the **datasets** it reads, in the order its function receives their frames (section 13) |
 | `packages` | no | what the source imports; each must be on the allow-list (`drishti.bi.report.python-packages`, console `bi.python.packages`) |
-| `target` | no | `server` (default), `browser` or `both`. A browser target cannot need a package Pyodide lacks (it has numpy, pandas, scipy, statsmodels, not pyarrow) |
+| `target` | no | `server` (default). 2.3.0: `browser` and `both` (items of 2.2) are read and run on the console like `server` |
 | `timeout` | no | seconds, 1 to `drishti.bi.report.python-max-seconds` (60); default 10 |
 | `memory` | no | megabytes the code may add to what Python needs to start, 32 to `python-max-memory-mb` (1024); default 256 |
 | `output` | visual | `echarts` (default), `vega-lite` (section 14), `svg` or `png`; a measure's output is `number`, a transform's `frame` |
@@ -206,7 +206,7 @@ parameters; the canvas shows a placeholder, since Python runs when a report is o
 | `format.run` | What happens |
 |---|---|
 | `server` | the console's runner (below) |
-| `browser` | Pyodide in a Web Worker of the page: the item must allow it (`target: browser` or `both`) |
+| `browser` | (until 2.2) Pyodide in the page; since 2.3.0 a visual that says `browser` runs on the console |
 | `auto` | the server first; when the server cannot run it (the runner is off or not installed, `DRS-9074`, or the item is for the browser only) and the browser can, the browser |
 
 **Server.** The console starts a **worker subprocess per call** (`python -I core/pyrunner_worker.py`), at most `bi.python.workers` (2) at once; a call waits `bi.python.queue_seconds` (5) for a place,
@@ -259,7 +259,7 @@ container with the usual limits. `GET /bi/python/status` says which isolation is
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `enabled` | `true` (`DRISHTI_BI_PYTHON_ENABLED`) | off: the server target answers `DRS-9074`; the browser target still works |
+| `enabled` | `true` (`DRISHTI_BI_PYTHON_ENABLED`) | off: the server target answers `DRS-9074` |
 | `workers` | `2` | processes at once |
 | `queue_seconds` | `5` | how long a call waits for a place |
 | `packages` | pandas, numpy, pyarrow, scipy, statsmodels | the allow-list; one not installed is refused when used. Keep it equal to the server's `python-packages` |
@@ -457,3 +457,26 @@ PUT /api/v1/me/measure-alerts/Vol
 ```
 
 The reader is tested against the real runner ([ProcessMeasureRunnerTest](../../drishti-server/src/test/java/com/ash/drishti/server/bi/transform/ProcessMeasureRunnerTest.java)) and with a stand-in ([PythonAlertReaderTest](../../drishti-server/src/test/java/com/ash/drishti/server/alerts/measure/PythonAlertReaderTest.java): what the runner is handed, a masked column, a failing run).
+
+## Wave B (2.3.0): one runner on the console, the Py-node endpoint, columns
+
+* **No browser target.** Pyodide is no longer loaded by any BI page; `target: browser` and `both` run on the console. The visual's *Run on* setting is gone
+  from the designer.
+* **The fork-server.** Each console runs one parent that imported pandas, numpy and pyarrow once and forks a child per call; the child gets its own session,
+  limits, audit hook and scratch folder, exactly as a fresh process did (`bi.python.fork_server`, [OPERATIONS.md](../admin/OPERATIONS.md#bi-scale-wave-b)).
+* **The L4 result cache.** An answer is kept by the item's code, its parameters and the exact input bytes (`bi.python.cache_entries`, `cache_seconds`): the
+  same masked rows give the same answer without a call; another reader's masked rows are other bytes, so never their answer.
+* **`compute_groups(frame, by, params)`.** A measure may define it instead of `compute`: one vectorised call over every group's rows that returns a
+  DataFrame of the group columns and one value column (`value`, else the last). Faster for many groups:
+
+```python
+def compute_groups(frame, by, params):
+    out = frame.groupby(by, dropna=False)["pnl1d"].std().reset_index()
+    return out.rename(columns={"pnl1d": "value"})
+```
+
+* **The `column` interface.** `derive(frame, params)` returns one value per row (a Series, an array or a list), for a dataset's `derive: { python: … }`
+  (plan node `PyColumn`).
+* **The Py-node endpoint.** The server's planner places Python nodes on the console tier and calls `POST /internal/py/transform`, `/measure` and
+  `/column` on the console with `X-Drishti-Runner-Token` ([API_GUIDE.md](API_GUIDE.md); `drishti.bi.transform.console-url` and `console-token` on the
+  server, the same `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` on the console). Without it the server runs `transform_cli.py` itself, as before.

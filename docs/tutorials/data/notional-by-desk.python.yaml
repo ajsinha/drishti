@@ -22,7 +22,7 @@ interface: visual
 output: echarts
 inputs: [desk, notional]
 packages: [pandas]
-target: both
+target: server                   # the console runs it (2.3.0: there is no browser target)
 timeout: 10
 memory: 256
 params: { top: 8 }

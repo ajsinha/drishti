@@ -1137,11 +1137,16 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 * **Nothing is drawn and the console shows no error.** The four scripts under `/static/vendor/vega/6.4.0/` load on first use; a proxy that blocks them (or a stale cache after an upgrade) leaves the frame empty. Reload with the cache off.
 * **The page reports a policy violation naming `style-src`.** Not from Vega: vega-embed is called with `defaultStyle: false`. A violation from an `unsafe-eval` means a different Vega build was vendored: it must be the bundle with `vega-interpreter` ([VENDOR.md](../../drishti-console/web/static/vendor/VENDOR.md)).
 
-### A Perspective chart or its settings panel
+### A visual says Stale, Not updating or Asked once (2.3.0)
 
-* **The settings panel logs "refused to apply inline style".** Expected: the viewer sets a dozen `style` attributes the policy does not allow; the panel works. Nothing else is refused ([REPORTS.md](REPORTS.md#perspective-charts-and-the-settings-panel)).
-* **The floppy button is not there.** It shows for the people who may edit the report, and not on a shipped report: copy it to your workspace.
-* **"Not valid ... format.view".** A saved view has the keys `plugin`, `plugin_config`, `columns`, `group_by`, `split_by`, `aggregates`, `sort`, `filter`, `expressions`, `columns_config`; `plugin` is Datagrid or a chart (`Y Bar`, `Y Line`, `X/Y Scatter`, `Heatmap`, `Treemap` ...).
+* **Stale.** Nothing was heard for `bi.live.stale_seconds` (30): the console's channel dropped (it reconnects by itself) or the server's stream is quiet
+  longer than its status interval. The picture is the last good answer; the chip goes back to Live with the next event.
+* **Not updating.** The standing query was refused or failed: the chip's title says why (`DRS-9181`/`9182`: too many standing queries for the server or
+  for you; close a tab or raise `drishti.bi.mq.max-subscriptions-per-user`; `DRS-9183`: a past as-of date never changes).
+* **Asked once.** The page follows 12 visuals (a board 16) already; the others were asked once. Split the page, or open the visual alone.
+* **Every few seconds.** Not a fault: windows, time intelligence and Python measures, or a model over `drishti.bi.mq.maintenance-budget`, are recomputed
+  on the server's tick (`drishti.bi.mq.tick`).
+* **No chip at all.** The visual reads a 2.1 dataset (no model query): it follows the report's stream as before, with the live bar above the page.
 
 ### Analyse: where the Slice, SQL and Python cells run (2.3.0)
 

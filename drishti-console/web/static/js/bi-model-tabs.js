@@ -23,9 +23,9 @@
   const M = window.drishtiModel, B = window.drishtiBi;
   if (!M || !B) { return; }
   const h = M.h, q = M.q;
-  const FORMATS = ['', 'amount0', 'amount2', 'signed0', 'signed2', 'pct', 'integer', 'decimal2'];
+  const FORMATS = ['', 'amount0', 'amount2', 'signed0', 'signed2', 'pct', 'share', 'integer', 'decimal2'];
   const AGGS = [['', 'the column\'s default'], ['sum', 'sum'], ['avg', 'average'], ['min', 'minimum'], ['max', 'maximum'], ['count', 'count'], ['distinct', 'distinct count']];
-  const FORMAT_WORDS = { amount0: 'amount, no decimals', amount2: 'amount, 2 decimals', signed0: 'signed amount, no decimals', signed2: 'signed amount, 2 decimals', pct: 'percent', integer: 'whole number', decimal2: 'number, 2 decimals' };
+  const FORMAT_WORDS = { amount0: 'amount, no decimals', amount2: 'amount, 2 decimals', signed0: 'signed amount, no decimals', signed2: 'signed amount, 2 decimals', pct: 'percent', share: 'share of 1, as a percent', integer: 'whole number', decimal2: 'number, 2 decimals' };
   const ATTRS = [['user.desks', 'the reader\'s desks'], ['user.roles', 'the reader\'s roles']];
   const sel = (options, value, attrs) => h('select', Object.assign({ class: 'studio-select' }, attrs || {}), options.map((o) => { const [v, t] = Array.isArray(o) ? o : [o, o || '(none)']; return h('option', { value: v, text: t, selected: String(value == null ? '' : value) === v }); }));
   const fieldsOf = (filter) => { const out = []; Object.keys(M.infos).forEach((a) => M.infos[a].columns.forEach((c) => { if (!filter || filter(c)) { out.push(a + '.' + c.name); } })); return out; };

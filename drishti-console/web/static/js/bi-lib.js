@@ -139,6 +139,7 @@
       case 'amount0': return minus(v, 0) + GROUP.format(Math.abs(v));
       case 'signed0': return sign(v, 0) + GROUP.format(Math.abs(v));
       case 'signed2': return sign(v, 2) + GROUP2.format(Math.abs(v));
+      case 'share': return minus(v * 100, 2) + FREE.format(Math.abs(v * 100)) + '%';          // a share of 1 (share_of): 1.25 is 125 %, never read as already a percent
       case 'pct': return (Math.abs(v) <= 1 ? minus(v * 100, 2) + FREE.format(Math.abs(v * 100)) : minus(v, 2) + FREE.format(Math.abs(v))) + '%';
       case 'compact': return B.compact(v);
       default: return minus(v, 2) + (Number.isInteger(v) ? GROUP.format(Math.abs(v)) : FREE.format(Math.abs(v)));

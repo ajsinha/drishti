@@ -31,7 +31,7 @@
   const MAX_FOLLOW = 12;                    // standing queries one page holds (the server allows drishti.bi.mq.max-subscriptions-per-user for a person)
   let pbar = null, picker = null;           // wave B: the parameter slicers and Show as (bi-consume.js), the time picker
   let rep = null, idx = null, pageId = null, palette = null, tokens = null;
-  const frames = new Map();                 // visual id -> {frame, spec, token, psp}
+  const frames = new Map();                 // visual id -> {frame, spec, token, res, mq, follow, chip}
   const rolling = {};                       // visual id -> the points a rolling chart has collected since the page opened
   let watch = null, indicator = null, refresher = null, seenGeneration = 0, wasOff = false;
   const live = q('[data-live]');

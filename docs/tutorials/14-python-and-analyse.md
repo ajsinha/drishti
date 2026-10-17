@@ -26,8 +26,8 @@ About 55 minutes.
 ## Before you start
 
 - [Tutorial 10](10-first-bi-report.md) done (reports, workspaces, `Economics desk`). You sign in as the development administrator, who holds the `bi-author` power that Python needs (reading with **Slice** and **SQL** needs only `bi`).
-- The console's Python environment from [tutorial 1](01-first-15-minutes.md) (`drishti-console/.venv`): it carries `pandas`, `numpy` and `pyarrow`, which Python items may import. Nothing else to install for the **server** target. (The **browser** target runs the same code in Pyodide, a download of
-  about 340 MB made once with `tools/fetch-pyodide.sh`; this tutorial uses the server.)
+- The console's Python environment from [tutorial 1](01-first-15-minutes.md) (`drishti-console/.venv`): it carries `pandas`, `numpy` and `pyarrow`, which Python items may import. Nothing else to install: since 2.3.0 every Python item and cell runs on the console, in its sandbox (a fork-server forks one child per call), never in
+  the browser.
 - Two small files in [data/](data/): [notional-by-desk.python.yaml](data/notional-by-desk.python.yaml) (a Python visual) and [desk-python.report.yaml](data/desk-python.report.yaml) (a report on the model `trades-basic@1` that uses it).
 - The command line token of tutorial 1 (`DRISHTI_TOKEN`).
 
@@ -56,7 +56,7 @@ title: Desk P&L volatility
 interface: measure
 inputs: [pnl1d]                  # the columns the function reads
 packages: [pandas]               # what the source imports (must be on the allow-list)
-target: both                     # server, browser or both
+target: server                   # the console runs it (2.3.0: there is no browser target)
 timeout: 10                      # seconds
 memory: 256                      # megabytes
 params: { min_trades: 2 }
@@ -116,7 +116,7 @@ interface: visual
 output: echarts
 inputs: [desk, notional]
 packages: [pandas]
-target: both
+target: server
 params: { top: 8 }
 source: |
   def render(table, params):
@@ -276,7 +276,7 @@ result = {'title': {'text': 'Notional by desk'}, 'xAxis': {'type': 'category', '
           'series': [{'type': 'bar', 'data': [float(v) for v in g['notional']]}]}
 ```
 
-Press **Run** (the selector beside it chooses *Server (sandbox)* or *Browser (Pyodide)*).
+Press **Run** (the line beside it says *Runs on the console (sandbox)*: since 2.3.0 there is no browser target).
 
 ![A Python cell and its chart: Notional by desk, ten bars; the line says Python, server, 262 ms, 750 rows](img/t14/08-python-cell.jpg)
 
@@ -427,10 +427,9 @@ You should see `Tests: 3 of 3 passed.` and a line for each (`passed · the stand
 
 ## Step 10 · Where a SQL cell runs, and promote into a report you already have
 
-A SQL cell's select says **where** it runs: **Server: Drishti SQL over the model** (the default; the answer is the model's, with true totals, and the
-cell is the same plan a report visual runs) or **Over the extract** (the rows the page holds; selectable until wave B, then the server is the only
-engine: the browser computes nothing). When the console has DuckDB-Wasm installed (`tools/fetch-duckdb-wasm.sh`), *Over the extract* and **Slice** run in
-the browser with it; without it, on the console. Above the tabs, **Promote a slice or a SQL cell to** a *new report draft* or to one of your report
+A SQL cell is **Drishti SQL over the model**, run by the server as you (the answer is the model's, with true totals, and the cell is the same plan a
+report visual runs); the line beside **Run** says so. A cell over the table `extract` (a notebook of 2.2) still runs, over the rows of the extract, on the
+console. Since 2.3.0 nothing runs in the browser: the **Slice** too is worked out by the console (the line under it says *Worked out by the console*). Above the tabs, **Promote a slice or a SQL cell to** a *new report draft* or to one of your report
 drafts. Choose one, write a SQL cell and **Run** it:
 
 ![A SQL cell on the server engine: MTM by desk for the USD trades, the engine select, and the line naming the model and the plan](img/t14/19-analyse-engines.jpg)
@@ -506,6 +505,6 @@ Watch a measure the model computes instead (an expression, step 1), or a visual 
 | `DRS-9073` | the SQL over the extract tried to do more than read the table `extract` |
 | `DRS-9170` | Drishti SQL on the server was asked to do more than one SELECT (a write, a second statement) |
 | `DRS-9162` | a model query was asked for a Python measure: a python visual runs it |
-| `DRS-9074` | the runner is busy or not installed (`bi.python.workers`, the pandas environment), or a browser run needs Pyodide (`tools/fetch-pyodide.sh`) |
+| `DRS-9074` | the runner is busy or not installed (`bi.python.workers`, the pandas environment) |
 | the Python tab will not run | you lack the `bi-author` power |
 | a column is empty in the extract | it is masked for your role; the line under the form names it |

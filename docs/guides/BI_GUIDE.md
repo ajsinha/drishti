@@ -895,3 +895,70 @@ status event). A change of your roles or `user.*` attributes changes your securi
 
 **Back-dated loads.** A load for an earlier business date moves that date's answers only: an as-of answer of another date keeps its cache entry, and a
 standing query that reads later dates is not evaluated again.
+
+### 25.1 In the console: reports, boards and alerts follow pushed answers
+
+Every visual of a report and every tile of a board whose question is a model query **follows** it: the page subscribes the visual's query
+(`POST /api/v1/bi/mq/subscribe`, `deliver: rows`, the throttle of `bi.live.min_interval_ms`) and the answers arrive over the console's one live channel
+(`mq:<subscription>` on `/api/channel`, which reads `GET /api/v1/bi/mq/stream`). A pushed answer redraws the visual in place; one with totals, highlighted
+marks or bins is asked again, quietly. Nothing polls, and a page holds at most 12 standing queries (a board 16); the rest are asked once and say so. A
+report on a 2.1 dataset (no model query) keeps the report stream of earlier releases.
+
+**The state chip** under each visual says how it is kept current, in words and an icon, never colour alone:
+
+| Chip | Means |
+|---|---|
+| **Live** · 41 ms | the server pushes each change; the time is how late the last one was |
+| **Throttled** | the visual's evaluations took longer than its throttle: the server doubled it |
+| **Every few seconds** | worked out again on the server's tick (windows, time intelligence, Python measures, or a model over its maintenance budget) |
+| **Stale** | nothing heard for `bi.live.stale_seconds`; the picture is the last good one |
+| **Not updating** | the subscription failed (the reason is the chip's title) |
+| **As of 2026-10-09** | a past day: asked once, it never changes |
+| **2026-10-01 to 2026-10-09** | a window, followed |
+| **Asked once** | the page follows its maximum already |
+
+![A table on a model: the Live chip under it](img/bi-wave-b/state-chip.jpg)
+
+**The time picker** (*Time* in the report's bar, the board's bar and Analyse's extract) asks the same question **now** (live), **as of a date** or over **a
+window** of dates: one plan answers all three (§4.5 of the design). *As of* a past date is asked once; *now* and a window are followed.
+
+**Parameter slicers and Show as.** A report on a model with parameters or calculation groups shows them above the page: a what-if number as a slider
+(its min, max and step), a field parameter as a choice of fields, text, dates, yes or no, and each calculation group as *Show as*. A value other than the
+default is a chip in the filter line; the visuals are asked again with the values (`mq: 2`, `params`, `calc`), and so are their standing queries.
+
+![The shock slider at 0.5: MTM shocked is MTM times 1.5](img/bi-wave-b/parameter-slicer.jpg)
+
+**Explain.** The diagram button of a visual opens *How this was answered* over it: the steps per tier (the data store, the Java server, the console's
+Python), each scan's layer (`columns`, `live`, `history`, `direct`, a rollup), the plan hash, whether the cache answered, the engine's and Python's times,
+and the plan as text. It shows that a security rule applied, never another reader's rule. **Close** puts the visual back.
+
+![How this was answered: the steps, where each ran and the layer each scan read](img/bi-wave-b/explain-panel.jpg)
+
+**Alerts.** The Alerts page has a **Now** column: each alert's number as it is, pushed (`deliver: value`), with its chip. The alert itself is still judged
+by the server on its own trigger.
+
+**The browser computes nothing** (design principle P3). The Slice of Analyse is worked out by the console (`POST /bi/explore/pivot`), a SQL cell is
+Drishti SQL run by the server (a cell over the table `extract` by the console), Python cells and python visuals run in the console's sandbox; no BI page
+loads WebAssembly, Pyodide or DuckDB-Wasm, and none has `'wasm-unsafe-eval'` in its policy. A 2.1 report's Perspective grid is drawn as Drishti's grid of
+the rows the server sends; the live desk sample's pivot is a matrix and its chart a stacked column.
+
+From the command line the same standing query is `curl -sN` on the stream above; the same explain is any model query with `options: { explain: true }`:
+
+```
+$ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' http://localhost:18480/api/v1/bi/mq \
+    -d '{"mq": 2, "model": "wave-b-model@1", "select": {"fields": ["trade.desk"], "measures": ["MTM shocked"]}, "params": {"shock": 0.5}, "options": {"explain": true}}'
+{"rows": [["DESK-EQD", 637500], ["DESK-FI", -112500], ["DESK-FX", -862500]],
+ "meta": {"tiers": {"java": 4}, "timings": {"engineMillis": 4.9, "layer": "columns", "sourceOrJavaMillis": 1.78}, "plan": "p_994bfe46057d176f", "cached": false,
+          "millis": 6.3, "explainText": "plan: p_994bfe46057d176f   signature: s_f3056bc6c04cfd95   time: current 2026-10-16\n...", ...}, ...}
+```
+
+`explainText` in full (captured on a scratch server with the trading pack and a small file lake; the model was made in the designer as above):
+
+```text
+plan: p_994bfe46057d176f   signature: s_f3056bc6c04cfd95   time: current 2026-10-16
+timings: {engineMillis=4.9, layer=columns, sourceOrJavaMillis=1.78}
+- Answer {binding={params={shock=0.5}}, columns=[trade.desk, MTM shocked], shape=grouped}   tier: java
+  - Limit {n=500}   tier: java
+    - Aggregate trade by [trade.desk]: [MTM shocked]   tier: java
+      - SecureScan trade (pack.trading.trade@1.0.0)  rules: none  columns: [desk, mtm]   tier: java   layer: columns
+```

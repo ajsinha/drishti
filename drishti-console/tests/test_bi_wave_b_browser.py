@@ -132,7 +132,7 @@ def made(browser, stack):
     page.click("[data-publish]")
     expect(page.locator("[data-state]")).to_have_text("Published", timeout=30000)
     doc = page.evaluate("window.drishtiModel.doc")
-    assert doc["measures"]["MTM share"] == {"expr": "share_of(measure('Sum of mtm'), over=ALL)", "format": "pct"}
+    assert doc["measures"]["MTM share"] == {"expr": "share_of(measure('Sum of mtm'), over=ALL)", "format": "share"}
     assert doc["measures"]["MTM shocked"]["expr"] == "measure('Sum of mtm') * (1 + param.shock)" and doc["parameters"]["shock"]["kind"] == "number"
     name = doc["model"]
     body = ("rachana: 2\nreport: wave-b-desks\nversion: 1\ntitle: Wave B desks\nmodel: " + name + "@1\npages:\n  - id: main\n    title: Main\n    visuals:\n"
@@ -246,5 +246,10 @@ def test_the_explain_panel_shows_tiers_layers_and_times(browser, made):
     expect(panel.locator("[data-explain-times]")).to_contain_text("ms")
     assert panel.locator("[data-explain-op]").count() >= 2
     assert "SecureScan" in panel.locator("[data-explain-text]").text_content() or panel.locator('[data-explain-op="SecureScan"]').count() >= 1
+    if os.environ.get("DRISHTI_CAPTURES"):                       # the answer the guide quotes (BI_GUIDE.md section 25.1)
+        a = fetch(page, "POST", "/bi/api/mq", {"mq": 2, "model": made["model"] + "@1", "select": {"fields": ["trade.desk"], "measures": ["MTM shocked"]},
+                                                "params": {"shock": 0.5}, "options": {"explain": True}})
+        with open(os.path.join(os.environ["DRISHTI_CAPTURES"], "wave-b-explain.json"), "w") as f:
+            json.dump(a["body"], f, indent=1)
     clean(page)
     page.context.close()

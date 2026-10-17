@@ -40,7 +40,7 @@ About 30 minutes.
 - the live indicator of a report, **Pause** and **Resume**, and what redraws;
 - a **board**: tiles from several reports, amber and red tiles from their alert rules, pages that turn on their own, and **kiosk mode**;
 - the **history** of a live table (a line that is there when the page opens) and the **board designer**, with a tile alert that does not flicker (hysteresis);
-- a **chart you can reshape** (Perspective's chart and its settings panel, saved back into the report) and a **wall of Python** tiles.
+- a **chart of the desk by currency** (the server groups, the browser draws) and a **wall of Python** tiles.
 
 ## Step 1 · Live data moves together
 
@@ -211,11 +211,13 @@ You should see `Paused` and a **Resume** button; the pictures hold still while t
 
 ![The live bar says Live again with a new last-update time](img/t12/06-live-resumed.jpg)
 
-You should see `Live` again and the page **catch up at once** to the table as it is now. If the connection drops (stop the console to see it) the page says so, keeps what it has and redraws everything when the stream is back. The second page, **Every trade**, is a Perspective grid of all 750 trades, updated by key:
+You should see `Live` again and the page **catch up at once** to the table as it is now. If the connection drops (stop the console to see it) the page says so, keeps what it has and redraws everything when the stream is back. The second page, **Every trade**, is a grid of all 750 trades:
 
-![The Every trade page: Perspective's grid of all the trades, ticking](img/t12/07-live-grid.jpg)
+![The Every trade page: the grid of all the trades, ticking](img/t12/07-live-grid.jpg)
 
-You should see a spreadsheet-like grid you can sort, filter and re-pivot in the browser, with the rows ticking in place. Everything is **as you**: sign in as someone whose role masks `trader` and the same page shows `•••` in that column on every tick, because each tick makes your page ask again, as you.
+You should see every trade with its desk, book, product, currency, direction, trader, notional, MTM and P&L, the rows redrawn as they tick. (Until 2.2 this
+was a Perspective grid that pivoted in the browser; since 2.3.0 the browser computes nothing, and a 2.1 `perspective-grid` is drawn as Drishti's grid of
+the rows the server sends.) Everything is **as you**: sign in as someone whose role masks `trader` and the same page shows `•••` in that column on every tick, because each tick makes your page ask again, as you.
 
 **On the command line** one visual of the report is one call, the one the page makes on every tick (`state` holds the slicers and selections; the answer
 says the layer, and `live` how the table is doing):
@@ -377,28 +379,39 @@ bi-a57e4089af  board  Night desk  draft in My workspace
 
 It opens in the board designer at `/bi/design/board/<id>`; `bi catalogue publish <id>` publishes it once it is in a shared workspace.
 
-## Step 9 · A chart you can reshape, and a wall of Python
+## Step 9 · A chart of the desk by currency, and a wall of Python
 
-The **Live trading desk** report has a fourth page, **Chart**: the same rows as the pivot, drawn by Perspective's chart plugin (`type: perspective-chart`, `format: { plugin: Y Bar }`), and it moves with the trades like the grid does.
+The **Live trading desk** report has a fourth page, **Chart**: net MTM per desk, one stacked series per currency. The **Pivot** page before it is the same
+question as a matrix. Both are worked out by the server (its standing queries since 2.3.0) and only drawn by the browser.
 
-![The Chart page: net MTM by desk, split by currency, as stacked bars](img/t12/15-perspective-chart.jpg)
+![The Chart page: net MTM by desk, split by currency, as stacked columns](img/t12/15-chart-page.jpg)
 
-Press the sliders button in the corner of the visual. Perspective's own **settings panel** opens: *Group by*, *Split by*, *Order by*, *Where*, the aggregates, and at the top the chart (switch to a line, a heatmap or a treemap).
-
-![The settings panel open: group by desk, split by currency, the sum of mtm on the Y axis](img/t12/16-chart-settings.jpg)
-
-You should see `desk` under *Group By*, `currency` under *Split By* and `sum mtm` on the Y axis. **The YAML** of the visual (the report's **Chart** page; what the floppy disk below saves is
-added to its `format` as `view`):
+You should see one column per desk, each split into its currencies, redrawn as the trades tick. **The YAML** of the two visuals (the report's **Pivot** and
+**Chart** pages):
 
 ```yaml
-      - type: perspective-chart         # Perspective's chart plugin over the same pivot
+      - id: desk-currency
+        type: matrix                    # the server groups and totals: desks down, currencies across
+        title: Net MTM and notional by desk and currency
+        wells: { rows: [trade.desk], columns: [trade.currency], values: [MTM, Notional] }
+      - id: mtm-chart
+        type: column                    # the same question as a chart: a column per desk, one series per currency, stacked
         title: Net MTM by desk and currency
-        at: { x: 0, y: 0, w: 12, h: 12 }
-        wells: { rows: [trade.desk], columns: [trade.currency], values: [trade.mtm] }
-        format: { plugin: Y Bar, aggregates: { trade.mtm: sum } }
+        wells: { axis: [trade.desk], legend: [trade.currency], values: [MTM] }
+        format: { stacked: true, labels: false }
 ```
 
- What you change is yours: another person opening the report sees the report's own view. If you may **edit** the report (this one is a shipped sample, so you may not; copy it to your workspace and open the copy), a second button, the floppy disk, **saves this view into the report's draft** as `format.view`, and publishing the report shows it to everyone. [REPORTS.md](../guides/REPORTS.md#perspective-charts-and-the-settings-panel) has the keys.
+To chart it another way, copy the report to your workspace, open the copy in the designer and change the visual's type (a bar, a line, a heatmap) or its
+wells: the server answers the new question. **On the command line** the chart's numbers are one call, the one the page makes:
+
+```
+$ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
+    http://localhost:18480/api/v1/bi/reports/file:report:live-trading-desk/query -d '{"page": "chart", "visual": "mtm-chart", "state": {}}'
+{"columns": [{"name": "trade.desk", "masked": false, "type": "string"}, {"name": "trade.currency", "masked": false, "type": "string"},
+             {"name": "MTM", "masked": false, "type": "decimal"}],
+ "rows": [["DESK-RATES", "USD", 102925894.0], ["DESK-RATES", "EUR", 86189988.0], ["DESK-RATES", "AUD", 23604613.0], ...],
+ "rowCount": 56, "meta": {"layer": "live", "rows": 56, "cached": false, "masked": [], ...}, ...}
+```
 
 A board tile can be a **Python visual** too. Open the sample board **Python wall** from the catalogue.
 

@@ -58,7 +58,8 @@ def test_the_guide_has_forty_and_more_recipes_each_with_its_expression():
     assert len(found) >= 40, len(found)
     assert [r["id"] for r in found] == [f"R{i}" for i in range(1, len(found) + 1)], "the recipes are numbered R1, R2, ... in order"
     for r in found:
-        assert r["expr"] and "[" not in r["expr"].split("by=")[0].replace("in [", ""), r                # DEL v2: no old [Measure] references
+        plain = re.sub(r"\b(over|ignore|keep|by)=\[[^\]]*\]", "", r["expr"])                          # wave B: keyword lists of fields
+        assert r["expr"] and "[" not in plain.replace("in [", ""), r                                          # DEL v2: no old [Measure] references
         assert r["scope"] in ("aggregate", "row", "rule"), r
         assert r["by"] or r["scope"] == "rule", r
 

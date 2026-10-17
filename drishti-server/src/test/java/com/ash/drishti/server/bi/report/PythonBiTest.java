@@ -47,7 +47,7 @@ class PythonBiTest {
             PythonManifest.Result r = manifest(sample(name));
             assertThat(r.ok()).as(name + ": " + r.problems()).isTrue();
             assertThat(r.manifest().source()).contains("def ");
-            assertThat(r.manifest().target()).isEqualTo("both");
+            assertThat(r.manifest().target()).as("2.3.0: the console runs every Python item").isEqualTo("server");
         }
         PythonManifest.Manifest m = manifest(sample("desk-pnl-volatility")).manifest();
         assertThat(m.interfaceKind()).isEqualTo("measure");

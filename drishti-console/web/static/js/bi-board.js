@@ -29,7 +29,7 @@
 
   let board = null, model = null, pageIdx = 0, tokens = null, kiosk = false;
   const reports = new Map();            // report item id -> {rep, idx, palette}
-  const tiles = new Map();              // tile key (page/tile) -> {frame, tile, info, spec, token, res, psp}
+  const tiles = new Map();              // tile key (page/tile) -> {frame, tile, info, spec, token, res, mq, follow, chip}
   const rolling = {};                   // tile key -> a rolling chart's points
   let watch = null, indicator = null, refresher = null, seenGeneration = 0, wasOff = false, rotateTimer = 0;
   let time = { mode: 'now' };            // wave B: the board's time (now, as of, a window); its tiles follow pushed answers (bi-consume.js)
@@ -164,7 +164,7 @@
       const info = (model.tiles || {})[p.id + '/' + tile.id] || {};
       const spec = info.report ? specOf(tile, info) : null;
       const frame = B.frame(spec || { id: tile.id, type: 'text', title: tile.title || tile.visual }, { buttons: [] });
-      const entry = { frame, tile, info, spec, key: p.id + '/' + tile.id, token: 0, res: null, psp: null };
+      const entry = { frame, tile, info, spec, key: p.id + '/' + tile.id, token: 0, res: null };
       tiles.set(entry.key, entry);
       place(entry);
       grid.appendChild(frame.el);

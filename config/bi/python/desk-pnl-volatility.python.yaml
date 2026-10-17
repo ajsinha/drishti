@@ -29,7 +29,7 @@ tags: [sample, trading, python]
 interface: measure
 inputs: [pnl1d]                  # the columns the function reads, as the table names them
 packages: [pandas]               # what the source imports (must be on the allow-list)
-target: both                     # server, browser or both
+target: server                   # the console runs it (2.3.0: no browser target)
 timeout: 10                      # seconds
 memory: 256                      # megabytes
 params: { min_trades: 2 }        # defaults the function reads; a visual may override them in format.params

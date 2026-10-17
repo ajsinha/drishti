@@ -125,6 +125,25 @@
   generation buses carry loads and refreshes between nodes. Proven in process with two nodes (`TwoNodesTest`); the HTTP transport between Java nodes
   is not built yet (run one Java node). No static state holds generations or subscriptions. **The 500-viewer load test** (`ViewersLoadTest`) is
   written for a real server (`-Ddrishti.load.url=…`) and skipped otherwise. OPERATIONS.md: BI metrics and BI scale.
+- **Console: no browser compute (wave B, console task 1).** DuckDB-Wasm, Perspective (with its Arrow module) and BI's Pyodide driver are gone from every
+  BI page, and no BI page's policy has `'wasm-unsafe-eval'` (a test fails if one loads a compute engine). Analyse's Slice is worked out by the console
+  (`POST /bi/explore/pivot`), SQL cells are Drishti SQL on the server (a cell over `extract` on the console), Python cells and visuals run on the console
+  only (a manifest's `target: browser` or `both` runs there; the samples say `server`); a 2.1 Perspective visual is Drishti's grid of the server's rows,
+  and the live desk sample's pivot is a matrix and its chart a stacked column. `bi.explore.browser_engine` and `browser_start_seconds` are gone.
+- **Console: the runner (task 2).** A fork-server per console (pandas, numpy, pyarrow imported once; one forked child per call with its own session, limits,
+  audit hook and scratch folder; `bi.python.fork_server`), the L4 result cache (item code, parameters and the exact masked input bytes;
+  `bi.python.cache_*`), the `column` interface (`derive`) and `compute_groups`, and the Py-node endpoint the server's planner calls
+  (`/internal/py/transform`, `/measure`, `/column`, `X-Drishti-Runner-Token` = `bi.python.runner_token` / `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN`).
+- **Console: the calculation UI (task 3).** The model designer's **Calculations** tab (calculation groups, parameters, the business calendar, FX
+  conversion) and **Quick calculation** in the Measures tab (% of total, ignoring a slicer, via a relationship, period to date, balances, yesterday, a
+  what-if shock; from the function catalogue); a measure's **Via**; the ExpressionEditor completes `param.x`, `SELECTED`, `via=` ids and `ALL`; a new number
+  format `share` (always a share of 1).
+- **Console: live everywhere (task 4).** Reports, boards and the alerts page (a **Now** column) follow standing queries whose answers the server pushes
+  over the console's one channel (`mq:<id>`); a state chip under each visual (Live, Throttled, Every few seconds, Stale, Not updating, As of, Window); a
+  time picker (now, as of a date, a window) on reports, boards and Analyse; parameter slicers and *Show as* (calculation groups) on a report over a model.
+- **Console: explain and usage (task 5).** *How this was answered* over each visual (tiers, layers, timings, the plan as text); **Admin → BI → BI usage**
+  (questions by model, cache hit rate, layers, readers, SQL, other BI actions, the engine and the Python runner, from the audit log). Docs: EXPRESSIONS.md
+  5.4 and recipes R60–R72, BI_GUIDE 25.1, OPERATIONS (the console's runner, BI usage), REPORTS, ANALYSE, PYTHON_BI, tutorials 12 and 14.
 
 ## 2.2.0 — Datasets and data models rooted in packs, a Python-like expression language, read-only SQL, one query plan (2026-10-17)
 

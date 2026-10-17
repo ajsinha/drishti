@@ -45,8 +45,8 @@
 
   /** The calculations offered, each a DEL template over the base (a measure reference, or SELECTED in a calculation group's item). `needs`: what else to pick. */
   const QUICK = [
-    { id: 'share-all', fn: 'share_of', label: '% of total', suffix: '% of total', format: 'pct', make: (b) => 'share_of(' + b + ', over=ALL)' },
-    { id: 'share-field', fn: 'share_of', label: '% of the total of a field', needs: 'field', suffix: '% of', format: 'pct', make: (b, x) => 'share_of(' + b + ', over=[' + x + '])' },
+    { id: 'share-all', fn: 'share_of', label: '% of total', suffix: '% of total', format: 'share', make: (b) => 'share_of(' + b + ', over=ALL)' },
+    { id: 'share-field', fn: 'share_of', label: '% of the total of a field', needs: 'field', suffix: '% of', format: 'share', make: (b, x) => 'share_of(' + b + ', over=[' + x + '])' },
     { id: 'ignore', fn: 'calc', label: 'Ignoring a field\'s filter (a slicer)', needs: 'field', suffix: 'ignoring', make: (b, x) => 'calc(' + b + ', ignore=[' + x + '])' },
     { id: 'ignore-all', fn: 'calc', label: 'Ignoring every filter', suffix: 'all you may see', make: (b) => 'calc(' + b + ', ignore=ALL)' },
     { id: 'via', fn: 'calc', label: 'Through another relationship', needs: 'rel', suffix: 'via', make: (b, x) => 'calc(' + b + ', via=' + lit(x) + ')' },

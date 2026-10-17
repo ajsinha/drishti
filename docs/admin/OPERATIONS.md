@@ -1759,7 +1759,7 @@ SQLite and DuckDB are embedded files and need no sizing.
 | a connector's fragments | `drishti.bi.exec.max-fragments`, `connectors.<name>.max-fragments` | 8; fewer for a small database |
 | a failing connector | `drishti.bi.exec.breaker-failures`, `breaker-open` | 5 failures, 30 s |
 | standing queries | `drishti.bi.mq.max-subscriptions`, `max-subscriptions-per-user`, `maintenance-budget`, `tick` | 500, 20, 250 ms per second per model, 5 s |
-| Python | `drishti.bi.transform.console-url`, `max-concurrent`, `timeout` | the console's URL, 2 per console, 60 s |
+| Python | `drishti.bi.transform.console-url`, `console-token`, `max-concurrent`, `timeout`; the console's `bi.python.workers`, `fork_server`, `cache_entries` | the console's URL and secret, 2 per console, 60 s; the fork-server on; 256 cached answers |
 
 **Many viewers of one report.** Readers with the same effective security share one standing-query group and one cache entry per visual: 500 viewers with 5
 distinct securities are 5 evaluations per visual. `GET /api/v1/bi/engine` and the `drishti_bi_sq_*` metrics show the groups and their modes.
@@ -1771,6 +1771,30 @@ when the owner is lost (its stream goes on). The generation bus carries loads an
 themselves. *As built in 2.3.0:* the directory, the forwarding and the failover are in the server and proven with two nodes in one process
 (`TwoNodesTest`); the HTTP transport between Java nodes (the peers and the bus bridge over the network) is not built yet, so a production site runs one
 Java node behind any number of consoles.
+
+**The console's Python runner** (the console tier of the plan: `PyTransform`, `PyAggregate`, `PyColumn`, Analyse's cells, python visuals). Each console
+runs a **fork-server** (`bi.python.fork_server`, on by default): one parent process that has imported pandas, numpy and pyarrow, and forks one child per
+call with its own session, limits, audit hook and scratch folder, so a call costs a fork (milliseconds), not an interpreter start (about a second). The
+answers are kept in the **L4 result cache** (`bi.python.cache_entries`, `cache_max_bytes`, `cache_seconds`) by the item's code, its parameters and the
+exact input bytes (already masked for the reader). To let the server's planner run Python on the console, give both the same secret and the server the
+console's URL:
+
+```
+# the server (application.yaml or the environment)
+DRISHTI_BI_TRANSFORM_CONSOLE_URL=http://console-1:17480
+DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN=<a long random secret>
+# the console (the same variable sets bi.python.runner_token)
+DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN=<the same secret>
+```
+
+The console answers `POST /internal/py/transform`, `/measure` and `/column` only with that token (`403 DRS-9073` without it, `503 DRS-9074` when no token
+is set). `GET /bi/python/status` on the console (signed in) and **Admin → BI → BI usage** say whether the fork-server runs, how many calls it forked, the
+cache's hits and whether the endpoint is on. Size `bi.python.workers` (calls at once per console) to the cores you give Python, and
+`drishti.bi.transform.max-concurrent` on the server to the sum over the consoles.
+
+**Admin → BI → BI usage** (`/admin/bi/usage`, BI administrators; the audit part for system administrators) sums the latest audit events: questions and
+SQL statements per model, the share answered from the cache, the layers that answered and the average rows, the busiest readers, the other BI actions,
+the engine's counters and the Python runner. A model with many questions and few from the cache is the one a rollup helps.
 
 **The 500-viewer load test** is `ViewersLoadTest` (in `drishti-server`): run it **against a real server, never on a laptop**:
 `./mvnw -pl drishti-server test -Dtest=ViewersLoadTest -Ddrishti.load.url=http://server:18480 -Ddrishti.load.queries=/path/visuals.jsonl
