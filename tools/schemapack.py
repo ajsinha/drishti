@@ -336,7 +336,7 @@ def make(a, cli) -> int:
     say_plan(plan)
     store = "delta" if a.store == "delta" else "file"
     for k in plan.kinds:
-        if k.real and k.date and a.store:
+        if k.real and (k.date or k.snapshot) and a.store:          # a snapshot kind is dated too (by the day it is loaded)
             k.template = store
         if getattr(a, "connector", None):
             k.connector = a.connector

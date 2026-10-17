@@ -17,6 +17,43 @@
 
 ## Unreleased
 
+- **One large file of deep trading documents, from Build -> New pack to a deployed pack with its data, all in the browser**
+  ([Schema to pack, A deep trading JSON](docs/guides/SCHEMA_TO_PACK.md#appendix-a-deep-trading-json)). *Reading:* a JSON array of any size
+  is streamed like JSON Lines (one document in memory at a time); **every row is counted** for the columns that could tell record types apart
+  (rare types are found, with their true row count), up to `builder.pack_profile_rows_per_type` (10,000) rows of each type are **profiled**
+  (how often each field has a value, digits written as text, every array's size at every depth) and `builder.pack_design_samples_per_type` (50)
+  of each type are kept as **design samples**, chosen for variety; a 2 GB / 500,000-row file reads in about 20 s with memory flat (about
+  110 MB in the page). *Planning:* ids of any case and type (`TRADE_ID`, an integer, preferred over `TRANSACTION_ID`; integer ids are labels,
+  never amounts); **blank text is no value** (a field blank everywhere is hidden, never an enum of `""`); `UPPER_SNAKE` names read as words
+  (*Trade ID*, *Buy sell code*, *Counterparty UEN*); a document with no business-date field is a **snapshot** stored under the day it is
+  loaded (`ingest: {key, snapshot: true}`; choose a date field on the card instead); a type column (`PRODUCT_TYPE`) is found by itself and
+  gives **exactly one Sutra per type**, named after it (`comswap`, `cash`), each designed from its own type's rows, with the catch-all only
+  when some rows have no type (the card lists "5 types -> 5 Sutras" with each type's rows); **pages per value** (counterparty, portfolio,
+  index) become derived kinds with links both ways; **Anonymise samples** (on by default for data files: names, ids and amounts replaced
+  the same way everywhere, dates and short vocabulary kept) keeps every real value out of the pack's samples, tests and catalogue.
+  *The deep design* (any depth, nothing about trades in it): a deal-ticket strip, the document's filled fields, an array of a few items
+  with arrays of its own (legs) **side by side**, each item's schedule a row wide drilling into the levels below (cash flows -> resets),
+  plain arrays (events) as tables that say *No events* when absent, a payment timeline across all items, the other documents of the same
+  counterparty on the right; and a **BI model** with a dataset per level (deal, legs, cash flows, resets, events), each row carrying the keys
+  above it. *Loading:* **Admin -> Packs -> a pack -> Load data** streams the whole file to the server (JSON array or JSON Lines, up to
+  `drishti.loads.upload-max-mb`), which writes it into the pack's File connector by business date, checks every row against the pack's Sutras
+  (types with no Sutra, fields no Sutra shows), and announces the load (refresh, verify; the pages per value are rebuilt).
+- **Rachana: a table or ladder drills down level by level** (`levels:`, with `crumb`, `root`; `empty:` for the words of an empty table) to any
+  depth: one level at a time with its own columns, count and total, a breadcrumb, the parent row as a ticket, ↑ ↓ Enter → to open, Esc,
+  Backspace or ← to go up, and the open level in the address (`?dr.<panel>=1.6`) so it can be shared and Back goes up
+  ([levels](docs/guides/RACHANA_REFERENCE.md#levels-drill-down-level-by-level)). New functions `flatten(list)` and `nonblank(a, b, …)`. A panel
+  whose `source` names an entity no source holds says it has no data rather than failing.
+- **Command line:** `pack make FILE.json --name N` reads a JSON array (or JSON Lines) with no schema through the console's engine (the same
+  plan as the page), with `--anonymise/--no-anonymise`, `--related none|PATH,...` and `--as-of DATE` for a snapshot; `data ingest --as-of`.
+- **Server:** `GET|POST /api/v1/admin/packs/{pack}/data` (Load data; token scope `packs:admin`); the File connector's
+  `layout.<kind>.title` (promoted columns after the id in the search title, so type-ahead finds a deal by its counterparty); a BI table may be
+  over an array at any depth (`each: LEGS[].CASH_FLOWS[].RESETS`, columns `$.TRADE_ID`, `^.FLOW_ID`, `^^.LEG_ID`); packs may carry
+  `config/bi/models/`; derived pages and BI tables read documents 500 at a time (5,000 deals no longer exhaust the heap);
+  `SourcePlugin.dependsOn(kind)` lets a load refresh what is built from the loaded kind.
+- **Synthetic data:** `tools/packgen/comswap_synth.py` (a commodity book: ComSwap, ComFut, Cash, Commodity and a rare CallNot, the shape of a
+  trading-system export, every value invented; samples in `docs/guides/examples/comswap/`) and `tools/packgen/note_synth.py` (a structured
+  note, four levels deep, another shape).
+
 ## 2.2.0 — Datasets and data models rooted in packs, a Python-like expression language, read-only SQL, one query plan (2026-10-17)
 
 - **Server: the model layer's loose ends from the wave A console lane and its QA (wave A).** The **AI authoring hooks work on models**: Describe a

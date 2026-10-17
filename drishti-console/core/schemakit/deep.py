@@ -375,8 +375,9 @@ def derived_panels(kp: KindPlan, plan: Plan | None) -> list:
     for name, agg in d["fields"].items():
         if name == "count":
             continue
-        fm = ', fmt: "amount0"' if agg.startswith("sum") else ""
-        L.append(f"      - {{ label: {q(humanize(name))}, bind: {q('$.' + name)}{fm} }}")
+        fm = ', fmt: "amount0"' if agg.startswith(("sum", "distinct")) else ""
+        bind = f"size($.{name})" if agg.startswith("distinct") else "$." + name      # how many different portfolios, not the list
+        L.append(f"      - {{ label: {q(humanize(name))}, bind: {q(bind)}{fm} }}")
     pkey = parent.key if parent is not None else None
     L += ["  - id: members", "    kind: table", f"    title: {q(parent.title if parent is not None else 'Documents')}", '    key: "F3"', '    rows: "$.rows"',
           f"    empty: {q('No ' + (parent.title.lower() if parent is not None else 'documents'))}", "    columns:"]
