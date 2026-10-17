@@ -167,3 +167,16 @@
 .bi-merge { border: 1px solid var(--d-warn); border-radius: var(--d-radius); padding: .6rem .8rem; }
 .bi-merge-val { max-height: 10rem; overflow: auto; font-size: .78rem; white-space: pre-wrap; margin: .25rem 0 0; }
 .bi-merge-both th { color: var(--d-warn); }
+/* the model designer's YAML tab in the theme (dark by default), like the report designer's */
+.bi-md .CodeMirror { height: 32rem; border: 1px solid var(--d-border); border-radius: var(--d-radius); font: .82rem/1.5 var(--d-font-mono); background: var(--d-bg-2); color: var(--d-ink); }
+.bi-md .CodeMirror-gutters { background: var(--d-bg); border-right: 1px solid var(--d-border); }
+.bi-md .CodeMirror-linenumber { color: var(--d-faint); }
+.bi-md .CodeMirror-cursor { border-left-color: var(--d-accent); }
+.bi-md .CodeMirror-selected, .bi-md .CodeMirror-focused .CodeMirror-selected { background: var(--d-accent-tint); }
+.bi-md .CodeMirror-focused { outline: 2px solid var(--d-accent); outline-offset: 1px; }
+.bi-md .cm-s-default .cm-keyword { color: var(--d-accent); } .bi-md .cm-s-default .cm-string { color: var(--d-link); }
+.bi-md .cm-s-default .cm-comment { color: var(--d-faint); font-style: italic; }
+.bi-md .cm-s-default .cm-number, .bi-md .cm-s-default .cm-atom { color: var(--d-pos); }
+.bi-md .cm-s-default .cm-variable-2 { color: var(--d-ok); } .bi-md .cm-s-default .cm-def { color: var(--d-warn); }
+.bi-md .cm-s-default .cm-bracket, .bi-md .cm-s-default .cm-operator { color: var(--d-muted); }
+.bi-md-pin-warn { color: var(--d-warn); }

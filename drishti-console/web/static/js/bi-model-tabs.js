@@ -98,6 +98,11 @@
       const q1 = "measure('" + from.replace(/'/g, "\\'") + "')", q2 = 'measure("' + from + '")', to1 = "measure('" + to.replace(/'/g, "\\'") + "')";
       Object.values(next).forEach((m) => { if (m && m.expr) { m.expr = m.expr.split(q1).join(to1).split(q2).join(to1).split('[' + from + ']').join(to1); } });
       doc.measures = next;
+      // the name is used elsewhere in the model too: perspectives, the contract's list, hidden-for
+      const swap = (list) => (Array.isArray(list) ? list.map((x) => (x === from ? to : x)) : list);
+      Object.values(doc.perspectives || {}).forEach((p) => { if (p && p.measures) { p.measures = swap(p.measures); } });
+      if (doc.contract && doc.contract.measures) { doc.contract.measures = swap(doc.contract.measures); }
+      [].concat((doc.security || {})['hidden-for'] || []).forEach((x) => { if (x && x.measures) { x.measures = swap(x.measures); } });
     });
   }
   function drawMeasures() {

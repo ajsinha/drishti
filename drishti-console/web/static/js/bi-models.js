@@ -54,9 +54,14 @@
     function draw() {
       const t = (q('[data-search]').value || '').trim().toLowerCase();
       const match = (d) => !t || (d.name + ' ' + d.title + ' ' + (d.pack || '') + ' ' + (d.kind || '')).toLowerCase().indexOf(t) >= 0;
+      // the shipped samples and the datasets Drishti generated (sample facts, a file: item, no owner) stay out of Your datasets unless asked for
+      const sample = (d) => /^file:/.test(String(d.id || '')) || !d.owner || d.owner === 'system' || /^(sample|generated)[-_]/.test(String(d.name || ''));
+      const samples = all.items.filter(sample).length, showSamples = q('[data-show-samples]').checked;
+      q('[data-samples-row]').hidden = !samples;
+      q('[data-samples-count]').textContent = String(samples);
       [['items', 'item'], ['models', 'model']].forEach(([key, kind]) => {
         const box = B.clear(q('[data-' + key + ']'));
-        const list = all[key].filter(match);
+        const list = all[key].filter(match).filter((d) => key !== 'items' || showSamples || !sample(d) || !!t);
         list.forEach((d) => box.appendChild(card(d, kind)));
         q('[data-' + key + '-empty]').hidden = list.length > 0;
       });
@@ -70,6 +75,7 @@
       q('[data-packs-empty]').hidden = Object.keys(by).length > 0;
     }
     q('[data-search]').addEventListener('input', draw);
+    q('[data-show-samples]').addEventListener('change', draw);
     // New model: a title, a workspace, the datasets to start with
     const form = q('[data-new-model-form]');
     q('[data-new-model]').addEventListener('click', () => {

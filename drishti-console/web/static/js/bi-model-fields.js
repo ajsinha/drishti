@@ -65,8 +65,9 @@
     Object.values(M.doc.measures || {}).forEach((m) => { if (m && m.folder) { folders.add(m.folder); } });
     const show = sel([['', 'every field']].concat(Object.keys(persp).map((p) => [p, 'the perspective ' + ((persp[p] || {}).title || p)])), filterBy, { 'data-fields-filter': '', 'aria-label': 'Show' });
     show.addEventListener('change', () => { filterBy = show.value; drawFields(); });
-    pane.append(h('p', { class: 'text-muted-d', text: 'Properties set here belong to the model: every report, board and answer that reads it shows the display name, the description, the format and the folder, and leaves hidden fields out. A report never re-declares them.' }),
-      h('p', {}, h('label', {}, 'Show ', show)), h('datalist', { id: 'mdFolders' }, Array.from(folders).map((f) => h('option', { value: f }))));
+    pane.append(h('p', { class: 'text-muted-d', text: 'Properties set here belong to the model: every report, board and answer that reads it shows the display name, the description, the format and the folder, and leaves hidden fields out. A report never re-declares them.' }));
+    drawPerspectives(pane);                                    // the perspectives first: a short list that names the long table below
+    pane.append(h('p', {}, h('label', {}, 'Show ', show)), h('datalist', { id: 'mdFolders' }, Array.from(folders).map((f) => h('option', { value: f }))));
     const inP = (kind, name) => { if (!filterBy) { return true; } const p = persp[filterBy] || {}; return (kind === 'measure' ? p.measures || [] : p.fields || []).indexOf(name) >= 0; };
     const tb = h('tbody');
     const row = (kind, name, props, info) => {
@@ -87,7 +88,6 @@
     Object.keys(M.doc.measures || {}).filter((n) => inP('measure', n)).forEach((n) => row('measure', n, typeof M.doc.measures[n] === 'object' ? M.doc.measures[n] : {}, null));
     pane.appendChild(h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl bi-tbl bi-lw-cols bi-md-fields', 'data-plain': '', 'data-fields-table': '' }, h('caption', { class: 'visually-hidden', text: 'Field properties' }),
       h('thead', {}, h('tr', {}, ['Field', 'Display name', 'Description', 'Format', 'Folder', 'Hidden', 'Sort by', 'Category', 'Summarise'].map((t) => h('th', { scope: 'col', text: t })))), tb)));
-    drawPerspectives(pane);
   }
 
   function drawPerspectives(pane) {

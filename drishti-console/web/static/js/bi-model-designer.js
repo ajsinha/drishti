@@ -120,9 +120,11 @@
           const nEx = ((r.check && r.check.exposures) || []).length, bare = !Object.keys(M.doc.datasets || {}).length;
           const badge = q('[data-valid]');
           // the header agrees with the Security tab: a model that checks clean but has a role exposed is not ready, said in words and in the warning colour (not the error one)
-          badge.textContent = bare ? 'Add a dataset to begin' : !r.check.valid ? (M.acted ? 'Has errors' : 'Not ready yet') : nEx ? 'Valid, ' + nEx + ' to fix before publishing' : 'Valid';
+          // the badge agrees with the problems pinned on the canvas: valid with warnings says how many
+          const nWarn = ((r.check && r.check.problems) || []).filter((p) => p.level === 'warning').length;
+          badge.textContent = bare ? 'Add a dataset to begin' : !r.check.valid ? (M.acted ? 'Has errors' : 'Not ready yet') : nEx ? 'Valid, ' + nEx + ' to fix before publishing' : nWarn ? 'Valid, ' + nWarn + ' warning' + (nWarn === 1 ? '' : 's') : 'Valid';
           badge.classList.toggle('bi-bad', !bare && !r.check.valid && !!M.acted);
-          badge.classList.toggle('bi-warnbadge', !bare && (nEx > 0 || (!r.check.valid && !M.acted)));
+          badge.classList.toggle('bi-warnbadge', !bare && (nEx > 0 || nWarn > 0 || (!r.check.valid && !M.acted)));
           M.emit('checked');
           M.redraw();
           resolve();
@@ -164,13 +166,39 @@
         doc.datasets[alias] = { dataset: i.name + '@^' + String(i.version || '1').split('.')[0], role };
         const lay = (doc.layout = doc.layout || {});
         lay.positions = lay.positions || {};
-        lay.positions[alias] = at || autoPlace(Object.keys(doc.datasets).length - 1, role);
+        lay.positions[alias] = at || freeSpot(lay.positions, alias, role);
       });
       M.selected = { kind: 'dataset', alias };
       B.near(anchor || q('[data-ds-list]'), 'Added ' + i.title + ' as ' + alias + ' (' + role + '). Suggested relationships appear under the canvas.', false);
     }).catch((e) => B.near(anchor || q('[data-ds-list]'), e.message, true));
   }
-  function autoPlace(i, role) { return [24 + (i % 3) * 270, 24 + Math.floor(i / 3) * 240 + (role === 'dimension' ? 0 : 20)]; }
+  function autoPlace(i, role) { return [24 + (i % 3) * 270, 24 + Math.floor(i / 3) * 260 + (role === 'dimension' ? 0 : 20)]; }
+  const BOX_W = 260, BOX_H = 250;
+  const overlaps = (a, b) => Math.abs(a[0] - b[0]) < BOX_W && Math.abs(a[1] - b[1]) < BOX_H;
+  /** The first place on the grid (three across, facts and dimensions alike) that no other box covers. */
+  function freeSpot(positions, alias, role) {
+    const others = Object.keys(positions || {}).filter((a) => a !== alias).map((a) => positions[a]).filter(Array.isArray);
+    for (let i = 0; i < 300; i++) { const p = autoPlace(i, role); if (!others.some((o) => overlaps(o, p))) { return p; } }
+    return autoPlace(others.length, role);
+  }
+  /** Auto-layout: every box that sits on another (an old draft, a drop on a crowded canvas) moves to a free place; the boxes not touched stay. */
+  function untangle(positions) {
+    const seen = {};
+    let moved = 0;
+    Object.keys(M.doc.datasets || {}).forEach((a) => {
+      const p = positions[a];
+      if (!Array.isArray(p) || Object.keys(seen).some((b) => overlaps(seen[b], p))) { positions[a] = freeSpot(seen, a, (M.doc.datasets[a] || {}).role); moved++; }
+      seen[a] = positions[a];
+    });
+    return moved;
+  }
+  /** Tidy: every box placed again on the grid, the facts first and then the dimensions, none over another. */
+  M.untangle = () => M.edit((doc) => {
+    doc.layout = doc.layout || {};
+    const sets = doc.datasets || {}, order = Object.keys(sets).sort((a, b) => ((sets[a] || {}).role === 'dimension') - ((sets[b] || {}).role === 'dimension'));
+    doc.layout.positions = {};
+    order.forEach((a, i) => { doc.layout.positions[a] = autoPlace(i, (sets[a] || {}).role); });
+  });
 
   // ---- the canvas ----------------------------------------------------------------------------------------------------
   const NS = 'http://www.w3.org/2000/svg';
@@ -205,7 +233,7 @@
         'aria-label': alias + ', ' + (use.role || 'fact') + (info ? ', ' + info.title : '') },
         h('header', { class: 'bi-md-boxhead', 'data-handle': alias }, h('strong', { text: alias }), role),
         h('p', { class: 'bi-md-boxsub text-muted-d', text: info ? info.title + ' · ' + (info.grain.says || '') : String(use.dataset || '') }),
-        probs.length ? h('p', { class: 'bi-md-pin', 'data-pin': alias }, B.icon('exclamation-triangle'), ' ' + probs[0].code + ' ' + probs[0].message.slice(0, 120)) : null,
+        probs.length ? (() => { const p0 = probs.find((p) => p.level === 'error') || probs[0]; return h('p', { class: 'bi-md-pin' + (p0.level === 'error' ? '' : ' bi-md-pin-warn'), 'data-pin': alias, 'data-pin-level': p0.level || 'error' }, B.icon(p0.level === 'error' ? 'exclamation-triangle' : 'info-circle'), ' ' + p0.code + ' ' + p0.message.slice(0, 120) + (probs.length > 1 ? ' (+' + (probs.length - 1) + ' more: Check lists them)' : '')); })() : null,
         list);
       box.style.left = x + 'px';
       box.style.top = y + 'px';
@@ -653,14 +681,17 @@
     M.doc.datasets = M.doc.datasets || {};
     const lay = (M.doc.layout = M.doc.layout || {});
     lay.positions = lay.positions || {};
-    Object.keys(M.doc.datasets).forEach((a, i) => { if (!lay.positions[a]) { lay.positions[a] = autoPlace(i, (M.doc.datasets[a] || {}).role); } });
+    untangle(lay.positions);                                   // no box drawn over another at open (a layout the YAML never gave, or one that overlaps)
     if (window.CodeMirror) {
       editor = window.CodeMirror.fromTextArea(ta, { mode: 'rachana-yaml', lineNumbers: true, lineWrapping: true, indentUnit: 2, tabSize: 2, readOnly: M.readOnly, viewportMargin: Infinity });
       editor.on('change', onYaml);
+      editor.getInputField().setAttribute('aria-label', 'Model YAML (Ctrl+S saves; Escape then Tab leaves the editor)');
+      editor.setOption('extraKeys', { Esc: () => { const t = q('[data-tab="yaml"]'); if (t) { t.focus(); } } });
     } else { ta.addEventListener('input', onYaml); ta.readOnly = M.readOnly; }
     q('[data-undo]').addEventListener('click', () => step(undo, redo));
     q('[data-redo]').addEventListener('click', () => step(redo, undo));
     q('[data-check]').addEventListener('click', check);
+    q('[data-tidy]').addEventListener('click', () => { M.untangle(); B.near(q('[data-tidy]'), 'No box sits on another now (Undo puts them back).', false); });
     q('[data-check-close]').addEventListener('click', () => { q('[data-check-box]').hidden = true; });
     q('[data-save]').addEventListener('click', save);
     q('[data-save-copy]').addEventListener('click', saveCopy);

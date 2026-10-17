@@ -550,13 +550,36 @@
         if (targets.length) { sel.focus(); }
       }).catch(fail);
     }
-    var opened = false;
+    var opened = false, knownRoles = null;
+    /** The audience's roles picked, not typed: a tick per role the server knows (and the ones already named), kept in step with the text box (still there for any other role). */
+    function rolePicker(input) {
+      var box = q('[data-audience-roles]');
+      if (!box) { box = h('div', { class: 'bi-roles', 'data-audience-roles': '', role: 'group', 'aria-label': 'Roles in the audience' }); input.closest('label').after(box); }
+      var draw = function () {
+        var have = input.value.split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+        var all = (knownRoles || []).concat(have).filter(function (r, i, a) { return a.indexOf(r) === i; }).sort();
+        clear(box);
+        all.forEach(function (r) {
+          var cb = h('input', { type: 'checkbox', value: r, 'data-audience-role': r, checked: have.indexOf(r) >= 0 });
+          cb.addEventListener('change', function () {
+            var now = input.value.split(',').map(function (x) { return x.trim(); }).filter(function (x) { return x && x !== r; });
+            if (cb.checked) { now.push(r); }
+            input.value = now.join(', ');
+          });
+          box.appendChild(h('label', { class: 'bi-checkrow' }, cb, ' ' + r));
+        });
+      };
+      if (!input.hasAttribute('data-picker')) { input.setAttribute('data-picker', ''); input.addEventListener('change', draw); }
+      if (knownRoles) { draw(); return; }
+      api('GET', '/bi/model-api/roles').then(function (r) { knownRoles = (r && r.roles) || []; draw(); }).catch(function () { knownRoles = []; draw(); });
+    }
     function form() {
       var f = q('[data-edit]');
       if (!it.can.edit) { f.hidden = true; return; }
       f.elements.title.value = it.title; f.elements.description.value = it.description || ''; f.elements.tags.value = (it.tags || []).join(', ');
       f.elements.audienceRoles.value = (it.audience.roles || []).join(', '); f.elements.audienceUsers.value = (it.audience.users || []).join(', ');
       f.elements.audiencePacks.value = (it.audience.packs || []).join(', '); f.elements.body.value = it.body || '';
+      rolePicker(f.elements.audienceRoles);
       if (!opened && /[?&]edit=1/.test(window.location.search)) { opened = true; f.hidden = false; f.elements.body.focus(); }
     }
     q('[data-edit]').addEventListener('submit', function (e) {
