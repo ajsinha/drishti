@@ -466,6 +466,7 @@ def test_the_wizards_preview_answers_a_filtered_grouped_dataset(browser):
     page.click('[data-group-key="desk"]')
     next_step(page, "preview")
     page.click("[data-preview-go]")                                                              # the draft saved, then its first rows from the server
+    page.click("[data-confirm-go]")                                                            # the server previews a saved draft: asked first
     expect(page.locator("[data-preview-table] tbody tr")).to_have_count(3, timeout=20000)       # grouped by desk: three desks
     shoot(page, '[data-step="preview"]', "wizard-preview")
     clean(page)
@@ -492,6 +493,7 @@ def test_the_wizards_preview_answers_a_grouped_dataset_with_a_worked_out_column(
     page.click('[data-group-key="desk"]')
     next_step(page, "preview")
     page.click("[data-preview-go]")
+    page.click("[data-confirm-go]")                                                            # the server previews a saved draft: asked first
     expect(page.locator("[data-preview-table] tbody tr")).to_have_count(3, timeout=20000)
     expect(page.locator("[data-preview-table] thead")).to_contain_text("notionalM")
     shoot(page, '[data-step="preview"]', "wizard-preview-grouped")
@@ -538,6 +540,7 @@ def test_the_wizard_adds_a_python_column(browser):
     next_step(page, "group")
     next_step(page, "preview")
     page.click("[data-preview-go]")
+    page.click("[data-confirm-go]")                                                            # the server previews a saved draft: asked first
     expect(page.locator("[data-preview-table] thead")).to_contain_text("size", timeout=30000)
     cells = page.eval_on_selector_all("[data-preview-table] tbody tr", "rows => rows.map(r => [...r.children].map(c => c.textContent))")
     heads = page.eval_on_selector_all("[data-preview-table] thead th", "hs => hs.map(h => h.textContent)")

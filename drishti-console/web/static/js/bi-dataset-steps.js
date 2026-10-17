@@ -216,7 +216,7 @@
       const W = L.W, box = B.clear(q('[data-derive]'));
       if (!W.derive.length) { box.appendChild(h('p', { class: 'text-muted-d', 'data-derive-none': '', text: 'None yet: add a formula column or a Python column below, or go on.' })); }
       W.derive.forEach((d, i) => {
-        const name = h('input', { class: 'studio-in mono', value: d.name, 'data-derive-name': i, 'aria-label': 'Name of worked-out column ' + (i + 1), placeholder: 'notionalUsd' });
+        const name = h('input', { class: 'studio-in mono', value: d.name, 'data-derive-name': i, 'aria-label': 'Name of worked-out column ' + (i + 1), placeholder: 'mtmBps' });
         name.addEventListener('change', () => { d.name = name.value.trim().replace(/[^A-Za-z0-9_]/g, '_'); name.value = d.name; L.keep(); });
         const type = L.sel(L.TYPES, d.type || 'decimal', { 'data-derive-type': i, 'aria-label': 'Type of ' + (d.name || 'column ' + (i + 1)) });
         type.addEventListener('change', () => { d.type = type.value; L.keep(); });
@@ -233,9 +233,17 @@
             x.addEventListener('change', () => { d.inputs = (d.inputs || []).filter((n) => n !== c.name).concat(x.checked ? [c.name] : []); L.keep(); });
             return h('label', { class: 'bi-checkrow' }, x, ' ' + c.name);
           }));
-          how = h('div', {}, h('label', { class: 'bi-frow' }, h('span', { text: 'Python item' }), item), h('fieldset', {}, h('legend', { text: 'Its inputs (the columns it reads, masked as the reader)' }), ins));
+          // as the Python-table source: no item yet? Write one (the catalogue, in a new tab), and the list is read again when you come back
+          const write = h('a', { href: '/bi/catalogue?kind=python', target: '_blank', rel: 'noopener', 'data-derive-python-new': i, text: 'Write one' });
+          const again = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-derive-python-reload': i, text: 'Read the list again' });
+          again.addEventListener('click', () => B.busy(again, () => B.api('GET', '/catalogue?kind=python&limit=100').then((c) => {
+            pythons = (c.items || c.results || []).map((x) => ({ name: x.id.replace(/^file:python:/, ''), title: x.title }));
+            L.draw.derive();
+          })).catch((e) => B.near(again, e.message, true)));
+          how = h('div', {}, h('label', { class: 'bi-frow' }, h('span', { text: 'Python item' }), item), h('p', { class: 'text-muted-d bi-small-note' }, 'A Python column item takes the input columns below and returns one value per row. None yet? ', write, ' (it opens in a new tab), then ', again, '.'),
+            h('fieldset', {}, h('legend', { text: 'Its inputs (the columns it reads, masked as the reader)' }), ins));
         } else {
-          const ex = h('input', { class: 'studio-in mono', value: d.expr || '', 'data-derive-expr': i, placeholder: "notional * fx(currency, 'USD')" });
+          const ex = h('input', { class: 'studio-in mono', value: d.expr || '', 'data-derive-expr': i, placeholder: 'mtm / notional * 10000' });
           how = h('div', { class: 'bi-frow' }, h('span', { text: 'Formula (row by row)' }), ex);
           window.setTimeout(() => B.exprEditor(ex, { checkAtStart: true, scope: 'row', label: 'Formula of ' + (d.name || 'the column'), fields: colFields, measures: [], target, onCommit: (v) => { d.expr = v; L.keep(); L.check('derive').catch(() => {}); } }), 0);
           ex.addEventListener('input', () => { d.expr = ex.value; L.keep(); });
@@ -290,7 +298,7 @@
   // ---- preview -------------------------------------------------------------------------------------------------------
   function table(host, columns, rows) {
     B.clear(host).appendChild(h('table', { class: 'tbl bi-tbl', 'data-plain': '', 'data-preview-table': '' }, h('caption', { class: 'visually-hidden', text: 'The first rows' }),
-      h('thead', {}, h('tr', {}, columns.map((c) => h('th', { scope: 'col', text: c.name || c })))),
+      h('thead', {}, h('tr', {}, columns.map((c) => { const n = String(c.name || c); return h('th', { scope: 'col', title: n, text: n.indexOf('.') > 0 ? n.slice(n.indexOf('.') + 1) : n }); }))),   // the column as the dataset names it, without the table
       h('tbody', {}, rows.slice(0, 20).map((r) => h('tr', {}, r.map((v) => h('td', { text: v == null ? '—' : typeof v === 'number' ? B.fmt(v) : String(v) })))))));
   }
   function preview(btn) {
@@ -301,6 +309,10 @@
         table(host, a.columns || [], a.rows || []);
         meta.textContent = (a.rowCount != null ? a.rowCount : (a.rows || []).length) + ' rows, as you' + ((a.meta || {}).millis != null ? ', in ' + a.meta.millis + ' ms' : '') + '.';
       })).catch((e) => { meta.textContent = e.status === 404 ? 'This server does not run Drishti SQL yet.' : e.message; });
+    }
+    if (!W.savedId && !W.previewOk) {                                   // the server previews a saved draft: never made behind the person's back
+      return B.confirm(btn, 'The server previews a saved draft. Save this dataset as a draft (you can delete it, and Save later updates the same draft) and preview it?', 'Save the draft and preview')
+        .then((yes) => { if (yes) { W.previewOk = true; return preview(btn); } meta.textContent = 'Not previewed: nothing was saved.'; return null; });
     }
     if (!W.title) { W.title = (W.base && W.base.title ? W.base.title + ' (narrowed)' : 'New dataset'); }
     if (!W.name) { W.name = B.slug(W.title); }

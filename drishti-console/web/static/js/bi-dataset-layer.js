@@ -111,7 +111,13 @@
     const mine = (check.problems || []).filter((p) => !keys.length || keys.some((k) => p.path === k || String(p.path || '').indexOf(k + '.') === 0 || String(p.path || '').indexOf(k + '[') === 0));
     mine.forEach((p) => box.appendChild(h('li', { class: 'bi-problem bi-problem-' + p.level, 'data-code': p.code }, h('strong', { text: p.code + ' ' }), h('code', { text: p.path || '(dataset)' }), ': ' + p.message,
       p.fix ? h('span', { class: 'text-muted-d', text: ' ' + p.fix }) : null)));
-    if (!mine.length) { box.appendChild(h('li', { class: 'bi-ok', text: keys.length ? 'Nothing to fix here.' : 'Checks clean.' })); }
+    // never "nothing to fix" beside a problem: not when the step's own expression shows one, and the problems of other steps are counted
+    const host = list.closest('section, fieldset, .wiz-step, form') || list.parentElement;
+    const shown = host && host.querySelector('.bi-xe-problems .bi-problem-error, .bi-xe-problems .bi-problem-warning');
+    const elsewhere = (check.problems || []).filter((p) => mine.indexOf(p) < 0 && (p.level || 'error') === 'error').length;
+    if (!mine.length && !shown) {
+      box.appendChild(h('li', { class: elsewhere ? 'text-muted-d' : 'bi-ok', 'data-step-clean': '', text: keys.length ? (elsewhere ? 'This step checks clean; ' + elsewhere + ' error' + (elsewhere === 1 ? '' : 's') + ' in other steps (Save lists them).' : 'This step checks clean.') : (check.valid === false ? '' : 'Checks clean.') }));
+    }
   };
   L.check = function (step) {
     return B.layer.post('dataset-yaml', { doc: L.doc() }).then((r) => {

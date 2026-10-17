@@ -55,3 +55,9 @@ textarea.bi-xe-in { resize: vertical; min-height: 2.4rem; }
   .bi-xe-help { min-width: 44px; }
   .bi-xe-row { flex-wrap: wrap; }
 }
+/* a report's own measure (the Fields pane): the label above, the editor and its list, card and problems across the whole pane */
+.bi-md-localm .bi-frow { display: flex; flex-direction: column; align-items: stretch; gap: .2rem; }
+.bi-md-localm .bi-xe { flex: 1 1 auto; width: 100%; }
+.bi-md-localm .bi-xe-in, .bi-md-localm input.studio-in { width: 100%; box-sizing: border-box; }
+.bi-md-localm .bi-xe-list, .bi-md-localm .bi-xe-card { left: 0; right: 0; max-width: none; }
+.bi-md-localm[open] { grid-column: 1 / -1; }

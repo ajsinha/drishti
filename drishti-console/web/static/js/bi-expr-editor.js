@@ -126,10 +126,24 @@
         measureList().slice(0, 12).forEach((m) => out.push({ kind: 'measure', label: m.name, detail: m.description || 'measure(\'' + m.name + '\')', insert: 'measure(\'' + m.name.replace(/'/g, '\\\'') + '\')', from: c.start }));
       }
       if (w.length || c.call) {
-        fieldList().filter((f) => f.name.toLowerCase().indexOf(w) === 0 || (w && f.name.toLowerCase().split('.').pop().indexOf(w) === 0)).slice(0, 40)
-          .forEach((f) => out.push({ kind: 'field', label: f.name, detail: [f.type, f.meaning, f.format].filter(Boolean).join(' · ') + (f.description ? ' — ' + f.description : ''), insert: f.name, from: c.start }));
+        const callName = c.call ? c.call.name : '';
+        const first = !c.call || c.call.args === 0;
+        // count(trade): a dataset (its alias) is what count takes first, so the model's aliases come first there
+        if (/^(count|count_rows|countrows|distinct_count)$/.test(callName) && first && c.word.indexOf('.') < 0) {
+          Array.from(new Set(fieldList().map((f) => f.name.split('.')[0]).filter(Boolean))).filter((a) => a.toLowerCase().indexOf(w) === 0)
+            .forEach((a) => out.push({ kind: 'table', label: a, detail: 'count the rows of ' + a, insert: a, from: c.start }));
+        }
+        const fnItems = c.word.indexOf('.') < 0 ? fns.filter((f) => f.name.indexOf(w) === 0).slice(0, 30).map((f) => ({ kind: 'function', label: f.name, detail: f.signature, fn: f, insert: f.name + '(', from: c.start })) : [];
+        let fieldItems = fieldList().filter((f) => f.name.toLowerCase().indexOf(w) === 0 || (w && f.name.toLowerCase().split('.').pop().indexOf(w) === 0))
+          .map((f) => ({ kind: 'field', label: f.name, type: f.type, detail: [f.type, f.meaning, f.format].filter(Boolean).join(' · ') + (f.description ? ' — ' + f.description : ''), insert: f.name, from: c.start }));
+        if (/^(sum|avg|average|min|max|median|stdev|variance|percentile)$/.test(callName) && first) {            // sum(: the numbers first, text last
+          const num = (f) => (/^(int|integer|long|decimal|double|float|number|numeric)/i.test(String(f.type || '')) ? 0 : 1);
+          fieldItems = fieldItems.map((f, i) => [f, i]).sort((a, b) => num(a[0]) - num(b[0]) || a[1] - b[1]).map((x) => x[0]);
+        }
+        fieldItems = fieldItems.slice(0, 40);
+        // a prefix that starts a function name puts the functions above the fields (fields are reached by their dataset's alias anyway)
+        if (w.length) { fnItems.forEach((x) => out.push(x)); fieldItems.forEach((x) => out.push(x)); } else { fieldItems.forEach((x) => out.push(x)); fnItems.forEach((x) => out.push(x)); }
         if (c.word.indexOf('.') < 0) {
-          fns.filter((f) => f.name.indexOf(w) === 0).slice(0, 30).forEach((f) => out.push({ kind: 'function', label: f.name, detail: f.signature, fn: f, insert: f.name + '(', from: c.start }));
           (WORDS[scope === 'aggregate' ? 'aggregate' : 'row'] || []).filter((k) => w && k.toLowerCase().indexOf(w) === 0 && k !== c.word).forEach((k) => out.push({ kind: 'word', label: k, detail: '', insert: k, from: c.start }));
         }
         if (scope !== 'row' && scope !== 'rule' && w && 'measure'.indexOf(w) !== 0) {
@@ -140,7 +154,7 @@
       if (/^[A-Z]/.test(c.word)) { out.sort((a, b) => (a.kind === 'measure' ? 0 : 1) - (b.kind === 'measure' ? 0 : 1)); }
       return { c, out: out.slice(0, 60) };
     }
-    const ICON = { field: 'fonts', measure: 'calculator', function: 'braces', keyword: 'at', word: 'type' };
+    const ICON = { field: 'fonts', measure: 'calculator', function: 'braces', keyword: 'at', word: 'type', table: 'table' };
     function open(force) {
       const s = suggestions();
       items = s.out;
@@ -233,6 +247,42 @@
       if (!at.end || (at.start === 0 && at.end >= text.length)) { return frag; }
       return at.end > at.start && at.end <= text.length ? text.slice(0, at.start) + frag + text.slice(at.end) : '';
     }
+    /** Fixes the console can offer itself when the server's problem has no replacement: an unclosed "(", "=" written for "==", a name the server
+     *  cannot find (DRS-9152) with the nearest field or measure. Every fix is only offered; the server checks the result again. */
+    function localFix(text, p) {
+      const msg = String(p.message || '') + ' ' + String(typeof p.fix === 'string' ? p.fix : '');
+      let open = 0, quote = '';
+      for (const c of text) { if (quote) { if (c === quote) { quote = ''; } } else if (c === '\'' || c === '"') { quote = c; } else if (c === '(') { open++; } else if (c === ')') { open--; } }
+      if (open > 0 && (/\)|paren|unclosed|end of (the )?(expression|input)|expected/i.test(msg) || p.code === 'DRS-9101' || p.code === 'DRS-9100')) { return { text: text + ')'.repeat(open), why: 'close the bracket' }; }
+      const eq = text.replace(/(\b[A-Za-z_]\w*\.[A-Za-z_]\w*\s*)=(?!=)/g, '$1==');
+      if (eq !== text && /=|compar|assign|syntax|expected/i.test(msg)) { return { text: eq, why: 'compare with ==' }; }
+      if (p.code === 'DRS-9152') {
+        const bad = (/'([^']+)'/.exec(msg) || [])[1];
+        if (bad) {
+          const said = /did you mean\s+'?([A-Za-z_][\w. ]*?)'?[?.]?(\s|$)/i.exec(msg);
+          const names = fieldList().map((f) => f.name).concat(measureList().map((m) => m.name));
+          const best = said ? said[1] : nearest(bad, names);
+          if (best && best !== bad && text.indexOf(bad) >= 0) { return { text: text.split(bad).join(best), why: 'use ' + best }; }
+        }
+      }
+      return null;
+    }
+    function nearest(word, names) {
+      const d = (a, b) => { const m = []; for (let i = 0; i <= a.length; i++) { m[i] = [i]; } for (let j = 1; j <= b.length; j++) { m[0][j] = j; }
+        for (let i = 1; i <= a.length; i++) { for (let j = 1; j <= b.length; j++) { m[i][j] = Math.min(m[i - 1][j] + 1, m[i][j - 1] + 1, m[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); } } return m[a.length][b.length]; };
+      let best = '', score = 99;
+      names.forEach((n) => { const s = d(word.toLowerCase(), n.toLowerCase()); if (s < score) { score = s; best = n; } });
+      return score <= Math.max(2, Math.floor(word.length / 4)) ? best : '';
+    }
+    /** A fix that sums, averages or ranges over a text column is no fix: it is never offered. */
+    function sane(repl) {
+      const types = {};
+      fieldList().forEach((f) => { types[f.name] = String(f.type || '').toLowerCase(); });
+      const re = /\b(sum|avg|average|min|max|median|stdev|variance)\(\s*([A-Za-z_]\w*\.[A-Za-z_]\w*)/g;
+      let m;
+      while ((m = re.exec(repl))) { if (/^(string|text|bool|boolean)$/.test(types[m[2]] || '')) { return false; } }
+      return true;
+    }
     function drawProblems(r) {
       B.clear(probs);
       // the server checks against the saved item: a measure or field this page has but has not saved yet is not "not found" (opts.known names them)
@@ -242,8 +292,11 @@
       if (r && r.problems && list2.length < r.problems.length && !list2.some((p) => (p.level || 'error') === 'error')) { r = Object.assign({}, r, { valid: true, pending: true }); }
       input.setAttribute('aria-invalid', list2.some((p) => (p.level || 'error') === 'error') ? 'true' : 'false');
       list2.forEach((p) => {
-        const repl = p.replacement || (p.fix && typeof p.fix === 'object' ? p.fix.expr || p.fix.text : '') || fixed(r, p);
-        const fixWords = typeof p.fix === 'string' ? p.fix : p.fix && p.fix.label ? p.fix.label : '';
+        let repl = p.replacement || (p.fix && typeof p.fix === 'object' ? p.fix.expr || p.fix.text : '') || fixed(r, p);
+        if (repl && !sane(repl)) { repl = ''; }
+        if (!repl) { const lf = localFix(input.value.trim(), p); if (lf && sane(lf.text)) { repl = lf.text; } }
+        let fixWords = typeof p.fix === 'string' ? p.fix : p.fix && p.fix.label ? p.fix.label : '';
+        if (fixWords && !repl && /\b(sum|avg)\(/.test(fixWords) && !sane(fixWords)) { fixWords = ''; }
         let btn = null;
         if (repl) {
           btn = h('button', { type: 'button', class: 'btn-pill btn-accent bi-small', 'data-xe-fix': p.code || 'fix', title: 'Replace the formula with the fix' }, B.icon('magic'), ' Use ', h('code', { text: repl.length > 60 ? repl.slice(0, 57) + '…' : repl }));
