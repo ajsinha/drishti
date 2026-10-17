@@ -39,6 +39,14 @@ public interface SourceGateway {
      */
     Optional<SourcePlugin> plugin(String connector, String kind);
 
+    /**
+     * The connectors a table reads: the named one, or, when the name is blank and the kind is served by a union of connectors (one
+     * per source system, setting {@code union: true}), every one of them, their rows put together; else {@link #plugin}'s choice.
+     */
+    default List<SourcePlugin> plugins(String connector, String kind) {
+        return plugin(connector, kind).map(List::of).orElse(List.of());
+    }
+
     /** Ids of the kind on the business date (null for the latest), at most {@code limit}; the slow path for sources that cannot scan columns. */
     List<EntityRef> ids(String kind, LocalDate date, int limit);
 

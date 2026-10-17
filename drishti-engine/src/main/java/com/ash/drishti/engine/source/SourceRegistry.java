@@ -62,6 +62,8 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     /** By connector name and by the name its documents carry (source-name): the source and its stale-after. */
     private final Map<String, SourcePlugin> bySource = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, java.time.Duration> staleAfter = new java.util.concurrent.ConcurrentHashMap<>();
+    /** Connectors whose setting {@code union} is true: each holds one slice of its kinds (one source system), read together. */
+    private final java.util.Set<String> unions = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     /**
      * How fresh a source's data is.
@@ -393,6 +395,11 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         String sourceName = own.getOrDefault("source-name", p.manifest().name());
         bySource.put(p.manifest().name(), p);
         bySource.put(sourceName, p);
+        if (Boolean.parseBoolean(own.getOrDefault("union", "false").trim())) {
+            unions.add(p.manifest().name());
+        } else {
+            unions.remove(p.manifest().name());
+        }
         String after = own.get("stale-after");
         if (after != null && !after.isBlank()) {
             try {
@@ -407,6 +414,7 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
 
     private void unregister(String name, SourcePlugin p) {
         bySource.values().removeIf(x -> x == p);
+        unions.remove(name);
         staleAfter.keySet().removeIf(k -> !bySource.containsKey(k));
     }
 
@@ -579,6 +587,15 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     }
 
     /** The connector a document's {@code provenance.source} names: a connector's own name or the system-of-record name it serves. */
+    /**
+     * Whether the connector is one of a union: its setting {@code union: true} says it holds one slice of its kinds (one source
+     * system of several, ids unique across them), so a read, a search, a type-ahead and a BI table ask every union connector of
+     * the kind together rather than the first that holds the date.
+     */
+    public boolean union(String connector) {
+        return connector != null && unions.contains(connector);
+    }
+
     public Optional<SourcePlugin> connector(String source) {
         return source == null ? Optional.empty() : Optional.ofNullable(bySource.get(source));
     }

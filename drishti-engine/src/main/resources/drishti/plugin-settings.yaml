@@ -24,6 +24,7 @@ common:
   - { name: "mode.*", desc: "Per-kind read mode (mode.<kind>)", group: mapping }
   - { name: domain, desc: "The data domain (folder, schema or key prefix) the connector reads", group: connection }
   - { name: stale-after, type: duration, desc: "Mark the source stale when it has received nothing for this long (15m, 2h, 1d)", group: general }
+  - { name: union, type: boolean, default: "false", desc: "This connector holds one slice of its kinds (one source system of several, ids unique across them): reads, searches, type-ahead and BI tables ask every union connector of the kind together", group: mapping }
 plugins:
   jdbc:
     tls: true
@@ -102,6 +103,7 @@ plugins:
       - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
       - { name: "mode.*", desc: "Per-kind read mode", group: mapping }
       - { name: "layout.*", desc: "Per-kind column layout", group: mapping }
+      - { name: "table.*", desc: "Per-kind table folder under the domain when it is not the kind's name (table.trade: trade_endur)", group: mapping }
       - { name: "hadoop.*", desc: "Any Hadoop configuration property (hadoop.fs.s3a.connection.maximum)", group: tuning }
       - { name: engine, desc: "Reader engine", group: tuning }
       - { name: date-column, desc: "Business date column", group: mapping }

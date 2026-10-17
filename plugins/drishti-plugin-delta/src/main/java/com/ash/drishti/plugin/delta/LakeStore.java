@@ -87,7 +87,9 @@ public interface LakeStore extends AutoCloseable {
             throw new com.ash.drishti.api.tls.TlsException("tls.* is read by the native engine only: Hadoop's S3A has no setting for a private CA. "
                     + "Set engine: native, or import the CA into the JVM's truststore (-Djavax.net.ssl.trustStore=...)");
         }
-        return engine == EngineKind.NATIVE ? NativeLake.open(root, domain, settings) : HadoopLake.open(root, domain, settings);
+        LakeStore lake = engine == EngineKind.NATIVE ? NativeLake.open(root, domain, settings) : HadoopLake.open(root, domain, settings);
+        Map<String, String> names = NamedTables.of(settings);
+        return names.isEmpty() ? lake : new NamedTables(lake, names);     // table.<kind>: a kind read from a folder of another name
     }
 
     /** Whether {@code root} is a URI of object storage (a scheme other than {@code file:}, not a drive letter). */

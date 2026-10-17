@@ -95,6 +95,65 @@ public record ColumnSet(String[] ids, Map<String, double[]> numbers, Map<String,
         return out;
     }
 
+    /**
+     * Several sets one after the other (the source systems of a union, each with its own ids): a path numeric in every set stays
+     * numeric, text in every set stays text, and is mixed otherwise; a set without the path gives its rows no value there. The date
+     * is the first set's; the sets that are incomplete say why, joined.
+     */
+    public static ColumnSet concat(java.util.List<ColumnSet> sets) {
+        if (sets.size() == 1) {
+            return sets.get(0);
+        }
+        int n = sets.stream().mapToInt(ColumnSet::size).sum();
+        String[] ids = new String[n];
+        java.util.Set<String> paths = new java.util.LinkedHashSet<>();
+        for (ColumnSet c : sets) {
+            paths.addAll(c.numbers.keySet());
+            paths.addAll(c.texts.keySet());
+            paths.addAll(c.mixed.keySet());
+        }
+        Map<String, double[]> num = new LinkedHashMap<>();
+        Map<String, String[]> txt = new LinkedHashMap<>();
+        Map<String, Object[]> mix = new LinkedHashMap<>();
+        for (String p : paths) {
+            boolean allNum = sets.stream().allMatch(c -> c.numbers.containsKey(p) || !c.has(p));
+            boolean allTxt = sets.stream().allMatch(c -> c.texts.containsKey(p) || !c.has(p));
+            if (allNum) {
+                double[] out = new double[n];
+                java.util.Arrays.fill(out, Double.NaN);
+                num.put(p, out);
+            } else if (allTxt) {
+                txt.put(p, new String[n]);
+            } else {
+                mix.put(p, new Object[n]);
+            }
+        }
+        int at = 0;
+        StringBuilder why = new StringBuilder();
+        for (ColumnSet c : sets) {
+            System.arraycopy(c.ids, 0, ids, at, c.size());
+            for (String p : paths) {
+                if (!c.has(p)) {
+                    continue;
+                }
+                if (num.containsKey(p)) {
+                    System.arraycopy(c.numbers.get(p), 0, num.get(p), at, c.size());
+                } else if (txt.containsKey(p)) {
+                    System.arraycopy(c.texts.get(p), 0, txt.get(p), at, c.size());
+                } else {
+                    for (int i = 0; i < c.size(); i++) {
+                        mix.get(p)[at + i] = c.value(p, i);
+                    }
+                }
+            }
+            if (c.incomplete != null) {
+                why.append(why.length() == 0 ? "" : "; ").append(c.incomplete);
+            }
+            at += c.size();
+        }
+        return new ColumnSet(ids, num, txt, sets.get(0).businessDate, why.length() == 0 ? null : why.toString(), mix);
+    }
+
     /** The set with only these paths (those it has), and the same ids, date and completeness. */
     public ColumnSet select(Collection<String> paths) {
         Map<String, double[]> n = new LinkedHashMap<>();

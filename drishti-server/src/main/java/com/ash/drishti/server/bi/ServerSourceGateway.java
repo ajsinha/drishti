@@ -74,6 +74,17 @@ public final class ServerSourceGateway implements SourceGateway {
     }
 
     @Override
+    public List<SourcePlugin> plugins(String connector, String kind) {
+        if (connector == null || connector.isBlank()) {
+            List<SourcePlugin> union = router.unionOf(kind);
+            if (!union.isEmpty()) {
+                return union;
+            }
+        }
+        return SourceGateway.super.plugins(connector, kind);
+    }
+
+    @Override
     public List<EntityRef> ids(String kind, LocalDate date, int limit) {
         List<EntityHit> hits = router.search(kind, "", limit, props.recordReadBudget(), asOf(date));
         return hits.stream().map(EntityHit::ref).toList();

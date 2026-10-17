@@ -35,7 +35,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import org.duckdb.DuckDBAppender;
 import org.duckdb.DuckDBConnection;
@@ -75,9 +74,12 @@ final class TableBuilder {
      * @param partition the directory the file goes in when the date is known; for a null date {@code partitionFor} gives it once the date is
      */
     Built build(Dataset.Table t, LocalDate date, java.util.function.Function<LocalDate, Path> partitionFor) {
-        SourcePlugin plugin = sources.plugin(t.connector(), t.kind()).orElseThrow(() -> new DrishtiException(ErrorCode.QUERY_SOURCE,
-                "no running connector serves kind '" + t.kind() + "'" + (t.connector().isBlank() ? "" : " under the name '" + t.connector() + "'")
-                        + ": check Admin, Connectors"));
+        List<SourcePlugin> plugins = sources.plugins(t.connector(), t.kind());
+        if (plugins.isEmpty()) {
+            throw new DrishtiException(ErrorCode.QUERY_SOURCE, "no running connector serves kind '" + t.kind() + "'"
+                    + (t.connector().isBlank() ? "" : " under the name '" + t.connector() + "'") + ": check Admin, Connectors");
+        }
+        SourcePlugin plugin = plugins.get(0);
         List<Dataset.Column> cols = t.physical();
         List<String> warnings = new ArrayList<>();
         String stage = "bi_stage_" + STAGE.incrementAndGet();
@@ -87,32 +89,38 @@ final class TableBuilder {
             LocalDate resolved = date;
             long rows;
             String how;
-            ArrowScan scan = each ? null : tryScan(plugin, t, cols, date);
-            if (scan != null) {
-                how = "scan";
-                try (scan) {
-                    List<ColumnBatch.Type> types = null;
-                    DuckDBAppender app = null;
-                    rows = 0;
-                    for (ColumnBatch b = scan.next(); b != null; b = scan.next()) {
-                        if (app == null) {
-                            types = List.of(b.types());
-                            create(c, stage, cols, types, false);
-                            app = duck.createAppender(DuckDBConnection.DEFAULT_SCHEMA, stage);
+            List<ArrowScan> scans = each ? null : tryScans(plugins, t, cols, date);
+            if (scans != null) {
+                how = plugins.size() > 1 ? "scan of " + plugins.size() + " connectors" : "scan";
+                List<ColumnBatch.Type> types = null;
+                DuckDBAppender app = null;
+                rows = 0;
+                try {
+                    for (ArrowScan scan : scans) {            // a union's source systems one after the other, into one table
+                        for (ColumnBatch b = scan.next(); b != null; b = scan.next()) {
+                            if (app == null) {
+                                types = plugins.size() > 1 ? declared(cols) : List.of(b.types());
+                                create(c, stage, cols, types, false);
+                                app = duck.createAppender(DuckDBConnection.DEFAULT_SCHEMA, stage);
+                            }
+                            if (resolved == null && b.businessDate() != null) {
+                                resolved = b.businessDate();
+                            }
+                            append(app, b, types);
+                            rows += b.rows();
                         }
-                        if (resolved == null && b.businessDate() != null) {
-                            resolved = b.businessDate();
-                        }
-                        append(app, b);
-                        rows += b.rows();
+                        warnings.addAll(scan.warnings());
                     }
+                } finally {
                     if (app != null) {
                         app.close();
                     }
-                    warnings.addAll(scan.warnings());
-                    if (types == null) {
-                        create(c, stage, cols, cols.stream().map(x -> ColumnBatch.Type.TEXT).toList(), false);       // no rows: an empty partition
+                    for (ArrowScan scan : scans) {
+                        scan.close();
                     }
+                }
+                if (types == null) {
+                    create(c, stage, cols, cols.stream().map(x -> ColumnBatch.Type.TEXT).toList(), false);       // no rows: an empty partition
                 }
             } else {
                 how = "records";
@@ -155,13 +163,32 @@ final class TableBuilder {
         }
     }
 
-    private ArrowScan tryScan(SourcePlugin plugin, Dataset.Table t, List<Dataset.Column> cols, LocalDate date) {
-        try {
-            Optional<ArrowScan> s = plugin.scan(new ScanRequest(t.kind(), cols.stream().map(Dataset.Column::path).toList(), List.of(), date, date, props.scanBatchRows()));
-            return s.orElse(null);
-        } catch (Exception e) {
-            throw new DrishtiException(ErrorCode.QUERY_SOURCE, "connector '" + plugin.manifest().name() + "' could not scan " + t.kind() + ": " + e.getMessage());
+    /** A scan of every connector, or null (documents are read) when one of them cannot scan the kind as columns. */
+    private List<ArrowScan> tryScans(List<SourcePlugin> plugins, Dataset.Table t, List<Dataset.Column> cols, LocalDate date) {
+        List<ArrowScan> out = new ArrayList<>();
+        for (SourcePlugin plugin : plugins) {
+            ArrowScan s;
+            try {
+                s = plugin.scan(new ScanRequest(t.kind(), cols.stream().map(Dataset.Column::path).toList(), List.of(), date, date, props.scanBatchRows())).orElse(null);
+            } catch (Exception e) {
+                out.forEach(ArrowScan::close);
+                throw new DrishtiException(ErrorCode.QUERY_SOURCE, "connector '" + plugin.manifest().name() + "' could not scan " + t.kind() + ": " + e.getMessage());
+            }
+            if (s == null) {
+                out.forEach(ArrowScan::close);
+                return null;
+            }
+            out.add(s);
         }
+        return out;
+    }
+
+    /**
+     * The column types a union's table is made with: the dataset's (a number column is a number, the others text), not the first
+     * source system's, since another may write the same field differently (a trade id that is a number in one system, text in another).
+     */
+    private static List<ColumnBatch.Type> declared(List<Dataset.Column> cols) {
+        return cols.stream().map(x -> numeric(x) ? ColumnBatch.Type.NUMBER : ColumnBatch.Type.TEXT).toList();
     }
 
     // ---- staging -----------------------------------------------------------------------------------------------------
@@ -179,11 +206,16 @@ final class TableBuilder {
         }
     }
 
-    private static void append(DuckDBAppender app, ColumnBatch b) throws java.sql.SQLException {
+    /** One batch into a table whose column types are {@code into}: a value of another type is converted ({@link #appendAs}). */
+    private static void append(DuckDBAppender app, ColumnBatch b, List<ColumnBatch.Type> into) throws java.sql.SQLException {
         for (int r = 0; r < b.rows(); r++) {
             app.beginRow();
             app.append(b.ids()[r]);
             for (int c = 0; c < b.types().length; c++) {
+                if (b.types()[c] != into.get(c)) {
+                    appendAs(app, b, c, r, into.get(c));
+                    continue;
+                }
                 switch (b.types()[c]) {
                     case NUMBER -> {
                         double d = ((double[]) b.data()[c])[r];
@@ -198,6 +230,36 @@ final class TableBuilder {
                 }
             }
             app.endRow();
+        }
+    }
+
+    /** A value written as another type: a number as text (a whole number without ".0"), text as a number (null when it is not one). */
+    private static void appendAs(DuckDBAppender app, ColumnBatch b, int c, int r, ColumnBatch.Type into) throws java.sql.SQLException {
+        Object v = switch (b.types()[c]) {
+            case NUMBER -> {
+                double d = ((double[]) b.data()[c])[r];
+                yield Double.isNaN(d) ? null : d;
+            }
+            case BOOLEAN -> ((boolean[]) b.data()[c])[r];
+            case TEXT -> ((String[]) b.data()[c])[r];
+        };
+        switch (into) {
+            case TEXT -> app.append(v == null ? null
+                    : v instanceof Double d && d == Math.rint(d) && !Double.isInfinite(d) ? String.valueOf(d.longValue()) : String.valueOf(v));
+            case NUMBER -> {
+                Double d = null;
+                if (v instanceof Double x) {
+                    d = x;
+                } else if (v instanceof String t && !t.isBlank()) {
+                    try {
+                        d = Double.valueOf(t.trim());
+                    } catch (NumberFormatException e) {
+                        d = null;                         // text that is not a number: no value
+                    }
+                }
+                app.append(d);
+            }
+            case BOOLEAN -> app.append((boolean) (v instanceof Boolean x ? x : Boolean.parseBoolean(String.valueOf(v))));
         }
     }
 

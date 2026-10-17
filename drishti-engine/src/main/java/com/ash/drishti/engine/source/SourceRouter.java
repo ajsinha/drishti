@@ -87,7 +87,30 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
                 ordered.putIfAbsent(p.manifest().name(), p);
             }
         }
-        return new ArrayList<>(ordered.values());
+        return adjacentUnion(new ArrayList<>(ordered.values()));
+    }
+
+    /** The union connectors of a kind moved up to sit right after the first of them, so the union is read as one store. */
+    private List<SourcePlugin> adjacentUnion(List<SourcePlugin> in) {
+        int first = -1;
+        for (int i = 0; i < in.size(); i++) {
+            if (registry.union(in.get(i).manifest().name())) {
+                first = i;
+                break;
+            }
+        }
+        if (first < 0) {
+            return in;
+        }
+        List<SourcePlugin> out = new ArrayList<>(in.subList(0, first));
+        in.stream().filter(p -> registry.union(p.manifest().name())).forEach(out::add);
+        in.subList(first, in.size()).stream().filter(p -> !registry.union(p.manifest().name())).forEach(out::add);
+        return out;
+    }
+
+    /** The union connectors among a kind's candidates, in order (empty when the kind has no union). */
+    public List<SourcePlugin> unionOf(String kind) {
+        return candidates(kind).stream().filter(p -> registry.union(p.manifest().name())).toList();
     }
 
     public CompletableFuture<EntityDocument> fetch(EntityRef ref) {
@@ -180,7 +203,11 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      * stops with {@code DRS-1007} at a dated store without time travel that may hold the date (DATA-15).
      */
     private EntityDocument readFirst(EntityRef ref, List<SourcePlugin> candidates, AsOf asOf, AtomicReference<String> asking) {
+        String heldBy = null;                                  // a union connector that holds the date and does not list ref
         for (SourcePlugin p : candidates) {
+            if (heldBy != null && !registry.union(p.manifest().name())) {
+                break;                                         // the union holds the date: stores behind it are not asked (DATA-12)
+            }
             Optional<EntityDocument> d;
             boolean dated = p.manifest().capabilities().dated();
             String name = p.manifest().name();
@@ -204,10 +231,18 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
                 return named(d.get(), name);
             }
             stats.notHeld(name, System.nanoTime() - t0);
+            if (coverage == DateCoverage.HELD && registry.union(name)) {
+                heldBy = heldBy == null ? name : heldBy + ", " + name;   // another source system of the union may hold it
+                continue;
+            }
             if (coverage == DateCoverage.HELD) {
                 throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, name + " holds " + ref.kind()
                         + (asOf.businessDate() == null ? "" : " for " + asOf.businessDate()) + " and does not list " + ref);
             }
+        }
+        if (heldBy != null) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, heldBy + " hold " + ref.kind()
+                    + (asOf.businessDate() == null ? "" : " for " + asOf.businessDate()) + " and none lists " + ref);
         }
         String routed = routes.get(ref.kind());
         if (routed != null && registry.plugin(routed).isEmpty()) {
@@ -315,9 +350,24 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
                 }));
             }
         }
+        return new Listing(interleave(parts.stream().map(CompletableFuture::join).toList(), limit), failures.asMap());
+    }
+
+    /**
+     * The hits of several sources as one list of at most {@code limit}: taken in turn, one from each source, so a union's source
+     * systems all show in a short list (a type-ahead) instead of the first filling it; an entity two sources list counts once.
+     */
+    static List<EntityHit> interleave(List<List<EntityHit>> parts, int limit) {
         Map<EntityRef, EntityHit> merged = new LinkedHashMap<>();
-        parts.forEach(f -> f.join().forEach(h -> merged.putIfAbsent(h.ref(), h)));
-        return new Listing(merged.values().stream().limit(limit).toList(), failures.asMap());
+        int longest = parts.stream().mapToInt(List::size).max().orElse(0);
+        for (int i = 0; i < longest && merged.size() < limit; i++) {
+            for (List<EntityHit> part : parts) {
+                if (i < part.size()) {
+                    merged.putIfAbsent(part.get(i).ref(), part.get(i));
+                }
+            }
+        }
+        return merged.values().stream().limit(limit).toList();
     }
 
     /**
@@ -330,15 +380,23 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         List<SourcePlugin> ordered = candidates(kind);
         readOrder(ordered, asOf);
         java.util.Set<String> out = new java.util.HashSet<>();
+        boolean unionHeld = false;
         for (SourcePlugin p : ordered) {
             DateCoverage coverage = coverage(p, kind, asOf);
+            boolean union = registry.union(p.manifest().name());
+            if (unionHeld && !union) {
+                break;                                     // the union holds the date: what is behind it is not listed
+            }
             if (refusesKnownAt(p, asOf, coverage)) {
                 failures.add(p.manifest().name(), NO_VERSIONS);
             } else {
                 out.add(p.manifest().name());
             }
             if (coverage == DateCoverage.HELD) {
-                break;
+                if (!union) {
+                    break;
+                }
+                unionHeld = true;                          // every source system of the union is listed
             }
         }
         return out;
@@ -419,6 +477,9 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             if (left <= 0) {
                 return Optional.empty();
             }
+            if (registry.union(p.manifest().name())) {
+                return unionColumns(kind, paths, asOf, candidates, left, failures);
+            }
             try {
                 Optional<com.ash.drishti.api.ColumnSet> got = CompletableFuture.supplyAsync(() -> {
                     try {
@@ -441,6 +502,39 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * The columns of every union connector of the kind, read concurrently and put one after the other (each source system's rows,
+     * ids unique across them). Empty, so documents are read instead, when one of them does not keep the paths as columns, fails or
+     * is too slow; a failure is added to {@code failures}.
+     */
+    private Optional<com.ash.drishti.api.ColumnSet> unionColumns(String kind, java.util.Collection<String> paths, AsOf asOf, List<SourcePlugin> candidates,
+            long leftNanos, SourceFailures failures) {
+        List<SourcePlugin> union = candidates.stream().filter(p -> registry.union(p.manifest().name())).toList();
+        if (union.stream().anyMatch(p -> !p.columnar(kind).containsAll(paths))) {
+            return Optional.empty();
+        }
+        List<CompletableFuture<Optional<com.ash.drishti.api.ColumnSet>>> parts = union.stream().map(p -> CompletableFuture.supplyAsync(() -> {
+            try {
+                return p.columns(kind, paths, asOf);
+            } catch (Exception e) {
+                throw new CompletionException(e);
+            }
+        }, executor).orTimeout(leftNanos, TimeUnit.NANOSECONDS)).toList();
+        List<com.ash.drishti.api.ColumnSet> sets = new ArrayList<>();
+        for (int i = 0; i < parts.size(); i++) {
+            try {
+                parts.get(i).join().ifPresent(sets::add);
+            } catch (CompletionException e) {
+                if (!(e.getCause() instanceof TimeoutException)) {
+                    failures.add(union.get(i).manifest().name(), SourceFailure.reason(e, Duration.ofNanos(leftNanos)));
+                }
+                return Optional.empty();
+            }
+        }
+        sets.stream().filter(c -> c.incomplete() != null).forEach(c -> failures.add(kind, c.incomplete()));
+        return sets.isEmpty() ? Optional.empty() : Optional.of(com.ash.drishti.api.ColumnSet.concat(sets));
     }
 
     /** The paths a source of the kind keeps as columns (the first that keeps any). */
