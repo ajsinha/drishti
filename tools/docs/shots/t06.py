@@ -90,21 +90,21 @@ def sutra(c: Ctx):
 def column_filter(c: Ctx):
     """Every table on a live view has a funnel on each column (the workbench preview is a sketch; the live view is the real thing)."""
     login(c)
-    go(c, "/v/trade/MX-20000001", height=1700, wait="#p-schedule .cf-btn", settle=1500)
-    th = c.page.locator("#p-schedule th", has_text="Amount").first
+    go(c, "/v/trade/MX-20000001", height=1700, wait="#p-event-list .cf-btn", settle=1500)
+    th = c.page.locator("#p-event-list th", has_text="Amount").first
     th.locator(".cf-btn").click()
     c.page.locator(".cf-menu").wait_for()
     c.page.locator(".cf-menu .cf-op").select_option(label="Greater than")
     c.page.locator(".cf-menu .cf-a").fill("5m")
     c.page.wait_for_timeout(500)
-    box = c.page.locator("#p-schedule").bounding_box()
+    box = c.page.locator("#p-event-list").bounding_box()
     menu = c.page.locator(".cf-menu").bounding_box()
     top = max(0, min(box["y"], menu["y"]) - 10)
     c.save("07-column-filter.jpg", clip={"x": 0, "y": top, "width": 1280, "height": min(box["y"] + 520, 1700) - top})
     c.page.keyboard.press("Enter")
     c.page.wait_for_timeout(800)
-    go(c, "/v/trade/MX-20000001", width=390, height=844, wait="#p-schedule .cf-btn", settle=1200)
-    c.page.locator("#p-schedule").scroll_into_view_if_needed()
+    go(c, "/v/trade/MX-20000001", width=390, height=844, wait="#p-event-list .cf-btn", settle=1200)
+    c.page.locator("#p-event-list").scroll_into_view_if_needed()
     c.page.wait_for_timeout(500)
     c.save("08-phone.jpg")
 

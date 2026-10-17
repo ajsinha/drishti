@@ -61,7 +61,7 @@ def trade(c: Ctx):
 def search(c: Ctx):
     login(c)
     go(c, "/t", wait=".cmd-input")
-    command(c, "TRD where mtm > 1m order by mtm desc limit 50")
+    command(c, "TRD where QUANTITY > 1bn order by QUANTITY desc limit 50")
     c.page.wait_for_url("**/s?*")
     c.page.locator("table").first.wait_for(timeout=30000)
     c.page.wait_for_timeout(1500)

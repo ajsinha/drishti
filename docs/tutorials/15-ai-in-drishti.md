@@ -24,9 +24,15 @@ About 30 minutes.
 
 ## Before you start
 
-- [Tutorial 10](10-first-bi-report.md) done (the World economics report, which reads the model `world-economics@1`), [tutorial 13](13-govern-bi.md) for the people `ann` (a writer) and `sue` (a steward).
+- The quick-start environment of [tutorial 10](10-first-bi-report.md#before-you-start) (the demo lakes and **Drishti server (demo lakes)**, sign-in on),
+  [tutorial 10](10-first-bi-report.md) done (the World economics report, which reads the model `world-economics@1`), [tutorial 13](13-govern-bi.md) for
+  the people `ann` (a writer) and `sue` (a steward).
+- The AI layer is a **restart** of the server and the console with two more variables (step 1): in the IDE, edit the run configurations **Drishti server
+  (demo lakes)** and **Drishti console** and add them under *Environment variables*.
 - Nothing to buy and no key: the mock provider is part of Drishti. The files used are in [data/ai/](data/ai/) (`mock.yaml` and `local-model.yaml`).
-- The command line token of tutorial 1 (`DRISHTI_TOKEN`); the AI features have no `drishti.py` command, so the command line here is `curl` on the API.
+- The personal API token of [tutorial 1, step 9](01-first-15-minutes.md#step-9--make-a-token-for-the-command-line) in `DRISHTI_TOKEN`, and
+  `DRISHTI_SERVER`; the AI features have no `drishti.py` command, so the command line here is `curl` on the API (the `bi/ai` calls are reads a personal
+  token may make; **Test connection** is the console's, for administrators).
 
 ## What you will learn
 
@@ -197,7 +203,7 @@ economies.REGION_NAME       GDP per capita (USD)
 East Asia & Pacific        13,973.22
 Europe & Central Asia      34,598.00
 Latin America & Caribbean  10,993.23
-3 row(s)  as of 2026-10-13  plan p_eda8a5a73862ba70
+3 row(s)  as of 2026-10-16  plan p_344b7fa781a125c9
 ```
 
 and **as YAML** (`bi mq that.yaml`):
@@ -208,7 +214,9 @@ model: world-economics@1
 select: { fields: [economies.REGION_NAME], measures: [GDP per capita (USD)] }
 sort: [{ by: GDP per capita (USD), desc: true }]
 limit: 200
-``` Now **Explain this number**: press the light bulb in the header of the **GDP (USD bn)** card.
+```
+
+Now **Explain this number**: press the light bulb in the header of the **GDP (USD bn)** card.
 
 ![Explain this number: GDP (USD bn) = 117,326.82; Model World economics 1.0.0, Measure GDP (USD bn) = sum(economies.GDP_USD_BN), Reads economies.GDP_USD_BN, Sources economies: world-economics-economies 1.0.0 (economy, macro-store); then the top members by name with their share](img/t15/07-explain.jpg)
 

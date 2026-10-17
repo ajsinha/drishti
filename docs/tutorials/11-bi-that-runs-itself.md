@@ -30,8 +30,14 @@ About 45 minutes.
 
 ## Before you start
 
-- [Tutorial 10](10-first-bi-report.md) done (it made the workspace `Economics desk`), and [tutorial 8](08-share-and-collaborate.md) for the colleague `vera`; [tutorial 9](09-reports.md) for how the **Reports** page lists subscriptions.
-- The command line token of tutorial 1 (`DRISHTI_TOKEN`, and `DRISHTI_SERVER` when your server is not on `localhost:18480`).
+- The quick-start environment of [tutorial 10](10-first-bi-report.md#before-you-start): the demo lakes, the server **Drishti server (demo lakes)** with
+  sign-in on, signed in as `drishti-dev-admin`. The figures below are from that lake (15,000 trade valuations over ten desks, business date
+  2026-10-16).
+- [Tutorial 10](10-first-bi-report.md) done (it made the workspace `Economics desk`), and [tutorial 8](08-share-and-collaborate.md) for the colleague `vera`
+  (a user with the `viewer` role and the address `vera@example.com`); [tutorial 9](09-reports.md) for how the **Reports** page lists subscriptions.
+- The personal API token of [tutorial 1, step 9](01-first-15-minutes.md#step-9--make-a-token-for-the-command-line) in `DRISHTI_TOKEN` (with `bi:write`),
+  and `DRISHTI_SERVER` when your server is not on `localhost:18480`. A personal token **reads** and writes BI items, but it never calls your own
+  `/me/...` addresses (subscriptions, alerts): those are made in the console, and steps 2 and 5 say so.
 - Three small files in [data/](data/): [trades-daily.dataset.yaml](data/trades-daily.dataset.yaml) (a dataset that refreshes itself),
   [trades-daily.model.yaml](data/trades-daily.model.yaml) (the model over it) and [desk-check.report.yaml](data/desk-check.report.yaml) (a report that
   says what its numbers must be).
@@ -76,17 +82,19 @@ dataset: trades-daily
 version: 1.0.0
 title: Trades refreshed daily
 description: The trades by desk, rebuilt on their own at 06:30 on business days.
-source: { connector: trading-store, kind: trade }
-grain: { says: "One row per trade per business date", keys: [tradeId] }
+source: { connector: risk-store, kind: trade-valuation }
+grain: { says: "One row per trade per business date", keys: [TRADE_ID] }
 refresh: "business-days 06:30"      # a schedule (daily 06:00, hourly, cron ...) or after-load: when the layers are rebuilt without anyone asking
 columns:
-  tradeId:  { type: string, role: key }
-  desk:     { type: string }
-  currency: { type: string }
-  notional: { type: decimal, format: amount0 }
-  mtm:      { type: decimal, format: signed0 }
+  TRADE_ID:  { type: string, role: key }
+  DESK:     { type: string }
+  CURRENCY: { type: string }
+  NOTIONAL: { type: decimal, format: amount0 }
+  MTM:      { type: decimal, format: signed0 }
 ```
 
+The rows are the `market-risk` pack's **trade valuations** (`risk-store` is its Delta connector, the table `risk/trade-valuation` that
+`lake demo` built): one row per trade and business date with its desk, currency, notional and MTM, in the names the data has (`TRADE_ID`, `DESK`, ...).
 The words are the ones of a scheduled report ([tutorial 9](09-reports.md)): `daily 06:00`, `weekdays 07:00`, `business-days 06:30` (skips holidays of the
 server's calendar), `hourly`, `cron ...`, or `after-load`. `refresh: { on-load: true }` (what the wizard writes for *when new data loads*) rebuilds only
 when data arrives; `{ schedule: "daily 06:00", on-load: true }` does both. The model over it, [data/trades-daily.model.yaml](data/trades-daily.model.yaml),
@@ -101,8 +109,8 @@ title: Trades daily
 datasets:
   trade: { dataset: trades-daily, role: fact }
 measures:
-  Notional: { expr: "sum(trade.notional)", format: amount0 }
-  MTM:      { expr: "sum(trade.mtm)", format: signed0 }
+  Notional: { expr: "sum(trade.NOTIONAL)", format: amount0 }
+  MTM:      { expr: "sum(trade.MTM)", format: signed0 }
   Trades:   { expr: "count(trade)" }
 security:
   rows:
@@ -115,19 +123,19 @@ file name; the ids differ on your machine):
 
 ```text
 $ python3 tools/drishti.py bi item new economics-desk docs/tutorials/data/trades-daily.dataset.yaml
-bi-03f88abb6f  dataset  Trades refreshed daily  draft in Economics desk
+bi-c767a5fd15  dataset  Trades refreshed daily  draft in Economics desk
 
-$ python3 tools/drishti.py bi catalogue publish bi-03f88abb6f --note "refreshes itself on business mornings"
+$ python3 tools/drishti.py bi catalogue publish bi-c767a5fd15 --note "refreshes itself on business mornings"
 published Trades refreshed daily as version 1
 
-$ python3 tools/drishti.py bi dataset refresh bi-03f88abb6f
+$ python3 tools/drishti.py bi dataset refresh bi-c767a5fd15
 scheduled  (America/New_York, calendar USNY)
   dataset   business-days 06:30   waiting for the scheduler
 
 $ python3 tools/drishti.py bi item new economics-desk docs/tutorials/data/trades-daily.model.yaml
-bi-0cb43111e3  model  Trades daily  draft in Economics desk
+bi-a29d960c58  model  Trades daily  draft in Economics desk
 
-$ python3 tools/drishti.py bi catalogue publish bi-0cb43111e3 --note "the measures over the dataset"
+$ python3 tools/drishti.py bi catalogue publish bi-a29d960c58 --note "the measures over the dataset"
 published Trades daily as version 1
 ```
 
@@ -142,33 +150,35 @@ You should see one row, `dataset`, with the schedule `business-days 06:30` and t
 author power); the command line's `--now` asks for it and waits until it ends:
 
 ```text
-$ python3 tools/drishti.py bi dataset refresh bi-03f88abb6f --now
+$ python3 tools/drishti.py bi dataset refresh bi-c767a5fd15 --now
 scheduled  (America/New_York, calendar USNY)
-  dataset   business-days 06:30   ok  last run 2026-10-13 06:23:07 UTC by manual (drishti-dev-admin): 750 rows in 13 ms
+  dataset   business-days 06:30   ok  last run 2026-10-17 21:42:16 UTC by manual (drishti-dev-admin): 30000 rows in 41 ms
 ```
+
+(The count is the rows read for every table built from the dataset: 15,000 for the model's `trade` table and 15,000 for the dataset's own implicit
+model, so `30000` for 15,000 trade valuations.)
 
 (Over REST: `POST /api/v1/bi/datasets/<id>/refresh` starts it and `GET` the same path answers the state.)
 
-![The Refresh section after Refresh now: Refreshed 750 rows in 16 ms, the dataset row ok, and the run in Recent refreshes](img/t11/02-refresh-now.jpg)
+![The Refresh section after Refresh now: Refreshed 30,000 rows, the dataset row ok, and the run in Recent refreshes](img/t11/02-refresh-now.jpg)
 
-You should see *Refreshed 750 rows in 16 ms.* beside the button, the status `ok` with a note, the line *Last refresh ... · Next ...*, and **Recent
+You should see *Refreshed 30000 rows in ... ms.* beside the button, the status `ok` with a note, the line *Last refresh ... · Next ...*, and **Recent
 refreshes**: every run, newest first, with who or what started it (`schedule`, `after-load trade`, `retry`, `manual (drishti-dev-admin)`), the rows, the
 time and any note. The history and the state are kept in the BI store, so they are still there after a restart (a run the restart interrupted shows as
 `interrupted`). Ask the model for the rows the refresh built:
 
 ```text
-$ python3 tools/drishti.py bi mq --model trades-daily@1 --select trade.desk --measures "Trades,Notional,MTM" --limit 4
-trade.desk   Trades  Notional           MTM
------------  ------  -----------------  -------------
-DESK-COMM    90      11,359,000,000.00  16,954,390.00
-DESK-CREDIT  72      8,598,000,000.00   7,948,456.00
-DESK-EQD     132     15,806,000,000.00  -6,433,670.00
-DESK-FI      78      10,346,000,000.00  -2,977,676.00
-4 row(s)  as of 2026-10-13  plan p_347854bf75d4d394
+$ python3 tools/drishti.py bi mq --model trades-daily@1 --select trade.DESK --measures "Trades,Notional,MTM" --limit 4
+trade.DESK   Trades  Notional            MTM
+-----------  ------  ------------------  ---------------
+DESK-COMM    5990    888,803,742,773.65  -429,967,635.39
+DESK-CREDIT  1172    344,825,753,000.00  360,552,941.89
+DESK-EQD     1452    428,542,341,000.00  -79,395,510.75
+DESK-FI      1248    401,083,619,000.00  -42,949,081.83
+4 row(s)  as of 2026-10-16  plan p_73884682a2e01af8
 ```
 
-The note on the status says the demo connector reads the trade documents one by one instead of scanning columns, which is slower on a big table and fine
-on the demo; the refresh worked. A refresh that fails is **retried** with the shared retry policy (5 s, doubling, up to 5 minutes; after four tries it is
+The Delta connector scans the promoted columns of the table, so 15,000 rows take a few tens of milliseconds. A refresh that fails is **retried** with the shared retry policy (5 s, doubling, up to 5 minutes; after four tries it is
 `failed` until its next time), and the dataset page says so.
 
 ## Step 2 · Subscribe a colleague to a report
@@ -192,7 +202,8 @@ outside address has no rights to ask as. Press **Subscribe**.
 You should see `Morning economy pack` badged `SUBSCRIPTION`, the report, `business-days 07:30`, `vera` with `Excel attached`, and the next run in UTC
 (07:30 New York on the next business day: `11:30`).
 
-**From the command line** a subscription is one REST call (there is no `drishti.py` command for subscriptions yet): `PUT /api/v1/me/subscriptions/<name>`
+**From the command line**: none. A subscription is yours (`/api/v1/me/subscriptions/<name>`), and a personal API token never calls your own `/me/...`
+addresses (`403 DRS-5002 API tokens may not call this endpoint`); what the console sends on **Subscribe**, as you, is `PUT /api/v1/me/subscriptions/<name>`
 with the body below, and `GET` the same path reads it back. **The YAML** of what the form saved (the server keeps it as JSON; these are its keys, captured):
 
 ```yaml
@@ -207,17 +218,21 @@ schedule: business-days 07:30
 date: today
 format: xlsx
 recipients: [vera]
+narrative: false
+sms: false
+webhooks: []
 enabled: true
-nextRun: '2026-10-13T11:30:00Z'
+nextRun: '2026-10-19T11:30:00Z'          # saved on Saturday 17 October: the next business day is Monday
 ```
 
 ```text
 $ curl -s -X PUT -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
     -d '{"target":{"type":"report","id":"file:report:world-economics","page":"world"},"schedule":"business-days 07:30","format":"xlsx","recipients":["vera"]}' \
     "$DRISHTI_SERVER/api/v1/me/subscriptions/Morning%20economy%20pack"
+{"title":"forbidden","status":403,"code":"DRS-5002","detail":"API tokens may not call this endpoint"}
 ```
 
-Press **Run now** (or `POST /api/v1/me/subscriptions/Morning%20economy%20pack/run`).
+Press **Run now** (the console's `POST /api/v1/me/subscriptions/Morning%20economy%20pack/run`).
 
 ## Step 3 · What "Run now" says without a mail server
 
@@ -232,9 +247,9 @@ copy, had nowhere to send it, and will **retry** (4 attempts, then `failed`). No
 account is shown as `skipped · no email address on file`. The run as the API keeps it (`runs` of the subscription, captured):
 
 ```text
-{"id": "34aeeb3f", "trigger": "by hand", "status": "retrying", "sent": 0, "failed": 0, "skipped": 0, "retrying": 1,
- "deliveries": [{"to": "vera@example.com", "label": "Vera Lim", "user": "vera", "attempts": 2, "status": "retry",
-                 "error": "IllegalStateException: no SMTP host: set spring.mail.host", "nextAttempt": "2026-10-13T06:19:51Z"}]}
+{"id": "7fc8f059", "at": "2026-10-17T21:43:29.128765703Z", "trigger": "by hand", "status": "retrying", "sent": 0, "failed": 0, "skipped": 0, "retrying": 1,
+ "deliveries": [{"to": "vera@example.com", "label": "Vera Lim", "user": "vera", "attempts": 1, "status": "retry",
+                 "error": "IllegalStateException: no SMTP host: set spring.mail.host", "nextAttempt": "2026-10-17T21:43:34.227711247Z"}]}
 ```
 
 **To configure mail** you need four things on the **server** (not the console): an SMTP host, the collaboration email switch, the console's address (for the links in the mail) and a From address. In the environment, before the server starts:
@@ -308,7 +323,7 @@ Ask the owner of the subscription, or an administrator, to change or stop it.
 ['World economics.xlsx']
 ```
 
-You should see a mail from your From address to `vera`'s address, marked `Auto-Submitted: auto-generated`, with each visual and how many rows it holds, a
+(This mail was captured on an earlier run of the tutorial, on business date 2026-10-13; the steps and the shape are the same on the demo lake, the date is yours.) You should see a mail from your From address to `vera`'s address, marked `Auto-Submitted: auto-generated`, with each visual and how many rows it holds, a
 link that opens the report in Drishti, and the workbook attached (29,589 bytes here). The link is built from `DRISHTI_CONSOLE_URL` (here the tutorial's
 scratch console; yours says `localhost:17480`).
 
@@ -320,20 +335,20 @@ overview**. Each card has a **bell** in its corner: *Alert me*.
 
 ![The Mark to market card with its bell](img/t11/07-alert-me.jpg)
 
-You should see the card (`Mark to market`, `+138,562,638` in this data) and the bell. Press the bell: the form opens already filled in with the report, the page and the visual.
+You should see the card (`Mark to market`, `+2,796,077,089` on the demo lake) and the bell. Press the bell: the form opens already filled in with the report, the page and the visual.
 
-![The Alert me form: name MTM floor, a visual of a BI report, below 200,000,000, hysteresis 10,000,000, after a data load](img/t11/08-alert-form.jpg)
+![The Alert me form: name MTM floor, a visual of a BI report, below 3,000,000,000, hysteresis 10,000,000, after a data load](img/t11/08-alert-form.jpg)
 
 Name it `MTM floor`. **Watch** says what (this visual, with the filters you had set; a card answers one cell, so it is watched as it is). **Tell me
-when**: *crosses a limit*, *below* `200000000` (a limit above today's number so you see it fire; a real floor would be a loss limit), **Hysteresis**
+when**: *crosses a limit*, *below* `3000000000` (a limit above today's number so you see it fire; a real floor would be a loss limit), **Hysteresis**
 `10000000`: after it fires it stays quiet until the number has come back **inside** the limit by at least this much, so a number that wobbles around the
 limit does not ring every minute. **Look**: *after a data load* (the others are *on a schedule* such as `hourly`, and *live*, when the source pushes
 changes). Press **Check now** (it says what the alert would do right now) and **Save**.
 
-![The alerts page: MTM floor, watching the visual, below 200,000,000, active, fired, and a recent alert](img/t11/09-alerts-list.jpg)
+![The alerts page: MTM floor, watching the visual, below 3,000,000,000, active, fired, and a recent alert](img/t11/09-alerts-list.jpg)
 
 You should see the alert under **Alerts on numbers** with the state `active` (it fired when saved: a new alert whose condition already holds fires at
-once) and the message `MTM floor — now 138,562,638 (below 200,000,000)`. The states: **armed** (watching), **active** (fired, will not fire again until it
+once) and the message `MTM floor — now 2,796,077,089 (below 3,000,000,000)`. The states: **armed** (watching), **active** (fired, will not fire again until it
 re-arms), **paused** (you switched it off). Open **Edit and history**.
 
 ![The alert's history: fired, the message, and what each channel did: inbox ok](img/t11/10-alert-history.jpg)
@@ -341,30 +356,32 @@ re-arms), **paused** (you switched it off). Open **Edit and history**.
 You should see one entry per firing, clearing or skipped look with the time, what triggered it, the number and the channel result (`inbox: ok`). The alert
 reads the number **as you**: a number masked for you is never judged and never shown. The message also lands in the **inbox**, under **Alerts**:
 
-![The inbox, Alerts tab: MTM floor - now 138,562,638 (below 200,000,000)](img/t11/13-inbox-alert.jpg)
+![The inbox, Alerts tab: MTM floor - now 2,796,077,089 (below 3,000,000,000)](img/t11/13-inbox-alert.jpg)
 
 You should see the row (and one more for every firing); it opens what the alert is about. With the mail server of step 4 and an address on your account,
 tick **Email** in the form and the same message arrives as `Drishti alert: MTM floor`. A mail that fails is tried again by the shared retry policy (the
 history shows `retrying: attempt 1 of 4 …`, then `sent (attempt 3 of 4)`).
 
 **An alert on a measure of a model** needs no report. **In the UI**: **Alerts → New alert on a number**, **Watch** *A measure of a model*, choose the model
-**Trades daily** (step 1) and the measure **MTM**, **Add a filter** `trade.desk` *is* `DESK-FX`, then *crosses a limit*, *below* `-10000000`, and
+**Trades daily** (step 1) and the measure **MTM**, **Add a filter** `trade.DESK` *is* `DESK-FX`, then *crosses a limit*, *below* `-10000000`, and
 **Check now**:
 
-![Alert me on a measure of a model: model Trades daily, measure MTM, the filter trade.desk is DESK-FX, below -10,000,000](img/t11/21-alert-model.jpg)
+![Alert me on a measure of a model: model Trades daily, measure MTM, the filter trade.DESK is DESK-FX, below -10,000,000](img/t11/21-alert-model.jpg)
 
 You should see the model and its measures in the two lists (only the models and measures you may read), the filter row, and *The number is the model's
-measure read as you, with your row rules and masks*. **On the command line** it is `PUT /api/v1/me/measure-alerts/<name>`; **Check now** is
-`POST .../check` (captured; the FX desk's MTM is `-15,759,419`, below the limit, so it fires):
+measure read as you, with your row rules and masks*. Press **Save**: the FX desk's MTM is `-669,248,940`, below the limit, so it fires at once.
+
+**From the command line** you can read the number it watches, and list your alerts (a read); saving and **Check now** are the console's calls
+(`PUT /api/v1/me/measure-alerts/<name>` and `POST .../check`), which a personal token may not make (`403 DRS-5002`):
 
 ```text
-$ curl -s -X PUT -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' -d @fx-floor.json \
-    "$DRISHTI_SERVER/api/v1/me/measure-alerts/FX%20desk%20MTM%20floor"
-{"name": "FX desk MTM floor", "describe": "below -10,000,000", "label": "trades-daily@1 · MTM", ...}
-$ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" "$DRISHTI_SERVER/api/v1/me/measure-alerts/FX%20desk%20MTM%20floor/check"
-{"name": "FX desk MTM floor", "state": {"drishti-dev-admin": {"active": true, "lastValue": -15759419.0, ...}},
- "history": [{"action": "fired", "trigger": "by hand", "value": -15759419.0, "message": "FX desk MTM floor — now -15,759,419 (below -10,000,000)",
-              "delivered": {"inbox": "ok", "email": "off", "bridge": "off", "sms": "off"}}]}
+$ python3 tools/drishti.py bi mq --model trades-daily@1 --select trade.DESK --measures "Trades,MTM" --where trade.DESK=DESK-FX
+trade.DESK  Trades  MTM
+----------  ------  ---------------
+DESK-FX     1428    -669,248,939.51
+1 row(s)  as of 2026-10-16  plan p_437edbd8a00760b8
+$ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "$DRISHTI_SERVER/api/v1/me/measure-alerts" | jq -c '.[] | {name, describe, label, history: [.history[0] | {action, trigger, message, delivered}]}'
+{"name":"FX desk MTM floor","describe":"below -10,000,000","label":"trades-daily@1 · MTM","history":[{"action":"fired","trigger":"saved","message":"FX desk MTM floor — now -669,248,939.51 (below -10,000,000)","delivered":{"inbox":"ok","email":"off","bridge":"off","sms":"off"}}]}
 ```
 
 **The YAML** of that alert (the body of `fx-floor.json`; the server keeps the query as one model query, `mq: 1`, and fills in what you left out):
@@ -379,7 +396,7 @@ source:
   query:
     select: { fields: [], measures: [MTM] }
     where:
-      - { field: trade.desk, op: eq, value: DESK-FX }
+      - { field: trade.DESK, op: eq, value: DESK-FX }
 condition: { type: threshold, op: below, value: -10000000 }
 trigger: { mode: after-load }
 delivery: { inbox: true }
@@ -391,7 +408,8 @@ The **Export** bar is under the page tabs of every report: choose *this page* or
 
 ![The Export bar: this page, PDF, PNG, Excel, CSV, Subscribe](img/t11/11-export-bar.jpg)
 
-You should see the bar. Press **PNG**, or fetch a page directly (the console serves exports at `/dist/bi/<report id>.<format>`; it is a signed-in call, shown here with the file written):
+You should see the bar. Press **PNG**, or fetch a page directly: the console serves exports at `/dist/bi/<report id>.<format>` (a signed-in call), and the
+server at `POST /api/v1/export/<format>`, which a personal token may call (an export is a read):
 
 ![The PNG of the Overview page: the cards as figures, the bars drawn, the data below](img/t11/12-export-png.jpg)
 
@@ -399,31 +417,36 @@ You should see the cards as their figures, the charts as horizontal bars and the
 Excel, PDF and PNG, as the person who sees everything (captured from the console's `/dist/bi/file%3Areport%3Atrades-overview.<format>?page=overview`):
 
 ```text
-Trades overview.xlsx   18,129 bytes   sheets:  About | Trades | Notional | Mark to market | Average MTM per trade |
+$ for f in xlsx pdf png; do curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
+    -d '{"type":"report","id":"file:report:trades-overview","page":"overview"}' -o "Trades overview.$f" $DRISHTI_SERVER/api/v1/export/$f; done
+Trades overview.xlsx   29,181 bytes   sheets:  About | Trades | Notional | Mark to market | Average MTM per trade |
                                                 MTM by desk (click a bar to fil | Notional by trade date | Trades by desk and currency   (2 native charts)
-Trades overview.pdf     9,313 bytes   4 pages
-Trades overview.png   192,388 bytes
+Trades overview.pdf    10,050 bytes   4 pages
+Trades overview.png   219,335 bytes
 ```
 
 An Excel file has an `About` sheet (the title, the date, the filters) and **one sheet per visual**, with numbers as numbers; sheet names are cut at Excel's
 31 characters. The CSV of one visual (choose it in the bar's first box, or add `&visual=by-desk` to the address):
 
 ```text
-GET http://localhost:17480/dist/bi/file%3Areport%3Atrades-overview.csv?page=overview&visual=by-desk      (what the CSV button asks for)
-desk,MTM
-DESK-RATES,161766771
-DESK-COMM,16954390
-DESK-STRUCT,15784130
-DESK-MM,9453242
-DESK-CREDIT,7948456
-DESK-SFT,-240890
-DESK-FI,-2977676
-DESK-EQD,-6433670
-DESK-FX,-15759419
-DESK-INFL,-47932696
+$ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
+    -d '{"type":"report","id":"file:report:trades-overview","page":"overview","visual":"by-desk"}' $DRISHTI_SERVER/api/v1/export/csv
+DESK,MTM
+DESK-RATES,4.108728089500002E9
+DESK-MM,3.938052168699998E8
+DESK-STRUCT,3.826084649599996E8
+DESK-CREDIT,3.605529418899995E8
+DESK-SFT,5.137524869000003E7
+DESK-FI,-4.294908182999991E7
+DESK-EQD,-7.939551074999997E7
+DESK-COMM,-4.299676353900004E8
+DESK-FX,-6.692489395099996E8
+DESK-INFL,-1.2794317058800008E9
 ```
 
-You should see a header row and one line per desk. Every export carries your **business date and slicer choices**, is built as you (masked fields stay
+(The console's CSV button asks the same of `GET /dist/bi/file%3Areport%3Atrades-overview.csv?page=overview&visual=by-desk`.) You should see a header row
+and one line per desk, the largest MTM first. Large amounts are written in exponent form (`4.108728089500002E9` is 4,108,728,089.50): spreadsheets read
+them as numbers. Every export carries your **business date and slicer choices**, is built as you (masked fields stay
 masked), and is audited; limits (rows per sheet, file size, time) are settings of `drishti.distribution.export.*`. There is no YAML: an export is a
 request, and a **subscription** (step 2) is the export written down. [DISTRIBUTION.md](../guides/DISTRIBUTION.md) has them.
 
@@ -431,8 +454,8 @@ request, and a **subscription** (step 2) is the export written down. [DISTRIBUTI
 
 A report or a model may declare the numbers it must show, as `tests:`. A **report's** tests name a measure (optionally a visual and a row of it) and the
 number; a **model's** tests are questions in Drishti SQL and the number each must give. The tutorial's report,
-[data/desk-check.report.yaml](data/desk-check.report.yaml), reads the model of step 1 and says four things (the demo book holds 750 trades, 84 of them on
-the FX desk; the third test is wrong on purpose):
+[data/desk-check.report.yaml](data/desk-check.report.yaml), reads the model of step 1 and says four things (the demo lake holds 15,000 trade
+valuations, 1,428 of them on the FX desk; the third test is wrong on purpose):
 
 ```yaml
 rachana: 2
@@ -445,12 +468,12 @@ pages:
     title: Main
     visuals:
       - { id: trades, type: card, title: Trades, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }
-      - { id: by-desk, type: bar, title: Trades by desk, at: { x: 3, y: 0, w: 6, h: 4 }, wells: { axis: [trade.desk], values: [Trades] } }
+      - { id: by-desk, type: bar, title: Trades by desk, at: { x: 3, y: 0, w: 6, h: 4 }, wells: { axis: [trade.DESK], values: [Trades] } }
 tests:
-  - { name: The book holds 750 trades, measure: Trades, expect: 750 }
-  - { name: Trades within a range, measure: Trades, expect: { min: 745, max: 755 } }
+  - { name: The book holds 15000 trades, measure: Trades, expect: 15000 }
+  - { name: Trades within a range, measure: Trades, expect: { min: 14900, max: 15100 } }
   - { name: Close to 100 trades, measure: Trades, expect: 100, tolerance: 1% }
-  - { name: The FX desk, visual: by-desk, row: { trade.desk: DESK-FX }, expect: 84 }
+  - { name: The FX desk, visual: by-desk, row: { trade.DESK: DESK-FX }, expect: 1428 }
 ```
 
 **In the UI** there is no form for tests yet: write them in the designer's **YAML** tab (or the item page's **Edit**). Create the report in
@@ -458,28 +481,28 @@ tests:
 
 ![Check in the designer: nothing to report, and Expected values: 3 passed, 1 failed, with the failing test's expected and found figures](img/t11/16-tests.jpg)
 
-You should see `3 passed, 1 failed.` and the failing test saying what it expected and what it found (`expected 100 ± 1%, got 750`). Now press **Publish**
+You should see `3 passed, 1 failed.` and the failing test saying what it expected and what it found (`expected 100 ± 1%, got 15000`). Now press **Publish**
 on the item's page:
 
 ![The publish refused: DRS-9043 names the failing test, the figure expected and the figure found](img/t11/17-publish-refused.jpg)
 
-You should see `DRS-9043 'Desk check' cannot be published: 1 of its tests fails (Close to 100 trades: expected 100 ± 1%, got 750).` Mend the expectation
+You should see `DRS-9043 'Desk check' cannot be published: 1 of its tests fails (Close to 100 trades: expected 100 ± 1%, got 15000).` Mend the expectation
 (or the data) and publish again; a `bi-admin` may publish anyway with `force`, and the audit log says so. **From the command line** the same three moves
 (`bi item tests` exits 1 when a test fails, so a CI job can run it):
 
 ```text
 $ python3 tools/drishti.py bi item new economics-desk docs/tutorials/data/desk-check.report.yaml
-bi-6027da28fe  report  Desk check  draft in Economics desk
+bi-ba581ce78b  report  Desk check  draft in Economics desk
 
-$ python3 tools/drishti.py bi item tests bi-6027da28fe
-pass  The book holds 750 trades: expected 750, found 750
-pass  Trades within a range: expected 745 to 755, found 750
-fail  Close to 100 trades: expected 100 ± 1%, found 750
-pass  The FX desk: expected 84, found 84
+$ python3 tools/drishti.py bi item tests bi-ba581ce78b
+pass  The book holds 15000 trades: expected 15000, found 15,000
+pass  Trades within a range: expected 14900 to 15100, found 15,000
+fail  Close to 100 trades: expected 100 ± 1%, found 15,000
+pass  The FX desk: expected 1428, found 1,428
 3 passed, 1 failed
 
-$ python3 tools/drishti.py bi catalogue publish bi-6027da28fe --note "first cut"
-drishti: the server said 409 DRS-9043: DRS-9043 'Desk check' cannot be published: 1 of its tests fails (Close to 100 trades: expected 100 ± 1%, got 750). Fix the item or the expected value, or publish anyway with force.
+$ python3 tools/drishti.py bi catalogue publish bi-ba581ce78b --note "first cut"
+drishti: the server said 409 DRS-9043: DRS-9043 'Desk check' cannot be published: 1 of its tests fails (Close to 100 trades: expected 100 ± 1%, got 15000). Fix the item or the expected value, or publish anyway with force.
 ```
 
 **A model's own tests** say what the model must answer, whatever report reads it. Add them to the model's YAML (here with `bi item save`; in the UI, the
@@ -487,28 +510,30 @@ model designer's **YAML** tab):
 
 ```yaml
 tests:
-  - { name: The book holds 750 trades, sql: "SELECT MEASURE('Trades') FROM trade", expect: 750 }
-  - { name: Every desk has trades, sql: "SELECT COUNT(DISTINCT trade.desk) FROM trade", expect: { min: 1 } }
+  - { name: The book holds 15000 trades, sql: "SELECT MEASURE('Trades') FROM trade", expect: 15000 }
+  - { name: Every desk has trades, sql: "SELECT COUNT(DISTINCT trade.DESK) FROM trade", expect: { min: 1 } }
 ```
+
+(`trades-daily-tested.model.yaml` below is [data/trades-daily.model.yaml](data/trades-daily.model.yaml) with these `tests:` added at the end.)
 
 **In the UI** open the model (**Models → Trades daily → Open the designer**), the **Contract** tab, **Expected values**, and press **Run the tests**:
 
 ![The model designer's Contract tab: Expected values lists the two tests with their questions, and Run the tests answers 2 passed](img/t11/20-model-tests.jpg)
 
-You should see each test with its question and what it should give, and, after **Run the tests**, `2 passed, 0 failed.` with the figures found (`750`, and
+You should see each test with its question and what it should give, and, after **Run the tests**, `2 passed, 0 failed.` with the figures found (`15,000`, and
 `10` desks). They run on the **saved** model, as you or as a role you hold, and that matters:
 
 ```text
-$ python3 tools/drishti.py bi item save bi-0cb43111e3 trades-daily-tested.model.yaml --message "the figures it must give"
-bi-0cb43111e3  saved  (draft, published v1)
+$ python3 tools/drishti.py bi item save bi-a29d960c58 trades-daily-tested.model.yaml --message "the figures it must give"
+bi-a29d960c58  saved  (draft, published v1)
 
-$ python3 tools/drishti.py bi item tests bi-0cb43111e3
-pass  The book holds 750 trades: expected 750, found 750
+$ python3 tools/drishti.py bi item tests bi-a29d960c58
+pass  The book holds 15000 trades: expected 15000, found 15,000
 pass  Every desk has trades: expected 1 or more, found 10
 2 passed, 0 failed
 
-$ python3 tools/drishti.py bi item tests bi-0cb43111e3 --role viewer
-fail  The book holds 750 trades: expected 750, found 0
+$ python3 tools/drishti.py bi item tests bi-a29d960c58 --role viewer
+fail  The book holds 15000 trades: expected 15000, found 0
 fail  Every desk has trades: expected 1 or more, found 0
 0 passed, 2 failed  (as viewer)
 ```

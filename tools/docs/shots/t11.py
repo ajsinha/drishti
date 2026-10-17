@@ -154,7 +154,7 @@ def alerts(c: Ctx):
     c.page.wait_for_url("**/alerts/new**")
     c.page.fill('input[name="name"]', "MTM floor")
     c.page.select_option('select[name="op"]', "below")
-    c.page.fill('input[name="value"]', "200000000")
+    c.page.fill('input[name="value"]', "3000000000")
     c.page.fill('input[name="hysteresis"]', "10000000")
     c.page.select_option('select[name="trigger_mode"]', "after-load")
     c.page.click("[data-check-now]")
@@ -187,7 +187,7 @@ def alert_on_a_model(c: Ctx):
     c.page.select_option('select[name="model_measure"]', "MTM")
     c.page.click("[data-al-addfilter]")
     row = c.page.locator("[data-al-filter]").first
-    row.locator("select").first.select_option("trade.desk")
+    row.locator("select").first.select_option("trade.DESK")
     row.locator("input").fill("DESK-FX")
     c.page.fill('input[name="name"]', "FX desk MTM floor")
     c.page.select_option('select[name="op"]', "below")
@@ -261,8 +261,8 @@ def expected_values(c: Ctx):
     # the model's own tests: a Drishti SQL question and the figure it must give, run from the model designer
     model = next(i for i in bi(c, "GET", f"/workspaces/{WORKSPACE}/items") if i["title"] == MODEL_TITLE)
     body = (DATA / "trades-daily.model.yaml").read_text() + (
-        "tests:\n  - { name: The book holds 750 trades, sql: \"SELECT MEASURE('Trades') FROM trade\", expect: 750 }\n"
-        "  - { name: Every desk has trades, sql: \"SELECT COUNT(DISTINCT trade.desk) FROM trade\", expect: { min: 1 } }\n")
+        "tests:\n  - { name: The book holds 15000 trades, sql: \"SELECT MEASURE('Trades') FROM trade\", expect: 15000 }\n"
+        "  - { name: Every desk has trades, sql: \"SELECT COUNT(DISTINCT trade.DESK) FROM trade\", expect: { min: 1 } }\n")
     bi(c, "PUT", "/items/" + model["id"], {"body": body, "message": "the figures it must give"})
     go(c, "/bi/md/" + model["id"], wait="[data-md-root][data-ready=yes]", settle=1500)
     c.page.click('[data-tab="contract"]')

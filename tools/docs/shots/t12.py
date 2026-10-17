@@ -145,12 +145,13 @@ def board_designer(c: Ctx):
 
 
 @shot("15-chart-page.jpg")
-def perspective_chart(c: Ctx):
-    """The chart page of the live desk report: a 2.1 Perspective visual, drawn since wave B as Drishti's own grid of the server's answer."""
+def desk_currency_chart(c: Ctx):
+    """The Chart page of the live desk report: net MTM by desk, one stacked series per currency, a column visual the server groups and the browser only
+    draws (2.3.0: no Perspective, no computing in the browser)."""
     login(c, height=900)
     c.page.set_viewport_size({"width": 1280, "height": 900})
     c.page.goto(f"{c.base}/bi/r/{LIVE_REPORT}/chart")
-    c.page.wait_for_selector(".bi-vis tbody tr", timeout=60000)
+    c.page.wait_for_selector('[data-visual="mtm-chart"] canvas', timeout=60000)
     c.page.wait_for_timeout(2500)
     c.page.evaluate("window.scrollTo(0, 0)")
     c.save("15-chart-page.jpg")

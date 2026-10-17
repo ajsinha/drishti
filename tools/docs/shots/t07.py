@@ -21,7 +21,7 @@ from __future__ import annotations
 import json
 import urllib.request
 
-from _tut import OUT, SERVER_ENV, call, go, login  # noqa: F401
+from _tut import lake_days, OUT, SERVER_ENV, call, go, login  # noqa: F401
 from shotlib import SERVER_PORT, Ctx, register
 
 shot = register("t07", OUT / "t07")
@@ -70,9 +70,10 @@ def expectations(c: Ctx):
 def history(c: Ctx):
     login(c, height=1000)
     secret = token(c)
-    for body in ({"kind": KIND, "businessDate": "2026-10-07", "status": "ready", "rows": 750, "rejected": 0, "source": "nightly-trade-etl", "batchId": "eod-20261007"},
-                 {"kind": KIND, "businessDate": "2026-10-08", "status": "failed", "source": "nightly-trade-etl", "batchId": "eod-20261008", "note": "copy stopped: disk full"},
-                 {"kind": KIND, "businessDate": "2026-10-08", "status": "ready", "rows": 750, "rejected": 2, "source": "nightly-trade-etl", "batchId": "eod-20261008-2"}):
+    d13, d14, d15 = lake_days(4)[:3]                      # the tutorial: 2026-10-13 ready (API), 2026-10-14 failed, 2026-10-15 ready; the last day left missing
+    for body in ({"kind": KIND, "businessDate": d15, "status": "ready", "rows": 15000, "rejected": 0, "source": "nightly-trade-etl", "batchId": "eod-" + d15.replace("-", "")},
+                 {"kind": KIND, "businessDate": d13, "status": "ready", "rows": 14998, "rejected": 2, "source": "nightly-trade-etl", "batchId": "eod-" + d13.replace("-", "")},
+                 {"kind": KIND, "businessDate": d14, "status": "failed", "batchId": "eod-" + d14.replace("-", ""), "note": "copy stopped: disk full"}):
         announce(secret, body)
     go(c, f"/admin/packs/{PACK}/loads", height=1100, wait="[data-loads-table] tr", settle=1000)
     c.page.locator("[data-loads-table] tr[data-status=ready] .loads-steps summary").first.click()
@@ -91,9 +92,11 @@ def alert(c: Ctx):
     f.locator("[name=name]").fill("trades-loaded")
     f.locator("[name=title]").fill("Trades have not been loaded")
     f.locator("[name=severity]").select_option("warn")
-    f.locator("[name=source_type]").select_option("dataset")
-    f.locator("[name=dataset]").fill("file:dataset:trades-basic")
-    f.locator("[name=ds_measure]").fill("Trades")
+    f.locator("[name=source_type]").select_option("model")             # since 2.2 the measures live on the model (Trades, the basics)
+    f.locator("[data-al-model] option[value='trades-basic@1']").wait_for(state="attached", timeout=30000)
+    f.locator("[data-al-model]").select_option("trades-basic@1")
+    f.locator("[data-al-measure] option[value='Trades']").wait_for(state="attached", timeout=30000)
+    f.locator("[data-al-measure]").select_option("Trades")
     f.locator("[name=condition_type]").select_option("nodata")
     f.locator("[name=by]").fill("18:30")
     f.locator("[name=trigger_mode]").select_option("after-load")

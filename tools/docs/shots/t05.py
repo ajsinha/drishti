@@ -25,10 +25,19 @@ shot = register("t05", OUT / "t05")
 DATA = ROOT / "docs" / "tutorials" / "data"
 
 
+def confirm(c: Ctx):
+    """Says yes in the page's own dialog (Admin → Packs asks before a deploy or a roll back; never the browser's window.confirm)."""
+    yes = c.page.locator("[data-ask-yes]")
+    yes.wait_for(state="visible", timeout=10000)
+    yes.click()
+
+
 def sources(c: Ctx, width: int = 1280, height: int = 900):
     login(c, width=width, height=height)
     c.page.goto(c.base + "/build/pack/new")
-    c.page.set_input_files("[data-files]", [str(DATA / "schemas" / "quote.schema.json")])
+    c.page.evaluate("() => sessionStorage.clear()")            # the wizard resumes what an earlier picture left in this tab: start empty
+    c.page.goto(c.base + "/build/pack/new")
+    c.page.set_input_files("[data-files]", [str(DATA / "schemas" / "desk-quote.schema.json")])
     c.page.locator("[data-total]:has-text('1 schema')").wait_for(timeout=30000)
     c.page.set_input_files("[data-folder]", str(DATA / "desk-quotes"))
     c.page.locator("[data-total]:has-text('10 data files')").wait_for(timeout=30000)
@@ -46,12 +55,14 @@ def pack(c: Ctx, width: int = 1280):
     p = c.page
     p.click("[data-next]")
     p.fill("#pkp-name", "desk-quotes")
+    p.locator("#pkp-name").dispatch_event("change")          # the title, code and connector that followed the old name follow the new one
     p.fill("#pkp-title", "Desk quotes")
+    p.fill("#pkp-code", "DQP")
     p.fill("#pkp-description", "The desk's end-of-day quotes, generated from their schema and a folder of documents.")
-    p.locator("select[aria-label='Source of quote']").select_option("file")
-    p.fill("input[aria-label='Connector name for quote']", "desk-quotes")
-    p.locator("input[aria-label='Connector name for quote']").dispatch_event("change")
-    for sel in ("#pkp-name", "#pkp-title", "#pkp-description"):
+    p.locator("select[aria-label='Source of desk-quote']").select_option("file")
+    p.fill("input[aria-label='Connector name for desk-quote']", "desk-quotes")
+    p.locator("input[aria-label='Connector name for desk-quote']").dispatch_event("change")
+    for sel in ("#pkp-title", "#pkp-code", "#pkp-description"):
         p.locator(sel).dispatch_event("change")
     c.until("!document.querySelector('[data-next]').disabled")
 
@@ -120,8 +131,8 @@ def deploy_through_the_wizard(c: Ctx, version: str):
     c.page.click("[data-deploy-link]")
     c.page.wait_for_url("**/admin/packs**")
     c.page.locator("[data-deploy-go]").wait_for(timeout=60000)
-    c.page.once("dialog", lambda d: d.accept())
     c.page.locator("[data-deploy-go]").click()
+    confirm(c)
     c.page.wait_for_timeout(10000)                     # the deploy takes effect at once, then the page reloads itself
 
 
@@ -130,7 +141,7 @@ def deployed(c: Ctx):
     deploy_through_the_wizard(c, "1.0.0")
     go(c, "/admin/packs#history", height=1700, wait="[data-history]", settle=1000)
     elem_shot(c, "08-deployed.jpg", "[data-history]", pad=50, extra=40)
-    go(c, "/v/quote/Q-EURUSD", height=800, wait="[data-panel]", settle=1800)
+    go(c, "/v/desk-quote/Q-EURUSD", height=800, wait="[data-panel]", settle=1800)
     c.save("09-quote.jpg")
 
 
@@ -140,8 +151,8 @@ def kept(c: Ctx):
     go(c, "/admin/packs#history", height=1700, wait="[data-history]", settle=1000)
     c.page.evaluate("window.scrollTo(0, 0)")
     elem_shot(c, "10-versions-kept.jpg", "[data-kept]", pad=60, extra=200)
-    c.page.once("dialog", lambda d: d.accept())
     c.page.locator("[data-kept] tr[data-version='1.0.0'] [data-rollback]").first.click()
+    confirm(c)
     c.page.wait_for_timeout(4000)
     go(c, "/admin/packs#history", height=1700, wait="[data-history]", settle=1000)
     elem_shot(c, "11-rolled-back.jpg", "[data-history]", pad=60, extra=60)

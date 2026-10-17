@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Quote",
+  "title": "Desk quote",
   "description": "A desk's end-of-day quote for one instrument: the bid, the ask and the mid, and the venue it came from.",
   "type": "object",
   "required": [

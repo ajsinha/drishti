@@ -24,7 +24,10 @@ About 40 minutes.
 
 ## Before you start
 
-- [Tutorial 1](01-first-15-minutes.md) done (server and console with sign-in on), and [tutorial 12](12-live-bi-and-boards.md) for the live report the host shows.
+- The quick-start environment of [tutorial 10](10-first-bi-report.md#before-you-start) (the demo lakes, **Drishti server (demo lakes)** with sign-in
+  on), with the **demo ticker on** as in [tutorial 12](12-live-bi-and-boards.md#before-you-start) (`DRISHTI_DEMO_ENABLED=true`): the trade the host
+  shows, `END-1000008`, and the live report's ticking come from the demo source (on the lakes alone, without the ticker, use an ENDUR trade of the lake
+  such as `1000001` instead).
 - Embedding is **off by default**. This tutorial turns it on (step 1). It needs a third port for the host application (the sample host uses 17968 by default; the pictures use 17944), and the two demo users `viewer` and `author` in Drishti (step 2).
 - The sample host is [tools/elements-demo](../../tools/elements-demo/README.md): a small Python program with its own sign-in and its own backend. It signs its requests with a **demo key** that ships in the repository: never use it for anything real.
 
@@ -46,7 +49,8 @@ export DRISHTI_PUBLIC_URL=http://127.0.0.1:18480        # the server's address a
 export DRISHTI_CONSOLE_URL=http://127.0.0.1:17480       # the console's address as the browser reaches it (the token's audience)
 ```
 
-(Sign-in must already be on: embedding needs `DRISHTI_SECURITY_ENABLED=true` on the server, which tutorial 1 set. The pictures were made on ports 18943 and 17943; yours are 18480 and 17480.) Restart both. Without the setting the embed calls are refused. You should see **Admin → Embedding** open once both are back (step 3).
+(Sign-in must already be on: embedding needs `DRISHTI_SECURITY_ENABLED=true` on the server, which the run configuration sets. In the IDE, add the three
+variables to the run configurations **Drishti server (demo lakes)** and **Drishti console** under *Environment variables*. The pictures were made on ports 18943 and 17943; yours are 18480 and 17480.) Restart both. Without the setting the embed calls are refused. You should see **Admin → Embedding** open once both are back (step 3).
 
 ## Step 2 · Two users the host will sign in
 
@@ -150,7 +154,7 @@ Open `http://127.0.0.1:17944/report` (signed in as `viewer`).
 
 ![The host's report page: a card "The desk report" holding the Live trading desk report with its live indicator, Pause button, page tabs, five cards, bars, a rolling line and tables](img/t16/06-host-report.jpg)
 
-You should see the **Live trading desk** report from tutorial 12 (a live report: in 2.2 it stays on its 2.1 dataset until the live tables join the model layer) in a card of the host's page: the live indicator and **Pause**, the page tabs *Desk*, *Every trade*, *Pivot*, the cards, the bars, the rolling line and the tables; the `trader` column reads `•••` (masked). It is one element:
+You should see the **Live trading desk** report from tutorial 12 (a live report: in 2.2 it stays on its 2.1 dataset until the live tables join the model layer) in a card of the host's page: the live indicator and **Pause**, the page tabs *Desk*, *Every trade*, *Pivot*, the cards, the bars, the rolling line and the tables; the `TRADER_ID` column reads `•••` (masked). It is one element:
 
 ```html
 <drishti-report id="rep" report="file:report:live-trading-desk" theme="light"></drishti-report>
@@ -161,7 +165,7 @@ The second element shows **one visual** of the same report with no chrome. Click
 
 ![Further down the page: the Worst trades and Latest changes tables, the single visual Net MTM by desk, and the host's own panel listing the events the report raised](img/t16/07-host-report-click.jpg)
 
-You should see the host's own panel at the bottom, **the events the report told the page about**: `page-changed`, `loaded` (twice: one for each element), `masked rep {"columns":["trade.trader"]}`, (click a bar and a `filter-changed` event with the selection joins them). A host page can react to all of them (`drishti:filter-changed`, `drishti:page-changed`, `drishti:error`, `drishti:masked`, `drishti:token-needed`). The library is also available as an npm package, `@drishti/elements`, with TypeScript declarations.
+You should see the host's own panel at the bottom, **the events the report told the page about**: `page-changed`, `loaded` (twice: one for each element), `masked rep {"columns":["trade.TRADER_ID"]}`, (click a bar and a `filter-changed` event with the selection joins them). A host page can react to all of them (`drishti:filter-changed`, `drishti:page-changed`, `drishti:error`, `drishti:masked`, `drishti:token-needed`). The library is also available as an npm package, `@drishti/elements`, with TypeScript declarations.
 
 On a phone the report is drawn with the report's **own phone layout** (the designer's *Phone* tab: which visuals, in what order):
 
@@ -173,7 +177,7 @@ single visual from its address, so open `http://127.0.0.1:17944/report?report=fi
 
 ![The host's report page with Trades overview, a report on the model trades-basic@1: four cards, MTM by desk, notional by trade date, the desk and currency table and the Currency slicer, and no live bar](img/t16/12-host-model-report.jpg)
 
-You should see **Trades overview** in the same card: the tabs *Overview* and *By product*, the cards (`750` trades, `92,558,000,000` of notional), the
+You should see **Trades overview** in the same card: the tabs *Overview* and *By product*, the cards (`15,000` trades, `3,617,068,619,774` of notional), the
 bars, the line, the table and the **Currency** slicer with its values, and **no live bar** (the report has no live table). The host's panel says
 `loaded rep {"title":"Trades overview","page":"overview"}`. The elements are the same two, with the other report:
 
@@ -188,15 +192,24 @@ query the server ran for it:
 ```text
 POST http://127.0.0.1:17912/embed/v1/reports/file:report:trades-overview/query
      {"page":"overview","visual":"by-desk","state":{"carry":[],"slicers":{},"drill":[],"selections":[]}}
-200  {"columns": [{"name": "trade.desk", ...}, {"name": "MTM", ...}],
-      "rows": [["DESK-RATES", 162336641.0], ["DESK-COMM", 16836999.0], ...], "rowCount": 10,
+200  {"columns": [{"name": "trade.DESK", ...}, {"name": "MTM", ...}],
+      "rows": [["DESK-RATES", 4108728089.500002], ["DESK-MM", 393805216.8699998], ...], "rowCount": 10,
       "meta": {"layer": "columns", "tables": ["trade"], "masked": [], ...}, "visual": "by-desk",
-      "mq": {"mq": 1, "model": "trades-basic@1", "select": {"fields": ["trade.desk"], "measures": ["MTM"]},
+      "mq": {"mq": 1, "model": "trades-basic@1", "select": {"fields": ["trade.DESK"], "measures": ["MTM"]},
              "shape": "grouped", "sort": [{"by": "MTM", "desc": true}], "limit": 500, "options": {"format": "json", "layer": "auto"}}}
 ```
 
-The same question **from the command line**, as you (`python3 tools/drishti.py bi mq --model trades-basic@1 --select trade.desk --measures MTM`),
-gives the same ten desks. **In YAML** the report's first lines are what make it a report on a model:
+The same question **from the command line**, as you, gives the same ten desks (unmasked: you are not an embed token):
+
+```text
+$ python3 tools/drishti.py bi mq --model trades-basic@1 --select trade.DESK --measures MTM --sort=-MTM --limit 3
+trade.DESK   MTM
+-----------  ----------------
+DESK-RATES   4,108,728,089.50
+DESK-MM      393,805,216.87
+DESK-STRUCT  382,608,464.96
+3 row(s)  as of 2026-10-16  plan p_23850150972ee2e5
+``` **In YAML** the report's first lines are what make it a report on a model:
 
 ```yaml
 rachana: 2

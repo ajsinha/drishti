@@ -12,11 +12,11 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-rachana: 1
+rachana: 2
 report: slicer-kinds
 version: 1
 title: Slicer kinds
-dataset: trades-basic
+model: trades-basic@1
 pages:
   - id: one
     title: One

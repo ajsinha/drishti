@@ -18,12 +18,12 @@ You (the development administrator) share a filtered view of the swap MX-2000000
 answers. Two people, one browser at a time: each sign-in clears the other's session."""
 from __future__ import annotations
 
-from _tut import OUT, SERVER_ENV, VERA, call, go, login, people  # noqa: F401
+from _tut import OUT, SERVER_ENV, VERA, call, go, lake_days, login, people  # noqa: F401
 from shotlib import Ctx, register
 
 shot = register("t08", OUT / "t08")
 TRADE = "/v/trade/MX-20000001"
-PIN = "2026-09-30"
+PIN = lake_days(2)[0]                      # the business day before the demo lakes' last (2026-10-15 in the tutorial)
 
 
 def done(c: Ctx, action):
@@ -45,13 +45,13 @@ def share(c: Ctx):
     c.save("00-users.jpg")
     login(c, height=1700)
     filtered_view(c, height=1700, path=f"{TRADE}?asOf={PIN}")
-    done(c, lambda: c.page.locator("#p-schedule [data-ctl='when'] .ctl-preset").select_option(label="Next 90 days"))
-    c.page.locator("#p-schedule [data-ctl='legs'] summary").click()
-    done(c, lambda: c.page.locator("#p-schedule [data-ctl='legs'] input[value='2']").uncheck())
+    done(c, lambda: c.page.locator("#p-event-list [data-ctl='when'] .ctl-preset").select_option(label="Next 90 days"))
+    c.page.locator("#p-event-list [data-ctl='legs'] summary").click()
+    done(c, lambda: c.page.locator("#p-event-list [data-ctl='legs'] input[value='2']").uncheck())
     c.page.keyboard.press("Escape")
     c.page.mouse.move(1270, 1650)
     c.page.wait_for_timeout(400)
-    box = c.page.locator("#p-schedule").bounding_box()
+    box = c.page.locator("#p-event-list").bounding_box()
     c.save("01-filtered-view.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": min(box["y"] + 330, 800)})
     c.page.set_viewport_size({"width": 1280, "height": 900})
     c.page.keyboard.press("Alt+s")
@@ -59,7 +59,7 @@ def share(c: Ctx):
     c.page.locator("[data-shr-to]").fill("ver")
     c.page.locator(".shr-list [role=option]").first.wait_for()
     c.page.keyboard.press("Enter")
-    c.page.locator("[data-shr-note]").fill("Vera, this is the cashflow schedule for the next 90 days, fixed leg only. Can you check the first payment before 16:00?")
+    c.page.locator("[data-shr-note]").fill("Vera, these are leg 1's events for the next 90 days. Can you check the next settlement before 16:00?")
     c.page.wait_for_timeout(600)
     c.save("02-share-dialog.jpg")
     c.page.keyboard.press("Control+Enter")
@@ -100,12 +100,12 @@ def write(c: Ctx):
     c.page.keyboard.type("@ver")
     c.page.locator("#discOpts [role=option]").first.wait_for()
     c.page.keyboard.press("Enter")
-    c.page.keyboard.type("the first fixed payment is {")
+    c.page.keyboard.type(" who booked this? the ticket says {")
     c.page.locator("#discOpts [role=option]").first.wait_for()
-    c.page.keyboard.type("mtm")
+    c.page.keyboard.type("trader")
     c.page.locator("#discOpts [role=option]").first.wait_for()
     c.page.keyboard.press("Enter")
-    c.page.keyboard.type(" on this view. Is that the amount you expected?")
+    c.page.keyboard.type(". Can you confirm with the desk?")
     c.page.wait_for_timeout(500)
     c.save("08-discussion-write.jpg")
     c.page.keyboard.press("Control+Enter")

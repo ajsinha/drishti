@@ -29,7 +29,7 @@ shot = register("t18", OUT / "t18")
 DATA = ROOT / "docs" / "tutorials" / "data"
 WORKSPACE = "Exposure desk"
 AUDIENCE = ["risk", "desk-head", "admin"]
-TRADE, NETTING, COUNTERPARTY, DESK = "pack.trading.trade", "pack.counterparty-risk.netting-set", "pack.core.counterparty", "pack.core.desk"
+TRADE, NETTING, COUNTERPARTY, DESK = "pack.market-risk.trade-valuation", "pack.counterparty-risk.netting-set", "pack.core.counterparty", "pack.core.desk"
 STATE: dict = {}
 
 
@@ -108,17 +108,23 @@ def designer(c: Ctx):
     p.wait_for_selector('[data-md-root][data-ready="yes"]', timeout=30000)
     STATE["model"] = p.url.rsplit("/", 1)[-1]
     p.wait_for_selector('[data-suggestion]', timeout=30000)
+    if p.locator('[data-box="trade_valuation"]').count():                     # the box is named after the dataset: the tutorial calls it trade
+        p.locator('[data-box="trade_valuation"]').first.click()
+        alias = p.locator("[data-insp-alias]")
+        alias.fill("trade")
+        alias.press("Tab")
+        p.wait_for_selector('[data-box="trade"]', timeout=15000)
     p.select_option('[data-role-of="netting_set"]', "fact")                 # trades reference netting sets, so it was guessed a dimension: it is a fact
-    p.wait_for_selector('[data-suggestion="trade.nettingSet->netting_set.id"]', timeout=15000)
+    p.wait_for_selector('[data-suggestion="trade.NETTING_SET->netting_set.id"]', timeout=15000)
     p.wait_for_timeout(1500)
     elem_shot(c, "04-canvas-suggestions.jpg", '[data-pane="canvas"]', pad=8)
-    for s in ("trade.counterpartyId->counterparty.id", "netting_set.counterparty->counterparty.id", "trade.desk->desk.id"):
+    for s in ("trade.COUNTERPARTY->counterparty.id", "netting_set.COUNTERPARTY->counterparty.id", "trade.DESK->desk.id"):
         p.locator(f'[data-suggestion="{s}"] [data-accept]').click()
         p.wait_for_selector(f'[data-rel="{s.replace("->", " → ")}"]', timeout=15000)
     p.wait_for_timeout(1000)
     elem_shot(c, "05-relationships.jpg", "[data-suggestions-box]", pad=8, extra=260)
     p.click('[data-tab="measures"]')
-    for alias, col, name in (("trade", "mtm", "MTM"), ("trade", "pnl1d", "P&L 1d"), ("trade", "*", "Trades"), ("netting_set", "eePeak", "Exposure (EE peak)"),
+    for alias, col, name in (("trade", "MTM", "MTM"), ("trade", "PNL_1D", "P&L 1d"), ("trade", "*", "Trades"), ("netting_set", "EE_PEAK", "Exposure (EE peak)"),
                              ("netting_set", "*", "Netting sets")):
         p.select_option("[data-nm-alias]", alias)
         p.select_option("[data-nm-column]", col)
@@ -152,7 +158,7 @@ def designer(c: Ctx):
         p.fill("[data-rule-roles]", roles)
         p.select_option("[data-rule-kind]", kind)
         if kind == "attr":
-            p.select_option("[data-rule-field]", "trade.desk")
+            p.select_option("[data-rule-field]", "trade.DESK")
         p.click("[data-rule-add]")
         p.wait_for_timeout(1500)
     p.wait_for_selector('[data-exposure="netting_set:desk-head"]', timeout=15000)
@@ -162,7 +168,7 @@ def designer(c: Ctx):
         if p.locator(sel).count():
             p.click(sel)
             p.wait_for_timeout(1200)
-    p.select_option("[data-mask-field]", "counterparty.name")
+    p.select_option("[data-mask-field]", "counterparty.NAME")
     p.click("[data-mask-add]")
     p.wait_for_timeout(1200)
     p.click('[data-tab="contract"]')
@@ -208,7 +214,7 @@ def refused(c: Ctx):
     item = bi(c, "POST", f"/workspaces/{STATE['ws']}/items", {"kind": "report", "title": "Exposure by desk (refused)",
                                                                 "body": "report: exposure-by-desk\ntitle: Exposure by desk (refused)\nmodel: cp-risk@1\npages:\n"
                                                                         "  - id: main\n    title: Main\n    visuals:\n"
-                                                                        "      - { id: bar, type: bar, title: Exposure by desk, at: { x: 0, y: 0, w: 8, h: 6 }, wells: { axis: [desk.name], values: [Exposure (EE peak)] } }\n"})
+                                                                        "      - { id: bar, type: bar, title: Exposure by desk, at: { x: 0, y: 0, w: 8, h: 6 }, wells: { axis: [desk.NAME], values: [Exposure (EE peak)] } }\n"})
     go(c, "/bi/design/" + item["id"], wait='[data-design-root][data-ready="yes"]', settle=1500)
     settled_design(p)
     p.locator(".bi-dvis").first.click()

@@ -21,8 +21,8 @@ import json
 from _tut import call, login  # noqa: F401
 from shotlib import Ctx
 
-WORLD = "file:dataset:world-economics"
-RISK = "file:dataset:trading-risk"
+WORLD = "mq:world-economics@1"           # the designer's choice for the model world-economics
+RISK = "mq:trading-risk@1"
 
 
 def bi(c: Ctx, method: str, path: str, body: dict | None = None) -> dict:

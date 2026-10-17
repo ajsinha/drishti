@@ -38,15 +38,16 @@ About 25 minutes.
 
 ## Step 1 · Start from a search
 
-Run a search that finds what you want to see every day. Type:
+Run a search that finds what you want to see every day: the trades whose valuation lost more than 200 million. Valuations are their own kind, `trade-valuation`
+(mnemonic `TVAL`, one per trade per day, from the market-risk pack); the trade itself carries no MTM. Type:
 
 ```text
-TRD where mtm < -10000000 order by mtm
+TVAL where MTM < -200m order by MTM
 ```
 
-![The search results: seven trades with MTM below minus ten million, and a Schedule... link beside the search box](img/t09/01-schedule-link.jpg)
+![The search results: seven trade valuations with MTM below minus 200 million, and a Schedule... link beside the search box](img/t09/01-schedule-link.jpg)
 
-You should see a table (`7 of 750 trades match`), the **Schedule...** link beside the search box and a **Watch as a monitor** button. (From a search made with a form, **Schedule a report** under the results does the
+You should see a table (`7 of 15000 trade valuations match`, worst first: `TVAL-MX-30002670` at about −319 million), the **Schedule...** link beside the search box and a **Watch as a monitor** button. (From a search made with a form, **Schedule a report** under the results does the
 same, tutorial 3.) Press **Schedule...**.
 
 ## Step 2 · Say when, which day, and where
@@ -70,17 +71,18 @@ webhook your administrator allows. Press **Save report**.
 
 ![The saved report: Big losers, the search, business-days 18:30, the next run, folder](img/t09/03-report-saved.jpg)
 
-You should see `Saved Big losers`, and a row with the search, the schedule, where it goes and **Next run (UTC)**. The next run skips the weekend and a holiday: 12 October 2026 is a New York holiday, so a report saved that
-weekend first runs on the 13th. The server shows the next three runs of any schedule text; this is the call behind it:
+You should see `Saved Big losers`, and a row with the search, the schedule, where it goes and **Next run (UTC)**. The next run skips the weekend and the holidays of the
+calendar: saved on Saturday 17 October 2026, it first runs on Monday the 19th (`2026-10-19T22:30:00Z`); had it been saved the weekend before, Monday 12 October (Columbus Day,
+a New York holiday) would have been skipped too. The server shows the next three runs of any schedule text; this is the call behind it:
 
 ```text
 $ for each schedule: curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' -d '{"schedule":"..."}' http://localhost:18480/api/v1/subscriptions/preview
 business-days 18:30
-{"next":["2026-10-13T22:30:00Z","2026-10-14T22:30:00Z","2026-10-15T22:30:00Z"]}
+{"next": ["2026-10-19T22:30:00Z", "2026-10-20T22:30:00Z", "2026-10-21T22:30:00Z"]}
 monthly last 18:00 business
-{"next":["2026-10-30T22:00:00Z","2026-11-30T23:00:00Z","2026-12-31T23:00:00Z"]}
+{"next": ["2026-10-30T22:00:00Z", "2026-11-30T23:00:00Z", "2026-12-31T23:00:00Z"]}
 after-load trade
-{"next":[]}
+{"next": []}
 ```
 
 You should see three instants for `business-days 18:30` (22:30 UTC is 18:30 New York), the last business day of each coming month for `monthly last 18:00 business`, and none for `after-load`, which has no time, only a trigger.
@@ -91,18 +93,38 @@ Press **Run now** on the row.
 
 ![After Run now: the report ran, 7 rows, and the file it wrote](img/t09/04-run-now.jpg)
 
-You should see `Big losers: 7 rows`, the path of the file, and the **Last run** line `ok`, the time and `7 rows`. The report ran **as you**: it sees what your roles let you see, with the same masked fields, and it stops if your account is disabled or
-deleted. The file is a CSV in the reports folder:
+You should see `Big losers: 7 rows`, the path of the file, and the **Last run** line `ok`, the time and `7 rows`, for the business date `2026-10-15` (*the business day
+before* 2026-10-16). The report ran **as you**: it sees what your roles let you see, with the same masked fields, and it stops if your account is disabled or
+deleted. The file is a CSV in the reports folder, under the data folder:
 
 ```text
-$ head -4 data/reports/drishti-dev-admin/Big_losers/Big_losers-2026-10-08-2219.csv
-kind,id,title,MTM (USD),Product type,Direction,Currency,Notional,Maturity date,Book
-trade,MX-20000007,MX-20000007,-68527810,OIS,Pay fixed,CHF,199000000,2034-06-26,BOOK-RATES-3
-trade,MX-20000035,MX-20000035,-39818756,ZC_SWAP,Pay fixed,CHF,186000000,2035-04-19,BOOK-RATES-2
-trade,MX-20000036,MX-20000036,-30205543,ZC_SWAP,Pay fixed,JPY,175000000,2035-06-11,BOOK-RATES-1
+$ head -4 data/reports/drishti-dev-admin/Big_losers/Big_losers-2026-10-15-1746.csv
+kind,id,title,MTM (USD)
+trade-valuation,TVAL-MX-30002670,TVAL-MX-30002670,-319580679.781726
+trade-valuation,TVAL-MX-30001782,TVAL-MX-30001782,-283751034.71329
+trade-valuation,TVAL-MX-30003114,TVAL-MX-30003114,-282298514.881738
 ```
 
-You should see the columns of the search (kind, id, title, then the fields the results showed) and one line for each trade.
+You should see the columns of the search (kind, id, title, then the fields the results showed: here the MTM) and one line for each valuation. The file name carries the
+business date it was run for and the time.
+
+**From the command line** the run is one call too, `POST /api/v1/me/reports/Big%20losers/run`, from a signed-in session; it answers with the run:
+
+```text
+{"at": "2026-10-17T21:46:55.675641667Z", "trigger": "by hand", "businessDate": "2026-10-15", "rows": 7, "bytes": 507,
+ "target": "~/drishti/data/reports/drishti-dev-admin/Big_losers/Big_losers-2026-10-15-1746.csv", "status": "ok"}
+```
+
+The report as the page saves it (`PUT /api/v1/me/reports/{name}`):
+
+```yaml
+name: Big losers
+query: TVAL where MTM < -200m order by MTM
+schedule: business-days 18:30
+deliver: folder
+date: previous            # the business day before
+enabled: true
+```
 
 ## Step 4 · A subscription: a view for a colleague
 
@@ -110,14 +132,24 @@ Open `TRD MX-20000001` and press **Subscribe** (next to Export) in the title lin
 
 ![The Subscribe form: name, when after-load trade, data for the date of the load, send as a PDF, to vera](img/t09/05-subscribe-form.jpg)
 
-Fill in: name `Swap for Vera`, **When** `after-load trade` (it runs after the day's data lands, not at a time), **Data for** *the date of the load that triggered it*, **Send as** *a PDF attached*, and **To** `vera`. **Send as** offers the email
+Fill in: name `Swap for Vera`, **When**: under **Send** choose *on a schedule I write (advanced)*, open **Advanced: the schedule as text** and type `after-load trade` (it runs after the day's data lands, not at a time; the plain choices are every day, every business day, every week, month end and every hour, at a time), **Data for** *the date of the load that triggered it*, **Send as** *a PDF attached*, and **To** `vera`. **Send as** offers the email
 itself (the tables in the body), a PDF or an Excel workbook. **To** takes user names and `role:NAME` (everyone who holds the role), separated by commas. Try an email address first:
 
 ![DRS-9061: an email address is not a user; a subscription goes to users and roles only](img/t09/09-email-refused.jpg)
 
-You should see `DRS-9061 'vera@example.com' is an email address, not a user: a subscription goes to users and roles only, because each person gets the report with their own access`. That is the rule that keeps masks
+You should see `DRS-9061 'vera@example.com' is an email address, not a user: a subscription goes to users and roles only, because each person gets the report with their own access (an address outside the system has none)`. That is the rule that keeps masks
 safe: Drishti builds each recipient's copy from the data **as that person**, with their roles as they are now, so the sender never sees and the mail never carries a figure the recipient may not see. Someone who may not open the view is skipped, and the history says why. Only
-a BI author or an administrator may subscribe other people; anyone may subscribe themselves. Put `vera` back and press **Subscribe**.
+a BI author or an administrator may subscribe other people; anyone may subscribe themselves. Put `vera` back and press **Subscribe**. What the page saves (`PUT /api/v1/me/subscriptions/{name}`):
+
+```yaml
+name: Swap for Vera
+title: TRD MX-20000001
+target: { type: view, id: trade/MX-20000001 }
+schedule: after-load trade
+format: pdf
+date: load                # the date of the load that triggered it
+recipients: [vera]
+```
 
 ## Step 5 · Reports, all in one place
 
@@ -139,7 +171,16 @@ Press **Run now** on `Swap for Vera`.
 
 ![The subscription's last run: skipped or retrying, with the reason](img/t09/10-subscription-run.jpg)
 
-On a fresh install, with no mail server: You should see `Swap for Vera: 0 sent, 1 to retry` and a last-run line `retrying`. Open **History**:
+On a fresh install, with no mail server: You should see `Swap for Vera: 0 sent, 1 to retry` and a last-run line `retrying`. The run, as the server answers it:
+
+```text
+{"id": "b0bd2b86", "at": "2026-10-17T21:47:08.870822192Z", "trigger": "by hand",
+ "deliveries": [{"to": "vera@example.com", "label": "Vera Lim", "attempts": 1, "user": "vera",
+                 "error": "IllegalStateException: no SMTP host: set spring.mail.host", "status": "retry", "nextAttempt": "2026-10-17T21:47:14.698917894Z"}],
+ "sent": 0, "failed": 0, "skipped": 0, "retrying": 1, "status": "retrying"}
+```
+
+Open **History**:
 
 ![The history of runs: each run, how it was triggered, and for each recipient the status and the reason](img/t09/11-subscription-history.jpg)
 
@@ -153,19 +194,22 @@ On a phone the page is one column:
 
 ## Step 7 · From the command line and the API
 
-Creating and editing reports and subscriptions is done in the console (there is no `drishti.py reports` command yet). Reading them is REST, with the token of tutorial 1 (a personal token may read but never change your reports):
+Creating and editing reports and subscriptions is done in the console (there is no `drishti.py reports` command yet). Reading them is REST, with the token of tutorial 1. A
+personal token may read but never change your reports: a `PUT` with it is refused, `403 DRS-5002 API tokens may not call this endpoint`.
 
 ```text
-$ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" http://localhost:18480/api/v1/me/reports
-Big losers | TRD where mtm < -10000000 order by mtm | business-days 18:30 | folder
+$ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" http://localhost:18480/api/v1/me/reports \
+    | python3 -c "import json,sys; [print(r['name'], '|', r['query'], '|', r['schedule'], '|', r['deliver'], '|', r['date']) for r in json.load(sys.stdin)]"
+Big losers | TVAL where MTM < -200m order by MTM | business-days 18:30 | folder | previous
 ```
 
 ```text
-$ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" http://localhost:18480/api/v1/me/subscriptions
+$ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" http://localhost:18480/api/v1/me/subscriptions \
+    | python3 -c "import json,sys; [print(r['name'], '|', r['schedule'], '|', r['format'], '|', ','.join(r['recipients']), '|', r['date']) for r in json.load(sys.stdin)]"
 Swap for Vera | after-load trade | pdf | vera | load
 ```
 
-You should see one line for each, its name, schedule, format, recipients and which day's data. [DISTRIBUTION.md](../guides/DISTRIBUTION.md) lists the whole API (`PUT /api/v1/me/subscriptions/{name}` and friends, for a session, not a token) and the retry rules.
+You should see one line for each, its name, schedule, format or destination, recipients and which day's data. [DISTRIBUTION.md](../guides/DISTRIBUTION.md) lists the whole API (`PUT /api/v1/me/subscriptions/{name}` and friends, for a session, not a token) and the retry rules.
 
 ## Next steps
 

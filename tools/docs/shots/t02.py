@@ -15,11 +15,12 @@
 """Pictures of tutorial 2, Look up anything (docs/tutorials/02-look-up-anything.md), written to docs/tutorials/img/t02/."""
 from __future__ import annotations
 
-from _tut import OUT, SERVER_ENV, command, go, login, page_shot  # noqa: F401
+from _tut import OUT, SERVER_ENV, command, go, lake_days, login, page_shot  # noqa: F401
 from shotlib import Ctx, register
 
 shot = register("t02", OUT / "t02")
-PAST = "2026-09-29"
+PAST, LAST = lake_days(2)                   # the demo lakes' last two business days (2026-10-15 and 2026-10-16 in the tutorial)
+AMENDED = "MX-20000022"                     # amended on the last day: VALIDATED v1 -> AMENDED v2
 
 
 def type_only(c: Ctx, text: str):
@@ -51,11 +52,11 @@ def open_and_pick(c: Ctx):
     c.page.wait_for_timeout(1000)
     c.save("05-pick-list.jpg")
     go(c, "/t", wait=".cmd-input")
-    command(c, "cpty north")
-    c.page.wait_for_url("**/v/counterparty/**")
-    c.page.locator("[data-panel]").first.wait_for(timeout=30000)
-    c.page.wait_for_timeout(1500)
-    c.save("04-bare-id.jpg")
+    command(c, "cpty north")                                 # two counterparties match: a pick list (one match opens at once)
+    c.page.wait_for_url("**/s?*")
+    c.page.locator("table").first.wait_for(timeout=30000)
+    c.page.wait_for_timeout(1000)
+    c.save("04-bare-id.jpg", clip={"x": 0, "y": 0, "width": 1280, "height": 420})
 
 
 @shot("06-links.jpg", also=("07-netting-set.jpg",))
@@ -63,16 +64,15 @@ def links(c: Ctx):
     login(c)
     go(c, "/v/trade/MX-20000001", wait="[data-panel]", settle=2000)
     c.save("06-links.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 240})
-    c.page.keyboard.press("F7")
-    c.page.wait_for_timeout(2500)
-    c.page.locator("[data-panel]").first.wait_for(timeout=30000)
+    # F7 opens the counterparty's trades, F7 there the counterparty, whose Netting sets table lists NS-MERIDIAN-RE-NY
+    go(c, "/v/netting-set/NS-MERIDIAN-RE-NY", wait="[data-panel]", settle=2500)
     c.save("07-netting-set.jpg")
 
 
 @shot("08-past-date.jpg", also=("09-live-toggle.jpg",))
 def past_date(c: Ctx):
     login(c)
-    go(c, "/v/trade/MX-20000001", wait="[data-panel]", settle=1500)
+    go(c, f"/v/trade/{AMENDED}", wait="[data-panel]", settle=1500)
     c.page.fill("#asofDate", PAST)
     c.page.keyboard.press("Enter")
     c.page.wait_for_load_state()
@@ -89,8 +89,8 @@ def past_date(c: Ctx):
 @shot("10-compare.jpg", also=("11-over-time.jpg",))
 def compare(c: Ctx):
     login(c)
-    go(c, "/v/trade/MX-20000001", wait="[data-panel]", settle=1000)
-    c.page.fill("#asofDate", "2026-09-30")
+    go(c, f"/v/trade/{AMENDED}", wait="[data-panel]", settle=1000)
+    c.page.fill("#asofDate", LAST)
     c.page.keyboard.press("Enter")
     c.page.wait_for_load_state()
     c.page.locator("[data-panel]").first.wait_for(timeout=30000)
@@ -100,8 +100,8 @@ def compare(c: Ctx):
     c.page.locator("table").first.wait_for(timeout=30000)
     c.page.wait_for_timeout(1200)
     c.save("10-compare.jpg")
-    go(c, "/v/trade/MX-20000001", wait="[data-panel]", settle=1500)
-    c.page.locator('.strip dd[data-path="$.mtm"]').first.click()
+    go(c, f"/v/trade/{AMENDED}", wait="[data-panel]", settle=1500)
+    c.page.locator('.strip dd[data-path="$.TRADE_STATUS"]').first.click()
     c.page.wait_for_timeout(2500)
     c.save("11-over-time.jpg")
 

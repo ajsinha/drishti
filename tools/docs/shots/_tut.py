@@ -41,6 +41,20 @@ WIDE, HIGH = 1280, 800
 _people = {"done": False}
 
 
+def lake_days(n: int = 7) -> list[str]:
+    """The last `n` USNY business days ending on today's business date: the dates `drishti.py lake demo` writes (data/testdata/README.md), so a
+    picture of a past date or of Compare uses days the demo lakes hold. DRISHTI_SHOTS_LAKE_END pins the last day (YYYY-MM-DD)."""
+    import os
+    from datetime import date, datetime
+    from zoneinfo import ZoneInfo
+    sys.path.insert(0, str(ROOT / "tools"))
+    from samplegen.dates import Calendar
+    from samplegen.lake import business_days
+    end = os.environ.get("DRISHTI_SHOTS_LAKE_END")
+    end = date.fromisoformat(end) if end else datetime.now(ZoneInfo("America/New_York")).date()
+    return [d.isoformat() for d in business_days(end, n, Calendar.of("USNY"))]
+
+
 def login(c: Ctx, user: str = ADMIN, password: str | None = None, width: int = WIDE, height: int = HIGH):
     """Signs in as `user` (clearing any other person's session first), on a 1280 px window."""
     try:                                                           # a picture before this one may have left kiosk (full screen) on: a window cannot be resized then
