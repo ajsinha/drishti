@@ -85,7 +85,7 @@ public final class LakeWriter {
     private final Engine engine;
 
     public LakeWriter() {
-        this(DefaultEngine.create(new LocalWriteFileIO(Map.of())));
+        this(DefaultEngine.create(new LocalWriteFileIO(Map.of("parquet.compression", "SNAPPY"))));      // as delta-rs writes (Kernel writes uncompressed otherwise)
     }
 
     LakeWriter(Engine engine) {

@@ -570,6 +570,45 @@ doctor: 1 red, 3 yellow
 **Scheduling** `server smoke --json` every few minutes is a cheap synthetic monitor (exit `1` pages someone); `server health`
 in a load balancer's script. Real output: [CLI_GUIDE.md section 7](CLI_GUIDE.md). In the console: Admin → **Health**.
 
+A scratch server on port 18956 with only the `finance` pack loaded and empty data folders (paths shortened; exit `1` because two
+of its sources have no data yet), then the smoke test that passes anyway, and a load announced by hand:
+
+```
+$ python3 tools/drishti.py server health --server http://localhost:18956
+status DEGRADED  version 2.2.0  java 21.0.12.1  uptime 17s
+packs 1  sources 6 (degraded 0, down 2)  packs with problems 1  failed to start 0
+  file                        DOWN      DOWN: no directory <data>/feeds
+  finance-lake                DOWN      DOWN: cannot reach <data>/delta/finance (engine: native)
+  book-totals                 UP        UP (nothing computed yet)
+  demo                        UP        UP
+  news                        UP        UP
+  yfinance                    UP        UP
+$ python3 tools/drishti.py server packs list --server http://localhost:18956 | head -n 4
+pack                  version  loaded  on   added  kinds
+finance               1.0.0    yes     yes         14
+banking-core          1.0.0    no      no          0
+climate-risk          1.0.0    no      no          0
+$ python3 tools/drishti.py server smoke --server http://localhost:18956 --ids 1 --dates 1 | tail -n 5
+fx-spot               EURUSD                    2026-10-16  2       0      9.1      OK
+book                  COMM-NY-1                 2026-10-16  3       1      7.1      OK
+book-pnl              COMM-NY-1                 2026-10-16  2       0      19.0     OK
+
+13 views, p50 8.9 ms, max 57.1 ms
+smoke: passed
+$ python3 tools/drishti.py data landed --server http://localhost:18956 --pack finance --kind book --date 2026-10-16 --rows 12 --batch demo-1 --source lake-build
+book for 2026-10-16 loaded: 12 rows; 0 alerts fired
+  load mvcepvo0-1  status ready  verified verified  attempt 1
+  record  ok      recorded
+  refresh ok      caches dropped: demo, file, finance-lake
+  verify  ok      3 book entities on 2026-10-16
+  alerts  ok      0 alerts fired
+  smoke   skipped not asked for (loads.smoke is 0)
+  notices ok      1 person told
+$ python3 tools/drishti.py data loads --server http://localhost:18956 --pack finance
+received             kind              date        status        rows    rej  verified  alerts told  batch / source
+2026-10-17 13:02:58  book              2026-10-16  ready           12         verified       0    1  demo-1 lake-build
+```
+
 ### 5.5 connector
 
 Admin → Connectors from the terminal: `connector list`, `connector get NAME [--yaml]`, `connector apply FILE` (create or change; the
@@ -582,7 +621,39 @@ python3 tools/drishti.py connector apply config/connectors/book-store.yaml --ser
 python3 tools/drishti.py connector test book-store
 ```
 
-Every change is audited and the old text kept ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)). Real output:
+Every change is audited and the old text kept ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)). The 10,000-deal lake of
+section 12, bound to a connector on the scratch server and tried: the server reads every row `lake build` wrote.
+
+```
+$ cat book-store.yaml
+plugin: delta
+description: the synthetic commodity-swap book (lake build)
+kinds: [deal]
+settings:
+  root: <scratch>/l10b
+  domain: comswap
+  layout:
+    deal:
+      columns: [COUNTERPARTY, PORTFOLIO, QUANTITY]
+$ python3 tools/drishti.py connector apply book-store.yaml --server http://localhost:18956
+applied book-store: running; changed (new connector), root, domain, layout.deal.columns; version ffc4169939987981
+  note kinds: kind 'deal' is not owned by a loaded pack (loaded: agreement, book, book-pnl, clearing-account, contract-spec, counterparty, credit-limit, csa, and 6 more)
+$ python3 tools/drishti.py connector test book-store --server http://localhost:18956
+book-store (delta): reachable, health UP (engine: native), 22 ms
+  note: kinds: kind 'deal' is not owned by a loaded pack (loaded: agreement, book, book-pnl, clearing-account, contract-spec, counterparty, credit-limit, csa, and 6 more)
+  kind  business date  rows   note
+  ----  -------------  -----  ----
+  deal  2026-10-16     10000
+$ python3 tools/drishti.py connector list --server http://localhost:18956
+3 connector(s) in <scratch>/connectors   (watching: WATCHING)
+  name          origin  plugin   kinds     state           used by  problems
+  ------------  ------  -------  --------  --------------  -------  --------
+  book-store    file    delta    deal      running
+  book-totals   file    derived  book-pnl  running         finance
+  finance-lake  file    delta              down, retrying  finance
+```
+
+The note goes once a pack that owns `deal` is loaded and routes it to `book-store`. More output:
 [CLI_GUIDE.md section 7](CLI_GUIDE.md).
 
 ### 5.6 design
@@ -713,7 +784,7 @@ $ python3 tools/packgen/comswap_synth.py --deals 1500 --seed 8 --mix --jsonl --o
 wrote 1500 synthetic deals to book-2026-10-19.jsonl
 ```
 
-2,000 deals are 28.5 MB of pretty-printed JSON (about 14 KB a deal); the lake of section 4 holds them in 4.4 MB of Parquet.
+2,000 deals are 28.5 MB of pretty-printed JSON (about 14 KB a deal); the lake of section 4 (two days, 3,500 deals) holds them in 4.4 MB of Parquet.
 
 ## 9. Developer tools
 
@@ -813,24 +884,29 @@ standard output to a log file or the journal; alert on a non-zero exit, and on `
 
 ## 12. Sizing a large load (300,000 documents and more)
 
-Measured on the synthetic book (about 14 KB a deal as pretty-printed JSON, 4 to 5 KB compact), one laptop, local SSD:
+Measured on the synthetic book (14 KB a deal as pretty-printed JSON, 8.7 KB compact), one laptop, local SSD, `/usr/bin/time -v`
+around the whole command (peak memory is the largest process: the builder, or the Java writer it starts):
 
-| Run | Documents | Input | Engine | Time | Peak memory |
+| Documents | Input | Engine | Wall time | Peak memory | Lake |
 |---|---|---|---|---|---|
-| 4.2 | 2,000 | 28.5 MB JSON array | deltalake | 0.47 s | 257 MB (the Python process) |
-| 4.5 | 2,000 | 28.5 MB JSON array | Drishti's writer | 1.6 s (0.9 s of it the JVM starting) | 260 MB (the Java process, `-Xmx1g`) |
+| 2,000 | 28.5 MB JSON array | deltalake | 0.6 s | 257 MB | 2.6 MB a day |
+| 2,000 | 28.5 MB JSON array | Drishti's writer | 1.7 s | 260 MB | 2.6 MB a day |
+| 10,000 | 140 MB JSON array | deltalake | 1.3 s | 626 MB | 13 MB a day |
+| 10,000 | 140 MB JSON array | Drishti's writer (`auto`, the server's exec jar) | 2.9 s (0.8 s reading, 2.0 s writing, about 1 s of it the JVM starting) | 591 MB (the builder itself: 114 MB) | 13 MB a day |
 
 What grows with the input, and what does not:
 
-* **Memory does not grow with the file.** It is one decoded document at a time while reading, then one batch while writing:
-  `--batch-mb` (128 MB of documents) or `--batch-rows` (50,000), whichever is smaller. Peak memory is about twice the batch plus
-  the interpreter (or the JVM's heap, `DRISHTI_LAKE_HEAP`). Lower `--batch-mb` on a small machine.
-* **Disk.** The staged rows take about the compact size of the documents (a third of a pretty-printed export) on the lake's disk
-  while the run lasts; the lake itself about 15 % of the pretty-printed input (Snappy Parquet). For 300,000 such deals: a 4.3 GB
-  export, about 1.5 GB staged, about 0.7 GB of lake per business date.
-* **Time** grows linearly with the documents: reading is JSON decoding (about 100 MB a second of pretty-printed JSON), writing is
-  Parquet encoding. Expect a few minutes for 300,000 deals; the per-run summary's `timings` shows where the time went.
+* **Memory does not grow with the file.** Reading holds one document at a time (the builder stayed at 114 MB for 140 MB of input);
+  writing holds one batch: `--batch-mb` (128 MB of compact documents, 15,368 of these deals) or `--batch-rows` (50,000), whichever
+  is smaller, plus its Parquet encoding: about 600 MB for the default batch. That is the ceiling for any number of documents;
+  `--batch-mb 32` brings it to about 250 MB on a small machine, at the cost of more, smaller files.
+* **Disk.** The staged rows take the compact size of the documents (about 60 % of a pretty-printed export) on the lake's disk while
+  the run lasts; the lake itself about 10 % of the pretty-printed input (Snappy Parquet). For 300,000 such deals: a 4.2 GB export,
+  2.6 GB staged during the run, about 400 MB of lake per business date.
+* **Time** grows linearly with the documents (reading about 180 MB a second of pretty-printed JSON here; writing about 5,000
+  deals a second): about 40 s with deltalake and a minute with Drishti's writer for 300,000 deals, a few minutes for a million.
+  The per-run summary's `timings` shows where the time went; `batchRows` and `averageDocumentBytes` what the batches were.
 * **Partitions.** Each business date times each classifier value is a folder with at least one file; keep classifiers to a few
   dozen values (`lake scan` shows the counts) and compact with `lake maintain`.
-* **The console's page** streams the upload to its temporary folder (`DRISHTI_CONSOLE_TMP_DIR`: put it on a disk with room for the
-  file) and runs the same builder; `lakes.jobs` (2) bounds the builds at once.
+* **The console's page** streams the upload to its temporary folder (`DRISHTI_CONSOLE_TMP_DIR`: room for the file) and runs the
+  same builder; `lakes.jobs` (2) bounds the builds at once, so plan memory for two batches.
