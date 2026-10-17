@@ -17,7 +17,8 @@ test: run it by hand).
 
     drishti-console/.venv/bin/python drishti-console/tests/bi_live_shots.py <pictures dir> <captures.json>
 
-Ports 18995 (server) and 17995 (console), a scratch directory, the shipped live samples over the demo source ticking every 200 ms (750 trades of which 360 tick, 66 netting sets).
+Ports 18995 (server) and 17995 (console), a scratch directory, the shipped live samples over the demo source ticking every 200 ms (the risk engine's trade valuations of every source system and the netting sets).
+No Perspective pictures: since 2.3.0 a 2.1 perspective-grid is drawn as Drishti's own grid, pictured as the live grid.
 Pictures are desktop (1600 px: the top bar needs it) and the phone (390 px)."""
 import json
 import sys
@@ -91,9 +92,9 @@ def main(out: Path, captures: Path) -> None:
                 page.click("[data-live-pause]")
 
                 ready(page, f"/bi/r/{REPORT}/grid")
-                page.screenshot(path=str(out / "perspective-grid.png"))
+                page.screenshot(path=str(out / "live-grid.png"))
                 ready(page, f"/bi/r/{REPORT}/pivot")
-                page.screenshot(path=str(out / "perspective-pivot.png"))
+                page.screenshot(path=str(out / "live-matrix.png"))
 
                 # the dataset page says how its live table is doing
                 page.goto(f"{CONSOLE_URL}/bi/d/file:dataset:live-trading")
@@ -111,7 +112,7 @@ def main(out: Path, captures: Path) -> None:
                 # ---- the same grid for a reader without raw -----------------------------------------------------------------------
                 ann = sign_in(browser, "ann")
                 ready(ann, f"/bi/r/{REPORT}/grid")
-                ann.screenshot(path=str(out / "perspective-grid-masked.png"))
+                ann.screenshot(path=str(out / "live-grid-masked.png"))
 
                 # ---- the board ---------------------------------------------------------------------------------------------------
                 wall = sign_in(browser, "rita")
