@@ -109,6 +109,7 @@ class Stats:
     duplicates: Counter = field(default_factory=Counter)             # business date -> ids seen more than once
     numeric: dict = field(default_factory=dict)                       # promoted column -> True while every value is a number
     files: list = field(default_factory=list)                         # [{file, bytes}]
+    doc_bytes: int = 0                                                # characters of the accepted documents (compact JSON)
     sample: tuple | None = None                                       # (id, date) of the first accepted document, to open one
 
     def reject(self, where: str, reason: str) -> None:
@@ -182,9 +183,10 @@ class Stager:
         if part is None:
             part = self.parts[(day, values)] = Part(day, values, self.folder / f"{len(self.parts) + 1}.rows" if self.folder else pathlib.Path(""))
         part.rows += 1
+        text = json.dumps(doc, ensure_ascii=False, separators=(",", ":"))
+        st.doc_bytes += len(text)
         if self.folder:
-            self._handle(part).write(json.dumps([ident, json.dumps(doc, ensure_ascii=False, separators=(",", ":")), promoted],
-                                                ensure_ascii=False, separators=(",", ":")) + "\n")
+            self._handle(part).write(json.dumps([ident, text, promoted], ensure_ascii=False, separators=(",", ":")) + "\n")
 
     def _handle(self, part: Part):
         k = (part.day, part.values)

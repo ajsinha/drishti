@@ -280,7 +280,10 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say) -> tuple[int, dic
         engine, why = writers.choose(a.engine, a.jar, a.java)
         summary["engine"], summary["engineWhy"] = engine, why
         promoted = st.types()
-        t = writers.Table(table, names, promoted, a.mode, a.batch_rows, ["id", "business_date", *names, *promoted])
+        avg = st.stats.doc_bytes / max(1, st.stats.accepted)
+        batch = min(a.batch_rows, max(100, int(a.batch_mb * 1048576 / max(1.0, avg))))      # rows per batch, bounded by bytes too
+        summary["batchRows"], summary["averageDocumentBytes"] = batch, round(avg)
+        t = writers.Table(table, names, promoted, a.mode, batch, ["id", "business_date", *names, *promoted])
         t1 = time.monotonic()
         prog.update(force=True, phase="writing", engine=engine, partsDone=0, partsTotal=len(summary["partitions"]))
 
@@ -440,7 +443,8 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     g = p.add_argument_group("how")
     g.add_argument("--engine", choices=("auto", "drishti", "deltalake"), default="auto", help="auto (default): Drishti's Java writer when the server jar is found, else deltalake")
     g.add_argument("--mode", choices=MODES, default="overwrite-dates", help="overwrite-dates (default), overwrite-partitions or append")
-    g.add_argument("--batch-rows", type=int, default=50_000, help="rows per batch written (default 50,000; also the most rows sorted at once)")
+    g.add_argument("--batch-rows", type=int, default=50_000, help="most rows per batch written (default 50,000; also the most rows sorted at once)")
+    g.add_argument("--batch-mb", type=int, default=128, help="most MB of documents per batch (default 128): large documents make smaller batches, so memory stays flat")
     g.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then drishti-server/target)")
     g.add_argument("--java", help="the java binary (default: JAVA_HOME, then java on the PATH)")
     g.add_argument("--dry-run", action="store_true", help="read and count, write nothing")
