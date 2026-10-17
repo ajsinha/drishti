@@ -21,7 +21,7 @@
 #   name, family, signature           the call as a person writes it (Python keyword syntax)
 #   params                            in order: name, type, default (optional => may be left out), keyword-only, variadic
 #                                     types: number, integer-literal, number-literal, string, string-literal, boolean, boolean-literal,
-#                                     date, any, field, date-field, table-or-any, aggregate, fields (a list of fields)
+#                                     date, any, field, date-field, table-or-any, aggregate, fields (a list of fields), fields-or-all (a list or ALL)
 #   returns                           number, integer, decimal, string, boolean, date, timestamp, same (the first argument's type)
 #   scopes                            row, rule, aggregate, context (where it may be written; section 3.3.1)
 #   status                            built (works now) or the wave that builds it (B, C): refused with DRS-9129 until then
@@ -506,15 +506,17 @@ functions:
     signature: avg_by(agg, by=[fields])
     params: [{ name: agg, type: aggregate }, { name: by, type: fields, keyword-only: true }]
     returns: decimal
-    scopes: [aggregate]
-    status: B
+    scopes: [aggregate, context]
+    status: built
     since: B
-    description: "A two-level aggregate: agg per value of by, then the average of those (the explicit iteration DEL has instead of DAX context transition)."
+    description: "A two-level aggregate: agg per value of by (within each group of the answer), then the average of those values (the explicit iteration DEL has instead of DAX context transition)."
     examples:
       - { expr: "avg_by(sum(trades.mtm), by=[trades.tradeDate])", says: "the average daily MTM" }
       - { expr: "avg_by(count(trades), by=[trades.book])", says: "trades per book, on average" }
     edge-cases:
+      nulls: "Groups of by whose aggregate is None are left out of the average."
       empty: "None when no group of by has rows."
+      masked: "A masked field in by is refused (DRS-9161): the inner groups would split on hidden values."
 
   # ---- time intelligence -------------------------------------------------------------------------------------------------------
   - name: ytd
@@ -856,32 +858,37 @@ functions:
   - name: calc
     family: filter context
     signature: calc(agg, where=..., ignore=[...] | ALL, keep=[...], via='rel_id')
-    params: [{ name: agg, type: aggregate }, { name: where, type: boolean, default: None, keyword-only: true }, { name: ignore, type: fields, default: "[]", keyword-only: true }, { name: keep, type: fields, default: "[]", keyword-only: true }, { name: via, type: string-literal, default: None, keyword-only: true }]
+    params: [{ name: agg, type: aggregate }, { name: where, type: boolean, default: None, keyword-only: true }, { name: ignore, type: fields-or-all, default: "[]", keyword-only: true }, { name: keep, type: fields, default: "[]", keyword-only: true }, { name: via, type: string-literal, default: None, keyword-only: true }]
     returns: same
     scopes: [aggregate, context]
-    status: B
+    status: built
     since: B
-    description: "The aggregate in an edited filter context: add conditions (where=), drop query and group filters on fields (ignore=, or ALL), keep only some (keep=), or follow an inactive relationship (via=). Security is never in scope."
+    description: "The aggregate in an edited filter context: add conditions (where=, a row condition ANDed to the aggregate's), drop the query's and the group's filters on some fields (ignore=[...]) or on all (ignore=ALL), drop every filter except those on some fields (keep=[...]), or follow an inactive relationship (via='r_5', the active one for the same pair switched off). Security is never in scope: ignore=ALL means everything you may see."
     examples:
-      - { expr: "calc(measure('MTM'), ignore=[desks.name])", says: "MTM ignoring the desk slicer" }
+      - { expr: "calc(measure('MTM'), ignore=[desks.name])", says: "MTM ignoring the desk slicer and the desk of the row" }
+      - { expr: "calc(sum(trades.mtm), where=trades.status == 'Live')", says: "MTM of the live trades, whatever else is filtered" }
+      - { expr: "calc(measure('MTM'), keep=[desks.region])", says: "MTM of the whole region of the row" }
       - { expr: "calc(measure('MTM'), via='r_5')", says: "MTM along the settlement-date relationship" }
     edge-cases:
-      masked: "ignore=ALL means all the rows you may see, never more."
+      masked: "ignore=ALL means all the rows you may see, never more; a masked field in ignore= or keep= is never a group (it is not grouped on)."
+      empty: "None (a count: 0) when the edited context has no rows."
+      types: "Nesting of calc, share_of, parent_of and as_of is at most three deep (DRS-9127)."
 
   - name: share_of
     family: filter context
     signature: share_of(agg, over=[...] | ALL)
-    params: [{ name: agg, type: aggregate }, { name: over, type: fields, keyword-only: true }]
+    params: [{ name: agg, type: aggregate }, { name: over, type: fields-or-all, keyword-only: true }]
     returns: decimal
     scopes: [aggregate, context]
-    status: B
+    status: built
     since: B
-    description: The aggregate divided by itself over a coarser group (over=ALL is the grand total you may see).
+    description: "The aggregate divided by itself with the fields of over ignored (the same as agg / calc(agg, ignore=over)): over=ALL is the share of the grand total you may see, over=[books.name] a book's share within the rest of its group."
     examples:
       - { expr: "share_of(measure('MTM'), over=ALL)", says: "MTM as a share of the total you may see" }
       - { expr: "share_of(measure('MTM'), over=[books.name])", says: "a book's share within its desk" }
     edge-cases:
       nulls: "None when the coarser total is 0 or None."
+      masked: "Of what you may see: the total never includes rows your row rules hide."
 
   - name: parent_of
     family: filter context
@@ -889,14 +896,15 @@ functions:
     params: [{ name: agg, type: aggregate }, { name: hierarchy, type: string-literal, keyword-only: true }]
     returns: decimal
     scopes: [aggregate, context]
-    status: B
+    status: built
     since: B
-    description: The aggregate as a share of its parent level in a hierarchy of the model.
+    description: "The aggregate as a share of its parent level in a hierarchy of the model: the deepest level of the hierarchy in the answer is ignored (with the levels below it), so each row is divided by its parent's total."
     examples:
       - { expr: "parent_of(measure('MTM'), hierarchy='Desk and book')", says: "a book's share of its desk" }
       - { expr: "parent_of(measure('Notional'), hierarchy='Region')", says: "a country's share of its region" }
     edge-cases:
-      nulls: "None at the top level."
+      nulls: "None at the top level, and when no level of the hierarchy is a field of the answer; None when the parent's total is 0."
+      types: "hierarchy names a hierarchy of the model (DRS-9152 otherwise)."
 
   # ---- time travel (B) ---------------------------------------------------------------------------------------------------------
   - name: as_of

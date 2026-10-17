@@ -47,6 +47,16 @@ public interface Fields {
         return true;
     }
 
+    /** The type of a parameter of the model ({@code param.name}, wave B); empty when there is none. Without a model every name is accepted. */
+    default Optional<DelType> param(String name) {
+        return known() ? Optional.empty() : Optional.of(DelType.ANY);
+    }
+
+    /** The parameters' names, for the suggestion in a problem. */
+    default List<String> params() {
+        return List.of();
+    }
+
     Fields NONE = new Fields() {
         @Override
         public Optional<Field> field(List<String> parts) {

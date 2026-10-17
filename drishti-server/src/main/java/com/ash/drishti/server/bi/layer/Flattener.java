@@ -111,7 +111,7 @@ public final class Flattener {
         });
         List<Dataset.Relationship> rels = new ArrayList<>();
         for (ModelDef.Rel r : m.relationships()) {
-            rels.add(new Dataset.Relationship(r.fromAlias(), r.fromColumn(), r.toAlias(), r.toColumn(), r.cardinality(), r.direction(), r.active()));
+            rels.add(new Dataset.Relationship(r.fromAlias(), r.fromColumn(), r.toAlias(), r.toColumn(), r.cardinality(), r.direction(), r.active(), r.id()));
         }
         rels.addAll(hiddenRels);
         Map<String, Dataset.Measure> measures = new LinkedHashMap<>();
@@ -119,6 +119,9 @@ public final class Flattener {
         Map<String, String> ids = measureIds(all);
         for (ModelDef.Meas x : all.values()) {
             String expr = com.ash.drishti.server.bi.expr.Expressions.withMeasureNames(x.expr(), ids);
+            if (expr != null && x.via() != null && !x.via().isBlank()) {
+                expr = "calc(" + expr + ", via=" + com.ash.drishti.server.bi.expr.DelPrinter.quote(x.via()) + ")";   // a measure along an inactive relationship (wave B)
+            }
             measures.put(x.name(), new Dataset.Measure(x.name(), expr, x.format(), x.description(), x.python(), x.inputs(), x.by()));
         }
         Dataset.Security sec = new Dataset.Security(List.of(), masked, security);

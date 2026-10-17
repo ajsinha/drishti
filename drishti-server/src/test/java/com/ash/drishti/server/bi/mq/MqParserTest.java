@@ -85,7 +85,9 @@ class MqParserTest {
     @Test
     void theShapeIs9150() {
         assertThat(code("{ model: m, select: { measures: [MTM] } }")).isEqualTo("DRS-9150 mq");
-        assertThat(code("{ mq: 2, model: m, select: { measures: [MTM] } }")).isEqualTo("DRS-9150 mq");
+        assertThat(code("{ mq: 3, model: m, select: { measures: [MTM] } }")).isEqualTo("DRS-9150 mq");
+        assertThat(code("{ mq: 2, model: m, select: { measures: [MTM] }, options: { budget: { millis: 0 } } }")).isEqualTo("DRS-9150 options.budget");
+        assertThat(code("{ mq: 2, model: m, select: { measures: [MTM] }, calc: { Time: [YTD] } }")).isEqualTo("DRS-9150 calc.Time");
         assertThat(code("{ mq: 1, model: m, select: { measures: [MTM] }, colour: red }")).isEqualTo("DRS-9150 colour");
         assertThat(code("{ mq: 1, model: m, select: { measures: MTM } }")).isEqualTo("DRS-9150 select.measures");
         assertThat(code("{ mq: 1, model: m, select: { } }")).isEqualTo("DRS-9150 select");

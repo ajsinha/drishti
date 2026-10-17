@@ -360,7 +360,7 @@ public final class ModelCatalog {
         }
         StringBuilder b = new StringBuilder();
         ds.measures().forEach((k, m) -> {
-            if (!flat.measures().containsKey(k)) {
+            if (!flat.measures().containsKey(k) || !java.util.Objects.equals(flat.measures().get(k).expr(), m.expr())) {   // a local measure, or one a calculation group or a parameter rewrote
                 b.append(k).append('=').append(m.expr()).append(';');
             }
         });
@@ -1106,6 +1106,7 @@ public final class ModelCatalog {
         }
         m.put("measures", measures);
         m.put("hierarchies", v.def().hierarchies());
+        m.putAll(MqDescribe.calculation(v.def()));                              // wave B: calculation groups, parameters, calendar, FX
         m.put("perspectives", v.def().semantics().perspectives().values().stream().map(x -> Map.of("name", x.name(), "title", x.title(), "description", x.description())).toList());
         if (view != null) {
             m.put("perspective", view.name());

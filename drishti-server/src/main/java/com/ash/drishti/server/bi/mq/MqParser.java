@@ -44,7 +44,8 @@ public final class MqParser {
 
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
     private static final ObjectMapper JSON = new ObjectMapper().configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
-    static final Set<String> TOP = Set.of("mq", "model", "define", "select", "where", "having", "time", "sort", "limit", "totals", "drill", "shape", "params", "options");
+    static final Set<String> TOP = Set.of("mq", "model", "define", "select", "where", "having", "time", "sort", "limit", "totals", "drill", "shape", "params", "calc",
+            "perspective", "options");
     /** The comparisons a {@code where} may make: the engine's, plus {@code relative} and {@code top}. */
     public static final Set<String> OPS;
 
@@ -78,8 +79,17 @@ public final class MqParser {
                 out.add(MqException.Problem.of("DRS-9150", k, "unknown key '" + k + "' (the keys are " + new java.util.TreeSet<>(TOP) + ")"));
             }
         });
-        if (!root.path("mq").canConvertToInt() || root.path("mq").asInt() != 1) {
-            out.add(new MqException.Problem("DRS-9150", "mq", "a model query starts `mq: 1` (the language version)", Map.of("set", "mq", "to", 1)));
+        int version = root.path("mq").canConvertToInt() ? root.path("mq").asInt() : 0;
+        if (version != 1 && version != 2) {
+            out.add(new MqException.Problem("DRS-9150", "mq", "a model query starts `mq: 1` or `mq: 2` (the language version; 2 adds params, calc, perspective and options.budget)",
+                    Map.of("set", "mq", "to", 1)));
+        }
+        if (version == 1) {
+            for (String k : List.of("params", "calc", "perspective")) {
+                if (present(root.path(k))) {
+                    out.add(new MqException.Problem("DRS-9150", k, "`" + k + ":` is a key of `mq: 2`", Map.of("set", "mq", "to", 2)));
+                }
+            }
         }
         String model = root.path("model").isTextual() ? root.path("model").asText() : "";
         Map<String, String> define = new LinkedHashMap<>();
@@ -152,11 +162,41 @@ public final class MqParser {
         if (root.path("params").isObject()) {
             root.path("params").fields().forEachRemaining(e -> params.put(e.getKey(), JSON.convertValue(e.getValue(), Object.class)));
         }
-        if (!params.isEmpty()) {
-            out.add(MqException.Problem.of("DRS-9150", "params", "what-if parameters arrive in wave W6: send `params: {}` or leave it out"));
+        if (!root.path("params").isMissingNode() && !root.path("params").isNull() && !root.path("params").isObject()) {
+            out.add(MqException.Problem.of("DRS-9150", "params", "`params:` maps a parameter's name to its value: { shock: -0.1 }"));
+        }
+        Map<String, String> calc = new LinkedHashMap<>();
+        JsonNode cg = root.path("calc");
+        if (!cg.isMissingNode() && !cg.isNull()) {
+            if (!cg.isObject()) {
+                out.add(MqException.Problem.of("DRS-9150", "calc", "`calc:` maps a calculation group to the item applied to the selected measures: { Time: YTD }"));
+            } else {
+                cg.fields().forEachRemaining(e -> {
+                    if (!e.getValue().isTextual()) {
+                        out.add(MqException.Problem.of("DRS-9150", "calc." + e.getKey(), "an item of a calculation group is its name (text)"));
+                    } else {
+                        calc.put(e.getKey(), e.getValue().asText());
+                    }
+                });
+            }
+        }
+        String perspective = root.path("perspective").isTextual() ? root.path("perspective").asText() : null;
+        if (root.has("perspective") && !root.path("perspective").isTextual() && !root.path("perspective").isNull()) {
+            out.add(MqException.Problem.of("DRS-9150", "perspective", "`perspective:` names one perspective of the model"));
         }
         JsonNode o = root.path("options");
         ModelQuery.Options options = new ModelQuery.Options(o.path("layer").asText("auto"), o.path("explain").asBoolean(false), o.path("format").asText("json"));
+        ModelQuery.Budget budget = ModelQuery.Budget.NONE;
+        JsonNode bn = o.path("budget");
+        if (!bn.isMissingNode() && !bn.isNull()) {
+            Long millis = bn.path("millis").canConvertToLong() ? bn.path("millis").asLong() : null;
+            Long rows = bn.path("rows").canConvertToLong() ? bn.path("rows").asLong() : null;
+            if (!bn.isObject() || millis == null && rows == null || millis != null && millis < 1 || rows != null && rows < 1) {
+                out.add(MqException.Problem.of("DRS-9150", "options.budget", "a budget is { millis: <most milliseconds>, rows: <most rows read> }, each a whole number from 1"));
+            } else {
+                budget = new ModelQuery.Budget(millis, rows);
+            }
+        }
         if (!Set.of("auto", "columns", "rollup", "direct").contains(options.layer())) {
             out.add(MqException.Problem.of("DRS-9150", "options.layer", "layer is auto, columns, rollup or direct"));
         }
@@ -169,7 +209,13 @@ public final class MqParser {
         if (!out.isEmpty()) {
             throw new MqException(out);
         }
-        return new ModelQuery(1, model, define, fields, measures, where, having, time, sort, limit, totals, drill, shape, params, options);
+        return new ModelQuery(version, model, define, fields, measures, where, having, time, sort, limit, totals, drill, shape, params, options,
+                new ModelQuery.Ext(calc, perspective, budget));
+    }
+
+    /** True when a key holds something (not missing, null, an empty mapping or blank text). */
+    private static boolean present(JsonNode n) {
+        return !n.isMissingNode() && !n.isNull() && !(n.isContainerNode() && n.isEmpty()) && !(n.isTextual() && n.asText().isBlank());
     }
 
     private static List<JsonNode> list(JsonNode n, String path, List<MqException.Problem> out) {
@@ -332,10 +378,20 @@ public final class MqParser {
     /** The query as a sorted tree with its defaults written: what ran, shown in the answer's meta. */
     public static Map<String, Object> canonical(ModelQuery q) {
         Map<String, Object> m = new TreeMap<>();
-        m.put("mq", 1);
+        boolean two = !q.params().isEmpty() || !q.ext().empty();
+        m.put("mq", two ? 2 : 1);
         m.put("model", q.model());
         if (!q.define().isEmpty()) {
             m.put("define", new TreeMap<>(q.define()));
+        }
+        if (!q.params().isEmpty()) {
+            m.put("params", new TreeMap<>(q.params()));
+        }
+        if (!q.ext().calc().isEmpty()) {
+            m.put("calc", new TreeMap<>(q.ext().calc()));
+        }
+        if (q.ext().perspective() != null) {
+            m.put("perspective", q.ext().perspective());
         }
         Map<String, Object> select = new TreeMap<>();
         select.put("fields", q.fields());
@@ -389,6 +445,17 @@ public final class MqParser {
         Map<String, Object> o = new TreeMap<>();
         o.put("layer", q.options().layer());
         o.put("format", q.options().format());
+        ModelQuery.Budget b = q.ext().budget();
+        if (!b.equals(ModelQuery.Budget.NONE)) {
+            Map<String, Object> bm = new TreeMap<>();
+            if (b.millis() != null) {
+                bm.put("millis", b.millis());
+            }
+            if (b.rows() != null) {
+                bm.put("rows", b.rows());
+            }
+            o.put("budget", bm);
+        }
         m.put("options", o);
         return m;
     }

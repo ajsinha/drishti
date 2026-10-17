@@ -141,6 +141,73 @@ measures:
   MTM per trade: { expr: "measure('m_mtm') / measure('Trades')" }      # by id and by name
 ```
 
+### 5.1 The filter context: `calc`, `share_of`, `parent_of`, `avg_by` (wave B)
+
+A measure is worked out per group of the answer in a **filter context** of four layers. You can edit layers 2 and 3; layer 1 is never in reach:
+
+| Layer | What it holds | Who changes it |
+|---|---|---|
+| 1 security | your row rules and masks, per dataset | nobody: `ignore=ALL` means *everything you may see* |
+| 2 query | the query's filters: MQ `where`, slicers, page and visual filters, drill, cross-filter | `calc(…, ignore=…/keep=…)`, `share_of` |
+| 3 group | the values of the answer's fields for this row (`desk == 'RATES'`) | `calc(…, ignore=…/keep=…)`, `share_of`, `parent_of` |
+| 4 measure | the measure's own `where=` and `calc(…, where=…)` | the measure |
+
+```yaml
+measures:
+  MTM:              { expr: "sum(trades.mtm)" }
+  MTM all desks:    { expr: "calc(measure('MTM'), ignore=[desks.name])" }        # the desk slicer and the row's desk dropped
+  MTM % of total:   { expr: "share_of(measure('MTM'), over=ALL)" }               # of the total you may see
+  MTM % of desk:    { expr: "share_of(measure('MTM'), over=[books.name])" }      # a book's share of the rest of its group
+  MTM % of parent:  { expr: "parent_of(measure('MTM'), hierarchy='Desk and book')" }
+  Live MTM anyway:  { expr: "calc(measure('MTM'), where=trades.status == 'Live')" }
+  Region MTM:       { expr: "calc(measure('MTM'), keep=[desks.region])" }        # every filter but the region's dropped
+  MTM by settle:    { expr: "calc(measure('MTM'), via='r_5')" }                  # the inactive relationship r_5 instead of the active one
+  Avg book MTM:     { expr: "avg_by(sum(trades.mtm), by=[books.name])" }         # MTM per book, then the average
+```
+
+Before and after, for *MTM all desks* with a slicer `desk in [RATES]` and the answer grouped by desk and currency:
+
+| | desk filter | desk group | currency group | so the value is |
+|---|---|---|---|---|
+| `measure('MTM')` | RATES | the row's desk | the row's currency | MTM of that desk and currency |
+| `calc(measure('MTM'), ignore=[desks.name])` | dropped | dropped | kept | MTM of every desk you may see, in that currency |
+
+How it runs: `where=` alone restricts the aggregates (`FILTER (WHERE …)`); `ignore`, `keep`, `via`, `share_of`, `parent_of` and `avg_by` become a
+**context sub-query** (the same question at the coarser grain, as you, joined back on the fields both keep: `Context` nodes in `explain`). Rules:
+security is never in scope; contexts nest at most three deep (`DRS-9127` in an expression, `DRS-9166` through measures); no context transition
+(iterate explicitly with `avg_by`); a context is read on the groups the answer has, so a grand total with no rows of its own shows `None`; no rollup
+answers a measure with a context (the plan says so).
+
+### 5.2 Parameters and calculation groups (wave B)
+
+A model declares **parameters** and **calculation groups**; a query (`mq: 2`) gives values and picks items.
+
+```yaml
+parameters:
+  shock:     { kind: number, default: 0, min: -0.5, max: 0.5, step: 0.01 }     # what-if: param.shock in any expression
+  breakdown: { kind: field, fields: [desks.region, trades.currency], default: desks.region }   # field: param.breakdown in select.fields
+calc-groups:
+  Time:
+    precedence: 10                                   # several groups: the highest precedence applies first (innermost)
+    items:
+      Current: "SELECTED"
+      YTD:     "ytd(SELECTED, trades.tradeDate)"     # SELECTED is the measure the item applies to
+      Prior:   "prior_period(SELECTED, trades.tradeDate)"
+measures:
+  Shocked MTM: { expr: "measure('MTM') * (1 + param.shock)" }
+```
+
+```yaml
+mq: 2
+model: desk-calc
+select: { fields: [param.breakdown], measures: [MTM, Notional, Trades] }
+params: { shock: -0.1, breakdown: trades.currency }
+calc: { Time: YTD }                                  # every selected measure becomes its YTD; the answer keeps the names
+```
+
+A value outside the parameter's kind, range or list is `DRS-9164`; an unknown group or item `DRS-9165`. The values and the items are part of the
+question (the plan hash), so two shocks are two cache entries. `param.x` is refused in a row rule (security never depends on a what-if value).
+
 ## 6. Functions
 
 The reference below is generated from the server's catalogue (`drishti-server/src/main/resources/bi/expr/functions.yaml`), the same list the
@@ -154,11 +221,11 @@ marked with a later wave is refused with `DRS-9129` until that wave.
 | scalar | [`abs`](#fn-abs), [`round`](#fn-round), [`coalesce`](#fn-coalesce), [`upper`](#fn-upper), [`lower`](#fn-lower), [`len`](#fn-len), [`contains`](#fn-contains), [`startswith`](#fn-startswith), [`endswith`](#fn-endswith), [`date`](#fn-date), [`timestamp`](#fn-timestamp), [`year`](#fn-year), [`quarter`](#fn-quarter), [`month`](#fn-month), [`week`](#fn-week), [`day`](#fn-day), [`days_between`](#fn-days-between), [`business_days_between`](#fn-business-days-between) |
 | conversion | [`fx`](#fn-fx) *(B)*, [`convert`](#fn-convert) *(B)* |
 | lookup | [`related`](#fn-related) |
-| aggregate | [`sum`](#fn-sum), [`avg`](#fn-avg), [`min`](#fn-min), [`max`](#fn-max), [`count`](#fn-count), [`distinct`](#fn-distinct), [`ratio`](#fn-ratio), [`percentile`](#fn-percentile), [`avg_by`](#fn-avg-by) *(B)* |
+| aggregate | [`sum`](#fn-sum), [`avg`](#fn-avg), [`min`](#fn-min), [`max`](#fn-max), [`count`](#fn-count), [`distinct`](#fn-distinct), [`ratio`](#fn-ratio), [`percentile`](#fn-percentile), [`avg_by`](#fn-avg-by) |
 | time intelligence | [`ytd`](#fn-ytd), [`mtd`](#fn-mtd), [`qtd`](#fn-qtd), [`prior_period`](#fn-prior-period), [`same_period_last_year`](#fn-same-period-last-year), [`running`](#fn-running), [`fiscal_ytd`](#fn-fiscal-ytd) *(B)* |
 | windows | [`lag`](#fn-lag), [`lead`](#fn-lead), [`rank`](#fn-rank), [`dense_rank`](#fn-dense-rank), [`percent_rank`](#fn-percent-rank), [`moving_avg`](#fn-moving-avg), [`moving_sum`](#fn-moving-sum), [`moving_min`](#fn-moving-min), [`moving_max`](#fn-moving-max), [`cumulative`](#fn-cumulative) |
 | balances | [`last`](#fn-last) *(B)*, [`first`](#fn-first) *(B)*, [`opening`](#fn-opening) *(B)*, [`closing`](#fn-closing) *(B)*, [`avg_over`](#fn-avg-over) *(B)* |
-| filter context | [`calc`](#fn-calc) *(B)*, [`share_of`](#fn-share-of) *(B)*, [`parent_of`](#fn-parent-of) *(B)* |
+| filter context | [`calc`](#fn-calc), [`share_of`](#fn-share-of), [`parent_of`](#fn-parent-of) |
 | time travel | [`as_of`](#fn-as-of) *(B)*, [`shift_date`](#fn-shift-date) *(B)*, [`asof`](#fn-asof) *(B)* |
 | measure reference | [`measure`](#fn-measure) |
 
@@ -742,9 +809,9 @@ The continuous p-quantile of x in the group (p between 0 and 1): 0.5 is the medi
 <a id="fn-avg-by"></a>
 #### `avg_by(agg, by=[fields])`
 
-*Scopes: aggregate · returns: decimal · since B* — **arrives in wave B**: refused with `DRS-9129` until then
+*Scopes: aggregate, context · returns: decimal · since B*
 
-A two-level aggregate: agg per value of by, then the average of those (the explicit iteration DEL has instead of DAX context transition).
+A two-level aggregate: agg per value of by (within each group of the answer), then the average of those values (the explicit iteration DEL has instead of DAX context transition).
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
@@ -756,7 +823,9 @@ A two-level aggregate: agg per value of by, then the average of those (the expli
 | `avg_by(sum(trades.mtm), by=[trades.tradeDate])` | the average daily MTM |
 | `avg_by(count(trades), by=[trades.book])` | trades per book, on average |
 
+* **None:** Groups of by whose aggregate is None are left out of the average.
 * **No rows:** None when no group of by has rows.
+* **Masked values:** A masked field in by is refused (DRS-9161): the inner groups would split on hidden values.
 
 ### Time intelligence
 
@@ -1207,36 +1276,40 @@ The average over the dates of the group of the aggregate per date (an average da
 <a id="fn-calc"></a>
 #### `calc(agg, where=..., ignore=[...] | ALL, keep=[...], via='rel_id')`
 
-*Scopes: aggregate, context · returns: the type of `agg` · since B* — **arrives in wave B**: refused with `DRS-9129` until then
+*Scopes: aggregate, context · returns: the type of `agg` · since B*
 
-The aggregate in an edited filter context: add conditions (where=), drop query and group filters on fields (ignore=, or ALL), keep only some (keep=), or follow an inactive relationship (via=). Security is never in scope.
+The aggregate in an edited filter context: add conditions (where=, a row condition ANDed to the aggregate's), drop the query's and the group's filters on some fields (ignore=[...]) or on all (ignore=ALL), drop every filter except those on some fields (keep=[...]), or follow an inactive relationship (via='r_5', the active one for the same pair switched off). Security is never in scope: ignore=ALL means everything you may see.
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
 | `agg` | aggregate | required |  |
 | `where` | boolean | `None` | keyword only: `where=...` |
-| `ignore` | fields | `[]` | keyword only: `ignore=...` |
+| `ignore` | fields-or-all | `[]` | keyword only: `ignore=...` |
 | `keep` | fields | `[]` | keyword only: `keep=...` |
 | `via` | string-literal | `None` | keyword only: `via=...` |
 
 | Example | What it says |
 |---|---|
-| `calc(measure('MTM'), ignore=[desks.name])` | MTM ignoring the desk slicer |
+| `calc(measure('MTM'), ignore=[desks.name])` | MTM ignoring the desk slicer and the desk of the row |
+| `calc(sum(trades.mtm), where=trades.status == 'Live')` | MTM of the live trades, whatever else is filtered |
+| `calc(measure('MTM'), keep=[desks.region])` | MTM of the whole region of the row |
 | `calc(measure('MTM'), via='r_5')` | MTM along the settlement-date relationship |
 
-* **Masked values:** ignore=ALL means all the rows you may see, never more.
+* **No rows:** None (a count: 0) when the edited context has no rows.
+* **Masked values:** ignore=ALL means all the rows you may see, never more; a masked field in ignore= or keep= is never a group (it is not grouped on).
+* **Types:** Nesting of calc, share_of, parent_of and as_of is at most three deep (DRS-9127).
 
 <a id="fn-share-of"></a>
 #### `share_of(agg, over=[...] | ALL)`
 
-*Scopes: aggregate, context · returns: decimal · since B* — **arrives in wave B**: refused with `DRS-9129` until then
+*Scopes: aggregate, context · returns: decimal · since B*
 
-The aggregate divided by itself over a coarser group (over=ALL is the grand total you may see).
+The aggregate divided by itself with the fields of over ignored (the same as agg / calc(agg, ignore=over)): over=ALL is the share of the grand total you may see, over=[books.name] a book's share within the rest of its group.
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
 | `agg` | aggregate | required |  |
-| `over` | fields | required | keyword only: `over=...` |
+| `over` | fields-or-all | required | keyword only: `over=...` |
 
 | Example | What it says |
 |---|---|
@@ -1244,13 +1317,14 @@ The aggregate divided by itself over a coarser group (over=ALL is the grand tota
 | `share_of(measure('MTM'), over=[books.name])` | a book's share within its desk |
 
 * **None:** None when the coarser total is 0 or None.
+* **Masked values:** Of what you may see: the total never includes rows your row rules hide.
 
 <a id="fn-parent-of"></a>
 #### `parent_of(agg, hierarchy='name')`
 
-*Scopes: aggregate, context · returns: decimal · since B* — **arrives in wave B**: refused with `DRS-9129` until then
+*Scopes: aggregate, context · returns: decimal · since B*
 
-The aggregate as a share of its parent level in a hierarchy of the model.
+The aggregate as a share of its parent level in a hierarchy of the model: the deepest level of the hierarchy in the answer is ignored (with the levels below it), so each row is divided by its parent's total.
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
@@ -1262,7 +1336,8 @@ The aggregate as a share of its parent level in a hierarchy of the model.
 | `parent_of(measure('MTM'), hierarchy='Desk and book')` | a book's share of its desk |
 | `parent_of(measure('Notional'), hierarchy='Region')` | a country's share of its region |
 
-* **None:** None at the top level.
+* **None:** None at the top level, and when no level of the hierarchy is a field of the answer; None when the parent's total is 0.
+* **Types:** hierarchy names a hierarchy of the model (DRS-9152 otherwise).
 
 ### Time travel
 

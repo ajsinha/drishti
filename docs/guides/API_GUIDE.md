@@ -1645,6 +1645,8 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9025 | 429 | Query busy | Too many queries at once for the server (`max-concurrent`) or the user (`max-concurrent-per-user`) |
 | DRS-9026 | 502 | Query source | A table's connector is not running, or is not a SQL store for a `direct` table |
 | DRS-9027 | 500 | Query engine | The engine failed on the compiled query; the message says how |
+| DRS-9028 | 413 | Query memory | (wave B scale) The query would need more than `drishti.bi.exec.max-memory-mb` on the Java tier: group by less, filter, or ask a rollup |
+| DRS-9029 | 413 | Query cost | (wave B scale) The planner's estimate of rows read is over the query's budget (`options.budget.rows`, else its work class's); the message has the estimate and the fix (a date filter, a rollup) |
 | DRS-9030 | 422 | Report invalid | The report YAML is malformed, or a key, id, grid position, filter or setting is not valid (the problem names the path of the key); publishing such a report is refused with it |
 | DRS-9031 | 422 | Report reference | A field, measure, hierarchy, page, bookmark or slicer the report names does not exist in its dataset or in the report |
 | DRS-9032 | 422 | Report visual | A visual is built wrongly: a well it does not have, a measure in a field well or a field in a measure well, a required well empty, too many items in a well |
@@ -1678,12 +1680,12 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9120 | 422 | Model invalid | Publishing a data model whose Check has an error (`DRS-9120` to `DRS-9129` in the problem list, [BI_MODEL_SPEC.md section 2.11](../architecture/BI_MODEL_SPEC.md#211-model-problems)) |
 | DRS-9126 | 409 | Breaking change | A published model or dataset loses a measure, column or relationship (by stable id or name), makes a relationship inactive or changes a grain key without a new major version; or the version goes down |
 | DRS-9127 | 422 | Expression | An expression that is not DEL v2 (a construct Python has and DEL refuses, the old syntax once refused), or that does not fit its scope, its types or the function catalogue; a model measure that does not compile ([EXPRESSIONS.md](EXPRESSIONS.md#7-problems-and-their-fixes)) |
-| DRS-9129 | 422 | Later wave | A key, function or value a later wave builds (`calc`, `share_of`, `param.x`, `ALL`, calculation groups: wave B) |
+| DRS-9129 | 422 | Later wave | A key, function or value a later wave builds (user functions `fn.x`: wave C) |
 | DRS-9132 | (warning) | Hidden measure still reachable | Check: a measure hidden for some roles reads columns they still see (a default measure or a `define` reaches the number); the message lists the columns to hide too |
 | DRS-9163 | 422 | Not available to your role | A field or measure hidden for the caller's roles (`hidden-for`), on every endpoint (a report keeps this code); its definition, columns and who may see it are never said |
 | DRS-9131 | (warning) | Roles without a rule | Check names the readers of a dataset that no row rule of the model names: they see no rows (`meta.noAccess` in their answers) |
 | DRS-9130 | 409 | Security safeguard | A model where a role restricted by a row rule elsewhere would see every row of a dataset with no rule: give that dataset a rule, or write `may-see-all: { <alias>: [<role>] }` (audited `bi-model-may-see-all`) |
-| DRS-9150 | 422 | Model query shape | An unknown key, a wrong type, `mq` missing or not 1, two time forms, `params` before wave W6 |
+| DRS-9150 | 422 | Model query shape | An unknown key, a wrong type, `mq` missing or not 1 or 2, two time forms, `params`, `calc` or `perspective` with `mq: 1`, an `options.budget` that is not whole numbers from 1 |
 | DRS-9151 | 404 | Model not found | No model (or dataset, for `dataset:<name>`) of that name and version the caller may read, a retired major, or a model whose Check has errors |
 | DRS-9152 | 422 | Unknown name | A field, measure, hierarchy or stable id the model lacks (with `fix` when a near name exists) |
 | DRS-9153 | 422 | Outside the contract | A field or measure the model's `contract` does not expose (with the deprecation and `fix` when deprecated) |
@@ -1696,6 +1698,9 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9160 | 422 | Repeats rows | A row extract (`shape: rows`) with fields of two facts |
 | DRS-9161 | 403 | Masked field | A filter, sort or `top` on a field masked for the caller (the body also names `DRS-9021`; `fix` offers the dataset's key) |
 | DRS-9162 | 422 | Python measure | A Python measure in a grouped query (a python visual runs it) |
+| DRS-9164 | 422 | Parameter | (`mq: 2`) A `params` value the model does not take: an unknown parameter, the wrong kind, outside `min`..`max`, not one of its `values`, a field parameter's value not one of its `fields`, or `param.x` in `select.fields` that is not a field parameter |
+| DRS-9165 | 422 | Calculation group | (`mq: 2`) A `calc` group or item the model does not have (with `fix`: its groups or items), or a Python measure under a calculation group |
+| DRS-9166 | 422 | Filter context | A filter-context or time function that cannot be planned: `via=` names no relationship, `parent_of` no hierarchy, `as_of` a date that is not fixed before the query (`date('…')`, `asof()`, `shift_date(asof(), n)`), contexts nested more than three deep through the measures they name, a context where none can be (a rollup, a live aggregate) |
 | DRS-9190 | 422 | Not converted | The expression converter could not keep the meaning of an old-syntax expression; it is left as it was (`POST /bi/expr/convert` lists it under `problems`) |
 | DRS-9170 | 422 | SQL syntax | Not a Drishti SQL statement: a syntax error (with its position), more than one statement, or DDL/DML/`ATTACH`/`COPY`/`PRAGMA`/`SET` (the dialect is read-only) |
 | DRS-9171 | 422 | SQL name | A table that is not an alias of the model, a column it does not have for the caller (a hidden column is not found), a column of a table the statement does not read, or a bare name in two tables |
@@ -1711,6 +1716,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9181 | 429 | Server subscriptions | `drishti.bi.mq.max-subscriptions` standing queries are open already |
 | DRS-9182 | 429 | Your subscriptions | `drishti.bi.mq.max-subscriptions-per-user` standing queries of yours are open already |
 | DRS-9183 | 422 | Past as-of | Subscribing to a query as of a past date, which never changes: ask it once |
+| DRS-9184 | 503 | Shard owner unreachable | (wave B scale, several Java nodes) The node that owns the model's shard could not be reached to forward a subscription; retry after `Retry-After` |
 
 `DRS-5003` (503, "backend unreachable") and `DRS-9404` (404, an unknown Drishti Elements module or script) are raised by the console, never by the server, so they are not in this table. `DRS-8006` is in the table for completeness: the console raises it, the server never does. Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
 (for example `DRS-2004` for a `.sutra.md` or plain `.yaml` file in a Sutra folder, `DRS-2009` for a missing or
@@ -1876,7 +1882,7 @@ POST /api/v1/bi/mq  {"mq":1,"model":"loop-model@1","select":{"measures":["Total"
 | `POST` | `/bi/models/{id}/query` | the same with the model in the path (the body has no `model`; `mq` may be left out) |
 | `POST` | `/bi/mq/validate` | validation steps 1 to 9 without reading data: `{valid, model, warnings, currencyGuard, query, request, totals}` (`request` is the engine request it would run: a drill already a field and `eq` filters) or the refusal |
 | `GET` | `/bi/models` | the models the caller may read, their own draft models included: `{models: [{id, name, version, title, status, kind: model \| implicit \| compat, draft?, owner?, workspace?, query?}]}` (`draft`, `owner` and `workspace` for model items; `query` is what to put in `model:` for a dataset) |
-| `GET` | `/bi/models/{id}/describe` | what a designer, an AI or a client needs to write a query, as the caller sees it: `{id, name, version, implicit, compat, title, lifecycle, datasets[{alias, dataset, version, role, mode, fields[{field, id, type, role, meaning, references, unit, format, masked, description}]}], relationships[], measures[{name, id, expr, format, additive, currency, implicit, masked}], hierarchies, contract, ai}`; masked fields marked, hidden ones (`hidden-for`) absent |
+| `GET` | `/bi/models/{id}/describe` | what a designer, an AI or a client needs to write a query, as the caller sees it: `{id, name, version, implicit, compat, title, lifecycle, datasets[{alias, dataset, version, role, mode, fields[{field, id, type, role, meaning, references, unit, format, masked, description}]}], relationships[], measures[{name, id, expr, format, additive, currency, implicit, masked}], hierarchies, calcGroups[{name, precedence, description, items[{name, expr}]}], parameters[{name, kind, title, description, default, min, max, step, values, fields}], calendar{holidays, fiscalYearStart}, fx{rates, from, to, rate, date, base}, contract, ai}` (wave B: `calcGroups`, `parameters`, `calendar`, `fx`); masked fields marked, hidden ones (`hidden-for`) absent |
 | `GET` | `/bi/models/{id}/consumers` | what reads the model (`{id}` an item id, `name@major` or `dataset:name`): `{consumers[{kind, id, title, status, owner, workspace}], hidden}` (the ones the caller may not see are counted in `hidden`); the same list is `usedBy` in `describe` |
 | `POST` | `/bi/models/{ref}/preview-as` | body `{role, query?}` (`query` a model query without `model`; default: no fields, no measures): the answer as a reader holding **only that role** would get it (the role's access to the model, row rules, masks by its raw power, hidden fields; no user attributes, so a rule on `user.desks` gives no rows), plus `previewAs: {role, attributes, by}`; a refusal the role would get is `refused: [{code, path, message}]` with no rows (never the asker's own answer). A bi-admin or the model's owner only (`403 DRS-9002` otherwise); audited `bi-model-preview-as` |
 | `GET` | `/bi/models/roles` | the roles that may use BI, for the designer's role picker; `?model=<ref>` keeps only the roles that can read that model's datasets |
@@ -1891,8 +1897,12 @@ POST /api/v1/bi/mq  {"mq":1,"model":"loop-model@1","select":{"measures":["Total"
 **The query** (every key, [BI_MODEL_SPEC.md section 5.1](../architecture/BI_MODEL_SPEC.md#51-the-object)): `mq: 1`, `model`, `define` (local measures), `select: {fields, measures}`
 (names or stable ids), `where` (the dataset query's operators plus `relative` with a `window` such as `last-30-days` and `top` with `n`, `by`, `dir`), `having` (a measure
 against one number), `time` (one of `as-of`, `window: {from, to}`, `window: {last: 1h}`, `live: true`), `sort`, `limit` (default `drishti.bi.mq.grouped-limit`), `totals`
-(`grand`, `subtotals` or `{levels}`: only the measures that do not add up are asked per level), `drill: {hierarchy, path}`, `shape: grouped | rows`, `params` (wave W6: empty),
-`options: {layer, explain, format}`. Validation runs ten steps in order before any data is read; the first step that fails answers with all its problems
+(`grand`, `subtotals` or `{levels}`: only the measures that do not add up are asked per level), `drill: {hierarchy, path}`, `shape: grouped | rows`,
+`options: {layer, explain, format}`. **`mq: 2`** (wave B, [BI_DESIGN.md section 3.6](../architecture/BI_DESIGN.md#36-mq-the-one-query-object-and-where-all-four-languages-meet))
+adds `params: {name: value}` (what-if values bound as `param.name` in the model's measures, and field parameters: `param.breakdown` in `select.fields` is the field
+the value names; defaults when left out; `DRS-9164`), `calc: {Group: Item}` (calculation groups applied to every selected measure, the answer keeps the measure's
+name; `DRS-9165`), `perspective: <name>` (names outside it are `DRS-9153`) and `options.budget: {millis, rows}`; `mq: 1` with one of these keys is `DRS-9150`. The
+parameters' values, the items applied and the local measures are part of the plan hash, so of every cache key. Validation runs ten steps in order before any data is read; the first step that fails answers with all its problems
 ([section 5.3](../architecture/BI_MODEL_SPEC.md#53-validation-before-any-data-is-read)). In W1 the currency guard (`DRS-9158`) and the semi-additive rule (`DRS-9159`) are warnings in
 `meta.warnings`, not refusals.
 

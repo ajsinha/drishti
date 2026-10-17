@@ -23,6 +23,20 @@
   call fails with `DRS-5003`, a banner ("Server not reachable - retrying...", Retry now) polls the console with a 2 s to 30 s backoff and, when
   the server is back, says "Connected again" and reloads the page (never one with unsaved edits: it offers Reload). The sign-in page says so too.
 
+### 2.3.0 (in progress) — Calculation, live and scale (wave B, server lane)
+
+- **Server: the filter context (wave B task 1).** DEL's `calc(agg, where=, ignore=[…] | ALL, keep=[…], via='r_5')`, `share_of(agg, over=[…] | ALL)`,
+  `parent_of(agg, hierarchy=)` and `avg_by(agg, by=[…])` are built (catalogue `status: built`, EXPRESSIONS.md regenerated): `where=` alone restricts
+  the aggregates; the others are **context sub-queries** (the same compiler, as the same reader, at the coarser grain, left-joined on the fields both
+  keep), so security is never in scope and `ignore=ALL` is "everything you may see"; nesting at most three deep (`DRS-9127`, `DRS-9166`); a measure's
+  `via:` key is `calc(…, via=)`. The plan has `Context` nodes (hash, explain); no rollup answers a context. **Model `calc-groups`** (items over
+  `SELECTED`, precedence) and **`parameters`** (what-if `number`/`integer`/`text`/`date`/`boolean` as `param.x`, and `field` parameters) are read,
+  checked and described (`describe`: `calcGroups`, `parameters`, `calendar`, `fx`). **MQ v2** (`mq: 2`): `params`, `calc: {Group: Item}`,
+  `perspective`, `options.budget`; the values, items and local measures are part of the plan hash (a local measure no longer shares a cache entry
+  with another of the same name). New codes `DRS-9164` (parameter), `DRS-9165` (calculation group), `DRS-9166` (context), and reserved for the scale
+  task `DRS-9028`, `DRS-9029`, `DRS-9184`. Property test: % of total, ignore-a-slicer, keep, where and nested contexts equal an independent
+  computation for random fields, filters and readers; a YTD calculation group over ten measures and a what-if shock equal theirs.
+
 ## 2.2.0 — Datasets and data models rooted in packs, a Python-like expression language, read-only SQL, one query plan (2026-10-17)
 
 - **Server: the model layer's loose ends from the wave A console lane and its QA (wave A).** The **AI authoring hooks work on models**: Describe a

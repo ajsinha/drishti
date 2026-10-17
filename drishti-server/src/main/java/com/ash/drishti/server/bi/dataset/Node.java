@@ -43,6 +43,32 @@ public sealed interface Node {
     Set<String> ANALYTIC = Set.of("lag", "lead", "rank", "dense_rank", "percent_rank", "moving_avg", "moving_sum", "moving_min", "moving_max");
     /** The analytic functions that run along an order column (the rest rank by the aggregate itself). */
     Set<String> ORDERED = Set.of("lag", "lead", "moving_avg", "moving_sum", "moving_min", "moving_max");
+    /**
+     * Wave B (docs/architecture/BI_DESIGN.md sections 3.3.4 and 3.3.5): functions over an aggregate in an edited filter context or at other dates. Their
+     * keyword arguments are kept as pseudo-calls {@code Call("=where", [cond])}, {@code Call("=ignore", [refs or ALL])} (see {@link #keyword}).
+     */
+    Set<String> CONTEXT = Set.of("calc", "share_of", "parent_of", "avg_by", "as_of", "last", "first", "opening", "closing", "avg_over", "convert");
+    /** Scalars of wave B: dates that move ({@code shift_date}), the query's as-of date ({@code asof}), FX rates ({@code fx}). */
+    Set<String> SCALARS_B = Set.of("shift_date", "asof", "fx");
+    /** The prefix of a keyword argument kept in the tree. */
+    String KEYWORD = "=";
+    /** Keyword arguments that name fields a context drops or keeps (or {@code ALL}): the expression does not read them, so walks of the tree skip them. */
+    Set<String> UNREAD = Set.of("=ignore", "=keep", "=over", "=hierarchy", "=via", "=period", "=unit", "=to", "=at");
+
+    /** The value of a keyword argument of a call ({@code null} when absent): its one item, or for a list keyword the pseudo-call itself. */
+    static Call keyword(Call c, String name) {
+        for (Node a : c.args()) {
+            if (a instanceof Call k && k.function().equals(KEYWORD + name)) {
+                return k;
+            }
+        }
+        return null;
+    }
+
+    /** The positional arguments of a call (its keyword pseudo-calls left out). */
+    static List<Node> positional(Call c) {
+        return c.args().stream().filter(a -> !(a instanceof Call k && k.function().startsWith(KEYWORD))).toList();
+    }
 
     /** Whether the function is worked out over the result rows, not inside the group. */
     static boolean isWindow(String f) {
@@ -92,7 +118,7 @@ public sealed interface Node {
             return true;
         }
         return switch (n) {
-            case Call c -> c.args().stream().anyMatch(a -> anyMatch(a, test));
+            case Call c -> !UNREAD.contains(c.function()) && c.args().stream().anyMatch(a -> anyMatch(a, test));
             case Bin b -> anyMatch(b.left(), test) || anyMatch(b.right(), test);
             case Un u -> anyMatch(u.operand(), test);
             case In i -> anyMatch(i.value(), test) || i.items().stream().anyMatch(a -> anyMatch(a, test));
@@ -105,7 +131,11 @@ public sealed interface Node {
     static void walk(Node n, java.util.function.Consumer<Node> visit) {
         visit.accept(n);
         switch (n) {
-            case Call c -> c.args().forEach(a -> walk(a, visit));
+            case Call c -> {
+                if (!UNREAD.contains(c.function())) {
+                    c.args().forEach(a -> walk(a, visit));
+                }
+            }
             case Bin b -> {
                 walk(b.left(), visit);
                 walk(b.right(), visit);

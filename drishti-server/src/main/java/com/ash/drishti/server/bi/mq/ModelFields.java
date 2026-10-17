@@ -43,14 +43,49 @@ public final class ModelFields implements Fields {
     private final SqlCompiler.Masks masks;
     private final Set<String> hidden;
     private final Map<String, String> ids;
+    private final Map<String, DelType> params;
 
     ModelFields(Dataset flat, String current, SqlCompiler.Masks masks, Set<String> hidden, Map<String, String> ids) {
+        this(flat, current, masks, hidden, ids, Map.of());
+    }
+
+    ModelFields(Dataset flat, String current, SqlCompiler.Masks masks, Set<String> hidden, Map<String, String> ids, Map<String, DelType> params) {
         this.flat = flat;
         this.resolver = new Resolver(flat);
         this.current = current;
         this.masks = masks;
         this.hidden = hidden;
         this.ids = ids;
+        this.params = params;
+    }
+
+    /** The DEL types of a model's parameters ({@code param.name}): a what-if number, text, date or boolean; a field parameter is not a value. */
+    static Map<String, DelType> paramTypes(com.ash.drishti.server.bi.layer.ModelDef def) {
+        Map<String, DelType> out = new java.util.LinkedHashMap<>();
+        def.calculation().parameters().forEach((name, p) -> {
+            DelType t = switch (p.kind()) {
+                case "number" -> DelType.DECIMAL;
+                case "integer" -> DelType.INTEGER;
+                case "text" -> DelType.STRING;
+                case "date" -> DelType.DATE;
+                case "boolean" -> DelType.BOOLEAN;
+                default -> null;
+            };
+            if (t != null) {
+                out.put(name, t);
+            }
+        });
+        return out;
+    }
+
+    @Override
+    public Optional<DelType> param(String name) {
+        return Optional.ofNullable(params.get(name));
+    }
+
+    @Override
+    public List<String> params() {
+        return List.copyOf(params.keySet());
     }
 
     /** The fields of a model bound to the reader; {@code alias} is the dataset whose row is in context (row and rule scope), or null. */
@@ -61,7 +96,7 @@ public final class ModelFields implements Fields {
         if (current == null && alias == null && v.flat().tables().size() == 1) {
             current = v.flat().tables().keySet().iterator().next();
         }
-        return new ModelFields(v.flat(), current, b.context().masks(), hidden, Flattener.measureIds(v.measureDefs()));
+        return new ModelFields(v.flat(), current, b.context().masks(), hidden, Flattener.measureIds(v.measureDefs()), paramTypes(v.def()));
     }
 
     private static void hiddenOf(String alias, ResolvedDataset r, Set<String> roles, Set<String> out) {

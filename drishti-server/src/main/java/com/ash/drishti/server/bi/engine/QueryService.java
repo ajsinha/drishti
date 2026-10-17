@@ -389,7 +389,30 @@ public final class QueryService implements AutoCloseable {
             }
         }));
         java.util.Collections.sort(dates);
-        SqlCompiler.Compiled c = probe.compile(plan, reader, from, cap, components, timeContext(q, dates));
+        SqlCompiler.MoreSources more = (t, lo, hi) -> {
+            if (from.containsKey(t) && java.util.Objects.equals(lo, q.from()) && java.util.Objects.equals(hi, q.to()) && rollup == null) {
+                return from.get(t);
+            }
+            Dataset.Table table = d.tables().get(t);
+            if (table == null) {
+                throw new DrishtiException(ErrorCode.QUERY_INVALID, "no table '" + t + "' in this model");
+            }
+            if (who.denied().contains(t)) {
+                return TableRelations.cached(d, table, List.of(), Dialect.DUCKDB);
+            }
+            boolean sameDates = java.util.Objects.equals(lo, q.from()) && java.util.Objects.equals(hi, q.to());
+            if (table.isLive() && liveTables.properties().enabled() || table.isHistory()) {
+                if (!sameDates) {
+                    throw new DrishtiException(ErrorCode.MQ_TIME, "'" + t + "' is a live table: it holds the current state, not " + lo + " (an as_of or an opening balance needs a snapshot dataset)");
+                }
+                LiveTable lt = liveTables.ensure(ds.key(), d, table.isHistory() ? d.tables().get(table.of()) : table, sampler(ds));
+                return table.isHistory() ? lt.history().orElseThrow().source(d, Dialect.DUCKDB) : lt.source(d, Dialect.DUCKDB);
+            }
+            Layers.Layer layer = "live".equals(table.mode()) ? layers.live(ds.key(), table) : layers.columns(ds.key(), table, lo, hi);
+            layer.warnings().forEach(w -> warnings.add(t + (sameDates ? "" : " at " + lo) + ": " + w));
+            return TableRelations.cached(d, table, layer.files(), Dialect.DUCKDB);
+        };
+        SqlCompiler.Compiled c = probe.compile(plan, reader, from, cap, components, timeContext(q, dates), more);
         AnalyticEngine.Answer a = engine.query(c.sql(), c.params(), cap, props.timeout());
         return finish(ds, q, c, a, layerName, rollup == null ? null : rollup.name(), dates, warnings, explain);
     }
@@ -482,8 +505,8 @@ public final class QueryService implements AutoCloseable {
      * exactly one row of the dimension, so the rule keeps or drops it whole, as it would each fact row.
      */
     Dataset.Rollup route(Dataset d, SqlCompiler.Plan plan, QueryRequest q, Map<String, LiveTable> inMemory) {
-        if (d.rollups().isEmpty() || plan.measures().isEmpty() || plan.multiFact()) {
-            return null;
+        if (d.rollups().isEmpty() || plan.measures().isEmpty() || plan.multiFact() || SqlCompiler.usesContext(d, plan)) {
+            return null;                                                       // a filter context or a balance reads rows a rollup does not hold
         }
         String table = plan.tables().size() == 1 ? plan.tables().iterator().next() : plan.base();
         Set<String> joinedOn = ruleOnlyJoins(d, plan, table);
@@ -604,7 +627,9 @@ public final class QueryService implements AutoCloseable {
             from.put(t, TableRelations.direct(d, d.tables().get(t), target, dialect, q.from(), q.to()));
         }
         int cap = q.limit() != null ? Math.min(q.limit(), props.maxRows()) : props.maxRows() + 1;
-        SqlCompiler.Compiled c = compiler.compile(p, reader, from, cap, null, timeContext(q, List.of()));
+        final SqlTarget store = target;
+        SqlCompiler.MoreSources more = (t, lo, hi) -> TableRelations.direct(d, d.tables().get(t), store, dialect, lo, hi);
+        SqlCompiler.Compiled c = compiler.compile(p, reader, from, cap, null, timeContext(q, List.of()), more);
         long t0 = System.nanoTime();
         AnalyticEngine.Answer a;
         try {

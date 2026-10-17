@@ -52,7 +52,17 @@ public final class Planner {
      * @param hidden the measures the answer drops (the currency guard's)
      */
     public record Input(Dataset flat, String model, String version, Map<String, Source> sources, QueryRequest main, List<PlanNode.Cond> rowConditions,
-            List<PlanNode.Cond> having, String time, boolean rows, List<List<String>> totals, Map<String, String> ids, Set<String> hidden) {}
+            List<PlanNode.Cond> having, String time, boolean rows, List<List<String>> totals, Map<String, String> ids, Set<String> hidden, Map<String, Object> binding) {
+
+        public Input {
+            binding = binding == null ? Map.of() : binding;
+        }
+
+        public Input(Dataset flat, String model, String version, Map<String, Source> sources, QueryRequest main, List<PlanNode.Cond> rowConditions,
+                List<PlanNode.Cond> having, String time, boolean rows, List<List<String>> totals, Map<String, String> ids, Set<String> hidden) {
+            this(flat, model, version, sources, main, rowConditions, having, time, rows, totals, ids, hidden, Map.of());
+        }
+    }
 
     private Planner() {}
 
@@ -81,6 +91,9 @@ public final class Planner {
             PlanNode source = new PlanNode.Filter(scans, conds);
             List<String> mine = p.measures().stream().filter(m -> measures.contains(m) || in.hidden().contains(m)).toList();   // the guard's too: the rollup must hold them
             aggregates.add(new PlanNode.Aggregate(List.of(source), p.fact(), fields, mine, null));
+            for (String m : mine) {
+                aggregates.addAll(ContextNodes.of(ds, m, scans, in.rowConditions().stream().filter(c -> p.tables().contains(alias(c.field()))).toList(), p.fact(), fields));
+            }
         }
         PlanNode node = aggregates.size() == 1 ? aggregates.get(0) : new PlanNode.Meet(aggregates, fields);
         List<String> windows = measures.stream().filter(m -> windowed(ds, m, new LinkedHashSet<>())).toList();
@@ -98,7 +111,7 @@ public final class Planner {
         }
         List<String> columns = new ArrayList<>(fields);
         columns.addAll(measures);
-        node = new PlanNode.Answer(node, columns, in.rows() ? "rows" : "grouped");
+        node = new PlanNode.Answer(node, columns, in.rows() ? "rows" : "grouped", in.binding());
         return new LogicalPlan(node, in.model(), in.version(), in.time(), in.totals(), in.ids());
     }
 

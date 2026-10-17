@@ -33,13 +33,39 @@ import java.util.Map;
  * @param where row filters, ANDed
  * @param having filters on measures, after aggregation
  * @param shape {@code grouped} (the default) or {@code rows} (an extract: no measures)
- * @param params what-if values (wave W6): refused when not empty
+ * @param params what-if and field parameter values ({@code mq: 2}, wave B): parameter name to value
+ * @param ext the other keys of {@code mq: 2}: calculation groups applied, the perspective, the budget
  */
 public record ModelQuery(int mq, String model, Map<String, String> define, List<String> fields, List<String> measures, List<Where> where, List<Having> having,
-        Time time, List<Sort> sort, Integer limit, Totals totals, Drill drill, String shape, Map<String, Object> params, Options options) {
+        Time time, List<Sort> sort, Integer limit, Totals totals, Drill drill, String shape, Map<String, Object> params, Options options, Ext ext) {
 
     public static final String GROUPED = "grouped";
     public static final String ROWS = "rows";
+
+    /**
+     * The keys {@code mq: 2} adds (docs/architecture/BI_DESIGN.md section 3.6).
+     *
+     * @param calc calculation group to the item applied to the selected measures ({@code { Time: YTD }})
+     * @param perspective the perspective whose fields and measures the query may name (names outside it are {@code DRS-9153}), or null
+     * @param budget the most time and rows the query may take ({@code options.budget}); null values: the work class's
+     */
+    public record Ext(Map<String, String> calc, String perspective, Budget budget) {
+        public static final Ext NONE = new Ext(Map.of(), null, Budget.NONE);
+
+        public Ext {
+            calc = Collections.unmodifiableMap(new LinkedHashMap<>(calc == null ? Map.of() : calc));
+            budget = budget == null ? Budget.NONE : budget;
+        }
+
+        public boolean empty() {
+            return calc.isEmpty() && perspective == null && budget.equals(Budget.NONE);
+        }
+    }
+
+    /** {@code options.budget}: milliseconds and estimated rows read; null for the work class's default. */
+    public record Budget(Long millis, Long rows) {
+        public static final Budget NONE = new Budget(null, null);
+    }
 
     public ModelQuery {
         define = Collections.unmodifiableMap(new LinkedHashMap<>(define));
@@ -49,16 +75,28 @@ public record ModelQuery(int mq, String model, Map<String, String> define, List<
         having = List.copyOf(having);
         sort = List.copyOf(sort);
         params = Collections.unmodifiableMap(new LinkedHashMap<>(params));
+        ext = ext == null ? Ext.NONE : ext;
+    }
+
+    /** A query of {@code mq: 1}'s keys (no calculation groups, perspective or budget). */
+    public ModelQuery(int mq, String model, Map<String, String> define, List<String> fields, List<String> measures, List<Where> where, List<Having> having, Time time,
+            List<Sort> sort, Integer limit, Totals totals, Drill drill, String shape, Map<String, Object> params, Options options) {
+        this(mq, model, define, fields, measures, where, having, time, sort, limit, totals, drill, shape, params, options, Ext.NONE);
     }
 
     /** The same query against another model reference (the model of {@code POST /models/{id}/query}). */
     public ModelQuery withModel(String ref) {
-        return new ModelQuery(mq, ref, define, fields, measures, where, having, time, sort, limit, totals, drill, shape, params, options);
+        return new ModelQuery(mq, ref, define, fields, measures, where, having, time, sort, limit, totals, drill, shape, params, options, ext);
     }
 
     /** The same query with other fields, filters and limit (what step 4 and step 5 of the compiler produce). */
     public ModelQuery with(List<String> fields, List<Where> where, Integer limit) {
-        return new ModelQuery(mq, model, define, fields, measures, where, having, time, sort, limit, totals, null, shape, params, options);
+        return new ModelQuery(mq, model, define, fields, measures, where, having, time, sort, limit, totals, null, shape, params, options, ext);
+    }
+
+    /** The same query with other fields and measures (field parameters resolved, calculation groups bound). */
+    public ModelQuery withSelect(List<String> fields, List<String> measures) {
+        return new ModelQuery(mq, model, define, fields, measures, where, having, time, sort, limit, totals, drill, shape, params, options, ext);
     }
 
     public boolean rows() {

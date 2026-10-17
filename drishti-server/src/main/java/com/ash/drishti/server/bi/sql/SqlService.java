@@ -120,7 +120,7 @@ public final class SqlService {
         for (SqlComposer.LeafUse l : c.leaves()) {
             ModelQuery q = l.leaf().query();
             ModelQuery timed = new ModelQuery(q.mq(), q.model(), q.define(), q.fields(), q.measures(), q.where(), q.having(), SqlBinder.time(time), q.sort(), q.limit(), q.totals(),
-                    q.drill(), q.shape(), q.params(), q.options());
+                    q.drill(), q.shape(), q.params(), q.options(), q.ext());
             leaves.add(new SqlComposer.LeafUse(l.table(), new SqlBinder.Leaf(timed, l.leaf().columns(), l.leaf().offset(), time)));
         }
         return new SqlComposer.Composite(leaves, c.sql(), c.params(), c.sensitive(), c.shape());
@@ -255,7 +255,7 @@ public final class SqlService {
     private static Compiled at(Compiled c, java.time.LocalDate date) {
         ModelQuery.Time t = new ModelQuery.Time(date, null, null, null, false);
         java.util.function.UnaryOperator<ModelQuery> dated = q -> q.time().equals(ModelQuery.Time.DEFAULT) ? new ModelQuery(q.mq(), q.model(), q.define(), q.fields(), q.measures(),
-                q.where(), q.having(), t, q.sort(), q.limit(), q.totals(), q.drill(), q.shape(), q.params(), q.options()) : q;
+                q.where(), q.having(), t, q.sort(), q.limit(), q.totals(), q.drill(), q.shape(), q.params(), q.options(), q.ext()) : q;
         if (c.leaf() != null) {
             SqlBinder.Leaf l = c.leaf();
             return new Compiled(c.sql(), c.statement(), new SqlBinder.Leaf(dated.apply(l.query()), l.columns(), l.offset(), l.time()), null);

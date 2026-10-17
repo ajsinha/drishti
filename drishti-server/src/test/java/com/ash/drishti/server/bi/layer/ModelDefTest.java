@@ -162,11 +162,22 @@ class ModelDefTest {
     }
 
     @Test
-    void laterWaveKeysAre9129() {
-        assertThat(codes(MODEL + "calc-groups:\n  Time: { items: { YTD: \"ytd(${measure}, trades.tradeDate)\" } }\n")).contains("e:DRS-9129");
-        assertThat(codes(MODEL + "parameters:\n  shock: { kind: number }\n")).contains("e:DRS-9129");
-        assertThat(codes(MODEL.replace("{ id: m_mtm, expr: \"sum(trades.mtm)\" }", "{ id: m_mtm, expr: \"sum(trades.mtm)\", via: r_1 }"))).contains("e:DRS-9129");
-        assertThat(codes(MODEL + "calc-groups: {}\nparameters: {}\n")).isEmpty();                                     // empty placeholders are fine
+    void waveBKeysAreReadAndChecked() {
+        // calculation groups, parameters, the calendar and via= are built in wave B: read, kept, and checked for their shape
+        String calc = MODEL + "calc-groups:\n  Time: { precedence: 5, items: { YTD: \"ytd(${measure}, trades.tradeDate)\", Now: SELECTED } }\n";
+        assertThat(codes(calc)).isEmpty();
+        ModelDef m = ModelDefParser.parse(calc).model();
+        assertThat(m.calculation().calcGroups().get("Time").items()).containsEntry("YTD", "ytd(SELECTED, trades.tradeDate)");
+        assertThat(m.calculation().calcGroups().get("Time").precedence()).isEqualTo(5);
+        assertThat(codes(MODEL + "calc-groups:\n  Time: { items: { YTD: \"ytd(sum(trades.mtm), trades.tradeDate)\" } }\n")).contains("e:DRS-9127");   // no SELECTED
+        assertThat(codes(MODEL + "parameters:\n  shock: { kind: number, default: 0, min: -1, max: 1 }\n")).isEmpty();
+        assertThat(codes(MODEL + "parameters:\n  shock: { kind: number }\n")).contains("e:DRS-9120");                          // no default
+        assertThat(codes(MODEL + "parameters:\n  by: { kind: field, fields: [trades.desk], default: trades.mtm }\n")).contains("e:DRS-9120");
+        assertThat(codes(MODEL + "calendars: { holidays: USNY, fiscal-year-start: 4 }\n")).isEmpty();
+        assertThat(codes(MODEL + "calendars: { fiscal-year-start: 13 }\n")).contains("e:DRS-9120");
+        assertThat(codes(MODEL.replace("{ id: m_mtm, expr: \"sum(trades.mtm)\" }", "{ id: m_mtm, expr: \"sum(trades.mtm)\", via: r_1 }"))).isEmpty();
+        assertThat(codes(MODEL.replace("{ id: m_mtm, expr: \"sum(trades.mtm)\" }", "{ id: m_mtm, expr: \"sum(trades.mtm)\", via: r_9 }"))).contains("e:DRS-9122");
+        assertThat(codes(MODEL + "calc-groups: {}\nparameters: {}\n")).isEmpty();
     }
 
     @Test

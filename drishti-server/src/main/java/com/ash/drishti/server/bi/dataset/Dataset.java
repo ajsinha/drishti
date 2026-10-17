@@ -232,7 +232,12 @@ public record Dataset(String name, int version, String title, String description
      * @param direction {@code single} (filters flow from the one side to the many side) or {@code both}; stored, queries use the join as written
      * @param active an inactive relationship is not joined by a query
      */
-    public record Relationship(String fromTable, String fromColumn, String toTable, String toColumn, String cardinality, String direction, boolean active) {
+    public record Relationship(String fromTable, String fromColumn, String toTable, String toColumn, String cardinality, String direction, boolean active, String id) {
+
+        /** A relationship without a stable id (a version-1 dataset's). */
+        public Relationship(String fromTable, String fromColumn, String toTable, String toColumn, String cardinality, String direction, boolean active) {
+            this(fromTable, fromColumn, toTable, toColumn, cardinality, direction, active, null);
+        }
 
         public String label() {
             return fromTable + "." + fromColumn + " -> " + toTable + "." + toColumn;

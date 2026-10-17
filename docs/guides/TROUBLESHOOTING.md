@@ -1309,6 +1309,8 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 | `DRS-9025` | too many queries at once, for the server (`max-concurrent`) or for you (`max-concurrent-per-user`) (HTTP 429): try again |
 | `DRS-9026` | a table's connector is not running (Admin, Connectors says why), or is not a SQL store for a `direct` table (HTTP 502) |
 | `DRS-9027` | the analytic engine failed on the compiled query (HTTP 500); the message is DuckDB's. A BI author can add `?explain=true` to see the SQL |
+| `DRS-9028` | the query needs more memory than `drishti.bi.exec.max-memory-mb` allows one query on the Java tier (HTTP 413): group by fewer fields, add a filter, or ask the model owner for a rollup |
+| `DRS-9029` | the planner estimated more rows than the query's budget (HTTP 413): add a date filter, ask a rollup's fields, or raise `options.budget.rows` (the message has the estimate) |
 | `DRS-9030` | a report's YAML or a structure in it is not valid (HTTP 422): not YAML, an unknown visual type, a grid position that does not fit the 12 columns, a duplicate id, an operator that is not one, an image from another address. The problem names the path of the key; check it in the designer's YAML tab or with `POST /api/v1/bi/reports/validate`; publishing such a report is refused with this code |
 | `DRS-9031` | a report names a field, measure, hierarchy, page, bookmark or slicer that its dataset or the report does not have (HTTP 422); the message lists what exists. A dataset that changed under a report is the usual cause |
 | `DRS-9032` | a visual is built wrongly (HTTP 422): a measure in a field well or a field in a measure well, a well the visual does not have, a required well left empty, more items than the well takes |
@@ -1372,6 +1374,9 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 | `DRS-9161` | a filter, sort or `top` on a field masked for you (HTTP 403, the body also names `DRS-9021`); `fix` offers the dataset's key, which identifies the same rows |
 | `DRS-9162` | a Python measure in a grouped model query (HTTP 422): a python visual runs it |
 | `DRS-9163` | a field or measure hidden for your roles (`hidden-for`, HTTP 422): it is not available to your role on any endpoint; ask the model's owner, or use another field |
+| `DRS-9164` | a `params` value the model does not take (HTTP 422): the message names the parameter, its kind and range; `GET /bi/models/{id}/describe` lists the parameters |
+| `DRS-9165` | a calculation group or item the model does not have (HTTP 422): `describe` lists `calcGroups`; the `fix` offers the names |
+| `DRS-9166` | a filter-context function cannot be planned (HTTP 422): `via=` must name a relationship id, `parent_of` a hierarchy, `as_of` a fixed date (`date('…')`, `asof()`, `shift_date(asof(), -1)`); contexts nest at most three deep |
 | `DRS-9190` | the expression converter (`drishti.py bi migrate --expressions`, `POST /api/v1/bi/expr/convert`) could not keep an old expression's meaning, so it left it as it was: rewrite it in DEL v2 by hand ([EXPRESSIONS.md section 10](EXPRESSIONS.md#10-the-old-syntax-and-the-converter)) |
 | `DRS-9170` | a Drishti SQL statement that is not one (HTTP 422): a syntax error at the position given, two statements, or a write (`INSERT`, `DELETE`, `CREATE`, `ATTACH`, `COPY`, `PRAGMA`, `SET` ...): the dialect is one read-only `SELECT` ([SQL.md](SQL.md)) |
 | `DRS-9171` | a table that is not one of the model's aliases, or a column it lacks for you (a hidden column is not found, on purpose); a bare column in two tables (say which); a column of a table the statement does not read (`JOIN` it) |
@@ -1387,6 +1392,7 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 | `DRS-9181` | the server holds `drishti.bi.mq.max-subscriptions` standing queries (HTTP 429) |
 | `DRS-9182` | you hold `drishti.bi.mq.max-subscriptions-per-user` standing queries (HTTP 429): end one (`DELETE /api/v1/bi/mq/subscribe/{id}`) |
 | `DRS-9183` | a subscription to an as-of date in the past (HTTP 422): it never changes, so ask it once |
+| `DRS-9184` | with several Java nodes, the node that owns the model's standing queries could not be reached (HTTP 503): retry; an operator checks `drishti.bi.cluster.nodes` and the owner's health |
 | `DRS-9404` | raised by the console only (HTTP 404): an embedding page asked for a Drishti Elements module or enhancer script the console does not ship (`/embed/v1/m/<name>.js`, or `/embed/v1/js/<name>.js` for a script that is not one of the console's enhancers); check the file name and the library version in the `<script>` tag |
 | `DRS-7016` | the picture could not be made (HTTP 503): it took longer than `snapshots.timeout`, is over `snapshots.max-bytes`, or the JDK has no font libraries (a minimal image: install the JDK's fontconfig and freetype packages); the message says which. Send without a picture, or raise the limit |
 

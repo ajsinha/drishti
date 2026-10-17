@@ -64,7 +64,7 @@ public final class MqValidator {
 
     public static Checked validate(ModelView v, ModelQuery query, Context ctx, MqProperties props) {
         // ---- 3 names and the contract
-        ModelQuery q = resolveIds(v, query);
+        ModelQuery q = MqBindings.select(v, resolveIds(v, query));            // mq: 2: field parameters, the perspective, the calculation groups named
         Dataset base = v.flat();
         Resolver resolver = new Resolver(base);
         List<MqException.Problem> out = new ArrayList<>();
@@ -110,6 +110,7 @@ public final class MqValidator {
         // ---- 4 local measures
         Dataset ds = withDefine(base, q, com.ash.drishti.server.bi.layer.Flattener.measureIds(v.measureDefs()), out);
         fail(out);
+        ds = MqBindings.bind(v, q, ds);                                        // mq: 2: what-if values bound into the measures, calculation groups applied
 
         // ---- 5 filters
         List<String> fields = new ArrayList<>(q.fields());
@@ -232,7 +233,7 @@ public final class MqValidator {
         List<ModelQuery.Having> having = q.having().stream().map(h -> new ModelQuery.Having(ids.getOrDefault(h.measure(), h.measure()), h.op(), h.values())).toList();
         List<ModelQuery.Sort> sort = q.sort().stream().map(s -> new ModelQuery.Sort(ids.getOrDefault(s.by(), s.by()), s.desc())).toList();
         return new ModelQuery(q.mq(), q.model(), q.define(), fields, measures, where, having, q.time(), sort, q.limit(), q.totals(), q.drill(), q.shape(), q.params(),
-                q.options());
+                q.options(), q.ext());
     }
 
     private static void field(Resolver r, Dataset ds, String f, String path, List<MqException.Problem> out) {

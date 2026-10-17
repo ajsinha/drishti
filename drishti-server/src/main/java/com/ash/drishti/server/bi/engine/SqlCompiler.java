@@ -54,6 +54,15 @@ public final class SqlCompiler {
     /** The FROM item of one table: SQL, including its alias, and the parameters inside it. */
     public record Source(String sql, List<Object> params) {}
 
+    /** The FROM item of a table the main query does not read, or of any table at other dates: what a filter context's sub-query reads (wave B). */
+    @FunctionalInterface
+    public interface MoreSources {
+        Source of(String table, LocalDate from, LocalDate to);
+    }
+
+    /** How deep filter-context sub-queries may nest (docs/architecture/BI_DESIGN.md section 3.3.5, rule 2). */
+    public static final int MAX_CONTEXT_DEPTH = 3;
+
     /** One output column. */
     public record Out(String name, boolean measure, boolean masked, String table) {}
 
@@ -121,10 +130,28 @@ public final class SqlCompiler {
     private final Resolver resolver;
     private final Dialect dialect;
 
+    private int depth;
+
     public SqlCompiler(Dataset ds, Dialect dialect) {
         this.ds = ds;
         this.resolver = new Resolver(ds);
         this.dialect = dialect;
+    }
+
+    /** This compiler writes a filter context's sub-query {@code d} levels down. */
+    SqlCompiler depth(int d) {
+        this.depth = d;
+        return this;
+    }
+
+    /** True when a measure (or one it names) needs a filter context, a balance or a date of wave B. */
+    public static boolean usesContext(Dataset ds, String measure) {
+        return Contexts.uses(ds, measure);
+    }
+
+    /** True when one of the plan's measures needs a filter context or a balance (wave B): no rollup answers it. */
+    public static boolean usesContext(Dataset ds, Plan p) {
+        return p.measureNames().stream().anyMatch(m -> Contexts.uses(ds, m)) || p.filters().stream().anyMatch(f -> f.measure() != null && Contexts.uses(ds, f.filter().field()));
     }
 
     // ---- plan --------------------------------------------------------------------------------------------------------
@@ -301,7 +328,7 @@ public final class SqlCompiler {
             } else if (n instanceof Node.Ref) {
                 own[0] = true;
             } else if (n instanceof Node.Call c && (Node.AGGREGATES.contains(c.function()) && !"ratio".equals(c.function()) || Node.TIME.contains(c.function())
-                    || Node.isWindow(c.function()))) {
+                    || Node.isWindow(c.function()) || Node.CONTEXT.contains(c.function()))) {
                 own[0] = true;
             }
         });
@@ -580,8 +607,16 @@ public final class SqlCompiler {
 
     /** As {@link #compile(Plan, Reader, Map, int, Map)}, with the as-of date and calendar the time-intelligence measures are worked out from. */
     public Compiled compile(Plan p, Reader reader, Map<String, Source> sources, int rowCap, Map<String, String> components, TimeWindows.Context time) {
+        return compile(p, reader, sources, rowCap, components, time, null);
+    }
+
+    /**
+     * As {@link #compile(Plan, Reader, Map, int, Map, TimeWindows.Context)}; {@code more} gives the FROM item of a table a filter context reads beyond the
+     * plan's tables or at another date (null: a context may read only the plan's tables at the query's dates).
+     */
+    public Compiled compile(Plan p, Reader reader, Map<String, Source> sources, int rowCap, Map<String, String> components, TimeWindows.Context time, MoreSources more) {
         if (p.multiFact()) {
-            return compileMulti(p, reader, sources, rowCap, time);
+            return compileMulti(p, reader, sources, rowCap, time, more);
         }
         QueryRequest q = p.query();
         SqlEmitter select = new SqlEmitter(ds, dialect, p.base(), components, reader.user()).time(time);
@@ -607,7 +642,11 @@ public final class SqlCompiler {
             items.add(expr + " AS " + Dialect.quote(f.text()));
             aliasSql.put(f.text(), f.masked() ? null : expr);
             select.windowField(f.ref(), expr, f.masked());
+            having.windowField(f.ref(), expr, f.masked());
         }
+        Contexts contexts = components == null ? new Contexts(ds, dialect, reader, sources, more, q, time, p.fields(), aliasSql, depth) : null;
+        select.contexts(contexts);
+        having.contexts(contexts);
         for (Use m : p.measures()) {
             outs.add(new Out(m.name(), true, m.masked(), null));
             if (m.masked()) {
@@ -615,6 +654,12 @@ public final class SqlCompiler {
                 notes.add("measure " + m.name() + " is masked");
             } else {
                 items.add(select.emit(m.tree(), false) + " AS " + Dialect.quote(m.name()));
+            }
+        }
+        List<String> havings = new ArrayList<>();
+        for (FilterUse f : p.filters()) {
+            if (f.measure() != null) {
+                havings.add(measureFilter(having, f.filter()));
             }
         }
         // FROM and joins
@@ -632,6 +677,10 @@ public final class SqlCompiler {
                         .append('.').append(Dialect.quote(Dataset.DATE));
             }
             fromParams.addAll(s.params());
+        }
+        if (contexts != null && !contexts.joined().isEmpty()) {
+            from.append(contexts.from(fromParams));
+            notes.add(contexts.joined().size() + " filter context" + (contexts.joined().size() == 1 ? "" : "s") + " joined on the answer's fields");
         }
         // WHERE: filters, then the row rules
         List<String> preds = new ArrayList<>();
@@ -652,12 +701,6 @@ public final class SqlCompiler {
                 ors.add(where.emit(rule, false));
             }
             preds.add("(" + String.join(" OR ", ors) + ")");
-        }
-        List<String> havings = new ArrayList<>();
-        for (FilterUse f : p.filters()) {
-            if (f.measure() != null) {
-                havings.add(measureFilter(having, f.filter()));
-            }
         }
         StringBuilder sql = new StringBuilder("SELECT ");
         boolean grouped = !p.measures().isEmpty() || !havings.isEmpty();                     // a measure filter on fields alone (a slicer under a report's
@@ -704,10 +747,10 @@ public final class SqlCompiler {
      * full-outer-joined on those fields (null equals null, so a group one fact lacks still shows with the other's figures), the measures are picked from their part,
      * and the measure filters, sort and limit are applied to the joined rows.
      */
-    private Compiled compileMulti(Plan p, Reader reader, Map<String, Source> sources, int rowCap, TimeWindows.Context time) {
+    private Compiled compileMulti(Plan p, Reader reader, Map<String, Source> sources, int rowCap, TimeWindows.Context time, MoreSources more) {
         List<Compiled> cs = new ArrayList<>();
         for (Plan part : p.parts()) {
-            cs.add(compile(part, reader, sources, Integer.MAX_VALUE, null, time));
+            cs.add(compile(part, reader, sources, Integer.MAX_VALUE, null, time, more));
         }
         Map<String, Integer> holder = new LinkedHashMap<>();
         Map<String, Out> outOf = new LinkedHashMap<>();
