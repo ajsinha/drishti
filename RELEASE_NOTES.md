@@ -46,6 +46,11 @@ read-only SQL, one query plan for everything.** (Wave A of [BI_DESIGN.md](docs/a
   drill level by level (legs, cash flows, resets, events) with a breadcrumb and the keyboard; counterparty, portfolio and
   index pages; a BI model with a dataset per level; **Load data** streams a whole file into a pack's File connector and
   checks every row. A synthetic multi-product generator (`tools/packgen/comswap_synth.py --mix`) for samples and tests.
+- **Lakes from big JSON files:** `drishti.py lake build|scan|status|maintain` streams a JSON array or JSONL file (any
+  size, memory capped by the batch) into a Delta lake partitioned by business date and any classifier columns
+  (`--partition-by PRODUCT_TYPE`), with Drishti's own Java Delta writer or the Python `deltalake`; scheduler-friendly
+  (exit codes, a lock, a run summary); the same from **Admin → Data loads → Lakes**, which binds the lake to a pack.
+- **[TOOLS.md](docs/guides/TOOLS.md):** one guide to every command-line and UI tool, with examples and scheduling.
 - **The console reconnects by itself** when the server starts late or restarts (a banner, then the page recovers).
 - **Also:** `external_lib/` (jars on the server's class path, Python modules in the console, `DRISHTI_EXTERNAL_LIB`); a
   deployed pack's Sutra opens in the designer; tutorials 10–18 rewritten for models with UI, CLI and YAML in every step.
