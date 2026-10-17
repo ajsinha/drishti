@@ -277,9 +277,11 @@
   // -- a refusal over a dataset change, and the warnings of a publish ---------------------------------------------------------
   function warnings(it) {
     var box = q('[data-warnings]'); clear(box);
-    var w = it && it.warnings || [];
+    var w = (it && it.warnings || []).slice();
+    // what a migration (2.2: rachana 1 to the model layer, the old expression syntax) could not convert: the item kept its text, and says why here
+    (it && it.migrationProblems || []).forEach(function (p) { w.push('Not migrated (' + p.step + (p.where ? ', ' + p.where : '') + '): ' + p.problem); });
     box.hidden = !w.length;
-    if (w.length) { box.appendChild(h('h2', { text: 'Heads up' })); box.appendChild(h('ul', {}, w.map(function (x) { return h('li', { text: x }); }))); }
+    if (w.length) { box.appendChild(h('h2', { text: 'Heads up' })); box.appendChild(h('ul', {}, w.map(function (x) { return h('li', { 'data-warning': /^Not migrated/.test(x) ? 'migration' : '', text: x }); }))); }
   }
   /** Publishes the dataset and rewrites the reports that use its renamed fields and measures to the new names, in one step. */
   function publishRenamed(sub) {

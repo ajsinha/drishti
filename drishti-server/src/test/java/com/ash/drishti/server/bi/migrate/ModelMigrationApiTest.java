@@ -151,6 +151,8 @@ class ModelMigrationApiTest {
         assertThat(report.publishedVersion()).isEqualTo(2);
         assertThat(store.item("it-ahead").orElseThrow().kind()).as("a draft ahead is never changed").isEqualTo("dataset");
         assertThat(call("GET", "/api/v1/bi/migrate/problems", null).path("problems").findValuesAsText("item")).contains("it-ahead");
+        assertThat(call("GET", "/api/v1/bi/items/it-ahead", null).path("migrationProblems").toString()).as("on the item's own page")
+                .contains("\"step\":\"models\"").contains("draft is ahead");
         JsonNode audit = call("GET", "/api/v1/admin/audit?limit=200", null);
         assertThat(audit.findValuesAsText("action")).contains("bi-model-migrated", "bi-item-created");
     }
