@@ -18,7 +18,7 @@
     scan       the fields of an export with their values, and the suggested --key, --date and --partition-by (tools/lake/scan.py)
     status     who holds the lake's lock, and the last runs (from <lake>/_drishti-lake)
     demo       the demo lakes of the seven packs from the committed test data, data/testdata (tools/lake/demo.py)
-    maintain   retention, compaction, checkpoints and vacuum on a schedule (tools/lake/maintain.py; options passed through)
+    maintain   retention, compaction, checkpoints and vacuum, now or on schedules; --history (tools/lake/maintain.py; options passed through)
 """
 from __future__ import annotations
 
@@ -110,4 +110,7 @@ def register(groups, add, srv) -> None:
     _mod("demo").add_arguments(dm)
     add(sub, "maintain", cmd_maintain, "lake maintain: retention, compaction, checkpoint and vacuum (tools/lake/maintain.py; its options are passed through)",
         [], "examples:\n  drishti.py lake maintain --config deploy/lake-maintenance.yaml --once --dry-run\n"
-            "  drishti.py lake maintain relayout --root data/delta --domain trading")
+            "  drishti.py lake maintain --once --tables trading/trade_endur      (the file Admin -> Lakes writes: <data>/lakes/lake-maintenance.yaml)\n"
+            "  drishti.py lake maintain --history\n"
+            "  drishti.py lake maintain relayout --root data/delta --domain trading\n"
+            "Only tables lake build built are maintained (--force-foreign overrides, with a warning). Guide: docs/admin/LAKE_MAINTENANCE.md")

@@ -101,7 +101,7 @@ python_tool_tests() {
   if command -v uv >/dev/null; then                  # the lake writers and maintenance need deltalake; uv provides it without installing
     # a hung test fails the drill (timeout exits 124) instead of blocking it: these take seconds, 10 minutes is a hang
     timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/samplegen/test_layout.py
-    timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_maintain.py 2>&1 | grep -v '^{"at"'
+    timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_maintain.py tools/lake/test_maintain_admin.py 2>&1 | grep -v '^{"at"'
     timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_demo.py
     # the real-data tools (tools/realdata) are pytest-style functions on recorded fixtures: no network, a few seconds
     timeout --kill-after=30 600 uv run -q --with pytest --with pyyaml python -m pytest -q -p no:cacheprovider tools/realdata/tests

@@ -31,11 +31,15 @@ from routes.common import ident, render
 router = APIRouter(prefix="/admin", include_in_schema=False)
 
 
-def _lakes(request: Request) -> Lakes:
-    st = request.app.state
+def lakes_of(app) -> Lakes:
+    st = app.state
     if not hasattr(st, "lakes"):
         st.lakes = Lakes(LakeSettings.from_settings(st.settings, Path(__file__).resolve().parent.parent))
     return st.lakes
+
+
+def _lakes(request: Request) -> Lakes:
+    return lakes_of(request.app)
 
 
 def _err(e: LakeError) -> JSONResponse:
@@ -63,7 +67,12 @@ async def page(request: Request):
         figures = await asyncio.to_thread(lakes.figures)
     except Exception:                     # noqa: BLE001 - the screen opens without the table rather than not at all
         figures = []
-    return render(request, "admin/lakes.html", cfg=lakes.cfg.as_dict(), status=status, runs=lakes.runs(10), tables=figures)
+    try:
+        from core.lake_maint import maintenance
+        maint = await asyncio.to_thread(maintenance(request.app).overview, figures)
+    except Exception:                     # noqa: BLE001 - without the tools folder or with a broken file the tables are listed without Maintain
+        maint = None
+    return render(request, "admin/lakes.html", cfg=lakes.cfg.as_dict(), status=status, runs=lakes.runs(10), tables=figures, maint=maint)
 
 
 @router.get("/api/lakes/targets")

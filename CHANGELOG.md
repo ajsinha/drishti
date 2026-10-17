@@ -17,6 +17,12 @@
 
 ## Unreleased
 
+- **Lake maintenance in Admin → Lakes.** Tick tables, **Dry run** (files and size before → after, dates retention drops, files vacuum
+  removes) or **Maintain now** in the background with progress and cancel; settings per table and schedules (day-and-time picker or cron
+  text, or after every build; a run missed while down runs once at start) saved in `<data>/lakes/lake-maintenance.yaml`, the file
+  `lake maintain` now reads by default; history on the page and in `lake maintain --history`. Only tables `lake build` made are
+  maintained (others are their publisher's; `--force-foreign` overrides, with a warning); changed tables send the data-load signal.
+  [LAKE_MAINTENANCE.md](docs/admin/LAKE_MAINTENANCE.md)
 - **About this page opens the Sutra.** In *Why the page looks like this*, the Sutra that drew the page is a link that opens it in the
   designer with the record on screen as its sample; the Sutras not chosen open there too.
 - **How this view was built links on.** The panel's Sutra opens in the designer and its Source opens the connector's page.

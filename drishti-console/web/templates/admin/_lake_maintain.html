@@ -1,0 +1,113 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Admin -> Lakes: the tables, and Maintain over them (core/lake_maint.py, admin-lake-maintain.js). #}
+{% macro settings_text(s) -%}
+{{ "keep all dates" if s["keep-business-days"] is none else ("{:,}".format(s["keep-business-days"]) ~ " business days") }} · {{ s["target-file-mb"] }} MB files · {{ "checkpoint" if s.checkpoint else "no checkpoint" }} · {{ "no vacuum" if s["vacuum-hours"] is none else ("vacuum " ~ s["vacuum-hours"] ~ " h") }}
+{%- endmacro %}
+<section class="mt" data-maint aria-labelledby="lkTables">
+  <h2 class="lk-h2" id="lkTables">The lakes <a class="emb-help" href="/help/lake-maintenance" aria-label="Help: lake maintenance" title="Help: lake maintenance">?</a></h2>
+  <p class="text-muted-d mt-intro">Tick the tables to maintain: retention drops old business dates, compaction merges small files, a checkpoint shortens the log,
+    vacuum removes files no longer used. <strong>Dry run</strong> shows what would change; <strong>Maintain now</strong> does it in the background, one run at a time per lake.
+    Only tables {{ PRODUCT }}'s lake build made can be maintained; a table another system publishes is its publisher's to maintain.</p>
+  {% if maint %}
+  <div class="mt-bar" role="toolbar" aria-label="Choose tables">
+    <label class="mt-check"><input type="checkbox" data-mt-all> Select all</label>
+    <label class="loads-field mt-domain">Select a domain<select class="studio-in" data-mt-domain><option value="">—</option>
+      {% for d in maint.tables | selectattr("owned") | map(attribute="domain") | unique | sort %}<option value="{{ d }}">{{ d }}</option>{% endfor %}</select></label>
+    <span class="mt-count" data-mt-count aria-live="polite">No table selected</span>
+    <button type="button" class="btn-pill" data-mt-dry disabled>Dry run</button>
+    <button type="button" class="btn-pill btn-accent" data-mt-run disabled>Maintain now</button>
+  </div>
+  {% endif %}
+  <div class="tbl-wrap"><table class="tbl adm-tbl lk-tables" data-lake-tables aria-labelledby="lkTables">
+    <thead><tr>{% if maint %}<th scope="col" class="mt-pick-col"><span class="visually-hidden">Maintain</span></th>{% endif %}<th scope="col">Table</th><th scope="col" class="num">Rows</th><th scope="col" class="num">Files</th><th scope="col" class="num">Size</th>
+      <th scope="col" class="num">Partitions</th><th scope="col" class="num">Business dates</th><th scope="col">Latest date</th><th scope="col">Last build</th>{% if maint %}<th scope="col">Maintenance</th>{% endif %}</tr></thead>
+    <tbody>{% set owners = {} %}{% if maint %}{% for m in maint.tables %}{% set _ = owners.update({m.root ~ "|" ~ m.table: m}) %}{% endfor %}{% endif %}
+    {% for t in tables %}{% set m = owners.get(t.root ~ "|" ~ t.table) %}<tr data-lake-table="{{ t.table }}" data-root="{{ t.root }}" data-domain="{{ t.domain }}"{% if m and not m.owned %} class="mt-foreign"{% endif %}>
+      {% if maint %}<td class="mt-pick-col">{% if m and m.owned %}<label class="mt-check"><input type="checkbox" data-mt-pick value="{{ t.table }}" data-root="{{ t.root }}" data-domain="{{ t.domain }}"><span class="visually-hidden">Maintain {{ t.table }}</span></label>
+        {% else %}<label class="mt-check" title="{{ m.reason if m else 'not readable' }}"><input type="checkbox" disabled aria-describedby="mtWhy{{ loop.index }}"><span class="visually-hidden">{{ t.table }} cannot be maintained here</span></label>{% endif %}</td>{% endif %}
+      <th scope="row"><span class="mono">{{ t.table }}</span><br><small class="text-muted-d">{{ t.root }}</small></th>
+      {% if t.error %}<td colspan="7" class="text-muted-d">Not readable: {{ t.error }}</td>{% else %}
+      <td class="num mono">{{ "{:,}".format(t.rows) if t.rows is not none else "?" }}</td><td class="num mono" data-mt-files>{{ t.files }}</td><td class="num mono" data-mt-size>{{ t.size }}</td>
+      <td class="num mono">{{ t.partitions }}{% set by = t.partitionBy | reject("equalto", "business_date") | list %}{% if by %} <small class="text-muted-d">by {{ by | join(", ") }}</small>{% endif %}</td>
+      <td class="num mono">{{ t.dates }}</td><td class="mono">{{ t.latestDate or "–" }}</td><td class="mono">{{ t.lastBuild or "–" }}</td>{% endif %}
+      {% if maint %}<td class="mt-own">{% if m and m.owned %}<span data-mt-settings>{{ settings_text(m.settings) }}</span>{% if m.owner and m.owner.pack %}<br><small class="text-muted-d">built for {{ m.owner.pack }}</small>{% endif %}
+        {% else %}<span class="mt-publisher" id="mtWhy{{ loop.index }}">Maintained by its publisher</span><br><small class="text-muted-d">not built by drishti.py lake build: read only here</small>{% endif %}</td>{% endif %}</tr>
+    {% else %}<tr><td colspan="10" class="text-muted-d">No Delta table under these roots yet: build one above, or run <code>drishti.py lake demo</code>.</td></tr>{% endfor %}</tbody>
+  </table></div>
+
+  {% if maint %}
+  <div class="mt-cli"><span class="text-muted-d">The same from a terminal or cron:</span> <code class="mono" data-mt-cli>python3 tools/drishti.py lake maintain --config {{ maint.configFile }} --once</code>
+    <button type="button" class="btn-pill btn-sm" data-mt-copy>Copy</button></div>
+  <p class="adm-msg" data-mt-msg role="status" aria-live="polite"></p>
+
+  <section class="lk-step mt-run" data-mt-runbox hidden aria-labelledby="mtRunH">
+    <h3 id="mtRunH" data-mt-run-title>Maintenance</h3>
+    <div class="lk-progress"><progress max="100" value="0" data-mt-bar aria-label="Maintenance progress"></progress> <span data-mt-run-text></span>
+      <button type="button" class="btn-pill btn-sm" data-mt-cancel>Cancel after this table</button></div>
+    <div class="tbl-wrap"><table class="tbl adm-tbl mt-result" data-mt-result data-plain>
+      <caption class="visually-hidden">Each table: files and size before and after, the dates retention drops, what vacuum removes, the outcome</caption>
+      <thead><tr><th scope="col">Table</th><th scope="col">Files</th><th scope="col">Size</th><th scope="col">Retention</th><th scope="col">Vacuum</th><th scope="col">Outcome</th></tr></thead>
+      <tbody></tbody></table></div>
+  </section>
+
+  <details class="lk-step mt-panel" data-mt-settings-panel>
+    <summary><h3>Settings for the selected tables</h3></summary>
+    <p class="text-muted-d">Saved per table in <span class="mono">{{ maint.configFile }}</span>, the file <span class="mono">lake maintain</span> reads; a blank keeps the default.</p>
+    <div class="lk-grid">
+      <label class="loads-field">Retention (business days; blank keeps every date)<input class="studio-in" type="number" min="1" inputmode="numeric" data-mt-set="keep-business-days" placeholder="keep all"></label>
+      <label class="loads-field">Target file size (MB)<input class="studio-in" type="number" min="1" max="4096" inputmode="numeric" data-mt-set="target-file-mb" placeholder="{{ maint.defaults['target-file-mb'] }}"></label>
+      <label class="loads-field">Vacuum files unused for (hours; blank: no vacuum)<input class="studio-in" type="number" min="0" inputmode="numeric" data-mt-set="vacuum-hours" placeholder="{{ maint.defaults['vacuum-hours'] }}"></label>
+      <label class="loads-check mt-check"><input type="checkbox" data-mt-set="checkpoint" checked> Write a checkpoint</label>
+    </div>
+    <p class="lk-warn" data-mt-vacuum-warn hidden>Below {{ maint.vacuumSafeHours }} hours (7 days), vacuum removes files a reader or a "known at" view may still be using.</p>
+    <p><button type="button" class="btn-pill btn-accent" data-mt-save disabled>Save for the selected tables</button></p>
+  </details>
+
+  <details class="lk-step mt-panel" data-mt-sched-panel>
+    <summary><h3>Schedules</h3></summary>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-mt-schedules data-plain>
+      <caption class="visually-hidden">The lake-maintenance schedules</caption>
+      <thead><tr><th scope="col">Name</th><th scope="col">When</th><th scope="col">Tables</th><th scope="col">Next</th><th scope="col">Last run</th><th scope="col">Actions</th></tr></thead>
+      <tbody></tbody></table></div>
+    <h4>New schedule for the selected tables</h4>
+    <div class="lk-grid">
+      <label class="loads-field">Name<input class="studio-in" data-mt-sname autocomplete="off" placeholder="nightly"></label>
+      <fieldset class="mt-when"><legend>When</legend>
+        <label class="mt-check"><input type="radio" name="mtWhen" value="time" data-mt-mode checked> At a time</label>
+        <label class="mt-check"><input type="radio" name="mtWhen" value="after-build" data-mt-mode> After every build of the table</label></fieldset>
+    </div>
+    <div data-mt-timepick>
+      <fieldset class="mt-days"><legend>Days</legend>
+        {% for d in ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] %}<label class="mt-check"><input type="checkbox" data-mt-day value="{{ d }}"{% if d in ["tue", "wed", "thu", "fri", "sat"] %} checked{% endif %}> {{ d | title }}</label>{% endfor %}
+      </fieldset>
+      <div class="lk-grid">
+        <label class="loads-field">Time ({{ maint.zone }})<input class="studio-in" type="time" data-mt-at value="02:30"></label>
+        <label class="loads-field">Cron text (minute hour day month weekday)<input class="studio-in mono" data-mt-cron autocomplete="off" spellcheck="false" value="30 2 * * 2,3,4,5,6"></label>
+      </div>
+      <p class="text-muted-d" data-mt-friendly>Tue–Sat 02:30</p>
+    </div>
+    <p class="text-muted-d">A run missed while the console was stopped runs once when it starts again (the history marks it as a catch-up).</p>
+    <p><button type="button" class="btn-pill btn-accent" data-mt-add disabled>Create the schedule</button></p>
+  </details>
+
+  <h2 class="lk-h2" id="mtHist">Maintenance history</h2>
+  <div class="tbl-wrap"><table class="tbl adm-tbl mt-history" data-mt-history data-plain aria-labelledby="mtHist">
+    <thead><tr><th scope="col">When</th><th scope="col">By</th><th scope="col">Tables</th><th scope="col">Files</th><th scope="col">Size</th><th scope="col">Outcome</th></tr></thead>
+    <tbody><tr><td colspan="6" class="text-muted-d">Loading…</td></tr></tbody></table></div>
+  <p class="text-muted-d">Kept in <span class="mono">{{ maint.historyFile }}</span>; <span class="mono">drishti.py lake maintain --history</span> shows the same.</p>
+  {% endif %}
+</section>

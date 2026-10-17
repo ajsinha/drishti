@@ -80,19 +80,9 @@
     <div data-result></div>
   </section>
 
-  <h2 class="lk-h2" id="lkTables">The lakes</h2>
-  <div class="tbl-wrap"><table class="tbl adm-tbl lk-tables" data-lake-tables aria-labelledby="lkTables">
-    <thead><tr><th scope="col">Table</th><th scope="col" class="num">Rows</th><th scope="col" class="num">Files</th><th scope="col" class="num">Size</th>
-      <th scope="col" class="num">Partitions</th><th scope="col" class="num">Business dates</th><th scope="col">Latest date</th><th scope="col">Last build</th></tr></thead>
-    <tbody>{% for t in tables %}<tr data-lake-table="{{ t.table }}"><th scope="row"><span class="mono">{{ t.table }}</span><br><small class="text-muted-d">{{ t.root }}</small></th>
-      {% if t.error %}<td colspan="7" class="text-muted-d">Not readable: {{ t.error }}</td>{% else %}
-      <td class="num mono">{{ "{:,}".format(t.rows) if t.rows is not none else "?" }}</td><td class="num mono">{{ t.files }}</td><td class="num mono">{{ t.size }}</td>
-      <td class="num mono">{{ t.partitions }}{% set by = t.partitionBy | reject("equalto", "business_date") | list %}{% if by %} <small class="text-muted-d">by {{ by | join(", ") }}</small>{% endif %}</td>
-      <td class="num mono">{{ t.dates }}</td><td class="mono">{{ t.latestDate or "–" }}</td><td class="mono">{{ t.lastBuild or "–" }}</td>{% endif %}</tr>
-    {% else %}<tr><td colspan="8" class="text-muted-d">No Delta table under these roots yet: build one above, or run <code>drishti.py lake demo</code>.</td></tr>{% endfor %}</tbody>
-  </table></div>
+  {% include "admin/_lake_maintain.html" %}
 
-  <h2 class="lk-h2">Recent runs</h2>
+  <h2 class="lk-h2">Recent builds</h2>
   <div class="tbl-wrap"><table class="tbl adm-tbl lk-runs">
     <caption class="visually-hidden">The last runs of the lake builds, from each root's run log</caption>
     <thead><tr><th scope="col">Run log line</th></tr></thead>
@@ -101,4 +91,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-lakes.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-lakes.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-lake-maintain.js?v={{ ASSET_V }}"></script>{% endblock %}

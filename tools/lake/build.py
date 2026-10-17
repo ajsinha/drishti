@@ -381,6 +381,9 @@ def _finish(a, lake, summary, code, started, say, write_files: bool = True) -> t
         text = json.dumps(summary, indent=2, default=str)
         (runs / f"{summary['run']}.json").write_text(text, encoding="utf-8")
         (lake / STATE / "last-run.json").write_text(text, encoding="utf-8")
+        if summary.get("status") in ("ok", "partial") and not summary.get("dryRun"):
+            import ownership                               # the table is Drishti's to maintain (lake maintain, Admin -> Lakes)
+            ownership.record(lake, summary)
         summary["summaryFile"] = str(target or runs / f"{summary['run']}.json")
     if target:
         target.parent.mkdir(parents=True, exist_ok=True)

@@ -65,6 +65,8 @@ class LakeSettings:
     python: str = ""
     keep_min: int = 240
     jobs: int = 2
+    data_dir: Path | None = None                 # <data>: lake maintenance keeps its YAML and history in <data>/lakes (core/lake_maint.py)
+    schedules: bool = True                       # run the lake-maintenance schedules in this console
 
     @classmethod
     def from_settings(cls, s, console_dir: Path) -> "LakeSettings":
@@ -77,7 +79,9 @@ class LakeSettings:
         return cls(roots=[path(r) for r in roots], tools_dir=path(s.get("builder.tools_dir", "../tools")),
                    max_upload_mb=int(s.get("lakes.max_upload_mb", 4096)), scan_docs=int(s.get("lakes.scan_docs", 20000)),
                    engine=str(s.get("lakes.engine", "auto") or "auto"), jar=str(s.get("lakes.jar", "") or ""),
-                   python=str(s.get("lakes.python", "") or ""), keep_min=int(s.get("lakes.keep_min", 240)), jobs=int(s.get("lakes.jobs", 2)))
+                   python=str(s.get("lakes.python", "") or ""), keep_min=int(s.get("lakes.keep_min", 240)), jobs=int(s.get("lakes.jobs", 2)),
+                   data_dir=path(s.get("lakes.data_dir", None) or "../data"),
+                   schedules=str(s.get("lakes.maintenance_schedules", True)).lower() not in ("false", "0", "off", "no"))
 
     def as_dict(self) -> dict:
         return {"roots": [str(r) for r in self.roots], "maxUploadMb": self.max_upload_mb, "scanDocs": self.scan_docs, "engine": self.engine}

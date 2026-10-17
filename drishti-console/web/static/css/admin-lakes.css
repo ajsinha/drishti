@@ -28,7 +28,32 @@
 .lk-top { color: var(--d-muted); font-size: .85rem; max-width: 22rem; overflow-wrap: anywhere; }
 .lk-warn { color: var(--d-warn, #9a6200); margin: .4rem 0; }
 .lk-runs td { white-space: normal; overflow-wrap: anywhere; font-size: .8rem; }
+/* Maintain: the toolbar over the tables, the run, settings, schedules and history (admin-lake-maintain.js) */
+.mt-intro { max-width: 70rem; }
+.mt-bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem 1rem; margin: .5rem 0; }
+.mt-bar .loads-field { margin: 0; }
+.mt-count { color: var(--d-muted); min-width: 10rem; }
+.mt-check { display: inline-flex; align-items: center; gap: .35rem; min-height: 44px; min-width: 44px; cursor: pointer; }
+.mt-check input { width: 18px; height: 18px; }
+.mt-pick-col { width: 3rem; text-align: center; }
+.mt-foreign th, .mt-foreign td { color: var(--d-muted); }
+.mt-foreign .mt-check { cursor: not-allowed; }
+.mt-publisher { font-weight: 600; }
+.mt-own { white-space: normal; min-width: 14rem; font-size: .85rem; }
+.mt-cli { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin: .5rem 0; }
+.mt-cli code { overflow-wrap: anywhere; white-space: normal; font-size: .8rem; background: var(--d-surface-2, transparent); padding: .2rem .4rem; border-radius: 4px; }
+.mt-panel summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+.mt-panel summary h3, .mt-run h3 { font-size: 1rem; margin: .5rem 0; display: inline; }
+.mt-panel h4 { font-size: .95rem; margin: .8rem 0 .3rem; }
+.mt-when, .mt-days { border: 0; padding: 0; margin: .3rem 0; display: flex; flex-wrap: wrap; gap: 0 .9rem; }
+.mt-when legend, .mt-days legend { font-size: .85rem; color: var(--d-muted); padding: 0; width: 100%; }
+.mt-result td, .mt-history td, .mt-history th { white-space: normal; overflow-wrap: anywhere; font-size: .85rem; }
+.mt-paused { color: var(--d-warn, #9a6200); font-size: .8rem; font-weight: 400; }
+.mt-actions { display: flex; flex-wrap: wrap; gap: .3rem; }
+.mt-panel .lk-grid input.studio-in { width: 100%; box-sizing: border-box; }
 @media (max-width: 640px) {
+  .mt-bar .btn-pill, .mt-actions .btn-pill, .mt-cli .btn-pill, .mt-panel .btn-pill, .mt-panel input:not([type=checkbox]):not([type=radio]), .mt-bar select { min-height: 44px; font-size: 16px; }
+  .mt-check input { width: 24px; height: 24px; }
   .lk-step { padding: .2rem .5rem .6rem; }
   .lk-step input[type=checkbox] { width: 24px; height: 24px; }
   .lk-step .btn-pill, .lk-step select, .lk-step input:not([type=checkbox]) { min-height: 44px; font-size: 16px; }

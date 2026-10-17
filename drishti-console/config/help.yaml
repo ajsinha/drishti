@@ -101,6 +101,7 @@ categories:
 # slug or slug#anchor. Documents that left the list (architecture, the per-plugin connector pages, the runbooks) are still in
 # the help centre at their path slug, so the old addresses keep working.
 moved:
+  lake-maintenance: docs-admin-lake-maintenance   # Admin -> Lakes -> Maintain's help link (docs/admin/LAKE_MAINTENANCE.md, in the reference)
   quickstart: install-and-run
   windows: install-and-run#drishti-on-windows
   ide-guide: docs-guides-ide-guide

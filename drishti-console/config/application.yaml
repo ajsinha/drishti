@@ -174,6 +174,8 @@ lakes:                       # Admin -> Data loads -> Lakes (/admin/lakes): a la
   python: ""                 # the Python that runs tools/lake/build.py (default: the console's own)
   keep_min: 240              # minutes an upload and a finished build are kept
   jobs: 2                    # builds running at once on this console
+  data_dir: ${DRISHTI_DATA_DIR:../data}   # <data>: Lakes -> Maintain keeps <data>/lakes/lake-maintenance.yaml (also lake maintain's default) and its history there
+  maintenance_schedules: ${DRISHTI_LAKE_MAINTENANCE_SCHEDULES:true}   # run the lake-maintenance schedules in this console (false: run lake maintain --daemon instead)
 form:                        # query by form (FORM <pack>; docs/guides/USER_GUIDE.md)
   collapse_on_submit: true   # after Search the form folds to one line of its criteria so the results get the room; Show form (Alt+F) brings it back
 calc:                        # Calc: Python in the browser (docs/guides/PYTHON_CALC.md); also needs a role with calc

@@ -75,7 +75,7 @@ def test_the_page_and_the_data_loads_link(client, backend, monkeypatch, lakes):
     fake(backend, monkeypatch, [])
     page = client.get("/admin/lakes").text
     for text in ("Load a file into a lake", "admin-lakes.js", "admin-lakes.css", "data-file", "Id field", "Business date", "Classifier", "Promote",
-                 "Replace those dates", "Bind the lake to the pack", "Recent runs", 'aria-live="polite"', str(lakes.cfg.roots[0])):
+                 "Replace those dates", "Bind the lake to the pack", "Recent builds", 'aria-live="polite"', str(lakes.cfg.roots[0])):
         assert text in page, text
     assert 'href="/admin/lakes"' in client.get("/admin/loads").text
 

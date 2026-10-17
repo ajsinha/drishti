@@ -728,6 +728,8 @@ guides are listed in [CONNECTORS.md](../connectors/CONNECTORS.md).
 
 ## 7. Lake maintenance: `tools/lake/maintain.py`
 
+> From the browser, with schedules, settings per table and a history: **Admin → Lakes → Maintain**, [LAKE_MAINTENANCE.md](../admin/LAKE_MAINTENANCE.md).
+
 `drishti.py lake maintain` (the same as `tools/lake/maintain.py`) keeps a lake bounded: **retention** (business dates older than
 `keep-business-days`, never more than `max-drop-share` of a table without `--force-drop`), **compaction** of each day's small
 files (or a re-layout into the pack's declared layout), a **checkpoint**, and **vacuum** of unreferenced files. Local lakes and S3.

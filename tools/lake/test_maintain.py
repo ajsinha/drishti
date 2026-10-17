@@ -26,6 +26,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import maintain  # noqa: E402
+import ownership  # noqa: E402
+
+
+def own(uri: str, pack: str = "trading", kind: str = "trade") -> None:
+    """Marks a table as built by lake build (its build record), so maintenance may touch it."""
+    p = Path(uri)
+    ownership.record(p.parent.parent, {"table": uri, "pack": pack, "kind": kind, "run": "test", "finishedAt": "2026-09-30T00:00:00+00:00"})
 
 
 def business_days(end: date, n: int) -> list[date]:
@@ -48,6 +55,7 @@ class MaintainTest(unittest.TestCase):
                 ids = [f"T-{part}-{i}" for i in range(5)]
                 write_deltalake(uri, pa.table({"id": ids, "doc": [json.dumps({"tradeId": i, "mtm": part}) for i in ids],
                                                "business_date": pa.array([d] * 5, pa.date32())}), mode="append", partition_by=["business_date"])
+        own(uri)
         return uri
 
     def test_retention_compaction_checkpoint_and_vacuum(self):
@@ -102,6 +110,7 @@ class MaintainTest(unittest.TestCase):
             broken = Path(tmp) / "trading" / "broken" / "_delta_log"
             broken.mkdir(parents=True)
             (broken / "00000000000000000000.json").write_text("not delta")
+            own(str(broken.parent))
             config = {"lakes": [{"root": tmp, "compact": True, "checkpoint": False, "vacuum-hours": None}]}
             self.assertEqual(maintain.run(config, dry_run=False, today=date(2026, 9, 30)), 1)
 

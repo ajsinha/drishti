@@ -208,7 +208,15 @@ def create_app(settings: Settings) -> FastAPI:
                         workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes,
                         ai_routes)
 
-    from routes import artifact_routes, lake_routes
+    from routes import artifact_routes, lake_maint_routes, lake_routes
+
+    def _lake_schedules(app):
+        from core.lake_maint import maintenance
+        try:
+            m = maintenance(app)
+        except Exception:  # noqa: BLE001 - a console without the lake settings still starts
+            return None
+        return asyncio.create_task(m.loop_forever(app)) if m.lakes.cfg.schedules else None
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -219,7 +227,10 @@ def create_app(settings: Settings) -> FastAPI:
         ai = getattr(app.state, "ai", None)
         watcher = asyncio.create_task(ai.supervise()) if ai is not None and (ai.enabled or ai.mcp_enabled) else None
         backend_task = asyncio.create_task(app.state.backend_watch.run()) if app.state.backend_watch.enabled else None
+        maint_task = _lake_schedules(app)                    # Admin -> Lakes -> Maintain: the schedules (core/lake_maint.py)
         yield
+        if maint_task is not None:
+            maint_task.cancel()
         if backend_task is not None:
             backend_task.cancel()
         runner = getattr(app.state, "pyrunner", None)
@@ -376,6 +387,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(connector_routes.router)
     app.include_router(artifact_routes.router)
     app.include_router(lake_routes.router)
+    app.include_router(lake_maint_routes.router)
     app.include_router(form_routes.router)
     app.include_router(ai_routes.router)
     if app.state.bi_on:
