@@ -36,6 +36,10 @@
   <span class="mono" data-ext-java title="Jars in the server's external_lib/java folder, on its class path from the start (DRISHTI_EXTERNAL_LIB)">server {{ xl.get('java') or '—' }} · {{ (xl.get('jars') or []) | length }} jar{{ '' if (xl.get('jars') or []) | length == 1 else 's' }}{% if xl.get('jars') %}: {{ (xl.get('jars') | map(attribute='name') | join(', ')) }}{% endif %}</span>
   <span class="mono" data-ext-python title="Modules and packages in the console's external_lib/python folder, importable from the start (DRISHTI_EXTERNAL_LIB)">console {{ (console_ext or {}).get('python') or '—' }} · {{ ((console_ext or {}).get('items') or []) | length }} item{{ '' if ((console_ext or {}).get('items') or []) | length == 1 else 's' }}{% if (console_ext or {}).get('items') %}: {{ console_ext['items'] | join(', ') }}{% endif %}</span>
 </div>
+<div class="hl-sum" data-console-watch aria-label="Console and server connection">
+  <span><b>Console watch</b></span>
+  {% for w in (watch or []) %}<span class="mono" data-watch-server="{{ w.id }}" title="The console asks each server every backend.check_seconds (DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS)">{{ w.name }}: {% if w.reachable is none %}not checked yet{% elif w.reachable %}reachable{% if w.version %} · v{{ w.version }}{% endif %}{% else %}<span class="t-neg">unreachable</span> · {{ w.lastError }}{% endif %}</span>{% endfor %}
+</div>
 <div class="hl-sum" data-tmp-folders aria-label="Temporary folders">
   <span><b>Temp folders</b></span>
   <span class="mono" data-tmp-server title="The server's folder drishti-&lt;pid&gt; (drishti.tmp-dir / DRISHTI_TMP_DIR): removed on shutdown; left-over ones are listed, never deleted automatically">server {{ (h.tmp or {}).get('path') or '—' }} · {{ (((h.tmp or {}).get('bytes') or 0) / 1048576) | round(1) }} MB · {{ (h.tmp or {}).get('files') or 0 }} files</span>

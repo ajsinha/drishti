@@ -205,6 +205,16 @@ cashflows and SOFR curve should appear.
 `{"status":"UP","server":"reachable"}`, or `503` with `"server":"unreachable"` while it cannot reach it. Point a load
 balancer's readiness check at `/readyz` and a restart policy at `/healthz`.
 
+**Start order does not matter, and a restart is noticed.** Start the console first, the server first or both at once. The
+console asks each server every `backend.check_seconds` (default 5; `DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS`), logs
+`server http://... unreachable: ...` and `server ... reachable again after 42 s` once each, shows the state on
+Admin > Health (Console watch) and answers `GET /healthz/backend` (`reachable`, `since`, `lastError`, `version`; no secrets).
+What people see while the server is down or restarting: a page that was already open keeps what it shows; the first call
+that fails, or a page opened meanwhile, shows a bar at the top, "Server not reachable, retrying...", with **Retry now**. The
+page checks with a growing pause (2 s up to 30 s). When the server is back the bar says "Connected again" and a page that
+had failed reloads by itself. A page with unsaved edits (a designer) is never reloaded: the bar offers **Reload** instead.
+The sign-in page says the server is not reachable and recovers the same way.
+
 ### 3.6 Choosing packs
 
 `DRISHTI_PACKS` is a comma-separated list of pack names (directories under `config/packs/`). Enabling a pack also enables

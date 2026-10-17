@@ -47,6 +47,14 @@ def _bounded(value, low: int, high: int, default: int) -> int:
         return default
 
 
+def _seconds(value) -> float:
+    """``backend.check_seconds``: how often the console asks its server if it is there; 0 turns the watch off."""
+    try:
+        return max(0.0, float(value))
+    except (TypeError, ValueError):
+        return 5.0
+
+
 def asset_fingerprint() -> str:
     """A short hash of the scripts and stylesheets (names, sizes, times): part of every asset URL, so browsers fetch a
     changed file at once instead of running a cached old one against a newer server."""
@@ -215,7 +223,10 @@ def create_app(settings: Settings) -> FastAPI:
                                        catalogue.default)
         ai = getattr(app.state, "ai", None)
         watcher = asyncio.create_task(ai.supervise()) if ai is not None and (ai.enabled or ai.mcp_enabled) else None
+        backend_task = asyncio.create_task(app.state.backend_watch.run()) if app.state.backend_watch.enabled else None
         yield
+        if backend_task is not None:
+            backend_task.cancel()
         if getattr(app.state, "tmp_owner", False):          # the process that runs this app: uvicorn re-raises the stop signal after this, so atexit would not run
             from core import tmpdir
 
@@ -268,6 +279,9 @@ def create_app(settings: Settings) -> FastAPI:
     templates.env.globals["when_local"] = when_local
     app.state.settings = settings
     app.state.servers = catalogue
+    from core.backend_watch import BackendWatch
+
+    app.state.backend_watch = BackendWatch(catalogue, _seconds(settings.get("backend.check_seconds", 5)))      # started by the lifespan
     app.state.auth = (Auth(settings) if len(catalogue) == 1 and catalogue.default == "default"
                       else Switch({s.id: Auth(settings, s) for s in catalogue.all()}, catalogue.default))
     from core.oidc import Oidc

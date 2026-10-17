@@ -348,6 +348,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_CONSOLE_HOST` | `server.host` | `0.0.0.0` | The address the console listens on (every interface; `127.0.0.1` keeps it to this machine). |
 | `DRISHTI_CONSOLE_PORT` | `server.port` | `17480` | The console's port. |
 | `DRISHTI_BACKEND_URL` | `backend.url` | `http://127.0.0.1:18480` | Where the server is. |
+| `DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS` | `backend.check_seconds` | `5` | How often the console asks each server if it is there (`0` = never). Pages show a banner and recover by themselves when it returns. |
 | `DRISHTI_CONSOLE_TMP_DIR` | `tmp_dir` | empty | Base of the console's temp folder `drishti-console-<pid>` (empty: `DRISHTI_TMP_DIR`, then the system temp folder), removed on exit; left-over ones of dead processes are listed on Health, never deleted automatically. |
 | `DRISHTI_EXTERNAL_LIB` | `external_lib` | empty | Base of the external library folder (empty: `external_lib` in the repository root); `<base>/python` is importable. The server reads the same variable for `<base>/java`. |
 | `DRISHTI_PRODUCT` | `ui.product` | `Drishti` | The product name shown in pages. |
@@ -2261,6 +2262,7 @@ You should see uvicorn report `Uvicorn running on http://127.0.0.1:17481`.
 | `backend.url` | `http://127.0.0.1:18480` (`DRISHTI_BACKEND_URL`) | The Drishti server. |
 | `backend.timeout_seconds` | `5` | Per call to the server. |
 | `backend.name` | the product name (`ui.product`) | The name of the single server when `servers` is not set; the picker and the top bar show it. |
+| `backend.check_seconds` | `5` (`DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS`) | How often the console's background watch asks each server (the default and every one of `servers`) whether it is reachable, with a 2 s timeout. It keeps reachable / since / last error / version, logs each change once, and answers `GET /healthz/backend`, which every page's banner polls. Shown on Admin > Health (Console watch). `0` turns the watch off. |
 | `backend.pool_size` | `64` | Pooled HTTP connections to the server (per server, when there are several). |
 | `collab.bridge_test_timeout_seconds` | `30` | How long Admin > Collaboration waits for a bridge **Test** (the server waits for the bridge's own `drishti.collab.bridges.timeout`, default 10 s, so keep this longer). When it runs out the page says `DRS-7013` and names `drishti.collab.bridges.timeout`. |
 

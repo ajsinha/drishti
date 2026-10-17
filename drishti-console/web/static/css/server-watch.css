@@ -1,0 +1,26 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* The server-watch banner (js/server-watch.js): a compact bar at the top of the page. */
+.sw-banner { position: sticky; top: 0; z-index: 2000; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;
+  padding: .35rem 1rem; background: var(--d-surface-2); color: var(--d-ink); border-bottom: 2px solid var(--d-warn); }
+.sw-banner[hidden] { display: none; }
+.sw-banner[data-state="up"] { border-bottom-color: var(--d-ok); }
+.sw-banner .sw-text { flex: 1 1 14rem; }
+.sw-btn { min-height: 44px; min-width: 44px; padding: 0 .9rem; border: 1px solid var(--d-border); border-radius: 6px;
+  background: var(--d-surface); color: var(--d-ink); font: inherit; cursor: pointer; }
+.sw-btn[hidden] { display: none; }
+.sw-btn:hover { border-color: var(--d-accent); }
+.sw-btn:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }

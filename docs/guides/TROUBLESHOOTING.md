@@ -339,7 +339,11 @@ The log gets the first failure and failures number 2, 4, 8, ... of each thing, n
 
 ### Pages say `DRS-5003 backend unreachable`
 
-- **Cause:** the console cannot reach the server.
+- **Cause:** the console cannot reach the server (not started yet, or restarting).
+- **What you see:** a bar at the top of the page, "Server not reachable - retrying...", with **Retry now** (and a dismiss
+  cross). Nothing to do: the page asks the console every 2 to 30 s and, when the server is back, shows "Connected again" and
+  reloads by itself. A page with unsaved changes is not reloaded; the bar offers **Reload** when you are ready. The console's
+  own check runs every `backend.check_seconds` (default 5); Admin > Health shows it, and `GET /healthz/backend` is the raw state.
 - **Check:** `curl -s http://localhost:18480/actuator/health`. If that works from your shell, the console may be
   pointing elsewhere: the console reads `DRISHTI_BACKEND_URL` (default `http://127.0.0.1:18480`).
 - **Fix:** start the server, or restart the console with the right `DRISHTI_BACKEND_URL`.

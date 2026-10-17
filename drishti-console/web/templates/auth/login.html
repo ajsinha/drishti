@@ -16,7 +16,7 @@
 {% extends "base.html" %}
 {% block title %}Sign in · {{ PRODUCT }}{% endblock %}
 {% block content %}
-<div class="login">
+<div class="login" data-watch-probe>
   {# sign-in is off only when neither passwords nor single sign-on are on; an error (a cancelled SSO) always shows the form #}
   {% if not AUTH_ENABLED and not request.app.state.oidc.enabled and not error %}<div class="login-box">
     <h1>Sign in</h1>

@@ -73,6 +73,17 @@ def healthz(request: Request):
     return {"status": "UP", "pythonRuntime": runtime.version if runtime.installed else "not installed: run tools/fetch-pyodide.sh"}
 
 
+@router.get("/healthz/backend")
+async def healthz_backend(request: Request):
+    """Whether the console can reach the server this browser uses, as the console's watch last saw it (core/backend_watch.py):
+    {reachable, since, lastError, version, server, checkSeconds}. What server-watch.js polls while a page shows the banner. No secrets."""
+    from core import servers
+
+    sid = servers.current()
+    watch = request.app.state.backend_watch
+    return JSONResponse({**await watch.state(sid), "server": sid, "checkSeconds": watch.seconds}, headers={"Cache-Control": "no-store"})
+
+
 @router.get("/readyz")
 async def readyz(request: Request):
     """Readiness: the console can reach the server (route traffic here only then). 503 while it cannot."""

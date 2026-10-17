@@ -438,7 +438,8 @@ async def health(request: Request, partial: int = 0):
         connectors = set()
     from core import external_lib, tmpdir
 
-    return render(request, "admin/_health_body.html" if partial else "admin/health.html", h=data, connectors=connectors, console_tmp=tmpdir.info(), console_ext=external_lib.info())
+    return render(request, "admin/_health_body.html" if partial else "admin/health.html", h=data, connectors=connectors, console_tmp=tmpdir.info(), console_ext=external_lib.info(),
+                  watch=request.app.state.backend_watch.snapshot())
 
 
 @router.get("/caches")

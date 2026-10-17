@@ -17,6 +17,12 @@
 
 ## Unreleased
 
+- **Console: reconnects to the server by itself.** Start order no longer matters and a restarted server is noticed. A background watch checks
+  each server every `backend.check_seconds` (default 5, `DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS`), logs each change once, shows it on Admin >
+  Health and answers `GET /healthz/backend`. Every page carries `server-watch.js`: when a page was rendered while the server was unreachable, or a
+  call fails with `DRS-5003`, a banner ("Server not reachable - retrying...", Retry now) polls the console with a 2 s to 30 s backoff and, when
+  the server is back, says "Connected again" and reloads the page (never one with unsaved edits: it offers Reload). The sign-in page says so too.
+
 ## 2.2.0 — Datasets and data models rooted in packs, a Python-like expression language, read-only SQL, one query plan (2026-10-17)
 
 - **Server: the model layer's loose ends from the wave A console lane and its QA (wave A).** The **AI authoring hooks work on models**: Describe a
