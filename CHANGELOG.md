@@ -17,6 +17,23 @@
 
 ## Unreleased
 
+- **Console: the Wave A experience QA fixes.** The field being typed in commits before every save (Ctrl+S, Save, Publish, a tab switch) in the model,
+  report and board designers and both dataset wizards, and the Contract tab redraws without `NotFoundError`. The model designer **autosaves** the draft
+  2 s after each change (*Draft saved at …*) and a stale save opens a **merge view** (theirs and yours per part; the browser journal stays the backup);
+  publish refusals stay under the toolbar with the tab that fixes them; the Contract tab follows the server's semver (the proposed version, the
+  refusal explained). Security: a hidden measure names the visible columns that still reach it (`DRS-9132`) with **Hide these columns too**, the text
+  says what hiding does (`DRS-9163`), a **free row rule** in DEL (columns and `user.*` completed) and a **Tests designer** (expected values, tolerance,
+  role); **Preview as a role** picks the measure and the grouping and shows the role's refusal. A visual hidden for the reader says *Not available to
+  your role* (no Retry); an empty visual for a role without a row rule says *Your role has no rows of <dataset>* (`meta.noAccess`). Expression
+  editor: fixes for an open bracket, `=` for `==` and a name not found (`DRS-9152`), never a sum over a text column; aliases in `count(`, numbers first
+  in `sum(`, functions above column-matched fields; the report's own measure editor spans the pane; the wizard's SQL view gets the editor. Wizard:
+  working examples (no `fx()`), **Write one** for a Python column, Preview asks before saving a draft and shows bare column names, never *nothing to
+  fix* beside a problem, no pointer to the version 1 builder. Analyse ticks one fact of a two-fact model; pickers say draft / published / published with
+  draft changes; the item page shows what a migration could not convert and picks audience roles from a list; *Your datasets* hides shipped samples
+  (toggle). Canvas: **Tidy the layout**, no overlapping boxes, the Valid badge counts pinned warnings; the YAML tab themed with a screen-reader name;
+  perspectives at the top of Fields, measure renames carried into perspectives, contract and hidden-for. Phone: 44 px targets on the BI pages, tab
+  lists take ArrowLeft/Right/Home/End. Tests: `test_wave_a_qa_console_browser.py`.
+
 - **Server: the 2.1 dataset paths are removed (wave A, task 6).** The compatibility reader is gone (a `rachana: 1` dataset is no longer read as a model:
   `DRS-9151` names `drishti.py bi migrate --models`); composed and derived datasets are removed (`dataset/Composition` and their `FrameService` code; a
   `from:` or `derived:` text parses with `DRS-9190` and is still read by the converter); `POST /api/v1/bi/datasets/{id}/query` answers `410` with the

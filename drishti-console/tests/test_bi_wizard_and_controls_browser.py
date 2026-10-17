@@ -91,8 +91,8 @@ def test_the_wizard_builds_a_dataset_from_a_connector_without_typing_yaml(stack,
     assert s in (200, 201), ws
     state["ws"] = ws["id"]
     page.click("[data-new-wizard]")                                                   # New dataset: the one entry
-    page.wait_for_selector("[data-guided]")
-    page.click("[data-guided]")                                                       # its guided tables builder
+    page.wait_for_selector('[data-src="extends"]')
+    page.goto(page.url.split("/bi/")[0] + "/bi/datasets/new")                        # the guided tables builder, no longer pointed at from New dataset
     page.wait_for_selector('[data-wiz-body][data-step="source"]')
     page.check('[data-wiz-mode="connector"]')
     page.select_option("[data-wiz-connector]", "trading-store")

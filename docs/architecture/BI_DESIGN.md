@@ -888,7 +888,7 @@ rate per model.
 | Suggestions from packs | relationships from `references:`, measures from `aggregate:` defaults, hierarchies from pack graphs, formats from vocabulary units, the time mode from the connector |
 | Validate as you type | the ExpressionEditor and QueryPanel call `/validate` (DEL, MQ, DSQL) debounced; problems show beside the control with the `fix` as a button |
 | Preview is a server answer | always as the author (masks on), with the plan's tier and time under it |
-| Never lose work | server-side draft autosave (every change, debounced 2 s) + local journal; stale-save detection by item etag (`409` with a merge view); leaving with unsaved changes asks |
+| Never lose work | server-side draft autosave (every change, debounced 2 s) + local journal; stale-save detection by item etag (`409` with a merge view); leaving with unsaved changes asks. **Status (wave A QA):** built in the model designer (`PUT /items/{id}` with `baseEtag` 2 s after the last change, *Draft saved at …*; a `DRS-9007` stops the autosave and opens the merge view, theirs and yours per top-level part, a part only one side changed preselected; the browser journal stays as the backup); the focused field commits before every save in all designers and the wizard. The report and board designers keep Save with the stale-save choice (Reload, a copy, Overwrite) |
 | Undo everywhere | a command stack per item tab (100 steps), including YAML tab edits |
 | Accessibility and phone | every designer usable at 390 px (single-column mode: properties as a sheet), keyboard-only, 44 px targets, screen-reader names; the diagram has a list view equivalent |
 

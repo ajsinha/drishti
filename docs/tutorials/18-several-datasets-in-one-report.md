@@ -130,7 +130,7 @@ A desk head may see every counterparty, desk and netting set (the exposure of th
 
 ![The YAML tab: the model with its datasets, relationships, measures, security and layout](img/t18/09-model-yaml.jpg)
 
-**Save** (`Saved draft`), then **Publish** (`Published`). On the model's item page, give it the **Audience** `risk` and `desk-head`, so rita and hana may read it (step 7). The model as stored, with the stable ids the server adds on save (captured):
+**Save** (`Saved draft`), then **Publish** (`Published`). The designer also saves the draft by itself two seconds after each change (*Draft saved at 14:02:31* beside the state; Ctrl+S saves the field you are still typing in too), and if someone saved the model meanwhile it opens a **merge view** (theirs and yours, part by part) instead of overwriting. If Publish is refused, the reason stays under the toolbar with the tab that fixes it (a contract change needing a new major opens **Contract**, which proposes the version). On the model's item page, give it the **Audience** `risk` and `desk-head` (tick them in the role list under *Roles*), so rita and hana may read it (step 7). The model as stored, with the stable ids the server adds on save (captured):
 
 ```yaml
 rachana: 2
@@ -454,7 +454,7 @@ Hana's exposure there is **`1,356,300,321`**, not `1,447,544,943`: the Transform
 
 ## Step 8 · The same analysis in Analyse, promoted to a visual
 
-When you do not yet know the question, work it out in **Analyse** before you build anything (step 4 did the first half). Open the notebook of step 4, in the **Python** tab, and press **Promote to a visual** under the second cell (the chart):
+When you do not yet know the question, work it out in **Analyse** before you build anything (step 4 did the first half). Opening this two-fact model in Analyse ticks the fields of one fact (trades) and the dimensions; the netting sets' fields are marked *another fact* and stay unticked, because one extract has one grain. Open the notebook of step 4, in the **Python** tab, and press **Promote to a visual** under the second cell (the chart):
 
 ![After promoting: Python visual draft saved in your workspace, beside the button, with an Open the draft link](img/t18/19-promote-visual.jpg)
 
@@ -493,4 +493,5 @@ Where Drishti is **behind**: no bidirectional or many-to-many relationships yet,
 | `DRS-9151` for a reader | they may not read the model: give the model an **Audience** (its item page), or share the report only |
 | `DRS-9070` "no Python item" on a Python dataset | name the Transform by its catalogue id or its title, and publish it first |
 | `DRS-9071` from a Transform | the code failed on the frames it got (a column named differently, for example); the message is Python's |
-| *Checks clean as far as the saved draft goes* in the formula editor | the formula uses measures you made since the last save: Save, and the check is complete |
+| *Checks clean as far as the saved draft goes* in the formula editor | the formula uses measures you made since the last save: wait for *Draft saved at …* (the autosave, two seconds after a change) or press Save, and the check is complete |
+| *Saved elsewhere since you opened it* with a table of parts | someone saved the model while you edited it: the autosave stopped; keep theirs or yours for each part and press **Merge and save** |
