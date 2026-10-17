@@ -129,7 +129,7 @@ def test_a_four_level_document_of_another_shape_drills_through_every_level():
     assert any(c["bind"] == "size(@.fixings)" for c in cp["levels"][0]["columns"])
     barrier = k.index["couponBarrier"]
     assert barrier.fmt == "price4"                                       # 0.7 is not rounded to 1
-    tables = yaml.safe_load(BI.dataset(k, pl, "notes-store"))["tables"]
+    tables = BI.dataset(k, pl, "notes-store")["tables"]
     fix = next(t for n, t in tables.items() if t["source"].get("each") == "couponPeriods[].observations[].fixings")
     assert fix["columns"]["noteId"]["path"] == "$.noteId"
 
@@ -161,14 +161,14 @@ def test_samples_cover_documents_with_and_without_the_optional_arrays():
 def test_the_bi_dataset_has_a_table_per_level_with_the_keys_above():
     pl = P.make_plan([], A.anonymise({"comswap": deals()}), pack_name="cs")
     k = pl.kind("comswap")
-    d = yaml.safe_load(BI.dataset(k, pl, "cs-store"))
+    d = BI.dataset(k, pl, "cs-store")
     t = d["tables"]
     assert t["legs"]["source"]["each"] == "LEGS"
-    resets = t["cash_flows_resets"]
+    resets = t["resets"]
     assert resets["source"]["each"] == "LEGS[].CASH_FLOWS[].RESETS"
     assert resets["columns"]["TRADE_ID"]["path"] == "$.TRADE_ID" and resets["columns"]["LEG_ID"]["path"] == "^^.LEG_ID"
     assert resets["columns"]["FLOW_ID"]["path"] == "^.FLOW_ID"
-    assert {"from": "legs_cash_flows.id", "to": "comswap.id", "cardinality": "many-to-one"} in d["relationships"]
+    assert {"from": "cash_flows.id", "to": "comswap.id", "cardinality": "many-to-one"} in d["relationships"]
     assert d["measures"]["Leg notional"]["expr"] == "sum(legs.NOTIONAL)"
 
 

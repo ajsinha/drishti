@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 /**
- * The BI content a pack archive carries (docs/guides/BI_GOVERNANCE.md, "BI content in packs"): {@code config/bi/datasets|reports|boards|notebooks|python/} inside
+ * The BI content a pack archive carries (docs/guides/BI_GOVERNANCE.md, "BI content in packs"): {@code config/bi/datasets|models|reports|boards|notebooks|python/} inside
  * the pack folder, in the same file shapes as the BI folder. A deploy does not copy the files anywhere readers could use them unchecked: they become a bundle that
  * goes through the bundle import, so the same rules apply as to any import (the draft and the published text must parse, a dataset change that would break published
  * reports is refused unless a bi-admin forces it, the audience is the pack, certification does not travel), and the import is kept so it can be rolled back.
@@ -46,7 +46,8 @@ import java.util.stream.Stream;
 public final class PackBi {
 
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
-    private static final Map<String, String> FOLDERS = Map.of("datasets", "dataset", "reports", "report", "boards", "board", "notebooks", "notebook", "python", "python");
+    private static final Map<String, String> FOLDERS = Map.of("datasets", "dataset", "models", "model", "reports", "report", "boards", "board", "notebooks", "notebook",
+            "python", "python");
 
     private final BiBundles bundles;
     private final BiStore store;

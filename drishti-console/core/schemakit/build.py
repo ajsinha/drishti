@@ -347,11 +347,10 @@ def assemble(plan: Plan, items: list[Item], drafts: dict, pack_dir: pathlib.Path
     from . import bi as BI                    # every level of a deep document as a BI table (config/bi: imported into BI on deploy)
     for kp in plan.kinds:
         if kp.template in ("file", "delta") and not kp.derived:
-            text = BI.dataset(kp, plan, kp.connector or f"{plan.pack['name']}-store")
-            if text:
-                dd = pack_dir / "config" / "bi" / "datasets"
-                dd.mkdir(parents=True, exist_ok=True)
-                (dd / f"{kp.kind}-tables.dataset.yaml").write_text(text, encoding="utf-8")
+            for rel, text in BI.files(kp, plan, kp.connector or f"{plan.pack['name']}-store").items():
+                f = pack_dir / "config" / "bi" / rel
+                f.parent.mkdir(parents=True, exist_ok=True)
+                f.write_text(text, encoding="utf-8")
     fmts = pack_formats(plan, [s["yaml"] for s in built.sutras])
     if fmts:
         (pack_dir / "config" / "formats.yaml").write_text(yaml.safe_dump({"formats": fmts}, sort_keys=False), encoding="utf-8")
