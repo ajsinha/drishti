@@ -127,6 +127,12 @@ async def _start(request: Request, me, sutra: str | None, kind: str, id_: str, e
         if ex:
             return await designs.copy_example(backend, ex, me, fallback)
         return await backend.designs("POST", "", me, {"kind": fallback, "sutra": designs.new_sutra(fallback)})
+    if sutra and "@" not in sutra:                # a bare name (Admin, a pack's Sutras): the newest loaded version of it
+        loaded = [s for s in await backend.sutras(me) if s.get("name") == sutra.strip()]
+        if not loaded:
+            raise BackendError(404, "DRS-2003", f"no Sutra '{sutra}' is loaded")
+        newest = max(loaded, key=lambda s: int(str(s.get("version") or 0)) if str(s.get("version") or "0").isdigit() else 0)
+        sutra = f"{newest.get('name')}@{newest.get('version')}"
     if sutra and "@" in sutra:
         name = sutra.partition("@")[0]
         known = next((s for s in await backend.sutras(me) if s.get("name") == name), None)

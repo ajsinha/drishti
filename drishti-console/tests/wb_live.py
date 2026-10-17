@@ -20,6 +20,7 @@ the repackaged jar under ``drishti-server/target`` run on a free port in a scrat
 tests that need it are skipped, never failed."""
 import json
 import os
+import shutil
 import re
 from pathlib import Path
 import socket
@@ -115,9 +116,13 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False):
 
     port = free_port()
     work = work or tmp_path_factory.mktemp("wb-server")
-    for name in ("config",):                       # the server reads these beside where it runs; its data stays in the scratch directory
-        if (ROOT / name).exists():
-            (work / name).symlink_to(ROOT / name)
+    if (ROOT / "config").exists():                 # the server reads config beside where it runs; its data stays in the scratch directory
+        (work / "config").mkdir()
+        for sub in (ROOT / "config").iterdir():    # each part linked, except connectors: a deployed test pack writes its connector file
+            if sub.name == "connectors":           # there, and it must land in the scratch copy, never in the repository's config
+                shutil.copytree(sub, work / "config" / "connectors", symlinks=True)
+            else:
+                (work / "config" / sub.name).symlink_to(sub)
     env = {"PATH": os.environ.get("PATH", ""), "HOME": str(work), "DRISHTI_PORT": str(port), **extra_env}
     proc = subprocess.Popen([str(JAVA), "-Xmx768m", "-jar", str(jar())], cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     try:

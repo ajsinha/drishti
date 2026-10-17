@@ -132,6 +132,17 @@ def test_schemas_and_a_folder_to_a_verified_bundle_a_deploy_and_a_rollback(brows
     page.wait_for_function("() => document.querySelector('[data-history]').innerText.includes('sg-deploy')")
     assert "deploy" in page.locator("[data-history]").inner_text()
 
+    # the deployed pack's screen opens in the designer with its Sutra, not an empty design (user report 2026-10-17)
+    page.goto(base + "/admin/packs/sg-deploy")
+    links = page.locator("a:has-text('Open in Build')")
+    assert links.count() >= 1, "the pack page lists no Sutra to open in Build"
+    links.first.click()
+    page.locator("[data-start-go]").click()
+    page.wait_for_function("() => window.drishtiWorkbench && window.drishtiWorkbench.store.state.id", timeout=BROWSER_WAIT_MS)
+    yaml_text = page.evaluate("() => window.drishtiWorkbench.store.state.yaml || ''")
+    assert "panels" in yaml_text or "sections" in yaml_text, "the designer opened empty: " + yaml_text[:200]
+    assert "match: { kind: sg" in yaml_text and "my-layout" not in yaml_text, yaml_text[:300]   # the pack's own Sutra, not a blank starter
+
     # a second version, the same way, then back to the first
     make_pack(page, base, "sg-deploy", "1.0.1", data)
     page.click("[data-deploy-link]")
