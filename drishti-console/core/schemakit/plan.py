@@ -31,10 +31,21 @@ from .resolve import Node, Resolver, SchemaDoc, SchemaError, parse_text
 KIND_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
 ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 ISO_DATETIME = re.compile(r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}")
-ID_NAME = re.compile(r"(^_?id$)|(Id$)|(_id$)|(^uuid$)|(^key$)|(Key$)|(_key$)")
+# an id-like name: camelCase ...Id / ...Key, or a snake / UPPER_SNAKE word id, key, uuid, uen, ref (TRADE_ID, counterparty_uen), any case
+ID_NAME = re.compile(r"(^_?id$)|([a-z0-9]Id$)|(^uuid$)|(^key$)|([a-z0-9]Key$)|(?i:(^|[_-])(id|key|uuid|uen|ref)$)|(?i:^(id|uuid|key)$)")
+# the entity a document most often IS (preferred as its key over other unique ids, after <kind>_id): a trade's TRADE_ID over its TRANSACTION_ID
+KEY_STEMS = ("trade", "deal", "contract", "order", "position", "account", "instrument", "security", "note", "bond", "document", "record", "event")
+# names whose values say who or what a document is about: replaced when samples are anonymised, offered as pages of their own
+IDENTIFYING = re.compile(r"(?i)(counterpart|cpty|customer|client|party|trader|entity|legal|portfolio|book|desk|uen|lei|account|address|email|phone|"
+                         r"user|owner|broker|issuer|guarantor|transit|branch|firm|name|person|contact)")
+ACRONYMS = {"ID", "UEN", "DVP", "ISO", "LEI", "UTI", "UPI", "ISIN", "CUSIP", "SEDOL", "FX", "PV", "MTM", "NPV", "CCY", "OTC", "CSA", "PNL", "URL", "BIC",
+            "IBAN", "NY", "TT", "UK", "US", "EU", "DV01", "CS01", "VAR", "ETRM"}
 LINK_NAME = re.compile(r"^(.+?)(Ids?|_ids?|Keys?|_keys?|Refs?|_refs?)$")
 DATE_PREFERRED = ("businessdate", "business_date", "asof", "asofdate", "as_of", "as_of_date", "reportingdate", "date", "valuationdate", "tradedate")
+LOOSE_DATES = ("date", "tradedate")              # names that may be a business date, or a per-document date (taken only when few distinct)
+SNAPSHOT = "@snapshot"                           # the date override that says: no date field, the day of the load
 STATUS_NAMES = ("status", "state", "stage", "phase", "lifecycle")
+TYPE_COLUMN = re.compile(r"(?i)^(product_?type|record_?type|doc(ument)?_?type|entity_?type|type|kind)$")
 DEFAULTS = {"strip_max": 6, "enum_max": 40, "samples": 5, "match_max_values": 24, "match_cross_max": 40, "distinct_enum_max": 12}
 
 
@@ -46,8 +57,8 @@ def norm(s: str) -> str:
 
 def singular(s: str) -> str:
     if s.lower().endswith("ies") and len(s) > 4:
-        return s[:-3] + "y"
-    return s[:-1] if s.endswith("s") and len(s) > 3 and not s.endswith("ss") else s
+        return s[:-3] + ("Y" if s[-3:].isupper() else "y")
+    return s[:-1] if s.lower().endswith("s") and len(s) > 3 and not s.lower().endswith("ss") else s
 
 
 def words(name: str) -> list[str]:
@@ -57,11 +68,18 @@ def words(name: str) -> list[str]:
 
 
 def humanize(name: str) -> str:
-    """tradeDate -> Trade date; counterparty_id -> Counterparty ID; dv01 -> DV01; mtm -> MTM-like short words stay as typed in capitals."""
+    """tradeDate -> Trade date; counterparty_id -> Counterparty ID; dv01 -> DV01; mtm -> MTM-like short words stay as typed in capitals.
+    An UPPER_SNAKE name reads as words, not shouting: TRADE_ID -> Trade ID, BUY_SELL_CODE -> Buy sell code, COUNTERPARTY_UEN -> Counterparty UEN."""
     ws = words(name)
+    if (len(ws) > 1 and all(w.isupper() or w.isdigit() for w in ws)) or (len(ws) == 1 and ws[0].isupper() and len(ws[0]) > 3 and ws[0] not in ACRONYMS):
+        caps = [w if w in ACRONYMS or w.isdigit() else w.lower() for w in ws]
+        caps[0] = caps[0] if caps[0] in ACRONYMS else caps[0].capitalize()
+        return " ".join(caps)
     out = []
     for i, w in enumerate(ws):
-        if w.lower() == "id":
+        if w.upper() in ACRONYMS and w.upper() != "VAR":
+            out.append(w.upper())
+        elif w.lower() == "id":
             out.append("ID")
         elif w.isupper() or re.fullmatch(r"[a-z]{1,3}\d+", w) or (len(w) <= 4 and not re.search(r"[aeiouy]", w.lower())):
             out.append(w.upper())
@@ -119,6 +137,7 @@ class FieldInfo:
     importance: int = 0
     firm: bool = False           # fmt comes from the schema (x-drishti-format, a date format, a 0..1 range), not from a name guess
     values: dict = field(default_factory=dict)   # x-drishti-values: what each enum value means
+    fill: float = 1.0            # the share of sample documents where the field has a value ("" and null are no value); 1 without samples
 
 
 @dataclass
@@ -169,6 +188,13 @@ class KindPlan:
     warnings: list = field(default_factory=list)
     connector: str = ""
     template: str = "samples"
+    snapshot: bool = False       # no business-date field: documents are stored under the day their file is loaded
+    related: list = field(default_factory=list)         # [{path, kind, expr, label}]: a page per value of a field (derived kinds)
+    related_options: list = field(default_factory=list) # the fields that could have one
+    derived: dict = field(default_factory=dict)         # this kind IS a page per value: {from, path, expr, members, label}
+    counts: dict = field(default_factory=dict)          # {field: {value: rows}} over EVERY row of the data files ("" = no value)
+    match_counts: dict = field(default_factory=dict)    # the counts of the split column(s): what each type's Sutra covers
+    profile: dict = field(default_factory=dict)         # {path: stats} over many rows (pack-read.js), beyond the kept samples
 
     @property
     def real(self) -> bool:
@@ -206,17 +232,25 @@ def kind_dict(k: KindPlan) -> dict:
             "key": k.key, "keyWhy": k.key_why, "keyCandidates": k.key_candidates, "keyAmbiguous": k.key_ambiguous,
             "links": [vars(l) for l in k.links], "match": k.match, "matchWhy": k.match_why, "matchOptions": k.match_options,
             "date": k.date, "dateWhy": k.date_why, "mnemonic": k.mnemonic, "strip": k.strip, "controls": k.controls,
-            "connector": k.connector, "template": k.template, "samples": len(k.samples), "synthetic": not k.real,
+            "connector": k.connector, "template": k.template, "samples": len(k.samples), "synthetic": not k.real, "snapshot": k.snapshot,
+            "related": k.related, "relatedOptions": k.related_options, "derived": k.derived, "matchCounts": k.match_counts,
             "sutras": [{"name": s.name, "label": s.label, "where": s.where, "fallback": s.fallback} for s in k.sutras],
             "fields": [{"path": f.path, "label": f.label, "description": f.description, "type": f.type, "format": f.format, "required": f.required,
-                        "fmt": f.fmt, "unit": f.unit, "enum": f.enum, "role": f.role} for f in k.fields],
+                        "fmt": f.fmt, "unit": f.unit, "enum": f.enum, "role": f.role, "fill": round(f.fill, 3), "hidden": f.hidden} for f in k.fields],
             "warnings": k.warnings}
 
 
 # ----------------------------------------------------------------------------------------------- nodes from sample documents
 
+def blank(v) -> bool:
+    """No value: null, an empty or all-space text (the way most extracts spell a missing value), an empty list or object."""
+    return v is None or (isinstance(v, str) and not v.strip()) or (isinstance(v, (list, dict)) and not v)
+
+
 def node_from_docs(docs: list[dict], depth: int = 0) -> Node:
-    """A schema-like Node inferred from documents: types, enums of repeated short strings, dates, and required = in 95% of the documents."""
+    """A schema-like Node inferred from documents: types, enums of repeated short strings, dates, and required = a value in 95% of the
+    documents. A blank ("", null) is no value: it neither types a field nor makes it required; the share of documents with a value is kept
+    as ``ann['fill']`` (a field blank everywhere is hidden from the views and the columns), how many items an array holds as ``ann['items']``."""
     n = Node(type="object")
     seen: dict[str, list] = {}
     for d in docs:
@@ -224,14 +258,25 @@ def node_from_docs(docs: list[dict], depth: int = 0) -> Node:
             seen.setdefault(k, []).append(v)
     total = len(docs)
     for k, vals in seen.items():
-        n.props[k] = _node_of_values(vals, depth)
-        if len(vals) >= 0.95 * total and all(v is not None for v in vals):
+        c = _node_of_values(vals, depth)
+        filled = sum(1 for v in vals if not blank(v))
+        c.ann["fill"] = round(filled / total, 4) if total else 0.0
+        lists = [len(v) for v in vals if isinstance(v, list)]
+        if lists:
+            c.ann["items"] = {"min": min(lists), "max": max(lists), "avg": round(sum(lists) / len(lists), 2), "absent": total - len(vals),
+                              "empty": sum(1 for x in lists if not x)}
+        n.props[k] = c
+        if filled >= 0.95 * total:
             n.required.add(k)
     return n
 
 
+NUMERIC_TEXT = re.compile(r"^-?\d+(\.\d+)?$")
+MEASURE_NAME = re.compile(r"(?i)(rate|spread|volume|factor|amount|price|quantity|qty|notional|strike|accrual|weight|mtm|balance|exposure|coupon|level)")
+
+
 def _node_of_values(vals: list, depth: int) -> Node:
-    vals = [v for v in vals if v is not None]
+    vals = [v for v in vals if not (v is None or (isinstance(v, str) and not v.strip()))]
     n = Node()
     if not vals:
         return n
@@ -241,10 +286,14 @@ def _node_of_values(vals: list, depth: int) -> Node:
         n.type = "integer"
     elif all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in vals):
         n.type = "number"
+        n.ann["maxabs"] = max(abs(v) for v in vals)
+        n.ann["frac"] = any(isinstance(v, float) and not v.is_integer() for v in vals)
     elif all(isinstance(v, str) for v in vals):
         n.type = "string"
         if all(ISO_DATE.match(v) for v in vals):
             n.format = "date"
+        elif all(NUMERIC_TEXT.match(v) for v in vals):
+            n.ann["numeric-text"] = True       # digits in a text: a code (TRANSIT 00042) unless the name reads as a measure (see _walk)
         elif all(ISO_DATETIME.match(v) for v in vals):
             n.format = "date-time"
         else:
@@ -275,12 +324,21 @@ def _fmt_for(f: FieldInfo, n: Node) -> str:
         return "date"
     nm = norm(f.name)
     if n.type == "integer":
-        return "amount0" if not re.search(r"year|version|count$|^n[A-Z]|rank|level", f.name) else ""
+        return "amount0" if not (re.search(r"year|version|count$|^n[A-Z]|rank|level", f.name)
+                                 or re.search(r"(?i)(^|_)(year|version|count|rank|level|seq|sequence|number|num)$|^num_", f.name)) else ""
     if n.type == "number":
         if f.unit in ("%", "percent") or (n.minimum is not None and n.maximum is not None and 0 <= n.minimum and n.maximum <= 1):
             return "pct2"
         if re.search(r"(pct|percent|ratio|rate|yield)$", nm) and (n.maximum is None or n.maximum <= 1):
             return "pct2"
+        if re.search(r"(accrual|factor|weight)", nm):
+            return "price4"
+        if n.ann.get("frac") and isinstance(n.ann.get("maxabs"), (int, float)) and not re.search(r"(mtm|pnl|notional|amount|balance|exposure|quantity)", nm):
+            # known from the data: fractions near 1 (a barrier of 0.7, a ratio) keep 4 decimals, prices and levels 2; never rounded to nothing
+            if n.ann["maxabs"] <= 1.5 and not re.search(r"(pct|percent|ratio|rate|yield|coupon)$", nm):
+                return "price4"
+            if n.ann["maxabs"] < 100000:
+                return "price2"
         if re.search(r"(mtm|pnl|pl|delta|change|diff)", nm):
             return "signed0"
         return "amount2" if re.search(r"(price|rate|spread|amount|fee|cost|notional)", nm) else "amount0"
@@ -301,6 +359,8 @@ def _role_of(f: FieldInfo, n: Node) -> str:
         return "datetime"
     if n.enum and n.type in ("string", "integer", ""):
         return "status" if norm(f.name) in STATUS_NAMES or norm(f.name).endswith(STATUS_NAMES) else "dimension"
+    if n.type == "string" and not n.format and (norm(f.name) in STATUS_NAMES or norm(f.name).endswith(STATUS_NAMES)):
+        return "status"                                   # a status by its name, even in a handful of documents
     if n.type == "boolean":
         return "flag"
     if n.type in ("integer", "number"):
@@ -318,8 +378,18 @@ def _walk(kp: KindPlan, n: Node, prefix: str = "", in_array: bool = False, depth
                       enum=list(c.enum)[:DEFAULTS["enum_max"]], hidden=bool(c.ann.get("hidden")))
         f.role = _role_of(f, c)
         f.fmt = _fmt_for(f, c) if c.scalar else ""
+        if isinstance(c.ann.get("fill"), (int, float)):
+            f.fill = float(c.ann["fill"])
+            if f.fill == 0 and not c.ann.get("hidden") is False:
+                f.hidden = True                       # blank in every sample document: not shown, not a column, not a form field
         f.firm = bool(f.fmt) and (bool(c.ann.get("format")) or c.format in ("date", "date-time") or f.fmt == "pct2" and f.unit in ("%", "percent")
                                   or (c.minimum is not None and c.maximum is not None and 0 <= c.minimum and c.maximum <= 1))
+        if ID_NAME.search(name) and (c.type == "integer" or (c.type == "string" and "fill" in c.ann)) and not c.ann.get("format"):
+            f.role, f.fmt, f.firm = "id", "", False   # an id is a label: never an amount, a strip figure or a total, whether text or integer
+        elif c.ann.get("numeric-text") and MEASURE_NAME.search(name) and not ID_NAME.search(name):
+            f.role = "number"                         # a measure written as text ("78.5000"): read and formatted as a number
+            f.fmt = "price4" if re.search(r"(?i)(rate|price|spread|strike|level|coupon)", name) else "amount0"
+            f.firm = True
         if isinstance(c.ann.get("values"), dict):
             f.values = {str(k): str(v) for k, v in c.ann["values"].items()}
         if f.unit and f.fmt in ("amount0", "amount2") and f.unit not in f.label:
@@ -373,10 +443,17 @@ def pick_key(kp: KindPlan, others: dict, ov_key: str | None) -> None:
             kp.warnings.append(f"no id-like field is unique in all {len(docs)} sample documents: {', '.join(pool)}")
     kp.key_candidates = pool or [k for k, v in n.props.items() if v.scalar and k in n.required]
     kn = norm(kp.kind)
+    tail = f", unique in all {len(docs)} sample documents" if docs else ""
     for want, why in (("id", "named id"), (kn + "id", "named <kind>Id"), (singular(kn) + "id", "named <kind>Id"), (kn + "key", "named <kind>Key")):
         hit = next((k for k in pool if norm(k) == want), None)
         if hit:
-            kp.key, kp.key_why = hit, f"{why}" + (", required" if hit in n.required else "")
+            kp.key, kp.key_why = hit, f"{why}" + (", required" if hit in n.required else "") + tail
+            return
+    for stem in KEY_STEMS:                     # TRADE_ID, dealId: the id of what such a document usually is, before other unique ids
+        hit = next((k for k in pool if norm(k) in (stem + "id", stem + "key", stem + "number", stem + "ref")), None)
+        if hit and len(pool) > 1:
+            kp.key, kp.key_why = hit, f"named like the id of a {stem}" + (f", unique in all {len(docs)} sample documents" if docs else "") + \
+                f" (other id-like fields: {', '.join(k for k in pool if k != hit)[:120]})"
             return
     plain = [k for k in pool if not _is_link_name(k, others, kp.kind)]
     if len(plain) == 1:
@@ -459,6 +536,9 @@ def _node_at(n: Node, path: str) -> Node | None:
 def pick_date(kp: KindPlan, ov: dict) -> None:
     n = kp.node
     if "date" in ov:
+        if ov["date"] == SNAPSHOT:
+            kp.date, kp.snapshot, kp.date_why = None, True, "chosen by you: each file is a snapshot, stored under the day it is loaded"
+            return
         kp.date, kp.date_why = ov["date"] or None, "chosen by you" if ov["date"] else "none"
         return
     tagged = [k for k, v in n.props.items() if v.ann.get("role") in ("date", "business-date", "businessDate") or v.ann.get("date") is True]
@@ -466,11 +546,23 @@ def pick_date(kp: KindPlan, ov: dict) -> None:
     if tagged:
         kp.date, kp.date_why = tagged[0], "x-drishti-role: date"
         return
+    days = {k: len({str(d.get(k))[:10] for d in kp.samples if not blank(d.get(k))}) for k in cand} if kp.real else {}
+    inferred = kp.real and not kp.source             # documents only: a date field must behave like a business date to be taken as one
     for want in DATE_PREFERRED:
         hit = next((k for k in cand if norm(k) == want), None)
-        if hit:
+        # a business date is the same for many documents (one file, one day); a trade date or a start date differs from deal to deal
+        if hit and (not inferred or want not in LOOSE_DATES or days.get(hit, 0) <= max(3, len(kp.samples) // 10)):
             kp.date, kp.date_why = hit, "a date field named like a business date"
             return
+    if inferred:
+        if cand:
+            kp.snapshot = True
+            kp.date_why = (f"no field holds a business date: {', '.join(cand[:4])}{' ...' if len(cand) > 4 else ''} differ from document to document, so each "
+                           "file is taken as a snapshot and stored under the day it is loaded. If every document carries the day it describes, choose that field")
+        else:
+            kp.snapshot = True
+            kp.date_why = "no date field: each file is taken as a snapshot and stored under the day it is loaded"
+        return
     req = [k for k in cand if k in n.required]
     if len(req) == 1 or (req and kp.real):
         kp.date, kp.date_why = req[0], "the required date field"
@@ -485,11 +577,25 @@ def match_options(kp: KindPlan) -> list:
     for name, c in n.props.items():
         if c.type in ("string", "integer") and (c.enum or kp.real):
             vals = list(c.enum)
-            if not vals and kp.real:
-                seen = list(dict.fromkeys(d.get(name) for d in kp.samples if isinstance(d.get(name), (str, int)) and not isinstance(d.get(name), bool)))
+            counted = (kp.counts or {}).get(name)
+            if counted and kp.real:                 # every row counted: rare types are in the list with their true count
+                vals = [v for v, _ in sorted(((k, v) for k, v in counted.items() if not blank(k)), key=lambda kv: -kv[1])]
+            elif not vals and kp.real:
+                seen = list(dict.fromkeys(d.get(name) for d in kp.samples if isinstance(d.get(name), (str, int)) and not isinstance(d.get(name), bool) and not blank(d.get(name))))
                 vals = seen if 1 < len(seen) <= DEFAULTS["match_max_values"] else []
             if 1 < len(vals) <= DEFAULTS["match_max_values"] and name != kp.key and name != kp.date:
-                out.append({"field": name, "values": vals, "sutras": len(vals) + 1})
+                if counted:
+                    blanks = int(counted.get("", 0))
+                    rows = {str(v): int(counted.get(v, 0)) for v in vals}
+                elif kp.real:
+                    blanks = sum(1 for d in kp.samples if blank(d.get(name)))
+                    rows = {str(v): sum(1 for d in kp.samples if d.get(name) == v) for v in vals}
+                else:
+                    blanks, rows = 0, {}
+                typeish = bool(re.search(r"(?i)(type|product|kind|class|category|instrument)", name))
+                out.append({"field": name, "values": vals, "rows": rows, "blank": blanks, "typeish": typeish,
+                            "sutras": len(vals) + (1 if (blanks or not kp.real) else 0)})
+    out.sort(key=lambda o: (not o["typeish"],))
     return out
 
 
@@ -508,6 +614,13 @@ def pick_match(kp: KindPlan, ov: dict) -> None:
     if tagged:
         kp.match, kp.match_why = tagged[:2], "x-drishti-match"
         return
+    if kp.real and not kp.source:
+        # one file of several record types: a column named like the type (PRODUCT_TYPE, recordType, type) splits it, one Sutra per type
+        strong = [o for o in kp.match_options if TYPE_COLUMN.search(o["field"]) and len(o["values"]) >= 2]
+        if strong:
+            kp.match = [strong[0]["field"]]
+            kp.match_why = f"the documents have a type column ({strong[0]['field']}, {len(strong[0]['values'])} types): one Sutra per type"
+            return
     kp.match_why = "one Sutra for the kind" + (f" (it can be split by {', '.join(o['field'] for o in kp.match_options[:3])})" if kp.match_options else "")
 
 
@@ -519,11 +632,26 @@ def build_sutras(kp: KindPlan, name_prefix: str = "") -> None:
         kp.sutras = [SutraPlan(f"{name_prefix}{kp.kind}-default", kp.title, priority=1, fallback=True)]
         return
     value_sets = []
+    if len(fields) > 1:
+        kp.warnings.append(f"split by {len(fields)} columns ({', '.join(fields)}): every combination gets a Sutra, so one type has several Sutras; "
+                           "split by one type column unless the layouts really differ within a type")
+    kp.match_counts = {}
     for f in fields:
         c = n.props.get(f)
         vals = list(c.enum) if c is not None and c.enum else []
+        counted = (kp.counts or {}).get(f)
+        if counted:                                   # every row of the files counted in the browser (or by the command line)
+            kp.match_counts[f] = {str(k): int(v) for k, v in counted.items()}
+            seen_all = [v for v, _ in sorted(((k, v) for k, v in counted.items() if not blank(k)), key=lambda kv: -kv[1])]
+            vals = vals + [v for v in seen_all if v not in [str(x) for x in vals]] if kp.source else seen_all
+        elif kp.real:
+            seen: dict = {}
+            for d in kp.samples:
+                v = d.get(f)
+                seen["" if blank(v) or not isinstance(v, (str, int, float, bool)) else v] = seen.get("" if blank(v) or not isinstance(v, (str, int, float, bool)) else v, 0) + 1
+            kp.match_counts[f] = {str(k): v for k, v in seen.items()}
         if not vals and kp.real:
-            vals = list(dict.fromkeys(d.get(f) for d in kp.samples if isinstance(d.get(f), (str, int, float, bool))))
+            vals = list(dict.fromkeys(d.get(f) for d in kp.samples if isinstance(d.get(f), (str, int, float, bool)) and not blank(d.get(f))))
         if not vals:
             kp.warnings.append(f"the match field '{f}' has no known values (no enum in the schema, no samples): only the catch-all Sutra is written")
         value_sets.append(vals)
@@ -534,8 +662,10 @@ def build_sutras(kp: KindPlan, name_prefix: str = "") -> None:
         used: set = set()
         for combo in combos:
             where = " && ".join(f"$.{f} == {literal(v)}" for f, v in zip(fields, combo))
-            sl = slug("-".join(str(v) for v in combo)) or "x"
+            sl = re.sub(r"[^a-z0-9]+", "-", "-".join(str(v) for v in combo).lower()).strip("-")[:48] or "x"
             nm, i = f"{name_prefix}{kp.kind}-{sl}", 2
+            if kp.real and not kp.source and len(fields) == 1 and re.fullmatch(r"[a-z][a-z0-9-]{1,40}", sl) and sl != kp.kind:
+                nm = f"{name_prefix}{sl}"            # one file of several types: each type's Sutra is named after the type (comswap, cash)
             while nm in used:
                 nm, i = f"{nm}-{i}", i + 1
             used.add(nm)
@@ -544,7 +674,12 @@ def build_sutras(kp: KindPlan, name_prefix: str = "") -> None:
                 variant = next((b for _, b in n.variants if _variant_value(b, fields[0]) == combo[0]), None)
             label = ", ".join(f"{humanize(f)} {v}" for f, v in zip(fields, combo))
             kp.sutras.append(SutraPlan(nm, label, where, dict(zip(fields, combo)), variant, priority=10))
-    kp.sutras.append(SutraPlan(f"{name_prefix}{kp.kind}-default", kp.title, priority=1, fallback=True))
+    # one Sutra per type; the catch-all only where some documents have no type (or, without data, where nobody can tell)
+    blanks = sum(int(c.get("", 0)) for c in kp.match_counts.values()) if kp.real else 0
+    if not kp.real or blanks or not all(value_sets):
+        kp.sutras.append(SutraPlan(f"{name_prefix}{kp.kind}-default", kp.title, priority=1, fallback=True))
+        if kp.real and blanks:
+            kp.warnings.append(f"{blanks} document(s) have no {' / '.join(fields)}: they are shown by the catch-all Sutra {name_prefix}{kp.kind}-default")
 
 
 def _variant_value(b: Node, disc: str):
@@ -565,13 +700,33 @@ def pick_strip(kp: KindPlan, max_n: int) -> None:
             and not _is_ordinal(f)]
     nums = sorted(nums, key=lambda f: (-f.importance, f.path.count("."), kp.fields.index(f)))
     dates = [f for f in top if f.role in ("date",) and f.required and f.path != kp.date][:1]
+    if kp.real and not kp.source:
+        kp.strip = [f.path for f in _ticket_strip(kp, top, status, nums, banned)[:max(max_n, 8)]]
+        return
     chosen = list(dict.fromkeys(forced + status + nums + dates))
     kp.strip = [f.path for f in chosen[:max_n]]
 
 
+def _ticket_strip(kp: KindPlan, top: list, status: list, nums: list, banned: set) -> list:
+    """The strip of a document known only from its data, read like a deal ticket: status, side, size, product, who, where, when."""
+    vis = [f for f in top if f.fill >= 0.5 and f.path not in banned and f.role != "id"]
+
+    def named(rx, roles=("dimension", "status", "text", "link")):
+        return [f for f in vis if re.search(rx, f.name, re.I) and f.role in roles]
+    side = named(r"(buy.?sell|^side$|direction|pay.?rec|long.?short)")[:1]
+    product = sorted(named(r"(product|instrument|asset.?class|^type$|_type$)"), key=lambda f: (-("sub" in f.name.lower()), kp.fields.index(f)))[:1]
+    plain = lambda fs: [f for f in fs if not re.search(r"(?i)(original|first|last|uen|lei|country|code)", f.name)][:1]   # noqa: E731
+    who = plain(named(r"(counterpart|cpty|customer|client|issuer|borrower)")) + plain(named(r"(portfolio|book|desk|fund)"))
+    size = [f for f in nums if f.path in {v.path for v in vis}][:1]
+    start = [f for f in vis if f.role == "date" and re.search(r"(?i)(start|effective|value)", f.name)][:1]
+    end = [f for f in vis if f.role == "date" and re.search(r"(?i)(matur|expir|end|termination)", f.name)][:1]
+    version = [f for f in vis if re.search(r"(?i)version$", f.name) and f.fill >= 0.5][:1]
+    return list(dict.fromkeys(status + side + size + product + who + start + end + version))
+
+
 def _is_ordinal(f: FieldInfo) -> bool:
     """A year, a version or a rank is a label, not an amount."""
-    return bool(re.search(r"(^|[a-z])(year|version|rank|index|order|seq)$", f.name, re.I))
+    return bool(re.search(r"(^|[a-z_])(year|version|rank|index|order|seq|sequence|number)$", f.name, re.I))
 
 
 def pick_controls(kp: KindPlan) -> None:
@@ -608,8 +763,46 @@ def load_docs(schemas: list) -> tuple[list[SchemaDoc], list[str]]:
     return docs, bad
 
 
+def apply_profile(kp: KindPlan, prof: dict) -> None:
+    """What the samples say about each field, corrected by the profile of many more rows (pack-read.js): the share of rows with a value
+    (a field blank in the kept samples but filled elsewhere is shown; one blank everywhere is hidden) and how many items each array holds.
+    ``prof``: {rows, objects: {prefix: n}, paths: {path: {n, blank}}, arrays: {path: {min, max, sum, count, absent, empty}}}."""
+    paths, objects, arrs = prof.get("paths") or {}, prof.get("objects") or {}, prof.get("arrays") or {}
+    for f in kp.fields:
+        st = paths.get(f.path)
+        parent = f.path[: f.path.rfind(".") + 1] if "." in f.path else ""
+        of = objects.get(parent) or prof.get("rows") or 0
+        if st and of:
+            f.fill = max(0.0, min(1.0, (int(st.get("n", 0)) - int(st.get("blank", 0))) / of))
+            c = _node_at(kp.node, f.path)
+            f.hidden = f.fill == 0 or bool(c is not None and c.ann.get("hidden") is True)
+        a = arrs.get(f.path)
+        c = _array_node(kp.node, f.path) if a and kp.node is not None else None
+        if c is not None:
+            cnt = max(1, int(a.get("count", 0)))
+            c.ann["items"] = {"min": int(a.get("min", 0)), "max": int(a.get("max", 0)), "avg": round(float(a.get("sum", 0)) / cnt, 2),
+                              "absent": int(a.get("absent", 0)), "empty": int(a.get("empty", 0))}
+
+
+def _array_node(n: Node, path: str) -> Node | None:
+    """The array node (not its items) at a plan path such as LEGS[].CASH_FLOWS."""
+    cur = n
+    parts = path.split(".")
+    for i, part in enumerate(parts):
+        arr = part.endswith("[]")
+        part = part[:-2] if arr else part
+        cur = cur.props.get(part) if cur is not None else None
+        if cur is None:
+            return None
+        if i < len(parts) - 1 and (arr or cur.type == "array"):
+            cur = cur.items
+    return cur
+
+
 def make_plan(schemas: list, samples: dict | None = None, overrides: dict | None = None, settings: dict | None = None,
-              existing_mnemonics: set | None = None, pack_name: str = "") -> Plan:
+              existing_mnemonics: set | None = None, pack_name: str = "", counts: dict | None = None, profiles: dict | None = None) -> Plan:
+    """``counts`` {kind: {field: {value: rows}}} and ``profiles`` {kind: profile} come from reading EVERY row of the data files
+    (the browser's pack-read.js, or the command line): the split shows every type, rare ones too, and the fields are judged on many rows."""
     cfg = {**DEFAULTS, **(settings or {})}
     samples = {k: v for k, v in (samples or {}).items() if v}
     overrides = overrides or {}
@@ -650,6 +843,12 @@ def make_plan(schemas: list, samples: dict | None = None, overrides: dict | None
     for kp in kinds.values():
         ov = overrides.get(kp.kind, {})
         _walk(kp, kp.node)
+        name = kp.orig or kp.kind
+        kp.counts = dict((counts or {}).get(name) or (counts or {}).get(kp.kind) or {})
+        prof = (profiles or {}).get(name) or (profiles or {}).get(kp.kind)
+        if isinstance(prof, dict) and kp.real:
+            kp.profile = prof
+            apply_profile(kp, prof.get("all") or prof)
         if ov.get("title"):
             kp.title = ov["title"]
         if ov.get("description") is not None:
@@ -672,7 +871,7 @@ def make_plan(schemas: list, samples: dict | None = None, overrides: dict | None
             if want:
                 kp.warnings.append(f"the mnemonic {want} is taken or not valid; using a free one")
             kp.mnemonic = mnemonic_of(kp.kind, taken)
-        kp.template = ov.get("template") or ("delta" if kp.real and kp.date else "samples")
+        kp.template = ov.get("template") or ("delta" if kp.real and (kp.date or kp.snapshot) else "samples")
         kp.connector = str(ov.get("connector") or "")
         pick_strip(kp, int(cfg["strip_max"]))
         pick_controls(kp)
@@ -685,6 +884,27 @@ def make_plan(schemas: list, samples: dict | None = None, overrides: dict | None
             extra = sorted({k for d in kp.samples[:200] for k in d} - set(kp.node.props))
             if extra:
                 kp.warnings.append(f"fields in the samples that the schema does not describe: {', '.join(extra[:8])}")
+    from . import related as R                 # pages for each counterparty, portfolio, index ...: derived kinds (related.py)
+    for kp in list(kinds.values()):
+        if not kp.real or kp.derived or not kp.key:
+            continue
+        ov = overrides.get(kp.kind, {})
+        kp.related_options = R.options(kp)
+        chosen = R.chosen_options(kp, ov) if (not kp.source or "related" in ov) else []
+        for d in R.make(kp, chosen, taken):
+            dov = overrides.get(d.kind, {})
+            want = str(dov.get("mnemonic") or "").upper()
+            if want and re.fullmatch(r"[A-Z][A-Z0-9]{1,7}", want) and want not in taken:
+                taken.discard(d.mnemonic)
+                taken.add(want)
+                d.mnemonic = want
+            _walk(d, d.node)
+            for l in d.links:
+                if l.field in d.index:
+                    d.index[l.field].role = "link"
+            pick_strip(d, int(cfg["strip_max"]))
+            build_sutras(d, "")
+            kinds[d.kind] = d
     plan.kinds = list(kinds.values())
     synthetic = [k.kind for k in plan.kinds if not k.real]
     if synthetic:
@@ -711,12 +931,14 @@ def match_kind(file_stem: str, kinds: list[str]) -> str | None:
 
 
 def suggest_pack(kinds: list, name: str = "") -> dict:
-    nm = slug(name) or (slug(kinds[0].kind) + "-pack" if len(kinds) == 1 else "my-pack")
+    own = [k for k in kinds if not k.derived]             # pages per value come with their kind: they do not name the pack
+    nm = slug(name) or (slug(own[0].kind) + "-pack" if len(own) == 1 else "my-pack")
     ws = [w for w in nm.split("-") if w]
     code = ("".join(w[0] for w in ws) if len(ws) > 1 else nm[:4]).upper()
-    titles = ", ".join(k.title for k in kinds[:4]) + (" ..." if len(kinds) > 4 else "")
+    titles = ", ".join(k.title for k in own[:4]) + (" ..." if len(own) > 4 else "")
+    origin = "schemas" if any(k.source for k in own) or not any(k.real for k in own) else "data files"
     return {"name": nm, "code": code, "title": humanize(nm.replace("-", " ")) if nm else "", "version": "1.0.0",
-            "description": f"Generated from schemas: {titles}." if kinds else "",
+            "description": f"Generated from {origin}: {titles}." if own else "",
             "connector": connector_name(nm)}
 
 

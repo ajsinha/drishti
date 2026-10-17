@@ -65,26 +65,98 @@ def unwrap(rec: dict, stem: str) -> tuple[str, dict | None]:
     return stem, rec if isinstance(rec, dict) else None
 
 
+def is_json_array(path: pathlib.Path) -> bool:
+    """A .json file whose first non-blank character is '[': data, a JSON array of documents (what many exports write)."""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            head = fh.read(4096).lstrip()
+        return head.startswith("[")
+    except OSError:
+        return False
+
+
 def input_files(inputs, recursive: bool = False) -> list[pathlib.Path]:
-    """The .jsonl files named by `inputs`: each is a file, or a folder (its *.jsonl; with `recursive` its subfolders too)."""
+    """The data files named by `inputs`: each is a file (.jsonl, or a .json array), or a folder (its *.jsonl and *.json arrays; with
+    `recursive` its subfolders too)."""
     files: list[pathlib.Path] = []
     for i in inputs if isinstance(inputs, (list, tuple)) else [inputs]:
         i = pathlib.Path(i)
         if i.is_dir():
-            files += sorted(i.glob("**/*.jsonl" if recursive else "*.jsonl"))
+            pick = "**/" if recursive else ""
+            files += sorted(list(i.glob(pick + "*.jsonl")) + [f for f in i.glob(pick + "*.json") if is_json_array(f)])
         elif i.is_file():
             files.append(i)
         else:
             raise SystemExit(f"sutragen: {i} does not exist")
     if not files:
-        raise SystemExit(f"sutragen: no *.jsonl files in {', '.join(map(str, inputs))}")
+        raise SystemExit(f"sutragen: no *.jsonl files (or .json arrays) in {', '.join(map(str, inputs))}")
     return files
 
 
+def array_elements(path: pathlib.Path, chunk: int = 1 << 20):
+    """Yields (text, element number) of each element of a top-level JSON array, read in chunks: one element in memory at a time, so an
+    export of any size is read as JSON Lines is (the same rule as the console's page)."""
+    depth, in_str, esc, started, n = 0, False, False, False, 0
+    buf: list[str] = []
+    grab = False
+    with open(path, encoding="utf-8") as fh:
+        while True:
+            block = fh.read(chunk)
+            if not block:
+                break
+            start = 0 if grab else -1
+            for i, ch in enumerate(block):
+                if in_str:
+                    if esc:
+                        esc = False
+                    elif ch == "\\":
+                        esc = True
+                    elif ch == '"':
+                        in_str = False
+                    continue
+                if ch == '"':
+                    in_str = True
+                elif not started:
+                    if ch == "[":
+                        started, depth = True, 1
+                    elif not ch.isspace():
+                        raise ValueError(f"{path}: not a JSON array")
+                elif ch in "{[":
+                    if depth == 1:
+                        grab, start, buf = True, i, []
+                    depth += 1
+                elif ch in "}]":
+                    depth -= 1
+                    if depth == 1 and grab:
+                        buf.append(block[start:i + 1])
+                        n += 1
+                        yield "".join(buf), n
+                        grab, buf, start = False, [], -1
+                    elif depth == 0:
+                        return
+            if grab:
+                buf.append(block[max(start, 0):])
+
+
 def read_records(files, say_bad=None):
-    """Yields (kind, document, where) for every line; bad lines go to say_bad(text) (default: stderr)."""
+    """Yields (kind, document, where) for every line (or element of a .json array); bad lines go to say_bad(text) (default: stderr)."""
     say_bad = say_bad or (lambda t: print("  skipped " + t, file=sys.stderr))
     for f in files:
+        if f.suffix.lower() == ".json":
+            try:
+                for text, n in array_elements(f):
+                    try:
+                        k, doc = unwrap(json.loads(text), f.stem)
+                    except ValueError as e:
+                        say_bad(f"{f}[{n}]: not JSON ({e})")
+                        continue
+                    if doc is None:
+                        say_bad(f"{f}[{n}]: not a JSON object")
+                        continue
+                    yield k, doc, f"{f}[{n}]"
+            except ValueError as e:
+                say_bad(str(e))
+            continue
         with open(f, encoding="utf-8") as fh:
             for n, line in enumerate(fh, 1):
                 if not line.strip():

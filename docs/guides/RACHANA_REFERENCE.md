@@ -680,12 +680,12 @@ what it does when empty, masked or live, and a screenshot: [PANELS.md](PANELS.md
 | Kind | Required options | Optional options | Renders | Uses `columns` |
 |---|---|---|---|---|
 | [`kv`](#kv) | | `rows`, `columns`, `fields` | label/value grid | yes |
-| [`table`](#table) | `rows` | `totalLabel`, `limit`, `moreLabel`, `link`, `search`, [`pivot`](#pivot-a-pivot-tab-on-a-table-or-ladder), `children`, `expand` | table with optional total row and "N more" | yes |
+| [`table`](#table) | `rows` | `totalLabel`, `limit`, `moreLabel`, `link`, `search`, [`pivot`](#pivot-a-pivot-tab-on-a-table-or-ladder), `children`, `expand`, [`levels`, `crumb`, `root`](#levels-drill-down-level-by-level), `empty` | table with optional total row and "N more"; a drill-down with `levels` | yes |
 | [`tabs`](#tabs) | `each` | `tabTitle`, `layout` | one sub-panel per element, as tabs or side by side | in `body` |
 | [`line`](#line) | | `rows`, `source`, `x`, `y`, `mark`, `footer`, `unit`, `fmt` | line chart | no |
 | [`area`](#area) | `rows` | `x`, `series`, `limit`, `limitLabel`, `unit` | area chart, several series, dashed limit | no |
 | [`hbar`](#hbar) | `rows` | `label`, `value`, `fmt`, `tone` | horizontal bars | no |
-| [`ladder`](#ladder) | `rows` | `totalLabel`, `highlight`, `search`, [`pivot`](#pivot-a-pivot-tab-on-a-table-or-ladder), `children`, `expand` | table with highlighted rows | yes |
+| [`ladder`](#ladder) | `rows` | `totalLabel`, `highlight`, `search`, [`pivot`](#pivot-a-pivot-tab-on-a-table-or-ladder), `children`, `expand`, [`levels`, `crumb`, `root`](#levels-drill-down-level-by-level), `empty` | table with highlighted rows | yes |
 | [`links`](#links-panel) | | | linked entities with badges | no |
 | [`status`](#status) | | `fields` | label/value grid, coloured by meaning | no (uses `fields`) |
 | [`provenance`](#provenance) | | | how the view was built | no |
@@ -708,12 +708,12 @@ expressions and templates are compiled at load time.
 | Kind | Expressions (Rachana-EL) | Field names (of each row) | Plain values |
 |---|---|---|---|
 | `kv` | `rows` | | |
-| `table` | `rows`, `moreLabel`, `children`, each `pivot` field's `bind` | each `pivot` field written as a path | `limit` (integer), `totalLabel`, `search` (`false` hides the filter), `expand`, the rest of `pivot` |
+| `table` | `rows`, `moreLabel`, `children`, `crumb`, `root`, each `pivot` field's `bind`, each level's `rows`, `crumb` and column `bind` | each `pivot` field written as a path | `limit` (integer), `totalLabel`, `search` (`false` hides the filter), `expand`, `empty`, each level's `title`, the rest of `pivot` |
 | `tabs` | `each`, `tabTitle` | | `layout` |
 | `line` | `rows`, `source`, `mark` | `x`, `y` | `unit`, `fmt` |
 | `area` | `rows`, `limit` | `x`, each series' `value` | `series[].label`, `series[].tone`, `limitLabel`, `unit` |
 | `hbar` | `rows` | `label`, `value` | `fmt`, `tone` |
-| `ladder` | `rows`, `highlight`, `children`, each `pivot` field's `bind` | each `pivot` field written as a path | `totalLabel`, `search` (`false` hides the filter), `expand`, the rest of `pivot` |
+| `ladder` | `rows`, `highlight`, `children`, `crumb`, `root`, each `pivot` field's `bind`, each level's `rows`, `crumb` and column `bind` | each `pivot` field written as a path | `totalLabel`, `search` (`false` hides the filter), `expand`, `empty`, each level's `title`, the rest of `pivot` |
 | `status` | each field's `bind` | | each field's `label`, `fmt`, `tone` |
 | `gauge` | `value`, `max` | | `label`, `fmt` |
 | `surface` | `rows`; `y` when it starts with `$` or `@` | `y` otherwise | `fmt`, `unit`, `view` |
@@ -788,6 +788,10 @@ One row per element of `rows`.
 | `link` | | | Accepted, no effect (see above). |
 | `children` | | none | Expression evaluated per row (`@` is the row) giving the rows nested under it, for example `children: "@.children"`. A row that has children shows a ▸/▾ toggle and expands in place, indented, to any depth (up to `drishti.panels.tree-depth`, 12). Columns evaluate against each child with `@`. `total: true` columns sum the rows that have no children only, so nothing counts twice. A number, a list or a boolean is `DRS-2029`. A table with `children` is not sorted, paged or given per-column filters; its filter keeps the ancestors of the rows that match. |
 | `expand` | | `1` | Levels shown open at first: `1` shows only the top level, `2` opens those to show their children, `all` opens every level. A whole number from 1 or `all` (`DRS-2029` otherwise). |
+| `levels` | | none | A drill-down: the rows each row opens to, level by level, each level with its own `rows` (read with `@` the row above), `title`, `crumb` and `columns`; 1 to 6 levels. See [levels: drill down level by level](#levels-drill-down-level-by-level). Not with `children` or `pivot` (`DRS-2029`). |
+| `crumb` | | `'#' + (#index + 1)` | With `levels`: an expression naming a first-level row in the breadcrumb (`"'Leg ' + @.leg"`). |
+| `root` | | the panel title | With `levels`: an expression, read against the document, for the first step of the breadcrumb (`"'Deal ' + $.tradeId"`). |
+| `empty` | | `No data available` | The words shown when there are no rows (the list is missing, null or empty): `empty: No events`. |
 | `search` | | `true` | `false` hides the filter box (and the per-column filters) in the panel's heading, for a table too small or too fixed to need one. Table and ladder panels take it; on any other kind it is a problem (`DRS-2023`, *option 'search' applies only to panels that show a table*). `true` or `false` only (`search: maybe` is `DRS-2029`). |
 | `pivot` | | none | Offers a **Pivot** tab beside the table: `true`, or the fields a user may pivot by and the arrangement it opens with ([below](#pivot-a-pivot-tab-on-a-table-or-ladder)). Without it there is no Pivot tab. |
 
@@ -952,7 +956,7 @@ tabs come from `each`, one per element, **whatever the count** (a cap has one le
 | Rule | Why |
 |---|---|
 | the kind is `kv`, `status`, `table`, `ladder`, `hbar`, `markdown` or `metric` | charts, `links`, `pivot` and `provenance` draw things of the whole view (`DRS-2023`) |
-| no `tabs` inside a tab | one level of tabs; deeper structure is a tree table (below) (`DRS-2023`) |
+| no `tabs` inside a tab | one level of tabs; deeper structure is a tree table (below) or a table that drills level by level ([`levels`](#levels-drill-down-level-by-level)) (`DRS-2023`) |
 | no `pivot:` on a table inside a tab | the Pivot tab reads the whole panel by its id (`DRS-2023`) |
 | no `span` or `height` | the panels take the size of their tabs panel (`DRS-2030`) |
 | an `id` on each, unique within the tab (`DRS-2010`, `DRS-2024`) | the live view and the CSV name the panels by it |
@@ -996,6 +1000,51 @@ month, each with a ▸ that opens the month's daily fixings. A live update repai
 opened, and shows a moved fixing in its nested cell. Without a Sutra, inference lays such a document out the same way: a tab per
 element, the element's fields, and a table for each list it holds, a tree when those rows hold lists again (docs/guides/PACK_DEVELOPER_GUIDE.md,
 Modelling deep documents). The worked pictures are in the [User guide](USER_GUIDE.md#a-deep-trade-legs-cashflows-and-fixings).
+
+#### levels: drill down level by level
+
+A tree (`children`) opens rows in place with the same columns at every depth. When each level is a different thing (a deal's legs, each
+leg's cash flows, each cash flow's resets, each reset's observations) give the table **`levels`**: the table shows one level at a time,
+each with its own columns, count and total, and a row that has rows under it opens them in place of the level, with the way back on screen:
+
+```yaml
+  - id: legs-cash-flows
+    kind: table
+    title: Cash flows
+    rows: "@.CASH_FLOWS"                         # inside a tab of legs: @ is the leg
+    crumb: "'Cash flow ' + @.FLOW_ID"            # a row's name in the breadcrumb
+    root: "'Deal ' + $.TRADE_ID + ' › Leg ' + @.LEG_ID"
+    empty: No cash flows
+    columns:
+      - { label: Payment date, bind: "@.PAYMENT_DATE", fmt: date }
+      - { label: Notional, bind: "@.NOTIONAL", fmt: amount0, total: true }
+      - { label: Resets, bind: "size(@.RESETS)", fmt: amount0 }
+    levels:
+      - rows: "@.RESETS"                         # what a cash flow opens to, read with @ the cash flow
+        title: Resets
+        crumb: "'Reset ' + (#index + 1)"
+        columns:
+          - { label: Reset date, bind: "@.RESET_DATE", fmt: date }
+          - { label: Rate, bind: "nonblank(@.RATE, '-')" }
+```
+
+You should see the cash flows with a count beside the title; the first cell of each row is a link with the number of resets it holds
+(`5000026 1 ▸`). Opening it (a click, or ↑ ↓ to the row and Enter or →) shows the breadcrumb *Deal 100002 › Leg 2 › Cash flow 5000026 ›
+Resets*, the cash flow's own values as a ticket under it, then its resets with their count and total. **Esc**, Backspace or ← goes up one
+level (the row you came from is selected), a breadcrumb step goes straight to that level, and the browser's Back does too: every level is
+in the address (`?dr.legs-cash-flows=1`, and `~2` for the second tab of a tabs panel), so a copied address opens the same level, in the
+same tab. Every level's table sorts, filters and pages like any table.
+
+| Key of a level | Required | Meaning |
+|---|---|---|
+| `rows` | yes | Expression giving the rows a row of the level above opens to, read with `@` that row (`"@.RESETS"`); a missing or empty list is a level with no rows (it says *No resets*), never an error. |
+| `title` | | What the rows of the level are; the caption above them and the last step of the breadcrumb. |
+| `crumb` | | Expression naming one row of this level in the breadcrumb (default its number). |
+| `columns` | | As a table's (`label`, `bind`, `fmt`, `tone`, `total`, `link`); a `total: true` column adds up the rows of the level under each row. |
+
+Up to 6 levels; every expression is checked when the Sutra loads (`DRS-2101`), the shape of `levels` too (`DRS-2029`). The rows are bound
+on the server once, bounded like a tree by `drishti.panels.tree-rows`; the console only shows and hides them. Build -> New pack writes
+this for a document whose arrays hold arrays ([Schema to pack, A deep trading JSON](SCHEMA_TO_PACK.md#appendix-a-deep-trading-json)).
 
 #### line
 
@@ -1987,7 +2036,9 @@ The set is closed (`Functions.java`); a name outside it is a compile error
 | `sum(list, 'field'?)` | 1–2 | the sum of `field` over the list's elements (or of the elements themselves); non-numbers are skipped; `0` when `list` is not a list |
 | `fmt(value, 'format')` | 2 | the value formatted as text with a named [format](#formats); an unknown format gives plain text |
 | `coalesce(a, b, …)` | 1–8 | the first argument that is not empty (an empty text `''` is not empty); empty if all are |
+| `nonblank(a, b, …)` | 1–8 | the first argument that has a value, skipping empty and all-space text as well as null (what most extracts write for a missing value): `nonblank(@.RATE, @.STRIKE_PRICE, '-')`; empty if none has |
 | `first(list)` | 1 | the first element; empty for a non-list or an empty list |
+| `flatten(list)` | 1 | a list of lists made one list, in order: `flatten($.legs[*].cashflows)` is every cashflow of every leg (a timeline of all payments); elements that are not lists are kept; empty for anything but a list. One level only |
 | `last(list)` | 1 | the last element |
 | `abs(x)` | 1 | the absolute value (NaN for a non-number) |
 | `min(a, b, …)` / `min(list)` | 1–8 | the smallest number among the arguments, or among a single list's elements; non-numbers are skipped; empty if none |

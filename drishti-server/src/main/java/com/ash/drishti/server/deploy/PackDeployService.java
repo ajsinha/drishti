@@ -272,7 +272,9 @@ public final class PackDeployService {
             if (code == 0) {
                 checks.add(Check.ok("sutra " + cmd, ok > 0 ? ok + " Sutra file(s) passed" : "nothing to " + cmd));
             } else {
-                List<String> bad = text.lines().filter(l -> l.startsWith("PROBLEM") || l.startsWith("FAIL") || l.contains("DRS-")).limit(6).toList();
+                List<String> bad = text.lines().filter(l -> l.contains(" is in error") || l.contains("did not render") || l.contains("should have data"))
+                        .limit(3).collect(java.util.stream.Collectors.toCollection(ArrayList::new));       // why first, then which files
+                text.lines().filter(l -> l.startsWith("PROBLEM") || l.startsWith("FAIL") || l.contains("DRS-")).limit(6 - bad.size()).forEach(bad::add);
                 checks.add(Check.fail("sutra " + cmd, bad.isEmpty() ? "failed (exit " + code + ")" : String.join("; ", bad)));
             }
         }

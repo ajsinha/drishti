@@ -1,0 +1,47 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* A table that drills down level by level (Sutra levels:, static/js/drill.js): the breadcrumb, the parent row as a compact ticket,
+   one level's table at a time with its count and total. Dense like a terminal screen; theme tokens only. */
+.drill { display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
+.dr-crumbs { display: flex; align-items: center; justify-content: space-between; gap: .5rem; min-height: 2rem; flex-wrap: wrap; }
+.dr-crumbs ol { display: flex; flex-wrap: wrap; align-items: center; gap: .15rem; list-style: none; margin: 0; padding: 0; font-size: .82rem; min-width: 0; }
+.dr-crumbs li { display: inline-flex; align-items: center; color: var(--d-muted); min-width: 0; overflow-wrap: anywhere; }
+.dr-crumbs li + li::before { content: "›"; margin: 0 .35rem; color: var(--d-faint); }
+.dr-crumbs li[aria-current] { color: var(--d-ink); font-weight: 600; }
+.dr-crumbs button.dr-step { background: none; border: 0; padding: .1rem .15rem; min-height: 1.6rem; color: var(--d-link); font: inherit; cursor: pointer; border-radius: 4px; }
+.dr-crumbs button.dr-step:hover, .dr-crumbs button.dr-step:focus-visible { text-decoration: underline; outline: 2px solid var(--d-accent); outline-offset: 1px; }
+.dr-up { min-height: 2rem; }
+.dr-lv[hidden] { display: none; }
+.dr-parent { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: .3rem .9rem; margin: 0 0 .25rem; padding: .35rem .55rem;
+  border-left: 3px solid var(--d-accent); background: var(--d-surface-2); border-radius: 0 6px 6px 0; font-size: .8rem; }
+.dr-parent div { min-width: 0; display: flex; flex-direction: column; gap: .05rem; }   /* a ticket: the label small above its value */
+.dr-parent dt { color: var(--d-muted); font-weight: 400; font-size: .72rem; overflow-wrap: anywhere; }
+.dr-parent dd { margin: 0; color: var(--d-ink); font-family: var(--d-font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dr-cap { caption-side: top; text-align: left; font-size: .78rem; color: var(--d-muted); padding: 0 0 .2rem; text-transform: uppercase; letter-spacing: .04em; }
+.dr-count { display: inline-block; min-width: 1.6rem; padding: 0 .35rem; margin-left: .3rem; border-radius: 999px; background: var(--d-accent-tint); color: var(--d-accent); font-size: .75rem;
+  text-align: center; letter-spacing: 0; }
+.dr-tbl td, .dr-tbl th { padding-top: .22rem; padding-bottom: .22rem; }
+.dr-tbl tbody tr:first-child td { background: none; }
+.dr-tbl tbody tr.hl td, .dr-tbl tbody tr.dr-came td { background: var(--d-highlight); }
+a.dr-open { color: var(--d-link); text-decoration: none; display: inline-flex; align-items: center; gap: .4rem; min-height: 1.6rem; }
+a.dr-open:hover, a.dr-open:focus-visible { text-decoration: underline; }
+.dr-n { font-size: .72rem; color: var(--d-accent); border: 1px solid var(--d-accent-tint); border-radius: 999px; padding: 0 .35rem; white-space: nowrap; }
+@media (max-width: 600px) {
+  .dr-parent { grid-template-columns: 1fr 1fr; }
+  a.dr-open { min-height: 2.75rem; }
+  .dr-crumbs button.dr-step { min-height: 2.75rem; min-width: 2.75rem; }
+  .dr-up { min-height: 2.75rem; }
+}

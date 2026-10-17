@@ -75,8 +75,68 @@
     return k.fields.filter(function (f) { return f.path.indexOf('.') < 0 && f.path.indexOf('[') < 0 && /^(string|integer|number|)$/.test(f.type) && f.role !== 'object'; });
   }
 
+  /** A page per value (a derived kind): what it groups, how many pages the samples make, and its mnemonic. */
+  function derivedCard(plan, k, change) {
+    var id = k.origKind || k.kind, d = k.derived;
+    var c = el('article', { class: 'pk-card pk-derived', 'aria-labelledby': 'pkh-' + id, 'data-derived': d.from });
+    c.appendChild(el('div', { class: 'pk-card-h' }, [el('h3', { id: 'pkh-' + id, class: 'pk-kind', text: k.title }), el('span', { class: 'bs-role', text: 'page per value' })]));
+    c.appendChild(el('p', { class: 'pk-desc', text: 'A page for each ' + (d.label || '').toLowerCase() + ' of a ' + d.from + ': its ' + d.from + ' documents with their count and totals, built by the server from the documents themselves (no extra feed). '
+      + U.plural(k.samples, 'page') + ' in the samples. The ' + d.from + ' view links to it; it links back to each document.' }));
+    var mn = el('input', { type: 'text', class: 'studio-in mono', value: k.mnemonic, maxlength: '8', autocomplete: 'off', 'data-focus': 'mn-' + id });
+    mn.addEventListener('change', function () { change(id, { mnemonic: mn.value.trim().toUpperCase() }); });
+    c.appendChild(el('div', { class: 'pk-grid' }, [field('Mnemonic', mn, 'Typed before a value: ' + k.mnemonic + ' <' + (d.label || 'value').toLowerCase() + '>.')]));
+    return c;
+  }
+
+  /** "Split into Sutras by": one type column, one Sutra per value found (every row counted), with each type's row count. */
+  function splitBox(plan, k, change) {
+    var id = k.origKind || k.kind, cur = (k.match || [])[0] || '';
+    var box = el('div', { class: 'pk-split', 'data-split': id });
+    box.appendChild(el('h4', { class: 'bs-h2', text: 'Split into Sutras by a type column' }));
+    var opts = [{ value: '', label: '(none) one Sutra for every ' + k.kind }];
+    var seen = {};
+    (k.matchOptions || []).forEach(function (o) { seen[o.field] = 1; opts.push({ value: o.field, label: o.field + ' (' + U.plural(o.values.length, 'type') + (o.typeish ? ')' : ')') }); });
+    if (cur && !seen[cur]) { opts.push({ value: cur, label: cur }); }
+    var sel = U.select(opts, cur, { 'data-focus': 'match-' + id, 'aria-label': 'Type column of ' + k.kind });
+    sel.addEventListener('change', function () { change(id, { match: sel.value ? [sel.value] : [] }); });
+    box.appendChild(field('Type column', sel, 'One Sutra per value found in the whole file (every row is counted, rare types too). A catch-all Sutra is added only when some rows have no value.'));
+    var counts = cur && k.matchCounts ? k.matchCounts[cur] : null;
+    if (counts) {
+      var vals = Object.keys(counts).filter(function (v) { return v !== ''; }).sort(function (a, b) { return counts[b] - counts[a]; });
+      var blanks = counts[''] || 0;
+      box.appendChild(el('p', { class: 'pk-types-h', 'data-types-summary': true, text: U.plural(vals.length, 'type') + ' → ' + U.plural(k.sutras.length, 'Sutra') + (blanks ? ' (' + U.num(blanks) + ' rows have no ' + cur + ': they get the catch-all ' + k.kind + '-default)' : '') }));
+      var t = el('table', { class: 'tbl adm-tbl pk-types', 'data-plain': true }, [el('thead', {}, [el('tr', {}, [el('th', { text: cur }), el('th', { class: 'num', text: 'Rows' }), el('th', { text: 'Sutra' })])])]);
+      var tb = el('tbody');
+      vals.forEach(function (v) {
+        var s = k.sutras.filter(function (x) { return !x.fallback && x.where.indexOf("'" + v.replace(/'/g, "\\'") + "'") >= 0; })[0];
+        tb.appendChild(el('tr', {}, [el('td', { class: 'mono', text: v }), el('td', { class: 'num mono', text: U.num(counts[v]) }), el('td', { class: 'mono', text: s ? s.name : '' })]));
+      });
+      t.appendChild(tb);
+      box.appendChild(el('div', { class: 'tbl-wrap' }, [t]));
+    }
+    return box;
+  }
+
+  /** Pages for each value of a field: one checkbox per field that groups the documents (counterparty, portfolio, index ...). */
+  function relatedBox(k, change) {
+    var id = k.origKind || k.kind, on = (k.related || []).map(function (r) { return r.path; });
+    var box = el('fieldset', { class: 'pk-related', 'data-related': id }, [el('legend', { text: 'Pages for each value (counterparty, portfolio, index …)' })]);
+    (k.relatedOptions || []).forEach(function (o) {
+      var cid = 'pkr-' + id + '-' + o.path.replace(/[^A-Za-z0-9]/g, '_');
+      var cb = el('input', { type: 'checkbox', id: cid, 'data-focus': 'rel-' + id + '-' + o.path, value: o.path });
+      cb.checked = on.indexOf(o.path) >= 0;
+      cb.addEventListener('change', function () {
+        var now = Array.prototype.filter.call(box.querySelectorAll('input[type=checkbox]'), function (x) { return x.checked; }).map(function (x) { return x.value; });
+        change(id, { related: now });
+      });
+      box.appendChild(el('div', { class: 'pk-check' }, [cb, el('label', { for: cid }, [el('b', { text: o.label }), ' ', el('span', { class: 'text-muted-d', text: '(' + o.path + ': ' + o.why + ')' })])]));
+    });
+    return box;
+  }
+
   function card(plan, k, S, change) {
     var id = k.origKind || k.kind;
+    if (k.derived && k.derived.from) { return derivedCard(plan, k, change); }
     var kindNames = plan.kinds.map(function (x) { return x.kind; });
     var scal = scalarTop(k);
     var c = el('article', { class: 'pk-card' + (k.keyAmbiguous || !k.key ? ' pk-needs' : ''), 'aria-labelledby': 'pkh-' + id });
@@ -114,20 +174,27 @@
     var seen = {};
     (k.matchOptions || []).forEach(function (o) { seen[o.field] = 1; matchOpts.push({ value: o.field, label: o.field + ' (' + U.plural(o.sutras, 'Sutra') + ')' }); });
     if (cur && !seen[cur]) { matchOpts.push({ value: cur, label: cur + ' (' + U.plural(k.sutras.length, 'Sutra') + ')' }); }
-    var matchSel = U.select(matchOpts, cur, { 'data-focus': 'match-' + id });
-    matchSel.addEventListener('change', function () { change(id, { match: matchSel.value ? [matchSel.value] : [] }); });
-    grid.appendChild(field('Split into Sutras by', matchSel, k.matchWhy + '. A catch-all Sutra is always added.'));
+    if (k.synthetic) {                       // schemas only: the old control; with data the split box below lists every type
+      var matchSel = U.select(matchOpts, cur, { 'data-focus': 'match-' + id });
+      matchSel.addEventListener('change', function () { change(id, { match: matchSel.value ? [matchSel.value] : [] }); });
+      grid.appendChild(field('Split into Sutras by', matchSel, k.matchWhy + '. A catch-all Sutra is always added.'));
+    }
 
     var dateFields = k.fields.filter(function (f) { return f.path.indexOf('.') < 0 && (f.role === 'date' || f.role === 'datetime' || f.format === 'date' || f.format === 'date-time'); });
-    var dateSel = U.select([{ value: '', label: '(none) no dated store' }].concat(dateFields.map(function (f) { return { value: f.path, label: f.path }; })), k.date || '', { 'data-focus': 'date-' + id });
+    var dateOpts = [{ value: '', label: '(none) no dated store' }];
+    if (!k.synthetic) { dateOpts.push({ value: '@snapshot', label: 'Snapshot: the day the file is loaded' }); }
+    var dateSel = U.select(dateOpts.concat(dateFields.map(function (f) { return { value: f.path, label: f.path + ' (each document\'s own date)' }; })),
+      k.snapshot ? '@snapshot' : (k.date || ''), { 'data-focus': 'date-' + id });
     dateSel.addEventListener('change', function () { change(id, { date: dateSel.value }); });
-    grid.appendChild(field('Business date field', dateSel, k.dateWhy || ''));
+    grid.appendChild(field('Business date', dateSel, (k.snapshot ? 'Snapshot. ' : '') + (k.dateWhy || '') + (k.dateWhy ? '.' : '')));
 
     var mn = el('input', { type: 'text', class: 'studio-in mono', value: k.mnemonic, maxlength: '8', autocomplete: 'off', 'data-focus': 'mn-' + id });
     mn.addEventListener('change', function () { change(id, { mnemonic: mn.value.trim().toUpperCase() }); });
     var clash = (plan.conflicts.mnemonics || []).indexOf(k.mnemonic) >= 0;
     grid.appendChild(field('Mnemonic', mn, clash ? 'Another pack already uses ' + k.mnemonic + ': choose another.' : 'Typed before an id: ' + k.mnemonic + ' ' + (k.key ? '<' + k.key + '>' : '<id>') + '.', clash ? 'pk-warn' : ''));
+    if (!k.synthetic) { c.appendChild(splitBox(plan, k, change)); }
     c.appendChild(grid);
+    if (!k.synthetic && (k.relatedOptions || []).length) { c.appendChild(relatedBox(k, change)); }
 
     // links
     var links = el('div', { class: 'pk-links' }, [el('h4', { class: 'bs-h2', text: 'Links to other kinds' })]);
@@ -160,11 +227,12 @@
       c.appendChild(ul);
     }
     var det = el('details', { class: 'pk-fields' }, [el('summary', { text: 'Fields (' + k.fields.length + ')' })]);
-    var t = el('table', { class: 'tbl adm-tbl', 'data-plain': true }, [el('thead', {}, [el('tr', {}, ['Path', 'Label', 'Type', 'Format', 'Description'].map(function (h) { return el('th', { text: h }); }))])]);
+    var t = el('table', { class: 'tbl adm-tbl', 'data-plain': true }, [el('thead', {}, [el('tr', {}, ['Path', 'Label', 'Type', 'Format', 'Filled', 'Description'].map(function (h) { return el('th', { text: h }); }))])]);
     var tb = el('tbody');
     k.fields.forEach(function (f) {
-      tb.appendChild(el('tr', {}, [el('td', { class: 'mono', text: f.path + (f.required ? ' *' : '') }), el('td', { text: f.label }), el('td', { text: f.type + (f.enum.length ? ' enum' : '') }),
-        el('td', { text: f.fmt || f.format || '' }), el('td', { text: f.description })]));
+      var filled = f.hidden ? 'blank everywhere: not shown' : (f.fill === undefined || k.synthetic ? '' : Math.round(f.fill * 100) + '%');
+      tb.appendChild(el('tr', f.hidden ? { class: 'pk-blank' } : {}, [el('td', { class: 'mono', text: f.path + (f.required ? ' *' : '') }), el('td', { text: f.label }), el('td', { text: f.type + (f.enum.length ? ' enum' : '') }),
+        el('td', { text: f.fmt || f.format || '' }), el('td', { class: 'num', text: filled }), el('td', { text: f.description })]));
     });
     t.appendChild(tb);
     det.appendChild(el('div', { class: 'tbl-wrap' }, [t]));

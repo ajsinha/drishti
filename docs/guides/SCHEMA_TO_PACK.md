@@ -51,6 +51,7 @@ pack folder: pack.yaml, sutras/, tests/, samples/, config/about.yaml, README.md 
 9. [Limits and settings](#limits-and-settings)
 10. [Troubleshooting](#troubleshooting)
 11. [Not yet, and what this leaves for later](#not-yet-and-what-this-leaves-for-later)
+12. [Appendix: A deep trading JSON](#appendix-a-deep-trading-json)
 
 ## Quick start
 
@@ -92,9 +93,9 @@ a kind named after its file (`trades.jsonl` is first matched to a schema kind: `
 The key is the field whose value names one document (`tradeId`). It becomes the id in the title and in the pick lists.
 
 1. A property with `x-drishti-role: key` (or `x-drishti-key: true`).
-2. Otherwise the candidates are the top-level string or integer properties named `id`, `_id`, `*Id`, `*_id`, `*Key`, `uuid`, or with `format: uuid`;
+2. Otherwise the candidates are the top-level string or integer properties named `id`, `_id`, `*Id`, `*_id`, `*Key`, `uuid`, or with `format: uuid`, in any case (`TRADE_ID`, `COUNTERPARTY_UEN`, `trade_ref` too); an integer id is a label, never an amount, a strip figure or a total;
    **required** ones first, and, when real documents are given, only those that are **unique** in them.
-3. Of the candidates, in order: one named `id`; one named `<kind>Id` or `<kind>_id`; the **only** one that does not refer to another kind of the batch.
+3. Of the candidates, in order: one named `id`; one named `<kind>Id` or `<kind>_id`; one named after what such a document usually is (`TRADE_ID`, `dealId`, `contractId`, before a `TRANSACTION_ID` that changes on every amendment); the **only** one that does not refer to another kind of the batch.
 4. If several remain, the key is **ambiguous**: the first is used, a warning names them all, the page marks the card amber and the command line
    **asks** (when it runs in a terminal; `--yes` takes the first). Choose with `x-drishti-role: key`, `--key kind=FIELD`, or the card.
 5. No candidate at all: no key. The page will not go on; `pack make` stops and says `--key`.
@@ -166,7 +167,11 @@ versions are not figures. The first figure is emphasised.
 ### Splitting a kind into several Sutras
 
 **One Sutra per variant or per value**, each with its own `match.where` and its own samples, plus a catch-all `<kind>-default` at priority 1 (a document
-of a value you did not think of still opens).
+of a value you did not think of still opens). With real data the catch-all is made **only when some rows have no value** in the split column (the card
+says how many); when every row has a type, N types make exactly N Sutras, each named after its type (`comswap`, `cash`) and designed from its own
+type's rows. The card lists them, "5 types → 5 Sutras", with each type's row count, the rare ones too (every row of every file is counted, not a
+sample). A column named like a type (`PRODUCT_TYPE`, `productType`, `recordType`, `assetClass`) with 2 to 40 values is chosen by itself; a second
+split column is under *Advanced* and warns of the cross product.
 
 - **`oneOf` / `anyOf` of objects with a discriminator**: the `discriminator.propertyName` (OpenAPI style), `x-drishti-discriminator`, or a property
   every branch fixes to a different `const` (or one-value `enum`), preferring `type`, `kind`, `productType`, `category`. One Sutra per branch
@@ -180,8 +185,13 @@ A match column with many values makes many Sutras: the page refuses more than `b
 ### The business date
 
 Used to partition real data by day (a dated store). From `x-drishti-role: date`; else a date field named like a business date (`businessDate`, `asOf`,
-`reportingDate`, `date`, `valuationDate`, `tradeDate`); else the one required date field. With several candidates and none named like a date the card asks. No date: no
-dated store, the pack serves its samples.
+`reportingDate`, `date`, `valuationDate`, `tradeDate`); else the one required date field. With several candidates and none named like a date the card asks.
+
+Real documents with **no business-date field** (an export of the book as it is now: trade, start and maturity dates, none of them the day of the
+data) are a **snapshot**: the card's *Business date* says *The day it is loaded (snapshot)*, the pack writes `ingest: {key: TRADE_ID, snapshot: true}`,
+and every load is stored under the business date of the day it is loaded, so yesterday's book stays as it was. Choose a date field on the card
+(or `--date kind=FIELD`) to file each document under its own date instead; `--as-of 2026-10-16` loads a snapshot under another day. Schemas
+alone with no date: no dated store, the pack serves its samples.
 
 ### Mnemonic, connectors and the pack
 
@@ -557,6 +567,9 @@ warnings, the bundle's checksum and `checks` (`packCheck`, `packVerify`).
 | `builder.pack_max_files`, `builder.pack_max_docs`, `builder.pack_max_schema_kb`, `builder.pack_max_sutras` | 200, 5000, 512, 200 | refused with `413 DRS-5005` |
 | `builder.pack_jobs_per_user`, `builder.pack_job_ttl_min`, `builder.pack_draft_concurrency` | 3, 60, 4 | preview jobs |
 | `builder.tools_dir` | `../tools` | where `packbundle.py` is |
+| `builder.pack_profile_rows_per_type` | 10000 | rows of each type profiled (fields filled, array sizes); every row is still counted |
+| `builder.pack_design_samples_per_type` | 50 | documents of each type kept, varied in shape, to design that type's Sutra |
+| `builder.pack_load_max_mb`, `drishti.loads.upload-max-mb` | 2048, 2048 | the largest file **Load data** streams on (console), and takes (server) |
 
 All are in [CONFIGURATION.md](../admin/CONFIGURATION.md).
 
@@ -574,8 +587,254 @@ All are in [CONFIGURATION.md](../admin/CONFIGURATION.md).
 | a Sutra *refused by the server* | the Sutra tab shows the located problems; usually a field name that is not a valid path |
 | *501 packbundle.py is not available* | the console cannot find `tools/` (`builder.tools_dir`); the page still plans and previews |
 | *429 DRS-5005* | too many preview jobs running: cancel one |
+| *N types → N + 1 Sutras* on the card | some rows have no type; the extra one is the catch-all and the card says how many rows it is for |
+| a field shown as *TODO* everywhere | blank in every row read (only `""` or spaces): it is hidden; a field that is blank in some rows is shown where it has a value |
+| Load data: *types with no Sutra* | rows whose type the pack was not built with; they are stored, and open with the catch-all if there is one: make the pack again from a file that has them |
+| *DRS-1001 no source holds deals-counterparty/...* right after a load | the pages per value are rebuilt by the load; if they are not, check the load result's steps say the pack's `-pages` connector was refreshed |
 
 ## Not yet, and what this leaves for later
 
 - **Controls.** Enumerated fields are listed as dropdown suggestions (plan and `MANIFEST.json`); the design of controls is in progress (RUPAKA, the BI design note, section 8, has none yet), so nothing is written to a Sutra.
 - **Editing the generated Sutras in place.** Open one in the workbench to refine it; to keep the schema as the source, change the schema and generate again (`pack regenerate` merges later changes).
+
+## Appendix: A deep trading JSON
+
+A trading system's export is often **one large JSON array** with no schema: each element a deal, its legs inside it, each leg's cash flows
+inside the leg, each cash flow's resets inside that, events beside the legs, names in `UPPER_SNAKE`, blanks written as `""`, and no field
+that says which day the file describes. Several products share the file and one column (`PRODUCT_TYPE`) tells them apart. This appendix
+takes such a file from nothing to a deployed pack with its data, every step in the browser, with the command line and the YAML beside it.
+
+Every value here is **synthetic** (`tools/packgen/comswap_synth.py`: counterparties `CPTY-ALPHA` ..., traders *Trader A* ..., portfolios
+`PF-ENERGY-01` ...). Never put a real export's values in a pack, a test, a sample or a screenshot: **Anonymise samples** (below) exists for that.
+
+```bash
+# a whole book in one file: 5,000 deals of five types (ComSwap, ComFut, Cash, Commodity and a rare CallNot), about 66 MB
+python3 tools/packgen/comswap_synth.py --mix --deals 5000 --out deals.json
+# small ones are committed: docs/guides/examples/comswap/book-sample.json (40 mixed) and comswap-sample.json (40 swaps)
+# another deep shape, four levels, camelCase: a structured note (coupon periods, observations, fixings)
+python3 tools/packgen/note_synth.py --notes 30 --out notes.json
+```
+
+One deal, shortened:
+
+```json
+{ "TRADE_ID": 100004, "TRANSACTION_ID": 700000021, "TRADE_STATUS": "Amended", "PRODUCT_TYPE": "ComSwap",
+  "PRODUCT_SUB_TYPE": "Fixed float swap", "COUNTERPARTY": "CPTY-PRAIRIE", "PORTFOLIO": "PF-ENERGY-01", "LEGAL_ENTITY": "LE-SOUTH",
+  "TRADE_DATE": "2026-02-17", "START_DATE": "2026-05-01", "MATURITY_DATE": "2027-10-31", "QUANTITY": 180000, "PRECIOUS_METAL_FLAG": "",
+  "LEGS": [
+    { "LEG_ID": 1, "LEG_TYPE": "Fixed", "NOTIONAL": 10000, "CASH_FLOWS": [ { "FLOW_ID": 5000099, "PAYMENT_DATE": "2026-06-05", "RESETS": [] } ] },
+    { "LEG_ID": 2, "LEG_TYPE": "Float", "INDEX": { "NAME": "IDX-NATGAS-TTF", "GROUP": "Energy" },
+      "CASH_FLOWS": [ { "FLOW_ID": 5000119, "PAYMENT_DATE": "2026-08-05",
+                        "RESETS": [ { "RESET_ID": 1, "RESET_DATE": "2026-07-01", "ACCRUAL_START_DATE": "", "RATE": "31.8669" } ] } ] } ],
+  "EVENTS": [ { "EVENT_ID": 9000011, "LEG_ID": 1, "EVENT_TYPE": "Reset", "EVENT_DATE": "2026-06-05", "AMOUNT": 142210.64 } ] }
+```
+
+### 1. Read the file (Build → New pack, step 1)
+
+Choose `deals.json` with **Choose files**. The page streams it: one document in memory at a time, whatever its size, and nothing is
+uploaded. **Every row is counted** for the columns that could tell record types apart, up to `builder.pack_profile_rows_per_type` rows of
+each type are profiled (how often each field has a value, digits written as text, the size of every array at every depth), and
+`builder.pack_design_samples_per_type` documents of each type are kept, chosen for variety (with and without events, one leg and two, fixed
+and floating). Measured: 66 MB / 5,000 deals in 0.5 s; 2 GB / 500,000 rows in about 20 s with about 110 MB in the page, flat.
+
+![Step 1: one JSON array of 5,000 deals read in the browser, with its rows, size and the documents kept](img/deepjson/01-sources.jpg)
+
+**Anonymise samples** is on by default for data files: before anything leaves the browser's sample, names and ids are replaced the same way
+everywhere (`CPTY-0007`), digits by other digits of the same length, amounts scaled; dates and short vocabularies (`Buy`, `Float`) are kept, so
+the design is the same. Turn it off only for data you may share.
+
+### 2. The card (step 2)
+
+![The kind's card: 5 types to 5 Sutras with each type's rows, the key, the snapshot date, pages per value and links](img/deepjson/02-card.jpg)
+
+You should see, without choosing anything:
+
+- **Split into Sutras by a type column**: `PRODUCT_TYPE (5 types)`, and the list *5 types → 5 Sutras*: `ComSwap 2,225 → comswap` ...
+  `CallNot 52 → callnot`. The rare type is there with its true count, because every row was counted. No catch-all: every row has a type
+  (a file where some rows have none gets a sixth, `deals-default`, and the card says for how many rows).
+- **Key field** `TRADE_ID`, *named like the id of a trade, unique in all documents (other id-like fields: TRANSACTION_ID)*. An integer id is
+  an id: never summed, never a strip figure.
+- **Business date**: *Snapshot: the day the file is loaded*. `TRADE_DATE`, `START_DATE` and `MATURITY_DATE` differ from deal to deal, so none
+  is the day of the file. Choose one if every document does carry its own day.
+- **Pages for each value**: *Counterparty*, *Portfolio* and *Index* (`LEGS[].INDEX.NAME`, found inside the legs) are ticked; each becomes a
+  kind of its own, built by the server from the deals (no extra feed), linked both ways: a deal's counterparty opens the counterparty's page,
+  which lists its deals.
+- **Fields**: `UPPER_SNAKE` read as words (*Trade status*, *Buy sell code*); a field that is blank in every row (`PRECIOUS_METAL_FLAG` above)
+  is hidden rather than shown empty; a field filled in a few rows shows its *Filled* share.
+
+The same plan from the command line, where every choice above has a flag:
+
+```bash
+python3 tools/drishti.py pack make deals.json --name book --kind deals --store files --yes
+#   deals: key TRADE_ID (named like the id of a trade ...); date (none); match PRODUCT_TYPE; 5 Sutra(s);
+#   links COUNTERPARTY->deals-counterparty, PORTFOLIO->deals-portfolio
+#   deals 2026-10-16: 5000 rows -> build/book-1.0.0/data/files/book/2026-10-16/deals.jsonl
+# --match COL          another type column
+# --key TRADE_ID       --date FIELD (instead of a snapshot)       --as-of 2026-10-16 (the day a snapshot is stored under)
+# --related none       no pages per value; --related COUNTERPARTY,PORTFOLIO for these only
+# --no-anonymise       keep the samples as they are
+```
+
+### 3. Pack, preview, deploy (steps 3 to 5)
+
+Name the pack `book` and press Next. The preview drafts the five Sutras and the three page kinds against the server and checks each one.
+
+![Step 4: every Sutra drafted, checked and shown on its own samples](img/deepjson/03-preview.jpg)
+
+Step 5 downloads the pack or **deploys it** (Admin → Packs, with its checks). What comes out, in `pack.yaml` (shortened):
+
+```yaml
+pack: book
+kinds: [deals, deals-counterparty, deals-portfolio, deals-index]
+connectors: [book-pages, book-store]
+routes: {deals: book-store, deals-counterparty: book-pages, deals-portfolio: book-pages, deals-index: book-pages}
+ingest:
+  deals: {key: TRADE_ID, snapshot: true}       # no business-date field: stored under the day it is loaded
+connector-templates:
+  book-store:                                  # the File connector the data goes into
+    plugin: file
+    kinds: [deals]
+    settings:
+      root: ${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}
+      domain: book
+      layout:
+        deals:
+          columns: [TRADE_STATUS, BUY_SELL_CODE, QUANTITY, PRODUCT_SUB_TYPE, COUNTERPARTY, PORTFOLIO, START_DATE, TRADE_ID, ...]
+          title: [PRODUCT_TYPE, COUNTERPARTY, PORTFOLIO]
+  book-pages:                                  # the pages per value, built from the deals
+    plugin: derived
+    kinds: [deals-counterparty, deals-index, deals-portfolio]
+    settings:
+      deals-counterparty:
+        from: deals
+        group-by: $.COUNTERPARTY
+        fields: {count: count, totalQuantity: sum $.QUANTITY, portfolios: distinct $.PORTFOLIO}
+      deals-index:
+        from: deals
+        group-by: first($.LEGS[?@.INDEX.NAME != '']).INDEX.NAME
+graph:
+  fields:
+    COUNTERPARTY: {kind: deals-counterparty, label: Counterparty}
+    PORTFOLIO: {kind: deals-portfolio, label: Portfolio}
+```
+
+`layout.deals.title` puts the type, counterparty and portfolio after the id in the search title, so typing `CPTY-PRAIRIE` in the command bar
+offers that counterparty's deals as well as its page. The pack also carries `sutras/deals/{comswap,comfut,commodity,cash,callnot}.v1.sutra.yaml`,
+one Sutra for each page kind, anonymised samples and tests, and `config/bi/` (section 7).
+
+### 4. Load the data (Admin → Packs → book → Load data)
+
+![Load data: 5,000 rows streamed into the File connector, checked against the Sutras, then refresh, verify, alerts and notices](img/deepjson/04-load-data.jpg)
+
+Choose the same `deals.json` and press **Load the file**. It is streamed from the browser to the server (never held in memory on the way,
+up to `drishti.loads.upload-max-mb`), written into `book-store` under the business date (a snapshot: today's, or the day you choose; a day
+loaded again is replaced), and **every row is checked** against the pack's Sutras: *types with no Sutra* (a product the pack was not built
+with) and *fields no Sutra shows* are listed with their counts. Then the load is announced like any other data load
+([Data loads](DATA_LOADS.md)): caches are dropped (the pages per value are rebuilt from the new deals), the day is verified, alerts and
+subscriptions run. 5,000 deals take about a second.
+
+The same from a script, or offline:
+
+```bash
+# over REST, with a token that has packs:admin (a JSON array or JSON Lines)
+curl -sS -X POST "http://HOST:18480/api/v1/admin/packs/book/data?kind=deals&date=2026-10-16" \
+     -H "Authorization: Bearer $DRISHTI_TOKEN" -H "Content-Type: application/json" --data-binary @deals.json
+# offline, into the File connector's folder (JSON Lines: comswap_synth.py --jsonl writes them)
+python3 tools/drishti.py data ingest --from deals.jsonl --pack build/book-1.0.0/pack/book --store files --root /path/to/files --as-of 2026-10-16
+```
+
+### 5. A deal
+
+Type `DEA 100004 <GO>` (or the counterparty's name, and pick the deal).
+
+![A ComSwap: the deal strip, its filled fields, the legs side by side, the payment timeline](img/deepjson/05-deal.jpg)
+
+- the **strip**: status, side, quantity, sub type, counterparty and portfolio (links), start and maturity;
+- **Deals** (F2): every field the deal fills, blanks left out;
+- **Legs** (F3): a few legs **side by side**, each with its own terms (a fixed leg's price, a floating leg's index and reset convention);
+- **Cash flows by leg** (F4): a tab per leg, each schedule a row wide, drilling down level by level (below);
+- **Events** (F5): the deal's resets, payments and the like, or *No events* when it has none;
+- on the right, the **payment dates of every leg** as one timeline (`flatten($.LEGS[*].CASH_FLOWS)`), and the other deals of the same counterparty.
+
+A ComFut, a Cash payment and a CallNot open with their own Sutras: the same arrangement made from their own fields (a cash deal has no legs
+panel because it has no legs).
+
+### 6. Drill down: leg → cash flow → resets
+
+![Leg 2, cash flow 5000119, its resets: the breadcrumb, the cash flow as a ticket, the resets](img/deepjson/06-resets.jpg)
+
+In **Cash flows by leg**, choose *Leg 2 · Float*, then a cash flow's link (`5000119 1 ▸`: one reset). The breadcrumb reads *Deals 100004 ›
+Leg 2 · Float › Cash flow 5000119 › Resets*, the cash flow's values sit above as a ticket, and its resets fill the table with their count.
+Keyboard: ↑ ↓ to a row, Enter or → to open, **Esc**, Backspace or ← to go up (the row you came from stays selected); the browser's Back goes
+up too, and the address keeps the level and the tab, so a copied link opens this very table of resets. The Sutra behind it (shortened):
+
+```yaml
+  - id: legs-cash-flows
+    kind: tabs
+    title: Cash flows by leg
+    each: "$.LEGS"
+    tabTitle: "'Leg ' + @.LEG_ID + ' · ' + @.LEG_TYPE"
+    panels:
+      - id: legs-cash-flows-rows
+        kind: table
+        title: Cash flows
+        rows: "@.CASH_FLOWS"
+        crumb: "'Cash flow ' + @.FLOW_ID"
+        root: "'Deals ' + $.TRADE_ID + ' › ' + 'Leg ' + @.LEG_ID + ' · ' + @.LEG_TYPE"
+        empty: "No cash flows"
+        columns:
+          - { label: "Payment date", bind: "@.PAYMENT_DATE", fmt: "date" }
+          - { label: "Notional", bind: "@.NOTIONAL", fmt: "amount2", total: true }
+          - { label: "Resets", bind: "size(@.RESETS)", fmt: "amount0" }
+        levels:
+          - rows: "@.RESETS"
+            title: "Resets"
+            crumb: "'Reset ' + @.RESET_ID"
+            columns:
+              - { label: "Reset date", bind: "@.RESET_DATE", fmt: "date" }
+              - { label: "Rate", bind: "@.RATE", fmt: "price4" }
+```
+
+Nothing in it is about trades: any array whose elements hold arrays is drawn this way, to any depth (the structured note of
+`note_synth.py` drills *coupon period → observations → fixings*). `levels`, `crumb`, `root` and `empty` are in the
+[Rachana reference](RACHANA_REFERENCE.md#levels-drill-down-level-by-level).
+
+### 7. A counterparty, the phone, and BI
+
+![The counterparty's page: its deals with their count and total quantity, each deal a link](img/deepjson/07-counterparty.jpg)
+
+The counterparty link opens `DEAC CPTY-PRAIRIE`: how many deals, the total quantity, how many portfolios, and every deal (filter, sort, page;
+each id opens the deal). On a phone the same deal stacks: the strip in two columns, panels one under another, the function keys along the
+bottom, nothing wider than the screen.
+
+![The deal on a phone, 390 px wide](img/deepjson/08-phone.jpg)
+
+For analysis the pack ships a **BI model** with a table for every level, each row carrying the keys above it, so a cash flow can be counted by
+its deal's counterparty or its leg's index:
+
+```yaml
+# config/bi/models/book-deals.model.yaml (shortened)
+model: book-deals
+datasets:
+  deals: {dataset: book-deals-deals, role: dimension}
+  legs: {dataset: book-deals-legs, role: fact}              # each: LEGS
+  cash_flows: {dataset: book-deals-cash-flows, role: fact}  # each: LEGS[].CASH_FLOWS, with ^.LEG_ID
+  resets: {dataset: book-deals-resets, role: fact}          # each: LEGS[].CASH_FLOWS[].RESETS, with ^.FLOW_ID and ^^.LEG_ID
+  events: {dataset: book-deals-events, role: fact}
+relationships:
+  - {from: legs.id, to: deals.id}
+  - {from: cash_flows.id, to: deals.id}
+measures:
+  Leg notional: {expr: sum(legs.NOTIONAL), format: amount0}
+  Cash flows: {expr: count(cash_flows)}
+```
+
+```bash
+python3 tools/drishti.py bi mq --model book-deals@1 --select deals.PRODUCT_TYPE --measures "Deals documents,Cash flows,Resets" --server http://HOST:18480 --token ...
+```
+
+### What is still short of a trading terminal
+
+The deal screen is generic, so it is not a product-specific one (a swap's pricing and risk screen, a description page per security): there is
+no valuation, no curve or fixing history beside a floating leg, no side-by-side comparison of two deals, and the timeline shows dates and
+amounts but not a cash-flow ladder netted by date. Those need a quant engine or a hand-written Sutra on top of the generated one.

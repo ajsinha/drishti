@@ -36,3 +36,9 @@
 @media (max-width: 640px) {
   .idx-tbl .fk, .idx-health .fk { min-height: 44px; min-width: 44px; }
 }
+/* Load data (Admin → Packs → a pack) */
+.pd-data-form { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: flex-end; margin: .5rem 0; }
+.pd-field { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
+.pd-field input[type=file] { max-width: 100%; min-height: 2.75rem; }
+.pd-folder { overflow-wrap: anywhere; white-space: normal; }
+.pd-data progress { width: 100%; max-width: 32rem; }

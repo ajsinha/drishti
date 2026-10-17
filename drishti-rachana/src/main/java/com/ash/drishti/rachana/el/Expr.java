@@ -318,7 +318,7 @@ public interface Expr {
                 values.add(v);
             }
             // a function of a masked value is masked (coalesce only passes it on when it is the first value it has)
-            return masked && !"coalesce".equals(name) ? Values.mask() : fn.apply(values, c);
+            return masked && !"coalesce".equals(name) && !"nonblank".equals(name) ? Values.mask() : fn.apply(values, c);
         }
 
         public void paths(Consumer<String> sink) {

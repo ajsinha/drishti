@@ -53,6 +53,9 @@ import org.duckdb.DuckDBConnection;
  */
 final class TableBuilder {
 
+    /** Documents read at a time when a table is built record by record. */
+    private static final int READ_BATCH = 500;
+
     /** What was built. */
     record Built(LocalDate date, long rows, Path file, List<String> warnings, String how) {}
 
@@ -205,11 +208,16 @@ final class TableBuilder {
             ids = ids.subList(0, props.recordReadMax());
             warnings.add("only the first " + props.recordReadMax() + " " + t.kind() + " entities were read (drishti.bi.query.record-read-max)");
         }
-        Map<EntityRef, EntityDocument> docs = sources.read(ids, date);
         long rows = 0;
         boolean each = t.each() != null;
+        Map<EntityRef, EntityDocument> docs = Map.of();
+        int at = 0;
         try (DuckDBAppender app = duck.createAppender(DuckDBConnection.DEFAULT_SCHEMA, stage)) {
             for (EntityRef ref : ids) {
+                if (at % READ_BATCH == 0) {                // documents a batch at a time: memory holds one batch, never the kind
+                    docs = sources.read(ids.subList(at, Math.min(ids.size(), at + READ_BATCH)), date);
+                }
+                at++;
                 EntityDocument d = docs.get(ref);
                 if (d == null || d.deleted()) {
                     continue;
@@ -218,28 +226,67 @@ final class TableBuilder {
                     seen.set(d.provenance().businessDate());
                 }
                 if (!each) {
-                    row(app, ref.id(), -1, d.data(), cols);
+                    row(app, ref.id(), -1, List.of(d.data()), cols);
                     rows++;
                 } else {
-                    DataNode arr = d.data().at(t.each());
-                    for (int i = 0; i < arr.size(); i++) {
-                        row(app, ref.id(), i, arr.get(i), cols);
-                        rows++;
-                    }
+                    rows += nested(app, ref.id(), new java.util.ArrayList<>(List.of(d.data())), t.each().split("\\[\\]\\."), 0, cols);
                 }
             }
         }
         return rows;
     }
 
-    private static void row(DuckDBAppender app, String id, int index, DataNode node, List<Dataset.Column> cols) throws java.sql.SQLException {
+    /**
+     * The rows of an array at any depth ({@code each: LEGS[].CASH_FLOWS[].RESETS}): every element of the last array, with its ancestors
+     * kept so a column reads the document ({@code $.TRADE_ID}), the element one level up ({@code ^.LEG_ID}), two up ({@code ^^.FLOW_ID})
+     * or the element itself (a plain path). {@code index} is the element's position in its own array.
+     */
+    private static long nested(DuckDBAppender app, String id, java.util.List<DataNode> chain, String[] steps, int level, List<Dataset.Column> cols)
+            throws java.sql.SQLException {
+        DataNode arr = chain.get(chain.size() - 1).at(steps[level]);
+        long n = 0;
+        for (int i = 0; i < arr.size(); i++) {
+            DataNode e = arr.get(i);
+            if (e.type() != com.ash.drishti.api.NodeType.OBJECT && level < steps.length - 1) {
+                continue;
+            }
+            chain.add(e);
+            if (level == steps.length - 1) {
+                row(app, id, i, chain, cols);
+                n++;
+            } else {
+                n += nested(app, id, chain, steps, level + 1, cols);
+            }
+            chain.remove(chain.size() - 1);
+        }
+        return n;
+    }
+
+    /** A column's value: {@code $.} reads the document, each leading {@code ^} one level up from the element, a plain path the element. */
+    static DataNode resolve(java.util.List<DataNode> chain, String path) {
+        if (path.startsWith("$.")) {
+            return chain.get(0).at(path.substring(2));
+        }
+        int up = 0;
+        while (up < path.length() && path.charAt(up) == '^') {
+            up++;
+        }
+        if (up > 0) {
+            int at = chain.size() - 1 - up;
+            String rest = path.substring(up).startsWith(".") ? path.substring(up + 1) : path.substring(up);
+            return at < 0 ? DataNode.missing() : chain.get(at).at(rest);
+        }
+        return chain.get(chain.size() - 1).at(path);
+    }
+
+    private static void row(DuckDBAppender app, String id, int index, java.util.List<DataNode> chain, List<Dataset.Column> cols) throws java.sql.SQLException {
         app.beginRow();
         app.append(id);
         if (index >= 0) {
             app.append((long) index);
         }
         for (Dataset.Column col : cols) {
-            DataNode v = node.at(col.path());
+            DataNode v = resolve(chain, col.path());
             if (numeric(col)) {
                 double d = v.isNull() || v.isMasked() ? Double.NaN : v.asDouble();
                 if (Double.isNaN(d)) {
