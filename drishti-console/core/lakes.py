@@ -220,6 +220,17 @@ class Lakes:
                             "promoted": [c for c in types if c not in ("id", "doc", "business_date") and c not in parts]})
         return out
 
+    def figures(self) -> list[dict]:
+        """Every table under the roots with its rows, files, size, partitions, business dates and last build (tools/lake/laketables.py)."""
+        mod = _tool(self.cfg.tools_dir, "laketables")
+        out = []
+        for root in self.cfg.roots:
+            for t in mod.tables(root):
+                t["root"] = str(root)
+                t["size"] = mod.human_bytes(t.get("bytes"))
+                out.append(t)
+        return out
+
     def runs(self, limit: int = 20) -> list[dict]:
         out = []
         for root in self.cfg.roots:

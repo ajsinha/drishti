@@ -58,9 +58,13 @@ def cmd_status(a, extra) -> int:
             held = True
     log = (state / "runs.log").read_text(encoding="utf-8").splitlines() if (state / "runs.log").is_file() else []
     last = json.loads((state / "last-run.json").read_text(encoding="utf-8")) if (state / "last-run.json").is_file() else None
+    tabs = _mod("laketables").tables(pathlib.Path(a.lake))
     if a.json:
-        print(json.dumps({"locked": held, "holder": holder or None, "runs": log[-a.runs:], "last": last}, indent=2))
+        print(json.dumps({"locked": held, "holder": holder or None, "runs": log[-a.runs:], "last": last, "tables": tabs}, indent=2))
         return 0
+    print(f"tables ({len(tabs)}):")
+    for line in _mod("laketables").table_text(tabs).splitlines():
+        print("  " + line)
     print(f"lock: {'held by ' + holder if held else 'free'}")
     print(f"runs ({len(log)} logged, last {min(a.runs, len(log))}):")
     for line in log[-a.runs:]:
@@ -93,7 +97,7 @@ def register(groups, add, srv) -> None:
     s = add(sub, "scan", cmd_scan, "lake scan: an export's fields (presence, types, frequent values) and the suggested key, date and classifiers",
             [], "example:\n  drishti.py lake scan exports/book.json --limit 5000")
     _mod("scan").add_arguments(s)
-    st = add(sub, "status", cmd_status, "lake status: whether a run holds the lake's lock, and its last runs", [],
+    st = add(sub, "status", cmd_status, "lake status: the lake's tables (rows, files, size, partitions, business dates, last build), its lock and last runs", [],
              "example:\n  drishti.py lake status --lake data/delta")
     st.add_argument("--lake", required=True, metavar="DIR")
     st.add_argument("--runs", type=int, default=10, help="log lines shown (default 10)")

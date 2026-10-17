@@ -17,6 +17,7 @@ CLI's engine (tools/lake/build.py) as a job on the console's machine, bind the l
 load. Administrators only; see core/lakes.py."""
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 
 from fastapi import APIRouter, Request
@@ -58,7 +59,11 @@ async def page(request: Request):
         status = await request.app.state.backend.admin("GET", "/status", me)
     except BackendError:
         status = {}
-    return render(request, "admin/lakes.html", cfg=lakes.cfg.as_dict(), status=status, runs=lakes.runs(10))
+    try:
+        figures = await asyncio.to_thread(lakes.figures)
+    except Exception:                     # noqa: BLE001 - the screen opens without the table rather than not at all
+        figures = []
+    return render(request, "admin/lakes.html", cfg=lakes.cfg.as_dict(), status=status, runs=lakes.runs(10), tables=figures)
 
 
 @router.get("/api/lakes/targets")

@@ -62,8 +62,17 @@ window.drsMessage = function (p, fallback) {
   var box = asof ? asof.querySelector('input[type="date"]') : null;
   if (asof && box) {
     var holidays = (box.getAttribute('data-holidays') || '').split(',');
+    var now = new Date();
+    var today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    if (!box.max || box.max > today) { box.max = box.getAttribute('data-current') || today; }   // never a day after today: the picker greys it out
     box.addEventListener('change', function () {
       if (!box.value) { return; }
+      if (box.max && box.value > box.max) {                                  // typed past the end: said, and nothing is asked
+        box.setCustomValidity('Pick ' + box.max + ' or earlier: there is no data after today.');
+        box.reportValidity();
+        return;
+      }
+      box.setCustomValidity('');
       var d = new Date(box.value + 'T12:00:00Z').getUTCDay();
       if (d === 0 || d === 6 || holidays.indexOf(box.value) >= 0) {
         box.title = box.value + ' is not a business day: showing the business day before it';

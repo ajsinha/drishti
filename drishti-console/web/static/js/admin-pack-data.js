@@ -55,7 +55,10 @@
     kinds = r.body.kinds || [];
     maxMb = r.body.maxMb || maxMb;
     if (!kinds.length) {
-      targetsEl.appendChild(el('p', { class: 'text-muted-d', text: 'This pack names no kind to load (its pack.yaml has no ingest: section). Packs made by Build → New pack from data files have one.' }));
+      // a pack that reads its connectors (a Delta lake, a database) takes no files here: say where its data does come from, not what it lacks
+      var lakes = el('a', { href: '/admin/lakes', text: 'Load a file into a lake' });
+      targetsEl.appendChild(el('p', { class: 'text-muted-d', 'data-no-ingest': '' }, [document.createTextNode('This pack reads its data from its connectors, so files are not loaded into it here. For a Delta lake it reads, use '),
+        lakes, document.createTextNode(' (or drishti.py lake build); a pack made by Build → New pack from data files takes files on this page.')]));
       return;
     }
     var t = el('table', { class: 'tbl adm-tbl det-tbl', 'data-plain': true }, [el('caption', { class: 'visually-hidden', text: 'What this pack loads' }),

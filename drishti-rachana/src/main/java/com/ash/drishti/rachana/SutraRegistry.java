@@ -363,7 +363,11 @@ public final class SutraRegistry implements AutoCloseable {
         for (String d : props.allDirs()) {
             Path dir = Path.of(d).toAbsolutePath().normalize();
             if (!Files.isDirectory(dir)) {
-                LOG.warn("sutra directory {} does not exist", dir);
+                if (props.dirs().contains(d)) {
+                    LOG.debug("sutra directory {} does not exist (optional: the packs' Sutras are read from the packs)", dir);   // the server's own folder is optional
+                } else {
+                    LOG.warn("sutra directory {} does not exist", dir);
+                }
                 continue;
             }
             try (Stream<Path> s = Files.walk(dir)) {
