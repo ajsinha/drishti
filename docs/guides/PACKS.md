@@ -83,9 +83,9 @@ example ids are real: they exist in the pack's `samples/` folder.
 |---|---|---|---|---|
 | `core` | `CORE` | — | `CPTY` counterparty (with `COUNTRY_OF_RISK` and `UEN`) · `GRP` counterparty group · `ISS` issuer · `CCP` central counterparty · `LE` bank legal entity · `BOOK` book (portfolio) · `DESK` desk · `TRDR` trader · `CAL` holiday calendar · `CLR` clearing account | `CPTY CP-NORTHBRIDGE` |
 | `market-data` | `MKT` | `core` | `CRV` interest rate curve · `REPO` repo curve · `FX` FX spot rate · `FXF` FX forward curve · `FXV` FX volatility surface · `IRV` swaption volatility cube · `CPV` cap/floor volatility surface · `EQ` equity · `EQX` equity index · `DIV` dividend curve · `EQV` equity volatility surface · `CDS` credit curve · `INF` inflation index · `INFC` inflation curve · `CMD` commodity · `CMDC` commodity forward curve · `CMDV` commodity volatility surface · `FIX` rate index fixings · `BND` bond (security master) · `CORR` correlation matrix | `CRV CRV-USD-OIS` |
-| `trading` | `TRDS` | `core`, `market-data` | `TRD` trade (125 products in ten asset classes) · `DPNL` desk P&L (derived from the trades) | `TRD MX-20000001` |
+| `trading` | `TRDS` | `core`, `market-data` | `TRD` trade from three source systems (ENDUR, CALYPSO, MUREX) in one production schema, 130 product types · `CTRD` counterparty trades · `PTRD` portfolio trades · `LTRD` legal entity trades · `ITRD` index trades (the last four derived from the trades of every system) | `TRD MX-20000001`, `TRD 1000001`, `CTRD CP-ALDERSHOT` |
 | `counterparty-risk` | `CCR` | `trading` | `AGR` master agreement (ISDA) · `CSA` credit support annex · `NSET` netting set · `LIM` credit limit · `EXP` exposure profile · `CVA` CVA / XVA · `SACCR` SA-CCR exposure · `COLL` collateral balance · `MC` margin call · `SIMM` ISDA SIMM initial margin | `AGR AGR-NORTHBRIDGE-ISDA` |
-| `market-risk` | `MRSK` | `market-data`, `trading` | `VAR` VaR / expected shortfall · `SCN` stress scenario · `STR` stress result · `FRTB` FRTB sensitivities · `PNL` P&L explain | `VAR VAR-RATES` |
+| `market-risk` | `MRSK` | `market-data`, `trading` | `VAR` VaR / expected shortfall · `SCN` stress scenario · `STR` stress result · `FRTB` FRTB sensitivities · `PNL` P&L explain · `TVAL` trade valuation (MTM, P&L 1d, DV01 of every trade) | `VAR VAR-RATES`, `TVAL TVAL-MX-20000001` |
 | `world-economy` | `WRLD` | — | `ECON` economy · `MACRO` macro indicator · `FCST` IMF forecast · `LABR` labour market · `FISC` fiscal position · `ECG` country group · `REGE` region economy · `JUR` jurisdiction · `PARTY` party · `OFFC` office holder · `ELEC` election · `REGN` world region · `SOCI` social indicator (real public data for about 216 countries: World Bank, IMF, CIA World Factbook, UNDP; [REAL_DATA](REAL_DATA.md); not a sample, but the IMF part is for internal demonstrations only) | `ECON ECON-IND` |
 | `news-and-markets` | `NWMK` | — | `TOPIC` news topic · `NEWS` headlines · `CO` listed company · `QUOTE` quote and price history (fifteen topics and twenty well-known companies; headlines from the [news connector](../connectors/NEWS.md), quotes from the [yfinance connector](../connectors/YFINANCE.md); a sample pack, both connectors off as shipped) | `TOPIC TOPIC-FED` |
 
@@ -94,6 +94,44 @@ systems name it on a trade: `COUNTERPARTY_COUNTRY_OF_RISK`) and its `UEN`, and t
 `economy` (`ECON-<alpha-3>`, the country of risk's economy in `world-economy`) and `newsId` (its headlines in `news-and-markets`). A
 country topic and a listed company of `news-and-markets` link to their `economy` in the same way. Agreements and CSAs belong to
 `counterparty-risk`, so `CPTY CP-NORTHBRIDGE` shows its master agreement as a link only when `counterparty-risk` is on.
+
+### Trading
+
+A bank books its trades in several systems; the trading pack shows them as one book. Each system feeds a **common schema**, the
+47 upper-snake attributes a production extract has, nested the same way whatever the system:
+
+| Level | Attributes |
+|---|---|
+| deal | `SOURCE_SYSTEM` (ENDUR, CALYPSO or MUREX), `TRADE_ID` (unique across the systems: Endur deal numbers `1000001`…, Calypso `CLY-…`, Murex `MX-…`), `TRADE_STATUS`, `TRADE_ACTION`, `TRADE_VERSION`, `TRANSACTION_ID`, `PRODUCT_TYPE` (picks the deal's screen), `PRODUCT_SUB_TYPE`, `PRODUCT_GROUP`, `QUANTITY`, `PRICE`, `BUY_SELL_CODE`, `OPTION_TYPE`, `STRIKE_PRICE`, `COUNTERPARTY` (a `core` counterparty id), `COUNTERPARTY_UEN`, `COUNTERPARTY_COUNTRY_OF_RISK`, `LEGAL_ENTITY`, `PORTFOLIO` (a `core` book), `TRADER_ID`, the dates (`TRADE_DATE`, `START_DATE`, `MATURITY_DATE`, `SETTLEMENT_DATE` …), `CURRENCY` and the flags, then `LEGS` and `EVENTS` |
+| `LEGS[]` | `LEG_ID`, `LEG_TYPE` (FIXED, FLOAT, PHYSICAL, OPTION), `LEG_ECONOMIC_TYPE` (Pay, Receive), `NOTIONAL`, `PRICE_UNIT`, `DISCOUNT_INDEX`, reset conventions, `SETTLEMENT_TYPE`, `INDEX {NAME, GROUP, SUB_GROUP}`, `CASH_FLOWS[]` |
+| `CASH_FLOWS[]` | `FLOW_ID`, `NOTIONAL`, `RATE`, `FLOAT_SPREAD`, `START_DATE`, `END_DATE`, `PAYMENT_DATE`, `RATE_DETERMINATION_DATE`, `STRIKE_PRICE`, `RESETS[]` (`RESET_ID`, `RESET_DATE`, `RATE` …) |
+| `EVENTS[]` | `LEG_ID` (blank for the deal's own events), `EVENT_ID`, `EVENT_TYPE`, `PAYMENT_TYPE`, `EVENT_DATE`, `AMOUNT` (signed: paid is negative), `CURRENCY` |
+
+Endur books the commodity desk's own deals (five product types: `ComSwap`, `ComFut`, `Cash`, `CallNot`, `Commodity`); Calypso and
+Murex book the 125 products of the taxonomy (rates, FX, credit, equity, commodities, inflation, fixed income, securities financing,
+money markets, structured). Missing values are spelt as extracts spell them (mostly `""`), so the screens read them with `nonblank`.
+
+**Three connectors, one kind.** Each system lands in a Delta table of its own (`<root>/trading/trade_endur`, `trade_calypso`,
+`trade_murex`), read by its own connector (`trade-endur`, `trade-calypso`, `trade-murex`), all serving `trade` as a union: opening
+a trade finds it in whichever system holds it, a search, a type-ahead, the search form's drop-downs and a BI table over `trade` read
+all three, and every row says its `SOURCE_SYSTEM` ([CONNECTORS.md](../connectors/CONNECTORS.md#several-connectors-for-one-kind-a-union)).
+`tools/packgen/trades/make_trades.py --lake` builds the three tables (and their business days, with the amendments of each day)
+through `drishti.py lake build --connector …` ([TOOLS.md](TOOLS.md)).
+
+**The deal screen** (one per product type, the same layout for all): **F2 DES** the deal ticket; **F3 LEGS** the legs side by side,
+each with its terms, its notional profile (a step line), its fixings and its cash flows opening to their resets; **F4 FLOWS** every
+flow of every leg; **F5 EVT** the events by leg, with a table filtered by leg and by dates (the header's controls); **F6 PAY** the
+netted payment ladder and payments by month; **F7** the counterparty's trades; **F8** impact; **F9** the raw document.
+
+**Pages over many trades** (derived kinds, recomputed every minute from the trades of every system): `CTRD <counterparty>`,
+`PTRD <book>`, `LTRD <legal entity>`, `ITRD <index>`. Each shows the live trades (with a Pivot tab by product and system),
+payments in the next 7, 30 and 90 days and the upcoming ones listed, notional by product type (a donut), by index, the maturity
+ladder by year and payments by month.
+
+**Values are the risk engine's.** A booking carries no mark-to-market; `market-risk`'s **trade valuation** (`TVAL TVAL-<trade
+id>`) carries each trade's MTM, P&L 1d and DV01 with the trade's source system, portfolio, desk and netting set, and its MTM ticks
+live. The BI samples that add up MTM (`trades-basic`, `trading-risk`, `live-trading`) read the valuations; `trading-cashflows`
+reads the bookings of the three systems.
 
 Every pack's overview guide (*Help → Domain packs*, or `config/packs/<name>/guides/`) describes its domain and has a
 **Finding things** section with the commands that work for every kind of the pack:

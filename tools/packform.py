@@ -45,11 +45,19 @@ NUMBERS = re.compile(r"(?i).*(rate|score|ratio|share|count|length|growth|inflati
                      r"majority|intensity|warming|carbon|purity|enrolled|customers|sample|lead|moe|haircut|q30|utilisation|variantcount|recordsaffected).*")
 
 
+# words an upper-snake name spells that stay as a person writes them (PNL_1D reads "P&L 1d", COUNTERPARTY_UEN "Counterparty UEN")
+SPELLED = {"pnl": "P&L", "mtm": "MTM", "dv01": "DV01", "cs01": "CS01", "pv": "PV", "npv": "NPV", "uen": "UEN", "lei": "LEI", "fx": "FX",
+           "ny": "NY", "tt": "TT", "isin": "ISIN", "uti": "UTI", "csa": "CSA", "var": "VaR", "es": "ES", "usd": "USD"}
+
+
 def humanize(path: str) -> str:
     last = path.rsplit(".", 1)[-1]
-    if last.upper() == last:
+    upper = last.upper() == last
+    if upper:
         last = last.lower()                       # TRADE_DATE reads as "Trade date", as tradeDate does
     words = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", last).replace("_", " ").lower().strip()
+    if upper:
+        words = " ".join(SPELLED.get(w, w) for w in words.split(" "))
     owner = path.rsplit(".", 1)[0].replace(".", " ") + " " if "." in path else ""
     text = (owner + words).strip()
     return text[:1].upper() + text[1:] if text else path

@@ -18,7 +18,7 @@
 
 Value at risk, stress testing, FRTB sensitivities and P&L explain.
 
-**Extends:** `market-data`, `trading` · **Extended by:** none · **Kinds:** 5
+**Extends:** `market-data`, `trading` · **Extended by:** none · **Kinds:** 6
 
 Enable it with `DRISHTI_PACKS=market-risk` (the packs it extends come with it; where they differ, the more specific wins).
 
@@ -41,7 +41,7 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 
 | Connector | Folder | Domain | Tables | Kinds |
 |---|---|---|---|---|
-| `risk-store` | `data/delta/risk/` | Market-risk results: VaR, stress, FRTB, P&L explain | snapshot (every business date) | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain` |
+| `risk-store` | `data/delta/risk/` | Market-risk results: VaR, stress, FRTB, P&L explain | snapshot (every business date) | `var`, `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation` |
 
 Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`.
 
@@ -54,6 +54,7 @@ Load real data into each domain's folder, or point a domain at a database instea
 | `stress-result` | Stress result | `STR` | `STR-…` | `resultId` | P&L of a desk under a scenario, by book. |
 | `frtb-sensitivity` | FRTB sensitivities | `FRTB` | `FRTB-…` | `resultId` | Delta, vega and curvature by risk class and bucket (SBM). |
 | `pnl-explain` | P&L explain | `PNL` | `PNL-…` | `resultId` | Daily P&L attributed to risk factors, new trades and residual. |
+| `trade-valuation` | Trade valuation | `TVAL` | `TVAL-…` | `VALUATION_ID` | A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product). |
 
 ### VaR / expected shortfall (`var`)
 
@@ -93,6 +94,18 @@ Daily P&L attributed to risk factors, new trades and residual.
 
 **Links:** `book` → Book (`book`).
 
+### Trade valuation (`trade-valuation`)
+
+A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product).
+
+**Fields its Sutra reads:** `TRADE_ID`, `SOURCE_SYSTEM`, `MTM`, `PNL_1D`, `DV01`, `NOTIONAL`, `VALUATION_DATE`.
+
+**Links:** `TRADE_ID` → Trade (`trade`), `DESK` → Desk (`desk`), `NETTING_SET` → Netting set (`netting-set`).
+
 ## Who can see it
 
 Role `market-risk`: kinds `*`, raw JSON.
+
+## F8 impact
+
+Amounts at stake: `trade-valuation` by `$.MTM`.

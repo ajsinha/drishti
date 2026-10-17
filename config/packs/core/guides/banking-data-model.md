@@ -31,6 +31,16 @@ desk ─► VaR ─► stress results ◄─ stress scenario        book ─► 
 
 | Field | Label | Opens kind | Pack | Data domain |
 |---|---|---|---|---|
+| `COUNTERPARTY` | Counterparty | `counterparty` | `core` | `reference` |
+| `DESK` | Desk | `desk` | `core` | `reference` |
+| `LEGAL_ENTITY` | Legal entity | `legal-entity` | `core` | `reference` |
+| `NETTING_SET` | Netting set | `netting-set` | `counterparty-risk` | `credit` |
+| `ORIGINAL_COUNTERPARTY` | Original counterparty | `counterparty` | `core` | `reference` |
+| `PORTFOLIO` | Portfolio | `book` | `core` | `reference` |
+| `TRADER_ID` | Trader | `trader` | `core` | `reference` |
+| `TRADE_ID` | Trade | `trade` | `trading` | `trading` |
+| `TT_BOOK` | Book | `book` | `core` | `reference` |
+| `TT_GROUP` | Desk | `desk` | `core` | `reference` |
 | `agreement` | Agreement | `agreement` | `counterparty-risk` | `legal` |
 | `basisCurve` | Basis curve | `ir-curve` | `market-data` | `market` |
 | `benchmarkCurve` | Benchmark curve | `ir-curve` | `market-data` | `market` |

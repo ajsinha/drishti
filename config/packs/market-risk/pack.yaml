@@ -191,13 +191,13 @@ form:
     label: Source system
     type: text
   - path: MTM
-    label: Mtm
+    label: MTM
     type: amount
   - path: PNL_1D
-    label: Pnl 1 d
+    label: P&L 1d
     type: amount
   - path: DV01
-    label: Dv01
+    label: DV01
     type: amount
   - path: NOTIONAL
     label: Notional

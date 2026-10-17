@@ -28,9 +28,9 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 
 | Command | Does |
 |---|---|
-| `TRD <id> <GO>` | Opens that trade. A bare identifier works too: its prefix (`MX-…`, `CLY-…`, `END-…`, `IMG-…`, `BBG-…`, `WSS-…`) tells Drishti the kind. |
+| `TRD <id> <GO>` | Opens that trade. A bare identifier works too: its prefix (`MX-…`, `CLY-…`, `1000001…`) tells Drishti the kind. |
 | `TRD <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
-| `TRD <field>=<value> <GO>` | Lists by field value, for example `TRD productType=IRS_FIXFLOAT`. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
+| `TRD <field>=<value> <GO>` | Lists by field value, for example `TRD PRODUCT_TYPE=IRS_FIXFLOAT`. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
 | `TRD <GO>` | Lists every trade. |
 | `FORM trading <GO>` | The pack's search form: boxes for the key fields of each kind instead of a written search. |
 | `TRDS <GO>` | The pack's overview: its kinds, their mnemonics and how many documents each holds. |
@@ -41,11 +41,17 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 
 | Connector | Folder | Domain | Tables | Kinds |
 |---|---|---|---|---|
-| `trading-store` | `data/delta/trading/` | Trades in every product | snapshot (every business date) | `trade` |
+| `trade-endur` | `data/delta/trading/trade_endur/` | Trades booked in ENDUR | snapshot (every business date), a union with the other two | `trade` |
+| `trade-calypso` | `data/delta/trading/trade_calypso/` | Trades booked in CALYPSO | snapshot (every business date), a union with the other two | `trade` |
+| `trade-murex` | `data/delta/trading/trade_murex/` | Trades booked in MUREX | snapshot (every business date), a union with the other two | `trade` |
 
-### Live trades and desk totals
+### One trade view, three source systems
 
-Two more connectors belong to this pack. `trading-stream` (Kafka, **off by default**; switch it on with `DRISHTI_STREAM_TRADING=true`) streams the day's live trades, which **Live** in the top bar reads first. `desk-totals` is a *derived* connector: it computes the pack's second mnemonic, `DPNL` (kind `desk-pnl`), from the trades wherever they come from, one row per desk with the trade count, MTM, one-day P&L, DV01, worst MTM, books and currencies, refreshed every minute. Try `DPNL DESK-RATES <GO>`.
+Each booking system lands in a table of its own and is read by its own connector; the three serve the kind `trade` together (`union: true`): a trade opens from whichever system holds it, and a search, a type-ahead, the search form's drop-downs and a BI table read all three, each row saying its `SOURCE_SYSTEM`. Build the three tables, with a week of business days and the day's amendments, with `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/trades/make_trades.py --trades 3000 --days 7 --lake data/delta`.
+
+### Live trades and pages over many trades
+
+`trading-stream` (Kafka, **off by default**; switch it on with `DRISHTI_STREAM_TRADING=true`) streams the day's new trade versions, which **Live** in the top bar reads first. `trade-pages` is a *derived* connector: from the trades of every system it computes the pages of a counterparty (`CTRD`), a portfolio (`PTRD`), a legal entity (`LTRD`) and an index (`ITRD`): the live trades, payments in the next 7, 30 and 90 days, notional by product type and by index, the maturity ladder and payments by month, refreshed every minute. Try `CTRD CP-ALDERSHOT <GO>`.
 
 Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`.
 
@@ -53,26 +59,19 @@ Load real data into each domain's folder, or point a domain at a database instea
 
 | Kind | Name | Mnemonic | Identifiers | Id field | What it is |
 |---|---|---|---|---|---|
-| `trade` | Trade | `TRD` | `MX-…`, `CLY-…`, `END-…`, `IMG-…`, `BBG-…`, `WSS-…` | `tradeId` | A trade in any of the pack's products; its productType selects its Sutra. |
+| `trade` | Trade | `TRD` | `MX-…`, `CLY-…`, `1000001…` | `TRADE_ID` | A trade from any source system (ENDUR, CALYPSO, MUREX) in the common schema; its PRODUCT_TYPE selects its Sutra. |
 
 ### Trade (`trade`)
 
-A trade in any of the pack's products; its productType selects its Sutra.
+A trade from any source system (ENDUR, CALYPSO, MUREX) in the common schema; its PRODUCT_TYPE selects its Sutra.
 
-Every trade shares the fields below; `productType` chooses its Sutra (one per product, see *Trading products*).
+Every source system writes the same 47 upper-snake attributes, nested the same way; `PRODUCT_TYPE` chooses the deal's Sutra (one per product type, see *Trading products*; Endur's five are `ComSwap`, `ComFut`, `Cash`, `CallNot`, `Commodity`).
 
 ```text
-tradeId, productType, productName, assetClass, family, status, direction, tradeDate, effectiveDate,
-    maturityDate, currency, notional, mtm, mtmCurrency, pnl1d,
-    counterparty {id, name}, nettingSet, book, trader, clearingAccount?, issuer?,
-    <market-data reference fields, e.g. discountCurve>,
-    terms {<product terms>}, risk {<measure>: value}, sensitivities [{bucket, <measure>...}],
-    legs [{leg, label, payReceive, rateType, index, rate, spread, frequency, dayCount, currency, notional}],
-    schedule [...], nextIndex, pnlHistory [{date, pnl}], pnlExplain [{step, pnl, total?}],
-    execution {venue, venueMic, executionTimestamp, trader, orderId},
-    lifecycle {status, version, events [...], timeline [{date, event, status, description, amount?}]},
-    confirmation {status, method, matched}, clearing {status, ccp?}, regulatory {uti, upi, reportingRegimes [...]},
-    settlementInstructions {method, ourAgentBic, theirAgentBic, ssiId}, valuation {model, curves [...], npv}
+SOURCE_SYSTEM, SOURCE_UPDATE_TIME, TRADE_DATE, INPUT_DATE, TRADE_ID, TRADE_STATUS, TRADE_ACTION, TRADE_VERSION, TRANSACTION_ID, PACKAGE_ID, QUANTITY, PRICE, BUY_SELL_CODE, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, PRODUCT_SUB_GROUP, OPTION_TYPE, STRIKE_PRICE, COUNTERPARTY, COUNTERPARTY_UEN, COUNTERPARTY_COUNTRY_OF_RISK, ORIGINAL_COUNTERPARTY, ORIGINAL_COUNTERPARTY_UEN, INTERNAL_EXTERNAL_CODE, TRANSIT, LEGAL_ENTITY, PORTFOLIO, TRADER_ID, TRADER_FIRST_NAME, TRADER_LAST_NAME, START_DATE, MATURITY_DATE, REGISTRY_DELIVERY_DATE, CURRENCY, DELIVERY_VERSUS_PAYMENT, STRATEGY, INTERNAL_TRADING_STRATEGY, NY_CURVE_FLAG, VAULT_LOCATION_ALLOCATION, PRECIOUS_METAL_FLAG, TT_GROUP, TT_BOOK, LEASE_PERPETUITY_FLAG, SETTLEMENT_DATE,
+LEGS [{LEG_ID, LEG_TYPE, LEG_ECONOMIC_TYPE, CURRENCY, LEASE_CURRENCY, FLOAT_SPREAD, PRICE_UNIT, NOTIONAL, DISCOUNT_INDEX, SPOT_CONVERSION_FACTOR, PHYSICAL_LOCATION_NAME, INDEX_LOCATION_NAME, RESET_FIXING_SHIFT, RESET_HOLIDAY_SCHEDULE, RESET_CONVENTION, EMISSIONS_VINTAGE_MIN, EMISSIONS_VINTAGE_MAX, EMISSIONS_VINTAGE_DELIVERY_TYPE, SETTLEMENT_TYPE, NY_CURVE_FLAG, NUM_RRDC_REC, NUM_PROFILE_REC, DAILY_VOLUME, INDEX {NAME, GROUP, SUB_GROUP},
+       CASH_FLOWS [{FLOW_ID, FLOW_TYPE, NOTIONAL, RATE, FLOAT_SPREAD, START_DATE, END_DATE, PAYMENT_DATE, RATE_DETERMINATION_DATE, FIRST_RESET_DATE, LAST_RESET_DATE, STRIKE_PRICE, RESETS [{RESET_ID, ACCRUAL, START_DATE, END_DATE, RESET_DATE, ACCRUAL_START_DATE, ACCRUAL_END_DATE, RATE}]}]}],
+EVENTS [{LEG_ID, EVENT_ID, EVENT_NUMBER, EVENT_TYPE, PAYMENT_TYPE, EVENT_DATE, AMOUNT, CURRENCY, SEQUENCE_NUMBER, VAULT_LOCATION_ALLOCATION, NY_CURVE_FLAG}]
 ```
 
 ## Who can see it
@@ -81,4 +80,4 @@ Role `trader`: kinds `trade`, `ir-curve`, `repo-curve`, `fx-spot`, `fx-forward-c
 
 ## F8 impact
 
-Amounts at stake: `trade` by `$.mtm`.
+Amounts at stake: `trade` by `first($.LEGS).NOTIONAL`.

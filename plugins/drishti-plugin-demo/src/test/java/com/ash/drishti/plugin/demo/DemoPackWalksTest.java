@@ -355,33 +355,14 @@ class DemoPackWalksTest {
     }
 
     // ---- trading ---------------------------------------------------------------------------------------------
+    /** A trade is a booking (it does not tick); its valuation does: the MTM walks and the day's P&L is the MTM less the opening MTM. */
     @Test
-    void tradeMtmValuationPnlExplainAndLegsAddUp() {
-        int[] legged = {0};
-        eachSample("trade", (before, after) -> {
-            boolean fromLegs = ((List<?>) at(before, "_meta.walk.derive")).stream().anyMatch(d -> "mtm".equals(((Map<?, ?>) d).get("set")));
-            double mtm = num(after, "mtm");
-            closeTo(num(after, "valuation.npv"), mtm, 0.5, "npv is the MTM");
-            closeTo(num(after, "pnl1d"), mtm - num(after, "pnlExplain.0.pnl"), 1, "day P&L is the MTM less the opening MTM");
-            closeTo(nums(after, "pnlExplain.*.pnl").stream().mapToDouble(Double::doubleValue).sum(), mtm, 2, "P&L explain adds up to the MTM");
-            List<Double> legPvs = nums(after, "legs.*.pv");
-            if (!legPvs.isEmpty() && fromLegs) {
-                legged[0]++;
-                double sum0 = nums(before, "legs.*.pv").stream().mapToDouble(Double::doubleValue).sum();
-                if (Math.abs(sum0 - num(before, "mtm")) <= Math.max(2, Math.abs(num(before, "mtm")) * 1e-6)) {
-                    closeTo(legPvs.stream().mapToDouble(Double::doubleValue).sum(), mtm, 1, "MTM is the sum of the leg PVs");
-                }
-                assertThat(legPvs).as("leg PVs moved").isNotEqualTo(nums(before, "legs.*.pv"));
-                for (int i = 0; i < legPvs.size(); i++) {
-                    List<Double> flows = nums(after, "legs." + i + ".cashflows.*.pv");
-                    if (!flows.isEmpty()) {
-                        closeTo(flows.stream().mapToDouble(Double::doubleValue).sum(), legPvs.get(i), 0.01 * flows.size() + 0.05, "leg " + i + " cashflow PVs add up to the leg");
-                    }
-                }
-            }
-            assertThat(moved(before, "mtm")).as("mtm moved").isTrue();
+    void tradeValuationMtmWalksAndItsDayPnlFollows() {
+        eachSample("trade-valuation", (before, after) -> {
+            double opening = num(before, "MTM") - num(before, "PNL_1D");
+            closeTo(num(after, "PNL_1D"), num(after, "MTM") - opening, 1, "day P&L is the MTM less the opening MTM");
+            assertThat(moved(before, "MTM")).as("MTM moved").isTrue();
         });
-        assertThat(legged[0]).as("trades with leg PVs were exercised").isGreaterThan(50);
     }
 
     @Test

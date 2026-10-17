@@ -32,6 +32,8 @@ import make_data
 import make_packs
 import taxonomy as T
 import trade_shape as S
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "trades"))
+import schema as TSCHEMA  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[3]
 PACKS = ROOT / "config" / "packs"
@@ -59,7 +61,7 @@ def fields_of(k) -> list[str]:
 
 def shown_prefix(spec) -> str:
     """How a kind's identifiers begin, for the guides: trades carry their booking system's prefix (booking.py)."""
-    return "MX-…`, `CLY-…`, `END-…`, `IMG-…`, `BBG-…`, `WSS-" if spec.kind == "trade" else spec.prefix
+    return "MX-…`, `CLY-…`, `1000001" if spec.kind == "trade" else spec.prefix
 
 
 def finding(mnemonic: str, label: str, prefix: str, field_example: str = "", pack: str = "", code: str = "") -> list[str]:
@@ -92,21 +94,32 @@ def overview(name: str, docs: dict) -> str:
               f"**Kinds:** {len(kinds)}", "",
               "Enable it with `DRISHTI_PACKS=" + name + "` (the packs it extends come with it; where they differ, the more specific wins).", ""]
     first = SPEC["trade"] if "trade" in kinds else SPEC[kinds[0]]
-    lines += finding(first.mnemonic, first.label, shown_prefix(first), "productType=IRS_FIXFLOAT" if first.kind == "trade" else "", name, make_packs.CODES[name])
+    lines += finding(first.mnemonic, first.label, shown_prefix(first), "PRODUCT_TYPE=IRS_FIXFLOAT" if first.kind == "trade" else "", name, make_packs.CODES[name])
     lines += ["## Where the data comes from", "",
               "Each kind is read from the Delta Lake folder of its **data domain** (`data/delta/<domain>/<kind>/`, partitioned by "
               "business date). Pick a date in the top bar to see that day; **Live** reads the streaming source first.", ""]
     rows = []
     for d, ks in p["kinds"].items():
         mode = "effective (a row when an entity changes)" if d in make_packs.EFFECTIVE_DOMAINS else "snapshot (every business date)"
+        if name == "trading" and d == "trading":
+            for cname, table_ in make_packs.TRADE_SYSTEMS.items():
+                rows.append([f"`{cname}`", f"`data/delta/trading/{table_}/`", f"Trades booked in {table_[6:].upper()}", mode + ", a union with the other two", "`trade`"])
+            continue
         rows.append([f"`{d}-store`", f"`data/delta/{d}/`", layout.DOMAINS[d], mode, ", ".join(f"`{k}`" for k in ks)])
     lines += table(["Connector", "Folder", "Domain", "Tables", "Kinds"], rows)
     if name == "trading":
-        lines += ["### Live trades and desk totals", "",
-                  "Two more connectors belong to this pack. `trading-stream` (Kafka, **off by default**; switch it on with `DRISHTI_STREAM_TRADING=true`) "
-                  "streams the day's live trades, which **Live** in the top bar reads first. `desk-totals` is a *derived* connector: it computes the "
-                  "pack's second mnemonic, `DPNL` (kind `desk-pnl`), from the trades wherever they come from, one row per desk with the trade count, "
-                  "MTM, one-day P&L, DV01, worst MTM, books and currencies, refreshed every minute. Try `DPNL DESK-RATES <GO>`.", ""]
+        lines += ["### One trade view, three source systems", "",
+                  "Each booking system lands in a table of its own and is read by its own connector; the three serve the kind `trade` together "
+                  "(`union: true`): a trade opens from whichever system holds it, and a search, a type-ahead, the search form's drop-downs and a BI "
+                  "table read all three, each row saying its `SOURCE_SYSTEM`. Build the three tables, with a week of business days and the "
+                  "day's amendments, with `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/trades/make_trades.py "
+                  "--trades 3000 --days 7 --lake data/delta`.", "",
+                  "### Live trades and pages over many trades", "",
+                  "`trading-stream` (Kafka, **off by default**; switch it on with `DRISHTI_STREAM_TRADING=true`) streams the day's new trade versions, "
+                  "which **Live** in the top bar reads first. `trade-pages` is a *derived* connector: from the trades of every system it computes "
+                  "the pages of a counterparty (`CTRD`), a portfolio (`PTRD`), a legal entity (`LTRD`) and an index (`ITRD`): the live trades, "
+                  "payments in the next 7, 30 and 90 days, notional by product type and by index, the maturity ladder and payments by month, "
+                  "refreshed every minute. Try `CTRD CP-ALDERSHOT <GO>`.", ""]
     if name == "market-data":
         lines += ["### Public data feeds", "", "Real market data from public sources, each its own connector and **off by default**. Switch one "
                   "on with its environment variable (or `drishti.sources.connectors.<name>.enabled: true` in the site configuration). "
@@ -134,8 +147,13 @@ def overview(name: str, docs: dict) -> str:
         if s.links:
             lines += ["**Links:** " + ", ".join(f"`{f}` → {lab} (`{kind}`)" for f, (kind, lab) in s.links.items()) + ".", ""]
     if name == "trading":
-        lines += ["### Trade (`trade`)", "", T.TRADE.desc, "", "Every trade shares the fields below; `productType` chooses its Sutra "
-                  "(one per product, see *Trading products*).", "", "```text", S.__doc__.split("\n\n")[1].strip(), "```", ""]
+        lines += ["### Trade (`trade`)", "", T.TRADE.desc, "", "Every source system writes the same 47 upper-snake attributes, nested the "
+                  "same way; `PRODUCT_TYPE` chooses the deal's Sutra (one per product type, see *Trading products*; Endur's five are "
+                  "`ComSwap`, `ComFut`, `Cash`, `CallNot`, `Commodity`).", "", "```text",
+                  ", ".join(TSCHEMA.TOP[:-2]) + ",",
+                  "LEGS [{" + ", ".join(TSCHEMA.LEG[:-2]) + ", INDEX {" + ", ".join(TSCHEMA.INDEX) + "},",
+                  "       CASH_FLOWS [{" + ", ".join(TSCHEMA.FLOW[:-1]) + ", RESETS [{" + ", ".join(TSCHEMA.RESET) + "}]}]}],",
+                  "EVENTS [{" + ", ".join(TSCHEMA.EVENT) + "}]", "```", ""]
     lines += ["## Who can see it", ""]
     roles = make_packs.ROLES.get(name)
     lines += ([f"Role `{r}`: kinds {', '.join(f'`{x}`' for x in v['kinds'])}{', raw JSON' if v.get('raw') else ''}." for r, v in roles.items()]
@@ -150,8 +168,10 @@ def overview(name: str, docs: dict) -> str:
 def products(docs: dict) -> str:
     lines = [HEADER, GENERATED, "# Trading products", "",
              f"The trading pack covers **{len(T.PRODUCTS)} products** in ten asset classes. Each has its own Sutra, matched on the trade's "
-             "`productType`, with the product's terms, legs or schedule, the market data it is valued with, and its risk measures. "
-             "`TRD productType=<productType> <GO>` lists the trades in one product.", ""]
+             "`PRODUCT_TYPE`, laid out as a deal screen (ticket, legs side by side with their flows and resets, events, payments); Calypso "
+             "and Murex book them. The table says what each product is in the model the samples were generated from: its terms, schedule, "
+             "the market data it is valued with and its risk measures (the valuation is market-risk's trade valuation, `TVAL`). "
+             "`TRD PRODUCT_TYPE=<product type> <GO>` lists the trades in one product.", ""]
     by = defaultdict(list)
     for p in T.PRODUCTS:
         by[p.asset].append(p)
@@ -162,7 +182,7 @@ def products(docs: dict) -> str:
         for p in ps:
             rows.append([p.name, f"`{p.code}`", p.family, p.schedule or "—", ", ".join(f"`{k}`" for _, k, _ in p.md) or "—",
                          ", ".join(S.RISK_LABELS[r] for r in p.risk) or "—"])
-        lines += table(["Product", "productType", "Family", "Schedule", "Market data", "Risk"], rows)
+        lines += table(["Product", "PRODUCT_TYPE", "Family", "Schedule", "Market data", "Risk"], rows)
         for p in ps:
             lines += [f"**{p.name}** (`{p.code}`): {p.desc} Terms: " + ", ".join(f"`{f.name}` ({f.label})" for f in p.terms) + ".", ""]
     return "\n".join(lines)

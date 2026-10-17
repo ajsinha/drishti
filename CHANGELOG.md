@@ -17,6 +17,38 @@
 
 ## Unreleased
 
+- **Production-shaped trades from three source systems.** The trading pack's `trade` is the common schema a production extract has:
+  47 upper-snake attributes (`SOURCE_SYSTEM`, `TRADE_ID`, `TRADE_STATUS`, `PRODUCT_TYPE`, `COUNTERPARTY`, `LEGAL_ENTITY`, `PORTFOLIO`,
+  `TRADER_ID`, the dates, `CURRENCY` …) with `LEGS[]` (`INDEX`, `CASH_FLOWS[]` -> `RESETS[]`) and `EVENTS[]`, the same for **ENDUR**
+  (the commodity desk's deals: `ComSwap`, `ComFut`, `Cash`, `CallNot`, `Commodity`, ids `1000001`…), **CALYPSO** (`CLY-…`) and
+  **MUREX** (`MX-…`, the 125 products of the taxonomy between them). No camelCase remains on a trade; the old fields (`tradeId`,
+  `productType`, `mtm`, `legs`, `schedule` …) are gone, and a trade's MTM, P&L and DV01 are now market-risk's **trade valuation**
+  (`TVAL TVAL-<trade id>`, live). Generators in `tools/packgen/trades` (`make_trades.py --trades N --days D [--lake DIR]`: a week of
+  business days with the day's amendments, so Compare has changes). Ids of the samples changed with their systems (`IMG-`, `BBG-`,
+  `WSS-`, `END-` are gone: equity and structured are Murex, FX, money markets, fixed income and securities financing Calypso).
+  [PACKS.md](docs/guides/PACKS.md#trading).
+- **Union connectors.** Several connectors may serve one kind, one source system each (`union: true`): a read finds the entity in
+  whichever holds it, a search and the type-ahead list every system in turn, columns, pivots, the search form's drop-downs and BI tables
+  over the kind read them all (a store behind the union is still not asked). The Delta connector reads a kind from a named folder
+  (`table.trade: trade_endur`). The trading pack ships `trade-endur`, `trade-calypso` and `trade-murex` (replacing `trading-store`);
+  `drishti.py lake build --connector trade-endur` (or `--table`) writes the table a connector reads.
+  [CONNECTORS.md](docs/connectors/CONNECTORS.md#several-connectors-for-one-kind-a-union).
+- **Deal screens and pages for traders and risk analysts.** One deal Sutra per product type: F2 the DES ticket, F3 the legs side by
+  side (each with its notional profile, fixings and cash flows opening to their resets), F4 every flow, F5 events by leg with leg and
+  date controls, F6 the netted payment ladder and payments by month. New derived pages `CTRD`, `PTRD`, `LTRD`, `ITRD` (a counterparty's,
+  portfolio's, legal entity's and index's trades from every system: live trades, payments in 7/30/90 days, notional by product type as a
+  donut and by index, maturity ladder, payments by month); `DPNL` desk P&L is gone. Rachana-EL `group()`, `days()`, `today()`; `line`
+  `step: true`; `hbar` `shape: donut`; `line`, `area` and `timeline` may sit inside a tab.
+- **Compare on deep documents.** Arrays are matched by their identifier in any case and convention (`LEGS` by `LEG_ID`, `CASH_FLOWS` by
+  `FLOW_ID`, `RESETS` by `RESET_ID`, `EVENTS` by `EVENT_ID`), and a side-by-side panel shows the ticket and each leg's terms on the two
+  dates with the fields that differ marked.
+- **Search form for trades** on the new fields: source system, product type and a product sub type that follows it, status, side,
+  currency, legal entity, portfolio, counterparty (type to find), trader, trade and maturity dates; drop-downs list the values of every
+  system. A form field may `depend` on another enum. Upper-snake names read as words in inferred labels (`MATURITY_DATE`: *Maturity date*).
+- **BI samples** follow: `trades-basic`, `trading-risk` and `live-trading` read the trade valuations (columns `DESK`, `PORTFOLIO`,
+  `PRODUCT_TYPE`, `MTM`, `PNL_1D` …), `trading-cashflows` reads the bookings of the three systems (`LEGS`, `LEGS[].CASH_FLOWS`). The
+  default field masks add `TRADER_ID`, `TRADER_FIRST_NAME` and `TRADER_LAST_NAME`.
+
 - **Seven packs.** `config/packs` now holds exactly seven packs, all on by default (`drishti.packs.enabled` /
   `DRISHTI_PACKS` defaults to `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets`; it was `finance`):
   **core** (`CORE`, from `banking-core`: counterparties, now with `COUNTRY_OF_RISK` and `UEN` and links to their economy and headlines,

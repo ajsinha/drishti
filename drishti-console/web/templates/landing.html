@@ -63,7 +63,7 @@
       <div class="bar"><i></i><i></i><i></i>&nbsp; examples/packs/finance/sutras/rates/irs-vanilla.v3.sutra.yaml</div>
 <pre><span class="tok-k">sutra</span>: irs-vanilla
 <span class="tok-k">version</span>: 3
-<span class="tok-k">match</span>: { kind: trade, where: <span class="tok-s">"productType == 'IRS'"</span> }
+<span class="tok-k">match</span>: { kind: trade, where: <span class="tok-s">"$.PRODUCT_TYPE == 'IRS_FIXFLOAT'"</span> }
 <span class="tok-k">strip</span>:
   - { label: Notional (USD), bind: $.notional, fmt: amount0 }
   - { label: MTM (USD), bind: $.mtm, emphasis: true }
