@@ -329,6 +329,38 @@ public sealed interface PlanNode {
         }
     }
 
+    /**
+     * A Python node, run on the console backend (wave B, section 3.6): {@code PyAggregate} (a Python measure: its item computes one value per group of the
+     * answer from the rows of its input columns), {@code PyTransform}, {@code PyColumn}. Its sources are the secured scans of its inputs.
+     */
+    record PyNode(String kind, String item, String measure, List<String> columns, List<String> by, List<PlanNode> sources) implements PlanNode {
+        public PyNode {
+            columns = List.copyOf(columns);
+            by = List.copyOf(by);
+            sources = List.copyOf(sources);
+        }
+
+        @Override
+        public String op() {
+            return kind;
+        }
+
+        @Override
+        public List<PlanNode> inputs() {
+            return sources;
+        }
+
+        @Override
+        public Map<String, Object> props() {
+            return sorted("item", item, "measure", measure, "columns", columns, "by", by);
+        }
+
+        @Override
+        public PlanNode withInputs(List<PlanNode> inputs) {
+            return new PyNode(kind, item, measure, columns, by, inputs);
+        }
+    }
+
     /** After aggregation: window measures over the answer's rows ({@code rank}, {@code lag}, {@code moving_*}, {@code running}). */
     record Window(PlanNode input, List<String> measures) implements PlanNode {
         @Override

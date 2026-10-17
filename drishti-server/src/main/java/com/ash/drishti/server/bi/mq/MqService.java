@@ -93,6 +93,25 @@ public final class MqService {
     private final PlanProperties planProps;
     private final ResultCache<Ran> cache;
 
+    /** Runs a Python measure on the console for one answer (wave B, R8): its values per group of the answer's fields, as the reader. */
+    @FunctionalInterface
+    public interface PythonMeasures {
+        com.fasterxml.jackson.databind.JsonNode run(SecuritySignature.Reader reader, Dataset.Measure measure, List<String> groupBy, List<String> columns, List<List<Object>> rows);
+    }
+
+    private volatile PythonMeasures python;
+    private volatile java.util.function.Function<Dataset.Table, com.ash.drishti.server.bi.engine.ConnectorCapabilities> capabilities;
+
+    /** Python measures in any grouped query (wave B): run by the console's runner after the query. */
+    public void python(PythonMeasures p) {
+        this.python = p;
+    }
+
+    /** The connectors' capability descriptors, for the tier planner (stage 7). */
+    public void capabilities(java.util.function.Function<Dataset.Table, com.ash.drishti.server.bi.engine.ConnectorCapabilities> c) {
+        this.capabilities = c;
+    }
+
     public MqService(MqProperties props) {
         this(props, PlanProperties.off());
     }
@@ -115,7 +134,7 @@ public final class MqService {
     /** Steps 3 to 9 without reading data (top-N is not resolved): {@code valid}, the warnings, and the engine request it would run; a refusal throws. */
     public Map<String, Object> validate(Bound b, ModelQuery q) {
         ObjectSecurity.check(b.view(), q, b.security().hidden());
-        MqValidator.Checked c = MqValidator.validate(b.view(), q, b.context(), props);
+        MqValidator.Checked c = MqValidator.validate(b.view(), q, b.context(), props, python != null);
         MqCompiler.Compiled compiled = MqCompiler.compile(b.view(), c, b.context(), props, tq -> new QueryService.Result(List.of(), 0, null));
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("valid", true);
@@ -135,7 +154,7 @@ public final class MqService {
     /** The plan of a query as the bound reader would run it, without reading data (a {@code top} filter is not resolved: the plan never holds data). */
     public LogicalPlan plan(Bound b, ModelQuery q) {
         ObjectSecurity.check(b.view(), q, b.security().hidden());
-        MqValidator.Checked c = MqValidator.validate(b.view(), q, b.context(), props);
+        MqValidator.Checked c = MqValidator.validate(b.view(), q, b.context(), props, python != null);
         MqCompiler.Compiled compiled = MqCompiler.compile(b.view(), c, b.context(), props, tq -> new QueryService.Result(List.of(), 0, null));
         return MqPlans.plan(b.view(), c, compiled, b.security());
     }
@@ -145,11 +164,15 @@ public final class MqService {
      * (the validator's and the guard's) and when it started.
      */
     public record Ran(ModelQuery query, MqValidator.Checked checked, MqCompiler.Compiled compiled, QueryService.Result raw, QueryService.Result shown,
-            List<Map<String, Object>> totals, List<String> warnings, long started, LogicalPlan plan, String signature, boolean fromCache) {
+            List<Map<String, Object>> totals, List<String> warnings, long started, LogicalPlan plan, String signature, boolean fromCache, Map<String, Object> timings) {
+
+        public Ran {
+            timings = timings == null ? Map.of() : timings;
+        }
 
         /** The same answer, served again from the result cache (started now). */
         Ran cached(long t0) {
-            return new Ran(query, checked, compiled, raw, shown, totals, warnings, t0, plan, signature, true);
+            return new Ran(query, checked, compiled, raw, shown, totals, warnings, t0, plan, signature, true, Map.of("cache", "hit"));
         }
 
 
@@ -189,7 +212,7 @@ public final class MqService {
         if (b.envelope() != null) {
             b.envelope().check(q, b.view());                                         // a report-only reader: what the report can ask, nothing else
         }
-        MqValidator.Checked c = MqValidator.validate(b.view(), q, b.context(), props);
+        MqValidator.Checked c = MqValidator.validate(b.view(), q, b.context(), props, python != null);
         MqCompiler.Compiled compiled = MqCompiler.compile(b.view(), c, b.context(), props, tq -> b.runner().run(c.dataset(), tq, false));
         LogicalPlan plan = MqPlans.plan(b.view(), c, compiled, b.security());          // stages 3 to 6: bind, secure, guard, optimise
         QueryRequest main = Lowering.request(plan, compiled.main());
@@ -211,10 +234,21 @@ public final class MqService {
                 ? new ResultCache.Key(plan.hash() + (engineLimit ? "|engine-limit" : "") + "|top:" + tops(compiled), signature, b.generationFor(plan, q), plan.immutable()) : null;
         Ran hit = key == null ? null : cache.get(key);
         if (hit != null) {
-            return new Ran(q, c, compiled, servedAgain(hit.raw()), servedAgain(hit.shown()), hit.totals(), hit.warnings(), t0, plan, signature, true);
+            return new Ran(q, c, compiled, servedAgain(hit.raw()), servedAgain(hit.shown()), hit.totals(), hit.warnings(), t0, plan, signature, true, Map.of("cache", "hit"));
         }
-        QueryService.Result r = b.runner().run(compiled.dataset(), main, explain);
+        List<String> py = main.measures().stream().filter(m -> compiled.dataset().measures().get(m) != null && compiled.dataset().measures().get(m).python() != null).toList();
+        QueryRequest sqlMain = py.isEmpty() ? main : new QueryRequest(main.fields(), main.measures().stream().filter(m -> !py.contains(m)).toList(), main.filters(), main.from(),
+                main.to(), main.orderBy(), main.limit(), main.layer(), main.detail());
+        long e0 = System.nanoTime();
+        QueryService.Result r = b.runner().run(compiled.dataset(), sqlMain, explain);
+        long engineNanos = System.nanoTime() - e0;
+        long pyNanos = 0;
         List<String> warnings = new ArrayList<>(c.warnings());
+        if (!py.isEmpty()) {
+            long p0 = System.nanoTime();
+            r = PythonAnswers.add(b, compiled.dataset(), main, sqlMain, r, py, python, props, warnings);
+            pyNanos = System.nanoTime() - p0;
+        }
         warnings.addAll(guardWarnings(r, compiled.guards()));
         List<Guards.Refusal> refused = Guards.refusals(warnings, planProps);           // stage 5: the guards that refuse from wave A
         if (!refused.isEmpty()) {
@@ -223,10 +257,23 @@ public final class MqService {
         QueryService.Result shown = withoutGuards(r);
         List<Map<String, Object>> totals = new ArrayList<>();
         for (MqCompiler.Level level : compiled.totals()) {
-            QueryService.Result tr = b.runner().run(compiled.dataset(), level.query(), false);
-            totals.add(Map.of("by", level.by(), "measures", level.query().measures(), "rows", rows(tr)));
+            QueryRequest lq = level.query();
+            List<String> sqlMeasures = lq.measures().stream().filter(m -> !py.contains(m)).toList();
+            if (sqlMeasures.isEmpty()) {
+                continue;                                                       // a Python measure has no total (it is not additive)
+            }
+            if (sqlMeasures.size() < lq.measures().size()) {
+                lq = new QueryRequest(lq.fields(), sqlMeasures, lq.filters(), lq.from(), lq.to(), lq.orderBy(), lq.limit(), lq.layer(), lq.detail());
+            }
+            QueryService.Result tr = b.runner().run(compiled.dataset(), lq, false);
+            totals.add(Map.of("by", level.by(), "measures", lq.measures(), "rows", rows(tr)));
         }
-        Ran ran = new Ran(q, c, compiled, r, shown, totals, warnings, t0, plan, signature, false);
+        Map<String, Object> timings = new LinkedHashMap<>();
+        timings.put("engineMillis", Math.round(engineNanos / 1e5) / 10.0);
+        if (!py.isEmpty()) {
+            timings.put("pythonMillis", Math.round(pyNanos / 1e5) / 10.0);
+        }
+        Ran ran = new Ran(q, c, compiled, r, shown, totals, warnings, t0, plan, signature, false, timings);
         if (key != null) {
             cache.put(key, ran);
         }
@@ -284,7 +331,16 @@ public final class MqService {
         meta.put("plan", ran.plan() == null ? null : ran.plan().hash());
         meta.put("signature", ran.signature());
         if (q.options().explain() && ran.plan() != null) {
-            meta.put("explain", ran.plan().tree());
+            com.ash.drishti.server.bi.plan.TierPlanner.Placement placed = com.ash.drishti.server.bi.plan.TierPlanner.place(ran.plan(), compiled.dataset(), capabilities);
+            meta.put("explain", com.ash.drishti.server.bi.plan.Explain.tree(ran.plan().root(), placed));      // wave B: tiers and layers
+            meta.put("tiers", placed.counts());
+            Map<String, Object> timings = new LinkedHashMap<>(ran.timings());
+            if (mm != null) {
+                timings.put("layer", mm.layer());
+                timings.put("sourceOrJavaMillis", mm.millis());
+            }
+            meta.put("timings", timings);
+            meta.put("explainText", com.ash.drishti.server.bi.plan.Explain.text(ran.plan(), ran.signature(), placed, timings));
         }
         meta.put("millis", Math.round((System.nanoTime() - t0) / 1e5) / 10.0);
         meta.put("generation", "g-" + (mm == null ? 0 : mm.generation()));

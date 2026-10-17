@@ -1697,7 +1697,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9159 | 422 | Semi-additive | A balance measure added across a window of dates (asked with other measures, without the date as a field): refused from wave A; asked alone it is answered as the last date's value with a warning |
 | DRS-9160 | 422 | Repeats rows | A row extract (`shape: rows`) with fields of two facts |
 | DRS-9161 | 403 | Masked field | A filter, sort or `top` on a field masked for the caller (the body also names `DRS-9021`; `fix` offers the dataset's key) |
-| DRS-9162 | 422 | Python measure | A Python measure in a grouped query (a python visual runs it) |
+| DRS-9162 | 422 | Python measure | A Python measure in a grouped query when the server has no Python runner, or one the query sorts on, filters on (`having`) or ranks by (`top`): it is worked out on the console after the query (wave B) |
 | DRS-9164 | 422 | Parameter | (`mq: 2`) A `params` value the model does not take: an unknown parameter, the wrong kind, outside `min`..`max`, not one of its `values`, a field parameter's value not one of its `fields`, or `param.x` in `select.fields` that is not a field parameter |
 | DRS-9165 | 422 | Calculation group | (`mq: 2`) A `calc` group or item the model does not have (with `fix`: its groups or items), or a Python measure under a calculation group |
 | DRS-9166 | 422 | Filter context | A filter-context or time function that cannot be planned: `via=` names no relationship, `parent_of` no hierarchy, `as_of` a date that is not fixed before the query (`date('…')`, `asof()`, `shift_date(asof(), n)`), contexts nested more than three deep through the measures they name, a context where none can be (a rollup, a live aggregate) |
@@ -1905,6 +1905,23 @@ name; `DRS-9165`), `perspective: <name>` (names outside it are `DRS-9153`) and `
 parameters' values, the items applied and the local measures are part of the plan hash, so of every cache key. Validation runs ten steps in order before any data is read; the first step that fails answers with all its problems
 ([section 5.3](../architecture/BI_MODEL_SPEC.md#53-validation-before-any-data-is-read)). In W1 the currency guard (`DRS-9158`) and the semi-additive rule (`DRS-9159`) are warnings in
 `meta.warnings`, not refusals.
+
+**Explain and Python measures (wave B).** With `options: { explain: true }` the answer's `meta` has `explain` (the plan as a tree, each node with its
+`tier`: `source` for a fragment a SQL store runs, `java`, `console` for a `PyAggregate`; each scan with its `layer`: `columns`, `live`, `history`, `direct`,
+`rollup <name>`), `tiers` (nodes per tier), `timings` (`engineMillis`, `pythonMillis`, `layer`, `sourceOrJavaMillis`) and `explainText` (the indented text of
+[BI_DESIGN.md §4.7](../architecture/BI_DESIGN.md#47-explain)). A Python measure (`python: <item>`, `inputs`, `by`) may be asked in any grouped query: the
+SQL measures run first, then the rows of its inputs with the answer's fields are read as the reader and the Python runner gives one value per group (a
+masked input leaves the column `None`, said in `warnings`); it has no total. The runner is the console's **Py-node endpoint** when
+`drishti.bi.transform.console-url` is set (else the server runs the console's `transform_cli.py` as before):
+
+| Call (server to console) | Body | Answer |
+|---|---|---|
+| `POST {console-url}/internal/py/transform` | `{manifest, params, inputs: [base64 Arrow IPC], max_rows, max_bytes}` | `200` the result as Parquet (`application/vnd.apache.parquet`), headers `X-Drishti-Rows`, `X-Drishti-Ms`, `X-Drishti-Columns` (`[{name, type}]`) |
+| `POST {console-url}/internal/py/measure` | `{manifest, params, group_by: [names], columns: [names], rows: [[...]]}` | `200 {ok: true, by, rows: [[group values..., value]], ms}` |
+| a refusal (either) | | `{ok: false, code: DRS-9070..9076, status, detail}` (JSON) |
+
+Both carry `X-Drishti-Runner-Token` (`drishti.bi.transform.console-token`); the console checks it. At most `drishti.bi.transform.max-concurrent` calls at
+once (`503 DRS-9074` after `queue-wait`), each at most `timeout` (`504 DRS-9072`).
 
 **An answer** (captured from a scratch server with the trading pack and its small file lake; the model `desk-trading` has a desk-head rule on its one dataset,
 `pack.trading.trade`). As `rita` (risk) and then as `hana` (desk-head of DESK-FX), the same query:

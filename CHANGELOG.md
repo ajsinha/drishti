@@ -59,6 +59,17 @@
   moves only that date's generation (`Layers.generation(key, date)`): an as-of answer of another date keeps its L1 entry, a standing query that reads
   later dates is not evaluated again. Property test: a board (rows), a report (diff) and an alert (value) for three readers over one live model equal
   the same query asked now after random update streams.
+- **Server: the tier planner and Python nodes (wave B task 4).** `plan/TierPlanner` places every node of the plan (stage 7): a direct table's scan and
+  an aggregate wholly in one SQL store that aggregates at the **source**, Python nodes on the **console**, the rest on the **Java** tier; each scan has its
+  layer (`columns`, `live`, `history`, `direct`, `rollup <name>`). **Explain** (`options.explain`) answers the tree with tiers and layers, `tiers`,
+  `timings` (`engineMillis`, `pythonMillis`, `layer`) and `explainText`. Each connector has a **capability descriptor** (`ConnectorCapabilities`: SQL
+  dialect, aggregates, filter types, streams, dated, max fragments) that replaces the default-dialect fallback of direct queries, and a **fragment pool
+  and circuit breaker** (`FragmentPools`, `drishti.bi.exec.max-fragments`, `breaker-failures`, `breaker-open`): layer builds and direct queries run in
+  the pool; a failing connector is refused at once (`DRS-9026`, named) until one fragment succeeds again; `GET /bi/engine` lists them. **Python
+  measures in any grouped query** (R8, plan node `PyAggregate`): the SQL measures run first, the inputs' rows per group are read as the reader, and the
+  Python runner gives one value per group (a masked input leaves the column `None`; sorting or filtering on it is `DRS-9162`). The runner is the
+  console's **Py-node endpoint** (`ConsolePythonRunner`: `POST {drishti.bi.transform.console-url}/internal/py/transform` and `/measure`, token
+  `console-token`) when set, else the process runner as before.
 
 ## 2.2.0 — Datasets and data models rooted in packs, a Python-like expression language, read-only SQL, one query plan (2026-10-17)
 

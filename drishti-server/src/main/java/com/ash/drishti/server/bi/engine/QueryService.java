@@ -106,6 +106,34 @@ public final class QueryService implements AutoCloseable {
                 .expireAfterWrite(props.cacheTtl()).build();
     }
 
+    private volatile ExecProperties exec = ExecProperties.defaults();
+    private volatile FragmentPools pools = new FragmentPools(exec, Clock.systemUTC());
+
+    /** The execution settings (wave B): fragment pools and circuit breakers per connector, work classes, memory and cost budgets. */
+    public void exec(ExecProperties e) {
+        this.exec = e;
+        this.pools = new FragmentPools(e, Clock.systemUTC());
+    }
+
+    public ExecProperties execProperties() {
+        return exec;
+    }
+
+    /** The connectors' fragment pools and breakers. */
+    public FragmentPools pools() {
+        return pools;
+    }
+
+    /** The name a table's fragments are pooled under: its running connector's, else what the table names. */
+    String connectorOf(Dataset.Table t) {
+        return sources.plugin(t.connector(), t.kind()).map(p -> p.manifest().name()).orElse(t.connector().isBlank() ? t.kind() : t.connector());
+    }
+
+    /** The capability descriptor of the connector a table reads (null when none runs). */
+    public ConnectorCapabilities capabilities(Dataset.Table t) {
+        return sources.plugin(t.connector(), t.kind()).map(p -> ConnectorCapabilities.of(p, t.kind(), exec)).orElse(null);
+    }
+
     /** The generation bus of this node (wave B): live batches, loads and refreshes, pushed to standing queries. */
     public GenerationBus bus() {
         return bus;
@@ -155,6 +183,8 @@ public final class QueryService implements AutoCloseable {
         Map<String, Long> l = new LinkedHashMap<>();
         byLayer.forEach((k, v) -> l.put(k, v.get()));
         m.put("byLayer", l);
+        m.put("connectors", pools.stats());                                     // wave B: fragment pools and circuit breakers
+        m.put("bus", Map.of("published", bus.published(), "delivered", bus.delivered()));
         return m;
     }
 
@@ -354,7 +384,7 @@ public final class QueryService implements AutoCloseable {
                 }
                 continue;
             }
-            Layers.Layer layer = "live".equals(table.mode()) ? layers.live(ds.key(), table) : layers.columns(ds.key(), table, q.from(), q.to());
+            Layers.Layer layer = "live".equals(table.mode()) ? layers.live(ds.key(), table) : pools.run(connectorOf(table), () -> layers.columns(ds.key(), table, q.from(), q.to()));
             cols.put(t, layer);
             warnings.addAll(layer.warnings());
         }
@@ -414,7 +444,7 @@ public final class QueryService implements AutoCloseable {
                 LiveTable lt = liveTables.ensure(ds.key(), d, table.isHistory() ? d.tables().get(table.of()) : table, sampler(ds));
                 return table.isHistory() ? lt.history().orElseThrow().source(d, Dialect.DUCKDB) : lt.source(d, Dialect.DUCKDB);
             }
-            Layers.Layer layer = "live".equals(table.mode()) ? layers.live(ds.key(), table) : layers.columns(ds.key(), table, lo, hi);
+            Layers.Layer layer = "live".equals(table.mode()) ? layers.live(ds.key(), table) : pools.run(connectorOf(table), () -> layers.columns(ds.key(), table, lo, hi));
             layer.warnings().forEach(w -> warnings.add(t + (sameDates ? "" : " at " + lo) + ": " + w));
             return TableRelations.cached(d, table, layer.files(), Dialect.DUCKDB);
         };
@@ -612,6 +642,7 @@ public final class QueryService implements AutoCloseable {
     private Result direct(Loaded ds, QueryRequest q, SqlCompiler.Plan plan, SqlCompiler.Reader reader, Caller who, boolean explain) {
         Dataset d = ds.dataset();
         SqlTarget target = null;
+        ConnectorCapabilities caps = null;
         for (String t : plan.tables()) {
             Dataset.Table table = d.tables().get(t);
             if (!"direct".equals(table.mode())) {
@@ -625,8 +656,10 @@ public final class QueryService implements AutoCloseable {
                 throw new DrishtiException(ErrorCode.QUERY_INVALID, "direct tables of one query must live in one store; '" + t + "' is in another connector");
             }
             target = st;
+            caps = ConnectorCapabilities.of(p, table.kind(), exec);
         }
-        Dialect dialect = Dialect.of(target.dialect());
+        Dialect dialect = caps.sqlDialect();                                    // the connector's capability descriptor says the dialect (wave B)
+        final String connector = caps.connector();
         SqlCompiler compiler = new SqlCompiler(d, dialect);
         SqlCompiler.Plan p = compiler.plan(q, reader);
         Map<String, SqlCompiler.Source> from = new LinkedHashMap<>();
@@ -638,28 +671,30 @@ public final class QueryService implements AutoCloseable {
         SqlCompiler.MoreSources more = (t, lo, hi) -> TableRelations.direct(d, d.tables().get(t), store, dialect, lo, hi);
         SqlCompiler.Compiled c = compiler.compile(p, reader, from, cap, null, timeContext(d, q, List.of()), more);
         long t0 = System.nanoTime();
-        AnalyticEngine.Answer a;
-        try {
-            a = target.with(conn -> {
-                try (PreparedStatement ps = conn.prepareStatement(c.sql())) {
-                    ps.setQueryTimeout((int) Math.max(1, props.timeout().toSeconds()));
-                    for (int i = 0; i < c.params().size(); i++) {
-                        ps.setObject(i + 1, c.params().get(i));
+        final SqlTarget into = target;
+        AnalyticEngine.Answer a = pools.run(connector, () -> {                  // the connector's fragment pool and circuit breaker (wave B)
+            try {
+                return into.with(conn -> {
+                    try (PreparedStatement ps = conn.prepareStatement(c.sql())) {
+                        ps.setQueryTimeout((int) Math.max(1, props.timeout().toSeconds()));
+                        for (int i = 0; i < c.params().size(); i++) {
+                            ps.setObject(i + 1, c.params().get(i));
+                        }
+                        try (ResultSet rs = ps.executeQuery()) {
+                            List<ArrowIpcWriter.Column> cols = DuckDbEngine.read(rs, cap);
+                            return new AnalyticEngine.Answer(cols, cols.isEmpty() ? 0 : cols.get(0).values().length, (System.nanoTime() - t0) / 1e6);
+                        }
                     }
-                    try (ResultSet rs = ps.executeQuery()) {
-                        List<ArrowIpcWriter.Column> cols = DuckDbEngine.read(rs, cap);
-                        return new AnalyticEngine.Answer(cols, cols.isEmpty() ? 0 : cols.get(0).values().length, (System.nanoTime() - t0) / 1e6);
-                    }
-                }
-            });
-        } catch (DrishtiException e) {
-            throw e;
-        } catch (SQLException e) {
-            throw new DrishtiException(e.getMessage() != null && e.getMessage().toLowerCase().contains("timeout") ? ErrorCode.QUERY_TIMEOUT : ErrorCode.QUERY_SOURCE,
-                    "the store could not run the query: " + e.getMessage().lines().findFirst().orElse(""));
-        } catch (Exception e) {
-            throw new DrishtiException(ErrorCode.QUERY_SOURCE, "the store could not run the query: " + e.getMessage());
-        }
+                });
+            } catch (DrishtiException e) {
+                throw e;
+            } catch (SQLException e) {
+                throw new DrishtiException(e.getMessage() != null && e.getMessage().toLowerCase().contains("timeout") ? ErrorCode.QUERY_TIMEOUT : ErrorCode.QUERY_SOURCE,
+                        "the store could not run the query: " + e.getMessage().lines().findFirst().orElse(""));
+            } catch (Exception e) {
+                throw new DrishtiException(ErrorCode.QUERY_SOURCE, "the store could not run the query: " + e.getMessage());
+            }
+        });
         return finish(ds, q, c, a, "direct", null, List.of(), List.of(), explain);
     }
 

@@ -79,7 +79,11 @@ public final class Planner {
         Dataset ds = in.flat();
         List<String> fields = q.fields();
         List<String> measures = q.measures().stream().filter(m -> !in.hidden().contains(m)).toList();
-        List<Part> parts = parts(in, reader);
+        List<String> python = measures.stream().filter(m -> ds.measures().get(m) != null && ds.measures().get(m).python() != null).toList();
+        Input sqlIn = python.isEmpty() ? in : new Input(in.flat(), in.model(), in.version(), in.sources(), new QueryRequest(q.fields(), q.measures().stream()
+                .filter(m -> !python.contains(m)).toList(), q.filters(), q.from(), q.to(), q.orderBy(), q.limit(), q.layer(), q.detail()), in.rowConditions(), in.having(),
+                in.time(), in.rows(), in.totals(), in.ids(), in.hidden(), in.binding());
+        List<Part> parts = sqlIn.main().measures().isEmpty() && !python.isEmpty() ? List.of() : parts(sqlIn, reader);
         List<PlanNode> aggregates = new ArrayList<>();
         for (Part p : parts) {
             List<PlanNode> scans = new ArrayList<>();
@@ -94,6 +98,23 @@ public final class Planner {
             for (String m : mine) {
                 aggregates.addAll(ContextNodes.of(ds, m, scans, in.rowConditions().stream().filter(c -> p.tables().contains(alias(c.field()))).toList(), p.fact(), fields));
             }
+        }
+        for (String m : python) {                                               // wave B (R8): a Python measure is a PyAggregate on the console
+            Dataset.Measure pm = ds.measures().get(m);
+            java.util.Set<String> tables = new LinkedHashSet<>();
+            fields.forEach(f -> tables.add(alias(f)));
+            pm.inputs().forEach(i -> tables.add(alias(i)));
+            List<PlanNode> scans = new ArrayList<>();
+            for (String t : tables) {
+                if (!ds.tables().containsKey(t)) {
+                    continue;
+                }
+                Source src = in.sources().getOrDefault(t, new Source(ds.name(), Integer.toString(ds.version())));
+                scans.add(shaped(ds.tables().get(t), new PlanNode.SecureScan(t, src.dataset(), src.version(), scanTime(ds.tables().get(t), in.time()), List.of(), List.of(), List.of(),
+                        List.of(), List.of(), false)));
+            }
+            List<PlanNode.Cond> conds = in.rowConditions().stream().filter(c -> tables.contains(alias(c.field()))).toList();
+            aggregates.add(new PlanNode.PyNode("PyAggregate", pm.python(), m, pm.inputs(), fields, List.of(new PlanNode.Filter(scans, conds))));
         }
         PlanNode node = aggregates.size() == 1 ? aggregates.get(0) : new PlanNode.Meet(aggregates, fields);
         List<String> windows = measures.stream().filter(m -> windowed(ds, m, new LinkedHashSet<>())).toList();

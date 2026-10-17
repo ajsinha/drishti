@@ -30,9 +30,20 @@ public final class Explain {
     private Explain() {}
 
     public static Map<String, Object> tree(PlanNode n) {
+        return tree(n, null);
+    }
+
+    /** The tree with each node's tier and each scan's layer (wave B: what stage 7 placed where). */
+    public static Map<String, Object> tree(PlanNode n, TierPlanner.Placement placement) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("op", n.op());
         m.putAll(n.props());
+        if (placement != null) {
+            m.put("tier", placement.tier(n));
+            if (placement.layers().containsKey(n)) {
+                m.put("layer", placement.layers().get(n));
+            }
+        }
         if (n instanceof PlanNode.SecureScan s) {
             m.put("rules", s.rules().size());
             m.put("masked", s.masked());
@@ -44,7 +55,7 @@ public final class Explain {
             m.put("rollup", a.rollup());
         }
         List<Map<String, Object>> in = new ArrayList<>();
-        n.inputs().forEach(i -> in.add(tree(i)));
+        n.inputs().forEach(i -> in.add(tree(i, placement)));
         if (!in.isEmpty()) {
             m.put("inputs", in);
         }
@@ -53,13 +64,21 @@ public final class Explain {
 
     /** The indented text: one line per node. */
     public static String text(LogicalPlan p, String signature) {
+        return text(p, signature, null, Map.of());
+    }
+
+    /** The indented text with each node's tier and layer, and the times the tiers took (wave B: explain after execution). */
+    public static String text(LogicalPlan p, String signature, TierPlanner.Placement placement, Map<String, Object> timings) {
         StringBuilder b = new StringBuilder();
         b.append("plan: ").append(p.hash()).append("   signature: ").append(signature).append("   time: ").append(p.time()).append('\n');
-        line(p.root(), 0, b);
+        if (!timings.isEmpty()) {
+            b.append("timings: ").append(timings).append('\n');
+        }
+        line(p.root(), 0, b, placement);
         return b.toString();
     }
 
-    private static void line(PlanNode n, int depth, StringBuilder b) {
+    private static void line(PlanNode n, int depth, StringBuilder b, TierPlanner.Placement placement) {
         b.append("  ".repeat(depth)).append("- ").append(n.op());
         switch (n) {
             case PlanNode.SecureScan s -> {
@@ -86,7 +105,13 @@ public final class Explain {
                 }
             }
         }
+        if (placement != null) {
+            b.append("   tier: ").append(placement.tier(n));
+            if (placement.layers().containsKey(n)) {
+                b.append("   layer: ").append(placement.layers().get(n));
+            }
+        }
         b.append('\n');
-        n.inputs().forEach(i -> line(i, depth + 1, b));
+        n.inputs().forEach(i -> line(i, depth + 1, b, placement));
     }
 }

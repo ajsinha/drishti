@@ -135,9 +135,13 @@ class LiveStandingQueriesTest {
     static final class Held {
         List<List<Object>> rows;
         Object value;
+        String failure;
 
         @SuppressWarnings("unchecked")
         void apply(StandingQueries.Event e, int keys) {
+            if ("status".equals(e.name())) {
+                failure = String.valueOf(e.data().get("detail"));
+            }
             if (!"answer".equals(e.name())) {
                 return;
             }
@@ -199,9 +203,7 @@ class LiveStandingQueriesTest {
                     default -> lake.set(id, "mtm", (double) (rnd.nextInt(20001) - 10000));
                 }
             }
-            Thread.sleep(80);                                                   // the feed's frame merges the burst into a batch
-            assertThat(service.bus().drained(5_000)).isTrue();
-            assertThat(standing.settled(10_000)).isTrue();
+            quiesce();
             for (Map.Entry<String, String> e : ids.entrySet()) {
                 String user = e.getKey().split("/")[0];
                 String name = e.getKey().split("/")[1];
@@ -221,7 +223,7 @@ class LiveStandingQueriesTest {
                         mine.sort(Maintainer.order(new com.ash.drishti.server.bi.engine.QueryRequest(List.of("trades.desk", "trades.currency"), List.of("Biggest", "MTM"),
                                 List.of(), null, null, List.of(), null, "auto")));
                     }
-                    assertThat(StandingQueries.sameRows(mine, now)).as("burst %d %s:%n held %s%n asked %s", burst, e.getKey(), mine, now).isTrue();
+                    assertThat(StandingQueries.sameRows(mine, now)).as("burst %d %s:%n held %s%n asked %s%n failure %s", burst, e.getKey(), mine, now, x.failure).isTrue();
                 }
             }
         }
@@ -229,6 +231,20 @@ class LiveStandingQueriesTest {
         Map<String, Long> modes = (Map<String, Long>) standing.stats().get("modes");
         assertThat(modes).containsKey("incremental");
         assertThat((Long) standing.stats().get("incremental")).isPositive();
+    }
+
+    /** Waits until the live table stopped moving (the feed's frames merged the burst), the bus delivered every notice and the groups applied them. */
+    void quiesce() throws InterruptedException {
+        long until = System.nanoTime() + Duration.ofSeconds(10).toNanos();
+        while (System.nanoTime() < until) {
+            long g1 = service.live().generation(model.key());
+            Thread.sleep(60);
+            long g2 = service.live().generation(model.key());
+            if (g1 == g2 && service.bus().drained(5_000) && standing.settled(10_000) && service.live().generation(model.key()) == g2) {
+                return;
+            }
+        }
+        throw new AssertionError("the live table did not settle");
     }
 
     @Test

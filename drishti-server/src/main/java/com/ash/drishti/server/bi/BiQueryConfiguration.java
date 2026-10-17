@@ -48,7 +48,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @EnableConfigurationProperties({QueryProperties.class, BiReportProperties.class, BiLiveProperties.class, BiRefreshProperties.class,
-        com.ash.drishti.server.bi.transform.TransformProperties.class})
+        com.ash.drishti.server.bi.transform.TransformProperties.class, com.ash.drishti.server.bi.engine.ExecProperties.class})
 public class BiQueryConfiguration {
 
     @Bean(destroyMethod = "close")
@@ -62,12 +62,18 @@ public class BiQueryConfiguration {
     }
 
     @Bean(destroyMethod = "")
-    public QueryService biQueries(QueryProperties props, BiLiveProperties live, AnalyticEngine engine, SourceGateway sources) {
-        return new QueryService(props, live, engine, sources, Clock.systemUTC());
+    public QueryService biQueries(QueryProperties props, BiLiveProperties live, AnalyticEngine engine, SourceGateway sources,
+            com.ash.drishti.server.bi.engine.ExecProperties exec) {
+        QueryService q = new QueryService(props, live, engine, sources, Clock.systemUTC());
+        q.exec(exec);                                                          // wave B: fragment pools and breakers per connector, work classes, budgets
+        return q;
     }
 
     @Bean
     public com.ash.drishti.server.bi.transform.TransformRunner transformRunner(com.ash.drishti.server.bi.transform.TransformProperties props, QueryProperties query, BiReportProperties report) {
+        if (!props.consoleUrl().isBlank()) {                                   // wave B: the Py nodes run on the console backend
+            return new com.ash.drishti.server.bi.transform.ConsolePythonRunner(props, props.consoleUrl(), props.consoleToken());
+        }
         java.nio.file.Path scratch = props.workDir().isBlank() ? java.nio.file.Path.of(query.storeDir()).toAbsolutePath().resolve("transform-tmp") : java.nio.file.Path.of(props.workDir());
         return new com.ash.drishti.server.bi.transform.ProcessTransformRunner(props, scratch, report.pythonPackages(), report.pythonMaxSeconds(), report.pythonMaxMemoryMb());
     }

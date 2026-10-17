@@ -63,6 +63,11 @@ public final class MqValidator {
     private MqValidator() {}
 
     public static Checked validate(ModelView v, ModelQuery query, Context ctx, MqProperties props) {
+        return validate(v, query, ctx, props, false);
+    }
+
+    /** As {@link #validate(ModelView, ModelQuery, Context, MqProperties)}; {@code python}: Python measures run on the console in any grouped query (wave B, R8). */
+    public static Checked validate(ModelView v, ModelQuery query, Context ctx, MqProperties props, boolean python) {
         // ---- 3 names and the contract
         ModelQuery q = MqBindings.select(v, resolveIds(v, query));            // mq: 2: field parameters, the perspective, the calculation groups named
         Dataset base = v.flat();
@@ -206,8 +211,15 @@ public final class MqValidator {
         for (int i = 0; i < q.measures().size(); i++) {
             Dataset.Measure m = ds.measures().get(q.measures().get(i));
             if (m != null && m.python() != null) {
-                out.add(MqException.Problem.of("DRS-9162", "select.measures[" + i + "]", "'" + m.name() + "' is a Python measure (" + m.python()
-                        + "): a python visual runs it; a grouped query cannot"));
+                String name = m.name();
+                if (!python) {
+                    out.add(MqException.Problem.of("DRS-9162", "select.measures[" + i + "]", "'" + name + "' is a Python measure (" + m.python()
+                            + "): a python visual runs it; a grouped query cannot"));
+                } else if (q.sort().stream().anyMatch(s -> s.by().equals(name)) || q.having().stream().anyMatch(h -> h.measure().equals(name))
+                        || q.where().stream().anyMatch(w -> name.equals(w.by()))) {
+                    out.add(MqException.Problem.of("DRS-9162", "select.measures[" + i + "]", "'" + name + "' is a Python measure: it is worked out on the console after the"
+                            + " query, so it cannot be sorted on, filtered on or ranked by"));
+                }
             }
         }
         fail(out);
