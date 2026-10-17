@@ -162,7 +162,21 @@
    ]
   }
  ],
- "EVENTS": [],
+ "EVENTS": [
+  {
+   "LEG_ID": 2,
+   "EVENT_ID": 9000057,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Commodity payment",
+   "EVENT_DATE": "2026-03-03",
+   "AMOUNT": 22177.5,
+   "CURRENCY": "USD",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  }
+ ],
  "_meta": {
   "source": "endur",
   "generation": 1

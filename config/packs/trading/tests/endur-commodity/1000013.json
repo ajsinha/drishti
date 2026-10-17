@@ -162,5 +162,19 @@
    ]
   }
  ],
- "EVENTS": []
+ "EVENTS": [
+  {
+   "LEG_ID": 2,
+   "EVENT_ID": 9000053,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Commodity payment",
+   "EVENT_DATE": "2026-04-03",
+   "AMOUNT": -167880836.0,
+   "CURRENCY": "USD",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  }
+ ]
 }

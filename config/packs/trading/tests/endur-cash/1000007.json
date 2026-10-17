@@ -104,5 +104,19 @@
    ]
   }
  ],
- "EVENTS": []
+ "EVENTS": [
+  {
+   "LEG_ID": 1,
+   "EVENT_ID": 9000031,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Cash payment",
+   "EVENT_DATE": "2025-06-03",
+   "AMOUNT": -1370236.65,
+   "CURRENCY": "EUR",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  }
+ ]
 }

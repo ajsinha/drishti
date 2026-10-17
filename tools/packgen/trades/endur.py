@@ -76,6 +76,17 @@ class Endur:
         buy = doc["BUY_SELL_CODE"] == "Buy"
         events = doc.get("EVENTS") or []
         pays = {leg["LEG_ID"]: (leg["LEG_TYPE"] == S.FIXED) == buy for leg in legs}       # a buyer pays the fixed leg
+        if not events and rich:                     # a deal other than a swap settles each flow of its money legs in cash
+            for leg in legs:
+                if leg["LEG_TYPE"] == "PHYSICAL":
+                    continue
+                for f in leg["CASH_FLOWS"]:
+                    self.gen.event_id += 1
+                    events.append(S.blank_event() | {
+                        "LEG_ID": leg["LEG_ID"], "EVENT_ID": self.gen.event_id, "EVENT_NUMBER": len(events) + 1, "EVENT_TYPE": "Payment",
+                        "PAYMENT_TYPE": {"Cash": "Cash payment", "CallNot": "Interest", "ComFut": "Futures settlement"}.get(doc["PRODUCT_TYPE"], "Commodity payment"),
+                        "EVENT_DATE": f["PAYMENT_DATE"], "AMOUNT": round(float(f["NOTIONAL"]) * (0.04 if doc["PRODUCT_TYPE"] == "CallNot" else 1.0), 2),
+                        "CURRENCY": leg["CURRENCY"], "SEQUENCE_NUMBER": len(events) + 1})
         for e in events:
             if isinstance(e.get("AMOUNT"), (int, float)):
                 e["AMOUNT"] = round(-abs(e["AMOUNT"]) if pays.get(e["LEG_ID"]) else abs(e["AMOUNT"]), 2)

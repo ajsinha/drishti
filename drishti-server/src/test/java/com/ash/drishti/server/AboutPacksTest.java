@@ -127,7 +127,7 @@ class AboutPacksTest {
         GlossaryResolver resolver = new GlossaryResolver(catalog);
         GlossaryEntry var99 = resolver.resolve("var", "var99", null).orElseThrow();
         assertThat(var99.term()).isEqualTo("Value at risk, 99%, 1 day");
-        assertThat(resolver.resolve("trade", "mtm", null).orElseThrow().term()).isEqualTo("Mark to market");
+        assertThat(resolver.resolve("trade", "TRADE_STATUS", null).orElseThrow().term()).isEqualTo("Trade status");
     }
 
     @Test

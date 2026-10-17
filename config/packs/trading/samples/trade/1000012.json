@@ -104,7 +104,21 @@
    ]
   }
  ],
- "EVENTS": [],
+ "EVENTS": [
+  {
+   "LEG_ID": 1,
+   "EVENT_ID": 9000047,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Interest",
+   "EVENT_DATE": "2025-04-03",
+   "AMOUNT": 40000.0,
+   "CURRENCY": "CAD",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  }
+ ],
  "_meta": {
   "source": "endur",
   "generation": 1

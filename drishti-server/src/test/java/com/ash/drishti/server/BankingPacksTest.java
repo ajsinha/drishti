@@ -40,10 +40,10 @@ class BankingPacksTest {
         mvc.perform(get("/api/v1/packs")).andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].name").value(containsInAnyOrder("core", "market-data", "trading", "market-risk", "counterparty-risk")));
         mvc.perform(get("/api/v1/sources"))
-                .andExpect(jsonPath("$.sources[*].name").value(hasItems("reference-store", "market-store", "trading-store", "risk-store",
+                .andExpect(jsonPath("$.sources[*].name").value(hasItems("reference-store", "market-store", "trade-endur", "trade-calypso", "trade-murex", "trade-pages", "risk-store",
                         "legal-store", "credit-store", "collateral-store")));
-        mvc.perform(get("/api/v1/sutras")).andExpect(jsonPath("$.length()").value(171))
-                .andExpect(jsonPath("$[*].name").value(hasItems("irs-fixfloat", "netting-set", "var", "ir-curve", "counterparty")));
+        mvc.perform(get("/api/v1/sutras")).andExpect(jsonPath("$.length()").value(179))
+                .andExpect(jsonPath("$[*].name").value(hasItems("irs-fixfloat", "endur-comswap", "counterparty-trades", "netting-set", "var", "ir-curve", "counterparty")));
         mvc.perform(get("/api/v1/command/suggest").param("q", "NSE"))
                 .andExpect(jsonPath("$[*].mnemonic").value(hasItem("NSET")));
     }
@@ -69,10 +69,10 @@ class BankingPacksTest {
                 .andExpect(jsonPath("$.panels[?(@.id == 'positions')].data.pivot.columns[0]").value(hasItem("currency")))
                 .andExpect(jsonPath("$.panels[?(@.id == 'positions')].data.pivot.heat").value(hasItem(true)));
         mvc.perform(get("/api/v1/views/trade/MX-20000001")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.panels[?(@.id == 'schedule' && @.kind == 'ladder')].data.pivot.rows[0]").value(hasItem("type")));
-        mvc.perform(get("/api/v1/search").param("q", "TRD where mtm > 0")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.pivot.rows[0]").value("book")).andExpect(jsonPath("$.pivot.columns[0]").value("currency"))
-                .andExpect(jsonPath("$.pivot.fields[*].name").value(hasItems("book", "desk", "counterparty.name", "risk.dv01")));
+                .andExpect(jsonPath("$.panels[?(@.id == 'legs')].data.layout").value(hasItem("columns")));
+        mvc.perform(get("/api/v1/search").param("q", "TRD where QUANTITY > 0")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.pivot.rows[0]").value("PRODUCT_TYPE")).andExpect(jsonPath("$.pivot.columns[0]").value("SOURCE_SYSTEM"))
+                .andExpect(jsonPath("$.pivot.fields[*].name").value(hasItems("PORTFOLIO", "SOURCE_SYSTEM", "COUNTERPARTY", "QUANTITY")));
     }
 
     /** Each of the seven chart and aggregate kinds on a sample the generators wrote for it: drawn, with the numbers expected. */
@@ -82,7 +82,7 @@ class BankingPacksTest {
             {"var/VAR-RATES", "scenarios", "histogram"}, {"pnl-explain/PNL-COMM-1", "explain", "waterfall"},
             {"desk/DESK-RATES", "mtmGrid", "pivot"}, {"desk/DESK-RATES", "tradeCount", "pivot"}, {"legal-entity/LE-NY", "riskReturn", "scatter"},
             {"counterparty/CP-ALDERSHOT", "hierarchy", "graph"}, {"equity/EQ-CSCA", "ohlc", "candlestick"}, {"commodity/CMD-BRENT", "ohlc", "candlestick"},
-            {"trade/MX-20000001", "explain", "waterfall"}, {"trade/MX-20000001", "lifecycle", "timeline"}};
+            {"trade/MX-20000001", "ladder", "hbar"}, {"trade/MX-20000001", "events", "timeline"}, {"trade/1000001", "ladder", "hbar"}};
         for (String[] c : cases) {
             String panel = "$.panels[?(@.id == '" + c[1] + "')]";
             mvc.perform(get("/api/v1/views/" + c[0])).andExpect(status().isOk())
@@ -96,7 +96,7 @@ class BankingPacksTest {
                 .andExpect(jsonPath("$.panels[?(@.id == 'hierarchy')].data.nodes[?(@.focus == true)].id").value(hasItem("CP-ALDERSHOT")))
                 .andExpect(jsonPath("$.panels[?(@.id == 'hierarchy')].data.nodes[?(@.id == 'GRP-ALDERSHOT')].link.kind").value(hasItem("counterparty-group")));
         mvc.perform(get("/api/v1/views/trade/MX-20000001"))
-                .andExpect(jsonPath("$.panels[?(@.id == 'explain')].data.steps[-1].label").value(hasItem("Closing MTM")))
-                .andExpect(jsonPath("$.panels[?(@.id == 'lifecycle')].data.events[0].label").value(hasItem("Booked")));
+                .andExpect(jsonPath("$.panels[?(@.id == 'events')].data.events[0].label").value(hasItem("BOOKED · deal")))
+                .andExpect(jsonPath("$.panels[?(@.id == 'legs')].data.tabs[0].panels[?(@.id == 'leg-notional')].data.step").value(hasItem(true)));
     }
 }

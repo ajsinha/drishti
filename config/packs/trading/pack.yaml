@@ -435,11 +435,11 @@ console:
     - Interest rate swap (Murex) · legs side by side, flows and fixings
   - - TRD 1000001
     - Commodity swap (Endur) · legs, resets, events
-  - - TRD CLY-3000001
-    - Single-name CDS (Calypso)
-  - - TRD 1000013
-    - Physical commodity deal (Endur)
-  - - CTRD CP-SOLARIS
+  - - TRD CLY-3000086
+    - Single-name CDS (Calypso) · premium leg payments
+  - - TRD 1000015
+    - Physical commodity deal (Endur) · delivery and payment legs
+  - - CTRD CP-ALDERSHOT
     - A counterparty's trades in every system · payments, notional by product
   help: config/help.yaml
 python:

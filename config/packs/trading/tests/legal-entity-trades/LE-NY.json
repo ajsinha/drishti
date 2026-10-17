@@ -627,7 +627,21 @@
    "INDEX_NAME": "IDX-NATGAS-TTF",
    "COUNTERPARTY": "CP-HARBORPT",
    "PORTFOLIO": "BOOK-COMM-2",
-   "EVENTS": []
+   "EVENTS": [
+    {
+     "LEG_ID": 1,
+     "EVENT_ID": 9000018,
+     "EVENT_NUMBER": 1,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Futures settlement",
+     "EVENT_DATE": "2025-01-02",
+     "AMOUNT": 367879.0,
+     "CURRENCY": "EUR",
+     "SEQUENCE_NUMBER": 1,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    }
+   ]
   },
   {
    "TRADE_ID": 1000006,
@@ -641,7 +655,21 @@
    "INDEX_NAME": "IDX-NATGAS-HH",
    "COUNTERPARTY": "CP-HALCYON",
    "PORTFOLIO": "BOOK-COMM-2",
-   "EVENTS": []
+   "EVENTS": [
+    {
+     "LEG_ID": 1,
+     "EVENT_ID": 9000030,
+     "EVENT_NUMBER": 1,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Futures settlement",
+     "EVENT_DATE": "2025-04-02",
+     "AMOUNT": 29609.0,
+     "CURRENCY": "USD",
+     "SEQUENCE_NUMBER": 1,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    }
+   ]
   },
   {
    "TRADE_ID": 1000007,
@@ -655,7 +683,21 @@
    "INDEX_NAME": "",
    "COUNTERPARTY": "CP-MERIDIAN-RE",
    "PORTFOLIO": "BOOK-COMM-3",
-   "EVENTS": []
+   "EVENTS": [
+    {
+     "LEG_ID": 1,
+     "EVENT_ID": 9000031,
+     "EVENT_NUMBER": 1,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Cash payment",
+     "EVENT_DATE": "2025-06-03",
+     "AMOUNT": -1370236.65,
+     "CURRENCY": "EUR",
+     "SEQUENCE_NUMBER": 1,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    }
+   ]
   },
   {
    "TRADE_ID": 1000009,
@@ -669,7 +711,21 @@
    "INDEX_NAME": "",
    "COUNTERPARTY": "CP-NORTHBRIDGE",
    "PORTFOLIO": "BOOK-COMM-1",
-   "EVENTS": []
+   "EVENTS": [
+    {
+     "LEG_ID": 1,
+     "EVENT_ID": 9000032,
+     "EVENT_NUMBER": 1,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Cash payment",
+     "EVENT_DATE": "2024-12-03",
+     "AMOUNT": -1309343.79,
+     "CURRENCY": "USD",
+     "SEQUENCE_NUMBER": 1,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    }
+   ]
   },
   {
    "TRADE_ID": 1000010,
@@ -683,7 +739,34 @@
    "INDEX_NAME": "",
    "COUNTERPARTY": "CP-CASCADIA",
    "PORTFOLIO": "BOOK-COMM-1",
-   "EVENTS": []
+   "EVENTS": [
+    {
+     "LEG_ID": 1,
+     "EVENT_ID": 9000033,
+     "EVENT_NUMBER": 1,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Interest",
+     "EVENT_DATE": "2026-10-02",
+     "AMOUNT": 400000.0,
+     "CURRENCY": "CAD",
+     "SEQUENCE_NUMBER": 1,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 1,
+     "EVENT_ID": 9000034,
+     "EVENT_NUMBER": 2,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Interest",
+     "EVENT_DATE": "2026-11-02",
+     "AMOUNT": 400000.0,
+     "CURRENCY": "CAD",
+     "SEQUENCE_NUMBER": 2,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    }
+   ]
   },
   {
    "TRADE_ID": 1000011,
@@ -697,7 +780,21 @@
    "INDEX_NAME": "",
    "COUNTERPARTY": "CP-SOLARIS",
    "PORTFOLIO": "BOOK-COMM-1",
-   "EVENTS": []
+   "EVENTS": [
+    {
+     "LEG_ID": 1,
+     "EVENT_ID": 9000035,
+     "EVENT_NUMBER": 1,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Interest",
+     "EVENT_DATE": "2025-08-03",
+     "AMOUNT": -200000.0,
+     "CURRENCY": "EUR",
+     "SEQUENCE_NUMBER": 1,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    }
+   ]
   },
   {
    "TRADE_ID": 1000012,
@@ -711,7 +808,21 @@
    "INDEX_NAME": "",
    "COUNTERPARTY": "CP-VERDANT",
    "PORTFOLIO": "BOOK-COMM-3",
-   "EVENTS": []
+   "EVENTS": [
+    {
+     "LEG_ID": 1,
+     "EVENT_ID": 9000047,
+     "EVENT_NUMBER": 1,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Interest",
+     "EVENT_DATE": "2025-04-03",
+     "AMOUNT": 40000.0,
+     "CURRENCY": "CAD",
+     "SEQUENCE_NUMBER": 1,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    }
+   ]
   },
   {
    "TRADE_ID": 1000013,
@@ -725,7 +836,21 @@
    "INDEX_NAME": "IDX-COPPER-3M",
    "COUNTERPARTY": "CP-HALCYON",
    "PORTFOLIO": "BOOK-COMM-3",
-   "EVENTS": []
+   "EVENTS": [
+    {
+     "LEG_ID": 2,
+     "EVENT_ID": 9000053,
+     "EVENT_NUMBER": 1,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Commodity payment",
+     "EVENT_DATE": "2026-04-03",
+     "AMOUNT": -167880836.0,
+     "CURRENCY": "USD",
+     "SEQUENCE_NUMBER": 1,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    }
+   ]
   },
   {
    "TRADE_ID": 1000014,
@@ -739,7 +864,21 @@
    "INDEX_NAME": "IDX-CORN-M1",
    "COUNTERPARTY": "CP-BRAMBLE",
    "PORTFOLIO": "BOOK-COMM-1",
-   "EVENTS": []
+   "EVENTS": [
+    {
+     "LEG_ID": 2,
+     "EVENT_ID": 9000057,
+     "EVENT_NUMBER": 1,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Commodity payment",
+     "EVENT_DATE": "2026-03-03",
+     "AMOUNT": 22177.5,
+     "CURRENCY": "USD",
+     "SEQUENCE_NUMBER": 1,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    }
+   ]
   },
   {
    "TRADE_ID": 1000015,
@@ -753,7 +892,138 @@
    "INDEX_NAME": "IDX-CRUDE-M1",
    "COUNTERPARTY": "CP-SOLARIS",
    "PORTFOLIO": "BOOK-COMM-1",
-   "EVENTS": []
+   "EVENTS": [
+    {
+     "LEG_ID": 2,
+     "EVENT_ID": 9000058,
+     "EVENT_NUMBER": 1,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Commodity payment",
+     "EVENT_DATE": "2026-03-02",
+     "AMOUNT": 389097.5,
+     "CURRENCY": "USD",
+     "SEQUENCE_NUMBER": 1,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 2,
+     "EVENT_ID": 9000059,
+     "EVENT_NUMBER": 2,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Commodity payment",
+     "EVENT_DATE": "2026-04-02",
+     "AMOUNT": 389097.5,
+     "CURRENCY": "USD",
+     "SEQUENCE_NUMBER": 2,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 2,
+     "EVENT_ID": 9000060,
+     "EVENT_NUMBER": 3,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Commodity payment",
+     "EVENT_DATE": "2026-05-02",
+     "AMOUNT": 389097.5,
+     "CURRENCY": "USD",
+     "SEQUENCE_NUMBER": 3,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 2,
+     "EVENT_ID": 9000061,
+     "EVENT_NUMBER": 4,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Commodity payment",
+     "EVENT_DATE": "2026-06-02",
+     "AMOUNT": 389097.5,
+     "CURRENCY": "USD",
+     "SEQUENCE_NUMBER": 4,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 2,
+     "EVENT_ID": 9000062,
+     "EVENT_NUMBER": 5,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Commodity payment",
+     "EVENT_DATE": "2026-07-02",
+     "AMOUNT": 389097.5,
+     "CURRENCY": "USD",
+     "SEQUENCE_NUMBER": 5,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 2,
+     "EVENT_ID": 9000063,
+     "EVENT_NUMBER": 6,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Commodity payment",
+     "EVENT_DATE": "2026-08-02",
+     "AMOUNT": 389097.5,
+     "CURRENCY": "USD",
+     "SEQUENCE_NUMBER": 6,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 2,
+     "EVENT_ID": 9000064,
+     "EVENT_NUMBER": 7,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Commodity payment",
+     "EVENT_DATE": "2026-09-02",
+     "AMOUNT": 389097.5,
+     "CURRENCY": "USD",
+     "SEQUENCE_NUMBER": 7,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 2,
+     "EVENT_ID": 9000065,
+     "EVENT_NUMBER": 8,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Commodity payment",
+     "EVENT_DATE": "2026-10-02",
+     "AMOUNT": 389097.5,
+     "CURRENCY": "USD",
+     "SEQUENCE_NUMBER": 8,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 2,
+     "EVENT_ID": 9000066,
+     "EVENT_NUMBER": 9,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Commodity payment",
+     "EVENT_DATE": "2026-11-02",
+     "AMOUNT": 389097.5,
+     "CURRENCY": "USD",
+     "SEQUENCE_NUMBER": 9,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 2,
+     "EVENT_ID": 9000067,
+     "EVENT_NUMBER": 10,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Commodity payment",
+     "EVENT_DATE": "2026-12-02",
+     "AMOUNT": 389097.5,
+     "CURRENCY": "USD",
+     "SEQUENCE_NUMBER": 10,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    }
+   ]
   },
   {
    "TRADE_ID": "CLY-3000085",
