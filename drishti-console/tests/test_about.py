@@ -35,7 +35,9 @@ def test_the_partial_shows_data_layout_next_and_the_sutra_description(client, ba
     h = r.text
     assert "A vanilla interest-rate swap: legs, cashflows and risk." in h                      # layer 1: the Sutra description
     assert "trade-store" in h and ">up<" in h and "2026-10-03 06:12:00" in h and "fresh" in h      # layer 3, one health word
-    assert "Sutra <b class=\"mono\">irs-vanilla v1</b>" in h and "irs-exotic v2" in h and "its condition was false" in h   # layer 4
+    assert "<b>irs-vanilla v1</b></a>" in h and "irs-exotic v2" in h and "its condition was false" in h   # layer 4
+    # each Sutra named opens in the designer; the chosen one with this record as its sample
+    assert 'href="/studio?sutra=irs-vanilla%401&amp;kind=trade&amp;id=IRS-48213"' in h and 'href="/studio?sutra=irs-exotic%402"' in h
     assert "References" in h and "table-of-objects, score 0.82" in h
     assert "<code>$.curve</code> is missing in this document" in h
     assert "1 field hidden for your role: <b>Trader</b>" in h and "Swaption" in h and "not shown" in h
