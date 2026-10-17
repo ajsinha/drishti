@@ -480,6 +480,7 @@
   q('[data-check-close]').addEventListener('click', () => { q('[data-check-box]').hidden = true; });
   function save() {
     if (S.readOnly) { return Promise.resolve(); }
+    B.commitFocus();
     const btn = q('[data-save]');
     return B.busy(btn, () => flush().then((yaml) => B.saveItem(itemId, { body: yaml }, S.etag, btn, () => B.askWorkspace(btn, 'Save the copy', 'Save the copy into').then((to) => B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: 'board', title: (S.model.title || 'Board') + ' (copy)', description: S.model.description || '', body: yaml }))
       .then((it) => { S.dirty = false; window.location.href = '/bi/design/board/' + B.id2path(it.id); })))).then((it) => {

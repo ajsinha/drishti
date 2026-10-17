@@ -180,6 +180,7 @@
     });
   };
   function save(publish) {
+    B.commitFocus();
     const btn = publish ? q('[data-save-publish]') : q('[data-save]');
     if (!L.W.title || !L.W.name) { B.near(btn, 'Give it a title and a name.', true); return; }
     B.busy(btn, () => L.check('save').then((r) => {

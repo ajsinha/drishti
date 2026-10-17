@@ -159,3 +159,6 @@
   .bi-md-fields th[scope=row] { display: block; padding: .2rem 0; }
   [data-fields-pane] .studio-in, [data-fields-pane] .studio-select, [data-fields-pane] .btn-pill, [data-security-pane] .studio-in, [data-security-pane] .studio-select, [data-security-pane] .btn-pill, [data-contract-pane] .btn-pill, [data-measures-pane] .studio-in, [data-measures-pane] .studio-select, [data-measures-pane] .btn-pill, [data-measures-pane] summary { min-height: 44px; }
 }
+/* Wave A QA: a hidden measure still reachable through visible columns (DRS-9132), said beside its entry */
+.bi-warn-text { color: var(--d-warn); }
+.bi-warn-text code { color: inherit; }

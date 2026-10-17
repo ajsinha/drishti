@@ -394,6 +394,7 @@
   let editor = null, ignoreYaml = false, yamlTimer = null;
   const ta = q('[data-yaml]');
   function showTab(name) {
+    B.commitFocus(canvas);
     B.qa('[data-tab]', canvas).forEach((b) => b.setAttribute('aria-selected', b.getAttribute('data-tab') === name ? 'true' : 'false'));
     B.qa('[data-pane]', canvas).forEach((p) => { p.hidden = p.getAttribute('data-pane') !== name; });
     q('[data-inspector]').hidden = name !== 'canvas';
@@ -419,6 +420,7 @@
 
   function check() {
     const box = q('[data-check-box]');
+    B.commitFocus();
     return M.compose(true).then(() => {
       box.hidden = false;
       const list = B.clear(q('[data-problems]'));
@@ -432,6 +434,7 @@
   function save() {
     const btn = q('[data-save]');
     if (M.readOnly) { return Promise.resolve(); }
+    B.commitFocus();                                             // the field being typed in is part of what is saved (it commits on blur, Ctrl+S comes first)
     return B.busy(btn, () => M.compose(true).then(() => B.saveItem(itemId, { body: M.yaml }, M.etag, btn, saveCopy))).then((it) => {
       M.item = Object.assign({}, M.item, it); M.etag = it.etag; M.dirty = false; forget(); buttons();
       // a save on a published model makes a draft beside the published version: Publish and the state are worked out again from the item as it now is
@@ -456,6 +459,7 @@
   }
   function publish() {
     const btn = q('[data-publish]');
+    B.commitFocus();
     if (M.item && M.item.personal) { B.near(btn, 'This model is in your private workspace, which cannot publish. Use Move beside Publish to choose a shared workspace.', true); return Promise.resolve(); }
     const review = M.item && M.item.workspaceReviewRequired;
     const go = () => B.api('POST', '/items/' + B.id2path(itemId) + '/' + (review ? 'propose' : 'publish'), { note: 'From the model designer' }).then((it) => {

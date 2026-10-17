@@ -38,11 +38,12 @@
     const kept = [];
     B.qa('[data-keep] input, [data-keep] select, [data-keep] textarea', pane).forEach((el) => {
       const key = Array.from(el.attributes).map((a) => a.name).find((n) => n.indexOf('data-') === 0);
-      if (key) { kept.push({ key, value: el.type === 'checkbox' ? el.checked : el.value, focus: document.activeElement === el }); }
+      if (key) { kept.push({ key, id: el.getAttribute(key), value: el.type === 'checkbox' ? el.checked : el.value, focus: document.activeElement === el }); }
     });
     draw();
     kept.forEach((k) => {
-      const el = pane.querySelector('[data-keep] [' + k.key + ']');
+      // by the attribute and its value: ticks that share an attribute (data-role-pick="risk", data-c-pick="trade.desk") each get their own state back
+      const el = pane.querySelector('[data-keep] [' + k.key + (k.id ? '="' + window.CSS.escape(k.id) + '"' : '') + ']');
       if (!el) { return; }
       if (el.type === 'checkbox') { el.checked = k.value; } else if (el.value !== k.value) { el.value = k.value; if (el.tagName === 'SELECT') { el.dispatchEvent(new Event('change')); } }
       if (k.focus) { el.focus(); if (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && /^(text|search)$/.test(el.type))) { el.setSelectionRange(el.value.length, el.value.length); } }
@@ -342,11 +343,11 @@
     Object.keys(M.doc.measures || {}).forEach((n) => picks.appendChild(tick('measures', n)));
     fieldsOf((col) => col.role !== 'amount').forEach((f) => picks.appendChild(tick('fields', f)));
     const pub = M.item && M.item.publishedVersion ? 'Published before: a change that removes or changes what consumers use needs the next major version; the server refuses it otherwise (DRS-9126).' : 'Not published yet: the first publish sets the contract.';
-    pane.append(h('section', { class: 'bi-sec bi-form' }, h('h3', { text: 'Name and version' }), h('label', { class: 'bi-frow' }, h('span', { text: 'Title' }), title),
+    pane.append(h('section', { class: 'bi-sec bi-form', 'data-keep': '' }, h('h3', { text: 'Name and version' }), h('label', { class: 'bi-frow' }, h('span', { text: 'Title' }), title),
       h('label', { class: 'bi-frow' }, h('span', { text: 'Description' }), desc), h('p', {}, h('code', { text: 'model: ' + M.doc.model })),
       h('div', { class: 'bi-md-row' }, h('label', {}, 'Version ', ver), bumps), h('p', { class: 'text-muted-d bi-small-note', text: pub + ' Reports bind to the major: ' + M.doc.model + '@' + major() + '.' }),
       h('label', { class: 'bi-frow' }, h('span', { text: 'Lifecycle' }), life)),
-    h('section', { class: 'bi-sec bi-form' }, h('h3', { text: 'What consumers may use' }), exposes, picks));
+    h('section', { class: 'bi-sec bi-form', 'data-keep': '' }, h('h3', { text: 'What consumers may use' }), exposes, picks));
   }
 
   function redrawTab() {
@@ -356,7 +357,7 @@
     const badge = q('[data-count-security]');
     badge.hidden = !ex.length;
     badge.textContent = ex.length ? '⚠ ' + ex.length : '';
-    if (M.tab === 'measures') { keepForms(q('[data-measures-pane]'), drawMeasures); } else if (M.tab === 'security') { keepForms(q('[data-security-pane]'), drawSecurity); } else if (M.tab === 'contract') { drawContract(); }
+    if (M.tab === 'measures') { keepForms(q('[data-measures-pane]'), drawMeasures); } else if (M.tab === 'security') { keepForms(q('[data-security-pane]'), drawSecurity); } else if (M.tab === 'contract') { keepForms(q('[data-contract-pane]'), drawContract); }
   }
   M.on('redraw', redrawTab);
   M.on('tab', redrawTab);

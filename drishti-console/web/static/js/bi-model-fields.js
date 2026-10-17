@@ -132,6 +132,30 @@
 
   // ---- security: hidden-for and Preview as ---------------------------------------------------------------------------
   const hiddenFor = () => [].concat(((M.doc.security || {})['hidden-for']) || []);
+  /** The columns (alias.column) a model measure reads, through the measures it names: what still gives its number to a role that sees them. */
+  function readsOf(name, seen) {
+    seen = seen || new Set();
+    if (seen.has(name)) { return []; }
+    seen.add(name);
+    const m = (M.doc.measures || {})[name];
+    const expr = m && typeof m === 'object' ? m.expr || '' : typeof m === 'string' ? m : '';
+    const known = new Set(allFields().map((f) => f.name)), out = new Set();
+    (String(expr).match(/[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*/g) || []).forEach((t) => { if (known.has(t)) { out.add(t); } });
+    ((B.exprEditor && B.exprEditor.measureRefs) ? B.exprEditor.measureRefs(String(expr)) : []).forEach((r) => readsOf(r.name, seen).forEach((x) => out.add(x)));
+    return Array.from(out);
+  }
+  /** The visible columns that still reach the measures entry `i` hides (DRS-9132): the server's warning when its Check says it, else worked out here. */
+  function reachable(x, i) {
+    const all = hiddenFor();
+    const said = ((M.check && M.check.problems) || []).filter((p) => p.code === 'DRS-9132' && (p.path === 'security.hidden-for[' + i + '].measures' || (all.length === 1 && /^security\.hidden-for(\.measures)?$/.test(p.path))));
+    const fromServer = [];
+    said.forEach((p) => { const m = /fields: \[([^\]]*)\]/.exec(p.message || '') || /through \[([^\]]*)\]/.exec(p.message || ''); if (m) { m[1].split(',').map((y) => y.trim()).filter(Boolean).forEach((y) => { if (fromServer.indexOf(y) < 0) { fromServer.push(y); } }); } });
+    if (said.length) { return { cols: fromServer, server: true }; }
+    const hid = new Set([].concat(x.fields || []));
+    const cols = [];
+    [].concat(x.measures || []).forEach((n) => readsOf(n).forEach((c) => { if (!hid.has(c) && cols.indexOf(c) < 0) { cols.push(c); } }));
+    return { cols, server: false };
+  }
   function drawSecurityExtras() {
     const pane = q('[data-security-pane]');
     if (!pane || q('[data-hidden-for]', pane)) { return; }
@@ -139,54 +163,100 @@
     hiddenFor().forEach((x, i) => {
       const rm = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Remove this entry', 'data-hidden-remove': String(i), disabled: M.readOnly }, B.icon('x-lg'));
       rm.addEventListener('click', () => M.edit((doc) => { const a = [].concat(doc.security['hidden-for']); a.splice(i, 1); if (a.length) { doc.security['hidden-for'] = a; } else { delete doc.security['hidden-for']; } }));
-      list.appendChild(h('li', { 'data-hidden-entry': String(i) }, h('strong', { text: [].concat(x.roles || []).join(', ') }), ' do not see ', h('code', { text: [].concat(x.fields || [], x.measures || []).join(', ') }), ' ', rm));
+      const li = h('li', { 'data-hidden-entry': String(i) }, h('strong', { text: [].concat(x.roles || []).join(', ') }), ' do not see ', h('code', { text: [].concat(x.fields || [], x.measures || []).join(', ') }), ' ', rm);
+      const r = reachable(x, i);
+      if (r.cols.length) {
+        const too = h('button', { type: 'button', class: 'btn-pill btn-accent bi-small', 'data-hidden-too': String(i), text: 'Hide these columns too', disabled: M.readOnly });
+        too.addEventListener('click', () => M.edit((doc) => {
+          const a = [].concat(doc.security['hidden-for']);
+          const e = Object.assign({}, a[i]);
+          e.fields = Array.from(new Set([].concat(e.fields || [], r.cols)));
+          a[i] = e;
+          doc.security['hidden-for'] = a;
+        }));
+        li.appendChild(h('p', { class: 'bi-near bi-warn-text', 'data-hidden-reachable': r.cols.join(','), role: 'note' }, B.icon('exclamation-triangle'),
+          ' Still reachable' + (r.server ? ' (DRS-9132)' : '') + ': ' + [].concat(x.roles || []).join(', ') + ' still see ', h('code', { text: r.cols.join(', ') }),
+          ', so a default measure or a formula of their own gives the same number. ', too));
+      }
+      list.appendChild(li);
     });
     if (!list.children.length) { list.appendChild(h('li', { class: 'text-muted-d', text: 'Nothing hidden: every reader sees every field and measure their rows allow.' })); }
     const box = h('section', { class: 'bi-sec bi-form', 'data-hidden-for': '', 'data-keep': '' }, h('h3', { text: 'Hidden from some roles' }),
-      h('p', { class: 'text-muted-d bi-small-note', text: 'For these roles the field or measure does not exist: it is left out of the Fields pane, of SQL and of AI answers, and naming it is "not found". Masking (above) shows that a value exists; hiding does not.' }), list);
+      h('p', { class: 'text-muted-d bi-small-note', 'data-hidden-note': '', text: 'For these roles a hidden field or measure is left out of the Fields pane, of SQL and of AI answers, and a query that names it is told it is not available to their role (DRS-9163). A measure that reads a hidden column is hidden with it. Hiding a measure hides its name, not the columns it reads: while the role sees those columns it can work the number out again, so each entry below names the columns that still reach it, with Hide these columns too. Masking (above) shows that a value exists; hiding does not.' }), list);
     if (!M.readOnly) {
       const who = h('input', { class: 'studio-in', 'data-hidden-roles': '', list: 'mdHiddenRoles', placeholder: 'external', 'aria-label': 'Roles (comma-separated)' });
       const what = h('div', { class: 'bi-layer-picks', role: 'group', 'aria-label': 'Fields and measures to hide' },
         allFields().map((f) => h('label', { class: 'bi-checkrow' }, h('input', { type: 'checkbox', value: f.name, 'data-hidden-pick': f.name, 'data-kind': 'field' }), ' ' + f.name))
           .concat(measureNames().map((n) => h('label', { class: 'bi-checkrow' }, h('input', { type: 'checkbox', value: n, 'data-hidden-pick': n, 'data-kind': 'measure' }), ' ' + n))));
+      const warn = h('p', { class: 'bi-near bi-warn-text', 'data-hidden-pick-warn': '', 'aria-live': 'polite', hidden: true });
+      const pickedNow = () => B.qa('[data-hidden-pick]', what).filter((c) => c.checked);
+      what.addEventListener('change', () => {                    // while ticking: a measure whose columns stay visible is said at once
+        const fs = new Set(pickedNow().filter((c) => c.getAttribute('data-kind') === 'field').map((c) => c.value));
+        const open = [];
+        pickedNow().filter((c) => c.getAttribute('data-kind') === 'measure').forEach((c) => readsOf(c.value).forEach((col) => { if (!fs.has(col) && open.indexOf(col) < 0) { open.push(col); } }));
+        warn.hidden = !open.length;
+        warn.textContent = open.length ? 'These columns still reach the measures you tick: ' + open.join(', ') + '. Tick them too, or the role can work the number out again.' : '';
+      });
       const go = h('button', { type: 'button', class: 'btn-pill btn-accent bi-small', 'data-hidden-add': '', text: 'Hide them' });
       go.addEventListener('click', () => {
         const rs = who.value.split(',').map((x) => x.trim()).filter(Boolean);
-        const picked = B.qa('[data-hidden-pick]', what).filter((c) => c.checked);
+        const picked = pickedNow();
         if (!rs.length || !picked.length) { B.near(go, 'Name the roles and tick what they must not see.', true); return; }
         const entry = { roles: rs };
         const fs = picked.filter((c) => c.getAttribute('data-kind') === 'field').map((c) => c.value), ms = picked.filter((c) => c.getAttribute('data-kind') === 'measure').map((c) => c.value);
         if (fs.length) { entry.fields = fs; }
         if (ms.length) { entry.measures = ms; }
         M.edit((doc) => { doc.security = doc.security || {}; doc.security['hidden-for'] = [].concat(doc.security['hidden-for'] || [], [entry]); });
-        B.near(go, 'Hidden from ' + rs.join(', ') + '.', false);
+        const open = reachable(entry, hiddenFor().length - 1).cols;
+        B.near(go, 'Hidden from ' + rs.join(', ') + '.' + (open.length ? ' Still reachable through ' + open.join(', ') + ': see Hide these columns too above.' : ''), false);
       });
       box.append(h('datalist', { id: 'mdHiddenRoles' }, roles().map((r) => h('option', { value: r }))), h('label', { class: 'bi-frow' }, h('span', { text: 'Roles' }), who),
-        h('fieldset', {}, h('legend', { text: 'What they must not see' }), what), go);
+        h('fieldset', {}, h('legend', { text: 'What they must not see' }), what), warn, go);
     }
     pane.appendChild(box);
     pane.appendChild(previewAs());
   }
-  /** Preview as a role: the server answers the model query as that role would get it (rows and masks); a server that cannot says so, never shows yours. */
+  /** Preview as a role: the server answers the model query as a reader holding only that role would get it (POST /models/{ref}/preview-as: rows, masks, hidden
+   *  fields, a refusal as the role would read it); the author sees the reader's numbers here. A server without the endpoint says so, never shows yours. */
   function previewAs() {
-    const role = sel(roles().map((r) => [r, r]), '', { 'data-preview-role': '', 'aria-label': 'Role' });
+    const role = sel(roles().map((r) => [r, r]), '', { 'data-preview-role': '', 'aria-label': 'Role to preview as' });
+    const ms = measureNames();
+    const meas = sel(ms.map((n) => [n, n]), ms[0] || '', { 'data-preview-measure': '', 'aria-label': 'Measure to preview' });
+    const by = sel([['', '(no grouping)']].concat(allFields().filter((f) => (f.col.type || 'string') === 'string').map((f) => [f.name, f.name])), M.tryField(), { 'data-preview-by': '', 'aria-label': 'Group the preview by' });
     const go = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-preview-as': '', text: 'Preview' });
     const out = h('div', { class: 'tbl-wrap', 'data-preview-as-out': '', 'aria-live': 'polite' });
+    const cell = (v) => h('td', { text: v == null ? '—' : typeof v === 'number' ? B.fmt(v) : String(v) });
     go.addEventListener('click', () => {
       if (!role.value) { B.near(go, 'Choose a role.', true); return; }
-      if (M.dirty) { B.near(go, 'Preview reads the saved draft: Save first.', true); return; }
-      const by = M.tryField(), m = measureNames()[0];
-      const query = { mq: 1, select: { fields: by ? [by] : [], measures: m ? [m] : [] }, limit: 12 };
-      B.busy(go, () => B.api('POST', '/models/' + encodeURIComponent(M.doc.model + '@' + String(M.doc.version || '1').split('.')[0]) + '/preview-as', { role: role.value, query }).then((a) => {
-        B.clear(out).appendChild(h('table', { class: 'tbl bi-tbl bi-md-mini', 'data-plain': '', 'data-previewed-as': role.value },
-          h('caption', { class: 'text-muted-d', text: 'As ' + role.value + ((a.meta || {}).masked && a.meta.masked.length ? '; masked: ' + a.meta.masked.join(', ') : '') + ((a.meta || {}).hidden && a.meta.hidden.length ? '; hidden: ' + a.meta.hidden.join(', ') : '') }),
-          h('thead', {}, h('tr', {}, (a.columns || []).map((c) => h('th', { scope: 'col', text: c.name || c })))),
-          h('tbody', {}, (a.rows || []).map((r) => h('tr', {}, r.map((v) => h('td', { text: v == null ? '—' : typeof v === 'number' ? B.fmt(v) : String(v) })))))));
-      }).catch((e) => { B.clear(out).appendChild(h('p', { class: 'bi-near bi-bad', 'data-preview-as-error': e.code || '', text: e.status === 404 || e.status === 405 ? 'This server cannot preview as another role yet: the answer is never shown as yours instead.' : e.message })); }));
+      const run = () => {
+        const query = { mq: 1, select: { fields: by.value ? [by.value] : [], measures: meas.value ? [meas.value] : [] }, limit: 12 };
+        return B.api('POST', '/models/' + encodeURIComponent(M.doc.model + '@' + String(M.doc.version || '1').split('.')[0]) + '/preview-as', { role: role.value, query }).then((a) => {
+          const meta = a.meta || {}, refused = [].concat(a.refused || []), none = B.noAccess ? B.noAccess(meta) : [].concat(meta.noAccess || []);
+          const notes = [];
+          if ((meta.masked || []).length) { notes.push('masked: ' + meta.masked.join(', ')); }
+          if ((meta.hidden || []).length) { notes.push('hidden: ' + meta.hidden.join(', ')); }
+          if (none.length) { notes.push('no rows of ' + none.join(', ') + ' (no rule of the model gives this role any)'); }
+          B.clear(out);
+          if (refused.length) {
+            out.appendChild(h('div', { class: 'bi-near', 'data-preview-as-refused': refused.map((x) => x.code).join(',') }, h('strong', { text: role.value + ' would be told: ' }),
+              h('ul', { class: 'bi-layer-list' }, refused.map((x) => h('li', {}, h('code', { text: x.code }), ' ' + (x.message || ''))))));
+            return;
+          }
+          out.appendChild(h('table', { class: 'tbl bi-tbl bi-md-mini', 'data-plain': '', 'data-previewed-as': role.value },
+            h('caption', { class: 'text-muted-d', text: 'As ' + role.value + ' would read it (no user attributes: a rule on user.* gives no rows)' + (notes.length ? '; ' + notes.join('; ') : '') }),
+            h('thead', {}, h('tr', {}, (a.columns || []).map((c) => h('th', { scope: 'col', text: c.name || c })))),
+            h('tbody', {}, (a.rows || []).length ? (a.rows || []).map((r) => h('tr', {}, r.map(cell))) : h('tr', {}, h('td', { colspan: String(Math.max(1, (a.columns || []).length)), class: 'text-muted-d', text: none.length ? 'No rows: this role has no rows of ' + none.join(', ') + '.' : 'No rows for this role.' })))));
+        }).catch((e) => {
+          const missing = (e.status === 404 || e.status === 405) && !e.code;
+          B.clear(out).appendChild(h('p', { class: 'bi-near bi-bad', 'data-preview-as-error': e.code || '', text: missing ? 'This server cannot preview as another role yet: the answer is never shown as yours instead.' : (e.code === 'DRS-9151' ? 'The server cannot find this model as the role would: Save the draft first. ' : '') + e.message }));
+        });
+      };
+      const saveFirst = M.dirty && M.saveNow ? M.saveNow() : Promise.resolve();
+      B.busy(go, () => saveFirst.then(() => { if (M.dirty) { throw new Error('Preview reads the saved draft: Save first.'); } return run(); })).catch((e) => B.near(go, e.message, true));
     });
     return h('section', { class: 'bi-sec bi-form', 'data-preview-as-box': '', 'data-keep': '' }, h('h3', { text: 'Preview as a role' }),
-      h('p', { class: 'text-muted-d bi-small-note', text: 'The saved draft\'s first measure by a suggested field, answered by the server as the role would get it: its rows, masks and hidden fields.' }),
-      h('div', { class: 'bi-md-row' }, h('label', {}, 'Role ', role), go), out);
+      h('p', { class: 'text-muted-d bi-small-note', text: 'A measure of the saved draft, answered by the server as a reader holding only that role would get it: the rows its rules allow, its masks and hidden fields, or the refusal it would read. Unsaved changes are saved first.' }),
+      h('div', { class: 'bi-md-row' }, h('label', {}, 'Role ', role), h('label', {}, 'Measure ', meas), h('label', {}, 'By ', by), go), out);
   }
 
   // ---- contract: the diff, the bump, the impact ----------------------------------------------------------------------

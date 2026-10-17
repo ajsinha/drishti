@@ -448,6 +448,7 @@
 
   function save() {
     if (D.readOnly) { return Promise.resolve(); }
+    B.commitFocus();                                              // the field being typed in commits (on blur) before the YAML is flushed
     const btn = q('[data-save]');
     return B.busy(btn, () => D.flushYaml().then((yaml) => B.saveItem(itemId, { body: yaml }, D.item && D.item.etag, btn, () => saveCopy(true))).then((it) => {
       D.dirty = false;
