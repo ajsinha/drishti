@@ -20,31 +20,31 @@
 import pandas as pd
 from drishti import quant as q
 
-cps = await drishti.search_async("CPTY where pfePeak > 0 and rating != '' and sector != '' and country != '' limit 1000")
+cps = await drishti.search_async("CPTY where PFE_PEAK > 0 and RATING != '' and SECTOR != '' and COUNTRY != '' limit 1000")
 pds = {}
 for cid in cps["id"]:
-    pds[cid] = ((await drishti.get_async("counterparty", cid)).get("kyc") or {}).get("pd1y", 0.0)
+    pds[cid] = ((await drishti.get_async("counterparty", cid)).get("KYC") or {}).get("PD_1Y", 0.0)
 cps["PD 1Y"] = cps["id"].map(pds)
-cps["expected loss"] = cps["PD 1Y"] * 0.6 * cps["pfePeak"]
-total = cps["pfePeak"].sum()
+cps["expected loss"] = cps["PD 1Y"] * 0.6 * cps["PFE_PEAK"]
+total = cps["PFE_PEAK"].sum()
 
 rows = []
-for by in ["id", "sector", "rating", "country"]:
-    g = cps.groupby(by)["pfePeak"].sum()
+for by in ["ID", "SECTOR", "RATING", "COUNTRY"]:
+    g = cps.groupby(by)["PFE_PEAK"].sum()
     h = q.hhi(g)
-    rows.append({"by": "counterparty" if by == "id" else by, "groups": len(g), "HHI": h, "equivalent equal groups": 1 / h,
+    rows.append({"BY": "COUNTERPARTY" if by == "ID" else by, "groups": len(g), "HHI": h, "equivalent equal groups": 1 / h,
                  "largest": g.idxmax(), "largest share": g.max() / total})
 show(pd.DataFrame(rows), title=f"Concentration of peak PFE, {len(cps)} counterparties, {total:,.0f} in all")
 
-top = cps.sort_values("pfePeak", ascending=False).head(10).reset_index(drop=True)
-top["share"] = top["pfePeak"] / total
+top = cps.sort_values("PFE_PEAK", ascending=False).head(10).reset_index(drop=True)
+top["share"] = top["PFE_PEAK"] / total
 top["cumulative share"] = top["share"].cumsum()
-show(top[["id", "name", "rating", "sector", "country", "pfePeak", "share", "cumulative share", "PD 1Y", "expected loss"]],
+show(top[["ID", "NAME", "RATING", "SECTOR", "COUNTRY", "PFE_PEAK", "share", "cumulative share", "PD 1Y", "expected loss"]],
      title=f"Top ten names: the top five hold {top['share'].head(5).sum():.0%}")
 order = ["AAA", "AA+", "AA", "AA-", "A+", "A", "A-", "BBB+", "BBB", "BBB-", "BB+", "BB", "BB-", "B+", "B", "B-"]
-by_rating = cps.groupby("rating").agg(names=("id", "size"), exposure=("pfePeak", "sum"), expected_loss=("expected loss", "sum"))
+by_rating = cps.groupby("RATING").agg(names=("ID", "size"), exposure=("PFE_PEAK", "sum"), expected_loss=("expected loss", "sum"))
 by_rating = by_rating.reindex([r for r in order if r in by_rating.index])
 show(by_rating, title="By rating grade")
-chart(by_rating.reset_index(), kind="bar", x="rating", y="exposure", title="Peak PFE by rating")
+chart(by_rating.reset_index(), kind="bar", x="RATING", y="exposure", title="Peak PFE by rating")
 HHI_SECTOR = rows[1]["HHI"]
 print(f"Sector HHI {HHI_SECTOR:.3f}: {'concentrated (above 0.25)' if HHI_SECTOR > 0.25 else 'moderate (0.15-0.25)' if HHI_SECTOR > 0.15 else 'diversified'}")

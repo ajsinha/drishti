@@ -18,21 +18,21 @@ sutra: simm
 version: 1
 description: Initial margin by risk class and product class.
 match: { kind: simm, priority: 10 }
-title: { pill: Collateral and margin · ISDA SIMM initial margin, id: $.calcId }
+title: { pill: Collateral and margin · ISDA SIMM initial margin, id: $.CALC_ID }
 strip:
-  - { label: Total IM, bind: $.total, fmt: compact, emphasis: true }
-  - { label: Posted, bind: $.posted, fmt: compact }
-  - { label: Received, bind: $.received, fmt: compact }
-  - { label: Version, bind: $.version }
+  - { label: Total IM, bind: $.TOTAL, fmt: compact, emphasis: true }
+  - { label: Posted, bind: $.POSTED, fmt: compact }
+  - { label: Received, bind: $.RECEIVED, fmt: compact }
+  - { label: Version, bind: $.VERSION }
 panels:
   - id: classes
     kind: hbar
     title: IM by risk class
     key: F2
-    rows: $.riskClasses
-    label: riskClass
-    value: im
+    rows: $.RISK_CLASSES
+    label: RISK_CLASS
+    value: IM
     fmt: compact
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.nettingSet, 'netting-set')", F8: impact, F9: raw }
+keys: { F7: "link($.NETTING_SET, 'netting-set')", F8: impact, F9: raw }

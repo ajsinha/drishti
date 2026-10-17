@@ -21,27 +21,27 @@ import math
 import pandas as pd
 
 doc = view.doc
-hs = pd.DataFrame(doc["hedgingSets"])
-hs["add-on"] = (hs["sf"] * hs["effectiveNotional"]).abs()                 # |SF x effective notional| per hedging set
-by_class = hs.groupby("assetClass", as_index=False)["add-on"].sum()
-engine = {a["assetClass"]: a["addOn"] for a in doc.get("addOns") or []}
-by_class["engine add-on"] = by_class["assetClass"].map(engine)
+hs = pd.DataFrame(doc["HEDGING_SETS"])
+hs["add-on"] = (hs["SF"] * hs["EFFECTIVE_NOTIONAL"]).abs()                 # |SF x effective notional| per hedging set
+by_class = hs.groupby("ASSET_CLASS", as_index=False)["add-on"].sum()
+engine = {a["ASSET_CLASS"]: a["ADD_ON"] for a in doc.get("ADD_ONS") or []}
+by_class["engine add-on"] = by_class["ASSET_CLASS"].map(engine)
 show(hs, title=f"{view.id}: hedging sets")
 show(by_class, title="Add-on by asset class")
 
-ns = await drishti.get_async("netting-set", doc["nettingSet"])
-V, C = ns.get("netMtm", 0.0), ns.get("collateral", 0.0)                  # value of the trades, collateral held
+ns = await drishti.get_async("netting-set", doc["NETTING_SET"])
+V, C = ns.get("NET_MTM", 0.0), ns.get("COLLATERAL", 0.0)                  # value of the trades, collateral held
 addon = by_class["add-on"].sum()
-alpha = doc.get("alpha", 1.4)
+alpha = doc.get("ALPHA", 1.4)
 rc = max(V - C, 0.0)                                                      # unmargined replacement cost (a simplification)
 mult = min(1.0, 0.05 + 0.95 * math.exp((V - C) / (2 * 0.95 * addon))) if addon else 1.0
 ead = alpha * (rc + mult * addon)
 show(pd.DataFrame({
-    "measure": ["V (net MTM)", "C (collateral)", "replacement cost", "aggregate add-on", "multiplier", "EAD", "risk weight implied"],
+    "MEASURE": ["V (net MTM)", "C (collateral)", "replacement cost", "aggregate add-on", "MULTIPLIER", "EAD", "risk weight implied"],
     "recomputed": [V, C, rc, addon, mult, ead, None],
-    "engine": [None, None, doc.get("replacementCost"), doc.get("addOn"), doc.get("multiplier"), doc.get("ead"),
-               doc.get("rwa", 0) / doc["ead"] if doc.get("ead") else None],
+    "engine": [None, None, doc.get("REPLACEMENT_COST"), doc.get("ADD_ON"), doc.get("MULTIPLIER"), doc.get("EAD"),
+               doc.get("RWA", 0) / doc["EAD"] if doc.get("EAD") else None],
 }), title=f"EAD = {alpha} x (RC + multiplier x AddOn)")
-chart(by_class, kind="bar", x="assetClass", y=["add-on", "engine add-on"], title="Add-on by asset class")
-print(f"EAD recomputed {ead:,.0f} against the engine's {doc.get('ead'):,.0f}: "
-      f"{'within 1%' if abs(ead / doc['ead'] - 1) < 0.01 else 'different inputs (maturity factors, supervisory deltas, correlation)'}")
+chart(by_class, kind="bar", x="ASSET_CLASS", y=["add-on", "engine add-on"], title="Add-on by asset class")
+print(f"EAD recomputed {ead:,.0f} against the engine's {doc.get('EAD'):,.0f}: "
+      f"{'within 1%' if abs(ead / doc['EAD'] - 1) < 0.01 else 'different inputs (maturity factors, supervisory deltas, correlation)'}")

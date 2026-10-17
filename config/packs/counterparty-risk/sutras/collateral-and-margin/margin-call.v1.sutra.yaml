@@ -18,24 +18,24 @@ sutra: margin-call
 version: 1
 description: A variation or initial margin call and its settlement status.
 match: { kind: margin-call, priority: 10 }
-title: { pill: Collateral and margin · Margin call, id: $.callId }
+title: { pill: Collateral and margin · Margin call, id: $.CALL_ID }
 strip:
-  - { label: Date, bind: $.callDate, fmt: date }
-  - { label: Type, bind: $.marginType }
-  - { label: Direction, bind: $.direction }
-  - { label: Amount, bind: $.amount, fmt: amount0, emphasis: true }
-  - { label: Status, bind: $.status, tone: status }
-  - { label: Dispute, bind: $.disputeAmount, fmt: amount0 }
+  - { label: Date, bind: $.CALL_DATE, fmt: date }
+  - { label: Type, bind: $.MARGIN_TYPE }
+  - { label: Direction, bind: $.DIRECTION }
+  - { label: Amount, bind: $.AMOUNT, fmt: amount0, emphasis: true }
+  - { label: Status, bind: $.STATUS, tone: status }
+  - { label: Dispute, bind: $.DISPUTE_AMOUNT, fmt: amount0 }
 panels:
   - id: events
     kind: ladder
     title: Workflow
     key: F2
-    rows: $.events
+    rows: $.EVENTS
     columns:
-      - { label: Time, bind: "@.at" }
-      - { label: Event, bind: "@.event" }
-      - { label: By, bind: "@.by" }
+      - { label: Time, bind: "@.AT" }
+      - { label: Event, bind: "@.EVENT" }
+      - { label: By, bind: "@.BY" }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.nettingSet, 'netting-set')", F8: impact, F9: raw }
+keys: { F7: "link($.NETTING_SET, 'netting-set')", F8: impact, F9: raw }

@@ -18,33 +18,33 @@ sutra: credit-limit
 version: 1
 description: "PFE limit by tenor bucket for a counterparty, with utilisation."
 match: { kind: credit-limit, priority: 10 }
-title: { pill: Exposure and capital · Credit limit, id: $.limitId }
+title: { pill: Exposure and capital · Credit limit, id: $.LIMIT_ID }
 strip:
-  - { label: Counterparty, bind: $.counterpartyName }
-  - { label: Measure, bind: $.measure }
-  - { label: Limit, bind: $.limit, fmt: compact }
-  - { label: Used, bind: $.used, fmt: compact }
-  - { label: Utilisation, bind: $.utilisation, fmt: pct0, emphasis: true }
-  - { label: Status, bind: $.status, tone: status }
+  - { label: Counterparty, bind: $.COUNTERPARTY_NAME }
+  - { label: Measure, bind: $.MEASURE }
+  - { label: Limit, bind: $.LIMIT, fmt: compact }
+  - { label: Used, bind: $.USED, fmt: compact }
+  - { label: Utilisation, bind: $.UTILISATION, fmt: pct0, emphasis: true }
+  - { label: Status, bind: $.STATUS, tone: status }
 panels:
   - id: buckets
     kind: table
     title: By tenor bucket
     key: F2
-    rows: $.buckets
+    rows: $.BUCKETS
     columns:
-      - { label: Bucket, bind: "@.bucket" }
-      - { label: Limit, bind: "@.limit", fmt: compact }
-      - { label: Used, bind: "@.used", fmt: compact }
-      - { label: Utilisation, bind: "@.utilisation", fmt: pct0 }
+      - { label: Bucket, bind: "@.BUCKET" }
+      - { label: Limit, bind: "@.LIMIT", fmt: compact }
+      - { label: Used, bind: "@.USED", fmt: compact }
+      - { label: Utilisation, bind: "@.UTILISATION", fmt: pct0 }
   - id: util
     kind: hbar
     title: Utilisation
     area: right
-    rows: $.buckets
-    label: bucket
-    value: utilisation
+    rows: $.BUCKETS
+    label: BUCKET
+    value: UTILISATION
     fmt: pct0
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.counterparty, 'counterparty')", F8: impact, F9: raw }
+keys: { F7: "link($.COUNTERPARTY, 'counterparty')", F8: impact, F9: raw }

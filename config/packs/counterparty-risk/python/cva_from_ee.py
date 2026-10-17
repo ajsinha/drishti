@@ -21,28 +21,28 @@ import numpy as np
 import pandas as pd
 from drishti import quant as q
 
-ns_id = view.id if view.kind == "netting-set" else view.doc["nettingSet"]
+ns_id = view.id if view.kind == "netting-set" else view.doc["NETTING_SET"]
 ns = view.doc if view.kind == "netting-set" else await drishti.get_async("netting-set", ns_id)
-prof = await drishti.get_async("exposure-profile", ns["exposureProfile"])
-cp = await drishti.get_async("counterparty", ns["counterparty"])
-b = pd.DataFrame(prof["buckets"]).assign(years=lambda d: d["tenor"].map(q.tenor_years))
+prof = await drishti.get_async("exposure-profile", ns["EXPOSURE_PROFILE"])
+cp = await drishti.get_async("counterparty", ns["COUNTERPARTY"])
+b = pd.DataFrame(prof["BUCKETS"]).assign(years=lambda d: d["TENOR"].map(q.tenor_years))
 b = b[b["years"] > 0].sort_values("years")
 try:                                                    # CP-HALCYON -> CDS-HALCYON, where the market quotes one
-    cds = await drishti.get_async("credit-curve", "CDS-" + ns["counterparty"].removeprefix("CP-"))
-    knots = np.array([q.tenor_years(p["tenor"]) for p in cds["points"]])
-    lam, R, source = q.forward_hazards(knots, [p["hazard"] for p in cds["points"]]), cds.get("recovery", 0.4), cds["curveId"]
+    cds = await drishti.get_async("credit-curve", "CDS-" + ns["COUNTERPARTY"].removeprefix("CP-"))
+    knots = np.array([q.tenor_years(p["TENOR"]) for p in cds["POINTS"]])
+    lam, R, source = q.forward_hazards(knots, [p["HAZARD"] for p in cds["POINTS"]]), cds.get("RECOVERY", 0.4), cds["CURVE_ID"]
 except drishti.DrishtiError:
-    pd1 = cp["kyc"]["pd1y"]
+    pd1 = cp["KYC"]["PD_1Y"]
     knots, lam, R, source = np.array([30.0]), np.array([-np.log(1 - pd1)]), 0.4, f"flat hazard from PD 1Y {pd1:.2%}"
-ois = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", "CRV-USD-OIS"))["points"])
+ois = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", "CRV-USD-OIS"))["POINTS"])
 
-out = q.cva_from_profile(b["years"].to_numpy(), b["ee"].to_numpy(), knots, lam, R, discount=ois)
-up = q.cva_from_profile(b["years"].to_numpy(), b["ee"].to_numpy(), knots, lam + 1e-4 / (1 - R), R, discount=ois)
-table = pd.DataFrame({"tenor": b["tenor"], "EE": b["ee"], "survival": out["survival"], "PD in period": out["pd"],
-                      "df": out["df"], "CVA contribution": out["contrib"]})
-show(table, title=f"{ns_id}: CVA by period ({cp['name']}, {cp.get('rating', '')}; {source}, recovery {R:.0%})")
-engine = (await drishti.get_async("cva", ns["cvaResult"])) if ns.get("cvaResult") else {}
-show(pd.DataFrame({"measure": ["CVA (approximation)", "CVA (engine)", "CS01 +1 bp (approximation)", "CS01 (engine)"],
-                   "value": [-out["cva"], engine.get("cva"), -(up["cva"] - out["cva"]), engine.get("cs01")]}),
+out = q.cva_from_profile(b["years"].to_numpy(), b["EE"].to_numpy(), knots, lam, R, discount=ois)
+up = q.cva_from_profile(b["years"].to_numpy(), b["EE"].to_numpy(), knots, lam + 1e-4 / (1 - R), R, discount=ois)
+table = pd.DataFrame({"TENOR": b["TENOR"], "EE": b["EE"], "SURVIVAL": out["SURVIVAL"], "PD in period": out["pd"],
+                      "DF": out["DF"], "CVA contribution": out["contrib"]})
+show(table, title=f"{ns_id}: CVA by period ({cp['NAME']}, {cp.get('RATING', '')}; {source}, recovery {R:.0%})")
+engine = (await drishti.get_async("cva", ns["CVA_RESULT"])) if ns.get("CVA_RESULT") else {}
+show(pd.DataFrame({"MEASURE": ["CVA (approximation)", "CVA (engine)", "CS01 +1 bp (approximation)", "CS01 (engine)"],
+                   "VALUE": [-out["CVA"], engine.get("CVA"), -(up["CVA"] - out["CVA"]), engine.get("CS01")]}),
      title="CVA as a charge (negative), against the engine")
-chart(table, kind="bar", x="tenor", y="CVA contribution", title="Where the CVA comes from")
+chart(table, kind="bar", x="TENOR", y="CVA contribution", title="Where the CVA comes from")

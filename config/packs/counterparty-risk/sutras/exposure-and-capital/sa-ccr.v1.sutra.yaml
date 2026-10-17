@@ -18,31 +18,31 @@ sutra: sa-ccr
 version: 1
 description: "Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier."
 match: { kind: sa-ccr, priority: 10 }
-title: { pill: Exposure and capital · SA-CCR exposure, id: $.calcId }
+title: { pill: Exposure and capital · SA-CCR exposure, id: $.CALC_ID }
 strip:
-  - { label: RC, bind: $.replacementCost, fmt: compact }
-  - { label: Add-on, bind: $.addOn, fmt: compact }
-  - { label: Multiplier, bind: $.multiplier, fmt: df4 }
-  - { label: EAD, bind: $.ead, fmt: compact, emphasis: true }
-  - { label: RWA, bind: $.rwa, fmt: compact }
+  - { label: RC, bind: $.REPLACEMENT_COST, fmt: compact }
+  - { label: Add-on, bind: $.ADD_ON, fmt: compact }
+  - { label: Multiplier, bind: $.MULTIPLIER, fmt: df4 }
+  - { label: EAD, bind: $.EAD, fmt: compact, emphasis: true }
+  - { label: RWA, bind: $.RWA, fmt: compact }
 panels:
   - id: addons
     kind: hbar
     title: Add-on by asset class
     key: F2
-    rows: $.addOns
-    label: assetClass
-    value: addOn
+    rows: $.ADD_ONS
+    label: ASSET_CLASS
+    value: ADD_ON
     fmt: compact
   - id: hedging
     kind: table
     title: Hedging sets
-    rows: $.hedgingSets
+    rows: $.HEDGING_SETS
     columns:
-      - { label: Asset class, bind: "@.assetClass" }
-      - { label: Hedging set, bind: "@.hedgingSet" }
-      - { label: Effective notional, bind: "@.effectiveNotional", fmt: compact }
-      - { label: SF, bind: "@.sf", fmt: pct2 }
+      - { label: Asset class, bind: "@.ASSET_CLASS" }
+      - { label: Hedging set, bind: "@.HEDGING_SET" }
+      - { label: Effective notional, bind: "@.EFFECTIVE_NOTIONAL", fmt: compact }
+      - { label: SF, bind: "@.SF", fmt: pct2 }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.nettingSet, 'netting-set')", F8: impact, F9: raw }
+keys: { F7: "link($.NETTING_SET, 'netting-set')", F8: impact, F9: raw }

@@ -18,31 +18,31 @@ sutra: cva
 version: 1
 description: "Credit, debit and funding valuation adjustments with sensitivities."
 match: { kind: cva, priority: 10 }
-title: { pill: Exposure and capital · CVA / XVA, id: $.resultId }
+title: { pill: Exposure and capital · CVA / XVA, id: $.RESULT_ID }
 strip:
-  - { label: CVA, bind: $.cva, fmt: signed0, tone: sign, emphasis: true }
-  - { label: DVA, bind: $.dva, fmt: signed0, tone: sign }
-  - { label: FVA, bind: $.fva, fmt: signed0, tone: sign }
-  - { label: KVA, bind: $.kva, fmt: signed0, tone: sign }
-  - { label: CS01 (cpty), bind: $.cs01, fmt: signed0, tone: sign }
+  - { label: CVA, bind: $.CVA, fmt: signed0, tone: sign, emphasis: true }
+  - { label: DVA, bind: $.DVA, fmt: signed0, tone: sign }
+  - { label: FVA, bind: $.FVA, fmt: signed0, tone: sign }
+  - { label: KVA, bind: $.KVA, fmt: signed0, tone: sign }
+  - { label: CS01 (cpty), bind: $.CS01, fmt: signed0, tone: sign }
 panels:
   - id: components
     kind: hbar
     title: Adjustments
     key: F2
-    rows: $.components
-    label: name
-    value: amount
+    rows: $.COMPONENTS
+    label: NAME
+    value: AMOUNT
     fmt: signed0
     tone: sign
   - id: sens
     kind: table
     title: Sensitivities
-    rows: $.sensitivities
+    rows: $.SENSITIVITIES
     columns:
-      - { label: Risk factor, bind: "@.factor" }
-      - { label: Bump, bind: "@.bump" }
-      - { label: "Δ CVA", bind: "@.delta", fmt: signed0, tone: sign }
+      - { label: Risk factor, bind: "@.FACTOR" }
+      - { label: Bump, bind: "@.BUMP" }
+      - { label: "Δ CVA", bind: "@.DELTA", fmt: signed0, tone: sign }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.nettingSet, 'netting-set')", F8: impact, F9: raw }
+keys: { F7: "link($.NETTING_SET, 'netting-set')", F8: impact, F9: raw }

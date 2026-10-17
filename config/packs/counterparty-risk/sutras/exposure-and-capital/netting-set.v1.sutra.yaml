@@ -18,20 +18,20 @@ sutra: netting-set
 version: 1
 description: "Trades that net on close-out under one agreement and CSA, with exposure and collateral."
 match: { kind: netting-set, priority: 10 }
-title: { pill: Exposure and capital · Netting set, id: $.nettingSetId }
+title: { pill: Exposure and capital · Netting set, id: $.NETTING_SET_ID }
 strip:
-  - { label: Trades, bind: $.tradeCount }
-  - { label: Net MTM, bind: $.netMtm, fmt: signed0, tone: sign }
-  - { label: Collateral, bind: $.collateral, fmt: signed0 }
-  - { label: EE peak, bind: $.eePeak, fmt: compact }
-  - { label: PFE 95 peak, bind: $.pfePeak, fmt: compact, emphasis: true }
-  - { label: Limit, bind: $.limit, fmt: compact }
-  - { label: Utilisation, bind: $.utilisation, fmt: pct0 }
-  - { label: CVA, bind: $.cva, fmt: signed0, tone: sign }
+  - { label: Trades, bind: $.TRADE_COUNT }
+  - { label: Net MTM, bind: $.NET_MTM, fmt: signed0, tone: sign }
+  - { label: Collateral, bind: $.COLLATERAL, fmt: signed0 }
+  - { label: EE peak, bind: $.EE_PEAK, fmt: compact }
+  - { label: PFE 95 peak, bind: $.PFE_PEAK, fmt: compact, emphasis: true }
+  - { label: Limit, bind: $.LIMIT, fmt: compact }
+  - { label: Utilisation, bind: $.UTILISATION, fmt: pct0 }
+  - { label: CVA, bind: $.CVA, fmt: signed0, tone: sign }
 controls:
-  - { id: asset, kind: dropdown, label: Asset class, options: "$.byAsset[*].asset", placement: header, panel: trades }
-  - { id: product, kind: multi-select, label: Product, options: "$.trades[*].product", placement: header, panel: trades }
-  - { id: minNotional, kind: slider, label: Notional at least, min: 0, max: "max($.trades[*].notional)", step: 1000000, placement: header, panel: trades }
+  - { id: asset, kind: dropdown, label: Asset class, options: "$.BY_ASSET[*].ASSET", placement: header, panel: trades }
+  - { id: product, kind: multi-select, label: Product, options: "$.TRADES[*].PRODUCT", placement: header, panel: trades }
+  - { id: minNotional, kind: slider, label: Notional at least, min: 0, max: "max($.TRADES[*].NOTIONAL)", step: 1000000, placement: header, panel: trades }
   - { id: top, kind: top-n, label: Show, options: [10, 25, 50], default: 25, placement: header, panel: trades }
 panels:
   - id: exposure
@@ -39,42 +39,42 @@ panels:
     title: Exposure profile
     code: EXP
     key: F2
-    rows: $.profile
-    x: tenor
-    limit: $.limit
+    rows: $.PROFILE
+    x: TENOR
+    limit: $.LIMIT
     series:
-      - { label: Expected exposure, value: ee, tone: link }
-      - { label: PFE 95, value: pfe, tone: accent }
+      - { label: Expected exposure, value: EE, tone: link }
+      - { label: PFE 95, value: PFE, tone: accent }
   - id: trades
     kind: table
     title: "Member trades${ctl.asset ? ' · ' + ctl.asset : ''}"
     code: TRD
     key: F3
-    rows: $.trades
-    where: "(ctl.asset == '' || @.assetClass == ctl.asset) && oneOf(@.product, ctl.product) && (ctl.minNotional == '' || @.notional >= ctl.minNotional)"
+    rows: $.TRADES
+    where: "(ctl.asset == '' || @.ASSET_CLASS == ctl.asset) && oneOf(@.PRODUCT, ctl.product) && (ctl.minNotional == '' || @.NOTIONAL >= ctl.minNotional)"
     limit: ctl.top
     pivot:
-      fields: [product, assetClass, currency, book, maturityBucket, { field: maturity, label: Maturity date }, { field: notional, fmt: compact }, { field: mtm, label: MTM (USD), fmt: signed0 }, tradeId]
-      rows: [product]
-      columns: [maturityBucket]
-      values: [{ field: notional, agg: sum }]
-      filters: [currency, assetClass]
+      fields: [PRODUCT, ASSET_CLASS, CURRENCY, BOOK, MATURITY_BUCKET, { field: MATURITY, label: Maturity date }, { field: NOTIONAL, fmt: compact }, { field: MTM, label: MTM (USD), fmt: signed0 }, TRADE_ID]
+      rows: [PRODUCT]
+      columns: [MATURITY_BUCKET]
+      values: [{ field: NOTIONAL, agg: sum }]
+      filters: [CURRENCY, ASSET_CLASS]
     columns:
-      - { label: Trade, bind: "@.tradeId" }
-      - { label: Product, bind: "@.product" }
-      - { label: Notional, bind: "@.notional", fmt: compact }
-      - { label: Maturity, bind: "@.maturity", fmt: date }
-      - { label: MTM, bind: "@.mtm", fmt: signed0, tone: sign, total: true }
+      - { label: Trade, bind: "@.TRADE_ID" }
+      - { label: Product, bind: "@.PRODUCT" }
+      - { label: Notional, bind: "@.NOTIONAL", fmt: compact }
+      - { label: Maturity, bind: "@.MATURITY", fmt: date }
+      - { label: MTM, bind: "@.MTM", fmt: signed0, tone: sign, total: true }
   - id: byAsset
     kind: hbar
     title: Net MTM by asset class
     area: right
-    rows: $.byAsset
-    on-select: { by: asset, field: asset, filter: [trades] }
-    label: asset
-    value: mtm
+    rows: $.BY_ASSET
+    on-select: { by: asset, field: ASSET, filter: [trades] }
+    label: ASSET
+    value: MTM
     fmt: signed0
     tone: sign
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.counterparty, 'counterparty')", F8: impact, F9: raw }
+keys: { F7: "link($.COUNTERPARTY, 'counterparty')", F8: impact, F9: raw }

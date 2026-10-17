@@ -18,34 +18,34 @@ sutra: exposure-profile
 version: 1
 description: "Simulated EE, EPE, ENE and PFE by time bucket for a netting set."
 match: { kind: exposure-profile, priority: 10 }
-title: { pill: Exposure and capital · Exposure profile, id: $.profileId }
+title: { pill: Exposure and capital · Exposure profile, id: $.PROFILE_ID }
 strip:
-  - { label: EPE, bind: $.epe, fmt: compact }
-  - { label: EEPE, bind: $.eepe, fmt: compact }
-  - { label: PFE 95 peak, bind: $.pfePeak, fmt: compact, emphasis: true }
-  - { label: Paths, bind: $.paths, fmt: amount0 }
-  - { label: Run, bind: $.runDate, fmt: date }
+  - { label: EPE, bind: $.EPE, fmt: compact }
+  - { label: EEPE, bind: $.EEPE, fmt: compact }
+  - { label: PFE 95 peak, bind: $.PFE_PEAK, fmt: compact, emphasis: true }
+  - { label: Paths, bind: $.PATHS, fmt: amount0 }
+  - { label: Run, bind: $.RUN_DATE, fmt: date }
 panels:
   - id: profile
     kind: area
     title: Exposure (USD)
     key: F2
-    rows: $.buckets
-    x: tenor
+    rows: $.BUCKETS
+    x: TENOR
     series:
-      - { label: EE, value: ee, tone: link }
-      - { label: PFE 95, value: pfe95, tone: accent }
-      - { label: ENE, value: ene, tone: neg }
+      - { label: EE, value: EE, tone: link }
+      - { label: PFE 95, value: PFE_95, tone: accent }
+      - { label: ENE, value: ENE, tone: neg }
   - id: buckets
     kind: table
     title: Buckets
-    rows: $.buckets
+    rows: $.BUCKETS
     columns:
-      - { label: Tenor, bind: "@.tenor" }
-      - { label: EE, bind: "@.ee", fmt: compact }
-      - { label: ENE, bind: "@.ene", fmt: compact }
-      - { label: PFE 95, bind: "@.pfe95", fmt: compact }
-      - { label: PFE 99, bind: "@.pfe99", fmt: compact }
+      - { label: Tenor, bind: "@.TENOR" }
+      - { label: EE, bind: "@.EE", fmt: compact }
+      - { label: ENE, bind: "@.ENE", fmt: compact }
+      - { label: PFE 95, bind: "@.PFE_95", fmt: compact }
+      - { label: PFE 99, bind: "@.PFE_99", fmt: compact }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.nettingSet, 'netting-set')", F8: impact, F9: raw }
+keys: { F7: "link($.NETTING_SET, 'netting-set')", F8: impact, F9: raw }

@@ -1,56 +1,56 @@
 {
- "resultId": "CVA-ALDERSHOT-FRA",
- "cva": -7,
- "dva": 4,
- "fva": -407,
- "kva": -1389,
- "cs01": 0,
- "components": [
+ "RESULT_ID": "CVA-ALDERSHOT-FRA",
+ "CVA": -7,
+ "DVA": 4,
+ "FVA": -407,
+ "KVA": -1389,
+ "CS01": 0,
+ "COMPONENTS": [
   {
-   "name": "CVA",
-   "amount": -7
+   "NAME": "CVA",
+   "AMOUNT": -7
   },
   {
-   "name": "DVA",
-   "amount": 4
+   "NAME": "DVA",
+   "AMOUNT": 4
   },
   {
-   "name": "FVA",
-   "amount": -407
+   "NAME": "FVA",
+   "AMOUNT": -407
   },
   {
-   "name": "KVA",
-   "amount": -1389
+   "NAME": "KVA",
+   "AMOUNT": -1389
   }
  ],
- "sensitivities": [
+ "SENSITIVITIES": [
   {
-   "factor": "Counterparty spread",
-   "bump": "+1 bp",
-   "delta": 0
+   "FACTOR": "Counterparty spread",
+   "BUMP": "+1 bp",
+   "DELTA": 0
   },
   {
-   "factor": "USD rates",
-   "bump": "+1 bp",
-   "delta": 0
+   "FACTOR": "USD rates",
+   "BUMP": "+1 bp",
+   "DELTA": 0
   },
   {
-   "factor": "EUR rates",
-   "bump": "+1 bp",
-   "delta": 0
+   "FACTOR": "EUR rates",
+   "BUMP": "+1 bp",
+   "DELTA": 0
   },
   {
-   "factor": "FX vol",
-   "bump": "+1 vol",
-   "delta": 0
+   "FACTOR": "FX vol",
+   "BUMP": "+1 vol",
+   "DELTA": 0
   },
   {
-   "factor": "Recovery",
-   "bump": "+1%",
-   "delta": 0
+   "FACTOR": "Recovery",
+   "BUMP": "+1%",
+   "DELTA": 0
   }
  ],
- "nettingSet": "NS-ALDERSHOT-FRA",
+ "NETTING_SET": "NS-ALDERSHOT-FRA",
  "_meta": {
   "source": "xva-engine",
   "generation": 1

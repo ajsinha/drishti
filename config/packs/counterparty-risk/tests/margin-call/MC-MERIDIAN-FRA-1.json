@@ -1,26 +1,26 @@
 {
- "callId": "MC-MERIDIAN-FRA-1",
- "callDate": "2026-09-30",
- "marginType": "Variation",
- "direction": "We call",
- "amount": 7000.0,
- "status": "Agreed",
- "disputeAmount": 0,
- "events": [
+ "CALL_ID": "MC-MERIDIAN-FRA-1",
+ "CALL_DATE": "2026-09-30",
+ "MARGIN_TYPE": "Variation",
+ "DIRECTION": "We call",
+ "AMOUNT": 7000.0,
+ "STATUS": "Agreed",
+ "DISPUTE_AMOUNT": 0,
+ "EVENTS": [
   {
-   "at": "2026-09-30 09:05",
-   "event": "Call issued",
-   "by": "collateral-system"
+   "AT": "2026-09-30 09:05",
+   "EVENT": "Call issued",
+   "BY": "collateral-system"
   },
   {
-   "at": "2026-09-30 11:40",
-   "event": "Agreed",
-   "by": "counterparty ops"
+   "AT": "2026-09-30 11:40",
+   "EVENT": "Agreed",
+   "BY": "counterparty ops"
   }
  ],
- "nettingSet": "NS-MERIDIAN-FRA",
- "csa": "CSA-MERIDIAN",
- "currency": "USD",
+ "NETTING_SET": "NS-MERIDIAN-FRA",
+ "CSA": "CSA-MERIDIAN",
+ "CURRENCY": "USD",
  "_meta": {
   "source": "collateral-system",
   "generation": 1

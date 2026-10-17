@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 
 doc = view.doc
-im = pd.Series({r["riskClass"]: r["im"] for r in doc["riskClasses"]}, dtype=float).rename_axis("risk class")
+im = pd.Series({r["RISK_CLASS"]: r["IM"] for r in doc["RISK_CLASSES"]}, dtype=float).rename_axis("risk class")
 CLASSES = ["Interest rate", "Credit qualifying", "Credit non-qualifying", "Equity", "Commodity", "FX"]
 PSI = np.array([                                  # illustrative cross-risk-class correlations (the shape of SIMM's table)
     [1.00, 0.04, 0.04, 0.07, 0.37, 0.14],
@@ -32,16 +32,16 @@ PSI = np.array([                                  # illustrative cross-risk-clas
     [0.14, 0.37, 0.15, 0.39, 0.35, 1.00]])
 x = np.array([im.get(c, 0.0) for c in CLASSES])
 with_psi = float(np.sqrt(x @ PSI @ x))
-simple, total = im.sum(), doc["total"]
+simple, total = im.sum(), doc["TOTAL"]
 cross = x.sum() ** 2 - np.sum(x ** 2)                                   # sum over r != s of IM_r IM_s
 implied = (total ** 2 - np.sum(x ** 2)) / cross if cross else float("nan")
 
-show(im.to_frame("IM").assign(share=lambda d: d["IM"] / d["IM"].sum()), title=f"{view.id}: {doc.get('version', '')}, {doc.get('nettingSet', '')}")
+show(im.to_frame("IM").assign(share=lambda d: d["IM"] / d["IM"].sum()), title=f"{view.id}: {doc.get('VERSION', '')}, {doc.get('NETTING_SET', '')}")
 show(pd.DataFrame({
-    "measure": ["simple sum of risk classes", "reported total", "aggregated with the correlation matrix", "diversification (matrix)",
-                "implied flat correlation", "posted", "received", "net (received - posted)"],
-    "value": [simple, total, with_psi, simple - with_psi, implied, doc.get("posted"), doc.get("received"),
-              (doc.get("received") or 0) - (doc.get("posted") or 0)],
+    "MEASURE": ["simple sum of risk classes", "reported total", "aggregated with the correlation matrix", "diversification (matrix)",
+                "implied flat correlation", "POSTED", "RECEIVED", "net (received - posted)"],
+    "VALUE": [simple, total, with_psi, simple - with_psi, implied, doc.get("POSTED"), doc.get("RECEIVED"),
+              (doc.get("RECEIVED") or 0) - (doc.get("POSTED") or 0)],
 }), title="Aggregation across risk classes: sqrt(sum_r sum_s psi_rs IM_r IM_s)")
 chart(im.rename("IM").reset_index(), kind="bar", x="risk class", y="IM", title="IM by risk class")
 print("The reported total is the simple sum: no diversification across risk classes is taken" if abs(total - simple) < 10 else

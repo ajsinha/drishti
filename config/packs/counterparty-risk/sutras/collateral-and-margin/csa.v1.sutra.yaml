@@ -18,24 +18,24 @@ sutra: csa
 version: 1
 description: "Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts."
 match: { kind: csa, priority: 10 }
-title: { pill: Collateral and margin · Credit support annex, id: $.csaId }
+title: { pill: Collateral and margin · Credit support annex, id: $.CSA_ID }
 strip:
-  - { label: Margin, bind: $.marginType }
-  - { label: Threshold (us), bind: $.thresholdUs, fmt: compact }
-  - { label: Threshold (them), bind: $.thresholdThem, fmt: compact }
-  - { label: MTA, bind: $.mta, fmt: compact }
-  - { label: IA, bind: $.independentAmount, fmt: compact }
-  - { label: Frequency, bind: $.frequency }
-  - { label: MPoR, bind: $.mpor, emphasis: true }
+  - { label: Margin, bind: $.MARGIN_TYPE }
+  - { label: Threshold (us), bind: $.THRESHOLD_US, fmt: compact }
+  - { label: Threshold (them), bind: $.THRESHOLD_THEM, fmt: compact }
+  - { label: MTA, bind: $.MTA, fmt: compact }
+  - { label: IA, bind: $.INDEPENDENT_AMOUNT, fmt: compact }
+  - { label: Frequency, bind: $.FREQUENCY }
+  - { label: MPoR, bind: $.MPOR, emphasis: true }
 panels:
   - id: eligible
     kind: table
     title: Eligible collateral and haircuts
     key: F2
-    rows: $.eligible
+    rows: $.ELIGIBLE
     columns:
-      - { label: Asset, bind: "@.asset" }
-      - { label: Haircut, bind: "@.haircut", fmt: pct2 }
+      - { label: Asset, bind: "@.ASSET" }
+      - { label: Haircut, bind: "@.HAIRCUT", fmt: pct2 }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.agreement, 'agreement')", F8: impact, F9: raw }
+keys: { F7: "link($.AGREEMENT, 'agreement')", F8: impact, F9: raw }

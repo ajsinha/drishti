@@ -18,28 +18,28 @@ sutra: collateral-balance
 version: 1
 description: "Collateral held and posted under a CSA, by asset, after haircuts."
 match: { kind: collateral-balance, priority: 10 }
-title: { pill: Collateral and margin · Collateral balance, id: $.balanceId }
+title: { pill: Collateral and margin · Collateral balance, id: $.BALANCE_ID }
 strip:
-  - { label: Held, bind: $.held, fmt: compact }
-  - { label: Posted, bind: $.posted, fmt: compact }
-  - { label: Net, bind: $.net, fmt: signed0, tone: sign, emphasis: true }
-  - { label: As of, bind: $.asOf, fmt: date }
+  - { label: Held, bind: $.HELD, fmt: compact }
+  - { label: Posted, bind: $.POSTED, fmt: compact }
+  - { label: Net, bind: $.NET, fmt: signed0, tone: sign, emphasis: true }
+  - { label: As of, bind: $.AS_OF, fmt: date }
 panels:
   - id: positions
     kind: table
     title: Positions
     key: F2
-    rows: $.positions
+    rows: $.POSITIONS
     pivot:
-      rows: [direction]
-      values: [{ field: marketValue, agg: sum }, { field: value, agg: sum }]
-      filters: [asset]
+      rows: [DIRECTION]
+      values: [{ field: MARKET_VALUE, agg: sum }, { field: VALUE, agg: sum }]
+      filters: [ASSET]
     columns:
-      - { label: Asset, bind: "@.asset" }
-      - { label: Direction, bind: "@.direction" }
-      - { label: Market value, bind: "@.marketValue", fmt: amount0, total: true }
-      - { label: Haircut, bind: "@.haircut", fmt: pct2 }
-      - { label: Collateral value, bind: "@.value", fmt: amount0, total: true }
+      - { label: Asset, bind: "@.ASSET" }
+      - { label: Direction, bind: "@.DIRECTION" }
+      - { label: Market value, bind: "@.MARKET_VALUE", fmt: amount0, total: true }
+      - { label: Haircut, bind: "@.HAIRCUT", fmt: pct2 }
+      - { label: Collateral value, bind: "@.VALUE", fmt: amount0, total: true }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.csa, 'csa')", F8: impact, F9: raw }
+keys: { F7: "link($.CSA, 'csa')", F8: impact, F9: raw }

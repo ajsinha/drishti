@@ -51,96 +51,96 @@ Load real data into each domain's folder, or point a domain at a database instea
 
 | Kind | Name | Mnemonic | Identifiers | Id field | What it is |
 |---|---|---|---|---|---|
-| `agreement` | Master agreement | `AGR` | `AGR-…` | `agreementId` | ISDA, GMRA or GMSLA master agreement with its key elections. |
-| `csa` | Credit support annex | `CSA` | `CSA-…` | `csaId` | Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts. |
-| `netting-set` | Netting set | `NSET` | `NS-…` | `nettingSetId` | Trades that net on close-out under one agreement and CSA, with exposure and collateral. |
-| `credit-limit` | Credit limit | `LIM` | `LIM-…` | `limitId` | PFE limit by tenor bucket for a counterparty, with utilisation. |
-| `exposure-profile` | Exposure profile | `EXP` | `EXP-…` | `profileId` | Simulated EE, EPE, ENE and PFE by time bucket for a netting set. |
-| `cva` | CVA / XVA | `CVA` | `CVA-…` | `resultId` | Credit, debit and funding valuation adjustments with sensitivities. |
-| `sa-ccr` | SA-CCR exposure | `SACCR` | `SACCR-…` | `calcId` | Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier. |
-| `collateral-balance` | Collateral balance | `COLL` | `COLL-…` | `balanceId` | Collateral held and posted under a CSA, by asset, after haircuts. |
-| `margin-call` | Margin call | `MC` | `MC-…` | `callId` | A variation or initial margin call and its settlement status. |
-| `simm` | ISDA SIMM initial margin | `SIMM` | `SIMM-…` | `calcId` | Initial margin by risk class and product class. |
+| `agreement` | Master agreement | `AGR` | `AGR-…` | `AGREEMENT_ID` | ISDA, GMRA or GMSLA master agreement with its key elections. |
+| `csa` | Credit support annex | `CSA` | `CSA-…` | `CSA_ID` | Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts. |
+| `netting-set` | Netting set | `NSET` | `NS-…` | `NETTING_SET_ID` | Trades that net on close-out under one agreement and CSA, with exposure and collateral. |
+| `credit-limit` | Credit limit | `LIM` | `LIM-…` | `LIMIT_ID` | PFE limit by tenor bucket for a counterparty, with utilisation. |
+| `exposure-profile` | Exposure profile | `EXP` | `EXP-…` | `PROFILE_ID` | Simulated EE, EPE, ENE and PFE by time bucket for a netting set. |
+| `cva` | CVA / XVA | `CVA` | `CVA-…` | `RESULT_ID` | Credit, debit and funding valuation adjustments with sensitivities. |
+| `sa-ccr` | SA-CCR exposure | `SACCR` | `SACCR-…` | `CALC_ID` | Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier. |
+| `collateral-balance` | Collateral balance | `COLL` | `COLL-…` | `BALANCE_ID` | Collateral held and posted under a CSA, by asset, after haircuts. |
+| `margin-call` | Margin call | `MC` | `MC-…` | `CALL_ID` | A variation or initial margin call and its settlement status. |
+| `simm` | ISDA SIMM initial margin | `SIMM` | `SIMM-…` | `CALC_ID` | Initial margin by risk class and product class. |
 
 ### Master agreement (`agreement`)
 
 ISDA, GMRA or GMSLA master agreement with its key elections.
 
-**Fields its Sutra reads:** `type`, `counterpartyName`, `governingLaw`, `signed`, `closeOutNetting`, `elections`.
+**Fields its Sutra reads:** `TYPE`, `COUNTERPARTY_NAME`, `GOVERNING_LAW`, `SIGNED`, `CLOSE_OUT_NETTING`, `ELECTIONS`.
 
-**Links:** `counterparty` → Counterparty (`counterparty`), `csa` → CSA (`csa`).
+**Links:** `COUNTERPARTY` → Counterparty (`counterparty`), `CSA` → CSA (`csa`).
 
 ### Credit support annex (`csa`)
 
 Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts.
 
-**Fields its Sutra reads:** `marginType`, `thresholdUs`, `thresholdThem`, `mta`, `independentAmount`, `frequency`, `mpor`, `eligible`.
+**Fields its Sutra reads:** `MARGIN_TYPE`, `THRESHOLD_US`, `THRESHOLD_THEM`, `MTA`, `INDEPENDENT_AMOUNT`, `FREQUENCY`, `MPOR`, `ELIGIBLE`.
 
-**Links:** `agreement` → Agreement (`agreement`), `counterparty` → Counterparty (`counterparty`).
+**Links:** `AGREEMENT` → Agreement (`agreement`), `COUNTERPARTY` → Counterparty (`counterparty`).
 
 ### Netting set (`netting-set`)
 
 Trades that net on close-out under one agreement and CSA, with exposure and collateral.
 
-**Fields its Sutra reads:** `tradeCount`, `netMtm`, `collateral`, `eePeak`, `pfePeak`, `limit`, `utilisation`, `cva`, `profile`, `trades`, `byAsset`.
+**Fields its Sutra reads:** `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `EE_PEAK`, `PFE_PEAK`, `LIMIT`, `UTILISATION`, `CVA`, `PROFILE`, `TRADES`, `BY_ASSET`.
 
-**Links:** `counterparty` → Counterparty (`counterparty`), `agreement` → Agreement (`agreement`), `csa` → CSA (`csa`), `creditLimit` → Credit limit (`credit-limit`), `exposureProfile` → Exposure profile (`exposure-profile`), `cvaResult` → CVA (`cva`), `saccr` → SA-CCR (`sa-ccr`), `simm` → SIMM (`simm`), `collateralBalance` → Collateral (`collateral-balance`).
+**Links:** `COUNTERPARTY` → Counterparty (`counterparty`), `AGREEMENT` → Agreement (`agreement`), `CSA` → CSA (`csa`), `CREDIT_LIMIT` → Credit limit (`credit-limit`), `EXPOSURE_PROFILE` → Exposure profile (`exposure-profile`), `CVA_RESULT` → CVA (`cva`), `SACCR` → SA-CCR (`sa-ccr`), `SIMM` → SIMM (`simm`), `COLLATERAL_BALANCE` → Collateral (`collateral-balance`).
 
 ### Credit limit (`credit-limit`)
 
 PFE limit by tenor bucket for a counterparty, with utilisation.
 
-**Fields its Sutra reads:** `counterpartyName`, `measure`, `limit`, `used`, `utilisation`, `status`, `buckets`.
+**Fields its Sutra reads:** `COUNTERPARTY_NAME`, `MEASURE`, `LIMIT`, `USED`, `UTILISATION`, `STATUS`, `BUCKETS`.
 
-**Links:** `counterparty` → Counterparty (`counterparty`).
+**Links:** `COUNTERPARTY` → Counterparty (`counterparty`).
 
 ### Exposure profile (`exposure-profile`)
 
 Simulated EE, EPE, ENE and PFE by time bucket for a netting set.
 
-**Fields its Sutra reads:** `epe`, `eepe`, `pfePeak`, `paths`, `runDate`, `buckets`.
+**Fields its Sutra reads:** `EPE`, `EEPE`, `PFE_PEAK`, `PATHS`, `RUN_DATE`, `BUCKETS`.
 
-**Links:** `nettingSet` → Netting set (`netting-set`).
+**Links:** `NETTING_SET` → Netting set (`netting-set`).
 
 ### CVA / XVA (`cva`)
 
 Credit, debit and funding valuation adjustments with sensitivities.
 
-**Fields its Sutra reads:** `cva`, `dva`, `fva`, `kva`, `cs01`, `components`, `sensitivities`.
+**Fields its Sutra reads:** `CVA`, `DVA`, `FVA`, `KVA`, `CS01`, `COMPONENTS`, `SENSITIVITIES`.
 
-**Links:** `nettingSet` → Netting set (`netting-set`), `creditCurve` → Counterparty curve (`credit-curve`).
+**Links:** `NETTING_SET` → Netting set (`netting-set`), `CREDIT_CURVE` → Counterparty curve (`credit-curve`).
 
 ### SA-CCR exposure (`sa-ccr`)
 
 Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 
-**Fields its Sutra reads:** `replacementCost`, `addOn`, `multiplier`, `ead`, `rwa`, `addOns`, `hedgingSets`.
+**Fields its Sutra reads:** `REPLACEMENT_COST`, `ADD_ON`, `MULTIPLIER`, `EAD`, `RWA`, `ADD_ONS`, `HEDGING_SETS`.
 
-**Links:** `nettingSet` → Netting set (`netting-set`).
+**Links:** `NETTING_SET` → Netting set (`netting-set`).
 
 ### Collateral balance (`collateral-balance`)
 
 Collateral held and posted under a CSA, by asset, after haircuts.
 
-**Fields its Sutra reads:** `held`, `posted`, `net`, `asOf`, `positions`.
+**Fields its Sutra reads:** `HELD`, `POSTED`, `NET`, `AS_OF`, `POSITIONS`.
 
-**Links:** `csa` → CSA (`csa`), `nettingSet` → Netting set (`netting-set`).
+**Links:** `CSA` → CSA (`csa`), `NETTING_SET` → Netting set (`netting-set`).
 
 ### Margin call (`margin-call`)
 
 A variation or initial margin call and its settlement status.
 
-**Fields its Sutra reads:** `callDate`, `marginType`, `direction`, `amount`, `status`, `disputeAmount`, `events`.
+**Fields its Sutra reads:** `CALL_DATE`, `MARGIN_TYPE`, `DIRECTION`, `AMOUNT`, `STATUS`, `DISPUTE_AMOUNT`, `EVENTS`.
 
-**Links:** `nettingSet` → Netting set (`netting-set`), `csa` → CSA (`csa`).
+**Links:** `NETTING_SET` → Netting set (`netting-set`), `CSA` → CSA (`csa`).
 
 ### ISDA SIMM initial margin (`simm`)
 
 Initial margin by risk class and product class.
 
-**Fields its Sutra reads:** `total`, `posted`, `received`, `version`, `riskClasses`.
+**Fields its Sutra reads:** `TOTAL`, `POSTED`, `RECEIVED`, `VERSION`, `RISK_CLASSES`.
 
-**Links:** `nettingSet` → Netting set (`netting-set`).
+**Links:** `NETTING_SET` → Netting set (`netting-set`).
 
 ## Who can see it
 
@@ -148,4 +148,4 @@ Role `credit-risk`: kinds `*`, raw JSON.
 
 ## F8 impact
 
-Amounts at stake: `netting-set` by `$.netMtm`, `credit-limit` by `$.limit`. Dependents roll up through `nettingSet`, `creditLimit`.
+Amounts at stake: `netting-set` by `$.NET_MTM`, `credit-limit` by `$.LIMIT`. Dependents roll up through `NETTING_SET`, `CREDIT_LIMIT`.

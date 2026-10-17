@@ -1,101 +1,101 @@
 {
- "nettingSetId": "NS-MERIDIAN-FRA",
- "tradeCount": 1,
- "netMtm": 122689,
- "collateral": 79025,
- "eePeak": 59940,
- "pfePeak": 139305,
- "limit": 5000000.0,
- "utilisation": 0.0279,
- "cva": -41,
- "profile": [
+ "NETTING_SET_ID": "NS-MERIDIAN-FRA",
+ "TRADE_COUNT": 1,
+ "NET_MTM": 122689,
+ "COLLATERAL": 79025,
+ "EE_PEAK": 59940,
+ "PFE_PEAK": 139305,
+ "LIMIT": 5000000.0,
+ "UTILISATION": 0.0279,
+ "CVA": -41,
+ "PROFILE": [
   {
-   "tenor": "0",
-   "ee": 51915,
-   "pfe": 121651
+   "TENOR": "0",
+   "EE": 51915,
+   "PFE": 121651
   },
   {
-   "tenor": "1M",
-   "ee": 59940,
-   "pfe": 139305
+   "TENOR": "1M",
+   "EE": 59940,
+   "PFE": 139305
   },
   {
-   "tenor": "3M",
-   "ee": 41019,
-   "pfe": 90241
+   "TENOR": "3M",
+   "EE": 41019,
+   "PFE": 90241
   },
   {
-   "tenor": "6M",
-   "ee": 38533,
-   "pfe": 84773
+   "TENOR": "6M",
+   "EE": 38533,
+   "PFE": 84773
   },
   {
-   "tenor": "1Y",
-   "ee": 34006,
-   "pfe": 74812
+   "TENOR": "1Y",
+   "EE": 34006,
+   "PFE": 74812
   },
   {
-   "tenor": "2Y",
-   "ee": 26484,
-   "pfe": 58264
+   "TENOR": "2Y",
+   "EE": 26484,
+   "PFE": 58264
   },
   {
-   "tenor": "3Y",
-   "ee": 20625,
-   "pfe": 45376
+   "TENOR": "3Y",
+   "EE": 20625,
+   "PFE": 45376
   },
   {
-   "tenor": "5Y",
-   "ee": 12510,
-   "pfe": 27522
+   "TENOR": "5Y",
+   "EE": 12510,
+   "PFE": 27522
   },
   {
-   "tenor": "7Y",
-   "ee": 7588,
-   "pfe": 16693
+   "TENOR": "7Y",
+   "EE": 7588,
+   "PFE": 16693
   },
   {
-   "tenor": "10Y",
-   "ee": 3584,
-   "pfe": 7885
+   "TENOR": "10Y",
+   "EE": 3584,
+   "PFE": 7885
   }
  ],
- "trades": [
+ "TRADES": [
   {
-   "tradeId": "BBG-60000080",
-   "product": "Repurchase agreement",
-   "assetClass": "Securities financing",
-   "currency": "USD",
-   "book": "BOOK-SFT-2",
-   "notional": 85000000.0,
-   "maturity": "2026-12-21",
-   "maturityBucket": "0-1Y",
-   "mtm": 122689
+   "TRADE_ID": "BBG-60000080",
+   "PRODUCT": "Repurchase agreement",
+   "ASSET_CLASS": "Securities financing",
+   "CURRENCY": "USD",
+   "BOOK": "BOOK-SFT-2",
+   "NOTIONAL": 85000000.0,
+   "MATURITY": "2026-12-21",
+   "MATURITY_BUCKET": "0-1Y",
+   "MTM": 122689
   }
  ],
- "byAsset": [
+ "BY_ASSET": [
   {
-   "asset": "Securities financing",
-   "mtm": 122689
+   "ASSET": "Securities financing",
+   "MTM": 122689
   }
  ],
- "counterparty": "CP-MERIDIAN",
- "agreement": "AGR-MERIDIAN-ISDA",
- "csa": "CSA-MERIDIAN",
- "creditLimit": "LIM-MERIDIAN",
- "exposureProfile": "EXP-MERIDIAN-FRA",
- "cvaResult": "CVA-MERIDIAN-FRA",
- "saccr": "SACCR-MERIDIAN-FRA",
- "simm": "SIMM-MERIDIAN",
- "collateralBalance": "COLL-MERIDIAN-FRA",
- "legalEntity": "LE-FRA",
- "nettingEnforceable": true,
+ "COUNTERPARTY": "CP-MERIDIAN",
+ "AGREEMENT": "AGR-MERIDIAN-ISDA",
+ "CSA": "CSA-MERIDIAN",
+ "CREDIT_LIMIT": "LIM-MERIDIAN",
+ "EXPOSURE_PROFILE": "EXP-MERIDIAN-FRA",
+ "CVA_RESULT": "CVA-MERIDIAN-FRA",
+ "SACCR": "SACCR-MERIDIAN-FRA",
+ "SIMM": "SIMM-MERIDIAN",
+ "COLLATERAL_BALANCE": "COLL-MERIDIAN-FRA",
+ "LEGAL_ENTITY": "LE-FRA",
+ "NETTING_ENFORCEABLE": true,
  "_meta": {
   "source": "xva-engine",
   "generation": 1,
   "live": true,
   "walk": {
-   "netMtm": 1000
+   "NET_MTM": 1000
   }
  }
 }

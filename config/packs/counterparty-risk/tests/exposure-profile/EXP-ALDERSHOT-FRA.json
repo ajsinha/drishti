@@ -1,85 +1,85 @@
 {
- "profileId": "EXP-ALDERSHOT-FRA",
- "epe": 26290,
- "eepe": 141750,
- "pfePeak": 347288,
- "paths": 5000,
- "runDate": "2026-09-30",
- "buckets": [
+ "PROFILE_ID": "EXP-ALDERSHOT-FRA",
+ "EPE": 26290,
+ "EEPE": 141750,
+ "PFE_PEAK": 347288,
+ "PATHS": 5000,
+ "RUN_DATE": "2026-09-30",
+ "BUCKETS": [
   {
-   "tenor": "0",
-   "ee": 39314,
-   "ene": -139484,
-   "pfe95": 121929,
-   "pfe99": 163624
+   "TENOR": "0",
+   "EE": 39314,
+   "ENE": -139484,
+   "PFE_95": 121929,
+   "PFE_99": 163624
   },
   {
-   "tenor": "1M",
-   "ee": 81839,
-   "ene": -169110,
-   "pfe95": 215484,
-   "pfe99": 286947
+   "TENOR": "1M",
+   "EE": 81839,
+   "ENE": -169110,
+   "PFE_95": 215484,
+   "PFE_99": 286947
   },
   {
-   "tenor": "3M",
-   "ee": 141750,
-   "ene": -209646,
-   "pfe95": 347288,
-   "pfe99": 460688
+   "TENOR": "3M",
+   "EE": 141750,
+   "ENE": -209646,
+   "PFE_95": 347288,
+   "PFE_99": 460688
   },
   {
-   "tenor": "6M",
-   "ee": 0,
-   "ene": -97073,
-   "pfe95": 0,
-   "pfe99": 0
+   "TENOR": "6M",
+   "EE": 0,
+   "ENE": -97073,
+   "PFE_95": 0,
+   "PFE_99": 0
   },
   {
-   "tenor": "1Y",
-   "ee": 0,
-   "ene": -85667,
-   "pfe95": 0,
-   "pfe99": 0
+   "TENOR": "1Y",
+   "EE": 0,
+   "ENE": -85667,
+   "PFE_95": 0,
+   "PFE_99": 0
   },
   {
-   "tenor": "2Y",
-   "ee": 0,
-   "ene": -66717,
-   "pfe95": 0,
-   "pfe99": 0
+   "TENOR": "2Y",
+   "EE": 0,
+   "ENE": -66717,
+   "PFE_95": 0,
+   "PFE_99": 0
   },
   {
-   "tenor": "3Y",
-   "ee": 0,
-   "ene": -51959,
-   "pfe95": 0,
-   "pfe99": 0
+   "TENOR": "3Y",
+   "EE": 0,
+   "ENE": -51959,
+   "PFE_95": 0,
+   "PFE_99": 0
   },
   {
-   "tenor": "5Y",
-   "ee": 0,
-   "ene": -31515,
-   "pfe95": 0,
-   "pfe99": 0
+   "TENOR": "5Y",
+   "EE": 0,
+   "ENE": -31515,
+   "PFE_95": 0,
+   "PFE_99": 0
   },
   {
-   "tenor": "7Y",
-   "ee": 0,
-   "ene": -19115,
-   "pfe95": 0,
-   "pfe99": 0
+   "TENOR": "7Y",
+   "EE": 0,
+   "ENE": -19115,
+   "PFE_95": 0,
+   "PFE_99": 0
   },
   {
-   "tenor": "10Y",
-   "ee": 0,
-   "ene": -9029,
-   "pfe95": 0,
-   "pfe99": 0
+   "TENOR": "10Y",
+   "EE": 0,
+   "ENE": -9029,
+   "PFE_95": 0,
+   "PFE_99": 0
   }
  ],
- "nettingSet": "NS-ALDERSHOT-FRA",
- "model": "Hull-White 1F rates, GBM FX and equity, 5,000 paths",
- "confidence": 0.95,
+ "NETTING_SET": "NS-ALDERSHOT-FRA",
+ "MODEL": "Hull-White 1F rates, GBM FX and equity, 5,000 paths",
+ "CONFIDENCE": 0.95,
  "_meta": {
   "source": "xva-engine",
   "generation": 1

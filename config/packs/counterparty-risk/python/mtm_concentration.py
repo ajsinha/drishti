@@ -17,20 +17,20 @@
 # description: The counterparty's trades from drishti.search_async(): MTM by product and by netting set, each one's share of gross MTM, and a Herfindahl index of how concentrated it is.
 # kinds: netting-set, counterparty
 
-cp = view.id if view.kind == "counterparty" else view.doc["counterparty"]
-trades = await drishti.search_async(f"TRD where counterparty.id = '{cp}' and nettingSet != '' limit 1000")
-print(f"{cp}: {len(trades)} trades, net MTM {trades['mtm'].sum():,.0f}, gross {trades['mtm'].abs().sum():,.0f}")
+cp = view.id if view.kind == "counterparty" else view.doc["COUNTERPARTY"]
+trades = await drishti.search_async(f"TVAL where COUNTERPARTY = '{cp}' and NETTING_SET != '' limit 1000")
+print(f"{cp}: {len(trades)} trades, net MTM {trades['MTM'].sum():,.0f}, gross {trades['MTM'].abs().sum():,.0f}")
 
 
 def concentration(by):
-    g = trades.groupby(by)["mtm"].agg(trades="count", net="sum", gross=lambda s: s.abs().sum())
+    g = trades.groupby(by)["MTM"].agg(trades="count", net="sum", gross=lambda s: s.abs().sum())
     g["share"] = g["gross"] / g["gross"].sum()
     return g.sort_values("gross", ascending=False)
 
 
-by_product = concentration("productType")
+by_product = concentration("PRODUCT_TYPE")
 show(by_product, title="By product (share of gross MTM)")
 chart(by_product, kind="bar", y="gross", title="Gross MTM by product")
-show(concentration("nettingSet"), title="By netting set")
+show(concentration("NETTING_SET"), title="By netting set")
 hhi = (by_product["share"] ** 2).sum()
 print(f"Herfindahl index by product: {hhi:.3f} (1: all in one product; 1/{len(by_product)}: spread evenly)")

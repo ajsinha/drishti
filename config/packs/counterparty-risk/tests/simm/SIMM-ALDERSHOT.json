@@ -1,33 +1,33 @@
 {
- "calcId": "SIMM-ALDERSHOT",
- "total": 7713626,
- "posted": 7482217,
- "received": 7867899,
- "version": "ISDA SIMM 2.7",
- "riskClasses": [
+ "CALC_ID": "SIMM-ALDERSHOT",
+ "TOTAL": 7713626,
+ "POSTED": 7482217,
+ "RECEIVED": 7867899,
+ "VERSION": "ISDA SIMM 2.7",
+ "RISK_CLASSES": [
   {
-   "riskClass": "Interest rate",
-   "im": 3471132
+   "RISK_CLASS": "Interest rate",
+   "IM": 3471132
   },
   {
-   "riskClass": "Credit qualifying",
-   "im": 925635
+   "RISK_CLASS": "Credit qualifying",
+   "IM": 925635
   },
   {
-   "riskClass": "Equity",
-   "im": 1388453
+   "RISK_CLASS": "Equity",
+   "IM": 1388453
   },
   {
-   "riskClass": "Commodity",
-   "im": 617090
+   "RISK_CLASS": "Commodity",
+   "IM": 617090
   },
   {
-   "riskClass": "FX",
-   "im": 1311316
+   "RISK_CLASS": "FX",
+   "IM": 1311316
   }
  ],
- "nettingSet": "NS-ALDERSHOT-FRA",
- "counterparty": "CP-ALDERSHOT",
+ "NETTING_SET": "NS-ALDERSHOT-FRA",
+ "COUNTERPARTY": "CP-ALDERSHOT",
  "_meta": {
   "source": "margin-engine",
   "generation": 1

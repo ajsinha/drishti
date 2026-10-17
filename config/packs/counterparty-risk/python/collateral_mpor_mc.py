@@ -22,13 +22,13 @@ import pandas as pd
 from drishti import quant as q
 
 ns = view.doc
-csa = await drishti.get_async("csa", ns["csa"]) if ns.get("csa") else {}
-TH, MTA = csa.get("thresholdThem", 0) or 0, csa.get("mta", 0) or 0
-MPOR = int(str(csa.get("mpor", "10")).split()[0]) if csa else 10        # business days
-prof = {p["tenor"]: p["ee"] for p in ns.get("profile") or []}
-ee1 = prof.get("1Y") or ns.get("eePeak")
+csa = await drishti.get_async("csa", ns["CSA"]) if ns.get("CSA") else {}
+TH, MTA = csa.get("THRESHOLD_THEM", 0) or 0, csa.get("MTA", 0) or 0
+MPOR = int(str(csa.get("MPOR", "10")).split()[0]) if csa else 10        # business days
+prof = {p["TENOR"]: p["EE"] for p in ns.get("PROFILE") or []}
+ee1 = prof.get("1Y") or ns.get("EE_PEAK")
 sigma = ee1 * np.sqrt(2 * np.pi)                                         # a year's standard deviation of the value
-v0 = ns.get("netMtm", 0)
+v0 = ns.get("NET_MTM", 0)
 
 rng = np.random.default_rng(7)
 DAYS, PATHS = 252 * 2, 2000
@@ -47,11 +47,11 @@ collat_exposure = np.maximum(value - collateral, 0.0)
 rows = []
 for tenor in ["1M", "3M", "6M", "1Y", "2Y"]:
     d = min(int(round(q.tenor_years(tenor) * 252)), DAYS) - 1
-    rows.append({"tenor": tenor, "EE engine": prof.get(tenor), "EE uncollateralised": exposure[:, d].mean(),
+    rows.append({"TENOR": tenor, "EE engine": prof.get(tenor), "EE uncollateralised": exposure[:, d].mean(),
                  "EE collateralised": collat_exposure[:, d].mean(), "PFE95 uncollateralised": np.percentile(exposure[:, d], 95),
                  "PFE95 collateralised": np.percentile(collat_exposure[:, d], 95)})
-out = pd.DataFrame(rows).set_index("tenor")
+out = pd.DataFrame(rows).set_index("TENOR")
 show(out, title=f"{view.id}: sigma {sigma:,.0f} a year, threshold {TH:,.0f}, MTA {MTA:,.0f}, MPoR {MPOR} days")
-chart(out.reset_index(), kind="bar", x="tenor", y=["EE uncollateralised", "EE collateralised"], title="EE with and without the CSA")
+chart(out.reset_index(), kind="bar", x="TENOR", y=["EE uncollateralised", "EE collateralised"], title="EE with and without the CSA")
 print(f"Collateral cuts EE at 1Y by {1 - out.loc['1Y', 'EE collateralised'] / out.loc['1Y', 'EE uncollateralised']:.0%}; "
       "what is left is the threshold plus the MPoR gap risk")

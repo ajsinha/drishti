@@ -88,47 +88,44 @@ graph:
   - pattern: ^SIMM-
     kind: simm
   fields:
+    AGREEMENT:
+      kind: agreement
+      label: Agreement
+    COLLATERAL_BALANCE:
+      kind: collateral-balance
+      label: Collateral
+    CREDIT_LIMIT:
+      kind: credit-limit
+      label: Credit limit
+    CSA:
+      kind: csa
+      label: CSA
+    CVA_RESULT:
+      kind: cva
+      label: CVA
+    EXPOSURE_PROFILE:
+      kind: exposure-profile
+      label: Exposure profile
     NETTING_SET:
       kind: netting-set
       label: Netting set
-    agreement:
-      kind: agreement
-      label: Agreement
-    collateralBalance:
-      kind: collateral-balance
-      label: Collateral
-    creditLimit:
-      kind: credit-limit
-      label: Credit limit
-    csa:
-      kind: csa
-      label: CSA
-    cvaResult:
-      kind: cva
-      label: CVA
-    exposureProfile:
-      kind: exposure-profile
-      label: Exposure profile
-    nettingSet:
-      kind: netting-set
-      label: Netting set
-    saccr:
+    SACCR:
       kind: sa-ccr
       label: SA-CCR
-    simm:
+    SIMM:
       kind: simm
       label: SIMM
   badges:
-    csa: '''threshold '' + fmt($.thresholdThem, ''compact'')'
-    netting-set: '''PFE '' + fmt($.pfePeak, ''compact'')'
-    credit-limit: fmt($.utilisation, 'pct0') + ' used'
+    csa: '''threshold '' + fmt($.THRESHOLD_THEM, ''compact'')'
+    netting-set: '''PFE '' + fmt($.PFE_PEAK, ''compact'')'
+    credit-limit: fmt($.UTILISATION, 'pct0') + ' used'
   impact:
     follow:
-    - nettingSet
-    - creditLimit
+    - NETTING_SET
+    - CREDIT_LIMIT
     measures:
-      netting-set: $.netMtm
-      credit-limit: $.limit
+      netting-set: $.NET_MTM
+      credit-limit: $.LIMIT
     formats:
       netting-set: signed0
       credit-limit: compact
@@ -179,205 +176,205 @@ routes:
   simm: collateral-store
 form:
   agreement:
-  - path: agreementId
+  - path: AGREEMENT_ID
     label: Agreement id
     type: id
-  - path: type
+  - path: TYPE
     label: Type
     type: enum
-  - path: counterpartyName
+  - path: COUNTERPARTY_NAME
     label: Counterparty name
     type: number
-  - path: governingLaw
+  - path: GOVERNING_LAW
     label: Governing law
     type: text
-  - path: signed
+  - path: SIGNED
     label: Signed
     type: text
-  - path: closeOutNetting
+  - path: CLOSE_OUT_NETTING
     label: Close out netting
     type: text
   csa:
-  - path: csaId
-    label: Csa id
+  - path: CSA_ID
+    label: CSA id
     type: id
-  - path: marginType
+  - path: MARGIN_TYPE
     label: Margin type
     type: text
-  - path: thresholdUs
+  - path: THRESHOLD_US
     label: Threshold us
     type: text
-  - path: thresholdThem
+  - path: THRESHOLD_THEM
     label: Threshold them
     type: text
-  - path: mta
+  - path: MTA
     label: Mta
     type: text
-  - path: independentAmount
+  - path: INDEPENDENT_AMOUNT
     label: Independent amount
     type: amount
-  - path: frequency
+  - path: FREQUENCY
     label: Frequency
     type: text
-  - path: mpor
+  - path: MPOR
     label: Mpor
     type: text
   netting-set:
-  - path: nettingSetId
+  - path: NETTING_SET_ID
     label: Netting set id
     type: id
-  - path: tradeCount
+  - path: TRADE_COUNT
     label: Trade count
     type: number
-  - path: netMtm
-    label: Net mtm
+  - path: NET_MTM
+    label: Net MTM
     type: amount
-  - path: collateral
+  - path: COLLATERAL
     label: Collateral
     type: text
-  - path: eePeak
+  - path: EE_PEAK
     label: Ee peak
     type: text
-  - path: pfePeak
+  - path: PFE_PEAK
     label: Pfe peak
     type: text
-  - path: limit
+  - path: LIMIT
     label: Limit
     type: amount
-  - path: utilisation
+  - path: UTILISATION
     label: Utilisation
     type: number
   credit-limit:
-  - path: limitId
+  - path: LIMIT_ID
     label: Limit id
     type: id
-  - path: counterpartyName
+  - path: COUNTERPARTY_NAME
     label: Counterparty name
     type: number
-  - path: measure
+  - path: MEASURE
     label: Measure
     type: text
-  - path: limit
+  - path: LIMIT
     label: Limit
     type: amount
-  - path: used
+  - path: USED
     label: Used
     type: text
-  - path: utilisation
+  - path: UTILISATION
     label: Utilisation
     type: number
-  - path: status
+  - path: STATUS
     label: Status
     type: enum
   exposure-profile:
-  - path: profileId
+  - path: PROFILE_ID
     label: Profile id
     type: id
-  - path: epe
+  - path: EPE
     label: Epe
     type: text
-  - path: eepe
+  - path: EEPE
     label: Eepe
     type: text
-  - path: pfePeak
+  - path: PFE_PEAK
     label: Pfe peak
     type: text
-  - path: paths
+  - path: PATHS
     label: Paths
     type: text
-  - path: runDate
+  - path: RUN_DATE
     label: Run date
     type: date
   cva:
-  - path: resultId
+  - path: RESULT_ID
     label: Result id
     type: id
-  - path: cva
+  - path: CVA
     label: Cva
     type: text
-  - path: dva
+  - path: DVA
     label: Dva
     type: text
-  - path: fva
+  - path: FVA
     label: Fva
     type: text
-  - path: kva
+  - path: KVA
     label: Kva
     type: text
-  - path: cs01
-    label: Cs01
+  - path: CS01
+    label: CS01
     type: text
   sa-ccr:
-  - path: calcId
+  - path: CALC_ID
     label: Calc id
     type: id
-  - path: replacementCost
+  - path: REPLACEMENT_COST
     label: Replacement cost
     type: amount
-  - path: addOn
+  - path: ADD_ON
     label: Add on
-    type: date
-  - path: multiplier
+    type: text
+  - path: MULTIPLIER
     label: Multiplier
     type: text
-  - path: ead
+  - path: EAD
     label: Ead
     type: text
-  - path: rwa
+  - path: RWA
     label: Rwa
     type: text
   collateral-balance:
-  - path: balanceId
+  - path: BALANCE_ID
     label: Balance id
     type: id
-  - path: held
+  - path: HELD
     label: Held
     type: text
-  - path: posted
+  - path: POSTED
     label: Posted
     type: text
-  - path: net
+  - path: NET
     label: Net
     type: text
-  - path: asOf
+  - path: AS_OF
     label: As of
     type: text
   margin-call:
-  - path: callId
+  - path: CALL_ID
     label: Call id
     type: id
-  - path: callDate
+  - path: CALL_DATE
     label: Call date
     type: date
-  - path: marginType
+  - path: MARGIN_TYPE
     label: Margin type
     type: text
-  - path: direction
+  - path: DIRECTION
     label: Direction
     type: enum
-  - path: amount
+  - path: AMOUNT
     label: Amount
     type: amount
-  - path: status
+  - path: STATUS
     label: Status
     type: enum
-  - path: disputeAmount
+  - path: DISPUTE_AMOUNT
     label: Dispute amount
     type: amount
   simm:
-  - path: calcId
+  - path: CALC_ID
     label: Calc id
     type: id
-  - path: total
+  - path: TOTAL
     label: Total
     type: text
-  - path: posted
+  - path: POSTED
     label: Posted
     type: text
-  - path: received
+  - path: RECEIVED
     label: Received
     type: text
-  - path: version
+  - path: VERSION
     label: Version
     type: text
 console:

@@ -19,24 +19,24 @@
 
 import pandas as pd
 
-calls = await drishti.search_async("MC where amount > -1000bn and status != '' and disputeAmount > -1000bn and nettingSet != '' "
-                                   "and direction != '' and callDate != '' limit 1000")
-calls["callDate"] = pd.to_datetime(calls["callDate"])
-calls["age days"] = (pd.Timestamp(view.business_date or "2026-09-30") - calls["callDate"]).dt.days
-calls["disputed"] = calls["disputeAmount"].fillna(0)
+calls = await drishti.search_async("MC where AMOUNT > -1000bn and STATUS != '' and DISPUTE_AMOUNT > -1000bn and NETTING_SET != '' "
+                                   "and DIRECTION != '' and CALL_DATE != '' limit 1000")
+calls["CALL_DATE"] = pd.to_datetime(calls["CALL_DATE"])
+calls["age days"] = (pd.Timestamp(view.business_date or "2026-09-30") - calls["CALL_DATE"]).dt.days
+calls["disputed"] = calls["DISPUTE_AMOUNT"].fillna(0)
 
-summary = calls.groupby(["status", "direction"]).agg(calls=("id", "size"), amount=("amount", "sum"),
+summary = calls.groupby(["STATUS", "DIRECTION"]).agg(calls=("id", "size"), amount=("AMOUNT", "sum"),
                                                      disputed=("disputed", "sum")).reset_index()
-summary["dispute rate"] = summary["disputed"] / summary["amount"]
-show(summary, title=f"{len(calls)} margin calls, {calls['amount'].sum():,.0f} called, {calls['disputed'].sum():,.0f} disputed")
-open_calls = calls[~calls["status"].isin(["Settled", "Cancelled"])].sort_values("age days", ascending=False)
-show(open_calls[["id", "nettingSet", "direction", "amount", "disputed", "status", "age days"]].head(20).reset_index(drop=True),
+summary["dispute rate"] = summary["disputed"] / summary["AMOUNT"]
+show(summary, title=f"{len(calls)} margin calls, {calls['AMOUNT'].sum():,.0f} called, {calls['disputed'].sum():,.0f} disputed")
+open_calls = calls[~calls["STATUS"].isin(["Settled", "Cancelled"])].sort_values("age days", ascending=False)
+show(open_calls[["id", "NETTING_SET", "DIRECTION", "AMOUNT", "disputed", "STATUS", "age days"]].head(20).reset_index(drop=True),
      title=f"{len(open_calls)} calls not settled, oldest first")
-show(calls.nlargest(10, "disputed")[["id", "nettingSet", "amount", "disputed", "status"]].reset_index(drop=True), title="Largest disputes")
+show(calls.nlargest(10, "disputed")[["id", "NETTING_SET", "AMOUNT", "disputed", "STATUS"]].reset_index(drop=True), title="Largest disputes")
 
-ns = view.doc.get("nettingSet") if view.kind != "netting-set" else view.id
-mine = calls[calls["nettingSet"] == ns] if ns else calls.iloc[0:0]
+ns = view.doc.get("NETTING_SET") if view.kind != "netting-set" else view.id
+mine = calls[calls["NETTING_SET"] == ns] if ns else calls.iloc[0:0]
 if len(mine):
-    show(mine[["id", "callDate", "direction", "amount", "disputed", "status"]].reset_index(drop=True), title=f"Calls on {ns}")
-by_ns = calls.groupby("nettingSet")[["amount", "disputed"]].sum().sort_values("amount", ascending=False).head(15)
-chart(by_ns.reset_index(), kind="bar", x="nettingSet", y=["amount", "disputed"], title="Called and disputed by netting set (top 15)")
+    show(mine[["id", "CALL_DATE", "DIRECTION", "AMOUNT", "disputed", "STATUS"]].reset_index(drop=True), title=f"Calls on {ns}")
+by_ns = calls.groupby("NETTING_SET")[["AMOUNT", "disputed"]].sum().sort_values("AMOUNT", ascending=False).head(15)
+chart(by_ns.reset_index(), kind="bar", x="NETTING_SET", y=["AMOUNT", "disputed"], title="Called and disputed by netting set (top 15)")

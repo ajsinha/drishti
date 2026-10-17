@@ -1,57 +1,57 @@
 {
- "resultId": "CVA-MERIDIAN-FRA",
- "cva": -41,
- "dva": 17,
- "fva": -147,
- "kva": -557,
- "cs01": -1,
- "components": [
+ "RESULT_ID": "CVA-MERIDIAN-FRA",
+ "CVA": -41,
+ "DVA": 17,
+ "FVA": -147,
+ "KVA": -557,
+ "CS01": -1,
+ "COMPONENTS": [
   {
-   "name": "CVA",
-   "amount": -41
+   "NAME": "CVA",
+   "AMOUNT": -41
   },
   {
-   "name": "DVA",
-   "amount": 17
+   "NAME": "DVA",
+   "AMOUNT": 17
   },
   {
-   "name": "FVA",
-   "amount": -147
+   "NAME": "FVA",
+   "AMOUNT": -147
   },
   {
-   "name": "KVA",
-   "amount": -557
+   "NAME": "KVA",
+   "AMOUNT": -557
   }
  ],
- "sensitivities": [
+ "SENSITIVITIES": [
   {
-   "factor": "Counterparty spread",
-   "bump": "+1 bp",
-   "delta": -1
+   "FACTOR": "Counterparty spread",
+   "BUMP": "+1 bp",
+   "DELTA": -1
   },
   {
-   "factor": "USD rates",
-   "bump": "+1 bp",
-   "delta": 0
+   "FACTOR": "USD rates",
+   "BUMP": "+1 bp",
+   "DELTA": 0
   },
   {
-   "factor": "EUR rates",
-   "bump": "+1 bp",
-   "delta": 0
+   "FACTOR": "EUR rates",
+   "BUMP": "+1 bp",
+   "DELTA": 0
   },
   {
-   "factor": "FX vol",
-   "bump": "+1 vol",
-   "delta": -1
+   "FACTOR": "FX vol",
+   "BUMP": "+1 vol",
+   "DELTA": -1
   },
   {
-   "factor": "Recovery",
-   "bump": "+1%",
-   "delta": 1
+   "FACTOR": "Recovery",
+   "BUMP": "+1%",
+   "DELTA": 1
   }
  ],
- "nettingSet": "NS-MERIDIAN-FRA",
- "creditCurve": "CDS-MERIDIAN",
+ "NETTING_SET": "NS-MERIDIAN-FRA",
+ "CREDIT_CURVE": "CDS-MERIDIAN",
  "_meta": {
   "source": "xva-engine",
   "generation": 1
