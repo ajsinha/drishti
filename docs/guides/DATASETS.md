@@ -466,12 +466,11 @@ connector query's, has no layer: it is asked again). The answer names them, and 
 ```
 POST /api/v1/bi/datasets/file:dataset:desk-pnl-vs-exposure-py-result/refresh
 {"dataset": "file:dataset:desk-pnl-vs-exposure-py-result", "date": "2026-10-13",
- "refreshing": [], "models": ["file:model:desk-pnl-vs-exposure-py", "implicit:desk-pnl-vs-exposure-py-result@1"], "transformResultsDropped": 1,
+ "refreshing": [], "models": ["file:model:desk-pnl-vs-exposure-py", "implicit:desk-pnl-vs-exposure-py-result@1"], "transformResultsDropped": 0,
  "state": {"schedule": "on demand", "status": "running", "trigger": "manual (drishti-dev-admin)", ...}}
-$ python3 tools/drishti.py bi dataset refresh file:dataset:trading-risk-trades --now
-no schedule  (America/New_York, calendar USNY)
-  dataset   on demand             ok  last run 2026-10-13 08:00:41 UTC by manual (drishti-dev-admin): ... rows in ... ms
 ```
+
+From the command line `python3 tools/drishti.py bi dataset refresh ID --now` asks for it and waits until the state is no longer `running`.
 
 Its **tests** (`tests:` with `agg`, `unique`, `not-null`, `references-exist`; BI_MODEL_SPEC.md section 1.8) run from its page's *Expected values* and
 `drishti.py bi item tests ID`, and a failing one refuses its publish (`DRS-9043`).
