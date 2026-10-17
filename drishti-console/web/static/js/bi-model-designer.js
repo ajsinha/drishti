@@ -42,7 +42,7 @@
     q('[data-undo]').disabled = !undo.length || M.readOnly;
     q('[data-redo]').disabled = !redo.length || M.readOnly;
     const it = M.item || {};
-    q('[data-state]').textContent = M.readOnly ? 'Read-only' : M.dirty ? 'Unsaved changes' : it.status === 'published' ? 'Published'
+    q('[data-state]').textContent = M.readOnly ? 'Read-only' : M.conflict ? 'Not saved: saved elsewhere' : M.dirty ? (M.saving ? 'Saving the draft…' : 'Unsaved changes') : it.status === 'published' ? 'Published'
       : it.status === 'proposed' ? 'Proposed' : it.publishedVersion ? 'Draft changes (v' + it.publishedVersion + ' published)' : 'Saved draft';
     publishState();
   }
@@ -84,20 +84,24 @@
     redo.length = 0;
     fn(M.doc);
     M.dirty = true;
+    M.rev = (M.rev || 0) + 1;
     keep();
     buttons();
     if (!quiet) { M.redraw(); }
     M.compose();
+    M.autosave();
   };
   function step(from, to) {
     if (!from.length || M.readOnly) { return; }
     to.push(B.clone(M.doc));
     M.doc = from.pop();
     M.dirty = true;
+    M.rev = (M.rev || 0) + 1;
     keep();
     buttons();
     M.redraw();
     M.compose();
+    M.autosave();
   }
 
   // ---- compose: the YAML, the server's Check, the suggestions --------------------------------------------------------
@@ -116,9 +120,11 @@
           const nEx = ((r.check && r.check.exposures) || []).length, bare = !Object.keys(M.doc.datasets || {}).length;
           const badge = q('[data-valid]');
           // the header agrees with the Security tab: a model that checks clean but has a role exposed is not ready, said in words and in the warning colour (not the error one)
-          badge.textContent = bare ? 'Add a dataset to begin' : !r.check.valid ? (M.acted ? 'Has errors' : 'Not ready yet') : nEx ? 'Valid, ' + nEx + ' to fix before publishing' : 'Valid';
+          // the badge agrees with the problems pinned on the canvas: valid with warnings says how many
+          const nWarn = ((r.check && r.check.problems) || []).filter((p) => p.level === 'warning').length;
+          badge.textContent = bare ? 'Add a dataset to begin' : !r.check.valid ? (M.acted ? 'Has errors' : 'Not ready yet') : nEx ? 'Valid, ' + nEx + ' to fix before publishing' : nWarn ? 'Valid, ' + nWarn + ' warning' + (nWarn === 1 ? '' : 's') : 'Valid';
           badge.classList.toggle('bi-bad', !bare && !r.check.valid && !!M.acted);
-          badge.classList.toggle('bi-warnbadge', !bare && (nEx > 0 || (!r.check.valid && !M.acted)));
+          badge.classList.toggle('bi-warnbadge', !bare && (nEx > 0 || nWarn > 0 || (!r.check.valid && !M.acted)));
           M.emit('checked');
           M.redraw();
           resolve();
@@ -160,13 +166,39 @@
         doc.datasets[alias] = { dataset: i.name + '@^' + String(i.version || '1').split('.')[0], role };
         const lay = (doc.layout = doc.layout || {});
         lay.positions = lay.positions || {};
-        lay.positions[alias] = at || autoPlace(Object.keys(doc.datasets).length - 1, role);
+        lay.positions[alias] = at || freeSpot(lay.positions, alias, role);
       });
       M.selected = { kind: 'dataset', alias };
       B.near(anchor || q('[data-ds-list]'), 'Added ' + i.title + ' as ' + alias + ' (' + role + '). Suggested relationships appear under the canvas.', false);
     }).catch((e) => B.near(anchor || q('[data-ds-list]'), e.message, true));
   }
-  function autoPlace(i, role) { return [24 + (i % 3) * 270, 24 + Math.floor(i / 3) * 240 + (role === 'dimension' ? 0 : 20)]; }
+  function autoPlace(i, role) { return [24 + (i % 3) * 270, 24 + Math.floor(i / 3) * 260 + (role === 'dimension' ? 0 : 20)]; }
+  const BOX_W = 260, BOX_H = 250;
+  const overlaps = (a, b) => Math.abs(a[0] - b[0]) < BOX_W && Math.abs(a[1] - b[1]) < BOX_H;
+  /** The first place on the grid (three across, facts and dimensions alike) that no other box covers. */
+  function freeSpot(positions, alias, role) {
+    const others = Object.keys(positions || {}).filter((a) => a !== alias).map((a) => positions[a]).filter(Array.isArray);
+    for (let i = 0; i < 300; i++) { const p = autoPlace(i, role); if (!others.some((o) => overlaps(o, p))) { return p; } }
+    return autoPlace(others.length, role);
+  }
+  /** Auto-layout: every box that sits on another (an old draft, a drop on a crowded canvas) moves to a free place; the boxes not touched stay. */
+  function untangle(positions) {
+    const seen = {};
+    let moved = 0;
+    Object.keys(M.doc.datasets || {}).forEach((a) => {
+      const p = positions[a];
+      if (!Array.isArray(p) || Object.keys(seen).some((b) => overlaps(seen[b], p))) { positions[a] = freeSpot(seen, a, (M.doc.datasets[a] || {}).role); moved++; }
+      seen[a] = positions[a];
+    });
+    return moved;
+  }
+  /** Tidy: every box placed again on the grid, the facts first and then the dimensions, none over another. */
+  M.untangle = () => M.edit((doc) => {
+    doc.layout = doc.layout || {};
+    const sets = doc.datasets || {}, order = Object.keys(sets).sort((a, b) => ((sets[a] || {}).role === 'dimension') - ((sets[b] || {}).role === 'dimension'));
+    doc.layout.positions = {};
+    order.forEach((a, i) => { doc.layout.positions[a] = autoPlace(i, (sets[a] || {}).role); });
+  });
 
   // ---- the canvas ----------------------------------------------------------------------------------------------------
   const NS = 'http://www.w3.org/2000/svg';
@@ -201,7 +233,7 @@
         'aria-label': alias + ', ' + (use.role || 'fact') + (info ? ', ' + info.title : '') },
         h('header', { class: 'bi-md-boxhead', 'data-handle': alias }, h('strong', { text: alias }), role),
         h('p', { class: 'bi-md-boxsub text-muted-d', text: info ? info.title + ' · ' + (info.grain.says || '') : String(use.dataset || '') }),
-        probs.length ? h('p', { class: 'bi-md-pin', 'data-pin': alias }, B.icon('exclamation-triangle'), ' ' + probs[0].code + ' ' + probs[0].message.slice(0, 120)) : null,
+        probs.length ? (() => { const p0 = probs.find((p) => p.level === 'error') || probs[0]; return h('p', { class: 'bi-md-pin' + (p0.level === 'error' ? '' : ' bi-md-pin-warn'), 'data-pin': alias, 'data-pin-level': p0.level || 'error' }, B.icon(p0.level === 'error' ? 'exclamation-triangle' : 'info-circle'), ' ' + p0.code + ' ' + p0.message.slice(0, 120) + (probs.length > 1 ? ' (+' + (probs.length - 1) + ' more: Check lists them)' : '')); })() : null,
         list);
       box.style.left = x + 'px';
       box.style.top = y + 'px';
@@ -394,6 +426,7 @@
   let editor = null, ignoreYaml = false, yamlTimer = null;
   const ta = q('[data-yaml]');
   function showTab(name) {
+    B.commitFocus(canvas);
     B.qa('[data-tab]', canvas).forEach((b) => b.setAttribute('aria-selected', b.getAttribute('data-tab') === name ? 'true' : 'false'));
     B.qa('[data-pane]', canvas).forEach((p) => { p.hidden = p.getAttribute('data-pane') !== name; });
     q('[data-inspector]').hidden = name !== 'canvas';
@@ -419,6 +452,7 @@
 
   function check() {
     const box = q('[data-check-box]');
+    B.commitFocus();
     return M.compose(true).then(() => {
       box.hidden = false;
       const list = B.clear(q('[data-problems]'));
@@ -432,14 +466,106 @@
   function save() {
     const btn = q('[data-save]');
     if (M.readOnly) { return Promise.resolve(); }
-    return B.busy(btn, () => M.compose(true).then(() => B.saveItem(itemId, { body: M.yaml }, M.etag, btn, saveCopy))).then((it) => {
-      M.item = Object.assign({}, M.item, it); M.etag = it.etag; M.dirty = false; forget(); buttons();
+    B.commitFocus();                                             // the field being typed in is part of what is saved (it commits on blur, Ctrl+S comes first)
+    window.clearTimeout(autoTimer);
+    const rev = M.rev;
+    return B.busy(btn, () => autoChain.then(() => M.compose(true)).then(() => B.saveItem(itemId, { body: M.yaml }, M.etag, btn, saveCopy))).then((it) => {
+      M.item = Object.assign({}, M.item, it); M.etag = it.etag; M.conflict = false; M.savedDoc = B.clone(M.doc);
+      if (M.rev === rev) { M.dirty = false; forget(); }
+      buttons();
+      const mv = q('[data-merge]');
+      if (mv) { mv.remove(); }
       // a save on a published model makes a draft beside the published version: Publish and the state are worked out again from the item as it now is
       refreshItem();
       const wasLive = it.publishedVersion && it.status !== 'published';
       B.near(btn, 'Saved as a draft' + (wasLive ? ' (version ' + it.publishedVersion + ' stays published until you publish this one)' : '') + '. ' + (M.check && M.check.valid ? 'It checks clean: Publish when ready.' : 'Check lists what to fix before it can be published.'), false);
     }).catch((e) => { if (!e.cancelled) { B.near(btn, e.message, true); } });
   }
+  // ---- server autosave (docs/architecture/BI_DESIGN.md section 8.1): each change is saved to the draft 2 s after the last one; the browser's journal
+  //      (keep()) stays as the backup; a save someone else made since (409, DRS-9007) opens the merge view instead of overwriting ----------------------
+  let autoTimer = null, autoChain = Promise.resolve();
+  const AUTOSAVE_MS = Number(root.getAttribute('data-autosave-ms') || 2000);
+  M.autosave = function () {
+    if (M.readOnly || M.conflict || !M.item || !(AUTOSAVE_MS > 0)) { return; }
+    window.clearTimeout(autoTimer);
+    autoTimer = window.setTimeout(autoSaveNow, AUTOSAVE_MS);
+  };
+  function autoSaveNow() {
+    if (M.readOnly || M.conflict || !M.dirty) { return autoChain; }
+    const rev = M.rev;
+    M.saving = true;
+    buttons();
+    autoChain = autoChain.then(() => M.compose(true)).then(() => B.api('PUT', '/items/' + B.id2path(itemId), { body: M.yaml, baseEtag: M.etag, message: 'Autosaved by the model designer' })).then((it) => {
+      M.item = Object.assign({}, M.item, it); M.etag = it.etag; M.savedDoc = B.clone(M.doc);
+      if (M.rev === rev) { M.dirty = false; forget(); }
+      M.saving = false;
+      buttons();
+      q('[data-autosaved]').textContent = 'Draft saved at ' + new Date().toTimeString().slice(0, 8);
+    }).catch((e) => {
+      M.saving = false;
+      if (e.code === 'DRS-9007') { M.conflict = true; buttons(); return mergeView(); }
+      buttons();
+      q('[data-autosaved]').textContent = 'Not saved automatically (' + e.message + '); your changes are kept in this browser. Save tries again.';
+      return null;
+    });
+    return autoChain;
+  }
+  /** Saves now when there are unsaved changes (Preview as a role, Try it): resolves once the draft on the server is this one. */
+  M.saveNow = () => { window.clearTimeout(autoTimer); return M.dirty ? autoSaveNow() : Promise.resolve(); };
+
+  const SECTIONS = [['title', 'Title'], ['description', 'Description'], ['version', 'Version'], ['datasets', 'Datasets'], ['relationships', 'Relationships'], ['measures', 'Measures'],
+    ['fields', 'Field properties'], ['perspectives', 'Perspectives'], ['security', 'Security'], ['contract', 'Contract'], ['tests', 'Tests'], ['lifecycle', 'Lifecycle'], ['layout', 'Canvas layout']];
+  /** The merge view: theirs (the saved draft now) beside mine, part by part. A part only one side changed takes that side; a part both changed asks (mine first). */
+  function mergeView() {
+    const old = q('[data-merge]');
+    if (old) { old.remove(); }
+    return B.api('GET', '/items/' + B.id2path(itemId)).then((fresh) => B.layer.post('parse', { yaml: fresh.body || '' }).then((r) => {
+      const theirs = r.doc, base = M.savedDoc || {}, mine = M.doc;
+      const keys = SECTIONS.map((x) => x[0]).concat(Object.keys(Object.assign({}, theirs, mine)).filter((k) => !SECTIONS.some((x) => x[0] === k)));
+      const rows = [], pick = {};
+      keys.forEach((k) => {
+        const t = JSON.stringify(theirs[k]), m = JSON.stringify(mine[k]), b = JSON.stringify(base[k]);
+        if (t === m) { return; }
+        const iChanged = m !== b, theyChanged = t !== b;
+        pick[k] = !iChanged && theyChanged ? 'theirs' : 'mine';
+        const label = (SECTIONS.find((x) => x[0] === k) || [k, k])[1];
+        const radio = (v, words) => {
+          const x = h('input', { type: 'radio', name: 'merge-' + k, value: v, checked: pick[k] === v, 'data-merge-pick': k + ':' + v });
+          x.addEventListener('change', () => { pick[k] = v; });
+          return h('label', { class: 'bi-checkrow' }, x, ' ' + words);
+        };
+        const show = (v) => h('pre', { class: 'bi-merge-val mono', text: v === undefined ? '(none)' : JSON.stringify(v, null, 1).slice(0, 600) });
+        rows.push(h('tr', { 'data-merge-row': k, class: iChanged && theyChanged ? 'bi-merge-both' : '' },
+          h('th', { scope: 'row' }, label, h('br'), h('small', { class: 'text-muted-d', text: iChanged && theyChanged ? 'both changed' : iChanged ? 'you changed' : 'they changed' })),
+          h('td', {}, radio('theirs', 'theirs'), show(theirs[k])), h('td', {}, radio('mine', 'mine'), show(mine[k]))));
+      });
+      const go = h('button', { type: 'button', class: 'btn-pill btn-accent', 'data-merge-save': '', text: 'Merge and save' });
+      const reload = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-merge-reload': '', text: 'Take theirs (reload)' });
+      const over = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-merge-overwrite': '', text: 'Keep mine (overwrite)' });
+      const box = h('section', { class: 'bi-sec bi-merge', 'data-merge': '', role: 'alert', 'aria-labelledby': 'mdMerge' },
+        h('h2', { id: 'mdMerge', text: 'Saved elsewhere since you opened it' }),
+        h('p', { text: (fresh.updatedBy || fresh.owner || 'Someone') + ' saved this model since' + (fresh.updatedAt ? ' (' + String(fresh.updatedAt).replace('T', ' ').slice(0, 16) + ')' : '') + '. Autosave has stopped so nothing of theirs is overwritten. Choose, part by part, what the draft keeps; your changes stay in this browser until you do.' }),
+        rows.length ? h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl bi-tbl bi-merge-table', 'data-plain': '' }, h('caption', { class: 'visually-hidden', text: 'Theirs and mine, part by part' }),
+          h('thead', {}, h('tr', {}, ['Part', 'Theirs', 'Mine'].map((x) => h('th', { scope: 'col', text: x })))), h('tbody', {}, rows))) : h('p', { text: 'The two drafts are the same now: Merge and save keeps it.' }),
+        h('p', { class: 'bi-md-row' }, go, ' ', reload, ' ', over));
+      q('[data-msg]').after(box);
+      box.scrollIntoView({ block: 'nearest' });
+      const finish = (doc) => {
+        undo.push(B.clone(M.doc));
+        M.doc = doc; M.etag = fresh.etag; M.base = fresh.body || ''; M.savedDoc = B.clone(theirs); M.conflict = false; M.dirty = true; M.rev = (M.rev || 0) + 1;
+        box.remove(); keep(); buttons(); M.redraw();
+        return autoSaveNow();
+      };
+      go.addEventListener('click', () => {
+        const doc = B.clone(theirs);
+        Object.keys(pick).forEach((k) => { if (pick[k] === 'mine') { if (mine[k] === undefined) { delete doc[k]; } else { doc[k] = B.clone(mine[k]); } } });
+        finish(doc);
+      });
+      reload.addEventListener('click', () => { M.dirty = false; forget(); window.location.reload(); });
+      over.addEventListener('click', () => finish(B.clone(mine)));
+    })).catch((e) => M.say('Saved elsewhere since you opened it, and the saved version could not be read: ' + e.message, true));
+  }
+
   /** The item read again after a save, a publish or a move, so Publish (or Propose), Move and the state follow what the server now says. */
   function refreshItem() {
     return B.api('GET', '/items/' + B.id2path(itemId)).then((fresh) => {
@@ -456,18 +582,36 @@
   }
   function publish() {
     const btn = q('[data-publish]');
+    B.commitFocus();
     if (M.item && M.item.personal) { B.near(btn, 'This model is in your private workspace, which cannot publish. Use Move beside Publish to choose a shared workspace.', true); return Promise.resolve(); }
     const review = M.item && M.item.workspaceReviewRequired;
     const go = () => B.api('POST', '/items/' + B.id2path(itemId) + '/' + (review ? 'propose' : 'publish'), { note: 'From the model designer' }).then((it) => {
-      M.item = it; M.etag = it.etag; buttons();
+      M.item = it; M.etag = it.etag; M.lastRefusal = null; buttons();
+      const rf = q('[data-publish-refusal]');
+      if (rf) { rf.remove(); }
       B.near(btn, review ? 'Proposed for review: it is frozen until approved or withdrawn.' : 'Published. Reports can use ' + M.doc.model + '@' + String(M.doc.version || '1').split('.')[0] + '.', false);
     });
-    const after = (p) => p.catch((e) => {
-      B.near(btn, e.message, true);
-      if (/DRS-9130/.test(e.message || '')) { showTab('security'); }
-    });
+    const after = (p) => p.catch((e) => { refusal(e); });
     if (M.dirty) { return B.confirm(btn, 'Save the changes first, then ' + (review ? 'propose' : 'publish') + '?', 'Save and continue').then((yes) => (yes ? B.busy(btn, () => after(save().then(() => (M.dirty ? null : go())))) : null)); }
     return B.busy(btn, () => after(go()));
+  }
+  /** A refused publish, said where it stays (not a passing note): the code, the server's words, its problems, and the tab that fixes it. DRS-9126 (the
+   *  contract needs a new version) opens Contract, which proposes the version; DRS-9130 (the safeguard) opens Security. */
+  function refusal(e) {
+    const old = q('[data-publish-refusal]');
+    if (old) { old.remove(); }
+    const tab = e.code === 'DRS-9126' || /DRS-9126/.test(e.message || '') ? 'contract' : e.code === 'DRS-9130' || /DRS-9130/.test(e.message || '') ? 'security' : '';
+    const go = tab ? h('button', { type: 'button', class: 'btn-pill btn-accent bi-small', 'data-refusal-open': tab, text: tab === 'contract' ? 'Open the Contract tab' : 'Open the Security tab' }) : null;
+    const close = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Close', 'data-refusal-close': '' }, B.icon('x-lg'));
+    const box = h('div', { class: 'bi-warn bi-md-refusal', role: 'alert', 'data-publish-refusal': e.code || '' }, h('strong', { text: 'Not published. ' }), e.message,
+      (e.problems || []).length ? h('ul', {}, e.problems.slice(0, 8).map((p) => h('li', {}, h('code', { text: (p.code || '') + ' ' + (p.path || '') }), ' ' + (p.message || p.detail || '')))) : null,
+      tab === 'contract' ? h('p', { class: 'bi-small-note', text: 'A change that removes or changes what consumers use needs the next major version: the Contract tab names the changes and proposes the version (Use version …), then Publish again.' }) : null,
+      go, ' ', close);
+    if (go) { go.addEventListener('click', () => showTab(tab)); }
+    close.addEventListener('click', () => box.remove());
+    q('[data-msg]').after(box);
+    M.lastRefusal = e;
+    if (tab) { showTab(tab); }
   }
   function startBoard() {
     const btn = q('[data-board]');
@@ -515,7 +659,7 @@
     const no = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-restore-no': '', text: 'Discard them' });
     B.clear(box).append(h('span', { text: 'You have unsaved changes to this model from ' + new Date(kept.at).toLocaleString() + (kept.etag !== M.etag ? ' (someone has saved it since: restoring and saving will ask before overwriting)' : '') + '. ' }), yes, ' ', no);
     box.hidden = false;
-    yes.addEventListener('click', () => { undo.push(B.clone(M.doc)); M.doc = kept.doc; M.etag = kept.etag || M.etag; M.dirty = true; box.hidden = true; buttons(); M.redraw(); M.compose(true); });
+    yes.addEventListener('click', () => { undo.push(B.clone(M.doc)); M.doc = kept.doc; M.etag = kept.etag || M.etag; M.dirty = true; M.rev = (M.rev || 0) + 1; box.hidden = true; buttons(); M.redraw(); M.compose(true); M.autosave(); });
     no.addEventListener('click', () => { forget(); box.hidden = true; });
     void body;
   }
@@ -533,17 +677,21 @@
     return B.layer.post('parse', { yaml: it.body || '' });
   }).then((r) => {
     M.doc = r.doc;
+    M.savedDoc = B.clone(r.doc);
     M.doc.datasets = M.doc.datasets || {};
     const lay = (M.doc.layout = M.doc.layout || {});
     lay.positions = lay.positions || {};
-    Object.keys(M.doc.datasets).forEach((a, i) => { if (!lay.positions[a]) { lay.positions[a] = autoPlace(i, (M.doc.datasets[a] || {}).role); } });
+    untangle(lay.positions);                                   // no box drawn over another at open (a layout the YAML never gave, or one that overlaps)
     if (window.CodeMirror) {
       editor = window.CodeMirror.fromTextArea(ta, { mode: 'rachana-yaml', lineNumbers: true, lineWrapping: true, indentUnit: 2, tabSize: 2, readOnly: M.readOnly, viewportMargin: Infinity });
       editor.on('change', onYaml);
+      editor.getInputField().setAttribute('aria-label', 'Model YAML (Ctrl+S saves; Escape then Tab leaves the editor)');
+      editor.setOption('extraKeys', { Esc: () => { const t = q('[data-tab="yaml"]'); if (t) { t.focus(); } } });
     } else { ta.addEventListener('input', onYaml); ta.readOnly = M.readOnly; }
     q('[data-undo]').addEventListener('click', () => step(undo, redo));
     q('[data-redo]').addEventListener('click', () => step(redo, undo));
     q('[data-check]').addEventListener('click', check);
+    q('[data-tidy]').addEventListener('click', () => { M.untangle(); B.near(q('[data-tidy]'), 'No box sits on another now (Undo puts them back).', false); });
     q('[data-check-close]').addEventListener('click', () => { q('[data-check-box]').hidden = true; });
     q('[data-save]').addEventListener('click', save);
     q('[data-save-copy]').addEventListener('click', saveCopy);

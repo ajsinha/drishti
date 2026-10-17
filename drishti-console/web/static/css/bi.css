@@ -189,3 +189,10 @@ h1 .bi-soon, h2 .bi-soon { margin-left: .5rem; vertical-align: middle; }
 /* the dataset page: what a button reports sits a clear gap beside it, on a line of its own when narrow */
 [data-refresh-msg], [data-tests-sum] { display: inline-block; margin: .35rem 0 0 .75rem; font-size: .85rem; vertical-align: middle; }
 [data-refresh-msg].bi-bad { color: var(--d-bad); font-weight: 600; }
+/* Wave A QA: every target on the BI pages is 44 px on a phone (tabs, chip buttons, the designers' small buttons, summaries, the expression editor) */
+@media (max-width: 600px) {
+  .bi-shell button, .bi-shell [role="tab"], .bi-shell .bi-chipbtn, .bi-shell .bi-chip, .bi-shell summary, .bi-shell .bi-md-tab, .bi-shell .bi-tab, .bi-shell select, .bi-shell .bi-xe-opt { min-height: 44px; }
+  .bi-shell .bi-chipbtn, .bi-shell .bi-xe-help { min-width: 44px; display: inline-flex; align-items: center; justify-content: center; }
+  .bi-shell summary { display: flex; align-items: center; }
+  .bi-shell .bi-layer-picks .bi-checkrow, .bi-shell .bi-roles .bi-checkrow { min-height: 44px; display: flex; align-items: center; }
+}

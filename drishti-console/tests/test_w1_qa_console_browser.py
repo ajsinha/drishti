@@ -121,5 +121,5 @@ def test_the_new_dataset_wizard_fits_a_phone(browser):
     page.goto(CONSOLE_URL + "/bi/datasets/new-layer")
     expect(page.locator('[data-lw-root][data-ready="yes"]')).to_have_count(1, timeout=30000)
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "the page scrolls sideways"
-    expect(page.locator("[data-guided]")).to_be_visible()
+    expect(page.locator('[data-src="extends"]')).to_be_visible()
     page.context.close()

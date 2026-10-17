@@ -826,6 +826,10 @@ All are `sample: true`. The composed and the derived dataset give the same table
 
 ## 12. Build a dataset in the browser: the wizard
 
+> **Version 1 tables.** This wizard writes the version 1 (`rachana: 1`) tables document. **New dataset** opens the version 2 wizard of
+> [section 15](#15-the-dataset-wizard-version-2-wave-a), which no longer points here; this one is reached at `/bi/datasets/new` (and **Edit in the
+> wizard** on a version 1 dataset) until the version 1 datasets are migrated (`drishti.py bi migrate --models`).
+
 A business user builds a dataset without typing YAML: **Datasets → New dataset (guided)** (`/bi/datasets/new`). It is also opened by **My workspace → New item → dataset → Open the dataset wizard** (the same form has **Paste YAML**, for experts: a whole dataset document pasted and saved as a draft) (the workspace is passed along, so the draft is saved there) and by the designer's start page when no dataset exists, and **Edit in the wizard** on a dataset's page (`/bi/datasets/new?edit=<item id>`) opens a draft you may edit. It needs the `bi-author` power.
 
 The wizard keeps the dataset as one document and writes the same YAML sections 1 to 11 describe; every step edits that document in place, so **a key the wizard has no control for is kept and written out again** (`security:`, `tests:`, `layout:`, `rollups:`, a Python measure). Comments in an original file are not kept. The steps:
@@ -990,9 +994,9 @@ you have seen, Back and Next move one step, and the unfinished dataset is kept i
 | **Columns** | a pack dataset: tick the columns to keep (its keys always stay; *Keep all*, *Only the keys*). Any other source: each column's name, type, role, meaning, referenced kind, currency and whether it adds up; time and refresh | `columns: [tradeId, desk, ...]` (a subset), or `columns: {name: {type, role, ...}}` |
 | **Rows** | a condition on each row in the expression editor (row scope: the table's columns, the row functions) | `where: "status == 'Live'"` |
 | **One row is** | the keys as chips, in words; and **which duplicate wins**: none (the source has one row per key; Check says when it has not), the **latest** or the **earliest** row of each key by a column | `grain: {one-row-per: tradeId, keep: latest by updatedAt}`, or `grain: {says, keys}` |
-| **Worked-out columns** | **A formula column** (a name, a type, a meaning, the formula in the expression editor) or **A Python column** (a name, a type, the Python column item and the columns it reads) | `derive: {notionalUsd: {expr: ..., type: decimal, meaning: amount}, tenorBucket: {python: buckets.by_tenor, inputs: [maturityDate], type: string}}` |
+| **Worked-out columns** | **A formula column** (a name, a type, a meaning, the formula in the expression editor, e.g. `mtm / notional * 10000`) or **A Python column** (a name, a type, the Python column item and the columns it reads; no item yet? **Write one** opens the Python catalogue in a new tab, then **Read the list again**, as for the Python Transform source) | `derive: {notionalUsd: {expr: ..., type: decimal, meaning: amount}, tenorBucket: {python: buckets.by_tenor, inputs: [maturityDate], type: string}}` |
 | **Group** (optional) | *Group the rows*: one row per the columns you tick, each other column summed, averaged, its minimum, maximum, count or distinct count, or left out; a count of the rows under a name | `group: {by: [desk], columns: {mtm: sum, trades: count}, grain: {says, keys}}` |
-| **Preview** | **Preview** saves the draft (visible only to you) and shows its first rows, answered by the server as you (your row rules and masks); for an SQL view, the statement's first rows | — |
+| **Preview** | the server previews a saved draft, so the first **Preview** asks first (*Save the draft and preview*; Cancel saves nothing); later previews update that same draft. Its first rows, answered by the server as you (your row rules and masks), the headers as the dataset names its columns (`mtm`, not `trade.mtm`); for an SQL view, the statement's first rows | — |
 | **Save** | title, name (it follows the title until you type one), workspace, masked columns, the YAML for review; **Save draft** or **Save and publish** | the item |
 
 Never a silent distinct: a dataset whose rows repeat a key says which one wins, and the YAML says it too.
@@ -1005,7 +1009,7 @@ Never a silent distinct: a dataset whose rows repeat a key says which one wins, 
 
 ![Group: one row per desk, mtm, notional, pnl1d and notionalM summed, a count of the rows as trades](img/bi-languages/wizard-group.jpg)
 
-**Preview** saves the draft (under a name nobody you can see uses yet: `trade-narrowed`, else `trade-narrowed-2`) and shows its first rows, answered
+**Preview** asks, then saves the draft (under a name nobody you can see uses yet: `trade-narrowed`, else `trade-narrowed-2`) and shows its first rows, answered
 by the server as you. The trade pack dataset with `notionalM` worked out and grouped by desk:
 
 ![The preview: the first 3 rows of the draft trade-narrowed, as of 2026-10-08; DESK-EQD, DESK-FI and DESK-FX with mtm, notional, pnl1d and notionalM summed (77, 78, 79); Checks clean](img/bi-languages/wizard-preview-grouped.jpg)
@@ -1046,7 +1050,8 @@ drishti.py bi expr validate "notional / 1000000" --scope row --model dataset:pac
 and save the YAML as a draft with the API (`POST /api/v1/bi/workspaces/<id>/items` with `{kind: dataset, title, body}`) or put the file under
 `config/bi/datasets/`.
 
-**An SQL view over a model** is a reviewed Drishti SQL statement whose answer is the table ([SQL.md](SQL.md)): choose the model, write the statement,
+**An SQL view over a model** is a reviewed Drishti SQL statement whose answer is the table ([SQL.md](SQL.md)): choose the model, write the statement
+(in the expression editor: the model's fields, its tables and `MEASURE('…')` completed as you type, and the server's check under it),
 **Check the SQL** (the server says what it answers, or what is wrong with the fix), **Preview** (its first rows, as you), **Save**:
 
 ![The source step with An SQL view over a model chosen: the model SQL model, the statement, and The SQL checks: desk (string), mtm (decimal)](img/bi-languages/wizard-sql-view.jpg)

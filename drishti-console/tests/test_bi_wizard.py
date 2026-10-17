@@ -41,7 +41,7 @@ def test_the_entry_points_lead_to_the_wizard():
     client, _ = make()
     assert 'data-new-wizard href="/bi/datasets/new-layer"' in client.get("/bi/datasets").text          # one New dataset entry; the guided tables builder is its fifth source
     assert "/bi/datasets/new-layer" in client.get("/bi/designer").text
-    assert 'data-guided href="/bi/datasets/new"' in client.get("/bi/datasets/new-layer").text
+    assert "data-guided" not in client.get("/bi/datasets/new-layer").text                        # no pointer to the version 1 tables builder (wave A QA)
     assert "data-edit-wizard" in client.get("/bi/d/file:dataset:trades-basic").text and "data-set-schedule" in client.get("/bi/d/file:dataset:trades-basic").text
     assert "/bi/datasets/new-layer?workspace=" in (WEB / "static/js/bi.js").read_text() and "data-new-dataset-wizard" in (WEB / "templates/bi/workspace.html").read_text()
 

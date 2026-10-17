@@ -467,6 +467,7 @@
     body.appendChild(saved);
   };
   function save(go, area, wsSel, saved, title, confirmed) {
+    if (B.commitFocus) { B.commitFocus(); }
     const text = currentYaml(area);
     if (!confirmed && W.lastProblems && W.lastProblems.length) {
       const steps = Array.from(new Set(W.lastProblems.map((p) => W.steps[W.steps.findIndex((s) => s === ({ tables: 'columns', relationships: 'relationships', measures: 'measures', hierarchies: 'hierarchies', refresh: 'refresh' })[String(p.path || '').split(/[.[]/)[0]])]).filter(Boolean)));

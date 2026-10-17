@@ -60,8 +60,9 @@
     opts = opts || {};
     return B.layer.get('datasets').then((d) => {
       const groups = [];
-      const stateOf = (m) => (m.status === 'published' ? 'published' : m.status || 'draft');
-      const models = (d.models || []).filter((m) => m.kind !== 'compat').slice().sort((a, b) => (a.status === 'published' ? 0 : 1) - (b.status === 'published' ? 0 : 1) || String(a.title).localeCompare(String(b.title)));
+      // the item's state in words: published; published with draft changes not published yet (Analyse reads the published version); a draft never published
+      const stateOf = (m) => (m.status === 'published' ? 'published' : m.draft === false ? 'published, with unpublished draft changes' : m.status === 'proposed' ? 'proposed, not published yet' : 'draft, not published yet');
+      const models = (d.models || []).filter((m) => m.kind !== 'compat').slice().sort((a, b) => (a.draft === false ? 0 : 1) - (b.draft === false ? 0 : 1) || String(a.title).localeCompare(String(b.title)));
       if (models.length) {
         groups.push({ label: 'Models', items: models.map((m) => {
           const ref = m.query || (m.name + '@1');

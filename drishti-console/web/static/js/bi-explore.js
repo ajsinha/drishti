@@ -81,12 +81,16 @@
     if (!id) { return Promise.resolve(); }
     return X.fieldsOf(id).then(function (m) {
       X.model = m;
+      // a model with two facts (trades and netting sets): one extract is one grain, so only the first fact (and the dimensions) is ticked to begin with
+      var facts = (m.tables || []).filter(function (t) { return (t.kind || 'fact') === 'fact'; });
+      var startFact = facts.length > 1 ? facts[0].name : '';
       (m.tables || []).forEach(function (t) {
         var cols = (t.columns || []).filter(function (c) { return c.name !== 'id'; });
         if (!cols.length) { return; }
-        fieldsEl.appendChild(h('div', { class: 'bx-table' }, h('strong', { text: t.name }), cols.map(function (c) {
+        var otherFact = startFact && (t.kind || 'fact') === 'fact' && t.name !== startFact;
+        fieldsEl.appendChild(h('div', { class: 'bx-table', 'data-bx-table': t.name }, h('strong', { text: t.name }), otherFact ? h('small', { class: 'text-muted-d', 'data-bx-other-fact': t.name, text: ' another fact: tick its fields to analyse it instead (one fact per extract)' }) : null, cols.map(function (c) {
           var q2 = t.name + '.' + c.name;
-          var on = ticked ? ticked.indexOf(q2) >= 0 : !c.masked && (cols.indexOf(c) < 8 || NUMERIC.test(c.type || ''));
+          var on = ticked ? ticked.indexOf(q2) >= 0 : !otherFact && !c.masked && (cols.indexOf(c) < 8 || NUMERIC.test(c.type || ''));
           return h('label', { class: 'bx-check' }, h('input', { type: 'checkbox', name: 'f', value: q2, checked: on }),
             ' ' + c.name + (c.masked ? ' (masked)' : ''));
         })));

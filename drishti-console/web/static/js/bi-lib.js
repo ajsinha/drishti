@@ -37,7 +37,24 @@
   };
   B.q = (sel, scope) => (scope || document).querySelector(sel);
   B.qa = (sel, scope) => Array.prototype.slice.call((scope || document).querySelectorAll(sel));
-  B.clear = (el) => { while (el.firstChild) { el.removeChild(el.firstChild); } return el; };
+  // a focused field removed here may commit on its way out (Chrome fires blur and change), and that commit may redraw this very element: a child already
+  // taken out by that nested redraw is skipped, never a NotFoundError
+  B.clear = (el) => {
+    while (el.firstChild) {
+      const c = el.firstChild;
+      try { el.removeChild(c); } catch (e) { if (c.parentNode === el) { throw e; } }
+    }
+    return el;
+  };
+  /** Commits the field being edited before a save (Ctrl+S, the Save button, Publish, a tab switch): fields commit on change, which the browser fires on
+   *  blur, so the focused field is blurred (its change handler runs now, while the save waits) and focused again when it is still on the page. */
+  B.commitFocus = (scope) => {
+    const el = document.activeElement;
+    if (!el || el === document.body || !/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || (el.closest && el.closest('.CodeMirror')) || (scope && !scope.contains(el))) { return; }
+    const at = el.selectionStart;
+    el.blur();
+    if (el.isConnected) { el.focus(); try { if (at != null && el.setSelectionRange) { el.setSelectionRange(at, at); } } catch (e) { /* not a text field */ } }
+  };
   B.icon = (name) => B.h('i', { class: 'bi bi-' + name, 'aria-hidden': 'true' });
   B.id2path = (id) => encodeURIComponent(id).replace(/%3A/g, ':');
   B.clone = (o) => JSON.parse(JSON.stringify(o));
@@ -59,6 +76,8 @@
       if (!r.ok) {
         const e = new Error((data.code ? data.code + ' ' : '') + (data.detail || r.statusText));
         e.code = data.code; e.status = r.status; e.detail = data.detail || r.statusText;
+        if (Array.isArray(data.problems)) { e.problems = data.problems; }
+        if (data.fix) { e.fix = data.fix; }
         throw e;
       }
       return data;
@@ -351,6 +370,32 @@
     main.addEventListener('change', apply);
     return apply;
   };
+
+  /** Every tab list of the BI pages takes the keys of the ARIA tabs pattern: ArrowLeft and ArrowRight move to the next tab (and show it), Home and End to the
+   *  first and last; only the selected tab is in the Tab order. A tab list that handles its own keys says so with data-own-keys. */
+  if (!B.tabKeys) {
+    B.tabKeys = true;
+    const roving = (list) => { B.qa('[role=tab]', list).forEach((t) => { t.tabIndex = t.getAttribute('aria-selected') === 'true' ? 0 : -1; }); };
+    document.addEventListener('keydown', (e) => {
+      const tab = e.target && e.target.closest ? e.target.closest('[role=tab]') : null;
+      const list = tab && tab.closest('[role=tablist]');
+      if (!list || e.defaultPrevented || list.hasAttribute('data-own-keys') || e.altKey || e.ctrlKey || e.metaKey) { return; }
+      const tabs = B.qa('[role=tab]', list).filter((t) => !t.hidden && !t.disabled);
+      const i = tabs.indexOf(tab);
+      const to = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+      if (to === undefined || i < 0) { return; }
+      e.preventDefault();
+      const next = tabs[(to + tabs.length) % tabs.length];
+      next.focus();
+      next.click();
+      window.setTimeout(() => roving(list), 0);
+    });
+    const init = () => B.qa('[role=tablist]').filter((l) => !l.hasAttribute('data-own-keys')).forEach((l) => {
+      roving(l);
+      l.addEventListener('click', () => window.setTimeout(() => roving(l), 0));
+    });
+    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { window.setTimeout(init, 0); }
+  }
 
   B.ROW_PX = 56;                 // the height of one grid row of a report, in pixels (also in bi-report.css)
   B.GAP_PX = 10;

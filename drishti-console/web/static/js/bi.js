@@ -390,6 +390,21 @@
   // -- One item ---------------------------------------------------------------------------------------------------------
   function item() {
     var id = canvas.getAttribute('data-item'), it = null, note = null;
+    /** What an upgrade could not convert in this item (the server's migrationProblems): the item kept its text; said at the top, with the step and the place. */
+    function migration() {
+      var old = q('[data-migration]');
+      if (old) { old.remove(); }
+      var ps = (it && it.migrationProblems) || [];
+      if (!ps.length) { return; }
+      var box = h('section', { class: 'bi-sec bi-warn', 'data-migration': String(ps.length), role: 'alert', 'aria-labelledby': 'iMig' },
+        h('h2', { id: 'iMig', text: 'The upgrade could not convert this ' + (it.kind || 'item') }),
+        h('p', { text: 'It keeps its earlier text and still works as before; fix what is listed (Edit, or the YAML) and save, and the next start converts it.' }),
+        h('ul', {}, ps.map(function (p) {
+          return h('li', { 'data-migration-step': p.step || '' }, h('strong', { text: (p.step || 'migration') + ': ' }), p.where ? h('code', { text: p.where }) : null, p.where ? ' ' : null,
+            p.problem || p.detail || p.message || '', p.since ? h('small', { class: 'text-muted-d', text: ' (since ' + String(p.since).replace('T', ' ').slice(0, 16) + ')' }) : null);
+        })));
+      q('[data-msg]').after(box);
+    }
     var path = '/items/' + encodeURIComponent(id).replace(/%3A/g, ':');
     function show(x) {
       it = x;
@@ -405,7 +420,7 @@
       star.setAttribute('aria-pressed', it.favourite ? 'true' : 'false'); clear(star); star.appendChild(icon(it.favourite ? 'star-fill' : 'star'));
       q('[data-body]').textContent = it.body || '(empty)';
       q('[data-body-is]').textContent = it.bodyIs !== 'draft' ? 'published version' : it.status === 'proposed' ? 'draft, proposed for review (frozen)' : it.status === 'published' ? 'draft, the same as the published version' : it.draftChanges ? 'draft, with changes not yet published' : 'draft';
-      actions(); form(); versions();
+      actions(); form(); versions(); migration();
       var open = q('[data-open-dataset]');
       if (open) { open.hidden = it.kind !== 'dataset'; open.href = '/bi/d/' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }
       var enc = encodeURIComponent(it.id).replace(/%3A/g, ':');
@@ -535,13 +550,36 @@
         if (targets.length) { sel.focus(); }
       }).catch(fail);
     }
-    var opened = false;
+    var opened = false, knownRoles = null;
+    /** The audience's roles picked, not typed: a tick per role the server knows (and the ones already named), kept in step with the text box (still there for any other role). */
+    function rolePicker(input) {
+      var box = q('[data-audience-roles]');
+      if (!box) { box = h('div', { class: 'bi-roles', 'data-audience-roles': '', role: 'group', 'aria-label': 'Roles in the audience' }); input.closest('label').after(box); }
+      var draw = function () {
+        var have = input.value.split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+        var all = (knownRoles || []).concat(have).filter(function (r, i, a) { return a.indexOf(r) === i; }).sort();
+        clear(box);
+        all.forEach(function (r) {
+          var cb = h('input', { type: 'checkbox', value: r, 'data-audience-role': r, checked: have.indexOf(r) >= 0 });
+          cb.addEventListener('change', function () {
+            var now = input.value.split(',').map(function (x) { return x.trim(); }).filter(function (x) { return x && x !== r; });
+            if (cb.checked) { now.push(r); }
+            input.value = now.join(', ');
+          });
+          box.appendChild(h('label', { class: 'bi-checkrow' }, cb, ' ' + r));
+        });
+      };
+      if (!input.hasAttribute('data-picker')) { input.setAttribute('data-picker', ''); input.addEventListener('change', draw); }
+      if (knownRoles) { draw(); return; }
+      api('GET', '/bi/model-api/roles').then(function (r) { knownRoles = (r && r.roles) || []; draw(); }).catch(function () { knownRoles = []; draw(); });
+    }
     function form() {
       var f = q('[data-edit]');
       if (!it.can.edit) { f.hidden = true; return; }
       f.elements.title.value = it.title; f.elements.description.value = it.description || ''; f.elements.tags.value = (it.tags || []).join(', ');
       f.elements.audienceRoles.value = (it.audience.roles || []).join(', '); f.elements.audienceUsers.value = (it.audience.users || []).join(', ');
       f.elements.audiencePacks.value = (it.audience.packs || []).join(', '); f.elements.body.value = it.body || '';
+      rolePicker(f.elements.audienceRoles);
       if (!opened && /[?&]edit=1/.test(window.location.search)) { opened = true; f.hidden = false; f.elements.body.focus(); }
     }
     q('[data-edit]').addEventListener('submit', function (e) {

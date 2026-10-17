@@ -26,6 +26,21 @@
    * @param o { onRetry(), buttons: [element] }
    * @returns {el, body, head, foot, busy(), result(res, ctx, draw), error(e), dispose()}
    */
+  /** A refusal that means "hidden for your role" (DRS-9163, hidden-for): said as such, with no Retry (trying again gives the same answer). */
+  B.notForRole = (e) => !!e && (e.code === 'DRS-9163' || /not available to (your|their|the reader's) role/i.test(String(e.detail || e.message || '')));
+
+  /** The datasets (model aliases) the reader's role has no row of: the server's meta.noAccess, else read from its notes ("you have no access to rows of a, b in this model"). */
+  B.noAccess = (meta) => {
+    const out = [].concat((meta && meta.noAccess) || []);
+    if (!out.length) {
+      [].concat((meta && meta.warnings) || []).forEach((w) => {
+        const m = /^you have no access to rows of (.+?) in this model/.exec(String(w));
+        if (m) { m[1].split(/,\s*/).forEach((a) => { if (out.indexOf(a) < 0) { out.push(a); } }); }
+      });
+    }
+    return out;
+  };
+
   B.frame = function (spec, o) {
     o = o || {};
     const title = h('h3', { class: 'bi-vis-title', text: spec.title || '' });
@@ -61,6 +76,16 @@
           foot.appendChild(h('span', { class: 'bi-vis-ms', 'data-ms': String(m.millis), text: res.rowCount + (res.rowCount === 1 ? ' row' : ' rows') + ' · ' + (m.cached ? 'from the cache' : (Math.round(m.millis * 10) / 10) + ' ms') + ' · ' + m.layer + (m.rollup ? ' (' + m.rollup + ')' : '') }));
           if (m.masked && m.masked.length) { foot.appendChild(h('span', { class: 'bi-vis-masked', title: 'Masked for you: ' + m.masked.join(', '), text: ' · masked' })); }
           if (res.rowCount >= (res.limit || 0) && res.limit) { foot.appendChild(h('span', { text: ' · cut at ' + res.limit })); }
+          const none = B.noAccess(m);
+          if (none.length) {                                                   // the reader's role has no row rule on a dataset: said, never "no rows for this selection"
+            const words = 'Your role has no rows of ' + none.join(', ') + ' in this model';
+            foot.appendChild(h('span', { class: 'bi-vis-noaccess-note', 'data-no-access': none.join(','), text: ' · ' + words }));
+            if (!res.rowCount) {
+              drop();
+              B.clear(body).appendChild(h('div', { class: 'bi-vis-empty bi-vis-noaccess', role: 'status', 'data-no-access-why': none.join(',') }, B.icon('shield-lock'),
+                h('p', { text: words + ': no rule of the model gives it any, so this visual is empty for you. The model\'s owner can add a rule for your role (its Security tab).' })));
+            }
+          }
         }
       },
       error(e) {
@@ -69,6 +94,13 @@
         el.classList.add('bi-vis-failed');
         el.removeAttribute('aria-busy');
         B.clear(body);
+        if (B.notForRole(e)) {                                                 // hidden for the reader's role (DRS-9163): an answer, not a failure, so no Retry
+          el.classList.add('bi-vis-noaccess-frame');
+          body.appendChild(h('div', { class: 'bi-vis-error bi-vis-noaccess', role: 'status', 'data-not-for-role': e.code || '' }, B.icon('eye-slash'),
+            h('strong', { text: ' Not available to your role' }), h('p', { text: 'This visual uses a field or measure the model keeps from your role. Ask the model\'s owner if you need it.' })));
+          foot.textContent = '';
+          return;
+        }
         const retry = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-retry', text: 'Retry' });
         retry.addEventListener('click', () => { if (o.onRetry) { o.onRetry(); } });
         body.appendChild(h('div', { class: 'bi-vis-error', role: 'status' }, h('strong', { text: e.code || 'Error' }), h('p', { text: e.detail || e.message }), o.onRetry ? retry : null));

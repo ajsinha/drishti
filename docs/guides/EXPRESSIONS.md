@@ -1398,13 +1398,16 @@ drishti.py bi expr convert "[MTM] / [Trades]"     # measure('MTM') / measure('Tr
 ### 8.1 In the console: the expression editor
 
 Every place the console takes an expression uses one editor: a model's **Measures** tab (*Write a formula* and each measure's formula), a report's
-**New measure for this report** (Fields pane), the dataset wizard's **Rows** filter and **Worked-out columns**, and the guided tables builder's
-formulas. It never parses DEL itself: completion comes from the model and the server's catalogue (`GET /api/v1/bi/expr/functions`, only the
+**New measure for this report** (Fields pane), the dataset wizard's **Rows** filter, **Worked-out columns** and **SQL view** (Drishti SQL: the model's
+fields and `MEASURE('…')` completed, `/sql/validate` as the check), a model's **free row rule** (Security tab, rule scope, `user.*` completed), and the
+guided tables builder's formulas. It never parses DEL itself: completion comes from the model and the server's catalogue (`GET /api/v1/bi/expr/functions`, only the
 functions that work now), and every check is the server's (`POST /api/v1/bi/expr/validate`, debounced as you type).
 
 | You do | The editor does |
 |---|---|
-| type part of a name | lists the fields (with type, meaning and format), the measures and the functions that match; ↑ ↓ choose, Enter or Tab take one, Esc closes, Ctrl+Space opens the list anywhere |
+| type part of a name | lists the fields (with type, meaning and format), the measures and the functions that match; ↑ ↓ choose, Enter or Tab take one, Esc closes, Ctrl+Space opens the list anywhere. The order: a field whose whole name starts with what you typed (`status` for `sta`), then the functions (`sum` for `su`), then the fields matched by their column (`trade.summary`) |
+| type inside `count(` | the model's datasets (aliases) first: `count(trade)` counts its rows |
+| type inside `sum(`, `avg(`, `min(`, `max(` | the numeric fields first, text last |
 | pick a measure | writes `measure('Sum of mtm')` (a name with spaces or symbols needs nothing more); a word starting with a capital lists measures first |
 | pick a function | writes `sum(` and shows its **card**: the signature, one line, one example, *More in the guide* (this page, at the function) |
 | type inside a call | the card stays; after `,` the call's keyword arguments are offered (`where=`, `by=`, `desc=`) |
@@ -1424,6 +1427,15 @@ A bare column in a measure is the most common slip. The server answers `DRS-9127
 *wrap it: sum(trade.mtm)*; the button puts the fix in place of the column (the problem's `at` span), so `trade.mtm * 2` becomes `sum(trade.mtm) * 2`:
 
 ![trade.mtm * 2 in the editor, the problem DRS-9127 under it and a button Use sum(trade.mtm) * 2](img/bi-languages/expr-editor-problem.jpg)
+
+When the server's problem carries no replacement, the editor offers its own fix, always as a button and always checked again by the server:
+
+| The problem | The button |
+|---|---|
+| a bracket left open (`sum(trade.mtm`) | **Use** `sum(trade.mtm)`: the missing `)` added |
+| `=` written for a comparison (`where=trade.status = 'Live'`) | **Use** `… trade.status == 'Live'` (a keyword argument such as `where=` is left alone) |
+| a name the model does not have (`DRS-9152`, `sum(trade.mtmm)`) | the server's *did you mean*, else the nearest field or measure: **Use** `sum(trade.mtm)` |
+| any fix that would sum, average or range over a text column | never offered (a sum of `trade.status` is no fix) |
 
 The old syntax is refused with `DRS-9100` (a warning only where a site sets `legacy: warn`); its fix button writes the converter's text (`[Sum of mtm] * 2` becomes
 `measure('Sum of mtm') * 2`). **Try it** then asks the server, as you, on the saved draft:
