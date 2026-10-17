@@ -23,6 +23,9 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 from conftest import CONSOLE, FakeBackend  # noqa: E402
 from test_live_tabs_browser import browser  # noqa: E402,F401 - the shared browser fixture
 from test_page_widths_browser import AUDIT, TARGETS  # noqa: E402
+from scratch_ports import worker_port  # noqa: E402
+
+PORT = worker_port(17958)
 
 
 @pytest.fixture(scope="module")
@@ -34,14 +37,14 @@ def about_console():
 
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = FakeBackend()
-    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=17958, log_level="warning", timeout_graceful_shutdown=2))
+    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=PORT, log_level="warning", timeout_graceful_shutdown=2))
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
     deadline = time.monotonic() + 15
     while not server.started and time.monotonic() < deadline:
         time.sleep(0.05)
     assert server.started, "the console did not start"
-    yield "http://127.0.0.1:17958"
+    yield f"http://127.0.0.1:{PORT}"
     server.should_exit = True
     thread.join(10)
 

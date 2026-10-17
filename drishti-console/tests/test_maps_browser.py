@@ -38,7 +38,9 @@ from playwright.sync_api import sync_playwright  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 CONSOLE = ROOT / "drishti-console"
-SERVER_PORT, CONSOLE_PORT = 18941, 17941
+from scratch_ports import worker_ports  # noqa: E402
+
+SERVER_PORT, CONSOLE_PORT = worker_ports(18941, 17941)
 BASE = f"http://127.0.0.1:{CONSOLE_PORT}"
 REPORT = BASE + "/bi/r/file:report:world-economics"
 JAVA = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"

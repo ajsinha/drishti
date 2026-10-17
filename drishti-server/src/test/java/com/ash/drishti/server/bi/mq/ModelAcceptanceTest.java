@@ -175,6 +175,17 @@ class ModelAcceptanceTest {
                         - { role: [bi-risk, bi-analyst, report-author, admin], where: "true" }
                       masked: [mtm]
                     """);
+            Files.writeString(datasets.resolve("acc-sched.dataset.yaml"), """
+                    rachana: 2
+                    dataset: acc-sched
+                    version: 1.0.0
+                    source: { connector: acc-lake, kind: trade }
+                    grain: { keys: [id] }
+                    refresh: { schedule: "daily 06:00", on-load: true }
+                    columns:
+                      desk:     { type: string }
+                      notional: { type: decimal, aggregate: sum }
+                    """);
             Files.writeString(models.resolve("acc-model.model.yaml"), """
                     rachana: 2
                     model: acc-model
@@ -604,6 +615,15 @@ class ModelAcceptanceTest {
         assertThat(st.path("trigger").asText()).contains("wes");
         assertThat(ok(call("POST", "/api/v1/bi/mq", reader("rita"), q)).path("rows")).as("the same answer after the rebuild").isEqualTo(before);
         call("POST", path, reader("ann"), Map.of()).andExpect(status().isForbidden());   // a refresh is an author's
+    }
+
+    @Test @Order(11)
+    void aScheduledDatasetOfTheModelLayerShowsItsScheduleNotOnDemand() throws Exception {
+        // drill 2.2.0: the refresh state of a rachana 2 dataset said "on demand" although its refresh: runs on the scheduler
+        JsonNode st = ok(call("GET", "/api/v1/bi/datasets/file:dataset:acc-sched/refresh", reader("wes"), null));
+        assertThat(st.path("scheduled").asBoolean()).as(st.toString()).isTrue();
+        assertThat(st.path("tables").path(0).path("schedule").asText()).as(st.toString()).contains("06:00");      // its one table's job
+        assertThat(st.toString()).doesNotContain("on demand");
     }
 
     // ---- publishing: the tests gate, the contract's semver, and readers pinned to a major --------------------------------

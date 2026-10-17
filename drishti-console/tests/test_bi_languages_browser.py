@@ -13,13 +13,13 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Wave A of the BI design, console lane, in Chromium (docs/architecture/BI_DESIGN.md section 12.2) over the real server and console on scratch ports
-18912 and 17912 (the W1 model stack of tests/test_w1_model_designer_browser.py: security on, the trading and banking-core packs, a small file lake of
+18916 and 17916 (the W1 model stack of tests/test_w1_model_designer_browser.py: security on, the trading and banking-core packs, a small file lake of
 trades and desks). Checked: the dataset wizard makes a dataset with a column subset, a filter, an explicit grain with a de-duplication, a formula column
 and a grouping without typing YAML (the ExpressionEditor completing the columns); the ExpressionEditor in the model designer completes fields, measures
 (writing measure('...')) and functions, shows the call's card and the server's problems; field properties, perspectives and Preview as a role in the
 model designer; the Query panel's MQ and SQL views; a save on a published model makes a draft and Publish follows; a phone width without sideways scroll.
 
-Skipped when Playwright, Chromium or the built server jar is missing, or a scratch port is in use. Never run with pytest -n (the ports are fixed)."""
+Skipped when Playwright, Chromium or the built server jar is missing, or a scratch port is in use. Each pytest-xdist worker adds 100 to the ports (tests/scratch_ports.py)."""
 from __future__ import annotations
 
 import os
@@ -34,9 +34,8 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import test_w1_model_designer_browser as w1  # noqa: E402
 from bi_stack import listening  # noqa: E402
 
-w1.SERVER_PORT, w1.CONSOLE_PORT = 18912, 17912
-w1.SERVER, w1.CONSOLE_URL = f"http://127.0.0.1:{w1.SERVER_PORT}", f"http://127.0.0.1:{w1.CONSOLE_PORT}"
-CONSOLE_URL = w1.CONSOLE_URL
+PORTS = w1.worker_ports(18916, 17916)       # this file's own ports (plus the pytest-xdist worker offset): the stack fixture switches w1 to them
+CONSOLE_URL = f"http://127.0.0.1:{PORTS[1]}"
 # the server runs a Python column through the console's sandboxed runner, started with this Python (it has pandas)
 os.environ.setdefault("DRISHTI_BI_TRANSFORM_PYTHON", sys.executable)
 os.environ.setdefault("DRISHTI_BI_TRANSFORM_RUNNER", str(Path(__file__).resolve().parents[1] / "core" / "transform_cli.py"))
@@ -62,6 +61,7 @@ def shoot(page, selector, name, max_height=760):
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
+    w1.use_ports(PORTS)
     for port in (w1.SERVER_PORT, w1.CONSOLE_PORT):
         if listening(port):
             pytest.skip(f"port {port} is in use: stop whatever listens there")

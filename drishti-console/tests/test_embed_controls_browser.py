@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Controls inside <drishti-view> (ELEMENTS.md, RUPAKA.md 8.1) in Chromium, Firefox and WebKit, against a host application on another origin and a
-real scratch server (the stack of test_embed_elements_browser.py, which this file reuses: ports 18969/17969/17968 by default; set
+real scratch server (the stack of test_embed_elements_browser.py, which this file reuses: ports 18966/17966/17965 by default; set
 DRISHTI_ELEMENTS_SERVER_PORT, DRISHTI_ELEMENTS_CONSOLE_PORT and DRISHTI_ELEMENTS_HOST_PORT to run it beside another run).
 
 What is checked: the element draws the Sutra's controls in its shadow root; the `controls` attribute sets their values; a change asks the
@@ -22,6 +22,7 @@ host as a composed `drishti:controls` event and the live subscription is built w
 
     drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_embed_controls_browser.py"""
 import json
+import os
 import re
 
 import pytest
@@ -30,6 +31,10 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 from playwright.sync_api import expect  # noqa: E402
 
 from test_embed_elements_browser import SR, browser, host, stack  # noqa: E402,F401 - fixtures and helpers
+from scratch_ports import worker_ports  # noqa: E402
+
+# this file's own (server, console, host) ports plus the pytest-xdist worker offset: the stack of test_embed_elements_browser.py switches to them
+PORTS = worker_ports(*(os.environ.get(k, d) for k, d in (("DRISHTI_ELEMENTS_SERVER_PORT", 18966), ("DRISHTI_ELEMENTS_CONSOLE_PORT", 17966), ("DRISHTI_ELEMENTS_HOST_PORT", 17965))))
 
 IRS = "MX-20000001"
 LEG = f"{SR}.querySelectorAll('#p-schedule tbody tr')"

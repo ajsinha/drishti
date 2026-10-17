@@ -109,7 +109,12 @@
     only = { panel: opts.panel || '', path: opts.path || '' };
     host.open('discussion');
     aim(opts.panel ? 'panel:' + opts.panel : opts.path ? 'field:' + opts.path : 'entity');
-    return load().then(function () { box.focus(); });
+    var moved = false, mark = function () { moved = true; };     // a slow answer must not pull the focus back from where the reader has since gone
+    document.addEventListener('focusin', mark, true);
+    return load().then(function () {
+      document.removeEventListener('focusin', mark, true);
+      if (!moved && host.isOpen() && host.tab() === 'discussion') { box.focus(); }
+    });
   }
 
   // one comment box submits a thread, another a reply: the answer's warnings and who was not told are shown to the writer

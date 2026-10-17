@@ -51,7 +51,7 @@
       <input id="pkFolder" class="bs-file" type="file" webkitdirectory directory multiple data-folder></label>
       <button type="button" class="btn-pill btn-ghost" data-cancel-read hidden>Cancel reading</button></p>
     <div class="pk-anon">
-      <input type="checkbox" id="pkAnon" data-anonymise checked> <label for="pkAnon"><b>Anonymise samples</b></label>
+      <label class="pk-check" for="pkAnon"><input type="checkbox" id="pkAnon" data-anonymise checked aria-describedby="pkAnonHint"> <b>Anonymise samples</b></label>
       <p class="pk-hint text-muted-d" id="pkAnonHint">The documents the pack keeps (its samples, tests and catalogue) have their names, ids and amounts replaced, the same value by the
         same token everywhere; dates and short vocabulary (statuses, sides, currencies, product types) are kept. On by default for data files.
         It changes nothing in your data: the full file is loaded as it is after the pack is deployed (Admin → Packs → the pack → Load data).</p>

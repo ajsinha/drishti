@@ -46,12 +46,21 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 from conftest import CONSOLE  # noqa: E402
+from scratch_ports import worker_ports  # noqa: E402
 
 ROOT = CONSOLE.parent
-SERVER_PORT, CONSOLE_PORT, HOST_PORT = (int(os.environ.get(k, d)) for k, d in (("DRISHTI_ELEMENTS_SERVER_PORT", 18969), ("DRISHTI_ELEMENTS_CONSOLE_PORT", 17969), ("DRISHTI_ELEMENTS_HOST_PORT", 17968)))
-SERVER = f"http://127.0.0.1:{SERVER_PORT}"
-CONSOLE_URL = f"http://127.0.0.1:{CONSOLE_PORT}"
-HOST = f"http://127.0.0.1:{HOST_PORT}"
+# (server, console, host) plus the pytest-xdist worker offset; a file that reuses this stack (test_embed_controls_browser.py) names its own PORTS
+PORTS = worker_ports(*(os.environ.get(k, d) for k, d in (("DRISHTI_ELEMENTS_SERVER_PORT", 18969), ("DRISHTI_ELEMENTS_CONSOLE_PORT", 17969), ("DRISHTI_ELEMENTS_HOST_PORT", 17968))))
+
+
+def use_ports(ports) -> None:
+    """Points the stack and the helpers at the running file's (server, console, host) ports, never whichever file was imported last."""
+    global SERVER_PORT, CONSOLE_PORT, HOST_PORT, SERVER, CONSOLE_URL, HOST
+    SERVER_PORT, CONSOLE_PORT, HOST_PORT = ports
+    SERVER, CONSOLE_URL, HOST = (f"http://127.0.0.1:{p}" for p in ports)
+
+
+use_ports(PORTS)
 SECRET = os.environ.get("DRISHTI_ELEMENTS_TOKEN_SECRET", "poc-scratch-secret-0123456789abcdef0123")
 APP_ID = "elements-demo"
 KEY = json.loads((ROOT / "tools/elements-demo/demo-host-key.json").read_text())
@@ -141,7 +150,8 @@ class Stack:
 
 
 @pytest.fixture(scope="module")
-def stack(tmp_path_factory):
+def stack(request, tmp_path_factory):
+    use_ports(getattr(request.module, "PORTS", PORTS))
     for port in (CONSOLE_PORT, HOST_PORT):
         if _listening(port):
             pytest.skip(f"port {port} is in use: stop whatever listens there (this test starts its own console and host)")

@@ -911,7 +911,20 @@ public final class DatasetService {
     public Map<String, Object> refreshState(Principal p, String id) {
         BiStore.Item item = datasetItem(p, id);
         if (layerDatasetName(p, item) != null) {
-            return refresher == null ? Map.of("enabled", false, "scheduled", false) : refresher.status(item.id());
+            if (refresher == null) {
+                return Map.of("enabled", false, "scheduled", false);
+            }
+            // a `refresh:` schedule is run by the scheduler on the implicit one-table dataset (as its table's job, beside Refresh now's state under the
+            // same id): show the schedule and its state, not "on demand"
+            String body = bi.bodyFor(p, item);
+            DatasetParser.Result r = parse(item.id(), body);
+            if (r.ok()) {
+                Map<String, Object> scheduled = refresher.status(new QueryService.Loaded(item.id(), Layers.key(item.id()), r.dataset(), hash(body)));
+                if (Boolean.TRUE.equals(scheduled.get("scheduled"))) {
+                    return scheduled;
+                }
+            }
+            return refresher.status(item.id());
         }
         QueryService.Loaded ds = loaded(p, item);
         return refresher == null ? Map.of("enabled", false, "scheduled", false) : refresher.status(ds);
