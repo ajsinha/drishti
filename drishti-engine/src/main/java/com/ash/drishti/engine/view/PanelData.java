@@ -37,10 +37,18 @@ public sealed interface PanelData {
      * @param search the panel offers a filter box in its heading (Sutra option {@code search: false} turns it off)
      * @param pivot the Pivot tab the Sutra opts into ({@code pivot:}): its fields and the arrangement it opens with; null without one
      * @param expand levels shown open at first (Sutra {@code expand}); present only on a tree, a table whose Sutra says {@code children}
+     * @param levels the deeper levels a row drills into (Sutra {@code levels}): each level's title and columns; null for a plain table
+     * @param root the first step of the breadcrumb (Sutra {@code root}, read against the document), or null
+     * @param emptyLabel the words shown when there are no rows (Sutra {@code empty}), or null for the usual "No data available"
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     record Table(List<String> columns, List<Boolean> numeric, List<Row> rows, Row total, String more, boolean search,
-            java.util.Map<String, Object> pivot, Integer expand) implements PanelData {
+            java.util.Map<String, Object> pivot, Integer expand, List<Level> levels, String root, String emptyLabel) implements PanelData {
+
+        public Table(List<String> columns, List<Boolean> numeric, List<Row> rows, Row total, String more, boolean search,
+                java.util.Map<String, Object> pivot, Integer expand) {
+            this(columns, numeric, rows, total, more, search, pivot, expand, null, null, null);
+        }
 
         public Table(List<String> columns, List<Boolean> numeric, List<Row> rows, Row total, String more) {
             this(columns, numeric, rows, total, more, true, null, null);
@@ -62,9 +70,16 @@ public sealed interface PanelData {
      * @param path document path of the row, for live patches
      * @param children the rows nested under this one (Sutra {@code children}), each with its own children; absent for a leaf
      * @param pick the value a click on the row sets in a control ({@code on-select}); absent when the panel does not select
+     * @param crumb on a table with {@code levels}: the row's name in the breadcrumb ("Leg 2 · Float"), else absent
+     * @param kidsTotal on a table with {@code levels}: the total row of the rows this one drills into, else absent
      */
     record Row(List<Cell> cells, boolean highlight, String path, @JsonInclude(JsonInclude.Include.NON_EMPTY) List<Row> children,
-            @JsonInclude(JsonInclude.Include.NON_NULL) String pick) {
+            @JsonInclude(JsonInclude.Include.NON_NULL) String pick, @JsonInclude(JsonInclude.Include.NON_NULL) String crumb,
+            @JsonInclude(JsonInclude.Include.NON_NULL) Row kidsTotal) {
+
+        public Row(List<Cell> cells, boolean highlight, String path, List<Row> children, String pick) {
+            this(cells, highlight, path, children, pick, null, null);
+        }
 
         public Row(List<Cell> cells, boolean highlight, String path, List<Row> children) {
             this(cells, highlight, path, children, null);
@@ -74,6 +89,15 @@ public sealed interface PanelData {
             this(cells, highlight, path, null, null);
         }
     }
+
+    /**
+     * One level a table's rows drill into (Sutra {@code levels}).
+     *
+     * @param title what the rows of the level are ("Cash flows")
+     * @param columns header labels of the level
+     * @param numeric per column, whether it is right-aligned
+     */
+    record Level(String title, List<String> columns, List<Boolean> numeric) {}
 
     /**
      * {@code tabs}.

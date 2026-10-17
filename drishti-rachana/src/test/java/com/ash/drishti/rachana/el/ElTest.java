@@ -62,6 +62,17 @@ class ElTest {
     }
 
     @Test
+    void flattenJoinsTheListsOfEveryElementAndNonblankSkipsEmptyText() {
+        assertThat(eval("size(flatten($.legs[*].rows))")).isEqualTo(2L);              // leg 2 has no rows: nothing added for it
+        assertThat(eval("sum(flatten($.legs[*].rows), 'a')")).isEqualTo(3.5);
+        assertThat(eval("flatten($.tradeId)")).isNull();
+        assertThat(eval("size(flatten($.legs))")).isEqualTo(2L);                       // elements that are not lists are kept
+        assertThat(eval("nonblank('', '  ', $.nope, $.cp.name)")).isEqualTo("Northbridge");
+        assertThat(eval("coalesce('', $.cp.name)")).isEqualTo("");                       // coalesce keeps an empty text, as before
+        assertThat(eval("nonblank('', null)")).isNull();
+    }
+
+    @Test
     void rowContextAndBareIdentifiers() {
         EvalContext row = EvalContext.of(DOC, F).withRow(DOC.at("legs[1]"), 1);
         assertThat(Values.simplify(EL.compile("label + ' #' + #index").eval(row))).isEqualTo("Receive SOFR #1");

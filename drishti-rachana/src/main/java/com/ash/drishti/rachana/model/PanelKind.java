@@ -25,12 +25,12 @@ import java.util.Set;
  */
 public enum PanelKind {
     KV(Set.of(), Set.of("rows", "columns", "fields")),
-    TABLE(Set.of("rows"), Set.of("totalLabel", "limit", "moreLabel", "link", "search", "pivot", "children", "expand")),
+    TABLE(Set.of("rows"), Set.of("totalLabel", "limit", "moreLabel", "link", "search", "pivot", "children", "expand", "levels", "crumb", "root", "empty")),
     TABS(Set.of("each"), Set.of("tabTitle", "layout")),
     LINE(Set.of(), Set.of("rows", "source", "x", "y", "mark", "footer", "unit", "fmt")),
     AREA(Set.of("rows"), Set.of("x", "series", "limit", "limitLabel", "unit")),
     HBAR(Set.of("rows"), Set.of("label", "value", "fmt", "tone")),
-    LADDER(Set.of("rows"), Set.of("totalLabel", "highlight", "search", "pivot", "children", "expand")),
+    LADDER(Set.of("rows"), Set.of("totalLabel", "highlight", "search", "pivot", "children", "expand", "levels", "crumb", "root", "empty")),
     LINKS(Set.of(), Set.of()),
     STATUS(Set.of(), Set.of("fields")),
     PROVENANCE(Set.of(), Set.of()),

@@ -17,7 +17,7 @@
 {% block title %}New pack · {{ PRODUCT }}{% endblock %}
 {% block screen %}build{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/build-pack.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/build-pack.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drill.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm bs pk" data-pack-new data-sample-docs="{{ limits.sampleDocs }}" data-read-rows="{{ read_rows }}" data-read-mb="{{ read_mb }}"
@@ -110,5 +110,6 @@
 <script src="/static/js/pack-read.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/pack-kinds.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/pack-preview.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drill.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/pack-new.js?v={{ ASSET_V }}"></script>
 {% endblock %}

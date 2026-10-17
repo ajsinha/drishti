@@ -326,6 +326,10 @@ public final class Binder {
         boolean[] masked = new boolean[cols.size()];          // a column with a masked value is never added up
         String childrenExpr = p.option("children").orElse(null);
         int[] budget = {limits.treeRows()};
+        List<LevelSpec> levels = levelSpecs(p);
+        if (!levels.isEmpty()) {
+            return drillTable(p, c, rows, origin, rowsPath, limit, cols, headers, numeric, highlight, levels, budget);
+        }
         for (int i = 0; i < rows.size(); i++) {
             EvalContext rc = c.eval().withRow(rows.get(i), origin == null ? i : origin[i]);   // #index counts the data's rows, not the shown ones
             for (int k = 0; k < cols.size() && childrenExpr == null; k++) {
@@ -373,7 +377,137 @@ public final class Binder {
         }
         boolean search = !p.option("search").map(String::trim).filter(v -> v.equalsIgnoreCase("false") || v.equalsIgnoreCase("no")).isPresent();
         return new PanelData.Table(headers, numeric, out, total, more, search, pivots.view(p).orElse(null),
-                childrenExpr == null ? null : ChartBinder.expandLevels(p));
+                childrenExpr == null ? null : ChartBinder.expandLevels(p), null, null, p.option("empty").orElse(null));
+    }
+
+    /** One level of a drill table ({@code levels:}): the rows a row opens to, its title, its breadcrumb name and its columns. */
+    record LevelSpec(String rows, String title, String crumb, List<Column> columns) {}
+
+    private static List<LevelSpec> levelSpecs(Panel p) {
+        if (!(p.options().get("levels") instanceof List<?> list)) {
+            return List.of();
+        }
+        List<LevelSpec> out = new ArrayList<>();
+        for (Object o : list) {
+            if (o instanceof Map<?, ?> m && m.get("rows") instanceof String rows) {
+                List<Column> cols = new ArrayList<>();
+                if (m.get("columns") instanceof List<?> cl) {
+                    for (Object x : cl) {
+                        if (x instanceof Map<?, ?> cm && cm.get("bind") instanceof String bind) {
+                            cols.add(new Column(cm.get("label") == null ? null : String.valueOf(cm.get("label")), bind,
+                                    cm.get("fmt") == null ? null : String.valueOf(cm.get("fmt")), cm.get("tone") == null ? null : String.valueOf(cm.get("tone")),
+                                    Boolean.TRUE.equals(cm.get("total")), Boolean.TRUE.equals(cm.get("link"))));
+                        }
+                    }
+                }
+                out.add(new LevelSpec(rows, m.get("title") == null ? null : String.valueOf(m.get("title")),
+                        m.get("crumb") == null ? null : String.valueOf(m.get("crumb")), List.copyOf(cols)));
+            }
+        }
+        return out;
+    }
+
+    private static List<Boolean> numericOf(List<Column> cols) {
+        return cols.stream().map(col -> col.fmt() != null && !col.fmt().equals("date") && !col.fmt().equals("text")).toList();
+    }
+
+    /**
+     * A table whose rows drill into deeper levels ({@code levels:}): every row carries its breadcrumb name, the rows it opens to
+     * (bound with that level's columns, {@code @} the row of the level above) and their total row; the first level keeps the
+     * table's own where, limit, highlight and total. Bounded like a tree by {@code drishti.panels.tree-rows}.
+     */
+    private PanelData drillTable(Panel p, BindContext c, DataNode rows, int[] origin, String rowsPath, int limit, List<Column> cols,
+            List<String> headers, List<Boolean> numeric, String highlight, List<LevelSpec> levels, int[] budget) {
+        String crumb = p.option("crumb").orElse(null);
+        List<PanelData.Row> out = new ArrayList<>();
+        List<EvalContext> shown = new ArrayList<>();
+        for (int i = 0; i < rows.size(); i++) {
+            EvalContext rc = c.eval().withRow(rows.get(i), origin == null ? i : origin[i]);
+            shown.add(rc);
+            if (i >= limit) {
+                continue;
+            }
+            String rowPath = rowsPath == null ? null : rowsPath + "[" + (origin == null ? i : origin[i]) + "]";
+            boolean hl = highlight != null && Values.truthy(eval(highlight, rc));
+            out.add(drillRow(cols, crumb, levels, 0, rc, rowPath, hl, budget));
+        }
+        PanelData.Row total = totalRow(cols, shown, p.option("totalLabel").orElse("Total"));
+        String more = rows.size() > limit
+                ? p.option("moreLabel").map(m -> Values.text(eval(m, c.eval()))).orElse((rows.size() - limit) + " more") : null;
+        List<PanelData.Level> heads = levels.stream().map(l -> new PanelData.Level(l.title(), l.columns().stream().map(Column::label).toList(),
+                numericOf(l.columns()))).toList();
+        String root = null;
+        if (p.option("root").isPresent()) {
+            try {
+                root = Values.text(Values.simplify(eval(p.option("root").get(), c.eval())));
+            } catch (RuntimeException e) {
+                root = null;                                  // a breadcrumb that cannot be read starts at the panel's title
+            }
+        }
+        boolean search = !p.option("search").map(String::trim).filter(v -> v.equalsIgnoreCase("false") || v.equalsIgnoreCase("no")).isPresent();
+        return new PanelData.Table(headers, numeric, out, total, more, search, null, null, heads, root, p.option("empty").orElse(null));
+    }
+
+    private PanelData.Row drillRow(List<Column> cols, String crumbExpr, List<LevelSpec> levels, int depth, EvalContext rc, String path,
+            boolean highlight, int[] budget) {
+        List<Cell> cells = new ArrayList<>(cols.size());
+        for (Column col : cols) {
+            cells.add(cell(col, rc, null));
+        }
+        String crumb;
+        try {
+            crumb = Values.text(Values.simplify(eval(crumbExpr == null ? "'#' + (#index + 1)" : crumbExpr, rc)));
+        } catch (RuntimeException e) {
+            crumb = "#" + (rc.index() + 1);
+        }
+        List<PanelData.Row> kids = new ArrayList<>();
+        PanelData.Row kidsTotal = null;
+        if (depth < levels.size()) {
+            LevelSpec level = levels.get(depth);
+            DataNode under = node(eval(level.rows(), rc));
+            boolean single = under.type() == com.ash.drishti.api.NodeType.OBJECT;
+            List<EvalContext> contexts = new ArrayList<>();
+            for (int j = 0; j < (single ? 1 : under.size()) && budget[0] > 0; j++) {
+                DataNode kid = single ? under : under.get(j);
+                if (kid.type() != com.ash.drishti.api.NodeType.OBJECT) {
+                    continue;
+                }
+                budget[0]--;
+                EvalContext kc = rc.withRow(kid, j);
+                contexts.add(kc);
+                kids.add(drillRow(level.columns(), level.crumb(), levels, depth + 1, kc, null, false, budget));
+            }
+            kidsTotal = totalRow(level.columns(), contexts, "Total");
+        }
+        return new PanelData.Row(cells, highlight, path, kids, null, crumb, kidsTotal);
+    }
+
+    /** The total row of {@code total: true} columns over these rows; null when no column is totalled. A masked value is never added up. */
+    private PanelData.Row totalRow(List<Column> cols, List<EvalContext> rows, String label) {
+        if (cols.stream().noneMatch(Column::total)) {
+            return null;
+        }
+        List<Cell> cells = new ArrayList<>();
+        for (Column col : cols) {
+            if (!col.total()) {
+                cells.add(Cell.of(null, ""));
+                continue;
+            }
+            double sum = 0;
+            boolean masked = false;
+            for (EvalContext rc : rows) {
+                Object x = el.compile(col.bind()).eval(rc);
+                if (Values.masked(x)) {
+                    masked = true;
+                    break;
+                }
+                double v = Values.number(x);
+                sum += Double.isNaN(v) ? 0 : v;
+            }
+            cells.add(cell(null, masked ? Values.mask() : Values.normalise(sum), col.fmt(), col.tone(), false, null));
+        }
+        cells.set(firstBlankBefore(cols), Cell.of(null, label));
+        return new PanelData.Row(cells, false, null);
     }
 
     /**

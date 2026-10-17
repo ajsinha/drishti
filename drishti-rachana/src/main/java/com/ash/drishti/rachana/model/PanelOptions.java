@@ -121,6 +121,51 @@ public final class PanelOptions {
         if (kind == PanelKind.HISTOGRAM && option.equals("markers")) {
             return markers(value);
         }
+        if ((kind == PanelKind.TABLE || kind == PanelKind.LADDER) && option.equals("levels")) {
+            return levels(what, value);
+        }
+        if ((kind == PanelKind.TABLE || kind == PanelKind.LADDER) && Set.of("crumb", "root", "empty").contains(option) && !(value instanceof String)) {
+            return Optional.of(what + " is text" + ("empty".equals(option) ? " (the words shown when there are no rows)" : " (an expression)") + ", not '" + value + "'");
+        }
+        return Optional.empty();
+    }
+
+    /** The most levels a table's rows may drill into. */
+    public static final int MAX_LEVELS = 6;
+    /** The keys of one level of {@code levels:}. */
+    public static final Set<String> LEVEL_KEYS = Set.of("rows", "title", "crumb", "columns");
+    private static final Set<String> LEVEL_COLUMN_KEYS = Set.of("label", "bind", "fmt", "tone", "total", "link");
+
+    /**
+     * {@code levels:} of a table or ladder: 1 to {@link #MAX_LEVELS} mappings, each with {@code rows} (an expression read with {@code @}
+     * the row of the level above), an optional {@code title}, {@code crumb} and {@code columns} (as a table's: label, bind, fmt, tone,
+     * total, link).
+     */
+    private static Optional<String> levels(String what, Object value) {
+        if (!(value instanceof List<?> list) || list.isEmpty() || list.size() > MAX_LEVELS) {
+            return Optional.of(what + " must be a list of 1 to " + MAX_LEVELS + " levels, each { rows, title, crumb, columns }");
+        }
+        for (Object o : list) {
+            if (!(o instanceof Map<?, ?> m) || !(m.get("rows") instanceof String)) {
+                return Optional.of(what + ": every level is a mapping with rows (an expression such as \"@.cashflows\"), title, crumb and columns");
+            }
+            for (Object k : m.keySet()) {
+                if (!LEVEL_KEYS.contains(String.valueOf(k))) {
+                    return Optional.of(what + ": a level takes rows, title, crumb and columns, not '" + k + "'");
+                }
+            }
+            if (m.get("columns") != null && !(m.get("columns") instanceof List<?>)) {
+                return Optional.of(what + ": the columns of a level are a list of { label, bind, fmt, tone, total }");
+            }
+            if (m.get("columns") instanceof List<?> cols) {
+                for (Object c : cols) {
+                    if (!(c instanceof Map<?, ?> cm) || !(cm.get("bind") instanceof String)
+                            || !cm.keySet().stream().allMatch(k -> LEVEL_COLUMN_KEYS.contains(String.valueOf(k)))) {
+                        return Optional.of(what + ": a column of a level is { label, bind, fmt, tone, total, link } with a bind");
+                    }
+                }
+            }
+        }
         return Optional.empty();
     }
 

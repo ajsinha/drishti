@@ -37,10 +37,10 @@ public final class SutraExpressions {
 
     /** Per panel kind, the options that hold expressions (the rest are field names or literals). */
     static final Map<PanelKind, Set<String>> EL_OPTIONS = Map.ofEntries(
-            Map.entry(PanelKind.KV, Set.of("rows")), Map.entry(PanelKind.TABLE, Set.of("rows", "where", "limit", "moreLabel", "children")),
+            Map.entry(PanelKind.KV, Set.of("rows")), Map.entry(PanelKind.TABLE, Set.of("rows", "where", "limit", "moreLabel", "children", "crumb", "root")),
             Map.entry(PanelKind.TABS, Set.of("each", "tabTitle")), Map.entry(PanelKind.LINE, Set.of("rows", "where", "source", "mark")),
             Map.entry(PanelKind.AREA, Set.of("where", "rows", "limit")), Map.entry(PanelKind.HBAR, Set.of("where", "rows")),
-            Map.entry(PanelKind.LADDER, Set.of("rows", "where", "highlight", "children")), Map.entry(PanelKind.GAUGE, Set.of("value", "max")),
+            Map.entry(PanelKind.LADDER, Set.of("rows", "where", "highlight", "children", "crumb", "root")), Map.entry(PanelKind.GAUGE, Set.of("value", "max")),
             Map.entry(PanelKind.LINKS, Set.of()), Map.entry(PanelKind.STATUS, Set.of()),
             Map.entry(PanelKind.PROVENANCE, Set.of()), Map.entry(PanelKind.MARKDOWN, Set.of()), Map.entry(PanelKind.SURFACE, Set.of("where", "rows")),
             Map.entry(PanelKind.WATERFALL, Set.of("where", "rows")), Map.entry(PanelKind.HISTOGRAM, Set.of("where", "rows")),
@@ -132,6 +132,24 @@ public final class SutraExpressions {
             for (Object f : fields) {
                 if (f instanceof Map<?, ?> m && m.get("bind") != null) {
                     expr(m.get("bind").toString(), p.location(), out);
+                }
+            }
+        }
+        if (p.options().get("levels") instanceof List<?> levels) {        // a drill table: each level's rows, crumb and column binds
+            for (Object l : levels) {
+                if (l instanceof Map<?, ?> m) {
+                    for (String k : List.of("rows", "crumb")) {
+                        if (m.get(k) instanceof String s) {
+                            expr(s, p.location(), out);
+                        }
+                    }
+                    if (m.get("columns") instanceof List<?> cols) {
+                        cols.forEach(c -> {
+                            if (c instanceof Map<?, ?> cm && cm.get("bind") instanceof String b) {
+                                expr(b, p.location(), out);
+                            }
+                        });
+                    }
                 }
             }
         }
