@@ -109,3 +109,18 @@
 @media (pointer: coarse) {
   .pk-step, .pk-item, .pk-tab { min-height: 44px; min-width: 44px; }
 }
+/* one big file: the type column and its types, pages for each value, anonymised samples */
+.pk-split { border: 1px solid var(--d-accent-tint); border-left: 3px solid var(--d-accent); border-radius: 0 8px 8px 0; padding: .5rem .75rem; margin: .5rem 0 .75rem; }
+.pk-types-h { margin: .35rem 0; font-weight: 600; color: var(--d-ink); }
+.pk-types { max-width: 40rem; }
+.pk-related { border: 1px solid var(--d-border); border-radius: 8px; padding: .4rem .75rem .6rem; margin: .5rem 0; min-width: 0; }
+.pk-related legend { font-size: .85rem; color: var(--d-muted); padding: 0 .3rem; }
+.pk-check { display: flex; align-items: center; gap: .5rem; min-height: 2.25rem; }
+.pk-check input, .pk-anon input { width: 1.1rem; height: 1.1rem; flex: none; }
+.pk-anon { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .5rem; margin: .6rem 0; }
+.pk-anon .pk-hint { flex-basis: 100%; margin: 0; }
+.pk-derived { border-style: dashed; }
+tr.pk-blank td { color: var(--d-faint); }
+@media (pointer: coarse) {
+  .pk-check, .pk-anon { min-height: 44px; }
+}

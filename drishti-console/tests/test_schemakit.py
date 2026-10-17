@@ -444,7 +444,11 @@ def test_real_samples_are_split_across_sutras():
     items = {i.name: i for i in build.prepare(pl, 4)}
     irs = items["trade-irs"]
     assert [s.source for s in irs.samples] == ["real"] * 4 and all(s.doc["productType"] == "IRS" for s in irs.samples)
-    assert len(items["trade-default"].samples) == 4
+    # one Sutra per type: every document has a type, so there is no catch-all; documents without one bring it back, counted
+    assert "trade-default" not in items
+    pl3 = P.make_plan(schemas("trade"), {"trade": docs + [{"tradeId": "T99", "productType": "", "tradeDate": "2026-03-01"}]})
+    assert [s.name for s in pl3.kind("trade").sutras][-1] == "trade-default"
+    assert any("1 document(s) have no productType" in w for w in pl3.warnings)
     # a variant with no real documents is topped up with synthetic ones
     docs2 = [d for d in docs if d["productType"] != "FUT"]
     pl2 = P.make_plan(schemas("trade"), {"trade": docs2})

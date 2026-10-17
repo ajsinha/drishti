@@ -2368,6 +2368,8 @@ read by both programs, so one set of variables configures both halves.
 | `builder.pack_read_max_mb` | `1024` | The most MB per file the page may be told to read before it stops the file and says so. |
 | `builder.pack_max_files` | `200` | Schema and data files in one plan. Over it: `413 DRS-5005`. |
 | `builder.pack_max_docs` | `5000` | Sampled documents in one plan request. |
+| `builder.pack_profile_rows_per_type` | `10000` | **Build → New pack**: rows of each type (each value of the type column, such as `PRODUCT_TYPE`) the page profiles as it streams the file: how often each field has a value, its types, digits written as text, and the size of every nested array at every depth. Every row is still counted, so the list of types and their row counts is exact. A type with fewer rows is profiled entirely. |
+| `builder.pack_design_samples_per_type` | `50` | Documents of each type the page keeps to design that type's Sutra: spread over the whole file and chosen for variety (optional arrays present and absent, different nested shapes); anonymised by default. |
 | `builder.pack_max_schema_kb` | `512` | The largest single schema file. |
 | `builder.pack_max_sutras` | `200` | Sutras one generated pack may have (a match column with many values makes many). |
 | `builder.pack_jobs_per_user` | `3` | Preview jobs one person may have running at once, and kept after they finish. Over it: `429 DRS-5005`. |

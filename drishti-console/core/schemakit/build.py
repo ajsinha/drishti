@@ -65,6 +65,50 @@ def _spaced(docs: list, n: int, key: str | None) -> list:
     return [ordered[(i * len(ordered)) // n] for i in range(n)]
 
 
+def shape_of(doc, prefix: str = "", out: set | None = None, depth: int = 0) -> set:
+    """The paths a document fills, with how each array is (``LEGS[]`` filled, ``EVENTS:empty``, ``EVENTS:absent`` is added by the caller)."""
+    out = set() if out is None else out
+    if isinstance(doc, dict) and depth < 8:
+        for k, v in doc.items():
+            p = f"{prefix}{k}"
+            if v is None or (isinstance(v, str) and not v.strip()):
+                continue
+            if isinstance(v, list):
+                out.add(p + (":empty" if not v else "[]"))
+                for item in v[:50]:
+                    shape_of(item, p + "[].", out, depth + 1)
+            elif isinstance(v, dict):
+                shape_of(v, p + ".", out, depth + 1)
+            else:
+                out.add(p)
+    return out
+
+
+def covering(docs: list, n: int, key: str | None) -> list:
+    """Up to ``n`` documents that together show every path the documents fill and every way an optional array comes (filled, empty,
+    absent): greedy, the document adding most new paths first; then spread over the key, as ``_spaced`` does."""
+    if len(docs) <= n:
+        return _spaced(docs, n, key)
+    arrays = {p.split(":")[0].removesuffix("[]") for d in docs for p in shape_of(d) if p.endswith(("[]", ":empty")) and "." not in p}
+    shapes = []
+    for d in docs:
+        s = shape_of(d)
+        s |= {f"{a}:absent" for a in arrays if a not in d}
+        shapes.append(s)
+    order = sorted(range(len(docs)), key=lambda i: str(docs[i].get(key)) if key and docs[i].get(key) is not None else str(i))
+    seen: set = set()
+    picked: list = []
+    while len(picked) < n:
+        best = max((i for i in order if i not in picked), key=lambda i: len(shapes[i] - seen), default=None)
+        if best is None or not (shapes[best] - seen):
+            break
+        picked.append(best)
+        seen |= shapes[best]
+    rest = [docs[i] for i in order if i not in picked]
+    out = [docs[i] for i in picked] + _spaced(rest, n - len(picked), key) if len(picked) < n else [docs[i] for i in picked]
+    return sorted(out, key=lambda d: str(d.get(key)) if key and d.get(key) is not None else json.dumps(d, sort_keys=True))
+
+
 def prepare(plan: Plan, n: int | None = None) -> list[Item]:
     """For every Sutra of every kind, its samples: real documents that match first (spread over the key), the schema's own ``examples``,
     then synthetic documents until there are ``n`` (and always at least two when the Sutra has no real match)."""
@@ -73,7 +117,7 @@ def prepare(plan: Plan, n: int | None = None) -> list[Item]:
     for kp in plan.kinds:
         for idx, sp in enumerate(kp.sutras):
             real = [d for d in kp.samples if sp.fallback or _matches(d, sp)]
-            picks = [Sample(f"sample-{i}", d, "real") for i, d in enumerate(_spaced(real, n, kp.key), 1)]
+            picks = [Sample(f"sample-{i}", d, "real") for i, d in enumerate(covering(real, n, kp.key), 1)]
             ex = [Sample(f"sample-example-{i}", d, "example") for i, d in enumerate(synth.examples_of(kp, sp), 1)] if kp.node else []
             samples = picks + ex[: max(0, n - len(picks))]
             need = max(0, n - len(samples)) if not picks else (max(0, 2 - len(samples)) if not sp.fallback else 0)
@@ -189,8 +233,27 @@ def pack_manifest(plan: Plan, kinds_dir_note: str = "") -> dict:
                 m["routes"][k.kind] = name
                 if k.key and k.date:
                     ing[k.kind] = {"key": k.key, "date": k.date}
+                elif k.key and k.snapshot:
+                    ing[k.kind] = {"key": k.key, "snapshot": True}      # no date field: stored under the day of the load
         if ing:
             m["ingest"] = ing
+    derived = [k for k in plan.kinds if k.template == "derived" and k.derived]
+    if derived:
+        # one derived connector builds every page-per-value kind from the documents of the kind it groups (CONNECTOR_FILES.md)
+        name = f"{p['name']}-pages"[:60]
+        m.setdefault("connectors", [])
+        m.setdefault("routes", {})
+        m.setdefault("connector-templates", {})
+        m["connectors"] = sorted(set(m["connectors"]) | {name})
+        settings: dict = {"refresh": "60s"}
+        for k in derived:
+            d = k.derived
+            settings[k.kind] = {"from": d["from"], "group-by": d["group-by"], "id-field": d["id-field"], "members": d["members"],
+                                "max-members": d["max-members"], "fields": d["fields"], "rows": d["rows"]}
+            m["routes"][k.kind] = name
+        m["connector-templates"][name] = {"plugin": "derived", "enabled": True, "kinds": sorted(k.kind for k in derived),
+                                          "description": "Pages for each value of a field (a counterparty, a portfolio, an index), built from the pack's own documents",
+                                          "settings": settings}
     if getattr(plan, "controls_note", None):
         m["x-controls"] = plan.controls_note
     return m
@@ -217,7 +280,7 @@ def assemble(plan: Plan, items: list[Item], drafts: dict, pack_dir: pathlib.Path
         shutil.rmtree(pack_dir)
     built = Built(pack_dir)
     for it in items:
-        text, shown = decorate.finalize(drafts[it.name], it.kp, it.sp)
+        text, shown = decorate.finalize(drafts[it.name], it.kp, it.sp, plan)
         built.shown.setdefault(it.kp.kind, set()).update(shown)
         f = pack_dir / "sutras" / it.kp.kind / f"{it.name}.v1.sutra.yaml"
         f.parent.mkdir(parents=True, exist_ok=True)
@@ -252,6 +315,9 @@ def assemble(plan: Plan, items: list[Item], drafts: dict, pack_dir: pathlib.Path
     (pack_dir / "pack.yaml").write_text(note + yaml.safe_dump(man, sort_keys=False, width=120, allow_unicode=True), encoding="utf-8")
     (pack_dir / "config").mkdir(exist_ok=True)
     (pack_dir / "config" / "about.yaml").write_text(decorate.about_yaml(plan, built.shown), encoding="utf-8")
+    fmts = pack_formats(plan, [s["yaml"] for s in built.sutras])
+    if fmts:
+        (pack_dir / "config" / "formats.yaml").write_text(yaml.safe_dump({"formats": fmts}, sort_keys=False), encoding="utf-8")
     built.todo = decorate.todo_count(plan)
     (pack_dir / "README.md").write_text(readme(plan, items, built), encoding="utf-8")
     if license_header:
@@ -259,6 +325,17 @@ def assemble(plan: Plan, items: list[Item], drafts: dict, pack_dir: pathlib.Path
             if p.suffix in (".yaml", ".md") and p.is_file() and not p.read_text(encoding="utf-8").startswith(license_header[:20]):
                 p.write_text(license_header + p.read_text(encoding="utf-8"), encoding="utf-8")
     return built
+
+
+ANON = ("\n- **Anonymised**: every sample document (in `tests/`, `samples/` and `catalog.json`) was anonymised before it was kept: names, ids "
+        "and amounts are replaced consistently (the same value, the same token), dates and short vocabulary (statuses, sides, currencies) are kept. "
+        "No value of the source data is in this pack.")
+PACK_FORMATS = {"price4": {"type": "number", "decimals": 4, "grouping": True}}
+
+
+def pack_formats(plan: Plan, texts: list) -> dict:
+    """The formats the generated Sutras use beyond the core ones (config/formats.yaml)."""
+    return {name: spec for name, spec in PACK_FORMATS.items() if any(f"'{name}'" in t or f'"{name}"' in t or f": {name}" in t for t in texts)}
 
 
 def readme(plan: Plan, items: list[Item], built: Built) -> str:
@@ -280,7 +357,7 @@ Generated from JSON Schema by schemakit (`docs/guides/SCHEMA_TO_PACK.md`). Nothi
 - `tests/<sutra>/`: samples named `sample-N.json` (real documents), `sample-example-N.json` (the schema's own examples) or
   `sample-synthetic-N.json` (generated from the schema: **synthetic**), and `expect.yaml`.
   Sutras tested on synthetic samples only: {syn}.
-- `samples/`: documents so the pack opens before any data source is connected.
+- `samples/`: documents so the pack opens before any data source is connected.{ANON if plan.settings.get("anonymised") else ""}
 - `config/about.yaml`: the *About this page* text from the schema descriptions; {built.todo} field(s) had no description and say `TODO`.
 
 ## Next steps

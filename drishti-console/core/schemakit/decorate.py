@@ -72,24 +72,27 @@ def header(text: str, kp: KindPlan, sp: SutraPlan) -> str:
 def strip_entries(kp: KindPlan, allowed: set | None = None) -> list[str]:
     out = []
     paths = [p for p in kp.strip if allowed is None or p.split(".")[0] in allowed]       # a variant's strip holds only its own fields
-    for i, p in enumerate(paths):
+    links = {l.field: l.to for l in kp.links if not l.many}
+    first_num = next((p for p in paths if kp.index.get(p) is not None and kp.index[p].role == "number"), None)
+    for p in paths:
         f = kp.index.get(p)
         if f is None:
             continue
-        parts = [f"label: {q(label_with_unit(f))}", f'bind: "$.{p}"']
+        bind = f"link($.{p}, '{links[p]}')" if p in links else f"$.{p}"
+        parts = [f"label: {q(label_with_unit(f))}", f"bind: {q(bind)}"]
         if f.fmt and f.role in ("number", "date", "datetime"):
             parts.append(f"fmt: {q('date' if f.role in ('date', 'datetime') else f.fmt)}")
         if f.role == "status":
             parts.append('tone: "status"')
         elif f.fmt.startswith("signed"):
             parts.append('tone: "sign"')
-        if i == (1 if kp.index.get(paths[0]) is not None and kp.index[paths[0]].role == "status" else 0) and f.role == "number":
+        if p == first_num:
             parts.append("emphasis: true")
         out.append("  - { " + ", ".join(parts) + " }")
     return out
 
 
-def body(text: str, kp: KindPlan, allowed: set | None = None) -> tuple[str, set]:
+def body(text: str, kp: KindPlan, allowed: set | None = None, relabel: bool = True) -> tuple[str, set]:
     """Labels, formats, panel titles, strip and link() applied to the draft; also the set of field paths the Sutra shows."""
     links = {l.field: l for l in kp.links if not l.many}
     top = {norm(f.path): f for f in kp.fields if "." not in f.path and "[" not in f.path}
@@ -137,7 +140,7 @@ def body(text: str, kp: KindPlan, allowed: set | None = None) -> tuple[str, set]
             if f is not None and f.path in hidden:
                 i += 1
                 continue
-            if f is not None:
+            if f is not None and relabel:
                 label = q(label_with_unit(f))
                 line = line.replace(f'label: "{mb.group("label")}"', f"label: {label}", 1)
                 if f.firm and f.fmt:
@@ -154,11 +157,16 @@ def body(text: str, kp: KindPlan, allowed: set | None = None) -> tuple[str, set]
     return "\n".join(out) + "\n", shown
 
 
-def finalize(text: str, kp: KindPlan, sp: SutraPlan) -> tuple[str, set]:
+def finalize(text: str, kp: KindPlan, sp: SutraPlan, plan: Plan | None = None) -> tuple[str, set]:
+    """The Sutra the pack ships. A document known from its data whose arrays hold arrays (or a page per value) gets the deep design
+    (deep.py) in place of the auto-designer's draft: the draft cannot know that a leg is read beside the other leg."""
+    from . import deep
     allowed = None
     if sp.variant is not None and kp.node is not None:
         allowed = set(kp.node.base_props) | set(sp.variant.props)
-    return body(header(text, kp, sp), kp, allowed)
+    if deep.applies(kp):
+        text = deep.sutra(kp, sp, plan, strip_entries(kp, allowed))
+    return body(header(text, kp, sp), kp, allowed, relabel=not deep.applies(kp))
 
 
 # ----------------------------------------------------------------------------------------------- About this page
