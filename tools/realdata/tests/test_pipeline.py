@@ -65,12 +65,12 @@ def test_generated_glossary_is_what_is_committed():
 
 
 def test_no_imf_glossary_cites_no_imf_data():
-    eco = yaml.safe_load(A.render("economics", no_imf=True))
+    eco = yaml.safe_load(A.render("world", no_imf=True))
     assert "economic-forecast" not in eco["kinds"] and "debt" not in eco["vocabulary"] and "net_lending" not in eco["vocabulary"]
     assert "debtToGdp" not in eco["kinds"]["economy"]["glossary"]
-    text = A.render("economics", no_imf=True).replace("reserve position in the IMF", "")      # a definition of the reserves, not IMF data
+    text = A.render("world", no_imf=True).replace("reserve position in the IMF", "")      # a definition of the reserves, not IMF data
     assert "IMF" not in text and "Monetary Fund" not in text
-    assert A.render("politics", no_imf=True) == A.render("politics")                        # the politics pack never had IMF data
+    assert "jurisdiction" in eco["kinds"] and "social-indicator" in eco["kinds"]             # the politics half stays whole
 
 
 def test_sutra_tests_are_what_is_committed():

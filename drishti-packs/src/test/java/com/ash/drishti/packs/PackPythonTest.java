@@ -101,7 +101,7 @@ class PackPythonTest {
                 .hasSizeGreaterThanOrEqualTo(10);
         assertThat(titles.get("trading")).contains("MTM under parallel rate moves", "FX option: Garman-Kohlhagen price and Greeks")
                 .hasSizeGreaterThanOrEqualTo(10);
-        assertThat(titles.get("banking-core")).contains("P&L by book: a pandas pivot").hasSizeGreaterThanOrEqualTo(10);
+        assertThat(titles.get("core")).contains("P&L by book: a pandas pivot").hasSizeGreaterThanOrEqualTo(10);
         assertThat(titles.get("market-data")).contains("Interpolate the curve at any tenor", "Key-rate DV01 by bump and reprice")
                 .hasSizeGreaterThanOrEqualTo(20);
         assertThat(titles.get("counterparty-risk")).contains("MTM concentration by product and netting set").hasSizeGreaterThanOrEqualTo(10);

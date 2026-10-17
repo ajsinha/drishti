@@ -33,6 +33,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[3]
 PACKS = Path(os.environ["DRISHTI_PACKS_OUT"]) if os.environ.get("DRISHTI_PACKS_OUT") else ROOT / "config" / "packs"   # tools/realdata --out / --no-imf write elsewhere
+EXAMPLES = ROOT / "examples" / "packs"              # the retired example packs (PackSpec.retired): not shipped, loadable with DRISHTI_PACKS_EXTRA_DIRS
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "banking"))
 sys.path.insert(0, str(ROOT / "tools"))
 import make_docs as MD  # noqa: E402  (the banking guides' shared sections)
@@ -64,10 +65,16 @@ class PackSpec:
     external_ids: dict[str, set[str]] = field(default_factory=dict)   # kind -> ids that live in required packs
     compact_json: bool = False                      # write the sample documents without indentation (large generated packs)
     form_overrides: dict[str, dict[str, dict]] = field(default_factory=dict)   # kind -> field path -> {type:, label:} replacing the name-derived ones
+    retired: bool = False                           # an example pack: written under examples/packs, not config/packs
 
     @property
     def kinds(self) -> list[Kind]:
         return [k for ks in self.domains.values() for k in ks]
+
+
+def pack_dir(spec: PackSpec) -> Path:
+    """Where the pack is written: config/packs/<name>, or examples/packs/<name> for a retired example pack."""
+    return (EXAMPLES if spec.retired and not os.environ.get("DRISHTI_PACKS_OUT") else PACKS) / spec.name
 
 
 def _generated(spec: PackSpec, what: str) -> str:
@@ -169,7 +176,7 @@ def _json(spec: PackSpec, obj) -> str:
 
 
 def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
-    base = PACKS / spec.name
+    base = pack_dir(spec)
     out: dict[Path, str] = {}
     out[base / "pack.yaml"] = (f"{YAML_HEADER}\n\n# {_generated(spec, 'file')}\n# {spec.title} pack for Drishti.\n"
                                + yaml.safe_dump(manifest(spec, known_fields), sort_keys=False, allow_unicode=True, width=140))
@@ -202,7 +209,7 @@ def main(spec: PackSpec, docs: dict, known_fields: dict, lake_kinds_by_domain=No
     if problems:
         raise SystemExit(f"{spec.name} data is inconsistent:\n  " + "\n  ".join(problems[:30]))
     want = files(spec, docs, known_fields)
-    base = PACKS / spec.name
+    base = pack_dir(spec)
     existing = {f for sub in ("samples", "sutras") if (base / sub).exists() for f in (base / sub).rglob("*") if f.is_file()}
     if "--check" in sys.argv:
         stale = [str(f) for f, t in want.items() if not f.exists() or f.read_text(encoding="utf-8") != t]

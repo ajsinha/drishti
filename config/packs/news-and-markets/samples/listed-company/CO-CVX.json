@@ -1,0 +1,21 @@
+{
+ "companyId": "CO-CVX",
+ "ticker": "CVX",
+ "name": "Chevron Corporation",
+ "aliases": [
+  "CVX"
+ ],
+ "aliasText": "CVX",
+ "exchange": "NYSE",
+ "sector": "Energy",
+ "country": "US",
+ "economy": "ECON-USA",
+ "quoteId": "QUOTE-CVX",
+ "newsId": "NEWS-Chevron",
+ "newsAllId": "NEWS-Chevron~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

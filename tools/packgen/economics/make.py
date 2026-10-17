@@ -17,8 +17,8 @@ indicators per country (history, rank, definition), IMF World Economic Outlook f
 positions and the World Bank regions and income groups. The documents come from tools/realdata (the committed dataset);
 nothing is invented, and each document carries its source, dataset, retrieval date and licence.
 
-    python3 tools/packgen/economics/make.py            write config/packs/economics
-    python3 tools/packgen/economics/make.py --check    fail if the pack differs from what would be written
+    The kinds, documents and pack settings of the economics half of the world-economy pack: tools/packgen/world/make.py joins them
+    with the other half and writes config/packs/world-economy (running this file runs that one).
     python3 tools/realdata/realdata.py all             refresh the data, then write both packs
 """
 from __future__ import annotations
@@ -195,4 +195,5 @@ def spec() -> PB.PackSpec:
 
 
 if __name__ == "__main__":
-    PR.run(PB, "economics", spec(), build(), T.graph_fields())
+    import runpy
+    runpy.run_path(str(HERE.parent / "world" / "make.py"), run_name="__main__")

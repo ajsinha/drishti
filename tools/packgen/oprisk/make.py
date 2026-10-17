@@ -16,7 +16,7 @@
 audit and regulatory issues, operational-risk scenarios, third-party risk, cyber incidents and SMA capital, per desk
 and legal entity of the banking packs.
 
-    python3 tools/packgen/oprisk/make.py            write config/packs/operational-risk
+    python3 tools/packgen/oprisk/make.py            write examples/packs/operational-risk (a retired example pack)
     python3 tools/packgen/oprisk/make.py --check    fail if the pack differs from what would be written
     uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/oprisk/make.py --lake data/delta
 """
@@ -233,13 +233,13 @@ def spec(bank: dict) -> PB.PackSpec:
     return PB.PackSpec(
         code="OPR",
         columns={'loss-event': ['eventType', 'deskName', 'netLoss', 'grossLoss', 'status', 'occurred'], 'key-risk-indicator': ['name', 'deskName', 'value', 'amber', 'red', 'status'], 'issue': ['title', 'severity', 'owner', 'due', 'status'], 'risk-control': ['risk', 'deskName', 'inherent', 'effectiveness', 'residual'], 'cyber-incident': ['title', 'severity', 'recordsAffected', 'status'], 'third-party': ['name', 'criticality', 'annualSpend', 'slaBreaches']},  # key fields shown beside each entity in pick lists
-        name="operational-risk", title="Operational and non-financial risk", requires=["banking-core"], generator="tools/packgen/oprisk/make.py",
+        name="operational-risk", retired=True, title="Operational and non-financial risk", requires=["core"], generator="tools/packgen/oprisk/make.py",
         description="Loss events, RCSA, key risk indicators, issues and actions, scenarios, third-party and cyber risk, and SMA operational-risk capital.",
         domains={"oprisk": KINDS},
         examples=[("LOSS LOSS-2025-0001", "Operational loss event · timeline and failed control"), ("KRI KRI-RATES-1", "Key risk indicator against its thresholds"),
                   ("RCSA RCSA-FX-2", "Risk and control self-assessment"), ("ISSUE ISSUE-101", "Issue and actions"),
                   ("VEND VEND-001", "Critical vendor · services, exit plans, incidents"), ("OPCAP OPCAP-LDN", "SMA operational-risk capital")],
-        overview="Operational risk is organised by the banking-core desks and legal entities: losses, controls and indicators belong to desks, capital "
+        overview="Operational risk is organised by the core desks and legal entities: losses, controls and indicators belong to desks, capital "
                  "and scenarios to legal entities. A loss links to the control that failed, and issues and cyber incidents link to the losses they caused.",
         external_ids={"desk": set(bank["desk"]), "legal-entity": set(bank["legal-entity"])},
         roles={"oprisk": {"kinds": [k.kind for k in KINDS] + ["desk", "legal-entity"], "raw": True}})

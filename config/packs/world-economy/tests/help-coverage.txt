@@ -1,0 +1,14 @@
+# Lowest share of shown fields with a glossary entry, per Sutra (a ratchet: raise it when about.yaml grows, never lower it).
+country-group=1
+economic-forecast=1
+economy=1
+election=1
+fiscal-position=1
+jurisdiction=1
+labour-market=1
+macro-indicator=1
+office-holder=1
+party=1
+region=1
+region-economy=1
+social-indicator=1

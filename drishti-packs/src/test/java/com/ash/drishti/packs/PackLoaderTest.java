@@ -28,11 +28,13 @@ import org.junit.jupiter.api.io.TempDir;
 class PackLoaderTest {
 
     static final Path PACKS = Path.of("..", "config", "packs").toAbsolutePath().normalize();
+    /** The retired example packs (finance, logistics, genomics…): not shipped, loadable through drishti.packs.extra-dirs. */
+    static final Path EXAMPLES = Path.of("..", "examples", "packs").toAbsolutePath().normalize();
 
     @Test
-    void theShippedPacksLoadAndContributeProperties() {
+    void theExamplePacksLoadAndContributeProperties() {
         PackLoader l = new PackLoader();
-        List<Pack> packs = l.load(PACKS, List.of("finance", "logistics"));
+        List<Pack> packs = l.load(EXAMPLES, List.of("finance", "logistics"));
         assertThat(packs).extracting(Pack::name).containsExactly("finance", "logistics");
         Map<String, Object> p = l.properties(packs);
         assertThat(p).containsEntry("drishti.commands.mnemonics.TRD.kind", "trade")

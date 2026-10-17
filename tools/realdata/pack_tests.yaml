@@ -16,7 +16,7 @@
 # and the help-coverage ratchet (the lowest share of shown fields with a glossary entry, per Sutra; raise it when about.yaml grows, never lower it).
 # tools/realdata/pack_tests.py writes the tests from this file and the generated documents.
 
-economics:
+world-economy:
   helpCoverage:
     country-group: 1
     economic-forecast: 1
@@ -25,6 +25,12 @@ economics:
     labour-market: 1
     macro-indicator: 1
     region-economy: 1
+    election: 1
+    jurisdiction: 1
+    office-holder: 1
+    party: 1
+    region: 1
+    social-indicator: 1
   kinds:
     country-group:
       samples:
@@ -74,15 +80,6 @@ economics:
       - REGE-US-CA
       nonEmpty:
       - facts
-politics-society:
-  helpCoverage:
-    election: 1
-    jurisdiction: 1
-    office-holder: 1
-    party: 1
-    region: 1
-    social-indicator: 1
-  kinds:
     election:
       samples:
       - ELEC-BRA-LOW

@@ -55,13 +55,13 @@ FEEDS = {"nyfed-sofr": ("DRISHTI_FEED_NYFED_SOFR", ["rate-fixing"], {}, "SOFR fr
          "fred": ("DRISHTI_FEED_FRED", ["rate-fixing"], {"api-key": "${FRED_API_KEY:}", "series": "${DRISHTI_FRED_SERIES:DGS10,DFF}"},
                   "FRED series (needs FRED_API_KEY): FIX-FRED-DGS10, FIX-FRED-DFF")}
 # Reference data changes rarely: its tables keep a row only when an entity changes (effective dating).
-EFFECTIVE_DOMAINS = {"reference"}
+EFFECTIVE_DOMAINS = {"reference", "legal"}
 IMPACT = {"trading": {"measures": {"trade": "$.mtm"}, "formats": {"trade": "signed0"}},
           "counterparty-risk": {"follow": ["nettingSet", "creditLimit"], "measures": {"netting-set": "$.netMtm", "credit-limit": "$.limit"},
                                 "formats": {"netting-set": "signed0", "credit-limit": "compact"}}}
 EXAMPLES = {  # command, what it shows (ids from make_data.py's deterministic data)
-    "banking-core": [("CPTY CP-NORTHBRIDGE", "Counterparty · netting sets, KYC, rating"), ("AGR AGR-NORTHBRIDGE-ISDA", "ISDA master agreement · elections"),
-                     ("BOOK BOOK-RATES-1", "Book · top trades, MTM, DV01"), ("DESK DESK-RATES", "Desk · books, VaR")],
+    "core": [("CPTY CP-NORTHBRIDGE", "Counterparty · netting sets, KYC, rating, country of risk"), ("LE LE-NY", "Bank legal entity · New York"),
+             ("BOOK BOOK-RATES-1", "Book · top trades, MTM, DV01"), ("DESK DESK-RATES", "Desk · books, VaR")],
     "market-data": [("CRV CRV-USD-OIS", "SOFR discount curve · zero rates, pillars, forwards"), ("FXV FXV-EURUSD", "EUR/USD vol surface · smile by expiry"),
                     ("EQ EQ-NVTK", "Equity · price history, identifiers"), ("CDS CDS-SOLARIS", "Credit curve · spreads, hazard rates"),
                     ("CMDC CMDC-WTI", "WTI futures curve · backwardation")],
@@ -69,17 +69,17 @@ EXAMPLES = {  # command, what it shows (ids from make_data.py's deterministic da
                 ("TRD IMG-400031", "OTC equity option"), ("TRD IMG-400067", "Autocallable note · observation schedule")],
     "market-risk": [("VAR VAR-RATES", "Rates desk VaR · P&L series, contributions"), ("STR STR-GFC2008-RATES", "Stress · 2008 crisis on the rates desk"),
                     ("PNL PNL-RATES-1", "P&L explain"), ("FRTB FRTB-RATES-1", "FRTB sensitivities and charges")],
-    "counterparty-risk": [("NSET NS-SUMMIT-NY", "Netting set · 108 trades, exposure, CVA"), ("LIM LIM-SUMMIT", "Credit limit · utilisation by tenor"),
+    "counterparty-risk": [("AGR AGR-NORTHBRIDGE-ISDA", "ISDA master agreement · elections"), ("NSET NS-SUMMIT-NY", "Netting set · 108 trades, exposure, CVA"), ("LIM LIM-SUMMIT", "Credit limit · utilisation by tenor"),
                           ("CVA CVA-SUMMIT-NY", "CVA / XVA"), ("SACCR SACCR-SUMMIT-NY", "SA-CCR exposure at default")],
 }
 TRADER_KINDS = ["trade", *layout.PACKS["market-data"]["kinds"]["market"], "counterparty", "counterparty-group", "issuer", "book", "desk",
                 "trader", "legal-entity", "calendar", "agreement", "csa", "ccp", "clearing-account", "desk-pnl"]
 # the pack's own code: typed alone it opens the pack's overview (its kinds, mnemonics and counts)
-CODES = {"banking-core": "BNK", "market-data": "MKT", "trading": "TRDS", "market-risk": "MRSK", "counterparty-risk": "CCR"}
+CODES = {"core": "CORE", "market-data": "MKT", "trading": "TRDS", "market-risk": "MRSK", "counterparty-risk": "CCR"}
 
 # key fields shown beside each entity in pick lists (TRD MX-200000, CPTY north) and searches
 COLUMNS = {"trading": {"trade": ["productType", "direction", "currency", "notional", "mtm", "maturityDate", "book"]},
-           "banking-core": {"counterparty": ["name", "rating", "sector", "country", "netMtm"],
+           "core": {"counterparty": ["name", "rating", "sector", "COUNTRY_OF_RISK", "UEN", "netMtm"],
                             "book": ["name", "deskName", "tradeCount", "mtm", "dv01"]}}
 
 # a Pivot tab on the results and pick lists of these kinds (USER_GUIDE.md, The Pivot tab): fields the trade table keeps as
@@ -168,7 +168,7 @@ def manifest(name: str) -> dict:
     fields = {f: {"kind": kind, "label": label} for f, (kind, label) in T.graph_fields().items() if kind in kinds}
     m = {"pack": name, "version": "1.0.0", "code": CODES[name], "title": p["title"], "description": p["description"], "extends": p["requires"],
          "kinds": kinds, "sutras": "sutras", "formats": "config/formats.yaml",
-         **({"semantics": "config/semantics.yaml"} if name == "banking-core" else {}),
+         **({"semantics": "config/semantics.yaml"} if name == "core" else {}),
          "mnemonics": {specs[k].mnemonic: {"kind": k, "label": specs[k].label} for k in kinds},
          "graph": {"id-patterns": [{"pattern": BK.ID_PATTERN if k == "trade" else "^" + specs[k].prefix, "kind": k} for k in kinds],
                    "fields": dict(sorted(fields.items())),
@@ -249,7 +249,7 @@ def files() -> dict[Path, str]:
             meta = f"# title: {title}\n# description: {description}\n# kinds: {', '.join(kinds)}\n"
             note = f"# Generated by tools/packgen/banking/make_packs.py from snippets/{name}/{file} there. Edit that source, not this file."
             out[PACKS / name / "python" / file] = f"{HEADER}\n\n{note}\n{meta}\n{code}"
-        if name == "banking-core":   # every banking pack requires banking-core, so its vocabulary covers them all
+        if name == "core":   # every banking pack requires core, so its vocabulary covers them all
             out[PACKS / name / "config" / "semantics.yaml"] = (f"{HEADER}\n\n{GENERATED}\n# How banking field names read as labels.\n"
                                                                + yaml.safe_dump({"acronyms": ACRONYMS, "labels": {"tradeId": "Trade", "mtm": "MTM (USD)"}},
                                                                                 sort_keys=False, width=140))

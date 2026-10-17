@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Real public data for the economics and politics-society packs.
+"""Real public data for the world-economy pack (economics, politics and society).
 
     python3 tools/realdata/realdata.py fetch     [--cache DIR] [--refresh] [--pause S]   download the raw data (network)
     python3 tools/realdata/realdata.py normalise [--cache DIR]                           raw cache -> tools/realdata/dataset/*.json
@@ -49,7 +49,7 @@ import fetch as F  # noqa: E402
 import normalise as N  # noqa: E402
 import pack_tests as PT  # noqa: E402
 
-GENERATORS = {"economics": "tools/packgen/economics/make.py", "politics-society": "tools/packgen/politics/make.py"}
+GENERATORS = {"world-economy": "tools/packgen/world/make.py"}
 
 
 def generators(env: dict, check: bool = False) -> int:

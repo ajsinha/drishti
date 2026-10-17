@@ -16,7 +16,7 @@
 studies and clinical trials. Reference facts are public (see reference.py); samples, runs, studies and trials are
 synthetic.
 
-    python3 tools/packgen/genomics/make.py            write config/packs/genomics
+    python3 tools/packgen/genomics/make.py            write examples/packs/genomics (a retired example pack)
     python3 tools/packgen/genomics/make.py --check    fail if the pack differs from what would be written
     uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/genomics/make.py --lake data/delta
 """
@@ -227,7 +227,7 @@ def spec() -> PB.PackSpec:
         sample=True,
         code="GENO",
         columns={'gene': ['symbol', 'name', 'chromosome', 'location', 'length'], 'variant': ['geneSymbol', 'proteinChange', 'consequence', 'significance', 'condition'], 'sample': ['tissue', 'diagnosis', 'purity', 'variantCount', 'collected'], 'clinical-trial': ['title', 'phase', 'status', 'enrolled', 'biomarkerName'], 'protein': ['name', 'accession', 'length', 'massKda', 'subcellular'], 'sequencing-run': ['instrument', 'yieldGb', 'q30', 'status']},  # key fields shown beside each entity in pick lists
-        name="genomics", title="Genomics and biology", requires=[], generator="tools/packgen/genomics/make.py",
+        name="genomics", retired=True, title="Genomics and biology", requires=[], generator="tools/packgen/genomics/make.py",
         description="Genes, variants, proteins, pathways, sequenced samples, sequencing runs, expression studies and clinical trials.",
         domains={"genomics": KINDS},
         examples=[("GENE GENE-TP53", "Gene · GRCh38 location, expression by tissue, known variants"), ("VRNT VRNT-BRAF-V600E", "Variant · significance, population frequencies"),

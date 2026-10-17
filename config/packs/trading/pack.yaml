@@ -21,7 +21,7 @@ title: Trading
 description: Trades in 125 products across rates, FX, credit, equity, commodities, inflation, fixed income, securities financing, money markets
   and structured products.
 extends:
-- banking-core
+- core
 - market-data
 kinds:
 - trade

@@ -760,6 +760,9 @@ drishti:
     # Domain packs (config/packs/<name>/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples.
     # Site settings below always override what a pack contributes.
     dir: ${DRISHTI_PACKS_DIR:./config/packs}
+    # Further pack folders, comma-separated, looked in after dir: examples/packs holds the retired example packs (finance,
+    # genomics, logistics, retail-banking, climate-risk, operational-risk, liquidity-risk); name one in enabled to load it.
+    extra-dirs: ${DRISHTI_PACKS_EXTRA_DIRS:}
     # Packs loaded from Admin → Packs are listed here (drishti.packs.added) and read at every start; see spring.config.import.
     overlay: ${DRISHTI_PACKS_OVERLAY:${drishti.data.dir}/packs/added.yaml}
     # Packs installed from a signed registry (Admin → Packs → From the registry); looked in before dir, so they win.
@@ -782,7 +785,7 @@ drishti:
       history-file: ${DRISHTI_PACKS_DEPLOY_HISTORY:${drishti.data.dir}/packs/deploy-history.jsonl}
       probe-dates: 3                       # business dates listed per kind by Test connection
       probe-timeout-seconds: 30
-    enabled: ${DRISHTI_PACKS:finance}
+    enabled: ${DRISHTI_PACKS:core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets}
     # Sample packs (sample: true in pack.yaml) are demonstrations. visible: everyone sees them; developers: only users with the author
     # or admin power; hidden: nobody, they are not loaded and their connectors do not start. Admin -> Packs ("Hide samples from business
     # users") saves a choice that overrides this. Use developers once real packs exist.

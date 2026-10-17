@@ -18,7 +18,7 @@
 
 Curves, volatility surfaces, FX, equities, credit, inflation, commodities, fixings and bonds.
 
-**Extends:** `banking-core` · **Extended by:** `trading`, `market-risk`, `counterparty-risk` · **Kinds:** 20
+**Extends:** `core` · **Extended by:** `trading`, `market-risk` · **Kinds:** 20
 
 Enable it with `DRISHTI_PACKS=market-data` (the packs it extends come with it; where they differ, the more specific wins).
 

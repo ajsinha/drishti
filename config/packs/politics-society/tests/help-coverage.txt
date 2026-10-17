@@ -1,7 +1,0 @@
-# Lowest share of shown fields with a glossary entry, per Sutra (a ratchet: raise it when about.yaml grows, never lower it).
-election=1
-jurisdiction=1
-office-holder=1
-party=1
-region=1
-social-indicator=1

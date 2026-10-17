@@ -95,6 +95,7 @@ public final class PackReloader implements AutoCloseable {
     /** The folders packs are read from, fixed when the server starts (a later change to the environment must not move them). */
     private final String packsDir;
     private final String installedDir;
+    private final String extraDirs;
     private final String watchMode;
     private final long pollMs;
     private final long debounceMs;
@@ -129,6 +130,7 @@ public final class PackReloader implements AutoCloseable {
         this.samples = samples;
         this.packsDir = com.ash.drishti.packs.PackPaths.packsDir(env);
         this.installedDir = com.ash.drishti.packs.PackPaths.installedDir(env);
+        this.extraDirs = com.ash.drishti.packs.PackPaths.extraDirs(env);
         this.watchMode = env.getProperty("drishti.packs.watch", "auto").strip().toLowerCase(java.util.Locale.ROOT);
         if (!Set.of("auto", "poll", "off").contains(watchMode)) {
             throw new IllegalArgumentException("drishti.packs.watch must be auto, poll or off, not " + watchMode);
@@ -195,7 +197,7 @@ public final class PackReloader implements AutoCloseable {
     }
 
     private List<Path> dirs() {
-        return PackLoader.dirs(packsDir, installedDir);
+        return PackLoader.dirs(packsDir, installedDir, extraDirs);
     }
 
     /** One look at the folders: acts only when something differs from what was last seen, after the change has settled. */
@@ -329,7 +331,7 @@ public final class PackReloader implements AutoCloseable {
 
     /** The packs that should be loaded: the site's list, the administrator's overlay and new folders, minus hidden samples. */
     private List<String> desired(PackLoader loader, List<Path> dirs) {
-        LinkedHashSet<String> names = new LinkedHashSet<>(java.util.Arrays.stream(env.getProperty("drishti.packs.enabled", "finance").split(","))
+        LinkedHashSet<String> names = new LinkedHashSet<>(java.util.Arrays.stream(env.getProperty("drishti.packs.enabled", com.ash.drishti.packs.PackPaths.DEFAULT_ENABLED).split(","))
                 .map(String::trim).filter(s -> !s.isEmpty()).toList());
         names.addAll(overlay.added());
         names.addAll(candidates);
@@ -441,7 +443,7 @@ public final class PackReloader implements AutoCloseable {
             if (!onDisk) {
                 deleted.add(name);
                 if (neededBy == null) {
-                    if (current.containsKey(name) && java.util.Arrays.stream(env.getProperty("drishti.packs.enabled", "finance").split(",")).map(String::trim).anyMatch(name::equals)) {
+                    if (current.containsKey(name) && java.util.Arrays.stream(env.getProperty("drishti.packs.enabled", com.ash.drishti.packs.PackPaths.DEFAULT_ENABLED).split(",")).map(String::trim).anyMatch(name::equals)) {
                         problems.put(name, "its folder was removed and it was unloaded, but drishti.packs.enabled still names it: the server will not start until that is changed");
                     }
                     path.removeLast();
@@ -698,7 +700,7 @@ public final class PackReloader implements AutoCloseable {
 
     /** New folders and unloaded packs are remembered across restarts the way Admin &rarr; Packs Load and Unload do. */
     private void persistLoaded(List<String> loaded, List<String> unloaded) {
-        Set<String> configured = new LinkedHashSet<>(java.util.Arrays.stream(env.getProperty("drishti.packs.enabled", "finance").split(","))
+        Set<String> configured = new LinkedHashSet<>(java.util.Arrays.stream(env.getProperty("drishti.packs.enabled", com.ash.drishti.packs.PackPaths.DEFAULT_ENABLED).split(","))
                 .map(String::trim).filter(s -> !s.isEmpty()).toList());
         List<String> added = new ArrayList<>(overlay.added());
         boolean change = false;

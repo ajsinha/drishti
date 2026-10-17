@@ -1,0 +1,22 @@
+{
+ "companyId": "CO-AMZN",
+ "ticker": "AMZN",
+ "name": "Amazon.com, Inc.",
+ "aliases": [
+  "AMZN",
+  "AWS"
+ ],
+ "aliasText": "AMZN, AWS",
+ "exchange": "Nasdaq",
+ "sector": "Consumer Discretionary",
+ "country": "US",
+ "economy": "ECON-USA",
+ "quoteId": "QUOTE-AMZN",
+ "newsId": "NEWS-Amazon",
+ "newsAllId": "NEWS-Amazon~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

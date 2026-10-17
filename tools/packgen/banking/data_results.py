@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Reference data (banking-core) and risk results (counterparty-risk, market-risk) computed from the trades, so they
+"""Reference data (core) and risk results (counterparty-risk, market-risk) computed from the trades, so they
 reconcile: a netting set's net MTM is the sum of its trades', its exposure profile follows their maturities, CVA
 uses that exposure and the counterparty's credit curve, limits use the PFE, and VaR aggregates books into desks."""
 from __future__ import annotations
@@ -38,6 +38,9 @@ SACCR_CLASS = {"Rates": "Interest rate", "Inflation": "Interest rate", "Money ma
                "Securities financing": "Interest rate", "FX": "Foreign exchange", "Credit": "Credit", "Equity": "Equity", "Structured": "Equity",
                "Commodity": "Commodity"}
 
+
+# ISO 3166 alpha-2 -> alpha-3, for the counterparties' countries of risk (the world-economy pack's ids are ECON-<alpha-3>)
+ISO3 = {"BM": "BMU", "BR": "BRA", "CA": "CAN", "CH": "CHE", "DE": "DEU", "GB": "GBR", "GR": "GRC", "JP": "JPN", "KY": "CYM", "NO": "NOR", "US": "USA"}
 
 def years(d: str) -> float:
     return max((date.fromisoformat(d) - N.AS_OF).days / 365, 0.0)
@@ -315,9 +318,13 @@ def reference(trades: dict, docs: dict) -> None:
             tid = TR.trader_id(tr)
             docs["trader"][tid] = {"traderId": tid, "name": tr, "deskName": name, "tradeCount": sum(1 for t in trades.values() if t["trader"] == tid),
                                    "books": [{"id": b} for b in bl], "desk": desk, "_meta": {"source": "org-master", "generation": 1}}
-    for cp, (name, typ, sector, country, rating, grp) in N.COUNTERPARTIES.items():
+    for n, (cp, (name, typ, sector, country, rating, grp)) in enumerate(sorted(N.COUNTERPARTIES.items()), start=1):
         sets = [d for d in docs["netting-set"].values() if d["counterparty"] == f"CP-{cp}"]
+        # COUNTRY_OF_RISK and UEN as the trading systems name them (a trade's COUNTERPARTY_COUNTRY_OF_RISK, COUNTERPARTY_UEN);
+        # economy opens the country's economy when the world-economy pack is on, newsId its headlines (news-and-markets)
         out = {"counterpartyId": f"CP-{cp}", "name": name, "lei": ids.lei(name), "rating": rating, "sector": sector, "country": country, "type": typ,
+               "COUNTRY_OF_RISK": country, "UEN": f"UEN{100000 + n * 37:07d}", "economy": f"ECON-{ISO3[country]}",
+               "newsId": "NEWS-" + name.replace(" ", "_"),           # its headlines, when the news-and-markets pack's connector is on
                "netMtm": sum(s["netMtm"] for s in sets), "pfePeak": max([s["pfePeak"] for s in sets] or [0]),
                "nettingSets": [{"id": s["nettingSetId"], "agreement": s["agreement"], "trades": s["tradeCount"], "netMtm": s["netMtm"]} for s in sets],
                "kyc": {"status": "Approved", "riskRating": "Standard" if rating[0] == "A" else "Enhanced", "lastReview": "2026-02-11",

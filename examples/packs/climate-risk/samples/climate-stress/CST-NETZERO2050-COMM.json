@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-NETZERO2050-COMM",
+ "scenarioName": "Net Zero 2050",
+ "deskName": "Commodities",
+ "loss2030": -6502449,
+ "loss2050": -7802939,
+ "capitalShare": 0.00163,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -1942958
+  },
+  {
+   "sector": "Airlines",
+   "loss": -1548550
+  },
+  {
+   "sector": "Shipping",
+   "loss": -896263
+  },
+  {
+   "sector": "Materials",
+   "loss": -1308398
+  },
+  {
+   "sector": "Autos",
+   "loss": -806280
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 6502449
+  },
+  {
+   "year": "2040",
+   "loss": 7152694
+  },
+  {
+   "year": "2050",
+   "loss": 7802939
+  }
+ ],
+ "climateScenario": "NGFS-NETZERO2050",
+ "desk": "DESK-COMM",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

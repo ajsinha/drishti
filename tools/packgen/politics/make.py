@@ -19,8 +19,8 @@ social and governance indicators (World Bank WDI and Worldwide Governance Indica
 documents come from tools/realdata (the committed dataset); each carries its source, dataset, retrieval date and licence.
 Opinion polls and bills are not in any open, global dataset, so the pack has no such kinds.
 
-    python3 tools/packgen/politics/make.py            write config/packs/politics-society
-    python3 tools/packgen/politics/make.py --check    fail if the pack differs from what would be written
+    The kinds, documents and pack settings of the politics-society half of the world-economy pack: tools/packgen/world/make.py joins them
+    with the other half and writes config/packs/world-economy (running this file runs that one).
     python3 tools/realdata/realdata.py all            refresh the data, then write both packs
 """
 from __future__ import annotations
@@ -143,4 +143,5 @@ def spec() -> PB.PackSpec:
 
 
 if __name__ == "__main__":
-    PR.run(PB, "politics", spec(), build(), T.graph_fields())
+    import runpy
+    runpy.run_path(str(HERE.parent / "world" / "make.py"), run_name="__main__")

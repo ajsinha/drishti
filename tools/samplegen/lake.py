@@ -17,7 +17,7 @@ partitioned by business date, with a history of business days. Past dates vary t
 numbers with a deterministic random walk, so moving the date in the console changes what you see.
 
     uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \\
-        --samples config/packs/finance/samples --root data/delta --domain finance --days 10 [--as-of 2026-09-30]
+        --samples examples/packs/finance/samples --root data/delta --domain finance --days 10 [--as-of 2026-09-30]
 
 Layout (what the connector reads):  <root>/<domain>/<kind>/_delta_log/…
                                     <root>/<domain>/<kind>/business_date=YYYY-MM-DD/part-….parquet

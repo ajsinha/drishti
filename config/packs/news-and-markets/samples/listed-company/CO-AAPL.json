@@ -1,0 +1,23 @@
+{
+ "companyId": "CO-AAPL",
+ "ticker": "AAPL",
+ "name": "Apple Inc.",
+ "aliases": [
+  "Apple Inc",
+  "AAPL",
+  "iPhone"
+ ],
+ "aliasText": "Apple Inc, AAPL, iPhone",
+ "exchange": "Nasdaq",
+ "sector": "Technology",
+ "country": "US",
+ "economy": "ECON-USA",
+ "quoteId": "QUOTE-AAPL",
+ "newsId": "NEWS-Apple",
+ "newsAllId": "NEWS-Apple~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

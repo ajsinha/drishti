@@ -1,0 +1,19 @@
+{
+ "topicId": "TOPIC-GERMANY",
+ "name": "Germany",
+ "category": "Country",
+ "aliases": [
+  "German",
+  "Berlin"
+ ],
+ "aliasText": "German, Berlin",
+ "edition": "default",
+ "newsId": "NEWS-Germany",
+ "newsAllId": "NEWS-Germany~all",
+ "economy": "ECON-DEU",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

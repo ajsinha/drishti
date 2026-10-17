@@ -18,11 +18,12 @@ pack: counterparty-risk
 version: 1.0.0
 code: CCR
 title: Counterparty credit risk
-description: Netting sets, exposure and PFE, CVA/XVA, SA-CCR, credit limits, collateral, margin calls and SIMM.
+description: ISDA master agreements and CSAs, netting sets, exposure and PFE, CVA/XVA, SA-CCR, credit limits, collateral, margin calls and SIMM.
 extends:
-- market-data
 - trading
 kinds:
+- agreement
+- csa
 - netting-set
 - credit-limit
 - exposure-profile
@@ -34,6 +35,12 @@ kinds:
 sutras: sutras
 formats: config/formats.yaml
 mnemonics:
+  AGR:
+    kind: agreement
+    label: Master agreement
+  CSA:
+    kind: csa
+    label: Credit support annex
   NSET:
     kind: netting-set
     label: Netting set
@@ -60,6 +67,10 @@ mnemonics:
     label: ISDA SIMM initial margin
 graph:
   id-patterns:
+  - pattern: ^AGR-
+    kind: agreement
+  - pattern: ^CSA-
+    kind: csa
   - pattern: ^NS-
     kind: netting-set
   - pattern: ^LIM-
@@ -77,12 +88,18 @@ graph:
   - pattern: ^SIMM-
     kind: simm
   fields:
+    agreement:
+      kind: agreement
+      label: Agreement
     collateralBalance:
       kind: collateral-balance
       label: Collateral
     creditLimit:
       kind: credit-limit
       label: Credit limit
+    csa:
+      kind: csa
+      label: CSA
     cvaResult:
       kind: cva
       label: CVA
@@ -99,6 +116,7 @@ graph:
       kind: simm
       label: SIMM
   badges:
+    csa: '''threshold '' + fmt($.thresholdThem, ''compact'')'
     netting-set: '''PFE '' + fmt($.pfePeak, ''compact'')'
     credit-limit: fmt($.utilisation, 'pct0') + ' used'
   impact:
@@ -112,6 +130,17 @@ graph:
       netting-set: signed0
       credit-limit: compact
 connectors:
+  legal-store:
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds:
+    - agreement
+    - csa
+    settings:
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+      domain: legal
+      mode.agreement: effective
+      mode.csa: effective
   credit-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
@@ -135,6 +164,8 @@ connectors:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: collateral
 routes:
+  agreement: legal-store
+  csa: legal-store
   netting-set: credit-store
   credit-limit: credit-store
   exposure-profile: credit-store
@@ -144,6 +175,50 @@ routes:
   margin-call: collateral-store
   simm: collateral-store
 form:
+  agreement:
+  - path: agreementId
+    label: Agreement id
+    type: id
+  - path: type
+    label: Type
+    type: enum
+  - path: counterpartyName
+    label: Counterparty name
+    type: number
+  - path: governingLaw
+    label: Governing law
+    type: text
+  - path: signed
+    label: Signed
+    type: text
+  - path: closeOutNetting
+    label: Close out netting
+    type: text
+  csa:
+  - path: csaId
+    label: Csa id
+    type: id
+  - path: marginType
+    label: Margin type
+    type: text
+  - path: thresholdUs
+    label: Threshold us
+    type: text
+  - path: thresholdThem
+    label: Threshold them
+    type: text
+  - path: mta
+    label: Mta
+    type: text
+  - path: independentAmount
+    label: Independent amount
+    type: amount
+  - path: frequency
+    label: Frequency
+    type: text
+  - path: mpor
+    label: Mpor
+    type: text
   netting-set:
   - path: nettingSetId
     label: Netting set id
@@ -304,6 +379,8 @@ form:
     type: text
 console:
   examples:
+  - - AGR AGR-NORTHBRIDGE-ISDA
+    - ISDA master agreement · elections
   - - NSET NS-SUMMIT-NY
     - Netting set · 108 trades, exposure, CVA
   - - LIM LIM-SUMMIT

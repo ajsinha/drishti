@@ -15,6 +15,7 @@
 """Shared fixtures: a console app wired to the default configuration and a fake backend that serves
 ViewModels captured from the real server (tests/fixtures)."""
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -24,6 +25,8 @@ from fastapi.testclient import TestClient
 CONSOLE = Path(__file__).resolve().parent.parent
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 sys.path.insert(0, str(CONSOLE))
+# the stand-in server serves the retired example packs finance and logistics (examples/packs), as the server's tests do
+os.environ.setdefault("DRISHTI_PACKS_EXTRA_DIRS", str(CONSOLE.parent / "examples" / "packs"))
 
 from core.app import create_app  # noqa: E402
 from core.backend import BackendError  # noqa: E402

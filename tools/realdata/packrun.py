@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""What both pack generators (tools/packgen/economics/make.py, tools/packgen/politics/make.py) run as their main: the pack's glossary
+"""What the world-economy pack generator (tools/packgen/world/make.py) runs as its main: the pack's glossary
 source (about.py), the pack itself (packbuild) and the pack's Sutra tests (pack_tests.py), each written or, with --check, compared.
 
 Environment, set by realdata.py:
@@ -35,7 +35,7 @@ import pack_tests as PT  # noqa: E402
 
 
 def run(PB, pack_dir: str, spec, docs: dict, known_fields: dict) -> None:
-    """pack_dir is the generator directory (economics | politics); PB the packbuild module the generator loaded."""
+    """pack_dir is the generator directory (world); PB the packbuild module the generator loaded."""
     check = "--check" in sys.argv
     no_imf = os.environ.get(BD.ENV_NO_IMF) == "1"
     about_dir = os.environ.get("DRISHTI_ABOUT_DIR")

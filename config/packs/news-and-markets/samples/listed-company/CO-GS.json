@@ -1,0 +1,21 @@
+{
+ "companyId": "CO-GS",
+ "ticker": "GS",
+ "name": "The Goldman Sachs Group, Inc.",
+ "aliases": [
+  "Goldman"
+ ],
+ "aliasText": "Goldman",
+ "exchange": "NYSE",
+ "sector": "Financials",
+ "country": "US",
+ "economy": "ECON-USA",
+ "quoteId": "QUOTE-GS",
+ "newsId": "NEWS-Goldman_Sachs",
+ "newsAllId": "NEWS-Goldman_Sachs~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

@@ -1,0 +1,159 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# News and markets · a sample pack for Drishti built on two on-demand connectors: fifteen news topics (central banks, countries,
+# companies, themes) and twenty well-known listed companies (static reference data), each company with a live quote and price history
+# from Yahoo Finance (yfinance connector) and every topic and company with its headlines from Google News (news connector). Both
+# connectors are off by default. Countries and companies link to their economy (world-economy pack); a core counterparty links to its
+# headlines through its newsId.
+pack: news-and-markets
+sample: true                        # a demonstration pack: see drishti.packs.samples
+version: 1.0.0
+code: NWMK             # typed alone, opens this pack's overview
+title: News and markets
+description: >-
+  Sample pack: fifteen news topics (central banks, countries, companies, themes) and twenty listed companies, with headlines (Google News) and
+  quotes and price history (Yahoo Finance) fetched on demand. Internal demonstration only: Yahoo's endpoint is unofficial and its terms restrict
+  use; names leave the network when the connectors are on. Off until the connectors are enabled.
+kinds: [news-topic, news, listed-company, quote]
+formats: config/formats.yaml
+mnemonics:
+  TOPIC: { kind: news-topic, label: News topic }
+  NEWS:  { kind: news, label: Headlines }
+  CO:    { kind: listed-company, label: Listed company }
+  QUOTE: { kind: quote, label: Quote and price history }
+graph:
+  id-patterns:
+    - { pattern: "^TOPIC-", kind: news-topic }
+    - { pattern: "^NEWS-", kind: news }
+    - { pattern: "^CO-", kind: listed-company }
+    - { pattern: "^QUOTE-", kind: quote }
+  fields:
+    newsId:    { kind: news, label: Headlines }
+    newsAllId: { kind: news, label: All results }
+    quoteId:   { kind: quote, label: Quote }
+  badges:
+    news: "$.count + ' headlines'"
+    quote: "fmt($.price, 'price2') + ' ' + $.currency"
+    listed-company: "$.ticker"
+roles:
+  news-analyst: { kinds: [news-topic, news] }
+  market-analyst: { kinds: [listed-company, quote, news-topic, news] }
+form:                          # FORM news-and-markets: the search form of each kind
+  news-topic:
+    - { path: topicId, label: Topic id, type: id, group: Identity, help: "One or many: paste a list." }
+    - { path: name, type: text, group: Identity, help: "TOPIC name contains Fed finds the Federal Reserve through its name." }
+    - { path: category, type: enum, group: Identity }
+    - { path: aliasText, label: Other names, type: text, group: Identity, help: "Aliases such as Fed, FOMC, BoE." }
+    - { path: edition, type: enum, group: Edition }
+  listed-company:
+    - { path: companyId, label: Company id, type: id, group: Identity, help: "One or many: paste a list." }
+    - { path: ticker, type: text, group: Identity }
+    - { path: name, type: text, group: Identity }
+    - { path: aliasText, label: Other names, type: text, group: Identity, help: "Aliases such as Google for Alphabet." }
+    - { path: exchange, type: enum, group: Listing }
+    - { path: sector, type: enum, group: Listing }
+    - { path: country, type: enum, group: Listing }
+console:
+  examples:
+    - ["TOPIC TOPIC-FED", "Federal Reserve · headlines, count by source, how they were selected"]
+    - ["TOPIC TOPIC-OIL", "Oil prices · a theme rather than an entity"]
+    - ["TOPIC TOPIC-TOYOTA", "Toyota · the Japanese edition"]
+    - ["NEWS NEWS-Bitcoin", "Any name works: the headlines for bitcoin, not from the list"]
+    - ["CO CO-AAPL", "Apple · quote, six months of prices, headlines"]
+    - ["CO CO-XOM", "Exxon Mobil · energy"]
+    - ["QUOTE QUOTE-MSFT", "Any ticker works: the quote and history for MSFT"]
+  help: config/help.yaml
+columns:
+  news-topic:
+    - name
+    - category
+    - aliasText
+    - edition
+  listed-company:
+    - ticker
+    - name
+    - sector
+    - exchange
+    - country
+# TEMPLATES: each written once to config/connectors/<name>.yaml, DISABLED. Entity names are sent to Google (news) and tickers to Yahoo
+# (yfinance) when they are switched on.
+connectors:
+  news:
+    plugin: news
+    enabled: ${DRISHTI_NEWS_ENABLED:false}
+    kinds: [news]
+    settings:
+      base-url: ${DRISHTI_NEWS_URL:https://news.google.com/rss/search}
+      language: en
+      country: US
+      max-items: 15
+      timeout-seconds: 10
+      cache-ttl-seconds: 600
+      cache-max-entities: 200
+      relevance: title
+      user-agent: ${drishti.branding.product:Drishti} news connector (sample)
+      # BEGIN aliases (written by tools/make_samples.py)
+      aliases.Apple: Apple Inc, AAPL, iPhone
+      aliases.Microsoft: MSFT
+      aliases.Alphabet: Google, GOOGL
+      aliases.Amazon: AMZN, AWS
+      aliases.NVIDIA: Nvidia, NVDA
+      aliases.Tesla: TSLA, Elon Musk
+      aliases.Meta_Platforms: Meta, Facebook, Instagram
+      aliases.Netflix: NFLX
+      aliases.JPMorgan_Chase: JPMorgan, JP Morgan, Jamie Dimon
+      aliases.Bank_of_America: BofA, BAC
+      aliases.Goldman_Sachs: Goldman
+      aliases.Exxon_Mobil: Exxon, ExxonMobil
+      aliases.Chevron: CVX
+      aliases.Shell: Shell plc
+      aliases.Merck: Merck & Co, MRK
+      aliases.Pfizer: PFE
+      aliases.Walmart: WMT
+      aliases.Coca-Cola: Coke, Coca Cola
+      aliases.Disney: Walt Disney, DIS
+      aliases.Boeing: BA
+      aliases.Federal_Reserve: Fed, FOMC, Powell
+      aliases.European_Central_Bank: ECB, Lagarde
+      aliases.Bank_of_England: BoE
+      aliases.Bank_of_Japan: BoJ
+      aliases.inflation: CPI, consumer prices
+      aliases.interest_rates: rate cut, rate hike, rates
+      aliases.oil_prices: crude, Brent, oil
+      aliases.bitcoin: crypto, cryptocurrency
+      aliases.artificial_intelligence: AI, machine learning
+      aliases.climate_change: global warming, emissions, climate
+      aliases.India: Indian, New Delhi
+      aliases.Germany: German, Berlin
+      aliases.Brazil: Brazilian, Brasilia
+      aliases.Deutsche_Bank: Deutsche
+      aliases.Toyota: トヨタ, Toyota Motor
+      # END aliases
+  yfinance:
+    plugin: yfinance
+    enabled: ${DRISHTI_YFINANCE_ENABLED:false}
+    kinds: [quote]
+    settings:
+      base-url: ${DRISHTI_YFINANCE_URL:https://query1.finance.yahoo.com/v8/finance/chart}
+      range: 6mo
+      interval: 1d
+      timeout-seconds: 10
+      cache-ttl-seconds: 60
+      cache-max-symbols: 100
+      user-agent: ${drishti.branding.product:Drishti} yfinance connector (sample)
+routes:
+  news: news
+  quote: yfinance

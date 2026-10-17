@@ -1,0 +1,21 @@
+{
+ "companyId": "CO-SHEL",
+ "ticker": "SHEL",
+ "name": "Shell plc",
+ "aliases": [
+  "Shell plc"
+ ],
+ "aliasText": "Shell plc",
+ "exchange": "NYSE",
+ "sector": "Energy",
+ "country": "GB",
+ "economy": "ECON-GBR",
+ "quoteId": "QUOTE-SHEL",
+ "newsId": "NEWS-Shell",
+ "newsAllId": "NEWS-Shell~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

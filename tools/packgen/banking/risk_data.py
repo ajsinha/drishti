@@ -28,8 +28,8 @@ MTM_BY_CURRENCY = {"fields": TRADE_FIELDS, "rows": ["product"], "columns": ["cur
                    "filters": ["assetClass", "maturityBucket"], "heat": True}
 
 KINDS = [
-    Kind("counterparty", "CPTY", "CP-", "Counterparty", CP, "A legal entity the bank trades with: identifiers, rating, sector, country and parent group.", "counterpartyId",
-         [("Name", "$.name", None, None, False), ("LEI", "$.lei", None, None, False), ("Rating", "$.rating", None, None, True), ("Sector", "$.sector", None, None, False), ("Country", "$.country", None, None, False), ("Type", "$.type", None, None, False), ("Net MTM", "$.netMtm", "signed0", "sign", False), ("PFE peak", "$.pfePeak", "compact", None, False)],
+    Kind("counterparty", "CPTY", "CP-", "Counterparty", CP, "A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, country of risk and parent group.", "counterpartyId",
+         [("Name", "$.name", None, None, False), ("LEI", "$.lei", None, None, False), ("Rating", "$.rating", None, None, True), ("Sector", "$.sector", None, None, False), ("Country of risk", "$.COUNTRY_OF_RISK", None, None, False), ("UEN", "$.UEN", None, None, False), ("Type", "$.type", None, None, False), ("Net MTM", "$.netMtm", "signed0", "sign", False), ("PFE peak", "$.pfePeak", "compact", None, False)],
          [P("table", "nettingSets", "Netting sets", "$.nettingSets", [("Netting set", "@.id", None, None, False), ("Agreement", "@.agreement", None, None, False), ("Trades", "@.trades", "amount0", None, True), ("Net MTM", "@.netMtm", "signed0", "sign", True)], key="F2"),
           P("kv", "kyc", "KYC and classification", "$.kyc", area="right"),
           P("graph", "hierarchy", "Group hierarchy (agreements and netting sets)", key="F3", code="HIER",

@@ -21,7 +21,8 @@ connector answers each of its kinds; packs `require` the packs whose kinds they 
 from __future__ import annotations
 
 # data domain -> lake folder name (data/delta/<domain>/<kind>/)
-DOMAINS = {"reference": "Reference data: parties, organisation, legal agreements, calendars",
+DOMAINS = {"reference": "Reference data: parties, organisation, calendars",
+           "legal": "Legal agreements: ISDA masters and credit support annexes",
            "market": "Market data: curves, surfaces, prices, fixings",
            "trading": "Trades in every product",
            "risk": "Market-risk results: VaR, stress, FRTB, P&L explain",
@@ -29,20 +30,21 @@ DOMAINS = {"reference": "Reference data: parties, organisation, legal agreements
            "collateral": "Collateral and margin: balances, calls, SIMM"}
 
 PACKS = {
-    "banking-core": {
-        "title": "Banking core", "requires": [],
-        "description": "The parties, organisation and legal agreements every banking pack builds on.",
-        "kinds": {"reference": ["counterparty", "counterparty-group", "issuer", "agreement", "ccp", "legal-entity", "book", "desk",
-                                "trader", "calendar", "csa", "clearing-account"]}},
+    "core": {
+        "title": "Core", "requires": [],
+        "description": "The parties and organisation every pack builds on: counterparties (with country of risk and UEN), groups, issuers, CCPs, "
+                       "legal entities, books and portfolios, desks, traders and holiday calendars.",
+        "kinds": {"reference": ["counterparty", "counterparty-group", "issuer", "ccp", "legal-entity", "book", "desk",
+                                "trader", "calendar", "clearing-account"]}},
     "market-data": {
-        "title": "Market data", "requires": ["banking-core"],
+        "title": "Market data", "requires": ["core"],
         "description": "Curves, volatility surfaces, FX, equities, credit, inflation, commodities, fixings and bonds.",
         "kinds": {"market": ["ir-curve", "repo-curve", "fx-spot", "fx-forward-curve", "fx-vol-surface", "ir-vol-cube", "cap-vol-surface",
                              "equity", "equity-index", "dividend-curve", "equity-vol-surface", "credit-curve", "inflation-index",
                              "inflation-curve", "commodity", "commodity-curve", "commodity-vol-surface", "rate-fixing", "bond",
                              "correlation-matrix"]}},
     "trading": {
-        "title": "Trading", "requires": ["banking-core", "market-data"],
+        "title": "Trading", "requires": ["core", "market-data"],
         "description": "Trades in 125 products across rates, FX, credit, equity, commodities, inflation, fixed income, "
                        "securities financing, money markets and structured products.",
         "kinds": {"trading": ["trade"]}},
@@ -51,9 +53,11 @@ PACKS = {
         "description": "Value at risk, stress testing, FRTB sensitivities and P&L explain.",
         "kinds": {"risk": ["var", "stress-scenario", "stress-result", "frtb-sensitivity", "pnl-explain"]}},
     "counterparty-risk": {
-        "title": "Counterparty credit risk", "requires": ["market-data", "trading"],
-        "description": "Netting sets, exposure and PFE, CVA/XVA, SA-CCR, credit limits, collateral, margin calls and SIMM.",
-        "kinds": {"credit": ["netting-set", "credit-limit", "exposure-profile", "cva", "sa-ccr"],
+        "title": "Counterparty credit risk", "requires": ["trading"],
+        "description": "ISDA master agreements and CSAs, netting sets, exposure and PFE, CVA/XVA, SA-CCR, credit limits, collateral, "
+                       "margin calls and SIMM.",
+        "kinds": {"legal": ["agreement", "csa"],
+                  "credit": ["netting-set", "credit-limit", "exposure-profile", "cva", "sa-ccr"],
                   "collateral": ["collateral-balance", "margin-call", "simm"]}},
 }
 

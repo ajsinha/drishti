@@ -12,14 +12,14 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Generates the glossary source of each pack, tools/packgen/<economics|politics>/about.yaml, from two inputs: the indicator
+"""Generates the glossary source of the world-economy pack, tools/packgen/world/about.yaml, from two inputs: the indicator
 vocabulary in sources.yaml (term = name, means = def, unit) and the hand-written kind and field descriptions in
 tools/realdata/about/<pack>.kinds.yaml. The pack generators copy the result into config/packs/<pack>/config/about.yaml.
 
-    python3 tools/realdata/about.py            write both about.yaml files
-    python3 tools/realdata/about.py --check    fail if either differs from what would be written
+    python3 tools/realdata/about.py            write the about.yaml
+    python3 tools/realdata/about.py --check    fail if it differs from what would be written
 
-With no_imf the economics glossary has no IMF indicator, no economic-forecast kind and no sentence that cites the IMF.
+With no_imf the glossary has no IMF indicator, no economic-forecast kind and no sentence that cites the IMF.
 """
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ import normalise as N  # noqa: E402
 
 WIDTH = 170                                   # the line width of the committed files
 # pack generator directory -> (pack name, indicator groups its vocabulary covers)
-PACKS = {"economics": ("economics", ("economy", "labour", "fiscal")), "politics": ("politics-society", ("social", "governance"))}
+PACKS = {"world": ("world-economy", ("economy", "labour", "fiscal", "social", "governance"))}
 NO_IMF_FISCAL_ABOUT = "${$.economyName}'s central government revenue was ${fmt($.revenue, 'pc1')} of GDP and its expense ${fmt($.spending, 'pc1')} of GDP (World Bank)."
 
 
@@ -55,7 +55,7 @@ def kinds_text(pack: str, no_imf: bool) -> str:
     while lines and (lines[0].startswith("#") or not lines[0].strip()):
         lines.pop(0)
     text = "\n".join(lines)
-    if not (no_imf and pack == "economics"):
+    if not no_imf:
         return text
     kinds = yaml.safe_load(text)["kinds"]
     del kinds["economic-forecast"]

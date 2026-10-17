@@ -28,6 +28,8 @@ import org.springframework.core.env.Environment;
 public final class PackPaths {
 
     public static final String DEFAULT_PACKS = "./config/packs";
+    /** The packs enabled when {@code drishti.packs.enabled} is not set: the seven shipped packs. */
+    public static final String DEFAULT_ENABLED = "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets";
     private static final String LEGACY_PACKS = "./packs";
     private static final AtomicBoolean WARNED = new AtomicBoolean();
 
@@ -55,6 +57,11 @@ public final class PackPaths {
             return LEGACY_PACKS;
         }
         return dir;
+    }
+
+    /** Further pack folders, comma-separated ({@code drishti.packs.extra-dirs}), looked in after the packs folder: retired example packs. */
+    public static String extraDirs(Environment env) {
+        return env.getProperty("drishti.packs.extra-dirs", "");
     }
 
     public static String installedDir(Environment env) {

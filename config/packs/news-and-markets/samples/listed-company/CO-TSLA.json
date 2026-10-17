@@ -1,0 +1,22 @@
+{
+ "companyId": "CO-TSLA",
+ "ticker": "TSLA",
+ "name": "Tesla, Inc.",
+ "aliases": [
+  "TSLA",
+  "Elon Musk"
+ ],
+ "aliasText": "TSLA, Elon Musk",
+ "exchange": "Nasdaq",
+ "sector": "Consumer Discretionary",
+ "country": "US",
+ "economy": "ECON-USA",
+ "quoteId": "QUOTE-TSLA",
+ "newsId": "NEWS-Tesla",
+ "newsAllId": "NEWS-Tesla~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

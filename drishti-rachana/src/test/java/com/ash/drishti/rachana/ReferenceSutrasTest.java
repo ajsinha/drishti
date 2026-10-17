@@ -35,13 +35,13 @@ class ReferenceSutrasTest {
 
     static final Path FIXTURES = Path.of("..", "config", "packs", "finance", "samples");
     static final ElCompiler EL = new ElCompiler();
-    static final Formats F = Formats.load(null, java.util.List.of("../config/packs/finance/config/formats.yaml"));
+    static final Formats F = Formats.load(null, java.util.List.of("../examples/packs/finance/config/formats.yaml"));
     static SutraRegistry registry;
     static SutraMatcher matcher;
 
     @BeforeAll
     static void load() {
-        registry = new SutraRegistry(new RachanaProperties(List.of("../config/packs/finance/sutras"), false, null, null, null, null, null, null, null, null), EL);
+        registry = new SutraRegistry(new RachanaProperties(List.of("../examples/packs/finance/sutras"), false, null, null, null, null, null, null, null, null), EL);
         matcher = new SutraMatcher(registry, EL, F);
     }
 

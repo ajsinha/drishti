@@ -208,7 +208,7 @@ def model() -> str:
 
 
 GUIDES = {
-    "banking-core": [("banking-core", "Banking core pack", "The base: parties, organisation, agreements and calendars, and how to use them.", "building", overview),
+    "core": [("core", "Core pack", "The base: parties, organisation, books and calendars, and how to use them.", "building", overview),
                      ("banking-data-model", "The banking data model", "How counterparties, trades, netting sets, market data and risk results refer to each other.", "diagram-3", None)],
     "market-data": [("market-data", "Market data pack", "Curves, surfaces, prices and fixings: kinds, connectors and examples.", "graph-up", overview),
                     ("market-data-catalogue", "Market-data catalogue", "Every curve, surface, spot and fixing the pack defines, and how products select them.", "list-ul", None)],

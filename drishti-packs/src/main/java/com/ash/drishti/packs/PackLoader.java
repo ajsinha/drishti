@@ -82,11 +82,27 @@ public final class PackLoader {
 
     /** The folders packs are looked for in: installed ones ({@code drishti.packs.installed-dir}) first, if it exists. */
     public static List<Path> dirs(String packsDir, String installedDir) {
+        return dirs(packsDir, installedDir, null);
+    }
+
+    /**
+     * The folders packs are looked for in, then the extra folders ({@code drishti.packs.extra-dirs}, comma-separated, such
+     * as {@code examples/packs}): a pack there can be enabled by name and may extend the shipped packs, which win a name.
+     */
+    public static List<Path> dirs(String packsDir, String installedDir, String extraDirs) {
         List<Path> out = new ArrayList<>();
         if (installedDir != null && !installedDir.isBlank() && Files.isDirectory(Path.of(installedDir))) {
             out.add(Path.of(installedDir).toAbsolutePath().normalize());
         }
         out.add(Path.of(packsDir).toAbsolutePath().normalize());
+        if (extraDirs != null) {
+            for (String e : extraDirs.split(",")) {
+                Path x = e.isBlank() ? null : Path.of(e.trim()).toAbsolutePath().normalize();
+                if (x != null && Files.isDirectory(x) && !out.contains(x)) {
+                    out.add(x);
+                }
+            }
+        }
         return out;
     }
 

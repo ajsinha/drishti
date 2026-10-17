@@ -227,7 +227,7 @@ public class PackAdminController {
     private List<Map<String, Object>> onDisk() {
         List<Map<String, Object>> out = new ArrayList<>();
         Set<String> seen = new java.util.HashSet<>();
-        for (Path d : com.ash.drishti.packs.PackLoader.dirs(dir.toString(), com.ash.drishti.packs.PackPaths.installedDir(env))) {
+        for (Path d : com.ash.drishti.packs.PackLoader.dirs(dir.toString(), com.ash.drishti.packs.PackPaths.installedDir(env), com.ash.drishti.packs.PackPaths.extraDirs(env))) {
             for (Map<String, Object> m : onDisk(d)) {
                 if (seen.add((String) m.get("name"))) {
                     out.add(m);

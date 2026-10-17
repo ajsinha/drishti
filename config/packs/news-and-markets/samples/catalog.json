@@ -1,0 +1,212 @@
+[
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-FED",
+  "title": "TOPIC-FED",
+  "subtitle": "Central bank · Federal Reserve · Fed, FOMC, Powell"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-ECB",
+  "title": "TOPIC-ECB",
+  "subtitle": "Central bank · European Central Bank · ECB, Lagarde"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-BOE",
+  "title": "TOPIC-BOE",
+  "subtitle": "Central bank · Bank of England · BoE"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-BOJ",
+  "title": "TOPIC-BOJ",
+  "subtitle": "Central bank · Bank of Japan · BoJ"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-INFLATION",
+  "title": "TOPIC-INFLATION",
+  "subtitle": "Theme · inflation · CPI, consumer prices"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-RATES",
+  "title": "TOPIC-RATES",
+  "subtitle": "Theme · interest rates · rate cut, rate hike, rates"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-OIL",
+  "title": "TOPIC-OIL",
+  "subtitle": "Theme · oil prices · crude, Brent, oil"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-BITCOIN",
+  "title": "TOPIC-BITCOIN",
+  "subtitle": "Theme · bitcoin · crypto, cryptocurrency"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-AI",
+  "title": "TOPIC-AI",
+  "subtitle": "Theme · artificial intelligence · AI, machine learning"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-CLIMATE",
+  "title": "TOPIC-CLIMATE",
+  "subtitle": "Theme · climate change · global warming, emissions, climate"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-INDIA",
+  "title": "TOPIC-INDIA",
+  "subtitle": "Country · India · Indian, New Delhi"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-GERMANY",
+  "title": "TOPIC-GERMANY",
+  "subtitle": "Country · Germany · German, Berlin"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-BRAZIL",
+  "title": "TOPIC-BRAZIL",
+  "subtitle": "Country · Brazil · Brazilian, Brasilia"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-DEUTSCHE-BANK",
+  "title": "TOPIC-DEUTSCHE-BANK",
+  "subtitle": "Company · Deutsche Bank · Deutsche"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-TOYOTA",
+  "title": "TOPIC-TOYOTA",
+  "subtitle": "Company · Toyota · トヨタ, Toyota Motor"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-AAPL",
+  "title": "CO-AAPL",
+  "subtitle": "Technology · Apple Inc. (Nasdaq: AAPL) · Apple Inc, AAPL, iPhone"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-MSFT",
+  "title": "CO-MSFT",
+  "subtitle": "Technology · Microsoft Corporation (Nasdaq: MSFT) · MSFT"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-GOOGL",
+  "title": "CO-GOOGL",
+  "subtitle": "Communication Services · Alphabet Inc. (Nasdaq: GOOGL) · Google, GOOGL"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-AMZN",
+  "title": "CO-AMZN",
+  "subtitle": "Consumer Discretionary · Amazon.com, Inc. (Nasdaq: AMZN) · AMZN, AWS"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-NVDA",
+  "title": "CO-NVDA",
+  "subtitle": "Technology · NVIDIA Corporation (Nasdaq: NVDA) · Nvidia, NVDA"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-TSLA",
+  "title": "CO-TSLA",
+  "subtitle": "Consumer Discretionary · Tesla, Inc. (Nasdaq: TSLA) · TSLA, Elon Musk"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-META",
+  "title": "CO-META",
+  "subtitle": "Communication Services · Meta Platforms, Inc. (Nasdaq: META) · Meta, Facebook, Instagram"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-NFLX",
+  "title": "CO-NFLX",
+  "subtitle": "Communication Services · Netflix, Inc. (Nasdaq: NFLX) · NFLX"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-JPM",
+  "title": "CO-JPM",
+  "subtitle": "Financials · JPMorgan Chase & Co. (NYSE: JPM) · JPMorgan, JP Morgan, Jamie Dimon"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-BAC",
+  "title": "CO-BAC",
+  "subtitle": "Financials · Bank of America Corporation (NYSE: BAC) · BofA, BAC"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-GS",
+  "title": "CO-GS",
+  "subtitle": "Financials · The Goldman Sachs Group, Inc. (NYSE: GS) · Goldman"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-XOM",
+  "title": "CO-XOM",
+  "subtitle": "Energy · Exxon Mobil Corporation (NYSE: XOM) · Exxon, ExxonMobil"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-CVX",
+  "title": "CO-CVX",
+  "subtitle": "Energy · Chevron Corporation (NYSE: CVX) · CVX"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-SHEL",
+  "title": "CO-SHEL",
+  "subtitle": "Energy · Shell plc (NYSE: SHEL) · Shell plc"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-MRK",
+  "title": "CO-MRK",
+  "subtitle": "Health Care · Merck & Co., Inc. (NYSE: MRK) · Merck & Co, MRK"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-PFE",
+  "title": "CO-PFE",
+  "subtitle": "Health Care · Pfizer Inc. (NYSE: PFE) · PFE"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-WMT",
+  "title": "CO-WMT",
+  "subtitle": "Consumer Staples · Walmart Inc. (NYSE: WMT) · WMT"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-KO",
+  "title": "CO-KO",
+  "subtitle": "Consumer Staples · The Coca-Cola Company (NYSE: KO) · Coke, Coca Cola"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-DIS",
+  "title": "CO-DIS",
+  "subtitle": "Communication Services · The Walt Disney Company (NYSE: DIS) · Walt Disney, DIS"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-BA",
+  "title": "CO-BA",
+  "subtitle": "Industrials · The Boeing Company (NYSE: BA) · BA"
+ }
+]

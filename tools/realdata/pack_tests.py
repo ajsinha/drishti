@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Sutra tests of the economics and politics-society packs (config/packs/<pack>/tests/): a few real documents per kind, copied
+"""The Sutra tests of the world-economy pack (config/packs/<pack>/tests/): a few real documents per kind, copied
 from the generated samples, an expect.yaml per kind and the help-coverage ratchet. Which documents and what they expect is in
 pack_tests.yaml; the documents come from build_docs, so a data refresh updates the tests with the packs.
 

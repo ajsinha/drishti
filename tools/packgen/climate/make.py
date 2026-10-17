@@ -15,7 +15,7 @@
 """The climate-risk pack: counterparty climate profiles, PCAF financed emissions per book, NGFS scenarios, climate
 stress results, physical-risk assets and the EU-taxonomy green asset ratio, generated from the banking packs' data.
 
-    python3 tools/packgen/climate/make.py            write config/packs/climate-risk
+    python3 tools/packgen/climate/make.py            write examples/packs/climate-risk (a retired example pack)
     python3 tools/packgen/climate/make.py --check    fail if the pack differs from what would be written
     uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/climate/make.py --lake data/delta
 """
@@ -184,7 +184,7 @@ def spec(bank: dict) -> PB.PackSpec:
     return PB.PackSpec(
         code="CLI",
         columns={'climate-profile': ['counterpartyName', 'sector', 'intensity', 'transitionScore', 'physicalScore', 'netZeroTarget'], 'climate-stress': ['scenarioName', 'deskName', 'loss2030', 'loss2050', 'capitalShare'], 'financed-emissions': ['book', 'financed', 'exposure', 'intensity', 'dataQuality'], 'physical-asset': ['name', 'counterpartyName', 'country', 'value', 'worstHazard'], 'climate-scenario': ['name', 'category', 'warming', 'carbon2030', 'carbon2050'], 'taxonomy-alignment': ['legalEntityName', 'gar', 'eligible', 'covered']},  # key fields shown beside each entity in pick lists
-        name="climate-risk", title="Climate risk", requires=["trading"], generator="tools/packgen/climate/make.py",
+        name="climate-risk", retired=True, title="Climate risk", requires=["trading"], generator="tools/packgen/climate/make.py",
         description="Counterparty climate profiles, PCAF financed emissions, NGFS scenarios, climate stress, physical-risk assets and the green asset ratio.",
         domains={"climate": KINDS},
         examples=[("CLIM CLIM-SOLARIS", "Climate profile · emissions by scope, transition and physical risk"), ("FE FE-RATES-1", "Financed emissions of a book"),

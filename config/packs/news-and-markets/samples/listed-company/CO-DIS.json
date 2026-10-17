@@ -1,0 +1,22 @@
+{
+ "companyId": "CO-DIS",
+ "ticker": "DIS",
+ "name": "The Walt Disney Company",
+ "aliases": [
+  "Walt Disney",
+  "DIS"
+ ],
+ "aliasText": "Walt Disney, DIS",
+ "exchange": "NYSE",
+ "sector": "Communication Services",
+ "country": "US",
+ "economy": "ECON-USA",
+ "quoteId": "QUOTE-DIS",
+ "newsId": "NEWS-Disney",
+ "newsAllId": "NEWS-Disney~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

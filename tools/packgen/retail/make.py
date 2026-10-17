@@ -13,9 +13,9 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The retail-banking pack: customers, deposit accounts, mortgages, card accounts, personal loans, branches,
-collections cases and IFRS 9 portfolio segments, booked in the banking-core legal entities.
+collections cases and IFRS 9 portfolio segments, booked in the core legal entities.
 
-    python3 tools/packgen/retail/make.py            write config/packs/retail-banking
+    python3 tools/packgen/retail/make.py            write examples/packs/retail-banking (a retired example pack)
     python3 tools/packgen/retail/make.py --check    fail if the pack differs from what would be written
     uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/retail/make.py --lake data/delta
 """
@@ -256,13 +256,13 @@ def spec(bank: dict) -> PB.PackSpec:
     return PB.PackSpec(
         code="RTL",
         columns={'customer': ['name', 'segment', 'totalDeposits', 'totalLending', 'kycRisk'], 'deposit-account': ['holderName', 'type', 'balance', 'currency', 'rate', 'status'], 'mortgage': ['borrowerName', 'balance', 'rate', 'ltv', 'remainingYears', 'daysPastDue'], 'card-account': ['holderName', 'product', 'balance', 'limit', 'utilisation', 'status'], 'personal-loan': ['borrowerName', 'purpose', 'balance', 'rate', 'daysPastDue'], 'collections-case': ['customerName', 'arrears', 'daysPastDue', 'stage', 'status'], 'branch': ['name', 'city', 'customers', 'deposits', 'lending']},  # key fields shown beside each entity in pick lists
-        name="retail-banking", title="Retail banking", requires=["banking-core"], generator="tools/packgen/retail/make.py",
+        name="retail-banking", retired=True, title="Retail banking", requires=["core"], generator="tools/packgen/retail/make.py",
         description="Customers, deposit accounts, mortgages, cards, personal loans, branches, collections and IFRS 9 portfolio segments.",
         domains={"retail": KINDS},
         examples=[("CUST CUST-100231", "Customer · products held and profile"), ("ACCT ACCT-100231-CUR", "Current account · transactions (live)"),
                   ("MTG MTG-100231", "Mortgage · amortisation, property, payments"), ("CARD CARD-100238", "Credit card · spend by category, statements"),
                   ("BRN BRN-LDN-CITY", "Branch · product mix and NPS"), ("RPF RPF-US-CARD", "IFRS 9 · ECL by stage, delinquency")],
-        overview="Retail customers belong to branches, and branches and portfolio segments to the banking-core legal entities. A customer view lists "
+        overview="Retail customers belong to branches, and branches and portfolio segments to the core legal entities. A customer view lists "
                  "every product the customer holds; each product links back to its holder, and delinquent cards and loans open collections cases.",
         external_ids={"legal-entity": set(bank["legal-entity"])},
         roles={"retail": {"kinds": [k.kind for k in KINDS] + ["legal-entity"], "raw": True}})

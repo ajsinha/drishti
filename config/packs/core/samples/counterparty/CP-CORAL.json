@@ -1,0 +1,135 @@
+{
+ "counterpartyId": "CP-CORAL",
+ "name": "Coral Bay Municipal Authority",
+ "lei": "54930090PSTH3R63NY09",
+ "rating": "AA",
+ "sector": "Government",
+ "country": "US",
+ "type": "Municipality",
+ "COUNTRY_OF_RISK": "US",
+ "UEN": "UEN0100185",
+ "economy": "ECON-USA",
+ "newsId": "NEWS-Coral_Bay_Municipal_Authority",
+ "netMtm": -50059677,
+ "pfePeak": 73339836,
+ "nettingSets": [
+  {
+   "id": "NS-CORAL-FRA",
+   "agreement": "AGR-CORAL-ISDA",
+   "trades": 3,
+   "netMtm": 3083244
+  },
+  {
+   "id": "NS-CORAL-LDN",
+   "agreement": "AGR-CORAL-ISDA",
+   "trades": 9,
+   "netMtm": -5018209
+  },
+  {
+   "id": "NS-CORAL-NY",
+   "agreement": "AGR-CORAL-ISDA",
+   "trades": 25,
+   "netMtm": -48485563
+  },
+  {
+   "id": "NS-CORAL-TKY",
+   "agreement": "AGR-CORAL-ISDA",
+   "trades": 3,
+   "netMtm": 360851
+  }
+ ],
+ "kyc": {
+  "status": "Approved",
+  "riskRating": "Standard",
+  "lastReview": "2026-02-11",
+  "emirClassification": "NFC-",
+  "pd1y": 0.0003
+ },
+ "group": "GRP-CORAL",
+ "creditLimit": "LIM-CORAL",
+ "hierarchy": {
+  "nodes": [
+   {
+    "id": "GRP-CORAL",
+    "label": "Coral Bay Municipal Authority",
+    "type": "Group (ultimate parent)"
+   },
+   {
+    "id": "CP-CORAL",
+    "label": "Coral Bay Municipal Authority",
+    "type": "Counterparty"
+   },
+   {
+    "id": "AGR-CORAL-ISDA",
+    "label": "ISDA 2002 Master",
+    "type": "Agreement"
+   },
+   {
+    "id": "CSA-CORAL",
+    "label": "Credit support annex",
+    "type": "CSA"
+   },
+   {
+    "id": "NS-CORAL-FRA",
+    "label": "NS-CORAL-FRA · 3 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-CORAL-LDN",
+    "label": "NS-CORAL-LDN · 9 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-CORAL-NY",
+    "label": "NS-CORAL-NY · 25 trades",
+    "type": "Netting set"
+   },
+   {
+    "id": "NS-CORAL-TKY",
+    "label": "NS-CORAL-TKY · 3 trades",
+    "type": "Netting set"
+   }
+  ],
+  "edges": [
+   {
+    "from": "GRP-CORAL",
+    "to": "CP-CORAL",
+    "label": "parent of"
+   },
+   {
+    "from": "CP-CORAL",
+    "to": "AGR-CORAL-ISDA",
+    "label": "signed"
+   },
+   {
+    "from": "AGR-CORAL-ISDA",
+    "to": "CSA-CORAL",
+    "label": "secured by"
+   },
+   {
+    "from": "AGR-CORAL-ISDA",
+    "to": "NS-CORAL-FRA",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-CORAL-ISDA",
+    "to": "NS-CORAL-LDN",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-CORAL-ISDA",
+    "to": "NS-CORAL-NY",
+    "label": "nets"
+   },
+   {
+    "from": "AGR-CORAL-ISDA",
+    "to": "NS-CORAL-TKY",
+    "label": "nets"
+   }
+  ]
+ },
+ "_meta": {
+  "source": "counterparty-master",
+  "generation": 1
+ }
+}

@@ -1,0 +1,22 @@
+{
+ "companyId": "CO-BAC",
+ "ticker": "BAC",
+ "name": "Bank of America Corporation",
+ "aliases": [
+  "BofA",
+  "BAC"
+ ],
+ "aliasText": "BofA, BAC",
+ "exchange": "NYSE",
+ "sector": "Financials",
+ "country": "US",
+ "economy": "ECON-USA",
+ "quoteId": "QUOTE-BAC",
+ "newsId": "NEWS-Bank_of_America",
+ "newsAllId": "NEWS-Bank_of_America~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

@@ -15,7 +15,7 @@
 """The liquidity-risk pack: LCR, NSFR, maturity ladders, HQLA holdings, funding sources, liquidity stress and intraday
 liquidity, per legal entity, generated from the banking packs' data so entities, counterparties and bonds line up.
 
-    python3 tools/packgen/liquidity/make.py            write config/packs/liquidity-risk
+    python3 tools/packgen/liquidity/make.py            write examples/packs/liquidity-risk (a retired example pack)
     python3 tools/packgen/liquidity/make.py --check    fail if the pack differs from what would be written
     uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/liquidity/make.py --lake data/delta
 """
@@ -246,14 +246,14 @@ def spec(bank: dict) -> PB.PackSpec:
     return PB.PackSpec(
         code="LIQ",
         columns={'lcr': ['legalEntityName', 'lcr', 'hqla', 'netOutflows', 'buffer'], 'nsfr': ['legalEntityName', 'nsfr', 'asfTotal', 'rsfTotal'], 'funding-source': ['counterpartyName', 'type', 'amount', 'currency', 'maturity', 'runOffRate'], 'hqla-holding': ['security', 'level', 'marketValue', 'haircut', 'liquidityValue'], 'liquidity-stress': ['scenarioName', 'legalEntityName', 'survivalDays', 'minimumPosition'], 'maturity-ladder': ['legalEntityName', 'currency', 'gap1m', 'survivalDays']},  # key fields shown beside each entity in pick lists
-        name="liquidity-risk", title="Liquidity risk", requires=["trading"], generator="tools/packgen/liquidity/make.py",
+        name="liquidity-risk", retired=True, title="Liquidity risk", requires=["trading"], generator="tools/packgen/liquidity/make.py",
         description="LCR and NSFR by legal entity, maturity ladders, HQLA holdings, funding sources, liquidity stress survival and intraday liquidity.",
         domains={"liquidity": KINDS},
         examples=[("LCR LCR-NY", "Liquidity coverage ratio · HQLA by level, outflows, 30-day trend"), ("NSFR NSFR-LDN", "Net stable funding ratio"),
                   ("MLAD MLAD-LDN-GBP", "Maturity ladder · net gap by bucket"), ("LST LST-COMB-NY", "Liquidity stress · survival horizon"),
                   ("IDL IDL-NY-USD", "Intraday liquidity · usage through the day")],
         overview="Liquidity figures are computed per legal entity from the same entities, counterparties and bonds as the banking packs: HQLA holdings "
-                 "are the sovereign and corporate bonds of the market-data pack, funding sources are the banking-core counterparties.",
+                 "are the sovereign and corporate bonds of the market-data pack, funding sources are the core counterparties.",
         external_ids={"legal-entity": set(bank["legal-entity"]), "counterparty": set(bank["counterparty"]), "bond": set(bank["bond"])},
         roles={"treasury": {"kinds": [k.kind for k in KINDS] + ["legal-entity", "counterparty", "bond"], "raw": True}})
 

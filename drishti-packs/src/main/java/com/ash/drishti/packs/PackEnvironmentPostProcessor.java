@@ -46,7 +46,7 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
                 System.setProperty("drishti.index.dir", idx);
             }
         }
-        String enabled = env.getProperty("drishti.packs.enabled", "finance");
+        String enabled = env.getProperty("drishti.packs.enabled", PackPaths.DEFAULT_ENABLED);
         java.util.LinkedHashSet<String> names = new java.util.LinkedHashSet<>(
                 Arrays.stream(enabled.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());
         names.addAll(org.springframework.boot.context.properties.bind.Binder.get(env)
@@ -56,7 +56,7 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         ConnectorFiles files = new ConnectorFiles(java.nio.file.Path.of(connDir), java.nio.file.Path.of(PackPaths.dataDir(env), "connectors"));
         PackSettings overrides = new PackSettings(java.nio.file.Path.of(PackPaths.settingsDir(env)));
         PackLoader loader = new PackLoader(files);
-        List<java.nio.file.Path> dirs = PackLoader.dirs(dir, PackPaths.installedDir(env));
+        List<java.nio.file.Path> dirs = PackLoader.dirs(dir, PackPaths.installedDir(env), PackPaths.extraDirs(env));
         SamplePolicy samples = SamplePolicy.of(env);                                    // hidden: sample packs are not loaded
         List<Pack> packs = loader.load(dirs, samples.select(dirs, List.copyOf(names), loader));
         java.util.Set<String> suppressed = new java.util.LinkedHashSet<>();

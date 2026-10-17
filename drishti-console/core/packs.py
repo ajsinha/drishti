@@ -25,6 +25,8 @@ import yaml
 from core.servers import scoped
 
 log = logging.getLogger(__name__)
+# The packs the server enables when DRISHTI_PACKS is not set (PackPaths.DEFAULT_ENABLED): the seven shipped packs.
+DEFAULT_ENABLED = "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets"
 
 
 class Packs:
@@ -35,7 +37,10 @@ class Packs:
         if not self.dir.is_dir() and legacy.is_dir():        # one release of grace for the old location
             log.warning("The packs folder %s does not exist; using the old location %s (move it to config/packs).", self.dir, legacy)
             self.dir = legacy
-        self.fallback = [p.strip() for p in str(settings.get("packs.enabled", "finance")).split(",") if p.strip()]
+        self.extra = [x for x in ((e if e.is_absolute() else (console_dir / e).resolve())          # retired example packs (examples/packs)
+                                  for e in (Path(s.strip()) for s in str(settings.get("packs.extra_dirs", "") or "").split(",") if s.strip()))
+                      if x.is_dir() and x != self.dir]
+        self.fallback = [p.strip() for p in str(settings.get("packs.enabled", DEFAULT_ENABLED)).split(",") if p.strip()]
         self._cache: dict[str, tuple[float, list, list]] = {}
 
     async def current(self, backend, ident=None) -> list[dict]:
@@ -86,9 +91,12 @@ class Packs:
                 "python": row.get("python") or {"enabled": False, "snippets": []}}
 
     def _load(self, name: str) -> dict | None:
-        pdir = (self.dir / name).resolve()
-        manifest = pdir / "pack.yaml"
-        if not str(pdir).startswith(str(self.dir)) or not manifest.exists():
+        for root in [self.dir, *self.extra]:              # the shipped packs win a name, as on the server
+            pdir = (root / name).resolve()
+            manifest = pdir / "pack.yaml"
+            if str(pdir).startswith(str(root)) and manifest.exists():
+                break
+        else:
             return None
         m = yaml.safe_load(manifest.read_text(encoding="utf-8")) or {}
         console = m.get("console", {}) or {}
