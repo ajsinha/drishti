@@ -49,50 +49,50 @@ Load real data into each domain's folder, or point a domain at a database instea
 
 | Kind | Name | Mnemonic | Identifiers | Id field | What it is |
 |---|---|---|---|---|---|
-| `var` | VaR / expected shortfall | `VAR` | `VAR-…` | `resultId` | Historical VaR and ES for a desk or portfolio, with backtesting. |
-| `stress-scenario` | Stress scenario | `SCN` | `SCN-…` | `scenarioId` | A named historical or hypothetical shock set. |
-| `stress-result` | Stress result | `STR` | `STR-…` | `resultId` | P&L of a desk under a scenario, by book. |
-| `frtb-sensitivity` | FRTB sensitivities | `FRTB` | `FRTB-…` | `resultId` | Delta, vega and curvature by risk class and bucket (SBM). |
-| `pnl-explain` | P&L explain | `PNL` | `PNL-…` | `resultId` | Daily P&L attributed to risk factors, new trades and residual. |
+| `var` | VaR / expected shortfall | `VAR` | `VAR-…` | `RESULT_ID` | Historical VaR and ES for a desk or portfolio, with backtesting. |
+| `stress-scenario` | Stress scenario | `SCN` | `SCN-…` | `SCENARIO_ID` | A named historical or hypothetical shock set. |
+| `stress-result` | Stress result | `STR` | `STR-…` | `RESULT_ID` | P&L of a desk under a scenario, by book. |
+| `frtb-sensitivity` | FRTB sensitivities | `FRTB` | `FRTB-…` | `RESULT_ID` | Delta, vega and curvature by risk class and bucket (SBM). |
+| `pnl-explain` | P&L explain | `PNL` | `PNL-…` | `RESULT_ID` | Daily P&L attributed to risk factors, new trades and residual. |
 | `trade-valuation` | Trade valuation | `TVAL` | `TVAL-…` | `VALUATION_ID` | A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product). |
 
 ### VaR / expected shortfall (`var`)
 
 Historical VaR and ES for a desk or portfolio, with backtesting.
 
-**Fields its Sutra reads:** `var99`, `es975`, `svar`, `limit`, `exceptions`, `pnlSeries`, `contributions`, `scenarioPnl`, `meanPnl`.
+**Fields its Sutra reads:** `VAR_99`, `ES_975`, `SVAR`, `LIMIT`, `EXCEPTIONS`, `PNL_SERIES`, `CONTRIBUTIONS`, `SCENARIO_PNL`, `MEAN_PNL`.
 
-**Links:** `desk` → Desk (`desk`).
+**Links:** `DESK` → Desk (`desk`).
 
 ### Stress scenario (`stress-scenario`)
 
 A named historical or hypothetical shock set.
 
-**Fields its Sutra reads:** `name`, `type`, `severity`, `shocks`.
+**Fields its Sutra reads:** `NAME`, `TYPE`, `SEVERITY`, `SHOCKS`.
 
 ### Stress result (`stress-result`)
 
 P&L of a desk under a scenario, by book.
 
-**Fields its Sutra reads:** `scenarioName`, `pnl`, `limit`, `byBook`.
+**Fields its Sutra reads:** `SCENARIO_NAME`, `PNL`, `LIMIT`, `BY_BOOK`.
 
-**Links:** `scenario` → Scenario (`stress-scenario`), `desk` → Desk (`desk`).
+**Links:** `SCENARIO` → Scenario (`stress-scenario`), `DESK` → Desk (`desk`).
 
 ### FRTB sensitivities (`frtb-sensitivity`)
 
 Delta, vega and curvature by risk class and bucket (SBM).
 
-**Fields its Sutra reads:** `book`, `deltaCharge`, `vegaCharge`, `curvatureCharge`, `total`, `sensitivities`, `byClass`.
+**Fields its Sutra reads:** `BOOK`, `DELTA_CHARGE`, `VEGA_CHARGE`, `CURVATURE_CHARGE`, `TOTAL`, `SENSITIVITIES`, `BY_CLASS`.
 
-**Links:** `book` → Book (`book`).
+**Links:** `BOOK` → Book (`book`).
 
 ### P&L explain (`pnl-explain`)
 
 Daily P&L attributed to risk factors, new trades and residual.
 
-**Fields its Sutra reads:** `date`, `actual`, `explained`, `unexplained`, `attribution`, `explainSteps`.
+**Fields its Sutra reads:** `DATE`, `ACTUAL`, `EXPLAINED`, `UNEXPLAINED`, `ATTRIBUTION`, `EXPLAIN_STEPS`.
 
-**Links:** `book` → Book (`book`).
+**Links:** `BOOK` → Book (`book`).
 
 ### Trade valuation (`trade-valuation`)
 

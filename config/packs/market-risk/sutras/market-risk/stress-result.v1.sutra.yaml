@@ -18,21 +18,21 @@ sutra: stress-result
 version: 1
 description: "P&L of a desk under a scenario, by book."
 match: { kind: stress-result, priority: 10 }
-title: { pill: Market risk · Stress result, id: $.resultId }
+title: { pill: Market risk · Stress result, id: $.RESULT_ID }
 strip:
-  - { label: Scenario, bind: $.scenarioName }
-  - { label: "P&L", bind: $.pnl, fmt: signed0, tone: sign, emphasis: true }
-  - { label: Limit, bind: $.limit, fmt: compact }
+  - { label: Scenario, bind: $.SCENARIO_NAME }
+  - { label: "P&L", bind: $.PNL, fmt: signed0, tone: sign, emphasis: true }
+  - { label: Limit, bind: $.LIMIT, fmt: compact }
 panels:
   - id: books
     kind: hbar
     title: "P&L by book"
     key: F2
-    rows: $.byBook
-    label: book
-    value: pnl
+    rows: $.BY_BOOK
+    label: BOOK
+    value: PNL
     fmt: signed0
     tone: sign
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.scenario, 'stress-scenario')", F8: impact, F9: raw }
+keys: { F7: "link($.SCENARIO, 'stress-scenario')", F8: impact, F9: raw }

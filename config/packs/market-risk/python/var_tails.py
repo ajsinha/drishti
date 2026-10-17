@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 from scipy import stats
 from drishti import quant as q
 
-pnl = np.asarray(view.doc["scenarioPnl"], dtype=float)
+pnl = np.asarray(view.doc["SCENARIO_PNL"], dtype=float)
 n, mu, sd = len(pnl), pnl.mean(), pnl.std(ddof=1)
 jb = stats.jarque_bera(pnl)
 
@@ -31,15 +31,15 @@ rows = []
 for c in (0.95, 0.99, 0.995):
     hist = -np.quantile(pnl, 1 - c)
     normal = -(mu + q.norm_ppf(1 - c) * sd)
-    rows.append({"confidence": f"{c:.1%}", "historical loss": hist, "normal loss": normal, "historical / normal": hist / normal})
-show(pd.DataFrame(rows).set_index("confidence"), title=f"{view.id}: {n} scenarios against a normal of the same mean and volatility")
+    rows.append({"CONFIDENCE": f"{c:.1%}", "historical loss": hist, "normal loss": normal, "historical / normal": hist / normal})
+show(pd.DataFrame(rows).set_index("CONFIDENCE"), title=f"{view.id}: {n} scenarios against a normal of the same mean and volatility")
 
 losses = np.sort(-pnl[pnl < 0])[::-1]                               # largest loss first
 K = min(25, len(losses) - 1)
 hill = 1.0 / np.mean(np.log(losses[:K] / losses[K]))                 # tail index alpha: P(L > x) ~ x^-alpha
 show(pd.DataFrame({
-    "measure": ["skew", "excess kurtosis", "Jarque-Bera", "JB p-value", f"Hill tail index (k = {K})", "largest loss / sd"],
-    "value": [stats.skew(pnl), stats.kurtosis(pnl), jb.statistic, jb.pvalue, hill, losses[0] / sd],
+    "MEASURE": ["skew", "excess kurtosis", "Jarque-Bera", "JB p-value", f"Hill tail index (k = {K})", "largest loss / sd"],
+    "VALUE": [stats.skew(pnl), stats.kurtosis(pnl), jb.statistic, jb.pvalue, hill, losses[0] / sd],
 }), title="Shape of the distribution")
 print("Normal tails: Jarque-Bera does not reject" if jb.pvalue > 0.05 else
       f"Not normal (JB p {jb.pvalue:.1e}): a parametric VaR would {'understate' if rows[1]['historical / normal'] > 1 else 'overstate'} the 99% loss")

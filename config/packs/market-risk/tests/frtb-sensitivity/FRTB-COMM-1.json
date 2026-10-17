@@ -1,55 +1,55 @@
 {
- "resultId": "FRTB-COMM-1",
- "book": "BOOK-COMM-1",
- "deltaCharge": 11395921,
- "vegaCharge": 3113914,
- "curvatureCharge": 1353073,
- "total": 15862908,
- "sensitivities": [
+ "RESULT_ID": "FRTB-COMM-1",
+ "BOOK": "BOOK-COMM-1",
+ "DELTA_CHARGE": 11395921,
+ "VEGA_CHARGE": 3113914,
+ "CURVATURE_CHARGE": 1353073,
+ "TOTAL": 15862908,
+ "SENSITIVITIES": [
   {
-   "riskClass": "Commodity",
-   "bucket": "1",
-   "measure": "Delta",
-   "value": -265678
+   "RISK_CLASS": "Commodity",
+   "BUCKET": "1",
+   "MEASURE": "Delta",
+   "VALUE": -265678
   },
   {
-   "riskClass": "Commodity",
-   "bucket": "1",
-   "measure": "Vega",
-   "value": -59071
+   "RISK_CLASS": "Commodity",
+   "BUCKET": "1",
+   "MEASURE": "Vega",
+   "VALUE": -59071
   },
   {
-   "riskClass": "Commodity",
-   "bucket": "2",
-   "measure": "Delta",
-   "value": 732790
+   "RISK_CLASS": "Commodity",
+   "BUCKET": "2",
+   "MEASURE": "Delta",
+   "VALUE": 732790
   },
   {
-   "riskClass": "Commodity",
-   "bucket": "2",
-   "measure": "Vega",
-   "value": 1005986
+   "RISK_CLASS": "Commodity",
+   "BUCKET": "2",
+   "MEASURE": "Vega",
+   "VALUE": 1005986
   },
   {
-   "riskClass": "Commodity",
-   "bucket": "3",
-   "measure": "Delta",
-   "value": -514077
+   "RISK_CLASS": "Commodity",
+   "BUCKET": "3",
+   "MEASURE": "Delta",
+   "VALUE": -514077
   },
   {
-   "riskClass": "Commodity",
-   "bucket": "3",
-   "measure": "Vega",
-   "value": 712065
+   "RISK_CLASS": "Commodity",
+   "BUCKET": "3",
+   "MEASURE": "Vega",
+   "VALUE": 712065
   }
  ],
- "byClass": [
+ "BY_CLASS": [
   {
-   "riskClass": "Commodity",
-   "charge": 15862908
+   "RISK_CLASS": "Commodity",
+   "CHARGE": 15862908
   }
  ],
- "approach": "FRTB standardised (SBM)",
+ "APPROACH": "FRTB standardised (SBM)",
  "_meta": {
   "source": "frtb-engine",
   "generation": 1

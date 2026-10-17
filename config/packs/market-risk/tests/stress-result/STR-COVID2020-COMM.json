@@ -1,24 +1,24 @@
 {
- "resultId": "STR-COVID2020-COMM",
- "scenarioName": "COVID-19 March 2020",
- "pnl": -79275425,
- "limit": -75800000.0,
- "byBook": [
+ "RESULT_ID": "STR-COVID2020-COMM",
+ "SCENARIO_NAME": "COVID-19 March 2020",
+ "PNL": -79275425,
+ "LIMIT": -75800000.0,
+ "BY_BOOK": [
   {
-   "book": "BOOK-COMM-1",
-   "pnl": -24551466
+   "BOOK": "BOOK-COMM-1",
+   "PNL": -24551466
   },
   {
-   "book": "BOOK-COMM-2",
-   "pnl": -40288036
+   "BOOK": "BOOK-COMM-2",
+   "PNL": -40288036
   },
   {
-   "book": "BOOK-COMM-3",
-   "pnl": -14435923
+   "BOOK": "BOOK-COMM-3",
+   "PNL": -14435923
   }
  ],
- "scenario": "SCN-COVID2020",
- "desk": "DESK-COMM",
+ "SCENARIO": "SCN-COVID2020",
+ "DESK": "DESK-COMM",
  "_meta": {
   "source": "stress-engine",
   "generation": 1

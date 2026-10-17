@@ -18,42 +18,42 @@ sutra: var
 version: 1
 description: "Historical VaR and ES for a desk or portfolio, with backtesting."
 match: { kind: var, priority: 10 }
-title: { pill: Market risk · VaR / expected shortfall, id: $.resultId }
+title: { pill: Market risk · VaR / expected shortfall, id: $.RESULT_ID }
 strip:
-  - { label: VaR 99% 1D, bind: $.var99, fmt: compact, emphasis: true }
-  - { label: ES 97.5%, bind: $.es975, fmt: compact }
-  - { label: Stressed VaR, bind: $.svar, fmt: compact }
-  - { label: Limit, bind: $.limit, fmt: compact }
-  - { label: Exceptions (250d), bind: $.exceptions }
+  - { label: VaR 99% 1D, bind: $.VAR_99, fmt: compact, emphasis: true }
+  - { label: ES 97.5%, bind: $.ES_975, fmt: compact }
+  - { label: Stressed VaR, bind: $.SVAR, fmt: compact }
+  - { label: Limit, bind: $.LIMIT, fmt: compact }
+  - { label: Exceptions (250d), bind: $.EXCEPTIONS }
 panels:
   - id: pnl
     kind: line
     title: "Hypothetical P&L, last 60 days"
     key: F2
-    rows: $.pnlSeries
-    x: date
-    y: pnl
+    rows: $.PNL_SERIES
+    x: DATE
+    y: PNL
     fmt: signed0
   - id: contrib
     kind: hbar
     title: VaR contribution by book
     area: right
-    rows: $.contributions
-    label: book
-    value: var
+    rows: $.CONTRIBUTIONS
+    label: BOOK
+    value: VAR
     fmt: compact
   - id: scenarios
     kind: histogram
     title: "Scenario P&L distribution, 500 days (USD)"
     code: DIST
     key: F3
-    rows: $.scenarioPnl
+    rows: $.SCENARIO_PNL
     fmt: compact
     unit: USD
     markers:
-      - { label: VaR 99%, value: "-$.var99", tone: neg }
-      - { label: ES 97.5%, value: "-$.es975", tone: bad }
-      - { label: Mean, value: $.meanPnl, tone: link }
+      - { label: VaR 99%, value: "-$.VAR_99", tone: neg }
+      - { label: ES 97.5%, value: "-$.ES_975", tone: bad }
+      - { label: Mean, value: $.MEAN_PNL, tone: link }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.desk, 'desk')", F8: impact, F9: raw }
+keys: { F7: "link($.DESK, 'desk')", F8: impact, F9: raw }

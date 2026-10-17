@@ -1,74 +1,74 @@
 {
- "resultId": "PNL-INFL-1",
- "date": "2026-09-30",
- "actual": -254320,
- "explained": -261614,
- "unexplained": 7294,
- "attribution": [
+ "RESULT_ID": "PNL-INFL-1",
+ "DATE": "2026-09-30",
+ "ACTUAL": -254320,
+ "EXPLAINED": -261614,
+ "UNEXPLAINED": 7294,
+ "ATTRIBUTION": [
   {
-   "factor": "Rates delta",
-   "pnl": -109878
+   "FACTOR": "Rates delta",
+   "PNL": -109878
   },
   {
-   "factor": "FX delta",
-   "pnl": -31394
+   "FACTOR": "FX delta",
+   "PNL": -31394
   },
   {
-   "factor": "Credit",
-   "pnl": -20929
+   "FACTOR": "Credit",
+   "PNL": -20929
   },
   {
-   "factor": "Vega",
-   "pnl": -26161
+   "FACTOR": "Vega",
+   "PNL": -26161
   },
   {
-   "factor": "Carry and theta",
-   "pnl": -52323
+   "FACTOR": "Carry and theta",
+   "PNL": -52323
   },
   {
-   "factor": "New trades",
-   "pnl": -20929
+   "FACTOR": "New trades",
+   "PNL": -20929
   }
  ],
- "explainSteps": [
+ "EXPLAIN_STEPS": [
   {
-   "step": "Carry",
-   "pnl": -36626
+   "STEP": "Carry",
+   "PNL": -36626
   },
   {
-   "step": "Roll-down",
-   "pnl": -15697
+   "STEP": "Roll-down",
+   "PNL": -15697
   },
   {
-   "step": "Rates delta",
-   "pnl": -109878
+   "STEP": "Rates delta",
+   "PNL": -109878
   },
   {
-   "step": "FX delta",
-   "pnl": -31394
+   "STEP": "FX delta",
+   "PNL": -31394
   },
   {
-   "step": "Credit",
-   "pnl": -20929
+   "STEP": "Credit",
+   "PNL": -20929
   },
   {
-   "step": "Vol (vega)",
-   "pnl": -26161
+   "STEP": "Vol (vega)",
+   "PNL": -26161
   },
   {
-   "step": "Theta",
-   "pnl": 10465
+   "STEP": "Theta",
+   "PNL": 10465
   },
   {
-   "step": "New trades",
-   "pnl": -31394
+   "STEP": "New trades",
+   "PNL": -31394
   },
   {
-   "step": "Unexplained",
-   "pnl": 7294
+   "STEP": "Unexplained",
+   "PNL": 7294
   }
  ],
- "book": "BOOK-INFL-1",
+ "BOOK": "BOOK-INFL-1",
  "_meta": {
   "source": "pnl-explain",
   "generation": 1

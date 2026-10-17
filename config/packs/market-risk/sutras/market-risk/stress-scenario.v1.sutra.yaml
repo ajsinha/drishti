@@ -18,19 +18,19 @@ sutra: stress-scenario
 version: 1
 description: A named historical or hypothetical shock set.
 match: { kind: stress-scenario, priority: 10 }
-title: { pill: Market risk · Stress scenario, id: $.scenarioId }
+title: { pill: Market risk · Stress scenario, id: $.SCENARIO_ID }
 strip:
-  - { label: Name, bind: $.name }
-  - { label: Type, bind: $.type }
-  - { label: Severity, bind: $.severity, emphasis: true }
+  - { label: Name, bind: $.NAME }
+  - { label: Type, bind: $.TYPE }
+  - { label: Severity, bind: $.SEVERITY, emphasis: true }
 panels:
   - id: shocks
     kind: table
     title: Shocks
     key: F2
-    rows: $.shocks
+    rows: $.SHOCKS
     columns:
-      - { label: Risk factor, bind: "@.factor" }
-      - { label: Shock, bind: "@.shock" }
+      - { label: Risk factor, bind: "@.FACTOR" }
+      - { label: Shock, bind: "@.SHOCK" }
   - { id: built, kind: provenance, title: How this view was built }
 keys: { F8: impact, F9: raw }

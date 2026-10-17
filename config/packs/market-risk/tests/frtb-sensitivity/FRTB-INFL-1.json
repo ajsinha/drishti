@@ -1,55 +1,55 @@
 {
- "resultId": "FRTB-INFL-1",
- "book": "BOOK-INFL-1",
- "deltaCharge": 5877662,
- "vegaCharge": 2060138,
- "curvatureCharge": 396506,
- "total": 8334306,
- "sensitivities": [
+ "RESULT_ID": "FRTB-INFL-1",
+ "BOOK": "BOOK-INFL-1",
+ "DELTA_CHARGE": 5877662,
+ "VEGA_CHARGE": 2060138,
+ "CURVATURE_CHARGE": 396506,
+ "TOTAL": 8334306,
+ "SENSITIVITIES": [
   {
-   "riskClass": "GIRR",
-   "bucket": "1",
-   "measure": "Delta",
-   "value": 441769
+   "RISK_CLASS": "GIRR",
+   "BUCKET": "1",
+   "MEASURE": "Delta",
+   "VALUE": 441769
   },
   {
-   "riskClass": "GIRR",
-   "bucket": "1",
-   "measure": "Vega",
-   "value": -377150
+   "RISK_CLASS": "GIRR",
+   "BUCKET": "1",
+   "MEASURE": "Vega",
+   "VALUE": -377150
   },
   {
-   "riskClass": "GIRR",
-   "bucket": "2",
-   "measure": "Delta",
-   "value": -129074
+   "RISK_CLASS": "GIRR",
+   "BUCKET": "2",
+   "MEASURE": "Delta",
+   "VALUE": -129074
   },
   {
-   "riskClass": "GIRR",
-   "bucket": "2",
-   "measure": "Vega",
-   "value": 196071
+   "RISK_CLASS": "GIRR",
+   "BUCKET": "2",
+   "MEASURE": "Vega",
+   "VALUE": 196071
   },
   {
-   "riskClass": "GIRR",
-   "bucket": "3",
-   "measure": "Delta",
-   "value": -328724
+   "RISK_CLASS": "GIRR",
+   "BUCKET": "3",
+   "MEASURE": "Delta",
+   "VALUE": -328724
   },
   {
-   "riskClass": "GIRR",
-   "bucket": "3",
-   "measure": "Vega",
-   "value": -528969
+   "RISK_CLASS": "GIRR",
+   "BUCKET": "3",
+   "MEASURE": "Vega",
+   "VALUE": -528969
   }
  ],
- "byClass": [
+ "BY_CLASS": [
   {
-   "riskClass": "GIRR",
-   "charge": 8334306
+   "RISK_CLASS": "GIRR",
+   "CHARGE": 8334306
   }
  ],
- "approach": "FRTB standardised (SBM)",
+ "APPROACH": "FRTB standardised (SBM)",
  "_meta": {
   "source": "frtb-engine",
   "generation": 1

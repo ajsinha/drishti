@@ -65,14 +65,14 @@ graph:
   - pattern: ^TVAL-
     kind: trade-valuation
   fields:
-    scenario:
+    SCENARIO:
       kind: stress-scenario
       label: Scenario
-    varResult:
+    VAR_RESULT:
       kind: var
       label: VaR
   badges:
-    var: fmt($.var99, 'compact')
+    var: fmt($.VAR_99, 'compact')
   impact:
     measures:
       trade-valuation: $.MTM
@@ -101,83 +101,83 @@ routes:
   trade-valuation: risk-store
 form:
   var:
-  - path: resultId
+  - path: RESULT_ID
     label: Result id
     type: id
-  - path: var99
-    label: Var99
+  - path: VAR_99
+    label: VaR 99
     type: text
-  - path: es975
-    label: Es975
+  - path: ES_975
+    label: ES 975
     type: text
-  - path: svar
+  - path: SVAR
     label: Svar
     type: text
-  - path: limit
+  - path: LIMIT
     label: Limit
     type: amount
-  - path: exceptions
+  - path: EXCEPTIONS
     label: Exceptions
     type: text
   stress-scenario:
-  - path: scenarioId
+  - path: SCENARIO_ID
     label: Scenario id
     type: id
-  - path: name
+  - path: NAME
     label: Name
     type: text
-  - path: type
+  - path: TYPE
     label: Type
     type: enum
-  - path: severity
+  - path: SEVERITY
     label: Severity
     type: enum
   stress-result:
-  - path: resultId
+  - path: RESULT_ID
     label: Result id
     type: id
-  - path: scenarioName
+  - path: SCENARIO_NAME
     label: Scenario name
     type: text
-  - path: pnl
-    label: Pnl
+  - path: PNL
+    label: P&L
     type: amount
-  - path: limit
+  - path: LIMIT
     label: Limit
     type: amount
   frtb-sensitivity:
-  - path: resultId
+  - path: RESULT_ID
     label: Result id
     type: id
-  - path: book
+  - path: BOOK
     label: Book
     type: enum
-  - path: deltaCharge
+  - path: DELTA_CHARGE
     label: Delta charge
     type: text
-  - path: vegaCharge
+  - path: VEGA_CHARGE
     label: Vega charge
     type: text
-  - path: curvatureCharge
+  - path: CURVATURE_CHARGE
     label: Curvature charge
     type: text
-  - path: total
+  - path: TOTAL
     label: Total
     type: text
   pnl-explain:
-  - path: resultId
+  - path: RESULT_ID
     label: Result id
     type: id
-  - path: date
+  - path: DATE
     label: Date
     type: date
-  - path: actual
+  - path: ACTUAL
     label: Actual
     type: text
-  - path: explained
+  - path: EXPLAINED
     label: Explained
     type: text
-  - path: unexplained
+  - path: UNEXPLAINED
     label: Unexplained
     type: text
   trade-valuation:

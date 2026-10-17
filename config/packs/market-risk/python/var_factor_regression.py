@@ -21,27 +21,27 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 
-FACTORS = {"oil": ("commodity", "CMD-WTI"), "gold": ("commodity", "CMD-GOLD"), "copper": ("commodity", "CMD-COPPER"),
-           "equity NVTK": ("equity", "EQ-NVTK"), "equity GRNT": ("equity", "EQ-GRNT")}
-pnl = pd.DataFrame(view.doc["pnlSeries"]).set_index("date")["pnl"].astype(float)
+FACTORS = {"oil": ("COMMODITY", "CMD-WTI"), "gold": ("COMMODITY", "CMD-GOLD"), "copper": ("COMMODITY", "CMD-COPPER"),
+           "equity NVTK": ("EQUITY", "EQ-NVTK"), "equity GRNT": ("EQUITY", "EQ-GRNT")}
+pnl = pd.DataFrame(view.doc["PNL_SERIES"]).set_index("DATE")["PNL"].astype(float)
 rets = {}
 for name, (kind, fid) in FACTORS.items():
-    bars = (await drishti.get_async(kind, fid)).get("ohlc") or []
-    close = pd.Series({b["date"]: b["close"] for b in bars}, dtype=float).sort_index()
+    bars = (await drishti.get_async(kind, fid)).get("OHLC") or []
+    close = pd.Series({b["DATE"]: b["CLOSE"] for b in bars}, dtype=float).sort_index()
     rets[name] = np.log(close).diff() * 100                       # daily log return in %
 X = pd.DataFrame(rets)
-data = pd.concat([pnl.rename("pnl"), X], axis=1, join="inner").dropna()
+data = pd.concat([pnl.rename("PNL"), X], axis=1, join="inner").dropna()
 if len(data) < len(FACTORS) + 5:
     raise ValueError(f"only {len(data)} days line up between the P&L and the factors")
 
-model = sm.OLS(data["pnl"], sm.add_constant(data[list(FACTORS)])).fit()
-print(model.summary(title=f"{view.doc.get('desk', view.id)} daily P&L on factor returns (%), {len(data)} days"))
+model = sm.OLS(data["PNL"], sm.add_constant(data[list(FACTORS)])).fit()
+print(model.summary(title=f"{view.doc.get('DESK', view.id)} daily P&L on factor returns (%), {len(data)} days"))
 ci = model.conf_int()
-betas = pd.DataFrame({"P&L per 1% move": model.params, "95% low": ci[0], "95% high": ci[1], "p-value": model.pvalues}).drop("const").rename_axis("factor")
+betas = pd.DataFrame({"P&L per 1% move": model.params, "95% low": ci[0], "95% high": ci[1], "p-value": model.pvalues}).drop("const").rename_axis("FACTOR")
 betas["significant (5%)"] = betas["p-value"] < 0.05
 show(betas, title=f"Factor betas (R squared {model.rsquared:.2f}, adjusted {model.rsquared_adj:.2f})")
-contrib = ((data[list(FACTORS)] * model.params[list(FACTORS)]).var() / data["pnl"].var()).rename_axis("factor")
+contrib = ((data[list(FACTORS)] * model.params[list(FACTORS)]).var() / data["PNL"].var()).rename_axis("FACTOR")
 show(contrib.sort_values(ascending=False).to_frame("share of P&L variance (no covariances)"), title="Which factor explains most")
-print(f"Residual volatility {np.sqrt(model.scale):,.0f} a day against P&L volatility {data['pnl'].std(ddof=1):,.0f}: "
+print(f"Residual volatility {np.sqrt(model.scale):,.0f} a day against P&L volatility {data['PNL'].std(ddof=1):,.0f}: "
       f"{'the factors explain little; look elsewhere (book-level risk, idiosyncratic moves)' if model.rsquared < 0.3 else 'a usable factor model'}")
-chart(pd.DataFrame({"actual": data["pnl"], "fitted": model.fittedvalues}), kind="line", title="Actual against fitted daily P&L")
+chart(pd.DataFrame({"ACTUAL": data["PNL"], "fitted": model.fittedvalues}), kind="line", title="Actual against fitted daily P&L")

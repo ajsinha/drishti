@@ -21,23 +21,23 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-found = await drishti.search_async("PNL where actual != 0 and book != '' limit 1000")
-books = await drishti.search_async("BOOK where desk != '' limit 1000")
-desk_of = dict(zip(books["id"], books["desk"]))
+found = await drishti.search_async("PNL where ACTUAL != 0 and BOOK != '' limit 1000")
+books = await drishti.search_async("BOOK where DESK != '' limit 1000")
+desk_of = dict(zip(books["ID"], books["DESK"]))
 rows = []
-for rid in found["id"]:
+for rid in found["ID"]:
     d = await drishti.get_async("pnl-explain", rid)
-    for a in d["attribution"]:
-        rows.append({"book": d["book"], "desk": desk_of.get(d["book"], "?"), "factor": a["factor"], "pnl": a["pnl"]})
+    for a in d["ATTRIBUTION"]:
+        rows.append({"BOOK": d["BOOK"], "DESK": desk_of.get(d["BOOK"], "?"), "FACTOR": a["FACTOR"], "PNL": a["PNL"]})
 att = pd.DataFrame(rows)
 
-by_book = att.pivot_table(index="book", columns="factor", values="pnl", aggfunc="sum", fill_value=0, margins=True, margins_name="Total")
-show(by_book, title=f"Attribution by book ({att['book'].nunique()} books)")
-by_desk = att.pivot_table(index="desk", columns="factor", values="pnl", aggfunc="sum", fill_value=0)
+by_book = att.pivot_table(index="BOOK", columns="FACTOR", values="PNL", aggfunc="sum", fill_value=0, margins=True, margins_name="Total")
+show(by_book, title=f"Attribution by book ({att['BOOK'].nunique()} books)")
+by_desk = att.pivot_table(index="DESK", columns="FACTOR", values="PNL", aggfunc="sum", fill_value=0)
 show(by_desk.assign(Total=by_desk.sum(axis=1)), title="Attribution by desk")
-share = att.groupby("factor")["pnl"].apply(lambda s: s.abs().sum()) / att["pnl"].abs().sum()
+share = att.groupby("FACTOR")["PNL"].apply(lambda s: s.abs().sum()) / att["PNL"].abs().sum()
 show(share.sort_values(ascending=False).to_frame("share of absolute P&L"), title="What drives P&L, firm-wide")
-me = view.doc.get("book")
+me = view.doc.get("BOOK")
 if me in by_book.index:
     print(f"{me}: largest factor {by_book.loc[me].drop('Total').abs().idxmax()}; book total {by_book.loc[me, 'Total']:,.0f}")
 

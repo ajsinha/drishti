@@ -21,20 +21,20 @@ import numpy as np
 import pandas as pd
 
 doc = view.doc
-steps = pd.DataFrame(doc["explainSteps"])
-steps["cumulative"] = steps["pnl"].cumsum()
-show(steps, title=f"{view.id} ({doc['book']}, {doc['date']}): actual {doc['actual']:,.0f}, explained {doc['explained']:,.0f}")
-chart(steps, kind="bar", x="step", y="pnl", title=f"{doc['book']}: P&L explain by step")
+steps = pd.DataFrame(doc["EXPLAIN_STEPS"])
+steps["cumulative"] = steps["PNL"].cumsum()
+show(steps, title=f"{view.id} ({doc['BOOK']}, {doc['DATE']}): actual {doc['ACTUAL']:,.0f}, explained {doc['EXPLAINED']:,.0f}")
+chart(steps, kind="bar", x="STEP", y="PNL", title=f"{doc['BOOK']}: P&L explain by step")
 
 # name every field wanted in the condition ("> -1000bn" keeps every row): a search returns the fields it names
-books = await drishti.search_async("PNL where actual != 0 and book != '' and explained > -1000bn and unexplained > -1000bn limit 1000")
-books["unexplained % of actual"] = (books["unexplained"] / books["actual"].abs() * 100).round(2)
+books = await drishti.search_async("PNL where ACTUAL != 0 and BOOK != '' and EXPLAINED > -1000bn and UNEXPLAINED > -1000bn limit 1000")
+books["unexplained % of actual"] = (books["UNEXPLAINED"] / books["ACTUAL"].abs() * 100).round(2)
 books["flag"] = np.where(books["unexplained % of actual"].abs() > 10, "over 10%", "")
 books = books.sort_values("unexplained % of actual", key=lambda s: s.abs(), ascending=False).reset_index(drop=True)
-show(books[["book", "actual", "explained", "unexplained", "unexplained % of actual", "flag"]],
+show(books[["BOOK", "ACTUAL", "EXPLAINED", "UNEXPLAINED", "unexplained % of actual", "flag"]],
      title=f"Explain quality, {len(books)} books ({(books['flag'] != '').sum()} over the 10% threshold)")
-chart(books, kind="scatter", x="explained", y="actual", title="Actual against explained P&L by book")
-corr = np.corrcoef(books["actual"], books["explained"])[0, 1]
+chart(books, kind="scatter", x="EXPLAINED", y="ACTUAL", title="Actual against explained P&L by book")
+corr = np.corrcoef(books["ACTUAL"], books["EXPLAINED"])[0, 1]
 mean_abs = books["unexplained % of actual"].abs().mean()
 print(f"Across books: correlation of actual and explained {corr:.3f}; mean absolute unexplained {mean_abs:.1f}% of actual. "
-      f"{doc['book']} ranks {list(books['book']).index(doc['book']) + 1} of {len(books)} by unexplained share.")
+      f"{doc['BOOK']} ranks {list(books['BOOK']).index(doc['BOOK']) + 1} of {len(books)} by unexplained share.")

@@ -23,7 +23,7 @@ from scipy import stats
 from drishti import quant as q
 
 doc = view.doc
-pnl = np.asarray(doc["scenarioPnl"], dtype=float)
+pnl = np.asarray(doc["SCENARIO_PNL"], dtype=float)
 n, mu, sd = len(pnl), pnl.mean(), pnl.std(ddof=1)
 s, kx = stats.skew(pnl), stats.kurtosis(pnl)                         # excess kurtosis
 
@@ -43,11 +43,11 @@ def age_weighted(c, lam=0.99):                                       # weights f
 
 rows = []
 for c in (0.99, 0.975):
-    rows.append({"confidence": f"{c:.1%}", "historical": q.historical_var(pnl, c), "normal": q.parametric_var(sd, c, mu),
+    rows.append({"CONFIDENCE": f"{c:.1%}", "historical": q.historical_var(pnl, c), "normal": q.parametric_var(sd, c, mu),
                  "Cornish-Fisher": cornish_fisher(c), "age-weighted HS": age_weighted(c),
                  "ES historical": q.expected_shortfall(pnl, c)})
-show(pd.DataFrame(rows).set_index("confidence"),
-     title=f"{view.id}: {n} scenarios, skew {s:.2f}, excess kurtosis {kx:.2f} (engine VaR 99% {doc.get('var99'):,.0f})")
+show(pd.DataFrame(rows).set_index("CONFIDENCE"),
+     title=f"{view.id}: {n} scenarios, skew {s:.2f}, excess kurtosis {kx:.2f} (engine VaR 99% {doc.get('VAR_99'):,.0f})")
 
 rng = np.random.default_rng(20260930)                                # fixed seed: the same interval every run
 boot = np.array([q.historical_var(rng.choice(pnl, n, replace=True), 0.99) for _ in range(1000)])

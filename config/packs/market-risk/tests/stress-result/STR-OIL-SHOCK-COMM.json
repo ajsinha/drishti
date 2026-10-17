@@ -1,24 +1,24 @@
 {
- "resultId": "STR-OIL-SHOCK-COMM",
- "scenarioName": "Oil supply shock",
- "pnl": -37893427,
- "limit": -75800000.0,
- "byBook": [
+ "RESULT_ID": "STR-OIL-SHOCK-COMM",
+ "SCENARIO_NAME": "Oil supply shock",
+ "PNL": -37893427,
+ "LIMIT": -75800000.0,
+ "BY_BOOK": [
   {
-   "book": "BOOK-COMM-1",
-   "pnl": -9869484
+   "BOOK": "BOOK-COMM-1",
+   "PNL": -9869484
   },
   {
-   "book": "BOOK-COMM-2",
-   "pnl": -18425147
+   "BOOK": "BOOK-COMM-2",
+   "PNL": -18425147
   },
   {
-   "book": "BOOK-COMM-3",
-   "pnl": -9598796
+   "BOOK": "BOOK-COMM-3",
+   "PNL": -9598796
   }
  ],
- "scenario": "SCN-OIL-SHOCK",
- "desk": "DESK-COMM",
+ "SCENARIO": "SCN-OIL-SHOCK",
+ "DESK": "DESK-COMM",
  "_meta": {
   "source": "stress-engine",
   "generation": 1

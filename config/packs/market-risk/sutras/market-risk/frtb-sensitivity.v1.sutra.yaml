@@ -18,32 +18,32 @@ sutra: frtb-sensitivity
 version: 1
 description: "Delta, vega and curvature by risk class and bucket (SBM)."
 match: { kind: frtb-sensitivity, priority: 10 }
-title: { pill: Market risk · FRTB sensitivities, id: $.resultId }
+title: { pill: Market risk · FRTB sensitivities, id: $.RESULT_ID }
 strip:
-  - { label: Book, bind: $.book }
-  - { label: Delta charge, bind: $.deltaCharge, fmt: compact }
-  - { label: Vega charge, bind: $.vegaCharge, fmt: compact }
-  - { label: Curvature, bind: $.curvatureCharge, fmt: compact }
-  - { label: SBM total, bind: $.total, fmt: compact, emphasis: true }
+  - { label: Book, bind: $.BOOK }
+  - { label: Delta charge, bind: $.DELTA_CHARGE, fmt: compact }
+  - { label: Vega charge, bind: $.VEGA_CHARGE, fmt: compact }
+  - { label: Curvature, bind: $.CURVATURE_CHARGE, fmt: compact }
+  - { label: SBM total, bind: $.TOTAL, fmt: compact, emphasis: true }
 panels:
   - id: buckets
     kind: table
     title: Sensitivities
     key: F2
-    rows: $.sensitivities
+    rows: $.SENSITIVITIES
     columns:
-      - { label: Risk class, bind: "@.riskClass" }
-      - { label: Bucket, bind: "@.bucket" }
-      - { label: Measure, bind: "@.measure" }
-      - { label: Value, bind: "@.value", fmt: signed0, tone: sign }
+      - { label: Risk class, bind: "@.RISK_CLASS" }
+      - { label: Bucket, bind: "@.BUCKET" }
+      - { label: Measure, bind: "@.MEASURE" }
+      - { label: Value, bind: "@.VALUE", fmt: signed0, tone: sign }
   - id: classes
     kind: hbar
     title: Charge by risk class
     area: right
-    rows: $.byClass
-    label: riskClass
-    value: charge
+    rows: $.BY_CLASS
+    label: RISK_CLASS
+    value: CHARGE
     fmt: compact
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.book, 'book')", F8: impact, F9: raw }
+keys: { F7: "link($.BOOK, 'book')", F8: impact, F9: raw }

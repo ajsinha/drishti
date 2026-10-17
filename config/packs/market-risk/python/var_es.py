@@ -20,16 +20,16 @@
 import numpy as np
 import pandas as pd
 
-pnl = np.asarray(view.doc["scenarioPnl"], dtype=float)
+pnl = np.asarray(view.doc["SCENARIO_PNL"], dtype=float)
 worst = np.sort(pnl)
 n = len(pnl)
 var99 = -worst[n // 100 - 1]                  # the 1% quantile: the 5th worst of 500 scenarios
 es975 = -worst[: int(np.ceil(n * 0.025))].mean()   # the mean of the worst 2.5%
 
 show(pd.DataFrame({
-    "measure": ["VaR 99%", "ES 97.5%", "Mean P&L", "Worst scenario"],
+    "MEASURE": ["VaR 99%", "ES 97.5%", "Mean P&L", "Worst scenario"],
     "recomputed": [var99, es975, pnl.mean(), -worst[0]],
-    "engine": [view.doc.get("var99"), view.doc.get("es975"), view.doc.get("meanPnl"), None],
-}), title=f"{view.id}: {n} scenarios ({view.doc.get('method', '')})")
-chart(pd.DataFrame({"pnl": pnl}), kind="hist", y="pnl", bins=40, title="Scenario P&L")
-print(f"VaR uses {var99 / view.doc['limit']:.0%} of the limit {view.doc['limit']:,.0f}")
+    "engine": [view.doc.get("VAR_99"), view.doc.get("ES_975"), view.doc.get("MEAN_PNL"), None],
+}), title=f"{view.id}: {n} scenarios ({view.doc.get('METHOD', '')})")
+chart(pd.DataFrame({"PNL": pnl}), kind="hist", y="PNL", bins=40, title="Scenario P&L")
+print(f"VaR uses {var99 / view.doc['LIMIT']:.0%} of the limit {view.doc['LIMIT']:,.0f}")

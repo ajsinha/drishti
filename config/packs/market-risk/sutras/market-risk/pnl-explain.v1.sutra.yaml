@@ -18,20 +18,20 @@ sutra: pnl-explain
 version: 1
 description: "Daily P&L attributed to risk factors, new trades and residual."
 match: { kind: pnl-explain, priority: 10 }
-title: { pill: "Market risk · P&L explain", id: $.resultId }
+title: { pill: "Market risk · P&L explain", id: $.RESULT_ID }
 strip:
-  - { label: Date, bind: $.date, fmt: date }
-  - { label: Actual, bind: $.actual, fmt: signed0, tone: sign, emphasis: true }
-  - { label: Explained, bind: $.explained, fmt: signed0, tone: sign }
-  - { label: Unexplained, bind: $.unexplained, fmt: signed0, tone: sign }
+  - { label: Date, bind: $.DATE, fmt: date }
+  - { label: Actual, bind: $.ACTUAL, fmt: signed0, tone: sign, emphasis: true }
+  - { label: Explained, bind: $.EXPLAINED, fmt: signed0, tone: sign }
+  - { label: Unexplained, bind: $.UNEXPLAINED, fmt: signed0, tone: sign }
 panels:
   - id: attribution
     kind: hbar
     title: Attribution
     key: F2
-    rows: $.attribution
-    label: factor
-    value: pnl
+    rows: $.ATTRIBUTION
+    label: FACTOR
+    value: PNL
     fmt: signed0
     tone: sign
   - id: explain
@@ -39,12 +39,12 @@ panels:
     title: "P&L waterfall (risk factors to actual, USD)"
     code: PNLX
     key: F3
-    rows: $.explainSteps
-    label: step
-    value: pnl
+    rows: $.EXPLAIN_STEPS
+    label: STEP
+    value: PNL
     fmt: signed0
     sum: Actual
     unit: USD
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.book, 'book')", F8: impact, F9: raw }
+keys: { F7: "link($.BOOK, 'book')", F8: impact, F9: raw }

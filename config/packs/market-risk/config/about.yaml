@@ -40,172 +40,172 @@ kinds:
   var:
     title: Value-at-risk result
     about: >-
-      ${$.resultId} is a 1-day 99% historical VaR for ${coalesce($.deskName, $.desk, 'this portfolio')}:
-      ${fmt($.var99, 'compact')} USD, ${fmt($.var99 / $.limit, 'pct0')} of its ${fmt($.limit, 'compact')} limit,
-      with ${$.exceptions} exception(s) in 250 days.
+      ${$.RESULT_ID} is a 1-day 99% historical VaR for ${coalesce($.DESK_NAME, $.DESK, 'this portfolio')}:
+      ${fmt($.VAR_99, 'compact')} USD, ${fmt($.VAR_99 / $.LIMIT, 'pct0')} of its ${fmt($.LIMIT, 'compact')} limit,
+      with ${$.EXCEPTIONS} exception(s) in 250 days.
     guide: market-risk
     glossary:
-      var99: { use: "var99" }
-      es975: { use: "es975" }
-      svar: { use: "svar" }
-      exceptions:
+      VAR_99: { use: "var99" }
+      ES_975: { use: "es975" }
+      SVAR: { use: "svar" }
+      EXCEPTIONS:
         term: "Backtesting exceptions"
         means: "The days in the last 250 on which the day's loss was larger than the 99% VaR. Basel's traffic lights count them to judge the model."
         unit: "days"
         note: "0-4 is the Basel green zone, 5-9 amber and 10 or more red."
-      limit:
+      LIMIT:
         term: "VaR limit"
         means: "The VaR the desk is approved to run. VaR above it is a limit breach."
         unit: "USD"
         sign: "A positive amount; compare it with the VaR above."
-      scenarioPnl:
+      SCENARIO_PNL:
         term: "Scenario P&L"
         means: "The portfolio revalued under each of the 500 historical scenario days; the 1st percentile of this distribution is the VaR."
         unit: "USD"
         sign: "Positive is a gain."
-      contributions.var:
+      CONTRIBUTIONS.VAR:
         term: "Contribution to VaR"
         means: "The VaR of one book on its own. Books diversify against each other, so the contributions need not add up to the desk's VaR."
         unit: "USD"
         sign: "A loss, written as a positive number."
     panels:
-      scenarios: { about: "The markers are -VaR (${fmt($.var99, 'compact')}) and -ES (${fmt($.es975, 'compact')}); scenario days to their left lost more than VaR." }
-      pnl: { about: "The daily hypothetical P&L the backtest compares with VaR; a day below -${fmt($.var99, 'compact')} is an exception." }
+      scenarios: { about: "The markers are -VaR (${fmt($.VAR_99, 'compact')}) and -ES (${fmt($.ES_975, 'compact')}); scenario days to their left lost more than VaR." }
+      pnl: { about: "The daily hypothetical P&L the backtest compares with VaR; a day below -${fmt($.VAR_99, 'compact')} is an exception." }
   stress-scenario:
     title: Stress scenario
     about: >-
-      ${$.name} is a ${lower($.type)} stress scenario of ${lower($.severity)} severity: ${size($.shocks)} risk factors are shocked
+      ${$.NAME} is a ${lower($.TYPE)} stress scenario of ${lower($.SEVERITY)} severity: ${size($.SHOCKS)} risk factors are shocked
       together and the portfolio is revalued.
     guide: market-risk
     glossary:
-      type:
+      TYPE:
         term: "Scenario type"
         means: "A historical scenario replays the moves of a past episode; a hypothetical one is a designed set of moves that need not have happened."
         values:
           Historical: "Replays the market moves of a past episode."
           Hypothetical: "A designed set of moves chosen by risk managers."
-      severity:
+      SEVERITY:
         term: "Severity"
         means: "The rating the risk function gives the scenario, which decides how it is used in limits and reporting."
         values:
           Severe: "An extreme but plausible market event."
           Moderate: "A material move in one or a few markets."
           Mild: "A small or narrow move."
-      shocks.factor:
+      SHOCKS.FACTOR:
         term: "Risk factor"
         means: "The market variable the scenario moves, such as an equity index, a spread or a curve."
-      shocks.shock:
+      SHOCKS.SHOCK:
         term: "Shock"
         means: "How far the factor moves. The unit follows the factor: a proportional change for prices and spreads, percentage points for interest rates, points for volatility."
         sign: "Positive raises the factor, negative lowers it."
     panels:
-      shocks: { about: "These are the moves applied together; the stress results of ${$.name} revalue each desk's books under them." }
+      shocks: { about: "These are the moves applied together; the stress results of ${$.NAME} revalue each desk's books under them." }
   stress-result:
     title: Stress result
     about: >-
-      ${$.resultId}: under "${$.scenarioName}" the portfolio changes in value by ${fmt($.pnl, 'compact')} USD against a limit of
-      ${fmt($.limit, 'compact')}.
+      ${$.RESULT_ID}: under "${$.SCENARIO_NAME}" the portfolio changes in value by ${fmt($.PNL, 'compact')} USD against a limit of
+      ${fmt($.LIMIT, 'compact')}.
     guide: market-risk
     glossary:
-      scenarioName:
+      SCENARIO_NAME:
         term: "Scenario"
         means: "The stress scenario the portfolio was revalued under."
-      pnl: { use: "pnl" }
-      limit:
+      PNL: { use: "pnl" }
+      LIMIT:
         term: "Stress loss limit"
         means: "The largest loss the desk accepts under this scenario. A P&L below the limit is a breach."
         unit: "USD"
         sign: "Negative, like the loss it caps."
-      byBook.pnl:
+      BY_BOOK.PNL:
         term: "P&L of the book"
         means: "The book's share of the scenario P&L."
         unit: "USD"
         sign: "Positive is a gain."
     panels:
-      books: { about: "The books add up to the desk's stress P&L of ${fmt($.pnl, 'compact')} USD." }
+      books: { about: "The books add up to the desk's stress P&L of ${fmt($.PNL, 'compact')} USD." }
   frtb-sensitivity:
     title: FRTB sensitivities-based charge
     about: >-
-      ${$.resultId} is the FRTB standardised sensitivities-based method for ${$.book}: delta ${fmt($.deltaCharge, 'compact')},
-      vega ${fmt($.vegaCharge, 'compact')} and curvature ${fmt($.curvatureCharge, 'compact')} add up to ${fmt($.total, 'compact')} USD.
+      ${$.RESULT_ID} is the FRTB standardised sensitivities-based method for ${$.BOOK}: delta ${fmt($.DELTA_CHARGE, 'compact')},
+      vega ${fmt($.VEGA_CHARGE, 'compact')} and curvature ${fmt($.CURVATURE_CHARGE, 'compact')} add up to ${fmt($.TOTAL, 'compact')} USD.
     guide: market-risk
     glossary:
-      book:
+      BOOK:
         term: "Book"
         means: "The trading book the charge is computed for."
-      deltaCharge:
+      DELTA_CHARGE:
         term: "Delta risk charge"
         means: "Capital for the first-order sensitivity of the book to its risk factors, after the regulatory risk weights and the correlations within and between buckets."
         unit: "USD"
         sign: "A capital charge, positive."
-      vegaCharge:
+      VEGA_CHARGE:
         term: "Vega risk charge"
         means: "Capital for the sensitivity of option values to implied volatility, aggregated like delta."
         unit: "USD"
         sign: "A capital charge, positive."
-      curvatureCharge:
+      CURVATURE_CHARGE:
         term: "Curvature risk charge"
         means: "Capital for the loss that delta alone does not capture when an option's value is not linear in the underlying move (the gamma risk)."
         unit: "USD"
         sign: "A capital charge, positive."
-      total:
+      TOTAL:
         term: "Sensitivities-based charge"
         means: "The sum of the delta, vega and curvature charges of the book. The full standardised charge adds the default-risk and residual-risk add-ons."
         unit: "USD"
         sign: "A capital charge, positive."
-      sensitivities.riskClass:
+      SENSITIVITIES.RISK_CLASS:
         term: "Risk class"
         means: "One of the regulatory risk classes: general interest-rate, credit spread (non-securitisation, securitisation), equity, commodity or FX."
-      sensitivities.bucket:
+      SENSITIVITIES.BUCKET:
         term: "Bucket"
         means: "The regulatory grouping of risk factors inside a risk class, such as a sector, rating or tenor group, with its own risk weight and correlation."
-      sensitivities.measure:
+      SENSITIVITIES.MEASURE:
         term: "Measure"
         means: "Which risk the sensitivity measures: delta (to the price or rate), vega (to volatility) or curvature."
         values:
           Delta: "The first-order change for a small move in the risk factor."
           Vega: "The change for a small move in implied volatility."
           Curvature: "The loss beyond the linear estimate under the prescribed up and down shocks."
-      sensitivities.value:
+      SENSITIVITIES.VALUE:
         term: "Sensitivity"
         means: "The change in the value of the book's positions for the prescribed unit move in the factor, before the risk weight is applied."
         unit: "USD"
         sign: "Positive gains when the factor rises, negative loses."
-      byClass.charge:
+      BY_CLASS.CHARGE:
         term: "Charge by risk class"
         means: "The class's contribution to the book's sensitivities-based charge."
         unit: "USD"
   pnl-explain:
     title: P&L explain
     about: >-
-      On ${$.date} ${$.book} made ${fmt($.actual, 'signed0')} USD. Its risk factors explain ${fmt($.explained, 'signed0')};
-      ${fmt($.unexplained, 'signed0')} is unexplained.
+      On ${$.DATE} ${$.BOOK} made ${fmt($.ACTUAL, 'signed0')} USD. Its risk factors explain ${fmt($.EXPLAINED, 'signed0')};
+      ${fmt($.UNEXPLAINED, 'signed0')} is unexplained.
     guide: market-risk
     glossary:
-      date:
+      DATE:
         term: "Business date"
         means: "The trading day the P&L belongs to."
-      actual:
+      ACTUAL:
         term: "Actual P&L"
         means: "The change in the book's value over the day as booked, including new trades, fees and carry."
         unit: "USD"
         sign: "Positive is a gain."
-      explained:
+      EXPLAINED:
         term: "Explained P&L"
         means: "The part of the actual P&L that the risk factors account for: each sensitivity multiplied by that day's move in its factor, plus carry and roll-down."
         unit: "USD"
         sign: "Positive is a gain."
-      unexplained:
+      UNEXPLAINED:
         term: "Unexplained P&L"
         means: "Actual minus explained. A large or persistent residual points to a missing risk factor, a stale parameter or a pricing difference between the front office and risk."
         unit: "USD"
         sign: "Positive means the book did better than its risk factors predict."
-      attribution.pnl:
+      ATTRIBUTION.PNL:
         term: "P&L from the factor"
         means: "The explained P&L assigned to this risk factor."
         unit: "USD"
         sign: "Positive is a gain."
-      explainSteps.pnl:
+      EXPLAIN_STEPS.PNL:
         term: "Step in the waterfall"
         means: "Each step moves the running total from zero to the actual P&L; the last step is the unexplained rest."
         unit: "USD"
