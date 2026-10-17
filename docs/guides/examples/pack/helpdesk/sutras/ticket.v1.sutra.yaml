@@ -17,28 +17,28 @@ sutra: ticket
 version: 1
 description: A support ticket with its history, agent and client.
 match: { kind: ticket, priority: 10 }
-title: { pill: "Ticket", id: $.ticketId, with: $.clientName }
+title: { pill: "Ticket", id: $.TICKET_ID, with: $.CLIENT_NAME }
 strip:
-  - { label: Subject, bind: $.subject }
-  - { label: Status, bind: $.status, tone: status }
-  - { label: Priority, bind: $.priority }
-  - { label: Age, bind: $.ageHours, fmt: age0, emphasis: true }
-  - { label: Agent, bind: "link($.assignee, 'agent')" }
-  - { label: Client, bind: "link($.client, 'client')" }
+  - { label: Subject, bind: $.SUBJECT }
+  - { label: Status, bind: $.STATUS, tone: status }
+  - { label: Priority, bind: $.PRIORITY }
+  - { label: Age, bind: $.AGE_HOURS, fmt: age0, emphasis: true }
+  - { label: Agent, bind: "link($.ASSIGNEE, 'agent')" }
+  - { label: Client, bind: "link($.CLIENT, 'client')" }
 panels:
   - id: history
     kind: ladder
     title: History
     code: HIST
     key: F2
-    rows: $.history
-    highlight: "#index == size($.history) - 1"
+    rows: $.HISTORY
+    highlight: "#index == size($.HISTORY) - 1"
     columns:
-      - { label: Date, bind: "@.date", fmt: date }
-      - { label: Event, bind: "@.event" }
+      - { label: Date, bind: "@.DATE", fmt: date }
+      - { label: Event, bind: "@.EVENT" }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.assignee, 'agent')", F9: raw }
+keys: { F7: "link($.ASSIGNEE, 'agent')", F9: raw }
 notes: |
   The strip leads with status and age, the two things an agent triages by.
   The history is a ladder with the latest event lit, so a stalled ticket stands out.

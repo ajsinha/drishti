@@ -62,8 +62,8 @@ def write_lake(root: Path, days: dict) -> None:
     for day, rows in days.items():
         (root / day).mkdir(parents=True, exist_ok=True)
         for kind, n in rows.items():
-            lines = [json.dumps({"id": f"{kind[:3].upper()}-{1000 + i}", "ticketId": f"TKT-{1000 + i}", "subject": f"Ticket {i}", "status": "Open",
-                                 "priority": "P2", "ageHours": 4 + i, "assignee": "AGT-07", "client": "CLI-ACME", "history": []}) for i in range(n)]
+            lines = [json.dumps({"id": f"{kind[:3].upper()}-{1000 + i}", "TICKET_ID": f"TKT-{1000 + i}", "SUBJECT": f"Ticket {i}", "STATUS": "Open",
+                                 "PRIORITY": "P2", "AGE_HOURS": 4 + i, "ASSIGNEE": "AGT-07", "CLIENT": "CLI-ACME", "HISTORY": []}) for i in range(n)]
             (root / day / f"{kind}.jsonl").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 

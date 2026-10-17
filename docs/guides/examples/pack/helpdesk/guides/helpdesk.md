@@ -33,5 +33,5 @@ Tickets raised by clients and worked by agents. A teaching pack: it is built ste
 |---|---|
 | `TKT <id> <GO>` | Opens that ticket. A bare id (`TKT-…`) works too. |
 | `TKT <start of an id> <GO>` | A pick list; one match opens. `*` is a wildcard; case never matters. |
-| `TKT <field>=<value> <GO>` | Lists by value: `TKT status=open`, `TKT ageHours > 24 order by ageHours desc`. |
+| `TKT <field>=<value> <GO>` | Lists by value: `TKT STATUS=open`, `TKT AGE_HOURS > 24 order by AGE_HOURS desc`. |
 | `TKT <GO>` | Lists every ticket. |
