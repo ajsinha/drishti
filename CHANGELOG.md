@@ -17,6 +17,21 @@
 
 ## Unreleased
 
+- **Committed test data and one command for the demo lakes.** `data/testdata/` (the one committed folder under `data/`, 21.5 MB
+  of `.jsonl.gz`) holds seven business days of every dataset the seven packs read: 5,000 trades per source system (ENDUR with six
+  look-alike counterparties, CALYPSO and MUREX samples and clones; unique ids; amendments and new bookings across the days) and
+  every kind of core, market-data, counterparty-risk and market-risk, reconciled on the last day; the first day a snapshot, each
+  later day its changes (`tools/testdata/make_testdata.py`, `--check`). `drishti.py lake demo` (run configuration **Build demo
+  lakes**) rebuilds each day and writes the packs' Delta tables (trades by business date and `PRODUCT_TYPE`), the days moved to end
+  on today's business date (`--as-of`), checks the connector files and says what to start next (about 50 s, 800 MB);
+  `--with-real FILE` adds real extracts' trades, counterparties, agreements and netting sets to the local lake only. Run
+  configuration **Drishti server (demo lakes)** (samples off, `-Xmx4g`); news-and-markets gains a `news-store` Delta connector;
+  trade valuations get promoted columns in the risk lake. Guide: [data/testdata/README.md](data/testdata/README.md).
+- **Trading Calc snippets on the production-shaped trade**: swap reprice and key rates on the leg's `DISCOUNT_INDEX` curve, the
+  swaption from its underlying fixed leg, bond, CDS, a generic option grid, rate shift and peers on the risk engine's `TVAL`
+  valuations, and a new payment ladder; the underlying-specific option pricers (the common schema names no underlying) and the
+  P&L history were retired; stress-from-sensitivities rebuilds the rate shocks from `TVAL` DV01.
+
 - **UPPER_SNAKE attribute names in every kind of the seven packs.** Counterparties, legal entities, books, desks, traders,
   calendars, agreements, CSAs, netting sets, collateral, margin calls, limits, exposure, CVA, SA-CCR, SIMM, curves, surfaces, FX,
   fixings, equities, bonds, VaR, stress, FRTB, P&L explain, economies, indicators, jurisdictions, elections, news topics and listed

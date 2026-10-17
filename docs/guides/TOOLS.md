@@ -91,7 +91,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `sutra` | `sutra shape`, `sutra design`, `sutra lint`, `sutra test`, `sutra preview`, `sutra gen` | [5.1](#51-sutra) |
 | `pack` | `pack make`, `pack new`, `pack regenerate`, `pack diff`, `pack catalogue`, `pack i18n`, `pack check`, `pack about-check`, `pack bundle`, `pack verify`, `pack deploy`, `pack rollback`, `pack publish`, `pack keygen`, `pack install` | [5.2](#52-pack) |
 | `data` | `data profile`, `data ingest`, `data load`, `data landed`, `data loads` | [5.3](#53-data) |
-| `lake` | `lake build`, `lake scan`, `lake status`, `lake maintain` | [4](#4-lake-build-a-large-json-export-into-a-delta-lake) |
+| `lake` | `lake build`, `lake scan`, `lake status`, `lake demo`, `lake maintain` | [4](#4-lake-build-a-large-json-export-into-a-delta-lake) |
 | `server` | `server health`, `server packs`, `server smoke` | [5.4](#54-server-and-doctor) |
 | `connector` | `connector list`, `connector get`, `connector apply`, `connector delete`, `connector test`, `connector plugins`, `connector enable`, `connector disable`, `connector reset`, `connector history` | [5.5](#55-connector) |
 | `design` | `design list`, `design create`, `design get`, `design save`, `design check`, `design propose`, `design approve`, `design reject`, `design proposals`, `design export`, `design import`, `design bind`, `design autodesign`, `design delete` | [5.6](#56-design) |
@@ -407,7 +407,15 @@ A signal that fails leaves the data written and makes the run exit `2`.
 Admin → Data loads → **Load a file into a lake** (section 10.2) runs this builder on the console's machine with the choices made on
 the page, then binds the lake to the pack's connector and sends the signal as the administrator who started it.
 
-### 4.9 Scheduling the lake build
+### 4.9 The demo lakes: lake demo
+
+`drishti.py lake demo` (run configuration **Build demo lakes**) is `lake build` run for every dataset and business day of the
+committed test data, `data/testdata`: the seven packs' tables under `data/delta` in about 50 s, the seven days moved to end on today's
+business date (`--as-of data` keeps the files' own dates), the connector files checked, the next steps printed. `--only PREFIX` builds
+some datasets, `--lake DIR` another folder (the connector files then point there), `--with-real FILE[,FILE]` adds real extracts to the
+local lake only. Everything about the data and the five-step quick start is in [data/testdata/README.md](../../data/testdata/README.md).
+
+### 4.10 Scheduling the lake build
 
 A nightly load of the day's extract, at 21:30 on weekdays, after the export lands in `/srv/drop`:
 
