@@ -86,6 +86,12 @@ final class ReportRewrite {
             edits.add(new Edit(start(r), end(r), "2"));
         }
         edits.add(new Edit(start(dataset.getKeyNode()), end(ds), "model: " + b.model()));
+        int eol = yaml.indexOf('\n', end(ds));
+        String rest = yaml.substring(end(ds), eol < 0 ? yaml.length() : eol);
+        int hash = rest.indexOf('#');
+        if (hash >= 0 && rest.substring(0, hash).isBlank() && rest.contains("dataset")) { // a comment about the dataset line now describes a model
+            edits.add(new Edit(end(ds) + hash, end(ds) + rest.length(), "# the model it reads: its name and major version (BI_MODEL_SPEC.md)"));
+        }
         changes.add("dataset: " + ds.getValue() + " -> model: " + b.model());
         boolean oneModel = true;
         NodeTuple pages = tuple(top, "pages");

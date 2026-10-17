@@ -28,7 +28,7 @@ description: >-
 sample: true
 endorsement: promoted
 tags: [sample, multi-dataset, counterparty-risk]
-model: trading-risk@1            # the default dataset of the report: a visual with no `dataset:` of its own reads this one
+model: trading-risk@1            # the model it reads: its name and major version (BI_MODEL_SPEC.md)
 theme: { palette: default }
 
 filters:                                 # the converter: the composed dataset kept only the rows of its left source

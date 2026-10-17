@@ -16,9 +16,7 @@
 package com.ash.drishti.server.bi;
 
 import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.server.bi.engine.QueryRequest;
-import com.ash.drishti.server.bi.engine.QueryService;
 import com.ash.drishti.server.bi.model.PackModels;
 import com.ash.drishti.server.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -28,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,7 +33,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
