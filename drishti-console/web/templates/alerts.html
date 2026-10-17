@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}Alerts · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/dist.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/dist.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-consume.css?v={{ ASSET_V }}">{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
@@ -28,9 +28,10 @@
   <section class="pnl" id="measure" data-measure-alerts><header class="pnl-h"><h3>Alerts on numbers</h3><span class="pnl-code">{{ measure | length }}</span>
     <a class="btn-pill btn-accent dist-act" href="/alerts/new" data-new-alert>New alert on a number</a>{% if me and me.is_admin %}<a class="lnk dist-link" href="/alerts/all">Everyone's alerts and board tiles</a>{% endif %}</header><div class="pnl-b">
     {% if measure %}<div class="tbl-wrap"><table class="tbl dist-tbl" data-plain>
-      <thead><tr><th>Name</th><th>Watching</th><th>Tell me when</th><th>State</th><th>Last</th><th></th></tr></thead>
+      <thead><tr><th>Name</th><th>Watching</th><th>Now</th><th>Tell me when</th><th>State</th><th>Last</th><th></th></tr></thead>
       <tbody>{% for a in measure %}<tr data-alert-row="{{ a.name }}"><td><a class="lnk dist-link" href="/alerts/measure/{{ a.name | urlencode }}">{{ a.name }}</a></td>
         <td><a class="lnk dist-link" href="{{ a.link }}">{{ a.label }}</a></td>
+        <td data-alert-now data-alert-source="{{ (a.source or {}) | tojson | forceescape }}">—</td>
         <td>{{ a.describe }}<div class="cmp-path">{{ a.trigger.mode }}{% if a.trigger.schedule %} · {{ a.trigger.schedule }}{% endif %}</div></td>
         <td><span class="st st-{{ {'active': 'bad', 'armed': 'ok', 'paused': 'warn'}[a.standing] }}" data-standing>{{ a.standing }}</span></td>
         <td>{% if a.last %}<span class="mono text-muted-d">{{ when_local(a.last.at) }}</span> <b>{{ a.last.action }}</b><div class="cmp-path">{{ a.last.message }}</div>{% else %}—{% endif %}</td>
@@ -70,4 +71,4 @@
     {% else %}<li class="text-muted-d" data-empty>Nothing yet.</li>{% endfor %}</ul></div></section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/alerts-page.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/alerts-page.js?v={{ ASSET_V }}"></script>{% if measure %}<script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-consume.js?v={{ ASSET_V }}"></script><script src="/static/js/alerts-live.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}

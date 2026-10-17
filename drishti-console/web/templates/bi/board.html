@@ -23,7 +23,7 @@
     <dt><kbd>p</kbd></dt><dd>Pause or resume the updates (and the turning of pages)</dd>
     <dt><kbd>Esc</kbd></dt><dd>Leave the kiosk</dd>
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-report.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-board.css?v={{ ASSET_V }}">
+{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-consume.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-report.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-board.css?v={{ ASSET_V }}">
 {% endblock %}
 {% block bi_main %}
 <header class="bi-head"><div class="bi-title-row"><h1 data-title>Board</h1></div>
@@ -37,6 +37,11 @@
     <div class="bi-board-tools">
       <button type="button" class="btn-pill btn-ghost" data-prev aria-label="Previous page"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
       <button type="button" class="btn-pill btn-ghost" data-next aria-label="Next page"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      <span class="bi-tool bi-time" data-time role="group" aria-label="Time: now, as of a date, or a window">
+        <label>Time <select class="studio-select" data-time-mode aria-label="Time"><option value="now">Now (live)</option><option value="asof">As of a date</option><option value="window">A window</option></select></label>
+        <input type="date" class="studio-in" data-date aria-label="As of" hidden>
+        <input type="date" class="studio-in" data-date-from aria-label="From" hidden><input type="date" class="studio-in" data-date-to aria-label="To" hidden>
+      </span>
       <a class="btn-pill btn-ghost" data-design href="/bi/designer" hidden><i class="bi bi-pencil-square" aria-hidden="true"></i> Design</a>
       <button type="button" class="btn-pill btn-accent" data-kiosk aria-pressed="false"><i class="bi bi-fullscreen" aria-hidden="true"></i> <span>Kiosk</span></button>
     </div>
@@ -51,4 +56,4 @@
   <div class="bi-rgrid bi-board-grid" data-grid role="region" aria-label="Board page"></div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/multiselect.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/geomap.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-visuals.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-grids.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-vega.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-frame.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-live.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-python.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-board.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/multiselect.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/geomap.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-visuals.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-grids.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-vega.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-frame.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-live.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-consume.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-python.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-board.js?v={{ ASSET_V }}"></script>{% endblock %}

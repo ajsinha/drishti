@@ -97,6 +97,8 @@ class ChannelSession:
             upstream, is_view = self.backend.sse("/me/alerts/stream", self.me, opened=responses), False
         elif sub.startswith("bilive:"):                      # Rupaka phase 5: a report's live tables changed (tick), how they are doing (status); no data
             upstream, is_view = self.backend.sse(f"/bi/reports/{quote(sub[7:], safe='')}/live", self.me, opened=responses), False
+        elif sub.startswith("mq:") and len(sub) > 3:              # wave B: a standing query's pushed answers (answer) and its state (status)
+            upstream, is_view = self.backend.sse(f"/bi/mq/stream?ids={quote(sub[3:], safe='')}", self.me, opened=responses), False
         elif sub.startswith("monitor:"):
             upstream, is_view = self.backend.sse(f"/me/monitors/{quote(sub[8:])}/stream", self.me, opened=responses), False
         else:

@@ -143,6 +143,31 @@ async def model_view(request: Request, item: str):
     return _page(request, "bi/model.html", "datasets", item=item)
 
 
+@router.get("/admin/bi/usage")
+async def usage_page(request: Request, limit: int = 2000):
+    """Admin → BI usage (wave B): what BI is asked, by whom and how it is answered (core/bi_usage.py), from the audit log, the engine's counters and the console's
+    Python runner. BI administrators; the audit log itself is the system administrator's, so a bi-admin who is not one sees the engine and the runner only."""
+    from core.bi_usage import summarise
+
+    me = getattr(request.state, "bi_me", None) or {}
+    if "bi-admin" not in (me.get("powers") or []):
+        return render(request, "admin/forbidden.html", status_code=403)
+    usage, engine, why = None, None, ""
+    if ident(request).is_admin:
+        try:
+            events = await request.app.state.backend.admin("GET", "/audit", ident(request), limit=max(100, min(limit, 10000)))
+            usage = summarise(events if isinstance(events, list) else (events or {}).get("events") or [])
+        except BackendError as e:
+            why = e.detail
+    else:
+        why = "the audit log is shown to system administrators"
+    try:
+        engine = await request.app.state.backend.bi("GET", "/engine", ident(request))
+    except BackendError:
+        engine = None
+    return render(request, "bi/usage.html", screen="admin", usage=usage, engine=engine, why=why, runner=request.app.state.pyrunner.status())
+
+
 @router.get("/admin/bi")
 async def settings_page(request: Request):
     me = getattr(request.state, "bi_me", None) or {}

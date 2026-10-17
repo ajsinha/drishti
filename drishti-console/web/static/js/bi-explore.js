@@ -119,11 +119,15 @@
     var all = X.slice.rows.concat(X.slice.columns, X.slice.values.map(function (v) { return v.field; }), X.slice.filters.map(function (f) { return f.field; }));
     return all.every(function (n) { return names.indexOf(n) >= 0; });
   }
+  X.time = B.consume && q('[data-time]', root) ? B.consume.timePicker(q('[data-time]', root), function () {}) : null;
   q('[data-open]', root).addEventListener('submit', function (e) {
     e.preventDefault();
     var fields = qa('input[name=f]:checked', fieldsEl).map(function (i) { return i.value; });
     if (!dsSel.value || !fields.length) { say('Choose a dataset and at least one field.', true); return; }
-    X.open({ dataset: dsSel.value, fields: fields }).catch(function () {});
+    var t = X.time ? X.time.value() : { mode: 'now' };                // wave B: the extract is asked now, as of a date or over a window (one plan answers all three)
+    var spec = { dataset: dsSel.value, fields: fields };
+    if (t.mode === 'asof') { spec.dates = t.asOf; } else if (t.mode === 'window') { spec.dates = { from: t.from, to: t.to }; }
+    X.open(spec).catch(function () {});
   });
 
   // ---- slice ---------------------------------------------------------------------------------------------------------------------

@@ -1,0 +1,42 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Wave B: what every consumer of a model shares (bi-consume.js): the state chip under a visual, the time picker, the parameter slicers and the Explain panel. */
+.bi-state-chip { display: inline-flex; align-items: center; gap: .3rem; margin-left: .5rem; padding: .05rem .5rem; border: 1px solid var(--d-border); border-radius: 999px;
+  font-size: .75rem; color: var(--d-muted); white-space: nowrap; }
+.bi-state-chip .bi { font-size: .8rem; }
+.bi-state-live .bi, .bi-state-window .bi { color: var(--d-ok); }
+.bi-state-throttled .bi, .bi-state-tick .bi, .bi-state-connecting .bi, .bi-state-stale .bi { color: var(--d-warn); }
+.bi-state-failed .bi { color: var(--d-bad); }
+.bi-state-stale, .bi-state-failed { color: var(--d-ink); border-color: currentColor; }
+.bi-time { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.bi-time input[hidden] { display: none; }
+.bi-param-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin: .4rem 0; padding: .4rem .6rem; border: 1px solid var(--d-border);
+  border-radius: var(--d-radius); background: var(--d-surface-2); }
+.bi-param-word { font-weight: 600; font-size: .85rem; color: var(--d-muted); }
+.bi-param { display: inline-flex; align-items: center; gap: .4rem; }
+.bi-param-slider { display: inline-flex; align-items: center; gap: .4rem; }
+.bi-param-range { min-width: 8rem; min-height: 44px; accent-color: var(--d-accent); }
+.bi-param-out { min-width: 3rem; font-family: var(--d-font-mono); font-size: .85rem; }
+.bi-param-in { max-width: 9rem; }
+.bi-explain { margin: .4rem .6rem .6rem; padding: .5rem .7rem; border-top: 1px dashed var(--d-border); font-size: .85rem; overflow-x: auto; }
+.bi-explain h3 { font-size: .9rem; margin: 0 0 .3rem; }
+.bi-explain-tiers { display: flex; flex-wrap: wrap; gap: .3rem; margin: 0 0 .3rem; }
+.bi-explain-times { color: var(--d-muted); margin: 0 0 .4rem; }
+.bi-explain-text { white-space: pre; font-size: .78rem; max-height: 16rem; overflow: auto; }
+td[data-alert-now] { white-space: nowrap; }
+@media (pointer: coarse) {
+  .bi-time select, .bi-time input, .bi-param select, .bi-param input { min-height: 44px; }
+}

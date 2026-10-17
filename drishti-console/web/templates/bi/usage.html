@@ -1,0 +1,58 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{#
+  Admin → BI usage (wave B, docs/architecture/BI_DESIGN.md section 6.8): what BI is asked, by whom and how it is answered. Drawn by the server (routes/bi_routes.py,
+  core/bi_usage.py); no script of its own.
+#}
+{% extends "base.html" %}
+{% block title %}BI usage · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}">{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm" data-bi-usage>
+  {% with tab='bi' %}{% include "admin/_nav.html" %}{% endwith %}
+  <h1 class="ws-h">BI usage</h1>
+  <p class="text-muted-d">What BI is asked, by whom, and how it is answered: from the audit log (every model query, report visual and SQL statement), the engine's counters and
+    the console's Python runner. Use it to find the models that need a rollup (many questions, few from the cache), the busiest readers, and a runner that is not warm.
+    <a href="/admin/bi">BI settings</a></p>
+  {% if usage %}
+  <p class="bi-usage-facts" data-usage-facts><b>{{ usage.total }}</b> questions and <b>{{ usage.sql }}</b> SQL statements in the last {{ usage.events }} audit events
+    {% if usage.from %}({{ usage.from[:16] | replace('T', ' ') }} to {{ usage.to[:16] | replace('T', ' ') }}){% endif %}; <b>{{ usage.hitRate }} %</b> answered from the cache.</p>
+  <h2 class="ws-h">By model</h2>
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-usage-models data-plain>
+    <caption class="visually-hidden">Questions by model or dataset</caption>
+    <thead><tr><th scope="col">Model or dataset</th><th scope="col" class="num">Questions</th><th scope="col" class="num">SQL</th><th scope="col" class="num">From the cache</th>
+      <th scope="col" class="num">Rows on average</th><th scope="col">Layers</th><th scope="col" class="num">Readers</th></tr></thead>
+    <tbody>{% for m in usage.models %}<tr data-usage-model="{{ m.model }}"><th scope="row" class="mono">{{ m.model }}</th><td class="num">{{ m.questions }}</td><td class="num">{{ m.sql }}</td>
+      <td class="num">{{ m.hitRate }} %</td><td class="num">{{ m.avgRows }}</td><td>{% for k, v in m.layers.items() %}<span class="bi-chip">{{ k }} {{ v }}</span> {% endfor %}</td><td class="num">{{ m.readers }}</td></tr>
+    {% else %}<tr><td colspan="7" class="text-muted-d">No BI question in these events yet.</td></tr>{% endfor %}</tbody></table></div>
+  <h2 class="ws-h">Busiest readers</h2>
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-usage-readers data-plain><caption class="visually-hidden">Busiest readers</caption>
+    <thead><tr><th scope="col">Reader</th><th scope="col" class="num">Questions</th></tr></thead>
+    <tbody>{% for r in usage.readers %}<tr><th scope="row" class="mono">{{ r.reader }}</th><td class="num">{{ r.questions }}</td></tr>{% else %}<tr><td colspan="2" class="text-muted-d">None.</td></tr>{% endfor %}</tbody></table></div>
+  {% if usage.other %}<h2 class="ws-h">Other BI actions</h2>
+  <p data-usage-other>{% for o in usage.other %}<span class="bi-chip">{{ o.action }} {{ o.count }}</span> {% endfor %}</p>{% endif %}
+  {% else %}<p class="adm-warn" data-usage-none>The questions are not shown: {{ why or 'the audit log could not be read' }}.</p>{% endif %}
+  <h2 class="ws-h">The console's Python runner</h2>
+  <p data-usage-runner>Fork-server: <b>{{ 'running' if runner.forkServer.running else ('off' if not runner.forkServer.on else 'not started yet') }}</b>, {{ runner.forkServer.forks }} calls forked{% if runner.forkServer.failed %} (could not start: {{ runner.forkServer.failed }}){% endif %} ·
+    result cache: {{ runner.cache.entries }} entries, {{ runner.cache.hits }} hits, {{ runner.cache.misses }} misses · {{ runner.calls }} calls, {{ runner.failures }} failed ·
+    Py-node endpoint for the server: <b>{{ 'on' if runner.pyNode else 'off (no runner token)' }}</b></p>
+  {% if engine %}<h2 class="ws-h">The engine</h2>
+  <details data-usage-engine><summary>{{ engine.engine }} · live tables, transforms, limits and connector pools</summary><pre class="bi-explain-text">{{ engine | tojson(indent=1) }}</pre></details>{% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script>{% endblock %}

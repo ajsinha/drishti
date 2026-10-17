@@ -17,7 +17,7 @@
    Drawn by static/js/bi-explore.js and bi-explore-cells.js; the strict policy of every BI page applies (no WebAssembly: the Slice, SQL and Python cells run on the console and the server, wave B). #}
 {% extends "bi/shell.html" %}
 {% block bi_title %}Analyse{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-expr.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-explore.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-expr.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-explore.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-consume.css?v={{ ASSET_V }}">{% endblock %}
 {% block bi_main %}
 <header class="bi-head"><h1>Analyse</h1>
   <p class="text-muted-d">Open a model or a dataset as an extract of the rows you may see (masked columns stay masked), then slice it, query it with SQL or work on it in Python. Save the work as a notebook; promote a cell or a slice into a Python item or a report draft.</p></header>
@@ -27,6 +27,11 @@
   <h2>Extract</h2>
   <label>Model or dataset<select name="dataset" class="studio-select" data-dataset></select></label>
   <fieldset class="bx-fields" data-fields-box hidden><legend>Fields</legend><div data-fields></div></fieldset>
+  <span class="bi-time" data-time role="group" aria-label="Time of the extract: now, as of a date, or a window">
+    <label>Time <select class="studio-select" data-time-mode aria-label="Time"><option value="now">Now</option><option value="asof">As of a date</option><option value="window">A window</option></select></label>
+    <input type="date" class="studio-in" data-date aria-label="As of" hidden>
+    <input type="date" class="studio-in" data-date-from aria-label="From" hidden><input type="date" class="studio-in" data-date-to aria-label="To" hidden>
+  </span>
   <div class="bi-actions">
     <button type="submit" class="btn-pill btn-accent" data-open-go disabled><i class="bi bi-box-arrow-in-down" aria-hidden="true"></i> Open the extract</button>
     <label class="bx-inline">Notebook<select class="studio-select" data-notebooks aria-label="Open a saved notebook"><option value="">(none)</option></select></label>
@@ -86,4 +91,4 @@
 </form>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-expr-editor.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-query-panel.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-python.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-explore.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-explore-cells.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-explore-extracts.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-expr-editor.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-query-panel.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-python.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-consume.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-explore.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-explore-cells.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-explore-extracts.js?v={{ ASSET_V }}"></script>{% endblock %}

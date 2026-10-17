@@ -27,7 +27,9 @@
   const h = B.h, q = (s, sc) => B.q(s, sc || canvas);
   const reportId = canvas.getAttribute('data-item');
 
-  const state = { slicers: {}, selections: [], drills: {}, carry: [], dates: null, mode: 'filter', rows: {}, asTable: {} };
+  const state = { slicers: {}, selections: [], drills: {}, carry: [], dates: null, mode: 'filter', rows: {}, asTable: {}, time: { mode: 'now' } };
+  const MAX_FOLLOW = 12;                    // standing queries one page holds (the server allows drishti.bi.mq.max-subscriptions-per-user for a person)
+  let pbar = null, picker = null;           // wave B: the parameter slicers and Show as (bi-consume.js), the time picker
   let rep = null, idx = null, pageId = null, palette = null, tokens = null;
   const frames = new Map();                 // visual id -> {frame, spec, token, psp}
   const rolling = {};                       // visual id -> the points a rolling chart has collected since the page opened
@@ -91,6 +93,7 @@
     if (group === 'static' || group === 'entity' || spec.type === 'slicer') { return out; }
     if (group === 'python') { return out; }                                        // a Python result is drawn from rows Python was handed: no alert, drill or marks
     if (B.ai && group !== 'python') { out.push(B.ai.explainButton(spec, mk)); }                                  // Explain this number: hidden unless the server's AI layer is on
+    out.push(mk('bi-plan', 'diagram-3', 'How this was answered: tiers, layers, times', () => { const e = frames.get(spec.id); if (e) { B.consume.explain(e.frame, askedMq(e)); } }, { 'data-act': 'explain-plan' }));
     out.push(alertButton(spec, mk));                                               // Alert me: every visual that shows numbers, live ones too (a live source can alert on change)
     if (group === 'perspective' || group === 'live') { return out; }
     const sel = state.selections.find((s) => s.visual === spec.id);
@@ -161,12 +164,21 @@
     if (VGROUP[spec.type] === 'python') { return loadPython(spec, entry, token, quiet); }
     if (!quiet) { entry.frame.busy(); }
     return B.enqueue(() => B.api('POST', '/reports/' + B.id2path(reportId) + '/query', { page: pageId, visual: spec.id, state: stateFor(spec) })).then((res) => {
-      if (token !== entry.token) { return; }
+      if (token !== entry.token) { return null; }
+      entry.mq = res.mq || null;
+      // parameter values and Show as items ride on the model query (MQ v2): the report's own answer gave the query, the server answers it with them
+      const asked = askedMq(entry);
+      if (asked !== entry.mq && entry.mq && !DISTRIBUTIONS[spec.type]) { return B.enqueue(() => B.mq.ask(asked)).then((a) => [Object.assign({}, res, { columns: a.columns, rows: a.rows, rowCount: a.rowCount, totals: undefined, highlight: null, meta: Object.assign({}, res.meta, a.meta) })]); }
+      return [res];
+    }).then((got) => {
+      if (!got || token !== entry.token) { return; }
+      const res = got[0];
       entry.res = res;
       asOfNote(res);
       sawLive(res);
       B.live.markStale(entry.frame, false);
       draw(spec.id, quiet);
+      if (!quiet) { follow(spec, entry); }
     }, (e) => {
       if (token !== entry.token) { return; }
       if (quiet && entry.res) { B.live.markStale(entry.frame, true, e.code ? e.code + ' ' + e.detail : e.message); } else { entry.frame.error(e); }
@@ -174,6 +186,44 @@
   }
 
   /** The date the data is as of, beside the Business date control: what the engine read (the newest date of the answer), which may be older than the day in the top bar. */
+  // ---- wave B: standing queries, the state chip, parameters, time (bi-consume.js) ------------------------------------
+  const DISTRIBUTIONS = { histogram: 1, box: 1 };
+  /** The model query a visual is answered by now: the report's answer's own query with the parameter values and Show as items on it. */
+  function askedMq(entry) { return entry && entry.mq ? B.consume.withParams(entry.mq, pbar ? pbar.params() : {}, pbar ? pbar.calc() : {}) : null; }
+  /** A pushed answer redraws the visual in place when its rows are the whole picture; one with totals, highlights or bins is asked again (quietly). */
+  function pushed(spec, entry, d) {
+    if (!frames.get(spec.id) || frames.get(spec.id) !== entry) { return; }
+    if (watch && watch.paused()) { entry.pending = true; return; }
+    canvas.setAttribute('data-pushed', String((Number(canvas.getAttribute('data-pushed')) || 0) + 1));
+    const whole = d.rows && entry.res && !entry.res.totals && !entry.res.highlight && !DISTRIBUTIONS[spec.type] && !state.rows[spec.id] && entry.res.columns && (!d.rows.length || d.rows[0].length === entry.res.columns.length);
+    if (!whole) { load(spec, { quiet: true }); return; }
+    entry.res = Object.assign({}, entry.res, { rows: d.rows, rowCount: d.rows.length });
+    entry.frame.el.setAttribute('data-updated', new Date().toISOString());
+    entry.frame.el.setAttribute('data-cursor', d.cursor || '');
+    draw(spec.id, true);
+  }
+  /** Follows the visual's query when the time can be followed (now, a window, today); says so in its chip either way. */
+  function follow(spec, entry) {
+    const chip = entry.chip || (entry.chip = B.consume.chip(entry.frame));
+    const mq = askedMq(entry);
+    const key = mq ? JSON.stringify(mq) : '';
+    if (entry.follow && entry.followKey === key) { return; }
+    if (entry.follow) { entry.follow.close(); entry.follow = null; }
+    entry.followKey = key;
+    if (!mq) { chip.el.remove(); return; }
+    if (!B.consume.followable(state.time)) { chip.set('asof', 'A past day never changes: it was asked once.', state.time); return; }
+    const following = Array.from(frames.values()).filter((e) => e.follow).length;
+    if (following >= MAX_FOLLOW) { chip.set('once', 'This page follows ' + MAX_FOLLOW + ' visuals already; this one was asked once.'); return; }
+    chip.set('connecting');
+    entry.follow = B.consume.follow(mq, {
+      throttle: Math.max(250, Number(canvas.getAttribute('data-live-min')) || 250) + 'ms', deliver: 'rows', staleSeconds: Number(canvas.getAttribute('data-live-stale')) || 30,
+      onAnswer: (d) => pushed(spec, entry, d),
+      onState: (s, why, info) => { chip.set(state.time.mode === 'window' && s === 'live' ? 'window' : s, why, Object.assign({}, info, state.time)); B.live.markStale(entry.frame, s === 'stale' || s === 'failed', why); }
+    });
+  }
+  function closeFollows() { frames.forEach((e) => { if (e.follow) { e.follow.close(); e.follow = null; } }); }
+  window.addEventListener('pagehide', closeFollows);
+
   function asOfNote(res) {
     const note = q('[data-asof-note]');
     const ds = res && res.meta && res.meta.dates;
@@ -246,7 +296,7 @@
     watch = B.live.watch([reportId], {
       staleSeconds: Number(canvas.getAttribute('data-live-stale')) || 30,
       onHello: (id, d) => { if (wasOff || Number(d.generation) > seenGeneration) { refresher.request(); } wasOff = false; },
-      onTick: () => { refresher.request(); },
+      onTick: () => { if (!Array.from(frames.values()).some((e) => e.follow)) { refresher.request(); } },
       onState: (info) => { if (info.state === 'disconnected' || info.state === 'hidden') { wasOff = true; } if (indicator) { indicator.draw(); } },
       onSignal: () => { if (indicator) { indicator.draw(); } }
     });
@@ -330,7 +380,7 @@
   }
 
   function drawGrid() {
-    frames.forEach((e) => { e.frame.dispose(); if (e.psp) { e.psp.dispose(); } });
+    frames.forEach((e) => { e.frame.dispose(); if (e.follow) { e.follow.close(); } });
     frames.clear();
     const grid = B.clear(q('[data-grid]'));
     const page = pageOf(pageId);
@@ -378,6 +428,11 @@
       const sp = rep.report.pages.map((p) => p.visuals.find((x) => x.id === k)).find(Boolean);
       box.appendChild(h('span', { class: 'bi-chip', 'data-chip': 'slicer' }, B.icon('sliders'), ' ' + (sp ? sp.title || B.label(sp.wells.field[0]) : k) + ': ' + (Array.isArray(v) ? v.join(', ') : v.relative ? B.visuals.relativeLabel(v.relative) : (v.from == null ? '' : v.from) + ' to ' + (v.to == null ? '' : v.to))));
     });
+    if (pbar && pbar.active()) {
+      const p = pbar.params(), c = pbar.calc();
+      Object.keys(p).forEach((k) => box.appendChild(h('span', { class: 'bi-chip', 'data-chip': 'param' }, B.icon('sliders2'), ' ' + k + ': ' + p[k])));
+      Object.keys(c).forEach((k) => box.appendChild(h('span', { class: 'bi-chip', 'data-chip': 'calc' }, B.icon('layers'), ' ' + k + ': ' + c[k])));
+    }
     q('[data-reset]').hidden = !box.children.length && !state.dates;
   }
 
@@ -396,6 +451,9 @@
     state.rows = {};
     state.asTable = {};
     state.dates = null;
+    state.time = { mode: 'now' };
+    if (picker) { picker.reset(); }
+    if (pbar) { pbar.reset(); }
     q('[data-date]').value = '';
     { const t = document.querySelector('form[data-asof] input[type="date"]'); if (t && t.value) { q('[data-date]').value = t.value; } }
     Object.keys(state.drills).forEach((k) => { delete state.drills[k]; });
@@ -407,7 +465,8 @@
     const date = q('[data-date]');
     const topDate = document.querySelector('form[data-asof] input[type="date"]');
     if (topDate && topDate.value && !date.value) { date.value = topDate.value; date.setAttribute('data-from-topbar', ''); }          // the control shows the day the top bar has; it asks for nothing until it is changed
-    date.addEventListener('change', () => { date.removeAttribute('data-from-topbar'); state.dates = date.value ? { from: date.value, to: date.value } : null; refreshAll(null); });
+    date.addEventListener('change', () => date.removeAttribute('data-from-topbar'));
+    picker = B.consume.timePicker(q('[data-time]'), (t) => { state.time = t; state.dates = B.consume.datesOf(t); syncChips(); refreshAll(null); });
     const mode = q('[data-mode]');
     mode.addEventListener('change', () => { state.mode = mode.value; if (state.selections.length) { refreshAll(null); } });
     q('[data-reset]').addEventListener('click', reset);
@@ -424,6 +483,17 @@
     }
     if (window.ResizeObserver) { new ResizeObserver(() => frames.forEach((e) => e.frame.resize())).observe(q('[data-grid]')); }
     q('[data-design]').href = '/bi/design/' + B.id2path(reportId);
+  }
+
+  /** The model's parameters and calculation groups as slicers above the page (a report on a model; a 2.1 dataset has none). */
+  function paramBar(r) {
+    const host = q('[data-param-bar]');
+    const ref = (r.report && r.report.model) || (r.dataset && r.dataset.model && r.dataset.model.ref) || '';
+    if (!host || !ref) { return; }
+    B.api('GET', '/models/' + encodeURIComponent(ref) + '/describe').then((d) => {
+      pbar = B.consume.paramBar(host, d, () => { syncChips(); refreshAll(null); });
+      canvas.setAttribute('data-params', pbar.active() ? 'set' : (d.parameters || []).length || (d.calcGroups || []).length ? 'ready' : 'none');
+    }).catch(() => { host.hidden = true; });
   }
 
   function readCarry() {
@@ -461,6 +531,7 @@
     go(wanted && pageOf(wanted) ? wanted : first.id, carry, false);
     window.history.replaceState({ page: pageId, carry }, '', window.location.pathname + window.location.search);
     startLive();
+    paramBar(r);
     // what the export and subscribe controls (bi-export.js) need: the report, the page being shown, the state of the screen and the visuals that hold data
     B.reportView = { id: reportId, title: r.title, page: () => pageId, state: () => stateFor({ id: '' }), visuals: () => pageOf(pageId).visuals.filter((v) => ['static', 'entity', 'slicer'].indexOf(VGROUP[v.type]) < 0) };
     document.dispatchEvent(new CustomEvent('drishti:report-ready'));

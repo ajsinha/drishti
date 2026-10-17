@@ -32,6 +32,8 @@
   const tiles = new Map();              // tile key (page/tile) -> {frame, tile, info, spec, token, res, psp}
   const rolling = {};                   // tile key -> a rolling chart's points
   let watch = null, indicator = null, refresher = null, seenGeneration = 0, wasOff = false, rotateTimer = 0;
+  let time = { mode: 'now' };            // wave B: the board's time (now, as of, a window); its tiles follow pushed answers (bi-consume.js)
+  const MAX_FOLLOW = 16;
 
   const page = () => board.pages[pageIdx];
   const keyOf = (t) => page().id + '/' + t.id;
@@ -77,9 +79,11 @@
     if (['text', 'image', 'button'].indexOf(spec.type) >= 0) { entry.frame.result(null, (host) => B.visuals.draw(host, spec, ctxFor(entry), null)); return Promise.resolve(); }
     if (spec.type === 'python') { return loadPython(entry, token, quiet); }
     if (!quiet) { entry.frame.busy(); }
-    return B.enqueue(() => B.api('POST', qpath, { page: entry.info.page, visual: spec.id, state: {} })).then((res) => {
+    return B.enqueue(() => B.api('POST', qpath, { page: entry.info.page, visual: spec.id, state: B.consume.datesOf(time) ? { dates: B.consume.datesOf(time) } : {} })).then((res) => {
       if (token !== entry.token) { return; }
       entry.res = res;
+      entry.mq = res.mq || null;
+      if (!quiet) { followTile(entry); }
       if (res.live && res.live.generation > seenGeneration) { seenGeneration = res.live.generation; }
       B.live.markStale(entry.frame, false);
       const c = ctxFor(entry);
@@ -112,6 +116,35 @@
     });
   }
 
+  /** A tile follows its query's pushed answers (a standing query): a tile's rows redraw in place and its alert colour is judged again. */
+  function followTile(entry) {
+    const chip = entry.chip || (entry.chip = B.consume.chip(entry.frame));
+    const key = entry.mq ? JSON.stringify(entry.mq) : '';
+    if (entry.follow && entry.followKey === key) { return; }
+    if (entry.follow) { entry.follow.close(); entry.follow = null; }
+    entry.followKey = key;
+    if (!entry.mq) { chip.el.remove(); return; }
+    if (!B.consume.followable(time)) { chip.set('asof', 'A past day never changes: it was asked once.', time); return; }
+    if (Array.from(tiles.values()).filter((e) => e.follow).length >= MAX_FOLLOW) { chip.set('once', 'This page follows ' + MAX_FOLLOW + ' tiles already.'); return; }
+    chip.set('connecting');
+    entry.follow = B.consume.follow(entry.mq, {
+      throttle: Math.max(250, Number(canvas.getAttribute('data-live-min')) || 250) + 'ms', deliver: 'rows', staleSeconds: Number(canvas.getAttribute('data-live-stale')) || 30,
+      onAnswer: (d) => {
+        if (tiles.get(entry.key) !== entry || (watch && watch.paused())) { return; }
+        canvas.setAttribute('data-pushed', String((Number(canvas.getAttribute('data-pushed')) || 0) + 1));
+        if (!d.rows || !entry.res || entry.res.totals || (d.rows.length && entry.res.columns && d.rows[0].length !== entry.res.columns.length)) { load(entry, true); return; }
+        entry.res = Object.assign({}, entry.res, { rows: d.rows, rowCount: d.rows.length });
+        const c = ctxFor(entry);
+        c.update = true;
+        entry.frame.result(entry.res, (host) => B.visuals.draw(host, entry.spec, c, entry.res), { keep: true });
+        alertTile(entry);
+        entry.frame.el.setAttribute('data-updated', new Date().toISOString());
+      },
+      onState: (s, why, info) => { chip.set(time.mode === 'window' && s === 'live' ? 'window' : s, why, Object.assign({}, info, time)); B.live.markStale(entry.frame, s === 'stale' || s === 'failed', why); }
+    });
+  }
+  window.addEventListener('pagehide', () => tiles.forEach((e) => { if (e.follow) { e.follow.close(); } }));
+
   function missing(entry, why) {
     entry.frame.result(null, (host) => {
       B.clear(host).appendChild(h('div', { class: 'bi-vis-note', role: 'status', 'data-tile-state': 'missing' }, h('strong', { text: 'Not available' }), h('p', { text: why })));
@@ -120,7 +153,7 @@
   }
 
   function drawPage() {
-    tiles.forEach((e) => { e.frame.dispose(); if (e.psp) { e.psp.dispose(); } });
+    tiles.forEach((e) => { e.frame.dispose(); if (e.follow) { e.follow.close(); } });
     tiles.clear();
     const grid = B.clear(q('[data-grid]'));
     const p = page();
@@ -192,6 +225,8 @@
 
   function bar() {
     q('[data-kiosk]').addEventListener('click', () => setKiosk(!kiosk));
+    const tp = q('[data-time]');
+    if (tp) { B.consume.timePicker(tp, (t) => { time = t; drawPage(); }); }
     q('[data-prev]').addEventListener('click', () => show(pageIdx - 1));
     q('[data-next]').addEventListener('click', () => show(pageIdx + 1));
     document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && kiosk) { setKiosk(false, true); } });
@@ -210,7 +245,7 @@
     watch = B.live.watch(ids, {
       staleSeconds: Number(canvas.getAttribute('data-live-stale')) || 30,
       onHello: (id, d) => { if (wasOff || Number(d.generation) > seenGeneration) { refresher.request(); } wasOff = false; },
-      onTick: () => { refresher.request(); },
+      onTick: () => { if (!Array.from(tiles.values()).some((e) => e.follow)) { refresher.request(); } },
       onState: (info) => { if (info.state === 'disconnected' || info.state === 'hidden') { wasOff = true; } if (indicator) { indicator.draw(); } },
       onSignal: () => { if (indicator) { indicator.draw(); } }
     });
