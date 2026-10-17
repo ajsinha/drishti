@@ -19,7 +19,7 @@
 
 Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback,
 publish, keygen, install), data (profile and ingest your own JSON Lines or watch a drop folder, load the demo data), server (health, packs, smoke),
-view (get, explain), doctor, completion, design (the Screen Designer's designs over
+lake (build a Delta lake from a large JSON export, scan, status, maintain), view (get, explain), doctor, completion, design (the Screen Designer's designs over
 REST: create, save, check, propose, approve, export, import, bind) and docs (screenshots).
 Needs Python 3.10+ and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
 recipes and real output is docs/guides/CLI_GUIDE.md.
@@ -1231,6 +1231,8 @@ def build_parser() -> argparse.ArgumentParser:
             p.add_argument("--panel", help="explain one panel only")
         else:
             p.add_argument("--table", action="store_true", help="text tables (the default; --json gives the raw view)")
+    load_module("lakecli", "lake/cli.py").register(groups, add, srv)   # lake build|scan|status|maintain
+
     cp = groups.add_parser("completion", help="completion: print a shell completion script (bash, zsh, powershell)",
                            description="Generated from the command tree, so it is always current. bash: source <(drishti.py completion bash); zsh: source <(drishti.py completion zsh); "
                                        "PowerShell: drishti.py completion powershell | Out-String | Invoke-Expression. See CLI_GUIDE.",
@@ -1245,7 +1247,7 @@ def main(argv=None) -> int:
         ap = build_parser()
         a, extra = ap.parse_known_args(argv)
         a._argv = list(sys.argv[1:] if argv is None else argv)
-        passthrough = (a.group == "sutra" and a.cmd != "gen") or (a.group == "data" and a.cmd == "load")
+        passthrough = (a.group == "sutra" and a.cmd != "gen") or (a.group == "data" and a.cmd == "load") or (a.group == "lake" and a.cmd == "maintain")
         if extra and not passthrough:
             ap.error("unrecognized arguments: " + " ".join(extra))
         if extra and extra[0] == "--":

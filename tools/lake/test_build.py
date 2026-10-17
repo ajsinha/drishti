@@ -256,6 +256,34 @@ class DrishtiEngineTest(BuildTest):
         self.assertEqual(len(self.table().to_pyarrow_table()), 300)
 
 
+class CommandLineTest(unittest.TestCase):
+
+    def test_drishti_py_lake_build_scan_and_status(self):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        import contextlib
+        import io
+        import drishti
+        with tempfile.TemporaryDirectory() as tmp:
+            src, lake = Path(tmp) / "b.jsonl", Path(tmp) / "lake"
+            src.write_text("\n".join(json.dumps(d) for d in book(12)) + "\n{}\n", encoding="utf-8")
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = drishti.main(["lake", "build", "--from", str(src), "--kind", "deal", "--key", "TRADE_ID", "--date", "TRADE_DATE",
+                                     "--domain", "trading", "--lake", str(lake), "--engine", "deltalake", "--partition-by", "DESK"])
+            self.assertEqual(code, 2, out.getvalue())                          # written, one reject
+            self.assertIn("rejected 1: no id (field 'TRADE_ID' is missing or empty)", out.getvalue())
+            self.assertIn("lake-build partial exit=2", out.getvalue())
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                self.assertEqual(drishti.main(["lake", "status", "--lake", str(lake)]), 0)
+            self.assertIn("lock: free", out.getvalue())
+            self.assertIn("lake-build partial", out.getvalue())
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                self.assertEqual(drishti.main(["lake", "scan", str(src)]), 0)
+            self.assertIn("suggested --key TRADE_ID   --date TRADE_DATE", out.getvalue())
+
+
 class ScanTest(unittest.TestCase):
 
     def test_suggestions(self):

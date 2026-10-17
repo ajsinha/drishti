@@ -95,13 +95,13 @@ def scan(inputs, limit: int | None = None, cap: int = 1000, recursive: bool = Fa
 
 
 def suggest(rows: list[dict], n: int) -> dict:
-    """The likeliest id, business date and classifiers. Ids: present in every document, every value different, named like an id
+    """The likeliest id, business date and classifiers. Ids: present in (nearly) every document, every value different, named like an id
     first. Dates: mostly date-like values, few distinct ones, named like a date first. Classifiers: text in most documents with 2
     to 40 values."""
     if not n:
         return {"key": [], "date": [], "partitionBy": []}
-    keys = [r for r in rows if r["present"] == n and r["types"].keys() <= {"text", "number"}
-            and (r["many"] or r["distinct"] == n)]
+    keys = [r for r in rows if r["present"] >= n * 0.9 and r["types"].keys() <= {"text", "number"}
+            and (r["many"] or r["distinct"] == r["present"])]
     keys.sort(key=lambda r: (not _ID.search(r["path"]), r["path"].count("."), len(r["path"])))
     dates = [r for r in rows if r["present"] >= n * 0.9 and r["dateLike"] >= r["present"] * 0.9]
     dates.sort(key=lambda r: (not _DATE.search(r["path"]), r["many"], r["distinct"] or 0, r["path"].count(".")))

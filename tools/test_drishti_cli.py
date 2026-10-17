@@ -50,6 +50,7 @@ class Wiring(unittest.TestCase):
     COMMANDS = [("sutra", c) for c in ("shape", "design", "lint", "test", "preview", "gen")] + \
                [("pack", c) for c in ("new", "check", "about-check", "publish", "keygen", "verify", "install")] + \
                [("data", "ingest"), ("data", "load"), ("data", "landed"), ("data", "loads"),("server", "smoke"), ("view", "get"), ("view", "explain"), ("server", "health"), ("server", "packs"), ("docs", "shots"), ("bi", "workspace"), ("bi", "catalogue")] + \
+               [("lake", c) for c in ("build", "scan", "status", "maintain")] + \
                [("design", c) for c in ("list", "create", "get", "save", "check", "propose", "approve", "reject", "proposals", "export", "import",
                                         "bind", "autodesign", "delete")]
 
