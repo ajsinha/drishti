@@ -436,7 +436,7 @@ private draft cannot be published), the columns to mask, and the YAML the wizard
 
 ![The save step: the title Large economies, the name large-economies, the workspace Models desk, the masked columns, and the YAML](img/t10/39-wizard-save.jpg)
 
-Press **Save and publish**. Under the buttons the next steps appear: **Open the dataset**, **Start a report on it** (a report on its implicit model,
+Press **Save and publish**. **You should see** the next steps under the buttons: **Open the dataset**, **Start a report on it** (a report on its implicit model,
 `dataset:large-economies`) and **Use it in a new model**. Press **Use it in a new model**, choose *Models desk* and **Make the model**: the model
 designer opens on **Large economies model**, the dataset placed as a fact under the alias `large_economies`, with the default measures of its columns
 (`Count of large_economies`, `Sum of gdpUsdBn`, `Sum of populationM`).
