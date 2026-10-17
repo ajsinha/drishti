@@ -85,3 +85,18 @@ def test_provenance_banners_come_from_the_macro_and_the_embed_has_no_console_lin
     dated = {"ref": {"id": "T-1"}, "provenance": {"source": "ledger"}}
     assert "Back to live" in str(parts.provenance_banners(dated, "2026-10-01", {"selected": "2026-10-01"}, False, "/v/x"))
     assert "Back to live" not in str(parts.provenance_banners(dated, "2026-10-01", {"selected": "2026-10-01"}, True))
+
+
+def test_how_this_view_was_built_links_its_sutra_to_the_designer_and_its_source_to_the_connector():
+    """The provenance panel: the Sutra that drew the page opens in the designer, the connector it was read from opens on its page."""
+    from jinja2 import Environment, FileSystemLoader
+    env = Environment(loader=FileSystemLoader(str(CONSOLE / "web" / "templates")), extensions=["jinja2.ext.do"])
+    t = env.from_string('{% from "_macros/panels.html" import panel %}{{ panel(p) }}')
+    fields = [{"label": "Layout", "text": "Sutra endur-comswap v2 + inference"}, {"label": "Fingerprint", "text": "a1b2"},
+              {"label": "Source", "text": "trade-endur, gen 4"}]
+    h = t.render(p={"id": "built", "kind": "provenance", "title": "How this view was built", "data": {"fields": fields}})
+    assert '<a data-prov-sutra href="/studio?sutra=endur-comswap%402"' in h and ">endur-comswap v2</a> + inference" in h
+    assert '<a data-prov-source href="/admin/connectors/trade-endur"' in h and ">trade-endur</a>, gen 4" in h
+    fields[0]["text"] = "inferred from the shape of the document"
+    h = t.render(p={"id": "built", "kind": "provenance", "title": "How this view was built", "data": {"fields": fields}})
+    assert "data-prov-sutra" not in h and "inferred from the shape of the document" in h

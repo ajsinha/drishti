@@ -351,7 +351,7 @@
 {% macro pbody(p) -%}
   {% if p.empty or (p.data is none and p.kind != 'provenance') %}{{ no_data(p) }}
   {% elif p.kind in ['kv', 'status'] %}{{ fields(p.data.fields, 4 if p.area == 'main' else 2) }}
-  {% elif p.kind == 'provenance' %}<dl class="prov">{% for f in (p.data.fields or []) %}<div><dt>{{ f.label }}</dt><dd class="mono">{{ f.text }}</dd></div>{% endfor %}</dl>
+  {% elif p.kind == 'provenance' %}<dl class="prov">{% for f in (p.data.fields or []) %}{% set w = (f.text or '').split(' ') %}<div><dt>{{ f.label }}</dt><dd class="mono">{% if f.label == 'Layout' and w | length > 2 and w[0] == 'Sutra' and w[2][:1] == 'v' %}{# "Sutra <name> v<N>[ + inference]": the Sutra opens in the designer #}Sutra <a data-prov-sutra href="/studio?sutra={{ (w[1] ~ '@' ~ w[2][1:]) | urlencode }}" title="Open this Sutra in the designer">{{ w[1] }} {{ w[2] }}</a>{{ (' ' ~ (w[3:] | join(' '))) if w | length > 3 else '' }}{% elif f.label == 'Source' and ', gen ' in (f.text or '') %}{% set src = f.text.split(', gen ') %}{# "<connector>, gen <N>": the connector opens on its page #}<a data-prov-source href="/admin/connectors/{{ src[0] | urlencode }}" title="Open this connector's page">{{ src[0] }}</a>, gen {{ src[1] }}{% else %}{{ f.text }}{% endif %}</dd></div>{% endfor %}</dl>
   {% elif p.kind in ['table', 'ladder'] %}{% if p.data.levels %}{{ drill(p) }}{% else %}{{ pivotable(p) }}{% endif %}
   {% elif p.kind == 'tabs' %}{{ tabs(p) }}
   {% elif p.kind in ['line', 'area'] %}{{ chart(p) }}
