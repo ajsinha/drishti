@@ -24,6 +24,7 @@ from __future__ import annotations
 import glob
 import json
 import os
+import re
 import subprocess
 import sys
 import urllib.error
@@ -271,7 +272,7 @@ def test_pack_dataset_to_model_to_report(browser):
     # 6. save (checked clean), then start a report on the model: its Fields pane reads the model, its visuals ask the model
     page.click("[data-save]")
     expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
-    expect(page.locator("[data-valid]")).to_have_text("Valid")
+    expect(page.locator("[data-valid]")).to_have_text(re.compile(r"^Valid(, \d+ warnings?)?$"))      # valid; a warning pinned on the canvas is counted
     name = page.evaluate("window.drishtiModel.doc.model")
     assert name.startswith("trades-and-desks"), name
     page.click("[data-report]")

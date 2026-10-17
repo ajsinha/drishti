@@ -544,7 +544,7 @@ def test_the_wizard_adds_a_python_column(browser):
     expect(page.locator("[data-preview-table] thead")).to_contain_text("size", timeout=30000)
     cells = page.eval_on_selector_all("[data-preview-table] tbody tr", "rows => rows.map(r => [...r.children].map(c => c.textContent))")
     heads = page.eval_on_selector_all("[data-preview-table] thead th", "hs => hs.map(h => h.textContent)")
-    col = [i for i, h in enumerate(heads) if h.endswith(".size")][0]
+    col = [i for i, h in enumerate(heads) if h == "size" or h.endswith(".size")][0]                  # the column as the dataset names it
     assert {r[col] for r in cells} <= {"big", "small"} and cells, (heads, cells[:3])
     clean(page)
     page.context.close()

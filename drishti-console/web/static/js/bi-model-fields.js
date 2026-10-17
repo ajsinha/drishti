@@ -238,7 +238,7 @@
           if (none.length) { notes.push('no rows of ' + none.join(', ') + ' (no rule of the model gives this role any)'); }
           B.clear(out);
           if (refused.length) {
-            out.appendChild(h('div', { class: 'bi-near', 'data-preview-as-refused': refused.map((x) => x.code).join(',') }, h('strong', { text: role.value + ' would be told: ' }),
+            out.appendChild(h('div', { class: 'bi-near', 'data-previewed-as': role.value, 'data-preview-as-refused': refused.map((x) => x.code).join(',') }, h('strong', { text: role.value + ' would be told: ' }),
               h('ul', { class: 'bi-layer-list' }, refused.map((x) => h('li', {}, h('code', { text: x.code }), ' ' + (x.message || ''))))));
             return;
           }
@@ -376,9 +376,9 @@
     const fp = q('[data-fields-pane]');
     const typing = fp.contains(document.activeElement) && /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName) && document.activeElement.type !== 'checkbox';
     if (M.tab === 'fields' && (fromTab || !typing)) { drawFields(); }        // a Check landing while someone types never redraws under them
-    if (M.tab === 'security') { drawSecurityExtras(); drawTests('[data-security-pane]'); }
-    if (M.tab === 'contract') { drawContractExtras(); drawTests(); }
   }
+  M.on('security-extras', () => { drawSecurityExtras(); drawTests('[data-security-pane]'); });
+  M.on('contract-extras', () => { drawContractExtras(); drawTests(); });
   M.on('redraw', () => redraw(false));
   M.on('tab', () => redraw(true));
 })();

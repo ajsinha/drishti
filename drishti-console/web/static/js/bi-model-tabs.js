@@ -371,7 +371,7 @@
     const badge = q('[data-count-security]');
     badge.hidden = !ex.length;
     badge.textContent = ex.length ? '⚠ ' + ex.length : '';
-    if (M.tab === 'measures') { keepForms(q('[data-measures-pane]'), drawMeasures); } else if (M.tab === 'security') { keepForms(q('[data-security-pane]'), drawSecurity); } else if (M.tab === 'contract') { keepForms(q('[data-contract-pane]'), drawContract); }
+    if (M.tab === 'measures') { keepForms(q('[data-measures-pane]'), drawMeasures); } else if (M.tab === 'security') { keepForms(q('[data-security-pane]'), () => { drawSecurity(); M.emit('security-extras'); }); } else if (M.tab === 'contract') { keepForms(q('[data-contract-pane]'), () => { drawContract(); M.emit('contract-extras'); }); }   // the extras (bi-model-fields.js) drawn inside, so their half-filled forms are kept too
   }
   M.on('redraw', redrawTab);
   M.on('tab', redrawTab);

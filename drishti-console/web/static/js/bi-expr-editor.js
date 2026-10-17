@@ -145,7 +145,10 @@
         }
         fieldItems = fieldItems.slice(0, 40);
         // a prefix that starts a function name puts the functions above the fields (fields are reached by their dataset's alias anyway)
-        if (w.length) { fnItems.forEach((x) => out.push(x)); fieldItems.forEach((x) => out.push(x)); } else { fieldItems.forEach((x) => out.push(x)); fnItems.forEach((x) => out.push(x)); }
+        // a field whose whole name starts with the prefix (status for "sta") first; then the functions ("su" gives sum before trade.summary); then the
+        // fields matched only by their column (trade.summary for "su")
+        const whole = fieldItems.filter((f) => w && f.label.toLowerCase().indexOf(w) === 0), part = fieldItems.filter((f) => whole.indexOf(f) < 0);
+        if (w.length) { whole.concat(fnItems, part).forEach((x) => out.push(x)); } else { fieldItems.forEach((x) => out.push(x)); fnItems.forEach((x) => out.push(x)); }
         if (c.word.indexOf('.') < 0) {
           wordList.filter((k) => w && k.toLowerCase().indexOf(w) === 0 && k !== c.word).forEach((k) => out.push({ kind: 'word', label: k, detail: '', insert: k, from: c.start }));
         }
