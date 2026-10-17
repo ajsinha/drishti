@@ -60,6 +60,35 @@ Highest first (the full rules are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md#pre
 | `config/connectors/<name>.yaml` | the site's definition; it replaces the pack's template for that name wholesale |
 | the pack's template (`connectors:` mapping or `connector-templates:` in `pack.yaml`) | the pack's suggestion, written to the file once at the first start |
 
+### Several connectors for one kind: a union
+
+When one kind comes from several systems at once (trades from Endur, Calypso and Murex, each with its own extract), give each system
+its own connector serving the kind and mark them `union: true`. Ids must be unique across them (the trading pack's are: Endur deal
+numbers, `CLY-…`, `MX-…`), and each document says where it came from (the trading pack's `SOURCE_SYSTEM`).
+
+```yaml
+# config/connectors/trade-calypso.yaml (trade-endur.yaml and trade-murex.yaml differ only in the table and the name)
+plugin: delta
+kinds: [trade]
+settings:
+  root: ${DRISHTI_DELTA_ROOT:./data/delta}
+  domain: trading
+  union: true                   # one slice of the kind: the union of the three serves it
+  table: { trade: trade_calypso }
+  source-name: trade-calypso
+```
+
+| What | Without `union` | With `union: true` |
+|---|---|---|
+| open `TRD CLY-3000086` | the first connector that holds the date answers; one that holds it and does not list the id ends the read (*not found*) | every union connector is asked in turn; *not found* only when none lists it |
+| search and type-ahead | the first connector holding the date lists the kind | every union connector lists it; their hits are taken in turn, so a short type-ahead shows each system |
+| a structured search, a pick list, a pivot over columns | the columns of one connector | the columns of all of them, put together (a number in one system and text in another is kept as it is) |
+| a BI table over the kind (no `connector:` named) | one connector's rows | every union connector's rows in one table; naming a connector reads that one only |
+
+A connector behind the union (a stream of today's changes, the demo samples) is still not asked once the union holds the date. The
+trading pack ships its three trade connectors this way ([DELTA_CONNECTOR.md](DELTA_CONNECTOR.md#4-declaring-the-layout-in-a-pack));
+`drishti.py lake build --connector trade-endur` writes the table that connector reads ([TOOLS.md](../guides/TOOLS.md)).
+
 ## Which connector?
 
 | Your data is… | Use | Section |

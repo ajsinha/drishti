@@ -43,6 +43,19 @@
       <a class="lnk" href="/export/compare/{{ kind }}/{{ id | urlencode }}.csv?from={{ form.get('from', '') }}&to={{ form.get('to', '') }}{% if from_known %}&fromKnownAt={{ from_known | urlencode }}{% endif %}" title="Download the changes as CSV"><i class="bi bi-download" aria-hidden="true"></i> CSV</a>
       <span class="text-muted-d mono">{{ data.from.provenance.source }} · generation {{ data.from.provenance.generation }} → {{ data.to.provenance.generation }}</span>
     </div>
+    <div class="cmp-grid{% if side %} cmp-has-side{% endif %}">
+    {% if side %}
+    <section class="pnl cmp-side" aria-label="The two dates side by side"><header class="pnl-h"><h3>Side by side</h3>
+      <span class="pnl-code">{{ data.from.businessDate }} · {{ data.to.businessDate }}</span></header><div class="pnl-b">
+      {% for sec in side %}<div class="tbl-wrap"><table class="tbl cmp-sbs" data-cmp-section="{{ sec.title }}">
+        <caption>{{ sec.title }}{% if sec.changed %} <span class="cmp-k changed">{{ sec.changed }} changed</span>{% endif %}</caption>
+        <thead><tr><th scope="col">Field</th><th scope="col" class="num">{{ data.from.businessDate }}</th><th scope="col" class="num">{{ data.to.businessDate }}</th></tr></thead>
+        <tbody>{% for r in sec.rows %}<tr class="cmp-row-{{ r.state }}"{% if r.state != 'same' %} data-cmp-diff{% endif %}><th scope="row">{{ r.label }}</th>
+          <td class="num mono{% if r.state in ('changed', 'removed') %} cmp-old{% endif %}">{{ r.a }}</td><td class="num mono">{{ r.b }}</td></tr>{% endfor %}</tbody>
+      </table></div>{% endfor %}
+    </div></section>
+    {% endif %}
+    <div class="cmp-list">
     {% if not rows %}
       <p class="text-muted-d">No differences{% if only %} of this kind{% endif %}: the two versions are the same.</p>
     {% else %}
@@ -58,6 +71,7 @@
       {% if data.truncated %}<p class="text-muted-d">Only the first {{ data.changes | length }} changes are shown.</p>{% endif %}
     </div></section>
     {% endif %}
+    </div></div>
   {% endif %}
 </div>
 {% endblock %}

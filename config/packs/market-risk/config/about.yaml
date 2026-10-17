@@ -210,3 +210,11 @@ kinds:
         means: "Each step moves the running total from zero to the actual P&L; the last step is the unexplained rest."
         unit: "USD"
         sign: "Positive adds, negative subtracts."
+  trade-valuation:
+    title: Trade valuation
+    about: >-
+      The risk engine values ${$.TRADE_ID} (${$.PRODUCT_TYPE}, booked in ${$.SOURCE_SYSTEM}) at ${fmt($.MTM, 'signed0')} USD on ${$.VALUATION_DATE};
+      it moved ${fmt($.PNL_1D, 'signed0')} USD over the last day.
+    guide: market-risk
+    glossary:
+      MTM: { use: "MTM" }

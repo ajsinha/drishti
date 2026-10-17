@@ -177,24 +177,29 @@ Why each part is shaped this way:
 
 ## 4. Declaring the layout in a pack
 
-The layout belongs to the kind, so the pack that owns the kind declares it, on the Delta connector that stores it. The
-trading pack suggests this template (`config/packs/trading/pack.yaml`, written by `tools/packgen/banking/make_packs.py`); at the first start the server writes it to
-`config/connectors/trading-store.yaml`, which is then the site's file ([As a connector file](#as-a-connector-file)):
+The layout belongs to the kind, so the pack that owns the kind declares it, on the Delta connectors that store it. A trade comes
+from three booking systems, so the trading pack declares three connectors that serve the one kind `trade`, each reading its own
+table under the domain (`table.trade`), each one slice of a **union** (`union: true`: ids are unique across them, and a read, a
+search, a type-ahead and a BI table ask all three; see [CONNECTORS.md](CONNECTORS.md#several-connectors-for-one-kind-a-union)). The
+template (`config/packs/trading/pack.yaml`, written by `tools/packgen/banking/make_packs.py`) becomes, at the first start,
+`config/connectors/trade-endur.yaml` and its two siblings, which are then the site's files ([As a connector file](#as-a-connector-file)):
 
 ```yaml
 connectors:
-  trading-store:
+  trade-endur:                  # trade-calypso and trade-murex are the same but for their table and name
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [trade]
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: trading
+      union: true               # one source system of several: the union serves the kind
+      table: { trade: trade_endur }   # the kind trade is read from <root>/trading/trade_endur
+      source-name: trade-endur
       layout:
         trade:
-          columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
-                    tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
-                    risk.dv01, sourceSystem]
+          columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION,
+                    BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
           sort-by: id
           file-rows: 250000
           row-group-rows: 1000
@@ -202,23 +207,23 @@ connectors:
 
 | Key | Meaning |
 |---|---|
-| `layout.<kind>.columns` | Document paths to promote, as written in the document (`mtm`, `counterparty.id`). The column name is the path with `.` replaced by `__`. |
+| `layout.<kind>.columns` | Document paths to promote, as written in the document (`QUANTITY`, `counterparty.id`). The column name is the path with `.` replaced by `__`. |
+| `table.<kind>` | The kind's table folder under the domain when it is not the kind's name (`trade_endur`): several connectors then serve one kind from tables side by side. Only the named kinds are this connector's tables. |
 | `layout.<kind>.sort-by` | `id` (the default and the right choice for entity tables): rows sorted by id within each business day. |
 | `layout.<kind>.file-rows` | Rows per file (default 250,000). Each file holds a contiguous id range. |
 | `layout.<kind>.row-group-rows` | Rows per Parquet row group (default 10,000; the trading pack sets 1,000, which keeps the first open of a trade fast). |
 
 The pack loader flattens the nested settings into the connector's flat settings (`layout.trade.columns =
-tradeId,productType,…`), which is what the connector reads; in a connector file you may write them nested or flat.
+TRADE_ID,SOURCE_SYSTEM,…`, `table.trade = trade_endur`), which is what the connector reads; in a connector file you may write them nested or flat.
 
 **Choosing the columns.** Promote every field that a question over the whole book reads:
 
 | Used by | Fields (trading pack) |
 |---|---|
-| pick-list columns (`columns:` in `pack.yaml`) | `productType`, `direction`, `currency`, `notional`, `mtm`, `maturityDate`, `book` |
-| searches people run | `mtm`, `notional`, `currency`, `status`, `assetClass`, `tradeDate`, `maturityDate`, `sourceSystem` |
-| derived kinds (desk P&L) | `desk`, `mtm`, `pnl1d`, `risk.dv01`, `book`, `currency`, and their rows: `tradeId`, `productName` |
-| impact (F8) measures and roll-ups | `mtm`, `nettingSet` |
-| reverse lookups (linked entities) | `nettingSet`, `book`, `desk`, `counterparty.id` |
+| pick-list columns (`columns:` in `pack.yaml`) | `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `BUY_SELL_CODE`, `CURRENCY`, `QUANTITY`, `MATURITY_DATE`, `PORTFOLIO`, `COUNTERPARTY` |
+| searches and the search form | `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_SUB_TYPE`, `TRADE_STATUS`, `BUY_SELL_CODE`, `CURRENCY`, `LEGAL_ENTITY`, `PORTFOLIO`, `TRADER_ID`, `TRADE_DATE`, `MATURITY_DATE` |
+| derived kinds (a counterparty's, portfolio's, legal entity's trades) | `COUNTERPARTY`, `PORTFOLIO`, `LEGAL_ENTITY`; their rows read the documents (legs and events) |
+| reverse lookups (linked entities) | `COUNTERPARTY`, `PORTFOLIO`, `LEGAL_ENTITY`, `TRADER_ID` |
 
 A search whose condition, ordering or result columns use a field that is **not** promoted is answered from documents
 instead ([section 7](#7-searches-pick-lists-derived-kinds-and-impact-over-columns)), so a missing column shows up as
@@ -737,6 +742,8 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 | `mode.<kind>` | `snapshot` | `snapshot` (every entity every day) or `effective` (a row when an entity changes) |
 | `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
 | `layout.<kind>.columns` | none | promoted paths ([section 4](#4-declaring-the-layout-in-a-pack)) |
+| `table.<kind>` | the kind's name | the kind's table folder under the domain (`trade_endur`); with it, only the named kinds are served ([section 4](#4-declaring-the-layout-in-a-pack)) |
+| `union` | `false` | this connector is one slice of its kinds (one source system of several): reads, searches, type-ahead and BI ask every union connector of the kind ([CONNECTORS.md](CONNECTORS.md#several-connectors-for-one-kind-a-union)) |
 | `layout.<kind>.sort-by`, `file-rows`, `row-group-rows` | `id`, `250000`, `10000` (the trading pack: `1000`) | how writers lay the table out |
 | `refresh-seconds` | `10` | how often the table's latest version is checked; the type-ahead index is rebuilt every six |
 | `warm-dates` | `3` | after start, in the background, each table's newest N dates get their id map and one document read, so the first read of a recent past date is not the slow one (cold about 5x a warm read: 40-70 ms against 10 ms on the samples, more on a large day); `0` turns it off |

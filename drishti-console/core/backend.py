@@ -147,6 +147,11 @@ class BackendClient:
             q["panels"] = ",".join(panels) or "-"
         return await self._get(f"/views/{where}", ident, **q)
 
+    async def view_on(self, kind: str, id_: str, ident, business_date: str) -> dict:
+        """The view as of a business date, whatever date the reader's top bar holds (Compare's side by side)."""
+        where, q = entity_path(kind, id_)
+        return await self._send("GET", f"/views/{where}", ident, params=q, headers={asof.HEADER: business_date})
+
     async def explain(self, kind: str, id_: str, ident, generation: int | None = None, locale: str | None = None,
                       accept_language: str | None = None) -> dict:
         """About this page: where the data came from, why the layout is what it is, where next (the server's PageContext).

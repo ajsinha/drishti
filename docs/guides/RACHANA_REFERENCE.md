@@ -710,9 +710,9 @@ expressions and templates are compiled at load time.
 | `kv` | `rows` | | |
 | `table` | `rows`, `moreLabel`, `children`, `crumb`, `root`, each `pivot` field's `bind`, each level's `rows`, `crumb` and column `bind` | each `pivot` field written as a path | `limit` (integer), `totalLabel`, `search` (`false` hides the filter), `expand`, `empty`, each level's `title`, the rest of `pivot` |
 | `tabs` | `each`, `tabTitle` | | `layout` |
-| `line` | `rows`, `source`, `mark` | `x`, `y` | `unit`, `fmt` |
+| `line` | `rows`, `source`, `mark` | `x`, `y` | `unit`, `fmt`, `step` (true or false) |
 | `area` | `rows`, `limit` | `x`, each series' `value` | `series[].label`, `series[].tone`, `limitLabel`, `unit` |
-| `hbar` | `rows` | `label`, `value` | `fmt`, `tone` |
+| `hbar` | `rows` | `label`, `value` | `fmt`, `tone`, `shape` (`bars` or `donut`) |
 | `ladder` | `rows`, `highlight`, `children`, `crumb`, `root`, each `pivot` field's `bind`, each level's `rows`, `crumb` and column `bind` | each `pivot` field written as a path | `totalLabel`, `search` (`false` hides the filter), `expand`, `empty`, each level's `title`, the rest of `pivot` |
 | `status` | each field's `bind` | | each field's `label`, `fmt`, `tone` |
 | `gauge` | `value`, `max` | | `label`, `fmt` |
@@ -955,7 +955,7 @@ tabs come from `each`, one per element, **whatever the count** (a cap has one le
 
 | Rule | Why |
 |---|---|
-| the kind is `kv`, `status`, `table`, `ladder`, `hbar`, `markdown` or `metric` | charts, `links`, `pivot` and `provenance` draw things of the whole view (`DRS-2023`) |
+| the kind is `kv`, `status`, `table`, `ladder`, `hbar`, `markdown`, `metric`, `line`, `area` or `timeline` | the other charts, `links`, `pivot` and `provenance` draw things of the whole view (`DRS-2023`); a line, area or timeline of one element (a leg's notional profile, its fixings) is drawn in its tab, and with `layout: columns` the legs stand side by side, each with its own charts |
 | no `tabs` inside a tab | one level of tabs; deeper structure is a tree table (below) or a table that drills level by level ([`levels`](#levels-drill-down-level-by-level)) (`DRS-2023`) |
 | no `pivot:` on a table inside a tab | the Pivot tab reads the whole panel by its id (`DRS-2023`) |
 | no `span` or `height` | the panels take the size of their tabs panel (`DRS-2030`) |
@@ -1059,6 +1059,7 @@ A line chart: one point per row.
 | `mark` | | | Expression (against the main document) giving one x value to highlight; its value is written under the chart: `5Y point 4.03%`. |
 | `fmt` | | | Format of the mark's value. |
 | `unit` | | | Unit for the axis and the mark text; `%` is appended without a space, anything else after a space. |
+| `step` | | `false` | `true` draws the line as steps: a value holds until the next point (a leg's notional schedule, an amortising principal). |
 | `footer` | | | Accepted, no effect. |
 
 The series is named after the panel title. When `source` names an entity that has not arrived within the link
@@ -1127,6 +1128,7 @@ Horizontal bars, one per row, scaled to the largest absolute value.
 | `label` | | `label` | Field of each row for the bar's label. |
 | `value` | | `value` | Field of each row for the bar's number. Rows whose value is not a finite number are skipped. |
 | `fmt` | | plain | Format of the number written beside each bar. |
+| `shape` | | `bars` | `donut` draws the same rows as a ring of shares of their total (the total, formatted with `fmt`, in the middle; the rows, their amounts and shares listed under it). Use it for a share of a whole: notional by product type. Negative values count by their size. |
 | `tone` | | by sign | Tone of each bar; without it, negative bars are `neg` and the others `pos`. |
 
 ```yaml
@@ -2050,6 +2052,9 @@ The set is closed (`Functions.java`); a name outside it is a compile error
 | `matches(text, pattern)` | 2 | **case-insensitive** regular-expression test, matching anywhere in the text (anchor with `^` and `$`). The pattern is run by a linear-time engine, so no pattern can take exponential time: classes `[a-z]` `\d` `\w` `\s`, groups `( )` and `(?: )`, alternation `\|`, `* + ? {n,m}`, `^`, `$`, a leading `(?i)`. Back-references, look-around, atomic groups, possessive quantifiers and `\b` are refused (`DRS-4010`), as is a pattern over 200 characters; a value is cut to 8,192 characters and a match over 50 ms is `DRS-4011`. In a search: `TRD where counterparty.name matches '^Mer.*n$'` |
 | `matchesCase(text, pattern)` | 2 | `matches`, but upper and lower case differ |
 | `within(value, range)` | 2 | true when `value` lies in a `from..to` range (what a `date-range` or `number-range` control holds; either end may be empty and an empty range holds everything): numbers compare as numbers, anything else as text, so ISO dates order, and a timestamp is compared by its date. A missing or masked value is never within |
+| `group(list, 'key', 'value'?, 'by'?)` | 2–4 | the list's elements grouped by the field `key` (a dotted path), one row `{label, value, count}` per distinct key in key order: `value` the sum of the field `value` over the group (number-like text counts; without a value field, the count), `count` its elements; `by` cuts an ISO date key to its `month` (2026-10) or `year` (2026) first. Elements without a key are left out; at most 500 groups. Feeds a chart: `rows: "group($.EVENTS[?nonblank(@.AMOUNT)], 'EVENT_DATE', 'AMOUNT')"` is a payment ladder |
+| `days(from, to)` | 2 | whole calendar days from one ISO date to another (a timestamp counts by its date), negative when `to` is earlier; empty when either is not a date |
+| `today()` | 0 | the business date the view is built for (the document's, else the picked or current date), as ISO text; empty outside a view. `$.EVENTS[?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30]` are the payments of the next 30 days |
 | `oneOf(value, list)` | 2 | true when `value` equals an element of `list` (what a `multi-select` control holds); **nothing chosen (an empty list, or an empty text) holds everything**. A masked value is never one of them |
 
 Examples against `MX-20000001`:
@@ -2164,7 +2169,7 @@ A Sutra file that fails any check is not loaded (or keeps its last good version,
 | `DRS-2020` | `name 'IRS_Vanilla' must be lower-case kebab, 2-64 characters`, `version must be a positive integer up to 2147483647, not '0'` | bad name or version (also a version too large for any number, which is not reported as YAML syntax) | `irs-vanilla`; `version: 3` unquoted |
 | `DRS-2021` | `unknown panel kind 'chart'; expected one of kv, table, tabs, line, area, hbar, ladder, links, status, provenance, markdown, gauge, surface, waterfall, histogram, scatter, candlestick, graph, timeline, pivot, metric, map` | a kind that does not exist | use one of the 22 kinds |
 | `DRS-2022` | `'table' panel 'flows' needs option 'rows'` | a required option is missing | add it (see each kind's table) |
-| `DRS-2023` | `option 'limit' is not valid for 'ladder' panels`, `only 'tabs' panels take a 'body'`, `only 'tabs' panels take 'panels'`, `a 'line' panel cannot sit inside a tab; use one of kv, status, table, ladder, hbar, markdown, metric`, `a panel inside a tab cannot hold tabs of its own`, `a panel inside a tab cannot have a Pivot tab; put the table in a panel of its own`, `option 'pivot' applies only to panels that show a table (table, ladder), not 'kv'` | an option the kind does not accept | remove it, or change the kind |
+| `DRS-2023` | `option 'limit' is not valid for 'ladder' panels`, `only 'tabs' panels take a 'body'`, `only 'tabs' panels take 'panels'`, `a 'surface' panel cannot sit inside a tab; use one of kv, status, table, ladder, hbar, markdown, metric, line, area, timeline`, `a panel inside a tab cannot hold tabs of its own`, `a panel inside a tab cannot have a Pivot tab; put the table in a panel of its own`, `option 'pivot' applies only to panels that show a table (table, ladder), not 'kv'` | an option the kind does not accept | remove it, or change the kind |
 | `DRS-2024` | `duplicate panel id 'legs'`, `two panels of this tab are called 'terms'` | two panels with one id | rename one |
 | `DRS-2025` | `'F13' is not a function key (F1-F12)`, `function key F2 is used twice` | a bad or repeated key | use `F1`–`F12` once each, across panels and `keys` |
 | `DRS-2026` | `the strip holds at most 8 figures, found 9` | more than 8 strip items | move figures into a `kv` panel |

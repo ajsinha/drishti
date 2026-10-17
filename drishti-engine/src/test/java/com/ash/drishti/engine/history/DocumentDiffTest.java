@@ -70,4 +70,25 @@ class DocumentDiffTest {
         assertThat(r.changes()).extracting(DocumentDiff.Change::path).containsExactlyInAnyOrder("rate", "sensitivities[1Y].tenor", "sensitivities[1Y].dv01");
         assertThat(r.changes()).filteredOn(c -> c.path().equals("rate")).singleElement().satisfies(c -> assertThat(c.delta()).isEqualTo(0.000018));
     }
+
+    /** A deep production trade: LEGS by LEG_ID, CASH_FLOWS by FLOW_ID, RESETS by RESET_ID, EVENTS by EVENT_ID, whatever their case. */
+    @Test
+    void upperSnakeIdentifiersMatchEveryLevelOfADeepTrade() {
+        String before = """
+                {"TRADE_ID":"MX-1","LEGS":[{"LEG_ID":1,"CASH_FLOWS":[{"FLOW_ID":7,"RATE":0.04,"RESETS":[{"RESET_ID":"R-13","RATE":0.039},{"RESET_ID":"R-14","RATE":0.041}]}]},
+                                          {"LEG_ID":2,"CASH_FLOWS":[{"FLOW_ID":8,"RATE":0.05,"RESETS":[]}]}],
+                 "EVENTS":[{"LEG_ID":1,"EVENT_ID":31,"AMOUNT":-10},{"LEG_ID":1,"EVENT_ID":32,"AMOUNT":-12}]}""";
+        String after = """
+                {"TRADE_ID":"MX-1","LEGS":[{"LEG_ID":2,"CASH_FLOWS":[{"FLOW_ID":8,"RATE":0.05,"RESETS":[]}]},
+                                          {"LEG_ID":1,"CASH_FLOWS":[{"FLOW_ID":7,"RATE":0.04,"RESETS":[{"RESET_ID":"R-13","RATE":0.039},{"RESET_ID":"R-14","RATE":0.043}]}]}],
+                 "EVENTS":[{"LEG_ID":1,"EVENT_ID":31,"AMOUNT":-10},{"LEG_ID":1,"EVENT_ID":32,"AMOUNT":-12},{"LEG_ID":2,"EVENT_ID":33,"AMOUNT":5}]}""";
+        com.ash.drishti.common.JsonCodec codec = new com.ash.drishti.common.JsonCodec();
+        DocumentDiff.Result r = diff.diff(codec.read(before), codec.read(after));
+        assertThat(r.changes()).filteredOn(c -> c.kind() == DocumentDiff.Kind.CHANGED).extracting(DocumentDiff.Change::path)
+                .containsExactly("LEGS[1].CASH_FLOWS[7].RESETS[R-14].RATE");         // a leg moved in the list: matched by LEG_ID, not position
+        assertThat(r.changes()).filteredOn(c -> c.kind() == DocumentDiff.Kind.ADDED).extracting(DocumentDiff.Change::path)
+                .allMatch(p -> p.startsWith("EVENTS[33]."));
+        assertThat(DocumentDiff.identifier(codec.read("[{\"legId\":1,\"cashflowId\":5},{\"legId\":1,\"cashflowId\":6}]"), "cashflows")).isEqualTo("cashflowId");
+        assertThat(DocumentDiff.identifier(codec.read("[{\"RESET_ID\":\"\",\"RATE\":1},{\"RESET_ID\":\"\",\"RATE\":2}]"), "RESETS")).isNull();   // blank ids: by position
+    }
 }

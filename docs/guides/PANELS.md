@@ -418,7 +418,8 @@ Points along an axis: a curve by tenor, P&L by date. With `source` the points ar
 
 - **Use it when:** Order along an axis matters.
 - **Not when:** Several bands against a limit: `area`. Labelled amounts: `hbar`.
-- **Key options:** `rows`, `x`, `y`, `source`, `mark`, `fmt`, `unit`, `footer`. For `line`, `area` and `hbar` a field of each row is a bare name. Every option and its values: [reference](RACHANA_REFERENCE.md#line).
+- **Key options:** `rows`, `x`, `y`, `source`, `mark`, `fmt`, `unit`, `footer`, `step` (`true`: a value holds until the next point, a notional schedule). For `line`, `area` and `hbar` a field of each row is a bare name.
+- **Inside a tab:** a line (or area, or timeline) may sit in a tab and read the tab's element with `@`: each leg of a deal, side by side with `layout: columns`, draws its own notional profile (`rows: "@.CASH_FLOWS"`, `x: START_DATE`, `y: NOTIONAL`, `step: true`) and fixings (`rows: "flatten(@.CASH_FLOWS[*].RESETS)"`). Every option and its values: [reference](RACHANA_REFERENCE.md#line).
 - **Empty when** there are no x values, or no finite number.
 - **Masked:** a masked number is not drawn: a line over a masked measure comes out empty.
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.
@@ -472,7 +473,8 @@ Horizontal bars for a few labelled amounts, scaled to the largest absolute value
 
 - **Use it when:** DV01 by bucket, MTM by book.
 - **Not when:** Amounts that add up to a total: `waterfall`. Order along an axis: `line`.
-- **Key options:** `rows` (required), `label`, `value`, `fmt`, `tone`. Every option and its values: [reference](RACHANA_REFERENCE.md#hbar).
+- **Key options:** `rows` (required), `label`, `value`, `fmt`, `tone`, `shape` (`bars`, or `donut` for shares of a whole: the total in the middle, the rows with amount and share listed under it). Every option and its values: [reference](RACHANA_REFERENCE.md#hbar).
+- **Grouped rows:** `rows: "group($.TRADES, 'PRODUCT_TYPE', 'NOTIONAL')"` sums a field by another (Rachana-EL `group`), so a payment ladder (`group($.EVENTS, 'EVENT_DATE', 'AMOUNT')`), payments by month (`..., 'month'`) or a maturity ladder (`group($.TRADES, 'MATURITY_DATE', 'NOTIONAL', 'year')`) needs no field of its own in the data.
 - **Empty when** there is no bar with a finite number.
 - **Masked:** a masked amount reads `•••` and has no bar.
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.

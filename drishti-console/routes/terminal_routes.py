@@ -21,7 +21,7 @@ from urllib.parse import parse_qs, quote
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core import about_index, asof, collab as collab_core, controls
+from core import about_index, asof, collab as collab_core, compare_side, controls
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes import api_routes
@@ -235,7 +235,14 @@ async def compare(request: Request, kind: str, id_: str, from_: str = Query("", 
         return render(request, "terminal/missing.html", status_code=e.page_status, kind=kind, id=id_, error=e)
     rows = [dict(c, before_text=_shown(c.get("before")), after_text=_shown(c.get("after")), delta_text=_delta(c.get("delta")))
             for c in data.get("changes", []) if not only or c.get("kind") == only]
-    return render(request, "terminal/compare.html", kind=kind, id=id_, data=data, rows=rows, error=None, only=only, screen="compare",
+    side = []
+    a_date, b_date = (data.get("from") or {}).get("businessDate"), (data.get("to") or {}).get("businessDate")
+    if a_date and b_date and not fromKnownAt:          # the screens of the two dates side by side (a known-at restatement has one date)
+        try:
+            side = compare_side.sections(await backend.view_on(kind, id_, ident(request), a_date), await backend.view_on(kind, id_, ident(request), b_date))
+        except BackendError:
+            side = []                                  # the change list still answers
+    return render(request, "terminal/compare.html", kind=kind, id=id_, data=data, rows=rows, error=None, only=only, screen="compare", side=side,
                   form={"from": from_ or (data.get("from") or {}).get("businessDate") or "", "to": to or (data.get("to") or {}).get("businessDate") or ""},
                   from_known=fromKnownAt)
 
