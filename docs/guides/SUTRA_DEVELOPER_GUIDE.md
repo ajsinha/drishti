@@ -15,13 +15,14 @@
 -->
 # Sutra developer guide: writing Sutras, from your first panel to a tested, shipped screen
 
-This guide teaches you to write **Sutras**, the layouts of Drishti's screen grammar Rachana, by doing. You start with a
-gene from the genomics pack, write a Sutra one step at a time, preview each step, and finish with a complete trade
-view. Then it covers what a working author needs next: how a Sutra is chosen among several, labels and taxonomies,
-reading other entities with `source:`, expandable row groups, dates and live data, how inference and a Sutra share a
-screen, testing in CI, and the Build workbench. It ends with a checklist and the mistakes everyone makes once, with
-their problem codes. Every example on this page parses and validates as written, and every figure was read from the
-running sample server.
+This guide teaches you to write **Sutras**, the layouts of Drishti's screen grammar Rachana, by doing. You start with a counterparty from the `core` pack, write a Sutra one step at a time and preview
+each step; you then build a complete swap view over a trade booked in Murex, in the common schema every source system of the `trading` pack writes. After that it covers what a working author needs
+next: how one Sutra is chosen among several (source system and product type), how the trading pack shares blocks between a hundred-odd product Sutras, labels, reading other entities with `source:`,
+expandable row groups, dates and live data, controls, how inference and a Sutra share a screen, testing in CI, and the Build workbench. It ends with the mistakes everyone makes once, with their
+problem codes, and a checklist.
+
+Every Sutra on this page was previewed against the demo lakes of a fresh clone (`drishti.py lake demo`, seven business days ending 2026-10-16), and every figure you are told to expect was read from
+that preview. Figures that depend on the business date (a count of payments still to come) are marked as such; the seven days of the demo lakes end on the day you build them.
 
 **What this guide does not repeat.** One place owns each topic and this guide links to it:
 
@@ -35,30 +36,34 @@ running sample server.
 | adding a new panel kind | [Panel developer guide](PANELS.md#developing-a-panel-kind) |
 | shipping Sutras in a pack | [Pack developer guide](PACK_DEVELOPER_GUIDE.md) |
 
-Eleven small working Sutras, each with a self-contained JSON document and a note, are in [examples](examples/README.md):
-together they use all 22 panel kinds, nested pivot groups and tree rows. In the workbench every example opens as
-**your own copy** (Build → New screen → Examples), and **File → Open** loads any `.yaml` or `.json` of your own.
+Eleven small working Sutras, each with a self-contained JSON document and a note, are in [examples](examples/README.md): together they use all 22 panel kinds, nested pivot groups and tree rows. They
+are teaching documents with their own small data (written in camel case, as such JSON often is); the shipped packs and everything below use the production attribute names in UPPER_SNAKE. In the
+workbench every example opens as **your own copy** (Build → New screen → Examples), and **File → Open** loads any `.yaml` or `.json` of your own.
 
 **What you need**
 
-- the server on `http://localhost:18480` and the console on `http://localhost:17480` (see
-  [GETTING_STARTED.md](GETTING_STARTED.md)), started with the banking packs and the genomics pack, for example
-  `DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets`
-  (a pack's parents load with it, so this brings `core`, `market-data` and `trading` too);
-- `curl` and `python3` for the read-only checks;
-- a browser for the Build workbench (**Build → New screen**).
+- the quick-start stack of [GETTING_STARTED.md](GETTING_STARTED.md): the demo lakes built (`drishti-console/.venv/bin/python tools/drishti.py lake demo`), the server on `http://localhost:18480` with
+  the seven packs (`DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets`, the run configuration **Drishti server (demo lakes)**) and the console on
+  `http://localhost:17480`;
+- for the command-line checks, `curl` and `python3`, and a **personal API token**: sign in, open **My account → API tokens**, make one with the scope `design:write` (it reads everything you may read,
+  and may call the preview and save a Sutra), and `export DRISHTI_TOKEN=drk_…`. The commands below use
 
-The `curl` commands assume security is off. With security on, add `-H "Authorization: Bearer <token>"`.
+  ```bash
+  export DRISHTI=http://localhost:18480/api/v1
+  AUTH="Authorization: Bearer $DRISHTI_TOKEN"
+  ```
+
+- a browser for the Build workbench (**Build → New screen**).
 
 **Contents**
 
 1. [What a Sutra is, and when one applies](#1-what-a-sutra-is-and-when-one-applies)
-2. [Your first Sutra: a gene](#2-your-first-sutra-a-gene)
+2. [Your first Sutra: a counterparty](#2-your-first-sutra-a-counterparty)
 3. [Rachana-EL step by step](#3-rachana-el-step-by-step): paths, filters, functions, formats and tones
 4. [A trade view, built step by step](#4-a-trade-view-built-step-by-step)
 5. [Matching several Sutras](#5-matching-several-sutras): `match`, `where`, `priority`, and how one is chosen
 6. [Saving: the workbench and governance](#6-saving-the-workbench-and-governance)
-7. [How packs ship Sutras](#7-how-packs-ship-sutras)
+7. [How packs ship Sutras](#7-how-packs-ship-sutras): folders, shared blocks, `when:` and the coverage matrix
 8. [Things to know before you write many Sutras](#8-things-to-know-before-you-write-many-sutras): labels and taxonomies
 9. [Common mistakes and their messages](#9-common-mistakes-and-their-messages)
 10. [The panel kinds](#10-the-panel-kinds): links into the catalogue
@@ -74,35 +79,29 @@ The `curl` commands assume security is off. With security on, add `-H "Authoriza
 
 ## 1. What a Sutra is, and when one applies
 
-A **Sutra** is one YAML file, `<name>.v<N>.sutra.yaml`, that holds one layout: which panels to draw, in which
-order, bound to which parts of a JSON document. Its first key is always `rachana: 1`, the version of the Rachana
-language it is written in. It says nothing about pixels or code. One Sutra lays out a whole *family* of entities,
-for example every gene, or every fixed/float swap.
+A **Sutra** is one YAML file, `<name>.v<N>.sutra.yaml`, that holds one layout: which panels to draw, in which order, bound to which parts of a JSON document. Its first key is always `rachana: 1`, the
+version of the Rachana language it is written in. It says nothing about pixels or code. One Sutra lays out a whole *family* of entities: every counterparty, or every Murex fixed/float swap.
 
-Because a Sutra is ordinary YAML, ordinary YAML tools work on it: any editor that reads JSON Schema can complete and
-check it against the schema the server publishes (`GET /api/v1/rachana/schema`, see
+Because a Sutra is ordinary YAML, ordinary YAML tools work on it: any editor that reads JSON Schema can complete and check it against the schema the server publishes (`GET /api/v1/rachana/schema`, see
 [Editing outside the workbench](#editing-outside-the-workbench)), and linters and diff tools need nothing special.
 
-When you open an entity (`GENE GENE-BRCA1 <GO>` in the terminal), Drishti:
+When you open an entity (`CPTY CP-MERIDIAN-RE <GO>` in the terminal, or `/v/counterparty/CP-MERIDIAN-RE`), Drishti:
 
-1. fetches its document;
-2. looks for a Sutra whose `match.kind` is the entity's kind and whose `where` condition holds, highest
-   `priority` first;
-3. if it finds one, lays out the view by it, and lets **inference** fill only what it leaves out; if it finds
-   none, lays out the whole view by inference (from the shape of the data; see [INFERENCE.md](../architecture/INFERENCE.md)).
+1. fetches its document (here from the `reference-store` Delta connector of the `core` pack);
+2. looks for a Sutra whose `match.kind` is the entity's kind and whose `where` condition holds, highest `priority` first;
+3. if it finds one, lays out the view by it, and lets **inference** fill only what it leaves out; if it finds none, lays out the whole view by inference (from the shape of the data; see
+   [INFERENCE.md](../architecture/INFERENCE.md)).
 
 The bottom panel of every view, *How this view was built*, tells you which case applied. So does the API:
 
 ```bash
-curl -s http://localhost:18480/api/v1/views/gene/GENE-BRCA1 | python3 -c "import json,sys; print(json.load(sys.stdin)['provenance']['layout'])"
+curl -s -H "$AUTH" $DRISHTI/views/counterparty/CP-MERIDIAN-RE | python3 -c "import json,sys; print(json.load(sys.stdin)['provenance']['layout'])"
 ```
 
-You should see `Sutra gene v1 + inference`: the genomics pack's Sutra `gene`, version 1, completed by inference
-(its *Identifiers* panel lists no fields, so inference supplies them, and its *Linked entities* are always found
-at view time).
+You should see `Sutra counterparty v1 + inference`: the `core` pack's Sutra `counterparty`, version 1, completed by inference (its *Linked entities* panel is always found at view time, which counts as
+inference).
 
-You write a Sutra when inference is not good enough: when the identifier, the headline figures, the formats or
-the choice of chart should be what a person who knows the domain would choose.
+You write a Sutra when inference is not good enough: when the identifier, the headline figures, the formats or the choice of chart should be what a person who knows the domain would choose.
 
 ### Anatomy at a glance
 
@@ -113,12 +112,12 @@ rachana: 1                           # the language version, always first
 sutra: irs-fixfloat                  # name: lower-case kebab
 version: 1
 description: Exchanges fixed for floating RFR-compounded payments.
-match: { kind: trade, where: "$.productType == 'IRS_FIXFLOAT'", priority: 10 }
-title: { pill: "Rates · Interest rate swap (fixed/float)", id: $.tradeId,
-         with: "link($.counterparty.id, 'counterparty', $.counterparty.name)" }
+match: { kind: trade, where: "$.SOURCE_SYSTEM == 'MUREX' && $.PRODUCT_TYPE == 'IRS_FIXFLOAT'", priority: 10 }
+title: { pill: "Rates · Interest rate swap (fixed/float)", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }
 strip: [ ... up to eight header figures ... ]
-panels: [ ... the panels, in reading order ... ]
-keys: { F7: "link($.nettingSet, 'netting-set')", F8: impact, F9: raw }
+controls: [ ... up to twelve choices the reader makes ... ]
+panels: [ ... the panels, in reading order (or { use: <block> } for shared ones) ... ]
+keys: { F7: "link($.COUNTERPARTY, 'counterparty-trades')", F8: impact, F9: raw }
 ```
 
 | Part | What it does |
@@ -129,135 +128,144 @@ keys: { F7: "link($.nettingSet, 'netting-set')", F8: impact, F9: raw }
 | `match` | Which documents this Sutra lays out: a `kind`, an optional `where` over the document, and a `priority` ([section 5](#5-matching-several-sutras)). |
 | `title` | The title line: a `pill`, the identifier (`id`), and `with` (usually the counterparty, as a link). |
 | `strip` | The header figures, at most eight. `emphasis: true` highlights the one the desk watches. |
-| `panels` | The body. Each has an `id`, a `kind` and the options of that kind; `area: right` puts one in the side column. |
+| `controls` | Dropdowns, date ranges, sliders and the like the reader sets; panels read them as `ctl.<id>` ([section 13a](#13a-controls-let-the-reader-choose-and-what-a-share-keeps)). |
+| `panels` | The body. Each has an `id`, a `kind` and the options of that kind; `area: right` puts one in the side column. `{ use: legs@1 }` inserts a shared block ([section 7](#7-how-packs-ship-sutras)). |
 | `keys` | Function keys: `F2`-`F12` go to panels (a panel's own `key:`), links (`link(...)`), `impact` (F8) or `raw` (F9). |
 
-A Sutra lives in `sutras/<domain>/<name>.v<N>.sutra.yaml`, in a pack or a site directory. Problems report the file's own
-line and column. Every key and its default is in the [reference](RACHANA_REFERENCE.md#top-level).
+A Sutra lives in a Sutra folder of a pack (`config/packs/<pack>/sutras/`, any sub-folders) or of the site (`./sutras`, setting `drishti.rachana.dirs`). Problems report the file's own line and column.
+Every key and its default is in the [reference](RACHANA_REFERENCE.md#top-level).
 
-## 2. Your first Sutra: a gene
+## 2. Your first Sutra: a counterparty
 
 ### Step 1: look at the data
 
-Always start from the document itself:
+Always start from the document itself.
+
+**In the UI.** Open `CPTY CP-MERIDIAN-RE <GO>` and press **F9** (*Raw JSON*).
+
+**From the command line.**
 
 ```bash
-curl -s http://localhost:18480/api/v1/entities/gene/GENE-BRCA1/raw | python3 -m json.tool
+curl -s -H "$AUTH" $DRISHTI/entities/counterparty/CP-MERIDIAN-RE/raw | python3 -m json.tool
 ```
 
-You should see the provenance and, under `data` (expression shortened):
+You should see the provenance and, under `data` (the netting sets and the hierarchy shortened):
 
 ```json
 {
-  "geneId": "GENE-BRCA1",
-  "symbol": "BRCA1",
-  "name": "BRCA1 DNA repair associated",
-  "location": "chr17:43,044,295-43,125,483",
-  "chromosome": "17",
-  "start": 43044295,
-  "end": 43125483,
-  "length": 81189,
-  "strand": "-",
-  "transcripts": 38,
-  "expression": [
-    { "tissue": "Brain", "tpm": 14.34 },
-    { "tissue": "Lung", "tpm": 2.64 },
+  "COUNTERPARTY_ID": "CP-MERIDIAN-RE",
+  "NAME": "Meridian Reinsurance Ltd",
+  "LEI": "549300HGCM5CFCB6ZB96",
+  "RATING": "A",
+  "SECTOR": "Insurance",
+  "COUNTRY": "BM",
+  "TYPE": "Insurer",
+  "COUNTRY_OF_RISK": "BM",
+  "UEN": "UEN0100407",
+  "ECONOMY": "ECON-BMU",
+  "NET_MTM": -191313445.24,
+  "PFE_PEAK": 3125658100,
+  "NETTING_SETS": [
+    { "ID": "NS-MERIDIAN-RE-FRA", "AGREEMENT": "AGR-MERIDIAN-RE-ISDA", "TRADES": 45, "NET_MTM": 10804024.63 },
+    { "ID": "NS-MERIDIAN-RE-LDN", "AGREEMENT": "AGR-MERIDIAN-RE-ISDA", "TRADES": 191, "NET_MTM": -316071571.84 },
     …
-    { "tissue": "Pancreas", "tpm": 15.39 }
   ],
-  "variants": [
-    { "id": "VRNT-BRCA1-185DELAG", "protein": "p.Glu23fs", "significance": "Pathogenic" }
-  ],
-  "identifiers": { "assembly": "GRCh38.p14", "hgncSymbol": "BRCA1", "uniprot": "P38398", "biotype": "protein coding" },
-  "protein": "PROT-P38398",
-  "pathway": "PWY-HR"
+  "KYC": { "STATUS": "Approved", "RISK_RATING": "Standard", "LAST_REVIEW": "2026-02-11", "EMIR_CLASSIFICATION": "FC", "PD_1Y": 0.0006 },
+  "GROUP": "GRP-MERIDIAN",
+  "CREDIT_LIMIT": "LIM-MERIDIAN-RE",
+  "HIERARCHY": { "NODES": [ … ], "EDGES": [ … ] },
+  "LEGAL_ENTITY": "LE-NY"
 }
 ```
 
-Read it the way a Sutra will: `$` is this whole document, `$.symbol` is `BRCA1`, `$.identifiers.uniprot` is
-`P38398`, `$.expression` is a list of eight objects, and `$.expression[0].tissue` is `Brain`.
+Read it the way a Sutra will: `$` is this whole document, `$.NAME` is `Meridian Reinsurance Ltd`, `$.KYC.STATUS` is `Approved`, `$.NETTING_SETS` is a list of four objects, and `$.NETTING_SETS[0].ID`
+is `NS-MERIDIAN-RE-FRA`. Every kind of the seven packs writes its attributes in UPPER_SNAKE, as the production systems do; a path names them exactly (`$.net_mtm` is empty).
 
 ### Step 2: the smallest Sutra that works
 
-A Sutra needs four things: the language version (`rachana: 1`), a name (`sutra:`), a version, and a `match`
-with a `kind`. Here is the smallest useful one, with a single panel:
+A Sutra needs four things: the language version (`rachana: 1`), a name (`sutra:`), a version, and a `match` with a `kind`. Here is the smallest useful one, with a single panel:
 
 ```yaml
 rachana: 1
-sutra: gene-mine
+sutra: counterparty-mine
 version: 1
-match: { kind: gene, priority: 20 }
+match: { kind: counterparty, priority: 20 }
 panels:
-  - id: basics
+  - id: identity
     kind: kv
-    title: Basics
+    title: Identity
     columns:
-      - { label: Symbol, bind: $.symbol }
-      - { label: Location, bind: $.location }
+      - { label: Name, bind: $.NAME }
+      - { label: LEI, bind: $.LEI }
 ```
 
-- `rachana: 1` comes first in every Sutra. It names the version of the language, so that a later version of
-  Rachana can change the grammar without misreading today's files. Leave it out and you get
+- `rachana: 1` comes first in every Sutra. It names the version of the language, so that a later version of Rachana can change the grammar without misreading today's files. Leave it out and you get
   `DRS-2009 missing 'rachana: 1' (the Rachana language version) at the top`.
-- `sutra: gene-mine` is the name: lower-case letters, digits and hyphens, starting with a letter.
+- `sutra: counterparty-mine` is the name: lower-case letters, digits and hyphens, starting with a letter.
 - `version: 1` is a plain integer. Later you publish `version: 2` and keep version 1 on disk.
-- `match: { kind: gene, priority: 20 }` applies it to every gene, ahead of the pack's `gene` Sutra (priority 10).
+- `match: { kind: counterparty, priority: 20 }` applies it to every counterparty, ahead of the `core` pack's `counterparty` Sutra (priority 10).
 - `kind: kv` is a label/value grid; each column's `bind` says where its value comes from.
 
-### Step 3: preview it in the workbench
+### Step 3: preview it
 
-1. Open **Build → New screen**, bring `GENE-BRCA1` as a stored entity (kind `gene`, id `GENE-BRCA1`: see
-   [SCREEN_DESIGNER §1](SCREEN_DESIGNER.md#1-start-bring-data)) and choose *an empty Sutra* as the start. The workbench
-   opens with that gene as its sample.
+**In the UI.**
+
+1. Open **Build → New screen**, bring `CP-MERIDIAN-RE` as a stored entity (kind `counterparty`, id `CP-MERIDIAN-RE`: see [SCREEN_DESIGNER §1](SCREEN_DESIGNER.md#1-start-bring-data)) and choose *an
+   empty Sutra* as the start. The workbench opens with that counterparty as its sample.
 2. Open the **YAML** tab and replace its text with the YAML above.
 3. Press **Ctrl+Enter**.
 
-You should see, in the **Design** tab, a view titled `GENE-BRCA1` with one panel, *Basics*, showing
-`Symbol BRCA1` and `Location chr17:43,044,295-43,125,483`. Nothing has been saved: a preview always uses the text in
-the editor, whatever its `match` says, and writes no file.
+You should see, in the **Design** tab, a view titled `CP-MERIDIAN-RE` with one panel, *Identity*, showing `Name Meridian Reinsurance Ltd` and `LEI 549300HGCM5CFCB6ZB96`. Nothing has been saved: a
+preview always uses the text in the editor, whatever its `match` says, and writes no file.
+
+**From the command line.** The workbench's preview is one call, `POST /api/v1/studio/preview` with the YAML, a kind and an id (it needs the `design:write` scope); save the Sutra as
+`counterparty-mine.v1.sutra.yaml` and:
+
+```bash
+python3 -c "import json,sys; print(json.dumps({'yaml': open(sys.argv[1]).read(), 'kind': 'counterparty', 'id': 'CP-MERIDIAN-RE'}))" \
+    counterparty-mine.v1.sutra.yaml > preview.json
+curl -s -H "$AUTH" -H 'Content-Type: application/json' --data @preview.json $DRISHTI/studio/preview \
+  | python3 -c "import json,sys; v=json.load(sys.stdin); [print(p['id'], [(f['label'], f.get('text')) for f in p['data'].get('fields', [])]) for p in v['panels']]"
+```
+
+You should see `identity [('Name', 'Meridian Reinsurance Ltd'), ('LEI', '549300HGCM5CFCB6ZB96')]`.
 
 ![The YAML tab with a refused edit: the Problems tab names the code, the line and the reason](img/sutras/s01-yaml-problems.jpg)
 
-If the text has a problem, the **Problems** tab lists each one with its code, line and reason, for example
-`DRS-2010 line 7: missing 'kind'`; click one to jump to the line, and the design keeps its last good Sutra. The
-[mistakes section](#9-common-mistakes-and-their-messages) lists the usual ones.
-
+If the text has a problem, the **Problems** tab lists each one with its code, line and reason, for example `DRS-2021 line 7: unknown panel kind 'chart'`; click one to jump to the line, and the design
+keeps its last good Sutra. The preview call answers `422` with the same list (`"code": "DRS-2002"`, and each problem under `problems`). The [mistakes section](#9-common-mistakes-and-their-messages)
+lists the usual ones.
 
 ### Step 4: a title
 
-The title line is `[pill] ID with <something>`. Without a `title:`, the identifier is `$.id` and, when the document
-has no `id`, the entity's own id. Make it explicit:
+The title line is `[pill] ID with <something>`. Without a `title:`, the identifier is `$.id` and, when the document has no `id` (none of the packs' documents has one: they carry `COUNTERPARTY_ID`,
+`TRADE_ID`...), the entity's own id. Make it explicit:
 
 ```yaml
-title: { pill: "Gene · ${$.symbol}", id: $.geneId }
+title: { pill: "Counterparty · ${$.SECTOR}", id: $.COUNTERPARTY_ID, with: $.NAME }
 ```
 
-`pill` is a **template**: text in which `${…}` is replaced by the value of an expression. You should see the
-title `[Gene · BRCA1] GENE-BRCA1`.
+`pill` is a **template**: text in which `${…}` is replaced by the value of an expression. You should see the title `[Counterparty · Insurance] CP-MERIDIAN-RE with Meridian Reinsurance Ltd`.
 
 ### Step 4b: say what it is for: `description` and `notes`
 
-A Sutra carries its own explanation in two optional plain-text keys, so the file is the whole story and nothing
-else needs to be kept in step with it:
+A Sutra carries its own explanation in two optional plain-text keys, so the file is the whole story and nothing else needs to be kept in step with it:
 
 ```yaml
-description: Genes for the research desk.
+description: Counterparties for the credit desk.
 notes: |
-  Where the gene is, where it is expressed, and its known variants.
-  Priority 20 puts it ahead of the genomics pack's own gene Sutra (priority 10).
+  Who the bank faces, how much is netted where, and the KYC state.
+  Priority 20 puts it ahead of the core pack's own counterparty Sutra (priority 10).
 ```
 
-- `description` is one paragraph: what the layout shows and for which entities. The workbench and the catalogue show it, and so does
-  the *About this page* drawer on every view this Sutra draws (it is shown as written, never evaluated). Text that has to change
-  with the entity, such as "VAR-EQD is 70% of its limit", is written in the pack's `config/about.yaml`, not here
-  ([About text and glossary](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)).
-- `notes` is longer text for the next author and for reviewers: why the panels are in this order, what was
-  tried and dropped. Write it as a YAML block (`notes: |` and the lines indented under it); the line breaks are
-  kept. It is plain text, not Markdown.
-- A panel can have its own `description` too (`- { id: basics, kind: kv, description: The gene at a glance, … }`)
-  to say what that one panel is for.
+- `description` is one paragraph: what the layout shows and for which entities. The workbench and the catalogue show it, and so does the *About this page* drawer on every view this Sutra draws (it is
+  shown as written, never evaluated). Text that has to change with the entity, such as "VAR-EQD is 70% of its limit", is written in the pack's `config/about.yaml`, not here ([About text and
+  glossary](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)).
+- `notes` is longer text for the next author and for reviewers: why the panels are in this order, what was tried and dropped. Write it as a YAML block (`notes: |` and the lines indented under it); the
+  line breaks are kept. It is plain text, not Markdown.
+- A panel can have its own `description` too (`- { id: identity, kind: kv, description: Who they are, … }`) to say what that one panel is for.
 
-None of these change the view. They must be text: `notes: 3` is `DRS-2012 'notes' is plain text`.
+None of these change the view. They must be text: `notes:` followed by a list is `DRS-2012 'notes' is plain text`.
 
 ### Step 5: a strip of headline figures
 
@@ -265,210 +273,194 @@ The strip is the row of up to eight figures under the title:
 
 ```yaml
 strip:
-  - { label: Symbol, bind: $.symbol, emphasis: true }
-  - { label: Location, bind: $.location }
-  - { label: Length (bp), bind: $.length, fmt: amount0 }
-  - { label: Strand, bind: "$.strand == '-' ? 'Reverse' : 'Forward'" }
-  - { label: Transcripts, bind: $.transcripts }
+  - { label: Rating, bind: $.RATING, emphasis: true }
+  - { label: Country of risk, bind: $.COUNTRY_OF_RISK }
+  - { label: UEN, bind: $.UEN }
+  - { label: Net MTM, bind: $.NET_MTM, fmt: signed0, tone: sign }
+  - { label: PFE peak, bind: $.PFE_PEAK, fmt: compact }
+  - { label: Netting sets, bind: "size($.NETTING_SETS) + ' sets, ' + fmt(sum($.NETTING_SETS, 'TRADES'), 'amount0') + ' trades'" }
 ```
 
-You should see `Symbol BRCA1` (highlighted), `Location chr17:43,044,295-43,125,483`, `Length (bp) 81,189`,
-`Strand Reverse` and `Transcripts 38`.
+You should see `Rating A` (highlighted), `Country of risk BM`, `UEN UEN0100407`, `Net MTM −191,313,445` in the negative colour, `PFE peak 3.1bn` and `Netting sets 4 sets, 596 trades`.
 
-Three things just happened:
+Four things just happened:
 
-- `fmt: amount0` formatted `81189` with a thousands separator. Formats are named; the core set is `amount0`,
-  `amount2`, `signed0`, `signed2`, `pct0`, `pct2`, `price2`, `compact`, `date`, `dmy` and `text`, and the packs add
-  more (`pct4`, `bp1`, …).
-- `"$.strand == '-' ? 'Reverse' : 'Forward'"` is a Rachana-EL expression: *if the strand is `-`, show `Reverse`,
-  otherwise `Forward`*. It is in double quotes for YAML; the text inside the expression uses single quotes.
+- `fmt: signed0` formatted `-191313445.24` with a sign, no decimals and a true minus `−`; `fmt: compact` made `3125658100` read `3.1bn`. Formats are named; the core set is `amount0`, `amount2`,
+  `signed0`, `signed2`, `pct0`, `pct2`, `price2`, `compact`, `date`, `dmy` and `text`, and the packs add more (`pct4`, `price4`, `bp1`, …; [reference](RACHANA_REFERENCE.md#formats)).
+- `tone: sign` coloured the figure by its sign.
+- `"size($.NETTING_SETS) + ' sets, ' + …"` is a Rachana-EL expression: `size` counts the list, `sum($.NETTING_SETS, 'TRADES')` adds the `TRADES` of each element, `fmt(…, 'amount0')` formats inside an
+  expression, and `+` joins text. It is in double quotes for YAML; the text inside the expression uses single quotes.
 - `emphasis: true` highlights one figure. Use it once.
 
 ### Step 6: key/value panels, written and inferred
 
-Replace *Basics* with two kv panels:
+Replace *Identity* with two kv panels:
 
 ```yaml
-  - id: position
+  - id: identity
     kind: kv
-    title: Position on GRCh38
+    title: Identity and classification
     key: F2
     columns:
-      - { label: Chromosome, bind: $.chromosome }
-      - { label: Start, bind: $.start, fmt: amount0 }
-      - { label: End, bind: $.end, fmt: amount0 }
-      - { label: Span, bind: "$.end - $.start + 1", fmt: amount0 }
-  - id: identifiers
+      - { label: LEI, bind: $.LEI }
+      - { label: Type, bind: $.TYPE }
+      - { label: Legal entity, bind: "link($.LEGAL_ENTITY, 'legal-entity')" }
+      - { label: Probability of default (1y), bind: $.KYC.PD_1Y, fmt: pct2 }
+  - id: kyc
     kind: kv
-    title: Identifiers
+    title: KYC
     area: right
-    rows: $.identifiers
+    rows: $.KYC
 ```
 
-You should see *Position on GRCh38* with `Chromosome 17`, `Start 43,044,295`, `End 43,125,483` and
-`Span 81,189` (arithmetic works on numbers), and on the right *Identifiers* with `Assembly GRCh38.p14`,
-`Hgnc symbol BRCA1`, `Uniprot P38398`, `Biotype protein coding`.
+You should see *Identity and classification* with `LEI 549300HGCM5CFCB6ZB96`, `Type Insurer`, `Legal entity LE-NY` (a link: the `link(id, kind)` function makes any value navigable) and `Probability of
+default (1y) 0.06%`; and on the right *KYC* with `Status Approved`, `Risk rating Standard`, `Last review 2026-02-11`, `EMIR classification FC` and `PD 1y 0`.
 
-The second panel lists no columns. `rows: $.identifiers` points it at an object, and inference fills in one field
-per scalar in that object, labelled from the field names. That is quick, and it picks up new fields when the
-source adds them; list columns when you want to choose the labels and the order (*HGNC symbol*, not *Hgnc symbol*).
+The second panel lists no columns. `rows: $.KYC` points it at an object, and inference fills in one field per scalar in that object, labelled from the field names in words (`RISK_RATING` → *Risk
+rating*; the packs' acronym list spells `EMIR`). That is quick, and it picks up new fields when the source adds them; but look at `PD 1y 0`: inference shows `0.0006` with no format, and labels it as
+best it can. List columns when you want to choose the labels, the order and the formats, as the first panel does for the same figure.
 
-`key: F2` binds the F2 key to the panel: pressing it scrolls there. `area: right` puts the panel in the side column.
-Each column is a grid of 12 columns: `span: 6` would make a panel half as wide, so two such panels share a row, and
-`height: 8` would give it a fixed height of 8 rows (it scrolls inside). Both are optional; users may also arrange a view
-for themselves in layout mode (`Alt+L`), which never changes the Sutra ([reference](RACHANA_REFERENCE.md#keys-every-panel-takes)).
+`key: F2` binds the F2 key to the panel: pressing it scrolls there. `area: right` puts the panel in the side column. Each column is a grid of 12 columns: `span: 6` would make a panel half as wide, so
+two such panels share a row, and `height: 8` would give it a fixed height of 8 rows (it scrolls inside). Both are optional; users may also arrange a view for themselves in layout mode (`Alt+L`), which
+never changes the Sutra ([reference](RACHANA_REFERENCE.md#keys-every-panel-takes)).
 
-### Step 7: a table over a nested array, with links
+### Step 7: a table over a nested array, with links and totals
 
 ```yaml
-  - id: variants
+  - id: sets
     kind: table
-    title: "Known variants (${size($.variants)})"
+    title: "Netting sets (${size($.NETTING_SETS)})"
     key: F3
-    rows: $.variants
+    rows: $.NETTING_SETS
     columns:
-      - { label: Variant, bind: "@.id", link: true }
-      - { label: Protein change, bind: "@.protein" }
-      - { label: Significance, bind: "@.significance" }
+      - { label: Netting set, bind: "@.ID", link: true }
+      - { label: Agreement, bind: "@.AGREEMENT", link: true }
+      - { label: Trades, bind: "@.TRADES", fmt: amount0, total: true }
+      - { label: Net MTM, bind: "@.NET_MTM", fmt: signed0, tone: sign, total: true }
 ```
 
-Inside a table, `@` is the current row: `@.protein` is the row's `protein`. You should see the title
-`Known variants (1)` and one row, `VRNT-BRCA1-185DELAG · p.Glu23fs · Pathogenic`, with the variant id as a link
-that opens `VRNT VRNT-BRCA1-185DELAG`.
+Inside a table, `@` is the current row: `@.TRADES` is the row's `TRADES`. You should see the title `Netting sets (4)`, four rows from `NS-MERIDIAN-RE-FRA · AGR-MERIDIAN-RE-ISDA · 45 · +10,804,025` to
+the Tokyo set, the ids as links that open `NSET NS-MERIDIAN-RE-FRA` and `AGR AGR-MERIDIAN-RE-ISDA`, and a `Total` row of `596` trades and `−191,313,445`.
 
-`link: true` made the id a link: the genomics pack declares that ids starting with `VRNT-` are variants. A column
-whose field name ends in `Id`, `Ref` or `_id` (`@.variantId`) would be linked without it; `@.id` is too short a
-name for that rule, so it needs `link: true`.
+`link: true` made the ids links: the packs declare that ids starting with `NS-` are netting sets and `AGR-` agreements (`graph.id-patterns`). A column bound to a plain path whose last field ends in
+`_ID` or `_REF` (`@.TRADE_ID`, `$.BOOK_REF`) is linked without it; `@.ID` is too short a name for that rule, so it needs `link: true`.
 
-A table can also offer its rows as an interactive pivot. Add one line, `pivot: true`, and the panel gets a
-**Table | Pivot** switch: under **Pivot**, a reader drags the table's columns into rows, columns, values and filters,
-with totals, a chart and a drill-down to the rows under any cell
-([USER_GUIDE.md](USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)). To choose the fields and how it opens:
+A table can also offer its rows as an interactive pivot. Add one line, `pivot: true`, and the panel gets a **Table | Pivot** switch: under **Pivot**, a reader drags the table's columns into rows,
+columns, values and filters, with totals, a chart and a drill-down to the rows under any cell ([USER_GUIDE.md](USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)). To choose the fields and how it
+opens:
 
 ```yaml
     pivot:
-      fields: [significance, protein, id]      # row paths; they need not be columns
-      rows: [significance]
-      values: [{ field: id, agg: count }]
+      fields: [AGREEMENT, ID, TRADES, NET_MTM]      # row paths; they need not be columns
+      rows: [AGREEMENT]
+      values: [{ field: NET_MTM, agg: sum }]
 ```
 
-Without `pivot:` there is no switch: a Sutra decides where a pivot helps
-([reference](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)).
+Without `pivot:` there is no switch: a Sutra decides where a pivot helps ([reference](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)).
 
 ### Step 8: a chart
 
-Expression by tissue is a label and a number per row, which is what horizontal bars are for:
+Net MTM by netting set is a label and a number per row, which is what horizontal bars are for:
 
 ```yaml
-  - id: expression
+  - id: by-set
     kind: hbar
-    title: Tissue expression (TPM)
+    title: Net MTM by netting set
     key: F4
-    rows: $.expression
-    label: tissue
-    value: tpm
-    fmt: price2
+    area: right
+    rows: $.NETTING_SETS
+    label: ID
+    value: NET_MTM
+    fmt: compact
+    tone: sign
 ```
 
-For an `hbar`, `label` and `value` are **field names** of each row (not expressions, so no `@.`). You should see
-eight bars, the longest `Colon 45.92`, the shortest `Blood 1.23`.
+For an `hbar` (and a `line` or `area`), `label` and `value` are **field names** of each row, written exactly as the document writes them: not expressions (no `@.`), and `id` would not find `ID`. You
+should see four bars: `NS-MERIDIAN-RE-FRA 10.8m`, `NS-MERIDIAN-RE-LDN −316.1m` in the negative colour, `NS-MERIDIAN-RE-NY 99.7m` and `NS-MERIDIAN-RE-TKY 14.3m`.
 
-The key bar shows `F4 Tissue expression`: a panel key is labelled with the first two words of the title, cut at
-` (` or ` · `. Write titles whose first words make sense on their own (*Expression by tissue* would read
-*Expression by*).
+The key bar shows `F4 Net MTM`: a panel key is labelled with the first two words of the title, cut at ` (` or ` · `. Write titles whose first words make sense on their own (the *Identity and
+classification* panel reads *F2 Identity and*).
 
 ### Step 9: linked entities, provenance and keys
 
 ```yaml
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
   - { id: built, kind: provenance, title: How this view was built }
-keys: { F7: "link($.protein, 'protein')", F8: impact, F9: raw }
+keys: { F7: "link($.GROUP, 'counterparty-group')", F8: impact, F9: raw }
 ```
 
-- `links` lists every entity the document refers to, found from the packs' reference fields: you should see
-  `Protein PROT-P38398` and `Pathway PWY-HR`, both links.
-- `provenance` says how the view was built.
-- `keys` adds function keys that are not panels: `F7` opens the protein (`link(id, kind)`), `F8` the impact view,
-  `F9` the raw JSON. Panel keys and these keys share F1–F12; F1 is the console's help.
+- `links` lists every entity the document refers to, found from the packs' reference fields: you should see `Economy ECON-BMU` with the badge `+1.89 % growth` (the world-economy pack), `Group
+  GRP-MERIDIAN`, `Credit limit LIM-MERIDIAN-RE` and others, all links.
+- `provenance` says how the view was built: `Layout Sutra counterparty-mine v1 + inference`, a fingerprint of the document's shape and `Source reference-store, gen …`.
+- `keys` adds function keys that are not panels: `F7` opens the counterparty's group (`link(id, kind)`), `F8` the impact view, `F9` the raw JSON. Panel keys and these keys share F1–F12; F1 is the
+  console's help.
 
-### The whole gene Sutra
+### The whole counterparty Sutra
 
 ```yaml
 rachana: 1
-sutra: gene-mine
+sutra: counterparty-mine
 version: 1
-description: Genes for the research desk.
-match: { kind: gene, priority: 20 }
-title: { pill: "Gene · ${$.symbol}", id: $.geneId }
+description: Counterparties for the credit desk.
+match: { kind: counterparty, priority: 20 }
+title: { pill: "Counterparty · ${$.SECTOR}", id: $.COUNTERPARTY_ID, with: $.NAME }
 strip:
-  - { label: Symbol, bind: $.symbol, emphasis: true }
-  - { label: Location, bind: $.location }
-  - { label: Length (bp), bind: $.length, fmt: amount0 }
-  - { label: Strand, bind: "$.strand == '-' ? 'Reverse' : 'Forward'" }
-  - { label: Transcripts, bind: $.transcripts }
-  - { label: Expressed in, bind: "size($.expression[?@.tpm > 10]) + ' of ' + size($.expression) + ' tissues'" }
+  - { label: Rating, bind: $.RATING, emphasis: true }
+  - { label: Country of risk, bind: $.COUNTRY_OF_RISK }
+  - { label: UEN, bind: $.UEN }
+  - { label: Net MTM, bind: $.NET_MTM, fmt: signed0, tone: sign }
+  - { label: PFE peak, bind: $.PFE_PEAK, fmt: compact }
+  - { label: Netting sets, bind: "size($.NETTING_SETS) + ' sets, ' + fmt(sum($.NETTING_SETS, 'TRADES'), 'amount0') + ' trades'" }
 panels:
-  - id: position
+  - id: identity
     kind: kv
-    title: Position on GRCh38
+    title: Identity and classification
     key: F2
     columns:
-      - { label: Chromosome, bind: $.chromosome }
-      - { label: Start, bind: $.start, fmt: amount0 }
-      - { label: End, bind: $.end, fmt: amount0 }
-      - { label: Span, bind: "$.end - $.start + 1", fmt: amount0 }
-  - id: variants
+      - { label: LEI, bind: $.LEI }
+      - { label: Type, bind: $.TYPE }
+      - { label: Legal entity, bind: "link($.LEGAL_ENTITY, 'legal-entity')" }
+      - { label: Probability of default (1y), bind: $.KYC.PD_1Y, fmt: pct2 }
+  - id: sets
     kind: table
-    title: "Known variants (${size($.variants)})"
+    title: "Netting sets (${size($.NETTING_SETS)})"
     key: F3
-    rows: $.variants
+    rows: $.NETTING_SETS
     columns:
-      - { label: Variant, bind: "@.id", link: true }
-      - { label: Protein change, bind: "@.protein" }
-      - { label: Significance, bind: "@.significance" }
+      - { label: Netting set, bind: "@.ID", link: true }
+      - { label: Agreement, bind: "@.AGREEMENT", link: true }
+      - { label: Trades, bind: "@.TRADES", fmt: amount0, total: true }
+      - { label: Net MTM, bind: "@.NET_MTM", fmt: signed0, tone: sign, total: true }
   - { id: built, kind: provenance, title: How this view was built }
-  - id: expression
-    kind: hbar
-    title: Tissue expression (TPM)
-    key: F4
-    area: right
-    rows: $.expression
-    label: tissue
-    value: tpm
-    fmt: price2
+  - { id: by-set, kind: hbar, title: Net MTM by netting set, key: F4, area: right, rows: $.NETTING_SETS, label: ID, value: NET_MTM, fmt: compact, tone: sign }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-  - id: identifiers
-    kind: kv
-    title: Identifiers
-    area: right
-    rows: $.identifiers
-keys: { F7: "link($.protein, 'protein')", F8: impact, F9: raw }
+  - { id: kyc, kind: kv, title: KYC, area: right, rows: $.KYC }
+keys: { F7: "link($.GROUP, 'counterparty-group')", F8: impact, F9: raw }
 notes: |
-  Where the gene is, where it is expressed, and its known variants.
-  Priority 20 puts it ahead of the genomics pack's own gene Sutra (priority 10).
+  Who the bank faces, how much is netted where, and the KYC state.
+  Priority 20 puts it ahead of the core pack's own counterparty Sutra (priority 10).
 ```
 
-You should see the strip end with `Expressed in 5 of 8 tissues` (Brain, Liver, Colon, Breast and Pancreas are
-above 10 TPM), and the key bar `F2 Position on`, `F3 Known variants`, `F4 Tissue expression`, `F7 Protein`,
-`F8 Impact`, `F9 Raw JSON`. Preview it against `GENE-TP53` too (change the id box): the same layout serves every
-gene, and you should see `Known variants (1)` with `VRNT-TP53-R175H`.
+You should see the key bar `F2 Identity and`, `F3 Netting sets`, `F4 Net MTM`, `F7 Counterparty group`, `F8 Impact`, `F9 Raw JSON`, and *How this view was built* reading `Sutra counterparty-mine v1 +
+inference`. Preview it against another counterparty too (change the id box to `CP-NORTHPLAINS`): the same layout serves every counterparty.
 
 ## 3. Rachana-EL step by step
 
-Every `bind`, `rows`, `where` and `highlight` is a Rachana-EL expression. This section builds them up with
-before/after pairs against the swap `MX-20000001` (look at it with
-`curl -s http://localhost:18480/api/v1/entities/trade/MX-20000001/raw | python3 -m json.tool`).
+Every `bind`, `rows`, `where` and `highlight` is a Rachana-EL expression. This section builds them up against the Murex swap `MX-20000001` (look at it with `curl -s -H "$AUTH"
+$DRISHTI/entities/trade/MX-20000001/raw | python3 -m json.tool`). A trade, from any source system, has 47 top-level attributes (`SOURCE_SYSTEM`, `TRADE_ID`, `TRADE_STATUS`, `PRODUCT_TYPE`,
+`COUNTERPARTY`, `CURRENCY`…), a list of `LEGS`, each with its `CASH_FLOWS`, each of those with its `RESETS`, and a list of `EVENTS` ([PACKS.md](PACKS.md#trading)).
 
 ### Paths
 
 | You write | You get | Why |
 |---|---|---|
-| `$.notional` | `242000000` | a field of the document |
-| `$.counterparty.name` | `Meridian Reinsurance Ltd` | `.` walks into objects |
-| `$.legs[0].label` | `Receive fixed 4.0829%` | `[0]` is the first element |
-| `$.legs[-1].label` | `Pay AONIA compounded` | `[-1]` is the last |
-| `$.notionl` | *(empty)* | a misspelt field is empty, never an error: check spelling in the preview |
-| `$['day-count']` | | a field whose name has a hyphen needs brackets; `$.day-count` would subtract |
+| `$.QUANTITY` | `242000000` | a field of the document |
+| `$.COUNTERPARTY` | `CP-MERIDIAN-RE` | the counterparty's id (its name is on the counterparty's own document) |
+| `$.LEGS[0].LEG_TYPE` | `FIXED` | `[0]` is the first element |
+| `$.LEGS[-1].INDEX.NAME` | `AONIA` | `[-1]` is the last; `.` walks into objects |
+| `$.LEGS[0].CASH_FLOWS[0].PAYMENT_DATE` | `2026-06-29` | as deep as the data goes |
+| `$['TRADE_ID']` | `MX-20000001` | brackets: for a field whose name has a hyphen (`$['day-count']`; `$.day-count` would subtract) |
+| `$.QUANTTY` | *(empty)* | a misspelt field is empty, never an error: check spelling in the preview |
 
 ### Rows: `@` and `#index`
 
@@ -476,9 +468,9 @@ Inside `rows:`, `each:` or a filter, `@` is the current element and `#index` its
 
 | Before | After |
 |---|---|
-| `bind: $.schedule[0].amount` — always the first row | `bind: "@.amount"` — each row's own amount |
-| `highlight: "#index == 0"` — the first row lit | `highlight: "#index == $.nextIndex"` — the row the document says is next |
-| `tabTitle: "'Leg ' + #index"` — `Leg 0`, `Leg 1` | `tabTitle: "'Leg ' + (#index + 1)"` — `Leg 1`, `Leg 2` |
+| `bind: $.LEGS[0].CASH_FLOWS[0].RATE`: always the first flow | `bind: "@.RATE"`: each row's own rate |
+| `highlight: "#index == 0"`: the first row lit | `highlight: "@.PAYMENT_DATE == first($.EVENTS[?@.EVENT_DATE > today()]).EVENT_DATE"`: the next payment |
+| `tabTitle: "'Leg ' + #index"`: `Leg 0`, `Leg 1` | `tabTitle: "'Leg ' + @.LEG_ID"`: `Leg 1`, `Leg 2` |
 
 ### Filters
 
@@ -486,27 +478,34 @@ Inside `rows:`, `each:` or a filter, `@` is the current element and `#index` its
 
 | Expression | Result for `MX-20000001` |
 |---|---|
-| `size($.schedule)` | `35` |
-| `size($.schedule[?@.status != 'Settled'])` | `29` |
-| `size($.schedule[?@.leg == 1])` | the fixed leg's flows |
-| `first($.legs[?@.payer]).label` | `Pay AONIA compounded` |
+| `size($.EVENTS)` | `42` |
+| `size($.EVENTS[?@.EVENT_TYPE == 'CASH_SETTLEMENT'])` | `35`: one per payment of either leg |
+| `size($.EVENTS[?!nonblank(@.LEG_ID)])` | `7`: the deal's own events (booked, confirmed, cleared, amended…) |
+| `size($.EVENTS[?nonblank(@.AMOUNT) && @.EVENT_DATE > today()])` | `29` on the business date 2026-10-16: the cash events still to come |
+| `first($.LEGS[?@.LEG_TYPE == 'FLOAT']).INDEX.NAME` | `AONIA` |
+| `$.LEGS[?@.LEG_TYPE == 'FLOAT'].INDEX.NAME` | *(empty)*: a filter gives a list; take an element first (`first(...)`, `[0]`) |
+| `$.LEGS[*].LEG_ID` | the list `[1, 2]`: **projection**, a field of every element (what a control's `options` read) |
+| `size(flatten($.LEGS[*].CASH_FLOWS))` | `35`: every leg's flows as one list (`flatten`) |
+| `size(flatten($.LEGS[1].CASH_FLOWS[*].RESETS))` | `90`: every fixing of the floating leg |
 
-A filter gives a list, so `$.legs[?@.payer].label` is empty; take an element first (`first(...)`, `[0]`).
+The extracts of the source systems write a missing value as empty text (`"AMOUNT": ""`, `"LEG_ID": ""`), not as nothing. So test for a value with `nonblank(...)`, which treats empty text as missing,
+not with `coalesce`, which keeps it.
 
 ### Functions
 
 | Before | After | Shows |
 |---|---|---|
-| `bind: $.notional, fmt: amount0` | `bind: "$.currency + ' ' + fmt($.notional, 'amount0')"` | `AUD 242,000,000` |
-| `bind: $.risk.dv01` | `bind: "abs($.risk.dv01)", fmt: amount0` | `155,245` |
-| `bind: "$.terms.spread"` (missing: empty) | `bind: "coalesce($.terms.spread, 0)", fmt: bp1` | `0.0 bp` |
-| `bind: "$.legs[0].pv + $.legs[1].pv", fmt: signed0` | `bind: "sum($.legs, 'pv')", fmt: signed0` | `+1,875,863` |
-| `where: "$.status == 'live'"` (never true: case matters) | `where: "lower($.status) == 'live'"` | matches `Live` |
-| `where: "$.productName == 'swap'"` | `where: "contains($.productName, 'swap')"` | `contains` and `startsWith` ignore case |
+| `bind: $.QUANTITY, fmt: amount0` | `bind: "$.CURRENCY + ' ' + fmt(first($.LEGS).NOTIONAL, 'amount0')"` | `AUD 242,000,000` |
+| `bind: "$.LEGS[0].NOTIONAL + $.LEGS[1].NOTIONAL"` | `bind: "sum($.LEGS, 'NOTIONAL')", fmt: amount0` | `484,000,000` |
+| `bind: "coalesce($.PACKAGE_ID, 'none')"` (empty text is kept: shows nothing) | `bind: "nonblank($.PACKAGE_ID, 'none')"` | `none` |
+| `where: "$.TRADE_STATUS == 'amended'"` (never true: case matters) | `where: "lower($.TRADE_STATUS) == 'amended'"` | true for `AMENDED` |
+| `where: "$.PRODUCT_SUB_TYPE == 'swap'"` | `where: "contains($.PRODUCT_SUB_TYPE, 'swap')"` | `contains` and `startsWith` ignore case |
+| `bind: $.TRADER_ID` | `bind: "link($.TRADER_ID, 'trader', $.TRADER_FIRST_NAME + ' ' + $.TRADER_LAST_NAME)"` | `A. Shah`, a link to the trader |
+| a total per year the data does not carry | `rows: "group($.EVENTS[?nonblank(@.AMOUNT) && nonblank(@.LEG_ID)], 'EVENT_DATE', 'AMOUNT', 'year')"` | one row a year, `2025 −3,713,969` first |
+| days to maturity | `bind: "days(today(), $.MATURITY_DATE)"` | `2079` on 2026-10-16 |
 
-The whole set is `link`, `size`, `sum`, `fmt`, `coalesce`, `first`, `last`, `abs`, `min`, `max`, `upper`, `lower`,
-`contains` and `startsWith`; there is no other function. See the
-[reference](RACHANA_REFERENCE.md#functions) for each.
+The whole set is `link`, `size`, `sum`, `fmt`, `coalesce`, `nonblank`, `first`, `last`, `flatten`, `abs`, `min`, `max`, `upper`, `lower`, `contains`, `startsWith`, `matches`, `matchesCase`, `within`,
+`oneOf`, `group`, `days` and `today`; there is no other function, and no list literal (`['AUD', 'NZD']` does not compile). See the [reference](RACHANA_REFERENCE.md#functions) for each.
 
 ### Formats and tones
 
@@ -514,42 +513,45 @@ The whole set is `link`, `size`, `sum`, `fmt`, `coalesce`, `first`, `last`, `abs
 
 | Value | `fmt` | `tone` | Shows |
 |---|---|---|---|
-| `1875863` | none | none | `1875863` |
-| `1875863` | `amount0` | none | `1,875,863` |
-| `1875863` | `signed0` | `sign` | `+1,875,863`, positive colour |
+| `242000000` | none | none | `242000000` |
+| `242000000` | `amount0` | none | `242,000,000` |
+| `242000000` | `signed0` | `sign` | `+242,000,000`, positive colour |
 | `-155245` | `signed0` | `sign` | `−155,245`, negative colour (a true minus sign) |
 | `0.040829` | `pct4` | | `4.0829%` |
+| `0.040829` | `price4` | | `0.0408` (a price per unit: no scaling) |
 | `0.83` | `pct0` | | `83%` |
-| `46000000` | `compact` | | `46.0m` |
-| `Confirmed` | | `status` | `Confirmed`, `ok` colour |
+| `242000000` | `compact` | | `242.0m` |
+| `2025-07-25` | `dmy` | | `25 Jul 2025` |
+| `AMENDED` | | `status` | `AMENDED`, `ok` colour |
 | `Pending` | | `status` | `Pending`, `warn` colour |
 
-`tone: status` reads the words: *fail*, *reject*, *dispute*, *breach* are bad; *pending*, *unmatched*, *warn* are a
-warning; anything else is fine. So it suits confirmation and settlement statuses, but not every status: a variant's
-`Pathogenic` would show in the *fine* colour. Leave such fields untoned.
+`tone: status` reads the words: *fail*, *reject*, *dispute*, *breach* are bad; *pending*, *unmatched*, *warn* are a warning; anything else is fine. So it suits confirmation and settlement statuses and
+a trade's `TRADE_STATUS`, but not every status: a credit rating's `CCC` would show in the *fine* colour. Leave such fields untoned.
 
 ### Conditions
 
 Conditions combine with `&&`, `||` and `!`, and choose with `? :`:
 
 ```yaml
-where: "$.productType == 'IRS_FIXFLOAT' && $.status != 'Matured'"
-bind: "@.payer ? 'Pay' : 'Receive'"
-bind: "@.type == 'FIXED' ? fmt(@.rate, 'pct4') : @.index + ' + ' + fmt(@.spread, 'pct4')"
+where: "$.SOURCE_SYSTEM == 'MUREX' && $.PRODUCT_TYPE == 'IRS_FIXFLOAT'"
+bind: "$.BUY_SELL_CODE == 'B' ? 'Buy' : 'Sell'"
+bind: "@.LEG_TYPE == 'FIXED' ? fmt(@.RATE, 'pct4') : @.INDEX.NAME + ' + ' + fmt(@.FLOAT_SPREAD, 'pct4')"
 ```
 
-Two traps:
+Three things to know:
 
-- `<`, `>`, `<=`, `>=` compare **numbers** only. `@.payDate > '2026-09-30'` is always false, because text that is not
-  a number cannot be ordered. Compare dates with `==`, or use a field the data provides (`$.nextIndex`, a status).
-- `||` gives `true` or `false`, not a value: `$.nick || 'n/a'` shows `true`. For a default, use `coalesce($.nick, 'n/a')`.
+- `<`, `>`, `<=`, `>=` compare numbers as numbers, and two texts that are not numbers as text, character by character, so ISO dates order correctly: `'2026-01-31' < '2026-02-01'` is true, and
+  `@.PAYMENT_DATE < today()` tells a paid flow from one to come (the trading pack's legs block does exactly that). A number against text that is not a number, or anything against empty, is false.
+- `||` gives `true` or `false`, not a value: `$.STRATEGY || 'n/a'` shows `true`. For a default, use `nonblank($.STRATEGY, 'n/a')`.
+- `+` adds only when both sides are numbers; otherwise it joins text: `'Leg ' + 1` is `Leg 1`, `'1' + 1` is `11`. A missing value in arithmetic gives `NaN` (`$.QUANTTY * 2`); wrap it,
+  `nonblank($.QUANTTY, 0) * 2`.
 
 ## 4. A trade view, built step by step
 
-Now a bigger layout: the swap `MX-20000001`, booked in Murex and written, like every trade of the trading pack, in the common schema
-of all source systems (upper-snake attributes, `LEGS[]` -> `CASH_FLOWS[]` -> `RESETS[]`, `EVENTS[]`;
-[PACKS.md](PACKS.md#trading)). Open the workbench on it (Build → New screen, the stored entity `trade` `MX-20000001`, an empty
-Sutra: see [Step 3](#step-3-preview-it-in-the-workbench)) and grow the Sutra one block at a time in the YAML tab, previewing each.
+Now a bigger layout: the swap `MX-20000001`, booked in Murex and written, like every trade of the trading pack, in the common schema of all source systems (upper-snake attributes, `LEGS[]` ->
+`CASH_FLOWS[]` -> `RESETS[]`, `EVENTS[]`; [PACKS.md](PACKS.md#trading)). Open the workbench on it (Build → New screen, the stored entity `trade` `MX-20000001`, an empty Sutra: see [Step
+3](#step-3-preview-it)) and grow the Sutra one block at a time in the YAML tab, previewing each; or keep the file on disk and preview it with the `studio/preview` call of Step 3 (kind `trade`, id
+`MX-20000001`).
 
 ### 4.1 Identity, title and strip
 
@@ -578,11 +580,9 @@ strip:
 panels: []
 ```
 
-You should see `[Rates · Interest rate swap (fixed/float)] MX-20000001 with CP-MERIDIAN-RE` and the strip
-`Notional AUD 242,000,000 · Side Sell · Fixed rate 4.0829% · Maturity 2032-06-25 · Status AMENDED v2 · Source MUREX ·
-Trader A. Shah · Portfolio BOOK-RATES-3`. `with`, `Trader` and `Portfolio` are links. `panels: []` is valid: a Sutra may have no
-panels. A booking carries no mark-to-market: the trade's MTM, P&L and DV01 are market-risk's trade valuation
-(`TVAL TVAL-MX-20000001`), a page of its own.
+You should see `[Rates · Interest rate swap (fixed/float)] MX-20000001 with CP-MERIDIAN-RE` and the strip `Notional AUD 242,000,000 · Side Sell · Fixed rate 4.0829% · Maturity 2032-06-25 · Status
+AMENDED v2 · Source MUREX · Trader A. Shah · Portfolio BOOK-RATES-3`. `with`, `Trader` and `Portfolio` are links. `panels: []` is valid: a Sutra may have no panels. A booking carries no
+mark-to-market: the trade's MTM, P&L and DV01 are market-risk's trade valuation (`TVAL TVAL-MX-20000001`), a page of its own.
 
 ### 4.2 The ticket, and legs side by side
 
@@ -617,14 +617,12 @@ panels:
         - { label: Periods, bind: "size(@.CASH_FLOWS)" }
 ```
 
-You should see the *Deal ticket* (`Transaction 20000001002`, the legal entity and the curve as links) and two boxes side by side,
-`Leg 1 · Receive FIXED` (`Index Fixed`, `Periods 7`) and `Leg 2 · Pay FLOAT` (`Index AONIA`, `Periods 28`). With `layout: tabs` (the
-default) they would be tabs instead. The `body` is a panel without an `id`; only its columns are used, and it must be a `kv`. To put
-whole panels in each leg (its notional profile, its fixings, its cash flows opening to their resets), use `panels:` instead:
-[Panels inside a tab](RACHANA_REFERENCE.md#panels-inside-a-tab).
+You should see the *Deal ticket* (`Transaction 20000001002`, `Trade date 2025-07-25`, `Start 2025-07-28`, the legal entity `LE-NY` and the curve `CRV-AUD-OIS` as links) and two boxes side by side,
+`Leg 1 · Receive FIXED` (`Index Fixed`, `Notional 242,000,000`, `Frequency Annual`, `Periods 7`) and `Leg 2 · Pay FLOAT` (`Index AONIA`, `Frequency Monthly`, `Periods 28`). With `layout: tabs` (the
+default) they would be tabs instead. The `body` is a panel without an `id`; only its columns are used, and it must be a `kv`. To put whole panels in each leg (its notional profile, its fixings, its
+cash flows opening to their resets), use `panels:` instead, as the trading pack's shared `legs` block does: [Panels inside a tab](RACHANA_REFERENCE.md#panels-inside-a-tab).
 
-`nonblank(@.INDEX.NAME, 'Fixed')`: an extract spells a missing value as empty text (the fixed leg's index is `""`), and `nonblank`
-skips it where `coalesce` would keep it.
+`nonblank(@.INDEX.NAME, 'Fixed')`: the fixed leg's index name is `""`, empty text, and `nonblank` skips it where `coalesce` would keep it.
 
 ### 4.3 Cash flows with totals and "more"
 
@@ -644,18 +642,18 @@ skips it where `coalesce` would keep it.
       - { label: Notional, bind: "@.NOTIONAL", fmt: amount0, total: true }
 ```
 
-You should see five of the seven fixed periods, a total row (`Total` and `1,694,000,000` under *Notional*: the totals cover all
-seven rows, not just the five shown; the label sits in the column just before the first total), and `2 later flows` under the
-table. Numeric columns (those with a format other than `date`) are right-aligned.
+You should see five of the seven fixed periods (`20000001001 · 2026-06-29 · 4.0829% · 242,000,000` first), a total row (`Total` and `1,694,000,000` under *Notional*: the totals cover all seven rows,
+not just the five shown; the label sits in the column just before the first total), and `2 later flows` under the table. Numeric columns (those with a format other than `date` or `text`) are
+right-aligned.
 
-### 4.4 A ladder that lights the next payment
+### 4.4 A ladder of cash events
 
 ```yaml
   - id: schedule
     kind: ladder
     title: Cash events
     code: CF
-    rows: "$.EVENTS[?nonblank(@.AMOUNT)]"
+    rows: "$.EVENTS[?nonblank(@.AMOUNT) && nonblank(@.LEG_ID)]"
     highlight: "#index == 0"
     columns:
       - { label: Date, bind: "@.EVENT_DATE", fmt: date }
@@ -663,9 +661,9 @@ table. Numeric columns (those with a format other than `date`) are right-aligned
       - { label: Amount, bind: "@.AMOUNT", fmt: signed0, tone: sign, total: true }
 ```
 
-You should see the 36 cash settlements of both legs (paid negative, received positive), the first highlighted, and their net under
-*Amount*. A ladder always shows every row (it takes no `limit`); use a table when you need to cut. To list only what is still to
-come, filter on the view's business date: `rows: "$.EVENTS[?nonblank(@.AMOUNT) && days(today(), @.EVENT_DATE) >= 0]"`.
+You should see the 35 cash settlements of both legs in the document's order (the fixed leg's first: `2026-06-29 · Fixed · +8,987,302`), signed from the bank's side (received positive, paid negative),
+the first highlighted, and their net, `+1,170,846`, under *Amount*. A ladder always shows every row (it takes no `limit`); use a table when you need to cut. To list only what is still to come, filter
+on the view's business date: `rows: "$.EVENTS[?nonblank(@.AMOUNT) && nonblank(@.LEG_ID) && @.EVENT_DATE > today()]"`.
 
 ### 4.5 Charts: the trade's own data and another entity's
 
@@ -686,9 +684,9 @@ come, filter on the view's business date: `rows: "$.EVENTS[?nonblank(@.AMOUNT) &
     key: F5
     area: right
     source: "link($.LEGS[0].DISCOUNT_INDEX, 'ir-curve')"
-    rows: $.points
-    x: tenor
-    y: zeroRate
+    rows: $.POINTS
+    x: TENOR
+    y: ZERO_RATE
     mark: "'5Y'"
     fmt: price2
     unit: "%"
@@ -697,19 +695,18 @@ come, filter on the view's business date: `rows: "$.EVENTS[?nonblank(@.AMOUNT) &
     title: Payments by year (paid − / received +)
     code: PAY
     area: right
-    rows: "group($.EVENTS[?nonblank(@.AMOUNT)], 'EVENT_DATE', 'AMOUNT', 'year')"
+    rows: "group($.EVENTS[?nonblank(@.AMOUNT) && nonblank(@.LEG_ID)], 'EVENT_DATE', 'AMOUNT', 'year')"
     fmt: signed0
     tone: sign
 ```
 
-You should see on the right: a flat step line at 242,000,000 (the swap does not amortise); the AUD OIS curve from `1M` to `30Y` with
-the `5Y` point marked and `5Y point 4.03%` under it, beside a `CRV-AUD-OIS` link; and one bar a year, the net of what each leg pays
-and receives. `group(list, key, value, by)` sums a field by another (here by the year of the date), so a chart needs no total the
-data does not carry.
+You should see on the right: a flat step line at 242,000,000 over seven periods (the swap does not amortise); the AUD OIS curve from `1M` (3.5837) to `30Y` (4.2533) with the `5Y` point marked and `5Y
+point 4.03%` under it, beside a `CRV-AUD-OIS` link; and one bar a year from 2025 to 2032, the net of what each leg pays and receives (`2025 −3,713,969`, `2027 +1,016,708`…). `group(list, key, value,
+by)` sums a field by another (here by the year of the date) into rows of `label`, `value` and `count`, which are exactly the field names an `hbar` reads by default, so a chart needs no total the data
+does not carry.
 
-`source:` is what makes the second chart special: Drishti fetches the curve entity (with the same business date),
-and inside that panel `$` is the **curve's** document, so `rows: $.points` reads the curve's points. `mark` is
-evaluated against the trade.
+`source:` is what makes the second chart special: Drishti fetches the curve entity (with the same business date), and inside that panel `$` is the **curve's** document, so `rows: $.POINTS` reads the
+curve's points (`TENOR`, `ZERO_RATE`, `DF`…). `mark` is evaluated against the trade.
 
 ### 4.6 Operations, a gauge, links and keys
 
@@ -737,14 +734,13 @@ keys:
   F9: raw
 ```
 
-You should see `Status AMENDED` in its colour, `Last action AMEND (version 2)`; a gauge 48% full reading `48%` (the gauge formats
-value ÷ max, with `pct0` unless you say otherwise); the linked counterparty, legal entity, portfolio and trader; and
-the key bar `F2 Deal ticket`, `F3 Legs`, `F4 Cash flows`, `F5 Discount curve`, `F7 Counterparty trades`, `F8 Impact`, `F9 Raw JSON`.
+You should see `Status AMENDED` in its colour, `Last action AMEND (version 2)`, `Delivery versus payment NO`, `Transit 00107`; a gauge 48% full reading `48%` (the gauge formats value ÷ max, with
+`pct0` unless you say otherwise); the linked counterparty (with its rating `A` as a badge), legal entity, portfolio and trader; and the key bar `F2 Deal ticket`, `F3 Legs`, `F4 Cash flows`, `F5
+Discount curve`, `F7 Counterparty trades`, `F8 Impact`, `F9 Raw JSON`. F7 opens the trading pack's *counterparty trades* page: every trade with that counterparty, from every source system.
 
 ### 4.7 What happened to the trade, and panels for one sub type
 
-A trader also asks *what has happened to it so far*. `EVENTS` lists the deal's own events (no `LEG_ID`) and each leg's cash
-events; a `timeline` answers it, naming the leg:
+A trader also asks *what has happened to it so far*. `EVENTS` lists the deal's own events (no `LEG_ID`) and each leg's cash events; a `timeline` answers it, naming the leg:
 
 ```yaml
   - id: lifecycle
@@ -757,303 +753,335 @@ events; a `timeline` answers it, naming the leg:
     label: "@.EVENT_TYPE + (nonblank(@.LEG_ID) ? ' · leg ' + @.LEG_ID : ' · deal')"
 ```
 
-You should see the events in date order, from *BOOKED · deal* (2025-07-25) through each payment *CASH_SETTLEMENT · leg 1* or *leg 2*
-to the last *CASH_SETTLEMENT · leg 2* of 2032-06-25.
+You should see the events in date order, from *BOOKED · deal* and *CONFIRMED · deal* (2025-07-25), *CLEARED · deal*, *AMENDED · deal*, through each payment *CASH_SETTLEMENT · leg 1* or *leg 2*, to the
+last of 2032-06-25. A timeline sorts by date on the server; its `label` (and `detail`) take a field name or, as here, an expression starting with `@`.
 
-Some products book several sub types that read differently (an Endur `Commodity` deal is physical gas at a hub, `NGX-COMM-PHYS`, or
-warehouse warrants in a vault, `COMM-WARRANTS-INV`). Keep **one** Sutra for the product type and show a sub type's own panels with
-`when:`, an expression over the document; when it is not true the panel is left out:
+Some products book several sub types that read differently. An Endur `ComSwap` is a fixed-against-floating swap (`ENGY-SWAP`) or a basis swap of one index against another (`ENGY-B-SWAP`); an Endur
+`Commodity` deal is physical gas at a hub (`NGX-COMM-PHYS`) or warehouse warrants in a vault (`COMM-WARRANTS-INV`). Keep **one** Sutra for the product type and show a sub type's own panels with
+`when:`, an expression over the document; when it is not true the panel is left out, with no empty box. This is the shipped `endur-comswap` Sutra's pair:
 
 ```yaml
-  - id: delivery
+  - id: fixed-float
     kind: kv
-    title: Physical delivery at the hub
-    when: "$.PRODUCT_SUB_TYPE == 'NGX-COMM-PHYS'"
+    title: "Fixed against floating"
+    code: SWAP
+    when: "$.PRODUCT_SUB_TYPE == 'ENGY-SWAP'"
     columns:
-      - { label: Hub, bind: "$.LEGS[?@.LEG_TYPE == 'PHYSICAL'][0].PHYSICAL_LOCATION_NAME" }
-      - { label: Daily volume, bind: "$.LEGS[?@.LEG_TYPE == 'PHYSICAL'][0].DAILY_VOLUME", fmt: amount0 }
+      - { label: "Fixed price", bind: "$.LEGS[?@.LEG_TYPE == 'FIXED'][0].CASH_FLOWS[0].STRIKE_PRICE", fmt: price4 }
+      - { label: "Floating index", bind: "nonblank($.LEGS[?@.LEG_TYPE == 'FLOAT'][0].INDEX.NAME, '–')" }
+  - id: basis
+    kind: kv
+    title: "Basis: one index against another"
+    code: BAS
+    when: "$.PRODUCT_SUB_TYPE == 'ENGY-B-SWAP'"
+    columns:
+      - { label: "Index, leg 1", bind: "nonblank($.LEGS[0].INDEX.NAME, '–')" }
+      - { label: "Index, leg 2", bind: "nonblank($.LEGS[1].INDEX.NAME, '–')" }
 ```
 
-`label`, `value` and `detail` are field names of each row, or expressions starting with `@`. The server does the arithmetic (sums,
-groups, the sort by date), so the console only draws. Five more kinds work the same way: `waterfall` (a P&L explain, market-risk's
-`PNL`), `histogram` (a VaR scenario vector with VaR and ES lines), `scatter` (books' VaR against P&L), `candlestick` (daily
-bars), `graph` (a counterparty's group, agreement and netting sets) and `pivot` (MTM by book and currency, with
-totals). [Section 10](#10-the-panel-kinds) links to the entry of each of the 22 kinds in [PANELS.md](PANELS.md), which
-explains every kind: its options, what the server computes and what it does when empty, masked or live.
+Open `TRD 1000001` (an `ENGY-SWAP`): its view has the panel `fixed-float` and no `basis`; `TRD 1000003` (an `ENGY-B-SWAP`) the other way round. The Admin coverage matrix ([section
+7](#7-how-packs-ship-sutras)) lists, for each sub type in the data, which `when` panels it shows.
 
-Put the blocks of 4.2 to 4.7 together under one `panels:` and you have a complete trade view. The
-[reference's annotated example](RACHANA_REFERENCE.md#a-complete-example-annotated) is the same layout with every line
-commented, and the trading pack's `config/packs/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` is the one the server uses; it is
-built from shared blocks ([section 7](#7-how-packs-ship-sutras)).
+The other chart kinds work the same way: `waterfall` (a P&L explain, market-risk's `PNL`), `histogram` (a VaR scenario vector with VaR and ES lines), `scatter` (books' VaR against P&L), `candlestick`
+(daily bars), `graph` (a counterparty's group, agreement and netting sets), `pivot` (MTM by book and currency, with totals), `metric` (a big number with its change) and `map` (a country). [Section
+10](#10-the-panel-kinds) links to the entry of each of the 22 kinds in [PANELS.md](PANELS.md), which explains every kind: its options, what the server computes and what it does when empty, masked or
+live.
+
+Put the blocks of 4.2 to 4.7 together under one `panels:` and you have a complete trade view. The [reference's annotated example](RACHANA_REFERENCE.md#a-complete-example-annotated) is the same layout
+with every line commented, and the trading pack's `config/packs/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` is the one the server uses; it is built from shared blocks ([section
+7](#7-how-packs-ship-sutras)).
 
 ## 5. Matching several Sutras
 
-Many Sutras can apply to one kind. The engine takes the latest version of each Sutra of that kind, tries them by
-`priority` (highest first, then by name), and uses the first whose `where` holds.
+Many Sutras can apply to one kind: the trading pack alone has one per source system and product type. The engine takes the latest version of each Sutra of the kind, tries them by `priority` (highest
+first, then by name), and uses the first whose `where` holds.
 
 ### Specific before general
 
-There is no automatic "most specific wins": a longer `where` does not win by itself. Give the special case a
-higher priority:
+There is no automatic "most specific wins": a longer `where` does not win by itself. Give the special case a higher priority:
 
 ```yaml
-# irs-matured.v1.sutra.yaml: matured swaps get a short layout
-match: { kind: trade, where: "$.productType == 'IRS_FIXFLOAT' && $.status == 'Matured'", priority: 30 }
+# irs-matured.v1.sutra.yaml: matured Murex swaps get a short layout
+match: { kind: trade, where: "$.SOURCE_SYSTEM == 'MUREX' && $.PRODUCT_TYPE == 'IRS_FIXFLOAT' && $.TRADE_STATUS == 'MATURED'", priority: 30 }
 
-# swap-desk.v1.sutra.yaml: every other fixed/float swap
-match: { kind: trade, where: "$.productType == 'IRS_FIXFLOAT'", priority: 20 }
+# swap-desk.v1.sutra.yaml: every other Murex fixed/float swap
+match: { kind: trade, where: "$.SOURCE_SYSTEM == 'MUREX' && $.PRODUCT_TYPE == 'IRS_FIXFLOAT'", priority: 20 }
 
 # trade-fallback.v1.sutra.yaml: any trade at all
 match: { kind: trade, priority: 0 }
 ```
 
-`MX-20000001` is `Live`, so `irs-matured` does not hold; `swap-desk` does. A trade of another product falls to
-`trade-fallback` (no `where` always holds). Without a fallback, it falls to the product's own pack Sutra if one
-matches, and to inference otherwise.
+`MX-20000001` is `AMENDED`, so `irs-matured` does not hold; `swap-desk` does. Without `swap-desk`, the trading pack's own `irs-fixfloat` (priority 10) would; a trade of a product no Sutra names falls
+to `trade-fallback` (no `where` always holds) and, without a fallback, to inference.
 
-Good conditions are cheap and read stable fields: the product type, an asset class, a flag. They run for every
-view and on every live tick.
+Always name the **source system** with the product type. The same product type may come from two systems with different habits (Murex and Calypso both book bonds), and a Sutra that says only
+`$.PRODUCT_TYPE == 'IRS_FIXFLOAT'` would also take the other system's documents. Good conditions are cheap and read stable fields: the source system, the product type, a flag. They run for every view
+and on every live tick.
 
 ### Checking which Sutra applies
 
+**From the command line**, the Sutras of a kind with their conditions:
+
 ```bash
-curl -s http://localhost:18480/api/v1/sutras | python3 -c "
+curl -s -H "$AUTH" $DRISHTI/sutras | python3 -c "
 import json, sys
 for s in json.load(sys.stdin):
-    if s['kind'] == 'gene': print(s['priority'], s['name'], s['where'])"
+    if s['kind'] == 'trade' and 'MUREX' in (s['where'] or '') and 'SWAP' in (s['where'] or ''): print(s['priority'], s['name'], s['where'])" | head -3
 ```
 
-You should see `10 gene None`: one Sutra for genes, applying to all of them. After you save `gene-mine` with priority
-20, it appears above, and every gene's *How this view was built* says `Sutra gene-mine v1`.
+You should see `10 accreting-swap $.SOURCE_SYSTEM == 'MUREX' && $.PRODUCT_TYPE == 'ACCRETING_SWAP'`, then `amort-swap` and `basis-swap` likewise. After you save `swap-desk` with priority 20, it is
+listed too, and every Murex fixed/float swap's *How this view was built* says `Sutra swap-desk v1 + inference`.
+
+**In the UI**, the last panel of every view, *How this view was built*, names the winner; and **Admin → Packs → trading → Sutra coverage** lists every combination of the data with the Sutra that lays
+it out ([section 7](#7-how-packs-ship-sutras)).
 
 ### How one Sutra is chosen, worked through
 
-The three Sutras above, tried against four trades (the rule is the matcher's: the latest version of each Sutra of that
-kind, highest `priority` first, equal priorities in name order, the first whose `where` is true; the
-[reference](RACHANA_REFERENCE.md#matching-choosing-a-sutra-for-a-document) states it in full):
+The three Sutras above, tried against four trades (the rule is the matcher's: the latest version of each Sutra of that kind, highest `priority` first, equal priorities in name order, the first whose
+`where` is true; the [reference](RACHANA_REFERENCE.md#matching-choosing-a-sutra-for-a-document) states it in full):
 
 | Document | `irs-matured` (30) | `swap-desk` (20) | `trade-fallback` (0) | Chosen |
 |---|---|---|---|---|
-| `IRS_FIXFLOAT`, `Live` | `where` false | `where` true | not reached | `swap-desk` |
-| `IRS_FIXFLOAT`, `Matured` | `where` true | not reached | not reached | `irs-matured` |
-| `FX_OPTION` | false | false | no `where`: true | `trade-fallback` |
-| a `trade` with no `productType` | false (the missing field compares false, never an error) | false | true | `trade-fallback` |
+| `MUREX`, `IRS_FIXFLOAT`, `AMENDED` | `where` false | `where` true | not reached | `swap-desk` |
+| `MUREX`, `IRS_FIXFLOAT`, `MATURED` | `where` true | not reached | not reached | `irs-matured` |
+| `CALYPSO`, `GOVT_BOND` | false | false | no `where`: true | `trade-fallback` (or, without it, the pack's `govt-bond` at priority 10) |
+| a `trade` with no `SOURCE_SYSTEM` | false (the missing field compares false, never an error) | false | true | `trade-fallback` |
 
-Two habits keep this predictable. Give every kind a catch-all with a low priority, so a document with an unexpected
-shape still gets a layout you chose rather than a purely inferred one. And read the winner off the screen: the last
-panel of every view, *How this view was built*, names it (`Sutra swap-desk v1 + inference`).
+Two habits keep this predictable. Give every kind a catch-all with a low priority, so a document with an unexpected shape still gets a layout you chose rather than a purely inferred one. And read the
+winner off the screen (*How this view was built*) or the coverage matrix.
 
 ![The workbench Summary tab: what the Sutra applies to, its priority, the strip and each panel](img/sutras/s03-match-summary.jpg)
 
-In the workbench the **Summary** tab states what the Sutra *applies to* (kind, `where`, priority) before you save it.
-A preview ignores `match`, so to see a Sutra win against its siblings, publish it (or have it approved) and open
-entities in the terminal, or read `GET /api/v1/sutras` as above.
-
+In the workbench the **Summary** tab states what the Sutra *applies to* (kind, `where`, priority) before you save it. A preview ignores `match`, so to see a Sutra win against its siblings, publish it
+(or have it approved) and open entities in the terminal, or read `GET /api/v1/sutras` as above.
 
 ### Versions
 
-`name@version` identifies a Sutra. To change a published Sutra, publish the next version
-(`swap-desk.v2.sutra.yaml` with `version: 2`); keep version 1 on disk. Matching uses only the **latest** version of
-each name; the older one stays readable (`GET /api/v1/sutras/swap-desk/1/source`), so you can compare or roll back
-by removing version 2. Two files may not define the same `name@version` (`DRS-2028`).
+`name@version` identifies a Sutra. To change a published Sutra, publish the next version (`swap-desk.v2.sutra.yaml` with `version: 2`); keep version 1 on disk. Matching uses only the **latest**
+version of each name; the older one stays readable (`GET /api/v1/sutras/swap-desk/1/source`), so you can compare or roll back by removing version 2. Two files may not define the same `name@version`
+(`DRS-2028`).
 
 ## 6. Saving: the workbench and governance
 
-Designing is open to everyone; **saving to the registry** is the author right with studio saving on
-(`drishti.rachana.studio-save: true`), and with governance on a save is a **proposal**. On this sample server both
-are on:
+Designing is open to everyone; **saving to the registry** is the author right with studio saving on (`drishti.rachana.studio-save: true`, env `DRISHTI_STUDIO_SAVE`, which the quick-start run
+configurations set), and with governance on a save is a **proposal**. Check what this server lets you do:
 
 ```bash
-curl -s http://localhost:18480/api/v1/studio/settings
+curl -s -H "$AUTH" $DRISHTI/studio/settings
 ```
 
-You should see `{"save":true,"review":true,"approve":true}` (`approve` is whether *you* may approve).
+You should see `{"save": true, "approve": true, "review": true, "author": true}` for the seeded administrator (`approve` is whether *you* may approve; `author` whether you may save).
 
-1. In the workbench, type a note for the reviewer (*What changed?*) and press **Submit for review** (or **Ctrl+S**).
-   The Sutra is checked as it stands; if it has problems they are listed and nothing is submitted. Otherwise the
-   status line says `Submitted gene-mine v1 for review as <id>`. What the button says in each situation is in
-   [SCREEN_DESIGNER §22](SCREEN_DESIGNER.md#22-saving-and-proposing).
-2. An approver opens **Build → Govern → Reviews** (`/build/reviews`), sees the proposal with a diff against the live
-   version (empty for a new Sutra), and approves or rejects it (a rejection needs a reason). Panel blocks that only
-   changed place are listed as moves (*moved: Legs from position 1 to 2 (main → side)*), with the remaining edits as
-   a line diff; **Full line diff** opens the plain diff.
-3. With security on and `drishti.governance.four-eyes: true` (the default), the author cannot approve their own
-   proposal (`DRS-2007`). If someone changed the live Sutra after you proposed, approval is refused (`DRS-2006`):
-   propose again from the live version (the workbench's *base moved* flow does this, SCREEN_DESIGNER §21).
-4. On approval the file is written to `<first site Sutra directory>/<domain>/<name>.v<N>.sutra.yaml` (here
-   `./sutras/studio/gene-mine.v1.sutra.yaml`, unless the Sutra says `domain:`) and goes live at once.
+1. In the workbench, type a note for the reviewer (*What changed?*) and press **Submit for review** (or **Ctrl+S**). The Sutra is checked as it stands; if it has problems they are listed and nothing
+   is submitted. Otherwise the status line says `Submitted counterparty-mine v1 for review as <id>`. What the button says in each situation is in [SCREEN_DESIGNER
+   §22](SCREEN_DESIGNER.md#22-saving-and-proposing).
+2. An approver opens **Build → Govern → Reviews** (`/build/reviews`), sees the proposal with a diff against the live version (empty for a new Sutra), and approves or rejects it (a rejection needs a
+   reason). Panel blocks that only changed place are listed as moves (*moved: Legs from position 1 to 2 (main → side)*), with the remaining edits as a line diff; **Full line diff** opens the plain
+   diff.
+3. With security on and `drishti.governance.four-eyes: true` (the default), the author cannot approve their own proposal (`DRS-2007`). If someone changed the live Sutra after you proposed, approval is
+   refused (`DRS-2006`): propose again from the live version (the workbench's *base moved* flow does this, SCREEN_DESIGNER §21).
+4. On approval the file is written to `<first site Sutra directory>/<domain>/<name>.v<N>.sutra.yaml` (here `./sutras/studio/counterparty-mine.v1.sutra.yaml`, unless the Sutra says `domain:`) and goes
+   live at once.
 
-Every step is recorded in the audit log. With governance off, the button reads **Save** and publishes directly. The
-governance rules in full are in the [reference](RACHANA_REFERENCE.md#governance).
-
-You can also skip the workbench: put the file in a Sutra directory (`drishti.rachana.dirs`, `./sutras` by default). The
-server notices within a quarter of a second and loads it; an invalid file is reported and, if it had a valid
-version before, that version stays live:
+**From the command line**, the same proposal is one call with the YAML as the body (`design:write` scope); an approver answers it with `POST /api/v1/sutras/proposals/{id}/approve` (`design:approve`
+scope):
 
 ```bash
-curl -s http://localhost:18480/api/v1/sutras/problems
+curl -s -H "$AUTH" -H 'Content-Type: text/yaml' --data-binary @counterparty-mine.v1.sutra.yaml $DRISHTI/sutras
+```
+
+You should see `202` and `{"proposal": {"id": …, "name": "counterparty-mine", "version": 1, "status": "pending"}}`. Every step is recorded in the audit log. With governance off, the button reads
+**Save** and publishes directly. The governance rules in full are in the [reference](RACHANA_REFERENCE.md#governance).
+
+You can also skip the workbench: put the file in a Sutra directory (`drishti.rachana.dirs`, `./sutras` by default; env `DRISHTI_SUTRAS`). The server notices within a quarter of a second and loads it;
+an invalid file is reported and, if it had a valid version before, that version stays live:
+
+```bash
+curl -s -H "$AUTH" $DRISHTI/sutras/problems
 ```
 
 You should see `{}` when everything loaded.
 
-Only files named `*.sutra.yaml` are Sutras. Any other `.yaml` or `.yml` file in a Sutra directory, and any old
-Markdown Sutra (`*.sutra.md`, the format before Drishti 1.11), is reported as `DRS-2004` with the fix: rename the
-YAML file, or convert the Markdown one, which keeps its comments and turns its prose into `notes:`:
+Only files named `*.sutra.yaml` (and shared blocks, `*.block.yaml`) are read. Any other `.yaml` or `.yml` file in a Sutra directory, and any old Markdown Sutra (`*.sutra.md`, the format before Drishti
+1.11), is reported as `DRS-2004` with the fix: rename the YAML file, or convert the Markdown one, which keeps its comments and turns its prose into `notes:`:
 
 ```bash
 python3 tools/rachana/md_to_yaml.py sutras/ --delete
 ```
 
-`--delete` removes each `.sutra.md` once its `.sutra.yaml` is written; leave it out to keep both and compare first
-(the `.md` is still reported until you remove it).
+`--delete` removes each `.sutra.md` once its `.sutra.yaml` is written; leave it out to keep both and compare first (the `.md` is still reported until you remove it).
 
 ### Editing outside the workbench
 
-
-Any editor that reads JSON Schema can complete and check a Sutra as you type. The server publishes the schema of
-the language, with this server's entity kinds and format names filled in:
+Any editor that reads JSON Schema can complete and check a Sutra as you type. The server publishes the schema of the language, with this server's entity kinds and format names filled in:
 
 ```bash
-curl -s http://localhost:18480/api/v1/rachana/schema | python3 -c "
+curl -s -H "$AUTH" $DRISHTI/rachana/schema | python3 -c "
 import json, sys
 s = json.load(sys.stdin)
 print(s['title']); print(s['required']); print(len(s['properties']['match']['properties']['kind']['enum']), 'kinds')"
 ```
 
-You should see `Rachana Sutra, language 1`, `['rachana', 'sutra', 'version', 'match']` and the number of kinds the
-enabled packs serve. With the YAML extension of VS Code, for example, a first line
+You should see `Rachana Sutra, language 1`, `['rachana', 'sutra', 'version', 'match']` and `69 kinds` (the kinds the seven packs serve). With the YAML extension of VS Code, for example, a first line
 
 ```text
 # yaml-language-server: $schema=http://localhost:18480/api/v1/rachana/schema
 ```
 
-gives completion of keys, panel kinds, options, formats and kinds, and marks unknown keys before you save. The
-schema is generated from the grammar, so it never disagrees with the parser, but the server's checks (expressions,
-duplicate ids and keys) remain the final word: `GET /api/v1/sutras/problems` after you save.
+gives completion of keys, panel kinds, options, formats and kinds, and marks unknown keys before you save (on a server with security on, save the schema to a file once with the `curl` above and point
+the comment at the file). The schema is generated from the grammar, so it never disagrees with the parser, but the server's checks (expressions, duplicate ids and keys) remain the final word: `sutra
+lint` (section 15) before you commit, `GET /api/v1/sutras/problems` after the file is live.
 
 ## 7. How packs ship Sutras
 
-A pack is a folder under `config/packs/` with a `pack.yaml`. Its Sutras live in `sutras/` (or the folder its `sutras:` key
-names), in sub-folders of your choosing. **Folders are for people only**: the directory is read recursively and Drishti infers
-nothing from a folder name; each Sutra's own `match:` alone decides what it lays out
-([Folders mean nothing](RACHANA_REFERENCE.md#folders-mean-nothing)). The trading pack, whose trades come from three source systems in
-one common schema, keeps:
+A pack is a folder under `config/packs/` with a `pack.yaml`. Its Sutras live in `sutras/` (or the folder its `sutras:` key names), in sub-folders of your choosing. **Folders are for people only**: the
+directory is read recursively and Drishti infers nothing from a folder name; each Sutra's own `match:` alone decides what it lays out ([Folders mean
+nothing](RACHANA_REFERENCE.md#folders-mean-nothing)). The trading pack, whose trades come from three source systems in one common schema, keeps:
 
 ```text
 config/packs/trading/sutras/
   common/      deal-ticket, legs, flow-schedule, events, payments, deal-footer  (*.v1.block.yaml, shared panels)
-  endur/       one Sutra per Endur product type: match "$.SOURCE_SYSTEM == 'ENDUR' && $.PRODUCT_TYPE == 'ComSwap'"
-  calypso/     one Sutra per Calypso product type
-  murex/       one Sutra per Murex product type
-  pages/       counterparty, portfolio, legal-entity and index pages over many trades
+  endur/       one Sutra per Endur product type (5): endur-comswap matches "$.SOURCE_SYSTEM == 'ENDUR' && $.PRODUCT_TYPE == 'ComSwap'"
+  calypso/     one Sutra per Calypso product type (51): govt-bond, repo, fx-forward, cds-single …
+  murex/       one Sutra per Murex product type (74): irs-fixfloat, basis-swap, cmd-swap, eq-barrier …
+  pages/       counterparty-trades, portfolio-trades, legal-entity-trades, index-trades: pages over many trades
 ```
 
-Each product Sutra is a title, a strip and `{ use: deal-ticket@1 }`, `{ use: legs@1, with: { rate-fmt: pct4 } }`, … over the
-[shared blocks](RACHANA_REFERENCE.md#shared-panel-blocks-use), plus its own panels. A product's sub types (Endur's `ComSwap` books
-`ENGY-SWAP` and `ENGY-B-SWAP`) are panels with `when: "$.PRODUCT_SUB_TYPE == '…'"` in the product's one Sutra, never a Sutra of their
-own, so every trade matches exactly one Sutra. Admin → Packs → *trading* → **Sutra coverage** (`GET /api/v1/packs/{name}/coverage`)
-lists every source system × product type × sub type in the data with the Sutra that lays it out and the panels its `when`s show,
-flagging *none* (inferred) and *several*.
+Each product Sutra is a title, a strip, the two controls of the events table, and its panels, most of them shared blocks: this is the shipped `irs-fixfloat`, its strip shortened:
 
-```text
-examples/packs/genomics/
-  pack.yaml                         # kinds, mnemonics, id patterns, links, badges, roles
-  config/semantics.yaml             # optional: inference hints (roles, acronyms, labels)
-  config/formats.yaml               # optional: named formats
-  sutras/genomics-and-biology/
-    gene.v1.sutra.yaml
-    variant.v1.sutra.yaml
-    …
-  samples/gene/GENE-BRCA1.json      # sample documents for the demo source
+```yaml
+rachana: 1
+sutra: irs-fixfloat
+version: 1
+description: "Exchanges fixed for floating RFR-compounded payments."
+match: { kind: trade, where: "$.SOURCE_SYSTEM == 'MUREX' && $.PRODUCT_TYPE == 'IRS_FIXFLOAT'", priority: 10 }
+title: { pill: "Rates · Interest rate swap (fixed/float)", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }
+strip:                          # (eight figures: source, side, notional, quantity, trade date, maturity, status, portfolio)
+  - { label: Side, bind: "$.BUY_SELL_CODE == 'B' ? 'Buy' : ($.BUY_SELL_CODE == 'S' ? 'Sell' : nonblank($.BUY_SELL_CODE, '–'))" }
+  - { label: Notional, bind: "$.CURRENCY + ' ' + fmt(first($.LEGS).NOTIONAL, 'amount0')", emphasis: true }
+  - …
+controls:                       # the events by leg and by date: a trader's 'what is paid when, on which leg'
+  - { id: legs, kind: multi-select, label: Legs, options: "$.LEGS[*].LEG_ID", default: all, placement: header, panel: event-list, remember: user }
+  - { id: when, kind: date-range, label: Between, placement: header, panel: event-list }
+panels:
+  - { use: deal-ticket@1, with: { rate-fmt: pct4, product: "Interest rate swap (fixed/float)" } }
+  - { use: legs@1, with: { rate-fmt: pct4 } }
+  - { use: flow-schedule@1, with: { rate-fmt: pct4 } }
+  - { use: events@1 }
+  - { use: payments@1 }
+  - { use: deal-footer@1 }
+keys: { F7: "link($.COUNTERPARTY, 'counterparty-trades')", F8: impact, F9: raw }
 ```
+
+- **Shared blocks.** `{ use: legs@1, with: { rate-fmt: pct4 } }` is replaced by the panels of `common/legs.v1.block.yaml` (the legs side by side, each with its terms, notional profile, fixings and a
+  cash-flow table opening to its resets), with every `%{rate-fmt}` in it filled in: `pct4` for a rate (a fraction a year), `price4` for a commodity price per unit, the block's default. `deal-ticket`
+  is the DES ticket (deal, product, parties, dates, settlement), `flow-schedule` every flow of every leg in one table, `events` the timeline and the events table the two controls filter, `payments`
+  the netted payment ladder and payments by month, `deal-footer` the provenance and linked entities. A block is a file `<name>.v<N>.block.yaml` with `block:`, `version:`, `params:` (each with its
+  default) and `panels:`; the rules are in the [reference](RACHANA_REFERENCE.md#shared-panel-blocks-use). Change a block and every product Sutra that uses it changes; write `legs.v2.block.yaml` when
+  some Sutras must not follow, and move them one at a time.
+- **Sub types.** A product's sub types (Endur's `ComSwap` books `ENGY-SWAP` and `ENGY-B-SWAP`) are panels with `when: "$.PRODUCT_SUB_TYPE == '…'"` in the product's one Sutra ([section
+  4.7](#47-what-happened-to-the-trade-and-panels-for-one-sub-type)), never a Sutra of their own, so every trade matches exactly one Sutra.
+- **The coverage matrix.** **Admin → Packs → trading → Sutra coverage** (`GET /api/v1/packs/{name}/coverage`) lists every source system × product type × sub type in the data, with how many trades, an
+  example id, the Sutra that lays it out and the `when` panels it shows, flagging *none* (laid out by inference) and *several* (two Sutras tie: raise one's priority).
+
+  ```bash
+  curl -s -H "$AUTH" $DRISHTI/packs/trading/coverage | python3 -c "
+  import json, sys
+  k = json.load(sys.stdin)['kinds'][0]
+  print(k['kind'], k['combinations'], 'combinations, none', k['none'], 'several', k['several'])
+  for r in k['rows']:
+      if r['values']['SOURCE_SYSTEM'] == 'ENDUR': print(r['values'], r['count'], r['sutras'], r['shown'])"
+  ```
+
+  You should see `trade 132 combinations, none 0 several 0`, then the seven Endur combinations, for example `{'SOURCE_SYSTEM': 'ENDUR', 'PRODUCT_TYPE': 'ComSwap', 'PRODUCT_SUB_TYPE': 'ENGY-B-SWAP'}
+  208 ['endur-comswap'] ['basis']` and the same product's `ENGY-SWAP` row showing `['fixed-float']` (the counts are the demo lakes' latest day).
+- **Generated Sutras.** The trading pack's product Sutras begin `# Generated by tools/packgen/banking/make_sutras.py from the taxonomy. Edit the taxonomy, not this file.`: change the generator's
+  taxonomy and run it, or your edit is lost at the next generation. The blocks in `common/` and the pages are written by hand.
+
+Other rules:
 
 - A pack's Sutras load when the pack is enabled (`drishti.packs.enabled`, env `DRISHTI_PACKS`), alongside the site's.
-- A pack that `extends:` another may redefine one of its parent's Sutras with the same `name@version`; the more
-  specific pack wins. A site file with the same `name@version` as a pack's keeps the site's and reports the pack's as
-  `DRS-2028`; to change a pack's layout for your site, prefer a new name with a higher priority, or a higher version.
-- Some packs are generated (`examples/packs/genomics/pack.yaml` begins `Generated by tools/packgen/genomics/make.py`): change
-  the generator, not the generated Sutras, or your edit is lost at the next generation.
-- Packs can also add formats (`config/formats.yaml`) that their Sutras use, such as `pct4` and `bp1`.
+- A pack that `extends:` another may redefine one of its parent's Sutras with the same `name@version`; the more specific pack wins. A site file with the same `name@version` as a pack's keeps the
+  site's and reports the pack's as `DRS-2028`; to change a pack's layout for your site, prefer a new name with a higher priority, or a higher version.
+- Packs can also add formats (`config/formats.yaml`) that their Sutras use, such as `pct4`, `price4` and `bp1`, and semantics (`config/semantics.yaml`: acronyms and labels, section 8).
 
-See [PACKS.md](PACKS.md) for writing a pack.
+See [PACKS.md](PACKS.md) for the seven packs and [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md) for writing a pack.
 
 ## 8. Things to know before you write many Sutras
 
-- **Labels you leave out are filled in.** `{ bind: $.notional, fmt: amount0 }` reads *Notional*; pack vocabularies
-  spell acronyms (`dv01ByTenor` → *DV01 by tenor*).
-- **A field missing from one document is not an error.** The cell is empty; a panel whose data is missing says
-  *No data available*. One Sutra can serve documents with optional parts.
-- **A markdown panel shows plain text.** `**bold**` is not rendered inside a panel. Explanations for the people
-  who maintain the layout belong in `description` and `notes`, not in a panel.
-- **Sizes are not fixed.** `highlight: "#index == size($.history) - 1"` lights the last row of any length;
-  `#index == 19` lights row 20 only.
-- **Options that are field names take no `@.`:** `x: tenor`, `label: bucket`, `value: dv01`. Options that are
-  expressions take full paths: `rows: $.points`.
-
+- **Labels you leave out are filled in.** `{ bind: $.NET_MTM, fmt: signed0 }` reads *Net MTM*: the field name in words, with the packs' acronyms spelled right.
+- **A field missing from one document is not an error.** The cell is empty; a panel whose data is missing says *No data available* (or the panel's own `empty:` words). One Sutra can serve documents
+  with optional parts.
+- **Empty text is not nothing.** The source systems' extracts write a missing value as `""`; `nonblank(...)` treats it as missing, `coalesce(...)` does not.
+- **A markdown panel shows plain text.** `**bold**` is not rendered inside a panel. Explanations for the people who maintain the layout belong in `description` and `notes`, not in a panel.
+- **Sizes are not fixed.** `highlight: "#index == size($.EVENTS) - 1"` lights the last row of any length; `#index == 19` lights row 20 only.
+- **Options that are field names take no `@.`:** `x: TENOR`, `label: ID`, `value: NET_MTM` on a `line`, `area` or `hbar`, written exactly as the document writes the field. Options that are expressions
+  take full paths: `rows: $.POINTS`. The later chart kinds (`waterfall` to `pivot`) take a field name, a dotted path or an `@` expression.
 
 ### Labels: name what you must, the rest names itself
 
-Every strip item and column may have a `label`. Leave it out and the label is the name of the field it reads, in
-words: `bind: "@.payDate"` reads as **Pay date**. Where a label comes from, first match wins:
+Every strip item and column may have a `label`. Leave it out and the label is the name of the field it reads, in words: `bind: "@.PAYMENT_DATE"` reads as **Payment date**,
+`$.COUNTERPARTY_COUNTRY_OF_RISK` as **Counterparty country of risk**. Where a label comes from, first match wins:
 
 1. `label:` in the Sutra;
-2. the **pack taxonomy**: `labels:` in the pack's `config/semantics.yaml` (`mtm: MTM (USD)`, `tradeId: Trade`);
+2. the **pack taxonomy**: `labels:` in the pack's `config/semantics.yaml` (`NET_MTM: Net MTM (USD)`);
 3. the **global taxonomy**: `labels:` in the core semantics, or the site's replacement file;
-4. the field name in words, with the packs' `acronyms:` spelled right: `uti` → **UTI**, `dv01ByTenor` → **DV01 by tenor**.
+4. the field name in words, with the packs' `acronyms:` spelled right: `UEN` → **UEN**, `KYC.EMIR_CLASSIFICATION` → **EMIR classification**, `PFE_PEAK` → **PFE peak**.
 
-So a pack teaches Drishti its vocabulary once, and every Sutra and every inferred screen in that pack uses it. The
-practical rule: write a `label:` only where this layout needs different words from the rest of the pack; fix a label
-that is wrong everywhere in the taxonomy, not in thirty Sutras. How to add `labels:` and `acronyms:` to a pack is in
-[INFERENCE.md](../architecture/INFERENCE.md#adding-hints-for-your-pack); the label rules are in the
-[reference](RACHANA_REFERENCE.md#labels).
-
+So a pack teaches Drishti its vocabulary once, and every Sutra and every inferred screen in that pack uses it (the `core` pack's `config/semantics.yaml` lists the acronyms: MTM, PV, DV01, PFE, CVA,
+KYC, EMIR, LEI, UEN…). The practical rule: write a `label:` only where this layout needs different words from the rest of the pack; fix a label that is wrong everywhere in the taxonomy, not in thirty
+Sutras. How to add `labels:` and `acronyms:` to a pack is in [INFERENCE.md](../architecture/INFERENCE.md#adding-hints-for-your-pack); the label rules are in the
+[reference](RACHANA_REFERENCE.md#labels). What a field *means* (for the *About this page* glossary) is the pack's `config/about.yaml`, which `sutra test` measures as *help coverage* (section 15).
 
 ## 9. Common mistakes and their messages
 
-All the problems of a file are reported at once. The workbench lists them as `<code> line <n>: <message>`; the server log
-and `GET /api/v1/sutras/problems` give `<file>:<line>:<column> <code> <message>`.
+All the problems of a file are reported at once. `sutra lint` (section 15) and the server log give `<file>:<line> <code> <message>`; the workbench lists them as `<code> line <n>: <message>`, and `GET
+/api/v1/sutras/problems` as a map from file to problems with line and column. Every message below is what `sutra lint` printed for the mistake, on a counterparty Sutra.
 
 | You wrote | You see | Fix |
 |---|---|---|
-| `bind: @.amount` (unquoted) | `DRS-2001 YAML syntax: while scanning for the next token found character '@' that cannot start any token. (Do not use @ for indentation) …` | quote it: `bind: "@.amount"` |
+| `bind: @.ID` (unquoted) | `DRS-2001 YAML syntax: while scanning for the next token found character '@' that cannot start any token. (Do not use @ for indentation)` | quote it: `bind: "@.ID"` |
 | `highlight: #index == 0` | no error, and no row is highlighted (`#` starts a YAML comment, so the option is empty) | `highlight: "#index == 0"` |
-| `version: "2"` | `DRS-2020 version must be a positive integer` | `version: 2` |
-| `sutra: Gene_Mine` | `DRS-2020 name 'Gene_Mine' must be lower-case kebab, 2-64 characters` | `sutra: gene-mine` |
-| no `match:` | `DRS-2010 missing 'match' mapping with at least 'kind'` | `match: { kind: gene }` |
+| `version: "2"` | `DRS-2020 version must be a positive integer up to 2147483647, not '2'` | `version: 2` |
+| `sutra: Counterparty_Mine` | `DRS-2020 name 'Counterparty_Mine' must be lower-case kebab, 2-64 characters` | `sutra: counterparty-mine` |
+| no `match:` | `DRS-2010 missing 'match' mapping with at least 'kind'` | `match: { kind: counterparty }` |
 | `pannels:` | `DRS-2011 unknown key 'pannels' in top level` | `panels:` |
-| `kind: chart` | `DRS-2021 unknown panel kind 'chart'; expected one of kv, table, tabs, line, area, hbar, ladder, links, status, provenance, markdown, gauge, surface, waterfall, histogram, scatter, candlestick, graph, timeline, pivot, metric` | `kind: line` |
-| a `table` without `rows` | `DRS-2022 'table' panel 'variants' needs option 'rows'` | add `rows: $.variants` |
+| `version:` written twice | `DRS-2033 duplicate key 'version' (first written at line 3): YAML would keep only the last, so write each key once` | one of each key |
+| `kind: chart` | `DRS-2021 unknown panel kind 'chart'; expected one of kv, table, tabs, line, area, hbar, ladder, links, status, provenance, markdown, gauge, surface, waterfall, histogram, scatter, candlestick, graph, timeline, pivot, metric, map` | `kind: line` |
+| a `table` without `rows` | `DRS-2022 'table' panel 'sets' needs option 'rows'` | add `rows: $.NETTING_SETS` |
 | `limit: 5` on a `ladder` | `DRS-2023 option 'limit' is not valid for 'ladder' panels` | use a `table`, or drop `limit` |
 | `body:` on a `kv` | `DRS-2023 only 'tabs' panels take a 'body'` | make it `kind: tabs` with `each:` |
-| two panels with `id: legs` | `DRS-2024 duplicate panel id 'legs'` | rename one |
-| `key: F3` twice, or in `keys:` too | `DRS-2025 function key F3 is used twice` | one key per action |
+| two panels with `id: sets` | `DRS-2024 duplicate panel id 'sets'` | rename one |
+| `key: F3` on a panel and in `keys:` too | `DRS-2025 function key F3 is used twice` | one key per action |
 | `key: F13` | `DRS-2025 'F13' is not a function key (F1-F12)` | `F2`–`F12` |
 | nine strip items | `DRS-2026 the strip holds at most 8 figures, found 9` | move some into a `kv` panel |
 | `area: left` | `DRS-2027 area must be 'main' or 'right'` | `area: right` |
 | `span: 13` | `DRS-2030 span must be a whole number from 1 to 12 (columns of the 12-column grid), not '13'` | `span: 12` (or leave it out) |
-| `pivot: { rows: [desk] }` with no field `desk` | `DRS-2031 pivot rows name 'desk', which is not one of its fields (…)` | use one of the names the message lists, or add the field to `fields` |
-| `{ id: group, kind: graph, title: Group, agreements and netting sets }` | `DRS-2023 option 'agreements and netting sets' is not valid for 'graph' panels` (in `{ }` a comma ends the value) | quote it: `title: "Group, agreements and netting sets"` |
-| saving `gene@1` from the workbench | `DRS-2028 gene@1 is already defined in …/packs/genomics/…/gene.v1.sutra.yaml` | new name, or `version: 2` |
+| `pivot: { rows: [DESK] }` on a table with columns `@.ID` and `@.TRADES` | `DRS-2031 pivot rows name 'DESK', which is not one of its fields (ID, TRADES)` | use one of the names the message lists, or add the field to `fields` |
+| `{ id: group, kind: graph, title: Group, agreements and netting sets, … }` | `DRS-2023 option 'agreements and netting sets' is not valid for 'graph' panels` (in `{ }` a comma ends the value) | quote it: `title: "Group, agreements and netting sets"` |
+| `where: "@.ID == ctl.set"` with no control `set` | `DRS-2036 'ctl.set' reads a control the Sutra does not declare (it has no controls:)` | declare the control (section 13a) |
+| `{ use: deal-ticket@3 }` | `DRS-2048 no block deal-ticket@3 (blocks: deal-footer, deal-ticket, events, legs, flow-schedule, payments)` | a version that exists, or `use: deal-ticket` for the newest |
+| saving `counterparty@1` from the workbench | `DRS-2028 counterparty@1 is already defined in …/config/packs/core/sutras/…/counterparty.v1.sutra.yaml` | new name, or `version: 2` |
 | no `rachana:` line | `DRS-2009 missing 'rachana: 1' (the Rachana language version) at the top` | add `rachana: 1` as the first key |
 | `rachana: 2` | `DRS-2009 'rachana: 2' is not a language version this server reads (it reads 1)` | `rachana: 1` |
 | `notes:` followed by a list | `DRS-2012 'notes' is plain text` | `notes: \|` and indented text |
-| `gene-mine.v1.sutra.md` (an old Markdown Sutra) | `DRS-2004 Markdown Sutras are no longer read (Sutras are YAML since 1.11): convert it with python3 tools/rachana/md_to_yaml.py … --delete` | run the converter |
-| `gene-mine.yaml` in a Sutra folder | `DRS-2004 a Sutra file is named <name>.v<N>.sutra.yaml; rename gene-mine.yaml` | `gene-mine.v1.sutra.yaml` |
-| `bind: "size($.legs, 'pv')"` | `DRS-2101 expression 'size($.legs, 'pv')': DRS-2101 size takes 1 argument(s), got 2 at 0` | `sum($.legs, 'pv')` |
-| `bind: "round($.mtm)"` | `DRS-2101 expression 'round($.mtm)': DRS-2101 unknown function 'round'; known: abs, coalesce, contains, … at 0` | `fmt: amount0` does the rounding |
-| `title: "Legs ${size($.legs)"` | `DRS-2101 template 'Legs ${size($.legs)': DRS-2101 unclosed '${' at 5` | close the brace |
-| `bind: $.notionl` | no error; the cell is empty | fix the field name; preview catches these |
-| `where: "$.status == 'live'"` | no error; the Sutra never matches (`Live` ≠ `live`) | `lower($.status) == 'live'` |
-| `fmt: compact` on a gauge | the gauge reads `0.6` | leave `fmt` out (the gauge shows value ÷ max as `62%`) |
+| `counterparty-mine.v1.sutra.md` (an old Markdown Sutra) | `DRS-2004 Markdown Sutras are no longer read (Sutras are YAML since 1.11): convert it with python3 tools/rachana/md_to_yaml.py … --delete` | run the converter |
+| `counterparty-mine.yaml` in a Sutra folder | `DRS-2004 a Sutra file is named <name>.v<N>.sutra.yaml; rename counterparty-mine.yaml` | `counterparty-mine.v1.sutra.yaml` |
+| `bind: "size($.NETTING_SETS, 'TRADES')"` | `DRS-2101 expression 'size($.NETTING_SETS, 'TRADES')': size takes 1 argument(s), got 2 at 0` | `sum($.NETTING_SETS, 'TRADES')` |
+| `bind: "round(@.TRADES)"` | `DRS-2101 expression 'round(@.TRADES)': unknown function 'round'; known: abs, coalesce, contains, days, first, flatten, fmt, group, last, link, lower, matches, matchesCase, max, min, nonblank, oneOf, size, startsWith, sum, today, upper, within at 0` | `fmt: amount0` does the rounding |
+| `title: "Sets ${size($.NETTING_SETS)"` | `DRS-2101 template 'Sets ${size($.NETTING_SETS)': unclosed '${' at 5` | close the brace |
+| `bind: $.net_mtm` | no error; the cell is empty | the field is `NET_MTM`: names are exact; preview catches these |
+| `label: id` on an `hbar` over rows with `ID` | no error; no bars | `label: ID`: field names are exact on `line`, `area` and `hbar` |
+| `where: "$.TRADE_STATUS == 'amended'"` | no error; the Sutra never matches (`AMENDED` ≠ `amended`) | `lower($.TRADE_STATUS) == 'amended'`, or the case the data uses |
+| `where: "matches($.TRADE_ID, '^MX-\d+$')"` | `DRS-2001 YAML syntax: while scanning a double-quoted scalar … found unknown escape character d(100)`; without the YAML double quotes, no error and never true (Rachana-EL reads `\d` as the letter `d`) | `'^MX-[0-9]+$'` |
+| `fmt: compact` on a gauge | the gauge reads `0.5` | leave `fmt` out (the gauge shows value ÷ max as `48%`) |
 | a status field without `label` | the label reads `null` | give every status field a `label` |
 
 
 ## 10. The panel kinds
 
-There are 22 panel kinds. Each has one catalogue entry in [PANELS.md](PANELS.md): what it shows, when to use
-it, its key options, what it does when its data is empty, in error, masked or live, a complete YAML and a screenshot.
-The exhaustive option tables are in the [Rachana reference](RACHANA_REFERENCE.md#panel-kinds). This guide does not
-repeat either; pick a kind by what you need to show.
+There are 22 panel kinds. Each has one catalogue entry in [PANELS.md](PANELS.md): what it shows, when to use it, its key options, what it does when its data is empty, in error, masked or live, a
+complete YAML and a screenshot. The exhaustive option tables are in the [Rachana reference](RACHANA_REFERENCE.md#panel-kinds). This guide does not repeat either; pick a kind by what you need to show.
 
 | You want to show | Kind | You want to show | Kind |
 |---|---|---|---|
@@ -1061,340 +1089,357 @@ repeat either; pick a kind by what you need to show.
 | one big figure with its change | [`metric`](PANELS.md#metric) | a grid over two axes | [`surface`](PANELS.md#surface) |
 | rows, with totals and "N more" | [`table`](PANELS.md#table) | steps from a start to an end | [`waterfall`](PANELS.md#waterfall) |
 | a dated schedule, the next row lit | [`ladder`](PANELS.md#ladder) | a distribution with marker lines | [`histogram`](PANELS.md#histogram) |
-| one layout per element, as tabs | [`tabs`](PANELS.md#tabs) | two measures per row | [`scatter`](PANELS.md#scatter) |
+| one layout per element, as tabs or side by side | [`tabs`](PANELS.md#tabs) | two measures per row | [`scatter`](PANELS.md#scatter) |
 | a curve over an axis | [`line`](PANELS.md#line) | daily bars with volume | [`candlestick`](PANELS.md#candlestick) |
 | bands against a limit | [`area`](PANELS.md#area) | entities and their relations | [`graph`](PANELS.md#graph) |
-| bars scaled to the largest | [`hbar`](PANELS.md#hbar) | dated events in order | [`timeline`](PANELS.md#timeline) |
+| bars scaled to the largest, or a donut | [`hbar`](PANELS.md#hbar) | dated events in order | [`timeline`](PANELS.md#timeline) |
 | the entities the document points to | [`links`](PANELS.md#links) | a total by one field across another | [`pivot`](PANELS.md#pivot) |
 | states coloured by meaning | [`status`](PANELS.md#status) | a note with values in it | [`markdown`](PANELS.md#markdown) |
-| how the view was built | [`provenance`](PANELS.md#provenance) | | |
+| how the view was built | [`provenance`](PANELS.md#provenance) | a country on the map, or its regions | [`map`](PANELS.md#map) |
 
-To see the kinds working together, open an [example](examples/README.md) in the workbench: the all-panels showcase
-uses every kind on one bond trade, and the layout keys (`area`, `span`, `height`) that arrange them are in the
-[reference](RACHANA_REFERENCE.md#keys-every-panel-takes).
+To see the kinds working together, open an [example](examples/README.md) in the workbench: the all-panels showcase uses every kind on one bond trade, and the layout keys (`area`, `span`, `height`)
+that arrange them are in the [reference](RACHANA_REFERENCE.md#keys-every-panel-takes). The shipped Sutras are the other place to look: the trading pack's blocks (tabs holding panels, tree tables,
+timelines, donuts), `core`'s `counterparty` (a graph), `counterparty-risk`'s `netting-set` (an area against a limit, controls), `market-risk`'s `var` and `pnl-explain` (histogram, waterfall),
+`market-data`'s vol surfaces.
 
 ## 11. Reading other entities: `source:`
 
-A document usually points at others: a trade at its discount curve, a counterparty at its netting sets, a book at its
-desk. `source:` lets a panel read the **linked** entity's document instead of this one, so `$` inside that panel's
-options is the other entity. Every kind that reads data takes it; the reference table of the key is in
-[Keys every panel takes](RACHANA_REFERENCE.md#keys-every-panel-takes).
+A document usually points at others: a trade at its discount curve and its counterparty, a counterparty at its netting sets, a trade at its desk. `source:` lets a panel read the **linked** entity's
+document instead of this one, so `$` inside that panel's options is the other entity. Every kind that reads data takes it; the reference table of the key is in [Keys every panel
+takes](RACHANA_REFERENCE.md#keys-every-panel-takes).
 
 ```yaml
 panels:
-  # a curve that lives on another entity: the trade only holds its id
-  - id: curve
-    kind: line
-    title: Discount curve
-    source: "link($.discountCurve, 'ir-curve')"
-    rows: $.points
-    x: tenor
-    y: rate
-    fmt: pct4
+  # (the discount curve of section 4.5 is the first example: the trade holds only its id, CRV-AUD-OIS)
 
   # tabs: one tab per netting set, read from the counterparty
   - id: sets
     kind: tabs
     title: The counterparty's netting sets
-    source: "link($.counterparty.id, 'counterparty')"
-    each: $.nettingSets
-    tabTitle: "@.id"
+    source: "link($.COUNTERPARTY, 'counterparty')"
+    each: $.NETTING_SETS
+    tabTitle: "@.ID"
     body:
       kind: kv
       columns:
-        - { label: Agreement, bind: "@.agreement", link: true }
-        - { label: Net MTM, bind: "@.netMtm", fmt: signed0, tone: sign }
+        - { label: Agreement, bind: "@.AGREEMENT", link: true }
+        - { label: Trades, bind: "@.TRADES", fmt: amount0 }
+        - { label: Net MTM, bind: "@.NET_MTM", fmt: signed0, tone: sign }
 
-  # a pivot over a desk's positions, again from a link
+  # a pivot over the desk's positions, again from a link (TT_GROUP is the trade's desk)
   - id: grid
     kind: pivot
     title: "The desk's MTM by book and family"
-    source: "link($.desk, 'desk')"
-    rows: $.positions
-    by: book
-    across: family
-    value: mtm
+    source: "link($.TT_GROUP, 'desk')"
+    rows: $.POSITIONS
+    by: BOOK
+    across: FAMILY
+    value: MTM
     heat: true
     fmt: compact
     tone: sign
 ```
 
-The worked, runnable version of the last two is the [linked-sources example](examples/linked-sources.md).
+Previewed on `MX-20000001`, you should see four tabs, `NS-MERIDIAN-RE-FRA` to `NS-MERIDIAN-RE-TKY`, the London one with `Trades 191` and `Net MTM −316,071,572`; and the rates desk's
+grid, three books (`BOOK-RATES-1` totalling `6.0bn`, `BOOK-RATES-2` `−1.5bn`, `BOOK-RATES-3` `−393.7m`) across `swap`, `linear`, `future`, `option` and `exotic`, the desk `4.1bn` in all. The runnable
+version with its own small document is the [linked-sources example](examples/linked-sources.md).
 
 What to know, in the order you will meet it:
 
-- `source` is an expression that gives a `link(id, kind)`. After that, write `rows`, `each` and the other options as if
-  the linked document were the page's own; `@` is still the row.
-- The linked entity is read through the **same sources, business date and field masks** as the page, so the panel
-  never shows a value the viewer may not see. A kind the viewer may not open is not fetched at all: the panel says
-  *no access to <kind>*.
+- `source` is an expression that gives a `link(id, kind)`. After that, write `rows`, `each` and the other options as if the linked document were the page's own; `@` is still the row.
+- The linked entity is read through the **same sources, business date and field masks** as the page, so the panel never shows a value the viewer may not see. A kind the viewer may not open is not
+  fetched at all: the panel says *no access to <kind>*.
 - The title line still reads this entity; only the panel's data moves.
-- A missing link (the field is empty, or the entity does not exist) leaves the panel empty with a reason, not a broken
-  view. If the linked document is slow, the other panels draw first.
+- A missing link (the field is empty, or the entity does not exist) leaves the panel empty with a reason, not a broken view. If the linked document is slow, the other panels draw first.
 - A `line` with a `source` also refreshes live when the linked entity changes; other kinds refresh with the view.
-- `links`, `provenance` and `markdown` do not take `source`.
-- Entities of a pack that is not enabled cannot be read: `sutra test` needs the same `DRISHTI_PACKS` as the server
-  (section 15).
+- `links` and `provenance` do not take `source`.
+- Entities of a pack that is not enabled cannot be read: `sutra test` needs the same `DRISHTI_PACKS` as the server (section 15).
 
 ## 12. Expandable row groups: pivot `by` lists and tree tables
 
-Two features let rows hold rows. Both are opt-in in the Sutra; both open one level at a time with a ▸/▾ toggle, and the
-number of levels shown at first is `expand`.
+Two features let rows hold rows. Both are opt-in in the Sutra; both open one level at a time with a ▸/▾ toggle, and the number of levels shown at first is `expand`.
 
-**Row groups of a pivot.** `by` takes one field, or a **list** (at most six) for nested groups: a row for each desk,
-carrying the subtotal of everything in it, and under it a row for each of its books.
+**Row groups of a pivot.** `by` takes one field, or a **list** (at most six) for nested groups: a row for each book, carrying the subtotal of everything in it, and under it a row for each of its
+product families.
 
 ```yaml
   - id: nested
     kind: pivot
-    title: MTM by desk, book and product family (USD), across currency
-    rows: $.positions
-    by: [desk, book, family]      # three levels: desk, then its books, then their families
-    across: currency
-    value: mtm
+    title: The desk's MTM by book, family and currency
+    source: "link($.TT_GROUP, 'desk')"
+    rows: $.POSITIONS
+    by: [BOOK, FAMILY]            # two levels: the book, then its product families
+    across: CURRENCY
+    value: MTM
     fmt: compact
     tone: sign
-    expand: 1                     # only the desks, closed; 2 opens one level; all opens every level
+    expand: 1                     # only the books, closed; 2 opens one level; all opens every level
 ```
 
-You should see one row per desk with its subtotal, and each opens to its books. The group rows are aggregates of the
-underlying rows (an `avg` subtotal is the average of all its rows, not of its sub-groups). Heat shading is not drawn
-on nested pivots; use a flat pivot (`by: book`) when you want it. A string `by` keeps working; a number, an empty
-list or a list of non-names is `DRS-2029`.
+You should see one row per book with its subtotal (`BOOK-RATES-1 6.0bn`), each opening to its families (`swap 6.2bn`, `linear −161.2m`…), across `EUR`, `USD`, `CHF`, `GBP`, `JPY` and `CAD`. The group
+rows are aggregates of the underlying rows (an `avg` subtotal is the average of all its rows, not of its sub-groups). Heat shading is not drawn on nested pivots; use a flat pivot (`by: BOOK`) when you
+want it. A string `by` keeps working; a number, an empty list or a list of non-names is `DRS-2029`.
 
-**A tree table.** When each row *carries its own children*, say which with `children`, an expression over the row:
+**A tree table.** When each row *carries its own children*, say which with `children`, an expression over the row. A floating leg's cash flows each carry their resets:
 
 ```yaml
-  - id: org
+  - id: flows
     kind: table
-    title: Exposure by unit (opens to the second level)
-    rows: $.units
-    children: "@.children"        # the rows nested under this one, to any depth (limit 12)
-    expand: 2
+    title: Floating leg, cash flows opening to their resets
+    rows: $.LEGS[1].CASH_FLOWS
+    children: "@.RESETS"          # the rows nested under this one, to any depth (limit 12)
+    expand: 1
     columns:
-      - { label: Unit, bind: "@.name" }
-      - { label: Exposure, bind: "@.exposure", fmt: compact, total: true }
+      - { label: Flow / reset, bind: "nonblank(@.FLOW_ID, @.RESET_ID)" }
+      - { label: Start, bind: "@.START_DATE", fmt: date }
+      - { label: Payment / reset date, bind: "nonblank(@.PAYMENT_DATE, @.RESET_DATE)", fmt: date }
+      - { label: Rate, bind: "@.RATE", fmt: pct4 }
 ```
 
-`total: true` sums only the rows **without** children, so nothing counts twice. A tree table is not sorted, paged or
-given per-column filters, and its filter keeps the ancestors of the rows that match. `ladder` takes the same two keys.
+You should see the 28 floating periods (`20000001008 · 2025-07-28 · 2025-09-29 · 3.5377%` first), each with a ▸ that opens its fixings (`R-1 · 2025-07-28 · 2025-07-28 · 3.5376%`, `R-2 …`). The child
+rows are another kind of row (a reset has a reset date, a flow a payment date), so a column reads whichever field is there with `nonblank`. `total: true` sums only the rows **without** children, so
+nothing counts twice. A tree table is not sorted, paged or given per-column filters, and its filter keeps the ancestors of the rows that match. `ladder` takes the same two keys.
 
-Which to use: a pivot **aggregates** rows by fields you name (the data is flat and you group it); a tree table
-**shows** a hierarchy the document already has. Both are runnable: [pivot-row-groups](examples/pivot-row-groups.md) and
-[tree-table](examples/tree-table.md). The options and limits are in the reference
-([`table`](RACHANA_REFERENCE.md#table), [`pivot`](RACHANA_REFERENCE.md#pivot)); do not confuse the **`pivot` panel
-kind** with the **`pivot:` option** that gives a table a user-driven Pivot tab ([the option](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)).
+When each level is a different thing with its own columns (a leg's cash flows, then each flow's resets), use **`levels`** instead: the table shows one level at a time with a breadcrumb back ([levels:
+drill down level by level](RACHANA_REFERENCE.md#levels-drill-down-level-by-level)).
 
-For documents that are trees all the way down (legs holding cashflows holding fixings), the
-[nested documents tutorial](NESTED_DOCUMENTS.md) shows how paths, tables and tabs go as deep as the data.
+Which to use: a pivot **aggregates** rows by fields you name (the data is flat and you group it); a tree table or `levels` **shows** a hierarchy the document already has. Runnable, self-contained
+versions: [pivot-row-groups](examples/pivot-row-groups.md) and [tree-table](examples/tree-table.md). The options and limits are in the reference ([`table`](RACHANA_REFERENCE.md#table),
+[`pivot`](RACHANA_REFERENCE.md#pivot)); do not confuse the **`pivot` panel kind** with the **`pivot:` option** that gives a table a user-driven Pivot tab ([the
+option](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)).
+
+For documents that are trees all the way down (legs holding cash flows holding resets), the [nested documents tutorial](NESTED_DOCUMENTS.md) shows how paths, tables and tabs go as deep as the data.
 
 ## 13. Dates, live data and imperfect data
 
 Most of this is **nothing to write**, and that is the design.
 
-- **Business dates.** The top bar's date applies to every read. A Sutra never mentions dates: the same layout shows
-  today's live data or any past business day's snapshot, and the footer says which. Dates *in* the document are data like
-  any other: format them with `fmt: date`, and do not compare them with `<` or `>` (those compare numbers only, section 3).
-- **Live.** When the source streams, strip figures and table cells update in place; nothing to declare. After a Sutra
-  changes on disk every cached layout is dropped, so the next live tick uses the new one. How ticks travel is in
-  [LIVE.md](../architecture/LIVE.md).
-- **Imperfect data.** A missing field shows a dash; a panel with no data says *No data available*; a value of the wrong
-  type is shown as text. A Sutra never breaks a screen, which is also why a misspelt path is silent: preview against a
-  thin document and a rich one, and read the Tests tab's *empty* cells (section 16).
+- **Business dates.** The top bar's date applies to every read. A Sutra never mentions dates: the same layout shows today's data or any past business day's snapshot (the demo lakes hold seven), and
+  the footer says which. Dates *in* the document are data like any other: format them with `fmt: date` or `dmy`, compare them as ISO text (`@.PAYMENT_DATE < today()`), count days with `days(from,
+  to)`. `today()` is the business date the view is built for, so a Sutra that says "still to come" answers for the date the reader picked.
+- **Live.** When the source streams, strip figures and table cells update in place; nothing to declare. After a Sutra changes on disk every cached layout is dropped, so the next live tick uses the new
+  one. How ticks travel is in [LIVE.md](../architecture/LIVE.md).
+- **Imperfect data.** A missing field shows a dash; a panel with no data says *No data available* (or its `empty:` text); a value of the wrong type is shown as text; an extract's empty text is nothing
+  to `nonblank`. A Sutra never breaks a screen, which is also why a misspelt path is silent: preview against a thin document and a rich one, and read the Tests tab's *empty* cells (section 16).
 
 ## 13a. Controls: let the reader choose, and what a share keeps
 
-A Sutra may declare up to 12 **controls** (`controls:` beside `panels:`): dropdowns, a multi-select, a date range, a slider, a
-top-N, a search box. The reader sets them on the screen; panels read the values in expressions as `ctl.<id>`. Controls only
-choose: they never write data. The keys, the eleven kinds, the relative dates and the problem codes (`DRS-2034` to `DRS-2039`) are in
-the [reference](RACHANA_REFERENCE.md#controls); this is how an author uses them.
+A Sutra may declare up to 12 **controls** (`controls:` beside `panels:`): dropdowns, a multi-select, a date range, a slider, a top-N, a search box. The reader sets them on the screen; panels read the
+values in expressions as `ctl.<id>`. Controls only choose: they never write data. The keys, the eleven kinds, the relative dates and the problem codes (`DRS-2034` to `DRS-2039`) are in the
+[reference](RACHANA_REFERENCE.md#controls); this is how an author uses them.
 
-The shipped `netting-set` Sutra (counterparty-risk pack) puts four in the header of its member-trades table. This is the real
-file, trimmed to the parts that matter:
+Every trade Sutra of the trading pack declares two, for its events table (the shared `events` block's `event-list`): which legs, and between which dates. The shipped `netting-set` Sutra
+(counterparty-risk pack) puts four in the header of its member-trades table. This is the real file, trimmed to the parts that matter:
 
 ```yaml
 controls:
-  - { id: asset, kind: dropdown, label: Asset class, options: "$.byAsset[*].asset", placement: header, panel: trades }
-  - { id: product, kind: multi-select, label: Product, options: "$.trades[*].product", placement: header, panel: trades }
-  - { id: minNotional, kind: slider, label: Notional at least, min: 0, max: "max($.trades[*].notional)", step: 1000000, placement: header, panel: trades }
-  - { id: top, kind: top-n, label: Show, options: [10, 25, 50], default: 25, placement: header, panel: trades }
+  - { id: asset, kind: dropdown, label: Asset class, options: "$.BY_ASSET[*].ASSET", placement: header, panel: trades }
+  - { id: product, kind: multi-select, label: Product, options: "$.TRADES[*].PRODUCT", placement: header, panel: trades }
+  - { id: minNotional, kind: slider, label: Notional at least, min: 0, max: "max($.TRADES[*].NOTIONAL)", step: 1000000, placement: header, panel: trades }
+  - { id: status, kind: multi-select, label: Status, options: "$.TRADES[*].STATUS", default: all, placement: header, panel: trades }
 panels:
   - id: trades
     kind: table
-    title: "Member trades${ctl.asset ? ' · ' + ctl.asset : ''}"
-    rows: $.trades
-    where: "(ctl.asset == '' || @.assetClass == ctl.asset) && oneOf(@.product, ctl.product) && (ctl.minNotional == '' || @.notional >= ctl.minNotional)"
-    limit: ctl.top
+    title: "Member trades (${size($.TRADES)} of ${$.TRADE_COUNT})${ctl.asset ? ' · ' + ctl.asset : ''}"
+    rows: $.TRADES
+    where: "(ctl.asset == '' || @.ASSET_CLASS == ctl.asset) && oneOf(@.PRODUCT, ctl.product) && oneOf(@.STATUS, ctl.status) && (ctl.minNotional == '' || @.NOTIONAL >= ctl.minNotional)"
+  - id: byAsset
+    kind: hbar
+    title: Net MTM by asset class
+    rows: $.BY_ASSET
+    on-select: { by: asset, field: ASSET, filter: [trades] }
+    label: ASSET
+    value: MTM
 ```
 
 How to read it:
 
-1. A control is `{ id, kind, label, ... }`. `options` is a list or an expression over the document (`"$.trades[*].product"`);
-   `placement: header` with `panel: trades` puts it in that panel's header (the default, `strip`, puts it under the title; `side` is a bar at the page side).
-2. A panel reads the value with `where:` (a condition on each row, `@` the row), `limit:`, `rows:` or a `${ctl.id}` in its `title`.
-   The server computes the rows with the value; nothing is filtered in the browser. `oneOf(@.product, ctl.product)` treats an empty
-   multi-select as "everything"; `within(@.payDate, ctl.when)` tests a date or number against a `from..to` range.
-3. A dropdown value is text, a multi-select is a list, a `slider` with one handle is a **number** (`@.notional >= ctl.minNotional` compares as numbers;
-   it is empty when the slider has no scale), with `range: true` it is `from..to` text. A `top-n` is a whole number.
+1. A control is `{ id, kind, label, ... }`. `options` is a list or an expression over the document (`"$.TRADES[*].PRODUCT"`: the `PRODUCT` of every trade, without repeats); `placement: header` with
+   `panel: trades` puts it in that panel's header (the default, `strip`, puts it under the title; `side` is a bar at the page side).
+2. A panel reads the value with `where:` (a condition on each row, `@` the row), `limit:`, `rows:` or a `${ctl.id}` in its `title`. The server computes the rows with the value; nothing is filtered in
+   the browser. `oneOf(@.PRODUCT, ctl.product)` treats an empty multi-select as "everything"; `within(@.EVENT_DATE, ctl.when)` tests a date or number against a `from..to` range.
+3. A dropdown value is text, a multi-select is a list, a `slider` with one handle is a **number** (`@.NOTIONAL >= ctl.minNotional` compares as numbers; it is empty when the slider has no scale), with
+   `range: true` it is `from..to` text. A `top-n` is a whole number.
 4. Use a control you did not declare and the Sutra is refused (`DRS-2036`); a default that does not fit the kind is `DRS-2039`.
-5. `on-select: { by: asset, field: asset, filter: [trades] }` on a `table`, `ladder` or `hbar` lets a click on a row or bar set a control.
+5. `on-select: { by: asset, field: ASSET, filter: [trades] }` on a `table`, `ladder` or `hbar` lets a click on a row or bar set a control: click the *Rates* bar and the member trades show only rates.
 
-**View state.** The values live in the address (`?ctl.asset=FX&ctl.minNotional=250000000`, written once the reader has set one; a control left at its default is not
-written), so a link or the Share button reproduces the screen. `remember: user` keeps the last choice in the browser. A **sent share** keeps the
-reader's view state, the control values and the column filters (`f.<panel>.<column>`), up to `drishti.collab.share.max-view-state` characters
-(4000); the recipient opens the same view with the same values, under their own rights. The server serves it as
-`GET /api/v1/views/{kind}/{id}?ctl.<id>=...` (add `&panels=a,b` for only those panels). Not built yet: options from a Rūpaka dataset, a Pivot tab or CSV export that
-follows the controls, and control values stored with a scheduled subscription.
+**Try it.** **In the UI**, open `NSET NS-MERIDIAN-RE-NY <GO>`: the table reads *Member trades (343 of 343)* with a net of `+99,704,064`; choose *Asset class Rates* and set the slider to 250m, and the
+title gains `· Rates` and the rows drop to the large rates trades. **From the command line**, the same view with the values in the address:
+
+```bash
+curl -s -H "$AUTH" "$DRISHTI/views/netting-set/NS-MERIDIAN-RE-NY?panels=trades&ctl.asset=Rates&ctl.minNotional=250000000" \
+  | python3 -c "import json,sys; p=json.load(sys.stdin)['panels'][0]; print(p['title'], len(p['data']['rows']))"
+```
+
+You should see `Member trades (343 of 343) · Rates 55`.
+
+**View state.** The values live in the address (`?ctl.asset=Rates&ctl.minNotional=250000000`, written once the reader has set one; a control left at its default is not written), so a link or the Share
+button reproduces the screen. `remember: user` keeps the last choice in the browser. A **sent share** keeps the reader's view state, the control values and the column filters (`f.<panel>.<column>`),
+up to `drishti.collab.share.max-view-state` characters (4000); the recipient opens the same view with the same values, under their own rights. The server serves it as `GET
+/api/v1/views/{kind}/{id}?ctl.<id>=...` (add `&panels=a,b` for only those panels). Not built yet: options from a Rūpaka dataset, a Pivot tab or CSV export that follows the controls, and control values
+stored with a scheduled subscription.
 
 **Query by form** is not a Sutra feature: the search form of a kind (`FORM trading <GO>`) is declared in the pack's `form:` section, see
 [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#form-the-search-form-of-a-kind).
 
-**Tabs that hold panels.** A `tabs` panel with `each:` can hold whole panels per element (`panels:` instead of `body:`), so a deep trade shows each leg's terms,
-cashflows and fixings in its own tab; see section 4.2 and [Panels inside a tab](RACHANA_REFERENCE.md#panels-inside-a-tab).
+**Tabs that hold panels.** A `tabs` panel with `each:` can hold whole panels per element (`panels:` instead of `body:`), so a deep trade shows each leg's terms, notional profile, fixings and cash
+flows in its own tab, as the trading pack's `legs` block does; see section 4.2 and [Panels inside a tab](RACHANA_REFERENCE.md#panels-inside-a-tab).
 
-**When a Sutra is not enough.** A Sutra is a fixed layout everyone sees. For a one-off question about the screen in front of you, press `Alt+C` for Calc,
-Python in the browser with the view's document and tables already loaded ([PYTHON_CALC.md](PYTHON_CALC.md)). Calc is a power of a role (`calc`) and
-a pack must switch it on for its kinds; it never changes a Sutra.
+**When a Sutra is not enough.** A Sutra is a fixed layout everyone sees. For a one-off question about the screen in front of you, press `Alt+C` for Calc, Python in the browser with the view's document
+and tables already loaded ([PYTHON_CALC.md](PYTHON_CALC.md)). Calc is a power of a role (`calc`) and a pack must switch it on for its kinds; it never changes a Sutra. For questions across many
+entities (every trade of a book, by date), use BI ([BI_GUIDE.md](BI_GUIDE.md)).
 
 ## 14. Sutra and inference together
 
 A Sutra says what matters; inference fills in only what it leaves out:
 
 - a `table` or `ladder` with `rows:` and no `columns:` gets columns from the data;
-- a `kv` with `rows:` and no `columns:` gets the fields of the object;
+- a `kv` with `rows:` and no `columns:` gets the fields of the object (section 2, step 6);
 - the body of a `tabs` panel with no columns gets the fields of the first element;
 - a label nobody wrote reads as the field's name in words (section 8).
 
-Inference never adds to columns you wrote: list one column and the panel shows exactly what you listed. The *How this
-view was built* panel says `Sutra irs-fixfloat v1 + inference` whenever inference helped and an *inferred* tag on a panel
-says why; a document no Sutra matches is laid out entirely by inference. The rules, their scoring and the worked
-examples are in [INFERENCE.md](../architecture/INFERENCE.md#sutra-and-inference-together); to start a Sutra from what
-inference made, use the workbench's **auto-design** ([SCREEN_DESIGNER §7](SCREEN_DESIGNER.md#7-auto-design-and-its-alternatives)).
+Inference never adds to columns you wrote: list one column and the panel shows exactly what you listed. The *How this view was built* panel says `Sutra irs-fixfloat v1 + inference` whenever inference
+helped and an *inferred* tag on a panel says why; a document no Sutra matches is laid out entirely by inference. The rules, their scoring and the worked examples are in
+[INFERENCE.md](../architecture/INFERENCE.md#sutra-and-inference-together); to start a Sutra from what inference made, use the workbench's **auto-design** ([SCREEN_DESIGNER
+§7](SCREEN_DESIGNER.md#7-auto-design-and-its-alternatives)) or `sutra design` and `sutra gen` (section 15).
 
 ![The draft inference makes of a bond trade, beside a short Sutra on the same document](img/sutras/s05-inference-vs-sutra.jpg)
 
-*Left: what inference makes of the document (the auto-design draft): every figure present, none chosen, the coupon shown
-as `0` and the clean price as `98`. Right: a 17-line Sutra on the same document: the strip leads with MTM, P&L and DV01 in
-signed colours, and the terms read `4.2500%` and `97.84`. The Sutra decides what matters; inference would still fill any
-panel of it that listed no columns.*
+*Left: what inference makes of the all-panels showcase's bond document (the auto-design draft): every figure present, none chosen,
+the coupon shown as `0` and the clean price as `98`. Right: a 17-line Sutra on the same document: the strip leads with MTM, P&L and DV01 in signed colours, and the terms read `4.2500%` and `97.84`.
+The Sutra decides what matters; inference would still fill any panel of it that listed no columns.*
 
 ## 15. Testing: `expect.yaml`, `sutra lint|test|preview`, CI
 
-The workbench checks a screen against your sample files as you type. The `sutra` command runs **exactly the same
-engine** (the Sutra checker, the sample checker behind the Tests tab, the shape extractor, auto-design and the view
-pipeline) without a browser and without a web server, so a pack author gets the same answer in CI.
+The workbench checks a screen against your sample files as you type. The `sutra` command runs **exactly the same engine** (the Sutra checker, the sample checker behind the Tests tab, the shape
+extractor, auto-design and the view pipeline) without a browser and without a web server, so a pack author gets the same answer in CI. Run it through the command line program, or the server jar:
 
 ```
-java -jar drishti-server-<version>-exec.jar sutra <command> <path>... [options]
+drishti-console/.venv/bin/python tools/drishti.py sutra <command> <path>... [options]
+java -jar drishti-server/target/drishti-server-<version>-exec.jar sutra <command> <path>... [options]
 ```
 
 | Command | Takes | Does |
 |---|---|---|
-| `lint` | a pack folder, a folder of Sutras or one `.sutra.yaml` | parses and checks every Sutra; problems print with file, line and DRS code |
-| `test` | the same | renders each Sutra against its samples and checks `expect.yaml` |
+| `lint` | a pack folder, a folder of Sutras or one `.sutra.yaml` | parses and checks every Sutra (with its blocks expanded); problems print with file, line and DRS code; `--strict` makes the help warnings (`DRS-2045` to `DRS-2047`) fail the run |
+| `test` | the same | renders each Sutra against its samples, checks `expect.yaml`, and reports the help coverage of the fields it shows |
 | `preview` | the same | renders the samples; with `--out dir` writes one HTML snapshot per Sutra and sample |
 | `shape` | JSON sample files or a folder | infers the JSON Schema with roles (to the console, or `--out dir/shape.json`) |
-| `design` | JSON sample files or a folder | drafts a Sutra with auto-design (`--kind deal` names it; `--out dir` writes `deal.sutra.yaml`) |
+| `design` | JSON sample files or a folder | drafts a Sutra with auto-design (`--kind trade` names it; `--out dir` writes `trade.sutra.yaml`) |
 | `design --each` | a folder of subfolders of samples | one draft per subfolder in one run (`<out>/<subfolder>.sutra.yaml`; kind: `--kind`, else the subfolder's `kind` file, else its name) |
+| `gen` | folders or files of JSON Lines | `tools/sutragen.py`: one Sutra per group of documents, with samples ([below](#drafting-many-sutras-from-json-lines)) |
 
-Options: `--junit file` writes a JUnit XML report (on every path, including a usage error, so a CI report step always
-finds the file); `--out dir`; `--samples path` (repeatable) to use those JSON files instead of the Sutra's own samples;
-`--kind name` for a drafted Sutra. **Exit codes:** `0` everything passed (a Sutra without samples is reported as skipped);
-`1` problems (a Sutra that does not parse, a panel in error, an expectation not met, an unreadable or invalid sample,
-which is a failed test case and never a pass); `2` usage (an unknown command or option, a path that does not exist, an
-unknown key in `expect.yaml`).
+Options: `--junit file` writes a JUnit XML report (on every path, including a usage error, so a CI report step always finds the file); `--out dir`; `--samples path` (repeatable) to use those JSON
+files instead of the Sutra's own samples; `--kind name` for a drafted Sutra; `--strict` for `lint`. **Exit codes:** `0` everything passed (a Sutra without samples is reported as skipped); `1` problems
+(a Sutra that does not parse, a panel in error, an expectation not met, an unreadable or invalid sample, which is a failed test case and never a pass); `2` usage (an unknown command or option, a path
+that does not exist, an unknown key in `expect.yaml`).
 
 What it prints (a Sutra with a mistake, then a pack's own tests):
 
 ```text
-$ java -jar drishti-server-exec.jar sutra lint gene-mine/
-PROBLEM gene-mine/gene-mine.v1.sutra.yaml
-gene-mine/gene-mine.v1.sutra.yaml:7 DRS-2021 unknown panel kind 'chart'; expected one of kv, table, tabs, line, area, hbar, ladder, links, status, provenance, markdown, gauge, surface, waterfall, histogram, scatter, candlestick, graph, timeline, pivot, metric
+$ drishti-console/.venv/bin/python tools/drishti.py sutra lint counterparty-mine/
+PROBLEM counterparty-mine/counterparty-mine.v1.sutra.yaml
+counterparty-mine/counterparty-mine.v1.sutra.yaml:7 DRS-2021 unknown panel kind 'chart'; expected one of kv, table, tabs, line, area, hbar, ladder, links, status, provenance, markdown, gauge, surface, waterfall, histogram, scatter, candlestick, graph, timeline, pivot, metric, map
 $ echo $?
 1
 
-$ DRISHTI_PACKS=market-risk java -jar drishti-server-exec.jar sutra test config/packs/market-risk
-skip config/packs/market-risk/sutras/market-risk/frtb-sensitivity.v1.sutra.yaml (no samples)
-skip config/packs/market-risk/sutras/market-risk/pnl-explain.v1.sutra.yaml (no samples)
+$ drishti-console/.venv/bin/python tools/drishti.py sutra test config/packs/market-risk
+     frtb-sensitivity: help coverage 9/9 (100%)
+ok   config/packs/market-risk/sutras/market-risk/frtb-sensitivity.v1.sutra.yaml (2 samples)
+     pnl-explain: help coverage 4/4 (100%)
+ok   config/packs/market-risk/sutras/market-risk/pnl-explain.v1.sutra.yaml (2 samples)
+…    (stress-result and stress-scenario likewise)
+skip config/packs/market-risk/sutras/market-risk/trade-valuation.v1.sutra.yaml (no samples)
+     var: help coverage 5/5 (100%)
 ok   config/packs/market-risk/sutras/market-risk/var.v1.sutra.yaml (2 samples)
 ```
+
+`sutra lint config/packs/trading` prints `ok` for each of the pack's 134 Sutras (blocks expanded) in about seven seconds; `sutra test config/packs/trading` renders each against the samples in its
+`tests/` folder.
 
 ### The tests convention
 
 ```
 config/packs/<pack>/
-  sutras/.../var.v1.sutra.yaml
-  tests/var/                  <- one folder per Sutra, named by the Sutra's name (the `sutra:` line)
-    VAR-COMM.json             <- plain entity documents; the kind comes from the Sutra's `match.kind`
-    VAR-FX.json
+  sutras/.../irs-fixfloat.v1.sutra.yaml
+  tests/irs-fixfloat/         <- one folder per Sutra, named by the Sutra's name (the `sutra:` line)
+    MX-20000001.json          <- plain entity documents; the kind comes from the Sutra's `match.kind`
     expect.yaml               <- optional
+  tests/help-coverage.txt     <- optional: a floor of help coverage per Sutra (irs-fixfloat=0.9), never lowered
 ```
 
-`.json` files hold one document, `.jsonl` files one per line (reported as `file.jsonl:1`, `file.jsonl:2`...). Without a
-`tests/<sutra>/` folder, a Sutra file is tested against the `.json` beside it with the same name (that is how the
-documented examples work). `expect.yaml`:
+`.json` files hold one document, `.jsonl` files one per line (reported as `file.jsonl:1`, `file.jsonl:2`...). Without a `tests/<sutra>/` folder, a Sutra file is tested against the `.json` beside it
+with the same name (that is how the documented examples work). The trading pack's `tests/irs-fixfloat/expect.yaml`:
 
 ```yaml
 noErrors: true            # no panel in an error state on any sample (the default)
-nonEmpty: [pnl, limits]   # these panels must render with data on every sample
-samples:                  # optional: more expectations for one sample file
-  VAR-COMM.json: { nonEmpty: [backtest] }
+nonEmpty: [legs, ticket]  # these panels must render with data on every sample
+help: { about: true }     # the About this page text renders for every sample
 ```
 
-Any other key is a usage error (exit 2), so a typo cannot silently pass. The workbench's *pack fragment export* writes this
-layout, so an exported fragment passes `sutra test` unchanged. Choose samples like a tester: a rich document, a thin one
-that lacks the optional parts, and one with an empty list; `nonEmpty` then names the panels that must never silently vanish.
+The keys: `noErrors`, `nonEmpty` (panel ids), `samples` (per sample file: `VAR-COMM.json: { nonEmpty: [backtest] }`) and `help` (`coverage`: the share, 0 to 1, of the fields the Sutra shows that must
+have a glossary entry; `about: true`: the page text renders). Any other key is a usage error (exit 2), so a typo cannot silently pass. The workbench's *pack fragment export* writes this layout, so an
+exported fragment passes `sutra test` unchanged. Choose samples like a tester: a rich document, a thin one that lacks the optional parts, and one with an empty list; `nonEmpty` then names the panels
+that must never silently vanish. For a trading product, take the samples from the demo lakes (`curl … /entities/trade/<id>/raw`, the `data`), one per sub type.
 
 ### Drafting many Sutras from JSON Lines
 
-`sutra design --each <dir>` drafts one Sutra per immediate subfolder of `<dir>` that holds `.json` samples, in one JVM
-(a JVM start costs about 5 s): `<out>/<subfolder>.sutra.yaml`. The kind is `--kind` if given, else the subfolder's one-line
-`kind` file, else the folder name. `tools/sutragen.py` builds on it: it splits JSONL files into groups by field values, writes
-each group's samples, calls `design --each` once, edits the name, description, `match` line and title id, writes
-`tests/<sutra>/sample-*.json`, and runs `sutra lint`:
+`sutra design --each <dir>` drafts one Sutra per immediate subfolder of `<dir>` that holds `.json` samples, in one JVM (a JVM start costs about 5 s). `sutra gen` (`tools/sutragen.py`) builds on it: it
+splits JSON Lines files into groups by the values of the `--match` fields, writes each group's samples, calls `design --each` once, edits the name, description, `match` line and title id, writes
+`tests/<sutra>/sample-*.json`, and runs `sutra lint`. On 400 Endur trades of the committed test data:
 
 ```bash
-uv run --with pyyaml python tools/sutragen.py data/jsonl --key trade=tradeId --match trade=productType \
-    --date trade=businessDate --fallback --out config/packs/my-pack/sutras --tests-dir config/packs/my-pack/tests
-java -jar drishti-server-<version>-exec.jar sutra test config/packs/my-pack
+mkdir -p /tmp/gen && zcat data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz | head -400 > /tmp/gen/trade.jsonl
+drishti-console/.venv/bin/python tools/drishti.py sutra gen /tmp/gen --kind trade --key TRADE_ID \
+    --match SOURCE_SYSTEM,PRODUCT_TYPE --date TRADE_DATE --fallback --out /tmp/genout
 ```
 
-The whole workflow, including a complete pack and loading the data, is in
-[Generating a pack from JSON Lines](PACK_DEVELOPER_GUIDE.md#generating-a-pack-from-json-lines).
+You should see, in about 20 seconds:
+
+```text
+400 documents, 1 kind(s), 6 group(s)
+drafting 6 Sutra(s) with one `sutra design --each` run ...
+kind            group                                          docs samples  sutra
+trade           SOURCE_SYSTEM=ENDUR, PRODUCT_TYPE=CallNot         7       5  trade-endur-callnot
+…               (Cash 67, ComFut 79 and ComSwap 187 documents likewise)
+trade           SOURCE_SYSTEM=ENDUR, PRODUCT_TYPE=Commodity      60       5  trade-endur-commodity
+trade           (all)                                           400       5  trade-default
+ok      /tmp/genout/trade/trade-default.v1.sutra.yaml
+…
+```
+
+and `/tmp/genout/trade/trade-endur-comswap.v1.sutra.yaml` begins `match: { kind: trade, where: "$.SOURCE_SYSTEM == 'ENDUR' && $.PRODUCT_TYPE == 'ComSwap'", priority: 10 }`, with a `kv` of details, the
+legs as tabs, a pivot and the footer panels: a draft to edit, not a finished screen (it formats a numeric `TRADE_ID` with `amount0` in the strip, for one). Remove `/tmp/gen` and `/tmp/genout` when you
+are done. The whole workflow, including a complete pack and loading the data, is in [Generating a pack from JSON Lines](PACK_DEVELOPER_GUIDE.md#generating-a-pack-from-json-lines).
 
 ### In CI
 
 ```sh
-java -jar drishti-server-exec.jar sutra lint config/packs/my-pack
-java -jar drishti-server-exec.jar sutra test config/packs/my-pack --junit target/sutra-tests.xml
-java -jar drishti-server-exec.jar sutra preview config/packs/my-pack --out target/snapshots   # attach as build artifacts
+drishti-console/.venv/bin/python tools/drishti.py sutra lint config/packs/my-pack --strict
+drishti-console/.venv/bin/python tools/drishti.py sutra test config/packs/my-pack --junit target/sutra-tests.xml
+drishti-console/.venv/bin/python tools/drishti.py sutra preview config/packs/my-pack --out target/snapshots   # attach as build artifacts
 ```
 
-Publish `sutra-tests.xml` with your CI's JUnit report step. A Sutra whose panels read other entities with `source:`
-(section 11) needs those entities' packs enabled for the run: set `DRISHTI_PACKS=market-risk,counterparty-risk` (the same
-setting as the server) in the job. The command keeps nothing: its identity, governance and design data live in a
-temporary folder that is removed when it ends, and no port is opened.
+Publish `sutra-tests.xml` with your CI's JUnit report step. A Sutra whose panels read other entities with `source:` (section 11) needs those entities' packs enabled for the run: set
+`DRISHTI_PACKS=core,market-data,trading` (the same setting as the server) in the job. The command keeps nothing: its identity, governance and design data live in a temporary folder that is removed
+when it ends, and no port is opened.
 
-`sutra test docs/guides/examples` needs the QUICKSTART packs (the examples link to banking entities); without them the
-failure line says `NS-SUMMIT-NY not found`, which means the pack holding that entity is not enabled. `sutra test config/packs/<pack>`
-reports `skip (no samples)` for a Sutra with no `tests/<sutra>/` folder; that is not a failure.
+`sutra test docs/guides/examples` passes with the seven packs (the `linked-sources` example reads `CP-SUMMIT`, `NS-SUMMIT-NY` and `DESK-FI` from them); without them its failure line says `NS-SUMMIT-NY
+not found`, which means the pack holding that entity is not enabled. `sutra test config/packs/<pack>` reports `skip (no samples)` for a Sutra with no `tests/<sutra>/` folder; that is not a failure.
 
-**Limits.** The CLI keeps the server's input limits: a file over `drishti.builder.max-file-mb` (5 MB by default) is refused
-with one line that names it, text that is not UTF-8 says so, an engine that cannot start (for example a pack that is not
-found: set `DRISHTI_PACKS_DIR`) ends with `sutra: ...` and exit `1`, never a stack trace. `--kind` is a name (letters,
-digits, `.`, `_`, `-`, up to 64), not a path. `test` looks for `tests/<sutra>/` only inside the paths you gave it.
+**Limits.** The CLI keeps the server's input limits: a file over `drishti.builder.max-file-mb` (5 MB by default) is refused with one line that names it, text that is not UTF-8 says so, an engine that
+cannot start (for example a pack that is not found: set `DRISHTI_PACKS_DIR`) ends with `sutra: ...` and exit `1`, never a stack trace. `--kind` is a name (letters, digits, `.`, `_`, `-`, up to 64),
+not a path. `test` looks for `tests/<sutra>/` only inside the paths you gave it.
 
-**In this repository**, `SutraCliTest` runs `sutra test` over every shipped pack that has a `tests/` folder and over the
-documented examples, so the Maven build fails when a Sutra change breaks a pack's own tests. Add a `tests/<sutra>/` folder
-with one or two sample documents and an `expect.yaml` to any pack to put its Sutra under the same guard.
+**In this repository**, `SutraCliTest` runs `sutra test` over every shipped pack that has a `tests/` folder (counterparty-risk, market-risk, trading, world-economy) and over the documented examples,
+so the Maven build fails when a Sutra change breaks a pack's own tests. Add a `tests/<sutra>/` folder with one or two sample documents and an `expect.yaml` to any pack to put its Sutra under the same
+guard.
 
 ## 16. The Build workbench
 
-You can write every Sutra in this guide in a text editor. The **Build workbench** (**Build → New screen**) is the same
-language with the engine in the loop: the screen you see is the real one, every edit is an operation the server applies
-to the Sutra text (your comments and key order are kept), and the checks run as you type. Its full manual is
-[SCREEN_DESIGNER.md](SCREEN_DESIGNER.md); for a guided build of four complete screens, follow the
-[Build workbench tutorial](../tutorials/06-design-a-screen.md). What matters for a Sutra author:
+You can write every Sutra in this guide in a text editor. The **Build workbench** (**Build → New screen**) is the same language with the engine in the loop: the screen you see is the real one, every
+edit is an operation the server applies to the Sutra text (your comments and key order are kept), and the checks run as you type. Its full manual is [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md); for a
+guided build of complete screens, follow the [Build workbench tutorial](../tutorials/06-design-a-screen.md). What matters for a Sutra author:
 
 | You are doing | In the workbench | Section |
 |---|---|---|
@@ -1411,23 +1456,25 @@ to the Sutra text (your comments and key order are kept), and the checks run as 
 
 ![Preview with a file: the design drawn against a document that is not one of its samples](img/sutras/s02-preview.jpg)
 
-Two things the workbench does not do for you. A preview ignores `match`, so it never tells you whether this Sutra wins
-(section 5). And a green Tests tab means your *samples* render, not that every real document will: keep a thin sample.
-The same checks run headless as `sutra lint` and `sutra test` (section 15), which is how you keep them true after the
-design leaves the workbench.
+(The pictures are taken on the all-panels showcase example, whose own document is a small camel-case bond.)
 
-The workbench and the old Studio addresses: `/studio` no longer has a page; every old address redirects into the
-workbench ([SCREEN_DESIGNER §19](SCREEN_DESIGNER.md#19-studio-users-where-things-went)).
+Two things the workbench does not do for you. A preview ignores `match`, so it never tells you whether this Sutra wins (section 5). And a green Tests tab means your *samples* render, not that every
+real document will: keep a thin sample. The same checks run headless as `sutra lint` and `sutra test` (section 15), which is how you keep them true after the design leaves the workbench.
+
+The workbench and the old Studio addresses: `/studio` no longer has a page; every old address redirects into the workbench ([SCREEN_DESIGNER
+§19](SCREEN_DESIGNER.md#19-studio-users-where-things-went)).
 
 ## 17. Checklist
 
 Before you propose a Sutra:
 
-- `match.where` is specific enough, and `priority` is higher than any general Sutra for the kind; a low-priority
-  catch-all exists.
+- `match.where` names the source system and the product type (or whatever makes the family), and `priority` is higher than any general Sutra for the kind; a low-priority catch-all exists.
+- A product's sub types are `when:` panels in its one Sutra, and the coverage matrix shows *one* Sutra for every combination.
+- Panels another product shares come from a block (`use:`), not a copy.
 - The strip leads with what the reader checks first, and has at most eight figures.
 - Every panel a user reaches often has a `key` (F2–F6); F7 opens the parent entity, F8 impact, F9 raw JSON.
-- Money has `fmt: signed0` or `amount0`, and `tone: sign` where the sign matters.
+- Money has `fmt: signed0` or `amount0`, and `tone: sign` where the sign matters; rates `pct4`, prices `price4`.
+- Missing values from an extract are tested with `nonblank`, not `coalesce`.
 - Labels are left to the taxonomy unless the Sutra needs different words.
 - `source:` expressions give a `link(id, kind)`, and the packs of those kinds are enabled where the Sutra runs.
 - `description` says what the layout is for; `notes` say why it is what it is.
@@ -1435,13 +1482,11 @@ Before you propose a Sutra:
 - `tests/<sutra>/` has samples and an `expect.yaml`, and `sutra lint` and `sutra test` pass.
 - Problems is empty (`GET /api/v1/sutras/problems` returns `{}` after the file is live).
 
-**Problem codes you will meet** (the full list is in the [reference](RACHANA_REFERENCE.md#problem-codes)): `DRS-2001`
-YAML syntax; `DRS-2004` a file in a Sutra folder that is not a `*.sutra.yaml`; `DRS-2009` missing or unknown `rachana:`
-version; `DRS-2010` missing key; `DRS-2011` unknown key; `DRS-2012` wrong type; `DRS-2020` bad name or version;
-`DRS-2021` unknown panel kind; `DRS-2022`/`DRS-2023` a missing or invalid panel option; `DRS-2024` duplicate panel id;
-`DRS-2025` function-key clash; `DRS-2026` strip longer than 8; `DRS-2027` bad area; `DRS-2028` `name@version` defined
-twice; `DRS-2029` an option value of the wrong kind; `DRS-2030` bad `span`; `DRS-2031` a `pivot` the Pivot tab cannot use; `DRS-2034`-`DRS-2039` a control that is malformed, duplicated, reads a missing parent or control, or has a default it cannot hold;
-`DRS-2101` an expression that does not compile.
+**Problem codes you will meet** (the full list is in the [reference](RACHANA_REFERENCE.md#problem-codes)): `DRS-2001` YAML syntax; `DRS-2004` a file in a Sutra folder that is not a `*.sutra.yaml`;
+`DRS-2009` missing or unknown `rachana:` version; `DRS-2010` missing key; `DRS-2011` unknown key; `DRS-2012` wrong type; `DRS-2020` bad name or version; `DRS-2021` unknown panel kind;
+`DRS-2022`/`DRS-2023` a missing or invalid panel option; `DRS-2024` duplicate panel id; `DRS-2025` function-key clash; `DRS-2026` strip longer than 8; `DRS-2027` bad area; `DRS-2028` `name@version`
+defined twice; `DRS-2029` an option value of the wrong kind; `DRS-2030` bad `span`; `DRS-2031` a `pivot` the Pivot tab cannot use; `DRS-2033` a key written twice; `DRS-2034`-`DRS-2039` a control that
+is malformed, duplicated, reads a missing parent or control, or has a default it cannot hold; `DRS-2048` a `use:` of a block that does not exist; `DRS-2101` an expression that does not compile.
 
 ## Where next
 
