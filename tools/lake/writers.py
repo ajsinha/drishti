@@ -123,7 +123,7 @@ def choose(engine: str, jar: str | None = None, java: str | None = None) -> tupl
             raise WriteError("--engine drishti needs the server's exec jar with the lake writer (--jar, DRISHTI_JAR or a built "
                              "drishti-server/target/drishti-server-*-exec.jar) and Java 21")
     if deltalake_available():
-        return "deltalake", "the Python deltalake package" + (" (no server jar with the lake writer was found)" if engine == "auto" else "")
+        return "deltalake", "the Python deltalake package" + ("; no server jar with the lake writer was found" if engine == "auto" else "")
     raise WriteError("no engine: build the server (its exec jar carries Drishti's writer) or install deltalake and pyarrow "
                      "(uv run --with deltalake --with pyarrow ...)")
 

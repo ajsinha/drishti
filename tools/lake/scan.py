@@ -37,13 +37,22 @@ MAX_DEPTH = 3
 MAX_FIELDS = 2000
 _ID = re.compile(r"(^|[._-])(id|key|ref|code|number|no)$", re.I)
 _DATE = re.compile(r"date|_dt$|day|as_?of", re.I)
+_BUSINESS = re.compile(r"business|cob|as_?of|snapshot|report|valuation|eod|position|run", re.I)
+CLASS_HINTS = ("product", "type", "desk", "book", "portfolio", "asset", "class", "segment", "category", "sector", "region", "entity",
+               "status", "currency", "venue")
+
+
+def _hint(path: str) -> int:
+    """How classifier-like a name is: the place of its first hint in CLASS_HINTS (product first), len(CLASS_HINTS) for none."""
+    p = path.lower()
+    return min([i for i, h in enumerate(CLASS_HINTS) if h in p] or [len(CLASS_HINTS)])
 
 
 class Field:
-    __slots__ = ("path", "present", "types", "values", "many", "dates")
+    __slots__ = ("path", "present", "types", "values", "many", "dates", "blank")
 
     def __init__(self, path: str):
-        self.path, self.present, self.types, self.values, self.many, self.dates = path, 0, Counter(), Counter(), False, 0
+        self.path, self.present, self.types, self.values, self.many, self.dates, self.blank = path, 0, Counter(), Counter(), False, 0, 0
 
 
 def _walk(doc: dict, prefix: str, depth: int, out: dict, cap: int) -> None:
@@ -58,6 +67,8 @@ def _walk(doc: dict, prefix: str, depth: int, out: dict, cap: int) -> None:
         t = "null" if v is None else "boolean" if isinstance(v, bool) else "number" if isinstance(v, (int, float)) else \
             "text" if isinstance(v, str) else "array" if isinstance(v, list) else "object"
         f.types[t] += 1
+        if v is None or v == "":
+            f.blank += 1
         if t in ("text", "number", "boolean"):
             if t == "text" or (t == "number" and isinstance(v, int) and 19000101 <= v <= 21001231):
                 if stage.parse_day(v) is not None:
@@ -90,24 +101,25 @@ def scan(inputs, limit: int | None = None, cap: int = 1000, recursive: bool = Fa
     for f in fields.values():
         distinct = None if f.many else len(f.values)
         rows.append({"path": f.path, "present": f.present, "types": dict(f.types.most_common()), "distinct": distinct,
-                     "many": f.many, "dateLike": f.dates, "top": [[v, c] for v, c in f.values.most_common(8)]})
+                     "many": f.many, "dateLike": f.dates, "blank": f.blank, "top": [[v, c] for v, c in f.values.most_common(8)]})
     return {"documents": n, "rejected": bad, "limited": bool(limit and n >= limit), "fields": rows, "suggest": suggest(rows, n)}
 
 
 def suggest(rows: list[dict], n: int) -> dict:
     """The likeliest id, business date and classifiers. Ids: present in (nearly) every document, every value different, named like an id
-    first. Dates: mostly date-like values, few distinct ones, named like a date first. Classifiers: text in most documents with 2
-    to 40 values."""
+    first. Dates: mostly date-like values, named like a business date first (business, cob, as of, snapshot ...), then the fewest
+    distinct values. Classifiers: text in most documents, rarely blank, with 2 to 40 values, named like a classifier first (type,
+    product, desk, book, portfolio, status ...), then about 3 to 12 values before fewer or more."""
     if not n:
         return {"key": [], "date": [], "partitionBy": []}
     keys = [r for r in rows if r["present"] >= n * 0.9 and r["types"].keys() <= {"text", "number"}
             and (r["many"] or r["distinct"] == r["present"])]
     keys.sort(key=lambda r: (not _ID.search(r["path"]), r["path"].count("."), len(r["path"])))
     dates = [r for r in rows if r["present"] >= n * 0.9 and r["dateLike"] >= r["present"] * 0.9]
-    dates.sort(key=lambda r: (not _DATE.search(r["path"]), r["many"], r["distinct"] or 0, r["path"].count(".")))
+    dates.sort(key=lambda r: (not _BUSINESS.search(r["path"]), not _DATE.search(r["path"]), r["many"], r["distinct"] or 0, r["path"].count(".")))
     classes = [r for r in rows if r["present"] >= n * 0.5 and set(r["types"]) <= {"text", "null"} and not r["many"]
-               and 2 <= (r["distinct"] or 0) <= 40 and r not in dates]
-    classes.sort(key=lambda r: (r["distinct"], r["path"].count(".")))
+               and 2 <= (r["distinct"] or 0) <= 40 and r.get("blank", 0) <= r["present"] * 0.2 and r not in dates]
+    classes.sort(key=lambda r: (_hint(r["path"]), not 3 <= r["distinct"] <= 12, r["distinct"], r["path"].count(".")))
     return {"key": [r["path"] for r in keys[:5]], "date": [r["path"] for r in dates[:5]], "partitionBy": [r["path"] for r in classes[:8]]}
 
 

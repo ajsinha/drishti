@@ -239,6 +239,8 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say) -> tuple[int, dic
         staging = old / summary["run"]
     st = stage.Stager(staging, p["key"], p["date"], as_of, p["partition_by"], p["promote"])
     try:
+        if table:                                          # a table of another partitioning fails before anything is read
+            writers.check_layout(writers.Table(table, [stage.column_name(c) for c in p["partition_by"]], {}, a.mode, a.batch_rows, []))
         files = jsonstream.input_files(a.src, a.recursive)
         if not files:
             raise BuildError("no *.json, *.jsonl, *.ndjson or *.gz files in " + ", ".join(map(str, a.src)))
@@ -305,6 +307,10 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say) -> tuple[int, dic
         st.close()
         if staging and staging.exists() and not a.keep_staging:
             shutil.rmtree(staging, ignore_errors=True)
+            try:
+                staging.parent.rmdir()                     # the staging folder only while a run uses it
+            except OSError:
+                pass
 
 
 # ------------------------------------------------------------------------------------------------ the data-load signal
@@ -399,7 +405,8 @@ def report(s: dict, say) -> None:
         say(f"{'business date':<15}" + "".join(f"{n:<18}" for n in names) + f"{'rows':>9}" + ("   (dry run)" if s.get("dryRun") else ""))
         for x in s["partitions"]:
             say(f"{x['date']:<15}" + "".join(f"{str(v if v is not None else '(none)'):<18}" for v in x["values"].values()) + f"{x['rows']:>9}")
-        say(f"documents read: {s['documents']}, rows written: {s['accepted'] if not s.get('dryRun') else 0}, rejected: {s['rejected']}")
+        written = 0 if s.get("dryRun") or s["status"] == "failed" else s["accepted"]
+        say(f"documents read: {s['documents']}, rows written: {written}, rejected: {s['rejected']}" + (" (nothing was committed)" if s["status"] == "failed" else ""))
     for reason, n in (s.get("rejects") or {}).get("byReason", {}).items():
         say(f"  rejected {n}: {reason}")
     for x in (s.get("rejects") or {}).get("first", [])[:5]:
