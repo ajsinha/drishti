@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000120",
+ "TRADE_ID": "CLY-3000120",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "TRS_BOND",
+ "PRODUCT_GROUP": "Credit",
+ "PORTFOLIO": "BOOK-CREDIT-3",
+ "DESK": "DESK-CREDIT",
+ "COUNTERPARTY": "CP-VERDANT",
+ "NETTING_SET": "NS-VERDANT-NY",
+ "TRADER_ID": "TRDR-DWHITFIELD",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 130000000.0,
+ "MTM": -1895147,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -103538,
+ "DV01": 56759,
+ "TRADE_DATE": "2025-12-02",
+ "MATURITY_DATE": "2030-08-07",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 5090,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -1791609"
+    }
+   ]
+  }
+ }
+}

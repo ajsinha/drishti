@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000241",
+ "TRADE_ID": "CLY-3000241",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "COMMERCIAL_PAPER",
+ "PRODUCT_GROUP": "Money market",
+ "PORTFOLIO": "BOOK-MM-1",
+ "DESK": "DESK-MM",
+ "COUNTERPARTY": "CP-PINNACLE",
+ "NETTING_SET": "NS-PINNACLE-NY",
+ "TRADER_ID": "TRDR-SIYER",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 45000000.0,
+ "MTM": -567489,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -3380,
+ "DV01": 2723,
+ "TRADE_DATE": "2026-08-04",
+ "MATURITY_DATE": "2027-05-03",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 1585,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -564109"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000089",
+ "TRADE_ID": "CLY-3000089",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "CDS_SINGLE",
+ "PRODUCT_GROUP": "Credit",
+ "PORTFOLIO": "BOOK-CREDIT-3",
+ "DESK": "DESK-CREDIT",
+ "COUNTERPARTY": "CP-PINNACLE",
+ "NETTING_SET": "NS-PINNACLE-NY",
+ "TRADER_ID": "TRDR-CDUBOIS",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "CHF",
+ "NOTIONAL": 34000000.0,
+ "MTM": -287615,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -2853,
+ "DV01": 0,
+ "TRADE_DATE": "2024-09-19",
+ "MATURITY_DATE": "2034-12-04",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 915,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -284762"
+    }
+   ]
+  }
+ }
+}

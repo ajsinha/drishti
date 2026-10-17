@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000100",
+ "TRADE_ID": "MX-20000100",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "SWAPTION_EUR",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-2",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-CASCADIA",
+ "NETTING_SET": "NS-CASCADIA-NY",
+ "TRADER_ID": "TRDR-ASHAH",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "AUD",
+ "NOTIONAL": 23000000.0,
+ "MTM": 3203297,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 233748,
+ "DV01": 2907,
+ "TRADE_DATE": "2026-05-08",
+ "MATURITY_DATE": "2031-02-28",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 6637,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 2969549"
+    }
+   ]
+  }
+ }
+}

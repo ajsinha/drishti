@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000396",
+ "TRADE_ID": "MX-20000396",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "INFL_CAP_FLOOR",
+ "PRODUCT_GROUP": "Inflation",
+ "PORTFOLIO": "BOOK-INFL-2",
+ "DESK": "DESK-INFL",
+ "COUNTERPARTY": "CP-NORTHBRIDGE",
+ "NETTING_SET": "NS-NORTHBRIDGE-LDN",
+ "TRADER_ID": "TRDR-HOKORO",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 115000000.0,
+ "MTM": -318601,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -3836,
+ "DV01": 0,
+ "TRADE_DATE": "2025-09-12",
+ "MATURITY_DATE": "2026-10-12",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 1787,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -314765"
+    }
+   ]
+  }
+ }
+}

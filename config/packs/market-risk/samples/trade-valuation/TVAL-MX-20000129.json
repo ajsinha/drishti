@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000129",
+ "TRADE_ID": "MX-20000129",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "STIR_FUT_OPT",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-3",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-SUMMIT",
+ "NETTING_SET": "NS-SUMMIT-NY",
+ "TRADER_ID": "TRDR-ASHAH",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "JPY",
+ "NOTIONAL": 95000000.0,
+ "MTM": 1184715,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -15465,
+ "DV01": 11924,
+ "TRADE_DATE": "2024-06-25",
+ "MATURITY_DATE": "2026-10-07",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 3319,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 1200180"
+    }
+   ]
+  }
+ }
+}

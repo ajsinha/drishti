@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000150",
+ "TRADE_ID": "CLY-3000150",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "CREDIT_SPREAD_OPT",
+ "PRODUCT_GROUP": "Credit",
+ "PORTFOLIO": "BOOK-CREDIT-1",
+ "DESK": "DESK-CREDIT",
+ "COUNTERPARTY": "CP-SOLARIS",
+ "NETTING_SET": "NS-SOLARIS-NY",
+ "TRADER_ID": "TRDR-CDUBOIS",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 198000000.0,
+ "MTM": -2328179,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -13163,
+ "DV01": 0,
+ "TRADE_DATE": "2024-12-11",
+ "MATURITY_DATE": "2027-05-22",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 6636,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -2315016"
+    }
+   ]
+  }
+ }
+}

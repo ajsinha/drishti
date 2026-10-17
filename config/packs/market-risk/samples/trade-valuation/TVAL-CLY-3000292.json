@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000292",
+ "TRADE_ID": "CLY-3000292",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "SEC_LENDING",
+ "PRODUCT_GROUP": "Securities financing",
+ "PORTFOLIO": "BOOK-SFT-3",
+ "DESK": "DESK-SFT",
+ "COUNTERPARTY": "CP-TOKAI",
+ "NETTING_SET": "NS-TOKAI-FRA",
+ "TRADER_ID": "TRDR-KBRANDT",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "CHF",
+ "NOTIONAL": 11000000.0,
+ "MTM": 103775,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 11703,
+ "DV01": 0,
+ "TRADE_DATE": "2026-09-08",
+ "MATURITY_DATE": "2026-10-19",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 500,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 92072"
+    }
+   ]
+  }
+ }
+}

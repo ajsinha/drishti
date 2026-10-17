@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000230",
+ "TRADE_ID": "CLY-3000230",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "CLO_TRANCHE",
+ "PRODUCT_GROUP": "Fixed income",
+ "PORTFOLIO": "BOOK-FI-2",
+ "DESK": "DESK-FI",
+ "COUNTERPARTY": "CP-MERIDIAN-RE",
+ "NETTING_SET": "NS-MERIDIAN-RE-NY",
+ "TRADER_ID": "TRDR-BADEYEMI",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 212000000.0,
+ "MTM": 2819294,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -5167,
+ "DV01": -152744,
+ "TRADE_DATE": "2025-09-25",
+ "MATURITY_DATE": "2034-08-30",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 7759,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 2824461"
+    }
+   ]
+  }
+ }
+}

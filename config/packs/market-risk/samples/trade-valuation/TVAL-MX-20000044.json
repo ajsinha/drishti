@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000044",
+ "TRADE_ID": "MX-20000044",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "ACCRETING_SWAP",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-1",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-PINNACLE",
+ "NETTING_SET": "NS-PINNACLE-NY",
+ "TRADER_ID": "TRDR-ASHAH",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "AUD",
+ "NOTIONAL": 224000000.0,
+ "MTM": 25398239,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -1047194,
+ "DV01": -170454,
+ "TRADE_DATE": "2025-07-16",
+ "MATURITY_DATE": "2035-03-07",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 53036,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 26445433"
+    }
+   ]
+  }
+ }
+}

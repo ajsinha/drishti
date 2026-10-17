@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000078",
+ "TRADE_ID": "MX-20000078",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "BOND_FUTURE",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-1",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-SUMMIT",
+ "NETTING_SET": "NS-SUMMIT-NY",
+ "TRADER_ID": "TRDR-ASHAH",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 119000000.0,
+ "MTM": 511374,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -15472,
+ "DV01": -1177,
+ "TRADE_DATE": "2026-09-04",
+ "MATURITY_DATE": "2026-10-19",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 2213,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 526846"
+    }
+   ]
+  }
+ }
+}

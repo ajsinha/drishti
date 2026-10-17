@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000053",
+ "TRADE_ID": "MX-20000053",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "FWD_START_SWAP",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-2",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-HARBORPT",
+ "NETTING_SET": "NS-HARBORPT-NY",
+ "TRADER_ID": "TRDR-MOKAFOR",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "JPY",
+ "NOTIONAL": 174000000.0,
+ "MTM": -2963153,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 25683,
+ "DV01": 121167,
+ "TRADE_DATE": "2024-05-14",
+ "MATURITY_DATE": "2032-11-05",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 7666,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -2988836"
+    }
+   ]
+  }
+ }
+}

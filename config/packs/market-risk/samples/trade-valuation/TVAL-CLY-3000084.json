@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000084",
+ "TRADE_ID": "CLY-3000084",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "FX_QUANTO",
+ "PRODUCT_GROUP": "FX",
+ "PORTFOLIO": "BOOK-FX-2",
+ "DESK": "DESK-FX",
+ "COUNTERPARTY": "CP-CASCADIA",
+ "NETTING_SET": "NS-CASCADIA-LDN",
+ "TRADER_ID": "TRDR-ENOVAK",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "JPY",
+ "NOTIONAL": 202000000.0,
+ "MTM": -1346075,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 104307,
+ "DV01": 0,
+ "TRADE_DATE": "2024-11-05",
+ "MATURITY_DATE": "2029-06-25",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 4712,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -1450382"
+    }
+   ]
+  }
+ }
+}

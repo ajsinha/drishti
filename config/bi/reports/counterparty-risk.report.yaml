@@ -80,7 +80,7 @@ pages:
         type: histogram
         title: How the trades' MTM is spread
         at: { x: 8, y: 15, w: 4, h: 5 }
-        wells: { axis: [trades.tradeId], values: [MTM] }
+        wells: { axis: [trades.TRADE_ID], values: [MTM] }
         format: { bins: 12 }
         alt: Bars counting how many trades fall in each band of mark to market
 
@@ -96,7 +96,7 @@ pages:
         type: table
         title: The counterparty's trades (open one in the terminal)
         at: { x: 0, y: 2, w: 12, h: 7 }
-        wells: { columns: [trades.tradeId, trades.desk, trades.productType, trades.currency, MTM, Notional] }
+        wells: { columns: [trades.TRADE_ID, trades.DESK, trades.PRODUCT_TYPE, trades.CURRENCY, MTM, Notional] }
         sort: { by: MTM, desc: true }
         limit: 200
 

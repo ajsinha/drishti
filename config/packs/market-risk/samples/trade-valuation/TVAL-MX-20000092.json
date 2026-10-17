@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000092",
+ "TRADE_ID": "MX-20000092",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "COLLAR",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-1",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-TOKAI",
+ "NETTING_SET": "NS-TOKAI-NY",
+ "TRADER_ID": "TRDR-MOKAFOR",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 192000000.0,
+ "MTM": 2233273,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 45888,
+ "DV01": 11158,
+ "TRADE_DATE": "2024-08-21",
+ "MATURITY_DATE": "2026-10-07",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 6387,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 2187385"
+    }
+   ]
+  }
+ }
+}

@@ -43,14 +43,14 @@ pages:
         type: python
         title: One-day P&L (Python visual)
         at: { x: 6, y: 0, w: 6, h: 6 }
-        wells: { columns: [trade.desk, trade.pnl1d] }  # the rows handed to Python
+        wells: { columns: [trade.DESK, trade.PNL_1D] }  # the rows handed to Python
         format: { python: pnl-histogram, params: { bins: 24 }, run: auto }
         alt: Histogram of one-day P&L
       - id: strip
         type: python
         title: One-day P&L by desk (Python, Vega-Lite)
         at: { x: 0, y: 6, w: 12, h: 6 }
-        wells: { columns: [trade.desk, trade.pnl1d] }
+        wells: { columns: [trade.DESK, trade.PNL_1D] }
         format: { python: pnl-vega, run: server }
         alt: Dots of one-day P&L for each desk with each desk's median marked
 
@@ -61,7 +61,7 @@ pages:
         type: vega-lite                  # the specification is in format.spec; its data is the rows of the wells (put no data in it); fields are named without the table
         title: Net MTM by desk (Vega-Lite)
         at: { x: 0, y: 0, w: 8, h: 7 }
-        wells: { axis: [trade.desk], values: [MTM, Trades] }
+        wells: { axis: [trade.DESK], values: [MTM, Trades] }
         format:
           spec:
             mark: { type: bar, cornerRadiusEnd: 3 }

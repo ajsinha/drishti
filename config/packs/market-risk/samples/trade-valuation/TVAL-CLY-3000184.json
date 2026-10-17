@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000184",
+ "TRADE_ID": "CLY-3000184",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "CALLABLE_BOND",
+ "PRODUCT_GROUP": "Fixed income",
+ "PORTFOLIO": "BOOK-FI-2",
+ "DESK": "DESK-FI",
+ "COUNTERPARTY": "CP-SUMMIT",
+ "NETTING_SET": "NS-SUMMIT-NY",
+ "TRADER_ID": "TRDR-RCASTILLO",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "CHF",
+ "NOTIONAL": 109000000.0,
+ "MTM": 412203,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 6066,
+ "DV01": 111973,
+ "TRADE_DATE": "2025-04-10",
+ "MATURITY_DATE": "2036-08-08",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 1914,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 406137"
+    }
+   ]
+  }
+ }
+}

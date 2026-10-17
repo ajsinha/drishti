@@ -888,6 +888,4596 @@
   "subtitle": "Stress scenario · USD +15% vs all"
  },
  {
+  "kind": "trade-valuation",
+  "id": "TVAL-1000001",
+  "title": "TVAL-1000001",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-1000002",
+  "title": "TVAL-1000002",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-1000003",
+  "title": "TVAL-1000003",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-1000004",
+  "title": "TVAL-1000004",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-1000005",
+  "title": "TVAL-1000005",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-1000006",
+  "title": "TVAL-1000006",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-1000007",
+  "title": "TVAL-1000007",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-1000008",
+  "title": "TVAL-1000008",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-1000009",
+  "title": "TVAL-1000009",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-1000010",
+  "title": "TVAL-1000010",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-1000011",
+  "title": "TVAL-1000011",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-1000012",
+  "title": "TVAL-1000012",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-1000013",
+  "title": "TVAL-1000013",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-1000014",
+  "title": "TVAL-1000014",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-1000015",
+  "title": "TVAL-1000015",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000001",
+  "title": "TVAL-CLY-3000001",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000002",
+  "title": "TVAL-CLY-3000002",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000003",
+  "title": "TVAL-CLY-3000003",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000004",
+  "title": "TVAL-CLY-3000004",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000005",
+  "title": "TVAL-CLY-3000005",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000006",
+  "title": "TVAL-CLY-3000006",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000007",
+  "title": "TVAL-CLY-3000007",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000008",
+  "title": "TVAL-CLY-3000008",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000009",
+  "title": "TVAL-CLY-3000009",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000010",
+  "title": "TVAL-CLY-3000010",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000011",
+  "title": "TVAL-CLY-3000011",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000012",
+  "title": "TVAL-CLY-3000012",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000013",
+  "title": "TVAL-CLY-3000013",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000014",
+  "title": "TVAL-CLY-3000014",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000015",
+  "title": "TVAL-CLY-3000015",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000016",
+  "title": "TVAL-CLY-3000016",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000017",
+  "title": "TVAL-CLY-3000017",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000018",
+  "title": "TVAL-CLY-3000018",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000019",
+  "title": "TVAL-CLY-3000019",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000020",
+  "title": "TVAL-CLY-3000020",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000021",
+  "title": "TVAL-CLY-3000021",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000022",
+  "title": "TVAL-CLY-3000022",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000023",
+  "title": "TVAL-CLY-3000023",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000024",
+  "title": "TVAL-CLY-3000024",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000025",
+  "title": "TVAL-CLY-3000025",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000026",
+  "title": "TVAL-CLY-3000026",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000027",
+  "title": "TVAL-CLY-3000027",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000028",
+  "title": "TVAL-CLY-3000028",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000029",
+  "title": "TVAL-CLY-3000029",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000030",
+  "title": "TVAL-CLY-3000030",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000031",
+  "title": "TVAL-CLY-3000031",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000032",
+  "title": "TVAL-CLY-3000032",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000033",
+  "title": "TVAL-CLY-3000033",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000034",
+  "title": "TVAL-CLY-3000034",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000035",
+  "title": "TVAL-CLY-3000035",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000036",
+  "title": "TVAL-CLY-3000036",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000037",
+  "title": "TVAL-CLY-3000037",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000038",
+  "title": "TVAL-CLY-3000038",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000039",
+  "title": "TVAL-CLY-3000039",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000040",
+  "title": "TVAL-CLY-3000040",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000041",
+  "title": "TVAL-CLY-3000041",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000042",
+  "title": "TVAL-CLY-3000042",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000043",
+  "title": "TVAL-CLY-3000043",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000044",
+  "title": "TVAL-CLY-3000044",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000045",
+  "title": "TVAL-CLY-3000045",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000046",
+  "title": "TVAL-CLY-3000046",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000047",
+  "title": "TVAL-CLY-3000047",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000048",
+  "title": "TVAL-CLY-3000048",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000049",
+  "title": "TVAL-CLY-3000049",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000050",
+  "title": "TVAL-CLY-3000050",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000051",
+  "title": "TVAL-CLY-3000051",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000052",
+  "title": "TVAL-CLY-3000052",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000053",
+  "title": "TVAL-CLY-3000053",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000054",
+  "title": "TVAL-CLY-3000054",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000055",
+  "title": "TVAL-CLY-3000055",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000056",
+  "title": "TVAL-CLY-3000056",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000057",
+  "title": "TVAL-CLY-3000057",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000058",
+  "title": "TVAL-CLY-3000058",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000059",
+  "title": "TVAL-CLY-3000059",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000060",
+  "title": "TVAL-CLY-3000060",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000061",
+  "title": "TVAL-CLY-3000061",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000062",
+  "title": "TVAL-CLY-3000062",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000063",
+  "title": "TVAL-CLY-3000063",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000064",
+  "title": "TVAL-CLY-3000064",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000065",
+  "title": "TVAL-CLY-3000065",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000066",
+  "title": "TVAL-CLY-3000066",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000067",
+  "title": "TVAL-CLY-3000067",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000068",
+  "title": "TVAL-CLY-3000068",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000069",
+  "title": "TVAL-CLY-3000069",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000070",
+  "title": "TVAL-CLY-3000070",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000071",
+  "title": "TVAL-CLY-3000071",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000072",
+  "title": "TVAL-CLY-3000072",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000073",
+  "title": "TVAL-CLY-3000073",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000074",
+  "title": "TVAL-CLY-3000074",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000075",
+  "title": "TVAL-CLY-3000075",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000076",
+  "title": "TVAL-CLY-3000076",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000077",
+  "title": "TVAL-CLY-3000077",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000078",
+  "title": "TVAL-CLY-3000078",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000079",
+  "title": "TVAL-CLY-3000079",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000080",
+  "title": "TVAL-CLY-3000080",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000081",
+  "title": "TVAL-CLY-3000081",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000082",
+  "title": "TVAL-CLY-3000082",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000083",
+  "title": "TVAL-CLY-3000083",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000084",
+  "title": "TVAL-CLY-3000084",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000085",
+  "title": "TVAL-CLY-3000085",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000086",
+  "title": "TVAL-CLY-3000086",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000087",
+  "title": "TVAL-CLY-3000087",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000088",
+  "title": "TVAL-CLY-3000088",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000089",
+  "title": "TVAL-CLY-3000089",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000090",
+  "title": "TVAL-CLY-3000090",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000091",
+  "title": "TVAL-CLY-3000091",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000092",
+  "title": "TVAL-CLY-3000092",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000093",
+  "title": "TVAL-CLY-3000093",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000094",
+  "title": "TVAL-CLY-3000094",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000095",
+  "title": "TVAL-CLY-3000095",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000096",
+  "title": "TVAL-CLY-3000096",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000097",
+  "title": "TVAL-CLY-3000097",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000098",
+  "title": "TVAL-CLY-3000098",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000099",
+  "title": "TVAL-CLY-3000099",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000100",
+  "title": "TVAL-CLY-3000100",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000101",
+  "title": "TVAL-CLY-3000101",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000102",
+  "title": "TVAL-CLY-3000102",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000103",
+  "title": "TVAL-CLY-3000103",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000104",
+  "title": "TVAL-CLY-3000104",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000105",
+  "title": "TVAL-CLY-3000105",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000106",
+  "title": "TVAL-CLY-3000106",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000107",
+  "title": "TVAL-CLY-3000107",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000108",
+  "title": "TVAL-CLY-3000108",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000109",
+  "title": "TVAL-CLY-3000109",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000110",
+  "title": "TVAL-CLY-3000110",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000111",
+  "title": "TVAL-CLY-3000111",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000112",
+  "title": "TVAL-CLY-3000112",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000113",
+  "title": "TVAL-CLY-3000113",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000114",
+  "title": "TVAL-CLY-3000114",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000115",
+  "title": "TVAL-CLY-3000115",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000116",
+  "title": "TVAL-CLY-3000116",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000117",
+  "title": "TVAL-CLY-3000117",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000118",
+  "title": "TVAL-CLY-3000118",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000119",
+  "title": "TVAL-CLY-3000119",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000120",
+  "title": "TVAL-CLY-3000120",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000121",
+  "title": "TVAL-CLY-3000121",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000122",
+  "title": "TVAL-CLY-3000122",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000123",
+  "title": "TVAL-CLY-3000123",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000124",
+  "title": "TVAL-CLY-3000124",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000125",
+  "title": "TVAL-CLY-3000125",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000126",
+  "title": "TVAL-CLY-3000126",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000127",
+  "title": "TVAL-CLY-3000127",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000128",
+  "title": "TVAL-CLY-3000128",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000129",
+  "title": "TVAL-CLY-3000129",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000130",
+  "title": "TVAL-CLY-3000130",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000131",
+  "title": "TVAL-CLY-3000131",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000132",
+  "title": "TVAL-CLY-3000132",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000133",
+  "title": "TVAL-CLY-3000133",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000134",
+  "title": "TVAL-CLY-3000134",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000135",
+  "title": "TVAL-CLY-3000135",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000136",
+  "title": "TVAL-CLY-3000136",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000137",
+  "title": "TVAL-CLY-3000137",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000138",
+  "title": "TVAL-CLY-3000138",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000139",
+  "title": "TVAL-CLY-3000139",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000140",
+  "title": "TVAL-CLY-3000140",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000141",
+  "title": "TVAL-CLY-3000141",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000142",
+  "title": "TVAL-CLY-3000142",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000143",
+  "title": "TVAL-CLY-3000143",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000144",
+  "title": "TVAL-CLY-3000144",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000145",
+  "title": "TVAL-CLY-3000145",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000146",
+  "title": "TVAL-CLY-3000146",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000147",
+  "title": "TVAL-CLY-3000147",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000148",
+  "title": "TVAL-CLY-3000148",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000149",
+  "title": "TVAL-CLY-3000149",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000150",
+  "title": "TVAL-CLY-3000150",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000151",
+  "title": "TVAL-CLY-3000151",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000152",
+  "title": "TVAL-CLY-3000152",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000153",
+  "title": "TVAL-CLY-3000153",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000154",
+  "title": "TVAL-CLY-3000154",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000155",
+  "title": "TVAL-CLY-3000155",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000156",
+  "title": "TVAL-CLY-3000156",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000157",
+  "title": "TVAL-CLY-3000157",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000158",
+  "title": "TVAL-CLY-3000158",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000159",
+  "title": "TVAL-CLY-3000159",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000160",
+  "title": "TVAL-CLY-3000160",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000161",
+  "title": "TVAL-CLY-3000161",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000162",
+  "title": "TVAL-CLY-3000162",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000163",
+  "title": "TVAL-CLY-3000163",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000164",
+  "title": "TVAL-CLY-3000164",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000165",
+  "title": "TVAL-CLY-3000165",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000166",
+  "title": "TVAL-CLY-3000166",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000167",
+  "title": "TVAL-CLY-3000167",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000168",
+  "title": "TVAL-CLY-3000168",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000169",
+  "title": "TVAL-CLY-3000169",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000170",
+  "title": "TVAL-CLY-3000170",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000171",
+  "title": "TVAL-CLY-3000171",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000172",
+  "title": "TVAL-CLY-3000172",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000173",
+  "title": "TVAL-CLY-3000173",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000174",
+  "title": "TVAL-CLY-3000174",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000175",
+  "title": "TVAL-CLY-3000175",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000176",
+  "title": "TVAL-CLY-3000176",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000177",
+  "title": "TVAL-CLY-3000177",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000178",
+  "title": "TVAL-CLY-3000178",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000179",
+  "title": "TVAL-CLY-3000179",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000180",
+  "title": "TVAL-CLY-3000180",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000181",
+  "title": "TVAL-CLY-3000181",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000182",
+  "title": "TVAL-CLY-3000182",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000183",
+  "title": "TVAL-CLY-3000183",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000184",
+  "title": "TVAL-CLY-3000184",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000185",
+  "title": "TVAL-CLY-3000185",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000186",
+  "title": "TVAL-CLY-3000186",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000187",
+  "title": "TVAL-CLY-3000187",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000188",
+  "title": "TVAL-CLY-3000188",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000189",
+  "title": "TVAL-CLY-3000189",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000190",
+  "title": "TVAL-CLY-3000190",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000191",
+  "title": "TVAL-CLY-3000191",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000192",
+  "title": "TVAL-CLY-3000192",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000193",
+  "title": "TVAL-CLY-3000193",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000194",
+  "title": "TVAL-CLY-3000194",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000195",
+  "title": "TVAL-CLY-3000195",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000196",
+  "title": "TVAL-CLY-3000196",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000197",
+  "title": "TVAL-CLY-3000197",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000198",
+  "title": "TVAL-CLY-3000198",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000199",
+  "title": "TVAL-CLY-3000199",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000200",
+  "title": "TVAL-CLY-3000200",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000201",
+  "title": "TVAL-CLY-3000201",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000202",
+  "title": "TVAL-CLY-3000202",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000203",
+  "title": "TVAL-CLY-3000203",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000204",
+  "title": "TVAL-CLY-3000204",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000205",
+  "title": "TVAL-CLY-3000205",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000206",
+  "title": "TVAL-CLY-3000206",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000207",
+  "title": "TVAL-CLY-3000207",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000208",
+  "title": "TVAL-CLY-3000208",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000209",
+  "title": "TVAL-CLY-3000209",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000210",
+  "title": "TVAL-CLY-3000210",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000211",
+  "title": "TVAL-CLY-3000211",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000212",
+  "title": "TVAL-CLY-3000212",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000213",
+  "title": "TVAL-CLY-3000213",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000214",
+  "title": "TVAL-CLY-3000214",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000215",
+  "title": "TVAL-CLY-3000215",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000216",
+  "title": "TVAL-CLY-3000216",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000217",
+  "title": "TVAL-CLY-3000217",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000218",
+  "title": "TVAL-CLY-3000218",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000219",
+  "title": "TVAL-CLY-3000219",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000220",
+  "title": "TVAL-CLY-3000220",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000221",
+  "title": "TVAL-CLY-3000221",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000222",
+  "title": "TVAL-CLY-3000222",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000223",
+  "title": "TVAL-CLY-3000223",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000224",
+  "title": "TVAL-CLY-3000224",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000225",
+  "title": "TVAL-CLY-3000225",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000226",
+  "title": "TVAL-CLY-3000226",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000227",
+  "title": "TVAL-CLY-3000227",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000228",
+  "title": "TVAL-CLY-3000228",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000229",
+  "title": "TVAL-CLY-3000229",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000230",
+  "title": "TVAL-CLY-3000230",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000231",
+  "title": "TVAL-CLY-3000231",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000232",
+  "title": "TVAL-CLY-3000232",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000233",
+  "title": "TVAL-CLY-3000233",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000234",
+  "title": "TVAL-CLY-3000234",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000235",
+  "title": "TVAL-CLY-3000235",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000236",
+  "title": "TVAL-CLY-3000236",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000237",
+  "title": "TVAL-CLY-3000237",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000238",
+  "title": "TVAL-CLY-3000238",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000239",
+  "title": "TVAL-CLY-3000239",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000240",
+  "title": "TVAL-CLY-3000240",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000241",
+  "title": "TVAL-CLY-3000241",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000242",
+  "title": "TVAL-CLY-3000242",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000243",
+  "title": "TVAL-CLY-3000243",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000244",
+  "title": "TVAL-CLY-3000244",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000245",
+  "title": "TVAL-CLY-3000245",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000246",
+  "title": "TVAL-CLY-3000246",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000247",
+  "title": "TVAL-CLY-3000247",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000248",
+  "title": "TVAL-CLY-3000248",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000249",
+  "title": "TVAL-CLY-3000249",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000250",
+  "title": "TVAL-CLY-3000250",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000251",
+  "title": "TVAL-CLY-3000251",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000252",
+  "title": "TVAL-CLY-3000252",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000253",
+  "title": "TVAL-CLY-3000253",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000254",
+  "title": "TVAL-CLY-3000254",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000255",
+  "title": "TVAL-CLY-3000255",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000256",
+  "title": "TVAL-CLY-3000256",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000257",
+  "title": "TVAL-CLY-3000257",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000258",
+  "title": "TVAL-CLY-3000258",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000259",
+  "title": "TVAL-CLY-3000259",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000260",
+  "title": "TVAL-CLY-3000260",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000261",
+  "title": "TVAL-CLY-3000261",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000262",
+  "title": "TVAL-CLY-3000262",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000263",
+  "title": "TVAL-CLY-3000263",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000264",
+  "title": "TVAL-CLY-3000264",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000265",
+  "title": "TVAL-CLY-3000265",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000266",
+  "title": "TVAL-CLY-3000266",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000267",
+  "title": "TVAL-CLY-3000267",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000268",
+  "title": "TVAL-CLY-3000268",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000269",
+  "title": "TVAL-CLY-3000269",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000270",
+  "title": "TVAL-CLY-3000270",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000271",
+  "title": "TVAL-CLY-3000271",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000272",
+  "title": "TVAL-CLY-3000272",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000273",
+  "title": "TVAL-CLY-3000273",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000274",
+  "title": "TVAL-CLY-3000274",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000275",
+  "title": "TVAL-CLY-3000275",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000276",
+  "title": "TVAL-CLY-3000276",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000277",
+  "title": "TVAL-CLY-3000277",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000278",
+  "title": "TVAL-CLY-3000278",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000279",
+  "title": "TVAL-CLY-3000279",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000280",
+  "title": "TVAL-CLY-3000280",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000281",
+  "title": "TVAL-CLY-3000281",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000282",
+  "title": "TVAL-CLY-3000282",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000283",
+  "title": "TVAL-CLY-3000283",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000284",
+  "title": "TVAL-CLY-3000284",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000285",
+  "title": "TVAL-CLY-3000285",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000286",
+  "title": "TVAL-CLY-3000286",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000287",
+  "title": "TVAL-CLY-3000287",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000288",
+  "title": "TVAL-CLY-3000288",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000289",
+  "title": "TVAL-CLY-3000289",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000290",
+  "title": "TVAL-CLY-3000290",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000291",
+  "title": "TVAL-CLY-3000291",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000292",
+  "title": "TVAL-CLY-3000292",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000293",
+  "title": "TVAL-CLY-3000293",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000294",
+  "title": "TVAL-CLY-3000294",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000295",
+  "title": "TVAL-CLY-3000295",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000296",
+  "title": "TVAL-CLY-3000296",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000297",
+  "title": "TVAL-CLY-3000297",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000298",
+  "title": "TVAL-CLY-3000298",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000299",
+  "title": "TVAL-CLY-3000299",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000300",
+  "title": "TVAL-CLY-3000300",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000301",
+  "title": "TVAL-CLY-3000301",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000302",
+  "title": "TVAL-CLY-3000302",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000303",
+  "title": "TVAL-CLY-3000303",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000304",
+  "title": "TVAL-CLY-3000304",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000305",
+  "title": "TVAL-CLY-3000305",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-CLY-3000306",
+  "title": "TVAL-CLY-3000306",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000001",
+  "title": "TVAL-MX-20000001",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000002",
+  "title": "TVAL-MX-20000002",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000003",
+  "title": "TVAL-MX-20000003",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000004",
+  "title": "TVAL-MX-20000004",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000005",
+  "title": "TVAL-MX-20000005",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000006",
+  "title": "TVAL-MX-20000006",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000007",
+  "title": "TVAL-MX-20000007",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000008",
+  "title": "TVAL-MX-20000008",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000009",
+  "title": "TVAL-MX-20000009",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000010",
+  "title": "TVAL-MX-20000010",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000011",
+  "title": "TVAL-MX-20000011",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000012",
+  "title": "TVAL-MX-20000012",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000013",
+  "title": "TVAL-MX-20000013",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000014",
+  "title": "TVAL-MX-20000014",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000015",
+  "title": "TVAL-MX-20000015",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000016",
+  "title": "TVAL-MX-20000016",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000017",
+  "title": "TVAL-MX-20000017",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000018",
+  "title": "TVAL-MX-20000018",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000019",
+  "title": "TVAL-MX-20000019",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000020",
+  "title": "TVAL-MX-20000020",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000021",
+  "title": "TVAL-MX-20000021",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000022",
+  "title": "TVAL-MX-20000022",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000023",
+  "title": "TVAL-MX-20000023",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000024",
+  "title": "TVAL-MX-20000024",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000025",
+  "title": "TVAL-MX-20000025",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000026",
+  "title": "TVAL-MX-20000026",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000027",
+  "title": "TVAL-MX-20000027",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000028",
+  "title": "TVAL-MX-20000028",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000029",
+  "title": "TVAL-MX-20000029",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000030",
+  "title": "TVAL-MX-20000030",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000031",
+  "title": "TVAL-MX-20000031",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000032",
+  "title": "TVAL-MX-20000032",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000033",
+  "title": "TVAL-MX-20000033",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000034",
+  "title": "TVAL-MX-20000034",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000035",
+  "title": "TVAL-MX-20000035",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000036",
+  "title": "TVAL-MX-20000036",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000037",
+  "title": "TVAL-MX-20000037",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000038",
+  "title": "TVAL-MX-20000038",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000039",
+  "title": "TVAL-MX-20000039",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000040",
+  "title": "TVAL-MX-20000040",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000041",
+  "title": "TVAL-MX-20000041",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000042",
+  "title": "TVAL-MX-20000042",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000043",
+  "title": "TVAL-MX-20000043",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000044",
+  "title": "TVAL-MX-20000044",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000045",
+  "title": "TVAL-MX-20000045",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000046",
+  "title": "TVAL-MX-20000046",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000047",
+  "title": "TVAL-MX-20000047",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000048",
+  "title": "TVAL-MX-20000048",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000049",
+  "title": "TVAL-MX-20000049",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000050",
+  "title": "TVAL-MX-20000050",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000051",
+  "title": "TVAL-MX-20000051",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000052",
+  "title": "TVAL-MX-20000052",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000053",
+  "title": "TVAL-MX-20000053",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000054",
+  "title": "TVAL-MX-20000054",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000055",
+  "title": "TVAL-MX-20000055",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000056",
+  "title": "TVAL-MX-20000056",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000057",
+  "title": "TVAL-MX-20000057",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000058",
+  "title": "TVAL-MX-20000058",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000059",
+  "title": "TVAL-MX-20000059",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000060",
+  "title": "TVAL-MX-20000060",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000061",
+  "title": "TVAL-MX-20000061",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000062",
+  "title": "TVAL-MX-20000062",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000063",
+  "title": "TVAL-MX-20000063",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000064",
+  "title": "TVAL-MX-20000064",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000065",
+  "title": "TVAL-MX-20000065",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000066",
+  "title": "TVAL-MX-20000066",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000067",
+  "title": "TVAL-MX-20000067",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000068",
+  "title": "TVAL-MX-20000068",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000069",
+  "title": "TVAL-MX-20000069",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000070",
+  "title": "TVAL-MX-20000070",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000071",
+  "title": "TVAL-MX-20000071",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000072",
+  "title": "TVAL-MX-20000072",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000073",
+  "title": "TVAL-MX-20000073",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000074",
+  "title": "TVAL-MX-20000074",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000075",
+  "title": "TVAL-MX-20000075",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000076",
+  "title": "TVAL-MX-20000076",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000077",
+  "title": "TVAL-MX-20000077",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000078",
+  "title": "TVAL-MX-20000078",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000079",
+  "title": "TVAL-MX-20000079",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000080",
+  "title": "TVAL-MX-20000080",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000081",
+  "title": "TVAL-MX-20000081",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000082",
+  "title": "TVAL-MX-20000082",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000083",
+  "title": "TVAL-MX-20000083",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000084",
+  "title": "TVAL-MX-20000084",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000085",
+  "title": "TVAL-MX-20000085",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000086",
+  "title": "TVAL-MX-20000086",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000087",
+  "title": "TVAL-MX-20000087",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000088",
+  "title": "TVAL-MX-20000088",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000089",
+  "title": "TVAL-MX-20000089",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000090",
+  "title": "TVAL-MX-20000090",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000091",
+  "title": "TVAL-MX-20000091",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000092",
+  "title": "TVAL-MX-20000092",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000093",
+  "title": "TVAL-MX-20000093",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000094",
+  "title": "TVAL-MX-20000094",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000095",
+  "title": "TVAL-MX-20000095",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000096",
+  "title": "TVAL-MX-20000096",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000097",
+  "title": "TVAL-MX-20000097",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000098",
+  "title": "TVAL-MX-20000098",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000099",
+  "title": "TVAL-MX-20000099",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000100",
+  "title": "TVAL-MX-20000100",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000101",
+  "title": "TVAL-MX-20000101",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000102",
+  "title": "TVAL-MX-20000102",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000103",
+  "title": "TVAL-MX-20000103",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000104",
+  "title": "TVAL-MX-20000104",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000105",
+  "title": "TVAL-MX-20000105",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000106",
+  "title": "TVAL-MX-20000106",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000107",
+  "title": "TVAL-MX-20000107",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000108",
+  "title": "TVAL-MX-20000108",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000109",
+  "title": "TVAL-MX-20000109",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000110",
+  "title": "TVAL-MX-20000110",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000111",
+  "title": "TVAL-MX-20000111",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000112",
+  "title": "TVAL-MX-20000112",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000113",
+  "title": "TVAL-MX-20000113",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000114",
+  "title": "TVAL-MX-20000114",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000115",
+  "title": "TVAL-MX-20000115",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000116",
+  "title": "TVAL-MX-20000116",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000117",
+  "title": "TVAL-MX-20000117",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000118",
+  "title": "TVAL-MX-20000118",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000119",
+  "title": "TVAL-MX-20000119",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000120",
+  "title": "TVAL-MX-20000120",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000121",
+  "title": "TVAL-MX-20000121",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000122",
+  "title": "TVAL-MX-20000122",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000123",
+  "title": "TVAL-MX-20000123",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000124",
+  "title": "TVAL-MX-20000124",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000125",
+  "title": "TVAL-MX-20000125",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000126",
+  "title": "TVAL-MX-20000126",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000127",
+  "title": "TVAL-MX-20000127",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000128",
+  "title": "TVAL-MX-20000128",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000129",
+  "title": "TVAL-MX-20000129",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000130",
+  "title": "TVAL-MX-20000130",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000131",
+  "title": "TVAL-MX-20000131",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000132",
+  "title": "TVAL-MX-20000132",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000133",
+  "title": "TVAL-MX-20000133",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000134",
+  "title": "TVAL-MX-20000134",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000135",
+  "title": "TVAL-MX-20000135",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000136",
+  "title": "TVAL-MX-20000136",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000137",
+  "title": "TVAL-MX-20000137",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000138",
+  "title": "TVAL-MX-20000138",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000139",
+  "title": "TVAL-MX-20000139",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000140",
+  "title": "TVAL-MX-20000140",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000141",
+  "title": "TVAL-MX-20000141",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000142",
+  "title": "TVAL-MX-20000142",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000143",
+  "title": "TVAL-MX-20000143",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000144",
+  "title": "TVAL-MX-20000144",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000145",
+  "title": "TVAL-MX-20000145",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000146",
+  "title": "TVAL-MX-20000146",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000147",
+  "title": "TVAL-MX-20000147",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000148",
+  "title": "TVAL-MX-20000148",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000149",
+  "title": "TVAL-MX-20000149",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000150",
+  "title": "TVAL-MX-20000150",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000151",
+  "title": "TVAL-MX-20000151",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000152",
+  "title": "TVAL-MX-20000152",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000153",
+  "title": "TVAL-MX-20000153",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000154",
+  "title": "TVAL-MX-20000154",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000155",
+  "title": "TVAL-MX-20000155",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000156",
+  "title": "TVAL-MX-20000156",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000157",
+  "title": "TVAL-MX-20000157",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000158",
+  "title": "TVAL-MX-20000158",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000159",
+  "title": "TVAL-MX-20000159",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000160",
+  "title": "TVAL-MX-20000160",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000161",
+  "title": "TVAL-MX-20000161",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000162",
+  "title": "TVAL-MX-20000162",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000163",
+  "title": "TVAL-MX-20000163",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000164",
+  "title": "TVAL-MX-20000164",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000165",
+  "title": "TVAL-MX-20000165",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000166",
+  "title": "TVAL-MX-20000166",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000167",
+  "title": "TVAL-MX-20000167",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000168",
+  "title": "TVAL-MX-20000168",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000169",
+  "title": "TVAL-MX-20000169",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000170",
+  "title": "TVAL-MX-20000170",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000171",
+  "title": "TVAL-MX-20000171",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000172",
+  "title": "TVAL-MX-20000172",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000173",
+  "title": "TVAL-MX-20000173",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000174",
+  "title": "TVAL-MX-20000174",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000175",
+  "title": "TVAL-MX-20000175",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000176",
+  "title": "TVAL-MX-20000176",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000177",
+  "title": "TVAL-MX-20000177",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000178",
+  "title": "TVAL-MX-20000178",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000179",
+  "title": "TVAL-MX-20000179",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000180",
+  "title": "TVAL-MX-20000180",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000181",
+  "title": "TVAL-MX-20000181",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000182",
+  "title": "TVAL-MX-20000182",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000183",
+  "title": "TVAL-MX-20000183",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000184",
+  "title": "TVAL-MX-20000184",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000185",
+  "title": "TVAL-MX-20000185",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000186",
+  "title": "TVAL-MX-20000186",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000187",
+  "title": "TVAL-MX-20000187",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000188",
+  "title": "TVAL-MX-20000188",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000189",
+  "title": "TVAL-MX-20000189",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000190",
+  "title": "TVAL-MX-20000190",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000191",
+  "title": "TVAL-MX-20000191",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000192",
+  "title": "TVAL-MX-20000192",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000193",
+  "title": "TVAL-MX-20000193",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000194",
+  "title": "TVAL-MX-20000194",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000195",
+  "title": "TVAL-MX-20000195",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000196",
+  "title": "TVAL-MX-20000196",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000197",
+  "title": "TVAL-MX-20000197",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000198",
+  "title": "TVAL-MX-20000198",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000199",
+  "title": "TVAL-MX-20000199",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000200",
+  "title": "TVAL-MX-20000200",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000201",
+  "title": "TVAL-MX-20000201",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000202",
+  "title": "TVAL-MX-20000202",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000203",
+  "title": "TVAL-MX-20000203",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000204",
+  "title": "TVAL-MX-20000204",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000205",
+  "title": "TVAL-MX-20000205",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000206",
+  "title": "TVAL-MX-20000206",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000207",
+  "title": "TVAL-MX-20000207",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000208",
+  "title": "TVAL-MX-20000208",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000209",
+  "title": "TVAL-MX-20000209",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000210",
+  "title": "TVAL-MX-20000210",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000211",
+  "title": "TVAL-MX-20000211",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000212",
+  "title": "TVAL-MX-20000212",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000213",
+  "title": "TVAL-MX-20000213",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000214",
+  "title": "TVAL-MX-20000214",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000215",
+  "title": "TVAL-MX-20000215",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000216",
+  "title": "TVAL-MX-20000216",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000217",
+  "title": "TVAL-MX-20000217",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000218",
+  "title": "TVAL-MX-20000218",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000219",
+  "title": "TVAL-MX-20000219",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000220",
+  "title": "TVAL-MX-20000220",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000221",
+  "title": "TVAL-MX-20000221",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000222",
+  "title": "TVAL-MX-20000222",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000223",
+  "title": "TVAL-MX-20000223",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000224",
+  "title": "TVAL-MX-20000224",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000225",
+  "title": "TVAL-MX-20000225",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000226",
+  "title": "TVAL-MX-20000226",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000227",
+  "title": "TVAL-MX-20000227",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000228",
+  "title": "TVAL-MX-20000228",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000229",
+  "title": "TVAL-MX-20000229",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000230",
+  "title": "TVAL-MX-20000230",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000231",
+  "title": "TVAL-MX-20000231",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000232",
+  "title": "TVAL-MX-20000232",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000233",
+  "title": "TVAL-MX-20000233",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000234",
+  "title": "TVAL-MX-20000234",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000235",
+  "title": "TVAL-MX-20000235",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000236",
+  "title": "TVAL-MX-20000236",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000237",
+  "title": "TVAL-MX-20000237",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000238",
+  "title": "TVAL-MX-20000238",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000239",
+  "title": "TVAL-MX-20000239",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000240",
+  "title": "TVAL-MX-20000240",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000241",
+  "title": "TVAL-MX-20000241",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000242",
+  "title": "TVAL-MX-20000242",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000243",
+  "title": "TVAL-MX-20000243",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000244",
+  "title": "TVAL-MX-20000244",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000245",
+  "title": "TVAL-MX-20000245",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000246",
+  "title": "TVAL-MX-20000246",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000247",
+  "title": "TVAL-MX-20000247",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000248",
+  "title": "TVAL-MX-20000248",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000249",
+  "title": "TVAL-MX-20000249",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000250",
+  "title": "TVAL-MX-20000250",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000251",
+  "title": "TVAL-MX-20000251",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000252",
+  "title": "TVAL-MX-20000252",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000253",
+  "title": "TVAL-MX-20000253",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000254",
+  "title": "TVAL-MX-20000254",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000255",
+  "title": "TVAL-MX-20000255",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000256",
+  "title": "TVAL-MX-20000256",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000257",
+  "title": "TVAL-MX-20000257",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000258",
+  "title": "TVAL-MX-20000258",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000259",
+  "title": "TVAL-MX-20000259",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000260",
+  "title": "TVAL-MX-20000260",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000261",
+  "title": "TVAL-MX-20000261",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000262",
+  "title": "TVAL-MX-20000262",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000263",
+  "title": "TVAL-MX-20000263",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000264",
+  "title": "TVAL-MX-20000264",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000265",
+  "title": "TVAL-MX-20000265",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000266",
+  "title": "TVAL-MX-20000266",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000267",
+  "title": "TVAL-MX-20000267",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000268",
+  "title": "TVAL-MX-20000268",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000269",
+  "title": "TVAL-MX-20000269",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000270",
+  "title": "TVAL-MX-20000270",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000271",
+  "title": "TVAL-MX-20000271",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000272",
+  "title": "TVAL-MX-20000272",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000273",
+  "title": "TVAL-MX-20000273",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000274",
+  "title": "TVAL-MX-20000274",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000275",
+  "title": "TVAL-MX-20000275",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000276",
+  "title": "TVAL-MX-20000276",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000277",
+  "title": "TVAL-MX-20000277",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000278",
+  "title": "TVAL-MX-20000278",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000279",
+  "title": "TVAL-MX-20000279",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000280",
+  "title": "TVAL-MX-20000280",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000281",
+  "title": "TVAL-MX-20000281",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000282",
+  "title": "TVAL-MX-20000282",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000283",
+  "title": "TVAL-MX-20000283",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000284",
+  "title": "TVAL-MX-20000284",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000285",
+  "title": "TVAL-MX-20000285",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000286",
+  "title": "TVAL-MX-20000286",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000287",
+  "title": "TVAL-MX-20000287",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000288",
+  "title": "TVAL-MX-20000288",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000289",
+  "title": "TVAL-MX-20000289",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000290",
+  "title": "TVAL-MX-20000290",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000291",
+  "title": "TVAL-MX-20000291",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000292",
+  "title": "TVAL-MX-20000292",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000293",
+  "title": "TVAL-MX-20000293",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000294",
+  "title": "TVAL-MX-20000294",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000295",
+  "title": "TVAL-MX-20000295",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000296",
+  "title": "TVAL-MX-20000296",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000297",
+  "title": "TVAL-MX-20000297",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000298",
+  "title": "TVAL-MX-20000298",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000299",
+  "title": "TVAL-MX-20000299",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000300",
+  "title": "TVAL-MX-20000300",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000301",
+  "title": "TVAL-MX-20000301",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000302",
+  "title": "TVAL-MX-20000302",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000303",
+  "title": "TVAL-MX-20000303",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000304",
+  "title": "TVAL-MX-20000304",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000305",
+  "title": "TVAL-MX-20000305",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000306",
+  "title": "TVAL-MX-20000306",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000307",
+  "title": "TVAL-MX-20000307",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000308",
+  "title": "TVAL-MX-20000308",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000309",
+  "title": "TVAL-MX-20000309",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000310",
+  "title": "TVAL-MX-20000310",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000311",
+  "title": "TVAL-MX-20000311",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000312",
+  "title": "TVAL-MX-20000312",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000313",
+  "title": "TVAL-MX-20000313",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000314",
+  "title": "TVAL-MX-20000314",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000315",
+  "title": "TVAL-MX-20000315",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000316",
+  "title": "TVAL-MX-20000316",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000317",
+  "title": "TVAL-MX-20000317",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000318",
+  "title": "TVAL-MX-20000318",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000319",
+  "title": "TVAL-MX-20000319",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000320",
+  "title": "TVAL-MX-20000320",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000321",
+  "title": "TVAL-MX-20000321",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000322",
+  "title": "TVAL-MX-20000322",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000323",
+  "title": "TVAL-MX-20000323",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000324",
+  "title": "TVAL-MX-20000324",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000325",
+  "title": "TVAL-MX-20000325",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000326",
+  "title": "TVAL-MX-20000326",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000327",
+  "title": "TVAL-MX-20000327",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000328",
+  "title": "TVAL-MX-20000328",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000329",
+  "title": "TVAL-MX-20000329",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000330",
+  "title": "TVAL-MX-20000330",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000331",
+  "title": "TVAL-MX-20000331",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000332",
+  "title": "TVAL-MX-20000332",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000333",
+  "title": "TVAL-MX-20000333",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000334",
+  "title": "TVAL-MX-20000334",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000335",
+  "title": "TVAL-MX-20000335",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000336",
+  "title": "TVAL-MX-20000336",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000337",
+  "title": "TVAL-MX-20000337",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000338",
+  "title": "TVAL-MX-20000338",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000339",
+  "title": "TVAL-MX-20000339",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000340",
+  "title": "TVAL-MX-20000340",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000341",
+  "title": "TVAL-MX-20000341",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000342",
+  "title": "TVAL-MX-20000342",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000343",
+  "title": "TVAL-MX-20000343",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000344",
+  "title": "TVAL-MX-20000344",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000345",
+  "title": "TVAL-MX-20000345",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000346",
+  "title": "TVAL-MX-20000346",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000347",
+  "title": "TVAL-MX-20000347",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000348",
+  "title": "TVAL-MX-20000348",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000349",
+  "title": "TVAL-MX-20000349",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000350",
+  "title": "TVAL-MX-20000350",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000351",
+  "title": "TVAL-MX-20000351",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000352",
+  "title": "TVAL-MX-20000352",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000353",
+  "title": "TVAL-MX-20000353",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000354",
+  "title": "TVAL-MX-20000354",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000355",
+  "title": "TVAL-MX-20000355",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000356",
+  "title": "TVAL-MX-20000356",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000357",
+  "title": "TVAL-MX-20000357",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000358",
+  "title": "TVAL-MX-20000358",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000359",
+  "title": "TVAL-MX-20000359",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000360",
+  "title": "TVAL-MX-20000360",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000361",
+  "title": "TVAL-MX-20000361",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000362",
+  "title": "TVAL-MX-20000362",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000363",
+  "title": "TVAL-MX-20000363",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000364",
+  "title": "TVAL-MX-20000364",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000365",
+  "title": "TVAL-MX-20000365",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000366",
+  "title": "TVAL-MX-20000366",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000367",
+  "title": "TVAL-MX-20000367",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000368",
+  "title": "TVAL-MX-20000368",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000369",
+  "title": "TVAL-MX-20000369",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000370",
+  "title": "TVAL-MX-20000370",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000371",
+  "title": "TVAL-MX-20000371",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000372",
+  "title": "TVAL-MX-20000372",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000373",
+  "title": "TVAL-MX-20000373",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000374",
+  "title": "TVAL-MX-20000374",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000375",
+  "title": "TVAL-MX-20000375",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000376",
+  "title": "TVAL-MX-20000376",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000377",
+  "title": "TVAL-MX-20000377",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000378",
+  "title": "TVAL-MX-20000378",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000379",
+  "title": "TVAL-MX-20000379",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000380",
+  "title": "TVAL-MX-20000380",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000381",
+  "title": "TVAL-MX-20000381",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000382",
+  "title": "TVAL-MX-20000382",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000383",
+  "title": "TVAL-MX-20000383",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000384",
+  "title": "TVAL-MX-20000384",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000385",
+  "title": "TVAL-MX-20000385",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000386",
+  "title": "TVAL-MX-20000386",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000387",
+  "title": "TVAL-MX-20000387",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000388",
+  "title": "TVAL-MX-20000388",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000389",
+  "title": "TVAL-MX-20000389",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000390",
+  "title": "TVAL-MX-20000390",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000391",
+  "title": "TVAL-MX-20000391",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000392",
+  "title": "TVAL-MX-20000392",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000393",
+  "title": "TVAL-MX-20000393",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000394",
+  "title": "TVAL-MX-20000394",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000395",
+  "title": "TVAL-MX-20000395",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000396",
+  "title": "TVAL-MX-20000396",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000397",
+  "title": "TVAL-MX-20000397",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000398",
+  "title": "TVAL-MX-20000398",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000399",
+  "title": "TVAL-MX-20000399",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000400",
+  "title": "TVAL-MX-20000400",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000401",
+  "title": "TVAL-MX-20000401",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000402",
+  "title": "TVAL-MX-20000402",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000403",
+  "title": "TVAL-MX-20000403",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000404",
+  "title": "TVAL-MX-20000404",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000405",
+  "title": "TVAL-MX-20000405",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000406",
+  "title": "TVAL-MX-20000406",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000407",
+  "title": "TVAL-MX-20000407",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000408",
+  "title": "TVAL-MX-20000408",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000409",
+  "title": "TVAL-MX-20000409",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000410",
+  "title": "TVAL-MX-20000410",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000411",
+  "title": "TVAL-MX-20000411",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000412",
+  "title": "TVAL-MX-20000412",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000413",
+  "title": "TVAL-MX-20000413",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000414",
+  "title": "TVAL-MX-20000414",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000415",
+  "title": "TVAL-MX-20000415",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000416",
+  "title": "TVAL-MX-20000416",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000417",
+  "title": "TVAL-MX-20000417",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000418",
+  "title": "TVAL-MX-20000418",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000419",
+  "title": "TVAL-MX-20000419",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000420",
+  "title": "TVAL-MX-20000420",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000421",
+  "title": "TVAL-MX-20000421",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000422",
+  "title": "TVAL-MX-20000422",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000423",
+  "title": "TVAL-MX-20000423",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000424",
+  "title": "TVAL-MX-20000424",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000425",
+  "title": "TVAL-MX-20000425",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000426",
+  "title": "TVAL-MX-20000426",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000427",
+  "title": "TVAL-MX-20000427",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000428",
+  "title": "TVAL-MX-20000428",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000429",
+  "title": "TVAL-MX-20000429",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000430",
+  "title": "TVAL-MX-20000430",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000431",
+  "title": "TVAL-MX-20000431",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000432",
+  "title": "TVAL-MX-20000432",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000433",
+  "title": "TVAL-MX-20000433",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000434",
+  "title": "TVAL-MX-20000434",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000435",
+  "title": "TVAL-MX-20000435",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000436",
+  "title": "TVAL-MX-20000436",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000437",
+  "title": "TVAL-MX-20000437",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000438",
+  "title": "TVAL-MX-20000438",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000439",
+  "title": "TVAL-MX-20000439",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000440",
+  "title": "TVAL-MX-20000440",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000441",
+  "title": "TVAL-MX-20000441",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000442",
+  "title": "TVAL-MX-20000442",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000443",
+  "title": "TVAL-MX-20000443",
+  "subtitle": "Trade valuation"
+ },
+ {
+  "kind": "trade-valuation",
+  "id": "TVAL-MX-20000444",
+  "title": "TVAL-MX-20000444",
+  "subtitle": "Trade valuation"
+ },
+ {
   "kind": "var",
   "id": "VAR-COMM",
   "title": "VAR-COMM",

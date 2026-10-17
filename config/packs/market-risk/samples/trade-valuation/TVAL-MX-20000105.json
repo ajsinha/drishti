@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000105",
+ "TRADE_ID": "MX-20000105",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "SWAPTION_BERM",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-3",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-LUMEN",
+ "NETTING_SET": "NS-LUMEN-NY",
+ "TRADER_ID": "TRDR-MOKAFOR",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 214000000.0,
+ "MTM": 36115,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 996,
+ "DV01": -14914,
+ "TRADE_DATE": "2025-01-16",
+ "MATURITY_DATE": "2026-10-07",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 2212,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 35119"
+    }
+   ]
+  }
+ }
+}

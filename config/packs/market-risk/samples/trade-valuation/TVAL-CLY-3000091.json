@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000091",
+ "TRADE_ID": "CLY-3000091",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "CDS_INDEX",
+ "PRODUCT_GROUP": "Credit",
+ "PORTFOLIO": "BOOK-CREDIT-1",
+ "DESK": "DESK-CREDIT",
+ "COUNTERPARTY": "CP-HARBORPT",
+ "NETTING_SET": "NS-HARBORPT-NY",
+ "TRADER_ID": "TRDR-DWHITFIELD",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 55000000.0,
+ "MTM": 21107,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -139,
+ "DV01": 0,
+ "TRADE_DATE": "2024-11-19",
+ "MATURITY_DATE": "2032-02-17",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 592,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 21246"
+    }
+   ]
+  }
+ }
+}

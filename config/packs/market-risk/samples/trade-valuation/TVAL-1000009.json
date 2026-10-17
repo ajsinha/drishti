@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-1000009",
+ "TRADE_ID": 1000009,
+ "SOURCE_SYSTEM": "ENDUR",
+ "PRODUCT_TYPE": "Cash",
+ "PRODUCT_GROUP": "Commodity",
+ "PORTFOLIO": "BOOK-COMM-1",
+ "DESK": "DESK-COMM",
+ "COUNTERPARTY": "CP-NORTHBRIDGE",
+ "NETTING_SET": "",
+ "TRADER_ID": "TRDR-FROSSI",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "MATURED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 1309343.79,
+ "MTM": 17716,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 1056,
+ "DV01": 0,
+ "TRADE_DATE": "2024-10-10",
+ "MATURITY_DATE": "2024-12-01",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 500,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 16660"
+    }
+   ]
+  }
+ }
+}

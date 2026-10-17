@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000350",
+ "TRADE_ID": "MX-20000350",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "POWER_SWAP",
+ "PRODUCT_GROUP": "Commodity",
+ "PORTFOLIO": "BOOK-COMM-3",
+ "DESK": "DESK-COMM",
+ "COUNTERPARTY": "CP-NORTHBRIDGE",
+ "NETTING_SET": "NS-NORTHBRIDGE-NY",
+ "TRADER_ID": "TRDR-FROSSI",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 241000000.0,
+ "MTM": -1890065,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 82076,
+ "DV01": 0,
+ "TRADE_DATE": "2026-01-30",
+ "MATURITY_DATE": "2030-11-12",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 6190,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -1972141"
+    }
+   ]
+  }
+ }
+}

@@ -30,22 +30,23 @@ endorsement: "promoted"
 tags: [sample, trading, nested, cashflows]
 
 datasets:                       # alias: the dataset it reads, and its role (a fact is added up; a dimension groups and filters)
-  trades:    { dataset: trading-cashflows-trades, role: dimension }
+  trades:    { dataset: trading-cashflows-trades, role: fact }
   legs:      { dataset: trading-cashflows-legs, role: fact }
   cashflows: { dataset: trading-cashflows-cashflows, role: fact }
 
 relationships:                  # from the MANY side to the ONE side
-  - { from: legs.id, to: trades.id }
-  - { from: cashflows.id, to: trades.id }
+  - { from: legs.id, to: trades.id, active: false }
+  - { from: cashflows.id, to: trades.id, active: false }
 
 measures:
-  Cashflow amount:       { expr: "sum(cashflows.amount)", format: amount0, description: "Scheduled cashflow, summed over the rows the visual groups by." }
+  Cashflow amount:       { expr: "sum(cashflows.NOTIONAL)", format: amount0, description: "The flows' notional (quantity times price, or the principal of a period), summed over the rows the visual groups by." }
+  Trades:                { expr: "count(trades)", description: "Trades of every source system (ENDUR, CALYPSO, MUREX): group by trades.SOURCE_SYSTEM to see each." }
   Cashflows:             { expr: "count(cashflows)" }
-  Average cashflow:      { expr: "avg(cashflows.amount)", format: amount0 }
-  Largest cashflow:      { expr: "max(cashflows.amount)", format: amount0 }
+  Average cashflow:      { expr: "avg(cashflows.NOTIONAL)", format: amount0 }
+  Largest cashflow:      { expr: "max(cashflows.NOTIONAL)", format: amount0 }
   Legs:                  { expr: "count(legs)" }
-  Leg notional:          { expr: "sum(legs.notional)", format: amount0 }
+  Leg notional:          { expr: "sum(legs.NOTIONAL)", format: amount0 }
   Trades with cashflows: { expr: "distinct(cashflows.id)" }
 
 hierarchies:
-  Pay date: [cashflows.payDate.year, cashflows.payDate.quarter, cashflows.payDate.month, cashflows.payDate]
+  Pay date: [cashflows.PAYMENT_DATE.year, cashflows.PAYMENT_DATE.quarter, cashflows.PAYMENT_DATE.month, cashflows.PAYMENT_DATE]

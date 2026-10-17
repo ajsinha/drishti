@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000232",
+ "TRADE_ID": "MX-20000232",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "REVERSE_CONVERTIBLE",
+ "PRODUCT_GROUP": "Equity",
+ "PORTFOLIO": "BOOK-EQD-3",
+ "DESK": "DESK-EQD",
+ "COUNTERPARTY": "CP-ALDERSHOT",
+ "NETTING_SET": "NS-ALDERSHOT-LDN",
+ "TRADER_ID": "TRDR-JWEISS",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "CHF",
+ "NOTIONAL": 181000000.0,
+ "MTM": -4142972,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 279826,
+ "DV01": 0,
+ "TRADE_DATE": "2026-03-26",
+ "MATURITY_DATE": "2038-02-01",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 10096,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -4422798"
+    }
+   ]
+  }
+ }
+}

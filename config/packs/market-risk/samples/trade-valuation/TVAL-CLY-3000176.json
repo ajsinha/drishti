@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000176",
+ "TRADE_ID": "CLY-3000176",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "ZERO_BOND",
+ "PRODUCT_GROUP": "Fixed income",
+ "PORTFOLIO": "BOOK-FI-2",
+ "DESK": "DESK-FI",
+ "COUNTERPARTY": "CP-SUMMIT",
+ "NETTING_SET": "NS-SUMMIT-NY",
+ "TRADER_ID": "TRDR-RCASTILLO",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "JPY",
+ "NOTIONAL": 163000000.0,
+ "MTM": 3464598,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 35121,
+ "DV01": 62424,
+ "TRADE_DATE": "2024-07-04",
+ "MATURITY_DATE": "2029-03-12",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 8559,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 3429477"
+    }
+   ]
+  }
+ }
+}

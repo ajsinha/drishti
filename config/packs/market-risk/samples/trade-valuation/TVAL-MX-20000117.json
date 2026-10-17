@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000117",
+ "TRADE_ID": "MX-20000117",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "CMS_CAP",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-2",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-LUMEN",
+ "NETTING_SET": "NS-LUMEN-NY",
+ "TRADER_ID": "TRDR-ASHAH",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "CAD",
+ "NOTIONAL": 63000000.0,
+ "MTM": 73781,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 3751,
+ "DV01": -6102,
+ "TRADE_DATE": "2026-05-12",
+ "MATURITY_DATE": "2027-07-06",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 778,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 70030"
+    }
+   ]
+  }
+ }
+}

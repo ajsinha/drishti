@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000038",
+ "TRADE_ID": "MX-20000038",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "AMORT_SWAP",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-1",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-HALCYON",
+ "NETTING_SET": "NS-HALCYON-NY",
+ "TRADER_ID": "TRDR-MOKAFOR",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "GBP",
+ "NOTIONAL": 17000000.0,
+ "MTM": -531063,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 7792,
+ "DV01": 7938,
+ "TRADE_DATE": "2026-04-02",
+ "MATURITY_DATE": "2031-11-10",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 1232,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -538855"
+    }
+   ]
+  }
+ }
+}

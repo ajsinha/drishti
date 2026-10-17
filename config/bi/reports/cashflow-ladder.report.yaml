@@ -42,24 +42,24 @@ pages:
         type: column
         title: Cashflows by pay date (use the drill button to go from year to day)
         at: { x: 0, y: 2, w: 8, h: 6 }
-        wells: { axis: [cashflows.payDate.year], values: [Cashflow amount] }
+        wells: { axis: [cashflows.PAYMENT_DATE.year], values: [Cashflow amount] }
         hierarchy: Pay date
-        filters: [{ field: cashflows.payDate, op: not-null }]         # a cashflow with no pay date has no place on the ladder
+        filters: [{ field: cashflows.PAYMENT_DATE, op: not-null }]         # a cashflow with no pay date has no place on the ladder
         format: { labels: false }
         alt: Columns of scheduled cashflow amount by pay date
 
-      - id: desk
+      - id: source-system
         type: slicer
-        title: Desk
+        title: Source system
         at: { x: 8, y: 2, w: 4, h: 6 }
-        wells: { field: [trades.desk] }
+        wells: { field: [trades.SOURCE_SYSTEM] }
         format: { mode: list, scope: report }
 
-      - id: by-desk
+      - id: by-system
         type: table
-        title: Cashflows by desk
+        title: Cashflows by source system (ENDUR, CALYPSO, MUREX)
         at: { x: 0, y: 8, w: 12, h: 4 }
-        wells: { columns: [trades.desk, Cashflows, Cashflow amount, Average cashflow, Largest cashflow] }
+        wells: { columns: [trades.SOURCE_SYSTEM, Cashflows, Cashflow amount, Average cashflow, Largest cashflow] }
         format: { dataBars: [Cashflow amount] }
 
   - id: legs
@@ -71,5 +71,5 @@ pages:
         type: matrix
         title: Legs and notional by pay or receive and rate type
         at: { x: 0, y: 2, w: 12, h: 6 }
-        wells: { rows: [legs.payReceive], columns: [legs.rateType], values: [Legs, Leg notional] }
+        wells: { rows: [legs.LEG_ECONOMIC_TYPE], columns: [legs.LEG_TYPE], values: [Legs, Leg notional] }
         format: { subtotals: true }

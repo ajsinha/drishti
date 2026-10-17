@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000099",
+ "TRADE_ID": "CLY-3000099",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "CDS_TRANCHE",
+ "PRODUCT_GROUP": "Credit",
+ "PORTFOLIO": "BOOK-CREDIT-2",
+ "DESK": "DESK-CREDIT",
+ "COUNTERPARTY": "CP-BRAMBLE",
+ "NETTING_SET": "NS-BRAMBLE-NY",
+ "TRADER_ID": "TRDR-CDUBOIS",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "CAD",
+ "NOTIONAL": 11000000.0,
+ "MTM": 92367,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -2118,
+ "DV01": 0,
+ "TRADE_DATE": "2026-02-19",
+ "MATURITY_DATE": "2035-10-10",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 500,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 94485"
+    }
+   ]
+  }
+ }
+}

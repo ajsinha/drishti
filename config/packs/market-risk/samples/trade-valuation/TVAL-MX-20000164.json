@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000164",
+ "TRADE_ID": "MX-20000164",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "EQ_FORWARD",
+ "PRODUCT_GROUP": "Equity",
+ "PORTFOLIO": "BOOK-EQD-2",
+ "DESK": "DESK-EQD",
+ "COUNTERPARTY": "CP-LUMEN",
+ "NETTING_SET": "NS-LUMEN-LDN",
+ "TRADER_ID": "TRDR-PLINDQVIST",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "CHF",
+ "NOTIONAL": 8000000.0,
+ "MTM": -173531,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 1504,
+ "DV01": 0,
+ "TRADE_DATE": "2025-04-17",
+ "MATURITY_DATE": "2026-10-07",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 500,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -175035"
+    }
+   ]
+  }
+ }
+}

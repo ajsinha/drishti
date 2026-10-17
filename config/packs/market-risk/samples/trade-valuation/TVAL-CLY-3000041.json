@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000041",
+ "TRADE_ID": "CLY-3000041",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "FX_BARRIER",
+ "PRODUCT_GROUP": "FX",
+ "PORTFOLIO": "BOOK-FX-3",
+ "DESK": "DESK-FX",
+ "COUNTERPARTY": "CP-MERIDIAN-RE",
+ "NETTING_SET": "NS-MERIDIAN-RE-LDN",
+ "TRADER_ID": "TRDR-ENOVAK",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 202000000.0,
+ "MTM": 2035982,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 44130,
+ "DV01": 0,
+ "TRADE_DATE": "2025-05-22",
+ "MATURITY_DATE": "2028-03-29",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 6092,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 1991852"
+    }
+   ]
+  }
+ }
+}

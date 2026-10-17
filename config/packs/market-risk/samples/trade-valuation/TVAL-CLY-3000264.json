@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000264",
+ "TRADE_ID": "CLY-3000264",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "CALL_ACCOUNT",
+ "PRODUCT_GROUP": "Money market",
+ "PORTFOLIO": "BOOK-MM-3",
+ "DESK": "DESK-MM",
+ "COUNTERPARTY": "CP-AURORA",
+ "NETTING_SET": "NS-AURORA-NY",
+ "TRADER_ID": "TRDR-SIYER",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "GBP",
+ "NOTIONAL": 30000000.0,
+ "MTM": -392005,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -13092,
+ "DV01": 1069,
+ "TRADE_DATE": "2026-08-11",
+ "MATURITY_DATE": "2027-01-20",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 1084,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -378913"
+    }
+   ]
+  }
+ }
+}

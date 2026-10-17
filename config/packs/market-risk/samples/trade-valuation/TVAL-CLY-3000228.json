@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000228",
+ "TRADE_ID": "CLY-3000228",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "ABS",
+ "PRODUCT_GROUP": "Fixed income",
+ "PORTFOLIO": "BOOK-FI-3",
+ "DESK": "DESK-FI",
+ "COUNTERPARTY": "CP-MERIDIAN",
+ "NETTING_SET": "NS-MERIDIAN-NY",
+ "TRADER_ID": "TRDR-BADEYEMI",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 69000000.0,
+ "MTM": 1276947,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -2584,
+ "DV01": -12644,
+ "TRADE_DATE": "2026-09-18",
+ "MATURITY_DATE": "2028-12-14",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 3244,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 1279531"
+    }
+   ]
+  }
+ }
+}

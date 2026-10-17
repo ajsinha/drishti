@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000040",
+ "TRADE_ID": "MX-20000040",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "AMORT_SWAP",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-1",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-CASCADIA",
+ "NETTING_SET": "NS-CASCADIA-NY",
+ "TRADER_ID": "TRDR-MOKAFOR",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "CAD",
+ "NOTIONAL": 163000000.0,
+ "MTM": 14300779,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 48738,
+ "DV01": -138733,
+ "TRADE_DATE": "2026-05-05",
+ "MATURITY_DATE": "2036-06-12",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 30232,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 14252041"
+    }
+   ]
+  }
+ }
+}

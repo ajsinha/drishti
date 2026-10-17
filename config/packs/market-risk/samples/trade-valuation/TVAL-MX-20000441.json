@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000441",
+ "TRADE_ID": "MX-20000441",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "CREDIT_BASKET_NOTE",
+ "PRODUCT_GROUP": "Structured",
+ "PORTFOLIO": "BOOK-STRUCT-2",
+ "DESK": "DESK-STRUCT",
+ "COUNTERPARTY": "CP-NORTHBRIDGE",
+ "NETTING_SET": "NS-NORTHBRIDGE-TKY",
+ "TRADER_ID": "TRDR-VRAO",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 180000000.0,
+ "MTM": 3228356,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 27349,
+ "DV01": 0,
+ "TRADE_DATE": "2025-10-31",
+ "MATURITY_DATE": "2035-09-20",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 8257,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 3201007"
+    }
+   ]
+  }
+ }
+}

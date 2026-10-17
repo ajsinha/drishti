@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000107",
+ "TRADE_ID": "CLY-3000107",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "CDS_SWAPTION",
+ "PRODUCT_GROUP": "Credit",
+ "PORTFOLIO": "BOOK-CREDIT-3",
+ "DESK": "DESK-CREDIT",
+ "COUNTERPARTY": "CP-RHEINTAL",
+ "NETTING_SET": "NS-RHEINTAL-NY",
+ "TRADER_ID": "TRDR-CDUBOIS",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 147000000.0,
+ "MTM": 1786443,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -69421,
+ "DV01": 0,
+ "TRADE_DATE": "2024-09-23",
+ "MATURITY_DATE": "2027-03-23",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 5043,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 1855864"
+    }
+   ]
+  }
+ }
+}

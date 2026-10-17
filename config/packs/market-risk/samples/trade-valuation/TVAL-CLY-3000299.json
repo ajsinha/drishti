@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000299",
+ "TRADE_ID": "CLY-3000299",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "SEC_BORROWING",
+ "PRODUCT_GROUP": "Securities financing",
+ "PORTFOLIO": "BOOK-SFT-1",
+ "DESK": "DESK-SFT",
+ "COUNTERPARTY": "CP-MERIDIAN-RE",
+ "NETTING_SET": "NS-MERIDIAN-RE-FRA",
+ "TRADER_ID": "TRDR-KBRANDT",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 156000000.0,
+ "MTM": -1189358,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -25882,
+ "DV01": 0,
+ "TRADE_DATE": "2026-09-18",
+ "MATURITY_DATE": "2026-11-27",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 3939,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -1163476"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000429",
+ "TRADE_ID": "MX-20000429",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "HYBRID_FX_RATES",
+ "PRODUCT_GROUP": "Structured",
+ "PORTFOLIO": "BOOK-STRUCT-1",
+ "DESK": "DESK-STRUCT",
+ "COUNTERPARTY": "CP-SOLARIS",
+ "NETTING_SET": "NS-SOLARIS-TKY",
+ "TRADER_ID": "TRDR-VRAO",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 153000000.0,
+ "MTM": 2602465,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 99493,
+ "DV01": -80273,
+ "TRADE_DATE": "2026-05-15",
+ "MATURITY_DATE": "2033-01-28",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 6735,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 2502972"
+    }
+   ]
+  }
+ }
+}

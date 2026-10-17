@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000124",
+ "TRADE_ID": "CLY-3000124",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "TRS_LOAN_INDEX",
+ "PRODUCT_GROUP": "Credit",
+ "PORTFOLIO": "BOOK-CREDIT-3",
+ "DESK": "DESK-CREDIT",
+ "COUNTERPARTY": "CP-AURORA",
+ "NETTING_SET": "NS-AURORA-NY",
+ "TRADER_ID": "TRDR-CDUBOIS",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "CAD",
+ "NOTIONAL": 178000000.0,
+ "MTM": 1798395,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 77365,
+ "DV01": 0,
+ "TRADE_DATE": "2025-04-04",
+ "MATURITY_DATE": "2035-07-02",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 5377,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 1721030"
+    }
+   ]
+  }
+ }
+}

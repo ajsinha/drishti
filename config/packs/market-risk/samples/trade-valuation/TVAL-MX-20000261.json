@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000261",
+ "TRADE_ID": "MX-20000261",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "PORTFOLIO_SWAP",
+ "PRODUCT_GROUP": "Equity",
+ "PORTFOLIO": "BOOK-EQD-3",
+ "DESK": "DESK-EQD",
+ "COUNTERPARTY": "CP-HALCYON",
+ "NETTING_SET": "NS-HALCYON-LDN",
+ "TRADER_ID": "TRDR-JWEISS",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 98000000.0,
+ "MTM": 1474051,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -48129,
+ "DV01": 63003,
+ "TRADE_DATE": "2026-07-29",
+ "MATURITY_DATE": "2034-01-03",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 3928,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 1522180"
+    }
+   ]
+  }
+ }
+}

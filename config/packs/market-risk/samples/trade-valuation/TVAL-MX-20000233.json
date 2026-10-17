@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000233",
+ "TRADE_ID": "MX-20000233",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "REVERSE_CONVERTIBLE",
+ "PRODUCT_GROUP": "Equity",
+ "PORTFOLIO": "BOOK-EQD-2",
+ "DESK": "DESK-EQD",
+ "COUNTERPARTY": "CP-KESTREL",
+ "NETTING_SET": "NS-KESTREL-LDN",
+ "TRADER_ID": "TRDR-JWEISS",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 96000000.0,
+ "MTM": 906822,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -18682,
+ "DV01": 0,
+ "TRADE_DATE": "2026-05-05",
+ "MATURITY_DATE": "2035-12-07",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 2774,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 925504"
+    }
+   ]
+  }
+ }
+}

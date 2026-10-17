@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000388",
+ "TRADE_ID": "MX-20000388",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "YOY_INFL_SWAP",
+ "PRODUCT_GROUP": "Inflation",
+ "PORTFOLIO": "BOOK-INFL-1",
+ "DESK": "DESK-INFL",
+ "COUNTERPARTY": "CP-HARBORPT",
+ "NETTING_SET": "NS-HARBORPT-LDN",
+ "TRADER_ID": "TRDR-GMENDES",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 121000000.0,
+ "MTM": -947071,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 23557,
+ "DV01": -42315,
+ "TRADE_DATE": "2026-09-08",
+ "MATURITY_DATE": "2030-12-30",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 3104,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -970628"
+    }
+   ]
+  }
+ }
+}

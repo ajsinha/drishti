@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000261",
+ "TRADE_ID": "CLY-3000261",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "CALL_ACCOUNT",
+ "PRODUCT_GROUP": "Money market",
+ "PORTFOLIO": "BOOK-MM-1",
+ "DESK": "DESK-MM",
+ "COUNTERPARTY": "CP-RHEINTAL",
+ "NETTING_SET": "NS-RHEINTAL-NY",
+ "TRADER_ID": "TRDR-SIYER",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 249000000.0,
+ "MTM": -2192641,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 40789,
+ "DV01": 7914,
+ "TRADE_DATE": "2026-09-09",
+ "MATURITY_DATE": "2027-01-25",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 6875,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -2233430"
+    }
+   ]
+  }
+ }
+}

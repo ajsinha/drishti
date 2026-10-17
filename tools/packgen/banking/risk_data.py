@@ -145,4 +145,20 @@ KINDS = [
          [("CCP", "$.ccpName", None, None, False), ("IM", "$.im", "compact", None, True), ("VM today", "$.vmToday", "signed0", "sign", False), ("Excess", "$.excess", "compact", None, False)],
          [P("table", "trades", "Cleared trades", "$.trades", TRADE_COLS, key="F2", pivot=NOTIONAL_BY_MATURITY)], links={"ccp": ("ccp", "CCP")},
          badge="'IM ' + fmt($.im, 'compact')"),
+    # a trade's valuation is the risk engine's, not the booking system's: the trade (TRD) carries the booking, this its value
+    Kind("trade-valuation", "TVAL", "TVAL-", "Trade valuation", MR,
+         "A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, "
+         "portfolio, desk, product).", "VALUATION_ID",
+         [("Trade", "link($.TRADE_ID, 'trade')", None, None, False), ("Source", "$.SOURCE_SYSTEM", None, None, False),
+          ("MTM", "$.MTM", "signed0", "sign", True), ("P&L 1D", "$.PNL_1D", "signed0", "sign", False), ("DV01", "$.DV01", "signed0", "sign", False),
+          ("Notional", "$.NOTIONAL", "compact", None, False), ("Valued", "$.VALUATION_DATE", "date", None, False)],
+         [P("kv", "valuation", "Valuation", None, [("Trade", "link($.TRADE_ID, 'trade')", None, None, False), ("Source system", "$.SOURCE_SYSTEM", None, None, False),
+                                                    ("Product", "$.PRODUCT_TYPE", None, None, False), ("Group", "$.PRODUCT_GROUP", None, None, False),
+                                                    ("Portfolio", "link($.PORTFOLIO, 'book')", None, None, False), ("Desk", "link($.DESK, 'desk')", None, None, False),
+                                                    ("Counterparty", "link($.COUNTERPARTY, 'counterparty')", None, None, False),
+                                                    ("Currency", "$.CURRENCY", None, None, False), ("Notional", "$.NOTIONAL", "amount0", None, False),
+                                                    ("MTM (USD)", "$.MTM", "signed0", "sign", False), ("P&L 1D (USD)", "$.PNL_1D", "signed0", "sign", False),
+                                                    ("DV01 (USD)", "$.DV01", "signed0", "sign", False), ("Status", "$.TRADE_STATUS", None, "status", False),
+                                                    ("Maturity", "$.MATURITY_DATE", "date", None, False)], key="F2")],
+         links={"TRADE_ID": ("trade", "Trade"), "DESK": ("desk", "Desk"), "NETTING_SET": ("netting-set", "Netting set")}, live={"MTM": 2500.0}),
 ]

@@ -28,12 +28,16 @@ description: "The trades table of the model trading-cashflows."
 sample: true
 endorsement: "promoted"
 tags: [sample, trading, nested, cashflows]
-source: { connector: trading-store, kind: trade }
+source: { kind: trade }
 refresh: { on-load: true }
 columns:
-  desk:         { type: string }
-  productType:  { type: string }
-  currency:     { type: string }
-  status:       { type: string }
-  notional:     { type: decimal, format: amount0 }
-  maturityDate: { type: date }
+  SOURCE_SYSTEM:    { type: string }
+  PRODUCT_TYPE:     { type: string }
+  PRODUCT_SUB_TYPE: { type: string }
+  PORTFOLIO:        { type: string }
+  COUNTERPARTY:     { type: string }
+  CURRENCY:         { type: string }
+  TRADE_STATUS:     { type: string }
+  BUY_SELL_CODE:    { type: string }
+  QUANTITY:         { type: decimal, format: amount0 }
+  MATURITY_DATE:    { type: date }

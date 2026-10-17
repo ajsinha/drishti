@@ -28,10 +28,13 @@ description: "The cashflows table of the model trading-cashflows."
 sample: true
 endorsement: "promoted"
 tags: [sample, trading, nested, cashflows]
-source: { connector: trading-store, kind: trade, each: schedule }
+source: { kind: trade, each: "LEGS[].CASH_FLOWS" }
 refresh: { on-load: true }
 columns:
-  payDate: { type: date, path: date }
-  rate:    { type: decimal, format: pct }
-  amount:  { type: decimal, format: amount0 }
-  status:  { type: string }
+  LEG_ID:       { type: integer, path: "^.LEG_ID" }
+  FLOW_ID:      { type: integer }
+  PAYMENT_DATE: { type: date }
+  START_DATE:   { type: date }
+  END_DATE:     { type: date }
+  NOTIONAL:     { type: decimal, format: amount0 }
+  RATE:         { type: decimal }

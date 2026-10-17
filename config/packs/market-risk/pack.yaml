@@ -28,6 +28,7 @@ kinds:
 - stress-result
 - frtb-sensitivity
 - pnl-explain
+- trade-valuation
 sutras: sutras
 formats: config/formats.yaml
 mnemonics:
@@ -46,6 +47,9 @@ mnemonics:
   PNL:
     kind: pnl-explain
     label: P&L explain
+  TVAL:
+    kind: trade-valuation
+    label: Trade valuation
 graph:
   id-patterns:
   - pattern: ^VAR-
@@ -58,6 +62,8 @@ graph:
     kind: frtb-sensitivity
   - pattern: ^PNL-
     kind: pnl-explain
+  - pattern: ^TVAL-
+    kind: trade-valuation
   fields:
     scenario:
       kind: stress-scenario
@@ -77,6 +83,7 @@ connectors:
     - stress-result
     - frtb-sensitivity
     - pnl-explain
+    - trade-valuation
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: risk
@@ -86,6 +93,7 @@ routes:
   stress-result: risk-store
   frtb-sensitivity: risk-store
   pnl-explain: risk-store
+  trade-valuation: risk-store
 form:
   var:
   - path: resultId
@@ -167,6 +175,31 @@ form:
   - path: unexplained
     label: Unexplained
     type: text
+  trade-valuation:
+  - path: VALUATION_ID
+    label: Valuation id
+    type: id
+  - path: TRADE_ID
+    label: Trade id
+    type: id
+  - path: SOURCE_SYSTEM
+    label: Source system
+    type: text
+  - path: MTM
+    label: Mtm
+    type: amount
+  - path: PNL_1D
+    label: Pnl 1 d
+    type: amount
+  - path: DV01
+    label: Dv01
+    type: amount
+  - path: NOTIONAL
+    label: Notional
+    type: amount
+  - path: VALUATION_DATE
+    label: Valuation date
+    type: date
 console:
   examples:
   - - VAR VAR-RATES

@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-1000004",
+ "TRADE_ID": 1000004,
+ "SOURCE_SYSTEM": "ENDUR",
+ "PRODUCT_TYPE": "ComFut",
+ "PRODUCT_GROUP": "Commodity",
+ "PORTFOLIO": "BOOK-COMM-2",
+ "DESK": "DESK-COMM",
+ "COUNTERPARTY": "CP-HARBORPT",
+ "NETTING_SET": "",
+ "TRADER_ID": "TRDR-TBRENNAN",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "MATURED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 367879.0,
+ "MTM": -2100,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 35,
+ "DV01": 0,
+ "TRADE_DATE": "2024-10-25",
+ "MATURITY_DATE": "2024-12-31",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 500,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -2135"
+    }
+   ]
+  }
+ }
+}

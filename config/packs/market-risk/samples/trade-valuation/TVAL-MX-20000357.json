@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000357",
+ "TRADE_ID": "MX-20000357",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "GAS_SWING",
+ "PRODUCT_GROUP": "Commodity",
+ "PORTFOLIO": "BOOK-COMM-2",
+ "DESK": "DESK-COMM",
+ "COUNTERPARTY": "CP-CORAL",
+ "NETTING_SET": "NS-CORAL-NY",
+ "TRADER_ID": "TRDR-FROSSI",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 135000000.0,
+ "MTM": 2742803,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 5825,
+ "DV01": 0,
+ "TRADE_DATE": "2024-11-01",
+ "MATURITY_DATE": "2033-03-28",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 6836,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 2736978"
+    }
+   ]
+  }
+ }
+}

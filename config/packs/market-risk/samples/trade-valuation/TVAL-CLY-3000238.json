@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000238",
+ "TRADE_ID": "CLY-3000238",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "T_BILL",
+ "PRODUCT_GROUP": "Money market",
+ "PORTFOLIO": "BOOK-MM-2",
+ "DESK": "DESK-MM",
+ "COUNTERPARTY": "CP-SUMMIT",
+ "NETTING_SET": "NS-SUMMIT-NY",
+ "TRADER_ID": "TRDR-SIYER",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "CAD",
+ "NOTIONAL": 215000000.0,
+ "MTM": -1859294,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -129162,
+ "DV01": 6186,
+ "TRADE_DATE": "2026-08-19",
+ "MATURITY_DATE": "2026-12-11",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 5869,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -1730132"
+    }
+   ]
+  }
+ }
+}

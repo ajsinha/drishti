@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000094",
+ "TRADE_ID": "CLY-3000094",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "CDS_INDEX",
+ "PRODUCT_GROUP": "Credit",
+ "PORTFOLIO": "BOOK-CREDIT-2",
+ "DESK": "DESK-CREDIT",
+ "COUNTERPARTY": "CP-TOKAI",
+ "NETTING_SET": "NS-TOKAI-NY",
+ "TRADER_ID": "TRDR-CDUBOIS",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "JPY",
+ "NOTIONAL": 46000000.0,
+ "MTM": 1013301,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -38417,
+ "DV01": 0,
+ "TRADE_DATE": "2024-11-08",
+ "MATURITY_DATE": "2029-12-03",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 2487,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 1051718"
+    }
+   ]
+  }
+ }
+}

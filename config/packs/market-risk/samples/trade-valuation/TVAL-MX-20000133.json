@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000133",
+ "TRADE_ID": "MX-20000133",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "CALLABLE_SWAP",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-3",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-ALDERSHOT",
+ "NETTING_SET": "NS-ALDERSHOT-NY",
+ "TRADER_ID": "TRDR-MOKAFOR",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "CHF",
+ "NOTIONAL": 73000000.0,
+ "MTM": -432768,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -20753,
+ "DV01": -50425,
+ "TRADE_DATE": "2025-08-21",
+ "MATURITY_DATE": "2033-04-11",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 1596,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -412015"
+    }
+   ]
+  }
+ }
+}

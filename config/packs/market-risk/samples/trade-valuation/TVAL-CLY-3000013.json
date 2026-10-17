@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000013",
+ "TRADE_ID": "CLY-3000013",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "FX_NDF",
+ "PRODUCT_GROUP": "FX",
+ "PORTFOLIO": "BOOK-FX-3",
+ "DESK": "DESK-FX",
+ "COUNTERPARTY": "CP-LUMEN",
+ "NETTING_SET": "NS-LUMEN-LDN",
+ "TRADER_ID": "TRDR-LMOREAU",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 58000000.0,
+ "MTM": -16062,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 561,
+ "DV01": 0,
+ "TRADE_DATE": "2026-09-10",
+ "MATURITY_DATE": "2027-03-25",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 612,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -16623"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000207",
+ "TRADE_ID": "MX-20000207",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "EQ_ASIAN",
+ "PRODUCT_GROUP": "Equity",
+ "PORTFOLIO": "BOOK-EQD-3",
+ "DESK": "DESK-EQD",
+ "COUNTERPARTY": "CP-TOKAI",
+ "NETTING_SET": "NS-TOKAI-LDN",
+ "TRADER_ID": "TRDR-PLINDQVIST",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 155000000.0,
+ "MTM": -51366,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -1506,
+ "DV01": 0,
+ "TRADE_DATE": "2024-08-16",
+ "MATURITY_DATE": "2027-07-19",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 1653,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -49860"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000014",
+ "TRADE_ID": "MX-20000014",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "BASIS_SWAP",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-3",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-VERDANT",
+ "NETTING_SET": "NS-VERDANT-NY",
+ "TRADER_ID": "TRDR-MOKAFOR",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 64000000.0,
+ "MTM": -777511,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 32351,
+ "DV01": -28743,
+ "TRADE_DATE": "2026-03-20",
+ "MATURITY_DATE": "2031-03-05",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 2195,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -809862"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000061",
+ "TRADE_ID": "MX-20000061",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "FRA",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-1",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-CORAL",
+ "NETTING_SET": "NS-CORAL-NY",
+ "TRADER_ID": "TRDR-MOKAFOR",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "GBP",
+ "NOTIONAL": 394000000.0,
+ "MTM": -5003962,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -178705,
+ "DV01": -54076,
+ "TRADE_DATE": "2024-10-18",
+ "MATURITY_DATE": "2026-10-07",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 13948,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -4825257"
+    }
+   ]
+  }
+ }
+}

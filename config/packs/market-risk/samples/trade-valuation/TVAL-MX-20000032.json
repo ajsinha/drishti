@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000032",
+ "TRADE_ID": "MX-20000032",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "ZC_SWAP",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-3",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-HALCYON",
+ "NETTING_SET": "NS-HALCYON-NY",
+ "TRADER_ID": "TRDR-ASHAH",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "CHF",
+ "NOTIONAL": 85000000.0,
+ "MTM": 22777888,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 168326,
+ "DV01": -68518,
+ "TRADE_DATE": "2024-05-17",
+ "MATURITY_DATE": "2033-05-06",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 46406,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 22609562"
+    }
+   ]
+  }
+ }
+}

@@ -30,17 +30,19 @@ description: "The trade table of the model trades-basic."
 sample: true
 endorsement: "promoted"
 tags: [sample, trading, tutorial]
-source: { connector: trading-store, kind: trade }
+source: { connector: risk-store, kind: trade-valuation }
 refresh: { on-load: true }
 columns:
-  tradeId:       { type: string, role: key }
-  desk:          { type: string }
-  book:          { type: string }
-  productType:   { type: string }
-  currency:      { type: string }
-  status:        { type: string }
-  notional:      { type: decimal, format: amount0 }
-  mtm:           { type: decimal, format: signed0 }
-  pnl1d:         { type: decimal, format: signed0 }
-  tradeDate:     { type: date }
-  mtmInMillions: { type: decimal, expr: "mtm / 1000000", description: "MTM in millions of USD" }
+  VALUATION_ID:    { type: string, role: key }
+  TRADE_ID:        { type: string }
+  SOURCE_SYSTEM:   { type: string }
+  DESK:            { type: string }
+  PORTFOLIO:       { type: string }
+  PRODUCT_TYPE:    { type: string }
+  CURRENCY:        { type: string }
+  TRADE_STATUS:    { type: string }
+  NOTIONAL:        { type: decimal, format: amount0 }
+  MTM:             { type: decimal, format: signed0 }
+  PNL_1D:          { type: decimal, format: signed0 }
+  TRADE_DATE:      { type: date }
+  MTM_IN_MILLIONS: { type: decimal, expr: "MTM / 1000000", description: "MTM in millions of USD" }

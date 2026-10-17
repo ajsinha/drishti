@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000438",
+ "TRADE_ID": "MX-20000438",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "WORST_OF_NOTE",
+ "PRODUCT_GROUP": "Structured",
+ "PORTFOLIO": "BOOK-STRUCT-1",
+ "DESK": "DESK-STRUCT",
+ "COUNTERPARTY": "CP-PINNACLE",
+ "NETTING_SET": "NS-PINNACLE-TKY",
+ "TRADER_ID": "TRDR-VRAO",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 214000000.0,
+ "MTM": 765390,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 15573,
+ "DV01": 0,
+ "TRADE_DATE": "2024-04-19",
+ "MATURITY_DATE": "2028-09-12",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 3671,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 749817"
+    }
+   ]
+  }
+ }
+}

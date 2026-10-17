@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000139",
+ "TRADE_ID": "MX-20000139",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "RANGE_ACCRUAL_SWAP",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-3",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-RHEINTAL",
+ "NETTING_SET": "NS-RHEINTAL-NY",
+ "TRADER_ID": "TRDR-MOKAFOR",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "CAD",
+ "NOTIONAL": 130000000.0,
+ "MTM": -910777,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 36025,
+ "DV01": -113218,
+ "TRADE_DATE": "2024-05-31",
+ "MATURITY_DATE": "2034-10-23",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 3122,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -946802"
+    }
+   ]
+  }
+ }
+}

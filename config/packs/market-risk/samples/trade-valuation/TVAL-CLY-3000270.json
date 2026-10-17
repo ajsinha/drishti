@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000270",
+ "TRADE_ID": "CLY-3000270",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "REPO",
+ "PRODUCT_GROUP": "Securities financing",
+ "PORTFOLIO": "BOOK-SFT-3",
+ "DESK": "DESK-SFT",
+ "COUNTERPARTY": "CP-NORTHBRIDGE",
+ "NETTING_SET": "NS-NORTHBRIDGE-FRA",
+ "TRADER_ID": "TRDR-NFAROUK",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 139000000.0,
+ "MTM": -422916,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 32998,
+ "DV01": 1301,
+ "TRADE_DATE": "2026-09-11",
+ "MATURITY_DATE": "2026-10-27",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 2236,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -455914"
+    }
+   ]
+  }
+ }
+}

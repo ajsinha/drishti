@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000078",
+ "TRADE_ID": "CLY-3000078",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "FX_VARIANCE_SWAP",
+ "PRODUCT_GROUP": "FX",
+ "PORTFOLIO": "BOOK-FX-1",
+ "DESK": "DESK-FX",
+ "COUNTERPARTY": "CP-RHEINTAL",
+ "NETTING_SET": "NS-RHEINTAL-LDN",
+ "TRADER_ID": "TRDR-ENOVAK",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 4000000.0,
+ "MTM": 77801,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 467,
+ "DV01": 0,
+ "TRADE_DATE": "2025-03-11",
+ "MATURITY_DATE": "2033-06-03",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 500,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 77334"
+    }
+   ]
+  }
+ }
+}

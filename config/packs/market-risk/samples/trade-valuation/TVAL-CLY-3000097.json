@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000097",
+ "TRADE_ID": "CLY-3000097",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "CDS_TRANCHE",
+ "PRODUCT_GROUP": "Credit",
+ "PORTFOLIO": "BOOK-CREDIT-3",
+ "DESK": "DESK-CREDIT",
+ "COUNTERPARTY": "CP-MERIDIAN-RE",
+ "NETTING_SET": "NS-MERIDIAN-RE-NY",
+ "TRADER_ID": "TRDR-DWHITFIELD",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "CAD",
+ "NOTIONAL": 242000000.0,
+ "MTM": 3988071,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -19097,
+ "DV01": 0,
+ "TRADE_DATE": "2025-12-31",
+ "MATURITY_DATE": "2034-02-14",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 10396,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 4007168"
+    }
+   ]
+  }
+ }
+}

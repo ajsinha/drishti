@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000257",
+ "TRADE_ID": "CLY-3000257",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "DEPOSIT",
+ "PRODUCT_GROUP": "Money market",
+ "PORTFOLIO": "BOOK-MM-1",
+ "DESK": "DESK-MM",
+ "COUNTERPARTY": "CP-SOLARIS",
+ "NETTING_SET": "NS-SOLARIS-NY",
+ "TRADER_ID": "TRDR-ISCHULZ",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 12000000.0,
+ "MTM": -41962,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 778,
+ "DV01": -462,
+ "TRADE_DATE": "2026-07-31",
+ "MATURITY_DATE": "2027-01-11",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 500,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -42740"
+    }
+   ]
+  }
+ }
+}

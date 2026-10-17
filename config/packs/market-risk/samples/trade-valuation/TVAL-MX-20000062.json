@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000062",
+ "TRADE_ID": "MX-20000062",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "FRA",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-3",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-VERDANT",
+ "NETTING_SET": "NS-VERDANT-NY",
+ "TRADER_ID": "TRDR-ASHAH",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "AUD",
+ "NOTIONAL": 452000000.0,
+ "MTM": -5476015,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -244203,
+ "DV01": 17705,
+ "TRADE_DATE": "2024-11-01",
+ "MATURITY_DATE": "2026-10-07",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 15472,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -5231812"
+    }
+   ]
+  }
+ }
+}

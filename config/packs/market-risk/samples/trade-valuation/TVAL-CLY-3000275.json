@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000275",
+ "TRADE_ID": "CLY-3000275",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "REVERSE_REPO",
+ "PRODUCT_GROUP": "Securities financing",
+ "PORTFOLIO": "BOOK-SFT-1",
+ "DESK": "DESK-SFT",
+ "COUNTERPARTY": "CP-SOLARIS",
+ "NETTING_SET": "NS-SOLARIS-FRA",
+ "TRADER_ID": "TRDR-KBRANDT",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 214000000.0,
+ "MTM": 2428077,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -124863,
+ "DV01": 6860,
+ "TRADE_DATE": "2026-08-06",
+ "MATURITY_DATE": "2026-12-22",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 6996,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 2552940"
+    }
+   ]
+  }
+ }
+}

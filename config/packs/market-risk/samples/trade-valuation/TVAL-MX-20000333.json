@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000333",
+ "TRADE_ID": "MX-20000333",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "CMD_SPREAD_OPT",
+ "PRODUCT_GROUP": "Commodity",
+ "PORTFOLIO": "BOOK-COMM-1",
+ "DESK": "DESK-COMM",
+ "COUNTERPARTY": "CP-BRAMBLE",
+ "NETTING_SET": "NS-BRAMBLE-NY",
+ "TRADER_ID": "TRDR-TBRENNAN",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 195000000.0,
+ "MTM": 1690310,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -11700,
+ "DV01": 0,
+ "TRADE_DATE": "2025-11-14",
+ "MATURITY_DATE": "2032-07-30",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 5331,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 1702010"
+    }
+   ]
+  }
+ }
+}

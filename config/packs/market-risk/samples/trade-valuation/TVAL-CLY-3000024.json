@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000024",
+ "TRADE_ID": "CLY-3000024",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "FX_SWAP",
+ "PRODUCT_GROUP": "FX",
+ "PORTFOLIO": "BOOK-FX-2",
+ "DESK": "DESK-FX",
+ "COUNTERPARTY": "CP-HALCYON",
+ "NETTING_SET": "NS-HALCYON-LDN",
+ "TRADER_ID": "TRDR-ENOVAK",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 108000000.0,
+ "MTM": 708597,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 3115,
+ "DV01": -80277,
+ "TRADE_DATE": "2026-05-21",
+ "MATURITY_DATE": "2035-05-29",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 2497,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 705482"
+    }
+   ]
+  }
+ }
+}

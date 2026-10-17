@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000088",
+ "TRADE_ID": "MX-20000088",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "FLOOR",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-2",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-PINNACLE",
+ "NETTING_SET": "NS-PINNACLE-NY",
+ "TRADER_ID": "TRDR-ASHAH",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "CHF",
+ "NOTIONAL": 37000000.0,
+ "MTM": 707908,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -15944,
+ "DV01": 4838,
+ "TRADE_DATE": "2025-11-27",
+ "MATURITY_DATE": "2027-04-28",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 1786,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 723852"
+    }
+   ]
+  }
+ }
+}

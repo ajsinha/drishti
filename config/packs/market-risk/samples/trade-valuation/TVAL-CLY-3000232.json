@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000232",
+ "TRADE_ID": "CLY-3000232",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "CLO_TRANCHE",
+ "PRODUCT_GROUP": "Fixed income",
+ "PORTFOLIO": "BOOK-FI-3",
+ "DESK": "DESK-FI",
+ "COUNTERPARTY": "CP-CASCADIA",
+ "NETTING_SET": "NS-CASCADIA-NY",
+ "TRADER_ID": "TRDR-RCASTILLO",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 192000000.0,
+ "MTM": 2168781,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -85031,
+ "DV01": 179482,
+ "TRADE_DATE": "2024-12-20",
+ "MATURITY_DATE": "2035-11-13",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 6258,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 2253812"
+    }
+   ]
+  }
+ }
+}

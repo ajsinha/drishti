@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000237",
+ "TRADE_ID": "MX-20000237",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "EQ_VARIANCE_SWAP",
+ "PRODUCT_GROUP": "Equity",
+ "PORTFOLIO": "BOOK-EQD-3",
+ "DESK": "DESK-EQD",
+ "COUNTERPARTY": "CP-PINNACLE",
+ "NETTING_SET": "NS-PINNACLE-LDN",
+ "TRADER_ID": "TRDR-JWEISS",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "GBP",
+ "NOTIONAL": 8000000.0,
+ "MTM": -21217,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -20,
+ "DV01": 0,
+ "TRADE_DATE": "2025-07-03",
+ "MATURITY_DATE": "2036-08-20",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 500,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -21197"
+    }
+   ]
+  }
+ }
+}

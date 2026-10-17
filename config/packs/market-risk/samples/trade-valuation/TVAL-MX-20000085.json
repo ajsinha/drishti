@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000085",
+ "TRADE_ID": "MX-20000085",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "FLOOR",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-1",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-CORAL",
+ "NETTING_SET": "NS-CORAL-NY",
+ "TRADER_ID": "TRDR-MOKAFOR",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "CHF",
+ "NOTIONAL": 30000000.0,
+ "MTM": -309546,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -14470,
+ "DV01": -5272,
+ "TRADE_DATE": "2025-10-31",
+ "MATURITY_DATE": "2027-09-23",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 919,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -295076"
+    }
+   ]
+  }
+ }
+}

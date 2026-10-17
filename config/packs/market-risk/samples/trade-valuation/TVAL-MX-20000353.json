@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000353",
+ "TRADE_ID": "MX-20000353",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "POWER_SWAP",
+ "PRODUCT_GROUP": "Commodity",
+ "PORTFOLIO": "BOOK-COMM-3",
+ "DESK": "DESK-COMM",
+ "COUNTERPARTY": "CP-AURORA",
+ "NETTING_SET": "NS-AURORA-NY",
+ "TRADER_ID": "TRDR-TBRENNAN",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 199000000.0,
+ "MTM": 2093005,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 2315,
+ "DV01": 0,
+ "TRADE_DATE": "2026-02-11",
+ "MATURITY_DATE": "2032-06-29",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 6176,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 2090690"
+    }
+   ]
+  }
+ }
+}

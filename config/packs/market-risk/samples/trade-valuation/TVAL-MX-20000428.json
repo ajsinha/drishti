@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000428",
+ "TRADE_ID": "MX-20000428",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "HYBRID_FX_RATES",
+ "PRODUCT_GROUP": "Structured",
+ "PORTFOLIO": "BOOK-STRUCT-1",
+ "DESK": "DESK-STRUCT",
+ "COUNTERPARTY": "CP-CASCADIA",
+ "NETTING_SET": "NS-CASCADIA-TKY",
+ "TRADER_ID": "TRDR-VRAO",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 85000000.0,
+ "MTM": 917810,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -52981,
+ "DV01": 38134,
+ "TRADE_DATE": "2024-12-10",
+ "MATURITY_DATE": "2029-10-11",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 2686,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 970791"
+    }
+   ]
+  }
+ }
+}

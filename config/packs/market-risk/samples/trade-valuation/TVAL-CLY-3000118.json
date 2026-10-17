@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000118",
+ "TRADE_ID": "CLY-3000118",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "TRS_BOND",
+ "PRODUCT_GROUP": "Credit",
+ "PORTFOLIO": "BOOK-CREDIT-3",
+ "DESK": "DESK-CREDIT",
+ "COUNTERPARTY": "CP-MERIDIAN-RE",
+ "NETTING_SET": "NS-MERIDIAN-RE-NY",
+ "TRADER_ID": "TRDR-CDUBOIS",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 238000000.0,
+ "MTM": 4717154,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 53306,
+ "DV01": -89692,
+ "TRADE_DATE": "2025-10-21",
+ "MATURITY_DATE": "2030-07-08",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 11814,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 4663848"
+    }
+   ]
+  }
+ }
+}

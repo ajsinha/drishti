@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-1000003",
+ "TRADE_ID": 1000003,
+ "SOURCE_SYSTEM": "ENDUR",
+ "PRODUCT_TYPE": "ComSwap",
+ "PRODUCT_GROUP": "Commodity",
+ "PORTFOLIO": "BOOK-COMM-3",
+ "DESK": "DESK-COMM",
+ "COUNTERPARTY": "CP-CORAL",
+ "NETTING_SET": "",
+ "TRADER_ID": "TRDR-TBRENNAN",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 17909.1,
+ "MTM": -317,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 1,
+ "DV01": 0,
+ "TRADE_DATE": "2026-07-11",
+ "MATURITY_DATE": "2026-10-31",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 500,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -318"
+    }
+   ]
+  }
+ }
+}

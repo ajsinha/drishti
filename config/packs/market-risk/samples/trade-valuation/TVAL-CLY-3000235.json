@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000235",
+ "TRADE_ID": "CLY-3000235",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "T_BILL",
+ "PRODUCT_GROUP": "Money market",
+ "PORTFOLIO": "BOOK-MM-1",
+ "DESK": "DESK-MM",
+ "COUNTERPARTY": "CP-SUMMIT",
+ "NETTING_SET": "NS-SUMMIT-NY",
+ "TRADER_ID": "TRDR-ISCHULZ",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 46000000.0,
+ "MTM": -500692,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -15277,
+ "DV01": -1489,
+ "TRADE_DATE": "2026-08-12",
+ "MATURITY_DATE": "2026-12-30",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 1461,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -485415"
+    }
+   ]
+  }
+ }
+}

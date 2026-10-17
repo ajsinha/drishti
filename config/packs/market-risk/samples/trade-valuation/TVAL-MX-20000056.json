@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000056",
+ "TRADE_ID": "MX-20000056",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "CMS_SWAP",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-3",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-TOKAI",
+ "NETTING_SET": "NS-TOKAI-NY",
+ "TRADER_ID": "TRDR-MOKAFOR",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "JPY",
+ "NOTIONAL": 206000000.0,
+ "MTM": 4123460,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 163737,
+ "DV01": -133500,
+ "TRADE_DATE": "2025-06-02",
+ "MATURITY_DATE": "2033-08-31",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 10307,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 3959723"
+    }
+   ]
+  }
+ }
+}

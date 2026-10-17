@@ -34,66 +34,69 @@ tags: [sample, trading, nested, cashflows]
 # (the server says so in the query warnings) and kept as typed Parquet like the other layers.
 tables:
   trades:
-    source: { connector: trading-store, kind: trade }
+    source: { kind: trade }        # no connector named: every connector serving trades (ENDUR, CALYPSO, MUREX), their rows put together
     mode: cached
     columns:
-      desk:        string
-      productType: string
-      currency:    string
-      status:      string
-      notional:    { type: decimal, format: amount0 }
-      maturityDate: date
+      SOURCE_SYSTEM:    string
+      PRODUCT_TYPE:     string
+      PRODUCT_SUB_TYPE: string
+      PORTFOLIO:        string
+      COUNTERPARTY:     string
+      CURRENCY:         string
+      TRADE_STATUS:     string
+      BUY_SELL_CODE:    string
+      QUANTITY:         { type: decimal, format: amount0 }
+      MATURITY_DATE:    date
 
   legs:
     source:
-      connector: trading-store
       kind: trade
-      each: legs                   # one row per element of the trade's `legs` array. The row's id is the TRADE's id; `index` is its position.
+      each: LEGS                   # one row per element of the trade's `LEGS` array. The row's id is the TRADE's id; `index` is its position.
     mode: cached
     columns:                       # paths are relative to the array element
-      leg:        integer
-      label:      string
-      payReceive: string
-      rateType:   string
-      index_name: { path: index, type: string }     # the element's own field "index" (the rate index, USCPI): not the column `index`
-      rate:       { type: decimal, format: pct }
-      spread:     decimal
-      frequency:  string
-      dayCount:   string
-      currency:   string
-      notional:   { type: decimal, format: amount0 }
+      LEG_ID:            integer
+      LEG_TYPE:          string
+      LEG_ECONOMIC_TYPE: string
+      INDEX_NAME:        { path: INDEX.NAME, type: string }   # the leg's INDEX object's NAME
+      FLOAT_SPREAD:      decimal
+      PRICE_UNIT:        string
+      SETTLEMENT_TYPE:   string
+      CURRENCY:          string
+      NOTIONAL:          { type: decimal, format: amount0 }
 
   cashflows:
     source:
-      connector: trading-store
       kind: trade
-      each: schedule               # the trade's payment `schedule` array
+      each: "LEGS[].CASH_FLOWS"    # every leg's CASH_FLOWS array: one row per flow (^.LEG_ID reads the leg it belongs to)
     mode: cached
     columns:
-      payDate: { path: date, type: date }
-      rate:    { type: decimal, format: pct }
-      amount:  { type: decimal, format: amount0 }
-      status:  string
+      LEG_ID:       { path: ^.LEG_ID, type: integer }
+      FLOW_ID:      integer
+      PAYMENT_DATE: date
+      START_DATE:   date
+      END_DATE:     date
+      NOTIONAL:     { type: decimal, format: amount0 }
+      RATE:         decimal
 
-# RELATIONSHIPS. `id` on an array table is the PARENT trade's id, so legs.id and cashflows.id both join to trades.id, many rows to one trade.
 relationships:
   - { from: legs.id,      to: trades.id, cardinality: many-to-one }     # many legs belong to one trade
   - { from: cashflows.id, to: trades.id, cardinality: many-to-one }
 
 # MEASURES. Each aggregates one table. Group them by columns of the same table, or of trades (reached many-to-one).
 measures:
-  Cashflow amount:    { expr: "sum(cashflows.amount)", format: amount0, description: "Scheduled cashflow, summed over the rows the visual groups by." }
+  Cashflow amount:    { expr: "sum(cashflows.NOTIONAL)", format: amount0, description: "The flows' notional (quantity times price, or the principal of a period), summed over the rows the visual groups by." }
+  Trades:             { expr: "count(trades)", description: "Trades of every source system (ENDUR, CALYPSO, MUREX): group by trades.SOURCE_SYSTEM to see each." }
   Cashflows:          { expr: "count(cashflows)" }
-  Average cashflow:   { expr: "avg(cashflows.amount)", format: amount0 }
-  Largest cashflow:   { expr: "max(cashflows.amount)", format: amount0 }
+  Average cashflow:   { expr: "avg(cashflows.NOTIONAL)", format: amount0 }
+  Largest cashflow:   { expr: "max(cashflows.NOTIONAL)", format: amount0 }
   Legs:               { expr: "count(legs)" }
-  Leg notional:       { expr: "sum(legs.notional)", format: amount0 }
+  Leg notional:       { expr: "sum(legs.NOTIONAL)", format: amount0 }
   Trades with cashflows: { expr: "distinct(cashflows.id)" }
 
 # HIERARCHIES. A date column cut into parts: a visual can drill from year to quarter to month to the day.
 hierarchies:
-  Pay date: [cashflows.payDate.year, cashflows.payDate.quarter, cashflows.payDate.month, cashflows.payDate]
+  Pay date: [cashflows.PAYMENT_DATE.year, cashflows.PAYMENT_DATE.quarter, cashflows.PAYMENT_DATE.month, cashflows.PAYMENT_DATE]
 
-# Ask for "Cashflow amount" by `cashflows.payDate.month` and the answer is cashflow by pay month. Group cashflows by `trades.desk` and the join
+# Ask for "Cashflow amount" by `cashflows.PAYMENT_DATE.month` and the answer is cashflow by pay month. Group cashflows by `trades.SOURCE_SYSTEM` and the join
 # goes cashflows -> trades (many-to-one), so nothing is counted twice. Legs and cashflows are siblings: one query cannot group cashflows by
 # a leg column (that would repeat each cashflow once per leg), and the engine says so.

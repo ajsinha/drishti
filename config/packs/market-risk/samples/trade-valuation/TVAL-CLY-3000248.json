@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000248",
+ "TRADE_ID": "CLY-3000248",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "CERT_DEPOSIT",
+ "PRODUCT_GROUP": "Money market",
+ "PORTFOLIO": "BOOK-MM-3",
+ "DESK": "DESK-MM",
+ "COUNTERPARTY": "CP-CORAL",
+ "NETTING_SET": "NS-CORAL-NY",
+ "TRADER_ID": "TRDR-ISCHULZ",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "AUD",
+ "NOTIONAL": 214000000.0,
+ "MTM": 1716643,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -87343,
+ "DV01": -10683,
+ "TRADE_DATE": "2026-08-11",
+ "MATURITY_DATE": "2027-03-22",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 5573,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 1803986"
+    }
+   ]
+  }
+ }
+}

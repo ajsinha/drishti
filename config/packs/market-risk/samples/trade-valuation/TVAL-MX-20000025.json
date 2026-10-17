@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000025",
+ "TRADE_ID": "MX-20000025",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "XCCY_SWAP_MTM",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-2",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-ALDERSHOT",
+ "NETTING_SET": "NS-ALDERSHOT-NY",
+ "TRADER_ID": "TRDR-ASHAH",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 20000000.0,
+ "MTM": -71768,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 2598,
+ "DV01": 12772,
+ "TRADE_DATE": "2026-07-13",
+ "MATURITY_DATE": "2033-04-18",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 500,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -74366"
+    }
+   ]
+  }
+ }
+}

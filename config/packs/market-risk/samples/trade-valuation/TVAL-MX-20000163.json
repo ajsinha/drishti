@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000163",
+ "TRADE_ID": "MX-20000163",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "EQ_FORWARD",
+ "PRODUCT_GROUP": "Equity",
+ "PORTFOLIO": "BOOK-EQD-3",
+ "DESK": "DESK-EQD",
+ "COUNTERPARTY": "CP-CASCADIA",
+ "NETTING_SET": "NS-CASCADIA-LDN",
+ "TRADER_ID": "TRDR-PLINDQVIST",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "CAD",
+ "NOTIONAL": 230000000.0,
+ "MTM": -1368137,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -3102,
+ "DV01": 0,
+ "TRADE_DATE": "2026-09-09",
+ "MATURITY_DATE": "2028-04-07",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 5036,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -1365035"
+    }
+   ]
+  }
+ }
+}

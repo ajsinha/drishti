@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000272",
+ "TRADE_ID": "CLY-3000272",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "REVERSE_REPO",
+ "PRODUCT_GROUP": "Securities financing",
+ "PORTFOLIO": "BOOK-SFT-1",
+ "DESK": "DESK-SFT",
+ "COUNTERPARTY": "CP-CORAL",
+ "NETTING_SET": "NS-CORAL-FRA",
+ "TRADER_ID": "TRDR-NFAROUK",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 161000000.0,
+ "MTM": 3324957,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -86283,
+ "DV01": -2008,
+ "TRADE_DATE": "2026-08-06",
+ "MATURITY_DATE": "2026-10-07",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 8260,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 3411240"
+    }
+   ]
+  }
+ }
+}

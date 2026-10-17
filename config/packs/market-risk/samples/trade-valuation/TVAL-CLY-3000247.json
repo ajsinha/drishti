@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000247",
+ "TRADE_ID": "CLY-3000247",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "CERT_DEPOSIT",
+ "PRODUCT_GROUP": "Money market",
+ "PORTFOLIO": "BOOK-MM-1",
+ "DESK": "DESK-MM",
+ "COUNTERPARTY": "CP-HALCYON",
+ "NETTING_SET": "NS-HALCYON-NY",
+ "TRADER_ID": "TRDR-SIYER",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 11000000.0,
+ "MTM": 281651,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 2003,
+ "DV01": 571,
+ "TRADE_DATE": "2026-09-22",
+ "MATURITY_DATE": "2027-04-20",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 673,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 279648"
+    }
+   ]
+  }
+ }
+}

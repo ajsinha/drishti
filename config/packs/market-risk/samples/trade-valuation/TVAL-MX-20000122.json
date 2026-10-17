@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000122",
+ "TRADE_ID": "MX-20000122",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "CMS_SPREAD_OPT",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-1",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-SOLARIS",
+ "NETTING_SET": "NS-SOLARIS-NY",
+ "TRADER_ID": "TRDR-MOKAFOR",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "AUD",
+ "NOTIONAL": 176000000.0,
+ "MTM": 1603140,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 15960,
+ "DV01": 36709,
+ "TRADE_DATE": "2025-09-19",
+ "MATURITY_DATE": "2028-06-07",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 4966,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 1587180"
+    }
+   ]
+  }
+ }
+}

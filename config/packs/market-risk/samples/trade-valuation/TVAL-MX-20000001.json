@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000001",
+ "TRADE_ID": "MX-20000001",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "IRS_FIXFLOAT",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-3",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-MERIDIAN-RE",
+ "NETTING_SET": "NS-MERIDIAN-RE-NY",
+ "TRADER_ID": "TRDR-ASHAH",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "AUD",
+ "NOTIONAL": 242000000.0,
+ "MTM": 1876068,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 126999,
+ "DV01": -155245,
+ "TRADE_DATE": "2025-07-25",
+ "MATURITY_DATE": "2032-06-25",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 6172,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 1749069"
+    }
+   ]
+  }
+ }
+}

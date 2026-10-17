@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000278",
+ "TRADE_ID": "CLY-3000278",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "TRIPARTY_REPO",
+ "PRODUCT_GROUP": "Securities financing",
+ "PORTFOLIO": "BOOK-SFT-3",
+ "DESK": "DESK-SFT",
+ "COUNTERPARTY": "CP-TOKAI",
+ "NETTING_SET": "NS-TOKAI-FRA",
+ "TRADER_ID": "TRDR-NFAROUK",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 223000000.0,
+ "MTM": -4913363,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -323941,
+ "DV01": 0,
+ "TRADE_DATE": "2026-09-15",
+ "MATURITY_DATE": "2026-10-15",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 12057,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -4589422"
+    }
+   ]
+  }
+ }
+}

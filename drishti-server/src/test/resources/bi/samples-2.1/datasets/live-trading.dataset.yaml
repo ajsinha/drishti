@@ -35,27 +35,29 @@ tags: [sample, trading, live, streaming, tutorial]
 tables:
   trade:
     source:
-      kind: trade               # no connector named: whichever running connector serves trades and can push them (the demo ticker in this installation)
+      kind: trade-valuation     # no connector named: whichever running connector serves trade valuations and can push them (the demo ticker here)
     mode: live
     live:                       # retention keeps the table bounded: the most rows it holds, and how long a row may go without changing
       rows: 5000
       history:                  # every 10 s the measures below are worked out over the table and added to a bounded history, the dataset table `history`
         every: 10s              #   (ts, then one column per measure); the newest 360 samples are kept, an hour. A line of "MTM history" by history.ts is the
-        keep: 360               #   net MTM over the last hour, and it survives a browser refresh. Add `by: [desk]` for one row per desk and sample.
+        keep: 360               #   net MTM over the last hour, and it survives a browser refresh. Add `by: [DESK]` for one row per desk and sample.
         measures: [MTM, Losses, Trades]
     columns:
-      tradeId:     { type: string, key: true }
-      desk:        string
-      book:        string
-      productType: string
-      assetClass:  string
-      currency:    string
-      status:      string
-      direction:   string
-      trader:      string
-      notional:    { type: decimal, format: amount0 }
-      mtm:         { type: decimal, format: signed0 }
-      pnl1d:       { type: decimal, format: signed0 }
+      VALUATION_ID:  { type: string, key: true }
+      TRADE_ID:      string
+      SOURCE_SYSTEM: string
+      DESK:          string
+      PORTFOLIO:     string
+      PRODUCT_TYPE:  string
+      PRODUCT_GROUP: string
+      CURRENCY:      string
+      TRADE_STATUS:  string
+      BUY_SELL_CODE: string
+      TRADER_ID:     string
+      NOTIONAL:      { type: decimal, format: amount0 }
+      MTM:           { type: decimal, format: signed0 }
+      PNL_1D:        { type: decimal, format: signed0 }
       # Every live table also has two columns you never declare: updateSeq (a counter that grows with each change) and updatedAt (when the row last changed).
 
 measures:
@@ -63,33 +65,33 @@ measures:
     expr: "count(trade)"
     description: Number of trades followed.
   Notional:
-    expr: "sum(trade.notional)"
+    expr: "sum(trade.NOTIONAL)"
     format: amount0
   MTM:
-    expr: "sum(trade.mtm)"
+    expr: "sum(trade.MTM)"
     format: signed0
     description: Net mark-to-market in USD.
   PnL 1d:
-    expr: "sum(trade.pnl1d)"
+    expr: "sum(trade.PNL_1D)"
     format: signed0
   Losses:
-    expr: "sum(trade.mtm, where=trade.mtm < 0)"
+    expr: "sum(trade.MTM, where=trade.MTM < 0)"
     format: signed0
     description: The negative marks only.
   Worst trade:
-    expr: "min(trade.mtm)"
+    expr: "min(trade.MTM)"
     format: signed0
   Best trade:
-    expr: "max(trade.mtm)"
+    expr: "max(trade.MTM)"
     format: signed0
 
 hierarchies:
-  Desk and book: [trade.desk, trade.book]
+  Desk and book: [trade.DESK, trade.PORTFOLIO]
 
 # Kept by group as trades change (docs/guides/DATASETS.md section 7.1): a sum, count, minimum or maximum of a stored column moves by the difference, so the cards and the
 # bar read these few rows, not every trade. Losses (a condition inside the aggregate) is not here: it is computed over the rows, as before.
 rollups:
-  - { name: byDeskBook, table: trade, by: [desk, book, productType, currency], measures: [Trades, Notional, MTM, PnL 1d, Worst trade, Best trade] }
+  - { name: byDeskBook, table: trade, by: [DESK, PORTFOLIO, PRODUCT_TYPE, CURRENCY], measures: [Trades, Notional, MTM, PnL 1d, Worst trade, Best trade] }
 
 security:
-  masked: [trader]              # readers without the raw power see the mask in the trader column
+  masked: [TRADER_ID]              # readers without the raw power see the mask in the trader column

@@ -38,25 +38,25 @@ datasets:                       # alias: the dataset it reads, and its role (a f
   books:          { dataset: trading-risk-books, role: dimension }
 
 relationships:                  # from the MANY side to the ONE side
-  - { from: trades.desk, to: desks.id }
-  - { from: trades.book, to: books.id }
-  - { from: trades.counterpartyId, to: counterparties.id }
-  - { from: trades.nettingSet, to: netting_sets.id, active: false }
+  - { from: trades.DESK, to: desks.id }
+  - { from: trades.PORTFOLIO, to: books.id }
+  - { from: trades.COUNTERPARTY, to: counterparties.id }
+  - { from: trades.NETTING_SET, to: netting_sets.id, active: false }
   - { from: netting_sets.counterparty, to: counterparties.id }
 
 measures:
-  MTM:                 { expr: "sum(trades.mtm)", format: signed0, description: "Mark-to-market in USD, signed." }
-  Notional:            { expr: "sum(trades.notional)", format: amount0 }
-  P&L 1d:              { expr: "sum(trades.pnl1d)", format: signed0, description: "Profit and loss over the last day." }
+  MTM:                 { expr: "sum(trades.MTM)", format: signed0, description: "Mark-to-market in USD, signed." }
+  Notional:            { expr: "sum(trades.NOTIONAL)", format: amount0 }
+  P&L 1d:              { expr: "sum(trades.PNL_1D)", format: signed0, description: "Profit and loss over the last day." }
   Trades:              { expr: "count(trades)" }
-  Counterparties:      { expr: "distinct(trades.counterpartyId)", description: "How many different counterparties the trades are with." }
-  MTM per 1m notional: { expr: "ratio(sum(trades.mtm), sum(trades.notional)) * 1000000", format: signed2 }
-  Worst trade MTM:     { expr: "min(trades.mtm)", format: signed0 }
-  MTM median:          { expr: "percentile(trades.mtm, 0.5)", format: signed0, description: "The median trade MTM." }
-  MTM ytd:             { expr: "ytd(sum(trades.mtm), trades.tradeDate)", format: signed0, description: "MTM of the trades dated this year up to the as-of date (the end of the report's dates). Time intelligence: ytd, mtd, qtd, prior_period, same_period_last_year, running." }
-  MTM rank:            { expr: "rank(sum(trades.mtm))", description: "The position of each row of the visual by MTM, 1 for the highest (a window function: rank, dense_rank, percent_rank, lag, lead, moving_avg, moving_sum, moving_min, moving_max, cumulative)." }
-  MTM 3-day average:   { expr: "moving_avg(sum(trades.mtm), 3, trades.tradeDate)", format: signed0, description: "The average of MTM over the row and the two before it along the trade date (the visual needs trades.tradeDate as a field)." }
-  Open MTM:            { expr: "sum(trades.mtm, where=trades.status == 'Live')", format: signed0, description: "MTM of the live trades only (a condition inside the aggregate)." }
+  Counterparties:      { expr: "distinct(trades.COUNTERPARTY)", description: "How many different counterparties the trades are with." }
+  MTM per 1m notional: { expr: "ratio(sum(trades.MTM), sum(trades.NOTIONAL)) * 1000000", format: signed2 }
+  Worst trade MTM:     { expr: "min(trades.MTM)", format: signed0 }
+  MTM median:          { expr: "percentile(trades.MTM, 0.5)", format: signed0, description: "The median trade MTM." }
+  MTM ytd:             { expr: "ytd(sum(trades.MTM), trades.TRADE_DATE)", format: signed0, description: "MTM of the trades dated this year up to the as-of date (the end of the report's dates). Time intelligence: ytd, mtd, qtd, prior_period, same_period_last_year, running." }
+  MTM rank:            { expr: "rank(sum(trades.MTM))", description: "The position of each row of the visual by MTM, 1 for the highest (a window function: rank, dense_rank, percent_rank, lag, lead, moving_avg, moving_sum, moving_min, moving_max, cumulative)." }
+  MTM 3-day average:   { expr: "moving_avg(sum(trades.MTM), 3, trades.TRADE_DATE)", format: signed0, description: "The average of MTM over the row and the two before it along the trade date (the visual needs trades.TRADE_DATE as a field)." }
+  Open MTM:            { expr: "sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')", format: signed0, description: "MTM of the trades not yet matured (a condition inside the aggregate)." }
   Exposure (EE peak):  { expr: "sum(netting_sets.eePeak)", format: amount0, description: "Sum of the netting sets' expected-exposure peaks. Group by counterparty, not by desk." }
   Exposure (PFE peak): { expr: "sum(netting_sets.pfePeak)", format: amount0 }
   Netting sets:        { expr: "count(netting_sets)" }
@@ -64,12 +64,12 @@ measures:
   Collateral:          { expr: "sum(netting_sets.collateral)", format: signed0 }   # from counterparty-exposure
 
 hierarchies:
-  Trade date: [trades.tradeDate.year, trades.tradeDate.quarter, trades.tradeDate.month, trades.tradeDate]
+  Trade date: [trades.TRADE_DATE.year, trades.TRADE_DATE.quarter, trades.TRADE_DATE.month, trades.TRADE_DATE]
   Desk and book: [desks.name, books.name]
   Counterparty: [counterparties.sector, counterparties.name]
 
 rollups:
-  - { name: by_desk_currency, table: trades, by: [desk, currency, assetClass], measures: [MTM, Notional, P&L 1d, Trades, MTM per 1m notional] }
+  - { name: by_desk_currency, table: trades, by: [DESK, CURRENCY, PRODUCT_GROUP], measures: [MTM, Notional, P&L 1d, Trades, MTM per 1m notional] }
 
 security:
   # Row rules live in each dataset now (BI_MODEL_SPEC.md 2.6). A role restricted on one dataset sees every row of the datasets its rules never

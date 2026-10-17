@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000361",
+ "TRADE_ID": "MX-20000361",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "EMISSIONS_FUTURE",
+ "PRODUCT_GROUP": "Commodity",
+ "PORTFOLIO": "BOOK-COMM-1",
+ "DESK": "DESK-COMM",
+ "COUNTERPARTY": "CP-SUMMIT",
+ "NETTING_SET": "NS-SUMMIT-NY",
+ "TRADER_ID": "TRDR-TBRENNAN",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 145000000.0,
+ "MTM": 895927,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -37900,
+ "DV01": 0,
+ "TRADE_DATE": "2026-08-17",
+ "MATURITY_DATE": "2027-07-08",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 3242,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 933827"
+    }
+   ]
+  }
+ }
+}

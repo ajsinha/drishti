@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000425",
+ "TRADE_ID": "MX-20000425",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "CAPITAL_PROTECTED_NOTE",
+ "PRODUCT_GROUP": "Structured",
+ "PORTFOLIO": "BOOK-STRUCT-2",
+ "DESK": "DESK-STRUCT",
+ "COUNTERPARTY": "CP-CORAL",
+ "NETTING_SET": "NS-CORAL-TKY",
+ "TRADER_ID": "TRDR-YTANAKA",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 151000000.0,
+ "MTM": 2529887,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -18983,
+ "DV01": -106833,
+ "TRADE_DATE": "2025-10-10",
+ "MATURITY_DATE": "2034-05-22",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 6570,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 2548870"
+    }
+   ]
+  }
+ }
+}

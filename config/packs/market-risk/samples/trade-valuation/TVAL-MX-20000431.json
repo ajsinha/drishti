@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000431",
+ "TRADE_ID": "MX-20000431",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "HYBRID_FX_RATES",
+ "PRODUCT_GROUP": "Structured",
+ "PORTFOLIO": "BOOK-STRUCT-2",
+ "DESK": "DESK-STRUCT",
+ "COUNTERPARTY": "CP-MERIDIAN",
+ "NETTING_SET": "NS-MERIDIAN-TKY",
+ "TRADER_ID": "TRDR-VRAO",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 177000000.0,
+ "MTM": 401694,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -4277,
+ "DV01": 145833,
+ "TRADE_DATE": "2024-12-11",
+ "MATURITY_DATE": "2034-05-08",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 2573,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 405971"
+    }
+   ]
+  }
+ }
+}

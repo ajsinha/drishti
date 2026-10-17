@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000338",
+ "TRADE_ID": "MX-20000338",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "CMD_CALENDAR_SPREAD",
+ "PRODUCT_GROUP": "Commodity",
+ "PORTFOLIO": "BOOK-COMM-3",
+ "DESK": "DESK-COMM",
+ "COUNTERPARTY": "CP-SUMMIT",
+ "NETTING_SET": "NS-SUMMIT-NY",
+ "TRADER_ID": "TRDR-FROSSI",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 185000000.0,
+ "MTM": 1269696,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -44571,
+ "DV01": 0,
+ "TRADE_DATE": "2025-01-17",
+ "MATURITY_DATE": "2026-10-07",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 4389,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 1314267"
+    }
+   ]
+  }
+ }
+}

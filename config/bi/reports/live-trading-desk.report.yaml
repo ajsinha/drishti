@@ -60,7 +60,7 @@ pages:
         type: bar
         title: Net MTM by desk
         at: { x: 0, y: 2, w: 6, h: 5 }
-        wells: { axis: [trade.desk], values: [MTM] }
+        wells: { axis: [trade.DESK], values: [MTM] }
         hierarchy: Desk and book
         format: { labels: true }
         alt: Bar chart of net mark to market for each desk, redrawn as the trades tick
@@ -77,7 +77,7 @@ pages:
         type: table
         title: Worst trades
         at: { x: 0, y: 7, w: 6, h: 5 }
-        wells: { columns: [trade.tradeId, trade.desk, trade.trader, MTM] }
+        wells: { columns: [trade.TRADE_ID, trade.DESK, trade.TRADER_ID, MTM] }
         sort: { by: MTM, desc: false }
         limit: 8
         format: { conditional: [{ measure: MTM, op: lt, value: 0, colour: "#b3261e" }] }
@@ -86,7 +86,7 @@ pages:
         type: table
         title: Latest changes
         at: { x: 6, y: 7, w: 6, h: 5 }
-        wells: { columns: [trade.tradeId, trade.updatedAt, MTM] }
+        wells: { columns: [trade.TRADE_ID, trade.updatedAt, MTM] }
         sort: { by: trade.updatedAt, desc: true }
         limit: 8
 
@@ -104,7 +104,7 @@ pages:
         type: perspective-grid          # a 2.1 grid type: since 2.3.0 drawn as Drishti's own grid of the rows the server sends (no WebAssembly in the browser)
         title: Trades
         at: { x: 0, y: 0, w: 12, h: 12 }
-        wells: { columns: [trade.tradeId, trade.desk, trade.book, trade.productType, trade.currency, trade.direction, trade.trader, trade.notional, trade.mtm, trade.pnl1d] }
+        wells: { columns: [trade.TRADE_ID, trade.DESK, trade.PORTFOLIO, trade.PRODUCT_TYPE, trade.CURRENCY, trade.BUY_SELL_CODE, trade.TRADER_ID, trade.NOTIONAL, trade.MTM, trade.PNL_1D] }
         alt: Grid of every trade with its desk, book, product, currency, direction, trader, notional, mark to market and P and L, updated as trades tick
 
   - id: pivot
@@ -114,7 +114,7 @@ pages:
         type: matrix                    # the server groups and totals: desks down, currencies across (2.3.0: the browser no longer pivots)
         title: Net MTM and notional by desk and currency
         at: { x: 0, y: 0, w: 12, h: 12 }
-        wells: { rows: [trade.desk], columns: [trade.currency], values: [MTM, Notional] }
+        wells: { rows: [trade.DESK], columns: [trade.CURRENCY], values: [MTM, Notional] }
         alt: Pivot table of net mark to market and notional by desk and currency, recomputed as trades tick
 
   - id: chart
@@ -124,6 +124,6 @@ pages:
         type: column                    # the same question as a chart: a column per desk, one series per currency, stacked
         title: Net MTM by desk and currency
         at: { x: 0, y: 0, w: 12, h: 12 }
-        wells: { axis: [trade.desk], legend: [trade.currency], values: [MTM] }
+        wells: { axis: [trade.DESK], legend: [trade.CURRENCY], values: [MTM] }
         format: { stacked: true, labels: false }
         alt: Bar chart of net mark to market for each desk, split by currency, redrawn as trades tick

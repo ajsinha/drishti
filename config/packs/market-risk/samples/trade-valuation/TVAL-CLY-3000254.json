@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000254",
+ "TRADE_ID": "CLY-3000254",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "DEPOSIT",
+ "PRODUCT_GROUP": "Money market",
+ "PORTFOLIO": "BOOK-MM-2",
+ "DESK": "DESK-MM",
+ "COUNTERPARTY": "CP-PINNACLE",
+ "NETTING_SET": "NS-PINNACLE-NY",
+ "TRADER_ID": "TRDR-ISCHULZ",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "AUD",
+ "NOTIONAL": 36000000.0,
+ "MTM": 70858,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -1080,
+ "DV01": -799,
+ "TRADE_DATE": "2026-09-25",
+ "MATURITY_DATE": "2026-12-29",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 502,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 71938"
+    }
+   ]
+  }
+ }
+}

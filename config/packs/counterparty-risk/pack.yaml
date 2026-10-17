@@ -88,6 +88,9 @@ graph:
   - pattern: ^SIMM-
     kind: simm
   fields:
+    NETTING_SET:
+      kind: netting-set
+      label: Netting set
     agreement:
       kind: agreement
       label: Agreement

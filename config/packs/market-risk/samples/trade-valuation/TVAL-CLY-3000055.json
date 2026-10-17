@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000055",
+ "TRADE_ID": "CLY-3000055",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "FX_ASIAN",
+ "PRODUCT_GROUP": "FX",
+ "PORTFOLIO": "BOOK-FX-2",
+ "DESK": "DESK-FX",
+ "COUNTERPARTY": "CP-HALCYON",
+ "NETTING_SET": "NS-HALCYON-LDN",
+ "TRADER_ID": "TRDR-LMOREAU",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 93000000.0,
+ "MTM": 1054954,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -11597,
+ "DV01": 0,
+ "TRADE_DATE": "2026-07-24",
+ "MATURITY_DATE": "2027-06-05",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 3040,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 1066551"
+    }
+   ]
+  }
+ }
+}

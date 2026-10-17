@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000149",
+ "TRADE_ID": "CLY-3000149",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "CREDIT_SPREAD_OPT",
+ "PRODUCT_GROUP": "Credit",
+ "PORTFOLIO": "BOOK-CREDIT-3",
+ "DESK": "DESK-CREDIT",
+ "COUNTERPARTY": "CP-LUMEN",
+ "NETTING_SET": "NS-LUMEN-NY",
+ "TRADER_ID": "TRDR-DWHITFIELD",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 244000000.0,
+ "MTM": 4754624,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 89213,
+ "DV01": 0,
+ "TRADE_DATE": "2026-05-01",
+ "MATURITY_DATE": "2027-05-07",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 11949,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 4665411"
+    }
+   ]
+  }
+ }
+}

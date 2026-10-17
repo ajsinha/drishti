@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000063",
+ "TRADE_ID": "MX-20000063",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "FRA",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-3",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-MERIDIAN-RE",
+ "NETTING_SET": "NS-MERIDIAN-RE-NY",
+ "TRADER_ID": "TRDR-ASHAH",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 368000000.0,
+ "MTM": 467887,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -41178,
+ "DV01": 64342,
+ "TRADE_DATE": "2024-05-29",
+ "MATURITY_DATE": "2026-10-07",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 4616,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 509065"
+    }
+   ]
+  }
+ }
+}

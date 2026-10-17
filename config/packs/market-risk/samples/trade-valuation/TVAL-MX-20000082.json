@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000082",
+ "TRADE_ID": "MX-20000082",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "CAP",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-2",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-CORAL",
+ "NETTING_SET": "NS-CORAL-NY",
+ "TRADER_ID": "TRDR-ASHAH",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "GBP",
+ "NOTIONAL": 34000000.0,
+ "MTM": -111052,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -9966,
+ "DV01": -3830,
+ "TRADE_DATE": "2024-08-23",
+ "MATURITY_DATE": "2026-10-07",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 562,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -101086"
+    }
+   ]
+  }
+ }
+}

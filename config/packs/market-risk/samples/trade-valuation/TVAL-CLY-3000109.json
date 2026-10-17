@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000109",
+ "TRADE_ID": "CLY-3000109",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "FIRST_TO_DEFAULT",
+ "PRODUCT_GROUP": "Credit",
+ "PORTFOLIO": "BOOK-CREDIT-1",
+ "DESK": "DESK-CREDIT",
+ "COUNTERPARTY": "CP-CASCADIA",
+ "NETTING_SET": "NS-CASCADIA-NY",
+ "TRADER_ID": "TRDR-CDUBOIS",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "GBP",
+ "NOTIONAL": 153000000.0,
+ "MTM": 1940,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 123,
+ "DV01": 0,
+ "TRADE_DATE": "2026-07-28",
+ "MATURITY_DATE": "2033-04-22",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 1534,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 1817"
+    }
+   ]
+  }
+ }
+}

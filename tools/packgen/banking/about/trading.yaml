@@ -331,6 +331,14 @@ vocabulary:
   TRADES: { term: "Trades", means: "One row per trade: its id, source system, product, side, currency, first leg's notional, index, maturity and status." }
   TRADE_IDS: { term: "Trade ids", means: "The ids of the trades the page gathers." }
   INDEX_NAME: { term: "Index", means: "The index of the trade's first leg that names one." }
+  VALUATION_ID: { term: "Valuation", means: "The risk engine's valuation of one trade: TVAL- and the trade id." }
+  DESK: { term: "Desk", means: "The trading desk the trade's portfolio belongs to." }
+  NETTING_SET: { term: "Netting set", means: "The netting set the trade is valued in for counterparty risk (blank when it is in none)." }
+  MTM: { term: "Mark to market", means: "The trade's current fair value from the bank's side, as the risk engine values it.", unit: "USD", sign: "Positive is an amount the bank is owed, negative one it owes." }
+  MTM_CURRENCY: { term: "MTM currency", means: "The currency the mark to market is reported in." }
+  PNL_1D: { term: "One-day P&L", means: "The change in the trade's value over the last business day, including cash paid and received.", unit: "USD", sign: "Positive is a gain." }
+  DV01: { term: "DV01", means: "The change in the trade's value for a one basis point rise in interest rates.", unit: "USD per bp", sign: "Negative loses when rates rise." }
+  VALUATION_DATE: { term: "Valuation date", means: "The business date the valuation is for." }
 kinds:
   trade:
     title: Trade

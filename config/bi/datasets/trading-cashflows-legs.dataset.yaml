@@ -28,17 +28,15 @@ description: "The legs table of the model trading-cashflows."
 sample: true
 endorsement: "promoted"
 tags: [sample, trading, nested, cashflows]
-source: { connector: trading-store, kind: trade, each: legs }
+source: { kind: trade, each: LEGS }
 refresh: { on-load: true }
 columns:
-  leg:        { type: integer }
-  label:      { type: string }
-  payReceive: { type: string }
-  rateType:   { type: string }
-  index_name: { type: string, path: index }
-  rate:       { type: decimal, format: pct }
-  spread:     { type: decimal }
-  frequency:  { type: string }
-  dayCount:   { type: string }
-  currency:   { type: string }
-  notional:   { type: decimal, format: amount0 }
+  LEG_ID:            { type: integer }
+  LEG_TYPE:          { type: string }
+  LEG_ECONOMIC_TYPE: { type: string }
+  INDEX_NAME:        { type: string, path: INDEX.NAME }
+  FLOAT_SPREAD:      { type: decimal }
+  PRICE_UNIT:        { type: string }
+  SETTLEMENT_TYPE:   { type: string }
+  CURRENCY:          { type: string }
+  NOTIONAL:          { type: decimal, format: amount0 }

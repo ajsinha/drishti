@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000302",
+ "TRADE_ID": "MX-20000302",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "CMD_SWAP",
+ "PRODUCT_GROUP": "Commodity",
+ "PORTFOLIO": "BOOK-COMM-1",
+ "DESK": "DESK-COMM",
+ "COUNTERPARTY": "CP-LUMEN",
+ "NETTING_SET": "NS-LUMEN-NY",
+ "TRADER_ID": "TRDR-TBRENNAN",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "MATURED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 231000000.0,
+ "MTM": -26133,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -291,
+ "DV01": 0,
+ "TRADE_DATE": "2026-03-09",
+ "MATURITY_DATE": "2026-09-30",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 2362,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -25842"
+    }
+   ]
+  }
+ }
+}

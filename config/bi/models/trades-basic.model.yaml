@@ -35,11 +35,11 @@ datasets:                       # alias: the dataset it reads, and its role (a f
   trade: { dataset: trades-basic-trade, role: fact }
 
 measures:
-  Notional:              { expr: "sum(trade.notional)", format: amount0, description: "Total notional of the trades, in the trade's own currency units." }
-  MTM:                   { expr: "sum(trade.mtm)", format: signed0, description: "Mark-to-market in USD, signed." }
+  Notional:              { expr: "sum(trade.NOTIONAL)", format: amount0, description: "Total notional of the trades, in the trade's own currency units." }
+  MTM:                   { expr: "sum(trade.MTM)", format: signed0, description: "Mark-to-market in USD, signed." }
   Trades:                { expr: "count(trade)", description: "Number of trades." }
   Average MTM per trade: { expr: "measure('MTM') / measure('Trades')", format: signed0, description: "MTM divided by the number of trades (a measure built from measures)." }
-  Desk P&L volatility:   { python: desk-pnl-volatility, inputs: [trade.pnl1d], by: [trade.desk], description: "Standard deviation of the one-day P&L per desk, computed in Python. Shown by a python visual (docs/guides/PYTHON_BI.md); a query cannot use it." }
+  Desk P&L volatility:   { python: desk-pnl-volatility, inputs: [trade.PNL_1D], by: [trade.DESK], description: "Standard deviation of the one-day P&L per desk, computed in Python. Shown by a python visual (docs/guides/PYTHON_BI.md); a query cannot use it." }
 
 hierarchies:
-  Desk and book: [trade.desk, trade.book]
+  Desk and book: [trade.DESK, trade.PORTFOLIO]

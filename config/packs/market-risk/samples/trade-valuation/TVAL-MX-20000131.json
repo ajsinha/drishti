@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000131",
+ "TRADE_ID": "MX-20000131",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "STIR_FUT_OPT",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-2",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-SUMMIT",
+ "NETTING_SET": "NS-SUMMIT-NY",
+ "TRADER_ID": "TRDR-MOKAFOR",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 244000000.0,
+ "MTM": -848339,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 48677,
+ "DV01": 40985,
+ "TRADE_DATE": "2026-04-24",
+ "MATURITY_DATE": "2028-04-11",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 4137,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -897016"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000052",
+ "TRADE_ID": "MX-20000052",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "FWD_START_SWAP",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-3",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-BRAMBLE",
+ "NETTING_SET": "NS-BRAMBLE-NY",
+ "TRADER_ID": "TRDR-ASHAH",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 188000000.0,
+ "MTM": 38747885,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 739313,
+ "DV01": -187866,
+ "TRADE_DATE": "2026-06-15",
+ "MATURITY_DATE": "2037-09-28",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 79376,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 38008572"
+    }
+   ]
+  }
+ }
+}

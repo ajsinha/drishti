@@ -52,6 +52,9 @@ graph:
   - pattern: ^(MX|CLY)-\d+$
     kind: trade
   fields:
+    TRADE_ID:
+      kind: trade
+      label: Trade
     TRADE_IDS:
       kind: trade
       label: Trade

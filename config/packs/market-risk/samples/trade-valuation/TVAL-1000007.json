@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-1000007",
+ "TRADE_ID": 1000007,
+ "SOURCE_SYSTEM": "ENDUR",
+ "PRODUCT_TYPE": "Cash",
+ "PRODUCT_GROUP": "Commodity",
+ "PORTFOLIO": "BOOK-COMM-3",
+ "DESK": "DESK-COMM",
+ "COUNTERPARTY": "CP-MERIDIAN-RE",
+ "NETTING_SET": "",
+ "TRADER_ID": "TRDR-TBRENNAN",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "MATURED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 1370236.65,
+ "MTM": -7986,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -57,
+ "DV01": 0,
+ "TRADE_DATE": "2025-04-10",
+ "MATURITY_DATE": "2025-06-01",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 500,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -7929"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000188",
+ "TRADE_ID": "MX-20000188",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "EQ_OPTION_OTC",
+ "PRODUCT_GROUP": "Equity",
+ "PORTFOLIO": "BOOK-EQD-2",
+ "DESK": "DESK-EQD",
+ "COUNTERPARTY": "CP-LUMEN",
+ "NETTING_SET": "NS-LUMEN-LDN",
+ "TRADER_ID": "TRDR-JWEISS",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "GBP",
+ "NOTIONAL": 205000000.0,
+ "MTM": 1219453,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 36680,
+ "DV01": 0,
+ "TRADE_DATE": "2025-05-02",
+ "MATURITY_DATE": "2028-10-06",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 4489,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 1182773"
+    }
+   ]
+  }
+ }
+}

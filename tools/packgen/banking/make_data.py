@@ -75,6 +75,33 @@ def trade_samples(rich: dict[str, dict]) -> dict[str, dict]:
     return out
 
 
+def valuations(rich: dict[str, dict], trades: dict[str, dict]) -> dict[str, dict]:
+    """The risk engine's valuation of every trade of every source system (market-risk's trade-valuation, TVAL-<trade id>): the model's MTM,
+    P&L and DV01 for CALYPSO and MUREX (so netting sets still add up), a deterministic mark for ENDUR deals. Its MTM ticks live."""
+    import random
+    out = {}
+    for tid, t in trades.items():
+        r = rich.get(tid)
+        leg = (t.get("LEGS") or [{}])[0]
+        if r:
+            mtm, pnl, dv01, desk, notional = r["mtm"], r["pnl1d"], (r.get("risk") or {}).get("dv01", 0), r["desk"], r["notional"]
+        else:
+            g = random.Random(f"tval/{tid}")
+            notional = float(leg.get("NOTIONAL") or 0.0)
+            mtm = round(notional * g.gauss(0, 0.015))
+            pnl, dv01, desk = round(mtm * g.gauss(0, 0.04)), 0, "DESK-COMM"
+        vid = f"TVAL-{tid}"
+        step = max(500, round(abs(mtm) * 0.002 + notional * 1e-5))
+        out[vid] = {"VALUATION_ID": vid, "TRADE_ID": t["TRADE_ID"], "SOURCE_SYSTEM": t["SOURCE_SYSTEM"], "PRODUCT_TYPE": t["PRODUCT_TYPE"],
+                    "PRODUCT_GROUP": t["PRODUCT_GROUP"] or "Commodity", "PORTFOLIO": t["PORTFOLIO"], "DESK": desk, "COUNTERPARTY": t["COUNTERPARTY"],
+                    "NETTING_SET": (r or {}).get("nettingSet", ""), "TRADER_ID": t["TRADER_ID"], "BUY_SELL_CODE": t["BUY_SELL_CODE"], "TRADE_STATUS": t["TRADE_STATUS"], "CURRENCY": t["CURRENCY"],
+                    "NOTIONAL": notional, "MTM": mtm, "MTM_CURRENCY": "USD", "PNL_1D": pnl, "DV01": dv01, "TRADE_DATE": t["TRADE_DATE"],
+                    "MATURITY_DATE": t["MATURITY_DATE"], "VALUATION_DATE": N.AS_OF.isoformat(),
+                    "_meta": {"source": "risk-engine", "generation": 1, "live": True,
+                              "walk": {"MTM": step, "derive": [walks._derive("PNL_1D", f"$.MTM - {mtm - pnl}")]}}}
+    return out
+
+
 def build() -> dict[str, dict[str, dict]]:
     docs = {k: dict(v) for k, v in data_market.build().items()}
     for kind, ds in docs.items():
@@ -93,6 +120,7 @@ def build() -> dict[str, dict[str, dict]]:
         for d in ds.values():
             walks.apply(kind, d)
     docs["trade"] = trade_samples(trades)               # nulls kept: an extract writes them (PRICE, OPTION_TYPE, STRATEGY ...)
+    docs["trade-valuation"] = valuations(trades, docs["trade"])
     return docs
 
 

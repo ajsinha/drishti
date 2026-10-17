@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000059",
+ "TRADE_ID": "CLY-3000059",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "FX_ASIAN",
+ "PRODUCT_GROUP": "FX",
+ "PORTFOLIO": "BOOK-FX-3",
+ "DESK": "DESK-FX",
+ "COUNTERPARTY": "CP-TOKAI",
+ "NETTING_SET": "NS-TOKAI-LDN",
+ "TRADER_ID": "TRDR-ENOVAK",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "JPY",
+ "NOTIONAL": 218000000.0,
+ "MTM": 920619,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 928,
+ "DV01": 0,
+ "TRADE_DATE": "2026-08-19",
+ "MATURITY_DATE": "2029-09-16",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 4021,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 919691"
+    }
+   ]
+  }
+ }
+}

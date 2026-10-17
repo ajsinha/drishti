@@ -92,6 +92,9 @@ graph:
     COUNTERPARTY:
       kind: counterparty
       label: Counterparty
+    DESK:
+      kind: desk
+      label: Desk
     LEGAL_ENTITY:
       kind: legal-entity
       label: Legal entity

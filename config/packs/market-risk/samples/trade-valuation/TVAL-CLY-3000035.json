@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000035",
+ "TRADE_ID": "CLY-3000035",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "FX_DIGITAL",
+ "PRODUCT_GROUP": "FX",
+ "PORTFOLIO": "BOOK-FX-1",
+ "DESK": "DESK-FX",
+ "COUNTERPARTY": "CP-VERDANT",
+ "NETTING_SET": "NS-VERDANT-LDN",
+ "TRADER_ID": "TRDR-ENOVAK",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 146000000.0,
+ "MTM": 2716990,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 159944,
+ "DV01": 0,
+ "TRADE_DATE": "2026-06-23",
+ "MATURITY_DATE": "2027-06-14",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 6894,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 2557046"
+    }
+   ]
+  }
+ }
+}

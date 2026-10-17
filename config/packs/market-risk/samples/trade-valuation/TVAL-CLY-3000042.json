@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000042",
+ "TRADE_ID": "CLY-3000042",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "FX_BARRIER",
+ "PRODUCT_GROUP": "FX",
+ "PORTFOLIO": "BOOK-FX-3",
+ "DESK": "DESK-FX",
+ "COUNTERPARTY": "CP-ALDERSHOT",
+ "NETTING_SET": "NS-ALDERSHOT-LDN",
+ "TRADER_ID": "TRDR-ENOVAK",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "JPY",
+ "NOTIONAL": 211000000.0,
+ "MTM": 263226,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -4374,
+ "DV01": 0,
+ "TRADE_DATE": "2026-07-31",
+ "MATURITY_DATE": "2027-06-15",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 2636,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 267600"
+    }
+   ]
+  }
+ }
+}

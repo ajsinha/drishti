@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000183",
+ "TRADE_ID": "MX-20000183",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "EQ_OPTION_LISTED",
+ "PRODUCT_GROUP": "Equity",
+ "PORTFOLIO": "BOOK-EQD-1",
+ "DESK": "DESK-EQD",
+ "COUNTERPARTY": "CP-SUMMIT",
+ "NETTING_SET": "NS-SUMMIT-LDN",
+ "TRADER_ID": "TRDR-PLINDQVIST",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 122000000.0,
+ "MTM": -795277,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 5428,
+ "DV01": 0,
+ "TRADE_DATE": "2024-05-10",
+ "MATURITY_DATE": "2027-11-10",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 2811,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -800705"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000413",
+ "TRADE_ID": "MX-20000413",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "LPI_SWAP",
+ "PRODUCT_GROUP": "Inflation",
+ "PORTFOLIO": "BOOK-INFL-1",
+ "DESK": "DESK-INFL",
+ "COUNTERPARTY": "CP-BRAMBLE",
+ "NETTING_SET": "NS-BRAMBLE-LDN",
+ "TRADER_ID": "TRDR-HOKORO",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 217000000.0,
+ "MTM": 1126221,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -9148,
+ "DV01": 0,
+ "TRADE_DATE": "2026-07-31",
+ "MATURITY_DATE": "2035-02-22",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 4422,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 1135369"
+    }
+   ]
+  }
+ }
+}

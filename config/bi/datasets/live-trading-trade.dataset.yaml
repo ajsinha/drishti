@@ -32,21 +32,23 @@ description: "The trade table of the model live-trading."
 sample: true
 endorsement: "promoted"
 tags: [sample, trading, live, streaming, tutorial]
-source: { kind: trade }
+source: { kind: trade-valuation }
 time: { mode: live, live: { rows: 5000 }, history: { every: 10s, keep: 360, measures: [MTM, Losses, Trades] } }
 refresh: { on-load: true }
 columns:
-  tradeId:     { type: string, role: key }
-  desk:        { type: string }
-  book:        { type: string }
-  productType: { type: string }
-  assetClass:  { type: string }
-  currency:    { type: string }
-  status:      { type: string }
-  direction:   { type: string }
-  trader:      { type: string }
-  notional:    { type: decimal, format: amount0 }
-  mtm:         { type: decimal, format: signed0 }
-  pnl1d:       { type: decimal, format: signed0 }
+  VALUATION_ID:  { type: string, role: key }
+  TRADE_ID:      { type: string }
+  SOURCE_SYSTEM: { type: string }
+  DESK:          { type: string }
+  PORTFOLIO:     { type: string }
+  PRODUCT_TYPE:  { type: string }
+  PRODUCT_GROUP: { type: string }
+  CURRENCY:      { type: string }
+  TRADE_STATUS:  { type: string }
+  BUY_SELL_CODE: { type: string }
+  TRADER_ID:     { type: string }
+  NOTIONAL:      { type: decimal, format: amount0 }
+  MTM:           { type: decimal, format: signed0 }
+  PNL_1D:        { type: decimal, format: signed0 }
 security:
-  masked: [trader]
+  masked: [TRADER_ID]

@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000380",
+ "TRADE_ID": "MX-20000380",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "ZC_INFL_SWAP",
+ "PRODUCT_GROUP": "Inflation",
+ "PORTFOLIO": "BOOK-INFL-3",
+ "DESK": "DESK-INFL",
+ "COUNTERPARTY": "CP-NORTHBRIDGE",
+ "NETTING_SET": "NS-NORTHBRIDGE-LDN",
+ "TRADER_ID": "TRDR-GMENDES",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "JPY",
+ "NOTIONAL": 6000000.0,
+ "MTM": -188625,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -3216,
+ "DV01": 2162,
+ "TRADE_DATE": "2024-10-11",
+ "MATURITY_DATE": "2028-08-25",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 500,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -185409"
+    }
+   ]
+  }
+ }
+}

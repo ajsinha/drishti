@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000182",
+ "TRADE_ID": "CLY-3000182",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "CALLABLE_BOND",
+ "PRODUCT_GROUP": "Fixed income",
+ "PORTFOLIO": "BOOK-FI-1",
+ "DESK": "DESK-FI",
+ "COUNTERPARTY": "CP-SUMMIT",
+ "NETTING_SET": "NS-SUMMIT-NY",
+ "TRADER_ID": "TRDR-BADEYEMI",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "JPY",
+ "NOTIONAL": 115000000.0,
+ "MTM": -1530581,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 17569,
+ "DV01": 85424,
+ "TRADE_DATE": "2025-03-27",
+ "MATURITY_DATE": "2034-02-28",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 4211,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -1548150"
+    }
+   ]
+  }
+ }
+}

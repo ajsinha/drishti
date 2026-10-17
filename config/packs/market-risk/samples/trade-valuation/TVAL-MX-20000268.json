@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000268",
+ "TRADE_ID": "MX-20000268",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "CFD",
+ "PRODUCT_GROUP": "Equity",
+ "PORTFOLIO": "BOOK-EQD-3",
+ "DESK": "DESK-EQD",
+ "COUNTERPARTY": "CP-VERDANT",
+ "NETTING_SET": "NS-VERDANT-LDN",
+ "TRADER_ID": "TRDR-JWEISS",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 91000000.0,
+ "MTM": 491937,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 9564,
+ "DV01": 0,
+ "TRADE_DATE": "2025-09-30",
+ "MATURITY_DATE": "2026-10-07",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 1894,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 482373"
+    }
+   ]
+  }
+ }
+}

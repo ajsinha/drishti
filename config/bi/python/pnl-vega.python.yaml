@@ -29,7 +29,7 @@ endorsement: none
 tags: [sample, trading, python, vega-lite]
 interface: visual
 output: vega-lite
-inputs: [desk, pnl1d]
+inputs: [DESK, PNL_1D]
 packages: [pandas]
 target: server
 timeout: 10
@@ -38,21 +38,21 @@ params: { max_points: 400 }
 tests:
   - name: a dot for every trade and a median for every desk
     input:
-      columns: [desk, pnl1d]
+      columns: [DESK, PNL_1D]
       rows: [[FX, 10.0], [FX, 30.0], [RATES, -5.0]]
     expect: { kind: vega-lite, has: { layer.0.mark.type: circle, layer.1.mark.type: tick, "layer.0.data.values.2.desk": RATES } }
   - name: at most max_points dots
     input:
-      columns: [desk, pnl1d]
+      columns: [DESK, PNL_1D]
       rows: [[FX, 1.0], [FX, 2.0], [FX, 3.0]]
     params: { max_points: 2 }
     expect: { kind: vega-lite, has: { layer.0.data.values.1.pnl1d: 2.0 } }
 source: |
   def render(table, params):
       limit = int(params.get("max_points", 400))
-      rows = table.dropna(subset=["pnl1d"]).head(limit)
-      dots = [{"desk": str(r.desk), "pnl1d": float(r.pnl1d)} for r in rows.itertuples()]
-      medians = [{"desk": str(d), "median": float(v)} for d, v in rows.groupby("desk")["pnl1d"].median().items()]
+      rows = table.dropna(subset=["PNL_1D"]).head(limit)
+      dots = [{"desk": str(r.DESK), "pnl1d": float(r.PNL_1D)} for r in rows.itertuples()]
+      medians = [{"desk": str(d), "median": float(v)} for d, v in rows.groupby("DESK")["PNL_1D"].median().items()]
       return {
           "width": "container", "height": "container",
           "layer": [

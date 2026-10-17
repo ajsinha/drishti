@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000070",
+ "TRADE_ID": "MX-20000070",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "STIR_FUTURE",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-2",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-SUMMIT",
+ "NETTING_SET": "NS-SUMMIT-NY",
+ "TRADER_ID": "TRDR-ASHAH",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 246000000.0,
+ "MTM": 2387948,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -129374,
+ "DV01": 15561,
+ "TRADE_DATE": "2026-08-28",
+ "MATURITY_DATE": "2027-05-10",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 7236,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 2517322"
+    }
+   ]
+  }
+ }
+}

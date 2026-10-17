@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000121",
+ "TRADE_ID": "CLY-3000121",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "TRS_LOAN_INDEX",
+ "PRODUCT_GROUP": "Credit",
+ "PORTFOLIO": "BOOK-CREDIT-3",
+ "DESK": "DESK-CREDIT",
+ "COUNTERPARTY": "CP-MERIDIAN-RE",
+ "NETTING_SET": "NS-MERIDIAN-RE-NY",
+ "TRADER_ID": "TRDR-DWHITFIELD",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "GBP",
+ "NOTIONAL": 60000000.0,
+ "MTM": -1076104,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -31861,
+ "DV01": 0,
+ "TRADE_DATE": "2024-04-24",
+ "MATURITY_DATE": "2028-02-01",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 2752,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -1044243"
+    }
+   ]
+  }
+ }
+}

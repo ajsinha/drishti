@@ -29,27 +29,28 @@ description: "The trades table of the model trading-risk."
 sample: true
 endorsement: "promoted"
 tags: [sample, trading, counterparty-risk, cross-pack]
-source: { connector: trading-store, kind: trade }
+source: { connector: risk-store, kind: trade-valuation }
 refresh: { on-load: true }
 columns:
-  tradeId:          { type: string, role: key }
-  desk:             { type: string }
-  book:             { type: string }
-  nettingSet:       { type: string }
-  counterpartyId:   { type: string, path: counterparty.id }
-  counterpartyName: { type: string, path: counterparty.name }
-  productType:      { type: string }
-  assetClass:       { type: string }
-  currency:         { type: string }
-  status:           { type: string }
-  notional:         { type: decimal, format: amount0 }
-  mtm:              { type: decimal, format: signed0 }
-  pnl1d:            { type: decimal, format: signed0 }
-  dv01:             { type: decimal, path: risk.dv01, format: signed0 }
-  tradeDate:        { type: date }
-  maturityDate:     { type: date }
+  VALUATION_ID:  { type: string, role: key }
+  TRADE_ID:      { type: string }
+  SOURCE_SYSTEM: { type: string }
+  DESK:          { type: string }
+  PORTFOLIO:     { type: string }
+  COUNTERPARTY:  { type: string }
+  NETTING_SET:   { type: string }
+  PRODUCT_TYPE:  { type: string }
+  PRODUCT_GROUP: { type: string }
+  CURRENCY:      { type: string }
+  TRADE_STATUS:  { type: string }
+  NOTIONAL:      { type: decimal, format: amount0 }
+  MTM:           { type: decimal, format: signed0 }
+  PNL_1D:        { type: decimal, format: signed0 }
+  DV01:          { type: decimal, format: signed0 }
+  TRADE_DATE:    { type: date }
+  MATURITY_DATE: { type: date }
 security:
   rows:
-    - { role: desk-head, where: "desk in user.desks" }
+    - { role: desk-head, where: "DESK in user.desks" }
     - { role: [risk, analyst, admin], where: "True" }
-  masked: [counterpartyName]
+  masked: [COUNTERPARTY]

@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-CLY-3000113",
+ "TRADE_ID": "CLY-3000113",
+ "SOURCE_SYSTEM": "CALYPSO",
+ "PRODUCT_TYPE": "FIRST_TO_DEFAULT",
+ "PRODUCT_GROUP": "Credit",
+ "PORTFOLIO": "BOOK-CREDIT-2",
+ "DESK": "DESK-CREDIT",
+ "COUNTERPARTY": "CP-ALDERSHOT",
+ "NETTING_SET": "NS-ALDERSHOT-NY",
+ "TRADER_ID": "TRDR-DWHITFIELD",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "JPY",
+ "NOTIONAL": 180000000.0,
+ "MTM": -3938043,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 90892,
+ "DV01": 0,
+ "TRADE_DATE": "2024-11-08",
+ "MATURITY_DATE": "2027-03-22",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 9676,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -4028935"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000440",
+ "TRADE_ID": "MX-20000440",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "CREDIT_BASKET_NOTE",
+ "PRODUCT_GROUP": "Structured",
+ "PORTFOLIO": "BOOK-STRUCT-3",
+ "DESK": "DESK-STRUCT",
+ "COUNTERPARTY": "CP-ALDERSHOT",
+ "NETTING_SET": "NS-ALDERSHOT-TKY",
+ "TRADER_ID": "TRDR-VRAO",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "AUD",
+ "NOTIONAL": 139000000.0,
+ "MTM": 566863,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -41782,
+ "DV01": 0,
+ "TRADE_DATE": "2024-06-24",
+ "MATURITY_DATE": "2036-04-02",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 2524,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 608645"
+    }
+   ]
+  }
+ }
+}

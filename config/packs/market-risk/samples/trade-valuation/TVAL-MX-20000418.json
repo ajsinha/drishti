@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000418",
+ "TRADE_ID": "MX-20000418",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "RANGE_ACCRUAL_NOTE",
+ "PRODUCT_GROUP": "Structured",
+ "PORTFOLIO": "BOOK-STRUCT-2",
+ "DESK": "DESK-STRUCT",
+ "COUNTERPARTY": "CP-LUMEN",
+ "NETTING_SET": "NS-LUMEN-TKY",
+ "TRADER_ID": "TRDR-VRAO",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "AUD",
+ "NOTIONAL": 155000000.0,
+ "MTM": 660652,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 6821,
+ "DV01": 58915,
+ "TRADE_DATE": "2024-12-11",
+ "MATURITY_DATE": "2029-09-24",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 2871,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 653831"
+    }
+   ]
+  }
+ }
+}

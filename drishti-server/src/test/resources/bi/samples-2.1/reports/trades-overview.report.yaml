@@ -47,7 +47,7 @@ pages:
         type: bar                  # horizontal bars; `column` is the vertical kind
         title: MTM by desk (click a bar to filter the page)
         at: { x: 0, y: 2, w: 6, h: 5 }
-        wells: { axis: [trade.desk], values: [MTM] }
+        wells: { axis: [trade.DESK], values: [MTM] }
         hierarchy: Desk and book   # the drill-down button goes from desk to book (a hierarchy of the dataset)
         format: { labels: true }
         alt: Bar chart of mark to market for each desk
@@ -56,7 +56,7 @@ pages:
         type: line
         title: Notional by trade date
         at: { x: 6, y: 2, w: 6, h: 5 }
-        wells: { axis: [trade.tradeDate], values: [Notional] }
+        wells: { axis: [trade.TRADE_DATE], values: [Notional] }
         format: { labels: false, smooth: false }
         alt: Line chart of notional for each trade date
 
@@ -64,30 +64,30 @@ pages:
         type: table
         title: Trades by desk and currency
         at: { x: 0, y: 7, w: 9, h: 5 }
-        wells: { columns: [trade.desk, trade.currency, Trades, Notional, MTM] }
+        wells: { columns: [trade.DESK, trade.CURRENCY, Trades, Notional, MTM] }
         format: { dataBars: [Notional], conditional: [{ measure: MTM, op: lt, value: 0, colour: "#b3261e" }] }
 
       - id: currency
         type: slicer
         title: Currency
         at: { x: 9, y: 7, w: 3, h: 5 }
-        wells: { field: [trade.currency] }
+        wells: { field: [trade.CURRENCY] }
         format: { mode: list, scope: page }
 
   - id: products
     title: By product
     visuals:
       # Dropdown slicers: the shared checkbox list with a search box (format.mode: dropdown); each filters the whole page.
-      - { id: pick-product,  type: slicer, title: Product type, at: { x: 0, y: 0, w: 4, h: 2 }, wells: { field: [trade.productType] }, format: { mode: dropdown, scope: page } }
-      - { id: pick-desk,     type: slicer, title: Desk,         at: { x: 4, y: 0, w: 4, h: 2 }, wells: { field: [trade.desk] },        format: { mode: dropdown, scope: page } }
-      - { id: pick-currency, type: slicer, title: Currency,     at: { x: 8, y: 0, w: 4, h: 2 }, wells: { field: [trade.currency] },    format: { mode: dropdown, scope: page } }
-      - { id: share,  type: donut,  title: "Notional by product type (top 12)", at: { x: 0, y: 2, w: 5, h: 6 }, wells: { axis: [trade.productType], values: [Notional] },
-          filters: [{ field: trade.productType, op: top, n: 12, by: Notional }],
+      - { id: pick-product,  type: slicer, title: Product type, at: { x: 0, y: 0, w: 4, h: 2 }, wells: { field: [trade.PRODUCT_TYPE] }, format: { mode: dropdown, scope: page } }
+      - { id: pick-desk,     type: slicer, title: Desk,         at: { x: 4, y: 0, w: 4, h: 2 }, wells: { field: [trade.DESK] },        format: { mode: dropdown, scope: page } }
+      - { id: pick-currency, type: slicer, title: Currency,     at: { x: 8, y: 0, w: 4, h: 2 }, wells: { field: [trade.CURRENCY] },    format: { mode: dropdown, scope: page } }
+      - { id: share,  type: donut,  title: "Notional by product type (top 12)", at: { x: 0, y: 2, w: 5, h: 6 }, wells: { axis: [trade.PRODUCT_TYPE], values: [Notional] },
+          filters: [{ field: trade.PRODUCT_TYPE, op: top, n: 12, by: Notional }],
           format: { labels: true }, alt: Donut chart of notional for the twelve largest product types }
       - { id: matrix, type: matrix, title: Trades and MTM by desk and currency, at: { x: 5, y: 2, w: 7, h: 6 },
-          wells: { rows: [trade.desk], columns: [trade.currency], values: [Trades, MTM] }, format: { subtotals: true } }
-      - { id: books,  type: column, title: Notional by book, at: { x: 0, y: 8, w: 12, h: 5 }, wells: { axis: [trade.book], legend: [trade.currency], values: [Notional] },
+          wells: { rows: [trade.DESK], columns: [trade.CURRENCY], values: [Trades, MTM] }, format: { subtotals: true } }
+      - { id: books,  type: column, title: Notional by book, at: { x: 0, y: 8, w: 12, h: 5 }, wells: { axis: [trade.PORTFOLIO], legend: [trade.CURRENCY], values: [Notional] },
           format: { stacked: true }, alt: "Stacked columns of notional for each book, split by currency" }
 
 bookmarks:
-  - { name: FX desk only, page: overview, slicers: {} , filters: [{ field: trade.desk, op: in, values: [DESK-FX] }] }
+  - { name: FX desk only, page: overview, slicers: {} , filters: [{ field: trade.DESK, op: in, values: [DESK-FX] }] }

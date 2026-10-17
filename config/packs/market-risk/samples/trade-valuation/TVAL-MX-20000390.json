@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000390",
+ "TRADE_ID": "MX-20000390",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "YOY_INFL_SWAP",
+ "PRODUCT_GROUP": "Inflation",
+ "PORTFOLIO": "BOOK-INFL-3",
+ "DESK": "DESK-INFL",
+ "COUNTERPARTY": "CP-HARBORPT",
+ "NETTING_SET": "NS-HARBORPT-LDN",
+ "TRADER_ID": "TRDR-HOKORO",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 65000000.0,
+ "MTM": -1644875,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 38041,
+ "DV01": 60401,
+ "TRADE_DATE": "2025-01-03",
+ "MATURITY_DATE": "2036-06-02",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 3940,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -1682916"
+    }
+   ]
+  }
+ }
+}

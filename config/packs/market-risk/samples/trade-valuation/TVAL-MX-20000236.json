@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000236",
+ "TRADE_ID": "MX-20000236",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "EQ_VARIANCE_SWAP",
+ "PRODUCT_GROUP": "Equity",
+ "PORTFOLIO": "BOOK-EQD-1",
+ "DESK": "DESK-EQD",
+ "COUNTERPARTY": "CP-CASCADIA",
+ "NETTING_SET": "NS-CASCADIA-LDN",
+ "TRADER_ID": "TRDR-JWEISS",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 3000000.0,
+ "MTM": -18848,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -2297,
+ "DV01": 0,
+ "TRADE_DATE": "2024-11-01",
+ "MATURITY_DATE": "2029-10-22",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 500,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -16551"
+    }
+   ]
+  }
+ }
+}

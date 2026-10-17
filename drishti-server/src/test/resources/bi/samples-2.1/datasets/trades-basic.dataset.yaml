@@ -33,35 +33,37 @@ endorsement: promoted            # none, promoted or certified (certified needs 
 tags: [sample, trading, tutorial]
 
 tables:
-  trade:                         # the table's name in this model (the pack calls the kind "trade")
+  trade:                         # the table's name in this model: every trade's valuation (the market-risk pack's kind "trade-valuation")
     source:
-      connector: trading-store   # a connector by its LOGICAL name (config/connectors/trading-store.yaml): the same one the terminal reads
-      kind: trade                # the pack kind
+      connector: risk-store      # a connector by its LOGICAL name (config/connectors/risk-store.yaml): the same one the terminal reads
+      kind: trade-valuation      # the pack kind: one row per trade of every source system (ENDUR, CALYPSO, MUREX)
     mode: cached                 # cached: copied once per business date into a typed Parquet file (fast to query, rebuilt when a load lands)
     refresh:
-      on-load: true              # rebuild the date when a data-load signal for "trade" arrives (DATA_LOADS.md)
-    columns:                     # the columns you want; each is a path into the trade document, and a type
-      tradeId:     { type: string, key: true }   # key: the column other tables join to (no path given: the path is the name, tradeId)
-      desk:        string                         # shorthand: just the type
-      book:        string
-      productType: string
-      currency:    string
-      status:      string
-      notional:    { type: decimal, format: amount0 }   # format: how a visual shows it (a format name of the trading pack)
-      mtm:         { type: decimal, format: signed0 }
-      pnl1d:       { type: decimal, format: signed0 }
-      tradeDate:   date
+      on-load: true              # rebuild the date when a data-load signal for "trade-valuation" arrives (DATA_LOADS.md)
+    columns:                     # the columns you want; each is a path into the valuation document, and a type
+      VALUATION_ID:  { type: string, key: true }   # key: the column other tables join to (the valuation's id, TVAL- and the trade id)
+      TRADE_ID:      string                         # shorthand: just the type
+      SOURCE_SYSTEM: string                         # ENDUR, CALYPSO or MUREX: the booking system of the trade valued
+      DESK:          string
+      PORTFOLIO:     string
+      PRODUCT_TYPE:  string
+      CURRENCY:      string
+      TRADE_STATUS:  string
+      NOTIONAL:      { type: decimal, format: amount0 }   # format: how a visual shows it (a format name of the packs)
+      MTM:           { type: decimal, format: signed0 }
+      PNL_1D:        { type: decimal, format: signed0 }
+      TRADE_DATE:    date
       # Every table also has two columns you never declare: id (the entity's id) and businessDate (the date the row is for).
       # Calculated column: a row-level expression, computed at query time. It may use the table's own stored columns.
-      mtmInMillions: { type: decimal, expr: "mtm / 1000000", description: "MTM in millions of USD" }
+      MTM_IN_MILLIONS: { type: decimal, expr: "MTM / 1000000", description: "MTM in millions of USD" }
 
 measures:                        # a measure is an AGGREGATE: sum, avg, min, max, count, distinct, ratio, percentile
   Notional:
-    expr: "sum(trade.notional)"  # table.column names the column; sum() adds it up over the rows the visual is grouped by
+    expr: "sum(trade.NOTIONAL)"  # table.column names the column; sum() adds it up over the rows the visual is grouped by
     format: amount0
     description: Total notional of the trades, in the trade's own currency units.
   MTM:
-    expr: "sum(trade.mtm)"
+    expr: "sum(trade.MTM)"
     format: signed0
     description: Mark-to-market in USD, signed.
   Trades:
@@ -73,11 +75,11 @@ measures:                        # a measure is an AGGREGATE: sum, avg, min, max
     description: MTM divided by the number of trades (a measure built from measures).
   Desk P&L volatility:           # a PYTHON measure: not an expression but a Python item (config/bi/python/), run by the console's sandboxed runner
     python: desk-pnl-volatility  # the item (catalogue id, file name or title); it is called once per group with a table of that group's rows
-    inputs: [trade.pnl1d]        # the columns the function reads
-    by: [trade.desk]             # the groups: one number per desk
+    inputs: [trade.PNL_1D]        # the columns the function reads
+    by: [trade.DESK]             # the groups: one number per desk
     description: Standard deviation of the one-day P&L per desk, computed in Python. Shown by a python visual (docs/guides/PYTHON_BI.md); a query cannot use it.
 
 hierarchies:                     # an order to drill through: coarse first
-  Desk and book: [trade.desk, trade.book]
+  Desk and book: [trade.DESK, trade.PORTFOLIO]
 
 # No relationships, no security, no rollups: one table needs none. The next samples add them.

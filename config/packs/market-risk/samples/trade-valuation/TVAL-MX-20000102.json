@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000102",
+ "TRADE_ID": "MX-20000102",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "SWAPTION_EUR",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-1",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-HARBORPT",
+ "NETTING_SET": "NS-HARBORPT-NY",
+ "TRADER_ID": "TRDR-ASHAH",
+ "BUY_SELL_CODE": "B",
+ "TRADE_STATUS": "AMENDED",
+ "CURRENCY": "USD",
+ "NOTIONAL": 222000000.0,
+ "MTM": 4403209,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": 78091,
+ "DV01": 8636,
+ "TRADE_DATE": "2025-02-28",
+ "MATURITY_DATE": "2028-06-05",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 11026,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - 4325118"
+    }
+   ]
+  }
+ }
+}

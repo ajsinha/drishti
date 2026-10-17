@@ -1,0 +1,37 @@
+{
+ "VALUATION_ID": "TVAL-MX-20000135",
+ "TRADE_ID": "MX-20000135",
+ "SOURCE_SYSTEM": "MUREX",
+ "PRODUCT_TYPE": "CALLABLE_SWAP",
+ "PRODUCT_GROUP": "Rates",
+ "PORTFOLIO": "BOOK-RATES-3",
+ "DESK": "DESK-RATES",
+ "COUNTERPARTY": "CP-RHEINTAL",
+ "NETTING_SET": "NS-RHEINTAL-NY",
+ "TRADER_ID": "TRDR-ASHAH",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "AUD",
+ "NOTIONAL": 8000000.0,
+ "MTM": -34155,
+ "MTM_CURRENCY": "USD",
+ "PNL_1D": -213,
+ "DV01": -6030,
+ "TRADE_DATE": "2024-10-14",
+ "MATURITY_DATE": "2033-04-19",
+ "VALUATION_DATE": "2026-09-30",
+ "_meta": {
+  "source": "risk-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "MTM": 500,
+   "derive": [
+    {
+     "set": "PNL_1D",
+     "expr": "$.MTM - -33942"
+    }
+   ]
+  }
+ }
+}

@@ -112,7 +112,7 @@ class ConvertedSamplesTest {
         assertThat(report).contains("model: trading-risk@1").doesNotContain("dataset: counterparty-exposure").doesNotContain("links:").doesNotContainPattern("(?m)^[^#]*joined\\.")
                 .contains("{ field: Trades, op: gt, value: 0 }").contains("title: Desk P&L").contains("values: [P&L 1d]");
         assertThat(result.writes().get("models/trading-risk.model.yaml")).contains("P&L per exposure").contains("may-see-all")
-                .contains("{ from: trades.nettingSet, to: netting_sets.id, active: false }");
+                .contains("{ from: trades.COUNTERPARTY, to: counterparties.id }");
     }
 
     @Test
@@ -238,6 +238,11 @@ class ConvertedSamplesTest {
     /** The committed samples are the converter's output: the models, the datasets and the reports under config/bi are what it writes. */
     @Test
     void theCommittedSamplesAreTheConvertersOutput() throws Exception {
+        if (Boolean.getBoolean("drishti.bi.samples.write")) {      // after changing an original in samples-2.1: -Ddrishti.bi.samples.write=true rewrites config/bi
+            for (Map.Entry<String, String> w : result.writes().entrySet()) {
+                Files.writeString(BI.resolve(w.getKey()), w.getValue());
+            }
+        }
         for (Map.Entry<String, String> w : result.writes().entrySet()) {
             Path f = BI.resolve(w.getKey());
             assertThat(f).as(w.getKey() + " is committed (drishti.py bi migrate --models)").exists();
