@@ -98,8 +98,7 @@ final class ExpressionCheck {
     private static void engineChecks(String expr, Dataset flat, int length, List<DelException.Problem> problems) {
         Map<String, Dataset.Measure> measures = new LinkedHashMap<>(flat.measures());
         measures.put(PROBE, new Dataset.Measure(PROBE, expr, null, "being checked", null));
-        Dataset ds = new Dataset(flat.name(), flat.version(), flat.title(), flat.description(), flat.sample(), flat.engine(), flat.tables(), flat.relationships(), measures,
-                flat.hierarchies(), flat.security(), flat.rollups(), flat.refresh(), flat.compose(), flat.derived(), flat.tests());
+        Dataset ds = flat.withMeasures(measures);
         for (DatasetParser.Problem p : DatasetParser.check(ds)) {
             if (p.error() && (p.path().equals("measures." + PROBE) || p.path().startsWith("measures." + PROBE + "."))) {
                 problems.add(new DelException.Problem("DRS-9127", DelException.Problem.ERROR, p.message().replace(PROBE, "this measure"), null, 0, length));

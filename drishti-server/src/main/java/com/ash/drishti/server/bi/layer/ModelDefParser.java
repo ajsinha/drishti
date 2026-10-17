@@ -46,7 +46,7 @@ public final class ModelDefParser {
     }
 
     static final Set<String> TOP = Set.of("rachana", "expressions", "model", "version", "id", "datasets", "relationships", "measures", "calc-groups", "hierarchies", "parameters",
-            "calendars", "security", "contract", "ai", "golden", "tests", "rollups", "lifecycle", "replaced-by", "layout", "title", "description", "owner", "tags",
+            "calendars", "fx", "security", "contract", "ai", "golden", "tests", "rollups", "lifecycle", "replaced-by", "layout", "title", "description", "owner", "tags",
             "endorsement", "endorsedBy", "audience", "sample", "implicit-from", "fields", "perspectives");
     private static final Set<String> MEASURE_KEYS = Set.of("id", "expr", "format", "description", "currency", "additive", "python", "inputs", "by", "via", "implicit", "title",
             "display", "folder", "hidden");
@@ -87,14 +87,19 @@ public final class ModelDefParser {
         ModelDef.Security security = security(root.path("security"), datasets, y);
         ModelDef.Contract contract = contract(root.path("contract"), measures, datasets, y);
         List<String> placeholders = new ArrayList<>();
-        for (String k : List.of("calc-groups", "parameters")) {
-            if (LayerYaml.nonEmpty(root.path(k))) {
-                placeholders.add(k);
-                y.error("DRS-9129", k, "`" + k + ":` arrives in wave B; it is kept but refused until then: remove it to use the model now");
+        ModelDef.Calculation calculation = CalculationParser.read(root, datasets, y);
+        Set<String> relIds = new java.util.LinkedHashSet<>();
+        rels.forEach(r -> {
+            if (r.id() != null) {
+                relIds.add(r.id());
             }
-        }
-        measures.values().stream().filter(m -> m.via() != null).forEach(m -> y.error("DRS-9129", "measures." + m.name() + ".via",
-                "`via:` (a measure along an inactive relationship) arrives in wave B: calc(measure, via=...)"));
+            if (r.name() != null) {
+                relIds.add(r.name());
+            }
+            relIds.add(r.label());
+        });
+        measures.values().stream().filter(m -> m.via() != null && !relIds.contains(m.via())).forEach(m -> y.error("DRS-9122", "measures." + m.name() + ".via",
+                "via: names a relationship of the model by its id; there is no '" + m.via() + "' (relationships: " + rels.stream().map(r -> r.id() == null ? r.label() : r.id()).toList() + ")"));
         String lifecycle = LayerYaml.text(root, "lifecycle", "published");
         if (!ModelDef.LIFECYCLES.contains(lifecycle)) {
             y.error("DRS-9120", "lifecycle", "lifecycle is one of " + ModelDef.LIFECYCLES);
@@ -118,7 +123,7 @@ public final class ModelDefParser {
         return new ModelDef(name, version, LayerYaml.text(root, "id", ""), LayerYaml.text(root, "title", name), LayerYaml.text(root, "description", ""),
                 LayerYaml.text(root, "owner", ""), root.path("sample").asBoolean(false), LayerYaml.text(root, "endorsement", "none"), datasets, rels, measures, hierarchies,
                 security, contract, lifecycle, root.has("replaced-by") ? LayerYaml.text(root, "replaced-by", "") : null, rollups, tests, golden,
-                root.has("ai") ? root.get("ai") : null, root.has("implicit-from") ? LayerYaml.text(root, "implicit-from", "") : null, placeholders, semantics);
+                root.has("ai") ? root.get("ai") : null, root.has("implicit-from") ? LayerYaml.text(root, "implicit-from", "") : null, placeholders, semantics, calculation);
     }
 
     // ---- field properties, perspectives, object-level security (docs/architecture/BI_DESIGN.md sections 2.2 and 5.1) ----------

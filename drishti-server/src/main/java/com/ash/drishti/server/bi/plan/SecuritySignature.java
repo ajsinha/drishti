@@ -190,7 +190,7 @@ public final class SecuritySignature {
         return new Node.Str(String.valueOf(v));
     }
 
-    static String sha(String s) {
+    public static String sha(String s) {
         try {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8)));
         } catch (NoSuchAlgorithmException e) {

@@ -188,6 +188,8 @@ final class DatasetValidator {
                 analyticCall(path, c);
             } else if (Node.TIME.contains(f) || Node.WINDOW.contains(f)) {
                 timeCall(path, c);
+            } else if (Node.CONTEXT.contains(f) || Node.SCALARS_B.contains(f) || f.startsWith(Node.KEYWORD)) {
+                return;                                                        // wave B: checked by the DEL checker against the catalogue
             } else if (!Node.AGGREGATES.contains(f) && !Node.SCALARS.contains(f)) {
                 err(EXPRESSION, path, "unknown function '" + f + "'; aggregates: " + new java.util.TreeSet<>(Node.AGGREGATES) + ", row functions: " + new java.util.TreeSet<>(Node.SCALARS));
             } else if (ARITY_1_2.contains(f) && (a < 1 || a > 2)) {
@@ -299,6 +301,7 @@ final class DatasetValidator {
     /** Every name resolves; a column outside an aggregate is an error in a measure. */
     private void refs(String path, Node n, boolean inAggregate, String current) {
         switch (n) {
+            case Node.Ref r when r.parts().size() == 2 && "param".equals(r.parts().get(0)) -> { }      // a parameter, bound by the model query (wave B)
             case Node.Ref r -> {
                 try {
                     Resolver.ColRef ref = resolver.resolve(r.parts(), current);
@@ -322,6 +325,17 @@ final class DatasetValidator {
                     err(EXPRESSION, path, c.function() + "() cannot be inside an aggregate");
                 }
                 refs(path, c.args().get(0), false, current);               // the other arguments are columns and numbers, checked by analyticCall
+            }
+            case Node.Call c when Node.CONTEXT.contains(c.function()) || Node.SCALARS_B.contains(c.function()) -> {
+                List<Node> pos = Node.positional(c);
+                for (int i = 0; i < pos.size(); i++) {
+                    boolean aggregateArg = i == 0 && Node.CONTEXT.contains(c.function());
+                    refs(path, pos.get(i), !aggregateArg || inAggregate, current);  // the aggregate argument, then dates and columns read per row
+                }
+                Node.Call where = Node.keyword(c, "where");
+                if (where != null) {
+                    where.args().forEach(x -> refs(path, x, true, current));
+                }
             }
             case Node.Call c when (Node.TIME.contains(c.function()) || Node.WINDOW.contains(c.function())) && c.args().size() == 2 -> {
                 if (inAggregate) {

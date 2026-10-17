@@ -55,7 +55,12 @@ public final class DelChecker {
     private final Set<String> usedFields = new LinkedHashSet<>();
     private final Set<String> usedMeasures = new LinkedHashSet<>();
     private int aggregateDepth;
+    private int contextDepth;
     private boolean sawAggregate;
+
+    /** The families whose functions edit the filter context or the time of an aggregate (section 3.3.5: closed, nesting at most three deep). */
+    static final Set<String> CONTEXT_FAMILIES = Set.of("filter context", "time travel");
+    static final int MAX_CONTEXT_DEPTH = 3;
 
     private DelChecker(FunctionCatalog catalog, Scope scope, Fields fields) {
         this.catalog = catalog;
@@ -114,7 +119,7 @@ public final class DelChecker {
             case DelAst.Str x -> DelType.STRING;
             case DelAst.Bool x -> DelType.BOOLEAN;
             case DelAst.NoneLit x -> DelType.NONE;
-            case DelAst.AllLit x -> err(LATER, "ALL is the value of ignore= and over= (filter context, wave B)", null, x);
+            case DelAst.AllLit x -> err(LANGUAGE, "ALL is only the value of ignore= and over= (calc, share_of)", null, x);
             case DelAst.ListLit x -> err(LANGUAGE, "a list is only the right side of in (x in ['A', 'B']) or the value of by=[...]", null, x);
             case DelAst.Field f -> field(f, false);
             case DelAst.Call c -> call(c);
@@ -160,7 +165,20 @@ public final class DelChecker {
             return DelType.ANY;
         }
         if ("param".equals(head)) {
-            return err(LATER, "parameters (param." + (parts.size() > 1 ? parts.get(1) : "x") + ") arrive in wave B", null, f);
+            if (parts.size() != 2) {
+                return err(LANGUAGE, "a parameter is param.<name>, for example param.shock", null, f);
+            }
+            if (scope == Scope.RULE) {
+                return err(LANGUAGE, "param." + parts.get(1) + " cannot be used in a row rule: security never depends on a what-if value", null, f);
+            }
+            Optional<DelType> t = fields.param(parts.get(1));
+            if (t.isEmpty()) {
+                List<String> names = fields.params();
+                return err(NAME, "no parameter '" + parts.get(1) + "' in this model" + (names.isEmpty() ? " (it declares none: add it under parameters:)" : "; its parameters: " + names),
+                        null, f);
+            }
+            usedFields.add(f.text());
+            return t.get();
         }
         if ((scope == Scope.AGGREGATE || scope == Scope.CONTEXT) && aggregateDepth == 0 && !bare) {
             return err(LANGUAGE, "the column " + f.text() + " is outside an aggregate: a measure has one value per group, not per row", "wrap it: sum(" + f.text() + ")", f);
@@ -358,20 +376,41 @@ public final class DelChecker {
             sawAggregate = true;
             aggregateDepth++;
         }
+        boolean context = CONTEXT_FAMILIES.contains(f.family()) && f.takesAggregate();
+        if (context && ++contextDepth > MAX_CONTEXT_DEPTH) {
+            contextDepth--;
+            if (rows) {
+                aggregateDepth--;
+            }
+            return err(LANGUAGE, "filter-context functions (calc, share_of, parent_of, as_of) nest at most " + MAX_CONTEXT_DEPTH + " deep", "make the inner part a measure", c);
+        }
         DelType first = DelType.ANY;
         try {
             for (int i = 0; i < f.params().size(); i++) {
                 FunctionCatalog.Param p = f.params().get(i);
-                for (DelAst a : b.values().get(i)) {
-                    DelType t = argument(f, p, a);
-                    if (i == 0) {
-                        first = t;
+                boolean rowCondition = context && "where".equals(p.name());       // calc(agg, where=cond): cond is read per row, as sum(x, where=cond)
+                if (rowCondition) {
+                    aggregateDepth++;
+                }
+                try {
+                    for (DelAst a : b.values().get(i)) {
+                        DelType t = argument(f, p, a);
+                        if (i == 0) {
+                            first = t;
+                        }
+                    }
+                } finally {
+                    if (rowCondition) {
+                        aggregateDepth--;
                     }
                 }
             }
         } finally {
             if (rows) {
                 aggregateDepth--;
+            }
+            if (context) {
+                contextDepth--;
             }
         }
         if (f.takesAggregate()) {
@@ -511,18 +550,21 @@ public final class DelChecker {
                 }
                 return t;
             }
-            case "fields" -> {
+            case "fields", "fields-or-all" -> {
                 if (a instanceof DelAst.AllLit) {
-                    return err(LATER, "ALL is the value of ignore= and over= (filter context, wave B)", null, a);
+                    return "fields-or-all".equals(p.type()) ? DelType.LIST : err(LANGUAGE, what + " is a list of fields; ALL is only for ignore= and over=", null, a);
                 }
                 if (!(a instanceof DelAst.ListLit l)) {
-                    return err(LANGUAGE, what + " is a list of fields: " + p.name() + "=[alias.column, ...]", null, a);
+                    return err(LANGUAGE, what + " is a list of fields: " + p.name() + "=[alias.column, ...]" + ("fields-or-all".equals(p.type()) ? " or ALL" : ""), null, a);
                 }
                 for (DelAst item : l.items()) {
-                    if (!(item instanceof DelAst.Field fl)) {
+                    if (!(item instanceof DelAst.Field fl) || "user".equals(fl.parts().get(0)) || "param".equals(fl.parts().get(0))) {
                         err(LANGUAGE, what + " lists fields (alias.column)", null, item);
                     } else {
                         field(fl, true);
+                        if ("by".equals(p.name()) && "avg_by".equals(f.name())) {
+                            fields.field(fl.parts()).filter(Fields.Field::masked).ifPresent(x -> err(MASKED, "'" + fl.text() + "' is masked for you: avg_by cannot group on it", null, fl));
+                        }
                     }
                 }
                 return DelType.LIST;

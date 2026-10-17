@@ -51,9 +51,63 @@ final class SqlEmitter {
     private String windowDate;
     private TimeWindows.Window window;
     private final Map<String, List<WindowField>> windowFields = new java.util.LinkedHashMap<>();
+    /** The filter context of the SELECT this emitter writes (wave B); null in a probe or where no context may be. */
+    private Contexts contexts;
+    /** Row conditions every aggregate emitted now is restricted to: a DEL tree ({@code calc(where=)}) or raw SQL without parameters (a balance's date). */
+    private final List<Object> rowFilters = new ArrayList<>();
 
     /** A field of the query as the SELECT writes it, for {@code running()} to order and partition by. */
     private record WindowField(String part, String sql, boolean masked) {}
+
+    /** The filter context the context functions register their sub-queries with. */
+    SqlEmitter contexts(Contexts c) {
+        this.contexts = c;
+        return this;
+    }
+
+    Contexts contexts() {
+        return contexts;
+    }
+
+    boolean isPlanning() {
+        return planning;
+    }
+
+    TimeWindows.Context timeContext() {
+        return time;
+    }
+
+    Dataset dataset() {
+        return ds;
+    }
+
+    Resolver resolver() {
+        return resolver;
+    }
+
+    Dialect dialect() {
+        return dialect;
+    }
+
+    /** Whether a field of the query is on this date column (for {@code opening}: the period comes from the group). */
+    boolean hasField(Resolver.ColRef col) {
+        return !windowFields.getOrDefault(col.table() + "." + col.column(), List.of()).isEmpty();
+    }
+
+    /** Emits {@code n} with every aggregate in it restricted to {@code filter} as well (a DEL tree or raw SQL). */
+    String restricted(Object filter, Node n, boolean inAgg) {
+        rowFilters.add(filter);
+        try {
+            return emit(n, inAgg);
+        } finally {
+            rowFilters.remove(rowFilters.size() - 1);
+        }
+    }
+
+    /** The DEL conditions now restricting the aggregates (for a context's sub-query, which must keep them). */
+    List<Node> activeConditions() {
+        return rowFilters.stream().filter(Node.class::isInstance).map(Node.class::cast).toList();
+    }
 
     /**
      * @param base the table the query's rows come from (the meaning of {@code count(table)})
@@ -162,6 +216,9 @@ final class SqlEmitter {
     }
 
     private String ref(Node.Ref r, boolean countRows) {
+        if (r.parts().size() == 2 && "param".equals(r.parts().get(0))) {
+            throw new DrishtiException(ErrorCode.MQ_PARAM, "param." + r.parts().get(1) + " has no value here: parameters are bound by a model query (mq: 2, params)");
+        }
         Resolver.ColRef c;
         try {
             c = resolver.resolve(r.parts(), current);
@@ -212,6 +269,12 @@ final class SqlEmitter {
         if (Node.TIME.contains(f) || Node.WINDOW.contains(f)) {
             return timeCall(c, inAgg);
         }
+        if (Node.CONTEXT.contains(f) || Node.SCALARS_B.contains(f)) {
+            if (Node.CONTEXT.contains(f)) {
+                sawAggregate = true;
+            }
+            return ContextFunctions.emit(this, c, inAgg);
+        }
         return switch (f) {
             case "abs" -> "abs(" + emit(a.get(0), inAgg) + ")";
             case "upper" -> "upper(" + emit(a.get(0), inAgg) + ")";
@@ -238,10 +301,45 @@ final class SqlEmitter {
             }
             case "business_days_between" -> {
                 String to = weekdays(a.get(1), inAgg);
-                yield "(" + to + " - " + weekdays(a.get(0), inAgg) + ")";
+                String days = "(" + to + " - " + weekdays(a.get(0), inAgg) + ")";
+                yield holidaysBetween(a.get(0), a.get(1), days, inAgg);
             }
             default -> throw new DrishtiException(ErrorCode.DATASET_NOT_BUILT, "'" + f + "' is not built yet");
         };
+    }
+
+    /** How many years either side of the as-of date the holidays of {@code business_days_between} are taken from (the model's calendar, wave B). */
+    static final int HOLIDAY_YEARS = 10;
+
+    /**
+     * Weekdays between two dates less the calendar's holidays between them (wave B: the model's calendar, or the pack's): each holiday {@code h} with
+     * {@code a < h <= b} counts one less (one more when {@code b} is before {@code a}). Without holidays (weekends only, or while planning) the weekdays.
+     */
+    private String holidaysBetween(Node from, Node to, String weekdays, boolean inAgg) {
+        if (planning || time == null || time.calendar() == null) {
+            return weekdays;
+        }
+        List<java.time.LocalDate> hs = new ArrayList<>();
+        for (int y = time.asOf().getYear() - HOLIDAY_YEARS; y <= time.asOf().getYear() + HOLIDAY_YEARS; y++) {
+            hs.addAll(time.calendar().holidays(y));
+        }
+        if (hs.isEmpty()) {
+            return weekdays;
+        }
+        StringBuilder values = new StringBuilder();
+        for (int i = 0; i < hs.size(); i++) {
+            values.append(i == 0 ? "" : ", ").append("(CAST(? AS DATE))");
+        }
+        // parameters bind in text order: each sub-query's holidays, then its two dates
+        hs.forEach(d -> params.add(d.toString()));
+        String a1 = emit(from, inAgg);
+        String b1 = emit(to, inAgg);
+        String forward = "(SELECT count(*) FROM (VALUES " + values + ") AS h(d) WHERE h.d > CAST(" + a1 + " AS DATE) AND h.d <= CAST(" + b1 + " AS DATE))";
+        hs.forEach(d -> params.add(d.toString()));
+        String b2 = emit(to, inAgg);
+        String a2 = emit(from, inAgg);
+        String backward = "(SELECT count(*) FROM (VALUES " + values + ") AS g(d) WHERE g.d > CAST(" + b2 + " AS DATE) AND g.d <= CAST(" + a2 + " AS DATE))";
+        return "(" + weekdays + " - " + forward + " + " + backward + ")";
     }
 
     /**
@@ -283,7 +381,7 @@ final class SqlEmitter {
             case "percentile" -> dialect.percentile(inner, Double.toString(((Node.Num) a.get(1)).value()));
             default -> throw new DrishtiException(ErrorCode.QUERY_INVALID, "unknown aggregate " + f);
         };
-        if (cond == null && window == null) {
+        if (cond == null && window == null && rowFilters.isEmpty()) {
             return call;
         }
         String where = cond == null ? "" : emit(cond, true);
@@ -292,6 +390,10 @@ final class SqlEmitter {
             params.add(window.hi().toString());
             String range = "(" + windowDate + " >= CAST(? AS DATE) AND " + windowDate + " <= CAST(? AS DATE))";
             where = where.isEmpty() ? range : where + " AND " + range;
+        }
+        for (Object rf : rowFilters) {
+            String more = rf instanceof Node n ? emit(n, true) : String.valueOf(rf);
+            where = where.isEmpty() ? more : where + " AND " + more;
         }
         return call + " FILTER (WHERE " + where + ")";
     }

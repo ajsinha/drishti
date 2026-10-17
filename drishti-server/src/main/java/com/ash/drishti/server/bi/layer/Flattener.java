@@ -111,7 +111,7 @@ public final class Flattener {
         });
         List<Dataset.Relationship> rels = new ArrayList<>();
         for (ModelDef.Rel r : m.relationships()) {
-            rels.add(new Dataset.Relationship(r.fromAlias(), r.fromColumn(), r.toAlias(), r.toColumn(), r.cardinality(), r.direction(), r.active()));
+            rels.add(new Dataset.Relationship(r.fromAlias(), r.fromColumn(), r.toAlias(), r.toColumn(), r.cardinality(), r.direction(), r.active(), r.id()));
         }
         rels.addAll(hiddenRels);
         Map<String, Dataset.Measure> measures = new LinkedHashMap<>();
@@ -119,13 +119,36 @@ public final class Flattener {
         Map<String, String> ids = measureIds(all);
         for (ModelDef.Meas x : all.values()) {
             String expr = com.ash.drishti.server.bi.expr.Expressions.withMeasureNames(x.expr(), ids);
+            if (expr != null && x.via() != null && !x.via().isBlank()) {
+                expr = "calc(" + expr + ", via=" + com.ash.drishti.server.bi.expr.DelPrinter.quote(x.via()) + ")";   // a measure along an inactive relationship (wave B)
+            }
             measures.put(x.name(), new Dataset.Measure(x.name(), expr, x.format(), x.description(), x.python(), x.inputs(), x.by()));
         }
         Dataset.Security sec = new Dataset.Security(List.of(), masked, security);
         Dataset ds = new Dataset(m.name(), Math.max(1, m.major()), m.title(), m.description(), m.sample(), "duckdb", tables, rels, measures, m.hierarchies(), sec,
-                m.rollups(), Dataset.Refresh.NONE, null, null, List.of());
+                m.rollups(), Dataset.Refresh.NONE, null, null, List.of(), modelInfo(m, datasets));
         ds = DatasetParser.withHistories(ds, problems);
         return new Flat(ds, unbuilt, problems);
+    }
+
+    /** The model's calendar, FX rates and the per-row currency of its amounts, for the expressions (wave B). */
+    static Dataset.Model modelInfo(ModelDef m, Map<String, ResolvedDataset> datasets) {
+        Map<String, String> currencyOf = new LinkedHashMap<>();
+        for (ModelDef.Use use : m.datasets().values()) {
+            ResolvedDataset r = datasets.get(use.alias());
+            if (r == null) {
+                continue;
+            }
+            for (DatasetDef.Col c : r.def().columns().values()) {
+                if (c.unitCurrency() != null) {
+                    currencyOf.put(use.alias() + "." + c.name(), c.perRowCurrency(r.def().columns()) ? use.alias() + "." + c.unitCurrency() : c.unitCurrency());
+                }
+            }
+        }
+        ModelDef.Calculation calc = m.calculation();
+        ModelDef.FxDef f = calc.fx();
+        Dataset.Fx fx = f == null ? null : new Dataset.Fx(f.rates(), f.from(), f.to(), f.rate(), f.date(), f.base());
+        return new Dataset.Model(calc.calendar() == null ? null : calc.calendar().holidays(), calc.calendar() == null ? 1 : calc.calendar().fiscalYearStart(), fx, currencyOf);
     }
 
     private static List<Dataset.RowRule> rowRules(List<DatasetDef.Rule> rules, String name, Set<String> cols, String alias) {

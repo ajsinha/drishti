@@ -322,6 +322,9 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_BI_DIR` | `drishti.bi.dir` | `./config/bi` | Where Rupaka (BI) files live: `datasets/`, `reports/`, `boards/`, `notebooks/`, `python/`. Never inside a pack. |
 | `DRISHTI_BI_TRANSFORM_PYTHON` | `drishti.bi.transform.python` | empty | The Python that runs a derived dataset's Transform: it needs `pandas` and `pyarrow`, normally the console's `drishti-console/.venv/bin/python`. Empty: that file when it exists, else `python3`. |
 | `DRISHTI_BI_TRANSFORM_RUNNER` | `drishti.bi.transform.runner` | empty | The console's `core/transform_cli.py`, which the server starts to run a Transform in the sandboxed runner. Empty: looked for in `drishti-console/core` from the working directory and its parents. |
+| `DRISHTI_BI_TRANSFORM_CONSOLE_URL` | `drishti.bi.transform.console-url` | empty | (wave B) The console's Py-node endpoint base URL (`http://console:17480`): Transforms and Python measures run there (`/internal/py/*`). Empty: the server starts `transform_cli.py` itself. |
+| `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` | `drishti.bi.transform.console-token` | empty | (wave B) The shared secret sent as `X-Drishti-Runner-Token` on every Py-node call; the console refuses a call without it. |
+| `DRISHTI_BI_NODE` | `drishti.bi.exec.node` | empty | (wave B) This Java node's name when several Java nodes serve the site (`drishti.bi.exec.nodes` lists them); empty: one node. |
 | `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | At start, converts stored items once: old-syntax expressions to DEL v2, then `rachana: 1` datasets to datasets and models with their reports rebound (each change audited, the text before kept in the item's history). `false`: a bi-admin runs `drishti.py bi migrate` instead ([drishti.bi.migrate](#drishtibimigrate--migrations-of-stored-bi-items)). |
 | `DRISHTI_BI_STORE` | `drishti.bi.query.store-dir` | `./data/bi-store` | The BI store: the typed Parquet layers (columns, rollups, live snapshots) the dataset query engine writes and reads, and DuckDB's spill folder. Rebuildable from the connectors; never commit it. |
 | `DRISHTI_PACKS_DIR` | `drishti.packs.dir` | `./config/packs` | The packs directory. If it does not exist and the old `./packs` does, `./packs` is used with a warning (one release). |
@@ -1242,6 +1245,8 @@ A **Python dataset** (2.2; before it, a derived dataset) is made by a Python Tra
 | `max-concurrent` | `2` | Transforms running at once on the server. |
 | `queue-wait` | `5s` | How long a run waits for a place before `DRS-9074`. |
 | `compose-source-max-rows` | `50000` | Most rows one source of a composed dataset may answer (`DRS-9022`): group it by less or filter it in `from`. |
+| `console-url` (`DRISHTI_BI_TRANSFORM_CONSOLE_URL`) | empty | (wave B) The console's Py-node endpoint: Transforms and Python measures are `POST {console-url}/internal/py/transform` and `/internal/py/measure` ([API_GUIDE.md](../guides/API_GUIDE.md)); `max-concurrent`, `queue-wait` and `timeout` apply to those calls. Empty: the process runner above. |
+| `console-token` (`DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN`) | empty | (wave B) The shared secret of those calls (`X-Drishti-Runner-Token`). |
 
 ### `drishti.bi.refresh` — scheduled dataset refresh
 
@@ -1309,9 +1314,36 @@ default throttle is `drishti.bi.live.frame`; its stream's heartbeat is `drishti.
 | `max-subscriptions` | `500` | Standing queries open at once on the server (`429 DRS-9181`). |
 | `max-subscriptions-per-user` | `20` | Standing queries open at once for one person (`429 DRS-9182`). |
 | `min-throttle` | `100ms` | The shortest throttle a subscription may ask for (a shorter one is raised to it). |
-| `poll` | `100ms` | How often a stream looks for a new data generation of its subscriptions' models. |
+| `poll` | `100ms` | The step of a stream's wait (wave B: answers are pushed by the generation bus when a model's data moves; a stream is woken by its subscriptions' groups, so this only bounds how late a throttled delivery is sent). |
 | `idle-close` | `10m` | A subscription that no stream has read for this long is dropped. |
 | `pack-live` | `true` | A pack-generated dataset (`pack.<pack>.<kind>`) is `live` when the kind's connector pushes (decision D6), else `snapshot`; `false` keeps every one a snapshot. |
+| `maintenance-budget` | `250ms` | (wave B) Per model, the time keeping its standing queries current may take in each second; past it the model's groups are recomputed every `tick` and say `tick` (status and the `drishti_bi_sq_mode` metric) until a second spends less than half of it. |
+| `tick` | `5s` | (wave B) How often a standing query in tick mode is recomputed: windows, time intelligence and Python measures, and every query of a model over its maintenance budget. |
+
+Wave B ([BI_DESIGN.md §4.6](../architecture/BI_DESIGN.md#46-standing-queries-and-incremental-maintenance)): subscriptions are grouped by plan hash and security
+signature (one evaluation per group, `subscribers` in the subscribe answer); a group is kept current by difference (`sum`, `count`, `avg` of the live table's
+own columns, the reader's rules worked out per changed row), by asking the touched groups again (`min`, `max`, `distinct`, rules the engine works out), by
+asking the whole question again (contexts, fields of other tables, loads and refreshes), or on the tick. A group no subscriber reads stays 30 s.
+
+### `drishti.bi.exec` — execution, connectors and scale (wave B, 2.3.0)
+
+How the query engine shares the server ([BI_DESIGN.md §6.3 to §6.7](../architecture/BI_DESIGN.md#63-concurrency-fairness-and-memory)): work classes and
+slots, per-person and per-model shares, memory and cost budgets, per-connector fragment pools and circuit breakers, and the Java nodes of a site that runs
+more than one ([OPERATIONS.md, Scale](OPERATIONS.md#bi-scale-wave-b)).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `per-model-share` | `0.5` | The share of the server's slots (`drishti.bi.query.max-concurrent`) one model may hold at once: a hot model cannot take the server. Queries wait in **work classes**: **interactive** (a person's question) before **standing** (standing-query maintenance) before **background**; a person's share is `drishti.bi.query.max-concurrent-per-user` (standing and background work do not count against it). A query waits `drishti.bi.query.admission`, then `429 DRS-9025` with `Retry-After`. A query that needs more memory than the engine's `drishti.bi.query.memory-limit`, even spilling, is `413 DRS-9028`. |
+| `queue` | `2s` | How long a source fragment waits for its connector's pool (`max-fragments`) before `429 DRS-9025`. |
+| `interactive` | `30s` | Longest an interactive query runs before it is cancelled (`504 DRS-9024`; a shorter `options.budget.millis` or `drishti.bi.query.timeout` wins). |
+| `background` | `300s` | Longest background work runs (refresh, precompute, standing-query maintenance). |
+| `max-estimated-rows` | `200000000` | The planner's estimate of rows a query reads (from the layers' row counts) past which it is refused before it runs (`413 DRS-9029`, with the estimate and the fix: a date filter, a rollup's fields); a query's `options.budget.rows` may set its own. |
+| `max-fragments` | `8` | Source fragments (layer builds, direct queries) one connector runs at once; `connectors.<name>.max-fragments` overrides it per connector. Past it a fragment waits `queue`, then `DRS-9025`. |
+| `breaker-failures` | `5` | Consecutive failures of a connector that open its circuit breaker: while open every fragment for it is refused at once (`502 DRS-9026`, the connector named). |
+| `breaker-open` | `30s` | How long an open breaker refuses; then one fragment may try (half open): its success closes the breaker. |
+| `connectors.<name>.max-fragments` | (`max-fragments`) | Per connector (its manifest name): the fragments it runs at once. |
+| `node` (`DRISHTI_BI_NODE`) | empty | This Java node's name when several Java nodes serve the site; empty: one node. |
+| `nodes.<name>` | (none) | Every Java node of the site, name to base URL (`nodes.java-1: http://10.0.0.5:18480`). Each model's shard (its live tables and standing queries) is owned by one node, chosen by consistent hashing over the names; another node forwards subscriptions to the owner (`503 DRS-9184` while the owner cannot be reached) and takes over a lost node's shards. *As built in 2.3.0:* the directory, forwarding and failover are proven with two nodes in one process; the HTTP transport between Java nodes is not built yet, so run one Java node. |
 
 ### `drishti.bi.plan` — the logical plan, the result cache and the guards
 

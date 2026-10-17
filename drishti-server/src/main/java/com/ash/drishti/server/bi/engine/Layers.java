@@ -103,6 +103,14 @@ public final class Layers {
         return generations.computeIfAbsent(key, k -> new AtomicLong()).get();
     }
 
+    /** Generations per business date (wave B, back-dated refresh): a load for one date moves that date's answers only. */
+    private final Map<String, AtomicLong> dateGenerations = new ConcurrentHashMap<>();
+
+    /** The generation of one business date of {@code key}: moved by a load, refresh or invalidation of that date (an as-of answer's cache key). */
+    public long generation(String key, LocalDate date) {
+        return date == null ? generation(key) : dateGenerations.computeIfAbsent(key + "|" + date, k -> new AtomicLong()).get();
+    }
+
     /** Moves the data generation of {@code key} on without clearing a layer (rows that are not kept in a layer, such as a Transform's, were dropped). */
     public long bump(String key) {
         return generations.computeIfAbsent(key, k -> new AtomicLong()).incrementAndGet();
@@ -387,6 +395,9 @@ public final class Layers {
             latest.remove(key + "|" + t.name());
             liveAt.remove(root.resolve("live").resolve(key).resolve(t.name()).toString());
             touched.add(t.name());
+        }
+        if (!touched.isEmpty() && date != null) {
+            dateGenerations.computeIfAbsent(key + "|" + date, k -> new AtomicLong()).incrementAndGet();
         }
         if (!touched.isEmpty()) {
             generations.computeIfAbsent(key, k -> new AtomicLong()).incrementAndGet();

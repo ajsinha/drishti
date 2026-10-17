@@ -141,6 +141,115 @@ measures:
   MTM per trade: { expr: "measure('m_mtm') / measure('Trades')" }      # by id and by name
 ```
 
+### 5.1 The filter context: `calc`, `share_of`, `parent_of`, `avg_by` (wave B)
+
+A measure is worked out per group of the answer in a **filter context** of four layers. You can edit layers 2 and 3; layer 1 is never in reach:
+
+| Layer | What it holds | Who changes it |
+|---|---|---|
+| 1 security | your row rules and masks, per dataset | nobody: `ignore=ALL` means *everything you may see* |
+| 2 query | the query's filters: MQ `where`, slicers, page and visual filters, drill, cross-filter | `calc(…, ignore=…/keep=…)`, `share_of` |
+| 3 group | the values of the answer's fields for this row (`desk == 'RATES'`) | `calc(…, ignore=…/keep=…)`, `share_of`, `parent_of` |
+| 4 measure | the measure's own `where=` and `calc(…, where=…)` | the measure |
+
+```yaml
+measures:
+  MTM:              { expr: "sum(trades.mtm)" }
+  MTM all desks:    { expr: "calc(measure('MTM'), ignore=[desks.name])" }        # the desk slicer and the row's desk dropped
+  MTM % of total:   { expr: "share_of(measure('MTM'), over=ALL)" }               # of the total you may see
+  MTM % of desk:    { expr: "share_of(measure('MTM'), over=[books.name])" }      # a book's share of the rest of its group
+  MTM % of parent:  { expr: "parent_of(measure('MTM'), hierarchy='Desk and book')" }
+  Live MTM anyway:  { expr: "calc(measure('MTM'), where=trades.status == 'Live')" }
+  Region MTM:       { expr: "calc(measure('MTM'), keep=[desks.region])" }        # every filter but the region's dropped
+  MTM by settle:    { expr: "calc(measure('MTM'), via='r_5')" }                  # the inactive relationship r_5 instead of the active one
+  Avg book MTM:     { expr: "avg_by(sum(trades.mtm), by=[books.name])" }         # MTM per book, then the average
+```
+
+Before and after, for *MTM all desks* with a slicer `desk in [RATES]` and the answer grouped by desk and currency:
+
+| | desk filter | desk group | currency group | so the value is |
+|---|---|---|---|---|
+| `measure('MTM')` | RATES | the row's desk | the row's currency | MTM of that desk and currency |
+| `calc(measure('MTM'), ignore=[desks.name])` | dropped | dropped | kept | MTM of every desk you may see, in that currency |
+
+How it runs: `where=` alone restricts the aggregates (`FILTER (WHERE …)`); `ignore`, `keep`, `via`, `share_of`, `parent_of` and `avg_by` become a
+**context sub-query** (the same question at the coarser grain, as you, joined back on the fields both keep: `Context` nodes in `explain`). Rules:
+security is never in scope; contexts nest at most three deep (`DRS-9127` in an expression, `DRS-9166` through measures); no context transition
+(iterate explicitly with `avg_by`); a context is read on the groups the answer has, so a grand total with no rows of its own shows `None`; no rollup
+answers a measure with a context (the plan says so).
+
+### 5.2 Parameters and calculation groups (wave B)
+
+A model declares **parameters** and **calculation groups**; a query (`mq: 2`) gives values and picks items.
+
+```yaml
+parameters:
+  shock:     { kind: number, default: 0, min: -0.5, max: 0.5, step: 0.01 }     # what-if: param.shock in any expression
+  breakdown: { kind: field, fields: [desks.region, trades.currency], default: desks.region }   # field: param.breakdown in select.fields
+calc-groups:
+  Time:
+    precedence: 10                                   # several groups: the highest precedence applies first (innermost)
+    items:
+      Current: "SELECTED"
+      YTD:     "ytd(SELECTED, trades.tradeDate)"     # SELECTED is the measure the item applies to
+      Prior:   "prior_period(SELECTED, trades.tradeDate)"
+measures:
+  Shocked MTM: { expr: "measure('MTM') * (1 + param.shock)" }
+```
+
+```yaml
+mq: 2
+model: desk-calc
+select: { fields: [param.breakdown], measures: [MTM, Notional, Trades] }
+params: { shock: -0.1, breakdown: trades.currency }
+calc: { Time: YTD }                                  # every selected measure becomes its YTD; the answer keeps the names
+```
+
+A value outside the parameter's kind, range or list is `DRS-9164`; an unknown group or item `DRS-9165`. The values and the items are part of the
+question (the plan hash), so two shocks are two cache entries. `param.x` is refused in a row rule (security never depends on a what-if value).
+
+### 5.3 Balances, time travel, calendars and currencies (wave B)
+
+A **balance** (a position, a limit, collateral held) is not added across dates: summing Monday's and Tuesday's balance is meaningless. Write it with a
+balance function, which says which date's rows count:
+
+| Function | Per group of the answer | Example |
+|---|---|---|
+| `last(agg, date)` | the rows dated on the group's latest date | `last(sum(accounts.balance), accounts.businessDate)` |
+| `first(agg, date)` | the rows dated on the group's earliest date | `first(sum(accounts.balance), accounts.businessDate)` |
+| `closing(agg, date, period='month')` | the rows on the last **business** day of each period, up to the as-of date (a month ending on a holiday or a weekend closes on the business day before) | `closing(sum(accounts.balance), accounts.businessDate)` |
+| `opening(agg, date, period='month')` | the closing of the period before: along the answer's date field the row before; without one, the business day before the as-of date's period (read at that date when `date` is the snapshot's `businessDate`) | `opening(sum(accounts.balance), accounts.businessDate)` |
+| `avg_over(agg, date)` | the average of the aggregate per date (an average daily balance) | `avg_over(sum(accounts.balance), accounts.businessDate)` |
+| `as_of(agg, d)` | the aggregate at another business date (same fields, filters and security) | `measure('MTM') - as_of(measure('MTM'), shift_date(asof(), -1))` |
+
+A measure declared `additive: { over-time: last }` and **not** written with one of these, asked over a window of dates with other measures and without
+the date as a field, is refused (`DRS-9159`: the fix offers `last(measure('…'), <alias>.businessDate)`); asked alone it is still answered as its last
+date's value. `asof()` is the query's as-of date; `shift_date(d, n, unit='business-day')` moves a date by business days (on the model's calendar), days,
+weeks, months, quarters or years; `as_of` needs a date it can work out before the query runs (`date('…')`, `asof()`, `shift_date(asof(), -1)`:
+`DRS-9166` otherwise).
+
+**The model's calendar** (`calendars: { holidays: USNY, fiscal-year-start: 4 }`) decides the business days of `closing`, `opening`, `shift_date`,
+`prior_period`, `same_period_last_year`, `business_days_between` (weekdays less its holidays) and relative windows, and the fiscal year of
+`fiscal_ytd(agg, date)` (here from 1 April). Without one, the pack's calendar and a calendar year.
+
+**Currencies.** A model names its FX rates (`fx: { rates: <alias>, from: base, to: quote, rate: rate, date: day, base: USD }`): `fx(ccy, 'USD',
+at=d)` is the latest rate on or before `d` (a pair as stored, its inverse, or through `base`); `convert(agg, to='USD', at='as-of')` multiplies every
+amount inside the aggregate by the rate of its own currency (the column's `unit: { currency: <column> }`) at the as-of date, at each row's trade date
+(`at='trade-date'`) or at another date column (`at='settleDate'`). A converted measure has one currency, so the currency guard (`DRS-9158`) does not
+apply to it. The rates are reference data: the rates table's row rules do not filter a conversion.
+
+```yaml
+measures:
+  Month-end balance:   { expr: "closing(sum(accounts.balance), accounts.businessDate)" }
+  Average daily:       { expr: "avg_over(sum(accounts.balance), accounts.businessDate)" }
+  MTM day on day:      { expr: "measure('MTM') - as_of(measure('MTM'), shift_date(asof(), -1))" }
+  Fiscal YTD P&L:      { expr: "fiscal_ytd(sum(trades.pnl1d), trades.tradeDate)" }
+  Notional USD:        { expr: "convert(sum(trades.notional), to='USD')" }
+  Notional EUR traded: { expr: "convert(sum(trades.notional), to='EUR', at='trade-date')" }
+calendars: { holidays: USNY, fiscal-year-start: 4 }
+fx: { rates: rates, from: base, to: quote, rate: rate, date: day, base: USD }
+```
+
 ## 6. Functions
 
 The reference below is generated from the server's catalogue (`drishti-server/src/main/resources/bi/expr/functions.yaml`), the same list the
@@ -152,14 +261,14 @@ marked with a later wave is refused with `DRS-9129` until that wave.
 | Family | Functions |
 |---|---|
 | scalar | [`abs`](#fn-abs), [`round`](#fn-round), [`coalesce`](#fn-coalesce), [`upper`](#fn-upper), [`lower`](#fn-lower), [`len`](#fn-len), [`contains`](#fn-contains), [`startswith`](#fn-startswith), [`endswith`](#fn-endswith), [`date`](#fn-date), [`timestamp`](#fn-timestamp), [`year`](#fn-year), [`quarter`](#fn-quarter), [`month`](#fn-month), [`week`](#fn-week), [`day`](#fn-day), [`days_between`](#fn-days-between), [`business_days_between`](#fn-business-days-between) |
-| conversion | [`fx`](#fn-fx) *(B)*, [`convert`](#fn-convert) *(B)* |
+| conversion | [`fx`](#fn-fx), [`convert`](#fn-convert) |
 | lookup | [`related`](#fn-related) |
-| aggregate | [`sum`](#fn-sum), [`avg`](#fn-avg), [`min`](#fn-min), [`max`](#fn-max), [`count`](#fn-count), [`distinct`](#fn-distinct), [`ratio`](#fn-ratio), [`percentile`](#fn-percentile), [`avg_by`](#fn-avg-by) *(B)* |
-| time intelligence | [`ytd`](#fn-ytd), [`mtd`](#fn-mtd), [`qtd`](#fn-qtd), [`prior_period`](#fn-prior-period), [`same_period_last_year`](#fn-same-period-last-year), [`running`](#fn-running), [`fiscal_ytd`](#fn-fiscal-ytd) *(B)* |
+| aggregate | [`sum`](#fn-sum), [`avg`](#fn-avg), [`min`](#fn-min), [`max`](#fn-max), [`count`](#fn-count), [`distinct`](#fn-distinct), [`ratio`](#fn-ratio), [`percentile`](#fn-percentile), [`avg_by`](#fn-avg-by) |
+| time intelligence | [`ytd`](#fn-ytd), [`mtd`](#fn-mtd), [`qtd`](#fn-qtd), [`prior_period`](#fn-prior-period), [`same_period_last_year`](#fn-same-period-last-year), [`running`](#fn-running), [`fiscal_ytd`](#fn-fiscal-ytd) |
 | windows | [`lag`](#fn-lag), [`lead`](#fn-lead), [`rank`](#fn-rank), [`dense_rank`](#fn-dense-rank), [`percent_rank`](#fn-percent-rank), [`moving_avg`](#fn-moving-avg), [`moving_sum`](#fn-moving-sum), [`moving_min`](#fn-moving-min), [`moving_max`](#fn-moving-max), [`cumulative`](#fn-cumulative) |
-| balances | [`last`](#fn-last) *(B)*, [`first`](#fn-first) *(B)*, [`opening`](#fn-opening) *(B)*, [`closing`](#fn-closing) *(B)*, [`avg_over`](#fn-avg-over) *(B)* |
-| filter context | [`calc`](#fn-calc) *(B)*, [`share_of`](#fn-share-of) *(B)*, [`parent_of`](#fn-parent-of) *(B)* |
-| time travel | [`as_of`](#fn-as-of) *(B)*, [`shift_date`](#fn-shift-date) *(B)*, [`asof`](#fn-asof) *(B)* |
+| balances | [`last`](#fn-last), [`first`](#fn-first), [`opening`](#fn-opening), [`closing`](#fn-closing), [`avg_over`](#fn-avg-over) |
+| filter context | [`calc`](#fn-calc), [`share_of`](#fn-share-of), [`parent_of`](#fn-parent-of) |
+| time travel | [`as_of`](#fn-as-of), [`shift_date`](#fn-shift-date), [`asof`](#fn-asof) |
 | measure reference | [`measure`](#fn-measure) |
 
 ### Scalar
@@ -489,7 +598,7 @@ Calendar days from a to b (negative when b is before a). The same as b - a for t
 
 *Scopes: row, rule, aggregate · returns: integer · since A*
 
-Business days (Monday to Friday) from a, excluded, to b, included; negative when b is before a. Holidays of the model's calendar are counted from wave B (model calendars).
+Business days from a, excluded, to b, included, on the model's calendar (calendars.holidays, else the pack's): weekdays less the holidays between; negative when b is before a.
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
@@ -509,9 +618,9 @@ Business days (Monday to Friday) from a, excluded, to b, included; negative when
 <a id="fn-fx"></a>
 #### `fx(ccy, to, at=None)`
 
-*Scopes: row · returns: decimal · since B* — **arrives in wave B**: refused with `DRS-9129` until then
+*Scopes: row, aggregate · returns: decimal · since B*
 
-The rate that converts one unit of ccy into the currency to, at the row's date (or at=). Needs the model's FX dataset: built with model calendars and rates in wave B.
+The rate that converts one unit of ccy into the currency to: the latest rate on or before the row's business date (or at=) in the model's FX rates (fx: { rates, from, to, rate, date, base }), a pair as stored, its inverse, or through the base currency; 1 for the same currency. Worked out inside a measure (a dataset's derived column cannot read the rates).
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
@@ -521,18 +630,19 @@ The rate that converts one unit of ccy into the currency to, at the row's date (
 
 | Example | What it says |
 |---|---|
-| `trades.notional * fx(trades.currency, 'USD')` | notional in US dollars |
-| `trades.mtm * fx(trades.currency, 'EUR', at=trades.tradeDate)` | MTM in euros at the trade date |
+| `sum(trades.notional * fx(trades.currency, 'USD'))` | notional in US dollars |
+| `sum(trades.mtm * fx(trades.currency, 'EUR', at=trades.tradeDate))` | MTM in euros at each trade date |
 
-* **None:** None when the currency or the rate for that date is missing; the answer warns.
+* **None:** None when the currency is None or no rate for the pair is on or before the date.
+* **Masked values:** The rates are reference data: the rates table's row rules do not filter a conversion.
 * **Currencies:** A converted amount has one currency, so summing it lifts the currency guard (DRS-9158).
 
 <a id="fn-convert"></a>
 #### `convert(agg, to='USD', at='as-of')`
 
-*Scopes: aggregate · returns: decimal · since B* — **arrives in wave B**: refused with `DRS-9129` until then
+*Scopes: aggregate · returns: decimal · since B*
 
-An aggregate of amounts in many currencies, converted to one, at the as-of date or at each row's trade date.
+An aggregate of amounts in many currencies, converted to one: each amount inside is multiplied by the rate of its own currency (its column's unit: { currency: ... }) at the as-of date (at='as-of'), at each row's trade date (at='trade-date'; the business date when the row has none) or at another date column of the row (at='settleDate').
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
@@ -545,7 +655,9 @@ An aggregate of amounts in many currencies, converted to one, at the as-of date 
 | `convert(sum(trades.notional), to='USD')` | notional in USD at the as-of rate |
 | `convert(sum(trades.mtm), to='EUR', at='trade-date')` | each trade converted at its own trade date |
 
+* **None:** A row whose rate is unknown adds None (it is skipped by the sum).
 * **Currencies:** Lifts the currency guard: the result has one currency.
+* **Types:** An amount with no currency, or mixing two, is refused (DRS-9020): convert each amount in its own aggregate.
 
 ### Lookup
 
@@ -742,9 +854,9 @@ The continuous p-quantile of x in the group (p between 0 and 1): 0.5 is the medi
 <a id="fn-avg-by"></a>
 #### `avg_by(agg, by=[fields])`
 
-*Scopes: aggregate · returns: decimal · since B* — **arrives in wave B**: refused with `DRS-9129` until then
+*Scopes: aggregate, context · returns: decimal · since B*
 
-A two-level aggregate: agg per value of by, then the average of those (the explicit iteration DEL has instead of DAX context transition).
+A two-level aggregate: agg per value of by (within each group of the answer), then the average of those values (the explicit iteration DEL has instead of DAX context transition).
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
@@ -756,7 +868,9 @@ A two-level aggregate: agg per value of by, then the average of those (the expli
 | `avg_by(sum(trades.mtm), by=[trades.tradeDate])` | the average daily MTM |
 | `avg_by(count(trades), by=[trades.book])` | trades per book, on average |
 
+* **None:** Groups of by whose aggregate is None are left out of the average.
 * **No rows:** None when no group of by has rows.
+* **Masked values:** A masked field in by is refused (DRS-9161): the inner groups would split on hidden values.
 
 ### Time intelligence
 
@@ -879,9 +993,9 @@ A running total of a sum, count, min or max along the date field of the answer (
 <a id="fn-fiscal-ytd"></a>
 #### `fiscal_ytd(agg, date)`
 
-*Scopes: aggregate · returns: the type of `agg` · since B* — **arrives in wave B**: refused with `DRS-9129` until then
+*Scopes: aggregate · returns: the type of `agg` · since B*
 
-The aggregate from the start of the fiscal year of the model's calendar to the as-of date.
+The aggregate from the start of the fiscal year that holds the as-of date to the as-of date; the fiscal year starts on the first of the model's calendars.fiscal-year-start month (January when the model names none).
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
@@ -894,6 +1008,7 @@ The aggregate from the start of the fiscal year of the model's calendar to the a
 | `fiscal_ytd(count(trades), trades.tradeDate)` | trades this fiscal year |
 
 * **No rows:** None (a count: 0) when no row is in the window.
+* **Types:** date is a date or timestamp field of the aggregate's dataset.
 
 ### Windows
 
@@ -1108,9 +1223,9 @@ The same as running(agg, date).
 <a id="fn-last"></a>
 #### `last(agg, date)`
 
-*Scopes: aggregate · returns: the type of `agg` · since B* — **arrives in wave B**: refused with `DRS-9129` until then
+*Scopes: aggregate · returns: the type of `agg` · since B*
 
-The aggregate on the last date of each group that has rows (a balance's semi-additive total).
+The aggregate over the rows of each group dated on the group's latest date (a balance's semi-additive total: the latest day's figure, never the sum of the days).
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
@@ -1122,14 +1237,15 @@ The aggregate on the last date of each group that has rows (a balance's semi-add
 | `last(sum(accounts.balance), accounts.businessDate)` | the closing balance of the period |
 | `last(sum(collateral.value), collateral.businessDate)` | collateral held at the end |
 
+* **None:** Rows with no date are never the latest.
 * **No rows:** None when the group has no dated row.
 
 <a id="fn-first"></a>
 #### `first(agg, date)`
 
-*Scopes: aggregate · returns: the type of `agg` · since B* — **arrives in wave B**: refused with `DRS-9129` until then
+*Scopes: aggregate · returns: the type of `agg` · since B*
 
-The aggregate on the first date of each group that has rows.
+The aggregate over the rows of each group dated on the group's earliest date.
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
@@ -1146,9 +1262,9 @@ The aggregate on the first date of each group that has rows.
 <a id="fn-opening"></a>
 #### `opening(agg, date, period='month')`
 
-*Scopes: aggregate · returns: the type of `agg` · since B* — **arrives in wave B**: refused with `DRS-9129` until then
+*Scopes: aggregate · returns: the type of `agg` · since B*
 
-The balance at the close of the business day before the period starts.
+The balance at the close of the business day before the period starts (period: day, week, month, quarter, year): along the answer's date field it is the closing of the row before; without one, the aggregate on the business day before the as-of date's period (read at that business date when date is the snapshot's businessDate).
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
@@ -1161,14 +1277,14 @@ The balance at the close of the business day before the period starts.
 | `opening(sum(accounts.balance), accounts.businessDate)` | the opening balance of the month |
 | `opening(sum(accounts.balance), accounts.businessDate, period='quarter')` | the opening balance of the quarter |
 
-* **No rows:** None when the day before has no rows.
+* **No rows:** None when the day before has no rows, and on the first period of the answer when the period before is not in it.
 
 <a id="fn-closing"></a>
 #### `closing(agg, date, period='month')`
 
-*Scopes: aggregate · returns: the type of `agg` · since B* — **arrives in wave B**: refused with `DRS-9129` until then
+*Scopes: aggregate · returns: the type of `agg` · since B*
 
-The balance on the last business day of the period (holidays from the model's calendar).
+The aggregate over the rows dated on the last business day of each period (on the model's calendar: a month ending on a holiday or a weekend closes on the business day before), up to the as-of date (the as-of period closes on the as-of date); per group, so a monthly answer shows each month's close.
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
@@ -1182,13 +1298,14 @@ The balance on the last business day of the period (holidays from the model's ca
 | `closing(sum(accounts.balance), accounts.businessDate, period='year')` | the year-end balance |
 
 * **No rows:** None when the period's last business day has no rows.
+* **Types:** Without a window the periods of the five years before the as-of date are looked at.
 
 <a id="fn-avg-over"></a>
 #### `avg_over(agg, date)`
 
-*Scopes: aggregate · returns: decimal · since B* — **arrives in wave B**: refused with `DRS-9129` until then
+*Scopes: aggregate · returns: decimal · since B*
 
-The average over the dates of the group of the aggregate per date (an average daily balance).
+The average over the dates of each group of the aggregate per date (an average daily balance): avg_by(agg, by=[date]).
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
@@ -1207,36 +1324,40 @@ The average over the dates of the group of the aggregate per date (an average da
 <a id="fn-calc"></a>
 #### `calc(agg, where=..., ignore=[...] | ALL, keep=[...], via='rel_id')`
 
-*Scopes: aggregate, context · returns: the type of `agg` · since B* — **arrives in wave B**: refused with `DRS-9129` until then
+*Scopes: aggregate, context · returns: the type of `agg` · since B*
 
-The aggregate in an edited filter context: add conditions (where=), drop query and group filters on fields (ignore=, or ALL), keep only some (keep=), or follow an inactive relationship (via=). Security is never in scope.
+The aggregate in an edited filter context: add conditions (where=, a row condition ANDed to the aggregate's), drop the query's and the group's filters on some fields (ignore=[...]) or on all (ignore=ALL), drop every filter except those on some fields (keep=[...]), or follow an inactive relationship (via='r_5', the active one for the same pair switched off). Security is never in scope: ignore=ALL means everything you may see.
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
 | `agg` | aggregate | required |  |
 | `where` | boolean | `None` | keyword only: `where=...` |
-| `ignore` | fields | `[]` | keyword only: `ignore=...` |
+| `ignore` | fields-or-all | `[]` | keyword only: `ignore=...` |
 | `keep` | fields | `[]` | keyword only: `keep=...` |
 | `via` | string-literal | `None` | keyword only: `via=...` |
 
 | Example | What it says |
 |---|---|
-| `calc(measure('MTM'), ignore=[desks.name])` | MTM ignoring the desk slicer |
+| `calc(measure('MTM'), ignore=[desks.name])` | MTM ignoring the desk slicer and the desk of the row |
+| `calc(sum(trades.mtm), where=trades.status == 'Live')` | MTM of the live trades, whatever else is filtered |
+| `calc(measure('MTM'), keep=[desks.region])` | MTM of the whole region of the row |
 | `calc(measure('MTM'), via='r_5')` | MTM along the settlement-date relationship |
 
-* **Masked values:** ignore=ALL means all the rows you may see, never more.
+* **No rows:** None (a count: 0) when the edited context has no rows.
+* **Masked values:** ignore=ALL means all the rows you may see, never more; a masked field in ignore= or keep= is never a group (it is not grouped on).
+* **Types:** Nesting of calc, share_of, parent_of and as_of is at most three deep (DRS-9127).
 
 <a id="fn-share-of"></a>
 #### `share_of(agg, over=[...] | ALL)`
 
-*Scopes: aggregate, context · returns: decimal · since B* — **arrives in wave B**: refused with `DRS-9129` until then
+*Scopes: aggregate, context · returns: decimal · since B*
 
-The aggregate divided by itself over a coarser group (over=ALL is the grand total you may see).
+The aggregate divided by itself with the fields of over ignored (the same as agg / calc(agg, ignore=over)): over=ALL is the share of the grand total you may see, over=[books.name] a book's share within the rest of its group.
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
 | `agg` | aggregate | required |  |
-| `over` | fields | required | keyword only: `over=...` |
+| `over` | fields-or-all | required | keyword only: `over=...` |
 
 | Example | What it says |
 |---|---|
@@ -1244,13 +1365,14 @@ The aggregate divided by itself over a coarser group (over=ALL is the grand tota
 | `share_of(measure('MTM'), over=[books.name])` | a book's share within its desk |
 
 * **None:** None when the coarser total is 0 or None.
+* **Masked values:** Of what you may see: the total never includes rows your row rules hide.
 
 <a id="fn-parent-of"></a>
 #### `parent_of(agg, hierarchy='name')`
 
-*Scopes: aggregate, context · returns: decimal · since B* — **arrives in wave B**: refused with `DRS-9129` until then
+*Scopes: aggregate, context · returns: decimal · since B*
 
-The aggregate as a share of its parent level in a hierarchy of the model.
+The aggregate as a share of its parent level in a hierarchy of the model: the deepest level of the hierarchy in the answer is ignored (with the levels below it), so each row is divided by its parent's total.
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
@@ -1262,16 +1384,17 @@ The aggregate as a share of its parent level in a hierarchy of the model.
 | `parent_of(measure('MTM'), hierarchy='Desk and book')` | a book's share of its desk |
 | `parent_of(measure('Notional'), hierarchy='Region')` | a country's share of its region |
 
-* **None:** None at the top level.
+* **None:** None at the top level, and when no level of the hierarchy is a field of the answer; None when the parent's total is 0.
+* **Types:** hierarchy names a hierarchy of the model (DRS-9152 otherwise).
 
 ### Time travel
 
 <a id="fn-as-of"></a>
 #### `as_of(agg, date_expr)`
 
-*Scopes: aggregate, context · returns: the type of `agg` · since B* — **arrives in wave B**: refused with `DRS-9129` until then
+*Scopes: aggregate, context · returns: the type of `agg` · since B*
 
-The aggregate with every scan bound to another business date.
+The aggregate with every scan bound to another business date (the same fields, filters and security, that day's data), joined on the answer's fields: today against yesterday in one visual. The date is worked out before the query runs: date('...'), asof(), or shift_date(asof(), n, unit=).
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
@@ -1283,14 +1406,15 @@ The aggregate with every scan bound to another business date.
 | `measure('MTM') - as_of(measure('MTM'), shift_date(asof(), -1))` | MTM day on day |
 | `as_of(measure('Exposure'), date('2026-09-30'))` | exposure at the quarter end |
 
-* **No rows:** None when that date has no data.
+* **No rows:** None when that date has no data for the group.
+* **Types:** A date that depends on the row (a column) is refused (DRS-9166); a live table has no other dates (DRS-9157).
 
 <a id="fn-shift-date"></a>
 #### `shift_date(d, n, unit='business-day')`
 
-*Scopes: row, aggregate, context · returns: date · since B* — **arrives in wave B**: refused with `DRS-9129` until then
+*Scopes: row, aggregate, context · returns: date · since B*
 
-A date moved by n units (business days by default, on the model's calendar).
+A date moved by n units: business-day (the default, on the model's calendar: holidays and weekends skipped), day, week, month, quarter or year. Business days need a fixed date (asof() or date('...')); a column moves by the other units.
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
@@ -1304,17 +1428,18 @@ A date moved by n units (business days by default, on the model's calendar).
 | `shift_date(asof(), -1, unit='month')` | a month ago |
 
 * **None:** shift_date(None, n) is None.
+* **Types:** n is a whole number written in the expression; shift_date(column, n) in business days is refused (DRS-9020).
 
 <a id="fn-asof"></a>
 #### `asof()`
 
-*Scopes: row, aggregate, context · returns: date · since B* — **arrives in wave B**: refused with `DRS-9129` until then
+*Scopes: row, aggregate, context · returns: date · since B*
 
-The query's as-of date.
+The query's as-of date: the end of its dates (time.as-of, the window's end), else the business date it read.
 
 | Example | What it says |
 |---|---|
-| `days_between(trades.tradeDate, asof())` | the age of a trade |
+| `sum(trades.notional, where=days_between(trades.tradeDate, asof()) <= 30)` | notional traded in the last 30 days |
 | `count(trades, where=trades.maturityDate <= shift_date(asof(), 30, unit='day'))` | trades maturing within 30 days |
 
 * **Types:** Always a date.

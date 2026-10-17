@@ -196,6 +196,10 @@ public enum ErrorCode {
     QUERY_SOURCE("DRS-9026", 502),
     /** Queries: the analytic engine failed on a compiled query (a bug or a limit of the engine; the message says which). */
     QUERY_ENGINE("DRS-9027", 500),
+    /** Queries (wave B scale): the query needs more memory than the engine may use, even spilling to disk ({@code drishti.bi.query.memory-limit}). */
+    QUERY_MEMORY("DRS-9028", 413),
+    /** Queries (wave B scale): the planner's estimate of rows or bytes is over the query's budget ({@code options.budget} or the work class's); the message has the estimate and the fix. */
+    QUERY_COST("DRS-9029", 413),
     /** Reports: the YAML is malformed or a key, id, grid position, filter or setting is not valid (the problem names the path). */
     REPORT_INVALID("DRS-9030", 422),
     /** Reports: a field, measure, hierarchy, page or bookmark the report names does not exist in its dataset or in the report. */
@@ -298,6 +302,12 @@ public enum ErrorCode {
     MQ_PYTHON("DRS-9162", 422),
     /** Model query: a field or measure hidden for the caller's roles (hidden-for): the same answer as a name the model lacks, said as not available to them. */
     MQ_NOT_FOR_ROLE("DRS-9163", 422),
+    /** Model query (wave B): a parameter value the model does not take ({@code params}: unknown name, wrong kind, outside min..max, a field parameter's value not among its fields). */
+    MQ_PARAM("DRS-9164", 422),
+    /** Model query (wave B): a calculation group or item the model does not have ({@code calc}), or a measure the item cannot apply to. */
+    MQ_CALC_GROUP("DRS-9165", 422),
+    /** Model query (wave B): a filter-context or time function that cannot be planned (via names no relationship, parent_of no hierarchy, as_of no constant date, a context deeper than three). */
+    MQ_CONTEXT("DRS-9166", 422),
     /** The expression converter could not keep the meaning of an old-syntax expression (it is left as it was). */
     EXPR_CONVERT("DRS-9190", 422),
     /** Drishti SQL: not a statement of the dialect (syntax, more than one statement, DDL or DML: it is read-only). */
@@ -327,7 +337,9 @@ public enum ErrorCode {
     /** Standing query: the caller holds {@code drishti.bi.mq.max-subscriptions-per-user} already. */
     SQ_USER_LIMIT("DRS-9182", 429),
     /** Standing query: a subscription to a past as-of date, which never changes. */
-    SQ_PAST("DRS-9183", 422);
+    SQ_PAST("DRS-9183", 422),
+    /** Standing query (wave B scale): the node that owns the model's shard could not be reached to forward the subscription; the caller retries (Retry-After). */
+    SQ_OWNER_UNREACHABLE("DRS-9184", 503);
 
     private final String code;
     private final int httpStatus;

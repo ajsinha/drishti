@@ -63,8 +63,13 @@ public final class MqValidator {
     private MqValidator() {}
 
     public static Checked validate(ModelView v, ModelQuery query, Context ctx, MqProperties props) {
+        return validate(v, query, ctx, props, false);
+    }
+
+    /** As {@link #validate(ModelView, ModelQuery, Context, MqProperties)}; {@code python}: Python measures run on the console in any grouped query (wave B, R8). */
+    public static Checked validate(ModelView v, ModelQuery query, Context ctx, MqProperties props, boolean python) {
         // ---- 3 names and the contract
-        ModelQuery q = resolveIds(v, query);
+        ModelQuery q = MqBindings.select(v, resolveIds(v, query));            // mq: 2: field parameters, the perspective, the calculation groups named
         Dataset base = v.flat();
         Resolver resolver = new Resolver(base);
         List<MqException.Problem> out = new ArrayList<>();
@@ -110,6 +115,7 @@ public final class MqValidator {
         // ---- 4 local measures
         Dataset ds = withDefine(base, q, com.ash.drishti.server.bi.layer.Flattener.measureIds(v.measureDefs()), out);
         fail(out);
+        ds = MqBindings.bind(v, q, ds);                                        // mq: 2: what-if values bound into the measures, calculation groups applied
 
         // ---- 5 filters
         List<String> fields = new ArrayList<>(q.fields());
@@ -182,7 +188,7 @@ public final class MqValidator {
         if (!semi.isEmpty()) {
             lastOnly = semi.size() == q.measures().size();
             warnings.add("DRS-9159 " + semi + (semi.size() == 1 ? " is" : " are") + " semi-additive (a balance): over a window of dates "
-                    + (lastOnly ? "the answer is the last date's value" : "it is added across the dates; ask it alone or group by the business date") + " (refused from wave W2)");
+                    + (lastOnly ? "the answer is the last date's value" : "it is added across the dates; ask it alone, group by the business date, or write it with a balance function (last(measure('...'), alias.businessDate), closing, avg_over)") + " (refused from wave W2)");
         }
 
         // ---- 9 security
@@ -205,8 +211,15 @@ public final class MqValidator {
         for (int i = 0; i < q.measures().size(); i++) {
             Dataset.Measure m = ds.measures().get(q.measures().get(i));
             if (m != null && m.python() != null) {
-                out.add(MqException.Problem.of("DRS-9162", "select.measures[" + i + "]", "'" + m.name() + "' is a Python measure (" + m.python()
-                        + "): a python visual runs it; a grouped query cannot"));
+                String name = m.name();
+                if (!python) {
+                    out.add(MqException.Problem.of("DRS-9162", "select.measures[" + i + "]", "'" + name + "' is a Python measure (" + m.python()
+                            + "): a python visual runs it; a grouped query cannot"));
+                } else if (q.sort().stream().anyMatch(s -> s.by().equals(name)) || q.having().stream().anyMatch(h -> h.measure().equals(name))
+                        || q.where().stream().anyMatch(w -> name.equals(w.by()))) {
+                    out.add(MqException.Problem.of("DRS-9162", "select.measures[" + i + "]", "'" + name + "' is a Python measure: it is worked out on the console after the"
+                            + " query, so it cannot be sorted on, filtered on or ranked by"));
+                }
             }
         }
         fail(out);
@@ -232,7 +245,7 @@ public final class MqValidator {
         List<ModelQuery.Having> having = q.having().stream().map(h -> new ModelQuery.Having(ids.getOrDefault(h.measure(), h.measure()), h.op(), h.values())).toList();
         List<ModelQuery.Sort> sort = q.sort().stream().map(s -> new ModelQuery.Sort(ids.getOrDefault(s.by(), s.by()), s.desc())).toList();
         return new ModelQuery(q.mq(), q.model(), q.define(), fields, measures, where, having, q.time(), sort, q.limit(), q.totals(), q.drill(), q.shape(), q.params(),
-                q.options());
+                q.options(), q.ext());
     }
 
     private static void field(Resolver r, Dataset ds, String f, String path, List<MqException.Problem> out) {
@@ -293,8 +306,7 @@ public final class MqValidator {
             }
             measures.put(e.getKey(), new Dataset.Measure(e.getKey(), com.ash.drishti.server.bi.expr.Expressions.withMeasureNames(e.getValue(), ids), null, "local measure", null));
         }
-        Dataset ds = new Dataset(base.name(), base.version(), base.title(), base.description(), base.sample(), base.engine(), base.tables(), base.relationships(), measures,
-                base.hierarchies(), base.security(), base.rollups(), base.refresh(), base.compose(), base.derived(), base.tests());
+        Dataset ds = base.withMeasures(measures);
         for (DatasetParser.Problem p : DatasetParser.check(ds)) {
             for (String name : q.define().keySet()) {
                 if (p.error() && (p.path().equals("measures." + name) || p.path().startsWith("measures." + name + "."))) {

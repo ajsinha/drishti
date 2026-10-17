@@ -37,9 +37,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,10 +73,39 @@ public final class QueryService implements AutoCloseable {
     private final AnalyticEngine engine;
     private final Layers layers;
     private final LiveTables liveTables;
+    private final GenerationBus bus = new GenerationBus();
     private final SourceGateway sources;
     private final Cache<String, Result> cache;
-    private final Semaphore slots;
-    private final Map<String, AtomicInteger> perUser = new ConcurrentHashMap<>();
+    private volatile Admission admission;
+    private volatile Events events = Events.NONE;
+
+    /**
+     * What the engine tells the metrics (wave B, docs/architecture/BI_DESIGN.md section 6.8): a query's time and rows by model and layer, the wait for a
+     * place, a refusal by code, a source fragment's time by connector, a layer rebuild's time.
+     */
+    public interface Events {
+        default void query(String model, String layer, double seconds, int rows) {}
+
+        default void admission(double seconds) {}
+
+        default void refusal(String code) {}
+
+        default void fragment(String connector, String tier, double seconds) {}
+
+        default void rebuild(double seconds) {}
+
+        Events NONE = new Events() {};
+    }
+
+    public void events(Events e) {
+        this.events = e == null ? Events.NONE : e;
+        Events now = this.events;
+        pools.onFragment((c, s) -> now.fragment(c, "source", s));
+    }
+
+    public Admission admission() {
+        return admission;
+    }
     private final Executor background = Executors.newVirtualThreadPerTaskExecutor();
     private final AtomicLong queries = new AtomicLong();
     private final AtomicLong hits = new AtomicLong();
@@ -94,15 +120,51 @@ public final class QueryService implements AutoCloseable {
         this.props = props;
         this.engine = engine;
         this.sources = sources;
-        this.liveTables = new LiveTables(engine, sources, liveProps, clock);
+        this.liveTables = new LiveTables(engine, sources, liveProps, clock, bus);
         this.layers = new Layers(engine, sources, props, clock);
-        this.slots = new Semaphore(props.maxConcurrent(), true);
+        this.admission = new Admission(props.maxConcurrent(), props.maxConcurrentPerUser(), ExecProperties.defaults().perModelShare());
         // one budget in bytes; every entry weighs at least budget / entries, so the entry count is bounded too
         long budget = Math.max(1, props.cacheMaxBytes());
         long floor = props.cacheEntries() == 0 ? budget : Math.max(1, budget / props.cacheEntries());
         this.cache = props.cacheEntries() == 0 ? null : Caffeine.newBuilder().maximumWeight(budget)
                 .weigher((String k, Result v) -> (int) Math.min(Integer.MAX_VALUE, Math.max(floor, 256L + (long) v.rows() * Math.max(1, v.columns().size()) * 24)))
                 .expireAfterWrite(props.cacheTtl()).build();
+    }
+
+    private volatile ExecProperties exec = ExecProperties.defaults();
+    private volatile FragmentPools pools = new FragmentPools(exec, Clock.systemUTC());
+
+    /** The execution settings (wave B): fragment pools and circuit breakers per connector, work classes, memory and cost budgets. */
+    public void exec(ExecProperties e) {
+        this.exec = e;
+        this.pools = new FragmentPools(e, Clock.systemUTC());
+        this.admission = new Admission(props.maxConcurrent(), props.maxConcurrentPerUser(), e.perModelShare());
+        Events now = this.events;
+        this.pools.onFragment((c, x) -> now.fragment(c, "source", x));
+    }
+
+    public ExecProperties execProperties() {
+        return exec;
+    }
+
+    /** The connectors' fragment pools and breakers. */
+    public FragmentPools pools() {
+        return pools;
+    }
+
+    /** The name a table's fragments are pooled under: its running connector's, else what the table names. */
+    String connectorOf(Dataset.Table t) {
+        return sources.plugin(t.connector(), t.kind()).map(p -> p.manifest().name()).orElse(t.connector().isBlank() ? t.kind() : t.connector());
+    }
+
+    /** The capability descriptor of the connector a table reads (null when none runs). */
+    public ConnectorCapabilities capabilities(Dataset.Table t) {
+        return sources.plugin(t.connector(), t.kind()).map(p -> ConnectorCapabilities.of(p, t.kind(), exec)).orElse(null);
+    }
+
+    /** The generation bus of this node (wave B): live batches, loads and refreshes, pushed to standing queries. */
+    public GenerationBus bus() {
+        return bus;
     }
 
     public Layers layers() {
@@ -149,6 +211,9 @@ public final class QueryService implements AutoCloseable {
         Map<String, Long> l = new LinkedHashMap<>();
         byLayer.forEach((k, v) -> l.put(k, v.get()));
         m.put("byLayer", l);
+        m.put("admission", admission.stats());
+        m.put("connectors", pools.stats());                                     // wave B: fragment pools and circuit breakers
+        m.put("bus", Map.of("published", bus.published(), "delivered", bus.delivered()));
         return m;
     }
 
@@ -182,42 +247,74 @@ public final class QueryService implements AutoCloseable {
         if (staged != null && (explain || cache == null || cache.getIfPresent(cacheKey(ds, q, who) + stagedKey) == null)) {
             inner = innerAnswers(ds.dataset(), q, who, staged);               // likewise asked before this query takes its place
         }
-        AtomicInteger mine = perUser.computeIfAbsent(who.user(), u -> new AtomicInteger());
-        if (mine.incrementAndGet() > props.maxConcurrentPerUser()) {
-            mine.decrementAndGet();
-            rejected.incrementAndGet();
-            throw new DrishtiException(ErrorCode.QUERY_BUSY, "you already have " + props.maxConcurrentPerUser() + " queries running (drishti.bi.query.max-concurrent-per-user)");
+        String key = cache == null ? null : cacheKey(ds, q, who) + (frames == null ? "" : "|frames:" + frames.fingerprint()) + stagedKey;
+        if (key != null && !explain) {
+            Result hit = cache.getIfPresent(key);
+            if (hit != null) {
+                hits.incrementAndGet();
+                Meta m = hit.meta();
+                return new Result(hit.columns(), hit.rows(), new Meta(m.layer(), m.rollup(), m.rows(), 0, true, m.dates(), m.tables(), m.masked(), m.warnings(), null, m.generation()));
+            }
         }
-        boolean got = false;
+        QueryContext.Ctx ctx = QueryContext.current();
+        Admission.Ticket ticket;
         try {
-            String key = cache == null ? null : cacheKey(ds, q, who) + (frames == null ? "" : "|frames:" + frames.fingerprint()) + stagedKey;
-            if (key != null && !explain) {
-                Result hit = cache.getIfPresent(key);
-                if (hit != null) {
-                    hits.incrementAndGet();
-                    Meta m = hit.meta();
-                    return new Result(hit.columns(), hit.rows(), new Meta(m.layer(), m.rollup(), m.rows(), 0, true, m.dates(), m.tables(), m.masked(), m.warnings(), null, m.generation()));
-                }
-            }
-            try {
-                got = slots.tryAcquire(props.admission().toMillis(), TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            if (!got) {
-                rejected.incrementAndGet();
-                throw new DrishtiException(ErrorCode.QUERY_BUSY, "the server is running " + props.maxConcurrent() + " queries already (drishti.bi.query.max-concurrent); try again");
-            }
+            ticket = admission.enter(who.user(), ds.key(), ctx.workClass(), props.admission());   // work classes, a person's and a model's share (wave B)
+        } catch (DrishtiException e) {
+            rejected.incrementAndGet();
+            events.refusal(e.errorCode().code());
+            throw e;
+        }
+        try (ticket) {
+            events.admission(ticket.waitedNanos() / 1e9);
+            long t0 = System.nanoTime();
             Result r = ds.dataset().framed() ? runFramed(ds, q, who, rows != null || frames == null ? rows : frames.load(), explain) : run(ds, q, who, explain, inner);
+            events.query(ds.key(), r.meta() == null ? "" : r.meta().layer(), (System.nanoTime() - t0) / 1e9, r.rows());
             if (key != null && !explain) {
                 cache.put(key, r);
             }
             return r;
-        } finally {
-            if (got) {
-                slots.release();
+        } catch (DrishtiException e) {
+            events.refusal(e.errorCode().code());
+            throw e;
+        }
+    }
+
+    /** The time limit of the work on this thread: its class's, its budget's, the engine's, whichever is shortest. */
+    java.time.Duration timeout() {
+        QueryContext.Ctx ctx = QueryContext.current();
+        java.time.Duration t = props.timeout();
+        java.time.Duration cls = ctx.workClass() == QueryContext.WorkClass.INTERACTIVE ? exec.interactive() : exec.background();
+        t = cls.compareTo(t) < 0 ? cls : t;
+        if (ctx.budgetMillis() != null && ctx.budgetMillis() > 0 && java.time.Duration.ofMillis(ctx.budgetMillis()).compareTo(t) < 0) {
+            t = java.time.Duration.ofMillis(ctx.budgetMillis());
+        }
+        return t;
+    }
+
+    /**
+     * The planner's estimate of the rows a query reads (the layers' row counts of the dates it reads, the live tables' rows), refused above the budget
+     * ({@code options.budget.rows}, else {@code drishti.bi.exec.max-estimated-rows}) with the estimate and the fix ({@code DRS-9029}).
+     */
+    void estimate(Dataset d, SqlCompiler.Plan plan, Map<String, Layers.Layer> cols, Map<String, LiveTable> inMemory) {
+        long rows = 0;
+        for (String t : plan.tables()) {
+            Layers.Layer l = cols.get(t);
+            if (l != null) {
+                rows += l.rows();
             }
-            mine.decrementAndGet();
+            LiveTable lt = inMemory.get(t);
+            if (lt != null) {
+                rows += lt.status().rows();
+            }
+        }
+        QueryContext.Ctx ctx = QueryContext.current();
+        long budget = ctx.budgetRows() != null && ctx.budgetRows() > 0 ? ctx.budgetRows() : exec.maxEstimatedRows();
+        if (rows > budget) {
+            String rollups = d.rollups().stream().filter(r -> plan.tables().contains(r.table())).map(r -> r.name() + " " + r.by()).toList().toString();
+            throw new DrishtiException(ErrorCode.QUERY_COST, "the query would read about " + rows + " rows, over its budget of " + budget
+                    + (ctx.budgetRows() != null ? " (options.budget.rows)" : " (drishti.bi.exec.max-estimated-rows)") + ": add a date filter or a narrower window"
+                    + ("[]".equals(rollups) ? "" : ", or ask only the fields of a rollup " + rollups));
         }
     }
 
@@ -348,13 +445,16 @@ public final class QueryService implements AutoCloseable {
                 }
                 continue;
             }
-            Layers.Layer layer = "live".equals(table.mode()) ? layers.live(ds.key(), table) : layers.columns(ds.key(), table, q.from(), q.to());
+            Layers.Layer layer = "live".equals(table.mode()) ? layers.live(ds.key(), table) : pools.run(connectorOf(table), () -> layers.columns(ds.key(), table, q.from(), q.to()));
             cols.put(t, layer);
             warnings.addAll(layer.warnings());
         }
         Dataset.Rollup rollup = "columns".equals(q.layer()) || !staged.isEmpty() || plan.tables().stream().anyMatch(who.denied()::contains) ? null : route(d, plan, q, inMemory);
         if ("rollup".equals(q.layer()) && rollup == null) {
             throw new DrishtiException(ErrorCode.QUERY_INVALID, "no rollup of this dataset can answer the query (layer: rollup was asked for)");
+        }
+        if (rollup == null) {
+            estimate(d, plan, cols, inMemory);                                  // the cost budget before anything runs (wave B, section 6.7)
         }
         Map<String, SqlCompiler.Source> from = new LinkedHashMap<>();
         Map<String, String> components = null;
@@ -389,8 +489,31 @@ public final class QueryService implements AutoCloseable {
             }
         }));
         java.util.Collections.sort(dates);
-        SqlCompiler.Compiled c = probe.compile(plan, reader, from, cap, components, timeContext(q, dates));
-        AnalyticEngine.Answer a = engine.query(c.sql(), c.params(), cap, props.timeout());
+        SqlCompiler.MoreSources more = (t, lo, hi) -> {
+            if (from.containsKey(t) && java.util.Objects.equals(lo, q.from()) && java.util.Objects.equals(hi, q.to()) && rollup == null) {
+                return from.get(t);
+            }
+            Dataset.Table table = d.tables().get(t);
+            if (table == null) {
+                throw new DrishtiException(ErrorCode.QUERY_INVALID, "no table '" + t + "' in this model");
+            }
+            if (who.denied().contains(t)) {
+                return TableRelations.cached(d, table, List.of(), Dialect.DUCKDB);
+            }
+            boolean sameDates = java.util.Objects.equals(lo, q.from()) && java.util.Objects.equals(hi, q.to());
+            if (table.isLive() && liveTables.properties().enabled() || table.isHistory()) {
+                if (!sameDates) {
+                    throw new DrishtiException(ErrorCode.MQ_TIME, "'" + t + "' is a live table: it holds the current state, not " + lo + " (an as_of or an opening balance needs a snapshot dataset)");
+                }
+                LiveTable lt = liveTables.ensure(ds.key(), d, table.isHistory() ? d.tables().get(table.of()) : table, sampler(ds));
+                return table.isHistory() ? lt.history().orElseThrow().source(d, Dialect.DUCKDB) : lt.source(d, Dialect.DUCKDB);
+            }
+            Layers.Layer layer = "live".equals(table.mode()) ? layers.live(ds.key(), table) : pools.run(connectorOf(table), () -> layers.columns(ds.key(), table, lo, hi));
+            layer.warnings().forEach(w -> warnings.add(t + (sameDates ? "" : " at " + lo) + ": " + w));
+            return TableRelations.cached(d, table, layer.files(), Dialect.DUCKDB);
+        };
+        SqlCompiler.Compiled c = probe.compile(plan, reader, from, cap, components, timeContext(d, q, dates), more);
+        AnalyticEngine.Answer a = engine.query(c.sql(), c.params(), cap, timeout());
         return finish(ds, q, c, a, layerName, rollup == null ? null : rollup.name(), dates, warnings, explain);
     }
 
@@ -412,7 +535,7 @@ public final class QueryService implements AutoCloseable {
         SqlCompiler probe = new SqlCompiler(d, Dialect.DUCKDB);
         SqlCompiler.Plan plan = probe.plan(q, reader);
         int cap = q.limit() != null ? Math.min(q.limit(), props.maxRows()) : props.maxRows() + 1;
-        TimeWindows.Context time = timeContext(q, rows.dates());
+        TimeWindows.Context time = timeContext(d, q, rows.dates());
         Framed f = engine.with(conn -> {
             Map<String, String> staged = Map.of();
             try {
@@ -454,9 +577,10 @@ public final class QueryService implements AutoCloseable {
      * The as-of date of the time-intelligence measures: the end of the query's dates, else its start, else the newest date the query read, else the current
      * business date.
      */
-    private TimeWindows.Context timeContext(QueryRequest q, List<String> readDates) {
+    private TimeWindows.Context timeContext(Dataset d, QueryRequest q, List<String> readDates) {
         LocalDate asOf = q.to() != null ? q.to() : q.from() != null ? q.from() : !readDates.isEmpty() ? LocalDate.parse(readDates.get(readDates.size() - 1)) : sources.currentDate();
-        return new TimeWindows.Context(asOf, q.from(), sources.calendar());
+        Dataset.Model m = d.model();
+        return new TimeWindows.Context(asOf, q.from(), m.holidays() == null ? sources.calendar() : com.ash.drishti.common.BusinessCalendar.of(m.holidays()), m.fiscalYearStart());
     }
 
     private Result finish(Loaded ds, QueryRequest q, SqlCompiler.Compiled c, AnalyticEngine.Answer a, String layer, String rollup, List<String> dates,
@@ -482,8 +606,8 @@ public final class QueryService implements AutoCloseable {
      * exactly one row of the dimension, so the rule keeps or drops it whole, as it would each fact row.
      */
     Dataset.Rollup route(Dataset d, SqlCompiler.Plan plan, QueryRequest q, Map<String, LiveTable> inMemory) {
-        if (d.rollups().isEmpty() || plan.measures().isEmpty() || plan.multiFact()) {
-            return null;
+        if (d.rollups().isEmpty() || plan.measures().isEmpty() || plan.multiFact() || SqlCompiler.usesContext(d, plan)) {
+            return null;                                                       // a filter context or a balance reads rows a rollup does not hold
         }
         String table = plan.tables().size() == 1 ? plan.tables().iterator().next() : plan.base();
         Set<String> joinedOn = ruleOnlyJoins(d, plan, table);
@@ -582,6 +706,7 @@ public final class QueryService implements AutoCloseable {
     private Result direct(Loaded ds, QueryRequest q, SqlCompiler.Plan plan, SqlCompiler.Reader reader, Caller who, boolean explain) {
         Dataset d = ds.dataset();
         SqlTarget target = null;
+        ConnectorCapabilities caps = null;
         for (String t : plan.tables()) {
             Dataset.Table table = d.tables().get(t);
             if (!"direct".equals(table.mode())) {
@@ -595,8 +720,10 @@ public final class QueryService implements AutoCloseable {
                 throw new DrishtiException(ErrorCode.QUERY_INVALID, "direct tables of one query must live in one store; '" + t + "' is in another connector");
             }
             target = st;
+            caps = ConnectorCapabilities.of(p, table.kind(), exec);
         }
-        Dialect dialect = Dialect.of(target.dialect());
+        Dialect dialect = caps.sqlDialect();                                    // the connector's capability descriptor says the dialect (wave B)
+        final String connector = caps.connector();
         SqlCompiler compiler = new SqlCompiler(d, dialect);
         SqlCompiler.Plan p = compiler.plan(q, reader);
         Map<String, SqlCompiler.Source> from = new LinkedHashMap<>();
@@ -604,30 +731,34 @@ public final class QueryService implements AutoCloseable {
             from.put(t, TableRelations.direct(d, d.tables().get(t), target, dialect, q.from(), q.to()));
         }
         int cap = q.limit() != null ? Math.min(q.limit(), props.maxRows()) : props.maxRows() + 1;
-        SqlCompiler.Compiled c = compiler.compile(p, reader, from, cap, null, timeContext(q, List.of()));
+        final SqlTarget store = target;
+        SqlCompiler.MoreSources more = (t, lo, hi) -> TableRelations.direct(d, d.tables().get(t), store, dialect, lo, hi);
+        SqlCompiler.Compiled c = compiler.compile(p, reader, from, cap, null, timeContext(d, q, List.of()), more);
         long t0 = System.nanoTime();
-        AnalyticEngine.Answer a;
-        try {
-            a = target.with(conn -> {
-                try (PreparedStatement ps = conn.prepareStatement(c.sql())) {
-                    ps.setQueryTimeout((int) Math.max(1, props.timeout().toSeconds()));
-                    for (int i = 0; i < c.params().size(); i++) {
-                        ps.setObject(i + 1, c.params().get(i));
+        final SqlTarget into = target;
+        AnalyticEngine.Answer a = pools.run(connector, () -> {                  // the connector's fragment pool and circuit breaker (wave B)
+            try {
+                return into.with(conn -> {
+                    try (PreparedStatement ps = conn.prepareStatement(c.sql())) {
+                        ps.setQueryTimeout((int) Math.max(1, props.timeout().toSeconds()));
+                        for (int i = 0; i < c.params().size(); i++) {
+                            ps.setObject(i + 1, c.params().get(i));
+                        }
+                        try (ResultSet rs = ps.executeQuery()) {
+                            List<ArrowIpcWriter.Column> cols = DuckDbEngine.read(rs, cap);
+                            return new AnalyticEngine.Answer(cols, cols.isEmpty() ? 0 : cols.get(0).values().length, (System.nanoTime() - t0) / 1e6);
+                        }
                     }
-                    try (ResultSet rs = ps.executeQuery()) {
-                        List<ArrowIpcWriter.Column> cols = DuckDbEngine.read(rs, cap);
-                        return new AnalyticEngine.Answer(cols, cols.isEmpty() ? 0 : cols.get(0).values().length, (System.nanoTime() - t0) / 1e6);
-                    }
-                }
-            });
-        } catch (DrishtiException e) {
-            throw e;
-        } catch (SQLException e) {
-            throw new DrishtiException(e.getMessage() != null && e.getMessage().toLowerCase().contains("timeout") ? ErrorCode.QUERY_TIMEOUT : ErrorCode.QUERY_SOURCE,
-                    "the store could not run the query: " + e.getMessage().lines().findFirst().orElse(""));
-        } catch (Exception e) {
-            throw new DrishtiException(ErrorCode.QUERY_SOURCE, "the store could not run the query: " + e.getMessage());
-        }
+                });
+            } catch (DrishtiException e) {
+                throw e;
+            } catch (SQLException e) {
+                throw new DrishtiException(e.getMessage() != null && e.getMessage().toLowerCase().contains("timeout") ? ErrorCode.QUERY_TIMEOUT : ErrorCode.QUERY_SOURCE,
+                        "the store could not run the query: " + e.getMessage().lines().findFirst().orElse(""));
+            } catch (Exception e) {
+                throw new DrishtiException(ErrorCode.QUERY_SOURCE, "the store could not run the query: " + e.getMessage());
+            }
+        });
         return finish(ds, q, c, a, "direct", null, List.of(), List.of(), explain);
     }
 
@@ -649,6 +780,7 @@ public final class QueryService implements AutoCloseable {
                 continue;
             }
             touched.add(ds.id());
+            bus.publish(new GenerationBus.Notice(ds.key(), null, date != null && date.isBefore(sources.currentDate()) ? "backdated" : "load", date, layers.generation(ds.key()), null));
             if (cache != null) {
                 cache.asMap().keySet().removeIf(k -> k.startsWith(ds.key() + "|"));
             }
@@ -711,6 +843,8 @@ public final class QueryService implements AutoCloseable {
                 }
             }
         }
+        bus.publish(new GenerationBus.Notice(ds.key(), null, date.isBefore(sources.currentDate()) ? "backdated" : "refresh", date, layers.generation(ds.key()), null));
+        events.rebuild((System.nanoTime() - t0) / 1e9);
         return new Refreshed(shown, tables.stream().map(Dataset.Table::name).toList(), rows, Math.round((System.nanoTime() - t0) / 1e6), warnings.stream().distinct().toList());
     }
 
@@ -731,6 +865,7 @@ public final class QueryService implements AutoCloseable {
     @Override
     public void close() {
         liveTables.close();
+        bus.close();
         engine.close();
     }
 }

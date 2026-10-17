@@ -566,6 +566,18 @@ drishti:
       max-concurrent: 2              # Transforms running at once
       queue-wait: 5s                 # how long a run waits for a place before DRS-9074
       compose-source-max-rows: 50000 # most rows one source of a composed dataset may answer (DRS-9022)
+      console-url: ${DRISHTI_BI_TRANSFORM_CONSOLE_URL:}       # wave B: the console's Py-node endpoint (http://console:17480); blank: the server runs transform_cli.py itself
+      console-token: ${DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN:}   # the shared secret the console checks on /internal/py/* (X-Drishti-Runner-Token)
+    exec:                            # wave B: execution and scale (docs/admin/CONFIGURATION.md, drishti.bi.exec)
+      per-model-share: 0.5           # the share of drishti.bi.query.max-concurrent one model may hold at once (work classes: interactive, standing, background)
+      queue: 2s                      # how long a source fragment waits for its connector's pool before DRS-9025
+      interactive: 30s               # longest an interactive query runs (DRS-9024)
+      background: 300s               # longest background work runs (refresh, precompute, standing-query maintenance)
+      max-estimated-rows: 200000000  # the planner's estimate of rows read past which a query is refused (DRS-9029) unless options.budget allows more
+      max-fragments: 8               # source fragments one connector runs at once (per connector: connectors.<name>.max-fragments)
+      breaker-failures: 5            # consecutive failures that open a connector's circuit breaker (DRS-9026 at once while open)
+      breaker-open: 30s              # how long an open breaker refuses before one fragment may try again
+      node: ${DRISHTI_BI_NODE:}      # this Java node's name when several serve the site (blank: one node)
     plan:                            # the logical plan: result cache and guards (docs/admin/CONFIGURATION.md, drishti.bi.plan)
       cache-entries: 2000            # answers cached by plan hash, security signature and data generation (0: off)
       cache-ttl: 15m                 # an answer for the current state is asked again after this; as-of answers have no ttl

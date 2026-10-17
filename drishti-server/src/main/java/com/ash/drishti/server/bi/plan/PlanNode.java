@@ -298,6 +298,69 @@ public sealed interface PlanNode {
         }
     }
 
+    /**
+     * A sub-plan in a modified filter context (wave B, section 3.3.5): the aggregate of a context function ({@code calc}, {@code share_of},
+     * {@code parent_of}, {@code avg_by}, {@code as_of}, {@code last}, {@code first}) at the grain and with the filters the function leaves; its scans keep their
+     * security. {@code edits} are the function's arguments (ignore, keep, over, via, by, the date) as DEL text.
+     */
+    record Context(PlanNode input, String function, Map<String, Object> edits) implements PlanNode {
+        public Context {
+            edits = new TreeMap<>(edits);
+        }
+
+        @Override
+        public String op() {
+            return "Context";
+        }
+
+        @Override
+        public List<PlanNode> inputs() {
+            return List.of(input);
+        }
+
+        @Override
+        public Map<String, Object> props() {
+            return sorted("function", function, "edits", edits);
+        }
+
+        @Override
+        public PlanNode withInputs(List<PlanNode> inputs) {
+            return new Context(inputs.get(0), function, edits);
+        }
+    }
+
+    /**
+     * A Python node, run on the console backend (wave B, section 3.6): {@code PyAggregate} (a Python measure: its item computes one value per group of the
+     * answer from the rows of its input columns), {@code PyTransform}, {@code PyColumn}. Its sources are the secured scans of its inputs.
+     */
+    record PyNode(String kind, String item, String measure, List<String> columns, List<String> by, List<PlanNode> sources) implements PlanNode {
+        public PyNode {
+            columns = List.copyOf(columns);
+            by = List.copyOf(by);
+            sources = List.copyOf(sources);
+        }
+
+        @Override
+        public String op() {
+            return kind;
+        }
+
+        @Override
+        public List<PlanNode> inputs() {
+            return sources;
+        }
+
+        @Override
+        public Map<String, Object> props() {
+            return sorted("item", item, "measure", measure, "columns", columns, "by", by);
+        }
+
+        @Override
+        public PlanNode withInputs(List<PlanNode> inputs) {
+            return new PyNode(kind, item, measure, columns, by, inputs);
+        }
+    }
+
     /** After aggregation: window measures over the answer's rows ({@code rank}, {@code lag}, {@code moving_*}, {@code running}). */
     record Window(PlanNode input, List<String> measures) implements PlanNode {
         @Override
@@ -444,7 +507,15 @@ public sealed interface PlanNode {
     }
 
     /** The typed, masked rows the caller gets: the columns in order, and the shape ({@code grouped} or {@code rows}). */
-    record Answer(PlanNode input, List<String> columns, String shape) implements PlanNode {
+    record Answer(PlanNode input, List<String> columns, String shape, Map<String, Object> binding) implements PlanNode {
+        public Answer {
+            binding = binding == null ? Map.of() : new TreeMap<>(binding);
+        }
+
+        public Answer(PlanNode input, List<String> columns, String shape) {
+            this(input, columns, shape, Map.of());
+        }
+
         @Override
         public String op() {
             return "Answer";
@@ -455,14 +526,15 @@ public sealed interface PlanNode {
             return List.of(input);
         }
 
+        /** The binding (wave B: the parameters' values and the calculation groups applied) is part of the question, so of the hash. */
         @Override
         public Map<String, Object> props() {
-            return sorted("columns", columns, "shape", shape);
+            return binding.isEmpty() ? sorted("columns", columns, "shape", shape) : sorted("columns", columns, "shape", shape, "binding", binding);
         }
 
         @Override
         public PlanNode withInputs(List<PlanNode> inputs) {
-            return new Answer(inputs.get(0), columns, shape);
+            return new Answer(inputs.get(0), columns, shape, binding);
         }
     }
 

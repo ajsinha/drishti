@@ -38,8 +38,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties("drishti.bi.transform")
 public record TransformProperties(Boolean enabled, String python, String runner, String workDir, Duration cacheTtl, Integer cacheEntries, Integer maxInputRows, Integer maxRows,
-        Long maxBytes, Duration timeout, Integer maxConcurrent, Duration queueWait, Integer composeSourceMaxRows) {
+        Long maxBytes, Duration timeout, Integer maxConcurrent, Duration queueWait, Integer composeSourceMaxRows, String consoleUrl, String consoleToken) {
 
+    /** The settings before wave B (Python run by a process on this machine). */
+    public TransformProperties(Boolean enabled, String python, String runner, String workDir, Duration cacheTtl, Integer cacheEntries, Integer maxInputRows, Integer maxRows,
+            Long maxBytes, Duration timeout, Integer maxConcurrent, Duration queueWait, Integer composeSourceMaxRows) {
+        this(enabled, python, runner, workDir, cacheTtl, cacheEntries, maxInputRows, maxRows, maxBytes, timeout, maxConcurrent, queueWait, composeSourceMaxRows, null, null);
+    }
+
+    @org.springframework.boot.context.properties.bind.ConstructorBinding
     public TransformProperties {
         enabled = enabled == null || enabled;
         python = python == null ? "" : python.trim();
@@ -54,6 +61,8 @@ public record TransformProperties(Boolean enabled, String python, String runner,
         maxConcurrent = maxConcurrent == null || maxConcurrent <= 0 ? 2 : maxConcurrent;
         queueWait = positive(queueWait, Duration.ofSeconds(5));
         composeSourceMaxRows = composeSourceMaxRows == null || composeSourceMaxRows <= 0 ? 50_000 : composeSourceMaxRows;
+        consoleUrl = consoleUrl == null ? "" : consoleUrl.trim();
+        consoleToken = consoleToken == null ? "" : consoleToken.trim();
     }
 
     private static Duration positive(Duration d, Duration dflt) {
@@ -62,6 +71,6 @@ public record TransformProperties(Boolean enabled, String python, String runner,
 
     /** Defaults for tests and embedded use. */
     public static TransformProperties defaults() {
-        return new TransformProperties(null, null, null, null, null, null, null, null, null, null, null, null, null);
+        return new TransformProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 }

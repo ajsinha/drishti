@@ -374,7 +374,7 @@ final class DatasetSources implements StagedTables {
             ModelQuery.Time t = outer.from().equals(outer.to()) || outer.to() == null ? new ModelQuery.Time(outer.from(), null, null, null, false)
                     : new ModelQuery.Time(null, outer.from(), outer.to(), null, false);
             q = new ModelQuery(q.mq(), q.model(), q.define(), q.fields(), q.measures(), q.where(), q.having(), t, q.sort(), q.limit(), q.totals(), q.drill(), q.shape(),
-                    q.params(), q.options());
+                    q.params(), q.options(), q.ext());
         }
         return q;
     }

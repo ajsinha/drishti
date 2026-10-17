@@ -332,7 +332,7 @@ public final class ModelCatalog {
     MqService.Bound bound(Principal p, Found f) {
         ModelView v = f.view();
         QueryService.Caller who = datasets.caller(p, v.flat());
-        MqValidator.Context ctx = new MqValidator.Context(who.masks(), who.roles(), who.attributes(), who.enforce(), datasets.currentDate(), datasets.calendar());
+        MqValidator.Context ctx = new MqValidator.Context(who.masks(), who.roles(), who.attributes(), who.enforce(), datasets.currentDate(), v.flat().model().holidays() == null ? datasets.calendar() : com.ash.drishti.common.BusinessCalendar.of(v.flat().model().holidays()));   // the model's calendar when it names one (wave B)
         MqService.Runner run;
         if (v.compat()) {
             BiStore.Item item = f.item();
@@ -346,10 +346,20 @@ public final class ModelCatalog {
         java.util.Set<String> hidden = ObjectSecurity.hidden(v, who.roles());
         com.ash.drishti.server.bi.plan.SecuritySignature.Reader security = new com.ash.drishti.server.bi.plan.SecuritySignature.Reader(who.user(), who.enforce(), who.roles(),
                 who.attributes(), who.masks(), who.denied(), hidden);
-        return new MqService.Bound(v, run, ctx, security, () -> generation(p, v));
+        return new MqService.Bound(v, run, ctx, security, () -> generation(p, v), null, d -> datasets.generationAt(v.key(), d));
     }
 
     /** The generation the model's data is at (its layers and live tables), for a standing query. */
+    /** The generation bus of this node. */
+    public com.ash.drishti.server.bi.engine.GenerationBus bus() {
+        return datasets.bus();
+    }
+
+    /** A running live table of a model's (its layer key's) generation. */
+    public long liveGeneration(String key, String table) {
+        return datasets.liveGeneration(key, table);
+    }
+
     public long generation(Principal p, ModelView v) {
         return datasets.generation(v.id(), v.key(), v.flat());
     }
@@ -360,7 +370,7 @@ public final class ModelCatalog {
         }
         StringBuilder b = new StringBuilder();
         ds.measures().forEach((k, m) -> {
-            if (!flat.measures().containsKey(k)) {
+            if (!flat.measures().containsKey(k) || !java.util.Objects.equals(flat.measures().get(k).expr(), m.expr())) {   // a local measure, or one a calculation group or a parameter rewrote
                 b.append(k).append('=').append(m.expr()).append(';');
             }
         });
@@ -1106,6 +1116,7 @@ public final class ModelCatalog {
         }
         m.put("measures", measures);
         m.put("hierarchies", v.def().hierarchies());
+        m.putAll(MqDescribe.calculation(v.def()));                              // wave B: calculation groups, parameters, calendar, FX
         m.put("perspectives", v.def().semantics().perspectives().values().stream().map(x -> Map.of("name", x.name(), "title", x.title(), "description", x.description())).toList());
         if (view != null) {
             m.put("perspective", view.name());

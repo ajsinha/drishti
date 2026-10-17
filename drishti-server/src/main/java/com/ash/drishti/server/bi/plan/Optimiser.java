@@ -228,8 +228,9 @@ public final class Optimiser {
     private static PlanNode rollup(PlanNode n, Dataset flat) {
         if (n instanceof PlanNode.Aggregate a) {
             List<PlanNode.SecureScan> scans = PlanNode.scans(a);
-            if (a.measures().isEmpty() || PlanNode.all(a).stream().anyMatch(x -> x instanceof PlanNode.Dedup || x instanceof PlanNode.Regroup)) {
-                return a;
+            if (a.measures().isEmpty() || PlanNode.all(a).stream().anyMatch(x -> x instanceof PlanNode.Dedup || x instanceof PlanNode.Regroup)
+                    || a.measures().stream().anyMatch(m -> com.ash.drishti.server.bi.engine.SqlCompiler.usesContext(flat, m))) {
+                return a;                                                      // a filter context or a balance reads rows a rollup does not hold (QueryService#route agrees)
             }
             PlanNode.SecureScan s = scans.stream().filter(x -> x.alias().equals(a.fact())).findFirst().orElse(null);
             if (s == null) {

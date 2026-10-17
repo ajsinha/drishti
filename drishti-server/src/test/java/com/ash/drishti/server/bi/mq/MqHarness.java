@@ -136,6 +136,6 @@ final class MqHarness {
     MqService.Bound bind(ModelView v, Reader who, String key) {
         QueryService.Caller c = caller(v.flat(), who);
         MqValidator.Context ctx = new MqValidator.Context(c.masks(), c.roles(), c.attributes(), true, today, BusinessCalendar.of("WEEKENDS"));
-        return new MqService.Bound(v, (ds, q, explain) -> service.query(new QueryService.Loaded(key, Layers.key(key), ds, "h|" + ds.measures().keySet()), q, caller(ds, who), explain), ctx);
+        return new MqService.Bound(v, (ds, q, explain) -> service.query(new QueryService.Loaded(key, Layers.key(key), ds, "h|" + ds.measures().values().stream().map(m -> m.name() + "=" + m.expr()).toList()), q, caller(ds, who), explain), ctx);
     }
 }

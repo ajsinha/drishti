@@ -114,6 +114,10 @@ public final class DuckDbEngine implements AnalyticEngine {
             if (timedOut.get() || String.valueOf(e.getMessage()).toLowerCase().contains("interrupt")) {
                 throw new DrishtiException(ErrorCode.QUERY_TIMEOUT, "the query ran longer than " + timeout.toSeconds() + " s and was stopped (drishti.bi.query.timeout)");
             }
+            if (String.valueOf(e.getMessage()).toLowerCase().contains("out of memory")) {
+                throw new DrishtiException(ErrorCode.QUERY_MEMORY, "the query needs more memory than the engine may use, even spilling to disk (drishti.bi.query.memory-limit): "
+                        + "group by fewer fields, add a filter, or ask a rollup's fields");
+            }
             throw new DrishtiException(ErrorCode.QUERY_ENGINE, "the engine could not run the query: " + firstLine(e));
         }
     }

@@ -99,6 +99,9 @@ public final class DelLowering {
         FunctionCatalog.Fn f = catalog.function(name).orElseThrow(() -> new DelException(DelParser.CODE, "unknown function '" + name + "'", null, c.start(), c.end()));
         List<DelAst> positional = new ArrayList<>(c.args());
         String compiled = catalog.toLegacy(name);
+        if (Node.CONTEXT.contains(name) || Node.SCALARS_B.contains(name)) {
+            return keywords(c, f);
+        }
         List<Node> args = new ArrayList<>();
         switch (f.family()) {
             case "windows" -> {
@@ -141,6 +144,24 @@ public final class DelLowering {
                 return new Node.Call(compiled, args);
             }
         }
+    }
+
+    /**
+     * A wave B function keeps its keyword arguments in the tree (docs/architecture/BI_DESIGN.md section 3.3.5): positional arguments in order, then one
+     * pseudo-call {@code =name} per keyword, whose arguments are the value (a list's items; {@code ALL} as the reference {@code ALL}).
+     */
+    private Node keywords(DelAst.Call c, FunctionCatalog.Fn f) {
+        List<Node> args = new ArrayList<>();
+        c.args().forEach(a -> args.add(node(a)));
+        for (FunctionCatalog.Param p : f.params()) {
+            DelAst value = c.keyword(p.name());
+            if (value == null) {
+                continue;
+            }
+            List<Node> items = value instanceof DelAst.ListLit l ? l.items().stream().map(this::node).toList() : List.of(node(value));
+            args.add(new Node.Call(Node.KEYWORD + p.name(), items));
+        }
+        return new Node.Call(c.name(), args);
     }
 
     private List<Node> fields(DelAst list) {

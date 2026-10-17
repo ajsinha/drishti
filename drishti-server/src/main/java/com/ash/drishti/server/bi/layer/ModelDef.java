@@ -29,20 +29,71 @@ import java.util.Set;
  * consumer of one dataset by {@link ImplicitModels}, (the version-1 compatibility reader was removed in 2.2). Immutable.
  *
  * @param implicitFrom for an implicit model (or one written out from it), the dataset it was made from; else null
- * @param placeholders the later-wave keys that are used though their wave has not come ({@code calc-groups}, {@code parameters}): refused with DRS-9129
+ * @param placeholders the later-wave keys that are used though their wave has not come: refused with DRS-9129
+ * @param calculation wave B: calculation groups, parameters, the calendar and the FX rates
  */
 public record ModelDef(String name, String version, String id, String title, String description, String owner, boolean sample, String endorsement,
         Map<String, Use> datasets, List<Rel> relationships, Map<String, Meas> measures, Map<String, List<String>> hierarchies, Security security, Contract contract,
         String lifecycle, String replacedBy, List<Dataset.Rollup> rollups, List<JsonNode> tests, List<JsonNode> golden, JsonNode ai, String implicitFrom,
-        List<String> placeholders, Semantics semantics) {
+        List<String> placeholders, Semantics semantics, Calculation calculation) {
 
     /** As written before field properties, perspectives and object-level security (none). */
     public ModelDef(String name, String version, String id, String title, String description, String owner, boolean sample, String endorsement, Map<String, Use> datasets,
             List<Rel> relationships, Map<String, Meas> measures, Map<String, List<String>> hierarchies, Security security, Contract contract, String lifecycle, String replacedBy,
             List<Dataset.Rollup> rollups, List<JsonNode> tests, List<JsonNode> golden, JsonNode ai, String implicitFrom, List<String> placeholders) {
         this(name, version, id, title, description, owner, sample, endorsement, datasets, relationships, measures, hierarchies, security, contract, lifecycle, replacedBy, rollups,
-                tests, golden, ai, implicitFrom, placeholders, Semantics.NONE);
+                tests, golden, ai, implicitFrom, placeholders, Semantics.NONE, Calculation.NONE);
     }
+
+    /** As written before wave B (no calculation groups, parameters, calendar or FX rates). */
+    public ModelDef(String name, String version, String id, String title, String description, String owner, boolean sample, String endorsement, Map<String, Use> datasets,
+            List<Rel> relationships, Map<String, Meas> measures, Map<String, List<String>> hierarchies, Security security, Contract contract, String lifecycle, String replacedBy,
+            List<Dataset.Rollup> rollups, List<JsonNode> tests, List<JsonNode> golden, JsonNode ai, String implicitFrom, List<String> placeholders, Semantics semantics) {
+        this(name, version, id, title, description, owner, sample, endorsement, datasets, relationships, measures, hierarchies, security, contract, lifecycle, replacedBy, rollups,
+                tests, golden, ai, implicitFrom, placeholders, semantics, Calculation.NONE);
+    }
+
+    /**
+     * Wave B's model keys (docs/architecture/BI_DESIGN.md sections 3.3.5 and 12.2): calculation groups (templates applied to any selected measure, with
+     * {@code SELECTED} the measure), parameters ({@code param.name} in expressions, what-if numbers or a field chosen by the consumer), the model's calendar
+     * (holidays and the fiscal year) and the FX rates {@code fx} and {@code convert} read.
+     */
+    public record Calculation(Map<String, CalcGroup> calcGroups, Map<String, Parameter> parameters, CalendarDef calendar, FxDef fx) {
+        public static final Calculation NONE = new Calculation(Map.of(), Map.of(), null, null);
+
+        public Calculation {
+            calcGroups = Collections.unmodifiableMap(new LinkedHashMap<>(calcGroups));
+            parameters = Collections.unmodifiableMap(new LinkedHashMap<>(parameters));
+        }
+    }
+
+    /** A calculation group: its items (name to a DEL template over {@code SELECTED}) and its precedence (higher applies first, innermost). */
+    public record CalcGroup(String name, int precedence, Map<String, String> items, String description) {
+        public CalcGroup {
+            items = Collections.unmodifiableMap(new LinkedHashMap<>(items));
+        }
+    }
+
+    /**
+     * A parameter: {@code number}, {@code integer}, {@code text}, {@code date} or {@code boolean} (a what-if value bound as {@code param.name}) or {@code field}
+     * (one of {@code fields}, put in a query's fields as {@code param.name}).
+     */
+    public record Parameter(String name, String kind, Object defaultValue, Double min, Double max, Double step, List<Object> values, List<String> fields, String title,
+            String description) {
+        public Parameter {
+            values = values == null ? List.of() : List.copyOf(values);
+            fields = fields == null ? List.of() : List.copyOf(fields);
+        }
+    }
+
+    /** The model's calendar: the business-day calendar its dates follow ({@code USNY}, {@code USNY+GBLO}) and the month its fiscal year starts. */
+    public record CalendarDef(String holidays, int fiscalYearStart) {}
+
+    /**
+     * Where the FX rates are: a dataset of the model ({@code rates}, an alias) with the currency converted from and to, the rate (units of {@code to} per one
+     * {@code from}) and its date; {@code base} the currency every rate is quoted in when a pair is not stored directly (cross rates through it).
+     */
+    public record FxDef(String rates, String from, String to, String rate, String date, String base) {}
 
     /**
      * What a model says about its fields and measures beyond their computation (docs/architecture/BI_DESIGN.md sections 2.2 and 5.1): display properties
@@ -129,6 +180,7 @@ public record ModelDef(String name, String version, String id, String title, Str
         golden = golden == null ? List.of() : List.copyOf(golden);
         placeholders = placeholders == null ? List.of() : List.copyOf(placeholders);
         semantics = semantics == null ? Semantics.NONE : semantics;
+        calculation = calculation == null ? Calculation.NONE : calculation;
     }
 
     public int major() {

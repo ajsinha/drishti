@@ -177,7 +177,7 @@ public final class ConsumerQueries implements DatasetService.ModelGateway {
         Map<String, String> all = new java.util.LinkedHashMap<>(q.define());
         all.putAll(define);
         return new ModelQuery(q.mq(), q.model(), all, q.fields(), q.measures(), q.where(), q.having(), q.time(), q.sort(), q.limit(), q.totals(), q.drill(), q.shape(),
-                q.params(), q.options());
+                q.params(), q.options(), q.ext());
     }
 
     /** A field as {@code table.column[.part]}: as written when it names its table, else with the table that has the column (left as written when none or several do). */

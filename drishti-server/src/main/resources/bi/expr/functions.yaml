@@ -21,7 +21,7 @@
 #   name, family, signature           the call as a person writes it (Python keyword syntax)
 #   params                            in order: name, type, default (optional => may be left out), keyword-only, variadic
 #                                     types: number, integer-literal, number-literal, string, string-literal, boolean, boolean-literal,
-#                                     date, any, field, date-field, table-or-any, aggregate, fields (a list of fields)
+#                                     date, any, field, date-field, table-or-any, aggregate, fields (a list of fields), fields-or-all (a list or ALL)
 #   returns                           number, integer, decimal, string, boolean, date, timestamp, same (the first argument's type)
 #   scopes                            row, rule, aggregate, context (where it may be written; section 3.3.1)
 #   status                            built (works now) or the wave that builds it (B, C): refused with DRS-9129 until then
@@ -307,7 +307,7 @@ functions:
     scopes: [row, rule, aggregate]
     status: built
     since: A
-    description: "Business days (Monday to Friday) from a, excluded, to b, included; negative when b is before a. Holidays of the model's calendar are counted from wave B (model calendars)."
+    description: "Business days from a, excluded, to b, included, on the model's calendar (calendars.holidays, else the pack's): weekdays less the holidays between; negative when b is before a."
     examples:
       - { expr: "business_days_between(trades.tradeDate, trades.settlementDate)", says: "the settlement lag in business days" }
       - { expr: "count(trades, where=business_days_between(trades.tradeDate, trades.settlementDate) > 2)", says: "trades settling later than T+2" }
@@ -321,16 +321,17 @@ functions:
     signature: fx(ccy, to, at=None)
     params: [{ name: ccy, type: string }, { name: to, type: string-literal }, { name: at, type: date, default: None, keyword-only: true }]
     returns: decimal
-    scopes: [row]
-    status: B
+    scopes: [row, aggregate]
+    status: built
     since: B
-    description: "The rate that converts one unit of ccy into the currency to, at the row's date (or at=). Needs the model's FX dataset: built with model calendars and rates in wave B."
+    description: "The rate that converts one unit of ccy into the currency to: the latest rate on or before the row's business date (or at=) in the model's FX rates (fx: { rates, from, to, rate, date, base }), a pair as stored, its inverse, or through the base currency; 1 for the same currency. Worked out inside a measure (a dataset's derived column cannot read the rates)."
     examples:
-      - { expr: "trades.notional * fx(trades.currency, 'USD')", says: "notional in US dollars" }
-      - { expr: "trades.mtm * fx(trades.currency, 'EUR', at=trades.tradeDate)", says: "MTM in euros at the trade date" }
+      - { expr: "sum(trades.notional * fx(trades.currency, 'USD'))", says: "notional in US dollars" }
+      - { expr: "sum(trades.mtm * fx(trades.currency, 'EUR', at=trades.tradeDate))", says: "MTM in euros at each trade date" }
     edge-cases:
-      nulls: "None when the currency or the rate for that date is missing; the answer warns."
+      nulls: "None when the currency is None or no rate for the pair is on or before the date."
       currencies: "A converted amount has one currency, so summing it lifts the currency guard (DRS-9158)."
+      masked: "The rates are reference data: the rates table's row rules do not filter a conversion."
 
   - name: convert
     family: conversion
@@ -338,14 +339,16 @@ functions:
     params: [{ name: agg, type: aggregate }, { name: to, type: string-literal, default: "'USD'", keyword-only: true }, { name: at, type: string-literal, default: "'as-of'", keyword-only: true }]
     returns: decimal
     scopes: [aggregate]
-    status: B
+    status: built
     since: B
-    description: "An aggregate of amounts in many currencies, converted to one, at the as-of date or at each row's trade date."
+    description: "An aggregate of amounts in many currencies, converted to one: each amount inside is multiplied by the rate of its own currency (its column's unit: { currency: ... }) at the as-of date (at='as-of'), at each row's trade date (at='trade-date'; the business date when the row has none) or at another date column of the row (at='settleDate')."
     examples:
       - { expr: "convert(sum(trades.notional), to='USD')", says: "notional in USD at the as-of rate" }
       - { expr: "convert(sum(trades.mtm), to='EUR', at='trade-date')", says: "each trade converted at its own trade date" }
     edge-cases:
       currencies: "Lifts the currency guard: the result has one currency."
+      types: "An amount with no currency, or mixing two, is refused (DRS-9020): convert each amount in its own aggregate."
+      nulls: "A row whose rate is unknown adds None (it is skipped by the sum)."
 
   # ---- lookup ------------------------------------------------------------------------------------------------------------------
   - name: related
@@ -506,15 +509,17 @@ functions:
     signature: avg_by(agg, by=[fields])
     params: [{ name: agg, type: aggregate }, { name: by, type: fields, keyword-only: true }]
     returns: decimal
-    scopes: [aggregate]
-    status: B
+    scopes: [aggregate, context]
+    status: built
     since: B
-    description: "A two-level aggregate: agg per value of by, then the average of those (the explicit iteration DEL has instead of DAX context transition)."
+    description: "A two-level aggregate: agg per value of by (within each group of the answer), then the average of those values (the explicit iteration DEL has instead of DAX context transition)."
     examples:
       - { expr: "avg_by(sum(trades.mtm), by=[trades.tradeDate])", says: "the average daily MTM" }
       - { expr: "avg_by(count(trades), by=[trades.book])", says: "trades per book, on average" }
     edge-cases:
+      nulls: "Groups of by whose aggregate is None are left out of the average."
       empty: "None when no group of by has rows."
+      masked: "A masked field in by is refused (DRS-9161): the inner groups would split on hidden values."
 
   # ---- time intelligence -------------------------------------------------------------------------------------------------------
   - name: ytd
@@ -615,14 +620,15 @@ functions:
     params: [{ name: agg, type: aggregate }, { name: date, type: date-field }]
     returns: same
     scopes: [aggregate]
-    status: B
+    status: built
     since: B
-    description: The aggregate from the start of the fiscal year of the model's calendar to the as-of date.
+    description: "The aggregate from the start of the fiscal year that holds the as-of date to the as-of date; the fiscal year starts on the first of the model's calendars.fiscal-year-start month (January when the model names none)."
     examples:
       - { expr: "fiscal_ytd(sum(trades.pnl1d), trades.tradeDate)", says: "fiscal year-to-date P&L" }
       - { expr: "fiscal_ytd(count(trades), trades.tradeDate)", says: "trades this fiscal year" }
     edge-cases:
       empty: "None (a count: 0) when no row is in the window."
+      types: "date is a date or timestamp field of the aggregate's dataset."
 
   # ---- windows over the answer -------------------------------------------------------------------------------------------------
   - name: lag
@@ -783,14 +789,15 @@ functions:
     params: [{ name: agg, type: aggregate }, { name: date, type: date-field }]
     returns: same
     scopes: [aggregate]
-    status: B
+    status: built
     since: B
-    description: The aggregate on the last date of each group that has rows (a balance's semi-additive total).
+    description: "The aggregate over the rows of each group dated on the group's latest date (a balance's semi-additive total: the latest day's figure, never the sum of the days)."
     examples:
       - { expr: "last(sum(accounts.balance), accounts.businessDate)", says: "the closing balance of the period" }
       - { expr: "last(sum(collateral.value), collateral.businessDate)", says: "collateral held at the end" }
     edge-cases:
       empty: "None when the group has no dated row."
+      nulls: "Rows with no date are never the latest."
 
   - name: first
     family: balances
@@ -798,9 +805,9 @@ functions:
     params: [{ name: agg, type: aggregate }, { name: date, type: date-field }]
     returns: same
     scopes: [aggregate]
-    status: B
+    status: built
     since: B
-    description: The aggregate on the first date of each group that has rows.
+    description: "The aggregate over the rows of each group dated on the group's earliest date."
     examples:
       - { expr: "first(sum(accounts.balance), accounts.businessDate)", says: "the balance at the start of the period" }
       - { expr: "last(sum(accounts.balance), accounts.businessDate) - first(sum(accounts.balance), accounts.businessDate)", says: "the change over the period" }
@@ -813,14 +820,14 @@ functions:
     params: [{ name: agg, type: aggregate }, { name: date, type: date-field }, { name: period, type: string-literal, default: "'month'", keyword-only: true }]
     returns: same
     scopes: [aggregate]
-    status: B
+    status: built
     since: B
-    description: The balance at the close of the business day before the period starts.
+    description: "The balance at the close of the business day before the period starts (period: day, week, month, quarter, year): along the answer's date field it is the closing of the row before; without one, the aggregate on the business day before the as-of date's period (read at that business date when date is the snapshot's businessDate)."
     examples:
       - { expr: "opening(sum(accounts.balance), accounts.businessDate)", says: "the opening balance of the month" }
       - { expr: "opening(sum(accounts.balance), accounts.businessDate, period='quarter')", says: "the opening balance of the quarter" }
     edge-cases:
-      empty: "None when the day before has no rows."
+      empty: "None when the day before has no rows, and on the first period of the answer when the period before is not in it."
 
   - name: closing
     family: balances
@@ -828,14 +835,15 @@ functions:
     params: [{ name: agg, type: aggregate }, { name: date, type: date-field }, { name: period, type: string-literal, default: "'month'", keyword-only: true }]
     returns: same
     scopes: [aggregate]
-    status: B
+    status: built
     since: B
-    description: The balance on the last business day of the period (holidays from the model's calendar).
+    description: "The aggregate over the rows dated on the last business day of each period (on the model's calendar: a month ending on a holiday or a weekend closes on the business day before), up to the as-of date (the as-of period closes on the as-of date); per group, so a monthly answer shows each month's close."
     examples:
       - { expr: "closing(sum(accounts.balance), accounts.businessDate)", says: "the month-end balance" }
       - { expr: "closing(sum(accounts.balance), accounts.businessDate, period='year')", says: "the year-end balance" }
     edge-cases:
       empty: "None when the period's last business day has no rows."
+      types: "Without a window the periods of the five years before the as-of date are looked at."
 
   - name: avg_over
     family: balances
@@ -843,9 +851,9 @@ functions:
     params: [{ name: agg, type: aggregate }, { name: date, type: date-field }]
     returns: decimal
     scopes: [aggregate]
-    status: B
+    status: built
     since: B
-    description: The average over the dates of the group of the aggregate per date (an average daily balance).
+    description: "The average over the dates of each group of the aggregate per date (an average daily balance): avg_by(agg, by=[date])."
     examples:
       - { expr: "avg_over(sum(accounts.balance), accounts.businessDate)", says: "the average daily balance" }
       - { expr: "avg_over(sum(collateral.value), collateral.businessDate)", says: "average collateral held" }
@@ -856,32 +864,37 @@ functions:
   - name: calc
     family: filter context
     signature: calc(agg, where=..., ignore=[...] | ALL, keep=[...], via='rel_id')
-    params: [{ name: agg, type: aggregate }, { name: where, type: boolean, default: None, keyword-only: true }, { name: ignore, type: fields, default: "[]", keyword-only: true }, { name: keep, type: fields, default: "[]", keyword-only: true }, { name: via, type: string-literal, default: None, keyword-only: true }]
+    params: [{ name: agg, type: aggregate }, { name: where, type: boolean, default: None, keyword-only: true }, { name: ignore, type: fields-or-all, default: "[]", keyword-only: true }, { name: keep, type: fields, default: "[]", keyword-only: true }, { name: via, type: string-literal, default: None, keyword-only: true }]
     returns: same
     scopes: [aggregate, context]
-    status: B
+    status: built
     since: B
-    description: "The aggregate in an edited filter context: add conditions (where=), drop query and group filters on fields (ignore=, or ALL), keep only some (keep=), or follow an inactive relationship (via=). Security is never in scope."
+    description: "The aggregate in an edited filter context: add conditions (where=, a row condition ANDed to the aggregate's), drop the query's and the group's filters on some fields (ignore=[...]) or on all (ignore=ALL), drop every filter except those on some fields (keep=[...]), or follow an inactive relationship (via='r_5', the active one for the same pair switched off). Security is never in scope: ignore=ALL means everything you may see."
     examples:
-      - { expr: "calc(measure('MTM'), ignore=[desks.name])", says: "MTM ignoring the desk slicer" }
+      - { expr: "calc(measure('MTM'), ignore=[desks.name])", says: "MTM ignoring the desk slicer and the desk of the row" }
+      - { expr: "calc(sum(trades.mtm), where=trades.status == 'Live')", says: "MTM of the live trades, whatever else is filtered" }
+      - { expr: "calc(measure('MTM'), keep=[desks.region])", says: "MTM of the whole region of the row" }
       - { expr: "calc(measure('MTM'), via='r_5')", says: "MTM along the settlement-date relationship" }
     edge-cases:
-      masked: "ignore=ALL means all the rows you may see, never more."
+      masked: "ignore=ALL means all the rows you may see, never more; a masked field in ignore= or keep= is never a group (it is not grouped on)."
+      empty: "None (a count: 0) when the edited context has no rows."
+      types: "Nesting of calc, share_of, parent_of and as_of is at most three deep (DRS-9127)."
 
   - name: share_of
     family: filter context
     signature: share_of(agg, over=[...] | ALL)
-    params: [{ name: agg, type: aggregate }, { name: over, type: fields, keyword-only: true }]
+    params: [{ name: agg, type: aggregate }, { name: over, type: fields-or-all, keyword-only: true }]
     returns: decimal
     scopes: [aggregate, context]
-    status: B
+    status: built
     since: B
-    description: The aggregate divided by itself over a coarser group (over=ALL is the grand total you may see).
+    description: "The aggregate divided by itself with the fields of over ignored (the same as agg / calc(agg, ignore=over)): over=ALL is the share of the grand total you may see, over=[books.name] a book's share within the rest of its group."
     examples:
       - { expr: "share_of(measure('MTM'), over=ALL)", says: "MTM as a share of the total you may see" }
       - { expr: "share_of(measure('MTM'), over=[books.name])", says: "a book's share within its desk" }
     edge-cases:
       nulls: "None when the coarser total is 0 or None."
+      masked: "Of what you may see: the total never includes rows your row rules hide."
 
   - name: parent_of
     family: filter context
@@ -889,14 +902,15 @@ functions:
     params: [{ name: agg, type: aggregate }, { name: hierarchy, type: string-literal, keyword-only: true }]
     returns: decimal
     scopes: [aggregate, context]
-    status: B
+    status: built
     since: B
-    description: The aggregate as a share of its parent level in a hierarchy of the model.
+    description: "The aggregate as a share of its parent level in a hierarchy of the model: the deepest level of the hierarchy in the answer is ignored (with the levels below it), so each row is divided by its parent's total."
     examples:
       - { expr: "parent_of(measure('MTM'), hierarchy='Desk and book')", says: "a book's share of its desk" }
       - { expr: "parent_of(measure('Notional'), hierarchy='Region')", says: "a country's share of its region" }
     edge-cases:
-      nulls: "None at the top level."
+      nulls: "None at the top level, and when no level of the hierarchy is a field of the answer; None when the parent's total is 0."
+      types: "hierarchy names a hierarchy of the model (DRS-9152 otherwise)."
 
   # ---- time travel (B) ---------------------------------------------------------------------------------------------------------
   - name: as_of
@@ -905,14 +919,15 @@ functions:
     params: [{ name: agg, type: aggregate }, { name: date_expr, type: date }]
     returns: same
     scopes: [aggregate, context]
-    status: B
+    status: built
     since: B
-    description: The aggregate with every scan bound to another business date.
+    description: "The aggregate with every scan bound to another business date (the same fields, filters and security, that day's data), joined on the answer's fields: today against yesterday in one visual. The date is worked out before the query runs: date('...'), asof(), or shift_date(asof(), n, unit=)."
     examples:
       - { expr: "measure('MTM') - as_of(measure('MTM'), shift_date(asof(), -1))", says: "MTM day on day" }
       - { expr: "as_of(measure('Exposure'), date('2026-09-30'))", says: "exposure at the quarter end" }
     edge-cases:
-      empty: "None when that date has no data."
+      empty: "None when that date has no data for the group."
+      types: "A date that depends on the row (a column) is refused (DRS-9166); a live table has no other dates (DRS-9157)."
 
   - name: shift_date
     family: time travel
@@ -920,14 +935,15 @@ functions:
     params: [{ name: d, type: date }, { name: n, type: integer-literal }, { name: unit, type: string-literal, default: "'business-day'", keyword-only: true }]
     returns: date
     scopes: [row, aggregate, context]
-    status: B
+    status: built
     since: B
-    description: A date moved by n units (business days by default, on the model's calendar).
+    description: "A date moved by n units: business-day (the default, on the model's calendar: holidays and weekends skipped), day, week, month, quarter or year. Business days need a fixed date (asof() or date('...')); a column moves by the other units."
     examples:
       - { expr: "shift_date(asof(), -1)", says: "the previous business day" }
       - { expr: "shift_date(asof(), -1, unit='month')", says: "a month ago" }
     edge-cases:
       nulls: "shift_date(None, n) is None."
+      types: "n is a whole number written in the expression; shift_date(column, n) in business days is refused (DRS-9020)."
 
   - name: asof
     family: time travel
@@ -935,11 +951,11 @@ functions:
     params: []
     returns: date
     scopes: [row, aggregate, context]
-    status: B
+    status: built
     since: B
-    description: The query's as-of date.
+    description: "The query's as-of date: the end of its dates (time.as-of, the window's end), else the business date it read."
     examples:
-      - { expr: "days_between(trades.tradeDate, asof())", says: "the age of a trade" }
+      - { expr: "sum(trades.notional, where=days_between(trades.tradeDate, asof()) <= 30)", says: "notional traded in the last 30 days" }
       - { expr: "count(trades, where=trades.maturityDate <= shift_date(asof(), 30, unit='day'))", says: "trades maturing within 30 days" }
     edge-cases:
       types: "Always a date."

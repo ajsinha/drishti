@@ -43,7 +43,7 @@ public final class Guards {
                         "add the currency to the fields (it splits each group by currency), or filter one currency"));
             } else if (w.startsWith("DRS-9159") && w.contains("added across the dates")) {
                 out.add(new Refusal("DRS-9159", "select.measures", w.substring("DRS-9159 ".length()).replace(" (refused from wave W2)", ""),
-                        "ask the balance alone (its last date's value), or add the business date to the fields"));
+                        "ask the balance alone (its last date's value), add the business date to the fields, or write the measure with a balance function: last(measure('...'), <alias>.businessDate), closing(...) or avg_over(...)"));
             }
         }
         return out;

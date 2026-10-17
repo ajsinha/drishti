@@ -128,6 +128,19 @@ public final class DelPrinter {
         }
         String name = catalog.fromLegacy(f);
         List<String> out = new ArrayList<>();
+        if (Node.CONTEXT.contains(f) || Node.SCALARS_B.contains(f)) {
+            for (Node x : a) {
+                if (x instanceof Node.Call k && k.function().startsWith(Node.KEYWORD)) {
+                    String kw = k.function().substring(Node.KEYWORD.length());
+                    boolean list = catalog.function(f).flatMap(fn -> fn.param(kw)).map(pp -> pp.type().startsWith("fields")).orElse(false);
+                    boolean all = k.args().size() == 1 && k.args().get(0) instanceof Node.Ref r && r.parts().equals(List.of("ALL"));
+                    out.add(kw + "=" + (list && !all ? list(k.args()) : k.args().isEmpty() ? "None" : p(k.args().get(0), IF)));
+                } else {
+                    out.add(p(x, IF));
+                }
+            }
+            return name + "(" + String.join(", ", out) + ")";
+        }
         if (CONDITIONAL_AGGREGATES.contains(f) && a.size() == 2) {
             out.add(p(a.get(0), IF));
             out.add("where=" + p(a.get(1), IF));

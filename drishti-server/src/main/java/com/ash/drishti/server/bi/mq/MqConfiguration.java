@@ -75,14 +75,28 @@ public class MqConfiguration {
     }
 
     @Bean
-    public MqService mqService(MqProperties props, com.ash.drishti.server.bi.plan.PlanProperties plan) {
-        return new MqService(props, plan);
+    public MqService mqService(MqProperties props, com.ash.drishti.server.bi.plan.PlanProperties plan,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.python.PythonItems> items,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.transform.TransformRunner> runner,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> queries) {
+        MqService mq = new MqService(props, plan);
+        com.ash.drishti.server.bi.python.PythonItems pi = items.getIfAvailable();
+        com.ash.drishti.server.bi.transform.TransformRunner tr = runner.getIfAvailable();
+        if (pi != null && tr != null) {
+            mq.python(new PythonMeasureRunner(pi, tr));                       // wave B (R8): Python measures in any grouped query, run on the console
+        }
+        com.ash.drishti.server.bi.engine.QueryService q = queries.getIfAvailable();
+        if (q != null) {
+            mq.capabilities(q::capabilities);                                   // stage 7: the connectors' capability descriptors
+        }
+        return mq;
     }
 
     @Bean
     public StandingQueries standingQueries(ModelCatalog catalog, MqService mq, MqProperties props) {
         StandingQueries standing = new StandingQueries(catalog, mq, props, Clock.systemUTC());
         catalog.consumers().source(standing::on);                         // a live subscription reads the model too
+        standing.attach(catalog.bus());                                   // wave B: changes are pushed by the generation bus, never polled
         return standing;
     }
 

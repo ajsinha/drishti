@@ -43,7 +43,45 @@ import java.util.Set;
  */
 public record Dataset(String name, int version, String title, String description, boolean sample, String engine, Map<String, Table> tables,
         List<Relationship> relationships, Map<String, Measure> measures, Map<String, List<String>> hierarchies, Security security, List<Rollup> rollups, Refresh refresh,
-        Compose compose, Derived derived, List<ExpectedValue> tests) {
+        Compose compose, Derived derived, List<ExpectedValue> tests, Model model) {
+
+    /**
+     * What a data model adds for its expressions (wave B, docs/architecture/BI_DESIGN.md section 12.2 task 2): the business calendar its dates follow (null:
+     * the pack's), the month its fiscal year starts, where its FX rates are, and the per-row currency column of each amount ({@code trades.notional} to
+     * {@code trades.currency}, or an ISO code for a fixed currency).
+     */
+    public record Model(String holidays, int fiscalYearStart, Fx fx, Map<String, String> currencyOf) {
+        public static final Model NONE = new Model(null, 1, null, Map.of());
+
+        public Model {
+            currencyOf = currencyOf == null ? Map.of() : Map.copyOf(currencyOf);
+            fiscalYearStart = fiscalYearStart < 1 || fiscalYearStart > 12 ? 1 : fiscalYearStart;
+        }
+    }
+
+    /** The FX rates of a model: the alias of its rates table, the columns of the currencies, the rate and its date, and the base currency of cross rates. */
+    public record Fx(String rates, String from, String to, String rate, String date, String base) {}
+
+    public Dataset {
+        model = model == null ? Model.NONE : model;
+    }
+
+    /** A dataset with tests and no model information (a version-1 dataset, or a copy that keeps none). */
+    public Dataset(String name, int version, String title, String description, boolean sample, String engine, Map<String, Table> tables, List<Relationship> relationships,
+            Map<String, Measure> measures, Map<String, List<String>> hierarchies, Security security, List<Rollup> rollups, Refresh refresh, Compose compose, Derived derived,
+            List<ExpectedValue> tests) {
+        this(name, version, title, description, sample, engine, tables, relationships, measures, hierarchies, security, rollups, refresh, compose, derived, tests, Model.NONE);
+    }
+
+    /** The same dataset with other measures (local, guard, calculation-group and context measures), keeping everything else. */
+    public Dataset withMeasures(Map<String, Measure> m) {
+        return new Dataset(name, version, title, description, sample, engine, tables, relationships, m, hierarchies, security, rollups, refresh, compose, derived, tests, model);
+    }
+
+    /** The same dataset with other relationships, keeping everything else. */
+    public Dataset withRelationships(List<Relationship> r) {
+        return new Dataset(name, version, title, description, sample, engine, tables, r, measures, hierarchies, security, rollups, refresh, compose, derived, tests, model);
+    }
 
     /** A dataset without tests. */
     public Dataset(String name, int version, String title, String description, boolean sample, String engine, Map<String, Table> tables, List<Relationship> relationships,
@@ -232,7 +270,12 @@ public record Dataset(String name, int version, String title, String description
      * @param direction {@code single} (filters flow from the one side to the many side) or {@code both}; stored, queries use the join as written
      * @param active an inactive relationship is not joined by a query
      */
-    public record Relationship(String fromTable, String fromColumn, String toTable, String toColumn, String cardinality, String direction, boolean active) {
+    public record Relationship(String fromTable, String fromColumn, String toTable, String toColumn, String cardinality, String direction, boolean active, String id) {
+
+        /** A relationship without a stable id (a version-1 dataset's). */
+        public Relationship(String fromTable, String fromColumn, String toTable, String toColumn, String cardinality, String direction, boolean active) {
+            this(fromTable, fromColumn, toTable, toColumn, cardinality, direction, active, null);
+        }
 
         public String label() {
             return fromTable + "." + fromColumn + " -> " + toTable + "." + toColumn;

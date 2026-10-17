@@ -72,7 +72,33 @@ public final class MqPlans {
         }
         String id = v.def().id() == null || v.def().id().isBlank() ? v.id() : v.def().id();
         return new Planner.Input(compiled.dataset(), id, v.hash(), sources, main, rows, hav, time(q, compiled), q.rows(), compiled.totals().stream().map(MqCompiler.Level::by).toList(),
-                Planner.ids(v.ids()), new LinkedHashSet<>(compiled.guards().values()));
+                Planner.ids(v.ids()), new LinkedHashSet<>(compiled.guards().values()), binding(v, q));
+    }
+
+    /** What {@code mq: 2} binds into the question (the parameters' values, the calculation groups applied, the measures defined locally): part of the hash. */
+    static Map<String, Object> binding(ModelView v, ModelQuery q) {
+        Map<String, Object> b = new java.util.TreeMap<>();
+        Map<String, Object> values = MqBindings.values(v, q);
+        if (!values.isEmpty()) {
+            b.put("params", new java.util.TreeMap<>(values));
+        }
+        if (!q.ext().calc().isEmpty()) {
+            b.put("calc", new java.util.TreeMap<>(q.ext().calc()));
+        }
+        if (!q.define().isEmpty()) {
+            Map<String, Object> define = new java.util.TreeMap<>();
+            q.define().forEach((name, text) -> {
+                String canonical;
+                try {
+                    canonical = com.ash.drishti.server.bi.expr.DelPrinter.print(com.ash.drishti.server.bi.expr.Expressions.parse(text));   // spacing and quotes do not matter
+                } catch (RuntimeException e) {
+                    canonical = text;
+                }
+                define.put(name, canonical);
+            });
+            b.put("define", define);
+        }
+        return b;
     }
 
     private static Planner.Source source(ResolvedDataset r) {

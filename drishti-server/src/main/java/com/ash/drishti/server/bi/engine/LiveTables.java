@@ -66,7 +66,15 @@ public final class LiveTables implements AutoCloseable {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2, r -> Thread.ofPlatform().daemon().name("drishti-bi-live").unstarted(r));
     private final ExecutorService io = Executors.newVirtualThreadPerTaskExecutor();
 
+    private final GenerationBus bus;
+
     public LiveTables(AnalyticEngine engine, SourceGateway sources, BiLiveProperties props, Clock clock) {
+        this(engine, sources, props, clock, new GenerationBus());
+    }
+
+    /** @param bus where each batch's changes are published (wave B: standing queries are pushed, not polled) */
+    public LiveTables(AnalyticEngine engine, SourceGateway sources, BiLiveProperties props, Clock clock, GenerationBus bus) {
+        this.bus = bus;
         this.engine = engine;
         this.sources = sources;
         this.props = props;
@@ -124,6 +132,8 @@ public final class LiveTables implements AutoCloseable {
                 }
             }
             LiveTable table = new LiveTable(sqlName, t, engine, props, clock, kept);
+            final LiveTable published = table;
+            table.onChange(ch -> bus.publish(new GenerationBus.Notice(dsKey, t.name(), "live", null, published.generation(), ch)));   // push (wave B)
             LiveFeed feed = new LiveFeed(table, t, sources, props, scheduler, io);
             Entry made = new Entry(signature, table, feed, new java.util.concurrent.atomic.AtomicReference<>(clock.instant()), new java.util.concurrent.atomic.AtomicReference<>());
             feed.start();
@@ -132,7 +142,7 @@ public final class LiveTables implements AutoCloseable {
             if (h != null && sampler != null && ds.tables().get(h.table()) != null) {
                 table.history(new LiveHistory(sqlName + "_hist", h, ds.tables().get(h.table()), engine));
                 long ms = Math.max(1_000, h.every().toMillis());
-                made.sampling().set(scheduler.scheduleWithFixedDelay(() -> sample(made, h, t, sampler), ms, ms, java.util.concurrent.TimeUnit.MILLISECONDS));
+                made.sampling().set(scheduler.scheduleWithFixedDelay(() -> sample(dsKey, made, h, t, sampler), ms, ms, java.util.concurrent.TimeUnit.MILLISECONDS));
             }
             LOG.info("live table {}.{} started over {} ({} rows, {} entities pushed)", dsKey, t.name(), t.kind(), table.status().rows(), table.status().subscribed());
             return table;
@@ -148,7 +158,7 @@ public final class LiveTables implements AutoCloseable {
     }
 
     /** Takes one history sample: the sampled measures over the live table, by the history's groups, appended with the time. A failing sample is kept as the history's error. */
-    private void sample(Entry e, Dataset.History h, Dataset.Table t, Sampler sampler) {
+    private void sample(String dsKey, Entry e, Dataset.History h, Dataset.Table t, Sampler sampler) {
         LiveHistory hist = e.table().history().orElse(null);
         LiveTable.State s = e.table().state();
         if (hist == null || s == LiveTable.State.STARTING || s == LiveTable.State.FAILED || s == LiveTable.State.CLOSED) {
@@ -169,6 +179,7 @@ public final class LiveTables implements AutoCloseable {
             }
             if (hist.append(clock.instant(), rows) > 0) {
                 e.table().historyChanged();
+                bus.publish(new GenerationBus.Notice(dsKey, h.table(), "history", null, e.table().generation(), null));
             }
         } catch (RuntimeException ex) {
             hist.error(String.valueOf(ex.getMessage()));

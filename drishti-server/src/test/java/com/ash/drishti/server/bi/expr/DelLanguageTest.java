@@ -209,8 +209,10 @@ class DelLanguageTest {
         "trades.status + 1                      | ROW       | DRS-9127 | text cannot be used",
         "trades.tradeDate > '9 Oct'             | ROW       | DRS-9127 | cannot compare a date",
         "trades.desk == 'RATES'                 | ROW       | DRS-9161 | masked",
-        "calc(measure('MTM'), ignore=ALL)       | AGGREGATE | DRS-9129 | arrives in wave B",
-        "trades.mtm * param.shock               | ROW       | DRS-9129 | wave B",
+        "fn.risk(sum(trades.mtm))               | AGGREGATE | DRS-9129 | arrive in wave B",
+        "calc(calc(calc(calc(sum(trades.mtm), ignore=ALL), ignore=ALL), ignore=ALL), ignore=ALL) | AGGREGATE | DRS-9127 | nest at most 3 deep",
+        "sum(trades.mtm, where=ALL)              | AGGREGATE | DRS-9127 | ALL is only the value",
+        "trades.mtm * param.shock               | ROW       | DRS-9152 | no parameter 'shock'",
         "trades.status                          | RULE      | DRS-9127 | a row rule is a condition",
         "trades.status == user.name             | ROW       | DRS-9127 | is for row rules",
         "sum(sum(trades.mtm))                   | AGGREGATE | DRS-9127 | an aggregate inside an aggregate",
@@ -239,6 +241,13 @@ class DelLanguageTest {
         assertThat(check("trades.status in user.desks", Scope.RULE).ok()).isTrue();
         assertThat(check("rank(sum(trades.mtm), by=[trades.status])", Scope.AGGREGATE).ok()).isTrue();
         assertThat(check("ytd(sum(trades.mtm), trades.tradeDate)", Scope.AGGREGATE).fields()).contains("trades.tradeDate", "trades.mtm");
+        // wave B: the filter context, with its where= read per row and its field lists (or ALL)
+        assertThat(check("calc(measure('MTM'), ignore=[trades.status], where=trades.mtm > 0)", Scope.AGGREGATE).ok()).isTrue();
+        assertThat(check("share_of(measure('MTM'), over=ALL)", Scope.AGGREGATE).type()).isEqualTo(DelType.DECIMAL);
+        assertThat(check("avg_by(sum(trades.mtm), by=[trades.status])", Scope.AGGREGATE).ok()).isTrue();
+        assertThat(DelPrinter.print(DelLowering.lower(DelParser.parse("calc(measure('MTM'), ignore=ALL, where=trades.mtm > 0)"))))
+                .isEqualTo("calc(measure('MTM'), where=trades.mtm > 0, ignore=ALL)");
+        assertThat(DelPrinter.print(DelLowering.lower(DelParser.parse("share_of(sum(trades.mtm), over=[trades.status])")))).isEqualTo("share_of(sum(trades.mtm), over=[trades.status])");
     }
 
     /** Every example of every built function in the catalogue is DEL v2 and lowers to the compiler's tree; a later wave's examples are refused DRS-9129. */

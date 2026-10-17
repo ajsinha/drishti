@@ -389,12 +389,27 @@ public final class LiveTable implements AutoCloseable {
             if (after[0] > 0) {
                 seq.set(after[0]);
             }
+            Map<String, Object[]> before = new LinkedHashMap<>();
+            rowsToWrite.keySet().forEach(id -> before.put(id, last.get(id)));
+            Map<String, Object[]> removed = new LinkedHashMap<>();
+            removals.forEach(id -> {
+                if (last.get(id) != null) {
+                    removed.put(id, last.get(id));
+                }
+            });
             rowsToWrite.forEach(last::put);
             removals.forEach(last::remove);
             applied.addAndGet(rowsToWrite.size());
             deleted.addAndGet(removedBy[0]);
             evicted.addAndGet(gone.size());
+            gone.forEach(id -> {
+                if (last.get(id) != null) {
+                    removed.put(id, last.get(id));
+                }
+            });
             gone.forEach(last::remove);
+            Map<String, Object[]> written = new LinkedHashMap<>(rowsToWrite);
+            gone.forEach(written::remove);                                      // evicted in the same batch: gone, not written
             if (removedBy[0] > 0 || !gone.isEmpty()) {
                 epoch.incrementAndGet();
             }
@@ -402,6 +417,7 @@ public final class LiveTable implements AutoCloseable {
             lastUpdate = now;
             lastSeen = now;
             generation.incrementAndGet();
+            changed(written, before, removed);
             return rowsToWrite.size() + removals.size();
         } finally {
             write.unlock();
@@ -447,6 +463,31 @@ public final class LiveTable implements AutoCloseable {
         return new ArrayList<>(ids);
     }
 
+    /** Who hears of each batch's rows (the generation bus, through {@link LiveTables}); null: nobody. */
+    private volatile java.util.function.Consumer<GenerationBus.Change> changes;
+
+    void onChange(java.util.function.Consumer<GenerationBus.Change> c) {
+        this.changes = c;
+    }
+
+    /** The table's columns as a change set's rows hold them: the business date, then the physical columns. */
+    public List<String> rowColumns() {
+        List<String> out = new ArrayList<>();
+        out.add(Dataset.DATE);
+        cols.forEach(c -> out.add(c.name()));
+        return out;
+    }
+
+    /** Tells the listener what the batch wrote and removed (after it committed, still under the write lock: batches arrive in order). */
+    private void changed(Map<String, Object[]> written, Map<String, Object[]> before, Map<String, Object[]> removed) {
+        java.util.function.Consumer<GenerationBus.Change> c = changes;
+        if (c != null && (!written.isEmpty() || !removed.isEmpty())) {
+            Map<String, Object[]> b = new LinkedHashMap<>();
+            written.keySet().forEach(id -> b.put(id, before.get(id)));
+            c.accept(new GenerationBus.Change(rowColumns(), Map.copyOf(written), java.util.Collections.unmodifiableMap(b), Map.copyOf(removed)));
+        }
+    }
+
     private long count() {
         Object[] v = engine.query("SELECT count(*) FROM " + sqlName, List.of(), 1, java.time.Duration.ofSeconds(5)).columns().get(0).values();
         return v.length == 0 ? 0 : ((Number) v[0]).longValue();
@@ -477,11 +518,18 @@ public final class LiveTable implements AutoCloseable {
             keep(deltas);
             if (!gone.isEmpty()) {
                 evicted.addAndGet(gone.size());
+                Map<String, Object[]> removed = new LinkedHashMap<>();
+                gone.forEach(id -> {
+                    if (last.get(id) != null) {
+                        removed.put(id, last.get(id));
+                    }
+                });
                 gone.forEach(last::remove);
                 epoch.incrementAndGet();
                 generation.incrementAndGet();
                 rows = count();
                 lastUpdate = now;
+                changed(Map.of(), Map.of(), removed);
             }
             return gone.size();
         } finally {

@@ -748,6 +748,21 @@ public final class DatasetService {
     }
 
     /** The data generation of a dataset's layers and live tables (starting its live tables): what a standing query watches. */
+    /** The generation bus of the query engine (wave B: live batches, loads and refreshes pushed to standing queries). */
+    public com.ash.drishti.server.bi.engine.GenerationBus bus() {
+        return queries.bus();
+    }
+
+    /** A running live table's generation (0 when it does not run). */
+    public long liveGeneration(String key, String table) {
+        return queries.live().find(key, table).map(com.ash.drishti.server.bi.engine.LiveTable::generation).orElse(0L);
+    }
+
+    /** The generation of one business date of a dataset or model's layers (wave B: an as-of answer's cache key; a back-dated load moves only its date). */
+    public long generationAt(String key, java.time.LocalDate date) {
+        return queries.layers().generation(key, date);
+    }
+
     public long generation(String id, String key, Dataset ds) {
         Object live = queries.liveTick(new QueryService.Loaded(id, key, ds, "")).get("generation");
         return queries.layers().generation(key) * 1_000_003L + (live instanceof Number n ? n.longValue() : 0L);
