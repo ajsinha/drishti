@@ -44,7 +44,7 @@ def run_measure(req: dict, runner: PyRunner) -> dict:
 
 def run(folder: Path) -> dict:
     req = json.loads((folder / "req.json").read_text(encoding="utf-8"))
-    runner = PyRunner(dict(req.get("settings") or {}))            # a dict answers .get(key, default), which is all the runner asks of its settings
+    runner = PyRunner({**dict(req.get("settings") or {}), "bi.python.fork_server": False})   # one call per process here: no fork-server (a dict answers .get)
     if req.get("mode") == "measure":
         return run_measure(req, runner)
     arrows = [(folder / name).read_bytes() for name in req["inputs"]]

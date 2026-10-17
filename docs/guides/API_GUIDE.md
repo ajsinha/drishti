@@ -1919,7 +1919,8 @@ masked input leaves the column `None`, said in `warnings`); it has no total. The
 | Call (server to console) | Body | Answer |
 |---|---|---|
 | `POST {console-url}/internal/py/transform` | `{manifest, params, inputs: [base64 Arrow IPC], max_rows, max_bytes}` | `200` the result as Parquet (`application/vnd.apache.parquet`), headers `X-Drishti-Rows`, `X-Drishti-Ms`, `X-Drishti-Columns` (`[{name, type}]`) |
-| `POST {console-url}/internal/py/measure` | `{manifest, params, group_by: [names], columns: [names], rows: [[...]]}` | `200 {ok: true, by, rows: [[group values..., value]], ms}` |
+| `POST {console-url}/internal/py/measure` | `{manifest, params, group_by: [names], columns: [names], rows: [[...]]}` | `200 {ok: true, by, rows: [[group values..., value]], ms, cached}` (the item's `compute` per group, or `compute_groups(frame, by, params)` once over every group) |
+| `POST {console-url}/internal/py/column` | `{manifest, params, columns: [names], rows: [[...]]}` | `200 {ok: true, type, values: [one per row], ms, cached}` (the `column` interface: `derive(frame, params)`, plan node `PyColumn`) |
 | a refusal (either) | | `{ok: false, code: DRS-9070..9076, status, detail}` (JSON) |
 
 Both carry `X-Drishti-Runner-Token` (`drishti.bi.transform.console-token`); the console checks it. At most `drishti.bi.transform.max-concurrent` calls at

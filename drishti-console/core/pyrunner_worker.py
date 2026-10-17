@@ -15,7 +15,14 @@
 """The worker of the Python runner (docs/guides/PYTHON_BI.md): one short-lived process per call, started by ``core/pyrunner.py``.
 
 It reads ``req.json`` and ``in.arrow`` (the rows the person looking may see, as Arrow IPC) from its scratch folder, runs the
-author's function and writes ``out.json``. It imports nothing of the console. Defence in depth, not a kernel sandbox:
+author's function and writes ``out.json``. It imports nothing of the console.
+
+**Fork-server** (wave B, docs/architecture/BI_DESIGN.md section 3.5 invariant 3): ``python -I pyrunner_worker.py --serve`` is one long-lived
+parent per console that imports pandas, numpy and pyarrow once and then, for each line ``{"id", "tmp"}`` on its standard input, forks one child
+that runs one call exactly as a fresh process would (its own session, environment, scratch folder, limits and audit hook, installed in the child
+only) and exits. The parent answers ``{"id", "pid"}`` when the child starts and ``{"id", "rc"}`` when it ends; it never runs an author's code
+itself, so one-process-per-call isolation is kept while the interpreter's start-up and the imports leave the latency. Defence in depth, not a
+kernel sandbox:
 
 * the parent gives it an empty environment, the scratch folder as working directory, a new session (so a timeout kills the
   whole group) and, where the machine allows, a network namespace with no interfaces;
@@ -337,6 +344,59 @@ def _transform(req: dict, frames: list, ns: dict, tmp: str) -> dict:
     return {"kind": "transform", "columns": columns, "rows": int(table.num_rows)}
 
 
+def _column(req: dict, df, fn, params) -> dict:
+    """The ``column`` interface (BI_DESIGN.md 3.5, plan node ``PyColumn``): ``derive(frame, params)`` gets the declared input columns of the dataset (masked as
+    the reader sees them) and returns one value per row, vectorised: a pandas Series, a numpy array or a list of the frame's length."""
+    inputs = req["inputs"] or [c for c in df.columns if c != "id"]
+    missing = [c for c in inputs if c not in df.columns]
+    if missing:
+        raise ValueError(f"the rows lack the column(s) {missing}: list them in the derive's inputs")
+    out = fn(df[inputs].reset_index(drop=True).copy(), dict(params))
+    values = out.tolist() if hasattr(out, "tolist") else list(out) if isinstance(out, (list, tuple)) else None
+    if values is None:
+        raise TypeError(f"a column returns one value per row (a pandas Series, an array or a list), not {type(out).__name__}")
+    if len(values) != len(df):
+        raise ValueError(f"a column returns one value per row: {len(values)} values for {len(df)} rows")
+    clean = []
+    for v in values:
+        if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
+            v = None
+        clean.append(v)
+    kinds = {type(v).__name__ for v in clean if v is not None}
+    kind = "integer" if kinds <= {"int"} and kinds else "decimal" if kinds <= {"int", "float"} and kinds else "boolean" if kinds == {"bool"} else "string"
+    return {"kind": "column", "type": kind, "values": json.loads(json.dumps(clean, default=_plain, allow_nan=False))}
+
+
+def _compute_groups(req: dict, df, fn, params) -> dict:
+    """A measure's vectorised form (R8): ``compute_groups(frame, by, params)`` gets every group's rows at once (the declared inputs and the group columns) and
+    returns a DataFrame with the group columns and one value column (named ``value``, else the last one); one call instead of one per group."""
+    inputs = req["inputs"]
+    by = req["group_by"] if req["group_by"] is not None else [c for c in df.columns if c not in inputs]
+    missing = [c for c in inputs + by if c not in df.columns]
+    if missing:
+        raise ValueError(f"the rows lack the column(s) {missing}: list them in the visual's columns or the dataset measure's inputs and by")
+    out = fn(df[by + [c for c in inputs if c not in by]].reset_index(drop=True).copy(), list(by), dict(params))
+    if not hasattr(out, "columns"):
+        raise TypeError(f"compute_groups returns a pandas DataFrame of the group columns and one value column, not {type(out).__name__}")
+    if hasattr(out, "index") and getattr(out.index, "names", None) and any(n in by for n in out.index.names if n):
+        out = out.reset_index()
+    lack = [c for c in by if c not in out.columns]
+    if lack:
+        raise ValueError(f"compute_groups returned no column(s) {lack}: keep the group columns in the frame it returns")
+    value = "value" if "value" in out.columns else [c for c in out.columns if c not in by][-1:]
+    if not value:
+        raise ValueError("compute_groups returned no value column")
+    value = value if isinstance(value, str) else value[0]
+    if len(out) > req["max_groups"]:
+        raise Limit(f"more than {req['max_groups']} groups")
+    out = out.sort_values(by) if by else out
+    rows = []
+    for rec in out[by + [value]].itertuples(index=False, name=None):
+        key = [(k.item() if hasattr(k, "item") else k) for k in rec[:-1]]
+        rows.append(key + [_number(rec[-1], "group " + ", ".join(map(str, key)))])
+    return {"kind": "measure", "by": by, "rows": json.loads(json.dumps(rows, default=_plain, allow_nan=False)), "vectorised": True}
+
+
 def _run(req: dict, tmp: str) -> dict:
     import pyarrow as pa
     import pandas as pd
@@ -372,10 +432,14 @@ def _run(req: dict, tmp: str) -> dict:
     if cell:
         return _cell(req, df, ns, quant, others)
     exec(compile(req["source"], FILE, "exec"), ns)          # the worker's own exec; the author's code is not given it
+    params = req["params"]
+    if req["interface"] == "measure" and callable(ns.get("compute_groups")) and req["entry"] in ("compute", "compute_groups"):
+        return _compute_groups(req, df, ns["compute_groups"], params)
     fn = ns.get(req["entry"])
     if not callable(fn):
         raise ValueError(f"the source defines no function '{req['entry']}'")
-    params = req["params"]
+    if req["interface"] == "column":
+        return _column(req, df, fn, params)
     if req["interface"] == "measure":
         inputs = req["inputs"]
         by = req["group_by"] if req["group_by"] is not None else [c for c in df.columns if c not in inputs]       # no declared groups: the other columns handed over
@@ -438,5 +502,90 @@ def main(tmp: str) -> int:
     return 0
 
 
+PRELOAD = ("numpy", "pandas", "pyarrow", "pyarrow.parquet", "pyarrow.ipc")
+
+
+def _child(tmp: str, env: dict) -> int:
+    """One call in a forked child: a session of its own (the parent kills the group on a timeout), nothing of the parent's pipes, the call's environment and
+    scratch folder; then exactly what a fresh worker process does."""
+    os.setsid()
+    null = os.open(os.devnull, os.O_RDWR)
+    os.dup2(null, 0)
+    os.dup2(null, 1)
+    try:
+        err = os.open(os.path.join(tmp, "err.txt"), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        os.dup2(err, 2)
+    except OSError:
+        os.dup2(null, 2)
+    os.environ.clear()
+    os.environ.update({k: str(v) for k, v in env.items()})
+    os.environ.update({"HOME": tmp, "TMPDIR": tmp, "MPLCONFIGDIR": tmp})
+    os.chdir(tmp)
+    return main(tmp)
+
+
+def serve() -> int:
+    """The fork-server loop: requests on stdin, one JSON line each (``{"id", "tmp", "env"}``), answers on stdout (``{"id", "pid"}``, then ``{"id", "rc"}``)."""
+    import select
+    for name in PRELOAD:
+        try:
+            __import__(name)
+        except ImportError:
+            pass
+    out = sys.stdout
+    running: dict[int, object] = {}
+    buf = b""
+    stdin = sys.stdin.fileno()
+    out.write(json.dumps({"ready": True, "pid": os.getpid()}) + "\n")
+    out.flush()
+    open_input = True
+    while open_input or running:
+        try:
+            ready, _, _ = select.select([stdin] if open_input else [], [], [], 0.02)
+        except InterruptedError:
+            ready = []
+        if ready:
+            chunk = os.read(stdin, 65536)
+            if not chunk:
+                open_input = False                     # the console has gone: finish the children that run, then end
+            buf += chunk
+            while b"\n" in buf:
+                line, buf = buf.split(b"\n", 1)
+                try:
+                    req = json.loads(line)
+                    tmp, rid = str(req["tmp"]), req["id"]
+                except (ValueError, KeyError, TypeError):
+                    continue
+                if not os.path.isdir(tmp):
+                    out.write(json.dumps({"id": rid, "rc": 2, "error": "no scratch folder"}) + "\n")
+                    out.flush()
+                    continue
+                pid = os.fork()
+                if pid == 0:
+                    code = 70
+                    try:
+                        code = _child(tmp, dict(req.get("env") or {}))
+                    finally:
+                        os._exit(code)
+                running[pid] = rid
+                out.write(json.dumps({"id": rid, "pid": pid}) + "\n")
+                out.flush()
+        while running:
+            try:
+                pid, status = os.waitpid(-1, os.WNOHANG)
+            except ChildProcessError:
+                running.clear()
+                break
+            if pid == 0:
+                break
+            rid = running.pop(pid, None)
+            if rid is None:
+                continue
+            rc = -os.WTERMSIG(status) if os.WIFSIGNALED(status) else os.WEXITSTATUS(status)
+            out.write(json.dumps({"id": rid, "rc": rc}) + "\n")
+            out.flush()
+    return 0
+
+
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1]))
+    sys.exit(serve() if sys.argv[1:] == ["--serve"] else main(sys.argv[1]))

@@ -222,6 +222,9 @@ def create_app(settings: Settings) -> FastAPI:
         yield
         if backend_task is not None:
             backend_task.cancel()
+        runner = getattr(app.state, "pyrunner", None)
+        if runner is not None:
+            await runner.close()                              # the fork-server ends with the console
         if getattr(app.state, "tmp_owner", False):          # the process that runs this app: uvicorn re-raises the stop signal after this, so atexit would not run
             from core import tmpdir
 
@@ -377,7 +380,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(ai_routes.router)
     if app.state.bi_on:
         from core.explore import Limits
-        from routes import bi_routes, explore_routes, model_routes, python_routes, wizard_routes
+        from routes import bi_routes, explore_routes, model_routes, pynode_routes, python_routes, wizard_routes
 
         app.state.explore_limits = Limits.from_settings(settings)      # Analyse (docs/guides/ANALYSE.md): extract, SQL and cell limits
         app.include_router(bi_routes.router)
@@ -385,6 +388,7 @@ def create_app(settings: Settings) -> FastAPI:
         app.include_router(model_routes.router)
         app.include_router(python_routes.router)
         app.include_router(explore_routes.router)
+        app.include_router(pynode_routes.router)          # the Py-node endpoint the server's planner calls (/internal/py/*: its token only)
     from core.ai import AiRuntime
 
     app.state.ai = AiRuntime(settings, backend=lambda: app.state.backend)       # off by default: no file is read, no model or MCP server is called

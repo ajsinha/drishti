@@ -214,6 +214,11 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
     max_groups: 5000                                            # most groups a measure is called for
     network_namespace: auto                                     # auto: also run the worker in a network namespace with no interfaces when the machine allows it (unshare); require; off
     scratch_dir: ""                                             # where each call's scratch folder is made; empty: the system temporary folder
+    fork_server: ${DRISHTI_BI_PYTHON_FORK_SERVER:true}          # wave B: one pre-imported parent forks a child per call (no interpreter start per call); false: a new process per call
+    cache_entries: 256                                          # the L4 result cache: answers kept by item code, parameters and the exact (masked) input bytes; 0 turns it off
+    cache_max_bytes: 64000000
+    cache_seconds: 600
+    runner_token: ${DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN:}        # the Py-node endpoint (/internal/py/*) the server calls with X-Drishti-Runner-Token; empty: the endpoint is off
   # Rupaka phase 9 (docs/guides/ANALYSE.md): Analyse at /bi/explore: the masked extract, SQL cells, Python cells and notebooks.
   explore:
     max_rows: ${DRISHTI_BI_EXPLORE_MAX_ROWS:10000}             # most rows of an extract (the reader's rows, cut here); 10 to 100000
