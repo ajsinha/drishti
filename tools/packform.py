@@ -47,6 +47,8 @@ NUMBERS = re.compile(r"(?i).*(rate|score|ratio|share|count|length|growth|inflati
 
 def humanize(path: str) -> str:
     last = path.rsplit(".", 1)[-1]
+    if last.upper() == last:
+        last = last.lower()                       # TRADE_DATE reads as "Trade date", as tradeDate does
     words = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", last).replace("_", " ").lower().strip()
     owner = path.rsplit(".", 1)[0].replace(".", " ") + " " if "." in path else ""
     text = (owner + words).strip()

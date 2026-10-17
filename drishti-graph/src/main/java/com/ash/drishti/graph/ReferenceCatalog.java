@@ -121,6 +121,10 @@ public final class ReferenceCatalog implements com.ash.drishti.common.LiveSettin
     }
 
     static String humanize(String name) {
+        if (name.chars().noneMatch(Character::isLowerCase) && name.chars().filter(Character::isUpperCase).count() > 1) {
+            String w = name.replace('_', ' ').replace('-', ' ').toLowerCase(java.util.Locale.ROOT).trim();   // ORIGINAL_COUNTERPARTY
+            return w.isEmpty() ? name : Character.toUpperCase(w.charAt(0)) + w.substring(1);
+        }
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < name.length(); i++) {
             char c = name.charAt(i);

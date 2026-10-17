@@ -127,7 +127,7 @@ class ImperfectDataTest {
         ViewModel vm = pipeline.preview(Optional.of(s), new EntityDocument(EntityRef.of("trade", "MX-20000001"), trade,
                 new Provenance("test", 1, Instant.now(), false)));
         assertThat(vm.panels()).allSatisfy(p -> assertThat(p.empty()).as(p.id()).isFalse());
-        assertThat(vm.strip()).extracting(ViewModel.Cell::label).contains("UTI", "Venue");
-        assertThat(vm.strip()).filteredOn(c -> c.label().equals("UTI")).allSatisfy(c -> assertThat(c.text()).startsWith("5493"));
+        assertThat(vm.strip()).extracting(ViewModel.Cell::label).contains("Transit", "Source");
+        assertThat(vm.strip()).filteredOn(c -> c.label().equals("Transit")).allSatisfy(c -> assertThat(c.text()).isEqualTo("00107"));
     }
 }

@@ -197,6 +197,9 @@ public final class Semantics {
     }
 
     private static String words(String name) {
+        if (upperSnake(name)) {
+            name = name.toLowerCase(java.util.Locale.ROOT);           // TRADE_DATE reads as "trade date", as tradeDate does
+        }
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < name.length(); i++) {
             char c = name.charAt(i);
@@ -209,6 +212,19 @@ public final class Semantics {
             }
         }
         return sb.toString().trim().replaceAll(" +", " ");
+    }
+
+    /** {@code TRADE_DATE}, {@code PNL_1D}: upper case letters (digits and separators allowed), at least two letters. */
+    public static boolean upperSnake(String name) {
+        int letters = 0;
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            if (Character.isLowerCase(c)) {
+                return false;
+            }
+            letters += Character.isUpperCase(c) ? 1 : 0;
+        }
+        return letters > 1;
     }
 
     static String camel(String kind) {

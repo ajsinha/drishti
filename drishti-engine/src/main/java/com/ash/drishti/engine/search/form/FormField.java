@@ -152,6 +152,9 @@ public record FormField(String path, String label, FieldType type, List<String> 
     /** {@code counterparty.name} to {@code Counterparty name}; {@code tradeDate} to {@code Trade date}. */
     public static String humanize(String path) {
         String last = path.substring(path.lastIndexOf('.') + 1);
+        if (last.chars().noneMatch(Character::isLowerCase)) {
+            last = last.toLowerCase(java.util.Locale.ROOT);              // TRADE_DATE reads as "Trade date", as tradeDate does
+        }
         String spaced = last.replaceAll("([a-z0-9])([A-Z])", "$1 $2").replace('_', ' ').toLowerCase(java.util.Locale.ROOT).trim();
         String owner = path.contains(".") ? path.substring(0, path.lastIndexOf('.')).replace('.', ' ') + " " : "";
         String all = (owner + spaced).trim();

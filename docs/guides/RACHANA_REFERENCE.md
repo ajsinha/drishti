@@ -191,7 +191,7 @@ expression, which a schema cannot).
 
 ## A complete example, annotated
 
-The Sutra below lays out a vanilla fixed/float interest rate swap from the trading pack (`TRD MX-20000001`). It
+The Sutra below lays out a vanilla fixed/float interest rate swap from the trading pack (`TRD MX-20000001`, booked in Murex). It
 uses most of the grammar: matching, the title, the strip, a dozen panels of different kinds, expressions,
 templates, links and function keys. Every line is commented. The test suite (`RachanaReferenceExampleTest`)
 previews this exact block against `MX-20000001` and fails if it stops parsing or leaves a panel empty, so it
@@ -199,36 +199,33 @@ always works as written.
 
 How to read the notation:
 
-- `$` is the document. `$.counterparty.name` walks into objects, and `$.legs[0].rate` into arrays.
-- `@` is the current row inside `rows`, `each` or a column: `@.payDate` is the row's `payDate`.
+- `$` is the document. `$.LEGS[0].INDEX.NAME` walks into arrays and objects.
+- `@` is the current row inside `rows`, `each` or a column: `@.PAYMENT_DATE` is the row's `PAYMENT_DATE`.
 - A value in `"double quotes"` is a Rachana-EL expression (operators, functions). A bare path such as
-  `$.tradeId` needs no quotes.
+  `$.TRADE_ID` needs no quotes.
 - `${…}` inside text (titles, pills) embeds an expression in a template.
 - `#` starts a YAML comment, which the engine ignores.
 
-The fragment of the document that the Sutra reads looks like this (abridged; the full document is
+The trade is in the common schema every source system writes (47 upper-snake attributes, the same for Endur, Calypso and Murex;
+[PACKS.md](PACKS.md#trading)). The fragment of the document that the Sutra reads looks like this (abridged; the full document is
 `GET /api/v1/entities/trade/MX-20000001/raw`):
 
 ```json
 {
-  "tradeId": "MX-20000001", "productType": "IRS_FIXFLOAT", "productName": "Interest rate swap (fixed/float)",
-  "assetClass": "Rates", "status": "Live", "direction": "Receive fixed", "currency": "AUD",
-  "notional": 242000000, "mtm": 1875863, "pnl1d": 126986, "maturityDate": "2032-06-25",
-  "counterparty": { "id": "CP-MERIDIAN-RE", "name": "Meridian Reinsurance Ltd" },
-  "book": "BOOK-RATES-3", "nettingSet": "NS-MERIDIAN-RE-NY", "discountCurve": "CRV-AUD-OIS",
-  "terms": { "fixedRate": 0.040829, "payFrequency": "Annual", "dayCount": "ACT/365F", "businessDay": "Following" },
-  "risk": { "dv01": -155245 },
-  "sensitivities": [ { "bucket": "3M", "dv01": -5544 }, … ],
-  "legs": [ { "leg": 1, "label": "Receive fixed 4.0829%", "type": "FIXED", "payer": false, "rate": 0.040829,
-              "cashflows": [ { "n": 1, "payDate": "2026-06-29", "amount": 8987301.85, "df": 1.0, "pv": 0.0, "status": "Settled" }, … ] },
-            { "leg": 2, "label": "Pay AONIA compounded", "type": "FLOAT", "index": "AONIA", … } ],
-  "schedule": [ { "payDate": "2025-09-29", "leg": 2, "amount": -1403091.13, "pv": 0.0, "status": "Settled" }, … ],
-  "nextIndex": 6,
-  "pnlHistory": [ { "date": "2026-09-03", "pnl": -15005 }, … ],
-  "lifecycle": { "events": [ { "version": 1, "event": "New", "at": "2025-07-25T09:45:00Z", "by": "mo.ops" }, … ] },
-  "confirmation": { "status": "Confirmed", "method": "MarkitWire", "matched": "2025-07-25 16:51" },
-  "regulatory": { "uti": "5493…", "reportingStatus": "Accepted", "clearingObligation": true },
-  "clearing": { "status": "Cleared", "ccp": "LCH SwapClear" }
+  "SOURCE_SYSTEM": "MUREX", "TRADE_ID": "MX-20000001", "TRADE_STATUS": "AMENDED", "TRADE_ACTION": "AMEND", "TRADE_VERSION": "2",
+  "QUANTITY": 242000000.0, "PRICE": 0.040829, "BUY_SELL_CODE": "S", "PRODUCT_TYPE": "IRS_FIXFLOAT",
+  "PRODUCT_SUB_TYPE": "Interest rate swap (fixed/float)", "PRODUCT_GROUP": "Rates", "PRODUCT_SUB_GROUP": "swap",
+  "COUNTERPARTY": "CP-MERIDIAN-RE", "LEGAL_ENTITY": "LE-NY", "PORTFOLIO": "BOOK-RATES-3", "TRADER_ID": "TRDR-ASHAH",
+  "TRADE_DATE": "2025-07-25", "START_DATE": "2025-07-28", "MATURITY_DATE": "2032-06-25", "CURRENCY": "AUD",
+  "DELIVERY_VERSUS_PAYMENT": "NO", "INTERNAL_EXTERNAL_CODE": "External", "TRANSIT": "00107",
+  "LEGS": [ { "LEG_ID": 1, "LEG_TYPE": "FIXED", "LEG_ECONOMIC_TYPE": "Receive", "NOTIONAL": 242000000.0,
+              "DISCOUNT_INDEX": "CRV-AUD-OIS", "RESET_CONVENTION": "Annual", "INDEX": { "NAME": "", "GROUP": "", "SUB_GROUP": "" },
+              "CASH_FLOWS": [ { "FLOW_ID": 20000001001, "NOTIONAL": 242000000.0, "RATE": 0.040829, "START_DATE": "2025-07-28",
+                                "END_DATE": "2026-06-25", "PAYMENT_DATE": "2026-06-29", "RESETS": [] }, … ] },
+            { "LEG_ID": 2, "LEG_TYPE": "FLOAT", "LEG_ECONOMIC_TYPE": "Pay", "INDEX": { "NAME": "AONIA", … },
+              "CASH_FLOWS": [ { …, "RESETS": [ { "RESET_ID": "R-1", "RESET_DATE": "2025-07-28", "RATE": 0.035376 }, … ] }, … ] } ],
+  "EVENTS": [ { "LEG_ID": "", "EVENT_TYPE": "BOOKED", "EVENT_DATE": "2025-07-25", "AMOUNT": "" }, …,
+              { "LEG_ID": 1, "EVENT_TYPE": "CASH_SETTLEMENT", "PAYMENT_TYPE": "Interest", "EVENT_DATE": "2026-06-29", "AMOUNT": 8987301.85 }, … ]
 }
 ```
 
@@ -245,25 +242,25 @@ domain: rates                    # grouping in the workbench and the catalogue (
 # match, the one with the highest priority wins. No match at all: the view is built by inference.
 match:
   kind: trade
-  where: "$.productType == 'IRS_FIXFLOAT' && size($.legs) == 2 && $.status != 'Matured'"
+  where: "$.PRODUCT_TYPE == 'IRS_FIXFLOAT' && size($.LEGS) == 2 && $.TRADE_STATUS != 'MATURED'"
   priority: 50                   # above the trading pack's irs-fixfloat (10), so this one would win
 
 # ---- The title line:  [pill]  ID  with  <counterparty> -------------------------------------------------------
 title:
-  pill: "${$.assetClass} · ${$.productName}"      # a template: text with ${expression} parts
-  id: $.tradeId                                   # a path: the big identifier
-  with: "link($.counterparty.id, 'counterparty', $.counterparty.name)"   # link(id, kind, text) is navigable
+  pill: "${$.PRODUCT_GROUP} · ${$.PRODUCT_SUB_TYPE}"   # a template: text with ${expression} parts
+  id: $.TRADE_ID                                       # a path: the big identifier
+  with: "link($.COUNTERPARTY, 'counterparty')"         # link(id, kind, text?) is navigable
 
 # ---- The strip: up to 8 headline figures under the title ----------------------------------------------------
 strip:
-  - { bind: $.notional, fmt: amount0 }             # no label: taken from the taxonomy, else the field name ("Notional")
-  - { label: Currency, bind: $.currency }
-  - { label: Direction, bind: $.direction }
-  - { label: Fixed rate, bind: $.terms.fixedRate, fmt: pct4 }                 # 0.040829 shows as 4.0829%
-  - { label: Maturity, bind: $.maturityDate, fmt: date }
-  - { label: MTM (USD), bind: $.mtm, fmt: signed0, tone: sign, emphasis: true }  # signed, coloured by sign, highlighted
-  - { label: 1-day P&L, bind: $.pnl1d, fmt: signed0, tone: sign }
-  - { label: Book, bind: "link($.book, 'book')" }  # a link in the strip opens the book
+  - { bind: "$.LEGS[0].NOTIONAL", fmt: amount0 }   # no label: taken from the glossary, else the field name ("Notional")
+  - { label: Currency, bind: $.CURRENCY }
+  - { label: Side, bind: "$.BUY_SELL_CODE == 'B' ? 'Buy' : 'Sell'" }                # condition ? then : else
+  - { label: Fixed rate, bind: $.PRICE, fmt: pct4 }                                  # 0.040829 shows as 4.0829%
+  - { label: Maturity, bind: $.MATURITY_DATE, fmt: date }
+  - { label: Status, bind: "$.TRADE_STATUS + ' v' + $.TRADE_VERSION", tone: status, emphasis: true }   # coloured by meaning, highlighted
+  - { label: Source, bind: $.SOURCE_SYSTEM }
+  - { label: Portfolio, bind: "link($.PORTFOLIO, 'book')" }  # a link in the strip opens the book
 
 # ---- Panels: the body of the view, in order. area: right puts one in the side column ------------------------
 panels:
@@ -274,87 +271,82 @@ panels:
     title: Terms
     key: F2                                      # F2 jumps here (keys are unique across the Sutra)
     code: TRM                                    # a short tag at the right of the panel header
-    description: The economic terms, as agreed at trade date.   # plain text, shown in the About this page drawer, never evaluated
+    description: The economic terms, as booked.   # plain text, shown in the About this page drawer, never evaluated
     columns:
-      - { label: Trade date, bind: $.tradeDate, fmt: date }
-      - { label: Effective, bind: $.effectiveDate, fmt: date }
-      - { label: Day count, bind: $.terms.dayCount }
-      - { label: Pay frequency, bind: $.terms.payFrequency }
-      - { label: Discount curve, bind: "link($.discountCurve, 'ir-curve')" }   # links work in any cell
-      - { label: Net PV of the legs, bind: "sum($.legs, 'pv')", fmt: signed0, tone: sign }   # sum(list, 'field') adds a field up
-      - { label: Flows left, bind: "size($.schedule[?@.status != 'Settled']) + ' of ' + size($.schedule)" }  # size() counts
+      - { label: Trade date, bind: $.TRADE_DATE, fmt: date }
+      - { label: Start, bind: $.START_DATE, fmt: date }
+      - { label: Floating index, bind: "$.LEGS[?@.LEG_TYPE == 'FLOAT'][0].INDEX.NAME" }       # a filter: the floating leg, wherever it sits
+      - { label: Discount curve, bind: "link($.LEGS[0].DISCOUNT_INDEX, 'ir-curve')" }          # links work in any cell
+      - { label: Legs' notional, bind: "sum($.LEGS, 'NOTIONAL')", fmt: amount0 }              # sum(list, 'field') adds a field up
+      - { label: Flows, bind: "size(flatten($.LEGS[*].CASH_FLOWS))" }                         # flatten: every leg's flows as one list
+      - { label: Resets of leg 2, bind: "size(flatten($.LEGS[1].CASH_FLOWS[*].RESETS))" }   # the floating leg's fixings, every period's
 
   # tabs: one tab per element of each; inside, @ is that element. layout: columns shows them side by side.
   - id: legs
     kind: tabs
     title: Legs
     key: F3
-    each: $.legs
+    each: $.LEGS
     layout: columns
-    tabTitle: "'Leg ' + @.leg + ' · ' + @.label"   # + joins text
+    tabTitle: "'Leg ' + @.LEG_ID + ' · ' + @.LEG_ECONOMIC_TYPE + ' ' + @.LEG_TYPE"   # + joins text
     body:                                          # the panel drawn for each element
       kind: kv
       columns:
-        - { label: Pay or receive, bind: "@.payer ? 'Pay' : 'Receive'" }               # condition ? then : else
-        - { label: Rate, bind: "@.type == 'FIXED' ? fmt(@.rate, 'pct4') : @.index + ' + ' + fmt(@.spread, 'pct4')" }
-        - { label: Notional, bind: "@.notional", fmt: amount0 }
-        - { label: Frequency, bind: "@.frequency" }
-        - { label: Calendar, bind: "@.calendar" }
-        - { label: PV, bind: "@.pv", fmt: signed0, tone: sign }
+        - { label: Index, bind: "nonblank(@.INDEX.NAME, 'Fixed')" }              # nonblank: the first value that is not empty text
+        - { label: Notional, bind: "@.NOTIONAL", fmt: amount0 }
+        - { label: Frequency, bind: "@.RESET_CONVENTION" }
+        - { label: Calendar, bind: "@.RESET_HOLIDAY_SCHEDULE" }
+        - { label: Periods, bind: "size(@.CASH_FLOWS)" }
 
-  # table: one row per element of rows (here the first leg's cashflows), with a total row.
+  # table: one row per element of rows (here the first leg's cash flows), with a total row.
   - id: cashflows
     kind: table
-    title: "Cashflows · ${$.legs[0].label}"      # templates work in titles too
+    title: "Cash flows · leg ${$.LEGS[0].LEG_ID} (${$.LEGS[0].LEG_TYPE})"   # templates work in titles too
     key: F4
-    rows: $.legs[0].cashflows
+    rows: $.LEGS[0].CASH_FLOWS
     limit: 6                                     # show six rows, then "N more"
-    moreLabel: "(size($.legs[0].cashflows) - 6) + ' later cashflows'"
+    moreLabel: "(size($.LEGS[0].CASH_FLOWS) - 6) + ' later flows'"
     totalLabel: Total
     columns:
-      - { label: "#", bind: "@.n" }
-      - { label: Pay date, bind: "@.payDate", fmt: date }
-      - { label: Rate, bind: "@.rate", fmt: pct4 }
-      - { label: Amount, bind: "@.amount", fmt: signed2, tone: sign, total: true }   # total: summed into the total row
-      - { label: DF, bind: "@.df", fmt: df4 }
-      - { label: PV, bind: "@.pv", fmt: signed2, tone: sign, total: true }
-      - { label: Status, bind: "@.status", tone: status }
+      - { label: Flow, bind: "@.FLOW_ID" }
+      - { label: Start, bind: "@.START_DATE", fmt: date }
+      - { label: Payment, bind: "@.PAYMENT_DATE", fmt: date }
+      - { label: Rate, bind: "@.RATE", fmt: pct4 }
+      - { label: Notional, bind: "@.NOTIONAL", fmt: amount0, total: true }   # total: summed into the total row
 
   # ladder: a dated list with one highlighted row; highlight is evaluated per row.
   - id: schedule
     kind: ladder
-    title: Payment schedule (both legs)
-    rows: "$.schedule[?@.status != 'Settled']"   # a filter: [?condition] keeps matching elements
-    highlight: "#index == 0"                     # #index is the row's position: highlight the next payment
+    title: Payments to come (both legs)
+    rows: "$.EVENTS[?nonblank(@.AMOUNT) && @.EVENT_DATE > '2026-09-30']"   # a filter: [?condition] keeps matching elements
+    highlight: "#index == 0"                     # #index is the row's position: highlight the first
     columns:
-      - { label: Pay date, bind: "@.payDate", fmt: date }
-      - { label: Leg, bind: "@.leg == 1 ? 'Fixed' : 'Float'" }
-      - { label: Amount, bind: "@.amount", fmt: signed2, tone: sign }
+      - { label: Date, bind: "@.EVENT_DATE", fmt: date }
+      - { label: Leg, bind: "@.LEG_ID == 1 ? 'Fixed' : 'Float'" }
+      - { label: Amount, bind: "@.AMOUNT", fmt: signed2, tone: sign }
 
-  # status: operational fields, coloured by meaning (Confirmed, Cleared, Accepted…).
+  # status: operational fields, coloured by meaning (AMENDED, VALIDATED, CANCELLED…).
   - id: operations
     kind: status
-    title: Confirmation, clearing and reporting
+    title: Booking
     code: OPS
     fields:
-      - { label: Confirmation, bind: $.confirmation.status, tone: status }
-      - { label: Matched on, bind: "$.confirmation.method + ', ' + $.confirmation.matched" }
-      - { label: Clearing, bind: "$.clearing.status + ' at ' + $.clearing.ccp", tone: status }
-      - { label: Reporting, bind: $.regulatory.reportingStatus, tone: status }
-      - { label: UTI, bind: $.regulatory.uti }
-      - { label: Clearing obligation, bind: "$.regulatory.clearingObligation ? 'Yes' : 'No'" }
+      - { label: Status, bind: $.TRADE_STATUS, tone: status }
+      - { label: Last action, bind: "$.TRADE_ACTION + ' (version ' + $.TRADE_VERSION + ')'" }
+      - { label: Source system, bind: $.SOURCE_SYSTEM }
+      - { label: Legal entity, bind: "link($.LEGAL_ENTITY, 'legal-entity')" }
+      - { label: Transit, bind: $.TRANSIT }
+      - { label: Delivery versus payment, bind: $.DELIVERY_VERSUS_PAYMENT }
 
-  # ladder over nested data: the lifecycle events, newest last.
+  # ladder over nested data: the deal's own events (no leg), the latest last.
   - id: lifecycle
     kind: ladder
-    title: "Lifecycle (${size($.lifecycle.events)} events)"
-    rows: $.lifecycle.events
-    highlight: "#index == size($.lifecycle.events) - 1"   # the latest event
+    title: "Lifecycle (${size($.EVENTS[?!nonblank(@.LEG_ID)])} events)"
+    rows: "$.EVENTS[?!nonblank(@.LEG_ID)]"
+    highlight: "#index == size($.EVENTS[?!nonblank(@.LEG_ID)]) - 1"   # the latest event
     columns:
-      - { label: Version, bind: "@.version" }
-      - { label: Event, bind: "@.event" }
-      - { label: When, bind: "@.at" }
-      - { label: By, bind: "@.by" }
+      - { label: Event, bind: "@.EVENT_TYPE" }
+      - { label: Date, bind: "@.EVENT_DATE", fmt: date }
 
   # markdown: static notes for the people who read this view. The text is shown as written (plain text,
   # one paragraph); ${...} parts are evaluated, Markdown syntax is not rendered inside the panel.
@@ -362,23 +354,24 @@ panels:
     kind: markdown
     title: Reading this view
     text: |
-      MTM and DV01 are in USD whatever the trade currency (${$.currency} here). The payment schedule lists
-      the unsettled flows of both legs; the highlighted row is the next payment.
+      Amounts are in ${$.CURRENCY}. A cash event is signed from the bank's side: negative is paid, positive received.
+      The trade's value is the risk engine's (market-risk's trade valuation, TVAL ${$.TRADE_ID}).
 
   # provenance: how the view was built (Sutra and version, source, generation, business date).
   - { id: built, kind: provenance, title: How this view was built }
 
   # ---- The side column -----------------------------------------------------------------------------------
 
-  # line: a curve from this document's own data. x and y name fields of each row.
+  # line: a curve from this document's own data. x and y name fields of each row; step holds each value to the next point.
   - id: pnl
     kind: line
-    title: Daily P&L (last 20 business days)
+    title: Notional profile, leg 1
     area: right
-    rows: $.pnlHistory
-    x: date
-    y: pnl
-    fmt: signed0
+    rows: $.LEGS[0].CASH_FLOWS
+    x: START_DATE
+    y: NOTIONAL
+    step: true
+    fmt: amount0
 
   # line from ANOTHER entity: source reads the discount curve's own document and plots its points.
   - id: curve
@@ -387,40 +380,38 @@ panels:
     code: CRV
     key: F5
     area: right
-    source: "link($.discountCurve, 'ir-curve')"
+    source: "link($.LEGS[0].DISCOUNT_INDEX, 'ir-curve')"
     rows: $.points                               # with a source, $ is the curve's document, not the trade
     x: tenor
     y: zeroRate
     fmt: price2
     unit: "%"
 
-  # hbar: horizontal bars, one per row: label and value name fields of each row.
+  # hbar: horizontal bars, one per row: label and value name fields of each row; group() sums a field by another.
   - id: dv01
     kind: hbar
-    title: DV01 by bucket (USD)
-    code: SENS
+    title: Payments by year
+    code: PAY
     area: right
-    rows: $.sensitivities
-    label: bucket
-    value: dv01
+    rows: "group($.EVENTS[?nonblank(@.AMOUNT)], 'EVENT_DATE', 'AMOUNT', 'year')"
     fmt: signed0
     tone: sign
 
   # gauge: one value against a maximum (a limit, a budget). The text is value / max in fmt (pct0 by default).
   - id: dv01use
     kind: gauge
-    title: DV01 against the 250k desk guideline
+    title: Notional against a 500m counterparty guideline
     area: right
-    value: "abs($.risk.dv01)"
-    max: "250000"
-    label: DV01 used
+    value: "$.LEGS[0].NOTIONAL"
+    max: "500000000"
+    label: Guideline used
 
   # links: every entity this document refers to, resolved from the reference catalogue, with badges.
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 
 # ---- Function keys beyond the panel keys ------------------------------------------------------------------
 keys:
-  F7: "link($.nettingSet, 'netting-set')"        # F7 opens the netting set
+  F7: "link($.COUNTERPARTY, 'counterparty-trades')"   # F7 opens every trade with the counterparty, from every source system
   F8: impact                                     # F8: what depends on this trade
   F9: raw                                        # F9: the raw JSON (field masks for roles without raw)
 
@@ -440,19 +431,21 @@ What each part does when the view is built:
 | `rows`, `each` | Evaluated to a list; the panel's columns are evaluated once per element with `@` set to it. |
 | `source` | Follows the link and reads the other entity (the curve) through the same sources and business date; any panel kind that reads data takes it. A source the viewer may not open shows "no access". |
 | `key`, `keys` | Become the function-key bar; a panel key scrolls to the panel, a link key opens the entity. |
-| Missing data | A path that is absent evaluates to nothing: the cell is empty, and a panel with no data says so. |
+| Missing data | A path that is absent evaluates to nothing, and an extract's empty text is nothing to `nonblank`: the cell shows a dash or nothing, and a panel with no data says so. |
 
 You should see, previewing this block against `MX-20000001` in the workbench:
 
 | Where | Shows |
 |---|---|
-| Title | `[Rates · Interest rate swap (fixed/float)] MX-20000001 with Meridian Reinsurance Ltd` (the name is a link to `CPTY CP-MERIDIAN-RE`) |
-| Strip | `Notional 242,000,000`, `Fixed rate 4.0829%`, `MTM (USD) +1,875,863` (highlighted, positive colour) … `Book BOOK-RATES-3` (a link) |
-| Terms | `Net PV of the legs +1,875,863`, `Flows left 29 of 35` |
-| Cashflows | six of the seven fixed cashflows, a *Total* row, and `1 later cashflows` under it |
-| Payment schedule | 29 unsettled flows, the first (`2026-12-30`, Float, `−2,253,619.99`) highlighted |
-| DV01 against the 250k desk guideline | a bar at 62% with the text `62%` (155,245 / 250,000) |
-| Function keys | `F2 Terms`, `F3 Legs`, `F4 Cashflows`, `F5 Discount curve`, `F7 Netting set`, `F8 Impact`, `F9 Raw JSON` |
+| Title | `[Rates · Interest rate swap (fixed/float)] MX-20000001 with CP-MERIDIAN-RE` (a link to `CPTY CP-MERIDIAN-RE`) |
+| Strip | `Notional 242,000,000`, `Currency AUD`, `Side Sell`, `Fixed rate 4.0829%`, `Status AMENDED v2` (highlighted) … `Portfolio BOOK-RATES-3` (a link) |
+| Terms | `Floating index AONIA`, `Discount curve CRV-AUD-OIS` (a link), `Legs' notional 484,000,000`, `Flows 35`, `Resets of leg 2 90` |
+| Legs | two columns: `Leg 1 · Receive FIXED` (Index *Fixed*, Periods *7*) and `Leg 2 · Pay FLOAT` (Index *AONIA*, Periods *28*) |
+| Cash flows | six of the seven fixed periods, a *Total* row, and `1 later flows` under it |
+| Payments to come | the 29 cash events after the samples' date, the first highlighted |
+| Lifecycle | `BOOKED`, `CONFIRMED`, `CLEARED`, `AMENDED`, `CASH_SETTLED`, `NEXT_PAYMENT`, `MATURITY`, the last highlighted |
+| Notional against a 500m counterparty guideline | a bar at 48% (242,000,000 / 500,000,000) |
+| Function keys | `F2 Terms`, `F3 Legs`, `F4 Cash flows`, `F5 Discount curve`, `F7 Counterparty trades`, `F8 Impact`, `F9 Raw JSON` |
 
 ## Top level
 
