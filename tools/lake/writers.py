@@ -97,12 +97,28 @@ def deltalake_available() -> bool:
         return False
 
 
+def java_command(jar: str | None, java: str | None) -> list[str] | None:
+    """How to start Drishti's writer: the server's exec jar (``java -jar J lake ...``), or for development a class path in
+    DRISHTI_LAKE_CLASSPATH (``java -cp CP com.ash.drishti.deltalake.write.LakeCli lake ...``)."""
+    java_bin = find_java(java)
+    if not java_bin:
+        return None
+    heap = "-Xmx" + os.environ.get("DRISHTI_LAKE_HEAP", "1g")
+    cp = os.environ.get("DRISHTI_LAKE_CLASSPATH")
+    if cp and not jar:
+        return [java_bin, heap, "-cp", cp, "com.ash.drishti.deltalake.write.LakeCli"]
+    j = find_jar(jar)
+    if j and jar_has_writer(j):
+        return [java_bin, heap, "-jar", j]
+    return None
+
+
 def choose(engine: str, jar: str | None = None, java: str | None = None) -> tuple[str, str]:
     """(engine, why): auto is Drishti's writer when a jar with it is found, else deltalake when it is installed."""
     if engine in ("auto", "drishti"):
-        j = find_jar(jar)
-        if j and jar_has_writer(j) and find_java(java):
-            return "drishti", f"Drishti's Java writer in {os.path.basename(j)}"
+        cmd = java_command(jar, java)
+        if cmd:
+            return "drishti", "Drishti's Java writer in " + (os.path.basename(cmd[-1]) if cmd[-2] == "-jar" else "DRISHTI_LAKE_CLASSPATH")
         if engine == "drishti":
             raise WriteError("--engine drishti needs the server's exec jar with the lake writer (--jar, DRISHTI_JAR or a built "
                              "drishti-server/target/drishti-server-*-exec.jar) and Java 21")
@@ -236,8 +252,8 @@ def write_deltalake(t: Table, by_day: dict, progress=None) -> dict:
 
 def write_drishti(t: Table, by_day: dict, workdir: pathlib.Path, jar: str | None = None, java: str | None = None, progress=None) -> dict:
     check_layout(t)
-    jar_path, java_bin = find_jar(jar), find_java(java)
-    if not jar_path or not java_bin:
+    base = java_command(jar, java)
+    if not base:
         raise WriteError("Drishti's writer needs the server's exec jar and Java 21")
     if t.sort:                                          # the Java writer reads each part's file as it is: sort the small ones here
         for parts in by_day.values():
@@ -263,8 +279,7 @@ def write_drishti(t: Table, by_day: dict, workdir: pathlib.Path, jar: str | None
     }
     mf = workdir / "manifest.json"
     mf.write_text(json.dumps(manifest), encoding="utf-8")
-    heap = os.environ.get("DRISHTI_LAKE_HEAP", "1g")
-    cmd = [java_bin, f"-Xmx{heap}", "-jar", jar_path, "lake", "write", "--manifest", str(mf)]
+    cmd = [*base, "lake", "write", "--manifest", str(mf)]
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     result: dict = {}
     total = len(manifest["parts"])

@@ -133,7 +133,7 @@ class BuildTest(unittest.TestCase):
     def test_write_partitions_promoted_columns_and_hive_folders(self):
         code, s = build.run(self.base(), quiet)
         self.assertEqual(code, build.EXIT_OK, s.get("error"))
-        self.assertEqual(s["engine"], "deltalake")
+        self.assertEqual(s["engine"], self.base().engine)
         t = self.table()
         self.assertEqual(t.metadata().partition_columns, ["business_date", "PRODUCT_TYPE"])
         rows = t.to_pyarrow_table().to_pylist()
@@ -236,6 +236,24 @@ class BuildTest(unittest.TestCase):
         self.assertNotIn("drk_secret", json.dumps(s))
         code, s = build.run(self.base(signal="http://127.0.0.1:9", pack_name="synth-book"), quiet)
         self.assertEqual(code, build.EXIT_PARTIAL)              # written, but the server was not told
+
+
+@unittest.skipUnless(__import__("writers").java_command(None, None), "Drishti's writer: build the server jar or set DRISHTI_LAKE_CLASSPATH")
+class DrishtiEngineTest(BuildTest):
+    """The same runs through Drishti's Java writer; deltalake reads what it wrote (the two engines agree on the table)."""
+
+    def base(self, **kw):
+        return super().base(**{"engine": "drishti", **kw})
+
+    def test_write_partitions_promoted_columns_and_hive_folders(self):
+        super().test_write_partitions_promoted_columns_and_hive_folders()
+        self.assertEqual(self.table().version(), 0)                    # one commit for the whole table
+
+    def test_as_of_and_batches(self):
+        code, s = build.run(self.base(date=None, as_of="2026-09-30", partition_by=None, batch_rows=40), quiet)
+        self.assertEqual(code, 0, s.get("error"))
+        self.assertEqual(s["commit"]["commits"], 1)
+        self.assertEqual(len(self.table().to_pyarrow_table()), 300)
 
 
 class ScanTest(unittest.TestCase):

@@ -38,6 +38,11 @@ public final class LakeCli {
 
     private LakeCli() {}
 
+    /** {@code java -cp <class path> com.ash.drishti.deltalake.write.LakeCli lake write --manifest M} (DRISHTI_LAKE_CLASSPATH). */
+    public static void main(String[] args) {
+        System.exit(run(args, System.out, System.err));
+    }
+
     /** True when the command line is this tool's: {@code lake ...}. */
     public static boolean isCli(String[] args) {
         return args.length > 0 && "lake".equals(args[0]);
