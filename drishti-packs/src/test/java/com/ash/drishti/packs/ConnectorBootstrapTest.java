@@ -55,6 +55,36 @@ class ConnectorBootstrapTest {
     }
 
     @Test
+    void aChangedTemplateRegeneratesAnUneditedFileAndFlagsAnEditedOne(@TempDir Path dir) throws Exception {
+        ConnectorFiles files = new ConnectorFiles(dir.resolve("config/connectors"));
+        ConnectorBootstrap.run(packs(dir, RISK), files, null, true);
+        String renamed = RISK.replace("kinds: [var]\nroutes:\n  var:", "kinds: [var2]\nroutes:\n  var2:").replace("    kinds: [var]", "    kinds: [var2]");
+        ConnectorBootstrap.Result r = ConnectorBootstrap.run(packs(dir, renamed), files, null, true);
+        assertThat(r.regenerated()).containsExactly("risk-lake");
+        assertThat(files.read("risk-lake").kinds()).containsExactly("var2");
+        assertThat(ConnectorBootstrap.run(packs(dir, renamed), files, null, true).regenerated()).isEmpty();
+
+        files.write("risk-lake", files.text("risk-lake") + "# mine\n");
+        String third = renamed.replace("var2", "var3");
+        ConnectorBootstrap.Result e = ConnectorBootstrap.run(packs(dir, third), files, null, true);
+        assertThat(e.regenerated()).isEmpty();
+        assertThat(e.changed()).hasSize(1);
+        assertThat(e.changed().get(0).message()).contains("var2 \u2192 var3");
+        assertThat(files.read("risk-lake").kinds()).containsExactly("var2");
+    }
+
+    @Test
+    void aFileGeneratedBeforeMarkersExistedIsRegeneratedWhenOnlyKindsDiffer(@TempDir Path dir) throws Exception {
+        ConnectorFiles files = new ConnectorFiles(dir.resolve("config/connectors"));
+        List<Pack> old = packs(dir, RISK);
+        ConnectorBootstrap.run(old, files, null, true);
+        java.nio.file.Files.delete(dir.resolve("config/connectors/.generated/risk-lake.properties"));      // as written by an older server
+        String renamed = RISK.replace("kinds: [var]\nroutes:\n  var:", "kinds: [var2]\nroutes:\n  var2:").replace("    kinds: [var]", "    kinds: [var2]");
+        assertThat(ConnectorBootstrap.run(packs(dir, renamed), files, null, true).regenerated()).containsExactly("risk-lake");
+        assertThat(files.read("risk-lake").kinds()).containsExactly("var2");
+    }
+
+    @Test
     void generationCanBeSwitchedOff(@TempDir Path dir) throws Exception {
         ConnectorFiles files = new ConnectorFiles(dir.resolve("c"));
         assertThat(ConnectorBootstrap.run(packs(dir, RISK), files, null, false).generated()).isEmpty();

@@ -28,7 +28,12 @@ built and shown without any real data:
     python3 tools/packgen/comswap_synth.py --deals 5000 --jsonl --out /tmp/comswap-5000.jsonl   # one deal per line
 
 Deterministic: the same ``--seed`` and ``--deals`` give the same file. ``--profile sparse`` blanks what such extracts often leave blank
-(notionals 0, rates and event details empty); ``rich`` fills them; ``mixed`` (the default) does both, deal by deal.
+(rates, labels and event details empty); ``rich`` fills them; ``mixed`` (the default) does both, deal by deal.
+
+Amounts are consistent in every profile (unlike the real extract, whose notionals are all 0): a flow's ``NOTIONAL`` is the quantity of its
+period times a plausible price per price unit of its index; a leg's ``NOTIONAL`` is the sum of its flows' notionals; a fixed leg's ``RATE``
+and ``STRIKE_PRICE`` are its fixed price, a reset's ``RATE`` sits near the flow's price; an event's ``AMOUNT`` is a share of the flow or
+leg it belongs to (a settlement, a fee, a fixing difference), dated by that flow.
 """
 from __future__ import annotations
 
@@ -110,55 +115,74 @@ class Generator:
                         "START_DATE": d.isoformat(), "END_DATE": (d if averaging else flow_end).isoformat(),
                         "RESET_DATE": d.isoformat() if rich else "", "ACCRUAL_START_DATE": d.isoformat() if rich and averaging else "",
                         "ACCRUAL_END_DATE": d.isoformat() if rich and averaging else "",
-                        "RATE": f"{price * self.rng.uniform(0.94, 1.06):.4f}" if fixed else ""})
+                        "RATE": f"{price * self.rng.uniform(0.985, 1.015):.4f}" if fixed else ""})
         return out
 
-    def flows(self, start: dt.date, months: int, leg_type: str, qty: float, price: float, spread: float, averaging: bool, rich: bool) -> list:
-        out, d = [], start
+    def flows(self, start: dt.date, months: int, leg_type: str, qty: float, price: float, spread: float, averaging: bool, rich: bool,
+              fee: bool = False) -> list:
+        """One flow per month. The notional of a flow is its quantity times its price; a floating leg's price drifts a little month to month."""
+        out, d, p = [], start, price
         for _ in range(months):
             end = _month_end(d)
             pay = _days(end, self.rng.choice([5, 7, 10, 12]))
             fixed_leg = leg_type == "Fixed"
+            if not fixed_leg:
+                p = max(price * 0.5, p * self.rng.uniform(0.985, 1.015))
+            flow_price = price if fixed_leg else p + spread
+            notional = round(price if fee else qty * flow_price, 2)               # a fee is an amount; every other flow is quantity x price
             out.append({"FLOW_ID": self.flow_id, "FLOW_TYPE": ("Fixed price" if fixed_leg else "Floating average") if rich else "",
-                        "NOTIONAL": qty if rich else 0.0,
-                        "RATE": f"{price:.4f}" if (rich and fixed_leg) else "",
+                        "NOTIONAL": notional,
+                        "RATE": f"{price:.4f}" if (rich and fixed_leg and not fee) else "",
                         "FLOAT_SPREAD": f"{spread:.4f}" if (rich and not fixed_leg and spread) else "",
                         "START_DATE": d.isoformat(), "END_DATE": end.isoformat(), "PAYMENT_DATE": pay.isoformat(),
                         "RATE_DETERMINATION_DATE": end.isoformat(), "FIRST_RESET_DATE": d.isoformat(),
                         "LAST_RESET_DATE": end.isoformat() if rich else "",
-                        "STRIKE_PRICE": round(price, 4) if fixed_leg else 0.0,
-                        "RESETS": [] if fixed_leg else self.resets(d, end, averaging, rich, price)})
+                        "STRIKE_PRICE": round(price, 4) if (fixed_leg and not fee) else 0.0,
+                        "RESETS": [] if fixed_leg else self.resets(d, end, averaging, rich, p)})
             self.flow_id += 1
             d = _days(end, 1)
         return out
 
     def leg(self, leg_id: int, leg_type: str, idx: tuple, start: dt.date, months: int, qty: float, averaging: bool, rich: bool,
-            economic: str, location: str = "") -> dict:
-        name, group, sub, unit, ccy, price, _ = idx
-        price = round(price * self.rng.uniform(0.85, 1.15), 4)
+            economic: str, location: str = "", fee: bool = False, price: float | None = None) -> dict:
+        name, group, sub, unit, ccy, base_price, _ = idx
+        if price is None:
+            price = round(base_price * self.rng.uniform(0.85, 1.15), 4)
+        if fee:
+            price = float(self.rng.choice([2_500, 5_000, 7_500, 10_000, 25_000]))      # the fee, an amount in the currency
         spread = round(self.rng.choice([0.0, 0.25, 0.5, -0.35, 1.1]) * (price / 80.0), 4) if leg_type == "Float" else 0.0
         floating = leg_type == "Float"
+        flows = self.flows(start, months, leg_type, qty, price, spread, averaging, rich, fee)
         return {"LEG_ID": leg_id, "LEG_TYPE": leg_type, "LEG_ECONOMIC_TYPE": economic if rich else "", "CURRENCY": ccy, "LEASE_CURRENCY": ccy,
-                "FLOAT_SPREAD": f"{spread:.4f}" if (rich and floating and spread) else "", "PRICE_UNIT": unit, "NOTIONAL": qty if rich else 0.0,
+                "FLOAT_SPREAD": f"{spread:.4f}" if (rich and floating and spread) else "", "PRICE_UNIT": unit, "NOTIONAL": round(sum(f["NOTIONAL"] for f in flows), 2),
                 "DISCOUNT_INDEX": f"DISC-{ccy}" if rich else "", "SPOT_CONVERSION_FACTOR": "1" if rich else "",
                 "PHYSICAL_LOCATION_NAME": location, "INDEX_LOCATION_NAME": location if floating else "",
                 "RESET_FIXING_SHIFT": "0" if (rich and floating) else "", "RESET_HOLIDAY_SCHEDULE": None,
                 "RESET_CONVENTION": ("Daily average" if averaging else "Monthly") if (rich and floating) else "",
                 "EMISSIONS_VINTAGE_MIN": "", "EMISSIONS_VINTAGE_MAX": "", "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
                 "SETTLEMENT_TYPE": self.rng.choice(["Cash", "Cash", "Cash", "Physical"]), "NY_CURVE_FLAG": "", "NUM_RRDC_REC": "", "NUM_PROFILE_REC": "",
-                "DAILY_VOLUME": str(int(qty / 21)) if rich else "",
+                "DAILY_VOLUME": str(int(qty / 21)) if rich and not fee else "",
                 "INDEX": {"NAME": name if floating else "", "GROUP": group if (rich and floating) else "", "SUB_GROUP": sub if (rich and floating) else ""},
-                "CASH_FLOWS": self.flows(start, months, leg_type, qty, price, spread, averaging, rich)}
+                "CASH_FLOWS": flows}
 
     def events(self, legs: list, trade_date: dt.date, rich: bool) -> list:
+        """Events belong to a leg: a settlement is a share of one of its flows (dated by that flow's payment date); a fee is a few basis
+        points of the leg's notional; a fixing difference is a small share of one flow."""
         out = []
         for leg in legs:
+            flows = leg["CASH_FLOWS"]
             for n in range(1, self.rng.randint(1, 4) + 1):
                 etype, ptype = self.rng.choice(EVENT_TYPES)
-                when = _days(trade_date, 7 * n + self.rng.randint(0, 20))
+                flow = self.rng.choice(flows)
+                if etype == "Payment":
+                    amount, when = flow["NOTIONAL"] * self.rng.uniform(0.01, 0.05), dt.date.fromisoformat(flow["PAYMENT_DATE"])
+                elif etype == "Reset":
+                    amount, when = flow["NOTIONAL"] * self.rng.uniform(0.002, 0.02), dt.date.fromisoformat(flow["RATE_DETERMINATION_DATE"])
+                else:                                                              # Amend / Novate: a fee
+                    amount, when = leg["NOTIONAL"] * self.rng.uniform(0.0002, 0.001), _days(trade_date, 7 * n + self.rng.randint(0, 20))
                 out.append({"LEG_ID": leg["LEG_ID"], "EVENT_ID": self.event_id if rich else "", "EVENT_NUMBER": n if rich else "",
                             "EVENT_TYPE": etype if rich else "", "PAYMENT_TYPE": ptype if rich else "", "EVENT_DATE": when.isoformat() if rich else "",
-                            "AMOUNT": round(self.rng.uniform(500, 250_000), 2) if rich else "", "CURRENCY": leg["CURRENCY"] if rich else "",
+                            "AMOUNT": round(amount, 2) if rich else "", "CURRENCY": leg["CURRENCY"] if rich else "",
                             "SEQUENCE_NUMBER": n if rich else "", "VAULT_LOCATION_ALLOCATION": "", "NY_CURVE_FLAG": ""})
                 self.event_id += 1
         return out
@@ -186,7 +210,8 @@ class Generator:
             if legs_n >= 3:
                 legs.append(self.leg(3, "Float", idx, start, min(months, 3), qty, False, rich, "Basis", loc))
             if legs_n == 4:
-                legs.append(self.leg(4, "Fixed", idx, start, 1, 1.0, False, rich, "Fee"))
+                legs.append(self.leg(4, "Fixed", idx, start, 1, 1.0, False, rich, "Fee", fee=True))
+        fixed = next((l for l in legs if l["LEG_TYPE"] == "Fixed" and l["LEG_ECONOMIC_TYPE"] != "Fee"), None)
         status = "Matured" if maturity < self.base else _weighted(rng, [s for s in STATUSES if s[0] != "Matured"])
         cpty = rng.choice(COUNTERPARTIES)
         novated = rng.random() < 0.1
@@ -202,7 +227,8 @@ class Generator:
             self.package_left -= 1
         doc = {"SOURCE_SYSTEM": "SYNTH-ETRM", "SOURCE_UPDATE_TIME": "", "TRADE_DATE": trade_date.isoformat(), "INPUT_DATE": "",
                "TRADE_ID": trade_id, "TRADE_STATUS": status, "TRADE_ACTION": "", "TRADE_VERSION": rng.randint(1, 4) if rich else "",
-               "TRANSACTION_ID": str(700_000_000 + n * 7), "PACKAGE_ID": package, "QUANTITY": qty * months, "PRICE": None,
+               "TRANSACTION_ID": str(700_000_000 + n * 7), "PACKAGE_ID": package, "QUANTITY": qty * months,
+               "PRICE": float(fixed["CASH_FLOWS"][0]["STRIKE_PRICE"]) if fixed and rich else None,
                "BUY_SELL_CODE": rng.choice(["Buy", "Sell"]), "PRODUCT_TYPE": "ComSwap", "PRODUCT_SUB_TYPE": SUB_TYPES[legs_n],
                "PRODUCT_GROUP": "", "PRODUCT_SUB_GROUP": "", "OPTION_TYPE": None, "STRIKE_PRICE": None,
                "COUNTERPARTY": cpty, "COUNTERPARTY_UEN": "", "COUNTERPARTY_COUNTRY_OF_RISK": None,
@@ -230,12 +256,13 @@ class Generator:
         return _weighted(self.rng, [("ComSwap", 45), ("ComFut", 20), ("Cash", 17), ("Commodity", 17)])
 
     def simple_leg(self, leg_id: int, leg_type: str, ccy: str, unit: str, qty: float, start: dt.date, flows: int, rich: bool,
-                   index: str = "", lease: bool = True) -> dict:
-        """A leg of a non-swap product: its flows are periods (or one settlement), each with one reset that carries only its dates."""
+                   index: str = "", lease: bool = True, price: float = 1.0, rate: str = "") -> dict:
+        """A leg of a non-swap product: its flows are periods (or one settlement), each with one reset that carries only its dates. A flow's
+        notional is its quantity times ``price`` (1.0 for a leg that is an amount of currency); ``rate`` is a flow's quoted rate, if any."""
         out, d = [], start
         for _ in range(flows):
             end = _month_end(d) if flows > 1 else d
-            out.append({"FLOW_ID": self.flow_id, "FLOW_TYPE": "", "NOTIONAL": qty if rich else 0.0, "RATE": "", "FLOAT_SPREAD": "",
+            out.append({"FLOW_ID": self.flow_id, "FLOW_TYPE": "", "NOTIONAL": round(qty * price, 2), "RATE": rate if rich else "", "FLOAT_SPREAD": "",
                         "START_DATE": d.isoformat(), "END_DATE": end.isoformat(), "PAYMENT_DATE": _days(end, 2).isoformat(),
                         "RATE_DETERMINATION_DATE": end.isoformat(), "FIRST_RESET_DATE": d.isoformat(), "LAST_RESET_DATE": "", "STRIKE_PRICE": 0.0,
                         "RESETS": [{"RESET_ID": "", "ACCRUAL": "", "START_DATE": d.isoformat(), "END_DATE": end.isoformat(), "RESET_DATE": "",
@@ -243,7 +270,7 @@ class Generator:
             self.flow_id += 1
             d = _days(end, 1)
         return {"LEG_ID": leg_id, "LEG_TYPE": leg_type, "LEG_ECONOMIC_TYPE": "", "CURRENCY": ccy, "LEASE_CURRENCY": ccy if lease else "",
-                "FLOAT_SPREAD": "", "PRICE_UNIT": unit, "NOTIONAL": qty if rich else 0.0, "DISCOUNT_INDEX": "", "SPOT_CONVERSION_FACTOR": "",
+                "FLOAT_SPREAD": "", "PRICE_UNIT": unit, "NOTIONAL": round(sum(f["NOTIONAL"] for f in out), 2), "DISCOUNT_INDEX": "", "SPOT_CONVERSION_FACTOR": "",
                 "PHYSICAL_LOCATION_NAME": "", "INDEX_LOCATION_NAME": "", "RESET_FIXING_SHIFT": "", "RESET_HOLIDAY_SCHEDULE": None, "RESET_CONVENTION": "",
                 "EMISSIONS_VINTAGE_MIN": "", "EMISSIONS_VINTAGE_MAX": "", "EMISSIONS_VINTAGE_DELIVERY_TYPE": "", "SETTLEMENT_TYPE": "Cash" if unit == "Currency" else "Physical",
                 "NY_CURVE_FLAG": "", "NUM_RRDC_REC": "", "NUM_PROFILE_REC": "", "DAILY_VOLUME": str(int(qty)) if qty >= 1 else "0",
@@ -264,7 +291,9 @@ class Generator:
             lots = rng.choice([1, 5, 10, 25, 50])
             doc.update({"PRODUCT_SUB_TYPE": "EXCH-FUTURE", "QUANTITY": float(lots * 1000), "CURRENCY": idx[4],
                         "MATURITY_DATE": _month_end(start).isoformat()})
-            doc["LEGS"] = [self.simple_leg(1, "Float", idx[4], idx[3], float(lots * 1000), _month_end(start), 1, rich, idx[0])]
+            px = round(idx[5] * rng.uniform(0.9, 1.1), 4)
+            doc["PRICE"] = px if rich else None
+            doc["LEGS"] = [self.simple_leg(1, "Float", idx[4], idx[3], float(lots * 1000), _month_end(start), 1, rich, idx[0], price=px, rate=f"{px:.4f}")]
         elif product == "Cash":                                                      # a cash payment: one leg in currency, one flow
             amount = round(rng.uniform(5_000, 2_000_000), 2)
             doc.update({"PRODUCT_SUB_TYPE": rng.choice(["CASH-PAYMENT", "CASH-FEE"]), "QUANTITY": amount, "MATURITY_DATE": doc["START_DATE"]})
@@ -272,14 +301,18 @@ class Generator:
         elif product == "CallNot":                                                   # a call-notice deposit: interest, then principal
             amount = float(rng.choice([1, 2, 5, 10]) * 1_000_000)
             doc.update({"PRODUCT_SUB_TYPE": "CALL-DEPOSIT", "QUANTITY": amount, "CURRENCY": rng.choice(["USD", "CAD", "EUR"])})
-            doc["LEGS"] = [self.simple_leg(1, "Fixed", doc["CURRENCY"], "Currency", amount, start, rng.choice([1, 2]), rich, lease=rng.random() < 0.6)]
+            doc["LEGS"] = [self.simple_leg(1, "Fixed", doc["CURRENCY"], "Currency", amount, start, rng.choice([1, 2]), rich, lease=rng.random() < 0.6,
+                                           rate=f"{rng.uniform(2.5, 5.5):.4f}")]
         else:                                                                        # a physical commodity deal: delivery leg and payment leg
             idx = rng.choice(INDEXES)
             months = rng.choice([1, 1, 10, 12])
             qty = float(rng.choice([1, 5, 20]) * 1000)
             doc.update({"PRODUCT_SUB_TYPE": rng.choice(["PHYS-COMMODITY", "WARRANT-INVENTORY"]), "QUANTITY": qty * months, "CURRENCY": idx[4]})
-            doc["LEGS"] = [self.simple_leg(1, "Physical", idx[4], idx[3], qty, start, months, rich, idx[0]),
-                           self.simple_leg(2, "Fixed", idx[4], idx[3], qty, start, max(1, months - rng.choice([0, 2])), rich)]
+            px = round(idx[5] * rng.uniform(0.9, 1.1), 4)
+            pay_months = max(1, months - rng.choice([0, 2]))
+            doc["PRICE"] = px if rich else None
+            doc["LEGS"] = [self.simple_leg(1, "Physical", idx[4], idx[3], qty, start, months, rich, idx[0], price=px, rate=f"{px:.4f}"),
+                           self.simple_leg(2, "Fixed", idx[4], idx[3], qty * months / pay_months, start, pay_months, rich, price=px, rate=f"{px:.4f}")]
             doc["MATURITY_DATE"] = doc["LEGS"][0]["CASH_FLOWS"][-1]["END_DATE"]
         return doc
 

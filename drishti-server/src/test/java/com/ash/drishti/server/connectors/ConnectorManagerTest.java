@@ -139,6 +139,35 @@ class ConnectorManagerTest {
         assertThat(d.get("usedBy").toString()).contains("risk").contains("trade");
     }
 
+    private static final String PACK_RENAMED = PACK.replace("kinds: [trade]\nroutes", "kinds: [trade-new]\nroutes").replace("    kinds: [trade]\n", "    kinds: [trade-new]\n");
+
+    @Test
+    void aRedeployedPackWithRenamedKindsRegeneratesAnUneditedFile(@TempDir Path dir) throws Exception {
+        build(dir, PACK, null, null, Map.of());
+        assertThat(files.read("risk-db").kinds()).containsExactly("trade");
+        build(dir, PACK_RENAMED, null, null, Map.of());                                      // the pack is redeployed with a renamed kind
+        assertThat(files.read("risk-db").kinds()).containsExactly("trade-new");
+        assertThat(files.text("risk-db")).contains("Generated at first start");
+        assertThat(manager.detail("risk-db").get("templateChanged")).isNull();
+    }
+
+    @Test
+    void anEditedFileIsKeptAndFlaggedAndResetAppliesTheNewTemplate(@TempDir Path dir) throws Exception {
+        build(dir, PACK, null, null, Map.of());
+        files.write("risk-db", files.text("risk-db") + "# edited by the site\n");
+        build(dir, PACK_RENAMED, null, null, Map.of());
+        assertThat(files.read("risk-db").kinds()).containsExactly("trade");                  // kept
+        String flag = String.valueOf(manager.detail("risk-db").get("templateChanged"));
+        assertThat(flag).contains("trade \u2192 trade-new").contains("Reset to pack default");
+        assertThat(manager.detail("risk-db").get("problems").toString()).contains("trade-new");
+        assertThat(manager.healthSummary().get("templateChanged").toString()).contains("risk-db");
+        manager.reset("risk-db", null);
+        assertThat(files.read("risk-db").kinds()).containsExactly("trade-new");
+        assertThat(manager.detail("risk-db").get("templateChanged")).isNull();
+        build(dir, PACK_RENAMED, null, null, Map.of());                                      // and a further restart leaves it alone
+        assertThat(files.read("risk-db").kinds()).containsExactly("trade-new");
+    }
+
     @Test
     void aFileReplacesThePacksTemplateWholesaleAndNothingIsMerged(@TempDir Path dir) throws Exception {
         build(dir, PACK + "      pool: '9'\n", "risk-db", "plugin: fake\nsettings:\n  url: db://site\n", Map.of());

@@ -605,6 +605,9 @@ public final class PackReloader implements AutoCloseable {
         ConnectorBootstrap.Result boot = ConnectorBootstrap.run(packs, files, null,
                 Boolean.parseBoolean(env.getProperty("drishti.sources.connectors-generate", "true")));
         boot.generated().forEach(n -> audit.record("system", "connector-generated", n, "written from a pack's connector template"));
+        boot.regenerated().forEach(n -> audit.record("system", "connector-regenerated", n, "rewritten: the pack's connector template changed and the file had not been edited"));
+        boot.changed().forEach(c -> audit.record("system", "connector-template-changed", c.name(), c.message()));
+        boot.messages().forEach(m -> LOG.info("connectors: {}", m));
         Map<String, Object> props = loader.properties(packs);
         replaceSource(PackEnvironmentPostProcessor.SOURCE, props);
         // mnemonics: recompute every code a pack ever contributed from the environment, so a site setting keeps winning

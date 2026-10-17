@@ -24,6 +24,8 @@ import com.ash.drishti.engine.source.ConnectionProbe;
 import com.ash.drishti.engine.source.SettingCatalogue;
 import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.engine.source.SourcesProperties;
+import com.ash.drishti.packs.ConnectorBootstrap;
+import com.ash.drishti.packs.ConnectorBootstrap.TemplateChange;
 import com.ash.drishti.packs.ConnectorFiles;
 import com.ash.drishti.packs.Pack;
 import com.ash.drishti.packs.PackLoader;
@@ -536,6 +538,8 @@ public final class ConnectorManager {
         m.put("label", shown[1]);
         m.put("usedBy", usedBy(name));
         m.put("template", t.map(Template::pack).orElse(null));
+        TemplateChange tc = templateChange(name);
+        m.put("templateChanged", tc == null ? null : tc.message());
         return m;
     }
 
@@ -563,8 +567,22 @@ public final class ConnectorManager {
         return new String[] {"ok", "running"};
     }
 
+    /** The flag on an edited file whose pack template has changed since it was generated; null when there is none. */
+    private TemplateChange templateChange(String name) {
+        try {
+            Template t = template(name).orElse(null);
+            return t == null || !files.exists(name) ? null : ConnectorBootstrap.pending(files, name, t.pack(), t.definition());
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
     private List<String> problemsOf(String name, SourceRegistry.ConnectorStatus status) {
         List<String> out = new ArrayList<>();
+        TemplateChange tc = templateChange(name);
+        if (tc != null) {
+            out.add(tc.message());
+        }
         if (fileProblems.containsKey(name)) {
             out.add(fileProblems.get(name) + (registry.applied(name).isPresent() ? " (the last good configuration is running)" : ""));
         }
@@ -1026,7 +1044,12 @@ public final class ConnectorManager {
     public Change reset(String name, String ifMatch) {
         Template t = template(name).orElseThrow(() -> new DrishtiException(ErrorCode.CONNECTOR_CONFLICT,
                 "connector '" + name + "' has no pack default to go back to; delete it, or edit it"));
-        return save(name, templateText(t), files.exists(name) ? ifMatch == null ? ConnectorFiles.etag(files.text(name)) : ifMatch : null, true);
+        String text = templateText(t);
+        Change c = save(name, text, files.exists(name) ? ifMatch == null ? ConnectorFiles.etag(files.text(name)) : ifMatch : null, true);
+        if (files.exists(name) && ConnectorFiles.etag(files.text(name)).equals(ConnectorFiles.etag(text))) {
+            files.writeMarker(name, text, ConnectorBootstrap.fingerprint(files, name, t.definition()), ConnectorBootstrap.kindsOf(t.definition()));
+        }
+        return c;
     }
 
     /** Puts a kept earlier text back. */
@@ -1239,6 +1262,13 @@ public final class ConnectorManager {
         m.put("count", rows.size());
         m.put("failed", failed);
         m.put("badFiles", badFiles);
+        Map<String, String> changed = new java.util.TreeMap<>();
+        for (Map<String, Object> r : rows) {
+            if (r.get("templateChanged") != null) {
+                changed.put(String.valueOf(r.get("name")), String.valueOf(r.get("templateChanged")));
+            }
+        }
+        m.put("templateChanged", changed);
         m.put("problems", new LinkedHashMap<>(new java.util.TreeMap<>(fileProblems)));
         m.put("watch", watchState());
         m.put("directory", files.dir().toString());

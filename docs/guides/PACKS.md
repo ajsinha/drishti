@@ -317,7 +317,7 @@ takes the same path, so they all behave alike:
 
 3. It puts the pack to use **now**: its kinds and owners, its mnemonics (and so the command line, type-ahead and menus), its Sutras
    (re-read, listeners told what changed) and its connectors. A connector template becomes a connector file by the usual rule (written
-   once if no file of that name exists, never overwritten; [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)) and the connector
+   once if no file of that name exists, never overwritten once you edit it (an unedited generated file follows the pack's template when the pack is redeployed with changed kinds; an edited one is flagged with *Reset to pack default*); [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)) and the connector
    starts. The process, its sessions and every open live view carry on.
 4. It puts the settings a pack contributes to use **now** too: the roles it defines (a signed-in user's kinds follow at the next call),
    the link graph (reference patterns, fields, badges, impact), search columns and pivots, formats, semantic hints, About pages and

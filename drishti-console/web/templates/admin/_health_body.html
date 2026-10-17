@@ -102,6 +102,8 @@
     <tr class="hl-row-down"><td class="mono"><a href="/admin/packs/{{ name | urlencode }}" title="Open pack {{ name }}">{{ name }}</a></td><td><span class="hl-badge hl-bad">NOT LOADED</span></td><td colspan="4"></td><td class="hl-err">{{ why }}{{ retry_note((h.retry or {}).get('packs', {}).get(name)) }}</td></tr>{% endfor %}
   </tbody></table></div></div></section>
 
+{% if h.connectors and h.connectors.templateChanged %}<p class="hl-err" role="status"><b>Connector files behind their pack</b>: {% for n, m in h.connectors.templateChanged.items() %}<a class="mono" href="/admin/connectors/{{ n | urlencode }}">{{ n }}</a>: {{ m }}{{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
+
 {% if h.bi and h.bi.problems %}<p class="hl-err" role="alert"><b>BI folder</b> ({{ h.bi.watch }}): {% for b in h.bi.problems %}<span class="mono">{{ b.file }}</span>: {{ b.message }}{{ ' (the last good version is kept)' if b.keptLastGood }}{{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
 
 {% if h.overrides %}
