@@ -390,6 +390,21 @@
   // -- One item ---------------------------------------------------------------------------------------------------------
   function item() {
     var id = canvas.getAttribute('data-item'), it = null, note = null;
+    /** What an upgrade could not convert in this item (the server's migrationProblems): the item kept its text; said at the top, with the step and the place. */
+    function migration() {
+      var old = q('[data-migration]');
+      if (old) { old.remove(); }
+      var ps = (it && it.migrationProblems) || [];
+      if (!ps.length) { return; }
+      var box = h('section', { class: 'bi-sec bi-warn', 'data-migration': String(ps.length), role: 'alert', 'aria-labelledby': 'iMig' },
+        h('h2', { id: 'iMig', text: 'The upgrade could not convert this ' + (it.kind || 'item') }),
+        h('p', { text: 'It keeps its earlier text and still works as before; fix what is listed (Edit, or the YAML) and save, and the next start converts it.' }),
+        h('ul', {}, ps.map(function (p) {
+          return h('li', { 'data-migration-step': p.step || '' }, h('strong', { text: (p.step || 'migration') + ': ' }), p.where ? h('code', { text: p.where }) : null, p.where ? ' ' : null,
+            p.problem || p.detail || p.message || '', p.since ? h('small', { class: 'text-muted-d', text: ' (since ' + String(p.since).replace('T', ' ').slice(0, 16) + ')' }) : null);
+        })));
+      q('[data-msg]').after(box);
+    }
     var path = '/items/' + encodeURIComponent(id).replace(/%3A/g, ':');
     function show(x) {
       it = x;
@@ -405,7 +420,7 @@
       star.setAttribute('aria-pressed', it.favourite ? 'true' : 'false'); clear(star); star.appendChild(icon(it.favourite ? 'star-fill' : 'star'));
       q('[data-body]').textContent = it.body || '(empty)';
       q('[data-body-is]').textContent = it.bodyIs !== 'draft' ? 'published version' : it.status === 'proposed' ? 'draft, proposed for review (frozen)' : it.status === 'published' ? 'draft, the same as the published version' : it.draftChanges ? 'draft, with changes not yet published' : 'draft';
-      actions(); form(); versions();
+      actions(); form(); versions(); migration();
       var open = q('[data-open-dataset]');
       if (open) { open.hidden = it.kind !== 'dataset'; open.href = '/bi/d/' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }
       var enc = encodeURIComponent(it.id).replace(/%3A/g, ':');

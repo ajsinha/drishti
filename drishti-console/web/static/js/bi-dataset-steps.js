@@ -46,6 +46,20 @@
     md.addEventListener('change', () => { W().model = md.value; W().picks = []; W().columns = []; setSrc('model'); modelFields(); });
     sm.addEventListener('change', () => { W().sqlModel = sm.value; setSrc('sql'); });
     sq.addEventListener('input', () => { W().sql = sq.value; W().sqlColumns = []; if (W().src !== 'sql') { setSrc('sql'); } L.keep(); });
+    // the SQL view's statement in the ExpressionEditor: the chosen model's fields and MEASURE('…') completed, the server's /sql/validate as you type
+    let sqlFields = [], sqlMeasures = [];
+    const sqlLoad = () => (sm.value ? B.layer.get('fields?ref=' + encodeURIComponent(sm.value)).then((f) => {
+      sqlFields = (f.tables || []).flatMap((t) => (t.columns || []).map((c) => ({ name: t.name + '.' + c.name, type: c.type, meaning: c.meaning, format: c.format })).concat([{ name: t.name, type: 'table', meaning: 'FROM ' + t.name }]));
+      sqlMeasures = (f.measures || []).map((m) => ({ name: m.name, description: m.description || m.expr || '' }));
+    }).catch(() => {}) : Promise.resolve());
+    sm.addEventListener('change', sqlLoad);
+    if (B.exprEditor) {
+      B.exprEditor(sq, { scope: 'aggregate', label: 'Drishti SQL statement', functions: false, fields: () => sqlFields, measures: () => sqlMeasures,
+        words: ['SELECT', 'FROM', 'WHERE', 'JOIN', 'GROUP BY', 'ORDER BY', 'HAVING', 'LIMIT', 'AS', 'AND', 'OR', 'NOT', 'IN', 'DESC', 'ASC', 'MEASURE', 'COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'DISTINCT', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END'],
+        measureInsert: (n) => "MEASURE('" + n.replace(/'/g, "''") + "')",
+        check: (text) => (sm.value ? B.api('POST', '/sql/validate', { sql: text, model: sm.value }) : Promise.resolve({ valid: true, problems: [{ code: '', level: 'info', message: 'Choose the model the SQL reads to check it as you type.' }] })),
+        onInput: (v) => { W().sql = v; W().sqlColumns = []; L.keep(); } });
+    }
     q('[data-sql-check]').addEventListener('click', () => checkSql(q('[data-sql-check]')));
     return Promise.all([B.layer.get('datasets').then((d) => {
       (d.packs || []).forEach((p) => ext.appendChild(h('option', { value: p.name, text: p.title + ' (' + p.name + ')', selected: p.name === W().extends })));
@@ -54,7 +68,7 @@
       (d.packs || []).forEach((p) => sm.appendChild(h('option', { value: 'dataset:' + p.name, text: p.title + ' (the dataset\'s implicit model)' })));
       if (!W().extends && d.packs && d.packs.length) { W().extends = d.packs[0].name; }
       if (W().model) { md.value = W().model; modelFields(); }
-      if (W().sqlModel) { sm.value = W().sqlModel; }
+      if (W().sqlModel) { sm.value = W().sqlModel; sqlLoad(); }
     }), B.api('GET', '/catalogue?kind=python&limit=100').then((c) => {
       pythons = (c.items || c.results || []).map((x) => ({ name: x.id.replace(/^file:python:/, ''), title: x.title }));
       py.appendChild(h('option', { value: '', text: 'Choose a Python item' }));

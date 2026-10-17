@@ -264,14 +264,21 @@
       const known = new Set((roleList && roleList.roles) || []);
       Object.values((M.doc.security || {}).rows || {}).forEach((rs) => rs.forEach((r) => [].concat(r.role).forEach((x) => known.add(x))));
       Object.values(M.infos).forEach((i) => (i.rows || []).forEach((r) => [].concat(r.role).forEach((x) => known.add(x))));
-      const kind = sel([['attr', 'the column matches the reader'], ['value', 'the column equals a value'], ['all', 'every row']], 'attr', { 'data-rule-kind': '', 'aria-label': 'Which rows' });
+      const kind = sel([['attr', 'the column matches the reader'], ['value', 'the column equals a value'], ['expr', 'a formula (any condition)'], ['all', 'every row']], 'attr', { 'data-rule-kind': '', 'aria-label': 'Which rows' });
       const field = h('select', { class: 'studio-select', 'data-rule-field': '', 'aria-label': 'Column' });
       const fill = () => { B.clear(field); ((M.infos[aSel.value] || {}).columns || []).forEach((c) => field.appendChild(h('option', { value: aSel.value + '.' + c.name, text: c.name }))); };
       aSel.addEventListener('change', fill);
       fill();
       const attr = sel(ATTRS, 'user.desks', { 'data-rule-attr': '', 'aria-label': 'Reader attribute' });
       const val = h('input', { class: 'studio-in', 'data-rule-value': '', placeholder: 'DESK-FX', 'aria-label': 'Value', hidden: true });
-      kind.addEventListener('change', () => { field.hidden = kind.value === 'all'; attr.hidden = kind.value !== 'attr'; val.hidden = kind.value !== 'value'; });
+      // a free row rule in DEL (scope rule): the dataset's columns and the reader's attributes (user.*) completed, the server's check as you type
+      const free = h('input', { class: 'studio-in mono', 'data-rule-expr': '', placeholder: "trade.desk in user.desks and trade.status == 'Live'", 'aria-label': 'Row rule formula' });
+      const freeBox = h('div', { class: 'bi-md-grow bi-md-rule-expr', 'data-rule-expr-box': '', hidden: true }, free);
+      const userAttrs = [{ name: 'user.desks', type: 'list', meaning: 'the reader\'s desks' }, { name: 'user.roles', type: 'list', meaning: 'the reader\'s roles' },
+        { name: 'user.desk', type: 'string', meaning: 'the reader\'s first desk' }, { name: 'user.name', type: 'string', meaning: 'the reader\'s user name' }];
+      const ruleFields = () => ((M.infos[aSel.value] || {}).columns || []).map((c) => ({ name: aSel.value + '.' + c.name, type: c.type, meaning: c.meaning || c.role })).concat(userAttrs);
+      window.setTimeout(() => { if (free.isConnected && B.exprEditor) { B.exprEditor(free, { scope: 'rule', label: 'Row rule formula', fields: ruleFields, measures: [], target: () => ({ model: M.doc.model + '@' + major(), yaml: M.yaml, dataset: aSel.value }) }); } }, 0);
+      kind.addEventListener('change', () => { field.hidden = kind.value === 'all' || kind.value === 'expr'; attr.hidden = kind.value !== 'attr'; val.hidden = kind.value !== 'value'; freeBox.hidden = kind.value !== 'expr'; });
       const go = h('button', { type: 'button', class: 'btn-pill btn-accent', 'data-rule-add': '', text: 'Add the rule' });
       const picked = new Set([].concat(d.roles || []));
       const roleBox = h('div', { class: 'bi-roles', 'data-role-picker': '', role: 'group', 'aria-label': 'Roles the rule is for' },
@@ -279,8 +286,10 @@
       go.addEventListener('click', () => {
         const rs = B.qa('[data-role-pick]', roleBox).filter((c) => c.checked).map((c) => c.value).concat(roles.value.split(',').map((x) => x.trim()).filter(Boolean)).filter((x, i, a) => a.indexOf(x) === i);
         if (!rs.length) { near(go, 'Name the role (or roles) the rule is for.', true); roles.focus(); return; }
-        const where = kind.value === 'all' ? 'True' : kind.value === 'attr' ? field.value + ' in ' + attr.value : field.value + " == '" + val.value.replace(/'/g, '') + "'";
+        const where = kind.value === 'all' ? 'True' : kind.value === 'expr' ? free.value.trim() : kind.value === 'attr' ? field.value + ' in ' + attr.value : field.value + " == '" + val.value.replace(/'/g, '') + "'";
         if (kind.value === 'value' && !val.value.trim()) { near(go, 'Give the value.', true); val.focus(); return; }
+        if (kind.value === 'expr' && !where) { near(go, 'Write the condition, for example ' + aSel.value + ".desk in user.desks.", true); free.focus(); return; }
+        if (kind.value === 'expr') { free.value = ''; }
         draft = null;
         roles.value = '';
         B.qa('[data-role-pick]', roleBox).forEach((c) => { c.checked = false; });
@@ -291,7 +300,7 @@
         h('datalist', { id: 'mdRoles' }, Array.from(known).map((r) => h('option', { value: r }))),
         h('p', { class: 'text-muted-d bi-small-note', 'data-roles-note': '', text: 'Roles without a rule see no rows of the dataset: a rule says which rows a role may read.' + (roleList && roleList.source === 'identity' ? ' The roles listed are the ones your account carries and the ones already used in this model; type any other role below.' : '') }),
         h('fieldset', { class: 'bi-roles-box' }, h('legend', { text: 'Roles' }), roleBox, roles),
-        h('div', { class: 'bi-md-row' }, h('label', {}, 'On ', aSel), h('label', {}, 'see rows where ', kind), field, attr, val, go)));
+        h('div', { class: 'bi-md-row' }, h('label', {}, 'On ', aSel), h('label', {}, 'see rows where ', kind), field, attr, val, go), freeBox));
       // masks
       const masked = (M.doc.security || {}).masked || [];
       const mf = sel(fieldsOf(), '', { 'data-mask-field': '', 'aria-label': 'Column to mask' });

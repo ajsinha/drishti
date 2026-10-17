@@ -302,8 +302,8 @@
 
   // ---- expected values: the model's `tests:` (Drishti SQL with the figure it must give), run on the saved model as you or a role you hold -------------
   const expectText = (e) => (e && typeof e === 'object' ? (e.min != null && e.max != null ? e.min + ' to ' + e.max : e.min != null ? 'at least ' + e.min : e.max != null ? 'at most ' + e.max : JSON.stringify(e)) : String(e));
-  function drawTests() {
-    const pane = q('[data-contract-pane]');
+  function drawTests(where) {
+    const pane = q(where || '[data-contract-pane]');
     if (!pane || !M.item) { return; }
     let box = q('[data-model-tests]', pane);
     if (!box) {
@@ -336,8 +336,39 @@
     }
     const list = B.clear(q('[data-model-tests-list]', box));
     const tests = Array.isArray(M.doc.tests) ? M.doc.tests : [];
-    tests.forEach((t) => list.appendChild(h('li', {}, h('strong', { text: t.name || 'a test' }), ': ', h('code', { text: t.sql || '' }), ' should give ' + expectText(t.expect))));
-    if (!tests.length) { list.appendChild(h('li', { class: 'text-muted-d', text: 'No tests yet: add them in the YAML tab (tests: - { name, sql, expect }).' })); }
+    tests.forEach((t, i) => {
+      const rm = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Remove the test ' + (t.name || i + 1), 'data-test-remove': String(i), disabled: M.readOnly }, B.icon('x-lg'));
+      rm.addEventListener('click', () => M.edit((doc) => { doc.tests.splice(i, 1); if (!doc.tests.length) { delete doc.tests; } }));
+      list.appendChild(h('li', { 'data-model-test': t.name || String(i) }, h('strong', { text: t.name || 'a test' }), t.role ? ' (as ' + t.role + ')' : '', ': ', h('code', { text: t.sql || '' }), ' should give ' + expectText(t.expect) + (t.tolerance != null ? ' ± ' + t.tolerance : ''), ' ', rm));
+    });
+    if (!tests.length) { list.appendChild(h('li', { class: 'text-muted-d', text: 'No tests yet: add one below (or in the YAML tab: tests: - { name, sql, expect }).' })); }
+    if (!M.readOnly && !q('[data-test-form]', box)) { box.insertBefore(testForm(), q('[data-model-tests-list]', box).nextSibling); }
+  }
+  /** The Tests designer: a name, a Drishti SQL question, the figure it must give (a number, at least, at most, or a range), a tolerance, and the role to run it as. */
+  function testForm() {
+    const name = h('input', { class: 'studio-in', 'data-test-name': '', placeholder: 'FX desk MTM', 'aria-label': 'Test name' });
+    const sql = h('textarea', { class: 'studio-in mono', rows: '2', 'data-test-sql': '', placeholder: "SELECT MEASURE('Sum of mtm') FROM trade WHERE trade.desk = 'DESK-FX'", 'aria-label': 'Drishti SQL question' });
+    const how = sel([['eq', 'equals'], ['min', 'at least'], ['max', 'at most'], ['range', 'between']], 'eq', { 'data-test-how': '', 'aria-label': 'The figure must be' });
+    const a = h('input', { class: 'studio-in mono', type: 'number', step: 'any', 'data-test-a': '', 'aria-label': 'Expected value', placeholder: '125000' });
+    const b = h('input', { class: 'studio-in mono', type: 'number', step: 'any', 'data-test-b': '', 'aria-label': 'Upper bound', placeholder: '130000', hidden: true });
+    const tol = h('input', { class: 'studio-in mono', 'data-test-tolerance': '', 'aria-label': 'Tolerance (an amount or a percentage)', placeholder: '0.5%' });
+    const role = sel([['', 'the person running it']].concat(roles().map((r) => [r, r])), '', { 'data-test-role': '', 'aria-label': 'Run as the role' });
+    how.addEventListener('change', () => { b.hidden = how.value !== 'range'; });
+    const add = h('button', { type: 'button', class: 'btn-pill btn-accent bi-small', 'data-test-add': '', text: 'Add the test' });
+    add.addEventListener('click', () => {
+      const n = name.value.trim(), x = sql.value.trim(), av = parseFloat(a.value), bv = parseFloat(b.value);
+      if (!n || !x || isNaN(av) || (how.value === 'range' && isNaN(bv))) { B.near(add, 'A name, the question and the figure it must give.', true); return; }
+      const t = { name: n, sql: x, expect: how.value === 'eq' ? av : how.value === 'min' ? { min: av } : how.value === 'max' ? { max: av } : { min: Math.min(av, bv), max: Math.max(av, bv) } };
+      const tv = tol.value.trim();
+      if (tv) { if (!/^\d+(\.\d+)?%?$/.test(tv)) { B.near(add, 'A tolerance is an amount (0.01) or a percentage (0.5%).', true); return; } t.tolerance = /%$/.test(tv) ? tv : parseFloat(tv); }
+      if (role.value) { t.role = role.value; }
+      M.edit((doc) => { doc.tests = (Array.isArray(doc.tests) ? doc.tests : []).concat([t]); });
+      name.value = ''; sql.value = ''; a.value = ''; b.value = ''; tol.value = '';
+      B.near(add, 'Added ' + n + '. It runs on the saved draft (autosaved): Run the tests.', false);
+    });
+    return h('fieldset', { class: 'bi-form bi-md-testform', 'data-test-form': '', 'data-keep': '' }, h('legend', { text: 'Add an expected value' }),
+      h('label', { class: 'bi-frow' }, h('span', { text: 'Name' }), name), h('label', { class: 'bi-frow' }, h('span', { text: 'Question (Drishti SQL)' }), sql),
+      h('div', { class: 'bi-md-row' }, h('label', {}, 'The figure is ', how), a, b, h('label', {}, 'give or take ', tol), h('label', {}, 'run as ', role), add));
   }
 
   function redraw(fromTab) {
@@ -345,7 +376,7 @@
     const fp = q('[data-fields-pane]');
     const typing = fp.contains(document.activeElement) && /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName) && document.activeElement.type !== 'checkbox';
     if (M.tab === 'fields' && (fromTab || !typing)) { drawFields(); }        // a Check landing while someone types never redraws under them
-    if (M.tab === 'security') { drawSecurityExtras(); }
+    if (M.tab === 'security') { drawSecurityExtras(); drawTests('[data-security-pane]'); }
     if (M.tab === 'contract') { drawContractExtras(); drawTests(); }
   }
   M.on('redraw', () => redraw(false));

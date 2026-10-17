@@ -46,7 +46,7 @@
   /** The word before the caret and what it is: a measure name inside measure('…'), a keyword of the call the caret is in, or a name. */
   function context(text, at) {
     const before = text.slice(0, at);
-    const inMeasure = /measure\(\s*(['"])([^'"]*)$/.exec(before);
+    const inMeasure = /measure\(\s*(['"])([^'"]*)$/i.exec(before);
     if (inMeasure) { return { kind: 'measure-name', word: inMeasure[2], start: at - inMeasure[2].length, quote: inMeasure[1] }; }
     const m = /[A-Za-z_][A-Za-z0-9_.]*$/.exec(before);
     const word = m ? m[0] : '';
@@ -104,7 +104,10 @@
     input.setAttribute('autocomplete', 'off');
     if (opts.label && !input.getAttribute('aria-label')) { input.setAttribute('aria-label', opts.label); }
     let items = [], active = -1, timer = null, seq = 0, lastChecked = null, fns = [];
-    functions().then((f) => { fns = f.filter((x) => !x.scopes.length || x.scopes.indexOf(scope) >= 0 || (scope === 'rule' && x.scopes.indexOf('row') >= 0)); });
+    // opts.words (the statement's keywords), opts.functions === false (no DEL functions: Drishti SQL), opts.check(text) (another validator), opts.measureInsert(name)
+    if (opts.functions !== false) { functions().then((f) => { fns = f.filter((x) => !x.scopes.length || x.scopes.indexOf(scope) >= 0 || (scope === 'rule' && x.scopes.indexOf('row') >= 0)); }); }
+    const mIns = opts.measureInsert || ((n) => 'measure(\'' + n.replace(/'/g, '\\\'') + '\')');
+    const wordList = opts.words || WORDS[scope === 'aggregate' ? 'aggregate' : 'row'] || [];
 
     const fieldList = () => (typeof opts.fields === 'function' ? opts.fields() : opts.fields || []).map((f) => (typeof f === 'string' ? { name: f } : f));
     const measureList = () => (typeof opts.measures === 'function' ? opts.measures() : opts.measures || []).map((m) => (typeof m === 'string' ? { name: m } : m));
@@ -123,7 +126,7 @@
         call.keywords.filter((k) => k.indexOf(w) === 0).forEach((k) => out.push({ kind: 'keyword', label: k + '=', detail: 'a keyword of ' + call.name + '()', insert: k + '=', from: c.start }));
       }
       if (scope !== 'row' && scope !== 'rule' && 'measure'.indexOf(w) === 0 && w.length) {
-        measureList().slice(0, 12).forEach((m) => out.push({ kind: 'measure', label: m.name, detail: m.description || 'measure(\'' + m.name + '\')', insert: 'measure(\'' + m.name.replace(/'/g, '\\\'') + '\')', from: c.start }));
+        measureList().slice(0, 12).forEach((m) => out.push({ kind: 'measure', label: m.name, detail: m.description || 'measure(\'' + m.name + '\')', insert: mIns(m.name), from: c.start }));
       }
       if (w.length || c.call) {
         const callName = c.call ? c.call.name : '';
@@ -144,10 +147,10 @@
         // a prefix that starts a function name puts the functions above the fields (fields are reached by their dataset's alias anyway)
         if (w.length) { fnItems.forEach((x) => out.push(x)); fieldItems.forEach((x) => out.push(x)); } else { fieldItems.forEach((x) => out.push(x)); fnItems.forEach((x) => out.push(x)); }
         if (c.word.indexOf('.') < 0) {
-          (WORDS[scope === 'aggregate' ? 'aggregate' : 'row'] || []).filter((k) => w && k.toLowerCase().indexOf(w) === 0 && k !== c.word).forEach((k) => out.push({ kind: 'word', label: k, detail: '', insert: k, from: c.start }));
+          wordList.filter((k) => w && k.toLowerCase().indexOf(w) === 0 && k !== c.word).forEach((k) => out.push({ kind: 'word', label: k, detail: '', insert: k, from: c.start }));
         }
         if (scope !== 'row' && scope !== 'rule' && w && 'measure'.indexOf(w) !== 0) {
-          measureList().filter((m) => m.name.toLowerCase().indexOf(w) === 0).slice(0, 12).forEach((m) => out.push({ kind: 'measure', label: m.name, detail: 'measure(\'' + m.name + '\')', insert: 'measure(\'' + m.name.replace(/'/g, '\\\'') + '\')', from: c.start }));
+          measureList().filter((m) => m.name.toLowerCase().indexOf(w) === 0).slice(0, 12).forEach((m) => out.push({ kind: 'measure', label: m.name, detail: 'measure(\'' + m.name + '\')', insert: mIns(m.name), from: c.start }));
         }
       }
       // a capital first letter is a measure's name more often than a function's (functions are lower case): the measures come first then
@@ -230,7 +233,7 @@
           if (!text) { B.clear(probs); input.removeAttribute('aria-invalid'); lastChecked = null; resolve(null); return; }
           const mine = ++seq;
           const body = Object.assign({ expr: text, scope }, (opts.target && opts.target()) || {});
-          B.api('POST', '/expr/validate', body).then((r) => { if (mine === seq) { lastChecked = r; drawProblems(r); } resolve(r); })
+          (opts.check ? opts.check(text) : B.api('POST', '/expr/validate', body)).then((r) => { if (mine === seq) { lastChecked = r; drawProblems(r); } resolve(r); })
             .catch((e) => { if (mine === seq) { drawProblems({ valid: false, problems: [{ code: e.code || '', level: e.status === 404 ? 'info' : 'error', message: e.status === 404 ? 'The server cannot check expressions yet: Check runs when you save.' : e.detail || e.message, fix: e.fix }] }); } resolve(null); });
         }, now ? 0 : 350);
       });
