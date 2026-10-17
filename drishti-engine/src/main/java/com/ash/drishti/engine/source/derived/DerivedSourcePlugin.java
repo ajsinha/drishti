@@ -185,6 +185,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
                         }
                     } catch (RuntimeException e) {
                         health = "DOWN: " + e.getMessage();
+                        org.slf4j.LoggerFactory.getLogger(DerivedSourcePlugin.class).warn("derived pages for {} could not be refreshed: {}", asOf, e.toString());
                     }
                 });
                 return last;
@@ -203,6 +204,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
                 f.complete(compute(asOf));
             } catch (RuntimeException e) {
                 health = "DOWN: " + e.getMessage();
+                org.slf4j.LoggerFactory.getLogger(DerivedSourcePlugin.class).warn("derived pages for {} could not be built: {}", asOf, e.toString());
                 f.completeExceptionally(e);
             }
         }
@@ -267,6 +269,8 @@ public final class DerivedSourcePlugin implements SourcePlugin {
             }
         }
         health = "UP";
+        org.slf4j.LoggerFactory.getLogger(DerivedSourcePlugin.class).debug("derived {}: {}", asOf, byKind.entrySet().stream()
+                .map(e -> e.getKey() + "=" + e.getValue().size() + " of " + scanned.getOrDefault(e.getKey(), 0)).toList());
         return new Snapshot(byKind, scanned, asOf.live() ? null : dataDate, generation.incrementAndGet(), Instant.now());
     }
 }

@@ -390,7 +390,7 @@ def derived_panels(kp: KindPlan, plan: Plan | None) -> list:
         tot = ", total: true" if f is not None and f.role == "number" and TOTALISH.search(f.name) else ""
         tone = ', tone: "status"' if f is not None and f.role == "status" else ""
         L.append(f"      - {{ label: {q(label)}, bind: {q('@.' + c)}" + (f", fmt: {q(fm)}" if fm else "") + tone + tot + " }")
-    L += ["  - { id: refs, kind: links, title: Linked entities, area: right }", "  - { id: built, kind: provenance, title: How this view was built }"]
+    L.append("  - { id: built, kind: provenance, title: How this view was built }")   # no Linked entities: the table above links every document
     return L
 
 

@@ -240,7 +240,8 @@ public final class LoadService {
         List<String> purged = new ArrayList<>();
         try {
             for (SourcePlugin p : sources.plugins()) {
-                if (p.manifest().serves(kind)) {
+                // the kind's own stores, and the pages built from it (a derived connector groups loaded documents: its pages are stale now)
+                if (p.manifest().serves(kind) || "derived".equals(p.manifest().name())) {
                     p.purgeCaches();
                     purged.add(p.manifest().name());
                 }

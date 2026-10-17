@@ -169,6 +169,18 @@ def connector_block(pack: str, kinds: list, store: str, plan_cols: dict) -> dict
                          "layout": {k.kind: {"columns": plan_cols[k.kind], "sort-by": "id", "file-rows": 250000, "row-group-rows": 1000} for k in kinds}}}
 
 
+def page_paths(plan: Plan, kp: KindPlan) -> list[str]:
+    """The plain paths the pages per value of ``kp`` read (group, totals, rows): promoted, they are built from columns, no document read."""
+    out: list = []
+    for d in plan.kinds:
+        spec = d.derived
+        if not spec or spec.get("from") != kp.kind:
+            continue
+        exprs = [spec["group-by"]] + [a.partition(" ")[2] for a in spec["fields"].values()] + list(spec["rows"].values())
+        out += [e[2:] for e in exprs if re.fullmatch(r"\$\.[A-Za-z_][A-Za-z0-9_]*", e or "")]
+    return list(dict.fromkeys(out))
+
+
 def title_columns(kp: KindPlan) -> list[str]:
     """What a document's search title shows after its id: the type it is, and the fields that have a page per value (top level only)."""
     out = [m for m in kp.match if "." not in m]
@@ -241,7 +253,7 @@ def pack_manifest(plan: Plan, kinds_dir_note: str = "") -> dict:
         m["connectors"], m["routes"], m["connector-templates"], ing = sorted(by_conn), {}, {}, {}
         for name, ks in sorted(by_conn.items()):
             store = ks[0].template
-            m["connector-templates"][name] = connector_block(p["name"], ks, store, {k.kind: columns_for(k) + ([k.date] if k.date and k.date not in columns_for(k) else []) for k in ks})
+            m["connector-templates"][name] = connector_block(p["name"], ks, store, {k.kind: list(dict.fromkeys(columns_for(k) + ([k.date] if k.date else []) + page_paths(plan, k))) for k in ks})
             for k in ks:
                 m["routes"][k.kind] = name
                 if k.key and k.date:
@@ -312,6 +324,10 @@ def assemble(plan: Plan, items: list[Item], drafts: dict, pack_dir: pathlib.Path
     # samples/ catalog
     cat = []
     for kp in plan.kinds:
+        if kp.derived or (kp.real and kp.template in ("file", "delta")):
+            # its data is loaded into the store (or built from it): samples served beside the real documents would be listed and counted
+            # with them (a page per counterparty built from both); the Sutras' own tests keep their samples in tests/
+            continue
         sd = pack_dir / "samples" / kp.kind
         sd.mkdir(parents=True, exist_ok=True)
         for doc, src in catalog_docs(kp, plan):

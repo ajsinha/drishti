@@ -22,6 +22,27 @@
 (function () {
   'use strict';
   var KEY = 'dr.';
+  var active = null;                       // the drill last opened or clicked: Esc goes up in it even when focus left it
+
+  /** The drill's name in the address: its panel id, and ~N for the N-th tab of a tabs panel (each leg's schedule has its own). */
+  function idOf(root) {
+    var id = root.getAttribute('data-drill');
+    var pane = root.closest('.tab-pane, .col-box');
+    if (pane && pane.parentElement) {
+      var n = Array.prototype.filter.call(pane.parentElement.children, function (c) { return c.classList.contains('tab-pane') || c.classList.contains('col-box'); }).indexOf(pane);
+      if (n > 0) { id += '~' + (n + 1); }
+    }
+    return id;
+  }
+
+  /** A drill in a tab that is not shown: its tab is opened (a shared address may point into the second leg). */
+  function reveal(root) {
+    var pane = root.closest('.tab-pane');
+    if (pane && pane.hidden && pane.id) {
+      var head = document.querySelector('[aria-controls="' + pane.id + '"]');
+      if (head) { head.click(); }
+    }
+  }
 
   function param(id) { try { return new URLSearchParams(location.search).get(KEY + id) || ''; } catch (e) { return ''; } }
 
@@ -50,6 +71,7 @@
     var lv = levelOf(root, path);
     if (!lv) { path = ''; lv = levelOf(root, ''); }
     var from = root.__drPath || '';
+    if (opts.push) { active = root; }
     Array.prototype.forEach.call(root.querySelectorAll(':scope > .dr-lv'), function (x) {
       var on = x === lv;
       x.hidden = !on;
@@ -90,7 +112,7 @@
     }
     var up = root.querySelector('[data-dr-up]');
     if (up) { up.hidden = !path; }
-    if (opts.url !== false) { setParam(root.getAttribute('data-drill'), path, opts.push); }
+    if (opts.url !== false) { setParam(idOf(root), path, opts.push); }
     var t = lv.querySelector('table');
     // coming back up: the row that was open is marked and selected, so the keyboard carries on from it
     Array.prototype.forEach.call(root.querySelectorAll('tr.dr-came'), function (r) { r.classList.remove('dr-came'); });
@@ -126,18 +148,11 @@
       if (b) { show(root, b.getAttribute('data-dr-go'), { push: true, focus: true }); return; }
       if (e.target.closest('[data-dr-up]')) { up(root); }
     });
-    root.addEventListener('keydown', function (e) {
-      if (e.target.closest('input, select, textarea')) { return; }
-      if ((e.key === 'Escape' || e.key === 'Backspace') && !e.altKey && !e.ctrlKey && !e.metaKey) {
-        if (up(root)) { e.preventDefault(); e.stopPropagation(); }
-      } else if (e.key === 'ArrowRight' && !e.altKey) {
-        var sel = root.querySelector('.dr-lv.on tbody tr[aria-selected="true"] a[data-dr-open]');
-        if (sel) { e.preventDefault(); sel.click(); }
-      } else if (e.key === 'ArrowLeft' && !e.altKey) {
-        if (up(root)) { e.preventDefault(); }
-      }
-    });
-    show(root, param(root.getAttribute('data-drill')), { url: false });
+    root.addEventListener('pointerdown', function () { active = root; });
+    root.addEventListener('focusin', function () { active = root; });
+    var start = param(idOf(root));
+    if (start) { reveal(root); }
+    show(root, start, { url: false });
   }
 
   function scan(node) {
@@ -146,9 +161,33 @@
     Array.prototype.forEach.call(n.querySelectorAll ? n.querySelectorAll('[data-drill]') : [], wire);
   }
 
+  /** The drill a key is for: the one the focus is in, else the one last used (a panel redrawn by a live update keeps its address). */
+  function target(e) {
+    var r = e.target && e.target.closest ? e.target.closest('[data-drill]') : null;
+    if (r) { return r; }
+    if (active && !active.isConnected) {
+      var again = document.querySelector('[data-drill="' + active.getAttribute('data-drill') + '"]');
+      active = again && idOf(again) === idOf(active) ? again : null;
+    }
+    var body = !e.target || e.target === document.body || e.target === document.documentElement;
+    return body ? active : null;
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.defaultPrevented || (e.target.closest && e.target.closest('input, select, textarea, [contenteditable]'))) { return; }
+    var root = target(e);
+    if (!root) { return; }
+    if ((e.key === 'Escape' || e.key === 'Backspace' || (e.key === 'ArrowLeft' && !e.altKey)) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (up(root)) { e.preventDefault(); e.stopPropagation(); }
+    } else if (e.key === 'ArrowRight' && !e.altKey) {
+      var sel = root.querySelector('.dr-lv.on tbody tr[aria-selected="true"] a[data-dr-open]');
+      if (sel) { e.preventDefault(); sel.click(); }
+    }
+  });
+
   window.addEventListener('popstate', function () {
     Array.prototype.forEach.call(document.querySelectorAll('[data-drill]'), function (root) {
-      var want = param(root.getAttribute('data-drill'));
+      var want = param(idOf(root));
       if (want !== (root.__drPath || '')) { show(root, want, { url: false, focus: true }); }
     });
   });
