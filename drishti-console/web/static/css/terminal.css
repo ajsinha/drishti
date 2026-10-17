@@ -62,7 +62,7 @@ body.terminal { font-size: 14px; }
 .with-cp, .with-cp a { color: var(--d-link); font-size: 1.05rem; }
 .strip { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: .6rem 1.2rem; margin: 0; }
 .strip-i dt { color: var(--d-muted); font-weight: 400; font-size: .8rem; margin-bottom: .15rem; }
-.strip-i dd { margin: 0; font-size: 1.05rem; color: var(--d-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.strip-i dd { margin: 0; font-size: 1.05rem; color: var(--d-ink); white-space: normal; overflow-wrap: anywhere; }   /* wraps, never cut: a notional is read in full */
 .strip-i dd.emph { background: var(--d-emph-bg); padding: 0 .4rem; border-radius: 2px; }
 
 /* ---- grid and panels ---- */
@@ -783,6 +783,11 @@ table.tbl tr.tbl-filter th::after { content: none; }
 .dist-err-near { display: inline-block; margin-left: .6rem; font-weight: 600; vertical-align: middle; }
 /* Compare: the two dates side by side next to the change list (stacked on a narrow screen); a field that differs is marked */
 .cmp-grid.cmp-has-side { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: .8rem; align-items: start; }
+/* never clipped: each column scrolls inside itself and long values (a timestamp, a path) wrap */
+.cmp-grid > * { min-width: 0; }
+.cmp-grid .tbl-wrap { overflow-x: auto; max-width: 100%; }
+.cmp-grid td.mono, .cmp-grid .cmp-path { overflow-wrap: anywhere; word-break: break-word; white-space: normal; }
+.cmp-where { color: var(--d-muted); font-size: .78rem; }
 @media (max-width: 1100px) { .cmp-grid.cmp-has-side { grid-template-columns: minmax(0, 1fr); } }
 .cmp-sbs caption { caption-side: top; text-align: left; font-weight: 700; color: var(--d-muted); padding: .4rem 0 .2rem; }
 .cmp-sbs tr.cmp-row-changed td, .cmp-sbs tr.cmp-row-added td, .cmp-sbs tr.cmp-row-removed td { background: color-mix(in srgb, var(--d-warn) 14%, transparent); }

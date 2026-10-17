@@ -63,6 +63,9 @@ class PackSpec:
     sample: bool = False                            # a demonstration pack (pack.yaml sample: true): see drishti.packs.samples
     code: str = ""                                  # typed alone, opens the pack's overview (pack.yaml code:)   # kind -> key fields shown in pick lists (pack.yaml columns:)
     impact: dict | None = None
+    # kind -> the fields its Delta table keeps as real columns (the connector's layout): what a BI dataset over the kind reads without
+    # opening every document (the world-economics and region-economics models)
+    layouts: dict[str, list[str]] = field(default_factory=dict)
     overview: str = ""                              # prose for the overview guide
     external_ids: dict[str, set[str]] = field(default_factory=dict)   # kind -> ids that live in required packs
     compact_json: bool = False                      # write the sample documents without indentation (large generated packs)
@@ -108,6 +111,9 @@ def manifest(spec: PackSpec, known_fields: dict[str, tuple[str, str]]) -> dict:
         settings = {"root": "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", "domain": d}
         if d in spec.effective_domains:
             settings.update({f"mode.{k.kind}": "effective" for k in ks})
+        laid = {k.kind: {"columns": list(spec.layouts[k.kind])} for k in ks if spec.layouts.get(k.kind)}
+        if laid:
+            settings["layout"] = laid
         m["connectors"][f"{d}-store"] = {"plugin": "delta", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": [k.kind for k in ks],
                                          "settings": settings}
         m["routes"].update({k.kind: f"{d}-store" for k in ks})

@@ -82,7 +82,7 @@ class Endur:
         buy = doc["BUY_SELL_CODE"] == "Buy"
         events = doc.get("EVENTS") or []
         pays = {leg["LEG_ID"]: (leg["LEG_TYPE"] == S.FIXED) == buy for leg in legs}       # a buyer pays the fixed leg
-        if not events and rich:                     # a deal other than a swap settles each flow of its money legs in cash
+        if not events and (rich or doc["PRODUCT_TYPE"] in ("Cash", "CallNot")):   # a deal other than a swap settles each flow of its money legs in cash (a cash deal always)
             for leg in legs:
                 if leg["LEG_TYPE"] == "PHYSICAL":
                     continue
@@ -105,11 +105,13 @@ class Endur:
             "TRADE_STATUS": STATUS.get(doc["TRADE_STATUS"], doc["TRADE_STATUS"]), "TRADE_ACTION": "",
             "TRADE_VERSION": str(version) if version != "" else "", "TRANSACTION_ID": str(int(doc["TRANSACTION_ID"]) + n * 3),
             "BUY_SELL_CODE": S.BUY if buy else S.SELL, "PRODUCT_SUB_TYPE": SUB_TYPE.get(doc["PRODUCT_SUB_TYPE"], doc["PRODUCT_SUB_TYPE"]),
-            "COUNTERPARTY": cp, "COUNTERPARTY_UEN": ref["uen"] if rich else "", "COUNTERPARTY_COUNTRY_OF_RISK": ref["country"] if rich else None,
-            "ORIGINAL_COUNTERPARTY": orig, "ORIGINAL_COUNTERPARTY_UEN": R.CPTY[orig]["uen"] if orig and rich else "",
+            # who the deal is with and who booked it are always filled (a deal page, a netting set and a limit need them); the sparse deals
+            # keep the real extract's blanks elsewhere (events, vault, registry)
+            "COUNTERPARTY": cp, "COUNTERPARTY_UEN": ref["uen"], "COUNTERPARTY_COUNTRY_OF_RISK": ref["country"],
+            "ORIGINAL_COUNTERPARTY": orig, "ORIGINAL_COUNTERPARTY_UEN": R.CPTY[orig]["uen"] if orig else "",
             "INTERNAL_EXTERNAL_CODE": "External" if doc["INTERNAL_EXTERNAL_CODE"] == "External" else "Portfolio",
-            "TRANSIT": R.TRANSIT[self.entity], "LEGAL_ENTITY": self.entity if rich else "", "PORTFOLIO": rng.choice(self.books),
-            "TRADER_ID": R.trader_id(trader), "TRADER_FIRST_NAME": first if rich else "", "TRADER_LAST_NAME": last if rich else "",
+            "TRANSIT": R.TRANSIT[self.entity], "LEGAL_ENTITY": self.entity, "PORTFOLIO": rng.choice(self.books),
+            "TRADER_ID": R.trader_id(trader), "TRADER_FIRST_NAME": first, "TRADER_LAST_NAME": last,
             "DELIVERY_VERSUS_PAYMENT": "YES" if doc["DELIVERY_VERSUS_PAYMENT"] == "Y" else "NO", "TT_GROUP": "", "TT_BOOK": "",
             "EVENTS": events})
         if out["PRODUCT_SUB_TYPE"] == "NGX-COMM-PHYS":           # physical gas: delivered at a hub, the index read there

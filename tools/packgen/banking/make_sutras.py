@@ -62,12 +62,12 @@ CONTROLLED = {
             "  - { id: asset, kind: dropdown, label: Asset class, options: \"$.BY_ASSET[*].ASSET\", placement: header, panel: trades }",
             "  - { id: product, kind: multi-select, label: Product, options: \"$.TRADES[*].PRODUCT\", placement: header, panel: trades }",
             "  - { id: minNotional, kind: slider, label: Notional at least, min: 0, max: \"max($.TRADES[*].NOTIONAL)\", step: 1000000, placement: header, panel: trades }",
-            "  - { id: top, kind: top-n, label: Show, options: [10, 25, 50], default: 25, placement: header, panel: trades }",
+            "  - { id: status, kind: multi-select, label: Status, options: \"$.TRADES[*].STATUS\", default: all, placement: header, panel: trades }",
         ],
         "panels": {
-            "trades": {"title": "Member trades${ctl.asset ? ' · ' + ctl.asset : ''}",
-                       "extra": ["    where: \"(ctl.asset == '' || @.ASSET_CLASS == ctl.asset) && oneOf(@.PRODUCT, ctl.product) && (ctl.minNotional == '' || @.NOTIONAL >= ctl.minNotional)\"",
-                                 "    limit: ctl.top"]},
+            # every member, paged (the table's own pager): the live trades the set nets (a MATURED or CANCELLED trade is not a member)
+            "trades": {"title": "Member trades (${size($.TRADES)} of ${$.TRADE_COUNT})${ctl.asset ? ' · ' + ctl.asset : ''}",
+                       "extra": ["    where: \"(ctl.asset == '' || @.ASSET_CLASS == ctl.asset) && oneOf(@.PRODUCT, ctl.product) && oneOf(@.STATUS, ctl.status) && (ctl.minNotional == '' || @.NOTIONAL >= ctl.minNotional)\""]},
             "byAsset": {"extra": ["    on-select: { by: asset, field: ASSET, filter: [trades] }"]}},
     },
 }

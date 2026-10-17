@@ -57,7 +57,8 @@ def maturity_bucket(d: str) -> str:
 
 def trade_row(t: dict) -> dict:
     """A trade as a row of another entity's trade list: the columns shown, and what its Pivot tab groups by."""
-    return {"tradeId": t["tradeId"], "product": t["productName"], "assetClass": t["assetClass"], "currency": t["currency"], "book": t["book"],
+    return {"tradeId": t["tradeId"], "status": str(t.get("status") or "").upper() or None, "product": t["productName"], "assetClass": t["assetClass"],
+            "currency": t["currency"], "book": t["book"],
             "notional": t["notional"], "maturity": t["maturityDate"], "maturityBucket": maturity_bucket(t["maturityDate"]), "mtm": t["mtm"]}
 
 
@@ -67,6 +68,8 @@ def rating_pd(rating: str) -> float:
 
 
 # ---- counterparty credit risk ----------------------------------------------------------------------------------
+MEMBER_ROWS = 5_000                                    # the member rows a netting set lists at most (its TRADE_COUNT counts them all)
+
 def netting_sets(trades: dict) -> dict[str, list[dict]]:
     by = defaultdict(list)
     for t in trades.values():
@@ -108,7 +111,8 @@ def credit_results(trades: dict, docs: dict) -> None:
         docs["netting-set"][ns] = {
             "nettingSetId": ns, "tradeCount": len(members), "netMtm": net, "collateral": coll, "eePeak": ee_peak, "pfePeak": pfe_peak,
             "limit": limit, "utilisation": round(pfe_peak / limit, 4), "cva": cva, "profile": [{"tenor": p["tenor"], "ee": p["ee"], "pfe": p["pfe95"]} for p in prof],
-            "trades": [trade_row(t) for t in sorted(members, key=lambda t: -abs(t["mtm"]))][:40],
+            # every member (largest |MTM| first; a set past MEMBER_ROWS lists that many and says so: TRADES of TRADE_COUNT), for the page to page through
+            "trades": [trade_row(t) for t in sorted(members, key=lambda t: -abs(t["mtm"]))][:MEMBER_ROWS],
             "byAsset": [{"asset": a, "mtm": round(v)} for a, v in sorted(by_asset.items(), key=lambda x: -abs(x[1]))],
             "counterparty": f"CP-{cp}", "agreement": f"AGR-{cp}-ISDA", "csa": f"CSA-{cp}", "creditLimit": f"LIM-{cp}",
             "exposureProfile": f"EXP-{tag}", "cvaResult": f"CVA-{tag}", "saccr": f"SACCR-{tag}", "simm": f"SIMM-{cp}",
@@ -348,7 +352,10 @@ def reference(trades: dict, docs: dict) -> None:
             "mta": 500000, "independentAmount": 0, "frequency": "Daily", "mpor": "10 business days",
             "eligible": [{"asset": "USD, EUR, GBP cash", "haircut": 0.0}, {"asset": "G7 government bonds < 1Y", "haircut": 0.005},
                          {"asset": "G7 government bonds 1-5Y", "haircut": 0.02}, {"asset": "G7 government bonds 5-10Y", "haircut": 0.04}],
-            "agreement": f"AGR-{cp}-ISDA", "counterparty": f"CP-{cp}", "_meta": {"source": "legal-docs", "generation": 1}}
+            "agreement": f"AGR-{cp}-ISDA", "counterparty": f"CP-{cp}",
+            # what the CSA governs: the counterparty's netting sets and the collateral balances held and posted under it
+            "nettingSets": sorted(s["nettingSetId"] for s in sets), "collateralBalances": sorted(s["collateralBalance"] for s in sets),
+            "_meta": {"source": "legal-docs", "generation": 1}}
     groups = defaultdict(list)
     for cp, v in N.COUNTERPARTIES.items():
         groups[v[5]].append(cp)

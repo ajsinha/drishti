@@ -89,12 +89,14 @@ class CommonSchemaTest(unittest.TestCase):
         self.assertGreater(changed, 20)
 
     def test_the_packs_trade_samples_have_the_common_schema(self):
-        folder = ROOT / "config" / "packs" / "trading" / "samples" / "trade"
+        samples = ROOT / "config" / "packs" / "trading" / "samples"
         systems = set()
-        for f in folder.glob("*.json"):
-            d = json.loads(f.read_text(encoding="utf-8"))
+        docs = [(f.name, json.loads(f.read_text(encoding="utf-8"))) for f in (samples / "trade").glob("*.json")]        # one file per deal (before 2.3)
+        docs += [(f"trade.jsonl:{n}", json.loads(line)) for f in samples.glob("trade*.jsonl")                          # samples/<kind>.jsonl (2.3)
+                 for n, line in enumerate(f.read_text(encoding="utf-8").splitlines(), 1) if line.strip()]
+        for name, d in docs:
             d.pop("_meta", None)
-            self.assertEqual(S.problems(d), [], f.name)
+            self.assertEqual(S.problems(d), [], name)
             systems.add(d["SOURCE_SYSTEM"])
         self.assertEqual(systems, set(S.SYSTEMS))
 

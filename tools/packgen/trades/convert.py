@@ -177,7 +177,11 @@ class Converter:
         n = 0
         for t in (self.d.get("lifecycle") or {}).get("timeline") or []:
             n += 1
-            out.append(self.event("", n, str(t.get("event", "")).upper().replace(" ", "_"), "", t.get("date", ""), t.get("amount"), self.d["currency"]))
+            # a deal-level amount is in the currency of the leg whose notional it is (a cross-currency swap's yen leg), else the deal's
+            amt = _num(t.get("amount"))
+            ccy = next((lg["CURRENCY"] for lg in legs if amt is not None and _num(lg.get("NOTIONAL")) is not None and abs(_num(lg["NOTIONAL"])) == abs(amt)),
+                       self.d["currency"])
+            out.append(self.event("", n, str(t.get("event", "")).upper().replace(" ", "_"), "", t.get("date", ""), t.get("amount"), ccy))
         for leg in legs:
             sign = -1.0 if leg["LEG_ECONOMIC_TYPE"] == S.PAY else 1.0
             signed_already = any((_num(x.get("_amount")) or 0) < 0 for x in leg["CASH_FLOWS"])    # the model signs a paid amount itself

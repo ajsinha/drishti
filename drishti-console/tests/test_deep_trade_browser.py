@@ -66,7 +66,9 @@ def test_a_three_leg_commodity_swap_shows_its_legs_side_by_side_each_with_terms_
         if leg["INDEX"]["NAME"]:
             assert leg["INDEX"]["NAME"] in title, title
         parts = [box.locator("section.tab-part").nth(k).get_attribute("data-part") for k in range(box.locator("section.tab-part").count())]
-        assert parts == ["leg-terms", "leg-notional", "leg-fixings", "leg-flows"], parts
+        fixed = any(str(r.get("RATE") or "").strip() for f in leg["CASH_FLOWS"] for r in f.get("RESETS") or [])
+        # a leg with no fixing (a fixed leg) shows no empty Fixings chart
+        assert parts == ["leg-terms", "leg-notional"] + (["leg-fixings"] if fixed else []) + ["leg-flows"], parts
         assert box.locator("section[data-part='leg-terms'] dt", has_text="Pay / receive").count() == 1
         assert flows(box).locator("xpath=self::tr[@data-depth='0']").count() == len(leg["CASH_FLOWS"])
     assert not page.errors

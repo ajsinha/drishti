@@ -323,13 +323,15 @@
     var trail = [];
     try { trail = JSON.parse(sessionStorage.getItem('drishti.trail') || '[]'); } catch (e) { trail = []; }
     var at = trail.findIndex(function (c) { return c.url === here.url; });
-    trail = at >= 0 ? trail.slice(0, at + 1) : trail.concat([here]).slice(-6);
+    var CRUMBS = 5;                                       // the trail shows the last five views; older ones are kept for Back, behind an ellipsis
+    trail = at >= 0 ? trail.slice(0, at + 1) : trail.concat([here]).slice(-12);
     try { sessionStorage.setItem('drishti.trail', JSON.stringify(trail)); } catch (e) { /* storage blocked */ }
     var nav = document.querySelector('[data-crumbs]');
     if (nav && trail.length > 1) {
-      nav.innerHTML = '← ' + trail.map(function (c, i) {
-        var t = String(c.label).replace(/[&<>"]/g, '');
-        return i === trail.length - 1 ? '<span>' + t + '</span>' : '<a href="' + encodeURI(c.url) + '">' + t + '</a>';
+      var shown = trail.slice(-CRUMBS);
+      nav.innerHTML = '← ' + (trail.length > shown.length ? '<span class="crumb-more" title="' + (trail.length - shown.length) + ' earlier views">…</span><span class="sep">/</span>' : '') + shown.map(function (c, i) {
+        var t = String(c.label).replace(/[&<>"']/g, '');
+        return i === shown.length - 1 ? '<span>' + t + '</span>' : '<a href="' + encodeURI(c.url) + '">' + t + '</a>';
       }).join('<span class="sep">/</span>');
       nav.hidden = false;
     }

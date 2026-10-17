@@ -61,6 +61,7 @@ LOOKALIKES = {
 ROLE_OF = {"CallNot": ("VAULTGUARD", "HARBOURLINE-LDN"), "Cash": ("HOUSE",), "ComFut": ("METROEX",), "NGX-COMM-PHYS": ("PRAIRIEGAS",),
            "COMM-WARRANTS-INV": ("HOUSE", "VAULTGUARD"), "ComSwap": ("NORTHPLAINS",)}
 ROLE_SHARE = 0.6
+DEAD = {"MATURED", "CANCELLED"}                         # trade statuses no netting set holds (they neither net nor expose)
 SCALE = {"notional", "mtm", "pnl1d", "pv", "amount", "dv01", "cs01", "ie01", "delta", "gamma", "vega", "fxDelta", "jtd", "theta", "pnl",
          "quantity", "faceAmount", "premium", "principal", "interest", "npv", "marketValue"}
 SLIM = ("tradeId", "sourceSystem", "productType", "productName", "assetClass", "family", "currency", "book", "notional", "maturityDate", "mtm",
@@ -154,10 +155,9 @@ class Universe:
             role = ROLE_OF.get(d["PRODUCT_SUB_TYPE"]) or ROLE_OF.get(d["PRODUCT_TYPE"])
             if role and rng.random() < ROLE_SHARE:
                 cp = "CP-" + rng.choice(role)
-                rich = bool(d["LEGAL_ENTITY"])
                 d["COUNTERPARTY"] = cp
-                d["COUNTERPARTY_UEN"] = R.CPTY[cp]["uen"] if rich else ""
-                d["COUNTERPARTY_COUNTRY_OF_RISK"] = R.CPTY[cp]["country"] if rich else None
+                d["COUNTERPARTY_UEN"] = R.CPTY[cp]["uen"]
+                d["COUNTERPARTY_COUNTRY_OF_RISK"] = R.CPTY[cp]["country"]
                 if cp == "CP-HOUSE":
                     d["INTERNAL_EXTERNAL_CODE"] = "Portfolio"
             book.append(d)
@@ -190,7 +190,10 @@ class Universe:
         import walks
         import make_data as MD
         docs = {k: dict(v) for k, v in data_market.build().items()}
-        for kind, ds in data_results.build(self.rich).items():
+        # a netting set nets the trades that are still alive: a MATURED or CANCELLED trade is neither a member nor in its MTM, EE or CVA
+        status = {str(t["TRADE_ID"]): str(t.get("TRADE_STATUS") or "").upper() for book in self.trades.values() for t in book}
+        live = {tid: r for tid, r in self.rich.items() if status.get(tid) not in DEAD}
+        for kind, ds in data_results.build(live).items():
             docs.setdefault(kind, {}).update(ds)
         for ds in docs.values():
             for d in ds.values():
@@ -198,7 +201,7 @@ class Universe:
                     del d[k]
         docs = {kind: {i: U.record(d) for i, d in ds.items()} for kind, ds in docs.items()}
         members: dict[str, list[str]] = {}
-        for tid, t in self.rich.items():
+        for tid, t in live.items():
             members.setdefault(t["nettingSet"], []).append(tid)
         for ns, d in docs.get("netting-set", {}).items():   # every trade of the set, not only the 40 largest rows
             d["TRADE_IDS"] = sorted(members.get(ns, []))

@@ -17,7 +17,7 @@ rachana: 1
 block: deal-ticket
 version: 1
 description: "The deal ticket (DES): deal, product, parties, dates and settlement, as a booking system's ticket groups them."
-params: { rate-fmt: price4 }   # pct4 for rates (a fraction a year), price4 for prices per unit
+params: { rate-fmt: price4, product: '' }   # pct4 for rates (a fraction a year), price4 for prices per unit; product: the product type in words (the Sutra's)
 panels:
   - id: ticket
     kind: kv
@@ -32,7 +32,7 @@ panels:
       - { label: Package, bind: "nonblank($.PACKAGE_ID, '–')" }
       - { label: Source system, bind: $.SOURCE_SYSTEM }
       - { label: Updated, bind: "nonblank($.SOURCE_UPDATE_TIME, '–')" }
-      - { label: Product, bind: $.PRODUCT_TYPE }
+      - { label: Product, bind: "nonblank('%{product}') ? '%{product} (' + $.PRODUCT_TYPE + ')' : $.PRODUCT_TYPE" }
       - { label: Sub type, bind: "nonblank($.PRODUCT_SUB_TYPE, '–')" }
       - { label: Group, bind: "nonblank($.PRODUCT_GROUP, '–') + \" / \" + nonblank($.PRODUCT_SUB_GROUP, '–')" }
       - { label: Option, bind: "nonblank($.OPTION_TYPE, '–')" }

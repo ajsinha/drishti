@@ -47,6 +47,11 @@ FIELDS = {"TRADE_COUNT": "count", "NOTIONAL": "sum first($.LEGS).NOTIONAL", "SOU
           "PRODUCT_TYPES": "distinct $.PRODUCT_TYPE", "CURRENCIES": "distinct $.CURRENCY", "LAST_MATURITY": "max $.MATURITY_DATE"}
 
 
+# a page lists every trade of its counterparty, book, legal entity or index (the table pages through them); a group larger than this lists
+# its first MAX_MEMBERS and says so in the title (TRADES of TRADE_COUNT)
+MAX_MEMBERS = 20_000
+
+
 def slug(s: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
 
@@ -83,7 +88,7 @@ def _panels(rate_fmt: str) -> list[str]:
         f"      - {{ label: Package, bind: {q(dash('$.PACKAGE_ID'))} }}",
         f"      - {{ label: Source system, bind: $.SOURCE_SYSTEM }}",
         f"      - {{ label: Updated, bind: {q(dash('$.SOURCE_UPDATE_TIME'))} }}",
-        "      - { label: Product, bind: $.PRODUCT_TYPE }",
+        "      - { label: Product, bind: \"nonblank('%{product}') ? '%{product} (' + $.PRODUCT_TYPE + ')' : $.PRODUCT_TYPE\" }",   # words, the code kept
         f"      - {{ label: Sub type, bind: {q(dash('$.PRODUCT_SUB_TYPE'))} }}",
         f"      - {{ label: Group, bind: {q(dash('$.PRODUCT_GROUP') + ' + \" / \" + ' + dash('$.PRODUCT_SUB_GROUP'))} }}",
         f"      - {{ label: Option, bind: {q(dash('$.OPTION_TYPE'))} }}",
@@ -121,7 +126,10 @@ def _panels(rate_fmt: str) -> list[str]:
         "        title: Terms",
         "        columns:",
         "          - { label: Type, bind: \"nonblank(@.LEG_TYPE, '–')\" }",
-        "          - { label: Pay / receive, bind: \"nonblank(@.LEG_ECONOMIC_TYPE, '–')\" }",
+        # pay or receive: the booking's own word where it says it (CALYPSO, MUREX), else from the side and the leg (a buyer pays fixed and
+        # receives floating; a physical leg is taken by the buyer, delivered by the seller)
+        "          - { label: Pay / receive, bind: \"@.LEG_ECONOMIC_TYPE == 'Pay' || @.LEG_ECONOMIC_TYPE == 'Receive' ? @.LEG_ECONOMIC_TYPE : (@.LEG_TYPE == 'FIXED' ? ($.BUY_SELL_CODE == 'B' ? 'Pay' : ($.BUY_SELL_CODE == 'S' ? 'Receive' : '–')) : (@.LEG_TYPE == 'FLOAT' ? ($.BUY_SELL_CODE == 'B' ? 'Receive' : ($.BUY_SELL_CODE == 'S' ? 'Pay' : '–')) : (@.LEG_TYPE == 'PHYSICAL' ? ($.BUY_SELL_CODE == 'B' ? 'Take delivery' : ($.BUY_SELL_CODE == 'S' ? 'Deliver' : '–')) : '–')))\" }",
+        "          - { label: Economic type, bind: \"@.LEG_ECONOMIC_TYPE == 'Pay' || @.LEG_ECONOMIC_TYPE == 'Receive' ? '–' : nonblank(@.LEG_ECONOMIC_TYPE, '–')\" }",
         "          - { label: Index, bind: \"nonblank(@.INDEX.NAME, '–')\" }",
         "          - { label: Index group, bind: \"nonblank(@.INDEX.GROUP, '–')\" }",
         "          - { label: Notional, bind: \"@.CURRENCY + ' ' + fmt(@.NOTIONAL, 'amount0')\" }",
@@ -144,6 +152,7 @@ def _panels(rate_fmt: str) -> list[str]:
         "      - id: leg-fixings",
         "        kind: line",
         "        title: Fixings",
+        "        when: \"size(flatten(@.CASH_FLOWS[*].RESETS)[?nonblank(@.RATE)]) > 0\"",       # a fixed leg has no fixings: no empty chart
         "        rows: \"flatten(@.CASH_FLOWS[*].RESETS)[?nonblank(@.RATE)]\"",
         "        x: START_DATE",
         "        y: RATE",
@@ -162,7 +171,8 @@ def _panels(rate_fmt: str) -> list[str]:
         "          - { label: Status, bind: \"nonblank(@.PAYMENT_DATE) ? (@.PAYMENT_DATE < today() ? 'Paid' : (@.START_DATE <= today() ? 'Pricing' : 'Future')) : (nonblank(@.RATE) ? 'Fixed' : 'Open')\", tone: status }",
         "          - { label: Type, bind: \"nonblank(@.FLOW_TYPE, '–')\" }",
         "          - { label: Notional, bind: \"@.NOTIONAL\", fmt: amount0, total: true }",
-        f"          - {{ label: Rate / price, bind: \"@.RATE\", fmt: {rate_fmt} }}",
+        # a floating flow's rate is its fixings' average until the booking writes the rate
+        f"          - {{ label: Rate / price, bind: \"nonblank(@.RATE) ? @.RATE : (size(@.RESETS[?nonblank(@.RATE)]) > 0 ? sum(@.RESETS[?nonblank(@.RATE)], 'RATE') / size(@.RESETS[?nonblank(@.RATE)]) : '')\", fmt: {rate_fmt} }}",
         f"          - {{ label: Spread, bind: \"@.FLOAT_SPREAD\", fmt: {rate_fmt} }}",
         f"          - {{ label: Strike, bind: \"@.STRIKE_PRICE\", fmt: {rate_fmt} }}",
         "  - id: flows",
@@ -178,7 +188,7 @@ def _panels(rate_fmt: str) -> list[str]:
         "      - { label: Payment, bind: \"@.PAYMENT_DATE\", fmt: date }",
         "      - { label: Fixing, bind: \"nonblank(@.RATE_DETERMINATION_DATE, '–')\" }",
         "      - { label: Notional, bind: \"@.NOTIONAL\", fmt: amount0, total: true }",
-        f"      - {{ label: Rate / price, bind: \"@.RATE\", fmt: {rate_fmt} }}",
+        f"      - {{ label: Rate / price, bind: \"nonblank(@.RATE) ? @.RATE : (size(@.RESETS[?nonblank(@.RATE)]) > 0 ? sum(@.RESETS[?nonblank(@.RATE)], 'RATE') / size(@.RESETS[?nonblank(@.RATE)]) : '')\", fmt: {rate_fmt} }}",
         "      - { label: Resets, bind: \"size(@.RESETS)\" }",
         "  - id: events",
         "    kind: timeline",
@@ -258,7 +268,9 @@ def blocks() -> dict[str, str]:
     for name, _first, desc in BLOCKS:
         lines = [f"block: {name}", "version: 1", f"description: {q(desc)}"]
         if any(RF in ln for ln in cut[name]):
-            lines.append("params: { rate-fmt: price4 }   # pct4 for rates (a fraction a year), price4 for prices per unit")
+            extra = ", product: ''" if any("%{product}" in ln for ln in cut[name]) else ""
+            lines.append("params: { rate-fmt: price4" + extra + " }   # pct4 for rates (a fraction a year), price4 for prices per unit"
+                         + ("; product: the product type in words (the Sutra's)" if extra else ""))
         lines += ["panels:"] + cut[name]
         out[name] = "\n".join(lines) + "\n"
     return out
@@ -269,7 +281,9 @@ def deal_yaml(code: str, name: str, group: str, desc: str, system: str, sutra: s
     shown by `when:` for one sub type, after the ticket)."""
     rate_fmt = "pct4" if group in RATE_GROUPS else "price4"
     pill = f"{group} · {name}"
-    use = lambda b: f"  - {{ use: {b}@1, with: {{ rate-fmt: {rate_fmt} }} }}" if any(RF in ln for ln in _cut(_panels(RF))[b]) else f"  - {{ use: {b}@1 }}"  # noqa: E731
+    words = name.replace("'", "’").replace('"', "”")
+    with_product = lambda b: f", product: {q(words)}" if any("%{product}" in ln for ln in _cut(_panels(RF))[b]) else ""  # noqa: E731
+    use = lambda b: f"  - {{ use: {b}@1, with: {{ rate-fmt: {rate_fmt}{with_product(b)} }} }}" if any(RF in ln for ln in _cut(_panels(RF))[b]) else f"  - {{ use: {b}@1 }}"  # noqa: E731
     lines = [
         f"sutra: {sutra}",
         "version: 1",
@@ -350,7 +364,7 @@ def derived_yaml(kind: str) -> str:
     lines = [
         f"sutra: {kind}",
         "version: 1",
-        f"description: {q(what + ': live trades, upcoming payments, notional by product type and index, maturities, payments by month.')}",
+        f"description: {q(what + ': its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month.')}",
         f"match: {{ kind: {kind}, priority: 10 }}",
         f"title: {{ pill: {q(label)}, id: $.{id_field}" + (f", with: \"link($.{id_field}, '{target}')\"" if target else "") + " }",
         "strip:",
@@ -360,6 +374,8 @@ def derived_yaml(kind: str) -> str:
         "  - { label: Product types, bind: \"size($.PRODUCT_TYPES)\" }",
         "  - { label: Currencies, bind: \"size($.CURRENCIES)\" }",
         "  - { label: Last maturity, bind: $.LAST_MATURITY, fmt: date }",
+        "controls:                       # which trades the table lists: every status by default, or only the live ones",
+        "  - { id: status, kind: multi-select, label: Status, options: \"$.TRADES[*].TRADE_STATUS\", default: all, placement: header, panel: trades, remember: user }",
         "panels:",
         "  - id: pay7",
         "    kind: metric",
@@ -387,8 +403,9 @@ def derived_yaml(kind: str) -> str:
         "    span: 4",
         "  - id: trades",
         "    kind: table",
-        "    title: Live trades",
+        "    title: \"Trades (${size($.TRADES[?oneOf(@.TRADE_STATUS, ctl.status)])} of ${$.TRADE_COUNT})\"",
         "    code: TRD",
+        "    where: \"oneOf(@.TRADE_STATUS, ctl.status)\"",
         "    key: F2",
         "    rows: $.TRADES",
         "    pivot: { rows: [PRODUCT_TYPE], columns: [SOURCE_SYSTEM], values: [{ field: NOTIONAL, agg: sum }], filters: [CURRENCY] }",
@@ -458,6 +475,6 @@ def derived_connector() -> dict:
     """The derived connector's settings: one derived kind per axis, each with its rows (one per member trade) and totals."""
     out: dict = {"refresh": "60s"}
     for kind, (_m, _l, group, id_field, _t, _w) in DERIVED.items():
-        out[kind] = {"from": "trade", "group-by": group, "id-field": id_field, "members": "TRADE_IDS", "max-members": 500,
+        out[kind] = {"from": "trade", "group-by": group, "id-field": id_field, "members": "TRADE_IDS", "max-members": MAX_MEMBERS,
                      "rows-field": "TRADES", "fields": dict(FIELDS), "rows": dict(ROWS)}
     return out

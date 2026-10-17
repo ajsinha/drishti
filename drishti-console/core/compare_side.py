@@ -19,7 +19,43 @@ each element of its first tabs panel (a trade's legs), the label/value parts of 
 their label, so a leg added on the later date or a field that appeared shows on one side only."""
 from __future__ import annotations
 
+import re
+
 KV = ("kv", "status")
+_SEG = re.compile(r"^([^\[]+)\[([^\]]*)\]$")
+
+
+def _word(name: str) -> str:
+    """LEGS -> Leg, CASH_FLOWS -> Cash flow, RESETS -> Reset: an array's name as one of its elements."""
+    w = name.replace("_", " ").strip().lower()
+    w = w[:-1] if w.endswith("s") and not w.endswith("ss") else w
+    return w[:1].upper() + w[1:]
+
+
+def where(path: str) -> str:
+    """Where in the document a change sits, in words: LEGS[2].CASH_FLOWS[5000060].FLOAT_SPREAD -> Leg 2 › Cash flow 5000060 (the field
+    itself is the change's label); '' for a top-level field."""
+    parts = [p for p in str(path or "").split(".") if p][:-1]
+    out = []
+    for p in parts:
+        m = _SEG.match(p)
+        out.append(f"{_word(m.group(1))} {m.group(2)}" if m else p.replace("_", " ").lower())
+    return " › ".join(out)
+
+
+def nested(changes: list[dict]) -> dict | None:
+    """The changes inside the document's lists (a leg's cash flows and resets, events), as one more side-by-side section: what the
+    ticket and the leg terms do not show."""
+    rows = []
+    for c in changes:
+        w = where(c.get("path", ""))
+        if not w:
+            continue                                   # a top-level field: the ticket shows it
+        rows.append({"label": f"{w} › {c.get('label') or c.get('path')}", "a": c.get("before_text", ""), "b": c.get("after_text", ""),
+                     "state": c.get("kind") or "changed"})
+    if not rows:
+        return None
+    return {"title": "Cash flows, resets and events", "rows": rows, "changed": len(rows)}
 
 
 def _fields(panel: dict) -> list[dict]:

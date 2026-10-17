@@ -82,7 +82,7 @@ TRADER_KINDS = ["trade", *layout.PACKS["market-data"]["kinds"]["market"], "count
 CODES = {"core": "CORE", "market-data": "MKT", "trading": "TRDS", "market-risk": "MRSK", "counterparty-risk": "CCR"}
 
 # key fields shown beside each entity in pick lists (TRD MX-200000, CPTY north) and searches
-COLUMNS = {"trading": {"trade": ["SOURCE_SYSTEM", "PRODUCT_TYPE", "BUY_SELL_CODE", "CURRENCY", "QUANTITY", "MATURITY_DATE", "PORTFOLIO", "COUNTERPARTY"]},
+COLUMNS = {"trading": {"trade": ["SOURCE_SYSTEM", "PRODUCT_TYPE", "TRADE_STATUS", "TRADE_DATE", "BUY_SELL_CODE", "CURRENCY", "QUANTITY", "MATURITY_DATE", "PORTFOLIO", "COUNTERPARTY"]},
            "core": {"counterparty": ["NAME", "RATING", "SECTOR", "COUNTRY_OF_RISK", "UEN", "NET_MTM"],
                             "book": ["NAME", "DESK_NAME", "TRADE_COUNT", "MTM", "DV01"]}}
 

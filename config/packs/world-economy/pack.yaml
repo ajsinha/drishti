@@ -179,6 +179,30 @@ connectors:
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: macro
+      layout:
+        economy:
+          columns:
+          - NAME
+          - ISO3
+          - REGION_NAME
+          - INCOME_NAME
+          - GDP_USD_BN
+          - GDP_PER_CAPITA
+          - GROWTH
+          - INFLATION
+          - UNEMPLOYMENT
+          - POPULATION_M
+        region-economy:
+          columns:
+          - ISO3
+          - COUNTRY_NAME
+          - REGION_CODE
+          - NAME
+          - POPULATION
+          - GDP_USD_BN
+          - GDP_PER_CAPITA
+          - YEAR
+          - SOURCE
   civic-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}

@@ -22,7 +22,7 @@ title: { pill: Exposure and capital · Netting set, id: $.NETTING_SET_ID }
 strip:
   - { label: Trades, bind: $.TRADE_COUNT }
   - { label: Net MTM, bind: $.NET_MTM, fmt: signed0, tone: sign }
-  - { label: Collateral, bind: $.COLLATERAL, fmt: signed0 }
+  - { label: "Collateral (+ held, − posted)", bind: $.COLLATERAL, fmt: signed0 }
   - { label: EE peak, bind: $.EE_PEAK, fmt: compact }
   - { label: PFE 95 peak, bind: $.PFE_PEAK, fmt: compact, emphasis: true }
   - { label: Limit, bind: $.LIMIT, fmt: compact }
@@ -32,7 +32,7 @@ controls:
   - { id: asset, kind: dropdown, label: Asset class, options: "$.BY_ASSET[*].ASSET", placement: header, panel: trades }
   - { id: product, kind: multi-select, label: Product, options: "$.TRADES[*].PRODUCT", placement: header, panel: trades }
   - { id: minNotional, kind: slider, label: Notional at least, min: 0, max: "max($.TRADES[*].NOTIONAL)", step: 1000000, placement: header, panel: trades }
-  - { id: top, kind: top-n, label: Show, options: [10, 25, 50], default: 25, placement: header, panel: trades }
+  - { id: status, kind: multi-select, label: Status, options: "$.TRADES[*].STATUS", default: all, placement: header, panel: trades }
 panels:
   - id: exposure
     kind: area
@@ -47,12 +47,11 @@ panels:
       - { label: PFE 95, value: PFE, tone: accent }
   - id: trades
     kind: table
-    title: "Member trades${ctl.asset ? ' · ' + ctl.asset : ''}"
+    title: "Member trades (${size($.TRADES)} of ${$.TRADE_COUNT})${ctl.asset ? ' · ' + ctl.asset : ''}"
     code: TRD
     key: F3
     rows: $.TRADES
-    where: "(ctl.asset == '' || @.ASSET_CLASS == ctl.asset) && oneOf(@.PRODUCT, ctl.product) && (ctl.minNotional == '' || @.NOTIONAL >= ctl.minNotional)"
-    limit: ctl.top
+    where: "(ctl.asset == '' || @.ASSET_CLASS == ctl.asset) && oneOf(@.PRODUCT, ctl.product) && oneOf(@.STATUS, ctl.status) && (ctl.minNotional == '' || @.NOTIONAL >= ctl.minNotional)"
     pivot:
       fields: [PRODUCT, ASSET_CLASS, CURRENCY, BOOK, MATURITY_BUCKET, { field: MATURITY, label: Maturity date }, { field: NOTIONAL, fmt: compact }, { field: MTM, label: MTM (USD), fmt: signed0 }, TRADE_ID]
       rows: [PRODUCT]
@@ -61,6 +60,7 @@ panels:
       filters: [CURRENCY, ASSET_CLASS]
     columns:
       - { label: Trade, bind: "@.TRADE_ID" }
+      - { label: Status, bind: "@.STATUS", tone: status }
       - { label: Product, bind: "@.PRODUCT" }
       - { label: Notional, bind: "@.NOTIONAL", fmt: compact }
       - { label: Maturity, bind: "@.MATURITY", fmt: date }

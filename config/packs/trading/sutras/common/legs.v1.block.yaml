@@ -33,7 +33,8 @@ panels:
         title: Terms
         columns:
           - { label: Type, bind: "nonblank(@.LEG_TYPE, '–')" }
-          - { label: Pay / receive, bind: "nonblank(@.LEG_ECONOMIC_TYPE, '–')" }
+          - { label: Pay / receive, bind: "@.LEG_ECONOMIC_TYPE == 'Pay' || @.LEG_ECONOMIC_TYPE == 'Receive' ? @.LEG_ECONOMIC_TYPE : (@.LEG_TYPE == 'FIXED' ? ($.BUY_SELL_CODE == 'B' ? 'Pay' : ($.BUY_SELL_CODE == 'S' ? 'Receive' : '–')) : (@.LEG_TYPE == 'FLOAT' ? ($.BUY_SELL_CODE == 'B' ? 'Receive' : ($.BUY_SELL_CODE == 'S' ? 'Pay' : '–')) : (@.LEG_TYPE == 'PHYSICAL' ? ($.BUY_SELL_CODE == 'B' ? 'Take delivery' : ($.BUY_SELL_CODE == 'S' ? 'Deliver' : '–')) : '–')))" }
+          - { label: Economic type, bind: "@.LEG_ECONOMIC_TYPE == 'Pay' || @.LEG_ECONOMIC_TYPE == 'Receive' ? '–' : nonblank(@.LEG_ECONOMIC_TYPE, '–')" }
           - { label: Index, bind: "nonblank(@.INDEX.NAME, '–')" }
           - { label: Index group, bind: "nonblank(@.INDEX.GROUP, '–')" }
           - { label: Notional, bind: "@.CURRENCY + ' ' + fmt(@.NOTIONAL, 'amount0')" }
@@ -56,6 +57,7 @@ panels:
       - id: leg-fixings
         kind: line
         title: Fixings
+        when: "size(flatten(@.CASH_FLOWS[*].RESETS)[?nonblank(@.RATE)]) > 0"
         rows: "flatten(@.CASH_FLOWS[*].RESETS)[?nonblank(@.RATE)]"
         x: START_DATE
         y: RATE
@@ -74,6 +76,6 @@ panels:
           - { label: Status, bind: "nonblank(@.PAYMENT_DATE) ? (@.PAYMENT_DATE < today() ? 'Paid' : (@.START_DATE <= today() ? 'Pricing' : 'Future')) : (nonblank(@.RATE) ? 'Fixed' : 'Open')", tone: status }
           - { label: Type, bind: "nonblank(@.FLOW_TYPE, '–')" }
           - { label: Notional, bind: "@.NOTIONAL", fmt: amount0, total: true }
-          - { label: Rate / price, bind: "@.RATE", fmt: "%{rate-fmt}" }
+          - { label: Rate / price, bind: "nonblank(@.RATE) ? @.RATE : (size(@.RESETS[?nonblank(@.RATE)]) > 0 ? sum(@.RESETS[?nonblank(@.RATE)], 'RATE') / size(@.RESETS[?nonblank(@.RATE)]) : '')", fmt: "%{rate-fmt}" }
           - { label: Spread, bind: "@.FLOAT_SPREAD", fmt: "%{rate-fmt}" }
           - { label: Strike, bind: "@.STRIKE_PRICE", fmt: "%{rate-fmt}" }

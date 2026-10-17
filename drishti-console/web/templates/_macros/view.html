@@ -28,7 +28,7 @@
 {% macro strip(vm) -%}
 <dl class="strip">
   {% for c in vm.strip %}<div class="strip-i"><dt>{{ c.label }}</dt>
-    <dd class="mono{{ tone(c) }}{% if c.emphasis %} emph{% endif %}"{% if c.path %} data-path="{{ c.path }}"{% endif %}>{{ cell_text(c) }}</dd></div>{% endfor %}
+    <dd class="mono{{ tone(c) }}{% if c.emphasis %} emph{% endif %}"{% if c.path %} data-path="{{ c.path }}"{% endif %} title="{{ cell_text(c) | striptags }}">{{ cell_text(c) }}</dd></div>{% endfor %}
 </dl>
 {%- endmacro %}
 

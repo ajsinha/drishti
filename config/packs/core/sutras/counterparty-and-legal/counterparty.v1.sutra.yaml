@@ -43,7 +43,12 @@ panels:
     kind: kv
     title: KYC and classification
     area: right
-    rows: $.KYC
+    columns:
+      - { label: Status, bind: $.KYC.STATUS, tone: status }
+      - { label: Risk rating, bind: $.KYC.RISK_RATING }
+      - { label: Last review, bind: $.KYC.LAST_REVIEW, fmt: date }
+      - { label: EMIR classification, bind: $.KYC.EMIR_CLASSIFICATION }
+      - { label: PD (1 year), bind: $.KYC.PD_1Y, fmt: pct2 }
   - id: hierarchy
     kind: graph
     title: Group hierarchy (agreements and netting sets)

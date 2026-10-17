@@ -233,13 +233,16 @@ async def compare(request: Request, kind: str, id_: str, from_: str = Query("", 
             return render(request, "terminal/compare.html", kind=kind, id=id_, data=None, error=e, form=params, screen="compare",
                           from_known=fromKnownAt)
         return render(request, "terminal/missing.html", status_code=e.page_status, kind=kind, id=id_, error=e)
-    rows = [dict(c, before_text=_shown(c.get("before")), after_text=_shown(c.get("after")), delta_text=_delta(c.get("delta")))
+    rows = [dict(c, before_text=_shown(c.get("before")), after_text=_shown(c.get("after")), delta_text=_delta(c.get("delta")), where=compare_side.where(c.get("path", "")))
             for c in data.get("changes", []) if not only or c.get("kind") == only]
     side = []
     a_date, b_date = (data.get("from") or {}).get("businessDate"), (data.get("to") or {}).get("businessDate")
     if a_date and b_date and not fromKnownAt:          # the screens of the two dates side by side (a known-at restatement has one date)
         try:
             side = compare_side.sections(await backend.view_on(kind, id_, ident(request), a_date), await backend.view_on(kind, id_, ident(request), b_date))
+            deep = compare_side.nested(rows) if side else None       # the changes inside the lists (cash flows, resets, events) too
+            if deep:
+                side.append(deep)
         except BackendError:
             side = []                                  # the change list still answers
     return render(request, "terminal/compare.html", kind=kind, id=id_, data=data, rows=rows, error=None, only=only, screen="compare", side=side,

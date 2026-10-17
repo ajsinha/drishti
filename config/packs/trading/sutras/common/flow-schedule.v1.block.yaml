@@ -32,5 +32,5 @@ panels:
       - { label: Payment, bind: "@.PAYMENT_DATE", fmt: date }
       - { label: Fixing, bind: "nonblank(@.RATE_DETERMINATION_DATE, '–')" }
       - { label: Notional, bind: "@.NOTIONAL", fmt: amount0, total: true }
-      - { label: Rate / price, bind: "@.RATE", fmt: "%{rate-fmt}" }
+      - { label: Rate / price, bind: "nonblank(@.RATE) ? @.RATE : (size(@.RESETS[?nonblank(@.RATE)]) > 0 ? sum(@.RESETS[?nonblank(@.RATE)], 'RATE') / size(@.RESETS[?nonblank(@.RATE)]) : '')", fmt: "%{rate-fmt}" }
       - { label: Resets, bind: "size(@.RESETS)" }

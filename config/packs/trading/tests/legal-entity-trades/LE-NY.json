@@ -1,7 +1,7 @@
 {
  "LEGAL_ENTITY": "LE-NY",
- "TRADE_COUNT": 436,
- "NOTIONAL": 53877774059.76,
+ "TRADE_COUNT": 441,
+ "NOTIONAL": 53907826667.37,
  "SOURCE_SYSTEMS": [
   "CALYPSO",
   "ENDUR",
@@ -97,10 +97,15 @@
  "LAST_MATURITY": "2038-04-30",
  "TRADE_IDS": [
   "1000001",
+  "1000002",
   "1000003",
   "1000004",
+  "1000005",
   "1000006",
+  "1000007",
   "1000008",
+  "1000009",
+  "1000010",
   "1000011",
   "1000012",
   "1000013",
@@ -615,6 +620,164 @@
    ]
   },
   {
+   "TRADE_ID": 1000002,
+   "SOURCE_SYSTEM": "ENDUR",
+   "PRODUCT_TYPE": "ComSwap",
+   "BUY_SELL_CODE": "B",
+   "CURRENCY": "USD",
+   "NOTIONAL": 22128720.0,
+   "MATURITY_DATE": "2025-06-30",
+   "TRADE_STATUS": "MATURED",
+   "INDEX_NAME": "IDX-CRUDE-M1",
+   "COUNTERPARTY": "CP-LUMEN",
+   "PORTFOLIO": "BOOK-COMM-1",
+   "EVENTS": [
+    {
+     "LEG_ID": 1,
+     "EVENT_ID": "",
+     "EVENT_NUMBER": "",
+     "EVENT_TYPE": "",
+     "PAYMENT_TYPE": "",
+     "EVENT_DATE": "",
+     "AMOUNT": "",
+     "CURRENCY": "",
+     "SEQUENCE_NUMBER": "",
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 2,
+     "EVENT_ID": "",
+     "EVENT_NUMBER": "",
+     "EVENT_TYPE": "",
+     "PAYMENT_TYPE": "",
+     "EVENT_DATE": "",
+     "AMOUNT": "",
+     "CURRENCY": "",
+     "SEQUENCE_NUMBER": "",
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 2,
+     "EVENT_ID": "",
+     "EVENT_NUMBER": "",
+     "EVENT_TYPE": "",
+     "PAYMENT_TYPE": "",
+     "EVENT_DATE": "",
+     "AMOUNT": "",
+     "CURRENCY": "",
+     "SEQUENCE_NUMBER": "",
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 2,
+     "EVENT_ID": "",
+     "EVENT_NUMBER": "",
+     "EVENT_TYPE": "",
+     "PAYMENT_TYPE": "",
+     "EVENT_DATE": "",
+     "AMOUNT": "",
+     "CURRENCY": "",
+     "SEQUENCE_NUMBER": "",
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 2,
+     "EVENT_ID": "",
+     "EVENT_NUMBER": "",
+     "EVENT_TYPE": "",
+     "PAYMENT_TYPE": "",
+     "EVENT_DATE": "",
+     "AMOUNT": "",
+     "CURRENCY": "",
+     "SEQUENCE_NUMBER": "",
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 3,
+     "EVENT_ID": "",
+     "EVENT_NUMBER": "",
+     "EVENT_TYPE": "",
+     "PAYMENT_TYPE": "",
+     "EVENT_DATE": "",
+     "AMOUNT": "",
+     "CURRENCY": "",
+     "SEQUENCE_NUMBER": "",
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 3,
+     "EVENT_ID": "",
+     "EVENT_NUMBER": "",
+     "EVENT_TYPE": "",
+     "PAYMENT_TYPE": "",
+     "EVENT_DATE": "",
+     "AMOUNT": "",
+     "CURRENCY": "",
+     "SEQUENCE_NUMBER": "",
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 3,
+     "EVENT_ID": "",
+     "EVENT_NUMBER": "",
+     "EVENT_TYPE": "",
+     "PAYMENT_TYPE": "",
+     "EVENT_DATE": "",
+     "AMOUNT": "",
+     "CURRENCY": "",
+     "SEQUENCE_NUMBER": "",
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 3,
+     "EVENT_ID": "",
+     "EVENT_NUMBER": "",
+     "EVENT_TYPE": "",
+     "PAYMENT_TYPE": "",
+     "EVENT_DATE": "",
+     "AMOUNT": "",
+     "CURRENCY": "",
+     "SEQUENCE_NUMBER": "",
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 4,
+     "EVENT_ID": "",
+     "EVENT_NUMBER": "",
+     "EVENT_TYPE": "",
+     "PAYMENT_TYPE": "",
+     "EVENT_DATE": "",
+     "AMOUNT": "",
+     "CURRENCY": "",
+     "SEQUENCE_NUMBER": "",
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 4,
+     "EVENT_ID": "",
+     "EVENT_NUMBER": "",
+     "EVENT_TYPE": "",
+     "PAYMENT_TYPE": "",
+     "EVENT_DATE": "",
+     "AMOUNT": "",
+     "CURRENCY": "",
+     "SEQUENCE_NUMBER": "",
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    }
+   ]
+  },
+  {
    "TRADE_ID": 1000003,
    "SOURCE_SYSTEM": "ENDUR",
    "PRODUCT_TYPE": "ComSwap",
@@ -853,6 +1016,20 @@
    ]
   },
   {
+   "TRADE_ID": 1000005,
+   "SOURCE_SYSTEM": "ENDUR",
+   "PRODUCT_TYPE": "ComFut",
+   "BUY_SELL_CODE": "B",
+   "CURRENCY": "EUR",
+   "NOTIONAL": 1792370.0,
+   "MATURITY_DATE": "2025-09-30",
+   "TRADE_STATUS": "MATURED",
+   "INDEX_NAME": "IDX-NATGAS-TTF",
+   "COUNTERPARTY": "CP-VERDANT",
+   "PORTFOLIO": "BOOK-COMM-3",
+   "EVENTS": []
+  },
+  {
    "TRADE_ID": 1000006,
    "SOURCE_SYSTEM": "ENDUR",
    "PRODUCT_TYPE": "ComFut",
@@ -881,6 +1058,34 @@
    ]
   },
   {
+   "TRADE_ID": 1000007,
+   "SOURCE_SYSTEM": "ENDUR",
+   "PRODUCT_TYPE": "Cash",
+   "BUY_SELL_CODE": "S",
+   "CURRENCY": "USD",
+   "NOTIONAL": 666163.97,
+   "MATURITY_DATE": "2026-02-01",
+   "TRADE_STATUS": "MATURED",
+   "INDEX_NAME": "",
+   "COUNTERPARTY": "CP-BRAMBLE",
+   "PORTFOLIO": "BOOK-COMM-1",
+   "EVENTS": [
+    {
+     "LEG_ID": 1,
+     "EVENT_ID": 9000155,
+     "EVENT_NUMBER": 1,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Cash payment",
+     "EVENT_DATE": "2026-02-03",
+     "AMOUNT": 666163.97,
+     "CURRENCY": "USD",
+     "SEQUENCE_NUMBER": 1,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    }
+   ]
+  },
+  {
    "TRADE_ID": 1000008,
    "SOURCE_SYSTEM": "ENDUR",
    "PRODUCT_TYPE": "Cash",
@@ -895,7 +1100,7 @@
    "EVENTS": [
     {
      "LEG_ID": 1,
-     "EVENT_ID": 9000156,
+     "EVENT_ID": 9000157,
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Cash payment",
@@ -903,6 +1108,75 @@
      "AMOUNT": -1460914.66,
      "CURRENCY": "USD",
      "SEQUENCE_NUMBER": 1,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    }
+   ]
+  },
+  {
+   "TRADE_ID": 1000009,
+   "SOURCE_SYSTEM": "ENDUR",
+   "PRODUCT_TYPE": "Cash",
+   "BUY_SELL_CODE": "S",
+   "CURRENCY": "USD",
+   "NOTIONAL": 1465353.64,
+   "MATURITY_DATE": "2026-09-01",
+   "TRADE_STATUS": "VALIDATED",
+   "INDEX_NAME": "",
+   "COUNTERPARTY": "CP-RHEINTAL",
+   "PORTFOLIO": "BOOK-COMM-2",
+   "EVENTS": [
+    {
+     "LEG_ID": 1,
+     "EVENT_ID": 9000160,
+     "EVENT_NUMBER": 1,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Cash payment",
+     "EVENT_DATE": "2026-09-03",
+     "AMOUNT": 1465353.64,
+     "CURRENCY": "USD",
+     "SEQUENCE_NUMBER": 1,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    }
+   ]
+  },
+  {
+   "TRADE_ID": 1000010,
+   "SOURCE_SYSTEM": "ENDUR",
+   "PRODUCT_TYPE": "CallNot",
+   "BUY_SELL_CODE": "B",
+   "CURRENCY": "EUR",
+   "NOTIONAL": 4000000.0,
+   "MATURITY_DATE": "2026-11-30",
+   "TRADE_STATUS": "VALIDATED",
+   "INDEX_NAME": "",
+   "COUNTERPARTY": "CP-RHEINTAL",
+   "PORTFOLIO": "BOOK-COMM-3",
+   "EVENTS": [
+    {
+     "LEG_ID": 1,
+     "EVENT_ID": 9000161,
+     "EVENT_NUMBER": 1,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Interest",
+     "EVENT_DATE": "2026-10-02",
+     "AMOUNT": -80000.0,
+     "CURRENCY": "EUR",
+     "SEQUENCE_NUMBER": 1,
+     "VAULT_LOCATION_ALLOCATION": "",
+     "NY_CURVE_FLAG": ""
+    },
+    {
+     "LEG_ID": 1,
+     "EVENT_ID": 9000162,
+     "EVENT_NUMBER": 2,
+     "EVENT_TYPE": "CASH_SETTLEMENT",
+     "PAYMENT_TYPE": "Interest",
+     "EVENT_DATE": "2026-11-02",
+     "AMOUNT": -80000.0,
+     "CURRENCY": "EUR",
+     "SEQUENCE_NUMBER": 2,
      "VAULT_LOCATION_ALLOCATION": "",
      "NY_CURVE_FLAG": ""
     }
@@ -923,7 +1197,7 @@
    "EVENTS": [
     {
      "LEG_ID": 1,
-     "EVENT_ID": 9000159,
+     "EVENT_ID": 9000163,
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -951,7 +1225,7 @@
    "EVENTS": [
     {
      "LEG_ID": 1,
-     "EVENT_ID": 9000160,
+     "EVENT_ID": 9000164,
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -964,7 +1238,7 @@
     },
     {
      "LEG_ID": 1,
-     "EVENT_ID": 9000161,
+     "EVENT_ID": 9000165,
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -992,7 +1266,7 @@
    "EVENTS": [
     {
      "LEG_ID": 2,
-     "EVENT_ID": 9000170,
+     "EVENT_ID": 9000174,
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Commodity payment",
@@ -1005,7 +1279,7 @@
     },
     {
      "LEG_ID": 2,
-     "EVENT_ID": 9000171,
+     "EVENT_ID": 9000175,
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Commodity payment",
@@ -1018,7 +1292,7 @@
     },
     {
      "LEG_ID": 2,
-     "EVENT_ID": 9000172,
+     "EVENT_ID": 9000176,
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Commodity payment",
@@ -1031,7 +1305,7 @@
     },
     {
      "LEG_ID": 2,
-     "EVENT_ID": 9000173,
+     "EVENT_ID": 9000177,
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Commodity payment",
@@ -1044,7 +1318,7 @@
     },
     {
      "LEG_ID": 2,
-     "EVENT_ID": 9000174,
+     "EVENT_ID": 9000178,
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Commodity payment",
@@ -1057,7 +1331,7 @@
     },
     {
      "LEG_ID": 2,
-     "EVENT_ID": 9000175,
+     "EVENT_ID": 9000179,
      "EVENT_NUMBER": 6,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Commodity payment",
@@ -1070,7 +1344,7 @@
     },
     {
      "LEG_ID": 2,
-     "EVENT_ID": 9000176,
+     "EVENT_ID": 9000180,
      "EVENT_NUMBER": 7,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Commodity payment",
@@ -1083,7 +1357,7 @@
     },
     {
      "LEG_ID": 2,
-     "EVENT_ID": 9000177,
+     "EVENT_ID": 9000181,
      "EVENT_NUMBER": 8,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Commodity payment",
@@ -1111,7 +1385,7 @@
    "EVENTS": [
     {
      "LEG_ID": 2,
-     "EVENT_ID": 9000178,
+     "EVENT_ID": 9000182,
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Commodity payment",
@@ -1139,7 +1413,7 @@
    "EVENTS": [
     {
      "LEG_ID": 2,
-     "EVENT_ID": 9000212,
+     "EVENT_ID": 9000216,
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Commodity payment",
@@ -1152,7 +1426,7 @@
     },
     {
      "LEG_ID": 2,
-     "EVENT_ID": 9000213,
+     "EVENT_ID": 9000217,
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Commodity payment",
@@ -1165,7 +1439,7 @@
     },
     {
      "LEG_ID": 2,
-     "EVENT_ID": 9000214,
+     "EVENT_ID": 9000218,
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Commodity payment",
@@ -1178,7 +1452,7 @@
     },
     {
      "LEG_ID": 2,
-     "EVENT_ID": 9000215,
+     "EVENT_ID": 9000219,
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Commodity payment",
@@ -1191,7 +1465,7 @@
     },
     {
      "LEG_ID": 2,
-     "EVENT_ID": 9000216,
+     "EVENT_ID": 9000220,
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Commodity payment",
@@ -1204,7 +1478,7 @@
     },
     {
      "LEG_ID": 2,
-     "EVENT_ID": 9000217,
+     "EVENT_ID": 9000221,
      "EVENT_NUMBER": 6,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Commodity payment",
@@ -1217,7 +1491,7 @@
     },
     {
      "LEG_ID": 2,
-     "EVENT_ID": 9000218,
+     "EVENT_ID": 9000222,
      "EVENT_NUMBER": 7,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Commodity payment",
@@ -1230,7 +1504,7 @@
     },
     {
      "LEG_ID": 2,
-     "EVENT_ID": 9000219,
+     "EVENT_ID": 9000223,
      "EVENT_NUMBER": 8,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Commodity payment",
@@ -1243,7 +1517,7 @@
     },
     {
      "LEG_ID": 2,
-     "EVENT_ID": 9000220,
+     "EVENT_ID": 9000224,
      "EVENT_NUMBER": 9,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Commodity payment",
@@ -1256,7 +1530,7 @@
     },
     {
      "LEG_ID": 2,
-     "EVENT_ID": 9000221,
+     "EVENT_ID": 9000225,
      "EVENT_NUMBER": 10,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Commodity payment",
@@ -44657,7 +44931,7 @@
      "PAYMENT_TYPE": "",
      "EVENT_DATE": "2026-08-31",
      "AMOUNT": 19118000000.0,
-     "CURRENCY": "USD",
+     "CURRENCY": "JPY",
      "SEQUENCE_NUMBER": 4,
      "VAULT_LOCATION_ALLOCATION": "",
      "NY_CURVE_FLAG": ""

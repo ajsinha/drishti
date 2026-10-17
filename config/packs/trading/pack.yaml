@@ -196,7 +196,7 @@ connectors:
         group-by: $.COUNTERPARTY
         id-field: COUNTERPARTY
         members: TRADE_IDS
-        max-members: 500
+        max-members: 20000
         rows-field: TRADES
         fields:
           TRADE_COUNT: count
@@ -223,7 +223,7 @@ connectors:
         group-by: $.PORTFOLIO
         id-field: PORTFOLIO
         members: TRADE_IDS
-        max-members: 500
+        max-members: 20000
         rows-field: TRADES
         fields:
           TRADE_COUNT: count
@@ -250,7 +250,7 @@ connectors:
         group-by: $.LEGAL_ENTITY
         id-field: LEGAL_ENTITY
         members: TRADE_IDS
-        max-members: 500
+        max-members: 20000
         rows-field: TRADES
         fields:
           TRADE_COUNT: count
@@ -277,7 +277,7 @@ connectors:
         group-by: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME)
         id-field: INDEX_NAME
         members: TRADE_IDS
-        max-members: 500
+        max-members: 20000
         rows-field: TRADES
         fields:
           TRADE_COUNT: count
@@ -309,6 +309,8 @@ columns:
   trade:
   - SOURCE_SYSTEM
   - PRODUCT_TYPE
+  - TRADE_STATUS
+  - TRADE_DATE
   - BUY_SELL_CODE
   - CURRENCY
   - QUANTITY

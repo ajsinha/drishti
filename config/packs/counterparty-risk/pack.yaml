@@ -94,6 +94,9 @@ graph:
     COLLATERAL_BALANCE:
       kind: collateral-balance
       label: Collateral
+    COLLATERAL_BALANCES:
+      kind: collateral-balance
+      label: Collateral
     CREDIT_LIMIT:
       kind: credit-limit
       label: Credit limit
@@ -107,6 +110,9 @@ graph:
       kind: exposure-profile
       label: Exposure profile
     NETTING_SET:
+      kind: netting-set
+      label: Netting set
+    NETTING_SETS:
       kind: netting-set
       label: Netting set
     SACCR:

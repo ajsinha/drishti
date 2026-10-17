@@ -16,7 +16,7 @@
 rachana: 1
 sutra: portfolio-trades
 version: 1
-description: "Every trade of a portfolio (book), from every source system: live trades, upcoming payments, notional by product type and index, maturities, payments by month."
+description: "Every trade of a portfolio (book), from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month."
 match: { kind: portfolio-trades, priority: 10 }
 title: { pill: "Portfolio trades", id: $.PORTFOLIO, with: "link($.PORTFOLIO, 'book')" }
 strip:
@@ -26,6 +26,8 @@ strip:
   - { label: Product types, bind: "size($.PRODUCT_TYPES)" }
   - { label: Currencies, bind: "size($.CURRENCIES)" }
   - { label: Last maturity, bind: $.LAST_MATURITY, fmt: date }
+controls:                       # which trades the table lists: every status by default, or only the live ones
+  - { id: status, kind: multi-select, label: Status, options: "$.TRADES[*].TRADE_STATUS", default: all, placement: header, panel: trades, remember: user }
 panels:
   - id: pay7
     kind: metric
@@ -53,8 +55,9 @@ panels:
     span: 4
   - id: trades
     kind: table
-    title: Live trades
+    title: "Trades (${size($.TRADES[?oneOf(@.TRADE_STATUS, ctl.status)])} of ${$.TRADE_COUNT})"
     code: TRD
+    where: "oneOf(@.TRADE_STATUS, ctl.status)"
     key: F2
     rows: $.TRADES
     pivot: { rows: [PRODUCT_TYPE], columns: [SOURCE_SYSTEM], values: [{ field: NOTIONAL, agg: sum }], filters: [CURRENCY] }

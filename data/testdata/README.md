@@ -57,6 +57,12 @@ Written by `tools/testdata/make_testdata.py` (deterministic; `--check` says whet
 4. **Start** the server and the console: the run configurations **Drishti server (demo lakes)** (the samples off,
    `DRISHTI_DEMO_ENABLED=false`, so every page reads the lakes; with the samples on, a sample answers before the lake for an id both
    hold) and **Drishti console**. The server reads `data/delta` by default (`DRISHTI_DELTA_ROOT` moves it).
+
+   **The demo ticker (tutorial 12, live BI and boards).** The lakes are daily snapshots: they do not tick, so on these servers a live
+   visual's chip says **Listening** (following, nothing has changed) rather than **Live**. Tutorial 12's live trades and exposure come
+   from the **demo source**, which ticks by itself about twice a second: start the server with `DRISHTI_DEMO_ENABLED=true` (the run
+   configuration **Drishti server**, or edit **Drishti server (demo lakes)** and set that variable to `true`). With it on, a sample
+   answers before the lake for an id both hold; the lakes still answer every other id.
 5. **Open the demo pages** (the console on port 17480 by default):
 
    | Page | What it shows |

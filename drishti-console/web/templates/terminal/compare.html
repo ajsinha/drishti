@@ -62,7 +62,7 @@
     <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl">
       <thead><tr><th>Field</th><th></th><th class="num">{{ data.from.businessDate }}</th><th class="num">{{ data.to.businessDate }}</th><th class="num">Change</th></tr></thead>
       <tbody>{% for c in rows %}
-        <tr><td>{{ c.label }}<div class="cmp-path mono">{{ c.path }}</div></td>
+        <tr><td><span class="cmp-label">{{ c.label }}</span>{% if c.where %} <span class="cmp-where">· {{ c.where }}</span>{% endif %}<div class="cmp-path mono">{{ c.path }}</div></td>
           <td><span class="cmp-k {{ c.kind }}">{{ c.kind }}</span></td>
           <td class="num mono{% if c.kind == 'changed' %} cmp-old{% endif %}">{{ c.before_text }}</td>
           <td class="num mono">{{ c.after_text }}</td>
