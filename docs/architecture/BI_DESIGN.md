@@ -1150,8 +1150,37 @@ meets 6.8 on a real server; (6) explain shows tiers, layers and times; (7) QA fi
 (3) psql and Excel answers equal the MQ answers per user, masked; (4) a bundle with parameter rules moves a model and
 its reports from dev to test; (5) the docs pass is complete; (6) QA findings fixed before the drill.
 
-**After C:** Python data-prep experience (step preview, snippets, profiling: BI_PARITY_PLAN P1–P10), paginated
-reports, a second engine and an Excel add-in (3.0).
+**Between C and D: the product owner's real-life QA.** After 2.4.0 the product owner runs an isolated, full,
+real-life QA (real users' tasks on real-shaped data, outside the builders' own tests). Its findings are triaged first
+and fixed in wave D before anything else in it.
+
+#### Wave D — Real-life QA findings, data prep and statements → 2.5.0
+
+**Server lane:**
+
+1. **Real-life QA findings** (server side), first.
+2. **Python data-prep experience** (BI_PARITY_PLAN P1–P10): Transforms reading connectors directly, warm workers,
+   a tested snippets library (as-of joins for prices and FX, unpivot, type fixes), profiling of a Transform's input and
+   output, AI-written Transforms as reviewed drafts.
+3. **Paginated reports and statements:** page-exact layouts (headers, footers, page breaks, repeated table headers),
+   parameters, per-recipient bursting through subscriptions, PDF and Excel output, masked per reader.
+4. **3.0 groundwork:** a second query engine behind the tier planner (connector capability descriptors), and the
+   Excel add-in's API (the add-in itself in 3.0).
+
+**Console lane:**
+
+1. **Real-life QA findings** (console side), first.
+2. **Transform editor:** step-by-step preview (each step's rows and profile), snippets picker, profiling panel.
+3. **Statement designer** for paginated reports, previewed page by page.
+4. **The browser Python console** (personal, just-in-time analytics on a masked extract of a model; promoted results
+   run on the console backend) — only if the real-life QA asks for it.
+5. **Docs and tutorials** for data prep and statements (UI, CLI and YAML).
+
+**Accepted when:** (1) every real-life QA finding is fixed or explicitly deferred by the product owner; (2) a Transform
+is built step by step with a preview at each step and no YAML typing; (3) a monthly statement bursts to ten recipients,
+each masked, page-exact in PDF; (4) QA findings fixed before the drill.
+
+**After D:** 3.0 (the Excel add-in, the second engine in production, scale on real servers).
 
 ### 12.3 Risks
 
