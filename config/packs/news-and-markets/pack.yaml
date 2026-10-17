@@ -17,7 +17,7 @@
 # companies, themes) and twenty well-known listed companies (static reference data), each company with a live quote and price history
 # from Yahoo Finance (yfinance connector) and every topic and company with its headlines from Google News (news connector). Both
 # connectors are off by default. Countries and companies link to their economy (world-economy pack); a core counterparty links to its
-# headlines through its newsId.
+# headlines through its NEWS_ID.
 pack: news-and-markets
 sample: true                        # a demonstration pack: see drishti.packs.samples
 version: 1.0.0
@@ -41,31 +41,31 @@ graph:
     - { pattern: "^CO-", kind: listed-company }
     - { pattern: "^QUOTE-", kind: quote }
   fields:
-    newsId:    { kind: news, label: Headlines }
-    newsAllId: { kind: news, label: All results }
-    quoteId:   { kind: quote, label: Quote }
+    NEWS_ID:     { kind: news, label: Headlines }
+    NEWS_ALL_ID: { kind: news, label: All results }
+    QUOTE_ID:    { kind: quote, label: Quote }
   badges:
-    news: "$.count + ' headlines'"
-    quote: "fmt($.price, 'price2') + ' ' + $.currency"
-    listed-company: "$.ticker"
+    news: "$.COUNT + ' headlines'"
+    quote: "fmt($.PRICE, 'price2') + ' ' + $.CURRENCY"
+    listed-company: "$.TICKER"
 roles:
   news-analyst: { kinds: [news-topic, news] }
   market-analyst: { kinds: [listed-company, quote, news-topic, news] }
 form:                          # FORM news-and-markets: the search form of each kind
   news-topic:
-    - { path: topicId, label: Topic id, type: id, group: Identity, help: "One or many: paste a list." }
-    - { path: name, type: text, group: Identity, help: "TOPIC name contains Fed finds the Federal Reserve through its name." }
-    - { path: category, type: enum, group: Identity }
-    - { path: aliasText, label: Other names, type: text, group: Identity, help: "Aliases such as Fed, FOMC, BoE." }
-    - { path: edition, type: enum, group: Edition }
+    - { path: TOPIC_ID, label: Topic id, type: id, group: Identity, help: "One or many: paste a list." }
+    - { path: NAME, type: text, group: Identity, help: "TOPIC name contains Fed finds the Federal Reserve through its name." }
+    - { path: CATEGORY, type: enum, group: Identity }
+    - { path: ALIAS_TEXT, label: Other names, type: text, group: Identity, help: "Aliases such as Fed, FOMC, BoE." }
+    - { path: EDITION, type: enum, group: Edition }
   listed-company:
-    - { path: companyId, label: Company id, type: id, group: Identity, help: "One or many: paste a list." }
-    - { path: ticker, type: text, group: Identity }
-    - { path: name, type: text, group: Identity }
-    - { path: aliasText, label: Other names, type: text, group: Identity, help: "Aliases such as Google for Alphabet." }
-    - { path: exchange, type: enum, group: Listing }
-    - { path: sector, type: enum, group: Listing }
-    - { path: country, type: enum, group: Listing }
+    - { path: COMPANY_ID, label: Company id, type: id, group: Identity, help: "One or many: paste a list." }
+    - { path: TICKER, type: text, group: Identity }
+    - { path: NAME, type: text, group: Identity }
+    - { path: ALIAS_TEXT, label: Other names, type: text, group: Identity, help: "Aliases such as Google for Alphabet." }
+    - { path: EXCHANGE, type: enum, group: Listing }
+    - { path: SECTOR, type: enum, group: Listing }
+    - { path: COUNTRY, type: enum, group: Listing }
 console:
   examples:
     - ["TOPIC TOPIC-FED", "Federal Reserve · headlines, count by source, how they were selected"]
@@ -78,16 +78,16 @@ console:
   help: config/help.yaml
 columns:
   news-topic:
-    - name
-    - category
-    - aliasText
-    - edition
+    - NAME
+    - CATEGORY
+    - ALIAS_TEXT
+    - EDITION
   listed-company:
-    - ticker
-    - name
-    - sector
-    - exchange
-    - country
+    - TICKER
+    - NAME
+    - SECTOR
+    - EXCHANGE
+    - COUNTRY
 # TEMPLATES: each written once to config/connectors/<name>.yaml, DISABLED. Entity names are sent to Google (news) and tickers to Yahoo
 # (yfinance) when they are switched on.
 connectors:

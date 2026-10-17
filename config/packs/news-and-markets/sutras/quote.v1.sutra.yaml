@@ -17,22 +17,22 @@ sutra: quote
 version: 1
 description: "A quote and recent price history for a ticker, as the yfinance connector computed them."
 match: { kind: quote, priority: 10 }
-title: { pill: "Market watch · Quote", id: $.quoteId, with: $.name }
+title: { pill: "Market watch · Quote", id: $.QUOTE_ID, with: $.NAME }
 strip:
-  - { label: Price, bind: $.price, fmt: price2, emphasis: true }
-  - { label: Currency, bind: $.currency }
-  - { label: Change, bind: $.change, fmt: signed2, tone: sign }
-  - { label: Change %, bind: $.changePct, fmt: pc2, tone: sign }
-  - { label: Market, bind: $.marketState }
-  - { label: Exchange, bind: $.exchange }
+  - { label: Price, bind: $.PRICE, fmt: price2, emphasis: true }
+  - { label: Currency, bind: $.CURRENCY }
+  - { label: Change, bind: $.CHANGE, fmt: signed2, tone: sign }
+  - { label: Change %, bind: $.CHANGE_PCT, fmt: pc2, tone: sign }
+  - { label: Market, bind: $.MARKET_STATE }
+  - { label: Exchange, bind: $.EXCHANGE }
 panels:
   - id: history
     kind: line
     title: "Closing price"
     key: F2
-    rows: $.history
-    x: date
-    y: close
+    rows: $.HISTORY
+    x: DATE
+    y: CLOSE
     fmt: price2
   - id: range
     kind: kv
@@ -40,24 +40,24 @@ panels:
     key: F3
     area: right
     columns:
-      - { label: Day range, bind: $.dayRange }
-      - { label: 52-week range, bind: $.fiftyTwoWeekRange }
-      - { label: Volume, bind: $.volume, fmt: amount0 }
-      - { label: Market cap, bind: $.marketCap, fmt: compact }
-      - { label: Previous close, bind: $.previousClose, fmt: price2 }
-      - { label: As of, bind: $.asOf }
+      - { label: Day range, bind: $.DAY_RANGE }
+      - { label: 52-week range, bind: $.FIFTY_TWO_WEEK_RANGE }
+      - { label: Volume, bind: $.VOLUME, fmt: amount0 }
+      - { label: Market cap, bind: $.MARKET_CAP, fmt: compact }
+      - { label: Previous close, bind: $.PREVIOUS_CLOSE, fmt: price2 }
+      - { label: As of, bind: $.AS_OF }
   - id: bars
     kind: table
     title: "Price history"
     key: F4
-    rows: $.history
+    rows: $.HISTORY
     columns:
-      - { label: Date, bind: "@.date" }
-      - { label: Open, bind: "@.open", fmt: price2 }
-      - { label: High, bind: "@.high", fmt: price2 }
-      - { label: Low, bind: "@.low", fmt: price2 }
-      - { label: Close, bind: "@.close", fmt: price2 }
-      - { label: Volume, bind: "@.volume", fmt: amount0 }
-  - { id: source, kind: kv, title: Data source and terms, area: right, rows: $.provenance }
+      - { label: Date, bind: "@.DATE" }
+      - { label: Open, bind: "@.OPEN", fmt: price2 }
+      - { label: High, bind: "@.HIGH", fmt: price2 }
+      - { label: Low, bind: "@.LOW", fmt: price2 }
+      - { label: Close, bind: "@.CLOSE", fmt: price2 }
+      - { label: Volume, bind: "@.VOLUME", fmt: amount0 }
+  - { id: source, kind: kv, title: Data source and terms, area: right, rows: $.PROVENANCE }
   - { id: built, kind: provenance, title: How this view was built }
 keys: { F9: raw }

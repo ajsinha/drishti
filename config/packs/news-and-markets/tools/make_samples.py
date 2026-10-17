@@ -15,17 +15,20 @@
 
 """Writes the reference data of the two sample packs built on the on-demand connectors, from the lists below:
 
-  samples/news-topic/TOPIC-*.json       the topics (companies, countries, central banks, themes)
-  samples/listed-company/CO-*.json      about twenty well-known listed companies
+  samples/news-topic.jsonl              the topics (companies, countries, central banks, themes), one a line
+  samples/listed-company.jsonl          about twenty well-known listed companies
+  samples/catalog.json                  their ids, titles and subtitles
 
 and the aliases block of the news connector template in pack.yaml (between the BEGIN and END markers), so the connector
 knows every other name of every entity it is asked about. Run: python3 config/packs/news-and-markets/tools/make_samples.py
-The data is static reference data written by hand: no market data, no news. Both packs are samples (sample: true)."""
-import json
+The data is static reference data written by hand: no market data, no news. Attribute names are UPPER_SNAKE (TOPIC_ID, NEWS_ID)."""
 import pathlib
 import re
+import sys
 
 HERE = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(HERE.parents[2] / "tools" / "packgen" / "common"))
+import packsamples  # noqa: E402  (samples/<kind>.jsonl, one document a line)
 # ISO 3166 alpha-2 -> alpha-3: a country topic or a company links to its economy (the world-economy pack's ECON-<alpha-3>)
 ISO3 = {"US": "USA", "GB": "GBR", "DE": "DEU", "JP": "JPN", "IN": "IND", "BR": "BRA"}
 
@@ -77,10 +80,12 @@ def news_name(name):
     return "NEWS-" + name.replace(" ", "_")
 
 
+DOCS: dict[str, dict[str, dict]] = {}
+
+
 def write(directory, id_, doc, catalog, title, subtitle, kind):
     doc["_meta"] = {"source": "reference", "generation": 1, "live": False}
-    directory.mkdir(parents=True, exist_ok=True)
-    (directory / f"{id_}.json").write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    DOCS.setdefault(kind, {})[id_] = doc
     catalog.append({"kind": kind, "id": id_, "title": title, "subtitle": subtitle})
 
 
@@ -90,17 +95,25 @@ def main():
         locale = f"@{lang}-{country}" if lang else ""
         nid = news_name(name) + locale
         write(HERE / "samples" / "news-topic", f"TOPIC-{slug}",
-              {"topicId": f"TOPIC-{slug}", "name": name, "category": category, "aliases": aliases, "aliasText": ", ".join(aliases),
-               "edition": f"{lang}-{country}" if lang else "default", "newsId": nid, "newsAllId": nid + "~all",
-               **({"economy": f"ECON-{ISO3[country]}"} if country else {})},
+              {"TOPIC_ID": f"TOPIC-{slug}", "NAME": name, "CATEGORY": category, "ALIASES": aliases, "ALIAS_TEXT": ", ".join(aliases),
+               "EDITION": f"{lang}-{country}" if lang else "default", "NEWS_ID": nid, "NEWS_ALL_ID": nid + "~all",
+               **({"ECONOMY": f"ECON-{ISO3[country]}"} if country else {})},
               catalog, f"TOPIC-{slug}", f"{category} · {name} · {', '.join(aliases)}", "news-topic")
     for ticker, name, query, aliases, exchange, sector, country in COMPANIES:
         write(HERE / "samples" / "listed-company", f"CO-{ticker}",
-              {"companyId": f"CO-{ticker}", "ticker": ticker, "name": name, "aliases": aliases, "aliasText": ", ".join(aliases), "exchange": exchange, "sector": sector,
-               "country": country, "economy": f"ECON-{ISO3[country]}", "quoteId": f"QUOTE-{ticker}", "newsId": news_name(query),
-               "newsAllId": news_name(query) + "~all"},
+              {"COMPANY_ID": f"CO-{ticker}", "TICKER": ticker, "NAME": name, "ALIASES": aliases, "ALIAS_TEXT": ", ".join(aliases), "EXCHANGE": exchange,
+               "SECTOR": sector, "COUNTRY": country, "ECONOMY": f"ECON-{ISO3[country]}", "QUOTE_ID": f"QUOTE-{ticker}", "NEWS_ID": news_name(query),
+               "NEWS_ALL_ID": news_name(query) + "~all"},
               catalog, f"CO-{ticker}", f"{sector} · {name} ({exchange}: {ticker}) · {', '.join(aliases)}", "listed-company")
-    (HERE / "samples" / "catalog.json").write_text(json.dumps(catalog, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    out = HERE / "samples"
+    for old in sorted(out.rglob("*.json"), reverse=True):     # the older one-file-a-document layout
+        if old.name != "catalog.json":
+            old.unlink()
+    for d in (x for x in out.iterdir() if x.is_dir()):
+        if not any(d.iterdir()):
+            d.rmdir()
+    for name, text in packsamples.files(DOCS, catalog, packsamples.part_mb(sys.argv)).items():
+        (out / name).write_text(text, encoding="utf-8")
 
     lines = []
     for _, _, query, aliases, *_ in COMPANIES:

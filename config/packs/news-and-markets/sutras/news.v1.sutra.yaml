@@ -17,43 +17,43 @@ sutra: news
 version: 1
 description: "The headlines for one name, as the news connector computed them: newest first, filtered for relevance, duplicates removed."
 match: { kind: news, priority: 10 }
-title: { pill: "News · Headlines", id: $.newsId }
+title: { pill: "News · Headlines", id: $.NEWS_ID }
 strip:
-  - { label: Entity, bind: $.entity }
-  - { label: Edition, bind: $.edition }
-  - { label: Relevance filter, bind: $.relevanceFilter }
-  - { label: Headlines, bind: $.count, fmt: amount0, emphasis: true }
-  - { label: Fetched, bind: $.fetchedAt }
+  - { label: Entity, bind: $.ENTITY }
+  - { label: Edition, bind: $.EDITION }
+  - { label: Relevance filter, bind: $.RELEVANCE_FILTER }
+  - { label: Headlines, bind: $.COUNT, fmt: amount0, emphasis: true }
+  - { label: Fetched, bind: $.FETCHED_AT }
 panels:
   - id: headlines
     kind: table
     title: "Headlines, newest first"
     key: F2
-    rows: $.items
+    rows: $.ITEMS
     columns:
-      - { label: Published, bind: "@.published" }
-      - { label: Source, bind: "@.source" }
-      - { label: Headline, bind: "@.title" }
-      - { label: Link, bind: "@.link" }
+      - { label: Published, bind: "@.PUBLISHED" }
+      - { label: Source, bind: "@.SOURCE" }
+      - { label: Headline, bind: "@.TITLE" }
+      - { label: Link, bind: "@.LINK" }
   - id: bySource
     kind: hbar
     title: "Headlines by source"
     key: F3
     area: right
-    rows: $.bySource
-    label: source
-    value: count
+    rows: $.BY_SOURCE
+    label: SOURCE
+    value: COUNT
     fmt: amount0
   - id: pipeline
     kind: table
     title: "How the headlines were chosen"
     key: F4
     area: right
-    rows: $.pipeline
+    rows: $.PIPELINE
     columns:
-      - { label: Step, bind: "@.step" }
-      - { label: Kept, bind: "@.kept", fmt: amount0 }
-      - { label: Dropped, bind: "@.dropped", fmt: amount0 }
-  - { id: source, kind: kv, title: Data source and terms, area: right, rows: $.provenance }
+      - { label: Step, bind: "@.STEP" }
+      - { label: Kept, bind: "@.KEPT", fmt: amount0 }
+      - { label: Dropped, bind: "@.DROPPED", fmt: amount0 }
+  - { id: source, kind: kv, title: Data source and terms, area: right, rows: $.PROVENANCE }
   - { id: built, kind: provenance, title: How this view was built }
 keys: { F9: raw }

@@ -119,7 +119,7 @@ public final class NewsSourcePlugin implements SourcePlugin {
         List<String> aliases = settings.aliases().getOrDefault(NewsSettings.key(q.name()), List.of());
         NewsPipeline.Outcome out = pipeline.run(f.items(), q.name(), aliases, q.relevance());
         index.add(new EntityHit(ref, q.name(), "news · " + out.items().size() + " headlines"));
-        DataNode data = context.parseJson(new ByteArrayInputStream(JSON.writeValueAsBytes(document(ref, q, aliases, f, out))));
+        DataNode data = context.parseJson(new ByteArrayInputStream(JSON.writeValueAsBytes(com.ash.drishti.common.UpperSnake.keys(document(ref, q, aliases, f, out)))));
         return Optional.of(new EntityDocument(ref, data, new Provenance(settings.sourceName(), f.at().toEpochMilli(), f.at(), false)));
     }
 

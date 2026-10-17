@@ -63,15 +63,15 @@ class NewsSourcePluginTest {
         NewsSourcePlugin p = plugin(Map.of());
         DataNode d = doc(p, "NEWS-Acme");
         // 7 usable items: 3 "opens new plant" (one exact duplicate, one same headline from the same publisher), 1 unrelated, 1 denied, 1 FT, 1 Guardian
-        assertThat(d.get("fetched").asDouble()).isEqualTo(7.0);
+        assertThat(d.get("FETCHED").asDouble()).isEqualTo(7.0);
         assertThat(titles(d)).containsExactly("The wider Acme story: profits", "ACME names a new chief executive", "Acme opens new plant!");
-        assertThat(d.get("items").get(0).get("source").asText()).isEqualTo("The Guardian");
-        assertThat(d.get("items").get(0).get("link").asText()).isEqualTo("https://n.example/e1");
-        assertThat(d.get("items").get(0).get("published").asText()).isEqualTo("2026-10-09 18:45 UTC");
-        assertThat(d.get("items").get(1).get("snippet").asText()).doesNotContain("<").doesNotContain("&nbsp;");
-        assertThat(d.get("relevanceFilter").asText()).isEqualTo("on");
-        assertThat(d.get("pipeline").size()).isGreaterThanOrEqualTo(4);
-        assertThat(d.get("bySource").size()).isEqualTo(3);
+        assertThat(d.get("ITEMS").get(0).get("SOURCE").asText()).isEqualTo("The Guardian");
+        assertThat(d.get("ITEMS").get(0).get("LINK").asText()).isEqualTo("https://n.example/e1");
+        assertThat(d.get("ITEMS").get(0).get("PUBLISHED").asText()).isEqualTo("2026-10-09 18:45 UTC");
+        assertThat(d.get("ITEMS").get(1).get("SNIPPET").asText()).doesNotContain("<").doesNotContain("&nbsp;");
+        assertThat(d.get("RELEVANCE_FILTER").asText()).isEqualTo("on");
+        assertThat(d.get("PIPELINE").size()).isGreaterThanOrEqualTo(4);
+        assertThat(d.get("BY_SOURCE").size()).isEqualTo(3);
     }
 
     @Test
@@ -201,8 +201,8 @@ class NewsSourcePluginTest {
 
     private static java.util.List<String> titles(DataNode d) {
         java.util.List<String> out = new java.util.ArrayList<>();
-        for (int i = 0; i < d.get("items").size(); i++) {
-            out.add(d.get("items").get(i).get("title").asText());
+        for (int i = 0; i < d.get("ITEMS").size(); i++) {
+            out.add(d.get("ITEMS").get(i).get("TITLE").asText());
         }
         return out;
     }

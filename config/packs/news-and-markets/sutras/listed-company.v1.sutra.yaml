@@ -17,61 +17,61 @@ sutra: listed-company
 version: 1
 description: "A listed company: its live quote and price history (yfinance connector) and its news headlines (news connector), both computed on demand."
 match: { kind: listed-company, priority: 10 }
-title: { pill: "Market watch · Company", id: $.companyId, with: $.name }
+title: { pill: "Market watch · Company", id: $.COMPANY_ID, with: $.NAME }
 strip:
-  - { label: Ticker, bind: $.ticker, emphasis: true }
-  - { label: Exchange, bind: $.exchange }
-  - { label: Sector, bind: $.sector }
-  - { label: Country, bind: $.country }
-  - { label: Other names, bind: $.aliasText }
-  - { label: Quote, bind: "link($.quoteId, 'quote')" }
+  - { label: Ticker, bind: $.TICKER, emphasis: true }
+  - { label: Exchange, bind: $.EXCHANGE }
+  - { label: Sector, bind: $.SECTOR }
+  - { label: Country, bind: $.COUNTRY }
+  - { label: Other names, bind: $.ALIAS_TEXT }
+  - { label: Quote, bind: "link($.QUOTE_ID, 'quote')" }
 panels:
   - id: quote
     kind: kv
     title: "Quote"
     code: QUOTE
     key: F2
-    source: "link($.quoteId, 'quote')"
+    source: "link($.QUOTE_ID, 'quote')"
     columns:
-      - { label: Price, bind: $.price, fmt: price2 }
-      - { label: Currency, bind: $.currency }
-      - { label: Change, bind: $.change, fmt: signed2, tone: sign }
-      - { label: Change %, bind: $.changePct, fmt: pc2, tone: sign }
-      - { label: Market, bind: $.marketState }
-      - { label: Day range, bind: $.dayRange }
-      - { label: 52-week range, bind: $.fiftyTwoWeekRange }
-      - { label: Volume, bind: $.volume, fmt: amount0 }
-      - { label: Market cap, bind: $.marketCap, fmt: compact }
-      - { label: As of, bind: $.asOf }
+      - { label: Price, bind: $.PRICE, fmt: price2 }
+      - { label: Currency, bind: $.CURRENCY }
+      - { label: Change, bind: $.CHANGE, fmt: signed2, tone: sign }
+      - { label: Change %, bind: $.CHANGE_PCT, fmt: pc2, tone: sign }
+      - { label: Market, bind: $.MARKET_STATE }
+      - { label: Day range, bind: $.DAY_RANGE }
+      - { label: 52-week range, bind: $.FIFTY_TWO_WEEK_RANGE }
+      - { label: Volume, bind: $.VOLUME, fmt: amount0 }
+      - { label: Market cap, bind: $.MARKET_CAP, fmt: compact }
+      - { label: As of, bind: $.AS_OF }
   - id: history
     kind: line
     title: "Closing price"
     key: F3
-    source: "link($.quoteId, 'quote')"
-    rows: $.history
-    x: date
-    y: close
+    source: "link($.QUOTE_ID, 'quote')"
+    rows: $.HISTORY
+    x: DATE
+    y: CLOSE
     fmt: price2
   - id: headlines
     kind: table
     title: "Headlines, newest first"
     code: NEWS
     key: F4
-    source: "link($.newsId, 'news')"
-    rows: $.items
+    source: "link($.NEWS_ID, 'news')"
+    rows: $.ITEMS
     columns:
-      - { label: Published, bind: "@.published" }
-      - { label: Source, bind: "@.source" }
-      - { label: Headline, bind: "@.title" }
-      - { label: Link, bind: "@.link" }
+      - { label: Published, bind: "@.PUBLISHED" }
+      - { label: Source, bind: "@.SOURCE" }
+      - { label: Headline, bind: "@.TITLE" }
+      - { label: Link, bind: "@.LINK" }
   - id: bySource
     kind: hbar
     title: "Headlines by source"
     area: right
-    source: "link($.newsId, 'news')"
-    rows: $.bySource
-    label: source
-    value: count
+    source: "link($.NEWS_ID, 'news')"
+    rows: $.BY_SOURCE
+    label: SOURCE
+    value: COUNT
     fmt: amount0
   - id: note
     kind: markdown
@@ -80,4 +80,4 @@ panels:
     text: "Sample pack for internal demonstrations. The quote and history come from Yahoo Finance's unofficial public endpoint and the headlines from Google News, each by its own connector, both off until a site enables them (Admin, Connectors: yfinance and news). Turning them on sends this ticker to Yahoo and this company's name to Google. While the connectors are off (their shipped state) the panels above stay empty."
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.quoteId, 'quote')", F8: "link($.newsId, 'news')", F9: raw }
+keys: { F7: "link($.QUOTE_ID, 'quote')", F8: "link($.NEWS_ID, 'news')", F9: raw }

@@ -61,22 +61,22 @@ class YFinanceSourcePluginTest {
     void aQuoteAndItsHistoryAreParsed() throws Exception {
         YFinanceSourcePlugin p = plugin(Map.of("range", "1mo"));
         DataNode d = doc(p, "QUOTE-acme");
-        assertThat(d.get("quoteId").asText()).isEqualTo("QUOTE-ACME");
-        assertThat(d.get("name").asText()).isEqualTo("ACME Corporation");
-        assertThat(d.get("exchange").asText()).isEqualTo("NasdaqGS");
-        assertThat(d.get("price").asDouble()).isEqualTo(191.5);
-        assertThat(d.get("previousClose").asDouble()).isEqualTo(189.0);              // the bar before, not the chart's range start
-        assertThat(d.get("change").asDouble()).isEqualTo(2.5);
-        assertThat(d.get("changePct").asDouble()).isBetween(1.32, 1.33);
-        assertThat(d.get("dayRange").asText()).isEqualTo("188.90 – 192.30");
-        assertThat(d.get("fiftyTwoWeekRange").asText()).isEqualTo("140.10 – 199.60");
-        assertThat(d.get("volume").asDouble()).isEqualTo(51234567);
-        assertThat(d.get("marketCap").isNull()).isTrue();
-        assertThat(d.get("marketState").asText()).isEqualTo("CLOSED");
-        assertThat(d.get("history").size()).isEqualTo(4);                           // the bar without a close is skipped
-        assertThat(d.get("history").get(3).get("close").asDouble()).isEqualTo(191.5);
-        assertThat(d.get("history").get(0).get("date").asText()).matches("\\d{4}-\\d{2}-\\d{2}");
-        assertThat(d.get("historyRange").asText()).isEqualTo("1mo");
+        assertThat(d.get("QUOTE_ID").asText()).isEqualTo("QUOTE-ACME");
+        assertThat(d.get("NAME").asText()).isEqualTo("ACME Corporation");
+        assertThat(d.get("EXCHANGE").asText()).isEqualTo("NasdaqGS");
+        assertThat(d.get("PRICE").asDouble()).isEqualTo(191.5);
+        assertThat(d.get("PREVIOUS_CLOSE").asDouble()).isEqualTo(189.0);              // the bar before, not the chart's range start
+        assertThat(d.get("CHANGE").asDouble()).isEqualTo(2.5);
+        assertThat(d.get("CHANGE_PCT").asDouble()).isBetween(1.32, 1.33);
+        assertThat(d.get("DAY_RANGE").asText()).isEqualTo("188.90 – 192.30");
+        assertThat(d.get("FIFTY_TWO_WEEK_RANGE").asText()).isEqualTo("140.10 – 199.60");
+        assertThat(d.get("VOLUME").asDouble()).isEqualTo(51234567);
+        assertThat(d.get("MARKET_CAP").isNull()).isTrue();
+        assertThat(d.get("MARKET_STATE").asText()).isEqualTo("CLOSED");
+        assertThat(d.get("HISTORY").size()).isEqualTo(4);                           // the bar without a close is skipped
+        assertThat(d.get("HISTORY").get(3).get("CLOSE").asDouble()).isEqualTo(191.5);
+        assertThat(d.get("HISTORY").get(0).get("DATE").asText()).matches("\\d{4}-\\d{2}-\\d{2}");
+        assertThat(d.get("HISTORY_RANGE").asText()).isEqualTo("1mo");
         assertThat(fake.lastQuery()).isEqualTo("range=1mo&interval=1d");
     }
 
@@ -111,9 +111,9 @@ class YFinanceSourcePluginTest {
     @Test
     void serverErrorsAndRateLimitsAreRetriedAClientErrorIsNot() throws Exception {
         YFinanceSourcePlugin p = plugin(Map.of("retries", "2"));
-        assertThat(doc(p, "QUOTE-FLAKY").get("price").asDouble()).isEqualTo(191.5);
+        assertThat(doc(p, "QUOTE-FLAKY").get("PRICE").asDouble()).isEqualTo(191.5);
         assertThat(fake.calls("FLAKY")).isEqualTo(3);
-        assertThat(doc(plugin(Map.of("retries", "1")), "QUOTE-LIMITED").get("price").asDouble()).isEqualTo(191.5);
+        assertThat(doc(plugin(Map.of("retries", "1")), "QUOTE-LIMITED").get("PRICE").asDouble()).isEqualTo(191.5);
         assertThatThrownBy(() -> doc(p, "QUOTE-DENIED")).hasMessageContaining("HTTP 403");
         assertThat(fake.calls("DENIED")).isEqualTo(1);
     }

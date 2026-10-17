@@ -17,58 +17,58 @@ sutra: news-topic
 version: 1
 description: "A topic and the news about it: headlines (newest first) with their publishers and links, a count by source, and how the headlines were chosen. The headlines are computed on demand by the news connector."
 match: { kind: news-topic, priority: 10 }
-title: { pill: "News · Topic", id: $.topicId }
+title: { pill: "News · Topic", id: $.TOPIC_ID }
 strip:
-  - { label: Topic, bind: $.name }
-  - { label: Category, bind: $.category }
-  - { label: Other names, bind: $.aliasText }
-  - { label: Edition, bind: $.edition }
-  - { label: Headlines, bind: "link($.newsId, 'news')" }
+  - { label: Topic, bind: $.NAME }
+  - { label: Category, bind: $.CATEGORY }
+  - { label: Other names, bind: $.ALIAS_TEXT }
+  - { label: Edition, bind: $.EDITION }
+  - { label: Headlines, bind: "link($.NEWS_ID, 'news')" }
 panels:
   - id: headlines
     kind: table
     title: "Headlines, newest first"
     code: NEWS
     key: F2
-    source: "link($.newsId, 'news')"
-    rows: $.items
+    source: "link($.NEWS_ID, 'news')"
+    rows: $.ITEMS
     columns:
-      - { label: Published, bind: "@.published" }
-      - { label: Source, bind: "@.source" }
-      - { label: Headline, bind: "@.title" }
-      - { label: Link, bind: "@.link" }
+      - { label: Published, bind: "@.PUBLISHED" }
+      - { label: Source, bind: "@.SOURCE" }
+      - { label: Headline, bind: "@.TITLE" }
+      - { label: Link, bind: "@.LINK" }
   - id: bySource
     kind: hbar
     title: "Headlines by source"
     key: F3
     area: right
-    source: "link($.newsId, 'news')"
-    rows: $.bySource
-    label: source
-    value: count
+    source: "link($.NEWS_ID, 'news')"
+    rows: $.BY_SOURCE
+    label: SOURCE
+    value: COUNT
     fmt: amount0
   - id: pipeline
     kind: table
     title: "How the headlines were chosen"
     key: F4
     area: right
-    source: "link($.newsId, 'news')"
-    rows: $.pipeline
+    source: "link($.NEWS_ID, 'news')"
+    rows: $.PIPELINE
     columns:
-      - { label: Step, bind: "@.step" }
-      - { label: Kept, bind: "@.kept", fmt: amount0 }
-      - { label: Dropped, bind: "@.dropped", fmt: amount0 }
+      - { label: Step, bind: "@.STEP" }
+      - { label: Kept, bind: "@.KEPT", fmt: amount0 }
+      - { label: Dropped, bind: "@.DROPPED", fmt: amount0 }
   - id: everything
     kind: table
     title: "Everything the feed returned for this name (no relevance filter)"
     key: F5
-    source: "link($.newsAllId, 'news')"
-    rows: $.items
+    source: "link($.NEWS_ALL_ID, 'news')"
+    rows: $.ITEMS
     columns:
-      - { label: Published, bind: "@.published" }
-      - { label: Source, bind: "@.source" }
-      - { label: Headline, bind: "@.title" }
-      - { label: Link, bind: "@.link" }
+      - { label: Published, bind: "@.PUBLISHED" }
+      - { label: Source, bind: "@.SOURCE" }
+      - { label: Headline, bind: "@.TITLE" }
+      - { label: Link, bind: "@.LINK" }
   - id: note
     kind: markdown
     title: "About these headlines"
@@ -76,4 +76,4 @@ panels:
     text: "Sample pack. Headlines are fetched when this page opens, by the news connector, from Google News. While the connector is off (its shipped state) the tables above stay empty: enable it in Admin, Connectors (news). Turning it on sends the name of this topic to Google."
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.newsId, 'news')", F9: raw }
+keys: { F7: "link($.NEWS_ID, 'news')", F9: raw }

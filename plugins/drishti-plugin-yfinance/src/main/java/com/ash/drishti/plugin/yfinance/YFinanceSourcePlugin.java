@@ -125,7 +125,7 @@ public final class YFinanceSourcePlugin implements SourcePlugin {
         doc.put("provenance", source);
         index.add(new EntityHit(EntityRef.of(ref.kind(), settings.idPrefix() + symbol), symbol, "quote · " + f.quote().get("name")));
         return Optional.of(new EntityDocument(EntityRef.of(ref.kind(), settings.idPrefix() + symbol),
-                context.parseJson(new ByteArrayInputStream(JSON.writeValueAsBytes(doc))), new Provenance(settings.sourceName(), f.at().toEpochMilli(), f.at(), false)));
+                context.parseJson(new ByteArrayInputStream(JSON.writeValueAsBytes(com.ash.drishti.common.UpperSnake.keys(doc)))), new Provenance(settings.sourceName(), f.at().toEpochMilli(), f.at(), false)));
     }
 
     private static String range(Object low, Object high) {
