@@ -145,6 +145,14 @@ public final class DatasetService {
             return List.of();
         }
 
+        /** A model that reads a dataset of the model layer, and the tables (aliases) of it that do: what a refresh of that dataset rebuilds. */
+        record Reader(QueryService.Loaded loaded, List<String> tables) {}
+
+        /** The published models that read the dataset {@code name}, and its implicit model (what {@code POST /datasets/{id}/refresh} rebuilds). */
+        default List<Reader> readersOf(String name) {
+            return List.of();
+        }
+
         /** The model as a designer or a reader of a report sees it ({@code GET /models/{id}/describe}). */
         Map<String, Object> describe(Principal p, String model);
 
@@ -834,6 +842,10 @@ public final class DatasetService {
     /** Clears a dataset's layers for the current business date and reads them again, in the background; the dataset's refresh state says how it went. */
     public Map<String, Object> refresh(Principal p, String id) {
         BiStore.Item item = datasetItem(p, id);
+        String layerName = layerDatasetName(p, item);
+        if (layerName != null) {
+            return refreshLayerDataset(p, item, layerName);
+        }
         QueryService.Loaded ds = loaded(p, item);
         java.time.LocalDate today = sources.currentDate();
         List<String> touched = ds.dataset().tables().values().stream().filter(t -> "cached".equals(t.mode())).map(Dataset.Table::name).toList();
@@ -850,6 +862,44 @@ public final class DatasetService {
         return out;
     }
 
+    /** The name of a {@code rachana: 2} dataset item (one of the model layer), or null for a version 1 dataset. */
+    private String layerDatasetName(Principal p, BiStore.Item item) {
+        String body = bi.bodyFor(p, item);
+        if (!com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(body)) {
+            return null;
+        }
+        com.ash.drishti.server.bi.layer.DatasetDef d = com.ash.drishti.server.bi.layer.DatasetDefParser.parse(body).dataset();
+        if (d == null) {
+            throw new DrishtiException(ErrorCode.LAYER_DATASET_INVALID, "'" + item.title() + "' has errors: Check it on its page before a refresh");
+        }
+        return d.name();
+    }
+
+    /**
+     * A refresh of a dataset of the model layer: its kept Python Transform results are dropped (the next question runs the Transform again, as its reader),
+     * and in every published model that reads it, and its implicit model, the tables that read it are cleared and rebuilt in the background.
+     */
+    private Map<String, Object> refreshLayerDataset(Principal p, BiStore.Item item, String name) {
+        int dropped = frames == null ? 0 : frames.transforms().invalidateNamed(name);
+        ModelGateway g = gateway;
+        List<ModelGateway.Reader> readers = g == null ? List.of() : g.readersOf(name);
+        readers.forEach(r -> queries.layers().bump(r.loaded().key()));
+        java.time.LocalDate today = sources.currentDate();
+        audit.record(p.user(), "bi-dataset-refresh", item.id(), "dataset " + name + ": " + dropped + " kept Transform result(s) dropped, tables of " + readers.size() + " model(s) rebuilt");
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("dataset", item.id());
+        out.put("date", today.toString());
+        out.put("refreshing", readers.stream().flatMap(r -> r.tables().stream().map(t -> r.loaded().id() + "/" + t)).toList());
+        out.put("models", readers.stream().map(r -> r.loaded().id()).toList());
+        out.put("transformResultsDropped", dropped);
+        if (refresher != null) {
+            out.put("state", refresher.runNow(item.id(), readers, p.user()));
+        } else {
+            readers.forEach(r -> queries.refresh(r.loaded(), r.tables(), today));
+        }
+        return out;
+    }
+
     /** Runs a derived dataset's Transform now for the caller (see {@link DatasetController#runTransform}). */
     public Map<String, Object> runTransform(Principal p, String id) {
         BiStore.Item item = datasetItem(p, id);
@@ -859,7 +909,11 @@ public final class DatasetService {
 
     /** The refresh state of a dataset the caller may read: its schedule, last run, status, next run, failures. */
     public Map<String, Object> refreshState(Principal p, String id) {
-        QueryService.Loaded ds = loaded(p, datasetItem(p, id));
+        BiStore.Item item = datasetItem(p, id);
+        if (layerDatasetName(p, item) != null) {
+            return refresher == null ? Map.of("enabled", false, "scheduled", false) : refresher.status(item.id());
+        }
+        QueryService.Loaded ds = loaded(p, item);
         return refresher == null ? Map.of("enabled", false, "scheduled", false) : refresher.status(ds);
     }
 

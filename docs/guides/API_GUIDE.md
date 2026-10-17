@@ -1679,6 +1679,8 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9126 | 409 | Breaking change | A published model or dataset loses a measure, column or relationship (by stable id or name), makes a relationship inactive or changes a grain key without a new major version; or the version goes down |
 | DRS-9127 | 422 | Expression | An expression that is not DEL v2 (a construct Python has and DEL refuses, the old syntax once refused), or that does not fit its scope, its types or the function catalogue; a model measure that does not compile ([EXPRESSIONS.md](EXPRESSIONS.md#7-problems-and-their-fixes)) |
 | DRS-9129 | 422 | Later wave | A key, function or value a later wave builds (`calc`, `share_of`, `param.x`, `ALL`, calculation groups: wave B) |
+| DRS-9132 | (warning) | Hidden measure still reachable | Check: a measure hidden for some roles reads columns they still see (a default measure or a `define` reaches the number); the message lists the columns to hide too |
+| DRS-9163 | 422 | Not available to your role | A field or measure hidden for the caller's roles (`hidden-for`), on every endpoint (a report keeps this code); its definition, columns and who may see it are never said |
 | DRS-9131 | (warning) | Roles without a rule | Check names the readers of a dataset that no row rule of the model names: they see no rows (`meta.noAccess` in their answers) |
 | DRS-9130 | 409 | Security safeguard | A model where a role restricted by a row rule elsewhere would see every row of a dataset with no rule: give that dataset a rule, or write `may-see-all: { <alias>: [<role>] }` (audited `bi-model-may-see-all`) |
 | DRS-9150 | 422 | Model query shape | An unknown key, a wrong type, `mq` missing or not 1, two time forms, `params` before wave W6 |
@@ -2085,7 +2087,7 @@ The problems answer (captured):
 
 ```json
 {"count": 1, "problems": [{"step": "expressions", "item": "it-broken", "title": "it-broken", "kind": "dataset", "where": "measures.Per.expr",
-  "problem": "not converted, the item keeps its text: DRS-9127 expected ')' to close the call of sum() but the expression ends (sum(trades.mtm)",
+  "problem": "not converted, the item keeps its text: DRS-9127 expected ')' to close the call of sum(), but the expression ends there (sum(trades.mtm)",
   "since": "2026-10-13T02:35:52.717930195Z"}]}
 ```
 
@@ -2099,7 +2101,7 @@ read on the model; neither changes anything (open to a read-only token). Every s
 | Method | Path | What it does |
 |---|---|---|
 | `POST` | `/api/v1/bi/sql` | body `{model, sql, format?}`: `model` is `name@major` or `dataset:<name>`; `format` `json` (default), `csv` or `arrow`. The answer: `sql: 1`, `model`, `columns` (each with `name`, `type`, `masked`, and for an MQ-shaped statement `kind`, `id`, `source`: the model query's column), `rows`, `rowCount`, `meta` (`shape`: `mq` or `composite`; for `mq` the model query's meta: `query`, `plan`, `signature`, `cached`, `warnings`, `asOf`, ...; for `composite` `leaves`, the leaves' plan hashes). `EXPLAIN SELECT ...` answers `{explain: true, shape, plan, signature, queries, outer (composite), tree, text}` instead |
-| `POST` | `/api/v1/bi/sql/validate` | body `{model, sql}`: `{valid, shape, queries, columns: [{name, source, kind}], plan, signature, problems: []}` without reading data; or `valid: false` with `problems` (`code`, `message`, `fix`, `at: {start, end}`). Always `200` |
+| `POST` | `/api/v1/bi/sql/validate` | body `{model, sql}`: `{valid, shape, queries, columns: [{name, source, kind, type}] (type: a field's column type; a count, `count()` or `distinct()` an `integer`, any other measure a `decimal`), plan, signature, problems: []}` without reading data; or `valid: false` with `problems` (`code`, `message`, `fix`, `at: {start, end}`). Always `200` |
 
 A refusal is `422` with `code` (`DRS-9170` to `DRS-9179`, or the model query's own), `path: "sql@<offset>"` and `fix: {at, write}` (captured):
 

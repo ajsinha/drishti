@@ -456,6 +456,24 @@ GET  /api/v1/bi/datasets/file:dataset:nv-demo/refresh          (the demo lake ho
 **The state survives a restart.** The state and the last `drishti.bi.refresh.history` (25) runs of every job are kept in `<BI store>/refresh/state.json` (written after each run and each planned time, atomically). After a restart the page shows the same last run, status, rows, duration and history; a run that was in progress when the server stopped shows as `interrupted`; a time that passed while the server was down is run once at start-up (`trigger: schedule (catch-up)`). A file that cannot be read is ignored (a warning in the log) and the jobs start as `never`.
 
 **Refresh now, last and next run, history.** The **Refresh** section has a **Refresh now** button for people with the `bi-author` power (it is `POST /datasets/{id}/refresh`, audited as `bi-dataset-refresh`; the page then asks for the state once a second until the run is no longer `running`), a line *Last refresh ... · Next ...* and **Recent refreshes**, newest first: when, started by (`schedule`, `after-load trade`, `retry`, `manual (<person>)`), result, date, rows, time and the error of a failed run. `GET /datasets/{id}/refresh` carries the same in `dataset.history`. Settings: `drishti.bi.refresh.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibirefresh--scheduled-dataset-refresh)). The refresh is audited (`bi-dataset-refresh`).
+
+**A dataset of the model layer (`rachana: 2`, 2.2).** `POST /datasets/{id}/refresh` refreshes it through the models that read it: its kept Python
+Transform results are dropped (the next question runs the Transform again, as its reader), and in every published model that reads it, and in its
+implicit model (`dataset:<name>`), the tables that read it are cleared and rebuilt for the business date (a staged table, such as a Python dataset's or a
+connector query's, has no layer: it is asked again). The answer names them, and the state is kept under the dataset (`GET` answers `dataset.status`,
+`lastRows`, `history`; schedules stay with the models' tables):
+
+```
+POST /api/v1/bi/datasets/file:dataset:desk-pnl-vs-exposure-py-result/refresh
+{"dataset": "file:dataset:desk-pnl-vs-exposure-py-result", "date": "2026-10-13",
+ "refreshing": [], "models": ["file:model:desk-pnl-vs-exposure-py", "implicit:desk-pnl-vs-exposure-py-result@1"], "transformResultsDropped": 0,
+ "state": {"schedule": "on demand", "status": "running", "trigger": "manual (drishti-dev-admin)", ...}}
+```
+
+From the command line `python3 tools/drishti.py bi dataset refresh ID --now` asks for it and waits until the state is no longer `running`.
+
+Its **tests** (`tests:` with `agg`, `unique`, `not-null`, `references-exist`; BI_MODEL_SPEC.md section 1.8) run from its page's *Expected values* and
+`drishti.py bi item tests ID`, and a failing one refuses its publish (`DRS-9043`).
 No new write endpoint: `POST .../refresh` is the one that existed and needs `bi-author` (and, for a personal token, the `bi:write` scope).
 
 ### 7.1 Live tables (phase 5)

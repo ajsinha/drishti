@@ -176,7 +176,10 @@
     return freeName().then(() => B.layer.post('dataset-yaml', { doc: L.doc() })).then((r) => {
       const put = W.savedId ? B.api('PUT', '/items/' + B.id2path(W.savedId), { body: r.yaml })
         : B.api('POST', '/workspaces/' + encodeURIComponent(q('[data-ws]').value || root.getAttribute('data-workspace') || 'me') + '/items', { kind: 'dataset', title: W.title || W.name, description: '', body: r.yaml });
-      return put.then((it) => { W.savedId = it.id; L.keep(); return Object.assign(it, { check: r.check }); });
+      // Preview saved the draft before a workspace was chosen: the workspace of the Save step wins (a private draft cannot be published)
+      const ws = q('[data-ws]').value;
+      const placed = (it) => (W.savedId && ws && ws !== 'me' && it.workspace && it.workspace !== ws ? B.api('POST', '/items/' + B.id2path(it.id) + '/move', { workspace: ws }) : it);
+      return put.then(placed).then((it) => { W.savedId = it.id; L.keep(); return Object.assign(it, { check: r.check }); });
     });
   };
   function save(publish) {

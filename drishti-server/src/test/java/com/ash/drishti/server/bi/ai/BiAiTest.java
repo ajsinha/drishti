@@ -161,6 +161,50 @@ class BiAiTest {
                           - { id: total, type: card, title: Notional, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }
                           - { id: by-desk, type: bar, title: Notional by desk, at: { x: 0, y: 2, w: 6, h: 4 }, wells: { axis: [trades.desk], values: [Notional] } }
                     """);
+            Path models = Path.of("target/bi-ai-folder/models");
+            Files.createDirectories(models);
+            // the same lake through the model layer: a rachana 2 dataset and a model over it
+            Files.writeString(datasets.resolve("lake-trade.dataset.yaml"), """
+                    rachana: 2
+                    dataset: lake-trade
+                    version: 1.0.0
+                    source: { connector: ai-lake, kind: trade }
+                    grain: { keys: [tradeId] }
+                    columns:
+                      tradeId:  { type: string }
+                      desk:     { type: string, description: The desk that owns the trade }
+                      book:     { type: string }
+                      currency: { type: string }
+                      notional: { type: decimal }
+                      mtm:      { type: decimal }
+                    security:
+                      rows:
+                        - { role: [bi-risk, report-author, admin], where: "true" }
+                    """);
+            Files.writeString(models.resolve("lake-model.model.yaml"), """
+                    rachana: 2
+                    model: lake-model
+                    version: 1.0.0
+                    title: Lake model
+                    description: Trades of the lake, as a model
+                    datasets:
+                      trades: { dataset: lake-trade, role: fact }
+                    measures:
+                      Notional: { expr: "sum(trades.notional)", description: Sum of the notional }
+                      MTM:      { expr: "sum(trades.mtm)" }
+                    """);
+            Files.writeString(reports.resolve("lake-model-report.report.yaml"), """
+                    rachana: 2
+                    report: lake-model-report
+                    version: 1
+                    title: Lake model report
+                    model: lake-model@1
+                    pages:
+                      - id: main
+                        title: Main
+                        visuals:
+                          - { id: total, type: card, title: Notional, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }
+                    """);
             Files.writeString(ai.resolve("mock.yaml"), """
                     type: mock
                     models:
@@ -426,5 +470,43 @@ class BiAiTest {
         BiAiService off = new BiAiService(new LLMFactory(new LlmGateway(registry, LlmPolicy.none()), null), new AiProperties(null, null, null, null, null, null),
                 BiAiProperties.defaults(), bi, reports, datasets, audit);
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> off.narrate(rita, "x")).hasMessageContaining("switched off");
+    }
+
+    @Test
+    void theAuthoringHooksWorkOnAModelGroundedInItsDescribeAndPinnedToIt() throws Exception {
+        List<String> prompts = new ArrayList<>();
+        Principal wes = new Principal("wes", List.of("report-author"));
+        Map<String, Object> d = spying(prompts, "labels-only").draft(wes, "lake-model@1", "notional by desk");
+        assertThat((String) d.get("yaml")).as("a report on the model").contains("rachana: 2").contains("model: lake-model@1").doesNotContain("dataset:");
+        assertThat(d.get("model")).isEqualTo("lake-model@1");
+        assertThat(String.join("\n", prompts)).contains("table trades: the dataset lake-trade 1.0.0").contains("trades.desk string - The desk that owns the trade")
+                .contains("Notional - Sum of the notional").doesNotContain("sum(trades.notional)").doesNotContain("DESK-A");
+        JsonNode http = ok(send("/api/v1/bi/ai/draft", as("wes", "report-author"), Map.of("dataset", "file:model:lake-model", "request", "notional by desk")));
+        assertThat(http.path("valid").asBoolean()).isTrue();
+        assertThat(http.path("yaml").asText()).contains("model: lake-model@1");
+        JsonNode sug = ok(send("/api/v1/bi/ai/suggest", as("wes", "report-author"), Map.of("dataset", "lake-model@1", "goal", "what drives notional")));
+        assertThat(sug.path("suggestions")).hasSize(3);
+        assertThat(sug.path("model").asText()).isEqualTo("lake-model@1");
+        String bad = "rachana: 2\nreport: bad\nversion: 1\ntitle: Bad\nmodel: lake-model@1\npages:\n  - id: p\n    title: P\n    visuals:\n"
+                + "      - { id: v, type: bar, title: V, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { axis: [trades.nope], values: [Nothing] } }\n";
+        List<String> checks = new ArrayList<>();
+        Map<String, Object> explained = new BiAiCopilot(spying(checks, "labels-only")).explainChecks(wes, bad);
+        assertThat(explained.get("valid")).isEqualTo(false);
+        assertThat(String.join("\n", checks)).as("the model's names go with the problems").contains("trades.desk string");
+        JsonNode h = ok(send("/api/v1/bi/ai/dataset-helper", as("wes", "report-author"), Map.of("dataset", "file:model:lake-model")));
+        List<String> ids = new ArrayList<>();
+        h.path("items").forEach(i -> ids.add(i.path("id").asText()));
+        assertThat(ids).containsExactly("measure:Average notional", "field:trades.book");
+        assertThat(h.path("items").get(1).path("yaml").asText()).as("a model's fields: block").isEqualTo("trades.book: { description: \"The book the trade sits in\" }");
+        assertThat(h.path("model").asText()).isEqualTo("lake-model@1");
+        JsonNode asked = ok(send("/api/v1/bi/ai/ask", as("rita", "bi-risk"), Map.of("dataset", "lake-model@1", "question", "notional by desk")));
+        assertThat(asked.path("rows")).hasSize(3);
+        // explain's lineage names the model at the version that answered and each table's dataset by its current name and version
+        JsonNode why = ok(send("/api/v1/bi/ai/explain", as("rita", "bi-risk"), Map.of("report", "file:report:lake-model-report", "page", "main", "visual", "total",
+                "measure", "Notional", "state", DATES)));
+        assertThat(why.path("lineage").path("model").path("version").asText()).isEqualTo("1.0.0");
+        assertThat(why.path("lineage").path("dataset").path("name").asText()).isEqualTo("lake-model");
+        assertThat(why.path("lineage").path("sources").get(0).path("dataset").asText() + "@" + why.path("lineage").path("sources").get(0).path("version").asText())
+                .isEqualTo("lake-trade@1.0.0");
     }
 }

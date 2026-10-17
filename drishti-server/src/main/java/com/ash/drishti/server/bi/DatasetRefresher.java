@@ -21,6 +21,7 @@ import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.RefreshSpec;
 import com.ash.drishti.server.bi.engine.BiRefreshProperties;
+import com.ash.drishti.server.bi.engine.Layers;
 import com.ash.drishti.server.bi.engine.QueryService;
 import com.ash.drishti.server.dist.SubscriptionSchedule;
 import java.time.Clock;
@@ -53,7 +54,11 @@ public final class DatasetRefresher implements AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(DatasetRefresher.class);
 
     /** One thing that refreshes: a dataset as a whole ({@code table} null) or one of its tables. */
-    private record Job(QueryService.Loaded ds, String table, String schedule) {
+    private record Job(QueryService.Loaded ds, String table, String schedule, List<DatasetService.ModelGateway.Reader> readers) {
+
+        Job(QueryService.Loaded ds, String table, String schedule) {
+            this(ds, table, schedule, null);
+        }
 
         String key() {
             return ds.id() + (table == null ? "" : "#" + table);
@@ -288,8 +293,8 @@ public final class DatasetRefresher implements AutoCloseable {
         st.trigger = trigger;
         Instant started = clock.instant();
         try {
-            QueryService.Refreshed r = queries.refresh(j.ds(), j.tables(), date);
-            if (j.ds().dataset().framed()) {
+            QueryService.Refreshed r = j.readers() == null ? queries.refresh(j.ds(), j.tables(), date) : across(j.readers(), date);
+            if (j.ds().dataset() != null && j.ds().dataset().framed()) {
                 framed.refreshed(j.ds());
             }
             st.lastRun = started;
@@ -425,6 +430,53 @@ public final class DatasetRefresher implements AutoCloseable {
             Thread.ofVirtual().name("drishti-bi-refresh-" + j.key()).start(() -> run(j, st, "manual (" + actor + ")", sources()));
         }
         return st.toMap();
+    }
+
+    /**
+     * Refreshes a dataset of the model layer ({@code id}, its item) through the models that read it: the tables of each that read the dataset are cleared and
+     * rebuilt, on a background thread, and the state is kept under the dataset's id (what {@link #status(String)} shows).
+     */
+    public Map<String, Object> runNow(String id, List<DatasetService.ModelGateway.Reader> readers, String actor) {
+        Job j = new Job(new QueryService.Loaded(id, Layers.key(id), null, ""), null, "on demand", List.copyOf(readers));
+        State st = states.compute(j.key(), (k, old) -> old != null ? old : new State(j.schedule(), null));
+        if (st.running.compareAndSet(false, true)) {
+            st.status = "running";
+            st.trigger = "manual (" + actor + ")";
+            Thread.ofVirtual().name("drishti-bi-refresh-" + j.key()).start(() -> run(j, st, "manual (" + actor + ")", sources()));
+        }
+        return st.toMap();
+    }
+
+    /** One refresh over several models: the rows, tables and warnings added up, the latest date shown. */
+    private QueryService.Refreshed across(List<DatasetService.ModelGateway.Reader> readers, LocalDate date) {
+        long rows = 0;
+        long millis = 0;
+        String shown = date.toString();
+        List<String> tables = new ArrayList<>();
+        List<String> warnings = new ArrayList<>();
+        for (DatasetService.ModelGateway.Reader r : readers) {
+            QueryService.Refreshed one = queries.refresh(r.loaded(), r.tables(), date);
+            queries.layers().bump(r.loaded().key());                                // a Python or staged table has no layer: its answers are asked again
+            rows += one.rows();
+            millis += one.millis();
+            shown = one.date().compareTo(shown) > 0 ? one.date() : shown;
+            one.tables().forEach(t -> tables.add(r.loaded().id() + "/" + t));
+            warnings.addAll(one.warnings());
+        }
+        return new QueryService.Refreshed(shown, tables, rows, millis, warnings.stream().distinct().toList());
+    }
+
+    /** The refresh state of a dataset of the model layer: on demand, with the last run kept under its id. */
+    public Map<String, Object> status(String id) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("enabled", props.enabled());
+        m.put("scheduled", false);
+        m.put("zone", dates.zone().getId());
+        m.put("calendar", dates.calendar().name());
+        State own = states.get(id);
+        m.put("dataset", own == null ? new LinkedHashMap<>(Map.of("schedule", "on demand", "status", "never")) : own.toMap());
+        m.put("tables", List.of());
+        return m;
     }
 
     /** A data load finished ready: every {@code after-load} job whose tables read the kind runs shortly after, for the date loaded. */

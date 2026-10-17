@@ -184,6 +184,17 @@ class QueryEngineTest {
     }
 
     @Test
+    void aListOfValuesUnderAMeasureFilterIsGroupedNotDistinct() {
+        // a slicer (fields, no measure) on a report whose filters hold a measure filter (`Trades > 0`): the values are grouped so the HAVING can run
+        QueryService.Result all = run("{\"fields\":[\"trades.desk\"],\"filters\":[{\"field\":\"Trades\",\"op\":\"gt\",\"values\":[0]}],\"dates\":{\"from\":\"2026-10-09\"}}", risk());
+        QueryService.Result plain = run("{\"fields\":[\"trades.desk\"],\"dates\":{\"from\":\"2026-10-09\"}}", risk());
+        assertThat(all.rows()).isEqualTo(plain.rows()).isPositive();
+        assertThat(all.columns()).hasSize(1);
+        QueryService.Result none = run("{\"fields\":[\"trades.desk\"],\"filters\":[{\"field\":\"Trades\",\"op\":\"gt\",\"values\":[1e9]}],\"dates\":{\"from\":\"2026-10-09\"}}", risk());
+        assertThat(none.rows()).isZero();
+    }
+
+    @Test
     void filtersFilterAndOrderingOrders() {
         QueryService.Result r = run("{\"fields\":[\"trades.desk\"],\"measures\":[\"Notional\"],\"filters\":[{\"field\":\"trades.currency\",\"op\":\"in\",\"values\":[\"USD\"]},"
                 + "{\"field\":\"trades.notional\",\"op\":\"between\",\"values\":[500,3000]}],\"orderBy\":[{\"by\":\"Notional\",\"desc\":true}],\"dates\":{\"from\":\"2026-10-09\"}}", risk());

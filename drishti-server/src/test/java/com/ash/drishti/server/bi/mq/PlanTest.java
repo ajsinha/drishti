@@ -293,6 +293,42 @@ class PlanTest {
         assertThat(rolled).as("the rollup answered most of them").isGreaterThan(10);
     }
 
+    @Test
+    void rowRulesOnTheDimensionsDoNotStopARollupAndItAnswersExactlyAsTheColumnsLayer() {
+        // the shape of the trading-risk sample: every dataset has row rules; the dimension's rule is True for risk and desk-head (it restricts nothing for them,
+        // so it is not joined) and restricts emea to one region (joined on trades.desk, which the rollup groups by)
+        model = MqHarness.model(ROLLUP_MODEL, MqEngineTest.TRADES, MqEngineTest.DESKS, MqEngineTest.LIMITS);
+        String q = "{ mq: 1, model: desk-risk, select: { fields: [trades.currency], measures: [Notional, Trades] } }";
+        for (MqHarness.Reader who : List.of(MqHarness.RITA, MqHarness.deskHead("DESK-A"), EMEA)) {
+            assertThat(plan(who, q).tree().toString()).as(who.user()).contains("rollup=by_desk_ccy");
+        }
+        assertThat(plan(EMEA, "{ mq: 1, model: desk-risk, select: { fields: [desks.region], measures: [Notional] } }").tree().toString())
+                .as("a field of the dimension: the columns layer").doesNotContain("rollup=");
+        Random rnd = new Random(11);
+        MqService mq = new MqService(MqProperties.defaults());
+        List<List<String>> groupings = List.of(List.of(), List.of("trades.desk"), List.of("trades.currency"), List.of("trades.desk", "trades.currency"), List.of("desks.region"));
+        List<String> measures = List.of("MTM", "Notional", "Trades");
+        List<String> filters = List.of("", ", where: [{ field: trades.currency, op: eq, value: EUR }]", ", where: [{ field: trades.desk, op: in, values: [DESK-A, DESK-B] }]");
+        List<MqHarness.Reader> readers = List.of(MqHarness.RITA, MqHarness.deskHead("DESK-A"), MqHarness.deskHead("DESK-C"), EMEA);
+        Map<String, Integer> rolled = new java.util.TreeMap<>();
+        for (int i = 0; i < 48; i++) {
+            List<String> by = groupings.get(rnd.nextInt(groupings.size()));
+            List<String> ms = new ArrayList<>(measures.subList(0, 1 + rnd.nextInt(measures.size())));
+            String f = filters.get(rnd.nextInt(filters.size()));
+            MqHarness.Reader who = readers.get(i % readers.size());
+            String one = "{ mq: 1, model: desk-risk, select: { fields: " + EquivalenceTest.list(by) + ", measures: " + EquivalenceTest.list(ms) + " }" + f + ", options: { layer: %s } }";
+            Map<String, Object> auto = mq.ask(h.bind(model, who, "rollup"), MqParser.parse(one.formatted("auto")), false).body();
+            Map<String, Object> columns = mq.ask(h.bind(model, who, "rollup"), MqParser.parse(one.formatted("columns")), false).body();
+            @SuppressWarnings("unchecked")
+            Map<String, Object> meta = (Map<String, Object>) auto.get("meta");
+            if ("rollup".equals(meta.get("layer"))) {
+                rolled.merge(who.user(), 1, Integer::sum);
+            }
+            assertThat(normal(auto.get("rows"))).as(one + " as " + who.user()).isEqualTo(normal(columns.get("rows")));
+        }
+        assertThat(rolled).as("the rollup answered for every reader, rules or not").containsKeys("rita", "eve").hasSizeGreaterThanOrEqualTo(3);
+    }
+
     @SuppressWarnings("unchecked")
     static List<String> normal(Object rows) {
         List<String> out = new ArrayList<>();

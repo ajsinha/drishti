@@ -151,6 +151,8 @@ class ModelMigrationApiTest {
         assertThat(report.publishedVersion()).isEqualTo(2);
         assertThat(store.item("it-ahead").orElseThrow().kind()).as("a draft ahead is never changed").isEqualTo("dataset");
         assertThat(call("GET", "/api/v1/bi/migrate/problems", null).path("problems").findValuesAsText("item")).contains("it-ahead");
+        assertThat(call("GET", "/api/v1/bi/items/it-ahead", null).path("migrationProblems").toString()).as("on the item's own page")
+                .contains("\"step\":\"models\"").contains("draft is ahead");
         JsonNode audit = call("GET", "/api/v1/admin/audit?limit=200", null);
         assertThat(audit.findValuesAsText("action")).contains("bi-model-migrated", "bi-item-created");
     }
@@ -162,5 +164,26 @@ class ModelMigrationApiTest {
         assertThat(r.path("converted").asInt()).isZero();
         assertThat(store.items()).hasSize(items);
         assertThat(store.item("it-ds").orElseThrow().publishedVersion()).isEqualTo(2);
+    }
+
+    @Test @Order(4)
+    void aDryRunFindsTheNameCollisionsTheRunFinds() throws Exception {
+        // two 2.1 datasets of one name in one workspace: the second would make a second model 'twin' and second datasets 'twin-trades', 'twin-books'
+        published("it-twin-1", "dataset", DATASET.replace("desk-book", "twin"), DATASET.replace("desk-book", "twin"));
+        published("it-twin-2", "dataset", DATASET.replace("desk-book", "twin"), DATASET.replace("desk-book", "twin"));
+        // and one whose table would take the name of a dataset the first run made
+        published("it-again", "dataset", DATASET, DATASET);
+        JsonNode dry = call("POST", "/api/v1/bi/migrate/models", Map.of("dryRun", true));
+        JsonNode real = call("POST", "/api/v1/bi/migrate/models", Map.of());
+        Map<String, String> planned = new java.util.TreeMap<>();
+        dry.path("items").forEach(i -> planned.put(i.path("key").asText(), i.path("state").asText() + " " + i.path("problem").asText("")));
+        Map<String, String> done = new java.util.TreeMap<>();
+        real.path("items").forEach(i -> done.put(i.path("key").asText(), i.path("state").asText() + " " + i.path("problem").asText("")));
+        assertThat(planned).as("the dry run and the run agree").isEqualTo(done);
+        assertThat(dry.path("wouldConvert").asInt()).isEqualTo(real.path("converted").asInt()).isEqualTo(1);
+        assertThat(dry.path("problems").asInt()).isEqualTo(real.path("problems").asInt());
+        assertThat(planned.get("it-again")).contains("problem").contains("a dataset named 'desk-book-trades' exists already");
+        assertThat(planned.values()).anyMatch(v -> v.contains("a dataset named 'twin-trades' exists already") || v.contains("a model named 'twin'"));
+        assertThat(store.items().stream().filter(i -> "model".equals(i.kind()) && "ws-models".equals(i.workspace()) && i.body().contains("model: twin"))).hasSize(1);
     }
 }

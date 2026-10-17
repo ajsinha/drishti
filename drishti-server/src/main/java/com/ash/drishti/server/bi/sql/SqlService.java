@@ -148,6 +148,29 @@ public final class SqlService {
         return new LogicalPlan(root, id, b.view().hash(), time, List.of(), Planner.ids(b.view().ids()));
     }
 
+    private static final java.util.regex.Pattern COUNTING = java.util.regex.Pattern.compile("(?is)^\\s*(count|distinct)\\s*\\(.*\\)\\s*$");
+
+    /**
+     * The type a column of the answer will have, without reading data: a field's column type; a measure that counts ({@code COUNT(*)}, {@code count(...)},
+     * {@code distinct(...)}, as written or as the model defines it) is an integer, any other measure a decimal. What a SQL view dataset declares is checked
+     * against it.
+     */
+    static String typeOf(MqService.Bound b, ModelQuery q, SqlBinder.Out o) {
+        com.ash.drishti.server.bi.dataset.Dataset flat = b.view().flat();
+        if (!o.measure()) {
+            try {
+                com.ash.drishti.server.bi.dataset.Resolver r = new com.ash.drishti.server.bi.dataset.Resolver(flat);
+                com.ash.drishti.server.bi.dataset.Resolver.ColRef ref = r.resolve(List.of(o.source().split("\\.", -1)), null);
+                return ref.part() != null ? "integer" : r.column(ref.table(), ref.column()).type();
+            } catch (RuntimeException e) {
+                return "string";
+            }
+        }
+        String expr = q.define().containsKey(o.source()) ? q.define().get(o.source())
+                : flat.measures().containsKey(o.source()) ? flat.measures().get(o.source()).expr() : null;
+        return expr != null && COUNTING.matcher(expr).matches() ? "integer" : "decimal";
+    }
+
     /** Checks a statement without reading data: valid, its shape, the model queries, the output columns, the plan, or the problems. */
     public Map<String, Object> validate(MqService.Bound b, String ref, String sql) {
         Map<String, Object> m = new LinkedHashMap<>();
@@ -157,8 +180,8 @@ public final class SqlService {
             m.put("valid", true);
             m.put("shape", c.shape());
             m.put("queries", c.queries().stream().map(MqParser::canonical).toList());
-            m.put("columns", c.leaf() != null ? c.leaf().columns().stream().map(o -> Map.of("name", o.name(), "source", o.source(), "kind", o.measure() ? "measure" : "field")).toList()
-                    : List.of());
+            m.put("columns", c.leaf() != null ? c.leaf().columns().stream().map(o -> Map.of("name", o.name(), "source", o.source(), "kind", o.measure() ? "measure" : "field",
+                    "type", typeOf(b, c.leaf().query(), o))).toList() : List.of());
             m.put("plan", plan.hash());
             m.put("signature", b.signature());
             m.put("problems", List.of());

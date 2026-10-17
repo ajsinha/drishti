@@ -82,7 +82,9 @@ public class PreviewAsController {
         audit.record(p.user(), "bi-model-preview-as", mine.view().id(), "as role " + role);
         Map<String, Object> out;
         try {
-            out = new LinkedHashMap<>(mq.ask(catalog.bind(as, ref), MqParser.parse(query), false).body());
+            // a published model as the role reads it (their read on it included); a draft, which only its owner reads, as the owner sees it with the role's rules
+            MqService.Bound b = mine.item() != null && !mine.item().isPublished() ? catalog.bound(as, mine) : catalog.bind(as, ref);
+            out = new LinkedHashMap<>(mq.ask(b, MqParser.parse(query), false).body());
         } catch (MqException e) {
             out = new LinkedHashMap<>();                                       // what the role would be told: shown, never the asker's own answer instead
             out.put("refused", e.problems().stream().map(x -> Map.of("code", x.code(), "path", x.path(), "message", x.detail())).toList());

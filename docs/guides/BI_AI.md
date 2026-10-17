@@ -99,9 +99,12 @@ masked columns and fields hidden by row rules never go, because the engine has a
 ## 4. Report from words
 
 In the designer, **Describe a report** opens a box: say what you want ("notional by desk as a bar chart and the total as a card"), press **Draft it**. The model is told the report grammar
-(the visual types and their wells, the 12-column grid) and the dataset model, and answers with YAML. Drishti then:
+(the visual types and their wells, the 12-column grid) and the dataset model (for a model of the model layer its `describe` as you read it: each alias
+a table with its dataset and version, the fields you may see, the measures not hidden from you), and answers with YAML. `dataset` in the request names
+a model (`world-economics@1`, its item id), a dataset of the model layer (`dataset:<name>`) or a version 1 dataset. Drishti then:
 
-1. strips a code fence if the model added one, and pins `dataset:` to the dataset of the report you are editing;
+1. strips a code fence if the model added one, and pins the draft to what the report you are editing reads: on a **model** (2.2) `rachana: 2` and
+   `model: <name>@<major>` in place of any `dataset:`, on a version 1 dataset `dataset:` to it;
 2. runs the **report parser and checker** on it (the same as *Check* and Save): unknown fields or measures, bad wells, a bad grid, anything;
 3. if it fails, tells the model the problems (names only) and asks once more; if it still fails you get `422 DRS-4020` naming the first problems, and the draft is **not shown**;
 4. shows the passing draft as text with *Use this draft*, which puts it in the YAML tab like text you typed. **Nothing is saved or published**: the designer's undo, Check and Save are unchanged,
@@ -233,7 +236,7 @@ each with what it means and what to change, using the dataset's names. They are 
 
 ## 11. Dataset helper
 
-On the Model view of a dataset, **Ask the AI helper** proposes what a model usually lacks, from its names, types and descriptions alone (a column masked for you is left out; no value, no row):
+In the **model designer** (2.2; and on the Model view of a version 1 dataset), **Ask the AI helper** proposes what a model usually lacks, from its names, types and descriptions alone (a column masked for you is left out; no value, no row):
 
 * **relationships** between columns of the same type in different tables, with a cardinality and a reason;
 * **measures** with a name, an expression (one aggregate over a column the model has, or `count(table)`) and a one-sentence description;
@@ -243,6 +246,8 @@ Each item is checked against the model before it is shown, and a name that is no
 description for a column that has one are all dropped. Each is shown with the YAML it would add and an **Accept** button of its own: a relationship is added to the diagram and the `relationships:` block, a
 measure to the `measures:` block, a description into the column's line (whichever of the three ways it is written; when the line cannot be found the item says *Place it by hand* and the YAML is shown
 to copy). Nothing is saved until you press Save, and the draft is checked as you type like any other edit. `POST /api/v1/bi/ai/dataset-helper`, feature `bi-helper`.
+On a model the items are written for the model: a measure under `measures:`, a field's description under `fields:` (`economies.regionName: { description: "..." }`,
+kind `field`), a relationship under `relationships:`, each Accept one undoable edit of the designer's draft; the answer names the model (`"model": "my-world-economics@1"`).
 
 ![The dataset helper on the Model view](img/bi-ai/dataset-helper.jpg)
 

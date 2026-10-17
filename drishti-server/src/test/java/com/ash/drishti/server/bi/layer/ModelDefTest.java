@@ -293,4 +293,31 @@ class ModelDefTest {
         fewer.put("trades", ResolvedDataset.of(DatasetDefParser.parse(TRADES.replace("  mtm:", "  mtmX:")).dataset()));
         assertThat(Contracts.models(was, was, data, fewer).breaking()).anyMatch(x -> x.contains("trades.mtm is removed"));
     }
+
+    @Test
+    void aContractThatExposesLessIsBreakingAndNeedsANewMajor() {
+        Map<String, ResolvedDataset> data = resolved();
+        String listed = "contract:\n  exposes: listed\n  fields: [trades.desk, trades.mtm]\n  measures: [MTM, Trades]\n";
+        ModelDef all = ModelDefParser.parse(MODEL).model();
+        ModelDef narrowMinor = ModelDefParser.parse(MODEL.replace("version: 1.0.0", "version: 1.1.0") + listed).model();
+        Contracts.Change c = Contracts.models(all, narrowMinor, data, data);
+        assertThat(c.breaking()).as("all to listed hides the rest").anyMatch(x -> x.contains("no longer exposes the measure 'Notional'"))
+                .anyMatch(x -> x.contains("no longer exposes the field trades.notional")).noneMatch(x -> x.contains("'MTM'") || x.contains("trades.desk"));
+        assertThat(c.refusal()).contains("new major version (2.0.0, not 1.1.0)");
+        ModelDef listedV1 = ModelDefParser.parse(MODEL + listed).model();
+        ModelDef fewer = ModelDefParser.parse(MODEL.replace("version: 1.0.0", "version: 1.1.0") + listed.replace("measures: [MTM, Trades]", "measures: [MTM]")).model();
+        assertThat(Contracts.models(listedV1, fewer, data, data).refusal()).contains("no longer exposes the measure 'Trades'").contains("new major version");
+        ModelDef wider = ModelDefParser.parse(MODEL.replace("version: 1.0.0", "version: 1.1.0") + listed.replace("measures: [MTM, Trades]", "measures: [MTM, Trades, Limit]")).model();
+        assertThat(Contracts.models(listedV1, wider, data, data).refusal()).as("exposing more is a minor").isNull();
+        ModelDef major = ModelDefParser.parse(MODEL.replace("version: 1.0.0", "version: 2.0.0") + listed.replace("measures: [MTM, Trades]", "measures: [MTM]")).model();
+        assertThat(Contracts.models(listedV1, major, data, data).refusal()).isNull();
+        ModelDef renamed = ModelDefParser.parse(MODEL.replace("  Trades:   { id: m_trades", "  Trade count: { id: m_trades").replace("version: 1.0.0", "version: 1.1.0")
+                + listed.replace("measures: [MTM, Trades]", "measures: [MTM, Trade count]")).model();
+        assertThat(Contracts.models(listedV1, renamed, data, data).refusal()).as("a rename under the same id is the same measure").isNull();
+        ModelDef retitled = ModelDefParser.parse((MODEL + listed).replace("title: Desk risk", "title: Desk risk (new title)")).model();
+        assertThat(Contracts.models(listedV1, retitled, data, data).refusal()).as("one version string, one content").contains("1.0.0 is published already").contains("1.0.1");
+        DatasetDef d1 = DatasetDefParser.parse(DESKS).dataset();
+        assertThat(Contracts.datasets(d1, DatasetDefParser.parse(DESKS.replace("  region: { type: string }", "  region: { type: string, description: The region }")).dataset())
+                .refusal()).contains("published already");
+    }
 }

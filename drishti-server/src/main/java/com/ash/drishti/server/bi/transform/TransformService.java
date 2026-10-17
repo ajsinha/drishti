@@ -51,7 +51,7 @@ public final class TransformService implements AutoCloseable {
     /** The result for a reader: the Parquet file, the columns typed from the frame, its rows, whether it was kept, and the time the run took (0 when kept). */
     public record Output(Path file, List<TransformRunner.Column> columns, long rows, boolean cached, long millis) {}
 
-    private record Entry(Path file, List<TransformRunner.Column> columns, long rows, Instant expires, Instant made) {}
+    private record Entry(Path file, List<TransformRunner.Column> columns, long rows, Instant expires, Instant made, String dataset) {}
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -126,7 +126,7 @@ public final class TransformService implements AutoCloseable {
                 }
                 check(r, expect, out);
                 Instant now = clock.instant();
-                cache.put(id, new Entry(r.file(), r.columns(), r.rows(), now.plus(props.cacheTtl()), now));
+                cache.put(id, new Entry(r.file(), r.columns(), r.rows(), now.plus(props.cacheTtl()), now, datasetName));
                 learn(datasetName, r.columns());
                 evict(dir, datasetKey);
                 return new Output(r.file(), r.columns(), r.rows(), false, r.millis());
@@ -197,6 +197,22 @@ public final class TransformService implements AutoCloseable {
         for (Map.Entry<String, Entry> e : new ArrayList<>(cache.entrySet())) {
             if (e.getValue().file().startsWith(dir)) {
                 cache.remove(e.getKey());
+                n++;
+                try {
+                    Files.deleteIfExists(e.getValue().file());
+                } catch (IOException ignored) {
+                    // scratch
+                }
+            }
+        }
+        return n;
+    }
+
+    /** Drops every kept result of the dataset named {@code datasetName}, whichever model asked it (a person refreshed it). Returns how many. */
+    public int invalidateNamed(String datasetName) {
+        int n = 0;
+        for (Map.Entry<String, Entry> e : new ArrayList<>(cache.entrySet())) {
+            if (datasetName.equals(e.getValue().dataset()) && cache.remove(e.getKey(), e.getValue())) {
                 n++;
                 try {
                     Files.deleteIfExists(e.getValue().file());

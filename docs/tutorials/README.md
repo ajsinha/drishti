@@ -65,7 +65,8 @@ The pictures are made, not drawn: `tools/docs/screenshots.py --guide t01` (to `t
 | `data/live-desk.mq.yaml`, `data/night-desk.board.yaml` | a model query over the live table, with its SQL; a board of three live tiles | tutorial 12 |
 | `data/rates-trades.dataset.yaml`, `data/trades-model.model.yaml`, `data/trades-report.report.yaml` | a dataset, the model over it and the report on the model, to review, certify and change | tutorial 13 |
 | `data/notional-by-desk.python.yaml`, `data/desk-python.report.yaml` | a Python visual and a report that uses it | tutorial 14 |
-| `data/ai/mock.yaml`, `data/ai/local-model.yaml`, `data/world-economics-21.dataset.yaml` | the mock AI provider with rules for the tutorials, a provider with nothing listening, and the World economics dataset in its 2.1 form for the authoring hooks | tutorial 15 |
+| `data/ai/mock.yaml`, `data/ai/local-model.yaml` | the mock AI provider with rules for the tutorials, and a provider with nothing listening | tutorial 15 |
+| `data/world-economics-21.dataset.yaml` | the World economics dataset in its 2.1 form, which the upgrade converts to a model | tutorial 17 |
 | `data/pools.py` | the connection-pool sum | tutorial 17 |
 
 Everything else is the demo data of the packs you already have. The `politics-society` and `economics` packs hold published data from the World Bank, UNDP, the CIA World Factbook and the IMF

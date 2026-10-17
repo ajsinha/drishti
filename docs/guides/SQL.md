@@ -227,5 +227,6 @@ drishti.py bi sql --file q.sql --model trading-risk@1 --format csv > answer.csv
 ```
 
 `POST /api/v1/bi/sql {model, sql, format: json|csv|arrow}` and `POST /api/v1/bi/sql/validate {model, sql}`
-([API_GUIDE.md](API_GUIDE.md#drishti-sql-apiv1bisql)). Every statement is audited (`bi-sql`, with its text). Settings: `drishti.bi.sql.*`
+([API_GUIDE.md](API_GUIDE.md#drishti-sql-apiv1bisql)); validate types each output column without reading data (`COUNT(*)`, a model measure that is a `count()` or
+`distinct()`: `integer`; another measure: `decimal`; a field: its column's type), which a SQL view dataset's wizard proposes as the column types. Every statement is audited (`bi-sql`, with its text). Settings: `drishti.bi.sql.*`
 ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibisql--drishti-sql)).

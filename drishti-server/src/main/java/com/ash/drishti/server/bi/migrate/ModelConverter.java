@@ -252,8 +252,8 @@ public final class ModelConverter {
             bindings.apply(ref).ifPresent(b -> manual.add("python".equals(s.kind())
                     ? "the Transform reads the dataset " + ref + ", now the model " + b.model() + ": a Python dataset hands it that model's query answers "
                             + "(its source.inputs), each column named by the last part of its field or measure name"
-                    : "the notebook reads the dataset " + ref + ", now the model " + b.model() + ": rebind it (`model: " + b.model()
-                            + "`, extracts as model queries) when the console's notebooks read models"));
+                    : "the notebook reads the dataset " + ref + ", now the model " + b.model() + ": rebind it to the model (`dataset: mq:" + b.model()
+                            + "`, and each extract's `dataset:` the same way, its fields as alias.column), as the sample notebook pnl-vs-exposure-pandas does"));
         }
         return item(s, name, manual.isEmpty() ? "unchanged" : "manual", null, List.of(), null, List.of(), List.of(), manual, null);
     }

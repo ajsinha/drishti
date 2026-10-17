@@ -38,15 +38,18 @@ public final class TableRules {
 
     private TableRules() {}
 
-    /** The dimensions with security that a table of {@code from} reaches many-to-one along active relationships and that are not in it yet. */
-    static Set<String> reached(Dataset ds, Set<String> from) {
+    /**
+     * The dimensions with security that a table of {@code from} reaches many-to-one along active relationships and that are not in it yet, leaving out those
+     * that restrict nothing for this reader ({@link #openFor}): joining such a dimension filters no fact row, and leaving it out lets a rollup answer.
+     */
+    static Set<String> reached(Dataset ds, Set<String> from, SqlCompiler.Reader reader) {
         Set<String> out = new LinkedHashSet<>();
         if (!ds.security().perTable()) {
             return out;
         }
         for (Map.Entry<String, Dataset.TableSecurity> e : ds.security().tables().entrySet()) {
             String dim = e.getKey();
-            if (!e.getValue().dimension() || e.getValue().open() || from.contains(dim)) {
+            if (!e.getValue().dimension() || e.getValue().open() || openFor(e.getValue(), reader) || from.contains(dim)) {
                 continue;
             }
             for (String start : from) {
@@ -57,6 +60,25 @@ public final class TableRules {
             }
         }
         return out;
+    }
+
+    /**
+     * True when a table's security restricts nothing for this reader: no filter, and (when row rules are enforced) every layer gives one of the reader's roles
+     * a rule that is literally {@code True}. Exactly what {@link #bind} would AND in is then true, and the reader is not denied.
+     */
+    static boolean openFor(Dataset.TableSecurity s, SqlCompiler.Reader reader) {
+        if (!s.filters().isEmpty()) {
+            return false;
+        }
+        if (!reader.enforceRows()) {
+            return true;
+        }
+        for (List<Dataset.RowRule> layer : s.layers()) {
+            if (!layer.isEmpty() && layer.stream().noneMatch(r -> reader.roles().contains(r.role()) && "true".equalsIgnoreCase(r.where().strip()))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** True when {@code to} is reached from {@code from} along active relationships, many-to-one (or one-to-one) at every step. */

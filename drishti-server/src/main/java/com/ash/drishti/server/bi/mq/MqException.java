@@ -63,6 +63,7 @@ public final class MqException extends DrishtiException {
         String code = problems.get(0).code();
         ErrorCode old = switch (code) {
             case "DRS-9161" -> ErrorCode.QUERY_MASKED;
+            case "DRS-9163" -> errorCode();                                   // hidden for the reader's roles: said so on every endpoint, never a raw 'no measure'
             case "DRS-9151" -> errorCode();
             default -> code.startsWith("DRS-915") || code.startsWith("DRS-916") ? ErrorCode.QUERY_INVALID : errorCode();
         };

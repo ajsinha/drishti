@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * The contract rules of a publish (docs/architecture/BI_MODEL_SPEC.md section 2.8), as wave W1 detects them: what consumers could use and the new version
  * no longer has. A <em>breaking</em> change (a measure, column or relationship removed, by stable id or, without ids, by name; an id kept under another type;
- * an active relationship made inactive; a grain key changed) needs a new major version, else {@code DRS-9126}. A rename keeps the id and is not breaking:
+ * an active relationship made inactive; a grain key changed; a contract that exposes less) needs a new major version, else {@code DRS-9126}. A rename keeps the id and is not breaking:
  * consumers store ids. The version may never go down. Wave W2 adds the full detection (a measure whose meaning changed, contract fields).
  */
 public final class Contracts {
@@ -96,7 +96,45 @@ public final class Contracts {
                 breaking.add("the dataset '" + alias + "' is removed from the model");
             }
         }
+        narrowing(was, now, wasData, nowData, breaking);
         return new Change(breaking, renames, versionProblem(was.version(), now.version(), breaking));
+    }
+
+    /**
+     * A contract that exposes less than before: a field or a measure consumers could use (everything under {@code exposes: all}, the lists under
+     * {@code exposes: listed}) that is still in the model but no longer in its contract. Consumers may only use what the contract exposes, so this breaks
+     * them like a removal. A measure renamed under the same id is the same measure.
+     */
+    private static void narrowing(ModelDef was, ModelDef now, Map<String, ResolvedDataset> wasData, Map<String, ResolvedDataset> nowData, List<String> breaking) {
+        if (!now.contract().listed()) {
+            return;                                                           // exposes: all hides nothing that is still there
+        }
+        java.util.Set<String> nowFields = new java.util.HashSet<>(now.contract().fields());
+        java.util.Set<String> nowMeasures = new java.util.HashSet<>(now.contract().measures());
+        List<String> wasFields = new ArrayList<>();
+        if (was.contract().listed()) {
+            wasFields.addAll(was.contract().fields());
+        } else {
+            wasData.forEach((alias, d) -> d.def().columns().keySet().forEach(c -> wasFields.add(alias + "." + c)));
+        }
+        for (String f : wasFields) {
+            int dot = f.indexOf('.');
+            ResolvedDataset still = dot < 0 ? null : nowData.get(f.substring(0, dot));
+            boolean inModel = nowData.isEmpty() ? now.datasets().containsKey(dot < 0 ? f : f.substring(0, dot))
+                    : still != null && still.def().columns().containsKey(f.substring(dot + 1));
+            if (inModel && !nowFields.contains(f)) {
+                breaking.add("the contract no longer exposes the field " + f);
+            }
+        }
+        java.util.Collection<String> wasMeasures = was.contract().listed() ? was.contract().measures() : was.measures().keySet();
+        for (String name : wasMeasures) {
+            ModelDef.Meas w = was.measures().get(name);
+            ModelDef.Meas n = w == null ? now.measures().get(name) : now.measures().values().stream()
+                    .filter(x -> !w.id().isBlank() ? w.id().equals(x.id()) : w.name().equals(x.name())).findFirst().orElse(null);
+            if (n != null && !nowMeasures.contains(n.name())) {
+                breaking.add("the contract no longer exposes the measure '" + name + "'");
+            }
+        }
     }
 
     /** A measure kept (by id, or by name without ids) whose meaning changes: another expression tree, another currency or additivity. */
@@ -163,6 +201,10 @@ public final class Contracts {
         }
         if (!breaking.isEmpty() && b.major() <= a.major()) {
             return "a breaking change needs a new major version (" + (a.major() + 1) + ".0.0, not " + b + "): " + String.join("; ", breaking);
+        }
+        if (b.equals(a)) {                                                    // one version string, one content: every publish of a change carries a new version
+            return "version " + a + " is published already with other content: every change is published under a new version (" + a.major() + "." + a.minor() + "."
+                    + (a.patch() + 1) + " for words, formats or hidden fields, " + a.major() + "." + (a.minor() + 1) + ".0 for an addition, " + (a.major() + 1) + ".0.0 for a breaking change)";
         }
         return null;
     }

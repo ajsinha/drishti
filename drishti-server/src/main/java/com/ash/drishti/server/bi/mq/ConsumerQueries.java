@@ -101,6 +101,11 @@ public final class ConsumerQueries implements DatasetService.ModelGateway {
     }
 
     @Override
+    public List<Reader> readersOf(String name) {
+        return catalog.readersOf(name);
+    }
+
+    @Override
     public Map<String, Object> describe(Principal p, String model) {
         return catalog.describe(p, model);
     }

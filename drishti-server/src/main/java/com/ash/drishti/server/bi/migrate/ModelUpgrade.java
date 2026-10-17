@@ -85,6 +85,7 @@ final class ModelUpgrade {
         List<Map<String, Object>> items = new ArrayList<>();
         int converted = 0;
         int failed = 0;
+        java.util.Set<String> claimed = new java.util.HashSet<>();                       // names this run gives out: a dry run claims them as the run would
         for (String id : ahead) {
             BiStore.Item i = byId.getOrDefault(id, store.item(id).orElseThrow());
             problems.set(STEP, id, List.of(new MigrationProblems.Problem(STEP, id, i.title(), i.kind(), "body", "not converted: its draft is ahead of its published version; "
@@ -110,16 +111,19 @@ final class ModelUpgrade {
             }
             Map<String, Object> view = it.toMap(false);
             items.add(view);
-            if (!"converted".equals(it.state()) || dryRun) {
-                converted += "converted".equals(it.state()) ? 1 : 0;
+            if (!"converted".equals(it.state())) {
                 continue;
             }
-            String taken = "dataset".equals(src.kind()) ? taken(it, all) : null;
+            String taken = "dataset".equals(src.kind()) ? taken(it, src, all, claimed) : null;     // the same check in a dry run and a real one
             if (taken != null) {
                 problems.set(STEP, src.id(), List.of(new MigrationProblems.Problem(STEP, src.id(), src.title(), src.kind(), "body", "not converted: " + taken, now)));
                 view.put("state", "problem");
                 view.put("problem", taken);
                 failed++;
+                continue;
+            }
+            if (dryRun) {
+                converted++;
                 continue;
             }
             if ("dataset".equals(src.kind())) {
@@ -153,12 +157,28 @@ final class ModelUpgrade {
                 .map(ModelConverter.Item::yaml).findFirst().orElse(body);
     }
 
-    /** Why the new dataset items cannot be made (a stored item of that name exists), or null. */
-    private static String taken(ModelConverter.Item it, List<BiStore.Item> all) {
+    /**
+     * Why the dataset item cannot be converted, or null: a stored {@code rachana: 2} dataset already has the name of a dataset it would make, another model
+     * of its workspace already has the model's name (one model per name, ModelNames), or an item converted earlier in this run took either name. When it
+     * can be, its names are claimed for the rest of the run (a dry run claims them too, so it finds what the real run would).
+     */
+    private static String taken(ModelConverter.Item it, BiStore.Item src, List<BiStore.Item> all, java.util.Set<String> claimed) {
         for (ModelConverter.Output o : it.outputs()) {
-            if ("dataset".equals(o.kind()) && all.stream().anyMatch(x -> "dataset".equals(x.kind()) && x.body() != null && DatasetDefParser.isVersion2(x.body())
-                    && o.name().equals(DatasetDefParser.parse(x.body()).dataset() == null ? null : DatasetDefParser.parse(x.body()).dataset().name()))) {
+            if ("dataset".equals(o.kind()) && (claimed.contains("dataset:" + o.name()) || all.stream().anyMatch(x -> "dataset".equals(x.kind()) && x.body() != null
+                    && DatasetDefParser.isVersion2(x.body()) && o.name().equals(DatasetDefParser.parse(x.body()).dataset() == null ? null : DatasetDefParser.parse(x.body()).dataset().name())))) {
                 return "a dataset named '" + o.name() + "' exists already: rename it, then run drishti.py bi migrate --models";
+            }
+            String model = "model".equals(o.kind()) ? com.ash.drishti.server.bi.ModelNames.of(o.yaml()) : null;
+            if (model != null && (claimed.contains("model:" + src.workspace() + "|" + model) || all.stream().anyMatch(x -> "model".equals(x.kind()) && !x.id().equals(src.id())
+                    && x.workspace().equals(src.workspace()) && model.equals(com.ash.drishti.server.bi.ModelNames.of(x.body()))))) {
+                return "its workspace has a model named '" + model + "' already: rename one of them, then run drishti.py bi migrate --models";
+            }
+        }
+        for (ModelConverter.Output o : it.outputs()) {
+            if ("dataset".equals(o.kind())) {
+                claimed.add("dataset:" + o.name());
+            } else if ("model".equals(o.kind()) && com.ash.drishti.server.bi.ModelNames.of(o.yaml()) != null) {
+                claimed.add("model:" + src.workspace() + "|" + com.ash.drishti.server.bi.ModelNames.of(o.yaml()));
             }
         }
         return null;
@@ -197,7 +217,7 @@ final class ModelUpgrade {
         }
         BiStore.Revision r = store.addRevision(now.id(), model, "the dataset-to-model migration: now the model over " + created.size() + " dataset(s)", actor, at, "migrate",
                 published ? version : 0, revisionsKeep);
-        String note = "dataset became the model " + it.became() + "; new datasets " + created + "; the 2.1 text is saved state " + before;
+        String note = "the dataset became the " + it.became() + "; new datasets " + created + "; the 2.1 text is saved state " + before;   // became: "model x@1 over [...]"
         store.addEvent(now.id(), "migrate", actor, note, r.seq(), at);
         audit.record(actor, "bi-model-migrated", now.id(), note);
         return created;

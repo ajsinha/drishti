@@ -580,4 +580,178 @@ class ModelAcceptanceTest {
                 .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("rows, so say which number to watch")));
         ok(call("PUT", "/api/v1/me/measure-alerts/by-desk", reader("rita"), visual.formatted(",\"reduce\":\"sum\"")));
     }
+
+    @Test @Order(11)
+    void aDatasetOfTheModelLayerIsRefreshedThroughTheModelsThatReadIt() throws Exception {
+        Map<String, Object> q = Map.of("mq", 1, "model", "acc-model@1", "select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional", "Trades")),
+                "time", Map.of("as-of", "2026-10-07"));
+        JsonNode before = ok(call("POST", "/api/v1/bi/mq", reader("rita"), q)).path("rows");
+        String path = "/api/v1/bi/datasets/file:dataset:acc-trade/refresh";
+        JsonNode never = ok(call("GET", path, reader("wes"), null));
+        assertThat(never.path("dataset").path("status").asText()).isEqualTo("never");
+        JsonNode asked = ok(call("POST", path, reader("wes"), Map.of()));               // was DRS-9102: a rachana 2 dataset is read through the model layer
+        assertThat(asked.path("models").toString()).contains("file:model:acc-model");
+        assertThat(asked.path("refreshing").toString()).contains("file:model:acc-model/trades");
+        JsonNode st = null;
+        for (int i = 0; i < 100; i++) {
+            st = ok(call("GET", path, reader("wes"), null)).path("dataset");
+            if (!"running".equals(st.path("status").asText())) {
+                break;
+            }
+            Thread.sleep(100);
+        }
+        assertThat(st.path("status").asText()).as(st.toString()).isIn("ok", "warning");
+        assertThat(st.path("trigger").asText()).contains("wes");
+        assertThat(ok(call("POST", "/api/v1/bi/mq", reader("rita"), q)).path("rows")).as("the same answer after the rebuild").isEqualTo(before);
+        call("POST", path, reader("ann"), Map.of()).andExpect(status().isForbidden());   // a refresh is an author's
+    }
+
+    // ---- publishing: the tests gate, the contract's semver, and readers pinned to a major --------------------------------
+
+    static final String SV_DATASET = """
+            rachana: 2
+            dataset: sv-trade
+            version: 1.0.0
+            source: { connector: acc-lake, kind: trade }
+            grain: { keys: [id] }
+            columns:
+              desk:     { type: string }
+              notional: { type: decimal, aggregate: sum }
+            security:
+              rows:
+                - { role: [bi-risk, report-author, admin], where: "true" }
+            tests:
+              - { name: Rows on the day, agg: count, expect: 24, date: 2026-10-07 }
+              - { name: Notional by desk, agg: sum, column: notional, by: [desk], row: { desk: DESK-A }, expect: 92000, date: 2026-10-07 }
+              - { name: Desk is set, not-null: [desk] }
+              - { name: One row per desk, unique: [desk] }
+            """;
+
+    static final String SV_MODEL = """
+            rachana: 2
+            model: sv-model
+            version: 1.0.0
+            datasets:
+              trades: { dataset: sv-trade, role: fact }
+            measures:
+              Notional: { expr: "sum(trades.notional)" }
+              Trades:   { expr: "count(trades)" }
+            """;
+
+    @Test @Order(12)
+    void aDatasetsAndAModelsTestsGateThePublishAndANewMajorKeepsReadersPinnedToTheOld() throws Exception {
+        String ws = ok(call("POST", "/api/v1/bi/workspaces", reader("wes"), Map.of("name", "Semver Desk"))).path("id").asText();
+        String ds = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", reader("wes"), Map.of("kind", "dataset", "title", "SV trades", "body", SV_DATASET))).path("id").asText();
+        JsonNode run = ok(call("POST", "/api/v1/bi/items/" + ds + "/tests", reader("wes"), Map.of()));
+        Map<String, String> got = new TreeMap<>();
+        run.path("results").forEach(x -> got.put(x.path("name").asText(), x.path("status").asText()));
+        assertThat(got).as(run.toString()).containsEntry("Rows on the day", "pass").containsEntry("Notional by desk", "pass").containsEntry("Desk is set", "pass")
+                .containsEntry("One row per desk", "fail");
+        assertThat(run.toString()).contains("the key is not unique: desk = DESK-");
+        call("POST", "/api/v1/bi/items/" + ds + "/publish", reader("wes"), Map.of("note", "v1")).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-9043"));
+        ok(call("PUT", "/api/v1/bi/items/" + ds, reader("wes"), Map.of("body", SV_DATASET.replace("  - { name: One row per desk, unique: [desk] }\n", "")
+                .replace("version: 1.0.0", "version: 1.0.1"))));
+        ok(call("POST", "/api/v1/bi/items/" + ds + "/publish", reader("wes"), Map.of("note", "v1")));
+        // a model's SQL tests gate its publish too
+        String failing = SV_MODEL + "tests:\n  - { name: Trades, sql: \"SELECT COUNT(*) AS n FROM trades AS OF DATE '2026-10-08'\", expect: 25 }\n";
+        String model = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", reader("wes"), Map.of("kind", "model", "title", "SV model", "body", failing))).path("id").asText();
+        call("POST", "/api/v1/bi/items/" + model + "/publish", reader("wes"), Map.of("note", "v1")).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-9043"));
+        ok(call("PUT", "/api/v1/bi/items/" + model, reader("wes"), Map.of("body", failing.replace("expect: 25", "expect: 24"))));
+        ok(call("POST", "/api/v1/bi/items/" + model + "/publish", reader("wes"), Map.of("note", "v1")));
+        // narrowing the contract is a breaking change: a minor is refused, a major is published
+        String narrow = SV_MODEL + "contract:\n  exposes: listed\n  fields: [trades.desk]\n  measures: [Notional]\n";
+        ok(call("PUT", "/api/v1/bi/items/" + model, reader("wes"), Map.of("body", narrow.replace("version: 1.0.0", "version: 1.1.0"))));
+        call("POST", "/api/v1/bi/items/" + model + "/publish", reader("wes"), Map.of("note", "narrow")).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("DRS-9126")).andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("no longer exposes the measure 'Trades'")));
+        ok(call("PUT", "/api/v1/bi/items/" + model, reader("wes"), Map.of("body", narrow.replace("version: 1.0.0", "version: 2.0.0"))));
+        ok(call("POST", "/api/v1/bi/items/" + model + "/publish", reader("wes"), Map.of("note", "v2")));
+        // a reader pinned to @1 keeps the latest 1.x (with Trades); @2 and the unpinned name read 2.0.0, whose contract leaves Trades out
+        Map<String, Object> trades = Map.of("fields", List.of("trades.desk"), "measures", List.of("Trades"));
+        JsonNode one = ok(call("POST", "/api/v1/bi/mq", reader("wes"), Map.of("mq", 1, "model", "sv-model@1", "select", trades, "time", Map.of("as-of", DAY))));
+        assertThat(one.path("rows")).hasSize(3);
+        assertThat(one.path("model").path("version").asText()).isEqualTo("1.0.0");
+        call("POST", "/api/v1/bi/mq", reader("wes"), Map.of("mq", 1, "model", "sv-model@2", "select", trades)).andExpect(status().is4xxClientError());
+        JsonNode two = ok(call("POST", "/api/v1/bi/mq", reader("wes"), Map.of("mq", 1, "model", "sv-model", "select", Map.of("measures", List.of("Notional")), "time", Map.of("as-of", DAY))));
+        assertThat(two.path("model").path("version").asText()).isEqualTo("2.0.0");
+    }
+
+    @Test @Order(13)
+    void aModelNameIsHeldOnceInAWorkspaceAndOnceInTheCatalogue() throws Exception {
+        String desk = null;
+        for (JsonNode w : ok(call("GET", "/api/v1/bi/workspaces", reader("wes"), null))) {
+            if ("Semver Desk".equals(w.path("name").asText())) {
+                desk = w.path("id").asText();
+            }
+        }
+        assertThat(desk).isNotNull();
+        call("POST", "/api/v1/bi/workspaces/" + desk + "/items", reader("wes"), Map.of("kind", "model", "title", "Twin", "body", SV_MODEL))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-9004"))
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("already has a model named 'sv-model'")));
+        String other = ok(call("POST", "/api/v1/bi/workspaces/" + desk + "/items", reader("wes"), Map.of("kind", "model", "title", "Other",
+                "body", SV_MODEL.replace("model: sv-model", "model: sv-other")))).path("id").asText();
+        call("PUT", "/api/v1/bi/items/" + other, reader("wes"), Map.of("body", SV_MODEL)).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-9004"));
+        String ws2 = ok(call("POST", "/api/v1/bi/workspaces", reader("wes"), Map.of("name", "Second Desk"))).path("id").asText();
+        String twin = ok(call("POST", "/api/v1/bi/workspaces/" + ws2 + "/items", reader("wes"), Map.of("kind", "model", "title", "Twin",
+                "body", SV_MODEL.replace("version: 1.0.0", "version: 5.0.0")))).path("id").asText();     // another workspace may draft one of the name
+        call("POST", "/api/v1/bi/items/" + twin + "/publish", reader("wes"), Map.of("note", "twin")).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("DRS-9004")).andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("already has a published model named 'sv-model'")));
+        call("POST", "/api/v1/bi/items/" + twin + "/move", reader("wes"), Map.of("workspace", desk)).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-9004"));
+        call("POST", "/api/v1/bi/items/" + other + "/move", reader("wes"), Map.of("workspace", ws2)).andExpect(status().is2xxSuccessful());
+    }
+
+    @Test @Order(14)
+    void lineageAndImactOfTheModelLayerAreComputedFromTheItemsAsTheyAreNow() throws Exception {
+        JsonNode model = ok(call("GET", "/api/v1/bi/items/file:model:acc-model/lineage", reader("wes"), null));
+        assertThat(model.path("layer").asBoolean()).isTrue();
+        assertThat(model.path("model").path("version").asText()).isEqualTo("1.0.0");
+        JsonNode up = model.path("upstream").get(0);
+        assertThat(up.path("table").asText()).isEqualTo("trades");
+        assertThat(up.path("dataset").asText() + " " + up.path("version").asText()).isEqualTo("acc-trade 1.0.0");
+        assertThat(up.path("chain").toString()).contains("acc-lake");
+        assertThat(model.path("downstream").findValuesAsText("id")).contains("file:dataset:desk-book");     // a dataset on the model's answer reads it
+        JsonNode ds = ok(call("GET", "/api/v1/bi/items/file:dataset:acc-trade/lineage", reader("wes"), null));
+        assertThat(ds.path("dataset").path("name").asText()).isEqualTo("acc-trade");
+        assertThat(ds.path("downstream").findValuesAsText("id")).contains("file:model:acc-model");
+        assertThat(ds.path("downstream").get(0).path("as").asText()).isEqualTo("trades");
+        JsonNode impact = ok(call("GET", "/api/v1/bi/items/file:dataset:acc-trade/impact?remove=notional", reader("wes"), null));
+        assertThat(impact.path("layer").asBoolean()).isTrue();
+        JsonNode on = impact.path("affected").get(0);
+        assertThat(on.path("id").asText()).isEqualTo("file:model:acc-model");
+        assertThat(on.path("measures").toString()).contains("Notional");
+        assertThat(on.path("consumers").findValuesAsText("target")).contains("trades.notional", "Notional");
+        // a notebook bound with dataset: mq:<model>, and a report pinned to the model's earlier major, are consumers too
+        String desk = null;
+        for (JsonNode w : ok(call("GET", "/api/v1/bi/workspaces", reader("wes"), null))) {
+            if ("Semver Desk".equals(w.path("name").asText())) {
+                desk = w.path("id").asText();
+            }
+        }
+        ok(call("POST", "/api/v1/bi/workspaces/" + desk + "/items", reader("wes"), Map.of("kind", "notebook", "title", "SV notebook",
+                "body", "rachana: 1\nnotebook: sv-notebook\ntitle: SV notebook\ndataset: mq:sv-model@1\nfields: [trades.desk]\ncells: []\n")));
+        ok(call("POST", "/api/v1/bi/workspaces/" + desk + "/items", reader("wes"), Map.of("kind", "report", "title", "SV report",
+                "body", "rachana: 2\nreport: sv-report\nversion: 1\ntitle: SV report\nmodel: sv-model@1\npages:\n  - id: p\n    title: P\n    visuals:\n"
+                        + "      - { id: t, type: card, title: Trades, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n")));
+        String svModel = null;
+        for (JsonNode i : ok(call("GET", "/api/v1/bi/workspaces/" + desk + "/items", reader("wes"), null))) {
+            if ("model".equals(i.path("kind").asText()) && "SV model".equals(i.path("title").asText())) {
+                svModel = i.path("id").asText();
+            }
+        }
+        JsonNode used = ok(call("GET", "/api/v1/bi/models/" + svModel + "/consumers", reader("wes"), null));
+        assertThat(used.path("consumers").findValuesAsText("title")).contains("SV notebook", "SV report");
+        JsonNode svImpact = ok(call("GET", "/api/v1/bi/items/" + svModel + "/impact?remove=Trades", reader("wes"), null));
+        assertThat(svImpact.path("affected").get(0).path("consumers").findValuesAsText("title")).contains("SV report");
+    }
+
+    @Test @Order(15)
+    void theOwnerOfADraftModelPreviewsItAsARole() throws Exception {
+        // wes's draft model of order 5 (in his private workspace, never published)
+        Map<String, Object> q = Map.of("select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional")), "time", Map.of("as-of", "2026-10-07"));
+        JsonNode risk = ok(call("POST", "/api/v1/bi/models/wes-draft@1/preview-as", reader("wes"), Map.of("role", "bi-risk", "query", q)));
+        assertThat(risk.path("refused").isMissingNode()).as(risk.toString()).isTrue();
+        assertThat(risk.path("rows")).hasSize(3);
+        JsonNode head = ok(call("POST", "/api/v1/bi/models/wes-draft@1/preview-as", reader("wes"), Map.of("role", "desk-head", "query", q)));
+        assertThat(head.path("rows")).as("a rule on user.desks with no attributes: no rows").isEmpty();
+        call("POST", "/api/v1/bi/models/wes-draft@1/preview-as", reader("rita"), Map.of("role", "bi-risk", "query", q)).andExpect(status().isNotFound());
+    }
 }

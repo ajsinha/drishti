@@ -103,6 +103,11 @@ public final class Layers {
         return generations.computeIfAbsent(key, k -> new AtomicLong()).get();
     }
 
+    /** Moves the data generation of {@code key} on without clearing a layer (rows that are not kept in a layer, such as a Transform's, were dropped). */
+    public long bump(String key) {
+        return generations.computeIfAbsent(key, k -> new AtomicLong()).incrementAndGet();
+    }
+
     public long builds() {
         return builds.get();
     }

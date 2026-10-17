@@ -87,10 +87,16 @@ public final class ModelConsumers {
         return ref::equals;
     }
 
-    /** The consumers of a model item (its draft and published bodies both name it). */
+    /**
+     * The consumers of a model item: its draft and every published version name it, so a consumer pinned to an earlier major (which keeps reading that major's
+     * latest version) is still one.
+     */
     public List<Map<String, Object>> of(BiStore.Item model) {
-        String published = model.isPublished() ? bi.publishedBody(model) : null;
-        return find(namesModel(model, published == null ? List.of(model.body()) : List.of(model.body(), published)), model.id());
+        List<String> bodies = new ArrayList<>(List.of(model.body()));
+        if (model.publishedVersion() > 0) {
+            bodies.addAll(bi.publishedBodies(model));
+        }
+        return find(namesModel(model, bodies), model.id());
     }
 
     /** Every consumer whose model reference passes {@code names}, except the item {@code self}: {@code {kind, id, title, status, owner, workspace}}. */
@@ -133,7 +139,13 @@ public final class ModelConsumers {
         return out;
     }
 
-    /** The model references a body makes: a top-level {@code model:}, a dataset's {@code source.model}, a notebook extract's {@code model}. */
+    /** The prefix of a notebook's model binding ({@code dataset: mq:trading-risk@1}, the same in an extract's {@code dataset:}). */
+    static final String NOTEBOOK_MODEL = "mq:";
+
+    /**
+     * The model references a body makes: a top-level {@code model:}, a dataset's {@code source.model} and each {@code source.inputs} model query's
+     * {@code model} (a Python dataset), a notebook's {@code dataset: mq:<model>} and its extracts' ({@code dataset: mq:}, {@code model}, {@code query.model}).
+     */
     static List<String> refs(String body) {
         List<String> out = new ArrayList<>();
         if (body == null || body.isBlank() || !body.contains("model")) {
@@ -154,7 +166,18 @@ public final class ModelConsumers {
         if (root.path("source").path("model").isTextual()) {
             out.add(root.path("source").path("model").asText().strip());
         }
+        root.path("source").path("inputs").forEach(x -> {
+            if (x.path("model").isTextual()) {
+                out.add(x.path("model").asText().strip());
+            }
+        });
+        if (root.path("dataset").isTextual() && root.path("dataset").asText().strip().startsWith(NOTEBOOK_MODEL)) {
+            out.add(root.path("dataset").asText().strip().substring(NOTEBOOK_MODEL.length()));
+        }
         for (JsonNode x : root.path("extracts")) {
+            if (x.path("dataset").isTextual() && x.path("dataset").asText().strip().startsWith(NOTEBOOK_MODEL)) {
+                out.add(x.path("dataset").asText().strip().substring(NOTEBOOK_MODEL.length()));
+            }
             if (x.path("model").isTextual()) {
                 out.add(x.path("model").asText().strip());
             }

@@ -51,7 +51,7 @@ def register(bi, srv, ctx) -> None:
     q = bi.add_parser("mq", help="bi mq FILE | --model M --select ... --measures ...: ask one model query, as you", parents=[srv],
                       description="Asks one model query (mq: 1) of the server, as you: the same request a report visual, an alert or Analyse makes.",
                       formatter_class=argparse.RawDescriptionHelpFormatter,
-                      epilog="examples:\n  drishti.py bi mq query.yaml\n  drishti.py bi mq --model trading-risk@1 --select desks.name --measures MTM,Trades\n"
+                      epilog="examples:\n  drishti.py bi mq query.yaml\n  drishti.py bi mq --model trading-risk@1 --select desks.name --measures MTM,Trades --sort=-MTM --limit 3\n"
                              "  drishti.py bi mq --model trading-risk@1 --select desks.name --define \"Open MTM=sum(trades.mtm, where=trades.status == 'Live')\" --measures \"Open MTM\"")
     q.add_argument("file", nargs="?", help="a YAML or JSON model query")
     q.add_argument("--model", help="the model (name@major) or dataset:<name>")
@@ -59,6 +59,7 @@ def register(bi, srv, ctx) -> None:
     q.add_argument("--measures", default="", help="measures, comma-separated")
     q.add_argument("--define", action="append", default=[], help="a measure of this query only: \"Name=DEL expression\" (repeatable)")
     q.add_argument("--where", action="append", default=[], help="a filter: field=value (repeatable)")
+    q.add_argument("--sort", action="append", default=[], help="sort by a field or measure; a leading '-' sorts descending (write it --sort=-MTM); repeatable")
     q.add_argument("--limit", type=int)
     q.add_argument("--as-of", dest="as_of", help="a business date (YYYY-MM-DD)")
     q.set_defaults(func=lambda a, extra: mq(a, ctx))
@@ -154,6 +155,11 @@ def query_of(a, ctx) -> dict:
     for w in a.where:
         field, _, value = w.partition("=")
         q.setdefault("where", []).append({"field": field.strip(), "op": "eq", "value": value.strip()})
+    for s in a.sort:
+        by = s.strip()
+        if not by or by == "-":
+            raise ctx["CliError"](f"--sort takes a field or measure, '-' in front for descending, not {s!r}", 2)
+        q.setdefault("sort", []).append({"by": by[1:].strip(), "desc": True} if by.startswith("-") else {"by": by, "desc": False})
     if a.limit:
         q["limit"] = a.limit
     if a.as_of:

@@ -182,7 +182,7 @@
           h('caption', { class: 'text-muted-d', text: 'As ' + role.value + ((a.meta || {}).masked && a.meta.masked.length ? '; masked: ' + a.meta.masked.join(', ') : '') + ((a.meta || {}).hidden && a.meta.hidden.length ? '; hidden: ' + a.meta.hidden.join(', ') : '') }),
           h('thead', {}, h('tr', {}, (a.columns || []).map((c) => h('th', { scope: 'col', text: c.name || c })))),
           h('tbody', {}, (a.rows || []).map((r) => h('tr', {}, r.map((v) => h('td', { text: v == null ? '—' : typeof v === 'number' ? B.fmt(v) : String(v) })))))));
-      }).catch((e) => { B.clear(out).appendChild(h('p', { class: 'bi-near bi-bad', 'data-preview-as-error': e.code || '', text: e.status === 404 || e.status === 405 ? 'This server cannot preview as another role yet: the answer is never shown as yours instead.' : e.message })); }));
+      }).catch((e) => { B.clear(out).appendChild(h('p', { class: 'bi-near bi-bad', 'data-preview-as-error': e.code || '', text: e.status === 405 || (e.status === 404 && !e.code) ? 'This server cannot preview as another role yet: the answer is never shown as yours instead.' : (e.code ? e.code + ' ' : '') + e.message })); }));
     });
     return h('section', { class: 'bi-sec bi-form', 'data-preview-as-box': '', 'data-keep': '' }, h('h3', { text: 'Preview as a role' }),
       h('p', { class: 'text-muted-d bi-small-note', text: 'The saved draft\'s first measure by a suggested field, answered by the server as the role would get it: its rows, masks and hidden fields.' }),
