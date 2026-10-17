@@ -103,7 +103,13 @@ ROLES = {"trading": {"trader": {"kinds": TRADER_KINDS, "calc": True}}, "market-r
 LAYOUTS = {"trading": {"trade": {"columns": ["TRADE_ID", "SOURCE_SYSTEM", "PRODUCT_TYPE", "PRODUCT_SUB_TYPE", "PRODUCT_GROUP", "TRADE_STATUS",
                                              "TRADE_VERSION", "BUY_SELL_CODE", "CURRENCY", "QUANTITY", "TRADE_DATE", "MATURITY_DATE", "COUNTERPARTY",
                                              "LEGAL_ENTITY", "PORTFOLIO", "TRADER_ID"],
-                                 "sort-by": "id", "file-rows": 250000, "row-group-rows": 1000}}}
+                                 "sort-by": "id", "file-rows": 250000, "row-group-rows": 1000}},
+           # a valuation a trade a day: the BI models (trades-basic, trading-risk, live-trading) read these columns without the documents
+           "risk": {"trade-valuation": {"columns": ["VALUATION_ID", "TRADE_ID", "SOURCE_SYSTEM", "PRODUCT_TYPE", "PRODUCT_GROUP", "PORTFOLIO", "DESK",
+                                                    "COUNTERPARTY", "NETTING_SET", "TRADER_ID", "BUY_SELL_CODE", "TRADE_STATUS", "CURRENCY",
+                                                    "NOTIONAL", "MTM", "MTM_CURRENCY", "PNL_1D", "DV01", "TRADE_DATE", "MATURITY_DATE",
+                                                    "VALUATION_DATE"],
+                                        "sort-by": "id", "file-rows": 250000, "row-group-rows": 1000}}}
 # the trade view is fed by three booking systems, each its own connector and Delta table under the trading domain (a union: reads,
 # searches, type-ahead and BI ask all three; ids are unique across them)
 TRADE_SYSTEMS = {"trade-endur": "trade_endur", "trade-calypso": "trade_calypso", "trade-murex": "trade_murex"}

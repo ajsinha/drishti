@@ -38,6 +38,7 @@ are removed at the end. Needs PyYAML, and deltalake and pyarrow (engine deltalak
 from __future__ import annotations
 
 import argparse
+import contextlib
 import gzip
 import json
 import os
@@ -51,6 +52,7 @@ from datetime import datetime
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 DEFAULT_ROOT = "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
+REDATE = re.compile(r'("(?:AS_OF|VALUATION_DATE|RUN_DATE|SOURCE_UPDATE_TIME)":")(\d{4}-\d{2}-\d{2})')
 
 
 def data_dir() -> pathlib.Path:
@@ -169,6 +171,28 @@ class DemoLake:
         self.extras = RealExtras(a.with_real.split(",")).build() if a.with_real else {}
         self.tables: list[str] = []
         self.left_out: list[str] = []
+        self.dates = self.target_dates(a.as_of)
+        self.shift = {o: n for o, n in zip(self.manifest.dates, self.dates) if o != n}
+
+    def target_dates(self, as_of: str) -> list[str]:
+        """The business dates the lake is written for: the test data's own (``data``), or the same number of USNY business days
+        ending on ``today`` (the server's current business date, so the demo opens on data) or on a given date."""
+        if as_of == "data":
+            return list(self.manifest.dates)
+        sys.path.insert(0, str(ROOT / "tools"))
+        from datetime import date
+        from zoneinfo import ZoneInfo
+        from samplegen.dates import Calendar
+        from samplegen.lake import business_days
+        cal = Calendar.of("USNY")
+        end = datetime.now(ZoneInfo("America/New_York")).date() if as_of == "today" else date.fromisoformat(as_of)
+        return [d.isoformat() for d in business_days(end, len(self.manifest.dates), cal)]
+
+    def redate(self, line: str) -> str:
+        """A document's own dates of the day (AS_OF, VALUATION_DATE, RUN_DATE, SOURCE_UPDATE_TIME) moved with the business dates."""
+        if not self.shift:
+            return line
+        return REDATE.sub(lambda m: m.group(1) + self.shift.get(m.group(2), m.group(2)), line)
 
     def run(self) -> int:
         started = time.monotonic()
@@ -183,6 +207,8 @@ class DemoLake:
                     worst = max(worst, self.dataset(ds))
         finally:
             shutil.rmtree(self.staging, ignore_errors=True)
+            with contextlib.suppress(OSError):
+                self.staging.parent.rmdir()                   # <data>/build, when nothing else is in it
         elapsed = time.monotonic() - started
         notes = self.connector_files()
         self.report(elapsed, notes)
@@ -230,12 +256,12 @@ class DemoLake:
         key = ds.get("key")
         worst, rows = 0, 0
         stage = self.staging / f"{domain}-{table}.jsonl"
-        for day, state in zip(self.manifest.dates, self.states(ds)):
+        for day, state in zip(self.dates, self.states(ds)):
             if key is None:
                 key = next((k for k in json.loads(next(iter(state.values()))) if k.endswith("_ID")), "id") if state else "id"
             with stage.open("w", encoding="utf-8") as fh:
                 for line in state.values():
-                    fh.write(line + "\n")
+                    fh.write(self.redate(line) + "\n")
             argv = ["--from", str(stage), "--pack", str(self.packs.dir / pack), "--kind", kind, "--connector", connector, "--key", key,
                     "--as-of", day, "--lake", str(self.lake), "--engine", self.a.engine, "-q"]
             for p in ds.get("partition-by") or []:
@@ -246,10 +272,20 @@ class DemoLake:
             worst = max(worst, code)
             rows += len(state)
         stage.unlink(missing_ok=True)
+        self.checkpoint(path)
         self.tables.append(f"{domain}/{table}")
         if not self.a.quiet:
             print(f"  {domain}/{table}: {rows:,} rows over {len(self.manifest.dates)} days" + (" (failed)" if worst == 1 else ""))
         return worst
+
+    @staticmethod
+    def checkpoint(path: pathlib.Path) -> None:
+        """A checkpoint after the table's commits (a partitioned table takes one a partition a day), so a reader replays one file."""
+        try:
+            from deltalake import DeltaTable
+            DeltaTable(str(path)).create_checkpoint()
+        except Exception:                                     # noqa: BLE001 - an optimisation: the table reads without it
+            pass
 
     # ---- connector files -----------------------------------------------------------------------------------------------------------------
     def resolve(self, root: str) -> pathlib.Path:
@@ -302,8 +338,9 @@ class DemoLake:
 
     # ---- what next -----------------------------------------------------------------------------------------------------------------------
     def report(self, elapsed: float, notes: list[str]) -> None:
-        d = self.manifest.dates
-        print(f"\nDemo lake ready: {self.lake}: {len(self.tables)} tables, {len(d)} business days ({d[0]} to {d[-1]}), {elapsed:.0f} s"
+        d = self.dates
+        moved = f" (the test data's {self.manifest.dates[0]} to {self.manifest.dates[-1]}, moved to end on {d[-1]})" if self.shift else ""
+        print(f"\nDemo lake ready: {self.lake}: {len(self.tables)} tables, {len(d)} business days {d[0]} to {d[-1]}{moved}, {elapsed:.0f} s"
               + (f"; real extracts added locally ({sum(len(v) for v in self.extras.values())} documents)" if self.extras else ""))
         if self.left_out:
             print(f"  left out {len(self.left_out)} real document(s) whose id the test data already uses")
@@ -312,8 +349,9 @@ class DemoLake:
             print("  " + n)
         env = "" if self.lake == self.resolve(DEFAULT_ROOT) else f"DRISHTI_DELTA_ROOT={self.lake} "
         print("\nNext:\n"
-              "  1. Start the server: IDE run configuration 'Drishti server' (packs and ports set there), or\n"
-              f"     {env}DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets "
+              "  1. Start the server on the lakes: IDE run configuration 'Drishti server (demo lakes)' (the samples off, so every page reads\n"
+              "     the lakes), or\n"
+              f"     {env}DRISHTI_DEMO_ENABLED=false DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets "
               "java -jar drishti-server/target/drishti-server-*-exec.jar\n"
               "  2. Start the console: run configuration 'Drishti console', or\n"
               "     drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=17480 --backend.url=http://127.0.0.1:18480\n"
@@ -331,6 +369,8 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--lake", default=str(data_dir() / "delta"), help="the Delta root to build (default <data>/delta, what the packs read)")
     p.add_argument("--packs", default=str(ROOT / "config" / "packs"), help="the packs folder (default config/packs)")
     p.add_argument("--connectors-dir", help="the connector files' folder (default DRISHTI_CONNECTORS_DIR, else config/connectors)")
+    p.add_argument("--as-of", default="today", metavar="today|data|YYYY-MM-DD", help="the last business date of the lake: today (default: "
+                   "the server's current business date, so the demo opens on data), data (the test data's own dates) or a date")
     p.add_argument("--engine", choices=("auto", "drishti", "deltalake"), default="deltalake", help="the lake writer (default deltalake)")
     p.add_argument("--with-real", metavar="FILE[,FILE]", help="LOCAL ONLY: real trade extracts (JSON) whose counterparties, agreements and "
                    "netting sets are added to the local lake, never to data/testdata")

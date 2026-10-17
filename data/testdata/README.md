@@ -48,11 +48,15 @@ Written by `tools/testdata/make_testdata.py` (deterministic; `--check` says whet
 
    It rebuilds the seven daily snapshots of each dataset, writes them under `data/delta/<domain>/<kind>/` (the trades under
    `data/delta/trading/trade_endur`, `trade_calypso` and `trade_murex`, partitioned by business date and `PRODUCT_TYPE`; every other
-   table by business date), checks the seven packs' connector files and prints what to start next. Measured on a 24-core laptop with
-   an NVMe disk: **48 s, 775 MB peak memory**, 64 tables (16 of them static reference data built from the world-economy and
+   table by business date), checks the seven packs' connector files and prints what to start next. The seven days are moved to end on
+   **today's business date** (the server's current date, so every page opens on data; `--as-of data` keeps the test data's own
+   2026-09-22 to 2026-09-30, `--as-of 2026-10-30` any other end); the documents' own dates of the day (`AS_OF`, `VALUATION_DATE`,
+   `RUN_DATE`, `SOURCE_UPDATE_TIME`) move with them. Measured from a clean copy on a 24-core laptop with an NVMe disk: **about 50 s,
+   800 MB peak memory**, 64 tables, 237 MB on disk (16 tables are static reference data built from the world-economy and
    news-and-markets packs' samples).
-4. **Start** the server and the console: the run configurations **Drishti server** and **Drishti console** (or the compound **Drishti
-   QA (server + console)**). The server reads `data/delta` by default (`DRISHTI_DELTA_ROOT` moves it).
+4. **Start** the server and the console: the run configurations **Drishti server (demo lakes)** (the samples off,
+   `DRISHTI_DEMO_ENABLED=false`, so every page reads the lakes; with the samples on, a sample answers before the lake for an id both
+   hold) and **Drishti console**. The server reads `data/delta` by default (`DRISHTI_DELTA_ROOT` moves it).
 5. **Open the demo pages** (the console on port 17480 by default):
 
    | Page | What it shows |
@@ -65,12 +69,13 @@ Written by `tools/testdata/make_testdata.py` (deterministic; `--check` says whet
    | [/v/counterparty/CP-VAULTGUARD](http://localhost:17480/v/counterparty/CP-VAULTGUARD) | the vault look-alike: UEN, country of risk, legal entity, netting sets |
    | [/bi](http://localhost:17480/bi) | the shipped BI reports and models, now over seven business days (pick a date, or a range in Analyse) |
 
-   **Compare across days**: on a trade page pick the date `2026-09-22`, then **Compare** with `2026-09-30`; an amended trade (about 6%
+   **Compare across days**: on a trade page pick the first of the seven dates `lake demo` printed, then **Compare** with the last; an
+   amended trade (about 6%
    of each book is amended each day: the trades whose `TRADE_VERSION` moved) shows its changed rates, notionals, status or added fees.
 
 ## The datasets
 
-Seven business days, 2026-09-22 to 2026-09-30 (USNY calendar). Every document is UPPER_SNAKE, the shape the packs read; every
+Seven business days, 2026-09-22 to 2026-09-30 in the files (USNY calendar; `lake demo` moves them to end today unless `--as-of data`). Every document is UPPER_SNAKE, the shape the packs read; every
 counterparty is fictitious (`CP-…`). Columns: the first day's documents, the documents new or changed on each later day, the documents
 on the last day, and the folder's compressed size (MB).
 

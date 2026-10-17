@@ -92,6 +92,33 @@ connectors:
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: risk
+      layout:
+        trade-valuation:
+          columns:
+          - VALUATION_ID
+          - TRADE_ID
+          - SOURCE_SYSTEM
+          - PRODUCT_TYPE
+          - PRODUCT_GROUP
+          - PORTFOLIO
+          - DESK
+          - COUNTERPARTY
+          - NETTING_SET
+          - TRADER_ID
+          - BUY_SELL_CODE
+          - TRADE_STATUS
+          - CURRENCY
+          - NOTIONAL
+          - MTM
+          - MTM_CURRENCY
+          - PNL_1D
+          - DV01
+          - TRADE_DATE
+          - MATURITY_DATE
+          - VALUATION_DATE
+          sort-by: id
+          file-rows: 250000
+          row-group-rows: 1000
 routes:
   var: risk-store
   stress-scenario: risk-store

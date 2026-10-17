@@ -145,6 +145,9 @@ def trade_states(book: list[dict], days: Days, seed: int = 5):
             for k, t in list(live.items()):
                 live[k] = A.amend(t, day, seed)
         for t in joins.get(i, []):
+            stamp = str(t.get("SOURCE_UPDATE_TIME") or "")
+            if stamp[:10] > day:                              # a feed stamps a trade when it sends it: never after the day it joins
+                t["SOURCE_UPDATE_TIME"] = f"{day}{stamp[10:]}"
             live[str(t["TRADE_ID"])] = t
         yield {k: dumps(t) for k, t in live.items()}
 

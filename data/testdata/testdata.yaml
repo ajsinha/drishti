@@ -1,17 +1,3 @@
-# Project Drishti · Any data. Any domain. One grammar.
-#
-# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
-# All rights reserved.
-#
-# PROPRIETARY AND CONFIDENTIAL.
-#
-# This file is the confidential and proprietary property of Ashutosh Sinha.
-# Unauthorised copying, use, modification, distribution or disclosure of this
-# file, via any medium, is strictly prohibited except with the express prior
-# written permission of the copyright holder.
-#
-# See the LICENSE file in the root of this repository for the full terms.
-
 # data/testdata/testdata.yaml: written by tools/testdata/make_testdata.py; read by `drishti.py lake demo`. Do not edit by hand.
 # Each dataset: its folder (snapshot of the first day, then the changes of each later day), the pack, kind and Delta connector it
 # feeds, the key and the partition columns after business_date; or the pack samples it is built from (static reference data).
@@ -96,7 +82,7 @@ datasets:
     total: 4936
     files:
     - snapshot-2026-09-22.jsonl.gz
-    bytes: 1705710
+    bytes: 1705681
   - day: '2026-09-23'
     kind: changes
     documents: 319
@@ -110,14 +96,14 @@ datasets:
     total: 4952
     files:
     - changes-2026-09-24.jsonl.gz
-    bytes: 130506
+    bytes: 130456
   - day: '2026-09-25'
     kind: changes
     documents: 367
     total: 5000
     files:
     - changes-2026-09-25.jsonl.gz
-    bytes: 144142
+    bytes: 144094
   - day: '2026-09-28'
     kind: changes
     documents: 292
@@ -153,28 +139,28 @@ datasets:
     total: 4933
     files:
     - snapshot-2026-09-22.jsonl.gz
-    bytes: 5532835
+    bytes: 5532641
   - day: '2026-09-23'
     kind: changes
     documents: 303
     total: 4955
     files:
     - changes-2026-09-23.jsonl.gz
-    bytes: 345839
+    bytes: 345802
   - day: '2026-09-24'
     kind: changes
     documents: 320
     total: 4978
     files:
     - changes-2026-09-24.jsonl.gz
-    bytes: 358612
+    bytes: 358539
   - day: '2026-09-25'
     kind: changes
     documents: 324
     total: 5000
     files:
     - changes-2026-09-25.jsonl.gz
-    bytes: 332352
+    bytes: 332317
   - day: '2026-09-28'
     kind: changes
     documents: 295
