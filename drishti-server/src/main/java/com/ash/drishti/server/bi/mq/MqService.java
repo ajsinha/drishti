@@ -432,7 +432,7 @@ public final class MqService {
                 String type;
                 try {
                     Resolver.ColRef ref = resolver.resolve(List.of(col.name().split("\\.", -1)), null);
-                    type = ref.part() != null ? "integer" : resolver.column(ref.table(), ref.column()).type();
+                    type = ref.part() != null ? Resolver.partType(ref.part()) : resolver.column(ref.table(), ref.column()).type();
                 } catch (RuntimeException e) {
                     type = kind(col.kind());
                 }
@@ -442,7 +442,9 @@ public final class MqService {
                 m.put("id", info.id());
                 m.put("kind", "measure");
                 m.put("type", kind(col.kind()));
-                m.put("format", info.format());
+                Dataset.Measure bound = ds.measures().get(col.name());
+                Dataset.Measure base = ds.measures().get(MqBindings.BASE + col.name());
+                m.put("format", bound != null && base != null && bound.format() != null && !bound.format().equals(base.format()) ? bound.format() : info.format());   // a calculation item's own format (a share)
                 m.put("additive", info.adds() ? Boolean.TRUE : info.semiAdditive() ? Map.of("over-time", info.additive()) : Boolean.FALSE);
             }
             m.put("masked", masked.contains(col.name()));

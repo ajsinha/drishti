@@ -27,7 +27,7 @@
   const h = B.h, q = (s, sc) => B.q(s, sc || canvas);
   const reportId = canvas.getAttribute('data-item');
 
-  const state = { slicers: {}, selections: [], drills: {}, carry: [], dates: null, mode: 'filter', rows: {}, asTable: {}, time: { mode: 'now' } };
+  const state = { slicers: {}, selections: [], drills: {}, carry: [], dates: null, mode: 'filter', rows: {}, all: {}, asTable: {}, time: { mode: 'now' } };
   const MAX_FOLLOW = 12;                    // standing queries one page holds (the server allows drishti.bi.mq.max-subscriptions-per-user for a person)
   let pbar = null, picker = null;           // wave B: the parameter slicers and Show as (bi-consume.js), the time picker
   let rep = null, idx = null, pageId = null, palette = null, tokens = null;
@@ -69,6 +69,7 @@
     st.selections = state.selections.map((s) => ({ visual: s.visual, field: s.field, values: s.values, highlight: state.mode === 'highlight' }));
     st.drill = state.drills[spec.id] || [];
     if (state.rows[spec.id]) { st.rows = state.rows[spec.id] === true ? true : state.rows[spec.id]; }
+    if (state.all && state.all[spec.id]) { st.limit = 5000; }                       // "Show all" of a visual that said it was cut
     return st;
   }
 
@@ -147,7 +148,7 @@
   }
 
   function buildFrame(spec) {
-    const f = B.frame(spec, { buttons: buttons(spec), onRetry: () => load(spec) });
+    const f = B.frame(spec, { buttons: buttons(spec), onRetry: () => load(spec), onShowAll: () => { state.all[spec.id] = true; load(spec); } });
     f.el.style.gridColumn = (spec.at.x + 1) + ' / span ' + spec.at.w;
     f.el.style.gridRow = (spec.at.y + 1) + ' / span ' + spec.at.h;
     f.el.tabIndex = 0;
@@ -169,11 +170,14 @@
       entry.mq = res.mq || null;
       // parameter values and Show as items ride on the model query (MQ v2): the report's own answer gave the query, the server answers it with them
       const asked = askedMq(entry);
-      if (asked !== entry.mq && entry.mq && !DISTRIBUTIONS[spec.type]) { return B.enqueue(() => B.mq.ask(asked)).then((a) => [Object.assign({}, res, { columns: a.columns, rows: a.rows, rowCount: a.rowCount, totals: undefined, highlight: null, meta: Object.assign({}, res.meta, a.meta) })]); }
+      const named = (cols) => (res.period ? cols.map((c) => (c.name && c.name.endsWith('.' + res.period + '_start') ? Object.assign({}, c, { name: c.name.slice(0, -('.' + res.period + '_start').length) }) : c)) : cols);   // a series asked by period keeps its axis's name
+      const formats = (cols) => { const f = {}; (cols || []).forEach((c) => { if (c.kind === 'measure' && c.format) { f[c.name] = c.format; } }); return f; };   // a calculation item's format (a Share reads as a percent)
+      if (asked !== entry.mq && entry.mq && !DISTRIBUTIONS[spec.type]) { return B.enqueue(() => B.mq.ask(asked)).then((a) => [Object.assign({}, res, { columns: named(a.columns), rows: a.rows, rowCount: a.rowCount, totals: undefined, highlight: null, formats: formats(a.columns), meta: Object.assign({}, res.meta, a.meta) })]); }
       return [res];
     }).then((got) => {
       if (!got || token !== entry.token) { return; }
       const res = got[0];
+      if (state.all[spec.id]) { res.allShown = true; }
       entry.res = res;
       asOfNote(res);
       sawLive(res);
@@ -220,7 +224,7 @@
     entry.follow = B.consume.follow(mq, {
       throttle: Math.max(250, Number(canvas.getAttribute('data-live-min')) || 250) + 'ms', deliver: 'rows', staleSeconds: Number(canvas.getAttribute('data-live-stale')) || 30,
       onAnswer: (d) => pushed(spec, entry, d),
-      onState: (s, why, info) => { chip.set(state.time.mode === 'window' && s === 'live' ? 'window' : s, why, Object.assign({}, info, state.time)); B.live.markStale(entry.frame, s === 'stale' || s === 'failed', why); }
+      onState: (s, why, info) => { chip.set(state.time.mode === 'window' && (s === 'live' || s === 'quiet') ? 'window' : s, why, Object.assign({}, info, state.time)); B.live.markStale(entry.frame, s === 'stale' || s === 'failed', why); }
     });
   }
   function closeFollows() { frames.forEach((e) => { if (e.follow) { e.follow.close(); e.follow = null; } }); }
@@ -263,6 +267,7 @@
     entry.frame.result(res, (host) => {
       const c = ctxFor(ds);
       c.update = !!live;
+      if (res.formats) { c.formats = res.formats; }
       if (state.rows[id] || state.asTable[id]) { return B.visuals.dataTable(host, ds, c, res, true); }
       return B.visuals.draw(host, ds, c, res);
     }, live ? { keep: true } : undefined);

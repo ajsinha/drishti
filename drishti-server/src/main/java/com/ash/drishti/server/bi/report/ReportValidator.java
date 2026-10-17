@@ -528,7 +528,7 @@ public final class ReportValidator {
         try {
             Resolver.ColRef ref = resolver.resolve(List.of(field.split("\\.")), null);
             if (ref.part() != null) {
-                return "integer";
+                return Resolver.partType(ref.part());
             }
             Dataset.Column c = ref.column() == null ? null : resolver.column(ref.table(), ref.column());
             return c == null ? null : c.type();

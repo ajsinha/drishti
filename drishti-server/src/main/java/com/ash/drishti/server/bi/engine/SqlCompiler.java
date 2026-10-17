@@ -858,7 +858,7 @@ public final class SqlCompiler {
 
     private String filter(SqlEmitter e, QueryRequest.Filter f, Resolver.ColRef ref) {
         String col = e.column(ref);
-        String type = ref.part() != null ? "integer" : resolver.column(ref.table(), ref.column()).type();
+        String type = ref.part() != null ? Resolver.partType(ref.part()) : resolver.column(ref.table(), ref.column()).type();
         List<Object> v = f.values();
         switch (f.op()) {
             case "is-null" -> {

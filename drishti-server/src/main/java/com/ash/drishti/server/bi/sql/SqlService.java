@@ -161,7 +161,7 @@ public final class SqlService {
             try {
                 com.ash.drishti.server.bi.dataset.Resolver r = new com.ash.drishti.server.bi.dataset.Resolver(flat);
                 com.ash.drishti.server.bi.dataset.Resolver.ColRef ref = r.resolve(List.of(o.source().split("\\.", -1)), null);
-                return ref.part() != null ? "integer" : r.column(ref.table(), ref.column()).type();
+                return ref.part() != null ? com.ash.drishti.server.bi.dataset.Resolver.partType(ref.part()) : r.column(ref.table(), ref.column()).type();
             } catch (RuntimeException e) {
                 return "string";
             }

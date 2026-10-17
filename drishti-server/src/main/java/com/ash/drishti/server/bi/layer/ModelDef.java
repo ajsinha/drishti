@@ -67,10 +67,18 @@ public record ModelDef(String name, String version, String id, String title, Str
         }
     }
 
-    /** A calculation group: its items (name to a DEL template over {@code SELECTED}) and its precedence (higher applies first, innermost). */
-    public record CalcGroup(String name, int precedence, Map<String, String> items, String description) {
+    /**
+     * A calculation group: its items (name to a DEL template over {@code SELECTED}), its precedence (higher applies first, innermost) and the format an item
+     * gives its answer ({@code Share: { expr: "share_of(SELECTED, …)", format: share }}: a share reads as a percent, whatever the measure's own format).
+     */
+    public record CalcGroup(String name, int precedence, Map<String, String> items, String description, Map<String, String> formats) {
         public CalcGroup {
             items = Collections.unmodifiableMap(new LinkedHashMap<>(items));
+            formats = formats == null ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(formats));
+        }
+
+        public CalcGroup(String name, int precedence, Map<String, String> items, String description) {
+            this(name, precedence, items, description, Map.of());
         }
     }
 

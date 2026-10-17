@@ -103,6 +103,7 @@ final class CalculationParser {
         String path = "calc-groups." + name;
         y.unknownKeys(g, Set.of("precedence", "items", "description"), "DRS-9120", path);
         Map<String, String> items = new LinkedHashMap<>();
+        Map<String, String> formats = new LinkedHashMap<>();
         JsonNode it = g.path("items");
         if (!it.isObject() || it.isEmpty()) {
             y.error("DRS-9120", path + ".items", "a calculation group has items: { YTD: \"ytd(SELECTED, trades.tradeDate)\" }");
@@ -119,8 +120,11 @@ final class CalculationParser {
                 y.error("DRS-9127", path + ".items." + e.getKey(), ex.getMessage());
             }
             items.put(e.getKey(), text);
+            if (e.getValue().isObject() && e.getValue().path("format").isTextual() && !e.getValue().path("format").asText().isBlank()) {
+                formats.put(e.getKey(), e.getValue().path("format").asText());            // { expr, format }: the item's answer reads in it (a share as a percent)
+            }
         });
-        return new ModelDef.CalcGroup(name, g.path("precedence").asInt(0), items, LayerYaml.text(g, "description", ""));
+        return new ModelDef.CalcGroup(name, g.path("precedence").asInt(0), items, LayerYaml.text(g, "description", ""), formats);
     }
 
     private static ModelDef.Parameter parameter(String name, JsonNode p, LayerYaml y) {

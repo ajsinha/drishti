@@ -349,16 +349,20 @@ public final class BiReportService {
         Prepared pre = prepare(p, id, yaml, pageId, visualId, stateJson);
         boolean author = bi.mayAuthor(p);
         Map<String, Object> live = liveOf(p, pre);                  // read before the query: rows that change meanwhile are above its seq, so a client asking "since" misses none
-        DatasetService.Asked asked = datasets.asked(p, pre.dsItem(), pre.built().query(), explain && author);
+        VisualFit.Fitted fitted = VisualCatalogue.DISTRIBUTIONS.contains(pre.visual().type()) || pre.visual().type().startsWith("perspective-")
+                ? new VisualFit.Fitted(datasets.asked(p, pre.dsItem(), pre.built().query(), explain && author), pre.built().query(), null, null, null, false)
+                : VisualFit.fit(pre.visual(), pre.dataset(), pre.built().query(), q -> datasets.asked(p, pre.dsItem(), q, explain && author));
+        DatasetService.Asked asked = fitted.asked();               // never cut silently: a time series by period, any other with its count in all
         QueryService.Result r = shortNames(pre, asked.result());
         Map<String, Object> out = new LinkedHashMap<>(VisualCatalogue.DISTRIBUTIONS.contains(pre.visual().type()) ? distribution(pre, r) : datasets.json(r));
-        if (pre.built().highlight() != null) {
+        if (pre.built().highlight() != null && fitted.period() == null) {
             out.put("highlight", datasets.json(datasets.ask(p, pre.dsItem(), pre.built().highlight(), false)));
         } else {
             out.put("highlight", null);
         }
         out.put("visual", pre.visual().id());
-        out.put("query", describe(pre.built().query()));
+        out.put("query", describe(fitted.query()));
+        VisualFit.describe(fitted, out);
         out.put("mq", asked.query());                                // the model query the visual ran (docs/architecture/BI_MODEL_SPEC.md section 5.9)
         List<Map<String, Object>> totals = totals(p, pre);
         if (!totals.isEmpty()) {

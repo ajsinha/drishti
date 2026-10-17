@@ -55,9 +55,9 @@
     { id: 'mtd', fn: 'mtd', label: 'Month to date', needs: 'date', suffix: 'MTD', make: (b, x) => 'mtd(' + b + ', ' + x + ')' },
     { id: 'prior', fn: 'prior_period', label: 'Prior period', needs: 'date', suffix: 'prior period', make: (b, x) => 'prior_period(' + b + ', ' + x + ')' },
     { id: 'running', fn: 'running', label: 'Running total', needs: 'date', suffix: 'running', make: (b, x) => 'running(' + b + ', ' + x + ')' },
-    { id: 'closing', fn: 'closing', label: 'Closing balance (last business day of the month)', needs: 'date', suffix: 'closing', make: (b, x) => 'closing(' + b + ', ' + x + ')' },
-    { id: 'opening', fn: 'opening', label: 'Opening balance', needs: 'date', suffix: 'opening', make: (b, x) => 'opening(' + b + ', ' + x + ')' },
-    { id: 'avg-over', fn: 'avg_over', label: 'Average balance over the dates', needs: 'date', suffix: 'average balance', make: (b, x) => 'avg_over(' + b + ', ' + x + ')' },
+    { id: 'closing', fn: 'closing', label: 'Closing balance (last business day of the month)', needs: 'time', suffix: 'closing', make: (b, x) => 'closing(' + b + ', ' + x + ')' },
+    { id: 'opening', fn: 'opening', label: 'Opening balance', needs: 'time', suffix: 'opening', make: (b, x) => 'opening(' + b + ', ' + x + ')' },
+    { id: 'avg-over', fn: 'avg_over', label: 'Average balance over the dates', needs: 'time', suffix: 'average balance', make: (b, x) => 'avg_over(' + b + ', ' + x + ')' },
     { id: 'last', fn: 'last', label: 'Last value of each group', needs: 'date', suffix: 'last', make: (b, x) => 'last(' + b + ', ' + x + ')' },
     { id: 'yesterday', fn: 'as_of', label: 'As of the business day before', suffix: 'yesterday', make: (b) => 'as_of(' + b + ', shift_date(asof(), -1))' },
     { id: 'whatif', fn: null, label: 'What-if: shocked by a parameter', needs: 'param', suffix: 'shocked', make: (b, x) => b + ' * (1 + param.' + x + ')' }
@@ -67,10 +67,16 @@
   const fieldNames = (filter) => M.exprFields().filter((f) => !filter || filter(f)).map((f) => f.name);
   const isDate = (f) => /^(date|timestamp)/i.test(String(f.type || ''));
   const relOptions = () => (M.doc.relationships || []).map((r, i) => [r.id || '#' + i, r.from + ' → ' + r.to + (r.active === false ? ' (inactive)' : '')]);
+  let baseAlias = null;                                                       // the dataset the picked base measure reads (its time column comes first)
   const paramOptions = () => Object.keys(M.doc.parameters || {}).filter((n) => ['number', 'integer'].indexOf((M.doc.parameters[n] || {}).kind || 'number') >= 0);
   function needOptions(need) {
     if (need === 'field') { return fieldNames((f) => !isDate(f)).map((n) => [n, n]); }
     if (need === 'date') { return fieldNames(isDate).map((n) => [n, n]); }
+    if (need === 'time') {                                                  // a balance is taken along the data's own time: each dataset's business date first
+      const aliases = Object.keys(M.doc.datasets || {});
+      const first = baseAlias && aliases.indexOf(baseAlias) >= 0 ? [baseAlias].concat(aliases.filter((a) => a !== baseAlias)) : aliases;
+      return first.map((a) => [a + '.businessDate', a + '.businessDate (the business date of ' + a + ')']).concat(fieldNames(isDate).map((n) => [n, n]));
+    }
     if (need === 'rel') { return relOptions(); }
     if (need === 'param') { return paramOptions().map((n) => [n, 'param.' + n]); }
     return [];
@@ -103,7 +109,9 @@
     function refresh(keepWhat) {
       const t = cur();
       if (!t) { return; }
-      if (!keepWhat) {
+      const bm = (M.doc.measures || {})[base.value];
+      const bx = bm && (typeof bm === 'string' ? bm : bm.expr) || '';
+      baseAlias = (Object.keys(M.doc.datasets || {}).find((a) => new RegExp('\\b' + a + '\\.').test(bx))) || null;      if (!keepWhat) {
         B.clear(what);
         needOptions(t.needs).forEach(([v, l]) => what.appendChild(h('option', { value: v, text: l })));
       }
@@ -113,7 +121,7 @@
       shown.textContent = t.make(mref(base.value), x);
       if (!touched) { name.value = base.value + ' ' + t.suffix + (t.needs === 'field' ? ' ' + String(what.value).split('.').pop() : ''); }
     }
-    base.addEventListener('change', () => refresh(true));
+    base.addEventListener('change', () => refresh(!(cur() && cur().needs === 'time')));
     calc.addEventListener('change', () => refresh(false));
     what.addEventListener('change', () => refresh(true));
     name.addEventListener('input', () => { touched = true; });
@@ -122,6 +130,7 @@
       if (!t || !n) { near(add, 'Pick a measure and a calculation, and give the new measure a name.', true); return; }
       if ((M.doc.measures || {})[n]) { near(add, 'There is already a measure called ' + n + '.', true); return; }
       if (t.needs && !what.value) { near(add, 'Pick what the calculation needs first.', true); return; }
+      name.value = '';
       M.edit((doc) => {
         const x = t.needs === 'rel' ? relId(doc, what.value) : what.value;
         doc.measures = doc.measures || {};
@@ -158,7 +167,7 @@
         const text = typeof items[it] === 'string' ? items[it] : (items[it] || {}).expr || '';
         const ex = h('input', { class: 'studio-in mono', value: text, 'aria-label': 'Formula of ' + g + ' ' + it, 'data-cg-item': g + '/' + it, disabled: M.readOnly });
         const cell = h('td', {}, ex);
-        if (!M.readOnly) { M.exprEditor(ex, (v) => { if (v && v !== text) { M.edit((doc) => { doc['calc-groups'][g].items[it] = v; }, true); } }, { names: () => M.exprNames(true) }); }
+        if (!M.readOnly) { M.exprEditor(ex, (v) => { if (v && v !== text) { M.edit((doc) => { const its = doc['calc-groups'][g].items; if (its[it] && typeof its[it] === 'object') { its[it].expr = v; } else { its[it] = v; } }, true); } }, { names: () => M.exprNames(true) }); }
         const ip = M.problems('calc-groups.' + g + '.items.' + it);
         if (ip.length) { cell.appendChild(h('p', { class: 'bi-near bi-bad', text: ip[0].code + ' ' + ip[0].message })); }
         const rm = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Delete the item ' + it, 'data-cg-item-delete': g + '/' + it, disabled: M.readOnly }, B.icon('trash'));
@@ -184,7 +193,10 @@
         if (!n) { near(iAdd, 'Give the item a name.', true); return; }
         if (items[n] != null) { near(iAdd, 'The group has an item called ' + n + ' already.', true); return; }
         const t = QUICK.find((x) => x.id === iTpl.value);
-        M.edit((doc) => { const x = doc['calc-groups'][g]; x.items = x.items || {}; x.items[n] = t ? t.make('SELECTED', iWhat.value) : 'SELECTED'; });
+        const what = iWhat.value;
+        iName.value = ''; iName.removeAttribute('data-auto'); iTpl.value = '';               // the form is empty again for the next item
+        // a template with a format of its own (a share reads as a percent) keeps it: { expr, format }
+        M.edit((doc) => { const x = doc['calc-groups'][g]; x.items = x.items || {}; x.items[n] = t ? (t.format ? { expr: t.make('SELECTED', what), format: t.format } : t.make('SELECTED', what)) : 'SELECTED'; });
       });
       sec.appendChild(h('fieldset', { class: 'bi-cg', 'data-cg': g }, h('legend', {}, h('strong', { text: g }), ' ', rmG),
         h('div', { class: 'bi-md-row' }, h('label', {}, 'Precedence ', prec), h('label', { class: 'bi-md-grow' }, 'Description ', desc)),
@@ -199,6 +211,7 @@
       const n = gName.value.trim();
       if (!/^[A-Za-z][A-Za-z0-9 _-]{0,40}$/.test(n)) { near(gAdd, 'A group\'s name is a word or two: letters, digits, spaces.', true); return; }
       if (groups[n]) { near(gAdd, 'There is a group called ' + n + ' already.', true); return; }
+      gName.value = '';
       M.edit((doc) => { doc['calc-groups'] = doc['calc-groups'] || {}; doc['calc-groups'][n] = { precedence: 10, items: { Current: 'SELECTED' } }; });
     });
     sec.appendChild(h('div', { class: 'bi-md-row', 'data-keep': '' }, h('label', {}, 'New group ', gName), gAdd));
@@ -270,6 +283,7 @@
       if (!/^[A-Za-z_][A-Za-z0-9_]{0,40}$/.test(n)) { near(pAdd, 'A parameter\'s name is one word (letters, digits, underscore): it is written param.' + (n || 'name') + '.', true); return; }
       if (params[n]) { near(pAdd, 'There is a parameter called ' + n + ' already.', true); return; }
       const k = pKind.value;
+      pName.value = '';
       M.edit((doc) => {
         doc.parameters = doc.parameters || {};
         doc.parameters[n] = k === 'field' ? { kind: 'field', fields: fields.slice(0, 2), default: fields[0] || '' } : k === 'number' ? { kind: 'number', default: 0, min: -1, max: 1, step: 0.01 }

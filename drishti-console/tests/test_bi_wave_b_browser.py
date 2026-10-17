@@ -211,8 +211,9 @@ def test_a_live_report_follows_pushed_answers_with_its_state_chip(browser, made,
     page.wait_for_selector("[data-ready=yes]", state="attached", timeout=30000)
     rows_of(page)
     chip = page.locator('[data-visual="desks"] .bi-state-chip')
-    expect(chip).to_have_attribute("data-state", re.compile("live|tick"), timeout=30000)
-    expect(chip).to_contain_text(re.compile("Live|Every few seconds"))
+    # subscribed and waiting says Listening; Live only once a change has been pushed (asserted after the push below)
+    expect(chip).to_have_attribute("data-state", re.compile("quiet|live|tick"), timeout=30000)
+    expect(chip).to_contain_text(re.compile("Listening|Live|Every few seconds"))
     shoot(page, '[data-visual="desks"]', "state-chip")
     # new trades land in the lake and the dataset is refreshed: the server's generation bus pushes the new answer, nothing polls
     lake = stack.tmp / "lake" / "2026-10-08" / "trade.jsonl"
@@ -228,6 +229,7 @@ def test_a_live_report_follows_pushed_answers_with_its_state_chip(browser, made,
     page.wait_for_function("(n) => Number(document.getElementById('biCanvas').getAttribute('data-pushed') || 0) > n", arg=pushed0, timeout=60000)
     assert page.locator('[data-visual="desks"]').get_attribute("data-updated")
     expect(chip).to_have_attribute("data-state", re.compile("live|tick|throttled"))
+    expect(chip).to_contain_text(re.compile("Live|Every few seconds|Throttled"))
     clean(page)
     page.context.close()
 

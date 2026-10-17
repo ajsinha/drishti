@@ -34,8 +34,11 @@ public enum Dialect {
         return this == DUCKDB ? "VARCHAR" : "TEXT";
     }
 
-    /** A date part of a date or timestamp expression. */
+    /** A date part of a date or timestamp expression, or the first day of its period ({@code month_start}). */
     public String part(String part, String expr) {
+        if (part.endsWith("_start")) {                                   // a period bucket: the period's first day, a date
+            return "CAST(date_trunc('" + part.substring(0, part.length() - "_start".length()) + "', " + expr + ") AS DATE)";
+        }
         if (this == DUCKDB) {
             return part + "(" + expr + ")";
         }

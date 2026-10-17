@@ -39,6 +39,9 @@ public final class VisualQueries {
     /** The query for the visual; {@code highlight} is the same query with the marks selected on other visuals applied, null when nothing is highlighted. */
     public record Built(QueryRequest query, QueryRequest highlight) {}
 
+    /** The most rows "show all" asks for: what one answer in JSON holds by default ({@code drishti.bi.query.json-max-rows}). */
+    static final int SHOW_ALL = 5_000;
+
     /** Resolves a top-N filter to the values it keeps. */
     @FunctionalInterface
     public interface TopValues {
@@ -385,6 +388,9 @@ public final class VisualQueries {
             default -> props.chartRows();
         };
         int want = visual.limit() != null ? visual.limit() : dflt;
+        if (state.limit() != null && state.limit() > want && !"perspective".equals(spec.group())) {
+            return Math.min(state.limit(), SHOW_ALL);                     // "show all" of a visual that said it was cut: up to what an answer in JSON holds
+        }
         return state.limit() != null ? Math.min(want, state.limit()) : want;
     }
 

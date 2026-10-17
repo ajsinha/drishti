@@ -122,7 +122,7 @@ public final class ModelFields implements Fields {
             return Optional.empty();
         }
         Dataset.Column c = resolver.column(ref.table(), ref.column());
-        DelType t = ref.part() != null ? DelType.INTEGER : DelType.ofColumn(c == null ? null : c.type());
+        DelType t = ref.part() != null ? (Resolver.isBucket(ref.part()) ? DelType.DATE : DelType.INTEGER) : DelType.ofColumn(c == null ? null : c.type());
         return Optional.of(new Field(ref.text(), t, masks != null && masks.masked(ref.table(), ref.column())));
     }
 

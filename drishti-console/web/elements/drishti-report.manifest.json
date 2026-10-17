@@ -1,7 +1,7 @@
 {
   "after": "drishti-view.css",
-  "bytes": 31759,
-  "gzip": 6507,
+  "bytes": 32061,
+  "gzip": 6551,
   "icons": [
     "arrow-left",
     "caret-down-fill",
@@ -18,12 +18,12 @@
     "table",
     "x-circle"
   ],
-  "sha256": "10175d11d143a92fb638d6586181fded15e55b146c90ea72fd932a28879b9084",
+  "sha256": "28d467377c1b8e20537c8575a08022a6c44c95b83fcdae4c458fa3bbdcdc061e",
   "sources": [
     "css/bi.css",
     "css/bi-report.css",
     "css/bi-board.css",
     "vendor/bootstrap-icons/bootstrap-icons.css"
   ],
-  "version": "5153697541c9"
+  "version": "10a385216ddd"
 }

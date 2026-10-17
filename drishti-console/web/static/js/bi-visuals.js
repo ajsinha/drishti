@@ -44,7 +44,7 @@
     return null;
   };
 
-  V.formatOf = (ctx, name) => (ctx.index.measures[name] && ctx.index.measures[name].format) || (ctx.index.columns[name] && ctx.index.columns[name].format) || null;
+  V.formatOf = (ctx, name) => (ctx.formats && ctx.formats[name]) || (ctx.index.measures[name] && ctx.index.measures[name].format) || (ctx.index.columns[name] && ctx.index.columns[name].format) || null;
   V.numFmt = (spec, ctx, name) => (spec.format && spec.format.numberFormat) || V.formatOf(ctx, name);
 
   /** A live redraw (`ctx.update`) of a number that changed: the new value flashes for a moment (the style sheet turns the flash off for people who ask for less motion). */

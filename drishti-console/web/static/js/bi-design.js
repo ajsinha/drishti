@@ -523,7 +523,9 @@
     D.preview = true;
     document.addEventListener('keydown', (e) => {
       const k = e.key.toLowerCase();
-      if ((e.ctrlKey || e.metaKey) && k === 's') { e.preventDefault(); save(); return; }           // saves from anywhere, the YAML editor too, and never opens the browser's own Save dialog
+      if ((e.ctrlKey || e.metaKey) && k === 's') { e.preventDefault(); save(); return; }
+      // Escape deselects the visual (outside a field, a dialog or the YAML editor), so the next field added starts a visual of its own
+      if (e.key === 'Escape' && D.selected && !e.target.closest('input,textarea,select,.CodeMirror,dialog,[role=dialog]')) { D.select(null); D.say('Nothing selected: a field added now starts a new visual.'); return; }           // saves from anywhere, the YAML editor too, and never opens the browser's own Save dialog
       if ((e.ctrlKey || e.metaKey) && !e.target.closest('input,textarea,select,.CodeMirror')) {
         if (k === 'z' && !e.shiftKey) { e.preventDefault(); D.undo(); } else if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); D.redo(); }
       }

@@ -98,7 +98,7 @@ h1 .bi-soon, h2 .bi-soon { margin-left: .5rem; vertical-align: middle; }
 }
 @media (max-width: 760px) {
   .bi-shell { grid-template-columns: minmax(0, 1fr); padding: .6rem .7rem 1.5rem; gap: .6rem; }
-  .bi-rail { position: static; flex-direction: row; overflow-x: auto; gap: .25rem; padding-bottom: .3rem; border-bottom: 1px solid var(--d-border); -webkit-overflow-scrolling: touch; }
+  .bi-rail { position: static; flex-direction: row; flex-wrap: wrap; gap: .25rem; padding-bottom: .3rem; border-bottom: 1px solid var(--d-border); }   /* every link in view: they wrap, nothing hides past the edge */
   .bi-rail-link { flex: 0 0 auto; white-space: nowrap; min-height: 44px; padding: .4rem .65rem; }
   .bi-rail-link[aria-current="page"] { box-shadow: inset 0 -3px 0 var(--d-accent); }
   .bi-rail-keys { display: none; }

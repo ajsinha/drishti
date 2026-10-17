@@ -151,37 +151,44 @@
   };
 
   // ---- standing queries ------------------------------------------------------------------------------------------------------
-  const drop = (id) => B.api('DELETE', '/mq/subscribe/' + encodeURIComponent(id)).catch(() => {});
+  // keepalive: a DELETE sent while the tab closes (pagehide) still reaches the server, so a closed tab never holds standing queries
+  const drop = (id) => fetch('/bi/api' + B.viewPath('/mq/subscribe/' + encodeURIComponent(id)), { method: 'DELETE', credentials: 'same-origin', keepalive: true, headers: { Accept: 'application/json' } }).catch(() => {});
+  /** A refusal for want of room (DRS-9181 the server's, DRS-9182 yours): said as such, never a bare "Not updating". */
+  const FULL = { 'DRS-9181': 'The server follows as many live queries as it may; this visual was asked once. It updates again when others close.',
+    'DRS-9182': 'You follow too many live queries (other tabs or pages); close a tab, or wait a minute for closed ones to be freed, then reload.' };
+  /** How long after its last change a followed visual still says Live; past it, Listening (the stream is up, the data has not moved). */
+  const LIVE_FOR = 60000;
   /**
    * Follows a model query: the server pushes its answers. o: {throttle ('1s'), deliver ('rows' | 'diff' | 'value'), staleSeconds (30), onAnswer(d), onState(state, why, info)}.
    * States: connecting, live, throttled, tick, stale, failed. @returns {close(), id()}
    */
   C.follow = function (mq, o) {
-    let sq = null, off = null, closed = false, heard = Date.now(), state = 'connecting';
+    let sq = null, off = null, closed = false, heard = Date.now(), state = 'connecting', changed = 0;
     const set = (s, why, info) => { state = s; if (o.onState) { o.onState(s, why || '', info || {}); } };
     const stale = (o.staleSeconds || 30) * 1000;
     const timer = window.setInterval(() => {
-      if (!closed && sq && (state === 'live' || state === 'throttled' || state === 'tick') && Date.now() - heard > stale) { set('stale', 'nothing heard for ' + Math.round((Date.now() - heard) / 1000) + ' s'); }
+      if (!closed && sq && (state === 'live' || state === 'quiet' || state === 'throttled' || state === 'tick') && Date.now() - heard > stale) { set('stale', 'nothing heard for ' + Math.round((Date.now() - heard) / 1000) + ' s'); }
+      else if (!closed && sq && state === 'live' && Date.now() - changed > LIVE_FOR) { set('quiet', 'Following: no change for ' + Math.round((Date.now() - changed) / 1000) + ' s'); }
     }, 1000);
     B.api('POST', '/mq/subscribe', { query: mq, throttle: o.throttle || '1s', deliver: o.deliver || 'rows' }).then((r) => {
       if (closed) { drop(r.subscription); return; }
       sq = r.subscription;
       heard = Date.now();
-      set(r.mode === 'tick' ? 'tick' : 'live', '', r);
+      set(r.mode === 'tick' ? 'tick' : 'quiet', '', r);                 // Live only once changes flow: subscribed and waiting is Listening
       if (!window.DrishtiChannel) { set('failed', 'the console\'s live channel did not load'); return; }
       off = window.DrishtiChannel.subscribe('mq:' + sq, {
-        answer(d) { heard = Date.now(); if (state === 'stale' || state === 'connecting') { set(d.mode === 'tick' ? 'tick' : 'live', '', d); } if (o.onAnswer) { o.onAnswer(d || {}); } },
-        status(d) { heard = Date.now(); d = d || {}; set(d.state === 'failed' ? 'failed' : d.state === 'throttled' ? 'throttled' : d.state === 'tick' || d.mode === 'tick' ? 'tick' : 'live', d.error || d.reason || '', d); },
+        answer(d) { heard = changed = Date.now(); if (state !== 'throttled') { set(d && d.mode === 'tick' ? 'tick' : 'live', '', d); } if (o.onAnswer) { o.onAnswer(d || {}); } },
+        status(d) { heard = Date.now(); d = d || {}; set(d.state === 'failed' ? 'failed' : d.state === 'throttled' ? 'throttled' : d.state === 'tick' || d.mode === 'tick' ? 'tick' : Date.now() - changed < LIVE_FOR ? 'live' : 'quiet', d.error || d.reason || '', d); },
         gone(d) { set('failed', (d && d.detail) || 'the stream ended'); },
         error() { set('stale', 'the connection to the console dropped; trying again'); }
       });
-    }, (e) => set('failed', e.detail || e.message, { code: e.code }));
+    }, (e) => (FULL[e.code] ? set('full', FULL[e.code], { code: e.code }) : set('failed', e.detail || e.message, { code: e.code })));
     return { close() { closed = true; window.clearInterval(timer); if (off) { off(); } if (sq) { drop(sq); } }, id: () => sq, state: () => state };
   };
 
   // ---- the state chip --------------------------------------------------------------------------------------------------------
-  const WORDS = { connecting: 'Connecting', live: 'Live', throttled: 'Throttled', tick: 'Every few seconds', stale: 'Stale', failed: 'Not updating', asof: 'As of', window: 'Window', once: 'Asked once' };
-  const ICONS = { connecting: 'hourglass-split', live: 'broadcast', throttled: 'speedometer2', tick: 'clock-history', stale: 'exclamation-triangle', failed: 'x-octagon', asof: 'calendar-event', window: 'calendar-range', once: 'check2' };
+  const WORDS = { connecting: 'Connecting', live: 'Live', quiet: 'Listening', throttled: 'Throttled', tick: 'Every few seconds', stale: 'Stale', failed: 'Not updating', full: 'Too many live queries: close a tab', asof: 'As of', window: 'Window', once: 'Asked once' };
+  const ICONS = { connecting: 'hourglass-split', live: 'broadcast', quiet: 'pause-circle', throttled: 'speedometer2', tick: 'clock-history', stale: 'exclamation-triangle', failed: 'x-octagon', full: 'stack', asof: 'calendar-event', window: 'calendar-range', once: 'check2' };
   /** The chip under a visual (in its frame's foot); `set(state, why, info)`. */
   C.chip = function (frame) {
     let el = frame.foot.querySelector('.bi-state-chip');
@@ -194,7 +201,7 @@
         B.clear(el).append(B.icon(ICONS[state] || 'dot'), ' ' + text + (state === 'live' && info && info.lagMillis != null ? ' · ' + info.lagMillis + ' ms' : ''));
         el.className = 'bi-state-chip bi-state-' + state;
         el.setAttribute('data-state', state);
-        el.title = why || (state === 'live' ? 'The server pushes each change' + (info && info.mode ? ' (' + info.mode + ')' : '') : state === 'tick' ? 'Worked out again every few seconds (windows, time intelligence, Python, or a busy model)' : '');
+        el.title = why || (state === 'quiet' ? 'Following: the server pushes each change; none has come yet, so the picture is up to date' : state === 'live' ? 'The server pushes each change' + (info && info.mode ? ' (' + info.mode + ')' : '') : state === 'tick' ? 'Worked out again every few seconds (windows, time intelligence, Python, or a busy model)' : '');
         if (info && info.mode) { el.setAttribute('data-mode', info.mode); }
       }
     };

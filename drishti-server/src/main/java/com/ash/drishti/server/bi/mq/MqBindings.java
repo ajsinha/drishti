@@ -211,13 +211,15 @@ final class MqBindings {
                 String base = BASE + name;
                 measures.put(base, new Dataset.Measure(base, m.expr(), m.format(), m.description(), null, m.inputs(), m.by()));
                 Node current = new Node.MeasureRef(base);
+                String format = m.format();
                 for (ModelDef.CalcGroup g : groups) {
                     String template = g.items().get(q.ext().calc().get(g.name()));
+                    format = g.formats().getOrDefault(q.ext().calc().get(g.name()), format);     // the outermost item with a format of its own decides
                     Node t = com.ash.drishti.server.bi.expr.DelLowering.lower(com.ash.drishti.server.bi.expr.DelParser.parse(template));
                     current = selected(t, current);
                 }
                 Node bound = values.isEmpty() ? current : bindParams(current, values);
-                measures.put(name, withExpr(m, DelPrinter.print(bound)));
+                measures.put(name, new Dataset.Measure(m.name(), DelPrinter.print(bound), format, m.description(), m.python(), m.inputs(), m.by()));
                 changed = true;
             }
         }

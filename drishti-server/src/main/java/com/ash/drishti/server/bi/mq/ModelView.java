@@ -116,6 +116,47 @@ public record ModelView(String id, String key, String hash, ModelDef def, Datase
         return new MeasureInfo(additive == null ? "false" : additive, currency, format, id, python);
     }
 
+    /**
+     * Whether a measure that adds up across rows still must not be added across the business dates of a window: it reads only daily
+     * snapshots (a state, not a flow) and its author did not say {@code additive: true}. Over a window it takes the last date, as a
+     * semi-additive measure does; across the rows of one date it adds as before.
+     */
+    public boolean snapshotState(Dataset ds, String measure) {
+        ModelDef.Meas m = measureDefs().get(measure);
+        Dataset.Measure em = ds.measures().get(measure);
+        Dataset.Measure base = ds.measures().get(MqBindings.BASE + measure);
+        if (base != null) {
+            em = base;
+        }
+        return (m == null || m.additive() == null || m.implicit()) && em != null && em.expr() != null && info(ds, measure).adds() && snapshotsOnly(ds, em.expr());
+    }
+
+    /**
+     * Whether a measure reads only snapshot tables (one full copy of the data per business date): summing it over a window of dates would add the same
+     * trades once per day, so such a measure is semi-additive over the business date unless its author says {@code additive: true}.
+     */
+    boolean snapshotsOnly(Dataset ds, String expr) {
+        Node n;
+        try {
+            n = com.ash.drishti.server.bi.expr.Expressions.parse(expr);
+        } catch (RuntimeException e) {
+            return false;
+        }
+        Set<String> aliases = new LinkedHashSet<>();
+        Node.walk(n, x -> {
+            if (x instanceof Node.Ref r && !r.parts().isEmpty() && ds.tables().containsKey(r.parts().get(0))) {
+                aliases.add(r.parts().get(0));
+            }
+        });
+        return !aliases.isEmpty() && aliases.stream().allMatch(a -> {
+            ResolvedDataset r = datasets.get(a);
+            if (r == null || ds.tables().get(a).isLive()) {
+                return false;                                                   // a version-1 file, or a live table (its rows are the latest state already)
+            }
+            return r.def().time() == null || "snapshot".equals(r.def().time().mode());   // not history: a history's rows are events, they add up
+        });
+    }
+
     /** The functions that pick the dates of a balance (wave B): a measure written with one is not semi-additive any more. */
     static final java.util.Set<String> BALANCES = java.util.Set.of("last", "first", "opening", "closing", "avg_over", "as_of");
 

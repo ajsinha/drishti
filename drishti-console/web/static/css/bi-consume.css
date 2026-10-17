@@ -19,8 +19,9 @@
 .bi-state-chip .bi { font-size: .8rem; }
 .bi-state-live .bi, .bi-state-window .bi { color: var(--d-ok); }
 .bi-state-throttled .bi, .bi-state-tick .bi, .bi-state-connecting .bi, .bi-state-stale .bi { color: var(--d-warn); }
-.bi-state-failed .bi { color: var(--d-bad); }
-.bi-state-stale, .bi-state-failed { color: var(--d-ink); border-color: currentColor; }
+.bi-state-failed .bi, .bi-state-full .bi { color: var(--d-bad); }
+.bi-state-quiet .bi { color: var(--d-muted); }
+.bi-state-stale, .bi-state-failed, .bi-state-full { color: var(--d-ink); border-color: currentColor; }
 .bi-time { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
 .bi-time input[hidden] { display: none; }
 .bi-param-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin: .4rem 0; padding: .4rem .6rem; border: 1px solid var(--d-border);

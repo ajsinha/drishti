@@ -233,6 +233,9 @@ final class Maintainer {
 
     private static Object partOf(String part, Object v) {
         java.time.LocalDate d = v instanceof java.time.LocalDate x ? x : java.time.LocalDate.parse(String.valueOf(v).substring(0, 10));
+        if (com.ash.drishti.server.bi.dataset.Resolver.isBucket(part)) {
+            return com.ash.drishti.server.bi.engine.RowEval.bucket(part, d);
+        }
         return switch (part) {
             case "year" -> (long) d.getYear();
             case "quarter" -> (long) ((d.getMonthValue() - 1) / 3 + 1);

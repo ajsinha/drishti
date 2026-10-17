@@ -143,7 +143,7 @@
         if (entry.chip && !entry.chip.el.isConnected) { entry.frame.foot.appendChild(entry.chip.el); }
         entry.frame.el.setAttribute('data-updated', new Date().toISOString());
       },
-      onState: (s, why, info) => { chip.set(time.mode === 'window' && s === 'live' ? 'window' : s, why, Object.assign({}, info, time)); B.live.markStale(entry.frame, s === 'stale' || s === 'failed', why); }
+      onState: (s, why, info) => { chip.set(time.mode === 'window' && (s === 'live' || s === 'quiet') ? 'window' : s, why, Object.assign({}, info, time)); B.live.markStale(entry.frame, s === 'stale' || s === 'failed', why); }
     });
   }
   window.addEventListener('pagehide', () => tiles.forEach((e) => { if (e.follow) { e.follow.close(); } }));

@@ -362,8 +362,8 @@
       const tv = tol.value.trim();
       if (tv) { if (!/^\d+(\.\d+)?%?$/.test(tv)) { B.near(add, 'A tolerance is an amount (0.01) or a percentage (0.5%).', true); return; } t.tolerance = /%$/.test(tv) ? tv : parseFloat(tv); }
       if (role.value) { t.role = role.value; }
+      name.value = ''; sql.value = ''; a.value = ''; b.value = ''; tol.value = '';      // emptied before the redraw keeps the form's values
       M.edit((doc) => { doc.tests = (Array.isArray(doc.tests) ? doc.tests : []).concat([t]); });
-      name.value = ''; sql.value = ''; a.value = ''; b.value = ''; tol.value = '';
       B.near(add, 'Added ' + n + '. It runs on the saved draft (autosaved): Run the tests.', false);
     });
     return h('fieldset', { class: 'bi-form bi-md-testform', 'data-test-form': '', 'data-keep': '' }, h('legend', { text: 'Add an expected value' }),

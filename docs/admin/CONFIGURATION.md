@@ -1319,7 +1319,7 @@ default throttle is `drishti.bi.live.frame`; its stream's heartbeat is `drishti.
 | `max-subscriptions` | `500` | Standing queries open at once on the server (`429 DRS-9181`). |
 | `max-subscriptions-per-user` | `20` | Standing queries open at once for one person (`429 DRS-9182`). |
 | `min-throttle` | `100ms` | The shortest throttle a subscription may ask for (a shorter one is raised to it). |
-| `poll` | `100ms` | The step of a stream's wait (wave B: answers are pushed by the generation bus when a model's data moves; a stream is woken by its subscriptions' groups, so this only bounds how late a throttled delivery is sent). |
+| `idle-close` | `60s` | A subscription that no stream has read for this long is dropped (a tab closed without ending its standing queries frees them within a minute; the console also ends them on `pagehide`). |
 | `idle-close` | `10m` | A subscription that no stream has read for this long is dropped. |
 | `pack-live` | `true` | A pack-generated dataset (`pack.<pack>.<kind>`) is `live` when the kind's connector pushes (decision D6), else `snapshot`; `false` keeps every one a snapshot. |
 | `maintenance-budget` | `250ms` | (wave B) Per model, the time keeping its standing queries current may take in each second; past it the model's groups are recomputed every `tick` and say `tick` (status and the `drishti_bi_sq_mode` metric) until a second spends less than half of it. |

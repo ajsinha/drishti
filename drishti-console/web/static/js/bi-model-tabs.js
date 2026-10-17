@@ -140,7 +140,9 @@
     const fAdd = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-nf-add': '', text: 'Add formula', disabled: M.readOnly });
     fAdd.addEventListener('click', () => {
       if (!fName.value.trim() || !fExpr.value.trim()) { near(fAdd, 'Give the measure a name and a formula.', true); return; }
-      const n = addMeasure(fName.value.trim(), { expr: fExpr.value.trim() });
+      const fn = fName.value.trim(), fx = fExpr.value.trim();
+      fName.value = ''; fExpr.value = '';                                       // emptied before the redraw keeps the form's values: ready for the next one
+      const n = addMeasure(fn, { expr: fx });
       M.compose(true).then(() => { const p = M.problems('measures.' + n); near(fAdd, p.length ? p[0].code + ' ' + p[0].message : 'Added ' + n + '; it checks clean.', p.length > 0); });
     });
     pane.append(h('section', { class: 'bi-sec bi-form bi-md-newmeasure', 'aria-label': 'New measure', 'data-keep': '' }, h('h3', { text: 'New measure from a column' }),

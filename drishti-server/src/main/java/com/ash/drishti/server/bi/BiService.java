@@ -1370,6 +1370,11 @@ public final class BiService {
         out.put("shared", seen.stream().filter(i -> !i.owner().equals(p.user()) && (mine.contains(i.workspace()) || !i.audienceUsers().isEmpty() && i.audienceUsers().contains(p.user())))
                 .sorted(Comparator.comparing((BiStore.Item i) -> i.publishedAt() == null ? Instant.EPOCH : i.publishedAt()).reversed()).limit(props.recent())
                 .map(i -> view(i, p, marks, views, false)).toList());
+        for (String section : List.of("recent", "favourites", "certified", "shared")) {   // one tile per item and title in a section (a model and the dataset it came from share one)
+            Set<String> seenHere = new java.util.HashSet<>();
+            out.put(section, ((List<?>) out.get(section)).stream().map(o -> (Map<?, ?>) o)
+                    .filter(v -> seenHere.add("id:" + v.get("id")) & seenHere.add(v.get("kind") + ":" + v.get("title"))).toList());
+        }
         out.put("counts", Map.of("catalogue", seen.size(), "workspaces", mine.size() + 1));
         return out;
     }

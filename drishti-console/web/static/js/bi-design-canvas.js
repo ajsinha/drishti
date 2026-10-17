@@ -93,7 +93,14 @@
         dataset the field belongs to ('' for the report's main one). A visual that already holds fields reads one dataset: a field of another is refused. */
     D.addField = function (name, kind, opt) {
       opt = opt || {};
-      const target = opt.visual ? D.visual(opt.visual) : opt.useSelected ? D.sel() : null;
+      let target = opt.visual ? D.visual(opt.visual) : opt.useSelected ? D.sel() : null;
+      // a second measure added from the Fields list (a click or Enter) while a card is selected makes a card of its own beside it: one card, one
+      // number. Dropping it onto the card's well still adds it there (a multi-row card), on purpose.
+      if (!opt.visual && target && target.type === 'card' && kind === 'measure' && ((target.wells || {}).values || []).length) {
+        const beside = target;
+        target = null;
+        if (opt.x == null) { opt = Object.assign({}, opt, { x: Math.min(11, beside.at.x + beside.at.w) % 12, y: beside.at.y }); }
+      }
       const from = opt.dataset || '';
       const where = target ? 'the ' + target.type + ' ' + (target.title ? '"' + target.title + '"' : target.id) : 'the canvas' + (opt.x != null ? ' (column ' + (opt.x + 1) + ', row ' + (opt.y + 1) + ')' : '');
       D.curIdx = D.idxForRef(from);

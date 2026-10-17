@@ -25,8 +25,21 @@ import java.util.Set;
  */
 public final class Resolver {
 
-    /** Date parts a date or timestamp column may be cut into: {@code trades.tradeDate.year}. */
-    public static final Set<String> PARTS = Set.of("year", "quarter", "month", "day", "week");
+    /** Date periods a date or timestamp column may be bucketed into: {@code trade.TRADE_DATE.month_start} is the first day of the month (a date). */
+    public static final Set<String> BUCKETS = Set.of("week_start", "month_start", "quarter_start", "year_start");
+
+    /** Date parts a date or timestamp column may be cut into: {@code trades.tradeDate.year} (a number), or a period's first day (a date). */
+    public static final Set<String> PARTS = Set.of("year", "quarter", "month", "day", "week", "week_start", "month_start", "quarter_start", "year_start");
+
+    /** Whether a part is a period bucket (a date) rather than a number. */
+    public static boolean isBucket(String part) {
+        return part != null && BUCKETS.contains(part);
+    }
+
+    /** The type a date part has: {@code date} for a period bucket, else {@code integer}. */
+    public static String partType(String part) {
+        return isBucket(part) ? "date" : "integer";
+    }
 
     /** A resolved column. {@code column} is null for a bare table name (as in {@code count(trades)}). */
     public record ColRef(String table, String column, String part) {
@@ -134,7 +147,7 @@ public final class Resolver {
             checkPart(parts.get(0), parts.get(1), parts.get(2));
             return new ColRef(parts.get(0), parts.get(1), parts.get(2));
         }
-        throw new IllegalArgumentException("'" + text + "' is not a table.column or table.column.part (year, quarter, month, day, week)");
+        throw new IllegalArgumentException("'" + text + "' is not a table.column or table.column.part (year, quarter, month, day, week, or a period: week_start, month_start, quarter_start, year_start)");
     }
 
     private ColRef tryPart(String column, String part, String current) {
@@ -156,7 +169,7 @@ public final class Resolver {
 
     private void checkPart(String table, String column, String part) {
         if (!PARTS.contains(part)) {
-            throw new IllegalArgumentException("'" + part + "' is not a date part; use year, quarter, month, day or week");
+            throw new IllegalArgumentException("'" + part + "' is not a date part; use year, quarter, month, day, week, week_start, month_start, quarter_start or year_start");
         }
         String type = column(table, column).type();
         if (!"date".equals(type) && !"timestamp".equals(type)) {

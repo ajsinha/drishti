@@ -181,13 +181,13 @@ public final class MqValidator {
             if (info.currency() != null && info.currency().contains(".") && !fields.contains(info.currency()) && !pinned(q, info.currency())) {
                 currency.put(m, info.currency());
             }
-            if (info.semiAdditive() && window && !dated) {
+            if ((info.semiAdditive() || v.snapshotState(ds, m)) && window && !dated) {
                 semi.add(m);
             }
         }
         if (!semi.isEmpty()) {
             lastOnly = semi.size() == q.measures().size();
-            warnings.add("DRS-9159 " + semi + (semi.size() == 1 ? " is" : " are") + " semi-additive (a balance): over a window of dates "
+            warnings.add("DRS-9159 " + semi + (semi.size() == 1 ? " is" : " are") + " semi-additive (a balance, or a daily snapshot): over a window of dates "
                     + (lastOnly ? "the answer is the last date's value" : "it is added across the dates; ask it alone, group by the business date, or write it with a balance function (last(measure('...'), alias.businessDate), closing, avg_over)") + " (refused from wave W2)");
         }
 
@@ -319,7 +319,7 @@ public final class MqValidator {
 
     private static String type(Resolver r, String field) {
         Resolver.ColRef ref = r.resolve(List.of(field.split("\\.", -1)), null);
-        return ref.part() != null ? "integer" : r.column(ref.table(), ref.column()).type();
+        return ref.part() != null ? Resolver.partType(ref.part()) : r.column(ref.table(), ref.column()).type();
     }
 
     private static void filter(Resolver r, Dataset ds, ModelQuery.Where w, Set<String> measures, String path, List<MqException.Problem> out) {

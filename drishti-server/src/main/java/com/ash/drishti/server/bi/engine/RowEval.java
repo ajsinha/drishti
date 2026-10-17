@@ -30,7 +30,7 @@ import java.util.Objects;
  * with {@code None} is false, {@code /} by zero is {@code None}, {@code in user.desks} reads the reader's attribute. What it cannot work out (a function it
  * does not know, a column of another table) throws {@link Unsupported}, and the caller recomputes from the engine instead. Pure.
  */
-final class RowEval {
+public final class RowEval {
 
     /** The expression is outside what this evaluator does: recompute through the engine. */
     static final class Unsupported extends RuntimeException {
@@ -108,6 +108,17 @@ final class RowEval {
     }
 
     /** A date part as the engine gives it (an integer). */
+    /** The first day of a date's period ({@code week_start}: its Monday, {@code month_start}, {@code quarter_start}, {@code year_start}). */
+    public static LocalDate bucket(String part, LocalDate d) {
+        return switch (part) {
+            case "week_start" -> d.with(java.time.DayOfWeek.MONDAY);
+            case "month_start" -> d.withDayOfMonth(1);
+            case "quarter_start" -> LocalDate.of(d.getYear(), (d.getMonthValue() - 1) / 3 * 3 + 1, 1);
+            case "year_start" -> d.withDayOfYear(1);
+            default -> throw new IllegalArgumentException("not a period: " + part);
+        };
+    }
+
     static Object part(String part, Object v) {
         if (v == null) {
             return null;
@@ -119,6 +130,7 @@ final class RowEval {
             case "month" -> (long) d.getMonthValue();
             case "day" -> (long) d.getDayOfMonth();
             case "week" -> (long) d.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+            case "week_start", "month_start", "quarter_start", "year_start" -> bucket(part, d);
             default -> throw new Unsupported("date part " + part);
         };
     }

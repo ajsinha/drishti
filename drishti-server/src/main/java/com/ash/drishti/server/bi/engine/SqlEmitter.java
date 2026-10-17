@@ -446,7 +446,7 @@ final class SqlEmitter {
     /** The finest field of the query on the date/order column, for a window to order by; null while only planning. */
     private WindowField orderField(Resolver.ColRef date, String what) {
         List<WindowField> same = windowFields.getOrDefault(date.table() + "." + date.column(), List.of());
-        List<String> rank = List.of("year", "quarter", "month", "week", "day");
+        List<String> rank = List.of("year", "year_start", "quarter", "quarter_start", "month", "month_start", "week", "week_start", "day");
         WindowField order = null;
         for (WindowField w : same) {
             if (order == null || (w.part() == null ? rank.size() : rank.indexOf(w.part())) > (order.part() == null ? rank.size() : rank.indexOf(order.part()))) {

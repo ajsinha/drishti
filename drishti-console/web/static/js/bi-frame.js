@@ -75,7 +75,19 @@
           foot.textContent = '';
           foot.appendChild(h('span', { class: 'bi-vis-ms', 'data-ms': String(m.millis), text: res.rowCount + (res.rowCount === 1 ? ' row' : ' rows') + ' · ' + (m.cached ? 'from the cache' : (Math.round(m.millis * 10) / 10) + ' ms') + ' · ' + m.layer + (m.rollup ? ' (' + m.rollup + ')' : '') }));
           if (m.masked && m.masked.length) { foot.appendChild(h('span', { class: 'bi-vis-masked', title: 'Masked for you: ' + m.masked.join(', '), text: ' · masked' })); }
-          if (res.rowCount >= (res.limit || 0) && res.limit) { foot.appendChild(h('span', { text: ' · cut at ' + res.limit })); }
+          if (res.period) {                                                     // a time series asked by period so the whole range fits
+            foot.appendChild(h('span', { class: 'bi-vis-period', 'data-period': res.period, title: 'Too many days to draw one by one: each point is a ' + res.period + ' (the whole range is here).', text: ' · by ' + res.period }));
+          }
+          if (res.truncated) {                                                  // never cut silently: how many of how many, and a way to see them all
+            const all = Number(res.total) || 0;
+            foot.appendChild(h('span', { class: 'bi-vis-cut', 'data-total': String(all), text: ' · first ' + B.fmt(res.rowCount, 'int') + ' of ' + (res.totalMore ? 'more than ' : '') + B.fmt(all, 'int') }));
+            if (o.onShowAll && !res.allShown) {
+              const more = h('button', { type: 'button', class: 'bi-vis-showall', 'data-show-all': '', text: res.totalMore || all > 5000 ? 'Show 5,000' : 'Show all' });
+              more.addEventListener('click', () => o.onShowAll());
+              foot.appendChild(document.createTextNode(' '));
+              foot.appendChild(more);
+            }
+          }
           const none = B.noAccess(m);
           if (none.length) {                                                   // the reader's role has no row rule on a dataset: said, never "no rows for this selection"
             const words = 'Your role has no rows of ' + none.join(', ') + ' in this model';

@@ -55,7 +55,7 @@ public record MqProperties(Integer maxDays, Integer groupedLimit, Integer rowsLi
         maxSubscriptionsPerUser = positive(maxSubscriptionsPerUser, 20);
         minThrottle = minThrottle == null || minThrottle.isNegative() || minThrottle.isZero() ? Duration.ofMillis(100) : minThrottle;
         poll = poll == null || poll.isNegative() || poll.isZero() ? Duration.ofMillis(100) : poll;
-        idleClose = idleClose == null || idleClose.isNegative() || idleClose.isZero() ? Duration.ofMinutes(10) : idleClose;
+        idleClose = idleClose == null || idleClose.isNegative() || idleClose.isZero() ? Duration.ofSeconds(60) : idleClose;
         packLive = packLive == null || packLive;
         maintenanceBudget = maintenanceBudget == null || maintenanceBudget.isNegative() || maintenanceBudget.isZero() ? Duration.ofMillis(250) : maintenanceBudget;
         tick = tick == null || tick.isNegative() || tick.isZero() ? Duration.ofSeconds(5) : tick;
