@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test;
 
 class InferenceEngineTest {
 
-    static final Path FIXTURES = Path.of("..", "config", "packs", "finance", "samples");
+    static final Path FIXTURES = Path.of("..", "examples", "packs", "finance", "samples");
     static final ElCompiler EL = new ElCompiler();
     static final Formats F = Formats.load(null, java.util.List.of("../examples/packs/finance/config/formats.yaml"));
     static final InferenceEngine ENGINE = new InferenceEngine(Semantics.load(null, java.util.List.of("../examples/packs/finance/config/semantics.yaml")), Rules.builtIn());
