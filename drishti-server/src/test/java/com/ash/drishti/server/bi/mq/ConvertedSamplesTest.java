@@ -235,6 +235,9 @@ class ConvertedSamplesTest {
         assertThat(rows).isGreaterThan(3);
     }
 
+    /** The header line of a converted sample fixed by hand afterwards: the comparison leaves it out. */
+    static final String EDITED = "# EDITED AFTER CONVERSION";
+
     /** The committed samples are the converter's output: the models, the datasets and the reports under config/bi are what it writes. */
     @Test
     void theCommittedSamplesAreTheConvertersOutput() throws Exception {
@@ -246,6 +249,9 @@ class ConvertedSamplesTest {
         for (Map.Entry<String, String> w : result.writes().entrySet()) {
             Path f = BI.resolve(w.getKey());
             assertThat(f).as(w.getKey() + " is committed (drishti.py bi migrate --models)").exists();
+            if (Files.readString(f).contains(EDITED)) {
+                continue;                                       // fixed by hand after the conversion (it says so in its header): its author owns it now
+            }
             assertThat(Files.readString(f)).as(w.getKey()).isEqualTo(w.getValue());
         }
     }

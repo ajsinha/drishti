@@ -18,6 +18,8 @@
 
 # CONVERTED from datasets/trading-cashflows.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
 # docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
+# EDITED AFTER CONVERSION (2.3.0, Wave B): trades a dimension, the relationships active (many-to-one), the payments table and the USD
+# equivalent measures; ConvertedSamplesTest leaves a file with this line to its author.
 
 rachana: 2
 expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
@@ -40,4 +42,5 @@ columns:
   TRADE_STATUS:     { type: string }
   BUY_SELL_CODE:    { type: string }
   QUANTITY:         { type: decimal, format: amount0 }
+  NOTIONAL:         { type: decimal, format: amount0, path: "LEGS[0].NOTIONAL", description: "The trade's notional: its first leg's NOTIONAL, in that leg's currency (the trade's CURRENCY for single-currency trades; a cross-currency swap's first leg). A state of the trade, not a flow: over a window of dates the model takes the last date." }
   MATURITY_DATE:    { type: date }

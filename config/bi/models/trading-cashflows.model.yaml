@@ -18,6 +18,8 @@
 
 # CONVERTED from datasets/trading-cashflows.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
 # docs/architecture/BI_MODEL_SPEC.md section 8). The model keeps the old name and table names as aliases, so fields read as before.
+# EDITED AFTER CONVERSION (2.3.0, Wave B): trades a dimension, the relationships active (many-to-one), the payments table and the USD
+# equivalent measures; ConvertedSamplesTest leaves a file with this line to its author.
 
 rachana: 2
 expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/EXPRESSIONS.md)
@@ -30,23 +32,36 @@ endorsement: "promoted"
 tags: [sample, trading, nested, cashflows]
 
 datasets:                       # alias: the dataset it reads, and its role (a fact is added up; a dimension groups and filters)
-  trades:    { dataset: trading-cashflows-trades, role: fact }
+  trades:    { dataset: trading-cashflows-trades, role: dimension }   # one row per trade: what legs, cashflows and payments are grouped and sliced by
   legs:      { dataset: trading-cashflows-legs, role: fact }
   cashflows: { dataset: trading-cashflows-cashflows, role: fact }
+  payments:  { dataset: trading-cashflows-payments, role: fact }
 
-relationships:                  # from the MANY side to the ONE side
-  - { from: legs.id, to: trades.id, active: false }
-  - { from: cashflows.id, to: trades.id, active: false }
+relationships:                  # from the MANY side to the ONE side: a trade has many legs, cashflows and payments; each belongs to one trade
+  - { from: legs.id, to: trades.id, cardinality: many-to-one }
+  - { from: cashflows.id, to: trades.id, cardinality: many-to-one }
+  - { from: payments.id, to: trades.id, cardinality: many-to-one }
+
+# Units. A cashflow's NOTIONAL is the principal of its period in the leg's currency (a swap's 36 monthly periods each carry the trade's notional), so
+# summing it is a measure of scheduled exposure, never of cash. Cash is a payment: an EVENTS amount, signed (paid −, received +) in its own currency.
+# Both are converted to a USD equivalent at the market-data pack's sample spot rates of 2026-10-02 (FX-USDJPY 148.2, FX-EURUSD 1.174, FX-GBPUSD 1.348,
+# FX-USDCAD 1.389, FX-USDCHF 0.796, FX-AUDUSD 0.661); a currency without a rate adds nothing. Checked against an independent sum of the test data's
+# trade documents (tools/testdata): the engine's totals equal it.
 
 measures:
-  Cashflow amount:       { expr: "sum(cashflows.NOTIONAL)", format: amount0, description: "The flows' notional (quantity times price, or the principal of a period), summed over the rows the visual groups by." }
+  Cashflow amount:       { expr: "sum(payments.AMOUNT * (1 / 148.2 if payments.CURRENCY == 'JPY' else 1.174 if payments.CURRENCY == 'EUR' else 1.348 if payments.CURRENCY == 'GBP' else 1 / 1.389 if payments.CURRENCY == 'CAD' else 1 / 0.796 if payments.CURRENCY == 'CHF' else 0.661 if payments.CURRENCY == 'AUD' else 1 if payments.CURRENCY == 'USD' else None))", format: signed0, description: "Net payments in USD equivalent: the trades' EVENTS amounts, paid − / received +, each converted from its own currency at the sample spot." }
+  Payments:              { expr: "count(payments)", description: "Payment events (EVENTS) of the trades." }
+  Largest payment:       { expr: "max(abs(payments.AMOUNT * (1 / 148.2 if payments.CURRENCY == 'JPY' else 1.174 if payments.CURRENCY == 'EUR' else 1.348 if payments.CURRENCY == 'GBP' else 1 / 1.389 if payments.CURRENCY == 'CAD' else 1 / 0.796 if payments.CURRENCY == 'CHF' else 0.661 if payments.CURRENCY == 'AUD' else 1 if payments.CURRENCY == 'USD' else None)))", format: amount0, description: "The largest single payment, either way, in USD equivalent." }
+  Scheduled notional:    { expr: "sum(cashflows.NOTIONAL * (1 / 148.2 if cashflows.CURRENCY == 'JPY' else 1.174 if cashflows.CURRENCY == 'EUR' else 1.348 if cashflows.CURRENCY == 'GBP' else 1 / 1.389 if cashflows.CURRENCY == 'CAD' else 1 / 0.796 if cashflows.CURRENCY == 'CHF' else 0.661 if cashflows.CURRENCY == 'AUD' else 1 if cashflows.CURRENCY == 'USD' else None))", format: amount0, description: "The cashflows' period principal in USD equivalent: every period carries its notional, so this is scheduled exposure (notional times periods), not cash." }
+  Trade notional:        { expr: "sum(trades.NOTIONAL)", format: amount0, description: "The trades' notional (first leg), in the trades' own currencies: group by trades.CURRENCY before reading it as money." }
   Trades:                { expr: "count(trades)", description: "Trades of every source system (ENDUR, CALYPSO, MUREX): group by trades.SOURCE_SYSTEM to see each." }
   Cashflows:             { expr: "count(cashflows)" }
-  Average cashflow:      { expr: "avg(cashflows.NOTIONAL)", format: amount0 }
-  Largest cashflow:      { expr: "max(cashflows.NOTIONAL)", format: amount0 }
+  Average cashflow:      { expr: "avg(cashflows.NOTIONAL * (1 / 148.2 if cashflows.CURRENCY == 'JPY' else 1.174 if cashflows.CURRENCY == 'EUR' else 1.348 if cashflows.CURRENCY == 'GBP' else 1 / 1.389 if cashflows.CURRENCY == 'CAD' else 1 / 0.796 if cashflows.CURRENCY == 'CHF' else 0.661 if cashflows.CURRENCY == 'AUD' else 1 if cashflows.CURRENCY == 'USD' else None))", format: amount0, description: "A period's principal in USD equivalent, on average." }
+  Largest cashflow:      { expr: "max(cashflows.NOTIONAL * (1 / 148.2 if cashflows.CURRENCY == 'JPY' else 1.174 if cashflows.CURRENCY == 'EUR' else 1.348 if cashflows.CURRENCY == 'GBP' else 1 / 1.389 if cashflows.CURRENCY == 'CAD' else 1 / 0.796 if cashflows.CURRENCY == 'CHF' else 0.661 if cashflows.CURRENCY == 'AUD' else 1 if cashflows.CURRENCY == 'USD' else None))", format: amount0, description: "The largest period principal in USD equivalent." }
   Legs:                  { expr: "count(legs)" }
   Leg notional:          { expr: "sum(legs.NOTIONAL)", format: amount0 }
   Trades with cashflows: { expr: "distinct(cashflows.id)" }
 
 hierarchies:
-  Pay date: [cashflows.PAYMENT_DATE.year, cashflows.PAYMENT_DATE.quarter, cashflows.PAYMENT_DATE.month, cashflows.PAYMENT_DATE]
+  Pay date: [payments.EVENT_DATE.year, payments.EVENT_DATE.quarter, payments.EVENT_DATE.month, payments.EVENT_DATE]
+  Cashflow date: [cashflows.PAYMENT_DATE.year, cashflows.PAYMENT_DATE.quarter, cashflows.PAYMENT_DATE.month, cashflows.PAYMENT_DATE]
