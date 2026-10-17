@@ -179,6 +179,14 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
+     * True when what this source serves is computed from the entities of {@code kind} read through other sources (a derived kind:
+     * pages per counterparty built from trades), so a load of {@code kind} makes its caches stale. The default is false.
+     */
+    default boolean dependsOn(String kind) {
+        return false;
+    }
+
+    /**
      * Drops everything this source caches (memory and disk); the next reads refill from the source of truth.
      * Called by an admin at any time; must be safe while reads are in flight.
      */

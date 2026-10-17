@@ -65,7 +65,7 @@ public class PackDataLoader {
 
     /** What a load did. */
     public record Result(String pack, String kind, String connector, long rows, long rejected, List<String> rejections, Map<String, Long> days,
-            List<String> files, List<Map<String, Object>> checks, List<String> loads, long bytes, long millis) {}
+            List<String> files, List<Map<String, Object>> checks, List<String> loads, List<Map<String, Object>> steps, long bytes, long millis) {}
 
     private final LoadService loads;
     private final Environment env;
@@ -284,14 +284,18 @@ public class PackDataLoader {
             }
             tmp.clear();
             List<String> loadIds = new ArrayList<>();
+            List<Map<String, Object>> steps = new ArrayList<>();
             for (Map.Entry<LocalDate, Long> e : perDay.entrySet()) {
                 LoadService.Outcome o = loads.announce(packName, new LoadService.Announcement(kind, e.getKey().toString(), null, LoadRecord.READY,
                         e.getValue(), rejected[0], "upload" + (fileName == null ? "" : ": " + fileName), batch + "-" + e.getKey(), "loaded from the browser by " + user), user);
                 loadIds.add(o.load().id());
+                for (LoadRecord.Step st : o.load().steps() == null ? List.<LoadRecord.Step>of() : o.load().steps()) {
+                    steps.add(Map.of("date", e.getKey().toString(), "name", st.name(), "status", st.status(), "detail", st.detail() == null ? "" : st.detail()));
+                }
             }
             Map<String, Long> days = new LinkedHashMap<>();
             perDay.forEach((d, n) -> days.put(d.toString(), n));
-            return new Result(packName, kind, t.connector(), rows, rejected[0], rejections, days, files, checks(cov, perType, unseen), loadIds,
+            return new Result(packName, kind, t.connector(), rows, rejected[0], rejections, days, files, checks(cov, perType, unseen), loadIds, steps,
                     counted.count, (System.nanoTime() - t0) / 1_000_000);
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "the file is not a JSON array or JSON Lines past row " + (rows + rejected[0]) + ": "

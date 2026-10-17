@@ -151,6 +151,11 @@ public final class DerivedSourcePlugin implements SourcePlugin {
     }
 
     @Override
+    public boolean dependsOn(String kind) {
+        return kinds.stream().anyMatch(k -> k.from().equals(kind));
+    }
+
+    @Override
     public void purgeCaches() {
         synchronized (cache) {
             cache.clear();
@@ -269,7 +274,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
             }
         }
         health = "UP";
-        org.slf4j.LoggerFactory.getLogger(DerivedSourcePlugin.class).debug("derived {}: {}", asOf, byKind.entrySet().stream()
+        org.slf4j.LoggerFactory.getLogger(DerivedSourcePlugin.class).debug("derived pages {}: {}", asOf, byKind.entrySet().stream()
                 .map(e -> e.getKey() + "=" + e.getValue().size() + " of " + scanned.getOrDefault(e.getKey(), 0)).toList());
         return new Snapshot(byKind, scanned, asOf.live() ? null : dataDate, generation.incrementAndGet(), Instant.now());
     }

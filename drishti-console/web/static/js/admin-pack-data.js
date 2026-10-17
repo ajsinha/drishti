@@ -99,6 +99,12 @@
     } else {
       out.appendChild(el('p', { class: 't-ok', text: 'Every row has a Sutra of its type, and every field the rows fill is shown.' }));
     }
+    if ((b.steps || []).length) {
+      out.appendChild(el('h3', { class: 'ws-h', text: 'Then' }));
+      out.appendChild(el('ul', { class: 'det-list', 'data-data-steps': true }, b.steps.map(function (s) {
+        return el('li', {}, [el('span', { class: 'st' + (s.status === 'ok' ? ' st-ok' : s.status === 'failed' ? ' st-bad' : ''), text: s.name }), ' ' + s.detail]);
+      })));
+    }
     out.appendChild(el('p', { class: 'adm-actions' }, [el('a', { class: 'fk', href: '/admin/loads/' + encodeURIComponent(b.pack), text: 'Data loads of ' + b.pack }),
       ' ', el('a', { class: 'fk', href: '/search?q=' + encodeURIComponent(b.kind), text: 'Search ' + b.kind })]));
     out.hidden = false;

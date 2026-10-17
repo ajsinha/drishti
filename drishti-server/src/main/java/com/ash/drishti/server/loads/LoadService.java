@@ -241,7 +241,7 @@ public final class LoadService {
         try {
             for (SourcePlugin p : sources.plugins()) {
                 // the kind's own stores, and the pages built from it (a derived connector groups loaded documents: its pages are stale now)
-                if (p.manifest().serves(kind) || "derived".equals(p.manifest().name())) {
+                if (p.manifest().serves(kind) || p.dependsOn(kind)) {
                     p.purgeCaches();
                     purged.add(p.manifest().name());
                 }
