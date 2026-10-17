@@ -127,20 +127,20 @@ class ExplainGlossaryTest {
 
     @Test
     void aDerivedKindExplainsItsOwnFieldsFromTheirFormula() throws Exception {
-        JsonNode e = explain("full", "desk-pnl/DESK-RATES");
-        JsonNode mtm = term(e, "mtm");
-        assertThat(mtm).isNotNull();
-        assertThat(mtm.path("formula").asText()).startsWith("sum $.mtm");
-        assertThat(mtm.path("means").asText()).contains("Sum of mtm over the trade records");
-        assertThat(mtm.path("origin").asText()).isEqualTo("derived:desk-pnl.fields.mtm");
-        assertThat(term(e, "tradeCount").path("formula").asText()).startsWith("count");
+        JsonNode e = explain("full", "portfolio-trades/BOOK-RATES-1");
+        JsonNode notional = term(e, "LAST_MATURITY");
+        assertThat(notional).isNotNull();
+        assertThat(notional.path("formula").asText()).startsWith("max $.MATURITY_DATE");
+        assertThat(notional.path("means").asText()).isNotBlank();
+        assertThat(notional.path("origin").asText()).isEqualTo("derived:portfolio-trades.fields.LAST_MATURITY");
+        assertThat(term(e, "TRADE_COUNT").path("formula").asText()).startsWith("count");
     }
 
     @Test
     void theRouterDescribesADerivedFieldWithoutKnowingTheSourceSoPackLintSeesIt() {
         // pack lint asks by kind alone (no provenance): the derived source's note is found among the sources that serve the kind
-        assertThat(router.describeField("desk-pnl", "mtm")).get().satisfies(n -> assertThat(n.formula()).startsWith("sum $.mtm"));
-        assertThat(router.describeField("desk-pnl", "nothing")).isEmpty();
+        assertThat(router.describeField("portfolio-trades", "NOTIONAL")).get().satisfies(n -> assertThat(n.formula()).startsWith("sum first($.LEGS).NOTIONAL"));
+        assertThat(router.describeField("portfolio-trades", "nothing")).isEmpty();
         assertThat(router.describeField("var", "var99")).isEmpty();
     }
 

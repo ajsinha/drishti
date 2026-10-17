@@ -90,7 +90,7 @@ class ControlsApiTest {
     }
 
     private JsonNode schedule() throws Exception {
-        return json.readTree(Files.readString(Path.of("../config/packs/trading/samples/trade/MX-20000001.json"))).path("schedule");
+        return json.readTree(Files.readString(Path.of("../config/packs/trading/samples/trade/MX-20000001.json"))).path("EVENTS");
     }
 
     @Test
@@ -100,17 +100,17 @@ class ControlsApiTest {
         JsonNode legs = control(view, "legs");
         assertThat(legs.path("kind").asText()).isEqualTo("multi-select");
         assertThat(legs.path("placement").asText()).isEqualTo("header");
-        assertThat(legs.path("panel").asText()).isEqualTo("schedule");
+        assertThat(legs.path("panel").asText()).isEqualTo("event-list");
         assertThat(values(legs)).containsExactly("1", "2");
         assertThat(legs.path("values")).hasSize(2);                                // default: all
         assertThat(legs.path("remember").asBoolean()).isTrue();
-        assertThat(legs.path("reads")).extracting(JsonNode::asText).contains("schedule");
+        assertThat(legs.path("reads")).extracting(JsonNode::asText).contains("event-list");
         JsonNode when = control(view, "when");
         assertThat(when.path("kind").asText()).isEqualTo("date-range");
         assertThat(when.path("value").asText()).isEmpty();
         assertThat(when.path("options").size()).isGreaterThan(5);                  // presets, resolved on the calendar
         assertThat(when.path("options").get(0).path("value").asText()).matches("\\d{4}-\\d{2}-\\d{2}\\.\\.\\d{4}-\\d{2}-\\d{2}");
-        assertThat(panel(view, "schedule").path("data").path("rows")).hasSize(schedule().size());
+        assertThat(panel(view, "event-list").path("data").path("rows")).hasSize(schedule().size());
     }
 
     @Test
@@ -119,28 +119,28 @@ class ControlsApiTest {
         int inRange = 0;
         int both = 0;
         for (JsonNode r : schedule()) {
-            boolean one = r.path("leg").asInt() == 1;
-            boolean in = r.path("payDate").asText().compareTo("2026-10-01") >= 0 && r.path("payDate").asText().compareTo("2027-03-31") <= 0;
+            boolean one = r.path("LEG_ID").asText().isEmpty() || r.path("LEG_ID").asInt() == 1;   // a deal event (no leg) is always shown
+            boolean in = r.path("EVENT_DATE").asText().compareTo("2026-10-01") >= 0 && r.path("EVENT_DATE").asText().compareTo("2027-03-31") <= 0;
             leg1 += one ? 1 : 0;
             inRange += in ? 1 : 0;
             both += one && in ? 1 : 0;
         }
         assertThat(leg1).isBetween(1, schedule().size() - 1);
-        assertThat(panel(read(IRS, "full", "ctl.legs", "1"), "schedule").path("data").path("rows")).hasSize(leg1);
+        assertThat(panel(read(IRS, "full", "ctl.legs", "1"), "event-list").path("data").path("rows")).hasSize(leg1);
         JsonNode ranged = read(IRS, "full", "ctl.when", "2026-10-01..2027-03-31");
-        assertThat(panel(ranged, "schedule").path("data").path("rows")).hasSize(inRange);
-        assertThat(panel(ranged, "schedule").path("title").asText()).isEqualTo("Cashflows · paid 2026-10-01..2027-03-31");
+        assertThat(panel(ranged, "event-list").path("data").path("rows")).hasSize(inRange);
+        assertThat(panel(ranged, "event-list").path("title").asText()).isEqualTo("Events · 2026-10-01..2027-03-31");
         assertThat(control(ranged, "when").path("value").asText()).isEqualTo("2026-10-01..2027-03-31");
-        assertThat(panel(read(IRS, "full", "ctl.legs", "1", "ctl.when", "2026-10-01..2027-03-31"), "schedule").path("data").path("rows")).hasSize(both);
-        assertThat(panel(read(IRS, "full"), "schedule").path("title").asText()).isEqualTo("Cashflows");
+        assertThat(panel(read(IRS, "full", "ctl.legs", "1", "ctl.when", "2026-10-01..2027-03-31"), "event-list").path("data").path("rows")).hasSize(both);
+        assertThat(panel(read(IRS, "full"), "event-list").path("title").asText()).isEqualTo("Events");
     }
 
     @Test
     void aValueThatIsNotAnOptionFallsBackToTheDefaultAndAnOpenRangeHoldsEverything() throws Exception {
-        assertThat(panel(read(IRS, "full", "ctl.legs", "99"), "schedule").path("data").path("rows")).hasSize(schedule().size());
+        assertThat(panel(read(IRS, "full", "ctl.legs", "99"), "event-list").path("data").path("rows")).hasSize(schedule().size());
         assertThat(control(read(IRS, "full", "ctl.legs", "99"), "legs").path("values")).hasSize(2);
-        assertThat(panel(read(IRS, "full", "ctl.when", "garbage"), "schedule").path("data").path("rows")).hasSize(schedule().size());
-        assertThat(panel(read(IRS, "full", "ctl.when", "2027-01-01.."), "schedule").path("data").path("rows").size()).isLessThan(schedule().size());
+        assertThat(panel(read(IRS, "full", "ctl.when", "garbage"), "event-list").path("data").path("rows")).hasSize(schedule().size());
+        assertThat(panel(read(IRS, "full", "ctl.when", "2027-01-01.."), "event-list").path("data").path("rows").size()).isLessThan(schedule().size());
     }
 
     @Test
@@ -156,11 +156,11 @@ class ControlsApiTest {
 
     @Test
     void onlyTheNamedPanelsAreBuilt() throws Exception {
-        JsonNode view = read(IRS, "full", "ctl.legs", "2", "panels", "schedule");
+        JsonNode view = read(IRS, "full", "ctl.legs", "2", "panels", "event-list");
         assertThat(view.path("panels")).hasSize(1);
-        assertThat(view.path("panels").get(0).path("id").asText()).isEqualTo("schedule");
+        assertThat(view.path("panels").get(0).path("id").asText()).isEqualTo("event-list");
         assertThat(view.path("controls")).hasSize(2);                               // the controls always come back (their options may have moved)
-        assertThat(read(IRS, "full", "panels", "terms,schedule").path("panels")).hasSize(2);
+        assertThat(read(IRS, "full", "panels", "ticket,event-list").path("panels")).hasSize(2);
     }
 
     @Test

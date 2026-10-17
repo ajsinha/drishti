@@ -32,7 +32,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=trading,counterparty-risk",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.security.redact=trader",
+        "drishti.security.redact=name",
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false"})
 @AutoConfigureMockMvc
 class MaskCopiesOffTest {
@@ -42,8 +42,8 @@ class MaskCopiesOffTest {
 
     @Test
     void theCopyIsUnchangedWhileTheFieldIsMasked() throws Exception {
-        String body = mvc.perform(get("/api/v1/entities/trade/MX-20000001/raw").header("Authorization", "Bearer " + tokens.mint("u", List.of("masked"), 300)))
+        String body = mvc.perform(get("/api/v1/entities/counterparty/CP-MERIDIAN-RE/raw").header("Authorization", "Bearer " + tokens.mint("u", List.of("masked"), 300)))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        assertThat(body).contains("Captured in Murex by TRDR-ASHAH").contains("\"trader\":\"•••\"");
+        assertThat(body).contains("\"label\":\"Meridian Reinsurance Ltd\"").contains("\"name\":\"•••\"");
     }
 }

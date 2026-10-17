@@ -73,6 +73,11 @@ graph:
       label: VaR
   badges:
     var: fmt($.var99, 'compact')
+  impact:
+    measures:
+      trade-valuation: $.MTM
+    formats:
+      trade-valuation: signed0
 connectors:
   risk-store:
     plugin: delta

@@ -59,7 +59,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
         "drishti.packs.enabled=trading,counterparty-risk",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.security.redact=trader,counterparty,mtm", "drishti.security.registered-users-only=false",
+        "drishti.security.redact=trader,counterparty,mtm,COUNTERPARTY", "drishti.security.registered-users-only=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true",
         "drishti.security.oidc.enabled=true", "drishti.security.oidc.client-id=drishti",
         "drishti.embed.enabled=true", "drishti.embed.limits.searches-per-user-per-minute=4", "drishti.embed.issuer=https://drishti.test", "drishti.embed.audiences[0]=https://console.test",
@@ -227,16 +227,16 @@ class EmbedTokenTest {
         // the same user, signed in the usual way, has raw; through the embed token the masks always apply
         String own = "Bearer " + tokens.mint(u, List.of("full"), 300);
         JsonNode plain = json.readTree(mvc.perform(get(VIEW).header("Authorization", own)).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
-        assertThat(plain.toString()).contains("Meridian");
+        assertThat(plain.toString()).contains("CP-MERIDIAN-RE");
         assertThat(plain.path("provenance").path("masked").asInt()).isZero();
 
         MvcResult shown = call(tok, CRM, VIEW);
         assertThat(shown.getResponse().getStatus()).isEqualTo(200);
         JsonNode view = body(shown);
-        assertThat(view.toString()).doesNotContain("Meridian").contains(MASK);
+        assertThat(view.toString()).doesNotContain("CP-MERIDIAN-RE").contains(MASK);
         JsonNode prov = view.path("provenance");
         assertThat(prov.path("masked").asInt()).isGreaterThan(0);
-        assertThat(prov.path("maskedPanels").toString()).contains("terms");
+        assertThat(prov.path("maskedPanels").toString()).contains("ticket");
     }
 
     @Test

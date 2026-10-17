@@ -60,22 +60,28 @@ class FormApiTest {
                 .andExpect(jsonPath("$.kinds[*].kind", hasItem("trade")))
                 .andExpect(jsonPath("$.kinds[0].declared").value(true))                      // the trading pack declares its form: groups, order, help
                 .andExpect(jsonPath("$.form.inferred").value(false))
-                .andExpect(jsonPath("$.form.fields[0].path").value("tradeId"))
-                .andExpect(jsonPath("$.form.fields[?(@.path=='mtm')].group").value(hasItem("Money")))
+                .andExpect(jsonPath("$.form.fields[0].path").value("TRADE_ID"))
+                .andExpect(jsonPath("$.form.fields[?(@.path=='QUANTITY')].group").value(hasItem("Money")))
                 .andExpect(jsonPath("$.form.fields.length()").value(greaterThan(3)))
-                .andExpect(jsonPath("$.form.fields[?(@.path=='mtm')].type").value(hasItem("amount")))
-                .andExpect(jsonPath("$.form.fields[?(@.path=='notional')].indexed").exists());
+                .andExpect(jsonPath("$.form.fields[?(@.path=='QUANTITY')].type").value(hasItem("amount")))
+                .andExpect(jsonPath("$.form.fields[?(@.path=='QUANTITY')].indexed").exists())
+                .andExpect(jsonPath("$.form.fields[?(@.path=='TRADE_DATE')].type").value(hasItem("date")))
+                .andExpect(jsonPath("$.form.fields[?(@.path=='MATURITY_DATE')].type").value(hasItem("date")));
     }
 
     @Test
     void aDropdownListsTheValuesOfTheWholeKindNotOnlyItsFirstRows() throws Exception {
-        // the demo trades come grouped by product (rates first): the first 200 rows hold no FX product, but the dropdown must offer it
+        // the demo trades come grouped by product (rates first): the first 200 rows hold no FX product, but the dropdown must offer it;
+        // the drop-downs offer the values of every source system (ENDUR's own product types too)
         mvc.perform(get("/api/v1/forms/trading").header("Authorization", as("searcher")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.form.fields[?(@.path=='productType')].values[*]").value(hasItem("IRS_FIXFLOAT")))
-                .andExpect(jsonPath("$.form.fields[?(@.path=='productType')].values[*]").value(hasItem("FX_BARRIER")))
-                .andExpect(jsonPath("$.form.fields[?(@.path=='assetClass')].values[*]").value(hasItem("Rates")))
-                .andExpect(jsonPath("$.form.fields[?(@.path=='assetClass')].values[*]").value(hasItem("FX")));
+                .andExpect(jsonPath("$.form.fields[?(@.path=='PRODUCT_TYPE')].values[*]").value(hasItem("IRS_FIXFLOAT")))
+                .andExpect(jsonPath("$.form.fields[?(@.path=='PRODUCT_TYPE')].values[*]").value(hasItem("FX_BARRIER")))
+                .andExpect(jsonPath("$.form.fields[?(@.path=='PRODUCT_TYPE')].values[*]").value(hasItem("ComSwap")))
+                .andExpect(jsonPath("$.form.fields[?(@.path=='SOURCE_SYSTEM')].values[*]").value(org.hamcrest.Matchers.hasItems("ENDUR", "CALYPSO", "MUREX")))
+                .andExpect(jsonPath("$.form.fields[?(@.path=='COUNTERPARTY')].values[*]").value(hasItem("CP-MERIDIAN-RE")))
+                .andExpect(jsonPath("$.form.fields[?(@.path=='PRODUCT_SUB_TYPE')].depends").value(hasItem("PRODUCT_TYPE")))
+                .andExpect(jsonPath("$.form.fields[?(@.path=='PRODUCT_SUB_TYPE')].parents['ENGY-SWAP'][*]").value(hasItem("ComSwap")));
     }
 
     @Test
@@ -86,42 +92,47 @@ class FormApiTest {
 
     @Test
     void criteriaBecomeASearchTheServerRuns() throws Exception {
-        compile("searcher", "{\"criteria\":[{\"path\":\"currency\",\"op\":\"in\",\"values\":[\"EUR\",\"USD\"]},"
-                + "{\"path\":\"notional\",\"op\":\">=\",\"value\":\"100m\"}],\"orderBy\":\"mtm\",\"descending\":true,\"limit\":5}")
+        compile("searcher", "{\"criteria\":[{\"path\":\"CURRENCY\",\"op\":\"in\",\"values\":[\"EUR\",\"USD\"]},"
+                + "{\"path\":\"QUANTITY\",\"op\":\">=\",\"value\":\"100m\"}],\"orderBy\":\"QUANTITY\",\"descending\":true,\"limit\":5}")
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.command").value("TRD where (currency = 'EUR' or currency = 'USD') and notional >= 100m order by mtm desc limit 5"));
-        mvc.perform(get("/api/v1/search").param("q", "TRD where (currency = 'EUR' or currency = 'USD') and notional >= 100m order by mtm desc limit 5")
+                .andExpect(jsonPath("$.command").value("TRD where (CURRENCY = 'EUR' or CURRENCY = 'USD') and QUANTITY >= 100m order by QUANTITY desc limit 5"));
+        mvc.perform(get("/api/v1/search").param("q", "TRD where (CURRENCY = 'EUR' or CURRENCY = 'USD') and QUANTITY >= 100m order by QUANTITY desc limit 5")
                 .header("Authorization", as("searcher"))).andExpect(status().isOk()).andExpect(jsonPath("$.matched").value(greaterThan(5)));
-        compile("searcher", "{\"criteria\":[{\"path\":\"notional\",\"op\":\">=\",\"value\":\"lots\"}]}")
+        compile("searcher", "{\"criteria\":[{\"path\":\"SOURCE_SYSTEM\",\"op\":\"in\",\"values\":[\"ENDUR\"]},"
+                + "{\"path\":\"PRODUCT_TYPE\",\"op\":\"in\",\"values\":[\"ComSwap\"]}]}")
+                .andExpect(status().isOk()).andExpect(jsonPath("$.command").value("TRD where SOURCE_SYSTEM = 'ENDUR' and PRODUCT_TYPE = 'ComSwap'"));
+        mvc.perform(get("/api/v1/search").param("q", "TRD where SOURCE_SYSTEM = 'ENDUR' and PRODUCT_TYPE = 'ComSwap'").header("Authorization", as("searcher")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.matched").value(3));
+        compile("searcher", "{\"criteria\":[{\"path\":\"QUANTITY\",\"op\":\">=\",\"value\":\"lots\"}]}")
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("DRS-4004")).andExpect(jsonPath("$.detail").value(containsString("not a number")));
         compile("nothing", "{\"criteria\":[]}").andExpect(status().isForbidden());
     }
 
     @Test
     void regexSearchesRunAndUnsafeOnesAreRefusedWithACode() throws Exception {
-        compile("searcher", "{\"criteria\":[{\"path\":\"productName\",\"op\":\"regex\",\"value\":\"^REVOL\"}]}")
-                .andExpect(jsonPath("$.command").value("TRD where matches(productName, '^REVOL')"));
-        mvc.perform(get("/api/v1/search").param("q", "TRD where matches(productType, '^REVOL')").header("Authorization", as("searcher")))
+        compile("searcher", "{\"criteria\":[{\"path\":\"PRODUCT_SUB_TYPE\",\"op\":\"in\",\"values\":[\"Revolving credit facility\"]}]}")
+                .andExpect(jsonPath("$.command").value("TRD where PRODUCT_SUB_TYPE = 'Revolving credit facility'"));
+        mvc.perform(get("/api/v1/search").param("q", "TRD where matches(PRODUCT_TYPE, '^REVOL')").header("Authorization", as("searcher")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.matched").value(6));
-        mvc.perform(get("/api/v1/search").param("q", "TRD productType matches '^revol.*r$'").header("Authorization", as("searcher")))
+        mvc.perform(get("/api/v1/search").param("q", "TRD PRODUCT_TYPE matches '^revol.*r$'").header("Authorization", as("searcher")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.matched").value(6));
-        mvc.perform(get("/api/v1/search").param("q", "TRD where matchesCase(productType, 'revol')").header("Authorization", as("searcher")))
+        mvc.perform(get("/api/v1/search").param("q", "TRD where matchesCase(PRODUCT_TYPE, 'revol')").header("Authorization", as("searcher")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.matched").value(0));
-        compile("searcher", "{\"criteria\":[{\"path\":\"productName\",\"op\":\"regex\",\"value\":\"(a)\\\\1\"}]}")
+        mvc.perform(get("/api/v1/search").param("q", "TRD where matches(PRODUCT_TYPE, '(a)\\1')").header("Authorization", as("searcher")))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("DRS-4010"));
-        mvc.perform(get("/api/v1/search").param("q", "TRD where matches(productType, '(?=x)y')").header("Authorization", as("searcher")))
+        mvc.perform(get("/api/v1/search").param("q", "TRD where matches(PRODUCT_TYPE, '(?=x)y')").header("Authorization", as("searcher")))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("DRS-4010"));
         long t = System.nanoTime();                                          // a catastrophic pattern finishes in no time
-        mvc.perform(get("/api/v1/search").param("q", "TRD where matches(productType, '(a+)+$')").header("Authorization", as("searcher")))
+        mvc.perform(get("/api/v1/search").param("q", "TRD where matches(PRODUCT_TYPE, '(a+)+$')").header("Authorization", as("searcher")))
                 .andExpect(status().isOk());
         org.assertj.core.api.Assertions.assertThat((System.nanoTime() - t) / 1_000_000).isLessThan(5_000);
     }
 
     @Test
     void aMaskedFieldCannotBeProbedByARegexEither() throws Exception {
-        mvc.perform(get("/api/v1/search").param("q", "TRD where matches(trader, '^TRDR-')").header("Authorization", as("searcher")))
+        mvc.perform(get("/api/v1/search").param("q", "TRD where matches(TRADER_ID, '^TRDR-')").header("Authorization", as("searcher")))
                 .andExpect(jsonPath("$.matched").value(greaterThan(0)));
-        mvc.perform(get("/api/v1/search").param("q", "TRD where matches(trader, '^TRDR-')").header("Authorization", as("masked")))
+        mvc.perform(get("/api/v1/search").param("q", "TRD where matches(TRADER_ID, '^TRDR-')").header("Authorization", as("masked")))
                 .andExpect(jsonPath("$.matched").value(0));
     }
 }

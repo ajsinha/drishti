@@ -43,9 +43,9 @@ import org.springframework.test.web.servlet.MvcResult;
  * with {@code raw} sees the values.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
-        "drishti.packs.enabled=trading,counterparty-risk",
+        "drishti.packs.enabled=trading,counterparty-risk,market-risk",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.security.redact=trader,counterparty,mtm",
+        "drishti.security.redact=trader,counterparty,mtm,TRADER_ID,COUNTERPARTY,MTM,NOTIONAL",
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true"})
 @AutoConfigureMockMvc
@@ -91,19 +91,22 @@ class FieldMaskingTest {
     @Test
     void viewsMaskTheStripTitleTablesRecordsAndDerivedValues() throws Exception {
         JsonNode full = read("/api/v1/views/trade/MX-20000001", "full");
-        assertThat(cell(full.path("strip"), "MTM (USD)").path("text").asText()).isEqualTo("+1,876,068");
-        assertThat(full.path("title").path("with").path("text").asText()).isEqualTo("Meridian Reinsurance Ltd");
+        assertThat(full.path("title").path("with").path("text").asText()).isEqualTo("CP-MERIDIAN-RE");
+        assertThat(cell(full.path("strip"), "Notional").path("text").asText()).isEqualTo("AUD 242,000,000");
 
         JsonNode view = read("/api/v1/views/trade/MX-20000001", "masked");
         String text = view.toString();
-        // (the cash flows' PVs, not masked here, still add up to the MTM: a mask hides the fields it names, nothing else)
-        assertThat(text).doesNotContain("Meridian", "CP-MERIDIAN-RE", "\"id\":\"" + MASK);   // nor a link to a masked id
-        JsonNode mtm = cell(view.path("strip"), "MTM (USD)");
-        assertThat(mtm.path("text").asText()).isEqualTo(MASK);
-        assertThat(mtm.path("tone").asText(null)).isNull();                  // the sign of a masked value is not shown either
+        assertThat(text).doesNotContain("CP-MERIDIAN-RE", "\"id\":\"" + MASK);   // nor a link to a masked id
+        assertThat(cell(view.path("strip"), "Notional").path("text").asText()).contains(MASK);   // the legs' notional is masked
         assertThat(view.path("title").path("with").path("text").asText()).isEqualTo(MASK);
         assertThat(view.path("title").path("with").has("link") && !view.path("title").path("with").path("link").isNull()).isFalse();
-        assertThat(cell(panel(view, "terms").path("data").path("fields"), "Counterparty").path("text").asText()).isEqualTo(MASK);
+        assertThat(cell(panel(view, "ticket").path("data").path("fields"), "Counterparty").path("text").asText()).isEqualTo(MASK);
+
+        JsonNode value = read("/api/v1/views/trade-valuation/TVAL-MX-20000001", "full");
+        assertThat(cell(value.path("strip"), "MTM").path("text").asText()).isEqualTo("+1,876,068");
+        JsonNode mtm = cell(read("/api/v1/views/trade-valuation/TVAL-MX-20000001", "masked").path("strip"), "MTM");
+        assertThat(mtm.path("text").asText()).isEqualTo(MASK);
+        assertThat(mtm.path("tone").asText(null)).isNull();                  // the sign of a masked value is not shown either
 
         JsonNode ns = read("/api/v1/views/netting-set/NS-MERIDIAN-RE-NY", "masked");
         JsonNode table = panel(ns, "trades").path("data");
@@ -133,18 +136,18 @@ class FieldMaskingTest {
 
     @Test
     void theLiveStreamAndMonitorsCarryMaskedValues() throws Exception {
-        MvcResult r = mvc.perform(get("/api/v1/views/trade/MX-20000001/stream").header("Authorization", as("masked"))).andReturn();
+        MvcResult r = mvc.perform(get("/api/v1/views/trade-valuation/TVAL-MX-20000001/stream").header("Authorization", as("masked"))).andReturn();
         String body = "";
         for (int i = 0; i < 100 && !body.contains("event:view"); i++) {
             Thread.sleep(50);
             body = r.getResponse().getContentAsString(StandardCharsets.UTF_8);
         }
-        assertThat(body).contains("event:view", "{\"label\":\"MTM (USD)\",\"text\":\"" + MASK + "\"").doesNotContain("Meridian");
+        assertThat(body).contains("event:view", "{\"label\":\"MTM\",\"text\":\"" + MASK + "\"").doesNotContain("CP-MERIDIAN-RE");
 
         mvc.perform(put("/api/v1/me/monitors/Watch").header("Authorization", as("masked")).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"entities\":[{\"kind\":\"trade\",\"id\":\"MX-20000001\"}]}")).andExpect(status().is2xxSuccessful());
+                .content("{\"entities\":[{\"kind\":\"trade-valuation\",\"id\":\"TVAL-MX-20000001\"}]}")).andExpect(status().is2xxSuccessful());
         JsonNode rows = read("/api/v1/me/monitors/Watch", "masked");
-        assertThat(rows.toString()).contains(MASK).doesNotContain("Meridian", "1,876,068");
+        assertThat(rows.toString()).contains(MASK).doesNotContain("CP-MERIDIAN-RE", "1,876,068");
     }
 
     @Test
@@ -157,14 +160,14 @@ class FieldMaskingTest {
         assertThat(masked.toString()).doesNotContain("MX-20000001");
 
         JsonNode ns = read("/api/v1/impact/netting-set/NS-MERIDIAN-RE-NY", "masked");
-        JsonNode trades = group(ns, "trade");
+        JsonNode trades = group(ns, "trade-valuation");                            // the valuations in the netting set, measured by their MTM
         assertThat(trades.path("items").size()).isPositive();
         for (JsonNode item : trades.path("items")) {
             assertThat(item.path("measure").asText()).isEqualTo(MASK);
         }
         assertThat(trades.path("total").asText()).isEqualTo(MASK);
         JsonNode nsFull = read("/api/v1/impact/netting-set/NS-MERIDIAN-RE-NY", "full");
-        assertThat(group(nsFull, "trade").path("total").asText()).isNotEqualTo(MASK).isNotEmpty();
+        assertThat(group(nsFull, "trade-valuation").path("total").asText()).isNotEqualTo(MASK).isNotEmpty();
     }
 
     private static List<String> kinds(JsonNode impact) {
@@ -184,37 +187,35 @@ class FieldMaskingTest {
 
     @Test
     void typeAheadNeitherShowsNorMatchesMaskedValues() throws Exception {
-        JsonNode full = read("/api/v1/command/suggest", "full", "q", "TRD Meridian Reinsurance", "limit", "50");
+        JsonNode full = read("/api/v1/command/suggest", "full", "q", "TRD CP-MERIDIAN-RE", "limit", "50");
         assertThat(full.toString()).contains("MX-20000001");
-        assertThat(read("/api/v1/command/suggest", "full", "q", "TRD MX-2000000").toString()).contains("Meridian");
+        assertThat(read("/api/v1/command/suggest", "full", "q", "TRD MX-2000000").toString()).contains("CP-MERIDIAN-RE");
 
         JsonNode byId = read("/api/v1/command/suggest", "masked", "q", "TRD MX-2000000");
         assertThat(byId.size()).isPositive();
-        assertThat(byId.toString()).doesNotContain("Meridian");
-        JsonNode byName = read("/api/v1/command/suggest", "masked", "q", "TRD Meridian Reinsurance", "limit", "50");
+        assertThat(byId.toString()).doesNotContain("CP-MERIDIAN-RE");
+        JsonNode byName = read("/api/v1/command/suggest", "masked", "q", "TRD CP-MERIDIAN-RE", "limit", "50");
         assertThat(byName.toString()).doesNotContain("MX-20000001");
-        assertThat(read("/api/v1/command/suggest", "masked", "q", "Meridian Reinsurance", "limit", "50").toString())
-                .doesNotContain("\"kind\":\"trade\"");
     }
 
     @Test
     void alertsAndPhrasesCannotProbeAMaskedField() throws Exception {
         String user = "u-masked";
         mvc.perform(put("/api/v1/me/alerts/rules/Probe").header("Authorization", as("masked")).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"kind\":\"trade\",\"id\":\"MX-20000001\",\"when\":\"$.mtm > 0\",\"severity\":\"info\"}"))
+                .content("{\"kind\":\"trade\",\"id\":\"MX-20000001\",\"when\":\"$.COUNTERPARTY == 'CP-MERIDIAN-RE'\",\"severity\":\"info\"}"))
                 .andExpect(status().isOk());
         mvc.perform(put("/api/v1/me/alerts/rules/Shown").header("Authorization", as("masked")).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"kind\":\"trade\",\"id\":\"MX-20000001\",\"when\":\"$.notional > 0\",\"severity\":\"info\","
-                        + "\"message\":\"MTM ${fmt($.mtm, 'signed0')} with ${$.counterparty.name}\"}"))
+                .content("{\"kind\":\"trade\",\"id\":\"MX-20000001\",\"when\":\"$.QUANTITY > 0\",\"severity\":\"info\","
+                        + "\"message\":\"Notional ${fmt(first($.LEGS).NOTIONAL, 'compact')} with ${$.COUNTERPARTY}\"}"))
                 .andExpect(status().isOk());
         long deadline = System.currentTimeMillis() + 5000;
         while (alerts.events(user, 10).isEmpty() && System.currentTimeMillis() < deadline) {
             Thread.sleep(50);
         }
         Thread.sleep(400);
-        assertThat(alerts.events(user, 50)).isNotEmpty().allSatisfy(e -> {   // the rule on mtm never fires
+        assertThat(alerts.events(user, 50)).isNotEmpty().allSatisfy(e -> {   // the rule on the masked counterparty never fires
             assertThat(e.rule()).isEqualTo("Shown");
-            assertThat(e.message()).isEqualTo("MTM " + MASK + " with " + MASK);
+            assertThat(e.message()).isEqualTo("Notional " + MASK + " with " + MASK);
         });
 
         JsonNode full = read("/api/v1/phrase", "full", "text", "trades of trader TRDR-ASHAH");
@@ -227,10 +228,10 @@ class FieldMaskingTest {
     void aPivotOnAFieldUnderAMaskedParentGroupsUnderTheMask() throws Exception {
         JsonNode cube = json.readTree(mvc.perform(post("/api/v1/search/pivot/TRD").header("Authorization", as("masked"))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"rows\":[\"counterparty.name\"],\"values\":[{\"field\":\"notional\",\"agg\":\"sum\"}],\"documents\":true}"))
+                .content("{\"rows\":[\"COUNTERPARTY\"],\"values\":[{\"field\":\"QUANTITY\",\"agg\":\"sum\"}],\"documents\":true}"))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
         assertThat(cube.path("rowKeys").size()).isEqualTo(1);
         assertThat(cube.path("rowKeys").get(0).get(0).asText()).isEqualTo(MASK);
-        assertThat(cube.path("masked").toString()).contains("counterparty.name");
+        assertThat(cube.path("masked").toString()).contains("COUNTERPARTY");
     }
 }

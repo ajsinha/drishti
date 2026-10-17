@@ -66,7 +66,7 @@ class TradingStreamTest {
         PRODUCER = new KafkaProducer<>(p);
         try {
             SAMPLE = Files.readString(Path.of("../config/packs/trading/samples/trade/MX-20000001.json"));
-            String streamed = SAMPLE.replaceFirst("\"mtm\": -?[0-9.]+", "\"mtm\": 1234567");
+            String streamed = SAMPLE.replaceFirst("\"QUANTITY\": -?[0-9.]+", "\"QUANTITY\": 1234567");
             PRODUCER.send(new ProducerRecord<>("drishti.trading.trades", "MX-20000001", streamed)).get(10, TimeUnit.SECONDS);
         } catch (Exception e) {
             throw new IllegalStateException(e);
@@ -99,7 +99,7 @@ class TradingStreamTest {
         mvc.perform(get("/api/v1/views/trade/MX-20000001"))
                 .andExpect(jsonPath("$.provenance.source").value("trading-stream"))
                 .andExpect(jsonPath("$.provenance.live").value(true))
-                .andExpect(jsonPath("$.strip[?(@.label == 'MTM (USD)')].text").value(org.hamcrest.Matchers.hasItem("+1,234,567")));
+                .andExpect(jsonPath("$.strip[?(@.label == 'Quantity')].text").value(org.hamcrest.Matchers.hasItem("1,234,567")));
     }
 
     @Test

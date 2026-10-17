@@ -38,14 +38,15 @@ import org.springframework.test.web.servlet.MockMvc;
 
 /**
  * S2-11, {@code drishti.security.mask-copies=true}: the exact text of a masked field's value, copied into other text of the
- * same document ("Captured in Murex by TRDR-ASHAH"), reads as the mask for a role without {@code raw}; a role with {@code raw}
+ * same document (a counterparty's name repeated as the label of its node in the group hierarchy), reads as the mask for a role
+ * without {@code raw}; a role with {@code raw}
  * sees everything. A {@code redact} entry with dots masks a field by the end of its path. Case variants are not matched
  * (the match is exact), short values and over-large documents are left alone.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=trading,counterparty-risk",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.security.redact=trader,lifecycle.note", "drishti.security.mask-copies=true",
+        "drishti.security.redact=trader,name,lifecycle.note", "drishti.security.mask-copies=true",
         "drishti.security.mask-copies-max-nodes=5000",
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true"})
@@ -58,16 +59,16 @@ class MaskCopiesTest {
     private final ObjectMapper json = new ObjectMapper();
 
     private JsonNode raw(String role) throws Exception {
-        String body = mvc.perform(get("/api/v1/entities/trade/MX-20000001/raw").header("Authorization", "Bearer " + tokens.mint("u-" + role, List.of(role), 300)))
+        String body = mvc.perform(get("/api/v1/entities/counterparty/CP-MERIDIAN-RE/raw").header("Authorization", "Bearer " + tokens.mint("u-" + role, List.of(role), 300)))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
         return json.readTree(body);
     }
 
     @Test
-    void aCopyOfTheMaskedTraderInATimelineDescriptionReadsAsTheMask() throws Exception {
-        assertThat(raw("full").toString()).contains("Captured in Murex by TRDR-ASHAH");
+    void aCopyOfTheMaskedNameInTheHierarchyReadsAsTheMask() throws Exception {
+        assertThat(raw("full").toString()).contains("\"label\":\"Meridian Reinsurance Ltd\"");
         String masked = raw("masked").toString();
-        assertThat(masked).contains("Captured in Murex by •••:").doesNotContain("TRDR-ASHAH");
+        assertThat(masked).contains("\"label\":\"•••\"").doesNotContain("Meridian Reinsurance Ltd");
     }
 
     private DataNode doc(String trader, String text) {

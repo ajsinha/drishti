@@ -31,7 +31,8 @@ import org.springframework.test.web.servlet.MockMvc;
  * list still finds what it names, because the sources' indexes narrow by it before the limit applies.
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=trading",
-        "drishti.sources.connectors.trading-store.enabled=false", "drishti.search.max-scan=3"})
+        "drishti.sources.connectors.trade-endur.enabled=false", "drishti.sources.connectors.trade-calypso.enabled=false",
+        "drishti.sources.connectors.trade-murex.enabled=false", "drishti.search.max-scan=3"})
 @AutoConfigureMockMvc
 class PickListScaleTest {
 
@@ -42,7 +43,7 @@ class PickListScaleTest {
         mvc.perform(get("/api/v1/search").param("q", "TRD MX-2000017")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.rows[*].ref.id").value(hasItem("MX-20000170")))
                 .andExpect(jsonPath("$.partial").value(true));                  // MX-2000017 … names 10 trades; 3 are read
-        mvc.perform(get("/api/v1/search").param("q", "TRD BBG-60000100")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.rows[0].ref.id").value("BBG-60000100")).andExpect(jsonPath("$.partial").value(false));
+        mvc.perform(get("/api/v1/search").param("q", "TRD CLY-3000100")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows[0].ref.id").value("CLY-3000100")).andExpect(jsonPath("$.partial").value(false));
     }
 }

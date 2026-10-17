@@ -60,7 +60,8 @@ FEEDS = {"nyfed-sofr": ("DRISHTI_FEED_NYFED_SOFR", ["rate-fixing"], {}, "SOFR fr
 EFFECTIVE_DOMAINS = {"reference", "legal"}
 IMPACT = {"trading": {"measures": {"trade": "first($.LEGS).NOTIONAL"}, "formats": {"trade": "compact"}},
           "counterparty-risk": {"follow": ["nettingSet", "creditLimit"], "measures": {"netting-set": "$.netMtm", "credit-limit": "$.limit"},
-                                "formats": {"netting-set": "signed0", "credit-limit": "compact"}}}
+                                "formats": {"netting-set": "signed0", "credit-limit": "compact"}},
+          "market-risk": {"measures": {"trade-valuation": "$.MTM"}, "formats": {"trade-valuation": "signed0"}}}
 EXAMPLES = {  # command, what it shows (ids from make_data.py's deterministic data)
     "core": [("CPTY CP-NORTHBRIDGE", "Counterparty · netting sets, KYC, rating, country of risk"), ("LE LE-NY", "Bank legal entity · New York"),
              ("BOOK BOOK-RATES-1", "Book · top trades, MTM, DV01"), ("DESK DESK-RATES", "Desk · books, VaR")],

@@ -325,11 +325,6 @@ vocabulary:
   EVENT_DATE: { term: "Event date", means: "The day of the event; for a cash event, the day the cash moves." }
   AMOUNT: { term: "Amount", means: "The event's cash amount, signed from the bank's side.", sign: "Negative is paid, positive received." }
   SEQUENCE_NUMBER: { term: "Sequence", means: "The event's order in the booking system." }
-  TRADE_COUNT: { term: "Trades", means: "How many trades the page gathers, from every source system." }
-  SOURCE_SYSTEMS: { term: "Source systems", means: "The booking systems the trades come from." }
-  PRODUCT_TYPES: { term: "Product types", means: "The product types among the trades." }
-  CURRENCIES: { term: "Currencies", means: "The currencies of the trades." }
-  LAST_MATURITY: { term: "Last maturity", means: "The latest maturity date among the trades." }
   TRADES: { term: "Trades", means: "One row per trade: its id, source system, product, side, currency, first leg's notional, index, maturity and status." }
   TRADE_IDS: { term: "Trade ids", means: "The ids of the trades the page gathers." }
   INDEX_NAME: { term: "Index", means: "The index of the trade's first leg that names one." }
