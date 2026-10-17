@@ -31,6 +31,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "trades"))
 import layout
 import sutras as TS  # noqa: E402  (tools/packgen/trades: the production-shaped deal screens and the derived trade pages)
+import booking as BK  # noqa: E402
 from data_deep import DEEP
 import taxonomy as T
 import trade_shape as S
@@ -440,17 +441,21 @@ ENDUR_PRODUCTS = [("ComSwap", "Commodity swap", "An Endur commodity swap: fixed 
 
 def files() -> dict[Path, str]:
     out: dict[Path, str] = {}
-    for p in T.PRODUCTS:          # a deal screen per product type of the taxonomy (CALYPSO and MUREX book them)
-        out[PACKS / "trading" / "sutras" / slug(p.asset) / f"{product_name(p)}.v1.sutra.yaml"] = sutra_file(
-            TS.deal_yaml(p.code, p.name, p.asset, p.desc).replace(f"sutra: {slug(p.code)}\n", f"sutra: {product_name(p)}\n", 1))
-    for code, name, desc in ENDUR_PRODUCTS:     # and per product type of the Endur commodity book
-        out[PACKS / "trading" / "sutras" / "endur" / f"endur-{slug(code)}.v1.sutra.yaml"] = sutra_file(
-            TS.deal_yaml(code, name, "Commodity", desc).replace(f"sutra: {slug(code)}\n", f"sutra: endur-{slug(code)}\n", 1))
+    trading = PACKS / "trading" / "sutras"
+    for name, text in TS.blocks().items():   # the blocks every deal screen is made of, written once (sutras/common)
+        out[trading / "common" / f"{name}.v1.block.yaml"] = sutra_file(text)
+    for p in T.PRODUCTS:          # a deal screen per product type of the taxonomy, in the folder of the system that books it
+        system = BK.system_of(p.asset)
+        out[trading / system.lower() / f"{product_name(p)}.v1.sutra.yaml"] = sutra_file(
+            TS.deal_yaml(p.code, p.name, p.asset, p.desc, system, product_name(p)))
+    for code, name, desc in ENDUR_PRODUCTS:     # and per product type of the Endur commodity book, its sub types inside by when:
+        out[trading / "endur" / f"endur-{slug(code)}.v1.sutra.yaml"] = sutra_file(
+            TS.deal_yaml(code, name, "Commodity", desc, "ENDUR", f"endur-{slug(code)}", TS.ENDUR_EXTRA.get(code)))
     for k in T.KINDS:
         out[PACKS / layout.pack_of(k.kind) / "sutras" / slug(k.group) / f"{k.kind}.v1.sutra.yaml"] = kind_doc(k)
     for k in TS.DERIVED:          # a counterparty's, portfolio's, legal entity's and index's trades from every source system
         out[PACKS / "trading" / "sutras" / "pages" / f"{k}.v1.sutra.yaml"] = sutra_file(TS.derived_yaml(k))
-    names = [f.name for f in out]
+    names = [f.name for f in out if not f.name.endswith(".block.yaml")]
     dupes = {n for n in names if names.count(n) > 1}
     if dupes:
         raise SystemExit(f"duplicate Sutra names: {dupes}")
@@ -462,7 +467,8 @@ def main() -> None:
     layout.check([k.kind for k in T.KINDS] + ["trade"])
     want = files()
     outs = [PACKS / n / "sutras" for n in layout.PACKS]
-    existing = [f for o in outs if o.exists() for f in o.rglob("*.sutra.yaml") if GENERATED in f.read_text(encoding="utf-8")]
+    existing = [f for o in outs if o.exists() for pat in ("*.sutra.yaml", "*.block.yaml") for f in o.rglob(pat)
+                if GENERATED in f.read_text(encoding="utf-8")]
     # the Markdown Sutras this generator wrote before 1.11 (Sutras are YAML now): removed when it writes
     legacy = [f for o in outs if o.exists() for f in o.rglob("*.sutra.md") if "make_sutras.py" in f.read_text(encoding="utf-8")]
     if "--check" in sys.argv:

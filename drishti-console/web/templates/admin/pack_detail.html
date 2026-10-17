@@ -102,6 +102,22 @@
     {% else %}<p class="text-muted-d">No Sutra of its own: the kinds are shown with the generated screen.</p>{% endif %}
   </section>
 
+  {% if coverage %}<section aria-labelledby="pdCover" class="det-sec">
+    <h2 class="ws-h" id="pdCover">Sutra coverage</h2>
+    <p class="text-muted-d">Each combination of the fields the Sutras match on, as the data has it (every connector serving the kind), with the Sutra that lays it
+      out. <b>none</b>: no Sutra matches, the screen is inferred; <b>several</b>: more than one matches and the priority decides. Sutras' folders mean nothing
+      here: only each Sutra's <code>match:</code> does.</p>
+    {% for k in coverage %}<div class="tbl-wrap"><table class="tbl adm-tbl det-tbl" data-plain data-coverage="{{ k.kind }}">
+      <caption>{{ k.kind }} · {{ k.combinations }} combinations{% if k.none %} · <span class="t-neg">{{ k.none }} with no Sutra</span>{% endif %}{% if k.several %} · <span class="t-neg">{{ k.several }} with several</span>{% endif %}</caption>
+      <thead><tr>{% for f in k.fields %}<th scope="col">{{ f }}</th>{% endfor %}<th scope="col" class="num">Count</th><th scope="col">Sutra</th><th scope="col">Panels it shows</th><th scope="col">Example</th></tr></thead>
+      <tbody>{% for r in k.rows %}<tr class="cov-{{ r.state }}">{% for f in k.fields %}<td class="mono">{{ r['values'][f] or '–' }}</td>{% endfor %}
+        <td class="mono num">{{ r.count }}</td>
+        <td class="mono{% if r.state != 'one' %} t-neg{% endif %}">{% if r.state == 'none' %}none (inferred){% else %}{{ r.sutras | join(', ') }}{% if r.state == 'several' %} (several){% endif %}{% endif %}</td>
+        <td class="mono">{{ (r.shown or []) | join(', ') or '–' }}</td>
+        <td><a class="lnk mono" href="/v/{{ k.kind }}/{{ r.example | urlencode }}">{{ r.example }}</a></td></tr>{% endfor %}</tbody>
+    </table></div>{% endfor %}
+  </section>{% endif %}
+
   <section aria-labelledby="pdConn" class="det-sec">
     <h2 class="ws-h" id="pdConn">Connectors it names</h2>
     {% if sources.connectors %}<div class="tbl-wrap"><table class="tbl adm-tbl det-tbl" data-plain data-connectors>

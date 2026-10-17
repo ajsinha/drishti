@@ -370,7 +370,7 @@ final class SutraBuilder {
             problem("DRS-2012", "'" + what + "' must be a list", n);
             return List.of();
         }
-        return n.list();
+        return "panels".equals(what) ? SutraBlocks.expand(n.list(), file, problems) : n.list();   // { use: <block> } brings a block's panels
     }
 
     private void unknownKeys(Map<String, PNode> m, Set<String> allowed, String where) {

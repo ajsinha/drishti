@@ -6,19 +6,19 @@
  "PRODUCT_GROUP": "Commodity",
  "PORTFOLIO": "BOOK-COMM-3",
  "DESK": "DESK-COMM",
- "COUNTERPARTY": "CP-VERDANT",
+ "COUNTERPARTY": "CP-NORTHBRIDGE",
  "NETTING_SET": "",
  "TRADER_ID": "TRDR-TBRENNAN",
  "BUY_SELL_CODE": "S",
- "TRADE_STATUS": "MATURED",
- "CURRENCY": "CAD",
- "NOTIONAL": 1000000.0,
- "MTM": -3940,
+ "TRADE_STATUS": "VALIDATED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 10000000.0,
+ "MTM": -39396,
  "MTM_CURRENCY": "USD",
- "PNL_1D": -11,
+ "PNL_1D": -114,
  "DV01": 0,
- "TRADE_DATE": "2025-02-15",
- "MATURITY_DATE": "2025-09-30",
+ "TRADE_DATE": "2026-08-22",
+ "MATURITY_DATE": "2028-04-30",
  "VALUATION_DATE": "2026-09-30",
  "_meta": {
   "source": "risk-engine",
@@ -29,7 +29,7 @@
    "derive": [
     {
      "set": "PNL_1D",
-     "expr": "$.MTM - -3929"
+     "expr": "$.MTM - -39282"
     }
    ]
   }

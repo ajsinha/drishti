@@ -98,6 +98,32 @@ class CommonSchemaTest(unittest.TestCase):
             systems.add(d["SOURCE_SYSTEM"])
         self.assertEqual(systems, set(S.SYSTEMS))
 
+    def test_every_product_and_sub_type_of_the_generators_has_exactly_one_sutra(self):
+        """Each (source system, product type) the generators book is matched by one Sutra file of the pack, and each Endur sub type
+        shows its own panel (when:) inside its product's one Sutra: no inferred trade, no catch-all, no two Sutras for one."""
+        import re
+        sutras = ROOT / "config" / "packs" / "trading" / "sutras"
+        matches: dict[tuple[str, str], list[str]] = {}
+        whens: dict[str, set[str]] = {}
+        for f in sutras.rglob("*.sutra.yaml"):
+            text = f.read_text(encoding="utf-8")
+            if "kind: trade," not in text:
+                continue
+            m = re.search(r"\$\.SOURCE_SYSTEM == '([A-Z]+)' && \$\.PRODUCT_TYPE == '([^']+)'", text)
+            self.assertIsNotNone(m, f"{f.name} matches trades without naming a system and a product type")
+            matches.setdefault((m.group(1), m.group(2)), []).append(f.name)
+            whens[m.group(2)] = set(re.findall(r"when: \"\$\.PRODUCT_SUB_TYPE == '([^']+)'\"", text))
+        for system, trades in self.books.items():
+            for t in trades + (Endur().samples(2) if system == "ENDUR" else []):
+                key = (t["SOURCE_SYSTEM"], t["PRODUCT_TYPE"])
+                self.assertEqual(len(matches.get(key, [])), 1, f"{key}: {matches.get(key)}")
+                if system == "ENDUR":
+                    self.assertIn(t["PRODUCT_SUB_TYPE"], whens[t["PRODUCT_TYPE"]], f"{key} {t['PRODUCT_SUB_TYPE']} has no panel of its own")
+        from endur import SUB_TYPES
+        for product, subs in SUB_TYPES.items():
+            self.assertEqual(set(subs), whens[product], product)
+        self.assertEqual(len(matches), 130)                    # 125 products of the taxonomy and Endur's five, one Sutra each
+
 
 if __name__ == "__main__":
     unittest.main()

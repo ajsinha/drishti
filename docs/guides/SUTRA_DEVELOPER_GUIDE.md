@@ -546,9 +546,10 @@ Two traps:
 
 ## 4. A trade view, built step by step
 
-Now a bigger layout: the swap `MX-20000001`. Open the
-workbench on it (Build → New screen, the stored entity `trade` `MX-20000001`, an empty Sutra: see
-[Step 3](#step-3-preview-it-in-the-workbench)) and grow the Sutra one block at a time in the YAML tab, previewing each.
+Now a bigger layout: the swap `MX-20000001`, booked in Murex and written, like every trade of the trading pack, in the common schema
+of all source systems (upper-snake attributes, `LEGS[]` -> `CASH_FLOWS[]` -> `RESETS[]`, `EVENTS[]`;
+[PACKS.md](PACKS.md#trading)). Open the workbench on it (Build → New screen, the stored entity `trade` `MX-20000001`, an empty
+Sutra: see [Step 3](#step-3-preview-it-in-the-workbench)) and grow the Sutra one block at a time in the YAML tab, previewing each.
 
 ### 4.1 Identity, title and strip
 
@@ -559,30 +560,31 @@ version: 1
 description: Fixed/float swaps for the rates desk.
 match:
   kind: trade
-  where: "$.productType == 'IRS_FIXFLOAT'"
+  where: "$.SOURCE_SYSTEM == 'MUREX' && $.PRODUCT_TYPE == 'IRS_FIXFLOAT'"
   priority: 20
 title:
-  pill: "${$.assetClass} · ${$.productName}"
-  id: $.tradeId
-  with: "link($.counterparty.id, 'counterparty', $.counterparty.name)"
+  pill: "${$.PRODUCT_GROUP} · ${$.PRODUCT_SUB_TYPE}"
+  id: $.TRADE_ID
+  with: "link($.COUNTERPARTY, 'counterparty')"
 strip:
-  - { label: Notional, bind: "$.currency + ' ' + fmt($.notional, 'amount0')" }
-  - { label: Direction, bind: $.direction }
-  - { label: Maturity, bind: $.maturityDate, fmt: date }
-  - { label: MTM (USD), bind: $.mtm, fmt: signed0, tone: sign, emphasis: true }
-  - { label: 1-day P&L, bind: $.pnl1d, fmt: signed0, tone: sign }
-  - { label: DV01 (USD), bind: $.risk.dv01, fmt: signed0, tone: sign }
-  - { label: Status, bind: $.status, tone: status }
-  - { label: Book, bind: "link($.book, 'book')" }
+  - { label: Notional, bind: "$.CURRENCY + ' ' + fmt(first($.LEGS).NOTIONAL, 'amount0')" }
+  - { label: Side, bind: "$.BUY_SELL_CODE == 'B' ? 'Buy' : 'Sell'" }
+  - { label: Fixed rate, bind: $.PRICE, fmt: pct4 }
+  - { label: Maturity, bind: $.MATURITY_DATE, fmt: date }
+  - { label: Status, bind: "$.TRADE_STATUS + ' v' + $.TRADE_VERSION", tone: status, emphasis: true }
+  - { label: Source, bind: $.SOURCE_SYSTEM }
+  - { label: Trader, bind: "link($.TRADER_ID, 'trader', $.TRADER_FIRST_NAME + ' ' + $.TRADER_LAST_NAME)" }
+  - { label: Portfolio, bind: "link($.PORTFOLIO, 'book')" }
 panels: []
 ```
 
-You should see `[Rates · Interest rate swap (fixed/float)] MX-20000001 with Meridian Reinsurance Ltd` and the strip
-`Notional AUD 242,000,000 · Direction Receive fixed · Maturity 2032-06-25 · MTM (USD) +1,875,863 · 1-day P&L +126,986 ·
-DV01 (USD) −155,245 · Status Live · Book BOOK-RATES-3`. `with` and `Book` are links. `panels: []` is valid: a Sutra
-may have no panels.
+You should see `[Rates · Interest rate swap (fixed/float)] MX-20000001 with CP-MERIDIAN-RE` and the strip
+`Notional AUD 242,000,000 · Side Sell · Fixed rate 4.0829% · Maturity 2032-06-25 · Status AMENDED v2 · Source MUREX ·
+Trader A. Shah · Portfolio BOOK-RATES-3`. `with`, `Trader` and `Portfolio` are links. `panels: []` is valid: a Sutra may have no
+panels. A booking carries no mark-to-market: the trade's MTM, P&L and DV01 are market-risk's trade valuation
+(`TVAL TVAL-MX-20000001`), a page of its own.
 
-### 4.2 Terms, and legs as tabs
+### 4.2 The ticket, and legs side by side
 
 Replace `panels: []` with:
 
@@ -590,119 +592,120 @@ Replace `panels: []` with:
 panels:
   - id: terms
     kind: kv
-    title: Terms
-    code: TRM
+    title: Deal ticket
+    code: DES
     key: F2
     columns:
-      - { label: Fixed rate, bind: $.terms.fixedRate, fmt: pct4 }
-      - { label: Pay frequency, bind: $.terms.payFrequency }
-      - { label: Day count, bind: $.terms.dayCount }
-      - { label: Effective, bind: $.effectiveDate, fmt: date }
-      - { label: Discount curve, bind: "link($.discountCurve, 'ir-curve')" }
+      - { label: Transaction, bind: $.TRANSACTION_ID }
+      - { label: Trade date, bind: $.TRADE_DATE, fmt: date }
+      - { label: Start, bind: $.START_DATE, fmt: date }
+      - { label: Legal entity, bind: "link($.LEGAL_ENTITY, 'legal-entity')" }
+      - { label: Discount curve, bind: "link($.LEGS[0].DISCOUNT_INDEX, 'ir-curve')" }
   - id: legs
     kind: tabs
     title: Legs
     key: F3
-    each: $.legs
+    each: $.LEGS
     layout: columns
-    tabTitle: "'Leg ' + @.leg + ' · ' + @.label"
+    tabTitle: "'Leg ' + @.LEG_ID + ' · ' + @.LEG_ECONOMIC_TYPE + ' ' + @.LEG_TYPE"
     body:
       kind: kv
       columns:
-        - { label: Pay or receive, bind: "@.payer ? 'Pay' : 'Receive'" }
-        - { label: Rate, bind: "@.type == 'FIXED' ? fmt(@.rate, 'pct4') : @.index + ' + ' + fmt(@.spread, 'pct4')" }
-        - { label: Day count, bind: "@.dayCount" }
-        - { label: PV, bind: "@.pv", fmt: signed0, tone: sign }
+        - { label: Index, bind: "nonblank(@.INDEX.NAME, 'Fixed')" }
+        - { label: Notional, bind: "@.NOTIONAL", fmt: amount0 }
+        - { label: Frequency, bind: "@.RESET_CONVENTION" }
+        - { label: Periods, bind: "size(@.CASH_FLOWS)" }
 ```
 
-You should see *Terms* (`Fixed rate 4.0829%`, `Day count ACT/365F`, the curve as a link) and two boxes side by side,
-`Leg 1 · Receive fixed 4.0829%` (`Rate 4.0829%`, `PV +52,387,405`) and `Leg 2 · Pay AONIA compounded`
-(`Rate AONIA + 0.0000%`, `PV −50,511,542`). With `layout: tabs` (the default) they would be tabs instead. The
-`body` is a panel without an `id`; only its columns are used, and it must be a `kv`. To put whole panels in each tab (the leg's terms and a table of
-its own cashflows, a tree when they hold fixings), use `panels:` instead: [Panels inside a tab](RACHANA_REFERENCE.md#panels-inside-a-tab).
+You should see the *Deal ticket* (`Transaction 20000001002`, the legal entity and the curve as links) and two boxes side by side,
+`Leg 1 · Receive FIXED` (`Index Fixed`, `Periods 7`) and `Leg 2 · Pay FLOAT` (`Index AONIA`, `Periods 28`). With `layout: tabs` (the
+default) they would be tabs instead. The `body` is a panel without an `id`; only its columns are used, and it must be a `kv`. To put
+whole panels in each leg (its notional profile, its fixings, its cash flows opening to their resets), use `panels:` instead:
+[Panels inside a tab](RACHANA_REFERENCE.md#panels-inside-a-tab).
 
-### 4.3 Cashflows with totals and "more"
+`nonblank(@.INDEX.NAME, 'Fixed')`: an extract spells a missing value as empty text (the fixed leg's index is `""`), and `nonblank`
+skips it where `coalesce` would keep it.
+
+### 4.3 Cash flows with totals and "more"
 
 ```yaml
   - id: cashflows
     kind: table
-    title: "Cashflows · ${$.legs[0].label}"
+    title: "Cash flows · leg ${$.LEGS[0].LEG_ID}"
     key: F4
-    rows: $.legs[0].cashflows
+    rows: $.LEGS[0].CASH_FLOWS
     limit: 5
-    moreLabel: "(size($.legs[0].cashflows) - 5) + ' later cashflows'"
+    moreLabel: "(size($.LEGS[0].CASH_FLOWS) - 5) + ' later flows'"
     totalLabel: Total
     columns:
-      - { label: "#", bind: "@.n" }
-      - { label: Pay date, bind: "@.payDate", fmt: date }
-      - { label: Amount, bind: "@.amount", fmt: signed2, tone: sign, total: true }
-      - { label: DF, bind: "@.df", fmt: df4 }
-      - { label: PV, bind: "@.pv", fmt: signed2, tone: sign, total: true }
-      - { label: Status, bind: "@.status", tone: status }
+      - { label: Flow, bind: "@.FLOW_ID" }
+      - { label: Payment, bind: "@.PAYMENT_DATE", fmt: date }
+      - { label: Rate, bind: "@.RATE", fmt: pct4 }
+      - { label: Notional, bind: "@.NOTIONAL", fmt: amount0, total: true }
 ```
 
-You should see five of the seven fixed cashflows, a total row `Total · +68,325,150.22 · … · +52,387,404.92` (the
-totals cover all seven rows, not just the five shown; the label sits in the column just before the first total),
-and `2 later cashflows` under the table. Numeric columns (those with a format other than `date`) are right-aligned.
+You should see five of the seven fixed periods, a total row (`Total` and `1,694,000,000` under *Notional*: the totals cover all
+seven rows, not just the five shown; the label sits in the column just before the first total), and `2 later flows` under the
+table. Numeric columns (those with a format other than `date`) are right-aligned.
 
 ### 4.4 A ladder that lights the next payment
 
 ```yaml
   - id: schedule
     kind: ladder
-    title: Payment schedule
+    title: Cash events
     code: CF
-    rows: $.schedule
-    highlight: "#index == $.nextIndex"
+    rows: "$.EVENTS[?nonblank(@.AMOUNT)]"
+    highlight: "#index == 0"
     columns:
-      - { label: Pay date, bind: "@.payDate", fmt: date }
-      - { label: Leg, bind: "@.leg == 1 ? 'Fixed' : 'Float'" }
-      - { label: Amount, bind: "@.amount", fmt: signed0, tone: sign }
-      - { label: PV, bind: "@.pv", fmt: signed0, tone: sign, total: true }
+      - { label: Date, bind: "@.EVENT_DATE", fmt: date }
+      - { label: Leg, bind: "@.LEG_ID == 1 ? 'Fixed' : 'Float'" }
+      - { label: Amount, bind: "@.AMOUNT", fmt: signed0, tone: sign, total: true }
 ```
 
-You should see all 35 flows with the seventh (`2026-12-30`, Float, `−2,253,620`) highlighted, and a total PV of
-`+1,875,863`. A ladder always shows every row (it takes no `limit`); use a table when you need to cut.
+You should see the 36 cash settlements of both legs (paid negative, received positive), the first highlighted, and their net under
+*Amount*. A ladder always shows every row (it takes no `limit`); use a table when you need to cut. To list only what is still to
+come, filter on the view's business date: `rows: "$.EVENTS[?nonblank(@.AMOUNT) && days(today(), @.EVENT_DATE) >= 0]"`.
 
 ### 4.5 Charts: the trade's own data and another entity's
 
 ```yaml
-  - id: pnl
+  - id: notional
     kind: line
-    title: Daily P&L (USD)
+    title: Notional profile, leg 1
     area: right
-    rows: $.pnlHistory
-    x: date
-    y: pnl
-    fmt: signed0
+    rows: $.LEGS[0].CASH_FLOWS
+    x: START_DATE
+    y: NOTIONAL
+    step: true
+    fmt: amount0
   - id: curve
     kind: line
     title: Discount curve
     code: CRV
     key: F5
     area: right
-    source: "link($.discountCurve, 'ir-curve')"
+    source: "link($.LEGS[0].DISCOUNT_INDEX, 'ir-curve')"
     rows: $.points
     x: tenor
     y: zeroRate
     mark: "'5Y'"
     fmt: price2
     unit: "%"
-  - id: dv01
+  - id: payments
     kind: hbar
-    title: DV01 by bucket (USD)
-    code: SENS
+    title: Payments by year (paid − / received +)
+    code: PAY
     area: right
-    rows: $.sensitivities
-    label: bucket
-    value: dv01
+    rows: "group($.EVENTS[?nonblank(@.AMOUNT)], 'EVENT_DATE', 'AMOUNT', 'year')"
     fmt: signed0
     tone: sign
 ```
 
-You should see on the right: twenty days of P&L ending `2026-09-30`; the AUD OIS curve from `1M` to `30Y` with the
-`5Y` point marked and `5Y point 4.03%` under it, beside a `CRV-AUD-OIS` link; and seven DV01 bars from `3M −5,544` to
-`7Y −38,811`.
+You should see on the right: a flat step line at 242,000,000 (the swap does not amortise); the AUD OIS curve from `1M` to `30Y` with
+the `5Y` point marked and `5Y point 4.03%` under it, beside a `CRV-AUD-OIS` link; and one bar a year, the net of what each leg pays
+and receives. `group(list, key, value, by)` sums a field by another (here by the year of the date), so a chart needs no total the
+data does not carry.
 
 `source:` is what makes the second chart special: Drishti fetches the curve entity (with the same business date),
 and inside that panel `$` is the **curve's** document, so `rows: $.points` reads the curve's points. `mark` is
@@ -713,67 +716,75 @@ evaluated against the trade.
 ```yaml
   - id: operations
     kind: status
-    title: Confirmation and clearing
+    title: Booking
     code: OPS
     fields:
-      - { label: Confirmation, bind: $.confirmation.status, tone: status }
-      - { label: Platform, bind: "$.confirmation.method + ' · ' + $.confirmation.platformId" }
-      - { label: Clearing, bind: "$.clearing.status + ' at ' + $.clearing.ccp", tone: status }
-      - { label: Reporting, bind: $.regulatory.reportingStatus, tone: status }
+      - { label: Status, bind: $.TRADE_STATUS, tone: status }
+      - { label: Last action, bind: "$.TRADE_ACTION + ' (version ' + $.TRADE_VERSION + ')'" }
+      - { label: Delivery versus payment, bind: $.DELIVERY_VERSUS_PAYMENT }
+      - { label: Transit, bind: $.TRANSIT }
   - { id: built, kind: provenance, title: How this view was built }
-  - id: dv01use
+  - id: guideline
     kind: gauge
-    title: DV01 used of the 250k guideline
+    title: Notional used of a 500m guideline
     area: right
-    value: "abs($.risk.dv01)"
-    max: "250000"
+    value: "first($.LEGS).NOTIONAL"
+    max: "500000000"
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys:
-  F7: "link($.nettingSet, 'netting-set')"
+  F7: "link($.COUNTERPARTY, 'counterparty-trades')"
   F8: impact
   F9: raw
 ```
 
-You should see `Confirmation Confirmed`, `Clearing Cleared at LCH SwapClear` and `Reporting Accepted` in the *fine*
-colour; a gauge 62% full reading `62%` (the gauge formats value ÷ max, with `pct0` unless you say otherwise); the
-linked counterparty (badge `A`), netting set (badge `PFE 46.0m`), book, trader, desk and more; and the key bar
-`F2 Terms`, `F3 Legs`, `F4 Cashflows`, `F5 Discount curve`, `F7 Netting set`, `F8 Impact`, `F9 Raw JSON`.
+You should see `Status AMENDED` in its colour, `Last action AMEND (version 2)`; a gauge 48% full reading `48%` (the gauge formats
+value ÷ max, with `pct0` unless you say otherwise); the linked counterparty, legal entity, portfolio and trader; and
+the key bar `F2 Deal ticket`, `F3 Legs`, `F4 Cash flows`, `F5 Discount curve`, `F7 Counterparty trades`, `F8 Impact`, `F9 Raw JSON`.
 
-### 4.7 How the P&L moved, and what happened to the trade
+### 4.7 What happened to the trade, and panels for one sub type
 
-Two more questions a trader asks of a trade: *why did the MTM move today*, and *what has happened to it so far*.
-The trade's `pnlExplain` lists yesterday's MTM and today's moves by risk factor; `lifecycle.timeline` lists dated
-events. A `waterfall` and a `timeline` answer them:
+A trader also asks *what has happened to it so far*. `EVENTS` lists the deal's own events (no `LEG_ID`) and each leg's cash
+events; a `timeline` answers it, naming the leg:
 
 ```yaml
-  - id: explain
-    kind: waterfall
-    title: "P&L explain (USD, opening to closing MTM)"
-    code: PNLX
+  - id: lifecycle
+    kind: timeline
+    title: Events by leg
+    code: EVT
     key: F6
-    rows: $.pnlExplain          # [{step: Opening MTM, pnl: 1748877, total: true}, {step: Carry, pnl: -11426}, …]
-    label: step
-    value: pnl
-    sum: Closing MTM
-    fmt: signed0
-  - { id: lifecycle, kind: timeline, title: Lifecycle, code: LIFE, rows: $.lifecycle.timeline, detail: description }
+    rows: "$.EVENTS[?nonblank(@.EVENT_DATE)]"
+    date: EVENT_DATE
+    label: "@.EVENT_TYPE + (nonblank(@.LEG_ID) ? ' · leg ' + @.LEG_ID : ' · deal')"
 ```
 
-You should see eight bars: *Opening MTM +1,748,877* as a full bar, seven floating steps (*Carry −11,426* down,
-*Rates delta +132,686* up, …) and *Closing MTM +1,875,863*, which the server adds because of `sum:` and which equals
-the strip's MTM. Under it, seven events from *Booked* (2025-07-25) to *Maturity* (2032-06-25), *Next payment* in
-amber because its status is *Pending*.
+You should see the events in date order, from *BOOKED · deal* (2025-07-25) through each payment *CASH_SETTLEMENT · leg 1* or *leg 2*
+to the last *CASH_SETTLEMENT · leg 2* of 2032-06-25.
 
-`label`, `value` and `detail` are field names of each row, as for `hbar`. The server does the arithmetic (the running
-total, the closing bar, the sort by date), so the console only draws. Five more kinds work the same way:
-`histogram` (a VaR scenario vector with VaR and ES lines), `scatter` (books' VaR against P&L), `candlestick` (daily
+Some products book several sub types that read differently (an Endur `Commodity` deal is physical gas at a hub, `NGX-COMM-PHYS`, or
+warehouse warrants in a vault, `COMM-WARRANTS-INV`). Keep **one** Sutra for the product type and show a sub type's own panels with
+`when:`, an expression over the document; when it is not true the panel is left out:
+
+```yaml
+  - id: delivery
+    kind: kv
+    title: Physical delivery at the hub
+    when: "$.PRODUCT_SUB_TYPE == 'NGX-COMM-PHYS'"
+    columns:
+      - { label: Hub, bind: "$.LEGS[?@.LEG_TYPE == 'PHYSICAL'][0].PHYSICAL_LOCATION_NAME" }
+      - { label: Daily volume, bind: "$.LEGS[?@.LEG_TYPE == 'PHYSICAL'][0].DAILY_VOLUME", fmt: amount0 }
+```
+
+`label`, `value` and `detail` are field names of each row, or expressions starting with `@`. The server does the arithmetic (sums,
+groups, the sort by date), so the console only draws. Five more kinds work the same way: `waterfall` (a P&L explain, market-risk's
+`PNL`), `histogram` (a VaR scenario vector with VaR and ES lines), `scatter` (books' VaR against P&L), `candlestick` (daily
 bars), `graph` (a counterparty's group, agreement and netting sets) and `pivot` (MTM by book and currency, with
 totals). [Section 10](#10-the-panel-kinds) links to the entry of each of the 22 kinds in [PANELS.md](PANELS.md), which
 explains every kind: its options, what the server computes and what it does when empty, masked or live.
 
 Put the blocks of 4.2 to 4.7 together under one `panels:` and you have a complete trade view. The
 [reference's annotated example](RACHANA_REFERENCE.md#a-complete-example-annotated) is the same layout with every line
-commented, and the trading pack's `config/packs/trading/sutras/rates/irs-fixfloat.v1.sutra.yaml` is the one the server uses.
+commented, and the trading pack's `config/packs/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` is the one the server uses; it is
+built from shared blocks ([section 7](#7-how-packs-ship-sutras)).
 
 ## 5. Matching several Sutras
 
@@ -923,7 +934,26 @@ duplicate ids and keys) remain the final word: `GET /api/v1/sutras/problems` aft
 ## 7. How packs ship Sutras
 
 A pack is a folder under `config/packs/` with a `pack.yaml`. Its Sutras live in `sutras/` (or the folder its `sutras:` key
-names), one sub-folder per domain:
+names), in sub-folders of your choosing. **Folders are for people only**: the directory is read recursively and Drishti infers
+nothing from a folder name; each Sutra's own `match:` alone decides what it lays out
+([Folders mean nothing](RACHANA_REFERENCE.md#folders-mean-nothing)). The trading pack, whose trades come from three source systems in
+one common schema, keeps:
+
+```text
+config/packs/trading/sutras/
+  common/      deal-ticket, legs, flow-schedule, events, payments, deal-footer  (*.v1.block.yaml, shared panels)
+  endur/       one Sutra per Endur product type: match "$.SOURCE_SYSTEM == 'ENDUR' && $.PRODUCT_TYPE == 'ComSwap'"
+  calypso/     one Sutra per Calypso product type
+  murex/       one Sutra per Murex product type
+  pages/       counterparty, portfolio, legal-entity and index pages over many trades
+```
+
+Each product Sutra is a title, a strip and `{ use: deal-ticket@1 }`, `{ use: legs@1, with: { rate-fmt: pct4 } }`, … over the
+[shared blocks](RACHANA_REFERENCE.md#shared-panel-blocks-use), plus its own panels. A product's sub types (Endur's `ComSwap` books
+`ENGY-SWAP` and `ENGY-B-SWAP`) are panels with `when: "$.PRODUCT_SUB_TYPE == '…'"` in the product's one Sutra, never a Sutra of their
+own, so every trade matches exactly one Sutra. Admin → Packs → *trading* → **Sutra coverage** (`GET /api/v1/packs/{name}/coverage`)
+lists every source system × product type × sub type in the data with the Sutra that lays it out and the panels its `when`s show,
+flagging *none* (inferred) and *several*.
 
 ```text
 examples/packs/genomics/

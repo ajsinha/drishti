@@ -442,6 +442,13 @@ Writing Sutras is taught in the [Sutra guide](SUTRA_DEVELOPER_GUIDE.md); every k
 start from the samples, let auto-design draft it, edit on the canvas, and export the result into your pack as a
 [fragment](#pack-fragments-from-the-build-workbench) ([SCREEN_DESIGNER.md](SCREEN_DESIGNER.md)).
 
+Sutras may sit in any sub-folders of `sutras/` (`sutras/common/`, `sutras/endur/` …): the folder is for people only, read
+recursively, and Drishti infers nothing from its name; each Sutra's `match:` alone decides what it lays out. Panels several
+Sutras share go in a block (`<name>.v<N>.block.yaml`, `{ use: name@N, with: {…} }`), and a product's variants in panels with
+`when:` rather than in more Sutras; the trading pack does both ([PACKS.md](PACKS.md#trading),
+[Shared panel blocks](RACHANA_REFERENCE.md#shared-panel-blocks-use)). Admin → Packs → your pack → **Sutra coverage** shows which
+Sutra lays out each combination of the fields your Sutras match on, as the data has it.
+
 ### Step 12. Put the Sutra under test
 
 A Sutra that renders today can break with next month's data. `tests/<sutra>/` holds sample documents and an

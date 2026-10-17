@@ -31,9 +31,15 @@ from comswap_synth import Generator  # tools/packgen on the path (refdata puts i
 FIRST_ID = 1_000_001
 PRODUCTS = ("ComSwap", "ComFut", "Cash", "CallNot", "Commodity")
 STATUS = {"Validated": "VALIDATED", "New": "NEW", "Amended": "AMENDED", "Matured": "MATURED", "Cancelled": "CANCELLED"}
+# the sub types an Endur commodity book uses, by product type: ComSwap ENGY-SWAP / ENGY-B-SWAP (basis), ComFut ENGY-EXCH-FUT,
+# Cash CASH, CallNot NOSTRO, Commodity NGX-COMM-PHYS (physical gas at a hub) / COMM-WARRANTS-INV (warehouse warrants held in a vault)
 SUB_TYPE = {"Fixed swap": "ENGY-SWAP", "Fixed float swap": "ENGY-SWAP", "Basis swap": "ENGY-B-SWAP", "Location swap": "ENGY-SWAP",
-            "EXCH-FUTURE": "ENGY-EXCH-FUT", "CASH-PAYMENT": "CASH", "CASH-FEE": "NOSTRO", "CALL-DEPOSIT": "CALL-NOTICE",
-            "PHYS-COMMODITY": "COMM-PHYS", "WARRANT-INVENTORY": "COMM-WARRANTS-INV"}
+            "EXCH-FUTURE": "ENGY-EXCH-FUT", "CASH-PAYMENT": "CASH", "CASH-FEE": "CASH", "CALL-DEPOSIT": "NOSTRO",
+            "PHYS-COMMODITY": "NGX-COMM-PHYS", "WARRANT-INVENTORY": "COMM-WARRANTS-INV"}
+SUB_TYPES = {"ComSwap": ("ENGY-SWAP", "ENGY-B-SWAP"), "ComFut": ("ENGY-EXCH-FUT",), "Cash": ("CASH",), "CallNot": ("NOSTRO",),
+             "Commodity": ("NGX-COMM-PHYS", "COMM-WARRANTS-INV")}
+GAS_HUBS = ["NGX AECO-C", "NGX Dawn", "NGX Empress", "NGX Chicago", "NGX Union Dawn"]
+VAULTS = ["LME Rotterdam", "LME Singapore", "COMEX New York", "Vault Toronto A", "Vault London B"]
 UNITS = {"MT": "MT", "BBL": "BBL", "MMBTU": "MMBTU", "MWH": "MWH", "OZ": "OZ", "BU": "BU", "Currency": ""}
 
 
@@ -106,6 +112,15 @@ class Endur:
             "TRADER_ID": R.trader_id(trader), "TRADER_FIRST_NAME": first if rich else "", "TRADER_LAST_NAME": last if rich else "",
             "DELIVERY_VERSUS_PAYMENT": "YES" if doc["DELIVERY_VERSUS_PAYMENT"] == "Y" else "NO", "TT_GROUP": "", "TT_BOOK": "",
             "EVENTS": events})
+        if out["PRODUCT_SUB_TYPE"] == "NGX-COMM-PHYS":           # physical gas: delivered at a hub, the index read there
+            hub = rng.choice(GAS_HUBS)
+            for leg in legs:
+                if leg["LEG_TYPE"] == "PHYSICAL":
+                    leg["PHYSICAL_LOCATION_NAME"], leg["INDEX_LOCATION_NAME"], leg["SETTLEMENT_TYPE"] = hub, hub, S.PHYSICAL
+        elif out["PRODUCT_SUB_TYPE"] == "COMM-WARRANTS-INV":     # warehouse warrants: inventory held in a vault, registered
+            out["VAULT_LOCATION_ALLOCATION"] = rng.choice(VAULTS) if rich else ""
+            out["REGISTRY_DELIVERY_DATE"] = out["START_DATE"] if rich else ""
+            out["LEASE_PERPETUITY_FLAG"] = rng.choice(["Y", "N"]) if rich else ""
         return {k: out[k] for k in S.TOP}
 
     def deals(self, count: int, start: int = 0):
@@ -113,10 +128,20 @@ class Endur:
             yield self.deal(n)
 
     def samples(self, per_product: int = 3) -> list[dict]:
-        """``per_product`` deals of each of the five product types (the pack's samples and tests)."""
+        """``per_product`` deals of each of the five product types (the pack's samples and tests), at least one fully filled deal of
+        each of its sub types among them (a sparse deal leaves fields blank, as extracts do)."""
         out, n = [], 0
         for p in PRODUCTS:
-            for _ in range(per_product):
-                out.append(self.deal(n, p))
+            mine: list[dict] = []
+            for _ in range(60):
+                d = self.deal(n, p)
                 n += 1
+                missing = [st for st in SUB_TYPES[p] if not any(x["PRODUCT_SUB_TYPE"] == st and x["LEGAL_ENTITY"] for x in mine)]
+                if len(mine) < per_product - len(missing) or (d["PRODUCT_SUB_TYPE"] in missing and d["LEGAL_ENTITY"]):
+                    mine.append(d)
+                if len(mine) >= per_product and not [st for st in SUB_TYPES[p] if not any(x["PRODUCT_SUB_TYPE"] == st and x["LEGAL_ENTITY"] for x in mine)]:
+                    break
+            out += mine
+        for i, d in enumerate(out):                    # numbered in order, as an extract lists them
+            d["TRADE_ID"] = FIRST_ID + i
         return out

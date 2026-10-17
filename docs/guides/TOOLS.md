@@ -773,6 +773,7 @@ ExecStart=/usr/bin/python3 tools/drishti.py lake maintain --config deploy/lake-m
 | `tools/packgen/climate/make.py`, `liquidity/make.py`, `oprisk/make.py`, `retail/make.py` | the climate-risk, liquidity-risk, operational-risk and retail-banking packs, built on the banking data |
 | `tools/packgen/genomics/make.py` | the genomics pack (public reference facts, synthetic samples) |
 | `tools/packgen/world/make.py` (the halves `economics/make.py`, `politics/make.py`) with `tools/realdata/realdata.py` | the world-economy pack from real public data (World Bank, IMF; internal demos only) |
+| `tools/packgen/trades/make_trades.py` | **The trading pack's trades of three source systems** in the common schema (upper-snake, `LEGS` → `CASH_FLOWS` → `RESETS`, `EVENTS`): `--trades N` per system (ENDUR, CALYPSO, MUREX), `--days D` business days with about 6% amended each day, one `<out>/<system>/trades-<date>.jsonl.gz` a day; with `--lake <root>` each goes through `lake build --connector trade-<system>` into that system's table (`trade_endur`, `trade_calypso`, `trade_murex`). Deterministic; 10,000 trades or fewer on a laptop. `python3 tools/packgen/trades/make_trades.py --trades 50 --days 2 --out data/build/trades` prints `ENDUR: 50 trades x 2 days -> data/build/trades/endur` and the same for CALYPSO and MUREX. |
 | `tools/samplegen/bulk_trades.py` | a large trade book for scale tests, N trades over D business days, as a Delta lake (`load-delta.sh --trades`) |
 
 The synthetic book used on this page:

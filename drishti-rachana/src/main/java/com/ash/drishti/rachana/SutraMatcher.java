@@ -84,6 +84,24 @@ public final class SutraMatcher {
         return new MatchTrace(Optional.ofNullable(chosen), out);
     }
 
+    /** Every Sutra of the kind whose {@code where} holds for the document, highest priority first (a coverage check: one is right). */
+    public List<Sutra> matching(String kind, DataNode doc) {
+        EvalContext ctx = EvalContext.of(doc, formats);
+        return registry.forKind(kind).stream().filter(s -> holds(s.match().where(), ctx)).toList();
+    }
+
+    /** The ids of a Sutra's panels (inside its tabs too) whose {@code when} holds for the document: what is shown only for some documents. */
+    public List<String> shownByWhen(Sutra s, DataNode doc) {
+        EvalContext ctx = EvalContext.of(doc, formats);
+        List<String> out = new ArrayList<>();
+        for (com.ash.drishti.rachana.model.Panel p : s.panels()) {
+            for (com.ash.drishti.rachana.model.Panel q : java.util.stream.Stream.concat(java.util.stream.Stream.of(p), p.parts().stream()).toList()) {
+                q.option(com.ash.drishti.rachana.model.Panel.WHEN).filter(w -> holds(w, ctx)).ifPresent(w -> out.add(q.id()));
+            }
+        }
+        return out;
+    }
+
     private MatchTrace.Result evaluate(String where, EvalContext ctx) {
         if (where == null) {
             return MatchTrace.Result.TRUE;

@@ -972,6 +972,7 @@ curl -s $B/calc/settings
 | `GET` | `/about` | `{product, version, built, java, uptimeSeconds, sutras, sources, securityEnabled, packs, copyright}` |
 | `GET` | `/packs` | every installed pack `{name, version, title, description, console, kinds, assigned, active}` (assigned/active for the caller) |
 | `GET` | `/packs/{name}/overview` | as-of. One pack's start page: `{name, code, title, description, version, extends, kinds: [{kind, mnemonic, label, count, more, failed, example, columns}]}`, only the kinds the caller may open (`name` may be the pack code, `FIN`); `400` when the pack is not switched on for the caller |
+| `GET` | `/packs/{name}/coverage` | as-of; `kind` (optional). Which Sutra lays out which data: for each kind with Sutras, the fields they match on and show panels by (`when:`), and every combination of them in the data (every connector serving the kind): `{pack, kinds: [{kind, fields, combinations, none, several, failed, rows: [{values, count, example, sutras, shown, state}]}]}`, `state` `one`, `none` (inferred) or `several`. Admin → Packs → a pack shows it as *Sutra coverage* |
 | `GET` | `/sources` | `{sources: [{name, version, kinds, live, search, reverseLookup, health}], failures: {name: reason}}`; `kinds: []` means the source serves any kind |
 | `GET` | `/sutras` | every loaded Sutra `{name, latest, versions, domain, kind, where, priority}` |
 | `GET` | `/sutras/{name}/{version}` | one parsed Sutra as JSON `{name, version, domain, match, title, strip, panels, keys, location}`; `404 DRS-2003` |

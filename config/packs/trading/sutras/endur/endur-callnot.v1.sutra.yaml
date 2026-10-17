@@ -17,7 +17,7 @@ rachana: 1
 sutra: endur-callnot
 version: 1
 description: "An Endur call-notice deposit: interest periods, then the principal on notice."
-match: { kind: trade, where: "$.PRODUCT_TYPE == 'CallNot'", priority: 10 }
+match: { kind: trade, where: "$.SOURCE_SYSTEM == 'ENDUR' && $.PRODUCT_TYPE == 'CallNot'", priority: 10 }
 title: { pill: "Commodity · Call-notice deposit", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }
 strip:
   - { label: Source, bind: $.SOURCE_SYSTEM }
@@ -32,157 +32,21 @@ controls:                       # the events by leg and by date: a trader's 'wha
   - { id: legs, kind: multi-select, label: Legs, options: "$.LEGS[*].LEG_ID", default: all, placement: header, panel: event-list, remember: user }
   - { id: when, kind: date-range, label: Between, placement: header, panel: event-list }
 panels:
-  - id: ticket
+  - { use: deal-ticket@1, with: { rate-fmt: price4 } }
+  - id: deposit
     kind: kv
-    title: Deal ticket
-    code: DES
-    key: F2
+    title: "Call-notice deposit (nostro)"
+    code: DEP
+    when: "$.PRODUCT_SUB_TYPE == 'NOSTRO'"
     columns:
-      - { label: Trade id, bind: $.TRADE_ID }
-      - { label: Transaction, bind: "nonblank($.TRANSACTION_ID, '–')" }
-      - { label: Version, bind: "nonblank($.TRADE_VERSION, '–')" }
-      - { label: Action, bind: "nonblank($.TRADE_ACTION, '–')" }
-      - { label: Package, bind: "nonblank($.PACKAGE_ID, '–')" }
-      - { label: Source system, bind: $.SOURCE_SYSTEM }
-      - { label: Updated, bind: "nonblank($.SOURCE_UPDATE_TIME, '–')" }
-      - { label: Product, bind: $.PRODUCT_TYPE }
-      - { label: Sub type, bind: "nonblank($.PRODUCT_SUB_TYPE, '–')" }
-      - { label: Group, bind: "nonblank($.PRODUCT_GROUP, '–') + \" / \" + nonblank($.PRODUCT_SUB_GROUP, '–')" }
-      - { label: Option, bind: "nonblank($.OPTION_TYPE, '–')" }
-      - { label: Strike, bind: $.STRIKE_PRICE, fmt: price4 }
-      - { label: Price, bind: $.PRICE, fmt: price4 }
-      - { label: Quantity, bind: $.QUANTITY, fmt: amount2 }
-      - { label: Counterparty, bind: "link($.COUNTERPARTY, 'counterparty')" }
-      - { label: UEN, bind: "nonblank($.COUNTERPARTY_UEN, '–')" }
-      - { label: Country of risk, bind: "nonblank($.COUNTERPARTY_COUNTRY_OF_RISK, '–')" }
-      - { label: Original counterparty, bind: "nonblank($.ORIGINAL_COUNTERPARTY) ? link($.ORIGINAL_COUNTERPARTY, 'counterparty') : '–'" }
-      - { label: Internal / external, bind: "nonblank($.INTERNAL_EXTERNAL_CODE, '–')" }
-      - { label: Legal entity, bind: "nonblank($.LEGAL_ENTITY) ? link($.LEGAL_ENTITY, 'legal-entity') : '–'" }
-      - { label: Transit, bind: "nonblank($.TRANSIT, '–')" }
-      - { label: Portfolio, bind: "link($.PORTFOLIO, 'book')" }
-      - { label: Trader, bind: "link($.TRADER_ID, 'trader', nonblank($.TRADER_FIRST_NAME + ' ' + $.TRADER_LAST_NAME, $.TRADER_ID))" }
-      - { label: Trade date, bind: $.TRADE_DATE, fmt: date }
-      - { label: Input date, bind: "nonblank($.INPUT_DATE, '–')" }
-      - { label: Start, bind: $.START_DATE, fmt: date }
-      - { label: Maturity, bind: $.MATURITY_DATE, fmt: date }
-      - { label: Settlement, bind: "nonblank($.SETTLEMENT_DATE, '–')" }
-      - { label: Currency, bind: $.CURRENCY }
-      - { label: DVP, bind: "nonblank($.DELIVERY_VERSUS_PAYMENT, '–')" }
-      - { label: Book (TT), bind: "nonblank($.TT_BOOK, '–')" }
-  - id: legs
-    kind: tabs
-    title: Legs
-    code: LEGS
-    key: F3
-    each: $.LEGS
-    layout: columns
-    tabTitle: "'Leg ' + @.LEG_ID + ' · ' + nonblank(@.LEG_ECONOMIC_TYPE + ' ' + @.LEG_TYPE, @.LEG_TYPE, '–') + (nonblank(@.INDEX.NAME) ? ' · ' + @.INDEX.NAME : '')"
-    panels:
-      - id: leg-terms
-        kind: kv
-        title: Terms
-        columns:
-          - { label: Type, bind: "nonblank(@.LEG_TYPE, '–')" }
-          - { label: Pay / receive, bind: "nonblank(@.LEG_ECONOMIC_TYPE, '–')" }
-          - { label: Index, bind: "nonblank(@.INDEX.NAME, '–')" }
-          - { label: Index group, bind: "nonblank(@.INDEX.GROUP, '–')" }
-          - { label: Notional, bind: "@.CURRENCY + ' ' + fmt(@.NOTIONAL, 'amount0')" }
-          - { label: Price unit, bind: "nonblank(@.PRICE_UNIT, '–')" }
-          - { label: Spread, bind: "@.FLOAT_SPREAD", fmt: price4 }
-          - { label: Reset, bind: "nonblank(@.RESET_CONVENTION, '–')" }
-          - { label: Fixing shift, bind: "nonblank(@.RESET_FIXING_SHIFT, '–')" }
-          - { label: Settlement, bind: "nonblank(@.SETTLEMENT_TYPE, '–')" }
-          - { label: Discount index, bind: "nonblank(@.DISCOUNT_INDEX, '–')" }
-          - { label: Daily volume, bind: "@.DAILY_VOLUME", fmt: amount0 }
-          - { label: Flows, bind: "size(@.CASH_FLOWS)" }
-      - id: leg-notional
-        kind: line
-        title: Notional profile
-        rows: "@.CASH_FLOWS"
-        x: START_DATE
-        y: NOTIONAL
-        step: true
-        fmt: amount0
-      - id: leg-fixings
-        kind: line
-        title: Fixings
-        rows: "flatten(@.CASH_FLOWS[*].RESETS)[?nonblank(@.RATE)]"
-        x: START_DATE
-        y: RATE
-        fmt: price4
-      - id: leg-flows
-        kind: table
-        title: Cash flows and resets
-        rows: "@.CASH_FLOWS"
-        children: "@.RESETS"
-        expand: 1
-        columns:
-          - { label: Flow / reset, bind: "nonblank(@.FLOW_ID, @.RESET_ID, '·')" }
-          - { label: Start, bind: "@.START_DATE", fmt: date }
-          - { label: End, bind: "@.END_DATE", fmt: date }
-          - { label: Pay / reset date, bind: "nonblank(@.PAYMENT_DATE, @.RESET_DATE, '–')" }
-          - { label: Status, bind: "nonblank(@.PAYMENT_DATE) ? (@.PAYMENT_DATE < today() ? 'Paid' : (@.START_DATE <= today() ? 'Pricing' : 'Future')) : (nonblank(@.RATE) ? 'Fixed' : 'Open')", tone: status }
-          - { label: Type, bind: "nonblank(@.FLOW_TYPE, '–')" }
-          - { label: Notional, bind: "@.NOTIONAL", fmt: amount0, total: true }
-          - { label: Rate / price, bind: "@.RATE", fmt: price4 }
-          - { label: Spread, bind: "@.FLOAT_SPREAD", fmt: price4 }
-          - { label: Strike, bind: "@.STRIKE_PRICE", fmt: price4 }
-  - id: flows
-    kind: table
-    title: Cash-flow schedule, every leg
-    code: FLOWS
-    key: F4
-    rows: "flatten($.LEGS[*].CASH_FLOWS)"
-    columns:
-      - { label: Flow, bind: "@.FLOW_ID" }
-      - { label: Start, bind: "@.START_DATE", fmt: date }
-      - { label: End, bind: "@.END_DATE", fmt: date }
-      - { label: Payment, bind: "@.PAYMENT_DATE", fmt: date }
-      - { label: Fixing, bind: "nonblank(@.RATE_DETERMINATION_DATE, '–')" }
-      - { label: Notional, bind: "@.NOTIONAL", fmt: amount0, total: true }
-      - { label: Rate / price, bind: "@.RATE", fmt: price4 }
-      - { label: Resets, bind: "size(@.RESETS)" }
-  - id: events
-    kind: timeline
-    title: Events by leg
-    code: EVT
-    key: F5
-    rows: "$.EVENTS[?nonblank(@.EVENT_DATE)]"
-    date: EVENT_DATE
-    label: "@.EVENT_TYPE + (nonblank(@.LEG_ID) ? ' · leg ' + @.LEG_ID : ' · deal')"
-    detail: "nonblank(@.PAYMENT_TYPE, '') + (nonblank(@.AMOUNT) ? ' ' + @.CURRENCY + ' ' + fmt(@.AMOUNT, 'signed2') : '')"
-  - id: event-list
-    kind: table
-    title: "Events${ctl.when ? ' · ' + ctl.when : ''}"
-    code: EVTL
-    rows: $.EVENTS
-    where: "(!nonblank(@.LEG_ID) || oneOf(@.LEG_ID, ctl.legs)) && within(@.EVENT_DATE, ctl.when)"
-    empty: No events booked
-    columns:
-      - { label: Leg, bind: "nonblank(@.LEG_ID, 'deal')" }
-      - { label: Event, bind: "nonblank(@.EVENT_ID, '–')" }
-      - { label: Type, bind: "nonblank(@.EVENT_TYPE, '–')" }
-      - { label: Payment type, bind: "nonblank(@.PAYMENT_TYPE, '–')" }
-      - { label: Date, bind: "nonblank(@.EVENT_DATE, '–')" }
-      - { label: Amount, bind: "@.AMOUNT", fmt: signed2, tone: sign, total: true }
-      - { label: Currency, bind: "nonblank(@.CURRENCY, '–')" }
-  - id: ladder
-    kind: hbar
-    title: Netted payments by date (paid − / received +)
-    code: PAY
-    key: F6
-    area: right
-    rows: "group($.EVENTS[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)], 'EVENT_DATE', 'AMOUNT')"
-    fmt: signed0
-    tone: sign
-  - id: by-month
-    kind: hbar
-    title: Payments by month
-    code: PAYM
-    area: right
-    rows: "group($.EVENTS[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)], 'EVENT_DATE', 'AMOUNT', 'month')"
-    fmt: signed0
-    tone: sign
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+      - { label: "Principal", bind: "$.CURRENCY + ' ' + fmt($.QUANTITY, 'amount0')" }
+      - { label: "Rate", bind: "nonblank(first($.LEGS).CASH_FLOWS[0].RATE, '–')" }
+      - { label: "Interest periods", bind: "size(first($.LEGS).CASH_FLOWS)" }
+      - { label: "Next interest", bind: "first($.LEGS).CASH_FLOWS[?@.PAYMENT_DATE >= today()][0].PAYMENT_DATE", fmt: date }
+      - { label: "Lease currency", bind: "nonblank(first($.LEGS).LEASE_CURRENCY, '–')" }
+  - { use: legs@1, with: { rate-fmt: price4 } }
+  - { use: flow-schedule@1, with: { rate-fmt: price4 } }
+  - { use: events@1 }
+  - { use: payments@1 }
+  - { use: deal-footer@1 }
 keys: { F7: "link($.COUNTERPARTY, 'counterparty-trades')", F8: impact, F9: raw }

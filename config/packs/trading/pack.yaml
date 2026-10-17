@@ -441,7 +441,7 @@ console:
   - - TRD CLY-3000086
     - Single-name CDS (Calypso) · premium leg payments
   - - TRD 1000015
-    - Physical commodity deal (Endur) · delivery and payment legs
+    - Warehouse warrants (Endur) · inventory, delivery and payment legs
   - - CTRD CP-ALDERSHOT
     - A counterparty's trades in every system · payments, notional by product
   help: config/help.yaml

@@ -4,21 +4,21 @@
  "SOURCE_SYSTEM": "ENDUR",
  "PRODUCT_TYPE": "Commodity",
  "PRODUCT_GROUP": "Commodity",
- "PORTFOLIO": "BOOK-COMM-1",
+ "PORTFOLIO": "BOOK-COMM-2",
  "DESK": "DESK-COMM",
- "COUNTERPARTY": "CP-SOLARIS",
+ "COUNTERPARTY": "CP-BRAMBLE",
  "NETTING_SET": "",
- "TRADER_ID": "TRDR-TBRENNAN",
- "BUY_SELL_CODE": "S",
+ "TRADER_ID": "TRDR-FROSSI",
+ "BUY_SELL_CODE": "B",
  "TRADE_STATUS": "MATURED",
  "CURRENCY": "USD",
- "NOTIONAL": 3890975.0,
- "MTM": -25934,
+ "NOTIONAL": 8218194.0,
+ "MTM": -54775,
  "MTM_CURRENCY": "USD",
- "PNL_1D": 154,
+ "PNL_1D": 325,
  "DV01": 0,
- "TRADE_DATE": "2025-12-18",
- "MATURITY_DATE": "2026-11-30",
+ "TRADE_DATE": "2026-05-04",
+ "MATURITY_DATE": "2027-03-31",
  "VALUATION_DATE": "2026-09-30",
  "_meta": {
   "source": "risk-engine",
@@ -29,7 +29,7 @@
    "derive": [
     {
      "set": "PNL_1D",
-     "expr": "$.MTM - -26088"
+     "expr": "$.MTM - -55100"
     }
    ]
   }

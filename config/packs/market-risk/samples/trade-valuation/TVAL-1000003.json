@@ -4,32 +4,32 @@
  "SOURCE_SYSTEM": "ENDUR",
  "PRODUCT_TYPE": "ComSwap",
  "PRODUCT_GROUP": "Commodity",
- "PORTFOLIO": "BOOK-COMM-3",
+ "PORTFOLIO": "BOOK-COMM-1",
  "DESK": "DESK-COMM",
- "COUNTERPARTY": "CP-CORAL",
+ "COUNTERPARTY": "CP-CASCADIA",
  "NETTING_SET": "",
- "TRADER_ID": "TRDR-TBRENNAN",
- "BUY_SELL_CODE": "B",
- "TRADE_STATUS": "VALIDATED",
- "CURRENCY": "EUR",
- "NOTIONAL": 17909.1,
- "MTM": -317,
+ "TRADER_ID": "TRDR-FROSSI",
+ "BUY_SELL_CODE": "S",
+ "TRADE_STATUS": "NEW",
+ "CURRENCY": "USD",
+ "NOTIONAL": 233632200.0,
+ "MTM": -4141254,
  "MTM_CURRENCY": "USD",
- "PNL_1D": 1,
+ "PNL_1D": 11463,
  "DV01": 0,
- "TRADE_DATE": "2026-07-11",
- "MATURITY_DATE": "2026-10-31",
+ "TRADE_DATE": "2026-07-10",
+ "MATURITY_DATE": "2027-02-28",
  "VALUATION_DATE": "2026-09-30",
  "_meta": {
   "source": "risk-engine",
   "generation": 1,
   "live": true,
   "walk": {
-   "MTM": 500,
+   "MTM": 10619,
    "derive": [
     {
      "set": "PNL_1D",
-     "expr": "$.MTM - -318"
+     "expr": "$.MTM - -4152717"
     }
    ]
   }

@@ -486,9 +486,51 @@ view then shows the title and strip only.
   ```
 
   You should see entries such as
-  `{'name': 'irs-fixfloat', 'latest': 1, 'versions': [1], 'domain': 'rates', 'kind': 'trade', 'where': "$.productType == 'IRS_FIXFLOAT'", 'priority': 10}`.
+  `{'name': 'irs-fixfloat', 'latest': 1, 'versions': [1], 'domain': 'murex', 'kind': 'trade', 'where': "$.SOURCE_SYSTEM == 'MUREX' && $.PRODUCT_TYPE == 'IRS_FIXFLOAT'", 'priority': 10}`.
 - `GET /api/v1/sutras/{name}/{version}/source` returns the file's YAML (`text/yaml`), comments included, exactly as loaded.
-- The **domain** defaults to the name of the folder holding the file (`config/packs/trading/sutras/rates/…` → `rates`).
+- The **domain** defaults to the name of the folder holding the file (`config/packs/trading/sutras/murex/…` → `murex`). It is a label only (the catalog groups by it; the workbench saves back there): it never decides what the Sutra matches ([Folders mean nothing](#folders-mean-nothing)).
+
+### Shared panel blocks (`use:`)
+
+Many Sutras of one pack lay out the same parts (every trade has a deal ticket, legs, cash flows and events). Write those panels once
+as a **block** and `use:` it from each Sutra. A block is a file `<name>.v<N>.block.yaml` anywhere in a Sutra directory (the trading
+pack keeps its six in `sutras/common/`):
+
+```yaml
+rachana: 1
+block: legs                     # the name, as in the file name
+version: 1                      # the version, as in the file name
+description: Each leg side by side, its notional profile, fixings and cash flows.
+params: { rate-fmt: price4 }    # every parameter with its default
+panels:
+  - id: legs
+    kind: tabs
+    each: $.LEGS
+    panels:
+      - kind: kv
+        columns:
+          - { label: Spread, bind: "@.FLOAT_SPREAD", fmt: "%{rate-fmt}" }   # %{param} is replaced by its value
+```
+
+In a Sutra's `panels:` (at the top or inside a tab), `{ use: legs@1, with: { rate-fmt: pct4 } }` is replaced by the block's panels,
+each `%{param}` filled from `with:` or the default. `use: legs` (no version) takes the newest version, so a pack that changes a block
+in a way its Sutras should not follow writes `legs.v2.block.yaml` and moves Sutras one at a time. The panels expanded are ordinary
+panels: the Sutra's own rules (unique ids, keys, options) apply to the result, and `sutra lint` / `sutra test` check every Sutra
+with its blocks expanded.
+
+- A block is not a Sutra: it matches nothing and is never chosen; only Sutras that `use:` it show its panels.
+- A block may not `use:` another block, and a `with:` naming a parameter the block does not declare is an error.
+- Blocks load with the Sutras of the same directories (site and packs), before them.
+- Mistakes are `DRS-2048`: `no block legs@3 (blocks: deal-ticket, legs, …)`, `block 'legs' has no parameter 'colour'`,
+  `block 'nested' uses another block`, `name it legs.v1.block.yaml`.
+
+### Folders mean nothing
+
+A Sutra directory is read recursively. Sub-folders (`sutras/common/`, `sutras/endur/`, `sutras/calypso/`, `sutras/murex/`,
+`sutras/pages/`) are only for people: Drishti infers **nothing** from a folder's name, not a source system, a kind or a priority.
+What a Sutra lays out is decided by its own `match:` alone (`where: "$.SOURCE_SYSTEM == 'ENDUR' && $.PRODUCT_TYPE == 'ComSwap'"`),
+so moving a file to another folder changes nothing it shows. The folder name is kept only as the Sutra's *domain*, a label the
+catalog groups by and the folder a Sutra saved from the workbench is written back to.
 
 ### Where Sutras come from, and who wins
 
@@ -641,6 +683,7 @@ author may promote such a layout to the Sutra's next version, written with these
 | `columns` | | empty | The columns or fields; see below. Used by `kv`, `table`, `ladder`, `tabs` (in the body) and `surface`. |
 | `body` | `tabs` only | | The panel drawn once per tab. On any other kind, `DRS-2023 only 'tabs' panels take a 'body'`. |
 | `description` | | none | Plain text for authors: what the panel shows. Not shown in the view. |
+| `when` | | always | An expression over the document: the panel is shown only where it is true (left out, with no empty box, elsewhere). Any kind takes it, and so does a panel inside a tab (`@` is then the tab's element). Use it to give one product's sub types their own panels inside the product's one Sutra: `when: "$.PRODUCT_SUB_TYPE == 'NGX-COMM-PHYS'"`, rather than a second Sutra for the sub type. |
 
 Every other key of a panel is a **kind option**. Each kind accepts a fixed set (tables below); any other key
 is `DRS-2023 option 'x' is not valid for 'kv' panels`, and a missing required option is
@@ -2186,6 +2229,7 @@ A Sutra file that fails any check is not loaded (or keeps its last good version,
 | `DRS-2044` | `text is 700 characters; the limit is 600 (drishti.about.max-text)` | one text of an about entry (term, means, unit, sign, note, formula, a value's meaning, title) is longer than the cap | shorten it |
 | `DRS-2045` | `F1 is bound in keys: it opens About this page on a view, and this binding wins on this view (the drawer stays on '?'); bind another key to keep F1 for help` | a lint warning (`sutra lint`), not a load error: a Sutra binds `F1` | bind a key from `F2` to `F12`, or accept that `F1` runs your binding on this view |
 | `DRS-2046` | `about text for panel 'ghost' of kind 'widget' matches no panel of any Sutra for the kind` | a lint warning: `panels.<id>` in `about.yaml` names no panel | correct the id or delete the entry |
+| `DRS-2048` | `no block legs@3 (blocks: deal-ticket, legs, events)` | a `use:` names no block, a `with:` names no parameter, a block uses another or its file is misnamed | write the block, fix the name or version, or drop the parameter ([Shared panel blocks](#shared-panel-blocks-use)) |
 | `DRS-2047` | `field 'colour' is shown but has no glossary entry (kinds.widget.glossary in config/about.yaml, or a vocabulary entry)` | a lint warning: a field a Sutra shows has no glossary entry; fails `sutra lint --strict` | add the entry to the kind's `glossary:` or to `vocabulary:` |
 | `DRS-2101` | `expression '…': DRS-2101 …`, `template '…': DRS-2101 …` | an expression or template does not compile, or is beyond the [size limits](#size-limits) | see [Expression errors](#expression-errors) |
 
@@ -2402,7 +2446,7 @@ wins matching.
 
 | File | Entity | Notes |
 |---|---|---|
-| `config/packs/trading/sutras/rates/irs-fixfloat.v1.sutra.yaml` | `TRD MX-20000001` | kv, tabs (columns), ladder, line from a curve, hbar, links |
+| `config/packs/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` | `TRD MX-20000001` | kv, tabs (columns), ladder, line from a curve, hbar, links |
 | `config/packs/counterparty-risk/sutras/exposure-and-capital/netting-set.v1.sutra.yaml` | `NSET NS-MERIDIAN-RE-NY` | area with limit, table with totals and automatic id links |
 | `config/packs/market-data/sutras/market-data/equity-vol-surface.v1.sutra.yaml` | `EQV EQV-CSCA` | surface, table, line |
 | `examples/packs/finance/sutras/rates/irs-vanilla.v3.sutra.yaml` | `TRD IRS-48213` | line with `mark` (the retired finance example pack: `DRISHTI_PACKS_EXTRA_DIRS=examples/packs DRISHTI_PACKS=finance`) |

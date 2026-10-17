@@ -87,7 +87,7 @@ public enum PanelKind {
     }
 
     public boolean accepts(String option) {
-        return required.contains(option) || optional.contains(option) || ("source".equals(option) && readsData())
+        return required.contains(option) || optional.contains(option) || ("source".equals(option) && readsData()) || Panel.WHEN.equals(option)
                 || (Panel.WHERE.equals(option) && (required.contains("rows") || optional.contains("rows")) && this != KV)
                 || (Panel.ON_SELECT.equals(option) && (this == TABLE || this == LADDER || this == HBAR));
     }

@@ -432,7 +432,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         BindContext ctx = new BindContext(seen, layout, fp, eval, links, linked, pending, denied, maps);
         List<CompletableFuture<PanelView>> futures = new ArrayList<>();
         for (Panel p : layout.sutra().panels()) {
-            if (values.builds(p.id())) {                          // a control changed: only the panels that read it are built
+            if (values.builds(p.id()) && binder.shown(p, eval)) {   // a control changed: only the panels that read it are built; when: false leaves it out
                 futures.add(CompletableFuture.supplyAsync(() -> binder.bind(p, ctx), bindPool));
             }
         }

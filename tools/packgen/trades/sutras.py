@@ -64,28 +64,12 @@ def side(expr: str = "$.BUY_SELL_CODE") -> str:
     return f"{expr} == 'B' ? 'Buy' : ({expr} == 'S' ? 'Sell' : nonblank({expr}, '–'))"
 
 
-def deal_yaml(code: str, name: str, group: str, desc: str, system_note: str = "") -> str:
-    rate_fmt = "pct4" if group in RATE_GROUPS else "price4"
-    pill = f"{group} · {name}"
-    lines = [
-        f"sutra: {slug(code) + '-trade' if slug(code) in ('trade',) else slug(code)}",
-        "version: 1",
-        f"description: {q(desc + system_note)}",
-        f"match: {{ kind: trade, where: \"$.PRODUCT_TYPE == '{code}'\", priority: 10 }}",
-        f"title: {{ pill: {q(pill)}, id: $.TRADE_ID, with: \"link($.COUNTERPARTY, 'counterparty')\" }}",
-        "strip:",
-        "  - { label: Source, bind: $.SOURCE_SYSTEM }",
-        f"  - {{ label: Side, bind: {q(side())} }}",
-        "  - { label: Notional, bind: \"$.CURRENCY + ' ' + fmt(first($.LEGS).NOTIONAL, 'amount0')\", emphasis: true }",
-        "  - { label: Quantity, bind: \"fmt($.QUANTITY, 'amount0') + (nonblank(first($.LEGS).PRICE_UNIT) ? ' ' + first($.LEGS).PRICE_UNIT : '')\" }",
-        "  - { label: Trade date, bind: $.TRADE_DATE, fmt: date }",
-        "  - { label: Maturity, bind: $.MATURITY_DATE, fmt: date }",
-        "  - { label: Status, bind: \"nonblank($.TRADE_STATUS, '–') + (nonblank($.TRADE_VERSION) ? ' v' + $.TRADE_VERSION : '')\", tone: status }",
-        "  - { label: Portfolio, bind: \"link($.PORTFOLIO, 'book')\" }",
-        "controls:                       # the events by leg and by date: a trader's 'what is paid when, on which leg'",
-        "  - { id: legs, kind: multi-select, label: Legs, options: \"$.LEGS[*].LEG_ID\", default: all, placement: header, panel: event-list, remember: user }",
-        "  - { id: when, kind: date-range, label: Between, placement: header, panel: event-list }",
-        "panels:",
+RF = "\"%{rate-fmt}\""                # the blocks' parameter: rates as a percentage (pct4), prices and amounts in their unit (price4)
+
+
+def _panels(rate_fmt: str) -> list[str]:
+    """Every panel of the deal screen, in order (the blocks are cut from this list)."""
+    return [
         "  - id: ticket",
         "    kind: kv",
         "    title: Deal ticket",
@@ -239,9 +223,123 @@ def deal_yaml(code: str, name: str, group: str, desc: str, system_note: str = ""
         "    tone: sign",
         "  - { id: built, kind: provenance, title: How this view was built }",
         "  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }",
+    ]
+
+
+# the shared blocks of a deal screen (sutras/common/<name>.v1.block.yaml): (first panel id, description)
+BLOCKS = [("deal-ticket", "ticket", "The deal ticket (DES): deal, product, parties, dates and settlement, as a booking system's ticket groups them."),
+          ("legs", "legs", "The legs side by side: each leg's terms, notional profile (a step line), fixings and cash flows opening to their resets."),
+          ("flow-schedule", "flows", "Every cash flow of every leg in one schedule."),
+          ("events", "events", "The events by leg (a timeline) and as a table filtered by the Sutra's legs and dates controls (ctl.legs, ctl.when)."),
+          ("payments", "ladder", "The netted payment ladder (cash events by date, paid below the line) and payments by month."),
+          ("deal-footer", "built", "How the view was built and the entities the deal refers to.")]
+
+
+def _cut(lines: list[str]) -> dict[str, list[str]]:
+    """The panel lines grouped by block: a block runs from its first panel to the next block's first panel."""
+    firsts = {first: name for name, first, _ in BLOCKS}
+    out: dict[str, list[str]] = {}
+    current = None
+    for line in lines:
+        stripped = line.strip()
+        pid = stripped[len("- id: "):] if stripped.startswith("- id: ") else None
+        if pid is None and stripped.startswith("- { id: "):
+            pid = stripped[len("- { id: "):].split(",")[0]
+        if pid in firsts and line.startswith("  - "):
+            current = firsts[pid]
+        out.setdefault(current, []).append(line)
+    return out
+
+
+def blocks() -> dict[str, str]:
+    """{block name: its YAML (after rachana: 1)}: the shared panels every deal Sutra uses, rate format a parameter."""
+    cut = _cut(_panels(RF))
+    out = {}
+    for name, _first, desc in BLOCKS:
+        lines = [f"block: {name}", "version: 1", f"description: {q(desc)}"]
+        if any(RF in ln for ln in cut[name]):
+            lines.append("params: { rate-fmt: price4 }   # pct4 for rates (a fraction a year), price4 for prices per unit")
+        lines += ["panels:"] + cut[name]
+        out[name] = "\n".join(lines) + "\n"
+    return out
+
+
+def deal_yaml(code: str, name: str, group: str, desc: str, system: str, sutra: str, extra: list[str] | None = None) -> str:
+    """One product type's Sutra: the match, title and strip of a deal, the controls, and the shared blocks (with a product's own panels,
+    shown by `when:` for one sub type, after the ticket)."""
+    rate_fmt = "pct4" if group in RATE_GROUPS else "price4"
+    pill = f"{group} · {name}"
+    use = lambda b: f"  - {{ use: {b}@1, with: {{ rate-fmt: {rate_fmt} }} }}" if any(RF in ln for ln in _cut(_panels(RF))[b]) else f"  - {{ use: {b}@1 }}"  # noqa: E731
+    lines = [
+        f"sutra: {sutra}",
+        "version: 1",
+        f"description: {q(desc)}",
+        f"match: {{ kind: trade, where: \"$.SOURCE_SYSTEM == '{system}' && $.PRODUCT_TYPE == '{code}'\", priority: 10 }}",
+        f"title: {{ pill: {q(pill)}, id: $.TRADE_ID, with: \"link($.COUNTERPARTY, 'counterparty')\" }}",
+        "strip:",
+        "  - { label: Source, bind: $.SOURCE_SYSTEM }",
+        f"  - {{ label: Side, bind: {q(side())} }}",
+        "  - { label: Notional, bind: \"$.CURRENCY + ' ' + fmt(first($.LEGS).NOTIONAL, 'amount0')\", emphasis: true }",
+        "  - { label: Quantity, bind: \"fmt($.QUANTITY, 'amount0') + (nonblank(first($.LEGS).PRICE_UNIT) ? ' ' + first($.LEGS).PRICE_UNIT : '')\" }",
+        "  - { label: Trade date, bind: $.TRADE_DATE, fmt: date }",
+        "  - { label: Maturity, bind: $.MATURITY_DATE, fmt: date }",
+        "  - { label: Status, bind: \"nonblank($.TRADE_STATUS, '–') + (nonblank($.TRADE_VERSION) ? ' v' + $.TRADE_VERSION : '')\", tone: status }",
+        "  - { label: Portfolio, bind: \"link($.PORTFOLIO, 'book')\" }",
+        "controls:                       # the events by leg and by date: a trader's 'what is paid when, on which leg'",
+        "  - { id: legs, kind: multi-select, label: Legs, options: \"$.LEGS[*].LEG_ID\", default: all, placement: header, panel: event-list, remember: user }",
+        "  - { id: when, kind: date-range, label: Between, placement: header, panel: event-list }",
+        "panels:",
+        use("deal-ticket"),
+        *(extra or []),
+        *[use(b) for b, _, _ in BLOCKS[1:]],
         "keys: { F7: \"link($.COUNTERPARTY, 'counterparty-trades')\", F8: impact, F9: raw }",
     ]
     return "\n".join(lines) + "\n"
+
+
+def kv_when(pid: str, title: str, sub: str, code: str, columns: list[tuple[str, str, str | None]]) -> list[str]:
+    """A product's own panel, shown only for one sub type (`when:`): a label/value grid."""
+    out = [f"  - id: {pid}", "    kind: kv", f"    title: {q(title)}", f"    code: {code}", f"    when: \"$.PRODUCT_SUB_TYPE == '{sub}'\"", "    columns:"]
+    for label, bind, fmt in columns:
+        out.append(f"      - {{ label: {q(label)}, bind: {q(bind)}" + (f", fmt: {fmt}" if fmt else "") + " }")
+    return out
+
+
+PHYS = "$.LEGS[?@.LEG_TYPE == 'PHYSICAL'][0]"
+FIXED = "$.LEGS[?@.LEG_TYPE == 'FIXED'][0]"
+FLOAT = "$.LEGS[?@.LEG_TYPE == 'FLOAT'][0]"
+# each Endur product type's own panels, one per sub type it books (shown by when:, inside the product's one Sutra)
+ENDUR_EXTRA = {
+    "ComSwap": kv_when("fixed-float", "Fixed against floating", "ENGY-SWAP", "SWAP", [
+        ("Fixed price", f"{FIXED}.CASH_FLOWS[0].STRIKE_PRICE", "price4"), ("Floating index", f"nonblank({FLOAT}.INDEX.NAME, '–')", None),
+        ("Averaging", f"nonblank({FLOAT}.RESET_CONVENTION, '–')", None), ("Price unit", f"nonblank({FIXED}.PRICE_UNIT, '–')", None),
+        ("Periods", f"size({FIXED}.CASH_FLOWS)", None)])
+        + kv_when("basis", "Basis: one index against another", "ENGY-B-SWAP", "BAS", [
+            ("Index, leg 1", "nonblank($.LEGS[0].INDEX.NAME, '–')", None), ("Index, leg 2", "nonblank($.LEGS[1].INDEX.NAME, '–')", None),
+            ("Spread, leg 2", "$.LEGS[1].FLOAT_SPREAD", "price4"), ("Location", "nonblank($.LEGS[1].INDEX_LOCATION_NAME, '–')", None),
+            ("Averaging", "nonblank($.LEGS[0].RESET_CONVENTION, '–')", None)]),
+    "ComFut": kv_when("contract", "Exchange contract", "ENGY-EXCH-FUT", "FUT", [
+        ("Quantity", "fmt($.QUANTITY, 'amount0') + ' ' + nonblank(first($.LEGS).PRICE_UNIT, '')", None), ("Price", "$.PRICE", "price4"),
+        ("Index", "nonblank(first($.LEGS).INDEX.NAME, '–')", None), ("Settles", "first($.LEGS).CASH_FLOWS[0].PAYMENT_DATE", "date"),
+        ("Settlement", "nonblank(first($.LEGS).SETTLEMENT_TYPE, '–')", None)]),
+    "Cash": kv_when("payment", "Cash payment", "CASH", "CSH", [
+        ("Amount", "$.CURRENCY + ' ' + fmt(first($.LEGS).NOTIONAL, 'amount2')", None), ("Paid on", "first($.LEGS).CASH_FLOWS[0].PAYMENT_DATE", "date"),
+        ("Direction", "$.BUY_SELL_CODE == 'B' ? 'Paid' : 'Received'", None), ("Settlement", "nonblank(first($.LEGS).SETTLEMENT_TYPE, '–')", None)]),
+    "CallNot": kv_when("deposit", "Call-notice deposit (nostro)", "NOSTRO", "DEP", [
+        ("Principal", "$.CURRENCY + ' ' + fmt($.QUANTITY, 'amount0')", None), ("Rate", "nonblank(first($.LEGS).CASH_FLOWS[0].RATE, '–')", None),
+        ("Interest periods", "size(first($.LEGS).CASH_FLOWS)", None),
+        ("Next interest", "first($.LEGS).CASH_FLOWS[?@.PAYMENT_DATE >= today()][0].PAYMENT_DATE", "date"),
+        ("Lease currency", "nonblank(first($.LEGS).LEASE_CURRENCY, '–')", None)]),
+    "Commodity": kv_when("delivery", "Physical delivery at the hub", "NGX-COMM-PHYS", "DLV", [
+        ("Hub", f"nonblank({PHYS}.PHYSICAL_LOCATION_NAME, '–')", None), ("Index location", f"nonblank({PHYS}.INDEX_LOCATION_NAME, '–')", None),
+        ("Daily volume", f"{PHYS}.DAILY_VOLUME", "amount0"), ("Unit", f"nonblank({PHYS}.PRICE_UNIT, '–')", None),
+        ("Delivery from", f"{PHYS}.CASH_FLOWS[0].START_DATE", "date"), ("Delivery to", f"last({PHYS}.CASH_FLOWS).END_DATE", "date"),
+        ("Settlement", f"nonblank({PHYS}.SETTLEMENT_TYPE, '–')", None)])
+        + kv_when("inventory", "Warehouse warrants (inventory)", "COMM-WARRANTS-INV", "INV", [
+            ("Vault", "nonblank($.VAULT_LOCATION_ALLOCATION, '–')", None), ("Registered", "nonblank($.REGISTRY_DELIVERY_DATE, '–')", None),
+            ("Quantity", "fmt($.QUANTITY, 'amount0') + ' ' + nonblank(first($.LEGS).PRICE_UNIT, '')", None), ("Price", "$.PRICE", "price4"),
+            ("Lease perpetuity", "nonblank($.LEASE_PERPETUITY_FLAG, '–')", None), ("Precious metal", "nonblank($.PRECIOUS_METAL_FLAG, '–')", None)]),
+}
 
 
 def derived_yaml(kind: str) -> str:

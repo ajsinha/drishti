@@ -1757,7 +1757,7 @@ How to read them: each recipe is the question, the expression, and what to watch
 
 ```python
 # by: desks.name
-sum(trades.mtm)
+sum(trades.MTM)
 ```
 
 The sum of the trades' mark-to-market for each desk, over the trades *you* may see (a desk head sees their desks only). Masked MTM sums to `None`.
@@ -1766,7 +1766,7 @@ Captured on the demo lake as the risk reader (the first five desks of the answer
 | desks.name | Recipe |
 |---|---|
 | Bonds and securitised | -2,977,676 |
-| Commodities | 16,954,390 |
+| Commodities | 15,411,196 |
 | Credit trading | 7,948,456 |
 | Equity derivatives | -6,433,670 |
 | G10 and EM FX | -15,759,419 |
@@ -1775,14 +1775,14 @@ Captured on the demo lake as the risk reader (the first five desks of the answer
 
 ```python
 # by: desks.name
-sum(trades.pnl1d)
+sum(trades.PNL_1D)
 ```
 
 #### R3 · Open MTM (live trades only)
 
 ```python
 # by: desks.name
-sum(trades.mtm, where=trades.status == 'Live')
+sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')
 ```
 
 `where=` filters the rows of this aggregate only; the other measures of the same visual still see every trade. Power BI: `CALCULATE(SUM(...), ...)`.
@@ -1791,14 +1791,14 @@ sum(trades.mtm, where=trades.status == 'Live')
 
 ```python
 # by: desks.name
-sum(trades.mtm, where=trades.status != 'Live')
+sum(trades.MTM, where=trades.TRADE_STATUS == 'MATURED')
 ```
 
 #### R5 · Share of MTM that is still open
 
 ```python
 # by: desks.name
-ratio(sum(trades.mtm, where=trades.status == 'Live'), sum(trades.mtm))
+ratio(sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED'), sum(trades.MTM))
 ```
 
 `ratio` is `None` when the denominator is 0 or `None` (never an error, never infinity); `/` behaves the same.
@@ -1807,7 +1807,7 @@ ratio(sum(trades.mtm, where=trades.status == 'Live'), sum(trades.mtm))
 
 ```python
 # by: desks.name
-sum(abs(trades.mtm))
+sum(abs(trades.MTM))
 ```
 
 The size of the book whatever the sign: `abs` is applied row by row, then summed.
@@ -1816,7 +1816,7 @@ The size of the book whatever the sign: `abs` is applied row by row, then summed
 
 ```python
 # by: desks.name
-ratio(sum(trades.mtm), sum(abs(trades.mtm)))
+ratio(sum(trades.MTM), sum(abs(trades.MTM)))
 ```
 
 Close to 1 (or −1) for a one-way book, close to 0 for a hedged one.
@@ -1825,21 +1825,21 @@ Close to 1 (or −1) for a one-way book, close to 0 for a hedged one.
 
 ```python
 # by: counterparties.name
-sum(trades.mtm, where=trades.mtm > 0)
+sum(trades.MTM, where=trades.MTM > 0)
 ```
 
 #### R9 · Payable MTM (negative trades)
 
 ```python
 # by: counterparties.name
-sum(trades.mtm, where=trades.mtm < 0)
+sum(trades.MTM, where=trades.MTM < 0)
 ```
 
 #### R10 · P&L in bps of notional
 
 ```python
 # by: desks.name
-ratio(sum(trades.pnl1d), sum(trades.notional)) * 10_000
+ratio(sum(trades.PNL_1D), sum(trades.NOTIONAL)) * 10_000
 ```
 
 Underscores in numbers are allowed, as in Python: `10_000`, `1_000_000`.
@@ -1869,59 +1869,59 @@ count(trades)
 
 ```python
 # by: desks.name
-count(trades, where=trades.status == 'Live')
+count(trades, where=trades.TRADE_STATUS != 'MATURED')
 ```
 
 #### R14 · Counterparties traded with
 
 ```python
 # by: desks.name
-distinct(trades.counterpartyId)
+distinct(trades.COUNTERPARTY)
 ```
 
 #### R15 · Average ticket
 
 ```python
-# by: trades.productType
-avg(trades.notional)
+# by: trades.PRODUCT_TYPE
+avg(trades.NOTIONAL)
 ```
 
 #### R16 · Notional in millions, one decimal
 
 ```python
-# by: trades.currency
-round(sum(trades.notional) / 1_000_000, 1)
+# by: trades.CURRENCY
+round(sum(trades.NOTIONAL) / 1_000_000, 1)
 ```
 
-Notional is in each trade's own currency: group by `trades.currency` (as here), or the server refuses a sum across currencies (`DRS-9158`); converting
+Notional is in each trade's own currency: group by `trades.CURRENCY` (as here), or the server refuses a sum across currencies (`DRS-9158`); converting
 is `convert` over the model's `fx:` ([section 5.3](#53-balances-time-travel-calendars-and-currencies-wave-b)).
 
 #### R17 · Largest trade
 
 ```python
 # by: desks.name
-max(trades.notional)
+max(trades.NOTIONAL)
 ```
 
 #### R18 · Worst trade
 
 ```python
 # by: desks.name
-min(trades.mtm)
+min(trades.MTM)
 ```
 
 #### R19 · Swaps only
 
 ```python
 # by: desks.name
-count(trades, where=contains(trades.productType, 'SWAP'))
+count(trades, where=contains(trades.PRODUCT_TYPE, 'SWAP'))
 ```
 
 #### R20 · One book family
 
 ```python
 # by: desks.name
-sum(trades.notional, where=startswith(trades.book, 'BOOK-FX'))
+sum(trades.NOTIONAL, where=startswith(trades.PORTFOLIO, 'BOOK-FX'))
 ```
 
 ### 11.3 Market risk
@@ -1929,15 +1929,15 @@ sum(trades.notional, where=startswith(trades.book, 'BOOK-FX'))
 #### R21 · DV01 by currency
 
 ```python
-# by: trades.currency
-sum(trades.dv01)
+# by: trades.CURRENCY
+sum(trades.DV01)
 ```
 
 #### R22 · Absolute DV01
 
 ```python
 # by: desks.name
-sum(abs(trades.dv01))
+sum(abs(trades.DV01))
 ```
 
 The sensitivity regardless of direction, a quick view of how much rate risk a desk runs.
@@ -1945,15 +1945,15 @@ The sensitivity regardless of direction, a quick view of how much rate risk a de
 #### R23 · DV01 per million notional
 
 ```python
-# by: trades.currency
-ratio(sum(trades.dv01), sum(trades.notional)) * 1_000_000
+# by: trades.CURRENCY
+ratio(sum(trades.DV01), sum(trades.NOTIONAL)) * 1_000_000
 ```
 
 #### R24 · Notional-weighted tenor in years (a duration proxy)
 
 ```python
 # by: desks.name
-ratio(sum(trades.notional * days_between(trades.tradeDate, trades.maturityDate)), sum(trades.notional)) / 365
+ratio(sum(trades.NOTIONAL * days_between(trades.TRADE_DATE, trades.MATURITY_DATE)), sum(trades.NOTIONAL)) / 365
 ```
 
 Arithmetic inside an aggregate is row by row: each trade's notional times its days to maturity, then the sums.
@@ -1961,15 +1961,15 @@ Arithmetic inside an aggregate is row by row: each trade's notional times its da
 #### R25 · Average business days to maturity
 
 ```python
-# by: trades.productType
-avg(business_days_between(trades.tradeDate, trades.maturityDate))
+# by: trades.PRODUCT_TYPE
+avg(business_days_between(trades.TRADE_DATE, trades.MATURITY_DATE))
 ```
 
 #### R26 · Trades maturing within a year of their trade date
 
 ```python
 # by: desks.name
-count(trades, where=days_between(trades.tradeDate, trades.maturityDate) <= 365)
+count(trades, where=days_between(trades.TRADE_DATE, trades.MATURITY_DATE) <= 365)
 ```
 
 ### 11.4 Distribution and VaR-style measures
@@ -1978,14 +1978,14 @@ count(trades, where=days_between(trades.tradeDate, trades.maturityDate) <= 365)
 
 ```python
 # by: desks.name
-percentile(trades.mtm, 0.5)
+percentile(trades.MTM, 0.5)
 ```
 
 #### R28 · 5th percentile of one-day P&L (a VaR-style number)
 
 ```python
 # by: desks.name
-percentile(trades.pnl1d, 0.05)
+percentile(trades.PNL_1D, 0.05)
 ```
 
 On the demo lake: Bonds and securitised -104,633.90, Commodities -110,447.55, Credit trading -67,251.90. The trade-level 5% quantile of P&L, over the trades you may see. It is not a portfolio VaR (no aggregation of scenarios); quants use a Python
@@ -1995,7 +1995,7 @@ measure for that ([PYTHON_BI.md](PYTHON_BI.md)).
 
 ```python
 # by: desks.name
-avg(trades.pnl1d, where=trades.pnl1d <= -8_000)
+avg(trades.PNL_1D, where=trades.PNL_1D <= -8_000)
 ```
 
 The average of the losses beyond a threshold; put the threshold your desk uses.
@@ -2003,8 +2003,8 @@ The average of the losses beyond a threshold; put the threshold your desk uses.
 #### R30 · 99th percentile notional
 
 ```python
-# by: trades.productType
-percentile(trades.notional, 0.99)
+# by: trades.PRODUCT_TYPE
+percentile(trades.NOTIONAL, 0.99)
 ```
 
 ### 11.5 Counterparty credit
@@ -2032,14 +2032,14 @@ rank(sum(netting_sets.pfePeak))
 
 ```python
 # by: desks.name
-dense_rank(sum(trades.pnl1d), desc=True)
+dense_rank(sum(trades.PNL_1D), desc=True)
 ```
 
 #### R34 · Percent rank of counterparties by MTM
 
 ```python
 # by: counterparties.name
-percent_rank(sum(trades.mtm))
+percent_rank(sum(trades.MTM))
 ```
 
 #### R35 · Limit utilisation
@@ -2102,8 +2102,8 @@ sum(netting_sets.netMtm, where=netting_sets.netMtm > 0) - sum(netting_sets.colla
 #### R42 · MTM year to date
 
 ```python
-# by: trades.tradeDate.month
-ytd(sum(trades.mtm), trades.tradeDate)
+# by: trades.TRADE_DATE.month
+ytd(sum(trades.MTM), trades.TRADE_DATE)
 ```
 
 The trades dated this year up to the as-of date (the end of the report's dates). `mtd` and `qtd` work the same way.
@@ -2111,22 +2111,22 @@ The trades dated this year up to the as-of date (the end of the report's dates).
 #### R43 · Notional month to date
 
 ```python
-# by: trades.tradeDate
-mtd(sum(trades.notional), trades.tradeDate)
+# by: trades.TRADE_DATE
+mtd(sum(trades.NOTIONAL), trades.TRADE_DATE)
 ```
 
 #### R44 · P&L quarter to date
 
 ```python
 # by: desks.name
-qtd(sum(trades.pnl1d), trades.tradeDate)
+qtd(sum(trades.PNL_1D), trades.TRADE_DATE)
 ```
 
 #### R45 · P&L of the period before
 
 ```python
-# by: trades.tradeDate.month
-prior_period(sum(trades.pnl1d), trades.tradeDate)
+# by: trades.TRADE_DATE.month
+prior_period(sum(trades.PNL_1D), trades.TRADE_DATE)
 ```
 
 The same measure for the period before each row's (the month before, here, because the answer is by month).
@@ -2134,8 +2134,8 @@ The same measure for the period before each row's (the month before, here, becau
 #### R46 · Notional, same period last year
 
 ```python
-# by: trades.tradeDate.month
-same_period_last_year(sum(trades.notional), trades.tradeDate)
+# by: trades.TRADE_DATE.month
+same_period_last_year(sum(trades.NOTIONAL), trades.TRADE_DATE)
 ```
 
 On the business calendar's dates; a holiday-aware version (`fiscal_ytd` and model calendars) arrives in wave B.
@@ -2143,8 +2143,8 @@ On the business calendar's dates; a holiday-aware version (`fiscal_ytd` and mode
 #### R47 · Running notional
 
 ```python
-# by: trades.tradeDate
-running(sum(trades.notional), trades.tradeDate)
+# by: trades.TRADE_DATE
+running(sum(trades.NOTIONAL), trades.TRADE_DATE)
 ```
 
 ### 11.7 Windows over the answer
@@ -2152,23 +2152,23 @@ running(sum(trades.notional), trades.tradeDate)
 #### R48 · Three-day moving average of P&L
 
 ```python
-# by: trades.tradeDate
-moving_avg(sum(trades.pnl1d), 3, trades.tradeDate)
+# by: trades.TRADE_DATE
+moving_avg(sum(trades.PNL_1D), 3, trades.TRADE_DATE)
 ```
 
-The average of this row and the two before it, along the trade date (the visual needs `trades.tradeDate` as a field). `moving_sum`, `moving_min` and
+The average of this row and the two before it, along the trade date (the visual needs `trades.TRADE_DATE` as a field). `moving_sum`, `moving_min` and
 `moving_max` take the same arguments.
 
 #### R49 · Day-on-day change in P&L
 
 ```python
-# by: trades.tradeDate
-sum(trades.pnl1d) - lag(sum(trades.pnl1d), 1, trades.tradeDate)
+# by: trades.TRADE_DATE
+sum(trades.PNL_1D) - lag(sum(trades.PNL_1D), 1, trades.TRADE_DATE)
 ```
 
 Captured on the demo lake:
 
-| trades.tradeDate | Recipe |
+| trades.TRADE_DATE | Recipe |
 |---|---|
 | 2024-04-12 | `None` (no day before) |
 | 2024-04-16 | -135,851 |
@@ -2179,8 +2179,8 @@ Captured on the demo lake:
 #### R50 · Day-on-day change in MTM, per cent
 
 ```python
-# by: trades.tradeDate
-ratio(sum(trades.mtm) - lag(sum(trades.mtm), 1, trades.tradeDate), abs(lag(sum(trades.mtm), 1, trades.tradeDate))) * 100
+# by: trades.TRADE_DATE
+ratio(sum(trades.MTM) - lag(sum(trades.MTM), 1, trades.TRADE_DATE), abs(lag(sum(trades.MTM), 1, trades.TRADE_DATE))) * 100
 ```
 
 The first day has no day before: `lag` is `None` there and so is the change.
@@ -2188,8 +2188,8 @@ The first day has no day before: `lag` is `None` there and so is the change.
 #### R51 · Day-on-day change per desk
 
 ```python
-# by: desks.name, trades.tradeDate
-sum(trades.mtm) - lag(sum(trades.mtm), 1, trades.tradeDate, by=[desks.name])
+# by: desks.name, trades.TRADE_DATE
+sum(trades.MTM) - lag(sum(trades.MTM), 1, trades.TRADE_DATE, by=[desks.name])
 ```
 
 `by=` restarts the window for each desk.
@@ -2197,8 +2197,8 @@ sum(trades.mtm) - lag(sum(trades.mtm), 1, trades.tradeDate, by=[desks.name])
 #### R52 · Cumulative trade count
 
 ```python
-# by: trades.tradeDate
-cumulative(count(trades), trades.tradeDate)
+# by: trades.TRADE_DATE
+cumulative(count(trades), trades.TRADE_DATE)
 ```
 
 ### 11.8 Buckets and labels (row by row)
@@ -2211,7 +2211,7 @@ becomes a field you group by; the test runs each one inside `distinct(...)` or `
 ```python
 # scope: row
 # by: desks.name
-'0-1y' if days_between(trades.tradeDate, trades.maturityDate) <= 365 else '1-5y' if days_between(trades.tradeDate, trades.maturityDate) <= 1825 else '5y+'
+'0-1y' if days_between(trades.TRADE_DATE, trades.MATURITY_DATE) <= 365 else '1-5y' if days_between(trades.TRADE_DATE, trades.MATURITY_DATE) <= 1825 else '5y+'
 ```
 
 As a derived column of a trades dataset (`derive: { tenorBucket: { expr: "…", type: string } }`), then *exposure by tenor bucket* is any measure grouped
@@ -2222,7 +2222,7 @@ by `tenorBucket`. Conditionals chain like Python's: `a if c1 else b if c2 else d
 ```python
 # scope: row
 # by: desks.name
-'under 30 days' if days_between(trades.tradeDate, date('2026-10-09')) <= 30 else 'under 90 days' if days_between(trades.tradeDate, date('2026-10-09')) <= 90 else 'older'
+'under 30 days' if days_between(trades.TRADE_DATE, date('2026-10-09')) <= 30 else 'under 90 days' if days_between(trades.TRADE_DATE, date('2026-10-09')) <= 90 else 'older'
 ```
 
 Dates are written `date('2026-10-09')`.
@@ -2232,7 +2232,7 @@ Dates are written `date('2026-10-09')`.
 ```python
 # scope: row
 # by: desks.name
-'Long' if trades.mtm >= 0 else 'Short'
+'Long' if trades.MTM >= 0 else 'Short'
 ```
 
 #### R56 · Rating, with a default
@@ -2250,7 +2250,7 @@ coalesce(counterparties.rating, 'NR')
 ```python
 # scope: row
 # by: desks.name
-trades.status == 'Live' and trades.notional >= 5_000_000
+trades.TRADE_STATUS != 'MATURED' and trades.NOTIONAL >= 5_000_000
 ```
 
 A dataset's `where:` (keep only these rows) or a condition inside `count(…, where=…)`. `and`, `or` and `not` take booleans only.
@@ -2264,14 +2264,14 @@ reader at query time, so it is not run as a measure).
 
 ```python
 # scope: rule
-trades.desk in user.desks
+trades.DESK in user.desks
 ```
 
 #### R59 · Everyone sees the published books, desk heads also their own
 
 ```python
 # scope: rule
-startswith(trades.book, 'BOOK-PUB') or trades.desk in user.desks
+startswith(trades.PORTFOLIO, 'BOOK-PUB') or trades.DESK in user.desks
 ```
 
 ### 11.10 Filter context, balances and time (wave B)
@@ -2282,7 +2282,7 @@ These change *which rows* an aggregate reads (section 5.1) or *which dates* (sec
 
 ```python
 # by: desks.name
-share_of(sum(trades.mtm), over=ALL)
+share_of(sum(trades.MTM), over=ALL)
 ```
 
 Each desk's MTM over the MTM of every desk you may see, whatever the slicers say about desks: the shares of the answer add up to 1 when no other filter
@@ -2292,7 +2292,7 @@ is set. Format it `share` (always a share of 1: a negative total gives shares ab
 
 ```python
 # by: desks.name, books.name
-share_of(sum(trades.mtm), over=[books.name])
+share_of(sum(trades.MTM), over=[books.name])
 ```
 
 `over=` names the fields whose filter and group are dropped: here the book, so each book is divided by its desk's MTM. Power BI: `DIVIDE(x, CALCULATE(x, ALL(books[name])))`.
@@ -2301,16 +2301,16 @@ share_of(sum(trades.mtm), over=[books.name])
 
 ```python
 # by: desks.name, books.name
-parent_of(sum(trades.mtm), hierarchy='Desk and book')
+parent_of(sum(trades.MTM), hierarchy='Desk and book')
 ```
 
-The value of the level above in the model's hierarchy (the desk of each book), the denominator of a "% of parent" (`sum(trades.mtm) / parent_of(...)`).
+The value of the level above in the model's hierarchy (the desk of each book), the denominator of a "% of parent" (`sum(trades.MTM) / parent_of(...)`).
 
 #### R63 · MTM of every desk, ignoring the desk slicer
 
 ```python
 # by: desks.name
-calc(sum(trades.mtm), ignore=[desks.name])
+calc(sum(trades.MTM), ignore=[desks.name])
 ```
 
 The same number on every row: the slicer and the row's own desk are dropped, every other filter stays. Quick calculation: *Ignoring a field's filter*.
@@ -2319,7 +2319,7 @@ The same number on every row: the slicer and the row's own desk are dropped, eve
 
 ```python
 # by: desks.name
-calc(sum(trades.mtm), ignore=ALL)
+calc(sum(trades.MTM), ignore=ALL)
 ```
 
 Every query filter dropped (the slicers, the page, the drill); your row rules stay. A desk head's "all" is their desks.
@@ -2328,7 +2328,7 @@ Every query filter dropped (the slicers, the page, the drill); your row rules st
 
 ```python
 # by: desks.name
-calc(sum(trades.mtm), where=trades.status == 'Live')
+calc(sum(trades.MTM), where=trades.TRADE_STATUS != 'MATURED')
 ```
 
 `where=` adds a condition to this aggregate only (it is ANDed with the query's filters, not instead of them).
@@ -2337,16 +2337,16 @@ calc(sum(trades.mtm), where=trades.status == 'Live')
 
 ```python
 # by: counterparties.sector
-avg_by(sum(trades.mtm), by=[desks.name])
+avg_by(sum(trades.MTM), by=[desks.name])
 ```
 
-MTM per desk first, then the average of those numbers for each sector: an explicit iteration, where a plain `avg(trades.mtm)` would average the trades.
+MTM per desk first, then the average of those numbers for each sector: an explicit iteration, where a plain `avg(trades.MTM)` would average the trades.
 
 #### R67 · Fiscal year to date
 
 ```python
 # by: desks.name
-fiscal_ytd(sum(trades.pnl1d), trades.tradeDate)
+fiscal_ytd(sum(trades.PNL_1D), trades.TRADE_DATE)
 ```
 
 The P&L of the trades dated from the start of the fiscal year (the model's `calendars: { fiscal-year-start: }`, else January) to the as-of date.
@@ -2355,7 +2355,7 @@ The P&L of the trades dated from the start of the fiscal year (the model's `cale
 
 ```python
 # by: desks.name
-last(sum(trades.mtm), trades.tradeDate)
+last(sum(trades.MTM), trades.TRADE_DATE)
 ```
 
 Each desk's MTM on its latest trade date: a balance is read on one date, never added across dates.
@@ -2364,7 +2364,7 @@ Each desk's MTM on its latest trade date: a balance is read on one date, never a
 
 ```python
 # by: desks.name
-closing(sum(trades.mtm), trades.tradeDate)
+closing(sum(trades.MTM), trades.TRADE_DATE)
 ```
 
 The value on the last **business** day of each month up to the as-of date, on the model's calendar: a month ending on a holiday closes on the business day
@@ -2374,14 +2374,14 @@ before. `opening` is the closing of the period before.
 
 ```python
 # by: desks.name
-opening(sum(trades.mtm), trades.tradeDate)
+opening(sum(trades.MTM), trades.TRADE_DATE)
 ```
 
 #### R71 · Average daily balance
 
 ```python
 # by: desks.name
-avg_over(sum(trades.mtm), trades.tradeDate)
+avg_over(sum(trades.MTM), trades.TRADE_DATE)
 ```
 
 The aggregate per date, then the average of those dates.
@@ -2390,12 +2390,12 @@ The aggregate per date, then the average of those dates.
 
 ```python
 # by: desks.name
-sum(trades.mtm) - as_of(sum(trades.mtm), shift_date(asof(), -1))
+sum(trades.MTM) - as_of(sum(trades.MTM), shift_date(asof(), -1))
 ```
 
 `as_of` asks the same aggregate at another business date (same fields, filters and security); `shift_date(asof(), -1)` is the business day before the
 query's as-of date. Quick calculation: *As of the business day before*, then subtract.
 
-The currency recipes need the model's `fx:` (section 5.3), which the trading-risk sample does not declare: `convert(sum(trades.notional), to='USD')` is the
-notional in dollars at the as-of date, `convert(sum(trades.notional), to='EUR', at='trade-date')` at each trade's own date. A what-if shock needs a
-parameter: `sum(trades.mtm) * (1 + param.shock)`, set by the reader with a parameter slicer.
+The currency recipes need the model's `fx:` (section 5.3), which the trading-risk sample does not declare: `convert(sum(trades.NOTIONAL), to='USD')` is the
+notional in dollars at the as-of date, `convert(sum(trades.NOTIONAL), to='EUR', at='trade-date')` at each trade's own date. A what-if shock needs a
+parameter: `sum(trades.MTM) * (1 + param.shock)`, set by the reader with a parameter slicer.

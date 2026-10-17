@@ -6,18 +6,18 @@
  "PRODUCT_GROUP": "Commodity",
  "PORTFOLIO": "BOOK-COMM-1",
  "DESK": "DESK-COMM",
- "COUNTERPARTY": "CP-BRAMBLE",
+ "COUNTERPARTY": "CP-VERDANT",
  "NETTING_SET": "",
  "TRADER_ID": "TRDR-FROSSI",
  "BUY_SELL_CODE": "S",
- "TRADE_STATUS": "VALIDATED",
- "CURRENCY": "USD",
- "NOTIONAL": 22177.5,
- "MTM": -192,
+ "TRADE_STATUS": "MATURED",
+ "CURRENCY": "EUR",
+ "NOTIONAL": 82006.7,
+ "MTM": -710,
  "MTM_CURRENCY": "USD",
- "PNL_1D": 8,
+ "PNL_1D": 31,
  "DV01": 0,
- "TRADE_DATE": "2026-01-27",
+ "TRADE_DATE": "2025-12-31",
  "MATURITY_DATE": "2026-03-01",
  "VALUATION_DATE": "2026-09-30",
  "_meta": {
@@ -29,7 +29,7 @@
    "derive": [
     {
      "set": "PNL_1D",
-     "expr": "$.MTM - -200"
+     "expr": "$.MTM - -741"
     }
    ]
   }

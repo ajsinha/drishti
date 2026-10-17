@@ -930,6 +930,13 @@ class FakeBackend:
         self.aliases_saved = {k.upper(): v for k, v in aliases.items()}
         return dict(self.aliases_saved)
 
+    async def pack_coverage(self, name, ident=None):
+        return {"pack": name, "kinds": []}
+
+    async def view_on(self, kind, id_, ident, business_date):
+        """Compare's side by side: the view as of a date (the fake has one view whatever the date)."""
+        return await self.view(kind, id_, ident)
+
     async def pack_overview(self, name, ident=None):
         if name.upper() not in ("MKT", "MARKET-DATA"):
             raise BackendError(400, "DRS-5001", f"no pack '{name}' is switched on")

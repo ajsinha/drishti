@@ -349,6 +349,10 @@ class BackendClient:
     async def set_aliases(self, aliases: dict, ident) -> dict:
         return await self._send("PUT", "/command/aliases", ident, json=aliases)
 
+    async def pack_coverage(self, name: str, ident=None) -> dict:
+        """Which Sutra lays out which combination of the data's match fields (source system x product type ...), for each kind."""
+        return await self._get(f"/packs/{quote(name)}/coverage", ident)
+
     async def pack_overview(self, name: str, ident=None) -> dict:
         """A pack's kinds with their mnemonics, counts, an example and key columns (MKT <GO>)."""
         return await self._get(f"/packs/{quote(name)}/overview", ident)

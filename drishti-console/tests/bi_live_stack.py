@@ -80,7 +80,7 @@ def seed() -> None:
         assert s == 200, r
     for user, role in USERS.items():
         s, r = admin("POST", "/admin/users", {"username": user, "displayName": user.capitalize(), "email": f"{user}@desk.test", "roles": [role],
-                                            "packs": ["trading", "counterparty-risk"], "password": PASSWORD, "mustChangePassword": False})
+                                            "packs": ["trading", "counterparty-risk", "market-risk"], "password": PASSWORD, "mustChangePassword": False})
         assert s in (200, 201, 409), r                                # 409: already seeded (a server the previous file left running)
 
 
@@ -109,7 +109,7 @@ class LiveStack:
             for name in names:
                 suffix = {"datasets": "dataset", "reports": "report", "boards": "board"}[kind]
                 shutil.copy(ROOT / "config" / "bi" / kind / f"{name}.{suffix}.yaml", folder)
-        env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS="trading,counterparty-risk", DRISHTI_SECURITY_ENABLED="true",
+        env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS="trading,counterparty-risk,market-risk", DRISHTI_SECURITY_ENABLED="true",
                    DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_BI_DIR=str(work / "config" / "bi"), DRISHTI_DATA_DIR=str(work / "data"))
         self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
                                                  "--drishti.sources.plugins.demo.settings.tick-ms=200", f"--drishti.bi.query.store-dir={self.tmp / 'store'}", *self.extra],

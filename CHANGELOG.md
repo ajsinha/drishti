@@ -39,6 +39,14 @@
   portfolio's, legal entity's and index's trades from every system: live trades, payments in 7/30/90 days, notional by product type as a
   donut and by index, maturity ladder, payments by month); `DPNL` desk P&L is gone. Rachana-EL `group()`, `days()`, `today()`; `line`
   `step: true`; `hbar` `shape: donut`; `line`, `area` and `timeline` may sit inside a tab.
+- **One Sutra per source system and product type, built from shared blocks.** The trading pack's Sutras match
+  `$.SOURCE_SYSTEM == '<SYSTEM>' && $.PRODUCT_TYPE == '<type>'` and sit in `sutras/common/`, `endur/`, `calypso/`, `murex/` and `pages/`
+  (the old product-group folders are gone). Folders are for people only: Drishti reads `sutras/` recursively and infers nothing from a
+  folder name. New in Rachana: **shared panel blocks** (`<name>.v<N>.block.yaml` with `params:`, used as `{ use: legs@1, with: {...} }`,
+  `DRS-2048` for a block that cannot be used) and a panel's **`when:`** (shown only where it holds), which gives a product's sub types
+  their own panels inside its one Sutra (Endur `ENGY-SWAP` and `ENGY-B-SWAP`, `NGX-COMM-PHYS` and `COMM-WARRANTS-INV` …). Admin → Packs →
+  a pack → **Sutra coverage** (`GET /api/v1/packs/{name}/coverage`) lists every combination of the matched fields in the data with the
+  Sutra that lays it out, flagging *none* and *several*. [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md#shared-panel-blocks-use).
 - **Compare on deep documents.** Arrays are matched by their identifier in any case and convention (`LEGS` by `LEG_ID`, `CASH_FLOWS` by
   `FLOW_ID`, `RESETS` by `RESET_ID`, `EVENTS` by `EVENT_ID`), and a side-by-side panel shows the ticket and each leg's terms on the two
   dates with the fields that differ marked.

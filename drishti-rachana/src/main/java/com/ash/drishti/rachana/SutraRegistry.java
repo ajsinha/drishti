@@ -250,9 +250,16 @@ public final class SutraRegistry implements AutoCloseable {
         Map<String, String> texts = new HashMap<>();
         List<Path> files = files();
         lastGood.keySet().retainAll(files);
+        // the shared panel blocks first (<name>.v<N>.block.yaml): a Sutra's { use: <block> } reads them while it is parsed
+        for (SutraProblem p : com.ash.drishti.rachana.parse.SutraBlocks.load(props.allDirs().stream().map(d -> Path.of(d).toAbsolutePath().normalize()).toList())) {
+            problems.computeIfAbsent(p.location() == null ? "blocks" : p.location().file(), k -> new ArrayList<>()).add(p);
+        }
         for (Path f : files) {
             Sutra s;
             String fname = f.getFileName().toString();
+            if (com.ash.drishti.rachana.parse.SutraBlocks.isBlockFile(f)) {
+                continue;                                              // a block, read above
+            }
             if (!fname.endsWith(".sutra.yaml")) {                     // a file in a Sutra folder that is not a Sutra file
                 problems.put(f.toString(), List.of(new SutraProblem("DRS-2004", fname.endsWith(".sutra.md")
                         ? "Markdown Sutras are no longer read (Sutras are YAML since 1.11): convert it with "

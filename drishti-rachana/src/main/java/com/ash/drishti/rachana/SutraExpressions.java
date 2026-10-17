@@ -51,7 +51,8 @@ public final class SutraExpressions {
 
     /** The expression options of a panel kind: its own, and {@code source} for every kind that reads data. */
     static Set<String> expressionOptions(PanelKind kind) {
-        Set<String> own = EL_OPTIONS.getOrDefault(kind, Set.of());
+        Set<String> own = new java.util.HashSet<>(EL_OPTIONS.getOrDefault(kind, Set.of()));
+        own.add(com.ash.drishti.rachana.model.Panel.WHEN);                        // every kind may be shown only when ...
         if (!kind.readsData() || own.contains("source")) {
             return own;
         }

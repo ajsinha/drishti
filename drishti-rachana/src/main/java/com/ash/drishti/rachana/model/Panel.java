@@ -71,6 +71,11 @@ public record Panel(
     public static final String ON_SELECT = "on-select";
     /** A condition on each row, read with the controls: {@code where: "oneOf(@.leg, ctl.legs)"}. */
     public static final String WHERE = "where";
+    /**
+     * {@code when}: an expression over the document; when it is not true the panel is left out of the view (a physical deal's
+     * delivery panel only on a physical deal, one Sutra for every sub type of a product). Any kind takes it, inside a tab too.
+     */
+    public static final String WHEN = "when";
     public static final int MAX_HEIGHT = 24;
 
     /** The interactive pivot a table or ladder opts into ({@code pivot: true} or a mapping); see {@link PivotSpec}. */

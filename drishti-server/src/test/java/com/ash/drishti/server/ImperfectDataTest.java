@@ -103,7 +103,8 @@ class ImperfectDataTest {
                 ViewModel vm = pipeline.preview(Optional.of(s), doc);
                 String json = mapper.writeValueAsString(vm);
                 JsonNode back = mapper.readTree(json);                  // valid JSON: no NaN or Infinity tokens
-                assertThat(back.path("panels").size()).as(s.id()).isEqualTo(s.panels().size());
+                assertThat(back.path("panels").size()).as(s.id())                // a panel whose when: does not hold is left out
+                        .isBetween((int) s.panels().stream().filter(x -> x.option(com.ash.drishti.rachana.model.Panel.WHEN).isEmpty()).count(), s.panels().size());
                 assertThat(vm.title().id()).as(s.id()).isNotBlank();
                 for (ViewModel.PanelView p : vm.panels()) {
                     if (p.data() == null) {

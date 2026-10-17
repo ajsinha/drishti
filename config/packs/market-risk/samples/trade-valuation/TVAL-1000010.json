@@ -4,21 +4,21 @@
  "SOURCE_SYSTEM": "ENDUR",
  "PRODUCT_TYPE": "CallNot",
  "PRODUCT_GROUP": "Commodity",
- "PORTFOLIO": "BOOK-COMM-1",
+ "PORTFOLIO": "BOOK-COMM-3",
  "DESK": "DESK-COMM",
- "COUNTERPARTY": "CP-CASCADIA",
+ "COUNTERPARTY": "CP-RHEINTAL",
  "NETTING_SET": "",
  "TRADER_ID": "TRDR-FROSSI",
- "BUY_SELL_CODE": "S",
+ "BUY_SELL_CODE": "B",
  "TRADE_STATUS": "VALIDATED",
- "CURRENCY": "CAD",
- "NOTIONAL": 20000000.0,
- "MTM": 3109,
+ "CURRENCY": "EUR",
+ "NOTIONAL": 4000000.0,
+ "MTM": 622,
  "MTM_CURRENCY": "USD",
- "PNL_1D": -3,
+ "PNL_1D": -1,
  "DV01": 0,
- "TRADE_DATE": "2026-07-02",
- "MATURITY_DATE": "2029-08-31",
+ "TRADE_DATE": "2026-07-16",
+ "MATURITY_DATE": "2026-11-30",
  "VALUATION_DATE": "2026-09-30",
  "_meta": {
   "source": "risk-engine",
@@ -29,7 +29,7 @@
    "derive": [
     {
      "set": "PNL_1D",
-     "expr": "$.MTM - 3112"
+     "expr": "$.MTM - 623"
     }
    ]
   }

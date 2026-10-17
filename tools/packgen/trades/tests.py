@@ -32,8 +32,12 @@ def files(trades: dict[str, dict]) -> dict[Path, str]:
     """{path: text}: for each deal Sutra of the pack, the first sample trade of its product type."""
     out: dict[Path, str] = {}
     by_type: dict[str, dict] = {}
+    by_sub: dict[str, dict[str, dict]] = {}                 # a filled sample of every sub type, so each sub type's own panels are tested
     for _id, t in sorted(trades.items()):
         by_type.setdefault(t["PRODUCT_TYPE"], t)
+        subs = by_sub.setdefault(t["PRODUCT_TYPE"], {})
+        if t["SOURCE_SYSTEM"] == "ENDUR" and t.get("LEGAL_ENTITY") and t["PRODUCT_SUB_TYPE"] not in subs:
+            subs[t["PRODUCT_SUB_TYPE"]] = t
     names = []
     for f in sorted((ROOT / "config" / "packs" / "trading" / "sutras").rglob("*.sutra.yaml")):
         text = f.read_text(encoding="utf-8")
@@ -41,8 +45,9 @@ def files(trades: dict[str, dict]) -> dict[Path, str]:
         if not m or m.group(1) not in by_type:
             continue
         name = re.search(r"^sutra: (\S+)", text, re.M).group(1)
-        doc = {k: v for k, v in by_type[m.group(1)].items() if k != "_meta"}
-        out[TESTS / name / f"{doc['TRADE_ID']}.json"] = json.dumps(doc, indent=1, ensure_ascii=False) + "\n"
+        for t in [by_type[m.group(1)], *by_sub.get(m.group(1), {}).values()]:
+            doc = {k: v for k, v in t.items() if k != "_meta"}
+            out[TESTS / name / f"{doc['TRADE_ID']}.json"] = json.dumps(doc, indent=1, ensure_ascii=False) + "\n"
         out[TESTS / name / "expect.yaml"] = HEADER + EXPECT
         names.append(name)
     for kind, doc in derived_samples(trades).items():       # a page of each derived kind, as the derived connector computes it

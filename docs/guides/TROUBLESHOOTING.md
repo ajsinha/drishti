@@ -1226,6 +1226,7 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 | `DRS-2033` | a Sutra's YAML has a key written twice, a second document or a tag |
 | `DRS-2040`–`DRS-2044` | a pack's `config/about.yaml` has a problem (unknown key or bad version, kind not in the pack's lineage, a template that does not compile, `use` with no vocabulary entry, a text over the cap); listed by `GET /api/v1/sutras/problems` as `<pack>/about.yaml`; the entry is left out and the page is unaffected; see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#problem-codes) |
 | `DRS-2045`–`DRS-2047` | `sutra lint` help warnings (not load errors): a Sutra binds `F1`, an about `panels.<id>` matches no panel, a shown field has no glossary entry; `--strict` fails the run on them |
+| `DRS-2048` | a shared panel block cannot be used: `use:` names no block or version, `with:` names a parameter the block does not declare, a block uses another block, or a block file is misnamed ([Shared panel blocks](RACHANA_REFERENCE.md#shared-panel-blocks-use)) |
 | `DRS-2060` | A search form (the `form:` section of a pack, or a design's Form tab) is not valid YAML or names a field path, type or operator wrongly; the message says which field and what is allowed |
 | `DRS-2101` / `DRS-2102` | expression syntax (or past the size limits) / evaluation error |
 | `DRS-3001` | reserved; nothing raises it in this release |

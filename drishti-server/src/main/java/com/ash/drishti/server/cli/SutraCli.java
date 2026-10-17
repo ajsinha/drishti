@@ -508,6 +508,7 @@ public final class SutraCli {
 
     /** The Sutra files under the paths (a file, or a folder searched for {@code *.sutra.yaml}, not looking into {@code tests/}). */
     private List<Unit> units(List<Path> paths) throws IOException {
+        loadBlocks(paths);
         List<Unit> found = new ArrayList<>();
         for (Path p : paths) {
             if (Files.isRegularFile(p)) {
@@ -527,6 +528,41 @@ public final class SutraCli {
             throw new CliArgs.UsageException("no *.sutra.yaml under " + paths);
         }
         return found;
+    }
+
+    /**
+     * The shared panel blocks the Sutras being checked may use: those of the {@code sutras} folder each path is in (or holds), so
+     * {@code sutra test config/packs/trading} and a single file of it both see {@code sutras/common/*.block.yaml}.
+     */
+    private void loadBlocks(List<Path> paths) {
+        java.util.Set<Path> dirs = new java.util.LinkedHashSet<>();
+        for (Path p : paths) {
+            Path abs = p.toAbsolutePath().normalize();
+            Path up = abs;
+            while (up != null && (up.getFileName() == null || !up.getFileName().toString().equals("sutras"))) {
+                up = up.getParent();
+            }
+            if (up != null) {
+                dirs.add(up);
+            } else if (Files.isDirectory(abs.resolve("sutras"))) {
+                dirs.add(abs.resolve("sutras"));
+            } else {
+                dirs.add(Files.isDirectory(abs) ? abs : abs.getParent());
+            }
+        }
+        if (dirs.stream().anyMatch(d -> d != null && hasBlocks(d))) {
+            for (com.ash.drishti.rachana.SutraProblem p : com.ash.drishti.rachana.parse.SutraBlocks.load(dirs.stream().filter(java.util.Objects::nonNull).toList())) {
+                err.println(p.location().file() + ":" + p.location().line() + " " + p.code() + " " + p.message());   // a block that does not read
+            }
+        }
+    }
+
+    private static boolean hasBlocks(Path dir) {
+        try (Stream<Path> s = Files.walk(dir)) {
+            return s.anyMatch(com.ash.drishti.rachana.parse.SutraBlocks::isBlockFile);
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     private Unit unit(Path f) throws IOException {

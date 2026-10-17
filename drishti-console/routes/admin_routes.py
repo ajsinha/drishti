@@ -145,18 +145,19 @@ async def pack_detail(request: Request, name: str):
         except BackendError:
             return fallback
     loaded = bool(row.get("loaded"))
-    detail, overview, sources, expectations, loads, history = await asyncio.gather(
+    detail, overview, sources, expectations, loads, history, coverage = await asyncio.gather(
         best(backend.admin("GET", f"/packs/{q}/detail", me), {}) if loaded else asyncio.sleep(0, {}),
         best(backend.pack_overview(name, me), {}) if loaded else asyncio.sleep(0, {}),
         best(backend.admin("GET", f"/packs/{q}/datasource", me), {}) if loaded else asyncio.sleep(0, {}),
         best(backend.admin("GET", f"/loads/{q}/expectations", me), {}) if loaded else asyncio.sleep(0, {}),
         best(backend.admin("GET", f"/loads/{q}", me, limit=3), {}) if loaded else asyncio.sleep(0, {}),
-        best(backend.admin("GET", "/packs/history", me, limit=30, pack=name), {"history": [], "kept": {}}))
+        best(backend.admin("GET", "/packs/history", me, limit=30, pack=name), {"history": [], "kept": {}}),
+        best(backend.pack_coverage(name, me), {}) if loaded else asyncio.sleep(0, {}))
     examples = {k.get("kind"): k.get("example") for k in (overview or {}).get("kinds", [])}
     every = {p.get("name") for p in rows}
     return render(request, "admin/pack_detail.html", p=row, d=detail or {}, examples=examples, sources=sources or {}, expectations=expectations or {},
                   loads=(loads or {}).get("loads", []), history=history.get("history", []), kept=(history.get("kept") or {}).get(name, []),
-                  known_packs=every, status=await _status(request))
+                  known_packs=every, coverage=(coverage or {}).get("kinds", []), status=await _status(request))
 
 
 @router.post("/api/pack-samples")

@@ -568,6 +568,17 @@ public final class Binder {
         return 0;
     }
 
+    /** Whether a panel is in the view: no {@code when}, or its {@code when} is true for the document (a failing one hides it). */
+    public boolean shown(Panel p, EvalContext c) {
+        return p.option(Panel.WHEN).map(w -> {
+            try {
+                return Values.truthy(eval(w, c));
+            } catch (RuntimeException e) {
+                return false;
+            }
+        }).orElse(true);
+    }
+
     private PanelData tabs(Panel p, BindContext c) {
         DataNode each = node(eval(p.option("each").orElseThrow(), c.eval()));
         String tabTitle = p.option("tabTitle").orElse("'#' + (#index + 1)");
@@ -582,7 +593,9 @@ public final class Binder {
             }
             List<PanelView> inside = new ArrayList<>(p.parts().size());
             for (Panel part : p.parts()) {
-                inside.add(bind(part, c.withEval(rc)));       // a panel in a tab reads the tab's element as @
+                if (shown(part, rc)) {
+                    inside.add(bind(part, c.withEval(rc)));   // a panel in a tab reads the tab's element as @
+                }
             }
             tabs.add(new PanelData.Tab(Values.text(eval(tabTitle, rc)), fields, inside));
         }

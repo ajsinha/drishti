@@ -15,79 +15,79 @@
   "kind": "trade",
   "id": "1000003",
   "title": "1000003",
-  "subtitle": "Trade · ENDUR · ComSwap · CP-CORAL · EUR 0.0m"
+  "subtitle": "Trade · ENDUR · ComSwap · CP-CASCADIA · USD 233.6m"
  },
  {
   "kind": "trade",
   "id": "1000004",
   "title": "1000004",
-  "subtitle": "Trade · ENDUR · ComFut · CP-HARBORPT · EUR 0.4m"
+  "subtitle": "Trade · ENDUR · ComFut · CP-SOLARIS · USD 9.1m"
  },
  {
   "kind": "trade",
   "id": "1000005",
   "title": "1000005",
-  "subtitle": "Trade · ENDUR · ComFut · CP-ALDERSHOT · USD 0.0m"
+  "subtitle": "Trade · ENDUR · ComFut · CP-VERDANT · EUR 1.8m"
  },
  {
   "kind": "trade",
   "id": "1000006",
   "title": "1000006",
-  "subtitle": "Trade · ENDUR · ComFut · CP-HALCYON · USD 0.0m"
+  "subtitle": "Trade · ENDUR · ComFut · CP-HALCYON · USD 99.3m"
  },
  {
   "kind": "trade",
   "id": "1000007",
   "title": "1000007",
-  "subtitle": "Trade · ENDUR · Cash · CP-MERIDIAN-RE · EUR 1.4m"
+  "subtitle": "Trade · ENDUR · Cash · CP-BRAMBLE · USD 0.7m"
  },
  {
   "kind": "trade",
   "id": "1000008",
   "title": "1000008",
-  "subtitle": "Trade · ENDUR · Cash · CP-HALCYON · USD 1.0m"
+  "subtitle": "Trade · ENDUR · Cash · CP-SOLARIS · USD 1.5m"
  },
  {
   "kind": "trade",
   "id": "1000009",
   "title": "1000009",
-  "subtitle": "Trade · ENDUR · Cash · CP-NORTHBRIDGE · USD 1.3m"
+  "subtitle": "Trade · ENDUR · Cash · CP-RHEINTAL · USD 1.5m"
  },
  {
   "kind": "trade",
   "id": "1000010",
   "title": "1000010",
-  "subtitle": "Trade · ENDUR · CallNot · CP-CASCADIA · CAD 20.0m"
+  "subtitle": "Trade · ENDUR · CallNot · CP-RHEINTAL · EUR 4.0m"
  },
  {
   "kind": "trade",
   "id": "1000011",
   "title": "1000011",
-  "subtitle": "Trade · ENDUR · CallNot · CP-SOLARIS · EUR 5.0m"
+  "subtitle": "Trade · ENDUR · CallNot · CP-CORAL · USD 5.0m"
  },
  {
   "kind": "trade",
   "id": "1000012",
   "title": "1000012",
-  "subtitle": "Trade · ENDUR · CallNot · CP-VERDANT · CAD 1.0m"
+  "subtitle": "Trade · ENDUR · CallNot · CP-NORTHBRIDGE · EUR 10.0m"
  },
  {
   "kind": "trade",
   "id": "1000013",
   "title": "1000013",
-  "subtitle": "Trade · ENDUR · Commodity · CP-HALCYON · USD 167.9m"
+  "subtitle": "Trade · ENDUR · Commodity · CP-MERIDIAN · USD 106.3m"
  },
  {
   "kind": "trade",
   "id": "1000014",
   "title": "1000014",
-  "subtitle": "Trade · ENDUR · Commodity · CP-BRAMBLE · USD 0.0m"
+  "subtitle": "Trade · ENDUR · Commodity · CP-VERDANT · EUR 0.1m"
  },
  {
   "kind": "trade",
   "id": "1000015",
   "title": "1000015",
-  "subtitle": "Trade · ENDUR · Commodity · CP-SOLARIS · USD 3.9m"
+  "subtitle": "Trade · ENDUR · Commodity · CP-BRAMBLE · USD 8.2m"
  },
  {
   "kind": "trade",

@@ -123,6 +123,22 @@ each with its terms, its notional profile (a step line), its fixings and its cas
 flow of every leg; **F5 EVT** the events by leg, with a table filtered by leg and by dates (the header's controls); **F6 PAY** the
 netted payment ladder and payments by month; **F7** the counterparty's trades; **F8** impact; **F9** the raw document.
 
+**Where its Sutras are.** One Sutra per source system and product type, matching
+`"$.SOURCE_SYSTEM == 'ENDUR' && $.PRODUCT_TYPE == 'ComSwap'"`; a product's sub types (`ENGY-SWAP`, `ENGY-B-SWAP`) are panels with
+`when:` inside it, never Sutras of their own, so every trade matches exactly one. They are grouped in lower-case folders for people
+only: Drishti reads `sutras/` recursively and infers nothing from a folder name (each Sutra's `match:` alone decides).
+
+| Folder | Holds |
+|---|---|
+| `sutras/common/` | the shared panel blocks (`deal-ticket`, `legs`, `flow-schedule`, `events`, `payments`, `deal-footer`, `*.v1.block.yaml`) every product Sutra `use:`s ([Shared panel blocks](RACHANA_REFERENCE.md#shared-panel-blocks-use)) |
+| `sutras/endur/` | Endur's five product types, each with its sub types' own panels |
+| `sutras/calypso/`, `sutras/murex/` | the 125 products of the taxonomy, once per system |
+| `sutras/pages/` | the counterparty, portfolio, legal-entity and index pages |
+
+Admin → Packs → *trading* → **Sutra coverage** lists each source system × product type × sub type in the data with how many trades
+have it, the Sutra that lays it out and the panels its `when`s show, flagging *none* (an inferred screen) and *several*; the same
+check is a test (`SutraCoverageTest`, and the generators' `test_trades.py` for every product and sub type they book).
+
 **Pages over many trades** (derived kinds, recomputed every minute from the trades of every system): `CTRD <counterparty>`,
 `PTRD <book>`, `LTRD <legal entity>`, `ITRD <index>`. Each shows the live trades (with a Pivot tab by product and system),
 payments in the next 7, 30 and 90 days and the upcoming ones listed, notional by product type (a donut), by index, the maturity

@@ -69,7 +69,7 @@ EXAMPLES = {  # command, what it shows (ids from make_data.py's deterministic da
                     ("EQ EQ-NVTK", "Equity · price history, identifiers"), ("CDS CDS-SOLARIS", "Credit curve · spreads, hazard rates"),
                     ("CMDC CMDC-WTI", "WTI futures curve · backwardation")],
     "trading": [("TRD MX-20000001", "Interest rate swap (Murex) · legs side by side, flows and fixings"), ("TRD 1000001", "Commodity swap (Endur) · legs, resets, events"),
-                ("TRD CLY-3000086", "Single-name CDS (Calypso) · premium leg payments"), ("TRD 1000015", "Physical commodity deal (Endur) · delivery and payment legs"),
+                ("TRD CLY-3000086", "Single-name CDS (Calypso) · premium leg payments"), ("TRD 1000015", "Warehouse warrants (Endur) · inventory, delivery and payment legs"),
                 ("CTRD CP-ALDERSHOT", "A counterparty's trades in every system · payments, notional by product")],
     "market-risk": [("VAR VAR-RATES", "Rates desk VaR · P&L series, contributions"), ("STR STR-GFC2008-RATES", "Stress · 2008 crisis on the rates desk"),
                     ("PNL PNL-RATES-1", "P&L explain"), ("FRTB FRTB-RATES-1", "FRTB sensitivities and charges")],

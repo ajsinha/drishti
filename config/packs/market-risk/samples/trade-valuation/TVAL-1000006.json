@@ -4,32 +4,32 @@
  "SOURCE_SYSTEM": "ENDUR",
  "PRODUCT_TYPE": "ComFut",
  "PRODUCT_GROUP": "Commodity",
- "PORTFOLIO": "BOOK-COMM-2",
+ "PORTFOLIO": "BOOK-COMM-3",
  "DESK": "DESK-COMM",
  "COUNTERPARTY": "CP-HALCYON",
  "NETTING_SET": "",
  "TRADER_ID": "TRDR-TBRENNAN",
  "BUY_SELL_CODE": "B",
- "TRADE_STATUS": "AMENDED",
+ "TRADE_STATUS": "VALIDATED",
  "CURRENCY": "USD",
- "NOTIONAL": 29609.0,
- "MTM": 77,
+ "NOTIONAL": 99264422.0,
+ "MTM": 258008,
  "MTM_CURRENCY": "USD",
- "PNL_1D": -2,
+ "PNL_1D": -5877,
  "DV01": 0,
- "TRADE_DATE": "2025-02-06",
- "MATURITY_DATE": "2025-03-31",
+ "TRADE_DATE": "2026-08-06",
+ "MATURITY_DATE": "2026-09-30",
  "VALUATION_DATE": "2026-09-30",
  "_meta": {
   "source": "risk-engine",
   "generation": 1,
   "live": true,
   "walk": {
-   "MTM": 500,
+   "MTM": 1509,
    "derive": [
     {
      "set": "PNL_1D",
-     "expr": "$.MTM - 79"
+     "expr": "$.MTM - 263885"
     }
    ]
   }
