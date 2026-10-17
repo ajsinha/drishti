@@ -212,9 +212,9 @@
   }
   /** Shows (or hides, a second time) the Explain panel of a visual: its query asked again with options.explain. */
   C.explain = function (frame, mq) {
-    const open = frame.el.querySelector('.bi-explain');
+    const open = frame.el.querySelector(':scope > .bi-plan-panel');
     if (open) { open.remove(); return Promise.resolve(null); }
-    const panel = h('section', { class: 'bi-explain', 'data-explain': 'loading', 'aria-label': 'How this visual was answered' }, h('p', { class: 'text-muted-d', text: 'Asking the server how it answers this…' }));
+    const panel = h('section', { class: 'bi-plan-panel', 'data-explain': 'loading', 'aria-label': 'How this visual was answered' }, h('p', { class: 'text-muted-d', text: 'Asking the server how it answers this…' }));
     frame.el.appendChild(panel);
     if (!mq) { B.clear(panel).appendChild(h('p', { class: 'text-muted-d', text: 'This visual has no model query to explain.' })); panel.setAttribute('data-explain', 'none'); return Promise.resolve(null); }
     const q = JSON.parse(JSON.stringify(mq));

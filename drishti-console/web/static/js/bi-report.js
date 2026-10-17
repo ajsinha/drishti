@@ -265,6 +265,7 @@
       return B.visuals.draw(host, ds, c, res);
     }, live ? { keep: true } : undefined);
     refreshButtons(spec);
+    if (entry.chip && !entry.chip.el.isConnected) { entry.frame.foot.appendChild(entry.chip.el); }          // a redraw writes the foot again: the state chip stays
     const chartOrCard = entry.frame.body.querySelector('.bi-chart');
     if (chartOrCard) { chartOrCard.setAttribute('data-ready', '1'); }
   }

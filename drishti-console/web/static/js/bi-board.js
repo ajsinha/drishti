@@ -90,6 +90,7 @@
       c.update = !!quiet;
       entry.frame.result(res, (host) => B.visuals.draw(host, spec, c, res), quiet ? { keep: true } : undefined);
       alertTile(entry);
+      if (entry.chip && !entry.chip.el.isConnected) { entry.frame.foot.appendChild(entry.chip.el); }
       entry.frame.el.setAttribute('data-updated', new Date().toISOString());
     }, (e) => {
       if (token !== entry.token) { return; }
@@ -138,6 +139,7 @@
         c.update = true;
         entry.frame.result(entry.res, (host) => B.visuals.draw(host, entry.spec, c, entry.res), { keep: true });
         alertTile(entry);
+        if (entry.chip && !entry.chip.el.isConnected) { entry.frame.foot.appendChild(entry.chip.el); }
         entry.frame.el.setAttribute('data-updated', new Date().toISOString());
       },
       onState: (s, why, info) => { chip.set(time.mode === 'window' && s === 'live' ? 'window' : s, why, Object.assign({}, info, time)); B.live.markStale(entry.frame, s === 'stale' || s === 'failed', why); }
