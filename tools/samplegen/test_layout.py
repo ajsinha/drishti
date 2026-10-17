@@ -68,7 +68,7 @@ class Settings(unittest.TestCase):
     def test_the_trading_pack_declares_the_trade_layout(self):
         lay = layout.layouts_for_domain("trading")["trade"]
         self.assertEqual((lay.sort_by, lay.file_rows, lay.row_group_rows), ("id", 250_000, 1_000))
-        self.assertIn("counterparty.id", lay.columns)
+        self.assertTrue({"TRADE_ID", "SOURCE_SYSTEM", "PRODUCT_TYPE", "COUNTERPARTY", "PORTFOLIO"} <= set(lay.columns), lay.columns)
         self.assertEqual(layout.layouts_for_domain("reference"), {})
 
 
@@ -158,7 +158,7 @@ class BulkTrades(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp, contextlib.redirect_stdout(io.StringIO()):
             (pathlib.Path(tmp) / "reference").mkdir()
             self.assertEqual(bulk_trades.main(["--trades", "3000", "--days", "2", "--root", tmp, "--file-rows", "1000", "--workers", "2"]), 0)
-            uri = str(pathlib.Path(tmp) / "trading" / "trade")
+            uri = str(pathlib.Path(tmp) / "trading" / "trade_murex")          # one source system's table; the others are left alone
             acts = actions(uri)
             self.assertEqual(len(acts), 6)
             for day in {a["partition.business_date"] for a in acts}:
@@ -172,11 +172,12 @@ class BulkTrades(unittest.TestCase):
             got = {r["id"]: r for r in rows_of(uri) if r["business_date"] == date(2026, 9, 30)}
             self.assertEqual(len(got), 3000)
             self.assertIn("MX-20000001", got)
-            self.assertEqual(got["MX-20000001"]["sourceSystem"], "Murex")                         # samples carry their system too
-            self.assertEqual(json.loads(got["CLY-4000000"]["doc"])["assetClass"], "Credit")              # a clone stays in its template's system
-            self.assertEqual(got["MX-30000000"]["sourceSystem"], "Murex")
-            self.assertEqual(json.loads(got["MX-30000000"]["doc"])["sourceTradeId"], "30000000")
-            self.assertEqual(got["MX-30000000"]["notional"], float(json.loads(got["MX-30000000"]["doc"])["notional"]))
+            self.assertEqual(got["MX-20000001"]["SOURCE_SYSTEM"], "MUREX")                        # samples carry their system too
+            self.assertEqual({r["SOURCE_SYSTEM"] for r in got.values()}, {"MUREX"})                    # a clone stays in its template's system
+            clone = json.loads(got["MX-30000000"]["doc"])
+            self.assertEqual(clone["TRADE_ID"], "MX-30000000")
+            self.assertEqual(got["MX-30000000"]["QUANTITY"], float(clone["QUANTITY"]))
+            self.assertEqual(got["MX-30000000"]["PRODUCT_TYPE"], clone["PRODUCT_TYPE"])
 
     def test_workers_are_spawned_not_forked_from_a_threaded_process(self):
         # deltalake and pyarrow start thread pools; os.fork() then copies their locks held by threads that do not exist in
