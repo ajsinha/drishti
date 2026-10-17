@@ -36,6 +36,16 @@
   with another of the same name). New codes `DRS-9164` (parameter), `DRS-9165` (calculation group), `DRS-9166` (context), and reserved for the scale
   task `DRS-9028`, `DRS-9029`, `DRS-9184`. Property test: % of total, ignore-a-slicer, keep, where and nested contexts equal an independent
   computation for random fields, filters and readers; a YTD calculation group over ten measures and a what-if shock equal theirs.
+- **Server: time and balances (wave B task 2).** `last`, `first`, `opening`, `closing`, `avg_over`, `as_of`, `shift_date`, `asof()`,
+  `fiscal_ytd`, `fx` and `convert(…, at=)` are built. `closing` takes each period's last business day on the model's calendar up to the as-of date,
+  per group (May 2027 closes on Friday the 28th, Memorial Day being the 31st); `opening` is the close of the row before along the answer's date field,
+  else of the business day before the as-of period (read at that date for a snapshot's `businessDate`); `last`/`first` are per group (a context
+  sub-query finds the group's date); `as_of` binds every scan of its sub-query to another business date. A model's **`calendars: { holidays,
+  fiscal-year-start }`** drives the business days (also of `business_days_between`, which now subtracts holidays, and of relative windows) and
+  `fiscal_ytd`; its **`fx: { rates, from, to, rate, date, base }`** feeds `fx` (latest rate on or before the date, stored pair, inverse or through the
+  base) and `convert` (each amount by its own column's currency, at the as-of date, the trade date or another date column), which lifts the currency
+  guard. A measure written with a balance function is not semi-additive any more; one that is, added across dates with other measures, is refused
+  (`DRS-9159`) with the balance functions as the fix. Calculation groups no longer hide a measure's currency from the guard.
 
 ## 2.2.0 — Datasets and data models rooted in packs, a Python-like expression language, read-only SQL, one query plan (2026-10-17)
 

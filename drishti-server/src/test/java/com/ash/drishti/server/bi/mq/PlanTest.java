@@ -221,6 +221,12 @@ class PlanTest {
         Map<String, Object> balance = refusing.ask(b, MqParser.parse("{ mq: 1, model: desk-risk, select: { measures: [Sum of amount] }, time: { window: { from: 2026-10-08, to: 2026-10-09 } } }"),
                 false).body();
         assertThat(balance.get("rows")).as("a balance alone over a window is its last date's value: right, so answered").isNotNull();
+        // wave B: a balance added across the dates with another measure is refused, with the balance functions as the fix; written with last() it is not
+        assertThatThrownBy(() -> refusing.ask(b, MqParser.parse("{ mq: 1, model: desk-risk, select: { measures: [Sum of amount, Trades] }, time: { window: { from: 2026-10-08, to: "
+                + "2026-10-09 } } }"), false)).isInstanceOf(MqException.class).hasMessageContaining("DRS-9159").hasMessageContaining("last(measure(");
+        Map<String, Object> last = refusing.ask(b, MqParser.parse("{ mq: 1, model: desk-risk, define: { Closing: \"last(sum(limits.amount), limits.businessDate)\" }, "
+                + "select: { measures: [Closing] }, time: { window: { from: 2026-10-08, to: 2026-10-09 } } }"), false).body();
+        assertThat(((Number) ((List<List<Object>>) last.get("rows")).get(0).get(0)).doubleValue()).isEqualTo(118.0);       // the latest date's limits
     }
 
     // ---- property tests on the engine ------------------------------------------------------------------------------------

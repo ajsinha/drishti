@@ -73,11 +73,22 @@ public record ModelView(String id, String key, String hash, ModelDef def, Datase
     public MeasureInfo info(Dataset ds, String measure) {
         ModelDef.Meas m = measureDefs().get(measure);
         Dataset.Measure em = ds.measures().get(measure);
+        Dataset.Measure base = ds.measures().get(MqBindings.BASE + measure);
+        if (base != null) {
+            em = base;                                                          // a calculation group applied: the guards look at the measure as defined
+        }
         String format = m != null ? m.format() : em == null ? null : em.format();
         String id = m == null || m.id() == null ? "" : m.id();
         boolean python = em != null && em.python() != null;
         String additive = m == null ? null : m.additive();
         String currency = m == null ? null : m.currency();
+        String top = topFunction(em);
+        if (top != null && BALANCES.contains(top)) {
+            additive = "false";                                                 // a balance function already says which dates it takes (wave B)
+        }
+        if ("convert".equals(top)) {
+            currency = null;                                                    // converted to one currency: the guard is lifted
+        }
         if ((additive == null || currency == null) && em != null && em.expr() != null) {
             Node n;
             try {
@@ -103,6 +114,22 @@ public record ModelView(String id, String key, String hash, ModelDef def, Datase
             }
         }
         return new MeasureInfo(additive == null ? "false" : additive, currency, format, id, python);
+    }
+
+    /** The functions that pick the dates of a balance (wave B): a measure written with one is not semi-additive any more. */
+    static final java.util.Set<String> BALANCES = java.util.Set.of("last", "first", "opening", "closing", "avg_over", "as_of");
+
+    /** The function at the top of a measure's expression (its outermost call), or null. */
+    static String topFunction(Dataset.Measure em) {
+        if (em == null || em.expr() == null) {
+            return null;
+        }
+        try {
+            Node n = com.ash.drishti.server.bi.expr.Expressions.parse(em.expr());
+            return n instanceof Node.Call c ? c.function() : null;
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     /** The tables a measure aggregates (through the measures it names). */

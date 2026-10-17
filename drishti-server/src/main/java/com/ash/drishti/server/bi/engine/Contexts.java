@@ -172,8 +172,7 @@ final class Contexts {
             alias = "c" + depth + "_" + joined.size();
             Map<String, Dataset.Measure> measures = new LinkedHashMap<>(sub.measures());
             measures.put(MEASURE, new Dataset.Measure(MEASURE, DelPrinter.print(measure), null, "a filter context", null));
-            sub = new Dataset(sub.name(), sub.version(), sub.title(), sub.description(), sub.sample(), sub.engine(), sub.tables(), sub.relationships(), measures, sub.hierarchies(),
-                    sub.security(), sub.rollups(), sub.refresh(), sub.compose(), sub.derived(), sub.tests());
+            sub = sub.withMeasures(measures);
             LocalDate from = date != null ? date : query.from();
             LocalDate to = date != null ? date : query.to();
             QueryRequest q = new QueryRequest(grouped, List.of(MEASURE), filters, from, to, List.of(), null, "columns");
@@ -191,7 +190,7 @@ final class Contexts {
                 }
                 from0.put(t, s);
             }
-            TimeWindows.Context subTime = date == null ? time : new TimeWindows.Context(date, date, time.calendar());
+            TimeWindows.Context subTime = date == null ? time : new TimeWindows.Context(date, date, time.calendar(), time.fiscalYearStart());
             SqlCompiler.Compiled c = compiler.compile(plan, reader, from0, Integer.MAX_VALUE - 1, null, subTime, more);
             String sql = c.sql();
             List<Object> params = c.params();
@@ -205,6 +204,18 @@ final class Contexts {
         }
         String column = Dialect.quote(alias) + "." + Dialect.quote(MEASURE);
         return kind == Kind.EDGE ? column : "max(" + column + ")";
+    }
+
+    /** The FROM item of a table at the query's dates (the plan's, else read for this purpose): for {@code fx}'s rates table. */
+    SqlCompiler.Source source(String table) {
+        SqlCompiler.Source s = sources.get(table);
+        if (s != null) {
+            return s;
+        }
+        if (more == null) {
+            throw new DrishtiException(ErrorCode.MQ_CONTEXT, "table '" + table + "' cannot be read here");
+        }
+        return more.of(table, query.from(), query.to());
     }
 
     /** The FROM text of the joins (appended after the main query's joins), its parameters added to {@code params} in order. */
@@ -257,8 +268,7 @@ final class Contexts {
             boolean active = r == chosen || r.active() && !samePair;
             rels.add(new Dataset.Relationship(r.fromTable(), r.fromColumn(), r.toTable(), r.toColumn(), r.cardinality(), r.direction(), active, r.id()));
         }
-        return new Dataset(ds.name(), ds.version(), ds.title(), ds.description(), ds.sample(), ds.engine(), ds.tables(), rels, ds.measures(), ds.hierarchies(), ds.security(),
-                ds.rollups(), ds.refresh(), ds.compose(), ds.derived(), ds.tests());
+        return ds.withRelationships(rels);
     }
 
     /** True when a measure (or one it names) needs a context or a balance function: the rollups cannot answer it, nor a several-facts query combine it. */

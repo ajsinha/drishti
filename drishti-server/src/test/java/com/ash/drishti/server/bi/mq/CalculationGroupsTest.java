@@ -105,7 +105,7 @@ class CalculationGroupsTest {
         lake.trades.put(TestLake.DAY2, book);
         QueryProperties props = QueryProperties.defaults(store.toString());
         service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC());
-        mq = new MqService(MqProperties.defaults(), PlanProperties.defaults());
+        mq = new MqService(MqProperties.defaults(), new PlanProperties(null, null, null, "warn"));   // the cache on, the guards warning: the figures are what is compared
         h = new MqHarness(service, TestLake.DAY2);
         model = MqHarness.model(MODEL, TRADES, MqEngineTest.DESKS);
     }

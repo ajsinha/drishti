@@ -33,7 +33,7 @@ public sealed interface Node {
      * Time intelligence: {@code ytd(agg, table.dateColumn)} and its kin restrict the aggregate to the rows whose date falls in a window that ends at the query's
      * as-of date (the end of its dates); the windows are worked out in Java from the pack's business-day calendar and bound as parameters.
      */
-    Set<String> TIME = Set.of("ytd", "mtd", "qtd", "prior_period", "same_period_last_year");
+    Set<String> TIME = Set.of("ytd", "mtd", "qtd", "prior_period", "same_period_last_year", "fiscal_ytd");
     /** {@code running(agg, table.dateColumn)}: a running total of a sum, count, min or max along the date field of the query. */
     Set<String> WINDOW = Set.of("running", "cumulative");
     /**

@@ -412,7 +412,7 @@ public final class QueryService implements AutoCloseable {
             layer.warnings().forEach(w -> warnings.add(t + (sameDates ? "" : " at " + lo) + ": " + w));
             return TableRelations.cached(d, table, layer.files(), Dialect.DUCKDB);
         };
-        SqlCompiler.Compiled c = probe.compile(plan, reader, from, cap, components, timeContext(q, dates), more);
+        SqlCompiler.Compiled c = probe.compile(plan, reader, from, cap, components, timeContext(d, q, dates), more);
         AnalyticEngine.Answer a = engine.query(c.sql(), c.params(), cap, props.timeout());
         return finish(ds, q, c, a, layerName, rollup == null ? null : rollup.name(), dates, warnings, explain);
     }
@@ -435,7 +435,7 @@ public final class QueryService implements AutoCloseable {
         SqlCompiler probe = new SqlCompiler(d, Dialect.DUCKDB);
         SqlCompiler.Plan plan = probe.plan(q, reader);
         int cap = q.limit() != null ? Math.min(q.limit(), props.maxRows()) : props.maxRows() + 1;
-        TimeWindows.Context time = timeContext(q, rows.dates());
+        TimeWindows.Context time = timeContext(d, q, rows.dates());
         Framed f = engine.with(conn -> {
             Map<String, String> staged = Map.of();
             try {
@@ -477,9 +477,10 @@ public final class QueryService implements AutoCloseable {
      * The as-of date of the time-intelligence measures: the end of the query's dates, else its start, else the newest date the query read, else the current
      * business date.
      */
-    private TimeWindows.Context timeContext(QueryRequest q, List<String> readDates) {
+    private TimeWindows.Context timeContext(Dataset d, QueryRequest q, List<String> readDates) {
         LocalDate asOf = q.to() != null ? q.to() : q.from() != null ? q.from() : !readDates.isEmpty() ? LocalDate.parse(readDates.get(readDates.size() - 1)) : sources.currentDate();
-        return new TimeWindows.Context(asOf, q.from(), sources.calendar());
+        Dataset.Model m = d.model();
+        return new TimeWindows.Context(asOf, q.from(), m.holidays() == null ? sources.calendar() : com.ash.drishti.common.BusinessCalendar.of(m.holidays()), m.fiscalYearStart());
     }
 
     private Result finish(Loaded ds, QueryRequest q, SqlCompiler.Compiled c, AnalyticEngine.Answer a, String layer, String rollup, List<String> dates,
@@ -629,7 +630,7 @@ public final class QueryService implements AutoCloseable {
         int cap = q.limit() != null ? Math.min(q.limit(), props.maxRows()) : props.maxRows() + 1;
         final SqlTarget store = target;
         SqlCompiler.MoreSources more = (t, lo, hi) -> TableRelations.direct(d, d.tables().get(t), store, dialect, lo, hi);
-        SqlCompiler.Compiled c = compiler.compile(p, reader, from, cap, null, timeContext(q, List.of()), more);
+        SqlCompiler.Compiled c = compiler.compile(p, reader, from, cap, null, timeContext(d, q, List.of()), more);
         long t0 = System.nanoTime();
         AnalyticEngine.Answer a;
         try {

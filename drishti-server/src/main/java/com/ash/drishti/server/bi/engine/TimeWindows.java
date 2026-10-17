@@ -31,7 +31,16 @@ import java.time.Month;
 public final class TimeWindows {
 
     /** What the windows are measured from: the as-of date, the start of the query's dates (or null) and the calendar. */
-    public record Context(LocalDate asOf, LocalDate from, BusinessCalendar calendar) {
+    public record Context(LocalDate asOf, LocalDate from, BusinessCalendar calendar, int fiscalYearStart) {
+
+        public Context {
+            fiscalYearStart = fiscalYearStart < 1 || fiscalYearStart > 12 ? 1 : fiscalYearStart;
+        }
+
+        /** A context whose fiscal year is the calendar year. */
+        public Context(LocalDate asOf, LocalDate from, BusinessCalendar calendar) {
+            this(asOf, from, calendar, 1);
+        }
 
         /** A context for tests and callers without a business date: today, weekends only. */
         public static Context weekends(LocalDate asOf) {
@@ -56,10 +65,17 @@ public final class TimeWindows {
             case "ytd" -> new Window(LocalDate.of(end.getYear(), Month.JANUARY, 1), end);
             case "mtd" -> new Window(end.withDayOfMonth(1), end);
             case "qtd" -> new Window(LocalDate.of(end.getYear(), ((end.getMonthValue() - 1) / 3) * 3 + 1, 1), end);
+            case "fiscal_ytd" -> new Window(fiscalStart(end, ctx.fiscalYearStart()), end);
             case "prior_period" -> prior(ctx);
             case "same_period_last_year" -> lastYear(ctx);
             default -> throw new IllegalArgumentException("not a time function: " + function);
         };
+    }
+
+    /** The first day of the fiscal year that holds {@code d}, the fiscal year starting on the first of month {@code startMonth}. */
+    public static LocalDate fiscalStart(LocalDate d, int startMonth) {
+        LocalDate s = LocalDate.of(d.getYear(), startMonth, 1);
+        return s.isAfter(d) ? s.minusYears(1) : s;
     }
 
     /** The current window of {@code prior_period} and {@code same_period_last_year}: the query's dates, or the month to date when it names none. */

@@ -224,8 +224,7 @@ final class MqBindings {
         if (!changed) {
             return ds;
         }
-        return new Dataset(ds.name(), ds.version(), ds.title(), ds.description(), ds.sample(), ds.engine(), ds.tables(), ds.relationships(), measures, ds.hierarchies(),
-                ds.security(), ds.rollups(), ds.refresh(), ds.compose(), ds.derived(), ds.tests());
+        return ds.withMeasures(measures);
     }
 
     private static Dataset.Measure withExpr(Dataset.Measure m, String expr) {

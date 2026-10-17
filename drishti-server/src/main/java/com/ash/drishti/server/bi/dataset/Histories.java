@@ -123,6 +123,6 @@ public final class Histories {
             return ds;
         }
         return new Dataset(ds.name(), ds.version(), ds.title(), ds.description(), ds.sample(), ds.engine(), tables, ds.relationships(), measures, ds.hierarchies(), ds.security(),
-                ds.rollups(), ds.refresh(), ds.compose(), ds.derived(), ds.tests());
+                ds.rollups(), ds.refresh(), ds.compose(), ds.derived(), ds.tests(), ds.model());
     }
 }

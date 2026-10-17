@@ -332,7 +332,7 @@ public final class ModelCatalog {
     MqService.Bound bound(Principal p, Found f) {
         ModelView v = f.view();
         QueryService.Caller who = datasets.caller(p, v.flat());
-        MqValidator.Context ctx = new MqValidator.Context(who.masks(), who.roles(), who.attributes(), who.enforce(), datasets.currentDate(), datasets.calendar());
+        MqValidator.Context ctx = new MqValidator.Context(who.masks(), who.roles(), who.attributes(), who.enforce(), datasets.currentDate(), v.flat().model().holidays() == null ? datasets.calendar() : com.ash.drishti.common.BusinessCalendar.of(v.flat().model().holidays()));   // the model's calendar when it names one (wave B)
         MqService.Runner run;
         if (v.compat()) {
             BiStore.Item item = f.item();

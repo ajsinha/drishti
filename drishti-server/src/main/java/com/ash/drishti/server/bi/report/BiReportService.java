@@ -234,8 +234,7 @@ public final class BiReportService {
         }
         Map<String, Dataset.Measure> measures = new LinkedHashMap<>(ds.measures());
         local.forEach(x -> measures.put(x.name(), new Dataset.Measure(x.name(), x.expr(), x.format(), x.description() == null ? "the report's own measure" : x.description(), null)));
-        return new Dataset(ds.name(), ds.version(), ds.title(), ds.description(), ds.sample(), ds.engine(), ds.tables(), ds.relationships(), measures, ds.hierarchies(),
-                ds.security(), ds.rollups(), ds.refresh(), ds.compose(), ds.derived(), ds.tests());
+        return ds.withMeasures(measures);
     }
 
     private Map<String, Object> datasetSummary(Principal p, BiStore.Item dsItem) {

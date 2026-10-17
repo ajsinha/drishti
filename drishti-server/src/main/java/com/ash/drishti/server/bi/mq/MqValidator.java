@@ -183,7 +183,7 @@ public final class MqValidator {
         if (!semi.isEmpty()) {
             lastOnly = semi.size() == q.measures().size();
             warnings.add("DRS-9159 " + semi + (semi.size() == 1 ? " is" : " are") + " semi-additive (a balance): over a window of dates "
-                    + (lastOnly ? "the answer is the last date's value" : "it is added across the dates; ask it alone or group by the business date") + " (refused from wave W2)");
+                    + (lastOnly ? "the answer is the last date's value" : "it is added across the dates; ask it alone, group by the business date, or write it with a balance function (last(measure('...'), alias.businessDate), closing, avg_over)") + " (refused from wave W2)");
         }
 
         // ---- 9 security
@@ -294,8 +294,7 @@ public final class MqValidator {
             }
             measures.put(e.getKey(), new Dataset.Measure(e.getKey(), com.ash.drishti.server.bi.expr.Expressions.withMeasureNames(e.getValue(), ids), null, "local measure", null));
         }
-        Dataset ds = new Dataset(base.name(), base.version(), base.title(), base.description(), base.sample(), base.engine(), base.tables(), base.relationships(), measures,
-                base.hierarchies(), base.security(), base.rollups(), base.refresh(), base.compose(), base.derived(), base.tests());
+        Dataset ds = base.withMeasures(measures);
         for (DatasetParser.Problem p : DatasetParser.check(ds)) {
             for (String name : q.define().keySet()) {
                 if (p.error() && (p.path().equals("measures." + name) || p.path().startsWith("measures." + name + "."))) {

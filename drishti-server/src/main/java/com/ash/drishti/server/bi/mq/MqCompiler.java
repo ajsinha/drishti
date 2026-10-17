@@ -108,8 +108,7 @@ public final class MqCompiler {
                 }
                 guards.put(e.getKey(), name);
             }
-            ds = new Dataset(ds.name(), ds.version(), ds.title(), ds.description(), ds.sample(), ds.engine(), ds.tables(), ds.relationships(), all, ds.hierarchies(),
-                    ds.security(), ds.rollups(), ds.refresh(), ds.compose(), ds.derived(), ds.tests());
+            ds = ds.withMeasures(all);
         }
         List<QueryRequest.Sort> sort = q.sort().stream().map(s -> new QueryRequest.Sort(s.by(), s.desc())).toList();
         int limit = Math.min(props.maxLimit(), q.limit() != null ? q.limit() : q.rows() ? props.rowsLimit() : props.groupedLimit());

@@ -301,10 +301,45 @@ final class SqlEmitter {
             }
             case "business_days_between" -> {
                 String to = weekdays(a.get(1), inAgg);
-                yield "(" + to + " - " + weekdays(a.get(0), inAgg) + ")";
+                String days = "(" + to + " - " + weekdays(a.get(0), inAgg) + ")";
+                yield holidaysBetween(a.get(0), a.get(1), days, inAgg);
             }
             default -> throw new DrishtiException(ErrorCode.DATASET_NOT_BUILT, "'" + f + "' is not built yet");
         };
+    }
+
+    /** How many years either side of the as-of date the holidays of {@code business_days_between} are taken from (the model's calendar, wave B). */
+    static final int HOLIDAY_YEARS = 10;
+
+    /**
+     * Weekdays between two dates less the calendar's holidays between them (wave B: the model's calendar, or the pack's): each holiday {@code h} with
+     * {@code a < h <= b} counts one less (one more when {@code b} is before {@code a}). Without holidays (weekends only, or while planning) the weekdays.
+     */
+    private String holidaysBetween(Node from, Node to, String weekdays, boolean inAgg) {
+        if (planning || time == null || time.calendar() == null) {
+            return weekdays;
+        }
+        List<java.time.LocalDate> hs = new ArrayList<>();
+        for (int y = time.asOf().getYear() - HOLIDAY_YEARS; y <= time.asOf().getYear() + HOLIDAY_YEARS; y++) {
+            hs.addAll(time.calendar().holidays(y));
+        }
+        if (hs.isEmpty()) {
+            return weekdays;
+        }
+        StringBuilder values = new StringBuilder();
+        for (int i = 0; i < hs.size(); i++) {
+            values.append(i == 0 ? "" : ", ").append("(CAST(? AS DATE))");
+        }
+        // parameters bind in text order: each sub-query's holidays, then its two dates
+        hs.forEach(d -> params.add(d.toString()));
+        String a1 = emit(from, inAgg);
+        String b1 = emit(to, inAgg);
+        String forward = "(SELECT count(*) FROM (VALUES " + values + ") AS h(d) WHERE h.d > CAST(" + a1 + " AS DATE) AND h.d <= CAST(" + b1 + " AS DATE))";
+        hs.forEach(d -> params.add(d.toString()));
+        String b2 = emit(to, inAgg);
+        String a2 = emit(from, inAgg);
+        String backward = "(SELECT count(*) FROM (VALUES " + values + ") AS g(d) WHERE g.d > CAST(" + b2 + " AS DATE) AND g.d <= CAST(" + a2 + " AS DATE))";
+        return "(" + weekdays + " - " + forward + " + " + backward + ")";
     }
 
     /**
