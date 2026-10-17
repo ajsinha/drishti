@@ -37,9 +37,8 @@ from shotlib import Ctx, listening, out_dir, register  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[3]
 PACK = ROOT / "docs" / "guides" / "examples" / "pack" / "helpdesk"
-QUICKSTART = ["banking-core", "market-data", "trading", "market-risk", "counterparty-risk", "liquidity-risk", "climate-risk",
-              "operational-risk", "retail-banking", "genomics", "politics-society", "economics"]
-LISTED = "market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics"
+QUICKSTART = ["core", "market-data", "trading", "market-risk", "counterparty-risk", "world-economy", "news-and-markets"]
+LISTED = "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets"
 SERVER_PORT, CONSOLE_PORT = 18996, 17996
 shot = register("packs")
 

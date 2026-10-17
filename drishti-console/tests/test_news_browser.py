@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The market-watch and news-watch sample packs in Chromium, over the real server and console (tests/news_stack.py: ports 18993 and 17993). The two
+"""The news-and-markets sample packs in Chromium, over the real server and console (tests/news_stack.py: ports 18993 and 17993). The two
 on-demand connectors (news, yfinance) are switched on and pointed at local fakes that serve canned Google News RSS and Yahoo chart JSON: nothing reaches
 Google or Yahoo. A company page shows its quote, its price chart and its headlines with links that open the article in a new tab; a topic page shows the
 headlines, the count by source and the steps that chose them. With the connectors off (their shipped state) the same pages still open and say what is

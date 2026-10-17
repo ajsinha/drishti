@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Wave B, console lane, in Chromium over the real server and console (the W1 model stack of tests/test_w1_model_designer_browser.py on this file's own ports
-18926 and 17926 plus the pytest-xdist offset: security on, the trading and banking-core packs, a small file lake of trades and desks). The acceptance of
+18926 and 17926 plus the pytest-xdist offset: security on, the trading and core packs, a small file lake of trades and desks). The acceptance of
 docs/architecture/BI_DESIGN.md section 12.2 for the console lane:
 
 * no BI page computes: no WebAssembly, Pyodide, DuckDB-Wasm or Perspective file is requested, and no page's policy allows 'wasm-unsafe-eval';
@@ -87,7 +87,7 @@ def made(browser, stack):
     page = sign_in(browser, "wes")
     ws = fetch(page, "POST", "/bi/api/workspaces", {"name": "Wave B desk", "description": ""})
     assert ws["status"] in (200, 201), ws
-    m = fetch(page, "POST", "/bi/model-api/new", {"title": "Wave B model", "workspace": ws["body"]["id"], "datasets": ["pack.trading.trade", "pack.banking-core.desk"]})
+    m = fetch(page, "POST", "/bi/model-api/new", {"title": "Wave B model", "workspace": ws["body"]["id"], "datasets": ["pack.trading.trade", "pack.core.desk"]})
     assert m["status"] == 200, m
     page.goto(CONSOLE_URL + m["body"]["href"])
     expect(page.locator('[data-md-root][data-ready="yes"]')).to_have_count(1, timeout=30000)

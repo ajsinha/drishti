@@ -27,7 +27,7 @@ public final class ApiDtos {
 
     private ApiDtos() {}
 
-    /** @param text a command such as {@code TRD IRS-48213 <GO>} */
+    /** @param text a command such as {@code TRD MX-20000001 <GO>} */
     public record CommandRequest(String text) {}
 
     /**

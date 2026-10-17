@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Wave A of the BI design, console lane, in Chromium (docs/architecture/BI_DESIGN.md section 12.2) over the real server and console on scratch ports
-18916 and 17916 (the W1 model stack of tests/test_w1_model_designer_browser.py: security on, the trading and banking-core packs, a small file lake of
+18916 and 17916 (the W1 model stack of tests/test_w1_model_designer_browser.py: security on, the trading and core packs, a small file lake of
 trades and desks). Checked: the dataset wizard makes a dataset with a column subset, a filter, an explicit grain with a de-duplication, a formula column
 and a grouping without typing YAML (the ExpressionEditor completing the columns); the ExpressionEditor in the model designer completes fields, measures
 (writing measure('...')) and functions, shows the call's card and the server's problems; field properties, perspectives and Preview as a role in the
@@ -156,7 +156,7 @@ def new_model(page, title):
     """A shared workspace (a private one cannot publish) and a model over trades and desks in it; the designer opened on it."""
     ws = fetch(page, "POST", "/bi/api/workspaces", {"name": title + " desk", "description": ""})
     assert ws["status"] in (200, 201), ws
-    made = fetch(page, "POST", "/bi/model-api/new", {"title": title, "workspace": ws["body"]["id"], "datasets": ["pack.trading.trade", "pack.banking-core.desk"]})
+    made = fetch(page, "POST", "/bi/model-api/new", {"title": title, "workspace": ws["body"]["id"], "datasets": ["pack.trading.trade", "pack.core.desk"]})
     assert made["status"] == 200, made
     page.goto(CONSOLE_URL + made["body"]["href"])
     expect(page.locator('[data-md-root][data-ready="yes"]')).to_have_count(1, timeout=30000)

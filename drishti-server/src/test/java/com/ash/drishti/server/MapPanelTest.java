@@ -44,10 +44,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 /**
  * The {@code map} panel: the grammar (link and shade are mappings, the expressions are compiled when the Sutra loads), the
  * binder (which country is highlighted, which countries have a page, the figures that shade the map) and what the caller's
- * masks and rights do to them. Read through the real pipeline over the politics-society and economics packs' real documents.
+ * masks and rights do to them. Read through the real pipeline over the world-economy pack's real documents.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
-        "drishti.packs.enabled=politics-society,economics"})
+        "drishti.packs.enabled=world-economy"})
 class MapPanelTest {
 
     @Autowired ViewPipeline pipeline;

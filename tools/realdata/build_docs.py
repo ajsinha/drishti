@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Builds the documents of the economics and politics-society packs from the committed dataset (normalise.py's output).
+"""Builds the documents of the world-economy pack from the committed dataset (normalise.py's output).
 Both pack generators call economics() and politics(); nothing here is invented: every figure is a published value, every
 text is as published (HTML removed), and every document carries its provenance (source, dataset, retrieval date, licence).
 Percentages stay in percent as published (6.43 means 6.43%); the packs' pc1 / pc2 formats add the % sign.

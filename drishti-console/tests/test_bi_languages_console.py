@@ -91,7 +91,7 @@ def test_the_wizard_page_has_every_step_and_the_sql_view():
 
 
 PUBLISHED = {"rachana": 2, "model": "trading-risk", "version": "1.2.0", "title": "Trading risk",
-             "datasets": {"trade": {"dataset": "pack.trading.trade@^1", "role": "fact"}, "desk": {"dataset": "pack.banking-core.desk@^1", "role": "dimension"}},
+             "datasets": {"trade": {"dataset": "pack.trading.trade@^1", "role": "fact"}, "desk": {"dataset": "pack.core.desk@^1", "role": "dimension"}},
              "relationships": [{"from": "trade.desk", "to": "desk.id"}],
              "measures": {"MTM": {"expr": "sum(trade.mtm)", "format": "signed0"}, "Notional": {"expr": "sum(trade.notional)"}},
              "fields": {"trade.mtm": {"description": "Mark to market"}}, "perspectives": {"desk-view": {"fields": ["trade.desk"], "measures": ["MTM", "Notional"]}}}
@@ -181,7 +181,7 @@ version: 1.0.0
 title: Trading risk
 datasets:
   trade: {dataset: pack.trading.trade@^1, role: fact}     # the fact
-  desk: {dataset: pack.banking-core.desk@^1, role: dimension}
+  desk: {dataset: pack.core.desk@^1, role: dimension}
 relationships:
   - {from: trade.desk, to: desk.id}
 

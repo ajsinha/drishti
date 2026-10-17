@@ -43,11 +43,11 @@ columns:
   utilisation: {type: decimal, role: ratio, additive: false}
 """
 DESK = """rachana: 2
-dataset: pack.banking-core.desk
+dataset: pack.core.desk
 version: 1.0.0
 title: Desk
-generated: {by: pack, pack: banking-core}
-source: {pack: banking-core, kind: desk}
+generated: {by: pack, pack: core}
+source: {pack: core, kind: desk}
 grain: {says: One row per desk per business date, keys: [id]}
 columns:
   name: {type: string, role: dimension}
@@ -56,7 +56,7 @@ columns:
 DESCRIBED = {"id": "implicit:ds_pack_trading_trade@1", "name": "pack.trading.trade", "version": "1.0.0", "implicit": True, "title": "Implicit model of Trade",
              "datasets": [{"alias": "trade", "dataset": "pack.trading.trade", "version": "1.0.0", "role": "fact", "mode": "cached",
                            "fields": [{"field": "trade.desk", "type": "string", "role": "dimension", "references": "desk", "masked": False}]},
-                          {"alias": "desk", "dataset": "pack.banking-core.desk", "version": "1.0.0", "role": "dimension", "fields": [{"field": "desk.name", "type": "string", "masked": True}]}],
+                          {"alias": "desk", "dataset": "pack.core.desk", "version": "1.0.0", "role": "dimension", "fields": [{"field": "desk.name", "type": "string", "masked": True}]}],
              "measures": [{"name": "Sum of notional", "expr": "sum(trade.notional)", "implicit": True, "additive": True, "masked": False}], "hierarchies": {}}
 
 
@@ -68,11 +68,11 @@ class LayerBackend(BiBackend):
     async def bi(self, method, path, ident, body=None, **params):
         if path == "/pack-datasets":
             self.bi_calls.append((method, path, body, params))
-            return {"datasets": [{"name": "pack.trading.trade", "kind": "trade", "pack": "trading", "title": "Trade"}, {"name": "pack.banking-core.desk", "kind": "desk", "pack": "banking-core", "title": "Desk"}]}
+            return {"datasets": [{"name": "pack.trading.trade", "kind": "trade", "pack": "trading", "title": "Trade"}, {"name": "pack.core.desk", "kind": "desk", "pack": "core", "title": "Desk"}]}
         if path.startswith("/pack-datasets/"):
             self.bi_calls.append((method, path, body, params))
             name = path.rsplit("/", 1)[-1]
-            if name not in ("pack.trading.trade", "pack.banking-core.desk"):
+            if name not in ("pack.trading.trade", "pack.core.desk"):
                 raise BackendError(404, "DRS-9001", "no generated dataset")
             return {"name": name, "yaml": TRADE if name.endswith("trade") else DESK, "readOnly": True}
         if path == "/models":
@@ -104,7 +104,7 @@ def make(powers=("bi", "bi-author")):
 
 
 MODEL = {"rachana": 2, "model": "trading-risk", "version": "1.0.0", "title": "Trading risk",
-         "datasets": {"trade": {"dataset": "pack.trading.trade@^1", "role": "fact"}, "desk": {"dataset": "pack.banking-core.desk@^1", "role": "dimension"}},
+         "datasets": {"trade": {"dataset": "pack.trading.trade@^1", "role": "fact"}, "desk": {"dataset": "pack.core.desk@^1", "role": "dimension"}},
          "relationships": [], "measures": {"MTM": {"expr": "sum(trade.mtm)", "format": "signed0"}}}
 
 
@@ -162,7 +162,7 @@ def test_compose_checks_on_the_server_and_suggests_from_the_pack_references():
 
 def test_a_second_path_or_two_facts_are_proposed_inactive_and_dismissed_ones_stay_away():
     infos = {"trade": ml.dataset_info(TRADE), "desk": ml.dataset_info(DESK), "trade2": ml.dataset_info(TRADE)}
-    two_facts = dict(MODEL, datasets=dict(MODEL["datasets"], desk={"dataset": "pack.banking-core.desk@^1", "role": "fact"}))
+    two_facts = dict(MODEL, datasets=dict(MODEL["datasets"], desk={"dataset": "pack.core.desk@^1", "role": "fact"}))
     assert ml.suggestions(two_facts, infos)[0]["active"] is False
     infos["trade"] = ml.dataset_info(TRADE.replace("  currency:", "  bookingDesk: {type: string, role: dimension, references: desk}\n  currency:"))
     s = ml.suggestions(MODEL, infos)                                   # two columns of trade hold desk ids: the second path is inactive
@@ -193,10 +193,10 @@ def test_parse_reads_the_yaml_tab_and_refuses_what_is_not_a_model():
 
 def test_a_new_model_infers_star_roles_and_never_reuses_a_name():
     client, backend = make()
-    r = client.post("/bi/model-api/new", json={"title": "Trades and desks", "datasets": ["pack.trading.trade", "pack.banking-core.desk"]}).json()
+    r = client.post("/bi/model-api/new", json={"title": "Trades and desks", "datasets": ["pack.trading.trade", "pack.core.desk"]}).json()
     body = yaml.safe_load(backend.items[r["id"]]["body"])
     assert r["href"] == "/bi/md/" + r["id"] and body["model"] == "trades-and-desks-2"            # trades-and-desks is taken
-    assert body["datasets"] == {"trade": {"dataset": "pack.trading.trade@^1", "role": "fact"}, "desk": {"dataset": "pack.banking-core.desk@^1", "role": "dimension"}}
+    assert body["datasets"] == {"trade": {"dataset": "pack.trading.trade@^1", "role": "fact"}, "desk": {"dataset": "pack.core.desk@^1", "role": "dimension"}}
     assert backend.items[r["id"]]["kind"] == "model"
 
 

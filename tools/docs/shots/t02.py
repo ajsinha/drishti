@@ -108,7 +108,7 @@ def compare(c: Ctx):
 
 @shot("12-public-data.jpg")
 def public_data(c: Ctx):
-    """A different domain: a country from the politics-society pack (World Bank, UNDP and CIA World Factbook data, published and public)."""
+    """A different domain: a country from the world-economy pack (World Bank, UNDP and CIA World Factbook data, published and public)."""
     login(c)
     go(c, "/t", wait=".cmd-input")
     command(c, "JUR JUR-USA")

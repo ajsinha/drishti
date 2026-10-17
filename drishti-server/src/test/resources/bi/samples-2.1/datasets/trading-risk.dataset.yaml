@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # STORED SAMPLE 2 of 3: the "real" example. A cross-pack model: trades (trading pack) joined to counterparties and desks and books
-# (banking-core pack) and to netting sets (counterparty-risk pack), using the links the packs already declare.
+# (core pack) and to netting sets (counterparty-risk pack), using the links the packs already declare.
 # It also shows a date hierarchy, a rollup, a row rule per role and masked columns.
 # Tutorial: docs/tutorials/../guides/BI_RECIPES.md, 4 and 8. Reference: docs/guides/DATASETS.md.
 
@@ -69,7 +69,7 @@ tables:
 
   # ---- the dimension tables: what you group and filter by --------------------------------------------------------------
   counterparties:
-    source: { connector: reference-store, kind: counterparty }  # pack: banking-core
+    source: { connector: reference-store, kind: counterparty }  # pack: core
     mode: cached
     columns:
       name:    string
@@ -95,11 +95,11 @@ tables:
 # Relationships join tables. "from" is the MANY side, "to" the ONE side. These four are the links the packs declare in their
 # link graph (graph.fields: desk, book, nettingSet, counterparty); they cross packs. Every id is the entity's own id.
 relationships:
-  - { from: trades.desk,             to: desks.id,           cardinality: many-to-one }   # trading -> banking-core
-  - { from: trades.book,             to: books.id,           cardinality: many-to-one }   # trading -> banking-core
-  - { from: trades.counterpartyId,   to: counterparties.id,  cardinality: many-to-one }   # trading -> banking-core
+  - { from: trades.desk,             to: desks.id,           cardinality: many-to-one }   # trading -> core
+  - { from: trades.book,             to: books.id,           cardinality: many-to-one }   # trading -> core
+  - { from: trades.counterpartyId,   to: counterparties.id,  cardinality: many-to-one }   # trading -> core
   - { from: trades.nettingSet,       to: netting_sets.id,    cardinality: many-to-one }   # trading -> counterparty-risk
-  - { from: netting_sets.counterparty, to: counterparties.id, cardinality: many-to-one }  # counterparty-risk -> banking-core
+  - { from: netting_sets.counterparty, to: counterparties.id, cardinality: many-to-one }  # counterparty-risk -> core
   # Not every join is allowed in one query: a measure from trades can be grouped by anything trades reaches, many-to-one
   # (desks, books, counterparties, netting_sets). Exposure comes from netting_sets and can be grouped by counterparties,
   # but not by desks (no many-to-one path from netting sets to desks). Ask for them in separate queries.

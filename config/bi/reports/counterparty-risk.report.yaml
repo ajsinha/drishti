@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# SAMPLE REPORT 2 of 3: "Counterparty risk". A cross-pack report on the dataset trading-risk (trades from the trading pack, counterparties from banking-core,
+# SAMPLE REPORT 2 of 3: "Counterparty risk". A cross-pack report on the dataset trading-risk (trades from the trading pack, counterparties from core,
 # netting sets from counterparty-risk): exposure by counterparty, two slicers that filter every page, and a drill-through from a counterparty's bar to a page
 # about that counterparty. Read it with three different people to see the row rules and masks at work (docs/guides/BI_RECIPES.md, row rules and masks):
 #   * a desk-head sees only the trades of their own desks, so the MTM visuals show their desk; the exposure visuals are REFUSED for them (a visual says why,
@@ -26,7 +26,7 @@ version: 1
 title: Counterparty risk
 description: >-
   Exposure (expected and potential future, peak) by counterparty with the trades behind it; filter by sector and country, click a counterparty and drill through
-  to its own page. Cross-pack: trading, banking-core and counterparty-risk.
+  to its own page. Cross-pack: trading, core and counterparty-risk.
 sample: true
 endorsement: promoted
 tags: [sample, counterparty-risk, cross-pack, tutorial]

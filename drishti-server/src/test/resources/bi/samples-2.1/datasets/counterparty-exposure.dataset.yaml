@@ -44,7 +44,7 @@ tables:
       limit:        { type: decimal, format: amount0 }
 
   counterparties:
-    source: { connector: reference-store, kind: counterparty }  # pack: banking-core
+    source: { connector: reference-store, kind: counterparty }  # pack: core
     mode: cached
     columns:
       name:    string

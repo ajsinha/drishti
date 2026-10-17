@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Maps in Chromium over the real server and console (ports 18941 and 17941, no sign-in): the politics-society and economics packs' real data and the sample
+"""Maps in Chromium over the real server and console (ports 18941 and 17941, no sign-in): the world-economy pack's real data and the sample
 report World economics on its own dataset. The jurisdiction page of Australia draws the world with Australia highlighted and a click on New Zealand opens
 JUR-NZL; a country with no entity says so on hover and does not open; the economy page shades the countries with a legend; the report's map drills from the world
 to Australia and its regions and back, with the cross-filter on the rest of the page; and on a phone (390 px) nothing scrolls sideways and the way in is a list of
@@ -79,7 +79,7 @@ def stack(tmp_path_factory):
     from bi_samples import copy_samples
     copy_samples(work / "config/bi", ["world-economics"])               # the model and the dataset it reads
     shutil.copy(ROOT / "config/bi/reports/world-economics.report.yaml", work / "config/bi/reports")
-    env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config/packs"), DRISHTI_PACKS="politics-society,economics", DRISHTI_BI_DIR=str(work / "config/bi"),
+    env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config/packs"), DRISHTI_PACKS="world-economy", DRISHTI_BI_DIR=str(work / "config/bi"),
                DRISHTI_DATA_DIR=str(work / "data"))
     procs = []
     try:

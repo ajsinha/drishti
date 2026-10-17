@@ -31,7 +31,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 /**
  * DATA-08 (QA 2026-10-01): reverse lookups of a kind kept in {@code effective} mode (a line when an entity changes, as
- * banking-core keeps counterparties and credit limits) find the entities whose version on the date mentions the target,
+ * core keeps counterparties and credit limits) find the entities whose version on the date mentions the target,
  * as a read of each would show it, instead of none.
  */
 class FileEffectiveReverseTest {

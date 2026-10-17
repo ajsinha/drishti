@@ -36,7 +36,7 @@ class PackRegistryToolTest(unittest.TestCase):
         self.tmp = Path(tempfile.mkdtemp())
         self.pack = self.tmp / "widgets"
         (self.pack / "samples" / "widget").mkdir(parents=True)
-        (self.pack / "pack.yaml").write_text("pack: widgets\nversion: 1.2.0\ntitle: Widgets\nextends:\n  - banking-core\n"
+        (self.pack / "pack.yaml").write_text("pack: widgets\nversion: 1.2.0\ntitle: Widgets\nextends:\n  - core\n"
                                              "description: >-\n  Widgets and\n  their parts.\nkinds: [widget]\n")
         (self.pack / "samples" / "widget" / "W-1.json").write_text('{"widgetId": "W-1"}')
         with redirect_stdout(StringIO()):
@@ -50,7 +50,7 @@ class PackRegistryToolTest(unittest.TestCase):
     def test_publish_signs_a_reproducible_archive_and_verify_checks_it(self):
         with redirect_stdout(StringIO()):
             entry = packreg.publish(self.pack, self.registry, self.key, "acme")
-        self.assertEqual(("widgets", "1.2.0", ["banking-core"], "Widgets and their parts."),
+        self.assertEqual(("widgets", "1.2.0", ["core"], "Widgets and their parts."),
                          (entry["name"], entry["version"], entry["requires"], entry["description"]))
         first = (self.registry / "widgets-1.2.0.zip").read_bytes()
         self.assertEqual(first, packreg.archive(self.pack))                    # the same folder, the same bytes

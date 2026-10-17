@@ -91,4 +91,4 @@ def test_no_imf_documents_carry_no_imf():
     blob = json.dumps(eco, ensure_ascii=False).replace("reserve position in the IMF", "")
     assert "IMF" not in blob and "Monetary Fund" not in blob and "imf" not in blob.lower().replace("imfree", "")
     assert BD.economics(BD.Data(no_imf=False))["economic-forecast"]                         # the default build still has them
-    assert json.dumps(BD.politics(d)) == json.dumps(BD.politics(BD.Data(no_imf=False)))     # politics-society is the same either way
+    assert json.dumps(BD.politics(d)) == json.dumps(BD.politics(BD.Data(no_imf=False)))     # world-economy is the same either way

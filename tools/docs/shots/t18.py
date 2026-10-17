@@ -29,7 +29,7 @@ shot = register("t18", OUT / "t18")
 DATA = ROOT / "docs" / "tutorials" / "data"
 WORKSPACE = "Exposure desk"
 AUDIENCE = ["risk", "desk-head", "admin"]
-TRADE, NETTING, COUNTERPARTY, DESK = "pack.trading.trade", "pack.counterparty-risk.netting-set", "pack.banking-core.counterparty", "pack.banking-core.desk"
+TRADE, NETTING, COUNTERPARTY, DESK = "pack.trading.trade", "pack.counterparty-risk.netting-set", "pack.core.counterparty", "pack.core.desk"
 STATE: dict = {}
 
 

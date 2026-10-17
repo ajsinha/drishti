@@ -18,6 +18,40 @@ about: 1
 vocabulary:
   utilisation: { term: "Utilisation", means: "The share of the limit that is used: used divided by limit. Above 100% is a breach.", unit: "% of limit" }
 kinds:
+  agreement:
+    title: Master agreement
+    about: >-
+      ${$.agreementId} is the ${$.type} the bank signed with ${$.counterpartyName} on ${$.signed}, under ${$.governingLaw} law;
+      close-out netting is ${$.closeOutNetting}, so the trades under it net to one amount if either side defaults.
+    guide: counterparty-risk
+    glossary:
+      type: { term: "Agreement type", means: "The master agreement form, for example the ISDA 2002 Master Agreement." }
+      counterpartyName: { term: "Counterparty", means: "The legal entity that signed the agreement with the bank." }
+      governingLaw: { term: "Governing law", means: "The law the agreement is read under, which decides how close-out netting is enforced." }
+      signed: { term: "Signed", means: "The date the agreement was signed." }
+      closeOutNetting: { term: "Close-out netting", means: "Whether a legal opinion confirms that on default the trades net to one amount; only then may exposure be netted." }
+      elections.automaticEarlyTermination: { term: "Automatic early termination", means: "Whether the trades end by themselves on certain defaults, without a notice." }
+      elections.crossDefault: { term: "Cross default", means: "The threshold above which a default on other debt is a default under this agreement." }
+      elections.setOff: { term: "Set-off", means: "Whether amounts owed under other contracts may be set off against the close-out amount." }
+      elections.terminationCurrency: { term: "Termination currency", means: "The currency the close-out amount is paid in." }
+      elections.additionalTerminationEvents: { term: "Additional termination events", means: "Further events, such as a downgrade, that let a party end the trades." }
+      elections.protocols: { term: "Protocols", means: "The ISDA protocols both parties adhered to, which amend the agreement." }
+  csa:
+    title: Credit support annex
+    about: >-
+      ${$.csaId} secures ${$.agreement} with ${$.marginType} margin, called ${$.frequency}: the bank's threshold is
+      ${fmt($.thresholdUs, 'compact')} and the counterparty's ${fmt($.thresholdThem, 'compact')}, with a minimum transfer of ${fmt($.mta, 'compact')}.
+    guide: counterparty-risk
+    glossary:
+      marginType: { term: "Margin type", means: "Variation margin (VM) covers today's value; initial margin (IM) covers how it may move before a default is closed out." }
+      thresholdUs: { term: "Threshold (bank)", means: "The exposure the counterparty may have to the bank before the bank must post collateral.", unit: "USD" }
+      thresholdThem: { term: "Threshold (counterparty)", means: "The exposure the bank accepts before the counterparty must post collateral.", unit: "USD" }
+      mta: { term: "Minimum transfer amount", means: "The smallest collateral movement either side may call.", unit: "USD" }
+      independentAmount: { term: "Independent amount", means: "Collateral posted up front, whatever the exposure.", unit: "USD" }
+      frequency: { term: "Call frequency", means: "How often margin is called." }
+      mpor: { term: "Margin period of risk", means: "The time assumed between the last margin received and closing out a defaulted counterparty." }
+      eligible.asset: { term: "Eligible collateral", means: "An asset the counterparty may deliver as collateral." }
+      eligible.haircut: { term: "Haircut", means: "The share taken off the asset's value when it is counted as collateral." }
   netting-set:
     title: Netting set
     about: >-

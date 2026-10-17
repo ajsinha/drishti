@@ -42,7 +42,7 @@ public final class ImplicitModels {
     /**
      * The implicit model of {@code dataset}.
      *
-     * @param packDatasetOfKind the generated dataset of a kind ({@code desk} gives {@code pack.banking-core.desk}), or empty; only consulted for a generated dataset
+     * @param packDatasetOfKind the generated dataset of a kind ({@code desk} gives {@code pack.core.desk}), or empty; only consulted for a generated dataset
      */
     public static Implicit of(ResolvedDataset dataset, Function<String, Optional<ResolvedDataset>> packDatasetOfKind) {
         DatasetDef d = dataset.def();

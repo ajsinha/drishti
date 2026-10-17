@@ -12,8 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of the real-data guide (docs/guides/REAL_DATA.md): real countries in the economics and politics-society packs, written to
-docs/guides/img/realdata/. They need a server and console with those two packs (DRISHTI_PACKS=economics,politics-society):
+"""The pictures of the real-data guide (docs/guides/REAL_DATA.md): real countries in the world-economy pack, written to
+docs/guides/img/realdata/. They need a server and console with that pack (DRISHTI_PACKS=world-economy):
 
     drishti-console/.venv/bin/python tools/docs/screenshots.py --guide realdata --base http://127.0.0.1:17987
 """

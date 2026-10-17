@@ -317,7 +317,7 @@ drishti:
       - "* /api/v1/command/aliases"
     token-write-max-days: 90           # a token with a write scope must expire, within this many days (read tokens: 1-366 or never)
     roles:
-      viewer:  { kinds: ["*"], layout: false, bi: [bi] }   # packs add domain roles (finance: trader, risk); layout: may arrange views (default true)
+      viewer:  { kinds: ["*"], layout: false, bi: [bi] }   # packs add domain roles (trading: trader; market-risk, counterparty-risk); layout: may arrange views (default true)
       author:  { kinds: ["*"], raw: true, author: true, calc: true, bi: [bi, bi-author] }   # calc: may use Calc, Python in the browser (PYTHON_CALC.md)
       approver: { kinds: ["*"], raw: true, author: true, approve: true, calc: true, bi: [bi, bi-author] }   # reviews proposed Sutras (admins may too)
       admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true }
@@ -470,7 +470,7 @@ drishti:
       kinds: {}                      # days per entity kind, by kind name: { trade: 2555 }; beats the pack and the default
       interval: 24h                  # how often the purge runs; it only runs when some retention above 0 is set (a pack: packs.<pack>.retention-days)
     export-keep: 24h
-    packs: {}                        # per-pack overrides, by pack name: genomics: { share-enabled: false }
+    packs: {}                        # per-pack overrides, by pack name: news-and-markets: { share-enabled: false }
     bridges:                         # build step 9: post "comment + link" (never a value) to Teams, Slack or a signed webhook
       enabled: false
       render-as: viewer              # the role whose masks the posted text follows (the default has no raw)

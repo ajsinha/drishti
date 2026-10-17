@@ -46,7 +46,7 @@ def start_servers(work: Path) -> list:
         sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-server -am")
     packs = work / "packs"
     packs.mkdir()
-    for name in ("banking-core", "market-data", "trading"):
+    for name in ("core", "market-data", "trading"):
         (packs / name).symlink_to(ROOT / "config" / "packs" / name)
     (packs / "desk-demo").mkdir()
     (packs / "desk-demo" / "pack.yaml").write_text(

@@ -934,7 +934,7 @@ class FakeBackend:
         if name.upper() not in ("MKT", "MARKET-DATA"):
             raise BackendError(400, "DRS-5001", f"no pack '{name}' is switched on")
         return {"name": "market-data", "code": "MKT", "title": "Market data", "description": "Curves and surfaces.", "version": "1.0.0",
-                "extends": ["banking-core"], "kinds": [
+                "extends": ["core"], "kinds": [
                     {"kind": "fx-vol-surface", "mnemonic": "FXV", "label": "FX volatility surface", "count": 12, "more": False,
                      "example": "FXV-EURUSD", "columns": []},
                     {"kind": "ir-curve", "mnemonic": "CRV", "label": "Interest-rate curve", "count": 1234, "more": False,

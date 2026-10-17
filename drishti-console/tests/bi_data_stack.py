@@ -15,7 +15,7 @@
 """A real scratch stack for the dataset browser test and the tutorial pictures (Rupaka phase 2): the built server jar (security on, the trading pack) on
 :18989, the console on :17989 with sign-in. The data is a small lake of JSON-lines files read through a file connector named ``trading-store`` (the name
 the shipped sample datasets use), so the sample ``trades-basic`` runs unchanged: 2 business days of 60 trades. With ``DRISHTI_BI_DELTA_ROOT`` set to a
-Delta lake made by ``tools/packgen/banking/make_data.py --lake`` the stack serves that instead (banking-core and counterparty-risk too), which the other two
+Delta lake made by ``tools/packgen/banking/make_data.py --lake`` the stack serves that instead (core and counterparty-risk too), which the other two
 samples need. Everything lives in a scratch directory; ports in use are never touched (the stack refuses to start).
 
 Users (password ``long-enough-pass-1``): wes writes (bi, bi-author), rita is risk (bi, raw), hana is a desk head (bi, raw, desk DESK-FX), ann is an analyst

@@ -30,10 +30,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 /**
- * The generated domain packs load with the packs they require, and every example command they advertise opens a
- * view built by the pack's Sutra with every panel filled.
+ * The shipped packs (the default drishti.packs.enabled) load together, and every example command they advertise opens a view built
+ * by the pack's Sutra with every panel filled and no missing link. news-and-markets is the exception: its pages read two on-demand
+ * internet connectors that are off as shipped, so its examples only have to open by their Sutra.
  */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics"})
+@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=" + com.ash.drishti.packs.PackPaths.DEFAULT_ENABLED})
 class DomainPacksTest {
 
     @Autowired ViewPipeline pipeline;
@@ -41,24 +42,31 @@ class DomainPacksTest {
 
     @Test
     void everyAdvertisedExampleOpensAFullView() throws Exception {
-        for (String pack : new String[] {"liquidity-risk", "climate-risk", "operational-risk", "retail-banking", "genomics", "politics-society", "economics"}) {
+        for (String pack : com.ash.drishti.packs.PackPaths.DEFAULT_ENABLED.split(",")) {
             JsonNode manifest = new ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory()).readTree(
                     Files.readString(Path.of("../config/packs", pack, "pack.yaml")));
             for (JsonNode ex : manifest.path("console").path("examples")) {
                 EntityRef ref = commands.require(ex.get(0).asText());
+                if (ref.kind().equals("news") || ref.kind().equals("quote")) {
+                    continue;                                      // served only by the internet connectors, off as shipped
+                }
                 ViewModel v = pipeline.view(ref);
                 assertThat(v.provenance().layout()).as(ref.toString()).startsWith("Sutra ");
+                if (pack.equals("news-and-markets")) {
+                    continue;                                      // live headlines and quotes: off as shipped
+                }
                 assertThat(v.panels()).as(ref.toString()).allSatisfy(p -> assertThat(p.empty()).as(ref + "/" + p.id()).isFalse());
                 assertThat(links(v)).as(ref + " links").allSatisfy(l -> assertThat(l.status()).as(ref + " -> " + l.text()).isNotEqualTo("missing"));
             }
         }
     }
 
+    /** A core counterparty links across packs: its country of risk to the world-economy pack's economy, its agreement to counterparty-risk. */
     @Test
-    void aLinkFieldMeansOneKindAcrossPacks() {
-        ViewModel v = pipeline.view(commands.require("CST CST-DELAYED-COMM"));
-        assertThat(links(v)).filteredOn(l -> l.text().equals("NGFS-DELAYED")).singleElement()
-                .satisfies(l -> assertThat(l.link().kind()).isEqualTo("climate-scenario"));
+    void aCounterpartyLinksToItsEconomyAndItsAgreementInOtherPacks() {
+        ViewModel v = pipeline.view(commands.require("CPTY CP-NORTHBRIDGE"));
+        assertThat(links(v)).filteredOn(l -> l.link() != null && "economy".equals(l.link().kind())).isNotEmpty()
+                .allSatisfy(l -> assertThat(l.status()).isNotEqualTo("missing"));
     }
 
     private static java.util.List<PanelData.LinkItem> links(ViewModel v) {

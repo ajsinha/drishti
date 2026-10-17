@@ -44,7 +44,7 @@ title: {title}
 version: 1.0.0
 datasets:
   trade: {{dataset: pack.trading.trade@^1, role: fact}}
-  desk: {{dataset: pack.banking-core.desk@^1, role: dimension}}
+  desk: {{dataset: pack.core.desk@^1, role: dimension}}
 relationships:
   - {{from: trade.desk, to: desk.id}}
 measures:
@@ -54,7 +54,7 @@ measures:
 
 def open_model(browser, name, title="QA model"):
     page = sign_in(browser, "wes")
-    made = fetch(page, "POST", "/bi/model-api/new", {"title": title, "workspace": "me", "datasets": ["pack.trading.trade", "pack.banking-core.desk"]})
+    made = fetch(page, "POST", "/bi/model-api/new", {"title": title, "workspace": "me", "datasets": ["pack.trading.trade", "pack.core.desk"]})
     assert made["status"] == 200, made
     item = made["body"]["href"].rsplit("/", 1)[-1]
     got = fetch(page, "GET", f"/bi/api/items/{item}")

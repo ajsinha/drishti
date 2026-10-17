@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A real scratch stack for the market-watch and news-watch sample packs: the built server jar on :18993 with both on-demand connectors switched on and
+"""A real scratch stack for the news-and-markets sample pack: the built server jar on :18993 with both on-demand connectors switched on and
 pointed at two local fakes (a Google News RSS and a Yahoo chart endpoint, canned here), and the console on :17993. Nothing ever reaches Google or Yahoo.
 Everything lives in a scratch directory; ports that are already in use are never touched (the stack refuses to start)."""
 from __future__ import annotations
@@ -132,7 +132,7 @@ class Stack:
         work = self.tmp / "server"
         work.mkdir(parents=True)
         on = "true" if self.connectors_on else "false"
-        env = dict(os.environ, DRISHTI_PACKS="market-watch,news-watch", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS_SAMPLES="visible",
+        env = dict(os.environ, DRISHTI_PACKS="news-and-markets", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS_SAMPLES="visible",
                    DRISHTI_NEWS_ENABLED=on, DRISHTI_NEWS_URL=base + "/rss/search", DRISHTI_YFINANCE_ENABLED=on, DRISHTI_YFINANCE_URL=base + "/v8/finance/chart",
                    DRISHTI_CONNECTORS_DIR=str(work / "connectors"), DRISHTI_GRAPH_LINK_BUDGET="3s")
         self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}"], cwd=work, env=env,

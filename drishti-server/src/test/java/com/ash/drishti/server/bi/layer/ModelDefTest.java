@@ -279,7 +279,7 @@ class ModelDefTest {
     @Test
     void anImplicitModelBringsPackDimensionsOneHop() {
         DatasetDef trade = DatasetDefParser.parse(DatasetDefParserTest.TRADES.replace("dataset: trades", "dataset: pack.trading.trade\ngenerated: { by: pack, pack: trading }")).dataset();
-        DatasetDef desk = DatasetDefParser.parse(DESKS.replace("dataset: desks", "dataset: pack.banking-core.desk\ngenerated: { by: pack, pack: banking-core }")).dataset();
+        DatasetDef desk = DatasetDefParser.parse(DESKS.replace("dataset: desks", "dataset: pack.core.desk\ngenerated: { by: pack, pack: core }")).dataset();
         ImplicitModels.Implicit im = ImplicitModels.of(ResolvedDataset.of(trade), k -> "desk".equals(k) ? java.util.Optional.of(ResolvedDataset.of(desk)) : java.util.Optional.empty());
         assertThat(im.model().datasets()).containsOnlyKeys("trade", "desk");
         assertThat(im.model().datasets().get("desk").role()).isEqualTo("dimension");

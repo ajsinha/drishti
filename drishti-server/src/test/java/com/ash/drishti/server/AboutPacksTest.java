@@ -46,14 +46,13 @@ import org.springframework.boot.test.context.SpringBootTest;
  * sample with no failed expression, and every guide it points to exists.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
-        "drishti.packs.enabled=market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics",
+        "drishti.packs.enabled=market-risk,counterparty-risk,world-economy",
         "drishti.identity.database-url=jdbc:sqlite:target/aboutpacks-${random.uuid}/identity.db",
         "drishti.builder.designs.dir=target/aboutpacks-files-${random.uuid}"})
 class AboutPacksTest {
 
-    /** The packs whose kinds all need text: the QUICKSTART packs, and the trading pack their trades come from. */
-    private static final List<String> PACKS = List.of("market-risk", "counterparty-risk", "liquidity-risk", "climate-risk", "operational-risk",
-            "retail-banking", "genomics", "politics-society", "economics", "trading");
+    /** The packs whose kinds all need text: the shipped risk and world-economy packs, and the trading pack their trades come from. */
+    private static final List<String> PACKS = List.of("market-risk", "counterparty-risk", "world-economy", "trading");
 
     private static final Path PACKS_DIR = Path.of("..", "config", "packs");
     private final ObjectMapper yaml = new ObjectMapper(new YAMLFactory());

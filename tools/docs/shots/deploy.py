@@ -36,8 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from shotlib import CONSOLE_PORT, PACKS, ROOT, SERVER_PORT, Ctx, listening, out_dir, register  # noqa: E402
 
 shot = register("deploy")
-QUICKSTART = ["banking-core", "market-data", "trading", "market-risk", "counterparty-risk", "liquidity-risk", "climate-risk",
-              "operational-risk", "retail-banking", "genomics", "politics-society", "economics"]
+QUICKSTART = ["core", "market-data", "trading", "market-risk", "counterparty-risk", "world-economy", "news-and-markets"]
 HELPDESK = ROOT / "docs" / "guides" / "examples" / "pack" / "helpdesk"
 STATE: dict = {}
 ROW = "table.adm-tbl:not([data-kept]):not([data-history]) tr[data-pack='desk-lake']"

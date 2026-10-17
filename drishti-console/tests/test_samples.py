@@ -26,7 +26,7 @@ def _land(client, url, **params):
 
 def test_studio_names_no_entity_of_a_pack_that_may_be_absent(client, with_packs, monkeypatch):
     monkeypatch.setattr(client.app.state.examples, "default", "")   # no default example
-    for packs in (("banking-core", "market-data", "trading"), ("no-such-pack",)):
+    for packs in (("core", "market-data", "trading"), ("no-such-pack",)):
         with_packs(*packs)
         page = _land(client, "/studio")
         assert "IRS-48213" not in page and "CP-NORTHBRIDGE" not in page and "irs-vanilla" not in page

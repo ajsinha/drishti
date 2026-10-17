@@ -28,7 +28,7 @@ import urllib.request
 
 ROOT = Path(__file__).resolve().parents[2]
 EXAMPLES = ROOT / "docs" / "guides" / "examples"
-PACKS = "market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics"
+PACKS = "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets"
 SERVER_PORT = int(os.environ.get("DRISHTI_SHOTS_SERVER_PORT", 18997))      # the scratch ports; override when another run holds them
 CONSOLE_PORT = int(os.environ.get("DRISHTI_SHOTS_CONSOLE_PORT", 17997))
 FORBIDDEN = {18480, 17480}

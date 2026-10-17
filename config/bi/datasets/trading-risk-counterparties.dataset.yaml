@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # STORED SAMPLE 2 of 3: the "real" example. A cross-pack model: trades (trading pack) joined to counterparties and desks and books
-# (banking-core pack) and to netting sets (counterparty-risk pack), using the links the packs already declare.
+# (core pack) and to netting sets (counterparty-risk pack), using the links the packs already declare.
 # It also shows a date hierarchy, a rollup, a row rule per role and masked columns.
 # Tutorial: docs/tutorials/../guides/BI_RECIPES.md, 4 and 8. Reference: docs/guides/DATASETS.md.
 

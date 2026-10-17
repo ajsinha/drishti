@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Wave W1 of the model layer in Chromium (docs/architecture/BI_MODEL_SPEC.md section 9), over the real server and console on scratch ports 18918 and
-17918 (security on, the trading and banking-core packs, a small file lake of trades and desks): a pack-generated dataset is listed and browsable (grain,
+17918 (security on, the trading and core packs, a small file lake of trades and desks): a pack-generated dataset is listed and browsable (grain,
 keys, meanings, time mode); a new model takes it and the desks, the pack reference is suggested and accepted in one click; a measure gets its default
 from the column; a role restricted on trades but not on desks raises the safeguard beside the Security tab and is resolved with one click; the model is
 saved; a report started from it reads the model in its Fields pane; and the model query's answer equals the old dataset query over the same rows.
@@ -120,7 +120,7 @@ class Stack:
             write_lake(lake)
             (work / "config" / "connectors").mkdir(parents=True)
             (work / "config" / "connectors" / "trading-store.yaml").write_text(CONNECTOR.format(root=lake))
-            env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS="trading,banking-core", DRISHTI_SECURITY_ENABLED="true",
+            env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS="trading,core", DRISHTI_SECURITY_ENABLED="true",
                        DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_BI_DIR=str(work / "config" / "bi"), DRISHTI_DATA_DIR=str(work / "data"))
             self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
                                                      f"--drishti.bi.query.store-dir={self.tmp / 'store'}"], cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"),
@@ -131,7 +131,7 @@ class Stack:
                 assert s == 200, r
             for user, role, desk in [("wes", "bi-writer", ""), ("hana", "desk-head", "DESK-FX")]:
                 s, r = admin("POST", "/admin/users", {"username": user, "displayName": user.capitalize(), "email": f"{user}@desk.test", "desk": desk, "roles": [role],
-                                                    "packs": ["trading", "banking-core"], "password": PASSWORD, "mustChangePassword": False})
+                                                    "packs": ["trading", "core"], "password": PASSWORD, "mustChangePassword": False})
                 assert s in (200, 201, 409), r
             cenv = dict(os.environ, DRISHTI_AUTH_ENABLED="true", DRISHTI_SESSION_SECRET="s" * 40, DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_SECURE_COOKIE="false",
                         DRISHTI_SESSION_RECHECK_SECONDS="1")
@@ -234,7 +234,7 @@ def test_pack_dataset_to_model_to_report(browser):
     page.click("[data-new-model]")
     page.fill("[data-nm-title]", "Trades and desks")
     page.check('[data-nm-pick="pack.trading.trade"]')
-    page.check('[data-nm-pick="pack.banking-core.desk"]')
+    page.check('[data-nm-pick="pack.core.desk"]')
     page.click("[data-nm-go]")
     page.wait_for_url("**/bi/md/**")
     expect(page.locator('[data-md-root][data-ready="yes"]')).to_have_count(1, timeout=30000)

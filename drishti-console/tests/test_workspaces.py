@@ -41,7 +41,7 @@ def _ws(page: str) -> dict:
 
 def test_without_starters_the_index_says_so_and_offers_a_blank_workspace(client, with_packs):
     """UX-06: with packs that bring no starters, /w listed nothing, said nothing and had no way to make a workspace."""
-    with_packs("banking-core", "trading")
+    with_packs("core", "trading")
     page = client.get("/w").text
     assert "No starter workspaces" in page and "Open a starter below" not in page
     assert 'action="/w/new"' in page and 'name="name"' in page                  # a blank one, by name
