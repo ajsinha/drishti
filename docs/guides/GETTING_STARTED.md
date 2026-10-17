@@ -382,7 +382,7 @@ drishti-console/.venv/bin/python -m pytest drishti-console/tests -q             
 ### IntelliJ IDEA and PyCharm
 
 Running the server from IntelliJ IDEA and the console from PyCharm (run configurations, JDK and interpreter setup,
-debugging, reloading changes, tests in the IDE, common problems) has its own guide: **[IDE_GUIDE.md](IDE_GUIDE.md)**.
+debugging, reloading changes, tests in the IDE, common problems) has its own guide: **[IDE_GUIDE.md](IDE_GUIDE.md)**. The repository ships ready-made run configurations in `.run/` (server, a QA profile on its own ports and data folder, console, build the jar, the lake build and pack tools), so a tester needs only the two IDEs and no terminal.
 
 Where next from a terminal: **[CLI_GUIDE.md](CLI_GUIDE.md)** is the one command line, `tools/drishti.py`, for turning your JSON Lines
 into a pack, checking packs in CI, loading data and a pack into a running server, and the Screen Designer's propose and approve steps.

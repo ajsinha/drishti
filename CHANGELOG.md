@@ -17,6 +17,11 @@
 
 ## Unreleased
 
+- **Run configurations for IntelliJ IDEA and PyCharm; QA with no terminal.** `.run/` now holds Drishti server (default, QA profile on ports 18580/17580 with its own git-ignored
+  `qa-data/` folder, and a debug-friendly one), Drishti console (default and QA), Drishti build server jar (Maven), a compound Drishti QA (server + console) and Python
+  configurations for QA pack make, QA lake build (big JSON to Delta, editable parameters), QA server smoke and QA doctor. `docs/guides/IDE_GUIDE.md` is rewritten around them,
+  with the QA walk (build the jar, QA server, QA console, lake build, Build -> New pack, deploy, load data, open a deal) and more common problems. `deltalake` joins
+  `drishti-console/requirements.txt` so the lake build runs from the console's `.venv`.
 - **Console: reconnects to the server by itself.** Start order no longer matters and a restarted server is noticed. A background watch checks
   each server every `backend.check_seconds` (default 5, `DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS`), logs each change once, shows it on Admin >
   Health and answers `GET /healthz/backend`. Every page carries `server-watch.js`: when a page was rendered while the server was unreachable, or a

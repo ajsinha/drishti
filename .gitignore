@@ -33,3 +33,6 @@ external_lib/java/*
 !external_lib/java/.gitkeep
 external_lib/python/*
 !external_lib/python/.gitkeep
+
+# the QA run configurations (.run/): the QA profile own data folder, lake and packs
+/qa-data/

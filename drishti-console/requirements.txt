@@ -13,4 +13,5 @@ brotli>=1.1      # optional: Brotli for embed payloads (gzip otherwise)
 numpy>=2.0
 pandas>=2.2
 pyarrow>=16
+deltalake>=0.20    # lake build (tools/drishti.py lake build) writes Delta tables from the IDE; docs/guides/IDE_GUIDE.md
 # optional, allow-listed when installed: scipy>=1.13, statsmodels>=0.14
