@@ -23,30 +23,30 @@ import pandas as pd
 from drishti import quant as q
 
 doc = view.doc
-terms = doc.get("terms") or {}
-FREQ = {"Annual": 1, "Semi-annual": 2, "Quarterly": 4, "Monthly": 12}.get(terms.get("couponFrequency"), 2)
+terms = doc.get("TERMS") or {}
+FREQ = {"Annual": 1, "Semi-annual": 2, "Quarterly": 4, "Monthly": 12}.get(terms.get("COUPON_FREQUENCY"), 2)
 as_of = date.fromisoformat(view.business_date or "2026-09-30")
-years = (date.fromisoformat(doc["maturity"]) - as_of).days / 365.25
-c, clean = doc["coupon"], doc["price"]
+years = (date.fromisoformat(doc["MATURITY"]) - as_of).days / 365.25
+c, clean = doc["COUPON"], doc["PRICE"]
 
 ytm = q.bond_yield(clean, c, years, FREQ)                              # clean price -> yield (Brent)
 risk = q.bond_risk(ytm, c, years, FREQ)
 times, amounts, accrued = q.bond_cashflows(c, years, FREQ)
 show(pd.DataFrame({
-    "measure": ["years to maturity", "clean price", "accrued", "dirty price", "yield (recomputed)", "yield (master)",
+    "MEASURE": ["years to maturity", "clean price", "accrued", "dirty price", "yield (recomputed)", "yield (master)",
                 "Macaulay duration", "modified duration", "modified duration (master)", "convexity", "DV01 per 1m face"],
-    "value": [years, clean, accrued, risk["dirty"], f"{ytm:.4%}", f"{doc.get('yield', float('nan')):.4%}", risk["macaulay"],
-              risk["modified"], doc.get("modDuration"), risk["convexity"], risk["dv01"] * 1e6 / 100],
-}), title=f"{view.id}: {doc.get('issuerName', '')} {c:.3%} {doc['maturity']} ({terms.get('couponFrequency', '')}, {doc.get('rating', '')})")
+    "VALUE": [years, clean, accrued, risk["dirty"], f"{ytm:.4%}", f"{doc.get('YIELD', float('nan')):.4%}", risk["macaulay"],
+              risk["modified"], doc.get("MOD_DURATION"), risk["convexity"], risk["DV01"] * 1e6 / 100],
+}), title=f"{view.id}: {doc.get('ISSUER_NAME', '')} {c:.3%} {doc['MATURITY']} ({terms.get('COUPON_FREQUENCY', '')}, {doc.get('RATING', '')})")
 
-if doc.get("benchmarkCurve"):
-    bench = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", doc["benchmarkCurve"]))["points"])
+if doc.get("BENCHMARK_CURVE"):
+    bench = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", doc["BENCHMARK_CURVE"]))["POINTS"])
     zs = q.z_spread(risk["dirty"], times, amounts, bench)
     flows = pd.DataFrame({"years": times, "cashflow": amounts, "benchmark zero %": bench.zero(times) * 100,
                           "df at Z-spread": np.exp(-(bench.zero(times) + zs) * times)})
     flows["PV"] = flows["cashflow"] * flows["df at Z-spread"]
-    show(flows, title=f"Cashflows per 100 face on {doc['benchmarkCurve']} + Z-spread {zs * 1e4:.1f} bp "
-                      f"(master: {doc.get('zSpread')} bp)")
+    show(flows, title=f"Cashflows per 100 face on {doc['BENCHMARK_CURVE']} + Z-spread {zs * 1e4:.1f} bp "
+                      f"(master: {doc.get('Z_SPREAD')} bp)")
 
 ys = np.linspace(ytm - 0.03, ytm + 0.03, 25)
 chart(pd.DataFrame({"yield %": ys * 100, "clean price": [q.bond_price(y, c, years, FREQ) for y in ys]}),

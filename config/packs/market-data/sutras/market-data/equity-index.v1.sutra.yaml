@@ -18,30 +18,30 @@ sutra: equity-index
 version: 1
 description: Index level with its largest constituents.
 match: { kind: equity-index, priority: 10 }
-title: { pill: Market data · Equity index, id: $.indexId }
+title: { pill: Market data · Equity index, id: $.INDEX_ID }
 strip:
-  - { label: Name, bind: $.name }
-  - { label: Level, bind: $.level, fmt: price2, emphasis: true }
-  - { label: "1D", bind: $.change1d, fmt: pct2, tone: sign }
-  - { label: Constituents, bind: $.constituentCount }
-  - { label: Currency, bind: $.currency }
+  - { label: Name, bind: $.NAME }
+  - { label: Level, bind: $.LEVEL, fmt: price2, emphasis: true }
+  - { label: "1D", bind: $.CHANGE_1D, fmt: pct2, tone: sign }
+  - { label: Constituents, bind: $.CONSTITUENT_COUNT }
+  - { label: Currency, bind: $.CURRENCY }
 panels:
   - id: constituents
     kind: table
     title: Top constituents
     key: F2
-    rows: $.constituents
+    rows: $.CONSTITUENTS
     columns:
-      - { label: Equity, bind: "@.equity" }
-      - { label: Weight, bind: "@.weight", fmt: pct2 }
+      - { label: Equity, bind: "@.EQUITY" }
+      - { label: Weight, bind: "@.WEIGHT", fmt: pct2 }
   - id: history
     kind: line
     title: "Level, last 30 days"
     area: right
-    rows: $.history
-    x: date
-    y: close
+    rows: $.HISTORY
+    x: DATE
+    y: CLOSE
     fmt: price2
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.equityVolSurface, 'equity-vol-surface')", F8: impact, F9: raw }
+keys: { F7: "link($.EQUITY_VOL_SURFACE, 'equity-vol-surface')", F8: impact, F9: raw }

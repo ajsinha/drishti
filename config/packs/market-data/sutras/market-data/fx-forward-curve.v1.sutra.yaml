@@ -18,29 +18,29 @@ sutra: fx-forward-curve
 version: 1
 description: Forward points by tenor for a pair.
 match: { kind: fx-forward-curve, priority: 10 }
-title: { pill: Market data · FX forward curve, id: $.curveId }
+title: { pill: Market data · FX forward curve, id: $.CURVE_ID }
 strip:
-  - { label: Pair, bind: $.pair }
-  - { label: Spot, bind: $.spot, fmt: rate5 }
-  - { label: "3M points", bind: $.points3m, fmt: pips1, tone: sign, emphasis: true }
-  - { label: "1Y points", bind: $.points1y, fmt: pips1, tone: sign }
+  - { label: Pair, bind: $.PAIR }
+  - { label: Spot, bind: $.SPOT, fmt: rate5 }
+  - { label: "3M points", bind: $.POINTS_3M, fmt: pips1, tone: sign, emphasis: true }
+  - { label: "1Y points", bind: $.POINTS_1Y, fmt: pips1, tone: sign }
 panels:
   - id: points
     kind: line
     title: Forward points (pips)
     key: F2
-    rows: $.points
-    x: tenor
-    y: pips
+    rows: $.POINTS
+    x: TENOR
+    y: PIPS
     fmt: pips1
   - id: outright
     kind: table
     title: Outrights
-    rows: $.points
+    rows: $.POINTS
     columns:
-      - { label: Tenor, bind: "@.tenor" }
-      - { label: Points, bind: "@.pips", fmt: pips1, tone: sign }
-      - { label: Outright, bind: "@.outright", fmt: rate5 }
+      - { label: Tenor, bind: "@.TENOR" }
+      - { label: Points, bind: "@.PIPS", fmt: pips1, tone: sign }
+      - { label: Outright, bind: "@.OUTRIGHT", fmt: rate5 }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.fxSpot, 'fx-spot')", F8: impact, F9: raw }
+keys: { F7: "link($.FX_SPOT, 'fx-spot')", F8: impact, F9: raw }

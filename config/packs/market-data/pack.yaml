@@ -148,96 +148,96 @@ graph:
   - pattern: ^CORR-
     kind: correlation-matrix
   fields:
-    basisCurve:
+    BASIS_CURVE:
       kind: ir-curve
       label: Basis curve
-    benchmarkCurve:
+    BENCHMARK_CURVE:
       kind: ir-curve
       label: Benchmark curve
-    capVolSurface:
+    CAP_VOL_SURFACE:
       kind: cap-vol-surface
       label: Cap vol surface
-    commodityCurve:
+    COMMODITY_CURVE:
       kind: commodity-curve
       label: Commodity curve
-    commodityRef:
+    COMMODITY_REF:
       kind: commodity
       label: Commodity
-    commodityVolSurface:
+    COMMODITY_VOL_SURFACE:
       kind: commodity-vol-surface
       label: Commodity vol surface
-    correlation:
+    CORRELATION:
       kind: correlation-matrix
       label: Correlation
-    creditCurve:
+    CREDIT_CURVE:
       kind: credit-curve
       label: Credit curve
-    discountCurve:
+    DISCOUNT_CURVE:
       kind: ir-curve
       label: Discount curve
-    dividendCurve:
+    DIVIDEND_CURVE:
       kind: dividend-curve
       label: Dividend curve
-    equity:
+    EQUITY:
       kind: equity
       label: Equity
-    equityIndex:
+    EQUITY_INDEX:
       kind: equity-index
       label: Index
-    equityVolSurface:
+    EQUITY_VOL_SURFACE:
       kind: equity-vol-surface
       label: Equity vol surface
-    fixingIndex:
+    FIXING_INDEX:
       kind: rate-fixing
       label: Fixing index
-    forwardCurve:
+    FORWARD_CURVE:
       kind: ir-curve
       label: Forward curve
-    fxForwardCurve:
+    FX_FORWARD_CURVE:
       kind: fx-forward-curve
       label: Fx forward curve
-    fxSpot:
+    FX_SPOT:
       kind: fx-spot
       label: Fx spot
-    fxVolSurface:
+    FX_VOL_SURFACE:
       kind: fx-vol-surface
       label: Fx vol surface
-    inflationCurve:
+    INFLATION_CURVE:
       kind: inflation-curve
       label: Inflation curve
-    inflationIndex:
+    INFLATION_INDEX:
       kind: inflation-index
       label: Inflation index
-    repoCurve:
+    REPO_CURVE:
       kind: repo-curve
       label: Repo curve
-    swaptionVolCube:
+    SWAPTION_VOL_CUBE:
       kind: ir-vol-cube
       label: Swaption vol cube
-    underlyingBond:
+    UNDERLYING_BOND:
       kind: bond
       label: Underlying bond
-    underlyingEquity:
+    UNDERLYING_EQUITY:
       kind: equity
       label: Underlying equity
-    underlyingIndex:
+    UNDERLYING_INDEX:
       kind: equity-index
       label: Underlying index
   badges:
-    ir-curve: fmt($.tenY, 'pct2') + ' 10Y'
-    repo-curve: fmt($.overnight, 'pct2') + ' O/N'
-    fx-spot: fmt($.mid, 'rate5')
-    fx-vol-surface: fmt($.atm1y, 'price2') + ' vol'
-    ir-vol-cube: fmt($.v1y10y, 'price2') + ' bp'
-    equity: fmt($.price, 'price2')
-    equity-index: fmt($.level, 'price2')
-    equity-vol-surface: fmt($.atm1m, 'price2') + ' vol'
-    credit-curve: fmt($.spread5y, 'amount0') + ' bp 5Y'
-    inflation-curve: fmt($.be10y, 'pct2') + ' 10Y'
-    commodity: fmt($.front, 'price2')
-    commodity-curve: $.shape
-    rate-fixing: fmt($.latest, 'pct2')
-    bond: fmt($.price, 'price2')
+    ir-curve: fmt($.TEN_Y, 'pct2') + ' 10Y'
+    repo-curve: fmt($.OVERNIGHT, 'pct2') + ' O/N'
+    fx-spot: fmt($.MID, 'rate5')
+    fx-vol-surface: fmt($.ATM_1Y, 'price2') + ' vol'
+    ir-vol-cube: fmt($.V_1Y_10Y, 'price2') + ' bp'
+    equity: fmt($.PRICE, 'price2')
+    equity-index: fmt($.LEVEL, 'price2')
+    equity-vol-surface: fmt($.ATM_1M, 'price2') + ' vol'
+    credit-curve: fmt($.SPREAD_5Y, 'amount0') + ' bp 5Y'
+    inflation-curve: fmt($.BE_10Y, 'pct2') + ' 10Y'
+    commodity: fmt($.FRONT, 'price2')
+    commodity-curve: $.SHAPE
+    rate-fixing: fmt($.LATEST, 'pct2')
+    bond: fmt($.PRICE, 'price2')
 connectors:
   market-store:
     plugin: delta
@@ -341,341 +341,341 @@ routes:
   correlation-matrix: market-store
 form:
   ir-curve:
-  - path: curveId
+  - path: CURVE_ID
     label: Curve id
     type: id
-  - path: currency
+  - path: CURRENCY
     label: Currency
     type: enum
-  - path: curveType
+  - path: CURVE_TYPE
     label: Curve type
     type: text
-  - path: index
+  - path: INDEX
     label: Index
     type: text
-  - path: tenY
+  - path: TEN_Y
     label: Ten y
     type: text
-  - path: slope2s10s
-    label: Slope2s10s
+  - path: SLOPE_2S_10S
+    label: Slope 2s 10s
     type: text
-  - path: points
+  - path: POINTS
     label: Points
     type: text
-  - path: asOf
+  - path: AS_OF
     label: As of
     type: text
   repo-curve:
-  - path: curveId
+  - path: CURVE_ID
     label: Curve id
     type: id
-  - path: currency
+  - path: CURRENCY
     label: Currency
     type: enum
-  - path: collateral
+  - path: COLLATERAL
     label: Collateral
     type: text
-  - path: overnight
+  - path: OVERNIGHT
     label: Overnight
     type: text
-  - path: asOf
+  - path: AS_OF
     label: As of
     type: text
   fx-spot:
-  - path: pair
+  - path: PAIR
     label: Pair
     type: id
-  - path: mid
+  - path: MID
     label: Mid
     type: id
-  - path: bid
+  - path: BID
     label: Bid
     type: id
-  - path: ask
+  - path: ASK
     label: Ask
     type: text
-  - path: change1d
-    label: Change1d
+  - path: CHANGE_1D
+    label: Change 1d
     type: text
-  - path: spotDate
+  - path: SPOT_DATE
     label: Spot date
     type: date
   fx-forward-curve:
-  - path: curveId
+  - path: CURVE_ID
     label: Curve id
     type: id
-  - path: pair
+  - path: PAIR
     label: Pair
     type: text
-  - path: spot
+  - path: SPOT
     label: Spot
     type: text
-  - path: points3m
-    label: Points3m
+  - path: POINTS_3M
+    label: Points 3m
     type: text
-  - path: points1y
-    label: Points1y
+  - path: POINTS_1Y
+    label: Points 1y
     type: text
   fx-vol-surface:
-  - path: surfaceId
+  - path: SURFACE_ID
     label: Surface id
     type: id
-  - path: pair
+  - path: PAIR
     label: Pair
     type: text
-  - path: atm1m
-    label: Atm1m
+  - path: ATM_1M
+    label: Atm 1m
     type: text
-  - path: atm1y
-    label: Atm1y
+  - path: ATM_1Y
+    label: Atm 1y
     type: text
-  - path: rr1y
-    label: Rr1y
+  - path: RR_1Y
+    label: Rr 1y
     type: text
   ir-vol-cube:
-  - path: cubeId
+  - path: CUBE_ID
     label: Cube id
     type: id
-  - path: currency
+  - path: CURRENCY
     label: Currency
     type: enum
-  - path: model
+  - path: MODEL
     label: Model
     type: text
-  - path: v1y10y
-    label: V1y10y
+  - path: V_1Y_10Y
+    label: V 1y 10y
     type: text
-  - path: v5y5y
-    label: V5y5y
+  - path: V_5Y_5Y
+    label: V 5y 5y
     type: text
   cap-vol-surface:
-  - path: surfaceId
+  - path: SURFACE_ID
     label: Surface id
     type: id
-  - path: currency
+  - path: CURRENCY
     label: Currency
     type: enum
-  - path: atm5y
-    label: Atm5y
+  - path: ATM_5Y
+    label: Atm 5y
     type: text
   equity:
-  - path: ticker
+  - path: TICKER
     label: Ticker
     type: id
-  - path: name
+  - path: NAME
     label: Name
     type: text
-  - path: price
+  - path: PRICE
     label: Price
     type: amount
-  - path: change1d
-    label: Change1d
+  - path: CHANGE_1D
+    label: Change 1d
     type: text
-  - path: marketCap
+  - path: MARKET_CAP
     label: Market cap
     type: text
-  - path: sector
+  - path: SECTOR
     label: Sector
     type: enum
-  - path: exchange
+  - path: EXCHANGE
     label: Exchange
     type: text
-  - path: currency
+  - path: CURRENCY
     label: Currency
     type: enum
   equity-index:
-  - path: indexId
+  - path: INDEX_ID
     label: Index id
     type: id
-  - path: name
+  - path: NAME
     label: Name
     type: text
-  - path: level
+  - path: LEVEL
     label: Level
     type: enum
-  - path: change1d
-    label: Change1d
+  - path: CHANGE_1D
+    label: Change 1d
     type: text
-  - path: constituentCount
+  - path: CONSTITUENT_COUNT
     label: Constituent count
     type: number
-  - path: currency
+  - path: CURRENCY
     label: Currency
     type: enum
   dividend-curve:
-  - path: curveId
+  - path: CURVE_ID
     label: Curve id
     type: id
-  - path: underlier
+  - path: UNDERLIER
     label: Underlier
     type: text
-  - path: dividendYield
+  - path: DIVIDEND_YIELD
     label: Dividend yield
     type: amount
   equity-vol-surface:
-  - path: surfaceId
+  - path: SURFACE_ID
     label: Surface id
     type: id
-  - path: underlier
+  - path: UNDERLIER
     label: Underlier
     type: text
-  - path: atm1m
-    label: Atm1m
+  - path: ATM_1M
+    label: Atm 1m
     type: text
-  - path: atm1y
-    label: Atm1y
+  - path: ATM_1Y
+    label: Atm 1y
     type: text
-  - path: skew1y
-    label: Skew1y
+  - path: SKEW_1Y
+    label: Skew 1y
     type: text
   credit-curve:
-  - path: curveId
+  - path: CURVE_ID
     label: Curve id
     type: id
-  - path: issuerName
+  - path: ISSUER_NAME
     label: Issuer name
     type: text
-  - path: spread5y
-    label: Spread5y
+  - path: SPREAD_5Y
+    label: Spread 5y
     type: text
-  - path: recovery
+  - path: RECOVERY
     label: Recovery
     type: text
-  - path: seniority
+  - path: SENIORITY
     label: Seniority
     type: text
-  - path: docClause
+  - path: DOC_CLAUSE
     label: Doc clause
     type: text
-  - path: pd1y
-    label: Pd1y
+  - path: PD_1Y
+    label: Pd 1y
     type: text
   inflation-index:
-  - path: indexId
+  - path: INDEX_ID
     label: Index id
     type: id
-  - path: name
+  - path: NAME
     label: Name
     type: text
-  - path: latest
+  - path: LATEST
     label: Latest
     type: text
-  - path: yoy
+  - path: YOY
     label: Yoy
     type: text
-  - path: lag
+  - path: LAG
     label: Lag
     type: text
   inflation-curve:
-  - path: curveId
+  - path: CURVE_ID
     label: Curve id
     type: id
-  - path: index
+  - path: INDEX
     label: Index
     type: text
-  - path: be5y
-    label: Be5y
+  - path: BE_5Y
+    label: Be 5y
     type: text
-  - path: be10y
-    label: Be10y
+  - path: BE_10Y
+    label: Be 10y
     type: text
   commodity:
-  - path: commodityId
+  - path: COMMODITY_ID
     label: Commodity id
     type: id
-  - path: name
+  - path: NAME
     label: Name
     type: text
-  - path: front
+  - path: FRONT
     label: Front
     type: text
-  - path: unit
+  - path: UNIT
     label: Unit
     type: text
-  - path: exchange
+  - path: EXCHANGE
     label: Exchange
     type: text
-  - path: sector
+  - path: SECTOR
     label: Sector
     type: enum
   commodity-curve:
-  - path: curveId
+  - path: CURVE_ID
     label: Curve id
     type: id
-  - path: commodity
+  - path: COMMODITY
     label: Commodity
     type: text
-  - path: front
+  - path: FRONT
     label: Front
     type: text
-  - path: shape
+  - path: SHAPE
     label: Shape
     type: text
-  - path: roll
+  - path: ROLL
     label: Roll
     type: text
   commodity-vol-surface:
-  - path: surfaceId
+  - path: SURFACE_ID
     label: Surface id
     type: id
-  - path: commodity
+  - path: COMMODITY
     label: Commodity
     type: text
-  - path: atmFront
+  - path: ATM_FRONT
     label: Atm front
     type: text
   rate-fixing:
-  - path: indexId
+  - path: INDEX_ID
     label: Index id
     type: id
-  - path: name
+  - path: NAME
     label: Name
     type: text
-  - path: latest
+  - path: LATEST
     label: Latest
     type: text
-  - path: administrator
+  - path: ADMINISTRATOR
     label: Administrator
     type: text
-  - path: tenor
+  - path: TENOR
     label: Tenor
     type: text
   bond:
-  - path: isin
-    label: Isin
+  - path: ISIN
+    label: ISIN
     type: id
-  - path: issuerName
+  - path: ISSUER_NAME
     label: Issuer name
     type: text
-  - path: coupon
+  - path: COUPON
     label: Coupon
     type: text
-  - path: maturity
+  - path: MATURITY
     label: Maturity
     type: date
-  - path: price
+  - path: PRICE
     label: Price
     type: amount
-  - path: yield
+  - path: YIELD
     label: Yield
     type: amount
-  - path: zSpread
+  - path: Z_SPREAD
     label: Z spread
     type: text
-  - path: modDuration
+  - path: MOD_DURATION
     label: Mod duration
     type: number
   correlation-matrix:
-  - path: matrixId
+  - path: MATRIX_ID
     label: Matrix id
     type: id
-  - path: name
+  - path: NAME
     label: Name
     type: text
-  - path: factors
+  - path: FACTORS
     label: Factors
     type: text
-  - path: average
+  - path: AVERAGE
     label: Average
     type: text
 console:

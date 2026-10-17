@@ -21,23 +21,23 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-found = await drishti.search_async("FX where mid > 0 limit 100")
+found = await drishti.search_async("FX where MID > 0 limit 100")
 series = {}
-for pid in found["id"]:
+for pid in found["ID"]:
     d = await drishti.get_async("fx-spot", pid)
-    c = d.get("conventions") or {}
-    h = pd.Series({p["date"]: p["mid"] for p in d.get("history") or []}, dtype=float)
+    c = d.get("CONVENTIONS") or {}
+    h = pd.Series({p["DATE"]: p["MID"] for p in d.get("HISTORY") or []}, dtype=float)
     if len(h) < 10:
         continue
-    ccy = c["base"] if c.get("quote") == "USD" else c.get("quote")
-    if c.get("quote") == "USD":
+    ccy = c["BASE"] if c.get("QUOTE") == "USD" else c.get("QUOTE")
+    if c.get("QUOTE") == "USD":
         series[ccy] = h                                   # USD per unit: EUR, GBP, AUD
-    elif c.get("base") == "USD":
+    elif c.get("BASE") == "USD":
         series[ccy] = 1.0 / h                             # USD per unit of JPY, CAD, ...: a rise is the currency gaining
 prices = pd.DataFrame(series).sort_index().dropna()
 rets = np.log(prices).diff().dropna()                     # one row a day, one column a currency, vs USD
 
-corr = rets.corr().rename_axis("currency")
+corr = rets.corr().rename_axis("CURRENCY")
 show(corr.round(3), title=f"Correlation of daily returns against USD ({len(rets)} days, {prices.index[0]} to {prices.index[-1]})")
 
 z = (rets - rets.mean()) / rets.std(ddof=1)               # PCA on standardised returns: the correlation matrix
@@ -49,10 +49,10 @@ if vecs[:, 0].sum() < 0:
 explained = vals / vals.sum()
 show(pd.DataFrame({"component": [f"PC{i + 1}" for i in range(len(vals))], "variance explained": explained,
                    "cumulative": np.cumsum(explained)}).head(5), title="Principal components")
-show(pd.DataFrame(vecs[:, :3], index=rets.columns.rename("currency"), columns=["PC1 (dollar)", "PC2", "PC3"]).round(3), title="Loadings")
+show(pd.DataFrame(vecs[:, :3], index=rets.columns.rename("CURRENCY"), columns=["PC1 (dollar)", "PC2", "PC3"]).round(3), title="Loadings")
 
-me = view.doc.get("conventions") or {}
-mine = me.get("base") if me.get("quote") == "USD" else me.get("quote")
+me = view.doc.get("CONVENTIONS") or {}
+mine = me.get("BASE") if me.get("QUOTE") == "USD" else me.get("QUOTE")
 if mine in rets:
     vol = rets[mine].std(ddof=1) * np.sqrt(252)
     print(f"{view.id}: realised volatility {vol:.2%} a year; PC1 explains {explained[0]:.0%} of all currencies' variance")

@@ -18,27 +18,27 @@ sutra: repo-curve
 version: 1
 description: General-collateral or specials repo rates by term.
 match: { kind: repo-curve, priority: 10 }
-title: { pill: Market data · Repo curve, id: $.curveId }
+title: { pill: Market data · Repo curve, id: $.CURVE_ID }
 strip:
-  - { label: Currency, bind: $.currency }
-  - { label: Collateral, bind: $.collateral }
-  - { label: O/N, bind: $.overnight, fmt: pct4, emphasis: true }
-  - { label: As of, bind: $.asOf, fmt: date }
+  - { label: Currency, bind: $.CURRENCY }
+  - { label: Collateral, bind: $.COLLATERAL }
+  - { label: O/N, bind: $.OVERNIGHT, fmt: pct4, emphasis: true }
+  - { label: As of, bind: $.AS_OF, fmt: date }
 panels:
   - id: curve
     kind: line
     title: Repo rates (%)
     key: F2
-    rows: $.points
-    x: tenor
-    y: rate
+    rows: $.POINTS
+    x: TENOR
+    y: RATE
     fmt: price2
   - id: points
     kind: table
     title: Terms
-    rows: $.points
+    rows: $.POINTS
     columns:
-      - { label: Term, bind: "@.tenor" }
-      - { label: Rate (%), bind: "@.rate", fmt: price2 }
+      - { label: Term, bind: "@.TENOR" }
+      - { label: Rate (%), bind: "@.RATE", fmt: price2 }
   - { id: built, kind: provenance, title: How this view was built }
 keys: { F8: impact, F9: raw }

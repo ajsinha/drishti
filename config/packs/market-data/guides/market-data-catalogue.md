@@ -22,161 +22,161 @@ The market-data kinds and how trades use them. Trades link to market data throug
 
 Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a currency.
 
-**Mnemonic:** `CRV` · **Identifiers:** `CRV-…` · **Id field:** `curveId`
+**Mnemonic:** `CRV` · **Identifiers:** `CRV-…` · **Id field:** `CURVE_ID`
 
-**Fields its Sutra reads:** `currency`, `curveType`, `index`, `tenY`, `slope2s10s`, `points`, `asOf`, `forwards`.
+**Fields its Sutra reads:** `CURRENCY`, `CURVE_TYPE`, `INDEX`, `TEN_Y`, `SLOPE_2S_10S`, `POINTS`, `AS_OF`, `FORWARDS`.
 
 ## Repo curve (`repo-curve`)
 
 General-collateral or specials repo rates by term.
 
-**Mnemonic:** `REPO` · **Identifiers:** `REPO-…` · **Id field:** `curveId`
+**Mnemonic:** `REPO` · **Identifiers:** `REPO-…` · **Id field:** `CURVE_ID`
 
-**Fields its Sutra reads:** `currency`, `collateral`, `overnight`, `asOf`, `points`.
+**Fields its Sutra reads:** `CURRENCY`, `COLLATERAL`, `OVERNIGHT`, `AS_OF`, `POINTS`.
 
 ## FX spot rate (`fx-spot`)
 
 Spot rate for a currency pair with bid/ask.
 
-**Mnemonic:** `FX` · **Identifiers:** `FX-…` · **Id field:** `pair`
+**Mnemonic:** `FX` · **Identifiers:** `FX-…` · **Id field:** `PAIR`
 
-**Fields its Sutra reads:** `pair`, `mid`, `bid`, `ask`, `change1d`, `spotDate`, `history`, `conventions`.
+**Fields its Sutra reads:** `PAIR`, `MID`, `BID`, `ASK`, `CHANGE_1D`, `SPOT_DATE`, `HISTORY`, `CONVENTIONS`.
 
 ## FX forward curve (`fx-forward-curve`)
 
 Forward points by tenor for a pair.
 
-**Mnemonic:** `FXF` · **Identifiers:** `FXF-…` · **Id field:** `curveId`
+**Mnemonic:** `FXF` · **Identifiers:** `FXF-…` · **Id field:** `CURVE_ID`
 
-**Fields its Sutra reads:** `pair`, `spot`, `points3m`, `points1y`, `points`.
+**Fields its Sutra reads:** `PAIR`, `SPOT`, `POINTS_3M`, `POINTS_1Y`, `POINTS`.
 
 ## FX volatility surface (`fx-vol-surface`)
 
 Implied vols by expiry and delta (ATM, 25D RR/BF).
 
-**Mnemonic:** `FXV` · **Identifiers:** `FXV-…` · **Id field:** `surfaceId`
+**Mnemonic:** `FXV` · **Identifiers:** `FXV-…` · **Id field:** `SURFACE_ID`
 
-**Fields its Sutra reads:** `pair`, `atm1m`, `atm1y`, `rr1y`, `grid`.
+**Fields its Sutra reads:** `PAIR`, `ATM_1M`, `ATM_1Y`, `RR_1Y`, `GRID`.
 
 ## Swaption volatility cube (`ir-vol-cube`)
 
 Normal (bp) swaption vols by expiry × tenor.
 
-**Mnemonic:** `IRV` · **Identifiers:** `IRV-…` · **Id field:** `cubeId`
+**Mnemonic:** `IRV` · **Identifiers:** `IRV-…` · **Id field:** `CUBE_ID`
 
-**Fields its Sutra reads:** `currency`, `model`, `v1y10y`, `v5y5y`, `grid`.
+**Fields its Sutra reads:** `CURRENCY`, `MODEL`, `V_1Y_10Y`, `V_5Y_5Y`, `GRID`.
 
 ## Cap/floor volatility surface (`cap-vol-surface`)
 
 Cap vols by maturity and strike.
 
-**Mnemonic:** `CPV` · **Identifiers:** `CPV-…` · **Id field:** `surfaceId`
+**Mnemonic:** `CPV` · **Identifiers:** `CPV-…` · **Id field:** `SURFACE_ID`
 
-**Fields its Sutra reads:** `currency`, `atm5y`, `grid`.
+**Fields its Sutra reads:** `CURRENCY`, `ATM_5Y`, `GRID`.
 
 ## Equity (`equity`)
 
 A listed stock: price, dividends, sector and identifiers.
 
-**Mnemonic:** `EQ` · **Identifiers:** `EQ-…` · **Id field:** `ticker`
+**Mnemonic:** `EQ` · **Identifiers:** `EQ-…` · **Id field:** `TICKER`
 
-**Fields its Sutra reads:** `name`, `price`, `change1d`, `marketCap`, `sector`, `exchange`, `currency`, `beta`, `history`, `identifiers`, `ohlc`.
+**Fields its Sutra reads:** `NAME`, `PRICE`, `CHANGE_1D`, `MARKET_CAP`, `SECTOR`, `EXCHANGE`, `CURRENCY`, `BETA`, `HISTORY`, `IDENTIFIERS`, `OHLC`.
 
 ## Equity index (`equity-index`)
 
 Index level with its largest constituents.
 
-**Mnemonic:** `EQX` · **Identifiers:** `EQX-…` · **Id field:** `indexId`
+**Mnemonic:** `EQX` · **Identifiers:** `EQX-…` · **Id field:** `INDEX_ID`
 
-**Fields its Sutra reads:** `name`, `level`, `change1d`, `constituentCount`, `currency`, `constituents`, `history`.
+**Fields its Sutra reads:** `NAME`, `LEVEL`, `CHANGE_1D`, `CONSTITUENT_COUNT`, `CURRENCY`, `CONSTITUENTS`, `HISTORY`.
 
 ## Dividend curve (`dividend-curve`)
 
 Expected dividends by year (implied from dividend futures and forwards).
 
-**Mnemonic:** `DIV` · **Identifiers:** `DIV-…` · **Id field:** `curveId`
+**Mnemonic:** `DIV` · **Identifiers:** `DIV-…` · **Id field:** `CURVE_ID`
 
-**Fields its Sutra reads:** `underlier`, `dividendYield`, `points`.
+**Fields its Sutra reads:** `UNDERLIER`, `DIVIDEND_YIELD`, `POINTS`.
 
 ## Equity volatility surface (`equity-vol-surface`)
 
 Implied vols by expiry and moneyness.
 
-**Mnemonic:** `EQV` · **Identifiers:** `EQV-…` · **Id field:** `surfaceId`
+**Mnemonic:** `EQV` · **Identifiers:** `EQV-…` · **Id field:** `SURFACE_ID`
 
-**Fields its Sutra reads:** `underlier`, `atm1m`, `atm1y`, `skew1y`, `grid`.
+**Fields its Sutra reads:** `UNDERLIER`, `ATM_1M`, `ATM_1Y`, `SKEW_1Y`, `GRID`.
 
 ## Credit curve (`credit-curve`)
 
 CDS par spreads by tenor, recovery and implied default probabilities.
 
-**Mnemonic:** `CDS` · **Identifiers:** `CDS-…` · **Id field:** `curveId`
+**Mnemonic:** `CDS` · **Identifiers:** `CDS-…` · **Id field:** `CURVE_ID`
 
-**Fields its Sutra reads:** `issuerName`, `spread5y`, `recovery`, `seniority`, `docClause`, `pd1y`, `points`.
+**Fields its Sutra reads:** `ISSUER_NAME`, `SPREAD_5Y`, `RECOVERY`, `SENIORITY`, `DOC_CLAUSE`, `PD_1Y`, `POINTS`.
 
 ## Inflation index (`inflation-index`)
 
 Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…).
 
-**Mnemonic:** `INF` · **Identifiers:** `INF-…` · **Id field:** `indexId`
+**Mnemonic:** `INF` · **Identifiers:** `INF-…` · **Id field:** `INDEX_ID`
 
-**Fields its Sutra reads:** `name`, `latest`, `yoy`, `lag`, `fixings`.
+**Fields its Sutra reads:** `NAME`, `LATEST`, `YOY`, `LAG`, `FIXINGS`.
 
 ## Inflation curve (`inflation-curve`)
 
 Zero-coupon breakevens by tenor, with monthly seasonality.
 
-**Mnemonic:** `INFC` · **Identifiers:** `INFC-…` · **Id field:** `curveId`
+**Mnemonic:** `INFC` · **Identifiers:** `INFC-…` · **Id field:** `CURVE_ID`
 
-**Fields its Sutra reads:** `index`, `be5y`, `be10y`, `points`, `seasonality`.
+**Fields its Sutra reads:** `INDEX`, `BE_5Y`, `BE_10Y`, `POINTS`, `SEASONALITY`.
 
 ## Commodity (`commodity`)
 
 A traded commodity with its benchmark, unit and venue.
 
-**Mnemonic:** `CMD` · **Identifiers:** `CMD-…` · **Id field:** `commodityId`
+**Mnemonic:** `CMD` · **Identifiers:** `CMD-…` · **Id field:** `COMMODITY_ID`
 
-**Fields its Sutra reads:** `name`, `front`, `unit`, `exchange`, `sector`, `spec`, `ohlc`.
+**Fields its Sutra reads:** `NAME`, `FRONT`, `UNIT`, `EXCHANGE`, `SECTOR`, `SPEC`, `OHLC`.
 
 ## Commodity forward curve (`commodity-curve`)
 
 Futures settlement prices by delivery month.
 
-**Mnemonic:** `CMDC` · **Identifiers:** `CMDC-…` · **Id field:** `curveId`
+**Mnemonic:** `CMDC` · **Identifiers:** `CMDC-…` · **Id field:** `CURVE_ID`
 
-**Fields its Sutra reads:** `commodity`, `front`, `shape`, `roll`, `points`.
+**Fields its Sutra reads:** `COMMODITY`, `FRONT`, `SHAPE`, `ROLL`, `POINTS`.
 
 ## Commodity volatility surface (`commodity-vol-surface`)
 
 Implied vols by delivery month and moneyness.
 
-**Mnemonic:** `CMDV` · **Identifiers:** `CMDV-…` · **Id field:** `surfaceId`
+**Mnemonic:** `CMDV` · **Identifiers:** `CMDV-…` · **Id field:** `SURFACE_ID`
 
-**Fields its Sutra reads:** `commodity`, `atmFront`, `grid`.
+**Fields its Sutra reads:** `COMMODITY`, `ATM_FRONT`, `GRID`.
 
 ## Rate index fixings (`rate-fixing`)
 
 Published overnight and term rate fixings (SOFR, €STR, SONIA…).
 
-**Mnemonic:** `FIX` · **Identifiers:** `FIX-…` · **Id field:** `indexId`
+**Mnemonic:** `FIX` · **Identifiers:** `FIX-…` · **Id field:** `INDEX_ID`
 
-**Fields its Sutra reads:** `name`, `latest`, `administrator`, `tenor`, `fixings`.
+**Fields its Sutra reads:** `NAME`, `LATEST`, `ADMINISTRATOR`, `TENOR`, `FIXINGS`.
 
 ## Bond (security master) (`bond`)
 
 A listed bond: terms, price, yield, spreads and analytics.
 
-**Mnemonic:** `BND` · **Identifiers:** `BND-…` · **Id field:** `isin`
+**Mnemonic:** `BND` · **Identifiers:** `BND-…` · **Id field:** `ISIN`
 
-**Fields its Sutra reads:** `issuerName`, `coupon`, `maturity`, `price`, `yield`, `zSpread`, `modDuration`, `rating`, `terms`, `coupons`, `history`.
+**Fields its Sutra reads:** `ISSUER_NAME`, `COUPON`, `MATURITY`, `PRICE`, `YIELD`, `Z_SPREAD`, `MOD_DURATION`, `RATING`, `TERMS`, `COUPONS`, `HISTORY`.
 
 ## Correlation matrix (`correlation-matrix`)
 
 Pairwise correlations used by basket, quanto and spread products.
 
-**Mnemonic:** `CORR` · **Identifiers:** `CORR-…` · **Id field:** `matrixId`
+**Mnemonic:** `CORR` · **Identifiers:** `CORR-…` · **Id field:** `MATRIX_ID`
 
-**Fields its Sutra reads:** `name`, `factors`, `average`, `pairs`.
+**Fields its Sutra reads:** `NAME`, `FACTORS`, `AVERAGE`, `PAIRS`.
 
 ## How products select market data
 

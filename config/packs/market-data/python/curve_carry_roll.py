@@ -20,7 +20,7 @@
 import pandas as pd
 from drishti import quant as q
 
-curve = q.ZeroCurve.from_points(view.doc["points"])
+curve = q.ZeroCurve.from_points(view.doc["POINTS"])
 H = 0.25                                   # the horizon: three months
 NOTIONAL = 100e6
 
@@ -34,12 +34,12 @@ for T in [2, 3, 5, 7, 10, 15, 20, 30]:
     dv01 = q.annuity(curve, T - H, 1) * NOTIONAL / 1e4    # what 1 bp on the remaining swap is worth
     carry = (par_now - fund) * H * NOTIONAL               # fixed accrued less float paid over the horizon
     roll = (par_now - par_rolled) * 1e4 * dv01            # the swap rolls down to a lower par rate: a gain
-    rows.append({"tenor": f"{T}Y", "par %": par_now * 100, "par in 3M %": par_rolled * 100,
+    rows.append({"TENOR": f"{T}Y", "par %": par_now * 100, "par in 3M %": par_rolled * 100,
                  "carry per 100m": carry, "roll per 100m": roll, "DV01 per 100m": dv01,
                  "carry bp": carry / dv01, "roll-down bp": roll / dv01,
                  "breakeven bp": (carry + roll) / dv01})   # how far par may rise in 3M before the receiver loses
-out = pd.DataFrame(rows).set_index("tenor")
+out = pd.DataFrame(rows).set_index("TENOR")
 show(out, title=f"{view.id}: 3M carry and roll-down of receiving par swaps (funded at the 3M forward {fund:.3%})")
-chart(out.reset_index(), kind="bar", x="tenor", y=["carry bp", "roll-down bp"], title="3M carry and roll-down, bp of DV01")
+chart(out.reset_index(), kind="bar", x="TENOR", y=["carry bp", "roll-down bp"], title="3M carry and roll-down, bp of DV01")
 best = out["breakeven bp"].idxmax()
 print(f"Most carry and roll per unit of risk: receive {best}, {out.loc[best, 'breakeven bp']:.1f} bp of breakeven over 3 months")

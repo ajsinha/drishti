@@ -23,29 +23,29 @@ from drishti import quant as q
 
 doc = view.doc
 NOTIONAL = 10e6                                          # in the base currency
-spot_doc = await drishti.get_async("fx-spot", doc.get("fxSpot") or f"FX-{doc['pair']}")
-fwd_doc = await drishti.get_async("fx-forward-curve", spot_doc.get("fxForwardCurve") or f"FXF-{doc['pair']}")
-c = spot_doc["conventions"]
-S, pip = spot_doc["mid"], c.get("pipFactor", 10000)
-diffs = [(q.tenor_years(p["tenor"]), math.log((S + p["pips"] / pip) / S) / q.tenor_years(p["tenor"])) for p in fwd_doc["points"]]
+spot_doc = await drishti.get_async("fx-spot", doc.get("FX_SPOT") or f"FX-{doc['PAIR']}")
+fwd_doc = await drishti.get_async("fx-forward-curve", spot_doc.get("FX_FORWARD_CURVE") or f"FXF-{doc['PAIR']}")
+c = spot_doc["CONVENTIONS"]
+S, pip = spot_doc["MID"], c.get("PIP_FACTOR", 10000)
+diffs = [(q.tenor_years(p["TENOR"]), math.log((S + p["PIPS"] / pip) / S) / q.tenor_years(p["TENOR"])) for p in fwd_doc["POINTS"]]
 try:
-    rd_curve = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", f"CRV-{c['quote']}-OIS"))["points"])
+    rd_curve = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", f"CRV-{c['QUOTE']}-OIS"))["POINTS"])
 except drishti.DrishtiError:
     rd_curve = q.ZeroCurve([1, 30], [0.03, 0.03])
 
 
 def leg(K, T, rd, rf, vol, call, units):                 # one option: premium and Greeks for `units` of the base
     g = q.gk_greeks(S, K, T, rd, rf, vol, call)
-    return {k: g[k] * units for k in ("price", "delta", "vega")}
+    return {k: g[k] * units for k in ("PRICE", "DELTA", "vega")}
 
 
 rows = []
-for g in doc["grid"]:
-    T = q.tenor_years(g["expiry"])
+for g in doc["GRID"]:
+    T = q.tenor_years(g["EXPIRY"])
     diff = min(diffs, key=lambda p: abs(p[0] - T))[1]
     rd = rd_curve.zero(T)
     rf = rd - diff
-    atm_v, c25, p25 = g["atm"] / 100, g["c25"] / 100, g["p25"] / 100
+    atm_v, c25, p25 = g["ATM"] / 100, g["C_25"] / 100, g["P_25"] / 100
     K_atm = S * math.exp(diff * T + 0.5 * atm_v ** 2 * T)
     K_c = q.fx_strike_from_delta(S, T, rd, rf, c25, 0.25, True)
     K_p = q.fx_strike_from_delta(S, T, rd, rf, p25, 0.25, False)
@@ -53,11 +53,11 @@ for g in doc["grid"]:
              "25D risk reversal (long call)": [leg(K_c, T, rd, rf, c25, True, NOTIONAL), leg(K_p, T, rd, rf, p25, False, -NOTIONAL)],
              "25D strangle": [leg(K_c, T, rd, rf, c25, True, NOTIONAL), leg(K_p, T, rd, rf, p25, False, NOTIONAL)]}
     for name, legs in books.items():
-        prem = sum(x["price"] for x in legs)
-        rows.append({"expiry": g["expiry"], "structure": name, f"premium ({c['quote']})": prem,
-                     "pips": prem / NOTIONAL * pip, "% of notional": prem / (NOTIONAL * S) * 100,
-                     f"delta ({c['base']})": sum(x["delta"] for x in legs),
-                     f"vega per vol pt ({c['quote']})": sum(x["vega"] for x in legs) / 100})
+        prem = sum(x["PRICE"] for x in legs)
+        rows.append({"EXPIRY": g["EXPIRY"], "structure": name, f"premium ({c['QUOTE']})": prem,
+                     "PIPS": prem / NOTIONAL * pip, "% of notional": prem / (NOTIONAL * S) * 100,
+                     f"delta ({c['BASE']})": sum(x["DELTA"] for x in legs),
+                     f"vega per vol pt ({c['QUOTE']})": sum(x["vega"] for x in legs) / 100})
 out = pd.DataFrame(rows)
-show(out, title=f"{doc['pair']}: {NOTIONAL / 1e6:,.0f}m {c['base']} per structure, spot {S}")
-chart(out[out["structure"] == "ATM straddle"], kind="bar", x="expiry", y="% of notional", title="ATM straddle premium, % of notional")
+show(out, title=f"{doc['PAIR']}: {NOTIONAL / 1e6:,.0f}m {c['BASE']} per structure, spot {S}")
+chart(out[out["structure"] == "ATM straddle"], kind="bar", x="EXPIRY", y="% of notional", title="ATM straddle premium, % of notional")

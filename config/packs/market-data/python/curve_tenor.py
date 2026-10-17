@@ -30,10 +30,10 @@ def years(tenor):
     return float(tenor[:-1]) / UNIT[tenor[-1].upper()]
 
 
-pts = pd.DataFrame(view.doc["points"])
-pts["years"] = pts["tenor"].map(years)
+pts = pd.DataFrame(view.doc["POINTS"])
+pts["years"] = pts["TENOR"].map(years)
 pts = pts.sort_values("years")
-t, z, df = pts["years"].to_numpy(), pts["zeroRate"].to_numpy(), pts["df"].to_numpy()
+t, z, df = pts["years"].to_numpy(), pts["ZERO_RATE"].to_numpy(), pts["DF"].to_numpy()
 spline = CubicSpline(t, z)
 
 
@@ -41,7 +41,7 @@ def log_linear(x):                            # linear in log(df), back to a con
     return -np.interp(x, t, np.log(df)) / x * 100
 
 
-want = pd.DataFrame({"tenor": WANT, "years": [years(w) for w in WANT]})
+want = pd.DataFrame({"TENOR": WANT, "years": [years(w) for w in WANT]})
 want["linear zero %"] = np.interp(want["years"], t, z)
 want["log-linear df, zero %"] = log_linear(want["years"].to_numpy())
 want["cubic spline %"] = spline(want["years"])
@@ -55,5 +55,5 @@ ax.scatter(t, z, color="black", s=12, zorder=3, label="quoted")
 ax.scatter(want["years"], want["cubic spline %"], color="tab:red", s=30, zorder=4, label="asked")
 ax.set_xlabel("years")
 ax.set_ylabel("zero rate %")
-ax.set_title(f"{view.id} ({view.doc.get('index', '')})")
+ax.set_title(f"{view.id} ({view.doc.get('INDEX', '')})")
 ax.legend(fontsize=8)

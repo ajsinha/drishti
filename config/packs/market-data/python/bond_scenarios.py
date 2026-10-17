@@ -23,9 +23,9 @@ import pandas as pd
 from drishti import quant as q
 
 doc = view.doc
-FREQ = {"Annual": 1, "Semi-annual": 2, "Quarterly": 4}.get((doc.get("terms") or {}).get("couponFrequency"), 2)
-years = (date.fromisoformat(doc["maturity"]) - date.fromisoformat(view.business_date or "2026-09-30")).days / 365.25
-c, clean = doc["coupon"], doc["price"]
+FREQ = {"Annual": 1, "Semi-annual": 2, "Quarterly": 4}.get((doc.get("TERMS") or {}).get("COUPON_FREQUENCY"), 2)
+years = (date.fromisoformat(doc["MATURITY"]) - date.fromisoformat(view.business_date or "2026-09-30")).days / 365.25
+c, clean = doc["COUPON"], doc["PRICE"]
 y0 = q.bond_yield(clean, c, years, FREQ)
 r = q.bond_risk(y0, c, years, FREQ)
 dirty0 = r["dirty"]

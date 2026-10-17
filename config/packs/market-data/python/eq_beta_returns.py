@@ -23,14 +23,14 @@ import statsmodels.api as sm
 from scipy import stats
 
 doc = view.doc
-index_id = doc.get("equityIndex")
+index_id = doc.get("EQUITY_INDEX")
 if not index_id:
     raise ValueError(f"{view.id} names no equityIndex to regress on")
 idx = await drishti.get_async("equity-index", index_id)
 
 px = pd.DataFrame({
-    view.id: pd.Series({p["date"]: p["close"] for p in doc["history"]}),
-    index_id: pd.Series({p["date"]: p["close"] for p in idx["history"]}),
+    view.id: pd.Series({p["DATE"]: p["CLOSE"] for p in doc["HISTORY"]}),
+    index_id: pd.Series({p["DATE"]: p["CLOSE"] for p in idx["HISTORY"]}),
 }).sort_index().dropna()
 rets = np.log(px).diff().dropna()                        # one row a day both have a close
 y, x = rets[view.id], rets[index_id]
@@ -38,17 +38,17 @@ y, x = rets[view.id], rets[index_id]
 model = sm.OLS(y, sm.add_constant(x)).fit()
 beta, alpha = model.params[index_id], model.params["const"]
 show(pd.DataFrame({
-    "measure": ["beta (OLS)", "beta (security master)", "alpha, daily", "R squared", "correlation", "days",
+    "MEASURE": ["beta (OLS)", "beta (security master)", "alpha, daily", "R squared", "correlation", "days",
                 f"{view.id} vol, annual", f"{index_id} vol, annual"],
-    "value": [beta, doc.get("beta"), alpha, model.rsquared, y.corr(x), len(rets),
+    "VALUE": [beta, doc.get("BETA"), alpha, model.rsquared, y.corr(x), len(rets),
               y.std(ddof=1) * np.sqrt(252), x.std(ddof=1) * np.sqrt(252)],
-}), title=f"{view.id} against {index_id} ({idx.get('name', '')}), daily log returns")
+}), title=f"{view.id} against {index_id} ({idx.get('NAME', '')}), daily log returns")
 print(model.summary(title=f"OLS: {view.id} returns on {index_id} returns"))
 
 jb = stats.jarque_bera(y)
 show(pd.DataFrame({
-    "measure": ["mean daily", "std daily", "skew", "excess kurtosis", "Jarque-Bera", "JB p-value", "worst day", "best day"],
-    "value": [y.mean(), y.std(ddof=1), stats.skew(y), stats.kurtosis(y), jb.statistic, jb.pvalue, y.min(), y.max()],
+    "MEASURE": ["mean daily", "std daily", "skew", "excess kurtosis", "Jarque-Bera", "JB p-value", "worst day", "best day"],
+    "VALUE": [y.mean(), y.std(ddof=1), stats.skew(y), stats.kurtosis(y), jb.statistic, jb.pvalue, y.min(), y.max()],
 }), title=f"{view.id}: distribution of daily returns")
 chart(pd.DataFrame({"index return": x, "stock return": y}), kind="scatter", x="index return", y="stock return",
       title=f"{view.id} against {index_id}: beta {beta:.2f}")

@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from drishti import quant as q
 
-base = q.ZeroCurve.from_points(view.doc["points"])
+base = q.ZeroCurve.from_points(view.doc["POINTS"])
 NOTIONAL = 100e6
 SCENARIOS = {                                   # (parallel bp, twist bp, butterfly bp); twist: long end up, short end down
     "+100 parallel": (100, 0, 0), "+25 parallel": (25, 0, 0), "-25 parallel": (-25, 0, 0), "-100 parallel": (-100, 0, 0),
@@ -35,15 +35,15 @@ swaps = {t: q.par_swap_rate(base, t, 1) for t in tenors}          # receive each
 rows = []
 for name, (bp, twist, fly) in SCENARIOS.items():
     shocked = base.shifted(bp, twist, fly)
-    row = {"scenario": name}
+    row = {"SCENARIO": name}
     for t in tenors:
         row[f"rec {t}Y"] = q.swap_pv(shocked, swaps[t], NOTIONAL, t, 1, receive_fixed=True)
-    row["total"] = sum(row[f"rec {t}Y"] for t in tenors)
+    row["TOTAL"] = sum(row[f"rec {t}Y"] for t in tenors)
     row["2s10s move bp"] = ((shocked.zero(10) - shocked.zero(2)) - (base.zero(10) - base.zero(2))) * 1e4
     rows.append(row)
-pnl = pd.DataFrame(rows).set_index("scenario")
+pnl = pd.DataFrame(rows).set_index("SCENARIO")
 show(pnl, title=f"{view.id}: P&L of receiving par swaps, {NOTIONAL / 1e6:,.0f}m each")
-chart(pnl.reset_index(), kind="bar", x="scenario", y="total", title="Total P&L by scenario")
+chart(pnl.reset_index(), kind="bar", x="SCENARIO", y="TOTAL", title="Total P&L by scenario")
 
 grid = np.linspace(0.25, base.times[-1], 120)
 fig, ax = plt.subplots(figsize=(7.5, 3.4))

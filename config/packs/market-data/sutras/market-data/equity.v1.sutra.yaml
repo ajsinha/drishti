@@ -18,39 +18,39 @@ sutra: equity
 version: 1
 description: "A listed stock: price, dividends, sector and identifiers."
 match: { kind: equity, priority: 10 }
-title: { pill: Market data · Equity, id: $.ticker }
+title: { pill: Market data · Equity, id: $.TICKER }
 strip:
-  - { label: Name, bind: $.name }
-  - { label: Price, bind: $.price, fmt: price2, emphasis: true }
-  - { label: "1D", bind: $.change1d, fmt: pct2, tone: sign }
-  - { label: Market cap, bind: $.marketCap, fmt: compact }
-  - { label: Sector, bind: $.sector }
-  - { label: Exchange, bind: $.exchange }
-  - { label: Currency, bind: $.currency }
-  - { label: Beta, bind: $.beta, fmt: price2 }
+  - { label: Name, bind: $.NAME }
+  - { label: Price, bind: $.PRICE, fmt: price2, emphasis: true }
+  - { label: "1D", bind: $.CHANGE_1D, fmt: pct2, tone: sign }
+  - { label: Market cap, bind: $.MARKET_CAP, fmt: compact }
+  - { label: Sector, bind: $.SECTOR }
+  - { label: Exchange, bind: $.EXCHANGE }
+  - { label: Currency, bind: $.CURRENCY }
+  - { label: Beta, bind: $.BETA, fmt: price2 }
 panels:
   - id: history
     kind: line
     title: "Price, last 30 days"
     key: F2
-    rows: $.history
-    x: date
-    y: close
+    rows: $.HISTORY
+    x: DATE
+    y: CLOSE
     fmt: price2
   - id: ids
     kind: kv
     title: Identifiers
     area: right
-    rows: $.identifiers
+    rows: $.IDENTIFIERS
   - id: ohlc
     kind: candlestick
     title: Daily bars (last 60 days)
     code: OHLC
     key: F3
-    rows: $.ohlc
-    x: date
+    rows: $.OHLC
+    x: DATE
     fmt: price2
-    volume: volume
+    volume: VOLUME
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.issuer, 'issuer')", F8: impact, F9: raw }
+keys: { F7: "link($.ISSUER, 'issuer')", F8: impact, F9: raw }

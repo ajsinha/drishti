@@ -18,46 +18,46 @@ sutra: fx-vol-surface
 version: 1
 description: "Implied vols by expiry and delta (ATM, 25D RR/BF)."
 match: { kind: fx-vol-surface, priority: 10 }
-title: { pill: Market data · FX volatility surface, id: $.surfaceId }
+title: { pill: Market data · FX volatility surface, id: $.SURFACE_ID }
 strip:
-  - { label: Pair, bind: $.pair }
-  - { label: "1M ATM", bind: $.atm1m, fmt: price2, emphasis: true }
-  - { label: "1Y ATM", bind: $.atm1y, fmt: price2 }
-  - { label: "1Y 25D RR", bind: $.rr1y, fmt: price2, tone: sign }
+  - { label: Pair, bind: $.PAIR }
+  - { label: "1M ATM", bind: $.ATM_1M, fmt: price2, emphasis: true }
+  - { label: "1Y ATM", bind: $.ATM_1Y, fmt: price2 }
+  - { label: "1Y 25D RR", bind: $.RR_1Y, fmt: price2, tone: sign }
 panels:
   - id: smile
     kind: surface
     title: Smile surface (vol %)
     code: SURF
     key: F4
-    rows: $.grid
-    y: expiry
+    rows: $.GRID
+    y: EXPIRY
     columns:
-      - { label: "10D P", bind: "@.p10", fmt: price2 }
-      - { label: "25D P", bind: "@.p25", fmt: price2 }
-      - { label: ATM, bind: "@.atm", fmt: price2 }
-      - { label: "25D C", bind: "@.c25", fmt: price2 }
-      - { label: "10D C", bind: "@.c10", fmt: price2 }
+      - { label: "10D P", bind: "@.P_10", fmt: price2 }
+      - { label: "25D P", bind: "@.P_25", fmt: price2 }
+      - { label: ATM, bind: "@.ATM", fmt: price2 }
+      - { label: "25D C", bind: "@.C_25", fmt: price2 }
+      - { label: "10D C", bind: "@.C_10", fmt: price2 }
   - id: atm
     kind: line
     title: ATM vol term structure
     key: F2
-    rows: $.grid
-    x: expiry
-    y: atm
+    rows: $.GRID
+    x: EXPIRY
+    y: ATM
     fmt: price2
   - id: grid
     kind: table
     title: Surface (vol %)
     key: F3
-    rows: $.grid
+    rows: $.GRID
     columns:
-      - { label: Expiry, bind: "@.expiry" }
-      - { label: "10D P", bind: "@.p10", fmt: price2 }
-      - { label: "25D P", bind: "@.p25", fmt: price2 }
-      - { label: ATM, bind: "@.atm", fmt: price2 }
-      - { label: "25D C", bind: "@.c25", fmt: price2 }
-      - { label: "10D C", bind: "@.c10", fmt: price2 }
+      - { label: Expiry, bind: "@.EXPIRY" }
+      - { label: "10D P", bind: "@.P_10", fmt: price2 }
+      - { label: "25D P", bind: "@.P_25", fmt: price2 }
+      - { label: ATM, bind: "@.ATM", fmt: price2 }
+      - { label: "25D C", bind: "@.C_25", fmt: price2 }
+      - { label: "10D C", bind: "@.C_10", fmt: price2 }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.fxSpot, 'fx-spot')", F8: impact, F9: raw }
+keys: { F7: "link($.FX_SPOT, 'fx-spot')", F8: impact, F9: raw }

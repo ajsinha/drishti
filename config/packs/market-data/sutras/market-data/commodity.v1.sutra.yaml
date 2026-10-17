@@ -18,28 +18,28 @@ sutra: commodity
 version: 1
 description: "A traded commodity with its benchmark, unit and venue."
 match: { kind: commodity, priority: 10 }
-title: { pill: Market data · Commodity, id: $.commodityId }
+title: { pill: Market data · Commodity, id: $.COMMODITY_ID }
 strip:
-  - { label: Name, bind: $.name }
-  - { label: Front month, bind: $.front, fmt: price2, emphasis: true }
-  - { label: Unit, bind: $.unit }
-  - { label: Exchange, bind: $.exchange }
-  - { label: Sector, bind: $.sector }
+  - { label: Name, bind: $.NAME }
+  - { label: Front month, bind: $.FRONT, fmt: price2, emphasis: true }
+  - { label: Unit, bind: $.UNIT }
+  - { label: Exchange, bind: $.EXCHANGE }
+  - { label: Sector, bind: $.SECTOR }
 panels:
   - id: spec
     kind: kv
     title: Contract specification
     key: F2
-    rows: $.spec
+    rows: $.SPEC
   - id: ohlc
     kind: candlestick
     title: "Front month (daily bars, last 60 days)"
     code: OHLC
     key: F3
-    rows: $.ohlc
-    x: date
+    rows: $.OHLC
+    x: DATE
     fmt: price2
-    volume: volume
+    volume: VOLUME
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.commodityCurve, 'commodity-curve')", F8: impact, F9: raw }
+keys: { F7: "link($.COMMODITY_CURVE, 'commodity-curve')", F8: impact, F9: raw }

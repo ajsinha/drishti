@@ -18,28 +18,28 @@ sutra: inflation-curve
 version: 1
 description: "Zero-coupon breakevens by tenor, with monthly seasonality."
 match: { kind: inflation-curve, priority: 10 }
-title: { pill: Market data · Inflation curve, id: $.curveId }
+title: { pill: Market data · Inflation curve, id: $.CURVE_ID }
 strip:
-  - { label: Index, bind: $.index }
-  - { label: "5Y breakeven", bind: $.be5y, fmt: pct2, emphasis: true }
-  - { label: "10Y breakeven", bind: $.be10y, fmt: pct2 }
+  - { label: Index, bind: $.INDEX }
+  - { label: "5Y breakeven", bind: $.BE_5Y, fmt: pct2, emphasis: true }
+  - { label: "10Y breakeven", bind: $.BE_10Y, fmt: pct2 }
 panels:
   - id: curve
     kind: line
     title: ZC breakevens (%)
     key: F2
-    rows: $.points
-    x: tenor
-    y: breakeven
+    rows: $.POINTS
+    x: TENOR
+    y: BREAKEVEN
     fmt: price2
   - id: seasonality
     kind: hbar
     title: Seasonality
     area: right
-    rows: $.seasonality
-    label: month
-    value: factor
+    rows: $.SEASONALITY
+    label: MONTH
+    value: FACTOR
     fmt: price2
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.inflationIndex, 'inflation-index')", F8: impact, F9: raw }
+keys: { F7: "link($.INFLATION_INDEX, 'inflation-index')", F8: impact, F9: raw }

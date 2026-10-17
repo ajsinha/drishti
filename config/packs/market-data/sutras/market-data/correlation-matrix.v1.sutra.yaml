@@ -18,20 +18,20 @@ sutra: correlation-matrix
 version: 1
 description: "Pairwise correlations used by basket, quanto and spread products."
 match: { kind: correlation-matrix, priority: 10 }
-title: { pill: Market data · Correlation matrix, id: $.matrixId }
+title: { pill: Market data · Correlation matrix, id: $.MATRIX_ID }
 strip:
-  - { label: Name, bind: $.name }
-  - { label: Size, bind: size($.factors) }
-  - { label: Average, bind: $.average, fmt: price2, emphasis: true }
+  - { label: Name, bind: $.NAME }
+  - { label: Size, bind: size($.FACTORS) }
+  - { label: Average, bind: $.AVERAGE, fmt: price2, emphasis: true }
 panels:
   - id: pairs
     kind: table
     title: Pairs
     key: F2
-    rows: $.pairs
+    rows: $.PAIRS
     columns:
-      - { label: Factor 1, bind: "@.a" }
-      - { label: Factor 2, bind: "@.b" }
-      - { label: "ρ", bind: "@.rho", fmt: price2, tone: sign }
+      - { label: Factor 1, bind: "@.A" }
+      - { label: Factor 2, bind: "@.B" }
+      - { label: "ρ", bind: "@.RHO", fmt: price2, tone: sign }
   - { id: built, kind: provenance, title: How this view was built }
 keys: { F8: impact, F9: raw }

@@ -18,29 +18,29 @@ sutra: commodity-curve
 version: 1
 description: Futures settlement prices by delivery month.
 match: { kind: commodity-curve, priority: 10 }
-title: { pill: Market data · Commodity forward curve, id: $.curveId }
+title: { pill: Market data · Commodity forward curve, id: $.CURVE_ID }
 strip:
-  - { label: Commodity, bind: $.commodity }
-  - { label: Front, bind: $.front, fmt: price2, emphasis: true }
-  - { label: Shape, bind: $.shape }
-  - { label: "M1–M12", bind: $.roll, fmt: price2, tone: sign }
+  - { label: Commodity, bind: $.COMMODITY }
+  - { label: Front, bind: $.FRONT, fmt: price2, emphasis: true }
+  - { label: Shape, bind: $.SHAPE }
+  - { label: "M1–M12", bind: $.ROLL, fmt: price2, tone: sign }
 panels:
   - id: curve
     kind: line
     title: Forward curve
     key: F2
-    rows: $.points
-    x: month
-    y: price
+    rows: $.POINTS
+    x: MONTH
+    y: PRICE
     fmt: price2
   - id: points
     kind: table
     title: Settlements
-    rows: $.points
+    rows: $.POINTS
     columns:
-      - { label: Month, bind: "@.month" }
-      - { label: Price, bind: "@.price", fmt: price2 }
-      - { label: OI, bind: "@.openInterest", fmt: amount0 }
+      - { label: Month, bind: "@.MONTH" }
+      - { label: Price, bind: "@.PRICE", fmt: price2 }
+      - { label: OI, bind: "@.OPEN_INTEREST", fmt: amount0 }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.commodityRef, 'commodity')", F8: impact, F9: raw }
+keys: { F7: "link($.COMMODITY_REF, 'commodity')", F8: impact, F9: raw }

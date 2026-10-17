@@ -23,35 +23,35 @@ import matplotlib.pyplot as plt
 from drishti import quant as q
 
 doc = view.doc
-curve = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", f"CRV-{doc['currency']}-OIS"))["points"])
-grid = pd.DataFrame(doc["grid"]).set_index("expiry")
-tenor_cols = [c for c in grid.columns if c.startswith("t")]
+curve = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", f"CRV-{doc['CURRENCY']}-OIS"))["POINTS"])
+grid = pd.DataFrame(doc["GRID"]).set_index("EXPIRY")
+tenor_cols = [c for c in grid.columns if c.startswith("T_")]
 NOTIONAL = 100e6
 
 rows = []
 for expiry, g in grid.iterrows():
     te = q.tenor_years(expiry)
     for col in tenor_cols:
-        n = q.tenor_years(col[1:])
+        n = q.tenor_years(col[2:])
         ann = q.annuity(curve, te + n, 1, start=te)                    # forward-starting annual fixed leg
         fwd = q.par_swap_rate(curve, te + n, 1, start=te)
         vol = g[col] / 1e4                                              # bp a year -> rate units
         prem = ann * q.bachelier(fwd, fwd, te, vol, 1.0, True)          # payer ATM: annuity x Bachelier call on the rate
         vega = ann * np.sqrt(te) * q.norm_pdf(0.0) / 1e4                # per +1 bp of normal vol, per unit notional
-        rows.append({"expiry": expiry, "tenor": col[1:], "forward %": fwd * 100, "normal vol bp": g[col],
+        rows.append({"EXPIRY": expiry, "TENOR": col[2:], "forward %": fwd * 100, "normal vol bp": g[col],
                      "premium bp": prem * 1e4, "premium per 100m": prem * NOTIONAL, "vega per bp, 100m": vega * NOTIONAL})
 out = pd.DataFrame(rows)
-show(out, title=f"{view.id}: ATM payer swaptions ({doc.get('model', '')}), on CRV-{doc['currency']}-OIS")
-show(out.pivot(index="expiry", columns="tenor", values="premium bp").reindex(index=grid.index, columns=[c[1:] for c in tenor_cols]),
+show(out, title=f"{view.id}: ATM payer swaptions ({doc.get('MODEL', '')}), on CRV-{doc['CURRENCY']}-OIS")
+show(out.pivot(index="EXPIRY", columns="TENOR", values="premium bp").reindex(index=grid.index, columns=[c[2:] for c in tenor_cols]),
      title="Premium, bp of notional")
 
 fig, ax = plt.subplots(figsize=(6, 3.4))
 im = ax.imshow(grid[tenor_cols].to_numpy(), cmap="viridis", aspect="auto")
-ax.set_xticks(range(len(tenor_cols)), [c[1:] for c in tenor_cols])
+ax.set_xticks(range(len(tenor_cols)), [c[2:] for c in tenor_cols])
 ax.set_yticks(range(len(grid)), grid.index)
 for (i, j), v in np.ndenumerate(grid[tenor_cols].to_numpy()):
     ax.text(j, i, f"{v:.0f}", ha="center", va="center", fontsize=7, color="white")
 ax.set_xlabel("swap tenor")
-ax.set_ylabel("expiry")
+ax.set_ylabel("EXPIRY")
 ax.set_title(f"{view.id}: ATM normal vol, bp")
 fig.colorbar(im, ax=ax, shrink=0.8)

@@ -18,29 +18,29 @@ sutra: rate-fixing
 version: 1
 description: "Published overnight and term rate fixings (SOFR, €STR, SONIA…)."
 match: { kind: rate-fixing, priority: 10 }
-title: { pill: Market data · Rate index fixings, id: $.indexId }
+title: { pill: Market data · Rate index fixings, id: $.INDEX_ID }
 strip:
-  - { label: Index, bind: $.name }
-  - { label: Latest, bind: $.latest, fmt: pct4, emphasis: true }
-  - { label: Administrator, bind: $.administrator }
-  - { label: Tenor, bind: $.tenor }
+  - { label: Index, bind: $.NAME }
+  - { label: Latest, bind: $.LATEST, fmt: pct4, emphasis: true }
+  - { label: Administrator, bind: $.ADMINISTRATOR }
+  - { label: Tenor, bind: $.TENOR }
 panels:
   - id: fixings
     kind: ladder
     title: Recent fixings
     key: F2
-    rows: $.fixings
+    rows: $.FIXINGS
     columns:
-      - { label: Date, bind: "@.date", fmt: date }
-      - { label: Rate, bind: "@.rate", fmt: pct4 }
-      - { label: Volume (bn), bind: "@.volumeBn", fmt: amount0 }
+      - { label: Date, bind: "@.DATE", fmt: date }
+      - { label: Rate, bind: "@.RATE", fmt: pct4 }
+      - { label: Volume (bn), bind: "@.VOLUME_BN", fmt: amount0 }
   - id: chart
     kind: line
     title: Last 30 fixings
     area: right
-    rows: $.fixings
-    x: date
-    y: ratePct
+    rows: $.FIXINGS
+    x: DATE
+    y: RATE_PCT
     fmt: price2
   - { id: built, kind: provenance, title: How this view was built }
 keys: { F8: impact, F9: raw }

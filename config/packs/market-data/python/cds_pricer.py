@@ -22,12 +22,12 @@ import pandas as pd
 from drishti import quant as q
 
 doc = view.doc
-R = doc.get("recovery", 0.4)
-pts = pd.DataFrame(doc["points"])
-t_knots = pts["tenor"].map(q.tenor_years).to_numpy()
-lam = q.forward_hazards(t_knots, pts["hazard"].to_numpy())       # the curve's hazards are flat to each tenor
-disc = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", f"CRV-{doc.get('currency', 'USD')}-OIS"))["points"])
-COUPON = 0.05 if doc.get("spread5y", 0) > 300 else 0.01      # the standard running coupon: 500 bp high yield, 100 bp otherwise
+R = doc.get("RECOVERY", 0.4)
+pts = pd.DataFrame(doc["POINTS"])
+t_knots = pts["TENOR"].map(q.tenor_years).to_numpy()
+lam = q.forward_hazards(t_knots, pts["HAZARD"].to_numpy())       # the curve's hazards are flat to each tenor
+disc = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", f"CRV-{doc.get('CURRENCY', 'USD')}-OIS"))["POINTS"])
+COUPON = 0.05 if doc.get("SPREAD_5Y", 0) > 300 else 0.01      # the standard running coupon: 500 bp high yield, 100 bp otherwise
 NOTIONAL = 10e6
 
 
@@ -43,18 +43,18 @@ def legs(T, hazards):
 
 
 rows = []
-for tenor, quoted in zip(pts["tenor"], pts["spread"]):
+for tenor, quoted in zip(pts["TENOR"], pts["SPREAD"]):
     T = q.tenor_years(tenor)
     prot, rpv01 = legs(T, lam)
     par = prot / rpv01
     prot_up, rpv01_up = legs(T, lam + 1e-4 / (1 - R))            # +1 bp of spread, as hazard
     upfront = prot - COUPON * rpv01                                 # paid by the protection buyer, fraction of notional
     cs01 = ((prot_up - COUPON * rpv01_up) - upfront) * NOTIONAL     # protection buyer's gain for +1 bp
-    rows.append({"tenor": tenor, "quoted bp": quoted, "par spread bp": par * 1e4, "difference bp": par * 1e4 - quoted,
+    rows.append({"TENOR": tenor, "quoted bp": quoted, "par spread bp": par * 1e4, "difference bp": par * 1e4 - quoted,
                  "RPV01": rpv01, f"upfront % ({COUPON * 1e4:.0f} bp coupon)": upfront * 100,
                  "CS01 per 10m (buyer)": cs01})
-out = pd.DataFrame(rows).set_index("tenor")
-show(out, title=f"{view.id}: {doc.get('issuerName', '')} CDS, recovery {R:.0%}, discounted on CRV-{doc.get('currency')}-OIS")
-chart(out.reset_index(), kind="line", x="tenor", y=["quoted bp", "par spread bp"], title="Quoted against recomputed par spreads")
+out = pd.DataFrame(rows).set_index("TENOR")
+show(out, title=f"{view.id}: {doc.get('ISSUER_NAME', '')} CDS, recovery {R:.0%}, discounted on CRV-{doc.get('CURRENCY')}-OIS")
+chart(out.reset_index(), kind="line", x="TENOR", y=["quoted bp", "par spread bp"], title="Quoted against recomputed par spreads")
 print("Par spreads sit close to the quotes: the curve's hazards follow the credit triangle, which ignores discounting "
       "and premium accrual, so the differences are those simplifications.")

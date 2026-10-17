@@ -18,33 +18,33 @@ sutra: credit-curve
 version: 1
 description: "CDS par spreads by tenor, recovery and implied default probabilities."
 match: { kind: credit-curve, priority: 10 }
-title: { pill: Market data · Credit curve, id: $.curveId }
+title: { pill: Market data · Credit curve, id: $.CURVE_ID }
 strip:
-  - { label: Reference entity, bind: $.issuerName }
-  - { label: "5Y spread", bind: $.spread5y, fmt: bp1, emphasis: true }
-  - { label: Recovery, bind: $.recovery, fmt: pct0 }
-  - { label: Seniority, bind: $.seniority }
-  - { label: Doc clause, bind: $.docClause }
-  - { label: "1Y PD", bind: $.pd1y, fmt: pct2 }
+  - { label: Reference entity, bind: $.ISSUER_NAME }
+  - { label: "5Y spread", bind: $.SPREAD_5Y, fmt: bp1, emphasis: true }
+  - { label: Recovery, bind: $.RECOVERY, fmt: pct0 }
+  - { label: Seniority, bind: $.SENIORITY }
+  - { label: Doc clause, bind: $.DOC_CLAUSE }
+  - { label: "1Y PD", bind: $.PD_1Y, fmt: pct2 }
 panels:
   - id: spreads
     kind: line
     title: Par spreads (bp)
     key: F2
-    rows: $.points
-    x: tenor
-    y: spread
+    rows: $.POINTS
+    x: TENOR
+    y: SPREAD
     fmt: price2
   - id: points
     kind: table
     title: Term structure
     key: F3
-    rows: $.points
+    rows: $.POINTS
     columns:
-      - { label: Tenor, bind: "@.tenor" }
-      - { label: Spread (bp), bind: "@.spread", fmt: price2 }
-      - { label: Hazard, bind: "@.hazard", fmt: pct2 }
-      - { label: Survival, bind: "@.survival", fmt: df4 }
+      - { label: Tenor, bind: "@.TENOR" }
+      - { label: Spread (bp), bind: "@.SPREAD", fmt: price2 }
+      - { label: Hazard, bind: "@.HAZARD", fmt: pct2 }
+      - { label: Survival, bind: "@.SURVIVAL", fmt: df4 }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.issuer, 'issuer')", F8: impact, F9: raw }
+keys: { F7: "link($.ISSUER, 'issuer')", F8: impact, F9: raw }

@@ -23,14 +23,14 @@ import matplotlib.pyplot as plt
 from drishti import quant as q
 
 doc = view.doc
-grid = pd.DataFrame(doc["grid"]).set_index("expiry")
-cols = [c for c in grid.columns if c.startswith("m") and c[1:].isdigit()]
-m = np.array([int(c[1:]) / 100 for c in cols])                 # strike / forward: 0.8 ... 1.2
+grid = pd.DataFrame(doc["GRID"]).set_index("EXPIRY")
+cols = [c for c in grid.columns if c.startswith("M_") and c[2:].isdigit()]
+m = np.array([int(c[2:]) / 100 for c in cols])                 # strike / forward: 0.8 ... 1.2
 T = np.array([q.tenor_years(e) for e in grid.index])
 vol = grid[cols].to_numpy() / 100
 
-summary = pd.DataFrame({"years": T, "ATM %": grid["m100"], "skew 90-110 pts": grid["m90"] - grid["m110"],
-                        "wings 80+120 - 2 ATM pts": grid["m80"] + grid["m120"] - 2 * grid["m100"]}, index=grid.index)
+summary = pd.DataFrame({"years": T, "ATM %": grid["M_100"], "skew 90-110 pts": grid["M_90"] - grid["M_110"],
+                        "wings 80+120 - 2 ATM pts": grid["M_80"] + grid["M_120"] - 2 * grid["M_100"]}, index=grid.index)
 
 w = vol ** 2 * T[:, None]                                       # total implied variance by expiry and moneyness
 calendar = np.vstack([np.full(len(m), True), np.diff(w, axis=0) >= -1e-12])
@@ -42,7 +42,7 @@ for i, t in enumerate(T):                                       # call prices fo
     slope = np.diff(c) / np.diff(m)                              # must lie in [-1, 0] and rise (convexity)
     butterfly.append(bool(np.all(slope <= 1e-12) and np.all(slope >= -1 - 1e-12) and np.all(np.diff(slope) >= -1e-12)))
 summary["butterfly ok"] = butterfly
-show(summary, title=f"{view.id}: {doc.get('underlier', '')} ({doc.get('model', '')})")
+show(summary, title=f"{view.id}: {doc.get('UNDERLIER', '')} ({doc.get('MODEL', '')})")
 bad = summary[~(summary["calendar ok"] & summary["butterfly ok"])]
 print("No static arbitrage on the quoted grid" if bad.empty else f"Arbitrage flagged at: {', '.join(bad.index)}")
 
@@ -54,8 +54,8 @@ ax[0].set_ylabel("implied vol %")
 ax[0].set_title("Smile by expiry")
 ax[0].legend(fontsize=7)
 ax[1].plot(T, summary["ATM %"], "o-", label="ATM")
-ax[1].plot(T, grid["m90"], "s--", ms=3, label="90%")
-ax[1].plot(T, grid["m110"], "^--", ms=3, label="110%")
+ax[1].plot(T, grid["M_90"], "s--", ms=3, label="90%")
+ax[1].plot(T, grid["M_110"], "^--", ms=3, label="110%")
 ax[1].set_xlabel("years")
 ax[1].set_title("Term structure")
 ax[1].legend(fontsize=7)

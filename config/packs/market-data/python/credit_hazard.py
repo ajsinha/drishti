@@ -23,36 +23,36 @@ import matplotlib.pyplot as plt
 from drishti import quant as q
 
 doc = view.doc
-R = doc.get("recovery", 0.4)
-pts = pd.DataFrame(doc["points"])
-pts["years"] = pts["tenor"].map(q.tenor_years)
+R = doc.get("RECOVERY", 0.4)
+pts = pd.DataFrame(doc["POINTS"])
+pts["years"] = pts["TENOR"].map(q.tenor_years)
 t = pts["years"].to_numpy()
-pts["triangle hazard"] = q.hazard_from_spread(pts["spread"].to_numpy(), R)   # s / (1 - R), each tenor on its own
+pts["triangle hazard"] = q.hazard_from_spread(pts["SPREAD"].to_numpy(), R)   # s / (1 - R), each tenor on its own
 
 # the curve's hazards are term hazards (flat to each tenor: S = exp(-h t)); forward hazards apply between tenors
-fwd = q.forward_hazards(t, pts["hazard"].to_numpy())
+fwd = q.forward_hazards(t, pts["HAZARD"].to_numpy())
 pts["forward hazard"] = fwd
 pts["survival (recomputed)"] = q.survival(t, t, fwd)
 pts["cumulative PD"] = 1 - pts["survival (recomputed)"]
 prev = np.concatenate([[1.0], pts["survival (recomputed)"].to_numpy()[:-1]])
 pts["PD in period"] = prev - pts["survival (recomputed)"]
 pts["PD in period | alive"] = pts["PD in period"] / prev          # conditional on surviving to the period's start
-show(pts, title=f"{view.id}: {doc.get('issuerName', '')}, recovery {R:.0%}, {doc.get('seniority', '')}")
+show(pts, title=f"{view.id}: {doc.get('ISSUER_NAME', '')}, recovery {R:.0%}, {doc.get('SENIORITY', '')}")
 
-yearly = pd.DataFrame({"year": np.arange(1, int(t.max()) + 1)})
-yearly["survival"] = q.survival(yearly["year"].to_numpy(), t, fwd)
-yearly["annual PD | alive"] = 1 - yearly["survival"] / yearly["survival"].shift(1, fill_value=1.0)
+yearly = pd.DataFrame({"YEAR": np.arange(1, int(t.max()) + 1)})
+yearly["SURVIVAL"] = q.survival(yearly["YEAR"].to_numpy(), t, fwd)
+yearly["annual PD | alive"] = 1 - yearly["SURVIVAL"] / yearly["SURVIVAL"].shift(1, fill_value=1.0)
 show(yearly, title="Year by year")
-print(f"1Y PD: the curve says {doc.get('pd1y', float('nan')):.4%}, recomputed {1 - q.survival(1.0, t, fwd):.4%}; "
-      f"largest survival difference {np.max(np.abs(pts['survival (recomputed)'] - pts['survival'])):.1e}")
+print(f"1Y PD: the curve says {doc.get('PD_1Y', float('nan')):.4%}, recomputed {1 - q.survival(1.0, t, fwd):.4%}; "
+      f"largest survival difference {np.max(np.abs(pts['survival (recomputed)'] - pts['SURVIVAL'])):.1e}")
 
 fig, ax = plt.subplots(1, 2, figsize=(8, 3))
-ax[0].plot(t, pts["hazard"] * 1e4, "o-", label="term hazard (curve)")
+ax[0].plot(t, pts["HAZARD"] * 1e4, "o-", label="term hazard (curve)")
 ax[0].step(t, fwd * 1e4, where="pre", label="forward hazard")
 ax[0].plot(t, pts["triangle hazard"] * 1e4, "s--", label="credit triangle", ms=3)
 ax[0].set_title("hazard rate, bp")
 ax[0].legend(fontsize=7)
-ax[1].plot(yearly["year"], yearly["survival"], "o-")
+ax[1].plot(yearly["YEAR"], yearly["SURVIVAL"], "o-")
 ax[1].set_title("survival probability")
 for a in ax:
     a.set_xlabel("years")

@@ -176,7 +176,7 @@ public final class FeedSourcePlugin implements SourcePlugin {
         if (doc == null) {
             return Optional.empty();
         }
-        DataNode data = context.parseJson(new ByteArrayInputStream(JSON.writeValueAsBytes(doc)));
+        DataNode data = context.parseJson(new ByteArrayInputStream(JSON.writeValueAsBytes(com.ash.drishti.common.UpperSnake.keys(doc))));
         return Optional.of(new EntityDocument(ref, data, new Provenance(sourceName, fetchedAt.toEpochMilli(), fetchedAt, false, dataDate)));
     }
 

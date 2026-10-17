@@ -50,9 +50,9 @@ class FeedSourcePluginTest {
         assertThat(p.health()).isEqualTo("UP");
         assertThat(p.manifest().kinds()).containsExactly("rate-fixing");
         EntityDocument d = get(p, "rate-fixing", "FIX-SOFR-NYFED", null);
-        assertThat(d.data().get("administrator").asText()).contains("New York");
-        assertThat(d.data().get("fixings").size()).isEqualTo(20);
-        assertThat(d.data().get("latest").asDouble()).isBetween(0.0, 0.1);
+        assertThat(d.data().get("ADMINISTRATOR").asText()).contains("New York");
+        assertThat(d.data().get("FIXINGS").size()).isEqualTo(20);
+        assertThat(d.data().get("LATEST").asDouble()).isBetween(0.0, 0.1);
         EntityDocument earlier = get(p, "rate-fixing", "FIX-SOFR-NYFED", d.provenance().businessDate().minusDays(7));
         assertThat(earlier.provenance().businessDate()).isBefore(d.provenance().businessDate());
         assertThat(p.search("rate-fixing", "sofr", 5)).extracting(h -> h.ref().id()).containsExactly("FIX-SOFR-NYFED");
@@ -61,8 +61,8 @@ class FeedSourcePluginTest {
     @Test
     void ecbEstrReadsTheCsv() throws Exception {
         EntityDocument d = get(feed("ecb-estr", "ecb-estr.csv"), "rate-fixing", "FIX-ESTR-ECB", null);
-        assertThat(d.data().get("currency").asText()).isEqualTo("EUR");
-        assertThat(d.data().get("fixings").get(0).get("ratePct").asDouble()).isBetween(0.0, 10.0);
+        assertThat(d.data().get("CURRENCY").asText()).isEqualTo("EUR");
+        assertThat(d.data().get("FIXINGS").get(0).get("RATE_PCT").asDouble()).isBetween(0.0, 10.0);
     }
 
     @Test
@@ -71,28 +71,28 @@ class FeedSourcePluginTest {
         EntityDocument eur = get(p, "fx-spot", "FX-EURUSD-ECB", null);
         EntityDocument jpy = get(p, "fx-spot", "FX-USDJPY-ECB", null);
         EntityDocument eurjpy = get(p, "fx-spot", "FX-EURJPY-ECB", null);
-        assertThat(jpy.data().get("mid").asDouble()).isCloseTo(eurjpy.data().get("mid").asDouble() / eur.data().get("mid").asDouble(),
+        assertThat(jpy.data().get("MID").asDouble()).isCloseTo(eurjpy.data().get("MID").asDouble() / eur.data().get("MID").asDouble(),
                 org.assertj.core.data.Offset.offset(0.001));
-        assertThat(eur.data().get("history").size()).isEqualTo(30);
-        assertThat(eur.data().get("pairName").asText()).isEqualTo("EUR/USD");
+        assertThat(eur.data().get("HISTORY").size()).isEqualTo(30);
+        assertThat(eur.data().get("PAIR_NAME").asText()).isEqualTo("EUR/USD");
     }
 
     @Test
     void usTreasuryParYieldsBecomeACurve() throws Exception {
         FeedSourcePlugin p = feed("us-treasury", "us-treasury-202609.xml");
         EntityDocument d = get(p, "ir-curve", "CRV-USD-UST", null);
-        assertThat(d.data().get("points").size()).isGreaterThanOrEqualTo(10);
-        assertThat(d.data().get("tenY").asDouble()).isBetween(0.0, 0.1);
-        assertThat(d.data().get("asOf").asText()).isEqualTo("2026-09-30");
-        assertThat(get(p, "ir-curve", "CRV-USD-UST", LocalDate.of(2026, 9, 27)).data().get("asOf").asText()).isEqualTo("2026-09-25");   // the 26th is a Saturday
+        assertThat(d.data().get("POINTS").size()).isGreaterThanOrEqualTo(10);
+        assertThat(d.data().get("TEN_Y").asDouble()).isBetween(0.0, 0.1);
+        assertThat(d.data().get("AS_OF").asText()).isEqualTo("2026-09-30");
+        assertThat(get(p, "ir-curve", "CRV-USD-UST", LocalDate.of(2026, 9, 27)).data().get("AS_OF").asText()).isEqualTo("2026-09-25");   // the 26th is a Saturday
     }
 
     @Test
     void fredSkipsMissingObservations() throws Exception {
         FeedSourcePlugin p = feed("fred", "fred-dgs10.json", "series", "DGS10");
         EntityDocument d = get(p, "rate-fixing", "FIX-FRED-DGS10", null);
-        assertThat(d.data().get("fixings").size()).isEqualTo(5);                  // the "." observation is not a number
-        assertThat(d.data().get("fixings").get(0).get("ratePct").asDouble()).isEqualTo(4.09);
+        assertThat(d.data().get("FIXINGS").size()).isEqualTo(5);                  // the "." observation is not a number
+        assertThat(d.data().get("FIXINGS").get(0).get("RATE_PCT").asDouble()).isEqualTo(4.09);
     }
 
     @Test

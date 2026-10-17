@@ -18,19 +18,19 @@ sutra: dividend-curve
 version: 1
 description: Expected dividends by year (implied from dividend futures and forwards).
 match: { kind: dividend-curve, priority: 10 }
-title: { pill: Market data · Dividend curve, id: $.curveId }
+title: { pill: Market data · Dividend curve, id: $.CURVE_ID }
 strip:
-  - { label: Underlier, bind: $.underlier }
-  - { label: Yield, bind: $.dividendYield, fmt: pct2, emphasis: true }
+  - { label: Underlier, bind: $.UNDERLIER }
+  - { label: Yield, bind: $.DIVIDEND_YIELD, fmt: pct2, emphasis: true }
 panels:
   - id: divs
     kind: hbar
     title: Expected dividends
     key: F2
-    rows: $.points
-    label: year
-    value: amount
+    rows: $.POINTS
+    label: YEAR
+    value: AMOUNT
     fmt: price2
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.underlyingEquity, 'equity')", F8: impact, F9: raw }
+keys: { F7: "link($.UNDERLYING_EQUITY, 'equity')", F8: impact, F9: raw }

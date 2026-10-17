@@ -18,28 +18,28 @@ sutra: fx-spot
 version: 1
 description: Spot rate for a currency pair with bid/ask.
 match: { kind: fx-spot, priority: 10 }
-title: { pill: Market data · FX spot rate, id: $.pair }
+title: { pill: Market data · FX spot rate, id: $.PAIR }
 strip:
-  - { label: Pair, bind: $.pair }
-  - { label: Mid, bind: $.mid, fmt: rate5, emphasis: true }
-  - { label: Bid, bind: $.bid, fmt: rate5 }
-  - { label: Ask, bind: $.ask, fmt: rate5 }
-  - { label: "1D change", bind: $.change1d, fmt: pct2, tone: sign }
-  - { label: Value date, bind: $.spotDate, fmt: date }
+  - { label: Pair, bind: $.PAIR }
+  - { label: Mid, bind: $.MID, fmt: rate5, emphasis: true }
+  - { label: Bid, bind: $.BID, fmt: rate5 }
+  - { label: Ask, bind: $.ASK, fmt: rate5 }
+  - { label: "1D change", bind: $.CHANGE_1D, fmt: pct2, tone: sign }
+  - { label: Value date, bind: $.SPOT_DATE, fmt: date }
 panels:
   - id: history
     kind: line
     title: Last 30 days
     key: F2
-    rows: $.history
-    x: date
-    y: mid
+    rows: $.HISTORY
+    x: DATE
+    y: MID
     fmt: rate5
   - id: pair
     kind: kv
     title: Conventions
     area: right
-    rows: $.conventions
+    rows: $.CONVENTIONS
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.fxForwardCurve, 'fx-forward-curve')", F8: impact, F9: raw }
+keys: { F7: "link($.FX_FORWARD_CURVE, 'fx-forward-curve')", F8: impact, F9: raw }
