@@ -50,25 +50,25 @@ PLAIN = re.compile(r"^[A-Za-z0-9$][A-Za-z0-9 $@._()·/%×-]*$")
 CONTROLLED = {
     "irs-fixfloat": {
         "controls": [
-            "  - { id: legs, kind: multi-select, label: Legs, options: \"$.legs[*].leg\", default: all, placement: header, panel: schedule, remember: user }",
+            "  - { id: legs, kind: multi-select, label: Legs, options: \"$.LEGS[*].LEG\", default: all, placement: header, panel: schedule, remember: user }",
             "  - { id: when, kind: date-range, label: Paid between, placement: header, panel: schedule }",
         ],
         "panels": {"schedule": {
             "title": "Cashflows${ctl.when ? ' · paid ' + ctl.when : ''}",
-            "extra": ["    where: \"oneOf(@.leg, ctl.legs) && within(@.payDate, ctl.when)\""]}},
+            "extra": ["    where: \"oneOf(@.LEG, ctl.legs) && within(@.PAY_DATE, ctl.when)\""]}},
     },
     "netting-set": {
         "controls": [
-            "  - { id: asset, kind: dropdown, label: Asset class, options: \"$.byAsset[*].asset\", placement: header, panel: trades }",
-            "  - { id: product, kind: multi-select, label: Product, options: \"$.trades[*].product\", placement: header, panel: trades }",
-            "  - { id: minNotional, kind: slider, label: Notional at least, min: 0, max: \"max($.trades[*].notional)\", step: 1000000, placement: header, panel: trades }",
+            "  - { id: asset, kind: dropdown, label: Asset class, options: \"$.BY_ASSET[*].ASSET\", placement: header, panel: trades }",
+            "  - { id: product, kind: multi-select, label: Product, options: \"$.TRADES[*].PRODUCT\", placement: header, panel: trades }",
+            "  - { id: minNotional, kind: slider, label: Notional at least, min: 0, max: \"max($.TRADES[*].NOTIONAL)\", step: 1000000, placement: header, panel: trades }",
             "  - { id: top, kind: top-n, label: Show, options: [10, 25, 50], default: 25, placement: header, panel: trades }",
         ],
         "panels": {
             "trades": {"title": "Member trades${ctl.asset ? ' · ' + ctl.asset : ''}",
-                       "extra": ["    where: \"(ctl.asset == '' || @.assetClass == ctl.asset) && oneOf(@.product, ctl.product) && (ctl.minNotional == '' || @.notional >= ctl.minNotional)\"",
+                       "extra": ["    where: \"(ctl.asset == '' || @.ASSET_CLASS == ctl.asset) && oneOf(@.PRODUCT, ctl.product) && (ctl.minNotional == '' || @.NOTIONAL >= ctl.minNotional)\"",
                                  "    limit: ctl.top"]},
-            "byAsset": {"extra": ["    on-select: { by: asset, field: asset, filter: [trades] }"]}},
+            "byAsset": {"extra": ["    on-select: { by: asset, field: ASSET, filter: [trades] }"]}},
     },
 }
 
@@ -94,7 +94,8 @@ def flow(d: dict) -> str:
 
 
 def col(label, bind, fmt=None, tone=None, total=False) -> str:
-    return flow({"label": label, "bind": bind, "fmt": fmt, "tone": tone, "total": total or None})
+    # a row's own ID (a netting set in a counterparty's list) opens its entity: the bare name is too vague to link by itself
+    return flow({"label": label, "bind": bind, "fmt": fmt, "tone": tone, "total": total or None, "link": bind == "@.ID" or None})
 
 
 def yflow(v) -> str:

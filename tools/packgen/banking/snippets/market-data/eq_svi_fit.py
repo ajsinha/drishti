@@ -24,9 +24,9 @@ from scipy.optimize import least_squares
 from drishti import quant as q
 
 doc = view.doc
-rows_in = doc["grid"]
-cols = [c for c in rows_in[0] if c.startswith("m") and c[1:].isdigit()]
-k = np.log(np.array([int(c[1:]) / 100 for c in cols]))         # log-moneyness of each quoted strike
+rows_in = doc["GRID"]
+cols = [c for c in rows_in[0] if c.startswith("M_") and c[2:].isdigit()]
+k = np.log(np.array([int(c[2:]) / 100 for c in cols]))         # log-moneyness of each quoted strike
 fits, fig = [], plt.figure(figsize=(7, 3.4))
 ax = fig.gca()
 
@@ -36,7 +36,7 @@ def resid(p, w):                                                  # fitted less 
 
 
 for g in rows_in:
-    T = q.tenor_years(g["expiry"]) if "expiry" in g else q.month_code_years(g["month"], view.business_date or "2026-09-30")
+    T = q.tenor_years(g["EXPIRY"]) if "EXPIRY" in g else q.month_code_years(g["MONTH"], view.business_date or "2026-09-30")
     iv = np.array([g[c] for c in cols]) / 100
     w = iv ** 2 * T                                               # total variance: what SVI models
     a0 = max(w.min() * 0.9, 1e-6)
@@ -44,15 +44,15 @@ for g in rows_in:
                         bounds=([-1.0, 1e-6, -0.999, -1.0, 1e-4], [1.0, 5.0, 0.999, 1.0, 2.0]))
     a, b, rho, m, s = sol.x
     fitted = np.sqrt(np.maximum(q.svi_total_variance(k, *sol.x), 0) / T)
-    fits.append({"expiry": g.get("expiry") or g.get("month"), "years": T, "a": a, "b": b, "rho": rho, "m": m, "sigma": s,
+    fits.append({"EXPIRY": g.get("EXPIRY") or g.get("MONTH"), "years": T, "A": a, "B": b, "RHO": rho, "m": m, "sigma": s,
                  "rmse vol pts": float(np.sqrt(np.mean((fitted - iv) ** 2)) * 100),
                  "min variance ok": a + b * s * np.sqrt(1 - rho ** 2) >= 0,      # w stays positive everywhere
                  "Lee wing ok": b * (1 + abs(rho)) <= 2})                      # wing slope of total variance at most 2
     kk = np.linspace(k.min() - 0.1, k.max() + 0.1, 60)
     line, = ax.plot(np.exp(kk) * 100, np.sqrt(np.maximum(q.svi_total_variance(kk, *sol.x), 0) / T) * 100, lw=1,
-                    label=fits[-1]["expiry"])
+                    label=fits[-1]["EXPIRY"])
     ax.scatter(np.exp(k) * 100, iv * 100, s=10, color=line.get_color())
-out = pd.DataFrame(fits).set_index("expiry")
+out = pd.DataFrame(fits).set_index("EXPIRY")
 show(out, title=f"{view.id}: raw SVI per expiry (w(k) = a + b(rho(k - m) + sqrt((k - m)^2 + sigma^2)))")
 print(f"Worst fit: {out['rmse vol pts'].max():.3f} vol points ({out['rmse vol pts'].idxmax()})")
 ax.set_xlabel("moneyness %")

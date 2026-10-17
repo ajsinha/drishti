@@ -239,4 +239,4 @@ def spec() -> PB.PackSpec:
 
 
 if __name__ == "__main__":
-    PB.main(spec(), build(), T.graph_fields())
+    PB.main(spec(), build(), T.graph_fields(raw=True))

@@ -23,40 +23,40 @@ import matplotlib.pyplot as plt
 from drishti import quant as q
 
 doc = view.doc
-spot_doc = await drishti.get_async("fx-spot", doc.get("fxSpot") or f"FX-{doc['pair']}")
-fwd_doc = await drishti.get_async("fx-forward-curve", spot_doc.get("fxForwardCurve") or f"FXF-{doc['pair']}")
-c = spot_doc["conventions"]
-S, pip = spot_doc["mid"], c.get("pipFactor", 10000)
-pts = [(q.tenor_years(p["tenor"]), math.log((S + p["pips"] / pip) / S) / q.tenor_years(p["tenor"])) for p in fwd_doc["points"]]
+spot_doc = await drishti.get_async("fx-spot", doc.get("FX_SPOT") or f"FX-{doc['PAIR']}")
+fwd_doc = await drishti.get_async("fx-forward-curve", spot_doc.get("FX_FORWARD_CURVE") or f"FXF-{doc['PAIR']}")
+c = spot_doc["CONVENTIONS"]
+S, pip = spot_doc["MID"], c.get("PIP_FACTOR", 10000)
+pts = [(q.tenor_years(p["TENOR"]), math.log((S + p["PIPS"] / pip) / S) / q.tenor_years(p["TENOR"])) for p in fwd_doc["POINTS"]]
 try:
-    rd_curve = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", f"CRV-{c['quote']}-OIS"))["points"])
+    rd_curve = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", f"CRV-{c['QUOTE']}-OIS"))["POINTS"])
 except drishti.DrishtiError:
     rd_curve = q.ZeroCurve([1, 30], [0.03, 0.03])                    # no OIS curve for the quote currency: 3% flat
-    print(f"no OIS curve for {c['quote']}: domestic rate 3% flat")
+    print(f"no OIS curve for {c['QUOTE']}: domestic rate 3% flat")
 
 rows, fig, ax = [], *plt.subplots(figsize=(7, 3.4))
-for g in doc["grid"]:
-    T = q.tenor_years(g["expiry"])
+for g in doc["GRID"]:
+    T = q.tenor_years(g["EXPIRY"])
     diff = min(pts, key=lambda p: abs(p[0] - T))[1]                  # the nearest forward tenor's yield differential
     rd = rd_curve.zero(T)
     rf, F = rd - diff, S * math.exp(diff * T)
-    vols = {"10D put": g["p10"], "25D put": g["p25"], "ATM": g["atm"], "25D call": g["c25"], "10D call": g["c10"]}
-    strikes = {"10D put": q.fx_strike_from_delta(S, T, rd, rf, g["p10"] / 100, 0.10, call=False),
-               "25D put": q.fx_strike_from_delta(S, T, rd, rf, g["p25"] / 100, 0.25, call=False),
-               "ATM": F * math.exp(0.5 * (g["atm"] / 100) ** 2 * T),     # delta-neutral straddle strike
-               "25D call": q.fx_strike_from_delta(S, T, rd, rf, g["c25"] / 100, 0.25, call=True),
-               "10D call": q.fx_strike_from_delta(S, T, rd, rf, g["c10"] / 100, 0.10, call=True)}
-    rows.append({"expiry": g["expiry"], "forward": F, **{f"K {k}": v for k, v in strikes.items()},
-                 "RR25 quoted": g["rr25"], "RR25 from vols": g["c25"] - g["p25"],
-                 "BF25 quoted": g["bf25"], "BF25 from vols": (g["c25"] + g["p25"]) / 2 - g["atm"],
-                 "ATM total variance": (g["atm"] / 100) ** 2 * T})
-    ax.plot([strikes[k] / F for k in vols], list(vols.values()), "o-", ms=3, label=g["expiry"])
-out = pd.DataFrame(rows).set_index("expiry")
+    vols = {"10D put": g["P_10"], "25D put": g["P_25"], "ATM": g["ATM"], "25D call": g["C_25"], "10D call": g["C_10"]}
+    strikes = {"10D put": q.fx_strike_from_delta(S, T, rd, rf, g["P_10"] / 100, 0.10, call=False),
+               "25D put": q.fx_strike_from_delta(S, T, rd, rf, g["P_25"] / 100, 0.25, call=False),
+               "ATM": F * math.exp(0.5 * (g["ATM"] / 100) ** 2 * T),     # delta-neutral straddle strike
+               "25D call": q.fx_strike_from_delta(S, T, rd, rf, g["C_25"] / 100, 0.25, call=True),
+               "10D call": q.fx_strike_from_delta(S, T, rd, rf, g["C_10"] / 100, 0.10, call=True)}
+    rows.append({"EXPIRY": g["EXPIRY"], "forward": F, **{f"K {k}": v for k, v in strikes.items()},
+                 "RR25 quoted": g["RR_25"], "RR25 from vols": g["C_25"] - g["P_25"],
+                 "BF25 quoted": g["BF_25"], "BF25 from vols": (g["C_25"] + g["P_25"]) / 2 - g["ATM"],
+                 "ATM total variance": (g["ATM"] / 100) ** 2 * T})
+    ax.plot([strikes[k] / F for k in vols], list(vols.values()), "o-", ms=3, label=g["EXPIRY"])
+out = pd.DataFrame(rows).set_index("EXPIRY")
 out["calendar ok"] = out["ATM total variance"].diff().fillna(1) > 0   # total variance must rise with expiry
-show(out, title=f"{doc['pair']}: smile by expiry (spot {S}, {c['quote']} rates from its OIS curve)")
-chart(pd.DataFrame({"ATM vol %": [g["atm"] for g in doc["grid"]]}, index=[g["expiry"] for g in doc["grid"]]),
+show(out, title=f"{doc['PAIR']}: smile by expiry (spot {S}, {c['QUOTE']} rates from its OIS curve)")
+chart(pd.DataFrame({"ATM vol %": [g["ATM"] for g in doc["GRID"]]}, index=[g["EXPIRY"] for g in doc["GRID"]]),
       kind="line", title="ATM volatility term structure")
 ax.set_xlabel("strike / forward")
 ax.set_ylabel("vol %")
-ax.set_title(f"{doc['pair']} smile by expiry ({doc.get('model', '')})")
+ax.set_title(f"{doc['PAIR']} smile by expiry ({doc.get('MODEL', '')})")
 ax.legend(fontsize=7)

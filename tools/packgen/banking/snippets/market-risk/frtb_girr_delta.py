@@ -22,40 +22,40 @@ import pandas as pd
 from drishti import quant as q
 
 RW = {0.25: 0.017, 0.5: 0.017, 1: 0.016, 2: 0.013, 3: 0.012, 5: 0.011, 10: 0.011, 15: 0.011, 20: 0.011, 30: 0.011}
-book = view.doc.get("book") or view.id
-trades = await drishti.search_async(f"TRD where book = '{book}' limit 1000")
+book = view.doc.get("BOOK") or view.id
+trades = await drishti.search_async(f"TVAL where PORTFOLIO = '{book}' limit 1000")
 rows = []
-for tid in trades["id"]:
+for tid in trades["ID"]:
     d = await drishti.get_async("trade", tid)
-    for s in d.get("sensitivities") or []:
-        if s.get("dv01"):
-            rows.append({"currency": d["currency"], "tenor": q.tenor_years(s["bucket"]), "dv01": s["dv01"]})
+    for s in d.get("SENSITIVITIES") or []:
+        if s.get("DV01"):
+            rows.append({"CURRENCY": d["CURRENCY"], "TENOR": q.tenor_years(s["BUCKET"]), "DV01": s["DV01"]})
 if not rows:
     raise ValueError(f"{book} holds no interest-rate sensitivities (DV01 by tenor)")
-s = pd.DataFrame(rows).groupby(["currency", "tenor"], as_index=False)["dv01"].sum()
+s = pd.DataFrame(rows).groupby(["CURRENCY", "TENOR"], as_index=False)["DV01"].sum()
 vertices = np.array(sorted(RW))
-s["vertex"] = [vertices[np.argmin(np.abs(vertices - t))] for t in s["tenor"]]       # map each bucket to the nearest vertex
-s = s.groupby(["currency", "vertex"], as_index=False)["dv01"].sum()
-s["WS"] = [RW[v] * 1e4 * d for v, d in zip(s["vertex"], s["dv01"])]                 # s_k = DV01 / 1 bp; WS = RW x s_k
+s["vertex"] = [vertices[np.argmin(np.abs(vertices - t))] for t in s["TENOR"]]       # map each bucket to the nearest vertex
+s = s.groupby(["CURRENCY", "vertex"], as_index=False)["DV01"].sum()
+s["WS"] = [RW[v] * 1e4 * d for v, d in zip(s["vertex"], s["DV01"])]                 # s_k = DV01 / 1 bp; WS = RW x s_k
 
 
 def charge(scale):                                       # scale the correlations: 1 medium, 1.25 high, low as Basel
-    adj = lambda r: min(1.0, r * 1.25) if scale == "high" else max(2 * r - 1, 0.75 * r) if scale == "low" else r   # noqa: E731
+    adj = lambda r: min(1.0, r * 1.25) if scale == "HIGH" else max(2 * r - 1, 0.75 * r) if scale == "LOW" else r   # noqa: E731
     kb, sb = [], []
-    for ccy, g in s.groupby("currency"):
+    for ccy, g in s.groupby("CURRENCY"):
         T = g["vertex"].to_numpy(dtype=float)
         rho = np.array([[adj(max(np.exp(-0.03 * abs(a - b) / min(a, b)), 0.4)) for b in T] for a in T])
         kb.append(q.frtb_bucket_charge(g["WS"].to_numpy(), rho))
         sb.append(g["WS"].sum())
-    return q.frtb_across_buckets(kb, sb, adj(0.5)), dict(zip(s["currency"].unique(), kb))
+    return q.frtb_across_buckets(kb, sb, adj(0.5)), dict(zip(s["CURRENCY"].unique(), kb))
 
 
-results = {sc: charge(sc) for sc in ("low", "medium", "high")}
-show(s.pivot_table(index="vertex", columns="currency", values="WS", aggfunc="sum", fill_value=0),
+results = {sc: charge(sc) for sc in ("LOW", "medium", "HIGH")}
+show(s.pivot_table(index="vertex", columns="CURRENCY", values="WS", aggfunc="sum", fill_value=0),
      title=f"{book}: weighted sensitivities (WS) by vertex and currency, from {len(trades)} trades")
-show(pd.DataFrame({sc: r[1] for sc, r in results.items()}).rename_axis("currency"), title="Bucket charge K_b by currency and correlation scenario")
+show(pd.DataFrame({sc: r[1] for sc, r in results.items()}).rename_axis("CURRENCY"), title="Bucket charge K_b by currency and correlation scenario")
 best = max(results, key=lambda sc: results[sc][0])
-show(pd.DataFrame({"scenario": list(results), "GIRR delta charge": [r[0] for r in results.values()]}),
+show(pd.DataFrame({"SCENARIO": list(results), "GIRR delta charge": [r[0] for r in results.values()]}),
      title=f"GIRR delta capital: the {best} scenario binds at {results[best][0]:,.0f}")
 if view.kind == "frtb-sensitivity":
-    print(f"The engine's delta charge (all risk classes) is {view.doc.get('deltaCharge'):,.0f}; its inputs differ from this rebuild")
+    print(f"The engine's delta charge (all risk classes) is {view.doc.get('DELTA_CHARGE'):,.0f}; its inputs differ from this rebuild")

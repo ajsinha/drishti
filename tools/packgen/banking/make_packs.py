@@ -59,7 +59,7 @@ FEEDS = {"nyfed-sofr": ("DRISHTI_FEED_NYFED_SOFR", ["rate-fixing"], {}, "SOFR fr
 # Reference data changes rarely: its tables keep a row only when an entity changes (effective dating).
 EFFECTIVE_DOMAINS = {"reference", "legal"}
 IMPACT = {"trading": {"measures": {"trade": "first($.LEGS).NOTIONAL"}, "formats": {"trade": "compact"}},
-          "counterparty-risk": {"follow": ["nettingSet", "creditLimit"], "measures": {"netting-set": "$.netMtm", "credit-limit": "$.limit"},
+          "counterparty-risk": {"follow": ["NETTING_SET", "CREDIT_LIMIT"], "measures": {"netting-set": "$.NET_MTM", "credit-limit": "$.LIMIT"},
                                 "formats": {"netting-set": "signed0", "credit-limit": "compact"}},
           "market-risk": {"measures": {"trade-valuation": "$.MTM"}, "formats": {"trade-valuation": "signed0"}}}
 EXAMPLES = {  # command, what it shows (ids from make_data.py's deterministic data)
@@ -83,8 +83,8 @@ CODES = {"core": "CORE", "market-data": "MKT", "trading": "TRDS", "market-risk":
 
 # key fields shown beside each entity in pick lists (TRD MX-200000, CPTY north) and searches
 COLUMNS = {"trading": {"trade": ["SOURCE_SYSTEM", "PRODUCT_TYPE", "BUY_SELL_CODE", "CURRENCY", "QUANTITY", "MATURITY_DATE", "PORTFOLIO", "COUNTERPARTY"]},
-           "core": {"counterparty": ["name", "rating", "sector", "COUNTRY_OF_RISK", "UEN", "netMtm"],
-                            "book": ["name", "deskName", "tradeCount", "mtm", "dv01"]}}
+           "core": {"counterparty": ["NAME", "RATING", "SECTOR", "COUNTRY_OF_RISK", "UEN", "NET_MTM"],
+                            "book": ["NAME", "DESK_NAME", "TRADE_COUNT", "MTM", "DV01"]}}
 
 # a Pivot tab on the results and pick lists of these kinds (USER_GUIDE.md, The Pivot tab): fields the trade table keeps as
 # columns (LAYOUTS below), so the server pivots a whole book of the day from them; opens on MTM by book and currency
@@ -263,7 +263,7 @@ def files() -> dict[Path, str]:
             out[PACKS / name / "python" / file] = f"{HEADER}\n\n{note}\n{meta}\n{code}"
         if name == "core":   # every banking pack requires core, so its vocabulary covers them all
             out[PACKS / name / "config" / "semantics.yaml"] = (f"{HEADER}\n\n{GENERATED}\n# How banking field names read as labels.\n"
-                                                               + yaml.safe_dump({"acronyms": ACRONYMS, "labels": {"tradeId": "Trade", "mtm": "MTM (USD)", "TRADE_ID": "Trade"}},
+                                                               + yaml.safe_dump({"acronyms": ACRONYMS, "labels": {"TRADE_ID": "Trade", "MTM": "MTM (USD)"}},
                                                                                 sort_keys=False, width=140))
     return out
 

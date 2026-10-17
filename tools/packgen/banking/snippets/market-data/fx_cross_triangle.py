@@ -19,12 +19,12 @@
 
 import pandas as pd
 
-found = await drishti.search_async("FX where mid > 0 limit 100")
+found = await drishti.search_async("FX where MID > 0 limit 100")
 quotes = {}
-for pid in found["id"]:
+for pid in found["ID"]:
     d = await drishti.get_async("fx-spot", pid)
-    c = d.get("conventions") or {}
-    quotes[(c["base"], c["quote"])] = {"bid": d["bid"], "ask": d["ask"], "mid": d["mid"], "pip": c.get("pipFactor", 10000)}
+    c = d.get("CONVENTIONS") or {}
+    quotes[(c["BASE"], c["QUOTE"])] = {"BID": d["BID"], "ASK": d["ASK"], "MID": d["MID"], "pip": c.get("PIP_FACTOR", 10000)}
 
 
 def vs_usd(ccy, side):
@@ -34,7 +34,7 @@ def vs_usd(ccy, side):
     if (ccy, "USD") in quotes:                              # EUR/USD: USD per EUR
         return quotes[(ccy, "USD")][side]
     if ("USD", ccy) in quotes:                              # USD/JPY: JPY per USD, so invert (and swap the sides)
-        return 1.0 / quotes[("USD", ccy)]["ask" if side == "bid" else "bid"]
+        return 1.0 / quotes[("USD", ccy)]["ASK" if side == "BID" else "BID"]
     return None
 
 
@@ -42,17 +42,17 @@ rows = []
 for (b, qc), x in quotes.items():
     if "USD" in (b, qc):
         continue                                            # a cross: neither side is USD
-    mid_b, mid_q = vs_usd(b, "mid"), vs_usd(qc, "mid")
+    mid_b, mid_q = vs_usd(b, "MID"), vs_usd(qc, "MID")
     implied = mid_b / mid_q
-    via_bid = vs_usd(b, "bid") / vs_usd(qc, "ask")           # sell b for USD at the bid, buy qc with USD at the ask
-    via_ask = vs_usd(b, "ask") / vs_usd(qc, "bid")
-    rows.append({"pair": f"{b}/{qc}", "quoted mid": x["mid"], "via USD mid": implied,
-                 "difference pips": (x["mid"] - implied) * x["pip"],
-                 "direct bid": x["bid"], "direct ask": x["ask"], "synthetic bid": via_bid, "synthetic ask": via_ask,
-                 "arbitrage": "buy direct, sell synthetic" if x["ask"] < via_bid else
-                              "buy synthetic, sell direct" if via_ask < x["bid"] else "none"})
-out = pd.DataFrame(rows).set_index("pair")
+    via_bid = vs_usd(b, "BID") / vs_usd(qc, "ASK")           # sell b for USD at the bid, buy qc with USD at the ask
+    via_ask = vs_usd(b, "ASK") / vs_usd(qc, "BID")
+    rows.append({"PAIR": f"{b}/{qc}", "quoted mid": x["MID"], "via USD mid": implied,
+                 "difference pips": (x["MID"] - implied) * x["pip"],
+                 "direct bid": x["BID"], "direct ask": x["ASK"], "synthetic bid": via_bid, "synthetic ask": via_ask,
+                 "arbitrage": "buy direct, sell synthetic" if x["ASK"] < via_bid else
+                              "buy synthetic, sell direct" if via_ask < x["BID"] else "none"})
+out = pd.DataFrame(rows).set_index("PAIR")
 show(out, title=f"Crosses re-derived through USD ({len(quotes)} spot rates)")
-chart(out.reset_index(), kind="bar", x="pair", y="difference pips", title="Quoted cross mid less the mid via USD, pips")
+chart(out.reset_index(), kind="bar", x="PAIR", y="difference pips", title="Quoted cross mid less the mid via USD, pips")
 print(f"{(out['arbitrage'] != 'none').sum()} of {len(out)} crosses offer a riskless round trip at these bids and asks"
       " (sample quotes are not taken at the same instant)")

@@ -15,6 +15,9 @@
 """The whole risk-pack taxonomy in one place, with the consistency checks every generator relies on."""
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
 import market_data
 import products_credit_equity_cmd
 import products_other
@@ -22,8 +25,12 @@ import products_rates_fx
 import risk_data
 from risk_model import Kind
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "common"))
+import upper as U  # noqa: E402  (every name a pack writes is UPPER_SNAKE; the specifications keep the generator's short names)
+
 PRODUCTS = products_rates_fx.PRODUCTS + products_credit_equity_cmd.PRODUCTS + products_other.PRODUCTS
-KINDS: list[Kind] = market_data.KINDS + risk_data.KINDS
+RAW_KINDS: list[Kind] = market_data.KINDS + risk_data.KINDS          # the generator's short names (the retired example packs read these)
+KINDS: list[Kind] = [U.kind(k) for k in RAW_KINDS]
 KIND = {k.kind: k for k in KINDS}
 
 # Trade-level reference fields (besides each product's market-data fields).
@@ -37,8 +44,10 @@ TRADE_LINKS = {"nettingSet": ("netting-set", "Netting set"), "book": ("book", "B
 TRADE = Kind("trade", "TRD", "MX-", "Trade", "Trades", "A trade from any source system (ENDUR, CALYPSO, MUREX) in the common schema; its PRODUCT_TYPE selects its Sutra.", "TRADE_ID", [], [])   # ids carry their booking system's prefix (booking.py)
 
 
-def graph_fields() -> dict[str, tuple[str, str]]:
-    """Every reference field in the pack -> (kind, label). A field name must mean one kind."""
+def graph_fields(raw: bool = False) -> dict[str, tuple[str, str]]:
+    """Every reference field in the pack -> (kind, label). A field name must mean one kind. raw: the generator's short names (what the
+    retired example packs built on the banking data were written with), else the UPPER_SNAKE names the shipped packs carry."""
+    name = (lambda f: f) if raw else U.name
     out: dict[str, tuple[str, str]] = {}
 
     def claim(f, kind, label):
@@ -48,11 +57,11 @@ def graph_fields() -> dict[str, tuple[str, str]]:
         out.setdefault(f, (kind, label))
 
     for f, (k, lab) in TRADE_LINKS.items():
-        claim(f, k, lab)
+        claim(name(f), k, lab)
     for p in PRODUCTS:
         for f, k, _ in p.md:
-            claim(f, k, f[0].upper() + "".join(" " + c.lower() if c.isupper() else c for c in f[1:]))
-    for k in KINDS:
+            claim(name(f), k, f[0].upper() + "".join(" " + c.lower() if c.isupper() else c for c in f[1:]))
+    for k in RAW_KINDS if raw else KINDS:
         for f, (kind, lab) in k.links.items():
             claim(f, kind, lab)
     unknown = {k for k, _ in out.values()} - set(KIND) - {"trade"}

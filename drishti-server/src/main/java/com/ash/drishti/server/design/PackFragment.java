@@ -46,7 +46,7 @@ import org.springframework.stereotype.Component;
  * A Design as a pack fragment and back. The export is a zip with one folder: {@code pack.yaml} (a stub: the kind, a mnemonic
  * suggestion, an id pattern and the id field), the Sutra under {@code sutras/}, the samples as tests in
  * {@code tests/<sutra>/*.json} with an {@code expect.yaml} (what {@code sutra test} checks), three samples in
- * {@code samples/<kind>/} and a README. The import reads a zip of the same layout (or any pack folder zipped) into Designs,
+ * {@code samples/<kind>.jsonl} (one a line, with {@code samples/catalog.json}) and a README. The import reads a zip of the same layout (or any pack folder zipped) into Designs,
  * one per Sutra, with the samples found beside it. Nothing is written to disk; entries are read in memory with limits.
  */
 @Component
@@ -153,10 +153,17 @@ public class PackFragment {
             if (!docs.isEmpty()) {
                 put(zip, pack + "/tests/" + sutraName + "/expect.yaml", expectYaml(matrix));
             }
-            Set<String> usedSamples = new LinkedHashSet<>();
+            StringBuilder lines = new StringBuilder();                      // samples/<kind>.jsonl, one document a line, and the catalogue
+            com.fasterxml.jackson.databind.node.ArrayNode catalog = JSON.createArrayNode();
             for (int i = 0; i < Math.min(SAMPLES, docs.size()); i++) {
-                put(zip, pack + "/samples/" + kind + "/" + unique(usedSamples, docs.get(i).getKey()),
-                        JSON.writerWithDefaultPrettyPrinter().writeValueAsString(docs.get(i).getValue()));
+                JsonNode doc = docs.get(i).getValue();
+                lines.append(JSON.writeValueAsString(doc)).append('\n');
+                String id = doc.path(idField).isValueNode() && !doc.path(idField).asText().isBlank() ? doc.path(idField).asText() : kind + "-" + (i + 1);
+                catalog.addObject().put("kind", kind).put("id", id).put("title", id).put("subtitle", docs.get(i).getKey());
+            }
+            if (!lines.isEmpty()) {
+                put(zip, pack + "/samples/" + kind + ".jsonl", lines.toString());
+                put(zip, pack + "/samples/catalog.json", JSON.writerWithDefaultPrettyPrinter().writeValueAsString(catalog));
             }
             if (hasAbout(d)) {
                 put(zip, pack + "/" + ABOUT_FILE, d.about);
@@ -253,7 +260,7 @@ public class PackFragment {
                 + "- `sutras/`: the Sutra `" + sutra + "`.\n"
                 + "- `tests/" + sutra + "/`: " + tests + " sample document(s) and `expect.yaml`; run them with\n"
                 + "  `java -jar drishti-server-*-exec.jar sutra test " + pack + "`.\n"
-                + "- `samples/" + kind + "/`: up to three documents to try the view on.\n"
+                + "- `samples/" + kind + ".jsonl`: up to three documents to try the view on, one a line (`samples/catalog.json` lists them).\n"
                 + (hasAbout(d) ? "- `" + ABOUT_FILE + "`: the About text (page text, panel text, glossary) written in the workbench's About tab.\n" : "")
                 + "\n"
                 + "To use it: put this folder under the server's `config/packs/` directory and load it from Admin -> Packs (or list it in `DRISHTI_PACKS`).\n"
@@ -273,7 +280,7 @@ public class PackFragment {
 
     /**
      * Reads a zip of a pack folder into Designs for {@code user}: one Design per Sutra file, its samples being the documents of
-     * {@code tests/<sutra>/} and {@code samples/<kind>/}, its notes the README and its About text {@code config/about.yaml}.
+     * {@code tests/<sutra>/} and {@code samples/<kind>.jsonl} (or {@code samples/<kind>/}), its notes the README and its About text {@code config/about.yaml}.
      *
      * @param maxBytes the most the unpacked files may add up to
      */
@@ -300,7 +307,7 @@ public class PackFragment {
                 if (total > maxBytes) {
                     throw new DrishtiException(ErrorCode.PAYLOAD_TOO_LARGE, "the zip unpacks to more than " + (maxBytes / 1048576) + " MiB");
                 }
-                if (path.endsWith(".yaml") || path.endsWith(".yml") || path.endsWith(".json") || path.endsWith(".md")) {
+                if (path.endsWith(".yaml") || path.endsWith(".yml") || path.endsWith(".json") || path.endsWith(".jsonl") || path.endsWith(".md")) {
                     items.add(new Item(path, new String(data, StandardCharsets.UTF_8)));
                 }
             }
@@ -337,6 +344,16 @@ public class PackFragment {
                 if (j.path().endsWith(".json") && (inFolder(j.path(), "tests", name) || (kind != null && inFolder(j.path(), "samples", kind)))) {
                     String sampleName = j.path().substring(j.path().lastIndexOf('/') + 1);
                     samples.putIfAbsent(sampleName, j.text());
+                }
+            }
+            for (Item j : items) {                                              // samples/<kind>.jsonl (or .part-NNN.jsonl): a sample a line,
+                if (kind != null && isKindLines(j.path(), kind)) {                 // unless the same document is already a test
+                    int n = 0;
+                    for (String line : j.text().split("\n")) {
+                        if (!line.isBlank() && !holds(samples, line)) {
+                            samples.putIfAbsent(kind + "-" + (++n) + ".json", line);
+                        }
+                    }
                 }
             }
             StoredDesign d = designs.create(user, name, kind, null, sutraFile.text(), readme);
@@ -380,6 +397,28 @@ public class PackFragment {
     }
 
     /** Whether {@code path} is a file in a folder {@code leaf} that is itself under a folder called {@code parent}. */
+    /** Whether one of the samples already is this JSON document (compared as JSON, not as text). */
+    private static boolean holds(Map<String, String> samples, String json) {
+        try {
+            JsonNode doc = JSON.readTree(json);
+            for (String s : samples.values()) {
+                if (doc.equals(JSON.readTree(s))) {
+                    return true;
+                }
+            }
+        } catch (java.io.IOException | RuntimeException e) {
+            return false;
+        }
+        return false;
+    }
+
+    /** {@code .../samples/<kind>.jsonl} or {@code .../samples/<kind>.part-NNN.jsonl}. */
+    private static boolean isKindLines(String path, String kind) {
+        String file = path.substring(path.lastIndexOf('/') + 1);
+        String folder = path.contains("/") ? path.substring(0, path.lastIndexOf('/')) : "";
+        return (folder.equals("samples") || folder.endsWith("/samples")) && (file.equals(kind + ".jsonl") || file.matches(java.util.regex.Pattern.quote(kind) + "\\.part-\\d{3}\\.jsonl"));
+    }
+
     private static boolean inFolder(String path, String parent, String leaf) {
         String[] seg = path.split("/");
         for (int i = 0; i + 2 < seg.length; i++) {

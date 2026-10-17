@@ -36,8 +36,10 @@ PACKS = Path(os.environ["DRISHTI_PACKS_OUT"]) if os.environ.get("DRISHTI_PACKS_O
 EXAMPLES = ROOT / "examples" / "packs"              # the retired example packs (PackSpec.retired): not shipped, loadable with DRISHTI_PACKS_EXTRA_DIRS
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "banking"))
 sys.path.insert(0, str(ROOT / "tools"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import make_docs as MD  # noqa: E402  (the banking guides' shared sections)
 import make_sutras as MS  # noqa: E402  (the Rachana writer the banking packs use)
+import packsamples as SAMPLES  # noqa: E402  (samples/<kind>.jsonl, one document a line)
 import packform as PF  # noqa: E402  (the form: section: query by form, FORM <pack>)
 from risk_model import Kind  # noqa: E402
 
@@ -185,10 +187,18 @@ def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
     catalog = []
     for k in spec.kinds:
         for id_, d in sorted(docs.get(k.kind, {}).items()):
-            out[base / "samples" / k.kind / f"{id_}.json"] = _json(spec, d) + "\n"
-            sub = next((d[f] for f in ("name", "legalEntityName", "scenarioName", "counterpartyName", "security") if isinstance(d.get(f), str)), "")
+            sub = next((d[f] for f in ("NAME", "LEGAL_ENTITY_NAME", "SCENARIO_NAME", "COUNTERPARTY_NAME", "SECURITY", "name", "legalEntityName", "scenarioName", "counterpartyName", "security") if isinstance(d.get(f), str)), "")
             catalog.append({"kind": k.kind, "id": id_, "title": id_, "subtitle": f"{k.label}" + (f" · {sub}" if sub else "")})
-    out[base / "samples" / "catalog.json"] = _json(spec, catalog) + "\n"
+    # samples/: catalog.json and one JSON Lines file per kind (packsamples.py); the retired example packs keep <kind>/<id>.json
+    if spec.retired:
+        for k in spec.kinds:
+            for id_, d in sorted(docs.get(k.kind, {}).items()):
+                out[base / "samples" / k.kind / f"{id_}.json"] = _json(spec, d) + "\n"
+        out[base / "samples" / "catalog.json"] = _json(spec, catalog) + "\n"
+    else:
+        for name, text in SAMPLES.files({k.kind: docs.get(k.kind, {}) for k in spec.kinds}, catalog, SAMPLES.part_mb(sys.argv),
+                                        None if spec.compact_json else 1).items():
+            out[base / "samples" / name] = text
     out[base / "guides" / f"{spec.name}.md"] = overview(spec, docs)
     help_yaml = yaml.safe_dump({"guides": [{"slug": spec.name, "category": "packs", "title": f"{spec.title} pack", "icon": "box-seam",
                                             "file": f"guides/{spec.name}.md", "summary": spec.description}]}, sort_keys=False, allow_unicode=True)
@@ -220,6 +230,9 @@ def main(spec: PackSpec, docs: dict, known_fields: dict, lake_kinds_by_domain=No
         return
     for f in existing - set(want):
         f.unlink()
+    for d in sorted((x for x in (base / "samples").glob("*") if x.is_dir()), reverse=True) if (base / "samples").exists() else ():
+        if not any(d.iterdir()):
+            d.rmdir()                                       # a kind folder of the older one-file-a-document layout, now empty
     for f, t in want.items():
         f.parent.mkdir(parents=True, exist_ok=True)
         if not f.exists() or f.read_text(encoding="utf-8") != t:

@@ -19,7 +19,7 @@
         --key trade=tradeId,counterparty=counterpartyId --match trade=productType --date trade=businessDate
 
 Writes config/packs/<name>/ (or --out): pack.yaml (kinds, mnemonics, columns, and with --lake a Delta connector and routes),
-samples/ (catalog.json and one file per document, up to --catalog-samples per kind), one Sutra per kind or per
+samples/ (catalog.json and samples/<kind>.jsonl, one document a line, up to --catalog-samples per kind), one Sutra per kind or per
 --match group (tools/sutragen.py), tests/<sutra>/ with sample-*.json and expect.yaml, config/about.yaml (kind
 titles and glossary entries with TODO text for every field the Sutras show) and a README.md. Then it runs
 `sutra lint` and `sutra test` on the new pack and prints the result.
@@ -45,6 +45,9 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import sutragen as SG  # noqa: E402
+
+sys.path.insert(0, str(HERE / "common"))
+import packsamples  # noqa: E402  (samples/<kind>.jsonl, one document a line)
 
 
 def mnemonic_of(kind: str, taken: set[str]) -> str:
@@ -95,6 +98,7 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     p.add_argument("--out", type=pathlib.Path, help="default config/packs/<name>")
     p.add_argument("--force", action="store_true", help="overwrite an existing --out folder")
     p.add_argument("--catalog-samples", type=int, default=25, help="documents per kind kept in samples/ (default 25)")
+    p.add_argument("--sample-part-mb", type=float, default=50, help="split a kind's samples/<kind>.jsonl into parts above this size (default 50)")
     p.add_argument("--lake", type=pathlib.Path, help="also write the documents into a Delta lake here (needs --date); same as --store delta --lake")
     p.add_argument("--store", choices=("delta", "files"), default="delta", help="the dated store the pack reads: delta (default) or the File connector's files")
     p.add_argument("--files-root", type=pathlib.Path, help="with --store files: also write the documents as <root>/<pack>/<date>/<kind>.jsonl")
@@ -169,18 +173,18 @@ def run(opts) -> int:
     (out / "pack.yaml").write_text(note + yaml.safe_dump(manifest, sort_keys=False, width=120, allow_unicode=True), encoding="utf-8")
 
     # samples
-    cat = []
+    cat, by_kind = [], {}
     for k, docs in sorted(kinds.items()):
         chosen = SG.pick(docs, opts.catalog_samples, keys[k], dates.get(k))
-        sd = out / "samples" / k
-        sd.mkdir(parents=True, exist_ok=True)
         for d in chosen:
             kv = SG.get(d, keys[k])
             if kv is SG.MISSING:
                 continue
-            (sd / f"{kv}.json").write_text(json.dumps(d, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+            by_kind.setdefault(k, {})[str(kv)] = d
             cat.append({"kind": k, "id": str(kv), "title": str(kv), "subtitle": k})
-    (out / "samples" / "catalog.json").write_text(json.dumps(cat, indent=1) + "\n", encoding="utf-8")
+    (out / "samples").mkdir(parents=True, exist_ok=True)
+    for name, text in packsamples.files(by_kind, cat, getattr(opts, "sample_part_mb", packsamples.PART_MB)).items():   # catalog.json and samples/<kind>.jsonl
+        (out / "samples" / name).write_text(text, encoding="utf-8")
 
     # tests expectations
     for g in groups:

@@ -174,7 +174,7 @@ public final class Binder {
     }
 
     /**
-     * A column bound to an identifier field ({@code @.tradeId}, {@code $.counterpartyId}, {@code @.bookRef}) links its
+     * A column bound to an identifier field ({@code @.TRADE_ID}, {@code $.counterpartyId}, {@code @.bookRef}) links its
      * value when the value is an id a pack recognises, without {@code link: true}: an id in a table opens its entity.
      */
     static boolean namesAnId(String bind) {
@@ -182,7 +182,8 @@ public final class Binder {
             return false;
         }
         String last = bind.substring(bind.lastIndexOf('.') + 1);
-        return last.length() > 2 && (last.endsWith("Id") || last.endsWith("Ref") || last.endsWith("_id"));
+        return last.length() > 3 && (last.endsWith("_ID") || last.endsWith("_REF"))      // UPPER_SNAKE: $.COUNTERPARTY_ID, @.BOOK_REF
+                || last.length() > 2 && (last.endsWith("Id") || last.endsWith("Ref") || last.endsWith("_id"));
     }
 
     public LinkView linkView(Link l) {

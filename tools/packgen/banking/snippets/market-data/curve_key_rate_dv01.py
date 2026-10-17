@@ -21,7 +21,7 @@ import pandas as pd
 from drishti import quant as q
 
 TENOR, NOTIONAL, FREQ = 10.0, 100e6, 1           # change these: a 5Y semi-annual, a 30Y, ...
-base = q.ZeroCurve.from_points(view.doc["points"])
+base = q.ZeroCurve.from_points(view.doc["POINTS"])
 par = q.par_swap_rate(base, TENOR, FREQ)
 
 
@@ -30,7 +30,7 @@ def pv(curve):                                   # the receiver's PV of the swap
 
 
 pv0 = pv(base)                                   # zero by construction
-labels = sorted((p["tenor"] for p in view.doc["points"] if q.tenor_years(p["tenor"]) > 0), key=q.tenor_years)
+labels = sorted((p["TENOR"] for p in view.doc["POINTS"] if q.tenor_years(p["TENOR"]) > 0), key=q.tenor_years)
 rows = []
 for i, (label, t) in enumerate(zip(labels, base.times)):
     up, down = pv(base.key_rate_bumped(i, +1)), pv(base.key_rate_bumped(i, -1))
@@ -44,6 +44,6 @@ chart(krd, kind="bar", x="pillar", y="DV01", title="Key-rate DV01 (per +1 bp)")
 
 up25, down25 = pv(base.shifted(+25)), pv(base.shifted(-25))
 show(pd.DataFrame({
-    "measure": ["sum of key rates", "parallel +1 bp", "difference", "P&L +25 bp", "P&L -25 bp", "convexity (+25 and -25)"],
-    "value": [krd["DV01"].sum(), parallel, krd["DV01"].sum() - parallel, up25 - pv0, down25 - pv0, up25 + down25 - 2 * pv0],
+    "MEASURE": ["sum of key rates", "parallel +1 bp", "difference", "P&L +25 bp", "P&L -25 bp", "convexity (+25 and -25)"],
+    "VALUE": [krd["DV01"].sum(), parallel, krd["DV01"].sum() - parallel, up25 - pv0, down25 - pv0, up25 + down25 - 2 * pv0],
 }), title="Key rates against a parallel move")

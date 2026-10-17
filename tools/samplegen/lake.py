@@ -40,8 +40,13 @@ from datetime import date, timedelta
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from samplegen.dates import Calendar  # noqa: E402
 from samplegen.layout import Layout, layouts_for_domain, write_days, write_partition  # noqa: E402
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "packgen" / "common"))
+import packsamples  # noqa: E402  (samples/<kind>.jsonl or samples/<kind>/<id>.json)
 
-VARY = {"mtm", "netMtm", "dv01", "pv", "npv", "eePeak", "pfe95Peak", "pfePeak", "spot", "lastPrice", "price", "level", "mid",
+VARY = {"MTM", "NET_MTM", "DV01", "PV", "NPV", "EE_PEAK", "PFE_95_PEAK", "PFE_PEAK", "SPOT", "LAST_PRICE", "PRICE", "LEVEL", "MID",
+        "UTILISATION", "USED", "COLLATERAL_POSTED", "CVA", "FIXING", "RATE", "ZERO_RATE",
+        # the retired example packs still write the short names
+        "mtm", "netMtm", "dv01", "pv", "npv", "eePeak", "pfe95Peak", "pfePeak", "spot", "lastPrice", "price", "level", "mid",
         "utilisation", "used", "collateralPosted", "cva", "fixing", "rate", "zeroRate"}
 
 
@@ -147,7 +152,7 @@ def main():
     while not cal.is_business_day(end):
         end -= timedelta(days=1)
     samples = pathlib.Path(a.samples)
-    kinds = {d.name: {f.stem: json.loads(f.read_text()) for f in sorted(d.glob("*.json"))} for d in sorted(samples.iterdir()) if d.is_dir()}
+    kinds = packsamples.read(samples)
     total = write_tables(pathlib.Path(a.root) / a.domain, kinds, end, a.days, cal, layouts_for_domain(a.domain))
     print(f"{total} rows ({a.calendar})")
 

@@ -21,24 +21,24 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-res = await drishti.search_async("STR where pnl < 1000bn and scenario != '' and desk != '' limit 1000")
-matrix = res.pivot_table(index="scenario", columns="desk", values="pnl", aggfunc="sum")
+res = await drishti.search_async("STR where PNL < 1000bn and SCENARIO != '' and DESK != '' limit 1000")
+matrix = res.pivot_table(index="SCENARIO", columns="DESK", values="PNL", aggfunc="sum")
 matrix["firm"] = matrix.sum(axis=1)
 matrix = matrix.sort_values("firm")
 show(matrix, title=f"Stress P&L by scenario and desk ({len(res)} results)")
 
-worst = res.loc[res.groupby("desk")["pnl"].idxmin()].set_index("desk")
+worst = res.loc[res.groupby("DESK")["PNL"].idxmin()].set_index("DESK")
 limits = {}
-for rid in worst["id"]:
+for rid in worst["ID"]:
     d = await drishti.get_async("stress-result", rid)
-    limits[d["desk"]] = d.get("limit")
-worst["limit"] = worst.index.map(limits)
-worst["limit use"] = worst["pnl"] / worst["limit"]                    # both negative: the share of the loss limit used
-worst["status"] = np.where(worst["limit use"] >= 1, "breach", np.where(worst["limit use"] >= 0.8, "early warning", "ok"))
-show(worst[["scenario", "pnl", "limit", "limit use", "status"]].sort_values("limit use", ascending=False),
+    limits[d["DESK"]] = d.get("LIMIT")
+worst["LIMIT"] = worst.index.map(limits)
+worst["limit use"] = worst["PNL"] / worst["LIMIT"]                    # both negative: the share of the loss limit used
+worst["STATUS"] = np.where(worst["limit use"] >= 1, "breach", np.where(worst["limit use"] >= 0.8, "early warning", "ok"))
+show(worst[["SCENARIO", "PNL", "LIMIT", "limit use", "STATUS"]].sort_values("limit use", ascending=False),
      title="Each desk's worst scenario against its stress limit")
 print(f"Worst firm-wide scenario: {matrix.index[0]} ({matrix['firm'].iloc[0]:,.0f}); "
-      f"{(worst['status'] == 'breach').sum()} desks breach their stress limit in their worst scenario")
+      f"{(worst['STATUS'] == 'breach').sum()} desks breach their stress limit in their worst scenario")
 
 m = matrix.drop(columns="firm") / 1e6
 lim = np.nanmax(np.abs(m.to_numpy()))

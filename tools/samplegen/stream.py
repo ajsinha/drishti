@@ -27,7 +27,11 @@ import argparse
 import json
 import pathlib
 import random
+import sys
 import time
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "packgen" / "common"))
+import packsamples  # noqa: E402  (samples/trade.jsonl)
 
 
 def main():
@@ -36,15 +40,14 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--bootstrap", default="localhost:9092")
     ap.add_argument("--topic", default="drishti.trading.trades")
-    ap.add_argument("--samples", default="config/packs/trading/samples/trade")
+    ap.add_argument("--samples", default="config/packs/trading/samples")
     ap.add_argument("--rate", type=float, default=5.0)
     ap.add_argument("--seconds", type=float, default=0.0)
     a = ap.parse_args()
     producer = KafkaProducer(bootstrap_servers=a.bootstrap, key_serializer=str.encode,
                              value_serializer=lambda d: json.dumps(d, ensure_ascii=False).encode(), linger_ms=20)
     trades = {}
-    for f in sorted(pathlib.Path(a.samples).glob("*.json")):
-        d = json.loads(f.read_text())
+    for d in packsamples.read(pathlib.Path(a.samples)).get("trade", {}).values():
         d.pop("_meta", None)
         trades[d["tradeId"]] = d
         producer.send(a.topic, key=d["tradeId"], value=d)

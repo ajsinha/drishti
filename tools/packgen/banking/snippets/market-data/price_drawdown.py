@@ -23,11 +23,11 @@ import matplotlib.pyplot as plt
 from drishti import quant as q
 
 doc = view.doc
-if doc.get("ohlc"):
-    px = pd.Series({b["date"]: b["close"] for b in doc["ohlc"]})
+if doc.get("OHLC"):
+    px = pd.Series({b["DATE"]: b["CLOSE"] for b in doc["OHLC"]})
 else:                                                     # history: close (equity, index), price (bond), mid (FX)
-    field = next(f for f in ("close", "price", "mid") if f in (doc.get("history") or [{}])[0])
-    px = pd.Series({p["date"]: p[field] for p in doc["history"]})
+    field = next(f for f in ("CLOSE", "PRICE", "MID") if f in (doc.get("HISTORY") or [{}])[0])
+    px = pd.Series({p["DATE"]: p[field] for p in doc["HISTORY"]})
 px = px.sort_index().astype(float)
 rets = np.log(px).diff().dropna()
 
@@ -35,8 +35,8 @@ dd = q.max_drawdown(px.to_numpy())
 peak, trough = px.index[dd["peak"]], px.index[dd["trough"]]
 recovered = bool((px.iloc[dd["trough"]:] >= px.iloc[dd["peak"]]).any())
 show(pd.DataFrame({
-    "measure": ["first", "last", "return", "max drawdown", "peak", "trough", "recovered", "annualised vol"],
-    "value": [px.iloc[0], px.iloc[-1], f"{px.iloc[-1] / px.iloc[0] - 1:.2%}", f"{dd['drawdown'] / px.iloc[dd['peak']]:.2%}",
+    "MEASURE": ["first", "last", "return", "max drawdown", "peak", "trough", "recovered", "annualised vol"],
+    "VALUE": [px.iloc[0], px.iloc[-1], f"{px.iloc[-1] / px.iloc[0] - 1:.2%}", f"{dd['drawdown'] / px.iloc[dd['peak']]:.2%}",
               peak, trough, "yes" if recovered else "no", f"{rets.std(ddof=1) * np.sqrt(252):.2%}"],
 }), title=f"{view.id}: {len(px)} closes, {px.index[0]} to {px.index[-1]}")
 

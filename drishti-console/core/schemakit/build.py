@@ -54,6 +54,27 @@ class Item:
         return all(s.source == "synthetic" for s in self.samples)
 
 
+
+SAMPLE_PART_MB = 50      # a kind's samples are split into <kind>.part-001.jsonl ... only above this (tools/packgen/common/packsamples.py)
+
+
+def write_jsonl(samples_dir, kind: str, lines: list[str], part_mb: float = SAMPLE_PART_MB) -> None:
+    """samples/<kind>.jsonl, or <kind>.part-NNN.jsonl parts when it would pass part_mb."""
+    samples_dir.mkdir(parents=True, exist_ok=True)
+    parts, cur, size, limit = [], [], 0, int(part_mb * 1024 * 1024)
+    for ln in lines:
+        b = len(ln.encode("utf-8")) + 1
+        if cur and size + b > limit:
+            parts.append(cur)
+            cur, size = [], 0
+        cur.append(ln)
+        size += b
+    if cur:
+        parts.append(cur)
+    names = [f"{kind}.jsonl"] if len(parts) == 1 else [f"{kind}.part-{n:03d}.jsonl" for n in range(1, len(parts) + 1)]
+    for name, part in zip(names, parts):
+        (samples_dir / name).write_text("\n".join(part) + "\n", encoding="utf-8")
+
 def _matches(doc: dict, sp: SutraPlan) -> bool:
     return all(doc.get(f) == v for f, v in sp.values.items())
 
@@ -328,14 +349,15 @@ def assemble(plan: Plan, items: list[Item], drafts: dict, pack_dir: pathlib.Path
             # its data is loaded into the store (or built from it): samples served beside the real documents would be listed and counted
             # with them (a page per counterparty built from both); the Sutras' own tests keep their samples in tests/
             continue
-        sd = pack_dir / "samples" / kp.kind
-        sd.mkdir(parents=True, exist_ok=True)
+        lines = []
         for doc, src in catalog_docs(kp, plan):
             kv = doc.get(kp.key) if kp.key else None
             if kv is None:
                 continue
-            (sd / f"{kv}.json").write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+            lines.append(json.dumps(doc, ensure_ascii=False, separators=(",", ":")))
             cat.append({"kind": kp.kind, "id": str(kv), "title": str(kv), "subtitle": kp.kind + (" (synthetic sample)" if src == "synthetic" else "")})
+        if lines:                                   # samples/<kind>.jsonl: one document a line, in the catalogue's order
+            write_jsonl(pack_dir / "samples", kp.kind, lines)
     (pack_dir / "samples").mkdir(exist_ok=True)
     (pack_dir / "samples" / "catalog.json").write_text(json.dumps(cat, indent=1) + "\n", encoding="utf-8")
     # pack.yaml and About

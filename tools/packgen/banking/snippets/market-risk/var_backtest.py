@@ -21,20 +21,20 @@ import pandas as pd
 from drishti import quant as q
 
 doc = view.doc
-var99 = doc["var99"]
-pnl = pd.DataFrame(doc["pnlSeries"]).set_index("date")["pnl"].astype(float)
+var99 = doc["VAR_99"]
+pnl = pd.DataFrame(doc["PNL_SERIES"]).set_index("DATE")["PNL"].astype(float)
 breach = pnl < -var99
 k = q.kupiec_pof(int(breach.sum()), len(pnl), 0.99)
 
 show(pd.DataFrame({
-    "measure": ["days", "VaR 99%", "exceptions", "expected exceptions", "exceptions (engine)", "Kupiec LR", "p-value",
+    "MEASURE": ["days", "VaR 99%", "EXCEPTIONS", "expected exceptions", "exceptions (engine)", "Kupiec LR", "p-value",
                 "traffic light (scaled to 250 days)", "worst day", "worst loss / VaR"],
-    "value": [len(pnl), var99, k["exceptions"], round(k["expected"], 2), doc.get("exceptions"), round(k["lr"], 3),
+    "VALUE": [len(pnl), var99, k["EXCEPTIONS"], round(k["expected"], 2), doc.get("EXCEPTIONS"), round(k["lr"], 3),
               round(k["pvalue"], 4), k["light"], pnl.idxmin(), round(-pnl.min() / var99, 2)],
-}), title=f"{view.id}: backtest of {doc.get('method', '')}")
+}), title=f"{view.id}: backtest of {doc.get('METHOD', '')}")
 if breach.any():
     show(pnl[breach].to_frame("P&L").assign(**{"excess over VaR": lambda d: -d["P&L"] - var99}), title="Exceptions")
 verdict = "rejected" if k["pvalue"] < 0.05 else "not rejected"
 print(f"At 5% significance the 99% VaR model is {verdict} on {len(pnl)} days "
-      f"({k['exceptions']} exceptions against {k['expected']:.1f} expected).")
+      f"({k['EXCEPTIONS']} exceptions against {k['expected']:.1f} expected).")
 chart(pd.DataFrame({"P&L": pnl, "-VaR 99%": -var99}), kind="line", title="Daily P&L against VaR")

@@ -20,22 +20,22 @@
 import numpy as np
 import pandas as pd
 
-field = {"desk": "desk", "book": "book", "legal-entity": "legalEntity"}[view.kind]
-t = await drishti.search_async(f"TRD where {field} = '{view.id}' and family != '' and risk.dv01 != 0 and maturityDate != '' limit 1000")
-t["risk.dv01"] = pd.to_numeric(t["risk.dv01"], errors="coerce").fillna(0.0)
+field = {"desk": "DESK", "book": "PORTFOLIO", "legal-entity": "LEGAL_ENTITY"}[view.kind]
+t = await drishti.search_async(f"TVAL where {field} = '{view.id}' and PRODUCT_GROUP != '' and DV01 != 0 and MATURITY_DATE != '' limit 1000")
+t["DV01"] = pd.to_numeric(t["DV01"], errors="coerce").fillna(0.0)
 asof = pd.Timestamp(view.business_date or "2026-09-30")
-t["years"] = (pd.to_datetime(t["maturityDate"]) - asof).dt.days / 365.25
+t["years"] = (pd.to_datetime(t["MATURITY_DATE"]) - asof).dt.days / 365.25
 edges = [-np.inf, 1, 2, 5, 10, 30, np.inf]
 labels = ["0-1Y", "1-2Y", "2-5Y", "5-10Y", "10-30Y", "30Y+"]
-t["bucket"] = pd.cut(t["years"], edges, labels=labels)
+t["BUCKET"] = pd.cut(t["years"], edges, labels=labels)
 
-show(t.pivot_table(index="currency", columns="family", values="mtm", aggfunc="sum", fill_value=0, margins=True, margins_name="Total"),
+show(t.pivot_table(index="CURRENCY", columns="PRODUCT_GROUP", values="MTM", aggfunc="sum", fill_value=0, margins=True, margins_name="Total"),
      title=f"{view.id}: MTM by currency and product family ({len(t)} trades)")
-ladder = t.pivot_table(index="currency", columns="bucket", values="notional", aggfunc="sum", fill_value=0, observed=False)
+ladder = t.pivot_table(index="CURRENCY", columns="BUCKET", values="NOTIONAL", aggfunc="sum", fill_value=0, observed=False)
 show(ladder, title="Notional by currency and maturity bucket")
 chart(ladder.T, kind="bar", title="Maturity ladder: notional by bucket")
-summary = t.groupby("currency").apply(lambda g: pd.Series({
-    "trades": len(g), "notional": g["notional"].sum(), "MTM": g["mtm"].sum(), "DV01": g["risk.dv01"].sum(),
-    "avg maturity (notional-weighted)": np.average(g["years"].clip(lower=0), weights=g["notional"].abs()) if g["notional"].abs().sum() else 0,
+summary = t.groupby("CURRENCY").apply(lambda g: pd.Series({
+    "TRADES": len(g), "NOTIONAL": g["NOTIONAL"].sum(), "MTM": g["MTM"].sum(), "DV01": g["DV01"].sum(),
+    "avg maturity (notional-weighted)": np.average(g["years"].clip(lower=0), weights=g["NOTIONAL"].abs()) if g["NOTIONAL"].abs().sum() else 0,
 }), include_groups=False)
-show(summary.sort_values("notional", ascending=False), title="By currency")
+show(summary.sort_values("NOTIONAL", ascending=False), title="By currency")

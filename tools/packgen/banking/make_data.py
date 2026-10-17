@@ -14,7 +14,9 @@
 
 """Writes the banking packs' sample data and, optionally, the Delta Lake the server's connectors read.
 
-    python3 tools/packgen/banking/make_data.py                 write config/packs/<pack>/samples (the latest business date)
+    python3 tools/packgen/banking/make_data.py                 write config/packs/<pack>/samples (the latest business date): catalog.json
+                                                                and samples/<kind>.jsonl, one document a line (--sample-part-mb N splits
+                                                                a kind above N MB into <kind>.part-001.jsonl ..., default 50)
     python3 tools/packgen/banking/make_data.py --check         verify the data is consistent and the files are current
     uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta [--days 10]
                                                                 also write data/delta/<domain>/<kind>/ with business-day history,
@@ -50,6 +52,8 @@ ROOT = Path(__file__).resolve().parents[3]
 PACKS = ROOT / "config" / "packs"
 sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
+import packsamples as SAMPLES  # noqa: E402  (samples/<kind>.jsonl, one document a line)
+import upper as U  # noqa: E402
 import walks  # noqa: E402
 
 LIVE_WALK = {"ir-curve": {"tenY": 0.0003}, "fx-spot": {"mid": 0.0004}, "equity": {"price": 0.3}, "equity-index": {"level": 4.0},
@@ -102,7 +106,8 @@ def valuations(rich: dict[str, dict], trades: dict[str, dict]) -> dict[str, dict
     return out
 
 
-def build() -> dict[str, dict[str, dict]]:
+def build(upper: bool = True) -> dict[str, dict[str, dict]]:
+    """Every banking document; upper=False keeps the generator's short names (the retired example packs built on this data read those)."""
     docs = {k: dict(v) for k, v in data_market.build().items()}
     for kind, ds in docs.items():
         for d in ds.values():
@@ -119,6 +124,8 @@ def build() -> dict[str, dict[str, dict]]:
     for kind, ds in docs.items():                       # the coherent live walk of each kind (tools/packgen/common/walks.py)
         for d in ds.values():
             walks.apply(kind, d)
+    if upper:
+        docs = {kind: {i: U.record(d) for i, d in ds.items()} for kind, ds in docs.items()}   # the names a pack writes: UPPER_SNAKE
     docs["trade"] = trade_samples(trades)               # nulls kept: an extract writes them (PRICE, OPTION_TYPE, STRATEGY ...)
     docs["trade-valuation"] = valuations(trades, docs["trade"])
     return docs
@@ -131,7 +138,7 @@ def title(kind: str, d: dict) -> tuple[str, str]:
         notional = (d["LEGS"][0]["NOTIONAL"] if d.get("LEGS") else 0.0) or 0.0
         return str(d["TRADE_ID"]), (f"{label} · {d['SOURCE_SYSTEM']} · {d['PRODUCT_TYPE']} · {d['COUNTERPARTY']} · "
                                     f"{d['CURRENCY']} {notional / 1e6:,.1f}m")
-    for f in ("productName", "name", "issuerName", "scenarioName", "counterpartyName", "pairName", "commodity", "underlier", "pair", "currency", "book"):
+    for f in ("PRODUCT_NAME", "NAME", "ISSUER_NAME", "SCENARIO_NAME", "COUNTERPARTY_NAME", "PAIR_NAME", "COMMODITY", "UNDERLIER", "PAIR", "CURRENCY", "BOOK"):
         if isinstance(d.get(f), str):
             return d[ID_FIELD[kind]], f"{label} · {d[f]}"
     return d[ID_FIELD[kind]], label
@@ -152,7 +159,7 @@ def check(docs: dict) -> list[str]:
             for f, (target, _) in fields.items():
                 v = d.get(f)
                 vals = [v] if isinstance(v, str) else [x for x in v if isinstance(x, str)] if isinstance(v, list) else \
-                    [v["id"]] if isinstance(v, dict) and "id" in v else []
+                    [v["ID"]] if isinstance(v, dict) and "ID" in v else []
                 for x in vals:
                     if x and x not in index.get(target, ()):          # a blank reference (an extract's "") points nowhere
                         problems.append(f"{kind}/{id_}: {f} -> {target}/{x} does not exist")
@@ -160,8 +167,8 @@ def check(docs: dict) -> list[str]:
         problems += TSCHEMA.problems({k: v for k, v in d.items() if k != "_meta"})
     for ns, d in docs.get("netting-set", {}).items():
         total = sum(t["mtm"] for t in RICH.values() if t["nettingSet"] == ns)
-        if total != d["netMtm"]:
-            problems.append(f"netting-set/{ns}: netMtm {d['netMtm']} != sum of trades {total}")
+        if total != d["NET_MTM"]:
+            problems.append(f"netting-set/{ns}: NET_MTM {d['NET_MTM']} != sum of trades {total}")
     for id_, d in RICH.items():                                        # deep trades: legs add up, a cashflow's rate lies among its fixings
         for leg in d.get("legs", []):
             flows = leg.get("cashflows")
@@ -184,16 +191,19 @@ def check(docs: dict) -> list[str]:
 
 
 def sample_files(docs: dict) -> dict[Path, str]:
+    """Each pack's samples/: catalog.json and one JSON Lines file per kind (tools/packgen/common/samples.py)."""
     out: dict[Path, str] = {}
+    by_pack: dict[str, dict[str, dict]] = {}
     catalogs: dict[str, list] = {}
     for kind, ds in sorted(docs.items()):
         pack = layout.pack_of(kind)
+        by_pack.setdefault(pack, {})[kind] = ds
         for id_, d in sorted(ds.items()):
-            out[PACKS / pack / "samples" / kind / f"{id_}.json"] = json.dumps(d, indent=1, ensure_ascii=False) + "\n"
             t, sub = title(kind, d)
             catalogs.setdefault(pack, []).append({"kind": kind, "id": id_, "title": t, "subtitle": sub})
-    for pack, cat in catalogs.items():
-        out[PACKS / pack / "samples" / "catalog.json"] = json.dumps(cat, indent=1, ensure_ascii=False) + "\n"
+    for pack, kinds in by_pack.items():
+        for name, text in SAMPLES.files(kinds, catalogs[pack], SAMPLES.part_mb(sys.argv)).items():
+            out[PACKS / pack / "samples" / name] = text
     return out
 
 
@@ -223,7 +233,7 @@ def main() -> None:
         raise SystemExit("banking data is inconsistent:\n  " + "\n  ".join(problems[:40]))
     files = sample_files(docs)
     targets = [PACKS / p / "samples" for p in layout.PACKS]
-    existing = {f for t in targets if t.exists() for f in t.rglob("*.json")}
+    existing = {f for t in targets if t.exists() for f in t.rglob("*.json*")}    # the JSONL files, and any older <kind>/<id>.json
     if "--check" in sys.argv:
         stale = [str(f) for f, t in files.items() if not f.exists() or f.read_text(encoding="utf-8") != t] + TT.stale(docs["trade"])
         extra = [str(f) for f in existing - set(files)]
@@ -233,6 +243,10 @@ def main() -> None:
         return
     for f in existing - set(files):
         f.unlink()
+    for t in targets:                                   # the folders the older one-file-a-document layout left empty
+        for d in sorted((x for x in t.glob("*") if x.is_dir()), reverse=True) if t.exists() else ():
+            if not any(d.iterdir()):
+                d.rmdir()
     for f, t in files.items():
         f.parent.mkdir(parents=True, exist_ok=True)
         if not f.exists() or f.read_text(encoding="utf-8") != t:

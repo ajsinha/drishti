@@ -31,7 +31,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -43,7 +42,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 /**
  * A dataset started from the packs (RUPAKA.md section 6.2). Every kind of every pack the reader may open is offered as a table, with the
@@ -155,12 +153,11 @@ public final class PackModels {
 
     /** Top-level and one-deep scalar fields of the pack's sample documents. */
     private List<ColumnInfo> fromSamples(Pack pack, String kind) {
-        Path dir = pack.resolve("samples").resolve(kind);
         Map<String, ColumnInfo> cols = new LinkedHashMap<>();
-        if (Files.isDirectory(dir)) {
-            try (Stream<Path> files = Files.list(dir)) {
-                for (Path f : files.sorted().limit(5).toList()) {
-                    JsonNode doc = new ObjectMapper().readTree(Files.readString(f));
+        if (Files.isDirectory(pack.resolve("samples"))) {                       // samples/<kind>.jsonl or samples/<kind>/<id>.json
+            try {
+                for (String text : com.ash.drishti.common.PackSamples.documents(pack.resolve("samples"), kind, Set.of(), 5).values()) {
+                    JsonNode doc = new ObjectMapper().readTree(text);
                     doc.fields().forEachRemaining(e -> {
                         if (!e.getKey().startsWith("_")) {                       // _meta and friends are the server's, not the entity's
                             scalars(e.getKey(), e.getValue(), 0, cols);

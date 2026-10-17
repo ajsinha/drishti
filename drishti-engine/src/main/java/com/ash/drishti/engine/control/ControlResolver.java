@@ -193,7 +193,7 @@ public final class ControlResolver {
             for (int i = 0; i < n.size(); i++) {
                 DataNode e = n.get(i);
                 if (e.type() == NodeType.OBJECT) {
-                    e = e.get("id");                                 // a list of records offers their ids
+                    e = e.get("id").isMissing() ? e.get("ID") : e.get("id");   // a list of records offers their ids (ID, upper snake)
                 }
                 add(e, into);
             }

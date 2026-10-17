@@ -21,10 +21,10 @@ import numpy as np
 import pandas as pd
 from drishti import quant as q
 
-found = await drishti.search_async("VAR where var99 > 0 and desk != '' limit 100")
+found = await drishti.search_async("VAR where VAR_99 > 0 and DESK != '' limit 100")
 vectors = {}
-for vid, desk in zip(found["id"], found["desk"]):
-    vectors[desk] = np.asarray((await drishti.get_async("var", vid))["scenarioPnl"], dtype=float)
+for vid, desk in zip(found["ID"], found["DESK"]):
+    vectors[desk] = np.asarray((await drishti.get_async("var", vid))["SCENARIO_PNL"], dtype=float)
 n = min(len(v) for v in vectors.values())
 P = pd.DataFrame({d: v[:n] for d, v in vectors.items()})          # scenarios x desks
 firm = P.sum(axis=1).to_numpy()
@@ -38,14 +38,14 @@ comp *= firm_var / comp.sum()                                      # scaled so t
 
 rows = []
 for d in P.columns:
-    rows.append({"desk": d, "stand-alone VaR": q.historical_var(P[d], C), "component VaR": comp[d],
+    rows.append({"DESK": d, "stand-alone VaR": q.historical_var(P[d], C), "component VaR": comp[d],
                  "share of firm VaR": comp[d] / firm_var, "incremental VaR": firm_var - q.historical_var(firm - P[d], C)})
-out = pd.DataFrame(rows).set_index("desk").sort_values("component VaR", ascending=False)
+out = pd.DataFrame(rows).set_index("DESK").sort_values("component VaR", ascending=False)
 standalone = out["stand-alone VaR"].sum()
 show(out, title=f"Firm-wide VaR 99% {firm_var:,.0f} from {len(P.columns)} desks x {n} scenarios")
 print(f"Sum of stand-alone VaRs {standalone:,.0f}; firm VaR {firm_var:,.0f}; diversification benefit "
       f"{standalone - firm_var:,.0f} ({1 - firm_var / standalone:.0%})")
-chart(out.reset_index(), kind="bar", x="desk", y=["stand-alone VaR", "component VaR"], title="Stand-alone against component VaR")
-me = view.doc.get("desk")
+chart(out.reset_index(), kind="bar", x="DESK", y=["stand-alone VaR", "component VaR"], title="Stand-alone against component VaR")
+me = view.doc.get("DESK")
 if me in out.index:
     print(f"{me}: {out.loc[me, 'share of firm VaR']:.1%} of firm VaR; removing it changes firm VaR by {out.loc[me, 'incremental VaR']:,.0f}")

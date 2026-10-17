@@ -246,5 +246,5 @@ def spec(bank: dict) -> PB.PackSpec:
 
 
 if __name__ == "__main__":
-    bank = BANK.build()
-    PB.main(spec(bank), build(bank), T.graph_fields())
+    bank = BANK.build(upper=False)                 # a retired example pack: the banking data in its short names
+    PB.main(spec(bank), build(bank), T.graph_fields(raw=True))

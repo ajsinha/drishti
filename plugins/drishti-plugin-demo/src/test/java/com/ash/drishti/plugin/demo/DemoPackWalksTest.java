@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.within;
 
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.common.JsonCodec;
+import com.ash.drishti.common.PackSamples;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,7 +50,7 @@ class DemoPackWalksTest {
     private static final List<Path> PACKS = List.of(Path.of("../../config/packs"), Path.of("../../examples/packs"));
     private static final int TICKS = 40;
     /** Dependents that change only when something is crossed: a day's high or low when the price breaks it, a curve's shape when its first two months swap. */
-    private static final Set<String> CONDITIONAL = Set.of("ohlc.-1.high", "ohlc.-1.low", "shape");
+    private static final Set<String> CONDITIONAL = Set.of("ohlc.-1.high", "ohlc.-1.low", "shape", "OHLC.-1.HIGH", "OHLC.-1.LOW", "SHAPE");
     private static final Instant NOON = Instant.parse("2026-10-01T14:20:00Z");
 
     private static final JsonCodec JSON = new JsonCodec();
@@ -65,11 +66,11 @@ class DemoPackWalksTest {
                 if (!Files.isDirectory(samples)) {
                     continue;
                 }
-                try (Stream<Path> files = Files.walk(samples)) {
-                    for (Path f : files.filter(x -> x.toString().endsWith(".json") && !x.getFileName().toString().equals("catalog.json")).toList()) {
-                        DataNode doc = JSON.read(Files.readString(f));
+                for (String kind : PackSamples.kinds(samples)) {          // samples/<kind>.jsonl, or samples/<kind>/<id>.json
+                    for (Map.Entry<String, String> e : PackSamples.documents(samples, kind, Set.of(), 0).entrySet()) {
+                        DataNode doc = JSON.read(e.getValue());
                         if (doc.get("_meta").get("walk") instanceof DataNode.Obj w && w.size() > 0) {
-                            SAMPLES.computeIfAbsent(f.getParent().getFileName().toString(), k -> new TreeMap<>()).put(f.getFileName().toString(), doc);
+                            SAMPLES.computeIfAbsent(kind, k -> new TreeMap<>()).put(e.getKey(), doc);
                         }
                     }
                 }
@@ -248,109 +249,109 @@ class DemoPackWalksTest {
     @Test
     void irCurveZeroRatesDiscountFactorsForwardsAndHeadlineMoveTogether() {
         eachSample("ir-curve", (before, after) -> {
-            List<Double> zeros = nums(after, "points.*.zeroRate");
-            List<Double> zeros0 = nums(before, "points.*.zeroRate");
-            List<Object> tenors = values(after, "points.*.tenor");
+            List<Double> zeros = nums(after, "POINTS.*.ZERO_RATE");
+            List<Double> zeros0 = nums(before, "POINTS.*.ZERO_RATE");
+            List<Object> tenors = values(after, "POINTS.*.TENOR");
             for (int i = 0; i < zeros.size(); i++) {
-                closeTo(num(after, "points." + i + ".df"), Math.exp(-zeros.get(i) / 100 * DemoExpr.tenorYears((String) tenors.get(i))), 1.5e-6, "df " + tenors.get(i));
+                closeTo(num(after, "POINTS." + i + ".DF"), Math.exp(-zeros.get(i) / 100 * DemoExpr.tenorYears((String) tenors.get(i))), 1.5e-6, "df " + tenors.get(i));
             }
-            closeTo(num(after, "tenY"), num(after, "points.tenor=10Y.zeroRate") / 100, 1e-6, "tenY is the 10Y zero rate");
-            closeTo(num(after, "slope2s10s"), (num(after, "points.tenor=10Y.zeroRate") - num(after, "points.tenor=2Y.zeroRate")) * 100, 0.06, "2s10s");
+            closeTo(num(after, "TEN_Y"), num(after, "POINTS.TENOR=10Y.ZERO_RATE") / 100, 1e-6, "tenY is the 10Y zero rate");
+            closeTo(num(after, "SLOPE_2S_10S"), (num(after, "POINTS.TENOR=10Y.ZERO_RATE") - num(after, "POINTS.TENOR=2Y.ZERO_RATE")) * 100, 0.06, "2s10s");
             assertThat(zeros).as("zero rates moved").isNotEqualTo(zeros0);
-            assertThat(moved(before, "forwards.*.rate")).as("forwards.*.rate" + " moved").isTrue();
-            assertThat(moved(before, "points.*.quote")).as("points.*.quote" + " moved").isTrue();
-            assertThat(moved(before, "tenY")).as("tenY" + " moved").isTrue();
+            assertThat(moved(before, "FORWARDS.*.RATE")).as("forwards.*.rate" + " moved").isTrue();
+            assertThat(moved(before, "POINTS.*.QUOTE")).as("points.*.quote" + " moved").isTrue();
+            assertThat(moved(before, "TEN_Y")).as("tenY" + " moved").isTrue();
         });
     }
 
     @Test
     void fxSpotBidAskHoldTheirSpreadAndTheHistoryEndsOnTheSpot() {
         eachSample("fx-spot", (before, after) -> {
-            closeTo(num(after, "ask") - num(after, "bid"), num(before, "ask") - num(before, "bid"), 3e-5, "spread");
-            assertThat(num(after, "bid")).isLessThan(num(after, "mid"));
-            assertThat(num(after, "ask")).isGreaterThan(num(after, "mid"));
-            closeTo(num(after, "history.-1.mid"), num(after, "mid"), 1e-9, "today's point");
-            closeTo(num(after, "change1d"), num(after, "mid") / num(after, "history.-2.mid") - 1, 2e-5, "change1d");
-            assertThat(moved(before, "mid")).as("mid" + " moved").isTrue();
-            assertThat(moved(before, "bid")).as("bid" + " moved").isTrue();
+            closeTo(num(after, "ASK") - num(after, "BID"), num(before, "ASK") - num(before, "BID"), 3e-5, "spread");
+            assertThat(num(after, "BID")).isLessThan(num(after, "MID"));
+            assertThat(num(after, "ASK")).isGreaterThan(num(after, "MID"));
+            closeTo(num(after, "HISTORY.-1.MID"), num(after, "MID"), 1e-9, "today's point");
+            closeTo(num(after, "CHANGE_1D"), num(after, "MID") / num(after, "HISTORY.-2.MID") - 1, 2e-5, "change1d");
+            assertThat(moved(before, "MID")).as("mid" + " moved").isTrue();
+            assertThat(moved(before, "BID")).as("bid" + " moved").isTrue();
         });
     }
 
     @Test
     void equityPriceBarHistoryAndMarketCapMoveTogether() {
         eachSample("equity", (before, after) -> {
-            double px = num(after, "price");
-            closeTo(num(after, "history.-1.close"), px, 0.005, "history");
-            closeTo(num(after, "ohlc.-1.close"), px, 0.005, "bar close");
-            assertThat(num(after, "ohlc.-1.high")).isGreaterThanOrEqualTo(px - 0.005);
-            assertThat(num(after, "ohlc.-1.low")).isLessThanOrEqualTo(px + 0.005);
-            closeTo(num(after, "change1d"), px / num(after, "history.-2.close") - 1, 1e-4, "change1d");
-            closeTo(num(after, "marketCap") / px, num(before, "marketCap") / num(before, "price"), num(before, "marketCap") / num(before, "price") * 1e-3, "shares x fx");
-            assertThat(moved(before, "marketCap")).as("marketCap" + " moved").isTrue();
-            assertThat(num(after, "ohlc.-1.volume")).isGreaterThanOrEqualTo(num(before, "ohlc.-1.volume"));
+            double px = num(after, "PRICE");
+            closeTo(num(after, "HISTORY.-1.CLOSE"), px, 0.005, "history");
+            closeTo(num(after, "OHLC.-1.CLOSE"), px, 0.005, "bar close");
+            assertThat(num(after, "OHLC.-1.HIGH")).isGreaterThanOrEqualTo(px - 0.005);
+            assertThat(num(after, "OHLC.-1.LOW")).isLessThanOrEqualTo(px + 0.005);
+            closeTo(num(after, "CHANGE_1D"), px / num(after, "HISTORY.-2.CLOSE") - 1, 1e-4, "change1d");
+            closeTo(num(after, "MARKET_CAP") / px, num(before, "MARKET_CAP") / num(before, "PRICE"), num(before, "MARKET_CAP") / num(before, "PRICE") * 1e-3, "shares x fx");
+            assertThat(moved(before, "MARKET_CAP")).as("marketCap" + " moved").isTrue();
+            assertThat(num(after, "OHLC.-1.VOLUME")).isGreaterThanOrEqualTo(num(before, "OHLC.-1.VOLUME"));
         });
     }
 
     @Test
     void equityIndexLevelHistoryAndChangeMoveTogether() {
         eachSample("equity-index", (before, after) -> {
-            closeTo(num(after, "history.-1.close"), num(after, "level"), 0.005, "history");
-            closeTo(num(after, "change1d"), num(after, "level") / num(after, "history.-2.close") - 1, 1e-4, "change1d");
-            assertThat(moved(before, "level")).as("level" + " moved").isTrue();
+            closeTo(num(after, "HISTORY.-1.CLOSE"), num(after, "LEVEL"), 0.005, "history");
+            closeTo(num(after, "CHANGE_1D"), num(after, "LEVEL") / num(after, "HISTORY.-2.CLOSE") - 1, 1e-4, "change1d");
+            assertThat(moved(before, "LEVEL")).as("level" + " moved").isTrue();
         });
     }
 
     @Test
     void commodityFrontAndTodaysBarMoveTogether() {
         eachSample("commodity", (before, after) -> {
-            double front = num(after, "front");
-            closeTo(num(after, "ohlc.-1.close"), front, 0.005, "bar close");
-            assertThat(num(after, "ohlc.-1.high")).isGreaterThanOrEqualTo(front - 0.005);
-            assertThat(num(after, "ohlc.-1.low")).isLessThanOrEqualTo(front + 0.005);
-            assertThat(moved(before, "front")).as("front moved").isTrue();
+            double front = num(after, "FRONT");
+            closeTo(num(after, "OHLC.-1.CLOSE"), front, 0.005, "bar close");
+            assertThat(num(after, "OHLC.-1.HIGH")).isGreaterThanOrEqualTo(front - 0.005);
+            assertThat(num(after, "OHLC.-1.LOW")).isLessThanOrEqualTo(front + 0.005);
+            assertThat(moved(before, "FRONT")).as("front moved").isTrue();
         });
     }
 
     @Test
     void commodityCurvePointsFrontRollAndShapeMoveTogether() {
         eachSample("commodity-curve", (before, after) -> {
-            closeTo(num(after, "front"), num(after, "points.0.price"), 1e-9, "front is the first point");
-            closeTo(num(after, "roll"), (num(after, "points.1.price") / num(after, "points.0.price") - 1) * 100, 0.006, "roll");
-            assertThat(text(after, "shape")).isEqualTo(num(after, "points.1.price") < num(after, "points.0.price") ? "backwardation" : "contango");
-            assertThat(moved(before, "points.*.price")).as("points.*.price" + " moved").isTrue();
-            assertThat(moved(before, "points.11.price")).as("points.11.price" + " moved").isTrue();
+            closeTo(num(after, "FRONT"), num(after, "POINTS.0.PRICE"), 1e-9, "front is the first point");
+            closeTo(num(after, "ROLL"), (num(after, "POINTS.1.PRICE") / num(after, "POINTS.0.PRICE") - 1) * 100, 0.006, "roll");
+            assertThat(text(after, "SHAPE")).isEqualTo(num(after, "POINTS.1.PRICE") < num(after, "POINTS.0.PRICE") ? "backwardation" : "contango");
+            assertThat(moved(before, "POINTS.*.PRICE")).as("points.*.price" + " moved").isTrue();
+            assertThat(moved(before, "POINTS.11.PRICE")).as("points.11.price" + " moved").isTrue();
         });
     }
 
     @Test
     void creditCurveSpreadsHazardsSurvivalAndHeadlineMoveTogether() {
         eachSample("credit-curve", (before, after) -> {
-            double rec = num(after, "recovery");
-            List<Double> spreads = nums(after, "points.*.spread");
-            List<Object> tenors = values(after, "points.*.tenor");
+            double rec = num(after, "RECOVERY");
+            List<Double> spreads = nums(after, "POINTS.*.SPREAD");
+            List<Object> tenors = values(after, "POINTS.*.TENOR");
             for (int i = 0; i < spreads.size(); i++) {
                 double hazard = spreads.get(i) / 1e4 / (1 - rec);
-                closeTo(num(after, "points." + i + ".hazard"), hazard, 1e-6, "hazard");
-                closeTo(num(after, "points." + i + ".survival"), Math.exp(-num(after, "points." + i + ".hazard") * DemoExpr.tenorYears((String) tenors.get(i))), 1e-6, "survival");
+                closeTo(num(after, "POINTS." + i + ".HAZARD"), hazard, 1e-6, "hazard");
+                closeTo(num(after, "POINTS." + i + ".SURVIVAL"), Math.exp(-num(after, "POINTS." + i + ".HAZARD") * DemoExpr.tenorYears((String) tenors.get(i))), 1e-6, "survival");
                 assertThat(spreads.get(i)).isGreaterThanOrEqualTo(0.5);
             }
-            closeTo(num(after, "spread5y"), num(after, "points.tenor=5Y.spread"), 1e-9, "5Y headline");
-            closeTo(num(after, "pd1y"), 1 - num(after, "points.tenor=1Y.survival"), 1e-9, "pd1y");
-            assertThat(spreads).isNotEqualTo(nums(before, "points.*.spread"));
+            closeTo(num(after, "SPREAD_5Y"), num(after, "POINTS.TENOR=5Y.SPREAD"), 1e-9, "5Y headline");
+            closeTo(num(after, "PD_1Y"), 1 - num(after, "POINTS.TENOR=1Y.SURVIVAL"), 1e-9, "pd1y");
+            assertThat(spreads).isNotEqualTo(nums(before, "POINTS.*.SPREAD"));
         });
     }
 
     @Test
     void bondPriceYieldSpreadAndHistoryMoveTogether() {
         eachSample("bond", (before, after) -> {
-            double price = num(after, "price");
-            closeTo(num(after, "yield"), num(after, "coupon") - (price - 100) / (num(after, "modDuration") * 100), 2e-5, "yield");
-            closeTo(num(after, "history.-1.price"), price, 1e-9, "history");
-            assertThat(moved(before, "price")).as("price moved").isTrue();
-            double dPrice = price - num(before, "price");
-            double dSpread = num(after, "zSpread") - num(before, "zSpread");
+            double price = num(after, "PRICE");
+            closeTo(num(after, "YIELD"), num(after, "COUPON") - (price - 100) / (num(after, "MOD_DURATION") * 100), 2e-5, "yield");
+            closeTo(num(after, "HISTORY.-1.PRICE"), price, 1e-9, "history");
+            assertThat(moved(before, "PRICE")).as("price moved").isTrue();
+            double dPrice = price - num(before, "PRICE");
+            double dSpread = num(after, "Z_SPREAD") - num(before, "Z_SPREAD");
             assertThat(dPrice * dSpread).as("price up, spread down").isLessThanOrEqualTo(0.0);
-            assertThat((num(after, "yield") - num(before, "yield")) * dPrice).as("price up, yield down").isLessThanOrEqualTo(0.0);
+            assertThat((num(after, "YIELD") - num(before, "YIELD")) * dPrice).as("price up, yield down").isLessThanOrEqualTo(0.0);
         });
     }
 
@@ -368,25 +369,25 @@ class DemoPackWalksTest {
     @Test
     void nettingSetNetMtmAssetTotalsTradesAndExposureProfileMoveTogether() {
         eachSample("netting-set", (before, after) -> {
-            double hidden = num(before, "netMtm") - nums(before, "trades.*.mtm").stream().mapToDouble(Double::doubleValue).sum();
-            closeTo(num(after, "netMtm"), hidden + nums(after, "trades.*.mtm").stream().mapToDouble(Double::doubleValue).sum(), 1, "net MTM is the trades");
-            closeTo(num(after, "netMtm"), nums(after, "byAsset.*.mtm").stream().mapToDouble(Double::doubleValue).sum(), values(after, "byAsset.*.mtm").size(), "net MTM is the asset totals");
-            closeTo(num(after, "eePeak"), nums(after, "profile.*.ee").stream().mapToDouble(Double::doubleValue).max().orElseThrow(), 0.5, "EE peak");
-            closeTo(num(after, "pfePeak"), nums(after, "profile.*.pfe").stream().mapToDouble(Double::doubleValue).max().orElseThrow(), 0.5, "PFE peak");
-            closeTo(num(after, "utilisation"), num(after, "pfePeak") / num(after, "limit"), 1e-4, "utilisation");
-            assertThat(moved(before, "pfePeak")).as("pfePeak" + " moved").isTrue();
-            assertThat(moved(before, "netMtm")).as("netMtm" + " moved").isTrue();
+            double hidden = num(before, "NET_MTM") - nums(before, "TRADES.*.MTM").stream().mapToDouble(Double::doubleValue).sum();
+            closeTo(num(after, "NET_MTM"), hidden + nums(after, "TRADES.*.MTM").stream().mapToDouble(Double::doubleValue).sum(), 1, "net MTM is the trades");
+            closeTo(num(after, "NET_MTM"), nums(after, "BY_ASSET.*.MTM").stream().mapToDouble(Double::doubleValue).sum(), values(after, "BY_ASSET.*.MTM").size(), "net MTM is the asset totals");
+            closeTo(num(after, "EE_PEAK"), nums(after, "PROFILE.*.EE").stream().mapToDouble(Double::doubleValue).max().orElseThrow(), 0.5, "EE peak");
+            closeTo(num(after, "PFE_PEAK"), nums(after, "PROFILE.*.PFE").stream().mapToDouble(Double::doubleValue).max().orElseThrow(), 0.5, "PFE peak");
+            closeTo(num(after, "UTILISATION"), num(after, "PFE_PEAK") / num(after, "LIMIT"), 1e-4, "utilisation");
+            assertThat(moved(before, "PFE_PEAK")).as("pfePeak" + " moved").isTrue();
+            assertThat(moved(before, "NET_MTM")).as("netMtm" + " moved").isTrue();
             // the profile moved as one: the ratio of any point to the peak is unchanged
-            closeTo(num(after, "profile.0.ee") / num(after, "eePeak"), num(before, "profile.0.ee") / num(before, "eePeak"), 2e-3, "profile shape");
+            closeTo(num(after, "PROFILE.0.EE") / num(after, "EE_PEAK"), num(before, "PROFILE.0.EE") / num(before, "EE_PEAK"), 2e-3, "profile shape");
         });
     }
 
     @Test
     void bookMtmIsItsListedTradesPlusTheRestAndMoves() {
         eachSample("book", (before, after) -> {
-            double hidden = num(before, "mtm") - nums(before, "topTrades.*.mtm").stream().mapToDouble(Double::doubleValue).sum();
-            closeTo(num(after, "mtm"), hidden + nums(after, "topTrades.*.mtm").stream().mapToDouble(Double::doubleValue).sum(), 1, "book MTM");
-            assertThat(moved(before, "mtm")).as("mtm" + " moved").isTrue();
+            double hidden = num(before, "MTM") - nums(before, "TOP_TRADES.*.MTM").stream().mapToDouble(Double::doubleValue).sum();
+            closeTo(num(after, "MTM"), hidden + nums(after, "TOP_TRADES.*.MTM").stream().mapToDouble(Double::doubleValue).sum(), 1, "book MTM");
+            assertThat(moved(before, "MTM")).as("mtm" + " moved").isTrue();
         });
     }
 

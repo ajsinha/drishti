@@ -21,18 +21,18 @@ import numpy as np
 import pandas as pd
 from drishti import quant as q
 
-ccy = view.doc["currency"]
-found = await drishti.search_async("CRV where curveType = 'Discount (OIS)' and currency != '' limit 100")
+ccy = view.doc["CURRENCY"]
+found = await drishti.search_async("CRV where CURVE_TYPE = 'Discount (OIS)' and CURRENCY != '' limit 100")
 curves = {}
-for cid, c in zip(found["id"], found["currency"]):
-    curves[c] = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", cid))["points"])
+for cid, c in zip(found["ID"], found["CURRENCY"]):
+    curves[c] = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", cid))["POINTS"])
 
 rows = []
 for c, curve in sorted(curves.items()):
     z = {t: curve.zero(t) * 100 for t in (2, 5, 10, 30)}
-    rows.append({"currency": c, "2Y %": z[2], "5Y %": z[5], "10Y %": z[10], "30Y %": z[30],
+    rows.append({"CURRENCY": c, "2Y %": z[2], "5Y %": z[5], "10Y %": z[10], "30Y %": z[30],
                  "2s10s bp": (z[10] - z[2]) * 100, "5s30s bp": (z[30] - z[5]) * 100})
-table = pd.DataFrame(rows).set_index("currency")
+table = pd.DataFrame(rows).set_index("CURRENCY")
 show(table, title=f"OIS zero rates by currency ({len(table)} curves)")
 
 grid = np.round(np.linspace(0.5, 30, 60), 2)
@@ -41,11 +41,11 @@ chart(pd.DataFrame({c: curve.zero(grid) * 100 for c, curve in curves.items()}, i
 
 # swap spread: OIS against the government curve of the same currency, where there is one
 try:
-    govt = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", f"CRV-{ccy}-GOVT"))["points"])
+    govt = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", f"CRV-{ccy}-GOVT"))["POINTS"])
 except drishti.DrishtiError as e:
     print(f"no government curve for {ccy}: {e.detail}")
 else:
-    ois = curves.get(ccy) or q.ZeroCurve.from_points(view.doc["points"])
+    ois = curves.get(ccy) or q.ZeroCurve.from_points(view.doc["POINTS"])
     tenors = [1, 2, 3, 5, 7, 10, 15, 20, 30]
     spread = pd.DataFrame({"years": tenors, "OIS %": ois.zero(tenors) * 100, "government %": govt.zero(tenors) * 100})
     spread["swap spread bp"] = (spread["OIS %"] - spread["government %"]) * 100

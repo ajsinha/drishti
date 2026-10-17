@@ -19,24 +19,24 @@
 
 import pandas as pd
 
-found = await drishti.search_async("FRTB where total > 0 and book != '' limit 1000")
+found = await drishti.search_async("FRTB where TOTAL > 0 and BOOK != '' limit 1000")
 rows = []
-for rid in found["id"]:
+for rid in found["ID"]:
     d = await drishti.get_async("frtb-sensitivity", rid)
-    classes = ", ".join(sorted({c["riskClass"] for c in d.get("byClass") or []}))
-    rows.append({"book": d["book"], "risk class": classes, "delta": d["deltaCharge"], "vega": d["vegaCharge"],
-                 "curvature": d["curvatureCharge"], "total": d["total"]})
-df = pd.DataFrame(rows).set_index("book").sort_values("total", ascending=False)
-df["components - total"] = df[["delta", "vega", "curvature"]].sum(axis=1) - df["total"]
-df["delta share"] = df["delta"] / df["total"]
+    classes = ", ".join(sorted({c["RISK_CLASS"] for c in d.get("BY_CLASS") or []}))
+    rows.append({"BOOK": d["BOOK"], "risk class": classes, "DELTA": d["DELTA_CHARGE"], "vega": d["VEGA_CHARGE"],
+                 "curvature": d["CURVATURE_CHARGE"], "TOTAL": d["TOTAL"]})
+df = pd.DataFrame(rows).set_index("BOOK").sort_values("TOTAL", ascending=False)
+df["components - total"] = df[["DELTA", "vega", "curvature"]].sum(axis=1) - df["TOTAL"]
+df["delta share"] = df["DELTA"] / df["TOTAL"]
 df["rank"] = range(1, len(df) + 1)
-show(df, title=f"FRTB SBM charges, {len(df)} books, firm total {df['total'].sum():,.0f} (simple sum, no diversification)")
-by_class = df.groupby("risk class")[["delta", "vega", "curvature", "total"]].sum().sort_values("total", ascending=False)
-show(by_class.assign(share=by_class["total"] / by_class["total"].sum()), title="By risk class")
-chart(by_class.reset_index(), kind="bar", x="risk class", y=["delta", "vega", "curvature"], title="Charge by risk class and component")
+show(df, title=f"FRTB SBM charges, {len(df)} books, firm total {df['TOTAL'].sum():,.0f} (simple sum, no diversification)")
+by_class = df.groupby("risk class")[["DELTA", "vega", "curvature", "TOTAL"]].sum().sort_values("TOTAL", ascending=False)
+show(by_class.assign(share=by_class["TOTAL"] / by_class["TOTAL"].sum()), title="By risk class")
+chart(by_class.reset_index(), kind="bar", x="risk class", y=["DELTA", "vega", "curvature"], title="Charge by risk class and component")
 mismatch = df[df["components - total"].abs() > 1]
 print("Delta + vega + curvature equals the total for every book" if mismatch.empty
       else f"{len(mismatch)} books where the components do not add up to the total: {', '.join(mismatch.index)}")
-me = view.doc.get("book")
+me = view.doc.get("BOOK")
 if me in df.index:
-    print(f"{me}: {df.loc[me, 'total']:,.0f}, rank {df.loc[me, 'rank']} of {len(df)}; delta {df.loc[me, 'delta share']:.0%} of it")
+    print(f"{me}: {df.loc[me, 'TOTAL']:,.0f}, rank {df.loc[me, 'rank']} of {len(df)}; delta {df.loc[me, 'delta share']:.0%} of it")

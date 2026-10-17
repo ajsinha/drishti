@@ -20,19 +20,21 @@ commodity swap on a phone (390 px, touch). Views of the QUICKSTART packs, the re
 """
 from __future__ import annotations
 
-import json
+import sys
 
 from shotlib import ROOT, Ctx, register
 
+sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
+import packsamples  # noqa: E402  (samples/trade.jsonl)
+
 shot = register("deep")
-SAMPLES = ROOT / "config" / "packs" / "trading" / "samples" / "trade"
+SAMPLES = ROOT / "config" / "packs" / "trading" / "samples"
 
 
 def sample(product: str, legs: int) -> str:
-    for f in sorted(SAMPLES.glob("*.json")):
-        d = json.loads(f.read_text())
-        if d["productType"] == product and len(d["legs"]) == legs:
-            return d["tradeId"]
+    for d in packsamples.read(SAMPLES).get("trade", {}).values():
+        if d["PRODUCT_TYPE"] == product and len(d["LEGS"]) == legs:
+            return str(d["TRADE_ID"])
     raise AssertionError(f"no {product} sample with {legs} legs")
 
 

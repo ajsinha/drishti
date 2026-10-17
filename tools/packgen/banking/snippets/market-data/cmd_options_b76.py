@@ -22,28 +22,28 @@ from drishti import quant as q
 
 doc = view.doc
 as_of = view.business_date or "2026-09-30"
-curve_id = doc["surfaceId"].replace("CMDV-", "CMDC-")                  # CMDV-WTI -> CMDC-WTI
-futures = {p["month"]: p["price"] for p in (await drishti.get_async("commodity-curve", curve_id))["points"]}
-ois = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", "CRV-USD-OIS"))["points"])
+curve_id = doc["SURFACE_ID"].replace("CMDV-", "CMDC-")                  # CMDV-WTI -> CMDC-WTI
+futures = {p["MONTH"]: p["PRICE"] for p in (await drishti.get_async("commodity-curve", curve_id))["POINTS"]}
+ois = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", "CRV-USD-OIS"))["POINTS"])
 
 rows = []
-for g in doc["grid"]:
-    if g["month"] not in futures:
+for g in doc["GRID"]:
+    if g["MONTH"] not in futures:
         continue
-    F, T = futures[g["month"]], q.month_code_years(g["month"], as_of)
+    F, T = futures[g["MONTH"]], q.month_code_years(g["MONTH"], as_of)
     r = ois.zero(T)
-    atm, v90, v110 = g["m100"] / 100, g["m90"] / 100, g["m110"] / 100
+    atm, v90, v110 = g["M_100"] / 100, g["M_90"] / 100, g["M_110"] / 100
     call, put = q.black76_greeks(F, F, T, r, atm, True), q.black76_greeks(F, F, T, r, atm, False)
-    rows.append({"month": g["month"], "future": F, "years": T, "ATM vol %": g["m100"],
-                 "straddle": call["price"] + put["price"],
-                 "straddle % of F": (call["price"] + put["price"]) / F * 100,
+    rows.append({"MONTH": g["MONTH"], "future": F, "years": T, "ATM vol %": g["M_100"],
+                 "straddle": call["PRICE"] + put["PRICE"],
+                 "straddle % of F": (call["PRICE"] + put["PRICE"]) / F * 100,
                  "90% put": q.black76(F, 0.9 * F, T, r, v90, False), "110% call": q.black76(F, 1.1 * F, T, r, v110, True),
-                 "ATM call delta": call["delta"], "ATM gamma": call["gamma"], "ATM vega / pt": call["vega"] / 100,
-                 "ATM theta / day": call["theta"] / 365, "skew 90-110 pts": g["m90"] - g["m110"]})
-out = pd.DataFrame(rows).set_index("month")
-show(out, title=f"{view.id}: {doc.get('commodity', '')} options per unit of the future (Black-76, USD OIS discounting)")
-chart(out.reset_index(), kind="line", x="month", y=["ATM vol %"], title="ATM vol by contract month")
-chart(out.reset_index(), kind="bar", x="month", y="straddle % of F", title="ATM straddle, % of the future")
+                 "ATM call delta": call["DELTA"], "ATM gamma": call["gamma"], "ATM vega / pt": call["vega"] / 100,
+                 "ATM theta / day": call["theta"] / 365, "skew 90-110 pts": g["M_90"] - g["M_110"]})
+out = pd.DataFrame(rows).set_index("MONTH")
+show(out, title=f"{view.id}: {doc.get('COMMODITY', '')} options per unit of the future (Black-76, USD OIS discounting)")
+chart(out.reset_index(), kind="line", x="MONTH", y=["ATM vol %"], title="ATM vol by contract month")
+chart(out.reset_index(), kind="bar", x="MONTH", y="straddle % of F", title="ATM straddle, % of the future")
 print("Straddle ~ 0.8 x F x vol x sqrt(T) (a trader's rule of thumb): front "
       f"{0.8 * out['future'].iloc[0] * out['ATM vol %'].iloc[0] / 100 * out['years'].iloc[0] ** 0.5:.2f} against "
       f"{out['straddle'].iloc[0]:.2f} priced")

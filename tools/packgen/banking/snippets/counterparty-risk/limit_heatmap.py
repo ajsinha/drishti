@@ -21,26 +21,26 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-found = await drishti.search_async("LIM where utilisation > -1 and counterpartyName != '' limit 1000")
+found = await drishti.search_async("LIM where UTILISATION > -1 and COUNTERPARTY_NAME != '' limit 1000")
 rows = []
 for lid in found["id"]:
     d = await drishti.get_async("credit-limit", lid)
-    for b in d.get("buckets") or []:
-        rows.append({"limit": lid, "counterparty": d.get("counterpartyName"), "bucket": b["bucket"], "limit amount": b["limit"],
-                     "used": b["used"], "utilisation": b["utilisation"], "headroom": b["limit"] - b["used"]})
+    for b in d.get("BUCKETS") or []:
+        rows.append({"LIMIT": lid, "COUNTERPARTY": d.get("COUNTERPARTY_NAME"), "BUCKET": b["BUCKET"], "limit amount": b["LIMIT"],
+                     "USED": b["USED"], "UTILISATION": b["UTILISATION"], "headroom": b["LIMIT"] - b["USED"]})
 df = pd.DataFrame(rows)
-buckets = list(dict.fromkeys(df["bucket"]))                                # in the order the limits list them
-util = df.pivot_table(index="limit", columns="bucket", values="utilisation").reindex(columns=buckets)
+buckets = list(dict.fromkeys(df["BUCKET"]))                                # in the order the limits list them
+util = df.pivot_table(index="LIMIT", columns="BUCKET", values="UTILISATION").reindex(columns=buckets)
 util = util.loc[util.max(axis=1).sort_values(ascending=False).index]
 show(util, title=f"Utilisation by tenor bucket, {len(util)} limits (sorted by the worst bucket)")
 
-alerts = df[df["utilisation"] >= 0.8].assign(status=lambda d: np.where(d["utilisation"] >= 1, "breach", "early warning"))
-show(alerts.sort_values("utilisation", ascending=False).reset_index(drop=True), title=f"{len(alerts)} buckets at 80% or more")
-me = view.id if view.kind == "credit-limit" else view.doc.get("creditLimit")
+alerts = df[df["UTILISATION"] >= 0.8].assign(status=lambda d: np.where(d["UTILISATION"] >= 1, "breach", "early warning"))
+show(alerts.sort_values("UTILISATION", ascending=False).reset_index(drop=True), title=f"{len(alerts)} buckets at 80% or more")
+me = view.id if view.kind == "credit-limit" else view.doc.get("CREDIT_LIMIT")
 if me in util.index:
     rank = list(util.index).index(me) + 1
     print(f"{me}: worst bucket {util.loc[me].idxmax()} at {util.loc[me].max():.0%}; rank {rank} of {len(util)}; "
-          f"headroom {df[df['limit'] == me]['headroom'].min():,.0f} in its tightest bucket")
+          f"headroom {df[df['LIMIT'] == me]['headroom'].min():,.0f} in its tightest bucket")
 
 fig, ax = plt.subplots(figsize=(7, max(3, 0.28 * len(util))))
 im = ax.imshow(util.to_numpy() * 100, cmap="RdYlGn_r", vmin=0, vmax=110, aspect="auto")

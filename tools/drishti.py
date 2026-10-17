@@ -767,19 +767,25 @@ def read_json_files(paths) -> list[dict]:
     for p in paths:
         p = pathlib.Path(p)
         if p.is_dir():
-            files += sorted(p.glob("*.json"))
+            files += sorted(list(p.glob("*.json")) + list(p.glob("*.jsonl")))      # a pack's samples/<kind>.jsonl: a sample a line
         elif p.is_file():
             files.append(p)
         else:
             raise CliError(f"{p}: no such file or folder")
     out = []
     for f in files:
+        if f.name == "catalog.json":
+            continue
         try:
-            out.append({"name": f.name, "document": json.loads(f.read_text(encoding="utf-8"))})
+            if f.suffix == ".jsonl":
+                lines = [x for x in f.read_text(encoding="utf-8").splitlines() if x.strip()]
+                out += [{"name": f"{f.stem}-{n}.json", "document": json.loads(x)} for n, x in enumerate(lines, 1)]
+            else:
+                out.append({"name": f.name, "document": json.loads(f.read_text(encoding="utf-8"))})
         except ValueError as e:
             raise CliError(f"{f}: not JSON ({e})") from None
     if not out:
-        raise CliError("no .json sample files found")
+        raise CliError("no .json or .jsonl sample files found")
     return out
 
 

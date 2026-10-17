@@ -21,28 +21,28 @@ import pandas as pd
 from drishti import quant as q
 
 doc = view.doc
-pos = pd.DataFrame(doc["positions"])
-pos["value (recomputed)"] = pos["marketValue"] * (1 - pos["haircut"])
-pos["difference"] = pos["value (recomputed)"] - pos["value"]
-pos["share of value"] = pos["value"] / pos["value"].sum()
-show(pos, title=f"{view.id}: held {doc.get('held', 0):,.0f}, posted {doc.get('posted', 0):,.0f}, net {doc.get('net', 0):,.0f}")
-print(f"Concentration by asset: HHI {q.hhi(pos['value']):.2f} ({len(pos)} assets); largest "
-      f"{pos.loc[pos['value'].idxmax(), 'asset']} at {pos['share of value'].max():.0%}")
+pos = pd.DataFrame(doc["POSITIONS"])
+pos["value (recomputed)"] = pos["MARKET_VALUE"] * (1 - pos["HAIRCUT"])
+pos["difference"] = pos["value (recomputed)"] - pos["VALUE"]
+pos["share of value"] = pos["VALUE"] / pos["VALUE"].sum()
+show(pos, title=f"{view.id}: held {doc.get('HELD', 0):,.0f}, posted {doc.get('POSTED', 0):,.0f}, net {doc.get('NET', 0):,.0f}")
+print(f"Concentration by asset: HHI {q.hhi(pos['VALUE']):.2f} ({len(pos)} assets); largest "
+      f"{pos.loc[pos['VALUE'].idxmax(), 'ASSET']} at {pos['share of value'].max():.0%}")
 
-ns = await drishti.get_async("netting-set", doc["nettingSet"])
-cp_name = (await drishti.get_async("counterparty", ns["counterparty"]))["name"]
-own = pos[pos["asset"].str.startswith(cp_name.split()[0])]               # collateral issued by the counterparty itself
+ns = await drishti.get_async("netting-set", doc["NETTING_SET"])
+cp_name = (await drishti.get_async("counterparty", ns["COUNTERPARTY"]))["NAME"]
+own = pos[pos["ASSET"].str.startswith(cp_name.split()[0])]               # collateral issued by the counterparty itself
 if len(own):
-    print(f"Wrong-way collateral: {', '.join(own['asset'])} is issued by {cp_name}, the counterparty that posted it "
-          f"({own['value'].sum() / pos['value'].sum():.0%} of the value)")
-csa = await drishti.get_async("csa", doc["csa"]) if doc.get("csa") else {}
-required = max(ns.get("netMtm", 0) - (csa.get("thresholdThem") or 0), 0) + (csa.get("independentAmount") or 0)
-held = pos[pos["direction"] == "Held"]
+    print(f"Wrong-way collateral: {', '.join(own['ASSET'])} is issued by {cp_name}, the counterparty that posted it "
+          f"({own['VALUE'].sum() / pos['VALUE'].sum():.0%} of the value)")
+csa = await drishti.get_async("csa", doc["CSA"]) if doc.get("CSA") else {}
+required = max(ns.get("NET_MTM", 0) - (csa.get("THRESHOLD_THEM") or 0), 0) + (csa.get("INDEPENDENT_AMOUNT") or 0)
+held = pos[pos["DIRECTION"] == "Held"]
 rows = []
 for name, hc_mult, mv_move in [("as booked", 1, 0.0), ("haircuts x2", 2, 0.0), ("haircuts x3", 3, 0.0),
                                ("haircuts x2, prices -5%", 2, -0.05), ("haircuts x3, prices -10%", 3, -0.10)]:
-    value = (held["marketValue"] * (1 + mv_move) * (1 - (held["haircut"] * hc_mult).clip(upper=1))).sum()
-    rows.append({"scenario": name, "collateral value": value, "required": required, "shortfall": max(required - value, 0)})
+    value = (held["MARKET_VALUE"] * (1 + mv_move) * (1 - (held["HAIRCUT"] * hc_mult).clip(upper=1))).sum()
+    rows.append({"SCENARIO": name, "collateral value": value, "required": required, "shortfall": max(required - value, 0)})
 stress = pd.DataFrame(rows)
-show(stress, title=f"Haircut stress against the CSA requirement ({doc['nettingSet']}, net MTM {ns.get('netMtm', 0):,.0f})")
-chart(stress, kind="bar", x="scenario", y=["collateral value", "required"], title="Collateral against requirement")
+show(stress, title=f"Haircut stress against the CSA requirement ({doc['NETTING_SET']}, net MTM {ns.get('NET_MTM', 0):,.0f})")
+chart(stress, kind="bar", x="SCENARIO", y=["collateral value", "required"], title="Collateral against requirement")

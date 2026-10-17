@@ -20,13 +20,13 @@
 import pandas as pd
 
 doc = view.doc
-fx = pd.DataFrame(doc["fixings"])
-fx["date"] = pd.to_datetime(fx["date"])
-fx = fx.sort_values("date").reset_index(drop=True)
-rate = fx["rate"] if "rate" in fx else fx["ratePct"] / 100
+fx = pd.DataFrame(doc["FIXINGS"])
+fx["DATE"] = pd.to_datetime(fx["DATE"])
+fx = fx.sort_values("DATE").reset_index(drop=True)
+rate = fx["RATE"] if "RATE" in fx else fx["RATE_PCT"] / 100
 # a rate set on a Friday applies over the weekend: its weight is the days until the next fixing (1 for the last one)
-fx["days"] = fx["date"].diff().shift(-1).dt.days.fillna(1).astype(int)
-BASIS = 365 if doc.get("currency") in ("GBP", "AUD", "CAD") else 360          # SONIA, AONIA, CORRA: ACT/365F
+fx["days"] = fx["DATE"].diff().shift(-1).dt.days.fillna(1).astype(int)
+BASIS = 365 if doc.get("CURRENCY") in ("GBP", "AUD", "CAD") else 360          # SONIA, AONIA, CORRA: ACT/365F
 growth = (1 + rate * fx["days"] / BASIS).prod()
 days = int(fx["days"].sum())
 compounded = (growth - 1) * BASIS / days
@@ -34,13 +34,13 @@ simple = (rate * fx["days"]).sum() / days
 NOTIONAL = 100e6
 
 show(pd.DataFrame({
-    "measure": ["from", "to", "calendar days", "compounded in arrears (annualised)", "simple day-weighted average",
+    "MEASURE": ["FROM", "TO", "calendar days", "compounded in arrears (annualised)", "simple day-weighted average",
                 "compounding effect bp", f"interest on {NOTIONAL / 1e6:,.0f}m", "latest fixing", "change over window bp"],
-    "value": [fx["date"].iloc[0].date(), fx["date"].iloc[-1].date(), days, f"{compounded:.5%}", f"{simple:.5%}",
+    "VALUE": [fx["DATE"].iloc[0].date(), fx["DATE"].iloc[-1].date(), days, f"{compounded:.5%}", f"{simple:.5%}",
               f"{(compounded - simple) * 1e4:.3f}", f"{(growth - 1) * NOTIONAL:,.0f}", f"{rate.iloc[-1]:.4%}",
               f"{(rate.iloc[-1] - rate.iloc[0]) * 1e4:+.1f}"],
-}), title=f"{view.id}: {doc.get('name', '')} ({doc.get('administrator', '')}), ACT/{BASIS}")
-series = pd.DataFrame({"rate %": rate.to_numpy() * 100}, index=fx["date"].dt.strftime("%Y-%m-%d"))
-chart(series, kind="line", title=f"{doc.get('name', view.id)} fixings, %")
-if "volumeBn" in fx:
-    chart(pd.DataFrame({"volume bn": fx["volumeBn"].to_numpy()}, index=series.index), kind="bar", title="Volume, bn")
+}), title=f"{view.id}: {doc.get('NAME', '')} ({doc.get('ADMINISTRATOR', '')}), ACT/{BASIS}")
+series = pd.DataFrame({"rate %": rate.to_numpy() * 100}, index=fx["DATE"].dt.strftime("%Y-%m-%d"))
+chart(series, kind="line", title=f"{doc.get('NAME', view.id)} fixings, %")
+if "VOLUME_BN" in fx:
+    chart(pd.DataFrame({"volume bn": fx["VOLUME_BN"].to_numpy()}, index=series.index), kind="bar", title="Volume, bn")

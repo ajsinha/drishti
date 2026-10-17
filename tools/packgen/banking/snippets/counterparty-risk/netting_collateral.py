@@ -20,29 +20,29 @@
 import pandas as pd
 
 ns = view.doc
-trades = pd.DataFrame(ns["trades"])
-pos, neg = trades.loc[trades["mtm"] > 0, "mtm"].sum(), trades.loc[trades["mtm"] < 0, "mtm"].sum()
-net = trades["mtm"].sum()
+trades = pd.DataFrame(ns["TRADES"])
+pos, neg = trades.loc[trades["MTM"] > 0, "MTM"].sum(), trades.loc[trades["MTM"] < 0, "MTM"].sum()
+net = trades["MTM"].sum()
 ngr = max(net, 0) / pos if pos else float("nan")
 show(pd.DataFrame({
-    "measure": ["trades listed", "trades in the set", "positive MTM (owed to us)", "negative MTM (we owe)", "net MTM (listed)",
+    "MEASURE": ["trades listed", "trades in the set", "positive MTM (owed to us)", "negative MTM (we owe)", "net MTM (listed)",
                 "net MTM (netting set)", "exposure without netting", "exposure with netting", "netting benefit", "net-to-gross ratio"],
-    "value": [len(trades), ns.get("tradeCount"), pos, neg, net, ns.get("netMtm"), pos, max(net, 0), pos - max(net, 0), ngr],
-}), title=f"{view.id}: netting ({'enforceable' if ns.get('nettingEnforceable') else 'NOT enforceable'})")
+    "VALUE": [len(trades), ns.get("TRADE_COUNT"), pos, neg, net, ns.get("NET_MTM"), pos, max(net, 0), pos - max(net, 0), ngr],
+}), title=f"{view.id}: netting ({'enforceable' if ns.get('NETTING_ENFORCEABLE') else 'NOT enforceable'})")
 
-csa = await drishti.get_async("csa", ns["csa"]) if ns.get("csa") else {}
-th_them, th_us = csa.get("thresholdThem", 0) or 0, csa.get("thresholdUs", 0) or 0
-mta, ia = csa.get("mta", 0) or 0, csa.get("independentAmount", 0) or 0
-v = ns.get("netMtm", net)
-held = ns.get("collateral", 0) or 0                                    # positive: collateral we hold
+csa = await drishti.get_async("csa", ns["CSA"]) if ns.get("CSA") else {}
+th_them, th_us = csa.get("THRESHOLD_THEM", 0) or 0, csa.get("THRESHOLD_US", 0) or 0
+mta, ia = csa.get("MTA", 0) or 0, csa.get("INDEPENDENT_AMOUNT", 0) or 0
+v = ns.get("NET_MTM", net)
+held = ns.get("COLLATERAL", 0) or 0                                    # positive: collateral we hold
 required = max(v - th_them, 0) + ia if v > 0 else -max(-v - th_us, 0)  # what we should hold (negative: post)
 call = required - held
 due = call if abs(call) >= mta else 0.0                                 # below the minimum transfer amount: no call
 show(pd.DataFrame({
-    "measure": ["threshold (them)", "threshold (us)", "minimum transfer", "independent amount", "net MTM", "collateral held",
+    "MEASURE": ["threshold (them)", "threshold (us)", "minimum transfer", "independent amount", "net MTM", "collateral held",
                 "collateral required", "difference", "call due today", "exposure after collateral"],
-    "value": [th_them, th_us, mta, ia, v, held, required, call, due, max(v - held, 0)],
-}), title=f"{ns.get('csa', 'no CSA')}: {csa.get('marginType', '')}, {csa.get('frequency', '')}, MPoR {csa.get('mpor', '')}")
+    "VALUE": [th_them, th_us, mta, ia, v, held, required, call, due, max(v - held, 0)],
+}), title=f"{ns.get('CSA', 'no CSA')}: {csa.get('MARGIN_TYPE', '')}, {csa.get('FREQUENCY', '')}, MPoR {csa.get('MPOR', '')}")
 print("We call" if due > 0 else "We must post" if due < 0 else "No call: the difference is inside the minimum transfer amount",
       f"{abs(due):,.0f}" if due else "")
-chart(trades.sort_values("mtm").reset_index(drop=True), kind="bar", x="tradeId", y="mtm", title="MTM by trade")
+chart(trades.sort_values("MTM").reset_index(drop=True), kind="bar", x="TRADE_ID", y="MTM", title="MTM by trade")

@@ -67,7 +67,7 @@ class ShapeExamplesTest {
 
     @Test
     void linkedSourcesLinksItsCounterparty() throws IOException {
-        roles("linked-sources", Map.of("$.counterparty", "link"));
+        roles("linked-sources", Map.of("$.COUNTERPARTY", "link"));
     }
 
     @Test

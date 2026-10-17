@@ -20,7 +20,7 @@
 import pandas as pd
 from drishti import quant as q
 
-curve = q.ZeroCurve.from_points(view.doc["points"])      # log-linear on discount factors, as the curve is built
+curve = q.ZeroCurve.from_points(view.doc["POINTS"])      # log-linear on discount factors, as the curve is built
 FREQ = 1                                                 # fixed-leg payments a year: 1 annual, 2 semi-annual
 NOTIONAL = 100e6
 
@@ -30,15 +30,15 @@ for T in [1, 2, 3, 4, 5, 7, 10, 12, 15, 20, 25, 30]:
         break
     par = q.par_swap_rate(curve, T, FREQ)                # (1 - df(T)) / annuity: the float leg is worth par
     ann = q.annuity(curve, T, FREQ)                      # sum of year fraction x discount factor
-    rows.append({"tenor": f"{T}Y", "years": T, "par %": par * 100, "zero %": curve.zero(T) * 100,
+    rows.append({"TENOR": f"{T}Y", "years": T, "par %": par * 100, "zero %": curve.zero(T) * 100,
                  "par - zero bp": (par - curve.zero(T)) * 1e4, "annuity": ann,
                  "PV01 per 100m": ann * NOTIONAL / 1e4})  # value of 1 bp on the fixed rate
-swaps = pd.DataFrame(rows).set_index("tenor")
+swaps = pd.DataFrame(rows).set_index("TENOR")
 show(swaps, title=f"{view.id}: par swap rates ({FREQ}x a year fixed, single curve)")
 chart(swaps.reset_index(), kind="line", x="years", y=["par %", "zero %"], title="Par swap curve and zero curve")
 
 par = swaps["par %"]
 slopes = {"2s10s": (par["10Y"] - par["2Y"]) * 100, "5s30s": (par.get("30Y", float("nan")) - par["5Y"]) * 100,
           "2s5s10s fly": (2 * par["5Y"] - par["2Y"] - par["10Y"]) * 100}
-show(pd.DataFrame({"measure": list(slopes), "bp": list(slopes.values())}), title="Slopes of the par curve")
-print(f"The curve itself says 2s10s {view.doc.get('slope2s10s')} bp (on zero rates); the par curve says {slopes['2s10s']:.1f} bp")
+show(pd.DataFrame({"MEASURE": list(slopes), "bp": list(slopes.values())}), title="Slopes of the par curve")
+print(f"The curve itself says 2s10s {view.doc.get('SLOPE_2S_10S')} bp (on zero rates); the par curve says {slopes['2s10s']:.1f} bp")

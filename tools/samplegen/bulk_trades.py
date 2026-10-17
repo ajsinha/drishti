@@ -64,13 +64,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "banking"))
+sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
 
 import booking as BK  # noqa: E402
+import packsamples  # noqa: E402  (the pack's samples/trade.jsonl)
 from samplegen.dates import Calendar  # noqa: E402
 from samplegen.lake import business_days, walk  # noqa: E402
 from samplegen.layout import Layout, arrow_table, infer_types, layouts_for_domain, promote, write_file  # noqa: E402
 
-TEMPLATES = ROOT / "config" / "packs" / "trading" / "samples" / "trade"
+TEMPLATES = ROOT / "config" / "packs" / "trading" / "samples"            # trade.jsonl
 AS_OF = date(2026, 9, 30)                      # the banking lake's newest business date (data_names.AS_OF)
 PLACEHOLDER = "\u0000ID\u0000"
 # amounts that grow with the trade's size; rates, dates, counts and discount factors stay as they are
@@ -90,12 +92,10 @@ POOL_CONTEXT = multiprocessing.get_context("spawn")
 def load_templates(system: str = "MUREX") -> list[tuple[str, str, str]]:
     """The sample trades booked in ``system`` (MUREX or CALYPSO: their ids carry a prefix a clone can renumber)."""
     out = []
-    for f in sorted(TEMPLATES.glob("*.json")):
-        doc = json.loads(f.read_text(encoding="utf-8"))
+    for tid, doc in sorted(packsamples.read(TEMPLATES).get("trade", {}).items()):
         doc.pop("_meta", None)
         if doc.get("SOURCE_SYSTEM") != system:
             continue
-        tid = f.stem
         text = re.sub(re.escape(tid) + r"(?!\d)", PLACEHOLDER, json.dumps(doc, ensure_ascii=False))
         out.append((tid, text, system))
     if not out:

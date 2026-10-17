@@ -22,10 +22,10 @@ import pandas as pd
 from drishti import quant as q
 
 doc = view.doc
-b = pd.DataFrame(doc["buckets"])
-b["years"] = b["tenor"].map(q.tenor_years)
+b = pd.DataFrame(doc["BUCKETS"])
+b["years"] = b["TENOR"].map(q.tenor_years)
 b = b.sort_values("years").reset_index(drop=True)
-b["effective EE"] = np.maximum.accumulate(b["ee"])                     # non-decreasing EE: the Basel effective EE
+b["effective EE"] = np.maximum.accumulate(b["EE"])                     # non-decreasing EE: the Basel effective EE
 
 
 def time_average(col, horizon=1.0):
@@ -35,15 +35,15 @@ def time_average(col, horizon=1.0):
     return float(np.sum(b[col].to_numpy() * dt) / horizon)
 
 
-epe, eepe = time_average("ee"), time_average("effective EE")
-peak = b.loc[b["pfe99"].idxmax()]
+epe, eepe = time_average("EE"), time_average("effective EE")
+peak = b.loc[b["PFE_99"].idxmax()]
 show(pd.DataFrame({
-    "measure": ["EPE (1Y average of EE)", "EPE (engine)", "effective EPE (1Y average of effective EE)", "EEPE (engine)",
+    "MEASURE": ["EPE (1Y average of EE)", "EPE (engine)", "effective EPE (1Y average of effective EE)", "EEPE (engine)",
                 "peak EE", "peak PFE 95%", "peak PFE 95% (engine)", "peak PFE 99%", "at tenor", "PFE 99 / PFE 95 at the peak"],
-    "value": [epe, doc.get("epe"), eepe, doc.get("eepe"), b["ee"].max(), b["pfe95"].max(), doc.get("pfePeak"),
-              peak["pfe99"], peak["tenor"], peak["pfe99"] / peak["pfe95"]],
-}), title=f"{view.id}: {doc.get('nettingSet', '')}, {doc.get('paths', '')} paths ({doc.get('model', '')})")
+    "VALUE": [epe, doc.get("EPE"), eepe, doc.get("EEPE"), b["EE"].max(), b["PFE_95"].max(), doc.get("PFE_PEAK"),
+              peak["PFE_99"], peak["TENOR"], peak["PFE_99"] / peak["PFE_95"]],
+}), title=f"{view.id}: {doc.get('NETTING_SET', '')}, {doc.get('PATHS', '')} paths ({doc.get('MODEL', '')})")
 show(b, title="Profile by tenor")
-chart(b.set_index("tenor")[["ee", "effective EE", "pfe95", "pfe99", "ene"]], kind="line", title="Exposure profile")
+chart(b.set_index("TENOR")[["EE", "effective EE", "PFE_95", "PFE_99", "ENE"]], kind="line", title="Exposure profile")
 print("Regulatory EAD under the internal model method would be alpha x EEPE = "
       f"1.4 x {eepe:,.0f} = {1.4 * eepe:,.0f} (before any collateral or maturity adjustment)")

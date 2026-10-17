@@ -26,6 +26,7 @@ import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.api.Subscription;
+import com.ash.drishti.common.PackSamples;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
@@ -43,7 +44,8 @@ import java.util.function.Consumer;
 
 /**
  * Serves sample entities from pack sample directories ({@code dirs}: comma-separated, each holding
- * {@code catalog.json} and {@code <kind>/<id>.json}). The enabled packs supply the directories. Each fixture's
+ * {@code catalog.json} and {@code <kind>.jsonl}, one document a line, or {@code <kind>/<id>.json}: {@link PackSamples}). The enabled
+ * packs supply the directories. Each fixture's
  * {@code _meta} block becomes the provenance, so views show the source systems of the samples
  * ({@code aero-risk}, {@code port-ops}, ...).
  *
@@ -75,17 +77,25 @@ public final class DemoSourcePlugin implements SourcePlugin {
             }
             java.nio.file.Path root = java.nio.file.Path.of(dir.trim()).toAbsolutePath().normalize();
             DataNode catalog = read(context, root.resolve("catalog.json"));
+            Map<String, Map<String, DataNode>> byKind = new LinkedHashMap<>();       // kind -> id -> catalogue entry
             for (int i = 0; i < catalog.size(); i++) {
                 DataNode e = catalog.get(i);
-                EntityRef ref = EntityRef.of(e.get("kind").asText(), e.get("id").asText());
-                java.nio.file.Path file = root.resolve(ref.kind()).resolve(ref.id() + ".json").normalize();
-                if (!file.startsWith(root)) {
-                    continue;                                  // a catalogue entry may not point outside its pack's samples
+                byKind.computeIfAbsent(e.get("kind").asText(), k -> new LinkedHashMap<>()).put(e.get("id").asText(), e);
+            }
+            for (Map.Entry<String, Map<String, DataNode>> k : byKind.entrySet()) {
+                // samples/<kind>.jsonl (one document a line) or samples/<kind>/<id>.json; an id may not lead outside the pack's samples
+                Map<String, String> texts = PackSamples.documents(root, k.getKey(), k.getValue().keySet(), 0);
+                for (Map.Entry<String, DataNode> c : k.getValue().entrySet()) {
+                    String text = texts.get(c.getKey());
+                    if (text == null) {
+                        continue;
+                    }
+                    EntityRef ref = EntityRef.of(k.getKey(), c.getKey());
+                    DataNode raw = context.parseJson(new java.io.ByteArrayInputStream(text.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+                    documents.put(ref, toDocument(ref, raw));
+                    walks.put(ref, raw.get("_meta").get("walk"));
+                    index.add(new EntityHit(ref, c.getValue().get("title").asText(), c.getValue().get("subtitle").asText()));
                 }
-                DataNode raw = read(context, file);
-                documents.put(ref, toDocument(ref, raw));
-                walks.put(ref, raw.get("_meta").get("walk"));
-                index.add(new EntityHit(ref, e.get("title").asText(), e.get("subtitle").asText()));
             }
         }
         if (Boolean.parseBoolean(context.setting("ticking", "true"))) {

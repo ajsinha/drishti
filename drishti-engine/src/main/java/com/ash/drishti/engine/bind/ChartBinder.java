@@ -78,7 +78,12 @@ final class ChartBinder {
         if (spec.startsWith("@") || spec.startsWith("$") || spec.indexOf('(') >= 0 || spec.indexOf(' ') >= 0) {
             return binder.eval(spec, c.eval().withRow(row, index));
         }
-        return spec.indexOf('.') >= 0 ? row.at(spec) : row.get(spec);
+        if (spec.indexOf('.') >= 0) {
+            return row.at(spec);
+        }
+        DataNode v = row.get(spec);
+        // a panel's default field names (open, close, label, value, date ...) read the UPPER_SNAKE attribute when the row has that instead
+        return v.isMissing() ? row.get(spec.toUpperCase(java.util.Locale.ROOT)) : v;
     }
 
     private static String text(Object v) {
@@ -310,7 +315,7 @@ final class ChartBinder {
         int more = 0;
         for (int i = 0; i < nodes.size(); i++) {
             DataNode n = nodes.get(i);
-            String id = n.get("id").asText();
+            String id = either(n, "id").asText();
             if (id.isEmpty() || !ids.add(id)) {
                 continue;   // a node needs an id, once
             }
@@ -319,7 +324,7 @@ final class ChartBinder {
                 ids.remove(id);
                 continue;
             }
-            String kind = n.get("kind").asText();
+            String kind = either(n, "kind").asText();
             LinkView link = kind.isEmpty() ? linkOf(id) : binder.linkView(kind, id);
             String l = text(field(label, n, i, c));
             String g = text(field(group, n, i, c));
@@ -328,14 +333,20 @@ final class ChartBinder {
         List<PanelData.Edge> lines = new ArrayList<>();
         for (int i = 0; i < edges.size() && lines.size() < 2 * limits.maxNodes(); i++) {
             DataNode e = edges.get(i);
-            String from = e.get("from").asText();
-            String to = e.get("to").asText();
+            String from = either(e, "from").asText();
+            String to = either(e, "to").asText();
             if (ids.contains(from) && ids.contains(to)) {
-                String l = e.get("label").asText();
+                String l = either(e, "label").asText();
                 lines.add(new PanelData.Edge(from, to, l.isEmpty() ? null : l));
             }
         }
         return new PanelData.Graph(out, lines, p.option("layout").orElse("tree"), more);
+    }
+
+    /** A node's or an edge's own field (id, kind, from, to, label), as the document writes it: lower case or UPPER_SNAKE (ID, FROM). */
+    private static DataNode either(DataNode n, String field) {
+        DataNode v = n.get(field);
+        return v.isMissing() ? n.get(field.toUpperCase(java.util.Locale.ROOT)) : v;
     }
 
     // ---- timeline -----------------------------------------------------------------------------
