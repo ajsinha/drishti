@@ -666,11 +666,17 @@ public final class SutraCli {
 
     private List<Sample> jsonSamples(List<Path> paths) throws IOException {
         List<Sample> out = new ArrayList<>();
-        for (Path f : jsonFiles(paths, false)) {
-            out.add(new Sample(f.getFileName().toString(), read(f)));
+        for (Path f : jsonFiles(paths, true)) {
+            text(f);                                       // the server's input limits first: size and UTF-8, said in one line
+            for (Doc d : readDocs(f)) {                    // a .jsonl file is one sample per line (pack samples are samples/<kind>.jsonl)
+                if (d.document() == null) {
+                    throw new IOException(d.error());
+                }
+                out.add(new Sample(d.file(), d.document()));
+            }
         }
         if (out.isEmpty()) {
-            throw new CliArgs.UsageException("no .json samples under " + paths);
+            throw new CliArgs.UsageException("no .json or .jsonl samples under " + paths);
         }
         return out;
     }
@@ -691,11 +697,4 @@ public final class SutraCli {
         return files;
     }
 
-    private JsonNode read(Path f) throws IOException {
-        try {
-            return mapper.readTree(stripBom(text(f)));
-        } catch (IOException e) {
-            throw new IOException(f + " is not valid JSON: " + e.getMessage(), e);
-        }
-    }
 }
