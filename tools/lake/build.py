@@ -214,7 +214,7 @@ def run(a, say=print) -> tuple[int, dict]:
             raise BuildError("give --lake DIR (the Delta root the connector reads)")
         p = plan(a)
         as_of = date.fromisoformat(a.as_of) if a.as_of else None
-        summary.update({k: p[k] for k in ("pack", "domain", "kind", "key", "partition_by", "promote")},
+        summary.update({k: p[k] for k in ("pack", "domain", "kind", "key", "promote")}, partitionBy=p["partition_by"],
                        date=None if as_of else p["date"], asOf=as_of.isoformat() if as_of else None)
         table = str(lake / p["domain"] / p["kind"]) if lake else None
         summary["table"] = table
