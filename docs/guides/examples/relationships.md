@@ -23,4 +23,4 @@ How entities relate: a group and its agreements as a graph, netting sets as tabs
 
 **What to look for:** the group at the top of the graph and the netting sets at the bottom; one tab per netting set, each a small `kv`. The `links` panel resolves ids in the document against the live reference catalogue, so it lists entries only where your packs know them.
 
-**Lines to copy:** `nodes`, `edges`, `layout: tree` on the graph; `each`, `tabTitle` and `body` on tabs.
+**Lines to copy:** `NODES`, `EDGES`, `layout: tree` on the graph; `each`, `tabTitle` and `body` on tabs.

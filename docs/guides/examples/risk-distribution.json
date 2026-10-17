@@ -1,6 +1,6 @@
 {
-  "portfolio": "Commodities",
-  "scenarioPnl": [
+  "PORTFOLIO": "Commodities",
+  "SCENARIO_PNL": [
     -210135,
     -551211,
     -426398,
@@ -302,26 +302,26 @@
     -44742,
     199557
   ],
-  "var99": 1097165,
-  "es975": 1261740,
-  "meanPnl": 2221,
-  "books": [
+  "VAR99": 1097165,
+  "ES975": 1261740,
+  "MEAN_PNL": 2221,
+  "BOOKS": [
     {
-      "id": "RATES-A",
-      "mtm": 1486851,
-      "trades": 37
+      "ID": "RATES-A",
+      "MTM": 1486851,
+      "TRADES": 37
     },
     {
-      "id": "RATES-B",
-      "mtm": -4871775,
-      "trades": 43
+      "ID": "RATES-B",
+      "MTM": -4871775,
+      "TRADES": 43
     },
     {
-      "id": "CREDIT-1",
-      "mtm": -2121454,
-      "trades": 45
+      "ID": "CREDIT-1",
+      "MTM": -2121454,
+      "TRADES": 45
     }
   ],
-  "limit": 1500000,
-  "usage": 920000
+  "LIMIT": 1500000,
+  "USAGE": 920000
 }

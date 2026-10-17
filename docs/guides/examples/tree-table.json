@@ -1,55 +1,55 @@
 {
-  "organisation": "Northbridge",
-  "units": [
+  "ORGANISATION": "Northbridge",
+  "UNITS": [
     {
-      "name": "Group",
-      "exposure": 18850000,
-      "children": [
+      "NAME": "Group",
+      "EXPOSURE": 18850000,
+      "CHILDREN": [
         {
-          "name": "Rates",
-          "exposure": 8050000,
-          "children": [
+          "NAME": "Rates",
+          "EXPOSURE": 8050000,
+          "CHILDREN": [
             {
-              "name": "Rates A",
-              "exposure": 4200000
+              "NAME": "Rates A",
+              "EXPOSURE": 4200000
             },
             {
-              "name": "Rates B",
-              "exposure": 2750000
+              "NAME": "Rates B",
+              "EXPOSURE": 2750000
             },
             {
-              "name": "Rates C",
-              "exposure": 1100000,
-              "children": [
+              "NAME": "Rates C",
+              "EXPOSURE": 1100000,
+              "CHILDREN": [
                 {
-                  "name": "Swaps",
-                  "exposure": 800000
+                  "NAME": "Swaps",
+                  "EXPOSURE": 800000
                 },
                 {
-                  "name": "Futures",
-                  "exposure": 300000
+                  "NAME": "Futures",
+                  "EXPOSURE": 300000
                 }
               ]
             }
           ]
         },
         {
-          "name": "Credit",
-          "exposure": 5200000,
-          "children": [
+          "NAME": "Credit",
+          "EXPOSURE": 5200000,
+          "CHILDREN": [
             {
-              "name": "Credit 1",
-              "exposure": 3300000
+              "NAME": "Credit 1",
+              "EXPOSURE": 3300000
             },
             {
-              "name": "Credit 2",
-              "exposure": 1900000
+              "NAME": "Credit 2",
+              "EXPOSURE": 1900000
             }
           ]
         },
         {
-          "name": "Treasury",
-          "exposure": 5600000
+          "NAME": "Treasury",
+          "EXPOSURE": 5600000
         }
       ]
     }

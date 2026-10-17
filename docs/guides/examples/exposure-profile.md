@@ -23,4 +23,4 @@ Expected and potential future exposure over tenor, against a limit.
 
 **What to look for:** two filled series (EE and PFE 95) rising then falling over the tenors, and the limit as a line across them.
 
-**Lines to copy:** `series:` (one entry per measure, each with `label`, `value` and `tone`) and `limit: $.limit`.
+**Lines to copy:** `series:` (one entry per measure, each with `label`, `value` and `tone`) and `limit: $.LIMIT`.

@@ -1,618 +1,618 @@
 {
-  "tradeId": "DEMO-BOND-1",
-  "productName": "US Treasury 4.25% 2038",
-  "productType": "GOVT_BOND",
-  "direction": "BUY",
-  "currency": "USD",
-  "issuerCountry": "USA",
-  "notional": 25000000,
-  "maturityDate": "2038-04-30",
-  "mtm": 1209000,
-  "pnl1d": -41000,
-  "desk": "DESK-RATES",
-  "nettingSet": "NS-NB-RATES",
-  "underlyingBond": "UST-4.25-2038",
-  "nextIndex": 2,
-  "counterparty": {
-    "id": "CP-NORTHBRIDGE",
-    "name": "Northbridge Capital LLP"
+  "TRADE_ID": "DEMO-BOND-1",
+  "PRODUCT_NAME": "US Treasury 4.25% 2038",
+  "PRODUCT_TYPE": "GOVT_BOND",
+  "DIRECTION": "BUY",
+  "CURRENCY": "USD",
+  "ISSUER_COUNTRY": "USA",
+  "NOTIONAL": 25000000,
+  "MATURITY_DATE": "2038-04-30",
+  "MTM": 1209000,
+  "PNL1D": -41000,
+  "DESK": "DESK-RATES",
+  "NETTING_SET": "NS-NB-RATES",
+  "UNDERLYING_BOND": "UST-4.25-2038",
+  "NEXT_INDEX": 2,
+  "COUNTERPARTY": {
+    "ID": "CP-NORTHBRIDGE",
+    "NAME": "Northbridge Capital LLP"
   },
-  "terms": {
-    "coupon": 0.0425,
-    "couponFrequency": "Semi-annual",
-    "faceAmount": 25000000,
-    "cleanPrice": 97.84,
-    "yield": 0.0449
+  "TERMS": {
+    "COUPON": 0.0425,
+    "COUPON_FREQUENCY": "Semi-annual",
+    "FACE_AMOUNT": 25000000,
+    "CLEAN_PRICE": 97.84,
+    "YIELD": 0.0449
   },
-  "confirmation": {
-    "status": "Confirmed"
+  "CONFIRMATION": {
+    "STATUS": "Confirmed"
   },
-  "clearing": {
-    "status": "Cleared"
+  "CLEARING": {
+    "STATUS": "Cleared"
   },
-  "regulatory": {
-    "reportingStatus": "Pending"
+  "REGULATORY": {
+    "REPORTING_STATUS": "Pending"
   },
-  "risk": {
-    "dv01": -89000
+  "RISK": {
+    "DV01": -89000
   },
-  "pnlExplain": [
+  "PNL_EXPLAIN": [
     {
-      "step": "Opening MTM",
-      "pnl": 1250000
+      "STEP": "Opening MTM",
+      "PNL": 1250000
     },
     {
-      "step": "Carry",
-      "pnl": 18400
+      "STEP": "Carry",
+      "PNL": 18400
     },
     {
-      "step": "Rates move",
-      "pnl": -96300
+      "STEP": "Rates move",
+      "PNL": -96300
     },
     {
-      "step": "Credit spread",
-      "pnl": 41200
+      "STEP": "Credit spread",
+      "PNL": 41200
     },
     {
-      "step": "Funding",
-      "pnl": -7600
+      "STEP": "Funding",
+      "PNL": -7600
     },
     {
-      "step": "Other",
-      "pnl": 3100
+      "STEP": "Other",
+      "PNL": 3100
     }
   ],
-  "pnlHistory": [
+  "PNL_HISTORY": [
     {
-      "date": "2026-09-01",
-      "pnl": -8235
+      "DATE": "2026-09-01",
+      "PNL": -8235
     },
     {
-      "date": "2026-09-02",
-      "pnl": 22457
+      "DATE": "2026-09-02",
+      "PNL": 22457
     },
     {
-      "date": "2026-09-03",
-      "pnl": -7044
+      "DATE": "2026-09-03",
+      "PNL": -7044
     },
     {
-      "date": "2026-09-04",
-      "pnl": -10603
+      "DATE": "2026-09-04",
+      "PNL": -10603
     },
     {
-      "date": "2026-09-05",
-      "pnl": -35201
+      "DATE": "2026-09-05",
+      "PNL": -35201
     },
     {
-      "date": "2026-09-06",
-      "pnl": -6532
+      "DATE": "2026-09-06",
+      "PNL": -6532
     },
     {
-      "date": "2026-09-07",
-      "pnl": 46477
+      "DATE": "2026-09-07",
+      "PNL": 46477
     },
     {
-      "date": "2026-09-08",
-      "pnl": 18966
+      "DATE": "2026-09-08",
+      "PNL": 18966
     },
     {
-      "date": "2026-09-09",
-      "pnl": 43475
+      "DATE": "2026-09-09",
+      "PNL": 43475
     },
     {
-      "date": "2026-09-10",
-      "pnl": 11956
+      "DATE": "2026-09-10",
+      "PNL": 11956
     },
     {
-      "date": "2026-09-11",
-      "pnl": 17791
+      "DATE": "2026-09-11",
+      "PNL": 17791
     },
     {
-      "date": "2026-09-12",
-      "pnl": 9413
+      "DATE": "2026-09-12",
+      "PNL": 9413
     },
     {
-      "date": "2026-09-13",
-      "pnl": -64643
+      "DATE": "2026-09-13",
+      "PNL": -64643
     },
     {
-      "date": "2026-09-14",
-      "pnl": 36210
+      "DATE": "2026-09-14",
+      "PNL": 36210
     },
     {
-      "date": "2026-09-15",
-      "pnl": 22255
+      "DATE": "2026-09-15",
+      "PNL": 22255
     },
     {
-      "date": "2026-09-16",
-      "pnl": 21953
+      "DATE": "2026-09-16",
+      "PNL": 21953
     },
     {
-      "date": "2026-09-17",
-      "pnl": -65655
+      "DATE": "2026-09-17",
+      "PNL": -65655
     },
     {
-      "date": "2026-09-18",
-      "pnl": -67756
+      "DATE": "2026-09-18",
+      "PNL": -67756
     },
     {
-      "date": "2026-09-19",
-      "pnl": -33585
+      "DATE": "2026-09-19",
+      "PNL": -33585
     },
     {
-      "date": "2026-09-20",
-      "pnl": -16728
+      "DATE": "2026-09-20",
+      "PNL": -16728
     }
   ],
-  "sensitivities": [
+  "SENSITIVITIES": [
     {
-      "bucket": "3M",
-      "dv01": -120
+      "BUCKET": "3M",
+      "DV01": -120
     },
     {
-      "bucket": "1Y",
-      "dv01": -1450
+      "BUCKET": "1Y",
+      "DV01": -1450
     },
     {
-      "bucket": "2Y",
-      "dv01": -4200
+      "BUCKET": "2Y",
+      "DV01": -4200
     },
     {
-      "bucket": "5Y",
-      "dv01": -16800
+      "BUCKET": "5Y",
+      "DV01": -16800
     },
     {
-      "bucket": "10Y",
-      "dv01": -39800
+      "BUCKET": "10Y",
+      "DV01": -39800
     },
     {
-      "bucket": "20Y",
-      "dv01": -21100
+      "BUCKET": "20Y",
+      "DV01": -21100
     },
     {
-      "bucket": "30Y",
-      "dv01": -6400
+      "BUCKET": "30Y",
+      "DV01": -6400
     }
   ],
-  "schedule": [
+  "SCHEDULE": [
     {
-      "date": "2025-10-31",
-      "rate": 0.0425,
-      "amount": 1062500,
-      "status": "Paid"
+      "DATE": "2025-10-31",
+      "RATE": 0.0425,
+      "AMOUNT": 1062500,
+      "STATUS": "Paid"
     },
     {
-      "date": "2026-05-01",
-      "rate": 0.0425,
-      "amount": 1062500,
-      "status": "Paid"
+      "DATE": "2026-05-01",
+      "RATE": 0.0425,
+      "AMOUNT": 1062500,
+      "STATUS": "Paid"
     },
     {
-      "date": "2026-10-30",
-      "rate": 0.0425,
-      "amount": 1062500,
-      "status": "Pending"
+      "DATE": "2026-10-30",
+      "RATE": 0.0425,
+      "AMOUNT": 1062500,
+      "STATUS": "Pending"
     },
     {
-      "date": "2027-04-30",
-      "rate": 0.0425,
-      "amount": 1062500,
-      "status": "Scheduled"
+      "DATE": "2027-04-30",
+      "RATE": 0.0425,
+      "AMOUNT": 1062500,
+      "STATUS": "Scheduled"
     },
     {
-      "date": "2027-10-29",
-      "rate": 0.0425,
-      "amount": 1062500,
-      "status": "Scheduled"
+      "DATE": "2027-10-29",
+      "RATE": 0.0425,
+      "AMOUNT": 1062500,
+      "STATUS": "Scheduled"
     },
     {
-      "date": "2028-04-28",
-      "rate": 0.0425,
-      "amount": 1062500,
-      "status": "Scheduled"
+      "DATE": "2028-04-28",
+      "RATE": 0.0425,
+      "AMOUNT": 1062500,
+      "STATUS": "Scheduled"
     },
     {
-      "date": "2028-10-27",
-      "rate": 0.0425,
-      "amount": 1062500,
-      "status": "Scheduled"
+      "DATE": "2028-10-27",
+      "RATE": 0.0425,
+      "AMOUNT": 1062500,
+      "STATUS": "Scheduled"
     },
     {
-      "date": "2029-04-27",
-      "rate": 0.0425,
-      "amount": 1062500,
-      "status": "Scheduled"
+      "DATE": "2029-04-27",
+      "RATE": 0.0425,
+      "AMOUNT": 1062500,
+      "STATUS": "Scheduled"
     }
   ],
-  "lifecycle": {
-    "timeline": [
+  "LIFECYCLE": {
+    "TIMELINE": [
       {
-        "date": "2026-08-31",
-        "event": "Booked",
-        "status": "Done",
-        "description": "Booked by the rates desk from the broker ticket."
+        "DATE": "2026-08-31",
+        "EVENT": "Booked",
+        "STATUS": "Done",
+        "DESCRIPTION": "Booked by the rates desk from the broker ticket."
       },
       {
-        "date": "2026-08-31",
-        "event": "Confirmed",
-        "status": "Done",
-        "description": "Matched with the counterparty."
+        "DATE": "2026-08-31",
+        "EVENT": "Confirmed",
+        "STATUS": "Done",
+        "DESCRIPTION": "Matched with the counterparty."
       },
       {
-        "date": "2026-09-01",
-        "event": "Cleared",
-        "status": "Done",
-        "description": "Accepted by the clearing house."
+        "DATE": "2026-09-01",
+        "EVENT": "Cleared",
+        "STATUS": "Done",
+        "DESCRIPTION": "Accepted by the clearing house."
       },
       {
-        "date": "2026-10-30",
-        "event": "Next payment",
-        "status": "Pending",
-        "description": "Semi-annual coupon of 1,062,500."
+        "DATE": "2026-10-30",
+        "EVENT": "Next payment",
+        "STATUS": "Pending",
+        "DESCRIPTION": "Semi-annual coupon of 1,062,500."
       },
       {
-        "date": "2038-04-30",
-        "event": "Maturity",
-        "status": "Scheduled",
-        "description": "Redemption at par."
+        "DATE": "2038-04-30",
+        "EVENT": "Maturity",
+        "STATUS": "Scheduled",
+        "DESCRIPTION": "Redemption at par."
       }
     ],
-    "events": [
+    "EVENTS": [
       {
-        "version": 1,
-        "event": "Booked",
-        "reason": "New trade",
-        "by": "trader1"
+        "VERSION": 1,
+        "EVENT": "Booked",
+        "REASON": "New trade",
+        "BY": "trader1"
       },
       {
-        "version": 2,
-        "event": "Amended",
-        "reason": "Settlement date corrected",
-        "by": "ops2"
+        "VERSION": 2,
+        "EVENT": "Amended",
+        "REASON": "Settlement date corrected",
+        "BY": "ops2"
       },
       {
-        "version": 3,
-        "event": "Confirmed",
-        "reason": "Matched",
-        "by": "system"
+        "VERSION": 3,
+        "EVENT": "Confirmed",
+        "REASON": "Matched",
+        "BY": "system"
       }
     ]
   },
-  "nettingSets": [
+  "NETTING_SETS": [
     {
-      "id": "NS-NB-RATES",
-      "agreement": "ISDA-NB-2002",
-      "trades": 14,
-      "netMtm": 2150000
+      "ID": "NS-NB-RATES",
+      "AGREEMENT": "ISDA-NB-2002",
+      "TRADES": 14,
+      "NET_MTM": 2150000
     },
     {
-      "id": "NS-NB-FX",
-      "agreement": "ISDA-NB-2002",
-      "trades": 6,
-      "netMtm": -480000
+      "ID": "NS-NB-FX",
+      "AGREEMENT": "ISDA-NB-2002",
+      "TRADES": 6,
+      "NET_MTM": -480000
     }
   ],
-  "profile": [
+  "PROFILE": [
     {
-      "tenor": "1M",
-      "ee": 800000,
-      "pfe": 1900000
+      "TENOR": "1M",
+      "EE": 800000,
+      "PFE": 1900000
     },
     {
-      "tenor": "3M",
-      "ee": 1400000,
-      "pfe": 3100000
+      "TENOR": "3M",
+      "EE": 1400000,
+      "PFE": 3100000
     },
     {
-      "tenor": "6M",
-      "ee": 2100000,
-      "pfe": 4400000
+      "TENOR": "6M",
+      "EE": 2100000,
+      "PFE": 4400000
     },
     {
-      "tenor": "1Y",
-      "ee": 2900000,
-      "pfe": 5800000
+      "TENOR": "1Y",
+      "EE": 2900000,
+      "PFE": 5800000
     },
     {
-      "tenor": "2Y",
-      "ee": 3600000,
-      "pfe": 7000000
+      "TENOR": "2Y",
+      "EE": 3600000,
+      "PFE": 7000000
     },
     {
-      "tenor": "3Y",
-      "ee": 3300000,
-      "pfe": 6600000
+      "TENOR": "3Y",
+      "EE": 3300000,
+      "PFE": 6600000
     },
     {
-      "tenor": "5Y",
-      "ee": 2200000,
-      "pfe": 4800000
+      "TENOR": "5Y",
+      "EE": 2200000,
+      "PFE": 4800000
     },
     {
-      "tenor": "7Y",
-      "ee": 1100000,
-      "pfe": 2700000
+      "TENOR": "7Y",
+      "EE": 1100000,
+      "PFE": 2700000
     },
     {
-      "tenor": "10Y",
-      "ee": 400000,
-      "pfe": 1200000
+      "TENOR": "10Y",
+      "EE": 400000,
+      "PFE": 1200000
     }
   ],
-  "limit": 6500000,
-  "hierarchy": {
-    "nodes": [
+  "LIMIT": 6500000,
+  "HIERARCHY": {
+    "NODES": [
       {
-        "id": "GRP-NORTHBRIDGE",
-        "label": "Northbridge Holdings",
-        "type": "group"
+        "ID": "GRP-NORTHBRIDGE",
+        "LABEL": "Northbridge Holdings",
+        "TYPE": "group"
       },
       {
-        "id": "CP-NORTHBRIDGE",
-        "label": "Northbridge Capital LLP",
-        "type": "counterparty"
+        "ID": "CP-NORTHBRIDGE",
+        "LABEL": "Northbridge Capital LLP",
+        "TYPE": "counterparty"
       },
       {
-        "id": "ISDA-NB-2002",
-        "label": "ISDA 2002 Master",
-        "type": "agreement"
+        "ID": "ISDA-NB-2002",
+        "LABEL": "ISDA 2002 Master",
+        "TYPE": "agreement"
       },
       {
-        "id": "CSA-NB-1",
-        "label": "Credit support annex",
-        "type": "agreement"
+        "ID": "CSA-NB-1",
+        "LABEL": "Credit support annex",
+        "TYPE": "agreement"
       },
       {
-        "id": "NS-NB-RATES",
-        "label": "Rates netting set",
-        "type": "netting-set"
+        "ID": "NS-NB-RATES",
+        "LABEL": "Rates netting set",
+        "TYPE": "netting-set"
       },
       {
-        "id": "NS-NB-FX",
-        "label": "FX netting set",
-        "type": "netting-set"
+        "ID": "NS-NB-FX",
+        "LABEL": "FX netting set",
+        "TYPE": "netting-set"
       }
     ],
-    "edges": [
+    "EDGES": [
       {
-        "from": "GRP-NORTHBRIDGE",
-        "to": "CP-NORTHBRIDGE",
-        "label": "owns"
+        "FROM": "GRP-NORTHBRIDGE",
+        "TO": "CP-NORTHBRIDGE",
+        "LABEL": "owns"
       },
       {
-        "from": "CP-NORTHBRIDGE",
-        "to": "ISDA-NB-2002",
-        "label": "signed"
+        "FROM": "CP-NORTHBRIDGE",
+        "TO": "ISDA-NB-2002",
+        "LABEL": "signed"
       },
       {
-        "from": "ISDA-NB-2002",
-        "to": "CSA-NB-1",
-        "label": "supported by"
+        "FROM": "ISDA-NB-2002",
+        "TO": "CSA-NB-1",
+        "LABEL": "supported by"
       },
       {
-        "from": "ISDA-NB-2002",
-        "to": "NS-NB-RATES",
-        "label": "nets"
+        "FROM": "ISDA-NB-2002",
+        "TO": "NS-NB-RATES",
+        "LABEL": "nets"
       },
       {
-        "from": "ISDA-NB-2002",
-        "to": "NS-NB-FX",
-        "label": "nets"
+        "FROM": "ISDA-NB-2002",
+        "TO": "NS-NB-FX",
+        "LABEL": "nets"
       }
     ]
   },
-  "positions": [
+  "POSITIONS": [
     {
-      "desk": "RATES",
-      "book": "RATES-A",
-      "family": "bond",
-      "currency": "USD",
-      "mtm": 274901,
-      "trades": 3
+      "DESK": "RATES",
+      "BOOK": "RATES-A",
+      "FAMILY": "bond",
+      "CURRENCY": "USD",
+      "MTM": 274901,
+      "TRADES": 3
     },
     {
-      "desk": "RATES",
-      "book": "RATES-A",
-      "family": "bond",
-      "currency": "EUR",
-      "mtm": -41321,
-      "trades": 5
+      "DESK": "RATES",
+      "BOOK": "RATES-A",
+      "FAMILY": "bond",
+      "CURRENCY": "EUR",
+      "MTM": -41321,
+      "TRADES": 5
     },
     {
-      "desk": "RATES",
-      "book": "RATES-A",
-      "family": "swap",
-      "currency": "USD",
-      "mtm": -980865,
-      "trades": 5
+      "DESK": "RATES",
+      "BOOK": "RATES-A",
+      "FAMILY": "swap",
+      "CURRENCY": "USD",
+      "MTM": -980865,
+      "TRADES": 5
     },
     {
-      "desk": "RATES",
-      "book": "RATES-A",
-      "family": "swap",
-      "currency": "EUR",
-      "mtm": 546166,
-      "trades": 9
+      "DESK": "RATES",
+      "BOOK": "RATES-A",
+      "FAMILY": "swap",
+      "CURRENCY": "EUR",
+      "MTM": 546166,
+      "TRADES": 9
     },
     {
-      "desk": "RATES",
-      "book": "RATES-A",
-      "family": "future",
-      "currency": "USD",
-      "mtm": 229371,
-      "trades": 4
+      "DESK": "RATES",
+      "BOOK": "RATES-A",
+      "FAMILY": "future",
+      "CURRENCY": "USD",
+      "MTM": 229371,
+      "TRADES": 4
     },
     {
-      "desk": "RATES",
-      "book": "RATES-A",
-      "family": "future",
-      "currency": "EUR",
-      "mtm": -519918,
-      "trades": 6
+      "DESK": "RATES",
+      "BOOK": "RATES-A",
+      "FAMILY": "future",
+      "CURRENCY": "EUR",
+      "MTM": -519918,
+      "TRADES": 6
     },
     {
-      "desk": "RATES",
-      "book": "RATES-A",
-      "family": "option",
-      "currency": "USD",
-      "mtm": 1162356,
-      "trades": 1
+      "DESK": "RATES",
+      "BOOK": "RATES-A",
+      "FAMILY": "option",
+      "CURRENCY": "USD",
+      "MTM": 1162356,
+      "TRADES": 1
     },
     {
-      "desk": "RATES",
-      "book": "RATES-A",
-      "family": "option",
-      "currency": "EUR",
-      "mtm": 816161,
-      "trades": 4
+      "DESK": "RATES",
+      "BOOK": "RATES-A",
+      "FAMILY": "option",
+      "CURRENCY": "EUR",
+      "MTM": 816161,
+      "TRADES": 4
     },
     {
-      "desk": "RATES",
-      "book": "RATES-B",
-      "family": "bond",
-      "currency": "USD",
-      "mtm": -1108356,
-      "trades": 6
+      "DESK": "RATES",
+      "BOOK": "RATES-B",
+      "FAMILY": "bond",
+      "CURRENCY": "USD",
+      "MTM": -1108356,
+      "TRADES": 6
     },
     {
-      "desk": "RATES",
-      "book": "RATES-B",
-      "family": "bond",
-      "currency": "EUR",
-      "mtm": 24974,
-      "trades": 8
+      "DESK": "RATES",
+      "BOOK": "RATES-B",
+      "FAMILY": "bond",
+      "CURRENCY": "EUR",
+      "MTM": 24974,
+      "TRADES": 8
     },
     {
-      "desk": "RATES",
-      "book": "RATES-B",
-      "family": "swap",
-      "currency": "USD",
-      "mtm": -849396,
-      "trades": 5
+      "DESK": "RATES",
+      "BOOK": "RATES-B",
+      "FAMILY": "swap",
+      "CURRENCY": "USD",
+      "MTM": -849396,
+      "TRADES": 5
     },
     {
-      "desk": "RATES",
-      "book": "RATES-B",
-      "family": "swap",
-      "currency": "EUR",
-      "mtm": -506388,
-      "trades": 4
+      "DESK": "RATES",
+      "BOOK": "RATES-B",
+      "FAMILY": "swap",
+      "CURRENCY": "EUR",
+      "MTM": -506388,
+      "TRADES": 4
     },
     {
-      "desk": "RATES",
-      "book": "RATES-B",
-      "family": "future",
-      "currency": "USD",
-      "mtm": 383867,
-      "trades": 4
+      "DESK": "RATES",
+      "BOOK": "RATES-B",
+      "FAMILY": "future",
+      "CURRENCY": "USD",
+      "MTM": 383867,
+      "TRADES": 4
     },
     {
-      "desk": "RATES",
-      "book": "RATES-B",
-      "family": "future",
-      "currency": "EUR",
-      "mtm": -1340769,
-      "trades": 2
+      "DESK": "RATES",
+      "BOOK": "RATES-B",
+      "FAMILY": "future",
+      "CURRENCY": "EUR",
+      "MTM": -1340769,
+      "TRADES": 2
     },
     {
-      "desk": "RATES",
-      "book": "RATES-B",
-      "family": "option",
-      "currency": "USD",
-      "mtm": -980554,
-      "trades": 6
+      "DESK": "RATES",
+      "BOOK": "RATES-B",
+      "FAMILY": "option",
+      "CURRENCY": "USD",
+      "MTM": -980554,
+      "TRADES": 6
     },
     {
-      "desk": "RATES",
-      "book": "RATES-B",
-      "family": "option",
-      "currency": "EUR",
-      "mtm": -495153,
-      "trades": 8
+      "DESK": "RATES",
+      "BOOK": "RATES-B",
+      "FAMILY": "option",
+      "CURRENCY": "EUR",
+      "MTM": -495153,
+      "TRADES": 8
     },
     {
-      "desk": "CREDIT",
-      "book": "CREDIT-1",
-      "family": "bond",
-      "currency": "USD",
-      "mtm": -595081,
-      "trades": 2
+      "DESK": "CREDIT",
+      "BOOK": "CREDIT-1",
+      "FAMILY": "bond",
+      "CURRENCY": "USD",
+      "MTM": -595081,
+      "TRADES": 2
     },
     {
-      "desk": "CREDIT",
-      "book": "CREDIT-1",
-      "family": "bond",
-      "currency": "EUR",
-      "mtm": 2448996,
-      "trades": 9
+      "DESK": "CREDIT",
+      "BOOK": "CREDIT-1",
+      "FAMILY": "bond",
+      "CURRENCY": "EUR",
+      "MTM": 2448996,
+      "TRADES": 9
     },
     {
-      "desk": "CREDIT",
-      "book": "CREDIT-1",
-      "family": "swap",
-      "currency": "USD",
-      "mtm": -1318191,
-      "trades": 3
+      "DESK": "CREDIT",
+      "BOOK": "CREDIT-1",
+      "FAMILY": "swap",
+      "CURRENCY": "USD",
+      "MTM": -1318191,
+      "TRADES": 3
     },
     {
-      "desk": "CREDIT",
-      "book": "CREDIT-1",
-      "family": "swap",
-      "currency": "EUR",
-      "mtm": 745061,
-      "trades": 8
+      "DESK": "CREDIT",
+      "BOOK": "CREDIT-1",
+      "FAMILY": "swap",
+      "CURRENCY": "EUR",
+      "MTM": 745061,
+      "TRADES": 8
     },
     {
-      "desk": "CREDIT",
-      "book": "CREDIT-1",
-      "family": "future",
-      "currency": "USD",
-      "mtm": -2028840,
-      "trades": 2
+      "DESK": "CREDIT",
+      "BOOK": "CREDIT-1",
+      "FAMILY": "future",
+      "CURRENCY": "USD",
+      "MTM": -2028840,
+      "TRADES": 2
     },
     {
-      "desk": "CREDIT",
-      "book": "CREDIT-1",
-      "family": "future",
-      "currency": "EUR",
-      "mtm": 1087334,
-      "trades": 9
+      "DESK": "CREDIT",
+      "BOOK": "CREDIT-1",
+      "FAMILY": "future",
+      "CURRENCY": "EUR",
+      "MTM": 1087334,
+      "TRADES": 9
     },
     {
-      "desk": "CREDIT",
-      "book": "CREDIT-1",
-      "family": "option",
-      "currency": "USD",
-      "mtm": -1647078,
-      "trades": 6
+      "DESK": "CREDIT",
+      "BOOK": "CREDIT-1",
+      "FAMILY": "option",
+      "CURRENCY": "USD",
+      "MTM": -1647078,
+      "TRADES": 6
     },
     {
-      "desk": "CREDIT",
-      "book": "CREDIT-1",
-      "family": "option",
-      "currency": "EUR",
-      "mtm": -813655,
-      "trades": 6
+      "DESK": "CREDIT",
+      "BOOK": "CREDIT-1",
+      "FAMILY": "option",
+      "CURRENCY": "EUR",
+      "MTM": -813655,
+      "TRADES": 6
     }
   ],
-  "books": [
+  "BOOKS": [
     {
-      "id": "RATES-A",
-      "mtm": 1486851,
-      "trades": 37
+      "ID": "RATES-A",
+      "MTM": 1486851,
+      "TRADES": 37
     },
     {
-      "id": "RATES-B",
-      "mtm": -4871775,
-      "trades": 43
+      "ID": "RATES-B",
+      "MTM": -4871775,
+      "TRADES": 43
     },
     {
-      "id": "CREDIT-1",
-      "mtm": -2121454,
-      "trades": 45
+      "ID": "CREDIT-1",
+      "MTM": -2121454,
+      "TRADES": 45
     }
   ],
-  "scenarioPnl": [
+  "SCENARIO_PNL": [
     -210135,
     -551211,
     -426398,
@@ -914,365 +914,365 @@
     -44742,
     199557
   ],
-  "var99": 1097165,
-  "ohlc": [
+  "VAR99": 1097165,
+  "OHLC": [
     {
-      "date": "2026-09-01",
-      "open": 74.0,
-      "high": 74.06,
-      "low": 72.97,
-      "close": 73.2,
-      "volume": 93206
+      "DATE": "2026-09-01",
+      "OPEN": 74.0,
+      "HIGH": 74.06,
+      "LOW": 72.97,
+      "CLOSE": 73.2,
+      "VOLUME": 93206
     },
     {
-      "date": "2026-09-02",
-      "open": 73.2,
-      "high": 74.1,
-      "low": 72.15,
-      "close": 73.61,
-      "volume": 159955
+      "DATE": "2026-09-02",
+      "OPEN": 73.2,
+      "HIGH": 74.1,
+      "LOW": 72.15,
+      "CLOSE": 73.61,
+      "VOLUME": 159955
     },
     {
-      "date": "2026-09-03",
-      "open": 73.61,
-      "high": 73.68,
-      "low": 72.18,
-      "close": 72.88,
-      "volume": 150915
+      "DATE": "2026-09-03",
+      "OPEN": 73.61,
+      "HIGH": 73.68,
+      "LOW": 72.18,
+      "CLOSE": 72.88,
+      "VOLUME": 150915
     },
     {
-      "date": "2026-09-04",
-      "open": 72.88,
-      "high": 73.48,
-      "low": 72.8,
-      "close": 73.43,
-      "volume": 145653
+      "DATE": "2026-09-04",
+      "OPEN": 72.88,
+      "HIGH": 73.48,
+      "LOW": 72.8,
+      "CLOSE": 73.43,
+      "VOLUME": 145653
     },
     {
-      "date": "2026-09-05",
-      "open": 73.43,
-      "high": 73.66,
-      "low": 72.05,
-      "close": 73.64,
-      "volume": 214803
+      "DATE": "2026-09-05",
+      "OPEN": 73.43,
+      "HIGH": 73.66,
+      "LOW": 72.05,
+      "CLOSE": 73.64,
+      "VOLUME": 214803
     },
     {
-      "date": "2026-09-06",
-      "open": 73.64,
-      "high": 74.79,
-      "low": 73.35,
-      "close": 73.53,
-      "volume": 107861
+      "DATE": "2026-09-06",
+      "OPEN": 73.64,
+      "HIGH": 74.79,
+      "LOW": 73.35,
+      "CLOSE": 73.53,
+      "VOLUME": 107861
     },
     {
-      "date": "2026-09-07",
-      "open": 73.53,
-      "high": 74.14,
-      "low": 72.31,
-      "close": 72.66,
-      "volume": 183045
+      "DATE": "2026-09-07",
+      "OPEN": 73.53,
+      "HIGH": 74.14,
+      "LOW": 72.31,
+      "CLOSE": 72.66,
+      "VOLUME": 183045
     },
     {
-      "date": "2026-09-08",
-      "open": 72.66,
-      "high": 73.08,
-      "low": 71.43,
-      "close": 71.51,
-      "volume": 136408
+      "DATE": "2026-09-08",
+      "OPEN": 72.66,
+      "HIGH": 73.08,
+      "LOW": 71.43,
+      "CLOSE": 71.51,
+      "VOLUME": 136408
     },
     {
-      "date": "2026-09-09",
-      "open": 71.51,
-      "high": 72.56,
-      "low": 71.12,
-      "close": 72.51,
-      "volume": 116626
+      "DATE": "2026-09-09",
+      "OPEN": 71.51,
+      "HIGH": 72.56,
+      "LOW": 71.12,
+      "CLOSE": 72.51,
+      "VOLUME": 116626
     },
     {
-      "date": "2026-09-10",
-      "open": 72.51,
-      "high": 72.89,
-      "low": 70.75,
-      "close": 71.01,
-      "volume": 94257
+      "DATE": "2026-09-10",
+      "OPEN": 72.51,
+      "HIGH": 72.89,
+      "LOW": 70.75,
+      "CLOSE": 71.01,
+      "VOLUME": 94257
     },
     {
-      "date": "2026-09-11",
-      "open": 71.01,
-      "high": 71.18,
-      "low": 70.28,
-      "close": 71.11,
-      "volume": 192916
+      "DATE": "2026-09-11",
+      "OPEN": 71.01,
+      "HIGH": 71.18,
+      "LOW": 70.28,
+      "CLOSE": 71.11,
+      "VOLUME": 192916
     },
     {
-      "date": "2026-09-12",
-      "open": 71.11,
-      "high": 71.22,
-      "low": 69.32,
-      "close": 69.5,
-      "volume": 179845
+      "DATE": "2026-09-12",
+      "OPEN": 71.11,
+      "HIGH": 71.22,
+      "LOW": 69.32,
+      "CLOSE": 69.5,
+      "VOLUME": 179845
     },
     {
-      "date": "2026-09-13",
-      "open": 69.5,
-      "high": 71.17,
-      "low": 69.43,
-      "close": 70.63,
-      "volume": 156823
+      "DATE": "2026-09-13",
+      "OPEN": 69.5,
+      "HIGH": 71.17,
+      "LOW": 69.43,
+      "CLOSE": 70.63,
+      "VOLUME": 156823
     },
     {
-      "date": "2026-09-14",
-      "open": 70.63,
-      "high": 71.74,
-      "low": 70.54,
-      "close": 71.43,
-      "volume": 150526
+      "DATE": "2026-09-14",
+      "OPEN": 70.63,
+      "HIGH": 71.74,
+      "LOW": 70.54,
+      "CLOSE": 71.43,
+      "VOLUME": 150526
     },
     {
-      "date": "2026-09-15",
-      "open": 71.43,
-      "high": 71.56,
-      "low": 69.32,
-      "close": 70.62,
-      "volume": 164812
+      "DATE": "2026-09-15",
+      "OPEN": 71.43,
+      "HIGH": 71.56,
+      "LOW": 69.32,
+      "CLOSE": 70.62,
+      "VOLUME": 164812
     },
     {
-      "date": "2026-09-16",
-      "open": 70.62,
-      "high": 70.67,
-      "low": 68.62,
-      "close": 69.92,
-      "volume": 161146
+      "DATE": "2026-09-16",
+      "OPEN": 70.62,
+      "HIGH": 70.67,
+      "LOW": 68.62,
+      "CLOSE": 69.92,
+      "VOLUME": 161146
     },
     {
-      "date": "2026-09-17",
-      "open": 69.92,
-      "high": 70.37,
-      "low": 69.81,
-      "close": 70.06,
-      "volume": 153119
+      "DATE": "2026-09-17",
+      "OPEN": 69.92,
+      "HIGH": 70.37,
+      "LOW": 69.81,
+      "CLOSE": 70.06,
+      "VOLUME": 153119
     },
     {
-      "date": "2026-09-18",
-      "open": 70.06,
-      "high": 70.79,
-      "low": 70.05,
-      "close": 70.46,
-      "volume": 212313
+      "DATE": "2026-09-18",
+      "OPEN": 70.06,
+      "HIGH": 70.79,
+      "LOW": 70.05,
+      "CLOSE": 70.46,
+      "VOLUME": 212313
     },
     {
-      "date": "2026-09-19",
-      "open": 70.46,
-      "high": 70.76,
-      "low": 70.35,
-      "close": 70.54,
-      "volume": 90922
+      "DATE": "2026-09-19",
+      "OPEN": 70.46,
+      "HIGH": 70.76,
+      "LOW": 70.35,
+      "CLOSE": 70.54,
+      "VOLUME": 90922
     },
     {
-      "date": "2026-09-20",
-      "open": 70.54,
-      "high": 70.87,
-      "low": 69.72,
-      "close": 69.98,
-      "volume": 141029
+      "DATE": "2026-09-20",
+      "OPEN": 70.54,
+      "HIGH": 70.87,
+      "LOW": 69.72,
+      "CLOSE": 69.98,
+      "VOLUME": 141029
     },
     {
-      "date": "2026-09-21",
-      "open": 69.98,
-      "high": 73.01,
-      "low": 69.8,
-      "close": 72.37,
-      "volume": 182109
+      "DATE": "2026-09-21",
+      "OPEN": 69.98,
+      "HIGH": 73.01,
+      "LOW": 69.8,
+      "CLOSE": 72.37,
+      "VOLUME": 182109
     },
     {
-      "date": "2026-09-22",
-      "open": 72.37,
-      "high": 72.44,
-      "low": 71.06,
-      "close": 71.86,
-      "volume": 209549
+      "DATE": "2026-09-22",
+      "OPEN": 72.37,
+      "HIGH": 72.44,
+      "LOW": 71.06,
+      "CLOSE": 71.86,
+      "VOLUME": 209549
     },
     {
-      "date": "2026-09-23",
-      "open": 71.86,
-      "high": 73.55,
-      "low": 71.77,
-      "close": 72.9,
-      "volume": 214474
+      "DATE": "2026-09-23",
+      "OPEN": 71.86,
+      "HIGH": 73.55,
+      "LOW": 71.77,
+      "CLOSE": 72.9,
+      "VOLUME": 214474
     },
     {
-      "date": "2026-09-24",
-      "open": 72.9,
-      "high": 73.47,
-      "low": 72.06,
-      "close": 72.64,
-      "volume": 212524
+      "DATE": "2026-09-24",
+      "OPEN": 72.9,
+      "HIGH": 73.47,
+      "LOW": 72.06,
+      "CLOSE": 72.64,
+      "VOLUME": 212524
     },
     {
-      "date": "2026-09-25",
-      "open": 72.64,
-      "high": 73.97,
-      "low": 71.69,
-      "close": 73.5,
-      "volume": 84215
+      "DATE": "2026-09-25",
+      "OPEN": 72.64,
+      "HIGH": 73.97,
+      "LOW": 71.69,
+      "CLOSE": 73.5,
+      "VOLUME": 84215
     },
     {
-      "date": "2026-09-26",
-      "open": 73.5,
-      "high": 73.81,
-      "low": 72.85,
-      "close": 73.44,
-      "volume": 140277
+      "DATE": "2026-09-26",
+      "OPEN": 73.5,
+      "HIGH": 73.81,
+      "LOW": 72.85,
+      "CLOSE": 73.44,
+      "VOLUME": 140277
     },
     {
-      "date": "2026-09-27",
-      "open": 73.44,
-      "high": 73.79,
-      "low": 72.62,
-      "close": 73.72,
-      "volume": 178728
+      "DATE": "2026-09-27",
+      "OPEN": 73.44,
+      "HIGH": 73.79,
+      "LOW": 72.62,
+      "CLOSE": 73.72,
+      "VOLUME": 178728
     },
     {
-      "date": "2026-09-28",
-      "open": 73.72,
-      "high": 74.05,
-      "low": 71.06,
-      "close": 71.61,
-      "volume": 84938
+      "DATE": "2026-09-28",
+      "OPEN": 73.72,
+      "HIGH": 74.05,
+      "LOW": 71.06,
+      "CLOSE": 71.61,
+      "VOLUME": 84938
     },
     {
-      "date": "2026-09-29",
-      "open": 71.61,
-      "high": 72.15,
-      "low": 70.4,
-      "close": 70.44,
-      "volume": 98379
+      "DATE": "2026-09-29",
+      "OPEN": 71.61,
+      "HIGH": 72.15,
+      "LOW": 70.4,
+      "CLOSE": 70.44,
+      "VOLUME": 98379
     },
     {
-      "date": "2026-09-30",
-      "open": 70.44,
-      "high": 70.46,
-      "low": 69.85,
-      "close": 70.45,
-      "volume": 104102
+      "DATE": "2026-09-30",
+      "OPEN": 70.44,
+      "HIGH": 70.46,
+      "LOW": 69.85,
+      "CLOSE": 70.45,
+      "VOLUME": 104102
     }
   ],
-  "grid": [
+  "GRID": [
     {
-      "month": "X6",
-      "m90": 31.2,
-      "m100": 28.52,
-      "m110": 30.22
+      "MONTH": "X6",
+      "M90": 31.2,
+      "M100": 28.52,
+      "M110": 30.22
     },
     {
-      "month": "Z6",
-      "m90": 30.48,
-      "m100": 28.02,
-      "m110": 29.53
+      "MONTH": "Z6",
+      "M90": 30.48,
+      "M100": 28.02,
+      "M110": 29.53
     },
     {
-      "month": "F7",
-      "m90": 30.02,
-      "m100": 27.56,
-      "m110": 29.12
+      "MONTH": "F7",
+      "M90": 30.02,
+      "M100": 27.56,
+      "M110": 29.12
     },
     {
-      "month": "G7",
-      "m90": 29.49,
-      "m100": 27.15,
-      "m110": 28.46
+      "MONTH": "G7",
+      "M90": 29.49,
+      "M100": 27.15,
+      "M110": 28.46
     },
     {
-      "month": "H7",
-      "m90": 28.74,
-      "m100": 26.71,
-      "m110": 28.03
+      "MONTH": "H7",
+      "M90": 28.74,
+      "M100": 26.71,
+      "M110": 28.03
     },
     {
-      "month": "J7",
-      "m90": 28.19,
-      "m100": 26.19,
-      "m110": 27.27
+      "MONTH": "J7",
+      "M90": 28.19,
+      "M100": 26.19,
+      "M110": 27.27
     },
     {
-      "month": "K7",
-      "m90": 27.44,
-      "m100": 25.58,
-      "m110": 26.92
+      "MONTH": "K7",
+      "M90": 27.44,
+      "M100": 25.58,
+      "M110": 26.92
     },
     {
-      "month": "M7",
-      "m90": 26.89,
-      "m100": 25.17,
-      "m110": 26.15
+      "MONTH": "M7",
+      "M90": 26.89,
+      "M100": 25.17,
+      "M110": 26.15
     }
   ],
-  "bookTree": [
+  "BOOK_TREE": [
     {
-      "name": "DESK-FI \u00b7 Fixed income",
-      "trades": 5,
-      "mtm": null,
-      "children": [
+      "NAME": "DESK-FI · Fixed income",
+      "TRADES": 5,
+      "MTM": null,
+      "CHILDREN": [
         {
-          "name": "BOOK-FI-1 \u00b7 Govies",
-          "trades": 3,
-          "mtm": null,
-          "children": [
+          "NAME": "BOOK-FI-1 · Govies",
+          "TRADES": 3,
+          "MTM": null,
+          "CHILDREN": [
             {
-              "name": "BBG-60000001",
-              "trades": 1,
-              "mtm": -978378
+              "NAME": "BBG-60000001",
+              "TRADES": 1,
+              "MTM": -978378
             },
             {
-              "name": "BBG-60000002",
-              "trades": 1,
-              "mtm": 412050
+              "NAME": "BBG-60000002",
+              "TRADES": 1,
+              "MTM": 412050
             },
             {
-              "name": "BBG-60000003",
-              "trades": 1,
-              "mtm": 88210
+              "NAME": "BBG-60000003",
+              "TRADES": 1,
+              "MTM": 88210
             }
           ]
         },
         {
-          "name": "BOOK-FI-3 \u00b7 Corporates",
-          "trades": 2,
-          "mtm": null,
-          "children": [
+          "NAME": "BOOK-FI-3 · Corporates",
+          "TRADES": 2,
+          "MTM": null,
+          "CHILDREN": [
             {
-              "name": "BBG-60000011",
-              "trades": 1,
-              "mtm": -152300
+              "NAME": "BBG-60000011",
+              "TRADES": 1,
+              "MTM": -152300
             },
             {
-              "name": "BBG-60000012",
-              "trades": 1,
-              "mtm": 230400
+              "NAME": "BBG-60000012",
+              "TRADES": 1,
+              "MTM": 230400
             }
           ]
         }
       ]
     },
     {
-      "name": "DESK-RATES \u00b7 Rates",
-      "trades": 2,
-      "mtm": null,
-      "children": [
+      "NAME": "DESK-RATES · Rates",
+      "TRADES": 2,
+      "MTM": null,
+      "CHILDREN": [
         {
-          "name": "BOOK-IRS-1 \u00b7 Swaps",
-          "trades": 2,
-          "mtm": null,
-          "children": [
+          "NAME": "BOOK-IRS-1 · Swaps",
+          "TRADES": 2,
+          "MTM": null,
+          "CHILDREN": [
             {
-              "name": "MX-20000001",
-              "trades": 1,
-              "mtm": 1250000
+              "NAME": "MX-20000001",
+              "TRADES": 1,
+              "MTM": 1250000
             },
             {
-              "name": "MX-20000002",
-              "trades": 1,
-              "mtm": -640200
+              "NAME": "MX-20000002",
+              "TRADES": 1,
+              "MTM": -640200
             }
           ]
         }

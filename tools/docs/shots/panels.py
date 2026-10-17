@@ -42,10 +42,10 @@ KIND_PANEL = {"kv": "terms", "status": "ops", "waterfall": "explain", "line": "p
 FAMILIES = {"kv": "terms", "table": "versions", "line": "pnl", "metric": "headline"}
 DARK = ("kv", "table", "metric")
 EMPTY_PANEL = {
-    "kv": "{ id: terms, kind: kv, title: Bond terms, columns: [ { label: Coupon, bind: $.terms.coupon, fmt: pct4 }, { label: Yield, bind: $.terms.yield, fmt: pct4 } ] }",
-    "table": "{ id: versions, kind: table, title: Versions, rows: $.lifecycle.events, columns: [ { label: Event, bind: '@.event' }, { label: By, bind: '@.by' } ] }",
-    "line": "{ id: pnl, kind: line, title: Daily P&L (USD), rows: $.pnlHistory, x: date, y: pnl, fmt: signed0 }",
-    "metric": "{ id: headline, kind: metric, title: Mark to market (USD), value: $.mtm, fmt: signed0, tone: sign, unit: USD }",
+    "kv": "{ id: terms, kind: kv, title: Bond terms, columns: [ { label: Coupon, bind: $.TERMS.COUPON, fmt: pct4 }, { label: Yield, bind: $.TERMS.YIELD, fmt: pct4 } ] }",
+    "table": "{ id: versions, kind: table, title: Versions, rows: $.LIFECYCLE.EVENTS, columns: [ { label: Event, bind: '@.EVENT' }, { label: By, bind: '@.BY' } ] }",
+    "line": "{ id: pnl, kind: line, title: Daily P&L (USD), rows: $.PNL_HISTORY, x: DATE, y: PNL, fmt: signed0 }",
+    "metric": "{ id: headline, kind: metric, title: Mark to market (USD), value: $.MTM, fmt: signed0, tone: sign, unit: USD }",
 }
 _cache: dict = {}
 
@@ -59,8 +59,8 @@ def full_view() -> dict:
 
 
 def empty_view(kind: str) -> dict:
-    y = "rachana: 1\nsutra: state-demo\nversion: 1\nmatch: { kind: trade }\ntitle: { pill: Demo, id: $.tradeId }\npanels:\n  - " + EMPTY_PANEL[kind] + "\n"
-    return backend_preview(y, {"tradeId": "DEMO-1", "currency": "USD"})["panels"][0]
+    y = "rachana: 1\nsutra: state-demo\nversion: 1\nmatch: { kind: trade }\ntitle: { pill: Demo, id: $.TRADE_ID }\npanels:\n  - " + EMPTY_PANEL[kind] + "\n"
+    return backend_preview(y, {"TRADE_ID": "DEMO-1", "CURRENCY": "USD"})["panels"][0]
 
 
 def masked(panel: dict) -> dict:

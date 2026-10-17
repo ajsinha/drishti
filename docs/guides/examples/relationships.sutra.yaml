@@ -17,19 +17,19 @@ sutra: relationships
 version: 1
 description: "How entities relate: a graph of the group and its agreements, one tab per netting set, and a links panel."
 match: { kind: counterparty-summary }
-title: { pill: "Relationships · ${$.counterparty.name}", id: $.counterparty.id }
+title: { pill: "Relationships · ${$.COUNTERPARTY.NAME}", id: $.COUNTERPARTY.ID }
 panels:
-  - { id: group, kind: graph, title: "Group, agreements and netting sets", height: 12, nodes: $.hierarchy.nodes, edges: $.hierarchy.edges, label: label, group: type, layout: tree }
+  - { id: group, kind: graph, title: "Group, agreements and netting sets", height: 12, nodes: $.HIERARCHY.NODES, edges: $.HIERARCHY.EDGES, label: LABEL, group: TYPE, layout: tree }
   - id: sets
     kind: tabs
     title: Netting sets
     span: 7
-    each: $.nettingSets
-    tabTitle: "@.id"
+    each: $.NETTING_SETS
+    tabTitle: "@.ID"
     body:
       kind: kv
       columns:
-        - { label: Agreement, bind: "@.agreement" }
-        - { label: Trades, bind: "@.trades" }
-        - { label: Net MTM, bind: "@.netMtm", fmt: signed0, tone: sign }
+        - { label: Agreement, bind: "@.AGREEMENT" }
+        - { label: Trades, bind: "@.TRADES" }
+        - { label: Net MTM, bind: "@.NET_MTM", fmt: signed0, tone: sign }
   - { id: refs, kind: links, title: Linked entities, code: REFS, span: 5, height: 10 }

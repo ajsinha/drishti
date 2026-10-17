@@ -17,9 +17,9 @@ sutra: market-charts
 version: 1
 description: "Market data charts: candlestick bars with volume, a rotatable volatility surface and a line of closes."
 match: { kind: instrument }
-title: { pill: "Market · ${$.instrument}", id: $.instrument }
+title: { pill: "Market · ${$.INSTRUMENT}", id: $.INSTRUMENT }
 panels:
-  - { id: bars, kind: candlestick, title: "Daily bars with volume (USD/bbl)", height: 10, rows: $.ohlc, volume: volume, fmt: price2 }
-  - { id: close, kind: line, title: Closing price, span: 6, height: 9, rows: $.history, x: date, y: close, fmt: price2 }
-  - { id: smile, kind: surface, title: "Implied vol by contract month and moneyness (%)", span: 6, height: 9, view: 3d, rows: $.grid, y: month,
-      columns: [ { label: 90%, bind: "@.m90" }, { label: ATM, bind: "@.m100" }, { label: 110%, bind: "@.m110" } ] }
+  - { id: bars, kind: candlestick, title: "Daily bars with volume (USD/bbl)", height: 10, rows: $.OHLC, volume: VOLUME, fmt: price2 }
+  - { id: close, kind: line, title: Closing price, span: 6, height: 9, rows: $.HISTORY, x: DATE, y: CLOSE, fmt: price2 }
+  - { id: smile, kind: surface, title: "Implied vol by contract month and moneyness (%)", span: 6, height: 9, view: 3d, rows: $.GRID, y: MONTH,
+      columns: [ { label: 90%, bind: "@.M90" }, { label: ATM, bind: "@.M100" }, { label: 110%, bind: "@.M110" } ] }

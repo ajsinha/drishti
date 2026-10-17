@@ -18,15 +18,15 @@ sutra: map
 version: 1
 description: "A country on the map: the world with the country highlighted, and the country's own regions. A click on another country would open its page."
 match: { kind: country-brief }
-title: { pill: "Country · ${$.name}", id: $.countryId }
+title: { pill: "Country · ${$.NAME}", id: $.COUNTRY_ID }
 strip:
-  - { label: Country, bind: $.name, emphasis: true }
-  - { label: Capital, bind: $.capital }
-  - { label: Population (m), bind: $.populationM, fmt: price2 }
+  - { label: Country, bind: $.NAME, emphasis: true }
+  - { label: Capital, bind: $.CAPITAL }
+  - { label: Population (m), bind: $.POPULATION_M, fmt: price2 }
 panels:
-  - { id: world, kind: map, title: The world, highlight: $.iso3, span: 6, height: 12 }
-  - { id: regions, kind: map, title: Its regions, region: $.iso3, span: 6, height: 12 }
+  - { id: world, kind: map, title: The world, highlight: $.ISO3, span: 6, height: 12 }
+  - { id: regions, kind: map, title: Its regions, region: $.ISO3, span: 6, height: 12 }
   - id: facts
     kind: kv
     title: Facts
-    rows: $.facts
+    rows: $.FACTS

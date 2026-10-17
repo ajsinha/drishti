@@ -184,7 +184,7 @@ final class SutraBuilder {
         unknownKeys(n.map(), Set.of("pill", "id", "with"), "title");
         if (n.map().get("id") == null || n.map().get("id").value() == null) {
             // without 'title' the default is { id: $.id }; a title written out says which expression is the identifier
-            problem("DRS-2010", "missing 'id' in title: the expression for the large identifier, such as $.tradeId", n);
+            problem("DRS-2010", "missing 'id' in title: the expression for the large identifier, such as $.TRADE_ID", n);
         }
         return new Title(text(n.map().get("pill"), null), text(n.map().get("id"), "$.id"), text(n.map().get("with"), null));
     }

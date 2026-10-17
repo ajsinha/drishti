@@ -1,70 +1,70 @@
 {
-  "tradeId": "DEMO-BOND-1",
-  "currency": "USD",
-  "mtm": 1209000,
-  "pnl1d": -41000,
-  "pnlExplain": [
+  "TRADE_ID": "DEMO-BOND-1",
+  "CURRENCY": "USD",
+  "MTM": 1209000,
+  "PNL1D": -41000,
+  "PNL_EXPLAIN": [
     {
-      "step": "Opening MTM",
-      "pnl": 1250000
+      "STEP": "Opening MTM",
+      "PNL": 1250000
     },
     {
-      "step": "Carry",
-      "pnl": 18400
+      "STEP": "Carry",
+      "PNL": 18400
     },
     {
-      "step": "Rates move",
-      "pnl": -96300
+      "STEP": "Rates move",
+      "PNL": -96300
     },
     {
-      "step": "Credit spread",
-      "pnl": 41200
+      "STEP": "Credit spread",
+      "PNL": 41200
     },
     {
-      "step": "Funding",
-      "pnl": -7600
+      "STEP": "Funding",
+      "PNL": -7600
     },
     {
-      "step": "Other",
-      "pnl": 3100
+      "STEP": "Other",
+      "PNL": 3100
     }
   ],
-  "sensitivities": [
+  "SENSITIVITIES": [
     {
-      "bucket": "3M",
-      "dv01": -120
+      "BUCKET": "3M",
+      "DV01": -120
     },
     {
-      "bucket": "1Y",
-      "dv01": -1450
+      "BUCKET": "1Y",
+      "DV01": -1450
     },
     {
-      "bucket": "2Y",
-      "dv01": -4200
+      "BUCKET": "2Y",
+      "DV01": -4200
     },
     {
-      "bucket": "5Y",
-      "dv01": -16800
+      "BUCKET": "5Y",
+      "DV01": -16800
     },
     {
-      "bucket": "10Y",
-      "dv01": -39800
+      "BUCKET": "10Y",
+      "DV01": -39800
     },
     {
-      "bucket": "20Y",
-      "dv01": -21100
+      "BUCKET": "20Y",
+      "DV01": -21100
     },
     {
-      "bucket": "30Y",
-      "dv01": -6400
+      "BUCKET": "30Y",
+      "DV01": -6400
     }
   ],
-  "risk": {
-    "dv01": -89000,
-    "convexity": 7400
+  "RISK": {
+    "DV01": -89000,
+    "CONVEXITY": 7400
   },
-  "terms": {
-    "coupon": 0.0425,
-    "yield": 0.0449
+  "TERMS": {
+    "COUPON": 0.0425,
+    "YIELD": 0.0449
   }
 }

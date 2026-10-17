@@ -1,86 +1,86 @@
 {
-  "counterparty": {
-    "id": "CP-NORTHBRIDGE",
-    "name": "Northbridge Capital LLP",
-    "rating": "A-",
-    "country": "GB"
+  "COUNTERPARTY": {
+    "ID": "CP-NORTHBRIDGE",
+    "NAME": "Northbridge Capital LLP",
+    "RATING": "A-",
+    "COUNTRY": "GB"
   },
-  "nettingSets": [
+  "NETTING_SETS": [
     {
-      "id": "NS-NB-RATES",
-      "agreement": "ISDA-NB-2002",
-      "trades": 14,
-      "netMtm": 2150000
+      "ID": "NS-NB-RATES",
+      "AGREEMENT": "ISDA-NB-2002",
+      "TRADES": 14,
+      "NET_MTM": 2150000
     },
     {
-      "id": "NS-NB-FX",
-      "agreement": "ISDA-NB-2002",
-      "trades": 6,
-      "netMtm": -480000
+      "ID": "NS-NB-FX",
+      "AGREEMENT": "ISDA-NB-2002",
+      "TRADES": 6,
+      "NET_MTM": -480000
     }
   ],
-  "hierarchy": {
-    "nodes": [
+  "HIERARCHY": {
+    "NODES": [
       {
-        "id": "GRP-NORTHBRIDGE",
-        "label": "Northbridge Holdings",
-        "type": "group"
+        "ID": "GRP-NORTHBRIDGE",
+        "LABEL": "Northbridge Holdings",
+        "TYPE": "group"
       },
       {
-        "id": "CP-NORTHBRIDGE",
-        "label": "Northbridge Capital LLP",
-        "type": "counterparty"
+        "ID": "CP-NORTHBRIDGE",
+        "LABEL": "Northbridge Capital LLP",
+        "TYPE": "counterparty"
       },
       {
-        "id": "ISDA-NB-2002",
-        "label": "ISDA 2002 Master",
-        "type": "agreement"
+        "ID": "ISDA-NB-2002",
+        "LABEL": "ISDA 2002 Master",
+        "TYPE": "agreement"
       },
       {
-        "id": "CSA-NB-1",
-        "label": "Credit support annex",
-        "type": "agreement"
+        "ID": "CSA-NB-1",
+        "LABEL": "Credit support annex",
+        "TYPE": "agreement"
       },
       {
-        "id": "NS-NB-RATES",
-        "label": "Rates netting set",
-        "type": "netting-set"
+        "ID": "NS-NB-RATES",
+        "LABEL": "Rates netting set",
+        "TYPE": "netting-set"
       },
       {
-        "id": "NS-NB-FX",
-        "label": "FX netting set",
-        "type": "netting-set"
+        "ID": "NS-NB-FX",
+        "LABEL": "FX netting set",
+        "TYPE": "netting-set"
       }
     ],
-    "edges": [
+    "EDGES": [
       {
-        "from": "GRP-NORTHBRIDGE",
-        "to": "CP-NORTHBRIDGE",
-        "label": "owns"
+        "FROM": "GRP-NORTHBRIDGE",
+        "TO": "CP-NORTHBRIDGE",
+        "LABEL": "owns"
       },
       {
-        "from": "CP-NORTHBRIDGE",
-        "to": "ISDA-NB-2002",
-        "label": "signed"
+        "FROM": "CP-NORTHBRIDGE",
+        "TO": "ISDA-NB-2002",
+        "LABEL": "signed"
       },
       {
-        "from": "ISDA-NB-2002",
-        "to": "CSA-NB-1",
-        "label": "supported by"
+        "FROM": "ISDA-NB-2002",
+        "TO": "CSA-NB-1",
+        "LABEL": "supported by"
       },
       {
-        "from": "ISDA-NB-2002",
-        "to": "NS-NB-RATES",
-        "label": "nets"
+        "FROM": "ISDA-NB-2002",
+        "TO": "NS-NB-RATES",
+        "LABEL": "nets"
       },
       {
-        "from": "ISDA-NB-2002",
-        "to": "NS-NB-FX",
-        "label": "nets"
+        "FROM": "ISDA-NB-2002",
+        "TO": "NS-NB-FX",
+        "LABEL": "nets"
       }
     ]
   },
-  "agreement": "ISDA-NB-2002",
-  "nettingSet": "NS-NB-RATES",
-  "desk": "DESK-RATES"
+  "AGREEMENT": "ISDA-NB-2002",
+  "NETTING_SET": "NS-NB-RATES",
+  "DESK": "DESK-RATES"
 }

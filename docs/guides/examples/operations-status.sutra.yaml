@@ -17,28 +17,28 @@ sutra: operations-status
 version: 1
 description: "The back office on one screen: status lights, a lifecycle timeline, a coupon ladder, a note and how the view was built."
 match: { kind: trade-ops }
-title: { pill: "Operations · ${$.tradeId}", id: $.tradeId }
+title: { pill: "Operations · ${$.TRADE_ID}", id: $.TRADE_ID }
 panels:
   - id: ops
     kind: status
     title: Operations
     span: 5
     fields:
-      - { label: Confirmation, bind: $.confirmation.status, tone: status }
-      - { label: Clearing, bind: $.clearing.status, tone: status }
-      - { label: Reporting, bind: $.regulatory.reportingStatus, tone: status }
-      - { label: Settlement, bind: $.settlement.status, tone: status }
-  - { id: life, kind: timeline, title: Lifecycle, span: 7, rows: $.lifecycle.timeline, label: event, detail: description }
+      - { label: Confirmation, bind: $.CONFIRMATION.STATUS, tone: status }
+      - { label: Clearing, bind: $.CLEARING.STATUS, tone: status }
+      - { label: Reporting, bind: $.REGULATORY.REPORTING_STATUS, tone: status }
+      - { label: Settlement, bind: $.SETTLEMENT.STATUS, tone: status }
+  - { id: life, kind: timeline, title: Lifecycle, span: 7, rows: $.LIFECYCLE.TIMELINE, label: EVENT, detail: DESCRIPTION }
   - id: coupons
     kind: ladder
     title: Coupon schedule
-    rows: $.schedule
-    highlight: "#index == $.nextIndex"
+    rows: $.SCHEDULE
+    highlight: "#index == $.NEXT_INDEX"
     columns:
-      - { label: Pay date, bind: "@.date", fmt: date }
-      - { label: Rate, bind: "@.rate", fmt: pct4 }
-      - { label: Amount, bind: "@.amount", fmt: amount0, total: true }
-      - { label: Status, bind: "@.status", tone: status }
+      - { label: Pay date, bind: "@.DATE", fmt: date }
+      - { label: Rate, bind: "@.RATE", fmt: pct4 }
+      - { label: Amount, bind: "@.AMOUNT", fmt: amount0, total: true }
+      - { label: Status, bind: "@.STATUS", tone: status }
   - id: note
     kind: markdown
     title: Reading this view

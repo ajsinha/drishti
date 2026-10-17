@@ -1,12 +1,12 @@
 {
-  "countryId": "CTRY-AUS",
-  "name": "Australia",
-  "iso3": "AUS",
-  "capital": "Canberra",
-  "populationM": 27.2,
-  "facts": {
-    "officialName": "Commonwealth of Australia",
-    "government": "federal parliamentary democracy under a constitutional monarchy",
-    "states": "six states and two territories"
+  "COUNTRY_ID": "CTRY-AUS",
+  "NAME": "Australia",
+  "ISO3": "AUS",
+  "CAPITAL": "Canberra",
+  "POPULATION_M": 27.2,
+  "FACTS": {
+    "OFFICIAL_NAME": "Commonwealth of Australia",
+    "GOVERNMENT": "federal parliamentary democracy under a constitutional monarchy",
+    "STATES": "six states and two territories"
   }
 }

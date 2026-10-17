@@ -1,197 +1,197 @@
 {
-  "deskName": "Rates and Credit",
-  "positions": [
+  "DESK_NAME": "Rates and Credit",
+  "POSITIONS": [
     {
-      "desk": "RATES",
-      "book": "RATES-A",
-      "family": "bond",
-      "currency": "USD",
-      "mtm": 274901,
-      "trades": 3
+      "DESK": "RATES",
+      "BOOK": "RATES-A",
+      "FAMILY": "bond",
+      "CURRENCY": "USD",
+      "MTM": 274901,
+      "TRADES": 3
     },
     {
-      "desk": "RATES",
-      "book": "RATES-A",
-      "family": "bond",
-      "currency": "EUR",
-      "mtm": -41321,
-      "trades": 5
+      "DESK": "RATES",
+      "BOOK": "RATES-A",
+      "FAMILY": "bond",
+      "CURRENCY": "EUR",
+      "MTM": -41321,
+      "TRADES": 5
     },
     {
-      "desk": "RATES",
-      "book": "RATES-A",
-      "family": "swap",
-      "currency": "USD",
-      "mtm": -980865,
-      "trades": 5
+      "DESK": "RATES",
+      "BOOK": "RATES-A",
+      "FAMILY": "swap",
+      "CURRENCY": "USD",
+      "MTM": -980865,
+      "TRADES": 5
     },
     {
-      "desk": "RATES",
-      "book": "RATES-A",
-      "family": "swap",
-      "currency": "EUR",
-      "mtm": 546166,
-      "trades": 9
+      "DESK": "RATES",
+      "BOOK": "RATES-A",
+      "FAMILY": "swap",
+      "CURRENCY": "EUR",
+      "MTM": 546166,
+      "TRADES": 9
     },
     {
-      "desk": "RATES",
-      "book": "RATES-A",
-      "family": "future",
-      "currency": "USD",
-      "mtm": 229371,
-      "trades": 4
+      "DESK": "RATES",
+      "BOOK": "RATES-A",
+      "FAMILY": "future",
+      "CURRENCY": "USD",
+      "MTM": 229371,
+      "TRADES": 4
     },
     {
-      "desk": "RATES",
-      "book": "RATES-A",
-      "family": "future",
-      "currency": "EUR",
-      "mtm": -519918,
-      "trades": 6
+      "DESK": "RATES",
+      "BOOK": "RATES-A",
+      "FAMILY": "future",
+      "CURRENCY": "EUR",
+      "MTM": -519918,
+      "TRADES": 6
     },
     {
-      "desk": "RATES",
-      "book": "RATES-A",
-      "family": "option",
-      "currency": "USD",
-      "mtm": 1162356,
-      "trades": 1
+      "DESK": "RATES",
+      "BOOK": "RATES-A",
+      "FAMILY": "option",
+      "CURRENCY": "USD",
+      "MTM": 1162356,
+      "TRADES": 1
     },
     {
-      "desk": "RATES",
-      "book": "RATES-A",
-      "family": "option",
-      "currency": "EUR",
-      "mtm": 816161,
-      "trades": 4
+      "DESK": "RATES",
+      "BOOK": "RATES-A",
+      "FAMILY": "option",
+      "CURRENCY": "EUR",
+      "MTM": 816161,
+      "TRADES": 4
     },
     {
-      "desk": "RATES",
-      "book": "RATES-B",
-      "family": "bond",
-      "currency": "USD",
-      "mtm": -1108356,
-      "trades": 6
+      "DESK": "RATES",
+      "BOOK": "RATES-B",
+      "FAMILY": "bond",
+      "CURRENCY": "USD",
+      "MTM": -1108356,
+      "TRADES": 6
     },
     {
-      "desk": "RATES",
-      "book": "RATES-B",
-      "family": "bond",
-      "currency": "EUR",
-      "mtm": 24974,
-      "trades": 8
+      "DESK": "RATES",
+      "BOOK": "RATES-B",
+      "FAMILY": "bond",
+      "CURRENCY": "EUR",
+      "MTM": 24974,
+      "TRADES": 8
     },
     {
-      "desk": "RATES",
-      "book": "RATES-B",
-      "family": "swap",
-      "currency": "USD",
-      "mtm": -849396,
-      "trades": 5
+      "DESK": "RATES",
+      "BOOK": "RATES-B",
+      "FAMILY": "swap",
+      "CURRENCY": "USD",
+      "MTM": -849396,
+      "TRADES": 5
     },
     {
-      "desk": "RATES",
-      "book": "RATES-B",
-      "family": "swap",
-      "currency": "EUR",
-      "mtm": -506388,
-      "trades": 4
+      "DESK": "RATES",
+      "BOOK": "RATES-B",
+      "FAMILY": "swap",
+      "CURRENCY": "EUR",
+      "MTM": -506388,
+      "TRADES": 4
     },
     {
-      "desk": "RATES",
-      "book": "RATES-B",
-      "family": "future",
-      "currency": "USD",
-      "mtm": 383867,
-      "trades": 4
+      "DESK": "RATES",
+      "BOOK": "RATES-B",
+      "FAMILY": "future",
+      "CURRENCY": "USD",
+      "MTM": 383867,
+      "TRADES": 4
     },
     {
-      "desk": "RATES",
-      "book": "RATES-B",
-      "family": "future",
-      "currency": "EUR",
-      "mtm": -1340769,
-      "trades": 2
+      "DESK": "RATES",
+      "BOOK": "RATES-B",
+      "FAMILY": "future",
+      "CURRENCY": "EUR",
+      "MTM": -1340769,
+      "TRADES": 2
     },
     {
-      "desk": "RATES",
-      "book": "RATES-B",
-      "family": "option",
-      "currency": "USD",
-      "mtm": -980554,
-      "trades": 6
+      "DESK": "RATES",
+      "BOOK": "RATES-B",
+      "FAMILY": "option",
+      "CURRENCY": "USD",
+      "MTM": -980554,
+      "TRADES": 6
     },
     {
-      "desk": "RATES",
-      "book": "RATES-B",
-      "family": "option",
-      "currency": "EUR",
-      "mtm": -495153,
-      "trades": 8
+      "DESK": "RATES",
+      "BOOK": "RATES-B",
+      "FAMILY": "option",
+      "CURRENCY": "EUR",
+      "MTM": -495153,
+      "TRADES": 8
     },
     {
-      "desk": "CREDIT",
-      "book": "CREDIT-1",
-      "family": "bond",
-      "currency": "USD",
-      "mtm": -595081,
-      "trades": 2
+      "DESK": "CREDIT",
+      "BOOK": "CREDIT-1",
+      "FAMILY": "bond",
+      "CURRENCY": "USD",
+      "MTM": -595081,
+      "TRADES": 2
     },
     {
-      "desk": "CREDIT",
-      "book": "CREDIT-1",
-      "family": "bond",
-      "currency": "EUR",
-      "mtm": 2448996,
-      "trades": 9
+      "DESK": "CREDIT",
+      "BOOK": "CREDIT-1",
+      "FAMILY": "bond",
+      "CURRENCY": "EUR",
+      "MTM": 2448996,
+      "TRADES": 9
     },
     {
-      "desk": "CREDIT",
-      "book": "CREDIT-1",
-      "family": "swap",
-      "currency": "USD",
-      "mtm": -1318191,
-      "trades": 3
+      "DESK": "CREDIT",
+      "BOOK": "CREDIT-1",
+      "FAMILY": "swap",
+      "CURRENCY": "USD",
+      "MTM": -1318191,
+      "TRADES": 3
     },
     {
-      "desk": "CREDIT",
-      "book": "CREDIT-1",
-      "family": "swap",
-      "currency": "EUR",
-      "mtm": 745061,
-      "trades": 8
+      "DESK": "CREDIT",
+      "BOOK": "CREDIT-1",
+      "FAMILY": "swap",
+      "CURRENCY": "EUR",
+      "MTM": 745061,
+      "TRADES": 8
     },
     {
-      "desk": "CREDIT",
-      "book": "CREDIT-1",
-      "family": "future",
-      "currency": "USD",
-      "mtm": -2028840,
-      "trades": 2
+      "DESK": "CREDIT",
+      "BOOK": "CREDIT-1",
+      "FAMILY": "future",
+      "CURRENCY": "USD",
+      "MTM": -2028840,
+      "TRADES": 2
     },
     {
-      "desk": "CREDIT",
-      "book": "CREDIT-1",
-      "family": "future",
-      "currency": "EUR",
-      "mtm": 1087334,
-      "trades": 9
+      "DESK": "CREDIT",
+      "BOOK": "CREDIT-1",
+      "FAMILY": "future",
+      "CURRENCY": "EUR",
+      "MTM": 1087334,
+      "TRADES": 9
     },
     {
-      "desk": "CREDIT",
-      "book": "CREDIT-1",
-      "family": "option",
-      "currency": "USD",
-      "mtm": -1647078,
-      "trades": 6
+      "DESK": "CREDIT",
+      "BOOK": "CREDIT-1",
+      "FAMILY": "option",
+      "CURRENCY": "USD",
+      "MTM": -1647078,
+      "TRADES": 6
     },
     {
-      "desk": "CREDIT",
-      "book": "CREDIT-1",
-      "family": "option",
-      "currency": "EUR",
-      "mtm": -813655,
-      "trades": 6
+      "DESK": "CREDIT",
+      "BOOK": "CREDIT-1",
+      "FAMILY": "option",
+      "CURRENCY": "EUR",
+      "MTM": -813655,
+      "TRADES": 6
     }
   ]
 }

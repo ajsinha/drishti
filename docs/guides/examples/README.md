@@ -17,7 +17,7 @@
 
 Eleven small, working Sutras, each with a JSON document to run it against and a note on what it shows. Together they use all twenty-two panel kinds, nested pivot groups and tree rows. Each opens in the workbench as a copy (**Build → New → Examples**, or **File → Open** with its two files) and is listed under **Help → Examples**.
 
-Each example is `<name>.sutra.yaml` (the layout), `<name>.json` (a self-contained document, a few dozen rows at most) and `<name>.md` (what it shows, what to look for, which lines to copy).
+Each example is `<name>.sutra.yaml` (the layout), `<name>.json` (a self-contained document, a few dozen rows at most) and `<name>.md` (what it shows, what to look for, which lines to copy). The documents are small teaching documents that use the production attribute names in UPPER_SNAKE (`$.TRADE_ID`, `$.POSITIONS`), as the shipped packs, their Sutras and every other guide do; [linked-sources](linked-sources.md) reads the packs' own entities. A Sutra reads field names exactly as the document writes them.
 
 | Example | Shows | Panel kinds |
 |---|---|---|

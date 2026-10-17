@@ -109,11 +109,11 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
     title: "1 · kv: bond terms"
     span: 8
     columns:
-      - { label: Coupon, bind: $.terms.coupon, fmt: pct4 }
-      - { label: Frequency, bind: $.terms.couponFrequency }
-      - { label: Face amount, bind: $.terms.faceAmount, fmt: amount0 }
-      - { label: Clean price, bind: $.terms.cleanPrice, fmt: price2 }
-      - { label: Yield, bind: $.terms.yield, fmt: pct4 }
+      - { label: Coupon, bind: $.TERMS.COUPON, fmt: pct4 }
+      - { label: Frequency, bind: $.TERMS.COUPON_FREQUENCY }
+      - { label: Face amount, bind: $.TERMS.FACE_AMOUNT, fmt: amount0 }
+      - { label: Clean price, bind: $.TERMS.CLEAN_PRICE, fmt: price2 }
+      - { label: Yield, bind: $.TERMS.YIELD, fmt: pct4 }
 ```
 
 A `kv` panel when it is empty, error, masked, phone, dark:
@@ -152,9 +152,9 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
     title: "2 · status: operations"
     span: 4
     fields:
-      - { label: Confirmation, bind: $.confirmation.status, tone: status }
-      - { label: Clearing, bind: $.clearing.status, tone: status }
-      - { label: Reporting, bind: $.regulatory.reportingStatus, tone: status }
+      - { label: Confirmation, bind: $.CONFIRMATION.STATUS, tone: status }
+      - { label: Clearing, bind: $.CLEARING.STATUS, tone: status }
+      - { label: Reporting, bind: $.REGULATORY.REPORTING_STATUS, tone: status }
 ```
 
 ### provenance
@@ -198,8 +198,8 @@ One big headline figure, a KPI tile: the value formatted and toned, with an opti
 From [metric](examples/metric.sutra.yaml):
 
 ```yaml
-  - { id: mtm, kind: metric, title: Mark to market, span: 3, value: $.mtm, fmt: signed0, tone: sign, label: Net MTM,
-      unit: USD, delta: "$.mtm - $.mtmYesterday", deltaFmt: signed0, caption: "versus yesterday's close" }
+  - { id: mtm, kind: metric, title: Mark to market, span: 3, value: $.MTM, fmt: signed0, tone: sign, label: Net MTM,
+      unit: USD, delta: "$.MTM - $.MTM_YESTERDAY", deltaFmt: signed0, caption: "versus yesterday's close" }
 ```
 
 The states of a tile, and the same panel in the dark theme and at phone width:
@@ -237,7 +237,7 @@ The world with a country highlighted, shaded by a figure and clickable; or, with
 From [map](examples/map.sutra.yaml):
 
 ```yaml
-  - { id: world, kind: map, title: The world, highlight: $.iso3, span: 6, height: 12 }
+  - { id: world, kind: map, title: The world, highlight: $.ISO3, span: 6, height: 12 }
 ```
 
 The world-economy pack's `jurisdiction` Sutra and the world-economy pack's `economy` Sutra carry one, with a `link` to their own kind (and, for the economy, a GDP-per-head `shade`).
@@ -269,12 +269,12 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
     kind: table
     title: "9 · table: versions"
     span: 5
-    rows: $.lifecycle.events
+    rows: $.LIFECYCLE.EVENTS
     columns:
-      - { label: "#", bind: "@.version" }
-      - { label: Event, bind: "@.event" }
-      - { label: Reason, bind: "@.reason" }
-      - { label: By, bind: "@.by" }
+      - { label: "#", bind: "@.VERSION" }
+      - { label: Event, bind: "@.EVENT" }
+      - { label: Reason, bind: "@.REASON" }
+      - { label: By, bind: "@.BY" }
 ```
 
 A `table` panel when it is empty, error, masked, phone, dark:
@@ -312,13 +312,13 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
     kind: ladder
     title: "7 · ladder: coupon schedule"
     height: 8
-    rows: $.schedule
-    highlight: "#index == $.nextIndex"
+    rows: $.SCHEDULE
+    highlight: "#index == $.NEXT_INDEX"
     columns:
-      - { label: Pay date, bind: "@.date", fmt: date }
-      - { label: Rate, bind: "@.rate", fmt: pct4 }
-      - { label: Amount, bind: "@.amount", fmt: amount0, total: true }
-      - { label: Status, bind: "@.status", tone: status }
+      - { label: Pay date, bind: "@.DATE", fmt: date }
+      - { label: Rate, bind: "@.RATE", fmt: pct4 }
+      - { label: Amount, bind: "@.AMOUNT", fmt: amount0, total: true }
+      - { label: Status, bind: "@.STATUS", tone: status }
 ```
 
 ### tabs
@@ -344,14 +344,14 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
     kind: tabs
     title: "10 · tabs: netting sets, one tab each"
     span: 6
-    each: $.nettingSets
-    tabTitle: "@.id"
+    each: $.NETTING_SETS
+    tabTitle: "@.ID"
     body:
       kind: kv
       columns:
-        - { label: Agreement, bind: "@.agreement" }
-        - { label: Trades, bind: "@.trades" }
-        - { label: Net MTM, bind: "@.netMtm", fmt: signed0, tone: sign }
+        - { label: Agreement, bind: "@.AGREEMENT" }
+        - { label: Trades, bind: "@.TRADES" }
+        - { label: Net MTM, bind: "@.NET_MTM", fmt: signed0, tone: sign }
 ```
 
 A deep trade: a tab per leg, each with the leg's terms and its cashflows as a tree table that opens to the fixings
@@ -404,8 +404,8 @@ The two pivots are told apart in [the reference](RACHANA_REFERENCE.md#pivot-a-pi
 From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 ```yaml
-  - { id: grid, kind: pivot, title: "13 · pivot: MTM by book and family (USD)", rows: $.positions, by: [book, family], across: currency,
-      value: mtm, fmt: compact, tone: sign }
+  - { id: grid, kind: pivot, title: "13 · pivot: MTM by book and family (USD)", rows: $.POSITIONS, by: [BOOK, FAMILY], across: CURRENCY,
+      value: MTM, fmt: compact, tone: sign }
 ```
 
 ## Series
@@ -430,7 +430,7 @@ Points along an axis: a curve by tenor, P&L by date. With `source` the points ar
 From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 ```yaml
-  - { id: pnl, kind: line, title: "4 · line: daily P&L (USD)", span: 6, height: 9, rows: $.pnlHistory, x: date, y: pnl, fmt: signed0 }
+  - { id: pnl, kind: line, title: "4 · line: daily P&L (USD)", span: 6, height: 9, rows: $.PNL_HISTORY, x: DATE, y: PNL, fmt: signed0 }
 ```
 
 A `line` panel when it is empty, error, phone:
@@ -461,8 +461,8 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 ```yaml
   - { id: exposure, kind: area, title: "12 · area: exposure profile (USD)", span: 6,
-      rows: $.profile, x: tenor, limit: $.limit,
-      series: [ { label: EE, value: ee, tone: link }, { label: PFE 95, value: pfe, tone: accent } ] }
+      rows: $.PROFILE, x: TENOR, limit: $.LIMIT,
+      series: [ { label: EE, value: EE, tone: link }, { label: PFE 95, value: PFE, tone: accent } ] }
 ```
 
 ### hbar
@@ -485,7 +485,7 @@ Horizontal bars for a few labelled amounts, scaled to the largest absolute value
 From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 ```yaml
-  - { id: dv01, kind: hbar, title: "5 · hbar: DV01 by bucket (USD)", span: 8, rows: $.sensitivities, label: bucket, value: dv01, fmt: signed0, tone: sign }
+  - { id: dv01, kind: hbar, title: "5 · hbar: DV01 by bucket (USD)", span: 8, rows: $.SENSITIVITIES, label: BUCKET, value: DV01, fmt: signed0, tone: sign }
 ```
 
 ### gauge
@@ -507,7 +507,7 @@ One number against a maximum, as a filled bar with its percentage.
 From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 ```yaml
-  - { id: dv01use, kind: gauge, title: "6 · gauge: DV01 of a 250k guideline", span: 4, value: "abs($.risk.dv01)", max: "250000" }
+  - { id: dv01use, kind: gauge, title: "6 · gauge: DV01 of a 250k guideline", span: 4, value: "abs($.RISK.DV01)", max: "250000" }
 ```
 
 ## Market
@@ -531,8 +531,8 @@ A grid of values over two axes already in the document: a volatility smile by ex
 From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 ```yaml
-  - { id: smile, kind: surface, title: "17 · surface: implied vol (%)", height: 12, view: 3d, rows: $.grid, y: month,
-      columns: [ { label: 90%, bind: "@.m90" }, { label: ATM, bind: "@.m100" }, { label: 110%, bind: "@.m110" } ] }
+  - { id: smile, kind: surface, title: "17 · surface: implied vol (%)", height: 12, view: 3d, rows: $.GRID, y: MONTH,
+      columns: [ { label: 90%, bind: "@.M90" }, { label: ATM, bind: "@.M100" }, { label: 110%, bind: "@.M110" } ] }
 ```
 
 ### candlestick
@@ -554,7 +554,7 @@ Open, high, low and close by date, with optional volume bars; up days and down d
 From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 ```yaml
-  - { id: bars, kind: candlestick, title: "16 · candlestick: front month (USD/bbl)", height: 10, rows: $.ohlc, volume: volume, fmt: price2 }
+  - { id: bars, kind: candlestick, title: "16 · candlestick: front month (USD/bbl)", height: 10, rows: $.OHLC, volume: VOLUME, fmt: price2 }
 ```
 
 ## Risk
@@ -578,8 +578,8 @@ The distribution of many numbers, binned on the server, with optional marker lin
 From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 ```yaml
-  - { id: scenarios, kind: histogram, title: "15 · histogram: scenario P&L (USD)", span: 6, height: 9, rows: $.scenarioPnl, fmt: compact,
-      markers: [ { label: VaR 99%, value: "-$.var99", tone: neg } ] }
+  - { id: scenarios, kind: histogram, title: "15 · histogram: scenario P&L (USD)", span: 6, height: 9, rows: $.SCENARIO_PNL, fmt: compact,
+      markers: [ { label: VaR 99%, value: "-$.VAR99", tone: neg } ] }
 ```
 
 ### scatter
@@ -602,7 +602,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 ```yaml
   - { id: books, kind: scatter, title: "14 · scatter: books, MTM vs trades", span: 6, height: 9,
-      rows: $.books, x: mtm, y: trades, label: id, xFmt: compact, xLabel: MTM (USD), yLabel: Trades }
+      rows: $.BOOKS, x: MTM, y: TRADES, label: ID, xFmt: compact, xLabel: MTM (USD), yLabel: Trades }
 ```
 
 ## P&L
@@ -627,7 +627,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 ```yaml
   - { id: explain, kind: waterfall, title: "3 · waterfall: P&L explain (USD)", span: 6, height: 9,
-      rows: $.pnlExplain, label: step, value: pnl, sum: Closing MTM, fmt: signed0 }
+      rows: $.PNL_EXPLAIN, label: STEP, value: PNL, sum: Closing MTM, fmt: signed0 }
 ```
 
 ## Relationships
@@ -651,7 +651,7 @@ Entities and the relations between them (a legal-entity hierarchy); a node that 
 From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 ```yaml
-  - { id: group, kind: graph, title: "11 · graph: the counterparty's group", height: 12, nodes: $.hierarchy.nodes, edges: $.hierarchy.edges }
+  - { id: group, kind: graph, title: "11 · graph: the counterparty's group", height: 12, nodes: $.HIERARCHY.NODES, edges: $.HIERARCHY.EDGES }
 ```
 
 ### links
@@ -697,7 +697,7 @@ Dated events in order, each with a status tone and a short description, sorted b
 From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 ```yaml
-  - { id: life, kind: timeline, title: "8 · timeline: lifecycle", span: 7, rows: $.lifecycle.timeline, label: event, detail: description }
+  - { id: life, kind: timeline, title: "8 · timeline: lifecycle", span: 7, rows: $.LIFECYCLE.TIMELINE, label: EVENT, detail: DESCRIPTION }
 ```
 
 ### markdown
@@ -723,7 +723,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
     kind: markdown
     title: "19 · markdown: reading this view"
     area: right
-    text: "A ${lower($.direction)} ${$.currency} bond. Every panel reads the document in all-panels-showcase.json."
+    text: "A ${lower($.DIRECTION)} ${$.CURRENCY} bond. Every panel reads the document in all-panels-showcase.json."
 ```
 
 ## Common mistakes and their problem codes

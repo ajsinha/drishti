@@ -17,34 +17,34 @@ sutra: pivot-row-groups
 version: 1
 description: Pivot tables with nested row groups, subtotals and expand, beside a flat pivot with heat.
 match: { kind: portfolio }
-title: { pill: "Pivot · ${$.deskName}", id: $.deskName }
+title: { pill: "Pivot · ${$.DESK_NAME}", id: $.DESK_NAME }
 panels:
   - id: nested
     kind: pivot
     title: MTM by desk, book and product family (USD), across currency
-    rows: $.positions
-    by: [desk, book, family]
-    across: currency
-    value: mtm
+    rows: $.POSITIONS
+    by: [DESK, BOOK, FAMILY]
+    across: CURRENCY
+    value: MTM
     fmt: compact
     tone: sign
     expand: 1
   - id: open
     kind: pivot
     title: Trades by desk and book, every level open
-    rows: $.positions
-    by: [desk, book]
-    across: family
-    value: trades
+    rows: $.POSITIONS
+    by: [DESK, BOOK]
+    across: FAMILY
+    value: TRADES
     agg: sum
     expand: all
   - id: flat
     kind: pivot
     title: Flat pivot with heat, one field down the side
-    rows: $.positions
-    by: book
-    across: family
-    value: mtm
+    rows: $.POSITIONS
+    by: BOOK
+    across: FAMILY
+    value: MTM
     heat: true
     fmt: compact
     tone: sign
