@@ -38,9 +38,10 @@
      offered (each label says which with data-parents); nothing chosen there offers them all. A value hidden this way is unticked. */
   function dependents() {
     if (!form) { return; }
-    each(form.querySelectorAll('.qf-enum[data-depends]'), function (child) {
-      var parent = form.querySelector('.qf-field[data-field="' + child.getAttribute('data-depends') + '"]');
-      if (!parent) { return; }
+    each(form.querySelectorAll('.qf-enum[data-depends], .ms-box[data-depends]'), function (group) {
+      var parent = form.querySelector('.qf-field[data-field="' + group.getAttribute('data-depends') + '"]');
+      var child = group.closest('.qf-field');           // the field, not the group: a long list's labels move into its drop-down
+      if (!parent || !child) { return; }
       function apply() {
         var chosen = [];
         each(parent.querySelectorAll('input[type=checkbox]:checked'), function (b) { chosen.push(b.value); });

@@ -94,6 +94,7 @@
       var det = el('details', 'ms-box'), sum = el('summary');
       det.appendChild(sum);
       det.setAttribute('data-ms-for', g.id || '');
+      if (g.hasAttribute('data-depends')) { det.setAttribute('data-depends', g.getAttribute('data-depends')); }   // a dependent list stays one
       g.parentNode.insertBefore(det, g);
       decorate(det, { label: g.getAttribute('aria-label') || '', boxes: boxes });      // the labels move into the list; the empty group goes
       g.remove();
