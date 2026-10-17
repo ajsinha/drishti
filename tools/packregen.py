@@ -39,7 +39,8 @@ import tempfile
 GEN = "generated"
 LEGACY_GEN = ".generated"      # earlier builds; renamed once, with a message
 SUFFIX = ".base"  # so no tool (sutra lint, bundle globs) mistakes a baseline copy for a real file
-OPTIONS = ".options.json"
+OPTIONS = "options.json"        # visible: no hidden files of our own
+LEGACY_OPTIONS = ".options.json"  # earlier builds wrote it hidden; still read
 STORED = ("name", "title", "description", "version", "mnemonic", "key", "date", "match", "kind", "store", "priority", "min_docs", "fallback",
           "name_prefix", "samples", "catalog_samples", "skip_missing", "recursive")
 MARK_OURS, MARK_MID, MARK_THEIRS = "<<<<<<< yours (the pack)", "=======", ">>>>>>> regenerated from the new data"
@@ -86,6 +87,7 @@ def snapshot(pack: pathlib.Path, opts, source: pathlib.Path | None = None) -> No
         dst.write_bytes(data)
     stored = {k: getattr(opts, k) for k in STORED if isinstance(getattr(opts, k, None), (str, int, float, bool))}
     (base / OPTIONS).write_text(json.dumps(stored, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+    (base / LEGACY_OPTIONS).unlink(missing_ok=True)
     (base / "README.txt").write_text(NOTE, encoding="utf-8")
 
 
@@ -98,7 +100,8 @@ def read_baseline(pack: pathlib.Path) -> tuple[dict[str, bytes] | None, dict]:
         rel = p.relative_to(base).as_posix()
         if p.is_file() and rel.endswith(SUFFIX):
             files[rel[:-len(SUFFIX)]] = p.read_bytes()
-    opts = json.loads((base / OPTIONS).read_text(encoding="utf-8")) if (base / OPTIONS).is_file() else {}
+    found = next((base / n for n in (OPTIONS, LEGACY_OPTIONS) if (base / n).is_file()), None)
+    opts = json.loads(found.read_text(encoding="utf-8")) if found else {}
     return files, opts
 
 
