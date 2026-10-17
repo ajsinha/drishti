@@ -1955,11 +1955,12 @@ drishti.py bi model describe REF                                 a model as you 
 drishti.py bi model check FILE                                   the server's Check of a model or dataset YAML; exit 1 on an error (the safeguard's findings listed)
 drishti.py bi model consumers REF                                what reads the model: reports, boards, alerts, notebooks, datasets
 drishti.py bi mq FILE                                            ask one model query written as YAML or JSON
-drishti.py bi mq --model REF --select F,... --measures M,... [--define "Name=DEL"]... [--where field=value]... [--limit N] [--as-of DATE]
+drishti.py bi mq --model REF --select F,... --measures M,... [--define "Name=DEL"]... [--where field=value]... [--sort[=-]BY]... [--limit N] [--as-of DATE]
 ```
 
 `REF` is `name@major` (`trading-risk@1`), a model item id or `dataset:<name>` (a dataset's implicit model). `bi mq --define` adds a measure of this query
-only, in DEL (`--define "Open MTM=sum(trades.mtm, where=trades.status == 'Live')" --measures "Open MTM"`), as a report's own measure travels. The answer is
+only, in DEL (`--define "Open MTM=sum(trades.mtm, where=trades.status == 'Live')" --measures "Open MTM"`), as a report's own measure travels. `--sort BY`
+sorts by a field or measure, `--sort=-BY` descending (the `=` keeps the minus from reading as an option), repeatable: `--sort=-MTM --limit 3` is the top three. The answer is
 a table with its plan, its as-of date and the columns masked for you; `--json` prints the server's answer as it is.
 
 ### `bi item`, `bi dataset`: items from files, tests and refresh
@@ -1971,7 +1972,7 @@ user. A write needs the `bi:write` scope and the `bi-author` power; the server c
 drishti.py bi item new WORKSPACE FILE [--kind K] [--title T] [--audience ROLE,...]   a draft from a YAML file; the kind is read from the file name (x.model.yaml)
 drishti.py bi item save ID FILE [--message M]                                       a new saved state of the draft (the history shows the message)
 drishti.py bi item tests ID [--role R]                                              run the item's expected values (tests:) as you or a role you hold; exit 1 on a failure
-drishti.py bi dataset refresh ID [--now] [--wait S]                                 the refresh state; --now refreshes and waits until it ends
+drishti.py bi dataset refresh ID [--now] [--wait S]                                 the refresh state; --now refreshes and waits until it ends (a rachana 2 dataset: through the models that read it)
 ```
 
 Publishing is `bi catalogue publish ID` (above). Captured, the steps of [tutorial 11](../tutorials/11-bi-that-runs-itself.md):

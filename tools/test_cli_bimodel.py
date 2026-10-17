@@ -96,6 +96,14 @@ class BiModel(unittest.TestCase):
                           "define": {"Open MTM": "sum(trades.mtm, where=trades.status == 'Live')"},
                           "where": [{"field": "trades.currency", "op": "eq", "value": "USD"}], "limit": 5}, json.loads(FakeServer.requests[0][5]))
 
+    def test_mq_sorts_by_a_field_or_measure_descending_with_a_minus(self):
+        FakeServer.routes[("POST", "/api/v1/bi/mq")] = (200, {"columns": [{"name": "desks.name"}, {"name": "MTM"}], "rows": [], "meta": {}})
+        code, _, _ = self.go("bi", "mq", "--model", "trading-risk@1", "--select", "desks.name", "--measures", "MTM", "--sort=-MTM", "--sort", "desks.name")
+        self.assertEqual(0, code)
+        self.assertEqual([{"by": "MTM", "desc": True}, {"by": "desks.name", "desc": False}], json.loads(FakeServer.requests[0][5])["sort"])
+        code, _, err = self.go("bi", "mq", "--model", "trading-risk@1", "--measures", "MTM", "--sort=-")
+        self.assertEqual(2, code)
+
     def test_mq_reads_a_yaml_file(self):
         f = self.tmp / "q.yaml"
         f.write_text("mq: 1\nmodel: trading-risk@1\nselect: {fields: [desks.name], measures: [MTM]}\n", encoding="utf-8")
