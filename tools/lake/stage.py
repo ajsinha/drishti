@@ -109,6 +109,7 @@ class Stats:
     duplicates: Counter = field(default_factory=Counter)             # business date -> ids seen more than once
     numeric: dict = field(default_factory=dict)                       # promoted column -> True while every value is a number
     files: list = field(default_factory=list)                         # [{file, bytes}]
+    sample: tuple | None = None                                       # (id, date) of the first accepted document, to open one
 
     def reject(self, where: str, reason: str) -> None:
         self.rejects[reason] += 1
@@ -175,6 +176,8 @@ class Stager:
         elif st.accepted < DUPLICATE_WATCH:
             seen.add(h)
         st.accepted += 1
+        if st.sample is None:
+            st.sample = (ident, day.isoformat())
         part = self.parts.get((day, values))
         if part is None:
             part = self.parts[(day, values)] = Part(day, values, self.folder / f"{len(self.parts) + 1}.rows" if self.folder else pathlib.Path(""))

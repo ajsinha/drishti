@@ -25,7 +25,9 @@
   <h1 class="ws-h">Data loads</h1>
   <p class="text-muted-d">What your ETL has announced to {{ PRODUCT }} (<span class="mono">POST /api/v1/packs/&lt;pack&gt;/loads</span> or
     <span class="mono">drishti.py data landed</span>), what each pack expects today, and what is late.
-    {{ PRODUCT }} does not load the data: it reads it where it lives. See the <a href="/help/data-loads">Data loads guide</a>.</p>
+    {{ PRODUCT }} reads the data where it lives; to turn a large JSON export into a Delta lake a pack reads, use
+    <a href="/admin/lakes">Load a file into a lake</a> (or <span class="mono">drishti.py lake build</span> on a schedule). See the <a href="/help/data-loads">Data loads guide</a>.</p>
+  <p><a class="btn-pill btn-accent" href="/admin/lakes" data-lakes-link><i class="bi bi-database-add" aria-hidden="true"></i> Load a file into a lake</a></p>
   {% if attention %}<p class="adm-warn" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
     {{ attention }} expected load{{ '' if attention == 1 else 's' }} need{{ 's' if attention == 1 else '' }} attention (late, missing or failed).</p>{% endif %}
   <div class="tbl-wrap"><table class="tbl adm-tbl" data-loads-all>

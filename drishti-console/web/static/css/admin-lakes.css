@@ -1,0 +1,36 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Admin -> Data loads -> Lakes: the four steps (file, fields, target, build) and the run log. */
+.lk-crumb { margin: .2rem 0 0; font-size: .85rem; color: var(--d-muted); }
+.lk-step { border: 1px solid var(--d-border); border-radius: 8px; margin: .8rem 0; padding: .2rem .9rem .8rem; }
+.lk-step h2, .lk-h2 { font-size: 1.05rem; margin: .6rem 0 .4rem; }
+.lk-n { display: inline-flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem; border-radius: 50%;
+  background: var(--d-accent, #2f6fde); color: #fff; font-size: .8rem; margin-right: .3rem; }
+.lk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0 1rem; }
+.lk-grid .loads-field { max-width: none; }
+.lk-progress { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin: .5rem 0; }
+.lk-progress progress { width: min(24rem, 100%); }
+.lk-fields { max-height: 26rem; overflow: auto; }
+.lk-fields td, .lk-fields th { white-space: normal; }
+.lk-top { color: var(--d-muted); font-size: .85rem; max-width: 22rem; overflow-wrap: anywhere; }
+.lk-warn { color: var(--d-warn, #9a6200); margin: .4rem 0; }
+.lk-runs td { white-space: normal; overflow-wrap: anywhere; font-size: .8rem; }
+@media (max-width: 640px) {
+  .lk-step { padding: .2rem .5rem .6rem; }
+  .lk-step input[type=checkbox] { width: 24px; height: 24px; }
+  .lk-step .btn-pill, .lk-step select, .lk-step input:not([type=checkbox]) { min-height: 44px; font-size: 16px; }
+  .lk-fields td, .lk-fields th { padding: .5rem .3rem; }
+}

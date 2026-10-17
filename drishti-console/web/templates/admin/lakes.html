@@ -1,0 +1,92 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Lakes · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-lakes.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm" data-lakes data-max-mb="{{ cfg.maxUploadMb }}">
+  {% with tab='loads' %}{% include "admin/_nav.html" %}{% endwith %}
+  <p class="lk-crumb"><a href="/admin/loads">Data loads</a> <span aria-hidden="true">›</span> Lakes</p>
+  <h1 class="ws-h">Load a file into a lake <a class="emb-help" href="/help/tools" aria-label="Help: the lake build tool" title="Help: the lake build tool">?</a></h1>
+  <details class="adm-about"><summary>About this page</summary>
+  <p class="text-muted-d">Bring a large JSON export (an array or JSON Lines, gzipped or not) and turn it into a Delta table that {{ PRODUCT }}'s Delta connector
+    reads: one row per document, the whole document kept (nested lists intact), partitioned by business date and the classifiers you pick.
+    The build runs on this console's machine with the same engine as <span class="mono">drishti.py lake build</span>, so a run here and a scheduled run
+    behave the same (lock, summary, run log). Re-running a day replaces that day only. Lake roots this console may write:
+    <span class="mono">{{ cfg.roots | join(', ') }}</span> (<span class="mono">lakes.roots</span>). See <a href="/help/tools">Tools</a>.</p>
+  </details>
+  <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
+
+  <section class="lk-step" data-step="file" aria-labelledby="lkFile">
+    <h2 id="lkFile"><span class="lk-n">1</span> The file</h2>
+    <label class="loads-field">A .json (array), .jsonl, .ndjson or .gz file, up to {{ '{:,}'.format(cfg.maxUploadMb) }} MB
+      <input type="file" data-file accept=".json,.jsonl,.ndjson,.gz,application/json"></label>
+    <div class="lk-progress" data-upload-progress hidden><progress max="100" value="0" data-bar aria-label="Upload"></progress> <span data-upload-text></span></div>
+  </section>
+
+  <section class="lk-step" data-step="fields" aria-labelledby="lkFields" hidden>
+    <h2 id="lkFields"><span class="lk-n">2</span> Id, business date and classifiers</h2>
+    <p class="text-muted-d" data-scan-note></p>
+    <div class="lk-grid">
+      <label class="loads-field">Id field (one row per id and date)<select class="studio-in" data-key></select></label>
+      <label class="loads-field">Business date<select class="studio-in" data-date></select></label>
+      <label class="loads-field" data-asof-wrap hidden>One date for the whole file (as of)<input class="studio-in" type="date" data-asof></label>
+    </div>
+    <div class="tbl-wrap lk-fields"><table class="tbl adm-tbl" data-fields>
+      <caption class="visually-hidden">The file's fields: classifiers become partition folders, promoted fields become columns</caption>
+      <thead><tr><th scope="col">Field</th><th scope="col">Present</th><th scope="col">Values</th><th scope="col">Most frequent</th>
+        <th scope="col">Classifier</th><th scope="col">Promote</th></tr></thead>
+      <tbody></tbody></table></div>
+  </section>
+
+  <section class="lk-step" data-step="target" aria-labelledby="lkTarget" hidden>
+    <h2 id="lkTarget"><span class="lk-n">3</span> Where it goes</h2>
+    <div class="lk-grid">
+      <label class="loads-field">Lake<select class="studio-in" data-table></select></label>
+      <label class="loads-field">Lake root<select class="studio-in" data-root></select></label>
+      <label class="loads-field">Domain<input class="studio-in" data-domain autocomplete="off" spellcheck="false" placeholder="trading"></label>
+      <label class="loads-field">Kind (the table)<input class="studio-in" data-kind autocomplete="off" spellcheck="false" placeholder="deal"></label>
+      <label class="loads-field">When a date is already there<select class="studio-in" data-mode>
+        <option value="overwrite-dates">Replace those dates (re-runs are safe)</option>
+        <option value="overwrite-partitions">Replace only those dates and classifier values</option>
+        <option value="append">Add the rows</option></select></label>
+      <label class="loads-field">Pack (its Delta connector reads the lake)<select class="studio-in" data-pack></select></label>
+    </div>
+    <label class="loads-check"><input type="checkbox" data-bind checked> Bind the lake to the pack's Delta connector (a new connector file, or the kind added to it; kept in its history)</label>
+    <label class="loads-check"><input type="checkbox" data-signal checked> Tell the server the data landed (Data loads, alerts, notices)</label>
+    <p class="lk-warn" data-target-warn role="status" hidden></p>
+    <p><button type="button" class="btn-pill btn-accent" data-run>Build the lake</button></p>
+  </section>
+
+  <section class="lk-step" data-step="run" aria-labelledby="lkRun" hidden>
+    <h2 id="lkRun"><span class="lk-n">4</span> Build</h2>
+    <div class="lk-progress"><progress max="100" value="0" data-run-bar aria-label="Build"></progress> <span data-run-text>Starting…</span></div>
+    <div data-result></div>
+  </section>
+
+  <h2 class="lk-h2">Recent runs</h2>
+  <div class="tbl-wrap"><table class="tbl adm-tbl lk-runs">
+    <caption class="visually-hidden">The last runs of the lake builds, from each root's run log</caption>
+    <thead><tr><th scope="col">Run log line</th></tr></thead>
+    <tbody>{% for r in runs | reverse %}<tr><td class="mono">{{ r.line }}</td></tr>{% else %}<tr><td class="text-muted-d">No build has run on these roots yet.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-lakes.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -642,6 +642,10 @@ class BackendClient:
             kw["json"] = body
         return await self._send(method, "/admin" + path, ident, **kw)
 
+    async def announce_load(self, pack: str, body: dict, ident) -> dict:
+        """Tells the server a batch landed (``POST /api/v1/packs/{pack}/loads``), as Admin -> Data loads -> Lakes does after a build."""
+        return await self._send("POST", f"/packs/{quote(pack, safe='')}/loads", ident, json=body)
+
     async def admin_upload(self, path: str, ident, data: bytes, headers: dict, timeout: float = 120.0):
         """Sends raw bytes to an admin endpoint (a pack archive); ``headers`` carry its file name, checksum and signature."""
         return await self._send("POST", "/admin" + path, ident, content=data, headers={"Content-Type": "application/octet-stream", **headers}, timeout=timeout)

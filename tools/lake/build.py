@@ -264,7 +264,8 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say) -> tuple[int, dic
                                  for d, parts in by_day.items() for x in parts]
         summary.update(documents=st.stats.read, accepted=st.stats.accepted, rejected=st.stats.rejected,
                        rejects={"byReason": dict(st.stats.rejects.most_common()), "first": st.stats.reject_samples},
-                       duplicates=dict(st.stats.duplicates), files=st.stats.files)
+                       duplicates=dict(st.stats.duplicates), files=st.stats.files,
+                       sampleId=st.stats.sample[0] if st.stats.sample else None, sampleDate=st.stats.sample[1] if st.stats.sample else None)
         timings = {"readSeconds": round(read_s, 3)}
         summary["timings"] = timings
         if a.dry_run:

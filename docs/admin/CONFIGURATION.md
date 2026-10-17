@@ -389,6 +389,9 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | (no variable) | `bi.explore.quant_engine` | `stand-in` | The engine behind `quant.price(...)` in a Python cell ([QUANT_SERVICE.md](../architecture/QUANT_SERVICE.md#16-the-consoles-quantengine-slot-built-lean)); only `stand-in` is built in. |
 | `DRISHTI_LAYOUTS_ENABLED` | `layouts.enabled` | `true` | Offer layout mode. |
 | `DRISHTI_PACKS_DIR` | `packs.dir` | `../config/packs` | The packs directory (a relative path resolves from `drishti-console/`). |
+| `DRISHTI_LAKE_ROOTS` | `lakes.roots` | `../data/delta` | Admin → Data loads → Lakes ([TOOLS.md](../guides/TOOLS.md#lake-build)): the lake roots this console may write, comma-separated (relative paths resolve from `drishti-console/`); the page offers no other folder. |
+| `DRISHTI_JAR` | `lakes.jar` | empty | The drishti-server exec jar whose Java writer the page's builds use (`lakes.engine: auto`); empty: the newest `drishti-server/target/drishti-server-*-exec.jar`, else the Python `deltalake` package. |
+| (no variable) | `lakes.max_upload_mb`, `scan_docs`, `engine`, `python`, `keep_min`, `jobs` | `4096`, `20000`, `auto`, the console's Python, `240`, `2` | Largest upload (streamed to the console's temp folder); documents read to suggest the id, date and classifiers; `auto`, `drishti` or `deltalake`; the Python that runs `tools/lake/build.py`; minutes an upload and a finished build are kept; builds at once. |
 | `DRISHTI_AI_ENABLED` | `ai.enabled` | `false` | Turn on the console's own LLM provider layer (the recommended provider is `type: server`, which delegates to the server so keys stay there). |
 | `DRISHTI_AI_DIR` | `ai.dir` | `./config/ai` | The folder of provider files (the same format and, if you share the folder, the same files as the server). |
 | `DRISHTI_AI_DEFAULT_MODEL` | `ai.default_model` | empty | The model used when a call names none (`provider/model`). |

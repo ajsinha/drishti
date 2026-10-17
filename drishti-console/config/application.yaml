@@ -162,6 +162,15 @@ builder:                     # Build workbench, New (/build/new); docs/architect
   pack_draft_concurrency: 4  # Sutras drafted at once against the server
   tools_dir: ../tools        # the repository's tools/ folder (packbundle.py makes the bundle); relative to drishti-console/
   studio_kind: sample        # the kind a new Design and "Open in Studio" preview a brought document as (a pasted document has no kind of its own)
+lakes:                       # Admin -> Data loads -> Lakes (/admin/lakes): a large JSON file into a Delta lake (docs/guides/TOOLS.md)
+  roots: ${DRISHTI_LAKE_ROOTS:../data/delta}   # the lake roots this console may write, comma-separated (the Delta connectors' root)
+  max_upload_mb: 4096        # largest file uploaded (streamed to the console's temporary folder, never held in memory)
+  scan_docs: 20000           # documents read to suggest the id, date and classifiers (the build reads them all)
+  engine: auto               # auto (Drishti's Java writer when lakes.jar or the server jar is found, else deltalake), drishti, deltalake
+  jar: ${DRISHTI_JAR:}       # the drishti-server exec jar that carries the writer (default: drishti-server/target)
+  python: ""                 # the Python that runs tools/lake/build.py (default: the console's own)
+  keep_min: 240              # minutes an upload and a finished build are kept
+  jobs: 2                    # builds running at once on this console
 form:                        # query by form (FORM <pack>; docs/guides/USER_GUIDE.md)
   collapse_on_submit: true   # after Search the form folds to one line of its criteria so the results get the room; Show form (Alt+F) brings it back
 calc:                        # Calc: Python in the browser (docs/guides/PYTHON_CALC.md); also needs a role with calc

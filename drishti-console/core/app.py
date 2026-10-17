@@ -213,7 +213,7 @@ def create_app(settings: Settings) -> FastAPI:
                         workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes,
                         ai_routes)
 
-    from routes import artifact_routes
+    from routes import artifact_routes, lake_routes
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -374,6 +374,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(embed_admin_routes.router)
     app.include_router(connector_routes.router)
     app.include_router(artifact_routes.router)
+    app.include_router(lake_routes.router)
     app.include_router(form_routes.router)
     app.include_router(ai_routes.router)
     if app.state.bi_on:
