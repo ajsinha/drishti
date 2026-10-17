@@ -30,9 +30,9 @@ docs/guides/examples/embed/vendor/
 
 # your own libraries (external_lib/README.md): not part of the repository
 external_lib/java/*
-!external_lib/java/.gitkeep
+!external_lib/java/README.md
 external_lib/python/*
-!external_lib/python/.gitkeep
+!external_lib/python/README.md
 
-# the QA run configurations (.run/): the QA profile own data folder, lake and packs
+# the QA run configurations (run-configs/): the QA profile own data folder, lake and packs
 /qa-data/

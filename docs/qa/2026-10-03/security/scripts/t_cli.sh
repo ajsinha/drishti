@@ -15,7 +15,7 @@
 
 # Headless CLI on hostile inputs. Output goes to $W/cli; every file created outside --out is reported.
 R=/home/ashutosh/IdeaProjects/drishti
-W=$(cat "$(dirname "$0")/.workdir"); C=$W/cli
+W=$(cat "$(dirname "$0")/workdir.txt"); C=$W/cli
 export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 export DRISHTI_PACKS_DIR=$R/packs DRISHTI_PACKS=market-risk
 JAR=$R/drishti-server/target/drishti-server-1.13.0-exec.jar

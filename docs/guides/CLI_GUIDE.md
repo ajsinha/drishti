@@ -2524,11 +2524,11 @@ The Java `sutra` command that `pack check` and `pack make` start is a separate p
 (use 14.5 for that). **Variables** shows the parsed options (`a`), and **Evaluate expression** (Alt+F8) works on them.
 To stop on an error, tick **Run → View Breakpoints → Python Exception Breakpoints → Any exception**.
 
-### 14.4 Share the configurations with the team: `.run/`
+### 14.4 Share the configurations with the team: `run-configs/`
 
 By default a configuration lives in `.idea/workspace.xml` (personal, not committed). To share it, open it in **Edit
-Configurations** and tick **Store as project file**: PyCharm writes it to `.run/<name>.run.xml` in the project, which can be
-committed. This repository ships four to start from, `.run/drishti pack make.run.xml`, `.run/drishti sutra gen.run.xml`, `.run/drishti data profile.run.xml` and `.run/drishti pack regenerate.run.xml`; PyCharm
+Configurations** and tick **Store as project file**: PyCharm writes it to `run-configs/<name>.run.xml` in the project, which can be
+committed. This repository ships four to start from, `run-configs/drishti pack make.run.xml`, `run-configs/drishti sutra gen.run.xml`, `run-configs/drishti data profile.run.xml` and `run-configs/drishti pack regenerate.run.xml`; PyCharm
 lists them under **Python** as soon as the project opens (reload with **File → Reload All from Disk** if it was open already).
 The format is one `<configuration>` element in a `ProjectRunConfigurationManager` component:
 

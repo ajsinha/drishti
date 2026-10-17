@@ -178,7 +178,7 @@ $ tar tzf /backup/drishti/drishti-20261013-0130.tgz | grep -E '^config/bi/(model
 config/bi/datasets/
 config/bi/datasets/live-trading.dataset.yaml
 config/bi/datasets/live-exposure.dataset.yaml
-config/bi/datasets/.gitkeep
+config/bi/datasets/README.md
 config/bi/datasets/world-economics-economies.dataset.yaml
 config/bi/datasets/trading-risk-trades.dataset.yaml
 ```

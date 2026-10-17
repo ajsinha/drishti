@@ -79,7 +79,7 @@ To build the runnable jar as well (what `java -jar` and the Docker image use), o
 
 ### 3.1 The run configurations (already in the repository)
 
-The repository commits ready-made run configurations in `.run/`. IntelliJ shows them in the drop-down at the top right as soon as the
+The repository commits ready-made run configurations in `run-configs/`. IntelliJ shows them in the drop-down at the top right as soon as the
 project is open (folders **Drishti** and **Drishti QA**); there is nothing to type. Every one uses `$PROJECT_DIR$` (the repository root),
 the project's JDK and no absolute path of yours.
 
@@ -143,8 +143,8 @@ it must not share `./data`. Point a console at it with `DRISHTI_BACKEND_URL=http
 
 ### 4.1 Open the project
 
-**File -> Open** the **repository root** (not `drishti-console/` alone): the committed run configurations in `.run/`, the tools and the docs
-are then all in one project. Opening only `drishti-console/` works for the console, but then the `.run/` configurations are not shown.
+**File -> Open** the **repository root** (not `drishti-console/` alone): the committed run configurations in `run-configs/`, the tools and the docs
+are then all in one project. Opening only `drishti-console/` works for the console, but then the `run-configs/` configurations are not shown.
 Add the interpreter of section 4.2 once.
 
 ### 4.2 The interpreter
@@ -157,7 +157,7 @@ Add the interpreter of section 4.2 once.
 
 ### 4.3 The run configurations (already in the repository)
 
-PyCharm reads the same `.run/` folder of the repository root when you open the root as the project (section 4.1):
+PyCharm reads the same `run-configs/` folder of the repository root when you open the root as the project (section 4.1):
 
 | Run configuration | Parameters | Talks to |
 |---|---|---|
@@ -188,7 +188,7 @@ it includes.
 The pack and Sutra tools (`tools/drishti.py`: `pack make` (JSON Lines to one deployable folder), `pack new`, `pack check`, `sutra lint`, `data ingest`, the REST commands) run from PyCharm
 the same way, and the Java `sutra` tool runs from IntelliJ IDEA: run configurations, the interpreter with PyYAML (and `deltalake`,
 `pyarrow`), `DRISHTI_TOKEN` and the working directory are in
-[CLI_GUIDE.md](CLI_GUIDE.md#14-running-the-tools-from-pycharm-and-the-java-sutra-from-intellij), which also covers debugging them and sharing run configurations through `.run/` (two samples are committed: `pack make` and `sutra gen`).
+[CLI_GUIDE.md](CLI_GUIDE.md#14-running-the-tools-from-pycharm-and-the-java-sutra-from-intellij), which also covers debugging them and sharing run configurations through `run-configs/` (two samples are committed: `pack make` and `sutra gen`).
 
 ## 5. Running the tests from the IDEs
 

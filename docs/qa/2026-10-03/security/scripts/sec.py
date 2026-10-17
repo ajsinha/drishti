@@ -15,7 +15,7 @@
 
 """Helpers for the 2026-10-03 security QA: mint tokens (shared secret), call the scratch server :18961 / console :17961, log."""
 import base64, hashlib, hmac, json, os, time, datetime, urllib.request, urllib.error
-W = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".workdir")).read().strip()
+W = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "workdir.txt")).read().strip()
 SECRET = open(W + "/secret").read().strip()
 SRV = "http://127.0.0.1:18961"
 CON = "http://127.0.0.1:17961"

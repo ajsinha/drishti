@@ -16,7 +16,7 @@
 """File binding ON: non-authors, path escapes, symlinks, overwriting another Sutra (governance bypass), cross-design clash."""
 from sec import *
 import os
-P = "/api/v1/builder/designs"; W = open(".workdir").read().strip()
+P = "/api/v1/builder/designs"; W = open("workdir.txt").read().strip()
 SUT = "rachana: 1\nsutra: qa-bound\nversion: 1\ndescription: x\nmatch: { kind: qabound, priority: 1 }\ntitle: { id: $.id }\npanels: []\n"
 def mk(u, name="b"):
     s, b = api(u, "POST", P, {"name": name, "kind": "qabound", "sutra": SUT}); return jl(b)["id"]

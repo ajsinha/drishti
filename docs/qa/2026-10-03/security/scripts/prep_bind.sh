@@ -14,7 +14,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # prepares files for the file-binding tests in the scratch work dir
-W=$(cat "$(dirname "$0")/.workdir")
+W=$(cat "$(dirname "$0")/workdir.txt")
 mkdir -p $W/sutras/sub $W/outside
 printf 'rachana: 1\nsutra: other-live\nversion: 1\ndescription: the other Sutra\nmatch: { kind: otherkind, priority: 1 }\ntitle: { id: $.id }\npanels: []\n' > $W/sutras/existing.yaml
 printf 'top_secret: OUTSIDE-FILE-MARKER-31337\n' > $W/outside/secret.yaml

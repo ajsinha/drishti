@@ -16,7 +16,7 @@
 """File binding + governance: an author with binding on rewrites a live, approved Sutra file (and adds a new one) without any review."""
 from sec import *
 import os, time
-P = "/api/v1/builder/designs"; W = open(".workdir").read().strip()
+P = "/api/v1/builder/designs"; W = open("workdir.txt").read().strip()
 live = "rachana: 1\nsutra: live-victim\nversion: 1\ndescription: approved and live\nmatch: { kind: victimkind, priority: 1 }\ntitle: { id: $.id }\npanels: []\n"
 open(W + "/sutras/live-victim.v1.sutra.yaml", "w").write(live)
 time.sleep(3)
