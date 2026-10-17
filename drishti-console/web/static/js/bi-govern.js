@@ -213,8 +213,9 @@
   function layerLineage(l, box) {
     var chainOf = function (chain) {
       return (chain || []).map(function (x) {
-        return x.kind === 'pack-kind' ? h('span', {}, ' · kind ', h('span', { class: 'mono', text: x.name }), ' of pack ' + x.pack, ' · connector ', h('span', { class: 'mono', text: x.connector || 'whichever serves the kind' }))
+        var link = x.kind === 'pack-kind' ? h('span', {}, ' · kind ', h('span', { class: 'mono', text: x.name }), ' of pack ' + x.pack, ' · connector ', h('span', { class: 'mono', text: x.connector || 'whichever serves the kind' }))
           : h('span', {}, ' · ' + x.kind + ' ', h('span', { class: 'mono', text: x.name }));
+        return x.source ? h('span', {}, link, sourceOf(x.source)) : link;      // past the connector: what it reads from
       });
     };
     if (l.model) { box.appendChild(h('p', { 'data-model': true }, 'Model ', h('span', { class: 'mono', text: l.model.name + ' ' + l.model.version }), l.model.ref ? ' (the report names ' + l.model.ref + ')' : '')); }

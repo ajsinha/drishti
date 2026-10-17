@@ -728,6 +728,10 @@ class ModelAcceptanceTest {
         assertThat(up.path("table").asText()).isEqualTo("trades");
         assertThat(up.path("dataset").asText() + " " + up.path("version").asText()).isEqualTo("acc-trade 1.0.0");
         assertThat(up.path("chain").toString()).contains("acc-lake");
+        JsonNode source = up.path("chain").findValue("source");                    // past the connector: what it reads from, masked for a reader
+        assertThat(source).as("the connector's source in %s", up.path("chain")).isNotNull();
+        assertThat(source.path("connector").asText()).isEqualTo("acc-lake");
+        assertThat(source.path("masked").asBoolean()).isTrue();
         assertThat(model.path("downstream").findValuesAsText("id")).contains("file:dataset:desk-book");     // a dataset on the model's answer reads it
         JsonNode ds = ok(call("GET", "/api/v1/bi/items/file:dataset:acc-trade/lineage", reader("wes"), null));
         assertThat(ds.path("dataset").path("name").asText()).isEqualTo("acc-trade");
