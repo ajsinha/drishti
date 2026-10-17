@@ -122,6 +122,7 @@ public final class QueryService implements AutoCloseable {
         this.sources = sources;
         this.liveTables = new LiveTables(engine, sources, liveProps, clock, bus);
         this.layers = new Layers(engine, sources, props, clock);
+        this.layers.clearIfLakeRebuilt();                       // a lake rebuilt while the server was down (lake demo's stamp)
         this.admission = new Admission(props.maxConcurrent(), props.maxConcurrentPerUser(), ExecProperties.defaults().perModelShare());
         // one budget in bytes; every entry weighs at least budget / entries, so the entry count is bounded too
         long budget = Math.max(1, props.cacheMaxBytes());
@@ -238,6 +239,9 @@ public final class QueryService implements AutoCloseable {
 
     private Result query(Loaded ds, QueryRequest q, Caller who, boolean explain, Frames frames, StagedTables staged) {
         queries.incrementAndGet();
+        if (layers.sync(ds.key(), ds.dataset())) {             // the source holds new data that no load signal announced (a lake rebuilt)
+            bus.publish(new GenerationBus.Notice(ds.key(), null, "load", null, layers.generation(ds.key()), null));
+        }
         Frames.Rows rows = null;
         if (frames != null && ds.dataset().framed() && (explain || cache == null || cache.getIfPresent(cacheKey(ds, q, who) + "|frames:" + frames.fingerprint()) == null)) {
             rows = frames.load();                   // the sources are asked before this query takes a place of its own: they are queries too, and must not wait for it

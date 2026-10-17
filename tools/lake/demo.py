@@ -34,6 +34,12 @@ only, the trades themselves (BMO_LEGAL_ENTITY read as LEGAL_ENTITY), a counterpa
 agreement and a netting set per counterparty and legal entity holding its real trades. Nothing is written to data/testdata, and a
 real trade whose id the test data already uses is left out (the test data wins). Staging files live under <data>/build/lake-demo and
 are removed at the end. The file connector's sample feed is written to <data>/feeds as well. Needs PyYAML, and deltalake and pyarrow (engine deltalake, the default; --engine auto uses the server jar).
+
+A server must not keep serving the old figures: its BI store (<data>/bi-store) holds columns and rollups read from the lake. After the
+build, lake demo sends the data-load signal (POST /api/v1/packs/{pack}/loads) for every table and business date it wrote to the server
+--server names (default DRISHTI_SERVER, then http://localhost:18480; the token from --token-file or DRISHTI_TOKEN). When no server is
+reachable, or one refuses the signal, it leaves <bi-store>/lake-rebuilt.json and the server clears its columns and rollups at its next
+start. A running server also notices a rebuilt table by itself (a date's Delta files changed) and reads it again. --no-signal skips both.
 """
 from __future__ import annotations
 
@@ -47,11 +53,16 @@ import re
 import shutil
 import sys
 import time
-from datetime import datetime
+import urllib.error
+import urllib.parse
+import urllib.request
+from datetime import datetime, timezone
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 DEFAULT_ROOT = "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
+DEFAULT_SERVER = "http://localhost:18480"
+REBUILT_STAMP = "lake-rebuilt.json"          # read by the server at start (Layers.REBUILT_STAMP)
 REDATE = re.compile(r'("(?:AS_OF|VALUATION_DATE|RUN_DATE|SOURCE_UPDATE_TIME)":")(\d{4}-\d{2}-\d{2})')
 
 
@@ -170,9 +181,12 @@ class DemoLake:
         self.manifest = Manifest(self.testdata)
         self.extras = RealExtras(a.with_real.split(",")).build() if a.with_real else {}
         self.tables: list[str] = []
+        self.written: list[tuple[str, str, str]] = []    # (pack, kind, table) of every table written
         self.left_out: list[str] = []
         self.dates = self.target_dates(a.as_of)
         self.shift = {o: n for o, n in zip(self.manifest.dates, self.dates) if o != n}
+        self.run_id = datetime.now().strftime("%Y%m%dT%H%M%S")
+        self.server_note = ""
 
     def target_dates(self, as_of: str) -> list[str]:
         """The business dates the lake is written for: the test data's own (``data``), or the same number of USNY business days
@@ -212,8 +226,61 @@ class DemoLake:
         self.feeds = self.write_feeds()
         elapsed = time.monotonic() - started
         notes = self.connector_files()
+        self.server_note = self.tell_server()
         self.report(elapsed, notes)
         return worst
+
+    # ---- the server's BI store ---------------------------------------------------------------------------------------------------------
+    def bi_store(self) -> pathlib.Path:
+        return pathlib.Path(os.environ.get("DRISHTI_BI_STORE") or (self.data / "bi-store"))
+
+    def tell_server(self) -> str:
+        """The data-load signal for every table and date written; else the stamp the server reads at its next start."""
+        if self.a.no_signal or not self.written:
+            return "not told (--no-signal)" if self.a.no_signal else ""
+        base = (self.a.server or os.environ.get("DRISHTI_SERVER") or DEFAULT_SERVER).rstrip("/")
+        token = None
+        if self.a.token_file:
+            token = pathlib.Path(os.path.expanduser(self.a.token_file)).read_text(encoding="utf-8").strip()
+        token = token or os.environ.get("DRISHTI_TOKEN")
+        headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        if token:
+            headers["Authorization"] = "Bearer " + token
+        elif os.environ.get("DRISHTI_USER"):
+            headers["X-Drishti-User"] = os.environ["DRISHTI_USER"]
+        sent, failed, why = 0, 0, ""
+        try:
+            with urllib.request.urlopen(urllib.request.Request(base + "/actuator/health"), timeout=3):   # noqa: S310 - the operator's --server
+                reachable = True
+        except urllib.error.HTTPError:
+            reachable = True                                  # it answered: it is there
+        except (urllib.error.URLError, OSError):
+            reachable = False
+        if reachable:
+            for pack, kind, _table in self.written:
+                for day in self.dates:
+                    body = {"kind": kind, "businessDate": day, "status": "ready", "source": "lake demo", "batchId": f"lake-demo-{self.run_id}"}
+                    url = base + f"/api/v1/packs/{urllib.parse.quote(pack, safe='')}/loads"
+                    req = urllib.request.Request(url, data=json.dumps(body).encode(), headers=headers, method="POST")
+                    try:
+                        with urllib.request.urlopen(req, timeout=30):     # noqa: S310 - the operator's --server
+                            sent += 1
+                    except urllib.error.HTTPError as e:
+                        failed += 1
+                        why = why or f"{e.code} {e.read().decode('utf-8', 'replace')[:160]}"
+                    except (urllib.error.URLError, OSError) as e:
+                        failed += 1
+                        why = why or str(getattr(e, "reason", e))
+            if not failed:
+                return f"{base} told: {sent} data-load signals (each table, each date); it reads them again"
+        stamp = self.bi_store() / REBUILT_STAMP
+        stamp.parent.mkdir(parents=True, exist_ok=True)
+        stamp.write_text(json.dumps({"at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "by": "drishti.py lake demo", "lake": str(self.lake),
+                                     "dates": self.dates, "tables": [t for _, _, t in self.written]}, indent=1) + "\n", encoding="utf-8")
+        if not reachable:
+            return (f"no server at {base}: left {stamp}, so a server clears its stored BI columns and rollups at its next start")
+        return (f"{base} refused {failed} of {sent + failed} data-load signals ({why.strip()}; a token with loads:write: --token-file or "
+                f"DRISHTI_TOKEN): left {stamp} for its next start; a running server also re-reads a rebuilt table by itself")
 
     def wanted(self, ds: dict) -> bool:
         only = [x.strip() for x in (self.a.only or "").split(",") if x.strip()]
@@ -264,7 +331,7 @@ class DemoLake:
                 for line in state.values():
                     fh.write(self.redate(line) + "\n")
             argv = ["--from", str(stage), "--pack", str(self.packs.dir / pack), "--kind", kind, "--connector", connector, "--key", key,
-                    "--as-of", day, "--lake", str(self.lake), "--engine", self.a.engine, "-q"]
+                    "--as-of", day, "--lake", str(self.lake), "--engine", self.a.engine, "-q", "--no-stamp"]
             for p in ds.get("partition-by") or []:
                 argv += ["--partition-by", p]
             code, summary = self.lb.run(self.lb.build_parser().parse_args(argv), say=lambda *x, **k: None)
@@ -275,6 +342,7 @@ class DemoLake:
         stage.unlink(missing_ok=True)
         self.checkpoint(path)
         self.tables.append(f"{domain}/{table}")
+        self.written.append((pack, kind, f"{domain}/{table}"))
         if not self.a.quiet:
             print(f"  {domain}/{table}: {rows:,} rows over {len(self.manifest.dates)} days" + (" (failed)" if worst == 1 else ""))
         return worst
@@ -352,6 +420,8 @@ class DemoLake:
         if self.left_out:
             print(f"  left out {len(self.left_out)} real document(s) whose id the test data already uses")
         print(f"Feeds: {self.feeds} (the file connector's sample feed)")
+        if self.server_note:
+            print(f"Server: {self.server_note}")
         print("Connector files:")
         for n in notes:
             print("  " + n)
@@ -383,6 +453,9 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--with-real", metavar="FILE[,FILE]", help="LOCAL ONLY: real trade extracts (JSON) whose counterparties, agreements and "
                    "netting sets are added to the local lake, never to data/testdata")
     p.add_argument("--only", metavar="PREFIX[,PREFIX]", help="only these datasets: a folder prefix (trades/, core/counterparty) or a pack name")
+    p.add_argument("--server", help=f"the server told of the new data (default: DRISHTI_SERVER, then {DEFAULT_SERVER})")
+    p.add_argument("--token-file", help="the API token for the data-load signal (default: DRISHTI_TOKEN); never printed")
+    p.add_argument("--no-signal", action="store_true", help="tell no server, and leave no stamp for one")
     p.add_argument("-q", "--quiet", action="store_true", help="only the summary")
     return p
 

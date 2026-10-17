@@ -433,6 +433,39 @@ class QueryEngineTest {
     }
 
     @Test
+    void aRebuiltSourceDateIsReadAgainWithoutASignalAndOtherDatesAreKept() {
+        lake.versions.put(TestLake.DAY1, "files-1");
+        lake.versions.put(TestLake.DAY2, "files-1");
+        String body = "{\"fields\":[\"trades.desk\"],\"measures\":[\"Notional\"],\"dates\":{\"from\":\"2026-10-08\",\"to\":\"2026-10-09\"}}";
+        QueryService.Result first = service.query(ds, q(body), risk(), false);
+        assertThat(service.query(ds, q(body), risk(), false).meta().cached()).isTrue();
+        int scans = lake.scans.get();
+        // lake demo run again: DAY2 written afresh with other figures, no data-load signal reaches the server
+        lake.trades.put(TestLake.DAY2, lake.trades.get(TestLake.DAY2).stream().map(t -> new TestLake.Trade(t.id(), t.desk(), t.ccy(), t.cpty(), t.notional() * 3, t.mtm(), t.tradeDate(), t.legs())).toList());
+        lake.versions.put(TestLake.DAY2, "files-2");
+        QueryService.Result after = service.query(ds, q(body), risk(), false);
+        assertThat(after.meta().cached()).isFalse();                                       // the cached answer is not served
+        assertThat((double) rows(after, "trades.desk", "Notional").get("DESK-A"))
+                .isEqualTo(expectedSum("DESK-A", false, TestLake.DAY1) + expectedSum("DESK-A", false, TestLake.DAY2))
+                .isNotEqualTo(rows(first, "trades.desk", "Notional").get("DESK-A"));
+        assertThat(lake.scans.get()).isEqualTo(scans + 1);                                 // DAY2 read again; DAY1's stored columns kept
+    }
+
+    @Test
+    void aLakeRebuiltWhileTheServerWasDownClearsTheStoredLayersAtStart() throws Exception {
+        run("{\"measures\":[\"Trades\"],\"dates\":{\"from\":\"2026-10-09\"}}", risk());
+        Path columns = store.resolve("columns");
+        assertThat(columns).isDirectory();
+        java.nio.file.Files.writeString(store.resolve(Layers.REBUILT_STAMP), "{\"by\":\"drishti.py lake demo\"}");
+        start(QueryProperties.defaults(store.toString()));                               // the server starts again
+        assertThat(columns).doesNotExist();
+        assertThat(store.resolve(Layers.REBUILT_STAMP)).doesNotExist();
+        int scans = lake.scans.get();
+        run("{\"measures\":[\"Trades\"],\"dates\":{\"from\":\"2026-10-09\"}}", risk());
+        assertThat(lake.scans.get()).isEqualTo(scans + 1);                                 // built again from the lake
+    }
+
+    @Test
     void aChangedTableDefinitionRebuildsTheLayer() {
         String body = "{\"fields\":[\"trades.desk\"],\"measures\":[\"Trades\"],\"dates\":{\"from\":\"2026-10-09\"}}";
         run(body, risk());

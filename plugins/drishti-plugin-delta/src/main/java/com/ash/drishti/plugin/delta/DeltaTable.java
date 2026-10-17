@@ -60,6 +60,29 @@ final class DeltaTable {
     record Layout(long version, long timestamp, Row scanState, NavigableMap<LocalDate, List<Row>> files, StructType schema,
             boolean deletionVectors, Row idScanState) {}
 
+    /**
+     * The files a business date is read from, as one short text (their paths, sorted, hashed): a date restated, or a table removed and
+     * written again, has new files; a date untouched by a later commit keeps its stamp. {@code none} when the date has no files.
+     */
+    static String filesStamp(Layout layout, LocalDate date) {
+        List<Row> files = layout.files().get(date);
+        if (files == null || files.isEmpty()) {
+            return "none";
+        }
+        List<String> paths = new java.util.ArrayList<>();
+        for (Row r : files) {
+            FileStatus fs = InternalScanFileUtils.getAddFileStatus(r);
+            paths.add(fs.getPath() + ":" + fs.getSize());
+        }
+        java.util.Collections.sort(paths);
+        try {
+            byte[] h = java.security.MessageDigest.getInstance("SHA-256").digest(String.join("\n", paths).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return java.util.HexFormat.of().formatHex(h).substring(0, 16);
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     /** One business date's ids, sorted, each with the index of the file that holds it (in the date's file list). */
     record IdMap(String[] ids, int[] files) {
         int file(String id) {

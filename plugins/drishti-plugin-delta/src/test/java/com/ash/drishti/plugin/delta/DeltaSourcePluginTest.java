@@ -142,6 +142,35 @@ class DeltaSourcePluginTest extends DatedSourceContract {
     }
 
     @Test
+    void aDatesDataVersionMovesOnlyWhenACommitChangesThatDatesFiles() throws Exception {
+        Path root = Files.createTempDirectory("drishti-lake-version");
+        Path table = root.resolve("desk").resolve("trade");
+        copy(Path.of("src/test/resources/lake/desk/trade"), table);
+        Path correction = table.resolve("_delta_log").resolve("00000000000000000001.json");
+        byte[] restate = Files.readAllBytes(correction);
+        Files.delete(correction);                                                  // the table before the correction of 2026-09-30
+        DeltaSourcePlugin p = new DeltaSourcePlugin();
+        p.start(context(Map.of("root", root.toString(), "domain", "desk", "source-name", "versioned", "refresh-seconds", "1", "warm-dates", "0",
+                "engine", engine())));
+        try {
+            LocalDate d28 = LocalDate.of(2026, 9, 28);
+            LocalDate d30 = LocalDate.of(2026, 9, 30);
+            String table0 = p.dataVersion("trade").orElseThrow();
+            String day28 = p.dataVersion("trade", d28).orElseThrow();
+            String day30 = p.dataVersion("trade", d30).orElseThrow();
+            assertThat(p.dataVersion("trade", LocalDate.of(2026, 1, 1))).contains("none");
+            Files.write(correction, restate);                                      // the correction lands (a rebuild, a restatement)
+            Thread.sleep(1_200);                                                   // past refresh-seconds: the latest version is read again
+            assertThat(p.dataVersion("trade").orElseThrow()).isNotEqualTo(table0);
+            assertThat(p.dataVersion("trade", d30).orElseThrow()).isNotEqualTo(day30);   // its files changed: stored layers of the date are stale
+            assertThat(p.dataVersion("trade", d28)).contains(day28);                     // untouched: kept
+            assertThat(p.dataVersion("no-such-kind")).isEmpty();
+        } finally {
+            p.close();
+        }
+    }
+
+    @Test
     void healthAndCacheStatsNameTheEngine() throws Exception {
         assertThat(plugin().health()).isEqualTo("UP (engine: " + engine() + ")");
         assertThat(plugin().cacheStats()).containsEntry("engine", engine());

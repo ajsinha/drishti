@@ -17,6 +17,13 @@
 
 ## Unreleased
 
+- **A rebuilt lake is never served from old BI figures.** `drishti.py lake demo` sends the data-load signal for every table and business
+  date it wrote (`--server`, default `DRISHTI_SERVER` then `http://localhost:18480`; `--token-file` / `DRISHTI_TOKEN`); when no server is
+  reachable, or one refuses, it leaves `<bi-store>/lake-rebuilt.json` and the server clears its stored columns and rollups at its next
+  start (`lake build` leaves the same stamp when run without `--signal`, unless `--no-stamp`). A running server also notices by itself:
+  each stored partition records the Delta files it was read from, and a date whose files changed is read again (other dates are kept),
+  cached answers included. The Delta connector keys its own caches by version *and* commit time, so a table removed and written again
+  (its versions start at 0 again) is never answered from the old table's ids, documents or columns.
 - **Wave B QA fixes.** A visual is never cut silently: *first 500 of N* with **Show all**, and a time series is asked by week, month,
   quarter or year so its whole range fits (Trades overview's *Notional by trade date* covers every date; `trade.TRADE_DATE.month_start`
   and the other period parts are dates). The Cashflow ladder's model is fixed: trades a dimension, legs, cashflows and the new payments

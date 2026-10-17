@@ -75,6 +75,11 @@ Written by `tools/testdata/make_testdata.py` (deterministic; `--check` says whet
    | [/v/counterparty/CP-VAULTGUARD](http://localhost:17480/v/counterparty/CP-VAULTGUARD) | the vault look-alike: UEN, country of risk, legal entity, netting sets |
    | [/bi](http://localhost:17480/bi) | the shipped BI reports and models, now over seven business days (pick a date, or a range in Analyse) |
 
+   **Running `lake demo` again** (new dates, regenerated data) is safe while a server runs: `lake demo` tells it (the data-load signal for
+   every table and date; pass `--server URL` and a token with `loads:write`, `--token-file` or `DRISHTI_TOKEN`, when the server has
+   security on), and a running server also sees each rebuilt Delta date by itself and reads it again, so BI never shows the old figures.
+   With no server running it leaves `data/bi-store/lake-rebuilt.json`, and the next start clears the stored BI columns and rollups.
+
    **Compare across days**: on a trade page pick the first of the seven dates `lake demo` printed, then **Compare** with the last; an
    amended trade (about 6%
    of each book is amended each day: the trades whose `TRADE_VERSION` moved) shows its changed rates, notionals, status or added fees.

@@ -47,7 +47,9 @@ import org.slf4j.LoggerFactory;
  * {@code columns/<dataset>/<table>/date=<yyyy-mm-dd>/part.parquet} and {@code rollups/<dataset>/<name>/date=.../part.parquet}, each with a
  * {@code meta.json} beside it (the table's signature, rows, a build id, how it was read, warnings). A partition is <em>valid</em> while its
  * signature matches the table's definition; a data-load signal deletes the date's partitions, so the next query (or the eager rebuild) reads the
- * source for that date only. A build is single-flight per partition: concurrent queries wait for one read of the source.
+ * source for that date only. A partition also records the version of the source data it was read from ({@link SourceGateway#dataVersion}: a Delta
+ * date's files); when the source holds other data for that date (a lake rebuilt by {@code drishti.py lake demo}, a date restated without a
+ * signal) the partition is stale and built again. A build is single-flight per partition: concurrent queries wait for one read of the source.
  */
 public final class Layers {
 
@@ -157,18 +159,18 @@ public final class Layers {
             Latest l = latest.get(lk);
             long now = clock.millis();
             LocalDate current = sources.currentDate();
-            Partition today = current == null ? null : valid(dir, current, sig);
+            Partition today = current == null ? null : valid(dir, current, sig, version(t, current));
             if (today != null && today.rows() > 0) {
                 return new Layer(List.of(today), warnings, 0);              // the current business date is built (and has rows: an empty one is never served as 'the latest')
             }
             if (l != null && now - l.at() < props.latestTtl().toMillis()) {
-                Partition p = valid(dir, l.date(), sig);
+                Partition p = valid(dir, l.date(), sig, version(t, l.date()));
                 if (p != null) {
                     return new Layer(List.of(p), warnings, 0);
                 }
             }
             TableBuilder.Built b = lock(dir.toString() + "|latest", () -> builder.build(t, null, d -> partitionDir(dir, d)));
-            Partition p = finish(dir, b, sig);
+            Partition p = finish(dir, b, sig, version(t, b.date()));
             latest.put(lk, new Latest(b.date(), now));
             builds.incrementAndGet();
             warnings.addAll(b.warnings());
@@ -181,7 +183,8 @@ public final class Layers {
                 warnings.add("the range is longer than " + MAX_RANGE_DAYS + " days: later days are not read");
                 break;
             }
-            Partition p = valid(dir, d, sig);
+            final String ver = version(t, d);
+            Partition p = valid(dir, d, sig, ver);
             if (p == null) {
                 if (built >= MAX_BUILDS_PER_QUERY) {
                     warnings.add("more than " + MAX_BUILDS_PER_QUERY + " dates were missing from the layer: the rest are not read until a refresh builds them");
@@ -189,13 +192,13 @@ public final class Layers {
                 }
                 final LocalDate day = d;
                 TableBuilder.Built b = lock(partitionDir(dir, day) + "|build", () -> {
-                    Partition again = valid(dir, day, sig);
+                    Partition again = valid(dir, day, sig, ver);
                     return again != null ? null : builder.build(t, day, x -> partitionDir(dir, x));
                 });
                 if (b == null) {
-                    p = valid(dir, d, sig);
+                    p = valid(dir, d, sig, ver);
                 } else {
-                    p = finish(dir, b, sig);
+                    p = finish(dir, b, sig, ver);
                     builds.incrementAndGet();
                     built++;
                     warnings.addAll(b.warnings());
@@ -208,10 +211,13 @@ public final class Layers {
         return new Layer(out, warnings.stream().distinct().toList(), built);
     }
 
-    private Partition finish(Path dir, TableBuilder.Built b, String sig) {
+    private Partition finish(Path dir, TableBuilder.Built b, String sig, String sourceVersion) {
         Map<String, Object> meta = new LinkedHashMap<>();
         String id = Long.toHexString(System.nanoTime()) + "-" + b.rows();
         meta.put("signature", sig);
+        if (sourceVersion != null) {
+            meta.put("sourceVersion", sourceVersion);
+        }
         meta.put("rows", b.rows());
         meta.put("buildId", id);
         meta.put("how", b.how());
@@ -225,8 +231,26 @@ public final class Layers {
         return new Partition(b.date(), b.file(), b.rows(), id);
     }
 
-    /** The partition when it exists, is complete and was built for this signature; else null. */
-    private Partition valid(Path dir, LocalDate date, String sig) {
+    /**
+     * The version of the data a table reads on a date (null: the source cannot tell, or the date is not known yet). Never fails a query: a
+     * connector that cannot answer now leaves the stored partition in use.
+     */
+    String version(Dataset.Table t, LocalDate date) {
+        if (date == null || t.kind() == null || t.kind().isBlank()) {
+            return null;
+        }
+        try {
+            return sources.dataVersion(t.connector(), t.kind(), date);
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
+    /**
+     * The partition when it exists, is complete, was built for this signature and (when the source can say) from the data the source holds now;
+     * else null.
+     */
+    private Partition valid(Path dir, LocalDate date, String sig, String sourceVersion) {
         Path pd = partitionDir(dir, date);
         Path meta = pd.resolve("meta.json");
         if (!Files.isRegularFile(meta) || !Files.isRegularFile(pd.resolve("part.parquet"))) {
@@ -235,6 +259,10 @@ public final class Layers {
         try {
             JsonNode m = JSON.readTree(Files.readString(meta));
             if (!sig.equals(m.path("signature").asText())) {
+                return null;
+            }
+            if (sourceVersion != null && !sourceVersion.equals(m.path("sourceVersion").asText(null))) {
+                LOG.info("{} {}: the source holds other data now (a rebuilt or restated table): built again", dir.getFileName(), date);
                 return null;
             }
             return new Partition(date, pd.resolve("part.parquet"), m.path("rows").asLong(), m.path("buildId").asText());
@@ -377,6 +405,84 @@ public final class Layers {
     }
 
     // ---- invalidation ------------------------------------------------------------------------------------------------
+
+    /** The whole-table data version each cached table of a dataset was last seen at (key|table). */
+    private final Map<String, String> seen = new ConcurrentHashMap<>();
+
+    /**
+     * Moves the dataset's generations on when a table's source holds a new version since the last query (a lake rebuilt or a date restated
+     * without a data-load signal), so cached answers built from the old data are not served; the stale partitions themselves are rebuilt as
+     * they are read. Cheap: the connectors answer from their own latest-version cache. Returns true when something moved.
+     */
+    public boolean sync(String key, Dataset ds) {
+        boolean moved = false;
+        for (Dataset.Table t : ds.tables().values()) {
+            if (!"cached".equals(t.mode()) || t.kind() == null || t.kind().isBlank()) {
+                continue;
+            }
+            String v;
+            try {
+                v = sources.dataVersion(t.connector(), t.kind(), null);
+            } catch (RuntimeException e) {
+                continue;
+            }
+            if (v == null) {
+                continue;
+            }
+            String was = seen.put(key + "|" + t.name(), v);
+            if (was != null && !was.equals(v)) {
+                latest.remove(key + "|" + t.name());
+                moved = true;
+            }
+        }
+        if (moved) {
+            generations.computeIfAbsent(key, k -> new AtomicLong()).incrementAndGet();
+            dateGenerations.forEach((k, g) -> {
+                if (k.startsWith(key + "|")) {
+                    g.incrementAndGet();
+                }
+            });
+        }
+        return moved;
+    }
+
+    /** The file {@code drishti.py lake demo} writes into the BI store when no running server took its data-load signal. */
+    public static final String REBUILT_STAMP = "lake-rebuilt.json";
+
+    /**
+     * Clears the store's columns, rollups and live files when the lake was rebuilt while the server was down ({@code lake demo} left
+     * {@value #REBUILT_STAMP} in the store). Called at start; returns true when it cleared.
+     */
+    public boolean clearIfLakeRebuilt() {
+        Path stamp = root.resolve(REBUILT_STAMP);
+        if (!Files.isRegularFile(stamp)) {
+            return false;
+        }
+        String what;
+        try {
+            what = Files.readString(stamp, StandardCharsets.UTF_8).strip();
+        } catch (IOException e) {
+            what = "";
+        }
+        for (String folder : List.of("columns", "rollups", "live")) {
+            try {
+                TableBuilder.delete(root.resolve(folder));
+            } catch (IOException e) {
+                LOG.warn("cannot clear the BI store's {} after a lake rebuild: {}", folder, e.getMessage());
+                return false;
+            }
+        }
+        latest.clear();
+        liveAt.clear();
+        try {
+            Files.deleteIfExists(stamp);
+        } catch (IOException e) {
+            LOG.warn("cannot remove {}: {}", stamp, e.getMessage());
+        }
+        LOG.info("The lake was rebuilt while the server was stopped ({}): the BI store's columns and rollups were cleared and are built again from it",
+                what.length() > 200 ? what.substring(0, 200) + "..." : what);
+        return true;
+    }
 
     /** Deletes the date's partitions of every table (and rollup) of the dataset that reads the kind; returns the tables touched. */
     public List<String> invalidate(String key, Dataset ds, String kind, LocalDate date) {
