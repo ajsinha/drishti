@@ -92,10 +92,6 @@
     if (group === 'python') { return out; }                                        // a Python result is drawn from rows Python was handed: no alert, drill or marks
     if (B.ai && group !== 'python') { out.push(B.ai.explainButton(spec, mk)); }                                  // Explain this number: hidden unless the server's AI layer is on
     out.push(alertButton(spec, mk));                                               // Alert me: every visual that shows numbers, live ones too (a live source can alert on change)
-    if (group === 'perspective') {                                                  // Perspective's settings panel, and for the report's editor the view saved back into the YAML
-      out.push(mk('bi-psp-settings', 'sliders', 'Settings: columns, groups, aggregates, the chart', () => { const e = frames.get(spec.id); if (e && e.psp) { e.psp.toggleSettings().catch(() => {}); } }, { 'data-act': 'psp-settings' }));
-      if (rep && rep.mayEdit && !rep.shipped) { out.push(mk('bi-psp-save', 'floppy', 'Save this view into the report', () => { saveView(spec); }, { 'data-act': 'psp-save' })); }
-    }
     if (group === 'perspective' || group === 'live') { return out; }
     const sel = state.selections.find((s) => s.visual === spec.id);
     const path = state.drills[spec.id] || [];
@@ -162,7 +158,6 @@
     if (!entry) { return Promise.resolve(); }
     const token = ++entry.token;
     if (VGROUP[spec.type] === 'static' || VGROUP[spec.type] === 'entity') { entry.frame.result(null, (host) => B.visuals.draw(host, spec, ctxFor(spec), null)); return Promise.resolve(); }
-    if (VGROUP[spec.type] === 'perspective') { return loadPerspective(spec, entry, token, quiet); }
     if (VGROUP[spec.type] === 'python') { return loadPython(spec, entry, token, quiet); }
     if (!quiet) { entry.frame.busy(); }
     return B.enqueue(() => B.api('POST', '/reports/' + B.id2path(reportId) + '/query', { page: pageId, visual: spec.id, state: stateFor(spec) })).then((res) => {
@@ -205,43 +200,7 @@
     });
   }
 
-  /** The visual's view (what the settings panel left: plugin, columns, group by, split by, aggregates, sort, filter) written into the report's draft as format.view. */
-  function saveView(spec) {
-    const e = frames.get(spec.id);
-    if (!e || !e.psp) { return; }
-    e.psp.saveView().then((view) => {
-      if (!view) { say('Perspective is not running in this tab, so there is no view to save.', true); return null; }
-      const path = '/items/' + B.id2path(reportId);
-      return B.api('GET', path).then((item) => B.api('POST', '/reports/validate', { yaml: item.body || '' }).then((v) => {
-        if (!v.report) { throw new Error('The report cannot be read, so the view cannot be saved into it.'); }
-        const hit = [].concat.apply([], v.report.pages.map((p) => p.visuals)).find((x) => x.id === spec.id);
-        if (!hit) { throw new Error('The draft of the report no longer has the visual ' + spec.id + '.'); }
-        hit.format = Object.assign({}, hit.format, { view });
-        return B.api('POST', '/reports/format', { report: v.report });
-      }).then((f) => B.api('PUT', path, { body: f.yaml }))).then(() => {
-        say('View saved into the draft of the report (format.view of ' + spec.id + '). Publish the report for everyone to see it.');
-        canvas.setAttribute('data-view-saved', spec.id);
-      });
-    }).catch((err) => say(err.detail || err.message, true));
-  }
-
   function sawLive(res) { if (res && res.live && res.live.generation > seenGeneration) { seenGeneration = res.live.generation; } }
-
-  /** A Perspective visual: the first read as Arrow, then only what changed (bi-perspective.js); the controller lives with the frame until the page changes. */
-  function loadPerspective(spec, entry, token, quiet) {
-    if (!entry.psp) {
-      const ask = (format, extra) => {
-        const body = { page: pageId, visual: spec.id, state: Object.assign(stateFor(spec), extra || {}) };
-        return B.enqueue(() => (format === 'arrow' ? B.arrow('/reports/' + B.id2path(reportId) + '/query?format=arrow', body) : B.api('POST', '/reports/' + B.id2path(reportId) + '/query', body)))
-          .then((res) => { sawLive(res); return res; });
-      };
-      entry.psp = B.perspective.start(spec, entry.frame, ask, ctxFor(spec));
-      entry.frame.busy();
-      return entry.psp.load().catch((e) => { if (token === entry.token) { entry.frame.error(e); } });
-    }
-    if (quiet) { return entry.psp.refresh().then(() => B.live.markStale(entry.frame, false), (e) => B.live.markStale(entry.frame, true, e.code ? e.code + ' ' + e.detail : e.message)); }
-    return entry.psp.reload().catch((e) => entry.frame.error(e));
-  }
 
   function draw(id, live) {
     const entry = frames.get(id);

@@ -31,6 +31,7 @@ from fastapi.responses import JSONResponse
 
 from core.backend import BackendError
 from core.csrf import json_body
+from core.explore import pivot as explore_pivot
 from core.explore import (ExploreError, Extract, Limits, check_extracts, check_fields, dsql_answer, dsql_request, from_arrow, from_json, model_ref, parse_notebook,
                           model_of, mq_rows, promote_python, promote_transform, run_sql)
 from core.promote_report import add_to_report, sql_to_slice, visual_for
@@ -103,32 +104,18 @@ async def primary_for(request: Request, spec, extras: list[tuple[dict, Extract]]
     raise ExploreError("DRS-9070", 422, "send {extract: {dataset, fields}} or {extracts: [{name, dataset, fields}]}")
 
 
-DUCKDB_FOLDER = "vendor/duckdb-wasm"
-
-
-def duckdb_base(static: Path) -> str:
-    """The URL folder of the installed DuckDB-Wasm (tools/fetch-duckdb-wasm.sh), or '' when it is not installed."""
-    for stamp in sorted((static / DUCKDB_FOLDER).glob("*/drishti-duckdb-wasm.txt")) + sorted((static / DUCKDB_FOLDER).glob("*/.drishti-duckdb-wasm")):
-        folder = stamp.parent
-        if all((folder / n).exists() for n in ("duckdb-browser.mjs", "duckdb-browser-eh.worker.js", "duckdb-eh.wasm")):
-            return f"/static/{DUCKDB_FOLDER}/{folder.name}"
-    return ""
-
-
 @router.get("/bi/explore")
 async def page(request: Request):
     limits = _limits(request)
-    duck = "" if limits.browser_engine == "server" else duckdb_base(CONSOLE / "web" / "static")
     return _page(request, "bi/explore.html", "explore", limits=limits, may_python="bi-author" in _powers(request),
-                 quant=get_engine(limits.quant_engine).describe(), duckdb=duck)
+                 quant=get_engine(limits.quant_engine).describe())
 
 
 @router.get("/bi/explore/status")
 async def status(request: Request):
-    """What Analyse offers this person: its limits, whether Python cells can run (server and browser) and the quant engine's instruments."""
-    limits, runner, calc = _limits(request), request.app.state.pyrunner, request.app.state.calc
-    return JSONResponse({"limits": {k: v for k, v in vars(limits).items()}, "python": {**runner.status(), "browser": calc.runtime.describe(),
-                                                                                       "mayRun": "bi-author" in _powers(request)},
+    """What Analyse offers this person: its limits, whether Python cells can run (on the console) and the quant engine's instruments."""
+    limits, runner = _limits(request), request.app.state.pyrunner
+    return JSONResponse({"limits": {k: v for k, v in vars(limits).items()}, "python": {**runner.status(), "mayRun": "bi-author" in _powers(request)},
                          "quant": get_engine(limits.quant_engine).describe()}, headers={"Cache-Control": "no-store"})
 
 
@@ -156,6 +143,19 @@ async def sql(request: Request):
     except (BackendError, ExploreError) as e:
         return _fail(e)
     return JSONResponse({**out, "inputRows": len(ex.rows), "masked": ex.masked, "truncatedInput": ex.truncated}, headers={"Cache-Control": "no-store"})
+
+
+@router.post("/bi/explore/pivot")
+async def slice_pivot(request: Request):
+    """Body ``{extract: {...}, slice: {rows, columns, values: [{field, agg}], filters: [{field, value}]}}``: the Slice worked out on the console over the reader's
+    extract (core/explore.py pivot); ``{header, body, used, total, distinct, engine: console, inputRows, masked}``. The browser only draws it (wave B)."""
+    body = await json_body(request)
+    try:
+        ex = await extract_for(request, body.get("extract") if isinstance(body.get("extract"), dict) else {})
+        out = await asyncio.to_thread(explore_pivot, ex, body.get("slice") if isinstance(body.get("slice"), dict) else {})
+    except (BackendError, ExploreError) as e:
+        return _fail(e)
+    return JSONResponse({**out, "inputRows": len(ex.rows), "masked": ex.masked}, headers={"Cache-Control": "no-store"})
 
 
 @router.post("/bi/explore/dsql")

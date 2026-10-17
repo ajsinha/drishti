@@ -1103,10 +1103,11 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 - **Cause:** no connector that serves the kind can push it. When a dataset names no `connector:`, the engine uses the connector that serves the kind best (the one with the most columns promoted): a Delta or file connector for `trade` beats the demo source, and a store does not push. The table then reads the kind again every `drishti.bi.live.resync`.
 - **Fix:** name a connector that pushes in the dataset (`source: { connector: <name>, kind: trade }`: the Kafka or Redis connector, in `ticks` mode when a store serves the entities), or lower `resync`.
 
-### A Perspective grid says "Perspective could not start in this tab"
+### A 2.1 Perspective grid, pivot or chart is a plain table (2.3.0)
 
-- **Cause:** WebAssembly is blocked or failed in this browser tab (a policy of a proxy that rewrites the `Content-Security-Policy` header, a browser setting, or an out-of-memory tab). The visual then shows the first 500 rows as a plain table, and keeps following the live table.
-- **Fix:** open the report in a fresh tab; check the browser console for a `Content-Security-Policy` message. The report page that holds a Perspective visual is given `'wasm-unsafe-eval'` and the four style hashes in its own response only: a proxy must pass the header through. After a Perspective update, run `python tools/perspective-style-hashes.py --console <url> --user <u> --password <p> --check` and copy the list into `core/perspective_csp.py`.
+- **Cause:** wave B removed WebAssembly from every BI page ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3: the servers compute, the browser draws).
+  A `perspective-grid`, `perspective-pivot` or `perspective-chart` visual of a 2.1 report is drawn as Drishti's own grid of the server's answer.
+- **Fix:** none needed; to get a chart or a pivot back, change the visual to a `matrix` or a chart type in the designer (the server groups and totals it).
 
 ### A Perspective grid or pivot shows `•••` in a column
 
@@ -1142,12 +1143,12 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 * **The floppy button is not there.** It shows for the people who may edit the report, and not on a shipped report: copy it to your workspace.
 * **"Not valid ... format.view".** A saved view has the keys `plugin`, `plugin_config`, `columns`, `group_by`, `split_by`, `aggregates`, `sort`, `filter`, `expressions`, `columns_config`; `plugin` is Datagrid or a chart (`Y Bar`, `Y Line`, `X/Y Scatter`, `Heatmap`, `Treemap` ...).
 
-### Analyse in the browser: the line says "Worked out in this page" or "run by the console"
+### Analyse: where the Slice, SQL and Python cells run (2.3.0)
 
-* **DuckDB-Wasm is not installed.** `tools/fetch-duckdb-wasm.sh` installs it (36 MB, from the npm package, checked by SHA-256); until then Slice is the page's JavaScript and SQL is the console's SQLite. `data-duckdb` on the page's `#bx` is empty when it is not found.
-* **It started once and then fell back.** The first use downloads the WebAssembly: `bi.explore.browser_start_seconds` (30) may be too short on a slow link. The page remembers a failed start until it is reloaded (`data-duck-failed` on the body says why).
-* **The same SQL works in one engine and not the other.** The browser's is DuckDB (`date_trunc`, `QUALIFY`, `strftime(date, fmt)`), the console's SQLite (`date()`, `strftime(fmt, date)`). Choose the engine above the tabs, and write for it.
-* **`DRS-9072` "ran longer than ... and was stopped".** DuckDB cannot be interrupted, so its worker was ended and the next run starts a new one (a second or two).
+* **Everything runs on the console and the server.** Wave B removed DuckDB-Wasm and the browser's Python: the Slice is worked out by the console
+  (`POST /bi/explore/pivot`, the line under it says "Worked out by the console"), a SQL cell is Drishti SQL run by the server over the model (or, for a cell
+  over the table `extract`, the console's read-only SQLite), and a Python cell runs in the console's sandbox. An older notebook cell with `target: browser`
+  runs on the console.
 * **"Promote ... the target is not a report draft you can edit" (`DRS-9070`).** The target must be a report item in a workspace you contribute to (not a shipped sample and not another kind). Comments in its YAML are not kept when the visual is added.
 
 ### Calc: `drishti_bi` or Graphic Walker

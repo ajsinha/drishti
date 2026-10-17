@@ -13,8 +13,9 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 9, Analyse (docs/guides/ANALYSE.md): the SQL and Python cells of the page. SQL runs on the console over the reader's extract (read-only, limited);
-   a Python cell runs on the console's sandboxed worker (server) or in Pyodide (browser), with `df` and, on the server, `quant`. Output is data drawn as text,
+/* Rupaka phase 9, Analyse (docs/guides/ANALYSE.md): the SQL and Python cells of the page. SQL is Drishti SQL, run by the server over the model
+   as the reader (an older cell over the table `extract` runs on the console, read-only, limited); a Python cell runs on the console's sandboxed runner with
+   `df` and `quant`. Wave B: nothing runs in the browser. Output is data drawn as text,
    a table, a chart (ECharts, formatter strings removed by the runner) or an image; never markup. */
 (function () {
   'use strict';
@@ -50,10 +51,7 @@
       run.addEventListener('click', function () { runCell(kind, cell); });
       bar.appendChild(run);
       if (kind === 'python') {
-        var target = h('select', { class: 'studio-select', 'aria-label': 'Where cell ' + (i + 1) + ' runs' }, h('option', { value: 'server', text: 'Server (sandbox)' }), h('option', { value: 'browser', text: 'Browser (Pyodide)' }));
-        target.value = cell.target || 'server';
-        target.addEventListener('change', function () { cell.target = target.value; });
-        bar.appendChild(target);
+        bar.appendChild(h('small', { class: 'text-muted-d', 'data-runs-on': 'console', text: 'Runs on the console (sandbox)' }));
         [['measure', 'Promote to a measure'], ['visual', 'Promote to a visual'], ['transform', 'Promote to a Transform']].forEach(function (p) {
           var b = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-promote': p[0], text: p[1] });
           if (p[0] === 'transform' && !X.extras.length) {                                          // a Transform joins extracts: it needs a second one
@@ -67,15 +65,7 @@
         });
       }
       if (kind === 'sql') {
-        var eng = h('select', { class: 'studio-select', 'data-sql-engine': '', 'aria-label': 'Where cell ' + (i + 1) + ' runs' },
-          h('option', { value: 'server', text: 'Server: Drishti SQL over the model', disabled: !modelOf() }), h('option', { value: 'extract', text: 'Over the extract (until wave B)' }));
-        eng.value = cell.engine || sqlEngine();
-        eng.addEventListener('change', function () {
-          var was = cell.engine;
-          cell.engine = eng.value;
-          if (area.value === sqlStarter(was) || area.value === STARTER.sql) { cell.source = area.value = sqlStarter(cell.engine); }       // an untouched starter follows the engine
-        });
-        bar.appendChild(eng);
+        bar.appendChild(h('small', { class: 'text-muted-d', 'data-sql-engine': sqlEngine(), text: sqlEngine() === 'server' ? 'Drishti SQL, run by the server over the model' : 'Over the extract, on the console' }));
         var pb = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-promote-report': '' }, 'Promote to a report visual');
         pb.addEventListener('click', function () { X.promoteReport({ sql: cell.source }, 'SQL', pb); });
         bar.appendChild(pb);
@@ -96,29 +86,21 @@
       var showSql = function (r, engine) {
         clear(cell.out);
         var where = engine === 'dsql' ? 'Drishti SQL, run by the server over ' + r.model + ' as you' + (r.plan ? ' · plan ' + String(r.plan).slice(0, 12) : '') + (r.masked && r.masked.length ? ' · masked: ' + r.masked.join(', ') : '')
-          : engine === 'server' ? 'over the extract, run by the console (SQLite)' : 'over the extract, DuckDB in this browser';
+          : 'over the extract, run by the console';
         cell.out.appendChild(h('p', { class: 'bi-result-meta', 'data-engine': engine, text: r.rowCount + ' rows' + (r.truncated ? ' (cut to the SQL row limit)' : '') + ' in ' + r.ms + ' ms · ' + where }));
         var host = h('div', { class: 'tbl-wrap' });
         cell.out.appendChild(host);
         X.table(host, r.columns, r.rows, 200);
       };
       // the server is the default engine (Drishti SQL over the model); a statement over the table `extract` (an older notebook) still runs over the extract
-      var overExtract = cell.engine === 'extract' || !modelOf() || /\b(from|join)\s+extract\b/i.test(cell.source || '');
+      var overExtract = !modelOf() || /\b(from|join)\s+extract\b/i.test(cell.source || '');
       if (!overExtract) {
         return X.post('/bi/explore/dsql', { extract: spec(), sql: cell.source }).then(function (r) { showSql(r, 'dsql'); }).catch(function (e) { note(cell.out, e.message, true); });
       }
-      var viaServer = function () { return X.post('/bi/explore/sql', { extract: spec(), extracts: X.extras, sql: cell.source }).then(function (r) { showSql(r, 'server'); }); };
-      if (X.duck && X.duck.usable() && X.engine !== 'server') {                                  // DuckDB-Wasm on the extract in this page; the console's SQLite when it cannot start
-        return X.duck.sql(cell.source).then(function (r) { showSql(r, 'duckdb-wasm'); }, function (e) {
-          if (e && e.code) { throw e; }
-          return viaServer();
-        }).catch(function (e) { note(cell.out, e.message, true); });
-      }
-      return viaServer().catch(function (e) { note(cell.out, e.message, true); });
+      return X.post('/bi/explore/sql', { extract: spec(), extracts: X.extras, sql: cell.source }).then(function (r) { showSql(r, 'server'); }).catch(function (e) { note(cell.out, e.message, true); });
     }
     var done = function (r) { show(cell.out, r); };
     var fail = function (e) { note(cell.out, e.message, true); if (e.traceback) { cell.out.appendChild(h('pre', { class: 'bx-pre', text: e.traceback })); } };
-    if (cell.target === 'browser') { return B.python.runCell(cell.source, X.ex).then(done, fail); }
     return X.post('/bi/explore/python', { extract: spec(), extracts: X.extras, source: cell.source }).then(done, fail);
   }
 

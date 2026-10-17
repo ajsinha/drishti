@@ -144,21 +144,16 @@ def board_designer(c: Ctx):
     c.save("14-board-yaml.jpg", clip={"x": 0, "y": 56, "width": 1400, "height": 640})
 
 
-@shot("15-perspective-chart.jpg", also=("16-chart-settings.jpg",))
+@shot("15-perspective-chart.jpg")
 def perspective_chart(c: Ctx):
-    """The chart page of the live desk report: Perspective's chart plugin, then its settings panel open (the gear on the visual)."""
+    """The chart page of the live desk report: a 2.1 Perspective visual, drawn since wave B as Drishti's own grid of the server's answer."""
     login(c, height=900)
     c.page.set_viewport_size({"width": 1280, "height": 900})
     c.page.goto(f"{c.base}/bi/r/{LIVE_REPORT}/chart")
-    c.page.wait_for_selector("[data-psp=ready]", timeout=60000)
+    c.page.wait_for_selector(".bi-vis tbody tr", timeout=60000)
     c.page.wait_for_timeout(2500)
     c.page.evaluate("window.scrollTo(0, 0)")
     c.save("15-perspective-chart.jpg")
-    c.page.click('[data-act="psp-settings"]')
-    c.page.wait_for_selector('[data-psp-settings="open"]', timeout=30000)
-    c.page.wait_for_timeout(1500)
-    c.page.evaluate("window.scrollTo(0, 0)")
-    c.save("16-chart-settings.jpg")
 
 
 PYTHON_BOARD = "file:board:python-wall"

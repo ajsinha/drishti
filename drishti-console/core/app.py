@@ -26,7 +26,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from urllib.parse import quote
 
-from core.perspective_csp import PERSPECTIVE_WORKERS
 
 from fastapi.responses import JSONResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -83,10 +82,7 @@ PYODIDE = "/pyodide/"
 WALKER_PAGE = "/static/calc/walker.html"
 WALKER_CSP = ("default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src data: blob:; font-src data:; worker-src blob:; connect-src 'none'; "
               "base-uri 'none'; form-action 'none'; frame-ancestors 'self'; sandbox allow-scripts")
-# The vendored workers (Perspective's engine for the phase 5 visuals, DuckDB-Wasm for Analyse's browser engine) are scripts of this origin
-# served with the worker policy above; neither is a blob.
-VENDOR_WORKERS = PERSPECTIVE_WORKERS
-DUCKDB_WORKER_SUFFIX = "/duckdb-browser-eh.worker.js"
+# Wave B (BI_DESIGN.md P3): no BI page loads WebAssembly any more (Perspective and DuckDB-Wasm are gone); only Calc's worker above may compile it.
 EMBED = "/embed/"                           # embedded views for other web applications: off unless embed.enabled (routes/embed_routes.py)
 
 
@@ -184,8 +180,7 @@ class SecurityHeaders(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         path = request.url.path
-        vendor_worker = path in VENDOR_WORKERS or (path.startswith("/static/vendor/duckdb-wasm/") and path.endswith(DUCKDB_WORKER_SUFFIX))
-        policy = (worker_csp(request.headers.get("host", "")) if path == WORKER or vendor_worker
+        policy = (worker_csp(request.headers.get("host", "")) if path == WORKER
                   else WALKER_CSP if path == WALKER_PAGE else CSP)
         response.headers.setdefault("Content-Security-Policy", policy)
         if path.startswith(PYODIDE) and response.status_code == 200:

@@ -320,11 +320,11 @@
     return NONE;
   };
 
-  /** A Perspective visual is drawn by bi-perspective.js, on the pages that may run it (the report viewer and boards); the designer shows what it will be. */
-  V.perspectiveNote = function (host, spec) {
-    B.clear(host).appendChild(h('div', { class: 'bi-vis-note', role: 'note' }, h('strong', { text: spec.type === 'perspective-grid' ? 'Perspective grid' : 'Perspective pivot' }),
-      h('p', { text: 'Shown in the report viewer: it needs WebAssembly, which only the viewer is given. Columns: ' + [].concat(...Object.keys(spec.wells || {}).map((k) => spec.wells[k])).join(', ') + '.' })));
-    return NONE;
+  /** A visual of the 2.1 Perspective types (perspective-grid, -pivot, -chart): wave B draws no WebAssembly on BI pages (BI_DESIGN.md P3), so it is Drishti's own
+   *  grid of the server's answer, every column the answer has (the server grouped it: nothing is pivoted or added up here). */
+  V.perspectiveGrid = function (host, spec, ctx, res) {
+    if (!res) { B.clear(host).appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'No rows.' })); return NONE; }
+    return V.dataTable(host, spec, ctx, res, true);
   };
 
   /**
@@ -355,7 +355,7 @@
     if (spec.type === 'table') { return V.dataTable(host, spec, ctx, res, false); }
     if (spec.type === 'matrix') { return V.matrix(host, spec, ctx, res); }
     if (spec.type === 'slicer') { return V.slicer(host, spec, ctx, res); }
-    if (spec.type.indexOf('perspective-') === 0) { return V.perspectiveNote(host, spec); }
+    if (spec.type.indexOf('perspective-') === 0) { return V.perspectiveGrid(host, spec, ctx, res); }
     if (spec.type === 'vega-lite' && B.vega) { return B.vega.draw(host, spec, ctx, res); }
     return V.drawChartOrCard(host, spec, ctx, res) || NONE;
   };

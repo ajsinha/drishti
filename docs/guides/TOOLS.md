@@ -796,8 +796,6 @@ wrote 1500 synthetic deals to book-2026-10-19.jsonl
 | `tools/elements_package.py` | builds the npm package of Drishti Elements |
 | `tools/make_icons.py` | the console's favicon and app icons from the logo mark |
 | `tools/fetch-pyodide.sh` | installs the pinned, checksummed Pyodide runtime Calc serves from its own origin (no CDN) |
-| `tools/fetch-duckdb-wasm.sh` | installs the pinned DuckDB-Wasm build Analyse can run in the browser |
-| `tools/perspective-style-hashes.py` | measures the style hashes the vendored Perspective needs under the strict CSP |
 | `tools/docs/screenshots.py` | regenerates the guides' screenshots (Playwright, scratch ports); `drishti.py docs shots` runs it |
 | `tools/rachana/md_to_yaml.py` | converts Markdown Sutras (before 1.11) into YAML Sutras |
 | `tools/maps/build_regions.py` | builds the vendored region maps from Natural Earth |

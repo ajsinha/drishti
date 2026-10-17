@@ -19,7 +19,7 @@ and the console only ever holds what it was given, cut to ``bi.explore.max_rows`
 every call and is never kept between calls.
 
 The SQL cell runs over an extract in an in-memory SQLite database (one table, ``extract``) that is read-only by construction: an authorizer refuses
-everything except SELECT, a deadline interrupts a long query, and the result is cut to ``bi.explore.sql_max_rows``. (DuckDB-Wasm in the browser is the
+everything except SELECT, a deadline interrupts a long query, and the result is cut to ``bi.explore.sql_max_rows``. (DuckDB-Wasm in the browser was the
 planned engine, docs/guides/ANALYSE.md section 12; it is not vendored, so SQL runs here.)"""
 from __future__ import annotations
 
@@ -58,8 +58,6 @@ class Limits:
     max_cells: int = 60
     max_extracts: int = 6
     quant_engine: str = "stand-in"
-    browser_start: float = 30.0        # seconds DuckDB-Wasm has to start in the browser before the console takes over
-    browser_engine: str = "auto"       # auto: Slice and SQL run in the browser with DuckDB-Wasm when it is installed; server: always on the console
 
     @classmethod
     def from_settings(cls, settings) -> "Limits":
@@ -72,9 +70,7 @@ class Limits:
                    sql_max_seconds=g("sql_max_seconds", 5.0, 0.5, 60.0), sql_max_chars=g("sql_max_chars", 20_000, 100, 200_000),
                    cell_timeout=g("cell_timeout_seconds", 20, 1, 60), cell_memory=g("cell_memory_mb", 512, 64, 4096),
                    cell_max_chars=g("cell_max_chars", 65_536, 100, 500_000), max_cells=g("max_cells", 60, 1, 500), max_extracts=g("max_extracts", 6, 1, 20),
-                   quant_engine=str(settings.get("bi.explore.quant_engine", "stand-in")),
-                   browser_start=g("browser_start_seconds", 30.0, 3.0, 300.0),
-                   browser_engine="server" if str(settings.get("bi.explore.browser_engine", "auto")).lower() == "server" else "auto")
+                   quant_engine=str(settings.get("bi.explore.quant_engine", "stand-in")))
 
 
 @dataclass
@@ -372,3 +368,75 @@ def promote_python(cell_source: str, name: str, interface: str, columns: list[st
     if interface == "visual":
         doc["output"] = "echarts"
     return yaml.safe_dump(doc, sort_keys=False, default_flow_style=None, width=200)
+
+
+PIVOT_AGGS = ("sum", "avg", "count", "min", "max")
+PIVOT_MAX_KEYS = 2_000
+
+
+def pivot(extract: Extract, spec: dict) -> dict:
+    """The Slice of Analyse, worked out on the console (wave B: the browser draws, it adds nothing up; BI_DESIGN.md P3). ``spec`` is
+    ``{rows: [names], columns: [names], values: [{field, agg}], filters: [{field, value}]}`` over the extract's short names. Answers
+    ``{header, body, used, total, distinct}``: the header and rows of the pivot table as the page shows it (row keys, then one cell per column key and
+    value), the rows used after the filters, and up to 200 distinct values of each filter field for its picker."""
+    idx = {c: i for i, c in enumerate(extract.columns)}
+    rows_f = [str(x) for x in spec.get("rows") or [] if str(x) in idx]
+    cols_f = [str(x) for x in spec.get("columns") or [] if str(x) in idx]
+    vals = [{"field": str(v.get("field") or ""), "agg": str(v.get("agg") or "sum")} for v in spec.get("values") or [] if isinstance(v, dict)]
+    vals = [v for v in vals if (not v["field"] or v["field"] in idx) and v["agg"] in PIVOT_AGGS] or [{"field": "", "agg": "count"}]
+    filters = [(str(f.get("field")), str(f.get("value") or "")) for f in spec.get("filters") or [] if isinstance(f, dict) and str(f.get("field")) in idx]
+    text = lambda v: "" if v is None else str(v)  # noqa: E731
+    distinct = {}
+    for name, _ in filters:
+        seen = sorted({text(r[idx[name]]) for r in extract.rows})
+        distinct[name] = seen[:200]
+    kept = [r for r in extract.rows if all(not want or text(r[idx[f]]) == want for f, want in filters)]
+    key = lambda r, fs: tuple("(blank)" if r[idx[f]] is None else str(r[idx[f]]) for f in fs)  # noqa: E731
+    cells: dict = {}
+    rk: dict = {}
+    ck: dict = {}
+    for r in kept:
+        a, b = key(r, rows_f), key(r, cols_f)
+        rk[a] = a
+        ck[b] = b
+        if len(rk) > PIVOT_MAX_KEYS or len(ck) > PIVOT_MAX_KEYS:
+            raise ExploreError("DRS-9072", 413, f"the slice has more than {PIVOT_MAX_KEYS} row or column keys: put fewer fields in Rows or Columns, or filter")
+        acc = cells.setdefault((a, b), [{"n": 0, "sum": 0.0, "min": None, "max": None} for _ in vals])
+        for v, c in zip(vals, acc):
+            x = r[idx[v["field"]]] if v["field"] else 1
+            if x is None:
+                continue
+            c["n"] += 1
+            try:
+                num = float(x)
+            except (TypeError, ValueError):
+                continue
+            c["sum"] += num
+            c["min"] = num if c["min"] is None else min(c["min"], num)
+            c["max"] = num if c["max"] is None else max(c["max"], num)
+
+    def natural(k):
+        return [(0, float(p), "") if re.fullmatch(r"-?\d+(\.\d+)?", p) else (1, 0.0, p.lower()) for p in k]
+
+    def out(c, v):
+        a = v["agg"]
+        if not c or (a != "count" and c["min"] is None):              # nothing to add up (no rows, or every value masked or blank)
+            return 0 if c and a == "count" else ""
+        val = c["n"] if a == "count" else c["sum"] if a == "sum" else (c["sum"] / c["n"] if c["n"] else "") if a == "avg" else c["min"] if a == "min" else c["max"]
+        return round(val, 6) if isinstance(val, float) else val
+
+    row_keys = sorted(rk, key=natural) or [()]
+    col_keys = sorted(ck, key=natural) if cols_f else [()]
+    many = len(vals) > 1
+    header = list(rows_f) if rows_f else ["(all rows)"]
+    for c in col_keys:
+        for v in vals:
+            what = ((v["agg"] + " " + v["field"]) if v["field"] else "rows") if (many or not c) else ""
+            header.append(" · ".join(x for x in (" / ".join(c), what) if x) or "rows")
+    body = []
+    for a in row_keys:
+        row = list(a) if rows_f else ["(all)"]
+        for b in col_keys:
+            row.extend(out(c, v) for c, v in zip(cells.get((a, b)) or [None] * len(vals), vals))
+        body.append(row)
+    return {"header": header, "body": body, "used": len(kept), "total": len(extract.rows), "distinct": distinct, "engine": "console"}

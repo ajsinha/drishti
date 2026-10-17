@@ -75,7 +75,6 @@
     const rid = entry.info.report;
     const qpath = '/reports/' + B.id2path(rid) + '/query';
     if (['text', 'image', 'button'].indexOf(spec.type) >= 0) { entry.frame.result(null, (host) => B.visuals.draw(host, spec, ctxFor(entry), null)); return Promise.resolve(); }
-    if (['perspective-grid', 'perspective-pivot', 'perspective-chart'].indexOf(spec.type) >= 0) { return loadPerspective(entry, token, quiet, qpath); }
     if (spec.type === 'python') { return loadPython(entry, token, quiet); }
     if (!quiet) { entry.frame.busy(); }
     return B.enqueue(() => B.api('POST', qpath, { page: entry.info.page, visual: spec.id, state: {} })).then((res) => {
@@ -111,20 +110,6 @@
       entry.frame.error(e);
       if (e.traceback) { entry.frame.body.appendChild(h('pre', { class: 'bi-py-trace', 'data-py-trace': '', text: e.traceback })); }
     });
-  }
-
-  function loadPerspective(entry, token, quiet, qpath) {
-    const spec = entry.spec;
-    if (!entry.psp) {
-      const ask = (format, extra) => {
-        const body = { page: entry.info.page, visual: spec.id, state: Object.assign({}, extra || {}) };
-        return B.enqueue(() => (format === 'arrow' ? B.arrow(qpath + '?format=arrow', body) : B.api('POST', qpath, body)));
-      };
-      entry.psp = B.perspective.start(spec, entry.frame, ask, ctxFor(entry));
-      entry.frame.busy();
-      return entry.psp.load().catch((e) => entry.frame.error(e));
-    }
-    return (quiet ? entry.psp.refresh() : entry.psp.reload()).then(() => B.live.markStale(entry.frame, false), (e) => B.live.markStale(entry.frame, true, e.code ? e.code + ' ' + e.detail : e.message));
   }
 
   function missing(entry, why) {

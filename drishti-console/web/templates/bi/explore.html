@@ -14,7 +14,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {# Rupaka phase 9, Analyse (docs/guides/ANALYSE.md): open a dataset or a report visual's data as the reader's masked extract, then Slice, SQL and Python.
-   Drawn by static/js/bi-explore.js and bi-explore-cells.js; the strict policy of every BI page applies (no wasm on this page: DuckDB-Wasm's worker and browser Python's worker each compile it under the worker policy of their own file). #}
+   Drawn by static/js/bi-explore.js and bi-explore-cells.js; the strict policy of every BI page applies (no WebAssembly: the Slice, SQL and Python cells run on the console and the server, wave B). #}
 {% extends "bi/shell.html" %}
 {% block bi_title %}Analyse{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-expr.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-explore.css?v={{ ASSET_V }}">{% endblock %}
@@ -22,7 +22,7 @@
 <header class="bi-head"><h1>Analyse</h1>
   <p class="text-muted-d">Open a model or a dataset as an extract of the rows you may see (masked columns stay masked), then slice it, query it with SQL or work on it in Python. Save the work as a notebook; promote a cell or a slice into a Python item or a report draft.</p></header>
 <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
-<div class="bx" id="bx" data-max-rows="{{ limits.max_rows }}" data-sql-rows="{{ limits.sql_max_rows }}" data-sql-seconds="{{ limits.sql_max_seconds }}" data-sql-chars="{{ limits.sql_max_chars }}" data-duckdb-start="{{ limits.browser_start }}" data-may-python="{{ 'true' if may_python else 'false' }}"{% if duckdb %} data-duckdb="{{ duckdb }}"{% endif %}>
+<div class="bx" id="bx" data-max-rows="{{ limits.max_rows }}" data-sql-rows="{{ limits.sql_max_rows }}" data-sql-seconds="{{ limits.sql_max_seconds }}" data-sql-chars="{{ limits.sql_max_chars }}" data-may-python="{{ 'true' if may_python else 'false' }}">
 <form class="bi-form bx-open" data-open aria-label="Open an extract">
   <h2>Extract</h2>
   <label>Model or dataset<select name="dataset" class="studio-select" data-dataset></select></label>
@@ -33,8 +33,6 @@
   </div>
 </form>
 <p class="bx-info" data-info role="status" aria-live="polite"></p>
-{% if duckdb %}<p class="bx-engine"><label>Slice and SQL run in <select class="studio-select" data-engine-pick aria-label="Where Slice and SQL run"><option value="">this browser (DuckDB-Wasm)</option><option value="server">the console (a pivot in this page, SQL in SQLite)</option></select></label>
-  <span class="text-muted-d">If DuckDB-Wasm cannot start, the console does it.</span></p>{% endif %}
 <details class="bx-more" data-more>
   <summary>More extracts: join several datasets</summary>
   <p class="text-muted-d">Add other datasets as extracts of their own. A Python cell reads one as <code>extract("name")</code> (a pandas table of the rows you may see) and joins them; a SQL cell reads it as a table of that name.
@@ -88,4 +86,4 @@
 </form>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-expr-editor.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-query-panel.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-python.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-explore.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-explore-duck.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-explore-cells.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-explore-extracts.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-expr-editor.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-query-panel.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-python.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-explore.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-explore-cells.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-explore-extracts.js?v={{ ASSET_V }}"></script>{% endblock %}

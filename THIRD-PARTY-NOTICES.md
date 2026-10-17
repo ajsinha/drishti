@@ -33,8 +33,6 @@ Drishti is proprietary. It bundles or builds with these third-party components u
 | Natural Earth 10m admin-1 states and provinces (console, vendored per country for the maps' regions; simplified, `tools/maps/build_regions.py`) | Public domain |
 | FastAPI, Starlette, Jinja2, Uvicorn, httpx, PyYAML (console) | MIT / BSD |
 | CodeMirror 5 and its Python mode (console, vendored) | MIT |
-| FINOS Perspective (console, vendored; Rūpaka phase 0 proof of concept) | Apache-2.0 |
-| DuckDB-Wasm (console, installed by `tools/fetch-duckdb-wasm.sh`, not in the repository; Rūpaka phase 0) | MIT |
 | Vega, Vega-Lite, vega-embed, vega-interpreter (console; the `vega-lite` visual and Python's Vega-Lite output; `drishti-console/web/static/vendor/vega/`) | BSD-3-Clause |
 | Graphic Walker 0.5.3 and the 190 packages built into it (console, Calc's `drishti_bi.walk`; `drishti-console/web/static/vendor/graphic-walker/`, texts in its `LICENSES.txt`) | Apache-2.0 (Graphic Walker); MIT, ISC, BSD-2-Clause, BSD-3-Clause, Apache-2.0, 0BSD, zlib, Unlicense and SGI-B-2.0 (the packages: react, react-dom, vega, d3-*, lodash-es, mobx, styled-components, tess2 and the rest). `react-leaflet` (Hippocratic-2.1) is **not** included |
 | Apache Arrow JS (console, vendored bundle) and `arrow-format` with flatbuffers-java (server, Arrow IPC messages) | Apache-2.0 |

@@ -27,44 +27,15 @@ keeps its licence file beside it. Sizes are bytes as served (raw) and gzip -9.
 | **Natural Earth** admin-1 (states, provinces, counties), 1:10m scale, simplified (the map's regions: a click on a country opens its regions) | 5.1 (nvkelso/natural-earth-vector, `ne_10m_admin_1_states_provinces`) | Public domain (naturalearthdata.com/about/terms-of-use) | `echarts/maps/regions/<ISO3>.json` (251 files, about 7 MB in all, the largest under 200 KB; made by `tools/maps/build_regions.py`, see `regions/README.md`) and `echarts/maps/world-points.json` (the countries too small for the 1:110m shapes, one point each) | yes | a map that opens a country; each file is fetched the first time that country is opened; `/embed/v1/regions/<ISO3>.json` for the elements |
 | CodeMirror 5 | see its folder | MIT | `codemirror/` | yes | Studio, Build |
 | Pyodide (CPython for Calc) | 314.0.7 | MPL-2.0 | `pyodide/` | **no**: `tools/fetch-pyodide.sh` | Calc, on demand |
-| **FINOS Perspective** viewer, datagrid, d3fc plugin, engine (Rūpaka phase 0; the grid and pivot of phase 5) | 3.8.0 | Apache-2.0 (verified: package.json and LICENSE) | `perspective/3.8.0/` | yes, 3.9 MB | `/bi/poc`, and a report or board page that holds a `perspective-grid` or `perspective-pivot` visual (phase 5); on demand. The d3fc plugin is vendored but only the POC page loads it (wave C: the d3fc plugin is also loaded by a report or board page that holds a `perspective-chart`, on demand) |
-| **DuckDB-Wasm** (`eh` build: API module, worker, wasm) (Rūpaka phase 0) | 1.33.1-dev57.0 | MIT (verified: package.json; the repository's licence text is written by the fetch script) | `duckdb-wasm/1.33.1-dev57.0/` | **no**: 36 MB, `tools/fetch-duckdb-wasm.sh` (pinned SHA-256) | `/bi/poc`, and **Analyse** (`/bi/explore`: Slice and SQL in the browser, wave C), on first use |
-| Apache Arrow JS 17.0.0, one ES module bundled from the npm package with esbuild (DuckDB-Wasm imports it) | 17.0.0 | Apache-2.0 (LICENSE and NOTICE kept) | `apache-arrow/17.0.0/` | yes, 0.2 MB | with DuckDB-Wasm |
 | **Vega 6.4.0, Vega-Lite 6.5.0, vega-embed 7.3.0, vega-interpreter 2.3.2** (wave C: the `vega-lite` visual and a Python visual's Vega-Lite output) | 6.4.0 / 6.5.0 / 7.3.0 / 2.3.2 | BSD-3-Clause (each licence kept: `LICENSE-vega`, `-vega-lite`, `-vega-embed`, `-vega-interpreter`) | `vega/6.4.0/` | yes, 0.85 MB | a report or board page that draws one, the first time (`bi-vega.js`); no CDN |
 | **Graphic Walker 0.5.3** (wave C: Calc's `drishti_bi.walk`, PygWalker's front end) and the packages built into it | 0.5.3 | Apache-2.0 (its own); the 190 packages in the bundle are MIT, ISC, BSD-2/3, Apache-2.0, 0BSD, zlib, Unlicense and SGI-B-2.0 (`LICENSES.txt` lists each with its text; no Hippocratic, GPL or CC-BY code is in it) | `graphic-walker/0.5.3/` | yes, 4.5 MB | Calc's sandboxed Graphic Walker frame (`/static/calc/walker.html`), when a cell calls `drishti_bi.walk` |
 
-## Rūpaka phase 0 files (exact sizes)
+## Removed in wave B (2.3.0)
 
-| File | Raw | gzip |
-|---|---:|---:|
-| `perspective/3.8.0/perspective/cdn/perspective.js` (client) | 32,653 | 9,536 |
-| `perspective/3.8.0/perspective/cdn/perspective-server.worker.js` | 5,786 | 2,169 |
-| `perspective/3.8.0/perspective/wasm/perspective-server.wasm` | 2,277,909 | 2,247,185 |
-| `perspective/3.8.0/perspective-viewer/cdn/perspective-viewer.js` | 56,792 | 13,281 |
-| `perspective/3.8.0/perspective-viewer/wasm/perspective-viewer.wasm` | 920,705 | 911,980 |
-| `perspective/3.8.0/perspective-viewer/css/pro.css` | 100,699 | 22,645 |
-| `perspective/3.8.0/perspective-viewer/css/pro-dark.css` | 103,959 | 23,219 |
-| `perspective/3.8.0/datagrid/cdn/perspective-viewer-datagrid.js` | 130,067 | 37,469 |
-| `perspective/3.8.0/datagrid/css/*.css` (2 files) | 24,048 | 3,904 |
-| `perspective/3.8.0/d3fc/cdn/perspective-viewer-d3fc.js` | 284,956 | 97,297 |
-| `perspective/3.8.0/d3fc/css/perspective-viewer-d3fc.css` | 9,803 | 2,115 |
-| **Perspective total** | **3,947,377** | |
-| `duckdb-wasm/1.33.1-dev57.0/duckdb-eh.wasm` | 35,913,747 | 8,057,777 |
-| `duckdb-wasm/1.33.1-dev57.0/duckdb-browser-eh.worker.js` | 773,223 | 188,134 |
-| `duckdb-wasm/1.33.1-dev57.0/duckdb-browser.mjs` | 32,000 | 8,335 |
-| `apache-arrow/17.0.0/apache-arrow.mjs` | 209,281 | 48,468 |
-| **DuckDB-Wasm and Arrow total** | **36,928,251** | **8,302,714** |
-
-Perspective and DuckDB-Wasm together are 40.9 MB raw: over the 40 MB the phase-0 brief set for committing, so DuckDB-Wasm's 36 MB
-is installed by a script (as Pyodide is) and not committed. The "mvp" build (no WebAssembly exceptions) is 41 MB and the "coi"
-(threads, needs SharedArrayBuffer) 35.6 MB; neither is vendored.
-
-## Perspective and the content security policy (phase 5)
-
-Perspective runs as WebAssembly and writes `<style>` elements, so a page that holds a Perspective visual is given, in its own response only, `script-src 'self' 'wasm-unsafe-eval'` and the SHA-256 of each style (`drishti-console/core/perspective_csp.py`: `PERSPECTIVE_VERSION`, `STYLE_HASHES`; every other page keeps the strict policy).
-**The hash list belongs to the version above.** Updating Perspective is: vendor the new build under `perspective/<version>/` (keep the `cdn/`, `wasm/` and `css/` folders side by side), change `PERSPECTIVE_VERSION` (the report and board pages and the worker policy take their paths from it; the phase 0 route `routes/bi_poc_routes.py` has a constant of its own), start a stack (`drishti-console/tests/bi_live_stack.py`) and run
-`python tools/perspective-style-hashes.py --console http://127.0.0.1:17995 --user rita --password long-enough-pass-1 --check`; paste the list it prints into `STYLE_HASHES`. The Chromium test `test_the_style_hash_list_covers_the_real_pages` fails, naming the missing hash, when a version writes a style the list does not allow.
-Retest of 3.8.0 (second tab, 10,000 rows, memory, policy): [RUPAKA_POC.md](../../../../docs/architecture/RUPAKA_POC.md) section 12.
+FINOS Perspective 3.8.0, DuckDB-Wasm 1.33.1 and the Apache Arrow JS module that DuckDB-Wasm imported are no longer vendored: wave B made the servers compute
+every number and the browser draw (docs/architecture/BI_DESIGN.md principle P3), so no BI page loads WebAssembly. A 2.1 report's `perspective-grid`,
+`perspective-pivot` and `perspective-chart` visuals are drawn as Drishti's own grid of the server's answer; Analyse's Slice and SQL run on the console and the
+server. Pyodide stays for Calc only.
 
 ## Wave C files (exact sizes)
 

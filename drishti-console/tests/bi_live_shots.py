@@ -43,13 +43,10 @@ def sign_in(browser, user="rita", **ctx):
     return page
 
 
-def ready(page, path, psp=False):
+def ready(page, path):
     page.goto(CONSOLE_URL + path)
     page.wait_for_selector("[data-ready=yes]", state="attached", timeout=30000)
-    if psp:
-        page.wait_for_selector(".bi-psp[data-psp=ready]", state="attached", timeout=60000)
-    else:
-        page.wait_for_function("() => !document.querySelector('.bi-vis-busy') && document.querySelectorAll('.bi-vis').length > 0", timeout=30000)
+    page.wait_for_function("() => !document.querySelector('.bi-vis-busy') && document.querySelectorAll('.bi-vis').length > 0", timeout=30000)
     page.wait_for_function("() => document.querySelector('.bi-live-state').getAttribute('data-live-state') === 'live'", timeout=30000)
     page.wait_for_timeout(2500)                                      # a few updates have drawn over the first picture
 
@@ -93,9 +90,9 @@ def main(out: Path, captures: Path) -> None:
                 page.locator("[data-live-bar]").screenshot(path=str(out / "live-paused.png"))
                 page.click("[data-live-pause]")
 
-                ready(page, f"/bi/r/{REPORT}/grid", psp=True)
+                ready(page, f"/bi/r/{REPORT}/grid")
                 page.screenshot(path=str(out / "perspective-grid.png"))
-                ready(page, f"/bi/r/{REPORT}/pivot", psp=True)
+                ready(page, f"/bi/r/{REPORT}/pivot")
                 page.screenshot(path=str(out / "perspective-pivot.png"))
 
                 # the dataset page says how its live table is doing
@@ -113,7 +110,7 @@ def main(out: Path, captures: Path) -> None:
 
                 # ---- the same grid for a reader without raw -----------------------------------------------------------------------
                 ann = sign_in(browser, "ann")
-                ready(ann, f"/bi/r/{REPORT}/grid", psp=True)
+                ready(ann, f"/bi/r/{REPORT}/grid")
                 ann.screenshot(path=str(out / "perspective-grid-masked.png"))
 
                 # ---- the board ---------------------------------------------------------------------------------------------------

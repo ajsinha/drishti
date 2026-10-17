@@ -376,7 +376,6 @@
       }
       if (group === 'python') {
         fmt.appendChild(frow('Python item', textInput(f.python, (x) => setFmt(v, 'python', x.trim()), { 'data-format-python': '', placeholder: 'pnl-histogram' }), 'The Python item (catalogue id, file name or title) that draws this from the columns. Leave it empty when the values well holds a Python measure of the dataset.'));
-        fmt.appendChild(frow('Run on', selectInput([['', 'auto'], ['server', 'the console (sandboxed)'], ['browser', 'the browser (Pyodide)']], f.run, (x) => setFmt(v, 'run', x), { 'data-format-run': '' }), 'auto: the console, then the browser when the console cannot run it.'));
         fmt.appendChild(frow('Parameters (JSON)', textInput(f.params ? JSON.stringify(f.params) : '', (x) => {
           if (x.trim() === '') { setFmt(v, 'params', ''); return; }
           try { const o = JSON.parse(x); if (o && typeof o === 'object' && !Array.isArray(o)) { setFmt(v, 'params', o); } } catch (e) { /* keep what was there until it parses */ }

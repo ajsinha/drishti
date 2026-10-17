@@ -15,14 +15,11 @@
 """Rupaka phase 5 (streaming BI) in Chromium, over the real server and console (tests/bi_live_stack.py: ports 18995 and 17995, security on, the trading and
 counterparty-risk packs, the demo source ticking every 200 ms: 750 trades, 360 of them live, and 66 netting sets; never more): the sample report "Live trading desk" opens and
 redraws in place as the trades tick (the same chart, new numbers), says when the last update arrived, pauses and resumes, says when the connection drops and recovers;
-the Perspective grid and pivot load under the narrow policy with no violation, take masked Arrow, and apply streaming rows by key; when WebAssembly is blocked the grid
-is the plain table; the mask reads the same in every visual for a reader without raw; the sample board "Desk wall" colours tiles by threshold, fills the screen in kiosk
+the 2.1 Perspective grid and pivot visuals are Drishti's own grid of the server's answer under the strict policy (wave B: no WebAssembly on a BI page); the mask reads the same in every visual for a reader without raw; the sample board "Desk wall" colours tiles by threshold, fills the screen in kiosk
 mode and turns its pages by itself; and a phone (390 px) shows reports and boards with finger-sized controls.
 
 Skipped when Playwright, Chromium or the built server jar is missing, or a scratch port is in use. Never run with pytest -n (the ports are fixed)."""
-import importlib.util
 import re
-from pathlib import Path
 
 import pytest
 
@@ -236,93 +233,32 @@ def test_the_watch_says_stale_failed_and_hidden_and_the_rules_colour_tiles(stack
     page.context.close()
 
 
-# ---- Perspective --------------------------------------------------------------------------------------------------------------
+# ---- the 2.1 Perspective visuals (wave B: Drishti's own grid, no WebAssembly) ------------------------------------------------------
 
-def test_the_perspective_grid_and_pivot_load_under_the_policy_and_apply_streaming_rows(stack, browser):
+def test_the_perspective_grid_and_pivot_are_drishtis_grid_under_the_strict_policy(stack, browser):
     page = sign_in(browser)
+    wasm = []
+    page.on("request", lambda r: wasm.append(r.url) if r.url.endswith(".wasm") or "perspective" in r.url else None)
     resp = page.goto(f"{CONSOLE_URL}/bi/r/{REPORT}/grid")
     csp = resp.headers["content-security-policy"]
-    assert "'wasm-unsafe-eval'" in csp and "'unsafe-eval'" not in csp and "'unsafe-inline'" not in csp and "worker-src 'self'" in csp
+    assert "wasm" not in csp and "'unsafe-eval'" not in csp and "'unsafe-inline'" not in csp
     page.wait_for_selector("[data-ready=yes]", state="attached", timeout=30000)
-    page.wait_for_selector(".bi-psp[data-psp=ready]", state="attached", timeout=60000)
-    size = page.evaluate("document.querySelector('perspective-viewer').getTable().then(t => t.size())")
-    assert size == 750
-    assert page.evaluate("document.querySelector('perspective-viewer').save().then(c => c.plugin)") == "Datagrid"
-    assert "Live" in page.inner_text(".bi-live-state [data-live-text]")
-    # the rows that changed arrive by key: the table keeps its 750 rows and says how many changed
-    page.wait_for_function("() => Number(document.querySelector('.bi-psp').getAttribute('data-psp-changed')) > 0", timeout=20000)
-    assert page.get_attribute(".bi-psp", "data-psp-rows") == "750"
-    assert "Perspective" in page.inner_text('[data-visual="all-trades"] .bi-vis-foot') and "live" in page.inner_text('[data-visual="all-trades"] .bi-vis-foot')
-    # the grid shows the trade's own columns, as the table names them
-    cols = page.evaluate("document.querySelector('perspective-viewer').save().then(c => c.columns)")
-    assert cols[:3] == ["tradeId", "desk", "book"] and "trader" in cols
-    clean(page)
+    page.wait_for_selector('[data-visual="all-trades"] tbody tr', timeout=60000)
+    heads = page.locator('[data-visual="all-trades"] thead th').all_inner_texts()
+    assert len(heads) >= 3 and page.locator('[data-visual="all-trades"] tbody tr').count() >= 20
     page.goto(f"{CONSOLE_URL}/bi/r/{REPORT}/pivot")
-    page.wait_for_selector(".bi-psp[data-psp=ready]", state="attached", timeout=60000)
-    config = page.evaluate("document.querySelector('perspective-viewer').save()")
-    assert config["group_by"] == ["desk"] and config["split_by"] == ["currency"] and config["aggregates"] == {"mtm": "sum", "notional": "sum"}
+    page.wait_for_selector("[data-ready=yes]", state="attached", timeout=30000)
+    page.wait_for_selector(".bi-vis tbody tr", timeout=60000)
+    assert wasm == [], wasm
     clean(page)
 
 
 def test_the_mask_reads_the_same_in_the_grid_and_the_cards_for_a_reader_without_raw(stack, browser):
     page = sign_in(browser, "ann")
-    open_report(page, REPORT, "/grid")
-    page.wait_for_selector(".bi-psp[data-psp=ready]", state="attached", timeout=60000)
-    traders = page.evaluate("document.querySelector('perspective-viewer').getTable().then(t => t.view({ columns: ['trader'] })).then(v => v.to_columns()).then(c => [...new Set(c.trader)])")
-    assert traders == ["•••"]
-    page.wait_for_function("() => Number(document.querySelector('.bi-psp').getAttribute('data-psp-changed')) >= 0 && document.querySelector('.bi-psp').hasAttribute('data-psp-changed')", timeout=20000)
-    assert page.evaluate("document.querySelector('perspective-viewer').getTable().then(t => t.view({ columns: ['trader'] })).then(v => v.to_columns()).then(c => [...new Set(c.trader)])") == ["•••"], "still masked after updates"
     open_report(page, REPORT, "")
     page.wait_for_selector('[data-visual="movers"] tbody tr')
     assert set(page.locator('[data-visual="movers"] tbody tr td:nth-child(3)').all_inner_texts()) == {"•••"}
     clean(page)
-
-
-def test_the_grid_is_the_plain_table_when_webassembly_cannot_start(stack, browser):
-    page = sign_in(browser)
-    page.route("**/perspective-viewer.wasm", lambda route: route.abort())
-    open_report(page, REPORT, "/grid")
-    page.wait_for_selector(".bi-psp[data-psp=fallback]", state="attached", timeout=60000)
-    note = page.inner_text("[data-psp-note]")
-    assert "Perspective could not start in this tab" in note and "plain table" in page.inner_text('[data-visual="all-trades"] .bi-vis-foot')
-    assert page.locator(".bi-psp-plain tbody tr").count() >= 100
-    assert not page.errors or all("wasm" in e.lower() or "perspective" in e.lower() or "fetch" in e.lower() for e in page.errors), page.errors
-    rounds(page, 1)                                                                 # and it follows the live table the same way
-    page.context.close()
-
-
-def test_two_tabs_of_one_browser_both_draw_the_grid(stack, browser):
-    page = sign_in(browser)
-    open_report(page, REPORT, "/grid")
-    page.wait_for_selector(".bi-psp[data-psp=ready], .bi-psp[data-psp=fallback]", state="attached", timeout=60000)
-    page.wait_for_timeout(6000)                                                     # RUPAKA_POC.md section 8: a second tab that opens five seconds or more after the first
-    second = page.context.new_page()
-    second.goto(f"{CONSOLE_URL}/bi/r/{REPORT}/grid")
-    second.wait_for_selector("[data-ready=yes]", state="attached", timeout=30000)
-    second.wait_for_selector(".bi-psp[data-psp=ready], .bi-psp[data-psp=fallback]", state="attached", timeout=60000)
-    assert second.get_attribute(".bi-psp", "data-psp") == "ready", "the second tab trap of Perspective 3.8.0 (RUPAKA_POC.md section 8) is back: the grid fell back to the plain table"
-    assert second.evaluate("document.querySelector('perspective-viewer').getTable().then(t => t.size())") == 750
-    page.context.close()
-
-
-def test_the_style_hash_list_covers_the_real_pages(stack, browser):
-    """A library update that writes another style makes this fail with the hash to add (tools/perspective-style-hashes.py prints the whole list)."""
-    spec = importlib.util.spec_from_file_location("psp_hashes", Path(__file__).resolve().parents[2] / "tools" / "perspective-style-hashes.py")
-    tool = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(tool)
-    measured = tool.measure(CONSOLE_URL, "rita", PASSWORD, browser=browser)
-    missing = [h for h in measured if h not in tool.STYLE_HASHES]
-    assert not missing, f"Perspective {tool.PERSPECTIVE_VERSION} writes styles that core/perspective_csp.py STYLE_HASHES does not allow: {missing}"
-    assert measured, "no style was measured: the probe saw nothing"
-
-
-def test_the_designer_shows_what_a_perspective_visual_will_be(stack, browser):
-    page = sign_in(browser)
-    open_report(page)
-    text = page.evaluate("""() => { const host = document.createElement('div'); document.body.appendChild(host);
-      window.drishtiBi.visuals.draw(host, { id: 'g', type: 'perspective-grid', wells: { columns: ['trade.desk', 'trade.mtm'] } }, { interactive: false }, { columns: [], rows: [] }); return host.textContent; }""")
-    assert "Perspective grid" in text and "Shown in the report viewer" in text and "trade.desk" in text
-    page.context.close()
 
 
 # ---- boards -------------------------------------------------------------------------------------------------------------------

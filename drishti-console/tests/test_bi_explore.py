@@ -72,6 +72,21 @@ def extract(client, **extra):
 
 
 # ---- the extract ---------------------------------------------------------------------------------------------------------------
+def test_the_slice_is_worked_out_by_the_console_as_the_reader():
+    """Wave B: the browser adds nothing up; the console pivots the reader's extract (POST /bi/explore/pivot)."""
+    client, backend = make()
+    spec = {"dataset": DS, "fields": FIELDS}
+    r = client.post("/bi/explore/pivot", json={"extract": spec, "slice": {"rows": ["desk"], "columns": [], "values": [{"field": "notional", "agg": "sum"}, {"field": "mtm", "agg": "count"}],
+                                                                            "filters": [{"field": "desk", "value": ""}]}}).json()
+    assert r["engine"] == "console" and r["used"] == 5 and r["header"] == ["desk", "sum notional", "count mtm"]
+    assert r["body"] == [["EQ", 10.0, 1], ["FX", 300.0, 2], ["RATES", 350.0, 2]] and r["distinct"] == {"desk": ["EQ", "FX", "RATES"]}
+    backend.reader = "bob"                                         # the same slice for a reader with fewer rows and mtm masked
+    b = client.post("/bi/explore/pivot", json={"extract": spec, "slice": {"rows": ["desk"], "values": [{"field": "mtm", "agg": "sum"}]}}).json()
+    assert b["body"] == [["FX", ""]] and b["masked"] == ["mtm"]
+    by_col = client.post("/bi/explore/pivot", json={"extract": spec, "slice": {"columns": ["desk"], "values": [{"field": "notional", "agg": "max"}]}}).json()
+    assert by_col["header"] == ["(all rows)", "FX"] and by_col["body"] == [["(all)", 200.0]]
+
+
 def test_two_readers_get_different_extracts_and_nothing_is_kept():
     client, backend = make()
     a = extract(client).json()

@@ -13,8 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 9, Analyse (docs/guides/ANALYSE.md): the page. It opens a dataset as the reader's masked extract (POST /bi/explore/extract), pivots it in the
-   browser (Slice: DuckDB-Wasm is not vendored, so the pivot is plain JavaScript over the extract the page holds), keeps the notebook, and saves or promotes
+/* Rupaka phase 9, Analyse (docs/guides/ANALYSE.md): the page. It opens a dataset as the reader's masked extract (POST /bi/explore/extract), has the Slice worked
+   out by the console (POST /bi/explore/pivot: wave B, the browser draws and adds nothing up), keeps the notebook, and saves or promotes
    through the BI item API. The SQL and Python cells are in bi-explore-cells.js. Text only, never markup. */
 (function () {
   'use strict';
@@ -126,17 +126,12 @@
     X.open({ dataset: dsSel.value, fields: fields }).catch(function () {});
   });
 
-  // ---- where Slice and SQL run: DuckDB-Wasm in this page when it is installed, else the console / this page's JavaScript --------------------------------------
-  var pick = q('[data-engine-pick]', root);
-  if (pick) {
-    pick.addEventListener('change', function () { X.engine = pick.value === 'server' ? 'server' : ''; if (X.ex) { drawPivot(); } });
-  }
-
   // ---- slice ---------------------------------------------------------------------------------------------------------------------
   var AGGS = ['sum', 'avg', 'count', 'min', 'max'];
   function colType(name) { var c = X.ex.columns.filter(function (x) { return x.name === name; })[0]; return c ? c.type : 'string'; }
 
-  function drawChips() {
+  function drawChips() { drawChipsOnly(); drawPivot(); }
+  function drawChipsOnly() {
     var box = q('[data-chips]', root); clear(box);
     X.ex.columns.forEach(function (c) {
       var chip = h('span', { class: 'bx-chip', draggable: 'true', 'data-field': c.name, title: c.type + (c.masked ? ', masked' : '') }, h('span', { text: c.name }));
@@ -187,83 +182,33 @@
         body.appendChild(row);
       });
     });
-    drawPivot();
   }
-  function distinct(field) {
-    var i = X.ex.columns.findIndex(function (c) { return c.name === field; }), seen = {}, out = [];
-    X.ex.rows.forEach(function (r) { var v = r[i] == null ? '' : String(r[i]); if (!seen[v] && out.length < 200) { seen[v] = 1; out.push(v); } });
-    return out.sort();
-  }
-
-  /** The pivot of the extract under the slice: `{rowKeys, colKeys, cell(r, c) -> [values]}` (exposed for tests and the notebook). */
-  X.pivot = function (ex, s) {
-    var idx = {};
-    ex.columns.forEach(function (c, i) { idx[c.name] = i; });
-    var rows = ex.rows.filter(function (r) { return s.filters.every(function (f) { return !f.value || String(r[idx[f.field]] == null ? '' : r[idx[f.field]]) === f.value; }); });
-    var vals = s.values.length ? s.values : [{ field: '', agg: 'count' }];
-    var key = function (r, fields) { return fields.map(function (f) { return r[idx[f]] == null ? '(blank)' : String(r[idx[f]]); }); };
-    var rk = {}, ck = {}, cells = {};
-    rows.forEach(function (r) {
-      var a = key(r, s.rows), b = key(r, s.columns), ka = a.join('\u0001'), kb = b.join('\u0001');
-      rk[ka] = a; ck[kb] = b;
-      var cell = cells[ka + '\u0002' + kb] = cells[ka + '\u0002' + kb] || vals.map(function () { return { n: 0, sum: 0, min: null, max: null }; });
-      vals.forEach(function (v, i) {
-        var x = v.field ? r[idx[v.field]] : 1, c = cell[i];
-        if (x == null) { return; }
-        c.n += 1;
-        var num = Number(x);
-        if (isFinite(num)) { c.sum += num; c.min = c.min === null ? num : Math.min(c.min, num); c.max = c.max === null ? num : Math.max(c.max, num); }
-      });
-    });
-    return X.pivotFrom(rk, ck, cells, vals, rows.length);
-  };
-
-  /** The pivot object from the aggregates of each (row key, column key): {n, sum, min, max} for each value. The JavaScript pivot and the DuckDB one both end here. */
-  X.pivotFrom = function (rk, ck, cells, vals, used) {
-    var sortKeys = function (o) { return Object.keys(o).sort(function (x, y) { return x.localeCompare(y, undefined, { numeric: true }); }); };
-    var out = function (c, v) { return !c ? '' : v.agg === 'count' ? c.n : v.agg === 'sum' ? c.sum : v.agg === 'avg' ? (c.n ? c.sum / c.n : '') : v.agg === 'min' ? c.min : c.max; };
-    return {
-      rowKeys: sortKeys(rk).map(function (k) { return rk[k]; }), colKeys: sortKeys(ck).map(function (k) { return ck[k]; }), vals: vals, used: used,
-      cell: function (a, b) { var c = cells[a.join('\u0001') + '\u0002' + b.join('\u0001')]; return vals.map(function (v, i) { return out(c && c[i], v); }); }
-    };
-  };
+  /** A filter's values, as the console's last pivot listed them (the browser does not go through the rows). */
+  X.distinct = {};
+  function distinct(field) { return X.distinct[field] || []; }
 
   var pivotRun = 0;
-  /** The pivot, worked out by DuckDB-Wasm in the browser when it is there (bi-explore-duck.js), else by the JavaScript pivot above; the engine is on the table's data-engine. */
+  /** The pivot, worked out by the console over the reader's extract (POST /bi/explore/pivot); this page only draws it. */
   function drawPivot() {
     var host = clear(q('[data-pivot]', root)), s = X.slice, meta = q('[data-pivot-meta]', root);
     q('[data-promote-slice]', root).disabled = !(s.rows.length || s.columns.length);
     if (!X.ex || !(s.rows.length || s.columns.length || s.values.length)) { meta.textContent = 'Add fields to Rows, Columns or Values.'; return; }
     var run = ++pivotRun, ex = X.ex;
-    var finish = function (p, engine) { if (run === pivotRun && ex === X.ex) { showPivot(host, meta, s, p, engine); } };
-    if (X.duck && X.duck.usable() && X.engine !== 'server') {
-      meta.textContent = 'Working it out…';
-      X.duck.pivot(ex, s).then(function (p) { finish(p, 'duckdb-wasm'); }, function (e) {
-        if (run !== pivotRun) { return; }
-        if (e && e.code) { meta.textContent = e.message; return; }                                // a refusal, not an engine that is missing: say so
-        finish(X.pivot(ex, s), 'js');
-      });
-      return;
-    }
-    finish(X.pivot(ex, s), 'js');
+    meta.textContent = 'Working it out…';
+    X.post('/bi/explore/pivot', { extract: X.spec, slice: s }).then(function (p) {
+      if (run !== pivotRun || ex !== X.ex) { return; }
+      var fresh = Object.keys(p.distinct || {}).some(function (k) { return !X.distinct[k]; });
+      Object.keys(p.distinct || {}).forEach(function (k) { X.distinct[k] = p.distinct[k]; });
+      showPivot(host, meta, s, p, p.engine || 'console');
+      if (fresh) { drawChipsOnly(); }
+    }, function (e) { if (run === pivotRun) { meta.textContent = e.message; } });
   }
 
   function showPivot(host, meta, s, p, engine) {
-    var many = p.vals.length > 1;
-    var head = s.rows.length ? s.rows.slice() : ['(all rows)'];
-    var cols = p.colKeys.length && s.columns.length ? p.colKeys : [[]];
-    var header = head.slice();
-    cols.forEach(function (c) { p.vals.forEach(function (v) { header.push([c.join(' / '), many || !c.length ? (v.field ? v.agg + ' ' + v.field : 'rows') : ''].filter(Boolean).join(' · ') || 'rows'); }); });
-    var body = (p.rowKeys.length ? p.rowKeys : [[]]).map(function (rk) {
-      var row = s.rows.length ? rk.slice() : ['(all)'];
-      cols.forEach(function (c) { p.cell(rk, c.length ? c : []).forEach(function (v) { row.push(typeof v === 'number' ? Math.round(v * 1e6) / 1e6 : v); }); });
-      return row;
-    });
-    meta.textContent = p.used + ' of ' + X.ex.rowCount + ' rows used; ' + body.length + ' pivot rows. ' + (engine === 'js' ? 'Worked out in this page.' : 'Worked out by DuckDB in this browser.');
+    meta.textContent = p.used + ' of ' + X.ex.rowCount + ' rows used; ' + p.body.length + ' pivot rows. Worked out by the console.';
     meta.setAttribute('data-engine', engine);
-    X.table(host, header, body, MAX_SHOWN);
+    X.table(host, p.header, p.body, MAX_SHOWN);
   }
-
   // ---- promote a slice -------------------------------------------------------------------------------------------------------------
   X.qualified = function (name) { var i = X.ex.columns.findIndex(function (c) { return c.name === name; }); return X.qual[i] || name; };
   X.createItem = function (kind, title, body) { return B.api('POST', '/workspaces/me/items', { kind: kind, title: title, description: 'Started in Analyse.', body: body }); };

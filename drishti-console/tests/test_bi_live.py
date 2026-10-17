@@ -29,7 +29,6 @@ from conftest import CONSOLE
 from core.app import CSP, create_app
 from core.channel import ChannelSession
 from core.config import load_settings
-from core.perspective_csp import PERSPECTIVE_VERSION, STYLE_HASHES, board_uses_perspective, policy, uses_perspective
 
 LIVE = "file:report:live-desk"
 PLAIN = "file:report:plain"
@@ -92,34 +91,18 @@ def live():
 
 # ---- the policy ---------------------------------------------------------------------------------------------------------------
 
-def test_a_report_with_a_perspective_visual_gets_the_narrow_policy_and_no_other_page_does(live):
-    page = live.get(f"/bi/r/{LIVE}")
-    assert page.status_code == 200
-    csp = page.headers["content-security-policy"]
-    assert csp == policy(CSP)
-    assert "script-src 'self' 'wasm-unsafe-eval';" in csp and "'unsafe-eval'" not in csp and "'unsafe-inline'" not in csp and "worker-src 'self'" in csp
-    assert "style-src 'self' 'sha256-" in csp and all(f"'{h}'" in csp for h in STYLE_HASHES)
-    assert f'data-perspective="/static/vendor/perspective/{PERSPECTIVE_VERSION}"' in page.text
-    assert "perspective-viewer/css/pro.css" in page.text and "pro-dark.css" in page.text
-    assert "/static/js/bi-perspective.js" in page.text and "/static/js/bi-live.js" in page.text
-    # a report without one, and every other page of BI, keep the strict policy
-    plain = live.get(f"/bi/r/{PLAIN}")
-    assert plain.headers["content-security-policy"] == CSP and 'data-perspective=""' in plain.text and "pro.css" not in plain.text
-    for other in ("/bi", "/bi/catalogue", "/bi/datasets", "/bi/designer", "/t"):
-        csp = live.get(other).headers["content-security-policy"]
-        assert csp == CSP and "wasm" not in csp and "sha256" not in csp, other
+def test_every_bi_page_has_the_strict_policy_even_with_a_2_1_perspective_visual(live):
+    """Wave B (BI_DESIGN.md P3): no BI page compiles WebAssembly; a 2.1 report with a Perspective visual is drawn as Drishti's own grid of the server's answer."""
+    for path in (f"/bi/r/{LIVE}", f"/bi/r/{PLAIN}", f"/bi/b/{BOARD}", "/bi", "/bi/catalogue", "/bi/datasets", "/bi/designer", "/bi/explore"):
+        page = live.get(path)
+        assert page.status_code == 200, path
+        csp = page.headers["content-security-policy"]
+        assert csp == CSP and "wasm" not in csp and "sha256" not in csp, path
+        assert "bi-perspective.js" not in page.text and "vendor/perspective" not in page.text and "data-perspective" not in page.text, path
+    assert "/static/js/bi-live.js" in live.get(f"/bi/r/{LIVE}").text
 
 
-def test_when_the_server_cannot_be_asked_the_page_is_strict(live):
-    live.app.state.backend.fail_probe = True
-    page = live.get(f"/bi/r/{LIVE}")
-    assert page.status_code == 200 and page.headers["content-security-policy"] == CSP         # the page then shows the plain table in place of Perspective
-
-
-def test_a_board_gets_the_narrow_policy_only_with_a_perspective_tile(live):
-    strict = live.get(f"/bi/b/{BOARD}")
-    assert strict.status_code == 200 and strict.headers["content-security-policy"] == CSP
-    assert 'data-bi-page="board"' in strict.text and "/static/js/bi-board.js" in strict.text and "data-kiosk" in strict.text
+def test_a_board_with_a_perspective_tile_keeps_the_strict_policy(live):
     wall = dict(BOARD_MODEL, tiles={"p/t1": {"report": LIVE, "type": "perspective-grid", "live": True}})
     orig = live.app.state.backend.bi
 
@@ -127,18 +110,8 @@ def test_a_board_gets_the_narrow_policy_only_with_a_perspective_tile(live):
         return wall if path == "/boards/" + BOARD else await orig(method, path, ident, body, **params)
 
     live.app.state.backend.bi = with_perspective
-    assert live.get(f"/bi/b/{BOARD}").headers["content-security-policy"] == policy(CSP)
-
-
-def test_the_probes_read_the_models():
-    assert uses_perspective(LIVE_MODEL and {"report": LIVE_MODEL}) and not uses_perspective({"report": PLAIN_MODEL}) and not uses_perspective(None) and not uses_perspective({})
-    assert board_uses_perspective({"tiles": {"a": {"type": "perspective-pivot"}}}) and not board_uses_perspective(BOARD_MODEL) and not board_uses_perspective(None)
-
-
-def test_the_style_hashes_are_sha256_and_the_worker_policy_is_unchanged(live):
-    assert len(STYLE_HASHES) == len(set(STYLE_HASHES)) == 4 and all(h.startswith("sha256-") and len(h) == 51 for h in STYLE_HASHES)
-    csp = live.get(f"/static/vendor/perspective/{PERSPECTIVE_VERSION}/perspective/cdn/perspective-server.worker.js", headers={"host": "console.example"}).headers["content-security-policy"]
-    assert csp == "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src console.example/static/ console.example/pyodide/"
+    page = live.get(f"/bi/b/{BOARD}")
+    assert page.headers["content-security-policy"] == CSP and 'data-bi-page="board"' in page.text and "/static/js/bi-board.js" in page.text
 
 
 def test_the_board_and_the_report_open_from_the_item_page(live):
@@ -229,14 +202,8 @@ def test_the_live_settings_reach_the_page_and_are_bounded(live):
 
 def test_the_new_scripts_open_no_stream_no_blob_and_no_markup_of_their_own():
     js = CONSOLE / "web/static/js"
-    for name in ("bi-live.js", "bi-perspective.js", "bi-board.js"):
+    for name in ("bi-live.js", "bi-board.js"):
         text = (js / name).read_text(encoding="utf-8")
         assert "EventSource(" not in text and "createObjectURL" not in text and "new Blob" not in text and "innerHTML" not in text and "eval(" not in text, name
         assert "http://" not in text and "https://" not in text, name                                         # nothing from outside
-    assert "type: 'module'" in (js / "bi-perspective.js").read_text(encoding="utf-8")                       # the engine's worker is a script of this origin
-
-
-def test_the_vendored_perspective_is_the_version_the_hashes_belong_to():
-    assert (CONSOLE / f"web/static/vendor/perspective/{PERSPECTIVE_VERSION}/perspective/cdn/perspective-server.worker.js").exists()
-    note = (CONSOLE / "web/static/vendor/VENDOR.md").read_text(encoding="utf-8")
-    assert PERSPECTIVE_VERSION in note and "core/perspective_csp.py" in note
+    assert not (js / "bi-perspective.js").exists() and not (CONSOLE / "web/static/vendor/perspective").exists()

@@ -14,28 +14,16 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* Rupaka phase 6 (docs/guides/PYTHON_BI.md): the python visual of a report. The rows are the ones the person looking may see; the Python item that turns them
-   into a number per group or a chart runs in one of two places:
-
-     server    the console's sandboxed worker (POST /bi/python/run: no network, a scratch folder, CPU, memory, time and output limits);
-     browser   Pyodide (the runtime Calc ships) in a Web Worker of this page, loaded the first time it is needed, on the rows this page already received
-               (the JSON of the visual's own query). The worker is Calc's (calc-worker.js), which has the narrow 'wasm-unsafe-eval' policy of its own response;
-               this page keeps the strict policy.
-
-   format.run in the report says which (server, browser, auto). auto asks the server first and falls back to the browser when the server cannot run the
-   item (no runner, or the item is for the browser only) and the browser can. What comes back is data: a measure's rows (drawn here as bars), an ECharts
-   option (drawn with the vendored ECharts, formatter strings removed), an SVG or a PNG (shown as an image, which runs no script). Never HTML. */
+   into a number per group or a chart runs on the console's sandboxed runner (POST /bi/python/run: a fork-server worker with no network, a scratch folder,
+   CPU, memory, time and output limits). Wave B (docs/architecture/BI_DESIGN.md principle P3): the browser computes nothing, so there is no browser target any
+   more; a manifest or a visual that still says `browser` or `both` runs on the server. What comes back is data: a measure's rows (drawn here as bars), an
+   ECharts option (drawn with the vendored ECharts, formatter strings removed), a Vega-Lite specification, an SVG or a PNG (shown as an image, which runs no
+   script). Never HTML. */
 (function () {
   'use strict';
   const B = (window.drishtiBi = window.drishtiBi || {});
   const h = B.h;
-  const root = document.getElementById('biCanvas');
   const P = (B.python = B.python || {});
-  const RUNTIME = (root && root.getAttribute('data-py-runtime')) || '';
-  const WORKER = (root && root.getAttribute('data-py-worker')) || '';
-  const MODULE = (root && root.getAttribute('data-py-module')) || '';
-  const DRIVER = (root && root.getAttribute('data-py-driver')) || '';
-  const AUTHOR = !!root && root.getAttribute('data-author') === 'true';
-  const MARK = '\u0001BIRESULT';
   const DROP = ['formatter', 'extraCssText', 'appendToBody', 'valueFormatter'];
 
   const failure = (code, detail, traceback) => Object.assign(new Error(code + ' ' + detail), { code, detail, traceback: traceback || '' });
@@ -49,108 +37,9 @@
       }));
   }
 
-  // ---- the browser target ----------------------------------------------------------------------------------------------------
-  let worker = null;
-  let ready = null;
-  let chain = Promise.resolve();
-  let driver = null;
-
-  P.browserReady = () => !!RUNTIME && !!WORKER && typeof WebAssembly === 'object' && typeof Worker === 'function';
-
-  function boot() {
-    if (ready) { return ready; }
-    ready = new Promise((resolve, reject) => {
-      worker = new Worker(WORKER, { type: 'module', name: 'drishti-bi-python' });
-      worker.onmessage = (e) => {
-        const m = e.data || {};
-        if (m.type === 'ready') { resolve(m); } else if (m.type === 'failed') { reject(failure('DRS-9074', 'The browser Python could not start: ' + m.error)); }
-      };
-      worker.onerror = (e) => reject(failure('DRS-9074', 'The browser Python could not start: ' + (e.message || 'worker error')));
-      worker.postMessage({ type: 'init', base: RUNTIME, module: MODULE });
-    });
-    ready.catch(() => { ready = null; worker = null; });
-    return ready;
-  }
-  P.stopWorker = () => { if (worker) { worker.terminate(); } worker = null; ready = null; };
-
-  function loadDriver() {
-    if (!driver) { driver = fetch(DRIVER, { credentials: 'same-origin' }).then((r) => { if (!r.ok) { throw failure('DRS-9074', 'The browser driver did not load'); } return r.text(); }); }
-    return driver;
-  }
-
-  const b64 = (obj) => {
-    const bytes = new TextEncoder().encode(JSON.stringify(obj));
-    let s = '';
-    for (let i = 0; i < bytes.length; i += 0x8000) { s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); }
-    return btoa(s);
-  };
-
-  /** Runs `payload` ({columns, rows, source, entry, interface, inputs, by, params}) in Pyodide; serialised, one run at a time (the worker has one interpreter). */
-  function runInBrowser(manifest, payload) {
-    const job = chain.then(() => Promise.all([boot(), loadDriver()]).then(([, drv]) => new Promise((resolve, reject) => {
-      const id = 'bi' + Date.now() + Math.random().toString(16).slice(2);
-      let out = '';
-      const limit = Math.max(1, manifest.timeout || 10) * 1000 + 15000;                         // a first run also loads numpy and pandas
-      const timer = setTimeout(() => { P.stopWorker(); reject(failure('DRS-9072', "'" + manifest.name + "' ran longer than its " + (manifest.timeout || 10) + ' s limit in the browser and was stopped')); }, limit);
-      const prior = worker.onmessage;
-      worker.onmessage = (e) => {
-        const m = e.data || {};
-        if (m.type === 'stdout' && m.id === id) { out += m.text; } else if (m.type === 'done' && m.id === id) {
-          clearTimeout(timer);
-          worker.onmessage = prior;
-          const at = out.indexOf(MARK);
-          if (m.ok === false) { reject(failure('DRS-9071', m.error || 'the Python item failed', AUTHOR ? (m.traceback || '') : '')); } else if (at < 0) { reject(failure('DRS-9071', 'the Python item returned nothing')); } else { resolve(JSON.parse(out.slice(at + MARK.length).split('\n')[0])); }
-        }
-      };
-      const imports = (manifest.packages || []).filter((p) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(p)).map((p) => 'import ' + p + '\n').join('');
-      worker.postMessage({ type: 'run', id, code: imports + drv + "\n_bi_main('" + b64(payload) + "')\n", context: '{}' });
-    })));
-    chain = job.catch(() => {});
-    return job;
-  }
-
-  /** A notebook cell of Analyse (ANALYSE.md) in Pyodide: `ex` is the extract as the console sent it ({columns[{name}], rows}); no report involved. */
-  P.runCell = function (source, ex, params) {
-    if (!P.browserReady()) { return Promise.reject(failure('DRS-9074', 'The browser Python runtime is not installed on this console (tools/fetch-pyodide.sh), so cells can run on the server only')); }
-    const packages = ['pandas'].concat(['numpy', 'scipy', 'statsmodels'].filter((p) => new RegExp('^\\s*(import|from)\\s+' + p + '\\b', 'm').test(source)));
-    const payload = { columns: ex.columns.map((c) => c.name), rows: ex.rows, source, interface: 'cell', params: params || {}, entry: '', inputs: [], by: null, output: '' };
-    const t0 = performance.now();
-    return runInBrowser({ name: 'analyse-cell', timeout: 30, packages }, payload).then((out) => Object.assign(out, { ms: Math.round(performance.now() - t0), target: 'browser', inputRows: ex.rows.length }));
-  };
-
-  // ---- asking ------------------------------------------------------------------------------------------------------------------
-  const wantsBrowser = (m) => m.target === 'browser' || m.target === 'both';
-
-  /** The answer for one python visual: `{kind, ..., ms, target, item, version, rows}`. `args` is {report, page, state, visual}. */
+  /** The answer for one python visual: `{kind, ..., ms, target, item, version, rows}`, worked out by the console. `args` is {report, page, state, visual}. */
   P.run = function (spec, args) {
-    const mode = (spec.format && spec.format.run) || 'auto';
-    const server = () => post('/bi/python/run', { report: args.report, page: args.page, visual: spec.id, state: args.state });
-    const browser = () => {
-      const path = '/reports/' + B.id2path(args.report);
-      return B.enqueue(() => B.api('POST', path + '/python', { page: args.page, visual: spec.id })).then((desc) => {
-        if (!P.browserReady()) { throw failure('DRS-9074', 'The browser Python runtime is not installed on this console (tools/fetch-pyodide.sh), so this visual cannot run in the browser'); }
-        if (!wantsBrowser(desc.manifest)) { throw failure('DRS-9070', "'" + desc.manifest.name + "' is for the server only (target: server)"); }
-        return B.enqueue(() => B.api('POST', path + '/query', { page: args.page, visual: spec.id, state: args.state })).then((res) => {
-          const t0 = performance.now();
-          const m = desc.measure;
-          const short = (c) => String(c).slice(String(c).indexOf('.') + 1);
-          const payload = {
-            columns: res.columns.map((c) => c.name), rows: res.rows, source: desc.manifest.source, entry: desc.manifest.entry, interface: desc.manifest.interface,
-            inputs: m ? (m.inputs || []).map(short) : desc.manifest.inputs, by: m ? (m.by || []).map(short) : null, params: Object.assign({}, desc.manifest.params, desc.params || {}), output: desc.manifest.output
-          };
-          return runInBrowser(desc.manifest, payload).then((out) => Object.assign(out, {
-            ms: Math.round(performance.now() - t0), target: 'browser', item: desc.id, version: desc.version, measure: m ? m.name : null, inputRows: res.rowCount, masked: (res.meta && res.meta.masked) || []
-          }));
-        });
-      });
-    };
-    if (mode === 'browser') { return browser(); }
-    if (mode === 'server') { return server(); }
-    return server().catch((e) => {
-      const fallback = e.code === 'DRS-9074' || (e.code === 'DRS-9070' && /browser only/.test(e.detail || ''));
-      if (fallback && P.browserReady()) { return browser(); }
-      throw e;
-    });
+    return post('/bi/python/run', { report: args.report, page: args.page, visual: spec.id, state: args.state });
   };
 
   // ---- drawing -----------------------------------------------------------------------------------------------------------------

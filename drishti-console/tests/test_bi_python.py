@@ -138,10 +138,11 @@ def test_the_servers_refusals_are_passed_on_and_a_malformed_call_is_refused():
     assert client.post("/bi/python/run", json={"report": "r"}).status_code == 422
 
 
-def test_a_browser_only_item_is_not_run_on_the_server():
+def test_an_item_that_says_browser_runs_on_the_server():
+    """Wave B (BI_DESIGN.md 3.5): there is no browser target; an older manifest's `target: browser` or `both` runs on the console like any other."""
     only = {**MEASURE, "manifest": {**MEASURE["manifest"], "target": "browser"}}
     r = run(make(only)[0])
-    assert r.status_code == 422 and r.json()["code"] == "DRS-9070" and "browser only" in r.json()["detail"]
+    assert r.status_code == 200 and r.json()["target"] == "server" and r.json()["kind"] == "measure"
 
 
 def test_check_adds_the_consoles_source_checks_to_the_servers():
@@ -167,15 +168,16 @@ def test_the_python_paths_of_the_server_are_reachable_from_the_page_script():
     assert client.post("/bi/api/python/validate", json={"yaml": "x"}).status_code == 200
 
 
-def test_the_report_page_wires_the_browser_target_without_inline_script():
+def test_the_report_page_wires_python_without_inline_script_and_without_a_browser_runtime():
     client, _ = make(MEASURE)
     page = client.get("/bi/r/file:report:python-desk-risk").text
-    assert "/static/js/bi-python.js" in page and 'data-py-driver="/static/calc/bi_driver.py' in page and 'data-author="true"' in page
+    assert "/static/js/bi-python.js" in page and 'data-author="true"' in page
+    assert "data-py-runtime" not in page and "data-py-driver" not in page and "calc-worker.js" not in page and "pyodide" not in page.lower()
     assert "<script>" not in page.replace("<script src", "") and " onclick=" not in page
     reader, _ = make(MEASURE, powers=("bi",))
     assert 'data-author="false"' in reader.get("/bi/r/file:report:python-desk-risk").text
     assert client.get("/bi/r/file:report:python-desk-risk").headers["content-security-policy"].count("wasm-unsafe-eval") == 0
-    assert "/static/calc/bi_driver.py" and client.get("/static/calc/bi_driver.py").status_code == 200
+    assert client.get("/static/calc/bi_driver.py").status_code == 404
     assert client.get("/static/js/bi-python.js").status_code == 200
 
 
@@ -186,26 +188,3 @@ def test_the_run_route_takes_json_from_this_console_only():
     plain = client.post("/bi/python/run", content='{"report":"r"}', headers={"Content-Type": "text/plain"})
     assert plain.status_code in (400, 415) and plain.json()["code"] == "DRS-5001"
     assert client.post("/bi/python/check", content="x", headers={"Content-Type": "text/plain"}).status_code in (400, 415)
-
-
-def _browser(capsys, payload):
-    """The browser target's driver (static/calc/bi_driver.py), run here in CPython: the same code Pyodide runs, on the JSON rows the page received."""
-    import base64
-    import json
-    ns: dict = {}
-    exec(compile((CONSOLE / "web/static/calc/bi_driver.py").read_text(encoding="utf-8"), "bi_driver.py", "exec"), ns)
-    ns["_bi_main"](base64.b64encode(json.dumps(payload).encode()).decode())
-    line = [x for x in capsys.readouterr().out.splitlines() if x.startswith("\x01BIRESULT")][0]
-    return json.loads(line[len("\x01BIRESULT"):])
-
-
-def test_the_browser_driver_answers_as_the_server_worker_does(capsys):
-    rows = {"columns": ["desk", "pnl1d", "id"], "rows": [["A", 1.0, "1"], ["A", 2.0, "2"], ["B", 5.0, "3"]]}
-    m = MEASURE["manifest"]
-    out = _browser(capsys, {**rows, "source": m["source"], "entry": "compute", "interface": "measure", "inputs": ["pnl1d"], "by": ["desk"], "params": {"k": 1}, "output": "number"})
-    assert out == {"kind": "measure", "by": ["desk"], "rows": [["A", 3.0], ["B", 5.0]]}
-    v = VISUAL["manifest"]
-    out = _browser(capsys, {**rows, "source": v["source"], "entry": "render", "interface": "visual", "inputs": ["pnl1d"], "by": None, "params": {}, "output": "echarts"})
-    assert out["kind"] == "echarts" and out["option"]["title"]["text"] == "3" and "formatter" not in out["option"]["tooltip"]
-    with pytest.raises(TypeError, match="one number per group"):
-        _browser(capsys, {**rows, "source": "def compute(table, params):\n    return 'x'\n", "entry": "compute", "interface": "measure", "inputs": ["pnl1d"], "by": ["desk"], "params": {}, "output": "number"})

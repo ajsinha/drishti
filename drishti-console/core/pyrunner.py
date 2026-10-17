@@ -188,8 +188,6 @@ class PyRunner:
             raise PyError("DRS-9074", 503, f"the Python runner needs {', '.join(need)} in the console's environment (pip install -r drishti-console/requirements.txt)")
         if self.netns == "require" and not self._netns_ok():
             raise PyError("DRS-9074", 503, "bi.python.network_namespace is 'require' but this machine cannot create a network namespace (unshare --user --net)")
-        if m.get("target") == "browser":
-            raise PyError("DRS-9070", 422, f"'{m.get('name')}' runs in the browser only (target: browser)")
         for p in m.get("packages") or []:
             if p not in self.packages:
                 raise PyError("DRS-9073", 403, f"package '{p}' is not on the allow-list (bi.python.packages: {', '.join(self.packages)})")
