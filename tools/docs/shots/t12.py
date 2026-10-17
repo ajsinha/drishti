@@ -95,7 +95,7 @@ pages:
     title: Trading desk
     tiles:
       - { id: net-mtm, report: live-trading-desk, visual: mtm, title: Net MTM, at: { x: 0, y: 0, w: 4, h: 3 },
-          alert: { on: MTM, warn: { op: lt, value: 150000000 }, crit: { op: lt, value: 100000000 }, hysteresis: 5000000 } }
+          alert: { on: MTM, warn: { op: lt, value: 0 }, crit: { op: lt, value: -1000000000 }, hysteresis: 25000000 } }
       - { id: trades, report: live-trading-desk, visual: trades, at: { x: 4, y: 0, w: 2, h: 3 } }
       - { id: by-desk, report: live-trading-desk, visual: by-desk, at: { x: 0, y: 3, w: 6, h: 5 } }
 """

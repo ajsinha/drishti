@@ -21,8 +21,9 @@ the feature is for, then walks through an example: the exact text to type and wh
 If Drishti is not running yet, start with [GETTING_STARTED.md](GETTING_STARTED.md) (ten minutes) or
 [GETTING_STARTED.md](GETTING_STARTED.md) (every step explained).
 
-The examples use the banking packs (`trading`, `counterparty-risk` and the others) with their sample
-data, so ids such as `MX-20000001` and `NS-SUMMIT-NY` exist. If your administrator loaded other packs, the
+The examples use the seven shipped packs (`core`, `market-data`, `trading`, `counterparty-risk`, `market-risk`, `world-economy`, `news-and-markets`)
+on the demo lakes of the quick start (`drishti.py lake demo`, business date 2026-10-16; [GETTING_STARTED.md](GETTING_STARTED.md)), so ids such as
+`MX-20000001`, `1000001` and `NS-SUMMIT-NY` exist and the counts are those of 15,000 trades from ENDUR, CALYPSO and MUREX. If your administrator loaded other packs, the
 **Examples** list on the terminal page shows ids that work for you, and every pack's guide (*Help → Help
 centre → Domain packs*) has a *Finding things* section with the same commands for its own kinds.
 
@@ -33,7 +34,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [The pages at a glance](#the-pages-at-a-glance) | Every page and its address |
 | [The top bar](#the-top-bar) | The menus and the round tools on the right |
 | [The command line](#the-command-line) | Opening an entity, suggestions, what an error means |
-| [Pick lists](#pick-lists-when-a-command-names-several-entities) | `TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`, `TRD` |
+| [Pick lists](#pick-lists-when-a-command-names-several-entities) | `TRD MX-200000`, `CPTY north`, `TRD PRODUCT_TYPE=FX_QUANTO`, `TRD` |
 | [Tables: paging and the keyboard](#tables-sorting-filtering-paging-and-the-keyboard) | The pager, ▲ ▼, and the keys that walk a table |
 | [Controls on a screen](#controls-on-a-screen-choose-what-a-panel-shows) | Dropdowns, date ranges and search that a screen offers: pick a leg or a period and only the panels that depend on it move; the choice is in the address |
 | [A deep trade](#a-deep-trade-legs-cashflows-and-fixings) | A tab per leg; each leg's terms and cashflows, and a floating cashflow that opens to its fixings; live, and on a phone |
@@ -148,33 +149,34 @@ The command line is the box beside the brand in the top bar. Press `/` anywhere 
 <MNEMONIC> <ID> <GO>
 ```
 
-- The **mnemonic** names a kind of entity: `TRD` is a trade, `NSET` a netting set, `GENE` a gene.
+- The **mnemonic** names a kind of entity: `TRD` is a trade, `NSET` a netting set, `ECON` an economy.
 - The **id** names one entity of that kind: `MX-20000001`.
 - `<GO>` means "press Enter".
 
 Examples:
 
 ```text
-TRD MX-20000001          an interest rate swap
-TRD WSS-1500025          an FX option
+TRD MX-20000001      an interest rate swap (MUREX)
+TRD 1000001          a commodity swap (ENDUR)
+TRD CLY-3000025      an FX option (CALYPSO)
+TRD CLY-3000157      a government bond (CALYPSO)
 NSET NS-SUMMIT-NY    a netting set
 CRV CRV-USD-OIS      the USD SOFR discount curve
 CPTY CP-NORTHBRIDGE  a counterparty
-CUST CUST-100231     a retail customer
-VRNT VRNT-BRAF-V600E a genetic variant
+ECON ECON-USA        an economy (world-economy)
 ```
 
 **A bare id** works when its shape tells Drishti the kind. Type `MX-20000001` and press Enter: it opens
 the same trade as `TRD MX-20000001`.
 
-**Case** never matters: `trd t-10001` opens `MX-20000001`.
+**Case** never matters: `trd mx-20000001` opens `MX-20000001`.
 
 **One match opens; several give a pick list.** If what you typed names exactly one entity, it opens. If it
 names several (`TRD MX-200000`, the start of an id), you get a table to pick from. See
 [Pick lists](#pick-lists-when-a-command-names-several-entities).
 
 Mnemonics come from the packs that are switched on. The full list, pack by pack, is in
-[PACKS.md](PACKS.md#the-packs-that-ship). The most used banking ones:
+[PACKS.md](PACKS.md#the-packs-that-ship). The most used ones, from the seven shipped packs:
 
 | Mnemonic | Kind | Example |
 |---|---|---|
@@ -186,7 +188,8 @@ Mnemonics come from the packs that are switched on. The full list, pack by pack,
 | `CRV` | interest rate curve | `CRV CRV-USD-OIS` |
 | `FXV` | FX volatility surface | `FXV FXV-EURUSD` |
 | `VAR` | VaR / expected shortfall | `VAR VAR-RATES` |
-| `LCR` | liquidity coverage ratio | `LCR LCR-NY` |
+| `TVAL` | trade valuation (MTM, P&L, DV01) | `TVAL TVAL-MX-20000001` |
+| `ECON` | economy | `ECON ECON-USA` |
 
 ### Reserved words
 
@@ -223,7 +226,7 @@ Each suggestion shows the mnemonic, the id (the letters you typed are highlighte
 example:
 
 ```text
-TRD   MX-20000001   Trade · Interest rate swap (fixed/float) · Meridian Reinsurance Ltd · AUD 242m
+TRD   MX-20000002   Trade · MUREX · IRS_FIXFLOAT · CP-HALCYON · EUR 110.0m
 ```
 
 If your role sees some fields masked ([Masked fields](#masked-fields)), the subtitle is the entity's view title as you
@@ -258,7 +261,7 @@ The number of suggestions is a server setting (`drishti.commands.suggest-limit`,
   50); `↓` goes forward. The server keeps your history, so it follows you to another browser. Only commands that
   could be read are kept.
 - **Aliases.** On **My account → Aliases**, give a command a short word: `MYBOOK` for `BOOK BOOK-RATES-1`, or `REVS`
-  for `TRD productType=Revolver`. Typing `MYBOOK <GO>` then does the same as the command; anything you add after
+  for `TRD PRODUCT_TYPE=FX_QUANTO`. Typing `MYBOOK <GO>` then does the same as the command; anything you add after
   the word is kept (`MYBOOK F3`). A mnemonic or a pack code cannot be an alias. The same through the API:
   `GET` / `PUT /api/v1/command/aliases` and `GET /api/v1/command/history`.
 
@@ -270,9 +273,9 @@ The number of suggestions is a server setting (`drishti.commands.suggest-limit`,
 | A page headed *Pick a trade* that says `0 of 0 trades match` and *Nothing matches.* | The mnemonic is fine, but no trade's id starts with what you typed (`TRD MX-29999999`) and no title contains it | Type less of the id (`TRD MX-2`) and pick from the list |
 | `DRS-1001 no source holds trade/MX-29999999` | You opened an address such as `/v/trade/MX-29999999` directly, and no source has that id | Check the id; use the command line to find it |
 | `DRS-4004 'XYZ' is neither a mnemonic nor a kind; type it alone to see suggestions` | A pick list or search started with an unknown word | Type the first letter and pick a mnemonic |
-| `DRS-4004 no trade has a field 'producttyp'; did you mean productType?` | A pick list or search names a field the kind does not have (case does not matter, spelling does) | Use the name it suggests |
+| `DRS-4004 no trade has a field 'producttyp'; did you mean PRODUCT_TYPE, PRODUCT_GROUP?` | A pick list or search names a field the kind does not have (case does not matter, spelling does) | Use the name it suggests |
 | `DRS-4004 limit must be a whole number from 1 to 1000, not '0'` | `limit` outside its range | A number from 1 to 1000 |
-| `DRS-5002 <you> may not open lcr entities` | Your roles, or the packs you have switched on, do not include that kind | Switch the pack on in the box menu; otherwise ask an administrator |
+| `DRS-5002 <you> may not open trade-valuation entities` | Your roles, or the packs you have switched on, do not include that kind | Switch the pack on in the box menu; otherwise ask an administrator |
 
 ### A pack at a glance
 
@@ -292,30 +295,30 @@ the same. After you press Enter:
 
 ### The forms
 
-| You type | You get | Real result on the banking samples |
+| You type | You get | Real result on the demo lakes |
 |---|---|---|
 | `TRD MX-20000001` | That trade opens (an exact id) | the swap `MX-20000001` |
-| `TRD MX-200000` | Trades whose id **starts with** `MX-200000`, or whose title **contains** it | `99 of 99 trades match`: `MX-20000001` … `MX-20000099` |
-| `CPTY north` | Counterparties whose id starts with, or title contains, `north` | one match, so `CP-NORTHBRIDGE` opens at once |
-| `TRD MX-2*0` | `*` stands for any text, anywhere in the id | `19 of 19 trades match`: `MX-20000010`, `MX-20000020`, `MX-20000030`, … |
-| `TRD productType=Revolver` | Trades whose field has that value | `6 of 750 trades match`: `CLY-3000055` … `CLY-3000060` |
-| `TRD notional > 10m and currency = usd` | Trades matching a condition (no `where` needed) | `317 of 750 trades match; the first 100 are shown` |
-| `TRD MX-2* currency=usd order by mtm desc` | An id pattern and a condition together, sorted | `53 of 750 trades match`, largest MTM first (`MX-20000003`) |
-| `TRD` | Every trade | `750 of 750 trades match; the first 100 are shown` |
+| `TRD MX-200000` | Trades whose id **starts with** `MX-200000`, or whose title **contains** it | `99 of 15000 trades match`: `MX-20000001` … `MX-20000099` |
+| `CPTY north` | Counterparties whose id starts with, or title contains, `north` | `2 of 2 counterparties match` (`CP-NORTHBRIDGE`, `CP-NORTHPLAINS`); `CPTY northp` is one match, so `CP-NORTHPLAINS` opens at once |
+| `TRD MX-2*0` | `*` stands for any text, anywhere in the id | `44 of 15000 trades match`: `MX-20000010`, `MX-20000020`, `MX-20000030`, … |
+| `TRD PRODUCT_TYPE=FX_QUANTO` | Trades whose field has that value | `102 of 15000 trades match`: `CLY-3000079`, `CLY-3000080`, … |
+| `TRD QUANTITY > 10m and CURRENCY = usd` | Trades matching a condition (no `where` needed) | `3646 of 15000 trades match; the first 100 are shown` |
+| `TRD MX-2* CURRENCY=usd order by QUANTITY desc` | An id pattern and a condition together, sorted | `220 of 15000 trades match`, largest quantity first (`MX-20000066`) |
+| `TRD` | Every trade, of the three source systems | `15000 of 15000 trades match; the first 100 are shown` |
 
 Rules:
 
-- **Case never matters**, for ids, names, field names and values: `trd t-100`, `CPTY NORTH`, `productType=revolver`
-  and `trd producttype=revolver` all work. Text compared with `=` or `!=` ignores case in every search.
+- **Case never matters**, for ids, names, field names and values: `trd t-100`, `CPTY NORTH`, `PRODUCT_TYPE=fx_quanto`
+  and `trd product_type=FX_QUANTO` all work. Text compared with `=` or `!=` ignores case in every search.
 - **A field the kind does not have is an error, not an empty list:** `TRD where nosuchfield > 1` says
   `DRS-4004 no trade has a field 'nosuchfield'; …`, and a near miss names the field you meant
-  (`TRD prodcttype=revolver`: `…; did you mean productType?`).
+  (`TRD prodct_type=FX_QUANTO`: `…; did you mean PRODUCT_TYPE?`).
 - **A word without `*`** matches ids that **start** with it and titles that **contain** it. **A word with
   `*`** is a pattern on the id only (`*SUMMIT*` matches `NS-SUMMIT-NY`).
-- **A bare word after a comparison is a value:** `productType = Revolver` needs no quotes. Quote values that
-  contain spaces: `status = 'Early warning'`.
+- **A bare word after a comparison is a value:** `PRODUCT_TYPE = FX_QUANTO` needs no quotes. Quote values that
+  contain spaces: `STATUS = 'Early warning'`.
 - **Everything from [Search by value](#search-by-value) works here** (`and`, `or`, `not`, `contains`, `250k`,
-  `order by`, `limit`). `not status = matured` means *not (status = matured)*.
+  `order by`, `limit`). `not TRADE_STATUS = matured` means *not (TRADE_STATUS = matured)*.
 - **How many rows** you see is your *Search results* setting (100 unless you change it in
   [Your settings](#your-settings)), or `limit N` at the end of the command. The table then pages through them
   25 at a time ([Tables](#tables-sorting-filtering-paging-and-the-keyboard)).
@@ -325,14 +328,14 @@ Rules:
 
 The first column is the id (a link). Then come:
 
-1. the fields your command uses (`currency` and `mtm` in `TRD MX-2* currency=usd order by mtm desc`);
+1. the fields your command uses (`CURRENCY` and `QUANTITY` in `TRD MX-2* CURRENCY=usd order by QUANTITY desc`);
 2. the kind's **key fields**, which the pack declares under `columns:` in its `pack.yaml`
-   ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#columns-the-key-fields-of-a-pick-list)). For the banking packs:
+   ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#columns-the-key-fields-of-a-pick-list)). In the shipped packs:
 
    | Kind | Key fields shown |
    |---|---|
-   | trade | Product type, Direction, Currency, Notional, MTM (USD), Maturity date, Book |
-   | counterparty | Name, Rating, Sector, Country, Net MTM |
+   | trade | Source system, Product type, Trade status, Trade date, Buy/sell code, Currency, Quantity, Maturity date, Portfolio, Counterparty |
+   | counterparty | Name, Rating, Sector, Country of risk, UEN, Net MTM |
    | book | Name, Desk name, Trade count, MTM (USD), DV01 |
 
 3. for a kind whose pack declares no key fields, the first plain fields of its documents, up to six columns
@@ -340,22 +343,22 @@ The first column is the id (a link). Then come:
 
 A *Title* column appears only when titles say more than the id.
 
-### Worked example: find the revolving credit facilities
+### Worked example: find the FX quanto trades
 
-1. Press `/`, type `TRD productType=Revolver` and press Enter.
-2. You should see *Pick a trade*, the line `6 of 750 trades match`, the time it took, and a table:
+1. Press `/`, type `TRD PRODUCT_TYPE=FX_QUANTO` and press Enter.
+2. You should see *Pick a trade*, the line `102 of 15000 trades match`, the time it took, and a table:
 
    ```text
-   TRD      Product type  Direction  Currency  Notional      MTM (USD)   Maturity date  Book
-   CLY-3000055  REVOLVER      Long       CAD       202,000,000   3,459,176   2032-04-16     BOOK-CREDIT-3
-   CLY-3000056  REVOLVER      Short      GBP       127,000,000   1,256,638   2035-09-28     BOOK-CREDIT-2
-   CLY-3000057  REVOLVER      Long       AUD       156,000,000   1,498,057   2036-10-03     BOOK-CREDIT-1
+   TRD          Source system  Product type  Trade status  Trade date  Buy/sell  Currency  Quantity     Maturity date  Portfolio  Counterparty
+   CLY-3000079  CALYPSO        FX_QUANTO     AMENDED       2026-03-27  B         GBP       245,000,000  2027-12-04     BOOK-FX-2  CP-VERDANT
+   CLY-3000080  CALYPSO        FX_QUANTO     VALIDATED     2024-06-10  S         USD        15,000,000  2027-02-22     BOOK-FX-3  CP-HARBORPT
+   CLY-3000081  CALYPSO        FX_QUANTO     VALIDATED     2026-04-01  B         USD       237,000,000  2029-08-07     BOOK-FX-2  CP-VERDANT
    …
    ```
 
-3. Press `↓` twice: the second row is selected. Press `Enter`: `CLY-3000056` opens.
+3. Press `↓` twice: the second row is selected. Press `Enter`: `CLY-3000080` opens.
 4. Press `Alt+←` to come back to the list, and change the box at the top of the page to
-   `TRD productType=Revolver order by mtm desc`. Press **Search**: the largest MTM is now first.
+   `TRD PRODUCT_TYPE=FX_QUANTO order by QUANTITY desc`. Press **Search**: the largest quantity is now first (`CLY-4000384`, 1,212,505,000).
 5. **CSV** downloads the list; **Watch as a monitor** turns its first 50 rows into a live watchlist
    ([Monitors](#monitors)).
 
@@ -365,7 +368,7 @@ Every table in the console (pick lists, search results, the tables inside views,
 has a pager in its heading, and can be walked with the keyboard.
 
 ```text
-| Largest trades     [Filter rows   ] ⧩  « ‹ 1–25 of 49 · page 1 of 2 › »  ▲ ▼ [25 rows ▾]  F2 ⤓ ? |  <- the heading
+| Largest trades     [Filter rows   ] ⧩  « ‹ 1–10 of 10 · page 1 of 1 › »  ▲ ▼ [25 rows ▾]  F2 ⤓ ? |  <- the heading
 | Trade ↕   Product ↕   Notional ▼   Maturity ↕   MTM ↕                                          |
 | …                                                                                               |
 ```
@@ -384,7 +387,7 @@ there is nowhere to go.
   `>1m`, `<0`, `>=250k` or `=5` compare values. Example: on `TRD MX-2`, type `>200m` under *Notional* to keep the 18
   trades above 200 million.
 - A pick list or search holds the rows the server sent (100 by default); sorting and filtering work on those. For
-  all of a kind, sort or filter on the server instead: `TRD where notional > 200m order by notional desc`.
+  all of a kind, sort or filter on the server instead: `TRD where QUANTITY > 200m order by QUANTITY desc` (4369 of 15000 trades).
 - For Excel-style filtering (tick values, conditions, dates, top 10) use the funnel in each heading: [Filter a table like Excel](#filter-a-table-like-excel).
 - Live tables keep their sort and filters when they update.
 
@@ -503,7 +506,7 @@ pivot's report filter; the table's column filters do not reach into the tab.
 last line "*n* more rows" says when there are more. Nothing is paged by the server, so there is no server-side filter yet. When a
 table is paged by the server the same filters will go to it as the address's `f.` values, and the page raises the
 `drishti:column-filter` event for it to do so; until then, for all of a kind, filter in the query:
-`TRD where notional > 200m`.
+`TRD where QUANTITY > 200m`.
 
 **On a phone.**
 
@@ -582,31 +585,35 @@ carry the choices (there is no scheduled delivery yet). Authors add controls in 
 
 Real trades are not flat. A swap has **legs**, each leg has **cashflows**, and each floating cashflow has **fixings**: the
 observations of the rate or price that set it. The trading pack's swaps, basis and cross-currency swaps, caps and floors, swaptions and
-commodity swaps are all held that way, and their screens show it. Open `TRD END-1000013` (a commodity swap with three legs: a fixed price,
-the average of an index, and a fee).
+commodity swaps are all held that way (`LEGS` → `CASH_FLOWS` → `RESETS`, with `EVENTS` beside them), and their screens show it. Open
+`TRD 1000001`, an ENDUR commodity swap (`ComSwap`, sub-type `ENGY-SWAP`): a fixed price leg against a floating aluminium index leg (`IDX-ALU-3M`),
+36 monthly cash flows each.
 
-![A commodity swap: Legs has a tab per leg; the index leg's tab shows its terms, then a table of its monthly cashflows with the first one opened to its daily fixings](img/deep/01-commodity.jpg)
+![A commodity swap: the legs side by side; the index leg's terms, then its monthly cash flows with the first one opened to its resets](img/deep/01-commodity.jpg)
 
-- **A tab per leg.** `Leg 1 · Pay fixed 4.87 USD/lb`, `Leg 2 · Receive COMEX Copper settle monthly average`, `Leg 3 · Pay fee 0.018 USD/lb`: as many tabs as the
-  trade has legs (a cap has one, some commodity swaps four). Click a tab, or Tab to it and press Enter.
-- **The leg's terms** come first: pay or receive, the index, the spread, the day count, the reset and payment frequency, the business-day convention, the
-  calendar, the currency, the notional and the leg's present value.
-- **Its cashflows** follow, one row for each period: start, end, pay date, accrual factor, rate, amount, discount factor, PV and status
-  (`Settled`, `Fixed`, `Projected`).
-- **Floating cashflows open to their fixings.** A row with a ▸ has fixings: press it (or Enter or Space on it) and the fixings show under the
-  cashflow, indented: the fixing date, the index, its tenor, the rate and where it came from (the exchange's settlement once fixed, `Forward curve`
-  while still projected). A fixed cashflow has no ▸. The box above the table filters rows and keeps the cashflows whose fixings match.
-- **It is live.** While you watch, a projected fixing moves; its cell changes in place, the tab you were on stays, and the cashflows you opened stay open.
-- **Export.** The download link of the panel's heading saves every cell with its tab, panel and row, as CSV.
+- **Fixed against floating** sums the trade up: fixed price `2,332.9131`, floating index `IDX-ALU-3M`, averaging *Monthly*, price unit `MT`, 36 periods.
+- **Legs (F3), side by side.** `Leg 1 · Fixed price FIXED` and `Leg 2 · Floating price FLOAT · IDX-ALU-3M`: one column per leg on a wide screen, tabs
+  on a narrow one (a cap has one leg, some swaps more). Each leg shows its **Terms** (type, pay or receive, economic type, index, notional
+  `USD 167,969,743`, price unit, settlement, discount index, daily volume, flows), its **Notional profile** (a step line), its **Fixings** and its
+  **Cash flows and resets**.
+- **Cash-flow schedule, every leg (F4)**: one row per cash flow of every leg (72 here): flow id, start, end, payment, fixing date, notional,
+  rate or price, and how many resets it has.
+- **Floating cash flows open to their resets.** A row with a ▸ has resets (`5000037`, the floating leg's first flow, has one): press it (or Enter or
+  Space on it) and the resets show under the cash flow, indented, with their dates and values. A fixed flow has no ▸. The box above the table
+  filters rows and keeps the cash flows whose resets match.
+- **Events by leg (F5)** and **Netted payments by date (F6)**: the trade's events linked to its legs, and the payments netted per date (paid −,
+  received +: `+195,278` on 2025-07-22, `−211,665` on 2028-03-07).
+- **Export.** The download link of a panel's heading saves every cell with its tab, panel and row, as CSV.
 
-A vanilla interest-rate swap, `TRD MX-20000001`, reads the same way with two legs; the floating leg's cashflows open to the fixings of their monthly
-sub-periods:
+A MUREX interest-rate swap, `TRD MX-20000001`, reads the same way with two legs, `Leg 1 · Receive FIXED` and `Leg 2 · Pay FLOAT · AONIA`; the
+floating leg's cash flows open to their resets:
 
-![A swap: Leg 2, the floating leg, with its first cashflow opened to two monthly fixings](img/deep/02-swap.jpg)
+![A swap: Leg 2, the floating leg, with its first cash flow opened to its resets](img/deep/02-swap.jpg)
 
-On a phone the tabs scroll along one line, the terms stack, and the table scrolls sideways inside its own box; the ▸ buttons are 44 px targets.
+On a phone the legs become tabs that scroll along one line, the terms stack, and the table scrolls sideways inside its own box; the ▸ buttons are
+44 px targets.
 
-![The same commodity swap on a phone: the index leg's cashflow table with the first cashflow opened to its fixings](img/deep/03-phone.jpg)
+![The same commodity swap on a phone: the index leg's cash flows with the first one opened to its resets](img/deep/03-phone.jpg)
 
 The same layout is what you get from **inference** for any document that holds lists inside a short list of records, even with no Sutra written
 for it ([Inference](../architecture/INFERENCE.md#the-rules)). To build such a screen see
@@ -620,28 +627,32 @@ Open `TRD MX-20000001`. A view has five parts.
 ### 1 · The title line
 
 ```text
-[Rates · Interest rate swap (fixed/float)]  MX-20000001  with Meridian Reinsurance Ltd   Alert  Pin  Share  JSON  Print
+[Rates · Interest rate swap (fixed/float)]  MX-20000001  with CP-MERIDIAN-RE   Alert
+Pin  Share  JSON  Export  Subscribe  Print  Viewed by  About  Discussion  Compare
 ```
 
 - The **pill** says what the entity is.
-- The **id**, and the main party (**with …**). The party is a link: click it to open the counterparty.
+- The **id**, and the main party (**with …**), the trade's `COUNTERPARTY`. The party is a link: click it to open the counterparty.
 - The buttons on the right are explained in [Export, print and share](#export-print-and-share),
   [Alerts](#alerts) and [Pinning](#your-settings). **Compare** appears there too when a past date is picked.
 
 ### 2 · The strip
 
-The row of key figures under the title. For `MX-20000001`:
+The row of key figures under the title. For `MX-20000001` on 2026-10-16:
 
-| Label | Value (example) |
+| Label | Value |
 |---|---|
-| Notional | `AUD 242,000,000` |
-| Direction | `Receive fixed` |
+| Source | `MUREX` (the source system the trade comes from) |
+| Side | `Sell` |
+| **Notional** | `AUD 242,000,000` (highlighted: the figure the desk watches most) |
+| Quantity | `242,000,000` |
 | Trade date | `2025-07-25` |
 | Maturity | `2032-06-25` |
-| **MTM (USD)** | `+1,603,277` (highlighted: the figure the desk watches most) |
-| DV01 (USD) | `−155,245` |
-| Status | `Live` |
-| Book | `BOOK-RATES-3` (a link) |
+| Status | `AMENDED v2` (the trade status and version) |
+| Portfolio | `BOOK-RATES-3` (a link) |
+
+A trade carries no MTM: its valuation does. `TVAL TVAL-MX-20000001` shows `MTM +1,876,068`, `P&L 1D +126,999`, `DV01 −155,245`
+for the same trade.
 
 Positive figures carry a `+` and the positive colour; negative ones a true minus sign (`−`) and the
 negative colour.
@@ -651,24 +662,25 @@ negative colour.
 The main detail is on the left; context (charts, linked entities) is on the right. Each panel has a
 header with:
 
-- its **title** and, if it has one, its **function key** (`TRM · F2` means press `F2` to jump here);
+- its **title** and, if it has one, its **function key** (`DES · F2` means press `F2` to jump here);
 - an **inferred** tag when Drishti laid the panel out by itself (hover over it to read why);
 - a **↓** icon to download the panel as CSV;
 - a **?** that explains this kind of panel.
 
-`MX-20000001` shows *Terms*, *Legs* (one tab per leg), *Cashflows*, *How this view was built*, a curve
-chart, *DV01 by bucket*, *Daily P&L, last 20 days* and *Linked entities*.
+`MX-20000001` shows *Deal ticket* (F2), *Legs* (F3, the legs side by side), *Cash-flow schedule, every leg* (F4), *Events by leg* (F5),
+*Events*, *Netted payments by date* (F6), *Payments by month*, *How this view was built* and *Linked entities*; F7 opens the counterparty's
+trades, F8 the impact and F9 the raw JSON.
 
 Panel kinds you will meet:
 
 | Kind | Looks like | Example |
 |---|---|---|
-| `kv` | label and value pairs | *Terms* in `TRD MX-20000001` |
+| `kv` | label and value pairs | *Deal ticket* in `TRD MX-20000001` |
 | `table` | rows and columns, totals for money | member trades in `NSET NS-SUMMIT-NY` |
-| `tabs` | one tab per element of a list | *Legs* in `TRD MX-20000001` |
-| `ladder` | dated rows, the next one highlighted | *Cashflows* in `TRD MX-20000001` |
+| `tabs` | one tab (or column) per element of a list | *Legs* in `TRD MX-20000001` |
+| `ladder` | dated rows, the next one highlighted | a ladder of dated flows (the panels catalogue) |
 | `line` / `area` | a chart over tenors or dates | the curve in `CRV CRV-USD-OIS` |
-| `hbar` | horizontal bars | *DV01 by bucket* |
+| `hbar` | horizontal bars | *Netted payments by date* in `TRD MX-20000001` |
 | `surface` | a grid as a heatmap, or a 3D surface you can rotate | `FXV FXV-EURUSD` (*Heatmap* / *3D* buttons) |
 | `status`, `gauge`, `markdown` | a status list, a dial, formatted text | various packs |
 | `links` | linked entities with badges | *Linked entities* everywhere |
@@ -683,13 +695,13 @@ available*. The rest of the view still renders. Real feeds are often incomplete;
 
 Every identifier in a view is a door. Click `BOOK-RATES-3` in the strip and the book opens. The
 *Linked entities* panel lists everything the entity points to, each with a **badge** read from the
-target (for example `EE 32.4m` on a netting set). A badge that says *pending* means the target did not
+target (for example the rating `A` on the counterparty `CP-MERIDIAN-RE` of `TRD MX-20000001`). A badge that says *pending* means the target did not
 answer in time; open it to see it.
 
 **Ids in tables are links too.** A table column that shows an identifier (a column bound to a field whose
-name ends in `Id`, `Ref` or `_id`, such as `tradeId`, `counterpartyId` or `bookRef`) links each value to its
+name ends in `Id`, `Ref` or `_id` in any case, such as `TRADE_ID`, `COUNTERPARTY_ID` or `BOOK_REF`) links each value to its
 entity, as long as a pack recognises the id. Example: open `BOOK BOOK-RATES-1`; its *Largest trades* table
-(`F2`) starts with the *Trade* column (`MX-20000043`, `MX-20000011`, …), and clicking `MX-20000043` opens that trade. With the table selected, `↓` to a row and
+(`F2`) starts with the *Trade* column (`MX-30003150`, `MX-30004482`, …), and clicking `MX-30003150` opens that trade. With the table selected, `↓` to a row and
 `Enter` does the same ([Tables](#tables-sorting-filtering-paging-and-the-keyboard)).
 
 **Breadcrumbs** above the title (`← MX-20000001 / NS-MERIDIAN-RE-NY`) show the path you followed in this
@@ -795,8 +807,8 @@ yourself: put the panels you read first at the top, give a table more width and 
 main and the side column, or hide one you never read. Your arrangement is a **personal layout**: it is kept on the server
 for you, it never changes the Sutra, and nobody else sees it.
 
-A personal layout belongs to a **Sutra**, not to one entity: arrange `TRD IRS-48213` and every trade that the same Sutra
-lays out (`irs-vanilla` here) opens your way. The footer says so: its **Layout** key shows a dot (`Alt+L Layout •`)
+A personal layout belongs to a **Sutra**, not to one entity: arrange `TRD MX-20000001` and every trade that the same Sutra
+lays out (`irs-fixfloat` here: every interest rate swap, fixed against floating) opens your way. The footer says so: its **Layout** key shows a dot (`Alt+L Layout •`)
 when you are looking at your own layout.
 
 ### Turning it on
@@ -1049,21 +1061,21 @@ opens that way (those who saved their own keep theirs). With review off the butt
 
 ### Search results: computed on the server
 
-On a search or pick list whose kind offers a Pivot tab (`TRD where mtm > 0`), the pivot is not limited to the 100
+On a search or pick list whose kind offers a Pivot tab (`TVAL where MTM > 0`: 7579 of the 15000 trade valuations), the pivot is not limited to the 100
 results the page lists: the server aggregates **every entity the search matches** on the business date and sends only
 the cells. It reads the day's **columns**, the fields a large store keeps beside each document (a bank's trade table
-keeps `book`, `desk`, `currency`, `mtm` and a dozen more), so a whole book pivots without a document being read.
+keeps `PORTFOLIO`, `DESK`, `CURRENCY`, `MTM` and a dozen more), so a whole book pivots without a document being read.
 
 - A field no source keeps as a column is marked **doc**. Using one, or searching a kind whose store keeps no columns
   (the sample data), the server says so instead of guessing: *no source of trade keeps its fields as columns here. Ask
   for a document read …*. **Read documents instead** computes from the documents themselves, at most 20,000 of them;
   when there were more, the status line says *partial: the first 20000 documents*.
 - **Masked fields stay masked.** A field your role may not see (as in a search) groups under `•••` and is never added
-  up, and so does a field under a masked one (`counterparty.name` when `counterparty` is masked); the status line says
+  up, and so does a field under a masked one (`KYC.PD_1Y` when a counterparty's `KYC` is masked); the status line says
   *hidden from your role: Book*.
 - The rows under a cell come from the server a page at a time (**Previous**, **Next**).
 
-![The Pivot tab on TRD where mtm > 0: MTM by book and currency over the 379 matching trades, read from documents](/static/img/guide/pivot-search.png)
+![The Pivot tab on a trade search: a measure by portfolio and currency over the matching entities, read from the columns](/static/img/guide/pivot-search.png)
 
 ### Worked example
 
@@ -1125,13 +1137,14 @@ The keys a view offers are also buttons along the bottom of the screen, so you c
 ### F9 · Raw JSON
 
 Press `F9` in `TRD MX-20000001`. A drawer opens on the right with the full document, starting
-`{"tradeId": "MX-20000001", "productType": "IRS_FIXFLOAT", …}`, and its source and generation. Press `Esc`
-to close it. If your role does not have raw access, fields such as `trader` read `•••`, here and everywhere else
+`{"SOURCE_SYSTEM": "MUREX", "SOURCE_UPDATE_TIME": "2026-10-07T18:30:00Z", "TRADE_DATE": "2025-07-25", …, "TRADE_ID": "MX-20000001", …}`, and its
+source (`trade-murex`) and generation. Press `Esc` to close it. If your role does not have raw access, fields such as `TRADER_ID` read `•••`, here
+and everywhere else
 (see [Masked fields](#masked-fields)).
 
 ### Masked fields
 
-Your administrator can mask fields (`drishti.security.redact`, for example `trader` or `counterparty`) for roles
+Your administrator can mask fields (`drishti.security.redact`; by default `TRADER_ID`, `TRADER_FIRST_NAME` and `TRADER_LAST_NAME`) for roles
 without raw access. A masked field reads `•••` everywhere you could see or work out its value: the raw JSON, search
 results and their CSV, compare and history, Calc, pivots (grouped under `•••`, never added up), and views: the header
 strip, the title, tables and their totals, the Pivot tab's rows, charts (masked points are left out), anything a
@@ -1140,15 +1153,15 @@ is tied to the entity only through a masked field, and shows a masked measure an
 type-ahead neither shows nor matches a masked value, and an alert on a masked field never fires.
 
 You cannot find a masked value by trying: a condition on a masked field is never true, sorting by it does not sort,
-and typing it finds nothing. Fields under a masked one are masked too (with `counterparty` masked,
-`counterparty.name` reads `•••`).
+and typing it finds nothing. Fields under a masked one are masked too (with a counterparty's `KYC` masked,
+`KYC.PD_1Y` reads `•••`).
 
 ### Alt+C · Calc: Python on a view
 
 Press `Alt+C` on `VAR VAR-RATES`. A panel slides in from the right, like F9's, with a Python editor. The first time
 in a tab, Python starts (*Python ready*, about a second). Pick **VaR and expected shortfall from the scenario P&L**
 in **Snippets ▾** and press `Ctrl+Enter`: a table shows the VaR recomputed from the 500 scenario P&Ls
-(**9,611,219**, the same as the strip), the expected shortfall, and a histogram. `view` is the screen (`view.doc` its
+(**94,397,741**, the fifth-worst of the 500, the same as the strip's *VaR 99% 1D* `94.4m`), the expected shortfall, and a histogram. `view` is the screen (`view.doc` its
 document, `view.tables` its tables as pandas DataFrames); `drishti.search("TRD where …")`, `drishti.get(kind, id)`,
 `show()` and `chart()` are ready.
 
@@ -1163,8 +1176,9 @@ one it is shown greyed, with the reason. Everything about it, from the `drishti`
 Impact answers "what depends on this, and how much is at stake?". Open `TRD MX-20000001` and press `F8`.
 You should see *Impact of MX-20000001*:
 
-- **Depends on it directly:** *Netting set · 1*: `NS-MERIDIAN-RE-NY` with its net MTM.
-- **Rolls up into:** *Credit limit · 1*: `LIM-MERIDIAN-RE` via `creditLimit`, with the limit amount.
+- **Depends on it directly:** *Desk · 1*: `DESK-RATES`; *Netting set · 1*: `NS-MERIDIAN-RE-NY` with its net MTM (`+99,704,064`);
+  *Trade valuation · 1*: `TVAL-MX-20000001` with its MTM (`+1,876,068`).
+- **Rolls up into:** *Credit limit · 1*: `LIM-MERIDIAN-RE` via `CREDIT_LIMIT`, with the limit amount (`7.4bn`).
 
 Each group has a total. Click any id to open it. With [masked fields](#masked-fields), Impact lists only what you
 could find yourself, and a masked measure and its total read `•••`. See the
@@ -1172,8 +1186,9 @@ could find yourself, and a masked measure and its total read `•••`. See th
 
 ## Live updates
 
-Views of live entities tick: figures change in place and flash briefly. Open `TRD MX-20000001` and watch
-**MTM (USD)** for a few seconds.
+Views of live entities tick: figures change in place and flash briefly. With the demo source on
+(`DRISHTI_DEMO_ENABLED=true`; the demo lakes are daily snapshots and do not tick), open `TVAL TVAL-MX-20000001` and watch
+**MTM** for a few seconds.
 
 - The round **Live** button glows while the view streams (an amber ring while it reconnects). Hover over it to read
   how long the view took to build (`Live, built 1.92 ms`).
@@ -1242,32 +1257,35 @@ Click **Compare** (it appears in the title line when you have picked a date): *W
 change for numbers; choose any two dates at the top to compare further apart, or give the earlier side a *known at* time to see what was restated on the same date; filter to *changed*, *added* or *removed*; **CSV** downloads
 the comparison. Walk-through: [tutorial 2](../tutorials/02-look-up-anything.md), step 6.
 
-Example rows for `MX-20000001`, 2026-09-29 against 2026-09-30:
+Example rows for the valuation `TVAL-MX-20000001`, 2026-10-15 against 2026-10-16:
 
 | Field | Path | Before | After | Change |
 |---|---|---|---|---|
-| MTM (USD) | `mtm` | 1,904,860 | 1,875,863 | −28,997 |
-| DV01 | `risk.dv01` | −155,879 | −155,245 | +634 |
-| DV01 | `sensitivities[3M].dv01` | −5,619 | −5,544 | +75 |
+| MTM (USD) | `MTM` | 1,911,897 | 1,876,068 | −35,829 |
+| DV01 | `DV01` | −155,791 | −155,245 | +546 |
+| Valuation date | `VALUATION_DATE` | 2026-10-15 | 2026-10-16 | |
+
+An amended trade compares the same way: `MX-20000022` between 2026-10-07 and 2026-10-16 shows *Trade status* `VALIDATED` → `AMENDED`,
+*Trade action* `NEW` → `AMEND`, *Trade version* `1` → `2`, a new *Transaction ID* and *Source update time*.
 
 Lists are matched by their identifiers or natural keys (a tenor such as `3M`, a date, a code), so an
-inserted cashflow shows as one addition, not as every later cashflow changed. That is why the path
-above reads `sensitivities[3M]` rather than `sensitivities[0]`.
+inserted cash flow shows as one addition, not as every later cash flow changed: a path reads `LEGS[1].CASH_FLOWS[5000037]` (the
+flow's id) rather than `LEGS[1].CASH_FLOWS[0]`.
 
 The same comparison is available to programs:
 
 ```bash
-curl -s 'http://localhost:18480/api/v1/history/trade/MX-20000001/diff?from=2026-09-29&to=2026-09-30'
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "$DRISHTI_SERVER/api/v1/history/trade-valuation/TVAL-MX-20000001/diff?from=2026-10-15&to=2026-10-16"
 ```
 
 It also takes `fromKnownAt` and `toKnownAt`. See [API_GUIDE.md](API_GUIDE.md).
 
 ## How fresh is it
 
-The footer of every view names the source and says how long ago it last received new data: *trading-stream ·
-updated 2 min ago · gen 41*. The age keeps counting while the page is open. When a source has received nothing for
+The footer of every view names the source and says how long ago it last received new data: *trade-murex ·
+updated 42 min ago · gen 517 · as of 2026-10-16*. The age keeps counting while the page is open. When a source has received nothing for
 longer than it should (its `stale-after`, set by your administrator), the view shows an amber banner at the top:
-*trading-stream is behind: its last new data was 25 min ago, and it expects some within 15m. What you see may be out
+*trade-murex is behind: its last new data was 25 min ago, and it expects some within 15m. What you see may be out
 of date.* Sources read on demand (a database) cannot tell, and show no age.
 
 ## A number over time
@@ -1278,8 +1296,9 @@ Choose 10, 30, 90 or 250 days at the top. Links still open what they name; a num
 The first line says where the value comes from: the path in the document, the connector, the business date the data
 is for and the source's generation, with a link to the raw document.
 
-Worked example: open `TRD MX-20000001`, click the MTM in the strip. You see *MTM (USD) · MX-20000001 over time*, a line
-over 30 business days, and below it the values, newest first, each with *Data for* and *Source* (`trade-endur`).
+Worked example: open `TVAL TVAL-MX-20000001`, click the MTM in the strip. You see *MTM (USD) · TVAL-MX-20000001 over time*, a line
+over 30 business days, and below it the values, newest first, each with *Data for* and *Source* (`risk-store`, the demo lake of the
+market-risk pack; `+1,876,068` on 2026-10-16, `+1,908,960` on 2026-10-07).
 A *Data for* date in amber is earlier than the day it is listed under: the source carried its last value forward
 (no data that day). An entity no dated source holds shows today's value with a note, since no history is kept.
 
@@ -1287,20 +1306,20 @@ A *Data for* date in amber is earlier than the day it is listed under: the sourc
 press Search: each row shows today's value of every number with its change in brackets (`125  (+25)`), and entities
 only one of the dates holds are marked *added* or *removed*.
 
-The same through the API: `GET /api/v1/history/{kind}/{id}/series?path=$.mtm&days=30` and
-`GET /api/v1/search/compare?q=…&from=2026-09-25&to=2026-09-30`.
+The same through the API: `GET /api/v1/history/{kind}/{id}/series?path=$.MTM&days=30` and
+`GET /api/v1/search/compare?q=…&from=2026-10-07&to=2026-10-16`.
 
 ## Asking in plain words
 
-Type what you want in the command line, in words: `live trades over 5m in BOOK-RATES-3, biggest first`, and press
+Type what you want in the command line, in words: `amended trades over 5m in BOOK-RATES-3, biggest first`, and press
 Enter. When the words are not a command, Drishti shows the search they make and how it read each part; nothing runs
 until you press **Run it**. The search page has the same box, **In words**.
 
 ```
-live trades over 5m in BOOK-RATES-3, biggest first
-→ TRD where status = 'Live' and mtm > 5000000 and book = 'BOOK-RATES-3' order by mtm desc
-   "trades" → Trade (TRD) · "live" → status is Live · "over 5m" → mtm > 5000000
-   "in BOOK-RATES-3" → book is BOOK-RATES-3 · "biggest first" → sorted by mtm, largest first
+amended trades over 5m in BOOK-RATES-3, biggest first
+→ TRD where TRADE_STATUS = 'AMENDED' and QUANTITY > 5000000 and PORTFOLIO = 'BOOK-RATES-3' order by QUANTITY desc
+   "trades" → Trade (TRD) · "amended" → trade status is AMENDED · "over 5m" → quantity > 5000000
+   "BOOK-RATES-3" → portfolio is BOOK-RATES-3 · "biggest first" → sorted by quantity, largest first
 ```
 
 It understands:
@@ -1308,12 +1327,12 @@ It understands:
 | You write | It means |
 |---|---|
 | a kind: `trades`, `counterparties`, `desk pnl`, a mnemonic | what to list |
-| `over`, `above`, `more than`, `under`, `below`, `at least`, `at most` and a number (`5m`, `2.5 bn`, `10k`, `1,000,000`) | a comparison, on the field you name or the kind's main number (MTM, notional, amount…) |
+| `over`, `above`, `more than`, `under`, `below`, `at least`, `at most` and a number (`5m`, `2.5 bn`, `10k`, `1,000,000`) | a comparison, on the field you name or the kind's main number (a trade's quantity, a valuation's MTM, an amount…) |
 | `between 10m and 50m` | both bounds |
-| `negative mtm`, `positive pnl` | below or above zero |
-| a value the data has: `live`, `USD`, `BOOK-RATES-3` (optionally after `in`, `for`, `with`) | that field equals it |
+| `negative mtm`, `positive pnl` | below or above zero (`trade valuations with negative mtm` → `TVAL where MTM < 0`) |
+| a value the data has: `amended`, `USD`, `BOOK-RATES-3` (optionally after `in`, `for`, `with`) | that field equals it |
 | `maturing before 2028`, `traded after 2025`, `maturing in 2027`, `before 2026-12-31` | dates |
-| `biggest`, `top 10`, `smallest 5 … by notional`, `newest`, `sorted by` | the order, and how many |
+| `biggest`, `top 10`, `smallest 5 … by quantity`, `newest`, `sorted by` | the order, and how many |
 
 It is deterministic: no AI service, only the server's own vocabulary (its kinds, and each kind's fields and the
 values its documents have). Words it did not understand are listed as *Not understood, left out*, never guessed.
@@ -1324,15 +1343,15 @@ Change the words, or edit the search itself.
 Add `where` after a mnemonic to find entities by what they contain.
 
 ```text
-TRD where mtm > 1m order by mtm desc limit 50
+TVAL where MTM > 1m order by MTM desc limit 50
 ```
 
-You should see a page headed *Search by value*, a summary line such as `163 of 750 trades match; the first 50
-are shown`, the time it took, and a table: one row per trade, with a column for each field the query uses
-(here **MTM (USD)**), then the kind's key fields (*Product type*, *Direction*, *Currency*, …). Click an id to
+You should see a page headed *Search by value*, a summary line such as `3321 of 15000 trade valuations match; the first 50
+are shown`, the time it took, and a table: one row per valuation, with a column for each field the query uses
+(here **MTM (USD)**), then the kind's key fields. Click an id to
 open it, or walk the table with the keyboard ([Tables](#tables-sorting-filtering-paging-and-the-keyboard)).
 
-`where` is optional: `TRD mtm > 1m` and `TRD productType=Revolver` work as well, and come back as a
+`where` is optional: `TVAL MTM > 1m` and `TRD PRODUCT_TYPE=FX_QUANTO` work as well, and come back as a
 [pick list](#pick-lists-when-a-command-names-several-entities). The rest of this section applies to both.
 
 ### The parts of a search
@@ -1343,14 +1362,14 @@ open it, or walk the table with the keyboard ([Tables](#tables-sorting-filtering
 
 | Part | Rules | Example |
 |---|---|---|
-| Mnemonic | Any mnemonic, or a kind name | `TRD`, `NSET`, `customer` |
-| Field | As named in the document, in any case; dots for nested fields, brackets for list items. A name no entity of the kind has is an error with the closest names | `mtm`, `counterparty.name`, `legs[0].rate`, `COUNTERPARTY.NAME` |
-| Compare | `=`  `!=`  `<`  `<=`  `>`  `>=`; text compared with `=` and `!=` ignores case | `assetClass = 'Rates'` (also matches `rates`) |
-| Text | `contains` and `startswith`, case-insensitive; `contains` also looks inside lists | `counterparty.name contains 'Meridian'` |
-| Combine | `and`, `or`, `not`, brackets. `not` applies to the comparison after it | `mtm > 1m and not status = 'Matured'` |
+| Mnemonic | Any mnemonic, or a kind name | `TRD`, `NSET`, `trade-valuation` |
+| Field | As named in the document, in any case; dots for nested fields, brackets for list items. A name no entity of the kind has is an error with the closest names | `MTM`, `mtm`, `KYC.PD_1Y`, `LEGS[0].NOTIONAL` |
+| Compare | `=`  `!=`  `<`  `<=`  `>`  `>=`; text compared with `=` and `!=` ignores case | `PRODUCT_GROUP = 'Rates'` (also matches `rates`) |
+| Text | `contains` and `startswith`, case-insensitive; `contains` also looks inside lists | `COUNTERPARTY contains 'MERIDIAN'` |
+| Combine | `and`, `or`, `not`, brackets. `not` applies to the comparison after it | `MTM > 1m and not TRADE_STATUS = 'MATURED'` |
 | Amounts | `k` thousand, `m` million, `bn` billion | `250k`, `1.5m`, `2bn` |
 | Text values | in single quotes; a single word may go without | `'Early warning'`, `Rates` |
-| Sort | `order by <field>`, add `desc` for largest first. Equal values come in id order and entities without the field last, so a `limit` keeps the same rows every time | `order by mtm desc` |
+| Sort | `order by <field>`, add `desc` for largest first. Equal values come in id order and entities without the field last, so a `limit` keeps the same rows every time | `order by MTM desc` |
 | Size | `limit N`, a whole number from 1 to 1000; anything else (`limit 0`, `limit 5000`) is an error that gives the range | `limit 20` |
 
 Without `limit`, a search shows the number of results set in *My account → Settings* (100 unless you
@@ -1358,16 +1377,15 @@ change it).
 
 ### Examples to try
 
-| Search | Matches on the banking samples |
+| Search | Matches on the demo lakes (business date 2026-10-16) |
 |---|---|
-| `TRD where notional >= 250m and assetClass = 'Rates' order by mtm desc limit 20` | 4 of 750 trades |
-| `TRD where counterparty.name contains 'Meridian'` | 76 of 750 trades |
-| `TRD where mtm < -1m order by mtm` | 171 of 750 trades, most negative first |
-| `TRD where assetClass = rates` | 156 of 750 trades (case ignored, no quotes needed) |
-| `NSET where utilisation > 0.5 order by utilisation desc` | 46 of 66 netting sets |
-| `LIM where status = 'Early warning'` | 1 of 18 credit limits |
-| `CUST where totalDeposits > 100k order by totalDeposits desc` | 10 of 32 customers |
-| `VRNT where significance contains 'pathogenic'` | 6 of 8 variants |
+| `TRD where QUANTITY >= 250m and PRODUCT_GROUP = 'Rates' order by QUANTITY desc limit 20` | 783 of 15000 trades (the first 20 shown) |
+| `TRD where COUNTERPARTY contains 'MERIDIAN'` | 1291 of 15000 trades |
+| `TVAL where MTM < -1m order by MTM` | 3154 of 15000 trade valuations, most negative first |
+| `TRD where PRODUCT_GROUP = rates` | 1832 of 15000 trades (case ignored, no quotes needed) |
+| `NSET where UTILISATION > 0.5 order by UTILISATION desc` | 48 of 76 netting sets |
+| `LIM where STATUS = 'Early warning'` | 2 of 24 credit limits |
+| `ECON where GDP_USD_BN > 1000 order by GDP_USD_BN desc` | 21 of 213 economies |
 
 A search whose condition matches exactly one entity still shows its one-row table; only a command typed
 without `where` opens a single match directly.
@@ -1382,7 +1400,7 @@ without `where` opens a single match directly.
   and why (for example a lake date in a format the server does not read): entities it holds are missing, so
   "0 matches" does not mean none exist.
 - A mistake gives an error such as `DRS-4004 cannot read the condition: …` with the position. A condition that stops
-  short (`TRD where mtm >`) says `the condition ends early: something is missing after '>'`.
+  short (`TVAL where MTM >`) says `the condition ends early: something is missing after '>'`.
 - **CSV** downloads the results. **Watch as a monitor** saves the first 50 results as a live monitor
   (see [Monitors](#monitors)).
 - Where the kind's pack offers it, a **Table | Pivot** switch turns the results into a pivot over **every** match of
@@ -1527,8 +1545,8 @@ Worked example:
 
 1. Open `NSET NS-SUMMIT-NY` and click **Alert** in the title line. The *Alerts* page opens with
    **Kind** `netting-set` and **Id** `NS-SUMMIT-NY` filled in.
-2. Fill in **Name** `Summit utilisation`, **When** `$.utilisation > 0.5`, **Severity** `warn`, and
-   **Message** `${$.nettingSetId}: ${fmt($.utilisation, 'pct0')} of limit`.
+2. Fill in **Name** `Summit utilisation`, **When** `$.UTILISATION > 0.5`, **Severity** `warn`, and
+   **Message** `${$.NETTING_SET_ID}: ${fmt($.UTILISATION, 'pct0')} of limit`.
 3. Click **Save rule**. The utilisation is already about 58 %, so you should at once see a toast, the
    bell showing `1`, and under *Recent alerts* a line `warn NS-SUMMIT-NY NS-SUMMIT-NY: 58% of limit`.
 4. *Your rules* lists the rule; **Delete** removes it.
@@ -1539,10 +1557,10 @@ A condition is a Rachana-EL expression over the entity's document. `$` is the do
 reads a field.
 
 ```text
-$.utilisation > 0.8                          a netting set near its limit
-$.mtm < -450000                              a trade's MTM below −450k
-$.netMtm < -1500000 && $.utilisation > 0.6   both at once
-$.status == 'Early warning'                  a credit limit's status
+$.UTILISATION > 0.8                            a netting set near its limit
+$.MTM < -450000                                a trade valuation's MTM below −450k
+$.NET_MTM < -1500000 && $.UTILISATION > 0.6    both at once
+$.STATUS == 'Early warning'                    a credit limit's status
 ```
 
 In a rule (unlike a search) write `==` for equality, `&&` for and, `||` for or, and full numbers
@@ -1602,7 +1620,7 @@ Worked example (on the demo lakes, from a blank workspace):
 | Entity for this pane | A command or id (`TRD MX-20000001`, `NS-SUMMIT-NY`), then Enter |
 | follows | Which pane this one follows, or `—` |
 | Pane / × | Add a pane (up to four) / remove one |
-| Drag a suggestion onto a pane | Type in the command line (`TRD IRS`, or nothing for your recent ones), drag a suggestion onto a pane: the pane shows it. Click it without dragging to open it full screen as usual |
+| Drag a suggestion onto a pane | Type in the command line (`TRD MX-2`, or nothing for your recent ones), drag a suggestion onto a pane: the pane shows it. Click it without dragging to open it full screen as usual |
 | Drag a pane's number onto another pane | The other pane shows the same view |
 | Drag a divider | Share the width (or height) between two neighbouring columns (or rows); focus it with `Tab` and use the arrow keys (`Home`, or a double-click: equal) |
 | Save / Save as… / Delete | Keep it under its name, sizes included / a new name / remove it |
@@ -1611,7 +1629,7 @@ Worked example (on the demo lakes, from a blank workspace):
 
 Workspaces are saved to your account (up to 50 each).
 
-**If no starters are listed** (the banking packs ship none: *Starters* then says so), start a blank workspace as above,
+**If no starters are listed** (the seven shipped packs ship none: *Starters* then says so), start a blank workspace as above,
 or an administrator can add one for everybody
 to `drishti-console/config/workspaces.yaml`; it appears after the console restarts:
 
@@ -1653,7 +1671,7 @@ On a phone the drawer is a sheet from the bottom edge.
   an email when your administrator has set one up (each person can switch the email off on the *Account* page, under
   *Email me when*; the bell always shows it). After you post, the drawer says how many people were told and, by name,
   who was not (for example a colleague whose role may not open this kind of view).
-- **Quote a value.** Type **{** (or press **Quote a value**) and pick a field: the comment holds `{$.mtm}` and every reader
+- **Quote a value.** Type **{** (or press **Quote a value**) and pick a field: the comment holds `{$.MTM}` and every reader
   sees the number *as they may see it*: a reader who may not see the field sees ••• instead. A number you type out by
   hand is checked too: if it copies a value that is hidden from some readers, those readers see ••• (you read your own text as written). If you can see hidden values yourself you get a warning; if you cannot, you are not told, so nobody can test guesses of a hidden value. Email and chat posts about the comment carry the quoted values as each recipient may see them, unless your administrator set the pack to link-only.
 - **What the comment saw.** Every comment shows the data it was written against ("gen 1702 · 29 Sep"). When the page now
@@ -1754,17 +1772,17 @@ Every theme meets WCAG AA contrast: all text, including faint notes, the footer 
 ## Domain packs: choosing what you see
 
 A pack brings one domain: its mnemonics, layouts and data. If you may use more than one pack, the round
-**box** tool in the top bar shows how many you have switched on, for example `12`. Hover over it to read
+**box** tool in the top bar shows how many you have switched on, for example `7`. Hover over it to read
 their names (*Packs shown: core, market-data, …*).
 
 Worked example: see only trading and counterparty risk.
 
 1. Click the box. A menu opens headed *Show these packs*, with one line per pack: a tick box, the pack's
-   title (*Banking core*, *Market data*, *Trading*, …) and one line on what it covers.
+   title (*Core*, *Market data*, *Trading*, …) and one line on what it covers.
 2. Click **none** (top right of the menu): every box is cleared.
 3. Tick *Trading* and *Counterparty credit risk*.
 4. Click **Apply**. The page reloads and the box shows `2`.
-5. Type `L`. The suggestions no longer offer `LCR` (liquidity) or `LOSS` (operational risk).
+5. Type `E`. The suggestions no longer offer `ECON` (world economy), whose pack is now off.
 6. To undo, open the box, click **all**, then **Apply**.
 
 What changes when a pack is off for you:
@@ -1903,7 +1921,7 @@ There is no power for the [Pivot tab](#the-pivot-tab-slice-a-table-your-way): an
 may sort a table; promoting one to a Sutra needs **author Sutras** (and goes through review).
 
 Roles marked **built-in** come from the server's configuration and from packs (`viewer`, `author`,
-`approver`, `admin`, and pack roles such as `trader`, `credit-risk` or `retail`). They are shown read-only.
+`approver`, `admin`, and pack roles such as `trader`, `credit-risk` or `economist`). They are shown read-only.
 
 Worked example: a role for credit analysts.
 

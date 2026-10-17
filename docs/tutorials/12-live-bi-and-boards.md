@@ -33,11 +33,11 @@ About 30 minutes.
 - The personal API token of [tutorial 1, step 9](01-first-15-minutes.md#step-9--make-a-token-for-the-command-line) in `DRISHTI_TOKEN`, and
   `DRISHTI_SERVER` (default `http://localhost:18480`).
 - **A source that ticks.** The demo lakes are daily snapshots: they do not move, so on the quick-start server (**Drishti server (demo lakes)**, which sets
-  `DRISHTI_DEMO_ENABLED=false`) a live visual's chip says **Listening** (following, nothing has changed) rather than **Live**, and a live table follows
-  the first 2,000 trade valuations of the lake (`drishti.bi.live.follow-max`) and says so. For this tutorial **turn the demo ticker on**: edit the run
+  `DRISHTI_DEMO_ENABLED=false`) a live visual's chip says **Listening** (following, nothing has changed) rather than **Live**. Either way a live table
+  follows at most 2,000 trade valuations (`drishti.bi.live.follow-max`; the lake holds 15,000) and says so in a warning. For this tutorial **turn the demo ticker on**: edit the run
   configuration **Drishti server (demo lakes)** and set `DRISHTI_DEMO_ENABLED` to `true`, or start the server with it
-  ([data/testdata/README.md](../../data/testdata/README.md), "The demo ticker"). The demo source then changes the live trade valuations about twice a
-  second and the market data every few seconds; a sample answers before the lake for an id both hold, and the lakes still answer every other id. With a
+  ([data/testdata/README.md](../../data/testdata/README.md), "The demo ticker"). The demo source then moves every live sample that someone is watching
+  (a view, a live visual or a board tile open) every 400 ms; a sample answers before the lake for an id both hold, and the lakes still answer every other id. With a
   real source the same pages follow your own live connector ([DEMO_CONNECTOR.md](../connectors/DEMO_CONNECTOR.md), [DATA_LOADS.md](../guides/DATA_LOADS.md)).
 
 ## What you will learn
@@ -53,13 +53,13 @@ About 30 minutes.
 
 Open a rate curve in the terminal: type `CRV CRV-USD-BASIS <GO>`, or open `/v/ir-curve/CRV-USD-BASIS`.
 
-![The cross-currency basis curve: 10Y 4.0123%, 2s10s +24.7 bp, the zero-rate chart, the pillars table](img/t12/01-curve-now.jpg)
+![The cross-currency basis curve: the 10Y and 2s10s key figures, the zero-rate chart, the pillars table](img/t12/01-curve-now.jpg)
 
-You should see the key figures at the top (`10Y 3.7656%`, `2s10s +21.2 bp`), the **Zero rates** chart, a **1Y forward** chart and the **Pillars** table (tenor, instrument, quote, zero rate, discount factor), and `updated 1 s ago` at the bottom: the page is live. Wait ten seconds.
+You should see the key figures at the top (`10Y` and `2s10s`: about `4.13%` and `+18.9 bp` on a freshly started server, wherever the walk has taken them since), the **Zero rates** chart, a **1Y forward** chart and the **Pillars** table (tenor, instrument, quote, zero rate, discount factor), and `updated 1 s ago` at the bottom: the page is live. Wait ten seconds.
 
-![The same page a few seconds later: 10Y 3.7990%, 2s10s +21.5 bp, the chart redrawn, every row of the table changed](img/t12/02-curve-later.jpg)
+![The same page a few seconds later: other 10Y and 2s10s figures, the chart redrawn, every row of the table changed](img/t12/02-curve-later.jpg)
 
-You should see `10Y` at `3.7990%` and `2s10s` at `+21.5 bp`, the chart with a new shape and **every row of the table changed**, not just the 10Y cell: the quote, the zero rate and the discount factor of each tenor. A real market does not move one number: when the 10-year rate ticks, the whole curve, its forwards, its
+You should see other figures for `10Y` and `2s10s` (a few hundredths of a percent and a few tenths of a basis point away), the chart with a new shape and **every row of the table changed**, not just the 10Y cell: the quote, the zero rate and the discount factor of each tenor. A real market does not move one number: when the 10-year rate ticks, the whole curve, its forwards, its
 discount factors and its slope tick with it, and the demo does the same (a "coherent walk": one random draw moves a headline and everything that depends on it; [DEMO_CONNECTOR.md](../connectors/DEMO_CONNECTOR.md) section 7.4). The command line prints the same view as text, as of the moment you ask:
 
 ```text
@@ -72,37 +72,56 @@ Key figures
   Currency  USD
   Type      Cross-currency basis
   Index     SOFR
-  10Y       3.8200%
-  2s10s     +22.6 bp
+  10Y       4.1315%
+  2s10s     +18.9 bp
   Points    12
-  As of     2026-10-16
+  As of     2026-09-30
 
 Zero rates (%)  (line, curve, F2)
   series          points   first    last     min     max
   --------------  ------  ------  ------  ------  ------
-  Zero rates (%)      12  3.6824  3.8289  3.5938  3.8289
+  Zero rates (%)      12  4.0704  4.1443  3.9418  4.1443
   x: 1M .. 30Y
 
 Pillars  (table, points, F3)
   Tenor  Instrument          Quote  Zero      DF
   -----  ----------------  -------  ----  ------
-  1M     Deposit / future  3.6768%  3.68  0.9969
-  3M     Deposit / future  3.6609%  3.68  0.9908
-  6M     Deposit / future  3.6352%  3.67  0.9818
-  1Y     Basis swap        3.5760%  3.64  0.9642
+  1M     Deposit / future  4.0461%  4.07  0.9966
+  3M     Deposit / future  4.0740%  4.05  0.9899
+  6M     Deposit / future  3.9976%  4.00  0.9802
+  1Y     Basis swap        3.9077%  4.01  0.9607
   ...
+  10Y    Basis swap        3.4804%  4.13  0.6616
+  30Y    Basis swap        2.5293%  4.14  0.2884
+
+1Y forward rates (%)  (line, forwards)
+  series                points   first    last     min    max
+  --------------------  ------  ------  ------  ------  -----
+  1Y forward rates (%)       8  3.9801  4.0836  3.9801  4.307
+  x: 1Y .. 20Y
+
+How this view was built  (provenance, built)
+  field        value
+  -----------  -----------------------------
+  Layout       Sutra ir-curve v1 + inference
+  Fingerprint  d097…63e7
+  Source       md-hub, gen 29
+
 Linked entities  (links, refs)
   link          text      status    opens
   ------------  --------  --------  --------------------
   Calendar      CAL-USNY  resolved  calendar/CAL-USNY
   Fixing index  FIX-SOFR  resolved  rate-fixing/FIX-SOFR
 
-source market-store gen 6  layout Sutra ir-curve v1 + inference  built in 8.58 ms
+source md-hub gen 29  layout Sutra ir-curve v1 + inference  built in 1.74 ms
 ```
 
-You should see the table form of the same page. This one was asked of the quick-start server with the ticker **off**, so the source line names
-`market-store` (the `market-data` pack's Delta connector) and the figures are the lake's close of 2026-10-16; with the ticker on, the demo source answers
-first, the source line names it and every call gives other figures (they are ticking). That is **live data**: a connector that **pushes**
+You should see the table form of the same page, asked with the ticker **on**: the source line names `md-hub` (the demo source of the market-data
+samples, which answers before the lake) and `gen 29`, the number of times this curve has ticked; `As of` is the sample's own date. Ask again a minute later
+with the page still open in the browser and the figures and the generation have moved; ask with no page open and they have not: the demo moves only the
+entities someone is watching (a live view, a live BI visual or a board tile subscribes to them; [DEMO_CONNECTOR.md](../connectors/DEMO_CONNECTOR.md) section 7.1). With the
+ticker **off** the same command reads the lake: the source line names `market-store` (the `market-data` pack's Delta connector), the figures are the
+lake's close of the last business day, and nothing moves. That is **live data**: a connector that **pushes**
 changes instead of waiting to be asked. BI uses it through a live table. **The YAML** of a source that pushes is a connector's file; the demo's ticking needs
 none (it is built in), and a real one looks like the Kafka connector the `trading` pack suggests, `trading-stream` (written to
 `config/connectors/trading-stream.yaml` at the server's first start; off until you switch it on):
@@ -149,16 +168,18 @@ command for layers; captured with the ticker on):
 
 ```text
 $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" $DRISHTI_SERVER/api/v1/bi/datasets/file:dataset:live-trading/layers
-{"tables":[{"mode":"live","partitions":[],"table":"trade","live":{"table":"trade","kind":"trade","state":"live","rows":750,"entities":750,"subscribed":750,
-  "pushes":true,"seq":23065,"epoch":0,"generation":71,"lastUpdate":"2026-10-13T06:27:39.43Z","startedAt":"2026-10-13T06:26:46.90Z","applied":23065,"skipped":5,
-  "evicted":0,"deleted":0,"error":null,"aggregates":[{"rollup":"byDeskBook","groups":572,"incremental":45380,"recomputedGroups":16180}]}},
- {"mode":"history","partitions":[],"table":"history","history":{"table":"history","every":"PT10S","keep":360,"samples":5,"lastSample":"2026-10-13T06:27:40.03Z","error":null}}]}
+{"tables":[{"table":"trade","partitions":[],"mode":"live","live":{"table":"trade","kind":"trade-valuation","state":"live","rows":2000,"entities":2000,
+  "subscribed":2000,"pushes":true,"seq":13474,"epoch":0,"generation":27,"lastUpdate":"2026-10-17T23:09:11.409753668Z","lastSeen":"2026-10-17T23:09:14.646008349Z",
+  "startedAt":"2026-10-17T23:08:40.963118257Z","applied":13474,"skipped":1,"evicted":0,"deleted":0,
+  "error":"following the first 2000 trade-valuation entities of more (drishti.bi.live.follow-max)",
+  "aggregates":[{"rollup":"byDeskBook","groups":603,"incremental":24948,"recomputedGroups":8580}]}},
+ {"table":"history","partitions":[],"mode":"history","history":{"table":"history","every":"PT10S","keep":360,"samples":2,"lastSample":"2026-10-17T23:09:05.133271549Z","error":null}}]}
 ```
 
-You should see `state: live`, the rows and the entities followed (`subscribed`), `pushes: true`, and a count of changes applied (23,065 in the
-first minute here, 5 skipped because the value had not changed). With the ticker **off** the same call says `"state": "stale"`, `"rows": 2000` and
-`"error": "following the first 2000 trade-valuation entities of more (drishti.bi.live.follow-max)"`: the lake's 15,000 trade valuations are more than a
-live table follows, and nothing pushes. A live table starts when it is first used and is closed after ten idle minutes. The
+You should see `state: live`, the rows and the entities followed (`subscribed`), `pushes: true`, and a count of changes applied (13,474 in the
+first half-minute here, 1 skipped because the value had not changed). The `error` line is a limit, not a failure: the lake's 15,000 trade valuations (with
+the demo's samples among them) are more than a live table follows, so it follows the first 2,000 (`drishti.bi.live.follow-max`) and every query over it says
+so in a warning. With the ticker **off** the same call says `"state": "stale"` and the same limit: nothing pushes. A live table starts when it is first used and is closed after ten idle minutes. The
 queries are the ones of any dataset: a live table is just another layer that answers them.
 
 **The same table through the model layer.** The model the converter made of this sample, `live-trading@1`, reads the trade table as its one fact (the
@@ -216,22 +237,23 @@ options: { explain: true }
 
 ```text
 $ python3 tools/drishti.py bi mq docs/tutorials/data/live-desk.mq.yaml
-trade.DESK   Trades  Notional           MTM            Worst trade
------------  ------  -----------------  -------------  -------------
-DESK-COMM    90      11,359,000,000.00  16,439,974.00  -3,381,167.00
-DESK-CREDIT  72      8,598,000,000.00   7,967,236.00   -5,843,533.00
-DESK-EQD     132     15,806,000,000.00  -6,446,732.00  -5,477,087.00
-3 row(s)  as of 2026-10-13  plan p_a1be77c2c7dc5d14  layer live (rollup byDeskBook)
+trade.DESK   Trades  Notional            MTM              Worst trade
+-----------  ------  ------------------  ---------------  ---------------
+DESK-COMM    1340    150,736,891,389.22  -431,690,867.00  -138,590,967.00
+DESK-CREDIT  72      8,598,000,000.00    6,793,307.00     -5,788,195.00
+DESK-EQD     132     15,806,000,000.00   -6,651,101.00    -5,634,493.00
+3 row(s)  as of 2026-10-16  plan p_41d17c8e34c96a52  layer live (rollup byDeskBook)
 sql: SELECT "trade"."DESK" AS "trade.DESK", (CAST(coalesce(sum(m0), 0) AS BIGINT)) AS "Trades", (sum(m1)) AS "Notional", (sum(m2)) AS "MTM",
-     (min(m4)) AS "Worst trade" FROM (SELECT * FROM live_1_agg0) AS "trade" GROUP BY "trade"."DESK" ORDER BY "trade.DESK" ASC LIMIT 3
+     (min(m4)) AS "Worst trade" FROM (SELECT * FROM live_3_agg0) AS "trade" GROUP BY "trade"."DESK" ORDER BY "trade.DESK" ASC LIMIT 3
+warning: live trade: following the first 2000 trade-valuation entities of more (drishti.bi.live.follow-max)
 ```
 
-(With the ticker off the same file answers from the first 2,000 trade valuations it follows, all of them `DESK-COMM` on the demo lake, and says
-`warning: live trade: following the first 2000 trade-valuation entities of more (drishti.bi.live.follow-max)`.)
+(The 2,000 valuations followed are the demo's samples, which tick, and the first of the lake's, which do not: the lake's first ones are `DESK-COMM`'s,
+hence its 1,340 trades. With the ticker off the same file answers from the first 2,000 of the lake alone, all of them `DESK-COMM`.)
 
-You should see `layer live (rollup byDeskBook)`, and the FROM reads `live_1_agg0`, the kept groups. The layer line above says how it is going:
-`{"rollup": "byDeskBook", "groups": 572, "incremental": 45380, "recomputedGroups": 16180}` after about a minute of ticks (572 groups; 45,380 rows moved by
-difference; 16,180 groups whose minimum or maximum was read again). The reader's row rules and masks still apply on top. A measure that is not a plain
+You should see `layer live (rollup byDeskBook)`, and the FROM reads `live_3_agg0`, the kept groups. The layer line above says how it is going:
+`{"rollup": "byDeskBook", "groups": 603, "incremental": 24948, "recomputedGroups": 8580}` after about half a minute of ticks (603 groups; 24,948 rows moved by
+difference; 8,580 groups whose minimum or maximum was read again). The reader's row rules and masks still apply on top. A measure that is not a plain
 sum, count, minimum or maximum of a column (`Losses` has a condition inside) is computed over the rows as before; `drishti.bi.live.incremental-aggregates:
 false` turns this off. [DATASETS.md section 7.1](../guides/DATASETS.md#71-live-tables-phase-5).
 
@@ -273,10 +295,11 @@ says the layer, and `live` how the table is doing):
 ```text
 $ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' -d '{"page":"desk","visual":"by-desk","state":{}}' \
     $DRISHTI_SERVER/api/v1/bi/reports/file:report:live-trading-desk/query
-{"columns":[{"name":"trade.DESK","type":"string"},{"name":"MTM","type":"decimal"}],
- "rows":[["DESK-RATES",1.59591729E8],["DESK-COMM",1.6439974E7],["DESK-STRUCT",1.578413E7], ...],"rowCount":10,
- "meta":{"layer":"live","rollup":"byDeskBook","rows":10,"millis":1.34,...},"visual":"by-desk",
- "live":{"generation":71,"state":"live","tables":[{"table":"trade",...}]}}
+{"columns":[{"name":"trade.DESK","masked":false,"type":"string"},{"name":"MTM","masked":false,"type":"decimal"}],
+ "rows":[["DESK-RATES",1.61345431E8],["DESK-STRUCT",1.5637236E7],["DESK-MM",9417173.0], ... ,["DESK-INFL",-4.7557765E7],["DESK-COMM",-4.31780806E8]],"rowCount":10,
+ "meta":{"layer":"live","rollup":"byDeskBook","rows":10,"millis":1.2,"cached":false,...,
+         "warnings":["live trade: following the first 2000 trade-valuation entities of more (drishti.bi.live.follow-max)"]},"visual":"by-desk",
+ "live":{"generation":36,"state":"live","tables":[{"table":"trade","kind":"trade-valuation","state":"live","rows":2000,"applied":18829,...}]}}
 ```
 
 **The YAML** of the two live visuals of the page (the report is `config/bi/reports/live-trading-desk.report.yaml`): a bar is any bar, the rolling line is
@@ -298,7 +321,7 @@ A **board** puts the visuals of several reports on one screen. Open **Catalogue 
 
 ![The Desk wall: tiles from the trading desk report, two of them outlined amber](img/t12/08-board.jpg)
 
-You should see tiles of different sizes: the cards and charts of the Live trading desk, and two tiles outlined in **amber**, *Net MTM* (`+133,848,805`) and *Losses*, whose footers say `warning`. The colour comes from **alert rules in the board's file**, not from the report:
+You should see tiles of different sizes: the cards and charts of the Live trading desk, and two tiles outlined in **amber**, *Net MTM* (`-311,235,202` when this was captured; it ticks) and *Losses* (`-1,792,303,610`), whose footers say `warning`. The colour comes from **alert rules in the board's file**, not from the report:
 
 ```yaml
 pages:
@@ -306,11 +329,11 @@ pages:
     title: Trading desk
     tiles:
       - { id: net-mtm, report: live-trading-desk, visual: mtm, title: Net MTM, at: { x: 0, y: 0, w: 3, h: 3 },
-          alert: { on: MTM, warn: { op: lt, value: 150000000 }, crit: { op: lt, value: 100000000 }, hysteresis: 5000000 } }
+          alert: { on: MTM, warn: { op: lt, value: 0 }, crit: { op: lt, value: -1000000000 }, hysteresis: 25000000 } }
 ```
 
-A tile is a visual of a report (the report supplies the data, **as the person looking**) placed on a 12-column grid, with an optional `alert`: amber when the `warn` condition holds, red when `crit` does, and the footer says the word as well, so colour is never the only signal. Net MTM below 150 million is a warning, below 100 million critical;
-the live net MTM here (`+133,848,805`) is under 150 million, hence amber. A tile that turns red can also **tell people** (`notify:`, in the board's YAML; [BOARDS.md](../guides/BOARDS.md) section 4). The second page is another report over another live dataset:
+A tile is a visual of a report (the report supplies the data, **as the person looking**) placed on a 12-column grid, with an optional `alert`: amber when the `warn` condition holds, red when `crit` does, and the footer says the word as well, so colour is never the only signal. Net MTM below 0 is a warning, below -1 billion critical (Losses: below -1.5 billion, below -2.5 billion);
+the live net MTM here (`-311,235,202`) is below 0 but above -1 billion, hence amber, and Losses (`-1,792,303,610`) likewise. A tile that turns red can also **tell people** (`notify:`, in the board's YAML; [BOARDS.md](../guides/BOARDS.md) section 4). The second page is another report over another live dataset:
 
 ![The second page: Counterparty exposure tiles](img/t12/09-board-exposure.jpg)
 
@@ -371,14 +394,15 @@ Open the **Live trading desk** report again, wait a minute, and scroll to the bo
 
 ![The last-hour line: net MTM and losses, one point every ten seconds, drawn from the server](img/t12/11-history-line.jpg)
 
-You should see a line titled *Net MTM and losses, last hour* with a point for every ten seconds the dataset has been open (the sample dataset is sampled only while someone has it open, so on a freshly started server the line begins when you opened the page; reload it and the points are still there). The line is an ordinary `line` visual over the dataset table `history`: its axis is `history.ts` and its values are the generated measures `MTM history` and `Losses history`. [DATASETS.md](../guides/DATASETS.md#71-live-tables-phase-5) has the rest (grouping by a column, masks, the limits). **On the command line** the points are one visual's answer (five samples, the first minute; captured):
+You should see a line titled *Net MTM and losses, last hour* with a point for every ten seconds the dataset has been open (the sample dataset is sampled only while someone has it open, so on a freshly started server the line begins when you opened the page; reload it and the points are still there). The line is an ordinary `line` visual over the dataset table `history`: its axis is `history.ts` and its values are the generated measures `MTM history` and `Losses history`. [DATASETS.md](../guides/DATASETS.md#71-live-tables-phase-5) has the rest (grouping by a column, masks, the limits). **On the command line** the points are one visual's answer (twelve samples, the first two minutes; captured):
 
 ```text
 $ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' -d '{"page":"desk","visual":"last-hour","state":{}}' \
     $DRISHTI_SERVER/api/v1/bi/reports/file:report:live-trading-desk/query
-{"columns":[{"name":"history.ts","type":"string"},{"name":"MTM history","type":"decimal"},{"name":"Losses history","type":"decimal"}],
- "rows":[["2026-10-13 06:26:58.0",1.37081394E8,-6.79514802E8],["2026-10-13 06:27:08.0",1.35609682E8,-6.79996387E8], ...,
-         ["2026-10-13 06:27:40.0",1.36071107E8,-6.7900859E8]],"rowCount":5,"meta":{"layer":"live","tables":["history"],...}}
+{"columns":[{"name":"history.ts","masked":false,"type":"string"},{"name":"MTM history","masked":false,"type":"decimal"},
+            {"name":"Losses history","masked":false,"type":"decimal"}],
+ "rows":[["2026-10-17 23:08:55.0",-3.10700726E8,-1.790428046E9],["2026-10-17 23:09:05.0",-3.09656725E8,-1.791016081E9], ...,
+         ["2026-10-17 23:10:50.0",-3.10440227E8,-1.792199831E9]],"rowCount":12,"meta":{"layer":"live","tables":["history"],...}}
 ```
 
 The history is a table of the version 1 dataset. The model the converter made carries the history measures but not the `history` table yet, so the
@@ -396,7 +420,7 @@ The selected tile's pane holds its alert:
 
 ![The tile pane: the number it watches, amber and red thresholds, the hysteresis and whether to tell the readers](img/t12/13-tile-alert.jpg)
 
-*Net MTM* turns amber below 150 million and red below 100 million. The **hysteresis** of 5 million means a red tile stays red until the number is 5 million back above 100 million, so a number hovering at the edge does not flip the colour (and does not send a message each time). Press **Apply to the tile**.
+*Net MTM* turns amber below 0 and red below -1 billion (the demo lakes' book is billions: a net MTM of a few hundred million either way is ordinary). The **hysteresis** of 25 million means a red tile stays red until the number is 25 million back above -1 billion, so a number hovering at the edge does not flip the colour (and does not send a message each time). Press **Apply to the tile**.
 
 The **YAML** tab shows the same board as text; edit either and the other follows.
 
@@ -415,7 +439,7 @@ pages:
     title: Trading desk
     tiles:
       - { id: net-mtm, report: live-trading-desk, visual: mtm, title: Net MTM, at: { x: 0, y: 0, w: 4, h: 3 },
-          alert: { on: MTM, warn: { op: lt, value: 150000000 }, crit: { op: lt, value: 100000000 }, hysteresis: 5000000 } }
+          alert: { on: MTM, warn: { op: lt, value: 0 }, crit: { op: lt, value: -1000000000 }, hysteresis: 25000000 } }
       - { id: trades, report: live-trading-desk, visual: trades, at: { x: 4, y: 0, w: 2, h: 3 } }
       - { id: by-desk, report: live-trading-desk, visual: by-desk, at: { x: 0, y: 3, w: 6, h: 5 } }
 ```
@@ -452,21 +476,22 @@ You should see one column per desk, each split into its currencies, redrawn as t
 To chart it another way, copy the report to your workspace, open the copy in the designer and change the visual's type (a bar, a line, a heatmap) or its
 wells: the server answers the new question. **On the command line** the chart's numbers are one call, the one the page makes:
 
-```
+```text
 $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
     $DRISHTI_SERVER/api/v1/bi/reports/file:report:live-trading-desk/query -d '{"page": "chart", "visual": "mtm-chart", "state": {}}'
 {"columns": [{"name": "trade.DESK", "masked": false, "type": "string"}, {"name": "trade.CURRENCY", "masked": false, "type": "string"},
              {"name": "MTM", "masked": false, "type": "decimal"}],
- "rows": [["DESK-RATES", "USD", 102925894.0], ["DESK-RATES", "EUR", 86189988.0], ["DESK-RATES", "AUD", 23604613.0], ...],
- "rowCount": 56, "meta": {"layer": "live", "rows": 56, "cached": false, "masked": [], ...}, ...}
+ "rows": [["DESK-RATES", "USD", 103250910.0], ["DESK-RATES", "EUR", 85051243.0], ["DESK-RATES", "AUD", 25689818.0], ...],
+ "rowCount": 58, "meta": {"layer": "live", "rows": 58, "cached": false, "masked": [], ...}, ...}
 ```
 
 A board tile can be a **Python visual** too. Open the sample board **Python wall** from the catalogue.
 
 ![The Python wall: a Python measure (volatility by desk), a Python histogram and a Python visual drawn with Vega-Lite, as tiles](img/t12/17-python-wall.jpg)
 
-You should see three tiles, each with a line under it (`Python · desk-pnl-volatility v1 · server · ... ms · 15000 rows`): they ran for you, on the rows
-you may see (the 15,000 trade valuations of the lake, not the live table). The Python wall's tiles are visuals of the report **Desk P&L risk (Python)**, which reads the model `trades-basic@1` (2.2): a Python measure is a
+You should see three tiles, each with a line under it (`Python · desk-pnl-volatility v1 · server · ... ms · 10000 rows`): they ran for you, on the rows
+you may see of the lake's trade valuations (not the live table), cut to the first 10,000 of the 15,000 (the row limit of a Python visual's inputs: the server
+answers `X-Bi-Rows: 10000`; a JSON answer refuses more than 5,000 with `DRS-9022`, so the console asks in Arrow). The Python wall's tiles are visuals of the report **Desk P&L risk (Python)**, which reads the model `trades-basic@1` (2.2): a Python measure is a
 measure of the model (`Desk P&L volatility: { python: desk-pnl-volatility, inputs: [trade.PNL_1D], by: [trade.DESK] }`), so the board needs nothing new. A Python tile has no amber and red of its own; to be told when a Python measure crosses a limit make an **alert** on it ([tutorial 14](14-python-and-analyse.md), step 11).
 
 ### Note: boards and saving (2.1.0)

@@ -58,7 +58,7 @@ pages:
     title: Trading desk
     tiles:
       - { id: net-mtm, report: live-trading-desk, visual: mtm, title: Net MTM, at: { x: 0, y: 0, w: 3, h: 3 },
-          alert: { on: MTM, warn: { op: lt, value: 150000000 }, crit: { op: lt, value: 100000000 } } }
+          alert: { on: MTM, warn: { op: lt, value: 0 }, crit: { op: lt, value: -1000000000 } } }
 ```
 
 | Key | Meaning |
@@ -104,7 +104,7 @@ A tile of a `vega-lite` visual works the same way as any chart tile; a 2.1 `pers
 ## 4. Alerts: a tile changes colour
 
 ```yaml
-alert: { on: MTM, warn: { op: lt, value: 150000000 }, crit: { op: lt, value: 100000000 } }
+alert: { on: MTM, warn: { op: lt, value: 0 }, crit: { op: lt, value: -1000000000 } }
 ```
 
 | Key | Meaning |

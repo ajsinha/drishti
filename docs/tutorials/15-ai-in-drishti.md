@@ -31,7 +31,7 @@ About 30 minutes.
   (demo lakes)** and **Drishti console** and add them under *Environment variables*.
 - Nothing to buy and no key: the mock provider is part of Drishti. The files used are in [data/ai/](data/ai/) (`mock.yaml` and `local-model.yaml`).
 - The personal API token of [tutorial 1, step 9](01-first-15-minutes.md#step-9--make-a-token-for-the-command-line) in `DRISHTI_TOKEN`, and
-  `DRISHTI_SERVER`; the AI features have no `drishti.py` command, so the command line here is `curl` on the API (the `bi/ai` calls are reads a personal
+  `DRISHTI_SERVER` (and `DRISHTI_CONSOLE`, the console's address, `http://localhost:17480`, for the administrator's calls of step 2); the AI features have no `drishti.py` command, so the command line here is `curl` on the API (the `bi/ai` calls are reads a personal
   token may make; **Test connection** is the console's, for administrators).
 
 ## What you will learn
@@ -101,10 +101,25 @@ For a real provider that works you would read `OK: the model list answered` (a t
 in the console's log (and the layer's own recent list), who, which provider, the outcome, how long, never a key or a prompt:
 
 ```text
-2026-10-12 00:15:58 INFO drishti.ai.audit: ai-audit {"detail": "configured; this type makes no live call", "feature": "test-connection", "millis": 0, "outcome": "ok", "provider": "mock", "user": "drishti-dev-admin"}
-2026-10-12 00:15:58 INFO drishti.ai.audit: ai-audit {"detail": "http://127.0.0.1:18945 is not answering (the model endpoint could not be reached or answered something unreadable)", "feature": "test-connection", "millis": 4, "outcome": "failed", "provider": "local-model", "user": "drishti-dev-admin"}
-2026-10-12 00:15:58 INFO drishti.ai.audit: ai-audit {"detail": "enabled: false", "feature": "test-connection", "outcome": "not-usable", "provider": "fast", "user": "drishti-dev-admin"}
+2026-10-17 19:17:59,295 INFO drishti.ai.audit: ai-audit {"detail": "enabled: false", "feature": "test-connection", "outcome": "not-usable", "provider": "fast", "user": "drishti-dev-admin"}
+2026-10-17 19:17:59,306 INFO drishti.ai.audit: ai-audit {"detail": "http://127.0.0.1:18945 is not answering (the model endpoint could not be reached or answered something unreadable)", "feature": "test-connection", "millis": 3, "outcome": "failed", "provider": "local-model", "user": "drishti-dev-admin"}
+2026-10-17 19:17:59,315 INFO drishti.ai.audit: ai-audit {"detail": "configured; this type makes no live call", "feature": "test-connection", "millis": 0, "outcome": "ok", "provider": "mock", "user": "drishti-dev-admin"}
 ```
+
+**From the command line** there is no `drishti.py` command and a personal token does not reach it: the button is the console's own call,
+`POST /admin/ai/api/test/{name}`, made from an administrator's signed-in session (here with `curl` and the session cookie of a sign-in at `/login`), and
+`GET /admin/ai/api/overview` is the page's data:
+
+```text
+$ curl -s -b cookies -X POST $DRISHTI_CONSOLE/admin/ai/api/test/fast
+{"name":"fast","ok":false,"network":false,"detail":"enabled: false in the provider file","models":[]}
+$ curl -s -b cookies -X POST $DRISHTI_CONSOLE/admin/ai/api/test/local-model
+{"name":"local-model","ok":false,"network":true,"detail":"http://127.0.0.1:18945 is not answering (the model endpoint could not be reached or answered something unreadable)","models":[],"millis":3}
+$ curl -s -b cookies -X POST $DRISHTI_CONSOLE/admin/ai/api/test/mock
+{"name":"mock","ok":true,"network":false,"detail":"configured; this type makes no live call","models":[],"millis":0}
+```
+
+`network` says whether a call left the console; `fast` was not even tried.
 
 You should see one line for each press. (The same page shows the **server's** layer below the console's; the server has its own list. Keys live there: the recommended console provider is `type: server`, which hands the call to the server so the key stays in one place.)
 
@@ -113,15 +128,34 @@ You should see one line for each press. (The same page shows the **server's** la
 Before using a feature, know the two gates and the contents. **Gate one**: the BI power (`bi-author` to describe a report, `bi` to ask or explain). **Gate two**: the **AI policy**, per feature and role. And the prompt carries **the names of what the report reads (its model, here `world-economics@1`) and the person's own words, nothing else**:
 
 ```text
-DATASET world-economics: World economics
+TASK: ask-query
+DATASET world-economics: Output, growth, prices, jobs and population for about 200 economies (World Bank, latest year published), by country, World Bank region and income group. The country is an ISO 3166-1 alpha-3 code, so a map visual can shade it.
 FIELDS (write them as table.column):
-  table economies:
-    economies.REGION_NAME string - the World Bank region
+  table economies: the dataset world-economics-economies 1.0.0, a fact
+    economies.NAME string
+    economies.ISO3 string
+    economies.REGION_NAME string
+    economies.INCOME_NAME string
     economies.GDP_USD_BN decimal
+    economies.GDP_PER_CAPITA decimal
+    economies.GROWTH decimal
+    economies.INFLATION decimal
+    economies.UNEMPLOYMENT decimal
+    economies.POPULATION_M decimal
 MEASURES (write them by name):
+  Economies - How many economies.
   GDP (USD bn) - Gross domestic product at current prices, USD billions.
+  Population (m) - Population, millions.
+  GDP per capita (USD) - GDP over population: for a region, its total GDP over its total population.
+  Average growth - The simple average of the economies' real GDP growth, % a year.
+  Average inflation - The simple average of consumer-price inflation, % a year.
+  Average unemployment - The simple average of the unemployment rate, % of the labour force.
+  Count of economies
 QUESTION: GDP by region
 ```
+
+(The whole message of an *Ask* on the World economics report, rendered from the model as the server reads it for the administrator; the system message
+before it holds the query grammar and no data.)
 
 Not in it, in either mode: a row, a value of a field, a measure's definition, a connector or a path, and any field **masked for the reader** (it is left out, so the model cannot be told it exists). The setting `drishti.bi.ai.values` is `labels-only` by default; `aggregates` additionally lets the model word the reader's own masked
 aggregate result, and is an administrator's decision, not a button.
@@ -305,10 +339,35 @@ pages:
       - { id: v, type: bar, title: V, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { axis: [economies.NOPE], values: [Nothing] } }
 ```
 
-![Check, explained in plain words: two DRS-9031 problems (no column nope, no measure Nothing), each with what it means and what to change](img/t15/10-check-explained.jpg)
+![Check, explained in plain words: two DRS-9031 problems (no column NOPE, no measure Nothing), each with what it means and what to change](img/t15/10-check-explained.jpg)
 
-You should see the two `DRS-9031` problems the checker found and, under **Explain in plain words**, a sentence and a fix for each. The API is
-`POST /api/v1/bi/ai/explain-checks {"yaml": "..."}`, which answers `{"valid": false, "problems": [{"code": "DRS-9031", "path": "pages[0].visuals[0].wells.axis", "message": "...", "explain": "...", "fix": "..."}, ...]}`.
+You should see the two `DRS-9031` problems the checker found and, under **Explain in plain words**, a sentence and a fix for each. The API behind
+the button, with that YAML as the body's `yaml` (captured):
+
+```text
+$ curl ... -d '{"yaml": "rachana: 2\nreport: broken\n..."}' "$DRISHTI_SERVER/api/v1/bi/ai/explain-checks"
+200 {"valid": false, "explained": 2,
+     "problems": [{"level": "error", "code": "DRS-9031", "path": "pages[0].visuals[0].wells.axis",
+                   "message": "table 'economies' has no column 'NOPE' (it has NAME, ISO3, REGION_NAME, INCOME_NAME, GDP_USD_BN, GDP_PER_CAPITA, GROWTH, INFLATION, UNEMPLOYMENT, POPULATION_M)",
+                   "explain": "The bar chart is asked to plot a field the dataset does not have, so it cannot draw.",
+                   "fix": "Use a field of the dataset such as economies.REGION_NAME."},
+                  {"level": "error", "code": "DRS-9031", "path": "pages[0].visuals[0].wells.values",
+                   "message": "no measure 'Nothing' in dataset 'world-economics' (measures: Economies, GDP (USD bn), Population (m), GDP per capita (USD), ...)",
+                   "explain": "A measure named in the chart is not one of the dataset's measures.",
+                   "fix": "Pick one of GDP (USD bn), Population (m), Average growth and the others in the Fields pane."}]}
+```
+
+The suggestions of the picture above are `POST /api/v1/bi/ai/suggest` with the model and your goal (captured, the YAML of each shortened):
+
+```text
+$ curl ... -d '{"dataset": "world-economics@1", "goal": "compare GDP across regions"}' "$DRISHTI_SERVER/api/v1/bi/ai/suggest"
+200 {"dataset": "world-economics@1", "model": "world-economics@1",
+     "suggestions": [{"id": "by-region", "kind": "visual", "type": "bar", "title": "GDP by region", "why": "Which regions carry the world's output",
+                      "yaml": "- id: by-region\n  type: bar\n  ...\n  wells: { axis: [economies.REGION_NAME], values: [GDP (USD bn)] }\n ..."},
+                     {"id": "income-filter", "kind": "filter", "type": "slicer", "title": "Income group", "why": "Filter the page to one income group", ...},
+                     {"id": "growth", "kind": "visual", "type": "card", "title": "Average growth", "why": "The average growth at a glance", ...}],
+     "applied": false}
+```
 
 In the **model designer** (Models → a model of your own → *Open*), **Ask the AI helper** proposes relationships, measures (with descriptions) and field descriptions from the saved model's names, types and descriptions, never a value. The shipped World economics model is read-only, so make one of your own over the same datasets first: **New item**, kind *model*, paste [config/bi/models/world-economics.model.yaml](../../config/bi/models/world-economics.model.yaml) with `model: my-world-economics` and the title `My world economics`, **Create**, then open it. Each item is checked against the model before you see it (a name the model lacks is never offered), and **Accept** makes it one undoable edit of the draft: a relationship goes under `relationships:`, a measure under `measures:`, a field's description under `fields:`. **Save** keeps them:
 
@@ -339,7 +398,8 @@ fields:
   economies.INCOME_NAME: { description: "The World Bank income group of the economy" }
 ```
 
-(Asked of a version 1 dataset by its id, the helper still answers in that dataset's own YAML: `book: { type: string, description: ... }`.) The same layer writes the **summary at the top of a subscription's email** ([tutorial 11](11-bi-that-runs-itself.md), step 8). [BI_AI.md sections 9 to 11](../guides/BI_AI.md#9-a-written-summary-at-the-top-of-a-subscriptions-email).
+(Asked of the shipped model itself, `{"dataset": "file:model:world-economics"}`, it proposes the same three items, but **Accept** needs a model you may
+edit. Asked of a version 1 dataset by its id, the helper still answers in that dataset's own YAML: `book: { type: string, description: ... }`.) The same layer writes the **summary at the top of a subscription's email** ([tutorial 11](11-bi-that-runs-itself.md), step 8). [BI_AI.md sections 9 to 11](../guides/BI_AI.md#9-a-written-summary-at-the-top-of-a-subscriptions-email).
 
 ## Next steps
 

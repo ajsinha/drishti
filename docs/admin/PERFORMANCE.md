@@ -218,7 +218,7 @@ The percentiles cover only the last 30 seconds (`drishti.live.window`), so measu
 streaming. To generate load from the command line, open some streams in the background, measure, and stop them:
 
 ```bash
-for i in $(seq 50); do curl -sN -o /dev/null http://localhost:18480/api/v1/views/trade/END-1000008/stream & done
+for i in $(seq 50); do curl -sN -o /dev/null http://localhost:18480/api/v1/views/trade/1000001/stream & done
 sleep 10
 curl -s http://localhost:18480/api/v1/health/live
 kill $(jobs -p)

@@ -68,21 +68,42 @@ BI power never reaches the model. Every call is audited twice: the policy's acce
 
 ## 3. What the model is sent
 
-The prompt is the **dataset model** and the person's own words, nothing else:
+The prompt is the **model** the report reads (its describe, as the person reads it) and the person's own words, nothing else. For *Ask the data* on the
+shipped report **Trades overview** (model `trades-basic@1`) the message is, word for word (rendered from the model as the server reads it):
 
-```
-DATASET lake-report: Trades of the lake
+```text
+TASK: ask-query
+DATASET trades-basic: The simplest useful model: one table (the trading pack's trade) with four measures (Notional, MTM, Trades and average MTM per trade) and a desk-to-book hierarchy. Start here.
 FIELDS (write them as table.column):
-  table trades: 
-    trades.id string - the entity id
-    trades.desk string - The desk that owns the trade
-    trades.notional decimal
+  table trade: the dataset trades-basic-trade 1.0.0, a fact
+    trade.VALUATION_ID string
+    trade.TRADE_ID string
+    trade.SOURCE_SYSTEM string
+    trade.DESK string
+    trade.PORTFOLIO string
+    trade.PRODUCT_TYPE string
+    trade.CURRENCY string
+    trade.TRADE_STATUS string
+    trade.NOTIONAL decimal
+    trade.MTM decimal
+    trade.PNL_1D decimal
+    trade.TRADE_DATE date
+    trade.MTM_IN_MILLIONS decimal - MTM in millions of USD
 MEASURES (write them by name):
-  Notional - Sum of the notional
+  Notional - Total notional of the trades, in the trade's own currency units.
+  MTM - Mark-to-market in USD, signed.
+  Trades - Number of trades.
+  Average MTM per trade - MTM divided by the number of trades (a measure built from measures).
+  Desk P&L volatility - Standard deviation of the one-day P&L per desk, computed in Python. Shown by a python visual (docs/guides/PYTHON_BI.md); a query cannot use it.
+  Count of trade
 HIERARCHIES:
-  Desk and book: [trades.desk, trades.book]
+  Desk and book: [trade.DESK, trade.PORTFOLIO]
 QUESTION: notional by desk
 ```
+
+Each table is an alias of the model, described by its dataset and role; each field is `alias.COLUMN type`, with its description when the model gives one.
+(Until 2.3.0 a question asked **on a report over a model** sent the model's name and measures but not its fields; it now sends them, as a question asked
+of the model by name always did.)
 
 What is **not** in it, in either mode: a row, a value of a field, a measure's definition, a connector or a path, and any field **masked for the reader** (it is left out, so the model cannot be
 told it exists). The AI policy then masks `drishti.security.redact` fields and the extra patterns in the prompt as it does for every call. `BiAiTest` records the prompts and checks all of this.
@@ -110,14 +131,22 @@ a model (`world-economics@1`, its item id), a dataset of the model layer (`datas
 4. shows the passing draft as text with *Use this draft*, which puts it in the YAML tab like text you typed. **Nothing is saved or published**: the designer's undo, Check and Save are unchanged,
    and publishing still needs a person and the usual review.
 
-```
-POST /api/v1/bi/ai/draft  {"dataset": "trades-basic", "request": "notional by desk as a bar chart"}      (as wes, who holds bi-author)   200
-{ "yaml": "rachana: 1\nreport: drafted\nversion: 1\ntitle: Drafted from words\ndataset: trades-basic\npages:\n  - id: main\n ...",
-  "valid": true, "problems": [], "dataset": "trades-basic", "saved": false }
+```text
+POST /api/v1/bi/ai/draft  {"dataset": "world-economics@1", "request": "GDP by region"}                (as an administrator)   200
+{ "yaml": "rachana: 2\nreport: gdp-by-region\nversion: 1\ntitle: GDP by region\nmodel: world-economics@1\npages:\n  - id: main\n ...",
+  "valid": true, "problems": [], "dataset": "world-economics@1", "model": "world-economics@1", "saved": false }
 
-POST /api/v1/bi/ai/draft  {"dataset": "trades-basic", "request": "x"}                                     (as rita, no bi-author)         403
-{ "status": 403, "detail": "DRS-9002 rita does not hold the bi-author power (an administrator grants it on a role)", "code": "DRS-9002" }
+POST /api/v1/bi/ai/draft  {"dataset": "trades-basic@1", "request": "notional by desk as a bar chart"}   (as an administrator)   422
+{ "status": 422, "code": "DRS-4020", "detail": "DRS-4020 the model's draft did not pass the report check, so it is not shown:
+  pages[0].visuals[0].wells.values: no measure 'GDP (USD bn)' in dataset 'trades-basic' (measures: Notional, MTM, Trades, Average MTM per trade,
+  Desk P&L volatility, Count of trade); pages[0].visuals[1].wells.axis: 'economies.REGION_NAME' is not a table.column of this dataset (tables: trade); ..." }
+
+POST /api/v1/bi/ai/draft  {"dataset": "trades-basic@1", "request": "x"}                                (as rita, no bi-author)   403
+{ "status": 403, "code": "DRS-9002", "detail": "DRS-9002 rita does not hold the bi-author power (an administrator grants it on a role)" }
 ```
+
+(The second call is the checker at work: tutorial 15's mock answers every draft with the same world-economics report, which names nothing of
+`trades-basic@1`; it was told the problems once, answered the same, and the draft was refused, not shown.)
 
 ![Describe a report in the designer](img/bi-ai/bi-ai-describe.png)
 
@@ -132,19 +161,24 @@ The page shows the answer as a **table**, the **visual that suits it** (a card f
 by the model), a note of how many rows the engine answered, and **the query the model chose** (a disclosure) so you can see, and trust or doubt, what was asked. A refusal by the engine
 (a field that is not there, a limit) is shown with its code (`DRS-9020`, `DRS-9025`) and "the query the model chose was refused".
 
-```
-POST /api/v1/bi/ai/ask  {"report": "file:report:trades-overview", "question": "notional by desk"}                  (as rita)   200
-{ "columns": [{"name": "trade.DESK", "type": "string", "masked": false}, {"name": "Notional", "type": "decimal", "masked": false}],
-  "rows": [["DESK-FX", 79000000.0], ["DESK-FI", 78000000.0], ["DESK-EQD", 77000000.0]], "rowCount": 3,
-  "meta": {"layer": "columns", "rows": 3, "cached": false, "dates": ["2026-10-08"], "tables": ["trade"], "masked": [], ...},
+```text
+POST /api/v1/bi/ai/ask  {"report": "file:report:trades-overview", "question": "notional by desk"}          (as ann, bi-writer)   200
+{ "columns": [{"type": "string", "masked": false, "name": "trade.DESK"}, {"type": "decimal", "masked": false, "name": "Notional"}],
+  "rows": [["DESK-COMM", 8.888037427736503E11], ["DESK-RATES", 5.96934185E11], ["DESK-EQD", 4.28542341E11], ...], "rowCount": 10,
+  "meta": {"layer": "columns", "rows": 10, "cached": false, "dates": ["2026-10-16"], "tables": ["trade"], "masked": [], ...},
   "question": "notional by desk",
-  "query": {"fields": ["trade.DESK"], "measures": ["Notional"], "filters": [], "dates": {"from": "2026-10-08", "to": "2026-10-08"},
-            "orderBy": [{"by": "Notional", "desc": true}], "limit": 200},
+  "query": {"fields": ["trade.DESK"], "measures": ["Notional"], "filters": [], "orderBy": [{"desc": true, "by": "Notional"}], "limit": 200},
   "visual": "bar", "values": "labels-only", "summary": null }
 
-POST /api/v1/bi/ai/ask  {"report": "file:report:trades-overview", "question": "something no rule knows"}              (the mock cannot answer)   422
-{ "status": 422, "detail": "DRS-4020 the model did not answer with a query", "code": "DRS-4020" }
+POST /api/v1/bi/ai/ask  {"report": "file:report:trades-overview", "question": "something no rule knows"}   (the mock cannot answer)   422
+{ "status": 422, "code": "DRS-4020", "detail": "DRS-4020 the model did not answer with a query" }
+
+POST /api/v1/bi/ai/ask  {"report": "file:report:trades-overview", "question": "notional by desk"}          (as rita, risk)   403
+{ "status": 403, "code": "DRS-4018", "detail": "DRS-4018 feature 'bi-ask' is not open to your roles" }
 ```
+
+(Captured on tutorial 15's stack, whose AI policy opens `bi-ask` to `admin` and `bi-writer` only, hence rita's refusal; with no policy entry for the
+feature she would be answered, with her own row rules and masks.)
 
 The body names a `report` (the question is asked of the dataset that report reads, with the report's grants) or a `dataset` (a catalogue id). In `aggregates` mode `summary` is the model's
 wording of the result; in `labels-only` it is `null`. A question the model cannot turn into a query on this dataset is `DRS-4020`, not a guess.
@@ -160,17 +194,19 @@ number explained is the number on the screen. You get:
   measure reads), each with its top `explain-members` members and their **share**. A dimension masked for you, or one the engine will not group by, is left out.
 * **The narrative** (`aggregates` mode only): three sentences wording that breakdown, from numbers the model was given and told not to add to.
 
-```
-POST /api/v1/bi/ai/explain  {"report": "file:report:trades-overview", "page": "overview", "visual": "notional", "state": {"dates": {...}}}     (as rita)   200
+```text
+POST /api/v1/bi/ai/explain  {"report": "file:report:trades-overview", "page": "overview", "visual": "notional", "measure": "Notional", "state": {}}   (as rita)   200
 { "measure": "Notional",
-  "lineage": { "dataset": {"name": "trades-basic", "title": "Trades, the basics", "version": 1},
-               "measure": {"name": "Notional", "expr": "sum(trade.NOTIONAL)", "description": "Total notional of the trades, ..."},
+  "lineage": { "dataset": {"name": "trades-basic", "title": "Trades, the basics", "version": "1.0.0"}, "model": {"name": "trades-basic", "version": "1.0.0"},
+               "measure": {"name": "Notional", "expr": "sum(trade.NOTIONAL)", "description": "Total notional of the trades, in the trade's own currency units."},
                "columns": [{"name": "trade.NOTIONAL", "type": "decimal", "calculated": false, "expr": null}],
-               "sources": [{"table": "trade", "kind": "trade-valuation", "connector": "risk-store", "mode": "cached"}] },
-  "value": 234000000.0,
-  "breakdown": [ {"dimension": "trade.DESK", "members": [{"member": "DESK-FX", "value": 79000000.0, "share": 33.8},
-                                                      {"member": "DESK-FI", "value": 78000000.0, "share": 33.3}, ...]},
-                 {"dimension": "trade.PORTFOLIO", "members": [...]}, {"dimension": "trade.PRODUCT_TYPE", "members": [...]} ],
+               "sources": [{"table": "trade", "dataset": "trades-basic-trade", "version": "1.0.0", "kind": "trade-valuation", "connector": "risk-store", "mode": "cached"}] },
+  "value": 3.6170686197736504E12,
+  "breakdown": [ {"dimension": "trade.TRADE_ID", "members": [{"member": "1001777", "value": 1.53911817E10, "share": 0.4}, ...]},
+                 {"dimension": "trade.SOURCE_SYSTEM", "members": [{"member": "MUREX", "value": 1.56906739E12, "share": 43.4},
+                                                                {"member": "CALYPSO", "value": 1.468877391E12, "share": 40.6},
+                                                                {"member": "ENDUR", "value": 5.791238387736503E11, "share": 16.0}]},
+                 {"dimension": "trade.DESK", "members": [{"member": "DESK-COMM", "value": 8.888037427736503E11, "share": 24.6}, ...]} ],
   "values": "labels-only", "narrative": null }
 ```
 

@@ -25,9 +25,10 @@ About 40 minutes.
 ## Before you start
 
 - The quick-start environment of [tutorial 10](10-first-bi-report.md#before-you-start) (the demo lakes, **Drishti server (demo lakes)** with sign-in
-  on), with the **demo ticker on** as in [tutorial 12](12-live-bi-and-boards.md#before-you-start) (`DRISHTI_DEMO_ENABLED=true`): the trade the host
-  shows, `END-1000008`, and the live report's ticking come from the demo source (on the lakes alone, without the ticker, use an ENDUR trade of the lake
-  such as `1000001` instead).
+  on), with the **demo ticker on** as in [tutorial 12](12-live-bi-and-boards.md#before-you-start) (`DRISHTI_DEMO_ENABLED=true`): the live report of
+  step 6 ticks only with it. The trades the host shows, `1000001` (an ENDUR commodity swap with Harbor Point Bank) and `1000002`, are in the trading
+  pack's samples and in the ENDUR lake, so they open with the ticker on or off (trades themselves do not tick: the demo moves valuations, curves and
+  netting sets).
 - Embedding is **off by default**. This tutorial turns it on (step 1). It needs a third port for the host application (the sample host uses 17968 by default; the pictures use 17944), and the two demo users `viewer` and `author` in Drishti (step 2).
 - The sample host is [tools/elements-demo](../../tools/elements-demo/README.md): a small Python program with its own sign-in and its own backend. It signs its requests with a **demo key** that ships in the repository: never use it for anything real.
 
@@ -73,7 +74,7 @@ Fill it in:
 | Name, Id | `Harbour CRM`, `harbour-crm` | the id is what the host's backend names itself with |
 | Origins | `http://127.0.0.1:17944` | the **exact** origin of the host's pages (scheme, host, port, no path). A page on any other origin is refused (`DRS-8002`); `null` and wildcards are refused |
 | How it signs in | **Both** | a **client secret** (shown once) and a **public key** (a JWK set): the host's backend authenticates with the secret and signs a short assertion about its user with its private key. For the sample host paste the JWK set made from `tools/elements-demo/demo-host-key.json` (its public half: `n`, `e`, `kid`) |
-| Scopes | `embed:view`, `embed:about`, `embed:report` | what the host may ask a token for: views, the About text, BI reports |
+| Scopes | `embed:view`, `embed:about`, `embed:report`, `embed:search` | what the host may ask a token for: views, the About text, BI reports, and the search box of step 10 |
 | Kinds and reports | `trade, report:file:report:live-trading-desk, report:file:report:trades-overview` | an allow-list: **the kind `trade`** and **two reports**: the live desk report (step 6) and a report on a model (step 6, last part). Every report is `report:*`; empty means everything the user's roles open |
 | Calls per minute, per user per minute | `6000`, `600` | the defaults (600 and 60) are for a quiet page; a live report asks again at every tick |
 | Token life | `300` seconds | the lifetime of a token; never more than the server's `drishti.embed.token-max-seconds` |
@@ -102,7 +103,7 @@ You should see `host app on http://127.0.0.1:17944  (Drishti console http://127.
 ```html
 <script type="module" src="http://127.0.0.1:17480/embed/v1/drishti-elements.js" crossorigin="anonymous"></script>
 ...
-<drishti-view id="main" kind="trade" entity="END-1000008" theme="light"></drishti-view>
+<drishti-view id="main" kind="trade" entity="1000001" theme="light"></drishti-view>
 ```
 
 ```javascript
@@ -124,16 +125,22 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 subject_token=<a JWT the host signs: iss harbour-crm, sub author, aud <the token endpoint>, exp in 60 s>
 subject_token_type=urn:ietf:params:oauth:token-type:jwt
 audience=http://127.0.0.1:17480            (the console)
-scope=embed:view embed:about
--> {"access_token": "<JWT>", "token_type": "Bearer", "expires_in": 300, "scope": "embed:view embed:about"}
+scope=embed:view embed:about embed:report
+-> {"access_token": "<JWT>", "issued_token_type": "urn:ietf:params:oauth:token-type:access_token", "token_type": "Bearer", "expires_in": 300,
+    "scope": "embed:view embed:about embed:report"}
 ```
+
+(Captured against a stack on ports 19590 and 19591 with the client authenticated by `private_key_jwt` instead of the secret: a
+`client_assertion` signed with the same demo key, `iss` = `sub` = `harbour-crm`; [API_GUIDE.md](../guides/API_GUIDE.md) lists both ways. The sample
+host itself sends the secret, as above.)
 
 The token the page receives is a short **ES256** JWT; its header and claims are plain to read (here decoded from a real one):
 
 ```text
-header   {"alg": "ES256", "typ": "drishti-embed+jwt", "kid": "emb-84a7753c6409"}
-claims   {"iss": "http://127.0.0.1:18943", "aud": "http://127.0.0.1:17943", "sub": "author", "azp": "harbour-crm",
-          "scope": "embed:view", "origins": ["http://127.0.0.1:17944"], "iat": 1791778958, "exp": 1791779258, "jti": "emb_1G8z4U70Mns0OeiT", ...}
+header   {"alg": "ES256", "typ": "drishti-embed+jwt", "kid": "emb-1602301c91fc"}
+claims   {"iss": "http://127.0.0.1:19590", "aud": "http://127.0.0.1:19591", "sub": "author", "azp": "harbour-crm",
+          "scope": "embed:view embed:about embed:report", "origins": ["http://127.0.0.1:17944"], "iat": 1792278895, "exp": 1792279195,
+          "jti": "emb_ikzuTg317DGVdoqv", "typ": "drishti-embed+jwt"}
 ```
 
 What to notice: **five minutes** (`exp - iat = 300`), the application (`azp`), the **origin** it is good for and its **scope**. On **every call** the server checks the signature, the audience, the expiry, the application, the user (their roles **as they are now**), the origin, the scope and the kind or report, and the rates, then acts **as that user, read-only, with every field mask applied whatever their roles say**. The library asks the provider for a new token a minute before the old one ends, so nothing redraws.
@@ -144,7 +151,8 @@ Open `http://127.0.0.1:17944/` and press **author**.
 
 ![The host page, "Harbour CRM": its own search box, recent list and as-of date on the left; a watched trade; and a live Drishti trade view with its title, strip, Terms and P&L explain panels](img/t16/05-host-view.jpg)
 
-You should see **the host's** page chrome (a blue bar, its own search box *Find an entity*, **Recent**, an **As of** date) around **Drishti's** view: the trade `END-1000008` with its title, key figures and panels, and a second, smaller `<drishti-view>` in the side column (`header="strip" panels="none"`) that **shares the first one's connection**. Both are live: the MTM ticks. Type `TRD MX-20000001` in the host's search box: the page changes the element's `entity` attribute and the view switches in place. Click the counterparty (*Harbor Point Bank*): the element raises `drishti:navigate`, and the host decides what to do (the sample puts it in its own search box).
+You should see **the host's** page chrome (a blue bar, its own search box *Find an entity*, **Recent**, an **As of** date) around **Drishti's** view: the trade `1000001` (*Commodity · Commodity swap*, with `CP-HARBORPT`) with its title, key figures and panels, and a second, smaller `<drishti-view>` in the side column (`header="strip" panels="none"`) that **shares the first one's connection**. Both are subscribed (their footers say `live`): a trade changes when its source books a new version, which the demo ticker does not do, so here
+they hold still; a live kind (a curve, a netting set) would move in place. Type `TRD MX-20000001` in the host's search box: the page changes the element's `entity` attribute and the view switches in place. Click the counterparty (*Harbor Point Bank*): the element raises `drishti:navigate`, and the host decides what to do (the sample puts it in its own search box).
 
 Embedded views **always mask**: the `author` role holds the `raw` power in the console, but through an embed token every masked field reads `•••`. Open the same trade in the console beside it to compare.
 
@@ -186,11 +194,11 @@ bars, the line, the table and the **Currency** slicer with its values, and **no 
 <drishti-report id="one" report="file:report:trades-overview" visual="by-desk" chrome="bare" theme="light"></drishti-report>
 ```
 
-What the element asks for one visual, and what it is told (captured from the page; `curl` with an embed token sends the same), shows the model
+What the element asks for one visual, and what it is told (captured with the embed token of step 4 from the host's origin, as the page sends it), shows the model
 query the server ran for it:
 
 ```text
-POST http://127.0.0.1:17912/embed/v1/reports/file:report:trades-overview/query
+POST http://127.0.0.1:19591/embed/v1/reports/file:report:trades-overview/query        (Authorization: Bearer <embed token>, Origin: http://127.0.0.1:17944)
      {"page":"overview","visual":"by-desk","state":{"carry":[],"slicers":{},"drill":[],"selections":[]}}
 200  {"columns": [{"name": "trade.DESK", ...}, {"name": "MTM", ...}],
       "rows": [["DESK-RATES", 4108728089.500002], ["DESK-MM", 393805216.8699998], ...], "rowCount": 10,
@@ -270,8 +278,8 @@ Two more elements put more of Drishti in the host's page. **`<drishti-search>`**
 
 ```html
 <drishti-search placeholder="Find a trade" target="#v"></drishti-search>
-<drishti-view id="v" kind="trade" entity="END-1000008"></drishti-view>
-<drishti-about kind="trade" entity="END-1000008"></drishti-about>
+<drishti-view id="v" kind="trade" entity="1000001"></drishti-view>
+<drishti-about kind="trade" entity="1000001"></drishti-about>
 ```
 
 The repository has the same page as **React, Vue and Angular** samples in `docs/guides/examples/embed/`. Fetch the framework builds once (`bash docs/guides/examples/embed/fetch-vendor.sh`; they are not in the repository) and open `http://127.0.0.1:17968/samples/react/` on the host of step 4:
