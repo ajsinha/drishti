@@ -34,7 +34,7 @@ MEASURE_ROLES = ("amount", "quantity", "ratio")
 AGG_WORD = {"sum": "Sum of", "avg": "Average of", "min": "Minimum of", "max": "Maximum of", "count": "Count of", "distinct": "Distinct"}
 TOP_ORDER = ("rachana", "expressions", "model", "version", "id", "title", "description", "owner", "tags", "endorsement", "audience", "sample", "lifecycle", "replaced-by",
              "implicit-from", "datasets", "relationships", "measures", "fields", "hierarchies", "perspectives", "security", "contract", "rollups", "tests", "golden", "ai", "calc-groups",
-             "parameters", "calendars", "layout")
+             "parameters", "calendars", "fx", "layout")
 DATASET_ORDER = ("rachana", "expressions", "dataset", "version", "id", "title", "description", "owner", "tags", "endorsement", "extends", "source", "columns", "where", "grain",
                  "derive", "group", "time", "refresh", "security", "tests", "ai", "rollups", "layout")          # BI_DESIGN.md 3.1: the derivation keys in the order they apply
 
@@ -288,7 +288,7 @@ def _key(k) -> str:
 def _block(key: str, value, out: list[str]) -> None:
     """One top-level key: maps of maps one entry per line (flow), lists of maps one item per line, anything else as PyYAML writes it."""
     if isinstance(value, dict) and value and all(isinstance(v, (dict, list, str, int, float, bool)) or v is None for v in value.values()) \
-            and key in ("datasets", "measures", "hierarchies", "columns", "may-see-all", "derive", "fields", "perspectives"):
+            and key in ("datasets", "measures", "hierarchies", "columns", "may-see-all", "derive", "fields", "perspectives", "parameters"):
         out.append(f"{key}:")
         for k, v in value.items():
             out.append(f"  {_key(k)}: {_flow(v)}")
@@ -358,7 +358,7 @@ def to_yaml(doc: dict, order=TOP_ORDER) -> str:
     return text
 
 
-ENTRY_KEYS = ("datasets", "measures", "hierarchies", "columns", "derive", "fields", "perspectives")
+ENTRY_KEYS = ("datasets", "measures", "hierarchies", "columns", "derive", "fields", "perspectives", "parameters")
 
 
 def to_yaml_keeping(original: str, doc: dict, order=TOP_ORDER) -> str:
@@ -428,6 +428,9 @@ def fields_shape(described: dict, ref: str, model_doc: dict | None = None) -> di
                                       "fields": None if (v or {}).get("fields", []) is None else list((v or {}).get("fields") or []),
                                       "measures": None if (v or {}).get("measures", []) is None else list((v or {}).get("measures") or [])}
                              for k, v in persp.items() if isinstance(v, dict) or v is None},
+            # wave B: what a reader may set on the model (parameter slicers, Show as), as the server describes it
+            "parameters": [p for p in described.get("parameters") or [] if isinstance(p, dict) and p.get("name")],
+            "calcGroups": [g for g in described.get("calcGroups") or [] if isinstance(g, dict) and g.get("name")],
             "model": {"ref": ref, "id": mid, "name": model.get("name") or "", "version": model.get("version") or "", "implicit": implicit,
                       "dataset": ref[len("dataset:"):] if ref.startswith("dataset:") else ""}}
 

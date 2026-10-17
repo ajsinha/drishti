@@ -59,6 +59,7 @@
     <button type="button" class="bi-md-tab" role="tab" data-tab="canvas" aria-selected="true">Canvas</button>
     <button type="button" class="bi-md-tab" role="tab" data-tab="measures" aria-selected="false">Measures <span class="bi-md-count" data-count-measures></span></button>
     <button type="button" class="bi-md-tab" role="tab" data-tab="fields" aria-selected="false">Fields</button>
+    <button type="button" class="bi-md-tab" role="tab" data-tab="calc" aria-selected="false">Calculations <span class="bi-md-count" data-count-calc></span></button>
     <button type="button" class="bi-md-tab" role="tab" data-tab="security" aria-selected="false">Security <span class="bi-md-alert" data-count-security hidden></span></button>
     <button type="button" class="bi-md-tab" role="tab" data-tab="contract" aria-selected="false">Contract</button>
     <button type="button" class="bi-md-tab" role="tab" data-tab="yaml" aria-selected="false">YAML</button>
@@ -83,6 +84,7 @@
     </section>
     <section class="bi-md-pane" data-pane="measures" hidden aria-label="Measures"><div data-measures-pane></div></section>
     <section class="bi-md-pane" data-pane="fields" hidden aria-label="Fields"><div data-fields-pane></div></section>
+    <section class="bi-md-pane" data-pane="calc" hidden aria-label="Calculations"><div data-calc-pane></div></section>
     <section class="bi-md-pane" data-pane="security" hidden aria-label="Security"><div data-security-pane></div></section>
     <section class="bi-md-pane" data-pane="contract" hidden aria-label="Contract"><div data-contract-pane></div></section>
     <section class="bi-md-pane" data-pane="yaml" hidden aria-label="YAML">
@@ -93,4 +95,4 @@
   </div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script><script src="/static/js/cm-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-expr-editor.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-designer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-tabs.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-fields.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-ai.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script><script src="/static/js/cm-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-expr-editor.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-designer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-tabs.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-fields.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-calc.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model-ai.js?v={{ ASSET_V }}"></script>{% endblock %}

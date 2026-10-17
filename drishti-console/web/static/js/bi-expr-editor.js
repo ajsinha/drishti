@@ -18,7 +18,9 @@
    measures (writing measure('…')), the functions of the server's catalogue (signature, one line, one example, a link to the guide) and the keyword arguments
    of the call the caret is in; the call's card stays beside the input while you type its arguments. The console never parses DEL for meaning: as you type,
    the server's /bi/api/expr/validate says what is wrong, with the fix as a button, and Try it shows the server's answer for the current selection, as you.
-   Measure references read as chips under the input. Everything is built with DOM calls and textContent; same-origin JSON only. */
+   Measure references read as chips under the input. Wave B: the filter-context and balance functions (calc, share_of, closing ...) come from the same
+   catalogue; opts.names adds names of the model that are not fields (param.shock, SELECTED in a calculation group's item) and opts.keywordValues the
+   values a keyword takes (via='r_5': the model's relationship ids; over=/ignore=: ALL). Everything is built with DOM calls and textContent; same-origin JSON only. */
 (function () {
   'use strict';
   const B = (window.drishtiBi = window.drishtiBi || {});
@@ -110,6 +112,7 @@
     const wordList = opts.words || WORDS[scope === 'aggregate' ? 'aggregate' : 'row'] || [];
 
     const fieldList = () => (typeof opts.fields === 'function' ? opts.fields() : opts.fields || []).map((f) => (typeof f === 'string' ? { name: f } : f));
+    const nameList = () => (typeof opts.names === 'function' ? opts.names() : opts.names || []).map((n) => (typeof n === 'string' ? { name: n } : n));
     const measureList = () => (typeof opts.measures === 'function' ? opts.measures() : opts.measures || []).map((m) => (typeof m === 'string' ? { name: m } : m));
 
     function suggestions() {
@@ -122,6 +125,15 @@
         return { c, out };
       }
       const call = c.call && fns.find((f) => f.name === c.call.name);
+      // the value of a keyword: via='…' takes a relationship's id, over= / ignore= take ALL (or a list of fields, completed as fields)
+      const kwAt = /\b([a-z_]+)=\s*(['"]?)([A-Za-z0-9_.]*)$/.exec(input.value.slice(0, at));
+      if (call && kwAt) {
+        const vals = kwAt[1] === 'via' ? (opts.keywordValues ? opts.keywordValues('via') : []) : /^(over|ignore)$/.test(kwAt[1]) ? ['ALL'] : [];
+        vals.filter((v) => String(v).toLowerCase().indexOf(kwAt[3].toLowerCase()) === 0).forEach((v) => out.push({
+          kind: 'keyword', label: kwAt[1] === 'via' ? '\'' + v + '\'' : String(v), detail: kwAt[1] === 'via' ? 'a relationship of the model' : 'every field: the filters all go',
+          insert: kwAt[1] === 'via' && !kwAt[2] ? '\'' + v + '\'' : String(v) + (kwAt[2] || ''), from: at - kwAt[3].length }));
+        if (out.length) { return { c, out }; }
+      }
       if (call && c.word.indexOf('.') < 0) {
         call.keywords.filter((k) => k.indexOf(w) === 0).forEach((k) => out.push({ kind: 'keyword', label: k + '=', detail: 'a keyword of ' + call.name + '()', insert: k + '=', from: c.start }));
       }
@@ -152,6 +164,8 @@
         if (c.word.indexOf('.') < 0) {
           wordList.filter((k) => w && k.toLowerCase().indexOf(w) === 0 && k !== c.word).forEach((k) => out.push({ kind: 'word', label: k, detail: '', insert: k, from: c.start }));
         }
+        nameList().filter((n) => w && n.name.toLowerCase().indexOf(w) === 0 && n.name !== c.word).slice(0, 20)
+          .forEach((n) => out.push({ kind: 'word', label: n.name, detail: n.detail || '', insert: n.name, from: c.start }));
         if (scope !== 'row' && scope !== 'rule' && w && 'measure'.indexOf(w) !== 0) {
           measureList().filter((m) => m.name.toLowerCase().indexOf(w) === 0).slice(0, 12).forEach((m) => out.push({ kind: 'measure', label: m.name, detail: 'measure(\'' + m.name + '\')', insert: mIns(m.name), from: c.start }));
         }

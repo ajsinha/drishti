@@ -430,8 +430,8 @@
     B.qa('[data-tab]', canvas).forEach((b) => b.setAttribute('aria-selected', b.getAttribute('data-tab') === name ? 'true' : 'false'));
     B.qa('[data-pane]', canvas).forEach((p) => { p.hidden = p.getAttribute('data-pane') !== name; });
     q('[data-inspector]').hidden = name !== 'canvas';
-    q('.bi-md-side').hidden = ['security', 'measures', 'contract', 'fields'].indexOf(name) >= 0;          // the datasets list is for building the canvas
-    q('.bi-md-main').classList.toggle('bi-md-wide', ['security', 'measures', 'contract', 'fields'].indexOf(name) >= 0);
+    q('.bi-md-side').hidden = ['security', 'measures', 'contract', 'fields', 'calc'].indexOf(name) >= 0;          // the datasets list is for building the canvas
+    q('.bi-md-main').classList.toggle('bi-md-wide', ['security', 'measures', 'contract', 'fields', 'calc'].indexOf(name) >= 0);
     M.tab = name;
     if (name === 'yaml') { setYaml(M.yaml); if (editor) { editor.refresh(); } }
     if (name === 'canvas') { lines(); }

@@ -71,8 +71,13 @@
     return col ? fact + '.' + col.name : '';
   };
   /** The ExpressionEditor on a measure's formula: the model's fields and measures, the server's check against this draft, Try it on the saved draft. */
-  M.exprEditor = (input, onCommit) => B.exprEditor(input, {
-    scope: 'aggregate', label: 'Formula', fields: M.exprFields, measures: M.exprMeasures, onCommit,
+  /** What a formula may name besides fields and measures (wave B): the model's parameters as param.<name>; in a calculation group's item, SELECTED. */
+  M.exprNames = (selected) => Object.keys(M.doc.parameters || {}).map((n) => ({ name: 'param.' + n, detail: 'parameter: ' + ((M.doc.parameters[n] || {}).title || (M.doc.parameters[n] || {}).kind || n) }))
+    .concat(selected ? [{ name: 'SELECTED', detail: 'the measure the item is applied to' }] : []);
+  /** The relationships a measure may follow (via=): their ids; one without an id gets one when it is chosen in the measure's Via. */
+  M.relIds = () => (M.doc.relationships || []).filter((r) => r && r.id).map((r) => r.id);
+  M.exprEditor = (input, onCommit, extra) => B.exprEditor(input, Object.assign({
+    scope: 'aggregate', label: 'Formula', fields: M.exprFields, measures: M.exprMeasures, onCommit, names: () => M.exprNames(false), keywordValues: (k) => (k === 'via' ? M.relIds() : []),
     known: () => new Set(Object.keys(M.doc.measures || {}).concat(M.exprFields().map((f) => f.name))),
     target: () => ({ model: M.doc.model + '@' + major(), yaml: M.yaml }),
     tryIt: (expr) => {
@@ -81,7 +86,7 @@
       return B.mq.ask({ mq: 1, model: M.doc.model + '@' + major(), define: { 'Try it': expr }, select: { fields: by ? [by] : [], measures: ['Try it'] }, limit: 8 })
         .then((a) => ({ columns: a.columns, rows: a.rows, caption: 'As you' + (a.meta.asOf ? ', as of ' + a.meta.asOf : '') + ', on the saved draft' + (by ? ', by ' + by : '') }));
     }
-  });
+  }, extra || {}));
   function addMeasure(name, def) {
     let n = name, i = 2;
     while ((M.doc.measures || {})[n]) { n = name + ' ' + i++; }
@@ -145,12 +150,13 @@
         h('p', { class: 'text-muted-d bi-small-note', text: 'Python-like: sum(trade.mtm, where=trade.status == \'LIVE\'), measure(\'MTM\') / measure(\'Notional\'), a if c else b. Type to see the fields, the measures and the functions; Ctrl+Space lists them.' }),
         h('div', { class: 'bi-md-row' }, h('label', {}, 'Name ', fName), h('div', { class: 'bi-md-grow' }, fExpr), fAdd)));
     if (!M.readOnly) { M.exprEditor(fExpr, null); }
+    if (M.quickMeasure) { pane.appendChild(M.quickMeasure()); }
     q('[data-nf]', pane).addEventListener('toggle', (e) => { formulaOpen = e.target.open; });
     // the measures
     const list = h('div', { class: 'tbl-wrap' });
     const tb = h('tbody');
     list.appendChild(h('table', { class: 'tbl bi-tbl bi-md-measures', 'data-plain': '' }, h('caption', { class: 'visually-hidden', text: 'Measures' }),
-      h('thead', {}, h('tr', {}, ['Measure', 'Formula', 'Format', 'Adds up', '', ''].map((t) => h('th', { scope: 'col', text: t })))), tb));
+      h('thead', {}, h('tr', {}, ['Measure', 'Formula', 'Format', 'Adds up', 'Via', '', ''].map((t) => h('th', { scope: 'col', text: t })))), tb));
     Object.keys(M.doc.measures || {}).forEach((name) => {
       const m = M.doc.measures[name] || {};
       const probs = M.problems('measures.' + name);
@@ -165,15 +171,16 @@
       const addv = m.additive === false ? 'never' : m.additive && m.additive['over-time'] ? 'last' : 'yes';
       const ad = sel([['yes', 'yes'], ['last', 'not over time (last)'], ['never', 'never']], addv, { 'aria-label': 'Additivity of ' + name, 'data-m-additive': name, disabled: M.readOnly });
       ad.addEventListener('change', () => M.edit((doc) => { const x = doc.measures[name]; if (ad.value === 'yes') { delete x.additive; } else if (ad.value === 'never') { x.additive = false; } else { x.additive = { 'over-time': 'last' }; } }, true));
+      const via = viaSelect(name, m);
       const pv = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-m-preview': name, text: 'Preview' });
       pv.addEventListener('click', () => previewMeasure(name, pv));
       const rm = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Delete ' + name, 'data-m-delete': name, disabled: M.readOnly }, B.icon('trash'));
       rm.addEventListener('click', () => M.edit((doc) => { delete doc.measures[name]; }));
       exCell.append(probs.length ? h('p', { class: 'bi-near bi-bad', 'data-m-problem': name, text: probs[0].code + ' ' + probs[0].message }) : '',
         preview[name] ? h('div', { class: 'bi-md-preview', 'data-m-previewed': name }, preview[name]) : '');
-      tb.appendChild(h('tr', { 'data-measure': name, class: probs.some((p) => p.level === 'error') ? 'bi-md-badrow' : '' }, h('td', {}, nm), exCell, h('td', {}, fm), h('td', {}, ad), h('td', {}, pv), h('td', {}, rm)));
+      tb.appendChild(h('tr', { 'data-measure': name, class: probs.some((p) => p.level === 'error') ? 'bi-md-badrow' : '' }, h('td', {}, nm), exCell, h('td', {}, fm), h('td', {}, ad), h('td', {}, via), h('td', {}, pv), h('td', {}, rm)));
     });
-    if (!Object.keys(M.doc.measures || {}).length) { tb.appendChild(h('tr', {}, h('td', { colspan: '6', class: 'text-muted-d', text: 'No measure written yet. The default measures below exist anyway; add one above to rename or format it.' }))); }
+    if (!Object.keys(M.doc.measures || {}).length) { tb.appendChild(h('tr', {}, h('td', { colspan: '7', class: 'text-muted-d', text: 'No measure written yet. The default measures below exist anyway; add one above to rename or format it.' }))); }
     pane.appendChild(h('section', { class: 'bi-sec' }, h('h3', { text: 'Measures' }), list));
     const implicit = ((M.check && M.check.measures) || []).filter((n) => !(M.doc.measures || {})[n]);
     if (implicit.length) {
@@ -181,6 +188,27 @@
         h('p', { class: 'text-muted-d bi-small-note', text: 'One per column with an aggregation, and a count per dataset. Reports may use them by these names.' }),
         h('ul', { class: 'bi-md-defaults', role: 'list' }, implicit.map((n) => h('li', { 'data-implicit-measure': n, text: n })))));
     }
+  }
+  /** A measure's `via:` (wave B, BI_DESIGN.md 3.3.5): the relationship it follows instead of the active one for the same pair (an inactive one, usually).
+      Chosen from the model's relationships by their ends; one without an id is given one (r_<n>) so the measure can name it. */
+  function viaSelect(name, m) {
+    const rels = M.doc.relationships || [];
+    const label = (r) => r.from + ' → ' + r.to + (r.active === false ? ' (inactive)' : '');
+    const opts = [['', 'the active relationship']].concat(rels.map((r, i) => [r.id || '#' + i, label(r)]));
+    const s = sel(opts, m.via || '', { 'aria-label': 'Relationship ' + name + ' follows', 'data-m-via': name, disabled: M.readOnly || !!m.python || !rels.length });
+    s.addEventListener('change', () => M.edit((doc) => {
+      let v = s.value;
+      if (v.indexOf('#') === 0) {
+        const r = doc.relationships[Number(v.slice(1))];
+        let n = doc.relationships.length, id = 'r_' + n;
+        const taken = new Set(doc.relationships.map((x) => x.id).filter(Boolean));
+        while (taken.has(id)) { id = 'r_' + (++n); }
+        r.id = id;
+        v = id;
+      }
+      if (v) { doc.measures[name].via = v; } else { delete doc.measures[name].via; }
+    }, true));
+    return s;
   }
   function previewMeasure(name, btn) {
     const run = () => {
@@ -373,6 +401,7 @@
     badge.textContent = ex.length ? '⚠ ' + ex.length : '';
     if (M.tab === 'measures') { keepForms(q('[data-measures-pane]'), drawMeasures); } else if (M.tab === 'security') { keepForms(q('[data-security-pane]'), () => { drawSecurity(); M.emit('security-extras'); }); } else if (M.tab === 'contract') { keepForms(q('[data-contract-pane]'), () => { drawContract(); M.emit('contract-extras'); }); }   // the extras (bi-model-fields.js) drawn inside, so their half-filled forms are kept too
   }
+  M.keepForms = keepForms;
   M.on('redraw', redrawTab);
   M.on('tab', redrawTab);
 })();
