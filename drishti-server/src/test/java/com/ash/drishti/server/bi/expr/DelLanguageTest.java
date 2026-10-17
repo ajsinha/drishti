@@ -95,6 +95,9 @@ class DelLanguageTest {
         "!trades.a                     | old syntax",
         "trades.a ? 1 : 2              | old syntax",
         "true                          | old syntax",
+        "frobnicate(trades.a) ?? 3     | '??' is not DEL",
+        "trades.a ? 3                  | unexpected '?'",
+        "sum(trades.a                  | but the expression ends there",
     })
     void refusesWhatIsNotDel(String text, String says) {
         assertThatThrownBy(() -> DelParser.parse(text.strip())).isInstanceOf(DelException.class).hasMessageContaining(says.strip())

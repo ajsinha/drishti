@@ -1543,7 +1543,7 @@ dataset 'it-published' (it-published, published): would convert
       -> sum(trades.mtm, where=trades.status == 'Live')
     ...
 dataset 'it-broken' (it-broken, draft): problem
-    measures.Per.expr: NOT CONVERTED: DRS-9127 expected ')' to close the call of sum() but the expression ends
+    measures.Per.expr: NOT CONVERTED: DRS-9127 expected ')' to close the call of sum(), but the expression ends there
 4 stored item(s) scanned, 2 would be converted, 1 cannot be converted (they keep their text; Admin, BI settings lists them)
 ```
 

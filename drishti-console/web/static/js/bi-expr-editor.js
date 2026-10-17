@@ -250,7 +250,8 @@
           btn.addEventListener('click', () => { input.value = repl; changed(); commit(); input.focus(); });
         }
         probs.appendChild(h('li', { class: 'bi-problem bi-problem-' + (p.level || 'error'), 'data-xe-problem': p.code || '' },
-          p.code ? h('strong', { text: p.code + ' ' }) : null, p.message || '', fixWords ? h('span', { class: 'text-muted-d', text: ' ' + fixWords }) : null, btn ? ' ' : null, btn));
+          // the fix in words only when there is no button that says it (no "write: X  Use X"), set apart from the message (no "ends add ')'")
+          p.code ? h('strong', { text: p.code + ' ' }) : null, p.message || '', fixWords && !btn ? h('span', { class: 'text-muted-d', 'data-xe-fix-words': '', text: ' — ' + fixWords }) : null, btn ? ' ' : null, btn));
       });
       if (r && r.valid && !list2.length) {
         probs.appendChild(h('li', { class: 'bi-ok bi-xe-ok', 'data-xe-ok': '' }, B.icon('check2'), (r.pending ? ' Checks clean as far as the saved draft goes: save to check the names you added since' : ' Checks clean' + (r.type ? ': gives ' + (r.type.name || r.type) : '')) + '.'));

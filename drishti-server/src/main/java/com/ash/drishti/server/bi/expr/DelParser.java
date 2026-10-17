@@ -287,7 +287,7 @@ public final class DelParser {
             return t;
         }
         if (t.type() == T.EOF) {
-            throw new DelException(CODE, "expected '" + text + "' " + what + " but the expression ends", "add '" + text + "'", t.start(), t.end());
+            throw new DelException(CODE, "expected '" + text + "' " + what + ", but the expression ends there", "add '" + text + "' at the end", t.start(), t.end());
         }
         throw new DelException(CODE, "expected '" + text + "' " + what + " but found '" + t.text() + "'", null, t.start(), t.end());
     }
@@ -309,7 +309,7 @@ public final class DelParser {
                 return new DelAst.IfExp(body, test, orElse, start, orElse.end());
             }
             if (isOp("?")) {
-                throw new DelException(CODE, "'c ? a : b' is the old syntax", "write: a if c else b", peek().start(), peek().end());
+                throw question(peek());
             }
             if (isOp(":=")) {
                 throw new DelException(CODE, "assignment (:=) is not DEL: an expression has no variables", "write the expression where its value is needed, or make it a measure", peek().start(),
@@ -644,12 +644,27 @@ public final class DelParser {
         return new DelException(CODE, r[0], r[1], t.start(), t.end());
     }
 
+    /**
+     * A '?' read as precisely as the text allows: '??' (a null fallback, coalesce in DEL), the old 'c ? a : b' only when a ':' follows it, else a plain
+     * unexpected '?'.
+     */
+    private DelException question(Tok t) {
+        int at = toks.indexOf(t);
+        Tok next = at >= 0 && at + 1 < toks.size() ? toks.get(at + 1) : null;
+        if (next != null && next.type() == T.OP && "?".equals(next.text()) && next.start() == t.end()) {
+            return new DelException(CODE, "'??' is not DEL", "for a value when the first is empty write coalesce(a, b)", t.start(), next.end());
+        }
+        boolean colon = at >= 0 && toks.subList(at + 1, toks.size()).stream().anyMatch(x -> x.type() == T.OP && ":".equals(x.text()));
+        return colon ? new DelException(CODE, "'c ? a : b' is the old syntax", "write: a if c else b", t.start(), t.end())
+                : new DelException(CODE, "unexpected '?'", null, t.start(), t.end());
+    }
+
     private DelException unexpected(Tok t) {
         if (t.type() == T.EOF) {
             return new DelException(CODE, "the expression ends early: a value is missing", null, t.start(), t.end());
         }
         if (t.type() == T.OP && "?".equals(t.text())) {
-            return new DelException(CODE, "'c ? a : b' is the old syntax", "write: a if c else b", t.start(), t.end());
+            return question(t);
         }
         if (t.type() == T.OP && ("&&".equals(t.text()) || "||".equals(t.text()))) {
             return new DelException(CODE, "'" + t.text() + "' is the old syntax", "write '" + ("&&".equals(t.text()) ? "and" : "or") + "'", t.start(), t.end());
