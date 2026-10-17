@@ -276,6 +276,11 @@
         if (!r.published) { box.appendChild(h('p', { class: 'text-muted-d', 'data-contract-first': '', text: 'Never published: the first publish sets the contract. Version ' + (M.doc.version || '1.0.0') + ' is fine.' })); return; }
         if (!r.changes.length) { box.appendChild(h('p', { class: 'bi-ok', 'data-contract-same': '', text: 'No change from the published version ' + r.from + '.' })); return; }
         box.appendChild(h('ul', { class: 'bi-layer-list', 'data-contract-changes': '' }, r.changes.map((c) => h('li', { 'data-change-level': c.level }, h('span', { class: 'bi-badge' + (c.level === 'major' ? ' bi-warnbadge' : ''), text: c.level === 'none' ? 'no version' : c.level }), ' ' + c.text, c.usedBy && c.usedBy.length ? h('small', { class: 'text-muted-d', 'data-change-used-by': String(c.usedBy.length), text: ' · used by ' + c.usedBy.slice(0, 5).map((u) => u.title).join(', ') + (c.usedBy.length > 5 ? '…' : '') }) : null))));
+        const sv = (M.check && M.check.contract) || null;              // the server's semver, when its Check says it: that answer wins over the console's reading
+        if (sv && sv.bump) {
+          r.bump = sv.bump; r.next = sv.proposed || sv.next || r.next; r.ok = sv.ok != null ? !!sv.ok : r.ok; r.version = sv.version || r.version;
+          if (sv.refusal || sv.message) { box.appendChild(h('p', { class: 'bi-near bi-bad', 'data-contract-refusal': '', text: 'The server would refuse this publish: ' + (sv.refusal || sv.message) })); }
+        }
         const words = { major: 'a new major version: what reads ' + r.ref + ' has to move to it', minor: 'a minor version: consumers get the additions', patch: 'a patch', none: 'no new version' };
         const p = h('p', { 'data-contract-bump': r.bump }, 'These changes need ', h('strong', { text: words[r.bump] }), '. ');
         if (r.bump !== 'none' && !r.ok && !M.readOnly) {
@@ -283,7 +288,10 @@
           use.addEventListener('click', () => M.edit((doc) => { doc.version = r.next; }));
           p.append('The draft says ' + r.version + '. ', use);
         } else if (r.bump !== 'none') { p.append('The draft\'s version ' + r.version + ' is right.'); }
+        if (r.bump !== 'none') { p.appendChild(h('span', { class: 'bi-badge', 'data-contract-proposed': r.next, text: 'proposed: ' + r.next })); }
         box.appendChild(p);
+        const said = M.lastRefusal && (M.lastRefusal.code === 'DRS-9126' || /DRS-9126/.test(M.lastRefusal.message || ''));
+        if (said) { box.appendChild(h('p', { class: 'bi-near bi-bad', 'data-contract-refused': '', text: 'Publish was refused: ' + M.lastRefusal.message + (r.ok ? ' The draft now says ' + r.version + ': Save and Publish again.' : ' Use version ' + r.next + ' above, then Publish again.') })); }
         if (r.known && r.consumers.length) {
           box.appendChild(h('p', { 'data-contract-impact': String(r.consumers.length) }, h('strong', { text: r.consumers.length + ' item' + (r.consumers.length === 1 ? ' reads ' : 's read ') + r.ref + ': ' }),
             r.consumers.slice(0, 12).map((c) => c.title + ' (' + c.kind + ')').join(', ') + (r.consumers.length > 12 ? '…' : '') + '.'));

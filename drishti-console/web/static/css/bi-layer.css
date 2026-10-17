@@ -162,3 +162,8 @@
 /* Wave A QA: a hidden measure still reachable through visible columns (DRS-9132), said beside its entry */
 .bi-warn-text { color: var(--d-warn); }
 .bi-warn-text code { color: inherit; }
+/* the model designer's autosave line and its merge view (BI_DESIGN.md 8.1) */
+.bi-autosaved { margin-left: .5rem; }
+.bi-merge { border: 1px solid var(--d-warn); border-radius: var(--d-radius); padding: .6rem .8rem; }
+.bi-merge-val { max-height: 10rem; overflow: auto; font-size: .78rem; white-space: pre-wrap; margin: .25rem 0 0; }
+.bi-merge-both th { color: var(--d-warn); }

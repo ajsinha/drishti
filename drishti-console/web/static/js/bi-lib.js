@@ -76,6 +76,8 @@
       if (!r.ok) {
         const e = new Error((data.code ? data.code + ' ' : '') + (data.detail || r.statusText));
         e.code = data.code; e.status = r.status; e.detail = data.detail || r.statusText;
+        if (Array.isArray(data.problems)) { e.problems = data.problems; }
+        if (data.fix) { e.fix = data.fix; }
         throw e;
       }
       return data;
