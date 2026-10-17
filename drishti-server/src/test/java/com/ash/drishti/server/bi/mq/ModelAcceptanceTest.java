@@ -742,4 +742,16 @@ class ModelAcceptanceTest {
         JsonNode svImpact = ok(call("GET", "/api/v1/bi/items/" + svModel + "/impact?remove=Trades", reader("wes"), null));
         assertThat(svImpact.path("affected").get(0).path("consumers").findValuesAsText("title")).contains("SV report");
     }
+
+    @Test @Order(15)
+    void theOwnerOfADraftModelPreviewsItAsARole() throws Exception {
+        // wes's draft model of order 5 (in his private workspace, never published)
+        Map<String, Object> q = Map.of("select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional")), "time", Map.of("as-of", "2026-10-07"));
+        JsonNode risk = ok(call("POST", "/api/v1/bi/models/wes-draft@1/preview-as", reader("wes"), Map.of("role", "bi-risk", "query", q)));
+        assertThat(risk.path("refused").isMissingNode()).as(risk.toString()).isTrue();
+        assertThat(risk.path("rows")).hasSize(3);
+        JsonNode head = ok(call("POST", "/api/v1/bi/models/wes-draft@1/preview-as", reader("wes"), Map.of("role", "desk-head", "query", q)));
+        assertThat(head.path("rows")).as("a rule on user.desks with no attributes: no rows").isEmpty();
+        call("POST", "/api/v1/bi/models/wes-draft@1/preview-as", reader("rita"), Map.of("role", "bi-risk", "query", q)).andExpect(status().isNotFound());
+    }
 }

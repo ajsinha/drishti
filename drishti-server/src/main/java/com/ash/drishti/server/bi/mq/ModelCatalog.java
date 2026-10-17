@@ -329,7 +329,7 @@ public final class ModelCatalog {
         return bound(p, implicitOf(d));
     }
 
-    private MqService.Bound bound(Principal p, Found f) {
+    MqService.Bound bound(Principal p, Found f) {
         ModelView v = f.view();
         QueryService.Caller who = datasets.caller(p, v.flat());
         MqValidator.Context ctx = new MqValidator.Context(who.masks(), who.roles(), who.attributes(), who.enforce(), datasets.currentDate(), datasets.calendar());
