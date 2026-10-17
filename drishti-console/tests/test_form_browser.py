@@ -302,3 +302,31 @@ def test_the_forms_home_and_the_icons_fit_a_laptop_and_a_phone(browser, url):
     for sel in ("a.qh-kind", "[data-forms-filter]"):
         assert ph.locator(sel).first.bounding_box()["height"] >= 43.5, sel
     ctx.close()
+
+
+def test_endur_and_comswap_offer_only_their_sub_types_and_find_only_endur_swaps(page, url, be):
+    """The production-shaped trade form: ticking ENDUR and ComSwap (a long list, so a drop-down) leaves the two ComSwap sub types in the
+    sub type drop-down, and the results are Endur ComSwap trades only, with their source system in a column."""
+    be.systems = True
+    try:
+        page.goto(url + "/form/trading", wait_until="load")
+        page.locator('input[name="v.SOURCE_SYSTEM"][value="ENDUR"]').check()
+        types = page.locator('details.ms-box[data-depends]')
+        assert types.count() == 1                                                         # the sub type list is a drop-down that still depends
+        product = page.locator('.qf-field[data-field="PRODUCT_TYPE"] details.ms-box')
+        product.locator("summary").click()
+        product.locator('input[value="ComSwap"]').check()
+        product.locator(".ms-q").press("Escape")
+        offered = page.eval_on_selector_all('.qf-field[data-field="PRODUCT_SUB_TYPE"] input[type=checkbox]',
+                                            "els => els.filter(e => !e.closest('.qf-dep-off')).map(e => e.value)")
+        assert sorted(offered) == ["ENGY-B-SWAP", "ENGY-SWAP"]
+        page.get_by_role("button", name="Search").first.click()
+        page.wait_for_url("**/form/trading?**")
+        assert "v.SOURCE_SYSTEM=ENDUR" in page.url and "v.PRODUCT_TYPE=ComSwap" in page.url
+        assert "SOURCE_SYSTEM = 'ENDUR'" in be.asked[-1] and "PRODUCT_TYPE = 'ComSwap'" in be.asked[-1]
+        head = page.eval_on_selector_all("table thead th", "els => els.map(e => e.innerText.trim())")
+        rows = page.eval_on_selector_all("table tbody tr", "els => els.map(r => Array.from(r.cells).map(c => c.innerText.trim()))")
+        si, pi = head.index("Source system"), head.index("Product type")
+        assert len(rows) == 2 and all(r[si] == "ENDUR" and r[pi] == "ComSwap" for r in rows)
+    finally:
+        be.systems = False

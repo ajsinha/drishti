@@ -30,6 +30,20 @@ FIELDS = [
     {"path": "isActive", "label": "Active", "type": "bool", "operators": ["is"], "group": "Money", "indexed": True},
     {"path": "internalNote", "label": "Note", "type": "text", "operators": ["equals"], "hidden": True, "indexed": False},
 ]
+# the production-shaped trade of three source systems (FormBackend.systems): a product sub type that follows the product type
+SYSTEM_FIELDS = [
+    {"path": "SOURCE_SYSTEM", "label": "Source system", "type": "enum", "operators": ["in"], "values": ["CALYPSO", "ENDUR", "MUREX"], "indexed": True},
+    {"path": "PRODUCT_TYPE", "label": "Product type", "type": "enum", "operators": ["in"], "indexed": True,
+     "values": ["CallNot", "Cash", "ComFut", "ComSwap", "Commodity", "FX_SPOT", "IRS_FIXFLOAT", "OIS"]},
+    {"path": "PRODUCT_SUB_TYPE", "label": "Product sub type", "type": "enum", "operators": ["in"], "indexed": True, "depends": "PRODUCT_TYPE",
+     "values": ["CASH", "COMM-WARRANTS-INV", "ENGY-B-SWAP", "ENGY-EXCH-FUT", "ENGY-SWAP", "FX spot", "Interest rate swap (fixed/float)", "NGX-COMM-PHYS",
+                "NOSTRO", "Overnight index swap"],
+     "parents": {"CASH": ["Cash"], "COMM-WARRANTS-INV": ["Commodity"], "ENGY-B-SWAP": ["ComSwap"], "ENGY-EXCH-FUT": ["ComFut"], "ENGY-SWAP": ["ComSwap"],
+                 "FX spot": ["FX_SPOT"], "Interest rate swap (fixed/float)": ["IRS_FIXFLOAT"], "NGX-COMM-PHYS": ["Commodity"], "NOSTRO": ["CallNot"],
+                 "Overnight index swap": ["OIS"]}},
+]
+SYSTEM_ROWS = [("1000001", "ENDUR", "ComSwap"), ("1000003", "ENDUR", "ComSwap"), ("1000004", "ENDUR", "ComFut"), ("CLY-3000001", "CALYPSO", "FX_SPOT"),
+               ("MX-20000001", "MUREX", "IRS_FIXFLOAT")]
 ROWS = [("IRS-48213", "Meridian Bank", "BOOK-FI-1", -412580.5), ("IRS-47102", "Northbridge", "BOOK-FI-2", 1250000.0), ("CFT-77120", "Meridian Bank", "BOOK-CREDIT-1", 99000.0)]
 
 
@@ -43,6 +57,7 @@ class FormBackend(FakeBackend):
         self.settings_patched = []
         self.saved = []
         self.declared = True
+        self.systems = False               # the production-shaped trade form (SYSTEM_FIELDS) instead of FIELDS
 
     async def packs(self, ident=None):
         return [{"name": "trading", "version": "1.0.0", "title": "Trading", "description": "Trades.", "assigned": True, "active": True, "kinds": ["trade", "desk-pnl"]},
@@ -54,7 +69,7 @@ class FormBackend(FakeBackend):
         kinds = [{"kind": "trade", "mnemonic": "TRD", "label": "Trade", "declared": self.declared},
                  {"kind": "desk-pnl", "mnemonic": "DPNL", "label": "Desk P&L", "declared": False}]
         k = kind or "trade"
-        fields = FIELDS if k == "trade" else [{"path": "desk", "label": "Desk", "type": "text", "operators": ["equals"], "indexed": False}]
+        fields = (SYSTEM_FIELDS if self.systems else FIELDS) if k == "trade" else [{"path": "desk", "label": "Desk", "type": "text", "operators": ["equals"], "indexed": False}]
         return {"pack": "trading", "code": "TRDS", "title": "Trading", "kinds": kinds, "kind": k, "mnemonic": "TRD" if k == "trade" else "DPNL",
                 "form": {"kind": k, "inferred": not self.declared, "fields": fields}}
 
@@ -80,6 +95,12 @@ class FormBackend(FakeBackend):
 
     async def search(self, q, ident=None):
         self.asked.append(q)
+        if self.systems:                   # the trades whose system and product type the command names
+            rows = [r for r in SYSTEM_ROWS if ("SOURCE_SYSTEM" not in q or f"SOURCE_SYSTEM = '{r[1]}'" in q) and ("PRODUCT_TYPE" not in q or f"PRODUCT_TYPE = '{r[2]}'" in q)]
+            return {"kind": "trade", "mnemonic": "TRD", "columns": ["$.SOURCE_SYSTEM", "$.PRODUCT_TYPE"],
+                    "labels": {"$.SOURCE_SYSTEM": "Source system", "$.PRODUCT_TYPE": "Product type"},
+                    "rows": [{"ref": {"kind": "trade", "id": r[0]}, "title": r[0], "values": {"$.SOURCE_SYSTEM": r[1], "$.PRODUCT_TYPE": r[2]}} for r in rows],
+                    "scanned": 9000, "matched": len(rows), "partial": False, "failed": [], "elapsedMs": 3.1}
         rows = [r for r in ROWS if "Meridian" not in q or r[1] == "Meridian Bank"]
         return {"kind": "trade", "mnemonic": "TRD", "columns": ["$.counterparty.name", "$.book", "$.mtm"],
                 "labels": {"$.counterparty.name": "Counterparty name", "$.book": "Book", "$.mtm": "MTM"},
