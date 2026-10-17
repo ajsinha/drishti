@@ -114,18 +114,30 @@ public final class PackModels {
         String source = "";
         boolean data = false;
         if (plugin.isPresent()) {
+            // a connector of a union (one source system of several) is described with its siblings: a column is a number only when it is a
+            // number in every one of them (ENDUR's TRADE_ID is numeric, CALYPSO's and MUREX's are text)
+            List<SourcePlugin> members = sources.plugins("", kind);
+            List<SourcePlugin> read = members.size() > 1 && members.contains(plugin.get()) ? members : List.of(plugin.get());
             List<String> paths = plugin.get().columnar(kind).stream().sorted().toList();
             if (!paths.isEmpty()) {
-                source = "the connector's promoted columns";
-                Optional<ColumnSet> sample = Optional.empty();
-                try {
-                    sample = plugin.get().columns(kind, paths, AsOf.LATEST);
-                } catch (Exception e) {
-                    source += " (not readable now: " + e.getMessage() + ")";
+                source = read.size() > 1 ? "the promoted columns of its " + read.size() + " connectors" : "the connector's promoted columns";
+                Map<String, String> types = new LinkedHashMap<>();
+                for (SourcePlugin member : read) {
+                    Optional<ColumnSet> sample = Optional.empty();
+                    try {
+                        sample = member.columns(kind, paths, AsOf.LATEST);
+                    } catch (Exception e) {
+                        source += " (not readable now: " + e.getMessage() + ")";
+                    }
+                    data |= sample.isPresent() && sample.get().size() > 0;
+                    for (String path : paths) {
+                        String t = sample.map(x -> typeOf(x, path)).orElse(null);
+                        types.merge(path, t == null ? "?" : t, PackModels::wider);
+                    }
                 }
-                data = sample.isPresent() && sample.get().size() > 0;
                 for (String path : paths) {
-                    cols.add(new ColumnInfo(columnName(path), path, sample.map(s -> typeOf(s, path)).orElse("string"), true));
+                    String t = types.getOrDefault(path, "?");
+                    cols.add(new ColumnInfo(columnName(path), path, "?".equals(t) ? "string" : t, true));
                 }
             }
         }
@@ -134,6 +146,17 @@ public final class PackModels {
             cols.addAll(fromSamples(pack, kind));
         }
         return new TableInfo(table, pack.name(), kind, connector, data, source, cols);
+    }
+
+    /** The type that holds both: the same type, else text ({@code ?}: not read from that connector, says nothing). */
+    static String wider(String a, String b) {
+        if ("?".equals(a)) {
+            return b;
+        }
+        if ("?".equals(b) || a.equals(b)) {
+            return a;
+        }
+        return "string";
     }
 
     private static String typeOf(ColumnSet s, String path) {

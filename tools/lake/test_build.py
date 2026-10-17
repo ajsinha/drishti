@@ -50,7 +50,8 @@ _STORE = None
 
 
 def setUpModule():
-    """The BI-store stamp a build leaves goes to a temporary folder, never the repository's data/."""
+    """The BI-store stamp a build leaves goes to a temporary folder, never the repository's data/; the lakes the tests build count as the
+    server's lake (DRISHTI_DELTA_ROOT is set per test), except where a test says otherwise."""
     global _STORE
     _STORE = tempfile.TemporaryDirectory()
     os.environ["DRISHTI_BI_STORE"] = _STORE.name
@@ -58,6 +59,7 @@ def setUpModule():
 
 def tearDownModule():
     os.environ.pop("DRISHTI_BI_STORE", None)
+    os.environ.pop("DRISHTI_DELTA_ROOT", None)
     _STORE.cleanup()
 
 
@@ -124,6 +126,7 @@ class BuildTest(unittest.TestCase):
         self.tmp.cleanup()
 
     def base(self, **kw):
+        os.environ["DRISHTI_DELTA_ROOT"] = str(self.lake)          # the server reads this lake: a build leaves the stamp
         d = dict(src=[str(self.src)], lake=str(self.lake), domain="trading", kind="deal", key="TRADE_ID", date="TRADE_DATE",
                  partition_by=["PRODUCT_TYPE"], promote=["NOTIONAL,BOOK.NAME"], engine="deltalake")
         d.update(kw)
@@ -267,6 +270,12 @@ class BuildTest(unittest.TestCase):
         code, s = build.run(self.base(), quiet)
         self.assertEqual(code, 0, s.get("error"))
         self.assertTrue(json.loads(stamp.read_text())["table"].endswith("deal"))
+        stamp.unlink()
+        base = self.base()
+        os.environ["DRISHTI_DELTA_ROOT"] = str(self.root / "another-lake")   # a scratch lake the server does not read: no stamp
+        code, s = build.run(base, quiet)
+        self.assertEqual(code, 0, s.get("error"))
+        self.assertFalse(stamp.exists())
 
 
 @unittest.skipUnless(__import__("writers").java_command(None, None), "Drishti's writer: build the server jar or set DRISHTI_LAKE_CLASSPATH")

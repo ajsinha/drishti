@@ -318,7 +318,7 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say) -> tuple[int, dic
             if any(not s.get("ok") for s in sig):
                 code = EXIT_PARTIAL
                 summary["status"] = "partial"
-        if not a.no_stamp and (not a.signal or any(not s.get("ok") for s in summary.get("signal") or [])):
+        if not a.no_stamp and served_lake(lake) and (not a.signal or any(not s.get("ok") for s in summary.get("signal") or [])):
             summary["stamp"] = str(leave_stamp(lake, table, summary))
         prog.update(force=True, phase="done", status=summary["status"])
         return _finish(a, lake, summary, code, started, say)
@@ -369,6 +369,16 @@ def bi_store() -> pathlib.Path:
     """The server's BI store: DRISHTI_BI_STORE, else <data>/bi-store (DRISHTI_DATA_DIR, else the repository's data folder)."""
     data = pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or (HERE.parents[1] / "data"))
     return pathlib.Path(os.environ.get("DRISHTI_BI_STORE") or (data / "bi-store"))
+
+
+def served_lake(lake) -> bool:
+    """Whether the lake is the one the server reads: DRISHTI_DELTA_ROOT, else <data>/delta. A scratch lake elsewhere leaves no stamp, so a
+    server's next start does not clear its BI store for data it never reads."""
+    if lake is None:
+        return False
+    data = pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or (HERE.parents[1] / "data"))
+    served = pathlib.Path(os.environ.get("DRISHTI_DELTA_ROOT") or (data / "delta"))
+    return pathlib.Path(lake).resolve() == served.resolve()
 
 
 def leave_stamp(lake, table, summary) -> pathlib.Path:
