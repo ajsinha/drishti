@@ -64,6 +64,7 @@ A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), t
 19. Export, subscriptions and alerts · 20. Python · 21. Analyse · 22. With AI (below)
 23. [Models and pack datasets: the model layer (wave W1)](#23-models-and-pack-datasets-the-model-layer-wave-w1)
 24. [The languages in the console (wave A, 2.2.0)](#24-the-languages-in-the-console-wave-a-220)
+25. [Live answers and standing queries (wave B, 2.3.0)](#25-live-answers-and-standing-queries-wave-b-230)
 
 ## 1. What BI is, and is not
 
@@ -845,3 +846,52 @@ stays selectable until wave B ([ANALYSE.md](ANALYSE.md)).
 The console calls behind these (same-origin, deciding no access): `GET/POST /bi/api/expr/*` and `/bi/api/sql*` (passed to the server),
 `POST /bi/model-api/contract` (`{id, doc}` to the changes, the version and the consumers), `POST /bi/model-api/report-measures` (a report's own
 measures and perspective from its YAML), `POST /bi/model-api/compose` with `base` (the text to patch), `POST /bi/explore/dsql` (a SQL cell).
+
+## 25. Live answers and standing queries (wave B, 2.3.0)
+
+The design is [BI_DESIGN.md §4.5 and §4.6](../architecture/BI_DESIGN.md#46-standing-queries-and-incremental-maintenance); the endpoints are in
+[API_GUIDE.md](API_GUIDE.md#models-and-the-model-query-language-apiv1bi-wave-w1); the settings are `drishti.bi.mq.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
+
+**Three times, one plan.** Every question is asked at a time, bound per dataset of the model:
+
+| `time:` | A live dataset reads | A snapshot dataset reads | Subscribable |
+|---|---|---|---|
+| (none) or `live: true` | its in-memory current state | the current business date (or the latest date it holds) | yes |
+| `as-of: 2026-10-09` | its history sampled at the end of that day (refused `DRS-9157` without one) | that date's partition | today only (a past date never changes: `DRS-9183`) |
+| `window: { from, to }` / `{ last: 1h }` | its history over the window | the partitions in the window | yes |
+
+So a model can mix a live trades table with snapshot desks: the plan says which scan reads what (`explain`: each scan's `time` is `live`, `current` or the
+date). In DEL, `as_of(measure('MTM'), shift_date(asof(), -1))` asks the same measure at another date inside one visual.
+
+**Asking and subscribing.** A board, a report and an alert all subscribe the same way (`POST /api/v1/bi/mq/subscribe` with the model query, a throttle and
+`deliver: rows | diff | value`) and read one stream (`GET /api/v1/bi/mq/stream`). Nothing polls: when a model's data moves (a live batch, a data load, a
+refresh) the server's **generation bus** names the model, and only the subscriptions on it are evaluated.
+
+```
+curl -s -u rita:rita -H 'Content-Type: application/json' localhost:18958/api/v1/bi/mq/subscribe \
+  -d '{"query": {"mq": 1, "model": "live-desks", "select": {"fields": ["trades.desk"], "measures": ["MTM", "Trades"]}}, "throttle": "250ms", "deliver": "diff"}'
+# {"subscription": "sq_…", "throttle": "250ms", "deliver": "diff", "answer": {…}, "cursor": "g-…", "group": "sg_…", "mode": "incremental", "subscribers": 1}
+curl -sN -u rita:rita localhost:18958/api/v1/bi/mq/stream
+# event: answer   data: {"subscription": "sq_…", "cursor": "g-…", "diff": {"upsert": [["DESK-A", 12000.0, 7]], "delete": []}, "mode": "incremental"}
+# event: status   data: {"subscription": "sq_…", "state": "live", "mode": "incremental", "group": "sg_…", "lagMillis": 41, "cursor": "g-…"}
+```
+
+**One evaluation per group.** Subscriptions to the same question by readers with the same effective security (the same rows, masks and hidden fields) are
+one **group**: a morning of 500 viewers of one report with 5 distinct securities is 5 evaluations per visual. Each subscriber still has its own throttle and
+gets the newest answer when its throttle has passed (latest wins; nothing queues).
+
+**How a group is kept current** (its `mode`):
+
+| Mode | When | What happens on a live change |
+|---|---|---|
+| `incremental` | `sum`, `count`, `avg` (and arithmetic of them) of the live table's own columns, grouped by its columns; your row rules on that table | each changed row's old contribution is taken out of its group and the new one put in; no query |
+| `incremental` | `min`, `max`, `distinct`, `percentile`, or rules only the engine can work out | the groups the changed rows touch are asked again |
+| `recompute` | filter contexts (`share_of`, `calc(…, ignore=)`), fields of another table, `top` filters, loads and refreshes | the question is asked again |
+| `tick` | windows, time intelligence, Python measures, or a model over its maintenance budget | asked again every `drishti.bi.mq.tick` |
+
+**States.** `live` (current), `throttled` (an evaluation took longer than the throttle three times: the throttle doubled), `tick` (the model's standing
+queries spent more than `drishti.bi.mq.maintenance-budget` in a second: they are recomputed on the tick until a quiet second), `failed` (the reason is in the
+status event). A change of your roles or `user.*` attributes changes your security signature: your subscriptions are re-planned, never patched.
+
+**Back-dated loads.** A load for an earlier business date moves that date's answers only: an as-of answer of another date keeps its cache entry, and a
+standing query that reads later dates is not evaluated again.

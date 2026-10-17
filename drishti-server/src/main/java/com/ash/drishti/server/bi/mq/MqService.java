@@ -49,19 +49,35 @@ public final class MqService {
      * and the generation of the model's data (null: answers are not cached, as in the tests of the engine).
      */
     public record Bound(ModelView view, Runner runner, MqValidator.Context context, SecuritySignature.Reader security, java.util.function.LongSupplier generation,
-            Envelope envelope) {
+            Envelope envelope, java.util.function.Function<java.time.LocalDate, Long> generationAt) {
 
         public Bound(ModelView view, Runner runner, MqValidator.Context context) {
-            this(view, runner, context, MqPlans.reader(context), null, null);
+            this(view, runner, context, MqPlans.reader(context), null, null, null);
         }
 
         public Bound(ModelView view, Runner runner, MqValidator.Context context, SecuritySignature.Reader security, java.util.function.LongSupplier generation) {
-            this(view, runner, context, security, generation, null);
+            this(view, runner, context, security, generation, null, null);
+        }
+
+        public Bound(ModelView view, Runner runner, MqValidator.Context context, SecuritySignature.Reader security, java.util.function.LongSupplier generation,
+                Envelope envelope) {
+            this(view, runner, context, security, generation, envelope, null);
         }
 
         /** The same reader, limited to what a published consumer can ask (section 5.3: no read on the model). */
         public Bound within(Envelope e) {
-            return new Bound(view, runner, context, security, generation, e);
+            return new Bound(view, runner, context, security, generation, e, generationAt);
+        }
+
+        /**
+         * The generation an answer's cache entry is keyed by: for an answer as of a date, that date's generation only (wave B, back-dated refresh: a load
+         * for another date leaves it); else the model's.
+         */
+        public long generationFor(LogicalPlan plan, ModelQuery q) {
+            if (plan.immutable() && q.time().asOf() != null && generationAt != null) {
+                return generationAt.apply(q.time().asOf());
+            }
+            return generation.getAsLong();
         }
 
         /** The reader's security signature on this model (opaque). */
@@ -164,8 +180,11 @@ public final class MqService {
      * engine's rule (refused over {@code drishti.bi.query.max-rows}, {@code DRS-9022}) instead of the language's default cut; the consumers that predate the
      * language (a report visual, an extract, an alert) ask that way, so their answers are what they were.
      */
-    public Ran run(Bound b, ModelQuery q, boolean explain, boolean engineLimit) {
-        long t0 = System.nanoTime();
+    /** A query validated, compiled and planned as the bound reader, before it runs: what a standing query's maintainer needs (wave B). */
+    public record Prepared(MqValidator.Checked checked, MqCompiler.Compiled compiled, LogicalPlan plan, QueryRequest main) {}
+
+    /** Validates, compiles and plans a query as the bound reader (stages 1 to 6), without running it ({@code top} filters are resolved by asking). */
+    public Prepared prepare(Bound b, ModelQuery q, boolean engineLimit) {
         ObjectSecurity.check(b.view(), q, b.security().hidden());                    // a hidden field or measure does not exist for the reader
         if (b.envelope() != null) {
             b.envelope().check(q, b.view());                                         // a report-only reader: what the report can ask, nothing else
@@ -173,13 +192,23 @@ public final class MqService {
         MqValidator.Checked c = MqValidator.validate(b.view(), q, b.context(), props);
         MqCompiler.Compiled compiled = MqCompiler.compile(b.view(), c, b.context(), props, tq -> b.runner().run(c.dataset(), tq, false));
         LogicalPlan plan = MqPlans.plan(b.view(), c, compiled, b.security());          // stages 3 to 6: bind, secure, guard, optimise
-        String signature = b.signature();
         QueryRequest main = Lowering.request(plan, compiled.main());
         if (engineLimit && q.limit() == null) {
             main = new QueryRequest(main.fields(), main.measures(), main.filters(), main.from(), main.to(), main.orderBy(), null, main.layer(), main.detail());
         }
+        return new Prepared(c, compiled, plan, main);
+    }
+
+    public Ran run(Bound b, ModelQuery q, boolean explain, boolean engineLimit) {
+        long t0 = System.nanoTime();
+        Prepared prepared = prepare(b, q, engineLimit);
+        MqValidator.Checked c = prepared.checked();
+        MqCompiler.Compiled compiled = prepared.compiled();
+        LogicalPlan plan = prepared.plan();
+        String signature = b.signature();
+        QueryRequest main = prepared.main();
         ResultCache.Key key = cache.enabled() && b.generation() != null && !explain
-                ? new ResultCache.Key(plan.hash() + (engineLimit ? "|engine-limit" : "") + "|top:" + tops(compiled), signature, b.generation().getAsLong(), plan.immutable()) : null;
+                ? new ResultCache.Key(plan.hash() + (engineLimit ? "|engine-limit" : "") + "|top:" + tops(compiled), signature, b.generationFor(plan, q), plan.immutable()) : null;
         Ran hit = key == null ? null : cache.get(key);
         if (hit != null) {
             return new Ran(q, c, compiled, servedAgain(hit.raw()), servedAgain(hit.shown()), hit.totals(), hit.warnings(), t0, plan, signature, true);

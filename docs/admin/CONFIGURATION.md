@@ -1304,9 +1304,16 @@ default throttle is `drishti.bi.live.frame`; its stream's heartbeat is `drishti.
 | `max-subscriptions` | `500` | Standing queries open at once on the server (`429 DRS-9181`). |
 | `max-subscriptions-per-user` | `20` | Standing queries open at once for one person (`429 DRS-9182`). |
 | `min-throttle` | `100ms` | The shortest throttle a subscription may ask for (a shorter one is raised to it). |
-| `poll` | `100ms` | How often a stream looks for a new data generation of its subscriptions' models. |
+| `poll` | `100ms` | The step of a stream's wait (wave B: answers are pushed by the generation bus when a model's data moves; a stream is woken by its subscriptions' groups, so this only bounds how late a throttled delivery is sent). |
 | `idle-close` | `10m` | A subscription that no stream has read for this long is dropped. |
 | `pack-live` | `true` | A pack-generated dataset (`pack.<pack>.<kind>`) is `live` when the kind's connector pushes (decision D6), else `snapshot`; `false` keeps every one a snapshot. |
+| `maintenance-budget` | `250ms` | (wave B) Per model, the time keeping its standing queries current may take in each second; past it the model's groups are recomputed every `tick` and say `tick` (status and the `drishti_bi_sq_mode` metric) until a second spends less than half of it. |
+| `tick` | `5s` | (wave B) How often a standing query in tick mode is recomputed: windows, time intelligence and Python measures, and every query of a model over its maintenance budget. |
+
+Wave B ([BI_DESIGN.md §4.6](../architecture/BI_DESIGN.md#46-standing-queries-and-incremental-maintenance)): subscriptions are grouped by plan hash and security
+signature (one evaluation per group, `subscribers` in the subscribe answer); a group is kept current by difference (`sum`, `count`, `avg` of the live table's
+own columns, the reader's rules worked out per changed row), by asking the touched groups again (`min`, `max`, `distinct`, rules the engine works out), by
+asking the whole question again (contexts, fields of other tables, loads and refreshes), or on the tick. A group no subscriber reads stays 30 s.
 
 ### `drishti.bi.plan` — the logical plan, the result cache and the guards
 

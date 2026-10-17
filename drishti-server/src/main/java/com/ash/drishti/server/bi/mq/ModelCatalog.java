@@ -346,10 +346,20 @@ public final class ModelCatalog {
         java.util.Set<String> hidden = ObjectSecurity.hidden(v, who.roles());
         com.ash.drishti.server.bi.plan.SecuritySignature.Reader security = new com.ash.drishti.server.bi.plan.SecuritySignature.Reader(who.user(), who.enforce(), who.roles(),
                 who.attributes(), who.masks(), who.denied(), hidden);
-        return new MqService.Bound(v, run, ctx, security, () -> generation(p, v));
+        return new MqService.Bound(v, run, ctx, security, () -> generation(p, v), null, d -> datasets.generationAt(v.key(), d));
     }
 
     /** The generation the model's data is at (its layers and live tables), for a standing query. */
+    /** The generation bus of this node. */
+    public com.ash.drishti.server.bi.engine.GenerationBus bus() {
+        return datasets.bus();
+    }
+
+    /** A running live table of a model's (its layer key's) generation. */
+    public long liveGeneration(String key, String table) {
+        return datasets.liveGeneration(key, table);
+    }
+
     public long generation(Principal p, ModelView v) {
         return datasets.generation(v.id(), v.key(), v.flat());
     }

@@ -55,17 +55,17 @@ import org.junit.jupiter.api.io.TempDir;
  * values that did not change, retention by rows and by age, deletions, the burst of updates merged into one write, and the reader's row rules and masks applied
  * to every answer (an update changes the rows, never what a reader may see).
  */
-class LiveTablesTest {
+public class LiveTablesTest {
 
     /** The lake's trades as pushable entities. */
-    static final class LiveLake extends TestLake {
-        final Map<EntityRef, EntityDocument> docs = new ConcurrentHashMap<>();
+    public static final class LiveLake extends TestLake {
+        public final Map<EntityRef, EntityDocument> docs = new ConcurrentHashMap<>();
         final Map<EntityRef, List<Consumer<EntityDocument>>> listeners = new ConcurrentHashMap<>();
         final AtomicLong generation = new AtomicLong(1);
         final AtomicLong reads = new AtomicLong();
         volatile boolean pushes = true;
 
-        LiveLake() {
+        public LiveLake() {
             super(true, 20);
             Collection<EntityRef> refs = super.ids("trade", current, 1000);
             super.read(refs, current).forEach(docs::put);
@@ -99,7 +99,7 @@ class LiveTablesTest {
         }
 
         /** The source changes a field of an entity and pushes it. */
-        void set(String id, String field, Object value) {
+        public void set(String id, String field, Object value) {
             EntityRef ref = EntityRef.of("trade", id);
             Map<String, Object> m = new LinkedHashMap<>(asMap(docs.get(ref).data()));
             m.put(field, value);
@@ -108,7 +108,7 @@ class LiveTablesTest {
             listeners.getOrDefault(ref, List.of()).forEach(l -> l.accept(next));
         }
 
-        void add(String id, String desk, double notional, double mtm) {
+        public void add(String id, String desk, double notional, double mtm) {
             EntityRef ref = EntityRef.of("trade", id);
             Map<String, Object> m = new LinkedHashMap<>(asMap(docs.values().iterator().next().data()));
             m.put("tradeId", id);
@@ -118,7 +118,7 @@ class LiveTablesTest {
             docs.put(ref, new EntityDocument(ref, DataNode.of(m), new Provenance("test", generation.incrementAndGet(), Instant.now(), true)));
         }
 
-        void remove(String id) {
+        public void remove(String id) {
             EntityRef ref = EntityRef.of("trade", id);
             EntityDocument gone = EntityDocument.deleted(ref, new Provenance("test", generation.incrementAndGet(), Instant.now(), true));
             docs.remove(ref);

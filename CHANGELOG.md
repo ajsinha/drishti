@@ -46,6 +46,19 @@
   base) and `convert` (each amount by its own column's currency, at the as-of date, the trade date or another date column), which lifts the currency
   guard. A measure written with a balance function is not semi-additive any more; one that is, added across dates with other measures, is refused
   (`DRS-9159`) with the balance functions as the fix. Calculation groups no longer hide a measure's currency from the guard.
+- **Server: time modes and standing queries (wave B task 3).** A **generation bus** (`engine/GenerationBus`) publishes every change of a model's data
+  once, in order: a live batch with its rows (written, before, removed), a data load or refresh with its business date (`backdated` before the current
+  one), a history sample; standing queries are **pushed** (the stream waits on its groups, no polling of generations). Subscriptions are grouped by
+  **(plan hash, security signature)** (`StandingQueryRegistry`): one evaluation per group, a second subscriber gets the group's answer without one
+  (`group`, `mode`, `subscribers` in the subscribe answer). A group's **`Maintainer`** keeps it current by the rules of BI_DESIGN §4.6: `sum`, `count`,
+  `avg` (and arithmetic of them) of the live table's own columns **by difference** (the reader's row rules and the query's filters worked out per
+  changed row), `min`/`max`/`distinct`/`percentile` by asking the **touched groups** again, contexts and fields of other tables by asking again, windows,
+  time intelligence and Python **on the tick**. A per-model **maintenance budget** (`drishti.bi.mq.maintenance-budget`, `tick`) degrades a busy model's
+  groups to tick mode (`state: tick`); an overrun doubles the throttle; a security change re-plans the group. Each plan scan is bound to its own time
+  (**mixed live/snapshot**: `live` for a live table, `current` for a snapshot one asked live). **Back-dated refresh:** a load for an earlier date
+  moves only that date's generation (`Layers.generation(key, date)`): an as-of answer of another date keeps its L1 entry, a standing query that reads
+  later dates is not evaluated again. Property test: a board (rows), a report (diff) and an alert (value) for three readers over one live model equal
+  the same query asked now after random update streams.
 
 ## 2.2.0 — Datasets and data models rooted in packs, a Python-like expression language, read-only SQL, one query plan (2026-10-17)
 

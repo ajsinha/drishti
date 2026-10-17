@@ -278,20 +278,19 @@ public class MqController {
         bi.requirePower(p, BiAccess.BI);
         List<String> wanted = standing.mine(p, ids == null || ids.isBlank() ? List.of() : Arrays.stream(ids.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());
         SseEmitter emitter = new SseEmitter(0L);
-        long poll = mq.properties().poll().toMillis();
+        long beat = live.status().toMillis();
         executor.execute(() -> {
             try {
                 emitter.send(SseEmitter.event().name("status").data(json.writeValueAsString(Map.of("subscriptions", wanted))));
-                long quiet = 0;
+                long quietSince = System.nanoTime();
                 while (!Thread.currentThread().isInterrupted()) {
-                    Thread.sleep(poll);
-                    quiet += poll;
-                    for (StandingQueries.Event e : standing.poll(wanted)) {
+                    long left = Math.max(1, beat - (System.nanoTime() - quietSince) / 1_000_000);
+                    for (StandingQueries.Event e : standing.await(wanted, left)) {     // woken by the groups it reads (pushed by the generation bus)
                         emitter.send(SseEmitter.event().name(e.name()).data(json.writeValueAsString(e.data())));
-                        quiet = 0;
+                        quietSince = System.nanoTime();
                     }
-                    if (quiet >= live.status().toMillis()) {
-                        quiet = 0;
+                    if ((System.nanoTime() - quietSince) / 1_000_000 >= beat) {
+                        quietSince = System.nanoTime();
                         List<StandingQueries.Event> status = standing.status(wanted);
                         if (status.isEmpty()) {
                             emitter.complete();                            // every subscription of the stream was closed

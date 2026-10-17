@@ -85,7 +85,7 @@ public final class Planner {
             List<PlanNode> scans = new ArrayList<>();
             for (String t : p.tables()) {
                 Source s = in.sources().getOrDefault(t, new Source(ds.name(), Integer.toString(ds.version())));
-                scans.add(shaped(ds.tables().get(t), new PlanNode.SecureScan(t, s.dataset(), s.version(), in.time(), List.of(), List.of(), List.of(), List.of(), List.of(), false)));
+                scans.add(shaped(ds.tables().get(t), new PlanNode.SecureScan(t, s.dataset(), s.version(), scanTime(ds.tables().get(t), in.time()), List.of(), List.of(), List.of(), List.of(), List.of(), false)));
             }
             List<PlanNode.Cond> conds = in.rowConditions().stream().filter(c -> p.tables().contains(alias(c.field()))).toList();
             PlanNode source = new PlanNode.Filter(scans, conds);
@@ -113,6 +113,20 @@ public final class Planner {
         columns.addAll(measures);
         node = new PlanNode.Answer(node, columns, in.rows() ? "rows" : "grouped", in.binding());
         return new LogicalPlan(node, in.model(), in.version(), in.time(), in.totals(), in.ids());
+    }
+
+    /**
+     * The time a scan is bound to (section 4.5, mixed modes): a live table asked live or for the current state reads its in-memory state ({@code live}); a
+     * snapshot table asked live reads the current business date ({@code current}); an as-of date or a window binds every scan alike.
+     */
+    static String scanTime(Dataset.Table t, String time) {
+        if (t == null || time.startsWith("as-of ") || time.startsWith("window ") || time.startsWith("last ")) {
+            return time;
+        }
+        if (t.isLive()) {
+            return "live";
+        }
+        return "live".equals(time) ? "current" : time;
     }
 
     /** A dataset's own derivation above its scan (section 3.6): de-duplication, derived columns, grouping, as the engine applies them. */

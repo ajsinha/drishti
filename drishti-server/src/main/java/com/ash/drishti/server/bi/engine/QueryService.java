@@ -76,6 +76,7 @@ public final class QueryService implements AutoCloseable {
     private final AnalyticEngine engine;
     private final Layers layers;
     private final LiveTables liveTables;
+    private final GenerationBus bus = new GenerationBus();
     private final SourceGateway sources;
     private final Cache<String, Result> cache;
     private final Semaphore slots;
@@ -94,7 +95,7 @@ public final class QueryService implements AutoCloseable {
         this.props = props;
         this.engine = engine;
         this.sources = sources;
-        this.liveTables = new LiveTables(engine, sources, liveProps, clock);
+        this.liveTables = new LiveTables(engine, sources, liveProps, clock, bus);
         this.layers = new Layers(engine, sources, props, clock);
         this.slots = new Semaphore(props.maxConcurrent(), true);
         // one budget in bytes; every entry weighs at least budget / entries, so the entry count is bounded too
@@ -103,6 +104,11 @@ public final class QueryService implements AutoCloseable {
         this.cache = props.cacheEntries() == 0 ? null : Caffeine.newBuilder().maximumWeight(budget)
                 .weigher((String k, Result v) -> (int) Math.min(Integer.MAX_VALUE, Math.max(floor, 256L + (long) v.rows() * Math.max(1, v.columns().size()) * 24)))
                 .expireAfterWrite(props.cacheTtl()).build();
+    }
+
+    /** The generation bus of this node (wave B): live batches, loads and refreshes, pushed to standing queries. */
+    public GenerationBus bus() {
+        return bus;
     }
 
     public Layers layers() {
@@ -675,6 +681,7 @@ public final class QueryService implements AutoCloseable {
                 continue;
             }
             touched.add(ds.id());
+            bus.publish(new GenerationBus.Notice(ds.key(), null, date != null && date.isBefore(sources.currentDate()) ? "backdated" : "load", date, layers.generation(ds.key()), null));
             if (cache != null) {
                 cache.asMap().keySet().removeIf(k -> k.startsWith(ds.key() + "|"));
             }
@@ -737,6 +744,7 @@ public final class QueryService implements AutoCloseable {
                 }
             }
         }
+        bus.publish(new GenerationBus.Notice(ds.key(), null, date.isBefore(sources.currentDate()) ? "backdated" : "refresh", date, layers.generation(ds.key()), null));
         return new Refreshed(shown, tables.stream().map(Dataset.Table::name).toList(), rows, Math.round((System.nanoTime() - t0) / 1e6), warnings.stream().distinct().toList());
     }
 
@@ -757,6 +765,7 @@ public final class QueryService implements AutoCloseable {
     @Override
     public void close() {
         liveTables.close();
+        bus.close();
         engine.close();
     }
 }

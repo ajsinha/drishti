@@ -28,14 +28,24 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param maxSubscriptions standing queries open at once on the server
  * @param maxSubscriptionsPerUser standing queries open at once for one user
  * @param minThrottle the shortest throttle a subscription may ask for
- * @param poll how often the standing queries look for a new data generation
+ * @param poll the longest a stream waits before it looks again (wave B: answers are pushed; this is the stream's heartbeat step)
  * @param idleClose a subscription no stream has read for this long is closed
  * @param packLive true: a pack-generated dataset is {@code live} where the kind's connector pushes (decision D6); false keeps every one a snapshot
+ * @param maintenanceBudget per model, the time standing-query maintenance may take in each second (default 250ms); beyond it the model's standing queries
+ *     are recomputed on the tick and say {@code tick}
+ * @param tick how often a standing query in tick mode (windows, time intelligence, Python, or over the maintenance budget) is recomputed
  */
 @ConfigurationProperties("drishti.bi.mq")
 public record MqProperties(Integer maxDays, Integer groupedLimit, Integer rowsLimit, Integer maxLimit, Integer maxSubscriptions, Integer maxSubscriptionsPerUser,
-        Duration minThrottle, Duration poll, Duration idleClose, Boolean packLive) {
+        Duration minThrottle, Duration poll, Duration idleClose, Boolean packLive, Duration maintenanceBudget, Duration tick) {
 
+    /** The properties before wave B (no maintenance budget or tick: the defaults). */
+    public MqProperties(Integer maxDays, Integer groupedLimit, Integer rowsLimit, Integer maxLimit, Integer maxSubscriptions, Integer maxSubscriptionsPerUser,
+            Duration minThrottle, Duration poll, Duration idleClose, Boolean packLive) {
+        this(maxDays, groupedLimit, rowsLimit, maxLimit, maxSubscriptions, maxSubscriptionsPerUser, minThrottle, poll, idleClose, packLive, null, null);
+    }
+
+    @org.springframework.boot.context.properties.bind.ConstructorBinding
     public MqProperties {
         maxDays = positive(maxDays, 400);
         groupedLimit = positive(groupedLimit, 500);
@@ -47,6 +57,8 @@ public record MqProperties(Integer maxDays, Integer groupedLimit, Integer rowsLi
         poll = poll == null || poll.isNegative() || poll.isZero() ? Duration.ofMillis(100) : poll;
         idleClose = idleClose == null || idleClose.isNegative() || idleClose.isZero() ? Duration.ofMinutes(10) : idleClose;
         packLive = packLive == null || packLive;
+        maintenanceBudget = maintenanceBudget == null || maintenanceBudget.isNegative() || maintenanceBudget.isZero() ? Duration.ofMillis(250) : maintenanceBudget;
+        tick = tick == null || tick.isNegative() || tick.isZero() ? Duration.ofSeconds(5) : tick;
     }
 
     private static int positive(Integer v, int dflt) {
@@ -55,6 +67,6 @@ public record MqProperties(Integer maxDays, Integer groupedLimit, Integer rowsLi
 
     /** Defaults for tests and embedded use. */
     public static MqProperties defaults() {
-        return new MqProperties(null, null, null, null, null, null, null, null, null, null);
+        return new MqProperties(null, null, null, null, null, null, null, null, null, null, null, null);
     }
 }

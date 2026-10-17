@@ -205,6 +205,23 @@ class PlanTest {
         assertThat((String) meta.get("signature")).startsWith("s_");
     }
 
+    @Test
+    void aBackDatedLoadMovesOnlyThatDatesAnswers() {
+        MqService cached = new MqService(MqProperties.defaults(), new PlanProperties(100, null, null, "warn"));
+        AtomicLong generation = new AtomicLong(1);
+        Map<java.time.LocalDate, AtomicLong> byDate = new java.util.concurrent.ConcurrentHashMap<>();
+        MqService.Bound b0 = h.bind(model, MqHarness.RITA, "m");
+        MqService.Bound b = new MqService.Bound(b0.view(), b0.runner(), b0.context(), b0.security(), generation::get, null,
+                d -> byDate.computeIfAbsent(d, k -> new AtomicLong()).get());
+        String q = "{ mq: 1, model: desk-risk, select: { fields: [trades.desk], measures: [Trades] }, time: { as-of: 2026-10-08 } }";
+        assertThat(cached.run(b, MqParser.parse(q), false, false).fromCache()).isFalse();
+        generation.incrementAndGet();                                                         // a load for another date (the model's generation moves)
+        byDate.computeIfAbsent(java.time.LocalDate.of(2026, 10, 9), k -> new AtomicLong()).incrementAndGet();
+        assertThat(cached.run(b, MqParser.parse(q), false, false).fromCache()).as("an answer as of the 8th keeps its entry").isTrue();
+        byDate.computeIfAbsent(java.time.LocalDate.of(2026, 10, 8), k -> new AtomicLong()).incrementAndGet();
+        assertThat(cached.run(b, MqParser.parse(q), false, false).fromCache()).as("a load for the 8th moves it").isFalse();
+    }
+
     MqService.Bound bound(MqHarness.Reader who, AtomicLong generation) {
         MqService.Bound b = h.bind(model, who, "m");
         return new MqService.Bound(b.view(), b.runner(), b.context(), b.security(), generation::get);

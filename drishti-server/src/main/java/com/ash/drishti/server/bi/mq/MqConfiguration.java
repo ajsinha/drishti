@@ -83,6 +83,7 @@ public class MqConfiguration {
     public StandingQueries standingQueries(ModelCatalog catalog, MqService mq, MqProperties props) {
         StandingQueries standing = new StandingQueries(catalog, mq, props, Clock.systemUTC());
         catalog.consumers().source(standing::on);                         // a live subscription reads the model too
+        standing.attach(catalog.bus());                                   // wave B: changes are pushed by the generation bus, never polled
         return standing;
     }
 
