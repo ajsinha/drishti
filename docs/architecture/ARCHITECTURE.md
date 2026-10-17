@@ -29,8 +29,8 @@ engine** filling whatever the grammar does not say. A brand-new product type wit
 no Sutra at all still renders a usable view on day one; a Sutra makes it beautiful.
 
 The four reference mockups (`docs/requirements/drishti-*.png`) define the target. Their entities and Sutras ship in
-the `finance` pack (`examples/packs/finance/`), so they open only on a server that enables it (`DRISHTI_PACKS=finance`, the
-default):
+the `finance` pack (`examples/packs/finance/`), so they open only on a server that enables it (`DRISHTI_PACKS_EXTRA_DIRS=examples/packs DRISHTI_PACKS=finance`;
+it is a retired example pack since 2.3.0):
 
 | Mockup | Command | Sutra | Source |
 |---|---|---|---|

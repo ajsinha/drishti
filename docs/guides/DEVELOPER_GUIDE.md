@@ -1472,7 +1472,9 @@ Habits that keep the suite fast and reliable:
 
 - Turn the demo plugin's ticking off in Spring tests that do not test live updates:
   `"drishti.sources.plugins.demo.settings.ticking=false"`.
-- Name the packs a test needs (`"drishti.packs.enabled=finance"`) rather than relying on the default.
+- Name the packs a test needs (`"drishti.packs.enabled=trading"`) rather than relying on the default. The build sets
+  `drishti.packs.extra-dirs` to `examples/packs` and the default to `finance` for the server tests, so the tests written against the
+  retired `finance` and `logistics` packs keep them as fixtures; a new test should name shipped packs.
 - Server tests use their own identity database (`drishti-server/src/test/resources/config/application.properties`
   sets `jdbc:sqlite:target/test-identity/drishti.db`), so they never touch `./data`.
 - Prefer one assertion chain that reads like the behaviour (`assertThat(p99).as("warm p99 ms").isLessThan(50)`).

@@ -378,7 +378,7 @@ The image ships the packs it was built with. Provide yours without rebuilding th
 ```yaml
 # compose.yaml (service drishti-server)
 environment:
-  DRISHTI_PACKS: finance,my-bank
+  DRISHTI_PACKS: trading,my-bank
 volumes:
   - /srv/drishti/packs:/opt/drishti/data/packs/installed:ro      # filled by `pack deploy --to /srv/drishti/packs`
   - /srv/lake:/opt/drishti/data/delta:ro
@@ -399,7 +399,7 @@ spec:
       volumeMounts: [{ name: packs, mountPath: /packs }]
   containers:
     - name: drishti-server
-      env: [{ name: DRISHTI_PACKS, value: "finance" }, { name: DRISHTI_PACKS_DIR, value: "/packs" }]
+      env: [{ name: DRISHTI_PACKS, value: "market-risk,counterparty-risk" }, { name: DRISHTI_PACKS_DIR, value: "/packs" }]
       volumeMounts: [{ name: packs, mountPath: /packs, readOnly: true }]
 ```
 

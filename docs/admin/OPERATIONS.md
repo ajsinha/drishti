@@ -161,7 +161,7 @@ Open two terminals. In the first:
 
 ```bash
 cd /opt/drishti
-sudo -u drishti env JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 DRISHTI_PACKS=finance \
+sudo -u drishti env JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 DRISHTI_PACKS=market-risk,counterparty-risk \
   /usr/lib/jvm/java-21-openjdk-amd64/bin/java -jar drishti-server.jar   # any JDK 21 or newer; on Java 25 you may add -XX:+UseCompactObjectHeaders (Java-25-only flag, about 10% less heap; Java 21 refuses to start with it)
 ```
 
@@ -315,7 +315,7 @@ DRISHTI_TOKEN_SECRET=$(openssl rand -hex 32)
 DRISHTI_SESSION_SECRET=$(openssl rand -hex 32)
 DRISHTI_ADMIN_USER=your-name
 DRISHTI_ADMIN_PASSWORD=$(openssl rand -base64 18)
-DRISHTI_PACKS=finance
+DRISHTI_PACKS=market-risk,counterparty-risk
 EOF
 chmod 600 deploy/.env
 ```
