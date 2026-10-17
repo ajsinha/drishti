@@ -1356,7 +1356,7 @@ These are the codes an expression can raise:
 | `DRS-9127` | the old syntax or an old function name | `startsWith(trades.book, 'R')`: *'startsWith' is the old name* | `write startswith(...)` |
 | `DRS-9127` | a construct Python has and DEL does not ([section 3](#3-what-is-refused)) | `trades.mtm.sum()`: *method calls are not DEL* | `call the function on it: sum(trades.mtm)` |
 | `DRS-9129` | a function or value of a later wave | `calc(measure('MTM'), ignore=ALL)`: *calc() arrives in wave B (filter context)* | — |
-| `DRS-9152` | a field or measure that does not exist for you (a hidden column is "not found", on purpose) | `sum(trades.mtx)`: *no field 'trades.mtx'; did you mean trades.mtm?* | the suggested name |
+| `DRS-9152` | a field or measure that does not exist for you (in an expression a hidden column is "not found", on purpose; a model query that names one answers `DRS-9163`) | `sum(trades.mtx)`: *no field 'trades.mtx'; did you mean trades.mtm?* | the suggested name |
 | `DRS-9161` | a filter, sort or `in` on a field masked for you | `count(trades, where=trades.mtm < 0)` as a reader without raw | filter on a field that is not masked |
 | `DRS-9100` | the old expression syntax: refused (the default `drishti.bi.expr.legacy: refuse`); a warning only while a site sets `legacy: warn` | `[MTM] / [Trades]` | `write: measure('MTM') / measure('Trades')` |
 | `DRS-9190` | the converter could not keep the meaning of an old expression (it then leaves it as it was) | — | rewrite it by hand |

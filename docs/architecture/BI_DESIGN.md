@@ -557,7 +557,7 @@ language produce the same plan hash**, so caches and standing queries are shared
 | Predicate pushdown | moves `where` and `SemiJoin` filters into `SecureScan` and then into the source fragment | a predicate on a masked column is refused earlier (stage 4/5) |
 | Projection pruning | reads only the columns the plan uses (plus row-rule columns) | mask projection stays |
 | Grain split | measures split into per-fact `Aggregate`s (built: `SqlCompiler.expandMixed`) | fan-out guard |
-| **Aggregation (rollup) matching** | replaces `Aggregate(fact, by, measures)` + its scans by a rollup read when the rollup's `by` covers fields, filters and **row-rule columns**, and holds the measures' components | a rollup is per dataset version and generation; row-rule columns must be in `by`, else no match (security first) |
+| **Aggregation (rollup) matching** | replaces `Aggregate(fact, by, measures)` + its scans by a rollup read when the rollup's `by` covers fields, filters and **row-rule columns**, and holds the measures' components | a rollup is per dataset version and generation; the fact's row-rule columns must be in `by`, else no match (security first). A dimension whose rules restrict nothing for the reader (`True` for their roles, no filter) is not joined at all; a dimension joined only for its rules (a `SemiJoin`) keeps the match when the fact joins it directly, many-to-one, on a column in `by`: each rollup row belongs to one dimension row, so the rule keeps or drops it whole (engine `QueryService#route` and plan agree; tested equal to the columns layer for every reader) |
 | Cache lookup | before running any subtree whose canonical hash, security signature and generation vector match a cached answer (6.1) | — |
 | Common subplan | shares identical subtrees across the visuals of one page request and across standing queries (4.6) | same signature only |
 | Context lowering *(B)* | `Context` nodes to filtered aggregates (`where=`) or coarser sub-plans + `Meet` (`ignore`, `share_of`) | — |
@@ -669,7 +669,7 @@ its text only to people with the `bi-steward` power.
 | Pack entitlement | the pack (kinds a role may open) | `SecureScan` returns no rows for a kind the reader may not open | no |
 | Dataset row rules | `dataset.security.rows` (DEL rule scope, own columns) | ANDed into `SecureScan` | no |
 | Dataset masks | `security.masked`, pack `redact` | projection: value → `•••` before any aggregation; masked dims not grouped; measures over masked columns null; filter/sort/top on them `DRS-9161` | no |
-| Object-level (hidden) | `security.hidden-for` (dataset or model) | the column/measure does not exist for the reader: absent from `describe`, `DRS-9152` "not found" when named (indistinguishable from a typo, on purpose) | no |
+| Object-level (hidden) | `security.hidden-for` (dataset or model) | the column/measure does not exist for the reader: absent from `describe`, `DRS-9163` "not available to your role" when a query names it (never its definition or columns); a column hidden makes the measures and `define`s over it unavailable too, and Check warns `DRS-9132` when a hidden measure's columns stay visible to its roles | no |
 | Model rules | `model.security.rows.<alias>` (only tighter: AND) | ANDed into the same `SecureScan` | no |
 | Model masks | `model.security.masked` (only adds) | same as dataset masks | no |
 | Propagation | `propagate: dimension-to-fact` | `SemiJoin` from a restricted dimension into facts along active many-to-one relationships | no |

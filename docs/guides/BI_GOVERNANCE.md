@@ -143,6 +143,36 @@ GET /api/v1/bi/items/{id}/lineage            (as a reader)
 "upstream": [ { ..., "source": { "connector": "orders-lake", "plugin": "file", "masked": true, "declared": { "root": "\u2022\u2022\u2022" } } } ]
 ```
 
+**The model layer (2.2).** For a **model**, a **`rachana: 2` dataset** and a **report on a model**, the same `GET /items/{id}/lineage` is computed
+from the items as they are now (`"layer": true`): a model lists each alias with the dataset and version it resolves now, the range it asks for, its role
+and its chain down to the root (`chain`: the dataset, a pack kind and its connector, a connector query, a Python item, another model, an SQL view), then
+what reads it (reports with the fields and measures they use, boards, notebooks bound with `dataset: mq:`, datasets on the model's answer or with it in
+their Python inputs, alerts, subscriptions; a reader pinned to an earlier major counts). A dataset lists its root, then the models (published, and your
+drafts) that read it, under which alias and at which version, and the datasets that narrow it. A report on a model names the model and its version,
+what it uses, and the datasets of the aliases it touches.
+
+```
+GET /api/v1/bi/items/file:dataset:trading-risk-trades/lineage
+{"item": {...}, "layer": true, "dataset": {"name": "trading-risk-trades", "version": "1.0.0"},
+ "upstream": [{"table": "trading_risk_trades", "dataset": "trading-risk-trades", "version": "1.0.0",
+               "chain": [{"kind": "dataset", "name": "trading-risk-trades"}, {"kind": "pack-kind", "name": "trade", "pack": "trading", "connector": "trading-store"}]}],
+ "downstream": [{"id": "file:model:trading-risk", "kind": "model", "title": "Trading and counterparty risk", "as": "trades", "range": "", "reads": "1.0.0", ...}],
+ "hidden": 0}
+```
+
+`GET /items/{id}/impact` of a model says which consumers use what a change takes away: the names you give (`?remove=P%26L%201d`), else what the draft
+drops against the published version (its `breaking` lines from the contract rules and the `versionProblem`); of a `rachana: 2` dataset, for each model
+that reads it, the model's measures over the removed columns and the consumers that use either:
+
+```
+GET /api/v1/bi/items/file:dataset:trading-risk-trades/impact?remove=pnl1d
+{"applies": true, "layer": true, "hypothetical": true, "dataset": "trading-risk-trades",
+ "affected": [{"id": "file:model:trading-risk", "kind": "model", "as": "trades", "measures": ["P&L 1d"],
+               "consumers": [{"target": "trades.pnl1d", "consumers": [], "unknown": 2},
+                             {"target": "P&L 1d", "consumers": [{"kind": "report", "id": "file:report:pnl-vs-exposure", ...}], "unknown": 2}]}],
+ "breaking": [], "remove": ["pnl1d"]}
+```
+
 ## 6. Impact: what breaks if I change this
 
 Names are compared, not meanings: a field is `table.column`, and a measure or hierarchy is its name. A report names them in its wells, filters, sorts, drill-through and bookmarks; each place is recorded so the answer says *where* ("trade.book (page overview, visual rows)").

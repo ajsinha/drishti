@@ -17,6 +17,26 @@
 
 ## Unreleased
 
+- **Server: the model layer's loose ends from the wave A console lane and its QA (wave A).** The **AI authoring hooks work on models**: Describe a
+  report, Suggest visuals, Explain in plain words and the helper (was `DRS-9034`) are grounded in the model's `describe` as the author reads it, a
+  draft is pinned to it (`rachana: 2`, `model: name@major`), Ask takes a model, and the model designer has **Ask the AI helper** (relationships,
+  measures, `fields:` descriptions, one undoable edit each); Explain this number's lineage names the model's version and each table's dataset by its
+  current name and version. **Semver:** every publish of a changed model or `rachana: 2` dataset carries a new version (one version string, one
+  content); a contract that exposes less is breaking and needs a new major (`DRS-9126`); a reader pinned `@1` keeps the latest published 1.x after
+  2.0.0 (its own layers). **The publish gate** runs a model's tests and a `rachana: 2` dataset's (`agg` with `expect`, `unique`, `not-null`,
+  `references-exist`, as Drishti SQL on its implicit model; `DRS-9043`). **One model per name** in a workspace and in the catalogue (`DRS-9004`);
+  `bi migrate --models --dry-run` finds the collisions the run finds. **Lineage and impact** of models, `rachana: 2` datasets and reports on models
+  are computed from the items as they are now (`GET /items/{id}/lineage`, `/impact`); a model's consumers include notebooks bound with
+  `dataset: mq:`, Python datasets' inputs and readers pinned to an earlier major. **Refresh** of a `rachana: 2` dataset (the sample Python dataset
+  gave `DRS-9102`) drops its kept Transform results and rebuilds the tables of every model that reads it. The pnl-vs-exposure **slicer** under the
+  report's `Trades > 0` groups its values (`DRS-9027`). **Rollups and row rules:** a dimension whose rules restrict nothing for the reader is not
+  joined, and one joined only for its rules keeps the rollup when the fact joins it on a grouped column (answers equal the columns layer).
+  **Hidden-for:** a hidden field or measure answers `DRS-9163` "not available to your role" on every endpoint (no raw `DRS-9020`), and Check warns
+  `DRS-9132` "hidden measure still reachable through <columns>; hide the columns too". **Preview as** a role works on the owner's draft model. DEL
+  names `??` (write `coalesce`), calls `c ? a : b` old syntax only when a `:` follows, and the expression editor no longer repeats a fix beside its
+  button. `bi mq --sort` (`--sort=-X` descending). `POST /sql/validate` types its columns (a count is an `integer`). A migration problem shows on
+  the item's own page (`migrationProblems`). Migration notes reworded. Tutorials 10 (step 1 and the wizard, step 13) and 15 (steps 4 and 8) on the
+  model layer, pictures retaken.
 - **Server: the 2.1 dataset paths are removed (wave A, task 6).** The compatibility reader is gone (a `rachana: 1` dataset is no longer read as a model:
   `DRS-9151` names `drishti.py bi migrate --models`); composed and derived datasets are removed (`dataset/Composition` and their `FrameService` code; a
   `from:` or `derived:` text parses with `DRS-9190` and is still read by the converter); `POST /api/v1/bi/datasets/{id}/query` answers `410` with the

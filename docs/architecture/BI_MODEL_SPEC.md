@@ -242,6 +242,12 @@ tests:
   - { name: The book holds 750 trades, agg: count, expect: 750, date: 2026-10-09 }
 ```
 
+Since 2.2.0 each runs as Drishti SQL on the dataset's implicit model, as the test's `role:` (else the person checking), on the text being checked
+(`POST /api/v1/bi/items/{id}/tests`, the dataset page's *Expected values*): `agg` (with `column`, and the expected-value keys `expect`, `tolerance`,
+`by`, `row`, `filters`, `date`) compares one figure; `unique` passes when no key has two rows (else it names the worst key and its count);
+`not-null` counts the empty values of each column; `references-exist` compares the distinct values of `column` with the `key` (default `id`) of
+`dataset`. A failing test refuses the publish (`DRS-9043`; a bi-admin may force it), for a model's SQL `tests:` too.
+
 ### 1.9 `extends`: narrowing a dataset without copying it
 
 ```yaml
@@ -537,8 +543,15 @@ lifecycle: published
   a grain key changed. Publishing a breaking change needs a new **major** version (`DRS-9126` otherwise; W1 detects
   removed and renamed ids; W2 adds the full breaking-change detection and refusal). A minor adds; a patch changes
   descriptions, formats and `ai:`.
-* Consumers bind to a **major** (`model: trading-risk@1`). A new major does not move them; impact lists them and the
-  designer offers to move each (with a diff of what it uses).
+* A **contract that exposes less** is breaking too: `exposes: all` made `listed`, or a field or measure taken out of the lists while the model
+  still has it (consumers may use only what the contract exposes). A measure renamed under the same id is the same measure.
+* **One version string, one content:** every publish of a change carries a new version (`DRS-9126` says which bump: a patch for words, formats or a
+  hidden field, a minor for an addition, a major for a breaking change), and the version never goes down.
+* Consumers bind to a **major** (`model: trading-risk@1`). A new major does not move them: a reference pinned `@1` keeps reading the latest published
+  1.x (from the item's history, `drishti.bi.versions-keep`; its own layers), `@2` and the bare name read 2.x; impact lists them and the designer offers
+  to move each (with a diff of what it uses).
+* **One model per name**: a workspace holds one model of a name, and the catalogue one published model of a name (`DRS-9004` on a save, move or
+  publish that would make a second).
 
 ### 2.9 `ai:` and golden questions *(W5)*
 
