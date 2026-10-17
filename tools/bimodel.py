@@ -51,8 +51,8 @@ def register(bi, srv, ctx) -> None:
     q = bi.add_parser("mq", help="bi mq FILE | --model M --select ... --measures ...: ask one model query, as you", parents=[srv],
                       description="Asks one model query (mq: 1) of the server, as you: the same request a report visual, an alert or Analyse makes.",
                       formatter_class=argparse.RawDescriptionHelpFormatter,
-                      epilog="examples:\n  drishti.py bi mq query.yaml\n  drishti.py bi mq --model trading-risk@1 --select desks.name --measures MTM,Trades --sort=-MTM --limit 3\n"
-                             "  drishti.py bi mq --model trading-risk@1 --select desks.name --define \"Open MTM=sum(trades.mtm, where=trades.status == 'Live')\" --measures \"Open MTM\"")
+                      epilog="examples:\n  drishti.py bi mq query.yaml\n  drishti.py bi mq --model trading-risk@1 --select desks.NAME --measures MTM,Trades --sort=-MTM --limit 3\n"
+                             "  drishti.py bi mq --model trading-risk@1 --select desks.NAME --define \"Validated MTM=sum(trades.MTM, where=trades.TRADE_STATUS == 'VALIDATED')\" --measures \"Validated MTM\"")
     q.add_argument("file", nargs="?", help="a YAML or JSON model query")
     q.add_argument("--model", help="the model (name@major) or dataset:<name>")
     q.add_argument("--select", default="", help="fields, comma-separated")
@@ -140,6 +140,7 @@ def query_of(a, ctx) -> dict:
         q = yaml.safe_load(pathlib.Path(a.file).read_text(encoding="utf-8"))
         if not isinstance(q, dict):
             raise ctx["CliError"](f"{a.file}: a model query is a mapping (mq: 1, model, select, ...)", 2)
+        q = json.loads(json.dumps(q, default=str))         # a date written without quotes (2026-10-16) is read by YAML as a date: send it as text
         if a.model:
             q["model"] = a.model
         return q

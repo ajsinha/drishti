@@ -154,7 +154,7 @@ def cmd_delete(cli, a, extra) -> int:
     name = _name(cli, a.name)
     etag = a.if_match or api.json("GET", f"/api/v1/admin/connectors/{q(name)}").get("etag")
     res = api.json("DELETE", f"/api/v1/admin/connectors/{q(name)}" + _query(a.confirm), extra={"If-Match": etag} if etag else None)
-    cli.say_json(res) if a.json else print(f"deleted {name} (its text is kept in the connector folder's history/ folder)")
+    cli.say_json(res) if a.json else print(f"deleted {name} (its text is kept in <data>/connectors/history/)")
     return 0
 
 
@@ -255,7 +255,7 @@ def register(cli, sub, add, srv) -> None:
     p.add_argument("--test-first", action="store_true", help="try the settings on the real source first; apply only if it works")
     p.add_argument("--confirm", action="store_true", help="go ahead when the change switches off a connector that packs use")
 
-    p = add(sub, "delete", wrap(cmd_delete), "connector delete: remove a connector's file (its text is kept in .history)", [srv])
+    p = add(sub, "delete", wrap(cmd_delete), "connector delete: remove a connector's file (its text is kept in <data>/connectors/history)", [srv])
     p.add_argument("name")
     p.add_argument("--if-match", help="the version you expect")
     p.add_argument("--confirm", action="store_true", help="go ahead although packs use this connector")
