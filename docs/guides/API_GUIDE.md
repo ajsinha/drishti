@@ -2085,7 +2085,7 @@ The problems answer (captured):
 
 ```json
 {"count": 1, "problems": [{"step": "expressions", "item": "it-broken", "title": "it-broken", "kind": "dataset", "where": "measures.Per.expr",
-  "problem": "not converted, the item keeps its text: DRS-9127 expected ')' to close the call of sum() but the expression ends (sum(trades.mtm)",
+  "problem": "not converted, the item keeps its text: DRS-9127 expected ')' to close the call of sum(), but the expression ends there (sum(trades.mtm)",
   "since": "2026-10-13T02:35:52.717930195Z"}]}
 ```
 
