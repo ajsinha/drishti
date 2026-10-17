@@ -1496,8 +1496,8 @@ pnl = np.asarray(view.doc["scenarioPnl"], dtype=float)
 | When changes apply | at the server's next start (the pack model reads them once; `GET /api/v1/packs` carries them to the console) |
 | Roles | give the pack's analyst roles `calc: true` ([Roles](#roles-and-field-masks)); a pack that enables Calc without such a role offers it only to roles that have it elsewhere |
 
-The banking packs enable Calc with a library of 75 snippets (27 in `market-data`, 13 each in `trading` and
-`market-risk`, 12 in `counterparty-risk`, 10 in `core`): curves, FX, vol surfaces, options, bonds, credit,
+The banking packs enable Calc with a library of 71 snippets (27 in `market-data`, 13 in `market-risk`, 9 in `trading`,
+12 in `counterparty-risk`, 10 in `core`): curves, FX, vol surfaces, options, bonds, credit,
 VaR and its backtest, stress, FRTB, exposure, CVA, collateral, SA-CCR, desks, books and counterparties. Their
 generator writes them from `tools/packgen/banking/snippets/<pack>/*.py` (read by `calc_snippets.py`); `finance` has
 two inline ones and eight files. They share the pricing maths of `drishti.quant`. Every one, with the sample entity it

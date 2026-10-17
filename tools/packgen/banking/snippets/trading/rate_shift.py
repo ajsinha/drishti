@@ -13,26 +13,26 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # title: MTM under parallel rate moves
-# description: The trade's MTM after parallel moves of -100 to +100 bp from its DV01 (first order), and the tenors that drive it.
+# description: The trade's MTM after parallel moves of -100 to +100 bp, first order from the risk engine's DV01 (market-risk trade-valuation TVAL-<TRADE_ID>: MTM, DV01, PNL_1D), the trade's notional ladder by leg beside it.
 # kinds: trade
 # example: TRD MX-20000001
 
 import pandas as pd
 
 doc = view.doc
-mtm = doc["mtm"]
-dv01 = (doc.get("risk") or {}).get("dv01")
+val = await drishti.get_async("trade-valuation", f"TVAL-{doc['TRADE_ID']}")      # needs the market-risk pack
+mtm, dv01 = float(val["MTM"]), float(val.get("DV01") or 0)
 if not dv01:
-    raise ValueError(f"{view.id} has no risk.dv01: this snippet is for rate-sensitive trades")
+    raise ValueError(f"{view.id} ({doc.get('PRODUCT_TYPE')}) has no DV01 in {val['VALUATION_ID']}: this snippet is for rate-sensitive trades")
 
 moves = pd.DataFrame({"shift_bp": [-100, -50, -25, -10, -1, 0, 1, 10, 25, 50, 100]})
 moves["pnl"] = moves["shift_bp"] * dv01          # DV01: the change in value for +1 bp
 moves["mtm"] = mtm + moves["pnl"]
-show(moves, title=f"{view.id}: MTM {mtm:,.0f}, DV01 {dv01:,.0f} per bp")
+show(moves, title=f"{view.id}: MTM {mtm:,.0f} {val.get('MTM_CURRENCY', '')}, DV01 {dv01:,.0f} per bp (as of {val.get('VALUATION_DATE')})")
 chart(moves, kind="line", x="shift_bp", y="mtm", title="MTM after a parallel move (bp)")
 
-buckets = pd.DataFrame(doc.get("sensitivities") or [])
-if len(buckets):
-    buckets["share"] = buckets["dv01"] / buckets["dv01"].sum()
-    show(buckets, title="DV01 by tenor")
-    chart(buckets, kind="bar", x="bucket", y="dv01", title="DV01 by tenor")
+legs = pd.DataFrame([{"LEG_ID": leg["LEG_ID"], "LEG_TYPE": leg.get("LEG_TYPE"), "PAY_RECEIVE": leg.get("LEG_ECONOMIC_TYPE"),
+                      "CURRENCY": leg.get("CURRENCY"), "NOTIONAL": leg.get("NOTIONAL"), "INDEX": (leg.get("INDEX") or {}).get("NAME"),
+                      "FLOWS": len(leg.get("CASH_FLOWS") or [])} for leg in doc.get("LEGS") or []])
+if len(legs):
+    show(legs, title="Legs")

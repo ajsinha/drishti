@@ -1,0 +1,56 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# title: Payment ladder: what the trade pays and receives, by month
+# description: Every cash flow of the trade's LEGS with a PAYMENT_DATE, signed by the leg's LEG_ECONOMIC_TYPE (Pay or Receive; a blank side reads from BUY_SELL_CODE) at NOTIONAL x RATE x the accrual for interest and price flows and NOTIONAL for principal and settlement flows (an estimate where the extract leaves the amount out); the payments due in the next 7, 30 and 90 days, pay against receive by month as bars and the net as a running total.
+# kinds: trade
+# example: TRD 1000001
+
+from datetime import date
+import pandas as pd
+
+doc = view.doc
+num = lambda x: float(x) if x not in (None, "") else 0.0             # noqa: E731 - numbers may be text or blank
+as_of = date.fromisoformat(view.business_date or "2026-09-30")
+rows = []
+for leg in doc.get("LEGS") or []:
+    side = leg.get("LEG_ECONOMIC_TYPE") or ""
+    sign = -1 if side.startswith("Pay") else 1 if side.startswith("Rec") else (1 if doc.get("BUY_SELL_CODE") == "S" else -1)
+    for cf in leg.get("CASH_FLOWS") or []:
+        if not cf.get("PAYMENT_DATE"):
+            continue
+        n, kind = num(cf.get("NOTIONAL")), cf.get("FLOW_TYPE") or leg.get("LEG_TYPE") or ""
+        if kind in ("Principal", "Settlement", "Premium") and not num(cf.get("RATE")):
+            amount = n
+        elif cf.get("START_DATE") and cf.get("END_DATE"):
+            amount = n * num(cf.get("RATE")) * (date.fromisoformat(cf["END_DATE"]) - date.fromisoformat(cf["START_DATE"])).days / 365
+        else:
+            amount = n * num(cf.get("RATE"))
+        rows.append({"PAYMENT_DATE": cf["PAYMENT_DATE"], "LEG_ID": leg["LEG_ID"], "FLOW_TYPE": kind, "CURRENCY": leg.get("CURRENCY") or doc["CURRENCY"],
+                     "amount": sign * amount, "days": (date.fromisoformat(cf["PAYMENT_DATE"]) - as_of).days})
+if not rows:
+    raise ValueError(f"{view.id} ({doc.get('PRODUCT_TYPE')}) has no flows with a payment date")
+p = pd.DataFrame(rows).sort_values("PAYMENT_DATE")
+due = pd.DataFrame([{"window": f"next {d} days", "flows": int(((p["days"] >= 0) & (p["days"] <= d)).sum()),
+                     "receive": p[(p["days"] >= 0) & (p["days"] <= d) & (p["amount"] > 0)]["amount"].sum(),
+                     "pay": p[(p["days"] >= 0) & (p["days"] <= d) & (p["amount"] < 0)]["amount"].sum()} for d in (7, 30, 90)])
+due["net"] = due["receive"] + due["pay"]
+show(due, title=f"{view.id} ({doc['SOURCE_SYSTEM']} {doc['PRODUCT_TYPE']}): payments due from {as_of}")
+p["month"] = p["PAYMENT_DATE"].str[:7]
+by_month = p.assign(receive=p["amount"].clip(lower=0), pay=p["amount"].clip(upper=0)).groupby("month")[["receive", "pay"]].sum()
+by_month["net"] = by_month["receive"] + by_month["pay"]
+by_month["running net"] = by_month["net"].cumsum()
+show(by_month.reset_index(), title="Pay against receive by month")
+chart(by_month.reset_index(), kind="bar", x="month", y=["receive", "pay"], title="Payments by month (pay below zero)")
+chart(by_month.reset_index(), kind="line", x="month", y="running net", title="Running net payments")
