@@ -1,16 +1,16 @@
 {
  "resultId": "FE-RATES-3",
  "book": "BOOK-RATES-3",
- "financed": 23053,
- "exposure": 317950000,
- "intensity": 73,
- "dataQuality": 2.99,
+ "financed": 25061,
+ "exposure": 1731050000,
+ "intensity": 14,
+ "dataQuality": 2.18,
  "byCounterparty": [
   {
    "counterparty": "Meridian Reinsurance Ltd",
-   "exposure": 69150000,
-   "attribution": 0.002394,
-   "financed": 98,
+   "exposure": 1482250000,
+   "attribution": 0.051318,
+   "financed": 2106,
    "dataQuality": 2
   },
   {
@@ -101,6 +101,10 @@
    "financed": 7106
   },
   {
+   "sector": "Insurance",
+   "financed": 2106
+  },
+  {
    "sector": "Government",
    "financed": 277
   },
@@ -111,10 +115,6 @@
   {
    "sector": "Asset management",
    "financed": 100
-  },
-  {
-   "sector": "Insurance",
-   "financed": 98
   },
   {
    "sector": "Banking",

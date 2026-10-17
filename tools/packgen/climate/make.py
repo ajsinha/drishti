@@ -111,11 +111,14 @@ def build(bank: dict) -> dict[str, dict[str, dict]]:
             "counterparty": cp["counterpartyId"], "_meta": {"source": "climate-data", "generation": 1}}
     for b in bank["book"].values():
         r = rng("fe" + b["bookId"])
-        trades = [t for t in bank["trade"].values() if t["book"] == b["bookId"]]
+        trades = [t for t in bank["trade"].values() if t.get("PORTFOLIO") == b["bookId"]]   # trades are production-shaped (UPPER_SNAKE)
         by_cp = {}
         for t in trades:
-            by_cp.setdefault(t["counterparty"]["id"], 0.0)
-            by_cp[t["counterparty"]["id"]] += abs(t["notional"]) * 0.05
+            cpid = t.get("COUNTERPARTY")
+            if cpid not in bank["counterparty"]:
+                continue
+            by_cp.setdefault(cpid, 0.0)
+            by_cp[cpid] += _notional(t) * 0.05
         rows, by_sector = [], {}
         for cpid, exp in sorted(by_cp.items(), key=lambda x: -x[1])[:12]:
             prof = docs["climate-profile"][f"CLIM-{cpid[3:]}"]
@@ -178,6 +181,17 @@ def build(bank: dict) -> dict[str, dict[str, dict]]:
                                            "eligible": round(r.uniform(0.25, 0.55), 2), "covered": covered, "objectives": objs, "legalEntity": le,
                                            "_meta": {"source": "climate-data", "generation": 1}}
     return docs
+
+
+def _notional(trade: dict) -> float:
+    """A trade's notional: the largest leg notional (an extract may write numbers as text or leave them blank)."""
+    best = 0.0
+    for leg in trade.get("LEGS") or []:
+        try:
+            best = max(best, abs(float(leg.get("NOTIONAL") or 0)))
+        except (TypeError, ValueError):
+            pass
+    return best
 
 
 def spec(bank: dict) -> PB.PackSpec:

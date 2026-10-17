@@ -2,7 +2,7 @@
  "resultId": "FE-RATES-2",
  "book": "BOOK-RATES-2",
  "financed": 6777,
- "exposure": 299200000,
+ "exposure": 299750000,
  "intensity": 23,
  "dataQuality": 3.0,
  "byCounterparty": [
@@ -22,8 +22,8 @@
   },
   {
    "counterparty": "Aldershot Pension Trust",
-   "exposure": 25150000,
-   "attribution": 0.000317,
+   "exposure": 25700000,
+   "attribution": 0.000324,
    "financed": 15,
    "dataQuality": 3
   },

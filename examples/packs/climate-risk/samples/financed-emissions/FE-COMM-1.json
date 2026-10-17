@@ -1,10 +1,10 @@
 {
  "resultId": "FE-COMM-1",
  "book": "BOOK-COMM-1",
- "financed": 8877,
- "exposure": 182650000,
- "intensity": 49,
- "dataQuality": 3.69,
+ "financed": 10771,
+ "exposure": 177428010,
+ "intensity": 61,
+ "dataQuality": 3.67,
  "byCounterparty": [
   {
    "counterparty": "Aldershot Pension Trust",
@@ -22,9 +22,9 @@
   },
   {
    "counterparty": "Halcyon Shipping plc",
-   "exposure": 29700000,
-   "attribution": 0.000555,
-   "financed": 7389,
+   "exposure": 22743273,
+   "attribution": 0.000425,
+   "financed": 5659,
    "dataQuality": 4
   },
   {
@@ -35,31 +35,31 @@
    "dataQuality": 4
   },
   {
+   "counterparty": "Cascadia Airlines Inc.",
+   "exposure": 13781610,
+   "attribution": 0.004736,
+   "financed": 4413,
+   "dataQuality": 3
+  },
+  {
    "counterparty": "Bramble Asset Management",
-   "exposure": 12800000,
-   "attribution": 0.000237,
-   "financed": 15,
+   "exposure": 12833308,
+   "attribution": 0.000337,
+   "financed": 22,
    "dataQuality": 3
   },
   {
    "counterparty": "Pinnacle Credit Partners",
    "exposure": 12150000,
-   "attribution": 0.0004,
-   "financed": 25,
+   "attribution": 0.000389,
+   "financed": 24,
    "dataQuality": 3
   },
   {
    "counterparty": "Harbor Point Bank",
    "exposure": 11550000,
-   "attribution": 0.000319,
-   "financed": 29,
-   "dataQuality": 3
-  },
-  {
-   "counterparty": "Lumen Semiconductor AG",
-   "exposure": 11550000,
-   "attribution": 0.000184,
-   "financed": 88,
+   "attribution": 0.000259,
+   "financed": 24,
    "dataQuality": 4
   },
   {
@@ -77,10 +77,10 @@
    "dataQuality": 4
   },
   {
-   "counterparty": "Cascadia Airlines Inc.",
-   "exposure": 2100000,
-   "attribution": 0.000766,
-   "financed": 713,
+   "counterparty": "Lumen Semiconductor AG",
+   "exposure": 1569819,
+   "attribution": 2.4e-05,
+   "financed": 11,
    "dataQuality": 2
   },
   {
@@ -94,11 +94,11 @@
  "bySector": [
   {
    "sector": "Shipping",
-   "financed": 7389
+   "financed": 5659
   },
   {
    "sector": "Airlines",
-   "financed": 713
+   "financed": 4413
   },
   {
    "sector": "Government",
@@ -109,11 +109,7 @@
    "financed": 104
   },
   {
-   "sector": "Technology",
-   "financed": 88
-  },
-  {
-   "sector": "Banking",
+   "sector": "Asset management",
    "financed": 51
   },
   {
@@ -121,8 +117,12 @@
    "financed": 46
   },
   {
-   "sector": "Asset management",
-   "financed": 45
+   "sector": "Banking",
+   "financed": 46
+  },
+  {
+   "sector": "Technology",
+   "financed": 11
   }
  ],
  "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",

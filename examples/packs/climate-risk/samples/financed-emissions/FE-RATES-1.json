@@ -1,51 +1,51 @@
 {
  "resultId": "FE-RATES-1",
  "book": "BOOK-RATES-1",
- "financed": 22382,
- "exposure": 282400000,
- "intensity": 79,
- "dataQuality": 3.22,
+ "financed": 162833,
+ "exposure": 1231850000,
+ "intensity": 132,
+ "dataQuality": 3.82,
  "byCounterparty": [
+  {
+   "counterparty": "Verdant Agri Holdings",
+   "exposure": 971750000,
+   "attribution": 0.011117,
+   "financed": 136071,
+   "dataQuality": 4
+  },
   {
    "counterparty": "Summit Clearing LLC",
    "exposure": 31800000,
-   "attribution": 0.000792,
-   "financed": 45,
-   "dataQuality": 4
+   "attribution": 0.00129,
+   "financed": 73,
+   "dataQuality": 3
   },
   {
    "counterparty": "Pinnacle Credit Partners",
    "exposure": 31350000,
-   "attribution": 0.001114,
-   "financed": 69,
+   "attribution": 0.000643,
+   "financed": 40,
    "dataQuality": 3
   },
   {
    "counterparty": "Cascadia Airlines Inc.",
    "exposure": 27400000,
-   "attribution": 0.008351,
-   "financed": 7781,
-   "dataQuality": 3
+   "attribution": 0.018205,
+   "financed": 16963,
+   "dataQuality": 2
   },
   {
    "counterparty": "Tokai Mutual Trust Bank",
    "exposure": 27100000,
-   "attribution": 0.001118,
-   "financed": 131,
-   "dataQuality": 2
+   "attribution": 0.000825,
+   "financed": 97,
+   "dataQuality": 4
   },
   {
    "counterparty": "Halcyon Shipping plc",
    "exposure": 25450000,
-   "attribution": 0.000656,
-   "financed": 8739,
-   "dataQuality": 4
-  },
-  {
-   "counterparty": "Verdant Agri Holdings",
-   "exposure": 22300000,
-   "attribution": 0.000382,
-   "financed": 4670,
+   "attribution": 0.000649,
+   "financed": 8642,
    "dataQuality": 4
   },
   {
@@ -93,16 +93,16 @@
  ],
  "bySector": [
   {
-   "sector": "Shipping",
-   "financed": 8739
+   "sector": "Agriculture",
+   "financed": 136071
   },
   {
    "sector": "Airlines",
-   "financed": 7781
+   "financed": 16963
   },
   {
-   "sector": "Agriculture",
-   "financed": 4670
+   "sector": "Shipping",
+   "financed": 8642
   },
   {
    "sector": "Government",
@@ -110,15 +110,15 @@
   },
   {
    "sector": "Banking",
-   "financed": 167
+   "financed": 133
   },
   {
    "sector": "Asset management",
-   "financed": 114
+   "financed": 85
   },
   {
    "sector": "Financial services",
-   "financed": 45
+   "financed": 73
   },
   {
    "sector": "Pensions",

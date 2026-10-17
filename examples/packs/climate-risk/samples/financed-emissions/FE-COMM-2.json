@@ -1,10 +1,10 @@
 {
  "resultId": "FE-COMM-2",
  "book": "BOOK-COMM-2",
- "financed": 10990,
- "exposure": 189950000,
- "intensity": 58,
- "dataQuality": 2.83,
+ "financed": 8316,
+ "exposure": 192378921,
+ "intensity": 43,
+ "dataQuality": 2.85,
  "byCounterparty": [
   {
    "counterparty": "Summit Clearing LLC",
@@ -43,51 +43,51 @@
   },
   {
    "counterparty": "Aldershot Pension Trust",
-   "exposure": 11950000,
-   "attribution": 0.000229,
-   "financed": 11,
+   "exposure": 10958436,
+   "attribution": 0.00021,
+   "financed": 10,
    "dataQuality": 4
   },
   {
+   "counterparty": "Harbor Point Bank",
+   "exposure": 8398487,
+   "attribution": 0.000176,
+   "financed": 16,
+   "dataQuality": 2
+  },
+  {
    "counterparty": "Rheintal Landesbank",
-   "exposure": 8250000,
-   "attribution": 0.000306,
-   "financed": 23,
+   "exposure": 8323268,
+   "attribution": 0.000287,
+   "financed": 22,
    "dataQuality": 2
   },
   {
    "counterparty": "Coral Bay Municipal Authority",
    "exposure": 8250000,
-   "attribution": 0.000111,
-   "financed": 163,
-   "dataQuality": 2
-  },
-  {
-   "counterparty": "Kestrel Global Macro Fund",
-   "exposure": 6600000,
-   "attribution": 0.000144,
-   "financed": 7,
+   "attribution": 9.8e-05,
+   "financed": 144,
    "dataQuality": 4
   },
   {
    "counterparty": "Bramble Asset Management",
-   "exposure": 4800000,
-   "attribution": 8.2e-05,
-   "financed": 5,
+   "exposure": 5210910,
+   "attribution": 8.9e-05,
+   "financed": 6,
+   "dataQuality": 4
+  },
+  {
+   "counterparty": "Kestrel Global Macro Fund",
+   "exposure": 3987820,
+   "attribution": 0.000153,
+   "financed": 8,
    "dataQuality": 4
   },
   {
    "counterparty": "Pinnacle Credit Partners",
    "exposure": 3300000,
-   "attribution": 0.000116,
-   "financed": 7,
-   "dataQuality": 4
-  },
-  {
-   "counterparty": "Solaris Energy Corp.",
-   "exposure": 2850000,
-   "attribution": 0.00034,
-   "financed": 2673,
+   "attribution": 0.000144,
+   "financed": 9,
    "dataQuality": 4
   }
  ],
@@ -95,10 +95,6 @@
   {
    "sector": "Agriculture",
    "financed": 5216
-  },
-  {
-   "sector": "Utilities",
-   "financed": 2673
   },
   {
    "sector": "Shipping",
@@ -110,7 +106,7 @@
   },
   {
    "sector": "Government",
-   "financed": 163
+   "financed": 144
   },
   {
    "sector": "Insurance",
@@ -118,15 +114,15 @@
   },
   {
    "sector": "Banking",
-   "financed": 23
+   "financed": 38
   },
   {
    "sector": "Asset management",
-   "financed": 19
+   "financed": 23
   },
   {
    "sector": "Pensions",
-   "financed": 11
+   "financed": 10
   }
  ],
  "methodology": "PCAF Global GHG Standard, attribution = exposure / EVIC",
