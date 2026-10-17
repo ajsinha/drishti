@@ -460,7 +460,7 @@ public final class Layers {
         }
         String what;
         try {
-            what = Files.readString(stamp, StandardCharsets.UTF_8).strip();
+            what = Files.readString(stamp, StandardCharsets.UTF_8).replaceAll("\\s+", " ").strip();
         } catch (IOException e) {
             what = "";
         }
