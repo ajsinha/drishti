@@ -151,7 +151,9 @@ def check(a, argv: list[str]) -> int:
 
 def write_manifest(out: Path, dates: list[str], datasets: list[dict]) -> None:
     import yaml
-    head = ("# data/testdata/testdata.yaml: written by tools/testdata/make_testdata.py; read by `drishti.py lake demo`. Do not edit by hand.\n"
+    lic = (ROOT / "config" / "license-header.txt").read_text(encoding="utf-8").strip().splitlines()
+    head = "".join(f"# {line}".rstrip() + "\n" for line in lic) + "\n" + (
+            "# data/testdata/testdata.yaml: written by tools/testdata/make_testdata.py; read by `drishti.py lake demo`. Do not edit by hand.\n"
             "# Each dataset: its folder (snapshot of the first day, then the changes of each later day), the pack, kind and Delta connector it\n"
             "# feeds, the key and the partition columns after business_date; or the pack samples it is built from (static reference data).\n")
     body = {"business-dates": dates, "as-of": dates[-1], "datasets": datasets}
