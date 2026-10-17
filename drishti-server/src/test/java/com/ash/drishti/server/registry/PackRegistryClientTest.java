@@ -116,7 +116,7 @@ public class PackRegistryClientTest {
         assertThat(c.rollback("widgets")).isEqualTo("1.0.0");
         assertThat(Files.readString(installed.resolve("widgets/pack.yaml"))).contains("version: 1.0.0");
         try (var s = Files.list(installed)) {
-            assertThat(s.map(p -> p.getFileName().toString())).noneMatch(n -> n.startsWith(".staging"));
+            assertThat(s.map(p -> p.getFileName().toString())).noneMatch(n -> n.startsWith("staging"));
         }
     }
 

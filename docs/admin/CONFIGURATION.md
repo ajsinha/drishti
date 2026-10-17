@@ -198,6 +198,8 @@ setting, which still overrides the default:
 | `packs/added.yaml`, `packs/installed/`, `packs/settings/`, `packs/samples-mode`, `packs/deploy-history.jsonl` | `drishti.packs.overlay`, `installed-dir`, `settings-dir`, `samples-file`, `deploy.history-file` |
 | `delta/`, `files/`, `iceberg/`, `duckdb/` (the lake and store roots the packs' connector suggestions use) | `DRISHTI_DELTA_ROOT`, `DRISHTI_FILES_ROOT`, `DRISHTI_ICEBERG_ROOT`, `DRISHTI_DUCKDB_PATH` |
 | `cache/` (stream disk caches), `state/` (message-source state), `feeds/` (the bundled file source) | `DRISHTI_CACHE_ROOT`, `state.root`, `DRISHTI_FEEDS` |
+| `connectors/history/` (every earlier text of a connector file, for Restore), `connectors/generated/` (markers of connector files written from a pack template) | beside `drishti.sources.connectors-dir`; the files themselves stay in `config/connectors/` |
+| `qa/` (the IDE QA profile: its own data folder, token, lake and packs), `build/` (the default output of `pack make`, `schema pack` and `pack catalogue`), `drill/` (the logs of `tools/drill.sh`), `dev-sutras/` (Studio file binding) | `DRISHTI_DATA_DIR` for the tools; `drishti.builder.dev-dir` |
 | `loads/`, `collab/`, `designs/`, `reports/`, `governance/` | `drishti.loads.dir`, `drishti.collab.dir`, `drishti.builder.designs.dir`, `drishti.reports.folder`, `drishti.governance.dir` |
 
 Move the whole tree with one setting: `DRISHTI_DATA_DIR=/var/lib/drishti` puts the identity database at
@@ -329,7 +331,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_PACKS_WATCH` | `drishti.packs.watch` | `auto` | Live pack reload: `auto`, `poll` or `off`. |
 | `DRISHTI_PACKS_INSTALLED` | `drishti.packs.installed-dir` | `./data/packs/installed` | Where packs installed from a registry are kept. |
 | `DRISHTI_CONNECTORS_DIR` | `drishti.sources.connectors-dir` | `./config/connectors` | The connector folder: one YAML file per connector, the file name being the connector's name (Admin → Connectors). Watched; a change applies without a restart. See [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md). |
-| `DRISHTI_PACKS_SETTINGS` | `drishti.packs.settings-dir` | `./data/packs/settings` | Legacy: where the earlier per-pack data-source override files were. Read once at start and migrated into connector files; the originals are kept in `.migrated/`. |
+| `DRISHTI_PACKS_SETTINGS` | `drishti.packs.settings-dir` | `./data/packs/settings` | Legacy: where the earlier per-pack data-source override files were. Read once at start and migrated into connector files; the originals are kept in `migrated/`. |
 | `DRISHTI_UNINSTALLED_DIR` | `drishti.admin.uninstalled-dir` | `./data/uninstalled` | Where Admin → Artifacts moves what it uninstalls: one folder per uninstall, `<timestamp>-<kind>-<name>/`, holding the artifact as it was. See [`drishti.admin`](#drishtiadmin--uninstalling-packs-connectors-and-bi-files-safely). |
 | `DRISHTI_UNINSTALLED_KEEP` | `drishti.admin.uninstalled-keep` | `30d` | How long an uninstalled artifact is kept before it is removed (pruned once a day); `0` keeps them for ever. |
 | `DRISHTI_LOADS_DIR` | `drishti.loads.dir` | `./data/loads` | The data-load history per pack and the administrators' expectation overrides ([DATA_LOADS.md](../guides/DATA_LOADS.md)). |
@@ -686,7 +688,7 @@ The pack loader also writes some keys for the rest of the server (`drishti.packs
 
 | Key | Default | Meaning |
 |---|---|---|
-| `drishti.packs.installed-dir` | `./data/packs/installed` (`DRISHTI_PACKS_INSTALLED`) | Where registry installs go; packs here win over `drishti.packs.dir`. Replaced versions are kept under `.previous/`. |
+| `drishti.packs.installed-dir` | `./data/packs/installed` (`DRISHTI_PACKS_INSTALLED`) | Where registry installs go; packs here win over `drishti.packs.dir`. Replaced versions are kept under `previous-versions/`. |
 | `url` | empty (`DRISHTI_PACK_REGISTRY`) | A folder, `file:` or `https:` URL holding `index.json` and the archives. Empty: no registry. |
 | `trusted-keys.<publisher>` | none | The publisher's Ed25519 public key (base64 DER, as `tools/packreg/packreg.py keygen` prints it). Packs signed by anyone else are refused. |
 | `max-archive-mb` / `max-unpacked-mb` | `50` / `200` | Size limits for an archive and for what it unpacks to. |
@@ -701,10 +703,10 @@ An uploaded archive (the pack only, never data) is checked, previewed against th
 
 | Key | Default | Meaning |
 |---|---|---|
-| `DRISHTI_PACKS_SETTINGS` | `drishti.packs.settings-dir` | `./data/packs/settings` (`DRISHTI_PACKS_SETTINGS`) | **Legacy, migrated.** The folder where the earlier Admin → Packs → Data source panel wrote one `<pack>.yaml` per pack (connector `enabled` and `settings`). At the first start after the upgrade each override is moved into the connector file of the same name (applied on top of the existing file or, when there is none, of the pack's template); the original is kept in `<settings-dir>/.migrated/<pack>.yaml.<timestamp>`, the file's earlier text goes to `.history/`, and the step is audited as `connector-migrated`. An override that cannot be placed (no file and no template say which plugin) is left in place and reported. Nothing writes to this folder any more; it is read only for the migration. **Precedence, highest first: `drishti.sources.connectors` in the site configuration (deprecated), the connector file, the pack's template.** Credentials may only be `${ENV_NAME}` references. |
+| `DRISHTI_PACKS_SETTINGS` | `drishti.packs.settings-dir` | `./data/packs/settings` (`DRISHTI_PACKS_SETTINGS`) | **Legacy, migrated.** The folder where the earlier Admin → Packs → Data source panel wrote one `<pack>.yaml` per pack (connector `enabled` and `settings`). At the first start after the upgrade each override is moved into the connector file of the same name (applied on top of the existing file or, when there is none, of the pack's template); the original is kept in `<settings-dir>/migrated/<pack>.yaml.<timestamp>`, the file's earlier text goes to `<data dir>/connectors/history/`, and the step is audited as `connector-migrated`. An override that cannot be placed (no file and no template say which plugin) is left in place and reported. Nothing writes to this folder any more; it is read only for the migration. **Precedence, highest first: `drishti.sources.connectors` in the site configuration (deprecated), the connector file, the pack's template.** Credentials may only be `${ENV_NAME}` references. |
 | `drishti.packs.deploy.max-archive-mb` | `50` | The largest archive accepted (HTTP 413 above it, decided from the declared length before the body is read). The console's own limit is `packs.deploy_max_mb` in its `application.yaml`; keep it at or under this. |
 | `drishti.packs.deploy.max-unpacked-mb` / `max-files` | `200` / `10000` | What an archive may unpack to (a zip bomb stops here). |
-| `drishti.packs.deploy.keep-versions` | `5` | Previous versions kept per pack under `<installed-dir>/.previous/<pack>/` for a rollback; older ones are deleted. |
+| `drishti.packs.deploy.keep-versions` | `5` | Previous versions kept per pack under `<installed-dir>/previous-versions/<pack>/` for a rollback; older ones are deleted. |
 | `drishti.packs.deploy.require-signature` | `false` | `true`: only archives signed by a publisher in `drishti.packs.registry.trusted-keys` (Ed25519 over the archive bytes; headers `X-Drishti-Signature`, `X-Drishti-Publisher`). Unsigned archives are otherwise accepted with a NOTE. |
 | `drishti.packs.deploy.require-manifest` | `true` | An archive must carry `MANIFEST.json` (`drishti.py pack bundle` writes it) so every file's checksum is checked. |
 | `drishti.packs.deploy.staging-minutes` | `30` | How long a verified upload waits for its confirmation before it is discarded. |
@@ -1057,7 +1059,7 @@ Sample documents are never logged; deleting a Design deletes its samples at once
 | Key | Default | Meaning |
 |---|---|---|
 | `drishti.builder.file-binding` (`DRISHTI_BUILDER_FILE_BINDING`) | `false` | Let a Design be bound to a file in the author's **own development folder** (**Ship -> Bind to a file** in the workbench; `POST /api/v1/builder/designs/{id}/bind`). Saving writes that file and an edit made in an IDE is read back (`POST .../sync`). Needs the author right and `drishti.rachana.studio-save`. The folder is never one the registry loads, so **Save to file never makes anything live**: going live is always Ship -> Propose, then an approver. With it off every bind answers `403 DRS-5002`. |
-| `drishti.builder.dev-dir` (no dedicated variable; relaxed `DRISHTI_BUILDER_DEVDIR`) | `./dev-sutras` | Where bound files live, one folder per user (`<dev-dir>/<user>/`). It must lie **outside** `drishti.rachana.dirs` (otherwise a saved file would be hot-reloaded and go live without review; binding then answers `403`). Names that are symbolic links, or go through one, are refused; a file is written through a new temporary file renamed into place. Only administrators are shown the absolute path (`GET /builder/designs/binding`). |
+| `drishti.builder.dev-dir` (no dedicated variable; relaxed `DRISHTI_BUILDER_DEVDIR`) | `./data/dev-sutras` | Where bound files live, one folder per user (`<dev-dir>/<user>/`). It must lie **outside** `drishti.rachana.dirs` (otherwise a saved file would be hot-reloaded and go live without review; binding then answers `403`). Names that are symbolic links, or go through one, are refused; a file is written through a new temporary file renamed into place. Only administrators are shown the absolute path (`GET /builder/designs/binding`). |
 
 For development servers: leave binding off on authoring and production servers.
 

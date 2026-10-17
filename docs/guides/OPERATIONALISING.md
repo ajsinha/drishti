@@ -193,7 +193,7 @@ previous version is never lost. A folder that begins with a dot is ignored by th
 | Option | Meaning |
 |---|---|
 | `--to DIR` | the packs folder: `DRISHTI_PACKS_DIR`, or `drishti.packs.installed-dir` (searched before the packs dir, so it overrides a shipped pack of the same name) |
-| `--backup DIR` | where replaced versions go (default `<to>/.previous`). Keep it **outside** the packs folder if you want it excluded from a volume that is mounted into containers |
+| `--backup DIR` | where replaced versions go (default `<to>/previous-versions`). Keep it **outside** the packs folder if you want it excluded from a volume that is mounted into containers |
 | `--dry-run` | verify and say what would change, copy nothing |
 | `--no-sutra`, `--server-version V`, `--strict`, `--json` | as `pack verify` |
 
@@ -366,7 +366,7 @@ A deploy job (or a person) downloads `finance-bundle` and runs `pack deploy` per
 
 - The server must be able to **read** the pack folders and the data; it never writes into a pack. Make the deployed tree owned by the deploying user (or root) and readable by the service account: `chown -R deploy:drishti /opt/drishti/packs && chmod -R g+rX,o-rwx /opt/drishti/packs`.
 - `pack deploy` runs as the deploying user, and the archive records **no owners**, so files are created as that user. Run it with the same umask every time (`umask 027`).
-- Folders need `x` for the service account; `.previous/` and the backup folder should not be readable by others.
+- Folders need `x` for the service account; `previous-versions/` and the backup folder should not be readable by others.
 - If `data/packs/` (the overlay and installed packs) must be written by the server (Admin → Packs → Load writes `added.yaml`), that folder is the one place the service account needs write access.
 - Do not run `pack deploy` as the server's own user against a folder the server also edits through the registry installer, unless you want it to move that pack to the backup folder.
 
@@ -508,7 +508,7 @@ back by itself** if it cannot start with the new ones. The archive is the one se
 
    A version that is the same as, or older than, the running one is flagged and still allowed.
 4. **Deploy**. The server swaps the files into `drishti.packs.installed-dir` (the folder that wins over `config/packs/`), keeps the previous version under
-   `.previous/<pack>/<version>-<time>`, then checks all loaded packs with the new one, puts it to use **at once, with no restart**. A pack that was not loaded is loaded.
+   `previous-versions/<pack>/<version>-<time>`, then checks all loaded packs with the new one, puts it to use **at once, with no restart**. A pack that was not loaded is loaded.
    If the check fails, or the server cannot start with the new files, the old files are put back and the history says *reverted*; users stay signed in and
    live views reconnect.
 
@@ -545,7 +545,7 @@ needs the **packs:admin** scope (and its user the admin role). Every option and 
 | Needs a running server and a login | no | yes (administrator, `packs:admin` for a token) |
 | Checks before anything changes | `pack verify` on your machine | the server's checks above, on the server |
 | Shows what changes | `pack diff` | the same, in the page, against what is running |
-| Previous version kept | `.previous/` beside the packs | `.previous/` under the installed folder, N kept, listed in the page |
+| Previous version kept | `previous-versions/` beside the packs | `previous-versions/` under the installed folder, N kept, listed in the page |
 | Restart | you | in place, with automatic undo |
 | Audit | file system | audit rows and the history file |
 
@@ -595,7 +595,7 @@ Every command and real output: [CLI_GUIDE.md, `connector`](CLI_GUIDE.md#connecto
 **Admin → Connectors** (administrators; the Admin menu links to it) lists every connector with origin, plugin, kinds, status, which packs use it and when it
 changed. **New connector** and **Edit** open a form generated from the plugin's declared settings, a YAML tab (the same draft as text), **Test connection** and
 **History**. Test connection starts a throwaway instance on the draft's settings, lists per kind the newest business dates and how many entities the source
-holds, and closes it; nothing that runs is changed. Save writes the file atomically (the old text goes to `.history/`), applies it to that connector and says
+holds, and closes it; nothing that runs is changed. Save writes the file atomically (the old text goes to `<data dir>/connectors/history/`), applies it to that connector and says
 what state it reached; two editors cannot overwrite each other (the page sends the file's ETag and a stale one is refused with *changed since you read it*).
 
 ![Admin -> Connectors: every connector with origin, plugin, kinds, status, who uses it and when it changed](../connectors/img/connector_files/01-connectors-list.jpg)
@@ -640,11 +640,11 @@ Rollback of a pack (17.2) restores the pack's files only; connector files are th
 **Upgrading from the earlier Data source override.** Settings saved in Admin → Packs → Data source before connector files existed live in
 `data/packs/settings/<pack>.yaml`. At the first start after the upgrade the server moves each one into the connector file of the same name (the override's
 `enabled` and `settings` applied on top of the existing file, or on top of the pack's template when there is none), keeps the original in
-`data/packs/settings/.migrated/<pack>.yaml.<timestamp>` and the file's earlier text in `.history/`, and logs and audits it (`connector-migrated`):
+`data/packs/settings/migrated/<pack>.yaml.<timestamp>` and the file's earlier text in `<data dir>/connectors/history/`, and logs and audits it (`connector-migrated`):
 
 ```
 connectors: data-source override of pack 'risk' for connector 'risk-store' moved into risk-store.yaml
-connectors: original override file of pack 'risk' kept in data/packs/settings/.migrated
+connectors: original override file of pack 'risk' kept in data/packs/settings/migrated
 ```
 
 An override the server cannot place (neither a template nor a file says which plugin to use) is left where it is and reported; nothing is dropped. The calls
@@ -667,7 +667,7 @@ An override the server cannot place (neither a template nor a file says which pl
 | `drishti.sources.connectors-poll` | `5s` | how often the files are looked at |
 | `drishti.sources.connectors-drain` | `3s` | a connector being restarted stays open this long so reads in flight finish |
 | `drishti.sources.connectors-generate` | `true` | write a file from a pack's template when none of that name exists |
-| `drishti.packs.settings-dir` (`DRISHTI_PACKS_SETTINGS`) | `./data/packs/settings` | the old data-source override files; read once at start to migrate them, backups in `.migrated/` |
+| `drishti.packs.settings-dir` (`DRISHTI_PACKS_SETTINGS`) | `./data/packs/settings` | the old data-source override files; read once at start to migrate them, backups in `migrated/` |
 
 The endpoints (`/api/v1/admin/packs/...` for deploy and history, `/api/v1/admin/connectors` for connectors; administrator only; a personal token needs `packs:admin`): [API_GUIDE.md](API_GUIDE.md#deploying-a-pack-archive-and-the-packs-connectors) and [CONNECTOR_FILES.md, section 9](../connectors/CONNECTOR_FILES.md#9-the-rest-api).
 

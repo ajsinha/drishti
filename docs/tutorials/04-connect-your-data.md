@@ -287,7 +287,7 @@ desk-ledger is off (disabled)
 
 ```text
 $ python3 tools/drishti.py connector delete desk-ledger
-deleted desk-ledger (its text is kept in the connector folder's .history)
+deleted desk-ledger (its text is kept in the connector folder's history/ folder)
 ```
 
 Keep `desk-quotes`: tutorial 5 builds the pack that reads it.

@@ -32,7 +32,7 @@ def _install(tmp_path, monkeypatch):
     import routes.explore_routes as er
     folder = tmp_path / "vendor" / "duckdb-wasm" / "9.9.9"
     folder.mkdir(parents=True)
-    for n in ("duckdb-browser.mjs", "duckdb-browser-eh.worker.js", "duckdb-eh.wasm", ".drishti-duckdb-wasm"):
+    for n in ("duckdb-browser.mjs", "duckdb-browser-eh.worker.js", "duckdb-eh.wasm", "drishti-duckdb-wasm.txt"):
         (folder / n).write_text("x")
     real = er.duckdb_base
     monkeypatch.setattr(er, "duckdb_base", lambda static: real(tmp_path))

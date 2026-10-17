@@ -55,7 +55,7 @@ import org.springframework.core.env.Environment;
  * Deploys a pack from an archive: {@link #stage} unpacks and checks it (archive, signature, manifest and checksums,
  * required server version, Sutra lint and tests by the same checker as {@code sutra lint|test}, dependencies) and
  * previews the difference from the running version; {@link #deploy} then swaps it into
- * {@code drishti.packs.installed-dir}, keeping the version it replaces under {@code .previous/<pack>/<version>-<millis>} (the
+ * {@code drishti.packs.installed-dir}, keeping the version it replaces under {@code previous-versions/<pack>/<version>-<millis>} (the
  * layout the registry installer uses, so either can roll the other back); {@link #rollback} puts a kept version back.
  * Loading the files into the running server (the in-place restart with automatic rollback) is the controller's step.
  * The archive carries the pack only, never data. File changes are serialised by one lock.
@@ -142,7 +142,7 @@ public final class PackDeployService {
         out.put("size", data.length);
         out.put("sha256", sha);
         checks.add(Check.ok("archive", data.length + " bytes, sha256 " + sha.substring(0, 16) + "..."));
-        Path dir = installed.resolve(".uploads").resolve(id);
+        Path dir = com.ash.drishti.common.LegacyNames.migrate(installed, ".uploads", "uploads-awaiting-deploy").resolve(id);
         boolean keep = false;
         try {
             if (expectedSha != null && !expectedSha.isBlank() && !expectedSha.trim().equalsIgnoreCase(sha)) {
@@ -558,14 +558,14 @@ public final class PackDeployService {
     // -- helpers -----------------------------------------------------------------------------------------------------
 
     private Path keep(String name, String version, Path dir) throws IOException {
-        Path keepDir = installed.resolve(".previous").resolve(name).resolve(version + "-" + System.currentTimeMillis());
+        Path keepDir = com.ash.drishti.common.LegacyNames.migrate(installed, ".previous", "previous-versions").resolve(name).resolve(version + "-" + System.currentTimeMillis());
         Files.createDirectories(keepDir.getParent());
         Files.move(dir, keepDir, StandardCopyOption.ATOMIC_MOVE);
         return keepDir;
     }
 
     private List<Path> keptDirs(String name) {
-        Path d = installed.resolve(".previous").resolve(name);
+        Path d = com.ash.drishti.common.LegacyNames.migrate(installed, ".previous", "previous-versions").resolve(name);
         if (!Files.isDirectory(d)) {
             return List.of();
         }
@@ -621,7 +621,7 @@ public final class PackDeployService {
                 try {
                     Files.deleteIfExists(p);
                 } catch (IOException e) {
-                    // best effort: a leftover folder under .uploads or .previous is harmless
+                    // best effort: a leftover folder under uploads-awaiting-deploy or previous-versions is harmless
                 }
             });
         } catch (IOException e) {

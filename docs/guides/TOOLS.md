@@ -161,11 +161,11 @@ business date  PRODUCT_TYPE           rows
 2026-10-16     ComSwap                 892
 2026-10-16     Commodity               348
 documents read: 2000, rows written: 2000, rejected: 0
-summary: lake/.drishti-lake/runs/20261017T082600-509848.json
+summary: lake/_drishti-lake/runs/20261017T082600-509848.json
 2026-10-17T08:26:01-04:00 lake-build ok exit=0 run=20261017T082600-509848 domain=comswap kind=deal engine=deltalake mode=overwrite-dates rows=2000 rejected=0 dates=1 partitions=5 seconds=0.467
 ```
 
-The last line is **the** log line of the run (also appended to `<lake>/.drishti-lake/runs.log`): one line per run, whatever
+The last line is **the** log line of the run (also appended to `<lake>/_drishti-lake/runs.log`): one line per run, whatever
 happened, for a scheduler's log and for `grep`. `--dry-run` reads and counts and writes nothing; `-q` prints only the log line;
 `--json` prints the whole summary.
 
@@ -188,7 +188,7 @@ documents read: 1502, rows written: 1500, rejected: 2
   rejected 1: not JSON (Expecting value)
     e.g. book-2026-10-19.jsonl.gz:1501: no id (field 'TRADE_ID' is missing or empty)
     e.g. book-2026-10-19.jsonl.gz:1502: not JSON (Expecting value)
-summary: lake/.drishti-lake/runs/20261017T082601-509920.json
+summary: lake/_drishti-lake/runs/20261017T082601-509920.json
 2026-10-17T08:26:01-04:00 lake-build partial exit=2 run=20261017T082601-509920 domain=comswap kind=deal engine=deltalake mode=overwrite-dates rows=1500 rejected=2 dates=1 partitions=5 seconds=0.323
 ```
 
@@ -219,8 +219,8 @@ lake/comswap/deal/business_date=2026-10-19/PRODUCT_TYPE=ComFut
 lake/comswap/deal/business_date=2026-10-19/PRODUCT_TYPE=Commodity
 lake/comswap/deal/business_date=2026-10-19/PRODUCT_TYPE=ComSwap
 lake/comswap/deal/_delta_log
-lake/.drishti-lake
-lake/.drishti-lake/runs
+lake/_drishti-lake
+lake/_drishti-lake/runs
 ```
 
 | `--mode` | What a run does to the dates in its input | Re-run safe |
@@ -234,7 +234,7 @@ A table keeps the partitioning it was created with; a run that asks for another 
 ```
 $ ... lake build --from book-2026-10-16.json --kind deal --key TRADE_ID --as-of 2026-10-16 --partition-by PORTFOLIO --lake lake --domain comswap
 lake build: lake/comswap/deal is partitioned by business_date, PRODUCT_TYPE; this run asks for business_date, PORTFOLIO (give --partition-by PRODUCT_TYPE or write a new table)
-summary: lake/.drishti-lake/runs/20261017T082602-510178.json
+summary: lake/_drishti-lake/runs/20261017T082602-510178.json
 2026-10-17T08:26:02-04:00 lake-build failed exit=1 run=20261017T082602-510178 domain=comswap kind=deal mode=overwrite-dates seconds=0.001 error="lake/comswap/deal is partitioned by business_date, PRODUCT_TYPE; this run asks for business_date, PORTFOLIO (give --partition-by PRODUCT_TYPE or write a new table)"
 ```
 
@@ -266,7 +266,7 @@ business date  PRODUCT_TYPE           rows
 2026-10-16     ComSwap                 892
 2026-10-16     Commodity               348
 documents read: 2000, rows written: 2000, rejected: 0
-summary: lake2/.drishti-lake/runs/20261017T082247-499153.json
+summary: lake2/_drishti-lake/runs/20261017T082247-499153.json
 2026-10-17T08:22:49-04:00 lake-build ok exit=0 run=20261017T082247-499153 domain=comswap kind=deal engine=drishti mode=overwrite-dates rows=2000 rejected=0 dates=1 partitions=5 seconds=1.597
 $ ls lake2/comswap/deal/_delta_log
 00000000000000000000.crc
@@ -294,7 +294,7 @@ QUANTITY: Float64
 | `1` | failed: nothing was committed for the table (a bad option, an unreadable file, another partitioning, the engine failed) | alert; fix and re-run (safe) |
 | `3` | another run holds the lake's lock | try again later; never kill the other run |
 
-**The lock.** One run per lake at a time: the builder takes an exclusive lock on `<lake>/.drishti-lake/lock`. The operating system
+**The lock.** One run per lake at a time: the builder takes an exclusive lock on `<lake>/_drishti-lake/lock`. The operating system
 releases it when the process ends, so a run that crashed or was killed never blocks the next one. The file names the holder:
 
 ```
@@ -302,9 +302,9 @@ lake build: the lake is locked by {"pid": 510142, "host": "oryxpro", "since": "2
 2026-10-17T08:26:02-04:00 lake-build locked exit=3 run=20261017T082602-510155 domain=comswap kind=deal mode=overwrite-dates seconds=0.0 error="the lake is locked by {\"pid\": 510142, \"host\": \"oryxpro\", \"since\": \"2026-10-17T08:26:02-04:00\"}"
 ```
 
-**The log and the summary.** Every run appends its log line to `<lake>/.drishti-lake/runs.log` and writes its summary to
-`<lake>/.drishti-lake/runs/<run>.json` and `<lake>/.drishti-lake/last-run.json` (and `--summary FILE`). Staged rows go to
-`<lake>/.drishti-lake/staging/<run>/` while the run lasts and are removed after it (`--keep-staging` keeps them); a crashed run's are
+**The log and the summary.** Every run appends its log line to `<lake>/_drishti-lake/runs.log` and writes its summary to
+`<lake>/_drishti-lake/runs/<run>.json` and `<lake>/_drishti-lake/last-run.json` (and `--summary FILE`). Staged rows go to
+`<lake>/_drishti-lake/staging/<run>/` while the run lasts and are removed after it (`--keep-staging` keeps them); a crashed run's are
 removed by the next run, which holds the lock. A summary (the run of 4.3, two partitions shown):
 
 ```json
@@ -351,7 +351,7 @@ runs (3 logged, last 3):
   2026-10-17T08:26:01-04:00 lake-build ok exit=0 run=20261017T082600-509848 domain=comswap kind=deal engine=deltalake mode=overwrite-dates rows=2000 rejected=0 dates=1 partitions=5 seconds=0.467
   2026-10-17T08:26:01-04:00 lake-build partial exit=2 run=20261017T082601-509920 domain=comswap kind=deal engine=deltalake mode=overwrite-dates rows=1500 rejected=2 dates=1 partitions=5 seconds=0.323
   2026-10-17T08:26:02-04:00 lake-build ok exit=0 run=20261017T082601-510010 domain=comswap kind=deal engine=deltalake mode=overwrite-dates rows=2000 rejected=0 dates=1 partitions=5 seconds=0.4
-last run: ok (exit 0), summary lake/.drishti-lake/last-run.json
+last run: ok (exit 0), summary lake/_drishti-lake/last-run.json
 ```
 
 ### 4.7 A pack, a connector and the data-load signal
@@ -869,14 +869,14 @@ on and off and deploys a pack archive with its connectors (the twins: `drishti.p
 
 | Tool | Exit codes | Lock | Log | Re-run safe |
 |---|---|---|---|---|
-| `drishti.py lake build` | 0 ok, 2 rejects or signal failed, 1 failed, 3 locked | `<lake>/.drishti-lake/lock` (released when the process ends) | one line per run to stdout and `<lake>/.drishti-lake/runs.log`; JSON summary per run | yes with `overwrite-dates` / `overwrite-partitions` |
+| `drishti.py lake build` | 0 ok, 2 rejects or signal failed, 1 failed, 3 locked | `<lake>/_drishti-lake/lock` (released when the process ends) | one line per run to stdout and `<lake>/_drishti-lake/runs.log`; JSON summary per run | yes with `overwrite-dates` / `overwrite-partitions` |
 | `drishti.py lake maintain` | 0 ok, 1 a table failed | none: schedule it after the builds, on one machine | one JSON line per table and step | yes |
 | `drishti.py data ingest` (`--watch --once`) | 0 ok, 1 a file failed or had bad lines | a state file per lake or files root | stdout | yes with `overwrite-dates` |
 | `drishti.py data landed` | 0 ok, 1 not verified or refused | none needed (the same pack, kind, date and batch twice is recorded once) | stdout or `--json` | yes |
 | `drishti.py server smoke` / `server health` | 0 ok, 1 a check failed | none | stdout or `--json` | yes |
 | `drishti.py pack check` | 0 passed, 1 failed, 2 usage | none | stdout, JUnit with `--junit` | yes |
 | `tools/load-*.sh` | 0 ok, non-zero failed | none: one loader per store at a time | stdout | yes (each day replaced in one step) |
-| `tools/drill.sh` | 0 all passed and pushed | none: one drill at a time | `target/drill/*.log` | yes |
+| `tools/drill.sh` | 0 all passed and pushed | none: one drill at a time | `data/drill/*.log` | yes |
 
 Rules that hold for all of them: run as a service user that owns the lake or data folder; pass the server explicitly
 (`--server`, `--signal`); keep tokens in a file readable only by that user (`--token-file`), never on the command line; send

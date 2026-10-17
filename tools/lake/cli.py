@@ -16,7 +16,7 @@
 
     build      stream a JSON array, JSON Lines or .gz export into <lake>/<domain>/<kind> (tools/lake/build.py)
     scan       the fields of an export with their values, and the suggested --key, --date and --partition-by (tools/lake/scan.py)
-    status     who holds the lake's lock, and the last runs (from <lake>/.drishti-lake)
+    status     who holds the lake's lock, and the last runs (from <lake>/_drishti-lake)
     maintain   retention, compaction, checkpoints and vacuum on a schedule (tools/lake/maintain.py; options passed through)
 """
 from __future__ import annotations
@@ -43,7 +43,9 @@ def cmd_scan(a, extra) -> int:
 
 
 def cmd_status(a, extra) -> int:
-    state = pathlib.Path(a.lake) / ".drishti-lake"
+    state = pathlib.Path(a.lake) / "_drishti-lake"
+    if not state.is_dir() and (pathlib.Path(a.lake) / ".drishti-lake").is_dir():
+        state = pathlib.Path(a.lake) / ".drishti-lake"                 # an earlier build's name, until the next run renames it
     lock = state / "lock"
     holder = lock.read_text(encoding="utf-8").strip() if lock.is_file() else ""
     held = False

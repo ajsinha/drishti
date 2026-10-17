@@ -35,7 +35,8 @@ import java.util.stream.Stream;
 public final class TempFiles {
 
     /** Names a folder as one of ours (a stale folder is removed only if it holds this marker and its process is gone). */
-    static final String MARKER = ".drishti-tmp";
+    static final String MARKER = "drishti-temp-folder.txt";
+    static final String LEGACY_MARKER = ".drishti-tmp";
 
     private static final String PREFIX = "drishti-";
     private static final ReentrantLock LOCK = new ReentrantLock();
@@ -116,7 +117,7 @@ public final class TempFiles {
         try (Stream<Path> s = Files.list(b)) {
             for (Path p : s.toList()) {
                 String n = p.getFileName().toString();
-                if (!n.startsWith(PREFIX) || !n.substring(PREFIX.length()).matches("\\d{1,10}") || !Files.isRegularFile(p.resolve(MARKER))) {
+                if (!n.startsWith(PREFIX) || !n.substring(PREFIX.length()).matches("\\d{1,10}") || !(Files.isRegularFile(p.resolve(MARKER)) || Files.isRegularFile(p.resolve(LEGACY_MARKER)))) {
                     continue;
                 }
                 long pid = Long.parseLong(n.substring(PREFIX.length()));
@@ -198,7 +199,7 @@ public final class TempFiles {
             return List.of();
         }
         try (Stream<Path> s = Files.list(b)) {
-            return s.filter(p -> p.getFileName().toString().matches(PREFIX + "\\d{1,10}") && Files.isRegularFile(p.resolve(MARKER))
+            return s.filter(p -> p.getFileName().toString().matches(PREFIX + "\\d{1,10}") && (Files.isRegularFile(p.resolve(MARKER)) || Files.isRegularFile(p.resolve(LEGACY_MARKER)))
                     && ProcessHandle.of(Long.parseLong(p.getFileName().toString().substring(PREFIX.length()))).isEmpty()).map(p -> p.toString()).toList();
         } catch (IOException e) {
             return List.of();

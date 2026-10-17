@@ -49,7 +49,7 @@ def register(cli, packs, data, add, jvm, js, PFJ) -> None:
             "pack regenerate: regenerate Sutras, about text and tests from new data and three-way merge them into the pack, keeping your edits",
             [PFJ.build_parser(add_help=False), js],
             "example:\n  drishti.py pack regenerate config/packs/my-bank data/jsonl --dry-run\n  drishti.py pack regenerate config/packs/my-bank data/jsonl\n"
-            "Options not given are taken from the ones the pack was generated with (stored in <pack>/.generated/). Untouched generated files are refreshed, new\n"
+            "Options not given are taken from the ones the pack was generated with (stored in <pack>/generated/). Untouched generated files are refreshed, new\n"
             "groups added, files you edited kept, files edited on both sides merged line by line (conflict markers, listed, exit 1). Needs the jar (like pack new).")
     # the parents' positional `inputs` comes first; this command takes the pack folder before it, and does not require --name (the pack has one)
     pack_arg = p.add_argument("pack", metavar="PACK", help="the pack folder to update")
@@ -78,7 +78,7 @@ def register(cli, packs, data, add, jvm, js, PFJ) -> None:
             "example:\n  drishti.py pack catalogue config/packs/my-bank --out build/catalogue --format html --shots\n"
             "--shots also renders every Sutra's samples with `sutra preview` (HTML snapshots) and links them.")
     p.add_argument("pack", metavar="PACK")
-    p.add_argument("--out", metavar="DIR", help="default build/<pack>-catalogue")
+    p.add_argument("--out", metavar="DIR", help="default <data>/build/<pack>-catalogue")
     p.add_argument("--format", choices=("md", "html"), default="md", help="catalogue.md (default) or one self-contained index.html")
     p.add_argument("--shots", action="store_true", help="include HTML previews of each Sutra's samples (needs the jar)")
 

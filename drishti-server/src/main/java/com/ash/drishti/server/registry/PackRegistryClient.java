@@ -62,7 +62,7 @@ import org.yaml.snakeyaml.Yaml;
  * publisher's key, which must be among {@code trusted-keys}; that every entry stays inside the pack (no {@code ..},
  * no absolute paths) and the unpacked size is bounded; that its {@code pack.yaml} names the same pack and version.
  * Only then is it unpacked into {@code <installed-dir>/<name>}; the version it replaces is kept under
- * {@code <installed-dir>/.previous/} for a rollback.
+ * {@code <installed-dir>/previous-versions/} for a rollback.
  */
 public final class PackRegistryClient {
 
@@ -158,7 +158,7 @@ public final class PackRegistryClient {
             String replaced = installed(name).map(m -> m.path("version").asText()).orElse(null);
             Path target = installed.resolve(name);
             if (Files.exists(target)) {
-                Path keep = installed.resolve(".previous").resolve(name).resolve((replaced == null ? "unknown" : replaced) + "-" + System.currentTimeMillis());
+                Path keep = com.ash.drishti.common.LegacyNames.migrate(installed, ".previous", "previous-versions").resolve(name).resolve((replaced == null ? "unknown" : replaced) + "-" + System.currentTimeMillis());
                 Files.createDirectories(keep.getParent());
                 Files.move(target, keep, StandardCopyOption.ATOMIC_MOVE);
             }
@@ -173,7 +173,7 @@ public final class PackRegistryClient {
 
     /** Puts back the version installed before the current one (newest kept); returns its version. */
     public String rollback(String name) {
-        Path keep = installed.resolve(".previous").resolve(name);
+        Path keep = com.ash.drishti.common.LegacyNames.migrate(installed, ".previous", "previous-versions").resolve(name);
         try {
             Path last;
             try (var s = Files.list(keep)) {
@@ -183,7 +183,7 @@ public final class PackRegistryClient {
                 throw new DrishtiException(ErrorCode.BAD_REQUEST, "there is no earlier version of '" + name + "' to go back to");
             }
             Path target = installed.resolve(name);
-            Path out = installed.resolve(".previous").resolve(".discarded-" + name + "-" + System.currentTimeMillis());
+            Path out = com.ash.drishti.common.LegacyNames.migrate(installed, ".previous", "previous-versions").resolve("discarded-" + name + "-" + System.currentTimeMillis());
             if (Files.exists(target)) {
                 Files.move(target, out, StandardCopyOption.ATOMIC_MOVE);
             }
@@ -200,7 +200,7 @@ public final class PackRegistryClient {
     /** Puts a pack directory back as it was (after an install the server could not start with). */
     public void undo(Installed done) {
         try {
-            if (done.replaced() != null || Files.isDirectory(installed.resolve(".previous").resolve(done.name()))) {
+            if (done.replaced() != null || Files.isDirectory(com.ash.drishti.common.LegacyNames.migrate(installed, ".previous", "previous-versions").resolve(done.name()))) {
                 rollback(done.name());
             } else {
                 deleteQuietly(installed.resolve(done.name()));
@@ -238,7 +238,7 @@ public final class PackRegistryClient {
         Path staging;
         try {
             Files.createDirectories(installed);
-            staging = com.ash.drishti.common.TempFiles.createDir(installed, ".staging-" + name + "-");
+            staging = com.ash.drishti.common.TempFiles.createDir(installed, "staging-" + name + "-");
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -344,7 +344,7 @@ public final class PackRegistryClient {
                 try {
                     Files.deleteIfExists(p);
                 } catch (IOException e) {
-                    // best effort: a staging folder left behind is harmless and named .staging-*
+                    // best effort: a staging folder left behind is harmless and named staging-*
                 }
             });
         } catch (IOException e) {

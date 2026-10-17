@@ -100,7 +100,7 @@ def test_an_installed_runtime_is_whole_and_names_only_local_files():
     """When tools/fetch-pyodide.sh has run: every package in the lock file is a file here, and none is a URL."""
     import json
     folder = WEB / "static/vendor/pyodide"
-    if not (folder / ".drishti-pyodide").exists():
+    if not (folder / "drishti-pyodide.txt").exists():
         return                                                       # not installed (CI): nothing to check
     lock = json.loads((folder / "pyodide-lock.json").read_text(encoding="utf-8"))
     for name, p in lock["packages"].items():

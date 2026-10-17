@@ -136,7 +136,7 @@ def run(a, cli) -> int:
     yaml = cli.need_yaml()
     pack = pathlib.Path(a.pack).resolve()
     c = collect(pack, yaml)
-    out = pathlib.Path(a.out or pathlib.Path("build") / f"{pack.name}-catalogue").resolve()
+    out = pathlib.Path(a.out or pathlib.Path(__import__("os").environ.get("DRISHTI_DATA_DIR") or "data") / "build" / f"{pack.name}-catalogue").resolve()
     out.mkdir(parents=True, exist_ok=True)
     shots: dict[str, str] = {}
     if a.shots:

@@ -53,7 +53,7 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
                 .bind("drishti.packs.added", org.springframework.boot.context.properties.bind.Bindable.listOf(String.class))
                 .orElse(List.of()));
         String connDir = env.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", "./config/connectors"));
-        ConnectorFiles files = new ConnectorFiles(java.nio.file.Path.of(connDir));
+        ConnectorFiles files = new ConnectorFiles(java.nio.file.Path.of(connDir), java.nio.file.Path.of(PackPaths.dataDir(env), "connectors"));
         PackSettings overrides = new PackSettings(java.nio.file.Path.of(PackPaths.settingsDir(env)));
         PackLoader loader = new PackLoader(files);
         List<java.nio.file.Path> dirs = PackLoader.dirs(dir, PackPaths.installedDir(env));

@@ -460,7 +460,7 @@ What it does:
 3. Unpacks only the core runtime (`pyodide.mjs`, `pyodide.asm.mjs`, `pyodide.asm.wasm`, `python_stdlib.zip`) and
    numpy, pandas, scipy, statsmodels and matplotlib with everything they depend on, and writes a lock file that lists
    only those (so an import of anything else fails at once instead of asking for a file).
-4. Writes `.drishti-pyodide` (version, SHA-256, packages) and replaces the folder as a whole.
+4. Writes `drishti-pyodide.txt` (version, SHA-256, packages) and replaces the folder as a whole.
 
 Run it again and it says *already installed*; `--force` unpacks again. It needs bash and python3, and curl, wget or
 python3 to download.

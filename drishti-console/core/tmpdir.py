@@ -29,7 +29,8 @@ import tempfile
 from pathlib import Path
 
 _PREFIX = "drishti-console-"
-_MARKER = ".drishti-console-tmp"
+_MARKER = "drishti-console-temp-folder.txt"
+_LEGACY_MARKER = ".drishti-console-tmp"      # earlier builds; still recognised
 _root: Path | None = None
 _base: Path | None = None
 _before: str | None = None            # tempfile.tempdir before start(), put back by clean_up()
@@ -69,7 +70,7 @@ def remove_stale(base: Path) -> int:
 #         return 0
 #     for p in entries:
 #         n = p.name
-#         if not n.startswith(_PREFIX) or not n[len(_PREFIX):].isdigit() or not (p / _MARKER).is_file():
+#         if not n.startswith(_PREFIX) or not n[len(_PREFIX):].isdigit() or not ((p / _MARKER).is_file() or (p / _LEGACY_MARKER).is_file()):
 #             continue
 #         pid = int(n[len(_PREFIX):])
 #         if pid != os.getpid() and not _alive(pid):

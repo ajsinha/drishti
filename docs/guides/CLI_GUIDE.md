@@ -59,7 +59,7 @@ uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py pac
 | `--date FIELD` | the business-date field. Default: **detected**: a date-valued field (`businessDate`, `asOf`, `date`, ...) present in at least 95% of the documents; none found: no data folder, the pack serves its samples |
 | `--title`, `--version` | the pack title; the version (default `1.0.0`) |
 | `--store delta\|files` | the dated store: `delta` (default) or the File connector's files |
-| `--out DIR` | the folder to create (default `build/<name>-<version>`); `--force` replaces it |
+| `--out DIR` | the folder to create (default `data/build/<name>-<version>`, under `DRISHTI_DATA_DIR`); `--force` replaces it |
 | `--fallback` / `--no-fallback` | a catch-all Sutra for documents matching no group (default on) |
 
 What it makes (everything the server needs is in this one folder):
@@ -864,8 +864,8 @@ format is in [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md).
 
 A generated pack is a starting point you then edit (About text, labels, priorities). When the data grows (a new product type, a new
 field), `pack regenerate` generates again and **three-way merges** the result into your pack. `pack new` and `pack make` store what
-they generated in `<pack>/.generated/` (a `.base` copy of every generated file and the options used); that copy is the *base*, your
-pack is *ours*, the fresh generation is *theirs* (`tools/packregen.py`). Commit `.generated/` with the pack; the bundle leaves it out.
+they generated in `<pack>/generated/` (a `.base` copy of every generated file and the options used); that copy is the *base*, your
+pack is *ours*, the fresh generation is *theirs* (`tools/packregen.py`). Commit `generated/` with the pack; the bundle leaves it out.
 
 | Situation | What happens |
 |---|---|
@@ -876,7 +876,7 @@ pack is *ours*, the fresh generation is *theirs* (`tools/packregen.py`). Commit 
 | both changed, in different places | `merge`: a line-level three-way merge (difflib), written |
 | both changed the same lines | `conflict`: both texts in the file between `<<<<<<< yours`, `=======` and `>>>>>>> regenerated` markers; listed; **exit 1** |
 | you deleted a file the generator still makes | `deleted`: it stays deleted |
-| no `.generated/` (a pack made before this) | nothing is merged: differing files are `no-baseline` (kept, exit 1), new files are added |
+| no `generated/` (a pack made before this) | nothing is merged: differing files are `no-baseline` (kept, exit 1), new files are added |
 
 ```text
 $ python3 tools/drishti.py pack new few.jsonl --name mb --kind trade --match productType --key tradeId --out mb
@@ -899,7 +899,7 @@ summary: 829 add, 1 keep, 1 merge, 3 refresh, 24 remove; 70 unchanged
 ```
 
 Here two files had been edited by hand (a strip label in `trade-accreting-swap`, the About sentence): the label edit is kept, the
-About edit is merged with the regenerated skeleton. Without `--dry-run` the same plan is written, then `.generated/` is replaced by
+About edit is merged with the regenerated skeleton. Without `--dry-run` the same plan is written, then `generated/` is replaced by
 what was just generated (not by the merged result, so the next run still sees your edits as yours). A real conflict, here the
 generator now writes `priority: 20` on a line you changed to 15:
 
@@ -1695,7 +1695,7 @@ connector does not work; **2** usage (no such file, unknown option). The server 
 | `connector list` | every connector: where it is defined, plugin, kinds, state, which packs use it, problems | `--origin file\|pack\|application`, `--status running\|disabled\|failed\|idle\|not_loaded` |
 | `connector get NAME` | the effective settings (credentials masked), the file's path, kinds, state and **version** (the ETag) | `--yaml` prints only the file's text |
 | `connector apply FILE` | create or change a connector from a YAML file; the name is the file name without `.yaml` | `--name N` (override), `--if-match V` (the version you expect; default: read it now), `--test-first` (try the settings on the real source and apply only if they work), `--confirm` (go ahead although it switches off a connector packs use) |
-| `connector delete NAME` | remove the file (its text is kept in `.history/`); refused for a connector a pack's template suggests (reset or disable it) | `--if-match V`, `--confirm` |
+| `connector delete NAME` | remove the file (its text is kept in `<data dir>/connectors/history/`); refused for a connector a pack's template suggests (reset or disable it) | `--if-match V`, `--confirm` |
 | `connector test [NAME]` | start a throwaway instance on the saved settings, or the settings of `--file`, ask it what it holds, close it; exit 1 when it fails | `--file F` |
 | `connector plugins [NAME]` | the installed plugins; with a name, the settings that plugin reads (type, default, required, secret) | |
 | `connector enable NAME`, `disable NAME` | switch on or off, keeping the rest of the file | `--confirm` |
@@ -1843,7 +1843,7 @@ $ python3 tools/drishti.py connector delete trading-store
 drishti: the server said 409 DRS-5032: DRS-5032 connector 'trading-store' is named by pack trading's template, so it is not deleted: reset it to the pack's default, or disable it
 [exit 1]
 $ python3 tools/drishti.py connector delete orders-lake
-deleted orders-lake (its text is kept in the connector folder's .history)
+deleted orders-lake (its text is kept in the connector folder's history/ folder)
 ```
 
 `connector reset NAME` prints `NAME is back to the pack's default (running)` and keeps your previous text in `connector history`. With `--json` every command prints

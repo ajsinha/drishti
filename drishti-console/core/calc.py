@@ -24,7 +24,8 @@ from pathlib import Path
 
 from core.servers import scoped
 
-STAMP = ".drishti-pyodide"
+STAMP = "drishti-pyodide.txt"
+LEGACY_STAMP = ".drishti-pyodide"
 NOT_INSTALLED = "Python runtime not installed: run tools/fetch-pyodide.sh"
 
 
@@ -33,7 +34,7 @@ class Runtime:
 
     def __init__(self, folder: Path):
         self.folder = folder
-        stamp = folder / STAMP
+        stamp = folder / STAMP if (folder / STAMP).exists() else folder / LEGACY_STAMP
         info = {}
         if stamp.exists() and (folder / "pyodide.mjs").exists() and (folder / "pyodide.asm.wasm").exists():
             for line in stamp.read_text(encoding="utf-8").splitlines():

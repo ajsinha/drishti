@@ -430,7 +430,7 @@ public final class ArtifactService {
             }
             try {
                 Files.createDirectories(target.getParent());
-                Path tmp = com.ash.drishti.common.TempFiles.createFile(target.getParent(), "." + o.name() + "-", ".part");
+                Path tmp = com.ash.drishti.common.TempFiles.createFile(target.getParent(), o.name() + "-", ".part");
                 Files.write(tmp, body);
                 Files.move(tmp, target, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
             } catch (IOException e) {

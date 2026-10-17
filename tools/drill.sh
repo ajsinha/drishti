@@ -24,7 +24,7 @@
 #   DRILL_MVN_ARGS="..."      extra Maven arguments for both Java runs (e.g. -Ddrishti.test.forks=1 to run the test classes serially)
 #
 # Full drill: licence check; Java 21 full verify (it builds the jar the console tests start); then, at the same time and each
-# with its own log under target/drill/: the Java 25 forward-compatibility verify (in a copy of the committed tree, so it
+# with its own log under <data>/drill/: the Java 25 forward-compatibility verify (in a copy of the committed tree, so it
 # cannot touch the jar the console tests run), the console tests on pytest-xdist workers, and the Python tool tests (the
 # generated-content checks included). Every test that ran before still runs; only the waiting is shared.
 set -euo pipefail
@@ -58,7 +58,7 @@ fi
 echo "drill: mode = $MODE$([[ $PUSH == 0 ]] && echo ' (no push)')"
 
 PY=drishti-console/.venv/bin/python
-LOGS=target/drill; mkdir -p "$LOGS"
+DATA="${DRISHTI_DATA_DIR:-data}"; LOGS="$DATA/drill"; mkdir -p "$LOGS"
 T0=$SECONDS; STAGES=()
 stage_done() { STAGES+=("$(printf '%-36s %5ss' "$1" "$(( SECONDS - $2 ))")"); echo "drill: ${STAGES[-1]}"; }
 cpus=$(nproc 2>/dev/null || echo 4); workers=$(( cpus / 2 )); (( workers > 4 )) && workers=4; (( workers < 1 )) && workers=1
@@ -86,7 +86,7 @@ python_tool_tests() {
   python3 -m unittest -q tools/test_sutragen.py
   python3 -m unittest -q tools/test_ingest_jsonl.py
   python3 -m unittest -q tools/test_drishti_cli.py
-  python3 -m unittest -q tools/test_pack_bundle.py
+  python3 -m unittest -q tools/test_pack_bundle.py tools/test_no_hidden_names.py
   python3 -m unittest -q tools/test_packmake.py
   python3 -m unittest -q tools/test_pack_authoring.py
   python3 -m unittest -q tools/test_cli_extras.py
@@ -108,7 +108,7 @@ python_tool_tests() {
 # The console suite. A test that fails is run once more on its own, serially: about one run in 700 a workbench page has
 # loaded without its script starting (wait() in drishti-console/tests/test_workbench_browser.py reports the page state and,
 # after net::ERR_NETWORK_CHANGED, reloads once). A test that passes the second time is a flake: printed and kept in
-# target/drill-flakes.log so it is looked at, not hidden; a test that fails twice fails the drill.
+# $LOGS/flakes.log so it is looked at, not hidden; a test that fails twice fails the drill.
 # The tests run on pytest-xdist workers, one whole file at a time (--dist loadfile) so a browser file keeps its server and
 # browser fixtures; every live server picks its own free port and its own scratch directory (wb_live.py, tmp_path_factory).
 console_tests() {
@@ -120,8 +120,8 @@ console_tests() {
     [[ -n "$failed" ]] || { echo "drill: the console suite failed with no failed test to re-run (a collection error?)" >&2; return 1; }
     echo "drill: re-running the failed console tests once:" >&2; echo "$failed" >&2
     $PY -m pytest -q -p no:xdist --last-failed --last-failed-no-failures none "${targets[@]}" || return 1
-    { echo "$(date -Iseconds) $(git log --oneline -1)"; echo "$failed"; } >> target/drill-flakes.log
-    echo "drill: FLAKY (failed once, passed again), kept in target/drill-flakes.log" >&2
+    { echo "$(date -Iseconds) $(git log --oneline -1)"; echo "$failed"; } >> $LOGS/flakes.log
+    echo "drill: FLAKY (failed once, passed again), kept in $LOGS/flakes.log" >&2
   fi
 }
 

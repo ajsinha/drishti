@@ -63,7 +63,7 @@ public class DesignBinding {
     private final String devDir;
 
     public DesignBinding(DesignService designs, SutraRegistry sutras, RachanaProperties props, Entitlements entitlements,
-            @Value("${drishti.builder.file-binding:false}") boolean enabled, @Value("${drishti.builder.dev-dir:./dev-sutras}") String devDir) {
+            @Value("${drishti.builder.file-binding:false}") boolean enabled, @Value("${drishti.builder.dev-dir:${drishti.data.dir:./data}/dev-sutras}") String devDir) {
         this.designs = designs;
         this.sutras = sutras;
         this.props = props;
@@ -192,7 +192,7 @@ public class DesignBinding {
     /** Writes through a new temporary file in the same folder (created exclusively, no link followed), then renames it over the target. */
     private void write(Path file, String text) {
         Path dir = file.getParent();
-        Path tmp = dir.resolve(".drishti-" + HexFormat.of().formatHex(randomBytes()) + ".tmp");
+        Path tmp = dir.resolve("drishti-" + HexFormat.of().formatHex(randomBytes()) + ".tmp");
         try {
             Files.createDirectories(dir);
             try (OutputStream out = Channels.newOutputStream(Files.newByteChannel(tmp, Set.of(StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE,

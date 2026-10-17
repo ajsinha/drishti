@@ -229,7 +229,7 @@ class PackDeployApiTest {
     }
 
     private static long stagedUploads() throws Exception {
-        Path d = root.resolve("installed/.uploads");
+        Path d = root.resolve("installed/uploads-awaiting-deploy");
         if (!Files.isDirectory(d)) {
             return 0;
         }

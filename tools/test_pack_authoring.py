@@ -126,7 +126,19 @@ class Plan(unittest.TestCase):
             base, opts = packregen.read_baseline(pack)
             self.assertEqual(set(base), set(packregen.pack_files(pack)))
             self.assertEqual(opts["match"], "type")
-            self.assertFalse(list(pack.glob("**/*.sutra.yaml.base")) == [] or list(pack.glob(".generated/**/*.sutra.yaml")))
+            self.assertFalse(list(pack.glob("**/*.sutra.yaml.base")) == [] or list(pack.glob("generated/**/*.sutra.yaml")))
+
+
+class LegacyBaselineName(unittest.TestCase):
+    def test_hidden_generated_folder_of_an_earlier_build_is_renamed_once(self):
+        with tempfile.TemporaryDirectory() as t:
+            pack = pathlib.Path(t) / "pk"
+            (pack / ".generated").mkdir(parents=True)
+            (pack / ".generated" / "pack.yaml.base").write_text("pack: pk\n")
+            base = packregen._gen_dir(pack)
+            self.assertEqual(base.name, "generated")
+            self.assertTrue((base / "pack.yaml.base").is_file())
+            self.assertFalse((pack / ".generated").exists())
 
 
 class Diff(unittest.TestCase):
@@ -268,7 +280,7 @@ class RegenerateEndToEnd(unittest.TestCase):
             docs = [{"tradeId": f"T{i}", "type": ["IRS", "FRA"][i % 2], "notional": 100 + i} for i in range(6)]
             data.write_text("".join(json.dumps(d) + "\n" for d in docs))
             self.assertEqual(run("pack", "new", data, "--name", "pk", "--key", "tradeId", "--match", "type", "--out", pack)[0], 0)
-            self.assertTrue((pack / ".generated" / "pack.yaml.base").is_file())
+            self.assertTrue((pack / "generated" / "pack.yaml.base").is_file())
             irs = pack / "sutras/trade/trade-irs.v1.sutra.yaml"
             irs.write_text(irs.read_text().replace('label: "Notional"', 'label: "Face amount"'))
             about = pack / "config/about.yaml"

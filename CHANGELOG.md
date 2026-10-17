@@ -17,8 +17,9 @@
 
 ## Unreleased
 
+- **No hidden files or folders, and everything Drishti writes lives under the data folder.** Connector edit history and generated-file markers: `config/connectors/.history/` and `.generated/` are now `<data>/connectors/history/` and `generated/`; the pack baseline of `pack make` and `pack new`: `<pack>/generated/`; the lake builder state: `_drishti-lake/`; the installed-packs folders `previous-versions/` and `uploads-awaiting-deploy/`; `data/packs/settings/migrated/`; the temp-folder markers `drishti-temp-folder.txt` and `drishti-console-temp-folder.txt`; the Calc and DuckDB-Wasm stamps `drishti-pyodide.txt` and `drishti-duckdb-wasm.txt`; temp files lose their leading dot. Every old name is read once and renamed with a log line (nothing is lost). The IDE QA profile moves from `qa-data/` to `data/qa/`; `pack make` and the other tools write `build/` under the data folder; `tools/drill.sh` logs to `<data>/drill/`; pytest no longer creates `.pytest_cache`. Only names an external tool requires keep their dot (see the developer guide). A guard test (`tools/test_no_hidden_names.py`) fails on a new hidden name.
 - **Run configurations for IntelliJ IDEA and PyCharm; QA with no terminal.** `.run/` now holds Drishti server (default, QA profile on ports 18580/17580 with its own git-ignored
-  `qa-data/` folder, and a debug-friendly one), Drishti console (default and QA), Drishti build server jar (Maven), a compound Drishti QA (server + console) and Python
+  `data/qa/` folder, and a debug-friendly one), Drishti console (default and QA), Drishti build server jar (Maven), a compound Drishti QA (server + console) and Python
   configurations for QA pack make, QA lake build (big JSON to Delta, editable parameters), QA server smoke and QA doctor. `docs/guides/IDE_GUIDE.md` is rewritten around them,
   with the QA walk (build the jar, QA server, QA console, lake build, Build -> New pack, deploy, load data, open a deal) and more common problems. `deltalake` joins
   `drishti-console/requirements.txt` so the lake build runs from the console's `.venv`.

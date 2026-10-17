@@ -99,7 +99,7 @@ final class LocalWriteFileIO implements FileIO {
     @Override
     public void copyFileAtomically(String srcPath, String destPath, boolean overwrite) throws IOException {
         Path dest = local(destPath);
-        Path tmp = dest.resolveSibling("." + dest.getFileName() + "." + UUID.randomUUID() + ".tmp");
+        Path tmp = dest.resolveSibling("tmp-" + dest.getFileName() + "." + UUID.randomUUID() + ".tmp");
         Files.copy(local(srcPath), tmp);
         place(tmp, dest, overwrite);
     }
@@ -125,7 +125,7 @@ final class LocalWriteFileIO implements FileIO {
             @Override
             public void writeAtomically(CloseableIterator<String> data, boolean overwrite) throws IOException {
                 Files.createDirectories(target.getParent());
-                Path tmp = target.resolveSibling("." + target.getFileName() + "." + UUID.randomUUID() + ".tmp");
+                Path tmp = target.resolveSibling("tmp-" + target.getFileName() + "." + UUID.randomUUID() + ".tmp");
                 try (data; BufferedWriter w = Files.newBufferedWriter(tmp, StandardCharsets.UTF_8)) {
                     while (data.hasNext()) {
                         w.write(data.next());

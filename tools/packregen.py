@@ -15,7 +15,7 @@
 
 """`drishti.py pack regenerate`: new data, new Sutras, without losing a single edit.
 
-`pack new` / `pack make` store a baseline of what they generated in <pack>/.generated/ (a copy of every generated file plus the options used).
+`pack new` / `pack make` store a baseline of what they generated in <pack>/generated/ (a copy of every generated file plus the options used).
 `pack regenerate PACK INPUTS` generates again into a scratch folder (theirs) and merges it into the pack (ours) against the baseline (base):
 
     only theirs changed        refresh the file          only ours changed          keep it (your edit)
@@ -33,9 +33,11 @@ import io
 import json
 import pathlib
 import shutil
+import sys
 import tempfile
 
-GEN = ".generated"
+GEN = "generated"
+LEGACY_GEN = ".generated"      # earlier builds; renamed once, with a message
 SUFFIX = ".base"  # so no tool (sutra lint, bundle globs) mistakes a baseline copy for a real file
 OPTIONS = ".options.json"
 STORED = ("name", "title", "description", "version", "mnemonic", "key", "date", "match", "kind", "store", "priority", "min_docs", "fallback",
@@ -58,14 +60,23 @@ def pack_files(root: pathlib.Path) -> dict[str, bytes]:
     out = {}
     for p in sorted(root.rglob("*")):
         rel = p.relative_to(root)
-        if p.is_file() and not p.is_symlink() and rel.parts[0] != GEN and "__pycache__" not in rel.parts:
+        if p.is_file() and not p.is_symlink() and rel.parts[0] not in (GEN, LEGACY_GEN) and "__pycache__" not in rel.parts:
             out[rel.as_posix()] = p.read_bytes()
     return out
 
 
+def _gen_dir(pack: pathlib.Path) -> pathlib.Path:
+    """<pack>/generated; a hidden <pack>/.generated of an earlier build is renamed to it once (nothing is lost)."""
+    new, old = pack / GEN, pack / LEGACY_GEN
+    if old.is_dir() and not new.exists():
+        old.rename(new)
+        print(f"renamed {old} to {new} (Drishti no longer uses hidden names)", file=sys.stderr)
+    return new
+
+
 def snapshot(pack: pathlib.Path, opts, source: pathlib.Path | None = None) -> None:
-    """Writes <pack>/.generated/: a copy of the files as just generated (those of `source`, default the pack itself) and the options used."""
-    base = pack / GEN
+    """Writes <pack>/generated/: a copy of the files as just generated (those of `source`, default the pack itself) and the options used."""
+    base = _gen_dir(pack)
     files = pack_files(source or pack)
     if base.exists():
         shutil.rmtree(base)
@@ -79,7 +90,7 @@ def snapshot(pack: pathlib.Path, opts, source: pathlib.Path | None = None) -> No
 
 
 def read_baseline(pack: pathlib.Path) -> tuple[dict[str, bytes] | None, dict]:
-    base = pack / GEN
+    base = _gen_dir(pack)
     if not base.is_dir():
         return None, {}
     files = {}
@@ -237,7 +248,7 @@ def regenerate(a, cli, parser_actions=()) -> int:
                     p.write_bytes(x["data"])
                 elif x["action"] == "remove":
                     p.unlink()
-            for d in sorted((p for p in pack.rglob("*") if p.is_dir() and GEN not in p.parts), reverse=True):
+            for d in sorted((p for p in pack.rglob("*") if p.is_dir() and GEN not in p.parts and LEGACY_GEN not in p.parts), reverse=True):
                 if not any(d.iterdir()):
                     d.rmdir()
             snapshot(pack, ns, source=gen)

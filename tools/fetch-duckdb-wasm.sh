@@ -44,7 +44,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-STAMP="${DEST}/.drishti-duckdb-wasm"
+STAMP="${DEST}/drishti-duckdb-wasm.txt"
 if [ "$FORCE" = 0 ] && [ -f "$STAMP" ] && grep -q "^sha256=${SHA256}$" "$STAMP"; then
   echo "DuckDB-Wasm ${VERSION} is already installed in ${DEST}; --force unpacks it again"
   exit 0

@@ -35,8 +35,8 @@ Engines (--engine): auto (default) uses Drishti's own Java writer in the server'
 drishti-server/target), else the Python deltalake package; the run says which ran and why.
 
 For schedulers: exit 0 ok, 2 written with rejects (or the data-load signal failed), 1 failure (nothing was committed for the
-table that failed), 3 another run holds the lake's lock. Each run appends one line to <lake>/.drishti-lake/runs.log and writes a
-JSON summary (rows per date and partition, rejects with reasons, timings, engine) to <lake>/.drishti-lake/runs/<run>.json and
+table that failed), 3 another run holds the lake's lock. Each run appends one line to <lake>/_drishti-lake/runs.log and writes a
+JSON summary (rows per date and partition, rejects with reasons, timings, engine) to <lake>/_drishti-lake/runs/<run>.json and
 last-run.json (or --summary FILE). --signal URL then tells that server the data landed (POST /api/v1/packs/{pack}/loads)."""
 from __future__ import annotations
 
@@ -60,7 +60,7 @@ import writers  # noqa: E402
 
 EXIT_OK, EXIT_FAILED, EXIT_PARTIAL, EXIT_LOCKED = 0, 1, 2, 3
 MODES = ("overwrite-dates", "overwrite-partitions", "append")
-STATE = ".drishti-lake"
+STATE = "_drishti-lake"
 RESERVED = {"id", "doc", "business_date"}
 
 
@@ -75,10 +75,14 @@ class Locked(BuildError):
 # ------------------------------------------------------------------------------------------------ the lock
 
 class LakeLock:
-    """One run per lake at a time: an exclusive lock on <lake>/.drishti-lake/lock (released by the OS if the run dies, so a crashed
+    """One run per lake at a time: an exclusive lock on <lake>/_drishti-lake/lock (released by the OS if the run dies, so a crashed
     run never blocks the next). The file says who holds it."""
 
     def __init__(self, lake: pathlib.Path):
+        old = lake / ".drishti-lake"                       # the hidden name of earlier builds: renamed once
+        if old.is_dir() and not (lake / STATE).exists():
+            old.rename(lake / STATE)
+            print(f"renamed {old} to {lake / STATE} (Drishti no longer uses hidden names)", file=sys.stderr)
         self.path = lake / STATE / "lock"
         self.fh = None
 
@@ -448,7 +452,7 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     g.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then drishti-server/target)")
     g.add_argument("--java", help="the java binary (default: JAVA_HOME, then java on the PATH)")
     g.add_argument("--dry-run", action="store_true", help="read and count, write nothing")
-    g.add_argument("--keep-staging", action="store_true", help="keep the staged rows under <lake>/.drishti-lake/staging (to debug)")
+    g.add_argument("--keep-staging", action="store_true", help="keep the staged rows under <lake>/_drishti-lake/staging (to debug)")
     g = p.add_argument_group("afterwards")
     g.add_argument("--signal", metavar="URL", help="tell this server the data landed (POST /api/v1/packs/{pack}/loads); needs a token with loads:write")
     g.add_argument("--token-file", help="the API token for --signal (default: DRISHTI_TOKEN); never printed")

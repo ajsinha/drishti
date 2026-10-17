@@ -29,7 +29,7 @@
       <env name="DRISHTI_SEED_PASSWORD" value="drishti-dev-admin123" />
       <env name="DRISHTI_EXTERNAL_LIB" value="$PROJECT_DIR$/external_lib" />
       <env name="DRISHTI_PORT" value="18580" />
-      <env name="DRISHTI_DATA_DIR" value="$PROJECT_DIR$/qa-data/data" />
+      <env name="DRISHTI_DATA_DIR" value="$PROJECT_DIR$/data/qa/data" />
     </envs>
     <method v="2">
       <option name="Make" enabled="true" />

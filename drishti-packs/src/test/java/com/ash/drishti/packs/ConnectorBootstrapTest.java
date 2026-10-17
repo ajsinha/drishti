@@ -78,7 +78,7 @@ class ConnectorBootstrapTest {
         ConnectorFiles files = new ConnectorFiles(dir.resolve("config/connectors"));
         List<Pack> old = packs(dir, RISK);
         ConnectorBootstrap.run(old, files, null, true);
-        java.nio.file.Files.delete(dir.resolve("config/connectors/.generated/risk-lake.properties"));      // as written by an older server
+        java.nio.file.Files.delete(dir.resolve("config/connectors/generated/risk-lake.properties"));      // as written by an older server
         String renamed = RISK.replace("kinds: [var]\nroutes:\n  var:", "kinds: [var2]\nroutes:\n  var2:").replace("    kinds: [var]", "    kinds: [var2]");
         assertThat(ConnectorBootstrap.run(packs(dir, renamed), files, null, true).regenerated()).containsExactly("risk-lake");
         assertThat(files.read("risk-lake").kinds()).containsExactly("var2");
@@ -103,7 +103,7 @@ class ConnectorBootstrapTest {
         assertThat(d.isEnabled()).isFalse();
         assertThat(d.settings()).containsEntry("root", "/mnt/lake").containsEntry("engine", "native").containsEntry("domain", "risk");   // template + the admin's edit
         assertThat(overrides.text("risk")).isNull();                                                                                  // the override file is gone ...
-        try (var s = Files.list(overrides.dir().resolve(".migrated"))) {
+        try (var s = Files.list(overrides.dir().resolve("migrated"))) {
             List<Path> kept = s.toList();
             assertThat(kept).hasSize(1);                                                                                              // ... and kept as a backup
             assertThat(Files.readString(kept.get(0))).contains("/mnt/lake");

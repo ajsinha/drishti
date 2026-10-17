@@ -86,7 +86,7 @@ class ConnectorFilesTest {
         assertThat(files.revisionText("lake", h.get(0).id())).contains("/b");
         assertThat(files.read("lake").settings()).containsEntry("root", "/c");
         try (var s = Files.list(files.dir())) {
-            assertThat(s.map(p -> p.getFileName().toString()).toList()).containsExactlyInAnyOrder("lake.yaml", ".history");     // no temp files
+            assertThat(s.map(p -> p.getFileName().toString()).toList()).containsExactlyInAnyOrder("lake.yaml", "history");     // no temp files
         }
         assertThat(files.delete("lake")).isTrue();
         assertThat(files.history("lake")).hasSize(3);                                          // a delete keeps the text too

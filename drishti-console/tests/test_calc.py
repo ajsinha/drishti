@@ -134,7 +134,7 @@ def test_the_runtime_folder_is_read_from_its_stamp(tmp_path):
     assert NOT_INSTALLED == "Python runtime not installed: run tools/fetch-pyodide.sh"
     folder = tmp_path / "pyodide"
     folder.mkdir()
-    (folder / ".drishti-pyodide").write_text("version=314.0.7\nsha256=abc\npackages=numpy pandas\n")
+    (folder / "drishti-pyodide.txt").write_text("version=314.0.7\nsha256=abc\npackages=numpy pandas\n")
     assert not Runtime(folder).installed                     # a stamp without the runtime's files is not an install
     (folder / "pyodide.mjs").write_text("x")
     (folder / "pyodide.asm.wasm").write_bytes(b"\0" * 2000)

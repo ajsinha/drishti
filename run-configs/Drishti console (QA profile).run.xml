@@ -21,7 +21,7 @@
     <option name="PARENT_ENVS" value="true" />
     <envs>
       <env name="PYTHONUNBUFFERED" value="1" />
-      <env name="DRISHTI_LAKE_ROOTS" value="$PROJECT_DIR$/qa-data/delta" />
+      <env name="DRISHTI_LAKE_ROOTS" value="$PROJECT_DIR$/data/qa/delta" />
       <env name="DRISHTI_TOKEN_SECRET" value="drishti-dev-only-token-secret-change-me-0123456789" />
     </envs>
     <option name="SDK_HOME" value="$PROJECT_DIR$/drishti-console/.venv/bin/python" />

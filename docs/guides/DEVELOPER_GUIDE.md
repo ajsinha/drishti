@@ -304,7 +304,7 @@ is a `*.md` file or is a `help.yaml`, the drill runs in docs mode by itself; oth
    `${surefire.forkNumber}` (see `drishti-server/pom.xml`); Testcontainers and the in-test servers use free ports.
    A test must not clear or change a JVM-wide setting for the classes that follow it in the same fork
    (`PackDeployApiTest` puts the build's `drishti.packs.dir` back instead of clearing it).
-4. Then three jobs at the same time, each with its own log in `target/drill/` (`java25.log`, `console.log`,
+4. Then three jobs at the same time, each with its own log in `<data dir>/drill/` (`java25.log`, `console.log`,
    `tools.log`) and its own timing; all must pass, and the tail of each failed log is printed:
    - **Java 25**, the forward-compatibility run (`JAVA25_HOME`; skipped with a message when that JDK is absent): the same
      tests again, with Docker hidden so the container tests (already run on 21) are skipped, so a library that breaks on a
@@ -316,7 +316,7 @@ is a `*.md` file or is a `help.yaml`, the drill runs in docs mode by itself; oth
      in the tests starts on a free port in the worker's own scratch directory (`wb_live.py`, `tmp_path_factory`); the
      stand-in server object's state is put back after each test (`conftest.py`), so a test passes whichever tests ran
      before it on its worker. If it fails, the failed tests (and only those) run once more, serially: a test that passes
-     the second time is printed as `FLAKY` and appended to `target/drill-flakes.log` with the commit; a test that
+     the second time is printed as `FLAKY` and appended to `<data dir>/drill/flakes.log` with the commit; a test that
      fails twice, or a run that failed without a failed test to re-run (a collection error), stops the drill. The retry
      exists for a rare workbench page that loads without its script starting under load; a timed-out browser wait reports
      the page's state, failed requests and bad responses, and when a failed request is `net::ERR_NETWORK_CHANGED`
@@ -1570,6 +1570,31 @@ The console runs Uvicorn with access logs off (`access_log=False` in `run_drisht
     *Admin → Caches*.
 14. **A test that reads the repository** (`DocumentedSutrasTest`, `ImperfectDataTest`, the `drishti-it` rules) resolves
     paths relative to its module (`../docs`, `../config/packs`). Run Maven from the repository root.
+
+15. **A hidden file or folder.** Drishti makes none, in the repository or at run time: a person must be able to see what is where. Name a new
+    file or folder with a visible name (`history/`, `generated/`, `drishti-temp-folder.txt`, a temp file `name-xxxx.tmp`, never `.history`).
+    Everything the server, the console and the tools write goes under the data folder (`DRISHTI_DATA_DIR`, default `./data`), never the
+    repository root. When a name changes, read the old one once and rename it with a log line (`LegacyNames` in Java; see `packregen._gen_dir`
+    in Python), never lose data. `tools/test_no_hidden_names.py` fails on a new hidden name or a tracked one.
+
+### Why these few names start with a dot
+
+Only names an external tool looks for by exactly that name keep the dot:
+
+| Name | Why |
+|---|---|
+| `.gitignore`, `.gitattributes`, `.git/` | Git |
+| `.dockerignore` | Docker |
+| `.editorconfig` | editors |
+| `.java-version` | version managers (jenv, SDKMAN) |
+| `.mvn/` | the Maven wrapper |
+| `.github/` | GitHub |
+| `.idea/` | IntelliJ IDEA and PyCharm (our run configurations are in the visible `run-configs/`) |
+| `.venv/` | the Python convention for a virtual environment (git-ignored) |
+| `.claude/` | Claude Code |
+
+Everything else is visible. The user's own `~/.cache/drishti*` (downloads of the fetch tools) follows the operating system's convention and is
+outside the repository.
 
 ---
 

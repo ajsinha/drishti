@@ -709,7 +709,7 @@ drishti:
     max-alternatives: 2             # runner-up kinds kept with each drafted panel
     limit-names: [limit, max, cap, threshold, budget, capacity]   # names that hold a limit beside a measure (a gauge's maximum)
     file-binding: false             # development servers only: a design may be bound to a file in your own folder of dev-dir (save writes it, IDE edits come back); never makes anything live
-    dev-dir: ./dev-sutras           # where bound files live, one folder per user; must be OUTSIDE drishti.rachana.dirs (going live is always propose + approve)
+    dev-dir: ${drishti.data.dir:./data}/dev-sutras           # where bound files live, one folder per user; must be OUTSIDE drishti.rachana.dirs (going live is always propose + approve)
     sample-max-items: 50            # synthetic sampler: longest array it generates (a schema asking for more is clamped, with a problem)
     sample-max-string: 1000         # ... longest string
     sample-max-depth: 8             # ... deepest nesting

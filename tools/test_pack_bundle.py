@@ -106,7 +106,7 @@ class Bundles(unittest.TestCase):
     def test_default_backup_is_previous_under_target(self):
         run("pack", "deploy", self.bundle()["archive"], "--to", self.to, "--no-sutra")
         run("pack", "deploy", self.bundle("1.0.1")["archive"], "--to", self.to, "--no-sutra")
-        self.assertEqual(1, len(list((self.to / ".previous").iterdir())))
+        self.assertEqual(1, len(list((self.to / "previous-versions").iterdir())))
 
     def test_tampered_archive_is_refused_and_nothing_is_deployed(self):
         archive = pathlib.Path(self.bundle()["archive"])

@@ -55,7 +55,7 @@ class ConnectorApiTest {
 
     @org.junit.jupiter.api.BeforeEach
     void freshHistory() throws Exception {
-        Path h = files.dir().resolve(".history");
+        Path h = files.stateDir().resolve("history");
         if (Files.isDirectory(h)) {
             try (var s = Files.list(h)) {
                 for (Path p : s.filter(x -> x.getFileName().toString().startsWith("api-")).toList()) {

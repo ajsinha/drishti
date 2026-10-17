@@ -61,16 +61,16 @@ Contents: [1](#1-the-model-in-one-minute) the model · [2](#2-the-folder) the fo
 config/connectors/
   trading-store.yaml        one file per connector; the name is the file name
   site-quotes.yaml
-  .history/                 every earlier text of every file, written before each change
+  history/                  every earlier text of every file, written before each change
     site-quotes.20261010T140411601.yaml
 ```
 
 Names are lower case letters, digits and hyphens, starting with a letter or digit, at most 64 characters (`trading-lake`,
 `risk-store-2`). `plugins` and `history` are reserved. A file whose name breaks the rule (`Upper.yaml`, `a b.yaml`, `.yml`) is not
-loaded; the server lists it in the log and on the Connectors page. Dot files and `.history/` are ignored.
+loaded; the server lists it in the log and on the Connectors page. Dot files and `<data dir>/connectors/history/` are ignored.
 
 **Keep this folder in version control** if you manage configuration as code; it holds no secret (section 5). Back it up with the
-rest of the site configuration; `.history/` is a convenience, not a backup.
+rest of the site configuration; `<data dir>/connectors/history/` is a convenience, not a backup.
 
 ## 3. The file
 
@@ -95,7 +95,7 @@ settings:                         # the plugin's settings; nesting is flattened 
   Drishti's configuration. An unset variable without a default refuses that file (the last good configuration keeps running).
 - Lists become comma lists (`topics: [a, b]` is `topics: a,b`). Values are strings to the plugin.
 - Comments are kept when you edit the YAML in an editor or in the YAML tab. Saving from the **Form** tab rewrites the file from the
-  fields (comments are not kept; the earlier text is in `.history/`).
+  fields (comments are not kept; the earlier text is in `<data dir>/connectors/history/`).
 
 ## 4. Examples, one per store
 
@@ -410,7 +410,7 @@ What is **not** live: a connector defined in the server's own configuration (`ap
 
 ![Admin → Connectors: every connector with origin, plugin, kinds, status, who uses it and when it changed](img/connector_files/01-connectors-list.jpg)
 
-**Uninstalling safely.** The page has one way out for a connector that has a file, **Uninstall…** (there is no separate Delete button; `DELETE /{name}` remains for scripts and keeps the text in `.history/`). It: it asks what depends on the connector (the
+**Uninstalling safely.** The page has one way out for a connector that has a file, **Uninstall…** (there is no separate Delete button; `DELETE /{name}` remains for scripts and keeps the text in `<data dir>/connectors/history/`). It: it asks what depends on the connector (the
 packs and kinds that read through it, BI datasets that scan it, whether a pack's template would write it back), refuses while anything does, and otherwise **moves the file**
 to `data/uninstalled/` where **Admin → Artifacts → Uninstalled** restores it. A connector a pack's template names is only disabled or reset. See [ARTIFACTS.md](../admin/ARTIFACTS.md).
 
@@ -467,7 +467,7 @@ sent, with the message above; the server refuses it too.
 
 ![History: the earlier versions, and what changed](img/connector_files/06-history-diff.jpg)
 
-**Save** writes the file atomically (a timestamped copy of the old text goes to `.history/`), applies it to that connector and says
+**Save** writes the file atomically (a timestamped copy of the old text goes to `<data dir>/connectors/history/`), applies it to that connector and says
 what state it reached. **Two editors cannot overwrite each other**: the page sends the version it read (the file's ETag) and the server
 refuses a stale one with *changed since you read it*, offering **Load the current version**.
 
@@ -619,13 +619,13 @@ drop the profile.
 **The Admin → Packs → Data source override** (`data/packs/settings/<pack>.yaml`, written by the earlier Data source panel) is
 **unified** with connector files. At the first start after the upgrade the server **migrates** each override into the connector file of
 the same name: the override's `enabled` and `settings` are applied on top of the file (or, when there is none, on top of the pack's
-template), the original override file is moved to `data/packs/settings/.migrated/<pack>.yaml.<timestamp>` as a backup, and the file's
-earlier text, if there was one, goes to `.history/`. An override the server cannot place (no template and no file say which plugin to use) is
+template), the original override file is moved to `data/packs/settings/migrated/<pack>.yaml.<timestamp>` as a backup, and the file's
+earlier text, if there was one, goes to `<data dir>/connectors/history/`. An override the server cannot place (no template and no file say which plugin to use) is
 **left in place and reported**; nothing an administrator saved is dropped. It is logged and audited as `connector-migrated`:
 
 ```
 connectors: data-source override of pack 'risk' for connector 'risk-store' moved into risk-store.yaml
-connectors: original override file of pack 'risk' kept in data/packs/settings/.migrated
+connectors: original override file of pack 'risk' kept in data/packs/settings/migrated
 ```
 
 The panel itself is now a **view** of the pack's connectors with links to Admin → Connectors; the `PUT`, `DELETE` and `…/test` calls of

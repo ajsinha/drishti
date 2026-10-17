@@ -29,6 +29,7 @@ import os
 import pathlib
 import re
 import shutil
+import sys
 import tarfile
 import tempfile
 
@@ -87,7 +88,7 @@ def read_pack_yaml(pack: pathlib.Path) -> dict:
 def pack_files(pack: pathlib.Path) -> list[pathlib.Path]:
     out = []
     for dp, dns, fns in os.walk(pack):
-        dns[:] = sorted(d for d in dns if d not in SKIP_DIRS)
+        dns[:] = sorted(d for d in dns if d not in SKIP_DIRS and not (d == "generated" and pathlib.Path(dp) == pack))   # the baseline of pack make/new stays out of the bundle
         for fn in sorted(fns):
             p = pathlib.Path(dp) / fn
             if fn in SKIP_FILES or p.is_symlink() or fn.endswith(".pyc"):
@@ -259,7 +260,13 @@ def pack_version(folder: pathlib.Path) -> str:
 
 
 def backup_dir(to: pathlib.Path, backup: str | None) -> pathlib.Path:
-    return pathlib.Path(backup) if backup else to / ".previous"
+    if backup:
+        return pathlib.Path(backup)
+    old, new = to / ".previous", to / "previous-versions"      # the hidden name of earlier builds: renamed once
+    if old.is_dir() and not new.exists():
+        old.rename(new)
+        print(f"renamed {old} to {new} (Drishti no longer uses hidden names)", file=sys.stderr)
+    return new
 
 
 def swap_in(new: pathlib.Path, target: pathlib.Path, bdir: pathlib.Path, name: str) -> pathlib.Path | None:

@@ -108,7 +108,7 @@ DUCKDB_FOLDER = "vendor/duckdb-wasm"
 
 def duckdb_base(static: Path) -> str:
     """The URL folder of the installed DuckDB-Wasm (tools/fetch-duckdb-wasm.sh), or '' when it is not installed."""
-    for stamp in sorted((static / DUCKDB_FOLDER).glob("*/.drishti-duckdb-wasm")):
+    for stamp in sorted((static / DUCKDB_FOLDER).glob("*/drishti-duckdb-wasm.txt")) + sorted((static / DUCKDB_FOLDER).glob("*/.drishti-duckdb-wasm")):
         folder = stamp.parent
         if all((folder / n).exists() for n in ("duckdb-browser.mjs", "duckdb-browser-eh.worker.js", "duckdb-eh.wasm")):
             return f"/static/{DUCKDB_FOLDER}/{folder.name}"

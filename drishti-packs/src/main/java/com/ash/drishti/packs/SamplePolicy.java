@@ -84,7 +84,7 @@ public final class SamplePolicy {
             }
             try {
                 Files.createDirectories(file.getParent());
-                Path tmp = com.ash.drishti.common.TempFiles.createFile(file.getParent(), ".samples-", ".tmp");
+                Path tmp = com.ash.drishti.common.TempFiles.createFile(file.getParent(), "samples-", ".tmp");
                 Files.writeString(tmp, m + "\n", StandardCharsets.UTF_8);
                 Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
             } catch (IOException e) {

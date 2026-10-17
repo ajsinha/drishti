@@ -543,7 +543,7 @@ read by those templates and by `${NAME:default}` references inside connector fil
 **Changing a connector without a restart.** Edit the file (or use **Admin → Connectors**, `/admin/connectors`, or
 `drishti.py connector apply`). The folder is watched (`drishti.sources.connectors-watch`, default `auto`, with a poll every 5 s as
 a safety net): only the connector whose file changed is restarted, and reads in flight get `connectors-drain` (3 s) to finish.
-Every earlier text of a file is kept in `config/connectors/.history/` and can be restored from the page. A change to an environment
+Every earlier text of a file is kept in `data/connectors/history/` and can be restored from the page. A change to an environment
 variable that a file refers to still needs a restart of the server, because variables are read at start-up. A connector that fails to start,
 or whose plugin reports `DOWN` later, is retried by itself ([Retries](#retries-what-failed-is-tried-again-by-itself)).
 
@@ -1135,8 +1135,10 @@ working directory unless you changed them.
 | `sutras/` (`DRISHTI_SUTRAS`) | your own Sutras, and what Studio saves | **yes**, preferably in version control | git, or copy |
 | `application.local.yaml`, `drishti-console/config/application.local.yaml`, `/etc/drishti/drishti.env` | your configuration and secrets | **yes**, securely | copy |
 | `data/state/<connector>/` | ActiveMQ and RabbitMQ connectors' latest document of each entity received (RocksDB, with its write-ahead log). A queue does not send a message twice, so this is the only copy Drishti has | yes, if you use those connectors | stop the server, copy the whole folder (the write-ahead log with the table files), start; or rely on the source system to re-send. A copy taken while the server runs is not consistent |
-| `config/connectors/` (`DRISHTI_CONNECTORS_DIR`) | one YAML file per connector: which plugin, where it connects, which kinds it serves. No secret is written in a file (credentials are `${ENV_NAME}` references). `.history/` holds earlier texts, a convenience and not a backup | **yes**, preferably in version control | commit the folder, or copy it (files are written atomically) |
-| `data/packs/settings/.migrated/` | the original data-source override files that were moved into connector files at the upgrade | once, then optional | copy; they are kept only as a record |
+| `config/connectors/` (`DRISHTI_CONNECTORS_DIR`) | one YAML file per connector: which plugin, where it connects, which kinds it serves. No secret is written in a file (credentials are `${ENV_NAME}` references). `<data dir>/connectors/history/` holds earlier texts, a convenience and not a backup | **yes**, preferably in version control | commit the folder, or copy it (files are written atomically) |
+| `data/packs/settings/migrated/` | the original data-source override files that were moved into connector files at the upgrade | once, then optional | copy; they are kept only as a record |
+| `data/connectors/history/` | every earlier text of every connector file (Admin -> Connectors -> Restore); written before each change | yes, with `config/connectors/` | copy; moved there from `config/connectors/.history/` on first start, nothing lost |
+| `data/connectors/generated/` | markers that say which connector files were written from a pack template and whether they were edited | no | rebuilt from the packs |
 | `data/cache/<connector>/` | the Kafka connectors' disk cache | no | rebuilt from the topic; cleared every night anyway |
 | `data/delta/` (`DRISHTI_DELTA_ROOT`) | the lake | by its owner | Drishti only reads it; back it up with your data platform's policy |
 | `data/feeds/` (`DRISHTI_FEEDS`) | files for the file connector | by whoever writes them | |

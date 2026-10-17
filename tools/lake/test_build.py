@@ -142,12 +142,12 @@ class BuildTest(unittest.TestCase):
         self.assertEqual((r["PRODUCT_TYPE"], r["NOTIONAL"], r["BOOK__NAME"]), ("Future", 5000.0, "BK-0"))
         self.assertEqual(json.loads(r["doc"])["LEGS"][1]["CASH_FLOWS"][1]["AMOUNT"], 1.5)
         self.assertTrue((self.lake / "trading" / "deal" / "business_date=2026-10-01" / "PRODUCT_TYPE=Swap").is_dir())
-        last = json.loads((self.lake / ".drishti-lake" / "last-run.json").read_text())
+        last = json.loads((self.lake / "_drishti-lake" / "last-run.json").read_text())
         self.assertEqual(last["status"], "ok")
-        log = (self.lake / ".drishti-lake" / "runs.log").read_text().strip().splitlines()
+        log = (self.lake / "_drishti-lake" / "runs.log").read_text().strip().splitlines()
         self.assertEqual(len(log), 1)
         self.assertIn("lake-build ok exit=0", log[0])
-        self.assertFalse(any((self.lake / ".drishti-lake" / "staging").glob("*")))
+        self.assertFalse(any((self.lake / "_drishti-lake" / "staging").glob("*")))
 
     def test_rerun_replaces_only_that_day_and_append_adds(self):
         self.assertEqual(build.run(self.base(), quiet)[0], 0)

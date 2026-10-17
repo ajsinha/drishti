@@ -242,7 +242,7 @@ public record LoadsConfig(List<String> notifyRoles, List<String> notifyUsers, bo
             try {
                 Path f = file(pack);
                 Files.createDirectories(f.getParent());
-                Path tmp = com.ash.drishti.common.TempFiles.createFile(f.getParent(), "." + pack + "-", ".tmp");
+                Path tmp = com.ash.drishti.common.TempFiles.createFile(f.getParent(), pack + "-", ".tmp");
                 Files.writeString(tmp, "# Data loads override, written from Admin > Packs > Data loads. The pack's own files are unchanged;\n"
                         + "# delete this file (or press Reset) to use the pack's own loads: section again.\n" + yaml.writeValueAsString(doc));
                 Files.move(tmp, f, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);

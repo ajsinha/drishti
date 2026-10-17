@@ -1058,7 +1058,7 @@ def build_parser() -> argparse.ArgumentParser:
              "It never calls a running server, but a server that watches its packs folder checks the copied pack and loads it by itself (PACKS.md, Live reload); Admin > Packs > Load does it at once, DRISHTI_PACKS keeps it for every start.")
     pd.add_argument("source", metavar="BUNDLE|FOLDER")
     pd.add_argument("--to", required=True, metavar="DIR", help="the server's packs folder (DRISHTI_PACKS_DIR) or drishti.packs.installed-dir")
-    pd.add_argument("--backup", metavar="DIR", help="keep the replaced version here (default DIR/.previous under --to)")
+    pd.add_argument("--backup", metavar="DIR", help="keep the replaced version here (default DIR/previous-versions under --to)")
     pd.add_argument("--dry-run", action="store_true", help="verify and show what would change; copy nothing")
     pr_ = add(k, "rollback", cmd_pack_rollback, "pack rollback: put back the newest (or --version) backup of a pack; the version it replaces is kept too",
               epilog="example:\n  drishti.py pack rollback my-bank --to /opt/drishti/packs --backup /opt/drishti/backups")

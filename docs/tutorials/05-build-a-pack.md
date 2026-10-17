@@ -193,7 +193,7 @@ build/desk-quotes/MANIFEST.json
 build/desk-quotes/pack
 build/desk-quotes/pack/desk-quotes
 build/desk-quotes/pack/desk-quotes/config
-build/desk-quotes/pack/desk-quotes/.generated
+build/desk-quotes/pack/desk-quotes/generated
 build/desk-quotes/pack/desk-quotes/pack.yaml
 build/desk-quotes/pack/desk-quotes/README.md
 build/desk-quotes/pack/desk-quotes/samples

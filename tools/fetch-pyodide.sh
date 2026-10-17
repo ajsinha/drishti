@@ -48,7 +48,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-STAMP="${DEST}/.drishti-pyodide"
+STAMP="${DEST}/drishti-pyodide.txt"
 if [ "$FORCE" = 0 ] && [ -f "$STAMP" ] && grep -q "^version=${VERSION}$" "$STAMP" && grep -q "^sha256=${SHA256}$" "$STAMP"; then
   echo "Pyodide ${VERSION} is already installed in ${DEST} ($(du -sh "$DEST" | cut -f1)); --force unpacks it again"
   exit 0
@@ -129,7 +129,7 @@ lock["packages"] = {n: p for n, p in packages.items() if n in keep}
 print("packages: " + ", ".join(sorted(keep)))
 PY
 
-cat > "$WORK/pyodide/.drishti-pyodide" <<EOF
+cat > "$WORK/pyodide/drishti-pyodide.txt" <<EOF
 version=${VERSION}
 sha256=${SHA256}
 packages=${PACKAGES}

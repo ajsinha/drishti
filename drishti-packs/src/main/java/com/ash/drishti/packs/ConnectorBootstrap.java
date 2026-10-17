@@ -246,7 +246,8 @@ public final class ConnectorBootstrap {
                 }
             }
             try {
-                Path backup = dir.resolve(".migrated");
+                Path backup = dir.resolve("migrated");
+                com.ash.drishti.common.LegacyNames.migrate(dir, ".migrated", "migrated");
                 Files.createDirectories(backup);
                 Files.copy(doc, backup.resolve(pack + ".yaml." + STAMP.format(Instant.now())));
                 if (left.isEmpty()) {

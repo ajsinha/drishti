@@ -86,7 +86,7 @@ the project's JDK and no absolute path of yours.
 | Run configuration | What it does | Ports |
 |---|---|---|
 | **Drishti server** | `DrishtiApplication` of module `drishti-server`, working directory = the repository root, the nine quickstart packs, sign-in on with the documented development administrator (`drishti-dev-admin` / `drishti-dev-admin123`), `DRISHTI_EXTERNAL_LIB=$PROJECT_DIR$/external_lib`, `-Xmx2g`. Data in `./data`. | 18480 |
-| **Drishti server (QA profile)** | The same, with **its own data folder `qa-data/data`** (git-ignored) so QA never touches `./data` or another stack. | **18580** |
+| **Drishti server (QA profile)** | The same, with **its own data folder `data/qa/data`** (git-ignored) so QA never touches `./data` or another stack. | **18580** |
 | **Drishti server (debug-friendly)** | The QA profile with sign-in **off** and DEBUG logging for `com.ash.drishti`: for stepping through code without logging in. | 18580 |
 | **Drishti build server jar** | Maven: `package -DskipTests -pl drishti-server -am`; produces `drishti-server/target/drishti-server-<version>-exec.jar`. | |
 | **Drishti QA (server + console)** | Compound: starts the QA server and the QA console together (needs the Python plugin; in IntelliJ IDEA Community start the console from PyCharm instead). | 18580 + 17580 |
@@ -162,7 +162,7 @@ PyCharm reads the same `run-configs/` folder of the repository root when you ope
 | Run configuration | Parameters | Talks to |
 |---|---|---|
 | **Drishti console** | `--server.port=17480 --backend.url=http://127.0.0.1:18480` | the default server |
-| **Drishti console (QA profile)** | `--server.port=17580 --backend.url=http://127.0.0.1:18580`, environment `DRISHTI_LAKE_ROOTS=$PROJECT_DIR$/qa-data/delta` (Admin -> Data loads -> Lakes may write there) | the QA server |
+| **Drishti console (QA profile)** | `--server.port=17580 --backend.url=http://127.0.0.1:18580`, environment `DRISHTI_LAKE_ROOTS=$PROJECT_DIR$/data/qa/delta` (Admin -> Data loads -> Lakes may write there) | the QA server |
 
 Both run `drishti-console/run_drishti_web.py` from the repository root with the interpreter `drishti-console/.venv/bin/python`
 (the path is stored relative to the project; if PyCharm shows the interpreter as invalid, pick it once as in section 4.2).
@@ -219,7 +219,7 @@ they are skipped.
 
 ## 6. The QA profile, end to end (IntelliJ + PyCharm only)
 
-This is the walk a tester follows without a terminal. It uses ports 18580 (server) and 17580 (console) and the folder `qa-data/`
+This is the walk a tester follows without a terminal. It uses ports 18580 (server) and 17580 (console) and the folder `data/qa/`
 (git-ignored), so it never disturbs the default stack on 18480 / 17480 or the repository's `data/`.
 
 1. **Build the jar.** IntelliJ: run **Drishti build server jar** (a few minutes the first time). `pack make` and `lake build` use it.
@@ -229,12 +229,12 @@ This is the walk a tester follows without a terminal. It uses ports 18580 (serve
    `drishti-dev-admin` / `drishti-dev-admin123` (development defaults, [CONFIGURATION.md](../admin/CONFIGURATION.md)). With the
    Python plugin in IDEA, run the compound **Drishti QA (server + console)** for steps 2 and 3 in one click.
 4. **Make an API token for the tools** (smoke, doctor, the lake build's `--signal`): console -> *My account -> API tokens*, create one, and
-   save its text as `qa-data/token.txt` (create the folder; the file is git-ignored with the folder).
+   save its text as `data/qa/token.txt` (create the folder; the file is git-ignored with the folder).
 5. **Check the stack.** Run **QA server smoke** and **QA doctor**: smoke ends `smoke: OK`; doctor shows no red lines.
 6. **Make the pack from your JSON (optional if you build it in the browser, step 8).** Open **QA pack make (from JSON)**, set
    *Parameters*: the first argument is your sample file (JSON, JSON Lines or `.gz`; the placeholder is
    `$USER_HOME$/Downloads/YOUR_SAMPLE.jsonl`), `--kind` the entity kind, `--match` the field that tells the kinds apart, `--name` the
-   pack's name. It writes `qa-data/packs/<name>/` (the pack is in `qa-data/packs/<name>/pack/<name>`).
+   pack's name. It writes `data/qa/packs/<name>/` (the pack is in `data/qa/packs/<name>/pack/<name>`).
 7. **Build the lake from the big JSON.** Open **QA lake build (big JSON to Delta)** and edit *Parameters*:
 
    | Parameter | Meaning | Placeholder |
@@ -242,21 +242,21 @@ This is the walk a tester follows without a terminal. It uses ports 18580 (serve
    | `--from` | your big `.json` array, `.jsonl` or `.gz` (or a folder of them) | `$USER_HOME$/Downloads/YOUR_BIG_FILE.json` |
    | `--kind`, `--key`, `--date` | entity kind, its id field, its business-date field | `trade`, `tradeId`, `tradeDate` |
    | `--partition-by` | the column(s) the Delta table is split by | `PRODUCT_TYPE` |
-   | `--lake` | where the Delta table goes | `qa-data/delta` |
-   | `--pack` | the pack folder from step 6 (the folder that holds `pack.yaml`) | `qa-data/packs/qa-pack/pack/qa-pack` |
+   | `--lake` | where the Delta table goes | `data/qa/delta` |
+   | `--pack` | the pack folder from step 6 (the folder that holds `pack.yaml`) | `data/qa/packs/qa-pack/pack/qa-pack` |
 
-   Add `--signal http://localhost:18580 --token-file $PROJECT_DIR$/qa-data/token.txt` to tell the server the data landed. Run it; the
+   Add `--signal http://localhost:18580 --token-file $PROJECT_DIR$/data/qa/token.txt` to tell the server the data landed. Run it; the
    last line says `lake-build ok exit=0 ... rows=N`. It needs `pyyaml`, `pyarrow` and `deltalake` in the interpreter (they are in
    `drishti-console/requirements.txt`); a re-run of the same date replaces that date. Keep local runs to the size the machine takes
    (10,000 trades is plenty for QA).
 8. **Build -> New pack in the UI.** In the console: *Build -> New pack*, upload the same JSON, accept or edit the proposed Sutras, and save.
-9. **Deploy.** *Admin -> Packs -> Deploy* (the pack archive made in step 6 is `qa-data/packs/<name>/bundle/<name>-<version>.tar.gz`, or use
-   the one the wizard offers). Deploying writes under `qa-data/data/packs/`, never the repository's `config/packs`.
+9. **Deploy.** *Admin -> Packs -> Deploy* (the pack archive made in step 6 is `data/qa/packs/<name>/bundle/<name>-<version>.tar.gz`, or use
+   the one the wizard offers). Deploying writes under `data/qa/data/packs/`, never the repository's `config/packs`.
 10. **Load data.** *Admin -> Data loads* (or the lake build's `--signal`): the pack's loads show the table written in step 7. If a lake
-    folder is refused, it is not under `DRISHTI_LAKE_ROOTS` of the QA console (`qa-data/delta`).
+    folder is refused, it is not under `DRISHTI_LAKE_ROOTS` of the QA console (`data/qa/delta`).
 11. **Open a deal.** *Explore*, choose the pack and kind, open a row: the deal's page opens with its Sutra view.
 
-Start again from scratch by stopping both processes and deleting the `qa-data/` folder.
+Start again from scratch by stopping both processes and deleting the `data/qa/` folder.
 
 
 ## 7. Common problems
@@ -271,8 +271,8 @@ Start again from scratch by stopping both processes and deleting the `qa-data/` 
 | Tests pass in the terminal but fail in IDEA | `DRISHTI_*` variables are set in the test configuration (§5.1). |
 | PyCharm: `ModuleNotFoundError: No module named 'fastapi'` | The run configuration uses another interpreter: choose `drishti-console/.venv` (§4.2). |
 | `DRS-5003 backend unreachable` in the console | Start the server first; check the `--backend.url` parameter of the console's run configuration (§4.4). |
-| Smoke or doctor says `401 DRS-5010 missing bearer token` | Sign-in is on: make an API token (§6 step 4) and save it as `qa-data/token.txt`. |
-| `lake build: ... pack.yaml: no such file` | `--pack` must name the folder that holds `pack.yaml`: `qa-data/packs/<name>/pack/<name>`. |
+| Smoke or doctor says `401 DRS-5010 missing bearer token` | Sign-in is on: make an API token (§6 step 4) and save it as `data/qa/token.txt`. |
+| `lake build: ... pack.yaml: no such file` | `--pack` must name the folder that holds `pack.yaml`: `data/qa/packs/<name>/pack/<name>`. |
 | `deltalake is not installed` | The run configuration's interpreter lacks it: install `drishti-console/requirements.txt` into the `.venv` (§1). |
 | `pack make` says no `drishti-server-*-exec.jar` | Run **Drishti build server jar** first (§6 step 1). |
 | A run configuration is missing or shows `<no module>` | Open the repository root (a `pom.xml` project) and let the Maven import finish; the Python configurations need the Python plugin / PyCharm. |

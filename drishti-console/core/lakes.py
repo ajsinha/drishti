@@ -223,7 +223,9 @@ class Lakes:
     def runs(self, limit: int = 20) -> list[dict]:
         out = []
         for root in self.cfg.roots:
-            log = root / ".drishti-lake" / "runs.log"
+            log = root / "_drishti-lake" / "runs.log"
+            if not log.is_file():
+                log = root / ".drishti-lake" / "runs.log"      # an earlier build's name
             if log.is_file():
                 for line in log.read_text(encoding="utf-8").splitlines()[-limit:]:
                     out.append({"root": str(root), "line": line})

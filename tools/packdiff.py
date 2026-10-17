@@ -32,7 +32,7 @@ import pathlib
 import tempfile
 
 LEVELS = ("breaking", "selection", "layout", "change")
-SKIP_DIRS = {".generated", ".git", "__pycache__"}
+SKIP_DIRS = {"generated", ".generated", ".git", "__pycache__"}
 
 
 class DiffError(Exception):

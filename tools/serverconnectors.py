@@ -154,7 +154,7 @@ def cmd_delete(cli, a, extra) -> int:
     name = _name(cli, a.name)
     etag = a.if_match or api.json("GET", f"/api/v1/admin/connectors/{q(name)}").get("etag")
     res = api.json("DELETE", f"/api/v1/admin/connectors/{q(name)}" + _query(a.confirm), extra={"If-Match": etag} if etag else None)
-    cli.say_json(res) if a.json else print(f"deleted {name} (its text is kept in the connector folder's .history)")
+    cli.say_json(res) if a.json else print(f"deleted {name} (its text is kept in the connector folder's history/ folder)")
     return 0
 
 
