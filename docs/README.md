@@ -28,7 +28,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | **BI** | [BI guide](guides/BI_GUIDE.md) · [BI recipes](guides/BI_RECIPES.md) · [Datasets](guides/DATASETS.md) · [Reports](guides/REPORTS.md) · [Boards](guides/BOARDS.md) · [Governance](guides/BI_GOVERNANCE.md) · [Distribution](guides/DISTRIBUTION.md) · [Python in BI](guides/PYTHON_BI.md) · [Analyse](guides/ANALYSE.md) · [AI in BI](guides/BI_AI.md) |
 | **Data** | [Connectors](connectors/CONNECTORS.md) (a section per plugin) · [Connector files](connectors/CONNECTOR_FILES.md) · [TLS and proxy](connectors/TLS.md) · [Data loads](guides/DATA_LOADS.md) |
 | **Build** | [Packs](guides/PACKS.md) · [Pack developer guide](guides/PACK_DEVELOPER_GUIDE.md) · [Schema to pack](guides/SCHEMA_TO_PACK.md) · [Rachana guide](guides/SUTRA_DEVELOPER_GUIDE.md) · [Rachana reference](guides/RACHANA_REFERENCE.md) · [Panels](guides/PANELS.md) · [Examples](guides/examples/README.md) · [Build workbench](guides/SCREEN_DESIGNER.md) · [Connector developer guide](connectors/CONNECTOR_DEVELOPER_GUIDE.md) · [Developer guide](guides/DEVELOPER_GUIDE.md) · [Embedding](guides/ELEMENTS.md) |
-| **Operate** | [Configuration](admin/CONFIGURATION.md) · [Operations](admin/OPERATIONS.md) · [Users and roles](admin/USER_MANAGEMENT.md) · [Install and uninstall safely](admin/ARTIFACTS.md) · [API](guides/API_GUIDE.md) · [Command line](guides/CLI_GUIDE.md) · [AI providers](architecture/AI_PROVIDERS.md) · [Troubleshooting](guides/TROUBLESHOOTING.md) · [Release notes](../RELEASE_NOTES.md) |
+| **Operate** | [Configuration](admin/CONFIGURATION.md) · [Operations](admin/OPERATIONS.md) · [Users and roles](admin/USER_MANAGEMENT.md) · [Install and uninstall safely](admin/ARTIFACTS.md) · [API](guides/API_GUIDE.md) · [Command line](guides/CLI_GUIDE.md) · [Tools](guides/TOOLS.md) · [AI providers](architecture/AI_PROVIDERS.md) · [Troubleshooting](guides/TROUBLESHOOTING.md) · [Release notes](../RELEASE_NOTES.md) |
 | In the repository only | [architecture/](architecture/ARCHITECTURE.md) (design notes and [decision records](architecture/adr/README.md)), the per-plugin [connector documents](connectors/), the [runbooks](admin/runbooks/source-down.md), [qa/](qa/) |
 
 ## How these documents are organised
@@ -64,6 +64,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Install and run it on Windows (PowerShell, no Hadoop) | [GETTING_STARTED.md: Windows](guides/GETTING_STARTED.md#drishti-on-windows) |
 | Run and debug the server in IntelliJ IDEA and the console in PyCharm | [IDE_GUIDE.md](guides/IDE_GUIDE.md) |
 | Build a pack from JSON Lines, check it in CI, load data and drive the Screen Designer's review from a terminal | [CLI_GUIDE.md](guides/CLI_GUIDE.md) |
+| Find the right tool (command, script or page) for a job, load a large JSON export into a Delta lake, schedule loads and maintenance | [TOOLS.md](guides/TOOLS.md) |
 | Find your way around the top bar and its menus | [USER_GUIDE.md › The top bar](guides/USER_GUIDE.md#the-top-bar) |
 | Read Drishti from a script, a notebook or Excel with a personal API token | [CLIENTS.md](guides/CLIENTS.md) |
 | Run Python on the view you are looking at (`Alt+C`): re-price, recompute, pivot, chart | [PYTHON_CALC.md](guides/PYTHON_CALC.md) |

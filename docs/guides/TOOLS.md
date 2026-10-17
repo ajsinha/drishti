@@ -644,8 +644,8 @@ python3 tools/drishti.py data load --store files --trades 10000 --days 3 -- /tmp
 
 **Scheduling.** The loaders guard dates (a row dated after tomorrow is not loaded and the run fails naming it), replace each day
 they reach in one step, and refuse to drop more than half a table (`--max-drop-share`, `--force-drop`), so a nightly cron entry
-that re-runs is safe; the details are at the top of each script and in [DEMO_DATA.md](../connectors/DEMO_DATA.md). The connectors'
-guides are in [docs/connectors](../connectors/README.md).
+that re-runs is safe; the details are at the top of each script and in [DEMO_DATA.md](../connectors/DEMO_DATA.md). The connectors.
+guides are listed in [CONNECTORS.md](../connectors/CONNECTORS.md).
 
 ## 7. Lake maintenance: `tools/lake/maintain.py`
 
@@ -696,6 +696,7 @@ ExecStart=/usr/bin/python3 tools/drishti.py lake maintain --config deploy/lake-m
 | Tool | What it makes |
 |---|---|
 | `tools/packgen/comswap_synth.py` | **The synthetic Endur-like commodity-swap book**: deals with 1 to 4 legs, monthly cash flows, resets, events, packages and novations; upper-case keys in a fixed order, digit-string codes that must stay text, blanks spelt as `""`, `null`, `0` and a missing key. `--mix` makes a whole book (ComSwap, ComFut, Cash, Commodity and a rare CallNot by `PRODUCT_TYPE`). Deterministic (`--seed`); at most 10,000 deals. Every value is invented. |
+| `tools/packgen/note_synth.py` | a synthetic structured note of another shape (camelCase keys; note, coupon periods, observations, fixings; a call schedule and a basket of underlyings), to show the pack generator is generic. Every value is invented. |
 | `tools/packgen/pack_from_jsonl.py` | the engine of `drishti.py pack new`: a complete pack from a folder of JSON Lines |
 | `tools/packgen/banking/make_data.py`, `make_packs.py`, `make_sutras.py`, `make_docs.py` | the banking packs: their sample data and lake, manifests, Sutras and guides, from one taxonomy |
 | `tools/packgen/climate/make.py`, `liquidity/make.py`, `oprisk/make.py`, `retail/make.py` | the climate-risk, liquidity-risk, operational-risk and retail-banking packs, built on the banking data |
