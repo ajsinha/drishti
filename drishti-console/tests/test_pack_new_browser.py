@@ -128,19 +128,19 @@ def test_the_whole_flow_three_schemas_and_a_folder_to_a_downloaded_bundle(browse
     cards = page.locator(".pk-card")
     assert cards.count() == 3
     text = page.locator("[data-kinds]").inner_text()
-    assert "3 kinds, 6 Sutras to create" in text
+    assert "3 kinds, 5 Sutras to create" in text      # one per product type; no catch-all: every trade in the data has one
     assert page.locator("svg.pk-graph").count() == 1 and "trade to counterparty" in page.locator("svg.pk-graph title").text_content()
     trade = page.locator(".pk-card", has=page.locator("h3", has_text="Trade"))
     assert "trades.jsonl" in trade.inner_text() and "30 rows" in trade.inner_text()
     assert trade.locator("select[data-focus^=key-]").input_value() == "tradeId"
     assert trade.locator("select[data-focus^=match-]").input_value() == "productType"
-    assert "4 Sutras" in trade.inner_text() or "4 Sutra" in trade.inner_text()
+    assert "3 Sutras" in trade.inner_text()                                       # IRS, FXS, FUT; no catch-all: every trade has a type
     # change the match column: the plan is redone
     trade.locator("select[data-focus^=match-]").select_option("")
     page.locator(".pk-card h3:has-text('Trade')").wait_for()
     page.wait_for_function("() => document.querySelector('[data-kinds]').innerText.includes('3 kinds, 3 Sutras to create')")
     trade.locator("select[data-focus^=match-]").select_option("productType")
-    page.wait_for_function("() => document.querySelector('[data-kinds]').innerText.includes('3 kinds, 6 Sutras to create')")
+    page.wait_for_function("() => document.querySelector('[data-kinds]').innerText.includes('3 kinds, 5 Sutras to create')")
     # 3. the pack
     page.click("[data-next]")
     page.fill("#pkp-name", "sg-browser")
@@ -152,9 +152,9 @@ def test_the_whole_flow_three_schemas_and_a_folder_to_a_downloaded_bundle(browse
     # 4. preview
     page.click("[data-next]")
     page.locator(".pk-item").first.wait_for(timeout=20000)
-    assert page.locator(".pk-item").count() == 6
+    assert page.locator(".pk-item").count() == 5
     summary = page.locator(".pk-sum").inner_text()
-    assert "6 Sutras drafted" in summary and "synthetic samples only" in summary
+    assert "5 Sutras drafted" in summary and "synthetic samples only" in summary
     page.locator(".pk-item[data-sutra='trade-irs']").click()
     page.locator(".pk-pv .view, .pk-pv *").first.wait_for()
     assert "trade-irs" in page.locator(".pk-detail-t").inner_text()
@@ -269,11 +269,12 @@ def test_a_big_jsonl_file_is_streamed_and_sampled_not_uploaded(browser, pack_con
     page.goto(url + "/build/pack/new")
     page.set_input_files("[data-files]", str(big))
     page.locator("[data-total]:has-text('60,000 rows read')").wait_for(timeout=30000)
-    assert "200 documents sampled" in page.locator("[data-total]").inner_text()
+    kept = int(re.search(r"([\d,]+) documents sampled", page.locator("[data-total]").inner_text()).group(1).replace(",", ""))
+    assert 200 <= kept <= 200 + 3 * 50                                        # the sample, and examples of each type (kind: a, b, c)
     page.click("[data-next]")
     page.locator(".pk-card").first.wait_for()
     assert max(sent) < 400_000, "only the sample is sent, not the file"         # 200 small documents, not 60,000 rows
-    assert "60,000 rows, 200 sampled" in page.locator("[data-kinds]").inner_text()
+    assert f"60,000 rows, {kept} sampled" in page.locator("[data-kinds]").inner_text()
     page.close()
 
 
