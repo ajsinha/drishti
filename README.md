@@ -105,9 +105,10 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
 - **Calc** (`Alt+C`): Python in your browser on the view you are looking at ([PYTHON_CALC.md](docs/guides/PYTHON_CALC.md)).
 - **The Build workbench** (`/build`; Sutra Studio's page is folded into it; [tutorial 6](docs/tutorials/06-design-a-screen.md)): drag panels and fields onto a live screen, or a YAML editor with completion from the language's JSON Schema, live checks and a
   preview against any entity. A save is a proposal; an approver reviews the diff (four eyes).
-- **Domain packs**, enabled per server and assigned per user: `core`, `market-data`, `trading`
-  (125 products), `market-risk`, `counterparty-risk`, `liquidity-risk`, `climate-risk`, `operational-risk`,
-  `retail-banking`, `genomics`, `world-economy` (real public data; the IMF figures are for internal demonstrations only), and the small `finance`, `logistics`, `news-and-markets` packs.
+- **Domain packs**, enabled per server and assigned per user. Seven ship and are on by default: `core`, `market-data`, `trading`
+  (125 products), `counterparty-risk`, `market-risk`, `world-economy` (real public data; the IMF figures are for internal demonstrations only)
+  and the sample `news-and-markets`. The earlier `finance`, `logistics`, `genomics`, `retail-banking`, `climate-risk`, `operational-risk`
+  and `liquidity-risk` are retired examples in `examples/packs/` (`DRISHTI_PACKS_EXTRA_DIRS=examples/packs`).
   Packs inherit from each other, load and unload from Admin → Packs, and install from a **signed, versioned
   registry** with rollback ([PACKS.md](docs/guides/PACKS.md)).
 - **Drishti Elements**: show live views, panels and published BI reports inside another web application as `<drishti-view>`,
@@ -165,8 +166,8 @@ drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
 Open http://localhost:17480/t, type `TRD MX-20000001` and press Enter. Then try `DPNL DESK-RATES`, a past date in the
-top bar, or `live trades over 5m, biggest first`. Without `DRISHTI_PACKS` the server loads only the small
-`finance` pack; then try `TRD IRS-48213`.
+top bar, or `live trades over 5m, biggest first`. Without `DRISHTI_PACKS` the server loads the same seven
+packs; `CPTY CP-NORTHBRIDGE` then opens a counterparty with links to its agreement and its country's economy.
 
 Sign-in is off for local development (you act as a user with every role). To turn it on and sign in as the
 development admin **`drishti-dev-admin` / `drishti-dev-admin123`** (change that password; the UI warns until you
