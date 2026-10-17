@@ -155,6 +155,7 @@ builder:                     # Build workbench, New (/build/new); docs/architect
   pack_max_files: 200        # schema and data files in one plan
   pack_max_docs: 5000        # sampled documents in one plan request
   pack_profile_rows_per_type: 10000   # Build -> New pack: rows of each type (value of the split column) the page profiles (fields filled, array sizes); every row is counted
+  pack_load_max_mb: 2048     # Admin -> Packs -> a pack -> Load data: the largest file the console streams on to the server (which has drishti.loads.upload-max-mb)
   pack_design_samples_per_type: 50    # documents of each type the page keeps (spread over the file, varied in shape, anonymised) to design that type's Sutra
   pack_max_schema_kb: 512    # largest single schema file
   pack_max_sutras: 200       # Sutras one generated pack may have

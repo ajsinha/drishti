@@ -43,7 +43,7 @@ import argparse
 import json
 import pathlib
 import sys
-from datetime import date
+from datetime import date, timedelta
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -83,7 +83,17 @@ def pack_settings(pack: pathlib.Path) -> tuple[str, dict, dict, dict]:
     ing = m.get("ingest") or {}
     keys = {k: v.get("key", "id") for k, v in ing.items()}
     dates = {k: v["date"] for k, v in ing.items() if v.get("date")}
+    dates.update({k: SNAPSHOT for k, v in ing.items() if v.get("snapshot") is True and not v.get("date")})
     return st.get("domain") or m["pack"], layouts, keys, dates
+
+
+SNAPSHOT = "@snapshot"     # a kind with no business-date field: every document goes under the day of the load (--as-of, default today)
+
+
+def business_today() -> date:
+    """Today, or the Friday before on a weekend: the business date a snapshot loaded now is for (the server rolls back the same way)."""
+    d = date.today()
+    return d - timedelta(days=max(0, d.weekday() - 4))
 
 
 def collect(args, keys, dates, report: Report) -> dict[str, dict[date, list]]:
@@ -95,7 +105,7 @@ def collect(args, keys, dates, report: Report) -> dict[str, dict[date, list]]:
             report.untracked[kind] = report.untracked.get(kind, 0) + 1
             continue
         kv = SG.get(doc, keys.get(kind, "id"))
-        ds = SG.doc_date(doc, dfield)
+        ds = (getattr(args, "as_of", None) or business_today().isoformat()) if dfield == SNAPSHOT else SG.doc_date(doc, dfield)
         try:
             day = date.fromisoformat(ds) if ds else None
         except ValueError:
@@ -236,6 +246,7 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     p.add_argument("--store", choices=("delta", "files"), default="delta", help="delta (default) or the File connector's layout")
     p.add_argument("--root", type=pathlib.Path, help="the files root (DRISHTI_FILES_ROOT) for --store files")
     p.add_argument("--mode", choices=MODES, help="overwrite-dates (default), append or replace; a --watch run defaults to append")
+    p.add_argument("--as-of", help="YYYY-MM-DD: the business date of a snapshot kind (pack.yaml ingest: {snapshot: true}); default today")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--batch-rows", type=int, default=250_000)
     w = p.add_argument_group("watch a drop folder (see tools/ingest_watch.py)")

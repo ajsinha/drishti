@@ -602,11 +602,13 @@ public final class Binder {
             throw new SourceDeniedException(src.get());
         }
         EntityDocument d = c.linked().get(src.get());
-        if (d == null) {
-            throw new IllegalStateException(c.pending().contains(src.get()) ? "waiting for " + src.get().id() : src.get().id() + " not found");
+        if (d == null && c.pending().contains(src.get())) {
+            throw new IllegalStateException("waiting for " + src.get().id());
         }
-        return new BindContext(c.doc(), c.layout(), c.fingerprint(), EvalContext.of(d.data(), formats), c.links(), c.linked(), c.pending(),
-                c.denied());
+        // an entity the link names but no source holds (a page per value not built yet, a pack checked before it is deployed): the panel
+        // has nothing to show, as a missing branch of the document has; it is not broken
+        return new BindContext(c.doc(), c.layout(), c.fingerprint(), EvalContext.of(d == null ? DataNode.missing() : d.data(), formats), c.links(),
+                c.linked(), c.pending(), c.denied());
     }
 
     /** The linked entity a panel reads its data from, when it names one with {@code source}. */

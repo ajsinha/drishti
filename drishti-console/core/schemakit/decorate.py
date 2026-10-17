@@ -166,7 +166,12 @@ def finalize(text: str, kp: KindPlan, sp: SutraPlan, plan: Plan | None = None) -
         allowed = set(kp.node.base_props) | set(sp.variant.props)
     if deep.applies(kp):
         text = deep.sutra(kp, sp, plan, strip_entries(kp, allowed))
-    return body(header(text, kp, sp), kp, allowed, relabel=not deep.applies(kp))
+        out, shown = body(header(text, kp, sp), kp, allowed, relabel=False)
+        # what the deep design reads with @ (a leg's LEG_ID, a reset's RATE): every field of an array whose name it reads
+        refs = {m.group(2) for m in PATH_REF.finditer(out) if m.group(1) == "@"}
+        shown |= {f.path for f in kp.fields if "[]." in f.path and f.path.rsplit("[].", 1)[1] in refs and not f.hidden}
+        return out, shown
+    return body(header(text, kp, sp), kp, allowed)
 
 
 # ----------------------------------------------------------------------------------------------- About this page
@@ -204,6 +209,8 @@ def about_yaml(plan: Plan, shown: dict | None = None) -> str:
             if f.values:
                 entry["values"] = {k: v[:590] for k, v in f.values.items()}
             gl[gp] = entry
+            if "[]." in p:                       # a field inside an array is read in the Sutra with @ (@.RESETS): its entry by that name too
+                gl.setdefault(p.rsplit("[].", 1)[1], json.loads(json.dumps(entry)))
         doc["kinds"][kp.kind] = {"title": kp.title, "about": sentence, "glossary": gl}
     return yaml.safe_dump(doc, sort_keys=False, width=120, allow_unicode=True)
 

@@ -1547,6 +1547,7 @@ pack expects and who is told is the pack's `loads:` section and the administrato
 | `lookback-days` | `3` | Business days before today that are still checked for missing data. |
 | `default-notify-roles` | `[admin]` | Roles told about a load or late data when the pack names no roles or users. |
 | `smoke-max` | `20` | Most sample entities a pack may ask to be opened after a ready load. |
+| `upload-max-mb` | `2048` | **Load data** from the browser (Admin → Packs → a pack → Load data, `POST /api/v1/admin/packs/{pack}/data`): the largest file. The file is streamed, one document in memory at a time, so this bounds disk and time, not memory; the console streams it on without holding it, under its own cap `builder.pack_load_max_mb`. |
 
 The token scope that opens `POST /api/v1/packs/{pack}/loads` to a personal API token is `loads:write` (`drishti.security.token-scopes`); the
 user still needs a role that opens the kind. The expectation settings (`/api/v1/admin/loads/**`) are never open to a token.
@@ -2369,6 +2370,7 @@ read by both programs, so one set of variables configures both halves.
 | `builder.pack_max_files` | `200` | Schema and data files in one plan. Over it: `413 DRS-5005`. |
 | `builder.pack_max_docs` | `5000` | Sampled documents in one plan request. |
 | `builder.pack_profile_rows_per_type` | `10000` | **Build → New pack**: rows of each type (each value of the type column, such as `PRODUCT_TYPE`) the page profiles as it streams the file: how often each field has a value, its types, digits written as text, and the size of every nested array at every depth. Every row is still counted, so the list of types and their row counts is exact. A type with fewer rows is profiled entirely. |
+| `builder.pack_load_max_mb` | `2048` | **Admin → Packs → a pack → Load data**: the largest data file the console streams on to the server (never held in memory); the server has its own `drishti.loads.upload-max-mb`. |
 | `builder.pack_design_samples_per_type` | `50` | Documents of each type the page keeps to design that type's Sutra: spread over the whole file and chosen for variety (optional arrays present and absent, different nested shapes); anonymised by default. |
 | `builder.pack_max_schema_kb` | `512` | The largest single schema file. |
 | `builder.pack_max_sutras` | `200` | Sutras one generated pack may have (a match column with many values makes many). |

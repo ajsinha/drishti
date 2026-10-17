@@ -37,6 +37,7 @@ import re
 from .plan import ID_NAME, IDENTIFYING, ISO_DATE, ISO_DATETIME, blank
 
 VOCAB_MAX = 12
+NUMERIC = re.compile(r"^-?\d+(\.\d+)?$")
 SHORT = 32
 
 
@@ -99,6 +100,11 @@ class Anonymiser:
             return v
         if v in self.tokens:
             return self.tokens[v]
+        if NUMERIC.match(v) and not ID_NAME.search(name) and not (v.isdigit() and len(v) > 1 and v.startswith("0")) and not IDENTIFYING.search(name):
+            # a measure written as text ("78.5000"): scaled like a number, written back with as many decimals
+            places = len(v.split(".")[1]) if "." in v else 0
+            x = float(v) * _factor(name)
+            return f"{x:.{places}f}" if places else str(int(round(x)))
         if v.isdigit():
             self.digits += 1                           # the same length where it fits (codes keep their width), always unique
             tok = str(10 ** (len(v) - 1) + self.digits) if len(v) > 1 else str(self.digits)

@@ -36,7 +36,7 @@ from .plan import ID_NAME, KindPlan, Plan, SutraPlan, humanize, singular
 
 TABS_MAX = 4                 # an array of at most this many items (and arrays inside) is shown side by side
 TAB_MAX = 8                  # at most this many: tabs; more: one drill table
-KV_MAX = 18
+KV_MAX = 32
 COLS_MAX = 9
 TYPEISH = re.compile(r"(?i)(type|kind|side|direction|pay.?rec|buy.?sell|status|class|category)")
 TOTALISH = re.compile(r"(?i)(notional|quantity|qty|amount|volume|pv|mtm|value|balance|exposure|cash|principal)")
@@ -292,9 +292,17 @@ def deep_panels(kp: KindPlan, plan: Plan | None) -> list:
             L += [f"          - {c}" for c in terms_columns(kp, arr, related)]
             levels = chain(kp, arr)
             if levels:
+                # the schedule of each item, a whole row wide (one item at a time: schedules side by side would not fit), drilling below
                 first = levels[0]
-                L += drill_table(kp, f"{pid}-{re.sub(r'[^a-z0-9]+', '-', first.name.lower()).strip('-')}", first.label, "@." + first.name, first,
-                                 levels[1:], related, "      ", f"{root_crumb} + ' › ' + {crumb(kp, arr)}")
+                sid = f"{pid}-{re.sub(r'[^a-z0-9]+', '-', first.name.lower()).strip('-')}"
+                key2 = f"F{fkey}" if fkey <= 8 else ""
+                fkey += 1
+                L += [f"  - id: {sid}", "    kind: tabs", f"    title: {q(first.label + ' by ' + noun(arr).lower())}"]
+                if key2:
+                    L.append(f"    key: {q(key2)}")
+                L += [f"    each: {q('$.' + arr.name)}", f"    tabTitle: {q(crumb(kp, arr))}", "    panels:"]
+                L += drill_table(kp, f"{sid}-rows", first.label, "@." + first.name, first, levels[1:], related, "      ",
+                                 f"{root_crumb} + ' › ' + {crumb(kp, arr)}")
         else:
             L += drill_table(kp, pid, arr.label, "$." + arr.name, arr, chain(kp, arr), related, "  ", root_crumb, key)
     for arr, pid, key in flat:

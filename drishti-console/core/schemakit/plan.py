@@ -77,7 +77,9 @@ def humanize(name: str) -> str:
         return " ".join(caps)
     out = []
     for i, w in enumerate(ws):
-        if w.lower() == "id":
+        if w.upper() in ACRONYMS and w.upper() != "VAR":
+            out.append(w.upper())
+        elif w.lower() == "id":
             out.append("ID")
         elif w.isupper() or re.fullmatch(r"[a-z]{1,3}\d+", w) or (len(w) <= 4 and not re.search(r"[aeiouy]", w.lower())):
             out.append(w.upper())
@@ -284,6 +286,8 @@ def _node_of_values(vals: list, depth: int) -> Node:
         n.type = "integer"
     elif all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in vals):
         n.type = "number"
+        n.ann["maxabs"] = max(abs(v) for v in vals)
+        n.ann["frac"] = any(isinstance(v, float) and not v.is_integer() for v in vals)
     elif all(isinstance(v, str) for v in vals):
         n.type = "string"
         if all(ISO_DATE.match(v) for v in vals):
@@ -329,6 +333,12 @@ def _fmt_for(f: FieldInfo, n: Node) -> str:
             return "pct2"
         if re.search(r"(accrual|factor|weight)", nm):
             return "price4"
+        if n.ann.get("frac") and isinstance(n.ann.get("maxabs"), (int, float)) and not re.search(r"(mtm|pnl|notional|amount|balance|exposure|quantity)", nm):
+            # known from the data: fractions near 1 (a barrier of 0.7, a ratio) keep 4 decimals, prices and levels 2; never rounded to nothing
+            if n.ann["maxabs"] <= 1.5 and not re.search(r"(pct|percent|ratio|rate|yield|coupon)$", nm):
+                return "price4"
+            if n.ann["maxabs"] < 100000:
+                return "price2"
         if re.search(r"(mtm|pnl|pl|delta|change|diff)", nm):
             return "signed0"
         return "amount2" if re.search(r"(price|rate|spread|amount|fee|cost|notional)", nm) else "amount0"
@@ -632,7 +642,8 @@ def build_sutras(kp: KindPlan, name_prefix: str = "") -> None:
         counted = (kp.counts or {}).get(f)
         if counted:                                   # every row of the files counted in the browser (or by the command line)
             kp.match_counts[f] = {str(k): int(v) for k, v in counted.items()}
-            vals = vals or [v for v, _ in sorted(((k, v) for k, v in counted.items() if not blank(k)), key=lambda kv: -kv[1])]
+            seen_all = [v for v, _ in sorted(((k, v) for k, v in counted.items() if not blank(k)), key=lambda kv: -kv[1])]
+            vals = vals + [v for v in seen_all if v not in [str(x) for x in vals]] if kp.source else seen_all
         elif kp.real:
             seen: dict = {}
             for d in kp.samples:
@@ -651,8 +662,10 @@ def build_sutras(kp: KindPlan, name_prefix: str = "") -> None:
         used: set = set()
         for combo in combos:
             where = " && ".join(f"$.{f} == {literal(v)}" for f, v in zip(fields, combo))
-            sl = slug("-".join(str(v) for v in combo)) or "x"
+            sl = re.sub(r"[^a-z0-9]+", "-", "-".join(str(v) for v in combo).lower()).strip("-")[:48] or "x"
             nm, i = f"{name_prefix}{kp.kind}-{sl}", 2
+            if kp.real and not kp.source and len(fields) == 1 and re.fullmatch(r"[a-z][a-z0-9-]{1,40}", sl) and sl != kp.kind:
+                nm = f"{name_prefix}{sl}"            # one file of several types: each type's Sutra is named after the type (comswap, cash)
             while nm in used:
                 nm, i = f"{nm}-{i}", i + 1
             used.add(nm)
@@ -918,12 +931,14 @@ def match_kind(file_stem: str, kinds: list[str]) -> str | None:
 
 
 def suggest_pack(kinds: list, name: str = "") -> dict:
-    nm = slug(name) or (slug(kinds[0].kind) + "-pack" if len(kinds) == 1 else "my-pack")
+    own = [k for k in kinds if not k.derived]             # pages per value come with their kind: they do not name the pack
+    nm = slug(name) or (slug(own[0].kind) + "-pack" if len(own) == 1 else "my-pack")
     ws = [w for w in nm.split("-") if w]
     code = ("".join(w[0] for w in ws) if len(ws) > 1 else nm[:4]).upper()
-    titles = ", ".join(k.title for k in kinds[:4]) + (" ..." if len(kinds) > 4 else "")
+    titles = ", ".join(k.title for k in own[:4]) + (" ..." if len(own) > 4 else "")
+    origin = "schemas" if any(k.source for k in own) or not any(k.real for k in own) else "data files"
     return {"name": nm, "code": code, "title": humanize(nm.replace("-", " ")) if nm else "", "version": "1.0.0",
-            "description": f"Generated from schemas: {titles}." if kinds else "",
+            "description": f"Generated from {origin}: {titles}." if own else "",
             "connector": connector_name(nm)}
 
 

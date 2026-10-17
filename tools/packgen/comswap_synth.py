@@ -203,7 +203,7 @@ class Generator:
         doc = {"SOURCE_SYSTEM": "SYNTH-ETRM", "SOURCE_UPDATE_TIME": "", "TRADE_DATE": trade_date.isoformat(), "INPUT_DATE": "",
                "TRADE_ID": trade_id, "TRADE_STATUS": status, "TRADE_ACTION": "", "TRADE_VERSION": rng.randint(1, 4) if rich else "",
                "TRANSACTION_ID": str(700_000_000 + n * 7), "PACKAGE_ID": package, "QUANTITY": qty * months, "PRICE": None,
-               "BUY_SELL_CODE": rng.choice(["Buy", "Sell"]), "PRODUCT_TYPE": "COMM-SWAP", "PRODUCT_SUB_TYPE": SUB_TYPES[legs_n],
+               "BUY_SELL_CODE": rng.choice(["Buy", "Sell"]), "PRODUCT_TYPE": "ComSwap", "PRODUCT_SUB_TYPE": SUB_TYPES[legs_n],
                "PRODUCT_GROUP": "", "PRODUCT_SUB_GROUP": "", "OPTION_TYPE": None, "STRIKE_PRICE": None,
                "COUNTERPARTY": cpty, "COUNTERPARTY_UEN": "", "COUNTERPARTY_COUNTRY_OF_RISK": None,
                "ORIGINAL_COUNTERPARTY": rng.choice([c for c in COUNTERPARTIES if c != cpty]) if novated else "", "ORIGINAL_COUNTERPARTY_UEN": "",
@@ -222,45 +222,65 @@ class Generator:
         return doc                                                                   # else: the key is missing
 
     # ---- other products of the same book (--mix): one file, several record types told apart by PRODUCT_TYPE --------------------
+    # The deal header and the LEGS -> CASH_FLOWS -> RESETS shape are shared by every product of the book; what differs is how many legs,
+    # flows and resets a product has, which leg fields it fills, and whether it has EVENTS at all (only swaps do).
     def product_of(self, n: int) -> str:
         if n % 97 == 33:
-            return "COMM-SWAPTION"                                                   # rare: about 1 in 100, at least one in 40 deals
-        return _weighted(self.rng, [("COMM-SWAP", 55), ("COMM-FUT", 20), ("COMM-FWD", 15), ("COMM-OPT", 10)])
+            return "CallNot"                                                         # rare: about 1 in 100, at least one in 40 deals
+        return _weighted(self.rng, [("ComSwap", 45), ("ComFut", 20), ("Cash", 17), ("Commodity", 17)])
+
+    def simple_leg(self, leg_id: int, leg_type: str, ccy: str, unit: str, qty: float, start: dt.date, flows: int, rich: bool,
+                   index: str = "", lease: bool = True) -> dict:
+        """A leg of a non-swap product: its flows are periods (or one settlement), each with one reset that carries only its dates."""
+        out, d = [], start
+        for _ in range(flows):
+            end = _month_end(d) if flows > 1 else d
+            out.append({"FLOW_ID": self.flow_id, "FLOW_TYPE": "", "NOTIONAL": qty if rich else 0.0, "RATE": "", "FLOAT_SPREAD": "",
+                        "START_DATE": d.isoformat(), "END_DATE": end.isoformat(), "PAYMENT_DATE": _days(end, 2).isoformat(),
+                        "RATE_DETERMINATION_DATE": end.isoformat(), "FIRST_RESET_DATE": d.isoformat(), "LAST_RESET_DATE": "", "STRIKE_PRICE": 0.0,
+                        "RESETS": [{"RESET_ID": "", "ACCRUAL": "", "START_DATE": d.isoformat(), "END_DATE": end.isoformat(), "RESET_DATE": "",
+                                    "ACCRUAL_START_DATE": "", "ACCRUAL_END_DATE": "", "RATE": ""}]})
+            self.flow_id += 1
+            d = _days(end, 1)
+        return {"LEG_ID": leg_id, "LEG_TYPE": leg_type, "LEG_ECONOMIC_TYPE": "", "CURRENCY": ccy, "LEASE_CURRENCY": ccy if lease else "",
+                "FLOAT_SPREAD": "", "PRICE_UNIT": unit, "NOTIONAL": qty if rich else 0.0, "DISCOUNT_INDEX": "", "SPOT_CONVERSION_FACTOR": "",
+                "PHYSICAL_LOCATION_NAME": "", "INDEX_LOCATION_NAME": "", "RESET_FIXING_SHIFT": "", "RESET_HOLIDAY_SCHEDULE": None, "RESET_CONVENTION": "",
+                "EMISSIONS_VINTAGE_MIN": "", "EMISSIONS_VINTAGE_MAX": "", "EMISSIONS_VINTAGE_DELIVERY_TYPE": "", "SETTLEMENT_TYPE": "Cash" if unit == "Currency" else "Physical",
+                "NY_CURVE_FLAG": "", "NUM_RRDC_REC": "", "NUM_PROFILE_REC": "", "DAILY_VOLUME": str(int(qty)) if qty >= 1 else "0",
+                "INDEX": {"NAME": index, "GROUP": "", "SUB_GROUP": ""}, "CASH_FLOWS": out}
 
     def mixed(self, n: int) -> dict:
         product = self.product_of(n)
         doc = self.deal(n)
         doc["PRODUCT_TYPE"] = product
-        rng = self.rng
-        if product == "COMM-FUT":                                                    # exchange-traded: a contract and its daily settlements, no legs
-            idx = next(i for i in INDEXES if i[0] == (doc["LEGS"][0]["INDEX"]["NAME"] or "IDX-CRUDE-M1")) if doc["LEGS"] else INDEXES[0]
-            price = round(idx[5] * rng.uniform(0.9, 1.1), 4)
+        if product == "ComSwap":
+            return doc
+        rng, rich = self.rng, self.rich()
+        doc.pop("EVENTS", None)                                                      # only swaps carry events
+        start = dt.date.fromisoformat(doc["START_DATE"])
+        ccy = doc["CURRENCY"]
+        if product == "ComFut":                                                      # an exchange future: one leg, one settlement
+            idx = rng.choice(INDEXES)
             lots = rng.choice([1, 5, 10, 25, 50])
-            last = dt.date.fromisoformat(doc["TRADE_DATE"])
-            days = [d for d in _business_days(_days(last, 1), _days(last, 20))][:10]
-            doc.pop("LEGS", None)
-            doc.pop("EVENTS", None)
-            doc["PRODUCT_SUB_TYPE"] = "Future"
-            doc.update({"PRICE": price, "QUANTITY": float(lots * 1000), "LOTS": lots,
-                        "CONTRACT": {"EXCHANGE": rng.choice(["XNYM", "IFEU", "XLME"]), "CONTRACT_CODE": idx[0].replace("IDX-", "F-"),
-                                     "CONTRACT_MONTH": doc["MATURITY_DATE"][:7], "LOT_SIZE": 1000},
-                        "DAILY_SETTLEMENTS": [{"SETTLE_DATE": d.isoformat(), "SETTLE_PRICE": round(price * rng.uniform(0.97, 1.03), 4),
-                                               "VARIATION_MARGIN": round(lots * 1000 * price * rng.uniform(-0.03, 0.03), 2)} for d in days]})
-        elif product == "COMM-FWD":                                                  # a single period, settled once: legs, one flow each, no resets
-            doc["PRODUCT_SUB_TYPE"] = "Forward"
-            for leg in doc["LEGS"]:
-                leg["CASH_FLOWS"] = leg["CASH_FLOWS"][:1]
-                for cf in leg["CASH_FLOWS"]:
-                    cf["RESETS"] = []
-            doc["MATURITY_DATE"] = doc["LEGS"][0]["CASH_FLOWS"][0]["END_DATE"] if doc["LEGS"] and doc["LEGS"][0]["CASH_FLOWS"] else doc["MATURITY_DATE"]
-        elif product in ("COMM-OPT", "COMM-SWAPTION"):
-            doc["PRODUCT_SUB_TYPE"] = "Average price option" if product == "COMM-OPT" else "Swaption"
-            doc["OPTION_TYPE"] = rng.choice(["Call", "Put"])
-            doc["STRIKE_PRICE"] = round(float(doc["LEGS"][0]["CASH_FLOWS"][0]["STRIKE_PRICE"] or 75.0) * rng.uniform(0.9, 1.1), 4) if doc["LEGS"] and doc["LEGS"][0]["CASH_FLOWS"] else 75.0
-            doc["PREMIUM"] = round(rng.uniform(1_000, 90_000), 2)
-            if product == "COMM-SWAPTION":
-                doc["EXERCISE_DATE"] = doc["START_DATE"]
-                doc["UNDERLYING_TRADE_ID"] = 900_001 + n
+            doc.update({"PRODUCT_SUB_TYPE": "EXCH-FUTURE", "QUANTITY": float(lots * 1000), "CURRENCY": idx[4],
+                        "MATURITY_DATE": _month_end(start).isoformat()})
+            doc["LEGS"] = [self.simple_leg(1, "Float", idx[4], idx[3], float(lots * 1000), _month_end(start), 1, rich, idx[0])]
+        elif product == "Cash":                                                      # a cash payment: one leg in currency, one flow
+            amount = round(rng.uniform(5_000, 2_000_000), 2)
+            doc.update({"PRODUCT_SUB_TYPE": rng.choice(["CASH-PAYMENT", "CASH-FEE"]), "QUANTITY": amount, "MATURITY_DATE": doc["START_DATE"]})
+            doc["LEGS"] = [self.simple_leg(1, "Fixed", ccy, "Currency", amount, start, 1, rich, lease=False)]
+        elif product == "CallNot":                                                   # a call-notice deposit: interest, then principal
+            amount = float(rng.choice([1, 2, 5, 10]) * 1_000_000)
+            doc.update({"PRODUCT_SUB_TYPE": "CALL-DEPOSIT", "QUANTITY": amount, "CURRENCY": rng.choice(["USD", "CAD", "EUR"])})
+            doc["LEGS"] = [self.simple_leg(1, "Fixed", doc["CURRENCY"], "Currency", amount, start, rng.choice([1, 2]), rich, lease=rng.random() < 0.6)]
+        else:                                                                        # a physical commodity deal: delivery leg and payment leg
+            idx = rng.choice(INDEXES)
+            months = rng.choice([1, 1, 10, 12])
+            qty = float(rng.choice([1, 5, 20]) * 1000)
+            doc.update({"PRODUCT_SUB_TYPE": rng.choice(["PHYS-COMMODITY", "WARRANT-INVENTORY"]), "QUANTITY": qty * months, "CURRENCY": idx[4]})
+            doc["LEGS"] = [self.simple_leg(1, "Physical", idx[4], idx[3], qty, start, months, rich, idx[0]),
+                           self.simple_leg(2, "Fixed", idx[4], idx[3], qty, start, max(1, months - rng.choice([0, 2])), rich)]
+            doc["MATURITY_DATE"] = doc["LEGS"][0]["CASH_FLOWS"][-1]["END_DATE"]
         return doc
 
     def deals(self, count: int, mix: bool = False):
@@ -294,7 +314,7 @@ def main(argv=None) -> int:
     p.add_argument("--profile", choices=("mixed", "rich", "sparse"), default="mixed", help="how much is filled in (default mixed)")
     p.add_argument("--jsonl", action="store_true", help="one deal per line (JSON Lines) instead of one JSON array")
     p.add_argument("--indent", type=int, default=2, help="JSON array: indentation (default 2, as such exports are; 0 for one line per file)")
-    p.add_argument("--mix", action="store_true", help="a whole book: swaps, futures, forwards, options and a rare swaption in one file (PRODUCT_TYPE tells them apart)")
+    p.add_argument("--mix", action="store_true", help="a whole book in one file: ComSwap, ComFut, Cash, Commodity and a rare CallNot (PRODUCT_TYPE tells them apart)")
     p.add_argument("--out", default="-", help="the file to write (default: standard output)")
     a = p.parse_args(argv)
     if not 1 <= a.deals <= 10_000:

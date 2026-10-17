@@ -154,13 +154,26 @@ def drafts_ok(items: list[Item], drafts: dict) -> list[str]:
 def connector_block(pack: str, kinds: list, store: str, plan_cols: dict) -> dict:
     """A connector for kinds that share a logical name: the file or delta plugin on the usual root, one layout per kind."""
     if store == "file":
+        layout = {}
+        for k in kinds:
+            title = title_columns(k)
+            layout[k.kind] = {"columns": list(dict.fromkeys(plan_cols[k.kind] + title))}
+            if title:
+                layout[k.kind]["title"] = title          # type-ahead finds a document by these too (a counterparty, a portfolio, a type)
         return {"plugin": "file", "enabled": "${DRISHTI_FILES_ENABLED:true}", "kinds": sorted(k.kind for k in kinds),
                 "description": f"Set root (or DRISHTI_FILES_ROOT) to the folder that holds {pack}/<date>/<kind>.jsonl",
                 "settings": {"root": "${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}", "domain": pack, "id-field": "id",
-                             "layout": {k.kind: {"columns": plan_cols[k.kind]} for k in kinds}}}
+                             "layout": layout}}
     return {"plugin": "delta", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": sorted(k.kind for k in kinds),
             "settings": {"root": "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", "domain": pack,
                          "layout": {k.kind: {"columns": plan_cols[k.kind], "sort-by": "id", "file-rows": 250000, "row-group-rows": 1000} for k in kinds}}}
+
+
+def title_columns(kp: KindPlan) -> list[str]:
+    """What a document's search title shows after its id: the type it is, and the fields that have a page per value (top level only)."""
+    out = [m for m in kp.match if "." not in m]
+    out += [r["path"] for r in kp.related if "[" not in r["path"] and "." not in r["path"]]
+    return list(dict.fromkeys(out))[:4]
 
 
 def columns_for(kp: KindPlan, n: int = 7) -> list[str]:
@@ -312,9 +325,17 @@ def assemble(plan: Plan, items: list[Item], drafts: dict, pack_dir: pathlib.Path
     # pack.yaml and About
     man = pack_manifest(plan)
     note = HEADER_NOTE + "".join(f"# {k.kind}: key $.{k.key}" + (f", business date $.{k.date}" if k.date else "") + "\n" for k in plan.kinds)
-    (pack_dir / "pack.yaml").write_text(note + yaml.safe_dump(man, sort_keys=False, width=120, allow_unicode=True), encoding="utf-8")
+    (pack_dir / "pack.yaml").write_text(note + plain_yaml(man), encoding="utf-8")
     (pack_dir / "config").mkdir(exist_ok=True)
     (pack_dir / "config" / "about.yaml").write_text(decorate.about_yaml(plan, built.shown), encoding="utf-8")
+    from . import bi as BI                    # every level of a deep document as a BI table (config/bi: imported into BI on deploy)
+    for kp in plan.kinds:
+        if kp.template in ("file", "delta") and not kp.derived:
+            text = BI.dataset(kp, plan, kp.connector or f"{plan.pack['name']}-store")
+            if text:
+                dd = pack_dir / "config" / "bi" / "datasets"
+                dd.mkdir(parents=True, exist_ok=True)
+                (dd / f"{kp.kind}-tables.dataset.yaml").write_text(text, encoding="utf-8")
     fmts = pack_formats(plan, [s["yaml"] for s in built.sutras])
     if fmts:
         (pack_dir / "config" / "formats.yaml").write_text(yaml.safe_dump({"formats": fmts}, sort_keys=False), encoding="utf-8")
@@ -330,6 +351,16 @@ def assemble(plan: Plan, items: list[Item], drafts: dict, pack_dir: pathlib.Path
 ANON = ("\n- **Anonymised**: every sample document (in `tests/`, `samples/` and `catalog.json`) was anonymised before it was kept: names, ids "
         "and amounts are replaced consistently (the same value, the same token), dates and short vocabulary (statuses, sides, currencies) are kept. "
         "No value of the source data is in this pack.")
+def plain_yaml(doc) -> str:
+    """YAML without anchors and aliases (a repeated list is written out again): the server's reader caps aliases, and people read it."""
+    import yaml
+
+    class NoAliases(yaml.SafeDumper):
+        def ignore_aliases(self, data):
+            return True
+    return yaml.dump(doc, Dumper=NoAliases, sort_keys=False, width=120, allow_unicode=True)
+
+
 PACK_FORMATS = {"price4": {"type": "number", "decimals": 4, "grouping": True}}
 
 

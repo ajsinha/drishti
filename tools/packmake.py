@@ -312,9 +312,9 @@ def readme_text(v: dict) -> str:
 # ----------------------------------------------------------------------------------------------- the command
 
 def add_arguments(p: argparse.ArgumentParser) -> None:
-    p.add_argument("inputs", type=pathlib.Path, nargs="*", help="folder(s) of *.jsonl and/or single .jsonl file(s); optional with --schema")
-    p.add_argument("--kind", help="the kind of every document (e.g. trade); needed without --schema")
-    p.add_argument("--match", metavar="COL[,COL]", help="column(s) whose values split the kind: one Sutra per combination (e.g. productType); needed without --schema")
+    p.add_argument("inputs", type=pathlib.Path, nargs="*", help="folder(s) of *.jsonl, single .jsonl file(s) and/or .json arrays (an export: [ {...}, {...} ]); optional with --schema")
+    p.add_argument("--kind", help="the kind of every document (e.g. trade; default: the file name)")
+    p.add_argument("--match", metavar="COL", help="the type column: one Sutra per value found in the data, a catch-all only for rows without one (default: a column named like the type, e.g. PRODUCT_TYPE)")
     p.add_argument("--name", required=True, help="pack name (lower-case letters, digits, '-')")
     p.add_argument("--key", help="the id field (default: auto-detected: present and unique in every document, <kind>Id/id first)")
     p.add_argument("--date", help="the business-date field (default: auto-detected; none found: no dated store)")
@@ -339,7 +339,9 @@ def make(a, cli) -> int:
     """Runs the whole flow; `cli` is the drishti.py module (for pack_from_jsonl, pack check, bundle and verify)."""
     if not NAME_RE.fullmatch(a.name):
         raise MakeError("--name is lower-case letters, digits and '-'")
-    if a.schema:
+    jsons = [p for p in (a.inputs or []) if pathlib.Path(p).suffix.lower() == ".json"]
+    if a.schema or not a.match or jsons or getattr(a, "anonymise", None) is not None:
+        # the console's engine (schemakit): schemas and/or data, every kind inferred, one Sutra per type, the deep design, pages per value
         sp = _schemapack()
         try:
             return sp.make(a, cli)

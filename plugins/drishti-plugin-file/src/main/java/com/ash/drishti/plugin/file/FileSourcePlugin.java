@@ -77,6 +77,8 @@ public final class FileSourcePlugin implements SourcePlugin {
     private record DayKey(String kind, LocalDate day) {}
     private final java.util.Map<String, String> modes = new java.util.concurrent.ConcurrentHashMap<>();
     private final java.util.Map<String, List<String>> promoted = new java.util.concurrent.ConcurrentHashMap<>();
+    /** {@code layout.<kind>.title}: promoted columns written after the id in the search title, so type-ahead finds an entity by them too. */
+    private final java.util.Map<String, List<String>> titles = new java.util.concurrent.ConcurrentHashMap<>();
     private volatile java.util.Map<String, java.util.NavigableSet<LocalDate>> jsonl = java.util.Map.of();   // kind -> days with a file
     private com.github.benmanes.caffeine.cache.Cache<DayKey, JsonlDay> days;
     private final com.ash.drishti.api.SingleFlight<DayKey> builds = new com.ash.drishti.api.SingleFlight<>();
@@ -111,6 +113,8 @@ public final class FileSourcePlugin implements SourcePlugin {
                 modes.put(k.substring(5), v);
             } else if (k.startsWith("layout.") && k.endsWith(".columns")) {
                 promoted.put(k.substring(7, k.length() - 8), java.util.Arrays.stream(v.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList());
+            } else if (k.startsWith("layout.") && k.endsWith(".title")) {
+                titles.put(k.substring(7, k.length() - 6), java.util.Arrays.stream(v.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList());
             }
         });
         this.days = com.github.benmanes.caffeine.cache.Caffeine.newBuilder()
@@ -530,11 +534,17 @@ public final class FileSourcePlugin implements SourcePlugin {
             days.invalidateAll();
         }
         problems.clear();
+        if (root != null) {
+            rescan();               // a load just announced: the new day's file is listed and searched now, not at the next scheduled rescan
+        }
     }
 
     @Override
     public void close() {
-        purgeCaches();
+        if (days != null) {
+            days.invalidateAll();
+        }
+        problems.clear();
     }
 
     /** The newest file's modification time: when the folder last received new data. */
@@ -623,7 +633,24 @@ public final class FileSourcePlugin implements SourcePlugin {
             LocalDate newest = effective(kind) ? null : snapshotDay(kind, null).orElse(null);
             for (LocalDate d : newest == null ? ds : Set.of(newest)) {
                 try {
-                    for (String id : day(kind, d).ids()) {
+                    JsonlDay jd = day(kind, d);
+                    List<String> titled = titles.getOrDefault(kind, List.of());
+                    com.ash.drishti.api.ColumnSet cols = titled.isEmpty() ? null : jd.columns();
+                    if (cols != null) {
+                        for (int i = 0; i < cols.size(); i++) {
+                            String id = cols.ids()[i];
+                            StringBuilder t = new StringBuilder(id);
+                            for (String path : titled) {
+                                Object v = cols.value(path, i);
+                                if (v != null && !String.valueOf(v).isBlank()) {
+                                    t.append(" · ").append(v instanceof Double x && x == Math.rint(x) ? String.valueOf(x.longValue()) : v);
+                                }
+                            }
+                            unique.putIfAbsent(EntityRef.of(kind, id), new EntityHit(EntityRef.of(kind, id), t.toString(), kind + " · " + sourceName));
+                        }
+                        continue;
+                    }
+                    for (String id : jd.ids()) {
                         unique.putIfAbsent(EntityRef.of(kind, id), new EntityHit(EntityRef.of(kind, id), id, kind + " · " + sourceName));
                     }
                 } catch (RuntimeException e) {

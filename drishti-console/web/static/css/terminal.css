@@ -84,6 +84,7 @@ body.terminal { font-size: 14px; }
 .kv dt { color: var(--d-muted); font-weight: 400; font-size: .8rem; min-width: 0; overflow-wrap: anywhere; hyphens: auto; }
 .kv dd { margin: 0; color: var(--d-ink); overflow-wrap: anywhere; }
 .kv-item { min-width: 0; }
+.col-box .kv-4 { grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: .35rem .9rem; }   /* legs side by side: as many fields a row as fit */
 
 .tbl-wrap { overflow-x: auto; position: relative; }   /* so a visually-hidden span in a header cannot escape the scroll box and widen the page (UX-08) */
 .tbl { width: 100%; border-collapse: collapse; font-size: .86rem; }
@@ -97,8 +98,8 @@ body.terminal { font-size: 14px; }
 .tab-heads { display: flex; gap: 1.2rem; border-bottom: 1px solid var(--d-border); margin: -.2rem 0 .7rem; }
 .tab-head { background: none; border: 0; color: var(--d-muted); padding: .45rem .1rem; font-size: .9rem; border-bottom: 2px solid transparent; }
 .tab-head.on { color: var(--d-ink); font-weight: 700; border-bottom-color: var(--d-accent); }
-.cols { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
-.col-box { border: 1px solid var(--d-border); border-radius: 5px; padding: .6rem .8rem; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: .8rem; }
+.col-box { border: 1px solid var(--d-border); border-radius: 5px; padding: .6rem .8rem; min-width: 0; }
 .col-box h4 { font-size: .9rem; font-weight: 700; margin: 0 0 .4rem; }
 .tab-part { margin: .2rem 0 .9rem; }
 .tab-part-h { font-size: .85rem; font-weight: 700; margin: .5rem 0 .3rem; color: var(--d-muted); }

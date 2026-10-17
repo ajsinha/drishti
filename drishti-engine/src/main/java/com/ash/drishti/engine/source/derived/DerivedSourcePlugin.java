@@ -32,6 +32,7 @@ import com.ash.drishti.rachana.format.Formats;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -50,6 +51,9 @@ import java.util.stream.Collectors;
  * reader; a picked date is computed from that date's members, so derived kinds have history wherever their members do.
  */
 public final class DerivedSourcePlugin implements SourcePlugin {
+
+    /** Members read as documents at a time (a group key that is an expression): memory holds one batch, not the kind. */
+    private static final int READ_BATCH = 500;
 
     /** One computation: every group of every derived kind, for one business date. */
     private record Snapshot(Map<String, Map<String, DataNode>> byKind, Map<String, Integer> scanned, LocalDate dataDate, long generation,
@@ -213,7 +217,8 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         Map<String, Map<String, DataNode>> byKind = new HashMap<>();
         Map<String, Integer> scanned = new HashMap<>();
         LocalDate dataDate = null;
-        Map<String, Map<EntityRef, EntityDocument>> read = new HashMap<>();   // one read per source kind, shared by the derived kinds on it
+        // the kinds that need their members' documents, by source kind: read once, in batches, each member kept as only what it needs
+        Map<String, List<DerivedKind>> byDocs = new java.util.LinkedHashMap<>();
         for (DerivedKind k : kinds) {
             Optional<java.util.Set<String>> paths = k.paths();
             Optional<com.ash.drishti.api.ColumnSet> cols = paths.isEmpty() ? Optional.empty() : reader.columns(k.from(), paths.get(), asOf);
@@ -226,22 +231,40 @@ public final class DerivedSourcePlugin implements SourcePlugin {
                 }
                 continue;
             }
-            Map<EntityRef, EntityDocument> members = read.computeIfAbsent(k.from(), from -> reader.read(reader.list(from, asOf, maxScan), asOf));
-            Map<String, Map<String, DataNode>> groups = new HashMap<>();
-            for (EntityDocument d : members.values()) {
-                String g = k.keyOf(d.data());
-                if (g != null) {
-                    groups.computeIfAbsent(g, x -> new HashMap<>()).put(d.ref().id(), d.data());
-                }
-                LocalDate dd = d.provenance().businessDate();
-                if (dd != null && (dataDate == null || dd.isAfter(dataDate))) {
-                    dataDate = dd;
+            byDocs.computeIfAbsent(k.from(), x -> new ArrayList<>()).add(k);
+        }
+        for (Map.Entry<String, List<DerivedKind>> e : byDocs.entrySet()) {
+            List<EntityRef> refs = reader.list(e.getKey(), asOf, maxScan);
+            Map<DerivedKind, Map<String, Map<String, DataNode>>> groups = new HashMap<>();
+            Map<DerivedKind, java.util.Optional<java.util.Set<String>>> keep = new HashMap<>();
+            e.getValue().forEach(k -> {
+                groups.put(k, new HashMap<>());
+                keep.put(k, k.memberPaths());
+            });
+            int n = 0;
+            for (int from = 0; from < refs.size(); from += READ_BATCH) {
+                Map<EntityRef, EntityDocument> batch = reader.read(refs.subList(from, Math.min(refs.size(), from + READ_BATCH)), asOf);
+                for (EntityDocument d : batch.values()) {
+                    n++;
+                    for (DerivedKind k : e.getValue()) {
+                        String g = k.keyOf(d.data());
+                        if (g != null) {
+                            DataNode member = keep.get(k).map(paths -> DerivedKind.project(d.data(), paths)).orElse(d.data());
+                            groups.get(k).computeIfAbsent(g, x -> new HashMap<>()).put(d.ref().id(), member);
+                        }
+                    }
+                    LocalDate dd = d.provenance().businessDate();
+                    if (dd != null && (dataDate == null || dd.isAfter(dataDate))) {
+                        dataDate = dd;
+                    }
                 }
             }
-            Map<String, DataNode> built = new HashMap<>();
-            groups.forEach((g, m) -> built.put(g, k.build(g, m)));
-            byKind.put(k.kind(), built);
-            scanned.put(k.kind(), members.size());
+            for (DerivedKind k : e.getValue()) {
+                Map<String, DataNode> built = new HashMap<>();
+                groups.get(k).forEach((g, m) -> built.put(g, k.build(g, m)));
+                byKind.put(k.kind(), built);
+                scanned.put(k.kind(), n);
+            }
         }
         health = "UP";
         return new Snapshot(byKind, scanned, asOf.live() ? null : dataDate, generation.incrementAndGet(), Instant.now());

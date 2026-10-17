@@ -277,7 +277,12 @@
     function fld(label, key, hint, attrs) {
       var input = el(attrs && attrs.area ? 'textarea' : 'input', Object.assign({ class: 'studio-in' + (attrs && attrs.mono ? ' mono' : ''), autocomplete: 'off', 'data-pack-field': key }, (attrs && attrs.area) ? { rows: '3' } : { type: 'text', value: S.pack[key] || '' }));
       if (attrs && attrs.area) { input.value = S.pack[key] || ''; }
-      input.addEventListener('change', function () { S.pack[key] = input.value.trim(); S.job = null; S.jobView = null; if (key === 'name') { recheck(); } });
+      input.addEventListener('change', function () {
+        if (key === 'name' && S.plan) {                // the title, code and connector that came from the old name follow the new one
+          ['title', 'code', 'connector'].forEach(function (k) { if (S.pack[k] === S.plan.pack[k]) { S.pack[k] = ''; } });
+        }
+        S.pack[key] = input.value.trim(); S.job = null; S.jobView = null; if (key === 'name') { recheck(); }
+      });
       var id = 'pkp-' + key; input.id = id;
       return el('div', { class: 'pk-field' }, [el('label', { for: id, text: label }), input, hint ? el('p', { class: 'pk-hint text-muted-d', text: hint, id: id + '-h' }) : null]);
     }
@@ -392,6 +397,11 @@
       if (b.canDeploy) {
         host.appendChild(el('p', { class: 'text-muted-d', text: 'Hands the bundle to Admin → Packs → Deploy archive: the server checks it, shows what it changes (breaking changes first), and only then deploys. The version it replaces is kept, so you can roll back there.' }));
         host.appendChild(el('p', { class: 'bs-actions' }, [el('a', { class: 'btn-pill btn-accent', href: '/admin/packs?bundle=' + encodeURIComponent(S.job) + '#deploy', 'data-deploy-link': true, text: 'Check and deploy in Admin → Packs' })]));
+        if (S.data.length) {
+          host.appendChild(el('p', { class: 'text-muted-d', 'data-load-hint': true }, ['Then load the whole data (only a sample was read here): ',
+            el('a', { class: 'lnk', href: '/admin/packs/' + encodeURIComponent(b.pack) + '#load-data', text: 'Admin → Packs → ' + b.pack + ' → Load data' }),
+            ', and choose ' + S.data.map(function (d) { return d.name; }).join(', ') + ' again there. It goes into the File connector, every row checked against the Sutras.']));
+        }
       } else {
         host.appendChild(el('p', { class: 'text-muted-d', text: 'Deploying needs an administrator. Send them the bundle and its checksum; they use Admin → Packs → Deploy archive.' }));
       }
