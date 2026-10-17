@@ -367,7 +367,7 @@ The banking ones are written by `tools/packgen/banking/make_packs.py` from their
 `example` names the sample entity the snippet is checked on in a browser (it is not copied into the pack); the
 generator refuses a source without the four lines or with more than 60 lines of code, and `make_packs.py --check`
 fails when a generated file is stale or has no source. `finance` is hand-written: its files are
-`config/packs/finance/python/*.py`.
+`examples/packs/finance/python/*.py`.
 
 How they are written, so that each runs anywhere:
 
@@ -398,7 +398,7 @@ Who has it out of the box:
 | `viewer` | configuration | **no** |
 | `trader` (`trading`), `market-risk` (`market-risk`), `credit-risk` (`counterparty-risk`) | the banking packs | yes |
 | `trader`, `risk` (`finance`) | the finance pack | yes |
-| roles of packs that do not enable Calc (`climate-analyst`, `economist`, `scientist`, `treasury`, `oprisk`, `retail`, `analyst` of politics-society, `ops` and `shipment` of logistics, `market-analyst` and `listed-company` of market-watch, `news-analyst` and `news-topic` of news-watch) | those packs | no (their kinds offer no Calc) |
+| roles of packs that do not enable Calc (`climate-analyst`, `economist`, `scientist`, `treasury`, `oprisk`, `retail`, `analyst` of world-economy, `ops` and `shipment` of logistics, `market-analyst` and `listed-company` of news-and-markets, `news-analyst` and `news-topic` of news-and-markets) | those packs | no (their kinds offer no Calc) |
 | roles you define in Admin → Roles | the identity database | as you tick it |
 
 Give it:
@@ -678,7 +678,7 @@ packs together, then `finance` on its own), each opened on its example view and 
 which loads numpy and pandas (and scipy, statsmodels or matplotlib where used), took 1.9 to 6.1 s (median 2.1 s); a
 warm run 6 to 830 ms (median 39 ms; 64 of 87 runs under 100 ms; the slowest read every trade of a book).
 
-### `banking-core` (10)
+### `core` (10)
 
 | Snippet · file | On | Computes | Method |
 |---|---|---|---|
@@ -781,7 +781,7 @@ warm run 6 to 830 ms (median 39 ms; 64 of 87 runs under 100 ms; the slowest read
 ### `finance` (10)
 
 Two inline in `pack.yaml`: *MTM under parallel rate moves* (`trade`, `TRD IRS-48213`) and *Member trades, summed
-from the screen* (`netting-set`, `NS-NORTH-01`, from `view.tables`); and eight files, `config/packs/finance/python/*.py`
+from the screen* (`netting-set`, `NS-NORTH-01`, from `view.tables`); and eight files, `examples/packs/finance/python/*.py`
 (hand-written, not generated):
 
 | Snippet · file | On | Computes | Method |

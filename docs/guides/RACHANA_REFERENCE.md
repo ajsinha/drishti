@@ -1382,7 +1382,7 @@ One point per row with two numbers; rows without both are left out.
   - { id: riskReturn, kind: scatter, title: "Books: VaR against P&L", rows: $.books, x: var, y: pnl, size: trades, label: book, group: desk, fmt: signed0, xFmt: compact }
 ```
 
-You should see (banking-core pack, `LE LE-NY`) fifteen points in five colours; each opens its book.
+You should see (core pack, `LE LE-NY`) fifteen points in five colours; each opens its book.
 
 #### candlestick
 
@@ -1419,7 +1419,7 @@ Nodes and the edges between them. Each node needs an `id`; a node whose id a pac
   - { id: hierarchy, kind: graph, title: Group hierarchy, nodes: $.hierarchy.nodes, edges: $.hierarchy.edges, layout: tree }
 ```
 
-You should see (banking-core pack, `CPTY CP-MERIDIAN`) the group over two counterparties, then the ISDA, its CSA
+You should see (core pack, `CPTY CP-MERIDIAN`) the group over two counterparties, then the ISDA, its CSA
 and four netting sets.
 
 #### timeline
@@ -1466,7 +1466,7 @@ Totals are aggregates of the underlying rows (an `avg` total is the average of a
   - { id: mtmGrid, kind: pivot, title: MTM by book and currency, rows: $.positions, by: book, across: currency, value: mtm, agg: sum, heat: true, fmt: compact, tone: sign }
 ```
 
-You should see (banking-core pack, `DESK DESK-RATES`) three books across seven currencies, *BOOK-RATES-1* totalling
+You should see (core pack, `DESK DESK-RATES`) three books across seven currencies, *BOOK-RATES-1* totalling
 *177.4m* and the desk *132.8m*.
 
 A list `by` nests the rows: `by: [desk, book]` gives a row for each desk, with its subtotal, and under it a row for each of its
@@ -1830,7 +1830,7 @@ Negative numbers use the true minus sign `−` (U+2212). Rounding is half-up. A 
 
 | Name | Definition | Example | Packs |
 |---|---|---|---|
-| `pct4` | × 100, 4 decimals, `%` | `0.040829` → `4.0829%` | finance, banking-core, trading, market-data, market-risk, counterparty-risk |
+| `pct4` | × 100, 4 decimals, `%` | `0.040829` → `4.0829%` | finance, core, trading, market-data, market-risk, counterparty-risk |
 | `rate5` | 5 decimals, no grouping | `1.08345` → `1.08345` | same |
 | `pips1` | 1 decimal, `+` on positives | `12.34` → `+12.3` | same |
 | `df4` | 4 decimals | `0.991063` → `0.9911` | same |
@@ -1838,8 +1838,8 @@ Negative numbers use the true minus sign `−` (U+2212). Rounding is half-up. A 
 | `temp1` | 1 decimal, ` °C` | `4.25` → `4.3 °C` | logistics |
 | `hours0` | 0 decimals, `+` on positives, ` h` | `14` → `+14 h` | logistics |
 | `knots1` | 1 decimal, ` kn` | `18.4` → `18.4 kn` | logistics |
-| `pc1` | 1 decimal, `%` (the value is already a percentage, no scaling) | `3.84` → `3.8%` | economics, politics-society |
-| `pc2` | 2 decimals, `%` | `3.841` → `3.84%` | economics, politics-society; **market-watch** defines its own `pc2` with a `+` on positives and a space (`+1.25 %`), the later pack winning where both are enabled |
+| `pc1` | 1 decimal, `%` (the value is already a percentage, no scaling) | `3.84` → `3.8%` | world-economy |
+| `pc2` | 2 decimals, `%` | `3.841` → `3.84%` | world-economy; **news-and-markets** defines its own `pc2` with a `+` on positives and a space (`+1.25 %`), the later pack winning where both are enabled |
 
 ### Defining formats
 
@@ -2407,10 +2407,10 @@ wins matching.
 | `config/packs/trading/sutras/rates/irs-fixfloat.v1.sutra.yaml` | `TRD MX-20000001` | kv, tabs (columns), ladder, line from a curve, hbar, links |
 | `config/packs/counterparty-risk/sutras/exposure-and-capital/netting-set.v1.sutra.yaml` | `NSET NS-MERIDIAN-RE-NY` | area with limit, table with totals and automatic id links |
 | `config/packs/market-data/sutras/market-data/equity-vol-surface.v1.sutra.yaml` | `EQV EQV-CSCA` | surface, table, line |
-| `config/packs/finance/sutras/rates/irs-vanilla.v3.sutra.yaml` | `TRD IRS-48213` | line with `mark` (finance pack; enabled by default with `DRISHTI_PACKS=finance`) |
-| `config/packs/finance/sutras/fx/fx-swap.v2.sutra.yaml` | `TRD FXS-20931` | finance pack |
-| `config/packs/finance/sutras/commodities/listed-future.v1.sutra.yaml` | `TRD CFT-77120` | finance pack |
-| `config/packs/finance/sutras/credit/netting-set.v1.sutra.yaml` | `NSET NS-NORTH-01` | `link: true` columns, kv with inferred fields |
+| `examples/packs/finance/sutras/rates/irs-vanilla.v3.sutra.yaml` | `TRD IRS-48213` | line with `mark` (finance pack; enabled by default with `DRISHTI_PACKS=finance`) |
+| `examples/packs/finance/sutras/fx/fx-swap.v2.sutra.yaml` | `TRD FXS-20931` | finance pack |
+| `examples/packs/finance/sutras/commodities/listed-future.v1.sutra.yaml` | `TRD CFT-77120` | finance pack |
+| `examples/packs/finance/sutras/credit/netting-set.v1.sutra.yaml` | `NSET NS-NORTH-01` | `link: true` columns, kv with inferred fields |
 
 For a guided, step-by-step introduction, see [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md). For how inference fills
 what a Sutra leaves out, see [INFERENCE.md](../architecture/INFERENCE.md).

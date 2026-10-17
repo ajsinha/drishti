@@ -43,11 +43,11 @@ for the pattern.
 `QUOTE-AAPL` returns the last price, the change from the previous close in money and percent, the currency, the market state, the
 day's and the 52-week range, the volume, the market capitalisation when Yahoo gives one, and the closing prices (with open, high,
 low and volume) for the configured range at the configured interval. The console lays it out with the `quote` Sutra of the
-`market-watch` pack: a strip, a closing-price line, the ranges and a table of bars.
+`news-and-markets` pack: a strip, a closing-price line, the ranges and a table of bars.
 
 ## 2. Turning it on
 
-A pack that uses it (`market-watch`) carries a template; at first start the server writes `config/connectors/yfinance.yaml` from it with
+A pack that uses it (`news-and-markets`) carries a template; at first start the server writes `config/connectors/yfinance.yaml` from it with
 `enabled: ${DRISHTI_YFINANCE_ENABLED:false}`.
 
 ```
@@ -161,7 +161,7 @@ routes: { quote: yfinance }
   - { id: history, kind: line, source: "link($.quoteId, 'quote')", rows: $.history, x: date, y: close, fmt: price2 }
 ```
 
-See the [`market-watch` sample pack](../guides/PACKS.md#sample-packs).
+See the [`news-and-markets` sample pack](../guides/PACKS.md#sample-packs).
 
 ## 9. How it is built
 

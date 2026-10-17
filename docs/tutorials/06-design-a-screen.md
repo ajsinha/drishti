@@ -169,7 +169,7 @@ travels with the pack fragment you export; it goes live when an administrator de
 
 ## Step 7 · A map on a screen
 
-A panel of kind **`map`** draws a world map from a country code in the document, with shapes that ship with the console (no tiles, no map service, nothing fetched from the internet). Look at one that is already in the politics-society pack: type `JUR JUR-AUS` and press Enter, the jurisdiction of Australia.
+A panel of kind **`map`** draws a world map from a country code in the document, with shapes that ship with the console (no tiles, no map service, nothing fetched from the internet). Look at one that is already in the world-economy pack: type `JUR JUR-AUS` and press Enter, the jurisdiction of Australia.
 
 ![The page of JUR-AUS: the strip (Australia, Canberra, population 27.61, area), the panel "Where it is": the world map with Australia in the accent colour and its name, small countries as dots, and "Open a country" under it](img/t06/12-map-live.jpg)
 
@@ -181,7 +181,7 @@ You should see the country change colour and a tip, `Indonesia · click to open`
 
 ![The page of JUR-IDN: Indonesia, Jakarta, population 285.72, and the map with Indonesia highlighted; the breadcrumb at the top reads MX-20000001, JUR-AUS, JUR-IDN](img/t06/13-map-click.jpg)
 
-You should see **Indonesia's own page** (`JUR-IDN`), with the map now highlighting Indonesia, and the trail of pages you came by at the top (`JUR-AUS / JUR-IDN`). The panel that did all of this is three lines of the pack's Sutra, `config/packs/politics-society/sutras/politics-and-society/jurisdiction.v1.sutra.yaml`:
+You should see **Indonesia's own page** (`JUR-IDN`), with the map now highlighting Indonesia, and the trail of pages you came by at the top (`JUR-AUS / JUR-IDN`). The panel that did all of this is three lines of the pack's Sutra, `config/packs/world-economy/sutras/politics-and-society/jurisdiction.v1.sutra.yaml`:
 
 ```yaml
 - id: geography

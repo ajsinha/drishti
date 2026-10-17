@@ -76,7 +76,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Find entities by value (`TRD where mtm > 1m …`) | [USER_GUIDE.md › Search by value](guides/USER_GUIDE.md#search-by-value) |
 | Fill in a form instead of writing a search (`FORM trading <GO>`, Forms in the Views menu) | [QUERY_BY_FORM.md](guides/QUERY_BY_FORM.md) |
 | Choose what a panel shows with dropdowns, toggles and sliders; read a trade down to its fixings | [USER_GUIDE.md › Controls](guides/USER_GUIDE.md#controls-on-a-screen-choose-what-a-panel-shows), [A deep trade](guides/USER_GUIDE.md#a-deep-trade-legs-cashflows-and-fixings) |
-| Read what is in the economics and politics-society packs, where it comes from and under what licence (IMF data: internal demonstrations only) | [REAL_DATA.md](guides/REAL_DATA.md) |
+| Read what is in the world-economy pack, where it comes from and under what licence (IMF data: internal demonstrations only) | [REAL_DATA.md](guides/REAL_DATA.md) |
 | Look at a past date, or compare two dates | [USER_GUIDE.md › Business dates](guides/USER_GUIDE.md#business-dates-live-or-a-day-in-the-past), [Compare](guides/USER_GUIDE.md#compare-what-changed) |
 | See what depends on an entity (F8) | [Impact guide](guides/USER_GUIDE.md#f8--impact) |
 | Download CSV or JSON, print, or share a link | [USER_GUIDE.md › Export, print and share](guides/USER_GUIDE.md#export-print-and-share) |
@@ -206,7 +206,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [CLI_GUIDE.md](guides/CLI_GUIDE.md) | you work from a terminal or a pipeline: `tools/drishti.py` (`sutra`, `pack new|check|about-check|publish|install`, `data ingest|load|landed|loads`, `server packs`, `design create|check|propose|approve`), every option with real output, recipes, JSON formats, exit codes |
 | [DATA_LOADS.md](guides/DATA_LOADS.md) | your ETL has loaded a batch and Drishti should refresh, verify, check alerts, tell people and flag late data: the load API and CLI, expectations, the Data loads page, the token scope, recipes |
 | [OPERATIONALISING.md](guides/OPERATIONALISING.md) | you ship what you built to servers by copying: bundle, verify, deploy, promote, roll back (no API) |
-| [REAL_DATA.md](guides/REAL_DATA.md) | you use or refresh the real public data in the economics and politics-society packs: sources, licences (IMF data: internal demonstrations only), the pipeline that regenerates them |
+| [REAL_DATA.md](guides/REAL_DATA.md) | you use or refresh the real public data in the world-economy pack: sources, licences (IMF data: internal demonstrations only), the pipeline that regenerates them |
 | [BI_GUIDE.md](guides/BI_GUIDE.md) | what BI is and is not built, the BI menu and keyword, the four powers, workspace roles, items and versions, audiences, shipped files, BI settings, the CLI |
 | [tutorial 10](tutorials/10-first-bi-report.md) | build a report from scratch in the designer (cards, a map, a bar, a slicer), view, click and drill, publish, filter like Power BI, slicers across packs, a phone, two datasets in one report, relative dates, a tablet and the entity view |
 | [DATASETS.md](guides/DATASETS.md) | the YAML reference, aggregates and functions, security, modes, layers and rollups, the query, DRS-9010 to 9027, what is not built |

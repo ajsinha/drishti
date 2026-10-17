@@ -30,7 +30,7 @@ About 60 minutes.
 ## Before you start
 
 - [Tutorial 1](01-first-15-minutes.md) done: server and console running with sign-in on, you are signed in as the development administrator, and the token for the command line is set (`DRISHTI_TOKEN`).
-- Nothing else to install. The sample datasets and reports are files in `config/bi/` that every server reads. The data of **World economics** is real and public: about 200 economies from the World Bank (CC BY 4.0), through the `economics` pack. The dataset uses only the World Bank
+- Nothing else to install. The sample datasets and reports are files in `config/bi/` that every server reads. The data of **World economics** is real and public: about 200 economies from the World Bank (CC BY 4.0), through the `world-economy` pack. The dataset uses only the World Bank
   fields on purpose; the pack's IMF fields stay out of it ([REAL_DATA.md](../guides/REAL_DATA.md)).
 
 ## What you will learn
@@ -66,7 +66,7 @@ report **World economics**, and the seven **measures** (`Economies`, `GDP (USD b
 You should see the dataset `world-economics-economies` `1.0.0`: one row per economy (key `id`), time `snapshot (one per business date)`, read from
 `the economy kind of the pack, through macro-store`, refreshed `when new data loads`, and its columns: the country's name, its ISO code (`iso3`, which
 is what a map needs), World Bank region and income group and a few figures. The data is real and public (the World Bank, CC BY 4.0, through the
-`economics` pack).
+`world-economy` pack).
 
 **Ask it a question** before drawing anything. **From the command line** (the token of tutorial 1), a **model query** groups by the region and asks
 three measures, the biggest economies first:
@@ -294,7 +294,7 @@ You should see the same figures as the bookmark gave. *Click a mark to* **highli
 
 ## Step 9 · Counterparty risk: slicers across packs, and drill-through
 
-Open the shipped report **Counterparty risk**. Its dataset joins three packs (trades from `trading`, counterparties from `banking-core`, netting sets from `counterparty-risk`) and its two slicers, Sector and Country, are `scope: report`: they filter every page and reach the trades and the netting sets **through the relationships**.
+Open the shipped report **Counterparty risk**. Its dataset joins three packs (trades from `trading`, counterparties from `core`, netting sets from `counterparty-risk`) and its two slicers, Sector and Country, are `scope: report`: they filter every page and reach the trades and the netting sets **through the relationships**.
 
 ![Counterparty risk: cards for exposure, slicers for sector and country, the ten counterparties with the highest exposure](img/t10/21-counterparty.jpg)
 
@@ -410,7 +410,7 @@ Everything so far read models that ship with Drishti. A business user can make a
 server's check of what you chose.
 
 **1 · Source.** Where the table comes from: **a pack dataset** (keep some of its columns and rows, add columns, group it), an SQL view over a model, a
-query in a SQL connector, a Python Transform, or the answer of a model. Choose **A pack dataset** and `pack.economics.economy` (every kind of every pack
+query in a SQL connector, a Python Transform, or the answer of a model. Choose **A pack dataset** and `pack.world-economy.economy` (every kind of every pack
 is a dataset already, certified and read-only; this one narrows it).
 
 ![The wizard's source step: A pack dataset chosen, pack.economics.economy picked](img/t10/35-wizard-source.jpg)
@@ -544,8 +544,8 @@ browser test's small lake (two days of 60 trades over three desks); yours differ
 
 ```
 $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" http://localhost:18480/api/v1/bi/pack-datasets
-{"datasets":[{"name":"pack.banking-core.agreement","id":"ds_pack_banking_core_agreement","title":"Master agreement","pack":"banking-core","kind":"agreement",
- "version":"1.0.0","mode":"snapshot","endorsement":"certified","columns":14,"query":"dataset:pack.banking-core.agreement"}, ...]}
+{"datasets":[{"name":"pack.core.agreement","id":"ds_pack_banking_core_agreement","title":"Master agreement","pack":"core","kind":"agreement",
+ "version":"1.0.0","mode":"snapshot","endorsement":"certified","columns":14,"query":"dataset:pack.core.agreement"}, ...]}
 $ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
     -d '{"mq":1,"model":"dataset:pack.trading.trade","select":{"fields":["desk.name"],"measures":["Sum of mtm","Count of trade"]}}' \
     http://localhost:18480/api/v1/bi/mq
@@ -570,7 +570,7 @@ id: md_84db68c3
 title: Trades and desks
 datasets:
   trade: {dataset: pack.trading.trade@^1, role: fact}
-  desk: {dataset: pack.banking-core.desk@^1, role: dimension}
+  desk: {dataset: pack.core.desk@^1, role: dimension}
 relationships:
   - {from: trade.desk, to: desk.id, suggested: {from: pack-reference}}
 measures:

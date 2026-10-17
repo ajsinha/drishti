@@ -29,7 +29,7 @@ engine** filling whatever the grammar does not say. A brand-new product type wit
 no Sutra at all still renders a usable view on day one; a Sutra makes it beautiful.
 
 The four reference mockups (`docs/requirements/drishti-*.png`) define the target. Their entities and Sutras ship in
-the `finance` pack (`config/packs/finance/`), so they open only on a server that enables it (`DRISHTI_PACKS=finance`, the
+the `finance` pack (`examples/packs/finance/`), so they open only on a server that enables it (`DRISHTI_PACKS=finance`, the
 default):
 
 | Mockup | Command | Sutra | Source |
@@ -281,7 +281,7 @@ any schema-aware editor complete and check Sutras with it. With `hot-reload` on,
 invalid edit keeps the last good version and is listed at `GET /api/v1/sutras/problems`. Bindings use a small,
 compiled, side-effect-free expression language (**Rachana-EL**) — not scripting.
 
-A real Sutra, abbreviated (`config/packs/finance/sutras/rates/irs-vanilla.v3.sutra.yaml`, after its copyright comment):
+A real Sutra, abbreviated (`examples/packs/finance/sutras/rates/irs-vanilla.v3.sutra.yaml`, after its copyright comment):
 
 ```yaml
 rachana: 1
@@ -550,7 +550,7 @@ connectors, starter workspaces, help guides and sample data.
   depends on `drishti-packs`; they only read ordinary properties.
 - **Inheritance (ADR-015).** A pack may say `extends: [parent, …]`. Enabling a pack loads its ancestors too: the
   running server enabled with
-  `DRISHTI_PACKS=market-risk,counterparty-risk,…` also loads `banking-core`, `market-data` and `trading`. The order
+  `DRISHTI_PACKS=market-risk,counterparty-risk,…` also loads `core`, `market-data` and `trading`. The order
   is a C3 linearisation (`PackLineage`, as Python orders classes): where related packs define the same mnemonic,
   field, badge, role, route or connector, the child wins over its parents and the rightmost parent over the others;
   every override is reported (`drishti.packs.overrides`). Unrelated packs defining the same thing stop start-up and
@@ -559,17 +559,17 @@ connectors, starter workspaces, help guides and sample data.
 
   | Pack | `extends` |
   |---|---|
-  | `banking-core`, `genomics`, `economics`, `politics-society`, `finance`, `logistics` | – |
-  | `market-data`, `retail-banking`, `operational-risk` | `banking-core` |
-  | `trading` | `banking-core`, `market-data` |
+  | `core`, `genomics`, `economics`, `world-economy`, `finance`, `logistics` | – |
+  | `market-data`, `retail-banking`, `operational-risk` | `core` |
+  | `trading` | `core`, `market-data` |
   | `market-risk`, `counterparty-risk` | `market-data`, `trading` |
   | `liquidity-risk`, `climate-risk` | `trading` |
 - **Per-user packs.** Installed packs are what the server runs; an admin **assigns** packs to users (default
   `drishti.packs.default-for-users`), and each user chooses which assigned ones are **active**. A kind owned by an
   inactive pack cannot be opened (`PackAccess`).
-- **Shipped packs** (`config/packs/`): `banking-core`, `market-data`, `trading`, `market-risk`, `counterparty-risk`,
+- **Shipped packs** (`config/packs/`): `core`, `market-data`, `trading`, `market-risk`, `counterparty-risk`,
   `liquidity-risk`, `climate-risk`, `operational-risk`, `retail-banking`, `finance` (the reference mockups),
-  `logistics` (shipments, containers, vessels, ports), `genomics`, `politics-society`, `economics` — the
+  `logistics` (shipments, containers, vessels, ports), `genomics`, `world-economy`, `economics` — the
   non-financial ones prove the core is neutral.
 
 `GET /api/v1/packs` lists the loaded packs; the console reads their console content from the same folders. See

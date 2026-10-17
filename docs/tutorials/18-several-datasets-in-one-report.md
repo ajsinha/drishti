@@ -140,8 +140,8 @@ version: 1.0.0
 id: md_803c840d
 title: Counterparty P&L and exposure
 datasets:
-  counterparty: {dataset: pack.banking-core.counterparty@^1, role: dimension}
-  desk: {dataset: pack.banking-core.desk@^1, role: dimension}
+  counterparty: {dataset: pack.core.counterparty@^1, role: dimension}
+  desk: {dataset: pack.core.desk@^1, role: dimension}
   netting_set: {dataset: pack.counterparty-risk.netting-set@^1, role: fact}
   trade: {dataset: pack.trading.trade@^1, role: fact}
 relationships:

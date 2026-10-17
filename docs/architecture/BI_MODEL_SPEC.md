@@ -238,7 +238,7 @@ Today's `tests:` keep their form (DATASETS.md section 8.1) with `measure:` repla
 tests:
   - { name: Unique trade per date, unique: [tradeId] }                        # the grain test (1.3)
   - { name: Desk is always set, not-null: [desk] }
-  - { name: Desk exists, references-exist: { column: desk, dataset: pack.banking-core.desk } }   # (W2) referential test
+  - { name: Desk exists, references-exist: { column: desk, dataset: pack.core.desk } }   # (W2) referential test
   - { name: The book holds 750 trades, agg: count, expect: 750, date: 2026-10-09 }
 ```
 
@@ -404,9 +404,9 @@ layers, with its own security, and the model adds relationships, measures, hiera
 datasets:
   trades:         { dataset: pack.trading.trade@^1, role: fact }
   netting_sets:   { dataset: pack.counterparty-risk.netting-set@^1, role: fact }
-  counterparties: { dataset: pack.banking-core.counterparty@^1, role: dimension }
-  desks:          { dataset: pack.banking-core.desk@^1, role: dimension }
-  books:          { dataset: pack.banking-core.book@^1, role: dimension }
+  counterparties: { dataset: pack.core.counterparty@^1, role: dimension }
+  desks:          { dataset: pack.core.desk@^1, role: dimension }
+  books:          { dataset: pack.core.book@^1, role: dimension }
 ```
 
 * The alias (`trades`) is what fields and expressions use (`trades.mtm`): letters, digits, underscore. The converter
@@ -582,9 +582,9 @@ sample: true
 datasets:
   trades:         { dataset: pack.trading.trade@^1, role: fact }
   netting_sets:   { dataset: pack.counterparty-risk.netting-set@^1, role: fact }
-  counterparties: { dataset: pack.banking-core.counterparty@^1, role: dimension }
-  desks:          { dataset: pack.banking-core.desk@^1, role: dimension }
-  books:          { dataset: pack.banking-core.book@^1, role: dimension }
+  counterparties: { dataset: pack.core.counterparty@^1, role: dimension }
+  desks:          { dataset: pack.core.desk@^1, role: dimension }
+  books:          { dataset: pack.core.book@^1, role: dimension }
 relationships:
   - { from: trades.desk,               to: desks.id,          suggested: { from: pack-reference } }
   - { from: trades.book,               to: books.id,          suggested: { from: pack-reference } }
@@ -1173,10 +1173,10 @@ datasets until W3, the boards are unchanged (they name reports), and the noteboo
 | `datasets/trading-cashflows` | model `trading-cashflows` over `pack.trading.trade`, `pack.trading.trade.legs`, `pack.trading.trade.schedule` (aliases `trades`, `legs`, `cashflows`; the column `index_name` stays a renamed path in a user dataset because `index` is reserved); relationships as written |
 | `datasets/live-trading` | dataset `live-trading-trade` (`source: { pack: trading, kind: trade }`, `time: { mode: live, live: { rows: 5000 }, history: { every: 10s, keep: 360, measures: [MTM, Losses, Trades] } }`, masks `trader`); model `live-trading` with the measures, hierarchy and the live rollup |
 | `datasets/live-exposure` | dataset `live-exposure-netting` (live) + model `live-exposure` |
-| `datasets/counterparty-exposure` | model `counterparty-exposure` over `pack.counterparty-risk.netting-set` and `pack.banking-core.counterparty` (kept as a separate model with another owner, so the cross-owner link of 4.3 has a sample) |
+| `datasets/counterparty-exposure` | model `counterparty-exposure` over `pack.counterparty-risk.netting-set` and `pack.core.counterparty` (kept as a separate model with another owner, so the cross-owner link of 4.3 has a sample) |
 | `datasets/desk-pnl-vs-exposure` (composed) | **removed**; its measure `P&L per exposure` moves into `trading-risk` (2.10). Its question is example 8 |
 | `datasets/desk-pnl-vs-exposure-py` (derived) | Python dataset `pnl-vs-exposure-py` (1.10) and its implicit model; the Transform's `inputs:` become the dataset's MQ inputs |
-| `datasets/world-economics`, `region-economics` | models over `pack.economics.economy` and `pack.economics.region-economy` (aliases `economies`, `regions`); `Average growth` and the other averages are marked `additive: false` |
+| `datasets/world-economics`, `region-economics` | models over `pack.world-economy.economy` and `pack.economics.region-economy` (aliases `economies`, `regions`); `Average growth` and the other averages are marked `additive: false` |
 | `reports/trades-overview`, `cashflow-ladder`, `python-desk-risk`, `world-economics`, `region-economics`, `live-trading-desk`, `live-exposure`, `counterparty-risk` | `dataset:` → `model:` of the same name at `@1`; fields unchanged because aliases keep today's table names |
 | `reports/pnl-vs-exposure` | `model: trading-risk@1`; `joined.x` fields → `counterparties.x`; `Desk P&L` → `P&L 1d` (title kept); the two visuals with `dataset: counterparty-exposure` read the same model; `links:` removed; every visual gets `having: Trades > 0` as a page filter on a measure, to keep the left-join meaning (example 8) |
 | `boards/desk-wall` | one board over two models (`live-trading`, `live-exposure`): converted with a new model `live-desk` containing both live datasets as facts (an island pair, `DRS-9121` warning) and the two reports rebound to it (Open question 3) |

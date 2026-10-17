@@ -695,7 +695,7 @@ id: md_84db68c3
 title: Trades and desks
 datasets:
   trade: {dataset: pack.trading.trade@^1, role: fact}
-  desk: {dataset: pack.banking-core.desk@^1, role: dimension}
+  desk: {dataset: pack.core.desk@^1, role: dimension}
 relationships:
   - {from: trade.desk, to: desk.id, suggested: {from: pack-reference}}
 measures:
@@ -712,7 +712,7 @@ security:
 Before `may-see-all` was added, Check answered (as a warning; the publish refuses it):
 
 ```
-DRS-9130 security: the role 'desk-head' is restricted elsewhere in this model, but no row rule restricts 'desk' (pack.banking-core.desk): that role sees
+DRS-9130 security: the role 'desk-head' is restricted elsewhere in this model, but no row rule restricts 'desk' (pack.core.desk): that role sees
 every one of its rows. Add a rule for it on 'desk', or say so with `may-see-all: { desk: [desk-head] }` under security; until then the model cannot be published
 ```
 
@@ -816,7 +816,7 @@ id: md_8cec9e2f
 title: Languages model
 datasets:
   trade: {dataset: pack.trading.trade@^1, role: fact}
-  desk: {dataset: pack.banking-core.desk@^1, role: dimension}
+  desk: {dataset: pack.core.desk@^1, role: dimension}
 relationships:
   - {from: trade.desk, to: desk.id, suggested: {from: pack-reference}}
 measures:

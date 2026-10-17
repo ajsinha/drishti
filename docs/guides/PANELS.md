@@ -240,7 +240,7 @@ From [map](examples/map.sutra.yaml):
   - { id: world, kind: map, title: The world, highlight: $.iso3, span: 6, height: 12 }
 ```
 
-The politics-society pack's `jurisdiction` Sutra and the economics pack's `economy` Sutra carry one, with a `link` to their own kind (and, for the economy, a GDP-per-head `shade`).
+The world-economy pack's `jurisdiction` Sutra and the world-economy pack's `economy` Sutra carry one, with a `link` to their own kind (and, for the economy, a GDP-per-head `shade`).
 
 ## Tables
 

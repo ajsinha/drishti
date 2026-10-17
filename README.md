@@ -105,9 +105,9 @@ production, each with real screenshots; the [guides](docs/README.md) are the ref
 - **Calc** (`Alt+C`): Python in your browser on the view you are looking at ([PYTHON_CALC.md](docs/guides/PYTHON_CALC.md)).
 - **The Build workbench** (`/build`; Sutra Studio's page is folded into it; [tutorial 6](docs/tutorials/06-design-a-screen.md)): drag panels and fields onto a live screen, or a YAML editor with completion from the language's JSON Schema, live checks and a
   preview against any entity. A save is a proposal; an approver reviews the diff (four eyes).
-- **Domain packs**, enabled per server and assigned per user: `banking-core`, `market-data`, `trading`
+- **Domain packs**, enabled per server and assigned per user: `core`, `market-data`, `trading`
   (125 products), `market-risk`, `counterparty-risk`, `liquidity-risk`, `climate-risk`, `operational-risk`,
-  `retail-banking`, `genomics`, `politics-society` and `economics` (real public data; the IMF figures are for internal demonstrations only), and the small `finance`, `logistics`, `news-watch` and `market-watch` packs.
+  `retail-banking`, `genomics`, `world-economy` (real public data; the IMF figures are for internal demonstrations only), and the small `finance`, `logistics`, `news-and-markets` packs.
   Packs inherit from each other, load and unload from Admin → Packs, and install from a **signed, versioned
   registry** with rollback ([PACKS.md](docs/guides/PACKS.md)).
 - **Drishti Elements**: show live views, panels and published BI reports inside another web application as `<drishti-view>`,
@@ -228,7 +228,7 @@ Start with **[Install and run](docs/guides/GETTING_STARTED.md)**, then the **[tu
 | you use the console | [USER_GUIDE.md](docs/guides/USER_GUIDE.md) |
 | you use or build business intelligence (Rūpaka) | [BI_GUIDE.md](docs/guides/BI_GUIDE.md), [tutorial 10](docs/tutorials/10-first-bi-report.md), [DATASETS.md](docs/guides/DATASETS.md), [REPORTS.md](docs/guides/REPORTS.md), [PYTHON_BI.md](docs/guides/PYTHON_BI.md), [BI_AI.md](docs/guides/BI_AI.md), [BI_GOVERNANCE.md](docs/guides/BI_GOVERNANCE.md), [BOARDS.md](docs/guides/BOARDS.md) |
 | you run on Windows, or read from a script or Excel | [Install and run: Windows](docs/guides/GETTING_STARTED.md#drishti-on-windows), [CLIENTS.md](docs/guides/CLIENTS.md) |
-| you use or refresh the real public data (economics, politics-society) | [REAL_DATA.md](docs/guides/REAL_DATA.md) |
+| you use or refresh the real public data (world-economy) | [REAL_DATA.md](docs/guides/REAL_DATA.md) |
 | you define connectors as files, with TLS or a proxy | [CONNECTOR_FILES.md](docs/connectors/CONNECTOR_FILES.md), [TLS.md](docs/connectors/TLS.md), [the proxy](docs/connectors/TLS.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) |
 | you load, assign or install a domain pack | [PACKS.md](docs/guides/PACKS.md) |
 | you build a domain pack | [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md) |

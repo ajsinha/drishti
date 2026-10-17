@@ -71,7 +71,7 @@ A running server is **never touched** by `pack deploy`. That is deliberate: copy
 ## 3. Make a bundle
 
 ```bash
-python3 tools/drishti.py pack bundle config/packs/finance --out dist
+python3 tools/drishti.py pack bundle examples/packs/finance --out dist
 ```
 
 ```text
@@ -226,8 +226,8 @@ On a server that has only `tar` and `sha256sum`:
 cd /srv/drishti/incoming
 sha256sum -c finance-1.0.1.tar.gz.sha256            # finance-1.0.1.tar.gz: OK
 mkdir -p ../config/packs/.stage && tar -xzf finance-1.0.1.tar.gz -C ../config/packs/.stage
-mv ../config/packs/finance ../backups/finance-1.0.0         # keep the old one (skip on a first deploy)
-mv ../config/packs/.stage/finance ../config/packs/finance          # the rename is the switch
+mv ../examples/packs/finance ../backups/finance-1.0.0         # keep the old one (skip on a first deploy)
+mv ../config/packs/.stage/finance ../examples/packs/finance          # the rename is the switch
 rmdir ../config/packs/.stage
 ```
 
@@ -238,7 +238,7 @@ rmdir ../config/packs/.stage
 The point of a bundle is that **what you tested is what you ship**. Build once, on CI, and copy the same file through the stages:
 
 ```text
-git (config/packs/finance, tag v1.0.1)
+git (examples/packs/finance, tag v1.0.1)
    │  CI: pack check, pack bundle
    ▼
 finance-1.0.1.tar.gz + .sha256        ← built ONCE, stored as a CI artifact
@@ -285,7 +285,7 @@ while it is half-finished.** Write somewhere else, then make it appear in one st
 
 ```bash
 # 1. produce a day somewhere private (the ingest tool is idempotent per business date)
-python3 tools/drishti.py data ingest --from new-day.jsonl --pack config/packs/finance --store files --root /srv/stage/files
+python3 tools/drishti.py data ingest --from new-day.jsonl --pack examples/packs/finance --store files --root /srv/stage/files
 # 2. copy the date folder next to the others: first under a dot name, then rename (a rename is atomic on one filesystem)
 cp -r /srv/stage/files/finance/2026-10-05 /srv/drishti/files/finance/.2026-10-05.part
 mv /srv/drishti/files/finance/.2026-10-05.part /srv/drishti/files/finance/2026-10-05
@@ -331,7 +331,7 @@ restored finance 1.0.0 from prod/backups/finance-1.0.0-20261005T181007_529311; t
 ```
 
 It puts back the **newest** backup (`--version 1.0.0` picks one), keeps the version it replaced (so rolling back is itself
-undoable) and swaps in one rename. The packs-folder watcher then reloads the restored version by itself (restart only when `drishti.packs.watch` is `off`). By hand: `mv config/packs/finance config/packs/finance.bad && mv backups/finance-1.0.0-… config/packs/finance`.
+undoable) and swaps in one rename. The packs-folder watcher then reloads the restored version by itself (restart only when `drishti.packs.watch` is `off`). By hand: `mv examples/packs/finance examples/packs/finance.bad && mv backups/finance-1.0.0-… examples/packs/finance`.
 Data rolls back by `mv files files.new && mv files.old files` (section 8) or, for Delta, by `RESTORE`/time travel on the table.
 
 ## 11. Git as the source of truth, and a CI example
@@ -353,8 +353,8 @@ jobs:
         with: { distribution: temurin, java-version: 21 }
       - uses: astral-sh/setup-uv@v5
       - run: ./mvnw -q -DskipTests package -pl drishti-server -am        # the exec jar that lint and test use
-      - run: uv run --with pyyaml python tools/drishti.py pack check config/packs/finance --strict --junit build/reports
-      - run: uv run --with pyyaml python tools/drishti.py pack bundle config/packs/finance --out dist
+      - run: uv run --with pyyaml python tools/drishti.py pack check examples/packs/finance --strict --junit build/reports
+      - run: uv run --with pyyaml python tools/drishti.py pack bundle examples/packs/finance --out dist
       - run: uv run --with pyyaml python tools/drishti.py pack verify dist/finance-*.tar.gz
       - uses: actions/upload-artifact@v4
         with: { name: finance-bundle, path: "dist/finance-*" }

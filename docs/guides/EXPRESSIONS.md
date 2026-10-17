@@ -1743,7 +1743,7 @@ published text, version 2`, `the published text of version 1 before the migratio
 
 Fifty-odd finance and risk measures, each a DEL expression you can paste into the expression editor (a model's **Measures** tab, a report's
 **New measure for this report**, the dataset wizard's **Worked-out columns**), into `define:` of a model query, or into a YAML item. They are written
-against the shipped **trading-risk** sample (trades, netting sets, counterparties, desks and books across the trading, banking-core and
+against the shipped **trading-risk** sample (trades, netting sets, counterparties, desks and books across the trading, core and
 counterparty-risk packs; [DATASETS.md](DATASETS.md) shows its YAML) and **every one runs as a test on the demo lake**
 (`drishti-console/tests/test_expression_recipes.py` reads this section: the block under each `####` heading is the expression, its `# by:` line the
 fields the test groups by, `# scope:` the scope when it is not a measure). Change the aliases (`trades`, `netting_sets`, ...) to your model's.

@@ -13,9 +13,9 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Real data in the economics and politics-society packs
+# Real data in the world-economy pack
 
-The `economics` and `politics-society` packs carry **published public data**, not samples: about 213 economies and 216 countries from the World Bank, the IMF, UNDP and
+The `world-economy` packs carry **published public data**, not samples: about 213 economies and 216 countries from the World Bank, the IMF, UNDP and
 the CIA World Factbook. Every number is a published value (a percentage stays a percentage, as the source states it) and every text is as the source publishes it (HTML
 removed). Neither pack is marked `sample: true` any more.
 
@@ -68,12 +68,12 @@ credits; the *About this series* panel shows the World Bank code to look it up.
 | economics | `fiscal-position` | `FISC` | 192 | IMF debt and net lending, World Bank revenue, expense, military spending |
 | economics | `country-group` | `ECG` | 12 | a World Bank region, income group or the world, with aggregate series and its largest economies |
 | economics | `region-economy` | `REGE` | 59 | a state or territory (ISO 3166-2, `AU-NSW`, `US-CA`) with population and GDP: an **illustrative sample, rounded from public figures, not for reporting** (`tools/realdata/dataset/regions.json`, not fetched), behind the BI sample report *Region economics* |
-| politics-society | `jurisdiction` | `JUR` | 216 | a country: government type, capital, legislature seats by party, indicators, links to office holders, elections, parties and region |
-| politics-society | `office-holder` | `OFFC` | 430 | the chief of state and head of government as the Factbook publishes them |
-| politics-society | `election` | `ELEC` | 378 | the most recent lower-chamber, upper-chamber and executive election: system, term, seats by party, next election |
-| politics-society | `party` | `PARTY` | 282 | a party that won seats in the lower chamber at the most recent election, with the chamber's full result |
-| politics-society | `region` | `REGN` | 7 | a World Bank region: countries, population, life expectancy, government types |
-| politics-society | `social-indicator` | `SOCI` | 4,297 | one social or governance statistic of one country with a regional comparison |
+| world-economy | `jurisdiction` | `JUR` | 216 | a country: government type, capital, legislature seats by party, indicators, links to office holders, elections, parties and region |
+| world-economy | `office-holder` | `OFFC` | 430 | the chief of state and head of government as the Factbook publishes them |
+| world-economy | `election` | `ELEC` | 378 | the most recent lower-chamber, upper-chamber and executive election: system, term, seats by party, next election |
+| world-economy | `party` | `PARTY` | 282 | a party that won seats in the lower chamber at the most recent election, with the chamber's full result |
+| world-economy | `region` | `REGN` | 7 | a World Bank region: countries, population, life expectancy, government types |
+| world-economy | `social-indicator` | `SOCI` | 4,297 | one social or governance statistic of one country with a regional comparison |
 
 Removed because no open, global dataset backs them: central-bank decisions, trade flows (bilateral), price baskets, opinion polls, bills and candidates. The old
 fictional polities (Valdoria, Kestria) and the invented economies are gone.
@@ -107,7 +107,7 @@ output data). Examples of how many countries have data: GDP 213, real growth 212
 law 207, CO2 per capita 203, reserves 177. A missing value is simply absent from the series: nothing is estimated or filled in. Rankings count only countries whose latest
 value is from 2022 or later.
 
-Size: the economics pack is 6.9 MB, politics-society 12.1 MB and the normalised dataset 2.4 MB (21.4 MB of text in all, under the 25 MB limit; git compresses it to
+Size: the world-economy pack is 6.9 MB, world-economy 12.1 MB and the normalised dataset 2.4 MB (21.4 MB of text in all, under the 25 MB limit; git compresses it to
 about a fifth). Sample documents are written without indentation (`compact_json` in the pack generator) to keep it small.
 
 ### More countries and groups
@@ -121,7 +121,7 @@ The same Sutras serve every country: the United States and Nigeria below, Brazil
 
 ## Indicators
 
-### Economy, labour and fiscal (economics pack)
+### Economy, labour and fiscal (world-economy pack, economics half)
 
 <!-- realdata:begin indicators-economics -->
 | Key | Indicator | Unit | Source and code | Countries with data |
@@ -159,7 +159,7 @@ The same Sutras serve every country: the United States and Nigeria below, Brazil
 | `military` | Military expenditure | % of GDP | World Bank WDI `MS.MIL.XPND.GD.ZS` | 159 |
 <!-- realdata:end indicators-economics -->
 
-### Society and governance (politics-society pack)
+### Society and governance (world-economy pack)
 
 <!-- realdata:begin indicators-society -->
 | Key | Indicator | Unit | Source and code | Countries with data |
@@ -219,7 +219,7 @@ tests) and compares the guide tables. A run on the committed state prints:
 $ python3 tools/realdata/realdata.py check
 dataset: no raw cache at /home/ci/.cache/drishti-realdata, not re-derived     (with a cache: nothing)
 economics: 3924 files up to date
-politics-society: 5621 files up to date
+world-economy: 5621 files up to date
 ```
 
 ### Building without the IMF
@@ -232,7 +232,7 @@ python3 tools/realdata/realdata.py check --no-imf               # the --no-imf p
 
 `--no-imf` builds a World Bank, UNDP and Factbook pack set: the IMF is not contacted, the `economic-forecast` kind and its 192 documents are gone, the IMF `debt` and
 `net_lending` series are gone (so an economy has no `debtToGdp` and no `outlook` link), the `fiscal-position` kind keeps only the World Bank revenue, expense and military
-shares (`debt`, `balance` and the two paths are removed), and the glossary, FORM, examples, guide and provenance never name the IMF as a source. The politics-society pack
+shares (`debt`, `balance` and the two paths are removed), and the glossary, FORM, examples, guide and provenance never name the IMF as a source. The world-economy pack
 never used IMF data and is identical. The one remaining word is the World Bank's definition of *Total reserves* ("... reserve position in the IMF ..."), which describes the
 reserves, not IMF data. The committed dataset, glossary, tests and this guide are never touched: the packs go to `--out` (default `~/.cache/drishti-realdata/no-imf/packs`) and a
 `--no-imf` dataset to `~/.cache/drishti-realdata/no-imf/dataset`; copy the two pack directories into `config/packs/` of the build you ship.
@@ -257,9 +257,9 @@ about 260 Factbook files, and takes 10 to 20 minutes at the default pause; the W
 ```
 python3 tools/realdata/realdata.py all --refresh      # download again, normalise, regenerate glossary, packs, tests and guide tables
 python3 tools/realdata/realdata.py check              # clean when everything committed matches
-python3 tools/packgen/economics/make.py --check       # clean when the pack matches the dataset
+python3 tools/packgen/world/make.py --check           # clean when the pack matches the dataset
 python3 tools/packgen/politics/make.py --check
-python3 tools/drishti.py pack check config/packs/economics config/packs/politics-society
+python3 tools/drishti.py pack check config/packs/world-economy config/packs/world-economy
 python3 -m pytest tools/realdata/tests
 ```
 
@@ -275,22 +275,22 @@ name; unmatched profiles are listed in `meta.json` (`factbookUnmatched`: depende
 
 ## Generated outputs stay consistent
 
-`tools/packgen/economics/make.py` and `tools/packgen/politics/make.py` write `pack.yaml`, the Sutras, `samples/`, `guides/`, `config/help.yaml` and `config/about.yaml`;
+`tools/packgen/world/make.py` (joining the halves `tools/packgen/economics/make.py` and `tools/packgen/politics/make.py`) writes `pack.yaml`, the Sutras, `samples/`, `guides/`, `config/help.yaml` and `config/about.yaml`;
 `--check` fails if any differs. They also write `config/about.yaml`'s source and the pack `tests/` (see `about.py` and `pack_tests.py`). Only `config/formats.yaml` (the `pc1` and `pc2` formats that add a `%` sign to values already in percent) is kept by hand. The
 pack tests are one to five real countries per kind (India, the United States, Brazil, Nigeria, Japan) with `expect.yaml` (`noErrors`, `nonEmpty`, help coverage 100%); which ones is in `tools/realdata/pack_tests.yaml`.
 
 ```
-$ python3 tools/drishti.py pack check config/packs/economics config/packs/politics-society
+$ python3 tools/drishti.py pack check config/packs/world-economy config/packs/world-economy
 == economics: sutra lint: exit 0
 == economics: sutra test: exit 0
      economy: help coverage 8/8 (100%)
      ...
-== politics-society: sutra lint: exit 0
-== politics-society: sutra test: exit 0
+== world-economy: sutra lint: exit 0
+== world-economy: sutra test: exit 0
 ```
 
 ![Brazil's lower-chamber election](img/realdata/election-brazil.jpg)
 ![A governance indicator: Nigeria, rule of law](img/realdata/indicator-nigeria-rule-of-law.jpg)
 
 The pictures are made by `tools/docs/shots/realdata.py` (`drishti-console/.venv/bin/python tools/docs/screenshots.py --guide realdata`) on a server started with
-`DRISHTI_PACKS=economics,politics-society`.
+`DRISHTI_PACKS=world-economy`.

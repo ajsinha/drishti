@@ -184,7 +184,7 @@ Two things to notice:
 ## A real example: NGFS-DELAYED
 
 Inference also helps when you start a Sutra. With the climate-risk pack enabled, this read-only call asks the
-server what inference makes of the NGFS *Delayed transition* scenario (`config/packs/climate-risk/samples/climate-scenario/NGFS-DELAYED.json`),
+server what inference makes of the NGFS *Delayed transition* scenario (`examples/packs/climate-risk/samples/climate-scenario/NGFS-DELAYED.json`),
 ignoring the pack's own Sutra:
 
 ```bash
@@ -248,7 +248,7 @@ Reading it against the rules:
 - `shock` values such as `-0.0164` get `amount0` and would show as `-0`: nothing tells inference they are
   percentages.
 
-The pack's hand-written Sutra (`config/packs/climate-risk/sutras/climate/climate-scenario.v1.sutra.yaml`) fixes each
+The pack's hand-written Sutra (`examples/packs/climate-risk/sutras/climate/climate-scenario.v1.sutra.yaml`) fixes each
 of these: it titles the view by `$.scenarioId`, draws the carbon path as a **line** over `year`, and shows the
 shocks with `fmt: pct0, tone: sign`. That is the normal workflow: start from inference, then correct what a
 person knows better. Open `NGFS NGFS-DELAYED <GO>` in the terminal to see the result.
@@ -468,7 +468,7 @@ The usual way to write a Sutra for a new kind is to start from inference and cor
    file in a Sutra directory (`drishti.rachana.dirs`, or a pack's `sutras/` folder); it loads at once.
 
 After these steps you have, nearly line for line, the operational-risk pack's own
-`config/packs/operational-risk/sutras/operational-and-non-financial-risk/key-risk-indicator.v1.sutra.yaml`. Check the
+`examples/packs/operational-risk/sutras/operational-and-non-financial-risk/key-risk-indicator.v1.sutra.yaml`. Check the
 result:
 
 ```bash
@@ -530,7 +530,7 @@ The Sutra always wins. Inference only fills in:
 - the `kv` body of a `tabs` panel whose body states no columns (the fields of the first element);
 - labels nobody wrote: `bind: "@.payDate"` with no `label` reads **Pay date**.
 
-**Example (real).** The counterparty Sutra in `config/packs/banking-core/sutras/counterparty-and-legal/counterparty.v1.sutra.yaml`
+**Example (real).** The counterparty Sutra in `config/packs/core/sutras/counterparty-and-legal/counterparty.v1.sutra.yaml`
 declares its KYC panel without columns:
 
 ```yaml
@@ -628,7 +628,7 @@ The same file sets:
 |---|---|
 | `finance` | roles for `mtm`, `pv`, `dv01` (signed money), `notional`, `exposure`, `pfe` (money), rates, prices, pips, discount factors; contract-month tenors; `tradeId` as an identifier; finance acronyms |
 | `logistics` | roles for delays (hours), weights, temperatures, speed in knots, TEU capacity, ETAs; `shipmentId`, `containerId`, `vesselId`, `portId` as identifiers |
-| `banking-core` (and every banking pack through it) | acronyms (`MTM`, `DV01`, `CVA`, `ISDA`, `LEI`, …) and explicit labels (`mtm` → **MTM (USD)**); no roles |
+| `core` (and every banking pack through it) | acronyms (`MTM`, `DV01`, `CVA`, `ISDA`, `LEI`, …) and explicit labels (`mtm` → **MTM (USD)**); no roles |
 
 So with the banking packs but not `finance`, a field named `mtm` is a plain *number* to inference. That is
 fine in practice, because every banking kind ships with a Sutra; it matters only for new kinds.

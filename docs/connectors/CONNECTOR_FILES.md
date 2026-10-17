@@ -312,7 +312,7 @@ settings:
 
 ```
 connectors: connector file trading-store.yaml generated from the template of pack 'trading'
-connectors: connector file reference-store.yaml generated from the template of pack 'banking-core'
+connectors: connector file reference-store.yaml generated from the template of pack 'core'
 ```
 
 If you delete a generated file by hand while the pack still suggests it, it is written again at the next start; **Reset to pack

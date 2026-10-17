@@ -1019,7 +1019,7 @@ The offline path: no server API and no token. Full guide with real output, promo
 [OPERATIONALISING.md](OPERATIONALISING.md).
 
 ```bash
-drishti.py pack bundle config/packs/finance --out dist                 # finance-1.0.0.tar.gz + .sha256 + .manifest.json (runs pack check first)
+drishti.py pack bundle examples/packs/finance --out dist                 # finance-1.0.0.tar.gz + .sha256 + .manifest.json (runs pack check first)
 drishti.py pack verify dist/finance-1.0.0.tar.gz                # sha256, manifest checksums, schema, server version, sutra lint + test
 drishti.py pack deploy dist/finance-1.0.0.tar.gz --to /opt/drishti/packs --backup /opt/drishti/backups [--dry-run]
 drishti.py pack rollback finance --to /opt/drishti/packs --backup /opt/drishti/backups [--version 1.0.0]
@@ -1594,7 +1594,7 @@ Where the data came from
   health      up
 
 Why this layout: Sutra counterparty v1 + inference (a Sutra plus inference for what it left out)
-  Sutra counterparty v1 of pack banking-core, priority 10, where (no where: matches every document of the kind)
+  Sutra counterparty v1 of pack core, priority 10, where (no where: matches every document of the kind)
   Match trace: counterparty (priority 10) is the chosen Sutra; 0 other Sutra(s) were tried and did not match (first 10 shown)
   sutra           priority  where  result
   --------------  --------  -----  ------
@@ -1719,7 +1719,7 @@ $ python3 tools/drishti.py connector list
   legacy-feed       application  file                                                running                       defined in application.yaml (deprecated); save it to create legacy-feed.yaml
   market-store      file         delta    ir-curve,repo-curve,fx-spot +17            running (DOWN)  market-data
   nyfed-sofr-feed   file         feed     rate-fixing                                disabled        market-data
-  reference-store   file         delta    counterparty,counterparty-group,issuer +9  running (DOWN)  banking-core
+  reference-store   file         delta    counterparty,counterparty-group,issuer +9  running (DOWN)  core
   site-quotes       file         file     quote                                      running
   trading-store     file         delta    trade                                      running (DOWN)  trading
   trading-stream    file         kafka    trade                                      disabled        trading

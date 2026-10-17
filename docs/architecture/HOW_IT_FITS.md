@@ -19,7 +19,7 @@
 what happens between typing `TRD MX-20000001` and a live screen.* Every path, key, endpoint and output below is real:
 the files are in this repository and the outputs were captured from a server started with the QUICKSTART packs
 (`market-risk`, `counterparty-risk`, `liquidity-risk`, `climate-risk`, `operational-risk`, `retail-banking`,
-`genomics`, `politics-society`, `economics`) on `http://localhost:18480`. Values that tick (MTM, generation) will
+`genomics`, `world-economy`, `economics`) on `http://localhost:18480`. Values that tick (MTM, generation) will
 differ when you try it.
 
 ## Contents
@@ -509,12 +509,12 @@ the pack is `genomics` (no `extends`), the Sutra `variant v1` (no `where`, so th
 source `reference-genome`, and the pack's `kinds.variant.about` yields, under the title *Sequence variant*,
 "VRNT-BRAF-V600E is a missense change in BRAF (p.Val600Glu, c.1799T>A); it is classified "Pathogenic (somatic)" for
 Melanoma, colorectal and thyroid cancer." Nothing in the code names `variant` or `genomics`: the words are in
-`config/packs/genomics/config/about.yaml`, which the generator `tools/packgen/genomics/make.py` writes from its own about
+`examples/packs/genomics/config/about.yaml`, which the generator `tools/packgen/genomics/make.py` writes from its own about
 source.
 
 | | Trade (A) | Variant (B) |
 |---|---|---|
-| About file | `config/packs/trading/config/about.yaml`, `kinds.trade` | `config/packs/genomics/config/about.yaml`, `kinds.variant` |
+| About file | `config/packs/trading/config/about.yaml`, `kinds.trade` | `examples/packs/genomics/config/about.yaml`, `kinds.variant` |
 | Candidates in the `MatchTrace` | 124 other Sutras of kind `trade` | none |
 | Source and health | `murex-rates`, `up` | `reference-genome`, `up` |
 | **Unchanged** | `ExplainController`, `ExplainService`, `PageContext`, the drawer and its keys | the same |
@@ -691,7 +691,7 @@ Where each part is changed is section 7.
 
 The `genomics` pack has nothing to do with banking. Type `VRNT VRNT-BRAF-V600E <GO>`.
 
-**Pack** (`config/packs/genomics/pack.yaml`): `extends: []` (it stands alone), kinds `gene`, `variant`, `protein`, ..., and
+**Pack** (`examples/packs/genomics/pack.yaml`): `extends: []` (it stands alone), kinds `gene`, `variant`, `protein`, ..., and
 
 ```yaml
 mnemonics:
@@ -711,14 +711,14 @@ routes:
 
 This pack states the route for every kind (`routes:` becomes `drishti.sources.routes.variant`, read by
 `SourceRouter.candidates()`). The lake data is `data/delta/genomics/variant/business_date=2026-09-17` and later. As in
-example A, today's read is answered from the pack's samples (`config/packs/genomics/samples/variant/`) by the demo plugin, and
+example A, today's read is answered from the pack's samples (`examples/packs/genomics/samples/variant/`) by the demo plugin, and
 `?asOf=2026-09-30` is answered by `genomics-store` (`"source":"genomics-store","businessDate":"2026-09-30"`).
 
 **Document** (`GET /api/v1/entities/variant/VRNT-BRAF-V600E/raw`, trimmed): `variantId`, `geneSymbol: BRAF`,
 `proteinChange: p.Val600Glu`, `significance: Pathogenic (somatic)`, `frequencies: [{population, af}, ...]`,
 `evidence: [{source, assertion, stars, date}, ...]`, `gene: GENE-BRAF`.
 
-**Sutra** (`config/packs/genomics/sutras/genomics-and-biology/variant.v1.sutra.yaml`, trimmed):
+**Sutra** (`examples/packs/genomics/sutras/genomics-and-biology/variant.v1.sutra.yaml`, trimmed):
 
 ```yaml
 match: { kind: variant, priority: 10 }

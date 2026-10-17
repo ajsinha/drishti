@@ -900,7 +900,7 @@ curl -s $B/me/packs | jq -c .
 ```
 
 ```json
-{"assigned":["banking-core","market-data","trading","market-risk", …],"active":["banking-core","market-data","trading","market-risk", …]}
+{"assigned":["core","market-data","trading","market-risk", …],"active":["core","market-data","trading","market-risk", …]}
 ```
 
 **Workspaces.** A layout (`2col`, `3col`, `2x2` or `1+2`) and 1 to 4 panes. Each pane has `ref` (an entity or
@@ -984,7 +984,7 @@ curl -s $B/packs | jq -c '.[0:2][] | {name, version, title, kinds: .kinds[0:3], 
 ```
 
 ```
-{"name":"banking-core","version":"1.0.0","title":"Banking core","kinds":["counterparty","counterparty-group","issuer"],"assigned":true,"active":true}
+{"name":"core","version":"1.0.0","title":"Banking core","kinds":["counterparty","counterparty-group","issuer"],"assigned":true,"active":true}
 {"name":"market-data","version":"1.0.0","title":"Market data","kinds":["ir-curve","repo-curve","fx-spot"],"assigned":true,"active":true}
 ```
 
@@ -1256,7 +1256,7 @@ curl -s $B/admin/status | jq -c .
 ```
 
 ```json
-{"forceChangeOnCreate":false,"installedPacks":["banking-core","market-data","trading", …],"defaultAdminPasswordInUse":true,"users":1}
+{"forceChangeOnCreate":false,"installedPacks":["core","market-data","trading", …],"defaultAdminPasswordInUse":true,"users":1}
 ```
 
 `defaultAdminPasswordInUse: true` is a warning: change the seeded admin's password before production.
@@ -1417,7 +1417,7 @@ curl -s $B/admin/health | jq -c '.sources[0], .packs[0]'
 
 ```
 {"name":"civic-store","version":"1.0","status":"UP","health":"UP","kinds":["bill","candidate","election", …],"live":false,"dated":true,"search":true,"reads":{"reads":0},"cache":{"tables":8,"partitions":8,"timeTravel":0}}
-{"name":"banking-core","title":"Banking core","version":"1.0.0","extends":[],"overrides":[],"kinds":12,"sutras":12,"sutraProblems":[],"connectors":["reference-store"],"connectorsDown":[],"connectorsOff":[],"status":"OK"}
+{"name":"core","title":"Banking core","version":"1.0.0","extends":[],"overrides":[],"kinds":12,"sutras":12,"sutraProblems":[],"connectors":["reference-store"],"connectorsDown":[],"connectorsOff":[],"status":"OK"}
 ```
 
 A source's `reads` grows read counts, errors, p50/p99 and the last error once it has served traffic.

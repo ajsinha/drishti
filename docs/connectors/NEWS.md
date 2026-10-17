@@ -20,7 +20,7 @@ nothing. Its documents are **computed when they are asked for**: the entity id c
 for it, reads the answer safely, filters and tidies it, and returns the headlines as an ordinary entity that the console lays out
 like any other. It is the teaching example for [connectors that compute data on demand](CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand);
 its sibling [YFINANCE.md](YFINANCE.md) does the same for market quotes. The sample packs
-[news-watch](../guides/PACKS.md#sample-packs) and [market-watch](../guides/PACKS.md#sample-packs) are built on them.
+[news-and-markets](../guides/PACKS.md#sample-packs) and [news-and-markets](../guides/PACKS.md#sample-packs) are built on them.
 
 > **Privacy: names leave your network.** Every time a headline list is not in the cache, the connector sends the entity's name
 > (and the language and country of the edition) to `news.google.com`. For a company or a country that is harmless; for a client,
@@ -55,7 +55,7 @@ have been asked for since the server started can be found with the command-line 
 ## 2. Turning it on
 
 The connector is a site resource like any other: one file, `config/connectors/news.yaml`. It does not exist until a pack that uses it
-(`news-watch`, or `market-watch` which extends it) is loaded; the server then writes it **once** from the pack's template, with
+(`news-and-markets`, or `news-and-markets` which extends it) is loaded; the server then writes it **once** from the pack's template, with
 `enabled: ${DRISHTI_NEWS_ENABLED:false}`. To use it:
 
 ```
@@ -223,7 +223,7 @@ routes: { news: news }
       - { label: Link, bind: "@.link" }       # a web address in a cell is shown as a link that opens in a new tab
 ```
 
-The shipped examples are the `news-watch` pack (fifteen topics: central banks, countries, companies, themes) and the `market-watch`
+The shipped examples are the `news-and-markets` pack (fifteen topics: central banks, countries, companies, themes) and the `news-and-markets`
 pack (twenty listed companies with a quote, a price chart and these headlines); both are sample packs, see [PACKS.md](../guides/PACKS.md#sample-packs).
 
 ## 9. How it is built

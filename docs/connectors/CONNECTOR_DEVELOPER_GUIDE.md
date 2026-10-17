@@ -275,7 +275,7 @@ console's Python environment):
 ```
 
 **2. Choose the packs.** A pack gives your kinds their mnemonics and its connectors. The examples use the banking
-packs; `counterparty-risk` pulls in `trading`, `market-data` and `banking-core`, and `market-risk` adds stress
+packs; `counterparty-risk` pulls in `trading`, `market-data` and `core`, and `market-risk` adds stress
 results:
 
 ```bash
@@ -1290,7 +1290,7 @@ searches, filters for relevance, drops duplicates and denied publishers, sorts n
 should show the news about the entity being viewed. It is the example of [a connector that is code, not a store](#connectors-that-compute-data-on-demand).
 
 ```yaml
-# config/connectors/news.yaml  (written from the news-watch pack's template, enabled: false)
+# config/connectors/news.yaml  (written from the news-and-markets pack's template, enabled: false)
 plugin: news
 enabled: true
 kinds: [news]
@@ -1306,7 +1306,7 @@ Google (off as shipped); the first view of a name is pending under the 40 ms lin
 for** samples and internal demonstrations only: the endpoint is unofficial and Yahoo's terms restrict its use.
 
 ```yaml
-# config/connectors/yfinance.yaml  (written from the market-watch pack's template, enabled: false)
+# config/connectors/yfinance.yaml  (written from the news-and-markets pack's template, enabled: false)
 plugin: yfinance
 enabled: true
 kinds: [quote]
@@ -1484,7 +1484,7 @@ pack: equity-desk
 version: 1.0.0
 title: Equity desk
 extends:
-- banking-core                 # counterparties, books, traders… and banking-core's reference-store connector
+- core                 # counterparties, books, traders… and core's reference-store connector
 - market-data                  # equities, curves… and market-store plus the five feeds
 kinds:                         # a kind belongs to exactly one pack
 - order
@@ -1534,7 +1534,7 @@ undeclared-kinds plugin such as `file`). Then:
 - A source that holds nothing passes on; one that fails stops the read (`DRS-1003`), so a lake that is down shows as
   an error rather than silently serving other data.
 
-**Inheritance.** Enabling `equity-desk` (`DRISHTI_PACKS=equity-desk`) loads `banking-core` and `market-data` too
+**Inheritance.** Enabling `equity-desk` (`DRISHTI_PACKS=equity-desk`) loads `core` and `market-data` too
 (`extends:` and `requires:` both pull parents in), and every connector the three name runs: `reference-store`,
 `market-store`, the five feeds (off unless switched on), `equity-store` and `equity-orders`. Where two packs declare
 the same connector name (or route, mnemonic, field, badge or role):

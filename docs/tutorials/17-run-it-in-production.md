@@ -70,7 +70,7 @@ You should see the amber banner on every Admin page, and the users with their ro
 
 ```text
 $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" localhost:18480/api/v1/admin/status
-{"defaultAdminPasswordInUse":true,"installedPacks":["banking-core","market-data","trading", ...],"forceChangeOnCreate":false,"users":6}
+{"defaultAdminPasswordInUse":true,"installedPacks":["core","market-data","trading", ...],"forceChangeOnCreate":false,"users":6}
 ```
 
 Make your own administrator first (**New user**): a name, an email, the role `admin`, and a password (or *Must change at first sign-in*, which you will usually want).

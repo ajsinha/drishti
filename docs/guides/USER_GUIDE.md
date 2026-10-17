@@ -1755,7 +1755,7 @@ Every theme meets WCAG AA contrast: all text, including faint notes, the footer 
 
 A pack brings one domain: its mnemonics, layouts and data. If you may use more than one pack, the round
 **box** tool in the top bar shows how many you have switched on, for example `12`. Hover over it to read
-their names (*Packs shown: banking-core, market-data, …*).
+their names (*Packs shown: core, market-data, …*).
 
 Worked example: see only trading and counterparty risk.
 
@@ -1929,7 +1929,7 @@ if asked anyway. Roles only matter when sign-in is on. More in [USER_MANAGEMENT.
 |---|---|
 | Pack | *Trading* `trading 1.0.0` |
 | What it brings | its description |
-| Builds on | `banking-core, market-data`, and under it *needed by market-risk, counterparty-risk, …* |
+| Builds on | `core, market-data`, and under it *needed by market-risk, counterparty-risk, …* |
 | Kinds | `1 (TRD)`: the number of kinds and the first four mnemonics |
 | Connectors | `trading-store, trading-stream` |
 | Status | **on**, **off**, or **not loaded**; under it, the problem if the pack's files could not be used (the last good version keeps running) |
@@ -1956,7 +1956,7 @@ Two safeguards keep packs consistent:
 Worked example: take operational risk away for everyone.
 
 1. Open *Admin → Packs*. The *Operational and non-financial risk* row says **on**; *Builds on* reads
-   `banking-core`; nothing needs it.
+   `core`; nothing needs it.
 2. Click **Switch off**. The status turns to **off**, and *Changed* shows the time and your name.
 3. Type `LOSS` in the command line: no suggestions come. In the box menu, the pack is gone.
 4. Open *Admin → Audit log*: the newest line is `pack-disabled operational-risk` by you.

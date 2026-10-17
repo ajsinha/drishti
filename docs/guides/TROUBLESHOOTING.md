@@ -166,7 +166,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
     java -jar drishti-server/target/drishti-server-2.2.0-exec.jar
   ```
 
-  A pack's parents load by themselves: enabling `trading` also loads `banking-core` and `market-data`. Other
+  A pack's parents load by themselves: enabling `trading` also loads `core` and `market-data`. Other
   start-up messages from the pack loader: "`… declares pack 'x', expected 'y'`" (the folder name and the `pack:`
   key in its `pack.yaml` differ), "`packs require each other in a cycle`", and "`… is defined by both pack 'a'
   and pack 'b'`" (two unrelated packs claim the same mnemonic or kind). See [PACKS.md](PACKS.md).
@@ -176,7 +176,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 - **Cause:** `DRISHTI_PACKS` was not set for the server process; its default is `finance`.
 - **Check:** `curl -s http://localhost:18480/api/v1/packs | python3 -c "import json,sys; print([p['name'] for p in json.load(sys.stdin)])"`.
 - **Fix:** restart the server with the list you want, for example
-  `DRISHTI_PACKS=banking-core,market-data,trading,market-risk,counterparty-risk`.
+  `DRISHTI_PACKS=core,market-data,trading,market-risk,counterparty-risk`.
 
 ### An old version runs, or the wrong jar starts
 
@@ -667,7 +667,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
   ```bash
   uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \
-      --samples config/packs/finance/samples --root data/delta --domain finance --days 30
+      --samples examples/packs/finance/samples --root data/delta --domain finance --days 30
   ```
 
 ### "Latest data on or before … is from …"

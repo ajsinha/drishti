@@ -114,7 +114,7 @@ ports of their own, so that nothing of yours is touched: the QUICKSTART packs, p
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-DRISHTI_PORT=18996 DRISHTI_PACKS=market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics,helpdesk \
+DRISHTI_PORT=18996 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,helpdesk \
   java -jar drishti-server/target/drishti-server-2.2.0-exec.jar
 DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
@@ -141,7 +141,7 @@ mkdir -p config/packs/helpdesk/{samples/ticket,samples/agent,samples/client,sutr
 ### Step 2. The smallest working manifest
 
 `config/packs/helpdesk/pack.yaml`. Every file in the repository carries the copyright header: copy the comment block from
-the top of `config/packs/logistics/pack.yaml`, or run `python3 tools/license_headers.py --fix` when you are done (the build's
+the top of `examples/packs/logistics/pack.yaml`, or run `python3 tools/license_headers.py --fix` when you are done (the build's
 `LicenseHeaderTest` fails otherwise).
 
 ```yaml
@@ -656,7 +656,7 @@ this guide.
 
 ## `pack.yaml`, key by key
 
-Below is the complete `config/packs/logistics/pack.yaml`, annotated. Then the keys only larger packs use, from
+Below is the complete `examples/packs/logistics/pack.yaml`, annotated. Then the keys only larger packs use, from
 `config/packs/counterparty-risk/pack.yaml`. Every key here is read either by the server's pack loader
 (`drishti-packs/…/PackLoader.java`) or by the console (`drishti-console/core/packs.py`); keys not listed are ignored.
 
@@ -775,7 +775,7 @@ is used when the key is absent. A folder or file that does not exist is simply s
 
 When a command names several entities (`TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`), the user gets a
 **pick list**: a table with one row per entity. `columns:` says which fields of each kind appear beside the id,
-in order. From `config/packs/trading/pack.yaml` and `config/packs/banking-core/pack.yaml`:
+in order. From `config/packs/trading/pack.yaml` and `config/packs/core/pack.yaml`:
 
 ```yaml
 columns:                        # KIND: [field, …]  document paths, as in a search ("counterparty.name" works too)
@@ -1489,7 +1489,7 @@ pnl = np.asarray(view.doc["scenarioPnl"], dtype=float)
 | Roles | give the pack's analyst roles `calc: true` ([Roles](#roles-and-field-masks)); a pack that enables Calc without such a role offers it only to roles that have it elsewhere |
 
 The banking packs enable Calc with a library of 75 snippets (27 in `market-data`, 13 each in `trading` and
-`market-risk`, 12 in `counterparty-risk`, 10 in `banking-core`): curves, FX, vol surfaces, options, bonds, credit,
+`market-risk`, 12 in `counterparty-risk`, 10 in `core`): curves, FX, vol surfaces, options, bonds, credit,
 VaR and its backtest, stress, FRTB, exposure, CVA, collateral, SA-CCR, desks, books and counterparties. Their
 generator writes them from `tools/packgen/banking/snippets/<pack>/*.py` (read by `calc_snippets.py`); `finance` has
 two inline ones and eight files. They share the pricing maths of `drishti.quant`. Every one, with the sample entity it
@@ -1585,9 +1585,9 @@ This order is C3 linearisation, the rule Python uses to order classes (ADR-015).
 The packs involved:
 
 ```text
-banking-core:       extends []
-market-data:        extends [banking-core]
-trading:            extends [banking-core, market-data]
+core:       extends []
+market-data:        extends [core]
+trading:            extends [core, market-data]
 counterparty-risk:  extends [market-data, trading]
 ```
 
@@ -1595,10 +1595,10 @@ Work it out from the bottom:
 
 | Pack | Order (most specific first) | Why |
 |---|---|---|
-| `banking-core` | banking-core | no parents |
-| `market-data` | market-data → banking-core | one parent |
-| `trading` | trading → market-data → banking-core | rightmost parent (`market-data`) first, then `banking-core`; `banking-core` appears once, after `market-data` (which also extends it) |
-| `counterparty-risk` | counterparty-risk → trading → market-data → banking-core | rightmost parent (`trading`) first; `market-data` must come before `banking-core` |
+| `core` | core | no parents |
+| `market-data` | market-data → core | one parent |
+| `trading` | trading → market-data → core | rightmost parent (`market-data`) first, then `core`; `core` appears once, after `market-data` (which also extends it) |
+| `counterparty-risk` | counterparty-risk → trading → market-data → core | rightmost parent (`trading`) first; `market-data` must come before `core` |
 
 So if `counterparty-risk`, `trading` and `market-data` all defined a mnemonic `FIX`, the `counterparty-risk`
 definition would be used. If only `trading` and `market-data` defined it, `trading`'s would win.
@@ -1629,7 +1629,7 @@ routes:
 ```
 
 At the first start the server writes `config/connectors/bank-credit-db.yaml` from the template (the environment variables are read when the connector starts; a literal
-password would be refused). Start the server with `DRISHTI_PACKS=my-bank`. `counterparty-risk`, `trading`, `market-data` and `banking-core`
+password would be refused). Start the server with `DRISHTI_PACKS=my-bank`. `counterparty-risk`, `trading`, `market-data` and `core`
 come with it. *Admin → Health* lists every override, one per line, in the form `<what> <name>: <winner> overrides
 <loser>`:
 
@@ -1824,9 +1824,9 @@ help cards from one description. Each generated file says so in a comment near t
 
 | Packs | Generator |
 |---|---|
-| `banking-core`, `market-data`, `trading`, `market-risk`, `counterparty-risk` | `tools/packgen/banking/`: `make_packs.py` the manifests and the Calc snippets (`python/*.py`, from `snippets/<pack>/*.py` through `calc_snippets.py`), `make_sutras.py` the 171 Sutras, `make_docs.py` the guides, `make_data.py` the documents and the lake |
-| `liquidity-risk`, `climate-risk`, `operational-risk`, `retail-banking`, `genomics`, `politics-society`, `economics` | `tools/packgen/<area>/make.py` (`liquidity`, `climate`, `oprisk`, `retail`, `genomics`, `politics`, `economics`), all on the common builder `tools/packgen/common/packbuild.py` |
-| `finance`, `logistics`, `news-watch`, `market-watch` | hand-written; where a pack has a `tools/` folder (`finance`, `logistics`, `news-watch`) its samples come from there |
+| `core`, `market-data`, `trading`, `market-risk`, `counterparty-risk` | `tools/packgen/banking/`: `make_packs.py` the manifests and the Calc snippets (`python/*.py`, from `snippets/<pack>/*.py` through `calc_snippets.py`), `make_sutras.py` the 171 Sutras, `make_docs.py` the guides, `make_data.py` the documents and the lake |
+| `liquidity-risk`, `climate-risk`, `operational-risk`, `retail-banking`, `genomics`, `world-economy`, `economics` | `tools/packgen/<area>/make.py` (`liquidity`, `climate`, `oprisk`, `retail`, `genomics`, `politics`, `economics`), all on the common builder `tools/packgen/common/packbuild.py` |
+| `finance`, `logistics`, `news-and-markets`, `news-and-markets` | hand-written; where a pack has a `tools/` folder (`finance`, `logistics`, `news-and-markets`) its samples come from there |
 
 ### Never edit a generated file by hand
 
@@ -1850,7 +1850,7 @@ retail-banking: 159 files up to date
 
 After a hand edit to `config/packs/trading/pack.yaml`, the first command stops with
 `pack manifests out of date; run make_packs.py: ['config/packs/trading/pack.yaml']`. The packbuild generators also
-refuse files they did not write: an extra Sutra dropped into `config/packs/retail-banking/sutras/` gives
+refuse files they did not write: an extra Sutra dropped into `examples/packs/retail-banking/sutras/` gives
 `retail-banking pack out of date; run tools/packgen/retail/make.py. stale=[] extra=[…]`.
 
 ### Changing a generated pack, step by step
@@ -1870,7 +1870,7 @@ Example: show the trader's name in trade pick lists.
    python3 tools/packgen/banking/make_packs.py
    ```
 
-   You should see `wrote 5 pack manifests: banking-core, market-data, trading, market-risk, counterparty-risk`.
+   You should see `wrote 5 pack manifests: core, market-data, trading, market-risk, counterparty-risk`.
 4. Check the result: `git diff config/packs/trading/pack.yaml` shows `- trader` added under `columns: trade:`.
 5. Wait for the server to reload the pack (a few seconds; no restart), type `TRD MX-200000` and press Enter: the pick list has a
    *Trader* column.
@@ -2029,7 +2029,7 @@ if __name__ == "__main__":
 | `PackSpec` field | Meaning |
 |---|---|
 | `name`, `title`, `description` | The pack's id (its folder name and what `DRISHTI_PACKS` lists), display name and summary. |
-| `requires` | Packs this one builds on, e.g. `["banking-core"]` to link to counterparties. |
+| `requires` | Packs this one builds on, e.g. `["core"]` to link to counterparties. |
 | `domains` | Data domain → kinds. Each domain becomes a Delta Lake connector `<domain>-store`. |
 | `examples` | Commands shown on the landing page and in the pack's guide. |
 | `roles` | Roles the pack adds: which kinds they may open, and whether they see raw JSON. |

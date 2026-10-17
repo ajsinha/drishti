@@ -896,7 +896,7 @@ write_deltalake("data/delta/trading/trade", table, mode="overwrite",
 uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta --days 10
 # or one pack's samples into one domain
 uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \
-    --samples config/packs/finance/samples --root data/delta --domain finance --days 10 [--as-of 2026-09-30] [--calendar USNY]
+    --samples examples/packs/finance/samples --root data/delta --domain finance --days 10 [--as-of 2026-09-30] [--calendar USNY]
 DRISHTI_PACKS=counterparty-risk,market-risk java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
@@ -928,7 +928,7 @@ routes:
   trade: trading-store                    # trades are asked of the lake first
 ```
 
-Reference data that changes rarely is `effective` (from `config/packs/banking-core/pack.yaml`):
+Reference data that changes rarely is `effective` (from `config/packs/core/pack.yaml`):
 
 ```yaml
 connectors:
@@ -944,7 +944,7 @@ connectors:
       # ... one mode.<kind> line per kind
 ```
 
-`config/packs/finance/pack.yaml` declares its lake without `kinds`, so it serves every table it finds:
+`examples/packs/finance/pack.yaml` declares its lake without `kinds`, so it serves every table it finds:
 `finance-lake: { plugin: delta, enabled: "${DRISHTI_LAKE_ENABLED:true}", settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: finance, lookback-days: 10 } }`.
 
 **Site form**, your own domain, as the connector file `config/connectors/treasury-lake.yaml`:

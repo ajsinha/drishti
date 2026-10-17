@@ -134,7 +134,7 @@ The first ten waves (plus W11, user management, after 1.0.0); all are done. Each
 ## W5 — Rachana-EL & reference Sutras
 - Rachana-EL: lexer → parser → AST → compiled closures (paths, `[?x]` filters, ternary, `link()`, `size()`, arithmetic, concat); EBNF in the reference doc.
 - `Formats` (bundled `formats.yaml`, site override file) and `Tones`; `SutraMatcher` (the Sutra `match` block is the classifier).
-- `config/packs/finance/sutras/rates/irs-vanilla.v3.sutra.md`, `config/packs/finance/sutras/fx/fx-swap.v2.sutra.md`, `config/packs/finance/sutras/commodities/listed-future.v1.sutra.md`, `config/packs/finance/sutras/credit/netting-set.v1.sutra.md` (all `.sutra.yaml` since 1.11).
+- `examples/packs/finance/sutras/rates/irs-vanilla.v3.sutra.md`, `examples/packs/finance/sutras/fx/fx-swap.v2.sutra.md`, `examples/packs/finance/sutras/commodities/listed-future.v1.sutra.md`, `examples/packs/finance/sutras/credit/netting-set.v1.sutra.md` (all `.sutra.yaml` since 1.11).
 - Tests: jqwik property tests for EL; golden `Layout` JSON per reference Sutra.
 
 ## W6 — Inference engine
@@ -210,7 +210,7 @@ The first ten waves (plus W11, user management, after 1.0.0); all are done. Each
 | W13c ✅ | Per-user packs | admins assign packs to users; users choose active packs; kinds owned by one pack; enforced server-side (1.8.0) |
 | R1 ✅ | **risk**: taxonomy | 125 products in ten asset classes, 21 market-data kinds, 24 risk and reference kinds, one source of truth (`tools/packgen/banking/taxonomy.py`) with uniqueness checks |
 | R2 ✅ | risk: Sutras | `make_sutras.py` writes 170 Markdown Sutras (125 products, 45 kinds) that double as the data dictionary (YAML Sutras with `description` and `notes` since 1.11, ADR-017); `trade_shape.py` is the trade-document contract; every pack's Sutras load with zero problems (`PackSutrasTest`); drill fails if generated files drift |
-| B0 ✅ | banking packs split | `requires:`, `connectors:` and `routes:` in pack.yaml; data domains and packs many-to-many; five packs (banking-core, market-data, trading, market-risk, counterparty-risk) generated from the taxonomy (`tools/packgen/banking/`) |
+| B0 ✅ | banking packs split | `requires:`, `connectors:` and `routes:` in pack.yaml; data domains and packs many-to-many; five packs (core, market-data, trading, market-risk, counterparty-risk) generated from the taxonomy (`tools/packgen/banking/`) |
 | R3 ✅ | risk: data | `make_data.py`: thousands of consistent JSON documents (counterparties → netting sets → trades → market data; exposure, CVA, SA-CCR, SIMM, VaR, stress, FRTB, P&L) and a consistency checker |
 | R4 ✅ | risk: connector and docs | Delta Lake connector (W22) and named connector instances; pack manifests; `make_docs.py` guides |
 | R5 ✅ | risk: databases and feeds | the same data in Aerospike and PostgreSQL with the same tests; public data feeds as separately switchable connectors, off by default |
@@ -269,8 +269,8 @@ Releases 1.11 to 1.20 and what is unreleased; each is in [CHANGELOG.md](../../CH
 | AI and MCP (1.19) | Pluggable LLM providers and an MCP client, off by default, behind one policy (masking, limits, audit) | [AI_PROVIDERS.md](AI_PROVIDERS.md), [MCP_CLIENT.md](MCP_CLIENT.md) |
 | Schema to pack (1.19) | Sutras and packs from JSON Schema; Build → New pack | [SCHEMA_TO_PACK.md](../guides/SCHEMA_TO_PACK.md) |
 | Rūpaka, business intelligence (1.19 to 2.1.0) | Phase 1 shell, workspaces and catalogue (1.19); phase 2 datasets and the query engine, phase 3 reports, the designer and the Model view (1.20); phase 4 publishing and governance, phase 5 live tables, Perspective and boards (1.21); distribution (1.22); the Python, Analyse, AI and multi-dataset waves (2.0); the long tail of waves A to D (2.1) | [RUPAKA.md](RUPAKA.md), [BI_GUIDE.md](../guides/BI_GUIDE.md), [DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [BOARDS.md](../guides/BOARDS.md), [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md) |
-| Deep trades and real data (1.20) | Tabs hold panels (a trade, its legs, their cashflows and fixings on one screen); the `economics` and `politics-society` packs carry real public data (`tools/realdata`; the IMF data is for internal demos only) | [PANELS.md](../guides/PANELS.md), [REAL_DATA.md](../guides/REAL_DATA.md) |
-| Connectors that compute (unreleased) | `news` and `yfinance` source plugins whose documents are computed when asked for; the `news-watch` and `market-watch` sample packs | [NEWS.md](../connectors/NEWS.md), [YFINANCE.md](../connectors/YFINANCE.md) |
+| Deep trades and real data (1.20) | Tabs hold panels (a trade, its legs, their cashflows and fixings on one screen); the `world-economy` packs carry real public data (`tools/realdata`; the IMF data is for internal demos only) | [PANELS.md](../guides/PANELS.md), [REAL_DATA.md](../guides/REAL_DATA.md) |
+| Connectors that compute (unreleased) | `news` and `yfinance` source plugins whose documents are computed when asked for; the `news-and-markets` sample packs | [NEWS.md](../connectors/NEWS.md), [YFINANCE.md](../connectors/YFINANCE.md) |
 | Forms and Reports in the top bar (unreleased) | Two top-bar entries beside BI, with a forms home | [USER_GUIDE.md](../guides/USER_GUIDE.md) |
 
 ## Known gaps

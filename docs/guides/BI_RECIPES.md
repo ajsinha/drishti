@@ -100,7 +100,7 @@ As an author add `?explain=true` to see the SQL the server compiled (see [DATASE
 
 ## `trading-risk`: relationships from the packs' links
 
-Open **Trading and counterparty risk**. Its five tables read three connectors in three packs (`trading-store` of trading, `reference-store` of banking-core, `credit-store` of counterparty-risk). Its five
+Open **Trading and counterparty risk**. Its five tables read three connectors in three packs (`trading-store` of trading, `reference-store` of core, `credit-store` of counterparty-risk). Its five
 relationships are the links the packs declare (a trade's `desk`, `book`, `counterparty.id` and `nettingSet`; a netting set's `counterparty`), so the tables are already joined.
 
 ![the model page of trading-risk](img/bi-datasets/model-risk.png)

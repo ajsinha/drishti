@@ -385,7 +385,7 @@ Plugin `yfinance`. A quote and price history for a ticker (samples only).
 `QUOTE-AAPL` returns the last price, the change from the previous close in money and percent, the currency, the market state, the
 day's and the 52-week range, the volume, the market capitalisation when Yahoo gives one, and the closing prices (with open, high,
 low and volume) for the configured range at the configured interval. The console lays it out with the `quote` Sutra of the
-`market-watch` pack: a strip, a closing-price line, the ranges and a table of bars.
+`news-and-markets` pack: a strip, a closing-price line, the ranges and a table of bars.
 
 Everything else (how it reads, every setting, scale and limits, troubleshooting, a walk-through): [YFINANCE.md](YFINANCE.md).
 

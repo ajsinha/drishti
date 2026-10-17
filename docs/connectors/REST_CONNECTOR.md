@@ -273,7 +273,7 @@ drishti:
         plugin: rest
         kinds: [counterparty]
         settings: { base-url: "${CRM_URL}", header.Authorization: "Bearer ${CRM_TOKEN}" }
-      reference-store:                                 # the banking-core pack's Delta Lake, dated
+      reference-store:                                 # the core pack's Delta Lake, dated
         settings: { root: /srv/lake }
     routes:
       counterparty: crm-api
@@ -544,7 +544,7 @@ This walk-through puts the connector to work on a small case; the sections above
 
 Your client-onboarding system has an API that returns one counterparty as JSON:
 `GET https://crm.bank.example/api/counterparty/CP-HARBOURVIEW`. You want those counterparties in Drishti
-(`CPTY`, from `banking-core`) without copying them anywhere.
+(`CPTY`, from `core`) without copying them anywhere.
 
 #### Configure it
 

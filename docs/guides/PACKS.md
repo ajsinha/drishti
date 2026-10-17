@@ -36,10 +36,10 @@ pack step by step.
 
 A pack is configuration and content only. It contains no Java and no Python that the server runs (its Calc snippets,
 `python/*.py`, run in the user's browser; see [Calc](PACK_DEVELOPER_GUIDE.md#calc-python-snippets)). Here is the
-smallest complete pack in the repository, `config/packs/logistics/`:
+smallest complete pack in the repository, the retired example `examples/packs/logistics/`:
 
 ```text
-config/packs/logistics/
+examples/packs/logistics/
 ├── pack.yaml                    the manifest: kinds, commands, links, roles, alerts, console extras
 ├── sutras/
 │   └── shipment.v1.sutra.yaml   one layout (a Sutra, in YAML), for shipments in transit
@@ -75,75 +75,88 @@ Words used below:
 
 ## The packs that ship
 
-There are sixteen packs in `config/packs/`. Each row lists the pack, what it inherits from, its mnemonics, and one
-command to try. The example ids are real: they exist in the pack's `samples/` folder.
+Seven packs ship in `config/packs/`, and all seven are on by default (`drishti.packs.enabled`, below). Each row lists the
+pack, its code (typed alone it opens the pack's overview), what it inherits from, its mnemonics, and one command to try. The
+example ids are real: they exist in the pack's `samples/` folder.
 
-| Pack | Extends | Mnemonics | Try |
-|---|---|---|---|
-| `banking-core` | — | `CPTY` counterparty · `GRP` counterparty group · `ISS` issuer · `AGR` master agreement · `CCP` central counterparty · `LE` bank legal entity · `BOOK` book · `DESK` desk · `TRDR` trader · `CAL` holiday calendar · `CSA` credit support annex · `CLR` clearing account | `CPTY CP-NORTHBRIDGE` |
-| `market-data` | `banking-core` | `CRV` interest rate curve · `REPO` repo curve · `FX` FX spot rate · `FXF` FX forward curve · `FXV` FX volatility surface · `IRV` swaption volatility cube · `CPV` cap/floor volatility surface · `EQ` equity · `EQX` equity index · `DIV` dividend curve · `EQV` equity volatility surface · `CDS` credit curve · `INF` inflation index · `INFC` inflation curve · `CMD` commodity · `CMDC` commodity forward curve · `CMDV` commodity volatility surface · `FIX` rate index fixings · `BND` bond (security master) · `CORR` correlation matrix | `CRV CRV-USD-OIS` |
-| `trading` | `banking-core`, `market-data` | `TRD` trade (125 products in ten asset classes) · `DPNL` desk P&L | `TRD MX-20000001` |
-| `market-risk` | `market-data`, `trading` | `VAR` VaR / expected shortfall · `SCN` stress scenario · `STR` stress result · `FRTB` FRTB sensitivities · `PNL` P&L explain | `VAR VAR-RATES` |
-| `counterparty-risk` | `market-data`, `trading` | `NSET` netting set · `LIM` credit limit · `EXP` exposure profile · `CVA` CVA / XVA · `SACCR` SA-CCR exposure · `COLL` collateral balance · `MC` margin call · `SIMM` ISDA SIMM initial margin | `NSET NS-SUMMIT-NY` |
-| `liquidity-risk` | `trading` | `LCR` liquidity coverage ratio · `NSFR` net stable funding ratio · `MLAD` maturity ladder · `HQLA` HQLA holding · `FUND` funding source · `LST` liquidity stress result · `IDL` intraday liquidity | `LCR LCR-NY` |
-| `climate-risk` | `trading` | `CLIM` climate profile · `FE` financed emissions · `NGFS` climate scenario · `CST` climate stress result · `PHY` physical-risk asset · `GAR` green asset ratio | `CLIM CLIM-SOLARIS` |
-| `operational-risk` | `banking-core` | `LOSS` operational loss event · `RCSA` risk and control assessment · `KRI` key risk indicator · `ISSUE` issue and action · `OPSCN` operational-risk scenario · `VEND` third party (vendor) · `CYBER` cyber incident · `OPCAP` operational-risk capital | `LOSS LOSS-2025-0001` |
-| `retail-banking` | `banking-core` | `CUST` customer · `ACCT` deposit account · `MTG` mortgage · `CARD` card account · `PLN` personal loan · `BRN` branch · `COLC` collections case · `RPF` retail portfolio (IFRS 9) | `CUST CUST-100231` |
-| `genomics` | — | `GENE` gene · `VRNT` variant · `PROT` protein · `PWY` pathway · `SMPL` sample · `SEQ` sequencing run · `EXPR` expression study · `TRIAL` clinical trial | `GENE GENE-TP53` |
-| `politics-society` | — | `JUR` jurisdiction · `PARTY` party · `OFFC` office holder · `ELEC` election · `REGN` world region · `SOCI` social indicator (real public data for about 216 countries: CIA World Factbook, World Bank, UNDP; [REAL_DATA](REAL_DATA.md)) | `JUR JUR-IND` |
-| `economics` | — | `ECON` economy · `MACRO` macro indicator · `FCST` IMF forecast · `LABR` labour market · `FISC` fiscal position · `ECG` country group (real public data for about 213 economies: World Bank, IMF, CIA World Factbook; [REAL_DATA](REAL_DATA.md); not a sample, but the IMF part is for internal demonstrations only) | `ECON ECON-IND` |
-| `finance` | — | `TRD` trade · `NSET` netting set · `CSA` credit support annex · `AGR` master agreement · `CRV` curve · `CPTY` counterparty · `LIM` credit limit · `CLR` clearing account · `SPEC` contract specification · `IDX` rate index · `FXS` FX spot · `BOOK` book · `FIX` rate fixings · `BPNL` book P&L (derived from the trades) | `TRD IRS-48213` |
-| `logistics` | — | `SHP` shipment · `CTR` container · `VSL` vessel · `PORT` port | `SHP SHP-10042` |
-| `news-watch` | — | `TOPIC` news topic · `NEWS` headlines (fifteen topics: central banks, countries, companies, themes; headlines computed on demand by the [news connector](../connectors/NEWS.md); a sample pack, connector off) | `TOPIC TOPIC-FED` |
-| `market-watch` | `news-watch` | `CO` listed company · `QUOTE` quote and price history (twenty well-known companies; the quote from the [yfinance connector](../connectors/YFINANCE.md), headlines from the news connector; a sample pack, connectors off) | `CO CO-AAPL` |
+| Pack | Code | Extends | Mnemonics | Try |
+|---|---|---|---|---|
+| `core` | `CORE` | — | `CPTY` counterparty (with `COUNTRY_OF_RISK` and `UEN`) · `GRP` counterparty group · `ISS` issuer · `CCP` central counterparty · `LE` bank legal entity · `BOOK` book (portfolio) · `DESK` desk · `TRDR` trader · `CAL` holiday calendar · `CLR` clearing account | `CPTY CP-NORTHBRIDGE` |
+| `market-data` | `MKT` | `core` | `CRV` interest rate curve · `REPO` repo curve · `FX` FX spot rate · `FXF` FX forward curve · `FXV` FX volatility surface · `IRV` swaption volatility cube · `CPV` cap/floor volatility surface · `EQ` equity · `EQX` equity index · `DIV` dividend curve · `EQV` equity volatility surface · `CDS` credit curve · `INF` inflation index · `INFC` inflation curve · `CMD` commodity · `CMDC` commodity forward curve · `CMDV` commodity volatility surface · `FIX` rate index fixings · `BND` bond (security master) · `CORR` correlation matrix | `CRV CRV-USD-OIS` |
+| `trading` | `TRDS` | `core`, `market-data` | `TRD` trade (125 products in ten asset classes) · `DPNL` desk P&L (derived from the trades) | `TRD MX-20000001` |
+| `counterparty-risk` | `CCR` | `trading` | `AGR` master agreement (ISDA) · `CSA` credit support annex · `NSET` netting set · `LIM` credit limit · `EXP` exposure profile · `CVA` CVA / XVA · `SACCR` SA-CCR exposure · `COLL` collateral balance · `MC` margin call · `SIMM` ISDA SIMM initial margin | `AGR AGR-NORTHBRIDGE-ISDA` |
+| `market-risk` | `MRSK` | `market-data`, `trading` | `VAR` VaR / expected shortfall · `SCN` stress scenario · `STR` stress result · `FRTB` FRTB sensitivities · `PNL` P&L explain | `VAR VAR-RATES` |
+| `world-economy` | `WRLD` | — | `ECON` economy · `MACRO` macro indicator · `FCST` IMF forecast · `LABR` labour market · `FISC` fiscal position · `ECG` country group · `REGE` region economy · `JUR` jurisdiction · `PARTY` party · `OFFC` office holder · `ELEC` election · `REGN` world region · `SOCI` social indicator (real public data for about 216 countries: World Bank, IMF, CIA World Factbook, UNDP; [REAL_DATA](REAL_DATA.md); not a sample, but the IMF part is for internal demonstrations only) | `ECON ECON-IND` |
+| `news-and-markets` | `NWMK` | — | `TOPIC` news topic · `NEWS` headlines · `CO` listed company · `QUOTE` quote and price history (fifteen topics and twenty well-known companies; headlines from the [news connector](../connectors/NEWS.md), quotes from the [yfinance connector](../connectors/YFINANCE.md); a sample pack, both connectors off as shipped) | `TOPIC TOPIC-FED` |
 
-Samples among them: `genomics`, `logistics`, `news-watch` and `market-watch` are sample packs (`sample: true`; [Sample packs](#sample-packs)). The rest are
-reference or real-data packs.
+**Links between them.** A `core` counterparty carries its country of risk (`COUNTRY_OF_RISK`, ISO 3166 alpha-2, as the trading
+systems name it on a trade: `COUNTERPARTY_COUNTRY_OF_RISK`) and its `UEN`, and two link fields that open other packs when they are on:
+`economy` (`ECON-<alpha-3>`, the country of risk's economy in `world-economy`) and `newsId` (its headlines in `news-and-markets`). A
+country topic and a listed company of `news-and-markets` link to their `economy` in the same way. Agreements and CSAs belong to
+`counterparty-risk`, so `CPTY CP-NORTHBRIDGE` shows its master agreement as a link only when `counterparty-risk` is on.
 
 Every pack's overview guide (*Help → Domain packs*, or `config/packs/<name>/guides/`) describes its domain and has a
 **Finding things** section with the commands that work for every kind of the pack:
 
 | Command | Does |
 |---|---|
-| `CUST <id> <GO>` | Opens that customer. A bare identifier works too: its prefix (`CUST-…`) tells Drishti the kind. |
-| `CUST <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
-| `CUST <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
-| `CUST <GO>` | Lists every customer. |
+| `CPTY <id> <GO>` | Opens that counterparty. A bare identifier works too: its prefix (`CP-…`) tells Drishti the kind. |
+| `CPTY <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
+| `CPTY <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
+| `CPTY <GO>` | Lists every counterparty. |
 
-(That table is copied from `config/packs/retail-banking/guides/retail-banking.md`; every pack guide has the same one
-for its own kinds. Pick lists are explained in [USER_GUIDE.md](USER_GUIDE.md#pick-lists-when-a-command-names-several-entities).)
-
-**Two families.** The `finance` pack is the small demo behind the four original mockups (`TRD IRS-48213`). The
-banking family (`banking-core` … `retail-banking`) is the full model: 125 trade products and 76 kinds in eight packs. Both
-families define `trade`, `counterparty`, `netting-set` and other kinds, and a kind may belong to only one installed
-pack, so **a server runs one family or the other, never both**. `logistics`, `genomics`, `politics-society`,
-`economics`, `news-watch` and `market-watch` share no kinds with anything and can be added to either family.
+(Every pack guide has the same table for its own kinds. Pick lists are explained in
+[USER_GUIDE.md](USER_GUIDE.md#pick-lists-when-a-command-names-several-entities).)
 
 Typical combinations:
 
 | You want | `DRISHTI_PACKS=` |
 |---|---|
-| The original demo (the default) | `finance` |
-| The demo plus a second industry | `finance,logistics` |
-| Every banking pack | `market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking` |
-| Every banking pack plus the other domains | `market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics` |
-| Only genomics | `genomics` |
+| Everything that ships (the default) | `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets` |
+| The risk packs only | `market-risk,counterparty-risk` |
+| Trades and their reference data | `trading` |
+| Only the world economy | `world-economy` |
 
-You do not list `banking-core`, `market-data` or `trading` in the banking lines: the packs that extend them bring
-them in (see [Inheritance](PACK_DEVELOPER_GUIDE.md#inheritance)).
+You do not have to list `core`, `market-data` or `trading`: the packs that extend them bring them in (see
+[Inheritance](PACK_DEVELOPER_GUIDE.md#inheritance)).
+
+### Retired example packs (examples/packs)
+
+Seven earlier packs moved to `examples/packs/` in 2.3.0. They are not shipped in the images and not tested by default, but they
+still load: name the folder in `drishti.packs.extra-dirs` (`DRISHTI_PACKS_EXTRA_DIRS`) and the pack in `drishti.packs.enabled`.
+The shipped packs win a name, and a retired pack may extend them (`retail-banking` extends `core`, `climate-risk` extends `trading`).
+
+| Pack | What it was | Load it with |
+|---|---|---|
+| `finance` | the small demo behind the four original mockups (`TRD IRS-48213`); it defines `trade` and `counterparty` itself, so it is an alternative to the seven, not an addition | `DRISHTI_PACKS_EXTRA_DIRS=examples/packs DRISHTI_PACKS=finance` |
+| `logistics` | shipments, containers, vessels, ports (`SHP SHP-10042`) | `DRISHTI_PACKS_EXTRA_DIRS=examples/packs DRISHTI_PACKS=finance,logistics` |
+| `genomics` | genes, variants, proteins, pathways (`GENE GENE-TP53`) | `… DRISHTI_PACKS=<the seven>,genomics` |
+| `retail-banking` | customers, accounts, mortgages, cards, IFRS 9 segments (`CUST CUST-100231`) | `… DRISHTI_PACKS=<the seven>,retail-banking` |
+| `operational-risk` | loss events, RCSA, KRIs, SMA capital (`LOSS LOSS-2025-0001`) | `… DRISHTI_PACKS=<the seven>,operational-risk` |
+| `climate-risk` | climate profiles, PCAF, NGFS stress (`CLIM CLIM-SOLARIS`) | `… DRISHTI_PACKS=<the seven>,climate-risk` |
+| `liquidity-risk` | LCR, NSFR, ladders, HQLA (`LCR LCR-NY`) | `… DRISHTI_PACKS=<the seven>,liquidity-risk` |
+
+Four packs were merged into the seven and have no copy of their own: `banking-core` is `core`; `economics` and `politics-society`
+are `world-economy`; `news-watch` and `market-watch` are `news-and-markets`. Their kinds, mnemonics and ids are unchanged, so
+links, saved views and BI items that name a kind keep working; a list that names an old pack (`DRISHTI_PACKS=economics`) must
+name the new one. Agreements and CSAs moved from `banking-core` to `counterparty-risk`, and their Delta tables from the
+`reference` domain to a new `legal` domain (`<lake>/legal/agreement`, `<lake>/legal/csa`): rebuild the lake
+(`python3 tools/packgen/banking/make_data.py --lake data/delta`) or move the two folders.
 
 ## Turning packs on
 
 The server reads one setting, `drishti.packs.enabled`, from the environment variable `DRISHTI_PACKS` (a
-comma-separated list; default `finance`). Packs are looked for in `drishti.packs.dir` (`DRISHTI_PACKS_DIR`,
-default `./config/packs`, relative to the directory you start the server in).
+comma-separated list; default the seven shipped packs, `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets`).
+Packs are looked for in `drishti.packs.dir` (`DRISHTI_PACKS_DIR`, default `./config/packs`, relative to the directory you start the
+server in), then in the folders of `drishti.packs.extra-dirs` (`DRISHTI_PACKS_EXTRA_DIRS`, comma-separated, default none; set it to
+`examples/packs` for the [retired example packs](#retired-example-packs-examplespacks)).
 
 1. Stop the server.
 2. Start it with the packs you want. From the repository root:
 
    ```bash
    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-   DRISHTI_PACKS=finance,logistics java -jar drishti-server/target/drishti-server-2.2.0-exec.jar
+   DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.2.0-exec.jar
    ```
 
 3. Check what loaded. Any of these works:
@@ -156,21 +169,24 @@ default `./config/packs`, relative to the directory you start the server in).
    is missing here; *Admin → Packs* lists every pack with its status):
 
    ```text
-       "name": "finance",
-       "name": "logistics",
+       "name": "market-risk",
+       "name": "core",
+       "name": "market-data",
+       "name": "trading",
+       "name": "world-economy",
    ```
 
    In the console, *Admin → Packs* lists the loaded packs, and *Admin → Health* (`/admin/health`) shows each
    pack with its status, what it extends, its kinds, its Sutras, its connectors and any problems.
-4. Open the terminal (`/t`) and type a command from the new pack, for example `SHP SHP-10042 <GO>`.
+4. Open the terminal (`/t`) and type a command from the new pack, for example `ECON ECON-IND <GO>`.
 
 The console needs no setting: it asks the server which packs are on. (`packs.enabled` in
 `drishti-console/config/application.yaml` is only a fallback for when the server cannot be reached.) If you moved the
-packs folder, set `DRISHTI_PACKS_DIR` for both processes.
+packs folder, set `DRISHTI_PACKS_DIR` (and `DRISHTI_PACKS_EXTRA_DIRS`) for both processes.
 
 What happens at start-up:
 
-- Each listed pack is read from `config/packs/<name>/pack.yaml`, and so is every pack it extends.
+- Each listed pack is read from `config/packs/<name>/pack.yaml` (or the first extra folder that has it), and so is every pack it extends.
 - The packs' contents become **lowest-precedence** configuration. Anything the site sets in
   `drishti-server/src/main/resources/application.yaml`, an external `application.yaml` or an environment variable
   overrides a pack.
@@ -205,11 +221,11 @@ Its Sutras, connectors and routes stay loaded, so switching it back on is instan
 **The rules.**
 
 1. **A pack that a switched-on pack builds on cannot be switched off.** `trading` is needed by
-   `market-risk`, `counterparty-risk`, `liquidity-risk` and `climate-risk` (directly or through a parent).
+   `market-risk` and `counterparty-risk` (directly or through a parent).
    Its button is greyed (*Needed by …: switch those off first*), and the API refuses with
-   `DRS-5001 'trading' is needed by [market-risk, counterparty-risk, liquidity-risk, climate-risk]; switch those off first`.
+   `DRS-5001 'trading' is needed by [market-risk, counterparty-risk]; switch those off first`.
 2. **Switching a pack on switches on everything it builds on.** With `trading` and `market-risk` both off,
-   switching `market-risk` on switches `trading` on too (and `market-data` and `banking-core`, if they were
+   switching `market-risk` on switches `trading` on too (and `market-data` and `core`, if they were
    off).
 3. **Packs that were not loaded cannot be switched on** (`DRS-5001 '<name>' is not loaded; installed: […]`):
    packs load only when the server starts.
@@ -229,22 +245,21 @@ import json,sys
 for p in json.load(sys.stdin): print(p["name"], "loaded" if p["loaded"] else "NOT LOADED", "on" if p["enabled"] else "off", p.get("requiredBy") or "")'
 ```
 
-On a server started with `DRISHTI_PACKS=market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics`
+On a server started with `DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets`
 you should see (abridged):
 
 ```text
-banking-core loaded on ['market-data', 'trading', 'market-risk', 'counterparty-risk', 'liquidity-risk', 'climate-risk', 'operational-risk', 'retail-banking']
-market-data loaded on ['trading', 'market-risk', 'counterparty-risk', 'liquidity-risk', 'climate-risk']
-trading loaded on ['market-risk', 'counterparty-risk', 'liquidity-risk', 'climate-risk']
+core loaded on ['market-data', 'trading', 'counterparty-risk', 'market-risk']
+market-data loaded on ['trading', 'counterparty-risk', 'market-risk']
+trading loaded on ['counterparty-risk', 'market-risk']
+counterparty-risk loaded on
 market-risk loaded on
-…
-economics loaded on
-finance NOT LOADED off
-logistics NOT LOADED off
+world-economy loaded on
+news-and-markets loaded on
 ```
 
 To switch a pack, `PUT /api/v1/admin/packs/<name>` with `{"enabled": false}` or `{"enabled": true}`. The answer
-lists the packs now on: `{"name": "operational-risk", "enabled": false, "enabledPacks": [...]}`. See
+lists the packs now on: `{"name": "news-and-markets", "enabled": false, "enabledPacks": [...]}`. See
 [API_GUIDE.md](API_GUIDE.md).
 
 ## Who sees which pack
@@ -258,17 +273,17 @@ Four lists decide what a user sees. Each one narrows the one before it:
 | **Assigned** | an administrator, per user (*Admin → Users*) | what this user may use. A user who was never given a list of packs (for example one created through the API without `packs`) gets `drishti.packs.default-for-users` (`DRISHTI_DEFAULT_PACKS`; empty means every switched-on pack). A user given an **empty list** (every pack unticked in the dialog, or `"packs": []`) sees no pack: every kind answers `DRS-5002` no access. |
 | **Active** | the user, with the pack menu in the top bar | which of their assigned packs they want to see now |
 
-Example: the server loads twelve packs; an admin switches `operational-risk` off; Priya is assigned
-`trading`, `counterparty-risk` and `operational-risk`; she ticks only `counterparty-risk`. Priya sees
-counterparty risk, plus the kinds of the packs it extends (`trading`, `market-data`, `banking-core`), and
-nothing of operational risk even though it is assigned to her, because it is off for everyone.
+Example: the server loads the seven packs; an admin switches `news-and-markets` off; Priya is assigned
+`trading`, `counterparty-risk` and `news-and-markets`; she ticks only `counterparty-risk`. Priya sees
+counterparty risk, plus the kinds of the packs it extends (`trading`, `market-data`, `core`), and
+nothing of news and markets even though it is assigned to her, because it is off for everyone.
 
 **To assign packs to a user** (administrators), step by step:
 
 1. Open *Admin → Users* (`/admin/users`) and click **Edit** on the user (or **New user**).
-2. Under **Packs**, tick the packs this person may use, say `banking-core` and `counterparty-risk`.
+2. Under **Packs**, tick the packs this person may use, say `core` and `counterparty-risk`.
    Ticking none means *default packs* (`DRISHTI_DEFAULT_PACKS`, or every switched-on pack when that is empty).
-3. Click **Save**. The user list now shows `banking-core, counterparty-risk` in the user's row (or
+3. Click **Save**. The user list now shows `core, counterparty-risk` in the user's row (or
    *default packs*), and the change is in the audit log.
 4. At the user's next click, their pack menu lists only those two packs, and kinds of other packs answer
    `DRS-5002`.
@@ -278,7 +293,7 @@ The same with the API (an admin's token when security is on), when creating a us
 ```bash
 curl -s -X POST localhost:18480/api/v1/admin/users -H 'Content-Type: application/json' \
   -d '{"username":"priya","displayName":"Priya Raman","desk":"Credit","roles":["viewer"],
-       "packs":["banking-core","counterparty-risk"],"password":"credit-desk-2026"}'
+       "packs":["core","counterparty-risk"],"password":"credit-desk-2026"}'
 ```
 
 `PUT /api/v1/admin/users/priya` with a `packs` list changes it later. See
@@ -312,7 +327,7 @@ takes the same path, so they all behave alike:
    drishti:
      packs:
        added:
-         - logistics
+         - genomics          # a retired example pack, found through drishti.packs.extra-dirs
    ```
 
 3. It puts the pack to use **now**: its kinds and owners, its mnemonics (and so the command line, type-ahead and menus), its Sutras
@@ -377,10 +392,10 @@ a loaded pack names them again; after a restart they follow the usual rule (a co
 
 ## Sample packs
 
-A pack that exists to demonstrate Drishti is marked `sample: true` in its `pack.yaml`. The packs that ship marked so are **genomics** and **logistics**
-(invented data in domains far from capital markets) and **news-watch** and **market-watch** (a small list of well-known topics and listed companies, with
+A pack that exists to demonstrate Drishti is marked `sample: true` in its `pack.yaml`. The pack that ships marked so is **news-and-markets** (a small list of well-known topics and listed companies, with
 news and quotes that [connectors compute on demand](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand) from Google News and Yahoo Finance; their
-connectors are off as shipped, the Yahoo endpoint is unofficial and restricted, and names and tickers leave the network when they are on: internal demonstrations only); **politics-society** and **economics** are not samples: they carry real public data ([REAL_DATA](REAL_DATA.md)); the banking, markets and risk packs
+connectors are off as shipped, the Yahoo endpoint is unofficial and restricted, and names and tickers leave the network when they are on: internal demonstrations only); the retired example packs **genomics** and **logistics** (invented data in domains far from capital
+markets) are samples too; **world-economy** is not a sample: it carries real public data ([REAL_DATA](REAL_DATA.md)); the banking, markets and risk packs
 are the reference packs real ones build on, and are not samples. Who sees sample packs is the setting `drishti.packs.samples`
 (`DRISHTI_PACKS_SAMPLES`):
 
@@ -485,16 +500,17 @@ Every shipped pack has a short `code:`; typed alone on the command line (with `<
 every kind you may open, its mnemonic, how many the sources hold for the business date, an example and the key
 fields. Each row's mnemonic opens that kind's pick list. Typing the pack's name (`market-data`) works too.
 
-| Pack | Code | | Pack | Code |
+| Pack | Code | | Retired example pack | Code |
 |---|---|---|---|---|
-| banking-core | `BNK` | | climate-risk | `CLI` |
-| market-data | `MKT` | | economics | `ECO` |
+| core | `CORE` | | finance | `FIN` |
+| market-data | `MKT` | | logistics | `LOGI` |
 | trading | `TRDS` | | genomics | `GENO` |
-| market-risk | `MRSK` | | liquidity-risk | `LIQ` |
-| counterparty-risk | `CCR` | | operational-risk | `OPR` |
-| finance | `FIN` | | politics-society | `POLS` |
-| logistics | `LOGI` | | retail-banking | `RTL` |
-| news-watch | `NEWSW` | | market-watch | `MKTW` |
+| counterparty-risk | `CCR` | | retail-banking | `RTL` |
+| market-risk | `MRSK` | | operational-risk | `OPR` |
+| world-economy | `WRLD` | | climate-risk | `CLI` |
+| news-and-markets | `NWMK` | | liquidity-risk | `LIQ` |
+
+The codes of the merged packs changed: `BNK` (banking-core) is `CORE`, `ECO` and `POLS` are `WRLD`, `NEWSW` and `MKTW` are `NWMK`.
 
 The same answer as JSON: `curl -s localhost:18480/api/v1/packs/MKT/overview`. A pack author sets the code with `code:` in `pack.yaml` (in a generated pack, in its generator:
 [how the shipped packs are generated](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)).

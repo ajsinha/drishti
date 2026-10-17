@@ -90,7 +90,7 @@ Open two terminals in the repository root. The server, in the first (the packs a
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-export DRISHTI_PACKS=market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics
+export DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets
 export DRISHTI_STUDIO_SAVE=true
 export DRISHTI_SECURITY_ENABLED=true
 export DRISHTI_TOKEN_SECRET=change-me-to-a-long-random-string-0123456789

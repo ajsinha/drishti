@@ -150,7 +150,7 @@ look at **past business dates** and compare dates, you also need a small history
 under `data/delta/`. It is not in git because it is generated. Build it once:
 
 ```bash
-# banking packs: banking-core, market-data, trading, market-risk, counterparty-risk
+# banking packs: core, market-data, trading, market-risk, counterparty-risk
 uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta
 
 # the other generated packs (run the ones you want)
@@ -160,7 +160,7 @@ uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/oprisk
 uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/retail/make.py --lake data/delta
 uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/genomics/make.py --lake data/delta
 uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/politics/make.py --lake data/delta
-uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/economics/make.py --lake data/delta
+uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/world/make.py --lake data/delta
 ```
 
 Each command prints what it wrote, for example `lake: … rows under data/delta (…)`. Afterwards
@@ -178,7 +178,7 @@ Open a terminal in the `drishti` folder and run:
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-export DRISHTI_PACKS=market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics
+export DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets
 export DRISHTI_STUDIO_SAVE=true
 java -jar drishti-server/target/drishti-server-2.2.0-exec.jar
 ```
@@ -187,7 +187,7 @@ What the settings do:
 
 | Setting | Meaning |
 |---|---|
-| `DRISHTI_PACKS` | The packs to load, separated by commas. A pack's parents load with it: `market-risk` brings `banking-core`, `market-data` and `trading`. Without this setting only the small `finance` pack loads. |
+| `DRISHTI_PACKS` | The packs to load, separated by commas. A pack's parents load with it: `market-risk` brings `core`, `market-data` and `trading`. Without this setting only the small `finance` pack loads. |
 | `DRISHTI_STUDIO_SAVE=true` | Lets the Build workbench save Sutras (the view definitions it edits). Leave it out if you will not edit Sutras. |
 
 Leave this terminal open: the server runs in it and writes its log there. After a few seconds you
@@ -209,7 +209,7 @@ You should see `{"status":"UP","groups":["liveness","readiness"]}`. To list the 
 curl -s localhost:18480/api/v1/packs | python3 -c 'import json,sys; print([p["name"] for p in json.load(sys.stdin)])'
 ```
 
-You should see the twelve names, starting with `banking-core`, `market-data`, `trading`.
+You should see the twelve names, starting with `core`, `market-data`, `trading`.
 
 > **The smallest start.** `java -jar drishti-server/target/drishti-server-2.2.0-exec.jar` with no
 > settings loads only the `finance` pack: the four original mockups (`TRD IRS-48213`, `TRD FXS-20931`,

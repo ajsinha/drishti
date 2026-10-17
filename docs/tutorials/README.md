@@ -16,7 +16,7 @@
 # Drishti tutorials
 
 Hands-on, one worked example each. Every tutorial uses the demo data that ships with Drishti (the trades, counterparties and netting sets of the banking packs, the public data of the
-politics-society pack, and a few small files in [data/](data/)). Each step says what to do, gives the real command and its real output wherever a command exists, shows a real screenshot, and tells you what
+world-economy pack, and a few small files in [data/](data/)). Each step says what to do, gives the real command and its real output wherever a command exists, shows a real screenshot, and tells you what
 you should see. Each ends with next steps and what to do when something goes wrong.
 
 They are written for someone who has never used Drishti. The reference documents ([USER_GUIDE.md](../guides/USER_GUIDE.md), [CLI_GUIDE.md](../guides/CLI_GUIDE.md) and the rest of [guides/](../guides/)) say everything;
@@ -69,5 +69,5 @@ The pictures are made, not drawn: `tools/docs/screenshots.py --guide t01` (to `t
 | `data/world-economics-21.dataset.yaml` | the World economics dataset in its 2.1 form, which the upgrade converts to a model | tutorial 17 |
 | `data/pools.py` | the connection-pool sum | tutorial 17 |
 
-Everything else is the demo data of the packs you already have. The `politics-society` and `economics` packs hold published data from the World Bank, UNDP, the CIA World Factbook and the IMF
-([REAL_DATA.md](../guides/REAL_DATA.md)); the IMF part is for internal demonstration only, so the tutorials use the politics-society pack.
+Everything else is the demo data of the packs you already have. The `world-economy` packs hold published data from the World Bank, UNDP, the CIA World Factbook and the IMF
+([REAL_DATA.md](../guides/REAL_DATA.md)); the IMF part is for internal demonstration only, so the tutorials use the world-economy pack.

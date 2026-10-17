@@ -243,7 +243,7 @@ $ python3 tools/drishti.py connector list --origin file
   name              origin  plugin   kinds                                                   state           used by            problems
   ----------------  ------  -------  ------------------------------------------------------  --------------  -----------------  --------
   book-totals       file    derived  book-pnl                                                running
-  civic-store       file    delta    jurisdiction,party,office-holder +3                     running (DOWN)  politics-society
+  civic-store       file    delta    jurisdiction,party,office-holder +3                     running (DOWN)  world-economy
   climate-store     file    delta    climate-profile,financed-emissions,climate-scenario +3  running (DOWN)  climate-risk
   collateral-store  file    delta    collateral-balance,margin-call,simm                     running         counterparty-risk
   credit-store      file    delta    netting-set,credit-limit,exposure-profile +2            running         counterparty-risk
@@ -260,7 +260,7 @@ $ python3 tools/drishti.py connector list --origin file
   market-store      file    delta    ir-curve,repo-curve,fx-spot +17                         running         market-data
   nyfed-sofr-feed   file    feed     rate-fixing                                             disabled        market-data
   oprisk-store      file    delta    loss-event,risk-control,key-risk-indicator +5           running (DOWN)  operational-risk
-  reference-store   file    delta    counterparty,counterparty-group,issuer +9               running         banking-core
+  reference-store   file    delta    counterparty,counterparty-group,issuer +9               running         core
   retail-store      file    delta    customer,deposit-account,mortgage +5                    running (DOWN)  retail-banking
   risk-store        file    delta    var,stress-scenario,stress-result +2                    running         market-risk
   trading-store     file    delta    trade                                                   running         trading

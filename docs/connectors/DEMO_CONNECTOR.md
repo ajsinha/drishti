@@ -63,7 +63,7 @@ Every enabled pack that has a `samples/` folder contributes it. The folder holds
 entity:
 
 ```
-config/packs/finance/samples/
+examples/packs/finance/samples/
 ├── catalog.json                 the list of samples: kind, id, title, subtitle
 ├── trade/
 │   ├── IRS-48213.json           one document per entity: <kind>/<id>.json
@@ -93,7 +93,7 @@ The packs in this repository ship these samples (counted from the catalogues on 
 | Pack | Samples | Kinds | Live | With `walk` | JSON on disk |
 |---|---|---|---|---|---|
 | `finance` (the default pack) | 36 | 12 | 8 | 0 | 196 KB |
-| `banking-core` | 165 | 12 | 30 | 30 | 135 KB |
+| `core` | 165 | 12 | 30 | 30 | 135 KB |
 | `market-data` | 220 | 20 | 119 | 119 | 337 KB |
 | `trading` | 750 | 1 | 360 | 750 | 5.7 MB |
 | `counterparty-risk` | 498 | 8 | 66 | 66 | 553 KB |
@@ -104,11 +104,11 @@ The packs in this repository ship these samples (counted from the catalogues on 
 | `climate-risk` | 93 | 6 | 0 | 0 | 115 KB |
 | `economics` | 77 | 8 | 0 | 0 | 121 KB |
 | `genomics` | 58 | 8 | 0 | 0 | 50 KB |
-| `politics-society` | 96 | 8 | 0 | 0 | 93 KB |
+| `world-economy` | 96 | 8 | 0 | 0 | 93 KB |
 | `logistics` | 8 | 4 | 7 | 7 | 5 KB |
 | all packs | 2,546 | | 715 | | 7.9 MB |
 
-The five banking packs (`banking-core`, `market-data`, `trading`, `counterparty-risk`, `market-risk`) hold the 1,791
+The five banking packs (`core`, `market-data`, `trading`, `counterparty-risk`, `market-risk`) hold the 1,791
 documents that [DEMO_DATA.md](DEMO_DATA.md#the-samples) loads into every store; they are written by
 `python3 tools/packgen/banking/make_data.py`. The other packs are written by their own generators under
 `tools/packgen/` (built on `tools/packgen/common/packbuild.py`). Note that 390 of the 750 trading samples carry a
@@ -167,7 +167,7 @@ drishti.sources.plugins.demo.settings.dirs = <packs>/banking-core/samples,<packs
 ```
 
 The folders are listed **most general pack first**: with `DRISHTI_PACKS=counterparty-risk`, its parents
-(`banking-core`, `market-data`, `trading`) come before `counterparty-risk` itself. The connector loads the folders in
+(`core`, `market-data`, `trading`) come before `counterparty-risk` itself. The connector loads the folders in
 that order, and a sample with the same kind and id in a later folder **replaces** the earlier one, so a child pack can
 override a parent's sample by shipping the same `<kind>/<id>.json`. Type-ahead keeps one entry per entity as well (the
 later one wins).

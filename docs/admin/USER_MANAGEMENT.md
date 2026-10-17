@@ -95,7 +95,7 @@ Go to **Admin → Users** and click **New user**:
 | Desk | `Credit` |
 | Email | `priya@bank.example` |
 | Roles | tick `credit-analyst` |
-| Packs | untick all but `banking-core` and `counterparty-risk` |
+| Packs | untick all but `core` and `counterparty-risk` |
 | Initial password | something at least 10 characters long; tell Priya it, privately |
 | Must change at first sign-in | tick it if Priya should choose her own |
 
@@ -163,7 +163,7 @@ not offer Calc do not ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#9-roles-who-may
 layouts*. A pack declares one like this:
 
 ```yaml
-# config/packs/climate-risk/pack.yaml
+# examples/packs/climate-risk/pack.yaml
 roles:
   climate-analyst:
     kinds: [climate-profile, financed-emissions, climate-scenario, climate-stress, physical-asset, taxonomy-alignment]
@@ -586,7 +586,7 @@ curl -s -X PUT localhost:18480/api/v1/admin/role-definitions/credit-analyst \
 # Create a user holding it, with two packs
 curl -s -X POST localhost:18480/api/v1/admin/users -H 'Content-Type: application/json' \
   -d '{"username":"priya","displayName":"Priya Raman","desk":"Credit","roles":["credit-analyst"],
-       "packs":["banking-core","counterparty-risk"],"password":"credit-desk-2026"}'
+       "packs":["core","counterparty-risk"],"password":"credit-desk-2026"}'
 
 # Every role, with how many people hold it
 curl -s localhost:18480/api/v1/admin/role-definitions

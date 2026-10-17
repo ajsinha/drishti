@@ -219,15 +219,15 @@ The sign-in page says the server is not reachable and recovers the same way.
 
 `DRISHTI_PACKS` is a comma-separated list of pack names (directories under `config/packs/`). Enabling a pack also enables
 the packs it `extends`. For example `DRISHTI_PACKS=market-risk` brings in `market-data`, `trading` and
-`banking-core` as well. The installed packs are:
+`core` as well. The installed packs are:
 
 ```bash
 ls /opt/drishti/packs
 ```
 
 ```
-banking-core  climate-risk  counterparty-risk  economics  finance  genomics  liquidity-risk  logistics
-market-data  market-risk  operational-risk  politics-society  retail-banking  trading
+core  climate-risk  counterparty-risk  economics  finance  genomics  liquidity-risk  logistics
+market-data  market-risk  operational-risk  world-economy  retail-banking  trading
 ```
 
 What each pack contains, and how to write your own, is in [PACKS.md](../guides/PACKS.md). Most packs read a Delta Lake under
@@ -280,7 +280,7 @@ What does **not** change live, and why:
 - **Chat bridge URLs and secrets** and **embedded applications declared in configuration** (the GitOps list, read-only in Admin → Embedding): read at start.
 - **Python code** of the console and **Java code** of the server: a new build.
 
-**Sample packs.** Four shipped packs (genomics, politics-society, logistics, economics) are marked `sample: true`. Once your own packs exist, set
+**Sample packs.** Four shipped packs (genomics, world-economy, logistics, economics) are marked `sample: true`. Once your own packs exist, set
 `DRISHTI_PACKS_SAMPLES=developers` so only authors and administrators see them, or `hidden` to unload them and stop their connectors; or press
 **Hide samples from business users** in Admin → Packs (saved in `data/packs/samples-mode`, which overrides the variable).
 
@@ -388,7 +388,7 @@ a warning until you change that password). Then create real users under
 
 ## 5. Data stores, sample data and feeds
 
-The banking packs (`banking-core`, `market-data`, `trading`, `market-risk`, `counterparty-risk`, and the packs built
+The banking packs (`core`, `market-data`, `trading`, `market-risk`, `counterparty-risk`, and the packs built
 on them) read one store per data domain: `reference`, `market`, `trading`, `risk`, `credit`, `collateral`. Delta
 Lake is the default; PostgreSQL and Aerospike are one Spring profile away. Each command below is run from the
 repository root.
@@ -401,7 +401,7 @@ uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/bankin
 
 # the finance pack's own lake (domain "finance")
 uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \
-    --samples config/packs/finance/samples --root data/delta --domain finance --days 10
+    --samples examples/packs/finance/samples --root data/delta --domain finance --days 10
 ```
 
 The other generated packs write their lakes the same way, for example
@@ -1443,7 +1443,7 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
         ...
     ],
     "packs": [
-        { "name": "market-data", "extends": ["banking-core"], "kinds": 20, "sutras": 20, "sutraProblems": [],
+        { "name": "market-data", "extends": ["core"], "kinds": 20, "sutras": 20, "sutraProblems": [],
           "connectors": ["market-store", "nyfed-sofr-feed", "ecb-estr-feed", "ecb-fx-feed", "us-treasury-feed", "fred-feed"],
           "connectorsDown": [], "connectorsOff": ["ecb-estr-feed", "fred-feed"], "status": "OK", ... },
         ...

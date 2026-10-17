@@ -586,7 +586,7 @@ packs 1  sources 6 (degraded 0, down 2)  packs with problems 1  failed to start 
 $ python3 tools/drishti.py server packs list --server http://localhost:18956 | head -n 4
 pack                  version  loaded  on   added  kinds
 finance               1.0.0    yes     yes         14
-banking-core          1.0.0    no      no          0
+core          1.0.0    no      no          0
 climate-risk          1.0.0    no      no          0
 $ python3 tools/drishti.py server smoke --server http://localhost:18956 --ids 1 --dates 1 | tail -n 5
 fx-spot               EURUSD                    2026-10-16  2       0      9.1      OK
@@ -772,7 +772,7 @@ ExecStart=/usr/bin/python3 tools/drishti.py lake maintain --config deploy/lake-m
 | `tools/packgen/banking/make_data.py`, `make_packs.py`, `make_sutras.py`, `make_docs.py` | the banking packs: their sample data and lake, manifests, Sutras and guides, from one taxonomy |
 | `tools/packgen/climate/make.py`, `liquidity/make.py`, `oprisk/make.py`, `retail/make.py` | the climate-risk, liquidity-risk, operational-risk and retail-banking packs, built on the banking data |
 | `tools/packgen/genomics/make.py` | the genomics pack (public reference facts, synthetic samples) |
-| `tools/packgen/economics/make.py`, `politics/make.py` with `tools/realdata/realdata.py` | the economics and politics packs from real public data (World Bank, IMF; internal demos only) |
+| `tools/packgen/world/make.py` (the halves `economics/make.py`, `politics/make.py`) with `tools/realdata/realdata.py` | the world-economy pack from real public data (World Bank, IMF; internal demos only) |
 | `tools/samplegen/bulk_trades.py` | a large trade book for scale tests, N trades over D business days, as a Delta lake (`load-delta.sh --trades`) |
 
 The synthetic book used on this page:

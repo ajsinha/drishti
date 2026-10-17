@@ -861,15 +861,15 @@ relationships and measures. Version-1 files keep working through a compatibility
 columns, its vocabulary's meanings, its entity references), certified, read-only and versioned with the pack. In the console: **Models** in the BI rail
 (`/bi/models`) lists them; a dataset's page (`/bi/ds/pack.trading.trade`) shows what one row is, the keys, the time mode, the source and each column's
 type, role, meaning, referenced kind, unit, additivity and default measure, then the YAML Drishti wrote. From the API: `GET /api/v1/bi/pack-datasets`
-(the list) and `GET /api/v1/bi/pack-datasets/{name}` (the YAML). An entry of the list on a server with the trading and banking-core packs:
+(the list) and `GET /api/v1/bi/pack-datasets/{name}` (the YAML). An entry of the list on a server with the trading and core packs:
 
 ```json
-{"name": "pack.banking-core.book", "id": "ds_pack_banking_core_book", "title": "Book", "pack": "banking-core", "kind": "book", "version": "1.0.0",
- "mode": "snapshot", "endorsement": "certified", "columns": 10, "query": "dataset:pack.banking-core.book"}
+{"name": "pack.core.book", "id": "ds_pack_banking_core_book", "title": "Book", "pack": "core", "kind": "book", "version": "1.0.0",
+ "mode": "snapshot", "endorsement": "certified", "columns": 10, "query": "dataset:pack.core.book"}
 ```
 
 `query` is how a model query names the dataset's **implicit model**: the dataset as a fact, its pack dimensions one hop away (a trade's `desk` brings
-`pack.banking-core.desk` as `desk`), and default measures (`Sum of mtm`, `Count of trade`). So a report can start from a bare dataset: the dataset page's
+`pack.core.desk` as `desk`), and default measures (`Sum of mtm`, `Count of trade`). So a report can start from a bare dataset: the dataset page's
 **Start a report on it** does exactly that, and **Make it a model** writes the implicit model out as a draft model you can extend.
 
 **A dataset of your own** (`/bi/datasets/new-layer`, also *New dataset* on the Models page) is for what a pack does not give: a pack dataset **narrowed**

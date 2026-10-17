@@ -225,7 +225,7 @@ You should see a window with a line over the last 30 business days and the value
 
 ## Step 7 · A different domain: real public data
 
-The packs of other industries use exactly the same commands. The `politics-society` pack holds published data about countries (World Bank, UNDP and the CIA World Factbook, public sources;
+The packs of other industries use exactly the same commands. The `world-economy` pack holds published data about countries (World Bank, UNDP and the CIA World Factbook, public sources;
 [REAL_DATA.md](../guides/REAL_DATA.md) lists them and their licences). Type `JUR JUR-USA`.
 
 ![The jurisdiction view of the United States: government, legislature and indicators](img/t02/12-public-data.jpg)
