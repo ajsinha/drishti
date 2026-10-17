@@ -41,6 +41,12 @@ read-only SQL, one query plan for everything.** (Wave A of [BI_DESIGN.md](docs/a
   what their report asks.
 - **Governance:** every publish carries a new version; breaking changes need a major; readers pinned `@1` keep the latest
   1.x; the publish gate runs model and dataset tests; lineage and impact from report to pack kind.
+- **Deep trading JSON, generically:** Build → New pack reads JSON arrays and JSONL of any depth (ids in any case, blanks as
+  missing, UPPER_SNAKE names as words, anonymised samples by default) and makes exactly one Sutra per product type; deal pages
+  drill level by level (legs, cash flows, resets, events) with a breadcrumb and the keyboard; counterparty, portfolio and
+  index pages; a BI model with a dataset per level; **Load data** streams a whole file into a pack's File connector and
+  checks every row. A synthetic multi-product generator (`tools/packgen/comswap_synth.py --mix`) for samples and tests.
+- **The console reconnects by itself** when the server starts late or restarts (a banner, then the page recovers).
 - **Also:** `external_lib/` (jars on the server's class path, Python modules in the console, `DRISHTI_EXTERNAL_LIB`); a
   deployed pack's Sutra opens in the designer; tutorials 10–18 rewritten for models with UI, CLI and YAML in every step.
 
