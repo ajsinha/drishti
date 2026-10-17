@@ -45,7 +45,8 @@ import org.junit.jupiter.api.Test;
  */
 class DemoPackWalksTest {
 
-    private static final Path PACKS = Path.of("../../config/packs");
+    /** The shipped packs and the retired example packs (examples/packs), whose walks the demo plugin still serves. */
+    private static final List<Path> PACKS = List.of(Path.of("../../config/packs"), Path.of("../../examples/packs"));
     private static final int TICKS = 40;
     /** Dependents that change only when something is crossed: a day's high or low when the price breaks it, a curve's shape when its first two months swap. */
     private static final Set<String> CONDITIONAL = Set.of("ohlc.-1.high", "ohlc.-1.low", "shape");
@@ -57,7 +58,8 @@ class DemoPackWalksTest {
 
     @BeforeAll
     static void load() throws IOException {
-        try (Stream<Path> packs = Files.list(PACKS)) {
+        for (Path root : PACKS) {
+          try (Stream<Path> packs = Files.list(root)) {
             for (Path pack : packs.toList()) {
                 Path samples = pack.resolve("samples");
                 if (!Files.isDirectory(samples)) {
@@ -72,6 +74,7 @@ class DemoPackWalksTest {
                     }
                 }
             }
+          }
         }
     }
 
