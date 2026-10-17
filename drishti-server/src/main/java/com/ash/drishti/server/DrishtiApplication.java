@@ -54,6 +54,9 @@ public class DrishtiApplication {
         if (com.ash.drishti.server.cli.CliLauncher.isCli(args)) {            // `sutra lint|test|shape|design|preview <path>`: no web server
             System.exit(com.ash.drishti.server.cli.CliLauncher.launch(args, System.out, System.err));
         }
+        if (com.ash.drishti.deltalake.write.LakeCli.isCli(args)) {         // `lake write --manifest M` (tools/lake/build.py): no Spring, no web server
+            System.exit(com.ash.drishti.deltalake.write.LakeCli.run(args, System.out, System.err));
+        }
         Restarter.enable();
         while (true) {
             org.springframework.context.ConfigurableApplicationContext ctx;

@@ -32,7 +32,8 @@ import org.apache.parquet.hadoop.metadata.CompressionCodecName;
  * A Delta Kernel {@link Engine} that never touches Hadoop's file systems: local disk through {@code java.nio}
  * (Windows drive letters, backslashes and UNC shares included, so no {@code winutils.exe}), S3 through the AWS SDK v2,
  * Parquet through parquet-java over the engine's own input files with its own page decompression, commit JSON and
- * expressions through Kernel's Hadoop-free handlers. It only reads: Drishti never writes a Delta table.
+ * expressions through Kernel's Hadoop-free handlers. It only reads: the server never writes a Delta table (the loaders
+ * do: {@code lake build} through {@link com.ash.drishti.deltalake.write.LakeWriter}, a separate process, or delta-rs).
  *
  * <p>One engine serves every read of a connector, from any number of threads: its handlers are stateless, each read
  * opens its own streams, and the S3 client is shared. {@link #close()} releases the S3 client.
