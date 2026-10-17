@@ -18,54 +18,54 @@ sutra: economy
 version: 1
 description: "An economy: output, growth, prices, jobs, debt and external balance, and output by sector, from World Bank, IMF and CIA data."
 match: { kind: economy, priority: 10 }
-title: { pill: Economics · Economy, id: $.economyId }
+title: { pill: Economics · Economy, id: $.ECONOMY_ID }
 strip:
-  - { label: Economy, bind: $.name }
-  - { label: Region, bind: $.regionName }
-  - { label: GDP (USD bn), bind: $.gdpUsdBn, fmt: amount0 }
-  - { label: GDP per capita (USD), bind: $.gdpPerCapita, fmt: amount0 }
-  - { label: Real growth, bind: $.growth, fmt: pc2, tone: sign, emphasis: true }
-  - { label: Inflation, bind: $.inflation, fmt: pc2 }
-  - { label: Unemployment, bind: $.unemployment, fmt: pc2 }
-  - { label: Debt / GDP, bind: $.debtToGdp, fmt: pc1 }
+  - { label: Economy, bind: $.NAME }
+  - { label: Region, bind: $.REGION_NAME }
+  - { label: GDP (USD bn), bind: $.GDP_USD_BN, fmt: amount0 }
+  - { label: GDP per capita (USD), bind: $.GDP_PER_CAPITA, fmt: amount0 }
+  - { label: Real growth, bind: $.GROWTH, fmt: pc2, tone: sign, emphasis: true }
+  - { label: Inflation, bind: $.INFLATION, fmt: pc2 }
+  - { label: Unemployment, bind: $.UNEMPLOYMENT, fmt: pc2 }
+  - { label: Debt / GDP, bind: $.DEBT_TO_GDP, fmt: pc1 }
 panels:
   - id: geography
     kind: map
     title: Where it is
-    highlight: $.iso3
+    highlight: $.ISO3
     link: { kind: economy, id: "ECON-{iso3}" }
-    shade: { kind: economy, field: $.gdpPerCapita, by: $.iso3, fmt: amount0, label: GDP per capita (USD) }
+    shade: { kind: economy, field: $.GDP_PER_CAPITA, by: $.ISO3, fmt: amount0, label: GDP per capita (USD) }
     height: 11
   - id: growthPath
     kind: line
     title: "Real GDP growth, % a year"
     key: F2
-    rows: $.growthPath
-    x: year
-    y: growth
+    rows: $.GROWTH_PATH
+    x: YEAR
+    y: GROWTH
     fmt: pc2
   - id: sectors
     kind: hbar
     title: "Output by sector, % of GDP"
     key: F3
     area: right
-    rows: $.sectors
-    label: sector
-    value: share
+    rows: $.SECTORS
+    label: SECTOR
+    value: SHARE
     fmt: pc1
   - id: gdpPath
     kind: line
     title: "GDP, USD bn"
     key: F4
-    rows: $.gdpPath
-    x: year
-    y: gdp
+    rows: $.GDP_PATH
+    x: YEAR
+    y: GDP
     fmt: amount0
   - id: source
     kind: kv
     title: Data source and licence
     area: right
-    rows: $.provenance
+    rows: $.PROVENANCE
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.regionGroup, 'country-group')", F8: impact, F9: raw }
+keys: { F7: "link($.REGION_GROUP, 'country-group')", F8: impact, F9: raw }

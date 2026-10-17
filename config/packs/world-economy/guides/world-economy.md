@@ -22,7 +22,7 @@ The figures are published data, not samples: World Bank World Development Indica
 
 The data is published data, not samples: the CIA World Factbook (public domain) for governments, office holders, elections and parties, the World Bank World Development Indicators and Worldwide Governance Indicators (CC BY 4.0), and the UNDP Human Development Index (CC BY 3.0 IGO). Texts are shown as the sources publish them; every document names its source, dataset, retrieval date and licence in its Data source panel. Opinion polls and bills have no open global dataset, so this pack has no such kinds. A jurisdiction's page opens with a map: the country is highlighted on the world and a click on any other country opens that country's page (a country the pack holds no jurisdiction for is not clickable and says so on hover); the shapes ship with the console, nothing is fetched from the internet. Refresh with `tools/realdata/realdata.py` (see docs/guides/REAL_DATA.md).
 
-A counterparty of the core pack names its country of risk (`COUNTRY_OF_RISK`) and links to that country's economy (`economy`), so `CPTY CP-NORTHBRIDGE` opens the United States economy in one click.
+A counterparty of the core pack names its country of risk (`COUNTRY_OF_RISK`) and links to that country's economy (`ECONOMY`), so `CPTY CP-NORTHBRIDGE` opens the United States economy in one click.
 
 **Extends:** nothing · **Kinds:** 13
 
@@ -70,105 +70,105 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 
 An economy: output, growth, prices, jobs, debt and external balance, and output by sector, from World Bank, IMF and CIA data.
 
-**Fields its Sutra reads:** `name`, `regionName`, `gdpUsdBn`, `gdpPerCapita`, `growth`, `inflation`, `unemployment`, `debtToGdp`, `currentAccount`, `growthPath`, `sectors`, `gdpPath`, `provenance`.
+**Fields its Sutra reads:** `NAME`, `REGION_NAME`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `GROWTH`, `INFLATION`, `UNEMPLOYMENT`, `DEBT_TO_GDP`, `CURRENT_ACCOUNT`, `GROWTH_PATH`, `SECTORS`, `GDP_PATH`, `PROVENANCE`.
 
-**Links:** `regionGroup` → Region (`country-group`), `incomeGroup` → Income group (`country-group`), `labour` → Labour market (`labour-market`), `fiscal` → Fiscal position (`fiscal-position`), `outlook` → IMF forecast (`economic-forecast`), `indicators` → Indicators (`macro-indicator`).
+**Links:** `REGION_GROUP` → Region (`country-group`), `INCOME_GROUP` → Income group (`country-group`), `LABOUR` → Labour market (`labour-market`), `FISCAL` → Fiscal position (`fiscal-position`), `OUTLOOK` → IMF forecast (`economic-forecast`), `INDICATORS` → Indicators (`macro-indicator`).
 
 ### Macro indicator (`macro-indicator`)
 
 One headline statistic of one economy: the series, the latest value, the change and the rank among economies.
 
-**Fields its Sutra reads:** `name`, `latest`, `unit`, `latestYear`, `previous`, `rank`, `history`, `facts`, `provenance`.
+**Fields its Sutra reads:** `NAME`, `LATEST`, `UNIT`, `LATEST_YEAR`, `PREVIOUS`, `RANK`, `HISTORY`, `FACTS`, `PROVENANCE`.
 
-**Links:** `economy` → Economy (`economy`).
+**Links:** `ECONOMY` → Economy (`economy`).
 
 ### Economic forecast (`economic-forecast`)
 
 The IMF World Economic Outlook: growth, inflation, unemployment, external balance and debt, outturn and projections to 2031.
 
-**Fields its Sutra reads:** `economyName`, `vintage`, `growth2027`, `inflation2027`, `debt2030`, `projections`, `path`, `provenance`.
+**Fields its Sutra reads:** `ECONOMY_NAME`, `VINTAGE`, `GROWTH_2027`, `INFLATION_2027`, `DEBT_2030`, `PROJECTIONS`, `PATH`, `PROVENANCE`.
 
-**Links:** `economy` → Economy (`economy`).
+**Links:** `ECONOMY` → Economy (`economy`).
 
 ### Labour market (`labour-market`)
 
 Unemployment, participation, youth and female labour, and employment and output by sector.
 
-**Fields its Sutra reads:** `economyName`, `unemployment`, `participation`, `youthUnemployment`, `employmentRatio`, `femaleParticipation`, `unemploymentPath`, `bySector`, `provenance`.
+**Fields its Sutra reads:** `ECONOMY_NAME`, `UNEMPLOYMENT`, `PARTICIPATION`, `YOUTH_UNEMPLOYMENT`, `EMPLOYMENT_RATIO`, `FEMALE_PARTICIPATION`, `UNEMPLOYMENT_PATH`, `BY_SECTOR`, `PROVENANCE`.
 
-**Links:** `economy` → Economy (`economy`).
+**Links:** `ECONOMY` → Economy (`economy`).
 
 ### Fiscal position (`fiscal-position`)
 
 Government debt and net lending (IMF) with revenue, expense and military spending (World Bank), as shares of GDP.
 
-**Fields its Sutra reads:** `economyName`, `debt`, `balance`, `revenue`, `spending`, `military`, `ratios`, `debtPath`, `balancePath`, `provenance`.
+**Fields its Sutra reads:** `ECONOMY_NAME`, `DEBT`, `BALANCE`, `REVENUE`, `SPENDING`, `MILITARY`, `RATIOS`, `DEBT_PATH`, `BALANCE_PATH`, `PROVENANCE`.
 
-**Links:** `economy` → Economy (`economy`).
+**Links:** `ECONOMY` → Economy (`economy`).
 
 ### Country group (`country-group`)
 
 A World Bank region or income group (or the world): output, population, growth and its largest economies.
 
-**Fields its Sutra reads:** `name`, `groupType`, `economies`, `gdpUsdBn`, `gdpPerCapita`, `populationM`, `growth`, `growthPath`, `topEconomies`, `gdpPath`, `provenance`.
+**Fields its Sutra reads:** `NAME`, `GROUP_TYPE`, `ECONOMIES`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `POPULATION_M`, `GROWTH`, `GROWTH_PATH`, `TOP_ECONOMIES`, `GDP_PATH`, `PROVENANCE`.
 
-**Links:** `memberEconomies` → Economies (`economy`).
+**Links:** `MEMBER_ECONOMIES` → Economies (`economy`).
 
 ### Region economy (`region-economy`)
 
 A state or territory (ISO 3166-2): population, GDP and GDP per head. An illustrative sample, rounded from public figures, not for reporting.
 
-**Fields its Sutra reads:** `name`, `regionCode`, `countryName`, `populationM`, `gdpUsdBn`, `gdpPerCapita`, `facts`, `provenance`.
+**Fields its Sutra reads:** `NAME`, `REGION_CODE`, `COUNTRY_NAME`, `POPULATION_M`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `FACTS`, `PROVENANCE`.
 
-**Links:** `economy` → Economy (`economy`).
+**Links:** `ECONOMY` → Economy (`economy`).
 
 ### Jurisdiction (`jurisdiction`)
 
 A country: government type, capital, legislature and seats by party, office holders, elections and governance indicators, from the CIA World Factbook, World Bank and UNDP.
 
-**Fields its Sutra reads:** `name`, `capital`, `governmentType`, `populationM`, `areaKm2`, `currency`, `legislature`, `indicators`, `profile`, `partiesListed`, `provenance`.
+**Fields its Sutra reads:** `NAME`, `CAPITAL`, `GOVERNMENT_TYPE`, `POPULATION_M`, `AREA_KM2`, `CURRENCY`, `LEGISLATURE`, `INDICATORS`, `PROFILE`, `PARTIES_LISTED`, `PROVENANCE`.
 
-**Links:** `region` → World region (`region`), `chiefOfState` → Chief of state (`office-holder`), `headOfGovernment` → Head of government (`office-holder`), `lastElection` → Last election (`election`), `elections` → Elections (`election`), `parties` → Parties with seats (`party`), `socialIndicators` → Indicators (`social-indicator`).
+**Links:** `REGION` → World region (`region`), `CHIEF_OF_STATE` → Chief of state (`office-holder`), `HEAD_OF_GOVERNMENT` → Head of government (`office-holder`), `LAST_ELECTION` → Last election (`election`), `ELECTIONS` → Elections (`election`), `PARTIES` → Parties with seats (`party`), `SOCIAL_INDICATORS` → Indicators (`social-indicator`).
 
 ### Party (`party`)
 
 A political party that won seats in the lower chamber at the most recent election, with the chamber's full result.
 
-**Fields its Sutra reads:** `name`, `countryName`, `seats`, `seatShare`, `chamber`, `electionDate`, `results`, `provenance`.
+**Fields its Sutra reads:** `NAME`, `COUNTRY_NAME`, `SEATS`, `SEAT_SHARE`, `CHAMBER`, `ELECTION_DATE`, `RESULTS`, `PROVENANCE`.
 
-**Links:** `election` → Election (`election`), `jurisdiction` → Country (`jurisdiction`).
+**Links:** `ELECTION` → Election (`election`), `JURISDICTION` → Country (`jurisdiction`).
 
 ### Office holder (`office-holder`)
 
 The chief of state or head of government of a country as the CIA World Factbook publishes them, with how the office is filled.
 
-**Fields its Sutra reads:** `countryName`, `role`, `holder`, `since`, `governmentType`, `mandate`, `provenance`.
+**Fields its Sutra reads:** `COUNTRY_NAME`, `ROLE`, `HOLDER`, `SINCE`, `GOVERNMENT_TYPE`, `MANDATE`, `PROVENANCE`.
 
-**Links:** `jurisdiction` → Country (`jurisdiction`).
+**Links:** `JURISDICTION` → Country (`jurisdiction`).
 
 ### Election (`election`)
 
 The most recent election to a chamber or to the executive, with the system, term, seats by party and the date of the next one.
 
-**Fields its Sutra reads:** `title`, `dateText`, `system`, `winner`, `nextElection`, `results`, `summary`, `provenance`.
+**Fields its Sutra reads:** `TITLE`, `DATE_TEXT`, `SYSTEM`, `WINNER`, `NEXT_ELECTION`, `RESULTS`, `SUMMARY`, `PROVENANCE`.
 
-**Links:** `jurisdiction` → Country (`jurisdiction`).
+**Links:** `JURISDICTION` → Country (`jurisdiction`).
 
 ### World region (`region`)
 
 A World Bank region: its countries, population, life expectancy, women in parliament, Internet use and the government types found in it.
 
-**Fields its Sutra reads:** `name`, `countries`, `populationM`, `lifeExpectancy`, `womenParliament`, `internet`, `governmentTypes`, `lifeTrend`, `internetTrend`, `provenance`.
+**Fields its Sutra reads:** `NAME`, `COUNTRIES`, `POPULATION_M`, `LIFE_EXPECTANCY`, `WOMEN_PARLIAMENT`, `INTERNET`, `GOVERNMENT_TYPES`, `LIFE_TREND`, `INTERNET_TREND`, `PROVENANCE`.
 
-**Links:** `memberStates` → Countries (`jurisdiction`).
+**Links:** `MEMBER_STATES` → Countries (`jurisdiction`).
 
 ### Social indicator (`social-indicator`)
 
 A social or governance statistic of one country over time, with the regional comparison: health, education, inequality, rights and rule of law.
 
-**Fields its Sutra reads:** `name`, `latest`, `unit`, `latestYear`, `change5y`, `sourceName`, `series`, `byRegion`, `meaning`, `provenance`.
+**Fields its Sutra reads:** `NAME`, `LATEST`, `UNIT`, `LATEST_YEAR`, `CHANGE_5Y`, `SOURCE_NAME`, `SERIES`, `BY_REGION`, `MEANING`, `PROVENANCE`.
 
-**Links:** `jurisdiction` → Country (`jurisdiction`).
+**Links:** `JURISDICTION` → Country (`jurisdiction`).
 
 ## Who can see it
 

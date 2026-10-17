@@ -106,64 +106,64 @@ graph:
   - pattern: ^SOCI-
     kind: social-indicator
   fields:
-    chiefOfState:
+    CHIEF_OF_STATE:
       kind: office-holder
       label: Chief of state
-    economy:
+    ECONOMY:
       kind: economy
       label: Economy
-    election:
+    ELECTION:
       kind: election
       label: Election
-    elections:
+    ELECTIONS:
       kind: election
       label: Elections
-    fiscal:
+    FISCAL:
       kind: fiscal-position
       label: Fiscal position
-    headOfGovernment:
+    HEAD_OF_GOVERNMENT:
       kind: office-holder
       label: Head of government
-    incomeGroup:
+    INCOME_GROUP:
       kind: country-group
       label: Income group
-    indicators:
+    INDICATORS:
       kind: macro-indicator
       label: Indicators
-    jurisdiction:
+    JURISDICTION:
       kind: jurisdiction
       label: Country
-    labour:
+    LABOUR:
       kind: labour-market
       label: Labour market
-    lastElection:
+    LAST_ELECTION:
       kind: election
       label: Last election
-    memberEconomies:
+    MEMBER_ECONOMIES:
       kind: economy
       label: Economies
-    memberStates:
+    MEMBER_STATES:
       kind: jurisdiction
       label: Countries
-    outlook:
+    OUTLOOK:
       kind: economic-forecast
       label: IMF forecast
-    parties:
+    PARTIES:
       kind: party
       label: Parties with seats
-    region:
+    REGION:
       kind: region
       label: World region
-    regionGroup:
+    REGION_GROUP:
       kind: country-group
       label: Region
-    socialIndicators:
+    SOCIAL_INDICATORS:
       kind: social-indicator
       label: Indicators
   badges:
-    economy: fmt($.growth, 'pc2') + ' growth'
-    macro-indicator: fmt($.latest, 'price2') + ' ' + $.unit
-    party: fmt($.seats, 'amount0') + ' seats'
+    economy: fmt($.GROWTH, 'pc2') + ' growth'
+    macro-indicator: fmt($.LATEST, 'price2') + ' ' + $.UNIT
+    party: fmt($.SEATS, 'amount0') + ' seats'
 connectors:
   macro-store:
     plugin: delta
@@ -241,389 +241,389 @@ console:
   help: config/help.yaml
 columns:
   economy:
-  - name
-  - iso3
-  - regionName
-  - incomeName
-  - gdpUsdBn
-  - gdpPerCapita
-  - growth
-  - inflation
-  - unemployment
-  - debtToGdp
+  - NAME
+  - ISO3
+  - REGION_NAME
+  - INCOME_NAME
+  - GDP_USD_BN
+  - GDP_PER_CAPITA
+  - GROWTH
+  - INFLATION
+  - UNEMPLOYMENT
+  - DEBT_TO_GDP
   macro-indicator:
-  - countryName
-  - indicator
-  - latest
-  - unit
-  - latestYear
-  - rank
+  - COUNTRY_NAME
+  - INDICATOR
+  - LATEST
+  - UNIT
+  - LATEST_YEAR
+  - RANK
   economic-forecast:
-  - economyName
-  - vintage
-  - growth2027
-  - inflation2027
-  - debt2030
+  - ECONOMY_NAME
+  - VINTAGE
+  - GROWTH_2027
+  - INFLATION_2027
+  - DEBT_2030
   labour-market:
-  - economyName
-  - unemployment
-  - participation
-  - youthUnemployment
-  - employmentRatio
+  - ECONOMY_NAME
+  - UNEMPLOYMENT
+  - PARTICIPATION
+  - YOUTH_UNEMPLOYMENT
+  - EMPLOYMENT_RATIO
   fiscal-position:
-  - economyName
-  - debt
-  - balance
-  - revenue
-  - spending
-  - military
+  - ECONOMY_NAME
+  - DEBT
+  - BALANCE
+  - REVENUE
+  - SPENDING
+  - MILITARY
   country-group:
-  - name
-  - groupType
-  - economies
-  - gdpUsdBn
-  - populationM
-  - growth
+  - NAME
+  - GROUP_TYPE
+  - ECONOMIES
+  - GDP_USD_BN
+  - POPULATION_M
+  - GROWTH
   region-economy:
-  - name
-  - regionCode
-  - iso3
-  - countryName
-  - population
-  - gdpUsdBn
-  - gdpPerCapita
-  - year
-  - source
+  - NAME
+  - REGION_CODE
+  - ISO3
+  - COUNTRY_NAME
+  - POPULATION
+  - GDP_USD_BN
+  - GDP_PER_CAPITA
+  - YEAR
+  - SOURCE
   jurisdiction:
-  - name
-  - iso3
-  - regionName
-  - capital
-  - governmentType
-  - populationM
-  - currency
+  - NAME
+  - ISO3
+  - REGION_NAME
+  - CAPITAL
+  - GOVERNMENT_TYPE
+  - POPULATION_M
+  - CURRENCY
   party:
-  - name
-  - countryName
-  - seats
-  - seatShare
-  - chamber
+  - NAME
+  - COUNTRY_NAME
+  - SEATS
+  - SEAT_SHARE
+  - CHAMBER
   office-holder:
-  - countryName
-  - role
-  - holder
-  - since
-  - governmentType
+  - COUNTRY_NAME
+  - ROLE
+  - HOLDER
+  - SINCE
+  - GOVERNMENT_TYPE
   election:
-  - title
-  - dateText
-  - system
-  - winner
-  - nextElection
+  - TITLE
+  - DATE_TEXT
+  - SYSTEM
+  - WINNER
+  - NEXT_ELECTION
   region:
-  - name
-  - countries
-  - populationM
-  - lifeExpectancy
-  - womenParliament
+  - NAME
+  - COUNTRIES
+  - POPULATION_M
+  - LIFE_EXPECTANCY
+  - WOMEN_PARLIAMENT
   social-indicator:
-  - countryName
-  - indicator
-  - theme
-  - latest
-  - unit
-  - latestYear
+  - COUNTRY_NAME
+  - INDICATOR
+  - THEME
+  - LATEST
+  - UNIT
+  - LATEST_YEAR
 form:
   economy:
-  - path: economyId
+  - path: ECONOMY_ID
     label: Economy id
     type: id
-  - path: name
+  - path: NAME
     label: Name
     type: text
-  - path: iso3
+  - path: ISO3
     label: ISO3 code
     type: text
-  - path: regionName
+  - path: REGION_NAME
     label: Region
     type: enum
-  - path: incomeName
+  - path: INCOME_NAME
     label: Income group
     type: enum
-  - path: gdpUsdBn
+  - path: GDP_USD_BN
     label: GDP (USD bn)
     type: number
-  - path: gdpPerCapita
+  - path: GDP_PER_CAPITA
     label: GDP per capita (USD)
     type: number
-  - path: growth
+  - path: GROWTH
     label: Real growth (%)
     type: number
-  - path: inflation
+  - path: INFLATION
     label: Inflation (%)
     type: number
-  - path: unemployment
+  - path: UNEMPLOYMENT
     label: Unemployment (%)
     type: number
-  - path: debtToGdp
+  - path: DEBT_TO_GDP
     label: Debt / GDP (%)
     type: number
   macro-indicator:
-  - path: indicatorId
+  - path: INDICATOR_ID
     label: Indicator id
     type: id
-  - path: countryName
+  - path: COUNTRY_NAME
     label: Economy
     type: text
-  - path: indicator
+  - path: INDICATOR
     label: Indicator
     type: enum
-  - path: latest
+  - path: LATEST
     label: Latest value
     type: number
-  - path: unit
+  - path: UNIT
     label: Unit
     type: enum
-  - path: latestYear
+  - path: LATEST_YEAR
     label: Year
     type: text
-  - path: rank
+  - path: RANK
     label: Rank
     type: number
   economic-forecast:
-  - path: forecastId
+  - path: FORECAST_ID
     label: Forecast id
     type: id
-  - path: economyName
+  - path: ECONOMY_NAME
     label: Economy
     type: text
-  - path: vintage
+  - path: VINTAGE
     label: Vintage
     type: enum
-  - path: growth2027
+  - path: GROWTH_2027
     label: Growth 2027 (%)
     type: number
-  - path: inflation2027
+  - path: INFLATION_2027
     label: Inflation 2027 (%)
     type: number
-  - path: debt2030
+  - path: DEBT_2030
     label: Debt / GDP 2030 (%)
     type: number
   labour-market:
-  - path: labourId
+  - path: LABOUR_ID
     label: Labour id
     type: id
-  - path: economyName
+  - path: ECONOMY_NAME
     label: Economy
     type: text
-  - path: unemployment
+  - path: UNEMPLOYMENT
     label: Unemployment (%)
     type: number
-  - path: participation
+  - path: PARTICIPATION
     label: Participation (%)
     type: number
-  - path: youthUnemployment
+  - path: YOUTH_UNEMPLOYMENT
     label: Youth unemployment (%)
     type: number
-  - path: employmentRatio
+  - path: EMPLOYMENT_RATIO
     label: Employment ratio (%)
     type: number
   fiscal-position:
-  - path: fiscalId
+  - path: FISCAL_ID
     label: Fiscal id
     type: id
-  - path: economyName
+  - path: ECONOMY_NAME
     label: Economy
     type: text
-  - path: debt
+  - path: DEBT
     label: Debt / GDP (%)
     type: number
-  - path: balance
+  - path: BALANCE
     label: Net lending / GDP (%)
     type: number
-  - path: revenue
+  - path: REVENUE
     label: Revenue / GDP (%)
     type: number
-  - path: spending
+  - path: SPENDING
     label: Expense / GDP (%)
     type: number
-  - path: military
+  - path: MILITARY
     label: Military / GDP (%)
     type: number
   country-group:
-  - path: groupId
+  - path: GROUP_ID
     label: Group id
     type: id
-  - path: name
+  - path: NAME
     label: Name
     type: text
-  - path: groupType
+  - path: GROUP_TYPE
     label: Type
     type: enum
-  - path: economies
+  - path: ECONOMIES
     label: Economies
     type: number
-  - path: gdpUsdBn
+  - path: GDP_USD_BN
     label: GDP (USD bn)
     type: number
-  - path: populationM
+  - path: POPULATION_M
     label: Population (m)
     type: number
-  - path: growth
+  - path: GROWTH
     label: Real growth (%)
     type: number
   region-economy:
-  - path: regionId
+  - path: REGION_ID
     label: Region id
     type: id
-  - path: name
+  - path: NAME
     label: Region
     type: text
-  - path: regionCode
+  - path: REGION_CODE
     label: Region code (ISO 3166-2)
     type: text
-  - path: iso3
+  - path: ISO3
     label: Country (ISO3)
     type: text
-  - path: countryName
+  - path: COUNTRY_NAME
     label: Country
     type: text
-  - path: population
+  - path: POPULATION
     label: Population
     type: number
-  - path: gdpUsdBn
+  - path: GDP_USD_BN
     label: GDP (USD bn)
     type: number
-  - path: gdpPerCapita
+  - path: GDP_PER_CAPITA
     label: GDP per capita (USD)
     type: number
-  - path: year
+  - path: YEAR
     label: Year
     type: text
-  - path: source
+  - path: SOURCE
     label: Source
     type: text
   jurisdiction:
-  - path: jurisdictionId
+  - path: JURISDICTION_ID
     label: Jurisdiction id
     type: id
-  - path: name
+  - path: NAME
     label: Country
     type: text
-  - path: iso3
+  - path: ISO3
     label: ISO3 code
     type: text
-  - path: regionName
+  - path: REGION_NAME
     label: World region
     type: enum
-  - path: capital
+  - path: CAPITAL
     label: Capital
     type: text
-  - path: governmentType
+  - path: GOVERNMENT_TYPE
     label: Government type
     type: text
-  - path: populationM
+  - path: POPULATION_M
     label: Population (m)
     type: number
-  - path: currency
+  - path: CURRENCY
     label: Currency
     type: enum
   party:
-  - path: partyId
+  - path: PARTY_ID
     label: Party id
     type: id
-  - path: name
+  - path: NAME
     label: Party
     type: text
-  - path: countryName
+  - path: COUNTRY_NAME
     label: Country
     type: text
-  - path: seats
+  - path: SEATS
     label: Seats
     type: number
-  - path: seatShare
+  - path: SEAT_SHARE
     label: Seat share (%)
     type: number
-  - path: chamber
+  - path: CHAMBER
     label: Chamber
     type: text
   office-holder:
-  - path: officeId
+  - path: OFFICE_ID
     label: Office id
     type: id
-  - path: countryName
+  - path: COUNTRY_NAME
     label: Country
     type: text
-  - path: role
+  - path: ROLE
     label: Role
     type: enum
-  - path: holder
+  - path: HOLDER
     label: Holder
     type: text
-  - path: since
+  - path: SINCE
     label: Since
     type: text
-  - path: governmentType
+  - path: GOVERNMENT_TYPE
     label: Government type
     type: text
   election:
-  - path: electionId
+  - path: ELECTION_ID
     label: Election id
     type: id
-  - path: title
+  - path: TITLE
     label: Election
     type: text
-  - path: dateText
+  - path: DATE_TEXT
     label: Held
     type: text
-  - path: system
+  - path: SYSTEM
     label: System
     type: text
-  - path: winner
+  - path: WINNER
     label: Largest party
     type: text
-  - path: nextElection
+  - path: NEXT_ELECTION
     label: Next election
     type: text
   region:
-  - path: regionId
+  - path: REGION_ID
     label: Region id
     type: id
-  - path: name
+  - path: NAME
     label: Region
     type: text
-  - path: countries
+  - path: COUNTRIES
     label: Countries
     type: number
-  - path: populationM
+  - path: POPULATION_M
     label: Population (m)
     type: number
-  - path: lifeExpectancy
+  - path: LIFE_EXPECTANCY
     label: Life expectancy
     type: number
-  - path: womenParliament
+  - path: WOMEN_PARLIAMENT
     label: Women in parliament (%)
     type: number
   social-indicator:
-  - path: indicatorId
+  - path: INDICATOR_ID
     label: Indicator id
     type: id
-  - path: countryName
+  - path: COUNTRY_NAME
     label: Country
     type: text
-  - path: indicator
+  - path: INDICATOR
     label: Indicator
     type: enum
-  - path: theme
+  - path: THEME
     label: Theme
     type: enum
-  - path: latest
+  - path: LATEST
     label: Latest value
     type: number
-  - path: unit
+  - path: UNIT
     label: Unit
     type: enum
-  - path: latestYear
+  - path: LATEST_YEAR
     label: Year
     type: text
 roles:

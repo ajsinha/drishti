@@ -18,44 +18,44 @@ sutra: fiscal-position
 version: 1
 description: "Government debt and net lending (IMF) with revenue, expense and military spending (World Bank), as shares of GDP."
 match: { kind: fiscal-position, priority: 10 }
-title: { pill: Economics · Fiscal position, id: $.fiscalId }
+title: { pill: Economics · Fiscal position, id: $.FISCAL_ID }
 strip:
-  - { label: Economy, bind: $.economyName }
-  - { label: Debt / GDP, bind: $.debt, fmt: pc1 }
-  - { label: Net lending / GDP, bind: $.balance, fmt: pc2, tone: sign, emphasis: true }
-  - { label: Revenue / GDP, bind: $.revenue, fmt: pc1 }
-  - { label: Expense / GDP, bind: $.spending, fmt: pc1 }
-  - { label: Military / GDP, bind: $.military, fmt: pc2 }
+  - { label: Economy, bind: $.ECONOMY_NAME }
+  - { label: Debt / GDP, bind: $.DEBT, fmt: pc1 }
+  - { label: Net lending / GDP, bind: $.BALANCE, fmt: pc2, tone: sign, emphasis: true }
+  - { label: Revenue / GDP, bind: $.REVENUE, fmt: pc1 }
+  - { label: Expense / GDP, bind: $.SPENDING, fmt: pc1 }
+  - { label: Military / GDP, bind: $.MILITARY, fmt: pc2 }
 panels:
   - id: ratios
     kind: hbar
     title: "Central government, % of GDP"
     key: F2
-    rows: $.ratios
-    label: item
-    value: value
+    rows: $.RATIOS
+    label: ITEM
+    value: VALUE
     fmt: pc1
   - id: debtPath
     kind: line
     title: "General government gross debt, % of GDP"
     area: right
-    rows: $.debtPath
-    x: year
-    y: debt
+    rows: $.DEBT_PATH
+    x: YEAR
+    y: DEBT
     fmt: pc1
   - id: balancePath
     kind: line
     title: "Net lending / borrowing, % of GDP"
     key: F3
-    rows: $.balancePath
-    x: year
-    y: balance
+    rows: $.BALANCE_PATH
+    x: YEAR
+    y: BALANCE
     fmt: pc2
   - id: source
     kind: kv
     title: Data source and licence
     area: right
-    rows: $.provenance
+    rows: $.PROVENANCE
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.economy, 'economy')", F8: impact, F9: raw }
+keys: { F7: "link($.ECONOMY, 'economy')", F8: impact, F9: raw }

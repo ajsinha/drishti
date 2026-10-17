@@ -18,37 +18,37 @@ sutra: labour-market
 version: 1
 description: "Unemployment, participation, youth and female labour, and employment and output by sector."
 match: { kind: labour-market, priority: 10 }
-title: { pill: Economics · Labour market, id: $.labourId }
+title: { pill: Economics · Labour market, id: $.LABOUR_ID }
 strip:
-  - { label: Economy, bind: $.economyName }
-  - { label: Unemployment, bind: $.unemployment, fmt: pc2, emphasis: true }
-  - { label: Participation, bind: $.participation, fmt: pc1 }
-  - { label: Youth unemployment, bind: $.youthUnemployment, fmt: pc1 }
-  - { label: Employment ratio, bind: $.employmentRatio, fmt: pc1 }
-  - { label: Female participation, bind: $.femaleParticipation, fmt: pc1 }
+  - { label: Economy, bind: $.ECONOMY_NAME }
+  - { label: Unemployment, bind: $.UNEMPLOYMENT, fmt: pc2, emphasis: true }
+  - { label: Participation, bind: $.PARTICIPATION, fmt: pc1 }
+  - { label: Youth unemployment, bind: $.YOUTH_UNEMPLOYMENT, fmt: pc1 }
+  - { label: Employment ratio, bind: $.EMPLOYMENT_RATIO, fmt: pc1 }
+  - { label: Female participation, bind: $.FEMALE_PARTICIPATION, fmt: pc1 }
 panels:
   - id: unemploymentPath
     kind: line
     title: "Unemployment rate, % of labour force"
     key: F2
-    rows: $.unemploymentPath
-    x: year
-    y: rate
+    rows: $.UNEMPLOYMENT_PATH
+    x: YEAR
+    y: RATE
     fmt: pc2
   - id: bySector
     kind: table
     title: Employment and output by sector
     key: F3
-    rows: $.bySector
+    rows: $.BY_SECTOR
     columns:
-      - { label: Sector, bind: "@.sector" }
-      - { label: "Share of jobs, %", bind: "@.employmentShare", fmt: pc1, total: true }
-      - { label: "Share of GDP, %", bind: "@.valueAddedShare", fmt: pc1 }
+      - { label: Sector, bind: "@.SECTOR" }
+      - { label: "Share of jobs, %", bind: "@.EMPLOYMENT_SHARE", fmt: pc1, total: true }
+      - { label: "Share of GDP, %", bind: "@.VALUE_ADDED_SHARE", fmt: pc1 }
   - id: source
     kind: kv
     title: Data source and licence
     area: right
-    rows: $.provenance
+    rows: $.PROVENANCE
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.economy, 'economy')", F8: impact, F9: raw }
+keys: { F7: "link($.ECONOMY, 'economy')", F8: impact, F9: raw }

@@ -18,28 +18,28 @@ sutra: party
 version: 1
 description: "A political party that won seats in the lower chamber at the most recent election, with the chamber's full result."
 match: { kind: party, priority: 10 }
-title: { pill: Politics and society · Party, id: $.partyId }
+title: { pill: Politics and society · Party, id: $.PARTY_ID }
 strip:
-  - { label: Party, bind: $.name, emphasis: true }
-  - { label: Country, bind: $.countryName }
-  - { label: Seats, bind: $.seats, fmt: amount0 }
-  - { label: "Seat share, %", bind: $.seatShare, fmt: pc1 }
-  - { label: Chamber, bind: $.chamber }
-  - { label: Election, bind: $.electionDate }
+  - { label: Party, bind: $.NAME, emphasis: true }
+  - { label: Country, bind: $.COUNTRY_NAME }
+  - { label: Seats, bind: $.SEATS, fmt: amount0 }
+  - { label: "Seat share, %", bind: $.SEAT_SHARE, fmt: pc1 }
+  - { label: Chamber, bind: $.CHAMBER }
+  - { label: Election, bind: $.ELECTION_DATE }
 panels:
   - id: results
     kind: hbar
     title: Seats in the chamber
     key: F2
-    rows: $.results
-    label: party
-    value: seats
+    rows: $.RESULTS
+    label: PARTY
+    value: SEATS
     fmt: amount0
   - id: source
     kind: kv
     title: Data source and licence
     area: right
-    rows: $.provenance
+    rows: $.PROVENANCE
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.election, 'election')", F8: impact, F9: raw }
+keys: { F7: "link($.ELECTION, 'election')", F8: impact, F9: raw }

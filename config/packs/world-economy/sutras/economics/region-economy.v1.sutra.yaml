@@ -18,24 +18,24 @@ sutra: region-economy
 version: 1
 description: "A state or territory (ISO 3166-2): population, GDP and GDP per head. An illustrative sample, rounded from public figures, not for reporting."
 match: { kind: region-economy, priority: 10 }
-title: { pill: Economics · Region economy, id: $.regionId }
+title: { pill: Economics · Region economy, id: $.REGION_ID }
 strip:
-  - { label: Region, bind: $.name }
-  - { label: Code, bind: $.regionCode }
-  - { label: Country, bind: $.countryName }
-  - { label: Population (m), bind: $.populationM, fmt: price2 }
-  - { label: GDP (USD bn), bind: $.gdpUsdBn, fmt: amount0 }
-  - { label: GDP per capita (USD), bind: $.gdpPerCapita, fmt: amount0, emphasis: true }
+  - { label: Region, bind: $.NAME }
+  - { label: Code, bind: $.REGION_CODE }
+  - { label: Country, bind: $.COUNTRY_NAME }
+  - { label: Population (m), bind: $.POPULATION_M, fmt: price2 }
+  - { label: GDP (USD bn), bind: $.GDP_USD_BN, fmt: amount0 }
+  - { label: GDP per capita (USD), bind: $.GDP_PER_CAPITA, fmt: amount0, emphasis: true }
 panels:
   - id: facts
     kind: kv
     title: About these figures
-    rows: $.facts
+    rows: $.FACTS
   - id: source
     kind: kv
     title: Data source and licence
     area: right
-    rows: $.provenance
+    rows: $.PROVENANCE
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.economy, 'economy')", F8: impact, F9: raw }
+keys: { F7: "link($.ECONOMY, 'economy')", F8: impact, F9: raw }

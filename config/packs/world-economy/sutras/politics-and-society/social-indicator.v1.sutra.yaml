@@ -18,41 +18,41 @@ sutra: social-indicator
 version: 1
 description: "A social or governance statistic of one country over time, with the regional comparison: health, education, inequality, rights and rule of law."
 match: { kind: social-indicator, priority: 10 }
-title: { pill: Politics and society · Social indicator, id: $.indicatorId }
+title: { pill: Politics and society · Social indicator, id: $.INDICATOR_ID }
 strip:
-  - { label: Indicator, bind: $.name, emphasis: true }
-  - { label: Latest, bind: $.latest, fmt: price2 }
-  - { label: Unit, bind: $.unit }
-  - { label: Year, bind: $.latestYear }
-  - { label: Change (5y), bind: $.change5y, fmt: signed2, tone: sign }
-  - { label: Source, bind: $.sourceName }
+  - { label: Indicator, bind: $.NAME, emphasis: true }
+  - { label: Latest, bind: $.LATEST, fmt: price2 }
+  - { label: Unit, bind: $.UNIT }
+  - { label: Year, bind: $.LATEST_YEAR }
+  - { label: Change (5y), bind: $.CHANGE_5Y, fmt: signed2, tone: sign }
+  - { label: Source, bind: $.SOURCE_NAME }
 panels:
   - id: series
     kind: line
     title: Series
     key: F2
-    rows: $.series
-    x: year
-    y: value
+    rows: $.SERIES
+    x: YEAR
+    y: VALUE
     fmt: price2
   - id: byRegion
     kind: hbar
     title: Region comparison (latest)
     area: right
-    rows: $.byRegion
-    label: country
-    value: value
+    rows: $.BY_REGION
+    label: COUNTRY
+    value: VALUE
     fmt: price2
   - id: meaning
     kind: kv
     title: What it measures
     key: F3
-    rows: $.meaning
+    rows: $.MEANING
   - id: source
     kind: kv
     title: Data source and licence
     area: right
-    rows: $.provenance
+    rows: $.PROVENANCE
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.jurisdiction, 'jurisdiction')", F8: impact, F9: raw }
+keys: { F7: "link($.JURISDICTION, 'jurisdiction')", F8: impact, F9: raw }

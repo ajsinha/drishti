@@ -18,33 +18,33 @@ sutra: election
 version: 1
 description: "The most recent election to a chamber or to the executive, with the system, term, seats by party and the date of the next one."
 match: { kind: election, priority: 10 }
-title: { pill: Politics and society · Election, id: $.electionId }
+title: { pill: Politics and society · Election, id: $.ELECTION_ID }
 strip:
-  - { label: Election, bind: $.title }
-  - { label: Held, bind: $.dateText }
-  - { label: System, bind: $.system }
-  - { label: Largest party, bind: $.winner, emphasis: true }
-  - { label: Next election, bind: $.nextElection }
+  - { label: Election, bind: $.TITLE }
+  - { label: Held, bind: $.DATE_TEXT }
+  - { label: System, bind: $.SYSTEM }
+  - { label: Largest party, bind: $.WINNER, emphasis: true }
+  - { label: Next election, bind: $.NEXT_ELECTION }
 panels:
   - id: results
     kind: table
     title: Seats by party
     key: F2
-    rows: $.results
+    rows: $.RESULTS
     columns:
-      - { label: Party, bind: "@.party" }
-      - { label: Seats, bind: "@.seats", fmt: amount0, total: true }
-      - { label: "Share, %", bind: "@.share", fmt: pc1 }
+      - { label: Party, bind: "@.PARTY" }
+      - { label: Seats, bind: "@.SEATS", fmt: amount0, total: true }
+      - { label: "Share, %", bind: "@.SHARE", fmt: pc1 }
   - id: summary
     kind: kv
     title: Election facts (as published)
     area: right
-    rows: $.summary
+    rows: $.SUMMARY
   - id: source
     kind: kv
     title: Data source and licence
     area: right
-    rows: $.provenance
+    rows: $.PROVENANCE
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.jurisdiction, 'jurisdiction')", F8: impact, F9: raw }
+keys: { F7: "link($.JURISDICTION, 'jurisdiction')", F8: impact, F9: raw }

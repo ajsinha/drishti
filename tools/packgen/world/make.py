@@ -41,14 +41,24 @@ def _half(name: str):
 ECO = _half("economics")
 POL = _half("politics")
 PB, T, PR = ECO.PB, ECO.T, ECO.PR
+sys.path.insert(0, str(HERE.parent / "common"))
+import upper as U  # noqa: E402  (the pack writes UPPER_SNAKE names; the two halves build with their short ones)
 
 
 def build() -> dict[str, dict[str, dict]]:
-    return {**ECO.build(), **POL.build()}
+    return {kind: {i: U.record(d) for i, d in ds.items()} for kind, ds in {**ECO.build(), **POL.build()}.items()}
+
+
+def _upper(e: PB.PackSpec) -> PB.PackSpec:
+    """A half's spec in the names the documents carry: kinds, key columns and form overrides."""
+    return dataclasses.replace(
+        e, domains={d: [U.kind(k) for k in ks] for d, ks in e.domains.items()},
+        columns={k: [U.name(f) for f in v] for k, v in e.columns.items()},
+        form_overrides={k: {U.name(f): x for f, x in v.items()} for k, v in e.form_overrides.items()})
 
 
 def spec() -> PB.PackSpec:
-    e, p = ECO.spec(), POL.spec()
+    e, p = _upper(ECO.spec()), _upper(POL.spec())
     return dataclasses.replace(
         e, name="world-economy", code="WRLD", title="World economy", generator="tools/packgen/world/make.py",
         description=e.description.rstrip(".") + "; and governments and societies: government type, office holders, elections, parties with seats, "
@@ -56,7 +66,7 @@ def spec() -> PB.PackSpec:
         domains={**e.domains, **p.domains}, examples=e.examples + p.examples, columns={**e.columns, **p.columns},
         form_overrides={**e.form_overrides, **p.form_overrides}, roles={**e.roles, **p.roles},
         overview=e.overview + "\n\n" + p.overview + "\n\nA counterparty of the core pack names its country of risk (`COUNTRY_OF_RISK`) and "
-                 "links to that country's economy (`economy`), so `CPTY CP-NORTHBRIDGE` opens the United States economy in one click.")
+                 "links to that country's economy (`ECONOMY`), so `CPTY CP-NORTHBRIDGE` opens the United States economy in one click.")
 
 
 if __name__ == "__main__":

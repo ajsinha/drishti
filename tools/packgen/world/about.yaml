@@ -234,868 +234,868 @@ vocabulary:
 kinds:
   economy:
     title: Economy
-    about: ${$.name} (${$.regionName}) had a GDP of ${fmt($.gdpUsdBn, 'amount0')} billion USD in ${$.year}; real GDP grew ${fmt($.growth, 'pc2')}, inflation was ${fmt($.inflation,
-      'pc2')} and unemployment ${fmt($.unemployment, 'pc2')}. Figures are published World Bank, IMF and CIA data.
+    about: ${$.NAME} (${$.REGION_NAME}) had a GDP of ${fmt($.GDP_USD_BN, 'amount0')} billion USD in ${$.YEAR}; real GDP grew ${fmt($.GROWTH, 'pc2')}, inflation was ${fmt($.INFLATION,
+      'pc2')} and unemployment ${fmt($.UNEMPLOYMENT, 'pc2')}. Figures are published World Bank, IMF and CIA data.
     guide: world-economy
     glossary:
-      name:
+      NAME:
         term: Economy
         means: The country or territory, with the name the World Bank uses.
-      regionName:
+      REGION_NAME:
         term: World Bank region
         means: The World Bank geographic region the economy belongs to.
-      gdpUsdBn:
+      GDP_USD_BN:
         term: Gross domestic product
         means: The value of all goods and services produced in the economy in a year, in current US dollars at market exchange rates.
         unit: USD billions
-      gdpPerCapita:
+      GDP_PER_CAPITA:
         term: GDP per capita
         means: GDP divided by the mid-year population, in current US dollars.
         unit: USD
-      growth:
+      GROWTH:
         term: Real GDP growth
         means: The yearly change of GDP after removing inflation, so it measures the growth of output rather than of prices.
         unit: '% a year'
         sign: Negative is a contraction.
-      inflation:
+      INFLATION:
         term: Inflation
         means: The yearly change of consumer prices (the consumer price index).
         unit: '% a year'
-      unemployment:
+      UNEMPLOYMENT:
         term: Unemployment rate
         means: The share of the labour force without work but available for and seeking employment (ILO modelled estimate).
         unit: '% of labour force'
-      debtToGdp:
+      DEBT_TO_GDP:
         term: Government debt to GDP
         means: General government gross debt as a share of a year's GDP (IMF), the usual measure of how heavy public debt is.
         unit: '% of GDP'
-      currentAccount:
+      CURRENT_ACCOUNT:
         term: Current account balance
         means: Net exports of goods and services plus net income and transfers, as a share of GDP.
         unit: '% of GDP'
         sign: Negative means the economy borrows from abroad.
-      growthPath.year:
+      GROWTH_PATH.YEAR:
         term: Year
         means: The calendar year of the observation.
-      growthPath.growth:
+      GROWTH_PATH.GROWTH:
         term: Real GDP growth
         means: Real GDP growth in that year.
         unit: '% a year'
         sign: Negative is a contraction.
-      gdpPath.year:
+      GDP_PATH.YEAR:
         term: Year
         means: The calendar year of the observation.
-      gdpPath.gdp:
+      GDP_PATH.GDP:
         term: GDP
         means: GDP in current US dollars in that year.
         unit: USD billions
-      sectors.sector:
+      SECTORS.SECTOR:
         term: Sector
         means: Agriculture, industry or services, as the World Bank groups value added.
-      sectors.share:
+      SECTORS.SHARE:
         term: Share of GDP
         means: The sector's value added as a share of GDP.
         unit: '% of GDP'
-      provenance.source:
+      PROVENANCE.SOURCE:
         term: Source
         means: The organisation or organisations whose published data this view shows.
-      provenance.dataset:
+      PROVENANCE.DATASET:
         term: Dataset
         means: The named dataset and its vintage (the release the numbers come from).
-      provenance.retrievedAt:
+      PROVENANCE.RETRIEVED_AT:
         term: Retrieved
         means: The date the data was downloaded by tools/realdata.
-      provenance.licence:
+      PROVENANCE.LICENCE:
         term: Licence
         means: The terms under which the source allows reuse; attribution is required.
-      provenance.attribution:
+      PROVENANCE.ATTRIBUTION:
         term: Attribution
         means: The credit line to repeat when the data is shown or republished.
-      provenance.url:
+      PROVENANCE.URL:
         term: Source address
         means: The web page of the dataset.
   macro-indicator:
     title: Macro indicator
-    about: ${$.name} was ${fmt($.latest, 'price2')} (${$.unit}) in ${$.latestYear}; its rank among economies with recent data is ${fmt($.rank, 'amount0')}.
+    about: ${$.NAME} was ${fmt($.LATEST, 'price2')} (${$.UNIT}) in ${$.LATEST_YEAR}; its rank among economies with recent data is ${fmt($.RANK, 'amount0')}.
     guide: world-economy
     glossary:
-      name:
+      NAME:
         term: Indicator
         means: The economy and the statistic, as one name.
-      latest:
+      LATEST:
         term: Latest value
         means: The most recent published value of the statistic, in the unit shown.
-      unit:
+      UNIT:
         term: Unit
         means: 'What the value measures: a rate, a share of GDP, a level in US dollars.'
-      latestYear:
+      LATEST_YEAR:
         term: Year of the latest value
         means: The calendar year the latest value refers to.
-      previous:
+      PREVIOUS:
         term: Previous value
         means: The value one year before the latest observation, where published.
-      rank:
+      RANK:
         term: Rank
         means: The position of the economy among all economies with a value from 2022 or later, highest value first.
-      history.year:
+      HISTORY.YEAR:
         term: Year
         means: The calendar year of the observation.
-      history.value:
+      HISTORY.VALUE:
         term: Value
         means: The published value for that year, in the unit shown.
-      facts.indicator:
+      FACTS.INDICATOR:
         term: Indicator
         means: The statistic's name.
-      facts.unit:
+      FACTS.UNIT:
         term: Unit
         means: What the value measures.
-      facts.latestYear:
+      FACTS.LATEST_YEAR:
         term: Latest year
         means: The year of the latest value.
-      facts.rank:
+      FACTS.RANK:
         term: Rank
         means: The economy's position among economies with recent data, highest value first.
-      facts.worldBankCode:
+      FACTS.WORLD_BANK_CODE:
         term: World Bank code
         means: The indicator code in the World Bank API, for looking the series up at the source.
-      provenance.source:
+      PROVENANCE.SOURCE:
         term: Source
         means: The organisation or organisations whose published data this view shows.
-      provenance.dataset:
+      PROVENANCE.DATASET:
         term: Dataset
         means: The named dataset and its vintage (the release the numbers come from).
-      provenance.retrievedAt:
+      PROVENANCE.RETRIEVED_AT:
         term: Retrieved
         means: The date the data was downloaded by tools/realdata.
-      provenance.licence:
+      PROVENANCE.LICENCE:
         term: Licence
         means: The terms under which the source allows reuse; attribution is required.
-      provenance.attribution:
+      PROVENANCE.ATTRIBUTION:
         term: Attribution
         means: The credit line to repeat when the data is shown or republished.
-      provenance.url:
+      PROVENANCE.URL:
         term: Source address
         means: The web page of the dataset.
   economic-forecast:
     title: Economic forecast
-    about: The ${$.vintage} has ${$.economyName} growing ${fmt($.growth2027, 'pc2')} in 2027 with inflation of ${fmt($.inflation2027, 'pc2')}.
+    about: The ${$.VINTAGE} has ${$.ECONOMY_NAME} growing ${fmt($.GROWTH_2027, 'pc2')} in 2027 with inflation of ${fmt($.INFLATION_2027, 'pc2')}.
     guide: world-economy
     glossary:
-      economyName:
+      ECONOMY_NAME:
         term: Economy
         means: The country or territory the figures describe.
-      vintage:
+      VINTAGE:
         term: Vintage
         means: The IMF World Economic Outlook edition the figures come from; the IMF revises them twice a year.
-      growth2027:
+      GROWTH_2027:
         term: Real GDP growth in 2027
         means: The IMF projection of real GDP growth in 2027.
         unit: '% a year'
-      inflation2027:
+      INFLATION_2027:
         term: Inflation in 2027
         means: The IMF projection of average consumer-price inflation in 2027.
         unit: '% a year'
-      debt2030:
+      DEBT_2030:
         term: Government debt to GDP in 2030
         means: The IMF projection of general government gross debt as a share of GDP in 2030.
         unit: '% of GDP'
-      projections.year:
+      PROJECTIONS.YEAR:
         term: Year
         means: The calendar year.
-      projections.basis:
+      PROJECTIONS.BASIS:
         term: Basis
         means: Projection for years from the vintage year on, otherwise outturn or estimate.
-      projections.growth:
+      PROJECTIONS.GROWTH:
         term: Real GDP growth
         means: Yearly change of real GDP.
         unit: '% a year'
-      projections.inflation:
+      PROJECTIONS.INFLATION:
         term: Inflation
         means: Average consumer-price inflation.
         unit: '% a year'
-      projections.unemployment:
+      PROJECTIONS.UNEMPLOYMENT:
         term: Unemployment rate
         means: Share of the labour force without a job.
         unit: '% of labour force'
-      projections.currentAccount:
+      PROJECTIONS.CURRENT_ACCOUNT:
         term: Current account balance
         means: Balance of trade, income and transfers with the rest of the world.
         unit: '% of GDP'
         sign: Negative is a deficit.
-      projections.debt:
+      PROJECTIONS.DEBT:
         term: Government gross debt
         means: General government gross debt.
         unit: '% of GDP'
-      projections.netLending:
+      PROJECTIONS.NET_LENDING:
         term: Net lending / borrowing
         means: General government revenue minus expenditure.
         unit: '% of GDP'
         sign: Negative is a deficit.
-      projections.gdp:
+      PROJECTIONS.GDP:
         term: GDP
         means: GDP in current US dollars.
         unit: USD billions
-      path.year:
+      PATH.YEAR:
         term: Year
         means: The calendar year.
-      path.growth:
+      PATH.GROWTH:
         term: Real GDP growth
         means: Yearly change of real GDP, outturn then projection.
         unit: '% a year'
-      provenance.source:
+      PROVENANCE.SOURCE:
         term: Source
         means: The organisation or organisations whose published data this view shows.
-      provenance.dataset:
+      PROVENANCE.DATASET:
         term: Dataset
         means: The named dataset and its vintage (the release the numbers come from).
-      provenance.retrievedAt:
+      PROVENANCE.RETRIEVED_AT:
         term: Retrieved
         means: The date the data was downloaded by tools/realdata.
-      provenance.licence:
+      PROVENANCE.LICENCE:
         term: Licence
         means: The terms under which the source allows reuse; attribution is required.
-      provenance.attribution:
+      PROVENANCE.ATTRIBUTION:
         term: Attribution
         means: The credit line to repeat when the data is shown or republished.
-      provenance.url:
+      PROVENANCE.URL:
         term: Source address
         means: The web page of the dataset.
   labour-market:
     title: Labour market
-    about: In ${$.year} ${$.economyName} had unemployment of ${fmt($.unemployment, 'pc2')} and a labour-force participation rate of ${fmt($.participation, 'pc1')}.
+    about: In ${$.YEAR} ${$.ECONOMY_NAME} had unemployment of ${fmt($.UNEMPLOYMENT, 'pc2')} and a labour-force participation rate of ${fmt($.PARTICIPATION, 'pc1')}.
     guide: world-economy
     glossary:
-      economyName:
+      ECONOMY_NAME:
         term: Economy
         means: The country or territory the figures describe.
-      unemployment:
+      UNEMPLOYMENT:
         term: Unemployment rate
         means: The share of the labour force without work but available for and seeking employment.
         unit: '% of labour force'
-      participation:
+      PARTICIPATION:
         term: Labour force participation
         means: The share of people aged 15 and over who work or look for work.
         unit: '% of population 15+'
-      youthUnemployment:
+      YOUTH_UNEMPLOYMENT:
         term: Youth unemployment
         means: The unemployment rate of 15 to 24 year-olds.
         unit: '% of youth labour force'
-      employmentRatio:
+      EMPLOYMENT_RATIO:
         term: Employment ratio
         means: The share of people aged 15 and over who are employed.
         unit: '% of population 15+'
-      femaleParticipation:
+      FEMALE_PARTICIPATION:
         term: Female participation
         means: The labour force participation rate of women aged 15 and over.
         unit: '% of women 15+'
-      unemploymentPath.year:
+      UNEMPLOYMENT_PATH.YEAR:
         term: Year
         means: The calendar year.
-      unemploymentPath.rate:
+      UNEMPLOYMENT_PATH.RATE:
         term: Unemployment rate
         means: The unemployment rate in that year.
         unit: '% of labour force'
-      bySector.sector:
+      BY_SECTOR.SECTOR:
         term: Sector
         means: Agriculture, industry or services.
-      bySector.employmentShare:
+      BY_SECTOR.EMPLOYMENT_SHARE:
         term: Share of jobs
         means: The sector's share of total employment.
         unit: '% of employment'
-      bySector.valueAddedShare:
+      BY_SECTOR.VALUE_ADDED_SHARE:
         term: Share of GDP
         means: The sector's share of GDP (value added).
         unit: '% of GDP'
-      provenance.source:
+      PROVENANCE.SOURCE:
         term: Source
         means: The organisation or organisations whose published data this view shows.
-      provenance.dataset:
+      PROVENANCE.DATASET:
         term: Dataset
         means: The named dataset and its vintage (the release the numbers come from).
-      provenance.retrievedAt:
+      PROVENANCE.RETRIEVED_AT:
         term: Retrieved
         means: The date the data was downloaded by tools/realdata.
-      provenance.licence:
+      PROVENANCE.LICENCE:
         term: Licence
         means: The terms under which the source allows reuse; attribution is required.
-      provenance.attribution:
+      PROVENANCE.ATTRIBUTION:
         term: Attribution
         means: The credit line to repeat when the data is shown or republished.
-      provenance.url:
+      PROVENANCE.URL:
         term: Source address
         means: The web page of the dataset.
   fiscal-position:
     title: Fiscal position
-    about: ${$.economyName}'s general government gross debt was ${fmt($.debt, 'pc1')} of GDP and its net lending ${fmt($.balance, 'pc2')} of GDP (IMF).
+    about: ${$.ECONOMY_NAME}'s general government gross debt was ${fmt($.DEBT, 'pc1')} of GDP and its net lending ${fmt($.BALANCE, 'pc2')} of GDP (IMF).
     guide: world-economy
     glossary:
-      economyName:
+      ECONOMY_NAME:
         term: Economy
         means: The country or territory the figures describe.
-      debt:
+      DEBT:
         term: Government gross debt
         means: All liabilities of the general government that require payment of interest or principal, as a share of GDP (IMF).
         unit: '% of GDP'
-      balance:
+      BALANCE:
         term: Net lending / borrowing
         means: General government revenue minus total expenditure, as a share of GDP (IMF).
         unit: '% of GDP'
         sign: Negative is a deficit.
-      revenue:
+      REVENUE:
         term: Revenue
         means: Central government revenue excluding grants, as a share of GDP (World Bank).
         unit: '% of GDP'
-      spending:
+      SPENDING:
         term: Expense
         means: Central government cash payments for operating activities, as a share of GDP (World Bank).
         unit: '% of GDP'
-      military:
+      MILITARY:
         term: Military expenditure
         means: All spending on the armed forces, as a share of GDP (SIPRI via the World Bank).
         unit: '% of GDP'
-      ratios.item:
+      RATIOS.ITEM:
         term: Item
         means: A central-government ratio.
-      ratios.value:
+      RATIOS.VALUE:
         term: Share of GDP
         means: The item as a share of GDP.
         unit: '% of GDP'
-      debtPath.year:
+      DEBT_PATH.YEAR:
         term: Year
         means: The calendar year.
-      debtPath.debt:
+      DEBT_PATH.DEBT:
         term: Government gross debt
         means: General government gross debt in that year (IMF; later years are projections).
         unit: '% of GDP'
-      balancePath.year:
+      BALANCE_PATH.YEAR:
         term: Year
         means: The calendar year.
-      balancePath.balance:
+      BALANCE_PATH.BALANCE:
         term: Net lending / borrowing
         means: General government balance in that year (IMF; later years are projections).
         unit: '% of GDP'
         sign: Negative is a deficit.
-      provenance.source:
+      PROVENANCE.SOURCE:
         term: Source
         means: The organisation or organisations whose published data this view shows.
-      provenance.dataset:
+      PROVENANCE.DATASET:
         term: Dataset
         means: The named dataset and its vintage (the release the numbers come from).
-      provenance.retrievedAt:
+      PROVENANCE.RETRIEVED_AT:
         term: Retrieved
         means: The date the data was downloaded by tools/realdata.
-      provenance.licence:
+      PROVENANCE.LICENCE:
         term: Licence
         means: The terms under which the source allows reuse; attribution is required.
-      provenance.attribution:
+      PROVENANCE.ATTRIBUTION:
         term: Attribution
         means: The credit line to repeat when the data is shown or republished.
-      provenance.url:
+      PROVENANCE.URL:
         term: Source address
         means: The web page of the dataset.
   country-group:
     title: Country group
-    about: ${$.name} (${$.groupType}) groups ${fmt($.economies, 'amount0')} economies with GDP of ${fmt($.gdpUsdBn, 'amount0')} billion USD.
+    about: ${$.NAME} (${$.GROUP_TYPE}) groups ${fmt($.ECONOMIES, 'amount0')} economies with GDP of ${fmt($.GDP_USD_BN, 'amount0')} billion USD.
     guide: world-economy
     glossary:
-      name:
+      NAME:
         term: Group
         means: The World Bank region, income group or the world.
-      groupType:
+      GROUP_TYPE:
         term: Type
         means: Whether the group is a region, an income group or the world.
-      economies:
+      ECONOMIES:
         term: Economies
         means: The number of economies in the group that the pack covers.
-      gdpUsdBn:
+      GDP_USD_BN:
         term: Gross domestic product
         means: The group's GDP in current US dollars (World Bank aggregate).
         unit: USD billions
-      gdpPerCapita:
+      GDP_PER_CAPITA:
         term: GDP per capita
         means: The group's GDP per head, in current US dollars.
         unit: USD
-      populationM:
+      POPULATION_M:
         term: Population
         means: The group's total population.
         unit: millions
-      growth:
+      GROWTH:
         term: Real GDP growth
         means: The group's yearly real GDP growth (World Bank aggregate).
         unit: '% a year'
         sign: Negative is a contraction.
-      growthPath.year:
+      GROWTH_PATH.YEAR:
         term: Year
         means: The calendar year.
-      growthPath.growth:
+      GROWTH_PATH.GROWTH:
         term: Real GDP growth
         means: Group growth in that year.
         unit: '% a year'
-      gdpPath.year:
+      GDP_PATH.YEAR:
         term: Year
         means: The calendar year.
-      gdpPath.gdp:
+      GDP_PATH.GDP:
         term: GDP
         means: Group GDP in that year.
         unit: USD billions
-      topEconomies.economy:
+      TOP_ECONOMIES.ECONOMY:
         term: Economy
         means: One of the ten largest economies of the group.
-      topEconomies.gdpUsdBn:
+      TOP_ECONOMIES.GDP_USD_BN:
         term: GDP
         means: The economy's GDP in its latest year.
         unit: USD billions
-      topEconomies.growth:
+      TOP_ECONOMIES.GROWTH:
         term: Real GDP growth
         means: The economy's latest real GDP growth.
         unit: '% a year'
-      provenance.source:
+      PROVENANCE.SOURCE:
         term: Source
         means: The organisation or organisations whose published data this view shows.
-      provenance.dataset:
+      PROVENANCE.DATASET:
         term: Dataset
         means: The named dataset and its vintage (the release the numbers come from).
-      provenance.retrievedAt:
+      PROVENANCE.RETRIEVED_AT:
         term: Retrieved
         means: The date the data was downloaded by tools/realdata.
-      provenance.licence:
+      PROVENANCE.LICENCE:
         term: Licence
         means: The terms under which the source allows reuse; attribution is required.
-      provenance.attribution:
+      PROVENANCE.ATTRIBUTION:
         term: Attribution
         means: The credit line to repeat when the data is shown or republished.
-      provenance.url:
+      PROVENANCE.URL:
         term: Source address
         means: The web page of the dataset.
   region-economy:
     title: Region economy
-    about: ${$.name} (${$.regionCode}) has about ${fmt($.populationM, 'price2')} million people and GDP of ${fmt($.gdpUsdBn, 'amount0')} billion USD. Illustrative, rounded from public figures, not for reporting.
+    about: ${$.NAME} (${$.REGION_CODE}) has about ${fmt($.POPULATION_M, 'price2')} million people and GDP of ${fmt($.GDP_USD_BN, 'amount0')} billion USD. Illustrative, rounded from public figures, not for reporting.
     guide: world-economy
     glossary:
-      name:
+      NAME:
         term: Region
         means: The state or territory.
-      regionCode:
+      REGION_CODE:
         term: Region code
         means: The ISO 3166-2 code of the region (AU-NSW, US-CA); the BI map shades the region it names.
-      countryName:
+      COUNTRY_NAME:
         term: Country
         means: The country the region belongs to.
-      populationM:
+      POPULATION_M:
         term: Population
         means: People living in the region, rounded to the nearest 10,000 and shown in millions. Illustrative.
         unit: millions
-      gdpUsdBn:
+      GDP_USD_BN:
         term: Gross domestic product
         means: The region's output in US dollars, rounded to the nearest billion. Illustrative, not for reporting.
         unit: USD billions
-      gdpPerCapita:
+      GDP_PER_CAPITA:
         term: GDP per capita
         means: GDP over population, in US dollars. Illustrative.
         unit: USD
-      provenance.source:
+      PROVENANCE.SOURCE:
         term: Source
         means: The public figures the illustrative numbers were rounded from.
   jurisdiction:
     title: Jurisdiction
-    about: ${$.name} is a ${$.governmentType} with its capital at ${$.capital}, per the CIA World Factbook; population ${fmt($.populationM, 'price2')} million.
+    about: ${$.NAME} is a ${$.GOVERNMENT_TYPE} with its capital at ${$.CAPITAL}, per the CIA World Factbook; population ${fmt($.POPULATION_M, 'price2')} million.
     guide: world-economy
     glossary:
-      name:
+      NAME:
         term: Country
         means: The country's common name.
-      capital:
+      CAPITAL:
         term: Capital
         means: The seat of government.
-      governmentType:
+      GOVERNMENT_TYPE:
         term: Government type
         means: The form of government, as the CIA World Factbook describes it.
-      populationM:
+      POPULATION_M:
         term: Population
         means: The number of residents (World Bank, mid-year).
         unit: millions
-      areaKm2:
+      AREA_KM2:
         term: Area
         means: Total area, land and water.
         unit: square kilometres
-      currency:
+      CURRENCY:
         term: Currency
         means: The ISO 4217 code of the currency, from the Factbook exchange-rate entry.
-      legislature.party:
+      LEGISLATURE.PARTY:
         term: Party
         means: A party or group in the lower chamber, as the Factbook lists it.
-      legislature.seats:
+      LEGISLATURE.SEATS:
         term: Seats
         means: The seats the party won at the most recent election.
-      indicators.indicator:
+      INDICATORS.INDICATOR:
         term: Indicator
         means: A society or governance statistic.
-      indicators.value:
+      INDICATORS.VALUE:
         term: Value
         means: The latest published value.
-      indicators.year:
+      INDICATORS.YEAR:
         term: Year
         means: The year of the value.
-      indicators.unit:
+      INDICATORS.UNIT:
         term: Unit
         means: What the value measures.
-      partiesListed.party:
+      PARTIES_LISTED.PARTY:
         term: Party
         means: A political party as the Factbook publishes the name.
-      profile.officialName:
+      PROFILE.OFFICIAL_NAME:
         term: Official name
         means: The conventional long form of the country's name.
-      profile.languages:
+      PROFILE.LANGUAGES:
         term: Languages
         means: The languages spoken and their shares, as published.
-      profile.religions:
+      PROFILE.RELIGIONS:
         term: Religions
         means: The religious affiliations and their shares, as published.
-      profile.legalSystem:
+      PROFILE.LEGAL_SYSTEM:
         term: Legal system
         means: The legal tradition of the country.
-      profile.suffrage:
+      PROFILE.SUFFRAGE:
         term: Suffrage
         means: The voting age and who may vote.
-      profile.independence:
+      PROFILE.INDEPENDENCE:
         term: Independence
         means: When and from whom the country became independent.
-      profile.nationalHoliday:
+      PROFILE.NATIONAL_HOLIDAY:
         term: National holiday
         means: The national day.
-      profile.location:
+      PROFILE.LOCATION:
         term: Location
         means: Where the country is.
-      profile.currencyText:
+      PROFILE.CURRENCY_TEXT:
         term: Currency
         means: The currency and its exchange-rate basis, as published.
-      provenance.source:
+      PROVENANCE.SOURCE:
         term: Source
         means: The organisation or organisations whose published data this view shows.
-      provenance.dataset:
+      PROVENANCE.DATASET:
         term: Dataset
         means: The named dataset and its vintage (the release the numbers come from).
-      provenance.retrievedAt:
+      PROVENANCE.RETRIEVED_AT:
         term: Retrieved
         means: The date the data was downloaded by tools/realdata.
-      provenance.licence:
+      PROVENANCE.LICENCE:
         term: Licence
         means: The terms under which the source allows reuse; attribution is required.
-      provenance.attribution:
+      PROVENANCE.ATTRIBUTION:
         term: Attribution
         means: The credit line to repeat when the data is shown or republished.
-      provenance.url:
+      PROVENANCE.URL:
         term: Source address
         means: The web page of the dataset.
   party:
     title: Party
-    about: ${$.name} won ${fmt($.seats, 'amount0')} seats (${fmt($.seatShare, 'pc1')}) in the ${$.chamber} of ${$.countryName}.
+    about: ${$.NAME} won ${fmt($.SEATS, 'amount0')} seats (${fmt($.SEAT_SHARE, 'pc1')}) in the ${$.CHAMBER} of ${$.COUNTRY_NAME}.
     guide: world-economy
     glossary:
-      name:
+      NAME:
         term: Party
         means: The party's name as the CIA World Factbook lists it in the election result.
-      countryName:
+      COUNTRY_NAME:
         term: Country
         means: The country the party competes in.
-      seats:
+      SEATS:
         term: Seats
         means: The seats the party won in the chamber at the most recent election.
-      seatShare:
+      SEAT_SHARE:
         term: Seat share
         means: The party's seats as a share of the seats the Factbook lists.
         unit: '% of seats'
-      chamber:
+      CHAMBER:
         term: Chamber
         means: The legislative chamber the result is for.
-      electionDate:
+      ELECTION_DATE:
         term: Election date
         means: When the most recent election was held, as published.
-      results.party:
+      RESULTS.PARTY:
         term: Party
         means: A party or group in the chamber.
-      results.seats:
+      RESULTS.SEATS:
         term: Seats
         means: The seats it won.
-      provenance.source:
+      PROVENANCE.SOURCE:
         term: Source
         means: The organisation or organisations whose published data this view shows.
-      provenance.dataset:
+      PROVENANCE.DATASET:
         term: Dataset
         means: The named dataset and its vintage (the release the numbers come from).
-      provenance.retrievedAt:
+      PROVENANCE.RETRIEVED_AT:
         term: Retrieved
         means: The date the data was downloaded by tools/realdata.
-      provenance.licence:
+      PROVENANCE.LICENCE:
         term: Licence
         means: The terms under which the source allows reuse; attribution is required.
-      provenance.attribution:
+      PROVENANCE.ATTRIBUTION:
         term: Attribution
         means: The credit line to repeat when the data is shown or republished.
-      provenance.url:
+      PROVENANCE.URL:
         term: Source address
         means: The web page of the dataset.
   office-holder:
     title: Office holder
-    about: ${$.countryName}'s ${lower($.role)} is ${$.holder}, as the CIA World Factbook publishes it.
+    about: ${$.COUNTRY_NAME}'s ${lower($.ROLE)} is ${$.HOLDER}, as the CIA World Factbook publishes it.
     guide: world-economy
     glossary:
-      countryName:
+      COUNTRY_NAME:
         term: Country
         means: The country the office belongs to.
-      role:
+      ROLE:
         term: Role
         means: Chief of state (the ceremonial or constitutional head) or head of government (who leads the executive).
-      holder:
+      HOLDER:
         term: Holder
         means: The title and name of the office holder as the Factbook publishes them; surnames are in capitals.
-      since:
+      SINCE:
         term: Since
         means: The date the holder took office, as published.
-      governmentType:
+      GOVERNMENT_TYPE:
         term: Government type
         means: The form of government.
-      mandate.selection:
+      MANDATE.SELECTION:
         term: Selection
         means: How the office is filled.
-      mandate.heldOn:
+      MANDATE.HELD_ON:
         term: Most recent election
         means: When the office was last filled by election, as published.
-      mandate.nextElection:
+      MANDATE.NEXT_ELECTION:
         term: Expected next election
         means: When the next election is due, as published.
-      mandate.results:
+      MANDATE.RESULTS:
         term: Published results
         means: The result of the last election, as published.
-      mandate.asPublished:
+      MANDATE.AS_PUBLISHED:
         term: As published
         means: The Factbook's full entry for the office holder.
-      mandate.cabinet:
+      MANDATE.CABINET:
         term: Cabinet
         means: How the cabinet is chosen.
-      provenance.source:
+      PROVENANCE.SOURCE:
         term: Source
         means: The organisation or organisations whose published data this view shows.
-      provenance.dataset:
+      PROVENANCE.DATASET:
         term: Dataset
         means: The named dataset and its vintage (the release the numbers come from).
-      provenance.retrievedAt:
+      PROVENANCE.RETRIEVED_AT:
         term: Retrieved
         means: The date the data was downloaded by tools/realdata.
-      provenance.licence:
+      PROVENANCE.LICENCE:
         term: Licence
         means: The terms under which the source allows reuse; attribution is required.
-      provenance.attribution:
+      PROVENANCE.ATTRIBUTION:
         term: Attribution
         means: The credit line to repeat when the data is shown or republished.
-      provenance.url:
+      PROVENANCE.URL:
         term: Source address
         means: The web page of the dataset.
   election:
     title: Election
-    about: '${$.title}: held ${$.dateText}; the largest party was ${$.winner}; the next election is expected ${$.nextElection}.'
+    about: '${$.TITLE}: held ${$.DATE_TEXT}; the largest party was ${$.WINNER}; the next election is expected ${$.NEXT_ELECTION}.'
     guide: world-economy
     glossary:
-      title:
+      TITLE:
         term: Election
         means: The country and the chamber or office.
-      dateText:
+      DATE_TEXT:
         term: Held
         means: When the most recent election took place, as the Factbook publishes the date.
-      system:
+      SYSTEM:
         term: System
         means: The electoral system, for example plurality, proportional representation or an electoral college.
-      winner:
+      WINNER:
         term: Largest party
         means: The party with the most seats, or the elected head of state.
-      nextElection:
+      NEXT_ELECTION:
         term: Next election
         means: When the next election is expected, as published.
-      results.party:
+      RESULTS.PARTY:
         term: Party
         means: A party or group.
-      results.seats:
+      RESULTS.SEATS:
         term: Seats
         means: The seats it won.
-      results.share:
+      RESULTS.SHARE:
         term: Share of seats
         means: Its seats as a share of the seats listed.
         unit: '% of seats'
-      summary.chamber:
+      SUMMARY.CHAMBER:
         term: Chamber
         means: The legislative chamber.
-      summary.seats:
+      SUMMARY.SEATS:
         term: Seats
         means: The number of seats and how many are elected.
-      summary.electoralSystem:
+      SUMMARY.ELECTORAL_SYSTEM:
         term: Electoral system
         means: How votes become seats.
-      summary.term:
+      SUMMARY.TERM:
         term: Term
         means: How long members serve.
-      summary.heldOn:
+      SUMMARY.HELD_ON:
         term: Most recent election
         means: The date, as published.
-      summary.nextElection:
+      SUMMARY.NEXT_ELECTION:
         term: Expected next election
         means: The date, as published.
-      summary.women:
+      SUMMARY.WOMEN:
         term: Women in chamber
         means: The share of seats held by women.
         unit: '% of seats'
-      summary.selection:
+      SUMMARY.SELECTION:
         term: Selection
         means: How the head of state is chosen.
-      summary.results:
+      SUMMARY.RESULTS:
         term: Published results
         means: The result as the Factbook publishes it.
-      provenance.source:
+      PROVENANCE.SOURCE:
         term: Source
         means: The organisation or organisations whose published data this view shows.
-      provenance.dataset:
+      PROVENANCE.DATASET:
         term: Dataset
         means: The named dataset and its vintage (the release the numbers come from).
-      provenance.retrievedAt:
+      PROVENANCE.RETRIEVED_AT:
         term: Retrieved
         means: The date the data was downloaded by tools/realdata.
-      provenance.licence:
+      PROVENANCE.LICENCE:
         term: Licence
         means: The terms under which the source allows reuse; attribution is required.
-      provenance.attribution:
+      PROVENANCE.ATTRIBUTION:
         term: Attribution
         means: The credit line to repeat when the data is shown or republished.
-      provenance.url:
+      PROVENANCE.URL:
         term: Source address
         means: The web page of the dataset.
   region:
     title: World region
-    about: ${$.name} has ${fmt($.countries, 'amount0')} countries and ${fmt($.populationM, 'price2')} million people; life expectancy is ${fmt($.lifeExpectancy, 'price2')}
+    about: ${$.NAME} has ${fmt($.COUNTRIES, 'amount0')} countries and ${fmt($.POPULATION_M, 'price2')} million people; life expectancy is ${fmt($.LIFE_EXPECTANCY, 'price2')}
       years.
     guide: world-economy
     glossary:
-      name:
+      NAME:
         term: Region
         means: A World Bank geographic region.
-      countries:
+      COUNTRIES:
         term: Countries
         means: The number of countries of the region in the pack.
-      populationM:
+      POPULATION_M:
         term: Population
         means: The region's total population (World Bank aggregate).
         unit: millions
-      lifeExpectancy:
+      LIFE_EXPECTANCY:
         term: Life expectancy
         means: Years a newborn would live at current mortality (World Bank aggregate).
         unit: years
-      womenParliament:
+      WOMEN_PARLIAMENT:
         term: Women in parliament
         means: The share of parliamentary seats held by women (Inter-Parliamentary Union, via the World Bank).
         unit: '% of seats'
-      internet:
+      INTERNET:
         term: Internet users
         means: The share of the population that used the Internet in the last three months.
         unit: '% of population'
-      governmentTypes.type:
+      GOVERNMENT_TYPES.TYPE:
         term: Government type
         means: The form of government as the CIA World Factbook words it.
-      governmentTypes.count:
+      GOVERNMENT_TYPES.COUNT:
         term: Countries
         means: How many countries of the region have this government type.
-      lifeTrend.year:
+      LIFE_TREND.YEAR:
         term: Year
         means: The calendar year.
-      lifeTrend.value:
+      LIFE_TREND.VALUE:
         term: Life expectancy
         means: Years at birth in that year.
         unit: years
-      internetTrend.year:
+      INTERNET_TREND.YEAR:
         term: Year
         means: The calendar year.
-      internetTrend.value:
+      INTERNET_TREND.VALUE:
         term: Internet users
         means: Share of the population using the Internet in that year.
         unit: '% of population'
-      provenance.source:
+      PROVENANCE.SOURCE:
         term: Source
         means: The organisation or organisations whose published data this view shows.
-      provenance.dataset:
+      PROVENANCE.DATASET:
         term: Dataset
         means: The named dataset and its vintage (the release the numbers come from).
-      provenance.retrievedAt:
+      PROVENANCE.RETRIEVED_AT:
         term: Retrieved
         means: The date the data was downloaded by tools/realdata.
-      provenance.licence:
+      PROVENANCE.LICENCE:
         term: Licence
         means: The terms under which the source allows reuse; attribution is required.
-      provenance.attribution:
+      PROVENANCE.ATTRIBUTION:
         term: Attribution
         means: The credit line to repeat when the data is shown or republished.
-      provenance.url:
+      PROVENANCE.URL:
         term: Source address
         means: The web page of the dataset.
   social-indicator:
     title: Social indicator
-    about: ${$.name} was ${fmt($.latest, 'price2')} (${$.unit}) in ${$.latestYear}.
+    about: ${$.NAME} was ${fmt($.LATEST, 'price2')} (${$.UNIT}) in ${$.LATEST_YEAR}.
     guide: world-economy
     glossary:
-      name:
+      NAME:
         term: Indicator
         means: The country and the statistic.
-      latest:
+      LATEST:
         term: Latest value
         means: The most recent published value.
-      unit:
+      UNIT:
         term: Unit
         means: What the value measures.
-      latestYear:
+      LATEST_YEAR:
         term: Year
         means: The year of the latest value.
-      change5y:
+      CHANGE_5Y:
         term: Change over five years
         means: The latest value minus the value about five years earlier.
         sign: Positive is a rise; whether that is good depends on the indicator.
-      sourceName:
+      SOURCE_NAME:
         term: Source
         means: The dataset the series comes from.
-      series.year:
+      SERIES.YEAR:
         term: Year
         means: The calendar year.
-      series.value:
+      SERIES.VALUE:
         term: Value
         means: The published value in that year.
-      byRegion.country:
+      BY_REGION.COUNTRY:
         term: Country
         means: The country, from the same World Bank region.
-      byRegion.value:
+      BY_REGION.VALUE:
         term: Value
         means: The latest value (2022 or later) for that country.
-      meaning.indicator:
+      MEANING.INDICATOR:
         term: Indicator
         means: The statistic's name.
-      meaning.unit:
+      MEANING.UNIT:
         term: Unit
         means: What the value measures.
-      meaning.definition:
+      MEANING.DEFINITION:
         term: Definition
         means: The source's definition of the statistic.
-      meaning.comparedWith:
+      MEANING.COMPARED_WITH:
         term: Compared with
         means: The countries the bar chart compares with.
-      provenance.source:
+      PROVENANCE.SOURCE:
         term: Source
         means: The organisation or organisations whose published data this view shows.
-      provenance.dataset:
+      PROVENANCE.DATASET:
         term: Dataset
         means: The named dataset and its vintage (the release the numbers come from).
-      provenance.retrievedAt:
+      PROVENANCE.RETRIEVED_AT:
         term: Retrieved
         means: The date the data was downloaded by tools/realdata.
-      provenance.licence:
+      PROVENANCE.LICENCE:
         term: Licence
         means: The terms under which the source allows reuse; attribution is required.
-      provenance.attribution:
+      PROVENANCE.ATTRIBUTION:
         term: Attribution
         means: The credit line to repeat when the data is shown or republished.
-      provenance.url:
+      PROVENANCE.URL:
         term: Source address
         means: The web page of the dataset.

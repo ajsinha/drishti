@@ -18,24 +18,24 @@ sutra: office-holder
 version: 1
 description: "The chief of state or head of government of a country as the CIA World Factbook publishes them, with how the office is filled."
 match: { kind: office-holder, priority: 10 }
-title: { pill: Politics and society · Office holder, id: $.officeId }
+title: { pill: Politics and society · Office holder, id: $.OFFICE_ID }
 strip:
-  - { label: Country, bind: $.countryName }
-  - { label: Role, bind: $.role }
-  - { label: Holder, bind: $.holder, emphasis: true }
-  - { label: Since, bind: $.since }
-  - { label: Government, bind: $.governmentType }
+  - { label: Country, bind: $.COUNTRY_NAME }
+  - { label: Role, bind: $.ROLE }
+  - { label: Holder, bind: $.HOLDER, emphasis: true }
+  - { label: Since, bind: $.SINCE }
+  - { label: Government, bind: $.GOVERNMENT_TYPE }
 panels:
   - id: mandate
     kind: kv
     title: How the office is filled
     key: F2
-    rows: $.mandate
+    rows: $.MANDATE
   - id: source
     kind: kv
     title: Data source and licence
     area: right
-    rows: $.provenance
+    rows: $.PROVENANCE
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.jurisdiction, 'jurisdiction')", F8: impact, F9: raw }
+keys: { F7: "link($.JURISDICTION, 'jurisdiction')", F8: impact, F9: raw }

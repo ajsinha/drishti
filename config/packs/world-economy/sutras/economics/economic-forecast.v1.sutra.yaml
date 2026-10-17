@@ -18,42 +18,42 @@ sutra: economic-forecast
 version: 1
 description: "The IMF World Economic Outlook: growth, inflation, unemployment, external balance and debt, outturn and projections to 2031."
 match: { kind: economic-forecast, priority: 10 }
-title: { pill: Economics · Economic forecast, id: $.forecastId }
+title: { pill: Economics · Economic forecast, id: $.FORECAST_ID }
 strip:
-  - { label: Economy, bind: $.economyName }
-  - { label: Vintage, bind: $.vintage }
-  - { label: Growth 2027, bind: $.growth2027, fmt: pc2, tone: sign, emphasis: true }
-  - { label: Inflation 2027, bind: $.inflation2027, fmt: pc2 }
-  - { label: Debt / GDP 2030, bind: $.debt2030, fmt: pc1 }
+  - { label: Economy, bind: $.ECONOMY_NAME }
+  - { label: Vintage, bind: $.VINTAGE }
+  - { label: Growth 2027, bind: $.GROWTH_2027, fmt: pc2, tone: sign, emphasis: true }
+  - { label: Inflation 2027, bind: $.INFLATION_2027, fmt: pc2 }
+  - { label: Debt / GDP 2030, bind: $.DEBT_2030, fmt: pc1 }
 panels:
   - id: projections
     kind: table
     title: IMF series by year
     key: F2
-    rows: $.projections
+    rows: $.PROJECTIONS
     columns:
-      - { label: Year, bind: "@.year" }
-      - { label: Basis, bind: "@.basis" }
-      - { label: "Growth, %", bind: "@.growth", fmt: pc2, tone: sign }
-      - { label: "Inflation, %", bind: "@.inflation", fmt: pc2 }
-      - { label: "Unemployment, %", bind: "@.unemployment", fmt: pc2 }
-      - { label: "Current account, % GDP", bind: "@.currentAccount", fmt: pc2, tone: sign }
-      - { label: "Debt, % GDP", bind: "@.debt", fmt: pc1 }
-      - { label: "Net lending, % GDP", bind: "@.netLending", fmt: pc2, tone: sign }
-      - { label: "GDP, USD bn", bind: "@.gdp", fmt: amount0 }
+      - { label: Year, bind: "@.YEAR" }
+      - { label: Basis, bind: "@.BASIS" }
+      - { label: "Growth, %", bind: "@.GROWTH", fmt: pc2, tone: sign }
+      - { label: "Inflation, %", bind: "@.INFLATION", fmt: pc2 }
+      - { label: "Unemployment, %", bind: "@.UNEMPLOYMENT", fmt: pc2 }
+      - { label: "Current account, % GDP", bind: "@.CURRENT_ACCOUNT", fmt: pc2, tone: sign }
+      - { label: "Debt, % GDP", bind: "@.DEBT", fmt: pc1 }
+      - { label: "Net lending, % GDP", bind: "@.NET_LENDING", fmt: pc2, tone: sign }
+      - { label: "GDP, USD bn", bind: "@.GDP", fmt: amount0 }
   - id: path
     kind: line
     title: "Real GDP growth, % a year (to 2031)"
     area: right
-    rows: $.path
-    x: year
-    y: growth
+    rows: $.PATH
+    x: YEAR
+    y: GROWTH
     fmt: pc2
   - id: source
     kind: kv
     title: Data source and licence
     area: right
-    rows: $.provenance
+    rows: $.PROVENANCE
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.economy, 'economy')", F8: impact, F9: raw }
+keys: { F7: "link($.ECONOMY, 'economy')", F8: impact, F9: raw }

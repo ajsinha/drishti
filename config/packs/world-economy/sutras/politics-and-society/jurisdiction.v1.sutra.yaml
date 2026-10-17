@@ -18,56 +18,56 @@ sutra: jurisdiction
 version: 1
 description: "A country: government type, capital, legislature and seats by party, office holders, elections and governance indicators, from the CIA World Factbook, World Bank and UNDP."
 match: { kind: jurisdiction, priority: 10 }
-title: { pill: Politics and society · Jurisdiction, id: $.jurisdictionId }
+title: { pill: Politics and society · Jurisdiction, id: $.JURISDICTION_ID }
 strip:
-  - { label: Country, bind: $.name, emphasis: true }
-  - { label: Capital, bind: $.capital }
-  - { label: Government, bind: $.governmentType }
-  - { label: Population (m), bind: $.populationM, fmt: price2 }
-  - { label: Area (km2), bind: $.areaKm2, fmt: amount0 }
-  - { label: Currency, bind: $.currency }
+  - { label: Country, bind: $.NAME, emphasis: true }
+  - { label: Capital, bind: $.CAPITAL }
+  - { label: Government, bind: $.GOVERNMENT_TYPE }
+  - { label: Population (m), bind: $.POPULATION_M, fmt: price2 }
+  - { label: Area (km2), bind: $.AREA_KM2, fmt: amount0 }
+  - { label: Currency, bind: $.CURRENCY }
 panels:
   - id: geography
     kind: map
     title: Where it is
-    highlight: $.iso3
+    highlight: $.ISO3
     link: { kind: jurisdiction, id: "JUR-{iso3}" }
     height: 11
   - id: legislature
     kind: table
     title: "Seats by party, lower chamber"
     key: F2
-    rows: $.legislature
+    rows: $.LEGISLATURE
     columns:
-      - { label: Party, bind: "@.party" }
-      - { label: Seats, bind: "@.seats", fmt: amount0, total: true }
+      - { label: Party, bind: "@.PARTY" }
+      - { label: Seats, bind: "@.SEATS", fmt: amount0, total: true }
   - id: indicators
     kind: table
     title: Society and governance (latest)
     key: F3
-    rows: $.indicators
+    rows: $.INDICATORS
     columns:
-      - { label: Indicator, bind: "@.indicator" }
-      - { label: Value, bind: "@.value", fmt: price2, total: true }
-      - { label: Year, bind: "@.year" }
-      - { label: Unit, bind: "@.unit" }
+      - { label: Indicator, bind: "@.INDICATOR" }
+      - { label: Value, bind: "@.VALUE", fmt: price2, total: true }
+      - { label: Year, bind: "@.YEAR" }
+      - { label: Unit, bind: "@.UNIT" }
   - id: profile
     kind: kv
     title: Profile
     area: right
-    rows: $.profile
+    rows: $.PROFILE
   - id: partiesListed
     kind: table
     title: Political parties (as published)
     key: F4
-    rows: $.partiesListed
+    rows: $.PARTIES_LISTED
     columns:
-      - { label: Party, bind: "@.party" }
+      - { label: Party, bind: "@.PARTY" }
   - id: source
     kind: kv
     title: Data source and licence
     area: right
-    rows: $.provenance
+    rows: $.PROVENANCE
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.region, 'region')", F8: impact, F9: raw }
+keys: { F7: "link($.REGION, 'region')", F8: impact, F9: raw }

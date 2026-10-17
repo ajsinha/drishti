@@ -36,7 +36,7 @@ import normalise as N  # noqa: E402
 WIDTH = 170                                   # the line width of the committed files
 # pack generator directory -> (pack name, indicator groups its vocabulary covers)
 PACKS = {"world": ("world-economy", ("economy", "labour", "fiscal", "social", "governance"))}
-NO_IMF_FISCAL_ABOUT = "${$.economyName}'s central government revenue was ${fmt($.revenue, 'pc1')} of GDP and its expense ${fmt($.spending, 'pc1')} of GDP (World Bank)."
+NO_IMF_FISCAL_ABOUT = "${$.ECONOMY_NAME}'s central government revenue was ${fmt($.REVENUE, 'pc1')} of GDP and its expense ${fmt($.SPENDING, 'pc1')} of GDP (World Bank)."
 
 
 def header() -> str:
@@ -61,9 +61,9 @@ def kinds_text(pack: str, no_imf: bool) -> str:
     del kinds["economic-forecast"]
     eco, fisc = kinds["economy"], kinds["fiscal-position"]
     eco["about"] = eco["about"].replace("World Bank, IMF and CIA", "World Bank and CIA")
-    del eco["glossary"]["debtToGdp"]
+    del eco["glossary"]["DEBT_TO_GDP"]
     fisc["about"] = NO_IMF_FISCAL_ABOUT
-    fisc["glossary"] = {f: g for f, g in fisc["glossary"].items() if f not in ("debt", "balance") and not f.startswith(("debtPath.", "balancePath."))}
+    fisc["glossary"] = {f: g for f, g in fisc["glossary"].items() if f not in ("DEBT", "BALANCE") and not f.startswith(("DEBT_PATH.", "BALANCE_PATH."))}
     return yaml.safe_dump({"kinds": kinds}, sort_keys=False, allow_unicode=True, width=WIDTH)
 
 

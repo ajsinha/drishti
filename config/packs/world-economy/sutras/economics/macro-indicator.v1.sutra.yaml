@@ -18,33 +18,33 @@ sutra: macro-indicator
 version: 1
 description: "One headline statistic of one economy: the series, the latest value, the change and the rank among economies."
 match: { kind: macro-indicator, priority: 10 }
-title: { pill: Economics · Macro indicator, id: $.indicatorId }
+title: { pill: Economics · Macro indicator, id: $.INDICATOR_ID }
 strip:
-  - { label: Indicator, bind: $.name }
-  - { label: Latest, bind: $.latest, fmt: price2, emphasis: true }
-  - { label: Unit, bind: $.unit }
-  - { label: Year, bind: $.latestYear }
-  - { label: Previous, bind: $.previous, fmt: price2 }
-  - { label: Rank, bind: $.rank, fmt: amount0 }
+  - { label: Indicator, bind: $.NAME }
+  - { label: Latest, bind: $.LATEST, fmt: price2, emphasis: true }
+  - { label: Unit, bind: $.UNIT }
+  - { label: Year, bind: $.LATEST_YEAR }
+  - { label: Previous, bind: $.PREVIOUS, fmt: price2 }
+  - { label: Rank, bind: $.RANK, fmt: amount0 }
 panels:
   - id: history
     kind: line
     title: History
     key: F2
-    rows: $.history
-    x: year
-    y: value
+    rows: $.HISTORY
+    x: YEAR
+    y: VALUE
     fmt: price2
   - id: facts
     kind: kv
     title: About this series
     area: right
-    rows: $.facts
+    rows: $.FACTS
   - id: source
     kind: kv
     title: Data source and licence
     area: right
-    rows: $.provenance
+    rows: $.PROVENANCE
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.economy, 'economy')", F8: impact, F9: raw }
+keys: { F7: "link($.ECONOMY, 'economy')", F8: impact, F9: raw }
