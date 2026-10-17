@@ -107,7 +107,7 @@ output data). Examples of how many countries have data: GDP 213, real growth 212
 law 207, CO2 per capita 203, reserves 177. A missing value is simply absent from the series: nothing is estimated or filled in. Rankings count only countries whose latest
 value is from 2022 or later.
 
-Size: the world-economy pack is 6.9 MB, world-economy 12.1 MB and the normalised dataset 2.4 MB (21.4 MB of text in all, under the 25 MB limit; git compresses it to
+Size: the world-economy pack is about 19 MB (its economics half 6.9 MB, its politics half 12.1 MB) and the normalised dataset 2.4 MB (21.4 MB of text in all, under the 25 MB limit; git compresses it to
 about a fifth). Sample documents are written without indentation (`compact_json` in the pack generator) to keep it small.
 
 ### More countries and groups
@@ -159,7 +159,7 @@ The same Sutras serve every country: the United States and Nigeria below, Brazil
 | `military` | Military expenditure | % of GDP | World Bank WDI `MS.MIL.XPND.GD.ZS` | 159 |
 <!-- realdata:end indicators-economics -->
 
-### Society and governance (world-economy pack)
+### Society and governance (world-economy pack, politics half)
 
 <!-- realdata:begin indicators-society -->
 | Key | Indicator | Unit | Source and code | Countries with data |
@@ -202,14 +202,14 @@ Uzbekistan, Viet Nam in the April 2026 data).
 python3 tools/realdata/realdata.py fetch     [--cache DIR] [--refresh] [--pause S]   download the raw data (network)
 python3 tools/realdata/realdata.py normalise [--cache DIR]                           raw cache -> tools/realdata/dataset/*.json
 python3 tools/realdata/realdata.py about                                              sources.yaml + about/*.kinds.yaml -> tools/packgen/*/about.yaml
-python3 tools/realdata/realdata.py write                                              dataset -> the two packs, their glossary and their Sutra tests
+python3 tools/realdata/realdata.py write                                              dataset -> the pack, its glossary and its Sutra tests
 python3 tools/realdata/realdata.py tests                                              the packs' Sutra tests only (config/packs/*/tests)
 python3 tools/realdata/realdata.py docs                                               the generated tables of this guide
 python3 tools/realdata/realdata.py all       [--cache DIR] [--refresh]                fetch, normalise, about, write, docs: everything committed
 python3 tools/realdata/realdata.py check     [--cache DIR]                           fail if anything committed differs from what `all` would write
 ```
 
-`all` from the cached raw data regenerates **everything committed for the two packs** byte for byte: the normalised dataset, the glossary source
+`all` from the cached raw data regenerates **everything committed for the pack** byte for byte: the normalised dataset, the glossary source
 (`tools/packgen/*/about.yaml`), the packs (`pack.yaml`, Sutras, samples, guides, help, `config/about.yaml`), the Sutra tests (`tests/`) and the tables of this guide
 between its `<!-- realdata:begin ... -->` markers (sources, the two indicator tables with their country counts, the provenance example). Only `config/formats.yaml` is kept by hand.
 `check` fails on any drift: it re-derives the dataset from the cache (skipped, with a note, when there is no cache), runs both generators with `--check` (pack, glossary and

@@ -1825,8 +1825,9 @@ help cards from one description. Each generated file says so in a comment near t
 | Packs | Generator |
 |---|---|
 | `core`, `market-data`, `trading`, `market-risk`, `counterparty-risk` | `tools/packgen/banking/`: `make_packs.py` the manifests and the Calc snippets (`python/*.py`, from `snippets/<pack>/*.py` through `calc_snippets.py`), `make_sutras.py` the 171 Sutras, `make_docs.py` the guides, `make_data.py` the documents and the lake |
-| `liquidity-risk`, `climate-risk`, `operational-risk`, `retail-banking`, `genomics`, `world-economy`, `economics` | `tools/packgen/<area>/make.py` (`liquidity`, `climate`, `oprisk`, `retail`, `genomics`, `politics`, `economics`), all on the common builder `tools/packgen/common/packbuild.py` |
-| `finance`, `logistics`, `news-and-markets`, `news-and-markets` | hand-written; where a pack has a `tools/` folder (`finance`, `logistics`, `news-and-markets`) its samples come from there |
+| `world-economy` | `tools/packgen/world/make.py`, joining the halves `tools/packgen/economics/make.py` and `tools/packgen/politics/make.py` (real public data through `tools/realdata/`), on the common builder `tools/packgen/common/packbuild.py` |
+| retired: `liquidity-risk`, `climate-risk`, `operational-risk`, `retail-banking`, `genomics` (in `examples/packs/`) | `tools/packgen/<area>/make.py` (`liquidity`, `climate`, `oprisk`, `retail`, `genomics`), on the same builder with `retired=True`, which writes under `examples/packs/` |
+| `news-and-markets`; retired: `finance`, `logistics` | hand-written; the samples come from the pack's `tools/` folder (`config/packs/news-and-markets/tools/make_samples.py`, `examples/packs/finance/tools/`, `examples/packs/logistics/tools/`) |
 
 ### Never edit a generated file by hand
 
@@ -2095,7 +2096,7 @@ Start the server with the pack enabled, for example on its own (or, on a running
 DRISHTI_PACKS=library java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
-or alongside others: `DRISHTI_PACKS=finance,library`. The console reads the guide from the server, so it needs no restart. Then:
+or alongside others: `DRISHTI_PACKS=market-risk,library`. The console reads the guide from the server, so it needs no restart. Then:
 
 1. In the terminal, type `TI`. You should see `TITLE` (Book) in the suggestions.
 2. Type `TITLE TITLE-0001` and press Enter. You should see the pill *Library · Book* and the id *TITLE-0001*; the

@@ -34,7 +34,7 @@ param(
     [string]$JavaHome = $(if ($env:DRISHTI_JAVA_HOME) { $env:DRISHTI_JAVA_HOME } else { $env:JAVA_HOME }),
     # The server jar; default: drishti-server\target\drishti-server-*-exec.jar, then drishti-server*.jar in the folder.
     [string]$Jar = '',
-    # The packs to load (DRISHTI_PACKS); default: what DRISHTI_PACKS says, else the server's default (finance).
+    # The packs to load (DRISHTI_PACKS); default: what DRISHTI_PACKS says, else the server's default (the seven shipped packs).
     [string]$Packs = $env:DRISHTI_PACKS,
     # The server's port (DRISHTI_PORT).
     [int]$Port = $(if ($env:DRISHTI_PORT) { [int]$env:DRISHTI_PORT } else { 18480 }),

@@ -150,22 +150,19 @@ look at **past business dates** and compare dates, you also need a small history
 under `data/delta/`. It is not in git because it is generated. Build it once:
 
 ```bash
-# banking packs: core, market-data, trading, market-risk, counterparty-risk
+# core, market-data, trading, market-risk, counterparty-risk
 uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta
 
-# the other generated packs (run the ones you want)
-uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/liquidity/make.py --lake data/delta
-uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/climate/make.py --lake data/delta
-uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/oprisk/make.py --lake data/delta
-uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/retail/make.py --lake data/delta
-uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/genomics/make.py --lake data/delta
-uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/politics/make.py --lake data/delta
+# world-economy (economics and politics, real public data)
 uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/world/make.py --lake data/delta
 ```
 
+(news-and-markets has no lake: its headlines and quotes are fetched on demand. The retired example packs in `examples/packs`
+have their own generators, `tools/packgen/{liquidity,climate,oprisk,retail,genomics}/make.py`, with the same `--lake` option.)
+
 Each command prints what it wrote, for example `lake: … rows under data/delta (…)`. Afterwards
-`ls data/delta` lists one folder per data domain (`reference`, `market`, `trading`, `risk`, `credit`,
-`collateral`, `liquidity`, `climate`, `oprisk`, `retail`, `genomics`, `civic`, `macro`).
+`ls data/delta` lists one folder per data domain (`reference`, `legal`, `market`, `trading`, `risk`, `credit`,
+`collateral`, `civic`, `macro`).
 
 The sample history holds ten business days, ending on **30 September 2026**.
 
@@ -187,7 +184,7 @@ What the settings do:
 
 | Setting | Meaning |
 |---|---|
-| `DRISHTI_PACKS` | The packs to load, separated by commas. A pack's parents load with it: `market-risk` brings `core`, `market-data` and `trading`. Without this setting only the small `finance` pack loads. |
+| `DRISHTI_PACKS` | The packs to load, separated by commas. A pack's parents load with it: `market-risk` brings `core`, `market-data` and `trading`. Without this setting the same seven packs load (they are the default). |
 | `DRISHTI_STUDIO_SAVE=true` | Lets the Build workbench save Sutras (the view definitions it edits). Leave it out if you will not edit Sutras. |
 
 Leave this terminal open: the server runs in it and writes its log there. After a few seconds you
@@ -209,12 +206,12 @@ You should see `{"status":"UP","groups":["liveness","readiness"]}`. To list the 
 curl -s localhost:18480/api/v1/packs | python3 -c 'import json,sys; print([p["name"] for p in json.load(sys.stdin)])'
 ```
 
-You should see the twelve names, starting with `core`, `market-data`, `trading`.
+You should see the seven names, starting with `core`, `market-data`, `trading`.
 
 > **The smallest start.** `java -jar drishti-server/target/drishti-server-2.2.0-exec.jar` with no
-> settings loads only the `finance` pack: the four original mockups (`TRD IRS-48213`, `TRD FXS-20931`,
-> `TRD CFT-77120`, `NSET NS-NORTH-01`). Everything in this guide works the same way with those ids.
-> Do not mix `finance` with the banking packs: both define `TRD` and `CRV`.
+> settings loads the same seven packs. The small `finance` demo behind the four original mockups (`TRD IRS-48213`,
+> `TRD FXS-20931`, `TRD CFT-77120`, `NSET NS-NORTH-01`) is a retired example pack now: start with
+> `DRISHTI_PACKS_EXTRA_DIRS=examples/packs DRISHTI_PACKS=finance` to see it. Do not mix `finance` with the seven: both define `TRD` and `CRV`.
 
 ## Step 7 · Start the console
 
@@ -331,7 +328,7 @@ If you prefer containers, build the server first (Step 3), then:
 
 ```bash
 export DRISHTI_TOKEN_SECRET=$(openssl rand -hex 32) DRISHTI_SESSION_SECRET=$(openssl rand -hex 32)
-export DRISHTI_PACKS=finance            # or a banking list as in Step 6
+export DRISHTI_PACKS=market-risk,counterparty-risk   # or leave it out for the seven packs
 docker compose -f deploy/compose.yaml up -d --build
 ```
 
@@ -452,7 +449,7 @@ drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.por
 Later wins: the YAML, the local file, the environment, the arguments. To keep several configurations, keep several local
 files and copy the one you want to `drishti-console/config/application.local.yaml`, or set the environment per shell.
 
-### What the `${DRISHTI_PACKS:finance}` in the files means
+### What the `${DRISHTI_PACKS:core,…}` in the files means
 
 A value written `${NAME:default}` is "the variable `NAME` if it is set, else `default`". The meaning, the order that
 wins, and a table of every such placeholder in both `application.yaml` files are in
@@ -555,7 +552,7 @@ Its options:
 | Option | Default | Meaning |
 |---|---|---|
 | `-JavaHome` | `DRISHTI_JAVA_HOME`, then `JAVA_HOME`, then `java` on the PATH | the JDK folder (21 or newer) |
-| `-Packs` | `DRISHTI_PACKS`, else the server's default (`finance`) | the packs to load, e.g. `market-risk,counterparty-risk` |
+| `-Packs` | `DRISHTI_PACKS`, else the server's default (the seven shipped packs) | the packs to load, e.g. `market-risk,counterparty-risk` |
 | `-Port` | `DRISHTI_PORT`, else `18480` | the server's port |
 | `-LakeRoot` | `DRISHTI_DELTA_ROOT`, else `.\data\delta` | the Delta Lake |
 | `-Engine` | `DRISHTI_DELTA_ENGINE`, else `native` | `native`, `hadoop` (needs `winutils.exe`) or `auto` |

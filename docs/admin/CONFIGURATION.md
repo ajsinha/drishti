@@ -108,7 +108,7 @@ The server understands environment variables in two ways. Knowing the difference
    accepts the older form with `-` turned into `_` (`DRISHTI_SOURCES_FETCH_TIMEOUT`). Relaxed names work for
    every key, whether or not the YAML mentions a variable.
 2. **Named placeholders.** Some values in `application.yaml` and in the packs are written as
-   `${DRISHTI_TOKEN_SECRET:}` or `${DRISHTI_PACKS:finance}`: "use this variable, else the default after the
+   `${DRISHTI_TOKEN_SECRET:}` or `${DRISHTI_LAKE_ENABLED:true}`: "use this variable, else the default after the
    colon". These short names (`DRISHTI_PACKS`, `DRISHTI_TOKEN_SECRET`, `DRISHTI_DELTA_ROOT`) are the documented
    ones; they are listed in the [index](#environment-variable-index).
 
@@ -156,9 +156,9 @@ Each row was tried against a scratch server. Points to know:
 * **An empty default.** `${DRISHTI_PLUGIN_DIR:}` has an empty default: nothing is set when the variable is absent. A variable that is
   *set to empty* (`DRISHTI_PACKS=`) gives the empty string, not the default.
 * **Which applies, the placeholder or the relaxed name?** Both exist for a key such as `drishti.packs.enabled`
-  (written `${DRISHTI_PACKS:finance}` in the file). The placeholder is how the *file's own value* is computed.
+  (written `${DRISHTI_PACKS:core,market-data,…}` in the file). The placeholder is how the *file's own value* is computed.
   The relaxed name (`DRISHTI_PACKS_ENABLED`, [above](#two-kinds-of-environment-variable)) overrides the key itself, so
-  with both set the relaxed one wins: `DRISHTI_PACKS=genomics DRISHTI_PACKS_ENABLED=economics` loads only `economics`.
+  with both set the relaxed one wins: `DRISHTI_PACKS=market-risk DRISHTI_PACKS_ENABLED=world-economy` loads only `world-economy`.
   A key with no placeholder in the file has only the relaxed name.
 * **Precedence** of the sources, highest first: command-line arguments, Java system properties, environment
   variables, config files (a profile's file such as `application-files.yaml` over `application.yaml`). So
@@ -328,6 +328,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | At start, converts stored items once: old-syntax expressions to DEL v2, then `rachana: 1` datasets to datasets and models with their reports rebound (each change audited, the text before kept in the item's history). `false`: a bi-admin runs `drishti.py bi migrate` instead ([drishti.bi.migrate](#drishtibimigrate--migrations-of-stored-bi-items)). |
 | `DRISHTI_BI_STORE` | `drishti.bi.query.store-dir` | `./data/bi-store` | The BI store: the typed Parquet layers (columns, rollups, live snapshots) the dataset query engine writes and reads, and DuckDB's spill folder. Rebuildable from the connectors; never commit it. |
 | `DRISHTI_PACKS_DIR` | `drishti.packs.dir` | `./config/packs` | The packs directory. If it does not exist and the old `./packs` does, `./packs` is used with a warning (one release). |
+| `DRISHTI_PACKS_EXTRA_DIRS` | `drishti.packs.extra-dirs` | empty | Further pack folders, comma-separated, looked in after the packs directory (the shipped packs win a name): `examples/packs` makes the retired example packs (finance, genomics, logistics, retail-banking, climate-risk, operational-risk, liquidity-risk) loadable by name ([PACKS.md](../guides/PACKS.md#retired-example-packs-examplespacks)). |
 | `DRISHTI_PACKS_OVERLAY` | `drishti.packs.overlay` | `./data/packs/added.yaml` | The file of packs an administrator loaded from Admin → Packs; imported at start (`spring.config.import`) and named again by `drishti.packs.overlay`. Written by the server, not by hand. |
 | `DRISHTI_PACKS_SAMPLES` | `drishti.packs.samples` | `visible` | Who sees sample packs: `visible`, `developers` (author or admin) or `hidden`; Admin → Packs can override it. |
 | `DRISHTI_PACKS_SAMPLES_FILE` | `drishti.packs.samples-file` | `./data/packs/samples-mode` | Where the Admin → Packs choice for sample packs is saved. |
@@ -340,7 +341,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_LOADS_DIR` | `drishti.loads.dir` | `./data/loads` | The data-load history per pack and the administrators' expectation overrides ([DATA_LOADS.md](../guides/DATA_LOADS.md)). |
 | `DRISHTI_PACKS_DEPLOY_HISTORY` | `drishti.packs.deploy.history-file` | `./data/packs/deploy-history.jsonl` | The history of archive deployments and rollbacks. |
 | `DRISHTI_PACK_REGISTRY` | `drishti.packs.registry.url` | empty | A signed pack registry (a folder, `file:` or `https:` URL with `index.json`); empty: none. |
-| `DRISHTI_PACKS` | `drishti.packs.enabled` | `finance` | The packs to load (comma list); a pack's parents load with it. |
+| `DRISHTI_PACKS` | `drishti.packs.enabled` | `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets` | The packs to load (comma list); a pack's parents load with it. The default is the seven shipped packs. |
 | `DRISHTI_DEFAULT_PACKS` | `drishti.packs.default-for-users` | empty | Packs new users get; empty: every installed pack. |
 | `DRISHTI_SUGGEST_LIMIT` | `drishti.commands.suggest-limit` | `25` | Entries in the command line's dropdown. |
 
@@ -395,6 +396,8 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | (no variable) | `bi.explore.quant_engine` | `stand-in` | The engine behind `quant.price(...)` in a Python cell ([QUANT_SERVICE.md](../architecture/QUANT_SERVICE.md#16-the-consoles-quantengine-slot-built-lean)); only `stand-in` is built in. |
 | `DRISHTI_LAYOUTS_ENABLED` | `layouts.enabled` | `true` | Offer layout mode. |
 | `DRISHTI_PACKS_DIR` | `packs.dir` | `../config/packs` | The packs directory (a relative path resolves from `drishti-console/`). |
+| `DRISHTI_PACKS_EXTRA_DIRS` | `packs.extra_dirs` | empty | Further pack folders, comma-separated, as on the server (relative paths resolve from `drishti-console/`, so `../examples/packs`). |
+| `DRISHTI_PACKS` | `packs.enabled` | `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets` | Only used when the server cannot be asked which packs are on. |
 | `DRISHTI_LAKE_ROOTS` | `lakes.roots` | `../data/delta` | Admin → Data loads → Lakes ([TOOLS.md](../guides/TOOLS.md#4-lake-build-a-large-json-export-into-a-delta-lake)): the lake roots this console may write, comma-separated (relative paths resolve from `drishti-console/`); the page offers no other folder. |
 | `DRISHTI_JAR` | `lakes.jar` | empty | The drishti-server exec jar whose Java writer the page's builds use (`lakes.engine: auto`); empty: the newest `drishti-server/target/drishti-server-*-exec.jar`, else the Python `deltalake` package. |
 | (no variable) | `lakes.max_upload_mb`, `scan_docs`, `engine`, `python`, `keep_min`, `jobs` | `4096`, `20000`, `auto`, the console's Python, `240`, `2` | Largest upload (streamed to the console's temp folder); documents read to suggest the id, date and classifiers; `auto`, `drishti` or `deltalake`; the Python that runs `tools/lake/build.py`; minutes an upload and a finished build are kept; builds at once. |
@@ -499,7 +502,7 @@ and [MCP_CLIENT.md](../architecture/MCP_CLIENT.md).
 | Duration | a number with a unit: `ms`, `s`, `m`, `h`, `d` (or ISO-8601 `PT2S`) | `50ms`, `2s`, `15m` |
 | Period (dates) | ISO-8601 period | `P5Y` (five years), `P18M`, `P90D` |
 | Boolean | `true` / `false` | `true` |
-| List | YAML list, or a comma-separated string (handy in env vars) | `[finance, trading]` or `finance,trading` |
+| List | YAML list, or a comma-separated string (handy in env vars) | `[market-risk, trading]` or `market-risk,trading` |
 | Map | YAML mapping | `routes: { trade: trading-store }` |
 | Plugin and connector settings | always strings; quote numbers if you like | `pool-size: "4"` or `pool-size: 4` |
 
@@ -519,7 +522,7 @@ You should see `Tomcat started on port 18490` in the log. Point the console at i
 ### Load more packs
 
 ```bash
-DRISHTI_PACKS=finance,trading,market-data java -jar drishti-server/target/drishti-server-2.2.0-exec.jar
+DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.2.0-exec.jar
 ```
 
 Packs a listed pack `extends:` (or the older `requires:`) are loaded too, dependencies first. Then
@@ -675,7 +678,8 @@ drishti:
 | Key | Default | Meaning |
 |---|---|---|
 | `dir` | `./config/packs` (`DRISHTI_PACKS_DIR`) | The folder holding one sub-folder per pack. Relative to the server's working directory. The console reads the same variable (its default `../config/packs` is relative to `drishti-console/`), so use an absolute path when you set it. |
-| `enabled` | `finance` (`DRISHTI_PACKS`) | Comma-separated packs to load, in order. Packs they `extends:` (or the older `requires:`) are loaded as well. A missing pack stops start-up with a clear message. |
+| `extra-dirs` | empty (`DRISHTI_PACKS_EXTRA_DIRS`) | Further pack folders, comma-separated, looked in after `dir`; `examples/packs` holds the retired example packs. A pack there may extend the shipped ones. |
+| `enabled` | `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets` (`DRISHTI_PACKS`) | Comma-separated packs to load, in order. Packs they `extends:` (or the older `requires:`) are loaded as well. A missing pack stops start-up with a clear message. |
 | `default-for-users` | empty = every installed pack (`DRISHTI_DEFAULT_PACKS`) | The packs a user sees until an admin assigns packs to them. |
 | `samples` | `visible` (`DRISHTI_PACKS_SAMPLES`) | Who sees sample packs (`sample: true` in `pack.yaml`): `visible` (everyone), `developers` (only users with the author or admin power; use this once real packs exist) or `hidden` (nobody; sample packs are not loaded and their connectors do not start). The setting an administrator saves in Admin → Packs overrides it. |
 | `samples-file` | `./data/packs/samples-mode` (`DRISHTI_PACKS_SAMPLES_FILE`) | Where that saved setting is kept (one word). Delete it, or press *Use the configuration*, to let `samples` decide again. |
@@ -798,7 +802,7 @@ servers). The environment variables of this section are in the [placeholder tabl
 | `mask-copies-max-values` | `64` | Most distinct masked values scrubbed per document. |
 | `redact` | `[trader, counterpartyId, patientName, lifecycle.timeline.description]` | Field names masked for roles without `raw`, on every path that shows or reads their values ([field masks](#field-masks)). |
 
-The bundled roles; packs add domain roles (finance: `trader`, `risk`; logistics: `ops`):
+The bundled roles; packs add domain roles (trading: `trader`; market-risk: `market-risk`; counterparty-risk: `credit-risk`):
 
 ```yaml
 drishti:
@@ -1789,7 +1793,7 @@ Layout: `<root>/<domain>/<kind>/business_date=yyyy-MM-dd/` holding `(id, doc)` r
 |---|---|---|
 | `root` | `./data/delta` (packs use `DRISHTI_DELTA_ROOT`) | Local directory (`C:\lakes\drishti` on Windows), or a URI such as `s3a://bucket/lake`, `s3://…`, `abfs://…`, `gs://…`. |
 | `engine` | `DRISHTI_DELTA_ENGINE`, else `native` | Which Delta Kernel engine reads the lake. `native`: no Hadoop; local disk through `java.nio` and S3 (`s3://`, `s3a://`) through the AWS SDK; the one that works on Windows without `winutils.exe`. `hadoop`: Kernel's default engine over Hadoop's file systems; also reads `abfs://`, `gs://` and HDFS. `auto`: `native` on Windows, `hadoop` elsewhere. A `native` connector on an `abfs://` or `gs://` root refuses to start and says to use `hadoop`. Health shows `UP (engine: native)`; the cache stats carry `engine`. See [DELTA_CONNECTOR.md › Engines](../connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop). |
-| `domain` | empty | The data-domain sub-folder (`finance`, `trading`). |
+| `domain` | empty | The data-domain sub-folder (`reference`, `trading`, `legal`). |
 | `kinds` | every table found | Comma list. |
 | `mode.<kind>` | `snapshot` | `snapshot`: a full copy every business date, read within `lookback-days`. `effective`: a row only when the entity changes, no limit. |
 | `lookback-days` | `10` | How far back a snapshot read looks for the latest partition. |
@@ -2222,7 +2226,7 @@ Packs declare their connectors in `pack.yaml` with placeholders, so you switch t
 Example: the trading pack with its live Kafka stream.
 
 ```bash
-DRISHTI_PACKS=finance,trading DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=kafka:9092 \
+DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=kafka:9092 \
   java -jar drishti-server/target/drishti-server-2.2.0-exec.jar
 ```
 
@@ -2356,7 +2360,7 @@ sign-on settings (`auth.oidc`) apply to every server; each server verifies the I
 | `product_native` / `product_meaning` | `दृष्टि` / `Drishti (दृष्टि) means <em>sight</em>.` | The product name in its own script (blank for none) and one line on its meaning, on the About page. |
 | `copyright` / `notice` | the Drishti copyright and a ban on unauthorised copying | The legal lines in the footer and on the About page. Change them here, never in code; the server has the same under `drishti.branding`. |
 | `error_advice` | a short text for each of `DRS-1001`, `DRS-1002`, `DRS-1003`, `DRS-1004`, `DRS-1007`, `DRS-4003`, `DRS-4004`, and `default` | What an error page tells the user to do, by the code the server answered with. `{kind}` and `{id}` in a text become the entity asked for; a code with no entry gets `default`. Edit it so the advice fits your site (who to ask, which channel). |
-| `showcase` | four finance-pack screenshots | The landing page's pictures: `{slug, title, cmd, sutra}` each, the image being `web/static/img/shot-<slug>.png`. A caption names its `cmd` only when that command is one of the packs' examples. |
+| `showcase` | four screenshots of the retired finance example pack | The landing page's pictures: `{slug, title, cmd, sutra}` each, the image being `web/static/img/shot-<slug>.png`. A caption names its `cmd` only when that command is one of the packs' examples. |
 
 ### `embed` — embedded views
 
@@ -2396,7 +2400,8 @@ read by both programs, so one set of variables configures both halves.
 | Key | Default | Meaning |
 |---|---|---|
 | `packs.dir` | `../config/packs` (`DRISHTI_PACKS_DIR`), relative to `drishti-console/` | Where pack content (examples, guides) is read. |
-| `packs.enabled` | `finance` | Used only when the server cannot be asked which packs are enabled. |
+| `packs.extra_dirs` | empty (`DRISHTI_PACKS_EXTRA_DIRS`) | Further pack folders, comma-separated, read after `packs.dir` (the retired example packs: `../examples/packs`). |
+| `packs.enabled` | the seven shipped packs (`DRISHTI_PACKS`) | Used only when the server cannot be asked which packs are enabled. |
 | `help.docs_dir` | `../docs` | The documents rendered in the help centre's reference section. |
 | `studio.examples_dir` | `../docs/guides/examples` | The Rachana examples (`<name>.sutra.yaml`, `<name>.json`, `<name>.md`) that the Build workbench (**Build → New screen → Examples**, the File menu) and **Help → Examples** offer. Only names of complete example sets present there are served. |
 | `ui.studio_example` | `all-panels-showcase` | The example Studio opens on when no entity or Sutra is asked for. Blank, or a name that is not there: Studio opens on the first example entity of the user's packs, as before. |
@@ -2460,8 +2465,9 @@ Server (S), console (C), or both.
 |---|---|---|
 | `DRISHTI_PORT` | S | `server.port` |
 | `DRISHTI_ALLOW_INSECURE_TLS` | S | allows a connector's `tls.insecure-trust-all` ([`tls.*`](#tls--tls-for-connectors)) |
-| `DRISHTI_PACKS` | S | `drishti.packs.enabled` |
+| `DRISHTI_PACKS` | S, C | `drishti.packs.enabled`, `packs.enabled` |
 | `DRISHTI_PACKS_DIR` | S, C | `drishti.packs.dir`, `packs.dir` |
+| `DRISHTI_PACKS_EXTRA_DIRS` | S, C | `drishti.packs.extra-dirs`, `packs.extra_dirs` |
 | `DRISHTI_DEFAULT_PACKS` | S | `drishti.packs.default-for-users` |
 | `DRISHTI_PLUGIN_DIR` | S | `drishti.sources.plugin-dir` |
 | `DRISHTI_DEMO_ENABLED` | S | `drishti.sources.plugins.demo.enabled` |

@@ -17,6 +17,20 @@
 
 ## Unreleased
 
+- **Seven packs.** `config/packs` now holds exactly seven packs, all on by default (`drishti.packs.enabled` /
+  `DRISHTI_PACKS` defaults to `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets`; it was `finance`):
+  **core** (`CORE`, from `banking-core`: counterparties, now with `COUNTRY_OF_RISK` and `UEN` and links to their economy and headlines,
+  groups, issuers, CCPs, legal entities, books, desks, traders, calendars, clearing accounts); **market-data** (`MKT`); **trading** (`TRDS`,
+  `TRD` trades, extends core and market-data); **counterparty-risk** (`CCR`, now also `AGR` master agreements and `CSA`s, whose Delta tables
+  moved from the `reference` domain to a new `legal` domain: rebuild the lake or move `<lake>/reference/{agreement,csa}` to `<lake>/legal/`);
+  **market-risk** (`MRSK`); **world-economy** (`WRLD`, `economics` and `politics-society` in one pack, one generator
+  `tools/packgen/world/make.py`); **news-and-markets** (`NWMK`, `news-watch` and `market-watch` in one sample pack; topics and companies link
+  to their economy). Kinds, mnemonics and ids are unchanged; the codes `BNK`, `ECO`, `POLS`, `NEWSW`, `MKTW` are gone.
+  `finance`, `genomics`, `logistics`, `retail-banking`, `climate-risk`, `operational-risk` and `liquidity-risk` are **retired to
+  `examples/packs/`**: not shipped in the images, not tested by default, still loadable with the new `drishti.packs.extra-dirs`
+  (`DRISHTI_PACKS_EXTRA_DIRS=examples/packs`, server and console; a pack there may extend the shipped ones). Every example a shipped pack
+  advertises opens a full view (`DomainPacksTest`), and every `config/bi` item reads only what the seven serve (`ShippedExamplesPacksTest`).
+  [PACKS.md](docs/guides/PACKS.md#the-packs-that-ship), [CONFIGURATION.md](docs/admin/CONFIGURATION.md).
 - **No hidden files or folders, and everything Drishti writes lives under the data folder.** Connector edit history and generated-file markers: `config/connectors/.history/` and `.generated/` are now `<data>/connectors/history/` and `generated/`; the pack baseline of `pack make` and `pack new`: `<pack>/generated/`; the lake builder state: `_drishti-lake/`; the installed-packs folders `previous-versions/` and `uploads-awaiting-deploy/`; `data/packs/settings/migrated/`; the temp-folder markers `drishti-temp-folder.txt` and `drishti-console-temp-folder.txt`; the Calc and DuckDB-Wasm stamps `drishti-pyodide.txt` and `drishti-duckdb-wasm.txt`; temp files lose their leading dot. Every old name is read once and renamed with a log line (nothing is lost). The IDE QA profile moves from `qa-data/` to `data/qa/`; `pack make` and the other tools write `build/` under the data folder; `tools/drill.sh` logs to `<data>/drill/`; pytest no longer creates `.pytest_cache`. Only names an external tool requires keep their dot (see the developer guide). A guard test (`tools/test_no_hidden_names.py`) fails on a new hidden name.
 - **Run configurations for IntelliJ IDEA and PyCharm; QA with no terminal.** `.run/` now holds Drishti server (default, QA profile on ports 18580/17580 with its own git-ignored
   `data/qa/` folder, and a debug-friendly one), Drishti console (default and QA), Drishti build server jar (Maven), a compound Drishti QA (server + console) and Python
