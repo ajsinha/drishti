@@ -496,7 +496,7 @@ class BiAiTest {
         JsonNode h = ok(send("/api/v1/bi/ai/dataset-helper", as("wes", "report-author"), Map.of("dataset", "file:model:lake-model")));
         List<String> ids = new ArrayList<>();
         h.path("items").forEach(i -> ids.add(i.path("id").asText()));
-        assertThat(ids).containsExactly("measure:Average notional", "column:trades.book");
+        assertThat(ids).containsExactly("measure:Average notional", "field:trades.book");
         assertThat(h.path("items").get(1).path("yaml").asText()).as("a model's fields: block").isEqualTo("trades.book: { description: \"The book the trade sits in\" }");
         assertThat(h.path("model").asText()).isEqualTo("lake-model@1");
         JsonNode asked = ok(send("/api/v1/bi/ai/ask", as("rita", "bi-risk"), Map.of("dataset", "lake-model@1", "question", "notional by desk")));

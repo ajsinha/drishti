@@ -279,7 +279,7 @@ public final class BiAiCopilot {
             String desc = c.path("description").asText("").strip();
             if (count < max && types.containsKey(field) && !described.contains(field) && !desc.isEmpty() && desc.length() <= 200) {
                 described.add(field);
-                items.add(item("column", field, desc, layer ? field + ": { description: " + quote(desc) + " }"      // a model's fields: block
+                items.add(item(layer ? "field" : "column", field, desc, layer ? field + ": { description: " + quote(desc) + " }"      // a model's fields: block
                         : field.substring(field.indexOf('.') + 1) + ": { type: " + types.get(field) + ", description: " + quote(desc) + " }", Map.of("field", field, "description", desc)));
                 count++;
             }

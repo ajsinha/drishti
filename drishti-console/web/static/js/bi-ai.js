@@ -100,9 +100,9 @@
     const b = B.clear(p.body);
     const l = res.lineage;
     b.appendChild(h('p', { class: 'bi-ai-value' }, h('strong', { text: res.measure }), ' = ', h('span', { 'data-ai-value': '', text: B.fmt(res.value, res.measure, false) })));
-    const src = l.sources.map((s) => s.table + ' (' + s.kind + ', ' + s.connector + ')').join(', ');
+    const src = l.sources.map((s) => s.table + (s.dataset ? ': ' + s.dataset + ' ' + s.version : '') + ' (' + s.kind + ', ' + s.connector + ')').join(', ');
     b.appendChild(h('ol', { class: 'bi-ai-lineage', 'data-ai-lineage': '' },
-      h('li', { text: 'Dataset: ' + (l.dataset.title || l.dataset.name) }),
+      h('li', { text: l.model ? 'Model: ' + (l.dataset.title || l.model.name) + ' ' + l.model.version : 'Dataset: ' + (l.dataset.title || l.dataset.name) }),
       h('li', { text: 'Measure ' + l.measure.name + ' = ' + (l.measure.expr || l.measure.python || '') }),
       h('li', { text: 'Reads: ' + (l.columns.map((c) => c.name).join(', ') || 'no column') }),
       h('li', { text: 'Sources: ' + src })));

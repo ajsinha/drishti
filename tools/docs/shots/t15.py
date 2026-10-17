@@ -42,15 +42,16 @@ def start_servers(work):
     (ai / "fast.yaml").write_text((ROOT / "config" / "ai" / "groq.yaml.example").read_text().replace("enabled: true", "enabled: false"))
     return shotlib.start_servers(work, {**SERVER_ENV, "DRISHTI_AI_ENABLED": "true", "DRISHTI_AI_DIR": str(ai), "DRISHTI_AI_DEFAULT_MODEL": "mock/m", "SPRING_APPLICATION_JSON": AI_POLICY})
 WORLD_REPORT = "file:report:world-economics"
-WORLD_V1 = "World economics (2.1)"
-WORLD_21 = ROOT / "docs" / "tutorials" / "data" / "world-economics-21.dataset.yaml"
+WORLD_MODEL = "mq:world-economics@1"                     # the designer's choice for the model world-economics
+MY_WORLD = "My world economics"
 
 
-def world_v1(c: Ctx) -> str:
-    """The authoring hooks (describe, suggest, the dataset helper) still read a version 1 dataset in 2.2: the 2.1 World economics dataset as an item of
-    the workspace, made afresh; returns its id."""
-    clean_items(c, WORLD_V1)
-    return bi(c, "POST", "/workspaces/me/items", {"kind": "dataset", "title": WORLD_V1, "body": WORLD_21.read_text()})["id"]
+def my_world(c: Ctx) -> str:
+    """A model of the person's own over the World economics datasets (the shipped one is read-only), made afresh; returns its id."""
+    clean_items(c, MY_WORLD)
+    body = (ROOT / "config" / "bi" / "models" / "world-economics.model.yaml").read_text().replace("model: world-economics", "model: my-world-economics")
+    body = body.replace('title: "World economics"', 'title: "' + MY_WORLD + '"')
+    return bi(c, "POST", "/workspaces/me/items", {"kind": "model", "title": MY_WORLD, "body": body})["id"]
 
 
 @shot("01-admin-ai.jpg", also=("02-test-connection.jpg",))
@@ -72,7 +73,7 @@ def describe(c: Ctx):
     login(c, height=900)
     quiet_inbox(c)
     clean_items(c, "Drafted from words")
-    start_design(c, world_v1(c), "Drafted from words")
+    start_design(c, WORLD_MODEL, "Drafted from words")
     submit_design(c)
     c.page.click("[data-ai-draft]")
     c.page.fill("[data-ai-request]", "GDP by region as a bar chart and the total as a card")
@@ -116,7 +117,7 @@ def suggest_and_check(c: Ctx):
     login(c, height=900)
     quiet_inbox(c)
     clean_items(c, "Suggested visuals")
-    start_design(c, world_v1(c), "Suggested visuals")
+    start_design(c, WORLD_MODEL, "Suggested visuals")
     submit_design(c)
     c.page.click("[data-ai-suggest]")
     c.page.fill("[data-ai-goal]", "where the GDP sits, and a way to filter by income group")
@@ -141,13 +142,13 @@ def suggest_and_check(c: Ctx):
 
 @shot("11-dataset-helper.jpg")
 def dataset_helper(c: Ctx):
-    """The dataset helper on the Model view of a copy of the world dataset: a measure and two descriptions, each with its own Accept."""
+    """Ask the AI helper in the model designer, on a model of one's own over the World economics datasets: a measure and two field descriptions, each with Accept."""
     login(c, height=900)
     quiet_inbox(c)
-    made = {"id": world_v1(c)}
+    made = my_world(c)
     c.page.set_viewport_size({"width": 1280, "height": 1180})
-    c.page.goto(c.base + "/bi/m/" + made["id"])
-    c.page.wait_for_selector("[data-model-root][data-ready=yes]", timeout=30000)
+    c.page.goto(c.base + "/bi/md/" + made)
+    c.page.wait_for_selector("[data-md-root][data-ready=yes]", timeout=30000)
     c.page.click("[data-ai-helper]")
     c.page.wait_for_selector("[data-ai-item]", timeout=30000)
     c.page.wait_for_timeout(800)
