@@ -201,6 +201,19 @@ public final class RachanaSchema {
             return Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.PanelOptions.MAX_BINS,
                     "description", "How many bins (default: the square root of the count, 5 to 40)");
         }
+        if ((k == PanelKind.TABLE || k == PanelKind.LADDER) && o.equals("levels")) {
+            return Map.of("type", "array", "minItems", 1, "maxItems", com.ash.drishti.rachana.model.PanelOptions.MAX_LEVELS,
+                    "items", Map.of("type", "object", "required", List.of("rows"), "properties", Map.of(
+                            "rows", text(EL + " giving the rows a row of the level above opens to, read with @ that row (\"@.cashflows\")"),
+                            "title", Map.of("type", "string", "description", "What the rows of this level are (Cash flows)"),
+                            "crumb", text(EL + " naming a row of this level in the breadcrumb ('Flow ' + @.id)"),
+                            "columns", Map.of("type", "array", "items", Map.of("$ref", "#/$defs/column")))),
+                    "description", "Drill down level by level: a row opens to its rows of the next level, with a breadcrumb, the parent row, "
+                            + "counts and totals at each level, and an address (#panel=1.6) that can be shared");
+        }
+        if ((k == PanelKind.TABLE || k == PanelKind.LADDER) && o.equals("empty")) {
+            return Map.of("type", "string", "description", "The words shown when there are no rows (default: No data available)");
+        }
         if (k == PanelKind.TABLE && o.equals("limit")) {
             // one schema serves every kind that has a "limit": a table's is a count, an area's an expression, so no type here
             // (the table's rule, a whole number from 1, is kept by PanelOptions)

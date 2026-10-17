@@ -191,6 +191,46 @@ async def deploy_upload(request: Request):
         return _problem(e)
 
 
+@router.get("/api/packs/{name}/data")
+async def data_targets(request: Request, name: str):
+    """Load data: the kinds of the pack the browser can load into its File connector, and where each goes."""
+    try:
+        return await request.app.state.backend.admin("GET", f"/packs/{quote(name)}/data", ident(request))
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.post("/api/packs/{name}/data")
+async def data_load(request: Request, name: str):
+    """Load data: the browser sends the whole file (a JSON array or JSON Lines) as the body; it is streamed on to the server as it arrives
+    (never held here), which writes it into the pack's File connector and announces the load. Administrators only."""
+    me = ident(request)
+    if not me.is_admin:
+        return JSONResponse({"code": "DRS-5002", "detail": "administrators only"}, status_code=403)
+    kind = (request.headers.get("content-type") or "").split(";")[0].strip().lower()
+    if kind != "application/octet-stream":
+        raise BodyError(415, "send the file as application/octet-stream")
+    cap = int(request.app.state.settings.get("builder.pack_load_max_mb", 2048)) * 1048576
+    size = int(request.headers.get("content-length") or 0)
+    if size > cap:
+        raise BodyError(413, f"the file is over {cap // 1048576} MB (builder.pack_load_max_mb)")
+    seen = 0
+
+    async def chunks():
+        nonlocal seen
+        async for c in request.stream():
+            seen += len(c)
+            if seen > cap:
+                raise BodyError(413, f"the file is over {cap // 1048576} MB (builder.pack_load_max_mb)")
+            yield c
+    q = request.query_params
+    try:
+        return await request.app.state.backend.admin_stream_upload(f"/packs/{quote(name)}/data", me, chunks(),
+                                                                   {"kind": q.get("kind"), "date": q.get("date"), "file": q.get("file")})
+    except BackendError as e:
+        return _problem(e)
+
+
 @router.post("/api/packs/deploy/{upload_id}")
 async def deploy_confirm(request: Request, upload_id: str):
     """Deploys a verified upload; the server restarts in place to read it (and puts the old files back if it cannot start)."""

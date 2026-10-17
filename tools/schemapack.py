@@ -74,12 +74,20 @@ def gather_schemas(paths, recursive: bool = False) -> list[tuple[str, str]]:
     return out
 
 
+def _json_array(p: pathlib.Path) -> bool:
+    try:
+        with open(p, encoding="utf-8") as fh:
+            return fh.read(4096).lstrip().startswith("[")
+    except OSError:
+        return False
+
+
 def split_arguments(paths, recursive: bool = False) -> tuple[list, list]:
     """--schema takes every path up to the next flag, so a JSON Lines file or folder written after it is data, not a schema."""
     schemas, data = [], []
     for p in map(pathlib.Path, paths):
-        if p.suffix.lower() in (".jsonl", ".ndjson"):
-            data.append(p)
+        if p.suffix.lower() in (".jsonl", ".ndjson") or (p.suffix.lower() == ".json" and p.is_file() and _json_array(p)):
+            data.append(p)                      # a .json that is an array of documents is data, not a schema
         elif p.is_dir() and not any(list(p.glob(("**/" if recursive else "") + "*" + s)) for s in SCHEMA_SUFFIXES) and list(p.glob(("**/" if recursive else "") + "*.jsonl")):
             data.append(p)
         else:
@@ -124,9 +132,12 @@ def parse_overrides(SG, kinds: list[str], key, date, match, mnemonic) -> dict:
 
 def make_plan(a, SG, P, say=print):
     """The plan for the command line `a`; asks about ambiguous keys when a terminal is attached."""
-    schema_paths, data_paths = split_arguments(a.schema, getattr(a, "recursive", False))
+    schema_paths, data_paths = split_arguments(getattr(a, "schema", None) or [], getattr(a, "recursive", False))
     a.inputs = list(getattr(a, "inputs", None) or []) + data_paths
-    schemas = gather_schemas(schema_paths, getattr(a, "recursive", False))
+    # data alone (no --schema): every kind is inferred from its documents, as the console's Build -> New pack does
+    schemas = gather_schemas(schema_paths, getattr(a, "recursive", False)) if schema_paths else []
+    if not schemas and not a.inputs:
+        raise SchemaPackError("give schema files (--schema) and/or data files (.jsonl, or a .json array)")
     kinds0 = P.make_plan(schemas)
     names = [k.kind for k in kinds0.kinds]
     override_kind = getattr(a, "kind", None)
@@ -149,6 +160,17 @@ def make_plan(a, SG, P, say=print):
         ov.setdefault(n, {}).update(o)
     count = getattr(a, "count", None) or (a.samples if isinstance(getattr(a, "samples", None), int) else 5)
     settings = {"samples": count, "strip_max": getattr(a, "strip", 6) or 6}
+    a._real = samples                            # the documents as they are: what the dated store gets
+    anon = getattr(a, "anonymise", None)
+    if (anon is None and samples and not schemas) or anon is True:
+        sys.path.insert(0, str(ROOT / "drishti-console" / "core"))
+        from schemakit.anonymise import anonymise
+        samples = anonymise(samples)
+        settings["anonymised"] = True
+    rel = getattr(a, "related", None)
+    if rel is not None:                          # --related none | F1,F2 (default: the proposed ones)
+        for k in list(ov) + [k for k in samples if k not in ov]:
+            ov.setdefault(k, {})["related"] = [] if rel.strip().lower() == "none" else [x.strip() for x in rel.split(",") if x.strip()]
     plan = P.make_plan(schemas, samples, ov, settings, pack_name=getattr(a, "name", "") or "")
     if sys.stdin.isatty() and not getattr(a, "yes", False):
         changed = False
@@ -314,7 +336,7 @@ def make(a, cli) -> int:
     say_plan(plan)
     store = "delta" if a.store == "delta" else "file"
     for k in plan.kinds:
-        if k.real and k.date and a.store:
+        if k.real and (k.date or k.snapshot) and a.store:          # a snapshot kind is dated too (by the day it is loaded)
             k.template = store
         if getattr(a, "connector", None):
             k.connector = a.connector
@@ -334,7 +356,7 @@ def make(a, cli) -> int:
     if tool.exists() and str(out).startswith(str(ROOT)):
         import subprocess
         subprocess.run([sys.executable, str(tool), "--fix"], cwd=ROOT, capture_output=True)
-    dated = [k for k in plan.kinds if k.template in ("delta", "file") and k.real and k.date]
+    dated = [k for k in plan.kinds if k.template in ("delta", "file") and k.real and (k.date or k.snapshot)]
     data_dir = out / "data" / ("delta" if a.store == "delta" else "files")
     if dated:
         stage_and_ingest(a, cli, plan, dated, pack_dir, data_dir, SG)
@@ -357,7 +379,7 @@ def make(a, cli) -> int:
                         "mnemonic": k.mnemonic, "sample_id": str((docs[0].get(k.key) if docs else None) or f"{k.mnemonic}-0001"),
                         "samples": f"{len(docs)} real document(s)" if docs else "synthetic samples"})
     connectors = sorted({k.connector or f"{a.name}-store" for k in plan.kinds if k.template in ("delta", "file")})
-    vals = dict(name=a.name, title=plan.pack["title"], version=a.version, made=datetime.date.today().isoformat(), input=", ".join(str(p) for p in list(a.schema) + list(a.inputs or [])),
+    vals = dict(name=a.name, title=plan.pack["title"], version=a.version, made=datetime.date.today().isoformat(), input=", ".join(str(p) for p in list(a.schema or []) + list(a.inputs or [])),
                 sutras=len(items), kinds=kinds_v, data=bool(dated), store=("delta" if a.store == "delta" else "files"), warnings=plan.warnings, connector=", ".join(connectors))
     (out / "README.txt").write_text(readme_text(vals), encoding="utf-8")
     files = {str(p.relative_to(out)): PM.sha256(p) for p in PM.tree_files(out) if p.relative_to(out).parts[0] != "data"}
@@ -378,12 +400,13 @@ def stage_and_ingest(a, cli, plan, dated, pack_dir, data_dir, SG) -> None:
     IJ = cli.load_module("ingest_jsonl", "ingest_jsonl.py")
     with tempfile.TemporaryDirectory(prefix="schemapack-stage-") as tmp:
         for k in dated:
+            real = (getattr(a, "_real", None) or {}).get(k.orig or k.kind) or (getattr(a, "_real", None) or {}).get(k.kind) or k.samples
             with open(pathlib.Path(tmp) / f"{k.kind}.jsonl", "w", encoding="utf-8") as f:
-                for d in k.samples:
+                for d in real:                    # the data as it is: only the pack's samples were anonymised
                     f.write(json.dumps(d, ensure_ascii=False) + "\n")
         ia = argparse.Namespace(src=[pathlib.Path(tmp)], recursive=False, pack=pack_dir, domain=None, kind=None, key=None, date=None, columns=None,
                                 lake=data_dir if a.store == "delta" else None, store=a.store, root=data_dir if a.store == "files" else None,
-                                mode="replace", dry_run=False, batch_rows=250_000)
+                                mode="replace", dry_run=False, batch_rows=250_000, as_of=getattr(a, "as_of", None))
         IJ.ingest(ia, print)
 
 
@@ -395,3 +418,8 @@ def add_schema_arguments(p: argparse.ArgumentParser, with_pack: bool = False) ->
     p.add_argument("--mnemonic", help="kind=MNEMONIC,kind2=M2 (default: initials of the kind)")
     p.add_argument("--strip", type=int, default=6, help="entries in the strip of key numbers (default 6)")
     p.add_argument("--yes", action="store_true", help="never ask which field is the key: take the first candidate and warn")
+    p.add_argument("--anonymise", dest="anonymise", action="store_true", default=None,
+                   help="replace names, ids and amounts in the samples the pack keeps (default for data without --schema); the data loaded is not changed")
+    p.add_argument("--no-anonymise", dest="anonymise", action="store_false", help="keep the samples as they are")
+    p.add_argument("--related", metavar="none|PATH[,PATH]", help="pages for each value of these fields (counterparty, portfolio ...); default: the proposed ones; none: no pages")
+    p.add_argument("--as-of", help="YYYY-MM-DD: the business date a snapshot file is stored under (default today)")

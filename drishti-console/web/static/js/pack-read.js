@@ -68,16 +68,32 @@
 
   function hash(s) { var h = 2166136261; for (var i = 0; i < s.length; i++) { h = Math.imul(h ^ s.charCodeAt(i), 16777619); } return h >>> 0; }
 
-  /** Streams a JSON Lines file. opts: {sampleDocs, maxRows, maxBytes}; progress(bytesRead, rows); stop() true cancels. */
+  /** What a data file read gives the page: the sample, the counts and profile of every row (pack-profile.js), and its design samples. */
+  function finish(file, sam, prof, read, truncated) {
+    var r = prof.result(), seen = new Set(sam.docs), docs = sam.docs.slice();
+    r.design.forEach(function (d) { if (!seen.has(d)) { seen.add(d); docs.push(d); } });
+    return { type: 'data', name: file.name, rows: sam.rows, bytes: file.size, bytesRead: read, docs: docs, bad: sam.bad, truncated: truncated,
+      counts: r.counts, profile: r.profile, split: r.split, sampled: sam.docs.length, design: r.design.length };
+  }
+
+  function profiler(file, opts) {
+    var P = window.DrishtiPackProfile;
+    return new P.Profiler({ profilePerType: opts.profilePerType, designPerType: opts.designPerType, splitField: opts.splitField, seed: hash(file.name + ':' + file.size) });
+  }
+
+  /** Streams a JSON Lines file. opts: {sampleDocs, maxRows, maxBytes, profilePerType, designPerType, splitField}; progress(bytesRead, rows); stop() true cancels. */
   function readJsonl(file, opts, progress, stop) {
-    var sam = new Sampler(opts.sampleDocs, hash(file.name + ':' + file.size));
+    var sam = new Sampler(opts.sampleDocs, hash(file.name + ':' + file.size)), prof = profiler(file, opts);
     var dec = new TextDecoder('utf-8');
     var reader = file.stream().getReader();
     var buf = '', read = 0, truncated = false, lastTick = 0;
     function line(t) {
       t = t.trim();
       if (!t) { return; }
-      try { sam.add(JSON.parse(t)); } catch (e) { sam.bad++; }
+      var o;
+      try { o = unwrap(JSON.parse(t)); } catch (e) { sam.bad++; return; }
+      sam.add(o);
+      if (plain(o)) { prof.add(o, t.length); }
     }
     function pump() {
       return reader.read().then(function (r) {
@@ -101,23 +117,99 @@
     }
     return pump().then(function () {
       progress(read, sam.rows);
-      return { type: 'data', name: file.name, rows: sam.rows, bytes: file.size, bytesRead: read, docs: sam.docs, bad: sam.bad, truncated: truncated };
+      return finish(file, sam, prof, read, truncated);
     });
   }
 
-  /** A .json file is read whole: an array of objects is rows, an object that is a JSON Schema is a schema, any other object is one document. */
-  function readJson(file, opts, progress) {
-    if (file.size > opts.maxJsonBytes) {
-      return Promise.reject(new Error('is ' + (file.size / MB).toFixed(1) + ' MB, too big to read as one JSON document; use JSON Lines (.jsonl) for large data'));
+  /**
+   * Streams a JSON array of objects ([{...}, {...}], pretty-printed or not, any size): each element is cut out of the text by counting
+   * braces outside strings and parsed alone, so memory holds one element at a time, never the file.
+   */
+  function readJsonArray(file, opts, progress, stop) {
+    var sam = new Sampler(opts.sampleDocs, hash(file.name + ':' + file.size)), prof = profiler(file, opts);
+    var dec = new TextDecoder('utf-8');
+    var reader = file.stream().getReader();
+    var read = 0, truncated = false, lastTick = 0, done = false;
+    var depth = 0, inStr = false, esc = false, started = false, cur = '', grab = false, scalarAtTop = 0;
+    function element(text) {
+      var o;
+      try { o = unwrap(JSON.parse(text)); } catch (e) { sam.bad++; return; }
+      sam.add(o);
+      if (plain(o)) { prof.add(o, text.length); }
     }
-    return file.text().then(function (text) {
-      progress(file.size, 0);
-      var v;
-      try { v = JSON.parse(text); } catch (e) { throw new Error('is not valid JSON (' + e.message + ')'); }
-      if (looksLikeSchema(v)) { return { type: 'schema', name: file.name, text: text, bytes: file.size }; }
-      var sam = new Sampler(opts.sampleDocs, hash(file.name + ':' + file.size));
-      (Array.isArray(v) ? v : [v]).forEach(function (o) { if (sam.rows < opts.maxRows) { sam.add(o); } });
-      return { type: 'data', name: file.name, rows: sam.rows, bytes: file.size, bytesRead: file.size, docs: sam.docs, bad: sam.bad, truncated: false };
+    function scan(chunk) {
+      var from = grab ? 0 : -1;
+      for (var i = 0; i < chunk.length; i++) {
+        var ch = chunk.charCodeAt(i);
+        if (inStr) {
+          if (esc) { esc = false; } else if (ch === 92) { esc = true; } else if (ch === 34) { inStr = false; }
+          continue;
+        }
+        if (ch === 34) { inStr = true; continue; }
+        if (!started) { if (ch === 91) { started = true; depth = 1; } else if (ch > 32) { throw new Error('is not a JSON array of objects'); } continue; }
+        if (ch === 123 || ch === 91) {
+          if (depth === 1 && ch === 123) { grab = true; from = i; cur = ''; }
+          else if (depth === 1 && ch === 91) { scalarAtTop++; }
+          depth++;
+        } else if (ch === 125 || ch === 93) {
+          depth--;
+          if (depth === 1 && grab && ch === 125) {
+            element(cur + chunk.slice(from, i + 1));
+            grab = false; cur = ''; from = -1;
+            if (sam.rows >= opts.maxRows) { return true; }
+          } else if (depth === 0) { done = true; return true; }
+        }
+      }
+      if (grab) { cur += chunk.slice(Math.max(from, 0)); }
+      return false;
+    }
+    function pump() {
+      return reader.read().then(function (r) {
+        if (stop()) { reader.cancel(); throw new Error('cancelled'); }
+        if (r.done) { scan(dec.decode()); return; }
+        read += r.value.length;
+        var full = scan(dec.decode(r.value, { stream: true }));
+        var now = Date.now();
+        if (now - lastTick > 80) { lastTick = now; progress(read, sam.rows); }
+        if (full || done || read >= opts.maxBytes) {
+          truncated = !done && read < file.size;
+          reader.cancel();
+          return;
+        }
+        return pump();
+      });
+    }
+    return pump().then(function () {
+      progress(read, sam.rows);
+      if (scalarAtTop) { sam.bad += scalarAtTop; }
+      return finish(file, sam, prof, read, truncated);
+    });
+  }
+
+  /** The first character of a file that is not white space. */
+  function firstChar(file) {
+    return file.slice(0, 4096).text().then(function (t) { var m = /\S/.exec(t); return m ? m[0] : ''; });
+  }
+
+  /**
+   * A .json file: an array is rows, streamed whatever its size; an object is read whole (up to maxJsonBytes) and is a schema when it looks
+   * like one, else one document.
+   */
+  function readJson(file, opts, progress, stop) {
+    return firstChar(file).then(function (c) {
+      if (c === '[') { return readJsonArray(file, opts, progress, stop); }
+      if (file.size > opts.maxJsonBytes) {
+        return Promise.reject(new Error('is ' + (file.size / MB).toFixed(1) + ' MB, too big to read as one JSON document; a large file is a JSON array or JSON Lines (.jsonl)'));
+      }
+      return file.text().then(function (text) {
+        progress(file.size, 0);
+        var v;
+        try { v = JSON.parse(text); } catch (e) { throw new Error('is not valid JSON (' + e.message + ')'); }
+        if (looksLikeSchema(v)) { return { type: 'schema', name: file.name, text: text, bytes: file.size }; }
+        var sam = new Sampler(opts.sampleDocs, hash(file.name + ':' + file.size)), prof = profiler(file, opts);
+        (Array.isArray(v) ? v : [v]).forEach(function (o) { if (sam.rows < opts.maxRows) { o = unwrap(o); sam.add(o); if (plain(o)) { prof.add(o, 0); } } });
+        return finish(file, sam, prof, file.size, false);
+      });
     });
   }
 
@@ -130,7 +222,7 @@
     var e = ext(entry.name), f = entry.file;
     var wrap = function (r) { r.name = entry.name; return r; };
     if (e === 'jsonl' || e === 'ndjson') { return readJsonl(f, opts, progress, stop).then(wrap); }
-    if (e === 'json') { return readJson(f, opts, progress).then(wrap); }
+    if (e === 'json') { return readJson(f, opts, progress, stop).then(wrap); }
     if (e === 'yaml' || e === 'yml') { return readYaml(f).then(wrap); }
     return Promise.reject(new Error('is not a .json, .jsonl, .yaml or .yml file'));
   }

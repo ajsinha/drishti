@@ -33,7 +33,8 @@ public final class Functions {
             Map.entry("max", new int[] {1, 8}), Map.entry("upper", new int[] {1, 1}), Map.entry("lower", new int[] {1, 1}),
             Map.entry("contains", new int[] {2, 2}), Map.entry("startsWith", new int[] {2, 2}),
             Map.entry("matches", new int[] {2, 2}), Map.entry("matchesCase", new int[] {2, 2}),
-            Map.entry("within", new int[] {2, 2}), Map.entry("oneOf", new int[] {2, 2}));
+            Map.entry("within", new int[] {2, 2}), Map.entry("oneOf", new int[] {2, 2}),
+            Map.entry("flatten", new int[] {1, 1}), Map.entry("nonblank", new int[] {1, 8}));
 
     private static final Map<String, ElFunction> FUNCTIONS = Map.ofEntries(
             Map.entry("link", Functions::link), Map.entry("size", (a, c) -> size(a.get(0))),
@@ -50,7 +51,28 @@ public final class Functions {
             Map.entry("matches", (a, c) -> matches(a.get(0), Values.text(a.get(1)), true)),
             Map.entry("matchesCase", (a, c) -> matches(a.get(0), Values.text(a.get(1)), false)),
             Map.entry("within", (a, c) -> within(a.get(0), Values.text(a.get(1)))),
-            Map.entry("oneOf", (a, c) -> oneOf(a.get(0), a.get(1))));
+            Map.entry("oneOf", (a, c) -> oneOf(a.get(0), a.get(1))),
+            Map.entry("flatten", (a, c) -> flatten(a.get(0))),
+            Map.entry("nonblank", (a, c) -> a.stream().filter(v -> !Values.isNull(v) && !Values.text(Values.simplify(v)).isBlank()).findFirst().orElse(null)));
+
+    /**
+     * {@code flatten(list)}: a list of lists made one list ({@code flatten($.legs[*].cashflows)} is every cashflow of every leg, in
+     * order); elements that are not lists are kept as they are; anything but a list is empty. One level only, so it stays cheap.
+     */
+    private static Object flatten(Object v) {
+        if (!(Values.simplify(v) instanceof DataNode.Arr arr)) {
+            return null;
+        }
+        java.util.List<DataNode> out = new java.util.ArrayList<>();
+        for (DataNode e : arr.elements()) {
+            if (e instanceof DataNode.Arr inner) {
+                out.addAll(inner.elements());
+            } else if (!e.isNull()) {
+                out.add(e);
+            }
+        }
+        return new DataNode.Arr(java.util.List.copyOf(out));
+    }
 
     private static final java.util.concurrent.ConcurrentHashMap<String, com.ash.drishti.common.SafeRegex> PATTERNS = new java.util.concurrent.ConcurrentHashMap<>();
 

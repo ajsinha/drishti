@@ -91,8 +91,11 @@ public final class ColumnFilters {
         if (tests.isEmpty()) {
             return t;
         }
-        List<PanelData.Row> rows = keep(t.rows(), tests);
-        return new PanelData.Table(t.columns(), t.numeric(), rows, t.total(), t.more(), t.search(), t.pivot(), t.expand());
+        // a drill table (levels): its levels have columns of their own, so only its first level is filtered
+        List<PanelData.Row> rows = t.levels() != null && !t.levels().isEmpty()
+                ? t.rows().stream().filter(r -> tests.stream().allMatch(x -> x.passes(r))).toList() : keep(t.rows(), tests);
+        return new PanelData.Table(t.columns(), t.numeric(), rows, t.total(), t.more(), t.search(), t.pivot(), t.expand(), t.levels(), t.root(),
+                t.emptyLabel());
     }
 
     /** Rows that pass every filter, plus a parent that does not but has a child that does (as the console keeps it). */
@@ -102,7 +105,7 @@ public final class ColumnFilters {
             List<PanelData.Row> kids = r.children() == null || r.children().isEmpty() ? r.children() : keep(r.children(), tests);
             boolean pass = tests.stream().allMatch(t -> t.passes(r));
             if (pass || (kids != null && !kids.isEmpty())) {
-                out.add(kids == r.children() ? r : new PanelData.Row(r.cells(), r.highlight(), r.path(), kids, r.pick()));
+                out.add(kids == r.children() ? r : new PanelData.Row(r.cells(), r.highlight(), r.path(), kids, r.pick(), r.crumb(), r.kidsTotal()));
             }
         }
         return out;

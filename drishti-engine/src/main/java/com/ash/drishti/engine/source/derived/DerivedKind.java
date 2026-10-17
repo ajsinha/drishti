@@ -395,6 +395,45 @@ public final class DerivedKind {
         return java.util.Optional.of(out);
     }
 
+    /**
+     * The document paths the aggregates and the rows read (not the group key), when they are all plain paths: a member read as a document
+     * (a key that is an expression, such as the first leg's index) is kept as just these, not as the whole document, so a large kind is
+     * grouped without holding every document.
+     */
+    java.util.Optional<java.util.Set<String>> memberPaths() {
+        java.util.Set<String> raw = new java.util.LinkedHashSet<>();
+        fields.stream().filter(f -> f.expr() != null).forEach(f -> f.expr().paths(raw::add));
+        rowColumns.values().forEach(e -> e.paths(raw::add));
+        java.util.Set<String> out = new java.util.LinkedHashSet<>();
+        for (String p : raw) {
+            if (!p.startsWith("$.") || p.length() < 3 || p.contains("[")) {
+                return java.util.Optional.empty();
+            }
+            out.add(p.substring(2));
+        }
+        return java.util.Optional.of(out);
+    }
+
+    /** A member document cut down to these paths (each value as the document holds it). */
+    static DataNode project(DataNode doc, java.util.Set<String> paths) {
+        Map<String, Object> root = new LinkedHashMap<>();
+        for (String path : paths) {
+            DataNode v = doc.at(path);
+            if (v.isNull()) {
+                continue;
+            }
+            String[] parts = path.split("\\.");
+            Map<String, Object> at = root;
+            for (int p = 0; p < parts.length - 1; p++) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> next = (Map<String, Object>) at.computeIfAbsent(parts[p], x -> new LinkedHashMap<String, Object>());
+                at = next;
+            }
+            at.put(parts[parts.length - 1], v.unwrap());
+        }
+        return DataNode.of(root);
+    }
+
     /** The paths the group key and the filter read: enough to place a member in its group. */
     java.util.Set<String> keyPaths() {
         java.util.Set<String> out = new java.util.LinkedHashSet<>();

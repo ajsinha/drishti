@@ -206,7 +206,7 @@
       if (scroll && vis[st.sel].scrollIntoView) { vis[st.sel].scrollIntoView({ block: 'nearest' }); }
     }
     function open() {
-      var r = visible()[st.sel], a = r && r.querySelector('a[href]');
+      var r = visible()[st.sel], a = r && (r.querySelector('a[data-dr-open]') || r.querySelector('a[href]'));   // a drill row opens its level
       if (a) { a.click(); }
     }
 

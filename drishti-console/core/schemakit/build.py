@@ -65,6 +65,50 @@ def _spaced(docs: list, n: int, key: str | None) -> list:
     return [ordered[(i * len(ordered)) // n] for i in range(n)]
 
 
+def shape_of(doc, prefix: str = "", out: set | None = None, depth: int = 0) -> set:
+    """The paths a document fills, with how each array is (``LEGS[]`` filled, ``EVENTS:empty``, ``EVENTS:absent`` is added by the caller)."""
+    out = set() if out is None else out
+    if isinstance(doc, dict) and depth < 8:
+        for k, v in doc.items():
+            p = f"{prefix}{k}"
+            if v is None or (isinstance(v, str) and not v.strip()):
+                continue
+            if isinstance(v, list):
+                out.add(p + (":empty" if not v else "[]"))
+                for item in v[:50]:
+                    shape_of(item, p + "[].", out, depth + 1)
+            elif isinstance(v, dict):
+                shape_of(v, p + ".", out, depth + 1)
+            else:
+                out.add(p)
+    return out
+
+
+def covering(docs: list, n: int, key: str | None) -> list:
+    """Up to ``n`` documents that together show every path the documents fill and every way an optional array comes (filled, empty,
+    absent): greedy, the document adding most new paths first; then spread over the key, as ``_spaced`` does."""
+    if len(docs) <= n:
+        return _spaced(docs, n, key)
+    arrays = {p.split(":")[0].removesuffix("[]") for d in docs for p in shape_of(d) if p.endswith(("[]", ":empty")) and "." not in p}
+    shapes = []
+    for d in docs:
+        s = shape_of(d)
+        s |= {f"{a}:absent" for a in arrays if a not in d}
+        shapes.append(s)
+    order = sorted(range(len(docs)), key=lambda i: str(docs[i].get(key)) if key and docs[i].get(key) is not None else str(i))
+    seen: set = set()
+    picked: list = []
+    while len(picked) < n:
+        best = max((i for i in order if i not in picked), key=lambda i: len(shapes[i] - seen), default=None)
+        if best is None or not (shapes[best] - seen):
+            break
+        picked.append(best)
+        seen |= shapes[best]
+    rest = [docs[i] for i in order if i not in picked]
+    out = [docs[i] for i in picked] + _spaced(rest, n - len(picked), key) if len(picked) < n else [docs[i] for i in picked]
+    return sorted(out, key=lambda d: str(d.get(key)) if key and d.get(key) is not None else json.dumps(d, sort_keys=True))
+
+
 def prepare(plan: Plan, n: int | None = None) -> list[Item]:
     """For every Sutra of every kind, its samples: real documents that match first (spread over the key), the schema's own ``examples``,
     then synthetic documents until there are ``n`` (and always at least two when the Sutra has no real match)."""
@@ -73,7 +117,7 @@ def prepare(plan: Plan, n: int | None = None) -> list[Item]:
     for kp in plan.kinds:
         for idx, sp in enumerate(kp.sutras):
             real = [d for d in kp.samples if sp.fallback or _matches(d, sp)]
-            picks = [Sample(f"sample-{i}", d, "real") for i, d in enumerate(_spaced(real, n, kp.key), 1)]
+            picks = [Sample(f"sample-{i}", d, "real") for i, d in enumerate(covering(real, n, kp.key), 1)]
             ex = [Sample(f"sample-example-{i}", d, "example") for i, d in enumerate(synth.examples_of(kp, sp), 1)] if kp.node else []
             samples = picks + ex[: max(0, n - len(picks))]
             need = max(0, n - len(samples)) if not picks else (max(0, 2 - len(samples)) if not sp.fallback else 0)
@@ -110,13 +154,38 @@ def drafts_ok(items: list[Item], drafts: dict) -> list[str]:
 def connector_block(pack: str, kinds: list, store: str, plan_cols: dict) -> dict:
     """A connector for kinds that share a logical name: the file or delta plugin on the usual root, one layout per kind."""
     if store == "file":
+        layout = {}
+        for k in kinds:
+            title = title_columns(k)
+            layout[k.kind] = {"columns": list(dict.fromkeys(plan_cols[k.kind] + title))}
+            if title:
+                layout[k.kind]["title"] = title          # type-ahead finds a document by these too (a counterparty, a portfolio, a type)
         return {"plugin": "file", "enabled": "${DRISHTI_FILES_ENABLED:true}", "kinds": sorted(k.kind for k in kinds),
                 "description": f"Set root (or DRISHTI_FILES_ROOT) to the folder that holds {pack}/<date>/<kind>.jsonl",
                 "settings": {"root": "${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}", "domain": pack, "id-field": "id",
-                             "layout": {k.kind: {"columns": plan_cols[k.kind]} for k in kinds}}}
+                             "layout": layout}}
     return {"plugin": "delta", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": sorted(k.kind for k in kinds),
             "settings": {"root": "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", "domain": pack,
                          "layout": {k.kind: {"columns": plan_cols[k.kind], "sort-by": "id", "file-rows": 250000, "row-group-rows": 1000} for k in kinds}}}
+
+
+def page_paths(plan: Plan, kp: KindPlan) -> list[str]:
+    """The plain paths the pages per value of ``kp`` read (group, totals, rows): promoted, they are built from columns, no document read."""
+    out: list = []
+    for d in plan.kinds:
+        spec = d.derived
+        if not spec or spec.get("from") != kp.kind:
+            continue
+        exprs = [spec["group-by"]] + [a.partition(" ")[2] for a in spec["fields"].values()] + list(spec["rows"].values())
+        out += [e[2:] for e in exprs if re.fullmatch(r"\$\.[A-Za-z_][A-Za-z0-9_]*", e or "")]
+    return list(dict.fromkeys(out))
+
+
+def title_columns(kp: KindPlan) -> list[str]:
+    """What a document's search title shows after its id: the type it is, and the fields that have a page per value (top level only)."""
+    out = [m for m in kp.match if "." not in m]
+    out += [r["path"] for r in kp.related if "[" not in r["path"] and "." not in r["path"]]
+    return list(dict.fromkeys(out))[:4]
 
 
 def columns_for(kp: KindPlan, n: int = 7) -> list[str]:
@@ -184,13 +253,32 @@ def pack_manifest(plan: Plan, kinds_dir_note: str = "") -> dict:
         m["connectors"], m["routes"], m["connector-templates"], ing = sorted(by_conn), {}, {}, {}
         for name, ks in sorted(by_conn.items()):
             store = ks[0].template
-            m["connector-templates"][name] = connector_block(p["name"], ks, store, {k.kind: columns_for(k) + ([k.date] if k.date and k.date not in columns_for(k) else []) for k in ks})
+            m["connector-templates"][name] = connector_block(p["name"], ks, store, {k.kind: list(dict.fromkeys(columns_for(k) + ([k.date] if k.date else []) + page_paths(plan, k))) for k in ks})
             for k in ks:
                 m["routes"][k.kind] = name
                 if k.key and k.date:
                     ing[k.kind] = {"key": k.key, "date": k.date}
+                elif k.key and k.snapshot:
+                    ing[k.kind] = {"key": k.key, "snapshot": True}      # no date field: stored under the day of the load
         if ing:
             m["ingest"] = ing
+    derived = [k for k in plan.kinds if k.template == "derived" and k.derived]
+    if derived:
+        # one derived connector builds every page-per-value kind from the documents of the kind it groups (CONNECTOR_FILES.md)
+        name = f"{p['name']}-pages"[:60]
+        m.setdefault("connectors", [])
+        m.setdefault("routes", {})
+        m.setdefault("connector-templates", {})
+        m["connectors"] = sorted(set(m["connectors"]) | {name})
+        settings: dict = {"refresh": "60s"}
+        for k in derived:
+            d = k.derived
+            settings[k.kind] = {"from": d["from"], "group-by": d["group-by"], "id-field": d["id-field"], "members": d["members"],
+                                "max-members": d["max-members"], "fields": d["fields"], "rows": d["rows"]}
+            m["routes"][k.kind] = name
+        m["connector-templates"][name] = {"plugin": "derived", "enabled": True, "kinds": sorted(k.kind for k in derived),
+                                          "description": "Pages for each value of a field (a counterparty, a portfolio, an index), built from the pack's own documents",
+                                          "settings": settings}
     if getattr(plan, "controls_note", None):
         m["x-controls"] = plan.controls_note
     return m
@@ -217,7 +305,7 @@ def assemble(plan: Plan, items: list[Item], drafts: dict, pack_dir: pathlib.Path
         shutil.rmtree(pack_dir)
     built = Built(pack_dir)
     for it in items:
-        text, shown = decorate.finalize(drafts[it.name], it.kp, it.sp)
+        text, shown = decorate.finalize(drafts[it.name], it.kp, it.sp, plan)
         built.shown.setdefault(it.kp.kind, set()).update(shown)
         f = pack_dir / "sutras" / it.kp.kind / f"{it.name}.v1.sutra.yaml"
         f.parent.mkdir(parents=True, exist_ok=True)
@@ -236,6 +324,10 @@ def assemble(plan: Plan, items: list[Item], drafts: dict, pack_dir: pathlib.Path
     # samples/ catalog
     cat = []
     for kp in plan.kinds:
+        if kp.derived or (kp.real and kp.template in ("file", "delta")):
+            # its data is loaded into the store (or built from it): samples served beside the real documents would be listed and counted
+            # with them (a page per counterparty built from both); the Sutras' own tests keep their samples in tests/
+            continue
         sd = pack_dir / "samples" / kp.kind
         sd.mkdir(parents=True, exist_ok=True)
         for doc, src in catalog_docs(kp, plan):
@@ -249,9 +341,19 @@ def assemble(plan: Plan, items: list[Item], drafts: dict, pack_dir: pathlib.Path
     # pack.yaml and About
     man = pack_manifest(plan)
     note = HEADER_NOTE + "".join(f"# {k.kind}: key $.{k.key}" + (f", business date $.{k.date}" if k.date else "") + "\n" for k in plan.kinds)
-    (pack_dir / "pack.yaml").write_text(note + yaml.safe_dump(man, sort_keys=False, width=120, allow_unicode=True), encoding="utf-8")
+    (pack_dir / "pack.yaml").write_text(note + plain_yaml(man), encoding="utf-8")
     (pack_dir / "config").mkdir(exist_ok=True)
     (pack_dir / "config" / "about.yaml").write_text(decorate.about_yaml(plan, built.shown), encoding="utf-8")
+    from . import bi as BI                    # every level of a deep document as a BI table (config/bi: imported into BI on deploy)
+    for kp in plan.kinds:
+        if kp.template in ("file", "delta") and not kp.derived:
+            for rel, text in BI.files(kp, plan, kp.connector or f"{plan.pack['name']}-store").items():
+                f = pack_dir / "config" / "bi" / rel
+                f.parent.mkdir(parents=True, exist_ok=True)
+                f.write_text(text, encoding="utf-8")
+    fmts = pack_formats(plan, [s["yaml"] for s in built.sutras])
+    if fmts:
+        (pack_dir / "config" / "formats.yaml").write_text(yaml.safe_dump({"formats": fmts}, sort_keys=False), encoding="utf-8")
     built.todo = decorate.todo_count(plan)
     (pack_dir / "README.md").write_text(readme(plan, items, built), encoding="utf-8")
     if license_header:
@@ -259,6 +361,27 @@ def assemble(plan: Plan, items: list[Item], drafts: dict, pack_dir: pathlib.Path
             if p.suffix in (".yaml", ".md") and p.is_file() and not p.read_text(encoding="utf-8").startswith(license_header[:20]):
                 p.write_text(license_header + p.read_text(encoding="utf-8"), encoding="utf-8")
     return built
+
+
+ANON = ("\n- **Anonymised**: every sample document (in `tests/`, `samples/` and `catalog.json`) was anonymised before it was kept: names, ids "
+        "and amounts are replaced consistently (the same value, the same token), dates and short vocabulary (statuses, sides, currencies) are kept. "
+        "No value of the source data is in this pack.")
+def plain_yaml(doc) -> str:
+    """YAML without anchors and aliases (a repeated list is written out again): the server's reader caps aliases, and people read it."""
+    import yaml
+
+    class NoAliases(yaml.SafeDumper):
+        def ignore_aliases(self, data):
+            return True
+    return yaml.dump(doc, Dumper=NoAliases, sort_keys=False, width=120, allow_unicode=True)
+
+
+PACK_FORMATS = {"price4": {"type": "number", "decimals": 4, "grouping": True}}
+
+
+def pack_formats(plan: Plan, texts: list) -> dict:
+    """The formats the generated Sutras use beyond the core ones (config/formats.yaml)."""
+    return {name: spec for name, spec in PACK_FORMATS.items() if any(f"'{name}'" in t or f'"{name}"' in t or f": {name}" in t for t in texts)}
 
 
 def readme(plan: Plan, items: list[Item], built: Built) -> str:
@@ -280,7 +403,7 @@ Generated from JSON Schema by schemakit (`docs/guides/SCHEMA_TO_PACK.md`). Nothi
 - `tests/<sutra>/`: samples named `sample-N.json` (real documents), `sample-example-N.json` (the schema's own examples) or
   `sample-synthetic-N.json` (generated from the schema: **synthetic**), and `expect.yaml`.
   Sutras tested on synthetic samples only: {syn}.
-- `samples/`: documents so the pack opens before any data source is connected.
+- `samples/`: documents so the pack opens before any data source is connected.{ANON if plan.settings.get("anonymised") else ""}
 - `config/about.yaml`: the *About this page* text from the schema descriptions; {built.todo} field(s) had no description and say `TODO`.
 
 ## Next steps

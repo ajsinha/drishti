@@ -41,6 +41,66 @@
 {{ tree_rows(d, kids, depth + 1) }}{% endfor %}
 {%- endmacro %}
 
+{# A table whose Sutra says levels: a drill-down. Every level is a table of its own (sorted, filtered, paged and walked with the
+   keyboard like any table); a row that has rows under it opens them (its first cell is a link, Enter follows it) in place of the
+   level, with the breadcrumb above and the parent row's values and the level's count and total on top. static/js/drill.js shows one
+   level at a time, keeps the address (?dr.<panel>=1.6) so a level can be shared and Back goes up, and Esc / Backspace go up too. #}
+{% macro dr_head(heads, numeric) -%}
+<thead><tr>{% for h in (heads or []) %}<th{% if (numeric or [])[loop.index0] %} class="num"{% endif %}>{{ h }}</th>{% endfor %}</tr></thead>
+{%- endmacro %}
+
+{% macro dr_rows(pid, rows, numeric, prefix, depth, deeper, noun) -%}
+<tbody>
+{% for r in rows %}{% set path = prefix ~ loop.index0 %}{% set kids = r.children or [] %}
+  <tr{% if r.highlight %} class="hl"{% endif %}{% if r.path %} data-path="{{ r.path }}"{% endif %} data-dr-row="{{ path }}">
+  {% for c in (r.cells or []) %}<td class="mono{% if (numeric or [])[loop.index0] %} num{% endif %}{{ tone(c) }}">
+    {%- if loop.first and deeper %}<a class="dr-open" href="?dr.{{ pid }}={{ path }}" data-dr-open="{{ path }}" title="Open {{ r.crumb }}: {{ kids | length }} {{ noun }}" aria-label="Open {{ r.crumb }}: {{ kids | length }} {{ noun }}">{{ c.text if c.text not in (none, '') else r.crumb }}<span class="dr-n" aria-hidden="true">{{ kids | length }} ▸</span></a>
+    {%- else %}{{ cell_text(c) }}{% endif %}</td>{% endfor %}
+  </tr>{% endfor %}
+</tbody>
+{%- endmacro %}
+
+{% macro dr_foot(total, numeric) -%}
+{% if total %}<tfoot><tr class="total">{% for c in total.cells %}<td class="mono{% if (numeric or [])[loop.index0] %} num{% endif %}{{ tone(c) }}">{{ c.text }}</td>{% endfor %}</tr></tfoot>{% endif %}
+{%- endmacro %}
+
+{% macro dr_levels(pid, d, rows, prefix, depth) -%}
+{% set lv = d.levels[depth] %}{% set ph = d.columns if depth == 0 else d.levels[depth - 1].columns %}
+{% set deeper = depth + 1 < (d.levels | length) %}{% set noun = (d.levels[depth + 1].title or 'rows') | lower if deeper else '' %}
+{% for r in rows %}{% set path = prefix ~ loop.index0 %}{% set kids = r.children or [] %}
+<div class="dr-lv" data-dr-path="{{ path }}" data-dr-crumb="{{ r.crumb }}" data-dr-depth="{{ depth + 1 }}" hidden>
+  <dl class="dr-parent" aria-label="{{ r.crumb }}">{% for c in (r.cells or []) %}{% if c.text not in (none, '') %}<div><dt>{{ ph[loop.index0] }}</dt><dd class="mono{{ tone(c) }}">{{ cell_text(c) }}</dd></div>{% endif %}{% endfor %}</dl>
+  {% if kids %}
+  <div class="tbl-wrap"><table class="tbl dr-tbl" aria-label="{{ lv.title or 'Rows' }} of {{ r.crumb }}">
+    <caption class="dr-cap">{{ lv.title or 'Rows' }} <span class="dr-count">{{ kids | length }}</span></caption>
+    {{ dr_head(lv.columns, lv.numeric) }}
+    {{ dr_rows(pid, kids, lv.numeric, path ~ '.', depth + 1, deeper, noun) }}
+    {{ dr_foot(r.kidsTotal, lv.numeric) }}
+  </table></div>
+  {% else %}<p class="pnl-empty" role="status"><i class="bi bi-inbox" aria-hidden="true"></i> No {{ (lv.title or 'rows') | lower }}</p>{% endif %}
+</div>
+{% if deeper and kids %}{{ dr_levels(pid, d, kids, path ~ '.', depth + 1) }}{% endif %}
+{% endfor %}
+{%- endmacro %}
+
+{% macro drill(p) -%}
+{% set d = p.data %}{% set noun = (d.levels[0].title or 'rows') | lower %}
+<div class="drill" data-drill="{{ p.id }}" data-dr-root="{{ d.root or p.title or '' }}">
+  <nav class="dr-crumbs" aria-label="Where you are in {{ p.title or p.id }}"><ol data-dr-crumbs><li aria-current="location">{{ d.root or p.title or '' }}</li></ol>
+    <button type="button" class="fk dr-up" data-dr-up hidden title="Up one level (Esc)" aria-label="Up one level"><b>Esc</b> Up</button></nav>
+  <div class="dr-lv on" data-dr-path="" data-dr-depth="0">
+  <div class="tbl-wrap"><table class="tbl dr-tbl"{% if d.search == false %} data-no-search{% endif %} aria-label="{{ p.title or p.id }}">
+    <caption class="dr-cap">{{ p.title or '' }} <span class="dr-count">{{ (d.rows or []) | length }}</span></caption>
+    {{ dr_head(d.columns, d.numeric) }}
+    {{ dr_rows(p.id, d.rows or [], d.numeric, '', 0, true, noun) }}
+    {{ dr_foot(d.total, d.numeric) }}
+    {% if d.more %}<tfoot><tr class="more"><td colspan="{{ (d.columns or []) | length }}">{{ d.more }}</td></tr></tfoot>{% endif %}
+  </table></div>
+  </div>
+  {{ dr_levels(p.id, d, d.rows or [], '', 0) }}
+</div>
+{%- endmacro %}
+
 {% macro table(d) -%}
 {% if d.expand %}
 <div class="tbl-wrap"><table class="tbl tbl-tree" data-plain data-tree{% if d.search == false %} data-no-search{% endif %}>
@@ -272,7 +332,7 @@
 {% if p.denied %}<p class="pnl-empty pnl-denied" role="status" data-denied><i class="bi bi-lock" aria-hidden="true"></i> {{ p.denied | capitalize }}
   <span class="pnl-empty-why">This panel reads another kind of entity that your roles do not allow you to open.</span></p>
 {% else %}<p class="pnl-empty" role="status"{% if p.error %} title="{{ p.error }}"{% endif %}>
-  <i class="bi bi-inbox" aria-hidden="true"></i> {{ 'No linked entities' if p.kind == 'links' else 'No data available' }}
+  <i class="bi bi-inbox" aria-hidden="true"></i> {{ 'No linked entities' if p.kind == 'links' else ((p.data.emptyLabel if (p.data is mapping and p.data.emptyLabel) else none) or 'No data available') }}
   {% if p.error %}<span class="pnl-empty-why">The data did not have the shape this panel expects.</span>{% endif %}</p>{% endif %}
 {%- endmacro %}
 
@@ -281,7 +341,7 @@
   {% if p.empty or (p.data is none and p.kind != 'provenance') %}{{ no_data(p) }}
   {% elif p.kind in ['kv', 'status'] %}{{ fields(p.data.fields, 4 if p.area == 'main' else 2) }}
   {% elif p.kind == 'provenance' %}<dl class="prov">{% for f in (p.data.fields or []) %}<div><dt>{{ f.label }}</dt><dd class="mono">{{ f.text }}</dd></div>{% endfor %}</dl>
-  {% elif p.kind in ['table', 'ladder'] %}{{ pivotable(p) }}
+  {% elif p.kind in ['table', 'ladder'] %}{% if p.data.levels %}{{ drill(p) }}{% else %}{{ pivotable(p) }}{% endif %}
   {% elif p.kind == 'tabs' %}{{ tabs(p) }}
   {% elif p.kind in ['line', 'area'] %}{{ chart(p) }}
   {% elif p.kind == 'hbar' %}{{ bars(p.data) }}

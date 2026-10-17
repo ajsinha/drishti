@@ -650,6 +650,11 @@ class BackendClient:
         """Sends raw bytes to an admin endpoint (a pack archive); ``headers`` carry its file name, checksum and signature."""
         return await self._send("POST", "/admin" + path, ident, content=data, headers={"Content-Type": "application/octet-stream", **headers}, timeout=timeout)
 
+    async def admin_stream_upload(self, path: str, ident, chunks, params: dict | None = None, timeout: float = 3600.0):
+        """Streams a large body (a data file being loaded) to an admin endpoint chunk by chunk: the console never holds it whole."""
+        return await self._send("POST", "/admin" + path, ident, content=chunks, params={k: v for k, v in (params or {}).items() if v},
+                                headers={"Content-Type": "application/octet-stream"}, timeout=timeout)
+
     async def stream(self, kind: str, id_: str, ident=None, opened: list | None = None, controls: dict | None = None):
         """Yields ``(event, data)`` pairs from the server's SSE stream for a view, until it ends (see ``sse`` for ``opened``).
         ``controls`` are the ``ctl.<id>`` values the stream is built with: every frame keeps them."""

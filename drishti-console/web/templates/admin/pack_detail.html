@@ -56,6 +56,24 @@
   </section>
 
   {% if loaded %}
+  <section aria-labelledby="pdData" class="det-sec pd-data" id="load-data" data-pack-data="{{ p.name }}">
+    <h2 class="ws-h" id="pdData">Load data</h2>
+    <p class="text-muted-d">Load a whole data file into this pack's File connector: a JSON array or JSON Lines, of any size (it is streamed from this browser
+      to the server, one document at a time). Each document goes under its business date, or under the day you choose for a snapshot; a day loaded
+      again is replaced. Every row is checked against the pack's Sutras, then search, type-ahead, the pages per value and BI catch up.</p>
+    <div data-data-targets><p class="text-muted-d">Reading what this pack can load…</p></div>
+    <div class="pd-data-form" data-data-form hidden>
+      <div class="pd-field"><label for="pdFile">Data file</label><input id="pdFile" type="file" accept=".json,.jsonl,.ndjson" data-data-file></div>
+      <div class="pd-field" data-data-kind-box hidden><label for="pdKind">Kind</label><select id="pdKind" class="studio-in" data-data-kind></select></div>
+      <div class="pd-field" data-data-date-box hidden><label for="pdDate">Business date (snapshot)</label><input id="pdDate" type="date" class="studio-in" data-data-date></div>
+      <p class="adm-actions"><button type="button" class="fk" data-data-load disabled>Load the file</button>
+        <button type="button" class="fk" data-data-cancel hidden>Cancel</button></p>
+      <progress data-data-prog max="100" value="0" hidden aria-label="Sent so far"></progress>
+    </div>
+    <p class="adm-msg" data-data-msg role="status" aria-live="polite"></p>
+    <div data-data-result hidden></div>
+  </section>
+
   <section aria-labelledby="pdKinds" class="det-sec">
     <h2 class="ws-h" id="pdKinds">Kinds and mnemonics</h2>
     <div class="tbl-wrap"><table class="tbl adm-tbl det-tbl" data-plain data-kinds>
@@ -139,4 +157,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script><script src="/static/js/roles.js?v={{ ASSET_V }}"></script><script src="/static/js/artifact-uninstall.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-packs.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-retry.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-watch.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script><script src="/static/js/roles.js?v={{ ASSET_V }}"></script><script src="/static/js/artifact-uninstall.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-packs.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-pack-data.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-retry.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-watch.js?v={{ ASSET_V }}"></script>{% endblock %}

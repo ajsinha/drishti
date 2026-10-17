@@ -286,6 +286,10 @@ final class SutraBuilder {
                     options.put(opt, v);
                 }
             });
+            if (options.containsKey("levels") && (options.containsKey("children") || options.containsKey(Panel.PIVOT))) {
+                problem("DRS-2029", "a table with 'levels' drills into its rows level by level; it cannot also have "
+                        + (options.containsKey("children") ? "'children' (a tree)" : "a Pivot tab"), m.get("levels"));
+            }
             for (String req : kind.required()) {
                 if (!m.containsKey(req)) {
                     problem("DRS-2022", "'" + kind.id() + "' panel '" + id + "' needs option '" + req + "'", n);

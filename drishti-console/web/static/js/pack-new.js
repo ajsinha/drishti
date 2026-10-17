@@ -29,11 +29,13 @@
   var VERSION_RE = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$/;
   var cfg = {
     sampleDocs: parseInt(root.dataset.sampleDocs, 10) || 200, readRows: parseInt(root.dataset.readRows, 10) || 500000, readMb: parseInt(root.dataset.readMb, 10) || 1024,
-    canAuthor: root.dataset.canAuthor === 'true', isAdmin: root.dataset.isAdmin === 'true'
+    canAuthor: root.dataset.canAuthor === 'true', isAdmin: root.dataset.isAdmin === 'true',
+    profilePerType: parseInt(root.dataset.profilePerType, 10) || 10000, designPerType: parseInt(root.dataset.designPerType, 10) || 50
   };
   var S = {
     step: 1, schemas: [], data: [], missing: [], kindOf: {}, overrides: {}, pack: { name: '', code: '', title: '', description: '', version: '1.0.0', connector: '' },
     samples: 5, strip: 6, plan: null, planFiles: [], planKey: '', job: null, jobKey: '', jobView: null, draftId: null, reading: false, stop: false, busy: false,
+    anonymise: true, files: {}, split: {},          // files: name -> the chosen File (kept in this tab to read again by another type column)
     opts: { maxRows: Math.min(200000, cfg.readRows), maxMb: Math.min(500, cfg.readMb) }
   };
   var msg = $('[data-msg]'), nextB = $('[data-next]'), backB = $('[data-back]');
@@ -108,7 +110,7 @@
     U.clear(list);
     var rows = S.schemas.map(function (s) { return { kind: 'schema', name: s.name, info: U.bytes(s.bytes || s.text.length), ref: s }; })
       .concat(S.data.map(function (d) { return { kind: 'data', name: d.name, info: d.reading ? Math.round(100 * d.bytesRead / Math.max(d.bytes, 1)) + '% read, ' + U.num(d.rows) + ' rows'
-        : U.num(d.rows) + ' rows, ' + U.bytes(d.bytes) + ', ' + U.plural(d.docs.length, 'document') + ' sampled' + (d.truncated ? ' (stopped at the cap)' : '') + (d.bad ? ', ' + d.bad + ' bad line(s) skipped' : ''), ref: d }; }));
+        : U.num(d.rows) + ' rows (every row counted), ' + U.bytes(d.bytes) + ', ' + U.plural(d.docs.length, 'document') + ' kept' + typesText(d) + (d.truncated ? ' (stopped at the cap)' : '') + (d.bad ? ', ' + d.bad + ' bad line(s) skipped' : ''), ref: d }; }));
     rows.forEach(function (r) {
       var rm = el('button', { type: 'button', class: 'btn-pill btn-ghost', text: 'Remove', 'aria-label': 'Remove ' + r.name });
       rm.addEventListener('click', function () {
@@ -131,18 +133,27 @@
     nextB.disabled = S.reading;
   }
 
+  /** ", split by PRODUCT_TYPE: 5 types (up to 10,000 rows of each profiled, 50 of each kept)" for a data file read with a type column. */
+  function typesText(d) {
+    var p = d.profile, n = p && p.types ? Object.keys(p.types).filter(function (t) { return t !== '' && t !== '*'; }).length : 0;
+    if (!d.split || !n) { return ''; }
+    return ' · type column ' + d.split + ': ' + U.plural(n, 'type') + ' (up to ' + U.num(cfg.profilePerType) + ' rows of each profiled, ' + cfg.designPerType + ' of each kept as examples)';
+  }
+
   function invalidate() { persist(); S.plan = null; S.planKey = ''; S.job = null; S.jobKey = ''; S.jobView = null; }
 
   function readAll(entries) {
     S.reading = true; S.stop = false;
-    var opts = { sampleDocs: Math.min(cfg.sampleDocs, parseInt($('[data-sample-docs]').value, 10) || cfg.sampleDocs), maxRows: parseInt($('[data-max-rows]').value, 10) || S.opts.maxRows,
-      maxBytes: (parseInt($('[data-max-mb]').value, 10) || S.opts.maxMb) * 1048576, maxJsonBytes: 64 * 1048576 };
+    var base = { sampleDocs: Math.min(cfg.sampleDocs, parseInt($('[data-sample-docs]').value, 10) || cfg.sampleDocs), maxRows: parseInt($('[data-max-rows]').value, 10) || S.opts.maxRows,
+      maxBytes: (parseInt($('[data-max-mb]').value, 10) || S.opts.maxMb) * 1048576, maxJsonBytes: 64 * 1048576, profilePerType: cfg.profilePerType, designPerType: cfg.designPerType };
+    entries.forEach(function (e) { S.files[e.name] = e; });
     var problems = [];
     var chain = entries.reduce(function (p, e) {
       return p.then(function () {
         if (S.stop) { return; }
         var row = { name: e.name, bytes: e.file.size, bytesRead: 0, rows: 0, docs: [], reading: true, truncated: false, bad: 0 };
-        var isData = /\.(jsonl|ndjson)$/i.test(e.name);
+        var opts = Object.assign({}, base, { splitField: S.split[e.name] || '' });
+        var isData = /\.(jsonl|ndjson)$/i.test(e.name) || (/\.json$/i.test(e.name) && e.file.size > 1048576);
         if (isData) { S.data = S.data.filter(function (x) { return x.name !== e.name; }); S.data.push(row); }
         renderSources();
         var t = 0;
@@ -176,6 +187,8 @@
   ['dragleave', 'drop'].forEach(function (ev) { drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('over'); }); });
   drop.addEventListener('drop', function (e) { R.fromDrop(e.dataTransfer).then(addFiles); });
   $('[data-cancel-read]').addEventListener('click', function () { S.stop = true; });
+  var anonBox = $('[data-anonymise]');
+  anonBox.addEventListener('change', function () { S.anonymise = anonBox.checked; invalidate(); persist(); });
   $('[data-paste-add]').addEventListener('click', function () {
     var text = $('[data-paste]').value, name = $('[data-paste-name]').value.trim() || 'pasted.schema.json';
     if (!text.trim()) { say('Paste a schema first.', true); return; }
@@ -190,8 +203,21 @@
   // ---- 2. kinds ---------------------------------------------------------------------------------------------------------------
   function payload() {
     return { schemas: S.schemas.map(function (s) { return { name: s.name, text: s.text }; }),
-      data: S.data.map(function (d) { return { name: d.name, rows: d.rows, bytes: d.bytes, docs: d.docs }; }), kindOf: S.kindOf, overrides: S.overrides, pack: S.pack,
-      samples: S.samples, strip: S.strip };
+      data: S.data.map(function (d) { return { name: d.name, rows: d.rows, bytes: d.bytes, docs: d.docs, counts: d.counts || {}, profile: d.profile || {} }; }), kindOf: S.kindOf, overrides: S.overrides, pack: S.pack,
+      samples: S.samples, strip: S.strip, anonymise: S.anonymise };
+  }
+
+  /** The type column chosen on a card differs from the one a file was profiled by: read those files again by it (in this browser). */
+  function resplit(orig, field) {
+    var kind = S.plan && S.plan.kinds.filter(function (x) { return (x.origKind || x.kind) === orig; })[0];
+    if (!kind || !field) { return false; }
+    var again = (S.planFiles || []).filter(function (f) { return f.kind === kind.kind; }).map(function (f) { return S.data.filter(function (d) { return d.name === f.name; })[0]; })
+      .filter(function (d) { return d && d.split !== field && S.files[d.name]; });
+    if (!again.length) { return false; }
+    again.forEach(function (d) { S.split[d.name] = field; });
+    say('Reading ' + again.map(function (d) { return d.name; }).join(', ') + ' again to count and profile every ' + field + '…');
+    readAll(again.map(function (d) { return S.files[d.name]; })).then(function () { loadPlan(); });
+    return true;
   }
   var planTimer = null, planSeq = 0;
   function loadPlan(after) {
@@ -235,6 +261,7 @@
       } else { o[k] = patch[k]; }
     });
     S.job = null; S.jobView = null;
+    if (patch.match && patch.match.length === 1 && resplit(orig, patch.match[0])) { return; }
     loadPlan();
   }
   function assignFile(name, kind) {
@@ -250,7 +277,12 @@
     function fld(label, key, hint, attrs) {
       var input = el(attrs && attrs.area ? 'textarea' : 'input', Object.assign({ class: 'studio-in' + (attrs && attrs.mono ? ' mono' : ''), autocomplete: 'off', 'data-pack-field': key }, (attrs && attrs.area) ? { rows: '3' } : { type: 'text', value: S.pack[key] || '' }));
       if (attrs && attrs.area) { input.value = S.pack[key] || ''; }
-      input.addEventListener('change', function () { S.pack[key] = input.value.trim(); S.job = null; S.jobView = null; if (key === 'name') { recheck(); } });
+      input.addEventListener('change', function () {
+        if (key === 'name' && S.plan) {                // the title, code and connector that came from the old name follow the new one
+          ['title', 'code', 'connector'].forEach(function (k) { if (S.pack[k] === S.plan.pack[k]) { S.pack[k] = ''; } });
+        }
+        S.pack[key] = input.value.trim(); S.job = null; S.jobView = null; if (key === 'name') { recheck(); }
+      });
       var id = 'pkp-' + key; input.id = id;
       return el('div', { class: 'pk-field' }, [el('label', { for: id, text: label }), input, hint ? el('p', { class: 'pk-hint text-muted-d', text: hint, id: id + '-h' }) : null]);
     }
@@ -365,6 +397,11 @@
       if (b.canDeploy) {
         host.appendChild(el('p', { class: 'text-muted-d', text: 'Hands the bundle to Admin → Packs → Deploy archive: the server checks it, shows what it changes (breaking changes first), and only then deploys. The version it replaces is kept, so you can roll back there.' }));
         host.appendChild(el('p', { class: 'bs-actions' }, [el('a', { class: 'btn-pill btn-accent', href: '/admin/packs?bundle=' + encodeURIComponent(S.job) + '#deploy', 'data-deploy-link': true, text: 'Check and deploy in Admin → Packs' })]));
+        if (S.data.length) {
+          host.appendChild(el('p', { class: 'text-muted-d', 'data-load-hint': true }, ['Then load the whole data (only a sample was read here): ',
+            el('a', { class: 'lnk', href: '/admin/packs/' + encodeURIComponent(b.pack) + '#load-data', text: 'Admin → Packs → ' + b.pack + ' → Load data' }),
+            ', and choose ' + S.data.map(function (d) { return d.name; }).join(', ') + ' again there. It goes into the File connector, every row checked against the Sutras.']));
+        }
       } else {
         host.appendChild(el('p', { class: 'text-muted-d', text: 'Deploying needs an administrator. Send them the bundle and its checksum; they use Admin → Packs → Deploy archive.' }));
       }
@@ -419,7 +456,8 @@
       try {
         if (!(S.schemas.length || S.data.length)) { sessionStorage.removeItem(STORE); return; }
         sessionStorage.setItem(STORE, JSON.stringify({ v: 1, step: S.step, draftId: S.draftId, schemas: S.schemas, kindOf: S.kindOf, overrides: S.overrides, pack: S.pack, samples: S.samples, strip: S.strip,
-          data: S.data.map(function (d) { return { name: d.name, rows: d.rows, bytes: d.bytes, docs: d.docs, truncated: d.truncated, bad: d.bad }; }) }));
+          anonymise: S.anonymise, split: S.split,
+          data: S.data.map(function (d) { return { name: d.name, rows: d.rows, bytes: d.bytes, docs: d.docs, truncated: d.truncated, bad: d.bad, counts: d.counts, profile: d.profile, split: d.split }; }) }));
       } catch (e) { /* storage full or off: the draft on the server and the leave guard remain */ }
     }, 250);
   }
@@ -431,6 +469,7 @@
     if (!v || v.v !== 1 || !((v.schemas || []).length || (v.data || []).length)) { return false; }
     S.schemas = v.schemas || []; S.data = (v.data || []).map(function (d) { d.reading = false; d.bytesRead = d.bytes; return d; }); S.kindOf = v.kindOf || {}; S.overrides = v.overrides || {};
     S.pack = Object.assign(S.pack, v.pack || {}); S.samples = v.samples || 5; S.strip = v.strip || 6; S.draftId = v.draftId || null;
+    S.anonymise = v.anonymise !== false; S.split = v.split || {}; anonBox.checked = S.anonymise;
     return Math.min(Math.max(v.step || 1, 1), 3);                          // the preview is drafted again from step 3; steps 1 to 3 come back as they were
   }
   root.addEventListener('change', persist);

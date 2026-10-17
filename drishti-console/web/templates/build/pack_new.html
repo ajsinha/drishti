@@ -17,10 +17,10 @@
 {% block title %}New pack · {{ PRODUCT }}{% endblock %}
 {% block screen %}build{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/build-pack.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/build-pack.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drill.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
-<div class="adm bs pk" data-pack-new data-sample-docs="{{ limits.sampleDocs }}" data-read-rows="{{ read_rows }}" data-read-mb="{{ read_mb }}"
+<div class="adm bs pk" data-pack-new data-sample-docs="{{ limits.sampleDocs }}" data-profile-per-type="{{ limits.profilePerType }}" data-design-per-type="{{ limits.designPerType }}" data-read-rows="{{ read_rows }}" data-read-mb="{{ read_mb }}"
      data-can-author="{{ 'true' if can_author else 'false' }}" data-is-admin="{{ 'true' if is_admin else 'false' }}">
   <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/help/schema-to-pack">Schema to pack guide <span aria-hidden="true">?</span></a></nav>
   <h1>New pack</h1>
@@ -50,6 +50,15 @@
     <p class="bs-actions"><label class="btn-pill btn-ghost" for="pkFolder"><i class="bi bi-folder2-open" aria-hidden="true"></i> Choose a folder
       <input id="pkFolder" class="bs-file" type="file" webkitdirectory directory multiple data-folder></label>
       <button type="button" class="btn-pill btn-ghost" data-cancel-read hidden>Cancel reading</button></p>
+    <div class="pk-anon">
+      <input type="checkbox" id="pkAnon" data-anonymise checked> <label for="pkAnon"><b>Anonymise samples</b></label>
+      <p class="pk-hint text-muted-d" id="pkAnonHint">The documents the pack keeps (its samples, tests and catalogue) have their names, ids and amounts replaced, the same value by the
+        same token everywhere; dates and short vocabulary (statuses, sides, currencies, product types) are kept. On by default for data files.
+        It changes nothing in your data: the full file is loaded as it is after the pack is deployed (Admin → Packs → the pack → Load data).</p>
+    </div>
+    <p class="text-muted-d pk-reading-note" data-reading-note>Every row is counted (so every type of record is found with its true number of rows); up to
+      <b>{{ limits.profilePerType }}</b> rows of each type are profiled (which fields are filled, how deep the arrays go) and <b>{{ limits.designPerType }}</b>
+      of each type are kept as examples to design its Sutra. The file itself stays in this browser.</p>
     <details class="pk-caps"><summary>Reading limits</summary>
       <div class="bs-bar">
         <label for="pkRows">Read at most</label><input id="pkRows" class="studio-in" type="number" min="1000" step="1000" data-max-rows> <span>rows per file</span>
@@ -107,8 +116,10 @@
 {% endblock %}
 {% block scripts %}
 <script src="/static/js/pack-ui.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/pack-profile.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/pack-read.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/pack-kinds.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/pack-preview.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drill.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/pack-new.js?v={{ ASSET_V }}"></script>
 {% endblock %}

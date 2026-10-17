@@ -167,6 +167,11 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public boolean dependsOn(String kind) {
+        return delegate.dependsOn(kind);
+    }
+
+    @Override
     public void purgeCaches() {
         delegate.purgeCaches();
     }

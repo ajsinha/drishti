@@ -36,6 +36,7 @@ from dataclasses import dataclass, field
 
 from core.backend import BackendError
 from core.schemakit import build, decorate, plan as P
+from core.schemakit.anonymise import anonymise
 from core.schemakit.resolve import SchemaError
 
 NAME_RE = re.compile(r"[a-z0-9][a-z0-9-]*")
@@ -64,17 +65,24 @@ class WizardLimits:
     max_sutras: int = 200            # Sutras one pack may have
     read_rows: int = 500000          # the most rows per file the page may be told to read
     read_mb: int = 1024              # the most MB per file the page may be told to read
+    profile_per_type: int = 10000    # rows of each type the page profiles (every row is counted)
+    design_per_type: int = 50        # documents of each type the page keeps to design that type's Sutra
 
     @classmethod
     def from_settings(cls, s) -> "WizardLimits":
         g = lambda k, d: int(s.get(f"builder.{k}", d))     # noqa: E731
         return cls(g("pack_max_files", 200), g("pack_sample_docs", 200), g("pack_max_docs", 5000), g("pack_max_schema_kb", 512),
                    g("pack_jobs_per_user", 3), g("pack_job_ttl_min", 60) * 60, g("pack_draft_concurrency", 4), g("pack_max_sutras", 200),
-                   g("pack_read_max_rows", 500000), g("pack_read_max_mb", 1024))
+                   g("pack_read_max_rows", 500000), g("pack_read_max_mb", 1024), g("pack_profile_rows_per_type", 10000),
+                   g("pack_design_samples_per_type", 50))
 
     def as_dict(self) -> dict:
         return {"maxFiles": self.max_files, "sampleDocs": self.sample_docs, "maxDocs": self.max_docs, "maxSchemaKb": self.max_schema_kb,
-                "maxSutras": self.max_sutras}
+                "maxSutras": self.max_sutras, "profilePerType": self.profile_per_type, "designPerType": self.design_per_type}
+
+    def docs_per_file(self, types: int = 0) -> int:
+        """Documents one data file may bring: its overall sample, plus the design samples of each of its types (up to 40 types)."""
+        return self.sample_docs + self.design_per_type * max(0, min(types, 40))
 
 
 def load_tool(tools_dir: pathlib.Path, name: str):
@@ -111,12 +119,35 @@ def check_request(body: dict, lim: WizardLimits) -> tuple[list, dict, dict]:
     for d in data:
         if not isinstance(d, dict) or not d.get("name") or not isinstance(d.get("docs"), list):
             raise WizardError(400, "every data file is {name, docs, rows, bytes}")
-        docs = [x for x in d["docs"] if isinstance(x, dict)][: lim.sample_docs]
+        types = len((d.get("profile") or {}).get("types") or {}) if isinstance(d.get("profile"), dict) else 0
+        docs = [x for x in d["docs"] if isinstance(x, dict)][: lim.docs_per_file(types)]
         total += len(docs)
         if total > lim.max_docs:
             raise WizardError(413, f"over {lim.max_docs} sampled documents in all (builder.pack_max_docs)", "DRS-5005")
-        samples[str(d["name"])[:200]] = {"docs": docs, "rows": int(d.get("rows") or len(docs)), "bytes": int(d.get("bytes") or 0), "kind": str(d.get("kind") or "")}
+        counts = d.get("counts") if isinstance(d.get("counts"), dict) else {}
+        profile = d.get("profile") if isinstance(d.get("profile"), dict) else {}
+        samples[str(d["name"])[:200]] = {"docs": docs, "rows": int(d.get("rows") or len(docs)), "bytes": int(d.get("bytes") or 0), "kind": str(d.get("kind") or ""),
+                                         "counts": _clean_counts(counts), "profile": profile}
     return out_schemas, samples, {}
+
+
+def _clean_counts(counts: dict) -> dict:
+    """{field: {value: rows}} as the page counted them over every row: at most 64 fields of at most 500 values, whole numbers only."""
+    out: dict = {}
+    for f, vals in list(counts.items())[:64]:
+        if isinstance(vals, dict) and len(vals) <= 500:
+            out[str(f)[:200]] = {str(v)[:200]: int(n) for v, n in vals.items() if isinstance(n, (int, float)) and not isinstance(n, bool)}
+    return out
+
+
+def merge_counts(by_file: list) -> dict:
+    out: dict = {}
+    for c in by_file:
+        for f, vals in c.items():
+            dest = out.setdefault(f, {})
+            for v, n in vals.items():
+                dest[v] = dest.get(v, 0) + n
+    return out
 
 
 async def existing_packs(backend, ident, packs_state) -> dict:
@@ -165,6 +196,14 @@ def assign(samples: dict, kinds: list, kind_of: dict) -> tuple[dict, dict]:
     return by_kind, file_kind
 
 
+def anonymise_wanted(body: dict, schemas: list) -> bool:
+    """Anonymise samples: what the page says; by default on for data brought without a schema (real documents are all there is)."""
+    v = body.get("anonymise")
+    if isinstance(v, bool):
+        return v
+    return bool(body.get("data")) and not schemas
+
+
 async def plan_object(body: dict, lim: WizardLimits, backend, ident, packs_state):
     """(plan, samples, file_kind, names, taken): the plan of a request, with the pack fields the user typed applied."""
     schemas, samples, _ = check_request(body, lim)
@@ -179,11 +218,22 @@ async def plan_object(body: dict, lim: WizardLimits, backend, ident, packs_state
         first = P.make_plan(schemas)
         back = {ov["kind"]: o for o, ov in overrides.items() if isinstance(ov, dict) and ov.get("kind")}     # a file the user pointed at a renamed kind
         by_kind, file_kind = assign(samples, [k.kind for k in first.kinds], {f: back.get(k, k) for f, k in kind_of.items()})
-        plan = P.make_plan(schemas, by_kind, overrides, settings, existing_mnemonics=taken, pack_name=str(pack.get("name") or ""))
+        counts = {k: merge_counts([samples[f]["counts"] for f, kk in file_kind.items() if kk == k]) for k in by_kind}
+        profiles = {}
+        for f, k in file_kind.items():                    # one profile per kind: the file with the most rows read
+            if samples[f]["profile"] and (k not in profiles or samples[f]["rows"] > profiles[k][0]):
+                profiles[k] = (samples[f]["rows"], samples[f]["profile"])
+        profiles = {k: v[1] for k, v in profiles.items()}
+        anon = anonymise_wanted(body, schemas)
+        if anon:
+            by_kind = anonymise(by_kind)
+            settings["anonymised"] = True
+        plan = P.make_plan(schemas, by_kind, overrides, settings, existing_mnemonics=taken, pack_name=str(pack.get("name") or ""),
+                           counts=counts, profiles=profiles)
     except SchemaError as e:
         raise WizardError(422, str(e)) from None
     for k in plan.kinds:                      # the user's own JSON Lines files: the File connector reads them as they are, so it is the default source
-        if k.real and k.date and k.template == "delta" and not (overrides.get(k.orig) or {}).get("template"):
+        if k.real and (k.date or k.snapshot) and k.template == "delta" and not (overrides.get(k.orig) or {}).get("template"):
             k.template = "file"
     now = {k.orig: k.kind for k in plan.kinds}
     file_kind = {f: now.get(k, k) for f, k in file_kind.items()}                 # the names the user sees: after any rename
@@ -205,6 +255,7 @@ async def make_plan(body: dict, lim: WizardLimits, backend, ident, packs_state) 
                         "nameValid": bool(NAME_RE.fullmatch(plan.pack["name"])),
                         "versionValid": bool(VERSION_RE.fullmatch(str(plan.pack.get("version") or "")))}
     out["limits"] = lim.as_dict()
+    out["anonymised"] = bool(plan.settings.get("anonymised"))
     return out
 
 
@@ -322,7 +373,7 @@ class Jobs:
                 job.done += 1
                 return
             job.drafts[it.name] = draft["yaml"]
-            text, shown = decorate.finalize(draft["yaml"], it.kp, it.sp)
+            text, shown = decorate.finalize(draft["yaml"], it.kp, it.sp, job.plan)
             res = {"yaml": text, "shown": shown, "problems": [], "check": None}
             try:
                 res["check"] = await backend.check(text, it.kp.kind, samples, ident)
