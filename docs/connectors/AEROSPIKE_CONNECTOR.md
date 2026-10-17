@@ -124,28 +124,31 @@ everything else as text. The `doc` bin holds the day's JSON document as text.
 
 The pack declares the fields to promote on the connector that stores the kind, exactly as for Delta Lake (see
 [DELTA_CONNECTOR.md, section 4](DELTA_CONNECTOR.md#4-declaring-the-layout-in-a-pack) for how to choose them). The
-trading pack declares them on `trading-store`; the `aerospike` profile (`SPRING_PROFILES_ACTIVE=aerospike`) switches that
+trading pack declares them on `trade-endur`; the `aerospike` profile (`SPRING_PROFILES_ACTIVE=aerospike`) switches that
 connector to the Aerospike plugin and keeps the pack's settings, so the same declaration applies:
 
 ```yaml
-# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trading-store.yaml at the first start)
+# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trade-endur.yaml at the first start)
 connectors:
-  trading-store:
+  trade-endur:
     settings:
       domain: trading
       layout:
         trade:
-          columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
-                    tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
-                    risk.dv01, sourceSystem]
+          columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
 
 # drishti-server application-aerospike.yaml (the profile; deprecated, see \"As a connector file\" below)
 drishti:
   sources:
     connectors:
-      trading-store: { plugin: aerospike, settings: { hosts: "${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}",
+      trading-store: { plugin: aerospike, settings: { hosts: "${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}",   # 2.2's name, see the note
                                                        namespace: "${DRISHTI_AEROSPIKE_NAMESPACE:test}" } }
 ```
+
+> **2.3.0:** the trades are read per source system (`trade-endur`, `trade-calypso`, `trade-murex`, one Delta table each). The deprecated
+> store profiles still name 2.2's `trading-store`, so a profile leaves the trades on Delta; point a store at the trades with connector
+> files named after the three connectors (below).
+
 
 The connector reads `layout.<kind>.columns`; the set is the connector's `domain` (`trading`). The `sort-by`, `file-rows`
 and `row-group-rows` keys of the layout concern files and do not apply to Aerospike.
@@ -314,18 +317,18 @@ Aerospike first:
 drishti:
   sources:
     routes:
-      trade: trading-store                     # asked first
+      trade: trade-endur                     # asked first
     connectors:
-      trading-store:                           # Aerospike: the last 90 business days, TTL-expired
+      trade-endur:                           # Aerospike: the last 90 business days, TTL-expired
         plugin: aerospike
         kinds: [trade]
         settings: { hosts: "aero1:3000,aero2:3000", namespace: risk, domain: trading, lookback-days: 10,
-                    "layout.trade.columns": "tradeId,productType,…" }
+                    "layout.trade.columns": "TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,…" }
       trading-history:                         # Delta Lake: every business day for seven years
         plugin: delta
         kinds: [trade]
         settings: { root: "s3a://risk-lake/banking", domain: trading, lookback-days: 10,
-                    "layout.trade.columns": "tradeId,productType,…" }
+                    "layout.trade.columns": "TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,…" }
 ```
 
 How Drishti uses them:
@@ -427,7 +430,7 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 ids now:
 
 ```json
-{"name": "trading-store", "health": "UP", "cache": {"ids": 1000000, "columnSets": 1, "datesIndexed": 10, "kinds": 1}}
+{"name": "trade-endur", "health": "UP", "cache": {"ids": 1000000, "columnSets": 1, "datesIndexed": 10, "kinds": 1}}
 ```
 
 | Symptom | Likely cause | What to do |
@@ -534,7 +537,7 @@ start without a client certificate; and the start-up errors below.
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: aerospike
 kinds: [trade]
 description: Trading documents and promoted bins in Aerospike
@@ -627,13 +630,13 @@ SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=counterparty-risk,market-risk \
 
 ### Configuration by example
 
-**Site form, as a connector file.** `config/connectors/trading-store.yaml` points the trading pack's `trading-store` at Aerospike
+**Site form, as a connector file.** `config/connectors/trade-endur.yaml` points the trading pack's `trade-endur` at Aerospike
 (`config/connectors.examples/aerospike/` has all six banking `<domain>-store` connectors; the `aerospike` profile,
 `application-aerospike.yaml`, did the same and still works but is deprecated). A file replaces the pack's template wholesale, so it
 names the kinds and the promoted bins it needs ([section 3](#3-declaring-which-fields-are-bins)):
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: aerospike                                     # replaces the pack's "delta"
 kinds: [trade]
 settings:
@@ -643,11 +646,11 @@ settings:
   layout.trade.columns: tradeId,mtm,book,desk,counterparty.id,counterparty.name,nettingSet,risk.dv01   # the promoted bins
 ```
 
-**Pack form**, the pack's suggested template (every key is in [section 12](#12-settings)); the server writes it to `config/connectors/trading-store.yaml` at the first start if the site has no such file:
+**Pack form**, the pack's suggested template (every key is in [section 12](#12-settings)); the server writes it to `config/connectors/trade-endur.yaml` at the first start if the site has no such file:
 
 ```yaml
 connectors:
-  trading-store:
+  trade-endur:
     plugin: aerospike
     kinds: [trade]
     settings:
@@ -664,7 +667,7 @@ connectors:
       # user: ${AS_USER}            # security-enabled clusters
       # password: ${AS_PASSWORD}
 routes:
-  trade: trading-store
+  trade: trade-endur
 ```
 
 **Try it**, with a million trades a day and retention:

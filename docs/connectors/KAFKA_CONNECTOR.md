@@ -166,7 +166,7 @@ Notes, from the code:
 | reads the topic from the beginning at start | yes | yes (to reach the end; mapped keyed messages are not parsed unless watched) |
 | use it when | the topic is the store for Live | a lake or database already holds the day's data, and the topic is only the change feed, or too large to index |
 
-In `ticks` mode a view of `TRD MX-20000001` reads from `trading-store` (its provenance names the lake), shows the live
+In `ticks` mode a view of `TRD MX-20000001` reads from `trade-endur` (its provenance names the lake), shows the live
 dot, and each message for MX-20000001 repaints it within a frame. This is described with the routing in
 [CONNECTOR_DEVELOPER_GUIDE.md, Combining connectors](CONNECTOR_DEVELOPER_GUIDE.md#combining-connectors).
 
@@ -197,7 +197,7 @@ connectors:
       disk-cache.zone: America/New_York
 ```
 
-The pack routes `trade` to `trading-store` (Delta Lake); the stream is found as "every other connector serving
+The pack routes `trade` to `trade-endur` (Delta Lake); the stream is found as "every other connector serving
 `trade`", and is tried first on Live because it is live ([section 10.4](#104-with-a-lake-for-history)). The
 environment variables are listed in
 [CONFIGURATION.md](../admin/CONFIGURATION.md#environment-variables-used-by-the-packs-and-profiles).
@@ -451,8 +451,8 @@ The connector is undated. Configure the same kind on a dated store as well, and 
 
 | The user asks for | Order tried | Who answers |
 |---|---|---|
-| Live | `trading-stream` (live first) → `trading-store` → `file` | Kafka; a trade Kafka does not hold (matured, deleted) falls through to the lake's newest date |
-| a picked date | `trading-store` (dated first) → `file` → `trading-stream` | the lake for that date; when the lake does not hold the date, the next store is asked, and Kafka's current document comes last, with the *No data held for <date>* banner |
+| Live | `trading-stream` (live first) → `trade-endur` → `file` | Kafka; a trade Kafka does not hold (matured, deleted) falls through to the lake's newest date |
+| a picked date | `trade-endur` (dated first) → `file` → `trading-stream` | the lake for that date; when the lake does not hold the date, the next store is asked, and Kafka's current document comes last, with the *No data held for <date>* banner |
 
 With `mode: ticks` the lake answers every read and Kafka only ticks the open views. Seven years of history in the lake
 is described in [DELTA_CONNECTOR.md, section 8](DELTA_CONNECTOR.md#8-seven-years-of-history).
@@ -1001,7 +1001,7 @@ then picks a random trade `--rate` times a second (a fixed seed, 7), moves its `
 `--seconds 0` (the default) runs until Ctrl+C; any other value stops after that many seconds.
 
 `TRD MX-20000001 <GO>` on Live then shows provenance `trading-stream` and ticks whenever the trade is picked. Pick a
-date and the same trade comes from `trading-store`. Why switch the demo off: the trading samples hold the same ids;
+date and the same trade comes from `trade-endur`. Why switch the demo off: the trading samples hold the same ids;
 Kafka is asked before the samples on Live anyway, but with the samples off a trade Kafka does not hold falls through
 to the lake rather than to a random-walk sample.
 
@@ -1049,7 +1049,7 @@ connector reads the topic is in [section 2](#2-how-the-connector-reads-a-topic),
 
 4. **Look at it in the terminal.** `TRD MX-20000001 <GO>` on Live: the *Live* badge shows, provenance is
    `trading-stream`, and the MTM moves every time `stream.py` touches the trade. Pick a date: the same trade comes
-   from `trading-store` (the lake), because dated connectors go first for a picked date, and the view is a static
+   from `trade-endur` (the lake), because dated connectors go first for a picked date, and the view is a static
    snapshot. Why the demo is off is explained at the end of [section 15](#15-trying-it-streampy).
 5. **Watch Health.** `UP (catching up)` until the end offsets seen at start are reached, then `UP`. This holds in
    `ticks` mode too: it keeps nothing but still replays the topic at every start

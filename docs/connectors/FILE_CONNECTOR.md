@@ -136,9 +136,14 @@ to this plugin and keeps the packs' settings, so the trading pack's 19 promoted 
 drishti:
   sources:
     connectors:
-      trading-store: { plugin: file, settings: { root: "${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}" } }
+      trading-store: { plugin: file, settings: { root: "${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}" } }   # 2.2's name, see the note
       # … reference-store, market-store, risk-store, credit-store, collateral-store alike
 ```
+
+> **2.3.0:** the trades are read per source system (`trade-endur`, `trade-calypso`, `trade-murex`, one Delta table each). The deprecated
+> store profiles still name 2.2's `trading-store`, so a profile leaves the trades on Delta; point a store at the trades with connector
+> files named after the three connectors (below).
+
 
 The connector takes `<root>/<domain>` as its folder, `domain` coming from the pack (`trading`).
 
@@ -331,7 +336,7 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 `GET /api/v1/admin/health`:
 
 ```json
-{"name": "trading-store", "health": "UP", "cache": {"jsonlKinds": 1, "jsonlDays": 10, "indexedDays": 1, "ids": 10000,
+{"name": "trade-endur", "health": "UP", "cache": {"jsonlKinds": 1, "jsonlDays": 10, "indexedDays": 1, "ids": 10000,
  "indexBuilds": 1, "unreadableLines": 0, "duplicateIds": 0, "unreadableFiles": 0}}
 ```
 

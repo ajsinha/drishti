@@ -79,7 +79,8 @@ workspace panes).
 A view offers Calc when both hold:
 
 1. **The pack that owns the view's kind switches Calc on** (`python: { enabled: true }` in its `pack.yaml`, see
-   [section 8](#8-packs-switching-calc-on-and-starter-snippets)). The banking packs and `finance` do.
+   [section 8](#8-packs-switching-calc-on-and-starter-snippets)). Of the seven shipped packs, core, market-data, trading, counterparty-risk and
+   market-risk do (the retired example pack `finance` too).
 2. **One of your roles has the `calc` power** (see [section 9](#9-roles-who-may-use-calc)).
 
 Without the role, the key is still shown, greyed, with the reason: *You do not have access: Calc needs a role with
@@ -194,7 +195,7 @@ Tables hold what the screen shows, so their numbers are **as formatted**: `"−1
 `drishti.number(text)` does the same to any text. For exact values, read `view.doc`.
 
 ```python
-trades = view.tables["Member trades"]                  # NSET NS-NORTH-01 (finance pack)
+trades = view.table("trades")      # NSET NS-NORTHPLAINS-NY (demo lakes): the panel titled "Member trades (698 of 698)", by its id
 trades.groupby("Product")["MTM (USD)"].sum()
 ```
 
@@ -344,15 +345,16 @@ Rules:
   a pack.
 - Snippets are starters, not programs: they are code the user sees, edits and runs, with the user's own rights.
 
-### The banking packs' snippets
+### The shipped packs' snippets
 
-The five banking packs ship **71 snippets** and `finance` **10** (two inline in its `pack.yaml`, eight files): curves,
+Five of the seven shipped packs ship **71 snippets** (core 10, counterparty-risk 12, market-data 27, market-risk 13, trading 9; world-economy and
+news-and-markets none), and the retired example pack `finance` **10** (two inline in its `pack.yaml`, eight files): curves,
 FX, vol surfaces, options, bonds, credit, VaR and its backtest, stress, FRTB, exposure, CVA, collateral, SA-CCR,
 desks, books and counterparties, each written the way a trader or a quant would use it on that screen. The
 [Snippet catalogue](#18-snippet-catalogue) lists every one, with the sample entity it was checked on and what it
 computes.
 
-The banking ones are written by `tools/packgen/banking/make_packs.py` from their sources,
+The shipped ones are written by `tools/packgen/banking/make_packs.py` (the generator kept its name from the banking packs it began with) from their sources,
 `tools/packgen/banking/snippets/<pack>/<name>.py` (read by `calc_snippets.py`; never edit the generated
 `config/packs/<pack>/python/` files: change the source and run the generator, see
 [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
@@ -366,7 +368,7 @@ The banking ones are written by `tools/packgen/banking/make_packs.py` from their
 
 `example` names the sample entity the snippet is checked on in a browser (it is not copied into the pack); the
 generator refuses a source without the four lines or with more than 60 lines of code, and `make_packs.py --check`
-fails when a generated file is stale or has no source. `finance` is hand-written: its files are
+fails when a generated file is stale or has no source. `finance` (a retired example pack) is hand-written: its files are
 `examples/packs/finance/python/*.py`.
 
 How they are written, so that each runs anywhere:
@@ -396,8 +398,8 @@ Who has it out of the box:
 |---|---|---|
 | `admin`, `author`, `approver` | configuration (`drishti.security.roles`) | yes |
 | `viewer` | configuration | **no** |
-| `trader` (`trading`), `market-risk` (`market-risk`), `credit-risk` (`counterparty-risk`) | the banking packs | yes |
-| `trader`, `risk` (`finance`) | the finance pack | yes |
+| `trader` (`trading`), `market-risk` (`market-risk`), `credit-risk` (`counterparty-risk`) | the shipped packs | yes |
+| `trader`, `risk` (`finance`) | the retired example pack `finance`, when loaded from `examples/packs` | yes |
 | roles of packs that do not enable Calc (`climate-analyst`, `economist`, `scientist`, `treasury`, `oprisk`, `retail`, `analyst` of world-economy, `ops` and `shipment` of logistics, `market-analyst` and `listed-company` of news-and-markets, `news-analyst` and `news-topic` of news-and-markets) | those packs | no (their kinds offer no Calc) |
 | roles you define in Admin → Roles | the identity database | as you tick it |
 
@@ -673,8 +675,8 @@ on and, in brackets, the sample entity it was checked on (type it, `<GO>`, `Alt+
 `drishti.quant` functions, the libraries beyond numpy and pandas, and the reads it makes (`get`, `search`, `history`).
 Where a formula is simplified, *Computes* says so.
 
-All 85 were run in headless Chrome 154 (87 runs: one `finance` snippet on three curve types) against a scratch server and console with the samples as shipped (the banking
-packs together, then `finance` on its own), each opened on its example view and run twice: all pass. The first run,
+All 85 were run in headless Chrome 154 (87 runs: one `finance` snippet on three curve types) against a scratch server and console with the samples as shipped (the five
+packs with snippets together, then the retired `finance` on its own), each opened on its example view and run twice: all pass. The first run,
 which loads numpy and pandas (and scipy, statsmodels or matplotlib where used), took 1.9 to 6.1 s (median 2.1 s); a
 warm run 6 to 830 ms (median 39 ms; 64 of 87 runs under 100 ms; the slowest read every trade of a book).
 
@@ -776,7 +778,7 @@ Every snippet reads the production-shaped trade (the common UPPER_SNAKE schema o
 | **Payment ladder: what the trade pays and receives, by month** · `trade_payment_ladder.py` | `trade` (`TRD 1000001`) | Every cash flow of the trade's LEGS with a PAYMENT_DATE, signed by the leg's LEG_ECONOMIC_TYPE (Pay or Receive; a blank side reads from BUY_SELL_CODE) at NOTIONAL x RATE x the accrual for interest and price flows and NOTIONAL for principal and settlement flows (an estimate where the extract leaves the amount out); the payments due in the next 7, 30 and 90 days, pay against receive by month as bars and the net as a running total. | pandas |
 | **The trade among its peers** · `trade_vs_peers.py` | `trade` (`TRD MX-20000001`) | Every valuation of the same PRODUCT_TYPE across the source systems (drishti.search_async over the risk engine's trade valuations, TVAL): NOTIONAL, MTM, PNL_1D and MTM as a share of notional; where this trade ranks (percentiles) in each, the peers by PORTFOLIO and CURRENCY, and a scatter of MTM against notional with this trade marked. | reads: search, get |
 
-### `finance` (10)
+### `finance` (10, the retired example pack under `examples/packs/`)
 
 Two inline in `pack.yaml`: *MTM under parallel rate moves* (`trade`, `TRD IRS-48213`) and *Member trades, summed
 from the screen* (`netting-set`, `NS-NORTH-01`, from `view.tables`); and eight files, `examples/packs/finance/python/*.py`

@@ -71,10 +71,10 @@ kind that some enabled pack gives a mnemonic (or an id pattern) to; through the 
 |---|---|---|
 | **plugin** | a piece of software that knows how to talk to one *type* of store | `jdbc` talks to databases, `kafka` to Kafka |
 | **connector** | one plugin pointed at one *particular* store, with a name and its own settings | `desk-db`: the `jdbc` plugin, pointed at `jdbc:postgresql://db.bank.example/desk` |
-| **connector file** | one YAML file, `config/connectors/<name>.yaml`; the file name is the connector's name. Connectors belong to the site, not to a pack ([CONNECTOR_FILES.md](CONNECTOR_FILES.md)) | `config/connectors/trading-store.yaml` (Delta Lake) |
-| **pack template** | what a pack suggests for a connector it names (its `pack.yaml` `connectors:` mapping or `connector-templates:`); the server writes it to the file once, at the first start, and never overwrites the file | the trading pack's templates for `trading-store` (Delta Lake) and `trading-stream` (Kafka) |
+| **connector file** | one YAML file, `config/connectors/<name>.yaml`; the file name is the connector's name. Connectors belong to the site, not to a pack ([CONNECTOR_FILES.md](CONNECTOR_FILES.md)) | `config/connectors/trade-endur.yaml` (Delta Lake) |
+| **pack template** | what a pack suggests for a connector it names (its `pack.yaml` `connectors:` mapping or `connector-templates:`); the server writes it to the file once, at the first start, and never overwrites the file | the trading pack's templates for `trade-endur` (Delta Lake) and `trading-stream` (Kafka) |
 | **site connector** | a connector file no pack suggests | anything you add yourself |
-| **route** | "for this kind, ask this connector first" | `trade: trading-store` |
+| **route** | "for this kind, ask this connector first" | `trade: trade-endur` |
 | **default route** | the connector asked second, for every kind | `demo` (the sample data), as shipped |
 
 A plugin can also run **as itself**, without a connector name, under `drishti.sources.plugins.<plugin>`. That is how
@@ -169,12 +169,12 @@ You should see:
 
 ```json
 {"source":"murex-rates","generation":2,"fetchedAt":"2026-10-01T01:57:52.264798849Z","live":true,"businessDate":null}
-{"source":"trading-store","generation":7,"fetchedAt":"2026-10-01T01:57:52.290912912Z","live":false,"businessDate":"2026-09-29"}
+{"source":"trade-endur","generation":7,"fetchedAt":"2026-10-01T01:57:52.290912912Z","live":false,"businessDate":"2026-09-29"}
 {"source":"murex-rates","generation":2,"fetchedAt":"2026-10-01T01:59:42.090962906Z","live":true,"businessDate":null}
 ```
 
 - **Live**: the demo samples are live, so they go first; the sample's own source name (`murex-rates`) is shown.
-- **29 September**: dated sources go first, so the lake (`trading-store`) answers, with `businessDate`.
+- **29 September**: dated sources go first, so the lake (`trade-endur`) answers, with `businessDate`.
 - **1 August**: before the lake's first date (the sample lake holds ten business days), so the lake does not hold it
   and the undated samples answer. The console says so above the view:
   *No data held for 2026-08-01: the current data of murex-rates, a source that keeps no dates*
@@ -183,7 +183,7 @@ You should see:
 
 A connector is configured by **one file**, `config/connectors/<name>.yaml`, edited in your editor, in **Admin → Connectors**, or with
 `drishti.py connector apply`, and applied to the running server without a restart. A pack does not carry connection settings: it **names** the connectors it
-reads through (`connectors: [trading-store]` and `routes:` in its `pack.yaml`) and may **suggest** a template for each. Precedence, highest first
+reads through (`connectors: [trade-endur]` and `routes:` in its `pack.yaml`) and may **suggest** a template for each. Precedence, highest first
 (the full table and the rules are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md#precedence)):
 
 | Source | Role |
@@ -320,14 +320,14 @@ For administrators (with security on, add `-H "Authorization: Bearer $TOKEN"`; s
 
 ```bash
 curl -s http://localhost:18480/api/v1/admin/health | jq '{status, summary, failedToStart}'
-curl -s http://localhost:18480/api/v1/admin/health | jq '.sources[] | select(.name=="trading-store")'
+curl -s http://localhost:18480/api/v1/admin/health | jq '.sources[] | select(.name=="trade-endur")'
 ```
 
 A healthy connector looks like this (real output from a running server):
 
 ```json
 {
-  "name": "trading-store",
+  "name": "trade-endur",
   "version": "1.0",
   "status": "UP",
   "health": "UP",
@@ -1090,7 +1090,7 @@ makes the kind dated. **Loader:** none. **Limits:** search and reverse lookups o
 scale.
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: jdbc
 settings:
   url: ${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}
@@ -1109,7 +1109,7 @@ settings:
 time travel, search and reverse lookups, with no Spark.
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: delta
 kinds: [trade]
 settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: trading }
@@ -1127,7 +1127,7 @@ files' modification times (copy lakes with `cp -p`); codecs other than Snappy an
 Glue). **Use it when** your lake is Iceberg.
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: iceberg
 kinds: [trade]
 settings: { root: "${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}", domain: trading }
@@ -1143,7 +1143,7 @@ applied by every read. → full reference: [ICEBERG_CONNECTOR.md](ICEBERG_CONNEC
 single server holds a large book in one file and wants day-wide searches without a database server or a lake.
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: duckdb
 settings: { path: "${DRISHTI_DUCKDB_PATH:${drishti.data.dir:./data}/duckdb/drishti.duckdb}", table: trading.entities }
 ```
@@ -1159,7 +1159,7 @@ by id. **Loader:** `tools/load-duckdb.sh` (`--keep-days`); a load writes a new f
 without a lake.
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: mongodb
 settings: { uri: "${DRISHTI_MONGODB_URI:mongodb://localhost:27017}", database: drishti }
 ```
@@ -1175,7 +1175,7 @@ recent kernels (use 7). → full reference: [MONGODB_CONNECTOR.md](MONGODB_CONNE
 at memory speed with live ticks, and Delta Lake behind it for history.
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: redis
 settings: { uri: "${DRISHTI_REDIS_URI:redis://localhost:6379}" }
 ```
@@ -1191,7 +1191,7 @@ about 1 GB of memory per million trades a day; TTL retention; a day Redis does n
 two key lookups per view, with retention by record TTL.
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: aerospike
 settings: { hosts: "${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}", namespace: "${DRISHTI_AEROSPIKE_NAMESPACE:test}" }
 ```
@@ -1348,15 +1348,15 @@ eviction are in [ACTIVEMQ_CONNECTOR.md](ACTIVEMQ_CONNECTOR.md#7-durability-and-d
 
 ### History from a lake, live from Kafka, for the same kind
 
-This is what the trading pack names: `trading-store` (Delta Lake, dated) and `trading-stream` (Kafka, live), both
-serving `trade`, with `routes: { trade: trading-store }`. With the stream on and the demo off, the candidates for
-`trade` are the route (`trading-store`), then every other connector serving `trade` (`trading-stream`, and `file`,
+This is what the trading pack names: `trade-endur` (Delta Lake, dated) and `trading-stream` (Kafka, live), both
+serving `trade`, with `routes: { trade: trade-endur }`. With the stream on and the demo off, the candidates for
+`trade` are the route (`trade-endur`), then every other connector serving `trade` (`trading-stream`, and `file`,
 which serves every kind). Then:
 
 | The user asks for | Order tried | Who answers |
 |---|---|---|
-| Live | `trading-stream` (live first) → `trading-store` → `file` | Kafka; the view ticks from Kafka. A trade Kafka does not hold (matured, compacted away) falls through to the lake's newest date |
-| a picked date | `trading-store` (dated first) → `file` → `trading-stream` | the lake, for that date; a static snapshot |
+| Live | `trading-stream` (live first) → `trade-endur` → `file` | Kafka; the view ticks from Kafka. A trade Kafka does not hold (matured, compacted away) falls through to the lake's newest date |
+| a picked date | `trade-endur` (dated first) → `file` → `trading-stream` | the lake, for that date; a static snapshot |
 | a date the lake does not hold | as above | `file` if it has a dated folder; else Kafka's current document, with the banner *No data held for <date>* (the current data of trading-stream) |
 
 **`state` or `ticks`.** In `state` mode (the default) Kafka keeps an index of the topic and answers Live reads
@@ -1373,7 +1373,7 @@ settings: { mode: ticks, bootstrap-servers: "${DRISHTI_KAFKA_BOOTSTRAP}", topics
 ```
 
 The view is live because a connector *pushes* the kind (the plugin answers `pushes(ref)` with true in ticks mode),
-not because the document that answered is live: `TRD MX-20000001` reads from `trading-store` (its provenance names the
+not because the document that answered is live: `TRD MX-20000001` reads from `trade-endur` (its provenance names the
 lake), shows the green Live button, and each message for MX-20000001 on the topic repaints it within a frame. A picked
 business date stays a static snapshot either way.
 
@@ -1386,7 +1386,7 @@ Run one connector per data domain. A server with the banking packs runs, for exa
 {"sources":[
   {"name":"demo","kinds":[],"live":true,"search":true,"reverseLookup":true,"health":"UP"},
   {"name":"file","kinds":[],"live":false,"search":true,"reverseLookup":false,"health":"UP"},
-  {"name":"trading-store","kinds":["trade"],"live":false,"search":true,"reverseLookup":true,"health":"UP"},
+  {"name":"trade-endur","kinds":["trade"],"live":false,"search":true,"reverseLookup":true,"health":"UP"},
   {"name":"credit-store","kinds":["credit-limit","netting-set","sa-ccr","cva","exposure-profile"],"live":false,"search":true,"reverseLookup":true,"health":"UP"},
   {"name":"reference-store","kinds":["book","agreement","counterparty", "…"],"live":false,"search":true,"reverseLookup":true,"health":"UP"},
   {"name":"nyfed-sofr-feed","kinds":["rate-fixing"],"live":false,"search":true,"reverseLookup":false,"health":"UP"}],
@@ -1400,16 +1400,16 @@ names stable: routes, health history, cache purges and provenance all use them.
 
 The connector files are the site's, so change a pack's connector by editing its file (in **Admin → Connectors**, or in your editor). A file **replaces** the
 pack's template for that name **wholesale**: the settings are not merged, so what the file does not say is not inherited. To change only the root of
-`trading-store`, start from the generated file (`drishti.py connector get trading-store`) and edit that line:
+`trade-endur`, start from the generated file (`drishti.py connector get trade-endur`) and edit that line:
 
 ```yaml
-# config/connectors/trading-store.yaml (generated from the trading pack's template, then edited)
+# config/connectors/trade-endur.yaml (generated from the trading pack's template, then edited)
 plugin: delta
 kinds: [trade]
 settings:
   root: /srv/lake                  # the line the site changed
   domain: trading
-  layout.trade.columns: tradeId,productType,…
+  layout.trade.columns: TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,...
 ```
 
 ```yaml
@@ -1429,7 +1429,7 @@ Points to remember:
 - **A file is the whole definition.** `kinds:` in the file is the connector's list; kinds you leave out are no longer served by that connector. **Reset to pack default**
   (Admin → Connectors, or `drishti.py connector reset <name>`) puts the pack's template back and keeps your text in the history.
 - **Switch one off with `enabled: false`** in its file (`drishti.py connector disable fred-feed`).
-- **Keys the plugin does not read are ignored** (with a warning on the form and from the validator). Switching `trading-store` to `jdbc` and leaving `root` in the file is
+- **Keys the plugin does not read are ignored** (with a warning on the form and from the validator). Switching `trade-endur` to `jdbc` and leaving `root` in the file is
   harmless. (Aerospike *does* read `domain`, as its set, and `layout`, as its promoted bins.)
 - **A file with no `plugin:`** fails to start. A file name that no pack names and that is not a typo of one defines a new site connector; a pack that names a
   connector nobody defined loads, and its kinds answer `DRS-1011 connector <name> is not configured` ([CONNECTOR_FILES.md](CONNECTOR_FILES.md#a-pack-names-a-connector-nobody-defined)).
@@ -1645,7 +1645,7 @@ shortened):
 ```json
 [
   {"name": "engine", "type": "Layouts and shape fingerprints", "stats": {"layoutHitRate": 0.774, "fingerprints": 139, "layouts": 103}},
-  {"name": "trading-store", "type": "Connector", "stats": {"timeTravel": 0, "partitions": 3, "tables": 1}},
+  {"name": "trade-endur", "type": "Connector", "stats": {"timeTravel": 0, "partitions": 3, "tables": 1}},
   {"name": "ecb-fx-feed", "type": "Connector", "stats": {"series": 10, "observations": 640, "fetchedAt": "2026-10-01T01:35:09.770409225Z"}}
 ]
 ```

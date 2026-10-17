@@ -171,7 +171,7 @@ packs; `CPTY CP-NORTHBRIDGE` then opens a counterparty with links to its agreeme
 
 Sign-in is off for local development (you act as a user with every role). To turn it on and sign in as the
 development admin **`drishti-dev-admin` / `drishti-dev-admin123`** (change that password; the UI warns until you
-do), see [GETTING_STARTED.md, Step 13](docs/guides/GETTING_STARTED.md#step-13--optional-turn-on-sign-in-and-change-the-admin-password).
+do), see [GETTING_STARTED.md, Step 8](docs/guides/GETTING_STARTED.md#step-8--sign-in-and-change-the-admin-password).
 
 Checks: `curl -s localhost:18480/actuator/health` and `curl -s localhost:17480/healthz` answer
 `{"status":"UP"…}`; `curl -s localhost:17480/readyz` answers `{"status":"UP","server":"reachable"}` once the

@@ -112,10 +112,12 @@ Concepts used throughout (each is explained in its own guide; this one only link
   `drishti.py pack new --load`, `server packs load` and `pack install` are the command-line forms of the last two.
   [PACKS.md#loading-a-pack-while-the-server-runs](PACKS.md#loading-a-pack-while-the-server-runs) has the rules.
 
-Run the program from the repository root, or from anywhere with its path. These examples write `python3 tools/drishti.py`;
+Run the program from the repository root, or from anywhere with its path, with the console's interpreter
+(`drishti-console/.venv/bin/python`, which the quick start of [data/testdata/README.md](../../data/testdata/README.md) installs with PyYAML, deltalake
+and pyarrow). Many examples write `python3 tools/drishti.py`: any Python 3.10+ with PyYAML runs every command that does not write a Delta lake;
 `drishti.py` in the output is the same program.
 
-**`drishti.py --help`**
+**`drishti.py --help`** (captured on a fresh clone)
 
 ```text
 usage: drishti.py [-h] GROUP ...
@@ -124,25 +126,41 @@ drishti: one command line for building, checking, loading and shipping Drishti p
 
 positional arguments:
   GROUP
-    sutra     The Sutra tool: shape, design, lint, test, preview (Java) and
-              gen (one Sutra per group of JSON Lines)
-    pack      Packs: generate from JSON Lines, check in CI, find missing help
-              text, publish and install
-    data      Data: ingest your own JSON Lines into a lake or files store;
-              load the demo data into any store
-    server    A running server over REST: health and pack management
-              (administrator)
-    design    Screen Designer designs over REST: create, edit, check, propose,
-              approve, ship (anyone may design; approving needs an approver)
-    docs      Documentation tooling
+    sutra       The Sutra tool: shape, design, lint, test, preview (Java) and
+                gen (one Sutra per group of JSON Lines)
+    pack        Packs: generate from JSON Lines, check in CI, find missing
+                help text, publish and install
+    data        Data: ingest your own JSON Lines into a lake or files store;
+                load the demo data into any store
+    server      A running server over REST: health and pack management
+                (administrator)
+    connector   Connectors over REST (Admin -> Connectors): list, get, apply a
+                YAML file, test, enable, delete (administrator; a token needs
+                packs:admin)
+    design      Screen Designer designs over REST: create, edit, check,
+                propose, approve, ship (anyone may design; approving needs an
+                approver)
+    docs        Documentation tooling
+    doctor      doctor: is this machine ready (Java, jar, Python, directories,
+                ports, and with --server the token)
+    bi          Business intelligence (Rupaka) over REST: workspaces and the
+                catalogue, as the token's user sees them (a write needs the
+                bi:write scope)
+    view        A rendered entity view in the terminal, as the caller's token
+                sees it (masks apply)
+    lake        Delta lakes: build one from a large JSON export (memory flat,
+                safe to re-run), scan an export, status, maintain
+    completion  completion: print a shell completion script (bash, zsh,
+                powershell)
 
 options:
-  -h, --help  show this help message and exit
+  -h, --help    show this help message and exit
 
     python3 tools/drishti.py <group> <command> [options]          (or: uv run --with pyyaml python tools/drishti.py ...)
 
-Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (new, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install),
-data (ingest your own JSON Lines, load the demo data), server (health, packs), design (the Screen Designer's designs over
+Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback,
+publish, keygen, install), data (profile and ingest your own JSON Lines or watch a drop folder, load the demo data), server (health, packs, smoke),
+lake (build a Delta lake from a large JSON export, scan, status, maintain), view (get, explain), doctor, completion, design (the Screen Designer's designs over
 REST: create, save, check, propose, approve, export, import, bind) and docs (screenshots).
 Needs Python 3.10+ and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
 recipes and real output is docs/guides/CLI_GUIDE.md.
@@ -174,11 +192,13 @@ uv run --with pyyaml python tools/drishti.py --help
 uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta
 ```
 
-**With a virtual environment** (what an IDE wants, see [section 14](#14-running-the-tools-from-pycharm-and-the-java-sutra-from-intellij)):
+**With the console's environment** (what an IDE wants, see [section 14](#14-running-the-tools-from-pycharm-and-the-java-sutra-from-intellij);
+the run configurations use it):
 
 ```bash
-uv venv .venv-tools && uv pip install --python .venv-tools/bin/python pyyaml deltalake pyarrow
-.venv-tools/bin/python tools/drishti.py --help
+python3 -m venv drishti-console/.venv && drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt
+#   or, where python3 -m venv lacks ensurepip:  uv venv --python 3.13 drishti-console/.venv && uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
+drishti-console/.venv/bin/python tools/drishti.py --help
 ```
 
 **Environment variables** the program reads:
@@ -298,7 +318,7 @@ examples:
 Unknown options are passed to the Java tool. Exit codes as the Java tool: 0 ok, 1 problems, 2 usage.
 ```
 
-**Lint a pack** (the shipped help-desk example; the warnings are help-text gaps, DRS-2047, not errors, so the exit code is 0):
+**Lint a pack** (the shipped help-desk example; it prints the Sutra's absolute path, shortened here):
 
 ```bash
 python3 tools/drishti.py sutra lint docs/guides/examples/pack/helpdesk
@@ -306,23 +326,26 @@ python3 tools/drishti.py sutra lint docs/guides/examples/pack/helpdesk
 
 ```text
 ok      docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml
-docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml:15 warning DRS-2047 field 'subject' is shown but has no glossary entry (kinds.ticket...
-docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml:15 warning DRS-2047 field 'priority' is shown but has no glossary entry (kinds.ticke...
-docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml:15 warning DRS-2047 field 'ageHours' is shown but has no glossary entry (kinds.ticke...
-docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml:15 warning DRS-2047 field 'assignee' is shown but has no glossary entry (kinds.ticke...
-docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml:15 warning DRS-2047 field 'client' is shown but has no glossary entry (kinds.ticket....
-docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml:15 warning DRS-2047 field 'history.event' is shown but has no glossary entry (kinds....
+```
+
+A field a Sutra shows without a glossary entry in `config/about.yaml` is a warning (DRS-2047), not an error, so the exit code stays 0. With
+only the `AGE_HOURS` and `PRIORITY` entries the same command adds lines such as:
+
+```text
+docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml:15 warning DRS-2047 field 'ASSIGNEE' is shown but has no glossary entry (kinds.ticket.glossary in config/about.yaml, or a vocabulary entry)
+docs/guides/examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml:15 warning DRS-2047 field 'HISTORY.EVENT' is shown but has no glossary entry (kinds.ticket.glossary in config/about.yaml, or a vocabulary entry)
 ```
 
 `--strict` turns those DRS-2045 to 2047 help warnings into failures (exit 1). `sutra test <pack>` renders every Sutra against
 its `tests/<sutra>/` samples and checks `expect.yaml`; `--junit report.xml` writes a JUnit file; `sutra preview <pack> --out
 build/html` writes an HTML snapshot per sample.
 
-**Infer a shape** (a JSON Schema with Drishti's role annotations) and **draft a Sutra** from sample documents:
+**Infer a shape** (a JSON Schema with Drishti's role annotations) and **draft a Sutra** from sample documents (a folder of JSON
+files, one document each: here the help-desk example's test tickets):
 
 ```bash
-python3 tools/drishti.py sutra shape docs/guides/examples/pack/helpdesk/samples/ticket
-python3 tools/drishti.py sutra design docs/guides/examples/pack/helpdesk/samples/ticket --kind ticket
+python3 tools/drishti.py sutra shape docs/guides/examples/pack/helpdesk/tests/ticket
+python3 tools/drishti.py sutra design docs/guides/examples/pack/helpdesk/tests/ticket --kind ticket
 ```
 
 ```text
@@ -330,20 +353,26 @@ python3 tools/drishti.py sutra design docs/guides/examples/pack/helpdesk/samples
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
   "properties" : {
-    "ticketId" : {
+    "TICKET_ID" : {
       "type" : "string",
       "x-drishti" : {
-        "role" : "id",
-        "reason" : "named like an id, and no value repeats"
+        "role" : "link",
+        "reason" : "every value is the id of a ticket",
+        "kind" : "ticket"
       }
     },
-    "subject" : {
+    "SUBJECT" : {
       "type" : "string"
     },
-    "status" : {
+    "STATUS" : {
       "type" : "string",
+      "x-drishti" : {
+        "role" : "status",
+        "reason" : "named 'STATUS' with 2 distinct value(s)"
 ...
-    "samples" : 3
+  "required" : [ "TICKET_ID", "SUBJECT", "STATUS", "PRIORITY", "ASSIGNEE", "CLIENT", "CLIENT_NAME", "AGE_HOURS", "HISTORY", "_meta" ],
+  "x-drishti" : {
+    "samples" : 2
   }
 }
 ```
@@ -352,15 +381,13 @@ python3 tools/drishti.py sutra design docs/guides/examples/pack/helpdesk/samples
 rachana: 1
 sutra: ticket-auto
 version: 1
-description: Drafted by auto-design from 3 samples. Edit freely.
+description: Drafted by auto-design from 2 samples. Edit freely.
 match: { kind: ticket, priority: 1 }
-title: { pill: "Ticket · ${$.assignee}", id: "$.ticketId" }
+title: { pill: "Ticket · ${$.PRIORITY}", id: "'ticket'", with: "link($.TICKET_ID, 'ticket')" }
 strip:
-  - { label: "Status", bind: "$.status", tone: "status" }
-  - { label: "Client", bind: "$.client" }
-  - { label: "Client name", bind: "$.clientName" }
-  - { label: "Age hours", bind: "$.ageHours", fmt: "amount0", emphasis: true }
-  - { label: "Source", bind: "$._meta.source" }
+  - { label: "Status", bind: "$.STATUS", tone: "status" }
+  - { label: "Client name", bind: "$.CLIENT_NAME" }
+  - { label: "Age (h)", bind: "$.AGE_HOURS", fmt: "age0", emphasis: true }
   - { label: "Generation", bind: "$._meta.generation", fmt: "pct0" }
 panels:
   - id: details
@@ -368,13 +395,18 @@ panels:
     title: "Details"
     key: "F2"
 ...
-    kind: gauge
-    title: "Generation"
-    area: right
-    value: "$._meta.generation"
-    fmt: "pct0"
-    max: "1"
+  - id: history
+    kind: timeline
+    title: "History"
+    key: "F3"
+    rows: "$.HISTORY"
+    date: "DATE"
+    label: "EVENT"
+...
 ```
+
+A draft is a start, not a screen: here the id was read as a link to a ticket, so the title shows the word `ticket` and links the id;
+change it to `id: $.TICKET_ID` before you keep it.
 
 `sutra design --each DIR` drafts one Sutra per subfolder of samples in a single run (`<out>/<subfolder>.sutra.yaml`; the
 kind is `--kind`, else the folder's one-line `kind` file, else the folder name).
@@ -1019,10 +1051,11 @@ The offline path: no server API and no token. Full guide with real output, promo
 [OPERATIONALISING.md](OPERATIONALISING.md).
 
 ```bash
-drishti.py pack bundle examples/packs/finance --out dist                 # finance-1.0.0.tar.gz + .sha256 + .manifest.json (runs pack check first)
-drishti.py pack verify dist/finance-1.0.0.tar.gz                # sha256, manifest checksums, schema, server version, sutra lint + test
-drishti.py pack deploy dist/finance-1.0.0.tar.gz --to /opt/drishti/packs --backup /opt/drishti/backups [--dry-run]
-drishti.py pack rollback finance --to /opt/drishti/packs --backup /opt/drishti/backups [--version 1.0.0]
+drishti.py pack bundle config/packs/trading --out dist                  # trading-1.0.0.tar.gz + .sha256 + .manifest.json (runs pack check first)
+drishti.py pack verify dist/trading-1.0.0.tar.gz                # sha256, manifest checksums, schema, server version, sutra lint + test
+drishti.py pack deploy dist/trading-1.0.0.tar.gz --to /opt/drishti/packs --backup /opt/drishti/backups [--dry-run]
+drishti.py pack rollback trading --to /opt/drishti/packs --backup /opt/drishti/backups [--version 1.0.0]
+# real output of each, on the shipped trading pack: OPERATIONALISING.md sections 3 to 5 and 10
 ```
 
 `pack bundle` also takes `--no-check` (skip the `pack check` that runs first), `--requires-server VERSION` (the minimum server version written into the manifest; default this checkout's) and `--json`.
@@ -1417,13 +1450,16 @@ python3 tools/drishti.py server health
 ```
 
 ```text
-status DEGRADED  version 2.2.0  java 21.0.12.1  uptime 190s
+status DEGRADED  version 2.2.0  java 21.0.12.1  uptime 190s           (a scratch server with the retired example pack genomics and a pack of section 10)
 packs 2  sources 4 (degraded 0, down 2)  packs with problems 1  failed to start 0
   file                        DOWN      DOWN: no directory /srv/drishti/run/data/feeds
   genomics-store              DOWN      DOWN: cannot reach /srv/drishti/delta/genomics (engine: native)
   demo                        UP        UP
   jsonl-demo-store            UP        UP
 ```
+
+On the demo-lakes server of the quick start every source is up but a tutorial's extra pack (captured: `packs 8  sources 16 (degraded 0,
+down 1)`); [TOOLS.md section 5.4](TOOLS.md#54-server-and-doctor) has that output and `server packs list` with the seven packs.
 
 The exit code is 1 unless the status is `OK` (here two sources are down, so `DEGRADED`). `--json` prints the server's own
 `GET /api/v1/admin/health` document.
@@ -1706,29 +1742,40 @@ connector does not work; **2** usage (no such file, unknown option). The server 
 `DRS-5032` instead of being overwritten. A new connector needs no version. A literal credential in the file is refused with `DRS-5031`; write `${ENV_VAR}` or `file:/path`.
 
 ```text
-$ python3 tools/drishti.py connector list
-14 connector(s) in /srv/drishti/config/connectors   (watching: WATCHING)
-  name              origin       plugin   kinds                                      state           used by       problems
-  ----------------  -----------  -------  -----------------------------------------  --------------  ------------  ----------------------------------------------------------------------------
-  desk-quotes       file         file     quote                                      running         desk-demo
-  desk-totals       file         derived  desk-pnl                                   running         trading
-  ecb-estr-feed     file         feed     rate-fixing                                disabled        market-data
-  ecb-fx-feed       file         feed     fx-spot                                    disabled        market-data
-  fred-feed         file         feed     rate-fixing                                disabled        market-data
-  ledger-db         file         jdbc     ledger-entry                               running (DOWN)
-  legacy-feed       application  file                                                running                       defined in application.yaml (deprecated); save it to create legacy-feed.yaml
-  market-store      file         delta    ir-curve,repo-curve,fx-spot +17            running (DOWN)  market-data
-  nyfed-sofr-feed   file         feed     rate-fixing                                disabled        market-data
-  reference-store   file         delta    counterparty,counterparty-group,issuer +9  running (DOWN)  core
-  site-quotes       file         file     quote                                      running
-  trading-store     file         delta    trade                                      running (DOWN)  trading
-  trading-stream    file         kafka    trade                                      disabled        trading
-  us-treasury-feed  file         feed     ir-curve                                   disabled        market-data
-  deprecated: legacy-feed is defined in the server's own configuration; apply a file to replace it
+$ drishti-console/.venv/bin/python tools/drishti.py connector list
+24 connector(s) in <repo>/config/connectors   (watching: WATCHING)
+  name               origin  plugin    kinds                                                        state           used by            problems
+  -----------------  ------  --------  -----------------------------------------------------------  --------------  -----------------  --------
+  civic-store        file    delta     jurisdiction,party,office-holder +3                          running         world-economy
+  collateral-store   file    delta     collateral-balance,margin-call,simm                          running         counterparty-risk
+  credit-store       file    delta     netting-set,credit-limit,exposure-profile +2                 running         counterparty-risk
+  desk-ledger        file    jdbc      ledger-entry                                                 down, retrying
+  desk-quotes        file    file      desk-quote                                                   running
+  desk-quotes-store  file    delta     desk-quote                                                   down, retrying  desk-quotes
+  ecb-estr-feed      file    feed      rate-fixing                                                  disabled        market-data
+  ecb-fx-feed        file    feed      fx-spot                                                      disabled        market-data
+  fred-feed          file    feed      rate-fixing                                                  disabled        market-data
+  legal-store        file    delta     agreement,csa                                                running         counterparty-risk
+  macro-store        file    delta     economy,macro-indicator,economic-forecast +4                 running         world-economy
+  market-store       file    delta     ir-curve,repo-curve,fx-spot +17                              running         market-data
+  news               file    news      news                                                         disabled        news-and-markets
+  news-store         file    delta     news-topic,listed-company                                    running         news-and-markets
+  nyfed-sofr-feed    file    feed      rate-fixing                                                  disabled        market-data
+  reference-store    file    delta     counterparty,counterparty-group,issuer +7                    running         core
+  risk-store         file    delta     var,stress-scenario,stress-result +3                         running         market-risk
+  trade-calypso      file    delta     trade                                                        running         trading
+  trade-endur        file    delta     trade                                                        running         trading
+  trade-murex        file    delta     trade                                                        running         trading
+  trade-pages        file    derived   counterparty-trades,portfolio-trades,legal-entity-trades +1  running         trading
+  trading-stream     file    kafka     trade                                                        disabled        trading
+  us-treasury-feed   file    feed      ir-curve                                                     disabled        market-data
+  yfinance           file    yfinance  quote                                                        disabled        news-and-markets
 ```
 
-(The scratch server of these examples has no Delta lake or PostgreSQL, so those connectors are `DOWN`.) The `origin` is `file` (a file in the folder), `pack` (a
-pack's template that has no file yet) or `application` (the deprecated `drishti.sources.connectors` of the server's own configuration).
+(Captured on a fresh clone after `lake demo` with the seven packs, and two packs a tutorial added: `desk-quotes` and its JDBC `desk-ledger` are down
+because their stores are not there. The feeds, `news`, `yfinance` and `trading-stream` (Kafka) ship disabled.) The `origin` is `file` (a file in the folder), `pack` (a
+pack's template that has no file yet) or `application` (the deprecated `drishti.sources.connectors` of the server's own configuration, then flagged
+`deprecated` under the table).
 
 ```text
 $ python3 tools/drishti.py connector get site-quotes
@@ -1832,15 +1879,15 @@ $ python3 tools/drishti.py connector history orders-lake
 Switching off or deleting a connector packs use asks first (`DRS-5032`, exit 1) and goes ahead with `--confirm`; a connector a pack's template suggests is never deleted:
 
 ```text
-$ python3 tools/drishti.py connector disable trading-store
-drishti: the server said 409 DRS-5032: DRS-5032 disabling connector 'trading-store' would stop serving pack trading (trade); repeat with confirm=true to go ahead
+$ drishti-console/.venv/bin/python tools/drishti.py connector disable trade-endur
+drishti: the server said 409 DRS-5032: DRS-5032 disabling connector 'trade-endur' would stop serving pack trading (trade); repeat with confirm=true to go ahead
 [exit 1]
-$ python3 tools/drishti.py connector disable trading-store --confirm
-trading-store is off (disabled)
-$ python3 tools/drishti.py connector enable trading-store
-trading-store is on (running)
-$ python3 tools/drishti.py connector delete trading-store
-drishti: the server said 409 DRS-5032: DRS-5032 connector 'trading-store' is named by pack trading's template, so it is not deleted: reset it to the pack's default, or disable it
+$ drishti-console/.venv/bin/python tools/drishti.py connector disable trade-endur --confirm
+trade-endur is off (disabled)
+$ drishti-console/.venv/bin/python tools/drishti.py connector enable trade-endur
+trade-endur is on (running)
+$ drishti-console/.venv/bin/python tools/drishti.py connector delete trade-endur
+drishti: the server said 409 DRS-5032: DRS-5032 connector 'trade-endur' is named by pack trading's template, so it is not deleted: reset it to the pack's default, or disable it
 [exit 1]
 $ python3 tools/drishti.py connector delete orders-lake
 deleted orders-lake (its text is kept in the connector folder's history/ folder)
@@ -1959,7 +2006,7 @@ drishti.py bi mq --model REF --select F,... --measures M,... [--define "Name=DEL
 ```
 
 `REF` is `name@major` (`trading-risk@1`), a model item id or `dataset:<name>` (a dataset's implicit model). `bi mq --define` adds a measure of this query
-only, in DEL (`--define "Open MTM=sum(trades.mtm, where=trades.status == 'Live')" --measures "Open MTM"`), as a report's own measure travels. `--sort BY`
+only, in DEL (`--define "Live MTM=sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')" --measures "Live MTM"`), as a report's own measure travels. `--sort BY`
 sorts by a field or measure, `--sort=-BY` descending (the `=` keeps the minus from reading as an option), repeatable: `--sort=-MTM --limit 3` is the top three. The answer is
 a table with its plan, its as-of date and the columns masked for you; `--json` prints the server's answer as it is.
 
@@ -2461,14 +2508,15 @@ empty PyCharm to a run configuration for each common task.
 2. Make a virtual environment with `uv` (any virtual environment works), in a terminal at the repository root:
 
    ```bash
-   uv venv .venv-tools
-   uv pip install --python .venv-tools/bin/python pyyaml deltalake pyarrow
+   uv venv --python 3.13 drishti-console/.venv
+   uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
    ```
 
-   `pyyaml` is enough for everything except Delta lakes; `deltalake` and `pyarrow` are for `--store delta` (the default of
-   `pack make`) and `data ingest --lake`. On Windows the interpreter is `.venv-tools\Scripts\python.exe`.
+   This is the console's own environment, the one the quick start installs and the shipped run configurations (`run-configs/`) use: it has
+   `pyyaml`, `deltalake` and `pyarrow` (the last two for `--store delta`, the default of `pack make`, `data ingest --lake` and `lake build`).
+   On Windows the interpreter is `drishti-console\.venv\Scripts\python.exe`.
 3. **Settings (Ctrl+Alt+S) → Project → Python Interpreter → Add Interpreter → Add Local Interpreter → Existing**, pick
-   `.venv-tools/bin/python`, **OK**. Keep it separate from the console's `drishti-console/.venv`.
+   `drishti-console/.venv/bin/python`, **OK**.
 4. Optional: **Settings → Project → Project Structure**: mark `tools` as *Sources* so PyCharm resolves `import sutragen` and
    `import ingest_jsonl` when you click through code.
 
@@ -2479,7 +2527,7 @@ empty PyCharm to a run configuration for each common task.
 | Field | Value |
 |---|---|
 | **Script path** (not *Module name*; switch the toggle on the left of the field) | `<repo>/tools/drishti.py` |
-| **Python interpreter** | the `.venv-tools` interpreter from 14.1 |
+| **Python interpreter** | the `drishti-console/.venv` interpreter from 14.1 |
 | **Working directory** | **the repository root**: relative paths in *Parameters* resolve from here |
 | **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-2.2.0-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
 

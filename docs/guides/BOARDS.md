@@ -99,7 +99,7 @@ A tile may be a **python visual** of its report: a Python measure shown as bars,
 
 ![The Python wall: a Python measure, a Python histogram and a Python visual that returns Vega-Lite, as tiles](../tutorials/img/t12/17-python-wall.jpg)
 
-A tile of a `vega-lite` visual or a `perspective-chart` works the same way as any chart or Perspective tile. A Python tile has **no `alert:` of its own**: the colour rule reads the numbers a query returns, and a Python tile's number is made by code that runs for the person looking. To be told when a Python measure crosses a limit, make an **alert** on it: the server reads it for each person on its schedule or after a load ([DISTRIBUTION.md section 4.1](DISTRIBUTION.md#41-what-can-be-watched), [PYTHON_BI.md section 16](PYTHON_BI.md#16-python-in-alerts-and-on-boards)).
+A tile of a `vega-lite` visual works the same way as any chart tile; a 2.1 `perspective-*` visual draws as Drishti's own grid of the server's answer (no WebAssembly since 2.3.0). A Python tile has **no `alert:` of its own**: the colour rule reads the numbers a query returns, and a Python tile's number is made by code that runs for the person looking. To be told when a Python measure crosses a limit, make an **alert** on it: the server reads it for each person on its schedule or after a load ([DISTRIBUTION.md section 4.1](DISTRIBUTION.md#41-what-can-be-watched), [PYTHON_BI.md section 16](PYTHON_BI.md#16-python-in-alerts-and-on-boards)).
 
 ## 4. Alerts: a tile changes colour
 
@@ -312,7 +312,7 @@ The tiles' data comes from the report endpoints (`POST /api/v1/bi/reports/{id}/q
 
 ## 10. Built and not built
 
-**Built:** the board file and its parser with every problem coded (`DRS-9052`, `9053`); **notifications from a tile** (`notify:`: inbox, email and chat bridges, each person on their own number, cooldown, history, an administrators' overview) with **hysteresis** (`alert.hysteresis`); **Python tiles** (a python visual as a tile); the **board designer** (section 11); shipped boards (watched) and board items (stored, versioned, reviewed, published; the publish check); the viewer with pages, live redraw in place, the live indicator with pause and resume, per-tile alert colouring by threshold, kiosk mode with auto-rotating pages, Perspective and rolling-chart tiles; the API; phone layout.
+**Built:** the board file and its parser with every problem coded (`DRS-9052`, `9053`); **notifications from a tile** (`notify:`: inbox, email and chat bridges, each person on their own number, cooldown, history, an administrators' overview) with **hysteresis** (`alert.hysteresis`); **Python tiles** (a python visual as a tile); the **board designer** (section 11); shipped boards (watched) and board items (stored, versioned, reviewed, published; the publish check); the viewer with pages, live redraw in place, the live indicator with pause and resume, per-tile alert colouring by threshold, kiosk mode with auto-rotating pages, grid and rolling-chart tiles; the API; phone layout.
 
 **Not built, and not faked:**
 

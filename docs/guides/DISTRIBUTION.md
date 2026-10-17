@@ -36,7 +36,7 @@ cell reads `•••` in every format** (CSV, Excel, PDF, PNG and the mail's bo
 | **PNG** | one picture, as tall as the content needs (to a limit) | the tables and bars |
 
 For a **BI report** the PDF and PNG draw each visual as what it holds: a *card* as its value, a *chart* (bar, column, line, area, pie, donut, waterfall, treemap) as horizontal bars of its first
-measure above its data, every other type (table, matrix, Perspective grid, gauge, KPI, heatmap, scatter, combo) as its data table. Static visuals (text, image, button) and slicers are not exported: the
+measure above its data, every other type (table, matrix, a 2.1 `perspective-*` grid, gauge, KPI, heatmap, scatter, combo) as its data table. Static visuals (text, image, button) and slicers are not exported: the
 slicers' choices are written in the header as the filters. A **Sutra view** is drawn the way a share's picture is (the panels as the view draws them, charts included) with the sentence "Exported by …"
 in the band and across the page; Excel and CSV hold its table-like panels (tables, fields, pivots, metrics, tabs); a note says which graphic panels they leave out.
 
@@ -671,7 +671,7 @@ empty list everything the user's roles open. A host whose list names only entity
 
 **Live and tokens.** The report keeps its live stream while the page is visible and gives it back when hidden (and takes it again); a token renews in place on the open channel, so nothing redraws.
 
-**Not in the element.** Drill down and through, *Alert me*, *Show the rows behind this visual*, Export and Subscribe (use the console for those), and Perspective grids and pivots, which need WebAssembly under a policy of their own: the element shows the note the designer shows. Two elements of one report do not cross-filter each other.
+**Not in the element.** Drill down and through, *Alert me*, *Show the rows behind this visual*, Export and Subscribe (use the console for those). A 2.1 `perspective-*` visual is drawn there as in the viewer, Drishti's own grid of the server's answer (since 2.3.0 no BI page loads WebAssembly). Two elements of one report do not cross-filter each other.
 The full list is in [RUPAKA.md section 20.6, part 3](../architecture/RUPAKA.md#206-part-3-embedding-and-phone-layouts-as-built-phase-7-complete).
 
 **Also in the library (1.4.0).** `<drishti-about kind entity>` shows the *About this page* layers of a view (sources, lineage, the masks and rules that applied to the reader) in a panel of the host's own; the application needs the scope `embed:about`.
@@ -712,7 +712,7 @@ Both channels are in the history: an alert's `delivered` has `webhook:NAME` and 
 
 ## 7. What is not built
 
-* **In an embedded report** (section 5): drill, alerts, Export and Subscribe, Perspective, Vega-Lite and Python visuals, and cross-filtering between two elements. Embedding and the hand-made phone and tablet layouts are built.
+* **In an embedded report** (section 5): drill, alerts, Export and Subscribe, Vega-Lite and Python visuals, and cross-filtering between two elements. Embedding and the hand-made phone and tablet layouts are built.
 * **For alerts**: **escalation** (tell someone else if no one reacts), alerts that are **shared** between people (a board's
   audience is the only way an alert reaches more than its owner), a **calendar of quiet hours**, an alert on **several numbers at once** (make one alert each), and **forecast** conditions. An alert on a visual's *number* is a
   threshold on one value: per-row thresholds ("any desk below zero") are a board tile with `crit`, which judges the worst row.
@@ -720,5 +720,5 @@ Both channels are in the history: an alert's `delivered` has `webhook:NAME` and 
   (chart colours, a heatmap, a scatter, a map are shown as their data).
 * **Excel pivot tables** inside the workbook, and charts other than bar, column, line, area, pie and donut in an Excel export (they are drawn as columns; the six are real Excel charts); **XLSX styling** beyond the header, number and date formats.
 * **Notifying the owner in the inbox** when a delivery fails for good: the history and the audit say so; the bell does not.
-* **Subscribing a Perspective visual's live state**; a subscription reads the data as of the run.
+* **Subscribing a live visual's state as it ticks**; a subscription reads the data as of the run.
 * **Per-recipient pictures of a view with charts in the email body**: a view is sent as its tables (html) or as a PDF.

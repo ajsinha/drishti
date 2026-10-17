@@ -184,24 +184,27 @@ The pack declares the fields to promote on the connector that stores the kind, e
 packs' settings, so the same declaration applies:
 
 ```yaml
-# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trading-store.yaml at the first start)
+# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trade-endur.yaml at the first start)
 connectors:
-  trading-store:
+  trade-endur:
     settings:
       domain: trading
       layout:
         trade:
-          columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
-                    tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
-                    risk.dv01, sourceSystem]
+          columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
 
 # drishti-server application-redis.yaml (the profile; deprecated, see \"As a connector file\" below)
 drishti:
   sources:
     connectors:
-      trading-store: { plugin: redis, settings: { uri: "${DRISHTI_REDIS_URI:redis://localhost:6379}",
+      trading-store: { plugin: redis, settings: { uri: "${DRISHTI_REDIS_URI:redis://localhost:6379}",   # 2.2's name, see the note
                                                    cluster: "${DRISHTI_REDIS_CLUSTER:false}" } }
 ```
+
+> **2.3.0:** the trades are read per source system (`trade-endur`, `trade-calypso`, `trade-murex`, one Delta table each). The deprecated
+> store profiles still name 2.2's `trading-store`, so a profile leaves the trades on Delta; point a store at the trades with connector
+> files named after the three connectors (below).
+
 
 The connector reads `layout.<kind>.columns`; the key prefix is the connector's `domain` (`trading`). The loader takes
 the values from each line's `columns` object ([section 4](#4-loading)), which the generators fill from the same layout.
@@ -462,18 +465,18 @@ Configure both connectors for the kind, Redis first:
 drishti:
   sources:
     routes:
-      trade: trading-store                     # asked first
+      trade: trade-endur                     # asked first
     connectors:
-      trading-store:                           # Redis: the last five business days, TTL-expired, live
+      trade-endur:                           # Redis: the last five business days, TTL-expired, live
         plugin: redis
         kinds: [trade]
         settings: { uri: "rediss://drishti:${REDIS_PASSWORD}@redis.internal:6380", domain: trading, lookback-days: 10,
-                    "layout.trade.columns": "tradeId,productType,…" }
+                    "layout.trade.columns": "TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,…" }
       trading-history:                         # Delta Lake: every business day for seven years
         plugin: delta
         kinds: [trade]
         settings: { root: "s3a://risk-lake/banking", domain: trading, lookback-days: 10,
-                    "layout.trade.columns": "tradeId,productType,…" }
+                    "layout.trade.columns": "TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,…" }
 ```
 
 How Drishti uses them:
@@ -601,7 +604,7 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 `GET /api/v1/admin/health` shows the connector and its catalogue:
 
 ```json
-{"name": "trading-store", "health": "UP", "live": true, "lastUpdate": "2026-10-01T12:32:48.435Z",
+{"name": "trade-endur", "health": "UP", "live": true, "lastUpdate": "2026-10-01T12:32:48.435Z",
  "cache": {"kinds": 1, "datesIndexed": 10, "ids": 1000000, "columnSets": 2, "columnSetsMb": 438, "dictionaries": 1,
            "liveViews": 0}}
 ```
@@ -714,7 +717,7 @@ These are the messages from a real Redis 8 in the integration test.
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: redis
 kinds: [trade]
 description: Trading documents in Redis
@@ -724,9 +727,7 @@ settings:
   cluster: ${DRISHTI_REDIS_CLUSTER:false}
   layout:
     trade:
-      columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
-                tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
-                risk.dv01, sourceSystem]
+      columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
 ```
 
 The `redis` profile (`SPRING_PROFILES_ACTIVE=redis`) did this for the banking stores and still works, but is deprecated. A file replaces the pack's template wholesale, so it repeats the promoted `layout` the pack declared ([section 3](#3-declaring-which-fields-are-columns)).

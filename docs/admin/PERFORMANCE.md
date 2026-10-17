@@ -477,7 +477,7 @@ For example, give the `trading` pack's lake connector 2 GB:
 drishti:
   sources:
     connectors:
-      trading-store:
+      trade-endur:
         settings:
           cache-mb: 2048
 ```

@@ -185,7 +185,7 @@ profile, instance role).
 
 ```yaml
 # Polaris / Snowflake Open Catalog
-trading-store:
+trade-endur:
   plugin: iceberg
   kinds: [trade]
   settings: { catalog: rest, uri: "https://<account>.snowflakecomputing.com/polaris/api/catalog", warehouse: risk_catalog,
@@ -193,7 +193,7 @@ trading-store:
               domain: trading }
 
 # AWS Glue's Iceberg REST endpoint (SigV4 signing)
-trading-store:
+trade-endur:
   plugin: iceberg
   settings: { catalog: rest, uri: "https://glue.us-east-1.amazonaws.com/iceberg", warehouse: "<account-id>",
               catalog.rest.sigv4-enabled: "true", catalog.rest.signing-name: glue, catalog.rest.signing-region: us-east-1,
@@ -205,7 +205,7 @@ do atomically: two writers committing at once can lose a commit. One loader at a
 own commits per table). For several writers, use a REST catalog: it commits atomically on its side.
 
 The Drishti profile `iceberg` (`SPRING_PROFILES_ACTIVE=iceberg`, `drishti-server/src/main/resources/application-iceberg.yaml`; deprecated, replaced by the connector files in
-`config/connectors.examples/iceberg/`, see [As a connector file](#as-a-connector-file)) switches the banking packs' store connectors (`reference-store`, `market-store`, `trading-store`, `risk-store`,
+`config/connectors.examples/iceberg/`, see [As a connector file](#as-a-connector-file)) switches the banking packs' store connectors (`reference-store`, `market-store`, `trade-endur`, `risk-store`,
 `credit-store`, `collateral-store`) to this plugin with `catalog: ${DRISHTI_ICEBERG_CATALOG:hadoop}`,
 `root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}`, `uri: ${DRISHTI_ICEBERG_URI:}`, `warehouse: ${DRISHTI_ICEBERG_WAREHOUSE:}`
 and `credential: ${DRISHTI_ICEBERG_CREDENTIAL:}`; the packs keep deciding kinds, routes, modes and promoted columns.
@@ -533,7 +533,7 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 `GET /api/v1/admin/health` shows each connector with its caches:
 
 ```json
-{"name": "trading-store", "health": "UP",
+{"name": "trade-endur", "health": "UP",
  "cache": {"tables": 1, "snapshots": 1, "idMaps": 2, "columnSets": 2, "documents": 2, "partitions": 0,
            "daysWithDeletes": 0, "ids": 10000}}
 ```
@@ -634,7 +634,7 @@ Tested in `IcebergProxyTest` (the S3 file IO through a fake proxy, plain and `CO
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: iceberg
 kinds: [trade]
 description: Trading documents in an Iceberg catalog
@@ -647,9 +647,7 @@ settings:
   credential: ${DRISHTI_ICEBERG_CREDENTIAL}   # an environment (or file:) reference
   layout:
     trade:
-      columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
-                tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
-                risk.dv01, sourceSystem]
+      columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
 ```
 
 A file replaces the pack's template wholesale, so it repeats the promoted `layout` the pack declared ([section 5](#5-declaring-the-layout-in-a-pack)).

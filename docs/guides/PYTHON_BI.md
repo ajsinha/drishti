@@ -195,32 +195,32 @@ refused**: the SQL engine cannot run Python, so the measure is shown by a python
 | `wells.columns` | the columns handed to a Python item named in `format.python` (any number of fields of one table) |
 | `format.python` | the item; required unless the values well holds a Python measure. With a measure item and no dataset measure, the groups are the columns that are not `inputs` |
 | `format.params` | overrides the item's `params` |
-| `format.run` | `auto` (default), `server` or `browser` (section 6) |
+| `format.run` | `auto` (default), `server` or `browser` (section 6): since 2.3.0 every value runs on the console; the key is read so 2.2 reports keep working |
 
 The rows are the table's own rows (not grouped), under the page's slicers, filters and business date, at most `drishti.bi.report.python-rows` (10,000). The report **check** (`DRS-9030` to `9035`)
-refuses a python visual with neither an item nor a Python measure, with a values well that is not a Python measure, or without columns. In the designer the visual is under *Python*; its Format pane takes the item, *Run on* and the
-parameters; the canvas shows a placeholder, since Python runs when a report is opened, not while designing.
+refuses a python visual with neither an item nor a Python measure, with a values well that is not a Python measure, or without columns. In the designer the visual is under *Python*; its Format pane takes the item and the
+parameters (*Run on* is gone since 2.3.0); the canvas shows a placeholder, since Python runs when a report is opened, not while designing.
 
 ## 6. Where it runs
 
 | `format.run` | What happens |
 |---|---|
 | `server` | the console's runner (below) |
-| `browser` | (until 2.2) Pyodide in the page; since 2.3.0 a visual that says `browser` runs on the console |
-| `auto` | the server first; when the server cannot run it (the runner is off or not installed, `DRS-9074`, or the item is for the browser only) and the browser can, the browser |
+| `browser` | (until 2.2) Pyodide in the page; since 2.3.0 the console's runner, as `server` |
+| `auto` | (the default) the console's runner; until 2.2 it fell back to the browser when the server could not run the item, and since 2.3.0 such a run answers `DRS-9074` |
 
 **Server.** The console starts a **worker subprocess per call** (`python -I core/pyrunner_worker.py`), at most `bi.python.workers` (2) at once; a call waits `bi.python.queue_seconds` (5) for a place,
 then `DRS-9074`. The worker reads the Arrow stream the server built for this person, runs the function, and writes a small JSON answer, size-limited. Nothing is kept between calls: no worker idles,
 and there is no state to leak between people. Nothing extra is deployed: it is the console's own Python, with `pandas`, `numpy` and `pyarrow` installed (`requirements.txt`).
 
-**Browser.** The page loads Calc's worker (`/static/js/calc-worker.js`, Pyodide from `/pyodide/<version>/`, on this origin, never a CDN) **the first time a browser run is needed**, fetches the visual's own
-JSON query (the rows this person already may see), and runs `static/calc/bi_driver.py` with the item in it. The **report page keeps the strict content-security policy**: only the worker's response
-carries `'wasm-unsafe-eval'` (never `'unsafe-eval'`), as for Calc. Pyodide must be installed (`tools/fetch-pyodide.sh`); otherwise a browser run answers `DRS-9074` naming it. The browser's own
-sandbox is the boundary; the manifest's `memory` is not enforced there, and `timeout` stops the worker.
+**The browser (until 2.2).** Release 2.2 could run a python visual in the page, in Calc's Pyodide worker. Wave B (2.3.0) made the servers compute and
+the browser only draw ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3): no report, board or Analyse page loads Pyodide or WebAssembly, and a visual
+that says `browser` runs on the console. Pyodide stays for **Calc** only ([PYTHON_CALC.md](PYTHON_CALC.md)), Python you write yourself on a view.
 
-![The same report, run in the browser](img/bi-python/report-browser.png)
+The picture below is from 2.2 and kept for readers of old reports; the line under each visual now always says the console ran it
+(`Python · desk-pnl-volatility v1 · server · 240 ms · 60 rows`).
 
-The line under each visual says where it ran: `Python · desk-pnl-volatility v1 · browser · 3279 ms · 60 rows` (the first browser run loads the interpreter; later ones are as quick as the server's).
+![2.2 only: the same report run in the browser](img/bi-python/report-browser.png)
 
 ## 7. The sandbox, exactly
 
@@ -278,7 +278,7 @@ container with the usual limits. `GET /bi/python/status` says which isolation is
 | `DRS-9072` | 413 or 504 | a limit stopped it | over `timeout` (504), over `memory`, input or output size (413) |
 | `DRS-9073` | 403 | the sandbox refused something | an `import` that is not on the list, the network, a file outside the scratch folder, a process |
 | `DRS-9075` | 422 | a Transform's result is not usable | a column the derived dataset declares is missing from the frame, or the Transform's `inputs` are not the derived dataset's inputs (a Transform only: section 13) |
-| `DRS-9074` | 503 | no runner | all workers busy for `queue_seconds`, the runner switched off, `pandas` or `pyarrow` not installed in the console's environment, a package not installed, Pyodide not installed for a browser run |
+| `DRS-9074` | 503 | no runner | all workers busy for `queue_seconds`, the runner switched off, `pandas` or `pyarrow` not installed in the console's environment, a package not installed |
 | `DRS-9076` | 422 | a test the item ships with fails, so it is not published | `POST /bi/api/items/<id>/publish` (or `approve`) of a Python item whose `tests:` do not all pass; a bi-admin may publish with `force: true` (section 15) |
 | `DRS-9077` | 422 | a Vega-Lite specification could not be drawn (shown in the visual's frame; no HTTP call) | a `url` or `loader` in the specification, a library that did not load, an invalid specification (section 14) |
 
@@ -296,7 +296,7 @@ DRS-9073 403 Denied: import of 'socket' is not allowed here (this item may use: 
 
 ```
 {"enabled": true, "ready": true, "missing": [], "workers": 2, "running": 0, "packages": ["pandas", "numpy", "pyarrow", "scipy", "statsmodels"],
- "installed": ["pandas", "numpy", "pyarrow", "scipy"], "calls": 0, "failures": 0, "isolation": "network namespace + audit hook", "browser": {...}}
+ "installed": ["pandas", "numpy", "pyarrow", "scipy"], "calls": 0, "failures": 0, "isolation": "network namespace + audit hook", ...}
 ```
 
 More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
@@ -304,13 +304,13 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 ## 11. Measured
 
 On the development machine (a laptop, Python 3.14, pandas 3, 60 rows): a **server call takes about 220 to 320 ms** (a process start and the `pandas` import dominate; the first is the slowest), 214 to 250 ms warm. The design target was
-under 50 ms: **not met**, because each call starts a worker; a warm pool is the way to get there and is not built (section 12). A **browser run** loads the interpreter, numpy and pandas on the first use: both visuals of the sample report showed about 3.3 s on a first load here (the second waits for the interpreter the first loads; the
-runs themselves are the same code as the server's, on 60 rows). The Chromium test ([test_bi_python_browser.py](../../drishti-console/tests/test_bi_python_browser.py)) checks that both targets give the same figures as a computation from the same trades.
+under 50 ms: **not met**, because each call starts a worker; a warm pool is the way to get there and is not built (section 12). (Until 2.2 a browser run took about 3.3 s on its first load, the interpreter, numpy and pandas; since 2.3.0 there is no browser run, and wave B's
+fork-server takes the worker start off each call: see the end of this guide.) The Chromium test ([test_bi_python_browser.py](../../drishti-console/tests/test_bi_python_browser.py)) checks the sample report's figures against a computation from the same trades.
 
 ## 12. Built and not built
 
 Built: the Measure and Visual interfaces; Python items as BI items (versions, review, publish, shipped files, bundles); the manifest and its checks (server and console); Python measures in datasets; the
-`python` visual in reports and the designer; the sandboxed server runner with a pool; the browser target in Calc's Pyodide worker; the shipped samples.
+`python` visual in reports and the designer; the sandboxed server runner with a pool; the shipped samples. (The browser target of 2.2, in Calc's Pyodide worker, was removed in 2.3.0.)
 
 Built with several datasets (section 13): the **Transform** interface, run on the server over the reader's answers and published as a **Python dataset** (2.2: `source.python`, each input a model query; [BI_MODEL_SPEC.md section 1.2](../architecture/BI_MODEL_SPEC.md#12-sources)), kept per reader and version of the inputs; Analyse promotes a join cell to one.
 
@@ -388,7 +388,7 @@ What comes back from the worker is data, as with ECharts: `{"kind": "vega-lite",
 * **The data is inside the specification** (`data.values`). A `url` or a `loader` anywhere in it is refused, in the sandbox (`DRS-9073`: "a Vega-Lite specification may not load anything from a URL or name a loader") and again in the page. The page draws it with the vendored Vega, Vega-Lite, vega-embed and **vega-interpreter**
   ([VENDOR.md](../../drishti-console/web/static/vendor/VENDOR.md)): the interpreter walks the expression tree instead of compiling it to a function, so an expression such as `datum.MTM < 0` is evaluated **without `eval`** and the page keeps the strict content security policy (no `unsafe-eval`, no inline style: vega-embed is told not to write its own `<style>`). The loader refuses every URL, there is no actions menu, no editor link and no tooltip plug-in.
 * The page puts the theme's colours and the report's palette under whatever the specification's own `config` says, sizes the chart to its frame (`width` and `height` as `container`) and draws it on a canvas.
-* `target: browser` works the same way (the Pyodide driver returns the same answer); the size limit is `bi.python.max_output_bytes`.
+* The size limit is `bi.python.max_output_bytes`. (`target: browser` items of 2.2 run on the console and answer the same.)
 * A **report** can also hold a Vega-Lite visual with **no Python at all**: `type: vega-lite` ([REPORTS.md](REPORTS.md#35-vega-lite-visuals)).
 
 ## 15. Tests shipped with an item
@@ -441,7 +441,7 @@ pnl-vega             2 tests: passed 2
 
 ## 16. Python in alerts and on boards
 
-**Boards.** A board tile may be a **python visual** (a Python measure shown as bars, or a Python visual that returns a chart or a Vega-Lite specification): the tile runs it for the person looking, as the report does, on the server or in the browser (`format.run` of the visual). The sample board `python-wall` has three. A Python tile has no threshold alert of its own (the colour rule of a tile reads numbers the query returns); to be told when a Python measure crosses a limit, make an **alert** on it. See [BOARDS.md](BOARDS.md#python-tiles).
+**Boards.** A board tile may be a **python visual** (a Python measure shown as bars, or a Python visual that returns a chart or a Vega-Lite specification): the tile runs it for the person looking, as the report does, on the console's runner. The sample board `python-wall` has three. A Python tile has no threshold alert of its own (the colour rule of a tile reads numbers the query returns); to be told when a Python measure crosses a limit, make an **alert** on it. See [BOARDS.md](BOARDS.md#python-tiles).
 
 **Alerts.** An alert's source may be a **Python measure**: a dataset source whose measure is one (`type: dataset`, `measure: Desk P&L volatility`), or a visual source whose visual is a python visual that shows one. The server has no Python, so it does what a Transform does: it **builds the rows the person may see** (their row rules and masks applied by the engine, up to `drishti.bi.report.python-rows`), writes the item and the rows to a scratch folder and starts the console's runner (`drishti-console/core/transform_cli.py`, in `measure` mode), which runs the item in the same sandbox and answers a number for each group; the alert reduces the groups to one number (a dataset source: the whole input is one group; a visual source: the alert's `reduce`, `first` by default). It is read **for each person**, on the alert's schedule or after a load, like any other. What follows from that:
 

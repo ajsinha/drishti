@@ -159,28 +159,31 @@ can be queried inside MongoDB; choose `bson` only when operators query fields th
 
 The pack declares the fields to promote on the connector that stores the kind, as for Delta Lake (see
 [DELTA_CONNECTOR.md, section 4](DELTA_CONNECTOR.md#4-declaring-the-layout-in-a-pack) for how to choose them). The trading
-pack declares them on `trading-store`; the `mongodb` profile (`SPRING_PROFILES_ACTIVE=mongodb`) switches that connector
+pack declares them on `trade-endur`; the `mongodb` profile (`SPRING_PROFILES_ACTIVE=mongodb`) switches that connector
 to the MongoDB plugin and keeps the pack's settings:
 
 ```yaml
-# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trading-store.yaml at the first start)
+# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trade-endur.yaml at the first start)
 connectors:
-  trading-store:
+  trade-endur:
     settings:
       domain: trading
       layout:
         trade:
-          columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
-                    tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
-                    risk.dv01, sourceSystem]
+          columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
 
 # drishti-server application-mongodb.yaml (the profile; deprecated, see \"As a connector file\" below)
 drishti:
   sources:
     connectors:
-      trading-store: { plugin: mongodb, settings: { uri: "${DRISHTI_MONGODB_URI:mongodb://localhost:27017}",
+      trading-store: { plugin: mongodb, settings: { uri: "${DRISHTI_MONGODB_URI:mongodb://localhost:27017}",   # 2.2's name, see the note
                                                      database: "${DRISHTI_MONGODB_DATABASE:drishti}" } }
 ```
+
+> **2.3.0:** the trades are read per source system (`trade-endur`, `trade-calypso`, `trade-murex`, one Delta table each). The deprecated
+> store profiles still name 2.2's `trading-store`, so a profile leaves the trades on Delta; point a store at the trades with connector
+> files named after the three connectors (below).
+
 
 The connector reads `layout.<kind>.columns`; the collection is the connector's `collection` setting, else its `domain`
 (`trading`). A path becomes a field of `c` with its dots as two underscores (`MongoLayout.field`). Numbers are stored as
@@ -375,17 +378,17 @@ kind, MongoDB first:
 drishti:
   sources:
     routes:
-      trade: trading-store                     # asked first
+      trade: trade-endur                     # asked first
     connectors:
-      trading-store:                           # MongoDB: the last 90 business days (--keep-days 90 or --ttl-days 130)
+      trade-endur:                           # MongoDB: the last 90 business days (--keep-days 90 or --ttl-days 130)
         plugin: mongodb
         kinds: [trade]
         settings: { uri: "mongodb://m1,m2,m3/?replicaSet=rs0", database: risk, domain: trading,
-                    read-preference: secondaryPreferred, "layout.trade.columns": "tradeId,productType,…" }
+                    read-preference: secondaryPreferred, "layout.trade.columns": "TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,…" }
       trading-history:                         # Delta Lake: every business day for seven years
         plugin: delta
         kinds: [trade]
-        settings: { root: "s3a://risk-lake/banking", domain: trading, "layout.trade.columns": "tradeId,productType,…" }
+        settings: { root: "s3a://risk-lake/banking", domain: trading, "layout.trade.columns": "TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,…" }
 ```
 
 A read tries MongoDB first and falls through to Delta Lake for a day MongoDB does not hold; a search, pick list, derived
@@ -489,7 +492,7 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 `GET /api/v1/admin/health` shows the connector and its catalogue:
 
 ```json
-{"name": "trading-store", "health": "UP",
+{"name": "trade-endur", "health": "UP",
  "cache": {"kinds": 1, "datesIndexed": 10, "ids": 10000, "columnSets": 2, "columnSetsMb": 4, "dayReads": 2, "documentReads": 2}}
 ```
 
@@ -604,7 +607,7 @@ The health text of the integration test's connector, against a real `mongod` (sh
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: mongodb
 kinds: [trade]
 description: Trading documents in MongoDB
@@ -614,9 +617,7 @@ settings:
   database: ${DRISHTI_MONGODB_DATABASE:drishti}
   layout:
     trade:
-      columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
-                tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
-                risk.dv01, sourceSystem]
+      columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
 ```
 
 The `mongodb` profile (`SPRING_PROFILES_ACTIVE=mongodb`) did this for the six banking stores and still works, but is deprecated. A file replaces the pack's template wholesale, so it repeats the promoted `layout` the pack declared ([section 3](#3-declaring-which-fields-are-columns)).

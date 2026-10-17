@@ -131,28 +131,31 @@ Why each part is shaped this way:
 
 The pack declares the fields on the connector that stores the kind, exactly as for Delta Lake (see
 [DELTA_CONNECTOR.md, section 4](DELTA_CONNECTOR.md#4-declaring-the-layout-in-a-pack) for how to choose them). The trading
-pack declares them on `trading-store`; the `postgres` profile (`SPRING_PROFILES_ACTIVE=postgres`) switches that
+pack declares them on `trade-endur`; the `postgres` profile (`SPRING_PROFILES_ACTIVE=postgres`) switches that
 connector to the `jdbc` plugin in table mode and keeps the pack's settings, so the declaration applies unchanged:
 
 ```yaml
-# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trading-store.yaml at the first start)
+# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trade-endur.yaml at the first start)
 connectors:
-  trading-store:
+  trade-endur:
     settings:
       layout:
         trade:
-          columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
-                    tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
-                    risk.dv01, sourceSystem]
+          columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
 
 # drishti-server application-postgres.yaml (the profile; deprecated, see \"As a connector file\" below)
 drishti:
   sources:
     connectors:
-      trading-store: { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}",
+      trading-store: { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}",   # 2.2's name, see the note
                        user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD}",
                        table: trading.entities } }
 ```
+
+> **2.3.0:** the trades are read per source system (`trade-endur`, `trade-calypso`, `trade-murex`, one Delta table each). The deprecated
+> store profiles still name 2.2's `trading-store`, so a profile leaves the trades on Delta; point a store at the trades with connector
+> files named after the three connectors (below).
+
 
 The connector serves a path as a column only when the table has that column; a declared path the table lacks shows in
 Health ([section 11](#11-diagnosing)).
@@ -450,7 +453,7 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 `GET /api/v1/admin/health` shows the connector and its catalogue:
 
 ```json
-{"name": "trading-store", "health": "UP", "cache": {"ids": 1000000, "kinds": 1, "datesIndexed": 10, "columnSets": 1}}
+{"name": "trade-endur", "health": "UP", "cache": {"ids": 1000000, "kinds": 1, "datesIndexed": 10, "columnSets": 1}}
 ```
 
 | Symptom | Likely cause | What to do |
@@ -588,7 +591,7 @@ Messages from a real PostgreSQL 18 (`jdbc has not read its table yet: catalogue 
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: jdbc
 kinds: [trade]
 description: Trading documents in PostgreSQL (table mode)
@@ -603,9 +606,7 @@ settings:
   lookback-days: '10'
   layout:
     trade:
-      columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
-                tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
-                risk.dv01, sourceSystem]
+      columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
 ```
 
 A database URL may not carry a password (`jdbc:…//user:pw@host`, `?password=…`): the page, the API and the CLI refuse it with the name to use. The `postgres` profile did this for the six banking stores and still works, but is deprecated.
@@ -693,7 +694,7 @@ connector file of the same name replaces the suggestion wholesale; `config/conne
 profile, `application-postgres.yaml`, did the same and still works but is deprecated). For one connector:
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: jdbc                                   # replaces the pack's "delta"
 kinds: [trade]
 settings:
@@ -705,11 +706,11 @@ settings:
   # pool-size: inherits drishti.db.pool.size (20)
 ```
 
-**Pack form, a pack that owns its PostgreSQL store** (its suggested template; the server writes it to `config/connectors/trading-store.yaml` at the first start):
+**Pack form, a pack that owns its PostgreSQL store** (its suggested template; the server writes it to `config/connectors/trade-endur.yaml` at the first start):
 
 ```yaml
 connectors:
-  trading-store:
+  trade-endur:
     plugin: jdbc
     kinds: [trade]
     settings:
@@ -721,7 +722,7 @@ connectors:
       lookback-days: 10                              # snapshot kinds: how far back a picked date may fall
       # kinds: trade                                 # optional; otherwise the kinds the table holds
 routes:
-  trade: trading-store
+  trade: trade-endur
 ```
 
 #### Try it
@@ -743,7 +744,7 @@ million trades a day is in [section 7](#7-seven-years-sizing-and-postgresql-with
 curl -s "http://localhost:18480/api/v1/entities/trade/MX-20000001/raw?asOf=2026-09-29" | jq -c .provenance
 ```
 
-You should see `"source":"trading-store"` and `"businessDate":"2026-09-29"`.
+You should see `"source":"trade-endur"` and `"businessDate":"2026-09-29"`.
 
 #### In the terminal
 

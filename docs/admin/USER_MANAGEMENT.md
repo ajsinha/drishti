@@ -155,18 +155,18 @@ Configuration ships with these:
 | `approver` | everything | yes | yes | yes | — | yes | yes |
 | `admin` | everything | yes | yes | — | yes (and admins may approve) | yes | yes |
 
-Packs add their own: for example `trader` (finance), `credit-risk` (counterparty-risk), `market-risk`,
-`climate-analyst`, `retail`, `oprisk`, `scientist` and `economist`. The analysts' roles of the packs that offer Calc
-hold `calc`: `trader` and `risk` (finance), `trader` (trading), `market-risk` and `credit-risk`. Roles of packs that do
-not offer Calc do not ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#9-roles-who-may-use-calc)). Every pack role has
+Packs add their own. The seven shipped packs add `trader` (trading), `market-risk` (market-risk), `credit-risk` (counterparty-risk),
+`economist` and `analyst` (world-economy), `news-analyst` and `market-analyst` (news-and-markets); core and market-data add none. The roles
+of the packs that offer Calc hold `calc`: `trader`, `market-risk` and `credit-risk`. The roles of world-economy and news-and-markets
+do not ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#9-roles-who-may-use-calc)). Every pack role has
 `layout` (none sets `layout: false`), and so has every role you define in Admin → Roles unless you untick *Customise
 layouts*. A pack declares one like this:
 
 ```yaml
-# examples/packs/climate-risk/pack.yaml
+# config/packs/world-economy/pack.yaml
 roles:
-  climate-analyst:
-    kinds: [climate-profile, financed-emissions, climate-scenario, climate-stress, physical-asset, taxonomy-alignment]
+  economist:
+    kinds: [economy, macro-indicator, economic-forecast, labour-market, fiscal-position, country-group, ...]
 ```
 
 Rules for your own roles:

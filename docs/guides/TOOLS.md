@@ -25,9 +25,12 @@ The depth lives elsewhere and is linked from each section: every option of every
 [CLI_GUIDE.md](CLI_GUIDE.md); turning schema files and JSON into a pack is [SCHEMA_TO_PACK.md](SCHEMA_TO_PACK.md); running a site
 (deploys, monitoring, capacity, runbooks) is [OPERATIONS.md](../admin/OPERATIONS.md); announcing loads is [DATA_LOADS.md](DATA_LOADS.md).
 
-All the data on this page is invented. The commodity-swap book used throughout comes from the synthetic generator
-`tools/packgen/comswap_synth.py` (deals with legs, cash flows, resets and events, upper-case keys, blanks spelt four ways: the
-*shape* of a booking-system export, none of its values).
+All the data on this page is invented, and every example runs on a fresh clone as it is: the files are the committed test data
+under `data/testdata/` (the ENDUR trade book `data/testdata/trades/endur/`, a day-one snapshot and one file of changes per later day, JSON
+Lines gzipped; trades with legs, cash flows, resets and events in the UPPER_SNAKE attributes of the trading pack, blanks spelt four ways:
+the *shape* of a booking-system export, none of its values), the interpreter is the console's, `drishti-console/.venv/bin/python`
+(the five-step quick start of [data/testdata/README.md](../../data/testdata/README.md) installs it), and the commands run from the
+repository root. Scratch output (`lake`, `lake2`, `build/...`) goes into the clone; delete it afterwards.
 
 ## Contents
 
@@ -67,11 +70,16 @@ and it is the same engine the page runs.
 ## 2. Running the tools
 
 Every tool is Python 3.10+ or bash, run from the repository root. Most need only PyYAML; the ones that write Delta or Parquet need
-`deltalake` and `pyarrow`. With [uv](https://docs.astral.sh/uv/) nothing has to be installed:
+`deltalake` and `pyarrow`. The console's environment has all three (`drishti-console/requirements.txt`), so the examples run with its
+interpreter:
 
 ```bash
-uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py lake build ...
+drishti-console/.venv/bin/python tools/drishti.py lake build ...
 ```
+
+Without that environment, [uv](https://docs.astral.sh/uv/) runs a tool with nothing installed:
+`uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py lake build ...`. (On a machine whose `python3 -m venv`
+lacks `ensurepip`, `uv venv --python 3.13 drishti-console/.venv` makes the environment.)
 
 The Java tools (`sutra`, `pack check`, and Drishti's own lake writer) run from the server's exec jar, found as `--jar`, then
 `DRISHTI_JAR`, then the newest `drishti-server/target/drishti-server-*-exec.jar` (build it with `./mvnw -q -DskipTests package`).
@@ -79,11 +87,11 @@ The Java tools (`sutra`, `pack check`, and Drishti's own lake writer) run from t
 Exit codes follow one rule everywhere: `0` done, `1` problems found or refused, `2` usage (a bad option, a missing file). The lake
 builder adds `2` for "written with rejects" and `3` for "another run holds the lock" (section 4.6). Commands that talk to a
 server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`) and read the token from `--token-file` or
-`DRISHTI_TOKEN`; the token is never printed. Shell completion: `source <(python3 tools/drishti.py completion bash)`.
+`DRISHTI_TOKEN`; the token is never printed. Shell completion: `source <(drishti-console/.venv/bin/python tools/drishti.py completion bash)`.
 
 ## 3. `drishti.py`: the one command line
 
-`tools/drishti.py` is one program with twelve groups. `python3 tools/drishti.py <group> --help` lists a group's commands and
+`tools/drishti.py` is one program with twelve groups. `drishti-console/.venv/bin/python tools/drishti.py <group> --help` lists a group's commands and
 `<group> <command> --help` every option with examples.
 
 | Group | Commands | Section |
@@ -107,7 +115,7 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 `tools/ingest_jsonl.py` and `tools/ingest_watch.py` (`data ingest`), `tools/packbundle.py` (`pack bundle|verify|deploy|rollback`),
 `tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
 `tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
-`tools/lake/jsonstream.py`, `tools/lake/stage.py` and `tools/lake/writers.py`.
+`tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/demo.py` (`lake demo`) and `tools/lake/laketables.py` (the tables `lake status` lists).
 
 ## 4. lake build: a large JSON export into a Delta lake
 
@@ -131,96 +139,101 @@ bounded by rows (`--batch-rows`, 50,000) and bytes (`--batch-mb`, 128). Section 
 often it is present, its types and most frequent values, then suggests an id, a business date and classifiers:
 
 ```
-$ python3 tools/drishti.py lake scan book-2026-10-16.json --limit 500 | tail -n 8
-PRECIOUS_METAL_FLAG                    500         2  text  (455), Y(45)
+$ drishti-console/.venv/bin/python tools/drishti.py lake scan data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz --limit 500 | tail -n 8
+PRECIOUS_METAL_FLAG                    500         2  text  (458), Y(42)
 TT_GROUP                               500         1  text  (500)
 TT_BOOK                                500         1  text  (500)
-LEASE_PERPETUITY_FLAG                  500         1  text  (500)
+LEASE_PERPETUITY_FLAG                  500         3  text  (480), Y(10), N(10)
 SETTLEMENT_DATE                        500         1  text  (500)
 LEGS                                   500         0  array
-EVENTS                                 131         0  array
+EVENTS                                 500         0  array
 suggested --key TRADE_ID   --date START_DATE   --partition-by: PRODUCT_TYPE, PRODUCT_SUB_TYPE, PORTFOLIO
 ```
 
-`(455)` is a blank value counted 455 times. The id is a field present in (nearly) every document with every value different;
+`(458)` is a blank value counted 458 times. The id is a field present in (nearly) every document with every value different;
 the business date ranks names such as *business*, *cob*, *as of* and *snapshot* first; the classifiers are text fields rarely
 blank with 2 to 40 values, *product* and *type* first. This export is a snapshot of the book (its dates are trade and start
-dates, not the day of the extract), so the walk-through below uses `--as-of` for the day the file was taken.
+dates, not the day of the extract), so the walk-through below uses `--as-of` for the day the file was taken, 2026-09-22.
 
 ### 4.2 The first load
 
 ```
-$ uv run --with deltalake --with pyarrow --with pyyaml python tools/drishti.py lake build --from book-2026-10-16.json \
-    --kind deal --key TRADE_ID --as-of 2026-10-16 --partition-by PRODUCT_TYPE --promote COUNTERPARTY,PORTFOLIO,QUANTITY \
-    --lake lake --domain comswap
-engine: deltalake (the Python deltalake package; no server jar with the lake writer was found)
+$ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz \
+    --kind trade --key TRADE_ID --as-of 2026-09-22 --partition-by PRODUCT_TYPE --promote COUNTERPARTY,PORTFOLIO,QUANTITY \
+    --lake lake --domain trading
+engine: drishti (Drishti's Java writer in drishti-server-2.2.0-exec.jar)
 business date  PRODUCT_TYPE           rows
-2026-10-16     CallNot                  21
-2026-10-16     Cash                    337
-2026-10-16     ComFut                  402
-2026-10-16     ComSwap                 892
-2026-10-16     Commodity               348
-documents read: 2000, rows written: 2000, rejected: 0
-summary: lake/_drishti-lake/runs/20261017T082600-509848.json
-2026-10-17T08:26:01-04:00 lake-build ok exit=0 run=20261017T082600-509848 domain=comswap kind=deal engine=deltalake mode=overwrite-dates rows=2000 rejected=0 dates=1 partitions=5 seconds=0.467
+2026-09-22     CallNot                  55
+2026-09-22     Cash                    815
+2026-09-22     ComFut                  994
+2026-09-22     ComSwap                2266
+2026-09-22     Commodity               850
+documents read: 4980, rows written: 4980, rejected: 0
+summary: lake/_drishti-lake/runs/20261017T174352-1339862.json
+2026-10-17T17:43:55-04:00 lake-build ok exit=0 run=20261017T174352-1339862 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4980 rejected=0 dates=1 partitions=5 seconds=3.614
 ```
 
 The last line is **the** log line of the run (also appended to `<lake>/_drishti-lake/runs.log`): one line per run, whatever
 happened, for a scheduler's log and for `grep`. `--dry-run` reads and counts and writes nothing; `-q` prints only the log line;
-`--json` prints the whole summary.
+`--json` prints the whole summary. With the server jar built (a fresh clone after step 2 of the quick start) the builder picks
+Drishti's own writer; without it, `deltalake` (section 4.5).
+
+The run also leaves `<data>/bi-store/lake-rebuilt.json` (it was given no `--signal`): a server started afterwards clears the BI columns and
+rollups it had read from a lake, so it never answers from the data before this build; `--no-stamp` leaves none (section 4.7).
 
 ### 4.3 The next day, with rejects
 
-The next extract arrives gzipped, as JSON Lines, with two bad lines at the end:
+The next file of the book holds the day's changes (189 trades). Two bad lines added at its end show what a reject looks like:
 
 ```
-$ ... lake build --from book-2026-10-19.jsonl.gz --kind deal --key TRADE_ID --as-of 2026-10-19 --partition-by PRODUCT_TYPE \
-    --promote COUNTERPARTY,PORTFOLIO,QUANTITY --lake lake --domain comswap
-engine: deltalake (the Python deltalake package; no server jar with the lake writer was found)
+$ (zcat data/testdata/trades/endur/changes-2026-09-23.jsonl.gz; echo '{"PRODUCT_TYPE": "Cash"}'; echo 'not json') | gzip > day2.jsonl.gz
+$ drishti-console/.venv/bin/python tools/drishti.py lake build --from day2.jsonl.gz --kind trade --key TRADE_ID --as-of 2026-09-23 --partition-by PRODUCT_TYPE \
+    --promote COUNTERPARTY,PORTFOLIO,QUANTITY --lake lake --domain trading
+engine: drishti (Drishti's Java writer in drishti-server-2.2.0-exec.jar)
 business date  PRODUCT_TYPE           rows
-2026-10-19     CallNot                  16
-2026-10-19     Cash                    257
-2026-10-19     ComFut                  321
-2026-10-19     ComSwap                 672
-2026-10-19     Commodity               234
-documents read: 1502, rows written: 1500, rejected: 2
+2026-09-23     Cash                     33
+2026-09-23     ComFut                   35
+2026-09-23     ComSwap                  90
+2026-09-23     Commodity                31
+documents read: 191, rows written: 189, rejected: 2
   rejected 1: no id (field 'TRADE_ID' is missing or empty)
   rejected 1: not JSON (Expecting value)
-    e.g. book-2026-10-19.jsonl.gz:1501: no id (field 'TRADE_ID' is missing or empty)
-    e.g. book-2026-10-19.jsonl.gz:1502: not JSON (Expecting value)
-summary: lake/_drishti-lake/runs/20261017T082601-509920.json
-2026-10-17T08:26:01-04:00 lake-build partial exit=2 run=20261017T082601-509920 domain=comswap kind=deal engine=deltalake mode=overwrite-dates rows=1500 rejected=2 dates=1 partitions=5 seconds=0.323
+    e.g. day2.jsonl.gz:190: no id (field 'TRADE_ID' is missing or empty)
+    e.g. day2.jsonl.gz:191: not JSON (Expecting value)
+summary: lake/_drishti-lake/runs/20261017T174355-1339986.json
+2026-10-17T17:43:57-04:00 lake-build partial exit=2 run=20261017T174355-1339986 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=189 rejected=2 dates=1 partitions=4 seconds=2.201
 ```
 
 A reject never stops the run: it is counted per reason, the first 50 are kept with where they were (`file:line` for JSON Lines,
 `file[n]` for an element of an array), and the run exits `2` so a scheduler can tell "loaded, look at the rejects" from "all
 good". The reasons: not JSON, not a JSON object, no id, an id that is an object, no business date, a date that is not a date
 (ISO dates and date-times, `yyyymmdd` as text or a number are dates). An id seen twice on one date is reported as a duplicate.
+(The table holds what each file holds: the changes file is a day's changes, so the 2026-09-23 date has 189 trades. `lake demo`
+applies each day's changes to the previous day by key and writes the whole book every day: section 4.9.)
 
 ### 4.4 Re-running a day replaces that day only
 
 ```
-$ ... lake build --from book-2026-10-16.json ... --lake lake --domain comswap -q
-2026-10-17T08:26:02-04:00 lake-build ok exit=0 run=20261017T082601-510010 domain=comswap kind=deal engine=deltalake mode=overwrite-dates rows=2000 rejected=0 dates=1 partitions=5 seconds=0.4
+$ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz ... --lake lake --domain trading -q
+2026-10-17T17:44:01-04:00 lake-build ok exit=0 run=20261017T174358-1340108 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4980 rejected=0 dates=1 partitions=5 seconds=3.14
 $ find lake -maxdepth 4 -type d | sort
 lake
-lake/comswap
-lake/comswap/deal
-lake/comswap/deal/business_date=2026-10-16
-lake/comswap/deal/business_date=2026-10-16/PRODUCT_TYPE=CallNot
-lake/comswap/deal/business_date=2026-10-16/PRODUCT_TYPE=Cash
-lake/comswap/deal/business_date=2026-10-16/PRODUCT_TYPE=ComFut
-lake/comswap/deal/business_date=2026-10-16/PRODUCT_TYPE=Commodity
-lake/comswap/deal/business_date=2026-10-16/PRODUCT_TYPE=ComSwap
-lake/comswap/deal/business_date=2026-10-19
-lake/comswap/deal/business_date=2026-10-19/PRODUCT_TYPE=CallNot
-lake/comswap/deal/business_date=2026-10-19/PRODUCT_TYPE=Cash
-lake/comswap/deal/business_date=2026-10-19/PRODUCT_TYPE=ComFut
-lake/comswap/deal/business_date=2026-10-19/PRODUCT_TYPE=Commodity
-lake/comswap/deal/business_date=2026-10-19/PRODUCT_TYPE=ComSwap
-lake/comswap/deal/_delta_log
 lake/_drishti-lake
 lake/_drishti-lake/runs
+lake/trading
+lake/trading/trade
+lake/trading/trade/business_date=2026-09-22
+lake/trading/trade/business_date=2026-09-22/PRODUCT_TYPE=CallNot
+lake/trading/trade/business_date=2026-09-22/PRODUCT_TYPE=Cash
+lake/trading/trade/business_date=2026-09-22/PRODUCT_TYPE=ComFut
+lake/trading/trade/business_date=2026-09-22/PRODUCT_TYPE=Commodity
+lake/trading/trade/business_date=2026-09-22/PRODUCT_TYPE=ComSwap
+lake/trading/trade/business_date=2026-09-23
+lake/trading/trade/business_date=2026-09-23/PRODUCT_TYPE=Cash
+lake/trading/trade/business_date=2026-09-23/PRODUCT_TYPE=ComFut
+lake/trading/trade/business_date=2026-09-23/PRODUCT_TYPE=Commodity
+lake/trading/trade/business_date=2026-09-23/PRODUCT_TYPE=ComSwap
+lake/trading/trade/_delta_log
 ```
 
 | `--mode` | What a run does to the dates in its input | Re-run safe |
@@ -232,10 +245,10 @@ lake/_drishti-lake/runs
 A table keeps the partitioning it was created with; a run that asks for another fails before reading anything:
 
 ```
-$ ... lake build --from book-2026-10-16.json --kind deal --key TRADE_ID --as-of 2026-10-16 --partition-by PORTFOLIO --lake lake --domain comswap
-lake build: lake/comswap/deal is partitioned by business_date, PRODUCT_TYPE; this run asks for business_date, PORTFOLIO (give --partition-by PRODUCT_TYPE or write a new table)
-summary: lake/_drishti-lake/runs/20261017T082602-510178.json
-2026-10-17T08:26:02-04:00 lake-build failed exit=1 run=20261017T082602-510178 domain=comswap kind=deal mode=overwrite-dates seconds=0.001 error="lake/comswap/deal is partitioned by business_date, PRODUCT_TYPE; this run asks for business_date, PORTFOLIO (give --partition-by PRODUCT_TYPE or write a new table)"
+$ ... lake build --from data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz --kind trade --key TRADE_ID --as-of 2026-09-22 --partition-by PORTFOLIO --lake lake --domain trading
+lake build: lake/trading/trade is partitioned by business_date, PRODUCT_TYPE; this run asks for business_date, PORTFOLIO (give --partition-by PRODUCT_TYPE or write a new table)
+summary: lake/_drishti-lake/runs/20261017T174401-1340283.json
+2026-10-17T17:44:01-04:00 lake-build failed exit=1 run=20261017T174401-1340283 domain=trading kind=trade mode=overwrite-dates seconds=0.0 error="lake/trading/trade is partitioned by business_date, PRODUCT_TYPE; this run asks for business_date, PORTFOLIO (give --partition-by PRODUCT_TYPE or write a new table)"
 ```
 
 ### 4.5 The two engines
@@ -247,43 +260,47 @@ Python `deltalake` package otherwise; the first line of the output says which ra
 | | Drishti's writer (`drishti`) | `deltalake` (delta-rs) |
 |---|---|---|
 | Runs as | `java -jar drishti-server-<v>-exec.jar lake write --manifest M` (started by the builder) | the builder's own Python |
-| Needs | Java 21 and the server jar | `pip install deltalake pyarrow` (or `uv run --with ...`) |
+| Needs | Java 21 and the server jar | `deltalake` and `pyarrow` (in the console's environment) |
 | Commits | **one** per table per run: the replaced files are removed and the new ones added in the same version, so a reader sees all of the load or none of it | one per batch; the first batch of a replaced date replaces it |
 | Where | local disk (Windows paths too, no `winutils.exe`) | local disk and object storage |
 | Heap / memory | `DRISHTI_LAKE_HEAP` (default `1g`) | the batch (`--batch-mb`) plus Arrow's copy |
 
-The same synthetic day through Drishti's writer (the jar's writer taken from a development class path, `DRISHTI_LAKE_CLASSPATH`,
-as the tests do), then read back with deltalake: the two engines write the same table.
+The same day through `deltalake`, into a second lake; then the table Drishti's writer made (one commit per run: versions 0 to 2 for
+the three runs above), read back with deltalake: the two engines write the same table.
 
 ```
-$ python3 tools/drishti.py lake build --from book-2026-10-16.json --kind deal --key TRADE_ID --as-of 2026-10-16 \
-    --partition-by PRODUCT_TYPE --promote COUNTERPARTY,PORTFOLIO,QUANTITY --lake lake2 --domain comswap --engine drishti
-engine: drishti (Drishti's Java writer in DRISHTI_LAKE_CLASSPATH)
+$ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz --kind trade --key TRADE_ID \
+    --as-of 2026-09-22 --partition-by PRODUCT_TYPE --promote COUNTERPARTY,PORTFOLIO,QUANTITY --lake lake2 --domain trading --engine deltalake
+engine: deltalake (the Python deltalake package)
 business date  PRODUCT_TYPE           rows
-2026-10-16     CallNot                  21
-2026-10-16     Cash                    337
-2026-10-16     ComFut                  402
-2026-10-16     ComSwap                 892
-2026-10-16     Commodity               348
-documents read: 2000, rows written: 2000, rejected: 0
-summary: lake2/_drishti-lake/runs/20261017T082247-499153.json
-2026-10-17T08:22:49-04:00 lake-build ok exit=0 run=20261017T082247-499153 domain=comswap kind=deal engine=drishti mode=overwrite-dates rows=2000 rejected=0 dates=1 partitions=5 seconds=1.597
-$ ls lake2/comswap/deal/_delta_log
-00000000000000000000.crc
-00000000000000000000.json
-$ uv run --with deltalake --with pyarrow python -c "from deltalake import DeltaTable; t = DeltaTable('lake2/comswap/deal'); \
-    print('version', t.version(), 'partitions', t.metadata().partition_columns, 'rows', t.to_pyarrow_table().num_rows); print(t.schema().to_arrow())"
-version 0 partitions ['business_date', 'PRODUCT_TYPE'] rows 2000
-arro3.core.Schema
-------------
-id: Utf8
-doc: Utf8
-business_date: Date32
-PRODUCT_TYPE: Utf8
-COUNTERPARTY: Utf8
-PORTFOLIO: Utf8
-QUANTITY: Float64
+2026-09-22     CallNot                  55
+2026-09-22     Cash                    815
+2026-09-22     ComFut                  994
+2026-09-22     ComSwap                2266
+2026-09-22     Commodity               850
+documents read: 4980, rows written: 4980, rejected: 0
+summary: lake2/_drishti-lake/runs/20261017T174401-1340285.json
+2026-10-17T17:44:02-04:00 lake-build ok exit=0 run=20261017T174401-1340285 domain=trading kind=trade engine=deltalake mode=overwrite-dates rows=4980 rejected=0 dates=1 partitions=5 seconds=0.828
+$ ls lake/trading/trade/_delta_log lake2/trading/trade/_delta_log
+lake/trading/trade/_delta_log:
+00000000000000000000.crc  00000000000000000000.json  00000000000000000001.crc  00000000000000000001.json  00000000000000000002.crc  00000000000000000002.json
+
+lake2/trading/trade/_delta_log:
+00000000000000000000.json  00000000000000000001.json  00000000000000000002.json  00000000000000000003.json  00000000000000000004.json
+$ drishti-console/.venv/bin/python -c "from deltalake import DeltaTable; t = DeltaTable('lake/trading/trade'); d = t.to_pyarrow_dataset(); \
+    print('version', t.version(), 'partitions', t.metadata().partition_columns, 'rows', d.count_rows()); print(d.schema)"
+version 2 partitions ['business_date', 'PRODUCT_TYPE'] rows 5169
+id: string
+doc: string
+business_date: date32[day]
+PRODUCT_TYPE: string
+COUNTERPARTY: string
+PORTFOLIO: string
+QUANTITY: double
 ```
+
+(5,169 rows: the 4,980 of 2026-09-22 and the 189 of 2026-09-23. Read a table with `to_pyarrow_dataset()` as above: with deltalake 1.6
+on Python 3.13, a script that called `to_pyarrow_table()` printed its answer but did not exit.)
 
 ### 4.6 Exit codes, the lock, the log and the summary
 
@@ -295,62 +312,72 @@ QUANTITY: Float64
 | `3` | another run holds the lake's lock | try again later; never kill the other run |
 
 **The lock.** One run per lake at a time: the builder takes an exclusive lock on `<lake>/_drishti-lake/lock`. The operating system
-releases it when the process ends, so a run that crashed or was killed never blocks the next one. The file names the holder:
+releases it when the process ends, so a run that crashed or was killed never blocks the next one. The file names the holder. Two
+runs started 0.4 s apart (captured):
 
 ```
-lake build: the lake is locked by {"pid": 510142, "host": "oryxpro", "since": "2026-10-17T08:26:02-04:00"}
-2026-10-17T08:26:02-04:00 lake-build locked exit=3 run=20261017T082602-510155 domain=comswap kind=deal mode=overwrite-dates seconds=0.0 error="the lake is locked by {\"pid\": 510142, \"host\": \"oryxpro\", \"since\": \"2026-10-17T08:26:02-04:00\"}"
+2026-10-17T17:54:08-04:00 lake-build locked exit=3 run=20261017T175408-1353450 domain=trading kind=trade mode=overwrite-dates seconds=0.0 error="the lake is locked by {\"pid\": 1353448, \"host\": \"oryxpro\", \"since\": \"2026-10-17T17:54:08-04:00\"}"
+2026-10-17T17:54:10-04:00 lake-build ok exit=0 run=20261017T175408-1353448 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4980 rejected=0 dates=1 partitions=5 seconds=2.575
 ```
 
 **The log and the summary.** Every run appends its log line to `<lake>/_drishti-lake/runs.log` and writes its summary to
 `<lake>/_drishti-lake/runs/<run>.json` and `<lake>/_drishti-lake/last-run.json` (and `--summary FILE`). Staged rows go to
 `<lake>/_drishti-lake/staging/<run>/` while the run lasts and are removed after it (`--keep-staging` keeps them); a crashed run's are
-removed by the next run, which holds the lock. A summary (the run of 4.3, two partitions shown):
+removed by the next run, which holds the lock. A summary (the run of 4.3, two of its four partitions shown):
 
 ```json
 {
- "run": "20261017T082601-509920",
+ "run": "20261017T174355-1339986",
  "status": "partial",
  "mode": "overwrite-dates",
- "domain": "comswap",
- "kind": "deal",
+ "pack": null,
+ "domain": "trading",
+ "kind": "trade",
  "key": "TRADE_ID",
- "partitionBy": ["PRODUCT_TYPE"],
  "promote": ["COUNTERPARTY", "PORTFOLIO", "QUANTITY"],
- "asOf": "2026-10-19",
- "table": "lake/comswap/deal",
- "rows": {"2026-10-19": 1500},
+ "partitionBy": ["PRODUCT_TYPE"],
+ "asOf": "2026-09-23",
+ "table": "lake/trading/trade",
+ "rows": {"2026-09-23": 189},
  "partitions": [
-  {"date": "2026-10-19", "values": {"PRODUCT_TYPE": "CallNot"}, "rows": 16},
-  {"date": "2026-10-19", "values": {"PRODUCT_TYPE": "Cash"}, "rows": 257}
+  {"date": "2026-09-23", "values": {"PRODUCT_TYPE": "Cash"}, "rows": 33},
+  {"date": "2026-09-23", "values": {"PRODUCT_TYPE": "ComFut"}, "rows": 35}
  ],
- "documents": 1502, "accepted": 1500, "rejected": 2,
+ "documents": 191, "accepted": 189, "rejected": 2,
  "rejects": {
   "byReason": {"no id (field 'TRADE_ID' is missing or empty)": 1, "not JSON (Expecting value)": 1},
-  "first": [{"where": "book-2026-10-19.jsonl.gz:1501", "reason": "no id (field 'TRADE_ID' is missing or empty)"},
-            {"where": "book-2026-10-19.jsonl.gz:1502", "reason": "not JSON (Expecting value)"}]
+  "first": [{"where": "day2.jsonl.gz:190", "reason": "no id (field 'TRADE_ID' is missing or empty)"},
+            {"where": "day2.jsonl.gz:191", "reason": "not JSON (Expecting value)"}]
  },
  "duplicates": {},
- "files": [{"file": "book-2026-10-19.jsonl.gz", "bytes": 805886}],
- "sampleId": "100001", "sampleDate": "2026-10-19",
- "timings": {"readSeconds": 0.18, "writeSeconds": 0.116, "totalSeconds": 0.323},
- "engine": "deltalake",
- "commit": {"commits": 5, "version": 9},
+ "files": [{"file": "day2.jsonl.gz", "bytes": 174087}],
+ "sampleId": "1000029", "sampleDate": "2026-09-23",
+ "timings": {"readSeconds": 0.035, "writeSeconds": 2.159, "totalSeconds": 2.201},
+ "engine": "drishti",
+ "engineWhy": "Drishti's Java writer in drishti-server-2.2.0-exec.jar",
+ "batchRows": 10565, "averageDocumentBytes": 12703,
+ "commit": {"commits": 1, "version": 1, "files": 4},
  "columns": {"partition": ["PRODUCT_TYPE"], "promoted": {"COUNTERPARTY": "string", "PORTFOLIO": "string", "QUANTITY": "double"}},
+ "stamp": "<data>/bi-store/lake-rebuilt.json",
  "exitCode": 2,
- "peakMemoryMb": 211.5
+ "peakMemoryMb": 35.6
 }
 ```
 
-`lake status` reads them back, and says whether a run holds the lock now:
+`lake status` reads them back, lists the lake's tables and says whether a run holds the lock now:
 
 ```
-$ python3 tools/drishti.py lake status --lake lake
+$ drishti-console/.venv/bin/python tools/drishti.py lake status --lake lake
+tables (1):
+  table          rows   files  size    partitions        dates  latest date  last build
+  trading/trade  5,169  9      7.5 MB  9 (PRODUCT_TYPE)  2      2026-09-23   2026-10-17 21:54:10Z
 lock: free
-runs (3 logged, last 3):
-  2026-10-17T08:26:01-04:00 lake-build ok exit=0 run=20261017T082600-509848 domain=comswap kind=deal engine=deltalake mode=overwrite-dates rows=2000 rejected=0 dates=1 partitions=5 seconds=0.467
-  2026-10-17T08:26:01-04:00 lake-build partial exit=2 run=20261017T082601-509920 domain=comswap kind=deal engine=deltalake mode=overwrite-dates rows=1500 rejected=2 dates=1 partitions=5 seconds=0.323
-  2026-10-17T08:26:02-04:00 lake-build ok exit=0 run=20261017T082601-510010 domain=comswap kind=deal engine=deltalake mode=overwrite-dates rows=2000 rejected=0 dates=1 partitions=5 seconds=0.4
+runs (5 logged, last 5):
+  2026-10-17T17:43:55-04:00 lake-build ok exit=0 run=20261017T174352-1339862 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4980 rejected=0 dates=1 partitions=5 seconds=3.614
+  2026-10-17T17:43:57-04:00 lake-build partial exit=2 run=20261017T174355-1339986 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=189 rejected=2 dates=1 partitions=4 seconds=2.201
+  2026-10-17T17:44:01-04:00 lake-build ok exit=0 run=20261017T174358-1340108 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4980 rejected=0 dates=1 partitions=5 seconds=3.14
+  2026-10-17T17:44:01-04:00 lake-build failed exit=1 run=20261017T174401-1340283 domain=trading kind=trade mode=overwrite-dates seconds=0.0 error="lake/trading/trade is partitioned by business_date, PRODUCT_TYPE; this run asks for business_date, PORTFOLIO (give --partition-by PRODUCT_TYPE or write a new table)"
+  2026-10-17T17:54:10-04:00 lake-build ok exit=0 run=20261017T175408-1353448 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4980 rejected=0 dates=1 partitions=5 seconds=2.575
 last run: ok (exit 0), summary lake/_drishti-lake/last-run.json
 ```
 
@@ -361,46 +388,61 @@ connector (`settings.domain`, `settings.layout.<kind>.columns`), and the key and
 `pack make` and `pack new`). Options on the command line win.
 
 ```yaml
-# config/packs/synth-book/pack.yaml (the parts lake build reads)
-pack: synth-book
+# config/packs/trading/pack.yaml (the parts lake build reads; one Delta connector per source system)
+pack: trading
 connectors:
-  book-store:
+  trade-endur:
     plugin: delta
-    kinds: [deal]
+    kinds: [trade]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:./data/delta}
-      domain: comswap
-      layout:
-        deal:
-          columns: [COUNTERPARTY, PORTFOLIO, QUANTITY]
-ingest:
-  deal: {key: TRADE_ID, date: TRADE_DATE}
+      root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
+      domain: trading
+      table.trade: trade_endur
+      layout.trade.columns: "TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,...,COUNTERPARTY,LEGAL_ENTITY,PORTFOLIO,TRADER_ID"
+      union: "true"
+  trade-calypso: ...
+  trade-murex: ...
 ```
+
+The pack has three Delta connectors for `trade`, so the run names one with `--connector` (it picks the table, `trade_endur`, and the
+sixteen promoted columns); captured as a dry run:
 
 ```bash
-python3 tools/drishti.py lake build --from drop/book-2026-10-16.json --pack config/packs/synth-book --lake /srv/drishti/delta \
-    --as-of 2026-10-16 --partition-by PRODUCT_TYPE --signal http://drishti.internal:18480 --token-file /etc/drishti/loads.token
+drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz --pack config/packs/trading \
+    --kind trade --connector trade-endur --key TRADE_ID --as-of 2026-09-22 --partition-by PRODUCT_TYPE --lake lake3 --dry-run --json
+# "pack": "trading", "domain": "trading", "kind": "trade", "table": "lake3/trading/trade_endur", "promote": ["TRADE_ID", "SOURCE_SYSTEM",
+# "PRODUCT_TYPE", ... "TRADER_ID"] (16), "documents": 4980, "status": "dry-run", "exitCode": 0
 ```
 
-The connector reads the lake once its file says so (Admin → Connectors, or `drishti.py connector apply book-store.yaml`):
+In production the same run names the real lake and tells the server (the ETL's last step):
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-2026-10-16.json.gz --pack config/packs/trading --kind trade --connector trade-endur \
+    --key TRADE_ID --as-of 2026-10-16 --partition-by PRODUCT_TYPE --lake /srv/drishti/delta \
+    --signal http://drishti.internal:18480 --token-file /etc/drishti/loads.token
+```
+
+The connector reads the lake once its file says so (Admin → Connectors, or `drishti.py connector apply trade-endur.yaml`):
 
 ```yaml
-# config/connectors/book-store.yaml
+# config/connectors/trade-endur.yaml (written from the pack's template at the first start; yours to edit)
 plugin: delta
-kinds: [deal]
+kinds: [trade]
 settings:
   root: /srv/drishti/delta
-  domain: comswap
-  layout:
-    deal:
-      columns: [COUNTERPARTY, PORTFOLIO, QUANTITY]
+  domain: trading
+  table.trade: trade_endur
+  union: "true"
 ```
 
 `--signal URL` then tells **that** server (it is never a default) that each business date landed: `POST /api/v1/packs/{pack}/loads`
 with the rows, the rejects and the run as the batch id, so the server refreshes, verifies, checks its expectations and alerts, and
 tells people ([DATA_LOADS.md](DATA_LOADS.md)). The pack's name comes from `--pack`, or `--pack-name` without a pack folder. The
 token needs the `loads:write` scope; it is read from `--token-file` or `DRISHTI_TOKEN` and never printed or written to the summary.
-A signal that fails leaves the data written and makes the run exit `2`.
+A signal that fails leaves the data written and makes the run exit `2`. Without `--signal`, or when it fails, the run leaves
+`<bi-store>/lake-rebuilt.json` (the BI store: `DRISHTI_BI_STORE`, else `<data>/bi-store`), so the server's next start clears the BI columns
+and rollups it read from the lakes; a running server also notices a rebuilt date by itself (its Delta files changed) and reads it again.
+`--no-stamp` leaves no stamp.
 
 ### 4.8 The same in the browser
 
@@ -413,7 +455,9 @@ the page, then binds the lake to the pack's connector and sends the signal as th
 committed test data, `data/testdata`: the seven packs' tables under `data/delta` in about 50 s, the seven days moved to end on today's
 business date (`--as-of data` keeps the files' own dates), the connector files checked, the next steps printed. `--only PREFIX` builds
 some datasets, `--lake DIR` another folder (the connector files then point there), `--with-real FILE[,FILE]` adds real extracts to the
-local lake only. Everything about the data and the five-step quick start is in [data/testdata/README.md](../../data/testdata/README.md).
+local lake only. It then tells the server the lakes changed: the data-load signal for every table and date to `--server` (default
+`DRISHTI_SERVER`, then `http://localhost:18480`; a token with `loads:write` from `--token-file` or `DRISHTI_TOKEN`), or, with no server
+there, the stamp of section 4.7; `--no-signal` does neither. Everything about the data and the five-step quick start is in [data/testdata/README.md](../../data/testdata/README.md).
 
 ### 4.10 Scheduling the lake build
 
@@ -421,7 +465,7 @@ A nightly load of the day's extract, at 21:30 on weekdays, after the export land
 
 ```cron
 # m  h  dom mon dow  command
-30 21 *   *   1-5  cd /opt/drishti && python3 tools/drishti.py lake build --from /srv/drop/book-$(date +\%F).json.gz --pack config/packs/synth-book --lake /srv/drishti/delta --as-of $(date +\%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q >> /var/log/drishti/lake-build.log 2>&1
+30 21 *   *   1-5  cd /opt/drishti && drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +\%F).json.gz --pack config/packs/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +\%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q >> /var/log/drishti/lake-build.log 2>&1
 ```
 
 The same as a systemd timer (a missed run is caught up after a reboot, and `systemctl status` shows the exit code):
@@ -436,7 +480,7 @@ After=network-online.target
 Type=oneshot
 User=drishti
 WorkingDirectory=/opt/drishti
-ExecStart=/bin/sh -c 'python3 tools/drishti.py lake build --from /srv/drop/book-$(date +%%F).json.gz --pack config/packs/synth-book --lake /srv/drishti/delta --as-of $(date +%%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q'
+ExecStart=/bin/sh -c 'drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +%%F).json.gz --pack config/packs/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +%%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q'
 # 2 (written with rejects) is not a failure of the unit; alert on it from the summary instead
 SuccessExitStatus=2
 Environment=DRISHTI_LAKE_HEAP=2g
@@ -456,7 +500,7 @@ WantedBy=timers.target
 ```bash
 sudo systemctl enable --now drishti-lake-build.timer
 journalctl -u drishti-lake-build.service -n 20     # the run's log line
-python3 tools/drishti.py lake status --lake /srv/drishti/delta
+drishti-console/.venv/bin/python tools/drishti.py lake status --lake /srv/drishti/delta
 ```
 
 **Safe re-runs.** With `overwrite-dates` or `overwrite-partitions` a run can be repeated any number of times: the same input gives
@@ -474,8 +518,21 @@ Lines (for example one per `PRODUCT_TYPE`). The first five are the Java tool in 
 (`tools/sutragen.py`) and lints its result with the Java tool unless `--no-lint`.
 
 ```bash
-python3 tools/drishti.py sutra gen jsonl --key deal=TRADE_ID --match deal=PRODUCT_TYPE --out build/sutras
-python3 tools/drishti.py sutra lint config/packs/synth-book --strict
+mkdir -p build/tools-walk && zcat data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz | head -n 300 > build/tools-walk/trade.jsonl
+drishti-console/.venv/bin/python tools/drishti.py sutra gen build/tools-walk --key trade=TRADE_ID --match trade=PRODUCT_TYPE --out build/tools-walk/sutras
+drishti-console/.venv/bin/python tools/drishti.py sutra lint config/packs/trading --strict
+```
+
+Captured (the end of `sutra gen`: one Sutra per product type, each linted):
+
+```
+trade           PRODUCT_TYPE=ComSwap                            145       5  trade-comswap
+trade           PRODUCT_TYPE=Commodity                           38       5  trade-commodity
+ok      build/tools-walk/sutras/trade/trade-callnot.v1.sutra.yaml
+ok      build/tools-walk/sutras/trade/trade-cash.v1.sutra.yaml
+ok      build/tools-walk/sutras/trade/trade-comfut.v1.sutra.yaml
+ok      build/tools-walk/sutras/trade/trade-commodity.v1.sutra.yaml
+ok      build/tools-walk/sutras/trade/trade-comswap.v1.sutra.yaml
 ```
 
 Real output, every option: [CLI_GUIDE.md section 4](CLI_GUIDE.md#4-sutra-shape-design-gen-lint-test-preview). The page that does
@@ -497,10 +554,17 @@ the same is the Screen Designer and Studio ([SCREEN_DESIGNER.md](SCREEN_DESIGNER
 | `pack publish` / `pack keygen` / `pack install` | sign into a registry (`tools/packreg/packreg.py`); make a key; install from the registry on a server | Admin → Packs |
 
 ```bash
-python3 tools/drishti.py data profile jsonl/deal.jsonl            # first: what is there (5.3)
-python3 tools/drishti.py pack make jsonl/deal.jsonl --kind deal --match PRODUCT_TYPE --key TRADE_ID --date TRADE_DATE --name synth-book --out build/synth-book
-python3 tools/drishti.py pack check build/synth-book/pack --strict --junit build/reports
+drishti-console/.venv/bin/python tools/drishti.py data profile build/tools-walk/trade.jsonl      # first: what is there (5.3)
+drishti-console/.venv/bin/python tools/drishti.py pack make build/tools-walk/trade.jsonl --kind trade --match PRODUCT_TYPE --key TRADE_ID --date TRADE_DATE \
+    --name synth-book --out build/tools-walk/synth-book
+drishti-console/.venv/bin/python tools/drishti.py pack check build/tools-walk/synth-book/pack/synth-book --junit build/tools-walk/reports
 ```
+
+`pack make` writes one deployable folder (`MANIFEST.json`, `README.txt`, `bundle/`, `config/`, `data/` with a 300-row Delta store,
+`run-server.sh`, `run-server.ps1`) with the pack in `pack/synth-book/`; it ends by linting and testing it (captured: `sutra lint: exit 0`,
+`sutra test: exit 0`, each drafted Sutra with its help coverage, for instance `trade-comswap: help coverage 18/39 (46%)`). `pack check
+--strict` on the drafted pack exits `1`: the default Sutra shows fields its About text does not explain yet (`DRS-2047`, a warning that
+`--strict` makes an error). Write the About text (`pack about-check`), then make CI strict.
 
 Real output: [CLI_GUIDE.md section 5](CLI_GUIDE.md); schema files to a pack: [SCHEMA_TO_PACK.md](SCHEMA_TO_PACK.md).
 **Scheduling**: `pack check` belongs in CI (exit `1` fails the build; `--junit DIR` for the report); `pack deploy` is idempotent
@@ -509,38 +573,41 @@ Real output: [CLI_GUIDE.md section 5](CLI_GUIDE.md); schema files to a pack: [SC
 ### 5.3 data
 
 `data profile` lists every field of JSON Lines with coverage, distinct values and examples, and prints the `pack make` line that
-fits (a profile of 300 synthetic deals, first and last lines):
+fits (a profile of the first 300 ENDUR trades of the test data, `build/tools-walk/trade.jsonl` of 5.1; the file is named after the kind):
 
 ```
-$ python3 tools/drishti.py data profile jsonl/deal.jsonl | head -n 8
+$ drishti-console/.venv/bin/python tools/drishti.py data profile build/tools-walk/trade.jsonl | head -n 8
 data profile: 1 file(s), 300 document(s), 1 kind(s)
 
-== deal: 300 document(s), 107 field(s)
+== trade: 300 document(s), 107 field(s)
   field                                           type            cover  distinct  examples
-  SOURCE_SYSTEM                                   string           100%         1  SYNTH-ETRM
+  SOURCE_SYSTEM                                   string           100%         1  ENDUR
   SOURCE_UPDATE_TIME                              string           100%         1
-  TRADE_DATE                                      string           100%       249  2025-07-06, 2026-06-22, 2025-05-19
+  TRADE_DATE                                      string           100%       250  2025-06-20, 2025-01-21, 2026-07-10
   INPUT_DATE                                      string           100%         1
-$ python3 tools/drishti.py data profile jsonl/deal.jsonl | tail -n 6
-    COUNTERPARTY                 0.913  coverage 100%, 24 values over 300 documents (average 12.5 per value, evenness 0.98; largest group CPTY-EMBER = 23)
-    TRADER_LAST_NAME             0.895  coverage 100%, 13 values over 300 documents (average 23.1 per value, evenness 0.87; largest group  = 108)
-    PORTFOLIO                    0.842  coverage 100%, 7 values over 300 documents (average 42.9 per value, evenness 0.97; largest group PF-ENERGY-01 = 60)
-    PRODUCT_TYPE                 0.648  coverage 100%, 5 values over 300 documents (average 60.0 per value, evenness 0.83; largest group ComSwap = 129); name suggests a category
+$ drishti-console/.venv/bin/python tools/drishti.py data profile build/tools-walk/trade.jsonl | tail -n 6
+    COUNTERPARTY_UEN             0.860  coverage 100%, 22 values over 300 documents (average 13.6 per value, evenness 0.86; largest group UEN0100888 = 83)
+    COUNTERPARTY_COUNTRY_OF_RISK 0.827  coverage 100%, 11 values over 300 documents (average 27.3 per value, evenness 0.72; largest group US = 111)
+    PRODUCT_TYPE                 0.642  coverage 100%, 5 values over 300 documents (average 60.0 per value, evenness 0.82; largest group ComSwap = 145); name suggests a category
+    TRADE_STATUS                 0.613  coverage 100%, 5 values over 300 documents (average 60.0 per value, evenness 0.74; largest group MATURED = 150); name suggests a category
   suggested:
-    python3 tools/drishti.py pack make jsonl/deal.jsonl --kind deal --match PRODUCT_SUB_TYPE --key TRADE_ID --date TRADE_DATE --name deal-pack
+    python3 tools/drishti.py pack make build/tools-walk/trade.jsonl --kind trade --match PRODUCT_SUB_TYPE --key TRADE_ID --date TRADE_DATE --name trade-pack
 ```
+
+`data profile` reads plain JSON Lines; give it a gzipped file and it stops with a Python traceback (`UnicodeDecodeError`), so unpack
+first as above (`lake scan` reads `.gz` directly).
 
 `data ingest` writes JSON Lines into a Delta lake (the pack's layout, `business_date` partitions only) or the File connector's
 folders (`--store files`); `--watch DIR` turns a drop folder into a feed. Use `lake build` instead for JSON arrays, gzip, large
 files, classifier partitions or a lock and a summary; use `data ingest --store files` for the File connector. A dry run on the
-synthetic JSON Lines, by start date:
+300 trades, by start date:
 
 ```
-$ python3 tools/drishti.py data ingest --from jsonl --domain comswap --key TRADE_ID --date START_DATE --store files --root ingest-files --dry-run | tail -n 5
-deal                2026-10-01             17
-deal                2026-11-01             10
-deal                2026-12-01              5
-deal                2027-01-01              1
+$ drishti-console/.venv/bin/python tools/drishti.py data ingest --from build/tools-walk --domain trading --key TRADE_ID --date START_DATE --store files --root build/tools-walk/files --dry-run | tail -n 5
+trade               2026-09-01             18
+trade               2026-10-01             13
+trade               2026-11-01              7
+trade               2026-12-01              3
 total rows: 300
 ```
 
@@ -556,66 +623,78 @@ the terminal) and `server smoke` (opens sample views of every kind on two dates;
 `doctor` checks this machine without changing anything (paths shortened):
 
 ```
-$ python3 tools/drishti.py doctor
+$ drishti-console/.venv/bin/python tools/drishti.py doctor --server http://127.0.0.1:19590 --token-file ~/.drishti-token
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-RED    server jar              no drishti-server-*-exec.jar under drishti-server/target: build it (./mvnw -q -DskipTests package) or pass --jar / DRISHTI_JAR
-                               fix: ./mvnw -q -DskipTests package   (or set DRISHTI_JAR)
-GREEN  python                  /usr/bin/python3: Python 3.14.4
+GREEN  server jar              <repo>/drishti-server/target/drishti-server-2.2.0-exec.jar (version 2.2.0)
+GREEN  python                  <repo>/drishti-console/.venv/bin/python: Python 3.13.15
 GREEN  python pyyaml           installed
-YELLOW python deltalake        not installed (needed for data ingest --store delta)
-                               fix: pip install deltalake   or run through uv: uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py ...
-YELLOW python pyarrow          not installed (needed for data ingest --store delta)
-                               fix: pip install pyarrow   or run through uv: uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py ...
+GREEN  python deltalake        installed
+GREEN  python pyarrow          installed
 GREEN  repo config/packs/      <repo>/config/packs
-YELLOW console venv            <repo>/drishti-console/.venv
-                               fix: cd drishti-console && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+GREEN  console venv            <repo>/drishti-console/.venv
 GREEN  configured directories  none of DRISHTI_DELTA_ROOT, DRISHTI_FILES_ROOT, DRISHTI_PACKS_INSTALLED is set
 GREEN  port 18480              in use by Drishti: status UP
 GREEN  port 17480              in use by Drishti: answers 404 on /actuator/health, as the Drishti console does
-doctor: 1 red, 3 yellow
+YELLOW server                  http://127.0.0.1:19590: version 2.2.0, java 21.0.12.1, status DEGRADED
+GREEN  token                   accepted as a signed-in session (not a personal drk_ token): its power is the user's roles
+doctor: 0 red, 1 yellow
 ```
+
+(A fresh clone after the quick start, with its server on port 19590; the usual ports 18480 and 17480 are checked as well. On a machine
+without the jar or the console's environment the same lines are RED or YELLOW with the `fix:` to run.)
 
 **Scheduling** `server smoke --json` every few minutes is a cheap synthetic monitor (exit `1` pages someone); `server health`
 in a load balancer's script. Real output: [CLI_GUIDE.md section 7](CLI_GUIDE.md). In the console: Admin → **Health**.
 
-A scratch server on port 18956 with only the `finance` pack loaded and empty data folders (paths shortened; exit `1` because two
-of its sources have no data yet), then the smoke test that passes anyway, and a load announced by hand:
+The demo-lakes server of the quick start (the seven packs, and a pack a tutorial added; paths shortened), its packs, the smoke test of
+the trading pack, a load announced by hand and the list of loads:
 
 ```
-$ python3 tools/drishti.py server health --server http://localhost:18956
-status DEGRADED  version 2.2.0  java 21.0.12.1  uptime 17s
-packs 1  sources 6 (degraded 0, down 2)  packs with problems 1  failed to start 0
-  file                        DOWN      DOWN: no directory <data>/feeds
-  finance-lake                DOWN      DOWN: cannot reach <data>/delta/finance (engine: native)
-  book-totals                 UP        UP (nothing computed yet)
-  demo                        UP        UP
-  news                        UP        UP
-  yfinance                    UP        UP
-$ python3 tools/drishti.py server packs list --server http://localhost:18956 | head -n 4
+$ drishti-console/.venv/bin/python tools/drishti.py server health --server http://127.0.0.1:19590
+status DEGRADED  version 2.2.0  java 21.0.12.1  uptime 59s
+packs 8  sources 16 (degraded 0, down 1)  packs with problems 1  failed to start 0
+  desk-quotes-store           DOWN      DOWN: cannot reach <data>/delta/desk-quotes (engine: native)
+  ...
+$ drishti-console/.venv/bin/python tools/drishti.py server packs list --server http://127.0.0.1:19590 | head -n 9
 pack                  version  loaded  on   added  kinds
-finance               1.0.0    yes     yes         14
-core          1.0.0    no      no          0
-climate-risk          1.0.0    no      no          0
-$ python3 tools/drishti.py server smoke --server http://localhost:18956 --ids 1 --dates 1 | tail -n 5
-fx-spot               EURUSD                    2026-10-16  2       0      9.1      OK
-book                  COMM-NY-1                 2026-10-16  3       1      7.1      OK
-book-pnl              COMM-NY-1                 2026-10-16  2       0      19.0     OK
+core                  1.0.0    yes     yes         10
+market-data           1.0.0    yes     yes         20
+trading               1.0.0    yes     yes         5
+counterparty-risk     1.0.0    yes     yes         10
+market-risk           1.0.0    yes     yes         6
+world-economy         1.0.0    yes     yes         13
+news-and-markets      1.0.0    yes     yes         4
+desk-quotes           1.0.0    yes     yes  yes    1
+$ drishti-console/.venv/bin/python tools/drishti.py server smoke --server http://127.0.0.1:19590 --pack trading --ids 1 --dates 1
+OK   health                      status UP
+OK   pack trading                loaded, enabled, v1.0.0, 5 kinds, no Sutra problems
 
-13 views, p50 8.9 ms, max 57.1 ms
+kind                  id                        date        panels  empty  ms       result
+trade                 1000001                   2026-10-16  10      0      17.4     OK
+counterparty-trades   CP-ALDERSHOT              2026-10-16  10      0      154.0    OK
+portfolio-trades      BOOK-COMM-1               2026-10-16  10      0      912.3    OK
+legal-entity-trades   LE-FRA                    2026-10-16  10      2      285.4    OK
+index-trades          AONIA                     2026-10-16  10      0      69.3     OK
+
+5 views, p50 285.4 ms, max 1916.2 ms
 smoke: passed
-$ python3 tools/drishti.py data landed --server http://localhost:18956 --pack finance --kind book --date 2026-10-16 --rows 12 --batch demo-1 --source lake-build
-book for 2026-10-16 loaded: 12 rows; 0 alerts fired
-  load mvcepvo0-1  status ready  verified verified  attempt 1
-  record  ok      recorded
-  refresh ok      caches dropped: demo, file, finance-lake
-  verify  ok      3 book entities on 2026-10-16
+$ drishti-console/.venv/bin/python tools/drishti.py data landed --server http://127.0.0.1:19590 --pack core --kind desk --date 2026-10-16 --rows 10 --batch tools-guide-1 --source lake-build
+desk for 2026-10-16 reloaded: 10 rows; 0 alerts fired
+  load mvcy47uo-1  status ready  verified verified  attempt 1  (a reload)
+  record  ok      recorded as a reload of an earlier ready load
+  refresh ok      caches dropped: file, reference-store
+  verify  ok      10 desk entities on 2026-10-16
   alerts  ok      0 alerts fired
   smoke   skipped not asked for (loads.smoke is 0)
   notices ok      1 person told
-$ python3 tools/drishti.py data loads --server http://localhost:18956 --pack finance
+$ drishti-console/.venv/bin/python tools/drishti.py data loads --server http://127.0.0.1:19590 --pack core | head -n 4
 received             kind              date        status        rows    rej  verified  alerts told  batch / source
-2026-10-17 13:02:58  book              2026-10-16  ready           12         verified       0    1  demo-1 lake-build
+2026-10-17 22:06:00  desk              2026-10-16  ready           10         verified       0    1  tools-guide-1 lake-build
+2026-10-17 21:32:29  desk              2026-10-16  ready                      verified       0    1  lake-demo-20261017T173227 lake demo
+2026-10-17 21:32:29  desk              2026-10-15  ready                      verified       0    1  lake-demo-20261017T173227 lake demo
 ```
+
+The load is a *reload*: `lake demo` had announced every table and date already (the last two lines, one per business date it wrote).
 
 ### 5.5 connector
 
@@ -625,44 +704,45 @@ version is read first and sent back as `If-Match`, so a concurrent edit is refus
 `connector plugins`, `connector enable` / `connector disable`, `connector reset` (the pack's template back), `connector history`.
 
 ```bash
-python3 tools/drishti.py connector apply config/connectors/book-store.yaml --server http://localhost:18480 --token-file ~/.drishti-token
-python3 tools/drishti.py connector test book-store
+drishti-console/.venv/bin/python tools/drishti.py connector apply config/connectors/trade-endur.yaml --server http://localhost:18480 --token-file ~/.drishti-token
+drishti-console/.venv/bin/python tools/drishti.py connector test trade-endur
 ```
 
-Every change is audited and the old text kept ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)). The 10,000-deal lake of
-section 12, bound to a connector on the scratch server and tried: the server reads every row `lake build` wrote.
+Every change is audited and the old text kept ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)). The lake of section 4, tried
+as a connector file before it is applied (`--file`: a throwaway instance on the server, nothing saved), then the server's connectors:
 
 ```
-$ cat book-store.yaml
+$ cat tools-trade.yaml
 plugin: delta
-description: the synthetic commodity-swap book (lake build)
-kinds: [deal]
+description: the ENDUR trades of the TOOLS guide (lake build)
+kinds: [trade]
 settings:
-  root: <scratch>/l10b
-  domain: comswap
-  layout:
-    deal:
-      columns: [COUNTERPARTY, PORTFOLIO, QUANTITY]
-$ python3 tools/drishti.py connector apply book-store.yaml --server http://localhost:18956
-applied book-store: running; changed (new connector), root, domain, layout.deal.columns; version ffc4169939987981
-  note kinds: kind 'deal' is not owned by a loaded pack (loaded: agreement, book, book-pnl, clearing-account, contract-spec, counterparty, credit-limit, csa, and 6 more)
-$ python3 tools/drishti.py connector test book-store --server http://localhost:18956
-book-store (delta): reachable, health UP (engine: native), 22 ms
-  note: kinds: kind 'deal' is not owned by a loaded pack (loaded: agreement, book, book-pnl, clearing-account, contract-spec, counterparty, credit-limit, csa, and 6 more)
-  kind  business date  rows   note
-  ----  -------------  -----  ----
-  deal  2026-10-16     10000
-$ python3 tools/drishti.py connector list --server http://localhost:18956
-3 connector(s) in <scratch>/connectors   (watching: WATCHING)
-  name          origin  plugin   kinds     state           used by  problems
-  ------------  ------  -------  --------  --------------  -------  --------
-  book-store    file    delta    deal      running
-  book-totals   file    derived  book-pnl  running         finance
-  finance-lake  file    delta              down, retrying  finance
+  root: <repo>/lake
+  domain: trading
+$ drishti-console/.venv/bin/python tools/drishti.py connector test --file tools-trade.yaml --server http://127.0.0.1:19590
+tools-trade (delta): reachable, health UP (engine: native), 38 ms
+  kind   business date  rows  note
+  -----  -------------  ----  ----
+  trade  2026-09-23     189
+  trade  2026-09-22     4980
+$ drishti-console/.venv/bin/python tools/drishti.py connector list --server http://127.0.0.1:19590 | head -n 12
+23 connector(s) in <repo>/config/connectors   (watching: WATCHING)
+  name               origin  plugin    kinds                                                        state           used by            problems
+  -----------------  ------  --------  -----------------------------------------------------------  --------------  -----------------  --------
+  civic-store        file    delta     jurisdiction,party,office-holder +3                          running         world-economy
+  collateral-store   file    delta     collateral-balance,margin-call,simm                          running         counterparty-risk
+  credit-store       file    delta     netting-set,credit-limit,exposure-profile +2                 running         counterparty-risk
+  desk-quotes        file    file      desk-quote                                                   running
+  desk-quotes-store  file    delta     desk-quote                                                   down, retrying  desk-quotes
+  ecb-estr-feed      file    feed      rate-fixing                                                  disabled        market-data
+  ecb-fx-feed        file    feed      fx-spot                                                      disabled        market-data
+  fred-feed          file    feed      rate-fixing                                                  disabled        market-data
+  legal-store        file    delta     agreement,csa                                                running         counterparty-risk
 ```
 
-The note goes once a pack that owns `deal` is loaded and routes it to `book-store`. More output:
-[CLI_GUIDE.md section 7](CLI_GUIDE.md).
+Applying that file would add a fourth connector serving `trade` beside the three of the trading pack; to read the lake in place of the
+demo lake, edit `trade-endur.yaml`'s `root` instead (Admin → Connectors, or `connector get trade-endur --yaml`, edit, `connector apply`).
+More output: [CLI_GUIDE.md section 7](CLI_GUIDE.md).
 
 ### 5.6 design
 
@@ -680,8 +760,16 @@ functions|validate|convert` (the expression language), `bi migrate --expressions
 `bi mq` (a model query), `bi item new|save|tests` and `bi dataset refresh`. A write needs the `bi:write` scope.
 
 ```bash
-python3 tools/drishti.py bi expr validate "sum(QUANTITY) / count()" --model synth-book
-python3 tools/drishti.py bi migrate --expressions bi/ --check          # CI: exit 1 while a file has the old syntax
+drishti-console/.venv/bin/python tools/drishti.py bi expr validate "sum(trades.NOTIONAL) / count(trades)" --model trading-risk
+drishti-console/.venv/bin/python tools/drishti.py bi migrate --expressions config/bi --check          # CI: exit 1 while a file has the old syntax
+```
+
+Captured, with a lower-case name the second time (the model's columns are the packs' UPPER_SNAKE names):
+
+```
+valid  (del2, aggregate scope, type decimal)
+INVALID  (del2, aggregate scope, type any)
+  error   DRS-9152  at 4-19: no field 'trades.notional'; did you mean trades.NOTIONAL?
 ```
 
 Real output: [CLI_GUIDE.md section 7](CLI_GUIDE.md) and [EXPRESSIONS.md](EXPRESSIONS.md). In the console the migration's state is
@@ -693,7 +781,7 @@ on Admin → **BI** (items that could not be converted, with why).
 About answer. `completion bash|zsh|powershell` prints a completion script generated from the command tree:
 
 ```
-$ python3 tools/drishti.py completion bash | head -n 3
+$ drishti-console/.venv/bin/python tools/drishti.py completion bash | head -n 3
 # bash completion for drishti.py: generated by `drishti.py completion bash`
 #   source <(drishti.py completion bash)         or save it as ~/.local/share/bash-completion/completions/drishti.py
 _drishti_complete() {
@@ -718,7 +806,7 @@ generated trade book streamed in) into one store, **in the layout that store's c
 
 ```bash
 tools/load-duckdb.sh /tmp/demo.duckdb --trades 10000 --days 3
-python3 tools/drishti.py data load --store files --trades 10000 --days 3 -- /tmp/demo-files
+drishti-console/.venv/bin/python tools/drishti.py data load --store files --trades 1000 --days 1 -- /tmp/demo-files
 ```
 
 **Scheduling.** The loaders guard dates (a row dated after tomorrow is not loaded and the run fails naming it), replace each day
@@ -731,6 +819,15 @@ guides are listed in [CONNECTORS.md](../connectors/CONNECTORS.md).
 `drishti.py lake maintain` (the same as `tools/lake/maintain.py`) keeps a lake bounded: **retention** (business dates older than
 `keep-business-days`, never more than `max-drop-share` of a table without `--force-drop`), **compaction** of each day's small
 files (or a re-layout into the pack's declared layout), a **checkpoint**, and **vacuum** of unreferenced files. Local lakes and S3.
+
+**Who maintains a table.** Whoever writes a table maintains it.
+
+* A table **another system publishes** (for instance Endur's own export job writing a Delta table) is maintained by that system's
+  owner. Drishti only reads it: never point `lake maintain` at it, never compact or vacuum it.
+* A table **Drishti's lake tool builds** (`lake build`, `lake demo`) is Drishti's. Schedule `lake maintain` in the same job, right
+  after the build, on one machine: a compaction that races an append makes one of the two commits retry.
+* `lake demo` already writes a checkpoint for each table it builds, so the demo lakes need nothing more.
+
 A dry run on the lake of section 4:
 
 ```yaml
@@ -746,8 +843,8 @@ lakes:
 ```
 
 ```
-$ uv run --with deltalake --with pyarrow --with pyyaml python tools/drishti.py lake maintain --config maint.yaml --once --dry-run
-{"at": "2026-10-17T08:26:03-04:00", "event": "maintained", "dry_run": true, "table": "lake/comswap/deal", "before": {"files": 10, "mb": 4.44}, "retention": {"cutoff": "2024-10-21", "would_remove_files": 0}, "vacuum": {"files": 0, "dry_run": true}, "after": {"files": 10, "mb": 4.44}}
+$ drishti-console/.venv/bin/python tools/drishti.py lake maintain --config maint.yaml --once --dry-run
+{"at": "2026-10-17T18:07:13-04:00", "event": "maintained", "dry_run": true, "table": "lake/trading/trade", "before": {"files": 9, "mb": 7.48}, "retention": {"cutoff": "2024-10-21", "would_remove_files": 0}, "stats-columns-set": false, "compact": {"relaid-dates": ["2026-09-22", "2026-09-23"], "files": 0, "rows": 0}, "vacuum": {"files": 0, "dry_run": true}, "after": {"files": 9, "mb": 7.48}}
 ```
 
 One JSON line per table and step, for logs and monitoring; one failing table is reported and the rest go on (exit `1`). The shipped
@@ -758,7 +855,7 @@ timer that runs `--once` after the night's loads. It must not run while a `lake 
 builds (02:30 here, after a 21:30 build), and on one machine only.
 
 ```cron
-30 2 * * 2-6  cd /opt/drishti && uv run --with deltalake --with pyarrow --with pyyaml python tools/drishti.py lake maintain --config deploy/lake-maintenance.yaml --once >> /var/log/drishti/lake-maintain.log 2>&1
+30 2 * * 2-6  cd /opt/drishti && drishti-console/.venv/bin/python tools/drishti.py lake maintain --config deploy/lake-maintenance.yaml --once >> /var/log/drishti/lake-maintain.log 2>&1
 ```
 
 ```ini
@@ -767,7 +864,7 @@ builds (02:30 here, after a 21:30 build), and on one machine only.
 Type=oneshot
 User=drishti
 WorkingDirectory=/opt/drishti
-ExecStart=/usr/bin/python3 tools/drishti.py lake maintain --config deploy/lake-maintenance.yaml --once
+ExecStart=/opt/drishti/drishti-console/.venv/bin/python tools/drishti.py lake maintain --config deploy/lake-maintenance.yaml --once
 ```
 
 ## 8. Generators: `tools/packgen`, `tools/samplegen`, `tools/realdata`
@@ -781,19 +878,19 @@ ExecStart=/usr/bin/python3 tools/drishti.py lake maintain --config deploy/lake-m
 | `tools/packgen/climate/make.py`, `liquidity/make.py`, `oprisk/make.py`, `retail/make.py` | the climate-risk, liquidity-risk, operational-risk and retail-banking packs, built on the banking data |
 | `tools/packgen/genomics/make.py` | the genomics pack (public reference facts, synthetic samples) |
 | `tools/packgen/world/make.py` (the halves `economics/make.py`, `politics/make.py`) with `tools/realdata/realdata.py` | the world-economy pack from real public data (World Bank, IMF; internal demos only) |
-| `tools/packgen/trades/make_trades.py` | **The trading pack's trades of three source systems** in the common schema (upper-snake, `LEGS` → `CASH_FLOWS` → `RESETS`, `EVENTS`): `--trades N` per system (ENDUR, CALYPSO, MUREX), `--days D` business days with about 6% amended each day, one `<out>/<system>/trades-<date>.jsonl.gz` a day; with `--lake <root>` each goes through `lake build --connector trade-<system>` into that system's table (`trade_endur`, `trade_calypso`, `trade_murex`). Deterministic; 10,000 trades or fewer on a laptop. `python3 tools/packgen/trades/make_trades.py --trades 50 --days 2 --out data/build/trades` prints `ENDUR: 50 trades x 2 days -> data/build/trades/endur` and the same for CALYPSO and MUREX. |
+| `tools/packgen/trades/make_trades.py` | **The trading pack's trades of three source systems** in the common schema (upper-snake, `LEGS` → `CASH_FLOWS` → `RESETS`, `EVENTS`): `--trades N` per system (ENDUR, CALYPSO, MUREX), `--days D` business days with about 6% amended each day, one `<out>/<system>/trades-<date>.jsonl.gz` a day; with `--lake <root>` each goes through `lake build --connector trade-<system>` into that system's table (`trade_endur`, `trade_calypso`, `trade_murex`). Deterministic; 10,000 trades or fewer on a laptop. `drishti-console/.venv/bin/python tools/packgen/trades/make_trades.py --trades 50 --days 2 --out data/build/trades` prints `ENDUR: 50 trades x 2 days -> data/build/trades/endur` and the same for CALYPSO and MUREX. |
 | `tools/samplegen/bulk_trades.py` | a large trade book for scale tests, N trades over D business days, as a Delta lake (`load-delta.sh --trades`) |
 
-The synthetic book used on this page:
+The examples on this page read the committed test data (`data/testdata`, written by `tools/testdata/make_testdata.py`). For a book
+of another size, or a JSON array as a booking system exports it, the generators write one:
 
 ```
-$ python3 tools/packgen/comswap_synth.py --deals 2000 --mix --out book-2026-10-16.json
-wrote 2000 synthetic deals to book-2026-10-16.json
-$ python3 tools/packgen/comswap_synth.py --deals 1500 --seed 8 --mix --jsonl --out book-2026-10-19.jsonl
-wrote 1500 synthetic deals to book-2026-10-19.jsonl
+$ drishti-console/.venv/bin/python tools/packgen/comswap_synth.py --deals 2000 --mix --out build/tools-walk/book-2026-10-16.json
+wrote 2000 synthetic deals to build/tools-walk/book-2026-10-16.json
 ```
 
-2,000 deals are 28.5 MB of pretty-printed JSON (about 14 KB a deal); the lake of section 4 (two days, 3,500 deals) holds them in 4.4 MB of Parquet.
+2,000 deals are 27 MB of pretty-printed JSON (about 14 KB a deal); the lake of section 4 holds the 5,169 rows of two days in 7.5 MB
+of Parquet.
 
 ## 9. Developer tools
 

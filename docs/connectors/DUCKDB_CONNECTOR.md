@@ -135,27 +135,30 @@ Why each part is shaped this way:
 ## 3. Declaring the promoted columns
 
 The pack declares the fields on the connector that stores the kind, exactly as for Delta Lake and PostgreSQL. The
-trading pack declares them on `trading-store`; the `duckdb` profile (`SPRING_PROFILES_ACTIVE=duckdb`) switches that
+trading pack declares them on `trade-endur`; the `duckdb` profile (`SPRING_PROFILES_ACTIVE=duckdb`) switches that
 connector to the `duckdb` plugin and keeps the pack's settings, so the declaration applies unchanged:
 
 ```yaml
-# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trading-store.yaml at the first start)
+# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trade-endur.yaml at the first start)
 connectors:
-  trading-store:
+  trade-endur:
     settings:
       layout:
         trade:
-          columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
-                    tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
-                    risk.dv01, sourceSystem]
+          columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
 
 # drishti-server application-duckdb.yaml (the profile; deprecated, see \"As a connector file\" below)
 drishti:
   sources:
     connectors:
-      trading-store: { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:${drishti.data.dir:./data}/duckdb/drishti.duckdb}",
+      trading-store: { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:${drishti.data.dir:./data}/duckdb/drishti.duckdb}",   # 2.2's name, see the note
                        memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: trading.entities, pool-size: "8" } }
 ```
+
+> **2.3.0:** the trades are read per source system (`trade-endur`, `trade-calypso`, `trade-murex`, one Delta table each). The deprecated
+> store profiles still name 2.2's `trading-store`, so a profile leaves the trades on Delta; point a store at the trades with connector
+> files named after the three connectors (below).
+
 
 The connector serves a path as a column only when the table has that column; a declared path the table lacks shows
 in Health ([section 11](#11-diagnosing)).
@@ -497,7 +500,7 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 `GET /api/v1/admin/health` shows each connector and its catalogue:
 
 ```json
-{"name": "trading-store", "health": "UP", "cache": {"ids": 10000, "kinds": 1, "datesIndexed": 10, "columnSets": 2, "generation": 3}}
+{"name": "trade-endur", "health": "UP", "cache": {"ids": 10000, "kinds": 1, "datesIndexed": 10, "columnSets": 2, "generation": 3}}
 ```
 
 `generation` counts the files opened since start: it goes up by one after each load.
@@ -519,7 +522,7 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
 
 ```yaml
-# config/connectors/trading-store.yaml
+# config/connectors/trade-endur.yaml
 plugin: duckdb
 kinds: [trade]
 description: Trading documents in an embedded DuckDB file
@@ -531,9 +534,7 @@ settings:
   pool-size: '8'
   layout:
     trade:
-      columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
-                tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
-                risk.dv01, sourceSystem]
+      columns: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
 ```
 
 The `duckdb` profile (`SPRING_PROFILES_ACTIVE=duckdb`) did this for the six banking stores and still works, but is deprecated: the file replaces it. A file replaces the pack's template wholesale, so it repeats the promoted `layout` the pack declared ([section 3](#3-declaring-the-promoted-columns)).

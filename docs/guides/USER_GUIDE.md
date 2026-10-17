@@ -706,7 +706,7 @@ The *How this view was built* panel answers "where did this come from?":
 | Source | `murex-rates`, generation `1674` | Which system the document came from, and its version counter |
 
 The footer repeats the source and generation, and the business date when one is picked
-(`trading-store · gen 7 · as of 2026-09-29`).
+(`trade-endur · gen 7 · as of 2026-09-29`).
 
 ## About this page
 
@@ -771,7 +771,8 @@ limit" and layer 3 says "1 field hidden for your role: Limit":
 
 ### Another domain
 
-The words come from the pack, not from the program, so every domain explains itself in its own terms. A gene variant:
+The words come from the pack, not from the program, so every domain explains itself in its own terms. A gene variant (the retired example
+pack `genomics`, under `examples/packs/`):
 
 ![The drawer on a gene variant](img/about/04-genomics-variant.jpg)
 
@@ -845,18 +846,18 @@ Every change is announced to screen readers (*Cashflows · Leg 1: 1 of 5 in the 
 
 ### Worked example
 
-With the `finance` pack, open `TRD IRS-48213` (Sutra `irs-vanilla`):
+On the demo lakes, open `TRD 1000001` (an ENDUR commodity swap, Sutra `endur-comswap`):
 
 1. Press `Alt+L`.
-2. Drag *Cashflows · Leg 1* by its heading above *Legs*, and let go: it is first in the main column.
+2. Drag *Cash-flow schedule, every leg* by its heading above *Legs*, and let go: it is first in the main column.
 3. Drag its right edge to about two thirds of the column: the badge reads `8/12`. Drag its bottom edge down until the
    badge reads `8/12 · 8 rows`.
-4. Drag *DV01 by tenor (USD)* from the side column into the main column, under *Cashflows*, and narrow it to `4/12`.
+4. Drag *Payments by month* from the side column into the main column, under the schedule, and narrow it to `4/12`.
 5. Press `Tab` until *Linked entities* has the focus, press `←` (it moves to the main column), then `Shift`+`←` six
-   times (`6/12`): it now sits beside *DV01 by tenor*.
+   times (`6/12`): it now sits beside *Payments by month*.
 6. Focus *How this view was built* and press `H`.
-7. Press `Ctrl+Enter`. Reload: the view keeps your layout, and **F4** (the curve) still works. The key of a panel you
-   hid is greyed (*Hidden in your layout*) until you show the panel again.
+7. Press `Ctrl+Enter`. Reload: the view keeps your layout, and the function keys (**F2** the ticket ... **F6** the charts) still work. The key
+   of a panel you hid is greyed (*Hidden in your layout*) until you show the panel again.
 
 ### Who may, and what follows your layout
 
@@ -951,11 +952,9 @@ top, *Notional* into the cells, and read the totals; click any number to see the
 The switch is there **only where it was asked for**: a Sutra author adds `pivot:` to a table or ladder
 ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)), or a pack adds it to a kind's
 search results ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#pivot-a-pivot-tab-on-search-results)), and chooses which fields you may use and
-how it opens. Every other table stays a table. In the banking packs, for example: a netting set's and a clearing
-account's trades (notional by product and maturity bucket), a book's largest trades and a desk's trades (MTM by
-product, or by book, and currency), a desk's P&L (`DPNL`), collateral positions, a trade's cash flows (PV by flow type
-and leg), and trade searches (MTM by book and currency). In the finance pack: a netting set's member trades, a book's
-P&L and trade searches.
+how it opens. Every other table stays a table. In the seven packs: a netting set's member trades (notional by product and maturity bucket, counterparty-risk), a desk's trades
+(core), collateral balances, a counterparty's and a legal entity's trades (notional by product type and source system, trading), and trade
+searches (the trading pack's `pivot:` on `trade`: source system, portfolio, currency, product group and type, side, status, counterparty).
 
 ![The Pivot tab on a netting set's member trades: currency and product down the side, asset class and maturity bucket across, notional summed](/static/img/guide/pivot-netting-set.png)
 
@@ -1154,7 +1153,8 @@ document, `view.tables` its tables as pandas DataFrames); `drishti.search("TRD w
 `show()` and `chart()` are ready.
 
 The code runs in your browser, never on a server, and reads only what you could open by clicking. The key is offered
-where a pack switches Calc on (the banking packs and `finance` do) and needs a role with the `calc` power; without
+where a pack switches Calc on (trading, counterparty-risk and market-risk do, through roles with `calc: true`: `trader`, `credit-risk`,
+`market-risk`) and needs a role with the `calc` power; without
 one it is shown greyed, with the reason. Everything about it, from the `drishti` module to the limits, is in
 [PYTHON_CALC.md](PYTHON_CALC.md).
 
@@ -1279,7 +1279,7 @@ The first line says where the value comes from: the path in the document, the co
 is for and the source's generation, with a link to the raw document.
 
 Worked example: open `TRD MX-20000001`, click the MTM in the strip. You see *MTM (USD) · MX-20000001 over time*, a line
-over 30 business days, and below it the values, newest first, each with *Data for* and *Source* (`trading-store`).
+over 30 business days, and below it the values, newest first, each with *Data for* and *Source* (`trade-endur`).
 A *Data for* date in amber is earlier than the day it is listed under: the source carried its last value forward
 (no data that day). An entity no dated source holds shows today's value with a note, since no history is kept.
 
@@ -1499,8 +1499,8 @@ A monitor is a **live watchlist**: one row per entity, each row showing that ent
 strip) as they tick. Rows can be of different kinds.
 
 *Views → Monitors* in the top bar (`/m`) lists *Yours* and the *Starters* the packs offer. Opening a starter
-saves a copy to your account. (The `finance` pack offers *Credit watch* and `logistics` *Fleet watch*;
-the banking packs offer none, so start from a search.)
+saves a copy to your account. (None of the seven shipped packs offers a starter, so start from a search; the retired example packs
+`finance` and `logistics` under `examples/packs/` offer *Credit watch* and *Fleet watch*.)
 
 Step by step (a search, **Watch as a monitor**, adding an entity, removing a row), with pictures: [tutorial 3](../tutorials/03-query-by-form.md) (save a search and a monitor).
 
@@ -1550,8 +1550,8 @@ In a rule (unlike a search) write `==` for equality, `&&` for and, `||` for or, 
 `fmt(value, 'signed0')` or `fmt(value, 'compact')` format numbers. The full language is in
 [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md).
 
-Some packs suggest rules for their kinds (`finance`: *PFE near limit*, *MTM below −450k*); they appear
-on the Alerts page and fill the form when clicked.
+A pack may suggest rules for its kinds (`alerts:` in its `pack.yaml`; none of the seven shipped packs does, the retired example pack
+`finance` suggests *PFE near limit* and *MTM below −450k*); they appear on the Alerts page and fill the form when clicked.
 
 > **Tip:** a condition that cannot be evaluated (a misspelled field, say) is skipped, not alerted.
 > Check a field's exact name with `F9` first.
@@ -1578,7 +1578,7 @@ A workspace puts up to four live views on one screen. A pane can **follow** anot
 in the followed pane opens in the following pane.
 
 *Views → Workspaces* in the top bar (`/w`) lists yours and the starters. Starters come from packs that
-define them (`finance`: *Credit desk*, *Rates*, *Cross-asset*; `logistics`: one more) and from
+define them (none of the seven shipped packs does; the retired example pack `finance` defines *Credit desk*, *Rates*, *Cross-asset*) and from
 `drishti-console/config/workspaces.yaml`.
 
 With any packs, start a blank workspace: type a name under **New workspace** on `/w` and press **Create** (or open
@@ -1586,12 +1586,12 @@ With any packs, start a blank workspace: type a name under **New workspace** on 
 `drishti-console/config/workspaces.yaml`); type a command in each pane's box, then **Save**. When your packs bring no
 starters, *Starters* says so.
 
-Worked example (with the `finance` pack):
+Worked example (on the demo lakes, from a blank workspace):
 
-1. Open `/w` and click **Credit desk**. You see three panes: the netting set `NS-NORTH-01` (large), the
-   trade `IRS-48213` and the curve `USD-SOFR`.
+1. Open `/w`, type `Credit desk` under **New workspace** and press **Create**. In the first pane type `NSET NS-NORTHPLAINS-NY` (the
+   netting set), in the second `TRD 1000001`, and set the second pane to follow the first.
 2. In the netting-set pane, click another member trade. Pane 2 follows pane 1, so it opens that trade.
-3. Change **Layout** to *Two by two*, click **Pane** to add a fourth pane, and type `TRD FXS-20931` in its
+3. Change **Layout** to *Two by two*, click **Pane** to add a fourth pane, and type `TRD MX-20000001` (a MUREX swap) in its
    **Entity for this pane** box.
 4. Set its **follows** to `—` so it stays put.
 5. Click **Save as…**, name it `My credit desk`, and click OK. It now appears under *Yours*.
@@ -1931,7 +1931,7 @@ if asked anyway. Roles only matter when sign-in is on. More in [USER_MANAGEMENT.
 | What it brings | its description |
 | Builds on | `core, market-data`, and under it *needed by market-risk, counterparty-risk, …* |
 | Kinds | `1 (TRD)`: the number of kinds and the first four mnemonics |
-| Connectors | `trading-store, trading-stream` |
+| Connectors | `trade-endur, trading-stream` |
 | Status | **on**, **off**, or **not loaded**; under it, the problem if the pack's files could not be used (the last good version keeps running) |
 | Changed | when and by whom it was last switched |
 
@@ -1955,15 +1955,14 @@ Two safeguards keep packs consistent:
 
 Worked example: take operational risk away for everyone.
 
-1. Open *Admin → Packs*. The *Operational and non-financial risk* row says **on**; *Builds on* reads
-   `core`; nothing needs it.
+1. Open *Admin → Packs*. The *News and markets* row says **on**; nothing builds on it.
 2. Click **Switch off**. The status turns to **off**, and *Changed* shows the time and your name.
-3. Type `LOSS` in the command line: no suggestions come. In the box menu, the pack is gone.
-4. Open *Admin → Audit log*: the newest line is `pack-disabled operational-risk` by you.
+3. Type `TOPIC` in the command line: no suggestions come. In the box menu, the pack is gone.
+4. Open *Admin → Audit log*: the newest line is `pack-disabled news-and-markets` by you.
 5. Click **Switch on** to bring it back.
 
 **Not loaded** packs are folders on disk that the server did not load at start-up. Press **Load**: the server
-first checks the pack together with the loaded ones (a clash, such as `finance` with the banking packs, is refused
+first checks the pack together with the loaded ones (a clash, such as the retired example pack `finance` beside `trading`, both defining `trade`, is refused
 with the reason and nothing changes), then records it and puts it to use at once: no restart, nobody is signed out, and
 open views carry on. The page confirms and refreshes. A pack loaded this way shows **Unload**, which takes it back the
 same way (not while another loaded pack builds on it). See
@@ -2025,7 +2024,7 @@ written to the audit log. See [OPERATIONS.md section 12.2](../admin/OPERATIONS.m
 Worked example: check that every data source is up.
 
 1. Open *Admin → Health* (`/admin/health`). At the top is the overall state, **OK**, **DEGRADED** or
-   **DOWN**, and a summary. Below it, each connector (for example `trading-store`, `market-store`, `demo`)
+   **DOWN**, and a summary. Below it, each connector (for example `trade-endur`, `market-store`, `demo`)
    shows its state, reads, errors and p50/p99 read times. A Delta Lake connector whose folder is missing
    shows `DOWN: no Delta tables under …`; one with a table or date it cannot read shows **DEGRADED** and names it
    (`DEGRADED: cannot read trade 2026-09-30: …`).

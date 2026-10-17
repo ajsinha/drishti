@@ -507,7 +507,13 @@ entity it names. Every block is omitted when empty; answers are cached per user,
 `drishti.explain.cache-ttl` (60 s; `/admin/caches` purges them). Nothing is computed while a view is built.
 
 ```bash
-curl -s $B/views/trade/IRS-48213/explain | jq -c '{data, layout: (.layout | {label, sutra, candidates, noData, masked, noAccess})}'
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" $B/views/trade/1000001/explain | jq -c '{data, layout: (.layout | {label, sutra, candidates, noData, masked, noAccess})}'
+# captured on the demo lakes (abridged):
+# {"data":{"source":"trade-endur","generation":34,"businessDate":"2026-10-16","current":true,"live":false,"stale":false,"health":"up",
+#          "linked":{"fetched":4,"pending":0,"denied":0,"budgetMs":40}},
+#  "layout":{"label":"Sutra endur-comswap v1 + inference","sutra":{"name":"endur-comswap","version":1,"pack":"trading","priority":10,
+#            "where":"$.SOURCE_SYSTEM == 'ENDUR' && $.PRODUCT_TYPE == 'ComSwap'",...},
+#            "candidates":[{"name":"abs","where":"$.SOURCE_SYSTEM == 'CALYPSO' && $.PRODUCT_TYPE == 'ABS'","result":"false","chosen":false}, ...]}}
 ```
 
 | Block | Fields |
@@ -630,7 +636,7 @@ looks like "nothing matched":
 
 ```json
 "scanned":0,"matched":0,"partial":true,
-"failed":[{"source":"trading-store","reason":"trade 2026-09-30 cannot be read: the native Delta engine does not decompress BROTLI Parquet pages (it reads Snappy, ZSTD, GZIP, LZ4, LZ4_RAW and uncompressed); rewrite the date with Snappy or ZSTD (tools/lake/maintain.py relayout --force --dates <date>)"}]
+"failed":[{"source":"trade-endur","reason":"trade 2026-09-30 cannot be read: the native Delta engine does not decompress BROTLI Parquet pages (it reads Snappy, ZSTD, GZIP, LZ4, LZ4_RAW and uncompressed); rewrite the date with Snappy or ZSTD (tools/lake/maintain.py relayout --force --dates <date>)"}]
 ```
 
 The reason is the connector's own when it says what to do (an unsupported codec, a day with unreadable lines);
@@ -707,19 +713,20 @@ There is no separate power: keeping a pivot needs only the right to open the kin
 "maxRows": 50000}`); the rows come separately, all of them, whatever the table's `limit`:
 
 ```bash
-curl -s $B/views/netting-set/NS-NORTH-01/panels/trades/records | jq -c '.rows |= .[0:2]'
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" $B/views/netting-set/NS-NORTHPLAINS-NY/panels/trades/records | jq -c '.rows |= .[0:2]'
 ```
 
 ```json
-{"panel":"trades","fields":[{"name":"product","label":"Product","fmt":null},{"name":"currency","label":"Currency","fmt":null},
-  {"name":"maturity","label":"Maturity","fmt":"date"},{"name":"notional","label":"Notional","fmt":null},
-  {"name":"mtm","label":"MTM (USD)","fmt":"signed0"},{"name":"trade","label":"Trade","fmt":null,"kind":"trade"}],
- "rows":[["Interest rate swap","USD","2031-10-02",50000000,-412580,"IRS-48213"],
-         ["Interest rate swap","USD","2033-03-15",80000000,1106420,"IRS-47102"]],
- "total":14,"truncated":false,"limit":50000}
+{"panel":"trades","fields":[{"name":"PRODUCT","label":"Product","fmt":null},{"name":"ASSET_CLASS","label":"Asset class","fmt":null},
+  {"name":"CURRENCY","label":"Currency","fmt":null},{"name":"BOOK","label":"Book","fmt":null},{"name":"MATURITY_BUCKET","label":"Maturity bucket","fmt":null},
+  {"name":"MATURITY","label":"Maturity date","fmt":"date"},{"name":"NOTIONAL","label":"Notional","fmt":"compact"},
+  {"name":"MTM","label":"MTM (USD)","fmt":"signed0"},{"name":"TRADE_ID","label":"Trade","fmt":null}],
+ "rows":[["ENGY-SWAP","Commodity","USD","BOOK-COMM-1","1-2Y","2028-03-31",11332443120.0,-150005504,"1003930"],
+         ["ENGY-SWAP","Commodity","USD","BOOK-COMM-3","1-2Y","2027-10-31",3073970268.0,-138590967,"1000505"]],
+ "total":698,"truncated":false,"limit":50000}
 ```
 
-(finance pack). `kind` on a field says which entity its values open.
+(the counterparty-risk pack's netting set of the demo lakes, 698 member trades). `kind` on a field, when the panel declares one, says which entity its values open.
 
 **A search's cube.** The server aggregates every entity the search matches on the date (not only a page; `limit`
 and `order by` in `q` are ignored), over the day's promoted columns, and returns only the cells (a laid-out test table of 40 trades; numbers abridged):
@@ -939,10 +946,9 @@ curl -s -H "X-Drishti-User: ash" "$B/me/alerts?limit=5"
 ```
 
 A fired alert looks like `{"seq", "at", "user", "rule", "kind", "id", "severity", "message", "generation"}`.
-Suggestions come from the `alerts:` list in installed packs' `pack.yaml`; for example the finance pack
-suggests, for `trade`:
+Suggestions come from the `alerts:` list in installed packs' `pack.yaml`; none of the seven shipped packs declares one, so the answer is `[]`
+for every kind until your pack does. An entry has the shape of a rule, for instance (from the retired example pack `examples/packs/finance`):
 `{"kind":"trade","name":"MTM below −450k","when":"$.mtm < -450000","severity":"warn","message":"${$.tradeId}: MTM ${fmt($.mtm, 'signed0')}"}`.
-The answer is `[]` when no installed pack suggests rules for the kind.
 
 ### Python in the browser (Calc) and test entities
 
@@ -1544,7 +1550,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 |---|---|---|---|
 | DRS-1001 | 404 | entity not found | no source holds the entity; also a missing workspace, monitor or alert rule. A store that holds the date and does not list the entity is named (`DRS-1001 recent-files holds trade for 2026-09-29 and does not list trade/MX-30000006`): the stores behind it are not asked |
 | DRS-1002 | 404 | no source for kind | no source serves the kind |
-| DRS-1003 | 502 | source failed | the source answered with an error, could not be reached, or holds the data but cannot read it; `detail` names the connector (`DRS-1003 trading-store failed reading trade/MX-1`) and, when the connector says what to do, why (`…: trade 2026-09-30 cannot be read: the native Delta engine does not decompress BROTLI Parquet pages …`). The next connector is not asked: another store's data is never shown in place of a failing store's |
+| DRS-1003 | 502 | source failed | the source answered with an error, could not be reached, or holds the data but cannot read it; `detail` names the connector (`DRS-1003 trade-murex failed reading trade/MX-20000001`) and, when the connector says what to do, why (`…: trade 2026-09-30 cannot be read: the native Delta engine does not decompress BROTLI Parquet pages …`). The next connector is not asked: another store's data is never shown in place of a failing store's |
 | DRS-1004 | 504 | source timeout | the source took longer than `drishti.sources.fetch-timeout` (default 2 s) |
 | DRS-1005 | 422 | invalid json | a document (e.g. sample JSON pasted into Studio) is not valid JSON or not an object |
 | DRS-1006 | 500 | plugin load failed | a connector plugin could not be loaded (see `/sources` → `failures`) |
@@ -1810,22 +1816,27 @@ decided as for any item (`404 DRS-9001` otherwise), what the answer shows is dec
 | `POST` | `/bi/model/infer` | `{kinds: [...]}` (needs `bi-author`): `{proposals: [{fromTable, fromColumn, toTable, toColumn, cardinality, matchRate, matched, sampled, unmatched[], basis}]}` |
 | `GET` | `/bi/engine` | (needs `bi-admin`) counters (`queries`, `cacheHits`, `rejectedBusy`, `layerBuilds`, `byLayer`), the limits in force, since phase 5 `live: {tables, rows, enabled}` and `transforms: {enabled, runs, cacheHits, failures, kept, maxConcurrent}` (the Python Transforms of derived datasets) |
 
-**The query body.** `{"fields": ["trades.desk", "trades.tradeDate.month"], "measures": ["Notional", "MTM"], "filters": [{"field": "trades.currency", "op": "in", "values": ["USD", "EUR"]}], "dates": {"from": "2026-10-01", "to": "2026-10-09"}, "orderBy": [{"by": "MTM", "desc": true}], "limit": 100, "layer": "auto"}`.
+**The query body of 2.1** (what a `410` translates into a model query; still the body of a report visual's `query` answer): `{"fields": ["trades.DESK", "trades.TRADE_DATE.month"], "measures": ["Notional", "MTM"], "filters": [{"field": "trades.CURRENCY", "op": "in", "values": ["USD", "EUR"]}], "dates": {"from": "2026-10-01", "to": "2026-10-09"}, "orderBy": [{"by": "MTM", "desc": true}], "limit": 100, "layer": "auto"}`.
 Fields are `table.column` or `table.column.part` (`year quarter month day week`); filter `op` is `eq ne in not-in lt le gt ge between contains starts-with is-null not-null`; a filter whose field is a measure name filters the aggregate;
 `dates` omitted means the latest business date; `layer` is `auto`, `columns` or `rollup`. Every name is checked against the model, **every value is a bound parameter**.
 
-**The JSON answer** (captured, trimmed; `ann` is an analyst without the raw power, `Counterparties` is a distinct count of a masked column):
+**The JSON answer**, today through `POST /bi/mq` (captured on the demo lakes, trimmed; `hana` is a desk head of `DESK-FX` without the raw power,
+`Counterparties` a distinct count of a masked column):
 
 ```
-POST /api/v1/bi/datasets/file:dataset:trading-risk/query     {"fields":["desks.name"],"measures":["MTM","Trades","Counterparties"]}
-{"columns": [{"name":"desks.name","type":"string","masked":false}, {"name":"MTM","type":"decimal","masked":false},
-             {"name":"Trades","type":"integer","masked":false}, {"name":"Counterparties","type":"integer","masked":true}],
- "rows": [["Bonds and securitised", -2977676.0, 78, null], ["Commodities", 16954390.0, 90, null], ...],  "rowCount": 10,
- "meta": {"layer":"columns", "rollup":null, "rows":10, "millis":8.06, "cached":false, "dates":["2026-09-30"], "tables":["trades","desks"],
-          "masked":["Counterparties"], "warnings":["measure Counterparties is masked"], "generation":0}}
+POST /api/v1/bi/datasets/file:model:trading-risk/query   {"fields":["desks.NAME"],"measures":["MTM","Trades","Counterparties"]}
+410 {"title": "dataset query removed", "code": "DRS-9150", "detail": "POST /api/v1/bi/datasets/{id}/query was removed in 2.2: ask the model with POST /api/v1/bi/mq ...",
+     "mq": {"mq": 1, "model": "file:model:trading-risk", "select": {"measures": ["MTM", "Trades", "Counterparties"], "fields": ["desks.NAME"]}}}
+
+POST /api/v1/bi/mq   as hana   {"mq": 1, "model": "trading-risk@1", "select": {"fields": ["desks.NAME"], "measures": ["MTM", "Trades", "Counterparties"]}}
+{"columns": [{"name": "desks.NAME", "kind": "field", "type": "string", "masked": false}, {"name": "MTM", "kind": "measure", "type": "decimal", "format": "signed0", "masked": false},
+             {"name": "Trades", "kind": "measure", "type": "integer", "masked": false}, {"name": "Counterparties", "kind": "measure", "type": "decimal", "additive": false, "masked": true}],
+ "rows": [["G10 and EM FX", -669248939.51, 1428, null]], "rowCount": 1,
+ "meta": {"asOf": "2026-10-16", "layer": "columns", "rollup": null, "millis": 6.0, "dates": ["2026-10-16"], "tables": ["trades", "desks"],
+          "masked": ["Counterparties"], "warnings": ["measure Counterparties is masked"], "generation": "g-0"}}
 ```
 
-**The Arrow answer** (`format=arrow`): `Content-Type: application/vnd.apache.arrow.stream` (an Arrow IPC stream: text, 64-bit integer and double columns with nulls; Perspective and DuckDB-Wasm read it as it is), with `X-Bi-Layer`, `X-Bi-Rollup`,
+**The Arrow answer** (`format=arrow`): `Content-Type: application/vnd.apache.arrow.stream` (an Arrow IPC stream: text, 64-bit integer and double columns with nulls; pyarrow, pandas and DuckDB read it as it is), with `X-Bi-Layer`, `X-Bi-Rollup`,
 `X-Bi-Rows`, `X-Bi-Cached`, `X-Bi-Masked` (the masked columns) and `Server-Timing`. Masks are applied before the bytes are written. A JSON answer holds at most `drishti.bi.query.json-max-rows` rows (`413 DRS-9022` otherwise: ask for Arrow).
 
 Refusals are the standard problem body with the code: `403 DRS-9021` (filtering a masked column), `422 DRS-9020`, `413 DRS-9022`/`9023`, `504 DRS-9024`, `429 DRS-9025`, `502 DRS-9026`, `500 DRS-9027`, and `422 DRS-9010` when the dataset itself has errors.
@@ -1855,9 +1866,9 @@ POST /api/v1/bi/reports/file:report:acc-report/query  as rita   {"page":"main","
  "mq":{"limit":500,"model":"file:dataset:acc-trades","mq":1,"options":{"format":"json","layer":"auto"},"select":{"fields":["trades.desk"],"measures":["Notional","MTM"]},
        "shape":"grouped","sort":[{"by":"Notional","desc":true}],"time":{"as-of":"2026-10-08"}}}
 
-POST /api/v1/bi/datasets/file:dataset:acc-trades/query  as ann (no raw)   {"measures":["Trades"],"filters":[{"field":"trades.mtm","op":"gt","values":[0]}]}
-403 {"title":"query masked","detail":"DRS-9021 'trades.mtm' is masked for you: it cannot be filtered on","code":"DRS-9021","path":"where[0].field",
-     "fix":{"with":["trades.id"],"replace":"where[0].field"},"problems":[{"code":"DRS-9161","path":"where[0].field",...}],"also":"DRS-9021"}
+POST /api/v1/bi/mq   as hana (no raw)   {"mq":1,"model":"trading-risk@1","select":{"measures":["Trades"]},"where":[{"field":"trades.COUNTERPARTY","op":"eq","values":["CP-AURORA"]}]}
+403 {"title":"mq masked","detail":"DRS-9161 'trades.COUNTERPARTY' is masked for you: it cannot be filtered on","code":"DRS-9161","path":"where[0].field",
+     "fix":{"replace":"where[0].field","with":["trades.id"]},"problems":[{"code":"DRS-9161","path":"where[0].field",...}]}
 ```
 
 **A report bound to a model** (`model: trades@1` in place of `dataset:`) is read by every report endpoint: validate, query (with `mq`), publish, exports,
@@ -1944,21 +1955,22 @@ rita: {"mq": 1, "model": {"id": "file:model:desk-trading", "name": "desk-trading
 hana: ... "rows": [["DESK-FX", -575000.0, 20, -28750.0]], "rowCount": 1, ...
 ```
 
-The implicit model of a pack dataset needs no model at all (`dataset:pack.trading.trade`; its default measures are named `Count of trade`, `Sum of mtm`, ...):
+The implicit model of a pack dataset needs no model at all (`dataset:pack.trading.trade`; its default measures are named `Count of trade`, `Sum of
+QUANTITY`, ...: one `Sum of` per decimal column; `drishti.py bi model describe dataset:pack.trading.trade` lists them). Captured on the demo lakes:
 
 ```
-POST /api/v1/bi/mq   {"mq":1, "model":"dataset:pack.trading.trade", "select":{"fields":["trade.currency"], "measures":["Count of trade","Sum of mtm"]}}
+POST /api/v1/bi/mq   {"mq":1, "model":"dataset:pack.trading.trade", "select":{"fields":["trade.CURRENCY"], "measures":["Count of trade","Sum of QUANTITY"]}, "limit":3}
 {"mq": 1, "model": {"id": "implicit:ds_pack_trading_trade@1", "name": "pack.trading.trade", "version": "1.0.0", "implicit": true, "compat": false},
- "rows": [["EUR", 20, -75000.0], ["GBP", 20, 425000.0], ["USD", 20, -575000.0]], ...}
+ "rows": [["AUD", 421, 131332429161.5], ["CAD", 681, 191199328261.2], ["CHF", 590, 139266649156.07]], ...}
 ```
 
 **A refusal** carries the step's code, the path in the query and a `fix` where one exists (the designer shows it as a one-click change; the AI repair loop sends it back once):
 
 ```
-POST /api/v1/bi/mq   {"mq":1, "model":"desk-trading@1", "select":{"fields":["trades.Desk"], "measures":["MTM"]}}
+POST /api/v1/bi/mq   {"mq":1, "model":"trading-risk@1", "select":{"fields":["trades.Desk"], "measures":["MTM"]}}
 422 {"title": "mq name", "status": 422, "code": "DRS-9152", "path": "select.fields[0]",
-     "detail": "DRS-9152 table 'trades' has no column 'Desk' (it has book, currency, desk, mtm, notional, pnl1d, productType, status, tradeDate, tradeId)",
-     "fix": {"replace": "select.fields[0]", "with": ["trades.desk"]}, "problems": [ ...the same, one per problem of the step... ]}
+     "detail": "DRS-9152 table 'trades' has no column 'Desk' (it has VALUATION_ID, TRADE_ID, SOURCE_SYSTEM, DESK, PORTFOLIO, COUNTERPARTY, NETTING_SET, PRODUCT_TYPE, PRODUCT_GROUP, CURRENCY, TRADE_STATUS, NOTIONAL, MTM, PNL_1D, DV01, TRADE_DATE, MATURITY_DATE)",
+     "fix": {"replace": "select.fields[0]", "with": ["trades.DESK"]}, "problems": [ ...the same, one per problem of the step... ]}
 ```
 
 **The plan, the security signature and the result cache** (release 2.2 wave A, [BI_DESIGN.md §3.6, §4, §5.4, §6.1](../architecture/BI_DESIGN.md#36-mq-the-one-query-object-and-where-all-four-languages-meet)).
@@ -2201,16 +2213,23 @@ event:tick   data:{"generation":96,"lastUpdate":"2026-10-11T11:50:04.545007543Z"
 ```
 
 A JSON answer over such a dataset also carries `live` (the same object, read **before** the query ran, so asking "since `seq`" misses nothing): `"meta": {"layer": "live", ...}`, `"live": {"generation": 99, "state": "live", "tables": [{"table": "trade", "seq": 34943, "epoch": 0, ...}]}`.
-The state's `since` (a number) is for Perspective visuals: only the rows whose `updateSeq` is above it. A Perspective visual's first read is `?format=arrow`; the columns are named as the table names them, plus `id` and, for a live table, `updateSeq`. Captured (the same visual for a reader without `raw`; the mask is in the bytes):
+The state's `since` (a number) asks for only the rows whose `updateSeq` is above it (2.1 Perspective visuals read this way; since 2.3.0 a `perspective-*` visual is drawn as Drishti's grid from the JSON answer). A read with `?format=arrow` names the columns as the table names them, plus `id` and, for a live table, `updateSeq`. Captured on the demo lakes (the
+administrator; for a reader without `raw` the `TRADER_ID` values are `•••` in the bytes and `X-Bi-Masked` names the column):
 
 ```
-POST /api/v1/bi/reports/file:report:live-trading-desk/query?format=arrow   {"page": "grid", "visual": "all-trades", "state": {"limit": 3}}   (as ann)
-200  columns: tradeId, desk, book, productType, currency, direction, trader, notional, mtm, pnl1d, id, updateSeq        masked: ["trader"]
-     ["BBG-60000001","DESK-FI","BOOK-FI-3","GOVT_BOND","CHF","Short","•••",198000000.0,-978378.0,-23374.0,"BBG-60000001",1]
-POST ...   {"page": "grid", "visual": "all-trades", "state": {"since": 34943}}   (as rita)   200  rowCount: 360 (the rows that changed since), every updateSeq > 34943
+POST /api/v1/bi/reports/file:report:live-trading-desk/query?format=arrow   {"page": "grid", "visual": "all-trades", "state": {"limit": 3}}
+200  X-Bi-Rows: 3   X-Bi-Live: {"generation":10,"state":"live","tables":[{"table":"trade","kind":"trade-valuation","rows":2000,"seq":2000,...}]}
+     columns: TRADE_ID, DESK, PORTFOLIO, PRODUCT_TYPE, CURRENCY, BUY_SELL_CODE, TRADER_ID, NOTIONAL, MTM, PNL_1D, id, updateSeq
+     ["1000001", "DESK-COMM", "BOOK-COMM-2", "ComSwap", "USD", "S", "TRDR-FROSSI", 167969743.2, 4121280.0, -277804.0, "TVAL-1000001", 1]
+     ["1000002", "DESK-COMM", "BOOK-COMM-1", "ComSwap", "USD", "B", "TRDR-TBRENNAN", 22128720.0, 349620.0, -22270.0, "TVAL-1000002", 2]
+POST ...   {"page": "grid", "visual": "all-trades", "state": {"since": 1990}}   the rows whose updateSeq is above 1990
 ```
 
-A live table in `GET /bi/datasets/{id}/layers`: `{"table": "trade", "partitions": [], "mode": "live", "live": {"state": "live", "rows": 750, "entities": 750, "subscribed": 360, "pushes": true, "seq": 34943, "epoch": 0, "lastUpdate": "...", "error": null, ...}}`.
+A live table in `GET /bi/datasets/file:dataset:live-trading/layers` (captured): `{"table": "trade", "mode": "live", "partitions": [], "live": {"kind":
+"trade-valuation", "state": "live", "rows": 2000, "entities": 2000, "subscribed": 2000, "pushes": true, "seq": 2000, "epoch": 0, "applied": 2000,
+"error": "following the first 2000 trade-valuation entities of more (drishti.bi.live.follow-max)", "aggregates": [{"rollup": "byDeskBook", "groups": 32,
+...}], ...}}`, then the `history` table (`every: PT10S`, `keep: 360`). The `error` there is a note, not a failure: the table follows at most
+`drishti.bi.live.follow-max` (2,000) entities of the demo lakes' 14,849 trade valuations.
 
 Refusals are the standard problem body with the code: `422 DRS-9030` to `9032` (the report), `501 DRS-9033` (not built), `422 DRS-9034` (the dataset), `422 DRS-9035` (the state), and every dataset query code (`9020` to `9027`, `403 DRS-9021` for a masked column,
 `422 DRS-9020` when a row rule makes a visual unanswerable). Every query is audited like a dataset query. From the console the calls are under `/bi/api/reports/...`; the console's page asks three queries at a time (the server allows three per person) and retries a `429`.

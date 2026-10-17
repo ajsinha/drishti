@@ -197,9 +197,9 @@ You should see:
 {"status":"UP"}
 ```
 
-Then open `http://localhost:17480` in a browser, type `TRD IRS-48213` on the command line and press Enter (this
-is one of the `finance` pack's examples; the landing page lists the others). An interest rate swap with its legs,
-cashflows and SOFR curve should appear.
+Then open `http://localhost:17480` in a browser, type `TRD 1000001` on the command line and press Enter (an ENDUR
+commodity swap of the `trading` pack, from the demo lakes that `drishti.py lake demo` builds; the landing page lists other
+examples). The deal ticket with its legs side by side, the cash flows and their resets should appear.
 
 `/healthz` on the console only says the console process is answering (liveness). `/readyz` also asks the server:
 `{"status":"UP","server":"reachable"}`, or `503` with `"server":"unreachable"` while it cannot reach it. Point a load
@@ -217,21 +217,22 @@ The sign-in page says the server is not reachable and recovers the same way.
 
 ### 3.6 Choosing packs
 
-`DRISHTI_PACKS` is a comma-separated list of pack names (directories under `config/packs/`). Enabling a pack also enables
-the packs it `extends`. For example `DRISHTI_PACKS=market-risk` brings in `market-data`, `trading` and
-`core` as well. The installed packs are:
+`DRISHTI_PACKS` is a comma-separated list of pack names (directories under `config/packs/`). Unset, it is the seven shipped
+packs, `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets`. Enabling a pack also enables the packs it `extends`. For example `DRISHTI_PACKS=market-risk`
+brings in `market-data`, `trading` and `core` as well. The shipped packs are:
 
 ```bash
 ls /opt/drishti/packs
 ```
 
 ```
-core  climate-risk  counterparty-risk  economics  finance  genomics  liquidity-risk  logistics
-market-data  market-risk  operational-risk  world-economy  retail-banking  trading
+core  counterparty-risk  market-data  market-risk  news-and-markets  trading  world-economy
 ```
 
-What each pack contains, and how to write your own, is in [PACKS.md](../guides/PACKS.md). Most packs read a Delta Lake under
-`./data/delta`; section 5 shows how to generate sample data for them.
+The retired example packs (`finance`, `genomics`, `logistics`, `retail-banking`, `climate-risk`, `operational-risk`,
+`liquidity-risk`) are under `examples/packs/`; `DRISHTI_PACKS_EXTRA_DIRS=examples/packs` lets you name one. What each pack contains,
+and how to write your own, is in [PACKS.md](../guides/PACKS.md). The seven packs read Delta lakes under `./data/delta`; section 5 builds
+them.
 
 **Changing packs while the server runs.** The packs folder is watched (`DRISHTI_PACKS_WATCH`, default `auto`): copy a new pack folder in and it is
 checked and loaded; edit a `pack.yaml`, `about.yaml` or Sutra and it is checked and swapped in; delete a folder and the pack is unloaded. None of
@@ -280,7 +281,7 @@ What does **not** change live, and why:
 - **Chat bridge URLs and secrets** and **embedded applications declared in configuration** (the GitOps list, read-only in Admin → Embedding): read at start.
 - **Python code** of the console and **Java code** of the server: a new build.
 
-**Sample packs.** Four shipped packs (genomics, world-economy, logistics, economics) are marked `sample: true`. Once your own packs exist, set
+**Sample packs.** Of the seven shipped packs, `news-and-markets` is marked `sample: true` (so are the example packs `genomics` and `logistics`). Once your own packs exist, set
 `DRISHTI_PACKS_SAMPLES=developers` so only authors and administrators see them, or `hidden` to unload them and stop their connectors; or press
 **Hide samples from business users** in Admin → Packs (saved in `data/packs/samples-mode`, which overrides the variable).
 
@@ -346,7 +347,7 @@ You should see both services `running`, and after about 30 seconds `(healthy)`. 
 | server | `DRISHTI_SEED_ADMIN`, `DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD` | `true`, `DRISHTI_ADMIN_USER`, `DRISHTI_ADMIN_PASSWORD` from `.env` | the first administrator you chose; the well-known development admin is not created |
 | server | `DRISHTI_METRICS_TOKEN` | from `.env`, empty if unset | the bearer token a Prometheus scrape uses; empty means only an admin token reads `/actuator` |
 | server | `ports` | `127.0.0.1:18480:18480` | the server is reachable from this host only; the console reaches it over the compose network |
-| server | `DRISHTI_PACKS` | `${DRISHTI_PACKS:-finance}` | packs to enable |
+| server | `DRISHTI_PACKS` | `${DRISHTI_PACKS:-core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets}` | packs to enable |
 | server | volume `../sutras` → `/opt/drishti/sutras` (read-only) | | your own Sutras |
 | server | volume `../data/feeds` → `/opt/drishti/data/feeds` (read-only) | | the file connector's folder |
 | server | named volume `drishti-identity` → `/opt/drishti/data/identity` | | users, roles, audit, preferences |
@@ -396,18 +397,15 @@ repository root.
 ### 5.1 Delta Lake (default)
 
 ```bash
-# the banking packs: data/delta/<domain>/<kind>/business_date=…/ with ten business days of history
-uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta
-
-# the finance pack's own lake (domain "finance")
-uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \
-    --samples examples/packs/finance/samples --root data/delta --domain finance --days 10
+# the seven packs' lakes, from the committed test data (data/testdata): seven business days ending today, about 50 s
+drishti-console/.venv/bin/python tools/drishti.py lake demo
 ```
 
-The other generated packs write their lakes the same way, for example
-`uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/climate/make.py --lake data/delta`
-(also `genomics`, `politics`, `liquidity`, `oprisk`, `economics`, `retail`). Note that these generators also rewrite
-the pack's own files under `config/packs/`.
+It writes `data/delta/<domain>/<kind>/business_date=…/` for every dataset (the trades in `data/delta/trading/trade_endur`,
+`trade_calypso` and `trade_murex`, also partitioned by `PRODUCT_TYPE`), and tells a running server (or leaves a stamp for its next start)
+so its BI store reads the new data: [data/testdata/README.md](../../data/testdata/README.md). Your own data goes in with your ETL, or
+`drishti.py lake build` for a large JSON export ([TOOLS.md](../guides/TOOLS.md)). The retired example packs keep their generators under
+`tools/packgen/` (for instance `tools/packgen/banking/make_data.py --lake data/delta`).
 
 ### 5.2 PostgreSQL, Aerospike and Kafka in Docker
 
@@ -494,7 +492,7 @@ Defined in `drishti-server/src/main/resources/application.yaml`.
 | `DRISHTI_OIDC_ISSUER` | empty | `drishti.security.oidc.issuer` | the provider's issuer URL (https) |
 | `DRISHTI_OIDC_CLIENT_ID` | empty | `drishti.security.oidc.client-id` | the client id the ID token is issued to |
 | `DRISHTI_CALENDAR` | `USNY` | `drishti.business-date.calendar` | holiday calendar for the default business date: `USNY`, `GBLO`, `EUTA`, `JPTO`, or joint such as `USNY+GBLO` |
-| `DRISHTI_PACKS` | `finance` | `drishti.packs.enabled` | comma-separated packs to enable |
+| `DRISHTI_PACKS` | `core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets` | `drishti.packs.enabled` | comma-separated packs to enable |
 | `DRISHTI_PACKS_OVERLAY` | `./data/packs/added.yaml` | `drishti.packs.overlay` | packs loaded from Admin → Packs (written by the server, read at every start); back it up with `data/` |
 | `DRISHTI_PACKS_DIR` | `./config/packs` | `drishti.packs.dir` | where the packs are. The console reads the same variable, but resolves a relative value from `drishti-console/`; use an absolute path if you set it |
 | `DRISHTI_DEFAULT_PACKS` | empty (every installed pack) | `drishti.packs.default-for-users` | packs new users get until an admin changes them |
@@ -1206,14 +1204,14 @@ DRISHTI_DELTA_ROOT=s3a://risk-lake/banking java -jar drishti-server.jar
 ```
 
 Credentials then come from the AWS default chain (environment variables, profile, instance role). To set the
-region, an endpoint or keys explicitly, give the connector its own file, `config/connectors/trading-store.yaml` (the same keys
-under `drishti.sources.connectors.trading-store` in `application.local.yaml` still work but are deprecated):
+region, an endpoint or keys explicitly, give the connector its own file, `config/connectors/trade-endur.yaml` (the same keys
+under `drishti.sources.connectors.trade-endur` in `application.local.yaml` still work but are deprecated):
 
 ```yaml
 drishti:
   sources:
     connectors:
-      trading-store:
+      trade-endur:
         plugin: delta
         settings:
           root: s3a://risk-lake/banking

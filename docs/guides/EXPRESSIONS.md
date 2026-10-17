@@ -22,11 +22,11 @@ and masks are applied. DEL v2 arrived in release 2.2.0 (wave A) and replaces the
 converter rewrites old expressions for you ([section 10](#10-the-old-syntax-and-the-converter)).
 
 ```python
-sum(trades.mtm, where=trades.status == 'Live')                    # MTM of the live trades
+sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')                    # MTM of the live trades
 measure('P&L 1d') / measure('Exposure (EE peak)')                 # one measure over another
 notional * fx(currency, 'USD')                                    # a derived column (fx arrives in wave B)
-trades.desk in user.desks                                         # a row rule: each desk head sees their desks
-trades.mtm if trades.mtm > 0 else 0                               # a conditional
+trades.DESK in user.desks                                         # a row rule: each desk head sees their desks
+trades.MTM if trades.MTM > 0 else 0                               # a conditional
 ```
 
 Contents: [1](#1-where-you-write-del-scopes) scopes · [2](#2-the-grammar) grammar · [3](#3-what-is-refused) what is refused ·
@@ -48,13 +48,13 @@ Where an expression is written decides what it may name. The server checks the *
 
 | Scope | Where | May name | Aggregates? | Result |
 |---|---|---|---|---|
-| **row** | a dataset's `derive.*.expr` and `columns.*.expr`, its `where:`, MQ and SQL row filters | the columns of its own dataset (`notional`, or `trades.notional`); `related(desk.name)` one hop | no — an aggregate belongs in a measure | one value per row |
+| **row** | a dataset's `derive.*.expr` and `columns.*.expr`, its `where:`, MQ and SQL row filters | the columns of its own dataset (`notional`, or `trades.NOTIONAL`); `related(desk.name)` one hop | no — an aggregate belongs in a measure | one value per row |
 | **rule** | `security.rows[].where` | the dataset's own columns and `user.<attribute>` (`user.desks`, `user.name`) | no | `True` or `False` per row; no function can remove it |
-| **aggregate** | `measures.*.expr`, MQ `define`, report local measures | `alias.column` **inside an aggregate**, `measure('name')` | yes — a bare column outside an aggregate is refused: *wrap it: `sum(trades.mtm)`* | one value per group of the answer |
+| **aggregate** | `measures.*.expr`, MQ `define`, report local measures | `alias.column` **inside an aggregate**, `measure('name')` | yes — a bare column outside an aggregate is refused: *wrap it: `sum(trades.MTM)`* | one value per group of the answer |
 | **context** *(wave B)* | the first argument of `calc`, `share_of`, `parent_of`, `as_of` | as aggregate | yes | one value per group, in an edited filter context |
 
 **Row context** is "this row of this dataset": `notional * 2` is worked out for each trade. **Aggregate context** is "the rows of this group,
-after security and filters": `sum(trades.mtm)` in the bar for desk RATES is the sum over the RATES trades *you* may see.
+after security and filters": `sum(trades.MTM)` in the bar for desk RATES is the sum over the RATES trades *you* may see.
 
 ## 2. The grammar
 
@@ -73,7 +73,7 @@ term        := factor (("*" | "/" | "//" | "%") factor)*
 factor      := ("-" | "+") factor | power
 power       := primary ["**" factor]
 primary     := atom | call | field
-field       := NAME ("." NAME)*                                 # trades.mtm, trades.tradeDate.month, user.desks
+field       := NAME ("." NAME)*                                 # trades.MTM, trades.TRADE_DATE.month, user.desks
 call        := FUNCNAME "(" [arg ("," arg)* [","]] ")"          # catalogue functions only; never a method call
 arg         := expr | NAME "=" expr                             # keyword arguments: where= by= desc= ...
 atom        := NUMBER | STRING | True | False | None | ALL | list | "(" expr ")"
@@ -85,8 +85,8 @@ list        := "[" [expr ("," expr)* [","]] "]"                 # for in / not i
 | numbers | `12`, `1.5`, `1e6`, `1_000_000` | a number with `.` or an exponent is a decimal |
 | text | `'Live'`, `"it's"` | escapes `\\` `\'` `\"` `\n` `\t`; adjacent texts join (`'a' 'b'`); no f-strings, bytes, raw or triple-quoted strings |
 | booleans, null | `True`, `False`, `None` | capitalised, as in Python |
-| dates | `date('2026-10-09')`, `timestamp('2026-10-09T09:30')` | DEL has no date literal; a column compared with an ISO text (`trades.tradeDate >= '2026-10-01'`) is also read as a date |
-| fields | `trades.mtm`, `trades.tradeDate.year` (`.quarter`, `.month`, `.week`, `.day`) | in row and rule scope a bare `mtm` is a column of the dataset in context |
+| dates | `date('2026-10-09')`, `timestamp('2026-10-09T09:30')` | DEL has no date literal; a column compared with an ISO text (`trades.TRADE_DATE >= '2026-10-01'`) is also read as a date |
+| fields | `trades.MTM`, `trades.TRADE_DATE.year` (`.quarter`, `.month`, `.week`, `.day`) | in row and rule scope a bare `mtm` is a column of the dataset in context |
 | the reader | `user.desks`, `user.name`, `user.roles` | row rules only |
 | lists | `['USD', 'EUR']` | only on the right of `in` / `not in`, or as `by=[...]` |
 | comments | `# to the end of the line` | in YAML, write a multi-line expression as a block: `expr: \|` |
@@ -104,8 +104,8 @@ Everything else Python has is refused with `DRS-9127`, naming the construct and 
 | `x := 1`, `x = 1` | assignment is not DEL | `==` for equality; a measure for a reusable value |
 | `lambda x: x` | lambda is not DEL | a catalogue function, or a Python item |
 | `[x for x in t]`, `sum(x for x in t)` | comprehensions and generators are not DEL | `sum(x, where=...)`, `count(alias, where=...)` |
-| `trades.mtm[0]` | subscripts and slices are not DEL | name the column: `alias.column` |
-| `trades.mtm.sum()` | method calls are not DEL | `sum(trades.mtm)` |
+| `trades.MTM[0]` | subscripts and slices are not DEL | name the column: `alias.column` |
+| `trades.MTM.sum()` | method calls are not DEL | `sum(trades.MTM)` |
 | `f(*args)`, `f(**kw)` | star arguments are not DEL | write each argument |
 | `f'{x}'`, `b'x'`, `'''x'''` | prefixed or triple-quoted strings are not DEL | a plain `'text'` |
 | `{'a': 1}`, `(1, 2)` | dict, set and tuple literals are not DEL | a list for `in`: `[1, 2]` |
@@ -124,7 +124,7 @@ Every function follows these rules; the reference in [section 6](#6-functions) a
 | masked values | a masked column reads as the text `•••` in row scope; an aggregate over it is `None` and the answer marks it masked; a filter, sort or `in` on it is refused (`DRS-9161`) |
 | currencies | summing an amount whose currency is a column, across several currencies, is the currency guard (`DRS-9158`): group or filter by the currency |
 | types | integer with decimal gives decimal; `date - date` gives integer days; text with number is refused (no implicit casts); the items of `in [...]` must have the field's type |
-| booleans | `and`, `or`, `not` and `a if c else b` take conditions only: no truthiness of numbers or texts (`if trades.mtm` is refused; write `trades.mtm != 0`) |
+| booleans | `and`, `or`, `not` and `a if c else b` take conditions only: no truthiness of numbers or texts (`if trades.MTM` is refused; write `trades.MTM != 0`) |
 | `%` with negatives | follows SQL (the sign of the dividend), not Python (the sign of the divisor) |
 
 ## 5. Measures referring to measures
@@ -136,7 +136,7 @@ aggregates: `sum(measure('MTM'))` is refused (aggregate columns; combine measure
 
 ```yaml
 measures:
-  MTM:          { id: m_mtm, expr: "sum(trades.mtm)" }
+  MTM:          { id: m_mtm, expr: "sum(trades.MTM)" }
   Trades:       { id: m_trades, expr: "count(trades)" }
   MTM per trade: { expr: "measure('m_mtm') / measure('Trades')" }      # by id and by name
 ```
@@ -154,15 +154,15 @@ A measure is worked out per group of the answer in a **filter context** of four 
 
 ```yaml
 measures:
-  MTM:              { expr: "sum(trades.mtm)" }
+  MTM:              { expr: "sum(trades.MTM)" }
   MTM all desks:    { expr: "calc(measure('MTM'), ignore=[desks.NAME])" }        # the desk slicer and the row's desk dropped
   MTM % of total:   { expr: "share_of(measure('MTM'), over=ALL)" }               # of the total you may see
   MTM % of desk:    { expr: "share_of(measure('MTM'), over=[books.NAME])" }      # a book's share of the rest of its group
   MTM % of parent:  { expr: "parent_of(measure('MTM'), hierarchy='Desk and book')" }
-  Live MTM anyway:  { expr: "calc(measure('MTM'), where=trades.status == 'Live')" }
+  Live MTM anyway:  { expr: "calc(measure('MTM'), where=trades.TRADE_STATUS != 'MATURED')" }
   Region MTM:       { expr: "calc(measure('MTM'), keep=[desks.REGION])" }        # every filter but the region's dropped
   MTM by settle:    { expr: "calc(measure('MTM'), via='r_5')" }                  # the inactive relationship r_5 instead of the active one
-  Avg book MTM:     { expr: "avg_by(sum(trades.mtm), by=[books.NAME])" }         # MTM per book, then the average
+  Avg book MTM:     { expr: "avg_by(sum(trades.MTM), by=[books.NAME])" }         # MTM per book, then the average
 ```
 
 Before and after, for *MTM all desks* with a slicer `desk in [RATES]` and the answer grouped by desk and currency:
@@ -185,14 +185,14 @@ A model declares **parameters** and **calculation groups**; a query (`mq: 2`) gi
 ```yaml
 parameters:
   shock:     { kind: number, default: 0, min: -0.5, max: 0.5, step: 0.01 }     # what-if: param.shock in any expression
-  breakdown: { kind: field, fields: [desks.REGION, trades.currency], default: desks.REGION }   # field: param.breakdown in select.fields
+  breakdown: { kind: field, fields: [desks.REGION, trades.CURRENCY], default: desks.REGION }   # field: param.breakdown in select.fields
 calc-groups:
   Time:
     precedence: 10                                   # several groups: the highest precedence applies first (innermost)
     items:
       Current: "SELECTED"
-      YTD:     "ytd(SELECTED, trades.tradeDate)"     # SELECTED is the measure the item applies to
-      Prior:   "prior_period(SELECTED, trades.tradeDate)"
+      YTD:     "ytd(SELECTED, trades.TRADE_DATE)"     # SELECTED is the measure the item applies to
+      Prior:   "prior_period(SELECTED, trades.TRADE_DATE)"
 measures:
   Shocked MTM: { expr: "measure('MTM') * (1 + param.shock)" }
 ```
@@ -201,7 +201,7 @@ measures:
 mq: 2
 model: desk-calc
 select: { fields: [param.breakdown], measures: [MTM, Notional, Trades] }
-params: { shock: -0.1, breakdown: trades.currency }
+params: { shock: -0.1, breakdown: trades.CURRENCY }
 calc: { Time: YTD }                                  # every selected measure becomes its YTD; the answer keeps the names
 ```
 
@@ -243,9 +243,9 @@ measures:
   Month-end balance:   { expr: "closing(sum(accounts.balance), accounts.businessDate)" }
   Average daily:       { expr: "avg_over(sum(accounts.balance), accounts.businessDate)" }
   MTM day on day:      { expr: "measure('MTM') - as_of(measure('MTM'), shift_date(asof(), -1))" }
-  Fiscal YTD P&L:      { expr: "fiscal_ytd(sum(trades.pnl1d), trades.tradeDate)" }
-  Notional USD:        { expr: "convert(sum(trades.notional), to='USD')" }
-  Notional EUR traded: { expr: "convert(sum(trades.notional), to='EUR', at='trade-date')" }
+  Fiscal YTD P&L:      { expr: "fiscal_ytd(sum(trades.PNL_1D), trades.TRADE_DATE)" }
+  Notional USD:        { expr: "convert(sum(trades.NOTIONAL), to='USD')" }
+  Notional EUR traded: { expr: "convert(sum(trades.NOTIONAL), to='EUR', at='trade-date')" }
 calendars: { holidays: USNY, fiscal-year-start: 4 }
 fx: { rates: rates, from: base, to: quote, rate: rate, date: day, base: USD }
 ```
@@ -337,8 +337,8 @@ The absolute value of a number.
 
 | Example | What it says |
 |---|---|
-| `abs(trades.mtm)` | the size of a trade's MTM, whatever its sign (row scope) |
-| `sum(abs(trades.mtm))` | gross MTM: the sum of the absolute values |
+| `abs(trades.MTM)` | the size of a trade's MTM, whatever its sign (row scope) |
+| `sum(abs(trades.MTM))` | gross MTM: the sum of the absolute values |
 
 * **None:** abs(None) is None.
 * **Types:** Numbers only; abs of a text or a date is DRS-9127.
@@ -357,7 +357,7 @@ Rounds a number to n decimal places (half away from zero, as the database rounds
 
 | Example | What it says |
 |---|---|
-| `round(trades.notional / 1000000, 1)` | notional in millions with one decimal |
+| `round(trades.NOTIONAL / 1000000, 1)` | notional in millions with one decimal |
 | `round(measure('MTM'))` | a measure rounded to a whole number |
 
 * **None:** round(None, 2) is None.
@@ -376,7 +376,7 @@ The first of its arguments that is not None.
 
 | Example | What it says |
 |---|---|
-| `coalesce(trades.book, 'UNBOOKED')` | the book, or UNBOOKED when it is missing |
+| `coalesce(trades.PORTFOLIO, 'UNBOOKED')` | the book, or UNBOOKED when it is missing |
 | `coalesce(measure('MTM'), 0)` | a measure that shows 0 instead of an empty cell |
 
 * **None:** None only when every argument is None.
@@ -395,7 +395,7 @@ The text in capital letters.
 
 | Example | What it says |
 |---|---|
-| `upper(trades.currency)` | usd becomes USD |
+| `upper(trades.CURRENCY)` | usd becomes USD |
 | `upper(counterparties.NAME) == 'ACME BANK'` | a comparison that ignores case |
 
 * **None:** upper(None) is None.
@@ -414,8 +414,8 @@ The text in small letters.
 
 | Example | What it says |
 |---|---|
-| `lower(trades.status)` | LIVE becomes live |
-| `lower(trades.desk) in ['rates', 'credit']` | a list test that ignores case |
+| `lower(trades.TRADE_STATUS)` | LIVE becomes live |
+| `lower(trades.DESK) in ['rates', 'credit']` | a list test that ignores case |
 
 * **None:** lower(None) is None.
 
@@ -432,8 +432,8 @@ The number of characters of a text.
 
 | Example | What it says |
 |---|---|
-| `len(trades.tradeId)` | how long the id is |
-| `len(trades.comment) > 0` | a comment was written |
+| `len(trades.TRADE_ID)` | how long the id is |
+| `len(trades.COUNTERPARTY) > 0` | a comment was written |
 
 * **None:** len(None) is None (not 0).
 * **Types:** Text only; len of a list is not DEL.
@@ -452,8 +452,8 @@ True when the text contains the part, ignoring case.
 
 | Example | What it says |
 |---|---|
-| `contains(trades.product, 'swap')` | every kind of swap |
-| `sum(trades.mtm, where=contains(trades.book, 'HEDGE'))` | MTM of the hedge books |
+| `contains(trades.PRODUCT_TYPE, 'SWAP')` | every kind of swap |
+| `sum(trades.MTM, where=contains(trades.PORTFOLIO, 'COMM'))` | MTM of the hedge books |
 
 * **None:** contains(None, 'x') is None, which a filter treats as not matching.
 * **Masked values:** Filtering on a masked column is DRS-9161.
@@ -472,8 +472,8 @@ True when the text starts with the prefix, ignoring case.
 
 | Example | What it says |
 |---|---|
-| `startswith(trades.book, 'RATES-')` | the rates books |
-| `count(trades, where=startswith(trades.tradeId, 'BBG'))` | how many Bloomberg-booked trades |
+| `startswith(trades.PORTFOLIO, 'BOOK-RATES-')` | the rates books |
+| `count(trades, where=startswith(trades.TRADE_ID, 'BBG'))` | how many Bloomberg-booked trades |
 
 * **None:** startswith(None, 'x') is None.
 
@@ -491,8 +491,8 @@ True when the text ends with the suffix, ignoring case.
 
 | Example | What it says |
 |---|---|
-| `endswith(trades.book, '-LDN')` | the London books |
-| `not endswith(trades.product, 'option')` | everything but options |
+| `endswith(trades.PORTFOLIO, '-1')` | the London books |
+| `not endswith(trades.PRODUCT_TYPE, 'OPTION')` | everything but options |
 
 * **None:** endswith(None, 'x') is None.
 
@@ -509,8 +509,8 @@ A date written in ISO form (YYYY-MM-DD). DEL has no date literal; this is it.
 
 | Example | What it says |
 |---|---|
-| `trades.tradeDate >= date('2026-10-01')` | trades from October 2026 |
-| `sum(trades.mtm, where=trades.maturityDate < date('2027-01-01'))` | MTM of what matures this year |
+| `trades.TRADE_DATE >= date('2026-10-01')` | trades from October 2026 |
+| `sum(trades.MTM, where=trades.MATURITY_DATE < date('2027-01-01'))` | MTM of what matures this year |
 
 * **Types:** The text must be an ISO date; date('10/01/2026') is DRS-9127. Comparing a date with a text is allowed only for an ISO text.
 
@@ -537,7 +537,7 @@ A timestamp written in ISO form (YYYY-MM-DDTHH:MM[:SS]).
 
 *Scopes: row, rule, aggregate · returns: integer · since W1*
 
-The year of a date or timestamp. The same as the field part trades.tradeDate.year.
+The year of a date or timestamp. The same as the field part trades.TRADE_DATE.year.
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
@@ -545,8 +545,8 @@ The year of a date or timestamp. The same as the field part trades.tradeDate.yea
 
 | Example | What it says |
 |---|---|
-| `year(trades.tradeDate) == 2026` | trades of 2026 |
-| `year(trades.maturityDate) - year(trades.tradeDate)` | a rough tenor in years |
+| `year(trades.TRADE_DATE) == 2026` | trades of 2026 |
+| `year(trades.MATURITY_DATE) - year(trades.TRADE_DATE)` | a rough tenor in years |
 
 * **None:** year(None) is None.
 * **Types:** Dates and timestamps only.
@@ -564,8 +564,8 @@ The quarter (1 to 4) of a date or timestamp.
 
 | Example | What it says |
 |---|---|
-| `quarter(trades.tradeDate)` | 1 for January to March |
-| `count(trades, where=quarter(trades.tradeDate) == 4)` | trades done in the fourth quarter |
+| `quarter(trades.TRADE_DATE)` | 1 for January to March |
+| `count(trades, where=quarter(trades.TRADE_DATE) == 4)` | trades done in the fourth quarter |
 
 * **None:** quarter(None) is None.
 
@@ -582,8 +582,8 @@ The month (1 to 12) of a date or timestamp.
 
 | Example | What it says |
 |---|---|
-| `month(trades.tradeDate)` | 10 for October |
-| `month(trades.maturityDate) in [3, 6, 9, 12]` | quarter-end maturities |
+| `month(trades.TRADE_DATE)` | 10 for October |
+| `month(trades.MATURITY_DATE) in [3, 6, 9, 12]` | quarter-end maturities |
 
 * **None:** month(None) is None.
 
@@ -600,8 +600,8 @@ The ISO week number (1 to 53) of a date or timestamp.
 
 | Example | What it says |
 |---|---|
-| `week(trades.tradeDate)` | the ISO week a trade was done in |
-| `count(trades, where=week(trades.tradeDate) == 41)` | trades of week 41 |
+| `week(trades.TRADE_DATE)` | the ISO week a trade was done in |
+| `count(trades, where=week(trades.TRADE_DATE) == 41)` | trades of week 41 |
 
 * **None:** week(None) is None.
 * **Types:** ISO weeks: the first days of January can belong to week 52 or 53 of the year before.
@@ -619,8 +619,8 @@ The day of the month (1 to 31) of a date or timestamp.
 
 | Example | What it says |
 |---|---|
-| `day(trades.tradeDate)` | 9 for 2026-10-09 |
-| `day(trades.maturityDate) == 15` | mid-month maturities |
+| `day(trades.TRADE_DATE)` | 9 for 2026-10-09 |
+| `day(trades.MATURITY_DATE) == 15` | mid-month maturities |
 
 * **None:** day(None) is None.
 
@@ -638,8 +638,8 @@ Calendar days from a to b (negative when b is before a). The same as b - a for t
 
 | Example | What it says |
 |---|---|
-| `days_between(trades.tradeDate, trades.maturityDate)` | a trade's tenor in days |
-| `avg(days_between(trades.tradeDate, trades.maturityDate))` | the average tenor |
+| `days_between(trades.TRADE_DATE, trades.MATURITY_DATE)` | a trade's tenor in days |
+| `avg(days_between(trades.TRADE_DATE, trades.MATURITY_DATE))` | the average tenor |
 
 * **None:** None when either date is None.
 * **Types:** Timestamps are taken at their date.
@@ -658,8 +658,8 @@ Business days from a, excluded, to b, included, on the model's calendar (calenda
 
 | Example | What it says |
 |---|---|
-| `business_days_between(trades.tradeDate, trades.settlementDate)` | the settlement lag in business days |
-| `count(trades, where=business_days_between(trades.tradeDate, trades.settlementDate) > 2)` | trades settling later than T+2 |
+| `business_days_between(trades.TRADE_DATE, trades.MATURITY_DATE)` | the settlement lag in business days |
+| `count(trades, where=business_days_between(trades.TRADE_DATE, trades.MATURITY_DATE) > 2)` | trades settling later than T+2 |
 
 * **None:** None when either date is None.
 * **Types:** Weekends only until model calendars arrive (B); a holiday is counted as a business day.
@@ -681,8 +681,8 @@ The rate that converts one unit of ccy into the currency to: the latest rate on 
 
 | Example | What it says |
 |---|---|
-| `sum(trades.notional * fx(trades.currency, 'USD'))` | notional in US dollars |
-| `sum(trades.mtm * fx(trades.currency, 'EUR', at=trades.tradeDate))` | MTM in euros at each trade date |
+| `sum(trades.NOTIONAL * fx(trades.CURRENCY, 'USD'))` | notional in US dollars |
+| `sum(trades.MTM * fx(trades.CURRENCY, 'EUR', at=trades.TRADE_DATE))` | MTM in euros at each trade date |
 
 * **None:** None when the currency is None or no rate for the pair is on or before the date.
 * **Masked values:** The rates are reference data: the rates table's row rules do not filter a conversion.
@@ -703,8 +703,8 @@ An aggregate of amounts in many currencies, converted to one: each amount inside
 
 | Example | What it says |
 |---|---|
-| `convert(sum(trades.notional), to='USD')` | notional in USD at the as-of rate |
-| `convert(sum(trades.mtm), to='EUR', at='trade-date')` | each trade converted at its own trade date |
+| `convert(sum(trades.NOTIONAL), to='USD')` | notional in USD at the as-of rate |
+| `convert(sum(trades.MTM), to='EUR', at='trade-date')` | each trade converted at its own trade date |
 
 * **None:** A row whose rate is unknown adds None (it is skipped by the sum).
 * **Currencies:** Lifts the currency guard: the result has one currency.
@@ -748,9 +748,9 @@ The sum of x over the rows of the group (after security and filters), only the r
 
 | Example | What it says |
 |---|---|
-| `sum(trades.mtm)` | MTM |
-| `sum(trades.mtm, where=trades.status == 'Live')` | MTM of the live trades only |
-| `sum(trades.notional * trades.rate) / sum(trades.notional)` | a notional-weighted average rate |
+| `sum(trades.MTM)` | MTM |
+| `sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')` | MTM of the live trades only |
+| `sum(trades.NOTIONAL * trades.DV01) / sum(trades.NOTIONAL)` | a notional-weighted average rate |
 
 * **None:** None values are skipped.
 * **No rows:** None over no rows (not 0); wrap it in coalesce(..., 0) to show 0.
@@ -771,7 +771,7 @@ The arithmetic mean of x over the rows of the group.
 
 | Example | What it says |
 |---|---|
-| `avg(trades.notional)` | the average trade size |
+| `avg(trades.NOTIONAL)` | the average trade size |
 | `avg(economies.GROWTH, where=economies.REGION == 'Asia')` | average growth of the Asian economies |
 
 * **None:** None values are skipped (they are not zeros).
@@ -792,8 +792,8 @@ The smallest value of x in the group (numbers, dates or text).
 
 | Example | What it says |
 |---|---|
-| `min(trades.mtm)` | the worst trade MTM |
-| `min(trades.maturityDate, where=trades.status == 'Live')` | the next maturity |
+| `min(trades.MTM)` | the worst trade MTM |
+| `min(trades.MATURITY_DATE, where=trades.TRADE_STATUS != 'MATURED')` | the next maturity |
 
 * **None:** None values are skipped.
 * **No rows:** None over no rows.
@@ -833,8 +833,8 @@ count(trades) counts the rows of a dataset alias; count(x) counts the rows where
 | Example | What it says |
 |---|---|
 | `count(trades)` | how many trades |
-| `count(trades, where=trades.mtm < 0)` | how many trades lose money |
-| `count(trades.book)` | trades with a book |
+| `count(trades, where=trades.MTM < 0)` | how many trades lose money |
+| `count(trades.PORTFOLIO)` | trades with a book |
 
 * **None:** count(x) skips None; count(alias) counts every row.
 * **No rows:** 0 over no rows (never None).
@@ -854,7 +854,7 @@ How many different values of x the group has.
 | Example | What it says |
 |---|---|
 | `distinct(trades.COUNTERPARTY)` | how many counterparties |
-| `distinct(trades.book, where=trades.status == 'Live')` | books with live trades |
+| `distinct(trades.PORTFOLIO, where=trades.TRADE_STATUS != 'MATURED')` | books with live trades |
 
 * **None:** None is not a value.
 * **No rows:** 0 over no rows.
@@ -874,7 +874,7 @@ num / den as a decimal, None when den is 0. The same as num / den in DEL, kept f
 
 | Example | What it says |
 |---|---|
-| `ratio(sum(trades.mtm), sum(trades.notional))` | MTM per unit of notional |
+| `ratio(sum(trades.MTM), sum(trades.NOTIONAL))` | MTM per unit of notional |
 | `ratio(sum(regions.GDP_USD_BN), sum(regions.POPULATION)) * 1000000000` | GDP per head in USD |
 
 * **None:** None when either side is None.
@@ -895,7 +895,7 @@ The continuous p-quantile of x in the group (p between 0 and 1): 0.5 is the medi
 
 | Example | What it says |
 |---|---|
-| `percentile(trades.mtm, 0.5)` | the median trade MTM |
+| `percentile(trades.MTM, 0.5)` | the median trade MTM |
 | `-percentile(scenarios.pnl, 0.01)` | a 99% VaR-style loss from scenario P&L |
 
 * **None:** None values are skipped.
@@ -916,8 +916,8 @@ A two-level aggregate: agg per value of by (within each group of the answer), th
 
 | Example | What it says |
 |---|---|
-| `avg_by(sum(trades.mtm), by=[trades.tradeDate])` | the average daily MTM |
-| `avg_by(count(trades), by=[trades.book])` | trades per book, on average |
+| `avg_by(sum(trades.MTM), by=[trades.TRADE_DATE])` | the average daily MTM |
+| `avg_by(count(trades), by=[trades.PORTFOLIO])` | trades per book, on average |
 
 * **None:** Groups of by whose aggregate is None are left out of the average.
 * **No rows:** None when no group of by has rows.
@@ -939,8 +939,8 @@ The aggregate over the rows whose date falls between the start of the as-of date
 
 | Example | What it says |
 |---|---|
-| `ytd(sum(trades.mtm), trades.tradeDate)` | MTM of the trades dated this year so far |
-| `ytd(count(trades), trades.tradeDate)` | trades done this year |
+| `ytd(sum(trades.MTM), trades.TRADE_DATE)` | MTM of the trades dated this year so far |
+| `ytd(count(trades), trades.TRADE_DATE)` | trades done this year |
 
 * **No rows:** None (a count: 0) when no row is in the window.
 * **Types:** date is a date or timestamp field of the aggregate's dataset.
@@ -959,8 +959,8 @@ The aggregate over the rows dated from the start of the as-of month to the as-of
 
 | Example | What it says |
 |---|---|
-| `mtd(sum(trades.pnl1d), trades.tradeDate)` | month-to-date P&L |
-| `mtd(count(trades), trades.tradeDate)` | trades this month |
+| `mtd(sum(trades.PNL_1D), trades.TRADE_DATE)` | month-to-date P&L |
+| `mtd(count(trades), trades.TRADE_DATE)` | trades this month |
 
 * **No rows:** None (a count: 0) when no row is in the window.
 
@@ -978,8 +978,8 @@ The aggregate over the rows dated from the start of the as-of quarter to the as-
 
 | Example | What it says |
 |---|---|
-| `qtd(sum(trades.pnl1d), trades.tradeDate)` | quarter-to-date P&L |
-| `qtd(sum(trades.notional), trades.tradeDate)` | notional traded this quarter |
+| `qtd(sum(trades.PNL_1D), trades.TRADE_DATE)` | quarter-to-date P&L |
+| `qtd(sum(trades.NOTIONAL), trades.TRADE_DATE)` | notional traded this quarter |
 
 * **No rows:** None (a count: 0) when no row is in the window.
 
@@ -997,8 +997,8 @@ The aggregate over the period just before the query's dates, of the same number 
 
 | Example | What it says |
 |---|---|
-| `prior_period(sum(trades.pnl1d), trades.tradeDate)` | P&L of the period before |
-| `sum(trades.pnl1d) - prior_period(sum(trades.pnl1d), trades.tradeDate)` | change on the prior period |
+| `prior_period(sum(trades.PNL_1D), trades.TRADE_DATE)` | P&L of the period before |
+| `sum(trades.PNL_1D) - prior_period(sum(trades.PNL_1D), trades.TRADE_DATE)` | change on the prior period |
 
 * **No rows:** None (a count: 0) when the prior period has no rows.
 
@@ -1016,8 +1016,8 @@ The aggregate over the query's dates moved back one year.
 
 | Example | What it says |
 |---|---|
-| `same_period_last_year(sum(trades.notional), trades.tradeDate)` | notional a year ago |
-| `ratio(sum(trades.notional), same_period_last_year(sum(trades.notional), trades.tradeDate)) - 1` | growth on last year |
+| `same_period_last_year(sum(trades.NOTIONAL), trades.TRADE_DATE)` | notional a year ago |
+| `ratio(sum(trades.NOTIONAL), same_period_last_year(sum(trades.NOTIONAL), trades.TRADE_DATE)) - 1` | growth on last year |
 
 * **No rows:** None (a count: 0) when last year's window has no rows.
 
@@ -1035,8 +1035,8 @@ A running total of a sum, count, min or max along the date field of the answer (
 
 | Example | What it says |
 |---|---|
-| `running(sum(trades.notional), trades.tradeDate)` | cumulative notional by day |
-| `running(count(trades), trades.tradeDate)` | trades so far |
+| `running(sum(trades.NOTIONAL), trades.TRADE_DATE)` | cumulative notional by day |
+| `running(count(trades), trades.TRADE_DATE)` | trades so far |
 
 * **Masked values:** Refused along a masked date (DRS-9021).
 * **Types:** Only sum, count, min, max; the date field must be in the answer (DRS-9020 otherwise).
@@ -1055,8 +1055,8 @@ The aggregate from the start of the fiscal year that holds the as-of date to the
 
 | Example | What it says |
 |---|---|
-| `fiscal_ytd(sum(trades.pnl1d), trades.tradeDate)` | fiscal year-to-date P&L |
-| `fiscal_ytd(count(trades), trades.tradeDate)` | trades this fiscal year |
+| `fiscal_ytd(sum(trades.PNL_1D), trades.TRADE_DATE)` | fiscal year-to-date P&L |
+| `fiscal_ytd(count(trades), trades.TRADE_DATE)` | trades this fiscal year |
 
 * **No rows:** None (a count: 0) when no row is in the window.
 * **Types:** date is a date or timestamp field of the aggregate's dataset.
@@ -1079,8 +1079,8 @@ The aggregate n rows before, along order (a field of the answer), restarting for
 
 | Example | What it says |
 |---|---|
-| `lag(sum(trades.mtm), 1, trades.tradeDate)` | yesterday's MTM on each row |
-| `sum(trades.mtm) - lag(sum(trades.mtm), 1, trades.tradeDate, by=[trades.desk])` | day-on-day change per desk |
+| `lag(sum(trades.MTM), 1, trades.TRADE_DATE)` | yesterday's MTM on each row |
+| `sum(trades.MTM) - lag(sum(trades.MTM), 1, trades.TRADE_DATE, by=[trades.DESK])` | day-on-day change per desk |
 
 * **None:** None on the first n rows of each partition.
 * **Masked values:** A masked field is never a partition; ordering along a masked field is DRS-9021.
@@ -1101,8 +1101,8 @@ The aggregate n rows after, along order.
 
 | Example | What it says |
 |---|---|
-| `lead(sum(trades.notional), 1, trades.maturityDate)` | the next maturity bucket's notional |
-| `lead(count(trades), 2, trades.tradeDate, by=[trades.book])` | two days ahead, per book |
+| `lead(sum(trades.NOTIONAL), 1, trades.MATURITY_DATE)` | the next maturity bucket's notional |
+| `lead(count(trades), 2, trades.TRADE_DATE, by=[trades.PORTFOLIO])` | two days ahead, per book |
 
 * **None:** None on the last n rows of each partition.
 
@@ -1121,7 +1121,7 @@ The position of each row of the answer by the aggregate, 1 for the highest (desc
 
 | Example | What it says |
 |---|---|
-| `rank(sum(trades.mtm))` | MTM rank, best first |
+| `rank(sum(trades.MTM))` | MTM rank, best first |
 | `rank(sum(netting_sets.EE_PEAK), by=[counterparties.SECTOR])` | exposure rank within each sector |
 
 * **None:** None values rank last.
@@ -1141,7 +1141,7 @@ Like rank, without gaps after ties.
 
 | Example | What it says |
 |---|---|
-| `dense_rank(sum(trades.notional))` | 1, 2, 2, 3 for tied notionals |
+| `dense_rank(sum(trades.NOTIONAL))` | 1, 2, 2, 3 for tied notionals |
 | `dense_rank(count(trades), desc=False)` | the quietest first |
 
 * **None:** None values rank last.
@@ -1161,8 +1161,8 @@ The relative rank from 0 to 1.
 
 | Example | What it says |
 |---|---|
-| `percent_rank(sum(trades.mtm))` | 0 for the best desk, 1 for the worst |
-| `percent_rank(sum(trades.notional), desc=False)` | a percentile position by size |
+| `percent_rank(sum(trades.MTM))` | 0 for the best desk, 1 for the worst |
+| `percent_rank(sum(trades.NOTIONAL), desc=False)` | a percentile position by size |
 
 * **No rows:** 0 for a single row.
 
@@ -1182,8 +1182,8 @@ The average of the aggregate over the row and the n - 1 rows before it along ord
 
 | Example | What it says |
 |---|---|
-| `moving_avg(sum(trades.mtm), 3, trades.tradeDate)` | a three-day moving average of MTM |
-| `moving_avg(sum(trades.pnl1d), 20, trades.tradeDate, by=[trades.desk])` | a 20-day average P&L per desk |
+| `moving_avg(sum(trades.MTM), 3, trades.TRADE_DATE)` | a three-day moving average of MTM |
+| `moving_avg(sum(trades.PNL_1D), 20, trades.TRADE_DATE, by=[trades.DESK])` | a 20-day average P&L per desk |
 
 * **None:** The first rows average over what is there.
 
@@ -1203,8 +1203,8 @@ The sum of the aggregate over the row and the n - 1 rows before it.
 
 | Example | What it says |
 |---|---|
-| `moving_sum(sum(trades.pnl1d), 5, trades.tradeDate)` | a rolling five-day P&L |
-| `moving_sum(count(trades), 7, trades.tradeDate)` | trades over the last seven rows |
+| `moving_sum(sum(trades.PNL_1D), 5, trades.TRADE_DATE)` | a rolling five-day P&L |
+| `moving_sum(count(trades), 7, trades.TRADE_DATE)` | trades over the last seven rows |
 
 * **None:** None values are skipped.
 
@@ -1224,8 +1224,8 @@ The smallest value of the aggregate over the row and the n - 1 rows before it.
 
 | Example | What it says |
 |---|---|
-| `moving_min(sum(trades.mtm), 10, trades.tradeDate)` | the worst MTM of the last ten days |
-| `moving_min(min(trades.mtm), 3, trades.tradeDate)` | the worst trade over three days |
+| `moving_min(sum(trades.MTM), 10, trades.TRADE_DATE)` | the worst MTM of the last ten days |
+| `moving_min(min(trades.MTM), 3, trades.TRADE_DATE)` | the worst trade over three days |
 
 * **None:** None values are skipped.
 
@@ -1246,7 +1246,7 @@ The largest value of the aggregate over the row and the n - 1 rows before it.
 | Example | What it says |
 |---|---|
 | `moving_max(max(netting_sets.UTILISATION), 5, netting_sets.businessDate)` | peak utilisation over five days |
-| `moving_max(sum(trades.mtm), 20, trades.tradeDate)` | the 20-day high of MTM |
+| `moving_max(sum(trades.MTM), 20, trades.TRADE_DATE)` | the 20-day high of MTM |
 
 * **None:** None values are skipped.
 
@@ -1264,8 +1264,8 @@ The same as running(agg, date).
 
 | Example | What it says |
 |---|---|
-| `cumulative(sum(trades.notional), trades.tradeDate)` | notional so far |
-| `cumulative(count(trades), trades.tradeDate)` | trades so far |
+| `cumulative(sum(trades.NOTIONAL), trades.TRADE_DATE)` | notional so far |
+| `cumulative(count(trades), trades.TRADE_DATE)` | trades so far |
 
 * **Types:** As running.
 
@@ -1390,7 +1390,7 @@ The aggregate in an edited filter context: add conditions (where=, a row conditi
 | Example | What it says |
 |---|---|
 | `calc(measure('MTM'), ignore=[desks.NAME])` | MTM ignoring the desk slicer and the desk of the row |
-| `calc(sum(trades.mtm), where=trades.status == 'Live')` | MTM of the live trades, whatever else is filtered |
+| `calc(sum(trades.MTM), where=trades.TRADE_STATUS != 'MATURED')` | MTM of the live trades, whatever else is filtered |
 | `calc(measure('MTM'), keep=[desks.REGION])` | MTM of the whole region of the row |
 | `calc(measure('MTM'), via='r_5')` | MTM along the settlement-date relationship |
 
@@ -1490,8 +1490,8 @@ The query's as-of date: the end of its dates (time.as-of, the window's end), els
 
 | Example | What it says |
 |---|---|
-| `sum(trades.notional, where=days_between(trades.tradeDate, asof()) <= 30)` | notional traded in the last 30 days |
-| `count(trades, where=trades.maturityDate <= shift_date(asof(), 30, unit='day'))` | trades maturing within 30 days |
+| `sum(trades.NOTIONAL, where=days_between(trades.TRADE_DATE, asof()) <= 30)` | notional traded in the last 30 days |
+| `count(trades, where=trades.MATURITY_DATE <= shift_date(asof(), 30, unit='day'))` | trades maturing within 30 days |
 
 * **Types:** Always a date.
 
@@ -1525,25 +1525,25 @@ These are the codes an expression can raise:
 
 | Code | When | Example | Fix |
 |---|---|---|---|
-| `DRS-9127` | the language, a scope or a type | `trades.mtm * 2` as a measure: *the column trades.mtm is outside an aggregate* | `wrap it: sum(trades.mtm)` |
-| `DRS-9127` | a positional argument where a keyword is required | `sum(trades.mtm, trades.status == 'Live')`: *sum() takes at most 1 argument before its keywords* | `name it: where=...` |
-| `DRS-9127` | a comparison with `None` | `trades.book == None` | `write x is None` |
-| `DRS-9127` | an aggregate in a row expression or rule | `sum(trades.mtm)` in `derive`: *an aggregate belongs in a measure* | make it a measure of the model |
-| `DRS-9127` | the old syntax or an old function name | `startsWith(trades.book, 'R')`: *'startsWith' is the old name* | `write startswith(...)` |
-| `DRS-9127` | a construct Python has and DEL does not ([section 3](#3-what-is-refused)) | `trades.mtm.sum()`: *method calls are not DEL* | `call the function on it: sum(trades.mtm)` |
+| `DRS-9127` | the language, a scope or a type | `trades.MTM * 2` as a measure: *the column trades.MTM is outside an aggregate* | `wrap it: sum(trades.MTM)` |
+| `DRS-9127` | a positional argument where a keyword is required | `sum(trades.MTM, trades.TRADE_STATUS != 'MATURED')`: *sum() takes at most 1 argument before its keywords* | `name it: where=...` |
+| `DRS-9127` | a comparison with `None` | `trades.PORTFOLIO == None` | `write x is None` |
+| `DRS-9127` | an aggregate in a row expression or rule | `sum(trades.MTM)` in `derive`: *an aggregate belongs in a measure* | make it a measure of the model |
+| `DRS-9127` | the old syntax or an old function name | `startsWith(trades.PORTFOLIO, 'R')`: *'startsWith' is the old name* | `write startswith(...)` |
+| `DRS-9127` | a construct Python has and DEL does not ([section 3](#3-what-is-refused)) | `trades.MTM.sum()`: *method calls are not DEL* | `call the function on it: sum(trades.MTM)` |
 | `DRS-9129` | a function or value of a later wave | `calc(measure('MTM'), ignore=ALL)`: *calc() arrives in wave B (filter context)* | — |
-| `DRS-9152` | a field or measure that does not exist for you (in an expression a hidden column is "not found", on purpose; a model query that names one answers `DRS-9163`) | `sum(trades.mtx)`: *no field 'trades.mtx'; did you mean trades.mtm?* | the suggested name |
-| `DRS-9161` | a filter, sort or `in` on a field masked for you | `count(trades, where=trades.mtm < 0)` as a reader without raw | filter on a field that is not masked |
+| `DRS-9152` | a field or measure that does not exist for you (in an expression a hidden column is "not found", on purpose; a model query that names one answers `DRS-9163`) | `sum(trades.MTX)`: *no field 'trades.MTX'; did you mean trades.MTM?* | the suggested name |
+| `DRS-9161` | a filter, sort or `in` on a field masked for you | `count(trades, where=trades.MTM < 0)` as a reader without raw | filter on a field that is not masked |
 | `DRS-9100` | the old expression syntax: refused (the default `drishti.bi.expr.legacy: refuse`); a warning only while a site sets `legacy: warn` | `[MTM] / [Trades]` | `write: measure('MTM') / measure('Trades')` |
 | `DRS-9190` | the converter could not keep the meaning of an old expression (it then leaves it as it was) | — | rewrite it by hand |
-| `DRS-9158` | (at query time) a sum across currencies | `sum(trades.notional)` by desk, several currencies | group or filter by the currency |
+| `DRS-9158` | (at query time) a sum across currencies | `sum(trades.NOTIONAL)` by desk, several currencies | group or filter by the currency |
 
-Captured from the server (2.2.0), checking `trades.mtm * 2` as a measure:
+Captured from the server (2.2.0), checking `trades.MTM * 2` as a measure:
 
 ```json
 {"code": "DRS-9127", "level": "error",
- "message": "the column trades.mtm is outside an aggregate: a measure has one value per group, not per row",
- "fix": "wrap it: sum(trades.mtm)", "at": {"start": 0, "end": 10}}
+ "message": "the column trades.MTM is outside an aggregate: a measure has one value per group, not per row",
+ "fix": "wrap it: sum(trades.MTM)", "at": {"start": 0, "end": 10}}
 ```
 
 and `[MTM] / [Trades]` once the old syntax is refused:
@@ -1561,12 +1561,12 @@ and, for a measure, also compiles it the way publishing a model would — withou
 what is wrong ([API_GUIDE.md](API_GUIDE.md#expressions-apiv1biexpr)).
 
 ```bash
-drishti.py bi expr validate "sum(trades.notional, where=trades.desk == 'DESK-A') / measure('m_trades')" --model lang-model@1
+drishti.py bi expr validate "sum(trades.NOTIONAL, where=trades.DESK == 'DESK-RATES') / measure('Trades')" --model trading-risk
 # valid  (del2, aggregate scope, type decimal)
-drishti.py bi expr validate "trades.notional * 2" --model lang-model@1
+drishti.py bi expr validate "trades.NOTIONAL * 2" --model trading-risk
 # INVALID  (del2, aggregate scope, type number)
-#   error   DRS-9127  at 0-15: the column trades.notional is outside an aggregate: a measure has one value per group, not per row
-#       fix: wrap it: sum(trades.notional)
+#   error   DRS-9127  at 0-15: the column trades.NOTIONAL is outside an aggregate: a measure has one value per group, not per row
+#       fix: wrap it: sum(trades.NOTIONAL)
 drishti.py bi expr functions --scope row          # the functions you may use in a derived column
 drishti.py bi expr convert "[MTM] / [Trades]"     # measure('MTM') / measure('Trades')
 ```
@@ -1642,16 +1642,16 @@ dataset (its implicit model and alias):
 
 | DAX | DEL |
 |---|---|
-| `SUM(Trades[MTM])` | `sum(trades.mtm)` |
-| `CALCULATE(SUM(Trades[MTM]), Trades[Status] = "Live")` | `sum(trades.mtm, where=trades.status == 'Live')` |
+| `SUM(Trades[MTM])` | `sum(trades.MTM)` |
+| `CALCULATE(SUM(Trades[MTM]), Trades[TRADE_STATUS] <> "MATURED")` | `sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')` |
 | `COUNTROWS(Trades)` | `count(trades)` |
 | `DISTINCTCOUNT(Trades[Counterparty])` | `distinct(trades.COUNTERPARTY)` |
 | `DIVIDE([MTM], [Notional])` | `measure('MTM') / measure('Notional')` (or `ratio(...)`: `None` on 0) |
 | `IF([MTM] > 0, [MTM], 0)` | `measure('MTM') if measure('MTM') > 0 else 0` |
-| `TOTALYTD(SUM(Trades[PnL]), Trades[TradeDate])` | `ytd(sum(trades.pnl1d), trades.tradeDate)` |
-| `CALCULATE([MTM], SAMEPERIODLASTYEAR(Dates[Date]))` | `same_period_last_year(sum(trades.mtm), trades.tradeDate)` |
+| `TOTALYTD(SUM(Trades[PnL]), Trades[TradeDate])` | `ytd(sum(trades.PNL_1D), trades.TRADE_DATE)` |
+| `CALCULATE([MTM], SAMEPERIODLASTYEAR(Dates[Date]))` | `same_period_last_year(sum(trades.MTM), trades.TRADE_DATE)` |
 | `RANKX(ALL(Desks), [MTM])` | `rank(measure('MTM'))` (over the answer's rows) |
-| `PERCENTILE.INC(Trades[MTM], 0.5)` | `percentile(trades.mtm, 0.5)` |
+| `PERCENTILE.INC(Trades[MTM], 0.5)` | `percentile(trades.MTM, 0.5)` |
 | `RELATED(Desks[Name])` (calculated column) | `related(desk.name)` in a dataset's `derive` |
 | `CALCULATE([MTM], ALL(Desks[Name]))` | `calc(measure('MTM'), ignore=[desks.NAME])` *(wave B)* |
 | `DIVIDE([MTM], CALCULATE([MTM], ALL(Trades)))` | `share_of(measure('MTM'), over=ALL)` *(wave B)* — of what *you* may see |
@@ -1664,21 +1664,21 @@ There is no context transition: iteration is explicit (`avg_by`, wave B), so a m
 
 Until 2.2.0, expressions used a Rachana-EL-flavoured syntax. From the end of wave A it is refused (`drishti.bi.expr.legacy: refuse`, the default),
 with the DEL v2 text as the fix; a site still converting its own items may set `legacy: warn` to read it with a `DRS-9100` warning meanwhile. An item
-that declares `expressions: 2` refuses it whatever the setting. A text that is already DEL v2 but wrong (say `rank(trades.mtm)`) gets its DEL v2 problem,
+that declares `expressions: 2` refuses it whatever the setting. A text that is already DEL v2 but wrong (say `rank(trades.MTM)`) gets its DEL v2 problem,
 not `DRS-9100`. A rule written as a YAML boolean (`where: true`) is read as `True`.
 
 | Old syntax | DEL v2 |
 |---|---|
-| `sum(trades.mtm, trades.status == 'Live')` | `sum(trades.mtm, where=trades.status == 'Live')` |
+| `sum(trades.MTM, trades.TRADE_STATUS != 'MATURED')` | `sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')` |
 | `[P&L 1d] / [Exposure (EE peak)]` | `measure('P&L 1d') / measure('Exposure (EE peak)')` |
 | `c ? a : b`, `if(c, a, b)` | `a if c else b` |
 | `&&`, `\|\|`, `!` | `and`, `or`, `not` |
 | `a = b` (equality) | `a == b` |
 | `x in ('A', 'B')` | `x in ['A', 'B']` |
 | `true`, `false`, `null`; `x == null` | `True`, `False`, `None`; `x is None` |
-| `trades.desk in user.desks` | unchanged |
+| `trades.DESK in user.desks` | unchanged |
 | `startsWith(s, p)`, `length(s)` | `startswith(s, p)`, `len(s)` |
-| `rank(sum(x), 'asc')`, `lag(agg, 1, d, trades.desk)` | `rank(sum(x), desc=False)`, `lag(agg, 1, d, by=[trades.desk])` |
+| `rank(sum(x), 'asc')`, `lag(agg, 1, d, trades.DESK)` | `rank(sum(x), desc=False)`, `lag(agg, 1, d, by=[trades.DESK])` |
 
 **How it converts.** The old parser reads the expression into a tree; a printer writes the tree as DEL v2 (never a text substitution); the DEL v2
 parser reads it back, and the converter asserts that both compile to the **same tree, hence the same SQL**. Every shipped item is converted this
@@ -1690,7 +1690,8 @@ drishti.py bi migrate --expressions config/bi --write           # rewrite in pla
 drishti.py bi migrate --expressions config/bi --check           # CI: exit 1 while a file still has the old syntax
 ```
 
-Captured (two files of the 2.1 BI folder):
+Captured in 2.2, on two files of the 2.1 BI folder before they were converted (the shipped items have no old syntax left: today the same
+command ends `40 file(s), 0 with old-syntax expressions`):
 
 ```
 config/bi/datasets/trades-basic.dataset.yaml: would change (1 of 5 expressions)
@@ -1717,7 +1718,7 @@ drishti.py bi migrate --expressions --dry-run     # the server's stored items: w
 drishti.py bi migrate --expressions               # convert them (bi-admin); exit 1 while an item cannot be converted
 ```
 
-Captured (a store holding three items saved by 2.1, one of them with a typing slip):
+Captured in 2.2 (a store holding three items saved by 2.1 over the 2.1 sample fields, one of them with a typing slip):
 
 ```
 dataset 'it-published' (it-published, published): would convert

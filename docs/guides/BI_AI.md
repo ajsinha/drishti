@@ -166,7 +166,7 @@ POST /api/v1/bi/ai/explain  {"report": "file:report:trades-overview", "page": "o
   "lineage": { "dataset": {"name": "trades-basic", "title": "Trades, the basics", "version": 1},
                "measure": {"name": "Notional", "expr": "sum(trade.notional)", "description": "Total notional of the trades, ..."},
                "columns": [{"name": "trade.notional", "type": "decimal", "calculated": false, "expr": null}],
-               "sources": [{"table": "trade", "kind": "trade", "connector": "trading-store", "mode": "cached"}] },
+               "sources": [{"table": "trade", "kind": "trade", "connector": "trade-endur", "mode": "cached"}] },
   "value": 234000000.0,
   "breakdown": [ {"dimension": "trade.desk", "members": [{"member": "DESK-FX", "value": 79000000.0, "share": 33.8},
                                                       {"member": "DESK-FI", "value": 78000000.0, "share": 33.3}, ...]},
