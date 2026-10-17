@@ -105,6 +105,7 @@ body.terminal { font-size: 14px; }
 .tab-part { margin: .2rem 0 .9rem; }
 .tab-part-h { font-size: .85rem; font-weight: 700; margin: .5rem 0 .3rem; color: var(--d-muted); }
 .tab-part .tbl-wrap { overflow-x: auto; }
+.tab-part .chart { height: 150px; }
 .rows, .prov { margin: 0; }
 .rows > div, .prov > div { display: flex; justify-content: space-between; gap: 1rem; padding: .18rem 0; }
 .rows dt, .prov dt { color: var(--d-muted); font-weight: 400; }
@@ -525,6 +526,8 @@ body.embed .vhead { padding: .6rem .8rem; }
 .sw-pos { background: var(--d-pos); } .sw-neg { background: var(--d-neg); } .sw-link { background: var(--d-link); }
 .sw-ok { background: var(--d-ok); } .sw-warn { background: var(--d-warn); } .sw-bad { background: var(--d-bad); }
 .legend .mono { color: var(--d-ink); }
+.chart.xchart.xchart-donut { height: 200px; }
+.donut-legend { flex-wrap: wrap; gap: .3rem 1rem; }
 .pnl-note { margin: .3rem 0 0; color: var(--d-muted); font-size: .8rem; }
 .tl { list-style: none; margin: 0; padding: 0 0 0 .2rem; }
 .tl-i { position: relative; padding: 0 0 .7rem 1.3rem; border-left: 2px solid var(--d-border); margin-left: .35rem; color: var(--d-ink) !important; }

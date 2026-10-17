@@ -73,6 +73,27 @@ class ElTest {
     }
 
     @Test
+    void groupSumsByAKeyAndDaysCountFromTheViewsBusinessDate() {
+        DataNode doc = new JsonCodec().read("""
+                {"EVENTS":[{"EVENT_DATE":"2026-10-20","AMOUNT":"-1500.5","LEG":{"ID":1}},{"EVENT_DATE":"2026-10-20","AMOUNT":2000,"LEG":{"ID":2}},
+                           {"EVENT_DATE":"2026-11-03","AMOUNT":"","LEG":{"ID":1}},{"EVENT_DATE":"","AMOUNT":7},{"EVENT_DATE":"2027-01-15","AMOUNT":"x"}]}""");
+        EvalContext at = EvalContext.of(doc, F).withToday(java.time.LocalDate.of(2026, 10, 16));
+        java.util.function.Function<String, Object> ev = src -> Values.simplify(EL.compile(src).eval(at));
+        assertThat(ev.apply("size(group($.EVENTS, 'EVENT_DATE', 'AMOUNT'))")).isEqualTo(3L);              // a blank key is left out
+        assertThat(ev.apply("group($.EVENTS, 'EVENT_DATE', 'AMOUNT')[0].value")).isEqualTo(499.5);       // number-like text counts
+        assertThat(ev.apply("group($.EVENTS, 'EVENT_DATE', 'AMOUNT')[0].count")).isEqualTo(2L);
+        assertThat(ev.apply("group($.EVENTS, 'EVENT_DATE', 'AMOUNT', 'month')[1].label")).isEqualTo("2026-11");
+        assertThat(ev.apply("group($.EVENTS, 'EVENT_DATE', '', 'year')[0].value")).isEqualTo(3L);        // no value field: the count
+        assertThat(ev.apply("group($.EVENTS, 'LEG.ID')[0].label")).isEqualTo("1");                        // a dotted key
+        assertThat(ev.apply("group($.nope, 'x')")).isNull();
+        assertThat(ev.apply("today()")).isEqualTo("2026-10-16");
+        assertThat(ev.apply("days(today(), $.EVENTS[2].EVENT_DATE)")).isEqualTo(18L);
+        assertThat(ev.apply("size($.EVENTS[?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7])")).isEqualTo(2L);
+        assertThat(ev.apply("days('2026-10-16T09:00:00Z', 'soon')")).isNull();
+        assertThat(eval("today()")).isNull();                                                              // outside a view
+    }
+
+    @Test
     void rowContextAndBareIdentifiers() {
         EvalContext row = EvalContext.of(DOC, F).withRow(DOC.at("legs[1]"), 1);
         assertThat(Values.simplify(EL.compile("label + ' #' + #index").eval(row))).isEqualTo("Receive SOFR #1");

@@ -134,15 +134,27 @@ public sealed interface PanelData {
      * @param limitLabel caption for the limit
      * @param source the entity the points came from, or null
      * @param unit axis unit
+     * @param step drawn as steps (a value holds until the next point: a notional schedule), or null for a plain line
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     record Chart(List<String> x, List<Series> series, String mark, String markText, Double limit, String limitLabel,
-            LinkView source, String unit) implements PanelData {}
+            LinkView source, String unit, Boolean step) implements PanelData {
+
+        public Chart(List<String> x, List<Series> series, String mark, String markText, Double limit, String limitLabel, LinkView source, String unit) {
+            this(x, series, mark, markText, limit, limitLabel, source, unit, null);
+        }
+    }
 
     record Series(String label, List<Double> values, String tone) {}
 
     /** {@code hbar}: bars scaled to the largest absolute value. */
-    record Bars(List<Bar> bars) implements PanelData {}
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    record Bars(List<Bar> bars, String shape, String total) implements PanelData {
+
+        public Bars(List<Bar> bars) {
+            this(bars, null, null);
+        }
+    }
 
     record Bar(String label, double value, String text, String tone) {}
 

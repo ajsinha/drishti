@@ -100,7 +100,8 @@ class NestedTabsTest {
     @Test
     void aPanelInATabNeedsAnIdAndAKindATabCanHold() {
         assertThat(problems("- { kind: kv }\n")).anyMatch(p -> p.startsWith("DRS-2010"));
-        assertThat(problems("- { id: curve, kind: line, rows: \"@.points\", x: t, y: v }\n")).anyMatch(p -> p.startsWith("DRS-2023") && p.contains("cannot sit inside a tab"));
+        assertThat(problems("- { id: curve, kind: line, rows: \"@.points\", x: t, y: v, step: true }\n")).isEmpty();               // a leg's own chart
+        assertThat(problems("- { id: surf, kind: surface, rows: \"@.points\", y: v }\n")).anyMatch(p -> p.startsWith("DRS-2023") && p.contains("cannot sit inside a tab"));
         assertThat(problems("- { id: more, kind: tabs, each: \"@.x\" }\n")).anyMatch(p -> p.startsWith("DRS-2023"));
     }
 

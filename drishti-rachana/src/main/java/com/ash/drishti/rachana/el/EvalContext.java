@@ -28,14 +28,23 @@ import com.ash.drishti.rachana.format.Formats;
  * @param index position of the row, or -1
  * @param formats named formats
  */
-public record EvalContext(DataNode root, Object row, int index, Formats formats, java.util.Map<String, Object> ctl) {
+public record EvalContext(DataNode root, Object row, int index, Formats formats, java.util.Map<String, Object> ctl, java.time.LocalDate today) {
 
     public EvalContext {
         ctl = ctl == null ? java.util.Map.of() : ctl;
     }
 
+    public EvalContext(DataNode root, Object row, int index, Formats formats, java.util.Map<String, Object> ctl) {
+        this(root, row, index, formats, ctl, null);
+    }
+
     public EvalContext(DataNode root, Object row, int index, Formats formats) {
         this(root, row, index, formats, java.util.Map.of());
+    }
+
+    /** The same context for a view of this business date: {@code today()} reads it (null outside a view). */
+    public EvalContext withToday(java.time.LocalDate date) {
+        return new EvalContext(root, row, index, formats, ctl, date);
     }
 
     public static EvalContext of(DataNode root, Formats formats) {
@@ -43,7 +52,7 @@ public record EvalContext(DataNode root, Object row, int index, Formats formats,
     }
 
     public EvalContext withRow(Object row, int index) {
-        return new EvalContext(root, row, index, formats, ctl);
+        return new EvalContext(root, row, index, formats, ctl, today);
     }
 
     /**
@@ -51,6 +60,6 @@ public record EvalContext(DataNode root, Object row, int index, Formats formats,
      * list of text for a multi-select, a whole number for top-n, {@code from..to} text for a range.
      */
     public EvalContext withControls(java.util.Map<String, Object> values) {
-        return new EvalContext(root, row, index, formats, values);
+        return new EvalContext(root, row, index, formats, values, today);
     }
 }

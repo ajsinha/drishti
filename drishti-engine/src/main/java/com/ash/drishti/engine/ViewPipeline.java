@@ -391,7 +391,9 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
 
         EntityDocument seen = seen(doc, redact);                      // values: as the caller may see them
         ControlResolver.Resolved resolved = controls.resolve(layout.sutra(), EvalContext.of(seen.data(), formats), values, asOf, mayOpen);
-        EvalContext eval = resolved.apply(EvalContext.of(seen.data(), formats));   // ctl.<id>: the controls' values for this build
+        java.time.LocalDate today = doc.provenance() != null && doc.provenance().businessDate() != null ? doc.provenance().businessDate()
+                : asOf.businessDate() != null ? asOf.businessDate() : dates.current();
+        EvalContext eval = resolved.apply(EvalContext.of(seen.data(), formats)).withToday(today);   // ctl.<id>: the controls' values; today(): the date
         List<LinkRef> links = catalog.discover(seen.data(), ref);
         Set<EntityRef> wanted = new LinkedHashSet<>();
         Set<EntityRef> denied = new HashSet<>();

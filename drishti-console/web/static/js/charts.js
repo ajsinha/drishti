@@ -346,7 +346,20 @@
     });
   }
 
-  var BUILD = { waterfall: waterfall, histogram: histogram, scatter: scatter, candlestick: candlestick, graph: graph };
+  /** hbar with shape: donut: each row's share of the whole as a ring, the total (as the server formatted it) in the middle. */
+  function donut(d, t) {
+    var bars = (d.bars || []).filter(function (b) { return num(b.value); }), colours = palette(t);
+    return {
+      animationDuration: 400,
+      tooltip: tooltip(t, { trigger: 'item', formatter: function (p) { return esc(p.name) + ': <b>' + esc(p.data.text) + '</b> (' + p.percent + '%)'; } }),
+      title: { text: d.total || '', left: 'center', top: 'middle', textStyle: { color: t.ink, fontSize: 13, fontWeight: 600 } },
+      series: [{ type: 'pie', radius: ['52%', '78%'], avoidLabelOverlap: true, label: { show: false },
+        itemStyle: { borderColor: t.surface, borderWidth: 1 },
+        data: bars.map(function (b, i) { return { name: b.label, value: Math.abs(b.value), text: b.text, itemStyle: { color: colours[i % colours.length] } }; }) }]
+    };
+  }
+
+  var BUILD = { waterfall: waterfall, histogram: histogram, scatter: scatter, candlestick: candlestick, graph: graph, donut: donut };
 
   function draw(root, options) {
     if (!window.echarts) { return; }

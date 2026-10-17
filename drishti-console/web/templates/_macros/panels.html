@@ -217,6 +217,17 @@
 </ul>
 {%- endmacro %}
 
+{# hbar with shape: donut: each row's share of the total as a ring (static/js/charts.js), the total in the middle; the rows with their
+   amounts and shares stay under it as a list, so nothing is only in the picture. #}
+{% macro donut(p) -%}
+{% set d = p.data %}{% set ok = (d.bars or []) | selectattr('value', 'number') | list %}
+{% set whole = (ok | map(attribute='value') | map('abs') | sum) or 1 %}
+<div class="chart xchart xchart-donut" data-xchart="{{ d | tojson | forceescape }}" data-kind="donut" role="img"
+     aria-label="{{ p.title or 'hbar' }}: {{ ok | length }} shares of {{ d.total or '' }}"></div>
+<ul class="legend donut-legend">{% for b in ok %}<li><span class="sw sw-{{ ['link', 'accent', 'ok', 'neg', 'warn', 'bad', 'muted', 'ink'][loop.index0 % 8] }}"></span>{{ b.label }}
+  <span class="mono">{{ b.text }} · {{ ((b.value | abs) / whole * 100) | round(1) }}%</span></li>{% endfor %}</ul>
+{%- endmacro %}
+
 {% macro links(d) -%}
 <ul class="links">
   {% for l in (d.links or []) %}<li class="lk-{{ l.status }}"><span class="lk-label">{{ l.label }}</span>
@@ -344,6 +355,7 @@
   {% elif p.kind in ['table', 'ladder'] %}{% if p.data.levels %}{{ drill(p) }}{% else %}{{ pivotable(p) }}{% endif %}
   {% elif p.kind == 'tabs' %}{{ tabs(p) }}
   {% elif p.kind in ['line', 'area'] %}{{ chart(p) }}
+  {% elif p.kind == 'hbar' and p.data.shape == 'donut' %}{{ donut(p) }}
   {% elif p.kind == 'hbar' %}{{ bars(p.data) }}
   {% elif p.kind == 'surface' %}{{ surface(p) }}
   {% elif p.kind == 'links' %}{{ links(p.data) }}

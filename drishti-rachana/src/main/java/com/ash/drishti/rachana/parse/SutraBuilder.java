@@ -300,9 +300,12 @@ final class SutraBuilder {
                 columns, body, options, loc(n), parts);
     }
 
-    /** Panels a tab may hold: those that read a record or a list and draw no chart of their own. */
+    /**
+     * Panels a tab may hold: those that read a record or a list, and the simple charts of one element (a leg's notional profile and
+     * fixings as lines, its flows as bars), so legs side by side each show their own.
+     */
     private static final Set<PanelKind> TAB_PARTS = Set.of(PanelKind.KV, PanelKind.STATUS, PanelKind.TABLE, PanelKind.LADDER,
-            PanelKind.HBAR, PanelKind.MARKDOWN, PanelKind.METRIC);
+            PanelKind.HBAR, PanelKind.MARKDOWN, PanelKind.METRIC, PanelKind.LINE, PanelKind.AREA, PanelKind.TIMELINE);
 
     /** The {@code panels:} of a tabs panel: each needs an id (unique among them) and a kind a tab can hold. */
     private List<Panel> parts(PNode list) {
@@ -318,7 +321,7 @@ final class SutraBuilder {
                 continue;
             }
             if (part.kind() != null && !TAB_PARTS.contains(part.kind())) {
-                problem("DRS-2023", "a '" + part.kind().id() + "' panel cannot sit inside a tab; use one of kv, status, table, ladder, hbar, markdown, metric", n);
+                problem("DRS-2023", "a '" + part.kind().id() + "' panel cannot sit inside a tab; use one of kv, status, table, ladder, hbar, markdown, metric, line, area, timeline", n);
             }
             if (part.options().containsKey(Panel.PIVOT)) {
                 problem("DRS-2023", "a panel inside a tab cannot have a Pivot tab; put the table in a panel of its own", n);

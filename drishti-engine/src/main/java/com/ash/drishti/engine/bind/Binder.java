@@ -650,7 +650,7 @@ public final class Binder {
                     + (unit.isEmpty() || unit.equals("%") ? unit : " " + unit);
         }
         return new PanelData.Chart(xs, List.of(new PanelData.Series(p.title(), ys, "link")), mark, markText, null, null, source,
-                p.option("unit").orElse(null));
+                p.option("unit").orElse(null), "true".equals(p.option("step").orElse(null)) ? Boolean.TRUE : null);
     }
 
     private PanelData area(Panel p, BindContext c) {
@@ -684,16 +684,19 @@ public final class Binder {
         String fmt = p.option("fmt").orElse(null);
         String tone = p.option("tone").orElse(null);
         List<PanelData.Bar> bars = new ArrayList<>();
+        double total = 0;
         for (int i = 0; i < rows.size(); i++) {
             DataNode r = rows.get(i);
             double v = Values.number(r.get(value));
             if (!Double.isFinite(v)) {
                 continue;   // a row without a usable number is not a bar
             }
+            total += v;
             bars.add(new PanelData.Bar(r.get(label).asText(), v, formats.format(fmt, Values.normalise(v)),
                     tone == null ? (v < 0 ? "neg" : "pos") : Tones.resolve(tone, v)));
         }
-        return new PanelData.Bars(bars);
+        String shape = p.option("shape").filter("donut"::equals).orElse(null);
+        return new PanelData.Bars(bars, shape, shape == null ? null : formats.format(fmt, Values.normalise(total)));
     }
 
     private PanelData links(BindContext c) {

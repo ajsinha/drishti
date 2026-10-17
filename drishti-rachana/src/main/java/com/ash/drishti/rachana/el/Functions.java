@@ -34,7 +34,8 @@ public final class Functions {
             Map.entry("contains", new int[] {2, 2}), Map.entry("startsWith", new int[] {2, 2}),
             Map.entry("matches", new int[] {2, 2}), Map.entry("matchesCase", new int[] {2, 2}),
             Map.entry("within", new int[] {2, 2}), Map.entry("oneOf", new int[] {2, 2}),
-            Map.entry("flatten", new int[] {1, 1}), Map.entry("nonblank", new int[] {1, 8}));
+            Map.entry("flatten", new int[] {1, 1}), Map.entry("nonblank", new int[] {1, 8}),
+            Map.entry("group", new int[] {2, 4}), Map.entry("days", new int[] {2, 2}), Map.entry("today", new int[] {0, 0}));
 
     private static final Map<String, ElFunction> FUNCTIONS = Map.ofEntries(
             Map.entry("link", Functions::link), Map.entry("size", (a, c) -> size(a.get(0))),
@@ -53,7 +54,96 @@ public final class Functions {
             Map.entry("within", (a, c) -> within(a.get(0), Values.text(a.get(1)))),
             Map.entry("oneOf", (a, c) -> oneOf(a.get(0), a.get(1))),
             Map.entry("flatten", (a, c) -> flatten(a.get(0))),
-            Map.entry("nonblank", (a, c) -> a.stream().filter(v -> !Values.isNull(v) && !Values.text(Values.simplify(v)).isBlank()).findFirst().orElse(null)));
+            Map.entry("nonblank", (a, c) -> a.stream().filter(v -> !Values.isNull(v) && !Values.text(Values.simplify(v)).isBlank()).findFirst().orElse(null)),
+            Map.entry("group", Functions::group), Map.entry("days", (a, c) -> days(a.get(0), a.get(1))),
+            Map.entry("today", (a, c) -> c.today() == null ? null : c.today().toString()));
+
+    /** The most groups {@code group(...)} returns: a chart or table of groups stays readable and the work stays bounded. */
+    static final int MAX_GROUPS = 500;
+
+    /**
+     * {@code group(list, 'key', 'value'?, 'by'?)}: the list's elements grouped by the field {@code key} (a dotted path), one row
+     * {@code {label, value, count}} per distinct key in key order: {@code value} the sum of the field {@code value} over the group
+     * (non-numbers, blanks and number-like text read as numbers; the count when no value field is given), {@code count} its
+     * elements. {@code by} cuts an ISO date key to its {@code month} (2026-10) or {@code year} (2026) first. Elements without a key
+     * are left out; empty for anything but a list. A masked value makes the group's value masked.
+     */
+    private static Object group(java.util.List<Object> a, EvalContext c) {
+        if (!(Values.simplify(a.get(0)) instanceof DataNode.Arr arr)) {
+            return null;
+        }
+        String key = Values.text(a.get(1));
+        String value = a.size() > 2 && !Values.isNull(a.get(2)) && !Values.text(a.get(2)).isBlank() ? Values.text(a.get(2)) : null;
+        String by = a.size() > 3 ? Values.text(a.get(3)) : "";
+        java.util.TreeMap<String, double[]> groups = new java.util.TreeMap<>();
+        java.util.Set<String> masked = new java.util.HashSet<>();
+        for (DataNode e : arr.elements()) {
+            String k = path(e, key).asText();
+            if (k == null || k.isBlank()) {
+                continue;
+            }
+            k = "month".equals(by) && k.length() >= 7 ? k.substring(0, 7) : "year".equals(by) && k.length() >= 4 ? k.substring(0, 4) : k;
+            if (!groups.containsKey(k) && groups.size() >= MAX_GROUPS) {
+                continue;
+            }
+            double[] g = groups.computeIfAbsent(k, x -> new double[2]);
+            g[1]++;
+            if (value == null) {
+                g[0]++;
+                continue;
+            }
+            DataNode v = path(e, value);
+            if (v.isMasked()) {
+                masked.add(k);
+            }
+            double d = v.asDouble();
+            if (Double.isNaN(d) && v.type() == com.ash.drishti.api.NodeType.STRING) {
+                try {
+                    d = Double.parseDouble(v.asText().trim());
+                } catch (NumberFormatException ignored) {
+                    d = Double.NaN;
+                }
+            }
+            if (!Double.isNaN(d)) {
+                g[0] += d;
+            }
+        }
+        java.util.List<DataNode> out = new java.util.ArrayList<>(groups.size());
+        groups.forEach((k, g) -> {
+            java.util.Map<String, Object> row = new java.util.LinkedHashMap<>();
+            row.put("label", k);
+            row.put("value", masked.contains(k) ? null : Values.normalise(g[0]));
+            row.put("count", (long) g[1]);
+            out.add(DataNode.of(row));
+        });
+        return new DataNode.Arr(java.util.List.copyOf(out));
+    }
+
+    private static DataNode path(DataNode e, String dotted) {
+        return e.at(dotted);
+    }
+
+    /**
+     * {@code days(from, to)}: whole calendar days from one ISO date to another (a timestamp counts by its date), negative when
+     * {@code to} is earlier; empty when either is not a date. {@code days(today(), @.PAYMENT_DATE)} is how far off a payment is.
+     */
+    private static Object days(Object from, Object to) {
+        java.time.LocalDate a = date(from);
+        java.time.LocalDate b = date(to);
+        return a == null || b == null ? null : (Object) java.time.temporal.ChronoUnit.DAYS.between(a, b);
+    }
+
+    private static java.time.LocalDate date(Object v) {
+        String t = Values.text(Values.simplify(v)).trim();
+        if (t.length() < 10) {
+            return null;
+        }
+        try {
+            return java.time.LocalDate.parse(t.substring(0, 10));
+        } catch (java.time.format.DateTimeParseException e) {
+            return null;
+        }
+    }
 
     /**
      * {@code flatten(list)}: a list of lists made one list ({@code flatten($.legs[*].cashflows)} is every cashflow of every leg, in

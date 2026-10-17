@@ -41,15 +41,17 @@ public final class PanelOptions {
      * themes, which colour-blind readers tell apart). Totals are neutral either way.
      */
     public static final List<String> WATERFALL_COLORS = List.of("gain-loss", "theme");
+    /** How an hbar panel draws its rows: bars (the default), or a donut of each row's share of the total. */
+    public static final List<String> BAR_SHAPES = List.of("bars", "donut");
     /** The most bins a histogram may ask for. */
     public static final int MAX_BINS = 200;
 
     private static final Map<PanelKind, Map<String, List<String>>> CHOICES = Map.of(
             PanelKind.PIVOT, Map.of("agg", AGGREGATIONS),
             PanelKind.GRAPH, Map.of("layout", GRAPH_LAYOUTS),
-            PanelKind.WATERFALL, Map.of("colors", WATERFALL_COLORS));
+            PanelKind.WATERFALL, Map.of("colors", WATERFALL_COLORS), PanelKind.HBAR, Map.of("shape", BAR_SHAPES));
     private static final Map<PanelKind, Set<String>> BOOLEANS = Map.of(PanelKind.PIVOT, Set.of("heat", "totals"),
-            PanelKind.TABLE, Set.of("search"), PanelKind.LADDER, Set.of("search"));
+            PanelKind.TABLE, Set.of("search"), PanelKind.LADDER, Set.of("search"), PanelKind.LINE, Set.of("step"));
     /** Options that name a list (or one object) by an expression: a number, a truth value or a YAML list never is one. */
     private static final Set<String> LIST_EXPRESSIONS = Set.of("rows", "each", "nodes", "edges", "source", "children");
     /** What {@code expand: all} stands for: levels of a tree shown open (more than any tree is deep). */

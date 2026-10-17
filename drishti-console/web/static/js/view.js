@@ -77,6 +77,7 @@
       var o = { type: 'line', name: s.label, data: s.values, connectNulls: false, smooth: false, symbol: 'circle', symbolSize: 5,
         lineStyle: { width: 1.6, color: tone(s.tone) }, itemStyle: { color: tone(s.tone) } };
       if (area) { o.areaStyle = { color: tone(s.tone), opacity: .12 }; o.symbol = 'none'; }
+      if (d.step) { o.step = 'end'; o.symbol = 'none'; }               // a schedule: a value holds until the next date
       if (d.mark) {
         var i = d.x.indexOf(d.mark);
         if (i >= 0) { o.markPoint = { symbol: 'circle', symbolSize: 10, itemStyle: { color: t.accent }, label: { show: false }, data: [{ coord: [i, s.values[i]] }] }; }
