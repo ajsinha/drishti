@@ -372,6 +372,12 @@ class LanguagesApiTest {
         JsonNode ok = ok(call("POST", "/api/v1/bi/sql/validate", reader("rita"), Map.of("model", "lang-model@1", "sql", statement)));
         assertThat(ok.path("valid").asBoolean()).isTrue();
         assertThat(ok.path("plan").asText()).isEqualTo(viaPlan("rita"));
+        JsonNode typed = ok(call("POST", "/api/v1/bi/sql/validate", reader("rita"), Map.of("model", "lang-model@1",
+                "sql", "SELECT trades.desk, COUNT(*) AS n, MEASURE('Trades') AS t, SUM(trades.notional) AS s, COUNT(DISTINCT trades.book) AS b FROM trades GROUP BY trades.desk")));
+        Map<String, String> types = new java.util.LinkedHashMap<>();
+        typed.path("columns").forEach(c -> types.put(c.path("name").asText(), c.path("type").asText()));
+        assertThat(types).as("a SQL view's check types a count as an integer").containsEntry("n", "integer").containsEntry("t", "integer").containsEntry("b", "integer")
+                .containsEntry("s", "decimal").containsEntry("trades.desk", "string");
         if (System.getProperty("capture") != null) {
             System.out.println("CAPTURE9 " + rita);
             System.out.println("CAPTURE10 " + explain.path("text").asText().replace("\n", " || "));
