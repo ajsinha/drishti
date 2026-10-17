@@ -186,6 +186,7 @@
         body.appendChild(row);
       });
     });
+    drawPivot();                                   // the console works the slice out again (a field added, moved or removed)
   }
   /** A filter's values, as the console's last pivot listed them (the browser does not go through the rows). */
   X.distinct = {};
