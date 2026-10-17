@@ -20,11 +20,11 @@ dataset: rates-trades
 version: 1.0.0
 title: Rates trades
 description: The trades of the rates desk by desk and book, one row per trade per business date.
-source: { connector: trading-store, kind: trade }
-grain: { says: "One row per trade per business date", keys: [tradeId] }
+source: { connector: risk-store, kind: trade-valuation }
+grain: { says: "One row per trade per business date", keys: [TRADE_ID] }
 columns:
-  tradeId:  { type: string, role: key }
-  desk:     { type: string }
-  book:     { type: string }
-  notional: { type: decimal, format: amount0 }
-  mtm:      { type: decimal, format: signed0 }
+  TRADE_ID:  { type: string, role: key }
+  DESK:     { type: string }
+  PORTFOLIO:    { type: string }
+  NOTIONAL: { type: decimal, format: amount0 }
+  MTM:      { type: decimal, format: signed0 }

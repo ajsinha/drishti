@@ -17,7 +17,7 @@
 mq: 1
 model: live-trading@1
 select:
-  fields: [trade.desk]
+  fields: [trade.DESK]
   measures: [Trades, Notional, MTM, Worst trade]
 limit: 3
 options: { explain: true }

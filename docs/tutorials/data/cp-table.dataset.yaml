@@ -25,14 +25,14 @@ source:
     pnl: {model: cp-risk@1, select: {fields: [counterparty.id, counterparty.NAME, counterparty.SECTOR], measures: [MTM, Trades]}}
     exposure: {model: cp-risk@1, select: {fields: [counterparty.id], measures: [Exposure (EE peak)]}}
   params: {floor: 1.0}
-grain: {says: One row per counterparty, keys: [counterparty]}
+grain: {says: One row per counterparty, keys: [COUNTERPARTY]}
 time: {mode: snapshot}
 columns:
-  counterparty: {type: string, role: key, references: counterparty}
-  name: {type: string, role: attribute}
-  sector: {type: string, role: dimension}
-  mtm: {type: decimal, role: amount, additive: true, aggregate: sum, format: signed0}
-  trades: {type: integer, role: quantity, additive: true, aggregate: sum}
-  ee_peak: {type: decimal, role: amount, additive: true, aggregate: sum, format: amount0}
-  mtm_per_exposure: {type: decimal, role: ratio, additive: false, format: signed2}
-  exposure_rank: {type: decimal, role: attribute}
+  COUNTERPARTY: {type: string, role: key, references: counterparty}
+  NAME: {type: string, role: attribute}
+  SECTOR: {type: string, role: dimension}
+  MTM: {type: decimal, role: amount, additive: true, aggregate: sum, format: signed0}
+  TRADES: {type: integer, role: quantity, additive: true, aggregate: sum}
+  EE_PEAK: {type: decimal, role: amount, additive: true, aggregate: sum, format: amount0}
+  MTM_PER_EXPOSURE: {type: decimal, role: ratio, additive: false, format: signed2}
+  EXPOSURE_RANK: {type: decimal, role: attribute}

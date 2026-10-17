@@ -17,6 +17,27 @@
 
 ## Unreleased
 
+- **Wave B QA fixes.** A visual is never cut silently: *first 500 of N* with **Show all**, and a time series is asked by week, month,
+  quarter or year so its whole range fits (Trades overview's *Notional by trade date* covers every date; `trade.TRADE_DATE.month_start`
+  and the other period parts are dates). The Cashflow ladder's model is fixed: trades a dimension, legs, cashflows and the new payments
+  table many-to-one to it (so *by source system* works), *Net payments* and *Largest payment* in USD equivalent and signed (paid −,
+  received +), scheduled notional apart; the absurd 66.9 trillion was every period's principal in seven currencies added up, checked
+  against an independent sum of the test data. A cross-currency swap's exchange no longer books in the deal currency. A daily snapshot is
+  a state: over a window it takes the last date, never a sum of days; the trades carry `NOTIONAL` (first leg, its currency). A
+  calculation item keeps its own format (*Share* reads as a percent). Live chips say **Listening** until changes flow and **Too many live
+  queries: close a tab** when refused; a closed tab ends its standing queries (keepalive `DELETE`) and an unread one is dropped after 60 s
+  (`drishti.bi.mq.idle-close`). Counterparty, portfolio, legal-entity and index pages list every trade (paged, *Trades n of N*, a status
+  filter); a netting set holds only live trades (its MTM, EE and CVA too) and lists every member with its status; Compare wraps instead of
+  clipping and shows the changes inside cash flows, resets and events, each with where it sits; legs say Pay / receive from the booking
+  or from the side (a buyer pays fixed); a floating flow's rate is its fixings' average; a fixed leg has no empty fixings chart; product
+  types read in words with the code; trade search shows status and trade date; deal and counterparty headers wrap, never cut; Endur deals
+  always carry legal entity, UEN and trader, and cash deals their payments; KYC fields formatted, collateral signs labelled, a CSA links
+  its netting sets and collateral; the trail shows the last five views. Lakes screen and `drishti.py lake status`: every table with rows,
+  files, size, partitions, business dates, latest date and last build. Designer: a second measure added with a card selected starts a new
+  card, Escape deselects, Add forms empty after Add; the Quick calculation's balances default to the dataset's business date; the top-bar
+  date stops at today; the BI rail wraps on a phone; BI home lists an item once per section; no WARN for the optional `sutras` folder;
+  the macro store promotes the columns the economics models read. Tutorial data files use UPPER_SNAKE names; the demo ticker for tutorial
+  12 is documented (`DRISHTI_DEMO_ENABLED=true`).
 - **Committed test data and one command for the demo lakes.** `data/testdata/` (the one committed folder under `data/`, 21.5 MB
   of `.jsonl.gz`) holds seven business days of every dataset the seven packs read: 5,000 trades per source system (ENDUR with six
   look-alike counterparties, CALYPSO and MUREX samples and clones; unique ids; amendments and new bookings across the days) and

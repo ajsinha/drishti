@@ -20,12 +20,12 @@ dataset: trades-daily
 version: 1.0.0
 title: Trades refreshed daily
 description: The trades by desk, rebuilt on their own at 06:30 on business days.
-source: { connector: trading-store, kind: trade }
-grain: { says: "One row per trade per business date", keys: [tradeId] }
+source: { connector: risk-store, kind: trade-valuation }
+grain: { says: "One row per trade per business date", keys: [TRADE_ID] }
 refresh: "business-days 06:30"      # a schedule (daily 06:00, hourly, cron ...) or after-load: when the layers are rebuilt without anyone asking
 columns:
-  tradeId:  { type: string, role: key }
-  desk:     { type: string }
-  currency: { type: string }
-  notional: { type: decimal, format: amount0 }
-  mtm:      { type: decimal, format: signed0 }
+  TRADE_ID:  { type: string, role: key }
+  DESK:     { type: string }
+  CURRENCY: { type: string }
+  NOTIONAL: { type: decimal, format: amount0 }
+  MTM:      { type: decimal, format: signed0 }

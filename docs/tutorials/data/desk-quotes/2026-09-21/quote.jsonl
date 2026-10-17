@@ -1,6 +1,6 @@
-{"id": "Q-EURUSD", "instrument": "EUR/USD", "currency": "USD", "bid": 1.0834, "ask": 1.0839, "mid": 1.0836, "venue": "EBS", "asOf": "2026-09-21T17:00:00Z"}
-{"id": "Q-GBPUSD", "instrument": "GBP/USD", "currency": "USD", "bid": 1.2849, "ask": 1.2854, "mid": 1.2851, "venue": "EBS", "asOf": "2026-09-21T17:00:00Z"}
-{"id": "Q-USDJPY", "instrument": "USD/JPY", "currency": "JPY", "bid": 147.6413, "ask": 147.7003, "mid": 147.6708, "venue": "EBS", "asOf": "2026-09-21T17:00:00Z"}
-{"id": "Q-UST10Y", "instrument": "US Treasury 10Y", "currency": "USD", "bid": 97.6508, "ask": 97.6899, "mid": 97.6703, "venue": "EBS", "asOf": "2026-09-21T17:00:00Z"}
-{"id": "Q-BUND10Y", "instrument": "Bund 10Y", "currency": "EUR", "bid": 100.9602, "ask": 101.0006, "mid": 100.9804, "venue": "Bloomberg", "asOf": "2026-09-21T17:00:00Z"}
-{"id": "Q-WTI", "instrument": "WTI crude", "currency": "USD", "bid": 78.0654, "ask": 78.0966, "mid": 78.081, "venue": "Bloomberg", "asOf": "2026-09-21T17:00:00Z"}
+{"ID": "Q-EURUSD", "INSTRUMENT": "EUR/USD", "CURRENCY": "USD", "BID": 1.0834, "ASK": 1.0839, "MID": 1.0836, "VENUE": "EBS", "AS_OF": "2026-09-21T17:00:00Z"}
+{"ID": "Q-GBPUSD", "INSTRUMENT": "GBP/USD", "CURRENCY": "USD", "BID": 1.2849, "ASK": 1.2854, "MID": 1.2851, "VENUE": "EBS", "AS_OF": "2026-09-21T17:00:00Z"}
+{"ID": "Q-USDJPY", "INSTRUMENT": "USD/JPY", "CURRENCY": "JPY", "BID": 147.6413, "ASK": 147.7003, "MID": 147.6708, "VENUE": "EBS", "AS_OF": "2026-09-21T17:00:00Z"}
+{"ID": "Q-UST10Y", "INSTRUMENT": "US Treasury 10Y", "CURRENCY": "USD", "BID": 97.6508, "ASK": 97.6899, "MID": 97.6703, "VENUE": "EBS", "AS_OF": "2026-09-21T17:00:00Z"}
+{"ID": "Q-BUND10Y", "INSTRUMENT": "Bund 10Y", "CURRENCY": "EUR", "BID": 100.9602, "ASK": 101.0006, "MID": 100.9804, "VENUE": "Bloomberg", "AS_OF": "2026-09-21T17:00:00Z"}
+{"ID": "Q-WTI", "INSTRUMENT": "WTI crude", "CURRENCY": "USD", "BID": 78.0654, "ASK": 78.0966, "MID": 78.081, "VENUE": "Bloomberg", "AS_OF": "2026-09-21T17:00:00Z"}

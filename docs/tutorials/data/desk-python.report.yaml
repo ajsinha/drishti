@@ -23,8 +23,8 @@ pages:
   - id: desks
     title: Desks
     visuals:
-      - { id: currency, type: slicer, title: Currency, at: { x: 0, y: 0, w: 4, h: 2 }, wells: { field: [trade.currency] }, format: { mode: dropdown, scope: page } }
+      - { id: currency, type: slicer, title: Currency, at: { x: 0, y: 0, w: 4, h: 2 }, wells: { field: [trade.CURRENCY] }, format: { mode: dropdown, scope: page } }
       - { id: notional-chart, type: python, title: "Notional by desk (my Python visual)", at: { x: 0, y: 2, w: 6, h: 6 },
-          wells: { columns: [trade.desk, trade.notional] }, format: { python: Notional by desk chart, params: { top: 8 }, run: auto } }
+          wells: { columns: [trade.DESK, trade.NOTIONAL] }, format: { python: Notional by desk chart, params: { top: 8 }, run: auto } }
       - { id: volatility, type: python, title: "Desk P&L volatility (the shipped Python measure)", at: { x: 6, y: 2, w: 6, h: 6 },
           wells: { values: [Desk P&L volatility] }, format: { run: auto } }

@@ -20,7 +20,7 @@ title: Notional by desk chart
 description: The desks with the largest notional, drawn by Python as an ECharts option.
 interface: visual
 output: echarts
-inputs: [desk, notional]
+inputs: [DESK, NOTIONAL]
 packages: [pandas]
 target: server                   # the console runs it (2.3.0: there is no browser target)
 timeout: 10
@@ -29,12 +29,12 @@ params: { top: 8 }
 source: |
   def render(table, params):
       top = int(params.get("top", 8))
-      g = table.groupby("desk", as_index=False)["notional"].sum().sort_values("notional", ascending=False).head(top)
+      g = table.groupby("DESK", as_index=False)["NOTIONAL"].sum().sort_values("NOTIONAL", ascending=False).head(top)
       return {
           "title": {"text": f"Notional of the {len(g)} largest desks", "left": "center", "textStyle": {"fontSize": 13}},
           "tooltip": {"trigger": "axis"},
           "grid": {"left": 90, "right": 20, "top": 40, "bottom": 30},
           "xAxis": {"type": "value", "name": "Notional"},
-          "yAxis": {"type": "category", "data": list(g["desk"])[::-1]},
-          "series": [{"type": "bar", "data": [float(v) for v in g["notional"]][::-1]}],
+          "yAxis": {"type": "category", "data": list(g["DESK"])[::-1]},
+          "series": [{"type": "bar", "data": [float(v) for v in g["NOTIONAL"]][::-1]}],
       }

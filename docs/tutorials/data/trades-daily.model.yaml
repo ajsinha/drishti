@@ -23,8 +23,8 @@ description: Notional, MTM and the number of trades, by desk, over the dataset t
 datasets:
   trade: { dataset: trades-daily, role: fact }
 measures:
-  Notional: { expr: "sum(trade.notional)", format: amount0 }
-  MTM:      { expr: "sum(trade.mtm)", format: signed0 }
+  Notional: { expr: "sum(trade.NOTIONAL)", format: amount0 }
+  MTM:      { expr: "sum(trade.MTM)", format: signed0 }
   Trades:   { expr: "count(trade)" }
 security:
   rows:

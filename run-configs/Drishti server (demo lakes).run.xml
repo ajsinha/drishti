@@ -12,6 +12,10 @@
   written permission of the copyright holder.
 
   See the LICENSE file in the root of this repository for the full terms.
+
+  The demo lakes, read with the samples off (DRISHTI_DEMO_ENABLED=false): every page reads the lakes, and nothing ticks. For
+  tutorial 12 (live BI and boards) set DRISHTI_DEMO_ENABLED=true below: the demo source then ticks the live trades about twice a
+  second (data/testdata/README.md, "The demo ticker").
 -->
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Drishti server (demo lakes)" type="Application" factoryName="Application" folderName="Drishti">

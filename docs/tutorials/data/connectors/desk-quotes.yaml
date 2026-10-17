@@ -17,6 +17,7 @@ plugin: file
 kinds: [quote]
 description: Desk quotes from the tutorial folder
 settings:
+  id-field: ID
   root: ./docs/tutorials/data/desk-quotes
   lookback-days: '60'
   rescan-seconds: '30'

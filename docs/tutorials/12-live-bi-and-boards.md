@@ -31,7 +31,7 @@ About 30 minutes.
   their reports keep reading them meanwhile. The converter has already made a **model** of each (`live-trading@1`, `live-exposure@1`) over the same live
   table, so a model query, Analyse and an alert on a measure of a model read the live rows too (step 2).
 - The command line token of tutorial 1 (`DRISHTI_TOKEN`).
-- The demo data of the banking packs. It **ticks by itself** (the demo source changes the live trades about twice a second and the market data every few seconds); nothing to start. With a real source the same pages follow your own live connector ([DEMO_CONNECTOR.md](../connectors/DEMO_CONNECTOR.md), [DATA_LOADS.md](../guides/DATA_LOADS.md)).
+- The demo data of the banking packs. It **ticks by itself** (the demo source changes the live trades about twice a second and the market data every few seconds) when the demo source is on (`DRISHTI_DEMO_ENABLED=true`, the default of the run configuration **Drishti server**). On the demo lakes (**Drishti server (demo lakes)**, which turns it off) nothing ticks: set `DRISHTI_DEMO_ENABLED=true` there first ([data/testdata/README.md](../../data/testdata/README.md), "The demo ticker"). With a real source the same pages follow your own live connector ([DEMO_CONNECTOR.md](../connectors/DEMO_CONNECTOR.md), [DATA_LOADS.md](../guides/DATA_LOADS.md)).
 
 ## What you will learn
 

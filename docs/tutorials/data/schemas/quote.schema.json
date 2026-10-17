@@ -3,15 +3,53 @@
   "title": "Quote",
   "description": "A desk's end-of-day quote for one instrument: the bid, the ask and the mid, and the venue it came from.",
   "type": "object",
-  "required": ["id", "instrument", "mid", "asOf"],
+  "required": [
+    "ID",
+    "INSTRUMENT",
+    "MID",
+    "AS_OF"
+  ],
   "properties": {
-    "id": {"type": "string", "description": "The quote's identifier, one per instrument."},
-    "instrument": {"type": "string", "description": "What is quoted: a currency pair, a bond or a commodity."},
-    "currency": {"type": "string", "description": "The currency the price is in."},
-    "bid": {"type": "number", "x-drishti-format": "df4", "description": "The price a buyer will pay."},
-    "ask": {"type": "number", "x-drishti-format": "df4", "description": "The price a seller wants."},
-    "mid": {"type": "number", "x-drishti-format": "df4", "description": "Half-way between bid and ask."},
-    "venue": {"type": "string", "enum": ["EBS", "Reuters", "Bloomberg"], "description": "Where the quote was taken."},
-    "asOf": {"type": "string", "format": "date-time", "description": "When the quote was struck (the business date comes from it)."}
+    "ID": {
+      "type": "string",
+      "description": "The quote's identifier, one per instrument."
+    },
+    "INSTRUMENT": {
+      "type": "string",
+      "description": "What is quoted: a currency pair, a bond or a commodity."
+    },
+    "CURRENCY": {
+      "type": "string",
+      "description": "The currency the price is in."
+    },
+    "BID": {
+      "type": "number",
+      "x-drishti-format": "df4",
+      "description": "The price a buyer will pay."
+    },
+    "ASK": {
+      "type": "number",
+      "x-drishti-format": "df4",
+      "description": "The price a seller wants."
+    },
+    "MID": {
+      "type": "number",
+      "x-drishti-format": "df4",
+      "description": "Half-way between bid and ask."
+    },
+    "VENUE": {
+      "type": "string",
+      "enum": [
+        "EBS",
+        "Reuters",
+        "Bloomberg"
+      ],
+      "description": "Where the quote was taken."
+    },
+    "AS_OF": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the quote was struck (the business date comes from it)."
+    }
   }
 }

@@ -68,4 +68,4 @@ mock:
     - match: "(?i)QUESTION: [^\\n]*(how many|count)"
       reply: '{"fields":[],"measures":["Economies"]}'
     - match: "(?i)QUESTION: [^\\n]*(mtm|notional|desk)"
-      reply: '{"fields":["trade.desk"],"measures":["Notional"],"orderBy":[{"by":"Notional","desc":true}]}'
+      reply: '{"fields":["trade.DESK"],"measures":["Notional"],"orderBy":[{"by":"Notional","desc":true}]}'

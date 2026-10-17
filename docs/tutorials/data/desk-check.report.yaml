@@ -24,9 +24,9 @@ pages:
     title: Main
     visuals:
       - { id: trades, type: card, title: Trades, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }
-      - { id: by-desk, type: bar, title: Trades by desk, at: { x: 3, y: 0, w: 6, h: 4 }, wells: { axis: [trade.desk], values: [Trades] } }
+      - { id: by-desk, type: bar, title: Trades by desk, at: { x: 3, y: 0, w: 6, h: 4 }, wells: { axis: [trade.DESK], values: [Trades] } }
 tests:
   - { name: The book holds 750 trades, measure: Trades, expect: 750 }
   - { name: Trades within a range, measure: Trades, expect: { min: 745, max: 755 } }
   - { name: Close to 100 trades, measure: Trades, expect: 100, tolerance: 1% }
-  - { name: The FX desk, visual: by-desk, row: { trade.desk: DESK-FX }, expect: 84 }
+  - { name: The FX desk, visual: by-desk, row: { trade.DESK: DESK-FX }, expect: 84 }

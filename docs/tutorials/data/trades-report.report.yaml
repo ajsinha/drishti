@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 13: a report on the model trades-model. It reads trade.book, which is what the tutorial's "what breaks" check finds.
+# Tutorial 13: a report on the model trades-model. It reads trade.PORTFOLIO, which is what the tutorial's "what breaks" check finds.
 rachana: 2
 report: trades-report
 version: 1
@@ -23,5 +23,5 @@ pages:
     title: Overview
     visuals:
       - { id: notional, type: card, title: Notional, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }
-      - { id: by-desk, type: bar, title: Notional by desk, at: { x: 3, y: 0, w: 5, h: 4 }, wells: { axis: [trade.desk], values: [Notional] }, alt: Bars of notional by desk }
-      - { id: rows, type: table, title: Desk and book, at: { x: 0, y: 4, w: 8, h: 4 }, wells: { columns: [trade.desk, trade.book, MTM] } }
+      - { id: by-desk, type: bar, title: Notional by desk, at: { x: 3, y: 0, w: 5, h: 4 }, wells: { axis: [trade.DESK], values: [Notional] }, alt: Bars of notional by desk }
+      - { id: rows, type: table, title: Desk and book, at: { x: 0, y: 4, w: 8, h: 4 }, wells: { columns: [trade.DESK, trade.PORTFOLIO, MTM] } }

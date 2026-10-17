@@ -20,15 +20,15 @@ description: >
   by size and every column has its own filter.
 match: { kind: desk }
 title:
-  pill: "Desk · ${$.region}"
-  id: $.deskId
-  with: $.name
+  pill: "Desk · ${$.REGION}"
+  id: $.DESK_ID
+  with: $.NAME
 strip:
-  - { label: Net MTM (USD), bind: $.mtm, fmt: signed0, tone: sign, emphasis: true }
-  - { label: VaR 99%, bind: $.var99, fmt: amount0 }
-  - { label: Limit used, bind: $.limitUse, fmt: pct0 }
-  - { label: Open trades, bind: $.openTrades, fmt: amount0 }
-  - { label: Head of desk, bind: $.headOfDesk }
+  - { label: Net MTM (USD), bind: $.MTM, fmt: signed0, tone: sign, emphasis: true }
+  - { label: VaR 99%, bind: $.VAR_99, fmt: amount0 }
+  - { label: Limit used, bind: $.LIMIT_USE, fmt: pct0 }
+  - { label: Open trades, bind: $.OPEN_TRADES, fmt: amount0 }
+  - { label: Head of desk, bind: $.HEAD_OF_DESK }
 controls:
   - { id: minNotional, kind: slider, label: Notional at least, min: 0, max: 250000000, step: 25000000, placement: strip }
 panels:
@@ -36,24 +36,24 @@ panels:
     kind: tabs
     title: By currency
     span: 12
-    each: $.currencies
-    tabTitle: "@.code"
+    each: $.CURRENCIES
+    tabTitle: "@.CODE"
     panels:
       - id: ccy-figures
         kind: kv
         title: Totals
         columns:
-          - { label: Currency, bind: "@.code" }
-          - { label: Net MTM, bind: "@.netMtm", fmt: signed0, tone: sign }
-          - { label: Notional, bind: "@.notional", fmt: amount0 }
+          - { label: Currency, bind: "@.CODE" }
+          - { label: Net MTM, bind: "@.NET_MTM", fmt: signed0, tone: sign }
+          - { label: Notional, bind: "@.NOTIONAL", fmt: amount0 }
       - id: ccy-trades
         kind: table
         title: Trades
-        rows: "@.trades"
-        where: "@.notional >= ctl.minNotional"
+        rows: "@.TRADES"
+        where: "@.NOTIONAL >= ctl.minNotional"
         columns:
-          - { label: Trade, bind: "@.id" }
-          - { label: Product, bind: "@.product" }
-          - { label: Notional, bind: "@.notional", fmt: amount0 }
-          - { label: MTM, bind: "@.mtm", fmt: signed0, tone: sign }
-          - { label: Maturity, bind: "@.maturity", fmt: date }
+          - { label: Trade, bind: "@.ID" }
+          - { label: Product, bind: "@.PRODUCT" }
+          - { label: Notional, bind: "@.NOTIONAL", fmt: amount0 }
+          - { label: MTM, bind: "@.MTM", fmt: signed0, tone: sign }
+          - { label: Maturity, bind: "@.MATURITY", fmt: date }

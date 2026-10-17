@@ -30,10 +30,10 @@ source: |
   def run(pnl, exposure, params):
       """pnl: id, NAME, SECTOR, MTM, Trades (the counterparty's fields, without their alias).  exposure: id, Exposure (EE peak)."""
       short = lambda f: f.rename(columns=lambda c: c.split(".")[-1])          # counterparty.id and id are the same column
-      p = short(pnl).rename(columns={"id": "counterparty", "NAME": "name", "SECTOR": "sector", "MTM": "mtm", "Trades": "trades"})
-      e = short(exposure).rename(columns={"id": "counterparty", "Exposure (EE peak)": "ee_peak"})
-      m = p.merge(e, on="counterparty", how="left")
+      p = short(pnl).rename(columns={"id": "COUNTERPARTY", "Trades": "TRADES"})
+      e = short(exposure).rename(columns={"id": "COUNTERPARTY", "Exposure (EE peak)": "EE_PEAK"})
+      m = p.merge(e, on="COUNTERPARTY", how="left")
       floor = float(params.get("floor", 1.0))
-      m["mtm_per_exposure"] = m["mtm"] / m["ee_peak"].clip(lower=floor)
-      m["exposure_rank"] = m["ee_peak"].rank(ascending=False, method="min")
-      return m[["counterparty", "name", "sector", "mtm", "trades", "ee_peak", "mtm_per_exposure", "exposure_rank"]]
+      m["MTM_PER_EXPOSURE"] = m["MTM"] / m["EE_PEAK"].clip(lower=floor)
+      m["EXPOSURE_RANK"] = m["EE_PEAK"].rank(ascending=False, method="min")
+      return m[["COUNTERPARTY", "NAME", "SECTOR", "MTM", "TRADES", "EE_PEAK", "MTM_PER_EXPOSURE", "EXPOSURE_RANK"]]
