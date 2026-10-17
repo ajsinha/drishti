@@ -1,0 +1,2788 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# data/testdata/testdata.yaml: written by tools/testdata/make_testdata.py; read by `drishti.py lake demo`. Do not edit by hand.
+# Each dataset: its folder (snapshot of the first day, then the changes of each later day), the pack, kind and Delta connector it
+# feeds, the key and the partition columns after business_date; or the pack samples it is built from (static reference data).
+business-dates:
+- '2026-09-22'
+- '2026-09-23'
+- '2026-09-24'
+- '2026-09-25'
+- '2026-09-28'
+- '2026-09-29'
+- '2026-09-30'
+as-of: '2026-09-30'
+datasets:
+- folder: trades/endur
+  pack: trading
+  kind: trade
+  connector: trade-endur
+  key: TRADE_ID
+  partition-by:
+  - PRODUCT_TYPE
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 4980
+    total: 4980
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 3166140
+  - day: '2026-09-23'
+    kind: changes
+    documents: 189
+    total: 4986
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 161000
+  - day: '2026-09-24'
+    kind: changes
+    documents: 163
+    total: 4991
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 133012
+  - day: '2026-09-25'
+    kind: changes
+    documents: 170
+    total: 5000
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 124926
+  - day: '2026-09-28'
+    kind: changes
+    documents: 145
+    total: 5000
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 100191
+  - day: '2026-09-29'
+    kind: changes
+    documents: 162
+    total: 5000
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 122497
+  - day: '2026-09-30'
+    kind: changes
+    documents: 156
+    total: 5000
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 111085
+- folder: trades/calypso
+  pack: trading
+  kind: trade
+  connector: trade-calypso
+  key: TRADE_ID
+  partition-by:
+  - PRODUCT_TYPE
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 4936
+    total: 4936
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 1705710
+  - day: '2026-09-23'
+    kind: changes
+    documents: 319
+    total: 4936
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 140338
+  - day: '2026-09-24'
+    kind: changes
+    documents: 325
+    total: 4952
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 130506
+  - day: '2026-09-25'
+    kind: changes
+    documents: 367
+    total: 5000
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 144142
+  - day: '2026-09-28'
+    kind: changes
+    documents: 292
+    total: 5000
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 124566
+  - day: '2026-09-29'
+    kind: changes
+    documents: 305
+    total: 5000
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 127712
+  - day: '2026-09-30'
+    kind: changes
+    documents: 287
+    total: 5000
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 119342
+- folder: trades/murex
+  pack: trading
+  kind: trade
+  connector: trade-murex
+  key: TRADE_ID
+  partition-by:
+  - PRODUCT_TYPE
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 4933
+    total: 4933
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 5532835
+  - day: '2026-09-23'
+    kind: changes
+    documents: 303
+    total: 4955
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 345839
+  - day: '2026-09-24'
+    kind: changes
+    documents: 320
+    total: 4978
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 358612
+  - day: '2026-09-25'
+    kind: changes
+    documents: 324
+    total: 5000
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 332352
+  - day: '2026-09-28'
+    kind: changes
+    documents: 295
+    total: 5000
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 353025
+  - day: '2026-09-29'
+    kind: changes
+    documents: 277
+    total: 5000
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 326650
+  - day: '2026-09-30'
+    kind: changes
+    documents: 275
+    total: 5000
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 368555
+- folder: counterparty-risk/agreement
+  pack: counterparty-risk
+  kind: agreement
+  connector: legal-store
+  key: AGREEMENT_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 24
+    total: 24
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 1308
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 24
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 24
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 24
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 24
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 24
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 24
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: market-data/bond
+  pack: market-data
+  kind: bond
+  connector: market-store
+  key: ISIN
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 32
+    total: 32
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 9912
+  - day: '2026-09-23'
+    kind: changes
+    documents: 32
+    total: 32
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 9825
+  - day: '2026-09-24'
+    kind: changes
+    documents: 32
+    total: 32
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 9809
+  - day: '2026-09-25'
+    kind: changes
+    documents: 32
+    total: 32
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 9793
+  - day: '2026-09-28'
+    kind: changes
+    documents: 32
+    total: 32
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 9744
+  - day: '2026-09-29'
+    kind: changes
+    documents: 32
+    total: 32
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 9769
+  - day: '2026-09-30'
+    kind: changes
+    documents: 32
+    total: 32
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 7687
+- folder: core/book
+  pack: core
+  kind: book
+  connector: reference-store
+  key: BOOK_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 30
+    total: 30
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 9192
+  - day: '2026-09-23'
+    kind: changes
+    documents: 30
+    total: 30
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 9172
+  - day: '2026-09-24'
+    kind: changes
+    documents: 30
+    total: 30
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 9185
+  - day: '2026-09-25'
+    kind: changes
+    documents: 30
+    total: 30
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 9200
+  - day: '2026-09-28'
+    kind: changes
+    documents: 30
+    total: 30
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 9179
+  - day: '2026-09-29'
+    kind: changes
+    documents: 30
+    total: 30
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 9179
+  - day: '2026-09-30'
+    kind: changes
+    documents: 30
+    total: 30
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 8496
+- folder: core/calendar
+  pack: core
+  kind: calendar
+  connector: reference-store
+  key: CALENDAR_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 4
+    total: 4
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 883
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 4
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 4
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 4
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 4
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 4
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 4
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: market-data/cap-vol-surface
+  pack: market-data
+  kind: cap-vol-surface
+  connector: market-store
+  key: SURFACE_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 7
+    total: 7
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 1141
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 7
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 7
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 7
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 7
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 7
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 7
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: core/ccp
+  pack: core
+  kind: ccp
+  connector: reference-store
+  key: CCP_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 5
+    total: 5
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 337
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 5
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 5
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 5
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 5
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 5
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 5
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: core/clearing-account
+  pack: core
+  kind: clearing-account
+  connector: reference-store
+  key: ACCOUNT_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 5
+    total: 5
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 1786
+  - day: '2026-09-23'
+    kind: changes
+    documents: 2
+    total: 5
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 1666
+  - day: '2026-09-24'
+    kind: changes
+    documents: 2
+    total: 5
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 1670
+  - day: '2026-09-25'
+    kind: changes
+    documents: 2
+    total: 5
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 1669
+  - day: '2026-09-28'
+    kind: changes
+    documents: 2
+    total: 5
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 1660
+  - day: '2026-09-29'
+    kind: changes
+    documents: 2
+    total: 5
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 1677
+  - day: '2026-09-30'
+    kind: changes
+    documents: 2
+    total: 5
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 1680
+- folder: counterparty-risk/collateral-balance
+  pack: counterparty-risk
+  kind: collateral-balance
+  connector: collateral-store
+  key: BALANCE_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 76
+    total: 76
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 4721
+  - day: '2026-09-23'
+    kind: changes
+    documents: 76
+    total: 76
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 4721
+  - day: '2026-09-24'
+    kind: changes
+    documents: 76
+    total: 76
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 4721
+  - day: '2026-09-25'
+    kind: changes
+    documents: 76
+    total: 76
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 4721
+  - day: '2026-09-28'
+    kind: changes
+    documents: 76
+    total: 76
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 4721
+  - day: '2026-09-29'
+    kind: changes
+    documents: 76
+    total: 76
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 4721
+  - day: '2026-09-30'
+    kind: changes
+    documents: 76
+    total: 76
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 4721
+- folder: market-data/commodity
+  pack: market-data
+  kind: commodity
+  connector: market-store
+  key: COMMODITY_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 8
+    total: 8
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 10209
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 8
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 8
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 8
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 8
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 8
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 8
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: market-data/commodity-curve
+  pack: market-data
+  kind: commodity-curve
+  connector: market-store
+  key: CURVE_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 8
+    total: 8
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 1252
+  - day: '2026-09-23'
+    kind: changes
+    documents: 8
+    total: 8
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 1249
+  - day: '2026-09-24'
+    kind: changes
+    documents: 8
+    total: 8
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 1238
+  - day: '2026-09-25'
+    kind: changes
+    documents: 8
+    total: 8
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 1262
+  - day: '2026-09-28'
+    kind: changes
+    documents: 8
+    total: 8
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 1254
+  - day: '2026-09-29'
+    kind: changes
+    documents: 8
+    total: 8
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 1249
+  - day: '2026-09-30'
+    kind: changes
+    documents: 8
+    total: 8
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 1052
+- folder: market-data/commodity-vol-surface
+  pack: market-data
+  kind: commodity-vol-surface
+  connector: market-store
+  key: SURFACE_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 8
+    total: 8
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 1010
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 8
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 8
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 8
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 8
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 8
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 8
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: market-data/correlation-matrix
+  pack: market-data
+  kind: correlation-matrix
+  connector: market-store
+  key: MATRIX_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 3
+    total: 3
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 427
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 3
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 3
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 3
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 3
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 3
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 3
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: core/counterparty
+  pack: core
+  kind: counterparty
+  connector: reference-store
+  key: COUNTERPARTY_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 24
+    total: 24
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 7168
+  - day: '2026-09-23'
+    kind: changes
+    documents: 24
+    total: 24
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 7157
+  - day: '2026-09-24'
+    kind: changes
+    documents: 24
+    total: 24
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 7168
+  - day: '2026-09-25'
+    kind: changes
+    documents: 24
+    total: 24
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 7166
+  - day: '2026-09-28'
+    kind: changes
+    documents: 24
+    total: 24
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 7183
+  - day: '2026-09-29'
+    kind: changes
+    documents: 24
+    total: 24
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 7167
+  - day: '2026-09-30'
+    kind: changes
+    documents: 24
+    total: 24
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 6991
+- folder: core/counterparty-group
+  pack: core
+  kind: counterparty-group
+  connector: reference-store
+  key: GROUP_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 23
+    total: 23
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 1143
+  - day: '2026-09-23'
+    kind: changes
+    documents: 23
+    total: 23
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 1141
+  - day: '2026-09-24'
+    kind: changes
+    documents: 23
+    total: 23
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 1141
+  - day: '2026-09-25'
+    kind: changes
+    documents: 23
+    total: 23
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 1145
+  - day: '2026-09-28'
+    kind: changes
+    documents: 22
+    total: 23
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 1101
+  - day: '2026-09-29'
+    kind: changes
+    documents: 23
+    total: 23
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 1141
+  - day: '2026-09-30'
+    kind: changes
+    documents: 22
+    total: 23
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 1079
+- folder: market-data/credit-curve
+  pack: market-data
+  kind: credit-curve
+  connector: market-store
+  key: CURVE_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 16
+    total: 16
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 2233
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 16
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 16
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 16
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 16
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 16
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 16
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: counterparty-risk/credit-limit
+  pack: counterparty-risk
+  kind: credit-limit
+  connector: credit-store
+  key: LIMIT_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 24
+    total: 24
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 3373
+  - day: '2026-09-23'
+    kind: changes
+    documents: 24
+    total: 24
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 3350
+  - day: '2026-09-24'
+    kind: changes
+    documents: 24
+    total: 24
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 3381
+  - day: '2026-09-25'
+    kind: changes
+    documents: 24
+    total: 24
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 3352
+  - day: '2026-09-28'
+    kind: changes
+    documents: 24
+    total: 24
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 3347
+  - day: '2026-09-29'
+    kind: changes
+    documents: 24
+    total: 24
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 3355
+  - day: '2026-09-30'
+    kind: changes
+    documents: 24
+    total: 24
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 2953
+- folder: counterparty-risk/csa
+  pack: counterparty-risk
+  kind: csa
+  connector: legal-store
+  key: CSA_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 24
+    total: 24
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 691
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 24
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 24
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 24
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 24
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 24
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 24
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: counterparty-risk/cva
+  pack: counterparty-risk
+  kind: cva
+  connector: credit-store
+  key: RESULT_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 76
+    total: 76
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 5899
+  - day: '2026-09-23'
+    kind: changes
+    documents: 74
+    total: 76
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 5780
+  - day: '2026-09-24'
+    kind: changes
+    documents: 76
+    total: 76
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 5896
+  - day: '2026-09-25'
+    kind: changes
+    documents: 75
+    total: 76
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 5846
+  - day: '2026-09-28'
+    kind: changes
+    documents: 75
+    total: 76
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 5854
+  - day: '2026-09-29'
+    kind: changes
+    documents: 74
+    total: 76
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 5803
+  - day: '2026-09-30'
+    kind: changes
+    documents: 74
+    total: 76
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 5702
+- folder: core/desk
+  pack: core
+  kind: desk
+  connector: reference-store
+  key: DESK_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 10
+    total: 10
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 168827
+  - day: '2026-09-23'
+    kind: changes
+    documents: 10
+    total: 10
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 168657
+  - day: '2026-09-24'
+    kind: changes
+    documents: 10
+    total: 10
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 168662
+  - day: '2026-09-25'
+    kind: changes
+    documents: 10
+    total: 10
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 168670
+  - day: '2026-09-28'
+    kind: changes
+    documents: 10
+    total: 10
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 168611
+  - day: '2026-09-29'
+    kind: changes
+    documents: 10
+    total: 10
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 168558
+  - day: '2026-09-30'
+    kind: changes
+    documents: 10
+    total: 10
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 144949
+- folder: market-data/dividend-curve
+  pack: market-data
+  kind: dividend-curve
+  connector: market-store
+  key: CURVE_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 15
+    total: 15
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 760
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 15
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 15
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 15
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 15
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 15
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 15
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: market-data/equity
+  pack: market-data
+  kind: equity
+  connector: market-store
+  key: TICKER
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 10
+    total: 10
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 15525
+  - day: '2026-09-23'
+    kind: changes
+    documents: 10
+    total: 10
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 15526
+  - day: '2026-09-24'
+    kind: changes
+    documents: 10
+    total: 10
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 15522
+  - day: '2026-09-25'
+    kind: changes
+    documents: 10
+    total: 10
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 15531
+  - day: '2026-09-28'
+    kind: changes
+    documents: 10
+    total: 10
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 15523
+  - day: '2026-09-29'
+    kind: changes
+    documents: 10
+    total: 10
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 15522
+  - day: '2026-09-30'
+    kind: changes
+    documents: 10
+    total: 10
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 15491
+- folder: market-data/equity-index
+  pack: market-data
+  kind: equity-index
+  connector: market-store
+  key: INDEX_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 5
+    total: 5
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 1485
+  - day: '2026-09-23'
+    kind: changes
+    documents: 5
+    total: 5
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 1488
+  - day: '2026-09-24'
+    kind: changes
+    documents: 5
+    total: 5
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 1488
+  - day: '2026-09-25'
+    kind: changes
+    documents: 5
+    total: 5
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 1488
+  - day: '2026-09-28'
+    kind: changes
+    documents: 5
+    total: 5
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 1488
+  - day: '2026-09-29'
+    kind: changes
+    documents: 5
+    total: 5
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 1487
+  - day: '2026-09-30'
+    kind: changes
+    documents: 5
+    total: 5
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 1469
+- folder: market-data/equity-vol-surface
+  pack: market-data
+  kind: equity-vol-surface
+  connector: market-store
+  key: SURFACE_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 15
+    total: 15
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 1643
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 15
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 15
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 15
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 15
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 15
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 15
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: counterparty-risk/exposure-profile
+  pack: counterparty-risk
+  kind: exposure-profile
+  connector: credit-store
+  key: PROFILE_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 76
+    total: 76
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 20221
+  - day: '2026-09-23'
+    kind: changes
+    documents: 76
+    total: 76
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20207
+  - day: '2026-09-24'
+    kind: changes
+    documents: 76
+    total: 76
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20197
+  - day: '2026-09-25'
+    kind: changes
+    documents: 76
+    total: 76
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20198
+  - day: '2026-09-28'
+    kind: changes
+    documents: 76
+    total: 76
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20187
+  - day: '2026-09-29'
+    kind: changes
+    documents: 76
+    total: 76
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20201
+  - day: '2026-09-30'
+    kind: changes
+    documents: 76
+    total: 76
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20034
+- folder: market-risk/frtb-sensitivity
+  pack: market-risk
+  kind: frtb-sensitivity
+  connector: risk-store
+  key: RESULT_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 30
+    total: 30
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 2783
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 30
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 30
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 30
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 30
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 30
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 30
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: market-data/fx-forward-curve
+  pack: market-data
+  kind: fx-forward-curve
+  connector: market-store
+  key: CURVE_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 12
+    total: 12
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 1469
+  - day: '2026-09-23'
+    kind: changes
+    documents: 12
+    total: 12
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 1466
+  - day: '2026-09-24'
+    kind: changes
+    documents: 12
+    total: 12
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 1474
+  - day: '2026-09-25'
+    kind: changes
+    documents: 12
+    total: 12
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 1470
+  - day: '2026-09-28'
+    kind: changes
+    documents: 12
+    total: 12
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 1473
+  - day: '2026-09-29'
+    kind: changes
+    documents: 12
+    total: 12
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 1467
+  - day: '2026-09-30'
+    kind: changes
+    documents: 12
+    total: 12
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 1445
+- folder: market-data/fx-spot
+  pack: market-data
+  kind: fx-spot
+  connector: market-store
+  key: PAIR
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 12
+    total: 12
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 3304
+  - day: '2026-09-23'
+    kind: changes
+    documents: 12
+    total: 12
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 3319
+  - day: '2026-09-24'
+    kind: changes
+    documents: 12
+    total: 12
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 3287
+  - day: '2026-09-25'
+    kind: changes
+    documents: 12
+    total: 12
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 3299
+  - day: '2026-09-28'
+    kind: changes
+    documents: 12
+    total: 12
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 3281
+  - day: '2026-09-29'
+    kind: changes
+    documents: 12
+    total: 12
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 3286
+  - day: '2026-09-30'
+    kind: changes
+    documents: 12
+    total: 12
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 2930
+- folder: market-data/fx-vol-surface
+  pack: market-data
+  kind: fx-vol-surface
+  connector: market-store
+  key: SURFACE_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 12
+    total: 12
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 1844
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 12
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 12
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 12
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 12
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 12
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 12
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: market-data/inflation-curve
+  pack: market-data
+  kind: inflation-curve
+  connector: market-store
+  key: CURVE_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 4
+    total: 4
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 445
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 4
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 4
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 4
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 4
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 4
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 4
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: market-data/inflation-index
+  pack: market-data
+  kind: inflation-index
+  connector: market-store
+  key: INDEX_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 4
+    total: 4
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 673
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 4
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 4
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 4
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 4
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 4
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 4
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: market-data/ir-curve
+  pack: market-data
+  kind: ir-curve
+  connector: market-store
+  key: CURVE_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 28
+    total: 28
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 7929
+  - day: '2026-09-23'
+    kind: changes
+    documents: 28
+    total: 28
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 7929
+  - day: '2026-09-24'
+    kind: changes
+    documents: 28
+    total: 28
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 7910
+  - day: '2026-09-25'
+    kind: changes
+    documents: 28
+    total: 28
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 7888
+  - day: '2026-09-28'
+    kind: changes
+    documents: 28
+    total: 28
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 7933
+  - day: '2026-09-29'
+    kind: changes
+    documents: 28
+    total: 28
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 7897
+  - day: '2026-09-30'
+    kind: changes
+    documents: 28
+    total: 28
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 6887
+- folder: market-data/ir-vol-cube
+  pack: market-data
+  kind: ir-vol-cube
+  connector: market-store
+  key: CUBE_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 7
+    total: 7
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 1322
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 7
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 7
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 7
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 7
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 7
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 7
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: core/issuer
+  pack: core
+  kind: issuer
+  connector: reference-store
+  key: ISSUER_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 16
+    total: 16
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 1489
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 16
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 16
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 16
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 16
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 16
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 16
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: core/legal-entity
+  pack: core
+  kind: legal-entity
+  connector: reference-store
+  key: ENTITY_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 4
+    total: 4
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 1374
+  - day: '2026-09-23'
+    kind: changes
+    documents: 4
+    total: 4
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 1377
+  - day: '2026-09-24'
+    kind: changes
+    documents: 4
+    total: 4
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 1374
+  - day: '2026-09-25'
+    kind: changes
+    documents: 4
+    total: 4
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 1378
+  - day: '2026-09-28'
+    kind: changes
+    documents: 4
+    total: 4
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 1378
+  - day: '2026-09-29'
+    kind: changes
+    documents: 4
+    total: 4
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 1378
+  - day: '2026-09-30'
+    kind: changes
+    documents: 4
+    total: 4
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 1377
+- folder: counterparty-risk/margin-call
+  pack: counterparty-risk
+  kind: margin-call
+  connector: collateral-store
+  key: CALL_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 152
+    total: 152
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 2347
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 152
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 152
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 152
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 152
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 152
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 152
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: counterparty-risk/netting-set
+  pack: counterparty-risk
+  kind: netting-set
+  connector: credit-store
+  key: NETTING_SET_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 76
+    total: 76
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 148929
+  - day: '2026-09-23'
+    kind: changes
+    documents: 76
+    total: 76
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 148944
+  - day: '2026-09-24'
+    kind: changes
+    documents: 76
+    total: 76
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 149147
+  - day: '2026-09-25'
+    kind: changes
+    documents: 76
+    total: 76
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 149480
+  - day: '2026-09-28'
+    kind: changes
+    documents: 76
+    total: 76
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 149372
+  - day: '2026-09-29'
+    kind: changes
+    documents: 76
+    total: 76
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 149402
+  - day: '2026-09-30'
+    kind: changes
+    documents: 76
+    total: 76
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 142451
+- folder: market-risk/pnl-explain
+  pack: market-risk
+  kind: pnl-explain
+  connector: risk-store
+  key: RESULT_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 30
+    total: 30
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 3375
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 30
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 30
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 30
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 30
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 30
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 30
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: market-data/rate-fixing
+  pack: market-data
+  kind: rate-fixing
+  connector: market-store
+  key: INDEX_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 7
+    total: 7
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 2072
+  - day: '2026-09-23'
+    kind: changes
+    documents: 7
+    total: 7
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 2056
+  - day: '2026-09-24'
+    kind: changes
+    documents: 7
+    total: 7
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 2077
+  - day: '2026-09-25'
+    kind: changes
+    documents: 7
+    total: 7
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 2067
+  - day: '2026-09-28'
+    kind: changes
+    documents: 7
+    total: 7
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 2069
+  - day: '2026-09-29'
+    kind: changes
+    documents: 7
+    total: 7
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 2064
+  - day: '2026-09-30'
+    kind: changes
+    documents: 7
+    total: 7
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 2048
+- folder: market-data/repo-curve
+  pack: market-data
+  kind: repo-curve
+  connector: market-store
+  key: CURVE_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 7
+    total: 7
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 529
+  - day: '2026-09-23'
+    kind: changes
+    documents: 7
+    total: 7
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 532
+  - day: '2026-09-24'
+    kind: changes
+    documents: 7
+    total: 7
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 525
+  - day: '2026-09-25'
+    kind: changes
+    documents: 7
+    total: 7
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 519
+  - day: '2026-09-28'
+    kind: changes
+    documents: 7
+    total: 7
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 528
+  - day: '2026-09-29'
+    kind: changes
+    documents: 7
+    total: 7
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 519
+  - day: '2026-09-30'
+    kind: changes
+    documents: 7
+    total: 7
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 420
+- folder: counterparty-risk/sa-ccr
+  pack: counterparty-risk
+  kind: sa-ccr
+  connector: credit-store
+  key: CALC_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 76
+    total: 76
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 10256
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 76
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 76
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 76
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 76
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 76
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 76
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: counterparty-risk/simm
+  pack: counterparty-risk
+  kind: simm
+  connector: collateral-store
+  key: CALC_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 24
+    total: 24
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 1883
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 24
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 24
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 24
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 24
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 24
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 24
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: market-risk/stress-result
+  pack: market-risk
+  kind: stress-result
+  connector: risk-store
+  key: RESULT_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 80
+    total: 80
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 3697
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 80
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 80
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 80
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 80
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 80
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 80
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: market-risk/stress-scenario
+  pack: market-risk
+  kind: stress-scenario
+  connector: risk-store
+  key: SCENARIO_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 8
+    total: 8
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 581
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 8
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 8
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 8
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 8
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 8
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 8
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: market-risk/trade-valuation
+  pack: market-risk
+  kind: trade-valuation
+  connector: risk-store
+  key: VALUATION_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 14849
+    total: 14849
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 639249
+  - day: '2026-09-23'
+    kind: changes
+    documents: 14877
+    total: 14877
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 640402
+  - day: '2026-09-24'
+    kind: changes
+    documents: 14921
+    total: 14921
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 642210
+  - day: '2026-09-25'
+    kind: changes
+    documents: 15000
+    total: 15000
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 645608
+  - day: '2026-09-28'
+    kind: changes
+    documents: 15000
+    total: 15000
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 645684
+  - day: '2026-09-29'
+    kind: changes
+    documents: 15000
+    total: 15000
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 645833
+  - day: '2026-09-30'
+    kind: changes
+    documents: 15000
+    total: 15000
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 612703
+- folder: core/trader
+  pack: core
+  kind: trader
+  connector: reference-store
+  key: TRADER_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 20
+    total: 20
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 820
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 20
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 20
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 20
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 20
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 20
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 20
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- folder: market-risk/var
+  pack: market-risk
+  kind: var
+  connector: risk-store
+  key: RESULT_ID
+  days:
+  - day: '2026-09-22'
+    kind: snapshot
+    documents: 10
+    total: 10
+    files:
+    - snapshot-2026-09-22.jsonl.gz
+    bytes: 30745
+  - day: '2026-09-23'
+    kind: changes
+    documents: 0
+    total: 10
+    files:
+    - changes-2026-09-23.jsonl.gz
+    bytes: 20
+  - day: '2026-09-24'
+    kind: changes
+    documents: 0
+    total: 10
+    files:
+    - changes-2026-09-24.jsonl.gz
+    bytes: 20
+  - day: '2026-09-25'
+    kind: changes
+    documents: 0
+    total: 10
+    files:
+    - changes-2026-09-25.jsonl.gz
+    bytes: 20
+  - day: '2026-09-28'
+    kind: changes
+    documents: 0
+    total: 10
+    files:
+    - changes-2026-09-28.jsonl.gz
+    bytes: 20
+  - day: '2026-09-29'
+    kind: changes
+    documents: 0
+    total: 10
+    files:
+    - changes-2026-09-29.jsonl.gz
+    bytes: 20
+  - day: '2026-09-30'
+    kind: changes
+    documents: 0
+    total: 10
+    files:
+    - changes-2026-09-30.jsonl.gz
+    bytes: 20
+- samples: config/packs/world-economy/samples
+  pack: world-economy
+  kind: country-group
+  connector: macro-store
+- samples: config/packs/world-economy/samples
+  pack: world-economy
+  kind: economic-forecast
+  connector: macro-store
+- samples: config/packs/world-economy/samples
+  pack: world-economy
+  kind: economy
+  connector: macro-store
+- samples: config/packs/world-economy/samples
+  pack: world-economy
+  kind: election
+  connector: civic-store
+- samples: config/packs/world-economy/samples
+  pack: world-economy
+  kind: fiscal-position
+  connector: macro-store
+- samples: config/packs/world-economy/samples
+  pack: world-economy
+  kind: jurisdiction
+  connector: civic-store
+- samples: config/packs/world-economy/samples
+  pack: world-economy
+  kind: labour-market
+  connector: macro-store
+- samples: config/packs/world-economy/samples
+  pack: world-economy
+  kind: macro-indicator
+  connector: macro-store
+- samples: config/packs/world-economy/samples
+  pack: world-economy
+  kind: office-holder
+  connector: civic-store
+- samples: config/packs/world-economy/samples
+  pack: world-economy
+  kind: party
+  connector: civic-store
+- samples: config/packs/world-economy/samples
+  pack: world-economy
+  kind: region
+  connector: civic-store
+- samples: config/packs/world-economy/samples
+  pack: world-economy
+  kind: region-economy
+  connector: macro-store
+- samples: config/packs/world-economy/samples
+  pack: world-economy
+  kind: social-indicator
+  connector: civic-store
+- samples: config/packs/news-and-markets/samples
+  pack: news-and-markets
+  kind: listed-company
+  connector: news-store
+- samples: config/packs/news-and-markets/samples
+  pack: news-and-markets
+  kind: news-topic
+  connector: news-store

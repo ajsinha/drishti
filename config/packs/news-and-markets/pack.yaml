@@ -154,6 +154,15 @@ connectors:
       cache-ttl-seconds: 60
       cache-max-symbols: 100
       user-agent: ${drishti.branding.product:Drishti} yfinance connector (sample)
+  # the topics and companies with business-date history, from the demo lake (`drishti.py lake demo` builds news/news-topic and
+  # news/listed-company from this pack's samples); without a lake the samples answer as before
+  news-store:
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds: [news-topic, listed-company]
+    settings:
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+      domain: news
 routes:
   news: news
   quote: yfinance

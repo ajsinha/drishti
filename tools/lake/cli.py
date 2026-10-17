@@ -12,11 +12,12 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""`drishti.py lake build|scan|status|maintain`: build and look after Delta lakes from the terminal or a scheduler.
+"""`drishti.py lake build|scan|status|demo|maintain`: build and look after Delta lakes from the terminal or a scheduler.
 
     build      stream a JSON array, JSON Lines or .gz export into <lake>/<domain>/<kind> (tools/lake/build.py)
     scan       the fields of an export with their values, and the suggested --key, --date and --partition-by (tools/lake/scan.py)
     status     who holds the lake's lock, and the last runs (from <lake>/_drishti-lake)
+    demo       the demo lakes of the seven packs from the committed test data, data/testdata (tools/lake/demo.py)
     maintain   retention, compaction, checkpoints and vacuum on a schedule (tools/lake/maintain.py; options passed through)
 """
 from __future__ import annotations
@@ -69,6 +70,10 @@ def cmd_status(a, extra) -> int:
     return 0
 
 
+def cmd_demo(a, extra) -> int:
+    return _mod("demo").run(a)
+
+
 def cmd_maintain(a, extra) -> int:
     return _mod("maintain").main(extra)
 
@@ -93,6 +98,12 @@ def register(groups, add, srv) -> None:
     st.add_argument("--lake", required=True, metavar="DIR")
     st.add_argument("--runs", type=int, default=10, help="log lines shown (default 10)")
     st.add_argument("--json", action="store_true")
+    dm = add(sub, "demo", cmd_demo, "lake demo: build the demo lakes of the seven packs from data/testdata (seven business days), point the "
+             "connector files at them, say what to start next", [],
+             "examples:\n  drishti.py lake demo\n  drishti.py lake demo --lake /tmp/demo-lake\n"
+             "  drishti.py lake demo --with-real ~/Downloads/endur.json,~/Downloads/ComSwap.json      (LOCAL ONLY: never into data/testdata)\n"
+             "Guide: data/testdata/README.md")
+    _mod("demo").add_arguments(dm)
     add(sub, "maintain", cmd_maintain, "lake maintain: retention, compaction, checkpoint and vacuum (tools/lake/maintain.py; its options are passed through)",
         [], "examples:\n  drishti.py lake maintain --config deploy/lake-maintenance.yaml --once --dry-run\n"
             "  drishti.py lake maintain relayout --root data/delta --domain trading")

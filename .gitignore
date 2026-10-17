@@ -13,8 +13,10 @@ __pycache__/
 application.local.yaml
 hs_err_pid*
 # everything under data/ is generated or written at run time (lake, JSON lines, feeds, identity database, reports):
-# make it with tools/packgen/banking/make_data.py, never commit it
-/data/
+# make it with tools/packgen/banking/make_data.py, never commit it; the one exception is the committed test data,
+# data/testdata (tools/testdata/make_testdata.py writes it, `drishti.py lake demo` builds the demo lakes from it)
+/data/*
+!/data/testdata/
 .claude/
 # the Python runtime of Calc: installed by tools/fetch-pyodide.sh (pinned and verified), never committed
 drishti-console/web/static/vendor/pyodide/

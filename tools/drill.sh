@@ -96,10 +96,13 @@ python_tool_tests() {
   python3 -m unittest -q tools/test_cli_loads.py
   python3 -m unittest -q tools/test_pack_form.py
   python3 -m unittest -q tools/test_schemapack.py
+  python3 tools/testdata/make_testdata.py --check     # the committed test data (data/testdata) is what its generator writes
+  python3 -m unittest -q tools/testdata/test_testdata.py
   if command -v uv >/dev/null; then                  # the lake writers and maintenance need deltalake; uv provides it without installing
     # a hung test fails the drill (timeout exits 124) instead of blocking it: these take seconds, 10 minutes is a hang
     timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/samplegen/test_layout.py
     timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_maintain.py 2>&1 | grep -v '^{"at"'
+    timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_demo.py
     # the real-data tools (tools/realdata) are pytest-style functions on recorded fixtures: no network, a few seconds
     timeout --kill-after=30 600 uv run -q --with pytest --with pyyaml python -m pytest -q -p no:cacheprovider tools/realdata/tests
   fi

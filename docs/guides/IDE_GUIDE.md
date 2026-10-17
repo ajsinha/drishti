@@ -89,6 +89,7 @@ the project's JDK and no absolute path of yours.
 | **Drishti server (QA profile)** | The same, with **its own data folder `data/qa/data`** (git-ignored) so QA never touches `./data` or another stack. | **18580** |
 | **Drishti server (debug-friendly)** | The QA profile with sign-in **off** and DEBUG logging for `com.ash.drishti`: for stepping through code without logging in. | 18580 |
 | **Drishti build server jar** | Maven: `package -DskipTests -pl drishti-server -am`; produces `drishti-server/target/drishti-server-<version>-exec.jar`. | |
+| **Build demo lakes** | `drishti.py lake demo`: the seven packs' Delta lakes under `data/delta`, seven business days, from the committed test data ([data/testdata/README.md](../../data/testdata/README.md)); under a minute. Run it before **Drishti server** for the demo. | |
 | **Drishti QA (server + console)** | Compound: starts the QA server and the QA console together (needs the Python plugin; in IntelliJ IDEA Community start the console from PyCharm instead). | 18580 + 17580 |
 | **QA pack make (from JSON)**, **QA lake build (big JSON to Delta)**, **QA server smoke**, **QA doctor** | The command-line tools of [CLI_GUIDE.md](CLI_GUIDE.md) as Python run configurations (they need PyCharm or the Python plugin). Edit **Parameters** to point at your file (see section 6). | against 18580 |
 

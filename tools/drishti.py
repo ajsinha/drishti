@@ -1237,7 +1237,7 @@ def build_parser() -> argparse.ArgumentParser:
             p.add_argument("--panel", help="explain one panel only")
         else:
             p.add_argument("--table", action="store_true", help="text tables (the default; --json gives the raw view)")
-    load_module("lakecli", "lake/cli.py").register(groups, add, srv)   # lake build|scan|status|maintain
+    load_module("lakecli", "lake/cli.py").register(groups, add, srv)   # lake build|scan|status|demo|maintain
 
     cp = groups.add_parser("completion", help="completion: print a shell completion script (bash, zsh, powershell)",
                            description="Generated from the command tree, so it is always current. bash: source <(drishti.py completion bash); zsh: source <(drishti.py completion zsh); "

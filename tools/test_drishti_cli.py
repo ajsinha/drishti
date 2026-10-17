@@ -376,10 +376,10 @@ class RealJar(unittest.TestCase):
         except D.CliError:
             self.skipTest("no drishti-server exec jar built")
         import argparse
-        r = D.run_java(argparse.Namespace(jar=None, java=None), ["lint", str(ROOT / "config" / "packs" / "retail-banking")], capture=True)    # the engine's output stays quiet
+        r = D.run_java(argparse.Namespace(jar=None, java=None), ["lint", str(ROOT / "examples" / "packs" / "retail-banking")], capture=True)    # the engine's output stays quiet
         self.assertEqual(0, r.returncode, r.stderr[-500:])
         self.assertIn("ok", r.stdout)
-        code, _, _ = run("sutra", "lint", ROOT / "config" / "packs" / "retail-banking" / "pack.yaml.missing")
+        code, _, _ = run("sutra", "lint", ROOT / "examples" / "packs" / "retail-banking" / "pack.yaml.missing")
         self.assertEqual(2, code)
 
 
