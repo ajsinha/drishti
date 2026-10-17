@@ -70,6 +70,19 @@
   Python runner gives one value per group (a masked input leaves the column `None`; sorting or filtering on it is `DRS-9162`). The runner is the
   console's **Py-node endpoint** (`ConsolePythonRunner`: `POST {drishti.bi.transform.console-url}/internal/py/transform` and `/measure`, token
   `console-token`) when set, else the process runner as before.
+- **Server: scale (wave B task 5).** `engine/Admission` serves waiting queries by **work class** (interactive before standing-query maintenance before
+  background), within a person's share (`drishti.bi.query.max-concurrent-per-user`: standing work does not count against it) and a **model's share**
+  (`drishti.bi.exec.per-model-share`); a query waits `admission`, then `DRS-9025`. **Cost estimates and budgets:** before a query runs the engine adds
+  up the rows its layers and live tables hold for the dates it reads and refuses it over `options.budget.rows` or `drishti.bi.exec.max-estimated-rows`
+  (`DRS-9029`, with the estimate and the fix); `options.budget.millis` and the class's `interactive`/`background` limit cut its time. A query that runs
+  the engine out of memory, even spilling, is `DRS-9028`. **Micrometer metrics** of BI_DESIGN §6.8 (`drishti_bi_query_seconds{model,layer}`,
+  `_query_rows`, `_cache_requests_total{result}`, `_admission_wait_seconds`, `_refusals_total{code}`, `_fragment_seconds{tier,connector}`,
+  `_sq_active`, `_sq_lag_seconds`, `_sq_mode{mode}`, `_python_seconds{item}`, `_layer_rebuild_seconds`). **Several Java nodes:** a
+  `ShardDirectory` (rendezvous hashing of a model over the nodes that are up) names each model's shard owner; a subscription asked of another node is
+  held on the owner under the same id and held again where the shard moved when the owner is lost (`DRS-9184` while it cannot be reached); bridged
+  generation buses carry loads and refreshes between nodes. Proven in process with two nodes (`TwoNodesTest`); the HTTP transport between Java nodes
+  is not built yet (run one Java node). No static state holds generations or subscriptions. **The 500-viewer load test** (`ViewersLoadTest`) is
+  written for a real server (`-Ddrishti.load.url=…`) and skipped otherwise. OPERATIONS.md: BI metrics and BI scale.
 
 ## 2.2.0 — Datasets and data models rooted in packs, a Python-like expression language, read-only SQL, one query plan (2026-10-17)
 

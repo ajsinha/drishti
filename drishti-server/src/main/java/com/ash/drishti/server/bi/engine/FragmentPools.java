@@ -65,6 +65,12 @@ public final class FragmentPools {
 
     private final ExecProperties props;
     private final Clock clock;
+    private volatile java.util.function.BiConsumer<String, Double> onFragment = (c, s) -> { };
+
+    /** Who hears each fragment's time (the metrics: {@code drishti_bi_fragment_seconds{connector}}). */
+    public void onFragment(java.util.function.BiConsumer<String, Double> c) {
+        this.onFragment = c == null ? (x, s) -> { } : c;
+    }
     private final Map<String, Pool> pools = new ConcurrentHashMap<>();
 
     public FragmentPools(ExecProperties props, Clock clock) {
@@ -109,7 +115,9 @@ public final class FragmentPools {
             throw e;
         } finally {
             p.runs.incrementAndGet();
-            p.nanos.addAndGet(System.nanoTime() - t0);
+            long took = System.nanoTime() - t0;
+            p.nanos.addAndGet(took);
+            onFragment.accept(connector, took / 1e9);
             p.permits.release();
         }
     }

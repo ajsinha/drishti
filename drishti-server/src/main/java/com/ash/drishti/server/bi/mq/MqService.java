@@ -102,6 +102,13 @@ public final class MqService {
     private volatile PythonMeasures python;
     private volatile java.util.function.Function<Dataset.Table, com.ash.drishti.server.bi.engine.ConnectorCapabilities> capabilities;
 
+    private volatile java.util.function.BiConsumer<String, Double> pythonSeconds = (item, s) -> { };
+
+    /** Who hears how long each Python node took (the metrics: {@code drishti_bi_python_seconds{item}}). */
+    public void pythonSeconds(java.util.function.BiConsumer<String, Double> c) {
+        this.pythonSeconds = c == null ? (item, s) -> { } : c;
+    }
+
     /** Python measures in any grouped query (wave B): run by the console's runner after the query. */
     public void python(PythonMeasures p) {
         this.python = p;
@@ -223,6 +230,16 @@ public final class MqService {
     }
 
     public Ran run(Bound b, ModelQuery q, boolean explain, boolean engineLimit) {
+        ModelQuery.Budget budget = q.ext().budget();
+        if (budget.equals(ModelQuery.Budget.NONE)) {
+            return runIn(b, q, explain, engineLimit);
+        }
+        com.ash.drishti.server.bi.engine.QueryContext.Ctx now = com.ash.drishti.server.bi.engine.QueryContext.current();
+        return com.ash.drishti.server.bi.engine.QueryContext.with(new com.ash.drishti.server.bi.engine.QueryContext.Ctx(now.workClass(), budget.rows(), budget.millis()),
+                () -> runIn(b, q, explain, engineLimit));                    // options.budget: the engine's cost estimate and time limit (wave B)
+    }
+
+    private Ran runIn(Bound b, ModelQuery q, boolean explain, boolean engineLimit) {
         long t0 = System.nanoTime();
         Prepared prepared = prepare(b, q, engineLimit);
         MqValidator.Checked c = prepared.checked();
@@ -248,6 +265,9 @@ public final class MqService {
             long p0 = System.nanoTime();
             r = PythonAnswers.add(b, compiled.dataset(), main, sqlMain, r, py, python, props, warnings);
             pyNanos = System.nanoTime() - p0;
+            for (String m : py) {
+                pythonSeconds.accept(compiled.dataset().measures().get(m).python(), pyNanos / 1e9 / py.size());
+            }
         }
         warnings.addAll(guardWarnings(r, compiled.guards()));
         List<Guards.Refusal> refused = Guards.refusals(warnings, planProps);           // stage 5: the guards that refuse from wave A

@@ -1645,7 +1645,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9025 | 429 | Query busy | Too many queries at once for the server (`max-concurrent`) or the user (`max-concurrent-per-user`) |
 | DRS-9026 | 502 | Query source | A table's connector is not running, or is not a SQL store for a `direct` table |
 | DRS-9027 | 500 | Query engine | The engine failed on the compiled query; the message says how |
-| DRS-9028 | 413 | Query memory | (wave B scale) The query would need more than `drishti.bi.exec.max-memory-mb` on the Java tier: group by less, filter, or ask a rollup |
+| DRS-9028 | 413 | Query memory | (wave B scale) The query needs more memory than the engine may use, even spilling to disk (`drishti.bi.query.memory-limit`): group by less, filter, or ask a rollup's fields |
 | DRS-9029 | 413 | Query cost | (wave B scale) The planner's estimate of rows read is over the query's budget (`options.budget.rows`, else its work class's); the message has the estimate and the fix (a date filter, a rollup) |
 | DRS-9030 | 422 | Report invalid | The report YAML is malformed, or a key, id, grid position, filter or setting is not valid (the problem names the path of the key); publishing such a report is refused with it |
 | DRS-9031 | 422 | Report reference | A field, measure, hierarchy, page, bookmark or slicer the report names does not exist in its dataset or in the report |

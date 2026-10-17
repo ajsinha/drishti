@@ -1627,6 +1627,29 @@ Before this change, only a file edit re-evaluated anything: a pack refused for a
 AI provider or MCP server that failed stayed failed until someone edited a file or restarted the server. Calls to an AI provider or MCP server are always attempted
 (there is no circuit breaker that holds calls back); the retry makes the state shown on Admin → AI honest and reconnects MCP sessions.
 
+### BI metrics (wave B)
+
+The BI engine reports to Prometheus (`/actuator/prometheus`, [BI_DESIGN.md §6.8](../architecture/BI_DESIGN.md#68-slas-and-observability)):
+
+| Metric | Tags | What it says |
+|---|---|---|
+| `drishti_bi_query_seconds` | `model`, `layer` | time of each query the engine ran (count, sum, p50/p95/p99); `layer` is `columns`, `rollup`, `live`, `direct`, `composed`, `derived` |
+| `drishti_bi_query_rows` | | rows each query answered |
+| `drishti_bi_cache_requests_total` | `result` (`hit`, `miss`) | model-query answers served from the L1 result cache, and missed |
+| `drishti_bi_admission_wait_seconds` | | how long queries waited for a place (work classes, shares) |
+| `drishti_bi_refusals_total` | `code` | refusals by DRS code (`DRS-9025` busy, `DRS-9029` over budget, `DRS-9026` a connector's open breaker, ...) |
+| `drishti_bi_fragment_seconds` | `tier`, `connector` | source fragments (layer builds, direct queries) by connector |
+| `drishti_bi_sq_active` | | open standing queries |
+| `drishti_bi_sq_lag_seconds` | | the longest a standing-query group took from a change of its data to its new answer |
+| `drishti_bi_sq_mode` | `mode` (`incremental`, `recompute`, `tick`) | standing-query groups by how they are kept current |
+| `drishti_bi_python_seconds` | `item` | Python node calls (Python measures) |
+| `drishti_bi_layer_rebuild_seconds` | | layer rebuilds of refreshes |
+
+Alert on: `drishti_bi_sq_mode{mode="tick"} > 0` for long (a model over its maintenance budget), a growing
+`drishti_bi_refusals_total{code="DRS-9026"}` (a connector failing), the p95 of `drishti_bi_query_seconds` over the SLAs of §6.8 (500 ms on the columns
+layer, 50 ms cached). `GET /api/v1/bi/engine` shows the same live: `admission` (slots, running, waiting, refused), `connectors` (each one's breaker,
+fragments in use, runs, refused, last error) and `bus` (notices published and delivered).
+
 ## 14. Logs
 
 | Process | Where | Notes |
@@ -1718,6 +1741,39 @@ closes extras after `pool-idle-timeout`, so the sum is a ceiling, not the usual 
 `scan-threads` plus the reads you expect at once, and a quiet connector needs 2 to 4. MongoDB, Redis and Aerospike have their own limits (`maxIncomingConnections`,
 `maxclients`, `proto-fd-max`); each Drishti server instance can open `pool-size` to a MongoDB or Redis deployment and `pool-size` per node to Aerospike.
 SQLite and DuckDB are embedded files and need no sizing.
+
+### BI scale (wave B)
+
+**Settings** (`drishti.bi.*`, [CONFIGURATION.md](CONFIGURATION.md#drishtibiexec--execution-connectors-and-scale-wave-b-230)):
+
+| What | Setting | Start with |
+|---|---|---|
+| queries at once | `drishti.bi.query.max-concurrent` | twice the cores of the server |
+| a person's share | `drishti.bi.query.max-concurrent-per-user` | 3 to 4 (standing-query maintenance does not count against it) |
+| a model's share | `drishti.bi.exec.per-model-share` | 0.5 (one hot model takes at most half the slots) |
+| time limits | `drishti.bi.exec.interactive`, `background`, `drishti.bi.query.timeout` | 30 s, 300 s |
+| memory | `drishti.bi.query.memory-limit` (DuckDB, spills to the store's scratch) | half the server's memory |
+| cost budget | `drishti.bi.exec.max-estimated-rows` (a query's `options.budget.rows` may set its own) | 200 million rows read |
+| a connector's fragments | `drishti.bi.exec.max-fragments`, `connectors.<name>.max-fragments` | 8; fewer for a small database |
+| a failing connector | `drishti.bi.exec.breaker-failures`, `breaker-open` | 5 failures, 30 s |
+| standing queries | `drishti.bi.mq.max-subscriptions`, `max-subscriptions-per-user`, `maintenance-budget`, `tick` | 500, 20, 250 ms per second per model, 5 s |
+| Python | `drishti.bi.transform.console-url`, `max-concurrent`, `timeout` | the console's URL, 2 per console, 60 s |
+
+**Many viewers of one report.** Readers with the same effective security share one standing-query group and one cache entry per visual: 500 viewers with 5
+distinct securities are 5 evaluations per visual. `GET /api/v1/bi/engine` and the `drishti_bi_sq_*` metrics show the groups and their modes.
+
+**Several Java nodes.** Asked queries are stateless: any node answers any model query (the result cache is per node). Each model's shard (its live tables
+and standing queries) has one owner, chosen by rendezvous hashing of the model over the nodes that are up (`drishti.bi.exec.node`, `nodes`): a node that
+leaves moves only its own shards. A subscription asked of another node is held on the owner under the same id and is held again where the shard moved
+when the owner is lost (its stream goes on). The generation bus carries loads and refreshes between nodes; each node's live tables hear their connectors
+themselves. *As built in 2.3.0:* the directory, the forwarding and the failover are in the server and proven with two nodes in one process
+(`TwoNodesTest`); the HTTP transport between Java nodes (the peers and the bus bridge over the network) is not built yet, so a production site runs one
+Java node behind any number of consoles.
+
+**The 500-viewer load test** is `ViewersLoadTest` (in `drishti-server`): run it **against a real server, never on a laptop**:
+`./mvnw -pl drishti-server test -Dtest=ViewersLoadTest -Ddrishti.load.url=http://server:18480 -Ddrishti.load.queries=/path/visuals.jsonl
+-Ddrishti.load.users=rita:…,hana:…` (`drishti.load.viewers`, default 500; `drishti.load.seconds`, default 120). It prints the p95 of cached and columns-layer
+answers and the refusals by code, and fails over the SLAs of §6.8.
 
 ## 17. Runbooks
 

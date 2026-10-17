@@ -196,7 +196,7 @@ public enum ErrorCode {
     QUERY_SOURCE("DRS-9026", 502),
     /** Queries: the analytic engine failed on a compiled query (a bug or a limit of the engine; the message says which). */
     QUERY_ENGINE("DRS-9027", 500),
-    /** Queries (wave B scale): the query would need more than {@code drishti.bi.exec.max-memory-mb} on the Java tier (the engine's memory limit and spill budget). */
+    /** Queries (wave B scale): the query needs more memory than the engine may use, even spilling to disk ({@code drishti.bi.query.memory-limit}). */
     QUERY_MEMORY("DRS-9028", 413),
     /** Queries (wave B scale): the planner's estimate of rows or bytes is over the query's budget ({@code options.budget} or the work class's); the message has the estimate and the fix. */
     QUERY_COST("DRS-9029", 413),

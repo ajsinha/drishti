@@ -59,8 +59,8 @@ class FragmentPoolsTest {
     }
 
     static ExecProperties props(int fragments) {
-        return new ExecProperties(null, null, null, Duration.ofMillis(50), null, null, null, null, fragments, 3, Duration.ofSeconds(30),
-                Map.of("slow-store", Map.of("max-fragments", 1)), null, null);
+        return new ExecProperties(null, Duration.ofMillis(50), null, null, null, fragments, 3, Duration.ofSeconds(30), Map.of("slow-store", Map.of("max-fragments", 1)),
+                null, null);
     }
 
     @Test

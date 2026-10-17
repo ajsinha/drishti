@@ -1328,12 +1328,9 @@ more than one ([OPERATIONS.md, Scale](OPERATIONS.md#bi-scale-wave-b)).
 
 | Key | Default | Meaning |
 |---|---|---|
-| `slots` | `0` | Query slots of the server; `0`: twice the processors. Work classes take them in order: **interactive** (a person's question) before **standing** (standing-query maintenance) before **background** (refresh, precompute, tests); a waiting interactive query is served first. |
-| `per-user` | `4` | Queries one person runs at once; the next waits for one of them (never for others). |
-| `per-model-share` | `0.5` | The share of the slots one model may hold at once (a hot model cannot take the server). |
-| `queue` | `2s` | How long a query waits for a slot before `429 DRS-9025` (with `Retry-After`). |
-| `max-memory-mb` | `512` | Memory one query may use on the Java tier: the engine's memory limit, with spilling to the store's scratch folder; past the spill budget `413 DRS-9028`. |
-| `interactive` | `30s` | Longest an interactive query runs before it is cancelled (`504 DRS-9024`). |
+| `per-model-share` | `0.5` | The share of the server's slots (`drishti.bi.query.max-concurrent`) one model may hold at once: a hot model cannot take the server. Queries wait in **work classes**: **interactive** (a person's question) before **standing** (standing-query maintenance) before **background**; a person's share is `drishti.bi.query.max-concurrent-per-user` (standing and background work do not count against it). A query waits `drishti.bi.query.admission`, then `429 DRS-9025` with `Retry-After`. A query that needs more memory than the engine's `drishti.bi.query.memory-limit`, even spilling, is `413 DRS-9028`. |
+| `queue` | `2s` | How long a source fragment waits for its connector's pool (`max-fragments`) before `429 DRS-9025`. |
+| `interactive` | `30s` | Longest an interactive query runs before it is cancelled (`504 DRS-9024`; a shorter `options.budget.millis` or `drishti.bi.query.timeout` wins). |
 | `background` | `300s` | Longest background work runs (refresh, precompute, standing-query maintenance). |
 | `max-estimated-rows` | `200000000` | The planner's estimate of rows a query reads (from the layers' row counts) past which it is refused before it runs (`413 DRS-9029`, with the estimate and the fix: a date filter, a rollup's fields); a query's `options.budget.rows` may set its own. |
 | `max-fragments` | `8` | Source fragments (layer builds, direct queries) one connector runs at once; `connectors.<name>.max-fragments` overrides it per connector. Past it a fragment waits `queue`, then `DRS-9025`. |
@@ -1341,7 +1338,7 @@ more than one ([OPERATIONS.md, Scale](OPERATIONS.md#bi-scale-wave-b)).
 | `breaker-open` | `30s` | How long an open breaker refuses; then one fragment may try (half open): its success closes the breaker. |
 | `connectors.<name>.max-fragments` | (`max-fragments`) | Per connector (its manifest name): the fragments it runs at once. |
 | `node` (`DRISHTI_BI_NODE`) | empty | This Java node's name when several Java nodes serve the site; empty: one node. |
-| `nodes.<name>` | (none) | Every Java node of the site, name to base URL (`nodes.java-1: http://10.0.0.5:18480`). Each model's shard (its live tables and standing queries) is owned by one node, chosen by consistent hashing over the names; another node forwards subscriptions to the owner (`503 DRS-9184` while the owner cannot be reached) and takes over a lost node's shards. |
+| `nodes.<name>` | (none) | Every Java node of the site, name to base URL (`nodes.java-1: http://10.0.0.5:18480`). Each model's shard (its live tables and standing queries) is owned by one node, chosen by consistent hashing over the names; another node forwards subscriptions to the owner (`503 DRS-9184` while the owner cannot be reached) and takes over a lost node's shards. *As built in 2.3.0:* the directory, forwarding and failover are proven with two nodes in one process; the HTTP transport between Java nodes is not built yet, so run one Java node. |
 
 ### `drishti.bi.plan` — the logical plan, the result cache and the guards
 

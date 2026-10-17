@@ -37,9 +37,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,8 +76,36 @@ public final class QueryService implements AutoCloseable {
     private final GenerationBus bus = new GenerationBus();
     private final SourceGateway sources;
     private final Cache<String, Result> cache;
-    private final Semaphore slots;
-    private final Map<String, AtomicInteger> perUser = new ConcurrentHashMap<>();
+    private volatile Admission admission;
+    private volatile Events events = Events.NONE;
+
+    /**
+     * What the engine tells the metrics (wave B, docs/architecture/BI_DESIGN.md section 6.8): a query's time and rows by model and layer, the wait for a
+     * place, a refusal by code, a source fragment's time by connector, a layer rebuild's time.
+     */
+    public interface Events {
+        default void query(String model, String layer, double seconds, int rows) {}
+
+        default void admission(double seconds) {}
+
+        default void refusal(String code) {}
+
+        default void fragment(String connector, String tier, double seconds) {}
+
+        default void rebuild(double seconds) {}
+
+        Events NONE = new Events() {};
+    }
+
+    public void events(Events e) {
+        this.events = e == null ? Events.NONE : e;
+        Events now = this.events;
+        pools.onFragment((c, s) -> now.fragment(c, "source", s));
+    }
+
+    public Admission admission() {
+        return admission;
+    }
     private final Executor background = Executors.newVirtualThreadPerTaskExecutor();
     private final AtomicLong queries = new AtomicLong();
     private final AtomicLong hits = new AtomicLong();
@@ -97,7 +122,7 @@ public final class QueryService implements AutoCloseable {
         this.sources = sources;
         this.liveTables = new LiveTables(engine, sources, liveProps, clock, bus);
         this.layers = new Layers(engine, sources, props, clock);
-        this.slots = new Semaphore(props.maxConcurrent(), true);
+        this.admission = new Admission(props.maxConcurrent(), props.maxConcurrentPerUser(), ExecProperties.defaults().perModelShare());
         // one budget in bytes; every entry weighs at least budget / entries, so the entry count is bounded too
         long budget = Math.max(1, props.cacheMaxBytes());
         long floor = props.cacheEntries() == 0 ? budget : Math.max(1, budget / props.cacheEntries());
@@ -113,6 +138,9 @@ public final class QueryService implements AutoCloseable {
     public void exec(ExecProperties e) {
         this.exec = e;
         this.pools = new FragmentPools(e, Clock.systemUTC());
+        this.admission = new Admission(props.maxConcurrent(), props.maxConcurrentPerUser(), e.perModelShare());
+        Events now = this.events;
+        this.pools.onFragment((c, x) -> now.fragment(c, "source", x));
     }
 
     public ExecProperties execProperties() {
@@ -183,6 +211,7 @@ public final class QueryService implements AutoCloseable {
         Map<String, Long> l = new LinkedHashMap<>();
         byLayer.forEach((k, v) -> l.put(k, v.get()));
         m.put("byLayer", l);
+        m.put("admission", admission.stats());
         m.put("connectors", pools.stats());                                     // wave B: fragment pools and circuit breakers
         m.put("bus", Map.of("published", bus.published(), "delivered", bus.delivered()));
         return m;
@@ -218,42 +247,74 @@ public final class QueryService implements AutoCloseable {
         if (staged != null && (explain || cache == null || cache.getIfPresent(cacheKey(ds, q, who) + stagedKey) == null)) {
             inner = innerAnswers(ds.dataset(), q, who, staged);               // likewise asked before this query takes its place
         }
-        AtomicInteger mine = perUser.computeIfAbsent(who.user(), u -> new AtomicInteger());
-        if (mine.incrementAndGet() > props.maxConcurrentPerUser()) {
-            mine.decrementAndGet();
-            rejected.incrementAndGet();
-            throw new DrishtiException(ErrorCode.QUERY_BUSY, "you already have " + props.maxConcurrentPerUser() + " queries running (drishti.bi.query.max-concurrent-per-user)");
+        String key = cache == null ? null : cacheKey(ds, q, who) + (frames == null ? "" : "|frames:" + frames.fingerprint()) + stagedKey;
+        if (key != null && !explain) {
+            Result hit = cache.getIfPresent(key);
+            if (hit != null) {
+                hits.incrementAndGet();
+                Meta m = hit.meta();
+                return new Result(hit.columns(), hit.rows(), new Meta(m.layer(), m.rollup(), m.rows(), 0, true, m.dates(), m.tables(), m.masked(), m.warnings(), null, m.generation()));
+            }
         }
-        boolean got = false;
+        QueryContext.Ctx ctx = QueryContext.current();
+        Admission.Ticket ticket;
         try {
-            String key = cache == null ? null : cacheKey(ds, q, who) + (frames == null ? "" : "|frames:" + frames.fingerprint()) + stagedKey;
-            if (key != null && !explain) {
-                Result hit = cache.getIfPresent(key);
-                if (hit != null) {
-                    hits.incrementAndGet();
-                    Meta m = hit.meta();
-                    return new Result(hit.columns(), hit.rows(), new Meta(m.layer(), m.rollup(), m.rows(), 0, true, m.dates(), m.tables(), m.masked(), m.warnings(), null, m.generation()));
-                }
-            }
-            try {
-                got = slots.tryAcquire(props.admission().toMillis(), TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            if (!got) {
-                rejected.incrementAndGet();
-                throw new DrishtiException(ErrorCode.QUERY_BUSY, "the server is running " + props.maxConcurrent() + " queries already (drishti.bi.query.max-concurrent); try again");
-            }
+            ticket = admission.enter(who.user(), ds.key(), ctx.workClass(), props.admission());   // work classes, a person's and a model's share (wave B)
+        } catch (DrishtiException e) {
+            rejected.incrementAndGet();
+            events.refusal(e.errorCode().code());
+            throw e;
+        }
+        try (ticket) {
+            events.admission(ticket.waitedNanos() / 1e9);
+            long t0 = System.nanoTime();
             Result r = ds.dataset().framed() ? runFramed(ds, q, who, rows != null || frames == null ? rows : frames.load(), explain) : run(ds, q, who, explain, inner);
+            events.query(ds.key(), r.meta() == null ? "" : r.meta().layer(), (System.nanoTime() - t0) / 1e9, r.rows());
             if (key != null && !explain) {
                 cache.put(key, r);
             }
             return r;
-        } finally {
-            if (got) {
-                slots.release();
+        } catch (DrishtiException e) {
+            events.refusal(e.errorCode().code());
+            throw e;
+        }
+    }
+
+    /** The time limit of the work on this thread: its class's, its budget's, the engine's, whichever is shortest. */
+    java.time.Duration timeout() {
+        QueryContext.Ctx ctx = QueryContext.current();
+        java.time.Duration t = props.timeout();
+        java.time.Duration cls = ctx.workClass() == QueryContext.WorkClass.INTERACTIVE ? exec.interactive() : exec.background();
+        t = cls.compareTo(t) < 0 ? cls : t;
+        if (ctx.budgetMillis() != null && ctx.budgetMillis() > 0 && java.time.Duration.ofMillis(ctx.budgetMillis()).compareTo(t) < 0) {
+            t = java.time.Duration.ofMillis(ctx.budgetMillis());
+        }
+        return t;
+    }
+
+    /**
+     * The planner's estimate of the rows a query reads (the layers' row counts of the dates it reads, the live tables' rows), refused above the budget
+     * ({@code options.budget.rows}, else {@code drishti.bi.exec.max-estimated-rows}) with the estimate and the fix ({@code DRS-9029}).
+     */
+    void estimate(Dataset d, SqlCompiler.Plan plan, Map<String, Layers.Layer> cols, Map<String, LiveTable> inMemory) {
+        long rows = 0;
+        for (String t : plan.tables()) {
+            Layers.Layer l = cols.get(t);
+            if (l != null) {
+                rows += l.rows();
             }
-            mine.decrementAndGet();
+            LiveTable lt = inMemory.get(t);
+            if (lt != null) {
+                rows += lt.status().rows();
+            }
+        }
+        QueryContext.Ctx ctx = QueryContext.current();
+        long budget = ctx.budgetRows() != null && ctx.budgetRows() > 0 ? ctx.budgetRows() : exec.maxEstimatedRows();
+        if (rows > budget) {
+            String rollups = d.rollups().stream().filter(r -> plan.tables().contains(r.table())).map(r -> r.name() + " " + r.by()).toList().toString();
+            throw new DrishtiException(ErrorCode.QUERY_COST, "the query would read about " + rows + " rows, over its budget of " + budget
+                    + (ctx.budgetRows() != null ? " (options.budget.rows)" : " (drishti.bi.exec.max-estimated-rows)") + ": add a date filter or a narrower window"
+                    + ("[]".equals(rollups) ? "" : ", or ask only the fields of a rollup " + rollups));
         }
     }
 
@@ -392,6 +453,9 @@ public final class QueryService implements AutoCloseable {
         if ("rollup".equals(q.layer()) && rollup == null) {
             throw new DrishtiException(ErrorCode.QUERY_INVALID, "no rollup of this dataset can answer the query (layer: rollup was asked for)");
         }
+        if (rollup == null) {
+            estimate(d, plan, cols, inMemory);                                  // the cost budget before anything runs (wave B, section 6.7)
+        }
         Map<String, SqlCompiler.Source> from = new LinkedHashMap<>();
         Map<String, String> components = null;
         String layerName = modes.contains("live") || modes.contains("history") ? "live" : "columns";
@@ -449,7 +513,7 @@ public final class QueryService implements AutoCloseable {
             return TableRelations.cached(d, table, layer.files(), Dialect.DUCKDB);
         };
         SqlCompiler.Compiled c = probe.compile(plan, reader, from, cap, components, timeContext(d, q, dates), more);
-        AnalyticEngine.Answer a = engine.query(c.sql(), c.params(), cap, props.timeout());
+        AnalyticEngine.Answer a = engine.query(c.sql(), c.params(), cap, timeout());
         return finish(ds, q, c, a, layerName, rollup == null ? null : rollup.name(), dates, warnings, explain);
     }
 
@@ -780,6 +844,7 @@ public final class QueryService implements AutoCloseable {
             }
         }
         bus.publish(new GenerationBus.Notice(ds.key(), null, date.isBefore(sources.currentDate()) ? "backdated" : "refresh", date, layers.generation(ds.key()), null));
+        events.rebuild((System.nanoTime() - t0) / 1e9);
         return new Refreshed(shown, tables.stream().map(Dataset.Table::name).toList(), rows, Math.round((System.nanoTime() - t0) / 1e6), warnings.stream().distinct().toList());
     }
 

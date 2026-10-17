@@ -201,6 +201,9 @@ final class StandingQueryRegistry implements AutoCloseable {
     /** A change of some model's data: each group on that model whose answer it can move is scheduled. */
     void onNotice(GenerationBus.Notice n) {
         notices.incrementAndGet();
+        if (!n.origin().isEmpty() && ("live".equals(n.cause()) || "history".equals(n.cause()))) {
+            return;                                                             // live data is each node's own: its live tables hear the connector themselves
+        }
         for (Group g : groups.values()) {
             if (!g.modelKey.equals(n.key()) || g.members.isEmpty() && g.emptySince != null) {
                 continue;
@@ -264,7 +267,11 @@ final class StandingQueryRegistry implements AutoCloseable {
         ReentrantLock owner = owners.computeIfAbsent(g.owner.user(), u -> new ReentrantLock());
         owner.lock();
         try {
-            evaluateAs(g);
+            com.ash.drishti.server.bi.engine.QueryContext.with(new com.ash.drishti.server.bi.engine.QueryContext.Ctx(
+                    com.ash.drishti.server.bi.engine.QueryContext.WorkClass.STANDING, null, null), () -> {
+                        evaluateAs(g);                                          // the standing work class: after interactive questions, not a person's share
+                        return null;
+                    });
         } finally {
             owner.unlock();
         }

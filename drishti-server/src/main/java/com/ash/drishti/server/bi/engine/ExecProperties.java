@@ -20,15 +20,13 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Execution, scale and connectors, {@code drishti.bi.exec.*} (wave B, docs/architecture/BI_DESIGN.md sections 6.3, 6.5, 6.6 and 6.7; docs/admin/CONFIGURATION.md).
+ * Execution, connectors and scale, {@code drishti.bi.exec.*} (wave B, docs/architecture/BI_DESIGN.md sections 6.3, 6.5, 6.6 and 6.7;
+ * docs/admin/CONFIGURATION.md). The server's slots and a person's share are {@code drishti.bi.query.max-concurrent} and {@code max-concurrent-per-user}.
  *
- * @param slots query slots of the server (0: twice the processors)
- * @param perUser queries of one person at once (the next waits)
  * @param perModelShare the share of the slots one model may hold at once, 0 to 1
- * @param queue how long a query waits for a slot before {@code DRS-9025} (with {@code Retry-After})
- * @param maxMemoryMb the memory one query may use on the Java tier (the engine's memory limit; past the spill budget {@code DRS-9028})
+ * @param queue how long a source fragment waits for its connector's pool before {@code DRS-9025}
  * @param interactive the longest an interactive query runs ({@code DRS-9024} after)
- * @param background the longest background work runs (refresh, precompute, standing-query maintenance)
+ * @param background the longest standing-query maintenance and background work runs
  * @param maxEstimatedRows the planner's estimate of rows read past which a query is refused ({@code DRS-9029}) unless its {@code options.budget} allows more
  * @param maxFragments source fragments (layer builds, direct queries) one connector runs at once
  * @param breakerFailures consecutive failures of a connector that open its circuit breaker
@@ -38,16 +36,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param nodes every Java node of the site: name to its base URL ({@code java-1: http://10.0.0.5:18480}); empty: one node
  */
 @ConfigurationProperties("drishti.bi.exec")
-public record ExecProperties(Integer slots, Integer perUser, Double perModelShare, Duration queue, Integer maxMemoryMb, Duration interactive, Duration background,
-        Long maxEstimatedRows, Integer maxFragments, Integer breakerFailures, Duration breakerOpen, Map<String, Map<String, Object>> connectors, String node,
-        Map<String, String> nodes) {
+public record ExecProperties(Double perModelShare, Duration queue, Duration interactive, Duration background, Long maxEstimatedRows, Integer maxFragments,
+        Integer breakerFailures, Duration breakerOpen, Map<String, Map<String, Object>> connectors, String node, Map<String, String> nodes) {
 
     public ExecProperties {
-        slots = slots == null || slots <= 0 ? Math.max(2, 2 * Runtime.getRuntime().availableProcessors()) : slots;
-        perUser = perUser == null || perUser <= 0 ? 4 : perUser;
         perModelShare = perModelShare == null || perModelShare <= 0 || perModelShare > 1 ? 0.5 : perModelShare;
         queue = positive(queue, Duration.ofMillis(2000));
-        maxMemoryMb = maxMemoryMb == null || maxMemoryMb <= 0 ? 512 : maxMemoryMb;
         interactive = positive(interactive, Duration.ofSeconds(30));
         background = positive(background, Duration.ofSeconds(300));
         maxEstimatedRows = maxEstimatedRows == null || maxEstimatedRows <= 0 ? 200_000_000L : maxEstimatedRows;
@@ -73,12 +67,12 @@ public record ExecProperties(Integer slots, Integer perUser, Double perModelShar
         return v instanceof Number n && n.intValue() > 0 ? n.intValue() : v != null && String.valueOf(v).matches("\\d+") ? Integer.parseInt(String.valueOf(v)) : maxFragments;
     }
 
-    /** The slots one model may hold at once. */
-    public int modelSlots() {
+    /** The slots one model may hold at once, of {@code slots}. */
+    public int modelSlots(int slots) {
         return Math.max(1, (int) Math.floor(slots * perModelShare));
     }
 
     public static ExecProperties defaults() {
-        return new ExecProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        return new ExecProperties(null, null, null, null, null, null, null, null, null, null, null);
     }
 }

@@ -155,8 +155,52 @@ public final class StandingQueries implements AutoCloseable {
                 .map(s -> Map.<String, Object>of("kind", "subscription", "id", s.id, "title", "live query (" + s.deliver + ")", "status", state(s), "owner", s.owner.user())).toList();
     }
 
+    // ---- several Java nodes (wave B, section 6.5) --------------------------------------------------------------------
+
+    /** A subscription held on another node (its owner of the model's shard): kept here so that it is held again when that node is lost. */
+    private record Remote(String id, Principal owner, ModelQuery query, Duration throttle, String deliver, String node, String modelKey) {}
+
+    private volatile ShardDirectory directory;
+    private volatile Map<String, ShardDirectory.Peer> peers = Map.of();
+    private final Map<String, Remote> remotes = new ConcurrentHashMap<>();
+
+    /** Joins a site of several Java nodes: subscriptions on a model whose shard another node owns are held there (sticky by shard). */
+    public void cluster(ShardDirectory dir, Map<String, ShardDirectory.Peer> others) {
+        this.directory = dir;
+        this.peers = Map.copyOf(others);
+    }
+
     /** Subscribes the caller to a query: the first answer and the cursor it is at (the group's, when another reader of the same signature holds it already). */
     public Map<String, Object> subscribe(Principal p, ModelQuery q, Duration throttle, String deliver) {
+        return subscribe(p, q, throttle, deliver, "sq_" + HexFormat.of().formatHex(bytes()));
+    }
+
+    /**
+     * As {@link #subscribe(Principal, ModelQuery, Duration, String)} under a given id: a node that forwards a subscription to the shard's owner keeps its id,
+     * so the subscription is the same one when it is held again elsewhere. On a site of several nodes, a model whose shard another node owns is held there.
+     */
+    public Map<String, Object> subscribe(Principal p, ModelQuery q, Duration throttle, String deliver, String id) {
+        ShardDirectory dir = directory;
+        if (dir != null) {
+            String key = catalog.bind(p, q.model()).view().key();
+            String owner = dir.owner(key);
+            if (!owner.equals(dir.self())) {
+                ShardDirectory.Peer peer = peers.get(owner);
+                if (peer == null || !peer.alive()) {
+                    throw new DrishtiException(com.ash.drishti.common.ErrorCode.SQ_OWNER_UNREACHABLE, "the node that holds this model's standing queries (" + owner
+                            + ") cannot be reached: try again");
+                }
+                Map<String, Object> out = peer.subscribe(p, q, throttle, deliver, id);
+                remotes.put(id, new Remote(id, p, q, throttle, deliver, owner, key));
+                Map<String, Object> m = new LinkedHashMap<>(out);
+                m.put("node", owner);
+                return m;
+            }
+        }
+        return subscribeHere(p, q, throttle, deliver, id);
+    }
+
+    private Map<String, Object> subscribeHere(Principal p, ModelQuery q, Duration throttle, String deliver, String id) {
         sweep();
         if (!DELIVERIES.contains(deliver)) {
             throw new MqException(MqException.Problem.of("DRS-9150", "deliver", "deliver is rows, diff or value"));
@@ -174,7 +218,7 @@ public final class StandingQueries implements AutoCloseable {
             throw new MqException(MqException.Problem.of("DRS-9182", "", "you hold " + mine + " standing queries already (drishti.bi.mq.max-subscriptions-per-user): close one"));
         }
         Duration t = throttle == null || throttle.compareTo(props.minThrottle()) < 0 ? props.minThrottle() : throttle;
-        Sub s = new Sub("sq_" + HexFormat.of().formatHex(bytes()), p, q, deliver, t, clock.instant());
+        Sub s = new Sub(id, p, q, deliver, t, clock.instant());
         StandingQueryRegistry.Group g = registry.join(p, b, q, s.id, t);
         s.group = g;
         StandingQueryRegistry.Snapshot snap = g.snapshot();
@@ -207,6 +251,15 @@ public final class StandingQueries implements AutoCloseable {
 
     /** Ends a subscription of the caller (DRS-9180 when they hold none of that id). */
     public void unsubscribe(Principal p, String id) {
+        Remote r = remotes.get(id);
+        if (r != null && r.owner().user().equals(p.user())) {
+            remotes.remove(id);
+            ShardDirectory.Peer peer = peers.get(r.node());
+            if (peer != null && peer.alive()) {
+                peer.unsubscribe(p, id);
+            }
+            return;
+        }
         Sub s = subs.get(id);
         if (s == null || !s.owner.user().equals(p.user())) {
             throw new MqException(MqException.Problem.of("DRS-9180", "", "you hold no standing query '" + id + "'"));
@@ -218,10 +271,16 @@ public final class StandingQueries implements AutoCloseable {
     /** The caller's subscriptions among {@code ids} (all of theirs when empty); DRS-9180 for an id that is not theirs. */
     public List<String> mine(Principal p, List<String> ids) {
         if (ids.isEmpty()) {
-            return subs.values().stream().filter(s -> s.owner.user().equals(p.user())).map(s -> s.id).toList();
+            List<String> all = new ArrayList<>(subs.values().stream().filter(s -> s.owner.user().equals(p.user())).map(s -> s.id).toList());
+            remotes.values().stream().filter(r -> r.owner().user().equals(p.user())).forEach(r -> all.add(r.id()));
+            return all;
         }
         for (String id : ids) {
             Sub s = subs.get(id);
+            Remote r = remotes.get(id);
+            if (r != null && r.owner().user().equals(p.user())) {
+                continue;
+            }
             if (s == null || !s.owner.user().equals(p.user())) {
                 throw new MqException(MqException.Problem.of("DRS-9180", "ids", "you hold no standing query '" + id + "'"));
             }
@@ -235,7 +294,7 @@ public final class StandingQueries implements AutoCloseable {
      * current by the bus. Ids no longer held are skipped.
      */
     public List<Event> poll(List<String> ids) {
-        List<Event> out = new ArrayList<>();
+        List<Event> out = new ArrayList<>(remote(ids, false));
         Instant now = clock.instant();
         for (String id : ids) {
             Sub s = subs.get(id);
@@ -349,7 +408,7 @@ public final class StandingQueries implements AutoCloseable {
 
     /** The status of each subscription (the stream's heartbeat): its state ({@code live}, {@code throttled}, {@code tick}, {@code failed}), mode and cursor. */
     public List<Event> status(List<String> ids) {
-        List<Event> out = new ArrayList<>();
+        List<Event> out = new ArrayList<>(remote(ids, true));
         for (String id : ids) {
             Sub s = subs.get(id);
             if (s != null) {
@@ -365,6 +424,49 @@ public final class StandingQueries implements AutoCloseable {
                     m.put("lagMillis", g.lagMillis());
                 }
                 out.add(new Event("status", m));
+            }
+        }
+        return out;
+    }
+
+    /**
+     * The events of the subscriptions held on other nodes, asked of their owners. A subscription whose owner is lost is held again where its model's shard
+     * moved (here, or on the node that now owns it) under the same id: its first answer there is delivered as an {@code answer}, the stream goes on.
+     */
+    private List<Event> remote(List<String> ids, boolean status) {
+        if (remotes.isEmpty()) {
+            return List.of();
+        }
+        Map<String, List<String>> byNode = new LinkedHashMap<>();
+        for (String id : ids) {
+            Remote r = remotes.get(id);
+            if (r != null) {
+                byNode.computeIfAbsent(r.node(), k -> new ArrayList<>()).add(id);
+            }
+        }
+        List<Event> out = new ArrayList<>();
+        for (Map.Entry<String, List<String>> e : byNode.entrySet()) {
+            ShardDirectory.Peer peer = peers.get(e.getKey());
+            if (peer != null && peer.alive()) {
+                try {
+                    out.addAll(status ? peer.status(e.getValue()) : peer.poll(e.getValue()));
+                    continue;
+                } catch (RuntimeException lost) {
+                    // the node went away during the call: its subscriptions move below
+                }
+            }
+            for (String id : e.getValue()) {
+                Remote r = remotes.remove(id);
+                Map<String, Object> again = subscribe(r.owner(), r.query(), r.throttle(), r.deliver(), id);   // held where the shard is now
+                Object answer = again.get("answer");
+                if (answer instanceof Map<?, ?> a) {
+                    Map<String, Object> data = new LinkedHashMap<>();
+                    data.put("subscription", id);
+                    data.put("cursor", again.get("cursor"));
+                    data.put("rows", a.get("rows"));
+                    data.put("moved", again.getOrDefault("node", directory == null ? "" : directory.self()));
+                    out.add(new Event("answer", data));
+                }
             }
         }
         return out;
@@ -432,6 +534,11 @@ public final class StandingQueries implements AutoCloseable {
                 registry.leave(s.group, s.id);
             }
         }
+    }
+
+    /** The longest a group took from a change of its data to its new answer, in seconds (the metric {@code drishti_bi_sq_lag_seconds}). */
+    public double maxLagSeconds() {
+        return registry.groups().stream().mapToLong(StandingQueryRegistry.Group::lagMillis).max().orElse(0) / 1000.0;
     }
 
     /** Waits until every notice so far has been applied to the groups (tests; an orderly shutdown). */
