@@ -33,7 +33,7 @@ generate at its first start, except with --lake elsewhere, where it is written f
 only, the trades themselves (BMO_LEGAL_ENTITY read as LEGAL_ENTITY), a counterparty record for each real counterparty, an ISDA
 agreement and a netting set per counterparty and legal entity holding its real trades. Nothing is written to data/testdata, and a
 real trade whose id the test data already uses is left out (the test data wins). Staging files live under <data>/build/lake-demo and
-are removed at the end. Needs PyYAML, and deltalake and pyarrow (engine deltalake, the default; --engine auto uses the server jar).
+are removed at the end. The file connector's sample feed is written to <data>/feeds as well. Needs PyYAML, and deltalake and pyarrow (engine deltalake, the default; --engine auto uses the server jar).
 """
 from __future__ import annotations
 
@@ -209,6 +209,7 @@ class DemoLake:
             shutil.rmtree(self.staging, ignore_errors=True)
             with contextlib.suppress(OSError):
                 self.staging.parent.rmdir()                   # <data>/build, when nothing else is in it
+        self.feeds = self.write_feeds()
         elapsed = time.monotonic() - started
         notes = self.connector_files()
         self.report(elapsed, notes)
@@ -278,6 +279,12 @@ class DemoLake:
             print(f"  {domain}/{table}: {rows:,} rows over {len(self.manifest.dates)} days" + (" (failed)" if worst == 1 else ""))
         return worst
 
+    def write_feeds(self) -> pathlib.Path:
+        """<data>/feeds: the sample feed the file connector serves (SOFR history), as tools/packgen/banking/make_data.py writes it."""
+        sys.path.insert(0, str(ROOT / "tools" / "packgen" / "banking"))
+        import make_data
+        return make_data.write_feeds(self.data / "feeds")
+
     @staticmethod
     def checkpoint(path: pathlib.Path) -> None:
         """A checkpoint after the table's commits (a partitioned table takes one a partition a day), so a reader replays one file."""
@@ -344,6 +351,7 @@ class DemoLake:
               + (f"; real extracts added locally ({sum(len(v) for v in self.extras.values())} documents)" if self.extras else ""))
         if self.left_out:
             print(f"  left out {len(self.left_out)} real document(s) whose id the test data already uses")
+        print(f"Feeds: {self.feeds} (the file connector's sample feed)")
         print("Connector files:")
         for n in notes:
             print("  " + n)

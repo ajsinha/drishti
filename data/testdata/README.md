@@ -52,7 +52,7 @@ Written by `tools/testdata/make_testdata.py` (deterministic; `--check` says whet
    **today's business date** (the server's current date, so every page opens on data; `--as-of data` keeps the test data's own
    2026-09-22 to 2026-09-30, `--as-of 2026-10-30` any other end); the documents' own dates of the day (`AS_OF`, `VALUATION_DATE`,
    `RUN_DATE`, `SOURCE_UPDATE_TIME`) move with them. Measured from a clean copy on a 24-core laptop with an NVMe disk: **about 50 s,
-   800 MB peak memory**, 64 tables, 237 MB on disk (16 tables are static reference data built from the world-economy and
+   800 MB peak memory**, 64 tables, 243 MB on disk (16 tables are static reference data built from the world-economy and
    news-and-markets packs' samples).
 4. **Start** the server and the console: the run configurations **Drishti server (demo lakes)** (the samples off,
    `DRISHTI_DEMO_ENABLED=false`, so every page reads the lakes; with the samples on, a sample answers before the lake for an id both

@@ -64,12 +64,14 @@ class LakeDemo(unittest.TestCase):
             os.environ["DRISHTI_DATA_DIR"] = str(data)
             try:
                 a = demo.build_parser().parse_args(["--testdata", str(td), "--lake", str(lake), "--connectors-dir", str(conn), "--with-real", str(real),
-                                                    "--only", "trades/,core/counterparty,counterparty-risk/netting-set,counterparty-risk/agreement", "-q"])
+                                                    "--only", "trades/,core/counterparty,counterparty-risk/netting-set,counterparty-risk/agreement",
+                                                    "--as-of", "2026-10-30", "-q"])
                 with contextlib.redirect_stdout(io.StringIO()) as out:
                     self.assertEqual(demo.run(a), 0)
             finally:
                 os.environ.pop("DRISHTI_DATA_DIR") if old is None else os.environ.__setitem__("DRISHTI_DATA_DIR", old)
-            dates = json.loads(json.dumps(__import__("yaml").safe_load((td / "testdata.yaml").read_text())["business-dates"]))
+            # the seven days moved to end on --as-of: the seven USNY business days up to 2026-10-30
+            dates = ["2026-10-22", "2026-10-23", "2026-10-26", "2026-10-27", "2026-10-28", "2026-10-29", "2026-10-30"]
             for table in ("trading/trade_endur", "trading/trade_calypso", "trading/trade_murex", "reference/counterparty", "credit/netting-set"):
                 t = DeltaTable(str(lake / table)).to_pyarrow_table()
                 self.assertEqual(sorted({str(d) for d in t.column("business_date").to_pylist()}), dates, table)
@@ -80,6 +82,8 @@ class LakeDemo(unittest.TestCase):
             self.assertEqual(len(last), 41)                                   # 40 test trades and the made-up real one
             fake = json.loads(next(r["doc"] for r in last if r["id"] == "99000001"))
             self.assertEqual(fake["LEGAL_ENTITY"], "LE-TEST")                 # BMO_LEGAL_ENTITY read as LEGAL_ENTITY
+            stamps = {json.loads(r["doc"])["SOURCE_UPDATE_TIME"][:10] for r in last if r["id"] != "99000001"}
+            self.assertTrue(stamps and stamps <= set(dates) | {""}, stamps)   # the documents' dates of the day moved with the days
             cps = {r["id"] for r in DeltaTable(str(lake / "reference" / "counterparty")).to_pyarrow_table().to_pylist()}
             self.assertIn("MADE UP VAULTS", cps)
             ns = [json.loads(r["doc"]) for r in DeltaTable(str(lake / "credit" / "netting-set")).to_pyarrow_table().to_pylist()
@@ -90,6 +94,7 @@ class LakeDemo(unittest.TestCase):
             self.assertEqual(len(list((data / "connectors" / "history").glob("trade-endur.*.yaml"))), 1)
             self.assertTrue((conn / "trade-calypso.yaml").is_file())          # a lake elsewhere: the missing files are written
             self.assertFalse((data / "build" / "lake-demo").exists())        # staging removed
+            self.assertTrue((data / "feeds" / "fixing" / "SOFR-HISTORY.csv").is_file())
             self.assertIn("Demo lake ready", out.getvalue())
 
 
