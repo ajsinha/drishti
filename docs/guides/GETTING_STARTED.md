@@ -16,16 +16,23 @@
 
 # Install and run
 
-The reference for getting Drishti on a machine: install the tools, build the server, start the server and the console, turn on sign-in, other ways to build and run (a system Maven, an IDE, a different
-configuration file), running in Docker, and everything that differs on Windows. It does not teach the product: the first quarter of an hour in it is [tutorial 1](../tutorials/01-first-15-minutes.md), and
-the [tutorials](../tutorials/README.md) take you through the rest. The whole install takes about 20 minutes, most of it waiting for the first build.
+The reference for getting Drishti onto a machine: install the tools, build the server, build the **demo lakes** from the
+committed test data, start the server and the console, sign in, make a personal API token for the command line, and the other
+ways to build and run (an IDE with no terminal, a system Maven, Docker, a different configuration file, Windows). It does not
+teach the product: the first quarter of an hour in it is [tutorial 1](../tutorials/01-first-15-minutes.md), and the
+[tutorials](../tutorials/README.md) take you through the rest. From a clean clone the whole install takes about 15 minutes on a
+laptop, most of it the first build.
 
 You will:
 
-1. install three tools;
+1. install the tools;
 2. download and build Drishti;
-3. start the **server** (the part that reads data) and the **console** (the web pages you use);
-4. optionally turn on sign-in and change the development admin's password.
+3. build the demo lakes (seven business days of production-shaped data, one command);
+4. start the **server** (the part that reads data) and the **console** (the web pages you use);
+5. sign in, and make an API token for scripts and the command line.
+
+The short form of steps 2 to 5 is [data/testdata/README.md](../../data/testdata/README.md) ("Quick start: five steps"); this guide
+is the same path with every option and what you should see at each step.
 
 ## What Drishti is, in one minute
 
@@ -33,49 +40,73 @@ Drishti is a data viewer that you drive from the keyboard, like a Bloomberg term
 **command** and press Enter, and a full screen of figures, tables and charts appears:
 
 ```text
-TRD MX-20000001        a trade: an interest rate swap
-NSET NS-SUMMIT-NY  a netting set: all trades with one counterparty under one agreement
-CUST CUST-100231   a retail bank customer
-GENE GENE-TP53     a gene
+TRD 1000001             a trade booked in ENDUR: a commodity swap, its legs side by side, cash flows and resets
+TRD MX-20000001         a trade booked in MUREX: an interest rate swap
+CTRD CP-NORTHPLAINS     every live trade with one counterparty, payments due, maturity ladder
+NSET NS-SUMMIT-NY       a netting set: the trades with one counterparty under one agreement, exposure, CVA
+CPTY CP-NORTHBRIDGE     a counterparty: UEN, country of risk, legal entity, netting sets
 ```
 
-The first word is a **mnemonic** (a short code for a kind of thing: `TRD` is trade). The second is the
-**identifier** of one thing of that kind. In the docs we write `<GO>` after a command to mean "press Enter".
+The first word is a **mnemonic** (a short code for a kind of thing: `TRD` is a trade). The second is the **identifier** of
+one thing of that kind. In the docs we write `<GO>` after a command to mean "press Enter".
 
 There are two programs:
 
 | Program | What it does | Address |
 |---|---|---|
-| **Server** (Java) | Reads data from the sources, lays out each screen, sends live updates | `http://localhost:18480` |
-| **Console** (Python) | The web pages you see in your browser | `http://localhost:17480` |
+| **Server** (Java) | Reads data from the sources (Delta lakes, databases, files, message streams), lays out each screen, answers BI queries, pushes live updates | `http://localhost:18480` |
+| **Console** (Python) | The web pages you see in your browser; it computes nothing itself, the server does | `http://localhost:17480` |
 
 You always open the **console** in your browser. The console talks to the server for you.
 
-Industries are added as **packs**: a banking pack knows about trades and curves, a genomics pack knows
-about genes and variants. You choose which packs to load when you start the server.
+Industries are added as **packs**. Seven ship with Drishti and load by default:
+
+| Pack | What it knows | Builds on |
+|---|---|---|
+| `core` | counterparties (UEN, country of risk), groups, issuers, CCPs, legal entities, books, desks, traders, calendars | nothing |
+| `market-data` | curves, vol surfaces and cubes, FX, fixings, indices, equities, commodities, bonds | `core` |
+| `trading` (`TRD`) | trades from three source systems (ENDUR, CALYPSO, MUREX), one view of them | `core`, `market-data` |
+| `counterparty-risk` | agreements, CSAs, netting sets, collateral, margin calls, limits, exposure, CVA, SA-CCR, SIMM | `trading` |
+| `market-risk` | trade valuations, sensitivities, VaR, stress, P&L explain | `market-data`, `trading` |
+| `world-economy` | economies, macro indicators, forecasts, elections, parties, regions (public data) | nothing |
+| `news-and-markets` | news topics, listed companies, quotes (fetched on demand) | nothing |
+
+Every attribute of every kind is written in UPPER_SNAKE (`TRADE_ID`, `PRODUCT_TYPE`, `COUNTERPARTY`, `LEGS` → `CASH_FLOWS` →
+`RESETS`), the way the production source systems name them. Retired example packs (finance, genomics, logistics, retail
+banking, climate, operational and liquidity risk) live in `examples/packs/` and load only when you ask for them
+([PACKS.md](PACKS.md)).
+
+## Two ways to run it: the IDE or a terminal
+
+| | You need | Read |
+|---|---|---|
+| **IntelliJ IDEA and PyCharm, no terminal** | the two IDEs; the repository's ready-made run configurations in `run-configs/` (**Build demo lakes**, **Drishti build server jar**, **Drishti server (demo lakes)**, **Drishti console**, a QA profile, the CLI tools) | [IDE_GUIDE.md](IDE_GUIDE.md); this guide's steps 1 and 2, then run the configurations in the order of steps 3 to 7 |
+| **A terminal** | the commands below | this guide |
+
+Both give the same result: the run configurations hold exactly the settings the terminal commands below spell out.
 
 ## Step 1 · Install the prerequisites
 
 You need a Linux or macOS machine with the tools below. On Windows, Drishti runs natively (no WSL, no Hadoop
-`winutils.exe`): follow [GETTING_STARTED.md (Windows)](#drishti-on-windows), which covers the same steps in PowerShell.
+`winutils.exe`): follow [Drishti on Windows](#drishti-on-windows), which covers the same steps in PowerShell.
 
 | Tool | Version | Why | Check with |
 |---|---|---|---|
 | OpenJDK | **21** or newer (production runs 21) | builds and runs the server | `java -version` |
-| Python | 3.11 or newer | runs the console | `python3 --version` |
-| uv | any recent | creates the console's Python environment and builds sample history | `uv --version` |
+| Python | 3.11 or newer (3.13 recommended) | runs the console and the command-line tools | `python3 --version` |
+| uv | any recent (**recommended**) | makes the console's Python environment; works where `python3 -m venv` cannot | `uv --version` |
 | git | any | downloads the code | `git --version` |
-| Docker | optional | only to run everything in containers, or the PostgreSQL/Aerospike/Kafka extras | `docker --version` |
+| Docker | optional | only to run everything in containers, or the PostgreSQL/Kafka/… extras | `docker --version` |
 
 On Ubuntu or Debian:
 
 ```bash
-sudo apt install openjdk-21-jdk python3 python3-venv git curl   # any JDK 21 or newer works
+sudo apt install openjdk-21-jdk git curl             # any JDK 21 or newer works
 curl -LsSf https://astral.sh/uv/install.sh | sh      # installs uv into ~/.local/bin
 ```
 
-Drishti builds and runs on Java 21 or newer and refuses an older one; Java 21 is the production target and the recommended runtime; Java 25 is also tested and supported. Point `JAVA_HOME` at
-a JDK 21 or newer (these examples use 21) in every terminal you use for Drishti. On Ubuntu the path is:
+Drishti builds and runs on Java 21 or newer and refuses an older one; Java 21 is the production target, Java 25 is also tested.
+Point `JAVA_HOME` at a JDK 21 or newer in every terminal you use for Drishti. On Ubuntu the path is:
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
@@ -87,7 +118,7 @@ You should see a line that starts with `openjdk version "21.` (or a newer versio
 
 > **Tip:** add the two `export` lines to your `~/.bashrc` so new terminals get them too.
 
-You do **not** need to install Maven. The repository has its own copy (`./mvnw`).
+You do **not** need to install Maven. The repository has its own copy (`./mvnw`, Maven 3.9.12).
 
 ## Step 2 · Download the code
 
@@ -96,87 +127,153 @@ git clone https://github.com/ajsinha/drishti.git
 cd drishti
 ```
 
-Every command in the rest of this guide is run **from this `drishti` folder** (the repository root).
-The server finds the packs (`./config/packs`) and its data (`./data`) relative to where you start it.
+Every command in the rest of this guide is run **from this `drishti` folder** (the repository root). The server finds the packs
+(`./config/packs`) and its data folder (`./data`, or `DRISHTI_DATA_DIR`) relative to where you start it. The clone already holds
+the test data the demo lakes are built from: `data/testdata/` (about 23 MB of `.jsonl.gz`, the one folder under `data/` that is
+committed).
 
 ## Step 3 · Build the server
 
 ```bash
-./mvnw -q package -DskipTests
+./mvnw -q package -DskipTests -pl drishti-server -am
 ```
 
-The first build downloads its libraries and takes several minutes; later builds are much faster.
-`-q` keeps the output quiet, so a successful build prints little or nothing. When it finishes, check
-that the server program was built:
+The first build downloads its libraries and takes several minutes; later builds take about a minute (measured: 1 min 12 s on a
+24-core laptop with the libraries cached). `-q` keeps the output quiet, so a successful build prints nothing. `-pl drishti-server
+-am` builds the server and the modules it needs; `./mvnw -q package -DskipTests` builds every module (the benchmarks and the
+integration tests too), which is slower and gives the same server. When it finishes, check that the server program was built:
 
 ```bash
 ls drishti-server/target/*-exec.jar
 ```
 
-You should see `drishti-server/target/drishti-server-2.2.0-exec.jar`.
+You should see `drishti-server/target/drishti-server-2.2.0-exec.jar`. In the IDE this step is the run configuration
+**Drishti build server jar**.
 
-> **Note:** `./mvnw -q verify` builds **and** runs every test (several minutes more). Use it when you
-> change code; for a first try, `package -DskipTests` is enough.
+> **Note:** `./mvnw -q verify` builds **and** runs every test (much longer). Use it when you change code; for a first try,
+> `package -DskipTests` is enough.
 
-If the build stops with `Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java …`, your `JAVA_HOME` is older than Java 21. Go
-back to Step 1.
+If the build stops with `Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java …`, your
+`JAVA_HOME` is older than Java 21. Go back to Step 1.
 
-## Step 4 · Set up the console
+## Step 4 · Set up the console's Python
 
-Create a private Python environment for the console and install its libraries into it:
+Create a private Python environment for the console, the same environment the command-line tools (`tools/drishti.py`) and the
+lake builder use, and install its libraries into it. With **uv** (recommended):
 
 ```bash
-uv venv drishti-console/.venv
+uv venv --python 3.13 drishti-console/.venv
 uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
 ```
 
-You should see uv report the packages it installed (FastAPI, Uvicorn, Jinja2 and a few more).
+uv fetches Python 3.13 if the machine does not have it, then installs FastAPI, Uvicorn, PyYAML, pandas, pyarrow, deltalake and the
+rest. Check it:
 
-If you will use **Calc** (Python in the browser), install its runtime once with `tools/fetch-pyodide.sh` (about a
-340 MB download, cached; on Windows run it in Git Bash or WSL). Without it a Calc panel stays dead; see
-[PYTHON_CALC.md](PYTHON_CALC.md) section 12 for the offline way.
+```bash
+drishti-console/.venv/bin/python -c "import deltalake, pyarrow, yaml, fastapi; print('ok', deltalake.__version__)"
+```
 
-Without uv, plain Python works too:
+You should see `ok 1.6.6` (or a newer deltalake).
+
+**Without uv**, plain Python works where its `venv` module is complete:
 
 ```bash
 python3 -m venv drishti-console/.venv
 drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt
 ```
 
-## Step 5 · (Recommended) Build the sample history
+> **`ensurepip is not available`.** On Debian and Ubuntu the system Python ships without `ensurepip` until you install the
+> matching `python3.X-venv` package, and `python3 -m venv` stops with *The virtual environment was not created successfully because
+> ensurepip is not available … apt install python3.14-venv* (seen on Ubuntu with Python 3.14.4). Either install that package
+> (`sudo apt install python3.14-venv`, matching your `python3 --version`) or use uv as above, which needs neither.
 
-The packs come with sample documents for **today** (the server serves them live, so they tick). To
-look at **past business dates** and compare dates, you also need a small history: a local Delta Lake
-under `data/delta/`. It is not in git because it is generated. Build it once:
+If you will use **Calc** (Python in the browser on a view), install its runtime once with `tools/fetch-pyodide.sh` (about a 340 MB
+download, cached; on Windows run it in Git Bash or WSL). Without it a Calc panel stays dead; see
+[PYTHON_CALC.md](PYTHON_CALC.md) section 12 for the offline way. BI never computes in your browser: every number on a BI page comes
+from the server.
+
+## Step 5 · Build the demo lakes
+
+The demo lakes are what the seven packs read: one Delta table per dataset, seven business days each, built from the committed
+test data in one command:
 
 ```bash
-# core, market-data, trading, market-risk, counterparty-risk
-uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta
-
-# world-economy (economics and politics, real public data)
-uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/world/make.py --lake data/delta
+drishti-console/.venv/bin/python tools/drishti.py lake demo
 ```
 
-(news-and-markets has no lake: its headlines and quotes are fetched on demand. The retired example packs in `examples/packs`
-have their own generators, `tools/packgen/{liquidity,climate,oprisk,retail,genomics}/make.py`, with the same `--lake` option.)
+In the IDE this is the run configuration **Build demo lakes**. What you should see (the first lines, then the summary; the folder
+is your clone's):
 
-Each command prints what it wrote, for example `lake: … rows under data/delta (…)`. Afterwards
-`ls data/delta` lists one folder per data domain (`reference`, `legal`, `market`, `trading`, `risk`, `credit`,
-`collateral`, `civic`, `macro`).
+```text
+  trading/trade_endur: 34,957 rows over 7 days
+  trading/trade_calypso: 34,824 rows over 7 days
+  trading/trade_murex: 34,866 rows over 7 days
+  legal/agreement: 168 rows over 7 days
+  market/bond: 224 rows over 7 days
+  reference/book: 210 rows over 7 days
+  …
+  news/listed-company: 140 rows over 7 days
+  news/news-topic: 105 rows over 7 days
 
-The sample history holds ten business days, ending on **30 September 2026**.
+Demo lake ready: …/drishti/data/delta: 64 tables, 7 business days 2026-10-07 to 2026-10-16 (the test data's 2026-09-22 to 2026-09-30, moved to end on 2026-10-16), 53 s
+Feeds: …/drishti/data/feeds/fixing/SOFR-HISTORY.csv (the file connector's sample feed)
+Server: no server at http://localhost:18480: left …/drishti/data/bi-store/lake-rebuilt.json, so a server clears its stored BI columns and rollups at its next start
+Connector files:
+  civic-store: generated by the server at its first start (reads …/drishti/data/delta)
+  …
+  trade-calypso: generated by the server at its first start (reads …/drishti/data/delta)
+  trade-endur: generated by the server at its first start (reads …/drishti/data/delta)
+  trade-murex: generated by the server at its first start (reads …/drishti/data/delta)
+```
 
-> **Skip this step** if you only want to look around. Live views work without it; a view on a picked
-> date then says "*No data held for <date>*" and shows the current data, as a still snapshot.
+(The rows are the sum over the seven days: about 5,000 trades a day per source system.) Measured from a fresh clone: **53 s,
+807 MB peak memory**. What it did:
+
+- **Seven business days, ending on the last business day before today.** The test data's own days (2026-09-22 to 2026-09-30) are
+  moved to end on today's business date (on a Saturday, the Friday before), with the documents' own dates of the day (`AS_OF`,
+  `VALUATION_DATE`, `RUN_DATE`, `SOURCE_UPDATE_TIME`) moved with them, so every page opens on data. `--as-of data` keeps the test
+  data's dates; `--as-of 2026-10-30` ends on any date you choose.
+- **One table per dataset under `data/delta/<domain>/<kind>/`**, partitioned by business date. The trades go to one table per
+  source system, `data/delta/trading/trade_endur`, `trade_calypso` and `trade_murex`, partitioned by business date and
+  `PRODUCT_TYPE`; the three connectors `trade-endur`, `trade-calypso` and `trade-murex` read them and serve one kind, `trade`,
+  together.
+- **Told the server.** A running server gets the data-load signal for every table and date it wrote (`--server URL`, default
+  `DRISHTI_SERVER` then `http://localhost:18480`; with sign-in on, a token with the `loads:write` scope in `--token-file` or
+  `DRISHTI_TOKEN`). With no server running it leaves `data/bi-store/lake-rebuilt.json`, and the next server start clears the BI
+  store's stored columns and rollups so no old figure is served. Running `lake demo` again later is safe either way: a running
+  server also notices each rebuilt Delta date by itself. `--no-signal` skips both.
+- **Checked the connector files.** The packs' Delta connectors read `${DRISHTI_DELTA_ROOT:<data>/delta}`; with the default lake
+  nothing changes and the server writes the files at its first start ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)).
+
+Other options: `--lake DIR` builds elsewhere (the connector files are then pointed there, their earlier text kept under
+`data/connectors/history/`), `--only trades/,core/counterparty` builds some datasets, `--with-real FILE` adds a local real extract to
+your local lake only (never to `data/testdata`). The whole list: `drishti.py lake demo --help` and [TOOLS.md](TOOLS.md).
+
+> **Skip this step** and the server still starts: the packs' sample documents (served live by the demo source) answer for today,
+> and a view on a picked past date says "*No data held for <date>*".
 
 ## Step 6 · Start the server
 
-Open a terminal in the `drishti` folder and run:
+There are two ways to start it. Pick the first to explore on your own, the second for the demo lakes as the run configurations
+set them up (sign-in on, every page read from the lakes).
+
+**A. On the demo lakes, with sign-in** (the run configuration **Drishti server (demo lakes)**):
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 export DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets
 export DRISHTI_STUDIO_SAVE=true
+export DRISHTI_SECURITY_ENABLED=true
+export DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789
+export DRISHTI_SEED_ADMIN=true DRISHTI_SEED_USERNAME=drishti-dev-admin DRISHTI_SEED_PASSWORD=drishti-dev-admin123
+export DRISHTI_EXTERNAL_LIB=$PWD/external_lib
+export DRISHTI_DEMO_ENABLED=false
+java -Xmx4g -jar drishti-server/target/drishti-server-2.2.0-exec.jar
+```
+
+**B. The smallest start** (sign-in off, the packs' samples ticking live):
+
+```bash
 java -jar drishti-server/target/drishti-server-2.2.0-exec.jar
 ```
 
@@ -184,38 +281,55 @@ What the settings do:
 
 | Setting | Meaning |
 |---|---|
-| `DRISHTI_PACKS` | The packs to load, separated by commas. A pack's parents load with it: `market-risk` brings `core`, `market-data` and `trading`. Without this setting the same seven packs load (they are the default). |
-| `DRISHTI_STUDIO_SAVE=true` | Lets the Build workbench save Sutras (the view definitions it edits). Leave it out if you will not edit Sutras. |
+| `DRISHTI_PACKS` | The packs to load, comma-separated. A pack's parents load with it: `market-risk` brings `core`, `market-data` and `trading`. Without it the same seven load (they are the default). |
+| `DRISHTI_STUDIO_SAVE=true` | Lets the Build workbench save Sutras (the view layouts). Leave it out if you will not edit Sutras. |
+| `DRISHTI_SECURITY_ENABLED=true` | Sign-in on: every call needs a token. Off by default. |
+| `DRISHTI_TOKEN_SECRET` | The secret the server and the console share to sign tokens (at least 32 characters). The value above is the run configurations' development secret: never use it on a shared machine. |
+| `DRISHTI_SEED_ADMIN`, `DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD` | On the first start with no users, create this administrator (the values above are the defaults too). |
+| `DRISHTI_EXTERNAL_LIB` | The folder of extra jars and Python modules (`external_lib/java`, `external_lib/python`); default `external_lib` in the repository. |
+| `DRISHTI_DEMO_ENABLED=false` | The demo source (the packs' samples, ticking) off, so every page reads the lakes. With it on (the default) a sample answers before the lake for an id both hold; tutorial 12's live tiles need it on. |
 
-Leave this terminal open: the server runs in it and writes its log there. After a few seconds you
-should see a line like:
+Leave this terminal open: the server runs in it and writes its log there. After a few seconds you should see:
 
 ```text
-Started DrishtiApplication in 6.1 seconds
+… The lake was rebuilt while the server was stopped ({ … "by": "drishti.py lake demo" …): the BI store's columns and rollups were cleared and are built again from it
+… Started DrishtiApplication in 7.995 seconds (process running for 8.604)
 ```
 
-Check it from a second terminal:
+(The first line only once after a `lake demo` with no server running.) Check it from a second terminal; the health address is
+open even with sign-in on:
 
 ```bash
 curl -s localhost:18480/actuator/health
 ```
 
-You should see `{"status":"UP","groups":["liveness","readiness"]}`. To list the packs it loaded:
+You should see `{"status":"UP","groups":["liveness","readiness"]}`. With sign-in off (start B) you can list the packs at once:
 
 ```bash
 curl -s localhost:18480/api/v1/packs | python3 -c 'import json,sys; print([p["name"] for p in json.load(sys.stdin)])'
 ```
 
-You should see the seven names, starting with `core`, `market-data`, `trading`.
+`['core', 'market-data', 'trading', 'counterparty-risk', 'market-risk', 'world-economy', 'news-and-markets']`. With sign-in on the
+same call answers `401 DRS-5010 missing bearer token` until you send a token (Step 9).
 
-> **The smallest start.** `java -jar drishti-server/target/drishti-server-2.2.0-exec.jar` with no
-> settings loads the same seven packs. The small `finance` demo behind the four original mockups (`TRD IRS-48213`,
-> `TRD FXS-20931`, `TRD CFT-77120`, `NSET NS-NORTH-01`) is a retired example pack now: start with
-> `DRISHTI_PACKS_EXTRA_DIRS=examples/packs DRISHTI_PACKS=finance` to see it. Do not mix `finance` with the seven: both define `TRD` and `CRV`.
+At its first start the server writes one **connector file** per connector the packs suggest into `config/connectors/`
+(`trade-endur.yaml`, `market-store.yaml`, …) and a generated marker for each under `data/connectors/generated/`; edit the YAML to
+point a connector elsewhere ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)).
 
 ## Step 7 · Start the console
 
-Open another terminal in the `drishti` folder:
+Open another terminal in the `drishti` folder. With the server of start A (sign-in on), the console needs the same token secret
+and sign-in on (the run configuration **Drishti console**):
+
+```bash
+export DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789
+export DRISHTI_AUTH_ENABLED=true
+export DRISHTI_SESSION_SECRET=drishti-dev-only-session-secret-change-me-0123456789
+export DRISHTI_SECURE_COOKIE=false        # only for plain http on your own machine
+drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=17480 --backend.url=http://127.0.0.1:18480
+```
+
+With the server of start B (sign-in off), none of the `export` lines is needed:
 
 ```bash
 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
@@ -227,56 +341,16 @@ You should see:
 INFO:     Uvicorn running on http://0.0.0.0:17480 (Press CTRL+C to quit)
 ```
 
-Now open **http://localhost:17480** in your browser. You see the landing page with an animated eye.
-Click **Open the terminal**, or go straight to **http://localhost:17480/t**.
+> **The two must match.** A console started without `DRISHTI_TOKEN_SECRET` against a server with sign-in on cannot read anything:
+> its log says `business date unavailable: DRS-5010 missing bearer token` and pages stay empty. Start both with sign-in, or both
+> without.
 
-> **Signed in already?** Out of the box, sign-in is **off** so you can explore at once: you act as the
-> development user *Ash* with every role (the top bar shows `Rates desk · Ash`). Step 9 turns sign-in on.
+Now open **http://localhost:17480** in your browser. You see the landing page with an animated eye. Click **Open the terminal**,
+or go straight to **http://localhost:17480/t**.
 
-## Step 8 · Your first view
+## Step 8 · Sign in, and change the admin password
 
-Open http://localhost:17480, click in the command line (or press `/`), type `TRD MX-20000001` and press Enter: a full view of a trade, with a live MTM figure that changes and flashes. From there:
-
-| You want to | Go to |
-|---|---|
-| Open a trade, search, try the form, look at BI and make a token, in a guided quarter of an hour | [Tutorial 1 · Your first 15 minutes](../tutorials/01-first-15-minutes.md) |
-| Use mnemonics, type-ahead, links, a past business date and Compare | [Tutorial 2 · Look up anything](../tutorials/02-look-up-anything.md) |
-| Search by value (`TRD where mtm > 1m order by mtm desc`), by form, save a search and a monitor | [Tutorial 3 · Query by form](../tutorials/03-query-by-form.md) and [USER_GUIDE.md](USER_GUIDE.md#search-by-value) |
-| Set an alert and watch a list | [USER_GUIDE.md](USER_GUIDE.md#monitors) |
-
-If a command gives `DRS-4001` the mnemonic is unknown (is its pack loaded?); if a view says `DRS-1001 no source holds …` the id does not exist: type part of it and pick from the suggestions.
-
-## Step 9 · (Optional) Turn on sign-in and change the admin password
-
-With sign-in off, anyone who can reach the console acts as the development user. To try real
-sign-in on your machine, stop both programs (`Ctrl+C` in each terminal) and restart them with
-security on. Server and console must share the same **token secret**. Once it is on, the home page shows a **Sign in** button and, after signing in, your name with **Sign out**; with it off, the top bar's user menu says *Sign-in is off on this server*.
-
-```bash
-# in both terminals, the same value (at least 32 characters)
-export DRISHTI_TOKEN_SECRET=change-me-to-a-long-random-string-0123456789
-```
-
-Server terminal:
-
-```bash
-export DRISHTI_SECURITY_ENABLED=true
-java -jar drishti-server/target/drishti-server-2.2.0-exec.jar
-```
-
-Console terminal:
-
-```bash
-export DRISHTI_AUTH_ENABLED=true
-export DRISHTI_SESSION_SECRET=another-long-random-string-0123456789abcd
-export DRISHTI_SECURE_COOKIE=false        # only for plain http on your own machine
-drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
-```
-
-(`openssl rand -hex 32` prints a good random secret.)
-
-Now open http://localhost:17480/t. You are sent to **Sign in**. On first start with no users, the
-server creates a development administrator:
+With sign-in on you are sent to **Sign in**. On the first start with no users the server created the development administrator:
 
 | User | Password |
 |---|---|
@@ -284,43 +358,145 @@ server creates a development administrator:
 
 1. Sign in with those.
 2. Click your name in the top bar (or go to **http://localhost:17480/account**).
-3. Under **Change password**, type the current password, then a new one twice (at least 10 characters,
-   with letters and digits), and click **Change password**.
+3. Under **Change password**, type the current password, then a new one twice (at least 10 characters, with letters and digits),
+   and click **Change password**.
 
-Until you do, the admin's *Users* page warns that the development password is still in use. Five
-wrong passwords in a row lock an account for 15 minutes.
+Until you do, the admin's *Users* page warns that the development password is still in use. Five wrong passwords in a row lock an
+account for 15 minutes.
 
-**Admin** in the top bar opens the administration pages: *Users* (create users, give roles and packs),
-*Roles*, *Audit log*, *Packs*, *Connectors*, *Data loads*, *Collaboration*, *Embedding*, *Health* and *Caches*. Users, roles and packs per user are explained in
-[USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
+With sign-in off (start B) there is no sign-in: you act as the development user *Ash* with every role, and the top bar's user menu
+says *Sign-in is off on this server*.
 
-> **Production:** set `DRISHTI_SEED_ADMIN=false` so no development admin is created, and use long random
-> secrets. See [OPERATIONS.md](../admin/OPERATIONS.md).
+**Admin** in the top bar opens the administration pages, one tab each: *Users* (create users, give roles and packs), *Roles*,
+*Packs*, *Tokens*, *Access*, *Connectors*, *Artifacts*, *AI*, *Data loads*, *Collaboration*, *Embedding*, *BI*, *Audit log*,
+*Health* and *Caches* (*Lakes*, `/admin/lakes`, opens from *Connectors* and *Data loads*). Users, roles and
+packs per user are explained in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 
-## Step 10 · Switch packs, themes and settings
+> **Production:** set `DRISHTI_SEED_ADMIN=false` (or your own `DRISHTI_SEED_USERNAME`/`DRISHTI_SEED_PASSWORD`, as the Docker
+> setup does), and long random secrets (`openssl rand -hex 32`). See [OPERATIONS.md](../admin/OPERATIONS.md).
 
-- **Packs.** The box icon in the top bar shows how many packs you see (for example `12 packs`). Click it,
-  untick the ones you do not need, and click **Apply**. The examples, suggestions and help follow your
-  choice. You can only choose among packs the server loaded and an admin assigned to you.
-- **Themes.** The palette icon offers seven themes: Terminal, Parchment, Blue, Wall Street, Green, Crimson
-  and Crimson dark.
-- **Settings.** *My account → Settings* (`/account`) keeps your theme, the page to open after signing in
-  (for example `/v/trade/MX-20000001`), the clock's time zone, density, whether changes flash, and how many
-  search results to show.
+## Step 9 · Your first views
 
-## Step 11 · Find help
+Click in the command line (or press `/`), type `TRD 1000001` and press Enter: an ENDUR commodity swap, the deal ticket, its legs
+side by side, the cash flows opening to their resets, the payment ladder. The demo pages, on the console's port:
 
-- **Help** in the top bar (or `F1` on any page) opens the help centre at `/help`, with the tutorials, every
-  reference document and a search box. `F1` opens the help for the page you are on.
+| Page | What it shows |
+|---|---|
+| `/v/trade/1000001` (`TRD 1000001`) | an ENDUR trade: the ticket, legs side by side, cash flows and resets, the payment ladder |
+| `/v/trade/MX-20000001` (`TRD MX-20000001`) | a MUREX fixed/float interest rate swap |
+| `/v/trade/CLY-3000157` | a CALYPSO government bond |
+| `/v/counterparty-trades/CP-NORTHPLAINS` (`CTRD CP-NORTHPLAINS`) | a counterparty's live trades, payments due in 7/30/90 days, notional by product, maturity ladder |
+| `/v/netting-set/NS-NORTHPLAINS-NY` | its netting set: every member trade, exposure, CVA, collateral |
+| `/v/counterparty/CP-VAULTGUARD` (`CPTY CP-VAULTGUARD`) | a counterparty: UEN, country of risk, legal entity, netting sets |
+| `/bi` | the shipped BI reports and models over the seven business days |
+
+**Compare across days**: on a trade page pick the first of the seven dates `lake demo` printed, then **Compare** with the last; an
+amended trade (its `TRADE_VERSION` moved) shows its changed rates, notionals, status or fees.
+
+From there:
+
+| You want to | Go to |
+|---|---|
+| Open a trade, search, try the form, look at BI and make a token, in a guided quarter of an hour | [Tutorial 1 · Your first 15 minutes](../tutorials/01-first-15-minutes.md) |
+| Use mnemonics, type-ahead, links, a past business date and Compare | [Tutorial 2 · Look up anything](../tutorials/02-look-up-anything.md) |
+| Search by value (`TRD where QUANTITY > 100m order by QUANTITY desc`: 6,062 of the 15,000 trades on the demo lakes), by form, save a search and a monitor | [Tutorial 3 · Query by form](../tutorials/03-query-by-form.md) and [USER_GUIDE.md](USER_GUIDE.md#search-by-value) |
+| Set an alert and watch a list | [USER_GUIDE.md](USER_GUIDE.md#monitors) |
+
+If a command gives `DRS-4001` the mnemonic is unknown (is its pack loaded?); if a view says `DRS-1001 no source holds …` the id does
+not exist: type part of it and pick from the suggestions.
+
+## Step 10 · A personal API token for the command line
+
+Scripts, notebooks, Excel and `tools/drishti.py` call the server with a **personal API token**. Make one:
+
+- **In the UI:** your name in the top bar → **My account** (`/account`) → **API tokens**: a name, how many days, and the scopes it may
+  write with (none: it only reads; `loads:write` lets it announce data loads, `bi:write` edit BI items, `packs:admin` manage packs and
+  connectors, …), then **Create**. The secret (`drk_<id>_<secret>`) is shown **once**: copy it into a file only you can read.
+- **Over the API** (with a session token, as the console does): `POST /api/v1/me/tokens` with
+  `{"name": "laptop", "days": 30, "scopes": []}` answers `201` with the token's record and its `secret`
+  ([API_GUIDE.md](API_GUIDE.md#personal-api-tokens)).
+
+Then give it to the command line in a file (never on the command line itself) and check it:
+
+```bash
+umask 077; printf '%s' 'drk_…' > ~/drishti-token        # the secret you copied
+drishti-console/.venv/bin/python tools/drishti.py doctor --server http://localhost:18480 --token-file ~/drishti-token
+```
+
+The last lines of what you should see:
+
+```text
+GREEN  server                  http://localhost:18480: version 2.2.0, java 21.0.12.1, status UP
+GREEN  token                   accepted; this token 'cqFV714maGDy' acts as drishti-dev-admin: scopes read, expires 2026-10-18T21:33:38.684Z
+doctor: 0 red, 0 yellow
+```
+
+`DRISHTI_TOKEN` (the secret itself) and `DRISHTI_SERVER` (the base URL) work instead of the two options. A view in the terminal, as
+the token's user sees it (masks apply):
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py view get trade/MX-20000001 --server http://localhost:18480 --token-file ~/drishti-token
+```
+
+```text
+Rates · Interest rate swap (fixed/float)  MX-20000001  with CP-MERIDIAN-RE   [TRD]
+
+Key figures
+  figure      value
+  ----------  ---------------
+  Source      MUREX
+  Side        Sell
+  Notional    AUD 242,000,000
+  …
+```
+
+A read-only token refuses any change (`403 DRS-5002 API tokens only read`); a token with a write scope must expire (at most 90 days
+here, `writeMaxDays`). Revoke a token on the same page when you no longer use it. Every command: [CLI_GUIDE.md](CLI_GUIDE.md).
+
+## Step 11 · Switch packs, themes and settings
+
+- **Packs.** The box icon in the top bar shows how many packs you see (`7 packs`). Click it, untick the ones you do not need, and
+  click **Apply**. The examples, suggestions and help follow your choice. You can only choose among packs the server loaded and an
+  admin assigned to you.
+- **Themes.** The palette icon offers seven themes: Terminal, Parchment, Blue, Wall Street, Green, Crimson and Crimson dark.
+- **Settings.** *My account → Settings* (`/account`) keeps your theme, the page to open after signing in (for example
+  `/v/trade/1000001`), the clock's time zone, density, whether changes flash, and how many search results to show.
+
+## Step 12 · Find help
+
+- **Help** in the top bar (or `F1` on any page) opens the help centre at `/help`, with the tutorials, every reference document and
+  a search box. `F1` opens the help for the page you are on.
 - The **?** in each panel's header explains that kind of panel.
-- **About** (`/about`, linked in the footer) is the product page: what Drishti is, its features, measured performance, the competitive analysis, the technology and the licence. Versions and source health for admins are in *Admin → Health* (`/admin/health`).
+- **About** (`/about`, linked in the footer) is the product page: what Drishti is, its features, measured performance, the technology
+  and the licence. Versions and source health for admins are in *Admin → Health* (`/admin/health`).
 - Each pack has its own guide under *Help → Domain packs*, with example commands.
+
+## Where Drishti keeps things
+
+Nothing Drishti writes is hidden (no dot-folders of its own), and everything it writes at run time is under **one data folder**,
+`./data` by default (`DRISHTI_DATA_DIR` moves it):
+
+| Folder | What is in it |
+|---|---|
+| `data/testdata/` | the committed test data the demo lakes are built from (the only committed folder) |
+| `data/delta/` | the Delta lakes (`DRISHTI_DELTA_ROOT` moves them); `data/delta/_drishti-lake/` holds a lake's build log and lock |
+| `data/bi-store/` | the BI store: typed Parquet columns and rollups read from the lakes (`DRISHTI_BI_STORE`); `lake-rebuilt.json` appears here when `lake demo` could not tell a server |
+| `data/connectors/` | `generated/` (which connector files the server wrote from a pack's template) and `history/` (earlier text of every connector file changed by Admin, the API, the CLI or `lake demo`) |
+| `data/identity/` | users, roles, tokens (`drishti.db`, SQLite), the audit log |
+| `data/packs/` | the packs overlay `added.yaml` (packs loaded or switched off at run time) and installed pack archives |
+| `data/feeds/` | the file connector's feeds (the SOFR history `lake demo` writes) |
+| `data/loads/`, `data/governance/`, `data/collab/`, `data/reports/` | data-load history, BI governance, collaboration files, report output |
+| `data/qa/`, `data/build/`, `data/drill/` | the QA profile's own data, tool output (`lake demo` staging), the drill's logs |
+
+The repository itself holds code and configuration: `config/` (packs, connector files, BI files), `run-configs/` (the IDE run
+configurations), `docs/`, `tools/`, `external_lib/`.
 
 ## Stopping and starting again
 
-- Stop: press `Ctrl+C` in the server terminal and in the console terminal.
-- Start again: repeat Step 6 and Step 7 (with the same `export` lines). No rebuild is needed unless the
-  code changed. Your monitors, alerts, workspaces and settings are kept by the server under `./data`.
+- Stop: press `Ctrl+C` in the server terminal and in the console terminal (or the red square in the IDE).
+- Start again: repeat Step 6 and Step 7 (with the same `export` lines). No rebuild is needed unless the code changed. Your monitors,
+  alerts, workspaces and settings are kept by the server under `./data`.
+- New demo data: run Step 5 again, with the server running or not (it is told, or clears its BI store at its next start).
 
 ## Running everything in Docker (optional)
 
@@ -328,69 +504,62 @@ If you prefer containers, build the server first (Step 3), then:
 
 ```bash
 export DRISHTI_TOKEN_SECRET=$(openssl rand -hex 32) DRISHTI_SESSION_SECRET=$(openssl rand -hex 32)
+export DRISHTI_ADMIN_USER=admin DRISHTI_ADMIN_PASSWORD='choose-a-long-one-123'   # the first administrator; required
 export DRISHTI_PACKS=market-risk,counterparty-risk   # or leave it out for the seven packs
 docker compose -f deploy/compose.yaml up -d --build
 ```
 
-Sign-in is **on** in this setup: sign in at http://localhost:17480 as `drishti-dev-admin` /
-`drishti-dev-admin123` and change the password (Step 9). `docker compose -f deploy/compose.yaml down`
-stops it. Production details are in [OPERATIONS.md](../admin/OPERATIONS.md).
+Sign-in is **on** in this setup and there is **no** development admin: sign in at http://localhost:17480 as the
+`DRISHTI_ADMIN_USER` you chose. The containers serve the packs' samples (no lake is mounted; `deploy/compose.data.yaml` adds data
+stores). `docker compose -f deploy/compose.yaml down` stops it. Production details are in [OPERATIONS.md](../admin/OPERATIONS.md).
 
 ## Build and run without the wrapper, or from an IDE
 
-Everything above uses `./mvnw`. This section is for a machine that has its own Maven, and for working from
-IntelliJ IDEA and PyCharm. Commands were run on Ubuntu with Maven 3.9.12 and OpenJDK 21 (any Java 21 or newer works).
+Everything above uses `./mvnw`. This section is for a machine that has its own Maven, and for working from IntelliJ IDEA and
+PyCharm. Commands were run on Ubuntu with Maven 3.9.12 and OpenJDK 21 (any Java 21 or newer works).
 
 ### With Maven installed on the system
 
-The poms enforce only the Java version (`[21,)`, the rule that prints `Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java …`); they
-set no minimum Maven version. The wrapper pins **Maven 3.9.12** (`.mvn/wrapper/maven-wrapper.properties`), which is what
-the project is built and tested with; use 3.9.x. The enforcer rule checks the JVM Maven itself runs on, so set
-`JAVA_HOME` to Java 21 or newer (as in step 1) before `mvn`.
+The poms enforce only the Java version (`[21,)`, the rule that prints `Drishti needs Java 21 or newer (any vendor; production runs
+Java 21). Maven is running on Java …`); they set no minimum Maven version. The wrapper pins **Maven 3.9.12**
+(`.mvn/wrapper/maven-wrapper.properties`), which is what the project is built and tested with; use 3.9.x. The enforcer rule checks
+the JVM Maven itself runs on, so set `JAVA_HOME` to Java 21 or newer (as in step 1) before `mvn`.
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 export PATH="$JAVA_HOME/bin:$PATH"
-mvn -v                                  # "Apache Maven 3.9.…" and "Java version: 25.…"
+mvn -v                                  # "Apache Maven 3.9.…" and "Java version: 21.…"
 
 mvn -q package -DskipTests              # build (add -o to work offline once ~/.m2 is filled)
 mvn -q verify                           # build, every test and every rule
-mvn -q -pl drishti-server -am package -DskipTests    # one module and what it needs
+mvn -q -pl drishti-server -am package -DskipTests    # the server and what it needs
 ls drishti-server/target/*-exec.jar     # the application: drishti-server/target/drishti-server-2.2.0-exec.jar
 ```
 
-Run the server from the repository root (it finds `./config/packs` and `./data` relative to where you start it). It runs on
-Java 21 (the production target) or any newer JDK. Java-25-only note: `-XX:+UseCompactObjectHeaders` saves about 10% of the heap there, and Java 21 refuses to start with it, so leave it out on 21:
-
-```bash
-DRISHTI_PACKS=market-risk,counterparty-risk \
-  java -jar drishti-server/target/drishti-server-2.2.0-exec.jar
-```
-
-Run the console in a Python virtual environment (Python 3.11 or newer). With uv, as in step 3; without it:
-
-```bash
-python3 -m venv drishti-console/.venv           # Debian and Ubuntu: sudo apt install python3-venv first
-drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt          # add -r drishti-console/requirements-test.txt for pytest's extras
-drishti-console/.venv/bin/python drishti-console/run_drishti_web.py                # http://127.0.0.1:17480
-drishti-console/.venv/bin/python -m pytest drishti-console/tests -q                # the console's tests
-```
+Run the server from the repository root (it finds `./config/packs` and `./data` relative to where you start it). Java-25-only
+note: `-XX:+UseCompactObjectHeaders` saves about 10% of the heap there, and Java 21 refuses to start with it, so leave it out on 21.
 
 ### IntelliJ IDEA and PyCharm
 
-Running the server from IntelliJ IDEA and the console from PyCharm (run configurations, JDK and interpreter setup,
-debugging, reloading changes, tests in the IDE, common problems) has its own guide: **[IDE_GUIDE.md](IDE_GUIDE.md)**. The repository ships ready-made run configurations in `run-configs/` (server, a QA profile on its own ports and data folder, console, build the jar, the lake build and pack tools), so a tester needs only the two IDEs and no terminal.
+Running the server from IntelliJ IDEA and the console from PyCharm (the run configurations, JDK and interpreter setup, debugging,
+reloading changes, tests in the IDE, common problems) has its own guide: **[IDE_GUIDE.md](IDE_GUIDE.md)**. The repository ships
+ready-made run configurations in `run-configs/` (a visible folder; the IDE reads it as a project run-configuration folder): **Build
+demo lakes**, **Drishti build server jar**, **Drishti server**, **Drishti server (demo lakes)**, **Drishti server (debug-friendly)**,
+**Drishti console**, a QA profile on its own ports and data folder (**Drishti server (QA profile)**, **Drishti console (QA profile)**,
+the compound **Drishti QA (server + console)**), and the tools (`drishti doctor`, `drishti pack make`, `drishti sutra gen`,
+`drishti view get`, the QA lake build, …), so a tester needs only the two IDEs and no terminal.
 
-Where next from a terminal: **[CLI_GUIDE.md](CLI_GUIDE.md)** is the one command line, `tools/drishti.py`, for turning your JSON Lines
-into a pack, checking packs in CI, loading data and a pack into a running server, and the Screen Designer's propose and approve steps.
+Where next from a terminal: **[CLI_GUIDE.md](CLI_GUIDE.md)** is the one command line, `tools/drishti.py`, for turning your JSON
+Lines into a pack, checking packs in CI, loading data and a pack into a running server, lakes, and the Screen Designer's propose and
+approve steps.
 
 ## Supplying a different application config
 
 ### The server
 
-Spring Boot reads `application.yaml` from inside the jar, then `./application.local.yaml` (the bundled file imports it
-with `optional:`), and you can add more. Drishti's own `spring.config.import` entries are exactly two: that local file
-and the packs overlay `./data/packs/added.yaml` (`DRISHTI_PACKS_OVERLAY` moves it; the server writes it, do not edit it).
+Spring Boot reads `application.yaml` from inside the jar, then `./application.local.yaml` (the bundled file imports it with
+`optional:`), and you can add more. Drishti's own `spring.config.import` entries are exactly two: that local file and the packs
+overlay `<data>/packs/added.yaml` (`DRISHTI_PACKS_OVERLAY` moves it; the server writes it, do not edit it).
 
 | You want | Do | Command |
 |---|---|---|
@@ -402,12 +571,12 @@ and the packs overlay `./data/packs/added.yaml` (`DRISHTI_PACKS_OVERLAY` moves i
 | a profile's file of your own | name it `application-<profile>.yaml` beside your site file and add the location | `--spring.profiles.active=prod --spring.config.additional-location=file:/etc/drishti/` reads `/etc/drishti/application-prod.yaml` too |
 | **replace** the defaults (rare) | `--spring.config.location`, and keep the bundled file in the list | `--spring.config.location=classpath:/application.yaml,file:/etc/drishti/site.yaml` |
 
-**Do not** write `--spring.config.location=file:/etc/drishti/site.yaml` alone: it replaces the bundled
-`application.yaml`, so the server starts with none of Drishti's defaults (tried: it came up on Spring's port 8080, not
-18480). Prefer `additional-location`. A key set in a file you add overrides the bundled one; environment variables and
-`--key=value` arguments override both ([CONFIGURATION.md](../admin/CONFIGURATION.md#placeholders-namedefault)).
-Do not set the same key in both `application.local.yaml` and an additional file. The profiles the jar ships are `files`, `postgres`,
-`duckdb`, `mongodb`, `redis`, `aerospike` and `iceberg`.
+**Do not** write `--spring.config.location=file:/etc/drishti/site.yaml` alone: it replaces the bundled `application.yaml`, so the
+server starts with none of Drishti's defaults (tried: it came up on Spring's port 8080, not 18480). Prefer `additional-location`. A
+key set in a file you add overrides the bundled one; environment variables and `--key=value` arguments override both
+([CONFIGURATION.md](../admin/CONFIGURATION.md#placeholders-namedefault)). Do not set the same key in both `application.local.yaml`
+and an additional file. The profiles the jar ships are `files`, `postgres`, `duckdb`, `mongodb`, `redis`, `aerospike` and
+`iceberg`.
 
 A site file is ordinary YAML with the same keys as `application.yaml`; it needs only what you change:
 
@@ -422,10 +591,13 @@ drishti:
     studio-save: true
 ```
 
+Connectors are not configured here: each is a YAML file of its own in `config/connectors/`
+([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)).
+
 ### The console
 
-The console has **no flag or variable that points at another config file**: it reads `config/application.yaml`
-beside `run_drishti_web.py` (`drishti-console/config/`) and `drishti-console/config/application.local.yaml` if present
+The console has **no flag or variable that points at another config file**: it reads `config/application.yaml` beside
+`run_drishti_web.py` (`drishti-console/config/`) and `drishti-console/config/application.local.yaml` if present
 (`drishti-console/core/config.py`). Override it in one of three ways:
 
 ```bash
@@ -446,31 +618,29 @@ DRISHTI_CONSOLE__BACKEND__URL=http://127.0.0.1:18481 DRISHTI_CONSOLE_PORT=17481 
 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=17481 --backend.url=http://127.0.0.1:18481
 ```
 
-Later wins: the YAML, the local file, the environment, the arguments. To keep several configurations, keep several local
-files and copy the one you want to `drishti-console/config/application.local.yaml`, or set the environment per shell.
+Later wins: the YAML, the local file, the environment, the arguments. To keep several configurations, keep several local files and
+copy the one you want to `drishti-console/config/application.local.yaml`, or set the environment per shell.
 
 ### What the `${DRISHTI_PACKS:core,…}` in the files means
 
-A value written `${NAME:default}` is "the variable `NAME` if it is set, else `default`". The meaning, the order that
-wins, and a table of every such placeholder in both `application.yaml` files are in
+A value written `${NAME:default}` is "the variable `NAME` if it is set, else `default`". The meaning, the order that wins, and a
+table of every such placeholder in both `application.yaml` files are in
 [CONFIGURATION.md](../admin/CONFIGURATION.md#placeholders-namedefault).
 
 ## Drishti on Windows
 
+Drishti runs on Windows 10 and 11 (and Windows Server 2019 or later) without WSL, Docker or Hadoop. This section covers the same
+ground in PowerShell: installing Java (21 or newer, production runs 21) and Python, building the server or copying a built one,
+building the demo lakes, starting the server and the console, what does not work on Windows, and what to do when something goes
+wrong.
 
-Drishti runs on Windows 10 and 11 (and Windows Server 2019 or later) without WSL, Docker or Hadoop. This guide covers
-the same ground as this guide in PowerShell: installing Java (21 or newer, production runs 21) and Python, building the server
-or copying a built one, loading the demo lake, starting the server and the console, what does not work on Windows,
-and what to do when something goes wrong.
+Why it works without Hadoop: the Delta Lake connector reads through its **native engine** (module `drishti-deltalake`), which uses
+Java's own file access for local disk and the AWS SDK for S3. Hadoop's local file system, and with it `winutils.exe`, is never used.
+See [DELTA_CONNECTOR.md › Engines](../connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop).
 
-Why it works without Hadoop: the Delta Lake connector reads through its **native engine** (module
-`drishti-deltalake`), which uses Java's own file access for local disk and the AWS SDK for S3. Hadoop's local file
-system, and with it `winutils.exe`, is never used. See [DELTA_CONNECTOR.md › Engines](../connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop).
-
-> **Status.** The native engine is tested on Linux on every build, including its Windows path rules (drive letters,
-> backslashes, UNC shares) as unit tests. The `windows` GitHub Actions job builds, tests and starts the server on
-> `windows-latest`. Report what you find on your machine.
-
+> **Status.** The native engine is tested on Linux on every build, including its Windows path rules (drive letters, backslashes, UNC
+> shares) as unit tests. The `windows` GitHub Actions job builds, tests and starts the server on `windows-latest`. Report what you
+> find on your machine.
 
 ### 1. Install Java and Python
 
@@ -488,8 +658,7 @@ The Java you run Drishti with does not have to be the default Java. The scripts 
 $env:DRISHTI_JAVA_HOME = 'C:\Program Files\Eclipse Adoptium\jdk-21.0.5.11-hotspot'   # your JDK folder
 ```
 
-If PowerShell refuses to run the scripts (*running scripts is disabled on this system*), allow local scripts for your
-user once:
+If PowerShell refuses to run the scripts (*running scripts is disabled on this system*), allow local scripts for your user once:
 
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
@@ -503,41 +672,39 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 git clone https://github.com/ajsinha/drishti.git
 cd drishti
 $env:JAVA_HOME = $env:DRISHTI_JAVA_HOME
-.\mvnw.cmd -q package -DskipTests
+.\mvnw.cmd -q package -DskipTests -pl drishti-server -am
 dir drishti-server\target\*-exec.jar
 ```
 
 You should see `drishti-server-2.2.0-exec.jar`. To also run the tests of the Delta engine and connector:
 `.\mvnw.cmd -q verify -pl drishti-deltalake,plugins/drishti-plugin-delta -am` (tests that need Docker skip themselves).
 
-**Or copy** a server built elsewhere (on Linux, or by CI): Java bytecode is the same on every system. Make a folder,
-for example `C:\drishti`, holding:
+**Or copy** a server built elsewhere (on Linux, or by CI): Java bytecode is the same on every system. Make a folder, for example
+`C:\drishti`, holding:
 
 | Copy | From | Why |
 |---|---|---|
 | `drishti-server-2.2.0-exec.jar` | `drishti-server\target\` | the server (all its libraries are inside) |
 | `config\packs\` | the repository root | the domain packs (Sutras, mnemonics, samples). Also `config\connectors\` (connector files) and `config\bi\` (BI datasets and reports) if you use them |
 | `drishti-console\` | the repository root | only if you will run the console on this machine |
-| `tools\windows\`, `tools\packgen\`, `tools\samplegen\` | the repository's `tools\` | the scripts, and the lake generator if you will build the demo lake here |
-| `data\` | an existing installation, if any | the lake (`data\delta`), users (`data\identity`), feeds, reports; start without it and it is created |
+| `tools\` and `data\testdata\` | the repository | the scripts and `drishti.py`, and the test data if you will build the demo lakes here |
+| `data\` | an existing installation, if any | the lakes (`data\delta`), users (`data\identity`), feeds, reports; start without it and it is created |
 | `application.local.yaml` | your own, if any | site settings; read from the folder the server starts in |
 
-Without a clone, put the scripts in `C:\drishti\tools\windows\`: they work from the folder two levels above
-themselves, and look for the jar in `drishti-server\target\` and then in that folder.
+Without a clone, put the scripts in `C:\drishti\tools\windows\`: they work from the folder two levels above themselves, and look
+for the jar in `drishti-server\target\` and then in that folder.
 
-### 3. Load the demo lake
+### 3. Build the demo lakes
 
-Live views work without it. Past business dates, **Compare** and searches over the history need the banking packs'
-lake under `data\delta` (ten business days ending 30 September 2026):
+Make the console's Python first (step 5 below makes it on its first run, or by hand as there), then:
 
 ```powershell
-.\tools\windows\load-delta.ps1
+drishti-console\.venv\Scripts\python.exe tools\drishti.py lake demo
 ```
 
-With uv installed it fetches `deltalake`, `pyarrow` and `pyyaml` itself; without uv, install them first:
-`python -m pip install deltalake pyarrow pyyaml`. A bigger trade book: `.\tools\windows\load-delta.ps1 -Trades 50000`
-(about 20 MB a day per 10,000 trades). Another folder: `-Root D:\lakes\drishti`, and start the server with
-`-LakeRoot D:\lakes\drishti`.
+It writes the same 64 tables under `data\delta` as on Linux (seven business days ending today's business date). The older
+`.\tools\windows\load-delta.ps1` still writes the packs' samples as ten days of history (`tools/packgen/banking/make_data.py
+--lake`), without the multi-source trade tables; use `lake demo`.
 
 ### 4. Start the server
 
@@ -546,8 +713,9 @@ With uv installed it fetches `deltalake`, `pyarrow` and `pyyaml` itself; without
 ```
 
 The script checks that Java is 21 or newer, sets `DRISHTI_DELTA_ENGINE=native`, and starts the jar with
-`-XX:+UseCompactObjectHeaders` only on Java 25 or newer (Java-25-only: 10% less heap; the script leaves the flag out on Java 21, the production target, which refuses to start with it). It runs in the window until `Ctrl+C`.
-Its options:
+`-XX:+UseCompactObjectHeaders` only on Java 25 or newer (Java 21, the production target, refuses to start with it). It runs in the
+window until `Ctrl+C`. Set `$env:DRISHTI_DEMO_ENABLED='false'` first to read every page from the lakes, and the sign-in variables
+of Step 6 A (`$env:DRISHTI_SECURITY_ENABLED='true'` and the rest) to sign in. Its options:
 
 | Option | Default | Meaning |
 |---|---|---|
@@ -565,10 +733,9 @@ Check it from another PowerShell window:
 
 ```powershell
 Invoke-RestMethod http://localhost:18480/actuator/health
-(Invoke-RestMethod http://localhost:18480/api/v1/admin/health).sources | Select-Object name, health
 ```
 
-You should see `UP`, then each lake connector (`trading-store`, `market-store`, …) as `UP (engine: native)`.
+You should see `UP`. *Admin → Health* lists each lake connector (`trade-endur`, `market-store`, …) as `UP (engine: native)`.
 
 To run the jar by hand instead:
 
@@ -587,14 +754,14 @@ In a second PowerShell window:
 .\tools\windows\start-console.ps1
 ```
 
-The first run makes the console's Python environment and installs its libraries (with uv if present, else
-`python -m venv` and pip). Open **http://localhost:17480/t**. Options: `-Port` (17480), `-Backend`
-(`http://127.0.0.1:18480`), `-Python` (the Python to build the environment with), `-Reinstall`.
+The first run makes the console's Python environment and installs its libraries (with uv if present, else `python -m venv` and
+pip). Open **http://localhost:17480/t**. Options: `-Port` (17480), `-Backend` (`http://127.0.0.1:18480`), `-Python` (the Python to
+build the environment with), `-Reinstall`. With sign-in on the server, set the console's variables of Step 7 first.
 
 To start the console by hand instead (the same steps the script takes):
 
 ```powershell
-uv venv drishti-console\.venv
+uv venv --python 3.13 drishti-console\.venv
 uv pip install --python drishti-console\.venv\Scripts\python.exe -r drishti-console\requirements.txt
 drishti-console\.venv\Scripts\python.exe drishti-console\run_drishti_web.py
 ```
@@ -603,7 +770,7 @@ drishti-console\.venv\Scripts\python.exe drishti-console\run_drishti_web.py
 
 > The settings are the console's own: `DRISHTI_CONSOLE_PORT`, `DRISHTI_BACKEND_URL`.
 
-From here the []() steps 7 to 9 are the same.
+From here steps 8 to 12 above are the same.
 
 ### 6. The Delta engine on Windows
 
@@ -615,9 +782,9 @@ Every Delta connector has an `engine` setting; `DRISHTI_DELTA_ENGINE` sets it fo
 | `auto` | the same as `native` on Windows (and `hadoop` on Linux) |
 | `hadoop` | needs Hadoop's `winutils.exe` and `HADOOP_HOME`; use it only for a lake in Azure (`abfs://`) or Google Cloud Storage (`gs://`), which the native engine does not read |
 
-A lake in S3 reads the same on Windows, with the connector's `s3.endpoint`, `s3.access-key`, `s3.secret-key`,
-`s3.region` ([CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake)). Paths with spaces
-(`C:\Users\Jane Doe\drishti\data\delta`) are fine.
+A lake in S3 reads the same on Windows, with the connector's `s3.endpoint`, `s3.access-key`, `s3.secret-key`, `s3.region`
+([CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake)). Paths with spaces (`C:\Users\Jane Doe\drishti\data\delta`) are
+fine.
 
 ### 7. What does not work on Windows
 
@@ -626,11 +793,11 @@ A lake in S3 reads the same on Windows, with the connector's `s3.endpoint`, `s3.
 | The Iceberg connector (profile `iceberg`) | it reads through Hadoop's file systems, which need `winutils.exe` | keep the default Delta Lake; the Iceberg connector is idle unless the `iceberg` profile is set |
 | `engine: hadoop` on a local lake | Hadoop's local file system needs `winutils.exe` | `engine: native` (the default) |
 | Replacing a DuckDB file while the server reads it | Windows cannot rename a file over one that is open ([DUCKDB_CONNECTOR.md](../connectors/DUCKDB_CONNECTOR.md)) | load into a new file and switch the connector's `path`, or stop the server first |
-| The bash scripts in `tools\*.sh` (`load-delta.sh`, `load-postgres.sh`, `drill.sh`, …) | they need bash | `tools\windows\*.ps1` for the server, the console and the Delta lake; for the others, the Python tools they call run as they are (`python tools\…`), or use Git Bash or WSL |
+| The bash scripts in `tools\*.sh` (`load-postgres.sh`, `drill.sh`, …) | they need bash | `tools\windows\*.ps1` for the server and the console, `tools\drishti.py` for lakes and packs; for the others, the Python tools they call run as they are (`python tools\…`), or use Git Bash or WSL |
 | `docker compose` deployments (`deploy\`) | Linux containers | Docker Desktop runs them as on Linux; the jar runs natively as above |
 
-The Aerospike, PostgreSQL, Kafka, RabbitMQ, ActiveMQ, Redis, MongoDB, S3 and REST connectors are plain network clients
-and work on Windows; their servers are yours to run.
+The Aerospike, PostgreSQL, Kafka, RabbitMQ, ActiveMQ, Redis, MongoDB, S3 and REST connectors are plain network clients and work on
+Windows; their servers are yours to run.
 
 ### 8. Troubleshooting
 
@@ -639,31 +806,30 @@ and work on Windows; their servers are yours to run.
 | `Drishti runs on Java 21 or newer (production runs 21; 25 also supported); … says: … version "17…` | the script found an older Java | pass `-JavaHome` or set `DRISHTI_JAVA_HOME` to a JDK 21 or newer folder |
 | `running scripts is disabled on this system` | PowerShell's execution policy | `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` |
 | `HADOOP_HOME and hadoop.home.dir are unset`, `Could not locate executable winutils.exe` | a Delta connector on `engine: hadoop` | remove `engine: hadoop` and unset `DRISHTI_DELTA_ENGINE` (or set it to `native`) |
-| Health: `DOWN: cannot reach C:\…\data\delta\trading (engine: native)` | no lake there | run `load-delta.ps1`, or start with `-LakeRoot` pointing at the lake |
-| Health: `DOWN: no Delta tables under …` | the folder exists but has no `<kind>\_delta_log` | check the root and the pack's `domain` folder (`trading`, `market`, …) |
+| Health: `DOWN: cannot reach C:\…\data\delta\trading (engine: native)` | no lake there | run `tools\drishti.py lake demo`, or start with `-LakeRoot` pointing at the lake |
+| Health: `DOWN: no Delta tables under …` | the folder exists but has no `<kind>\_delta_log` | check the root and the connector's `domain` folder (`trading`, `market`, …) |
 | `the native Delta engine reads local disk and S3 …, not abfs://…` | an Azure or GCS lake with the native engine | set the connector's `engine: hadoop` (and install `winutils.exe`) |
 | `Port 18480 was already in use` | another server | `-Port 18481`, and the console with `-Backend http://127.0.0.1:18481` |
 | The console says `DRS-5003 backend unreachable` | the server is not up yet, or on another port | wait for `Started DrishtiApplication`; check `-Backend` |
-| `load-delta.ps1`: `No module named 'deltalake'` | no uv, and the libraries are not installed | `python -m pip install deltalake pyarrow pyyaml`, or install uv |
+| `lake demo`: `No module named 'deltalake'` | the console's Python is not set up | make it as in step 5 (it installs deltalake, pyarrow and PyYAML) |
 | Windows Defender slows the first start | it scans the jar's native libraries (RocksDB, DuckDB, SQLite, Snappy) as they unpack | let the first start finish; later starts are faster |
 
 More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
-
----
-
-*Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved. Proprietary and confidential.*
-
 
 ## If something goes wrong
 
 | You see | Do this |
 |---|---|
 | `Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java …` | `export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64` and build again |
-| `Port 18480 was already in use` | another server is running; stop it, or start this one with `DRISHTI_PORT=18481` and the console with `DRISHTI_BACKEND_URL=http://127.0.0.1:18481` |
+| `The virtual environment was not created successfully because ensurepip is not available` | use uv (Step 4), or `sudo apt install python3.X-venv` for your Python |
+| `lake demo`: `No module named 'deltalake'` (or `yaml`) | run it with the console's Python, `drishti-console/.venv/bin/python`, set up in Step 4 |
+| `Port 18480 was already in use` | another server is running; stop it, or start this one with `DRISHTI_PORT=18481` and the console with `DRISHTI_BACKEND_URL=http://127.0.0.1:18481` (and `lake demo --server http://localhost:18481`) |
 | The console says the backend is unreachable (`DRS-5003`) | start the server first; check `curl -s localhost:18480/actuator/health` |
+| Pages are empty and the console's log says `DRS-5010 missing bearer token` | the server has sign-in on and the console does not: start the console with the variables of Step 7 |
 | A command gives `DRS-4001` | the mnemonic is unknown: check its pack is loaded (`/api/v1/packs`) and chosen in the pack switcher |
 | A view says `DRS-1001 no source holds …` | the id does not exist; type part of it and pick from the suggestions |
-| A picked date shows today's data | build the sample history (Step 5) and restart the server |
+| A picked date shows today's data, or BI shows nothing for a date | build the demo lakes (Step 5); the server reads them without a restart |
+| BI shows figures from an earlier lake | it cannot after 2.3.0 (the server re-reads a rebuilt Delta date); if it does, *Admin → Caches* → purge, and report it |
 
 More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
@@ -677,6 +843,7 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 | Change how a screen looks | [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md), [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
 | Add users and roles | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
 | Connect your own data | [CONNECTORS.md](../connectors/CONNECTORS.md) and [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) |
+| Build a Delta lake from your own JSON export | [TOOLS.md](TOOLS.md) (`drishti.py lake build`) |
 | Build Drishti from source, run the tests | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md), [IDE_GUIDE.md](IDE_GUIDE.md) |
 | See every document | [the documentation map](../README.md) |
 
