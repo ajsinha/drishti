@@ -360,7 +360,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             } catch (RuntimeException e) {
                 // the date's files cannot be read (truncated, a codec the engine does not decompress): the read fails
                 // naming them, rather than looking as if the table did not hold the entity
-                throw problems.failed(ref.kind(), d.toString(), l.get().version(), e);
+                throw problems.failed(ref.kind(), d.toString(), l.get().timestamp(), e);
             }
             problems.ok(ref.kind(), d.toString());           // the date's files were read
             if (json == null) {
@@ -513,7 +513,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                     problems.listingOk(kind);
                     continue;
                 }
-                version = layout.get().version();
+                version = layout.get().timestamp();             // the commit, by its time: a table written again restarts its version numbers
                 problems.version(kind, version);
                 if (!layout.get().files().isEmpty()) {
                     where = layout.get().files().lastKey().toString();
@@ -618,7 +618,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         try {
             all = columnSet(kind, l.get(), dates.get(0), cols);
         } catch (RuntimeException e) {
-            throw problems.failed(kind, dates.get(0).toString(), l.get().version(), e);
+            throw problems.failed(kind, dates.get(0).toString(), l.get().timestamp(), e);
         }
         problems.ok(kind, dates.get(0).toString());
         Map<String, double[]> nums = new LinkedHashMap<>();
