@@ -101,8 +101,8 @@ document. This is how `tools/samplegen/stream.py` publishes the trading samples:
 ```text
 topic: drishti.trading.trades
 key:   MX-20000001
-value: {"tradeId": "MX-20000001", "productType": "IRS_FIXFLOAT", "currency": "AUD", "notional": 242000000.0,
-        "mtm": 1900000, "pnl1d": 24137, "book": "BOOK-RATES-3", "counterparty": {"id": "CP-MERIDIAN-RE", …}, …}
+value: {"SOURCE_SYSTEM": "MUREX", "TRADE_ID": "MX-20000001", "PRODUCT_TYPE": "IRS_FIXFLOAT", "CURRENCY": "AUD",
+        "QUANTITY": 242000000.0, "PRICE": 0.040829, "PORTFOLIO": "BOOK-RATES-3", "COUNTERPARTY": "CP-MERIDIAN-RE", "LEGS": […], …}
 ```
 
 **Keep the key equal to the id.** A keyed message on a mapped topic is indexed under its key *without parsing the
@@ -121,7 +121,7 @@ A topic without a kind carries envelopes, so one topic can carry many kinds:
 topic: risk.envelopes
 key:   netting-set/NS-ALDERSHOT-FRA
 value: {"kind": "netting-set", "id": "NS-ALDERSHOT-FRA",
-        "doc": {"nettingSetId": "NS-ALDERSHOT-FRA", "tradeCount": 3, "netMtm": -339550, "collateral": -229552, "pfePeak": 347288}}
+        "doc": {"NETTING_SET_ID": "NS-ALDERSHOT-FRA", "TRADE_COUNT": 3, "NET_MTM": -339550, "COLLATERAL": -229552, "PFE_PEAK": 347288}}
 ```
 
 Every envelope is parsed (the kind and id are inside the value). **Key envelopes `<kind>/<id>`**: compaction keeps the
@@ -188,7 +188,7 @@ connectors:
       bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
       topics: ${DRISHTI_TRADING_TOPIC:drishti.trading.trades}
       kind: trade                                            # mapped: every topic carries trade documents
-      id-field: tradeId                                      # the id of a message without a key
+      id-field: TRADE_ID                                     # the id of a message without a key
       stale-after: ${DRISHTI_STREAM_STALE_AFTER:15m}         # engine setting: amber in Health after 15 quiet minutes
       disk-cache.enabled: ${DRISHTI_STREAM_DISK_CACHE:true}
       disk-cache.root: ${DRISHTI_CACHE_ROOT:${drishti.data.dir:./data}/cache}    # → ./data/cache/trading-stream
@@ -248,7 +248,7 @@ settings:
   bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
   topics: ${DRISHTI_TRADING_TOPIC:drishti.trading.trades}
   kind: trade
-  id-field: tradeId
+  id-field: TRADE_ID
   mode: ticks                                         # keep nothing; push to views the lake answers
 ```
 
@@ -929,7 +929,7 @@ settings:
   bootstrap-servers: kafka-1.example.com:9093,kafka-2.example.com:9093
   topics: [drishti.trading.trades]
   kind: trade
-  id-field: tradeId
+  id-field: TRADE_ID
   stale-after: 15m
   disk-cache:
     enabled: true
@@ -984,20 +984,21 @@ topic's partitions, 5 s for a cold read, supervisor backoff 1 s to 30 s.
 ```bash
 docker compose -f deploy/compose.data.yaml up -d kafka            # apache/kafka 3.9.1, single-node KRaft, cleanup.policy compact
 uv run --with kafka-python python tools/samplegen/stream.py \
-    --bootstrap localhost:9092 --topic drishti.trading.trades --samples config/packs/trading/samples/trade --rate 5 --seconds 0
+    --bootstrap localhost:9092 --topic drishti.trading.trades --samples config/packs/trading/samples --rate 5 --seconds 0
 DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_DEMO_ENABLED=false \
   java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
-`stream.py` reads every `*.json` under `--samples` (750 trades in the trading pack), drops each one's `_meta`, and
-publishes it keyed by `tradeId` (`linger.ms` 20). It prints
+`stream.py` reads the pack's `samples/trade.jsonl` under `--samples` (765 trades in the trading pack), drops each one's `_meta`, and
+publishes it keyed by `TRADE_ID` (`linger.ms` 20). It prints
 
 ```text
-published 750 trades to drishti.trading.trades; ticking 5.0/s
+published 765 trades to drishti.trading.trades; ticking 5.0/s
 ```
 
-then picks a random trade `--rate` times a second (a fixed seed, 7), moves its `mtm` by a Gaussian step of
-`max(500, |mtm| × 0.002 + notional × 1e-5)` and adds the same move to `pnl1d`, and publishes the whole document again.
+then picks a random trade `--rate` times a second (a fixed seed, 7), moves its `PRICE` by a Gaussian step of `|PRICE| × 0.002`,
+stamps `SOURCE_UPDATE_TIME` with the time, and publishes the whole document again (a trade carries no MTM: that is the market-risk
+pack's trade valuation).
 `--seconds 0` (the default) runs until Ctrl+C; any other value stops after that many seconds.
 
 `TRD MX-20000001 <GO>` on Live then shows provenance `trading-stream` and ticks whenever the trade is picked. Pick a
@@ -1039,7 +1040,7 @@ connector reads the topic is in [section 2](#2-how-the-connector-reads-a-topic),
    trading stream, or the site form in [section 5.2](#52-site-form-envelopes-and-a-mapped-topic-on-a-secured-cluster)
    for envelopes on a secured cluster. The settings are in [section 14](#14-settings).
 2. **Publish.** `stream.py` ([section 15](#15-trying-it-streampy)) publishes every sample trade once, keyed by
-   `tradeId`, then gives `--rate` random trades a second a new `mtm` and `pnl1d`; `--seconds 0` runs until Ctrl+C.
+   `TRADE_ID`, then gives `--rate` random trades a second a new `PRICE`; `--seconds 0` runs until Ctrl+C.
 3. **Start the server.** In another terminal:
 
    ```bash
@@ -1067,7 +1068,7 @@ docker compose -f deploy/compose.data.yaml exec kafka /opt/kafka/bin/kafka-topic
 docker compose -f deploy/compose.data.yaml exec -T kafka /opt/kafka/bin/kafka-console-producer.sh \
     --bootstrap-server localhost:9092 --topic risk.envelopes \
     --property parse.key=true --property key.separator='|' <<'EOF'
-netting-set/NS-ALDERSHOT-FRA|{"kind":"netting-set","id":"NS-ALDERSHOT-FRA","doc":{"nettingSetId":"NS-ALDERSHOT-FRA","tradeCount":3,"netMtm":-339550}}
+netting-set/NS-ALDERSHOT-FRA|{"kind":"netting-set","id":"NS-ALDERSHOT-FRA","doc":{"NETTING_SET_ID":"NS-ALDERSHOT-FRA","TRADE_COUNT":3,"NET_MTM":-339550}}
 EOF
 ```
 
@@ -1087,5 +1088,5 @@ To send one mapped message by hand:
 ```bash
 docker compose -f deploy/compose.data.yaml exec kafka /opt/kafka/bin/kafka-console-producer.sh \
     --bootstrap-server localhost:9092 --topic drishti.trading.trades --property parse.key=true --property key.separator='|'
-MX-20000001|{"tradeId":"MX-20000001","productType":"IRS","mtm":1900000,"notional":242000000.0}
+MX-20000001|{"TRADE_ID":"MX-20000001","PRODUCT_TYPE":"IRS_FIXFLOAT","QUANTITY":242000000.0,"PRICE":0.040829}
 ```

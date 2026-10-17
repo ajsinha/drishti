@@ -1001,7 +1001,7 @@ def build_parser() -> argparse.ArgumentParser:
             p.add_argument("--match", help="with --schema: fields that split a kind into one Sutra per value (a,b or kind=a,b;kind2=c)")
             p.add_argument("--count", type=int, default=5, help="with --schema: samples per Sutra (default 5)")
     g = add(s, "gen", cmd_sutra_gen, "sutra gen: one Sutra per group of JSON Lines documents, with samples (tools/sutragen.py)", [],
-            "example:\n  drishti.py sutra gen data/jsonl --key trade=tradeId --match trade=productType --out build/sutras")
+            "example:\n  drishti.py sutra gen data/testdata/trades/endur --kind trade --key TRADE_ID --match PRODUCT_TYPE --out data/build/sutras")
     g.add_argument("inputs", type=pathlib.Path, nargs="+", help="folders of *.jsonl and/or single .jsonl files")
     SG.add_arguments(g)
     g.add_argument("--out", type=pathlib.Path, required=True, help="writes <out>/<kind>/<kind>-<slug>.v1.sutra.yaml and <out>/tests/<sutra>/sample-*.json")
@@ -1012,11 +1012,11 @@ def build_parser() -> argparse.ArgumentParser:
     k = group("pack", "Packs: generate from JSON Lines, check in CI, find missing help text, publish and install")
     pn = add(k, "new", cmd_pack_new, "pack new: create a complete pack from JSON Lines (kinds, Sutras, samples, tests, about text, a lake or files store)",
              [PFJ.build_parser(add_help=False), server_parent(with_json=False)],
-             "examples:\n  drishti.py pack new data/jsonl --name my-bank --key trade=tradeId --date trade=businessDate --lake data/delta\n"
-             "  drishti.py pack new data/jsonl --name my-bank --date businessDate --store files --files-root data/files "
+             "examples:\n  drishti.py pack new data/testdata/trades/murex --name murex-book --kind trade --key TRADE_ID --match PRODUCT_TYPE --out data/build/murex-book\n"
+             "  drishti.py pack new your-folder/ --name my-bank --date BUSINESS_DATE --store files --files-root data/files "
              "--load --server http://localhost:18977")
     pm = add(k, "make", cmd_pack_make, "pack make: ONE folder to deploy from JSON Lines: pack, Delta data, bundle, server config, run scripts and README.txt (tools/packmake.py)", [],
-             "example:\n  drishti.py pack make data/jsonl --kind trade --match productType --name my-bank --out build/my-bank\n"
+             "example:\n  drishti.py pack make data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank\n"
              "Chooses --key and --date itself when you do not (and says why), then runs pack check and pack verify.")
     load_module("packmake", "packmake.py").add_arguments(pm)
     pn.add_argument("--load", action="store_true", help="afterwards ask the running server to load the pack (administrator; takes effect at once, no restart)")

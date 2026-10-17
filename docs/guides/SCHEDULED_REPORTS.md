@@ -45,8 +45,9 @@ file went, or the error); **Run now** runs one at once. The walk-through (name, 
 view, *Export* in the header does the same for the view. What you save is what **you** may see: your masks and your row rules apply, and the slicers, controls and filters you set are in it, written in the header with the
 business date. A file made for you can be shared; it holds no one else's numbers.
 
-**Subscribe.** *Subscribe* (next to Export) sends the report or view to you by email, on a schedule: every business day at 07:30, every Monday, the last business day of the month, or **after the day's data
-lands**. You choose the form (the tables in the email, a PDF or an Excel file attached). A BI author or an administrator can also subscribe other people or a role; each of them receives a render made for
+**Subscribe.** *Subscribe* (next to Export) sends the report or view to you by email, on a schedule: **Send** offers every day, every business day (07:30 to start with), every week on a day,
+the last business day of the month and every hour, at a time you pick; *on a schedule I write (advanced)* and **Advanced: the schedule as text** take any schedule, such as `after-load trade`
+(**after the day's data lands**). You choose the form (the tables in the email, a PDF or an Excel file attached). A BI author or an administrator can also subscribe other people or a role; each of them receives a render made for
 them. Your subscriptions are on **Reports** in the top bar, in one list with your scheduled reports: *Run now*, *Pause*, *Resume*, *Delete*, and *History* (who was sent what, and if it failed, why). Reference:
 [DISTRIBUTION.md](DISTRIBUTION.md); walk-through: [tutorial 11](../tutorials/11-bi-that-runs-itself.md).
 

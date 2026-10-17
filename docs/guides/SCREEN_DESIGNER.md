@@ -239,7 +239,7 @@ same text, and every change is a step of the design's log: undo, redo and revisi
 
 - **Add** a control: pick its kind next to *Add control* (or `Enter` on the button). *Starter* adds a search box to the header of the first table.
 - **Cards.** Each control is a card: **Id** (what panels read as `ctl.<id>`), **Kind**, **Label**, **Options** (one field: `a, b, c`, or an
-  expression over the record such as `$.legs[*].leg`, or `kind: customer` for the ids of an entity kind), **Default**, **Placement** (strip, header
+  expression over the record such as `$.LEGS[*].LEG_ID` (the legs of a trade), or `kind: counterparty` for the ids of an entity kind), **Default**, **Placement** (strip, header
   of a panel, side) with the **Panel**, **Remember per reader**, **Required**; a cascading control has a **Parent** (an earlier control), a number
   range or slider **Min** and **Max**, a slider also **Step** and **Two handles (a range)**. Drag a card by its handle, or focus it and press `Alt+↑` / `Alt+↓` (the buttons do the same); `Delete` removes it. A
   card's fields are named for screen readers by the control's id as you type it.
@@ -249,7 +249,7 @@ same text, and every change is a step of the design's log: undo, redo and revisi
   the cards with its code (`DRS-2034` to `DRS-2039`) and in **Problems**, and the Sutra keeps its last good controls.
 - **Try them.** *Try them on the sample* draws the panels that read a control, from the previewed sample, with the **real controls** (the console's
   own): change one and the panels follow, exactly as for a reader. Options come from the sample; switch sample under *Data* to try another.
-  Panels read a control in `rows`, `where`, `limit` and `title` (`where: oneOf(@.leg, ctl.legs)`): set those in the inspector or the YAML tab.
+  Panels read a control in `rows`, `where`, `limit` and `title` (`where: oneOf(@.LEG_ID, ctl.legs)`): set those in the inspector or the YAML tab.
   The canvas keeps showing the screen as it is without a choice made.
 
 ### The Form tab
@@ -277,7 +277,7 @@ It is the `form:` section of `pack.yaml` for that kind, kept with the design.
 
 ![The Problems tab: a refused edit with its line, and what the light check found](img/designer/14-problems.jpg)
 
-A wrong expression (for example `rows: '$.legs[?'`) is listed here with the panel, the option, its line and its DRS code once; the Sutra is not accepted as a whole by the server, so the canvas draws the other panels and says which one it left out, and the Tests tab says the check cannot run until the problem is fixed.
+A wrong expression (for example `rows: '$.LEGS[?'`) is listed here with the panel, the option, its line and its DRS code once; the Sutra is not accepted as a whole by the server, so the canvas draws the other panels and says which one it left out, and the Tests tab says the check cannot run until the problem is fixed.
 
 One list, each item a button that takes you there:
 
@@ -382,7 +382,7 @@ In the pivot, `by` lists the row groups, `across` the columns. Exercise: reorder
 
 ![An area chart over tenor](img/designer/33-family-series.jpg)
 
-Drop a `series` field on empty canvas: the first suggestion is a line chart with `x` and `y` filled. Exercise: set `limit` to an expression such as `$.limit` to draw the limit line.
+Drop a `series` field on empty canvas: the first suggestion is a line chart with `x` and `y` filled. Exercise: set `limit` to an expression such as `$.LIMIT` to draw the limit line.
 
 ### Market data, candlestick and surface: [market-charts](examples/market-charts.md)
 

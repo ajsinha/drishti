@@ -192,7 +192,7 @@ instead (streamed, flat memory).
 drishti-console/.venv/bin/python tools/drishti.py data ingest --from data/trade.jsonl --pack config/packs/my-bank --lake /tmp/lake
 DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=/tmp/lake java -jar drishti-server/target/drishti-server-*-exec.jar
 # JSON-lines files (stdlib + PyYAML only): <root>/<domain>/<date>/<kind>.jsonl; serve with DRISHTI_FILES_ROOT
-drishti-console/.venv/bin/python tools/drishti.py data ingest --from data/jsonl --domain my-bank --key trade=TRADE_ID --date trade=BUSINESS_DATE \
+drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder/ --domain my-bank --key trade=TRADE_ID --date trade=BUSINESS_DATE \
     --store files --root /tmp/files --dry-run
 ```
 

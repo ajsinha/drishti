@@ -16,10 +16,11 @@
 stream (the trading pack's `trading-stream` connector, switched on with DRISHTI_STREAM_TRADING=true).
 
     uv run --with kafka-python python tools/samplegen/stream.py [--bootstrap localhost:9092] [--topic drishti.trading.trades]
-                                                                [--samples config/packs/trading/samples/trade] [--rate 5] [--seconds 0]
+                                                                [--samples config/packs/trading/samples] [--rate 5] [--seconds 0]
 
-Each trade is published once (the topic is the state: the latest message per trade wins), then `--rate` random
-trades per second get a new MTM and 1-day P&L. `--seconds 0` runs until interrupted.
+Each trade is published once, keyed by its TRADE_ID (the topic is the state: the latest message per trade wins), then `--rate` random
+trades per second get a new PRICE (a trade carries no MTM: that is the market-risk pack's trade valuation) and a new SOURCE_UPDATE_TIME.
+`--seconds 0` runs until interrupted.
 """
 from __future__ import annotations
 
@@ -49,19 +50,18 @@ def main():
     trades = {}
     for d in packsamples.read(pathlib.Path(a.samples)).get("trade", {}).values():
         d.pop("_meta", None)
-        trades[d["tradeId"]] = d
-        producer.send(a.topic, key=d["tradeId"], value=d)
+        trades[str(d["TRADE_ID"])] = d
+        producer.send(a.topic, key=str(d["TRADE_ID"]), value=d)
     producer.flush()
     print(f"published {len(trades)} trades to {a.topic}; ticking {a.rate}/s")
     rnd, start, ids = random.Random(7), time.time(), list(trades)
     try:
         while a.seconds <= 0 or time.time() - start < a.seconds:
             d = trades[rnd.choice(ids)]
-            step = max(500, abs(d["mtm"]) * 0.002 + d["notional"] * 1e-5)
-            move = round(rnd.gauss(0, step))
-            d["mtm"] += move
-            d["pnl1d"] = d.get("pnl1d", 0) + move
-            producer.send(a.topic, key=d["tradeId"], value=d)
+            price = d.get("PRICE") if isinstance(d.get("PRICE"), (int, float)) else 100.0
+            d["PRICE"] = round(price + rnd.gauss(0, max(0.0001, abs(price) * 0.002)), 6)
+            d["SOURCE_UPDATE_TIME"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            producer.send(a.topic, key=str(d["TRADE_ID"]), value=d)
             time.sleep(1 / a.rate)
     except KeyboardInterrupt:
         pass

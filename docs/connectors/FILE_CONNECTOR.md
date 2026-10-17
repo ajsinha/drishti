@@ -86,9 +86,9 @@ A line is one JSON object. Two forms are read, and a file may mix them:
 **The loaders' row** (what `make_data.py --jsonl`, `bulk_trades.py --jsonl` and every Drishti loader read and write):
 
 ```json
-{"domain": "trading", "kind": "trade", "id": "MX-20000001", "date": "2026-09-30",
- "doc": "{\"tradeId\": \"MX-20000001\", \"productType\": \"IRS_FIXFLOAT\", \"mtm\": 1875863, …}",
- "columns": {"mtm": 1875863.0, "book": "BOOK-RATES-3", "counterparty.id": "CP-MERIDIAN-RE", …}}
+{"domain": "trading", "kind": "trade", "id": "MX-20000001", "date": "2026-09-17",
+ "doc": "{\"SOURCE_SYSTEM\": \"MUREX\", \"TRADE_ID\": \"MX-20000001\", \"PRODUCT_TYPE\": \"IRS_FIXFLOAT\", …}",
+ "columns": {"TRADE_ID": "MX-20000001", "QUANTITY": 242000000.0, "PORTFOLIO": "BOOK-RATES-3", "COUNTERPARTY": "CP-MERIDIAN-RE", …}}
 ```
 
 `doc` is the entity's document, as a JSON string or as an object; `columns` carries the pack's promoted fields, so the
@@ -98,11 +98,12 @@ connector can index them without reading the document. A row without `columns` h
 **A plain document per line**, the simplest file anyone can write:
 
 ```json
-{"id": "BOOK-RATES-3", "name": "Rates book 3", "desk": "DESK-RATES", "currency": "USD"}
-{"id": "BOOK-FX-1", "name": "FX book 1", "desk": "DESK-FX", "currency": "USD"}
+{"BOOK_ID": "BOOK-RATES-3", "NAME": "Rates book 3", "DESK": "DESK-RATES", "CURRENCY": "USD"}
+{"BOOK_ID": "BOOK-FX-1", "NAME": "FX book 1", "DESK": "DESK-FX", "CURRENCY": "USD"}
 ```
 
-The id is the field named by `id-field` (`id` by default); promoted fields are read from the document by their paths.
+The id is the field named by `id-field` (`id` by default; here `id-field: BOOK_ID`); promoted fields are read from the document by
+their paths.
 
 **One line per id.** When an id appears on several lines of a day's file, its **last** line is the entity, as a reload
 of the file would leave it: the view, searches, pick lists, derived kinds and reverse lookups all read that line, and
@@ -110,12 +111,13 @@ the entity is counted once. The ids repeated are counted (`duplicateIds` in the 
 
 **`NaN` and `Infinity`.** Python's `json.dumps` writes `NaN`, `Infinity` and `-Infinity` by default, which strict
 JSON does not allow. The connector reads them and takes them as **no value**: a promoted number is empty (as a missing
-field is, so `mtm < 0` does not match it and sums leave it out), and the document opened holds `null` there.
+field is, so `QUANTITY < 0` does not match it and sums leave it out), and the document opened holds `null` there.
 
-**A promoted field of mixed types.** A field that is a number on most lines and text on others (`"mtm": "N/A"`) keeps
+**A promoted field of mixed types.** A field that is a number on most lines and text on others (`"QUANTITY": "N/A"`) keeps
 each value as the document holds it: numbers as numbers (`1e20` stays `1e20`, it is not clamped to a long), text as
 text. A search answered from the columns therefore orders and compares it exactly as one that reads documents
-(numbers in order, then text; `mtm > 10000000000000000000` matches the huge numbers and not `"N/A"`), and sums leave the text out.
+(numbers in order, then text; `QUANTITY > 10000000000000000000` matches the huge numbers and not `"N/A"`), and sums leave the text out.
+(The trades' `TRADE_ID` is such a field: ENDUR ids are numbers, CALYPSO and MUREX ids text.)
 
 **Lines that cannot be read** are skipped, not the day: a truncated line, a line that is not a JSON object, a line
 without an id, a line longer than `max-document-mb` (64 MB), or a line nested deeper than `max-nesting-depth`
@@ -287,6 +289,11 @@ On 2026-10-01, a developer workstation, the banking packs' samples plus 10,000 t
 | server heap in use | 321 MB |
 
 Every search answered over all 10,000 trades (`partial: false`).
+
+**The figures below were measured in 2.2**, when the generated trades were written in camel case (`mtm`, `notional`, `book`),
+so the searches are shown as they were run; the trades now carry the source systems' UPPER_SNAKE attributes and no MTM (that is the
+market-risk pack's trade valuation): today's equivalents read `TRD where QUANTITY > 500m and CURRENCY = 'USD'` and
+`TRD PORTFOLIO=BOOK-RATES-3`. Not re-measured for 2.3.
 
 **The scaling curve, measured with the scale benchmark (2026-10-01).** `tools/bench/scale.sh`
 ([SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)) loaded 10,000, 25,000 and 50,000 trades a day over three business

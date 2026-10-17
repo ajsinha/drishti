@@ -90,19 +90,19 @@ For one trade on one day (generation `9c41e07a2b5d13f0`, the load that last repl
 
 ```
 {trading:trade:days}:gens              HASH   20260929 → 5e0a…, 20260930 → 9c41e07a2b5d13f0
-trading:trade:{MX-20000017}            ZSET   20260929 → 20260929, 20260930 → 20260930
-trading:trade:{MX-20000017}:20260930.9c41e07a2b5d13f0
+trading:trade:{MX-20000001}            ZSET   20260929 → 20260929, 20260930 → 20260930
+trading:trade:{MX-20000001}:20260930.9c41e07a2b5d13f0
                                        STRING 0x03 <4-byte dictionary id> <zstd frame>          about 820 bytes
-                                              (6,300 bytes of JSON: {"tradeId":"MX-20000017","sourceSystem":"Murex",…})
+                                              (the JSON document: {"SOURCE_SYSTEM":"MUREX","SOURCE_UPDATE_TIME":"2026-09-30T18:30:00Z",…})
 
 {trading:trade:20260930}:cols:9c41e07a2b5d13f0
                                        HASH
   meta                 "version 1790857967807\nrows 1000000\nchunk-rows 10000\nchunks 100\n
-                        text tradeId\ntext productType\n…\nnumber notional\nnumber mtm\n…\ntext sourceSystem\n"
+                        text TRADE_ID\ntext SOURCE_SYSTEM\ntext PRODUCT_TYPE\n…\nnumber QUANTITY\n…\ntext TRADER_ID\n"
   #id:0 … #id:99       the ids, sorted, 10,000 per chunk
-  mtm:0 … mtm:99       10,000 doubles per chunk
-  book:0 … book:99     10,000 texts per chunk (a dictionary of the chunk's distinct books, then an index per row)
-  …                    one field per promoted path per chunk: 2,000 fields for nineteen paths
+  QUANTITY:0 … QUANTITY:99    10,000 doubles per chunk
+  PORTFOLIO:0 … PORTFOLIO:99  10,000 texts per chunk (a dictionary of the chunk's distinct portfolios, then an index per row)
+  …                    one field per promoted path per chunk: 1,600 fields for the trading pack's sixteen paths
 ```
 
 Why each part is shaped this way:
@@ -212,7 +212,7 @@ The `sort-by`, `file-rows` and `row-group-rows` keys of the layout concern files
 
 ## 4. Loading
 
-`tools/load-redis.sh` loads the banking packs' data, and optionally a large generated book, through `RedisLoader` (in
+`tools/load-redis.sh` loads the seven packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large generated book, through `RedisLoader` (in
 the plugin):
 
 ```bash
@@ -231,7 +231,7 @@ redis: trading:trade 2026-09-30: 1,000,000 rows, 19 columns in 2,000 chunks of 1
 redis: loaded 1,000,000 rows into redis://localhost:26479 in 81 s; documents 6,021 MB as JSON, 811 MB stored (7.4 times smaller)
 ```
 
-With `--trades`, the script merges the samples (`--merge`) and the bulk book, which starts with the 750 sample trades,
+With `--trades`, the script merges the samples (`--merge`) and the bulk book, which starts with the 765 sample trades of the trading pack,
 replaces the trade days it covers.
 
 How the loader works:
@@ -545,6 +545,11 @@ without a pool or pinned carrier threads (Jedis blocks inside `synchronized` cod
 before Java 24). Jedis pipelines write faster from one thread, but the loader is bound by its input (the generator wrote
 12,000 to 20,000 trades a second, and the loader kept up) and sends two commands a trade without a TTL, four with one:
 at most about 80,000 commands a second, under a third of what Lettuce sustains. Lettuce also gives Redis Cluster, TLS and pub/sub with one API.
+
+**The figures below were measured in 2.2**, when the generated trades were written in camel case (`mtm`, `notional`, `book`),
+so the searches are shown as they were run; the trades now carry the source systems' UPPER_SNAKE attributes and no MTM (that is the
+market-risk pack's trade valuation): today's equivalents read `TRD where QUANTITY > 500m and CURRENCY = 'USD'` and
+`TRD PORTFOLIO=BOOK-RATES-3`. Not re-measured for 2.3.
 
 **The scaling curve, measured with the scale benchmark (2026-10-01).** `tools/bench/scale.sh`
 ([SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)) loaded 10,000, 25,000 and 50,000 trades a day over three business

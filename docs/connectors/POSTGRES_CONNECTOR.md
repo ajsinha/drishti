@@ -73,10 +73,9 @@ CREATE TABLE trading.entities (
   id            text  NOT NULL,
   business_date date  NOT NULL,
   doc           jsonb COMPRESSION lz4 NOT NULL,
-  "tradeId" text, "productType" text, "productName" text, direction text, currency text,
-  notional double precision, mtm double precision, "pnl1d" double precision, "maturityDate" text, "tradeDate" text,
-  book text, desk text, status text, "assetClass" text, "counterparty__id" text, "counterparty__name" text,
-  "nettingSet" text, "risk__dv01" double precision, "sourceSystem" text,
+  "TRADE_ID" text, "SOURCE_SYSTEM" text, "PRODUCT_TYPE" text, "PRODUCT_SUB_TYPE" text, "PRODUCT_GROUP" text,
+  "TRADE_STATUS" text, "TRADE_VERSION" text, "BUY_SELL_CODE" text, "CURRENCY" text, "QUANTITY" double precision,
+  "TRADE_DATE" text, "MATURITY_DATE" text, "COUNTERPARTY" text, "LEGAL_ENTITY" text, "PORTFOLIO" text, "TRADER_ID" text,
   PRIMARY KEY (kind, id, business_date)
 ) PARTITION BY RANGE (business_date);
 
@@ -93,16 +92,17 @@ One row, for one trade on one day (the document shortened):
 
 ```
 kind               trade
-id                 MX-30000017
-business_date      2026-09-30
-doc                {"tradeId": "MX-30000017", "sourceSystem": "Murex", "productType": "IRS_FIXFLOAT", "mtm": 1875863, …}
-tradeId            MX-30000017
-productType        IRS_FIXFLOAT
-notional           242000000
-mtm                1875863
-book               BOOK-RATES-3
-counterparty__id   CP-MERIDIAN-RE
-nettingSet         NS-MERIDIAN-RE-ISDA
+id                 MX-20000001
+business_date      2026-09-17
+doc                {"SOURCE_SYSTEM": "MUREX", "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z", "TRADE_DATE": "2025-07-25", "TRADE_ID": "MX-20000001", …}
+TRADE_ID           MX-20000001
+SOURCE_SYSTEM      MUREX
+PRODUCT_TYPE       IRS_FIXFLOAT
+CURRENCY           AUD
+QUANTITY           242000000
+PORTFOLIO          BOOK-RATES-3
+COUNTERPARTY       CP-MERIDIAN-RE
+…
 risk__dv01         -155245
 …
 ```
@@ -162,7 +162,7 @@ Health ([section 11](#11-diagnosing)).
 
 ## 4. Loading
 
-`tools/load-postgres.sh` loads the banking packs' data, and optionally a large generated book:
+`tools/load-postgres.sh` loads the seven packs' sample data (written by `tools/packgen/banking/make_data.py`), and optionally a large generated book:
 
 ```bash
 tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti                               # samples: 1,791 documents x 10 days
@@ -223,7 +223,7 @@ How the loader works:
 CREATE TABLE IF NOT EXISTS trading.entities_y2026m10 PARTITION OF trading.entities FOR VALUES FROM ('2026-10-01') TO ('2026-11-01');
 BEGIN;
 DELETE FROM trading.entities WHERE kind = 'trade' AND business_date = '2026-10-01';
-COPY trading.entities (kind, id, business_date, doc, "tradeId", notional, mtm, book, "counterparty__id", "nettingSet") FROM STDIN;
+COPY trading.entities (kind, id, business_date, doc, "TRADE_ID", "QUANTITY", "CURRENCY", "PORTFOLIO", "COUNTERPARTY", …) FROM STDIN;
 INSERT INTO trading.entity_dates (kind, business_date, rows) VALUES ('trade', '2026-10-01', 1000000)
   ON CONFLICT (kind, business_date) DO UPDATE SET rows = EXCLUDED.rows, loaded_at = now();
 COMMIT;
@@ -291,7 +291,7 @@ reads them as a column set:
 2. **Read the ranges at once**, each on its own pooled connection, streaming (`fetchSize` 20,000):
 
    ```sql
-   SELECT id, mtm, notional, …, book, "nettingSet" FROM trading.entities
+   SELECT id, "QUANTITY", "CURRENCY", …, "PORTFOLIO", "COUNTERPARTY" FROM trading.entities
     WHERE kind = 'trade' AND business_date = '2026-09-30' AND id >= 'IMG-500375' AND id < 'MX-30083833'
    ```
 
@@ -387,7 +387,7 @@ the `postgres` profile and `-Xmx8g`, times over HTTP:
 | type-ahead `TRD CLY-40834` | 46 ms |
 | open a trade (view), first / again | 154 ms / 40 ms |
 | a trade's document, today / a past day | 43 ms / 30 ms |
-| `TRD where mtm < -50m order by mtm` | 102 ms (2,041 matches of 1,000,000) |
+| `TRD where mtm < -50m order by mtm` (2.2 field names) | 102 ms (2,041 matches of 1,000,000) |
 | `TRD where currency = 'USD' and notional > 500m …` | 225 ms (13,523 matches) |
 | `TRD book=BOOK-RATES-3` | 189 ms (70,649 matches) |
 | pick list `TRD END-1100` | 106 ms |
@@ -399,6 +399,11 @@ the `postgres` profile and `-Xmx8g`, times over HTTP:
 Every search answered over all 1,000,000 trades (`partial: false`), with the same matches as the Delta Lake and
 Aerospike connectors on the same book. Loading a smaller demo book is quick: the samples plus 20,000 trades a day for two
 days load in 12 s.
+
+**The figures below were measured in 2.2**, when the generated trades were written in camel case (`mtm`, `notional`, `book`),
+so the searches are shown as they were run; the trades now carry the source systems' UPPER_SNAKE attributes and no MTM (that is the
+market-risk pack's trade valuation): today's equivalents read `TRD where QUANTITY > 500m and CURRENCY = 'USD'` and
+`TRD PORTFOLIO=BOOK-RATES-3`. Not re-measured for 2.3.
 
 **The scaling curve, measured with the scale benchmark (2026-10-01).** `tools/bench/scale.sh`
 ([SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)) loaded 10,000, 25,000 and 50,000 trades a day over three business

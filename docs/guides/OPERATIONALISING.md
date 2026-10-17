@@ -453,11 +453,12 @@ Sections 3 to 9 build the artifacts one command at a time. When you start from J
 them in a single folder, so that what you carry to a server is that folder:
 
 ```bash
-uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py pack make data/jsonl \
-    --kind trade --match productType --name my-bank
+drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz \
+    --kind trade --match PRODUCT_TYPE --name my-bank
 ```
 
-The folder (`build/my-bank-1.0.0/`) holds the pack (`pack/my-bank/`, section 5: copy it into the packs folder), the data
+(the committed ENDUR trades of the test data; your own JSON Lines in their place, and `--date` with your business-date field:
+[CLI_GUIDE.md](CLI_GUIDE.md#quickest-path-pack-make) shows the run and why). The folder (`data/build/my-bank-1.0.0/`) holds the pack (`pack/my-bank/`, section 5: copy it into the packs folder), the data
 (`data/delta/`, section 8: copy to the lake root or point `DRISHTI_DELTA_ROOT` at it), the bundle (`bundle/`, section 3 and 4,
 already verified), a ready configuration overlay, `run-server.sh` and `.ps1`, a `MANIFEST.json`, and a `README.txt` with the deploy,
 verify, "lift the data from Delta", update and rollback steps filled in with your kind, ids and dates. Options and the folder tree:

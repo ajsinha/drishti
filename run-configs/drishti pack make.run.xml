@@ -28,7 +28,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/drishti.py" />
-    <option name="PARAMETERS" value="pack make data/jsonl --kind trade --match productType --name my-bank --out build/my-bank --force" />
+    <option name="PARAMETERS" value="pack make data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank --force" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

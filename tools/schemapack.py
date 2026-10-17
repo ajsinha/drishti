@@ -16,7 +16,7 @@
 
     drishti.py sutra design --schema trade.schema.json --kind trade --out build/sutras
     drishti.py pack make --schema schemas/ --name my-bank                     # schemas only: synthetic samples, marked synthetic
-    drishti.py pack make --schema schemas/ data/jsonl --name my-bank         # real samples win; the schemas add labels, descriptions, links
+    drishti.py pack make --schema schemas/ your-folder/ --name my-bank         # real samples win; the schemas add labels, descriptions, links
 
 The rules (kind, key, links, labels, match, strip, About text) are in drishti-console/core/schemakit (shared with the console's
 Build -> New pack page) and are documented in docs/guides/SCHEMA_TO_PACK.md. This module is the command-line glue: it reads the files,

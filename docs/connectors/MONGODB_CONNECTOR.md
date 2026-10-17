@@ -81,33 +81,30 @@ A data domain (`trading`) is two collections in the database (`drishti` by defau
 A real document as loaded (the document text shortened):
 
 ```
-db.trading.findOne({_id: "trade/BBG-60000001/20260917"})
+db.trading.findOne({_id: "trade/CLY-3000157/20260917"})
 {
-  _id: 'trade/BBG-60000001/20260917',
+  _id: 'trade/CLY-3000157/20260917',
   kind: 'trade',
-  id: 'BBG-60000001',
+  id: 'CLY-3000157',
   date: 20260917,                                   the business day as a number (yyyyMMdd)
-  doc: '{"tradeId":"BBG-60000001","sourceSystem":"Bloomberg TOMS",…}',   the JSON document, as text
+  doc: '{"SOURCE_SYSTEM":"CALYPSO","SOURCE_UPDATE_TIME":"2026-09-30T18:30:00Z",…}',   the JSON document, as text
   c: {                                              the promoted fields: numbers as doubles, the rest as text
-    tradeId: 'BBG-60000001',
-    productType: 'GOVT_BOND',
-    productName: 'Government bond',
-    direction: 'Short',
-    currency: 'CHF',
-    notional: 198000000,
-    mtm: -1072969,
-    pnl1d: -23374,
-    maturityDate: '2038-04-30',
-    tradeDate: '2026-08-31',
-    book: 'BOOK-FI-3',
-    desk: 'DESK-FI',
-    status: 'Live',
-    assetClass: 'Fixed income',
-    counterparty__id: 'CP-SUMMIT',                  counterparty.id: dots become two underscores
-    counterparty__name: 'Summit Clearing LLC',
-    nettingSet: 'NS-SUMMIT-NY',
-    risk__dv01: -178835,
-    sourceSystem: 'Bloomberg TOMS'
+    TRADE_ID: 'CLY-3000157',
+    SOURCE_SYSTEM: 'CALYPSO',
+    PRODUCT_TYPE: 'GOVT_BOND',
+    PRODUCT_SUB_TYPE: 'Government bond',
+    PRODUCT_GROUP: 'Fixed income',
+    TRADE_STATUS: 'VALIDATED',
+    TRADE_VERSION: '1',
+    BUY_SELL_CODE: 'S',
+    CURRENCY: 'CHF',
+    QUANTITY: 17179094,
+    TRADE_DATE: '2026-08-31',
+    MATURITY_DATE: '2038-04-30',
+    COUNTERPARTY: 'CP-SUMMIT',
+    LEGAL_ENTITY: 'LE-NY',
+    PORTFOLIO: 'BOOK-FI-3',
+    TRADER_ID: 'TRDR-RCASTILLO',                    a nested path (LEGS.CURRENCY) becomes two underscores (LEGS__CURRENCY)
   }
 }
 ```
@@ -138,7 +135,7 @@ Why each part is shaped this way:
   `trading_columns`; during development, on a three-million-document collection, a day of a million trades took 5.4 s of
   server time from `trading` and 1.1 s from `trading_columns` (single query), and through the connector 1.5–2.6 s against
   0.4–0.8 s. The cost is a second small write per row and about 7% more disk. The documents keep `c` as well, so an
-  operator can query `trading` alone (`db.trading.find({kind: "trade", date: 20260930, "c.mtm": {$lt: -5e7}})`).
+  operator can query `trading` alone (`db.trading.find({kind: "trade", date: 20260930, "c.QUANTITY": {$gt: 5e8}})`).
 - **zstd block compression** (`block_compressor=zstd`), set by the loader when it creates a collection. Measured: the
   10,000-trade sample stores 6,875 bytes a document uncompressed and about 1,050 bytes on disk.
 
@@ -192,7 +189,7 @@ layout concern files and do not apply.
 
 ## 4. Loading
 
-`tools/load-mongodb.sh` loads the banking packs' samples, and optionally a generated book, through `MongoLoader` (in the
+`tools/load-mongodb.sh` loads the seven packs' samples (written by `tools/packgen/banking/make_data.py`), and optionally a generated book, through `MongoLoader` (in the
 plugin):
 
 ```bash
@@ -420,7 +417,7 @@ HTTP (the second of two passes, so without JIT warm-up):
 | type-ahead `TRD CLY-30000` | 12–20 ms |
 | open a trade (view), first / again | 17 ms / 13 ms |
 | a trade's document on a past date | 6 ms |
-| `TRD where mtm < -50m order by mtm` | 8 ms (21 matches of 10,000, `partial: false`) |
+| `TRD where mtm < -50m order by mtm` (2.2 field names) | 8 ms (21 matches of 10,000, `partial: false`) |
 | `TRD where currency = 'USD' and notional > 500m order by notional desc limit 20` | 14 ms (113 matches) |
 | `TRD book=BOOK-RATES-3` | 10 ms (689 matches) |
 | pick list `TRD END-10000` | 7 ms (1,000 matches) |
@@ -441,6 +438,11 @@ not measurements**. Development runs before the measurement limit read a million
 connector in 0.4–0.8 s from `trading_columns` ([section 5.4](#54-a-days-columns)), far below the line's 4 s: the cold
 search jumped from 26 ms at 25,000 trades to 184 ms at 50,000, and one such point steepens a four-point line. Treat that
 figure as an upper bound; about 220 MB of heap per cached day remains an estimate.
+
+**The figures below were measured in 2.2**, when the generated trades were written in camel case (`mtm`, `notional`, `book`),
+so the searches are shown as they were run; the trades now carry the source systems' UPPER_SNAKE attributes and no MTM (that is the
+market-risk pack's trade valuation): today's equivalents read `TRD where QUANTITY > 500m and CURRENCY = 'USD'` and
+`TRD PORTFOLIO=BOOK-RATES-3`. Not re-measured for 2.3.
 
 **The scaling curve, measured with the scale benchmark (2026-10-01).** `tools/bench/scale.sh`
 ([SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)) loaded 10,000, 25,000 and 50,000 trades a day over three business

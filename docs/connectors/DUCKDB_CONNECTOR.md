@@ -60,7 +60,7 @@ impact and reverse lookups (a column set), and each kind's business dates. At a 
 document of 6–7 KB, kept for years, a store must answer the first in milliseconds, the third in about a second, and
 never read a day of documents to do it.
 
-A columnar engine is the natural home for the third question: a day's `mtm`, `notional` and `book` are three narrow
+A columnar engine is the natural home for the third question: a day's `QUANTITY`, `CURRENCY` and `PORTFOLIO` are three narrow
 columns, read without touching the documents. DuckDB adds three constraints of its own that shape this design:
 
 | DuckDB property | Consequence here |
@@ -82,31 +82,34 @@ CREATE TABLE trading.entities (
   id            VARCHAR NOT NULL,
   business_date DATE    NOT NULL,
   doc           VARCHAR NOT NULL,                       -- the whole document, JSON text
-  "tradeId" VARCHAR, "productType" VARCHAR, "productName" VARCHAR, direction VARCHAR, currency VARCHAR,
-  notional DOUBLE, mtm DOUBLE, "pnl1d" DOUBLE, "maturityDate" VARCHAR, "tradeDate" VARCHAR,
-  book VARCHAR, desk VARCHAR, status VARCHAR, "assetClass" VARCHAR, "counterparty__id" VARCHAR,
-  "counterparty__name" VARCHAR, "nettingSet" VARCHAR, "risk__dv01" DOUBLE, "sourceSystem" VARCHAR
+  "TRADE_ID" VARCHAR, "SOURCE_SYSTEM" VARCHAR, "PRODUCT_TYPE" VARCHAR, "PRODUCT_SUB_TYPE" VARCHAR,
+  "PRODUCT_GROUP" VARCHAR, "TRADE_STATUS" VARCHAR, "TRADE_VERSION" VARCHAR, "BUY_SELL_CODE" VARCHAR,
+  "CURRENCY" VARCHAR, "QUANTITY" DOUBLE, "TRADE_DATE" VARCHAR, "MATURITY_DATE" VARCHAR, "COUNTERPARTY" VARCHAR,
+  "LEGAL_ENTITY" VARCHAR, "PORTFOLIO" VARCHAR, "TRADER_ID" VARCHAR
 );                                                      -- rows written in (kind, business_date, id) order
 
 CREATE TABLE trading.entity_dates (kind VARCHAR, business_date DATE, rows BIGINT, loaded_at TIMESTAMPTZ,
                                    PRIMARY KEY (kind, business_date));
 ```
 
-The other domains (`reference`, `market`, `risk`, `credit`, `collateral`) have the same two tables with their own
-promoted columns. One row, for one trade on one day (the document shortened):
+The promoted columns are the trading pack's `layout.trade.columns` (sixteen, `config/packs/trading/pack.yaml`); a column is `DOUBLE`
+when the first value the loader meets is a number, else `VARCHAR`. The other domains (`reference`, `market`, `risk`, `credit`,
+`collateral`) have the same two tables with their own promoted columns. One row, for one trade on one day (the document shortened;
+written by `tools/load-duckdb.sh` from the samples, `tools/packgen/banking/make_data.py`):
 
 ```
 kind               trade
-id                 CLY-4000834
-business_date      2026-09-29
-doc                {"tradeId": "CLY-4000834", "sourceSystem": "Calypso", "sourceTradeId": "4000834", "productType": "CLN", …}
-tradeId            CLY-4000834
-productType        CLN
-notional           …
-mtm                …
-book               …
-counterparty__id   …
-nettingSet         …
+id                 MX-20000001
+business_date      2026-09-17
+doc                {"SOURCE_SYSTEM": "MUREX", "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z", "TRADE_DATE": "2025-07-25", "TRADE_ID": "MX-20000001", …}
+TRADE_ID           MX-20000001
+SOURCE_SYSTEM      MUREX
+PRODUCT_TYPE       IRS_FIXFLOAT
+CURRENCY           AUD
+QUANTITY           242000000.0
+PORTFOLIO          BOOK-RATES-3
+COUNTERPARTY       CP-MERIDIAN-RE
+…
 ```
 
 Why each part is shaped this way:
@@ -316,13 +319,13 @@ connector reads them as a column set:
 2. **Read the ranges at once**, each on its own duplicated connection:
 
    ```sql
-   SELECT id, mtm, notional, …, book, "nettingSet" FROM "drishti".trading.entities
+   SELECT id, "QUANTITY", "CURRENCY", …, "PORTFOLIO", "COUNTERPARTY" FROM "drishti".trading.entities
     WHERE kind = 'trade' AND business_date = CAST('2026-09-30' AS DATE) AND id >= ? AND id < ? ORDER BY id
    ```
 
    DuckDB scans in parallel within one query too; the ranges spread the work of turning rows into Java values over
    several threads. No document is read: DuckDB reads only the columns named.
-3. **Keep** it by memory (`columns-cache-mb`, 1024; a million trades of 19 fields is about 230 MB, estimated), for
+3. **Keep** it by memory (`columns-cache-mb`, 1024; a million trades of 19 fields was estimated at about 230 MB in 2.2), for
    `columns-seconds` (300), dropped at once when a new file is opened. Repeated texts (books, desks, currencies) share
    one copy.
 4. **Bound** the work: at most two days are read at a time.
@@ -437,7 +440,10 @@ over HTTP:
 | a load while the server runs: new file served | within 10 s, no failed read |
 | server heap in use | 141 MB |
 
-Every search answered over all 10,000 trades of the day (`partial: false`, `scanned: 10000`).
+Every search answered over all 10,000 trades of the day (`partial: false`, `scanned: 10000`). These figures were measured in 2.2,
+when the generated trades were written in camel case (`mtm`, `notional`, `book`, a `currency`), so the searches are shown as they
+were run; the trades now carry the source systems' UPPER_SNAKE attributes and no MTM (it is the market-risk pack's trade valuation),
+so today's equivalents read `TRD where QUANTITY > 500m and CURRENCY = 'USD'` and `TRD PORTFOLIO=BOOK-RATES-3`. Not re-measured for 2.3.
 
 **A million trades a day: not measured; extrapolated.** The straight lines through the scale benchmark's points (the
 table below) put the newest day's three searches at 64–155 ms, the first search on another business day at about 2 s and
@@ -447,7 +453,7 @@ rises with the size of that day's id lookup (about 260 ms on the line). These ar
 trades a day, not measurements**. Loading is limited by the generator and by rewriting the file ([section
 4.4](#44-the-cost-of-rewriting-the-file-and-the-production-pattern)).
 
-**The scaling curve, measured with the scale benchmark (2026-10-01).** `tools/bench/scale.sh`
+**The scaling curve, measured with the scale benchmark (2026-10-01, the 2.2 data and field names, as above).** `tools/bench/scale.sh`
 ([SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)) loaded 10,000, 25,000 and 50,000 trades a day over three business
 days (plus the banking samples) and asked the same questions over HTTP each time: a 24-thread laptop shared with other
 work, a Drishti server with `-Xmx2g`, DuckDB embedded, `memory-limit` 1 GB. Medians of 25 requests; every search exact

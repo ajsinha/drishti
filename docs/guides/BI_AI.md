@@ -134,11 +134,11 @@ by the model), a note of how many rows the engine answered, and **the query the 
 
 ```
 POST /api/v1/bi/ai/ask  {"report": "file:report:trades-overview", "question": "notional by desk"}                  (as rita)   200
-{ "columns": [{"name": "trade.desk", "type": "string", "masked": false}, {"name": "Notional", "type": "decimal", "masked": false}],
+{ "columns": [{"name": "trade.DESK", "type": "string", "masked": false}, {"name": "Notional", "type": "decimal", "masked": false}],
   "rows": [["DESK-FX", 79000000.0], ["DESK-FI", 78000000.0], ["DESK-EQD", 77000000.0]], "rowCount": 3,
   "meta": {"layer": "columns", "rows": 3, "cached": false, "dates": ["2026-10-08"], "tables": ["trade"], "masked": [], ...},
   "question": "notional by desk",
-  "query": {"fields": ["trade.desk"], "measures": ["Notional"], "filters": [], "dates": {"from": "2026-10-08", "to": "2026-10-08"},
+  "query": {"fields": ["trade.DESK"], "measures": ["Notional"], "filters": [], "dates": {"from": "2026-10-08", "to": "2026-10-08"},
             "orderBy": [{"by": "Notional", "desc": true}], "limit": 200},
   "visual": "bar", "values": "labels-only", "summary": null }
 
@@ -164,13 +164,13 @@ number explained is the number on the screen. You get:
 POST /api/v1/bi/ai/explain  {"report": "file:report:trades-overview", "page": "overview", "visual": "notional", "state": {"dates": {...}}}     (as rita)   200
 { "measure": "Notional",
   "lineage": { "dataset": {"name": "trades-basic", "title": "Trades, the basics", "version": 1},
-               "measure": {"name": "Notional", "expr": "sum(trade.notional)", "description": "Total notional of the trades, ..."},
-               "columns": [{"name": "trade.notional", "type": "decimal", "calculated": false, "expr": null}],
-               "sources": [{"table": "trade", "kind": "trade", "connector": "trade-endur", "mode": "cached"}] },
+               "measure": {"name": "Notional", "expr": "sum(trade.NOTIONAL)", "description": "Total notional of the trades, ..."},
+               "columns": [{"name": "trade.NOTIONAL", "type": "decimal", "calculated": false, "expr": null}],
+               "sources": [{"table": "trade", "kind": "trade-valuation", "connector": "risk-store", "mode": "cached"}] },
   "value": 234000000.0,
-  "breakdown": [ {"dimension": "trade.desk", "members": [{"member": "DESK-FX", "value": 79000000.0, "share": 33.8},
+  "breakdown": [ {"dimension": "trade.DESK", "members": [{"member": "DESK-FX", "value": 79000000.0, "share": 33.8},
                                                       {"member": "DESK-FI", "value": 78000000.0, "share": 33.3}, ...]},
-                 {"dimension": "trade.book", "members": [...]}, {"dimension": "trade.productType", "members": [...]} ],
+                 {"dimension": "trade.PORTFOLIO", "members": [...]}, {"dimension": "trade.PRODUCT_TYPE", "members": [...]} ],
   "values": "labels-only", "narrative": null }
 ```
 

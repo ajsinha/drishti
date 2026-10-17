@@ -115,12 +115,12 @@ The table (`IcebergLayout`):
 
 | Column (field id) | Type | Content |
 |---|---|---|
-| `id` (1) | string, required | the entity's id, `MX-20000017` |
+| `id` (1) | string, required | the entity's id, `MX-20000001` |
 | `doc` (2) | string | the whole JSON document, exactly what a view shows |
 | `business_date` (3) | date, required | the identity partition |
-| `tradeId`, `productType`, `book`, `desk`, `currency`, `nettingSet`, `sourceSystem`, … | string | promoted fields |
-| `notional`, `mtm`, `pnl1d` | double | promoted fields |
-| `counterparty__id`, `counterparty__name`, `risk__dv01` | string / double | promoted nested fields (`counterparty.id`: a dot becomes `__`, as in Delta) |
+| `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, `PORTFOLIO`, `LEGAL_ENTITY`, … | string | promoted fields (the trading pack's `layout.trade.columns`) |
+| `QUANTITY` | double | promoted field |
+| `LEGS__CURRENCY`, … | string / double | a promoted nested path (`LEGS.CURRENCY`: a dot becomes `__`, as in Delta) |
 
 | Property | Value | Why |
 |---|---|---|
@@ -140,17 +140,16 @@ The table (`IcebergLayout`):
 One row, as the loader writes it (the document shortened):
 
 ```
-id                  MX-20000017
+id                  MX-20000001
 business_date       2026-09-30
-doc                 {"tradeId": "MX-20000017", "sourceSystem": "Murex", "productType": "IRS_FIXFLOAT",
-                     "notional": 242000000.0, "mtm": 1875863, "book": "BOOK-RATES-3", "counterparty": {…}, "legs": [ … ], …}
-tradeId             MX-20000017
-productType         IRS_FIXFLOAT
-notional            242000000.0
-mtm                 1875863.0
-book                BOOK-RATES-3
-counterparty__id    CP-MERIDIAN-RE
-risk__dv01          -155245.0
+doc                 {"SOURCE_SYSTEM": "MUREX", "TRADE_ID": "MX-20000001", "PRODUCT_TYPE": "IRS_FIXFLOAT",
+                     "QUANTITY": 242000000.0, "PORTFOLIO": "BOOK-RATES-3", "COUNTERPARTY": "CP-MERIDIAN-RE", "LEGS": [ … ], …}
+TRADE_ID            MX-20000001
+SOURCE_SYSTEM       MUREX
+PRODUCT_TYPE        IRS_FIXFLOAT
+QUANTITY            242000000.0
+PORTFOLIO           BOOK-RATES-3
+COUNTERPARTY        CP-MERIDIAN-RE
 ```
 
 ### Why each part is shaped this way
@@ -274,8 +273,8 @@ trade-days on 24 cores), not by the writer. Treat these as estimates.
 **Your own writer** (Spark, Flink, Snowflake, Trino) writes the same table. In Spark, for one business day:
 
 ```python
-(day.select(F.col("tradeId").alias("id"), F.to_json(F.struct("*")).alias("doc"), F.lit("2026-09-30").cast("date").alias("business_date"),
-            "tradeId", "productType", "notional", "mtm", "book", F.col("counterparty.id").alias("counterparty__id"), …)
+(day.select(F.col("TRADE_ID").cast("string").alias("id"), F.to_json(F.struct("*")).alias("doc"), F.lit("2026-09-30").cast("date").alias("business_date"),
+            "TRADE_ID", "SOURCE_SYSTEM", "PRODUCT_TYPE", "CURRENCY", "QUANTITY", "PORTFOLIO", "COUNTERPARTY", …)
     .repartitionByRange(4, "id").sortWithinPartitions("id")
     .writeTo("risk.trading.trade").option("write.parquet.row-group-size-bytes", 1048576).overwritePartitions())
 ```
@@ -481,6 +480,11 @@ table below) put the newest day's three searches at 75–170 ms, a trade's docum
 past day, impact of `NS-SUMMIT-NY` at about 140 ms, the first search on another business day at about 5.5 s (its column
 set read) and then about 60 ms, and three days at about 2.5 GB. These are **extrapolations from 10,000 to 50,000 trades
 a day, not measurements**. Heap of 2–3.5 GB, as on Delta Lake, remains an estimate.
+
+**The figures below were measured in 2.2**, when the generated trades were written in camel case (`mtm`, `notional`, `book`),
+so the searches are shown as they were run; the trades now carry the source systems' UPPER_SNAKE attributes and no MTM (that is the
+market-risk pack's trade valuation): today's equivalents read `TRD where QUANTITY > 500m and CURRENCY = 'USD'` and
+`TRD PORTFOLIO=BOOK-RATES-3`. Not re-measured for 2.3.
 
 **The scaling curve, measured with the scale benchmark (2026-10-01).** `tools/bench/scale.sh`
 ([SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md)) loaded 10,000, 25,000 and 50,000 trades a day over three business
