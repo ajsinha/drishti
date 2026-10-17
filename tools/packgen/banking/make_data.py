@@ -34,12 +34,17 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "trades"))
 import data_market
 import data_names as N
 import data_results
 import data_trades
 import layout
 import taxonomy as T
+import convert as TC  # noqa: E402  (tools/packgen/trades: the common trade schema every source system writes)
+import endur as TE  # noqa: E402
+import schema as TSCHEMA  # noqa: E402
+import tests as TT  # noqa: E402  (the trading pack's Sutra tests, one sample per deal Sutra)
 
 ROOT = Path(__file__).resolve().parents[3]
 PACKS = ROOT / "config" / "packs"
@@ -52,13 +57,32 @@ LIVE_WALK = {"ir-curve": {"tenY": 0.0003}, "fx-spot": {"mid": 0.0004}, "equity":
 ID_FIELD = {k.kind: k.id_field for k in T.KINDS + [T.TRADE]}
 
 
+# the rich internal model of the trades (data_trades.py) the other kinds are computed from; the trade samples are what the source
+# systems write: the common schema (tools/packgen/trades), CALYPSO and MUREX converted from the model, ENDUR deals of its own
+RICH: dict[str, dict] = {}
+ENDUR_PER_PRODUCT = 3
+
+
+def trade_samples(rich: dict[str, dict]) -> dict[str, dict]:
+    out = {}
+    for tid, d in rich.items():
+        t = TC.convert(d, N.AS_OF.isoformat())
+        t["_meta"] = {"source": t["SOURCE_SYSTEM"].lower(), "generation": 1}
+        out[tid] = t
+    for t in TE.Endur(as_of=N.AS_OF).samples(ENDUR_PER_PRODUCT):
+        t["_meta"] = {"source": "endur", "generation": 1}
+        out[str(t["TRADE_ID"])] = t
+    return out
+
+
 def build() -> dict[str, dict[str, dict]]:
     docs = {k: dict(v) for k, v in data_market.build().items()}
     for kind, ds in docs.items():
         for d in ds.values():
             d["_meta"] = {"source": "md-hub", "generation": 1, "live": kind in LIVE_WALK, **({"walk": LIVE_WALK[kind]} if kind in LIVE_WALK else {})}
     trades = data_trades.build()
-    docs["trade"] = trades
+    RICH.clear()
+    RICH.update(trades)
     for kind, ds in data_results.build(trades).items():
         docs.setdefault(kind, {}).update(ds)
     for kind, ds in docs.items():
@@ -68,18 +92,20 @@ def build() -> dict[str, dict[str, dict]]:
     for kind, ds in docs.items():                       # the coherent live walk of each kind (tools/packgen/common/walks.py)
         for d in ds.values():
             walks.apply(kind, d)
+    docs["trade"] = trade_samples(trades)               # nulls kept: an extract writes them (PRICE, OPTION_TYPE, STRATEGY ...)
     return docs
 
 
 def title(kind: str, d: dict) -> tuple[str, str]:
     spec = next((k for k in T.KINDS + [T.TRADE] if k.kind == kind), None)
     label = spec.label if spec else kind
+    if kind == "trade":
+        notional = (d["LEGS"][0]["NOTIONAL"] if d.get("LEGS") else 0.0) or 0.0
+        return str(d["TRADE_ID"]), (f"{label} · {d['SOURCE_SYSTEM']} · {d['PRODUCT_TYPE']} · {d['COUNTERPARTY']} · "
+                                    f"{d['CURRENCY']} {notional / 1e6:,.1f}m")
     for f in ("productName", "name", "issuerName", "scenarioName", "counterpartyName", "pairName", "commodity", "underlier", "pair", "currency", "book"):
         if isinstance(d.get(f), str):
-            extra = d[f]
-            if kind == "trade":
-                extra = f"{d['productName']} · {d['counterparty']['name']} · {d['currency']} {d['notional'] / 1e6:,.0f}m"
-            return d[ID_FIELD[kind]], f"{label} · {extra}"
+            return d[ID_FIELD[kind]], f"{label} · {d[f]}"
     return d[ID_FIELD[kind]], label
 
 
@@ -93,20 +119,22 @@ def check(docs: dict) -> list[str]:
     fields = T.graph_fields()
     for kind, ds in docs.items():
         for id_, d in ds.items():
-            if d.get(ID_FIELD[kind]) != id_:
+            if str(d.get(ID_FIELD[kind])) != id_:
                 problems.append(f"{kind}/{id_}: id field {ID_FIELD[kind]} is {d.get(ID_FIELD[kind])!r}")
             for f, (target, _) in fields.items():
                 v = d.get(f)
                 vals = [v] if isinstance(v, str) else [x for x in v if isinstance(x, str)] if isinstance(v, list) else \
                     [v["id"]] if isinstance(v, dict) and "id" in v else []
                 for x in vals:
-                    if x not in index.get(target, ()):
+                    if x and x not in index.get(target, ()):          # a blank reference (an extract's "") points nowhere
                         problems.append(f"{kind}/{id_}: {f} -> {target}/{x} does not exist")
+    for id_, d in docs.get("trade", {}).items():                       # every source system writes exactly the common schema
+        problems += TSCHEMA.problems({k: v for k, v in d.items() if k != "_meta"})
     for ns, d in docs.get("netting-set", {}).items():
-        total = sum(t["mtm"] for t in docs["trade"].values() if t["nettingSet"] == ns)
+        total = sum(t["mtm"] for t in RICH.values() if t["nettingSet"] == ns)
         if total != d["netMtm"]:
             problems.append(f"netting-set/{ns}: netMtm {d['netMtm']} != sum of trades {total}")
-    for id_, d in docs.get("trade", {}).items():                       # deep trades: legs add up, a cashflow's rate lies among its fixings
+    for id_, d in RICH.items():                                        # deep trades: legs add up, a cashflow's rate lies among its fixings
         for leg in d.get("legs", []):
             flows = leg.get("cashflows")
             if not flows:
@@ -169,7 +197,7 @@ def main() -> None:
     targets = [PACKS / p / "samples" for p in layout.PACKS]
     existing = {f for t in targets if t.exists() for f in t.rglob("*.json")}
     if "--check" in sys.argv:
-        stale = [str(f) for f, t in files.items() if not f.exists() or f.read_text(encoding="utf-8") != t]
+        stale = [str(f) for f, t in files.items() if not f.exists() or f.read_text(encoding="utf-8") != t] + TT.stale(docs["trade"])
         extra = [str(f) for f in existing - set(files)]
         if stale or extra:
             raise SystemExit(f"banking samples out of date; run make_data.py. stale={stale[:3]} extra={extra[:3]}")
@@ -181,7 +209,7 @@ def main() -> None:
         f.parent.mkdir(parents=True, exist_ok=True)
         if not f.exists() or f.read_text(encoding="utf-8") != t:
             f.write_text(t, encoding="utf-8")
-    print(f"wrote {sum(len(v) for v in docs.values())} documents into {len(layout.PACKS)} packs' samples")
+    print(f"wrote {sum(len(v) for v in docs.values())} documents into {len(layout.PACKS)} packs' samples; {TT.write(docs['trade'])} trading test files")
     print(f"feeds: {write_feeds(ROOT / 'data' / 'feeds')}")
     if "--jsonl" in sys.argv:
         from samplegen.dates import Calendar
@@ -214,7 +242,14 @@ def main() -> None:
         rows = 0
         for domain in layout.DOMAINS:
             kinds = {k: docs.get(k, {}) for k in (x for p in layout.PACKS.values() for d, ks in p["kinds"].items() if d == domain for x in ks)}
-            rows += write_tables(root / domain, kinds, N.AS_OF, days, Calendar.of("USNY"), layouts_for_domain(domain))
+            lays = layouts_for_domain(domain)
+            if "trade" in kinds:                    # one table per source system (trade_endur ...), each its own connector's
+                trades = kinds.pop("trade")
+                for system in TSCHEMA.SYSTEMS:
+                    kinds[f"trade_{system.lower()}"] = {i: t for i, t in trades.items() if t["SOURCE_SYSTEM"] == system}
+                    if "trade" in lays:
+                        lays[f"trade_{system.lower()}"] = lays["trade"]
+            rows += write_tables(root / domain, kinds, N.AS_OF, days, Calendar.of("USNY"), lays)
         print(f"lake: {rows} rows under {root} ({', '.join(layout.DOMAINS)})")
 
 

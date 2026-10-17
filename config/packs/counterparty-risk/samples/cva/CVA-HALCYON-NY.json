@@ -1,53 +1,53 @@
 {
  "resultId": "CVA-HALCYON-NY",
- "cva": -2298009,
- "dva": 26810,
- "fva": -70402,
- "kva": -349187,
- "cs01": -41364,
+ "cva": -2290249,
+ "dva": 26720,
+ "fva": -69584,
+ "kva": -347947,
+ "cs01": -41224,
  "components": [
   {
    "name": "CVA",
-   "amount": -2298009
+   "amount": -2290249
   },
   {
    "name": "DVA",
-   "amount": 26810
+   "amount": 26720
   },
   {
    "name": "FVA",
-   "amount": -70402
+   "amount": -69584
   },
   {
    "name": "KVA",
-   "amount": -349187
+   "amount": -347947
   }
  ],
  "sensitivities": [
   {
    "factor": "Counterparty spread",
    "bump": "+1 bp",
-   "delta": -41364
+   "delta": -41224
   },
   {
    "factor": "USD rates",
    "bump": "+1 bp",
-   "delta": 9192
+   "delta": 9161
   },
   {
    "factor": "EUR rates",
    "bump": "+1 bp",
-   "delta": 4596
+   "delta": 4580
   },
   {
    "factor": "FX vol",
    "bump": "+1 vol",
-   "delta": -68940
+   "delta": -68707
   },
   {
    "factor": "Recovery",
    "bump": "+1%",
-   "delta": 39066
+   "delta": 38934
   }
  ],
  "nettingSet": "NS-HALCYON-NY",

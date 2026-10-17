@@ -7,7 +7,7 @@
  "dv01": 94813,
  "topTrades": [
   {
-   "tradeId": "IMG-400109",
+   "tradeId": "MX-20000265",
    "product": "Contract for difference",
    "assetClass": "Equity",
    "currency": "USD",
@@ -18,7 +18,7 @@
    "mtm": 6060457
   },
   {
-   "tradeId": "IMG-400011",
+   "tradeId": "MX-20000167",
    "product": "Equity forward",
    "assetClass": "Equity",
    "currency": "CHF",
@@ -29,7 +29,7 @@
    "mtm": -4487722
   },
   {
-   "tradeId": "IMG-400052",
+   "tradeId": "MX-20000208",
    "product": "Equity Asian option",
    "assetClass": "Equity",
    "currency": "USD",
@@ -40,7 +40,7 @@
    "mtm": -3294420
   },
   {
-   "tradeId": "IMG-400012",
+   "tradeId": "MX-20000168",
    "product": "Equity forward",
    "assetClass": "Equity",
    "currency": "JPY",
@@ -51,7 +51,7 @@
    "mtm": 3225946
   },
   {
-   "tradeId": "IMG-400050",
+   "tradeId": "MX-20000206",
    "product": "Equity Asian option",
    "assetClass": "Equity",
    "currency": "GBP",
@@ -62,7 +62,7 @@
    "mtm": -3224113
   },
   {
-   "tradeId": "IMG-400038",
+   "tradeId": "MX-20000194",
    "product": "Index option",
    "assetClass": "Equity",
    "currency": "USD",
@@ -73,7 +73,7 @@
    "mtm": -2574924
   },
   {
-   "tradeId": "IMG-400110",
+   "tradeId": "MX-20000266",
    "product": "Contract for difference",
    "assetClass": "Equity",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": -2343493
   },
   {
-   "tradeId": "IMG-400100",
+   "tradeId": "MX-20000256",
    "product": "Equity total return swap",
    "assetClass": "Equity",
    "currency": "EUR",
@@ -95,7 +95,7 @@
    "mtm": 2341483
   },
   {
-   "tradeId": "IMG-400127",
+   "tradeId": "MX-20000283",
    "product": "Basket option",
    "assetClass": "Equity",
    "currency": "GBP",
@@ -106,7 +106,7 @@
    "mtm": 1923365
   },
   {
-   "tradeId": "IMG-400003",
+   "tradeId": "MX-20000159",
    "product": "Equity position",
    "assetClass": "Equity",
    "currency": "JPY",

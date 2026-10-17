@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "BBG-60000120",
+   "tradeId": "CLY-3000306",
    "product": "Margin loan",
    "assetClass": "Securities financing",
    "currency": "USD",
@@ -73,7 +73,7 @@
    "mtm": 1594435
   },
   {
-   "tradeId": "BBG-60000079",
+   "tradeId": "CLY-3000265",
    "product": "Repurchase agreement",
    "assetClass": "Securities financing",
    "currency": "JPY",

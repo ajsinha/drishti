@@ -95,7 +95,7 @@
    "mtm": 3203297
   },
   {
-   "tradeId": "BBG-60000076",
+   "tradeId": "CLY-3000232",
    "product": "CLO tranche",
    "assetClass": "Fixed income",
    "currency": "USD",
@@ -106,7 +106,7 @@
    "mtm": 2168781
   },
   {
-   "tradeId": "END-1000032",
+   "tradeId": "MX-20000320",
    "product": "Average price option (APO)",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -117,7 +117,7 @@
    "mtm": -2067469
   },
   {
-   "tradeId": "CLY-3000047",
+   "tradeId": "CLY-3000131",
    "product": "Credit-linked note",
    "assetClass": "Credit",
    "currency": "JPY",
@@ -139,7 +139,7 @@
    "mtm": -1611444
   },
   {
-   "tradeId": "CLY-3000057",
+   "tradeId": "CLY-3000141",
    "product": "Revolving credit facility",
    "assetClass": "Credit",
    "currency": "AUD",
@@ -150,7 +150,7 @@
    "mtm": 1498057
   },
   {
-   "tradeId": "CLY-3000058",
+   "tradeId": "CLY-3000142",
    "product": "Revolving credit facility",
    "assetClass": "Credit",
    "currency": "EUR",
@@ -161,7 +161,7 @@
    "mtm": 1220418
   },
   {
-   "tradeId": "CLY-3000039",
+   "tradeId": "CLY-3000123",
    "product": "Total return swap on a loan index",
    "assetClass": "Credit",
    "currency": "USD",
@@ -172,7 +172,7 @@
    "mtm": 1036608
   },
   {
-   "tradeId": "CLY-3000033",
+   "tradeId": "CLY-3000117",
    "product": "Total return swap on a bond",
    "assetClass": "Credit",
    "currency": "USD",
@@ -183,7 +183,7 @@
    "mtm": -871754
   },
   {
-   "tradeId": "CLY-3000011",
+   "tradeId": "CLY-3000095",
    "product": "CDS index (CDX / iTraxx)",
    "assetClass": "Credit",
    "currency": "CHF",
@@ -205,7 +205,7 @@
    "mtm": -404709
   },
   {
-   "tradeId": "END-1000048",
+   "tradeId": "MX-20000336",
    "product": "Commodity spread option",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -216,7 +216,7 @@
    "mtm": 343104
   },
   {
-   "tradeId": "CLY-3000019",
+   "tradeId": "CLY-3000103",
    "product": "CDS index option",
    "assetClass": "Credit",
    "currency": "AUD",
@@ -227,7 +227,7 @@
    "mtm": -244202
   },
   {
-   "tradeId": "BBG-60000066",
+   "tradeId": "CLY-3000222",
    "product": "CMO tranche",
    "assetClass": "Fixed income",
    "currency": "USD",
@@ -238,7 +238,7 @@
    "mtm": -21778
   },
   {
-   "tradeId": "END-1000019",
+   "tradeId": "MX-20000307",
    "product": "Commodity basis swap",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -249,7 +249,7 @@
    "mtm": 17280
   },
   {
-   "tradeId": "CLY-3000025",
+   "tradeId": "CLY-3000109",
    "product": "First-to-default basket",
    "assetClass": "Credit",
    "currency": "GBP",

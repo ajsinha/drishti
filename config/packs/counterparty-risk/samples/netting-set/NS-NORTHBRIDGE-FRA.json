@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "BBG-60000107",
+   "tradeId": "CLY-3000293",
    "product": "Securities lending",
    "assetClass": "Securities financing",
    "currency": "USD",
@@ -73,7 +73,7 @@
    "mtm": 2398191
   },
   {
-   "tradeId": "BBG-60000118",
+   "tradeId": "CLY-3000304",
    "product": "Margin loan",
    "assetClass": "Securities financing",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": 697723
   },
   {
-   "tradeId": "BBG-60000084",
+   "tradeId": "CLY-3000270",
    "product": "Repurchase agreement",
    "assetClass": "Securities financing",
    "currency": "USD",
@@ -95,7 +95,7 @@
    "mtm": -422916
   },
   {
-   "tradeId": "BBG-60000097",
+   "tradeId": "CLY-3000283",
    "product": "Buy / sell-back",
    "assetClass": "Securities financing",
    "currency": "USD",
@@ -106,7 +106,7 @@
    "mtm": 119432
   },
   {
-   "tradeId": "BBG-60000101",
+   "tradeId": "CLY-3000287",
    "product": "Buy / sell-back",
    "assetClass": "Securities financing",
    "currency": "JPY",

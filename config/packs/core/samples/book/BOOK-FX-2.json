@@ -7,7 +7,7 @@
  "dv01": -79666,
  "topTrades": [
   {
-   "tradeId": "WSS-1500043",
+   "tradeId": "CLY-3000043",
    "product": "FX double-barrier option",
    "assetClass": "FX",
    "currency": "USD",
@@ -18,7 +18,7 @@
    "mtm": -4354827
   },
   {
-   "tradeId": "WSS-1500062",
+   "tradeId": "CLY-3000062",
    "product": "FX target redemption forward",
    "assetClass": "FX",
    "currency": "USD",
@@ -29,7 +29,7 @@
    "mtm": -4316238
   },
   {
-   "tradeId": "WSS-1500038",
+   "tradeId": "CLY-3000038",
    "product": "FX barrier option",
    "assetClass": "FX",
    "currency": "USD",
@@ -40,7 +40,7 @@
    "mtm": -3413754
   },
   {
-   "tradeId": "WSS-1500037",
+   "tradeId": "CLY-3000037",
    "product": "FX barrier option",
    "assetClass": "FX",
    "currency": "JPY",
@@ -51,7 +51,7 @@
    "mtm": 3355034
   },
   {
-   "tradeId": "WSS-1500079",
+   "tradeId": "CLY-3000079",
    "product": "Quanto option",
    "assetClass": "FX",
    "currency": "GBP",
@@ -62,7 +62,7 @@
    "mtm": 2783757
   },
   {
-   "tradeId": "WSS-1500040",
+   "tradeId": "CLY-3000040",
    "product": "FX barrier option",
    "assetClass": "FX",
    "currency": "GBP",
@@ -73,7 +73,7 @@
    "mtm": -2383626
   },
   {
-   "tradeId": "WSS-1500020",
+   "tradeId": "CLY-3000020",
    "product": "FX swap",
    "assetClass": "FX",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": 1696884
   },
   {
-   "tradeId": "WSS-1500019",
+   "tradeId": "CLY-3000019",
    "product": "FX swap",
    "assetClass": "FX",
    "currency": "USD",
@@ -95,7 +95,7 @@
    "mtm": -1679905
   },
   {
-   "tradeId": "WSS-1500066",
+   "tradeId": "CLY-3000066",
    "product": "FX target redemption forward",
    "assetClass": "FX",
    "currency": "USD",
@@ -106,7 +106,7 @@
    "mtm": 1608918
   },
   {
-   "tradeId": "WSS-1500012",
+   "tradeId": "CLY-3000012",
    "product": "FX forward",
    "assetClass": "FX",
    "currency": "GBP",

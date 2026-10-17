@@ -10,7 +10,7 @@
  "UEN": "UEN0100222",
  "economy": "ECON-GRC",
  "newsId": "NEWS-Halcyon_Shipping_plc",
- "netMtm": 66874016,
+ "netMtm": 66192042,
  "pfePeak": 124873575,
  "nettingSets": [
   {
@@ -23,7 +23,7 @@
    "id": "NS-HALCYON-NY",
    "agreement": "AGR-HALCYON-ISDA",
    "trades": 24,
-   "netMtm": 58668444
+   "netMtm": 57986470
   },
   {
    "id": "NS-HALCYON-TKY",

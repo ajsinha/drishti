@@ -34,6 +34,29 @@
 
   function each(list, fn) { Array.prototype.forEach.call(list, fn); }
 
+  /* A dependent enum (data-depends="PRODUCT_TYPE"): only its values that occur with the chosen values of the field it depends on are
+     offered (each label says which with data-parents); nothing chosen there offers them all. A value hidden this way is unticked. */
+  function dependents() {
+    if (!form) { return; }
+    each(form.querySelectorAll('.qf-enum[data-depends]'), function (child) {
+      var parent = form.querySelector('.qf-field[data-field="' + child.getAttribute('data-depends') + '"]');
+      if (!parent) { return; }
+      function apply() {
+        var chosen = [];
+        each(parent.querySelectorAll('input[type=checkbox]:checked'), function (b) { chosen.push(b.value); });
+        each(child.querySelectorAll('label[data-parents]'), function (l) {
+          var ok = !chosen.length || l.getAttribute('data-parents').split('|').some(function (p) { return chosen.indexOf(p) >= 0; });
+          l.classList.toggle('qf-dep-off', !ok);
+          var box = l.querySelector('input');
+          if (!ok && box && box.checked) { box.checked = false; box.dispatchEvent(new Event('change', { bubbles: true })); }
+        });
+      }
+      parent.addEventListener('change', apply);
+      apply();
+    });
+  }
+  dependents();
+
   function syncField(box) {
     var op = box.querySelector('.qf-op'), type = box.getAttribute('data-type');
     var v = box.querySelector('.qf-v'), v2 = box.querySelector('.qf-v2');

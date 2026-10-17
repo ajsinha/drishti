@@ -1,527 +1,201 @@
 {
- "tradeId": "MX-20000156",
- "sourceSystem": "Murex",
- "sourceTradeId": "20000156",
- "productType": "TARN_RATES",
- "productName": "Target redemption note (rates)",
- "assetClass": "Rates",
- "family": "exotic",
- "status": "Live",
- "direction": "Buy",
- "tradeDate": "2024-08-16",
- "effectiveDate": "2024-08-19",
- "maturityDate": "2035-07-04",
- "currency": "AUD",
- "notional": 139000000.0,
- "mtm": 634079,
- "mtmCurrency": "USD",
- "pnl1d": 15197,
- "counterparty": {
-  "id": "CP-HARBORPT",
-  "name": "Harbor Point Bank"
- },
- "nettingSet": "NS-HARBORPT-NY",
- "book": "BOOK-RATES-3",
- "trader": "TRDR-ASHAH",
- "desk": "DESK-RATES",
- "legalEntity": "LE-NY",
- "discountCurve": "CRV-AUD-OIS",
- "forwardCurve": "CRV-AUD-PROJ",
- "swaptionVolCube": "IRV-AUD",
- "terms": {
-  "target": 0.115478,
-  "couponFormula": "2 × (Strike − Index)"
- },
- "risk": {
-  "dv01": 137559,
-  "vega": 1092382
- },
- "sensitivities": [
+ "SOURCE_SYSTEM": "MUREX",
+ "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z",
+ "TRADE_DATE": "2024-08-16",
+ "INPUT_DATE": "2024-08-16",
+ "TRADE_ID": "MX-20000156",
+ "TRADE_STATUS": "VALIDATED",
+ "TRADE_ACTION": "NEW",
+ "TRADE_VERSION": "1",
+ "TRANSACTION_ID": "20000156001",
+ "PACKAGE_ID": "",
+ "QUANTITY": 139000000.0,
+ "PRICE": null,
+ "BUY_SELL_CODE": "B",
+ "PRODUCT_TYPE": "TARN_RATES",
+ "PRODUCT_SUB_TYPE": "Target redemption note (rates)",
+ "PRODUCT_GROUP": "Rates",
+ "PRODUCT_SUB_GROUP": "exotic",
+ "OPTION_TYPE": null,
+ "STRIKE_PRICE": null,
+ "COUNTERPARTY": "CP-HARBORPT",
+ "COUNTERPARTY_UEN": "UEN0100259",
+ "COUNTERPARTY_COUNTRY_OF_RISK": "US",
+ "ORIGINAL_COUNTERPARTY": "",
+ "ORIGINAL_COUNTERPARTY_UEN": "",
+ "INTERNAL_EXTERNAL_CODE": "External",
+ "TRANSIT": "00107",
+ "LEGAL_ENTITY": "LE-NY",
+ "PORTFOLIO": "BOOK-RATES-3",
+ "TRADER_ID": "TRDR-ASHAH",
+ "TRADER_FIRST_NAME": "A.",
+ "TRADER_LAST_NAME": "Shah",
+ "START_DATE": "2024-08-19",
+ "MATURITY_DATE": "2035-07-04",
+ "REGISTRY_DELIVERY_DATE": "",
+ "CURRENCY": "AUD",
+ "DELIVERY_VERSUS_PAYMENT": "NO",
+ "STRATEGY": null,
+ "INTERNAL_TRADING_STRATEGY": "",
+ "NY_CURVE_FLAG": "",
+ "VAULT_LOCATION_ALLOCATION": "",
+ "PRECIOUS_METAL_FLAG": "",
+ "TT_GROUP": "DESK-RATES",
+ "TT_BOOK": "BOOK-RATES-3",
+ "LEASE_PERPETUITY_FLAG": "",
+ "SETTLEMENT_DATE": "2024-08-19",
+ "LEGS": [
   {
-   "bucket": "3M",
-   "dv01": 3821,
-   "vega": 30344
-  },
-  {
-   "bucket": "6M",
-   "dv01": 7642,
-   "vega": 60688
-  },
-  {
-   "bucket": "1Y",
-   "dv01": 11463,
-   "vega": 91032
-  },
-  {
-   "bucket": "2Y",
-   "dv01": 15284,
-   "vega": 121376
-  },
-  {
-   "bucket": "3Y",
-   "dv01": 19105,
-   "vega": 151720
-  },
-  {
-   "bucket": "5Y",
-   "dv01": 22926,
-   "vega": 182064
-  },
-  {
-   "bucket": "7Y",
-   "dv01": 26748,
-   "vega": 212408
-  },
-  {
-   "bucket": "10Y",
-   "dv01": 30569,
-   "vega": 242752
-  }
- ],
- "legs": [
-  {
-   "leg": 1,
-   "label": "Pay performance",
-   "payReceive": "Pay",
-   "rateType": "Performance",
-   "index": "USCPI",
-   "rate": null,
-   "spread": 0.0,
-   "frequency": "Quarterly",
-   "dayCount": "ACT/360",
-   "currency": "AUD",
-   "notional": 139000000.0
-  },
-  {
-   "leg": 2,
-   "label": "Receive AONIA + spread",
-   "payReceive": "Receive",
-   "rateType": "Float",
-   "index": "AONIA",
-   "rate": 0.03642,
-   "spread": 0.0,
-   "frequency": "Quarterly",
-   "dayCount": "ACT/360",
-   "currency": "AUD",
-   "notional": 139000000.0
-  }
- ],
- "schedule": [
-  {
-   "date": "2024-11-19",
-   "level": 94.51,
-   "trigger": 100.0,
-   "performance": -0.0549,
-   "outcome": "Coupon paid"
-  },
-  {
-   "date": "2025-02-19",
-   "level": 93.27,
-   "trigger": 100.0,
-   "performance": -0.0673,
-   "outcome": "Coupon paid"
-  },
-  {
-   "date": "2025-05-19",
-   "level": 90.35,
-   "trigger": 100.0,
-   "performance": -0.0965,
-   "outcome": "Coupon paid"
-  },
-  {
-   "date": "2025-08-19",
-   "level": 90.95,
-   "trigger": 100.0,
-   "performance": -0.0905,
-   "outcome": "Coupon paid"
-  },
-  {
-   "date": "2025-11-19",
-   "level": 92.16,
-   "trigger": 100.0,
-   "performance": -0.0784,
-   "outcome": "Coupon paid"
-  },
-  {
-   "date": "2026-02-19",
-   "level": 88.31,
-   "trigger": 100.0,
-   "performance": -0.1169,
-   "outcome": "Coupon paid"
-  },
-  {
-   "date": "2026-05-19",
-   "level": 90.6,
-   "trigger": 100.0,
-   "performance": -0.094,
-   "outcome": "Coupon paid"
-  },
-  {
-   "date": "2026-08-19",
-   "level": 94.3,
-   "trigger": 100.0,
-   "performance": -0.057,
-   "outcome": "Coupon paid"
-  },
-  {
-   "date": "2026-11-19",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2027-02-19",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2027-05-19",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2027-08-19",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2027-11-19",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2028-02-19",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2028-05-19",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2028-08-19",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2028-11-19",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2029-02-19",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2029-05-19",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2029-08-19",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2029-11-19",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2030-02-19",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2030-05-19",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2030-08-19",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  }
- ],
- "nextIndex": 8,
- "pnlHistory": [
-  {
-   "date": "2026-09-03",
-   "pnl": 28469
-  },
-  {
-   "date": "2026-09-04",
-   "pnl": -13020
-  },
-  {
-   "date": "2026-09-07",
-   "pnl": -17470
-  },
-  {
-   "date": "2026-09-08",
-   "pnl": -704
-  },
-  {
-   "date": "2026-09-09",
-   "pnl": 17744
-  },
-  {
-   "date": "2026-09-10",
-   "pnl": -2008
-  },
-  {
-   "date": "2026-09-11",
-   "pnl": 8927
-  },
-  {
-   "date": "2026-09-14",
-   "pnl": -33740
-  },
-  {
-   "date": "2026-09-15",
-   "pnl": 11319
-  },
-  {
-   "date": "2026-09-16",
-   "pnl": 1898
-  },
-  {
-   "date": "2026-09-17",
-   "pnl": 12063
-  },
-  {
-   "date": "2026-09-18",
-   "pnl": -11110
-  },
-  {
-   "date": "2026-09-21",
-   "pnl": -189
-  },
-  {
-   "date": "2026-09-22",
-   "pnl": 37442
-  },
-  {
-   "date": "2026-09-23",
-   "pnl": 26419
-  },
-  {
-   "date": "2026-09-24",
-   "pnl": -21276
-  },
-  {
-   "date": "2026-09-25",
-   "pnl": -27410
-  },
-  {
-   "date": "2026-09-28",
-   "pnl": 24182
-  },
-  {
-   "date": "2026-09-29",
-   "pnl": -18092
-  },
-  {
-   "date": "2026-09-30",
-   "pnl": 16254
-  }
- ],
- "execution": {
-  "tradeDate": "2024-08-16",
-  "executionTimestamp": "2024-08-16T13:16:20.530Z",
-  "venue": "Voice",
-  "venueMic": "XOFF",
-  "executionType": "Voice",
-  "trader": "A. Shah",
-  "salesperson": null,
-  "orderId": "ORD-1D0B6B66C3"
- },
- "lifecycle": {
-  "status": "Live",
-  "version": 1,
-  "events": [
-   {
-    "version": 1,
-    "event": "New",
-    "reason": "Trade captured",
-    "at": "2024-08-16T11:43:00Z",
-    "by": "mo.amend"
-   }
-  ],
-  "sourceSystem": "Calypso",
-  "createdAt": "2024-08-16T11:43:00Z",
-  "lastModifiedAt": "2024-08-16T11:43:00Z",
-  "lastModifiedBy": "mo.amend",
-  "timeline": [
-   {
-    "date": "2024-08-16",
-    "event": "Booked",
-    "status": "Done",
-    "description": "Captured in Murex by TRDR-ASHAH: buy Target redemption note (rates)"
+   "LEG_ID": 1,
+   "LEG_TYPE": "OPTION",
+   "LEG_ECONOMIC_TYPE": "Pay",
+   "CURRENCY": "AUD",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 139000000.0,
+   "DISCOUNT_INDEX": "CRV-AUD-OIS",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "",
+   "RESET_HOLIDAY_SCHEDULE": null,
+   "RESET_CONVENTION": "Quarterly",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "1",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "USCPI",
+    "GROUP": "Rates",
+    "SUB_GROUP": ""
    },
-   {
-    "date": "2024-08-16",
-    "event": "Confirmed",
-    "status": "Matched",
-    "description": "Matched on MarkitWire (MA264014451)"
+   "CASH_FLOWS": [
+    {
+     "FLOW_ID": 20000156001,
+     "FLOW_TYPE": "Performance",
+     "NOTIONAL": 139000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2024-08-19",
+     "END_DATE": "2035-07-04",
+     "PAYMENT_DATE": "2035-07-04",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    }
+   ]
+  },
+  {
+   "LEG_ID": 2,
+   "LEG_TYPE": "FLOAT",
+   "LEG_ECONOMIC_TYPE": "Receive",
+   "CURRENCY": "AUD",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 139000000.0,
+   "DISCOUNT_INDEX": "CRV-AUD-OIS",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "-2",
+   "RESET_HOLIDAY_SCHEDULE": null,
+   "RESET_CONVENTION": "Quarterly",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "1",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "AONIA",
+    "GROUP": "Rates",
+    "SUB_GROUP": ""
    },
-   {
-    "date": "2026-11-19",
-    "event": "Next payment",
-    "status": "Pending",
-    "description": "Scheduled; settlement instructions confirmed"
-   },
-   {
-    "date": "2035-07-04",
-    "event": "Maturity",
-    "status": "Scheduled",
-    "description": "Final payment and close-out"
-   }
-  ]
- },
- "confirmation": {
-  "status": "Confirmed",
-  "method": "MarkitWire",
-  "platformId": "MA264014451",
-  "matched": "2024-08-16 16:01",
-  "affirmedBy": "Counterparty ops",
-  "breaks": []
- },
- "clearing": {
-  "status": "Bilateral",
-  "mandatory": false,
-  "reason": "Counterparty below clearing threshold"
- },
- "regulatory": {
-  "uti": "549300O1N13GO2II20961D0B6B66C3271AED619F",
-  "upi": "QZZL2YKIFV0V",
-  "reportingRegimes": [
-   "CFTC Part 43/45"
-  ],
-  "reportingParty": "Us",
-  "reportingStatus": "Accepted",
-  "clearingObligation": false,
-  "tradingObligation": false,
-  "mifidClassification": "Professional client",
-  "volckerExempt": false,
-  "saCcrAssetClass": "Interest rate"
- },
- "settlementInstructions": {
-  "method": "Gross",
-  "ourAgent": "JPMorgan Chase Bank, N.A.",
-  "ourAgentBic": "CHASUS33XXX",
-  "theirAgentBic": "HARBGB33XXX",
-  "ssiId": "SSI-AUD-99A301",
-  "netting": "Payment netting by currency and value date"
- },
- "valuation": {
-  "asOf": "2026-09-30",
-  "currency": "USD",
-  "npv": 634079,
-  "cleanPv": 634079.0,
-  "accrued": 0.0,
-  "legPvs": [],
-  "model": "Local-stochastic volatility Monte Carlo",
-  "curves": [
-   "CRV-AUD-OIS",
-   "CRV-AUD-PROJ",
-   "IRV-AUD"
-  ],
-  "status": "Official EOD",
-  "runId": "EOD-20260930-01"
- },
- "pnlExplain": [
-  {
-   "step": "Opening MTM",
-   "pnl": 618882,
-   "total": true
-  },
-  {
-   "step": "Carry",
-   "pnl": -1386
-  },
-  {
-   "step": "Roll-down",
-   "pnl": -1367
-  },
-  {
-   "step": "Rates delta",
-   "pnl": 13896
-  },
-  {
-   "step": "FX delta",
-   "pnl": -3200
-  },
-  {
-   "step": "Vol (vega)",
-   "pnl": 10885
-  },
-  {
-   "step": "Theta",
-   "pnl": -3843
-  },
-  {
-   "step": "Unexplained",
-   "pnl": 212
-  }
- ],
- "_meta": {
-  "source": "murex-rates",
-  "generation": 1,
-  "live": false,
-  "walk": {
-   "mtm": 2658,
-   "derive": [
+   "CASH_FLOWS": [
     {
-     "set": "valuation.npv",
-     "expr": "$.mtm"
-    },
-    {
-     "set": "valuation.cleanPv",
-     "expr": "$.mtm - valuation.accrued"
-    },
-    {
-     "set": "pnl1d",
-     "expr": "$.mtm - pnlExplain.0.pnl"
-    },
-    {
-     "set": "pnlExplain.3.pnl",
-     "expr": "pnlExplain.3.pnl + ($.mtm - sum(pnlExplain.*.pnl))"
+     "FLOW_ID": 20000156002,
+     "FLOW_TYPE": "Float",
+     "NOTIONAL": 139000000.0,
+     "RATE": 0.03642,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2024-08-19",
+     "END_DATE": "2035-07-04",
+     "PAYMENT_DATE": "2035-07-04",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
     }
    ]
   }
+ ],
+ "EVENTS": [
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000156001,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "BOOKED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2024-08-16",
+   "AMOUNT": "",
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000156002,
+   "EVENT_NUMBER": 2,
+   "EVENT_TYPE": "CONFIRMED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2024-08-16",
+   "AMOUNT": "",
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 2,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000156003,
+   "EVENT_NUMBER": 3,
+   "EVENT_TYPE": "NEXT_PAYMENT",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-11-19",
+   "AMOUNT": "",
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 3,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000156004,
+   "EVENT_NUMBER": 4,
+   "EVENT_TYPE": "MATURITY",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2035-07-04",
+   "AMOUNT": "",
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 4,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  }
+ ],
+ "_meta": {
+  "source": "murex",
+  "generation": 1
  }
 }

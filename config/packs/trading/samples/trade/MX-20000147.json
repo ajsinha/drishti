@@ -1,522 +1,201 @@
 {
- "tradeId": "MX-20000147",
- "sourceSystem": "Murex",
- "sourceTradeId": "20000147",
- "productType": "SNOWBALL_SWAP",
- "productName": "Snowball swap",
- "assetClass": "Rates",
- "family": "exotic",
- "status": "Live",
- "direction": "Sell",
- "tradeDate": "2024-06-07",
- "effectiveDate": "2024-06-10",
- "maturityDate": "2032-02-23",
- "currency": "GBP",
- "notional": 23000000.0,
- "mtm": 39565,
- "mtmCurrency": "USD",
- "pnl1d": 4159,
- "counterparty": {
-  "id": "CP-VERDANT",
-  "name": "Verdant Agri Holdings"
- },
- "nettingSet": "NS-VERDANT-NY",
- "book": "BOOK-RATES-1",
- "trader": "TRDR-ASHAH",
- "desk": "DESK-RATES",
- "legalEntity": "LE-NY",
- "discountCurve": "CRV-GBP-OIS",
- "forwardCurve": "CRV-GBP-PROJ",
- "swaptionVolCube": "IRV-GBP",
- "terms": {
-  "initialCoupon": 0.059288,
-  "snowballSpread": 217.2
- },
- "risk": {
-  "dv01": -14851,
-  "vega": -118707
- },
- "sensitivities": [
+ "SOURCE_SYSTEM": "MUREX",
+ "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z",
+ "TRADE_DATE": "2024-06-07",
+ "INPUT_DATE": "2024-06-07",
+ "TRADE_ID": "MX-20000147",
+ "TRADE_STATUS": "VALIDATED",
+ "TRADE_ACTION": "NEW",
+ "TRADE_VERSION": "1",
+ "TRANSACTION_ID": "20000147001",
+ "PACKAGE_ID": "",
+ "QUANTITY": 23000000.0,
+ "PRICE": null,
+ "BUY_SELL_CODE": "S",
+ "PRODUCT_TYPE": "SNOWBALL_SWAP",
+ "PRODUCT_SUB_TYPE": "Snowball swap",
+ "PRODUCT_GROUP": "Rates",
+ "PRODUCT_SUB_GROUP": "exotic",
+ "OPTION_TYPE": null,
+ "STRIKE_PRICE": null,
+ "COUNTERPARTY": "CP-VERDANT",
+ "COUNTERPARTY_UEN": "UEN0100666",
+ "COUNTERPARTY_COUNTRY_OF_RISK": "BR",
+ "ORIGINAL_COUNTERPARTY": "",
+ "ORIGINAL_COUNTERPARTY_UEN": "",
+ "INTERNAL_EXTERNAL_CODE": "External",
+ "TRANSIT": "00107",
+ "LEGAL_ENTITY": "LE-NY",
+ "PORTFOLIO": "BOOK-RATES-1",
+ "TRADER_ID": "TRDR-ASHAH",
+ "TRADER_FIRST_NAME": "A.",
+ "TRADER_LAST_NAME": "Shah",
+ "START_DATE": "2024-06-10",
+ "MATURITY_DATE": "2032-02-23",
+ "REGISTRY_DELIVERY_DATE": "",
+ "CURRENCY": "GBP",
+ "DELIVERY_VERSUS_PAYMENT": "NO",
+ "STRATEGY": null,
+ "INTERNAL_TRADING_STRATEGY": "",
+ "NY_CURVE_FLAG": "",
+ "VAULT_LOCATION_ALLOCATION": "",
+ "PRECIOUS_METAL_FLAG": "",
+ "TT_GROUP": "DESK-RATES",
+ "TT_BOOK": "BOOK-RATES-1",
+ "LEASE_PERPETUITY_FLAG": "",
+ "SETTLEMENT_DATE": "2024-06-10",
+ "LEGS": [
   {
-   "bucket": "3M",
-   "dv01": -530,
-   "vega": -4240
-  },
-  {
-   "bucket": "6M",
-   "dv01": -1061,
-   "vega": -8479
-  },
-  {
-   "bucket": "1Y",
-   "dv01": -1591,
-   "vega": -12719
-  },
-  {
-   "bucket": "2Y",
-   "dv01": -2122,
-   "vega": -16958
-  },
-  {
-   "bucket": "3Y",
-   "dv01": -2652,
-   "vega": -21198
-  },
-  {
-   "bucket": "5Y",
-   "dv01": -3182,
-   "vega": -25437
-  },
-  {
-   "bucket": "7Y",
-   "dv01": -3713,
-   "vega": -29677
-  }
- ],
- "legs": [
-  {
-   "leg": 1,
-   "label": "Receive performance",
-   "payReceive": "Receive",
-   "rateType": "Performance",
-   "index": "USCPI",
-   "rate": null,
-   "spread": 0.0,
-   "frequency": "Quarterly",
-   "dayCount": "ACT/360",
-   "currency": "GBP",
-   "notional": 23000000.0
-  },
-  {
-   "leg": 2,
-   "label": "Pay SONIA + spread",
-   "payReceive": "Pay",
-   "rateType": "Float",
-   "index": "SONIA",
-   "rate": 0.037956,
-   "spread": 0.0,
-   "frequency": "Quarterly",
-   "dayCount": "ACT/360",
-   "currency": "GBP",
-   "notional": 23000000.0
-  }
- ],
- "schedule": [
-  {
-   "date": "2024-09-10",
-   "level": 92.66,
-   "trigger": 100.0,
-   "performance": -0.0734,
-   "outcome": "Coupon paid"
-  },
-  {
-   "date": "2024-12-10",
-   "level": 99.4,
-   "trigger": 100.0,
-   "performance": -0.006,
-   "outcome": "Coupon paid"
-  },
-  {
-   "date": "2025-03-10",
-   "level": 89.17,
-   "trigger": 100.0,
-   "performance": -0.1083,
-   "outcome": "Coupon paid"
-  },
-  {
-   "date": "2025-06-10",
-   "level": 90.19,
-   "trigger": 100.0,
-   "performance": -0.0981,
-   "outcome": "Coupon paid"
-  },
-  {
-   "date": "2025-09-10",
-   "level": 91.46,
-   "trigger": 100.0,
-   "performance": -0.0854,
-   "outcome": "Coupon paid"
-  },
-  {
-   "date": "2025-12-10",
-   "level": 88.5,
-   "trigger": 100.0,
-   "performance": -0.115,
-   "outcome": "Coupon paid"
-  },
-  {
-   "date": "2026-03-10",
-   "level": 82.75,
-   "trigger": 100.0,
-   "performance": -0.1725,
-   "outcome": "Coupon paid"
-  },
-  {
-   "date": "2026-06-10",
-   "level": 92.1,
-   "trigger": 100.0,
-   "performance": -0.079,
-   "outcome": "Coupon paid"
-  },
-  {
-   "date": "2026-09-10",
-   "level": 98.69,
-   "trigger": 100.0,
-   "performance": -0.0131,
-   "outcome": "Coupon paid"
-  },
-  {
-   "date": "2026-12-10",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2027-03-10",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2027-06-10",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2027-09-10",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2027-12-10",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2028-03-10",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2028-06-10",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2028-09-10",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2028-12-10",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2029-03-10",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2029-06-10",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2029-09-10",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2029-12-10",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2030-03-10",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  },
-  {
-   "date": "2030-06-10",
-   "level": null,
-   "trigger": 100.0,
-   "performance": null,
-   "outcome": "Pending"
-  }
- ],
- "nextIndex": 9,
- "pnlHistory": [
-  {
-   "date": "2026-09-03",
-   "pnl": 6093
-  },
-  {
-   "date": "2026-09-04",
-   "pnl": 6375
-  },
-  {
-   "date": "2026-09-07",
-   "pnl": -232
-  },
-  {
-   "date": "2026-09-08",
-   "pnl": 945
-  },
-  {
-   "date": "2026-09-09",
-   "pnl": 338
-  },
-  {
-   "date": "2026-09-10",
-   "pnl": 737
-  },
-  {
-   "date": "2026-09-11",
-   "pnl": -5334
-  },
-  {
-   "date": "2026-09-14",
-   "pnl": 1058
-  },
-  {
-   "date": "2026-09-15",
-   "pnl": -281
-  },
-  {
-   "date": "2026-09-16",
-   "pnl": 1385
-  },
-  {
-   "date": "2026-09-17",
-   "pnl": -3356
-  },
-  {
-   "date": "2026-09-18",
-   "pnl": 1296
-  },
-  {
-   "date": "2026-09-21",
-   "pnl": -5594
-  },
-  {
-   "date": "2026-09-22",
-   "pnl": 2966
-  },
-  {
-   "date": "2026-09-23",
-   "pnl": -3013
-  },
-  {
-   "date": "2026-09-24",
-   "pnl": -3326
-  },
-  {
-   "date": "2026-09-25",
-   "pnl": 4587
-  },
-  {
-   "date": "2026-09-28",
-   "pnl": -3719
-  },
-  {
-   "date": "2026-09-29",
-   "pnl": -438
-  },
-  {
-   "date": "2026-09-30",
-   "pnl": 833
-  }
- ],
- "execution": {
-  "tradeDate": "2024-06-07",
-  "executionTimestamp": "2024-06-07T12:36:21.649Z",
-  "venue": "Bloomberg SEF",
-  "venueMic": "BSEF",
-  "executionType": "Electronic",
-  "trader": "A. Shah",
-  "salesperson": null,
-  "orderId": "ORD-6E8DF37272"
- },
- "lifecycle": {
-  "status": "Live",
-  "version": 1,
-  "events": [
-   {
-    "version": 1,
-    "event": "New",
-    "reason": "Trade captured",
-    "at": "2024-06-07T12:20:00Z",
-    "by": "mo.amend"
-   }
-  ],
-  "sourceSystem": "Murex",
-  "createdAt": "2024-06-07T12:20:00Z",
-  "lastModifiedAt": "2024-06-07T12:20:00Z",
-  "lastModifiedBy": "mo.amend",
-  "timeline": [
-   {
-    "date": "2024-06-07",
-    "event": "Booked",
-    "status": "Done",
-    "description": "Captured in Murex by TRDR-ASHAH: sell Snowball swap"
+   "LEG_ID": 1,
+   "LEG_TYPE": "OPTION",
+   "LEG_ECONOMIC_TYPE": "Receive",
+   "CURRENCY": "GBP",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 23000000.0,
+   "DISCOUNT_INDEX": "CRV-GBP-OIS",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "",
+   "RESET_HOLIDAY_SCHEDULE": null,
+   "RESET_CONVENTION": "Quarterly",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "1",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "USCPI",
+    "GROUP": "Rates",
+    "SUB_GROUP": ""
    },
-   {
-    "date": "2024-06-07",
-    "event": "Confirmed",
-    "status": "Matched",
-    "description": "Matched on MarkitWire (MA538752809)"
+   "CASH_FLOWS": [
+    {
+     "FLOW_ID": 20000147001,
+     "FLOW_TYPE": "Performance",
+     "NOTIONAL": 23000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2024-06-10",
+     "END_DATE": "2032-02-23",
+     "PAYMENT_DATE": "2032-02-23",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    }
+   ]
+  },
+  {
+   "LEG_ID": 2,
+   "LEG_TYPE": "FLOAT",
+   "LEG_ECONOMIC_TYPE": "Pay",
+   "CURRENCY": "GBP",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 23000000.0,
+   "DISCOUNT_INDEX": "CRV-GBP-OIS",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "-2",
+   "RESET_HOLIDAY_SCHEDULE": null,
+   "RESET_CONVENTION": "Quarterly",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "1",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "SONIA",
+    "GROUP": "Rates",
+    "SUB_GROUP": ""
    },
-   {
-    "date": "2026-12-10",
-    "event": "Next payment",
-    "status": "Pending",
-    "description": "Scheduled; settlement instructions confirmed"
-   },
-   {
-    "date": "2032-02-23",
-    "event": "Maturity",
-    "status": "Scheduled",
-    "description": "Final payment and close-out"
-   }
-  ]
- },
- "confirmation": {
-  "status": "Confirmed",
-  "method": "MarkitWire",
-  "platformId": "MA538752809",
-  "matched": "2024-06-07 13:09",
-  "affirmedBy": "Counterparty ops",
-  "breaks": []
- },
- "clearing": {
-  "status": "Bilateral",
-  "mandatory": false,
-  "reason": "Counterparty below clearing threshold"
- },
- "regulatory": {
-  "uti": "549300O1N13GO2II20966E8DF372723B79523A9E",
-  "upi": "QZ6D20JW8FY2",
-  "reportingRegimes": [
-   "CFTC Part 43/45"
-  ],
-  "reportingParty": "Us",
-  "reportingStatus": "Accepted",
-  "clearingObligation": false,
-  "tradingObligation": false,
-  "mifidClassification": "Professional client",
-  "volckerExempt": false,
-  "saCcrAssetClass": "Interest rate"
- },
- "settlementInstructions": {
-  "method": "CLS",
-  "ourAgent": "Barclays Bank plc",
-  "ourAgentBic": "BARCGB22XXX",
-  "theirAgentBic": "VERDGB33XXX",
-  "ssiId": "SSI-GBP-ABCF5A",
-  "netting": "Payment netting by currency and value date"
- },
- "valuation": {
-  "asOf": "2026-09-30",
-  "currency": "USD",
-  "npv": 39565,
-  "cleanPv": 39565.0,
-  "accrued": 0.0,
-  "legPvs": [],
-  "model": "Local-stochastic volatility Monte Carlo",
-  "curves": [
-   "CRV-GBP-OIS",
-   "CRV-GBP-PROJ",
-   "IRV-GBP"
-  ],
-  "status": "Official EOD",
-  "runId": "EOD-20260930-01"
- },
- "pnlExplain": [
-  {
-   "step": "Opening MTM",
-   "pnl": 35406,
-   "total": true
-  },
-  {
-   "step": "Carry",
-   "pnl": -151
-  },
-  {
-   "step": "Roll-down",
-   "pnl": 485
-  },
-  {
-   "step": "Rates delta",
-   "pnl": 6160
-  },
-  {
-   "step": "FX delta",
-   "pnl": 395
-  },
-  {
-   "step": "Vol (vega)",
-   "pnl": -1627
-  },
-  {
-   "step": "Theta",
-   "pnl": -1082
-  },
-  {
-   "step": "Unexplained",
-   "pnl": -21
-  }
- ],
- "_meta": {
-  "source": "murex-rates",
-  "generation": 1,
-  "live": false,
-  "walk": {
-   "mtm": 500,
-   "derive": [
+   "CASH_FLOWS": [
     {
-     "set": "valuation.npv",
-     "expr": "$.mtm"
-    },
-    {
-     "set": "valuation.cleanPv",
-     "expr": "$.mtm - valuation.accrued"
-    },
-    {
-     "set": "pnl1d",
-     "expr": "$.mtm - pnlExplain.0.pnl"
-    },
-    {
-     "set": "pnlExplain.3.pnl",
-     "expr": "pnlExplain.3.pnl + ($.mtm - sum(pnlExplain.*.pnl))"
+     "FLOW_ID": 20000147002,
+     "FLOW_TYPE": "Float",
+     "NOTIONAL": 23000000.0,
+     "RATE": 0.037956,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2024-06-10",
+     "END_DATE": "2032-02-23",
+     "PAYMENT_DATE": "2032-02-23",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
     }
    ]
   }
+ ],
+ "EVENTS": [
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000147001,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "BOOKED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2024-06-07",
+   "AMOUNT": "",
+   "CURRENCY": "GBP",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000147002,
+   "EVENT_NUMBER": 2,
+   "EVENT_TYPE": "CONFIRMED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2024-06-07",
+   "AMOUNT": "",
+   "CURRENCY": "GBP",
+   "SEQUENCE_NUMBER": 2,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000147003,
+   "EVENT_NUMBER": 3,
+   "EVENT_TYPE": "NEXT_PAYMENT",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-12-10",
+   "AMOUNT": "",
+   "CURRENCY": "GBP",
+   "SEQUENCE_NUMBER": 3,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000147004,
+   "EVENT_NUMBER": 4,
+   "EVENT_TYPE": "MATURITY",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2032-02-23",
+   "AMOUNT": "",
+   "CURRENCY": "GBP",
+   "SEQUENCE_NUMBER": 4,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  }
+ ],
+ "_meta": {
+  "source": "murex",
+  "generation": 1
  }
 }

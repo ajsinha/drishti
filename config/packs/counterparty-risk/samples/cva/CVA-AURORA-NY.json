@@ -1,26 +1,26 @@
 {
  "resultId": "CVA-AURORA-NY",
- "cva": -9303,
- "dva": 19536,
- "fva": -54071,
- "kva": -281852,
+ "cva": -9281,
+ "dva": 19490,
+ "fva": -53429,
+ "kva": -281357,
  "cs01": -167,
  "components": [
   {
    "name": "CVA",
-   "amount": -9303
+   "amount": -9281
   },
   {
    "name": "DVA",
-   "amount": 19536
+   "amount": 19490
   },
   {
    "name": "FVA",
-   "amount": -54071
+   "amount": -53429
   },
   {
    "name": "KVA",
-   "amount": -281852
+   "amount": -281357
   }
  ],
  "sensitivities": [
@@ -42,7 +42,7 @@
   {
    "factor": "FX vol",
    "bump": "+1 vol",
-   "delta": -279
+   "delta": -278
   },
   {
    "factor": "Recovery",

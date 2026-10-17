@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "BBG-60000114",
+   "tradeId": "CLY-3000300",
    "product": "Securities borrowing",
    "assetClass": "Securities financing",
    "currency": "EUR",
@@ -73,7 +73,7 @@
    "mtm": -2200202
   },
   {
-   "tradeId": "BBG-60000109",
+   "tradeId": "CLY-3000295",
    "product": "Securities borrowing",
    "assetClass": "Securities financing",
    "currency": "CAD",
@@ -84,7 +84,7 @@
    "mtm": -2184430
   },
   {
-   "tradeId": "BBG-60000105",
+   "tradeId": "CLY-3000291",
    "product": "Securities lending",
    "assetClass": "Securities financing",
    "currency": "JPY",

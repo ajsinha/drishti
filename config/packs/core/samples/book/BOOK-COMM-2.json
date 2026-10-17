@@ -3,11 +3,11 @@
  "name": "Commodities · book 2",
  "deskName": "Commodities",
  "tradeCount": 31,
- "mtm": 23033724,
+ "mtm": 20625722,
  "dv01": 0,
  "topTrades": [
   {
-   "tradeId": "END-1000011",
+   "tradeId": "MX-20000299",
    "product": "Commodity forward",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -18,7 +18,7 @@
    "mtm": 5446207
   },
   {
-   "tradeId": "END-1000002",
+   "tradeId": "MX-20000290",
    "product": "Commodity future",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -29,7 +29,7 @@
    "mtm": 4446305
   },
   {
-   "tradeId": "END-1000054",
+   "tradeId": "MX-20000342",
    "product": "Calendar spread",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -40,7 +40,7 @@
    "mtm": 3887196
   },
   {
-   "tradeId": "END-1000072",
+   "tradeId": "MX-20000360",
    "product": "Gas swing option",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -51,7 +51,7 @@
    "mtm": -3307013
   },
   {
-   "tradeId": "END-1000069",
+   "tradeId": "MX-20000357",
    "product": "Gas swing option",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -62,7 +62,7 @@
    "mtm": 2742803
   },
   {
-   "tradeId": "END-1000047",
+   "tradeId": "MX-20000335",
    "product": "Commodity spread option",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -73,7 +73,7 @@
    "mtm": 1874087
   },
   {
-   "tradeId": "END-1000078",
+   "tradeId": "MX-20000366",
    "product": "Emissions allowance future",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": 1790391
   },
   {
-   "tradeId": "END-1000025",
+   "tradeId": "MX-20000313",
    "product": "Option on commodity future",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -95,18 +95,7 @@
    "mtm": -1683518
   },
   {
-   "tradeId": "END-1000017",
-   "product": "Commodity swap",
-   "assetClass": "Commodity",
-   "currency": "USD",
-   "book": "BOOK-COMM-2",
-   "notional": 57000000.0,
-   "maturity": "2027-04-30",
-   "maturityBucket": "0-1Y",
-   "mtm": 1494618
-  },
-  {
-   "tradeId": "END-1000058",
+   "tradeId": "MX-20000346",
    "product": "Commodity index swap",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -115,6 +104,17 @@
    "maturity": "2033-12-22",
    "maturityBucket": "5-10Y",
    "mtm": 1412345
+  },
+  {
+   "tradeId": "MX-20000298",
+   "product": "Commodity forward",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-2",
+   "notional": 57000000.0,
+   "maturity": "2027-05-27",
+   "maturityBucket": "0-1Y",
+   "mtm": 965771
   }
  ],
  "desk": "DESK-COMM",
@@ -134,12 +134,12 @@
    "topTrades.5.mtm": 4148,
    "topTrades.6.mtm": 3981,
    "topTrades.7.mtm": 3767,
-   "topTrades.8.mtm": 3389,
-   "topTrades.9.mtm": 3225,
+   "topTrades.8.mtm": 3225,
+   "topTrades.9.mtm": 2332,
    "derive": [
     {
      "set": "mtm",
-     "expr": "4930303 + sum(topTrades.*.mtm)"
+     "expr": "3051148 + sum(topTrades.*.mtm)"
     }
    ]
   }

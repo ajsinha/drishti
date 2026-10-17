@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "IMG-400143",
+   "tradeId": "MX-20000425",
    "product": "Capital-protected note",
    "assetClass": "Structured",
    "currency": "USD",
@@ -73,7 +73,7 @@
    "mtm": 2529887
   },
   {
-   "tradeId": "IMG-400155",
+   "tradeId": "MX-20000437",
    "product": "Worst-of note",
    "assetClass": "Structured",
    "currency": "GBP",
@@ -84,7 +84,7 @@
    "mtm": -2097100
   },
   {
-   "tradeId": "IMG-400135",
+   "tradeId": "MX-20000417",
    "product": "Range accrual note",
    "assetClass": "Structured",
    "currency": "USD",

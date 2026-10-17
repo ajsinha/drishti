@@ -7,7 +7,7 @@
  "dv01": 800425,
  "topTrades": [
   {
-   "tradeId": "BBG-60000018",
+   "tradeId": "CLY-3000174",
    "product": "Floating rate note",
    "assetClass": "Fixed income",
    "currency": "GBP",
@@ -18,7 +18,7 @@
    "mtm": -3735787
   },
   {
-   "tradeId": "BBG-60000050",
+   "tradeId": "CLY-3000206",
    "product": "Municipal bond",
    "assetClass": "Fixed income",
    "currency": "USD",
@@ -29,7 +29,7 @@
    "mtm": -3693532
   },
   {
-   "tradeId": "BBG-60000037",
+   "tradeId": "CLY-3000193",
    "product": "Amortising bond",
    "assetClass": "Fixed income",
    "currency": "USD",
@@ -40,7 +40,7 @@
    "mtm": -3664626
   },
   {
-   "tradeId": "BBG-60000030",
+   "tradeId": "CLY-3000186",
    "product": "Callable bond",
    "assetClass": "Fixed income",
    "currency": "EUR",
@@ -51,7 +51,7 @@
    "mtm": 3201249
   },
   {
-   "tradeId": "BBG-60000048",
+   "tradeId": "CLY-3000204",
    "product": "Covered bond",
    "assetClass": "Fixed income",
    "currency": "CAD",
@@ -62,7 +62,7 @@
    "mtm": 2694900
   },
   {
-   "tradeId": "BBG-60000060",
+   "tradeId": "CLY-3000216",
    "product": "Agency MBS pass-through",
    "assetClass": "Fixed income",
    "currency": "CAD",
@@ -73,7 +73,7 @@
    "mtm": -2303954
   },
   {
-   "tradeId": "BBG-60000063",
+   "tradeId": "CLY-3000219",
    "product": "CMO tranche",
    "assetClass": "Fixed income",
    "currency": "EUR",
@@ -84,7 +84,7 @@
    "mtm": -2085900
   },
   {
-   "tradeId": "BBG-60000038",
+   "tradeId": "CLY-3000194",
    "product": "Amortising bond",
    "assetClass": "Fixed income",
    "currency": "GBP",
@@ -95,7 +95,7 @@
    "mtm": -1645510
   },
   {
-   "tradeId": "BBG-60000003",
+   "tradeId": "CLY-3000159",
    "product": "Government bond",
    "assetClass": "Fixed income",
    "currency": "EUR",
@@ -106,7 +106,7 @@
    "mtm": -1569609
   },
   {
-   "tradeId": "BBG-60000026",
+   "tradeId": "CLY-3000182",
    "product": "Callable bond",
    "assetClass": "Fixed income",
    "currency": "JPY",

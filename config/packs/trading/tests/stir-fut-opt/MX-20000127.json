@@ -1,299 +1,150 @@
 {
- "tradeId": "MX-20000127",
- "sourceSystem": "Murex",
- "sourceTradeId": "20000127",
- "productType": "STIR_FUT_OPT",
- "productName": "STIR future option",
- "assetClass": "Rates",
- "family": "option",
- "status": "Live",
- "direction": "Sell",
- "tradeDate": "2026-01-23",
- "effectiveDate": "2026-01-26",
- "maturityDate": "2028-11-20",
- "currency": "USD",
- "notional": 18000000.0,
- "mtm": 73162,
- "mtmCurrency": "USD",
- "pnl1d": -3817,
- "counterparty": {
-  "id": "CP-SUMMIT",
-  "name": "Summit Clearing LLC"
- },
- "nettingSet": "NS-SUMMIT-NY",
- "book": "BOOK-RATES-2",
- "trader": "TRDR-ASHAH",
- "desk": "DESK-RATES",
- "legalEntity": "LE-NY",
- "clearingAccount": "CLR-CME-1",
- "forwardCurve": "CRV-USD-PROJ",
- "capVolSurface": "CPV-USD",
- "terms": {
-  "contract": "SR3 H7 P 95.75",
-  "lots": 996,
-  "premiumTicks": 20.1
- },
- "risk": {
-  "dv01": -4528,
-  "vega": -81496
- },
- "sensitivities": [
+ "SOURCE_SYSTEM": "MUREX",
+ "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z",
+ "TRADE_DATE": "2026-01-23",
+ "INPUT_DATE": "2026-01-23",
+ "TRADE_ID": "MX-20000127",
+ "TRADE_STATUS": "VALIDATED",
+ "TRADE_ACTION": "NEW",
+ "TRADE_VERSION": "1",
+ "TRANSACTION_ID": "20000127001",
+ "PACKAGE_ID": "",
+ "QUANTITY": 996.0,
+ "PRICE": null,
+ "BUY_SELL_CODE": "S",
+ "PRODUCT_TYPE": "STIR_FUT_OPT",
+ "PRODUCT_SUB_TYPE": "STIR future option",
+ "PRODUCT_GROUP": "Rates",
+ "PRODUCT_SUB_GROUP": "option",
+ "OPTION_TYPE": null,
+ "STRIKE_PRICE": null,
+ "COUNTERPARTY": "CP-SUMMIT",
+ "COUNTERPARTY_UEN": "UEN0100592",
+ "COUNTERPARTY_COUNTRY_OF_RISK": "US",
+ "ORIGINAL_COUNTERPARTY": "",
+ "ORIGINAL_COUNTERPARTY_UEN": "",
+ "INTERNAL_EXTERNAL_CODE": "External",
+ "TRANSIT": "00107",
+ "LEGAL_ENTITY": "LE-NY",
+ "PORTFOLIO": "BOOK-RATES-2",
+ "TRADER_ID": "TRDR-ASHAH",
+ "TRADER_FIRST_NAME": "A.",
+ "TRADER_LAST_NAME": "Shah",
+ "START_DATE": "2026-01-26",
+ "MATURITY_DATE": "2028-11-20",
+ "REGISTRY_DELIVERY_DATE": "",
+ "CURRENCY": "USD",
+ "DELIVERY_VERSUS_PAYMENT": "NO",
+ "STRATEGY": null,
+ "INTERNAL_TRADING_STRATEGY": "",
+ "NY_CURVE_FLAG": "",
+ "VAULT_LOCATION_ALLOCATION": "",
+ "PRECIOUS_METAL_FLAG": "",
+ "TT_GROUP": "DESK-RATES",
+ "TT_BOOK": "BOOK-RATES-2",
+ "LEASE_PERPETUITY_FLAG": "",
+ "SETTLEMENT_DATE": "2026-01-26",
+ "LEGS": [
   {
-   "bucket": "3M",
-   "dv01": -302,
-   "vega": -5433
-  },
-  {
-   "bucket": "6M",
-   "dv01": -604,
-   "vega": -10866
-  },
-  {
-   "bucket": "1Y",
-   "dv01": -906,
-   "vega": -16299
-  },
-  {
-   "bucket": "2Y",
-   "dv01": -1207,
-   "vega": -21732
-  },
-  {
-   "bucket": "3Y",
-   "dv01": -1509,
-   "vega": -27165
+   "LEG_ID": 1,
+   "LEG_TYPE": "OPTION",
+   "LEG_ECONOMIC_TYPE": "Receive",
+   "CURRENCY": "USD",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 18000000.0,
+   "DISCOUNT_INDEX": "",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "",
+   "RESET_HOLIDAY_SCHEDULE": null,
+   "RESET_CONVENTION": "",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "1",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "",
+    "GROUP": "",
+    "SUB_GROUP": ""
+   },
+   "CASH_FLOWS": [
+    {
+     "FLOW_ID": 20000127001,
+     "FLOW_TYPE": "Principal",
+     "NOTIONAL": 18000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-01-26",
+     "END_DATE": "2028-11-20",
+     "PAYMENT_DATE": "2028-11-20",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    }
+   ]
   }
  ],
- "pnlHistory": [
+ "EVENTS": [
   {
-   "date": "2026-09-03",
-   "pnl": 7393
+   "LEG_ID": "",
+   "EVENT_ID": 20000127001,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "BOOKED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-01-23",
+   "AMOUNT": "",
+   "CURRENCY": "USD",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
   },
   {
-   "date": "2026-09-04",
-   "pnl": -2033
+   "LEG_ID": "",
+   "EVENT_ID": 20000127002,
+   "EVENT_NUMBER": 2,
+   "EVENT_TYPE": "CONFIRMED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-01-23",
+   "AMOUNT": "",
+   "CURRENCY": "USD",
+   "SEQUENCE_NUMBER": 2,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
   },
   {
-   "date": "2026-09-07",
-   "pnl": -3076
+   "LEG_ID": "",
+   "EVENT_ID": 20000127003,
+   "EVENT_NUMBER": 3,
+   "EVENT_TYPE": "CLEARED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-01-26",
+   "AMOUNT": "",
+   "CURRENCY": "USD",
+   "SEQUENCE_NUMBER": 3,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
   },
   {
-   "date": "2026-09-08",
-   "pnl": 581
-  },
-  {
-   "date": "2026-09-09",
-   "pnl": -449
-  },
-  {
-   "date": "2026-09-10",
-   "pnl": -2700
-  },
-  {
-   "date": "2026-09-11",
-   "pnl": -3218
-  },
-  {
-   "date": "2026-09-14",
-   "pnl": 193
-  },
-  {
-   "date": "2026-09-15",
-   "pnl": 3400
-  },
-  {
-   "date": "2026-09-16",
-   "pnl": -1612
-  },
-  {
-   "date": "2026-09-17",
-   "pnl": 1539
-  },
-  {
-   "date": "2026-09-18",
-   "pnl": 1217
-  },
-  {
-   "date": "2026-09-21",
-   "pnl": -2380
-  },
-  {
-   "date": "2026-09-22",
-   "pnl": 2521
-  },
-  {
-   "date": "2026-09-23",
-   "pnl": 2030
-  },
-  {
-   "date": "2026-09-24",
-   "pnl": 2870
-  },
-  {
-   "date": "2026-09-25",
-   "pnl": 974
-  },
-  {
-   "date": "2026-09-28",
-   "pnl": -306
-  },
-  {
-   "date": "2026-09-29",
-   "pnl": 3075
-  },
-  {
-   "date": "2026-09-30",
-   "pnl": -535
+   "LEG_ID": "",
+   "EVENT_ID": 20000127004,
+   "EVENT_NUMBER": 4,
+   "EVENT_TYPE": "MATURITY",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2028-11-20",
+   "AMOUNT": "",
+   "CURRENCY": "USD",
+   "SEQUENCE_NUMBER": 4,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
   }
- ],
- "execution": {
-  "tradeDate": "2026-01-23",
-  "executionTimestamp": "2026-01-23T12:39:54.802Z",
-  "venue": "Tradeweb SEF",
-  "venueMic": "TWSF",
-  "executionType": "Electronic",
-  "trader": "A. Shah",
-  "salesperson": null,
-  "orderId": "ORD-86E687B0E0"
- },
- "lifecycle": {
-  "status": "Live",
-  "version": 1,
-  "events": [
-   {
-    "version": 1,
-    "event": "New",
-    "reason": "Trade captured",
-    "at": "2026-01-23T12:15:00Z",
-    "by": "fo.capture"
-   }
-  ],
-  "sourceSystem": "Calypso",
-  "createdAt": "2026-01-23T12:15:00Z",
-  "lastModifiedAt": "2026-01-23T12:15:00Z",
-  "lastModifiedBy": "fo.capture",
-  "timeline": [
-   {
-    "date": "2026-01-23",
-    "event": "Booked",
-    "status": "Done",
-    "description": "Captured in Murex by TRDR-ASHAH: sell STIR future option"
-   },
-   {
-    "date": "2026-01-23",
-    "event": "Confirmed",
-    "status": "Matched",
-    "description": "Matched on MarkitWire (MA510240181)"
-   },
-   {
-    "date": "2026-01-26",
-    "event": "Cleared",
-    "status": "Done",
-    "description": "Novated to LCH SwapClear"
-   },
-   {
-    "date": "2028-11-20",
-    "event": "Maturity",
-    "status": "Scheduled",
-    "description": "Final payment and close-out"
-   }
-  ]
- },
- "confirmation": {
-  "status": "Confirmed",
-  "method": "MarkitWire",
-  "platformId": "MA510240181",
-  "matched": "2026-01-23 11:45",
-  "affirmedBy": "Counterparty ops",
-  "breaks": []
- },
- "clearing": {
-  "status": "Cleared",
-  "mandatory": true,
-  "ccp": "LCH SwapClear",
-  "clearingBroker": "Summit Clearing LLC",
-  "ccpTradeId": "LCH7134749058",
-  "account": "House",
-  "novatedAt": null
- },
- "regulatory": {
-  "uti": "549300O1N13GO2II209686E687B0E02B14098AD4",
-  "upi": "QZUHH6SUXVJT",
-  "reportingRegimes": [
-   "CFTC Part 43/45"
-  ],
-  "reportingParty": "Us",
-  "reportingStatus": "Accepted",
-  "clearingObligation": true,
-  "tradingObligation": true,
-  "mifidClassification": "Professional client",
-  "volckerExempt": false,
-  "saCcrAssetClass": "Interest rate"
- },
- "settlementInstructions": {
-  "method": "Gross",
-  "ourAgent": "JPMorgan Chase Bank, N.A.",
-  "ourAgentBic": "CHASUS33XXX",
-  "theirAgentBic": "SUMMUS33XXX",
-  "ssiId": "SSI-USD-6A7EC8",
-  "netting": "Payment netting by currency and value date"
- },
- "valuation": {
-  "asOf": "2026-09-30",
-  "currency": "USD",
-  "npv": 73162,
-  "cleanPv": 73162.0,
-  "accrued": 0.0,
-  "legPvs": [],
-  "model": "Black / Bachelier",
-  "curves": [
-   "CRV-USD-PROJ",
-   "CPV-USD"
-  ],
-  "status": "Official EOD",
-  "runId": "EOD-20260930-01"
- },
- "pnlExplain": [
-  {
-   "step": "Opening MTM",
-   "pnl": 76979,
-   "total": true
-  },
-  {
-   "step": "Carry",
-   "pnl": 17
-  },
-  {
-   "step": "Roll-down",
-   "pnl": 715
-  },
-  {
-   "step": "Rates delta",
-   "pnl": -8628
-  },
-  {
-   "step": "FX delta",
-   "pnl": 267
-  },
-  {
-   "step": "Vol (vega)",
-   "pnl": 4667
-  },
-  {
-   "step": "Theta",
-   "pnl": -918
-  },
-  {
-   "step": "Unexplained",
-   "pnl": 63
-  }
- ],
- "_meta": {
-  "source": "murex-rates",
-  "generation": 1,
-  "live": true,
-  "walk": {
-   "mtm": 500
-  }
- }
+ ]
 }

@@ -10,7 +10,7 @@
  "UEN": "UEN0100074",
  "economy": "ECON-NOR",
  "newsId": "NEWS-Aurora_Sovereign_Wealth_Fund",
- "netMtm": 43062593,
+ "netMtm": 42527268,
  "pfePeak": 82685600,
  "nettingSets": [
   {
@@ -29,7 +29,7 @@
    "id": "NS-AURORA-NY",
    "agreement": "AGR-AURORA-ISDA",
    "trades": 21,
-   "netMtm": 45059312
+   "netMtm": 44523987
   }
  ],
  "kyc": {

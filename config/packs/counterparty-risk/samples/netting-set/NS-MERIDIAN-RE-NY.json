@@ -95,7 +95,7 @@
    "mtm": 4820300
   },
   {
-   "tradeId": "CLY-3000034",
+   "tradeId": "CLY-3000118",
    "product": "Total return swap on a bond",
    "assetClass": "Credit",
    "currency": "EUR",
@@ -106,7 +106,7 @@
    "mtm": 4717154
   },
   {
-   "tradeId": "CLY-3000013",
+   "tradeId": "CLY-3000097",
    "product": "Index tranche",
    "assetClass": "Credit",
    "currency": "CAD",
@@ -117,7 +117,7 @@
    "mtm": 3988071
   },
   {
-   "tradeId": "BBG-60000074",
+   "tradeId": "CLY-3000230",
    "product": "CLO tranche",
    "assetClass": "Fixed income",
    "currency": "USD",
@@ -128,7 +128,7 @@
    "mtm": 2819294
   },
   {
-   "tradeId": "WSS-1500109",
+   "tradeId": "CLY-3000259",
    "product": "Call account",
    "assetClass": "Money market",
    "currency": "USD",
@@ -150,7 +150,7 @@
    "mtm": 2093639
   },
   {
-   "tradeId": "BBG-60000063",
+   "tradeId": "CLY-3000219",
    "product": "CMO tranche",
    "assetClass": "Fixed income",
    "currency": "EUR",
@@ -194,7 +194,7 @@
    "mtm": 1337400
   },
   {
-   "tradeId": "CLY-3000037",
+   "tradeId": "CLY-3000121",
    "product": "Total return swap on a loan index",
    "assetClass": "Credit",
    "currency": "GBP",
@@ -205,7 +205,7 @@
    "mtm": -1076104
   },
   {
-   "tradeId": "END-1000039",
+   "tradeId": "MX-20000327",
    "product": "Commodity swaption",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -238,7 +238,7 @@
    "mtm": -260656
   },
   {
-   "tradeId": "END-1000060",
+   "tradeId": "MX-20000348",
    "product": "Commodity index swap",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -249,7 +249,7 @@
    "mtm": 250034
   },
   {
-   "tradeId": "CLY-3000003",
+   "tradeId": "CLY-3000087",
    "product": "Single-name CDS",
    "assetClass": "Credit",
    "currency": "CHF",
@@ -260,7 +260,7 @@
    "mtm": -182288
   },
   {
-   "tradeId": "END-1000023",
+   "tradeId": "MX-20000311",
    "product": "Commodity basis swap",
    "assetClass": "Commodity",
    "currency": "USD",

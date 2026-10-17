@@ -123,13 +123,19 @@ def now_iso() -> str:
 
 # ------------------------------------------------------------------------------------------------ what to build
 
-def pack_defaults(pack: pathlib.Path, kind: str | None) -> dict:
-    """{pack, domain, kind, key, date, promote, connector} from a pack folder (its pack.yaml), whatever it declares."""
+def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = None) -> dict:
+    """{pack, domain, kind, key, date, promote, connector, table} from a pack folder (its pack.yaml), whatever it declares. With
+    ``connector`` that Delta connector of the pack (one of several serving a kind, one per source system: trade-endur ...), else the
+    first; ``table`` is its ``table.<kind>`` folder when it names one (trade_endur), else the kind."""
     import yaml
     m = yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {}
     out: dict = {"pack": m.get("pack") or pack.name}
     defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else (m.get("connector-templates") or {})
     delta = [(n, c) for n, c in (defs or {}).items() if isinstance(c, dict) and c.get("plugin") == "delta"]
+    if connector:
+        delta = [(n, c) for n, c in delta if n == connector]
+        if not delta:
+            raise BuildError(f"the pack has no Delta connector named {connector!r}")
     ing = m.get("ingest") or {}
     kinds = [k for k in ing] or [k for _, c in delta for k in (c.get("kinds") or [])]
     kind = kind or (kinds[0] if len(kinds) == 1 else None)
@@ -143,6 +149,8 @@ def pack_defaults(pack: pathlib.Path, kind: str | None) -> dict:
             flat = st.get(f"layout.{kind}.columns")
             cols = (lay or {}).get("columns") or flat or []
             out["promote"] = [x.strip() for x in (cols.split(",") if isinstance(cols, str) else cols) if str(x).strip()]
+            named = (st.get("table") or {}).get(kind) if isinstance(st.get("table"), dict) else st.get(f"table.{kind}")
+            out["table"] = named or None
     if kind and isinstance(ing.get(kind), dict):
         out["key"] = ing[kind].get("key")
         out["date"] = ing[kind].get("date")
@@ -152,14 +160,16 @@ def pack_defaults(pack: pathlib.Path, kind: str | None) -> dict:
 def plan(a) -> dict:
     """The run's settings: the options, filled from --pack where they are missing."""
     p = {"pack": a.pack_name, "domain": a.domain, "kind": a.kind, "key": a.key, "date": a.date, "promote": split(a.promote),
-         "partition_by": split(a.partition_by), "connector": None}
+         "partition_by": split(a.partition_by), "connector": getattr(a, "connector", None), "table": getattr(a, "table", None)}
     if a.pack:
-        d = pack_defaults(pathlib.Path(a.pack), a.kind)
-        for k in ("pack", "domain", "kind", "key", "date", "connector"):
+        d = pack_defaults(pathlib.Path(a.pack), a.kind, p["connector"])
+        for k in ("pack", "domain", "kind", "key", "date", "connector", "table"):
             p[k] = p[k] or d.get(k)
         if not p["promote"] and a.promote is None:
             p["promote"] = d.get("promote") or []
     p["key"] = p["key"] or "id"
+    if p["table"] and (not str(p["table"]).replace("_", "").replace("-", "").isalnum()):
+        raise BuildError(f"--table is a folder name under the domain, not a path: {p['table']}")
     if not p["kind"]:
         raise BuildError("give --kind (or a --pack with one kind)")
     if not p["domain"]:
@@ -220,7 +230,7 @@ def run(a, say=print) -> tuple[int, dict]:
         as_of = date.fromisoformat(a.as_of) if a.as_of else None
         summary.update({k: p[k] for k in ("pack", "domain", "kind", "key", "promote")}, partitionBy=p["partition_by"],
                        date=None if as_of else p["date"], asOf=as_of.isoformat() if as_of else None)
-        table = str(lake / p["domain"] / p["kind"]) if lake else None
+        table = str(lake / p["domain"] / (p["table"] or p["kind"])) if lake else None
         summary["table"] = table
         if a.dry_run:
             return _go(a, p, as_of, None, table, summary, prog, started, say)
@@ -443,6 +453,8 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     g.add_argument("--lake", metavar="DIR", help="the Delta root (the connector's root, DRISHTI_DELTA_ROOT)")
     g.add_argument("--domain", help="the lake domain (default: the pack's Delta connector's domain)")
     g.add_argument("--pack", metavar="DIR", help="a pack folder: domain, kind, key, date and promoted columns from its pack.yaml")
+    g.add_argument("--connector", help="which of the pack's Delta connectors the table is for (one per source system: trade-endur); default: the first")
+    g.add_argument("--table", help="the table's folder under the domain when it is not the kind (trade_endur); default: the connector's table.<kind>")
     g.add_argument("--pack-name", help="the pack's name for --signal when there is no --pack folder")
     g = p.add_argument_group("how")
     g.add_argument("--engine", choices=("auto", "drishti", "deltalake"), default="auto", help="auto (default): Drishti's Java writer when the server jar is found, else deltalake")

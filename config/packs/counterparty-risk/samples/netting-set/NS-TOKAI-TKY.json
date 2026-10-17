@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "IMG-400157",
+   "tradeId": "MX-20000439",
    "product": "Credit basket note",
    "assetClass": "Structured",
    "currency": "CHF",
@@ -73,7 +73,7 @@
    "mtm": -1748235
   },
   {
-   "tradeId": "IMG-400137",
+   "tradeId": "MX-20000419",
    "product": "Range accrual note",
    "assetClass": "Structured",
    "currency": "USD",

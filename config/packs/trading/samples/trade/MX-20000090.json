@@ -1,539 +1,347 @@
 {
- "tradeId": "MX-20000090",
- "sourceSystem": "Murex",
- "sourceTradeId": "20000090",
- "productType": "FLOOR",
- "productName": "Interest rate floor",
- "assetClass": "Rates",
- "family": "option",
- "status": "Live",
- "direction": "Sell",
- "tradeDate": "2026-01-20",
- "effectiveDate": "2026-01-22",
- "maturityDate": "2028-02-28",
- "currency": "JPY",
- "notional": 80000000.0,
- "mtm": -1029330,
- "mtmCurrency": "USD",
- "pnl1d": 37763,
- "counterparty": {
-  "id": "CP-AURORA",
-  "name": "Aurora Sovereign Wealth Fund"
- },
- "nettingSet": "NS-AURORA-NY",
- "book": "BOOK-RATES-1",
- "trader": "TRDR-ASHAH",
- "desk": "DESK-RATES",
- "legalEntity": "LE-NY",
- "discountCurve": "CRV-JPY-OIS",
- "forwardCurve": "CRV-JPY-PROJ",
- "capVolSurface": "CPV-JPY",
- "terms": {
-  "strike": 0.014744,
-  "floorFrequency": "Semi-annual",
-  "premium": 407333.0
- },
- "risk": {
-  "dv01": -14316,
-  "vega": -251393
- },
- "sensitivities": [
+ "SOURCE_SYSTEM": "MUREX",
+ "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z",
+ "TRADE_DATE": "2026-01-20",
+ "INPUT_DATE": "2026-01-20",
+ "TRADE_ID": "MX-20000090",
+ "TRADE_STATUS": "VALIDATED",
+ "TRADE_ACTION": "NEW",
+ "TRADE_VERSION": "1",
+ "TRANSACTION_ID": "20000090001",
+ "PACKAGE_ID": "",
+ "QUANTITY": 80000000.0,
+ "PRICE": 407333.0,
+ "BUY_SELL_CODE": "S",
+ "PRODUCT_TYPE": "FLOOR",
+ "PRODUCT_SUB_TYPE": "Interest rate floor",
+ "PRODUCT_GROUP": "Rates",
+ "PRODUCT_SUB_GROUP": "option",
+ "OPTION_TYPE": null,
+ "STRIKE_PRICE": 0.014744,
+ "COUNTERPARTY": "CP-AURORA",
+ "COUNTERPARTY_UEN": "UEN0100074",
+ "COUNTERPARTY_COUNTRY_OF_RISK": "NO",
+ "ORIGINAL_COUNTERPARTY": "",
+ "ORIGINAL_COUNTERPARTY_UEN": "",
+ "INTERNAL_EXTERNAL_CODE": "External",
+ "TRANSIT": "00107",
+ "LEGAL_ENTITY": "LE-NY",
+ "PORTFOLIO": "BOOK-RATES-1",
+ "TRADER_ID": "TRDR-ASHAH",
+ "TRADER_FIRST_NAME": "A.",
+ "TRADER_LAST_NAME": "Shah",
+ "START_DATE": "2026-01-22",
+ "MATURITY_DATE": "2028-02-28",
+ "REGISTRY_DELIVERY_DATE": "",
+ "CURRENCY": "JPY",
+ "DELIVERY_VERSUS_PAYMENT": "NO",
+ "STRATEGY": null,
+ "INTERNAL_TRADING_STRATEGY": "",
+ "NY_CURVE_FLAG": "",
+ "VAULT_LOCATION_ALLOCATION": "",
+ "PRECIOUS_METAL_FLAG": "",
+ "TT_GROUP": "DESK-RATES",
+ "TT_BOOK": "BOOK-RATES-1",
+ "LEASE_PERPETUITY_FLAG": "",
+ "SETTLEMENT_DATE": "2026-01-22",
+ "LEGS": [
   {
-   "bucket": "3M",
-   "dv01": -1432,
-   "vega": -25139
-  },
-  {
-   "bucket": "6M",
-   "dv01": -2863,
-   "vega": -50279
-  },
-  {
-   "bucket": "1Y",
-   "dv01": -4295,
-   "vega": -75418
-  },
-  {
-   "bucket": "2Y",
-   "dv01": -5726,
-   "vega": -100557
-  }
- ],
- "legs": [
-  {
-   "leg": 1,
-   "label": "Sell floor 1.4744% on TERM-TONA-6M",
-   "payer": true,
-   "type": "FLOORLETS",
-   "currency": "JPY",
-   "notional": 80000000.0,
-   "index": "TERM-TONA-6M",
-   "spread": 0.0,
-   "strike": 0.014744,
-   "dayCount": "ACT/360",
-   "frequency": "Semi-annual",
-   "resetFrequency": "Semi-annual",
-   "businessDayConvention": "Mod. following",
-   "calendar": "JPTO",
-   "paymentLag": "2 business days",
-   "cashflows": [
+   "LEG_ID": 1,
+   "LEG_TYPE": "OPTION",
+   "LEG_ECONOMIC_TYPE": "Pay",
+   "CURRENCY": "JPY",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 80000000.0,
+   "DISCOUNT_INDEX": "CRV-JPY-OIS",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "",
+   "RESET_HOLIDAY_SCHEDULE": "JPTO",
+   "RESET_CONVENTION": "Semi-annual",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "5",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "TERM-TONA-6M",
+    "GROUP": "Rates",
+    "SUB_GROUP": "Semi-annual"
+   },
+   "CASH_FLOWS": [
     {
-     "n": 1,
-     "type": "Floorlet",
-     "periodStart": "2026-01-22",
-     "periodEnd": "2026-02-27",
-     "fixingDate": "2026-01-20",
-     "payDate": "2026-03-03",
-     "notional": 80000000.0,
-     "index": "TERM-TONA-6M",
-     "strike": 0.014744,
-     "rate": 0.006184,
-     "accrualFactor": 0.1,
-     "volatilityBp": null,
-     "amount": -68480.0,
-     "discountFactor": 1.0,
-     "pv": 0.0,
-     "status": "Settled",
-     "fixings": [
+     "FLOW_ID": 20000090001,
+     "FLOW_TYPE": "Floorlet",
+     "NOTIONAL": 80000000.0,
+     "RATE": 0.006184,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-01-22",
+     "END_DATE": "2026-02-27",
+     "PAYMENT_DATE": "2026-03-03",
+     "RATE_DETERMINATION_DATE": "2026-01-20",
+     "FIRST_RESET_DATE": "2026-01-20",
+     "LAST_RESET_DATE": "2026-01-20",
+     "STRIKE_PRICE": 0.014744,
+     "RESETS": [
       {
-       "fixingDate": "2026-01-20",
-       "index": "TERM-TONA-6M",
-       "tenor": "6M",
-       "rate": 0.006184,
-       "source": "Refinitiv TONA term",
-       "status": "Fixed"
+       "RESET_ID": "R-1",
+       "ACCRUAL": "",
+       "START_DATE": "2026-01-20",
+       "END_DATE": "2026-02-27",
+       "RESET_DATE": "2026-01-20",
+       "ACCRUAL_START_DATE": "2026-01-22",
+       "ACCRUAL_END_DATE": "2026-02-27",
+       "RATE": 0.006184
       }
      ]
     },
     {
-     "n": 2,
-     "type": "Floorlet",
-     "periodStart": "2026-02-27",
-     "periodEnd": "2026-08-28",
-     "fixingDate": "2026-02-25",
-     "payDate": "2026-09-01",
-     "notional": 80000000.0,
-     "index": "TERM-TONA-6M",
-     "strike": 0.014744,
-     "rate": 0.006376,
-     "accrualFactor": 0.505556,
-     "volatilityBp": null,
-     "amount": -338439.11,
-     "discountFactor": 1.0,
-     "pv": 0.0,
-     "status": "Settled",
-     "fixings": [
+     "FLOW_ID": 20000090002,
+     "FLOW_TYPE": "Floorlet",
+     "NOTIONAL": 80000000.0,
+     "RATE": 0.006376,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-02-27",
+     "END_DATE": "2026-08-28",
+     "PAYMENT_DATE": "2026-09-01",
+     "RATE_DETERMINATION_DATE": "2026-02-25",
+     "FIRST_RESET_DATE": "2026-02-25",
+     "LAST_RESET_DATE": "2026-02-25",
+     "STRIKE_PRICE": 0.014744,
+     "RESETS": [
       {
-       "fixingDate": "2026-02-25",
-       "index": "TERM-TONA-6M",
-       "tenor": "6M",
-       "rate": 0.006376,
-       "source": "Refinitiv TONA term",
-       "status": "Fixed"
+       "RESET_ID": "R-2",
+       "ACCRUAL": "",
+       "START_DATE": "2026-02-25",
+       "END_DATE": "2026-08-28",
+       "RESET_DATE": "2026-02-25",
+       "ACCRUAL_START_DATE": "2026-02-27",
+       "ACCRUAL_END_DATE": "2026-08-28",
+       "RATE": 0.006376
       }
      ]
     },
     {
-     "n": 3,
-     "type": "Floorlet",
-     "periodStart": "2026-08-28",
-     "periodEnd": "2027-02-26",
-     "fixingDate": "2026-08-26",
-     "payDate": "2027-03-02",
-     "notional": 80000000.0,
-     "index": "TERM-TONA-6M",
-     "strike": 0.014744,
-     "rate": 0.005803,
-     "accrualFactor": 0.505556,
-     "volatilityBp": null,
-     "amount": -361613.78,
-     "discountFactor": 0.997525,
-     "pv": -360718.83,
-     "status": "Fixed",
-     "fixings": [
+     "FLOW_ID": 20000090003,
+     "FLOW_TYPE": "Floorlet",
+     "NOTIONAL": 80000000.0,
+     "RATE": 0.005803,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-08-28",
+     "END_DATE": "2027-02-26",
+     "PAYMENT_DATE": "2027-03-02",
+     "RATE_DETERMINATION_DATE": "2026-08-26",
+     "FIRST_RESET_DATE": "2026-08-26",
+     "LAST_RESET_DATE": "2026-08-26",
+     "STRIKE_PRICE": 0.014744,
+     "RESETS": [
       {
-       "fixingDate": "2026-08-26",
-       "index": "TERM-TONA-6M",
-       "tenor": "6M",
-       "rate": 0.005803,
-       "source": "Refinitiv TONA term",
-       "status": "Fixed"
+       "RESET_ID": "R-3",
+       "ACCRUAL": "",
+       "START_DATE": "2026-08-26",
+       "END_DATE": "2027-02-26",
+       "RESET_DATE": "2026-08-26",
+       "ACCRUAL_START_DATE": "2026-08-28",
+       "ACCRUAL_END_DATE": "2027-02-26",
+       "RATE": 0.005803
       }
      ]
     },
     {
-     "n": 4,
-     "type": "Floorlet",
-     "periodStart": "2027-02-26",
-     "periodEnd": "2027-08-30",
-     "fixingDate": "2027-02-24",
-     "payDate": "2027-09-01",
-     "notional": 80000000.0,
-     "index": "TERM-TONA-6M",
-     "strike": 0.014744,
-     "rate": 0.006612,
-     "accrualFactor": 0.513889,
-     "volatilityBp": 88.0,
-     "amount": -341739.62,
-     "discountFactor": 0.994179,
-     "pv": -339750.43,
-     "status": "Projected",
-     "fixings": [
+     "FLOW_ID": 20000090004,
+     "FLOW_TYPE": "Floorlet",
+     "NOTIONAL": 80000000.0,
+     "RATE": 0.006612,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2027-02-26",
+     "END_DATE": "2027-08-30",
+     "PAYMENT_DATE": "2027-09-01",
+     "RATE_DETERMINATION_DATE": "2027-02-24",
+     "FIRST_RESET_DATE": "2027-02-24",
+     "LAST_RESET_DATE": "2027-02-24",
+     "STRIKE_PRICE": 0.014744,
+     "RESETS": [
       {
-       "fixingDate": "2027-02-24",
-       "index": "TERM-TONA-6M",
-       "tenor": "6M",
-       "rate": 0.006612,
-       "source": "Forward curve",
-       "status": "Projected"
+       "RESET_ID": "R-4",
+       "ACCRUAL": "",
+       "START_DATE": "2027-02-24",
+       "END_DATE": "2027-08-30",
+       "RESET_DATE": "2027-02-24",
+       "ACCRUAL_START_DATE": "2027-02-26",
+       "ACCRUAL_END_DATE": "2027-08-30",
+       "RATE": ""
       }
      ]
     },
     {
-     "n": 5,
-     "type": "Floorlet",
-     "periodStart": "2027-08-30",
-     "periodEnd": "2028-02-28",
-     "fixingDate": "2027-08-26",
-     "payDate": "2028-03-01",
-     "notional": 80000000.0,
-     "index": "TERM-TONA-6M",
-     "strike": 0.014744,
-     "rate": 0.007412,
-     "accrualFactor": 0.505556,
-     "volatilityBp": 88.0,
-     "amount": -332027.67,
-     "discountFactor": 0.990463,
-     "pv": -328861.08,
-     "status": "Projected",
-     "fixings": [
+     "FLOW_ID": 20000090005,
+     "FLOW_TYPE": "Floorlet",
+     "NOTIONAL": 80000000.0,
+     "RATE": 0.007412,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2027-08-30",
+     "END_DATE": "2028-02-28",
+     "PAYMENT_DATE": "2028-03-01",
+     "RATE_DETERMINATION_DATE": "2027-08-26",
+     "FIRST_RESET_DATE": "2027-08-26",
+     "LAST_RESET_DATE": "2027-08-26",
+     "STRIKE_PRICE": 0.014744,
+     "RESETS": [
       {
-       "fixingDate": "2027-08-26",
-       "index": "TERM-TONA-6M",
-       "tenor": "6M",
-       "rate": 0.007412,
-       "source": "Forward curve",
-       "status": "Projected"
+       "RESET_ID": "R-5",
+       "ACCRUAL": "",
+       "START_DATE": "2027-08-26",
+       "END_DATE": "2028-02-28",
+       "RESET_DATE": "2027-08-26",
+       "ACCRUAL_START_DATE": "2027-08-30",
+       "ACCRUAL_END_DATE": "2028-02-28",
+       "RATE": ""
       }
      ]
-    }
-   ],
-   "rateType": "Option",
-   "payReceive": "Pay",
-   "legId": "MX-20000090-L1",
-   "pv": -1029330.34,
-   "projectedFlows": 2
-  }
- ],
- "schedule": [
-  {
-   "fixingDate": "2026-01-20",
-   "period": "2026-01-22..2026-02-27",
-   "index": "TERM-TONA-6M",
-   "rate": 0.006184,
-   "payoff": -68480.0,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2026-02-25",
-   "period": "2026-02-27..2026-08-28",
-   "index": "TERM-TONA-6M",
-   "rate": 0.006376,
-   "payoff": -338439.11,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2026-08-26",
-   "period": "2026-08-28..2027-02-26",
-   "index": "TERM-TONA-6M",
-   "rate": 0.005803,
-   "payoff": -361613.78,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2027-02-24",
-   "period": "2027-02-26..2027-08-30",
-   "index": "TERM-TONA-6M",
-   "rate": 0.006612,
-   "payoff": -341739.62,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2027-08-26",
-   "period": "2027-08-30..2028-02-28",
-   "index": "TERM-TONA-6M",
-   "rate": 0.007412,
-   "payoff": -332027.67,
-   "status": "Pending"
-  }
- ],
- "nextIndex": 3,
- "pnlHistory": [
-  {
-   "date": "2026-09-03",
-   "pnl": 12209
-  },
-  {
-   "date": "2026-09-04",
-   "pnl": 6912
-  },
-  {
-   "date": "2026-09-07",
-   "pnl": -18893
-  },
-  {
-   "date": "2026-09-08",
-   "pnl": -4833
-  },
-  {
-   "date": "2026-09-09",
-   "pnl": 35470
-  },
-  {
-   "date": "2026-09-10",
-   "pnl": -21699
-  },
-  {
-   "date": "2026-09-11",
-   "pnl": 26140
-  },
-  {
-   "date": "2026-09-14",
-   "pnl": 7687
-  },
-  {
-   "date": "2026-09-15",
-   "pnl": -20482
-  },
-  {
-   "date": "2026-09-16",
-   "pnl": -22382
-  },
-  {
-   "date": "2026-09-17",
-   "pnl": -18881
-  },
-  {
-   "date": "2026-09-18",
-   "pnl": -35873
-  },
-  {
-   "date": "2026-09-21",
-   "pnl": -32524
-  },
-  {
-   "date": "2026-09-22",
-   "pnl": -52036
-  },
-  {
-   "date": "2026-09-23",
-   "pnl": -40599
-  },
-  {
-   "date": "2026-09-24",
-   "pnl": -19312
-  },
-  {
-   "date": "2026-09-25",
-   "pnl": -67710
-  },
-  {
-   "date": "2026-09-28",
-   "pnl": -9135
-  },
-  {
-   "date": "2026-09-29",
-   "pnl": -25210
-  },
-  {
-   "date": "2026-09-30",
-   "pnl": 3119
-  }
- ],
- "execution": {
-  "tradeDate": "2026-01-20",
-  "executionTimestamp": "2026-01-20T08:07:07.091Z",
-  "venue": "Bloomberg SEF",
-  "venueMic": "BSEF",
-  "executionType": "Electronic",
-  "trader": "A. Shah",
-  "salesperson": null,
-  "orderId": "ORD-06F53DB889"
- },
- "lifecycle": {
-  "status": "Live",
-  "version": 1,
-  "events": [
-   {
-    "version": 1,
-    "event": "New",
-    "reason": "Trade captured",
-    "at": "2026-01-20T12:57:00Z",
-    "by": "mo.ops"
-   }
-  ],
-  "sourceSystem": "Murex",
-  "createdAt": "2026-01-20T12:57:00Z",
-  "lastModifiedAt": "2026-01-20T12:57:00Z",
-  "lastModifiedBy": "mo.ops",
-  "timeline": [
-   {
-    "date": "2026-01-20",
-    "event": "Booked",
-    "status": "Done",
-    "description": "Captured in Murex by TRDR-ASHAH: sell Interest rate floor"
-   },
-   {
-    "date": "2026-01-20",
-    "event": "Confirmed",
-    "status": "Matched",
-    "description": "Matched on MarkitWire (MA565254847)"
-   },
-   {
-    "date": "2026-08-26",
-    "event": "Cash settled",
-    "status": "Settled",
-    "description": "JPY payment settled",
-    "amount": -361613.78
-   },
-   {
-    "date": "2027-02-24",
-    "event": "Next payment",
-    "status": "Pending",
-    "description": "Scheduled; settlement instructions confirmed"
-   },
-   {
-    "date": "2028-02-28",
-    "event": "Maturity",
-    "status": "Scheduled",
-    "description": "Final payment and close-out"
-   }
-  ]
- },
- "confirmation": {
-  "status": "Confirmed",
-  "method": "MarkitWire",
-  "platformId": "MA565254847",
-  "matched": "2026-01-20 11:11",
-  "affirmedBy": "Counterparty ops",
-  "breaks": []
- },
- "clearing": {
-  "status": "Bilateral",
-  "mandatory": false,
-  "reason": "Counterparty below clearing threshold"
- },
- "regulatory": {
-  "uti": "549300O1N13GO2II209606F53DB88941E530FE7E",
-  "upi": "QZVA3WDD7YGX",
-  "reportingRegimes": [
-   "CFTC Part 43/45"
-  ],
-  "reportingParty": "Us",
-  "reportingStatus": "Accepted",
-  "clearingObligation": false,
-  "tradingObligation": false,
-  "mifidClassification": "Professional client",
-  "volckerExempt": false,
-  "saCcrAssetClass": "Interest rate"
- },
- "settlementInstructions": {
-  "method": "CLS",
-  "ourAgent": "MUFG Bank, Ltd.",
-  "ourAgentBic": "BOTKJPJTXXX",
-  "theirAgentBic": "AUROGB33XXX",
-  "ssiId": "SSI-JPY-79DAAE",
-  "netting": "Payment netting by currency and value date"
- },
- "valuation": {
-  "asOf": "2026-09-30",
-  "currency": "USD",
-  "npv": -1029330,
-  "cleanPv": -1029330.0,
-  "accrued": 0.0,
-  "legPvs": [],
-  "model": "Black / Bachelier",
-  "curves": [
-   "CRV-JPY-OIS",
-   "CRV-JPY-PROJ",
-   "CPV-JPY"
-  ],
-  "status": "Official EOD",
-  "runId": "EOD-20260930-01"
- },
- "pnlExplain": [
-  {
-   "step": "Opening MTM",
-   "pnl": -1067093,
-   "total": true
-  },
-  {
-   "step": "Carry",
-   "pnl": 12964
-  },
-  {
-   "step": "Roll-down",
-   "pnl": -2762
-  },
-  {
-   "step": "Rates delta",
-   "pnl": 28003
-  },
-  {
-   "step": "FX delta",
-   "pnl": -2531
-  },
-  {
-   "step": "Vol (vega)",
-   "pnl": 29461
-  },
-  {
-   "step": "Theta",
-   "pnl": -27897
-  },
-  {
-   "step": "Unexplained",
-   "pnl": 525
-  }
- ],
- "_meta": {
-  "source": "murex-rates",
-  "generation": 1,
-  "live": true,
-  "walk": {
-   "legs.0.cashflows.3.fixings.0.rate": 5e-05,
-   "legs.0.pv": {
-    "step": 2859,
-    "places": 2,
-    "with": []
-   },
-   "derive": [
-    {
-     "set": "mtm",
-     "expr": "sum(legs.*.pv)"
-    },
-    {
-     "set": "legs.0.cashflows.*.pv",
-     "scaleTo": "$.legs.0.pv",
-     "places": 2
-    },
-    {
-     "set": "valuation.npv",
-     "expr": "$.mtm"
-    },
-    {
-     "set": "valuation.cleanPv",
-     "expr": "$.mtm - valuation.accrued"
-    },
-    {
-     "set": "pnl1d",
-     "expr": "$.mtm - pnlExplain.0.pnl"
-    },
-    {
-     "set": "pnlExplain.5.pnl",
-     "expr": "pnlExplain.5.pnl + ($.mtm - sum(pnlExplain.*.pnl))"
     }
    ]
   }
+ ],
+ "EVENTS": [
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000090001,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "BOOKED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-01-20",
+   "AMOUNT": "",
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000090002,
+   "EVENT_NUMBER": 2,
+   "EVENT_TYPE": "CONFIRMED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-01-20",
+   "AMOUNT": "",
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 2,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000090003,
+   "EVENT_NUMBER": 3,
+   "EVENT_TYPE": "CASH_SETTLED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-08-26",
+   "AMOUNT": -361613.78,
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 3,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000090004,
+   "EVENT_NUMBER": 4,
+   "EVENT_TYPE": "NEXT_PAYMENT",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2027-02-24",
+   "AMOUNT": "",
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 4,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000090005,
+   "EVENT_NUMBER": 5,
+   "EVENT_TYPE": "MATURITY",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2028-02-28",
+   "AMOUNT": "",
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 5,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 1,
+   "EVENT_ID": 20000090006,
+   "EVENT_NUMBER": 6,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Floorlet",
+   "EVENT_DATE": "2026-03-03",
+   "AMOUNT": -68480.0,
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 6,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 1,
+   "EVENT_ID": 20000090007,
+   "EVENT_NUMBER": 7,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Floorlet",
+   "EVENT_DATE": "2026-09-01",
+   "AMOUNT": -338439.11,
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 7,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 1,
+   "EVENT_ID": 20000090008,
+   "EVENT_NUMBER": 8,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Floorlet",
+   "EVENT_DATE": "2027-03-02",
+   "AMOUNT": -361613.78,
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 8,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 1,
+   "EVENT_ID": 20000090009,
+   "EVENT_NUMBER": 9,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Floorlet",
+   "EVENT_DATE": "2027-09-01",
+   "AMOUNT": -341739.62,
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 9,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 1,
+   "EVENT_ID": 20000090010,
+   "EVENT_NUMBER": 10,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Floorlet",
+   "EVENT_DATE": "2028-03-01",
+   "AMOUNT": -332027.67,
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 10,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  }
+ ],
+ "_meta": {
+  "source": "murex",
+  "generation": 1
  }
 }

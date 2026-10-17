@@ -1,1076 +1,970 @@
 {
- "tradeId": "MX-20000050",
- "sourceSystem": "Murex",
- "sourceTradeId": "20000050",
- "productType": "FWD_START_SWAP",
- "productName": "Forward-starting swap",
- "assetClass": "Rates",
- "family": "swap",
- "status": "Live",
- "direction": "Pay fixed",
- "tradeDate": "2024-04-30",
- "effectiveDate": "2024-05-02",
- "maturityDate": "2027-02-08",
- "currency": "AUD",
- "notional": 79000000.0,
- "mtm": -526108,
- "mtmCurrency": "USD",
- "pnl1d": 33646,
- "counterparty": {
-  "id": "CP-ALDERSHOT",
-  "name": "Aldershot Pension Trust"
- },
- "nettingSet": "NS-ALDERSHOT-NY",
- "book": "BOOK-RATES-2",
- "trader": "TRDR-MOKAFOR",
- "desk": "DESK-RATES",
- "legalEntity": "LE-NY",
- "discountCurve": "CRV-AUD-OIS",
- "forwardCurve": "CRV-AUD-PROJ",
- "terms": {
-  "fixedRate": 0.024583,
-  "payFrequency": "Annual",
-  "dayCount": "ACT/360",
-  "businessDay": "Following",
-  "forwardStart": "2028-10-27"
- },
- "risk": {
-  "dv01": 18354
- },
- "sensitivities": [
+ "SOURCE_SYSTEM": "MUREX",
+ "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z",
+ "TRADE_DATE": "2024-04-30",
+ "INPUT_DATE": "2024-04-30",
+ "TRADE_ID": "MX-20000050",
+ "TRADE_STATUS": "VALIDATED",
+ "TRADE_ACTION": "NEW",
+ "TRADE_VERSION": "1",
+ "TRANSACTION_ID": "20000050001",
+ "PACKAGE_ID": "",
+ "QUANTITY": 79000000.0,
+ "PRICE": 0.024583,
+ "BUY_SELL_CODE": "B",
+ "PRODUCT_TYPE": "FWD_START_SWAP",
+ "PRODUCT_SUB_TYPE": "Forward-starting swap",
+ "PRODUCT_GROUP": "Rates",
+ "PRODUCT_SUB_GROUP": "swap",
+ "OPTION_TYPE": null,
+ "STRIKE_PRICE": null,
+ "COUNTERPARTY": "CP-ALDERSHOT",
+ "COUNTERPARTY_UEN": "UEN0100037",
+ "COUNTERPARTY_COUNTRY_OF_RISK": "GB",
+ "ORIGINAL_COUNTERPARTY": "",
+ "ORIGINAL_COUNTERPARTY_UEN": "",
+ "INTERNAL_EXTERNAL_CODE": "External",
+ "TRANSIT": "00107",
+ "LEGAL_ENTITY": "LE-NY",
+ "PORTFOLIO": "BOOK-RATES-2",
+ "TRADER_ID": "TRDR-MOKAFOR",
+ "TRADER_FIRST_NAME": "M.",
+ "TRADER_LAST_NAME": "Okafor",
+ "START_DATE": "2024-05-02",
+ "MATURITY_DATE": "2027-02-08",
+ "REGISTRY_DELIVERY_DATE": "",
+ "CURRENCY": "AUD",
+ "DELIVERY_VERSUS_PAYMENT": "NO",
+ "STRATEGY": null,
+ "INTERNAL_TRADING_STRATEGY": "",
+ "NY_CURVE_FLAG": "",
+ "VAULT_LOCATION_ALLOCATION": "",
+ "PRECIOUS_METAL_FLAG": "",
+ "TT_GROUP": "DESK-RATES",
+ "TT_BOOK": "BOOK-RATES-2",
+ "LEASE_PERPETUITY_FLAG": "",
+ "SETTLEMENT_DATE": "2024-05-02",
+ "LEGS": [
   {
-   "bucket": "3M",
-   "dv01": 1224
-  },
-  {
-   "bucket": "6M",
-   "dv01": 2447
-  },
-  {
-   "bucket": "1Y",
-   "dv01": 3671
-  },
-  {
-   "bucket": "2Y",
-   "dv01": 4894
-  },
-  {
-   "bucket": "3Y",
-   "dv01": 6118
-  }
- ],
- "legs": [
-  {
-   "leg": 1,
-   "label": "Pay fixed 2.4583%",
-   "payer": true,
-   "type": "FIXED",
-   "currency": "AUD",
-   "notional": 79000000.0,
-   "rate": 0.024583,
-   "dayCount": "ACT/360",
-   "frequency": "Annual",
-   "calendar": "GBLO",
-   "paymentLag": "2 business days",
-   "rollConvention": "8",
-   "stub": "None",
-   "cashflows": [
+   "LEG_ID": 1,
+   "LEG_TYPE": "FIXED",
+   "LEG_ECONOMIC_TYPE": "Pay",
+   "CURRENCY": "AUD",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 79000000.0,
+   "DISCOUNT_INDEX": "CRV-AUD-OIS",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "",
+   "RESET_HOLIDAY_SCHEDULE": "GBLO",
+   "RESET_CONVENTION": "Annual",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "3",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "",
+    "GROUP": "",
+    "SUB_GROUP": ""
+   },
+   "CASH_FLOWS": [
     {
-     "n": 1,
-     "payDate": "2025-02-12",
-     "notional": 79000000.0,
-     "rate": 0.024583,
-     "amount": -1532067.19,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2024-05-02",
-     "periodEnd": "2025-02-10",
-     "accrualFactor": 0.788889,
-     "discountFactor": 1.0,
-     "type": "Interest"
+     "FLOW_ID": 20000050001,
+     "FLOW_TYPE": "Interest",
+     "NOTIONAL": 79000000.0,
+     "RATE": 0.024583,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2024-05-02",
+     "END_DATE": "2025-02-10",
+     "PAYMENT_DATE": "2025-02-12",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
     },
     {
-     "n": 2,
-     "payDate": "2026-02-11",
-     "notional": 79000000.0,
-     "rate": 0.024583,
-     "amount": -1963635.41,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2025-02-10",
-     "periodEnd": "2026-02-09",
-     "accrualFactor": 1.011111,
-     "discountFactor": 1.0,
-     "type": "Interest"
+     "FLOW_ID": 20000050002,
+     "FLOW_TYPE": "Interest",
+     "NOTIONAL": 79000000.0,
+     "RATE": 0.024583,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2025-02-10",
+     "END_DATE": "2026-02-09",
+     "PAYMENT_DATE": "2026-02-11",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
     },
     {
-     "n": 3,
-     "payDate": "2027-02-10",
-     "notional": 79000000.0,
-     "rate": 0.024583,
-     "amount": -1963635.41,
-     "pv": -1937968.94,
-     "status": "Fixed",
-     "periodStart": "2026-02-09",
-     "periodEnd": "2027-02-08",
-     "accrualFactor": 1.011111,
-     "discountFactor": 0.986929,
-     "type": "Interest"
+     "FLOW_ID": 20000050003,
+     "FLOW_TYPE": "Interest",
+     "NOTIONAL": 79000000.0,
+     "RATE": 0.024583,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-02-09",
+     "END_DATE": "2027-02-08",
+     "PAYMENT_DATE": "2027-02-10",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
     }
-   ],
-   "pv": -1937968.94,
-   "accrued": 0.0,
-   "payReceive": "Pay",
-   "rateType": "Fixed",
-   "index": null,
-   "spread": 0.0,
-   "legId": "MX-20000050-L1",
-   "businessDayConvention": "Mod. following"
+   ]
   },
   {
-   "leg": 2,
-   "label": "Receive AONIA compounded",
-   "payer": false,
-   "type": "FLOAT",
-   "currency": "AUD",
-   "notional": 79000000.0,
-   "index": "AONIA",
-   "spread": 0.0,
-   "dayCount": "ACT/360",
-   "frequency": "Quarterly",
-   "calendar": "GBLO",
-   "paymentLag": "2 business days",
-   "compounding": "Compounded in arrears",
-   "observation": "Lookback 2 business days, no observation shift",
-   "nextReset": "2026-09-30",
-   "projectedFlows": 2,
-   "cashflows": [
-    {
-     "n": 1,
-     "fixingDate": "2024-08-06",
-     "payDate": "2024-08-12",
-     "notional": 79000000.0,
-     "index": "AONIA",
-     "rate": 0.035406,
-     "spread": 0.0,
-     "amount": 761425.7,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2024-05-02",
-     "periodEnd": "2024-08-08",
-     "accrualFactor": 0.272222,
-     "discountFactor": 1.0,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2024-05-02",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.03539,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2024-06-02",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.0354,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2024-07-02",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.035424,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2024-08-02",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.035428,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 2,
-     "fixingDate": "2024-11-06",
-     "payDate": "2024-11-12",
-     "notional": 79000000.0,
-     "index": "AONIA",
-     "rate": 0.036266,
-     "spread": 0.0,
-     "amount": 732170.24,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2024-08-08",
-     "periodEnd": "2024-11-08",
-     "accrualFactor": 0.255556,
-     "discountFactor": 1.0,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2024-08-08",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.036238,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2024-09-08",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.036254,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2024-10-08",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.036306,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 3,
-     "fixingDate": "2025-02-06",
-     "payDate": "2025-02-12",
-     "notional": 79000000.0,
-     "index": "AONIA",
-     "rate": 0.0359,
-     "spread": 0.0,
-     "amount": 740537.22,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2024-11-08",
-     "periodEnd": "2025-02-10",
-     "accrualFactor": 0.261111,
-     "discountFactor": 1.0,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2024-11-08",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.035868,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2024-12-08",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.03591,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2025-01-08",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.035919,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2025-02-08",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.035928,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 4,
-     "fixingDate": "2025-05-06",
-     "payDate": "2025-05-12",
-     "notional": 79000000.0,
-     "index": "AONIA",
-     "rate": 0.035359,
-     "spread": 0.0,
-     "amount": 675062.24,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2025-02-10",
-     "periodEnd": "2025-05-08",
-     "accrualFactor": 0.241667,
-     "discountFactor": 1.0,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2025-02-10",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.035309,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2025-03-10",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.035381,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2025-04-10",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.035384,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 5,
-     "fixingDate": "2025-08-06",
-     "payDate": "2025-08-12",
-     "notional": 79000000.0,
-     "index": "AONIA",
-     "rate": 0.036159,
-     "spread": 0.0,
-     "amount": 730010.03,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2025-05-08",
-     "periodEnd": "2025-08-08",
-     "accrualFactor": 0.255556,
-     "discountFactor": 1.0,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2025-05-08",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.036178,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2025-06-08",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.036169,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2025-07-08",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.03613,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 6,
-     "fixingDate": "2025-11-06",
-     "payDate": "2025-11-12",
-     "notional": 79000000.0,
-     "index": "AONIA",
-     "rate": 0.036052,
-     "spread": 0.0,
-     "amount": 743672.64,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2025-08-08",
-     "periodEnd": "2025-11-10",
-     "accrualFactor": 0.261111,
-     "discountFactor": 1.0,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2025-08-08",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.03608,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2025-09-08",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.036066,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2025-10-08",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.036013,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2025-11-08",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.035997,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 7,
-     "fixingDate": "2026-02-05",
-     "payDate": "2026-02-11",
-     "notional": 79000000.0,
-     "index": "AONIA",
-     "rate": 0.035354,
-     "spread": 0.0,
-     "amount": 705999.74,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2025-11-10",
-     "periodEnd": "2026-02-09",
-     "accrualFactor": 0.252778,
-     "discountFactor": 1.0,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2025-11-10",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.035394,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2025-12-10",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.035342,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2026-01-10",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.035326,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 8,
-     "fixingDate": "2026-05-06",
-     "payDate": "2026-05-12",
-     "notional": 79000000.0,
-     "index": "AONIA",
-     "rate": 0.036021,
-     "spread": 0.0,
-     "amount": 695605.53,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2026-02-09",
-     "periodEnd": "2026-05-08",
-     "accrualFactor": 0.244444,
-     "discountFactor": 1.0,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2026-02-09",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.036107,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2026-03-09",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.035986,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2026-04-09",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.035975,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 9,
-     "fixingDate": "2026-08-06",
-     "payDate": "2026-08-12",
-     "notional": 79000000.0,
-     "index": "AONIA",
-     "rate": 0.036184,
-     "spread": 0.0,
-     "amount": 746395.51,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2026-05-08",
-     "periodEnd": "2026-08-10",
-     "accrualFactor": 0.261111,
-     "discountFactor": 1.0,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2026-05-08",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.036185,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2026-06-08",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.036183,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2026-07-08",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.036184,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2026-08-08",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.036187,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 10,
-     "fixingDate": "2026-11-05",
-     "payDate": "2026-11-11",
-     "notional": 79000000.0,
-     "index": "AONIA",
-     "rate": 0.035442,
-     "spread": 0.0,
-     "amount": 707762.15,
-     "pv": 704846.91,
-     "status": "Projected",
-     "periodStart": "2026-08-10",
-     "periodEnd": "2026-11-09",
-     "accrualFactor": 0.252778,
-     "discountFactor": 0.995881,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2026-08-10",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.035442,
-       "source": "RBA AONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2026-09-10",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.03544,
-       "source": "Forward curve",
-       "status": "Projected"
-      },
-      {
-       "fixingDate": "2026-10-10",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.035444,
-       "source": "Forward curve",
-       "status": "Projected"
-      }
-     ]
-    },
-    {
-     "n": 11,
-     "fixingDate": "2027-02-04",
-     "payDate": "2027-02-10",
-     "notional": 79000000.0,
-     "index": "AONIA",
-     "rate": 0.035874,
-     "spread": 0.0,
-     "amount": 716377.99,
-     "pv": 707014.29,
-     "status": "Projected",
-     "periodStart": "2026-11-09",
-     "periodEnd": "2027-02-08",
-     "accrualFactor": 0.252778,
-     "discountFactor": 0.986929,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2026-11-09",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.035848,
-       "source": "Forward curve",
-       "status": "Projected"
-      },
-      {
-       "fixingDate": "2026-12-09",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.035881,
-       "source": "Forward curve",
-       "status": "Projected"
-      },
-      {
-       "fixingDate": "2027-01-09",
-       "index": "AONIA",
-       "tenor": "1M",
-       "rate": 0.035893,
-       "source": "Forward curve",
-       "status": "Projected"
-      }
-     ]
-    }
-   ],
-   "pv": 1411861.2,
-   "payReceive": "Receive",
-   "rateType": "Float",
-   "legId": "MX-20000050-L2",
-   "businessDayConvention": "Mod. following",
-   "resetFrequency": "Monthly"
-  }
- ],
- "schedule": [
-  {
-   "payDate": "2024-08-12",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.035406,
-   "amount": 761425.7,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2024-11-12",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.036266,
-   "amount": 732170.24,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2025-02-12",
-   "leg": 1,
-   "type": "Fixed",
-   "rate": 0.024583,
-   "amount": -1532067.19,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2025-02-12",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.0359,
-   "amount": 740537.22,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2025-05-12",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.035359,
-   "amount": 675062.24,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2025-08-12",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.036159,
-   "amount": 730010.03,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2025-11-12",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.036052,
-   "amount": 743672.64,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2026-02-11",
-   "leg": 1,
-   "type": "Fixed",
-   "rate": 0.024583,
-   "amount": -1963635.41,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2026-02-11",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.035354,
-   "amount": 705999.74,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2026-05-12",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.036021,
-   "amount": 695605.53,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2026-08-12",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.036184,
-   "amount": 746395.51,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2026-11-11",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.035442,
-   "amount": 707762.15,
-   "pv": 704846.91,
-   "status": "Projected"
-  },
-  {
-   "payDate": "2027-02-10",
-   "leg": 1,
-   "type": "Fixed",
-   "rate": 0.024583,
-   "amount": -1963635.41,
-   "pv": -1937968.94,
-   "status": "Fixed"
-  },
-  {
-   "payDate": "2027-02-10",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.035874,
-   "amount": 716377.99,
-   "pv": 707014.29,
-   "status": "Projected"
-  }
- ],
- "nextIndex": 11,
- "pnlHistory": [
-  {
-   "date": "2026-09-03",
-   "pnl": -10348
-  },
-  {
-   "date": "2026-09-04",
-   "pnl": -35344
-  },
-  {
-   "date": "2026-09-07",
-   "pnl": 22779
-  },
-  {
-   "date": "2026-09-08",
-   "pnl": -3337
-  },
-  {
-   "date": "2026-09-09",
-   "pnl": 35726
-  },
-  {
-   "date": "2026-09-10",
-   "pnl": 25894
-  },
-  {
-   "date": "2026-09-11",
-   "pnl": 2245
-  },
-  {
-   "date": "2026-09-14",
-   "pnl": 4386
-  },
-  {
-   "date": "2026-09-15",
-   "pnl": -11505
-  },
-  {
-   "date": "2026-09-16",
-   "pnl": 1323
-  },
-  {
-   "date": "2026-09-17",
-   "pnl": -11596
-  },
-  {
-   "date": "2026-09-18",
-   "pnl": 9698
-  },
-  {
-   "date": "2026-09-21",
-   "pnl": 9024
-  },
-  {
-   "date": "2026-09-22",
-   "pnl": 1881
-  },
-  {
-   "date": "2026-09-23",
-   "pnl": 7044
-  },
-  {
-   "date": "2026-09-24",
-   "pnl": -5844
-  },
-  {
-   "date": "2026-09-25",
-   "pnl": -10592
-  },
-  {
-   "date": "2026-09-28",
-   "pnl": -5153
-  },
-  {
-   "date": "2026-09-29",
-   "pnl": -13962
-  },
-  {
-   "date": "2026-09-30",
-   "pnl": -15245
-  }
- ],
- "execution": {
-  "tradeDate": "2024-04-30",
-  "executionTimestamp": "2024-04-30T16:04:30.616Z",
-  "venue": "Tradeweb SEF",
-  "venueMic": "TWSF",
-  "executionType": "Electronic",
-  "trader": "M. Okafor",
-  "salesperson": null,
-  "orderId": "ORD-7C350CC5A6"
- },
- "lifecycle": {
-  "status": "Live",
-  "version": 1,
-  "events": [
-   {
-    "version": 1,
-    "event": "New",
-    "reason": "Trade captured",
-    "at": "2024-04-30T10:45:00Z",
-    "by": "fo.capture"
-   }
-  ],
-  "sourceSystem": "Murex",
-  "createdAt": "2024-04-30T10:45:00Z",
-  "lastModifiedAt": "2024-04-30T10:45:00Z",
-  "lastModifiedBy": "fo.capture",
-  "timeline": [
-   {
-    "date": "2024-04-30",
-    "event": "Booked",
-    "status": "Done",
-    "description": "Captured in Murex by TRDR-MOKAFOR: pay fixed Forward-starting swap"
+   "LEG_ID": 2,
+   "LEG_TYPE": "FLOAT",
+   "LEG_ECONOMIC_TYPE": "Receive",
+   "CURRENCY": "AUD",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 79000000.0,
+   "DISCOUNT_INDEX": "CRV-AUD-OIS",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "-2",
+   "RESET_HOLIDAY_SCHEDULE": "GBLO",
+   "RESET_CONVENTION": "Monthly",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "11",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "AONIA",
+    "GROUP": "Rates",
+    "SUB_GROUP": "Monthly"
    },
-   {
-    "date": "2024-04-30",
-    "event": "Confirmed",
-    "status": "Matched",
-    "description": "Matched on MarkitWire (MA887156159)"
-   },
-   {
-    "date": "2025-09-05",
-    "event": "Partially terminated",
-    "status": "Done",
-    "description": "Notional reduced by 10%, unwind fee settled",
-    "amount": 7900000
-   },
-   {
-    "date": "2026-08-12",
-    "event": "Cash settled",
-    "status": "Settled",
-    "description": "AUD payment settled",
-    "amount": 746395.51
-   },
-   {
-    "date": "2026-11-11",
-    "event": "Next payment",
-    "status": "Pending",
-    "description": "Scheduled; settlement instructions confirmed"
-   },
-   {
-    "date": "2027-02-08",
-    "event": "Maturity",
-    "status": "Scheduled",
-    "description": "Final payment and close-out"
-   }
-  ]
- },
- "confirmation": {
-  "status": "Confirmed",
-  "method": "MarkitWire",
-  "platformId": "MA887156159",
-  "matched": "2024-04-30 14:11",
-  "affirmedBy": "Counterparty ops",
-  "breaks": []
- },
- "clearing": {
-  "status": "Bilateral",
-  "mandatory": false,
-  "reason": "Counterparty below clearing threshold"
- },
- "regulatory": {
-  "uti": "549300O1N13GO2II20967C350CC5A6E16D4BAA71",
-  "upi": "QZ1ZJEBYQ0SV",
-  "reportingRegimes": [
-   "CFTC Part 43/45"
-  ],
-  "reportingParty": "Us",
-  "reportingStatus": "Accepted",
-  "clearingObligation": false,
-  "tradingObligation": false,
-  "mifidClassification": "Professional client",
-  "volckerExempt": false,
-  "saCcrAssetClass": "Interest rate"
- },
- "settlementInstructions": {
-  "method": "Gross",
-  "ourAgent": "JPMorgan Chase Bank, N.A.",
-  "ourAgentBic": "CHASUS33XXX",
-  "theirAgentBic": "ALDEGB33XXX",
-  "ssiId": "SSI-AUD-D06EAF",
-  "netting": "Payment netting by currency and value date"
- },
- "valuation": {
-  "asOf": "2026-09-30",
-  "currency": "USD",
-  "npv": -526108,
-  "cleanPv": -526108.0,
-  "accrued": 0.0,
-  "legPvs": [],
-  "model": "Multi-curve OIS discounting",
-  "curves": [
-   "CRV-AUD-OIS",
-   "CRV-AUD-PROJ"
-  ],
-  "status": "Official EOD",
-  "runId": "EOD-20260930-01"
- },
- "pnlExplain": [
-  {
-   "step": "Opening MTM",
-   "pnl": -559754,
-   "total": true
-  },
-  {
-   "step": "Carry",
-   "pnl": -3117
-  },
-  {
-   "step": "Roll-down",
-   "pnl": 7104
-  },
-  {
-   "step": "Rates delta",
-   "pnl": 33163
-  },
-  {
-   "step": "FX delta",
-   "pnl": -1272
-  },
-  {
-   "step": "Vol (vega)",
-   "pnl": -716
-  },
-  {
-   "step": "Theta",
-   "pnl": 260
-  },
-  {
-   "step": "Unexplained",
-   "pnl": -1776
-  }
- ],
- "_meta": {
-  "source": "murex-rates",
-  "generation": 1,
-  "live": true,
-  "walk": {
-   "legs.1.cashflows.9.fixings.2.rate": 0.000142,
-   "legs.1.pv": {
-    "step": 1842,
-    "places": 2,
-    "with": [
-     {
-      "path": "legs.0.pv",
-      "scale": -0.3,
-      "places": 2
-     }
-    ]
-   },
-   "derive": [
+   "CASH_FLOWS": [
     {
-     "set": "mtm",
-     "expr": "sum(legs.*.pv)"
+     "FLOW_ID": 20000050004,
+     "FLOW_TYPE": "Interest",
+     "NOTIONAL": 79000000.0,
+     "RATE": 0.035406,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2024-05-02",
+     "END_DATE": "2024-08-08",
+     "PAYMENT_DATE": "2024-08-12",
+     "RATE_DETERMINATION_DATE": "2024-08-06",
+     "FIRST_RESET_DATE": "2024-05-02",
+     "LAST_RESET_DATE": "2024-08-02",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-1",
+       "ACCRUAL": "",
+       "START_DATE": "2024-05-02",
+       "END_DATE": "2024-08-08",
+       "RESET_DATE": "2024-05-02",
+       "ACCRUAL_START_DATE": "2024-05-02",
+       "ACCRUAL_END_DATE": "2024-08-08",
+       "RATE": 0.03539
+      },
+      {
+       "RESET_ID": "R-2",
+       "ACCRUAL": "",
+       "START_DATE": "2024-06-02",
+       "END_DATE": "2024-08-08",
+       "RESET_DATE": "2024-06-02",
+       "ACCRUAL_START_DATE": "2024-05-02",
+       "ACCRUAL_END_DATE": "2024-08-08",
+       "RATE": 0.0354
+      },
+      {
+       "RESET_ID": "R-3",
+       "ACCRUAL": "",
+       "START_DATE": "2024-07-02",
+       "END_DATE": "2024-08-08",
+       "RESET_DATE": "2024-07-02",
+       "ACCRUAL_START_DATE": "2024-05-02",
+       "ACCRUAL_END_DATE": "2024-08-08",
+       "RATE": 0.035424
+      },
+      {
+       "RESET_ID": "R-4",
+       "ACCRUAL": "",
+       "START_DATE": "2024-08-02",
+       "END_DATE": "2024-08-08",
+       "RESET_DATE": "2024-08-02",
+       "ACCRUAL_START_DATE": "2024-05-02",
+       "ACCRUAL_END_DATE": "2024-08-08",
+       "RATE": 0.035428
+      }
+     ]
     },
     {
-     "set": "legs.0.cashflows.*.pv",
-     "scaleTo": "$.legs.0.pv",
-     "places": 2
+     "FLOW_ID": 20000050005,
+     "FLOW_TYPE": "Interest",
+     "NOTIONAL": 79000000.0,
+     "RATE": 0.036266,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2024-08-08",
+     "END_DATE": "2024-11-08",
+     "PAYMENT_DATE": "2024-11-12",
+     "RATE_DETERMINATION_DATE": "2024-11-06",
+     "FIRST_RESET_DATE": "2024-08-08",
+     "LAST_RESET_DATE": "2024-10-08",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-5",
+       "ACCRUAL": "",
+       "START_DATE": "2024-08-08",
+       "END_DATE": "2024-11-08",
+       "RESET_DATE": "2024-08-08",
+       "ACCRUAL_START_DATE": "2024-08-08",
+       "ACCRUAL_END_DATE": "2024-11-08",
+       "RATE": 0.036238
+      },
+      {
+       "RESET_ID": "R-6",
+       "ACCRUAL": "",
+       "START_DATE": "2024-09-08",
+       "END_DATE": "2024-11-08",
+       "RESET_DATE": "2024-09-08",
+       "ACCRUAL_START_DATE": "2024-08-08",
+       "ACCRUAL_END_DATE": "2024-11-08",
+       "RATE": 0.036254
+      },
+      {
+       "RESET_ID": "R-7",
+       "ACCRUAL": "",
+       "START_DATE": "2024-10-08",
+       "END_DATE": "2024-11-08",
+       "RESET_DATE": "2024-10-08",
+       "ACCRUAL_START_DATE": "2024-08-08",
+       "ACCRUAL_END_DATE": "2024-11-08",
+       "RATE": 0.036306
+      }
+     ]
     },
     {
-     "set": "legs.1.cashflows.*.pv",
-     "scaleTo": "$.legs.1.pv",
-     "places": 2
+     "FLOW_ID": 20000050006,
+     "FLOW_TYPE": "Interest",
+     "NOTIONAL": 79000000.0,
+     "RATE": 0.0359,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2024-11-08",
+     "END_DATE": "2025-02-10",
+     "PAYMENT_DATE": "2025-02-12",
+     "RATE_DETERMINATION_DATE": "2025-02-06",
+     "FIRST_RESET_DATE": "2024-11-08",
+     "LAST_RESET_DATE": "2025-02-08",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-8",
+       "ACCRUAL": "",
+       "START_DATE": "2024-11-08",
+       "END_DATE": "2025-02-10",
+       "RESET_DATE": "2024-11-08",
+       "ACCRUAL_START_DATE": "2024-11-08",
+       "ACCRUAL_END_DATE": "2025-02-10",
+       "RATE": 0.035868
+      },
+      {
+       "RESET_ID": "R-9",
+       "ACCRUAL": "",
+       "START_DATE": "2024-12-08",
+       "END_DATE": "2025-02-10",
+       "RESET_DATE": "2024-12-08",
+       "ACCRUAL_START_DATE": "2024-11-08",
+       "ACCRUAL_END_DATE": "2025-02-10",
+       "RATE": 0.03591
+      },
+      {
+       "RESET_ID": "R-10",
+       "ACCRUAL": "",
+       "START_DATE": "2025-01-08",
+       "END_DATE": "2025-02-10",
+       "RESET_DATE": "2025-01-08",
+       "ACCRUAL_START_DATE": "2024-11-08",
+       "ACCRUAL_END_DATE": "2025-02-10",
+       "RATE": 0.035919
+      },
+      {
+       "RESET_ID": "R-11",
+       "ACCRUAL": "",
+       "START_DATE": "2025-02-08",
+       "END_DATE": "2025-02-10",
+       "RESET_DATE": "2025-02-08",
+       "ACCRUAL_START_DATE": "2024-11-08",
+       "ACCRUAL_END_DATE": "2025-02-10",
+       "RATE": 0.035928
+      }
+     ]
     },
     {
-     "set": "valuation.npv",
-     "expr": "$.mtm"
+     "FLOW_ID": 20000050007,
+     "FLOW_TYPE": "Interest",
+     "NOTIONAL": 79000000.0,
+     "RATE": 0.035359,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2025-02-10",
+     "END_DATE": "2025-05-08",
+     "PAYMENT_DATE": "2025-05-12",
+     "RATE_DETERMINATION_DATE": "2025-05-06",
+     "FIRST_RESET_DATE": "2025-02-10",
+     "LAST_RESET_DATE": "2025-04-10",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-12",
+       "ACCRUAL": "",
+       "START_DATE": "2025-02-10",
+       "END_DATE": "2025-05-08",
+       "RESET_DATE": "2025-02-10",
+       "ACCRUAL_START_DATE": "2025-02-10",
+       "ACCRUAL_END_DATE": "2025-05-08",
+       "RATE": 0.035309
+      },
+      {
+       "RESET_ID": "R-13",
+       "ACCRUAL": "",
+       "START_DATE": "2025-03-10",
+       "END_DATE": "2025-05-08",
+       "RESET_DATE": "2025-03-10",
+       "ACCRUAL_START_DATE": "2025-02-10",
+       "ACCRUAL_END_DATE": "2025-05-08",
+       "RATE": 0.035381
+      },
+      {
+       "RESET_ID": "R-14",
+       "ACCRUAL": "",
+       "START_DATE": "2025-04-10",
+       "END_DATE": "2025-05-08",
+       "RESET_DATE": "2025-04-10",
+       "ACCRUAL_START_DATE": "2025-02-10",
+       "ACCRUAL_END_DATE": "2025-05-08",
+       "RATE": 0.035384
+      }
+     ]
     },
     {
-     "set": "valuation.cleanPv",
-     "expr": "$.mtm - valuation.accrued"
+     "FLOW_ID": 20000050008,
+     "FLOW_TYPE": "Interest",
+     "NOTIONAL": 79000000.0,
+     "RATE": 0.036159,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2025-05-08",
+     "END_DATE": "2025-08-08",
+     "PAYMENT_DATE": "2025-08-12",
+     "RATE_DETERMINATION_DATE": "2025-08-06",
+     "FIRST_RESET_DATE": "2025-05-08",
+     "LAST_RESET_DATE": "2025-07-08",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-15",
+       "ACCRUAL": "",
+       "START_DATE": "2025-05-08",
+       "END_DATE": "2025-08-08",
+       "RESET_DATE": "2025-05-08",
+       "ACCRUAL_START_DATE": "2025-05-08",
+       "ACCRUAL_END_DATE": "2025-08-08",
+       "RATE": 0.036178
+      },
+      {
+       "RESET_ID": "R-16",
+       "ACCRUAL": "",
+       "START_DATE": "2025-06-08",
+       "END_DATE": "2025-08-08",
+       "RESET_DATE": "2025-06-08",
+       "ACCRUAL_START_DATE": "2025-05-08",
+       "ACCRUAL_END_DATE": "2025-08-08",
+       "RATE": 0.036169
+      },
+      {
+       "RESET_ID": "R-17",
+       "ACCRUAL": "",
+       "START_DATE": "2025-07-08",
+       "END_DATE": "2025-08-08",
+       "RESET_DATE": "2025-07-08",
+       "ACCRUAL_START_DATE": "2025-05-08",
+       "ACCRUAL_END_DATE": "2025-08-08",
+       "RATE": 0.03613
+      }
+     ]
     },
     {
-     "set": "pnl1d",
-     "expr": "$.mtm - pnlExplain.0.pnl"
+     "FLOW_ID": 20000050009,
+     "FLOW_TYPE": "Interest",
+     "NOTIONAL": 79000000.0,
+     "RATE": 0.036052,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2025-08-08",
+     "END_DATE": "2025-11-10",
+     "PAYMENT_DATE": "2025-11-12",
+     "RATE_DETERMINATION_DATE": "2025-11-06",
+     "FIRST_RESET_DATE": "2025-08-08",
+     "LAST_RESET_DATE": "2025-11-08",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-18",
+       "ACCRUAL": "",
+       "START_DATE": "2025-08-08",
+       "END_DATE": "2025-11-10",
+       "RESET_DATE": "2025-08-08",
+       "ACCRUAL_START_DATE": "2025-08-08",
+       "ACCRUAL_END_DATE": "2025-11-10",
+       "RATE": 0.03608
+      },
+      {
+       "RESET_ID": "R-19",
+       "ACCRUAL": "",
+       "START_DATE": "2025-09-08",
+       "END_DATE": "2025-11-10",
+       "RESET_DATE": "2025-09-08",
+       "ACCRUAL_START_DATE": "2025-08-08",
+       "ACCRUAL_END_DATE": "2025-11-10",
+       "RATE": 0.036066
+      },
+      {
+       "RESET_ID": "R-20",
+       "ACCRUAL": "",
+       "START_DATE": "2025-10-08",
+       "END_DATE": "2025-11-10",
+       "RESET_DATE": "2025-10-08",
+       "ACCRUAL_START_DATE": "2025-08-08",
+       "ACCRUAL_END_DATE": "2025-11-10",
+       "RATE": 0.036013
+      },
+      {
+       "RESET_ID": "R-21",
+       "ACCRUAL": "",
+       "START_DATE": "2025-11-08",
+       "END_DATE": "2025-11-10",
+       "RESET_DATE": "2025-11-08",
+       "ACCRUAL_START_DATE": "2025-08-08",
+       "ACCRUAL_END_DATE": "2025-11-10",
+       "RATE": 0.035997
+      }
+     ]
     },
     {
-     "set": "pnlExplain.3.pnl",
-     "expr": "pnlExplain.3.pnl + ($.mtm - sum(pnlExplain.*.pnl))"
+     "FLOW_ID": 20000050010,
+     "FLOW_TYPE": "Interest",
+     "NOTIONAL": 79000000.0,
+     "RATE": 0.035354,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2025-11-10",
+     "END_DATE": "2026-02-09",
+     "PAYMENT_DATE": "2026-02-11",
+     "RATE_DETERMINATION_DATE": "2026-02-05",
+     "FIRST_RESET_DATE": "2025-11-10",
+     "LAST_RESET_DATE": "2026-01-10",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-22",
+       "ACCRUAL": "",
+       "START_DATE": "2025-11-10",
+       "END_DATE": "2026-02-09",
+       "RESET_DATE": "2025-11-10",
+       "ACCRUAL_START_DATE": "2025-11-10",
+       "ACCRUAL_END_DATE": "2026-02-09",
+       "RATE": 0.035394
+      },
+      {
+       "RESET_ID": "R-23",
+       "ACCRUAL": "",
+       "START_DATE": "2025-12-10",
+       "END_DATE": "2026-02-09",
+       "RESET_DATE": "2025-12-10",
+       "ACCRUAL_START_DATE": "2025-11-10",
+       "ACCRUAL_END_DATE": "2026-02-09",
+       "RATE": 0.035342
+      },
+      {
+       "RESET_ID": "R-24",
+       "ACCRUAL": "",
+       "START_DATE": "2026-01-10",
+       "END_DATE": "2026-02-09",
+       "RESET_DATE": "2026-01-10",
+       "ACCRUAL_START_DATE": "2025-11-10",
+       "ACCRUAL_END_DATE": "2026-02-09",
+       "RATE": 0.035326
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 20000050011,
+     "FLOW_TYPE": "Interest",
+     "NOTIONAL": 79000000.0,
+     "RATE": 0.036021,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-02-09",
+     "END_DATE": "2026-05-08",
+     "PAYMENT_DATE": "2026-05-12",
+     "RATE_DETERMINATION_DATE": "2026-05-06",
+     "FIRST_RESET_DATE": "2026-02-09",
+     "LAST_RESET_DATE": "2026-04-09",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-25",
+       "ACCRUAL": "",
+       "START_DATE": "2026-02-09",
+       "END_DATE": "2026-05-08",
+       "RESET_DATE": "2026-02-09",
+       "ACCRUAL_START_DATE": "2026-02-09",
+       "ACCRUAL_END_DATE": "2026-05-08",
+       "RATE": 0.036107
+      },
+      {
+       "RESET_ID": "R-26",
+       "ACCRUAL": "",
+       "START_DATE": "2026-03-09",
+       "END_DATE": "2026-05-08",
+       "RESET_DATE": "2026-03-09",
+       "ACCRUAL_START_DATE": "2026-02-09",
+       "ACCRUAL_END_DATE": "2026-05-08",
+       "RATE": 0.035986
+      },
+      {
+       "RESET_ID": "R-27",
+       "ACCRUAL": "",
+       "START_DATE": "2026-04-09",
+       "END_DATE": "2026-05-08",
+       "RESET_DATE": "2026-04-09",
+       "ACCRUAL_START_DATE": "2026-02-09",
+       "ACCRUAL_END_DATE": "2026-05-08",
+       "RATE": 0.035975
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 20000050012,
+     "FLOW_TYPE": "Interest",
+     "NOTIONAL": 79000000.0,
+     "RATE": 0.036184,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-05-08",
+     "END_DATE": "2026-08-10",
+     "PAYMENT_DATE": "2026-08-12",
+     "RATE_DETERMINATION_DATE": "2026-08-06",
+     "FIRST_RESET_DATE": "2026-05-08",
+     "LAST_RESET_DATE": "2026-08-08",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-28",
+       "ACCRUAL": "",
+       "START_DATE": "2026-05-08",
+       "END_DATE": "2026-08-10",
+       "RESET_DATE": "2026-05-08",
+       "ACCRUAL_START_DATE": "2026-05-08",
+       "ACCRUAL_END_DATE": "2026-08-10",
+       "RATE": 0.036185
+      },
+      {
+       "RESET_ID": "R-29",
+       "ACCRUAL": "",
+       "START_DATE": "2026-06-08",
+       "END_DATE": "2026-08-10",
+       "RESET_DATE": "2026-06-08",
+       "ACCRUAL_START_DATE": "2026-05-08",
+       "ACCRUAL_END_DATE": "2026-08-10",
+       "RATE": 0.036183
+      },
+      {
+       "RESET_ID": "R-30",
+       "ACCRUAL": "",
+       "START_DATE": "2026-07-08",
+       "END_DATE": "2026-08-10",
+       "RESET_DATE": "2026-07-08",
+       "ACCRUAL_START_DATE": "2026-05-08",
+       "ACCRUAL_END_DATE": "2026-08-10",
+       "RATE": 0.036184
+      },
+      {
+       "RESET_ID": "R-31",
+       "ACCRUAL": "",
+       "START_DATE": "2026-08-08",
+       "END_DATE": "2026-08-10",
+       "RESET_DATE": "2026-08-08",
+       "ACCRUAL_START_DATE": "2026-05-08",
+       "ACCRUAL_END_DATE": "2026-08-10",
+       "RATE": 0.036187
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 20000050013,
+     "FLOW_TYPE": "Interest",
+     "NOTIONAL": 79000000.0,
+     "RATE": 0.035442,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-08-10",
+     "END_DATE": "2026-11-09",
+     "PAYMENT_DATE": "2026-11-11",
+     "RATE_DETERMINATION_DATE": "2026-11-05",
+     "FIRST_RESET_DATE": "2026-08-10",
+     "LAST_RESET_DATE": "2026-10-10",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-32",
+       "ACCRUAL": "",
+       "START_DATE": "2026-08-10",
+       "END_DATE": "2026-11-09",
+       "RESET_DATE": "2026-08-10",
+       "ACCRUAL_START_DATE": "2026-08-10",
+       "ACCRUAL_END_DATE": "2026-11-09",
+       "RATE": 0.035442
+      },
+      {
+       "RESET_ID": "R-33",
+       "ACCRUAL": "",
+       "START_DATE": "2026-09-10",
+       "END_DATE": "2026-11-09",
+       "RESET_DATE": "2026-09-10",
+       "ACCRUAL_START_DATE": "2026-08-10",
+       "ACCRUAL_END_DATE": "2026-11-09",
+       "RATE": ""
+      },
+      {
+       "RESET_ID": "R-34",
+       "ACCRUAL": "",
+       "START_DATE": "2026-10-10",
+       "END_DATE": "2026-11-09",
+       "RESET_DATE": "2026-10-10",
+       "ACCRUAL_START_DATE": "2026-08-10",
+       "ACCRUAL_END_DATE": "2026-11-09",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 20000050014,
+     "FLOW_TYPE": "Interest",
+     "NOTIONAL": 79000000.0,
+     "RATE": 0.035874,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-11-09",
+     "END_DATE": "2027-02-08",
+     "PAYMENT_DATE": "2027-02-10",
+     "RATE_DETERMINATION_DATE": "2027-02-04",
+     "FIRST_RESET_DATE": "2026-11-09",
+     "LAST_RESET_DATE": "2027-01-09",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-35",
+       "ACCRUAL": "",
+       "START_DATE": "2026-11-09",
+       "END_DATE": "2027-02-08",
+       "RESET_DATE": "2026-11-09",
+       "ACCRUAL_START_DATE": "2026-11-09",
+       "ACCRUAL_END_DATE": "2027-02-08",
+       "RATE": ""
+      },
+      {
+       "RESET_ID": "R-36",
+       "ACCRUAL": "",
+       "START_DATE": "2026-12-09",
+       "END_DATE": "2027-02-08",
+       "RESET_DATE": "2026-12-09",
+       "ACCRUAL_START_DATE": "2026-11-09",
+       "ACCRUAL_END_DATE": "2027-02-08",
+       "RATE": ""
+      },
+      {
+       "RESET_ID": "R-37",
+       "ACCRUAL": "",
+       "START_DATE": "2027-01-09",
+       "END_DATE": "2027-02-08",
+       "RESET_DATE": "2027-01-09",
+       "ACCRUAL_START_DATE": "2026-11-09",
+       "ACCRUAL_END_DATE": "2027-02-08",
+       "RATE": ""
+      }
+     ]
     }
    ]
   }
+ ],
+ "EVENTS": [
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000050001,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "BOOKED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2024-04-30",
+   "AMOUNT": "",
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000050002,
+   "EVENT_NUMBER": 2,
+   "EVENT_TYPE": "CONFIRMED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2024-04-30",
+   "AMOUNT": "",
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 2,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000050003,
+   "EVENT_NUMBER": 3,
+   "EVENT_TYPE": "PARTIALLY_TERMINATED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2025-09-05",
+   "AMOUNT": 7900000.0,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 3,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000050004,
+   "EVENT_NUMBER": 4,
+   "EVENT_TYPE": "CASH_SETTLED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-08-12",
+   "AMOUNT": 746395.51,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 4,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000050005,
+   "EVENT_NUMBER": 5,
+   "EVENT_TYPE": "NEXT_PAYMENT",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-11-11",
+   "AMOUNT": "",
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 5,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000050006,
+   "EVENT_NUMBER": 6,
+   "EVENT_TYPE": "MATURITY",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2027-02-08",
+   "AMOUNT": "",
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 6,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 1,
+   "EVENT_ID": 20000050007,
+   "EVENT_NUMBER": 7,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Interest",
+   "EVENT_DATE": "2025-02-12",
+   "AMOUNT": -1532067.19,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 7,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 1,
+   "EVENT_ID": 20000050008,
+   "EVENT_NUMBER": 8,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Interest",
+   "EVENT_DATE": "2026-02-11",
+   "AMOUNT": -1963635.41,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 8,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 1,
+   "EVENT_ID": 20000050009,
+   "EVENT_NUMBER": 9,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Interest",
+   "EVENT_DATE": "2027-02-10",
+   "AMOUNT": -1963635.41,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 9,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 2,
+   "EVENT_ID": 20000050010,
+   "EVENT_NUMBER": 10,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Interest",
+   "EVENT_DATE": "2024-08-12",
+   "AMOUNT": 761425.7,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 10,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 2,
+   "EVENT_ID": 20000050011,
+   "EVENT_NUMBER": 11,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Interest",
+   "EVENT_DATE": "2024-11-12",
+   "AMOUNT": 732170.24,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 11,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 2,
+   "EVENT_ID": 20000050012,
+   "EVENT_NUMBER": 12,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Interest",
+   "EVENT_DATE": "2025-02-12",
+   "AMOUNT": 740537.22,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 12,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 2,
+   "EVENT_ID": 20000050013,
+   "EVENT_NUMBER": 13,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Interest",
+   "EVENT_DATE": "2025-05-12",
+   "AMOUNT": 675062.24,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 13,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 2,
+   "EVENT_ID": 20000050014,
+   "EVENT_NUMBER": 14,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Interest",
+   "EVENT_DATE": "2025-08-12",
+   "AMOUNT": 730010.03,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 14,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 2,
+   "EVENT_ID": 20000050015,
+   "EVENT_NUMBER": 15,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Interest",
+   "EVENT_DATE": "2025-11-12",
+   "AMOUNT": 743672.64,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 15,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 2,
+   "EVENT_ID": 20000050016,
+   "EVENT_NUMBER": 16,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Interest",
+   "EVENT_DATE": "2026-02-11",
+   "AMOUNT": 705999.74,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 16,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 2,
+   "EVENT_ID": 20000050017,
+   "EVENT_NUMBER": 17,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Interest",
+   "EVENT_DATE": "2026-05-12",
+   "AMOUNT": 695605.53,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 17,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 2,
+   "EVENT_ID": 20000050018,
+   "EVENT_NUMBER": 18,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Interest",
+   "EVENT_DATE": "2026-08-12",
+   "AMOUNT": 746395.51,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 18,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 2,
+   "EVENT_ID": 20000050019,
+   "EVENT_NUMBER": 19,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Interest",
+   "EVENT_DATE": "2026-11-11",
+   "AMOUNT": 707762.15,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 19,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 2,
+   "EVENT_ID": 20000050020,
+   "EVENT_NUMBER": 20,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Interest",
+   "EVENT_DATE": "2027-02-10",
+   "AMOUNT": 716377.99,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 20,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  }
+ ],
+ "_meta": {
+  "source": "murex",
+  "generation": 1
  }
 }

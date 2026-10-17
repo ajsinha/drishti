@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "WSS-1500101",
+   "tradeId": "CLY-3000251",
    "product": "Certificate of deposit",
    "assetClass": "Money market",
    "currency": "EUR",
@@ -73,7 +73,7 @@
    "mtm": 3225400
   },
   {
-   "tradeId": "CLY-3000045",
+   "tradeId": "CLY-3000129",
    "product": "Credit-linked note",
    "assetClass": "Credit",
    "currency": "AUD",
@@ -84,7 +84,7 @@
    "mtm": 2791987
   },
   {
-   "tradeId": "CLY-3000066",
+   "tradeId": "CLY-3000150",
    "product": "Credit spread option",
    "assetClass": "Credit",
    "currency": "USD",
@@ -95,7 +95,7 @@
    "mtm": -2328179
   },
   {
-   "tradeId": "CLY-3000038",
+   "tradeId": "CLY-3000122",
    "product": "Total return swap on a loan index",
    "assetClass": "Credit",
    "currency": "GBP",
@@ -117,7 +117,7 @@
    "mtm": 1603140
   },
   {
-   "tradeId": "END-1000010",
+   "tradeId": "MX-20000298",
    "product": "Commodity forward",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -128,7 +128,7 @@
    "mtm": 965771
   },
   {
-   "tradeId": "CLY-3000043",
+   "tradeId": "CLY-3000127",
    "product": "Credit-linked note",
    "assetClass": "Credit",
    "currency": "JPY",
@@ -161,7 +161,7 @@
    "mtm": -309129
   },
   {
-   "tradeId": "BBG-60000061",
+   "tradeId": "CLY-3000217",
    "product": "CMO tranche",
    "assetClass": "Fixed income",
    "currency": "JPY",
@@ -172,7 +172,7 @@
    "mtm": -188070
   },
   {
-   "tradeId": "CLY-3000061",
+   "tradeId": "CLY-3000145",
    "product": "Credit spread option",
    "assetClass": "Credit",
    "currency": "GBP",
@@ -183,7 +183,7 @@
    "mtm": -79292
   },
   {
-   "tradeId": "WSS-1500107",
+   "tradeId": "CLY-3000257",
    "product": "Term deposit / placement",
    "assetClass": "Money market",
    "currency": "EUR",
@@ -194,7 +194,7 @@
    "mtm": -41962
   },
   {
-   "tradeId": "CLY-3000049",
+   "tradeId": "CLY-3000133",
    "product": "Term loan",
    "assetClass": "Credit",
    "currency": "JPY",

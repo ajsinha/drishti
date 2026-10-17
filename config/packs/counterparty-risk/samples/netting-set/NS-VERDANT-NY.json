@@ -106,7 +106,7 @@
    "mtm": 3450337
   },
   {
-   "tradeId": "CLY-3000050",
+   "tradeId": "CLY-3000134",
    "product": "Term loan",
    "assetClass": "Credit",
    "currency": "EUR",
@@ -117,7 +117,7 @@
    "mtm": -3431576
   },
   {
-   "tradeId": "CLY-3000036",
+   "tradeId": "CLY-3000120",
    "product": "Total return swap on a bond",
    "assetClass": "Credit",
    "currency": "EUR",
@@ -139,7 +139,7 @@
    "mtm": -1550182
   },
   {
-   "tradeId": "CLY-3000021",
+   "tradeId": "CLY-3000105",
    "product": "CDS index option",
    "assetClass": "Credit",
    "currency": "USD",
@@ -172,7 +172,7 @@
    "mtm": -777511
   },
   {
-   "tradeId": "END-1000071",
+   "tradeId": "MX-20000359",
    "product": "Gas swing option",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -183,7 +183,7 @@
    "mtm": -632140
   },
   {
-   "tradeId": "CLY-3000068",
+   "tradeId": "CLY-3000152",
    "product": "Unfunded risk participation",
    "assetClass": "Credit",
    "currency": "USD",
@@ -194,7 +194,7 @@
    "mtm": 483052
   },
   {
-   "tradeId": "CLY-3000054",
+   "tradeId": "CLY-3000138",
    "product": "Term loan",
    "assetClass": "Credit",
    "currency": "USD",
@@ -227,7 +227,7 @@
    "mtm": -263623
   },
   {
-   "tradeId": "END-1000021",
+   "tradeId": "MX-20000309",
    "product": "Commodity basis swap",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -238,7 +238,7 @@
    "mtm": 238821
   },
   {
-   "tradeId": "WSS-1500108",
+   "tradeId": "CLY-3000258",
    "product": "Term deposit / placement",
    "assetClass": "Money market",
    "currency": "JPY",
@@ -249,7 +249,7 @@
    "mtm": 221400
   },
   {
-   "tradeId": "END-1000043",
+   "tradeId": "MX-20000331",
    "product": "Commodity spread option",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -293,7 +293,7 @@
    "mtm": -32695
   },
   {
-   "tradeId": "CLY-3000001",
+   "tradeId": "CLY-3000085",
    "product": "Single-name CDS",
    "assetClass": "Credit",
    "currency": "CAD",
@@ -304,7 +304,7 @@
    "mtm": 28038
   },
   {
-   "tradeId": "END-1000082",
+   "tradeId": "MX-20000370",
    "product": "Weather derivative (HDD/CDD)",
    "assetClass": "Commodity",
    "currency": "USD",

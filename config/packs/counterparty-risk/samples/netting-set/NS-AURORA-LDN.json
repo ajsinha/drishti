@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "WSS-1500044",
+   "tradeId": "CLY-3000044",
    "product": "FX double-barrier option",
    "assetClass": "FX",
    "currency": "USD",
@@ -73,7 +73,7 @@
    "mtm": 2041598
   },
   {
-   "tradeId": "WSS-1500052",
+   "tradeId": "CLY-3000052",
    "product": "FX one-touch / no-touch",
    "assetClass": "FX",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": -1806756
   },
   {
-   "tradeId": "IMG-400092",
+   "tradeId": "MX-20000248",
    "product": "Dividend swap",
    "assetClass": "Equity",
    "currency": "USD",
@@ -95,7 +95,7 @@
    "mtm": -1409108
   },
   {
-   "tradeId": "WSS-1500023",
+   "tradeId": "CLY-3000023",
    "product": "FX swap",
    "assetClass": "FX",
    "currency": "USD",
@@ -106,7 +106,7 @@
    "mtm": 1276114
   },
   {
-   "tradeId": "MX-20000188",
+   "tradeId": "MX-20000410",
    "product": "Limited price index swap",
    "assetClass": "Inflation",
    "currency": "JPY",
@@ -117,7 +117,7 @@
    "mtm": -561601
   },
   {
-   "tradeId": "IMG-400108",
+   "tradeId": "MX-20000264",
    "product": "Portfolio (basket) swap",
    "assetClass": "Equity",
    "currency": "USD",
@@ -128,7 +128,7 @@
    "mtm": -375356
   },
   {
-   "tradeId": "WSS-1500025",
+   "tradeId": "CLY-3000025",
    "product": "FX vanilla option",
    "assetClass": "FX",
    "currency": "USD",
@@ -139,7 +139,7 @@
    "mtm": -355449
   },
   {
-   "tradeId": "IMG-400072",
+   "tradeId": "MX-20000228",
    "product": "Autocallable note",
    "assetClass": "Equity",
    "currency": "USD",
@@ -150,7 +150,7 @@
    "mtm": -241699
   },
   {
-   "tradeId": "MX-20000172",
+   "tradeId": "MX-20000394",
    "product": "Inflation cap / floor",
    "assetClass": "Inflation",
    "currency": "EUR",
@@ -161,7 +161,7 @@
    "mtm": 215279
   },
   {
-   "tradeId": "IMG-400056",
+   "tradeId": "MX-20000212",
    "product": "Equity digital option",
    "assetClass": "Equity",
    "currency": "EUR",
@@ -172,7 +172,7 @@
    "mtm": 159333
   },
   {
-   "tradeId": "MX-20000175",
+   "tradeId": "MX-20000397",
    "product": "Inflation-linked bond",
    "assetClass": "Inflation",
    "currency": "USD",
@@ -183,7 +183,7 @@
    "mtm": -116608
   },
   {
-   "tradeId": "IMG-400085",
+   "tradeId": "MX-20000241",
    "product": "Volatility swap",
    "assetClass": "Equity",
    "currency": "USD",

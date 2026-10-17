@@ -10,7 +10,7 @@
  "UEN": "UEN0100333",
  "economy": "ECON-CHE",
  "newsId": "NEWS-Lumen_Semiconductor_AG",
- "netMtm": -46466242,
+ "netMtm": -45215041,
  "pfePeak": 45241048,
  "nettingSets": [
   {
@@ -29,7 +29,7 @@
    "id": "NS-LUMEN-NY",
    "agreement": "AGR-LUMEN-ISDA",
    "trades": 15,
-   "netMtm": -38103300
+   "netMtm": -36852099
   },
   {
    "id": "NS-LUMEN-TKY",

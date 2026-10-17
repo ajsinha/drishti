@@ -28,546 +28,546 @@
  ],
  "positions": [
   {
-   "tradeId": "BBG-60000003",
+   "tradeId": "CLY-3000159",
    "book": "BOOK-FI-1",
    "currency": "EUR",
    "family": "bond",
    "mtm": -1569609
   },
   {
-   "tradeId": "BBG-60000007",
+   "tradeId": "CLY-3000163",
    "book": "BOOK-FI-1",
    "currency": "USD",
    "family": "bond",
    "mtm": -78300
   },
   {
-   "tradeId": "BBG-60000017",
+   "tradeId": "CLY-3000173",
    "book": "BOOK-FI-1",
    "currency": "EUR",
    "family": "bond",
    "mtm": -156199
   },
   {
-   "tradeId": "BBG-60000018",
+   "tradeId": "CLY-3000174",
    "book": "BOOK-FI-1",
    "currency": "GBP",
    "family": "bond",
    "mtm": -3735787
   },
   {
-   "tradeId": "BBG-60000019",
+   "tradeId": "CLY-3000175",
    "book": "BOOK-FI-1",
    "currency": "USD",
    "family": "bond",
    "mtm": 418522
   },
   {
-   "tradeId": "BBG-60000021",
+   "tradeId": "CLY-3000177",
    "book": "BOOK-FI-1",
    "currency": "CHF",
    "family": "bond",
    "mtm": -1467679
   },
   {
-   "tradeId": "BBG-60000022",
+   "tradeId": "CLY-3000178",
    "book": "BOOK-FI-1",
    "currency": "JPY",
    "family": "bond",
    "mtm": 532138
   },
   {
-   "tradeId": "BBG-60000026",
+   "tradeId": "CLY-3000182",
    "book": "BOOK-FI-1",
    "currency": "JPY",
    "family": "bond",
    "mtm": -1530581
   },
   {
-   "tradeId": "BBG-60000030",
+   "tradeId": "CLY-3000186",
    "book": "BOOK-FI-1",
    "currency": "EUR",
    "family": "bond",
    "mtm": 3201249
   },
   {
-   "tradeId": "BBG-60000036",
+   "tradeId": "CLY-3000192",
    "book": "BOOK-FI-1",
    "currency": "GBP",
    "family": "bond",
    "mtm": -48187
   },
   {
-   "tradeId": "BBG-60000037",
+   "tradeId": "CLY-3000193",
    "book": "BOOK-FI-1",
    "currency": "USD",
    "family": "bond",
    "mtm": -3664626
   },
   {
-   "tradeId": "BBG-60000038",
+   "tradeId": "CLY-3000194",
    "book": "BOOK-FI-1",
    "currency": "GBP",
    "family": "bond",
    "mtm": -1645510
   },
   {
-   "tradeId": "BBG-60000040",
+   "tradeId": "CLY-3000196",
    "book": "BOOK-FI-1",
    "currency": "USD",
    "family": "bond",
    "mtm": 598736
   },
   {
-   "tradeId": "BBG-60000045",
+   "tradeId": "CLY-3000201",
    "book": "BOOK-FI-1",
    "currency": "EUR",
    "family": "bond",
    "mtm": 38025
   },
   {
-   "tradeId": "BBG-60000048",
+   "tradeId": "CLY-3000204",
    "book": "BOOK-FI-1",
    "currency": "CAD",
    "family": "bond",
    "mtm": 2694900
   },
   {
-   "tradeId": "BBG-60000049",
+   "tradeId": "CLY-3000205",
    "book": "BOOK-FI-1",
    "currency": "CAD",
    "family": "bond",
    "mtm": 398064
   },
   {
-   "tradeId": "BBG-60000050",
+   "tradeId": "CLY-3000206",
    "book": "BOOK-FI-1",
    "currency": "USD",
    "family": "bond",
    "mtm": -3693532
   },
   {
-   "tradeId": "BBG-60000051",
+   "tradeId": "CLY-3000207",
    "book": "BOOK-FI-1",
    "currency": "CAD",
    "family": "bond",
    "mtm": -98879
   },
   {
-   "tradeId": "BBG-60000053",
+   "tradeId": "CLY-3000209",
    "book": "BOOK-FI-1",
    "currency": "EUR",
    "family": "bond",
    "mtm": -1016551
   },
   {
-   "tradeId": "BBG-60000054",
+   "tradeId": "CLY-3000210",
    "book": "BOOK-FI-1",
    "currency": "USD",
    "family": "bond",
    "mtm": 129572
   },
   {
-   "tradeId": "BBG-60000059",
+   "tradeId": "CLY-3000215",
    "book": "BOOK-FI-1",
    "currency": "GBP",
    "family": "securitized",
    "mtm": -464682
   },
   {
-   "tradeId": "BBG-60000060",
+   "tradeId": "CLY-3000216",
    "book": "BOOK-FI-1",
    "currency": "CAD",
    "family": "securitized",
    "mtm": -2303954
   },
   {
-   "tradeId": "BBG-60000061",
+   "tradeId": "CLY-3000217",
    "book": "BOOK-FI-1",
    "currency": "JPY",
    "family": "securitized",
    "mtm": -188070
   },
   {
-   "tradeId": "BBG-60000063",
+   "tradeId": "CLY-3000219",
    "book": "BOOK-FI-1",
    "currency": "EUR",
    "family": "securitized",
    "mtm": -2085900
   },
   {
-   "tradeId": "BBG-60000069",
+   "tradeId": "CLY-3000225",
    "book": "BOOK-FI-1",
    "currency": "USD",
    "family": "securitized",
    "mtm": 191276
   },
   {
-   "tradeId": "BBG-60000075",
+   "tradeId": "CLY-3000231",
    "book": "BOOK-FI-1",
    "currency": "EUR",
    "family": "securitized",
    "mtm": 187425
   },
   {
-   "tradeId": "BBG-60000002",
+   "tradeId": "CLY-3000158",
    "book": "BOOK-FI-2",
    "currency": "EUR",
    "family": "bond",
    "mtm": -214795
   },
   {
-   "tradeId": "BBG-60000004",
+   "tradeId": "CLY-3000160",
    "book": "BOOK-FI-2",
    "currency": "EUR",
    "family": "bond",
    "mtm": -536601
   },
   {
-   "tradeId": "BBG-60000010",
+   "tradeId": "CLY-3000166",
    "book": "BOOK-FI-2",
    "currency": "USD",
    "family": "bond",
    "mtm": -1502288
   },
   {
-   "tradeId": "BBG-60000011",
+   "tradeId": "CLY-3000167",
    "book": "BOOK-FI-2",
    "currency": "GBP",
    "family": "bond",
    "mtm": 1160530
   },
   {
-   "tradeId": "BBG-60000013",
+   "tradeId": "CLY-3000169",
    "book": "BOOK-FI-2",
    "currency": "CAD",
    "family": "bond",
    "mtm": 1050186
   },
   {
-   "tradeId": "BBG-60000016",
+   "tradeId": "CLY-3000172",
    "book": "BOOK-FI-2",
    "currency": "EUR",
    "family": "bond",
    "mtm": -218563
   },
   {
-   "tradeId": "BBG-60000020",
+   "tradeId": "CLY-3000176",
    "book": "BOOK-FI-2",
    "currency": "JPY",
    "family": "bond",
    "mtm": 3464598
   },
   {
-   "tradeId": "BBG-60000023",
+   "tradeId": "CLY-3000179",
    "book": "BOOK-FI-2",
    "currency": "USD",
    "family": "bond",
    "mtm": -1773546
   },
   {
-   "tradeId": "BBG-60000024",
+   "tradeId": "CLY-3000180",
    "book": "BOOK-FI-2",
    "currency": "USD",
    "family": "bond",
    "mtm": -228662
   },
   {
-   "tradeId": "BBG-60000025",
+   "tradeId": "CLY-3000181",
    "book": "BOOK-FI-2",
    "currency": "JPY",
    "family": "bond",
    "mtm": -507927
   },
   {
-   "tradeId": "BBG-60000027",
+   "tradeId": "CLY-3000183",
    "book": "BOOK-FI-2",
    "currency": "EUR",
    "family": "bond",
    "mtm": 3432773
   },
   {
-   "tradeId": "BBG-60000028",
+   "tradeId": "CLY-3000184",
    "book": "BOOK-FI-2",
    "currency": "CHF",
    "family": "bond",
    "mtm": 412203
   },
   {
-   "tradeId": "BBG-60000029",
+   "tradeId": "CLY-3000185",
    "book": "BOOK-FI-2",
    "currency": "USD",
    "family": "bond",
    "mtm": 1197314
   },
   {
-   "tradeId": "BBG-60000031",
+   "tradeId": "CLY-3000187",
    "book": "BOOK-FI-2",
    "currency": "EUR",
    "family": "bond",
    "mtm": -77849
   },
   {
-   "tradeId": "BBG-60000032",
+   "tradeId": "CLY-3000188",
    "book": "BOOK-FI-2",
    "currency": "USD",
    "family": "bond",
    "mtm": -98062
   },
   {
-   "tradeId": "BBG-60000034",
+   "tradeId": "CLY-3000190",
    "book": "BOOK-FI-2",
    "currency": "GBP",
    "family": "bond",
    "mtm": -149583
   },
   {
-   "tradeId": "BBG-60000035",
+   "tradeId": "CLY-3000191",
    "book": "BOOK-FI-2",
    "currency": "JPY",
    "family": "bond",
    "mtm": -942555
   },
   {
-   "tradeId": "BBG-60000042",
+   "tradeId": "CLY-3000198",
    "book": "BOOK-FI-2",
    "currency": "JPY",
    "family": "bond",
    "mtm": 283194
   },
   {
-   "tradeId": "BBG-60000043",
+   "tradeId": "CLY-3000199",
    "book": "BOOK-FI-2",
    "currency": "EUR",
    "family": "bond",
    "mtm": 116910
   },
   {
-   "tradeId": "BBG-60000044",
+   "tradeId": "CLY-3000200",
    "book": "BOOK-FI-2",
    "currency": "EUR",
    "family": "bond",
    "mtm": 518908
   },
   {
-   "tradeId": "BBG-60000052",
+   "tradeId": "CLY-3000208",
    "book": "BOOK-FI-2",
    "currency": "GBP",
    "family": "bond",
    "mtm": 1977148
   },
   {
-   "tradeId": "BBG-60000055",
+   "tradeId": "CLY-3000211",
    "book": "BOOK-FI-2",
    "currency": "GBP",
    "family": "securitized",
    "mtm": -385913
   },
   {
-   "tradeId": "BBG-60000057",
+   "tradeId": "CLY-3000213",
    "book": "BOOK-FI-2",
    "currency": "USD",
    "family": "securitized",
    "mtm": 1211464
   },
   {
-   "tradeId": "BBG-60000062",
+   "tradeId": "CLY-3000218",
    "book": "BOOK-FI-2",
    "currency": "USD",
    "family": "securitized",
    "mtm": -3032972
   },
   {
-   "tradeId": "BBG-60000064",
+   "tradeId": "CLY-3000220",
    "book": "BOOK-FI-2",
    "currency": "CHF",
    "family": "securitized",
    "mtm": -3222264
   },
   {
-   "tradeId": "BBG-60000067",
+   "tradeId": "CLY-3000223",
    "book": "BOOK-FI-2",
    "currency": "GBP",
    "family": "securitized",
    "mtm": 4905373
   },
   {
-   "tradeId": "BBG-60000071",
+   "tradeId": "CLY-3000227",
    "book": "BOOK-FI-2",
    "currency": "GBP",
    "family": "securitized",
    "mtm": 691482
   },
   {
-   "tradeId": "BBG-60000074",
+   "tradeId": "CLY-3000230",
    "book": "BOOK-FI-2",
    "currency": "USD",
    "family": "securitized",
    "mtm": 2819294
   },
   {
-   "tradeId": "BBG-60000078",
+   "tradeId": "CLY-3000234",
    "book": "BOOK-FI-2",
    "currency": "EUR",
    "family": "securitized",
    "mtm": -1673828
   },
   {
-   "tradeId": "BBG-60000001",
+   "tradeId": "CLY-3000157",
    "book": "BOOK-FI-3",
    "currency": "CHF",
    "family": "bond",
    "mtm": -978378
   },
   {
-   "tradeId": "BBG-60000005",
+   "tradeId": "CLY-3000161",
    "book": "BOOK-FI-3",
    "currency": "EUR",
    "family": "bond",
    "mtm": -2577766
   },
   {
-   "tradeId": "BBG-60000006",
+   "tradeId": "CLY-3000162",
    "book": "BOOK-FI-3",
    "currency": "EUR",
    "family": "bond",
    "mtm": 2677879
   },
   {
-   "tradeId": "BBG-60000008",
+   "tradeId": "CLY-3000164",
    "book": "BOOK-FI-3",
    "currency": "CHF",
    "family": "bond",
    "mtm": -380672
   },
   {
-   "tradeId": "BBG-60000009",
+   "tradeId": "CLY-3000165",
    "book": "BOOK-FI-3",
    "currency": "USD",
    "family": "bond",
    "mtm": -230040
   },
   {
-   "tradeId": "BBG-60000012",
+   "tradeId": "CLY-3000168",
    "book": "BOOK-FI-3",
    "currency": "EUR",
    "family": "bond",
    "mtm": 2211267
   },
   {
-   "tradeId": "BBG-60000014",
+   "tradeId": "CLY-3000170",
    "book": "BOOK-FI-3",
    "currency": "USD",
    "family": "bond",
    "mtm": -860534
   },
   {
-   "tradeId": "BBG-60000015",
+   "tradeId": "CLY-3000171",
    "book": "BOOK-FI-3",
    "currency": "JPY",
    "family": "bond",
    "mtm": 929743
   },
   {
-   "tradeId": "BBG-60000033",
+   "tradeId": "CLY-3000189",
    "book": "BOOK-FI-3",
    "currency": "JPY",
    "family": "bond",
    "mtm": 4750454
   },
   {
-   "tradeId": "BBG-60000039",
+   "tradeId": "CLY-3000195",
    "book": "BOOK-FI-3",
    "currency": "USD",
    "family": "bond",
    "mtm": -1903497
   },
   {
-   "tradeId": "BBG-60000041",
+   "tradeId": "CLY-3000197",
    "book": "BOOK-FI-3",
    "currency": "USD",
    "family": "bond",
    "mtm": -566957
   },
   {
-   "tradeId": "BBG-60000046",
+   "tradeId": "CLY-3000202",
    "book": "BOOK-FI-3",
    "currency": "USD",
    "family": "bond",
    "mtm": -686061
   },
   {
-   "tradeId": "BBG-60000047",
+   "tradeId": "CLY-3000203",
    "book": "BOOK-FI-3",
    "currency": "GBP",
    "family": "bond",
    "mtm": -63418
   },
   {
-   "tradeId": "BBG-60000056",
+   "tradeId": "CLY-3000212",
    "book": "BOOK-FI-3",
    "currency": "EUR",
    "family": "securitized",
    "mtm": 298826
   },
   {
-   "tradeId": "BBG-60000058",
+   "tradeId": "CLY-3000214",
    "book": "BOOK-FI-3",
    "currency": "JPY",
    "family": "securitized",
    "mtm": 134772
   },
   {
-   "tradeId": "BBG-60000065",
+   "tradeId": "CLY-3000221",
    "book": "BOOK-FI-3",
    "currency": "USD",
    "family": "securitized",
    "mtm": 173547
   },
   {
-   "tradeId": "BBG-60000066",
+   "tradeId": "CLY-3000222",
    "book": "BOOK-FI-3",
    "currency": "USD",
    "family": "securitized",
    "mtm": -21778
   },
   {
-   "tradeId": "BBG-60000068",
+   "tradeId": "CLY-3000224",
    "book": "BOOK-FI-3",
    "currency": "EUR",
    "family": "securitized",
    "mtm": -756700
   },
   {
-   "tradeId": "BBG-60000070",
+   "tradeId": "CLY-3000226",
    "book": "BOOK-FI-3",
    "currency": "GBP",
    "family": "securitized",
    "mtm": -2614302
   },
   {
-   "tradeId": "BBG-60000072",
+   "tradeId": "CLY-3000228",
    "book": "BOOK-FI-3",
    "currency": "EUR",
    "family": "securitized",
    "mtm": 1276947
   },
   {
-   "tradeId": "BBG-60000073",
+   "tradeId": "CLY-3000229",
    "book": "BOOK-FI-3",
    "currency": "USD",
    "family": "securitized",
    "mtm": 86751
   },
   {
-   "tradeId": "BBG-60000076",
+   "tradeId": "CLY-3000232",
    "book": "BOOK-FI-3",
    "currency": "USD",
    "family": "securitized",
    "mtm": 2168781
   },
   {
-   "tradeId": "BBG-60000077",
+   "tradeId": "CLY-3000233",
    "book": "BOOK-FI-3",
    "currency": "JPY",
    "family": "securitized",

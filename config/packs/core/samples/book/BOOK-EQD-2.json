@@ -7,7 +7,7 @@
  "dv01": 96984,
  "topTrades": [
   {
-   "tradeId": "IMG-400054",
+   "tradeId": "MX-20000210",
    "product": "Equity Asian option",
    "assetClass": "Equity",
    "currency": "USD",
@@ -18,7 +18,7 @@
    "mtm": 4285041
   },
   {
-   "tradeId": "IMG-400118",
+   "tradeId": "MX-20000274",
    "product": "Equity warrant",
    "assetClass": "Equity",
    "currency": "USD",
@@ -29,7 +29,7 @@
    "mtm": 3143714
   },
   {
-   "tradeId": "IMG-400121",
+   "tradeId": "MX-20000277",
    "product": "Convertible bond",
    "assetClass": "Equity",
    "currency": "CAD",
@@ -40,7 +40,7 @@
    "mtm": 3120994
   },
   {
-   "tradeId": "IMG-400004",
+   "tradeId": "MX-20000160",
    "product": "Equity position",
    "assetClass": "Equity",
    "currency": "USD",
@@ -51,7 +51,7 @@
    "mtm": 3106156
   },
   {
-   "tradeId": "IMG-400074",
+   "tradeId": "MX-20000230",
    "product": "Reverse convertible",
    "assetClass": "Equity",
    "currency": "EUR",
@@ -62,7 +62,7 @@
    "mtm": -2940178
   },
   {
-   "tradeId": "IMG-400049",
+   "tradeId": "MX-20000205",
    "product": "Equity Asian option",
    "assetClass": "Equity",
    "currency": "USD",
@@ -73,7 +73,7 @@
    "mtm": 2232719
   },
   {
-   "tradeId": "IMG-400015",
+   "tradeId": "MX-20000171",
    "product": "Single-stock future",
    "assetClass": "Equity",
    "currency": "JPY",
@@ -84,7 +84,7 @@
    "mtm": -2220542
   },
   {
-   "tradeId": "IMG-400046",
+   "tradeId": "MX-20000202",
    "product": "Equity barrier option",
    "assetClass": "Equity",
    "currency": "USD",
@@ -95,7 +95,7 @@
    "mtm": 1866866
   },
   {
-   "tradeId": "IMG-400104",
+   "tradeId": "MX-20000260",
    "product": "Portfolio (basket) swap",
    "assetClass": "Equity",
    "currency": "USD",
@@ -106,7 +106,7 @@
    "mtm": -1863356
   },
   {
-   "tradeId": "IMG-400120",
+   "tradeId": "MX-20000276",
    "product": "Equity warrant",
    "assetClass": "Equity",
    "currency": "USD",

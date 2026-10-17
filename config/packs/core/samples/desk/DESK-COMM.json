@@ -6,21 +6,21 @@
   {
    "id": "BOOK-COMM-1",
    "trades": 28,
-   "mtm": 7191610
+   "mtm": 7760837
   },
   {
    "id": "BOOK-COMM-2",
    "trades": 31,
-   "mtm": 23033724
+   "mtm": 20625722
   },
   {
    "id": "BOOK-COMM-3",
    "trades": 31,
-   "mtm": -13270944
+   "mtm": -13776964
   }
  ],
- "var99": 10949577,
- "mtm": 16954390,
+ "var99": 10946782,
+ "mtm": 14609595,
  "legalEntity": "LE-NY",
  "varResult": "VAR-COMM",
  "assetClasses": [
@@ -28,630 +28,630 @@
  ],
  "positions": [
   {
-   "tradeId": "END-1000003",
+   "tradeId": "MX-20000291",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "future",
    "mtm": 324697
   },
   {
-   "tradeId": "END-1000007",
+   "tradeId": "MX-20000295",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "linear",
    "mtm": -308982
   },
   {
-   "tradeId": "END-1000008",
+   "tradeId": "MX-20000296",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "linear",
    "mtm": 2102537
   },
   {
-   "tradeId": "END-1000012",
+   "tradeId": "MX-20000300",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "linear",
    "mtm": 1033434
   },
   {
-   "tradeId": "END-1000014",
+   "tradeId": "MX-20000302",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "swap",
-   "mtm": -1277334
+   "mtm": -26133
   },
   {
-   "tradeId": "END-1000016",
+   "tradeId": "MX-20000304",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "swap",
-   "mtm": 622129
+   "mtm": -59845
   },
   {
-   "tradeId": "END-1000027",
+   "tradeId": "MX-20000315",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "option",
    "mtm": -1422464
   },
   {
-   "tradeId": "END-1000029",
+   "tradeId": "MX-20000317",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "option",
    "mtm": -2435043
   },
   {
-   "tradeId": "END-1000031",
+   "tradeId": "MX-20000319",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "exotic",
    "mtm": 2118063
   },
   {
-   "tradeId": "END-1000033",
+   "tradeId": "MX-20000321",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "exotic",
    "mtm": -678515
   },
   {
-   "tradeId": "END-1000034",
+   "tradeId": "MX-20000322",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "exotic",
    "mtm": 91560
   },
   {
-   "tradeId": "END-1000035",
+   "tradeId": "MX-20000323",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "exotic",
    "mtm": -2061219
   },
   {
-   "tradeId": "END-1000036",
+   "tradeId": "MX-20000324",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "exotic",
    "mtm": -1215501
   },
   {
-   "tradeId": "END-1000038",
+   "tradeId": "MX-20000326",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "option",
    "mtm": 1233398
   },
   {
-   "tradeId": "END-1000042",
+   "tradeId": "MX-20000330",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "option",
    "mtm": 1250345
   },
   {
-   "tradeId": "END-1000045",
+   "tradeId": "MX-20000333",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "exotic",
    "mtm": 1690310
   },
   {
-   "tradeId": "END-1000046",
+   "tradeId": "MX-20000334",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "exotic",
    "mtm": -1012290
   },
   {
-   "tradeId": "END-1000048",
+   "tradeId": "MX-20000336",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "exotic",
    "mtm": 343104
   },
   {
-   "tradeId": "END-1000052",
+   "tradeId": "MX-20000340",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "linear",
    "mtm": 3656838
   },
   {
-   "tradeId": "END-1000056",
+   "tradeId": "MX-20000344",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "swap",
    "mtm": 1673731
   },
   {
-   "tradeId": "END-1000068",
+   "tradeId": "MX-20000356",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "exotic",
    "mtm": -143212
   },
   {
-   "tradeId": "END-1000073",
+   "tradeId": "MX-20000361",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "future",
    "mtm": 895927
   },
   {
-   "tradeId": "END-1000079",
+   "tradeId": "MX-20000367",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "exotic",
    "mtm": -21313
   },
   {
-   "tradeId": "END-1000080",
+   "tradeId": "MX-20000368",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "exotic",
    "mtm": -21943
   },
   {
-   "tradeId": "END-1000083",
+   "tradeId": "MX-20000371",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "exotic",
    "mtm": 85453
   },
   {
-   "tradeId": "END-1000084",
+   "tradeId": "MX-20000372",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "exotic",
    "mtm": 106922
   },
   {
-   "tradeId": "END-1000086",
+   "tradeId": "MX-20000374",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "linear",
    "mtm": -99778
   },
   {
-   "tradeId": "END-1000087",
+   "tradeId": "MX-20000375",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "linear",
    "mtm": 660756
   },
   {
-   "tradeId": "END-1000002",
+   "tradeId": "MX-20000290",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "future",
    "mtm": 4446305
   },
   {
-   "tradeId": "END-1000004",
+   "tradeId": "MX-20000292",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "future",
    "mtm": 920878
   },
   {
-   "tradeId": "END-1000005",
+   "tradeId": "MX-20000293",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "future",
    "mtm": 828768
   },
   {
-   "tradeId": "END-1000006",
+   "tradeId": "MX-20000294",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "future",
    "mtm": -204528
   },
   {
-   "tradeId": "END-1000009",
+   "tradeId": "MX-20000297",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "linear",
    "mtm": 192680
   },
   {
-   "tradeId": "END-1000010",
+   "tradeId": "MX-20000298",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "linear",
    "mtm": 965771
   },
   {
-   "tradeId": "END-1000011",
+   "tradeId": "MX-20000299",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "linear",
    "mtm": 5446207
   },
   {
-   "tradeId": "END-1000017",
+   "tradeId": "MX-20000305",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "swap",
-   "mtm": 1494618
+   "mtm": 511886
   },
   {
-   "tradeId": "END-1000018",
+   "tradeId": "MX-20000306",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "swap",
-   "mtm": 1166701
+   "mtm": -258569
   },
   {
-   "tradeId": "END-1000019",
+   "tradeId": "MX-20000307",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "swap",
    "mtm": 17280
   },
   {
-   "tradeId": "END-1000021",
+   "tradeId": "MX-20000309",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "swap",
    "mtm": 238821
   },
   {
-   "tradeId": "END-1000023",
+   "tradeId": "MX-20000311",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "swap",
    "mtm": 147584
   },
   {
-   "tradeId": "END-1000025",
+   "tradeId": "MX-20000313",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "option",
    "mtm": -1683518
   },
   {
-   "tradeId": "END-1000039",
+   "tradeId": "MX-20000327",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "option",
    "mtm": -735965
   },
   {
-   "tradeId": "END-1000041",
+   "tradeId": "MX-20000329",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "option",
    "mtm": -209787
   },
   {
-   "tradeId": "END-1000043",
+   "tradeId": "MX-20000331",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "exotic",
    "mtm": 85934
   },
   {
-   "tradeId": "END-1000047",
+   "tradeId": "MX-20000335",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "exotic",
    "mtm": 1874087
   },
   {
-   "tradeId": "END-1000049",
+   "tradeId": "MX-20000337",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "linear",
    "mtm": 813896
   },
   {
-   "tradeId": "END-1000054",
+   "tradeId": "MX-20000342",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "linear",
    "mtm": 3887196
   },
   {
-   "tradeId": "END-1000058",
+   "tradeId": "MX-20000346",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "swap",
    "mtm": 1412345
   },
   {
-   "tradeId": "END-1000059",
+   "tradeId": "MX-20000347",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "swap",
    "mtm": -133332
   },
   {
-   "tradeId": "END-1000060",
+   "tradeId": "MX-20000348",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "swap",
    "mtm": 250034
   },
   {
-   "tradeId": "END-1000061",
+   "tradeId": "MX-20000349",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "swap",
    "mtm": 612018
   },
   {
-   "tradeId": "END-1000069",
+   "tradeId": "MX-20000357",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "exotic",
    "mtm": 2742803
   },
   {
-   "tradeId": "END-1000070",
+   "tradeId": "MX-20000358",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "exotic",
    "mtm": 319975
   },
   {
-   "tradeId": "END-1000071",
+   "tradeId": "MX-20000359",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "exotic",
    "mtm": -632140
   },
   {
-   "tradeId": "END-1000072",
+   "tradeId": "MX-20000360",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "exotic",
    "mtm": -3307013
   },
   {
-   "tradeId": "END-1000075",
+   "tradeId": "MX-20000363",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "future",
    "mtm": 136996
   },
   {
-   "tradeId": "END-1000078",
+   "tradeId": "MX-20000366",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "future",
    "mtm": 1790391
   },
   {
-   "tradeId": "END-1000082",
+   "tradeId": "MX-20000370",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "exotic",
    "mtm": -27326
   },
   {
-   "tradeId": "END-1000085",
+   "tradeId": "MX-20000373",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "linear",
    "mtm": 176045
   },
   {
-   "tradeId": "END-1000001",
+   "tradeId": "MX-20000289",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "future",
    "mtm": -1071563
   },
   {
-   "tradeId": "END-1000013",
+   "tradeId": "MX-20000301",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "swap",
-   "mtm": -19804
+   "mtm": 9501
   },
   {
-   "tradeId": "END-1000015",
+   "tradeId": "MX-20000303",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "swap",
-   "mtm": 560051
+   "mtm": 24726
   },
   {
-   "tradeId": "END-1000020",
+   "tradeId": "MX-20000308",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "swap",
    "mtm": 7168
   },
   {
-   "tradeId": "END-1000022",
+   "tradeId": "MX-20000310",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "swap",
    "mtm": -181371
   },
   {
-   "tradeId": "END-1000024",
+   "tradeId": "MX-20000312",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "swap",
    "mtm": 921164
   },
   {
-   "tradeId": "END-1000026",
+   "tradeId": "MX-20000314",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "option",
    "mtm": 647109
   },
   {
-   "tradeId": "END-1000028",
+   "tradeId": "MX-20000316",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "option",
    "mtm": -3096114
   },
   {
-   "tradeId": "END-1000030",
+   "tradeId": "MX-20000318",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "option",
    "mtm": 78336
   },
   {
-   "tradeId": "END-1000032",
+   "tradeId": "MX-20000320",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "exotic",
    "mtm": -2067469
   },
   {
-   "tradeId": "END-1000037",
+   "tradeId": "MX-20000325",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "option",
    "mtm": -752009
   },
   {
-   "tradeId": "END-1000040",
+   "tradeId": "MX-20000328",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "option",
    "mtm": -1906599
   },
   {
-   "tradeId": "END-1000044",
+   "tradeId": "MX-20000332",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "exotic",
    "mtm": -3234955
   },
   {
-   "tradeId": "END-1000050",
+   "tradeId": "MX-20000338",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "linear",
    "mtm": 1269696
   },
   {
-   "tradeId": "END-1000051",
+   "tradeId": "MX-20000339",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "linear",
    "mtm": -63026
   },
   {
-   "tradeId": "END-1000053",
+   "tradeId": "MX-20000341",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "linear",
    "mtm": 114922
   },
   {
-   "tradeId": "END-1000055",
+   "tradeId": "MX-20000343",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "swap",
    "mtm": -1935705
   },
   {
-   "tradeId": "END-1000057",
+   "tradeId": "MX-20000345",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "swap",
    "mtm": 915725
   },
   {
-   "tradeId": "END-1000062",
+   "tradeId": "MX-20000350",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "swap",
    "mtm": -1890065
   },
   {
-   "tradeId": "END-1000063",
+   "tradeId": "MX-20000351",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "swap",
    "mtm": -833645
   },
   {
-   "tradeId": "END-1000064",
+   "tradeId": "MX-20000352",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "swap",
    "mtm": -653002
   },
   {
-   "tradeId": "END-1000065",
+   "tradeId": "MX-20000353",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "swap",
    "mtm": 2093005
   },
   {
-   "tradeId": "END-1000066",
+   "tradeId": "MX-20000354",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "swap",
    "mtm": -1195681
   },
   {
-   "tradeId": "END-1000067",
+   "tradeId": "MX-20000355",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "exotic",
    "mtm": 441969
   },
   {
-   "tradeId": "END-1000074",
+   "tradeId": "MX-20000362",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "future",
    "mtm": -995401
   },
   {
-   "tradeId": "END-1000076",
+   "tradeId": "MX-20000364",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "future",
    "mtm": 1058377
   },
   {
-   "tradeId": "END-1000077",
+   "tradeId": "MX-20000365",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "future",
    "mtm": -1773998
   },
   {
-   "tradeId": "END-1000081",
+   "tradeId": "MX-20000369",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "exotic",
    "mtm": -121801
   },
   {
-   "tradeId": "END-1000088",
+   "tradeId": "MX-20000376",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "linear",
    "mtm": 847802
   },
   {
-   "tradeId": "END-1000089",
+   "tradeId": "MX-20000377",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "linear",
    "mtm": -1248401
   },
   {
-   "tradeId": "END-1000090",
+   "tradeId": "MX-20000378",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "linear",

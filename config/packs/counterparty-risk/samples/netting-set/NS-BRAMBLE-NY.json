@@ -117,7 +117,7 @@
    "mtm": 2938696
   },
   {
-   "tradeId": "CLY-3000063",
+   "tradeId": "CLY-3000147",
    "product": "Credit spread option",
    "assetClass": "Credit",
    "currency": "EUR",
@@ -128,7 +128,7 @@
    "mtm": -2549257
   },
   {
-   "tradeId": "END-1000047",
+   "tradeId": "MX-20000335",
    "product": "Commodity spread option",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -139,7 +139,7 @@
    "mtm": 1874087
   },
   {
-   "tradeId": "END-1000045",
+   "tradeId": "MX-20000333",
    "product": "Commodity spread option",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -150,7 +150,7 @@
    "mtm": 1690310
   },
   {
-   "tradeId": "END-1000057",
+   "tradeId": "MX-20000345",
    "product": "Commodity index swap",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -161,7 +161,7 @@
    "mtm": 915725
   },
   {
-   "tradeId": "WSS-1500105",
+   "tradeId": "CLY-3000255",
    "product": "Term deposit / placement",
    "assetClass": "Money market",
    "currency": "USD",
@@ -172,7 +172,7 @@
    "mtm": 879743
   },
   {
-   "tradeId": "END-1000033",
+   "tradeId": "MX-20000321",
    "product": "Average price option (APO)",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -194,7 +194,7 @@
    "mtm": 479917
   },
   {
-   "tradeId": "CLY-3000072",
+   "tradeId": "CLY-3000156",
    "product": "Unfunded risk participation",
    "assetClass": "Credit",
    "currency": "AUD",
@@ -227,7 +227,7 @@
    "mtm": 94876
   },
   {
-   "tradeId": "CLY-3000015",
+   "tradeId": "CLY-3000099",
    "product": "Index tranche",
    "assetClass": "Credit",
    "currency": "CAD",
@@ -249,7 +249,7 @@
    "mtm": -47123
   },
   {
-   "tradeId": "END-1000079",
+   "tradeId": "MX-20000367",
    "product": "Weather derivative (HDD/CDD)",
    "assetClass": "Commodity",
    "currency": "USD",

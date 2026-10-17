@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "BBG-60000089",
+   "tradeId": "CLY-3000275",
    "product": "Reverse repo",
    "assetClass": "Securities financing",
    "currency": "USD",
@@ -73,7 +73,7 @@
    "mtm": 2428077
   },
   {
-   "tradeId": "BBG-60000110",
+   "tradeId": "CLY-3000296",
    "product": "Securities borrowing",
    "assetClass": "Securities financing",
    "currency": "CHF",

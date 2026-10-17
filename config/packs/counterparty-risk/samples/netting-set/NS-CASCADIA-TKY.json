@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "IMG-400152",
+   "tradeId": "MX-20000434",
    "product": "Worst-of note",
    "assetClass": "Structured",
    "currency": "JPY",
@@ -73,7 +73,7 @@
    "mtm": -1328010
   },
   {
-   "tradeId": "IMG-400146",
+   "tradeId": "MX-20000428",
    "product": "FX-rates hybrid (PRDC)",
    "assetClass": "Structured",
    "currency": "USD",

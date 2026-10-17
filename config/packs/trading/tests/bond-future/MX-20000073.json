@@ -1,288 +1,150 @@
 {
- "tradeId": "MX-20000073",
- "sourceSystem": "Murex",
- "sourceTradeId": "20000073",
- "productType": "BOND_FUTURE",
- "productName": "Government bond future",
- "assetClass": "Rates",
- "family": "future",
- "status": "Live",
- "direction": "Long",
- "tradeDate": "2026-09-11",
- "effectiveDate": "2026-09-14",
- "maturityDate": "2027-05-28",
- "currency": "GBP",
- "notional": 227000000.0,
- "mtm": -4816627,
- "mtmCurrency": "USD",
- "pnl1d": 106257,
- "counterparty": {
-  "id": "CP-SUMMIT",
-  "name": "Summit Clearing LLC"
- },
- "nettingSet": "NS-SUMMIT-NY",
- "book": "BOOK-RATES-1",
- "trader": "TRDR-ASHAH",
- "desk": "DESK-RATES",
- "legalEntity": "LE-NY",
- "clearingAccount": "CLR-CME-1",
- "benchmarkCurve": "CRV-GBP-GOVT",
- "underlyingBond": "BND-US0UST030079",
- "repoCurve": "REPO-GBP",
- "terms": {
-  "contract": "US Z6",
-  "lots": 689,
-  "ctd": null,
-  "conversionFactor": 0.8425
- },
- "risk": {
-  "dv01": 13414
- },
- "sensitivities": [
+ "SOURCE_SYSTEM": "MUREX",
+ "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z",
+ "TRADE_DATE": "2026-09-11",
+ "INPUT_DATE": "2026-09-11",
+ "TRADE_ID": "MX-20000073",
+ "TRADE_STATUS": "VALIDATED",
+ "TRADE_ACTION": "NEW",
+ "TRADE_VERSION": "1",
+ "TRANSACTION_ID": "20000073001",
+ "PACKAGE_ID": "",
+ "QUANTITY": 689.0,
+ "PRICE": null,
+ "BUY_SELL_CODE": "B",
+ "PRODUCT_TYPE": "BOND_FUTURE",
+ "PRODUCT_SUB_TYPE": "Government bond future",
+ "PRODUCT_GROUP": "Rates",
+ "PRODUCT_SUB_GROUP": "future",
+ "OPTION_TYPE": null,
+ "STRIKE_PRICE": null,
+ "COUNTERPARTY": "CP-SUMMIT",
+ "COUNTERPARTY_UEN": "UEN0100592",
+ "COUNTERPARTY_COUNTRY_OF_RISK": "US",
+ "ORIGINAL_COUNTERPARTY": "",
+ "ORIGINAL_COUNTERPARTY_UEN": "",
+ "INTERNAL_EXTERNAL_CODE": "External",
+ "TRANSIT": "00107",
+ "LEGAL_ENTITY": "LE-NY",
+ "PORTFOLIO": "BOOK-RATES-1",
+ "TRADER_ID": "TRDR-ASHAH",
+ "TRADER_FIRST_NAME": "A.",
+ "TRADER_LAST_NAME": "Shah",
+ "START_DATE": "2026-09-14",
+ "MATURITY_DATE": "2027-05-28",
+ "REGISTRY_DELIVERY_DATE": "",
+ "CURRENCY": "GBP",
+ "DELIVERY_VERSUS_PAYMENT": "NO",
+ "STRATEGY": null,
+ "INTERNAL_TRADING_STRATEGY": "",
+ "NY_CURVE_FLAG": "",
+ "VAULT_LOCATION_ALLOCATION": "",
+ "PRECIOUS_METAL_FLAG": "",
+ "TT_GROUP": "DESK-RATES",
+ "TT_BOOK": "BOOK-RATES-1",
+ "LEASE_PERPETUITY_FLAG": "",
+ "SETTLEMENT_DATE": "2026-09-14",
+ "LEGS": [
   {
-   "bucket": "3M",
-   "dv01": 2236
-  },
-  {
-   "bucket": "6M",
-   "dv01": 4471
-  },
-  {
-   "bucket": "1Y",
-   "dv01": 6707
+   "LEG_ID": 1,
+   "LEG_TYPE": "FIXED",
+   "LEG_ECONOMIC_TYPE": "Pay",
+   "CURRENCY": "GBP",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 227000000.0,
+   "DISCOUNT_INDEX": "",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "",
+   "RESET_HOLIDAY_SCHEDULE": null,
+   "RESET_CONVENTION": "",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "1",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "",
+    "GROUP": "",
+    "SUB_GROUP": ""
+   },
+   "CASH_FLOWS": [
+    {
+     "FLOW_ID": 20000073001,
+     "FLOW_TYPE": "Principal",
+     "NOTIONAL": 227000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-09-14",
+     "END_DATE": "2027-05-28",
+     "PAYMENT_DATE": "2027-05-28",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    }
+   ]
   }
  ],
- "pnlHistory": [
+ "EVENTS": [
   {
-   "date": "2026-09-03",
-   "pnl": -294828
+   "LEG_ID": "",
+   "EVENT_ID": 20000073001,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "BOOKED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-09-11",
+   "AMOUNT": "",
+   "CURRENCY": "GBP",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
   },
   {
-   "date": "2026-09-04",
-   "pnl": 68204
+   "LEG_ID": "",
+   "EVENT_ID": 20000073002,
+   "EVENT_NUMBER": 2,
+   "EVENT_TYPE": "CONFIRMED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-09-11",
+   "AMOUNT": "",
+   "CURRENCY": "GBP",
+   "SEQUENCE_NUMBER": 2,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
   },
   {
-   "date": "2026-09-07",
-   "pnl": -155408
+   "LEG_ID": "",
+   "EVENT_ID": 20000073003,
+   "EVENT_NUMBER": 3,
+   "EVENT_TYPE": "CLEARED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-09-14",
+   "AMOUNT": "",
+   "CURRENCY": "GBP",
+   "SEQUENCE_NUMBER": 3,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
   },
   {
-   "date": "2026-09-08",
-   "pnl": 84974
-  },
-  {
-   "date": "2026-09-09",
-   "pnl": -22646
-  },
-  {
-   "date": "2026-09-10",
-   "pnl": 92622
-  },
-  {
-   "date": "2026-09-11",
-   "pnl": 186615
-  },
-  {
-   "date": "2026-09-14",
-   "pnl": -35054
-  },
-  {
-   "date": "2026-09-15",
-   "pnl": 68091
-  },
-  {
-   "date": "2026-09-16",
-   "pnl": 29460
-  },
-  {
-   "date": "2026-09-17",
-   "pnl": -147430
-  },
-  {
-   "date": "2026-09-18",
-   "pnl": 153859
-  },
-  {
-   "date": "2026-09-21",
-   "pnl": 3374
-  },
-  {
-   "date": "2026-09-22",
-   "pnl": -304538
-  },
-  {
-   "date": "2026-09-23",
-   "pnl": -143027
-  },
-  {
-   "date": "2026-09-24",
-   "pnl": 146209
-  },
-  {
-   "date": "2026-09-25",
-   "pnl": 210000
-  },
-  {
-   "date": "2026-09-28",
-   "pnl": 79273
-  },
-  {
-   "date": "2026-09-29",
-   "pnl": -115162
-  },
-  {
-   "date": "2026-09-30",
-   "pnl": -130729
+   "LEG_ID": "",
+   "EVENT_ID": 20000073004,
+   "EVENT_NUMBER": 4,
+   "EVENT_TYPE": "MATURITY",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2027-05-28",
+   "AMOUNT": "",
+   "CURRENCY": "GBP",
+   "SEQUENCE_NUMBER": 4,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
   }
- ],
- "execution": {
-  "tradeDate": "2026-09-11",
-  "executionTimestamp": "2026-09-11T13:27:22.297Z",
-  "venue": "Tradeweb SEF",
-  "venueMic": "TWSF",
-  "executionType": "Electronic",
-  "trader": "A. Shah",
-  "salesperson": null,
-  "orderId": "ORD-B7255AC2E5"
- },
- "lifecycle": {
-  "status": "Live",
-  "version": 1,
-  "events": [
-   {
-    "version": 1,
-    "event": "New",
-    "reason": "Trade captured",
-    "at": "2026-09-11T11:13:00Z",
-    "by": "stp.gateway"
-   }
-  ],
-  "sourceSystem": "Calypso",
-  "createdAt": "2026-09-11T11:13:00Z",
-  "lastModifiedAt": "2026-09-11T11:13:00Z",
-  "lastModifiedBy": "stp.gateway",
-  "timeline": [
-   {
-    "date": "2026-09-11",
-    "event": "Booked",
-    "status": "Done",
-    "description": "Captured in Murex by TRDR-ASHAH: long Government bond future"
-   },
-   {
-    "date": "2026-09-11",
-    "event": "Confirmed",
-    "status": "Matched",
-    "description": "Matched on MarkitWire (MA179814108)"
-   },
-   {
-    "date": "2026-09-14",
-    "event": "Cleared",
-    "status": "Done",
-    "description": "Novated to LCH SwapClear"
-   },
-   {
-    "date": "2027-05-28",
-    "event": "Maturity",
-    "status": "Scheduled",
-    "description": "Final payment and close-out"
-   }
-  ]
- },
- "confirmation": {
-  "status": "Confirmed",
-  "method": "MarkitWire",
-  "platformId": "MA179814108",
-  "matched": "2026-09-11 10:04",
-  "affirmedBy": "Counterparty ops",
-  "breaks": []
- },
- "clearing": {
-  "status": "Cleared",
-  "mandatory": true,
-  "ccp": "LCH SwapClear",
-  "clearingBroker": "Summit Clearing LLC",
-  "ccpTradeId": "LCH3631106635",
-  "account": "House",
-  "novatedAt": null
- },
- "regulatory": {
-  "uti": "549300O1N13GO2II2096B7255AC2E55CA1C23D39",
-  "upi": "QZ27DXVCIAHN",
-  "reportingRegimes": [
-   "CFTC Part 43/45"
-  ],
-  "reportingParty": "Us",
-  "reportingStatus": "Accepted",
-  "clearingObligation": true,
-  "tradingObligation": true,
-  "mifidClassification": "Professional client",
-  "volckerExempt": false,
-  "saCcrAssetClass": "Interest rate"
- },
- "settlementInstructions": {
-  "method": "CLS",
-  "ourAgent": "Barclays Bank plc",
-  "ourAgentBic": "BARCGB22XXX",
-  "theirAgentBic": "SUMMGB33XXX",
-  "ssiId": "SSI-GBP-6A7EC8",
-  "netting": "Payment netting by currency and value date"
- },
- "valuation": {
-  "asOf": "2026-09-30",
-  "currency": "USD",
-  "npv": -4816627,
-  "cleanPv": -4816627.0,
-  "accrued": 0.0,
-  "legPvs": [],
-  "model": "Discounted cashflows",
-  "curves": [
-   "CRV-GBP-GOVT",
-   "BND-US0UST030079",
-   "REPO-GBP"
-  ],
-  "status": "Official EOD",
-  "runId": "EOD-20260930-01"
- },
- "pnlExplain": [
-  {
-   "step": "Opening MTM",
-   "pnl": -4922884,
-   "total": true
-  },
-  {
-   "step": "Carry",
-   "pnl": 24081
-  },
-  {
-   "step": "Roll-down",
-   "pnl": -31643
-  },
-  {
-   "step": "Rates delta",
-   "pnl": 116598
-  },
-  {
-   "step": "FX delta",
-   "pnl": -427
-  },
-  {
-   "step": "Vol (vega)",
-   "pnl": -4463
-  },
-  {
-   "step": "Theta",
-   "pnl": 7655
-  },
-  {
-   "step": "Unexplained",
-   "pnl": -5544
-  }
- ],
- "_meta": {
-  "source": "murex-rates",
-  "generation": 1,
-  "live": true,
-  "walk": {
-   "mtm": 11903
-  }
- }
+ ]
 }

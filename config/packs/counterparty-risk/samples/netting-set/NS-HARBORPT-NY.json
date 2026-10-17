@@ -1,63 +1,63 @@
 {
  "nettingSetId": "NS-HARBORPT-NY",
  "tradeCount": 14,
- "netMtm": 33345551,
- "collateral": 31085512,
- "eePeak": 6980358,
- "pfePeak": 16238175,
+ "netMtm": 33374856,
+ "collateral": 31112830,
+ "eePeak": 6982112,
+ "pfePeak": 16242033,
  "limit": 34000000.0,
- "utilisation": 0.4776,
- "cva": -6338,
+ "utilisation": 0.4777,
+ "cva": -6340,
  "profile": [
   {
    "tenor": "0",
-   "ee": 4073742,
-   "pfe": 10597083
+   "ee": 4075729,
+   "pfe": 10601454
   },
   {
    "tenor": "1M",
-   "ee": 4282059,
-   "pfe": 10316267
+   "ee": 4284005,
+   "pfe": 10320549
   },
   {
    "tenor": "3M",
-   "ee": 5688910,
-   "pfe": 13407052
+   "ee": 5690777,
+   "pfe": 13411159
   },
   {
    "tenor": "6M",
-   "ee": 6980358,
-   "pfe": 16238175
+   "ee": 6982112,
+   "pfe": 16242033
   },
   {
    "tenor": "1Y",
-   "ee": 3569620,
-   "pfe": 8079352
+   "ee": 3571168,
+   "pfe": 8082756
   },
   {
    "tenor": "2Y",
-   "ee": 2620099,
-   "pfe": 5874643
+   "ee": 2621304,
+   "pfe": 5877295
   },
   {
    "tenor": "3Y",
-   "ee": 2597661,
-   "pfe": 5825278
+   "ee": 2598599,
+   "pfe": 5827343
   },
   {
    "tenor": "5Y",
-   "ee": 2311370,
-   "pfe": 5178027
+   "ee": 2311939,
+   "pfe": 5179279
   },
   {
    "tenor": "7Y",
-   "ee": 1020573,
-   "pfe": 2274922
+   "ee": 1020918,
+   "pfe": 2275682
   },
   {
    "tenor": "10Y",
-   "ee": 296195,
-   "pfe": 656004
+   "ee": 296358,
+   "pfe": 656363
   }
  ],
  "trades": [
@@ -106,7 +106,7 @@
    "mtm": -2963153
   },
   {
-   "tradeId": "END-1000008",
+   "tradeId": "MX-20000296",
    "product": "Commodity forward",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -117,7 +117,7 @@
    "mtm": 2102537
   },
   {
-   "tradeId": "WSS-1500103",
+   "tradeId": "CLY-3000253",
    "product": "Term deposit / placement",
    "assetClass": "Money market",
    "currency": "AUD",
@@ -128,7 +128,7 @@
    "mtm": 1944745
   },
   {
-   "tradeId": "WSS-1500095",
+   "tradeId": "CLY-3000245",
    "product": "Commercial paper",
    "assetClass": "Money market",
    "currency": "JPY",
@@ -150,7 +150,7 @@
    "mtm": 634079
   },
   {
-   "tradeId": "CLY-3000032",
+   "tradeId": "CLY-3000116",
    "product": "Total return swap on a bond",
    "assetClass": "Credit",
    "currency": "USD",
@@ -172,7 +172,7 @@
    "mtm": 244842
   },
   {
-   "tradeId": "BBG-60000075",
+   "tradeId": "CLY-3000231",
    "product": "CLO tranche",
    "assetClass": "Fixed income",
    "currency": "EUR",
@@ -183,7 +183,7 @@
    "mtm": 187425
   },
   {
-   "tradeId": "WSS-1500093",
+   "tradeId": "CLY-3000243",
    "product": "Commercial paper",
    "assetClass": "Money market",
    "currency": "CAD",
@@ -194,7 +194,7 @@
    "mtm": 147333
   },
   {
-   "tradeId": "CLY-3000007",
+   "tradeId": "CLY-3000091",
    "product": "CDS index (CDX / iTraxx)",
    "assetClass": "Credit",
    "currency": "USD",
@@ -205,15 +205,15 @@
    "mtm": 21107
   },
   {
-   "tradeId": "END-1000013",
+   "tradeId": "MX-20000301",
    "product": "Commodity swap",
    "assetClass": "Commodity",
    "currency": "USD",
    "book": "BOOK-COMM-3",
    "notional": 208000000.0,
-   "maturity": "2027-08-31",
+   "maturity": "2027-05-31",
    "maturityBucket": "0-1Y",
-   "mtm": -19804
+   "mtm": 9501
   }
  ],
  "byAsset": [
@@ -223,7 +223,7 @@
   },
   {
    "asset": "Commodity",
-   "mtm": 2082733
+   "mtm": 2112038
   },
   {
    "asset": "Money market",
@@ -267,7 +267,7 @@
    "trades.10.mtm": 775,
    "trades.11.mtm": 695,
    "trades.12.mtm": 442,
-   "trades.13.mtm": 440,
+   "trades.13.mtm": 419,
    "eePeak": {
     "step": 0.004,
     "mode": "rel",

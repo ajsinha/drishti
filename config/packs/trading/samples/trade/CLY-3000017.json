@@ -1,386 +1,141 @@
 {
- "tradeId": "CLY-3000017",
- "sourceSystem": "Calypso",
- "sourceTradeId": "3000017",
- "productType": "CDS_TRANCHE",
- "productName": "Index tranche",
- "assetClass": "Credit",
- "family": "cds",
- "status": "Live",
- "direction": "Sell protection",
- "tradeDate": "2026-02-06",
- "effectiveDate": "2026-02-09",
- "maturityDate": "2031-09-23",
- "currency": "CHF",
- "notional": 37000000.0,
- "mtm": -257129,
- "mtmCurrency": "USD",
- "pnl1d": 4604,
- "counterparty": {
-  "id": "CP-NORTHBRIDGE",
-  "name": "Northbridge Capital LLP"
- },
- "nettingSet": "NS-NORTHBRIDGE-NY",
- "book": "BOOK-CREDIT-3",
- "trader": "TRDR-DWHITFIELD",
- "desk": "DESK-CREDIT",
- "legalEntity": "LE-NY",
- "issuer": "ISS-VERDANT",
- "creditCurve": "CDS-VERDANT",
- "discountCurve": "CRV-CHF-OIS",
- "correlation": "CORR-US-EQ",
- "terms": {
-  "index": "CDX.NA.IG S47",
-  "attachment": "0.15",
-  "detachment": "0.15",
-  "protection": "Bought"
- },
- "risk": {
-  "cs01": -17807,
-  "jtd": -22200000
- },
- "sensitivities": [
+ "SOURCE_SYSTEM": "CALYPSO",
+ "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z",
+ "TRADE_DATE": "2024-11-27",
+ "INPUT_DATE": "2024-11-27",
+ "TRADE_ID": "CLY-3000017",
+ "TRADE_STATUS": "VALIDATED",
+ "TRADE_ACTION": "NEW",
+ "TRADE_VERSION": "1",
+ "TRANSACTION_ID": "3000017001",
+ "PACKAGE_ID": "",
+ "QUANTITY": 78000000.0,
+ "PRICE": 6.2176,
+ "BUY_SELL_CODE": "B",
+ "PRODUCT_TYPE": "FX_NDF",
+ "PRODUCT_SUB_TYPE": "Non-deliverable forward",
+ "PRODUCT_GROUP": "FX",
+ "PRODUCT_SUB_GROUP": "linear",
+ "OPTION_TYPE": null,
+ "STRIKE_PRICE": null,
+ "COUNTERPARTY": "CP-KESTREL",
+ "COUNTERPARTY_UEN": "UEN0100296",
+ "COUNTERPARTY_COUNTRY_OF_RISK": "KY",
+ "ORIGINAL_COUNTERPARTY": "",
+ "ORIGINAL_COUNTERPARTY_UEN": "",
+ "INTERNAL_EXTERNAL_CODE": "External",
+ "TRANSIT": "00214",
+ "LEGAL_ENTITY": "LE-LDN",
+ "PORTFOLIO": "BOOK-FX-3",
+ "TRADER_ID": "TRDR-ENOVAK",
+ "TRADER_FIRST_NAME": "E.",
+ "TRADER_LAST_NAME": "Novak",
+ "START_DATE": "2024-11-29",
+ "MATURITY_DATE": "2026-10-07",
+ "REGISTRY_DELIVERY_DATE": "",
+ "CURRENCY": "USD",
+ "DELIVERY_VERSUS_PAYMENT": "NO",
+ "STRATEGY": null,
+ "INTERNAL_TRADING_STRATEGY": "",
+ "NY_CURVE_FLAG": "",
+ "VAULT_LOCATION_ALLOCATION": "",
+ "PRECIOUS_METAL_FLAG": "",
+ "TT_GROUP": "DESK-FX",
+ "TT_BOOK": "BOOK-FX-3",
+ "LEASE_PERPETUITY_FLAG": "",
+ "SETTLEMENT_DATE": "2024-11-29",
+ "LEGS": [
   {
-   "bucket": "6M",
-   "cs01": -1187,
-   "jtd": -1480000
-  },
-  {
-   "bucket": "1Y",
-   "cs01": -2374,
-   "jtd": -2960000
-  },
-  {
-   "bucket": "2Y",
-   "cs01": -3561,
-   "jtd": -4440000
-  },
-  {
-   "bucket": "3Y",
-   "cs01": -4749,
-   "jtd": -5920000
-  },
-  {
-   "bucket": "5Y",
-   "cs01": -5936,
-   "jtd": -7400000
-  }
- ],
- "schedule": [
-  {
-   "payDate": "2027-02-09",
-   "leg": 1,
-   "type": "Premium",
-   "rate": 0.01,
-   "amount": -100278.92,
-   "pv": -97270.55,
-   "status": "Scheduled"
-  },
-  {
-   "payDate": "2028-02-09",
-   "leg": 1,
-   "type": "Premium",
-   "rate": 0.01,
-   "amount": -82246.78,
-   "pv": -79779.38,
-   "status": "Scheduled"
-  },
-  {
-   "payDate": "2029-02-09",
-   "leg": 1,
-   "type": "Premium",
-   "rate": 0.01,
-   "amount": -102892.37,
-   "pv": -99805.6,
-   "status": "Scheduled"
-  },
-  {
-   "payDate": "2030-02-09",
-   "leg": 1,
-   "type": "Premium",
-   "rate": 0.01,
-   "amount": -96450.25,
-   "pv": -93556.74,
-   "status": "Scheduled"
-  },
-  {
-   "payDate": "2031-02-09",
-   "leg": 1,
-   "type": "Premium",
-   "rate": 0.01,
-   "amount": -92333.26,
-   "pv": -89563.26,
-   "status": "Scheduled"
-  },
-  {
-   "payDate": "2031-09-23",
-   "leg": 1,
-   "type": "Premium",
-   "rate": 0.01,
-   "amount": -85703.09,
-   "pv": -83132.0,
-   "status": "Scheduled"
-  }
- ],
- "nextIndex": 0,
- "pnlHistory": [
-  {
-   "date": "2026-09-03",
-   "pnl": -16860
-  },
-  {
-   "date": "2026-09-04",
-   "pnl": 15470
-  },
-  {
-   "date": "2026-09-07",
-   "pnl": 11870
-  },
-  {
-   "date": "2026-09-08",
-   "pnl": 5454
-  },
-  {
-   "date": "2026-09-09",
-   "pnl": -2165
-  },
-  {
-   "date": "2026-09-10",
-   "pnl": -6465
-  },
-  {
-   "date": "2026-09-11",
-   "pnl": 2151
-  },
-  {
-   "date": "2026-09-14",
-   "pnl": 6627
-  },
-  {
-   "date": "2026-09-15",
-   "pnl": -3378
-  },
-  {
-   "date": "2026-09-16",
-   "pnl": -12551
-  },
-  {
-   "date": "2026-09-17",
-   "pnl": -876
-  },
-  {
-   "date": "2026-09-18",
-   "pnl": -8298
-  },
-  {
-   "date": "2026-09-21",
-   "pnl": -873
-  },
-  {
-   "date": "2026-09-22",
-   "pnl": -7483
-  },
-  {
-   "date": "2026-09-23",
-   "pnl": -2832
-  },
-  {
-   "date": "2026-09-24",
-   "pnl": 3229
-  },
-  {
-   "date": "2026-09-25",
-   "pnl": 4287
-  },
-  {
-   "date": "2026-09-28",
-   "pnl": -4766
-  },
-  {
-   "date": "2026-09-29",
-   "pnl": 7524
-  },
-  {
-   "date": "2026-09-30",
-   "pnl": 5686
-  }
- ],
- "execution": {
-  "tradeDate": "2026-02-06",
-  "executionTimestamp": "2026-02-06T14:50:07.426Z",
-  "venue": "MarketAxess",
-  "venueMic": "MAEL",
-  "executionType": "Electronic",
-  "trader": "D. Whitfield",
-  "salesperson": null,
-  "orderId": "ORD-DB0356630F"
- },
- "lifecycle": {
-  "status": "Live",
-  "version": 2,
-  "events": [
-   {
-    "version": 1,
-    "event": "New",
-    "reason": "Trade captured",
-    "at": "2026-02-06T11:52:00Z",
-    "by": "stp.gateway"
+   "LEG_ID": 1,
+   "LEG_TYPE": "FIXED",
+   "LEG_ECONOMIC_TYPE": "Pay",
+   "CURRENCY": "USD",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 78000000.0,
+   "DISCOUNT_INDEX": "CRV-USD-OIS",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "",
+   "RESET_HOLIDAY_SCHEDULE": null,
+   "RESET_CONVENTION": "",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "1",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "",
+    "GROUP": "",
+    "SUB_GROUP": ""
    },
-   {
-    "version": 2,
-    "event": "Amendment",
-    "reason": "Notional corrected",
-    "at": "2026-04-06T11:52:00Z",
-    "by": "mo.amend"
-   }
-  ],
-  "sourceSystem": "Summit",
-  "createdAt": "2026-02-06T11:52:00Z",
-  "lastModifiedAt": "2026-04-06T11:52:00Z",
-  "lastModifiedBy": "mo.amend",
-  "timeline": [
-   {
-    "date": "2026-02-06",
-    "event": "Booked",
-    "status": "Done",
-    "description": "Captured in Calypso by TRDR-DWHITFIELD: sell protection Index tranche"
-   },
-   {
-    "date": "2026-02-06",
-    "event": "Confirmed",
-    "status": "Matched",
-    "description": "Matched on MarkitWire (MA705767226)"
-   },
-   {
-    "date": "2026-04-06",
-    "event": "Amended",
-    "status": "Done",
-    "description": "Notional corrected (version 2, by mo.amend)"
-   },
-   {
-    "date": "2027-02-09",
-    "event": "Next payment",
-    "status": "Pending",
-    "description": "Scheduled; settlement instructions confirmed"
-   },
-   {
-    "date": "2031-09-23",
-    "event": "Maturity",
-    "status": "Scheduled",
-    "description": "Final payment and close-out"
-   }
-  ]
- },
- "confirmation": {
-  "status": "Confirmed",
-  "method": "MarkitWire",
-  "platformId": "MA705767226",
-  "matched": "2026-02-06 16:04",
-  "affirmedBy": "Counterparty ops",
-  "breaks": []
- },
- "clearing": {
-  "status": "Bilateral",
-  "mandatory": false,
-  "reason": "Counterparty below clearing threshold"
- },
- "regulatory": {
-  "uti": "549300O1N13GO2II2096DB0356630F26BFFF2B61",
-  "upi": "QZDTBHN24KLI",
-  "reportingRegimes": [
-   "CFTC Part 43/45"
-  ],
-  "reportingParty": "Us",
-  "reportingStatus": "Accepted",
-  "clearingObligation": false,
-  "tradingObligation": false,
-  "mifidClassification": "Professional client",
-  "volckerExempt": false,
-  "saCcrAssetClass": "Credit"
- },
- "settlementInstructions": {
-  "method": "CLS",
-  "ourAgent": "JPMorgan Chase Bank, N.A.",
-  "ourAgentBic": "CHASUS33XXX",
-  "theirAgentBic": "NORTGB33XXX",
-  "ssiId": "SSI-CHF-A0C7C2",
-  "netting": "Payment netting by currency and value date"
- },
- "valuation": {
-  "asOf": "2026-09-30",
-  "currency": "USD",
-  "npv": -257129,
-  "cleanPv": -257129.0,
-  "accrued": 0.0,
-  "legPvs": [],
-  "model": "Discounted cashflows",
-  "curves": [
-   "CDS-VERDANT",
-   "CRV-CHF-OIS",
-   "CORR-US-EQ"
-  ],
-  "status": "Official EOD",
-  "runId": "EOD-20260930-01"
- },
- "pnlExplain": [
-  {
-   "step": "Opening MTM",
-   "pnl": -261733,
-   "total": true
-  },
-  {
-   "step": "Carry",
-   "pnl": 549
-  },
-  {
-   "step": "Roll-down",
-   "pnl": 300
-  },
-  {
-   "step": "Rates delta",
-   "pnl": 3791
-  },
-  {
-   "step": "FX delta",
-   "pnl": -202
-  },
-  {
-   "step": "Vol (vega)",
-   "pnl": 34
-  },
-  {
-   "step": "Theta",
-   "pnl": 59
-  },
-  {
-   "step": "Unexplained",
-   "pnl": 73
-  }
- ],
- "_meta": {
-  "source": "murex-credit",
-  "generation": 1,
-  "live": false,
-  "walk": {
-   "mtm": 884,
-   "derive": [
+   "CASH_FLOWS": [
     {
-     "set": "valuation.npv",
-     "expr": "$.mtm"
-    },
-    {
-     "set": "valuation.cleanPv",
-     "expr": "$.mtm - valuation.accrued"
-    },
-    {
-     "set": "pnl1d",
-     "expr": "$.mtm - pnlExplain.0.pnl"
-    },
-    {
-     "set": "pnlExplain.3.pnl",
-     "expr": "pnlExplain.3.pnl + ($.mtm - sum(pnlExplain.*.pnl))"
+     "FLOW_ID": 3000017001,
+     "FLOW_TYPE": "Principal",
+     "NOTIONAL": 78000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2024-11-29",
+     "END_DATE": "2026-10-07",
+     "PAYMENT_DATE": "2026-10-07",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
     }
    ]
   }
+ ],
+ "EVENTS": [
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 3000017001,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "BOOKED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2024-11-27",
+   "AMOUNT": "",
+   "CURRENCY": "USD",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 3000017002,
+   "EVENT_NUMBER": 2,
+   "EVENT_TYPE": "CONFIRMED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2024-11-27",
+   "AMOUNT": "",
+   "CURRENCY": "USD",
+   "SEQUENCE_NUMBER": 2,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 3000017003,
+   "EVENT_NUMBER": 3,
+   "EVENT_TYPE": "MATURITY",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-10-07",
+   "AMOUNT": "",
+   "CURRENCY": "USD",
+   "SEQUENCE_NUMBER": 3,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  }
+ ],
+ "_meta": {
+  "source": "calypso",
+  "generation": 1
  }
 }

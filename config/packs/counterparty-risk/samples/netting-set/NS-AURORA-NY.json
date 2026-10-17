@@ -1,63 +1,63 @@
 {
  "nettingSetId": "NS-AURORA-NY",
  "tradeCount": 21,
- "netMtm": 45059312,
- "collateral": 35055569,
- "eePeak": 31161379,
- "pfePeak": 70462883,
+ "netMtm": 44523987,
+ "collateral": 34639093,
+ "eePeak": 31105238,
+ "pfePeak": 70339374,
  "limit": 148000000.0,
- "utilisation": 0.4761,
- "cva": -9303,
+ "utilisation": 0.4753,
+ "cva": -9281,
  "profile": [
   {
    "tenor": "0",
-   "ee": 13224998,
-   "pfe": 31998596
+   "ee": 13106149,
+   "pfe": 31737128
   },
   {
    "tenor": "1M",
-   "ee": 16478008,
-   "pfe": 39144367
+   "ee": 16361609,
+   "pfe": 38888290
   },
   {
    "tenor": "3M",
-   "ee": 20933647,
-   "pfe": 48938023
+   "ee": 20821999,
+   "pfe": 48692397
   },
   {
    "tenor": "6M",
-   "ee": 21898080,
-   "pfe": 50486214
+   "ee": 21793197,
+   "pfe": 50255470
   },
   {
    "tenor": "1Y",
-   "ee": 23300823,
-   "pfe": 53200548
+   "ee": 23208263,
+   "pfe": 52996917
   },
   {
    "tenor": "2Y",
-   "ee": 27652436,
-   "pfe": 62743208
+   "ee": 27580350,
+   "pfe": 62584620
   },
   {
    "tenor": "3Y",
-   "ee": 31161379,
-   "pfe": 70462883
+   "ee": 31105238,
+   "pfe": 70339374
   },
   {
    "tenor": "5Y",
-   "ee": 28035302,
-   "pfe": 63084663
+   "ee": 28001251,
+   "pfe": 63009752
   },
   {
    "tenor": "7Y",
-   "ee": 7857484,
-   "pfe": 17575564
+   "ee": 7836831,
+   "pfe": 17530127
   },
   {
    "tenor": "10Y",
-   "ee": 821157,
-   "pfe": 1806546
+   "ee": 811402,
+   "pfe": 1785083
   }
  ],
  "trades": [
@@ -73,7 +73,7 @@
    "mtm": 36329052
   },
   {
-   "tradeId": "END-1000065",
+   "tradeId": "MX-20000353",
    "product": "Power swap",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": 2093005
   },
   {
-   "tradeId": "WSS-1500106",
+   "tradeId": "CLY-3000256",
    "product": "Term deposit / placement",
    "assetClass": "Money market",
    "currency": "EUR",
@@ -95,7 +95,7 @@
    "mtm": 2024594
   },
   {
-   "tradeId": "CLY-3000040",
+   "tradeId": "CLY-3000124",
    "product": "Total return swap on a loan index",
    "assetClass": "Credit",
    "currency": "CAD",
@@ -106,7 +106,7 @@
    "mtm": 1798395
   },
   {
-   "tradeId": "CLY-3000056",
+   "tradeId": "CLY-3000140",
    "product": "Revolving credit facility",
    "assetClass": "Credit",
    "currency": "GBP",
@@ -117,7 +117,7 @@
    "mtm": 1256638
   },
   {
-   "tradeId": "CLY-3000012",
+   "tradeId": "CLY-3000096",
    "product": "CDS index (CDX / iTraxx)",
    "assetClass": "Credit",
    "currency": "USD",
@@ -128,7 +128,7 @@
    "mtm": 1209105
   },
   {
-   "tradeId": "END-1000066",
+   "tradeId": "MX-20000354",
    "product": "Power swap",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -150,7 +150,7 @@
    "mtm": -1029330
   },
   {
-   "tradeId": "END-1000024",
+   "tradeId": "MX-20000312",
    "product": "Commodity basis swap",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -161,7 +161,7 @@
    "mtm": 921164
   },
   {
-   "tradeId": "END-1000090",
+   "tradeId": "MX-20000378",
    "product": "Freight forward agreement",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -183,7 +183,7 @@
    "mtm": 798724
   },
   {
-   "tradeId": "BBG-60000068",
+   "tradeId": "CLY-3000224",
    "product": "Asset-backed security",
    "assetClass": "Fixed income",
    "currency": "EUR",
@@ -205,18 +205,7 @@
    "mtm": 567048
   },
   {
-   "tradeId": "END-1000015",
-   "product": "Commodity swap",
-   "assetClass": "Commodity",
-   "currency": "USD",
-   "book": "BOOK-COMM-3",
-   "notional": 171000000.0,
-   "maturity": "2027-02-28",
-   "maturityBucket": "0-1Y",
-   "mtm": 560051
-  },
-  {
-   "tradeId": "WSS-1500114",
+   "tradeId": "CLY-3000264",
    "product": "Call account",
    "assetClass": "Money market",
    "currency": "GBP",
@@ -271,7 +260,18 @@
    "mtm": 37699
   },
   {
-   "tradeId": "END-1000020",
+   "tradeId": "MX-20000303",
+   "product": "Commodity swap",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-3",
+   "notional": 171000000.0,
+   "maturity": "2026-12-31",
+   "maturityBucket": "0-1Y",
+   "mtm": 24726
+  },
+  {
+   "tradeId": "MX-20000308",
    "product": "Commodity basis swap",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -282,7 +282,7 @@
    "mtm": 7168
   },
   {
-   "tradeId": "CLY-3000004",
+   "tradeId": "CLY-3000088",
    "product": "Single-name CDS",
    "assetClass": "Credit",
    "currency": "USD",
@@ -304,7 +304,7 @@
   },
   {
    "asset": "Commodity",
-   "mtm": 3200048
+   "mtm": 2664723
   },
   {
    "asset": "Money market",
@@ -344,12 +344,12 @@
    "trades.10.mtm": 1997,
    "trades.11.mtm": 1913,
    "trades.12.mtm": 1534,
-   "trades.13.mtm": 1520,
-   "trades.14.mtm": 1184,
-   "trades.15.mtm": 1152,
-   "trades.16.mtm": 827,
-   "trades.17.mtm": 693,
-   "trades.18.mtm": 475,
+   "trades.13.mtm": 1184,
+   "trades.14.mtm": 1152,
+   "trades.15.mtm": 827,
+   "trades.16.mtm": 693,
+   "trades.17.mtm": 475,
+   "trades.18.mtm": 449,
    "trades.19.mtm": 414,
    "trades.20.mtm": 401,
    "eePeak": {
@@ -363,7 +363,7 @@
    "derive": [
     {
      "set": "byAsset.0.mtm",
-     "expr": "trades.0.mtm + trades.7.mtm + trades.10.mtm + trades.12.mtm + trades.15.mtm + trades.16.mtm + trades.17.mtm + trades.18.mtm"
+     "expr": "trades.0.mtm + trades.7.mtm + trades.10.mtm + trades.12.mtm + trades.14.mtm + trades.15.mtm + trades.16.mtm + trades.17.mtm"
     },
     {
      "set": "byAsset.1.mtm",
@@ -371,11 +371,11 @@
     },
     {
      "set": "byAsset.2.mtm",
-     "expr": "trades.1.mtm + trades.6.mtm + trades.8.mtm + trades.9.mtm + trades.13.mtm + trades.19.mtm"
+     "expr": "trades.1.mtm + trades.6.mtm + trades.8.mtm + trades.9.mtm + trades.18.mtm + trades.19.mtm"
     },
     {
      "set": "byAsset.3.mtm",
-     "expr": "trades.2.mtm + trades.14.mtm"
+     "expr": "trades.2.mtm + trades.13.mtm"
     },
     {
      "set": "byAsset.4.mtm",

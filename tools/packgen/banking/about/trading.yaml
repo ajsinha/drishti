@@ -215,55 +215,162 @@ vocabulary:
   fxDelta: { term: "FX delta", means: "The change in value for a small move in the exchange rate against the reporting currency.", unit: "USD" }
   gamma: { term: "Gamma", means: "How much the option's delta changes for a move in the underlying; it measures the curvature of the value.", unit: "USD" }
   vega: { term: "Vega", means: "The change in value for a one-point rise in implied volatility.", unit: "USD per vol point" }
+  # the production-shaped trade (tools/packgen/trades/schema.py): the same upper-snake attributes in every source system
+  SOURCE_SYSTEM: { term: "Source system", means: "The booking system the trade comes from: ENDUR, CALYPSO or MUREX. Each feeds the trade view through a connector of its own." }
+  SOURCE_UPDATE_TIME: { term: "Updated in the source", means: "When the booking system last changed the trade; blank when the extract does not say." }
+  TRADE_DATE: { term: "Trade date", means: "The day the trade was agreed." }
+  INPUT_DATE: { term: "Input date", means: "The day the trade was entered in the booking system; it can be after the trade date." }
+  TRADE_ID: { term: "Trade id", means: "The trade's number, unique across the source systems: Endur deals are plain numbers, Calypso trades CLY-..., Murex trades MX-..." }
+  TRADE_STATUS:
+    term: "Trade status"
+    means: "Where the trade is in its life in the booking system."
+    values:
+      VALIDATED: "Checked and live."
+      NEW: "Entered, not yet validated."
+      AMENDED: "Changed after it was validated; its version went up."
+      MATURED: "Past its last date."
+      CANCELLED: "Cancelled; kept for the record."
+  TRADE_ACTION: { term: "Trade action", means: "What the last change to the trade was: NEW when it was booked, AMEND when it was changed." }
+  TRADE_VERSION: { term: "Version", means: "The version of the trade record; it goes up with every amendment." }
+  TRANSACTION_ID: { term: "Transaction number", means: "The number of this version of the trade in the booking system; it changes with every amendment while the trade id stays." }
+  PACKAGE_ID: { term: "Package", means: "The package the trade was dealt in with others, if any." }
+  QUANTITY: { term: "Quantity", means: "The trade's total quantity: units of the commodity (in the leg's price unit), or the amount of a cash or rates trade." }
+  PRICE: { term: "Price", means: "The trade's price or rate as dealt: a fixed price per unit, a bond price, or a rate (as a fraction a year)." }
+  BUY_SELL_CODE:
+    term: "Buy or sell"
+    means: "Which side of the trade the bank is on."
+    values:
+      B: "The bank bought (or pays fixed, or buys protection)."
+      S: "The bank sold."
+  PRODUCT_TYPE: { term: "Product type", means: "What the trade is, as the booking system types it; it picks the trade's screen." }
+  PRODUCT_SUB_TYPE: { term: "Product sub type", means: "The finer type within the product type." }
+  PRODUCT_GROUP: { term: "Product group", means: "The asset class or product family." }
+  PRODUCT_SUB_GROUP: { term: "Product sub group", means: "The product family within the group." }
+  OPTION_TYPE: { term: "Option type", means: "Call or put (or payer or receiver, cap or floor) for an option; blank otherwise." }
+  STRIKE_PRICE: { term: "Strike", means: "The price or rate at which an option is exercised, or a flow's fixed price." }
+  COUNTERPARTY: { term: "Counterparty", means: "The party on the other side of the trade (its id in the core pack)." }
+  COUNTERPARTY_UEN: { term: "Counterparty UEN", means: "The counterparty's unique entity number." }
+  COUNTERPARTY_COUNTRY_OF_RISK: { term: "Country of risk", means: "The country whose events would most affect the counterparty's ability to pay." }
+  ORIGINAL_COUNTERPARTY: { term: "Original counterparty", means: "The counterparty the trade was first dealt with, when it was novated to another." }
+  ORIGINAL_COUNTERPARTY_UEN: { term: "Original counterparty UEN", means: "The unique entity number of the original counterparty." }
+  INTERNAL_EXTERNAL_CODE: { term: "Internal or external", means: "External for a trade with a client or a market counterparty; internal (Portfolio) for one between two of the bank's books." }
+  TRANSIT: { term: "Transit", means: "The bank's transit number for the booking: text, so its leading zeros are kept." }
+  LEGAL_ENTITY: { term: "Legal entity", means: "The bank's legal entity that booked the trade." }
+  PORTFOLIO: { term: "Portfolio", means: "The portfolio (book) the trade is held in." }
+  TRADER_ID: { term: "Trader", means: "The trader who dealt the trade." }
+  TRADER_FIRST_NAME: { term: "Trader first name", means: "The trader's first name, as the booking system keeps it." }
+  TRADER_LAST_NAME: { term: "Trader last name", means: "The trader's last name, as the booking system keeps it." }
+  START_DATE: { term: "Start date", means: "The day the trade, the flow or the reset period starts." }
+  MATURITY_DATE: { term: "Maturity date", means: "The trade's last day (an option's expiry)." }
+  REGISTRY_DELIVERY_DATE: { term: "Registry delivery date", means: "The day a registered instrument (an emission allowance) is delivered." }
+  CURRENCY: { term: "Currency", means: "The currency of the trade, of the leg or of the event." }
+  DELIVERY_VERSUS_PAYMENT: { term: "Delivery versus payment", means: "YES when the instrument and the cash change hands together." }
+  STRATEGY: { term: "Strategy", means: "The trading strategy the trade belongs to, if any." }
+  INTERNAL_TRADING_STRATEGY: { term: "Internal trading strategy", means: "The bank's own strategy code for the trade, if any." }
+  NY_CURVE_FLAG: { term: "New York curve", means: "Whether the trade or leg is valued on the New York close curves." }
+  VAULT_LOCATION_ALLOCATION: { term: "Vault location", means: "Where a physical metal is held." }
+  PRECIOUS_METAL_FLAG: { term: "Precious metal", means: "Y when the trade is in a precious metal." }
+  TT_GROUP: { term: "Desk (trade tracking)", means: "The desk the trade-tracking system files the trade under." }
+  TT_BOOK: { term: "Book (trade tracking)", means: "The book the trade-tracking system files the trade under." }
+  LEASE_PERPETUITY_FLAG: { term: "Lease perpetuity", means: "Whether a metal lease runs until called." }
+  SETTLEMENT_DATE: { term: "Settlement date", means: "The day the trade settles." }
+  LEGS: { term: "Legs", means: "The trade's legs: each its own stream of flows (fixed and floating, pay and receive, delivery and payment)." }
+  EVENTS: { term: "Events", means: "Cash and lifecycle events of the trade, each naming its leg (blank for the whole deal)." }
+  LEG_ID: { term: "Leg", means: "The leg's number within the trade; an event names the leg it belongs to." }
+  LEG_TYPE: { term: "Leg type", means: "FIXED or FLOAT (a price or rate set by an index), or PHYSICAL, OPTION." }
+  LEG_ECONOMIC_TYPE: { term: "Pay or receive", means: "Whether the bank pays or receives the leg (or what it is: fixed price, floating price, fee)." }
+  LEASE_CURRENCY: { term: "Lease currency", means: "The currency a metal lease or a leg's financing is in." }
+  FLOAT_SPREAD: { term: "Spread", means: "The amount added to the floating index of the leg or flow (a rate or a price differential)." }
+  PRICE_UNIT: { term: "Price unit", means: "The unit the leg's quantities and prices are in (BBL, MT, MMBTU, MWH, OZ; blank for money)." }
+  NOTIONAL: { term: "Notional", means: "The leg's or flow's amount: quantity times price for a commodity, the principal for a rates leg." }
+  DISCOUNT_INDEX: { term: "Discount index", means: "The curve the leg's flows are discounted on." }
+  SPOT_CONVERSION_FACTOR: { term: "Spot conversion factor", means: "The factor that converts the leg's unit to the index's." }
+  PHYSICAL_LOCATION_NAME: { term: "Delivery location", means: "Where a physical commodity is delivered." }
+  INDEX_LOCATION_NAME: { term: "Index location", means: "The location the floating index is quoted at." }
+  RESET_FIXING_SHIFT: { term: "Fixing shift", means: "How many business days before the period the index is fixed (negative is before)." }
+  RESET_HOLIDAY_SCHEDULE: { term: "Fixing calendar", means: "The holiday calendar the fixings follow." }
+  RESET_CONVENTION: { term: "Reset convention", means: "How the floating price is set: daily average, monthly, compounded." }
+  EMISSIONS_VINTAGE_MIN: { term: "Earliest vintage", means: "The earliest vintage of emission allowances that may be delivered." }
+  EMISSIONS_VINTAGE_MAX: { term: "Latest vintage", means: "The latest vintage of emission allowances that may be delivered." }
+  EMISSIONS_VINTAGE_DELIVERY_TYPE: { term: "Vintage delivery", means: "How the vintages of emission allowances are delivered." }
+  SETTLEMENT_TYPE: { term: "Settlement type", means: "Cash Settlement or Physical Settlement." }
+  NUM_RRDC_REC: { term: "Rate records", means: "The number of rate records the booking system holds for the leg." }
+  NUM_PROFILE_REC: { term: "Profile records", means: "The number of profile (flow) records the booking system holds for the leg." }
+  DAILY_VOLUME: { term: "Daily volume", means: "The quantity per day of the leg, in its price unit." }
+  INDEX: { term: "Index", means: "The benchmark a floating leg is set by: its name, group and sub group." }
+  NAME: { term: "Index", means: "The benchmark a floating leg is set by." }
+  GROUP: { term: "Index group", means: "The family of the index." }
+  SUB_GROUP: { term: "Index sub group", means: "The finer family of the index." }
+  CASH_FLOWS: { term: "Cash flows", means: "The leg's periods: each with its dates, notional, rate or price, and its resets." }
+  FLOW_ID: { term: "Flow", means: "The flow's number in the booking system." }
+  FLOW_TYPE: { term: "Flow type", means: "What the flow is: interest, fixed price, floating average, principal." }
+  RATE: { term: "Rate or price", means: "The flow's fixed rate or price, or the fixing a reset observed; blank until it is known." }
+  END_DATE: { term: "End date", means: "The day the flow or reset period ends." }
+  PAYMENT_DATE: { term: "Payment date", means: "The day the flow is paid." }
+  RATE_DETERMINATION_DATE: { term: "Fixing date", means: "The day the flow's floating rate or price is determined." }
+  FIRST_RESET_DATE: { term: "First reset", means: "The first day the flow's floating price is observed." }
+  LAST_RESET_DATE: { term: "Last reset", means: "The last day the flow's floating price is observed." }
+  RESETS: { term: "Resets", means: "The observations of the index that set a floating flow: one per period, or one per pricing day for an average." }
+  RESET_ID: { term: "Reset", means: "The reset's number." }
+  ACCRUAL: { term: "Accrual", means: "The share of the period the reset counts for." }
+  RESET_DATE: { term: "Reset date", means: "The day the index is observed." }
+  ACCRUAL_START_DATE: { term: "Accrual start", means: "The first day the reset accrues." }
+  ACCRUAL_END_DATE: { term: "Accrual end", means: "The last day the reset accrues." }
+  EVENT_ID: { term: "Event", means: "The event's number." }
+  EVENT_NUMBER: { term: "Event number", means: "The event's position among the trade's events." }
+  EVENT_TYPE: { term: "Event type", means: "What happened or will: a cash settlement, a fee, a reset, an amendment, a novation, booking or confirmation." }
+  PAYMENT_TYPE: { term: "Payment type", means: "What a cash event pays: interest, a fixed or floating amount, a fee, an adjustment." }
+  EVENT_DATE: { term: "Event date", means: "The day of the event; for a cash event, the day the cash moves." }
+  AMOUNT: { term: "Amount", means: "The event's cash amount, signed from the bank's side.", sign: "Negative is paid, positive received." }
+  SEQUENCE_NUMBER: { term: "Sequence", means: "The event's order in the booking system." }
+  TRADE_COUNT: { term: "Trades", means: "How many trades the page gathers, from every source system." }
+  SOURCE_SYSTEMS: { term: "Source systems", means: "The booking systems the trades come from." }
+  PRODUCT_TYPES: { term: "Product types", means: "The product types among the trades." }
+  CURRENCIES: { term: "Currencies", means: "The currencies of the trades." }
+  LAST_MATURITY: { term: "Last maturity", means: "The latest maturity date among the trades." }
+  TRADES: { term: "Trades", means: "One row per trade: its id, source system, product, side, currency, first leg's notional, index, maturity and status." }
+  TRADE_IDS: { term: "Trade ids", means: "The ids of the trades the page gathers." }
+  INDEX_NAME: { term: "Index", means: "The index of the trade's first leg that names one." }
 kinds:
   trade:
     title: Trade
     about: >-
-      ${$.tradeId}: ${$.productName} (${$.assetClass}) with ${coalesce($.counterparty.name, 'no named counterparty')}, booked as "${$.direction}":
-      ${fmt($.notional, 'compact')} ${$.currency} notional, maturing ${$.maturityDate}. It is marked at ${fmt($.mtm, 'signed0')} ${$.mtmCurrency}
-      and its status is ${$.status}.
+      ${$.TRADE_ID} from ${$.SOURCE_SYSTEM}: ${$.PRODUCT_TYPE} (${nonblank($.PRODUCT_SUB_TYPE, $.PRODUCT_GROUP, 'no sub type')}) with ${$.COUNTERPARTY},
+      ${$.BUY_SELL_CODE == 'B' ? 'bought' : 'sold'} on ${$.TRADE_DATE}: ${size($.LEGS)} leg(s), the first of
+      ${fmt(first($.LEGS).NOTIONAL, 'compact')} ${$.CURRENCY}, maturing ${$.MATURITY_DATE}. Its status is ${nonblank($.TRADE_STATUS, 'not given')}.
     guide: trading
     glossary:
-      mtm: { term: "Mark to market", means: "The trade's current fair value, from the bank's side. A positive number is an amount the bank is owed; a negative one is an amount it owes.", unit: "USD", sign: "Positive is an asset of the bank." }
-      pnl1d: { term: "One-day P&L", means: "The change in value of the trade over the last business day, including cash flows paid and received.", unit: "USD", sign: "Positive is a gain." }
-      risk.dv01: { term: "DV01", means: "The change in value of the trade for a one basis point (0.01%) rise in interest rates.", unit: "USD per bp", sign: "Negative loses when rates rise." }
-      book: { term: "Book", means: "The trading book the trade is held in; its P&L and risk are reported there." }
-      trade: { term: "Trade", means: "The trade the line refers to." }
-      risk.delta: { term: "Delta", means: "The change in the trade's value for a small move in its underlying price.", unit: "USD" }
-      risk.exposure: { term: "Exposure", means: "The trade's net exposure to its underlying, in USD, signed by direction.", unit: "USD", sign: "Positive is long the underlying, negative short." }
-      schedule.asset: { term: "Asset", means: "The security or cash pledged or delivered on the line." }
-      terms.cmsTenor: { term: "CMS tenor", means: "The maturity of the constant-maturity swap rate the leg is indexed to, for example the 10-year swap rate." }
-      terms.longTenor: { term: "Long tenor", means: "The longer of the two swap tenors a curve-spread trade compares." }
-      terms.shortTenor: { term: "Short tenor", means: "The shorter of the two swap tenors a curve-spread trade compares." }
-      terms.underlyingTenor: { term: "Swap tenor", means: "The length of the swap that the swaption gives the right to enter." }
-      risk.vega: { use: "vega" }
-      risk.gamma: { use: "gamma" }
-      counterparty.name: { term: "Counterparty", means: "The legal entity on the other side of the trade, whose default the bank is exposed to." }
-      schedule.type: { term: "Cash-flow type", means: "What the line is: a fixed or floating coupon, a principal exchange, a fixing or another event of the trade." }
-      schedule.rate: { term: "Rate", means: "The rate applied to the period: the fixed rate, or the fixing of the floating index.", unit: "% a year" }
-      schedule.leg: { term: "Leg", means: "Which leg of the trade the line belongs to; a swap has two." }
-      schedule.level: { term: "Level", means: "The level of the index, price or spread observed or applicable for the line." }
-      schedule.period: { term: "Period", means: "The accrual or observation period of the line." }
-      schedule.value: { term: "Value after haircut", means: "The collateral's market value less its haircut.", unit: "trade currency" }
-      terms.days: { term: "Days", means: "The number of days the term of the instrument counts.", unit: "days" }
-      terms.factor: { term: "Pool factor", means: "The share of the original principal of a securitised pool that is still outstanding.", unit: "fraction (0-1)" }
-      terms.collateral: { term: "Collateral", means: "The assets pledged to secure the trade or loan." }
-      terms.version: { term: "Version", means: "The version of the trade record; it increases with each amendment or lifecycle event." }
-      terms.fee: { term: "Fee", means: "The fee charged on the trade, such as the borrow or lending fee of a securities loan.", unit: "% a year" }
-      terms.margin: { term: "Margin", means: "The initial or variation margin held against the position, or the spread margin over the reference rate." }
-      terms.period: { term: "Period", means: "The period the term covers." }
-      terms.ratio: { term: "Ratio", means: "The ratio that scales the instrument, such as the ratio of shares to bonds or the hedge ratio." }
-      terms.target: { term: "Target", means: "The target level of a target-redemption product, in pips for an FX target forward or as a cumulative coupon for a note, after which it terminates." }
-      terms.term: { use: "term" }
-      terms.tick: { term: "Tick", means: "The smallest price move of the exchange contract and its value." }
-  desk-pnl:
-    title: Desk P&L, derived from trades
+      LEGS.CASH_FLOWS: { use: "CASH_FLOWS" }
+      LEGS.INDEX.NAME: { use: "NAME" }
+  counterparty-trades:
+    title: Trades of a counterparty, derived from the trades of every source system
     about: >-
-      ${$.name} has ${$.tradeCount} trades marked at ${fmt($.mtm, 'signed0')} USD; their one-day P&L is ${fmt($.pnl1d, 'signed0')} USD.
+      ${$.TRADE_COUNT} trades from ${size($.SOURCE_SYSTEMS)} source system(s), in ${size($.PRODUCT_TYPES)} product type(s) and
+      ${size($.CURRENCIES)} currency(ies); the last matures on ${$.LAST_MATURITY}.
     guide: trading
     glossary:
-      rows.trade: { term: "Trade", means: "The trade the row shows." }
-      rows.product: { term: "Product", means: "The kind of instrument the trade is." }
-      rows.book: { term: "Book", means: "The trading book the trade belongs to." }
-      rows.mtm: { term: "Mark to market", means: "The trade's current fair value, from the bank's side.", unit: "USD", sign: "Positive is an asset of the bank." }
-      rows.pnl1d: { term: "One-day P&L", means: "The change in value of the trade over the last business day, including cash flows.", unit: "USD", sign: "Positive is a gain." }
+      TRADES.TRADE_ID: { use: "TRADE_ID" }
+  portfolio-trades:
+    title: Trades of a portfolio, derived from the trades of every source system
+    about: >-
+      ${$.TRADE_COUNT} trades from ${size($.SOURCE_SYSTEMS)} source system(s), in ${size($.PRODUCT_TYPES)} product type(s) and
+      ${size($.CURRENCIES)} currency(ies); the last matures on ${$.LAST_MATURITY}.
+    guide: trading
+    glossary:
+      TRADES.TRADE_ID: { use: "TRADE_ID" }
+  legal-entity-trades:
+    title: Trades of a legal entity of the bank, derived from the trades of every source system
+    about: >-
+      ${$.TRADE_COUNT} trades from ${size($.SOURCE_SYSTEMS)} source system(s), in ${size($.PRODUCT_TYPES)} product type(s) and
+      ${size($.CURRENCIES)} currency(ies); the last matures on ${$.LAST_MATURITY}.
+    guide: trading
+    glossary:
+      TRADES.TRADE_ID: { use: "TRADE_ID" }
+  index-trades:
+    title: Trades of an index, derived from the trades of every source system
+    about: >-
+      ${$.TRADE_COUNT} trades from ${size($.SOURCE_SYSTEMS)} source system(s), in ${size($.PRODUCT_TYPES)} product type(s) and
+      ${size($.CURRENCIES)} currency(ies); the last matures on ${$.LAST_MATURITY}.
+    guide: trading
+    glossary:
+      TRADES.TRADE_ID: { use: "TRADE_ID" }

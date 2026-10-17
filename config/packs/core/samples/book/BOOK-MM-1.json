@@ -7,7 +7,7 @@
  "dv01": 5166,
  "topTrades": [
   {
-   "tradeId": "WSS-1500113",
+   "tradeId": "CLY-3000263",
    "product": "Call account",
    "assetClass": "Money market",
    "currency": "USD",
@@ -18,7 +18,7 @@
    "mtm": 4542888
   },
   {
-   "tradeId": "WSS-1500090",
+   "tradeId": "CLY-3000240",
    "product": "Treasury bill",
    "assetClass": "Money market",
    "currency": "USD",
@@ -29,7 +29,7 @@
    "mtm": -2467214
   },
   {
-   "tradeId": "WSS-1500111",
+   "tradeId": "CLY-3000261",
    "product": "Call account",
    "assetClass": "Money market",
    "currency": "USD",
@@ -40,7 +40,7 @@
    "mtm": -2192641
   },
   {
-   "tradeId": "WSS-1500106",
+   "tradeId": "CLY-3000256",
    "product": "Term deposit / placement",
    "assetClass": "Money market",
    "currency": "EUR",
@@ -51,7 +51,7 @@
    "mtm": 2024594
   },
   {
-   "tradeId": "WSS-1500103",
+   "tradeId": "CLY-3000253",
    "product": "Term deposit / placement",
    "assetClass": "Money market",
    "currency": "AUD",
@@ -62,7 +62,7 @@
    "mtm": 1944745
   },
   {
-   "tradeId": "WSS-1500110",
+   "tradeId": "CLY-3000260",
    "product": "Call account",
    "assetClass": "Money market",
    "currency": "CAD",
@@ -73,7 +73,7 @@
    "mtm": -1837797
   },
   {
-   "tradeId": "WSS-1500087",
+   "tradeId": "CLY-3000237",
    "product": "Treasury bill",
    "assetClass": "Money market",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": 1540400
   },
   {
-   "tradeId": "WSS-1500092",
+   "tradeId": "CLY-3000242",
    "product": "Commercial paper",
    "assetClass": "Money market",
    "currency": "CHF",
@@ -95,7 +95,7 @@
    "mtm": 1053527
   },
   {
-   "tradeId": "WSS-1500089",
+   "tradeId": "CLY-3000239",
    "product": "Treasury bill",
    "assetClass": "Money market",
    "currency": "USD",
@@ -106,7 +106,7 @@
    "mtm": 967365
   },
   {
-   "tradeId": "WSS-1500100",
+   "tradeId": "CLY-3000250",
    "product": "Certificate of deposit",
    "assetClass": "Money market",
    "currency": "EUR",

@@ -7,7 +7,7 @@
  "dv01": -39025,
  "topTrades": [
   {
-   "tradeId": "MX-20000159",
+   "tradeId": "MX-20000381",
    "product": "Zero-coupon inflation swap",
    "assetClass": "Inflation",
    "currency": "JPY",
@@ -18,7 +18,7 @@
    "mtm": -14905195
   },
   {
-   "tradeId": "MX-20000189",
+   "tradeId": "MX-20000411",
    "product": "Limited price index swap",
    "assetClass": "Inflation",
    "currency": "USD",
@@ -29,7 +29,7 @@
    "mtm": -4276973
   },
   {
-   "tradeId": "MX-20000182",
+   "tradeId": "MX-20000404",
    "product": "Inflation asset swap",
    "assetClass": "Inflation",
    "currency": "JPY",
@@ -40,7 +40,7 @@
    "mtm": -2304552
   },
   {
-   "tradeId": "MX-20000169",
+   "tradeId": "MX-20000391",
    "product": "Inflation cap / floor",
    "assetClass": "Inflation",
    "currency": "GBP",
@@ -51,7 +51,7 @@
    "mtm": 2197247
   },
   {
-   "tradeId": "MX-20000191",
+   "tradeId": "MX-20000413",
    "product": "Limited price index swap",
    "assetClass": "Inflation",
    "currency": "USD",
@@ -62,7 +62,7 @@
    "mtm": 1126221
   },
   {
-   "tradeId": "MX-20000166",
+   "tradeId": "MX-20000388",
    "product": "Year-on-year inflation swap",
    "assetClass": "Inflation",
    "currency": "EUR",
@@ -73,7 +73,7 @@
    "mtm": -947071
   },
   {
-   "tradeId": "MX-20000181",
+   "tradeId": "MX-20000403",
    "product": "Inflation asset swap",
    "assetClass": "Inflation",
    "currency": "JPY",
@@ -84,7 +84,7 @@
    "mtm": -771745
   },
   {
-   "tradeId": "MX-20000192",
+   "tradeId": "MX-20000414",
    "product": "Limited price index swap",
    "assetClass": "Inflation",
    "currency": "GBP",
@@ -95,7 +95,7 @@
    "mtm": -339669
   },
   {
-   "tradeId": "MX-20000170",
+   "tradeId": "MX-20000392",
    "product": "Inflation cap / floor",
    "assetClass": "Inflation",
    "currency": "JPY",
@@ -106,7 +106,7 @@
    "mtm": 334643
   },
   {
-   "tradeId": "MX-20000179",
+   "tradeId": "MX-20000401",
    "product": "Inflation-linked bond",
    "assetClass": "Inflation",
    "currency": "EUR",

@@ -7,7 +7,7 @@
  "dv01": 292347,
  "topTrades": [
   {
-   "tradeId": "CLY-3000035",
+   "tradeId": "CLY-3000119",
    "product": "Total return swap on a bond",
    "assetClass": "Credit",
    "currency": "GBP",
@@ -18,7 +18,7 @@
    "mtm": -5751547
   },
   {
-   "tradeId": "CLY-3000029",
+   "tradeId": "CLY-3000113",
    "product": "First-to-default basket",
    "assetClass": "Credit",
    "currency": "JPY",
@@ -29,7 +29,7 @@
    "mtm": -3938043
   },
   {
-   "tradeId": "CLY-3000050",
+   "tradeId": "CLY-3000134",
    "product": "Term loan",
    "assetClass": "Credit",
    "currency": "EUR",
@@ -40,7 +40,7 @@
    "mtm": -3431576
   },
   {
-   "tradeId": "CLY-3000027",
+   "tradeId": "CLY-3000111",
    "product": "First-to-default basket",
    "assetClass": "Credit",
    "currency": "JPY",
@@ -51,7 +51,7 @@
    "mtm": -2867075
   },
   {
-   "tradeId": "CLY-3000045",
+   "tradeId": "CLY-3000129",
    "product": "Credit-linked note",
    "assetClass": "Credit",
    "currency": "AUD",
@@ -62,7 +62,7 @@
    "mtm": 2791987
   },
   {
-   "tradeId": "CLY-3000028",
+   "tradeId": "CLY-3000112",
    "product": "First-to-default basket",
    "assetClass": "Credit",
    "currency": "JPY",
@@ -73,7 +73,7 @@
    "mtm": 2634218
   },
   {
-   "tradeId": "CLY-3000053",
+   "tradeId": "CLY-3000137",
    "product": "Term loan",
    "assetClass": "Credit",
    "currency": "CAD",
@@ -84,7 +84,7 @@
    "mtm": -2592887
   },
   {
-   "tradeId": "CLY-3000038",
+   "tradeId": "CLY-3000122",
    "product": "Total return swap on a loan index",
    "assetClass": "Credit",
    "currency": "GBP",
@@ -95,7 +95,7 @@
    "mtm": -1607501
   },
   {
-   "tradeId": "CLY-3000008",
+   "tradeId": "CLY-3000092",
    "product": "CDS index (CDX / iTraxx)",
    "assetClass": "Credit",
    "currency": "CHF",
@@ -106,7 +106,7 @@
    "mtm": -1402373
   },
   {
-   "tradeId": "CLY-3000056",
+   "tradeId": "CLY-3000140",
    "product": "Revolving credit facility",
    "assetClass": "Credit",
    "currency": "GBP",

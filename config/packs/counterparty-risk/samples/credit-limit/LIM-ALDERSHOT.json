@@ -2,40 +2,40 @@
  "limitId": "LIM-ALDERSHOT",
  "counterpartyName": "Aldershot Pension Trust",
  "measure": "PFE 95 peak",
- "limit": 338000000.0,
- "used": 225619495,
- "utilisation": 0.6675,
+ "limit": 337000000.0,
+ "used": 224800213,
+ "utilisation": 0.6671,
  "status": "Within limit",
  "buckets": [
   {
    "bucket": "0-1Y",
-   "limit": 338000000,
-   "used": 191776571,
-   "utilisation": 0.5674
+   "limit": 337000000,
+   "used": 191080181,
+   "utilisation": 0.567
   },
   {
    "bucket": "1-3Y",
-   "limit": 338000000,
-   "used": 225619495,
-   "utilisation": 0.6675
+   "limit": 337000000,
+   "used": 224800213,
+   "utilisation": 0.6671
   },
   {
    "bucket": "3-5Y",
-   "limit": 270400000,
-   "used": 157933646,
-   "utilisation": 0.5841
+   "limit": 269600000,
+   "used": 157360149,
+   "utilisation": 0.5837
   },
   {
    "bucket": "5-10Y",
-   "limit": 202800000,
-   "used": 78966823,
-   "utilisation": 0.3894
+   "limit": 202200000,
+   "used": 78680075,
+   "utilisation": 0.3891
   },
   {
    "bucket": "10Y+",
-   "limit": 135200000,
-   "used": 22561950,
-   "utilisation": 0.1669
+   "limit": 134800000,
+   "used": 22480021,
+   "utilisation": 0.1668
   }
  ],
  "counterparty": "CP-ALDERSHOT",

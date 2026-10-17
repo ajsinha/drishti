@@ -7,7 +7,7 @@
  "dv01": 6208,
  "topTrades": [
   {
-   "tradeId": "BBG-60000114",
+   "tradeId": "CLY-3000300",
    "product": "Securities borrowing",
    "assetClass": "Securities financing",
    "currency": "EUR",
@@ -18,7 +18,7 @@
    "mtm": -2200202
   },
   {
-   "tradeId": "BBG-60000109",
+   "tradeId": "CLY-3000295",
    "product": "Securities borrowing",
    "assetClass": "Securities financing",
    "currency": "CAD",
@@ -29,7 +29,7 @@
    "mtm": -2184430
   },
   {
-   "tradeId": "BBG-60000085",
+   "tradeId": "CLY-3000271",
    "product": "Reverse repo",
    "assetClass": "Securities financing",
    "currency": "CHF",
@@ -40,7 +40,7 @@
    "mtm": -2160188
   },
   {
-   "tradeId": "BBG-60000095",
+   "tradeId": "CLY-3000281",
    "product": "Tri-party repo",
    "assetClass": "Securities financing",
    "currency": "JPY",
@@ -51,7 +51,7 @@
    "mtm": -1727235
   },
   {
-   "tradeId": "BBG-60000096",
+   "tradeId": "CLY-3000282",
    "product": "Tri-party repo",
    "assetClass": "Securities financing",
    "currency": "EUR",
@@ -62,7 +62,7 @@
    "mtm": 1265588
   },
   {
-   "tradeId": "BBG-60000110",
+   "tradeId": "CLY-3000296",
    "product": "Securities borrowing",
    "assetClass": "Securities financing",
    "currency": "CHF",
@@ -73,7 +73,7 @@
    "mtm": -562899
   },
   {
-   "tradeId": "BBG-60000103",
+   "tradeId": "CLY-3000289",
    "product": "Securities lending",
    "assetClass": "Securities financing",
    "currency": "EUR",
@@ -84,7 +84,7 @@
    "mtm": 516127
   },
   {
-   "tradeId": "BBG-60000112",
+   "tradeId": "CLY-3000298",
    "product": "Securities borrowing",
    "assetClass": "Securities financing",
    "currency": "GBP",
@@ -95,7 +95,7 @@
    "mtm": -511456
   },
   {
-   "tradeId": "BBG-60000108",
+   "tradeId": "CLY-3000294",
    "product": "Securities lending",
    "assetClass": "Securities financing",
    "currency": "GBP",
@@ -106,7 +106,7 @@
    "mtm": -362786
   },
   {
-   "tradeId": "BBG-60000079",
+   "tradeId": "CLY-3000265",
    "product": "Repurchase agreement",
    "assetClass": "Securities financing",
    "currency": "JPY",

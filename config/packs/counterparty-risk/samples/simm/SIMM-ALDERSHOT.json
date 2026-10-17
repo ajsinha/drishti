@@ -1,29 +1,29 @@
 {
  "calcId": "SIMM-ALDERSHOT",
- "total": 7141222,
- "posted": 6926985,
- "received": 7284046,
+ "total": 7068571,
+ "posted": 6856514,
+ "received": 7209942,
  "version": "ISDA SIMM 2.7",
  "riskClasses": [
   {
    "riskClass": "Interest rate",
-   "im": 3213550
+   "im": 3180857
   },
   {
    "riskClass": "Credit qualifying",
-   "im": 856947
+   "im": 848229
   },
   {
    "riskClass": "Equity",
-   "im": 1285420
+   "im": 1272343
   },
   {
    "riskClass": "Commodity",
-   "im": 571298
+   "im": 565486
   },
   {
    "riskClass": "FX",
-   "im": 1214008
+   "im": 1201657
   }
  ],
  "nettingSet": "NS-ALDERSHOT-FRA",

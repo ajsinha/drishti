@@ -36,9 +36,22 @@ import java.util.regex.Pattern;
  * @param hidden kept in the definition (and usable in a saved search) but not offered as an input
  * @param values for an enum: the values offered (when empty the server offers the values found in the data)
  * @param inferred true when no pack declared it
+ * @param depends for an enum: the path of another enum field whose choice narrows this one's values (a product sub type by its product
+ *     type), or empty
+ * @param parents for a dependent enum: each value with the values of {@code depends} it occurs with in the data (empty when unknown)
  */
 public record FormField(String path, String label, FieldType type, List<String> operators, String defaultValue, int order, String group,
-        String help, boolean required, boolean hidden, List<String> values, boolean inferred) {
+        String help, boolean required, boolean hidden, List<String> values, boolean inferred, String depends, Map<String, List<String>> parents) {
+
+    public FormField(String path, String label, FieldType type, List<String> operators, String defaultValue, int order, String group,
+            String help, boolean required, boolean hidden, List<String> values, boolean inferred) {
+        this(path, label, type, operators, defaultValue, order, group, help, required, hidden, values, inferred, "", Map.of());
+    }
+
+    /** The same field with the values offered and, for a dependent enum, the parent values each occurs with. */
+    public FormField withValues(List<String> offered, Map<String, List<String>> byParent) {
+        return new FormField(path, label, type, operators, defaultValue, order, group, help, required, hidden, offered, inferred, depends, byParent);
+    }
 
     private static final Pattern PATH = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*|\\[\\d+\\])*");
 
@@ -48,6 +61,8 @@ public record FormField(String path, String label, FieldType type, List<String> 
         group = group == null ? "" : group;
         help = help == null ? "" : help;
         values = values == null ? List.of() : List.copyOf(values);
+        depends = depends == null ? "" : depends;
+        parents = parents == null ? Map.of() : Map.copyOf(parents);
     }
 
     /** Reads one declared field, adding what is wrong with it to {@code problems} (null when it cannot be used). */
@@ -109,13 +124,21 @@ public record FormField(String path, String label, FieldType type, List<String> 
                 problems.add(named + ": values must be a list");
             }
         }
+        String depends = str(m.get("depends"));
+        if (depends.startsWith("$.")) {
+            depends = depends.substring(2);
+        }
+        if (!depends.isEmpty() && (type != FieldType.ENUM || !PATH.matcher(depends).matches() || depends.equals(path))) {
+            problems.add(named + ": depends names another enum field's path (PRODUCT_TYPE), and only an enum may depend on one");
+            depends = "";
+        }
         if (bool(m.get("required")) && bool(m.get("hidden")) && str(m.get("default")).isEmpty()) {
             problems.add(named + ": a required field that is hidden needs a default");
         }
         Object label = m.get("label");
         return new FormField(path, label == null || String.valueOf(label).isBlank() ? humanize(path) : String.valueOf(label).trim(), type, ops,
                 m.get("default") == null ? "" : String.valueOf(m.get("default")), order, str(m.get("group")), str(m.get("help")), bool(m.get("required")),
-                bool(m.get("hidden")), values, false);
+                bool(m.get("hidden")), values, false, depends, Map.of());
     }
 
     private static String str(Object o) {
@@ -162,6 +185,12 @@ public record FormField(String path, String label, FieldType type, List<String> 
         }
         if (!values.isEmpty()) {
             out.put("values", values);
+        }
+        if (!depends.isEmpty()) {
+            out.put("depends", depends);
+            if (!parents.isEmpty()) {
+                out.put("parents", parents);
+            }
         }
         return out;
     }

@@ -1,52 +1,52 @@
 {
  "resultId": "FRTB-COMM-3",
  "book": "BOOK-COMM-3",
- "deltaCharge": 7965671,
- "vegaCharge": 2193655,
- "curvatureCharge": 682258,
- "total": 10841584,
+ "deltaCharge": 7964358,
+ "vegaCharge": 2193293,
+ "curvatureCharge": 682146,
+ "total": 10839797,
  "sensitivities": [
   {
    "riskClass": "Commodity",
    "bucket": "1",
    "measure": "Delta",
-   "value": 26571
+   "value": 26566
   },
   {
    "riskClass": "Commodity",
    "bucket": "1",
    "measure": "Vega",
-   "value": 61799
+   "value": 61789
   },
   {
    "riskClass": "Commodity",
    "bucket": "2",
    "measure": "Delta",
-   "value": -683946
+   "value": -683834
   },
   {
    "riskClass": "Commodity",
    "bucket": "2",
    "measure": "Vega",
-   "value": 102956
+   "value": 102939
   },
   {
    "riskClass": "Commodity",
    "bucket": "3",
    "measure": "Delta",
-   "value": 291984
+   "value": 291936
   },
   {
    "riskClass": "Commodity",
    "bucket": "3",
    "measure": "Vega",
-   "value": -457293
+   "value": -457218
   }
  ],
  "byClass": [
   {
    "riskClass": "Commodity",
-   "charge": 10841584
+   "charge": 10839797
   }
  ],
  "approach": "FRTB standardised (SBM)",

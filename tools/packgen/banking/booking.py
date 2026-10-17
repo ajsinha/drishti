@@ -14,41 +14,33 @@
 
 """Booking systems: where each trade lives before Drishti sees it, and how that system numbers its trades.
 
-A bank books each asset class in a system suited to it, and every system numbers its own trades. A trade store that
-lands several systems in one book keeps each system's number behind a prefix, so ids stay unique and a user who
-knows a Murex trade number types it as it is: MX-20000017.
+The bank books its trades in three systems, each feeding the trading pack's trade view through a connector of its own (one Delta table
+each: trade_endur, trade_calypso, trade_murex). The product range of the taxonomy is split between Murex and Calypso; Endur books the
+commodity desk's own deals (tools/packgen/trades/endur.py), numbered by plain numbers (1000001 ...). Ids are unique across the systems,
+so a user who knows a Murex trade number types it as it is: MX-20000017.
 
-    Murex (MX.3)             rates, inflation                       MX-…    trade number
-    Calypso                  credit                                 CLY-…   trade id
-    Endur (Openlink)         commodities                            END-…   deal tracking number
-    Imagine Trading System   equity, structured products            IMG-…   trade id
-    Bloomberg TOMS           fixed income, securities financing     BBG-…   ticket number
-    Wall Street Systems      FX, money markets                      WSS-…   deal number
+    MUREX     rates, inflation, commodities (derivatives), equity, structured     MX-...    trade number
+    CALYPSO   credit, FX, money markets, fixed income, securities financing        CLY-...   trade id
+    ENDUR     commodity swaps, futures, physical deals, cash, call deposits         1000001   deal tracking number
 
-The sample trades take the first numbers of each system; tools/samplegen/bulk_trades.py continues from a separate,
-higher range per system, so its clones never collide with the samples. The ranges are illustrative: real
-installations start and format their numbers as they are configured.
+The sample trades take the first numbers of each system; tools/packgen/trades/make_trades.py clones them from a separate, higher range
+per system, so its clones never collide with the samples. The ranges are illustrative: real installations number as they are configured.
 """
 from __future__ import annotations
 
 SYSTEMS = {
-    #  system                   prefix   samples from   bulk clones from
-    "Murex":                    ("MX",   20_000_000,    30_000_000),
-    "Calypso":                  ("CLY",  3_000_000,     4_000_000),
-    "Endur":                    ("END",  1_000_000,     1_100_000),
-    "Imagine":                  ("IMG",  400_000,       500_000),
-    "Bloomberg TOMS":           ("BBG",  60_000_000,    70_000_000),
-    "Wall Street Systems":      ("WSS",  1_500_000,     2_000_000),
+    #  system      prefix   samples from   clones from
+    "MUREX":       ("MX",   20_000_000,    30_000_000),
+    "CALYPSO":     ("CLY",  3_000_000,     4_000_000),
 }
-BY_ASSET = {"Rates": "Murex", "Inflation": "Murex", "Credit": "Calypso", "Commodity": "Endur", "Equity": "Imagine",
-            "Structured": "Imagine", "Fixed income": "Bloomberg TOMS", "Securities financing": "Bloomberg TOMS",
-            "FX": "Wall Street Systems", "Money market": "Wall Street Systems"}
+BY_ASSET = {"Rates": "MUREX", "Inflation": "MUREX", "Commodity": "MUREX", "Equity": "MUREX", "Structured": "MUREX",
+            "Credit": "CALYPSO", "FX": "CALYPSO", "Money market": "CALYPSO", "Fixed income": "CALYPSO", "Securities financing": "CALYPSO"}
 # identifiers that name a trade without its kind (pack.yaml graph.id-patterns)
 ID_PATTERN = "^(" + "|".join(p for p, _, _ in SYSTEMS.values()) + r")-\d+$"
 
 
 def system_of(asset_class: str) -> str:
-    return BY_ASSET.get(asset_class, "Murex")
+    return BY_ASSET.get(asset_class, "MUREX")
 
 
 def sample_id(system: str, ordinal: int) -> tuple[str, str]:

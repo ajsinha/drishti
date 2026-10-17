@@ -73,7 +73,7 @@
    "mtm": 4123460
   },
   {
-   "tradeId": "CLY-3000053",
+   "tradeId": "CLY-3000137",
    "product": "Term loan",
    "assetClass": "Credit",
    "currency": "CAD",
@@ -95,7 +95,7 @@
    "mtm": 2233273
   },
   {
-   "tradeId": "WSS-1500102",
+   "tradeId": "CLY-3000252",
    "product": "Certificate of deposit",
    "assetClass": "Money market",
    "currency": "EUR",
@@ -106,7 +106,7 @@
    "mtm": -1329064
   },
   {
-   "tradeId": "CLY-3000010",
+   "tradeId": "CLY-3000094",
    "product": "CDS index (CDX / iTraxx)",
    "assetClass": "Credit",
    "currency": "JPY",
@@ -117,7 +117,7 @@
    "mtm": 1013301
   },
   {
-   "tradeId": "END-1000087",
+   "tradeId": "MX-20000375",
    "product": "Freight forward agreement",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -128,7 +128,7 @@
    "mtm": 660756
   },
   {
-   "tradeId": "CLY-3000026",
+   "tradeId": "CLY-3000110",
    "product": "First-to-default basket",
    "assetClass": "Credit",
    "currency": "JPY",
@@ -183,7 +183,7 @@
    "mtm": 125293
   },
   {
-   "tradeId": "END-1000081",
+   "tradeId": "MX-20000369",
    "product": "Weather derivative (HDD/CDD)",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -194,7 +194,7 @@
    "mtm": -121801
   },
   {
-   "tradeId": "END-1000086",
+   "tradeId": "MX-20000374",
    "product": "Freight forward agreement",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -216,7 +216,7 @@
    "mtm": -57660
   },
   {
-   "tradeId": "END-1000080",
+   "tradeId": "MX-20000368",
    "product": "Weather derivative (HDD/CDD)",
    "assetClass": "Commodity",
    "currency": "USD",

@@ -1,10 +1,10 @@
 {
  "calcId": "SACCR-ALDERSHOT-NY",
- "replacementCost": 7086074,
- "addOn": 35947192,
+ "replacementCost": 6607902,
+ "addOn": 33438041,
  "multiplier": 1.0,
- "ead": 60246572,
- "rwa": 12049314,
+ "ead": 56064320,
+ "rwa": 11212864,
  "addOns": [
   {
    "assetClass": "Interest rate",
@@ -16,7 +16,7 @@
   },
   {
    "assetClass": "Commodity",
-   "addOn": 11491644
+   "addOn": 8982493
   }
  ],
  "hedgingSets": [
@@ -77,7 +77,7 @@
   {
    "assetClass": "Commodity",
    "hedgingSet": "USD",
-   "effectiveNotional": 63842466,
+   "effectiveNotional": 49902740,
    "sf": 0.18
   }
  ],

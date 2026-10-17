@@ -29,8 +29,12 @@ KIND = {k.kind: k for k in KINDS}
 # Trade-level reference fields (besides each product's market-data fields).
 TRADE_LINKS = {"nettingSet": ("netting-set", "Netting set"), "book": ("book", "Book"), "trader": ("trader", "Trader"),
                "clearingAccount": ("clearing-account", "Clearing account"), "issuer": ("issuer", "Reference entity"),
-               "counterparty": ("counterparty", "Counterparty")}
-TRADE = Kind("trade", "TRD", "MX-", "Trade", "Trades", "A trade in any of the pack's products; its productType selects its Sutra.", "tradeId", [], [])   # ids carry their booking system's prefix (booking.py)
+               "counterparty": ("counterparty", "Counterparty"),
+               # the production-shaped trade (tools/packgen/trades/schema.py): its references, upper snake as every source system writes them
+               "COUNTERPARTY": ("counterparty", "Counterparty"), "ORIGINAL_COUNTERPARTY": ("counterparty", "Original counterparty"),
+               "PORTFOLIO": ("book", "Portfolio"), "TT_BOOK": ("book", "Book"), "LEGAL_ENTITY": ("legal-entity", "Legal entity"),
+               "TRADER_ID": ("trader", "Trader"), "TT_GROUP": ("desk", "Desk")}
+TRADE = Kind("trade", "TRD", "MX-", "Trade", "Trades", "A trade from any source system (ENDUR, CALYPSO, MUREX) in the common schema; its PRODUCT_TYPE selects its Sutra.", "TRADE_ID", [], [])   # ids carry their booking system's prefix (booking.py)
 
 
 def graph_fields() -> dict[str, tuple[str, str]]:

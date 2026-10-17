@@ -1,350 +1,256 @@
 {
- "tradeId": "MX-20000094",
- "sourceSystem": "Murex",
- "sourceTradeId": "20000094",
- "productType": "COLLAR",
- "productName": "Interest rate collar",
- "assetClass": "Rates",
- "family": "option",
- "status": "Live",
- "direction": "Sell",
- "tradeDate": "2026-02-13",
- "effectiveDate": "2026-02-16",
- "maturityDate": "2026-11-02",
- "currency": "CHF",
- "notional": 206000000.0,
- "mtm": -1819636,
- "mtmCurrency": "USD",
- "pnl1d": -154909,
- "counterparty": {
-  "id": "CP-HALCYON",
-  "name": "Halcyon Shipping plc"
- },
- "nettingSet": "NS-HALCYON-NY",
- "book": "BOOK-RATES-3",
- "trader": "TRDR-ASHAH",
- "desk": "DESK-RATES",
- "legalEntity": "LE-NY",
- "discountCurve": "CRV-CHF-OIS",
- "forwardCurve": "CRV-CHF-PROJ",
- "capVolSurface": "CPV-CHF",
- "terms": {
-  "capStrike": 0.058553,
-  "floorStrike": 0.027476
- },
- "risk": {
-  "dv01": -12236,
-  "vega": -361210
- },
- "sensitivities": [
+ "SOURCE_SYSTEM": "MUREX",
+ "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z",
+ "TRADE_DATE": "2026-02-13",
+ "INPUT_DATE": "2026-02-13",
+ "TRADE_ID": "MX-20000094",
+ "TRADE_STATUS": "AMENDED",
+ "TRADE_ACTION": "AMEND",
+ "TRADE_VERSION": "2",
+ "TRANSACTION_ID": "20000094002",
+ "PACKAGE_ID": "",
+ "QUANTITY": 206000000.0,
+ "PRICE": null,
+ "BUY_SELL_CODE": "S",
+ "PRODUCT_TYPE": "COLLAR",
+ "PRODUCT_SUB_TYPE": "Interest rate collar",
+ "PRODUCT_GROUP": "Rates",
+ "PRODUCT_SUB_GROUP": "option",
+ "OPTION_TYPE": null,
+ "STRIKE_PRICE": null,
+ "COUNTERPARTY": "CP-HALCYON",
+ "COUNTERPARTY_UEN": "UEN0100222",
+ "COUNTERPARTY_COUNTRY_OF_RISK": "GR",
+ "ORIGINAL_COUNTERPARTY": "",
+ "ORIGINAL_COUNTERPARTY_UEN": "",
+ "INTERNAL_EXTERNAL_CODE": "External",
+ "TRANSIT": "00107",
+ "LEGAL_ENTITY": "LE-NY",
+ "PORTFOLIO": "BOOK-RATES-3",
+ "TRADER_ID": "TRDR-ASHAH",
+ "TRADER_FIRST_NAME": "A.",
+ "TRADER_LAST_NAME": "Shah",
+ "START_DATE": "2026-02-16",
+ "MATURITY_DATE": "2026-11-02",
+ "REGISTRY_DELIVERY_DATE": "",
+ "CURRENCY": "CHF",
+ "DELIVERY_VERSUS_PAYMENT": "NO",
+ "STRATEGY": null,
+ "INTERNAL_TRADING_STRATEGY": "",
+ "NY_CURVE_FLAG": "",
+ "VAULT_LOCATION_ALLOCATION": "",
+ "PRECIOUS_METAL_FLAG": "",
+ "TT_GROUP": "DESK-RATES",
+ "TT_BOOK": "BOOK-RATES-3",
+ "LEASE_PERPETUITY_FLAG": "",
+ "SETTLEMENT_DATE": "2026-02-16",
+ "LEGS": [
   {
-   "bucket": "3M",
-   "dv01": -2039,
-   "vega": -60202
-  },
-  {
-   "bucket": "6M",
-   "dv01": -4079,
-   "vega": -120403
-  },
-  {
-   "bucket": "1Y",
-   "dv01": -6118,
-   "vega": -180605
-  }
- ],
- "schedule": [
-  {
-   "fixingDate": "2026-05-16",
-   "period": "2026-05-16..2026-08-16",
-   "index": "SARON",
-   "rate": 0.031181,
-   "payoff": 0.0,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2026-08-16",
-   "period": "2026-08-16..2026-11-16",
-   "index": "SARON",
-   "rate": 0.046777,
-   "payoff": 606515.5,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2026-11-02",
-   "period": "2026-11-02..2027-02-02",
-   "index": "SARON",
-   "rate": 0.029854,
-   "payoff": 0.0,
-   "status": "Pending"
-  }
- ],
- "nextIndex": 2,
- "pnlHistory": [
-  {
-   "date": "2026-09-03",
-   "pnl": -12746
-  },
-  {
-   "date": "2026-09-04",
-   "pnl": 80077
-  },
-  {
-   "date": "2026-09-07",
-   "pnl": 20225
-  },
-  {
-   "date": "2026-09-08",
-   "pnl": 47490
-  },
-  {
-   "date": "2026-09-09",
-   "pnl": -45323
-  },
-  {
-   "date": "2026-09-10",
-   "pnl": -58208
-  },
-  {
-   "date": "2026-09-11",
-   "pnl": -5299
-  },
-  {
-   "date": "2026-09-14",
-   "pnl": 16611
-  },
-  {
-   "date": "2026-09-15",
-   "pnl": 28059
-  },
-  {
-   "date": "2026-09-16",
-   "pnl": -49055
-  },
-  {
-   "date": "2026-09-17",
-   "pnl": 73310
-  },
-  {
-   "date": "2026-09-18",
-   "pnl": 24769
-  },
-  {
-   "date": "2026-09-21",
-   "pnl": 65718
-  },
-  {
-   "date": "2026-09-22",
-   "pnl": 7279
-  },
-  {
-   "date": "2026-09-23",
-   "pnl": -36870
-  },
-  {
-   "date": "2026-09-24",
-   "pnl": -4269
-  },
-  {
-   "date": "2026-09-25",
-   "pnl": 29362
-  },
-  {
-   "date": "2026-09-28",
-   "pnl": 122912
-  },
-  {
-   "date": "2026-09-29",
-   "pnl": 20090
-  },
-  {
-   "date": "2026-09-30",
-   "pnl": 76150
-  }
- ],
- "execution": {
-  "tradeDate": "2026-02-13",
-  "executionTimestamp": "2026-02-13T16:00:04.328Z",
-  "venue": "Voice",
-  "venueMic": "XOFF",
-  "executionType": "Voice",
-  "trader": "A. Shah",
-  "salesperson": null,
-  "orderId": "ORD-CAC1E9FAB9"
- },
- "lifecycle": {
-  "status": "Live",
-  "version": 2,
-  "events": [
-   {
-    "version": 1,
-    "event": "New",
-    "reason": "Trade captured",
-    "at": "2026-02-13T12:26:00Z",
-    "by": "mo.amend"
+   "LEG_ID": 1,
+   "LEG_TYPE": "OPTION",
+   "LEG_ECONOMIC_TYPE": "Receive",
+   "CURRENCY": "CHF",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 206000000.0,
+   "DISCOUNT_INDEX": "CRV-CHF-OIS",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "",
+   "RESET_HOLIDAY_SCHEDULE": null,
+   "RESET_CONVENTION": "",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "3",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "",
+    "GROUP": "",
+    "SUB_GROUP": ""
    },
-   {
-    "version": 2,
-    "event": "Amendment",
-    "reason": "Notional corrected",
-    "at": "2026-03-24T12:26:00Z",
-    "by": "mo.ops"
-   }
-  ],
-  "sourceSystem": "Summit",
-  "createdAt": "2026-02-13T12:26:00Z",
-  "lastModifiedAt": "2026-03-24T12:26:00Z",
-  "lastModifiedBy": "mo.ops",
-  "timeline": [
-   {
-    "date": "2026-02-13",
-    "event": "Booked",
-    "status": "Done",
-    "description": "Captured in Murex by TRDR-ASHAH: sell Interest rate collar"
-   },
-   {
-    "date": "2026-02-13",
-    "event": "Confirmed",
-    "status": "Matched",
-    "description": "Matched on MarkitWire (MA342631755)"
-   },
-   {
-    "date": "2026-03-24",
-    "event": "Amended",
-    "status": "Done",
-    "description": "Notional corrected (version 2, by mo.ops)"
-   },
-   {
-    "date": "2026-08-16",
-    "event": "Cash settled",
-    "status": "Settled",
-    "description": "CHF payment settled",
-    "amount": 606515.5
-   },
-   {
-    "date": "2026-11-02",
-    "event": "Next payment",
-    "status": "Pending",
-    "description": "Scheduled; settlement instructions confirmed"
-   },
-   {
-    "date": "2026-11-02",
-    "event": "Maturity",
-    "status": "Scheduled",
-    "description": "Final payment and close-out"
-   }
-  ]
- },
- "confirmation": {
-  "status": "Confirmed",
-  "method": "MarkitWire",
-  "platformId": "MA342631755",
-  "matched": "2026-02-13 12:45",
-  "affirmedBy": "Counterparty ops",
-  "breaks": []
- },
- "clearing": {
-  "status": "Bilateral",
-  "mandatory": false,
-  "reason": "Counterparty below clearing threshold"
- },
- "regulatory": {
-  "uti": "549300O1N13GO2II2096CAC1E9FAB944CB8216B0",
-  "upi": "QZKY3O6J49DQ",
-  "reportingRegimes": [
-   "CFTC Part 43/45"
-  ],
-  "reportingParty": "Us",
-  "reportingStatus": "Accepted",
-  "clearingObligation": false,
-  "tradingObligation": false,
-  "mifidClassification": "Professional client",
-  "volckerExempt": false,
-  "saCcrAssetClass": "Interest rate"
- },
- "settlementInstructions": {
-  "method": "CLS",
-  "ourAgent": "JPMorgan Chase Bank, N.A.",
-  "ourAgentBic": "CHASUS33XXX",
-  "theirAgentBic": "HALCGB33XXX",
-  "ssiId": "SSI-CHF-10E970",
-  "netting": "Payment netting by currency and value date"
- },
- "valuation": {
-  "asOf": "2026-09-30",
-  "currency": "USD",
-  "npv": -1819636,
-  "cleanPv": -1819636.0,
-  "accrued": 0.0,
-  "legPvs": [],
-  "model": "Black / Bachelier",
-  "curves": [
-   "CRV-CHF-OIS",
-   "CRV-CHF-PROJ",
-   "CPV-CHF"
-  ],
-  "status": "Official EOD",
-  "runId": "EOD-20260930-01"
- },
- "pnlExplain": [
-  {
-   "step": "Opening MTM",
-   "pnl": -1664727,
-   "total": true
-  },
-  {
-   "step": "Carry",
-   "pnl": -18231
-  },
-  {
-   "step": "Roll-down",
-   "pnl": -29847
-  },
-  {
-   "step": "Rates delta",
-   "pnl": -39150
-  },
-  {
-   "step": "FX delta",
-   "pnl": 8624
-  },
-  {
-   "step": "Vol (vega)",
-   "pnl": -10508
-  },
-  {
-   "step": "Theta",
-   "pnl": -62626
-  },
-  {
-   "step": "Unexplained",
-   "pnl": -3171
-  }
- ],
- "_meta": {
-  "source": "murex-rates",
-  "generation": 1,
-  "live": true,
-  "walk": {
-   "mtm": 5699,
-   "derive": [
+   "CASH_FLOWS": [
     {
-     "set": "valuation.npv",
-     "expr": "$.mtm"
+     "FLOW_ID": 20000094001,
+     "FLOW_TYPE": "2026-05-16..2026-08-16",
+     "NOTIONAL": 206000000.0,
+     "RATE": 0.031181,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-02-16",
+     "END_DATE": "2026-05-16",
+     "PAYMENT_DATE": "2026-05-16",
+     "RATE_DETERMINATION_DATE": "2026-05-16",
+     "FIRST_RESET_DATE": "2026-05-16",
+     "LAST_RESET_DATE": "2026-05-16",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-1",
+       "ACCRUAL": "",
+       "START_DATE": "2026-05-16",
+       "END_DATE": "2026-05-16",
+       "RESET_DATE": "2026-05-16",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": 0.031181
+      }
+     ]
     },
     {
-     "set": "valuation.cleanPv",
-     "expr": "$.mtm - valuation.accrued"
+     "FLOW_ID": 20000094002,
+     "FLOW_TYPE": "2026-08-16..2026-11-16",
+     "NOTIONAL": 206000000.0,
+     "RATE": 0.046777,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-05-16",
+     "END_DATE": "2026-08-16",
+     "PAYMENT_DATE": "2026-08-16",
+     "RATE_DETERMINATION_DATE": "2026-08-16",
+     "FIRST_RESET_DATE": "2026-08-16",
+     "LAST_RESET_DATE": "2026-08-16",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-2",
+       "ACCRUAL": "",
+       "START_DATE": "2026-08-16",
+       "END_DATE": "2026-08-16",
+       "RESET_DATE": "2026-08-16",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": 0.046777
+      }
+     ]
     },
     {
-     "set": "pnl1d",
-     "expr": "$.mtm - pnlExplain.0.pnl"
-    },
-    {
-     "set": "pnlExplain.6.pnl",
-     "expr": "pnlExplain.6.pnl + ($.mtm - sum(pnlExplain.*.pnl))"
+     "FLOW_ID": 20000094003,
+     "FLOW_TYPE": "2026-11-02..2027-02-02",
+     "NOTIONAL": 206000000.0,
+     "RATE": 0.029854,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-08-16",
+     "END_DATE": "2026-11-02",
+     "PAYMENT_DATE": "2026-11-02",
+     "RATE_DETERMINATION_DATE": "2026-11-02",
+     "FIRST_RESET_DATE": "2026-11-02",
+     "LAST_RESET_DATE": "2026-11-02",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-3",
+       "ACCRUAL": "",
+       "START_DATE": "2026-11-02",
+       "END_DATE": "2026-11-02",
+       "RESET_DATE": "2026-11-02",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
     }
    ]
   }
+ ],
+ "EVENTS": [
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000094001,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "BOOKED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-02-13",
+   "AMOUNT": "",
+   "CURRENCY": "CHF",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000094002,
+   "EVENT_NUMBER": 2,
+   "EVENT_TYPE": "CONFIRMED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-02-13",
+   "AMOUNT": "",
+   "CURRENCY": "CHF",
+   "SEQUENCE_NUMBER": 2,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000094003,
+   "EVENT_NUMBER": 3,
+   "EVENT_TYPE": "AMENDED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-03-24",
+   "AMOUNT": "",
+   "CURRENCY": "CHF",
+   "SEQUENCE_NUMBER": 3,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000094004,
+   "EVENT_NUMBER": 4,
+   "EVENT_TYPE": "CASH_SETTLED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-08-16",
+   "AMOUNT": 606515.5,
+   "CURRENCY": "CHF",
+   "SEQUENCE_NUMBER": 4,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000094005,
+   "EVENT_NUMBER": 5,
+   "EVENT_TYPE": "NEXT_PAYMENT",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-11-02",
+   "AMOUNT": "",
+   "CURRENCY": "CHF",
+   "SEQUENCE_NUMBER": 5,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000094006,
+   "EVENT_NUMBER": 6,
+   "EVENT_TYPE": "MATURITY",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-11-02",
+   "AMOUNT": "",
+   "CURRENCY": "CHF",
+   "SEQUENCE_NUMBER": 6,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 1,
+   "EVENT_ID": 20000094007,
+   "EVENT_NUMBER": 7,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "2026-08-16..2026-11-16",
+   "EVENT_DATE": "2026-08-16",
+   "AMOUNT": 606515.5,
+   "CURRENCY": "CHF",
+   "SEQUENCE_NUMBER": 7,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  }
+ ],
+ "_meta": {
+  "source": "murex",
+  "generation": 1
  }
 }

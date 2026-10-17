@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "MX-20000157",
+   "tradeId": "MX-20000379",
    "product": "Zero-coupon inflation swap",
    "assetClass": "Inflation",
    "currency": "EUR",
@@ -73,7 +73,7 @@
    "mtm": -8112592
   },
   {
-   "tradeId": "IMG-400074",
+   "tradeId": "MX-20000230",
    "product": "Reverse convertible",
    "assetClass": "Equity",
    "currency": "EUR",
@@ -84,7 +84,7 @@
    "mtm": -2940178
   },
   {
-   "tradeId": "WSS-1500012",
+   "tradeId": "CLY-3000012",
    "product": "FX forward",
    "assetClass": "FX",
    "currency": "GBP",
@@ -95,7 +95,7 @@
    "mtm": -1590129
   },
   {
-   "tradeId": "IMG-400060",
+   "tradeId": "MX-20000216",
    "product": "Equity digital option",
    "assetClass": "Equity",
    "currency": "USD",
@@ -106,7 +106,7 @@
    "mtm": -1069328
   },
   {
-   "tradeId": "WSS-1500028",
+   "tradeId": "CLY-3000028",
    "product": "FX vanilla option",
    "assetClass": "FX",
    "currency": "CHF",
@@ -117,7 +117,7 @@
    "mtm": -1063530
   },
   {
-   "tradeId": "IMG-400048",
+   "tradeId": "MX-20000204",
    "product": "Equity barrier option",
    "assetClass": "Equity",
    "currency": "CHF",
@@ -128,7 +128,7 @@
    "mtm": -773276
   },
   {
-   "tradeId": "IMG-400101",
+   "tradeId": "MX-20000257",
    "product": "Equity total return swap",
    "assetClass": "Equity",
    "currency": "EUR",
@@ -139,7 +139,7 @@
    "mtm": 657509
   },
   {
-   "tradeId": "WSS-1500007",
+   "tradeId": "CLY-3000007",
    "product": "FX forward",
    "assetClass": "FX",
    "currency": "USD",
@@ -150,7 +150,7 @@
    "mtm": 606494
   },
   {
-   "tradeId": "WSS-1500053",
+   "tradeId": "CLY-3000053",
    "product": "FX one-touch / no-touch",
    "assetClass": "FX",
    "currency": "USD",
@@ -161,7 +161,7 @@
    "mtm": -411302
   },
   {
-   "tradeId": "MX-20000174",
+   "tradeId": "MX-20000396",
    "product": "Inflation cap / floor",
    "assetClass": "Inflation",
    "currency": "EUR",
@@ -172,7 +172,7 @@
    "mtm": -318601
   },
   {
-   "tradeId": "IMG-400111",
+   "tradeId": "MX-20000267",
    "product": "Contract for difference",
    "assetClass": "Equity",
    "currency": "EUR",
@@ -183,7 +183,7 @@
    "mtm": 262724
   },
   {
-   "tradeId": "IMG-400113",
+   "tradeId": "MX-20000269",
    "product": "Contract for difference",
    "assetClass": "Equity",
    "currency": "GBP",
@@ -194,7 +194,7 @@
    "mtm": 207573
   },
   {
-   "tradeId": "MX-20000158",
+   "tradeId": "MX-20000380",
    "product": "Zero-coupon inflation swap",
    "assetClass": "Inflation",
    "currency": "JPY",
@@ -205,7 +205,7 @@
    "mtm": -188625
   },
   {
-   "tradeId": "IMG-400035",
+   "tradeId": "MX-20000191",
    "product": "OTC equity option",
    "assetClass": "Equity",
    "currency": "EUR",
@@ -216,7 +216,7 @@
    "mtm": -164052
   },
   {
-   "tradeId": "IMG-400122",
+   "tradeId": "MX-20000278",
    "product": "Convertible bond",
    "assetClass": "Equity",
    "currency": "USD",
@@ -227,7 +227,7 @@
    "mtm": 94323
   },
   {
-   "tradeId": "WSS-1500068",
+   "tradeId": "CLY-3000068",
    "product": "FX accumulator",
    "assetClass": "FX",
    "currency": "JPY",

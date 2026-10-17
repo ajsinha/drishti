@@ -1,307 +1,154 @@
 {
- "tradeId": "MX-20000128",
- "sourceSystem": "Murex",
- "sourceTradeId": "20000128",
- "productType": "STIR_FUT_OPT",
- "productName": "STIR future option",
- "assetClass": "Rates",
- "family": "option",
- "status": "Live",
- "direction": "Buy",
- "tradeDate": "2026-06-18",
- "effectiveDate": "2026-06-22",
- "maturityDate": "2027-09-27",
- "currency": "CAD",
- "notional": 36000000.0,
- "mtm": 136287,
- "mtmCurrency": "USD",
- "pnl1d": -3682,
- "counterparty": {
-  "id": "CP-SUMMIT",
-  "name": "Summit Clearing LLC"
- },
- "nettingSet": "NS-SUMMIT-NY",
- "book": "BOOK-RATES-2",
- "trader": "TRDR-MOKAFOR",
- "desk": "DESK-RATES",
- "legalEntity": "LE-NY",
- "clearingAccount": "CLR-CME-1",
- "forwardCurve": "CRV-CAD-PROJ",
- "capVolSurface": "CPV-CAD",
- "terms": {
-  "contract": "SR3 Z6 C 96.00",
-  "lots": 1135,
-  "premiumTicks": 17.7
- },
- "risk": {
-  "dv01": 3980,
-  "vega": 79301
- },
- "sensitivities": [
+ "SOURCE_SYSTEM": "MUREX",
+ "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z",
+ "TRADE_DATE": "2026-06-18",
+ "INPUT_DATE": "2026-06-18",
+ "TRADE_ID": "MX-20000128",
+ "TRADE_STATUS": "VALIDATED",
+ "TRADE_ACTION": "NEW",
+ "TRADE_VERSION": "1",
+ "TRANSACTION_ID": "20000128001",
+ "PACKAGE_ID": "",
+ "QUANTITY": 1135.0,
+ "PRICE": null,
+ "BUY_SELL_CODE": "B",
+ "PRODUCT_TYPE": "STIR_FUT_OPT",
+ "PRODUCT_SUB_TYPE": "STIR future option",
+ "PRODUCT_GROUP": "Rates",
+ "PRODUCT_SUB_GROUP": "option",
+ "OPTION_TYPE": null,
+ "STRIKE_PRICE": null,
+ "COUNTERPARTY": "CP-SUMMIT",
+ "COUNTERPARTY_UEN": "UEN0100592",
+ "COUNTERPARTY_COUNTRY_OF_RISK": "US",
+ "ORIGINAL_COUNTERPARTY": "",
+ "ORIGINAL_COUNTERPARTY_UEN": "",
+ "INTERNAL_EXTERNAL_CODE": "External",
+ "TRANSIT": "00107",
+ "LEGAL_ENTITY": "LE-NY",
+ "PORTFOLIO": "BOOK-RATES-2",
+ "TRADER_ID": "TRDR-MOKAFOR",
+ "TRADER_FIRST_NAME": "M.",
+ "TRADER_LAST_NAME": "Okafor",
+ "START_DATE": "2026-06-22",
+ "MATURITY_DATE": "2027-09-27",
+ "REGISTRY_DELIVERY_DATE": "",
+ "CURRENCY": "CAD",
+ "DELIVERY_VERSUS_PAYMENT": "NO",
+ "STRATEGY": null,
+ "INTERNAL_TRADING_STRATEGY": "",
+ "NY_CURVE_FLAG": "",
+ "VAULT_LOCATION_ALLOCATION": "",
+ "PRECIOUS_METAL_FLAG": "",
+ "TT_GROUP": "DESK-RATES",
+ "TT_BOOK": "BOOK-RATES-2",
+ "LEASE_PERPETUITY_FLAG": "",
+ "SETTLEMENT_DATE": "2026-06-22",
+ "LEGS": [
   {
-   "bucket": "3M",
-   "dv01": 663,
-   "vega": 13217
-  },
-  {
-   "bucket": "6M",
-   "dv01": 1327,
-   "vega": 26434
-  },
-  {
-   "bucket": "1Y",
-   "dv01": 1990,
-   "vega": 39650
-  }
- ],
- "pnlHistory": [
-  {
-   "date": "2026-09-03",
-   "pnl": -1982
-  },
-  {
-   "date": "2026-09-04",
-   "pnl": -1962
-  },
-  {
-   "date": "2026-09-07",
-   "pnl": 1925
-  },
-  {
-   "date": "2026-09-08",
-   "pnl": 6008
-  },
-  {
-   "date": "2026-09-09",
-   "pnl": 1418
-  },
-  {
-   "date": "2026-09-10",
-   "pnl": -3600
-  },
-  {
-   "date": "2026-09-11",
-   "pnl": -3927
-  },
-  {
-   "date": "2026-09-14",
-   "pnl": 3897
-  },
-  {
-   "date": "2026-09-15",
-   "pnl": -3818
-  },
-  {
-   "date": "2026-09-16",
-   "pnl": -1061
-  },
-  {
-   "date": "2026-09-17",
-   "pnl": -3704
-  },
-  {
-   "date": "2026-09-18",
-   "pnl": -662
-  },
-  {
-   "date": "2026-09-21",
-   "pnl": -4826
-  },
-  {
-   "date": "2026-09-22",
-   "pnl": -1468
-  },
-  {
-   "date": "2026-09-23",
-   "pnl": -3181
-  },
-  {
-   "date": "2026-09-24",
-   "pnl": 129
-  },
-  {
-   "date": "2026-09-25",
-   "pnl": -12990
-  },
-  {
-   "date": "2026-09-28",
-   "pnl": 545
-  },
-  {
-   "date": "2026-09-29",
-   "pnl": -4524
-  },
-  {
-   "date": "2026-09-30",
-   "pnl": -8005
-  }
- ],
- "execution": {
-  "tradeDate": "2026-06-18",
-  "executionTimestamp": "2026-06-18T11:29:35.444Z",
-  "venue": "Tradeweb SEF",
-  "venueMic": "TWSF",
-  "executionType": "Electronic",
-  "trader": "M. Okafor",
-  "salesperson": null,
-  "orderId": "ORD-B056FE3E9F"
- },
- "lifecycle": {
-  "status": "Live",
-  "version": 1,
-  "events": [
-   {
-    "version": 1,
-    "event": "New",
-    "reason": "Trade captured",
-    "at": "2026-06-18T10:56:00Z",
-    "by": "mo.ops"
-   }
-  ],
-  "sourceSystem": "Calypso",
-  "createdAt": "2026-06-18T10:56:00Z",
-  "lastModifiedAt": "2026-06-18T10:56:00Z",
-  "lastModifiedBy": "mo.ops",
-  "timeline": [
-   {
-    "date": "2026-06-18",
-    "event": "Booked",
-    "status": "Done",
-    "description": "Captured in Murex by TRDR-MOKAFOR: buy STIR future option"
+   "LEG_ID": 1,
+   "LEG_TYPE": "OPTION",
+   "LEG_ECONOMIC_TYPE": "Pay",
+   "CURRENCY": "CAD",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 36000000.0,
+   "DISCOUNT_INDEX": "",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "",
+   "RESET_HOLIDAY_SCHEDULE": null,
+   "RESET_CONVENTION": "",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "1",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "",
+    "GROUP": "",
+    "SUB_GROUP": ""
    },
-   {
-    "date": "2026-06-18",
-    "event": "Confirmed",
-    "status": "Matched",
-    "description": "Matched on MarkitWire (MA250016160)"
-   },
-   {
-    "date": "2026-06-22",
-    "event": "Cleared",
-    "status": "Done",
-    "description": "Novated to LCH SwapClear"
-   },
-   {
-    "date": "2027-09-27",
-    "event": "Maturity",
-    "status": "Scheduled",
-    "description": "Final payment and close-out"
-   }
-  ]
- },
- "confirmation": {
-  "status": "Confirmed",
-  "method": "MarkitWire",
-  "platformId": "MA250016160",
-  "matched": "2026-06-18 10:52",
-  "affirmedBy": "Counterparty ops",
-  "breaks": []
- },
- "clearing": {
-  "status": "Cleared",
-  "mandatory": true,
-  "ccp": "LCH SwapClear",
-  "clearingBroker": "Summit Clearing LLC",
-  "ccpTradeId": "LCH4207187827",
-  "account": "House",
-  "novatedAt": null
- },
- "regulatory": {
-  "uti": "549300O1N13GO2II2096B056FE3E9F1C02978EF0",
-  "upi": "QZUHH6SUXVJT",
-  "reportingRegimes": [
-   "CFTC Part 43/45"
-  ],
-  "reportingParty": "Us",
-  "reportingStatus": "Accepted",
-  "clearingObligation": true,
-  "tradingObligation": true,
-  "mifidClassification": "Professional client",
-  "volckerExempt": false,
-  "saCcrAssetClass": "Interest rate"
- },
- "settlementInstructions": {
-  "method": "Gross",
-  "ourAgent": "JPMorgan Chase Bank, N.A.",
-  "ourAgentBic": "CHASUS33XXX",
-  "theirAgentBic": "SUMMGB33XXX",
-  "ssiId": "SSI-CAD-6A7EC8",
-  "netting": "Payment netting by currency and value date"
- },
- "valuation": {
-  "asOf": "2026-09-30",
-  "currency": "USD",
-  "npv": 136287,
-  "cleanPv": 136287.0,
-  "accrued": 0.0,
-  "legPvs": [],
-  "model": "Black / Bachelier",
-  "curves": [
-   "CRV-CAD-PROJ",
-   "CPV-CAD"
-  ],
-  "status": "Official EOD",
-  "runId": "EOD-20260930-01"
- },
- "pnlExplain": [
-  {
-   "step": "Opening MTM",
-   "pnl": 139969,
-   "total": true
-  },
-  {
-   "step": "Carry",
-   "pnl": -249
-  },
-  {
-   "step": "Roll-down",
-   "pnl": 100
-  },
-  {
-   "step": "Rates delta",
-   "pnl": -1663
-  },
-  {
-   "step": "FX delta",
-   "pnl": 218
-  },
-  {
-   "step": "Vol (vega)",
-   "pnl": -555
-  },
-  {
-   "step": "Theta",
-   "pnl": -1410
-  },
-  {
-   "step": "Unexplained",
-   "pnl": -123
-  }
- ],
- "_meta": {
-  "source": "murex-rates",
-  "generation": 1,
-  "live": true,
-  "walk": {
-   "mtm": 633,
-   "derive": [
+   "CASH_FLOWS": [
     {
-     "set": "valuation.npv",
-     "expr": "$.mtm"
-    },
-    {
-     "set": "valuation.cleanPv",
-     "expr": "$.mtm - valuation.accrued"
-    },
-    {
-     "set": "pnl1d",
-     "expr": "$.mtm - pnlExplain.0.pnl"
-    },
-    {
-     "set": "pnlExplain.3.pnl",
-     "expr": "pnlExplain.3.pnl + ($.mtm - sum(pnlExplain.*.pnl))"
+     "FLOW_ID": 20000128001,
+     "FLOW_TYPE": "Principal",
+     "NOTIONAL": 36000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-06-22",
+     "END_DATE": "2027-09-27",
+     "PAYMENT_DATE": "2027-09-27",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
     }
    ]
   }
+ ],
+ "EVENTS": [
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000128001,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "BOOKED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-06-18",
+   "AMOUNT": "",
+   "CURRENCY": "CAD",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000128002,
+   "EVENT_NUMBER": 2,
+   "EVENT_TYPE": "CONFIRMED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-06-18",
+   "AMOUNT": "",
+   "CURRENCY": "CAD",
+   "SEQUENCE_NUMBER": 2,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000128003,
+   "EVENT_NUMBER": 3,
+   "EVENT_TYPE": "CLEARED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-06-22",
+   "AMOUNT": "",
+   "CURRENCY": "CAD",
+   "SEQUENCE_NUMBER": 3,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000128004,
+   "EVENT_NUMBER": 4,
+   "EVENT_TYPE": "MATURITY",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2027-09-27",
+   "AMOUNT": "",
+   "CURRENCY": "CAD",
+   "SEQUENCE_NUMBER": 4,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  }
+ ],
+ "_meta": {
+  "source": "murex",
+  "generation": 1
  }
 }

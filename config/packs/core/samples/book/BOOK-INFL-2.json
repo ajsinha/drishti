@@ -7,7 +7,7 @@
  "dv01": 183423,
  "topTrades": [
   {
-   "tradeId": "MX-20000161",
+   "tradeId": "MX-20000383",
    "product": "Zero-coupon inflation swap",
    "assetClass": "Inflation",
    "currency": "JPY",
@@ -18,7 +18,7 @@
    "mtm": 8195317
   },
   {
-   "tradeId": "MX-20000157",
+   "tradeId": "MX-20000379",
    "product": "Zero-coupon inflation swap",
    "assetClass": "Inflation",
    "currency": "EUR",
@@ -29,7 +29,7 @@
    "mtm": -8112592
   },
   {
-   "tradeId": "MX-20000164",
+   "tradeId": "MX-20000386",
    "product": "Year-on-year inflation swap",
    "assetClass": "Inflation",
    "currency": "GBP",
@@ -40,7 +40,7 @@
    "mtm": -4921358
   },
   {
-   "tradeId": "MX-20000173",
+   "tradeId": "MX-20000395",
    "product": "Inflation cap / floor",
    "assetClass": "Inflation",
    "currency": "USD",
@@ -51,7 +51,7 @@
    "mtm": 4685483
   },
   {
-   "tradeId": "MX-20000185",
+   "tradeId": "MX-20000407",
    "product": "Inflation asset swap",
    "assetClass": "Inflation",
    "currency": "JPY",
@@ -62,7 +62,7 @@
    "mtm": -2801657
   },
   {
-   "tradeId": "MX-20000190",
+   "tradeId": "MX-20000412",
    "product": "Limited price index swap",
    "assetClass": "Inflation",
    "currency": "JPY",
@@ -73,7 +73,7 @@
    "mtm": -1373222
   },
   {
-   "tradeId": "MX-20000180",
+   "tradeId": "MX-20000402",
    "product": "Inflation-linked bond",
    "assetClass": "Inflation",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": -1106536
   },
   {
-   "tradeId": "MX-20000178",
+   "tradeId": "MX-20000400",
    "product": "Inflation-linked bond",
    "assetClass": "Inflation",
    "currency": "GBP",
@@ -95,7 +95,7 @@
    "mtm": -992597
   },
   {
-   "tradeId": "MX-20000165",
+   "tradeId": "MX-20000387",
    "product": "Year-on-year inflation swap",
    "assetClass": "Inflation",
    "currency": "USD",
@@ -106,7 +106,7 @@
    "mtm": 956175
   },
   {
-   "tradeId": "MX-20000188",
+   "tradeId": "MX-20000410",
    "product": "Limited price index swap",
    "assetClass": "Inflation",
    "currency": "JPY",

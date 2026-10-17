@@ -1,53 +1,53 @@
 {
  "resultId": "CVA-LUMEN-NY",
- "cva": -6493,
- "dva": 2273,
- "fva": -45724,
- "kva": -60893,
- "cs01": -117,
+ "cva": -5897,
+ "dva": 2064,
+ "fva": -44223,
+ "kva": -34289,
+ "cs01": -106,
  "components": [
   {
    "name": "CVA",
-   "amount": -6493
+   "amount": -5897
   },
   {
    "name": "DVA",
-   "amount": 2273
+   "amount": 2064
   },
   {
    "name": "FVA",
-   "amount": -45724
+   "amount": -44223
   },
   {
    "name": "KVA",
-   "amount": -60893
+   "amount": -34289
   }
  ],
  "sensitivities": [
   {
    "factor": "Counterparty spread",
    "bump": "+1 bp",
-   "delta": -117
+   "delta": -106
   },
   {
    "factor": "USD rates",
    "bump": "+1 bp",
-   "delta": 26
+   "delta": 24
   },
   {
    "factor": "EUR rates",
    "bump": "+1 bp",
-   "delta": 13
+   "delta": 12
   },
   {
    "factor": "FX vol",
    "bump": "+1 vol",
-   "delta": -195
+   "delta": -177
   },
   {
    "factor": "Recovery",
    "bump": "+1%",
-   "delta": 110
+   "delta": 100
   }
  ],
  "nettingSet": "NS-LUMEN-NY",

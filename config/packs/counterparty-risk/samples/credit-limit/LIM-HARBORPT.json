@@ -3,38 +3,38 @@
  "counterpartyName": "Harbor Point Bank",
  "measure": "PFE 95 peak",
  "limit": 450000000.0,
- "used": 258807405,
+ "used": 258811263,
  "utilisation": 0.5751,
  "status": "Within limit",
  "buckets": [
   {
    "bucket": "0-1Y",
    "limit": 450000000,
-   "used": 219986294,
+   "used": 219989574,
    "utilisation": 0.4889
   },
   {
    "bucket": "1-3Y",
    "limit": 450000000,
-   "used": 258807405,
+   "used": 258811263,
    "utilisation": 0.5751
   },
   {
    "bucket": "3-5Y",
    "limit": 360000000,
-   "used": 181165184,
+   "used": 181167884,
    "utilisation": 0.5032
   },
   {
    "bucket": "5-10Y",
    "limit": 270000000,
-   "used": 90582592,
+   "used": 90583942,
    "utilisation": 0.3355
   },
   {
    "bucket": "10Y+",
    "limit": 180000000,
-   "used": 25880740,
+   "used": 25881126,
    "utilisation": 0.1438
   }
  ],

@@ -1,63 +1,63 @@
 {
  "nettingSetId": "NS-ALDERSHOT-NY",
  "tradeCount": 22,
- "netMtm": 21121197,
- "collateral": 14035123,
- "eePeak": 18650640,
- "pfePeak": 42672908,
- "limit": 75000000.0,
- "utilisation": 0.569,
- "cva": -11062,
+ "netMtm": 19695927,
+ "collateral": 13088025,
+ "eePeak": 18278239,
+ "pfePeak": 41853626,
+ "limit": 73000000.0,
+ "utilisation": 0.5733,
+ "cva": -10681,
  "profile": [
   {
    "tenor": "0",
-   "ee": 11632660,
-   "pfe": 29690090
+   "ee": 11154488,
+   "pfe": 28638112
   },
   {
    "tenor": "1M",
-   "ee": 13421453,
-   "pfe": 32333759
+   "ee": 12953140,
+   "pfe": 31303470
   },
   {
    "tenor": "3M",
-   "ee": 17883000,
-   "pfe": 42149164
+   "ee": 17433799,
+   "pfe": 41160921
   },
   {
    "tenor": "6M",
-   "ee": 16047504,
-   "pfe": 37035871
+   "ee": 15197860,
+   "pfe": 35091055
   },
   {
    "tenor": "1Y",
-   "ee": 18650640,
-   "pfe": 42672908
+   "ee": 18278239,
+   "pfe": 41853626
   },
   {
    "tenor": "2Y",
-   "ee": 7473679,
-   "pfe": 16722794
+   "ee": 7183653,
+   "pfe": 16084737
   },
   {
    "tenor": "3Y",
-   "ee": 7236718,
-   "pfe": 16201479
+   "ee": 7010845,
+   "pfe": 15704559
   },
   {
    "tenor": "5Y",
-   "ee": 3409177,
-   "pfe": 7577278
+   "ee": 3272179,
+   "pfe": 7275881
   },
   {
    "tenor": "7Y",
-   "ee": 2690771,
-   "pfe": 5988647
+   "ee": 2607678,
+   "pfe": 5805841
   },
   {
    "tenor": "10Y",
-   "ee": 581660,
-   "pfe": 1279653
+   "ee": 542410,
+   "pfe": 1193301
   }
  ],
  "trades": [
@@ -73,7 +73,7 @@
    "mtm": 9246729
   },
   {
-   "tradeId": "END-1000011",
+   "tradeId": "MX-20000299",
    "product": "Commodity forward",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": 5446207
   },
   {
-   "tradeId": "BBG-60000067",
+   "tradeId": "CLY-3000223",
    "product": "Asset-backed security",
    "assetClass": "Fixed income",
    "currency": "GBP",
@@ -95,7 +95,7 @@
    "mtm": 4905373
   },
   {
-   "tradeId": "CLY-3000029",
+   "tradeId": "CLY-3000113",
    "product": "First-to-default basket",
    "assetClass": "Credit",
    "currency": "JPY",
@@ -106,7 +106,7 @@
    "mtm": -3938043
   },
   {
-   "tradeId": "CLY-3000048",
+   "tradeId": "CLY-3000132",
    "product": "Credit-linked note",
    "assetClass": "Credit",
    "currency": "AUD",
@@ -117,7 +117,7 @@
    "mtm": 3195037
   },
   {
-   "tradeId": "END-1000040",
+   "tradeId": "MX-20000328",
    "product": "Commodity swaption",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -139,7 +139,7 @@
    "mtm": 1831652
   },
   {
-   "tradeId": "CLY-3000020",
+   "tradeId": "CLY-3000104",
    "product": "CDS index option",
    "assetClass": "Credit",
    "currency": "USD",
@@ -150,7 +150,7 @@
    "mtm": 1574254
   },
   {
-   "tradeId": "END-1000042",
+   "tradeId": "MX-20000330",
    "product": "Commodity swaption",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -161,7 +161,7 @@
    "mtm": 1250345
   },
   {
-   "tradeId": "END-1000038",
+   "tradeId": "MX-20000326",
    "product": "Commodity swaption",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -172,7 +172,7 @@
    "mtm": 1233398
   },
   {
-   "tradeId": "END-1000036",
+   "tradeId": "MX-20000324",
    "product": "Average price option (APO)",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -181,17 +181,6 @@
    "maturity": "2028-08-07",
    "maturityBucket": "1-2Y",
    "mtm": -1215501
-  },
-  {
-   "tradeId": "END-1000018",
-   "product": "Commodity swap",
-   "assetClass": "Commodity",
-   "currency": "USD",
-   "book": "BOOK-COMM-2",
-   "notional": 24000000.0,
-   "maturity": "2027-08-31",
-   "maturityBucket": "0-1Y",
-   "mtm": 1166701
   },
   {
    "tradeId": "MX-20000050",
@@ -249,7 +238,7 @@
    "mtm": -432768
   },
   {
-   "tradeId": "WSS-1500099",
+   "tradeId": "CLY-3000249",
    "product": "Certificate of deposit",
    "assetClass": "Money market",
    "currency": "JPY",
@@ -260,7 +249,7 @@
    "mtm": 409089
   },
   {
-   "tradeId": "END-1000007",
+   "tradeId": "MX-20000295",
    "product": "Commodity forward",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -280,6 +269,17 @@
    "maturity": "2027-04-26",
    "maturityBucket": "0-1Y",
    "mtm": -301692
+  },
+  {
+   "tradeId": "MX-20000306",
+   "product": "Commodity swap",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-2",
+   "notional": 24000000.0,
+   "maturity": "2027-01-31",
+   "maturityBucket": "0-1Y",
+   "mtm": -258569
   },
   {
    "tradeId": "MX-20000025",
@@ -310,12 +310,12 @@
    "mtm": 9309918
   },
   {
-   "asset": "Commodity",
-   "mtm": 5665569
-  },
-  {
    "asset": "Fixed income",
    "mtm": 4905373
+  },
+  {
+   "asset": "Commodity",
+   "mtm": 4240299
   },
   {
    "asset": "Credit",
@@ -353,15 +353,15 @@
    "trades.8.mtm": 2901,
    "trades.9.mtm": 2867,
    "trades.10.mtm": 2831,
-   "trades.11.mtm": 2733,
-   "trades.12.mtm": 1452,
-   "trades.13.mtm": 1383,
-   "trades.14.mtm": 1337,
-   "trades.15.mtm": 1318,
-   "trades.16.mtm": 1266,
-   "trades.17.mtm": 1218,
-   "trades.18.mtm": 1018,
-   "trades.19.mtm": 1003,
+   "trades.11.mtm": 1452,
+   "trades.12.mtm": 1383,
+   "trades.13.mtm": 1337,
+   "trades.14.mtm": 1318,
+   "trades.15.mtm": 1266,
+   "trades.16.mtm": 1218,
+   "trades.17.mtm": 1018,
+   "trades.18.mtm": 1003,
+   "trades.19.mtm": 917,
    "trades.20.mtm": 544,
    "trades.21.mtm": 400,
    "eePeak": {
@@ -375,15 +375,15 @@
    "derive": [
     {
      "set": "byAsset.0.mtm",
-     "expr": "trades.0.mtm + trades.6.mtm + trades.12.mtm + trades.13.mtm + trades.14.mtm + trades.15.mtm + trades.16.mtm + trades.19.mtm + trades.20.mtm + trades.21.mtm"
+     "expr": "trades.0.mtm + trades.6.mtm + trades.11.mtm + trades.12.mtm + trades.13.mtm + trades.14.mtm + trades.15.mtm + trades.18.mtm + trades.20.mtm + trades.21.mtm"
     },
     {
      "set": "byAsset.1.mtm",
-     "expr": "trades.1.mtm + trades.5.mtm + trades.8.mtm + trades.9.mtm + trades.10.mtm + trades.11.mtm + trades.18.mtm"
+     "expr": "trades.2.mtm"
     },
     {
      "set": "byAsset.2.mtm",
-     "expr": "trades.2.mtm"
+     "expr": "trades.1.mtm + trades.5.mtm + trades.8.mtm + trades.9.mtm + trades.10.mtm + trades.17.mtm + trades.19.mtm"
     },
     {
      "set": "byAsset.3.mtm",
@@ -391,7 +391,7 @@
     },
     {
      "set": "byAsset.4.mtm",
-     "expr": "trades.17.mtm"
+     "expr": "trades.16.mtm"
     },
     {
      "set": "netMtm",

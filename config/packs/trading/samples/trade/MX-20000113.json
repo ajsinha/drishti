@@ -1,303 +1,141 @@
 {
- "tradeId": "MX-20000113",
- "sourceSystem": "Murex",
- "sourceTradeId": "20000113",
- "productType": "SWAPTION_AMER",
- "productName": "American swaption",
- "assetClass": "Rates",
- "family": "option",
- "status": "Live",
- "direction": "Buy",
- "tradeDate": "2025-10-10",
- "effectiveDate": "2025-10-14",
- "maturityDate": "2028-04-13",
- "currency": "USD",
- "notional": 139000000.0,
- "mtm": 447170,
- "mtmCurrency": "USD",
- "pnl1d": -11633,
- "counterparty": {
-  "id": "CP-PINNACLE",
-  "name": "Pinnacle Credit Partners"
- },
- "nettingSet": "NS-PINNACLE-NY",
- "book": "BOOK-RATES-1",
- "trader": "TRDR-MOKAFOR",
- "desk": "DESK-RATES",
- "legalEntity": "LE-NY",
- "discountCurve": "CRV-USD-OIS",
- "forwardCurve": "CRV-USD-PROJ",
- "swaptionVolCube": "IRV-USD",
- "terms": {
-  "payerReceiver": "Receiver",
-  "strike": 0.034243,
-  "expiryDate": "2028-12-23"
- },
- "risk": {
-  "dv01": 27555,
-  "vega": 574461
- },
- "sensitivities": [
+ "SOURCE_SYSTEM": "MUREX",
+ "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z",
+ "TRADE_DATE": "2025-10-10",
+ "INPUT_DATE": "2025-10-10",
+ "TRADE_ID": "MX-20000113",
+ "TRADE_STATUS": "VALIDATED",
+ "TRADE_ACTION": "NEW",
+ "TRADE_VERSION": "1",
+ "TRANSACTION_ID": "20000113001",
+ "PACKAGE_ID": "",
+ "QUANTITY": 139000000.0,
+ "PRICE": null,
+ "BUY_SELL_CODE": "B",
+ "PRODUCT_TYPE": "SWAPTION_AMER",
+ "PRODUCT_SUB_TYPE": "American swaption",
+ "PRODUCT_GROUP": "Rates",
+ "PRODUCT_SUB_GROUP": "option",
+ "OPTION_TYPE": "Receiver",
+ "STRIKE_PRICE": 0.034243,
+ "COUNTERPARTY": "CP-PINNACLE",
+ "COUNTERPARTY_UEN": "UEN0100481",
+ "COUNTERPARTY_COUNTRY_OF_RISK": "US",
+ "ORIGINAL_COUNTERPARTY": "",
+ "ORIGINAL_COUNTERPARTY_UEN": "",
+ "INTERNAL_EXTERNAL_CODE": "External",
+ "TRANSIT": "00107",
+ "LEGAL_ENTITY": "LE-NY",
+ "PORTFOLIO": "BOOK-RATES-1",
+ "TRADER_ID": "TRDR-MOKAFOR",
+ "TRADER_FIRST_NAME": "M.",
+ "TRADER_LAST_NAME": "Okafor",
+ "START_DATE": "2025-10-14",
+ "MATURITY_DATE": "2028-12-23",
+ "REGISTRY_DELIVERY_DATE": "",
+ "CURRENCY": "USD",
+ "DELIVERY_VERSUS_PAYMENT": "NO",
+ "STRATEGY": null,
+ "INTERNAL_TRADING_STRATEGY": "",
+ "NY_CURVE_FLAG": "",
+ "VAULT_LOCATION_ALLOCATION": "",
+ "PRECIOUS_METAL_FLAG": "",
+ "TT_GROUP": "DESK-RATES",
+ "TT_BOOK": "BOOK-RATES-1",
+ "LEASE_PERPETUITY_FLAG": "",
+ "SETTLEMENT_DATE": "2025-10-14",
+ "LEGS": [
   {
-   "bucket": "3M",
-   "dv01": 2756,
-   "vega": 57446
-  },
-  {
-   "bucket": "6M",
-   "dv01": 5511,
-   "vega": 114892
-  },
-  {
-   "bucket": "1Y",
-   "dv01": 8266,
-   "vega": 172338
-  },
-  {
-   "bucket": "2Y",
-   "dv01": 11022,
-   "vega": 229784
-  }
- ],
- "pnlHistory": [
-  {
-   "date": "2026-09-03",
-   "pnl": -2067
-  },
-  {
-   "date": "2026-09-04",
-   "pnl": -18005
-  },
-  {
-   "date": "2026-09-07",
-   "pnl": -14483
-  },
-  {
-   "date": "2026-09-08",
-   "pnl": -395
-  },
-  {
-   "date": "2026-09-09",
-   "pnl": -2052
-  },
-  {
-   "date": "2026-09-10",
-   "pnl": 27024
-  },
-  {
-   "date": "2026-09-11",
-   "pnl": 771
-  },
-  {
-   "date": "2026-09-14",
-   "pnl": 5495
-  },
-  {
-   "date": "2026-09-15",
-   "pnl": -4456
-  },
-  {
-   "date": "2026-09-16",
-   "pnl": -3891
-  },
-  {
-   "date": "2026-09-17",
-   "pnl": 30876
-  },
-  {
-   "date": "2026-09-18",
-   "pnl": -17202
-  },
-  {
-   "date": "2026-09-21",
-   "pnl": -5064
-  },
-  {
-   "date": "2026-09-22",
-   "pnl": 9151
-  },
-  {
-   "date": "2026-09-23",
-   "pnl": 4397
-  },
-  {
-   "date": "2026-09-24",
-   "pnl": 14226
-  },
-  {
-   "date": "2026-09-25",
-   "pnl": -19266
-  },
-  {
-   "date": "2026-09-28",
-   "pnl": 9394
-  },
-  {
-   "date": "2026-09-29",
-   "pnl": -15365
-  },
-  {
-   "date": "2026-09-30",
-   "pnl": -11177
-  }
- ],
- "execution": {
-  "tradeDate": "2025-10-10",
-  "executionTimestamp": "2025-10-10T11:26:35.105Z",
-  "venue": "Tradeweb SEF",
-  "venueMic": "TWSF",
-  "executionType": "Electronic",
-  "trader": "M. Okafor",
-  "salesperson": null,
-  "orderId": "ORD-FE7D2D82E4"
- },
- "lifecycle": {
-  "status": "Live",
-  "version": 1,
-  "events": [
-   {
-    "version": 1,
-    "event": "New",
-    "reason": "Trade captured",
-    "at": "2025-10-10T10:41:00Z",
-    "by": "mo.ops"
-   }
-  ],
-  "sourceSystem": "Calypso",
-  "createdAt": "2025-10-10T10:41:00Z",
-  "lastModifiedAt": "2025-10-10T10:41:00Z",
-  "lastModifiedBy": "mo.ops",
-  "timeline": [
-   {
-    "date": "2025-10-10",
-    "event": "Booked",
-    "status": "Done",
-    "description": "Captured in Murex by TRDR-MOKAFOR: buy American swaption"
+   "LEG_ID": 1,
+   "LEG_TYPE": "OPTION",
+   "LEG_ECONOMIC_TYPE": "Pay",
+   "CURRENCY": "USD",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 139000000.0,
+   "DISCOUNT_INDEX": "CRV-USD-OIS",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "",
+   "RESET_HOLIDAY_SCHEDULE": null,
+   "RESET_CONVENTION": "",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "1",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "",
+    "GROUP": "",
+    "SUB_GROUP": ""
    },
-   {
-    "date": "2025-10-10",
-    "event": "Confirmed",
-    "status": "Matched",
-    "description": "Matched on MarkitWire (MA968557867)"
-   },
-   {
-    "date": "2028-04-13",
-    "event": "Maturity",
-    "status": "Scheduled",
-    "description": "Final payment and close-out"
-   }
-  ]
- },
- "confirmation": {
-  "status": "Confirmed",
-  "method": "MarkitWire",
-  "platformId": "MA968557867",
-  "matched": "2025-10-10 14:22",
-  "affirmedBy": "Counterparty ops",
-  "breaks": []
- },
- "clearing": {
-  "status": "Bilateral",
-  "mandatory": false,
-  "reason": "Counterparty below clearing threshold"
- },
- "regulatory": {
-  "uti": "549300O1N13GO2II2096FE7D2D82E403C5B4E533",
-  "upi": "QZL040OWCYA5",
-  "reportingRegimes": [
-   "CFTC Part 43/45"
-  ],
-  "reportingParty": "Us",
-  "reportingStatus": "Accepted",
-  "clearingObligation": false,
-  "tradingObligation": false,
-  "mifidClassification": "Professional client",
-  "volckerExempt": false,
-  "saCcrAssetClass": "Interest rate"
- },
- "settlementInstructions": {
-  "method": "Gross",
-  "ourAgent": "JPMorgan Chase Bank, N.A.",
-  "ourAgentBic": "CHASUS33XXX",
-  "theirAgentBic": "PINNUS33XXX",
-  "ssiId": "SSI-USD-F2BB52",
-  "netting": "Payment netting by currency and value date"
- },
- "valuation": {
-  "asOf": "2026-09-30",
-  "currency": "USD",
-  "npv": 447170,
-  "cleanPv": 447170.0,
-  "accrued": 0.0,
-  "legPvs": [],
-  "model": "Black / Bachelier",
-  "curves": [
-   "CRV-USD-OIS",
-   "CRV-USD-PROJ",
-   "IRV-USD"
-  ],
-  "status": "Official EOD",
-  "runId": "EOD-20260930-01"
- },
- "pnlExplain": [
-  {
-   "step": "Opening MTM",
-   "pnl": 458803,
-   "total": true
-  },
-  {
-   "step": "Carry",
-   "pnl": 2026
-  },
-  {
-   "step": "Roll-down",
-   "pnl": 1794
-  },
-  {
-   "step": "Rates delta",
-   "pnl": -3477
-  },
-  {
-   "step": "FX delta",
-   "pnl": 1553
-  },
-  {
-   "step": "Vol (vega)",
-   "pnl": -5489
-  },
-  {
-   "step": "Theta",
-   "pnl": -8292
-  },
-  {
-   "step": "Unexplained",
-   "pnl": 252
-  }
- ],
- "_meta": {
-  "source": "murex-rates",
-  "generation": 1,
-  "live": true,
-  "walk": {
-   "mtm": 2284,
-   "derive": [
+   "CASH_FLOWS": [
     {
-     "set": "valuation.npv",
-     "expr": "$.mtm"
-    },
-    {
-     "set": "valuation.cleanPv",
-     "expr": "$.mtm - valuation.accrued"
-    },
-    {
-     "set": "pnl1d",
-     "expr": "$.mtm - pnlExplain.0.pnl"
-    },
-    {
-     "set": "pnlExplain.6.pnl",
-     "expr": "pnlExplain.6.pnl + ($.mtm - sum(pnlExplain.*.pnl))"
+     "FLOW_ID": 20000113001,
+     "FLOW_TYPE": "Principal",
+     "NOTIONAL": 139000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2025-10-14",
+     "END_DATE": "2028-04-13",
+     "PAYMENT_DATE": "2028-04-13",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
     }
    ]
   }
+ ],
+ "EVENTS": [
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000113001,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "BOOKED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2025-10-10",
+   "AMOUNT": "",
+   "CURRENCY": "USD",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000113002,
+   "EVENT_NUMBER": 2,
+   "EVENT_TYPE": "CONFIRMED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2025-10-10",
+   "AMOUNT": "",
+   "CURRENCY": "USD",
+   "SEQUENCE_NUMBER": 2,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000113003,
+   "EVENT_NUMBER": 3,
+   "EVENT_TYPE": "MATURITY",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2028-04-13",
+   "AMOUNT": "",
+   "CURRENCY": "USD",
+   "SEQUENCE_NUMBER": 3,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  }
+ ],
+ "_meta": {
+  "source": "murex",
+  "generation": 1
  }
 }

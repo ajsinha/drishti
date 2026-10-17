@@ -2,7 +2,7 @@
  "resultId": "CVA-KESTREL-NY",
  "cva": -69030,
  "dva": 5575,
- "fva": -5713,
+ "fva": -6892,
  "kva": -122934,
  "cs01": -1243,
  "components": [
@@ -16,7 +16,7 @@
   },
   {
    "name": "FVA",
-   "amount": -5713
+   "amount": -6892
   },
   {
    "name": "KVA",

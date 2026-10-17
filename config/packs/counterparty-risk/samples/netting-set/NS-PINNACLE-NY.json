@@ -73,7 +73,7 @@
    "mtm": 25398239
   },
   {
-   "tradeId": "END-1000056",
+   "tradeId": "MX-20000344",
    "product": "Commodity index swap",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": 1673731
   },
   {
-   "tradeId": "CLY-3000018",
+   "tradeId": "CLY-3000102",
    "product": "Index tranche",
    "assetClass": "Credit",
    "currency": "EUR",
@@ -95,7 +95,7 @@
    "mtm": -1480347
   },
   {
-   "tradeId": "CLY-3000059",
+   "tradeId": "CLY-3000143",
    "product": "Revolving credit facility",
    "assetClass": "Credit",
    "currency": "CAD",
@@ -128,7 +128,7 @@
    "mtm": 1000230
   },
   {
-   "tradeId": "WSS-1500096",
+   "tradeId": "CLY-3000246",
    "product": "Commercial paper",
    "assetClass": "Money market",
    "currency": "CAD",
@@ -161,7 +161,7 @@
    "mtm": 644255
   },
   {
-   "tradeId": "WSS-1500091",
+   "tradeId": "CLY-3000241",
    "product": "Commercial paper",
    "assetClass": "Money market",
    "currency": "USD",
@@ -216,7 +216,7 @@
    "mtm": -417694
   },
   {
-   "tradeId": "CLY-3000005",
+   "tradeId": "CLY-3000089",
    "product": "Single-name CDS",
    "assetClass": "Credit",
    "currency": "CHF",
@@ -227,7 +227,7 @@
    "mtm": -287615
   },
   {
-   "tradeId": "END-1000085",
+   "tradeId": "MX-20000373",
    "product": "Freight forward agreement",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -249,7 +249,7 @@
    "mtm": 157179
   },
   {
-   "tradeId": "CLY-3000002",
+   "tradeId": "CLY-3000086",
    "product": "Single-name CDS",
    "assetClass": "Credit",
    "currency": "USD",
@@ -271,7 +271,7 @@
    "mtm": -96005
   },
   {
-   "tradeId": "CLY-3000022",
+   "tradeId": "CLY-3000106",
    "product": "CDS index option",
    "assetClass": "Credit",
    "currency": "USD",
@@ -282,7 +282,7 @@
    "mtm": 75526
   },
   {
-   "tradeId": "WSS-1500104",
+   "tradeId": "CLY-3000254",
    "product": "Term deposit / placement",
    "assetClass": "Money market",
    "currency": "AUD",
@@ -304,7 +304,7 @@
    "mtm": 34663
   },
   {
-   "tradeId": "WSS-1500094",
+   "tradeId": "CLY-3000244",
    "product": "Commercial paper",
    "assetClass": "Money market",
    "currency": "USD",

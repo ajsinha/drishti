@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "MX-20000185",
+   "tradeId": "MX-20000407",
    "product": "Inflation asset swap",
    "assetClass": "Inflation",
    "currency": "JPY",
@@ -73,7 +73,7 @@
    "mtm": -2801657
   },
   {
-   "tradeId": "WSS-1500019",
+   "tradeId": "CLY-3000019",
    "product": "FX swap",
    "assetClass": "FX",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": -1679905
   },
   {
-   "tradeId": "MX-20000180",
+   "tradeId": "MX-20000402",
    "product": "Inflation-linked bond",
    "assetClass": "Inflation",
    "currency": "USD",
@@ -95,7 +95,7 @@
    "mtm": -1106536
   },
   {
-   "tradeId": "MX-20000165",
+   "tradeId": "MX-20000387",
    "product": "Year-on-year inflation swap",
    "assetClass": "Inflation",
    "currency": "USD",
@@ -106,7 +106,7 @@
    "mtm": 956175
   },
   {
-   "tradeId": "MX-20000192",
+   "tradeId": "MX-20000414",
    "product": "Limited price index swap",
    "assetClass": "Inflation",
    "currency": "GBP",
@@ -117,7 +117,7 @@
    "mtm": -339669
   },
   {
-   "tradeId": "IMG-400078",
+   "tradeId": "MX-20000234",
    "product": "Reverse convertible",
    "assetClass": "Equity",
    "currency": "EUR",
@@ -128,7 +128,7 @@
    "mtm": -218334
   },
   {
-   "tradeId": "IMG-400087",
+   "tradeId": "MX-20000243",
    "product": "Volatility swap",
    "assetClass": "Equity",
    "currency": "USD",
@@ -139,7 +139,7 @@
    "mtm": 139897
   },
   {
-   "tradeId": "IMG-400090",
+   "tradeId": "MX-20000246",
    "product": "Volatility swap",
    "assetClass": "Equity",
    "currency": "JPY",
@@ -150,7 +150,7 @@
    "mtm": 31675
   },
   {
-   "tradeId": "IMG-400089",
+   "tradeId": "MX-20000245",
    "product": "Volatility swap",
    "assetClass": "Equity",
    "currency": "USD",

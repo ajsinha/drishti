@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "IMG-400050",
+   "tradeId": "MX-20000206",
    "product": "Equity Asian option",
    "assetClass": "Equity",
    "currency": "GBP",
@@ -73,7 +73,7 @@
    "mtm": -3224113
   },
   {
-   "tradeId": "IMG-400123",
+   "tradeId": "MX-20000279",
    "product": "Convertible bond",
    "assetClass": "Equity",
    "currency": "GBP",
@@ -84,7 +84,7 @@
    "mtm": -3175475
   },
   {
-   "tradeId": "IMG-400126",
+   "tradeId": "MX-20000282",
    "product": "Convertible bond",
    "assetClass": "Equity",
    "currency": "CAD",
@@ -95,7 +95,7 @@
    "mtm": 3067713
   },
   {
-   "tradeId": "MX-20000168",
+   "tradeId": "MX-20000390",
    "product": "Year-on-year inflation swap",
    "assetClass": "Inflation",
    "currency": "EUR",
@@ -106,7 +106,7 @@
    "mtm": -1644875
   },
   {
-   "tradeId": "IMG-400098",
+   "tradeId": "MX-20000254",
    "product": "Equity total return swap",
    "assetClass": "Equity",
    "currency": "CAD",
@@ -117,7 +117,7 @@
    "mtm": -1401680
   },
   {
-   "tradeId": "MX-20000166",
+   "tradeId": "MX-20000388",
    "product": "Year-on-year inflation swap",
    "assetClass": "Inflation",
    "currency": "EUR",
@@ -128,7 +128,7 @@
    "mtm": -947071
   },
   {
-   "tradeId": "IMG-400045",
+   "tradeId": "MX-20000201",
    "product": "Equity barrier option",
    "assetClass": "Equity",
    "currency": "CAD",
@@ -139,7 +139,7 @@
    "mtm": 424387
   },
   {
-   "tradeId": "WSS-1500083",
+   "tradeId": "CLY-3000083",
    "product": "Quanto option",
    "assetClass": "FX",
    "currency": "USD",
@@ -150,7 +150,7 @@
    "mtm": 224949
   },
   {
-   "tradeId": "IMG-400039",
+   "tradeId": "MX-20000195",
    "product": "Index option",
    "assetClass": "Equity",
    "currency": "GBP",
@@ -161,7 +161,7 @@
    "mtm": -140694
   },
   {
-   "tradeId": "WSS-1500080",
+   "tradeId": "CLY-3000080",
    "product": "Quanto option",
    "assetClass": "FX",
    "currency": "USD",
@@ -172,7 +172,7 @@
    "mtm": 123897
   },
   {
-   "tradeId": "WSS-1500074",
+   "tradeId": "CLY-3000074",
    "product": "FX variance swap",
    "assetClass": "FX",
    "currency": "USD",
@@ -183,7 +183,7 @@
    "mtm": 5343
   },
   {
-   "tradeId": "IMG-400088",
+   "tradeId": "MX-20000244",
    "product": "Volatility swap",
    "assetClass": "Equity",
    "currency": "USD",

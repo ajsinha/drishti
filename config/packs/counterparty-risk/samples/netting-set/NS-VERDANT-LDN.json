@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "MX-20000161",
+   "tradeId": "MX-20000383",
    "product": "Zero-coupon inflation swap",
    "assetClass": "Inflation",
    "currency": "JPY",
@@ -73,7 +73,7 @@
    "mtm": 8195317
   },
   {
-   "tradeId": "WSS-1500079",
+   "tradeId": "CLY-3000079",
    "product": "Quanto option",
    "assetClass": "FX",
    "currency": "GBP",
@@ -84,7 +84,7 @@
    "mtm": 2783757
   },
   {
-   "tradeId": "WSS-1500035",
+   "tradeId": "CLY-3000035",
    "product": "FX digital option",
    "assetClass": "FX",
    "currency": "USD",
@@ -95,7 +95,7 @@
    "mtm": 2716990
   },
   {
-   "tradeId": "IMG-400125",
+   "tradeId": "MX-20000281",
    "product": "Convertible bond",
    "assetClass": "Equity",
    "currency": "GBP",
@@ -106,7 +106,7 @@
    "mtm": 1334065
   },
   {
-   "tradeId": "MX-20000186",
+   "tradeId": "MX-20000408",
    "product": "Inflation asset swap",
    "assetClass": "Inflation",
    "currency": "JPY",
@@ -117,7 +117,7 @@
    "mtm": 528987
   },
   {
-   "tradeId": "IMG-400112",
+   "tradeId": "MX-20000268",
    "product": "Contract for difference",
    "assetClass": "Equity",
    "currency": "USD",
@@ -128,7 +128,7 @@
    "mtm": 491937
   },
   {
-   "tradeId": "WSS-1500081",
+   "tradeId": "CLY-3000081",
    "product": "Quanto option",
    "assetClass": "FX",
    "currency": "USD",
@@ -139,7 +139,7 @@
    "mtm": -199321
   },
   {
-   "tradeId": "IMG-400107",
+   "tradeId": "MX-20000263",
    "product": "Portfolio (basket) swap",
    "assetClass": "Equity",
    "currency": "GBP",

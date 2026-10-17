@@ -1,10 +1,10 @@
 {
  "calcId": "SACCR-HARBORPT-NY",
- "replacementCost": 2260039,
- "addOn": 51121596,
+ "replacementCost": 2262026,
+ "addOn": 41684664,
  "multiplier": 1.0,
- "ead": 74734289,
- "rwa": 37367144,
+ "ead": 61525367,
+ "rwa": 30762684,
  "addOns": [
   {
    "assetClass": "Interest rate",
@@ -16,7 +16,7 @@
   },
   {
    "assetClass": "Commodity",
-   "addOn": 38520740
+   "addOn": 29083808
   }
  ],
  "hedgingSets": [
@@ -59,7 +59,7 @@
   {
    "assetClass": "Commodity",
    "hedgingSet": "USD",
-   "effectiveNotional": 214004110,
+   "effectiveNotional": 161576712,
    "sf": 0.18
   },
   {

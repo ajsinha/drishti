@@ -3,11 +3,11 @@
  "name": "Commodities · book 3",
  "deskName": "Commodities",
  "tradeCount": 31,
- "mtm": -13270944,
+ "mtm": -13776964,
  "dv01": 0,
  "topTrades": [
   {
-   "tradeId": "END-1000044",
+   "tradeId": "MX-20000332",
    "product": "Commodity spread option",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -18,7 +18,7 @@
    "mtm": -3234955
   },
   {
-   "tradeId": "END-1000028",
+   "tradeId": "MX-20000316",
    "product": "Option on commodity future",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -29,7 +29,7 @@
    "mtm": -3096114
   },
   {
-   "tradeId": "END-1000065",
+   "tradeId": "MX-20000353",
    "product": "Power swap",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -40,7 +40,7 @@
    "mtm": 2093005
   },
   {
-   "tradeId": "END-1000032",
+   "tradeId": "MX-20000320",
    "product": "Average price option (APO)",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -51,7 +51,7 @@
    "mtm": -2067469
   },
   {
-   "tradeId": "END-1000055",
+   "tradeId": "MX-20000343",
    "product": "Commodity index swap",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -62,7 +62,7 @@
    "mtm": -1935705
   },
   {
-   "tradeId": "END-1000040",
+   "tradeId": "MX-20000328",
    "product": "Commodity swaption",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -73,7 +73,7 @@
    "mtm": -1906599
   },
   {
-   "tradeId": "END-1000062",
+   "tradeId": "MX-20000350",
    "product": "Power swap",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": -1890065
   },
   {
-   "tradeId": "END-1000077",
+   "tradeId": "MX-20000365",
    "product": "Emissions allowance future",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -95,7 +95,7 @@
    "mtm": -1773998
   },
   {
-   "tradeId": "END-1000050",
+   "tradeId": "MX-20000338",
    "product": "Calendar spread",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -106,7 +106,7 @@
    "mtm": 1269696
   },
   {
-   "tradeId": "END-1000089",
+   "tradeId": "MX-20000377",
    "product": "Freight forward agreement",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -139,7 +139,7 @@
    "derive": [
     {
      "set": "mtm",
-     "expr": "519661 + sum(topTrades.*.mtm)"
+     "expr": "13641 + sum(topTrades.*.mtm)"
     }
    ]
   }

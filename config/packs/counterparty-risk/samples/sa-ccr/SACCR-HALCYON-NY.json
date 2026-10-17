@@ -1,10 +1,10 @@
 {
  "calcId": "SACCR-HALCYON-NY",
- "replacementCost": 19980437,
- "addOn": 98237747,
+ "replacementCost": 19748180,
+ "addOn": 96066897,
  "multiplier": 1.0,
- "ead": 165505457,
- "rwa": 165505457,
+ "ead": 162141108,
+ "rwa": 162141108,
  "addOns": [
   {
    "assetClass": "Interest rate",
@@ -16,7 +16,7 @@
   },
   {
    "assetClass": "Commodity",
-   "addOn": 60811397
+   "addOn": 58640548
   }
  ],
  "hedgingSets": [
@@ -83,7 +83,7 @@
   {
    "assetClass": "Commodity",
    "hedgingSet": "USD",
-   "effectiveNotional": -337841096,
+   "effectiveNotional": -325780822,
    "sf": 0.18
   }
  ],

@@ -7,7 +7,7 @@
  "dv01": -168556,
  "topTrades": [
   {
-   "tradeId": "IMG-400097",
+   "tradeId": "MX-20000253",
    "product": "Equity total return swap",
    "assetClass": "Equity",
    "currency": "USD",
@@ -18,7 +18,7 @@
    "mtm": -5455747
   },
   {
-   "tradeId": "IMG-400059",
+   "tradeId": "MX-20000215",
    "product": "Equity digital option",
    "assetClass": "Equity",
    "currency": "EUR",
@@ -29,7 +29,7 @@
    "mtm": 4508571
   },
   {
-   "tradeId": "IMG-400041",
+   "tradeId": "MX-20000197",
    "product": "Index option",
    "assetClass": "Equity",
    "currency": "USD",
@@ -40,7 +40,7 @@
    "mtm": -4330699
   },
   {
-   "tradeId": "IMG-400076",
+   "tradeId": "MX-20000232",
    "product": "Reverse convertible",
    "assetClass": "Equity",
    "currency": "CHF",
@@ -51,7 +51,7 @@
    "mtm": -4142972
   },
   {
-   "tradeId": "IMG-400022",
+   "tradeId": "MX-20000178",
    "product": "Equity index future",
    "assetClass": "Equity",
    "currency": "GBP",
@@ -62,7 +62,7 @@
    "mtm": -3839873
   },
   {
-   "tradeId": "IMG-400123",
+   "tradeId": "MX-20000279",
    "product": "Convertible bond",
    "assetClass": "Equity",
    "currency": "GBP",
@@ -73,7 +73,7 @@
    "mtm": -3175475
   },
   {
-   "tradeId": "IMG-400043",
+   "tradeId": "MX-20000199",
    "product": "Equity barrier option",
    "assetClass": "Equity",
    "currency": "CHF",
@@ -84,7 +84,7 @@
    "mtm": 3103153
   },
   {
-   "tradeId": "IMG-400126",
+   "tradeId": "MX-20000282",
    "product": "Convertible bond",
    "assetClass": "Equity",
    "currency": "CAD",
@@ -95,7 +95,7 @@
    "mtm": 3067713
   },
   {
-   "tradeId": "IMG-400029",
+   "tradeId": "MX-20000185",
    "product": "Listed equity option",
    "assetClass": "Equity",
    "currency": "CAD",
@@ -106,7 +106,7 @@
    "mtm": 2756929
   },
   {
-   "tradeId": "IMG-400132",
+   "tradeId": "MX-20000288",
    "product": "Basket option",
    "assetClass": "Equity",
    "currency": "EUR",

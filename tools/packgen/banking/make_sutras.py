@@ -28,7 +28,9 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "trades"))
 import layout
+import sutras as TS  # noqa: E402  (tools/packgen/trades: the production-shaped deal screens and the derived trade pages)
 from data_deep import DEEP
 import taxonomy as T
 import trade_shape as S
@@ -429,13 +431,25 @@ def desk_pnl_yaml() -> str:
 
 
 # ---- output --------------------------------------------------------------------------------------------------
+ENDUR_PRODUCTS = [("ComSwap", "Commodity swap", "An Endur commodity swap: fixed price against the average of a floating index (or two indexes, a basis), month by month."),
+                  ("ComFut", "Commodity future", "An Endur exchange-traded commodity future: one leg, one settlement against the index."),
+                  ("Cash", "Cash payment", "An Endur cash deal: a payment or a fee in one currency, on one date."),
+                  ("CallNot", "Call-notice deposit", "An Endur call-notice deposit: interest periods, then the principal on notice."),
+                  ("Commodity", "Physical commodity", "An Endur physical commodity deal: a delivery leg in the commodity's unit and a payment leg.")]
+
+
 def files() -> dict[Path, str]:
     out: dict[Path, str] = {}
-    for p in T.PRODUCTS:
-        out[PACKS / "trading" / "sutras" / slug(p.asset) / f"{product_name(p)}.v1.sutra.yaml"] = product_doc(p)
+    for p in T.PRODUCTS:          # a deal screen per product type of the taxonomy (CALYPSO and MUREX book them)
+        out[PACKS / "trading" / "sutras" / slug(p.asset) / f"{product_name(p)}.v1.sutra.yaml"] = sutra_file(
+            TS.deal_yaml(p.code, p.name, p.asset, p.desc).replace(f"sutra: {slug(p.code)}\n", f"sutra: {product_name(p)}\n", 1))
+    for code, name, desc in ENDUR_PRODUCTS:     # and per product type of the Endur commodity book
+        out[PACKS / "trading" / "sutras" / "endur" / f"endur-{slug(code)}.v1.sutra.yaml"] = sutra_file(
+            TS.deal_yaml(code, name, "Commodity", desc).replace(f"sutra: {slug(code)}\n", f"sutra: endur-{slug(code)}\n", 1))
     for k in T.KINDS:
         out[PACKS / layout.pack_of(k.kind) / "sutras" / slug(k.group) / f"{k.kind}.v1.sutra.yaml"] = kind_doc(k)
-    out[PACKS / "trading" / "sutras" / "desks" / "desk-pnl.v1.sutra.yaml"] = sutra_file(desk_pnl_yaml())
+    for k in TS.DERIVED:          # a counterparty's, portfolio's, legal entity's and index's trades from every source system
+        out[PACKS / "trading" / "sutras" / "pages" / f"{k}.v1.sutra.yaml"] = sutra_file(TS.derived_yaml(k))
     names = [f.name for f in out]
     dupes = {n for n in names if names.count(n) > 1}
     if dupes:

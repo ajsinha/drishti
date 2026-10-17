@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "IMG-400134",
+   "tradeId": "MX-20000416",
    "product": "Range accrual note",
    "assetClass": "Structured",
    "currency": "EUR",
@@ -73,7 +73,7 @@
    "mtm": 587235
   },
   {
-   "tradeId": "IMG-400149",
+   "tradeId": "MX-20000431",
    "product": "FX-rates hybrid (PRDC)",
    "assetClass": "Structured",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": 401694
   },
   {
-   "tradeId": "IMG-400144",
+   "tradeId": "MX-20000426",
    "product": "Capital-protected note",
    "assetClass": "Structured",
    "currency": "USD",

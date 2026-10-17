@@ -7,7 +7,7 @@
  "dv01": -113007,
  "topTrades": [
   {
-   "tradeId": "MX-20000160",
+   "tradeId": "MX-20000382",
    "product": "Zero-coupon inflation swap",
    "assetClass": "Inflation",
    "currency": "GBP",
@@ -18,7 +18,7 @@
    "mtm": -9675629
   },
   {
-   "tradeId": "MX-20000167",
+   "tradeId": "MX-20000389",
    "product": "Year-on-year inflation swap",
    "assetClass": "Inflation",
    "currency": "JPY",
@@ -29,7 +29,7 @@
    "mtm": -7337433
   },
   {
-   "tradeId": "MX-20000176",
+   "tradeId": "MX-20000398",
    "product": "Inflation-linked bond",
    "assetClass": "Inflation",
    "currency": "JPY",
@@ -40,7 +40,7 @@
    "mtm": -2725596
   },
   {
-   "tradeId": "MX-20000168",
+   "tradeId": "MX-20000390",
    "product": "Year-on-year inflation swap",
    "assetClass": "Inflation",
    "currency": "EUR",
@@ -51,7 +51,7 @@
    "mtm": -1644875
   },
   {
-   "tradeId": "MX-20000162",
+   "tradeId": "MX-20000384",
    "product": "Zero-coupon inflation swap",
    "assetClass": "Inflation",
    "currency": "EUR",
@@ -62,7 +62,7 @@
    "mtm": -672060
   },
   {
-   "tradeId": "MX-20000186",
+   "tradeId": "MX-20000408",
    "product": "Inflation asset swap",
    "assetClass": "Inflation",
    "currency": "JPY",
@@ -73,7 +73,7 @@
    "mtm": 528987
   },
   {
-   "tradeId": "MX-20000184",
+   "tradeId": "MX-20000406",
    "product": "Inflation asset swap",
    "assetClass": "Inflation",
    "currency": "JPY",
@@ -84,7 +84,7 @@
    "mtm": 225940
   },
   {
-   "tradeId": "MX-20000158",
+   "tradeId": "MX-20000380",
    "product": "Zero-coupon inflation swap",
    "assetClass": "Inflation",
    "currency": "JPY",

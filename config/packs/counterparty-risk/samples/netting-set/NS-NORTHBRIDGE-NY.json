@@ -84,7 +84,7 @@
    "mtm": -6203686
   },
   {
-   "tradeId": "CLY-3000027",
+   "tradeId": "CLY-3000111",
    "product": "First-to-default basket",
    "assetClass": "Credit",
    "currency": "JPY",
@@ -95,7 +95,7 @@
    "mtm": -2867075
   },
   {
-   "tradeId": "END-1000062",
+   "tradeId": "MX-20000350",
    "product": "Power swap",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -128,7 +128,7 @@
    "mtm": -1401622
   },
   {
-   "tradeId": "END-1000012",
+   "tradeId": "MX-20000300",
    "product": "Commodity forward",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -139,7 +139,7 @@
    "mtm": 1033434
   },
   {
-   "tradeId": "CLY-3000030",
+   "tradeId": "CLY-3000114",
    "product": "First-to-default basket",
    "assetClass": "Credit",
    "currency": "USD",
@@ -150,7 +150,7 @@
    "mtm": 730145
   },
   {
-   "tradeId": "CLY-3000017",
+   "tradeId": "CLY-3000101",
    "product": "Index tranche",
    "assetClass": "Credit",
    "currency": "CHF",
@@ -161,7 +161,7 @@
    "mtm": -257129
   },
   {
-   "tradeId": "END-1000022",
+   "tradeId": "MX-20000310",
    "product": "Commodity basis swap",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -172,7 +172,7 @@
    "mtm": -181371
   },
   {
-   "tradeId": "CLY-3000067",
+   "tradeId": "CLY-3000151",
    "product": "Unfunded risk participation",
    "assetClass": "Credit",
    "currency": "JPY",
@@ -183,7 +183,7 @@
    "mtm": 177423
   },
   {
-   "tradeId": "BBG-60000065",
+   "tradeId": "CLY-3000221",
    "product": "CMO tranche",
    "assetClass": "Fixed income",
    "currency": "USD",

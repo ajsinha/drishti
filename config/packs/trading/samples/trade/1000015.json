@@ -1,0 +1,638 @@
+{
+ "SOURCE_SYSTEM": "ENDUR",
+ "SOURCE_UPDATE_TIME": "",
+ "TRADE_DATE": "2025-12-18",
+ "INPUT_DATE": "",
+ "TRADE_ID": 1000015,
+ "TRADE_STATUS": "MATURED",
+ "TRADE_ACTION": "",
+ "TRADE_VERSION": "4",
+ "TRANSACTION_ID": "700000140",
+ "PACKAGE_ID": "",
+ "QUANTITY": 50000.0,
+ "PRICE": 77.8195,
+ "BUY_SELL_CODE": "S",
+ "PRODUCT_TYPE": "Commodity",
+ "PRODUCT_SUB_TYPE": "COMM-PHYS",
+ "PRODUCT_GROUP": "",
+ "PRODUCT_SUB_GROUP": "",
+ "OPTION_TYPE": null,
+ "STRIKE_PRICE": null,
+ "COUNTERPARTY": "CP-SOLARIS",
+ "COUNTERPARTY_UEN": "UEN0100555",
+ "COUNTERPARTY_COUNTRY_OF_RISK": "US",
+ "ORIGINAL_COUNTERPARTY": "",
+ "ORIGINAL_COUNTERPARTY_UEN": "",
+ "INTERNAL_EXTERNAL_CODE": "External",
+ "TRANSIT": "00107",
+ "LEGAL_ENTITY": "LE-NY",
+ "PORTFOLIO": "BOOK-COMM-1",
+ "TRADER_ID": "TRDR-TBRENNAN",
+ "TRADER_FIRST_NAME": "T.",
+ "TRADER_LAST_NAME": "Brennan",
+ "START_DATE": "2026-02-01",
+ "MATURITY_DATE": "2026-11-30",
+ "REGISTRY_DELIVERY_DATE": "",
+ "CURRENCY": "USD",
+ "DELIVERY_VERSUS_PAYMENT": "NO",
+ "STRATEGY": null,
+ "INTERNAL_TRADING_STRATEGY": "",
+ "NY_CURVE_FLAG": "",
+ "VAULT_LOCATION_ALLOCATION": "",
+ "PRECIOUS_METAL_FLAG": "",
+ "TT_GROUP": "",
+ "TT_BOOK": "",
+ "LEASE_PERPETUITY_FLAG": "",
+ "SETTLEMENT_DATE": "",
+ "LEGS": [
+  {
+   "LEG_ID": 1,
+   "LEG_TYPE": "PHYSICAL",
+   "LEG_ECONOMIC_TYPE": "",
+   "CURRENCY": "USD",
+   "LEASE_CURRENCY": "USD",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "BBL",
+   "NOTIONAL": 3890975.0,
+   "DISCOUNT_INDEX": "",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "",
+   "RESET_HOLIDAY_SCHEDULE": null,
+   "RESET_CONVENTION": "",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Physical Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "",
+   "DAILY_VOLUME": "5000",
+   "INDEX": {
+    "NAME": "IDX-CRUDE-M1",
+    "GROUP": "",
+    "SUB_GROUP": ""
+   },
+   "CASH_FLOWS": [
+    {
+     "FLOW_ID": 5000368,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-02-01",
+     "END_DATE": "2026-02-28",
+     "PAYMENT_DATE": "2026-03-02",
+     "RATE_DETERMINATION_DATE": "2026-02-28",
+     "FIRST_RESET_DATE": "2026-02-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-02-01",
+       "END_DATE": "2026-02-28",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 5000369,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-03-01",
+     "END_DATE": "2026-03-31",
+     "PAYMENT_DATE": "2026-04-02",
+     "RATE_DETERMINATION_DATE": "2026-03-31",
+     "FIRST_RESET_DATE": "2026-03-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-03-01",
+       "END_DATE": "2026-03-31",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 5000370,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-04-01",
+     "END_DATE": "2026-04-30",
+     "PAYMENT_DATE": "2026-05-02",
+     "RATE_DETERMINATION_DATE": "2026-04-30",
+     "FIRST_RESET_DATE": "2026-04-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-04-01",
+       "END_DATE": "2026-04-30",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 5000371,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-05-01",
+     "END_DATE": "2026-05-31",
+     "PAYMENT_DATE": "2026-06-02",
+     "RATE_DETERMINATION_DATE": "2026-05-31",
+     "FIRST_RESET_DATE": "2026-05-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-05-01",
+       "END_DATE": "2026-05-31",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 5000372,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-06-01",
+     "END_DATE": "2026-06-30",
+     "PAYMENT_DATE": "2026-07-02",
+     "RATE_DETERMINATION_DATE": "2026-06-30",
+     "FIRST_RESET_DATE": "2026-06-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-06-01",
+       "END_DATE": "2026-06-30",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 5000373,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-07-01",
+     "END_DATE": "2026-07-31",
+     "PAYMENT_DATE": "2026-08-02",
+     "RATE_DETERMINATION_DATE": "2026-07-31",
+     "FIRST_RESET_DATE": "2026-07-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-07-01",
+       "END_DATE": "2026-07-31",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 5000374,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-08-01",
+     "END_DATE": "2026-08-31",
+     "PAYMENT_DATE": "2026-09-02",
+     "RATE_DETERMINATION_DATE": "2026-08-31",
+     "FIRST_RESET_DATE": "2026-08-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-08-01",
+       "END_DATE": "2026-08-31",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 5000375,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-09-01",
+     "END_DATE": "2026-09-30",
+     "PAYMENT_DATE": "2026-10-02",
+     "RATE_DETERMINATION_DATE": "2026-09-30",
+     "FIRST_RESET_DATE": "2026-09-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-09-01",
+       "END_DATE": "2026-09-30",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 5000376,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-10-01",
+     "END_DATE": "2026-10-31",
+     "PAYMENT_DATE": "2026-11-02",
+     "RATE_DETERMINATION_DATE": "2026-10-31",
+     "FIRST_RESET_DATE": "2026-10-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-10-01",
+       "END_DATE": "2026-10-31",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 5000377,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-11-01",
+     "END_DATE": "2026-11-30",
+     "PAYMENT_DATE": "2026-12-02",
+     "RATE_DETERMINATION_DATE": "2026-11-30",
+     "FIRST_RESET_DATE": "2026-11-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-11-01",
+       "END_DATE": "2026-11-30",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "LEG_ID": 2,
+   "LEG_TYPE": "FIXED",
+   "LEG_ECONOMIC_TYPE": "",
+   "CURRENCY": "USD",
+   "LEASE_CURRENCY": "USD",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "BBL",
+   "NOTIONAL": 3890975.0,
+   "DISCOUNT_INDEX": "",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "",
+   "RESET_HOLIDAY_SCHEDULE": null,
+   "RESET_CONVENTION": "",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Physical Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "",
+   "DAILY_VOLUME": "5000",
+   "INDEX": {
+    "NAME": "",
+    "GROUP": "",
+    "SUB_GROUP": ""
+   },
+   "CASH_FLOWS": [
+    {
+     "FLOW_ID": 5000378,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-02-01",
+     "END_DATE": "2026-02-28",
+     "PAYMENT_DATE": "2026-03-02",
+     "RATE_DETERMINATION_DATE": "2026-02-28",
+     "FIRST_RESET_DATE": "2026-02-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-02-01",
+       "END_DATE": "2026-02-28",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 5000379,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-03-01",
+     "END_DATE": "2026-03-31",
+     "PAYMENT_DATE": "2026-04-02",
+     "RATE_DETERMINATION_DATE": "2026-03-31",
+     "FIRST_RESET_DATE": "2026-03-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-03-01",
+       "END_DATE": "2026-03-31",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 5000380,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-04-01",
+     "END_DATE": "2026-04-30",
+     "PAYMENT_DATE": "2026-05-02",
+     "RATE_DETERMINATION_DATE": "2026-04-30",
+     "FIRST_RESET_DATE": "2026-04-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-04-01",
+       "END_DATE": "2026-04-30",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 5000381,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-05-01",
+     "END_DATE": "2026-05-31",
+     "PAYMENT_DATE": "2026-06-02",
+     "RATE_DETERMINATION_DATE": "2026-05-31",
+     "FIRST_RESET_DATE": "2026-05-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-05-01",
+       "END_DATE": "2026-05-31",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 5000382,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-06-01",
+     "END_DATE": "2026-06-30",
+     "PAYMENT_DATE": "2026-07-02",
+     "RATE_DETERMINATION_DATE": "2026-06-30",
+     "FIRST_RESET_DATE": "2026-06-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-06-01",
+       "END_DATE": "2026-06-30",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 5000383,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-07-01",
+     "END_DATE": "2026-07-31",
+     "PAYMENT_DATE": "2026-08-02",
+     "RATE_DETERMINATION_DATE": "2026-07-31",
+     "FIRST_RESET_DATE": "2026-07-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-07-01",
+       "END_DATE": "2026-07-31",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 5000384,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-08-01",
+     "END_DATE": "2026-08-31",
+     "PAYMENT_DATE": "2026-09-02",
+     "RATE_DETERMINATION_DATE": "2026-08-31",
+     "FIRST_RESET_DATE": "2026-08-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-08-01",
+       "END_DATE": "2026-08-31",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 5000385,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-09-01",
+     "END_DATE": "2026-09-30",
+     "PAYMENT_DATE": "2026-10-02",
+     "RATE_DETERMINATION_DATE": "2026-09-30",
+     "FIRST_RESET_DATE": "2026-09-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-09-01",
+       "END_DATE": "2026-09-30",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 5000386,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-10-01",
+     "END_DATE": "2026-10-31",
+     "PAYMENT_DATE": "2026-11-02",
+     "RATE_DETERMINATION_DATE": "2026-10-31",
+     "FIRST_RESET_DATE": "2026-10-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-10-01",
+       "END_DATE": "2026-10-31",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 5000387,
+     "FLOW_TYPE": "",
+     "NOTIONAL": 389097.5,
+     "RATE": "77.8195",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-11-01",
+     "END_DATE": "2026-11-30",
+     "PAYMENT_DATE": "2026-12-02",
+     "RATE_DETERMINATION_DATE": "2026-11-30",
+     "FIRST_RESET_DATE": "2026-11-01",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "",
+       "ACCRUAL": "",
+       "START_DATE": "2026-11-01",
+       "END_DATE": "2026-11-30",
+       "RESET_DATE": "",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": ""
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "EVENTS": [],
+ "_meta": {
+  "source": "endur",
+  "generation": 1
+ }
+}

@@ -1,369 +1,565 @@
 {
- "tradeId": "CLY-3000049",
- "sourceSystem": "Calypso",
- "sourceTradeId": "3000049",
- "productType": "TERM_LOAN",
- "productName": "Term loan",
- "assetClass": "Credit",
- "family": "loan",
- "status": "Live",
- "direction": "Long",
- "tradeDate": "2024-08-09",
- "effectiveDate": "2024-08-12",
- "maturityDate": "2028-06-12",
- "currency": "JPY",
- "notional": 6000000.0,
- "mtm": 37332,
- "mtmCurrency": "USD",
- "pnl1d": -243,
- "counterparty": {
-  "id": "CP-SOLARIS",
-  "name": "Solaris Energy Corp."
- },
- "nettingSet": "NS-SOLARIS-NY",
- "book": "BOOK-CREDIT-3",
- "trader": "TRDR-CDUBOIS",
- "desk": "DESK-CREDIT",
- "legalEntity": "LE-NY",
- "issuer": "ISS-SOLARIS",
- "discountCurve": "CRV-JPY-OIS",
- "forwardCurve": "CRV-JPY-PROJ",
- "creditCurve": "CDS-SOLARIS",
- "terms": {
-  "margin": 524.7,
-  "facilityType": "Term Loan A",
-  "amortisation": "1% p.a."
- },
- "risk": {
-  "cs01": 1778,
-  "dv01": 2016
- },
- "sensitivities": [
+ "SOURCE_SYSTEM": "CALYPSO",
+ "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z",
+ "TRADE_DATE": "2025-01-02",
+ "INPUT_DATE": "2025-01-02",
+ "TRADE_ID": "CLY-3000049",
+ "TRADE_STATUS": "VALIDATED",
+ "TRADE_ACTION": "NEW",
+ "TRADE_VERSION": "1",
+ "TRANSACTION_ID": "3000049001",
+ "PACKAGE_ID": "",
+ "QUANTITY": 94000000.0,
+ "PRICE": null,
+ "BUY_SELL_CODE": "S",
+ "PRODUCT_TYPE": "FX_TOUCH",
+ "PRODUCT_SUB_TYPE": "FX one-touch / no-touch",
+ "PRODUCT_GROUP": "FX",
+ "PRODUCT_SUB_GROUP": "exotic",
+ "OPTION_TYPE": null,
+ "STRIKE_PRICE": null,
+ "COUNTERPARTY": "CP-RHEINTAL",
+ "COUNTERPARTY_UEN": "UEN0100518",
+ "COUNTERPARTY_COUNTRY_OF_RISK": "DE",
+ "ORIGINAL_COUNTERPARTY": "",
+ "ORIGINAL_COUNTERPARTY_UEN": "",
+ "INTERNAL_EXTERNAL_CODE": "External",
+ "TRANSIT": "00214",
+ "LEGAL_ENTITY": "LE-LDN",
+ "PORTFOLIO": "BOOK-FX-3",
+ "TRADER_ID": "TRDR-ENOVAK",
+ "TRADER_FIRST_NAME": "E.",
+ "TRADER_LAST_NAME": "Novak",
+ "START_DATE": "2025-01-06",
+ "MATURITY_DATE": "2027-01-27",
+ "REGISTRY_DELIVERY_DATE": "",
+ "CURRENCY": "GBP",
+ "DELIVERY_VERSUS_PAYMENT": "NO",
+ "STRATEGY": null,
+ "INTERNAL_TRADING_STRATEGY": "",
+ "NY_CURVE_FLAG": "",
+ "VAULT_LOCATION_ALLOCATION": "",
+ "PRECIOUS_METAL_FLAG": "",
+ "TT_GROUP": "DESK-FX",
+ "TT_BOOK": "BOOK-FX-3",
+ "LEASE_PERPETUITY_FLAG": "",
+ "SETTLEMENT_DATE": "2025-01-06",
+ "LEGS": [
   {
-   "bucket": "6M",
-   "cs01": 178,
-   "dv01": 202
-  },
-  {
-   "bucket": "1Y",
-   "cs01": 356,
-   "dv01": 403
-  },
-  {
-   "bucket": "2Y",
-   "cs01": 533,
-   "dv01": 605
-  },
-  {
-   "bucket": "3Y",
-   "cs01": 711,
-   "dv01": 806
-  }
- ],
- "schedule": [
-  {
-   "date": "2025-02-12",
-   "opening": 6000000,
-   "principal": 750000,
-   "closing": 5250000,
-   "interest": 120000
-  },
-  {
-   "date": "2025-08-12",
-   "opening": 5250000,
-   "principal": 750000,
-   "closing": 4500000,
-   "interest": 105000
-  },
-  {
-   "date": "2026-02-12",
-   "opening": 4500000,
-   "principal": 750000,
-   "closing": 3750000,
-   "interest": 90000
-  },
-  {
-   "date": "2026-08-12",
-   "opening": 3750000,
-   "principal": 750000,
-   "closing": 3000000,
-   "interest": 75000
-  },
-  {
-   "date": "2027-02-12",
-   "opening": 3000000,
-   "principal": 750000,
-   "closing": 2250000,
-   "interest": 60000
-  },
-  {
-   "date": "2027-08-12",
-   "opening": 2250000,
-   "principal": 750000,
-   "closing": 1500000,
-   "interest": 45000
-  },
-  {
-   "date": "2028-02-12",
-   "opening": 1500000,
-   "principal": 750000,
-   "closing": 750000,
-   "interest": 30000
-  },
-  {
-   "date": "2028-06-12",
-   "opening": 750000,
-   "principal": 750000,
-   "closing": 0,
-   "interest": 15000
-  }
- ],
- "nextIndex": 4,
- "pnlHistory": [
-  {
-   "date": "2026-09-03",
-   "pnl": 4637
-  },
-  {
-   "date": "2026-09-04",
-   "pnl": -1697
-  },
-  {
-   "date": "2026-09-07",
-   "pnl": 320
-  },
-  {
-   "date": "2026-09-08",
-   "pnl": 1364
-  },
-  {
-   "date": "2026-09-09",
-   "pnl": 5559
-  },
-  {
-   "date": "2026-09-10",
-   "pnl": -1690
-  },
-  {
-   "date": "2026-09-11",
-   "pnl": -1580
-  },
-  {
-   "date": "2026-09-14",
-   "pnl": 6137
-  },
-  {
-   "date": "2026-09-15",
-   "pnl": -4334
-  },
-  {
-   "date": "2026-09-16",
-   "pnl": -12763
-  },
-  {
-   "date": "2026-09-17",
-   "pnl": -1226
-  },
-  {
-   "date": "2026-09-18",
-   "pnl": 4639
-  },
-  {
-   "date": "2026-09-21",
-   "pnl": 1297
-  },
-  {
-   "date": "2026-09-22",
-   "pnl": 928
-  },
-  {
-   "date": "2026-09-23",
-   "pnl": 44
-  },
-  {
-   "date": "2026-09-24",
-   "pnl": 2583
-  },
-  {
-   "date": "2026-09-25",
-   "pnl": 2295
-  },
-  {
-   "date": "2026-09-28",
-   "pnl": -3313
-  },
-  {
-   "date": "2026-09-29",
-   "pnl": 3903
-  },
-  {
-   "date": "2026-09-30",
-   "pnl": -884
-  }
- ],
- "execution": {
-  "tradeDate": "2024-08-09",
-  "executionTimestamp": "2024-08-09T13:37:41.483Z",
-  "venue": "MarketAxess",
-  "venueMic": "MAEL",
-  "executionType": "Electronic",
-  "trader": "C. Dubois",
-  "salesperson": null,
-  "orderId": "ORD-4E76D6A239"
- },
- "lifecycle": {
-  "status": "Live",
-  "version": 1,
-  "events": [
-   {
-    "version": 1,
-    "event": "New",
-    "reason": "Trade captured",
-    "at": "2024-08-09T11:05:00Z",
-    "by": "mo.amend"
-   }
-  ],
-  "sourceSystem": "Endur",
-  "createdAt": "2024-08-09T11:05:00Z",
-  "lastModifiedAt": "2024-08-09T11:05:00Z",
-  "lastModifiedBy": "mo.amend",
-  "timeline": [
-   {
-    "date": "2024-08-09",
-    "event": "Booked",
-    "status": "Done",
-    "description": "Captured in Calypso by TRDR-CDUBOIS: long Term loan"
+   "LEG_ID": 1,
+   "LEG_TYPE": "OPTION",
+   "LEG_ECONOMIC_TYPE": "Receive",
+   "CURRENCY": "GBP",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 94000000.0,
+   "DISCOUNT_INDEX": "",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "",
+   "RESET_HOLIDAY_SCHEDULE": null,
+   "RESET_CONVENTION": "",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "24",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "",
+    "GROUP": "",
+    "SUB_GROUP": ""
    },
-   {
-    "date": "2024-08-09",
-    "event": "Confirmed",
-    "status": "Matched",
-    "description": "Matched on MarkitWire (MA689932614)"
-   },
-   {
-    "date": "2027-02-12",
-    "event": "Next payment",
-    "status": "Pending",
-    "description": "Scheduled; settlement instructions confirmed"
-   },
-   {
-    "date": "2028-06-12",
-    "event": "Maturity",
-    "status": "Scheduled",
-    "description": "Final payment and close-out"
-   }
-  ]
- },
- "confirmation": {
-  "status": "Confirmed",
-  "method": "MarkitWire",
-  "platformId": "MA689932614",
-  "matched": "2024-08-09 13:57",
-  "affirmedBy": "Counterparty ops",
-  "breaks": []
- },
- "clearing": {
-  "status": "Bilateral",
-  "mandatory": false,
-  "reason": "Counterparty below clearing threshold"
- },
- "regulatory": {
-  "uti": "549300O1N13GO2II20964E76D6A239D99EAB6BA2",
-  "upi": "QZR40D99STCM",
-  "reportingRegimes": [
-   "CFTC Part 43/45"
-  ],
-  "reportingParty": "Us",
-  "reportingStatus": "Accepted",
-  "clearingObligation": false,
-  "tradingObligation": false,
-  "mifidClassification": "Professional client",
-  "volckerExempt": false,
-  "saCcrAssetClass": "Credit"
- },
- "settlementInstructions": {
-  "method": "CLS",
-  "ourAgent": "MUFG Bank, Ltd.",
-  "ourAgentBic": "BOTKJPJTXXX",
-  "theirAgentBic": "SOLAGB33XXX",
-  "ssiId": "SSI-JPY-269904",
-  "netting": "Payment netting by currency and value date"
- },
- "valuation": {
-  "asOf": "2026-09-30",
-  "currency": "USD",
-  "npv": 37332,
-  "cleanPv": 37332.0,
-  "accrued": 0.0,
-  "legPvs": [],
-  "model": "Discounted cashflows",
-  "curves": [
-   "CRV-JPY-OIS",
-   "CRV-JPY-PROJ",
-   "CDS-SOLARIS"
-  ],
-  "status": "Official EOD",
-  "runId": "EOD-20260930-01"
- },
- "pnlExplain": [
-  {
-   "step": "Opening MTM",
-   "pnl": 37575,
-   "total": true
-  },
-  {
-   "step": "Carry",
-   "pnl": -71
-  },
-  {
-   "step": "Roll-down",
-   "pnl": -171
-  },
-  {
-   "step": "Rates delta",
-   "pnl": -6
-  },
-  {
-   "step": "FX delta",
-   "pnl": -91
-  },
-  {
-   "step": "Vol (vega)",
-   "pnl": -29
-  },
-  {
-   "step": "Theta",
-   "pnl": 112
-  },
-  {
-   "step": "Unexplained",
-   "pnl": 13
-  }
- ],
- "_meta": {
-  "source": "murex-credit",
-  "generation": 1,
-  "live": false,
-  "walk": {
-   "mtm": 500,
-   "derive": [
+   "CASH_FLOWS": [
     {
-     "set": "valuation.npv",
-     "expr": "$.mtm"
+     "FLOW_ID": 3000049001,
+     "FLOW_TYPE": "Coupon paid",
+     "NOTIONAL": 94000000.0,
+     "RATE": 95.27,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2025-01-06",
+     "END_DATE": "2025-04-06",
+     "PAYMENT_DATE": "2025-04-06",
+     "RATE_DETERMINATION_DATE": "2025-04-06",
+     "FIRST_RESET_DATE": "2025-04-06",
+     "LAST_RESET_DATE": "2025-04-06",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-1",
+       "ACCRUAL": "",
+       "START_DATE": "2025-04-06",
+       "END_DATE": "2025-04-06",
+       "RESET_DATE": "2025-04-06",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": 95.27
+      }
+     ]
     },
     {
-     "set": "valuation.cleanPv",
-     "expr": "$.mtm - valuation.accrued"
+     "FLOW_ID": 3000049002,
+     "FLOW_TYPE": "Coupon paid",
+     "NOTIONAL": 94000000.0,
+     "RATE": 90.08,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2025-04-06",
+     "END_DATE": "2025-07-06",
+     "PAYMENT_DATE": "2025-07-06",
+     "RATE_DETERMINATION_DATE": "2025-07-06",
+     "FIRST_RESET_DATE": "2025-07-06",
+     "LAST_RESET_DATE": "2025-07-06",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-2",
+       "ACCRUAL": "",
+       "START_DATE": "2025-07-06",
+       "END_DATE": "2025-07-06",
+       "RESET_DATE": "2025-07-06",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": 90.08
+      }
+     ]
     },
     {
-     "set": "pnl1d",
-     "expr": "$.mtm - pnlExplain.0.pnl"
+     "FLOW_ID": 3000049003,
+     "FLOW_TYPE": "Coupon paid",
+     "NOTIONAL": 94000000.0,
+     "RATE": 96.72,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2025-07-06",
+     "END_DATE": "2025-10-06",
+     "PAYMENT_DATE": "2025-10-06",
+     "RATE_DETERMINATION_DATE": "2025-10-06",
+     "FIRST_RESET_DATE": "2025-10-06",
+     "LAST_RESET_DATE": "2025-10-06",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-3",
+       "ACCRUAL": "",
+       "START_DATE": "2025-10-06",
+       "END_DATE": "2025-10-06",
+       "RESET_DATE": "2025-10-06",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": 96.72
+      }
+     ]
     },
     {
-     "set": "pnlExplain.2.pnl",
-     "expr": "pnlExplain.2.pnl + ($.mtm - sum(pnlExplain.*.pnl))"
+     "FLOW_ID": 3000049004,
+     "FLOW_TYPE": "Coupon paid",
+     "NOTIONAL": 94000000.0,
+     "RATE": 87.54,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2025-10-06",
+     "END_DATE": "2026-01-06",
+     "PAYMENT_DATE": "2026-01-06",
+     "RATE_DETERMINATION_DATE": "2026-01-06",
+     "FIRST_RESET_DATE": "2026-01-06",
+     "LAST_RESET_DATE": "2026-01-06",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-4",
+       "ACCRUAL": "",
+       "START_DATE": "2026-01-06",
+       "END_DATE": "2026-01-06",
+       "RESET_DATE": "2026-01-06",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": 87.54
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 3000049005,
+     "FLOW_TYPE": "Coupon paid",
+     "NOTIONAL": 94000000.0,
+     "RATE": 86.62,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-01-06",
+     "END_DATE": "2026-04-06",
+     "PAYMENT_DATE": "2026-04-06",
+     "RATE_DETERMINATION_DATE": "2026-04-06",
+     "FIRST_RESET_DATE": "2026-04-06",
+     "LAST_RESET_DATE": "2026-04-06",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-5",
+       "ACCRUAL": "",
+       "START_DATE": "2026-04-06",
+       "END_DATE": "2026-04-06",
+       "RESET_DATE": "2026-04-06",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": 86.62
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 3000049006,
+     "FLOW_TYPE": "Coupon paid",
+     "NOTIONAL": 94000000.0,
+     "RATE": 83.93,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-04-06",
+     "END_DATE": "2026-07-06",
+     "PAYMENT_DATE": "2026-07-06",
+     "RATE_DETERMINATION_DATE": "2026-07-06",
+     "FIRST_RESET_DATE": "2026-07-06",
+     "LAST_RESET_DATE": "2026-07-06",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": [
+      {
+       "RESET_ID": "R-6",
+       "ACCRUAL": "",
+       "START_DATE": "2026-07-06",
+       "END_DATE": "2026-07-06",
+       "RESET_DATE": "2026-07-06",
+       "ACCRUAL_START_DATE": "",
+       "ACCRUAL_END_DATE": "",
+       "RATE": 83.93
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 3000049007,
+     "FLOW_TYPE": "Pending",
+     "NOTIONAL": 94000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-07-06",
+     "END_DATE": "2026-10-06",
+     "PAYMENT_DATE": "2026-10-06",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    },
+    {
+     "FLOW_ID": 3000049008,
+     "FLOW_TYPE": "Pending",
+     "NOTIONAL": 94000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-10-06",
+     "END_DATE": "2027-01-06",
+     "PAYMENT_DATE": "2027-01-06",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    },
+    {
+     "FLOW_ID": 3000049009,
+     "FLOW_TYPE": "Pending",
+     "NOTIONAL": 94000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2027-01-06",
+     "END_DATE": "2027-04-06",
+     "PAYMENT_DATE": "2027-04-06",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    },
+    {
+     "FLOW_ID": 3000049010,
+     "FLOW_TYPE": "Pending",
+     "NOTIONAL": 94000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2027-04-06",
+     "END_DATE": "2027-07-06",
+     "PAYMENT_DATE": "2027-07-06",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    },
+    {
+     "FLOW_ID": 3000049011,
+     "FLOW_TYPE": "Pending",
+     "NOTIONAL": 94000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2027-07-06",
+     "END_DATE": "2027-10-06",
+     "PAYMENT_DATE": "2027-10-06",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    },
+    {
+     "FLOW_ID": 3000049012,
+     "FLOW_TYPE": "Pending",
+     "NOTIONAL": 94000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2027-10-06",
+     "END_DATE": "2028-01-06",
+     "PAYMENT_DATE": "2028-01-06",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    },
+    {
+     "FLOW_ID": 3000049013,
+     "FLOW_TYPE": "Pending",
+     "NOTIONAL": 94000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2028-01-06",
+     "END_DATE": "2028-04-06",
+     "PAYMENT_DATE": "2028-04-06",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    },
+    {
+     "FLOW_ID": 3000049014,
+     "FLOW_TYPE": "Pending",
+     "NOTIONAL": 94000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2028-04-06",
+     "END_DATE": "2028-07-06",
+     "PAYMENT_DATE": "2028-07-06",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    },
+    {
+     "FLOW_ID": 3000049015,
+     "FLOW_TYPE": "Pending",
+     "NOTIONAL": 94000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2028-07-06",
+     "END_DATE": "2028-10-06",
+     "PAYMENT_DATE": "2028-10-06",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    },
+    {
+     "FLOW_ID": 3000049016,
+     "FLOW_TYPE": "Pending",
+     "NOTIONAL": 94000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2028-10-06",
+     "END_DATE": "2029-01-06",
+     "PAYMENT_DATE": "2029-01-06",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    },
+    {
+     "FLOW_ID": 3000049017,
+     "FLOW_TYPE": "Pending",
+     "NOTIONAL": 94000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2029-01-06",
+     "END_DATE": "2029-04-06",
+     "PAYMENT_DATE": "2029-04-06",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    },
+    {
+     "FLOW_ID": 3000049018,
+     "FLOW_TYPE": "Pending",
+     "NOTIONAL": 94000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2029-04-06",
+     "END_DATE": "2029-07-06",
+     "PAYMENT_DATE": "2029-07-06",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    },
+    {
+     "FLOW_ID": 3000049019,
+     "FLOW_TYPE": "Pending",
+     "NOTIONAL": 94000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2029-07-06",
+     "END_DATE": "2029-10-06",
+     "PAYMENT_DATE": "2029-10-06",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    },
+    {
+     "FLOW_ID": 3000049020,
+     "FLOW_TYPE": "Pending",
+     "NOTIONAL": 94000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2029-10-06",
+     "END_DATE": "2030-01-06",
+     "PAYMENT_DATE": "2030-01-06",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    },
+    {
+     "FLOW_ID": 3000049021,
+     "FLOW_TYPE": "Pending",
+     "NOTIONAL": 94000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2030-01-06",
+     "END_DATE": "2030-04-06",
+     "PAYMENT_DATE": "2030-04-06",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    },
+    {
+     "FLOW_ID": 3000049022,
+     "FLOW_TYPE": "Pending",
+     "NOTIONAL": 94000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2030-04-06",
+     "END_DATE": "2030-07-06",
+     "PAYMENT_DATE": "2030-07-06",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    },
+    {
+     "FLOW_ID": 3000049023,
+     "FLOW_TYPE": "Pending",
+     "NOTIONAL": 94000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2030-07-06",
+     "END_DATE": "2030-10-06",
+     "PAYMENT_DATE": "2030-10-06",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
+    },
+    {
+     "FLOW_ID": 3000049024,
+     "FLOW_TYPE": "Pending",
+     "NOTIONAL": 94000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2030-10-06",
+     "END_DATE": "2031-01-06",
+     "PAYMENT_DATE": "2031-01-06",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
     }
    ]
   }
+ ],
+ "EVENTS": [
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 3000049001,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "BOOKED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2025-01-02",
+   "AMOUNT": "",
+   "CURRENCY": "GBP",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 3000049002,
+   "EVENT_NUMBER": 2,
+   "EVENT_TYPE": "CONFIRMED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2025-01-02",
+   "AMOUNT": "",
+   "CURRENCY": "GBP",
+   "SEQUENCE_NUMBER": 2,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 3000049003,
+   "EVENT_NUMBER": 3,
+   "EVENT_TYPE": "NEXT_PAYMENT",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-10-06",
+   "AMOUNT": "",
+   "CURRENCY": "GBP",
+   "SEQUENCE_NUMBER": 3,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 3000049004,
+   "EVENT_NUMBER": 4,
+   "EVENT_TYPE": "MATURITY",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2032-01-16",
+   "AMOUNT": "",
+   "CURRENCY": "GBP",
+   "SEQUENCE_NUMBER": 4,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  }
+ ],
+ "_meta": {
+  "source": "calypso",
+  "generation": 1
  }
 }

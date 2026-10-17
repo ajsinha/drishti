@@ -10,7 +10,7 @@
  "UEN": "UEN0100259",
  "economy": "ECON-USA",
  "newsId": "NEWS-Harbor_Point_Bank",
- "netMtm": 24049570,
+ "netMtm": 24078875,
  "pfePeak": 205058358,
  "nettingSets": [
   {
@@ -29,7 +29,7 @@
    "id": "NS-HARBORPT-NY",
    "agreement": "AGR-HARBORPT-ISDA",
    "trades": 14,
-   "netMtm": 33345551
+   "netMtm": 33374856
   },
   {
    "id": "NS-HARBORPT-TKY",

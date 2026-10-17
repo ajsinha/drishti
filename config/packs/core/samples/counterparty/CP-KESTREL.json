@@ -10,7 +10,7 @@
  "UEN": "UEN0100296",
  "economy": "ECON-CYM",
  "newsId": "NEWS-Kestrel_Global_Macro_Fund",
- "netMtm": -7686719,
+ "netMtm": -8669451,
  "pfePeak": 98784506,
  "nettingSets": [
   {
@@ -29,7 +29,7 @@
    "id": "NS-KESTREL-NY",
    "agreement": "AGR-KESTREL-ISDA",
    "trades": 22,
-   "netMtm": -4760710
+   "netMtm": -5743442
   }
  ],
  "kyc": {

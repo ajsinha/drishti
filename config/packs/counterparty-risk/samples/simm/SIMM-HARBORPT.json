@@ -1,29 +1,29 @@
 {
  "calcId": "SIMM-HARBORPT",
- "total": 7414126,
- "posted": 7191702,
- "received": 7562409,
+ "total": 7413301,
+ "posted": 7190902,
+ "received": 7561567,
  "version": "ISDA SIMM 2.7",
  "riskClasses": [
   {
    "riskClass": "Interest rate",
-   "im": 3336357
+   "im": 3335985
   },
   {
    "riskClass": "Credit qualifying",
-   "im": 889695
+   "im": 889596
   },
   {
    "riskClass": "Equity",
-   "im": 1334543
+   "im": 1334394
   },
   {
    "riskClass": "Commodity",
-   "im": 593130
+   "im": 593064
   },
   {
    "riskClass": "FX",
-   "im": 1260401
+   "im": 1260261
   }
  ],
  "nettingSet": "NS-HARBORPT-FRA",

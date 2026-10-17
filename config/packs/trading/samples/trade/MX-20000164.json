@@ -1,984 +1,154 @@
 {
- "tradeId": "MX-20000164",
- "sourceSystem": "Murex",
- "sourceTradeId": "20000164",
- "productType": "YOY_INFL_SWAP",
- "productName": "Year-on-year inflation swap",
- "assetClass": "Inflation",
- "family": "swap",
- "status": "Live",
- "direction": "Pay fixed",
- "tradeDate": "2024-05-13",
- "effectiveDate": "2024-05-15",
- "maturityDate": "2026-11-05",
- "currency": "GBP",
- "notional": 243000000.0,
- "mtm": -4921358,
- "mtmCurrency": "USD",
- "pnl1d": 317086,
- "counterparty": {
-  "id": "CP-KESTREL",
-  "name": "Kestrel Global Macro Fund"
- },
- "nettingSet": "NS-KESTREL-LDN",
- "book": "BOOK-INFL-2",
- "trader": "TRDR-HOKORO",
- "desk": "DESK-INFL",
- "legalEntity": "LE-LDN",
- "discountCurve": "CRV-GBP-OIS",
- "inflationCurve": "INFC-UKRPI",
- "inflationIndex": "INF-UKRPI",
- "terms": {
-  "fixedRate": 0.029565,
-  "indexLag": "2 months"
- },
- "risk": {
-  "ie01": 48601,
-  "dv01": 55533
- },
- "sensitivities": [
+ "SOURCE_SYSTEM": "MUREX",
+ "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z",
+ "TRADE_DATE": "2025-04-17",
+ "INPUT_DATE": "2025-04-17",
+ "TRADE_ID": "MX-20000164",
+ "TRADE_STATUS": "AMENDED",
+ "TRADE_ACTION": "AMEND",
+ "TRADE_VERSION": "2",
+ "TRANSACTION_ID": "20000164002",
+ "PACKAGE_ID": "",
+ "QUANTITY": 249522.0,
+ "PRICE": 104.19,
+ "BUY_SELL_CODE": "S",
+ "PRODUCT_TYPE": "EQ_FORWARD",
+ "PRODUCT_SUB_TYPE": "Equity forward",
+ "PRODUCT_GROUP": "Equity",
+ "PRODUCT_SUB_GROUP": "linear",
+ "OPTION_TYPE": null,
+ "STRIKE_PRICE": null,
+ "COUNTERPARTY": "CP-LUMEN",
+ "COUNTERPARTY_UEN": "UEN0100333",
+ "COUNTERPARTY_COUNTRY_OF_RISK": "CH",
+ "ORIGINAL_COUNTERPARTY": "",
+ "ORIGINAL_COUNTERPARTY_UEN": "",
+ "INTERNAL_EXTERNAL_CODE": "External",
+ "TRANSIT": "00214",
+ "LEGAL_ENTITY": "LE-LDN",
+ "PORTFOLIO": "BOOK-EQD-2",
+ "TRADER_ID": "TRDR-PLINDQVIST",
+ "TRADER_FIRST_NAME": "P.",
+ "TRADER_LAST_NAME": "Lindqvist",
+ "START_DATE": "2025-04-22",
+ "MATURITY_DATE": "2026-10-07",
+ "REGISTRY_DELIVERY_DATE": "",
+ "CURRENCY": "CHF",
+ "DELIVERY_VERSUS_PAYMENT": "YES",
+ "STRATEGY": null,
+ "INTERNAL_TRADING_STRATEGY": "",
+ "NY_CURVE_FLAG": "",
+ "VAULT_LOCATION_ALLOCATION": "",
+ "PRECIOUS_METAL_FLAG": "",
+ "TT_GROUP": "DESK-EQD",
+ "TT_BOOK": "BOOK-EQD-2",
+ "LEASE_PERPETUITY_FLAG": "",
+ "SETTLEMENT_DATE": "2025-04-22",
+ "LEGS": [
   {
-   "bucket": "1Y",
-   "ie01": 16200,
-   "dv01": 18511
-  },
-  {
-   "bucket": "2Y",
-   "ie01": 32401,
-   "dv01": 37022
-  }
- ],
- "legs": [
-  {
-   "leg": 1,
-   "label": "Pay fixed 2.9565%",
-   "payer": true,
-   "type": "FIXED",
-   "currency": "GBP",
-   "notional": 243000000.0,
-   "rate": 0.029565,
-   "dayCount": "ACT/360",
-   "frequency": "Annual",
-   "calendar": "GBLO",
-   "paymentLag": "2 business days",
-   "rollConvention": "5",
-   "stub": "None",
-   "cashflows": [
-    {
-     "n": 1,
-     "payDate": "2024-11-07",
-     "notional": 243000000.0,
-     "rate": 0.029565,
-     "amount": -3472409.25,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2024-05-15",
-     "periodEnd": "2024-11-05",
-     "accrualFactor": 0.483333,
-     "discountFactor": 1.0,
-     "type": "Interest"
-    },
-    {
-     "n": 2,
-     "payDate": "2025-11-07",
-     "notional": 243000000.0,
-     "rate": 0.029565,
-     "amount": -7284076.88,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2024-11-05",
-     "periodEnd": "2025-11-05",
-     "accrualFactor": 1.013889,
-     "discountFactor": 1.0,
-     "type": "Interest"
-    },
-    {
-     "n": 3,
-     "payDate": "2026-11-09",
-     "notional": 243000000.0,
-     "rate": 0.029565,
-     "amount": -7284076.88,
-     "pv": -7253673.88,
-     "status": "Fixed",
-     "periodStart": "2025-11-05",
-     "periodEnd": "2026-11-05",
-     "accrualFactor": 1.013889,
-     "discountFactor": 0.995826,
-     "type": "Interest"
-    }
-   ],
-   "pv": -7253673.88,
-   "accrued": 0.0,
-   "payReceive": "Pay",
-   "rateType": "Fixed",
-   "index": null,
-   "spread": 0.0,
-   "legId": "MX-20000164-L1",
-   "businessDayConvention": "Mod. following"
-  },
-  {
-   "leg": 2,
-   "label": "Receive SONIA compounded",
-   "payer": false,
-   "type": "FLOAT",
-   "currency": "GBP",
-   "notional": 243000000.0,
-   "index": "SONIA",
-   "spread": 0.0,
-   "dayCount": "ACT/360",
-   "frequency": "Quarterly",
-   "calendar": "GBLO",
-   "paymentLag": "2 business days",
-   "compounding": "Compounded in arrears",
-   "observation": "Lookback 2 business days, no observation shift",
-   "nextReset": "2026-09-30",
-   "projectedFlows": 1,
-   "cashflows": [
-    {
-     "n": 1,
-     "fixingDate": "2024-08-01",
-     "payDate": "2024-08-07",
-     "notional": 243000000.0,
-     "index": "SONIA",
-     "rate": 0.037667,
-     "spread": 0.0,
-     "amount": 2084868.45,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2024-05-15",
-     "periodEnd": "2024-08-05",
-     "accrualFactor": 0.227778,
-     "discountFactor": 1.0,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2024-05-15",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.037666,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2024-06-15",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.037665,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2024-07-15",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.037671,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 2,
-     "fixingDate": "2024-11-01",
-     "payDate": "2024-11-07",
-     "notional": 243000000.0,
-     "index": "SONIA",
-     "rate": 0.038413,
-     "spread": 0.0,
-     "amount": 2385447.3,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2024-08-05",
-     "periodEnd": "2024-11-05",
-     "accrualFactor": 0.255556,
-     "discountFactor": 1.0,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2024-08-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.038395,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2024-09-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.038406,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2024-10-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.038438,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 3,
-     "fixingDate": "2025-02-03",
-     "payDate": "2025-02-07",
-     "notional": 243000000.0,
-     "index": "SONIA",
-     "rate": 0.038345,
-     "spread": 0.0,
-     "amount": 2381224.5,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2024-11-05",
-     "periodEnd": "2025-02-05",
-     "accrualFactor": 0.255556,
-     "discountFactor": 1.0,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2024-11-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.038336,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2024-12-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.038349,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2025-01-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.038349,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 4,
-     "fixingDate": "2025-05-01",
-     "payDate": "2025-05-08",
-     "notional": 243000000.0,
-     "index": "SONIA",
-     "rate": 0.03769,
-     "spread": 0.0,
-     "amount": 2289667.5,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2025-02-05",
-     "periodEnd": "2025-05-06",
-     "accrualFactor": 0.25,
-     "discountFactor": 1.0,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2025-02-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.037733,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2025-03-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.037677,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2025-04-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.037665,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2025-05-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.037618,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 5,
-     "fixingDate": "2025-08-01",
-     "payDate": "2025-08-07",
-     "notional": 243000000.0,
-     "index": "SONIA",
-     "rate": 0.038266,
-     "spread": 0.0,
-     "amount": 2350489.05,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2025-05-06",
-     "periodEnd": "2025-08-05",
-     "accrualFactor": 0.252778,
-     "discountFactor": 1.0,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2025-05-06",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.038292,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2025-06-06",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.038278,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2025-07-06",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.038227,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 6,
-     "fixingDate": "2025-11-03",
-     "payDate": "2025-11-07",
-     "notional": 243000000.0,
-     "index": "SONIA",
-     "rate": 0.038481,
-     "spread": 0.0,
-     "amount": 2389670.1,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2025-08-05",
-     "periodEnd": "2025-11-05",
-     "accrualFactor": 0.255556,
-     "discountFactor": 1.0,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2025-08-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.03851,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2025-09-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.038494,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2025-10-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.038439,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 7,
-     "fixingDate": "2026-02-03",
-     "payDate": "2026-02-09",
-     "notional": 243000000.0,
-     "index": "SONIA",
-     "rate": 0.037674,
-     "spread": 0.0,
-     "amount": 2339555.4,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2025-11-05",
-     "periodEnd": "2026-02-05",
-     "accrualFactor": 0.255556,
-     "discountFactor": 1.0,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2025-11-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.037709,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2025-12-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.037663,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2026-01-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.037651,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 8,
-     "fixingDate": "2026-04-30",
-     "payDate": "2026-05-07",
-     "notional": 243000000.0,
-     "index": "SONIA",
-     "rate": 0.038065,
-     "spread": 0.0,
-     "amount": 2286754.88,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2026-02-05",
-     "periodEnd": "2026-05-05",
-     "accrualFactor": 0.247222,
-     "discountFactor": 1.0,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2026-02-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.038093,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2026-03-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.038052,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2026-04-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.038053,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 9,
-     "fixingDate": "2026-08-03",
-     "payDate": "2026-08-07",
-     "notional": 243000000.0,
-     "index": "SONIA",
-     "rate": 0.038586,
-     "spread": 0.0,
-     "amount": 2396190.6,
-     "pv": 0.0,
-     "status": "Settled",
-     "periodStart": "2026-05-05",
-     "periodEnd": "2026-08-05",
-     "accrualFactor": 0.255556,
-     "discountFactor": 1.0,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2026-05-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.03857,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2026-06-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.038577,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2026-07-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.03861,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 10,
-     "fixingDate": "2026-11-03",
-     "payDate": "2026-11-09",
-     "notional": 243000000.0,
-     "index": "SONIA",
-     "rate": 0.037715,
-     "spread": 0.0,
-     "amount": 2342091.25,
-     "pv": 2332315.6,
-     "status": "Projected",
-     "periodStart": "2026-08-05",
-     "periodEnd": "2026-11-05",
-     "accrualFactor": 0.255556,
-     "discountFactor": 0.995826,
-     "type": "Interest",
-     "fixings": [
-      {
-       "fixingDate": "2026-08-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.03769,
-       "source": "BoE SONIA",
-       "status": "Fixed"
-      },
-      {
-       "fixingDate": "2026-09-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.037703,
-       "source": "Forward curve",
-       "status": "Projected"
-      },
-      {
-       "fixingDate": "2026-10-05",
-       "index": "SONIA",
-       "tenor": "1M",
-       "rate": 0.037752,
-       "source": "Forward curve",
-       "status": "Projected"
-      }
-     ]
-    }
-   ],
-   "pv": 2332315.6,
-   "payReceive": "Receive",
-   "rateType": "Float",
-   "legId": "MX-20000164-L2",
-   "businessDayConvention": "Mod. following",
-   "resetFrequency": "Monthly"
-  }
- ],
- "schedule": [
-  {
-   "payDate": "2024-08-07",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.037667,
-   "amount": 2084868.45,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2024-11-07",
-   "leg": 1,
-   "type": "Fixed",
-   "rate": 0.029565,
-   "amount": -3472409.25,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2024-11-07",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.038413,
-   "amount": 2385447.3,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2025-02-07",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.038345,
-   "amount": 2381224.5,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2025-05-08",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.03769,
-   "amount": 2289667.5,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2025-08-07",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.038266,
-   "amount": 2350489.05,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2025-11-07",
-   "leg": 1,
-   "type": "Fixed",
-   "rate": 0.029565,
-   "amount": -7284076.88,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2025-11-07",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.038481,
-   "amount": 2389670.1,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2026-02-09",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.037674,
-   "amount": 2339555.4,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2026-05-07",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.038065,
-   "amount": 2286754.88,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2026-08-07",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.038586,
-   "amount": 2396190.6,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2026-11-09",
-   "leg": 1,
-   "type": "Fixed",
-   "rate": 0.029565,
-   "amount": -7284076.88,
-   "pv": -7253673.88,
-   "status": "Fixed"
-  },
-  {
-   "payDate": "2026-11-09",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.037715,
-   "amount": 2342091.25,
-   "pv": 2332315.6,
-   "status": "Projected"
-  }
- ],
- "nextIndex": 11,
- "pnlHistory": [
-  {
-   "date": "2026-09-03",
-   "pnl": -49637
-  },
-  {
-   "date": "2026-09-04",
-   "pnl": 4037
-  },
-  {
-   "date": "2026-09-07",
-   "pnl": 179656
-  },
-  {
-   "date": "2026-09-08",
-   "pnl": 56849
-  },
-  {
-   "date": "2026-09-09",
-   "pnl": 256003
-  },
-  {
-   "date": "2026-09-10",
-   "pnl": 34491
-  },
-  {
-   "date": "2026-09-11",
-   "pnl": 173441
-  },
-  {
-   "date": "2026-09-14",
-   "pnl": 69274
-  },
-  {
-   "date": "2026-09-15",
-   "pnl": -183321
-  },
-  {
-   "date": "2026-09-16",
-   "pnl": -205915
-  },
-  {
-   "date": "2026-09-17",
-   "pnl": -50637
-  },
-  {
-   "date": "2026-09-18",
-   "pnl": -132265
-  },
-  {
-   "date": "2026-09-21",
-   "pnl": -122831
-  },
-  {
-   "date": "2026-09-22",
-   "pnl": -180375
-  },
-  {
-   "date": "2026-09-23",
-   "pnl": 108157
-  },
-  {
-   "date": "2026-09-24",
-   "pnl": -68871
-  },
-  {
-   "date": "2026-09-25",
-   "pnl": 1926
-  },
-  {
-   "date": "2026-09-28",
-   "pnl": 42206
-  },
-  {
-   "date": "2026-09-29",
-   "pnl": -358380
-  },
-  {
-   "date": "2026-09-30",
-   "pnl": 145611
-  }
- ],
- "execution": {
-  "tradeDate": "2024-05-13",
-  "executionTimestamp": "2024-05-13T12:44:46.556Z",
-  "venue": "Voice",
-  "venueMic": "XOFF",
-  "executionType": "Voice",
-  "trader": "H. Okoro",
-  "salesperson": null,
-  "orderId": "ORD-3A37B5036A"
- },
- "lifecycle": {
-  "status": "Live",
-  "version": 1,
-  "events": [
-   {
-    "version": 1,
-    "event": "New",
-    "reason": "Trade captured",
-    "at": "2024-05-13T12:20:00Z",
-    "by": "mo.ops"
-   }
-  ],
-  "sourceSystem": "Calypso",
-  "createdAt": "2024-05-13T12:20:00Z",
-  "lastModifiedAt": "2024-05-13T12:20:00Z",
-  "lastModifiedBy": "mo.ops",
-  "timeline": [
-   {
-    "date": "2024-05-13",
-    "event": "Booked",
-    "status": "Done",
-    "description": "Captured in Murex by TRDR-HOKORO: pay fixed Year-on-year inflation swap"
+   "LEG_ID": 1,
+   "LEG_TYPE": "FIXED",
+   "LEG_ECONOMIC_TYPE": "Receive",
+   "CURRENCY": "CHF",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 8000000.0,
+   "DISCOUNT_INDEX": "CRV-CHF-OIS",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "",
+   "RESET_HOLIDAY_SCHEDULE": null,
+   "RESET_CONVENTION": "",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "1",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "",
+    "GROUP": "",
+    "SUB_GROUP": ""
    },
-   {
-    "date": "2024-05-13",
-    "event": "Confirmed",
-    "status": "Matched",
-    "description": "Matched on MarkitWire (MA300026686)"
-   },
-   {
-    "date": "2026-08-07",
-    "event": "Cash settled",
-    "status": "Settled",
-    "description": "GBP payment settled",
-    "amount": 2396190.6
-   },
-   {
-    "date": "2026-11-05",
-    "event": "Maturity",
-    "status": "Scheduled",
-    "description": "Final payment and close-out"
-   },
-   {
-    "date": "2026-11-09",
-    "event": "Next payment",
-    "status": "Pending",
-    "description": "Scheduled; settlement instructions confirmed"
-   }
-  ]
- },
- "confirmation": {
-  "status": "Confirmed",
-  "method": "MarkitWire",
-  "platformId": "MA300026686",
-  "matched": "2024-05-13 15:25",
-  "affirmedBy": "Counterparty ops",
-  "breaks": []
- },
- "clearing": {
-  "status": "Bilateral",
-  "mandatory": false,
-  "reason": "Counterparty below clearing threshold"
- },
- "regulatory": {
-  "uti": "549300Z8F6KKOGHS7Q833A37B5036AE885C84598",
-  "upi": "QZHHNMS5NFHS",
-  "reportingRegimes": [
-   "UK EMIR",
-   "UK MiFIR"
-  ],
-  "reportingParty": "Us",
-  "reportingStatus": "Accepted",
-  "clearingObligation": false,
-  "tradingObligation": false,
-  "mifidClassification": "Professional client",
-  "volckerExempt": false,
-  "saCcrAssetClass": "Interest rate"
- },
- "settlementInstructions": {
-  "method": "CLS",
-  "ourAgent": "Barclays Bank plc",
-  "ourAgentBic": "BARCGB22XXX",
-  "theirAgentBic": "KESTGB33XXX",
-  "ssiId": "SSI-GBP-69F994",
-  "netting": "Payment netting by currency and value date"
- },
- "valuation": {
-  "asOf": "2026-09-30",
-  "currency": "USD",
-  "npv": -4921358,
-  "cleanPv": -4921358.0,
-  "accrued": 0.0,
-  "legPvs": [],
-  "model": "Multi-curve OIS discounting",
-  "curves": [
-   "CRV-GBP-OIS",
-   "INFC-UKRPI",
-   "INF-UKRPI"
-  ],
-  "status": "Official EOD",
-  "runId": "EOD-20260930-01"
- },
- "pnlExplain": [
-  {
-   "step": "Opening MTM",
-   "pnl": -5238444,
-   "total": true
-  },
-  {
-   "step": "Carry",
-   "pnl": 39704
-  },
-  {
-   "step": "Roll-down",
-   "pnl": 49662
-  },
-  {
-   "step": "Rates delta",
-   "pnl": 285691
-  },
-  {
-   "step": "FX delta",
-   "pnl": -49994
-  },
-  {
-   "step": "Vol (vega)",
-   "pnl": -8268
-  },
-  {
-   "step": "Theta",
-   "pnl": -3735
-  },
-  {
-   "step": "Unexplained",
-   "pnl": 4026
-  }
- ],
- "_meta": {
-  "source": "murex-rates",
-  "generation": 1,
-  "live": true,
-  "walk": {
-   "legs.1.cashflows.9.fixings.2.rate": 0.000151,
-   "legs.1.pv": {
-    "step": 12273,
-    "places": 2,
-    "with": [
-     {
-      "path": "legs.0.pv",
-      "scale": -0.3,
-      "places": 2
-     }
-    ]
-   },
-   "derive": [
+   "CASH_FLOWS": [
     {
-     "set": "mtm",
-     "expr": "sum(legs.*.pv)"
-    },
-    {
-     "set": "legs.0.cashflows.*.pv",
-     "scaleTo": "$.legs.0.pv",
-     "places": 2
-    },
-    {
-     "set": "legs.1.cashflows.*.pv",
-     "scaleTo": "$.legs.1.pv",
-     "places": 2
-    },
-    {
-     "set": "valuation.npv",
-     "expr": "$.mtm"
-    },
-    {
-     "set": "valuation.cleanPv",
-     "expr": "$.mtm - valuation.accrued"
-    },
-    {
-     "set": "pnl1d",
-     "expr": "$.mtm - pnlExplain.0.pnl"
-    },
-    {
-     "set": "pnlExplain.3.pnl",
-     "expr": "pnlExplain.3.pnl + ($.mtm - sum(pnlExplain.*.pnl))"
+     "FLOW_ID": 20000164001,
+     "FLOW_TYPE": "Principal",
+     "NOTIONAL": 8000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2025-04-22",
+     "END_DATE": "2026-10-07",
+     "PAYMENT_DATE": "2026-10-07",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
     }
    ]
   }
+ ],
+ "EVENTS": [
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000164001,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "BOOKED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2025-04-17",
+   "AMOUNT": "",
+   "CURRENCY": "CHF",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000164002,
+   "EVENT_NUMBER": 2,
+   "EVENT_TYPE": "CONFIRMED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2025-04-17",
+   "AMOUNT": "",
+   "CURRENCY": "CHF",
+   "SEQUENCE_NUMBER": 2,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000164003,
+   "EVENT_NUMBER": 3,
+   "EVENT_TYPE": "AMENDED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2025-08-22",
+   "AMOUNT": "",
+   "CURRENCY": "CHF",
+   "SEQUENCE_NUMBER": 3,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000164004,
+   "EVENT_NUMBER": 4,
+   "EVENT_TYPE": "MATURITY",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-10-07",
+   "AMOUNT": "",
+   "CURRENCY": "CHF",
+   "SEQUENCE_NUMBER": 4,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  }
+ ],
+ "_meta": {
+  "source": "murex",
+  "generation": 1
  }
 }

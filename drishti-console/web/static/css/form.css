@@ -73,3 +73,5 @@
 .qh-kinds li[hidden], .qh-pack[hidden], [data-forms-recent][hidden] { display: none; }
 .qh-kind { display: inline-flex; gap: .5rem; align-items: center; min-height: 36px; }
 @media (max-width: 700px) { .qh-kind { min-height: 44px; } .qh-find input { min-height: 44px; } }
+/* a dependent enum's value that does not occur with the chosen values of the field it depends on (form.js) */
+.qf-enum .qf-dep-off, .ms-list .qf-dep-off { display: none !important; }

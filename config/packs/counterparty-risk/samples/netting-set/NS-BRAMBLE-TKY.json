@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "IMG-400139",
+   "tradeId": "MX-20000421",
    "product": "Capital-protected note",
    "assetClass": "Structured",
    "currency": "GBP",
@@ -73,7 +73,7 @@
    "mtm": 566929
   },
   {
-   "tradeId": "IMG-400150",
+   "tradeId": "MX-20000432",
    "product": "FX-rates hybrid (PRDC)",
    "assetClass": "Structured",
    "currency": "JPY",

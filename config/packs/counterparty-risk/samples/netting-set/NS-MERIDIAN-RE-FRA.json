@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "BBG-60000111",
+   "tradeId": "CLY-3000297",
    "product": "Securities borrowing",
    "assetClass": "Securities financing",
    "currency": "GBP",
@@ -73,7 +73,7 @@
    "mtm": -1901921
   },
   {
-   "tradeId": "BBG-60000113",
+   "tradeId": "CLY-3000299",
    "product": "Securities borrowing",
    "assetClass": "Securities financing",
    "currency": "EUR",
@@ -84,7 +84,7 @@
    "mtm": -1189358
   },
   {
-   "tradeId": "BBG-60000116",
+   "tradeId": "CLY-3000302",
    "product": "Margin loan",
    "assetClass": "Securities financing",
    "currency": "JPY",
@@ -95,7 +95,7 @@
    "mtm": 709577
   },
   {
-   "tradeId": "BBG-60000108",
+   "tradeId": "CLY-3000294",
    "product": "Securities lending",
    "assetClass": "Securities financing",
    "currency": "GBP",
@@ -106,7 +106,7 @@
    "mtm": -362786
   },
   {
-   "tradeId": "BBG-60000088",
+   "tradeId": "CLY-3000274",
    "product": "Reverse repo",
    "assetClass": "Securities financing",
    "currency": "USD",

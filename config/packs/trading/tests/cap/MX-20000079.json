@@ -1,742 +1,486 @@
 {
- "tradeId": "MX-20000079",
- "sourceSystem": "Murex",
- "sourceTradeId": "20000079",
- "productType": "CAP",
- "productName": "Interest rate cap",
- "assetClass": "Rates",
- "family": "option",
- "status": "Live",
- "direction": "Buy",
- "tradeDate": "2025-12-15",
- "effectiveDate": "2025-12-17",
- "maturityDate": "2028-06-29",
- "currency": "JPY",
- "notional": 190000000.0,
- "mtm": 16,
- "mtmCurrency": "USD",
- "pnl1d": 0,
- "counterparty": {
-  "id": "CP-KESTREL",
-  "name": "Kestrel Global Macro Fund"
- },
- "nettingSet": "NS-KESTREL-NY",
- "book": "BOOK-RATES-3",
- "trader": "TRDR-MOKAFOR",
- "desk": "DESK-RATES",
- "legalEntity": "LE-NY",
- "discountCurve": "CRV-JPY-OIS",
- "forwardCurve": "CRV-JPY-PROJ",
- "capVolSurface": "CPV-JPY",
- "terms": {
-  "strike": 0.047883,
-  "capFrequency": "Quarterly",
-  "premium": 1131707.0
- },
- "risk": {
-  "dv01": 42033,
-  "vega": 681949
- },
- "sensitivities": [
+ "SOURCE_SYSTEM": "MUREX",
+ "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z",
+ "TRADE_DATE": "2025-12-15",
+ "INPUT_DATE": "2025-12-15",
+ "TRADE_ID": "MX-20000079",
+ "TRADE_STATUS": "AMENDED",
+ "TRADE_ACTION": "AMEND",
+ "TRADE_VERSION": "2",
+ "TRANSACTION_ID": "20000079002",
+ "PACKAGE_ID": "",
+ "QUANTITY": 190000000.0,
+ "PRICE": 1131707.0,
+ "BUY_SELL_CODE": "B",
+ "PRODUCT_TYPE": "CAP",
+ "PRODUCT_SUB_TYPE": "Interest rate cap",
+ "PRODUCT_GROUP": "Rates",
+ "PRODUCT_SUB_GROUP": "option",
+ "OPTION_TYPE": null,
+ "STRIKE_PRICE": 0.047883,
+ "COUNTERPARTY": "CP-KESTREL",
+ "COUNTERPARTY_UEN": "UEN0100296",
+ "COUNTERPARTY_COUNTRY_OF_RISK": "KY",
+ "ORIGINAL_COUNTERPARTY": "",
+ "ORIGINAL_COUNTERPARTY_UEN": "",
+ "INTERNAL_EXTERNAL_CODE": "External",
+ "TRANSIT": "00107",
+ "LEGAL_ENTITY": "LE-NY",
+ "PORTFOLIO": "BOOK-RATES-3",
+ "TRADER_ID": "TRDR-MOKAFOR",
+ "TRADER_FIRST_NAME": "M.",
+ "TRADER_LAST_NAME": "Okafor",
+ "START_DATE": "2025-12-17",
+ "MATURITY_DATE": "2028-06-29",
+ "REGISTRY_DELIVERY_DATE": "",
+ "CURRENCY": "JPY",
+ "DELIVERY_VERSUS_PAYMENT": "NO",
+ "STRATEGY": null,
+ "INTERNAL_TRADING_STRATEGY": "",
+ "NY_CURVE_FLAG": "",
+ "VAULT_LOCATION_ALLOCATION": "",
+ "PRECIOUS_METAL_FLAG": "",
+ "TT_GROUP": "DESK-RATES",
+ "TT_BOOK": "BOOK-RATES-3",
+ "LEASE_PERPETUITY_FLAG": "",
+ "SETTLEMENT_DATE": "2025-12-17",
+ "LEGS": [
   {
-   "bucket": "3M",
-   "dv01": 2802,
-   "vega": 45463
-  },
-  {
-   "bucket": "6M",
-   "dv01": 5604,
-   "vega": 90927
-  },
-  {
-   "bucket": "1Y",
-   "dv01": 8407,
-   "vega": 136390
-  },
-  {
-   "bucket": "2Y",
-   "dv01": 11209,
-   "vega": 181853
-  },
-  {
-   "bucket": "3Y",
-   "dv01": 14011,
-   "vega": 227316
-  }
- ],
- "legs": [
-  {
-   "leg": 1,
-   "label": "Buy cap 4.7883% on TERM-TONA-3M",
-   "payer": false,
-   "type": "CAPLETS",
-   "currency": "JPY",
-   "notional": 190000000.0,
-   "index": "TERM-TONA-3M",
-   "spread": 0.0,
-   "strike": 0.047883,
-   "dayCount": "ACT/360",
-   "frequency": "Quarterly",
-   "resetFrequency": "Quarterly",
-   "businessDayConvention": "Mod. following",
-   "calendar": "JPTO",
-   "paymentLag": "2 business days",
-   "cashflows": [
+   "LEG_ID": 1,
+   "LEG_TYPE": "OPTION",
+   "LEG_ECONOMIC_TYPE": "Receive",
+   "CURRENCY": "JPY",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 190000000.0,
+   "DISCOUNT_INDEX": "CRV-JPY-OIS",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "",
+   "RESET_HOLIDAY_SCHEDULE": "JPTO",
+   "RESET_CONVENTION": "Quarterly",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "11",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "TERM-TONA-3M",
+    "GROUP": "Rates",
+    "SUB_GROUP": "Quarterly"
+   },
+   "CASH_FLOWS": [
     {
-     "n": 1,
-     "type": "Caplet",
-     "periodStart": "2025-12-17",
-     "periodEnd": "2025-12-29",
-     "fixingDate": "2025-12-15",
-     "payDate": "2026-01-05",
-     "notional": 190000000.0,
-     "index": "TERM-TONA-3M",
-     "strike": 0.047883,
-     "rate": 0.005847,
-     "accrualFactor": 0.033333,
-     "volatilityBp": null,
-     "amount": 0.0,
-     "discountFactor": 1.0,
-     "pv": 0.0,
-     "status": "Settled",
-     "fixings": [
+     "FLOW_ID": 20000079001,
+     "FLOW_TYPE": "Caplet",
+     "NOTIONAL": 190000000.0,
+     "RATE": 0.005847,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2025-12-17",
+     "END_DATE": "2025-12-29",
+     "PAYMENT_DATE": "2026-01-05",
+     "RATE_DETERMINATION_DATE": "2025-12-15",
+     "FIRST_RESET_DATE": "2025-12-15",
+     "LAST_RESET_DATE": "2025-12-15",
+     "STRIKE_PRICE": 0.047883,
+     "RESETS": [
       {
-       "fixingDate": "2025-12-15",
-       "index": "TERM-TONA-3M",
-       "tenor": "3M",
-       "rate": 0.005847,
-       "source": "Refinitiv TONA term",
-       "status": "Fixed"
+       "RESET_ID": "R-1",
+       "ACCRUAL": "",
+       "START_DATE": "2025-12-15",
+       "END_DATE": "2025-12-29",
+       "RESET_DATE": "2025-12-15",
+       "ACCRUAL_START_DATE": "2025-12-17",
+       "ACCRUAL_END_DATE": "2025-12-29",
+       "RATE": 0.005847
       }
      ]
     },
     {
-     "n": 2,
-     "type": "Caplet",
-     "periodStart": "2025-12-29",
-     "periodEnd": "2026-03-30",
-     "fixingDate": "2025-12-25",
-     "payDate": "2026-04-01",
-     "notional": 190000000.0,
-     "index": "TERM-TONA-3M",
-     "strike": 0.047883,
-     "rate": 0.006242,
-     "accrualFactor": 0.252778,
-     "volatilityBp": null,
-     "amount": 0.0,
-     "discountFactor": 1.0,
-     "pv": 0.0,
-     "status": "Settled",
-     "fixings": [
+     "FLOW_ID": 20000079002,
+     "FLOW_TYPE": "Caplet",
+     "NOTIONAL": 190000000.0,
+     "RATE": 0.006242,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2025-12-29",
+     "END_DATE": "2026-03-30",
+     "PAYMENT_DATE": "2026-04-01",
+     "RATE_DETERMINATION_DATE": "2025-12-25",
+     "FIRST_RESET_DATE": "2025-12-25",
+     "LAST_RESET_DATE": "2025-12-25",
+     "STRIKE_PRICE": 0.047883,
+     "RESETS": [
       {
-       "fixingDate": "2025-12-25",
-       "index": "TERM-TONA-3M",
-       "tenor": "3M",
-       "rate": 0.006242,
-       "source": "Refinitiv TONA term",
-       "status": "Fixed"
+       "RESET_ID": "R-2",
+       "ACCRUAL": "",
+       "START_DATE": "2025-12-25",
+       "END_DATE": "2026-03-30",
+       "RESET_DATE": "2025-12-25",
+       "ACCRUAL_START_DATE": "2025-12-29",
+       "ACCRUAL_END_DATE": "2026-03-30",
+       "RATE": 0.006242
       }
      ]
     },
     {
-     "n": 3,
-     "type": "Caplet",
-     "periodStart": "2026-03-30",
-     "periodEnd": "2026-06-29",
-     "fixingDate": "2026-03-26",
-     "payDate": "2026-07-01",
-     "notional": 190000000.0,
-     "index": "TERM-TONA-3M",
-     "strike": 0.047883,
-     "rate": 0.005969,
-     "accrualFactor": 0.252778,
-     "volatilityBp": null,
-     "amount": 0.0,
-     "discountFactor": 1.0,
-     "pv": 0.0,
-     "status": "Settled",
-     "fixings": [
+     "FLOW_ID": 20000079003,
+     "FLOW_TYPE": "Caplet",
+     "NOTIONAL": 190000000.0,
+     "RATE": 0.005969,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-03-30",
+     "END_DATE": "2026-06-29",
+     "PAYMENT_DATE": "2026-07-01",
+     "RATE_DETERMINATION_DATE": "2026-03-26",
+     "FIRST_RESET_DATE": "2026-03-26",
+     "LAST_RESET_DATE": "2026-03-26",
+     "STRIKE_PRICE": 0.047883,
+     "RESETS": [
       {
-       "fixingDate": "2026-03-26",
-       "index": "TERM-TONA-3M",
-       "tenor": "3M",
-       "rate": 0.005969,
-       "source": "Refinitiv TONA term",
-       "status": "Fixed"
+       "RESET_ID": "R-3",
+       "ACCRUAL": "",
+       "START_DATE": "2026-03-26",
+       "END_DATE": "2026-06-29",
+       "RESET_DATE": "2026-03-26",
+       "ACCRUAL_START_DATE": "2026-03-30",
+       "ACCRUAL_END_DATE": "2026-06-29",
+       "RATE": 0.005969
       }
      ]
     },
     {
-     "n": 4,
-     "type": "Caplet",
-     "periodStart": "2026-06-29",
-     "periodEnd": "2026-09-29",
-     "fixingDate": "2026-06-25",
-     "payDate": "2026-10-01",
-     "notional": 190000000.0,
-     "index": "TERM-TONA-3M",
-     "strike": 0.047883,
-     "rate": 0.005355,
-     "accrualFactor": 0.255556,
-     "volatilityBp": null,
-     "amount": 0.0,
-     "discountFactor": 0.999985,
-     "pv": 0.0,
-     "status": "Fixed",
-     "fixings": [
+     "FLOW_ID": 20000079004,
+     "FLOW_TYPE": "Caplet",
+     "NOTIONAL": 190000000.0,
+     "RATE": 0.005355,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-06-29",
+     "END_DATE": "2026-09-29",
+     "PAYMENT_DATE": "2026-10-01",
+     "RATE_DETERMINATION_DATE": "2026-06-25",
+     "FIRST_RESET_DATE": "2026-06-25",
+     "LAST_RESET_DATE": "2026-06-25",
+     "STRIKE_PRICE": 0.047883,
+     "RESETS": [
       {
-       "fixingDate": "2026-06-25",
-       "index": "TERM-TONA-3M",
-       "tenor": "3M",
-       "rate": 0.005355,
-       "source": "Refinitiv TONA term",
-       "status": "Fixed"
+       "RESET_ID": "R-4",
+       "ACCRUAL": "",
+       "START_DATE": "2026-06-25",
+       "END_DATE": "2026-09-29",
+       "RESET_DATE": "2026-06-25",
+       "ACCRUAL_START_DATE": "2026-06-29",
+       "ACCRUAL_END_DATE": "2026-09-29",
+       "RATE": 0.005355
       }
      ]
     },
     {
-     "n": 5,
-     "type": "Caplet",
-     "periodStart": "2026-09-29",
-     "periodEnd": "2026-12-29",
-     "fixingDate": "2026-09-25",
-     "payDate": "2027-01-04",
-     "notional": 190000000.0,
-     "index": "TERM-TONA-3M",
-     "strike": 0.047883,
-     "rate": 0.006163,
-     "accrualFactor": 0.252778,
-     "volatilityBp": null,
-     "amount": 0.0,
-     "discountFactor": 0.998503,
-     "pv": 0.0,
-     "status": "Fixed",
-     "fixings": [
+     "FLOW_ID": 20000079005,
+     "FLOW_TYPE": "Caplet",
+     "NOTIONAL": 190000000.0,
+     "RATE": 0.006163,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-09-29",
+     "END_DATE": "2026-12-29",
+     "PAYMENT_DATE": "2027-01-04",
+     "RATE_DETERMINATION_DATE": "2026-09-25",
+     "FIRST_RESET_DATE": "2026-09-25",
+     "LAST_RESET_DATE": "2026-09-25",
+     "STRIKE_PRICE": 0.047883,
+     "RESETS": [
       {
-       "fixingDate": "2026-09-25",
-       "index": "TERM-TONA-3M",
-       "tenor": "3M",
-       "rate": 0.006163,
-       "source": "Refinitiv TONA term",
-       "status": "Fixed"
+       "RESET_ID": "R-5",
+       "ACCRUAL": "",
+       "START_DATE": "2026-09-25",
+       "END_DATE": "2026-12-29",
+       "RESET_DATE": "2026-09-25",
+       "ACCRUAL_START_DATE": "2026-09-29",
+       "ACCRUAL_END_DATE": "2026-12-29",
+       "RATE": 0.006163
       }
      ]
     },
     {
-     "n": 6,
-     "type": "Caplet",
-     "periodStart": "2026-12-29",
-     "periodEnd": "2027-03-29",
-     "fixingDate": "2026-12-25",
-     "payDate": "2027-03-31",
-     "notional": 190000000.0,
-     "index": "TERM-TONA-3M",
-     "strike": 0.047883,
-     "rate": 0.006268,
-     "accrualFactor": 0.25,
-     "volatilityBp": 88.0,
-     "amount": 0.0,
-     "discountFactor": 0.997003,
-     "pv": 0.0,
-     "status": "Projected",
-     "fixings": [
+     "FLOW_ID": 20000079006,
+     "FLOW_TYPE": "Caplet",
+     "NOTIONAL": 190000000.0,
+     "RATE": 0.006268,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-12-29",
+     "END_DATE": "2027-03-29",
+     "PAYMENT_DATE": "2027-03-31",
+     "RATE_DETERMINATION_DATE": "2026-12-25",
+     "FIRST_RESET_DATE": "2026-12-25",
+     "LAST_RESET_DATE": "2026-12-25",
+     "STRIKE_PRICE": 0.047883,
+     "RESETS": [
       {
-       "fixingDate": "2026-12-25",
-       "index": "TERM-TONA-3M",
-       "tenor": "3M",
-       "rate": 0.006268,
-       "source": "Forward curve",
-       "status": "Projected"
+       "RESET_ID": "R-6",
+       "ACCRUAL": "",
+       "START_DATE": "2026-12-25",
+       "END_DATE": "2027-03-29",
+       "RESET_DATE": "2026-12-25",
+       "ACCRUAL_START_DATE": "2026-12-29",
+       "ACCRUAL_END_DATE": "2027-03-29",
+       "RATE": ""
       }
      ]
     },
     {
-     "n": 7,
-     "type": "Caplet",
-     "periodStart": "2027-03-29",
-     "periodEnd": "2027-06-29",
-     "fixingDate": "2027-03-25",
-     "payDate": "2027-07-01",
-     "notional": 190000000.0,
-     "index": "TERM-TONA-3M",
-     "strike": 0.047883,
-     "rate": 0.006506,
-     "accrualFactor": 0.255556,
-     "volatilityBp": 88.0,
-     "amount": 0.0,
-     "discountFactor": 0.995347,
-     "pv": 0.0,
-     "status": "Projected",
-     "fixings": [
+     "FLOW_ID": 20000079007,
+     "FLOW_TYPE": "Caplet",
+     "NOTIONAL": 190000000.0,
+     "RATE": 0.006506,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2027-03-29",
+     "END_DATE": "2027-06-29",
+     "PAYMENT_DATE": "2027-07-01",
+     "RATE_DETERMINATION_DATE": "2027-03-25",
+     "FIRST_RESET_DATE": "2027-03-25",
+     "LAST_RESET_DATE": "2027-03-25",
+     "STRIKE_PRICE": 0.047883,
+     "RESETS": [
       {
-       "fixingDate": "2027-03-25",
-       "index": "TERM-TONA-3M",
-       "tenor": "3M",
-       "rate": 0.006506,
-       "source": "Forward curve",
-       "status": "Projected"
+       "RESET_ID": "R-7",
+       "ACCRUAL": "",
+       "START_DATE": "2027-03-25",
+       "END_DATE": "2027-06-29",
+       "RESET_DATE": "2027-03-25",
+       "ACCRUAL_START_DATE": "2027-03-29",
+       "ACCRUAL_END_DATE": "2027-06-29",
+       "RATE": ""
       }
      ]
     },
     {
-     "n": 8,
-     "type": "Caplet",
-     "periodStart": "2027-06-29",
-     "periodEnd": "2027-09-29",
-     "fixingDate": "2027-06-25",
-     "payDate": "2027-10-01",
-     "notional": 190000000.0,
-     "index": "TERM-TONA-3M",
-     "strike": 0.047883,
-     "rate": 0.006877,
-     "accrualFactor": 0.255556,
-     "volatilityBp": 88.0,
-     "amount": 0.0,
-     "discountFactor": 0.993599,
-     "pv": 0.0,
-     "status": "Projected",
-     "fixings": [
+     "FLOW_ID": 20000079008,
+     "FLOW_TYPE": "Caplet",
+     "NOTIONAL": 190000000.0,
+     "RATE": 0.006877,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2027-06-29",
+     "END_DATE": "2027-09-29",
+     "PAYMENT_DATE": "2027-10-01",
+     "RATE_DETERMINATION_DATE": "2027-06-25",
+     "FIRST_RESET_DATE": "2027-06-25",
+     "LAST_RESET_DATE": "2027-06-25",
+     "STRIKE_PRICE": 0.047883,
+     "RESETS": [
       {
-       "fixingDate": "2027-06-25",
-       "index": "TERM-TONA-3M",
-       "tenor": "3M",
-       "rate": 0.006877,
-       "source": "Forward curve",
-       "status": "Projected"
+       "RESET_ID": "R-8",
+       "ACCRUAL": "",
+       "START_DATE": "2027-06-25",
+       "END_DATE": "2027-09-29",
+       "RESET_DATE": "2027-06-25",
+       "ACCRUAL_START_DATE": "2027-06-29",
+       "ACCRUAL_END_DATE": "2027-09-29",
+       "RATE": ""
       }
      ]
     },
     {
-     "n": 9,
-     "type": "Caplet",
-     "periodStart": "2027-09-29",
-     "periodEnd": "2027-12-29",
-     "fixingDate": "2027-09-27",
-     "payDate": "2028-01-04",
-     "notional": 190000000.0,
-     "index": "TERM-TONA-3M",
-     "strike": 0.047883,
-     "rate": 0.007346,
-     "accrualFactor": 0.252778,
-     "volatilityBp": 88.0,
-     "amount": 0.16,
-     "discountFactor": 0.991671,
-     "pv": 0.16,
-     "status": "Projected",
-     "fixings": [
+     "FLOW_ID": 20000079009,
+     "FLOW_TYPE": "Caplet",
+     "NOTIONAL": 190000000.0,
+     "RATE": 0.007346,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2027-09-29",
+     "END_DATE": "2027-12-29",
+     "PAYMENT_DATE": "2028-01-04",
+     "RATE_DETERMINATION_DATE": "2027-09-27",
+     "FIRST_RESET_DATE": "2027-09-27",
+     "LAST_RESET_DATE": "2027-09-27",
+     "STRIKE_PRICE": 0.047883,
+     "RESETS": [
       {
-       "fixingDate": "2027-09-27",
-       "index": "TERM-TONA-3M",
-       "tenor": "3M",
-       "rate": 0.007346,
-       "source": "Forward curve",
-       "status": "Projected"
+       "RESET_ID": "R-9",
+       "ACCRUAL": "",
+       "START_DATE": "2027-09-27",
+       "END_DATE": "2027-12-29",
+       "RESET_DATE": "2027-09-27",
+       "ACCRUAL_START_DATE": "2027-09-29",
+       "ACCRUAL_END_DATE": "2027-12-29",
+       "RATE": ""
       }
      ]
     },
     {
-     "n": 10,
-     "type": "Caplet",
-     "periodStart": "2027-12-29",
-     "periodEnd": "2028-03-29",
-     "fixingDate": "2027-12-27",
-     "payDate": "2028-03-31",
-     "notional": 190000000.0,
-     "index": "TERM-TONA-3M",
-     "strike": 0.047883,
-     "rate": 0.007759,
-     "accrualFactor": 0.252778,
-     "volatilityBp": 88.0,
-     "amount": 2.22,
-     "discountFactor": 0.989811,
-     "pv": 2.2,
-     "status": "Projected",
-     "fixings": [
+     "FLOW_ID": 20000079010,
+     "FLOW_TYPE": "Caplet",
+     "NOTIONAL": 190000000.0,
+     "RATE": 0.007759,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2027-12-29",
+     "END_DATE": "2028-03-29",
+     "PAYMENT_DATE": "2028-03-31",
+     "RATE_DETERMINATION_DATE": "2027-12-27",
+     "FIRST_RESET_DATE": "2027-12-27",
+     "LAST_RESET_DATE": "2027-12-27",
+     "STRIKE_PRICE": 0.047883,
+     "RESETS": [
       {
-       "fixingDate": "2027-12-27",
-       "index": "TERM-TONA-3M",
-       "tenor": "3M",
-       "rate": 0.007759,
-       "source": "Forward curve",
-       "status": "Projected"
+       "RESET_ID": "R-10",
+       "ACCRUAL": "",
+       "START_DATE": "2027-12-27",
+       "END_DATE": "2028-03-29",
+       "RESET_DATE": "2027-12-27",
+       "ACCRUAL_START_DATE": "2027-12-29",
+       "ACCRUAL_END_DATE": "2028-03-29",
+       "RATE": ""
       }
      ]
     },
     {
-     "n": 11,
-     "type": "Caplet",
-     "periodStart": "2028-03-29",
-     "periodEnd": "2028-06-29",
-     "fixingDate": "2028-03-27",
-     "payDate": "2028-07-03",
-     "notional": 190000000.0,
-     "index": "TERM-TONA-3M",
-     "strike": 0.047883,
-     "rate": 0.008173,
-     "accrualFactor": 0.255556,
-     "volatilityBp": 88.0,
-     "amount": 13.73,
-     "discountFactor": 0.9877,
-     "pv": 13.56,
-     "status": "Projected",
-     "fixings": [
+     "FLOW_ID": 20000079011,
+     "FLOW_TYPE": "Caplet",
+     "NOTIONAL": 190000000.0,
+     "RATE": 0.008173,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2028-03-29",
+     "END_DATE": "2028-06-29",
+     "PAYMENT_DATE": "2028-07-03",
+     "RATE_DETERMINATION_DATE": "2028-03-27",
+     "FIRST_RESET_DATE": "2028-03-27",
+     "LAST_RESET_DATE": "2028-03-27",
+     "STRIKE_PRICE": 0.047883,
+     "RESETS": [
       {
-       "fixingDate": "2028-03-27",
-       "index": "TERM-TONA-3M",
-       "tenor": "3M",
-       "rate": 0.008173,
-       "source": "Forward curve",
-       "status": "Projected"
+       "RESET_ID": "R-11",
+       "ACCRUAL": "",
+       "START_DATE": "2028-03-27",
+       "END_DATE": "2028-06-29",
+       "RESET_DATE": "2028-03-27",
+       "ACCRUAL_START_DATE": "2028-03-29",
+       "ACCRUAL_END_DATE": "2028-06-29",
+       "RATE": ""
       }
      ]
     }
-   ],
-   "rateType": "Option",
-   "payReceive": "Receive",
-   "legId": "MX-20000079-L1",
-   "pv": 15.92,
-   "projectedFlows": 6
+   ]
   }
  ],
- "schedule": [
+ "EVENTS": [
   {
-   "fixingDate": "2025-12-15",
-   "period": "2025-12-17..2025-12-29",
-   "index": "TERM-TONA-3M",
-   "rate": 0.005847,
-   "payoff": 0.0,
-   "status": "Fixed"
+   "LEG_ID": "",
+   "EVENT_ID": 20000079001,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "BOOKED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2025-12-15",
+   "AMOUNT": "",
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
   },
   {
-   "fixingDate": "2025-12-25",
-   "period": "2025-12-29..2026-03-30",
-   "index": "TERM-TONA-3M",
-   "rate": 0.006242,
-   "payoff": 0.0,
-   "status": "Fixed"
+   "LEG_ID": "",
+   "EVENT_ID": 20000079002,
+   "EVENT_NUMBER": 2,
+   "EVENT_TYPE": "CONFIRMED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2025-12-15",
+   "AMOUNT": "",
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 2,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
   },
   {
-   "fixingDate": "2026-03-26",
-   "period": "2026-03-30..2026-06-29",
-   "index": "TERM-TONA-3M",
-   "rate": 0.005969,
-   "payoff": 0.0,
-   "status": "Fixed"
+   "LEG_ID": "",
+   "EVENT_ID": 20000079003,
+   "EVENT_NUMBER": 3,
+   "EVENT_TYPE": "AMENDED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-01-06",
+   "AMOUNT": "",
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 3,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
   },
   {
-   "fixingDate": "2026-06-25",
-   "period": "2026-06-29..2026-09-29",
-   "index": "TERM-TONA-3M",
-   "rate": 0.005355,
-   "payoff": 0.0,
-   "status": "Fixed"
+   "LEG_ID": "",
+   "EVENT_ID": 20000079004,
+   "EVENT_NUMBER": 4,
+   "EVENT_TYPE": "CASH_SETTLED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-09-25",
+   "AMOUNT": 0.0,
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 4,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
   },
   {
-   "fixingDate": "2026-09-25",
-   "period": "2026-09-29..2026-12-29",
-   "index": "TERM-TONA-3M",
-   "rate": 0.006163,
-   "payoff": 0.0,
-   "status": "Fixed"
+   "LEG_ID": "",
+   "EVENT_ID": 20000079005,
+   "EVENT_NUMBER": 5,
+   "EVENT_TYPE": "NEXT_PAYMENT",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-12-25",
+   "AMOUNT": "",
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 5,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
   },
   {
-   "fixingDate": "2026-12-25",
-   "period": "2026-12-29..2027-03-29",
-   "index": "TERM-TONA-3M",
-   "rate": 0.006268,
-   "payoff": 0.0,
-   "status": "Pending"
+   "LEG_ID": "",
+   "EVENT_ID": 20000079006,
+   "EVENT_NUMBER": 6,
+   "EVENT_TYPE": "MATURITY",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2028-06-29",
+   "AMOUNT": "",
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 6,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
   },
   {
-   "fixingDate": "2027-03-25",
-   "period": "2027-03-29..2027-06-29",
-   "index": "TERM-TONA-3M",
-   "rate": 0.006506,
-   "payoff": 0.0,
-   "status": "Pending"
+   "LEG_ID": 1,
+   "EVENT_ID": 20000079007,
+   "EVENT_NUMBER": 7,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Caplet",
+   "EVENT_DATE": "2028-01-04",
+   "AMOUNT": 0.16,
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 7,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
   },
   {
-   "fixingDate": "2027-06-25",
-   "period": "2027-06-29..2027-09-29",
-   "index": "TERM-TONA-3M",
-   "rate": 0.006877,
-   "payoff": 0.0,
-   "status": "Pending"
+   "LEG_ID": 1,
+   "EVENT_ID": 20000079008,
+   "EVENT_NUMBER": 8,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Caplet",
+   "EVENT_DATE": "2028-03-31",
+   "AMOUNT": 2.22,
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 8,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
   },
   {
-   "fixingDate": "2027-09-27",
-   "period": "2027-09-29..2027-12-29",
-   "index": "TERM-TONA-3M",
-   "rate": 0.007346,
-   "payoff": 0.16,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2027-12-27",
-   "period": "2027-12-29..2028-03-29",
-   "index": "TERM-TONA-3M",
-   "rate": 0.007759,
-   "payoff": 2.22,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2028-03-27",
-   "period": "2028-03-29..2028-06-29",
-   "index": "TERM-TONA-3M",
-   "rate": 0.008173,
-   "payoff": 13.73,
-   "status": "Pending"
+   "LEG_ID": 1,
+   "EVENT_ID": 20000079009,
+   "EVENT_NUMBER": 9,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Caplet",
+   "EVENT_DATE": "2028-07-03",
+   "AMOUNT": 13.73,
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 9,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
   }
- ],
- "nextIndex": 5,
- "pnlHistory": [
-  {
-   "date": "2026-09-03",
-   "pnl": -2855
-  },
-  {
-   "date": "2026-09-04",
-   "pnl": 1847
-  },
-  {
-   "date": "2026-09-07",
-   "pnl": 5567
-  },
-  {
-   "date": "2026-09-08",
-   "pnl": -3283
-  },
-  {
-   "date": "2026-09-09",
-   "pnl": -3593
-  },
-  {
-   "date": "2026-09-10",
-   "pnl": -1792
-  },
-  {
-   "date": "2026-09-11",
-   "pnl": 503
-  },
-  {
-   "date": "2026-09-14",
-   "pnl": -1200
-  },
-  {
-   "date": "2026-09-15",
-   "pnl": 855
-  },
-  {
-   "date": "2026-09-16",
-   "pnl": -167
-  },
-  {
-   "date": "2026-09-17",
-   "pnl": 4849
-  },
-  {
-   "date": "2026-09-18",
-   "pnl": 883
-  },
-  {
-   "date": "2026-09-21",
-   "pnl": -1956
-  },
-  {
-   "date": "2026-09-22",
-   "pnl": 5879
-  },
-  {
-   "date": "2026-09-23",
-   "pnl": -1996
-  },
-  {
-   "date": "2026-09-24",
-   "pnl": -7966
-  },
-  {
-   "date": "2026-09-25",
-   "pnl": 358
-  },
-  {
-   "date": "2026-09-28",
-   "pnl": -5104
-  },
-  {
-   "date": "2026-09-29",
-   "pnl": 3186
-  },
-  {
-   "date": "2026-09-30",
-   "pnl": -1131
-  }
- ],
- "execution": {
-  "tradeDate": "2025-12-15",
-  "executionTimestamp": "2025-12-15T14:12:38.170Z",
-  "venue": "Voice",
-  "venueMic": "XOFF",
-  "executionType": "Voice",
-  "trader": "M. Okafor",
-  "salesperson": null,
-  "orderId": "ORD-7E6E32744D"
- },
- "lifecycle": {
-  "status": "Live",
-  "version": 2,
-  "events": [
-   {
-    "version": 1,
-    "event": "New",
-    "reason": "Trade captured",
-    "at": "2025-12-15T12:01:00Z",
-    "by": "fo.capture"
-   },
-   {
-    "version": 2,
-    "event": "Amendment",
-    "reason": "Notional corrected",
-    "at": "2026-01-06T12:01:00Z",
-    "by": "fo.capture"
-   }
-  ],
-  "sourceSystem": "Calypso",
-  "createdAt": "2025-12-15T12:01:00Z",
-  "lastModifiedAt": "2026-01-06T12:01:00Z",
-  "lastModifiedBy": "fo.capture",
-  "timeline": [
-   {
-    "date": "2025-12-15",
-    "event": "Booked",
-    "status": "Done",
-    "description": "Captured in Murex by TRDR-MOKAFOR: buy Interest rate cap"
-   },
-   {
-    "date": "2025-12-15",
-    "event": "Confirmed",
-    "status": "Matched",
-    "description": "Matched on MarkitWire (MA507196821)"
-   },
-   {
-    "date": "2026-01-06",
-    "event": "Amended",
-    "status": "Done",
-    "description": "Notional corrected (version 2, by fo.capture)"
-   },
-   {
-    "date": "2026-09-25",
-    "event": "Cash settled",
-    "status": "Settled",
-    "description": "JPY payment settled",
-    "amount": 0.0
-   },
-   {
-    "date": "2026-12-25",
-    "event": "Next payment",
-    "status": "Pending",
-    "description": "Scheduled; settlement instructions confirmed"
-   },
-   {
-    "date": "2028-06-29",
-    "event": "Maturity",
-    "status": "Scheduled",
-    "description": "Final payment and close-out"
-   }
-  ]
- },
- "confirmation": {
-  "status": "Confirmed",
-  "method": "MarkitWire",
-  "platformId": "MA507196821",
-  "matched": "2025-12-15 14:09",
-  "affirmedBy": "Counterparty ops",
-  "breaks": []
- },
- "clearing": {
-  "status": "Bilateral",
-  "mandatory": false,
-  "reason": "Counterparty below clearing threshold"
- },
- "regulatory": {
-  "uti": "549300O1N13GO2II20967E6E32744DA6854720DF",
-  "upi": "QZIGSHIFAZL7",
-  "reportingRegimes": [
-   "CFTC Part 43/45"
-  ],
-  "reportingParty": "Us",
-  "reportingStatus": "Accepted",
-  "clearingObligation": false,
-  "tradingObligation": false,
-  "mifidClassification": "Professional client",
-  "volckerExempt": false,
-  "saCcrAssetClass": "Interest rate"
- },
- "settlementInstructions": {
-  "method": "CLS",
-  "ourAgent": "MUFG Bank, Ltd.",
-  "ourAgentBic": "BOTKJPJTXXX",
-  "theirAgentBic": "KESTGB33XXX",
-  "ssiId": "SSI-JPY-69F994",
-  "netting": "Payment netting by currency and value date"
- },
- "valuation": {
-  "asOf": "2026-09-30",
-  "currency": "USD",
-  "npv": 16,
-  "cleanPv": 16.0,
-  "accrued": 0.0,
-  "legPvs": [],
-  "model": "Black / Bachelier",
-  "curves": [
-   "CRV-JPY-OIS",
-   "CRV-JPY-PROJ",
-   "CPV-JPY"
-  ],
-  "status": "Official EOD",
-  "runId": "EOD-20260930-01"
- },
- "pnlExplain": [
-  {
-   "step": "Opening MTM",
-   "pnl": 16,
-   "total": true
-  },
-  {
-   "step": "Carry",
-   "pnl": 62
-  },
-  {
-   "step": "Roll-down",
-   "pnl": 51
-  },
-  {
-   "step": "Rates delta",
-   "pnl": -1193
-  },
-  {
-   "step": "FX delta",
-   "pnl": 56
-  },
-  {
-   "step": "Vol (vega)",
-   "pnl": 1161
-  },
-  {
-   "step": "Theta",
-   "pnl": -137
-  },
-  {
-   "step": "Unexplained",
-   "pnl": 0
-  }
- ],
- "_meta": {
-  "source": "murex-rates",
-  "generation": 1,
-  "live": true,
-  "walk": {
-   "mtm": 1900,
-   "legs.0.cashflows.5.fixings.0.rate": 5e-05
-  }
- }
+ ]
 }

@@ -1,760 +1,529 @@
 {
- "tradeId": "MX-20000089",
- "sourceSystem": "Murex",
- "sourceTradeId": "20000089",
- "productType": "FLOOR",
- "productName": "Interest rate floor",
- "assetClass": "Rates",
- "family": "option",
- "status": "Live",
- "direction": "Sell",
- "tradeDate": "2026-03-04",
- "effectiveDate": "2026-03-06",
- "maturityDate": "2028-10-24",
- "currency": "AUD",
- "notional": 100000000.0,
- "mtm": -57660,
- "mtmCurrency": "USD",
- "pnl1d": 652,
- "counterparty": {
-  "id": "CP-TOKAI",
-  "name": "Tokai Mutual Trust Bank"
- },
- "nettingSet": "NS-TOKAI-NY",
- "book": "BOOK-RATES-3",
- "trader": "TRDR-ASHAH",
- "desk": "DESK-RATES",
- "legalEntity": "LE-NY",
- "discountCurve": "CRV-AUD-OIS",
- "forwardCurve": "CRV-AUD-PROJ",
- "capVolSurface": "CPV-AUD",
- "terms": {
-  "strike": 0.02398,
-  "floorFrequency": "Quarterly",
-  "premium": 338998.0
- },
- "risk": {
-  "dv01": -22877,
-  "vega": -293456
- },
- "sensitivities": [
+ "SOURCE_SYSTEM": "MUREX",
+ "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z",
+ "TRADE_DATE": "2026-03-04",
+ "INPUT_DATE": "2026-03-04",
+ "TRADE_ID": "MX-20000089",
+ "TRADE_STATUS": "VALIDATED",
+ "TRADE_ACTION": "NEW",
+ "TRADE_VERSION": "1",
+ "TRANSACTION_ID": "20000089001",
+ "PACKAGE_ID": "",
+ "QUANTITY": 100000000.0,
+ "PRICE": 338998.0,
+ "BUY_SELL_CODE": "S",
+ "PRODUCT_TYPE": "FLOOR",
+ "PRODUCT_SUB_TYPE": "Interest rate floor",
+ "PRODUCT_GROUP": "Rates",
+ "PRODUCT_SUB_GROUP": "option",
+ "OPTION_TYPE": null,
+ "STRIKE_PRICE": 0.02398,
+ "COUNTERPARTY": "CP-TOKAI",
+ "COUNTERPARTY_UEN": "UEN0100629",
+ "COUNTERPARTY_COUNTRY_OF_RISK": "JP",
+ "ORIGINAL_COUNTERPARTY": "",
+ "ORIGINAL_COUNTERPARTY_UEN": "",
+ "INTERNAL_EXTERNAL_CODE": "External",
+ "TRANSIT": "00107",
+ "LEGAL_ENTITY": "LE-NY",
+ "PORTFOLIO": "BOOK-RATES-3",
+ "TRADER_ID": "TRDR-ASHAH",
+ "TRADER_FIRST_NAME": "A.",
+ "TRADER_LAST_NAME": "Shah",
+ "START_DATE": "2026-03-06",
+ "MATURITY_DATE": "2028-10-24",
+ "REGISTRY_DELIVERY_DATE": "",
+ "CURRENCY": "AUD",
+ "DELIVERY_VERSUS_PAYMENT": "NO",
+ "STRATEGY": null,
+ "INTERNAL_TRADING_STRATEGY": "",
+ "NY_CURVE_FLAG": "",
+ "VAULT_LOCATION_ALLOCATION": "",
+ "PRECIOUS_METAL_FLAG": "",
+ "TT_GROUP": "DESK-RATES",
+ "TT_BOOK": "BOOK-RATES-3",
+ "LEASE_PERPETUITY_FLAG": "",
+ "SETTLEMENT_DATE": "2026-03-06",
+ "LEGS": [
   {
-   "bucket": "3M",
-   "dv01": -1525,
-   "vega": -19564
-  },
-  {
-   "bucket": "6M",
-   "dv01": -3050,
-   "vega": -39127
-  },
-  {
-   "bucket": "1Y",
-   "dv01": -4575,
-   "vega": -58691
-  },
-  {
-   "bucket": "2Y",
-   "dv01": -6101,
-   "vega": -78255
-  },
-  {
-   "bucket": "3Y",
-   "dv01": -7626,
-   "vega": -97819
-  }
- ],
- "legs": [
-  {
-   "leg": 1,
-   "label": "Sell floor 2.3980% on TERM-AONIA-3M",
-   "payer": true,
-   "type": "FLOORLETS",
-   "currency": "AUD",
-   "notional": 100000000.0,
-   "index": "TERM-AONIA-3M",
-   "spread": 0.0,
-   "strike": 0.02398,
-   "dayCount": "ACT/360",
-   "frequency": "Quarterly",
-   "resetFrequency": "Quarterly",
-   "businessDayConvention": "Mod. following",
-   "calendar": "GBLO",
-   "paymentLag": "2 business days",
-   "cashflows": [
-    {
-     "n": 1,
-     "type": "Floorlet",
-     "periodStart": "2026-03-06",
-     "periodEnd": "2026-04-24",
-     "fixingDate": "2026-03-04",
-     "payDate": "2026-04-28",
-     "notional": 100000000.0,
-     "index": "TERM-AONIA-3M",
-     "strike": 0.02398,
-     "rate": 0.036645,
-     "accrualFactor": 0.136111,
-     "volatilityBp": null,
-     "amount": -0.0,
-     "discountFactor": 1.0,
-     "pv": 0.0,
-     "status": "Settled",
-     "fixings": [
-      {
-       "fixingDate": "2026-03-04",
-       "index": "TERM-AONIA-3M",
-       "tenor": "3M",
-       "rate": 0.036645,
-       "source": "Refinitiv AONIA term",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 2,
-     "type": "Floorlet",
-     "periodStart": "2026-04-24",
-     "periodEnd": "2026-07-24",
-     "fixingDate": "2026-04-22",
-     "payDate": "2026-07-28",
-     "notional": 100000000.0,
-     "index": "TERM-AONIA-3M",
-     "strike": 0.02398,
-     "rate": 0.035853,
-     "accrualFactor": 0.252778,
-     "volatilityBp": null,
-     "amount": -0.0,
-     "discountFactor": 1.0,
-     "pv": 0.0,
-     "status": "Settled",
-     "fixings": [
-      {
-       "fixingDate": "2026-04-22",
-       "index": "TERM-AONIA-3M",
-       "tenor": "3M",
-       "rate": 0.035853,
-       "source": "Refinitiv AONIA term",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 3,
-     "type": "Floorlet",
-     "periodStart": "2026-07-24",
-     "periodEnd": "2026-10-26",
-     "fixingDate": "2026-07-22",
-     "payDate": "2026-10-28",
-     "notional": 100000000.0,
-     "index": "TERM-AONIA-3M",
-     "strike": 0.02398,
-     "rate": 0.03669,
-     "accrualFactor": 0.261111,
-     "volatilityBp": null,
-     "amount": -0.0,
-     "discountFactor": 0.997255,
-     "pv": -0.0,
-     "status": "Fixed",
-     "fixings": [
-      {
-       "fixingDate": "2026-07-22",
-       "index": "TERM-AONIA-3M",
-       "tenor": "3M",
-       "rate": 0.03669,
-       "source": "Refinitiv AONIA term",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 4,
-     "type": "Floorlet",
-     "periodStart": "2026-10-26",
-     "periodEnd": "2027-01-25",
-     "fixingDate": "2026-10-22",
-     "payDate": "2027-01-27",
-     "notional": 100000000.0,
-     "index": "TERM-AONIA-3M",
-     "strike": 0.02398,
-     "rate": 0.035802,
-     "accrualFactor": 0.252778,
-     "volatilityBp": 88.0,
-     "amount": -0.0,
-     "discountFactor": 0.988308,
-     "pv": -0.0,
-     "status": "Projected",
-     "fixings": [
-      {
-       "fixingDate": "2026-10-22",
-       "index": "TERM-AONIA-3M",
-       "tenor": "3M",
-       "rate": 0.035802,
-       "source": "Forward curve",
-       "status": "Projected"
-      }
-     ]
-    },
-    {
-     "n": 5,
-     "type": "Floorlet",
-     "periodStart": "2027-01-25",
-     "periodEnd": "2027-04-26",
-     "fixingDate": "2027-01-21",
-     "payDate": "2027-04-28",
-     "notional": 100000000.0,
-     "index": "TERM-AONIA-3M",
-     "strike": 0.02398,
-     "rate": 0.036153,
-     "accrualFactor": 0.252778,
-     "volatilityBp": 88.0,
-     "amount": -258.85,
-     "discountFactor": 0.979357,
-     "pv": -253.51,
-     "status": "Projected",
-     "fixings": [
-      {
-       "fixingDate": "2027-01-21",
-       "index": "TERM-AONIA-3M",
-       "tenor": "3M",
-       "rate": 0.036153,
-       "source": "Forward curve",
-       "status": "Projected"
-      }
-     ]
-    },
-    {
-     "n": 6,
-     "type": "Floorlet",
-     "periodStart": "2027-04-26",
-     "periodEnd": "2027-07-26",
-     "fixingDate": "2027-04-22",
-     "payDate": "2027-07-28",
-     "notional": 100000000.0,
-     "index": "TERM-AONIA-3M",
-     "strike": 0.02398,
-     "rate": 0.036235,
-     "accrualFactor": 0.252778,
-     "volatilityBp": 88.0,
-     "amount": -2023.87,
-     "discountFactor": 0.970467,
-     "pv": -1964.1,
-     "status": "Projected",
-     "fixings": [
-      {
-       "fixingDate": "2027-04-22",
-       "index": "TERM-AONIA-3M",
-       "tenor": "3M",
-       "rate": 0.036235,
-       "source": "Forward curve",
-       "status": "Projected"
-      }
-     ]
-    },
-    {
-     "n": 7,
-     "type": "Floorlet",
-     "periodStart": "2027-07-26",
-     "periodEnd": "2027-10-25",
-     "fixingDate": "2027-07-22",
-     "payDate": "2027-10-27",
-     "notional": 100000000.0,
-     "index": "TERM-AONIA-3M",
-     "strike": 0.02398,
-     "rate": 0.036449,
-     "accrualFactor": 0.252778,
-     "volatilityBp": 88.0,
-     "amount": -4916.5,
-     "discountFactor": 0.961606,
-     "pv": -4727.73,
-     "status": "Projected",
-     "fixings": [
-      {
-       "fixingDate": "2027-07-22",
-       "index": "TERM-AONIA-3M",
-       "tenor": "3M",
-       "rate": 0.036449,
-       "source": "Forward curve",
-       "status": "Projected"
-      }
-     ]
-    },
-    {
-     "n": 8,
-     "type": "Floorlet",
-     "periodStart": "2027-10-25",
-     "periodEnd": "2028-01-24",
-     "fixingDate": "2027-10-21",
-     "payDate": "2028-01-26",
-     "notional": 100000000.0,
-     "index": "TERM-AONIA-3M",
-     "strike": 0.02398,
-     "rate": 0.036721,
-     "accrualFactor": 0.252778,
-     "volatilityBp": 88.0,
-     "amount": -8243.4,
-     "discountFactor": 0.952761,
-     "pv": -7853.99,
-     "status": "Projected",
-     "fixings": [
-      {
-       "fixingDate": "2027-10-21",
-       "index": "TERM-AONIA-3M",
-       "tenor": "3M",
-       "rate": 0.036721,
-       "source": "Forward curve",
-       "status": "Projected"
-      }
-     ]
-    },
-    {
-     "n": 9,
-     "type": "Floorlet",
-     "periodStart": "2028-01-24",
-     "periodEnd": "2028-04-24",
-     "fixingDate": "2028-01-20",
-     "payDate": "2028-04-26",
-     "notional": 100000000.0,
-     "index": "TERM-AONIA-3M",
-     "strike": 0.02398,
-     "rate": 0.03695,
-     "accrualFactor": 0.252778,
-     "volatilityBp": 88.0,
-     "amount": -11844.95,
-     "discountFactor": 0.943943,
-     "pv": -11180.96,
-     "status": "Projected",
-     "fixings": [
-      {
-       "fixingDate": "2028-01-20",
-       "index": "TERM-AONIA-3M",
-       "tenor": "3M",
-       "rate": 0.03695,
-       "source": "Forward curve",
-       "status": "Projected"
-      }
-     ]
-    },
-    {
-     "n": 10,
-     "type": "Floorlet",
-     "periodStart": "2028-04-24",
-     "periodEnd": "2028-07-24",
-     "fixingDate": "2028-04-20",
-     "payDate": "2028-07-26",
-     "notional": 100000000.0,
-     "index": "TERM-AONIA-3M",
-     "strike": 0.02398,
-     "rate": 0.037178,
-     "accrualFactor": 0.252778,
-     "volatilityBp": 88.0,
-     "amount": -15494.59,
-     "discountFactor": 0.935154,
-     "pv": -14489.82,
-     "status": "Projected",
-     "fixings": [
-      {
-       "fixingDate": "2028-04-20",
-       "index": "TERM-AONIA-3M",
-       "tenor": "3M",
-       "rate": 0.037178,
-       "source": "Forward curve",
-       "status": "Projected"
-      }
-     ]
-    },
-    {
-     "n": 11,
-     "type": "Floorlet",
-     "periodStart": "2028-07-24",
-     "periodEnd": "2028-10-24",
-     "fixingDate": "2028-07-20",
-     "payDate": "2028-10-26",
-     "notional": 100000000.0,
-     "index": "TERM-AONIA-3M",
-     "strike": 0.02398,
-     "rate": 0.037643,
-     "accrualFactor": 0.255556,
-     "volatilityBp": 88.0,
-     "amount": -18558.57,
-     "discountFactor": 0.926237,
-     "pv": -17189.64,
-     "status": "Projected",
-     "fixings": [
-      {
-       "fixingDate": "2028-07-20",
-       "index": "TERM-AONIA-3M",
-       "tenor": "3M",
-       "rate": 0.037643,
-       "source": "Forward curve",
-       "status": "Projected"
-      }
-     ]
-    }
-   ],
-   "rateType": "Option",
-   "payReceive": "Pay",
-   "legId": "MX-20000089-L1",
-   "pv": -57659.75,
-   "projectedFlows": 8
-  }
- ],
- "schedule": [
-  {
-   "fixingDate": "2026-03-04",
-   "period": "2026-03-06..2026-04-24",
-   "index": "TERM-AONIA-3M",
-   "rate": 0.036645,
-   "payoff": -0.0,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2026-04-22",
-   "period": "2026-04-24..2026-07-24",
-   "index": "TERM-AONIA-3M",
-   "rate": 0.035853,
-   "payoff": -0.0,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2026-07-22",
-   "period": "2026-07-24..2026-10-26",
-   "index": "TERM-AONIA-3M",
-   "rate": 0.03669,
-   "payoff": -0.0,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2026-10-22",
-   "period": "2026-10-26..2027-01-25",
-   "index": "TERM-AONIA-3M",
-   "rate": 0.035802,
-   "payoff": -0.0,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2027-01-21",
-   "period": "2027-01-25..2027-04-26",
-   "index": "TERM-AONIA-3M",
-   "rate": 0.036153,
-   "payoff": -258.85,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2027-04-22",
-   "period": "2027-04-26..2027-07-26",
-   "index": "TERM-AONIA-3M",
-   "rate": 0.036235,
-   "payoff": -2023.87,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2027-07-22",
-   "period": "2027-07-26..2027-10-25",
-   "index": "TERM-AONIA-3M",
-   "rate": 0.036449,
-   "payoff": -4916.5,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2027-10-21",
-   "period": "2027-10-25..2028-01-24",
-   "index": "TERM-AONIA-3M",
-   "rate": 0.036721,
-   "payoff": -8243.4,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2028-01-20",
-   "period": "2028-01-24..2028-04-24",
-   "index": "TERM-AONIA-3M",
-   "rate": 0.03695,
-   "payoff": -11844.95,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2028-04-20",
-   "period": "2028-04-24..2028-07-24",
-   "index": "TERM-AONIA-3M",
-   "rate": 0.037178,
-   "payoff": -15494.59,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2028-07-20",
-   "period": "2028-07-24..2028-10-24",
-   "index": "TERM-AONIA-3M",
-   "rate": 0.037643,
-   "payoff": -18558.57,
-   "status": "Pending"
-  }
- ],
- "nextIndex": 3,
- "pnlHistory": [
-  {
-   "date": "2026-09-03",
-   "pnl": -1007
-  },
-  {
-   "date": "2026-09-04",
-   "pnl": 1614
-  },
-  {
-   "date": "2026-09-07",
-   "pnl": 3404
-  },
-  {
-   "date": "2026-09-08",
-   "pnl": 1815
-  },
-  {
-   "date": "2026-09-09",
-   "pnl": -742
-  },
-  {
-   "date": "2026-09-10",
-   "pnl": 713
-  },
-  {
-   "date": "2026-09-11",
-   "pnl": 2744
-  },
-  {
-   "date": "2026-09-14",
-   "pnl": -2076
-  },
-  {
-   "date": "2026-09-15",
-   "pnl": -3280
-  },
-  {
-   "date": "2026-09-16",
-   "pnl": -1746
-  },
-  {
-   "date": "2026-09-17",
-   "pnl": -908
-  },
-  {
-   "date": "2026-09-18",
-   "pnl": -2620
-  },
-  {
-   "date": "2026-09-21",
-   "pnl": 128
-  },
-  {
-   "date": "2026-09-22",
-   "pnl": 639
-  },
-  {
-   "date": "2026-09-23",
-   "pnl": 3225
-  },
-  {
-   "date": "2026-09-24",
-   "pnl": -1180
-  },
-  {
-   "date": "2026-09-25",
-   "pnl": 1586
-  },
-  {
-   "date": "2026-09-28",
-   "pnl": 1412
-  },
-  {
-   "date": "2026-09-29",
-   "pnl": 764
-  },
-  {
-   "date": "2026-09-30",
-   "pnl": -1659
-  }
- ],
- "execution": {
-  "tradeDate": "2026-03-04",
-  "executionTimestamp": "2026-03-04T09:10:07.335Z",
-  "venue": "Tradeweb SEF",
-  "venueMic": "TWSF",
-  "executionType": "Electronic",
-  "trader": "A. Shah",
-  "salesperson": null,
-  "orderId": "ORD-3D9CBFFAA0"
- },
- "lifecycle": {
-  "status": "Live",
-  "version": 1,
-  "events": [
-   {
-    "version": 1,
-    "event": "New",
-    "reason": "Trade captured",
-    "at": "2026-03-04T09:31:00Z",
-    "by": "mo.amend"
-   }
-  ],
-  "sourceSystem": "Murex",
-  "createdAt": "2026-03-04T09:31:00Z",
-  "lastModifiedAt": "2026-03-04T09:31:00Z",
-  "lastModifiedBy": "mo.amend",
-  "timeline": [
-   {
-    "date": "2026-03-04",
-    "event": "Booked",
-    "status": "Done",
-    "description": "Captured in Murex by TRDR-ASHAH: sell Interest rate floor"
+   "LEG_ID": 1,
+   "LEG_TYPE": "OPTION",
+   "LEG_ECONOMIC_TYPE": "Pay",
+   "CURRENCY": "AUD",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 100000000.0,
+   "DISCOUNT_INDEX": "CRV-AUD-OIS",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "",
+   "RESET_HOLIDAY_SCHEDULE": "GBLO",
+   "RESET_CONVENTION": "Quarterly",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "11",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "TERM-AONIA-3M",
+    "GROUP": "Rates",
+    "SUB_GROUP": "Quarterly"
    },
-   {
-    "date": "2026-03-04",
-    "event": "Confirmed",
-    "status": "Matched",
-    "description": "Matched on MarkitWire (MA750375288)"
-   },
-   {
-    "date": "2026-07-22",
-    "event": "Cash settled",
-    "status": "Settled",
-    "description": "AUD payment settled",
-    "amount": -0.0
-   },
-   {
-    "date": "2026-10-22",
-    "event": "Next payment",
-    "status": "Pending",
-    "description": "Scheduled; settlement instructions confirmed"
-   },
-   {
-    "date": "2028-10-24",
-    "event": "Maturity",
-    "status": "Scheduled",
-    "description": "Final payment and close-out"
-   }
-  ]
- },
- "confirmation": {
-  "status": "Confirmed",
-  "method": "MarkitWire",
-  "platformId": "MA750375288",
-  "matched": "2026-03-04 10:00",
-  "affirmedBy": "Counterparty ops",
-  "breaks": []
- },
- "clearing": {
-  "status": "Bilateral",
-  "mandatory": false,
-  "reason": "Counterparty below clearing threshold"
- },
- "regulatory": {
-  "uti": "549300O1N13GO2II20963D9CBFFAA050C7390D83",
-  "upi": "QZVA3WDD7YGX",
-  "reportingRegimes": [
-   "CFTC Part 43/45"
-  ],
-  "reportingParty": "Us",
-  "reportingStatus": "Accepted",
-  "clearingObligation": false,
-  "tradingObligation": false,
-  "mifidClassification": "Professional client",
-  "volckerExempt": false,
-  "saCcrAssetClass": "Interest rate"
- },
- "settlementInstructions": {
-  "method": "Gross",
-  "ourAgent": "JPMorgan Chase Bank, N.A.",
-  "ourAgentBic": "CHASUS33XXX",
-  "theirAgentBic": "TOKAGB33XXX",
-  "ssiId": "SSI-AUD-6E2541",
-  "netting": "Payment netting by currency and value date"
- },
- "valuation": {
-  "asOf": "2026-09-30",
-  "currency": "USD",
-  "npv": -57660,
-  "cleanPv": -57660.0,
-  "accrued": 0.0,
-  "legPvs": [],
-  "model": "Black / Bachelier",
-  "curves": [
-   "CRV-AUD-OIS",
-   "CRV-AUD-PROJ",
-   "CPV-AUD"
-  ],
-  "status": "Official EOD",
-  "runId": "EOD-20260930-01"
- },
- "pnlExplain": [
-  {
-   "step": "Opening MTM",
-   "pnl": -58312,
-   "total": true
-  },
-  {
-   "step": "Carry",
-   "pnl": -239
-  },
-  {
-   "step": "Roll-down",
-   "pnl": -97
-  },
-  {
-   "step": "Rates delta",
-   "pnl": 1033
-  },
-  {
-   "step": "FX delta",
-   "pnl": 105
-  },
-  {
-   "step": "Vol (vega)",
-   "pnl": 159
-  },
-  {
-   "step": "Theta",
-   "pnl": -341
-  },
-  {
-   "step": "Unexplained",
-   "pnl": 32
-  }
- ],
- "_meta": {
-  "source": "murex-rates",
-  "generation": 1,
-  "live": true,
-  "walk": {
-   "legs.0.cashflows.3.fixings.0.rate": 0.000143,
-   "legs.0.pv": {
-    "step": 1115,
-    "places": 2,
-    "with": []
-   },
-   "derive": [
+   "CASH_FLOWS": [
     {
-     "set": "mtm",
-     "expr": "sum(legs.*.pv)"
+     "FLOW_ID": 20000089001,
+     "FLOW_TYPE": "Floorlet",
+     "NOTIONAL": 100000000.0,
+     "RATE": 0.036645,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-03-06",
+     "END_DATE": "2026-04-24",
+     "PAYMENT_DATE": "2026-04-28",
+     "RATE_DETERMINATION_DATE": "2026-03-04",
+     "FIRST_RESET_DATE": "2026-03-04",
+     "LAST_RESET_DATE": "2026-03-04",
+     "STRIKE_PRICE": 0.02398,
+     "RESETS": [
+      {
+       "RESET_ID": "R-1",
+       "ACCRUAL": "",
+       "START_DATE": "2026-03-04",
+       "END_DATE": "2026-04-24",
+       "RESET_DATE": "2026-03-04",
+       "ACCRUAL_START_DATE": "2026-03-06",
+       "ACCRUAL_END_DATE": "2026-04-24",
+       "RATE": 0.036645
+      }
+     ]
     },
     {
-     "set": "legs.0.cashflows.*.pv",
-     "scaleTo": "$.legs.0.pv",
-     "places": 2
+     "FLOW_ID": 20000089002,
+     "FLOW_TYPE": "Floorlet",
+     "NOTIONAL": 100000000.0,
+     "RATE": 0.035853,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-04-24",
+     "END_DATE": "2026-07-24",
+     "PAYMENT_DATE": "2026-07-28",
+     "RATE_DETERMINATION_DATE": "2026-04-22",
+     "FIRST_RESET_DATE": "2026-04-22",
+     "LAST_RESET_DATE": "2026-04-22",
+     "STRIKE_PRICE": 0.02398,
+     "RESETS": [
+      {
+       "RESET_ID": "R-2",
+       "ACCRUAL": "",
+       "START_DATE": "2026-04-22",
+       "END_DATE": "2026-07-24",
+       "RESET_DATE": "2026-04-22",
+       "ACCRUAL_START_DATE": "2026-04-24",
+       "ACCRUAL_END_DATE": "2026-07-24",
+       "RATE": 0.035853
+      }
+     ]
     },
     {
-     "set": "valuation.npv",
-     "expr": "$.mtm"
+     "FLOW_ID": 20000089003,
+     "FLOW_TYPE": "Floorlet",
+     "NOTIONAL": 100000000.0,
+     "RATE": 0.03669,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-07-24",
+     "END_DATE": "2026-10-26",
+     "PAYMENT_DATE": "2026-10-28",
+     "RATE_DETERMINATION_DATE": "2026-07-22",
+     "FIRST_RESET_DATE": "2026-07-22",
+     "LAST_RESET_DATE": "2026-07-22",
+     "STRIKE_PRICE": 0.02398,
+     "RESETS": [
+      {
+       "RESET_ID": "R-3",
+       "ACCRUAL": "",
+       "START_DATE": "2026-07-22",
+       "END_DATE": "2026-10-26",
+       "RESET_DATE": "2026-07-22",
+       "ACCRUAL_START_DATE": "2026-07-24",
+       "ACCRUAL_END_DATE": "2026-10-26",
+       "RATE": 0.03669
+      }
+     ]
     },
     {
-     "set": "valuation.cleanPv",
-     "expr": "$.mtm - valuation.accrued"
+     "FLOW_ID": 20000089004,
+     "FLOW_TYPE": "Floorlet",
+     "NOTIONAL": 100000000.0,
+     "RATE": 0.035802,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-10-26",
+     "END_DATE": "2027-01-25",
+     "PAYMENT_DATE": "2027-01-27",
+     "RATE_DETERMINATION_DATE": "2026-10-22",
+     "FIRST_RESET_DATE": "2026-10-22",
+     "LAST_RESET_DATE": "2026-10-22",
+     "STRIKE_PRICE": 0.02398,
+     "RESETS": [
+      {
+       "RESET_ID": "R-4",
+       "ACCRUAL": "",
+       "START_DATE": "2026-10-22",
+       "END_DATE": "2027-01-25",
+       "RESET_DATE": "2026-10-22",
+       "ACCRUAL_START_DATE": "2026-10-26",
+       "ACCRUAL_END_DATE": "2027-01-25",
+       "RATE": ""
+      }
+     ]
     },
     {
-     "set": "pnl1d",
-     "expr": "$.mtm - pnlExplain.0.pnl"
+     "FLOW_ID": 20000089005,
+     "FLOW_TYPE": "Floorlet",
+     "NOTIONAL": 100000000.0,
+     "RATE": 0.036153,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2027-01-25",
+     "END_DATE": "2027-04-26",
+     "PAYMENT_DATE": "2027-04-28",
+     "RATE_DETERMINATION_DATE": "2027-01-21",
+     "FIRST_RESET_DATE": "2027-01-21",
+     "LAST_RESET_DATE": "2027-01-21",
+     "STRIKE_PRICE": 0.02398,
+     "RESETS": [
+      {
+       "RESET_ID": "R-5",
+       "ACCRUAL": "",
+       "START_DATE": "2027-01-21",
+       "END_DATE": "2027-04-26",
+       "RESET_DATE": "2027-01-21",
+       "ACCRUAL_START_DATE": "2027-01-25",
+       "ACCRUAL_END_DATE": "2027-04-26",
+       "RATE": ""
+      }
+     ]
     },
     {
-     "set": "pnlExplain.3.pnl",
-     "expr": "pnlExplain.3.pnl + ($.mtm - sum(pnlExplain.*.pnl))"
+     "FLOW_ID": 20000089006,
+     "FLOW_TYPE": "Floorlet",
+     "NOTIONAL": 100000000.0,
+     "RATE": 0.036235,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2027-04-26",
+     "END_DATE": "2027-07-26",
+     "PAYMENT_DATE": "2027-07-28",
+     "RATE_DETERMINATION_DATE": "2027-04-22",
+     "FIRST_RESET_DATE": "2027-04-22",
+     "LAST_RESET_DATE": "2027-04-22",
+     "STRIKE_PRICE": 0.02398,
+     "RESETS": [
+      {
+       "RESET_ID": "R-6",
+       "ACCRUAL": "",
+       "START_DATE": "2027-04-22",
+       "END_DATE": "2027-07-26",
+       "RESET_DATE": "2027-04-22",
+       "ACCRUAL_START_DATE": "2027-04-26",
+       "ACCRUAL_END_DATE": "2027-07-26",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 20000089007,
+     "FLOW_TYPE": "Floorlet",
+     "NOTIONAL": 100000000.0,
+     "RATE": 0.036449,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2027-07-26",
+     "END_DATE": "2027-10-25",
+     "PAYMENT_DATE": "2027-10-27",
+     "RATE_DETERMINATION_DATE": "2027-07-22",
+     "FIRST_RESET_DATE": "2027-07-22",
+     "LAST_RESET_DATE": "2027-07-22",
+     "STRIKE_PRICE": 0.02398,
+     "RESETS": [
+      {
+       "RESET_ID": "R-7",
+       "ACCRUAL": "",
+       "START_DATE": "2027-07-22",
+       "END_DATE": "2027-10-25",
+       "RESET_DATE": "2027-07-22",
+       "ACCRUAL_START_DATE": "2027-07-26",
+       "ACCRUAL_END_DATE": "2027-10-25",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 20000089008,
+     "FLOW_TYPE": "Floorlet",
+     "NOTIONAL": 100000000.0,
+     "RATE": 0.036721,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2027-10-25",
+     "END_DATE": "2028-01-24",
+     "PAYMENT_DATE": "2028-01-26",
+     "RATE_DETERMINATION_DATE": "2027-10-21",
+     "FIRST_RESET_DATE": "2027-10-21",
+     "LAST_RESET_DATE": "2027-10-21",
+     "STRIKE_PRICE": 0.02398,
+     "RESETS": [
+      {
+       "RESET_ID": "R-8",
+       "ACCRUAL": "",
+       "START_DATE": "2027-10-21",
+       "END_DATE": "2028-01-24",
+       "RESET_DATE": "2027-10-21",
+       "ACCRUAL_START_DATE": "2027-10-25",
+       "ACCRUAL_END_DATE": "2028-01-24",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 20000089009,
+     "FLOW_TYPE": "Floorlet",
+     "NOTIONAL": 100000000.0,
+     "RATE": 0.03695,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2028-01-24",
+     "END_DATE": "2028-04-24",
+     "PAYMENT_DATE": "2028-04-26",
+     "RATE_DETERMINATION_DATE": "2028-01-20",
+     "FIRST_RESET_DATE": "2028-01-20",
+     "LAST_RESET_DATE": "2028-01-20",
+     "STRIKE_PRICE": 0.02398,
+     "RESETS": [
+      {
+       "RESET_ID": "R-9",
+       "ACCRUAL": "",
+       "START_DATE": "2028-01-20",
+       "END_DATE": "2028-04-24",
+       "RESET_DATE": "2028-01-20",
+       "ACCRUAL_START_DATE": "2028-01-24",
+       "ACCRUAL_END_DATE": "2028-04-24",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 20000089010,
+     "FLOW_TYPE": "Floorlet",
+     "NOTIONAL": 100000000.0,
+     "RATE": 0.037178,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2028-04-24",
+     "END_DATE": "2028-07-24",
+     "PAYMENT_DATE": "2028-07-26",
+     "RATE_DETERMINATION_DATE": "2028-04-20",
+     "FIRST_RESET_DATE": "2028-04-20",
+     "LAST_RESET_DATE": "2028-04-20",
+     "STRIKE_PRICE": 0.02398,
+     "RESETS": [
+      {
+       "RESET_ID": "R-10",
+       "ACCRUAL": "",
+       "START_DATE": "2028-04-20",
+       "END_DATE": "2028-07-24",
+       "RESET_DATE": "2028-04-20",
+       "ACCRUAL_START_DATE": "2028-04-24",
+       "ACCRUAL_END_DATE": "2028-07-24",
+       "RATE": ""
+      }
+     ]
+    },
+    {
+     "FLOW_ID": 20000089011,
+     "FLOW_TYPE": "Floorlet",
+     "NOTIONAL": 100000000.0,
+     "RATE": 0.037643,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2028-07-24",
+     "END_DATE": "2028-10-24",
+     "PAYMENT_DATE": "2028-10-26",
+     "RATE_DETERMINATION_DATE": "2028-07-20",
+     "FIRST_RESET_DATE": "2028-07-20",
+     "LAST_RESET_DATE": "2028-07-20",
+     "STRIKE_PRICE": 0.02398,
+     "RESETS": [
+      {
+       "RESET_ID": "R-11",
+       "ACCRUAL": "",
+       "START_DATE": "2028-07-20",
+       "END_DATE": "2028-10-24",
+       "RESET_DATE": "2028-07-20",
+       "ACCRUAL_START_DATE": "2028-07-24",
+       "ACCRUAL_END_DATE": "2028-10-24",
+       "RATE": ""
+      }
+     ]
     }
    ]
   }
+ ],
+ "EVENTS": [
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000089001,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "BOOKED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-03-04",
+   "AMOUNT": "",
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000089002,
+   "EVENT_NUMBER": 2,
+   "EVENT_TYPE": "CONFIRMED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-03-04",
+   "AMOUNT": "",
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 2,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000089003,
+   "EVENT_NUMBER": 3,
+   "EVENT_TYPE": "CASH_SETTLED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-07-22",
+   "AMOUNT": -0.0,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 3,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000089004,
+   "EVENT_NUMBER": 4,
+   "EVENT_TYPE": "NEXT_PAYMENT",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-10-22",
+   "AMOUNT": "",
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 4,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000089005,
+   "EVENT_NUMBER": 5,
+   "EVENT_TYPE": "MATURITY",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2028-10-24",
+   "AMOUNT": "",
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 5,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 1,
+   "EVENT_ID": 20000089006,
+   "EVENT_NUMBER": 6,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Floorlet",
+   "EVENT_DATE": "2027-04-28",
+   "AMOUNT": -258.85,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 6,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 1,
+   "EVENT_ID": 20000089007,
+   "EVENT_NUMBER": 7,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Floorlet",
+   "EVENT_DATE": "2027-07-28",
+   "AMOUNT": -2023.87,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 7,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 1,
+   "EVENT_ID": 20000089008,
+   "EVENT_NUMBER": 8,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Floorlet",
+   "EVENT_DATE": "2027-10-27",
+   "AMOUNT": -4916.5,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 8,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 1,
+   "EVENT_ID": 20000089009,
+   "EVENT_NUMBER": 9,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Floorlet",
+   "EVENT_DATE": "2028-01-26",
+   "AMOUNT": -8243.4,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 9,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 1,
+   "EVENT_ID": 20000089010,
+   "EVENT_NUMBER": 10,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Floorlet",
+   "EVENT_DATE": "2028-04-26",
+   "AMOUNT": -11844.95,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 10,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 1,
+   "EVENT_ID": 20000089011,
+   "EVENT_NUMBER": 11,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Floorlet",
+   "EVENT_DATE": "2028-07-26",
+   "AMOUNT": -15494.59,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 11,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": 1,
+   "EVENT_ID": 20000089012,
+   "EVENT_NUMBER": 12,
+   "EVENT_TYPE": "CASH_SETTLEMENT",
+   "PAYMENT_TYPE": "Floorlet",
+   "EVENT_DATE": "2028-10-26",
+   "AMOUNT": -18558.57,
+   "CURRENCY": "AUD",
+   "SEQUENCE_NUMBER": 12,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  }
+ ],
+ "_meta": {
+  "source": "murex",
+  "generation": 1
  }
 }

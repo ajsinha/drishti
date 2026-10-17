@@ -7,7 +7,7 @@
  "dv01": 1222918,
  "topTrades": [
   {
-   "tradeId": "BBG-60000033",
+   "tradeId": "CLY-3000189",
    "product": "Puttable bond",
    "assetClass": "Fixed income",
    "currency": "JPY",
@@ -18,7 +18,7 @@
    "mtm": 4750454
   },
   {
-   "tradeId": "BBG-60000006",
+   "tradeId": "CLY-3000162",
    "product": "Government bond",
    "assetClass": "Fixed income",
    "currency": "EUR",
@@ -29,7 +29,7 @@
    "mtm": 2677879
   },
   {
-   "tradeId": "BBG-60000070",
+   "tradeId": "CLY-3000226",
    "product": "Asset-backed security",
    "assetClass": "Fixed income",
    "currency": "GBP",
@@ -40,7 +40,7 @@
    "mtm": -2614302
   },
   {
-   "tradeId": "BBG-60000005",
+   "tradeId": "CLY-3000161",
    "product": "Government bond",
    "assetClass": "Fixed income",
    "currency": "EUR",
@@ -51,7 +51,7 @@
    "mtm": -2577766
   },
   {
-   "tradeId": "BBG-60000012",
+   "tradeId": "CLY-3000168",
    "product": "Corporate bond",
    "assetClass": "Fixed income",
    "currency": "EUR",
@@ -62,7 +62,7 @@
    "mtm": 2211267
   },
   {
-   "tradeId": "BBG-60000076",
+   "tradeId": "CLY-3000232",
    "product": "CLO tranche",
    "assetClass": "Fixed income",
    "currency": "USD",
@@ -73,7 +73,7 @@
    "mtm": 2168781
   },
   {
-   "tradeId": "BBG-60000039",
+   "tradeId": "CLY-3000195",
    "product": "Amortising bond",
    "assetClass": "Fixed income",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": -1903497
   },
   {
-   "tradeId": "BBG-60000072",
+   "tradeId": "CLY-3000228",
    "product": "Asset-backed security",
    "assetClass": "Fixed income",
    "currency": "EUR",
@@ -95,7 +95,7 @@
    "mtm": 1276947
   },
   {
-   "tradeId": "BBG-60000001",
+   "tradeId": "CLY-3000157",
    "product": "Government bond",
    "assetClass": "Fixed income",
    "currency": "CHF",
@@ -106,7 +106,7 @@
    "mtm": -978378
   },
   {
-   "tradeId": "BBG-60000015",
+   "tradeId": "CLY-3000171",
    "product": "Floating rate note",
    "assetClass": "Fixed income",
    "currency": "JPY",

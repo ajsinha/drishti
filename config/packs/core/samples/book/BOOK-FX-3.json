@@ -7,7 +7,7 @@
  "dv01": -7212,
  "topTrades": [
   {
-   "tradeId": "WSS-1500056",
+   "tradeId": "CLY-3000056",
    "product": "FX average-rate option",
    "assetClass": "FX",
    "currency": "USD",
@@ -18,7 +18,7 @@
    "mtm": -4103348
   },
   {
-   "tradeId": "WSS-1500039",
+   "tradeId": "CLY-3000039",
    "product": "FX barrier option",
    "assetClass": "FX",
    "currency": "JPY",
@@ -29,7 +29,7 @@
    "mtm": -2456557
   },
   {
-   "tradeId": "WSS-1500046",
+   "tradeId": "CLY-3000046",
    "product": "FX double-barrier option",
    "assetClass": "FX",
    "currency": "CAD",
@@ -40,7 +40,7 @@
    "mtm": -2103691
   },
   {
-   "tradeId": "WSS-1500044",
+   "tradeId": "CLY-3000044",
    "product": "FX double-barrier option",
    "assetClass": "FX",
    "currency": "USD",
@@ -51,7 +51,7 @@
    "mtm": 2041598
   },
   {
-   "tradeId": "WSS-1500041",
+   "tradeId": "CLY-3000041",
    "product": "FX barrier option",
    "assetClass": "FX",
    "currency": "USD",
@@ -62,7 +62,7 @@
    "mtm": 2035982
   },
   {
-   "tradeId": "WSS-1500008",
+   "tradeId": "CLY-3000008",
    "product": "FX forward",
    "assetClass": "FX",
    "currency": "JPY",
@@ -73,7 +73,7 @@
    "mtm": 1722945
   },
   {
-   "tradeId": "WSS-1500011",
+   "tradeId": "CLY-3000011",
    "product": "FX forward",
    "assetClass": "FX",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": -940839
   },
   {
-   "tradeId": "WSS-1500061",
+   "tradeId": "CLY-3000061",
    "product": "FX target redemption forward",
    "assetClass": "FX",
    "currency": "USD",
@@ -95,7 +95,7 @@
    "mtm": -930931
   },
   {
-   "tradeId": "WSS-1500059",
+   "tradeId": "CLY-3000059",
    "product": "FX average-rate option",
    "assetClass": "FX",
    "currency": "JPY",
@@ -106,7 +106,7 @@
    "mtm": 920619
   },
   {
-   "tradeId": "WSS-1500010",
+   "tradeId": "CLY-3000010",
    "product": "FX forward",
    "assetClass": "FX",
    "currency": "USD",

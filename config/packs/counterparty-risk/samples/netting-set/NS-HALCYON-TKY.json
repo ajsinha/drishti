@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "IMG-400133",
+   "tradeId": "MX-20000415",
    "product": "Range accrual note",
    "assetClass": "Structured",
    "currency": "USD",
@@ -73,7 +73,7 @@
    "mtm": 3526766
   },
   {
-   "tradeId": "IMG-400138",
+   "tradeId": "MX-20000420",
    "product": "Range accrual note",
    "assetClass": "Structured",
    "currency": "CAD",

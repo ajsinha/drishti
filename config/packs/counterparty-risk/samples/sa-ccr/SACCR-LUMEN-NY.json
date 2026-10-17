@@ -1,10 +1,10 @@
 {
  "calcId": "SACCR-LUMEN-NY",
  "replacementCost": 0,
- "addOn": 50135507,
- "multiplier": 0.8335,
- "ead": 58503123,
- "rwa": 29251562,
+ "addOn": 19662493,
+ "multiplier": 0.6406,
+ "ead": 17634110,
+ "rwa": 8817055,
  "addOns": [
   {
    "assetClass": "Interest rate",
@@ -16,7 +16,7 @@
   },
   {
    "assetClass": "Commodity",
-   "addOn": 31391014
+   "addOn": 918000
   }
  ],
  "hedgingSets": [
@@ -71,7 +71,7 @@
   {
    "assetClass": "Commodity",
    "hedgingSet": "USD",
-   "effectiveNotional": -174394521,
+   "effectiveNotional": -5100000,
    "sf": 0.18
   }
  ],

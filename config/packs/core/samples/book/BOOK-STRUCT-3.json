@@ -7,7 +7,7 @@
  "dv01": -187254,
  "topTrades": [
   {
-   "tradeId": "IMG-400145",
+   "tradeId": "MX-20000427",
    "product": "FX-rates hybrid (PRDC)",
    "assetClass": "Structured",
    "currency": "USD",
@@ -18,7 +18,7 @@
    "mtm": 4057279
   },
   {
-   "tradeId": "IMG-400141",
+   "tradeId": "MX-20000423",
    "product": "Capital-protected note",
    "assetClass": "Structured",
    "currency": "USD",
@@ -29,7 +29,7 @@
    "mtm": -2117461
   },
   {
-   "tradeId": "IMG-400155",
+   "tradeId": "MX-20000437",
    "product": "Worst-of note",
    "assetClass": "Structured",
    "currency": "GBP",
@@ -40,7 +40,7 @@
    "mtm": -2097100
   },
   {
-   "tradeId": "IMG-400142",
+   "tradeId": "MX-20000424",
    "product": "Capital-protected note",
    "assetClass": "Structured",
    "currency": "EUR",
@@ -51,7 +51,7 @@
    "mtm": 1294522
   },
   {
-   "tradeId": "IMG-400138",
+   "tradeId": "MX-20000420",
    "product": "Range accrual note",
    "assetClass": "Structured",
    "currency": "CAD",
@@ -62,7 +62,7 @@
    "mtm": -1227669
   },
   {
-   "tradeId": "IMG-400154",
+   "tradeId": "MX-20000436",
    "product": "Worst-of note",
    "assetClass": "Structured",
    "currency": "USD",
@@ -73,7 +73,7 @@
    "mtm": -809315
   },
   {
-   "tradeId": "IMG-400158",
+   "tradeId": "MX-20000440",
    "product": "Credit basket note",
    "assetClass": "Structured",
    "currency": "AUD",
@@ -84,7 +84,7 @@
    "mtm": 566863
   },
   {
-   "tradeId": "IMG-400153",
+   "tradeId": "MX-20000435",
    "product": "Worst-of note",
    "assetClass": "Structured",
    "currency": "GBP",
@@ -95,7 +95,7 @@
    "mtm": 503987
   },
   {
-   "tradeId": "IMG-400151",
+   "tradeId": "MX-20000433",
    "product": "Worst-of note",
    "assetClass": "Structured",
    "currency": "USD",
@@ -106,7 +106,7 @@
    "mtm": -196197
   },
   {
-   "tradeId": "IMG-400150",
+   "tradeId": "MX-20000432",
    "product": "FX-rates hybrid (PRDC)",
    "assetClass": "Structured",
    "currency": "JPY",

@@ -1,33 +1,33 @@
 {
  "nettingSetId": "NS-LUMEN-NY",
  "tradeCount": 15,
- "netMtm": -38103300,
- "collateral": -19744717,
- "eePeak": 6404973,
- "pfePeak": 15223191,
- "limit": 22000000.0,
- "utilisation": 0.692,
- "cva": -6493,
+ "netMtm": -36852099,
+ "collateral": -19096358,
+ "eePeak": 3745969,
+ "pfePeak": 8572232,
+ "limit": 12000000.0,
+ "utilisation": 0.7144,
+ "cva": -5897,
  "profile": [
   {
    "tenor": "0",
-   "ee": 1473464,
-   "pfe": 4569783
+   "ee": 666209,
+   "pfe": 2066172
   },
   {
    "tenor": "1M",
-   "ee": 2617850,
-   "pfe": 6892834
+   "ee": 937415,
+   "pfe": 2468225
   },
   {
    "tenor": "3M",
-   "ee": 4534250,
-   "pfe": 11108912
+   "ee": 1623650,
+   "pfe": 3977943
   },
   {
    "tenor": "6M",
-   "ee": 6404973,
-   "pfe": 15223191
+   "ee": 2288763,
+   "pfe": 5439879
   },
   {
    "tenor": "1Y",
@@ -84,7 +84,7 @@
    "mtm": -6638895
   },
   {
-   "tradeId": "CLY-3000065",
+   "tradeId": "CLY-3000149",
    "product": "Credit spread option",
    "assetClass": "Credit",
    "currency": "USD",
@@ -106,18 +106,7 @@
    "mtm": 2201547
   },
   {
-   "tradeId": "END-1000014",
-   "product": "Commodity swap",
-   "assetClass": "Commodity",
-   "currency": "USD",
-   "book": "BOOK-COMM-1",
-   "notional": 231000000.0,
-   "maturity": "2027-07-31",
-   "maturityBucket": "0-1Y",
-   "mtm": -1277334
-  },
-  {
-   "tradeId": "CLY-3000009",
+   "tradeId": "CLY-3000093",
    "product": "CDS index (CDX / iTraxx)",
    "assetClass": "Credit",
    "currency": "JPY",
@@ -128,7 +117,7 @@
    "mtm": 1066256
   },
   {
-   "tradeId": "CLY-3000064",
+   "tradeId": "CLY-3000148",
    "product": "Credit spread option",
    "assetClass": "Credit",
    "currency": "JPY",
@@ -150,7 +139,7 @@
    "mtm": 395535
   },
   {
-   "tradeId": "CLY-3000070",
+   "tradeId": "CLY-3000154",
    "product": "Unfunded risk participation",
    "assetClass": "Credit",
    "currency": "CAD",
@@ -172,7 +161,7 @@
    "mtm": -198183
   },
   {
-   "tradeId": "END-1000059",
+   "tradeId": "MX-20000347",
    "product": "Commodity index swap",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -216,6 +205,17 @@
    "mtm": 30927
   },
   {
+   "tradeId": "MX-20000302",
+   "product": "Commodity swap",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-1",
+   "notional": 231000000.0,
+   "maturity": "2026-09-30",
+   "maturityBucket": "0-1Y",
+   "mtm": -26133
+  },
+  {
    "tradeId": "MX-20000136",
    "product": "Callable swap",
    "assetClass": "Rates",
@@ -238,7 +238,7 @@
   },
   {
    "asset": "Commodity",
-   "mtm": -1410666
+   "mtm": -159465
   }
  ],
  "counterparty": "CP-LUMEN",
@@ -261,16 +261,16 @@
    "trades.1.mtm": 13678,
    "trades.2.mtm": 9909,
    "trades.3.mtm": 4803,
-   "trades.4.mtm": 2955,
-   "trades.5.mtm": 2533,
-   "trades.6.mtm": 2475,
-   "trades.7.mtm": 1191,
-   "trades.8.mtm": 1143,
-   "trades.9.mtm": 796,
-   "trades.10.mtm": 667,
-   "trades.11.mtm": 548,
-   "trades.12.mtm": 472,
-   "trades.13.mtm": 462,
+   "trades.4.mtm": 2533,
+   "trades.5.mtm": 2475,
+   "trades.6.mtm": 1191,
+   "trades.7.mtm": 1143,
+   "trades.8.mtm": 796,
+   "trades.9.mtm": 667,
+   "trades.10.mtm": 548,
+   "trades.11.mtm": 472,
+   "trades.12.mtm": 462,
+   "trades.13.mtm": 452,
    "trades.14.mtm": 409,
    "eePeak": {
     "step": 0.004,
@@ -283,15 +283,15 @@
    "derive": [
     {
      "set": "byAsset.0.mtm",
-     "expr": "trades.0.mtm + trades.1.mtm + trades.3.mtm + trades.7.mtm + trades.9.mtm + trades.11.mtm + trades.12.mtm + trades.13.mtm + trades.14.mtm"
+     "expr": "trades.0.mtm + trades.1.mtm + trades.3.mtm + trades.6.mtm + trades.8.mtm + trades.10.mtm + trades.11.mtm + trades.12.mtm + trades.14.mtm"
     },
     {
      "set": "byAsset.1.mtm",
-     "expr": "trades.2.mtm + trades.5.mtm + trades.6.mtm + trades.8.mtm"
+     "expr": "trades.2.mtm + trades.4.mtm + trades.5.mtm + trades.7.mtm"
     },
     {
      "set": "byAsset.2.mtm",
-     "expr": "trades.4.mtm + trades.10.mtm"
+     "expr": "trades.9.mtm + trades.13.mtm"
     },
     {
      "set": "netMtm",

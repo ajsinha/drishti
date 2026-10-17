@@ -208,8 +208,33 @@ public class FormController {
                 // no values: the person types one
             }
         }
-        return new FormField(f.path(), f.label(), f.type(), f.operators(), f.defaultValue(), f.order(), f.group(), f.help(), f.required(), f.hidden(),
-                new ArrayList<>(found), f.inferred());
+        return f.withValues(new ArrayList<>(found), f.depends().isEmpty() ? Map.of() : parents(f, kind, asOf, principal));
+    }
+
+    /**
+     * For a dependent enum (a product sub type that {@code depends} on the product type): each of its values with the values of the field it
+     * depends on that it occurs with, read from the data (every connector serving the kind), so the form offers only the sub types of the
+     * product types chosen. Empty when the data cannot be read: then every value is offered.
+     */
+    private Map<String, List<String>> parents(FormField f, String kind, AsOf asOf, Principal principal) {
+        Map<String, java.util.TreeSet<String>> by = new java.util.TreeMap<>();
+        try {
+            String code = mnemonics.codeFor(kind);
+            StructuredSearch.Result r = search.run(SearchQuery.parse((code == null ? kind : code) + " where " + f.path() + " != '' and " + f.depends()
+                    + " != '' limit " + enumScanRows), asOf, data -> entitlements.redact(principal, data));
+            for (var row : r.rows()) {
+                Object child = row.values().get("$." + f.path());
+                Object parent = row.values().get("$." + f.depends());
+                if (child != null && parent != null) {
+                    by.computeIfAbsent(String.valueOf(child), x -> new java.util.TreeSet<>()).add(String.valueOf(parent));
+                }
+            }
+        } catch (RuntimeException e) {
+            return Map.of();
+        }
+        Map<String, List<String>> out = new LinkedHashMap<>();
+        by.forEach((k, v) -> out.put(k, List.copyOf(v)));
+        return out;
     }
 
     private FormSpec infer(String kind, Map<String, List<Object>> samples) {

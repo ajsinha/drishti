@@ -7,7 +7,7 @@
  "dv01": 152667,
  "topTrades": [
   {
-   "tradeId": "CLY-3000065",
+   "tradeId": "CLY-3000149",
    "product": "Credit spread option",
    "assetClass": "Credit",
    "currency": "USD",
@@ -18,7 +18,7 @@
    "mtm": 4754624
   },
   {
-   "tradeId": "CLY-3000034",
+   "tradeId": "CLY-3000118",
    "product": "Total return swap on a bond",
    "assetClass": "Credit",
    "currency": "EUR",
@@ -29,7 +29,7 @@
    "mtm": 4717154
   },
   {
-   "tradeId": "CLY-3000013",
+   "tradeId": "CLY-3000097",
    "product": "Index tranche",
    "assetClass": "Credit",
    "currency": "CAD",
@@ -40,7 +40,7 @@
    "mtm": 3988071
   },
   {
-   "tradeId": "CLY-3000055",
+   "tradeId": "CLY-3000139",
    "product": "Revolving credit facility",
    "assetClass": "Credit",
    "currency": "CAD",
@@ -51,7 +51,7 @@
    "mtm": 3459176
   },
   {
-   "tradeId": "CLY-3000063",
+   "tradeId": "CLY-3000147",
    "product": "Credit spread option",
    "assetClass": "Credit",
    "currency": "EUR",
@@ -62,7 +62,7 @@
    "mtm": -2549257
   },
   {
-   "tradeId": "CLY-3000036",
+   "tradeId": "CLY-3000120",
    "product": "Total return swap on a bond",
    "assetClass": "Credit",
    "currency": "EUR",
@@ -73,7 +73,7 @@
    "mtm": -1895147
   },
   {
-   "tradeId": "CLY-3000040",
+   "tradeId": "CLY-3000124",
    "product": "Total return swap on a loan index",
    "assetClass": "Credit",
    "currency": "CAD",
@@ -84,7 +84,7 @@
    "mtm": 1798395
   },
   {
-   "tradeId": "CLY-3000023",
+   "tradeId": "CLY-3000107",
    "product": "CDS index option",
    "assetClass": "Credit",
    "currency": "USD",
@@ -95,7 +95,7 @@
    "mtm": 1786443
   },
   {
-   "tradeId": "CLY-3000020",
+   "tradeId": "CLY-3000104",
    "product": "CDS index option",
    "assetClass": "Credit",
    "currency": "USD",
@@ -106,7 +106,7 @@
    "mtm": 1574254
   },
   {
-   "tradeId": "CLY-3000014",
+   "tradeId": "CLY-3000098",
    "product": "Index tranche",
    "assetClass": "Credit",
    "currency": "JPY",

@@ -95,7 +95,7 @@
    "mtm": -5003962
   },
   {
-   "tradeId": "WSS-1500113",
+   "tradeId": "CLY-3000263",
    "product": "Call account",
    "assetClass": "Money market",
    "currency": "USD",
@@ -106,7 +106,7 @@
    "mtm": 4542888
   },
   {
-   "tradeId": "CLY-3000055",
+   "tradeId": "CLY-3000139",
    "product": "Revolving credit facility",
    "assetClass": "Credit",
    "currency": "CAD",
@@ -117,7 +117,7 @@
    "mtm": 3459176
   },
   {
-   "tradeId": "BBG-60000062",
+   "tradeId": "CLY-3000218",
    "product": "CMO tranche",
    "assetClass": "Fixed income",
    "currency": "USD",
@@ -128,7 +128,7 @@
    "mtm": -3032972
   },
   {
-   "tradeId": "END-1000069",
+   "tradeId": "MX-20000357",
    "product": "Gas swing option",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -161,7 +161,7 @@
    "mtm": -2176599
   },
   {
-   "tradeId": "END-1000035",
+   "tradeId": "MX-20000323",
    "product": "Average price option (APO)",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -172,7 +172,7 @@
    "mtm": -2061219
   },
   {
-   "tradeId": "WSS-1500110",
+   "tradeId": "CLY-3000260",
    "product": "Call account",
    "assetClass": "Money market",
    "currency": "CAD",
@@ -183,7 +183,7 @@
    "mtm": -1837797
   },
   {
-   "tradeId": "WSS-1500098",
+   "tradeId": "CLY-3000248",
    "product": "Certificate of deposit",
    "assetClass": "Money market",
    "currency": "AUD",
@@ -194,7 +194,7 @@
    "mtm": 1716643
   },
   {
-   "tradeId": "CLY-3000014",
+   "tradeId": "CLY-3000098",
    "product": "Index tranche",
    "assetClass": "Credit",
    "currency": "JPY",
@@ -216,7 +216,7 @@
    "mtm": -1414981
   },
   {
-   "tradeId": "END-1000061",
+   "tradeId": "MX-20000349",
    "product": "Power swap",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -238,7 +238,7 @@
    "mtm": -596746
   },
   {
-   "tradeId": "CLY-3000044",
+   "tradeId": "CLY-3000128",
    "product": "Credit-linked note",
    "assetClass": "Credit",
    "currency": "CAD",
@@ -249,7 +249,7 @@
    "mtm": -498458
   },
   {
-   "tradeId": "CLY-3000046",
+   "tradeId": "CLY-3000130",
    "product": "Credit-linked note",
    "assetClass": "Credit",
    "currency": "EUR",
@@ -260,7 +260,7 @@
    "mtm": -490007
   },
   {
-   "tradeId": "END-1000067",
+   "tradeId": "MX-20000355",
    "product": "Gas swing option",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -282,7 +282,7 @@
    "mtm": -309546
   },
   {
-   "tradeId": "END-1000068",
+   "tradeId": "MX-20000356",
    "product": "Gas swing option",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -304,7 +304,7 @@
    "mtm": -111052
   },
   {
-   "tradeId": "CLY-3000006",
+   "tradeId": "CLY-3000090",
    "product": "Single-name CDS",
    "assetClass": "Credit",
    "currency": "GBP",
@@ -315,7 +315,7 @@
    "mtm": 8248
   },
   {
-   "tradeId": "CLY-3000042",
+   "tradeId": "CLY-3000126",
    "product": "Total return swap on a loan index",
    "assetClass": "Credit",
    "currency": "USD",

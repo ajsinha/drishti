@@ -7,7 +7,7 @@
  "dv01": 429,
  "topTrades": [
   {
-   "tradeId": "WSS-1500109",
+   "tradeId": "CLY-3000259",
    "product": "Call account",
    "assetClass": "Money market",
    "currency": "USD",
@@ -18,7 +18,7 @@
    "mtm": 2344329
   },
   {
-   "tradeId": "WSS-1500098",
+   "tradeId": "CLY-3000248",
    "product": "Certificate of deposit",
    "assetClass": "Money market",
    "currency": "AUD",
@@ -29,7 +29,7 @@
    "mtm": 1716643
   },
   {
-   "tradeId": "WSS-1500102",
+   "tradeId": "CLY-3000252",
    "product": "Certificate of deposit",
    "assetClass": "Money market",
    "currency": "EUR",
@@ -40,7 +40,7 @@
    "mtm": -1329064
   },
   {
-   "tradeId": "WSS-1500114",
+   "tradeId": "CLY-3000264",
    "product": "Call account",
    "assetClass": "Money market",
    "currency": "GBP",

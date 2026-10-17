@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "MX-20000167",
+   "tradeId": "MX-20000389",
    "product": "Year-on-year inflation swap",
    "assetClass": "Inflation",
    "currency": "JPY",
@@ -73,7 +73,7 @@
    "mtm": -7337433
   },
   {
-   "tradeId": "IMG-400032",
+   "tradeId": "MX-20000188",
    "product": "OTC equity option",
    "assetClass": "Equity",
    "currency": "GBP",
@@ -84,7 +84,7 @@
    "mtm": 1219453
   },
   {
-   "tradeId": "IMG-400073",
+   "tradeId": "MX-20000229",
    "product": "Reverse convertible",
    "assetClass": "Equity",
    "currency": "EUR",
@@ -95,7 +95,7 @@
    "mtm": -407954
   },
   {
-   "tradeId": "WSS-1500014",
+   "tradeId": "CLY-3000014",
    "product": "Non-deliverable forward",
    "assetClass": "FX",
    "currency": "USD",
@@ -106,7 +106,7 @@
    "mtm": 333376
   },
   {
-   "tradeId": "IMG-400106",
+   "tradeId": "MX-20000262",
    "product": "Portfolio (basket) swap",
    "assetClass": "Equity",
    "currency": "JPY",
@@ -117,7 +117,7 @@
    "mtm": -330164
   },
   {
-   "tradeId": "WSS-1500026",
+   "tradeId": "CLY-3000026",
    "product": "FX vanilla option",
    "assetClass": "FX",
    "currency": "JPY",
@@ -128,7 +128,7 @@
    "mtm": -233837
   },
   {
-   "tradeId": "WSS-1500032",
+   "tradeId": "CLY-3000032",
    "product": "FX digital option",
    "assetClass": "FX",
    "currency": "GBP",
@@ -139,7 +139,7 @@
    "mtm": -198000
   },
   {
-   "tradeId": "IMG-400008",
+   "tradeId": "MX-20000164",
    "product": "Equity forward",
    "assetClass": "Equity",
    "currency": "CHF",
@@ -150,7 +150,7 @@
    "mtm": -173531
   },
   {
-   "tradeId": "IMG-400131",
+   "tradeId": "MX-20000287",
    "product": "Basket option",
    "assetClass": "Equity",
    "currency": "USD",
@@ -161,7 +161,7 @@
    "mtm": -51498
   },
   {
-   "tradeId": "WSS-1500072",
+   "tradeId": "CLY-3000072",
    "product": "FX accumulator",
    "assetClass": "FX",
    "currency": "JPY",
@@ -172,7 +172,7 @@
    "mtm": -37358
   },
   {
-   "tradeId": "WSS-1500073",
+   "tradeId": "CLY-3000073",
    "product": "FX variance swap",
    "assetClass": "FX",
    "currency": "USD",
@@ -183,7 +183,7 @@
    "mtm": -16928
   },
   {
-   "tradeId": "WSS-1500013",
+   "tradeId": "CLY-3000013",
    "product": "Non-deliverable forward",
    "assetClass": "FX",
    "currency": "USD",

@@ -25,31 +25,43 @@ extends:
 - market-data
 kinds:
 - trade
-- desk-pnl
+- counterparty-trades
+- portfolio-trades
+- legal-entity-trades
+- index-trades
 sutras: sutras
 formats: config/formats.yaml
 mnemonics:
   TRD:
     kind: trade
     label: Trade
-  DPNL:
-    kind: desk-pnl
-    label: Desk P&L (derived from trades)
+  CTRD:
+    kind: counterparty-trades
+    label: Counterparty trades (derived from trades)
+  PTRD:
+    kind: portfolio-trades
+    label: Portfolio trades (derived from trades)
+  LTRD:
+    kind: legal-entity-trades
+    label: Legal entity trades (derived from trades)
+  ITRD:
+    kind: index-trades
+    label: Index trades (derived from trades)
 graph:
   id-patterns:
-  - pattern: ^(MX|CLY|END|IMG|BBG|WSS)-\d+$
+  - pattern: ^(MX|CLY)-\d+$
     kind: trade
   fields:
-    tradeIds:
+    TRADE_IDS:
       kind: trade
       label: Trade
   impact:
     measures:
-      trade: $.mtm
+      trade: first($.LEGS).NOTIONAL
     formats:
-      trade: signed0
+      trade: compact
 connectors:
-  trading-store:
+  trade-endur:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds:
@@ -57,31 +69,58 @@ connectors:
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: trading
-      layout:
+      layout: &id001
         trade:
           columns:
-          - tradeId
-          - productType
-          - productName
-          - direction
-          - currency
-          - notional
-          - mtm
-          - pnl1d
-          - maturityDate
-          - tradeDate
-          - book
-          - desk
-          - status
-          - assetClass
-          - counterparty.id
-          - counterparty.name
-          - nettingSet
-          - risk.dv01
-          - sourceSystem
+          - TRADE_ID
+          - SOURCE_SYSTEM
+          - PRODUCT_TYPE
+          - PRODUCT_SUB_TYPE
+          - PRODUCT_GROUP
+          - TRADE_STATUS
+          - TRADE_VERSION
+          - BUY_SELL_CODE
+          - CURRENCY
+          - QUANTITY
+          - TRADE_DATE
+          - MATURITY_DATE
+          - COUNTERPARTY
+          - LEGAL_ENTITY
+          - PORTFOLIO
+          - TRADER_ID
           sort-by: id
           file-rows: 250000
           row-group-rows: 1000
+      union: true
+      table:
+        trade: trade_endur
+      source-name: trade-endur
+  trade-calypso:
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds:
+    - trade
+    settings:
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+      domain: trading
+      layout: *id001
+      union: true
+      table:
+        trade: trade_calypso
+      source-name: trade-calypso
+  trade-murex:
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds:
+    - trade
+    settings:
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+      domain: trading
+      layout: *id001
+      union: true
+      table:
+        trade: trade_murex
+      source-name: trade-murex
   trading-stream:
     plugin: kafka
     enabled: ${DRISHTI_STREAM_TRADING:false}
@@ -91,140 +130,233 @@ connectors:
       bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
       topics: ${DRISHTI_TRADING_TOPIC:drishti.trading.trades}
       kind: trade
-      id-field: tradeId
+      id-field: TRADE_ID
       stale-after: ${DRISHTI_STREAM_STALE_AFTER:15m}
       disk-cache.enabled: ${DRISHTI_STREAM_DISK_CACHE:true}
       disk-cache.root: ${DRISHTI_CACHE_ROOT:${drishti.data.dir:./data}/cache}
       disk-cache.max-gb: ${DRISHTI_STREAM_CACHE_GB:10}
       disk-cache.reset-at: ${DRISHTI_CACHE_RESET_AT:02:00}
       disk-cache.zone: America/New_York
-  desk-totals:
+  trade-pages:
     plugin: derived
     kinds:
-    - desk-pnl
+    - counterparty-trades
+    - portfolio-trades
+    - legal-entity-trades
+    - index-trades
     settings:
       refresh: 60s
-      desk-pnl:
+      counterparty-trades:
         from: trade
-        group-by: $.desk
-        id-field: desk
-        members: tradeIds
-        max-members: 250
+        group-by: $.COUNTERPARTY
+        id-field: COUNTERPARTY
+        members: TRADE_IDS
+        max-members: 500
+        rows-field: TRADES
         fields:
-          tradeCount: count
-          mtm: sum $.mtm
-          pnl1d: sum $.pnl1d
-          dv01: sum $.risk.dv01
-          worstMtm: min $.mtm
-          books: distinct $.book
-          currencies: distinct $.currency
+          TRADE_COUNT: count
+          NOTIONAL: sum first($.LEGS).NOTIONAL
+          SOURCE_SYSTEMS: distinct $.SOURCE_SYSTEM
+          PRODUCT_TYPES: distinct $.PRODUCT_TYPE
+          CURRENCIES: distinct $.CURRENCY
+          LAST_MATURITY: max $.MATURITY_DATE
         rows:
-          trade: $.tradeId
-          product: $.productName
-          book: $.book
-          currency: $.currency
-          mtm: $.mtm
-          pnl1d: $.pnl1d
+          TRADE_ID: $.TRADE_ID
+          SOURCE_SYSTEM: $.SOURCE_SYSTEM
+          PRODUCT_TYPE: $.PRODUCT_TYPE
+          BUY_SELL_CODE: $.BUY_SELL_CODE
+          CURRENCY: $.CURRENCY
+          NOTIONAL: first($.LEGS).NOTIONAL
+          MATURITY_DATE: $.MATURITY_DATE
+          TRADE_STATUS: $.TRADE_STATUS
+          INDEX_NAME: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME, '')
+          COUNTERPARTY: $.COUNTERPARTY
+          PORTFOLIO: $.PORTFOLIO
+          EVENTS: $.EVENTS
+      portfolio-trades:
+        from: trade
+        group-by: $.PORTFOLIO
+        id-field: PORTFOLIO
+        members: TRADE_IDS
+        max-members: 500
+        rows-field: TRADES
+        fields:
+          TRADE_COUNT: count
+          NOTIONAL: sum first($.LEGS).NOTIONAL
+          SOURCE_SYSTEMS: distinct $.SOURCE_SYSTEM
+          PRODUCT_TYPES: distinct $.PRODUCT_TYPE
+          CURRENCIES: distinct $.CURRENCY
+          LAST_MATURITY: max $.MATURITY_DATE
+        rows:
+          TRADE_ID: $.TRADE_ID
+          SOURCE_SYSTEM: $.SOURCE_SYSTEM
+          PRODUCT_TYPE: $.PRODUCT_TYPE
+          BUY_SELL_CODE: $.BUY_SELL_CODE
+          CURRENCY: $.CURRENCY
+          NOTIONAL: first($.LEGS).NOTIONAL
+          MATURITY_DATE: $.MATURITY_DATE
+          TRADE_STATUS: $.TRADE_STATUS
+          INDEX_NAME: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME, '')
+          COUNTERPARTY: $.COUNTERPARTY
+          PORTFOLIO: $.PORTFOLIO
+          EVENTS: $.EVENTS
+      legal-entity-trades:
+        from: trade
+        group-by: $.LEGAL_ENTITY
+        id-field: LEGAL_ENTITY
+        members: TRADE_IDS
+        max-members: 500
+        rows-field: TRADES
+        fields:
+          TRADE_COUNT: count
+          NOTIONAL: sum first($.LEGS).NOTIONAL
+          SOURCE_SYSTEMS: distinct $.SOURCE_SYSTEM
+          PRODUCT_TYPES: distinct $.PRODUCT_TYPE
+          CURRENCIES: distinct $.CURRENCY
+          LAST_MATURITY: max $.MATURITY_DATE
+        rows:
+          TRADE_ID: $.TRADE_ID
+          SOURCE_SYSTEM: $.SOURCE_SYSTEM
+          PRODUCT_TYPE: $.PRODUCT_TYPE
+          BUY_SELL_CODE: $.BUY_SELL_CODE
+          CURRENCY: $.CURRENCY
+          NOTIONAL: first($.LEGS).NOTIONAL
+          MATURITY_DATE: $.MATURITY_DATE
+          TRADE_STATUS: $.TRADE_STATUS
+          INDEX_NAME: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME, '')
+          COUNTERPARTY: $.COUNTERPARTY
+          PORTFOLIO: $.PORTFOLIO
+          EVENTS: $.EVENTS
+      index-trades:
+        from: trade
+        group-by: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME)
+        id-field: INDEX_NAME
+        members: TRADE_IDS
+        max-members: 500
+        rows-field: TRADES
+        fields:
+          TRADE_COUNT: count
+          NOTIONAL: sum first($.LEGS).NOTIONAL
+          SOURCE_SYSTEMS: distinct $.SOURCE_SYSTEM
+          PRODUCT_TYPES: distinct $.PRODUCT_TYPE
+          CURRENCIES: distinct $.CURRENCY
+          LAST_MATURITY: max $.MATURITY_DATE
+        rows:
+          TRADE_ID: $.TRADE_ID
+          SOURCE_SYSTEM: $.SOURCE_SYSTEM
+          PRODUCT_TYPE: $.PRODUCT_TYPE
+          BUY_SELL_CODE: $.BUY_SELL_CODE
+          CURRENCY: $.CURRENCY
+          NOTIONAL: first($.LEGS).NOTIONAL
+          MATURITY_DATE: $.MATURITY_DATE
+          TRADE_STATUS: $.TRADE_STATUS
+          INDEX_NAME: nonblank($.LEGS[0].INDEX.NAME, $.LEGS[1].INDEX.NAME, '')
+          COUNTERPARTY: $.COUNTERPARTY
+          PORTFOLIO: $.PORTFOLIO
+          EVENTS: $.EVENTS
 routes:
-  trade: trading-store
-  desk-pnl: desk-totals
+  trade: trade-endur
+  counterparty-trades: trade-pages
+  portfolio-trades: trade-pages
+  legal-entity-trades: trade-pages
+  index-trades: trade-pages
 columns:
   trade:
-  - productType
-  - direction
-  - currency
-  - notional
-  - mtm
-  - maturityDate
-  - book
+  - SOURCE_SYSTEM
+  - PRODUCT_TYPE
+  - BUY_SELL_CODE
+  - CURRENCY
+  - QUANTITY
+  - MATURITY_DATE
+  - PORTFOLIO
+  - COUNTERPARTY
 pivot:
   trade:
     fields:
-    - book
-    - desk
-    - currency
-    - assetClass
-    - productType
-    - direction
-    - status
-    - counterparty.name
-    - nettingSet
-    - sourceSystem
-    - maturityDate
-    - notional
-    - mtm
-    - pnl1d
-    - risk.dv01
+    - SOURCE_SYSTEM
+    - PORTFOLIO
+    - CURRENCY
+    - PRODUCT_GROUP
+    - PRODUCT_TYPE
+    - BUY_SELL_CODE
+    - TRADE_STATUS
+    - COUNTERPARTY
+    - LEGAL_ENTITY
+    - MATURITY_DATE
+    - QUANTITY
     rows:
-    - book
+    - PRODUCT_TYPE
     columns:
-    - currency
+    - SOURCE_SYSTEM
     values:
-    - field: mtm
+    - field: QUANTITY
       agg: sum
     filters:
-    - assetClass
-    - status
+    - PRODUCT_GROUP
+    - TRADE_STATUS
 form:
   trade:
-  - path: tradeId
+  - path: TRADE_ID
     label: Trade id
     type: id
     group: Identity
     order: 1
-    help: 'One or many: paste a list. MX-2* is any id starting MX-2.'
-  - path: counterparty.name
-    label: Counterparty
-    type: text
+    help: 'One or many: paste a list. MX-2* is any id starting MX-2; Endur ids are numbers.'
+  - path: SOURCE_SYSTEM
+    label: Source system
+    type: enum
     group: Identity
     order: 2
-  - path: nettingSet
-    label: Netting set
-    type: text
+    help: 'ENDUR, CALYPSO or MUREX: the booking system the trade comes from.'
+  - path: COUNTERPARTY
+    label: Counterparty
+    type: enum
     group: Identity
     order: 3
-  - path: assetClass
-    label: Asset class
-    type: enum
-    group: Product
-    order: 4
-  - path: productType
+    help: Type in the list to find a counterparty (CP-SOLARIS).
+  - path: PRODUCT_TYPE
     label: Product type
     type: enum
     group: Product
-    order: 5
-  - path: productName
-    label: Product name
-    type: text
-    group: Product
-    order: 6
-  - path: direction
-    label: Direction
+    order: 4
+  - path: PRODUCT_SUB_TYPE
+    label: Product sub type
     type: enum
     group: Product
-    order: 7
-  - path: status
+    order: 5
+    depends: PRODUCT_TYPE
+  - path: TRADE_STATUS
     label: Status
     type: enum
     group: Product
-    order: 8
-  - path: book
-    label: Book
+    order: 6
+  - path: BUY_SELL_CODE
+    label: Buy / sell
     type: enum
-    group: Where
-    order: 9
-  - path: desk
-    label: Desk
-    type: enum
-    group: Where
-    order: 10
-  - path: currency
+    group: Product
+    order: 7
+  - path: CURRENCY
     label: Currency
     type: enum
     group: Where
+    order: 8
+  - path: LEGAL_ENTITY
+    label: Legal entity
+    type: enum
+    group: Where
+    order: 9
+  - path: PORTFOLIO
+    label: Portfolio
+    type: enum
+    group: Where
+    order: 10
+  - path: TRADER_ID
+    label: Trader
+    type: enum
+    group: Where
     order: 11
-  - path: notional
-    label: Notional
+  - path: QUANTITY
+    label: Quantity
     type: amount
     group: Money
     order: 12
@@ -234,68 +366,81 @@ form:
     - between
     - '='
     help: 'Amounts take k, m and bn: 250k, 1.5m, 2bn.'
-  - path: mtm
-    label: MTM (USD)
-    type: amount
-    group: Money
-    order: 13
-    operators:
-    - '>'
-    - <
-    - between
-    - '='
-  - path: pnl1d
-    label: P&L 1d
-    type: amount
-    group: Money
-    order: 14
-  - path: risk.dv01
-    label: DV01
-    type: amount
-    group: Money
-    order: 15
-  - path: tradeDate
+  - path: TRADE_DATE
     label: Trade date
     type: date
     group: Dates
-    order: 16
-  - path: maturityDate
+    order: 13
+  - path: MATURITY_DATE
     label: Maturity date
     type: date
     group: Dates
-    order: 17
+    order: 14
     help: 'Relative ranges work here: next 10 business days.'
-  desk-pnl:
-  - path: desk
-    label: Desk
+  counterparty-trades:
+  - path: COUNTERPARTY
+    label: Counterparty trades
     type: id
-  - path: tradeCount
+  - path: TRADE_COUNT
     label: Trades
     type: number
-  - path: mtm
-    label: MTM (USD)
+  - path: NOTIONAL
+    label: Notional
     type: amount
-  - path: pnl1d
-    label: P&L 1d
+  - path: LAST_MATURITY
+    label: Last maturity
+    type: date
+  portfolio-trades:
+  - path: PORTFOLIO
+    label: Portfolio trades
+    type: id
+  - path: TRADE_COUNT
+    label: Trades
+    type: number
+  - path: NOTIONAL
+    label: Notional
     type: amount
-  - path: dv01
-    label: DV01
+  - path: LAST_MATURITY
+    label: Last maturity
+    type: date
+  legal-entity-trades:
+  - path: LEGAL_ENTITY
+    label: Legal entity trades
+    type: id
+  - path: TRADE_COUNT
+    label: Trades
+    type: number
+  - path: NOTIONAL
+    label: Notional
     type: amount
-  - path: worstMtm
-    label: Worst MTM
+  - path: LAST_MATURITY
+    label: Last maturity
+    type: date
+  index-trades:
+  - path: INDEX_NAME
+    label: Index trades
+    type: id
+  - path: TRADE_COUNT
+    label: Trades
+    type: number
+  - path: NOTIONAL
+    label: Notional
     type: amount
+  - path: LAST_MATURITY
+    label: Last maturity
+    type: date
 console:
   examples:
   - - TRD MX-20000001
-    - Interest rate swap · legs and every cashflow
-  - - TRD WSS-1500025
-    - FX option
+    - Interest rate swap (Murex) · legs side by side, flows and fixings
+  - - TRD 1000001
+    - Commodity swap (Endur) · legs, resets, events
   - - TRD CLY-3000001
-    - Single-name CDS
-  - - TRD IMG-400031
-    - OTC equity option
-  - - TRD IMG-400067
-    - Autocallable note · observation schedule
+    - Single-name CDS (Calypso)
+  - - TRD 1000013
+    - Physical commodity deal (Endur)
+  - - CTRD CP-SOLARIS
+    - A counterparty's trades in every system · payments, notional by product
   help: config/help.yaml
 python:
   enabled: true

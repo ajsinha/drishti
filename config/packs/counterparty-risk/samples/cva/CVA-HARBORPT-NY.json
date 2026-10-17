@@ -1,26 +1,26 @@
 {
  "resultId": "CVA-HARBORPT-NY",
- "cva": -6338,
- "dva": 2218,
- "fva": -40015,
- "kva": -64953,
+ "cva": -6340,
+ "dva": 2219,
+ "fva": -40050,
+ "kva": -64968,
  "cs01": -114,
  "components": [
   {
    "name": "CVA",
-   "amount": -6338
+   "amount": -6340
   },
   {
    "name": "DVA",
-   "amount": 2218
+   "amount": 2219
   },
   {
    "name": "FVA",
-   "amount": -40015
+   "amount": -40050
   },
   {
    "name": "KVA",
-   "amount": -64953
+   "amount": -64968
   }
  ],
  "sensitivities": [

@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "IMG-400141",
+   "tradeId": "MX-20000423",
    "product": "Capital-protected note",
    "assetClass": "Structured",
    "currency": "USD",
@@ -73,7 +73,7 @@
    "mtm": -2117461
   },
   {
-   "tradeId": "IMG-400148",
+   "tradeId": "MX-20000430",
    "product": "FX-rates hybrid (PRDC)",
    "assetClass": "Structured",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": 1945606
   },
   {
-   "tradeId": "IMG-400161",
+   "tradeId": "MX-20000443",
    "product": "Credit basket note",
    "assetClass": "Structured",
    "currency": "USD",
@@ -95,7 +95,7 @@
    "mtm": 772409
   },
   {
-   "tradeId": "IMG-400156",
+   "tradeId": "MX-20000438",
    "product": "Worst-of note",
    "assetClass": "Structured",
    "currency": "USD",
@@ -106,7 +106,7 @@
    "mtm": 765390
   },
   {
-   "tradeId": "IMG-400160",
+   "tradeId": "MX-20000442",
    "product": "Credit basket note",
    "assetClass": "Structured",
    "currency": "USD",

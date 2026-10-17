@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "IMG-400059",
+   "tradeId": "MX-20000215",
    "product": "Equity digital option",
    "assetClass": "Equity",
    "currency": "EUR",
@@ -73,7 +73,7 @@
    "mtm": 4508571
   },
   {
-   "tradeId": "IMG-400121",
+   "tradeId": "MX-20000277",
    "product": "Convertible bond",
    "assetClass": "Equity",
    "currency": "CAD",
@@ -84,7 +84,7 @@
    "mtm": 3120994
   },
   {
-   "tradeId": "WSS-1500039",
+   "tradeId": "CLY-3000039",
    "product": "FX barrier option",
    "assetClass": "FX",
    "currency": "JPY",
@@ -95,7 +95,7 @@
    "mtm": -2456557
   },
   {
-   "tradeId": "WSS-1500046",
+   "tradeId": "CLY-3000046",
    "product": "FX double-barrier option",
    "assetClass": "FX",
    "currency": "CAD",
@@ -106,7 +106,7 @@
    "mtm": -2103691
   },
   {
-   "tradeId": "IMG-400007",
+   "tradeId": "MX-20000163",
    "product": "Equity forward",
    "assetClass": "Equity",
    "currency": "CAD",
@@ -117,7 +117,7 @@
    "mtm": -1368137
   },
   {
-   "tradeId": "WSS-1500084",
+   "tradeId": "CLY-3000084",
    "product": "Quanto option",
    "assetClass": "FX",
    "currency": "JPY",
@@ -128,7 +128,7 @@
    "mtm": -1346075
   },
   {
-   "tradeId": "WSS-1500058",
+   "tradeId": "CLY-3000058",
    "product": "FX average-rate option",
    "assetClass": "FX",
    "currency": "CAD",
@@ -139,7 +139,7 @@
    "mtm": -1068715
   },
   {
-   "tradeId": "WSS-1500011",
+   "tradeId": "CLY-3000011",
    "product": "FX forward",
    "assetClass": "FX",
    "currency": "USD",
@@ -150,7 +150,7 @@
    "mtm": -940839
   },
   {
-   "tradeId": "IMG-400033",
+   "tradeId": "MX-20000189",
    "product": "OTC equity option",
    "assetClass": "Equity",
    "currency": "USD",
@@ -161,7 +161,7 @@
    "mtm": 521167
   },
   {
-   "tradeId": "MX-20000183",
+   "tradeId": "MX-20000405",
    "product": "Inflation asset swap",
    "assetClass": "Inflation",
    "currency": "GBP",
@@ -172,7 +172,7 @@
    "mtm": -497035
   },
   {
-   "tradeId": "IMG-400130",
+   "tradeId": "MX-20000286",
    "product": "Basket option",
    "assetClass": "Equity",
    "currency": "EUR",
@@ -183,7 +183,7 @@
    "mtm": 304517
   },
   {
-   "tradeId": "IMG-400080",
+   "tradeId": "MX-20000236",
    "product": "Variance swap",
    "assetClass": "Equity",
    "currency": "EUR",

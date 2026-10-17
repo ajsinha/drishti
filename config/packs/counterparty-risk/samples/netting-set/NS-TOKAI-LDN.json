@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "WSS-1500051",
+   "tradeId": "CLY-3000051",
    "product": "FX one-touch / no-touch",
    "assetClass": "FX",
    "currency": "USD",
@@ -73,7 +73,7 @@
    "mtm": -1462679
   },
   {
-   "tradeId": "WSS-1500009",
+   "tradeId": "CLY-3000009",
    "product": "FX forward",
    "assetClass": "FX",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": -1066636
   },
   {
-   "tradeId": "WSS-1500059",
+   "tradeId": "CLY-3000059",
    "product": "FX average-rate option",
    "assetClass": "FX",
    "currency": "JPY",
@@ -95,7 +95,7 @@
    "mtm": 920619
   },
   {
-   "tradeId": "WSS-1500064",
+   "tradeId": "CLY-3000064",
    "product": "FX target redemption forward",
    "assetClass": "FX",
    "currency": "CHF",
@@ -106,7 +106,7 @@
    "mtm": 850141
   },
   {
-   "tradeId": "IMG-400034",
+   "tradeId": "MX-20000190",
    "product": "OTC equity option",
    "assetClass": "Equity",
    "currency": "JPY",
@@ -117,7 +117,7 @@
    "mtm": 780054
   },
   {
-   "tradeId": "IMG-400075",
+   "tradeId": "MX-20000231",
    "product": "Reverse convertible",
    "assetClass": "Equity",
    "currency": "USD",
@@ -128,7 +128,7 @@
    "mtm": 479208
   },
   {
-   "tradeId": "MX-20000179",
+   "tradeId": "MX-20000401",
    "product": "Inflation-linked bond",
    "assetClass": "Inflation",
    "currency": "EUR",
@@ -139,7 +139,7 @@
    "mtm": 266856
   },
   {
-   "tradeId": "MX-20000187",
+   "tradeId": "MX-20000409",
    "product": "Limited price index swap",
    "assetClass": "Inflation",
    "currency": "GBP",
@@ -150,7 +150,7 @@
    "mtm": -115232
   },
   {
-   "tradeId": "IMG-400051",
+   "tradeId": "MX-20000207",
    "product": "Equity Asian option",
    "assetClass": "Equity",
    "currency": "USD",
@@ -161,7 +161,7 @@
    "mtm": -51366
   },
   {
-   "tradeId": "IMG-400079",
+   "tradeId": "MX-20000235",
    "product": "Variance swap",
    "assetClass": "Equity",
    "currency": "USD",

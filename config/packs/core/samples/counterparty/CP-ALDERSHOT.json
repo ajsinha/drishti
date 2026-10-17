@@ -10,7 +10,7 @@
  "UEN": "UEN0100037",
  "economy": "ECON-GBR",
  "newsId": "NEWS-Aldershot_Pension_Trust",
- "netMtm": 16462059,
+ "netMtm": 15036789,
  "pfePeak": 145548971,
  "nettingSets": [
   {
@@ -29,7 +29,7 @@
    "id": "NS-ALDERSHOT-NY",
    "agreement": "AGR-ALDERSHOT-ISDA",
    "trades": 22,
-   "netMtm": 21121197
+   "netMtm": 19695927
   },
   {
    "id": "NS-ALDERSHOT-TKY",

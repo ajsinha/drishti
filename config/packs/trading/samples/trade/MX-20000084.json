@@ -1,478 +1,243 @@
 {
- "tradeId": "MX-20000084",
- "sourceSystem": "Murex",
- "sourceTradeId": "20000084",
- "productType": "CAP",
- "productName": "Interest rate cap",
- "assetClass": "Rates",
- "family": "option",
- "status": "Live",
- "direction": "Buy",
- "tradeDate": "2024-10-17",
- "effectiveDate": "2024-10-21",
- "maturityDate": "2026-10-07",
- "currency": "EUR",
- "notional": 182000000.0,
- "mtm": 0,
- "mtmCurrency": "USD",
- "pnl1d": 0,
- "counterparty": {
-  "id": "CP-ALDERSHOT",
-  "name": "Aldershot Pension Trust"
- },
- "nettingSet": "NS-ALDERSHOT-NY",
- "book": "BOOK-RATES-2",
- "trader": "TRDR-ASHAH",
- "desk": "DESK-RATES",
- "legalEntity": "LE-NY",
- "discountCurve": "CRV-EUR-OIS",
- "forwardCurve": "CRV-EUR-PROJ",
- "capVolSurface": "CPV-EUR",
- "terms": {
-  "strike": 0.028856,
-  "capFrequency": "Semi-annual",
-  "premium": 68516.0
- },
- "risk": {
-  "dv01": 21018,
-  "vega": 601946
- },
- "sensitivities": [
+ "SOURCE_SYSTEM": "MUREX",
+ "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z",
+ "TRADE_DATE": "2024-10-17",
+ "INPUT_DATE": "2024-10-17",
+ "TRADE_ID": "MX-20000084",
+ "TRADE_STATUS": "VALIDATED",
+ "TRADE_ACTION": "NEW",
+ "TRADE_VERSION": "1",
+ "TRANSACTION_ID": "20000084001",
+ "PACKAGE_ID": "",
+ "QUANTITY": 182000000.0,
+ "PRICE": 68516.0,
+ "BUY_SELL_CODE": "B",
+ "PRODUCT_TYPE": "CAP",
+ "PRODUCT_SUB_TYPE": "Interest rate cap",
+ "PRODUCT_GROUP": "Rates",
+ "PRODUCT_SUB_GROUP": "option",
+ "OPTION_TYPE": null,
+ "STRIKE_PRICE": 0.028856,
+ "COUNTERPARTY": "CP-ALDERSHOT",
+ "COUNTERPARTY_UEN": "UEN0100037",
+ "COUNTERPARTY_COUNTRY_OF_RISK": "GB",
+ "ORIGINAL_COUNTERPARTY": "",
+ "ORIGINAL_COUNTERPARTY_UEN": "",
+ "INTERNAL_EXTERNAL_CODE": "External",
+ "TRANSIT": "00107",
+ "LEGAL_ENTITY": "LE-NY",
+ "PORTFOLIO": "BOOK-RATES-2",
+ "TRADER_ID": "TRDR-ASHAH",
+ "TRADER_FIRST_NAME": "A.",
+ "TRADER_LAST_NAME": "Shah",
+ "START_DATE": "2024-10-21",
+ "MATURITY_DATE": "2026-10-07",
+ "REGISTRY_DELIVERY_DATE": "",
+ "CURRENCY": "EUR",
+ "DELIVERY_VERSUS_PAYMENT": "NO",
+ "STRATEGY": null,
+ "INTERNAL_TRADING_STRATEGY": "",
+ "NY_CURVE_FLAG": "",
+ "VAULT_LOCATION_ALLOCATION": "",
+ "PRECIOUS_METAL_FLAG": "",
+ "TT_GROUP": "DESK-RATES",
+ "TT_BOOK": "BOOK-RATES-2",
+ "LEASE_PERPETUITY_FLAG": "",
+ "SETTLEMENT_DATE": "2024-10-21",
+ "LEGS": [
   {
-   "bucket": "3M",
-   "dv01": 3503,
-   "vega": 100324
-  },
-  {
-   "bucket": "6M",
-   "dv01": 7006,
-   "vega": 200649
-  },
-  {
-   "bucket": "1Y",
-   "dv01": 10509,
-   "vega": 300973
-  }
- ],
- "legs": [
-  {
-   "leg": 1,
-   "label": "Buy cap 2.8856% on TERM-ESTR-6M",
-   "payer": false,
-   "type": "CAPLETS",
-   "currency": "EUR",
-   "notional": 182000000.0,
-   "index": "TERM-ESTR-6M",
-   "spread": 0.0,
-   "strike": 0.028856,
-   "dayCount": "ACT/360",
-   "frequency": "Semi-annual",
-   "resetFrequency": "Semi-annual",
-   "businessDayConvention": "Mod. following",
-   "calendar": "EUTA",
-   "paymentLag": "2 business days",
-   "cashflows": [
-    {
-     "n": 1,
-     "type": "Caplet",
-     "periodStart": "2024-10-21",
-     "periodEnd": "2025-04-07",
-     "fixingDate": "2024-10-17",
-     "payDate": "2025-04-09",
-     "notional": 182000000.0,
-     "index": "TERM-ESTR-6M",
-     "strike": 0.028856,
-     "rate": 0.01976,
-     "accrualFactor": 0.466667,
-     "volatilityBp": null,
-     "amount": 0.0,
-     "discountFactor": 1.0,
-     "pv": 0.0,
-     "status": "Settled",
-     "fixings": [
-      {
-       "fixingDate": "2024-10-17",
-       "index": "TERM-ESTR-6M",
-       "tenor": "6M",
-       "rate": 0.01976,
-       "source": "Refinitiv ESTR term",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 2,
-     "type": "Caplet",
-     "periodStart": "2025-04-07",
-     "periodEnd": "2025-10-07",
-     "fixingDate": "2025-04-03",
-     "payDate": "2025-10-09",
-     "notional": 182000000.0,
-     "index": "TERM-ESTR-6M",
-     "strike": 0.028856,
-     "rate": 0.020615,
-     "accrualFactor": 0.508333,
-     "volatilityBp": null,
-     "amount": 0.0,
-     "discountFactor": 1.0,
-     "pv": 0.0,
-     "status": "Settled",
-     "fixings": [
-      {
-       "fixingDate": "2025-04-03",
-       "index": "TERM-ESTR-6M",
-       "tenor": "6M",
-       "rate": 0.020615,
-       "source": "Refinitiv ESTR term",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 3,
-     "type": "Caplet",
-     "periodStart": "2025-10-07",
-     "periodEnd": "2026-04-07",
-     "fixingDate": "2025-10-03",
-     "payDate": "2026-04-09",
-     "notional": 182000000.0,
-     "index": "TERM-ESTR-6M",
-     "strike": 0.028856,
-     "rate": 0.019961,
-     "accrualFactor": 0.505556,
-     "volatilityBp": null,
-     "amount": 0.0,
-     "discountFactor": 1.0,
-     "pv": 0.0,
-     "status": "Settled",
-     "fixings": [
-      {
-       "fixingDate": "2025-10-03",
-       "index": "TERM-ESTR-6M",
-       "tenor": "6M",
-       "rate": 0.019961,
-       "source": "Refinitiv ESTR term",
-       "status": "Fixed"
-      }
-     ]
-    },
-    {
-     "n": 4,
-     "type": "Caplet",
-     "periodStart": "2026-04-07",
-     "periodEnd": "2026-10-07",
-     "fixingDate": "2026-04-01",
-     "payDate": "2026-10-09",
-     "notional": 182000000.0,
-     "index": "TERM-ESTR-6M",
-     "strike": 0.028856,
-     "rate": 0.019988,
-     "accrualFactor": 0.508333,
-     "volatilityBp": null,
-     "amount": 0.0,
-     "discountFactor": 0.999524,
-     "pv": 0.0,
-     "status": "Fixed",
-     "fixings": [
-      {
-       "fixingDate": "2026-04-01",
-       "index": "TERM-ESTR-6M",
-       "tenor": "6M",
-       "rate": 0.019988,
-       "source": "Refinitiv ESTR term",
-       "status": "Fixed"
-      }
-     ]
-    }
-   ],
-   "rateType": "Option",
-   "payReceive": "Receive",
-   "legId": "MX-20000084-L1",
-   "pv": 0.0,
-   "projectedFlows": 0
-  }
- ],
- "schedule": [
-  {
-   "fixingDate": "2024-10-17",
-   "period": "2024-10-21..2025-04-07",
-   "index": "TERM-ESTR-6M",
-   "rate": 0.01976,
-   "payoff": 0.0,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2025-04-03",
-   "period": "2025-04-07..2025-10-07",
-   "index": "TERM-ESTR-6M",
-   "rate": 0.020615,
-   "payoff": 0.0,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2025-10-03",
-   "period": "2025-10-07..2026-04-07",
-   "index": "TERM-ESTR-6M",
-   "rate": 0.019961,
-   "payoff": 0.0,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2026-04-01",
-   "period": "2026-04-07..2026-10-07",
-   "index": "TERM-ESTR-6M",
-   "rate": 0.019988,
-   "payoff": 0.0,
-   "status": "Fixed"
-  }
- ],
- "nextIndex": -1,
- "pnlHistory": [
-  {
-   "date": "2026-09-03",
-   "pnl": -3978
-  },
-  {
-   "date": "2026-09-04",
-   "pnl": 1218
-  },
-  {
-   "date": "2026-09-07",
-   "pnl": 1791
-  },
-  {
-   "date": "2026-09-08",
-   "pnl": -3290
-  },
-  {
-   "date": "2026-09-09",
-   "pnl": 810
-  },
-  {
-   "date": "2026-09-10",
-   "pnl": -931
-  },
-  {
-   "date": "2026-09-11",
-   "pnl": -848
-  },
-  {
-   "date": "2026-09-14",
-   "pnl": -4051
-  },
-  {
-   "date": "2026-09-15",
-   "pnl": 1806
-  },
-  {
-   "date": "2026-09-16",
-   "pnl": -2789
-  },
-  {
-   "date": "2026-09-17",
-   "pnl": -5251
-  },
-  {
-   "date": "2026-09-18",
-   "pnl": -3691
-  },
-  {
-   "date": "2026-09-21",
-   "pnl": 3152
-  },
-  {
-   "date": "2026-09-22",
-   "pnl": -2746
-  },
-  {
-   "date": "2026-09-23",
-   "pnl": 1479
-  },
-  {
-   "date": "2026-09-24",
-   "pnl": -528
-  },
-  {
-   "date": "2026-09-25",
-   "pnl": -5042
-  },
-  {
-   "date": "2026-09-28",
-   "pnl": 2292
-  },
-  {
-   "date": "2026-09-29",
-   "pnl": 1515
-  },
-  {
-   "date": "2026-09-30",
-   "pnl": 1894
-  }
- ],
- "execution": {
-  "tradeDate": "2024-10-17",
-  "executionTimestamp": "2024-10-17T13:41:50.542Z",
-  "venue": "Voice",
-  "venueMic": "XOFF",
-  "executionType": "Voice",
-  "trader": "A. Shah",
-  "salesperson": null,
-  "orderId": "ORD-267973B3DB"
- },
- "lifecycle": {
-  "status": "Live",
-  "version": 1,
-  "events": [
-   {
-    "version": 1,
-    "event": "New",
-    "reason": "Trade captured",
-    "at": "2024-10-17T13:00:00Z",
-    "by": "mo.amend"
-   }
-  ],
-  "sourceSystem": "Endur",
-  "createdAt": "2024-10-17T13:00:00Z",
-  "lastModifiedAt": "2024-10-17T13:00:00Z",
-  "lastModifiedBy": "mo.amend",
-  "timeline": [
-   {
-    "date": "2024-10-17",
-    "event": "Booked",
-    "status": "Done",
-    "description": "Captured in Murex by TRDR-ASHAH: buy Interest rate cap"
+   "LEG_ID": 1,
+   "LEG_TYPE": "OPTION",
+   "LEG_ECONOMIC_TYPE": "Receive",
+   "CURRENCY": "EUR",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 182000000.0,
+   "DISCOUNT_INDEX": "CRV-EUR-OIS",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "",
+   "RESET_HOLIDAY_SCHEDULE": "EUTA",
+   "RESET_CONVENTION": "Semi-annual",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "4",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "TERM-ESTR-6M",
+    "GROUP": "Rates",
+    "SUB_GROUP": "Semi-annual"
    },
-   {
-    "date": "2024-10-17",
-    "event": "Confirmed",
-    "status": "Matched",
-    "description": "Matched on MarkitWire (MA182065966)"
-   },
-   {
-    "date": "2026-04-01",
-    "event": "Cash settled",
-    "status": "Settled",
-    "description": "EUR payment settled",
-    "amount": 0.0
-   },
-   {
-    "date": "2026-10-07",
-    "event": "Maturity",
-    "status": "Scheduled",
-    "description": "Final payment and close-out"
-   }
-  ]
- },
- "confirmation": {
-  "status": "Confirmed",
-  "method": "MarkitWire",
-  "platformId": "MA182065966",
-  "matched": "2024-10-17 11:01",
-  "affirmedBy": "Counterparty ops",
-  "breaks": []
- },
- "clearing": {
-  "status": "Bilateral",
-  "mandatory": false,
-  "reason": "Counterparty below clearing threshold"
- },
- "regulatory": {
-  "uti": "549300O1N13GO2II2096267973B3DB61436EC6D0",
-  "upi": "QZIGSHIFAZL7",
-  "reportingRegimes": [
-   "CFTC Part 43/45"
-  ],
-  "reportingParty": "Us",
-  "reportingStatus": "Accepted",
-  "clearingObligation": false,
-  "tradingObligation": false,
-  "mifidClassification": "Professional client",
-  "volckerExempt": false,
-  "saCcrAssetClass": "Interest rate"
- },
- "settlementInstructions": {
-  "method": "CLS",
-  "ourAgent": "Deutsche Bank AG",
-  "ourAgentBic": "DEUTDEFFXXX",
-  "theirAgentBic": "ALDEGB33XXX",
-  "ssiId": "SSI-EUR-D06EAF",
-  "netting": "Payment netting by currency and value date"
- },
- "valuation": {
-  "asOf": "2026-09-30",
-  "currency": "USD",
-  "npv": 0,
-  "cleanPv": 0.0,
-  "accrued": 0.0,
-  "legPvs": [],
-  "model": "Black / Bachelier",
-  "curves": [
-   "CRV-EUR-OIS",
-   "CRV-EUR-PROJ",
-   "CPV-EUR"
-  ],
-  "status": "Official EOD",
-  "runId": "EOD-20260930-01"
- },
- "pnlExplain": [
-  {
-   "step": "Opening MTM",
-   "pnl": 0,
-   "total": true
-  },
-  {
-   "step": "Carry",
-   "pnl": 69
-  },
-  {
-   "step": "Roll-down",
-   "pnl": 229
-  },
-  {
-   "step": "Rates delta",
-   "pnl": 43
-  },
-  {
-   "step": "FX delta",
-   "pnl": -112
-  },
-  {
-   "step": "Vol (vega)",
-   "pnl": -10
-  },
-  {
-   "step": "Theta",
-   "pnl": -219
-  },
-  {
-   "step": "Unexplained",
-   "pnl": 0
-  }
- ],
- "_meta": {
-  "source": "murex-rates",
-  "generation": 1,
-  "live": true,
-  "walk": {
-   "mtm": 1820,
-   "derive": [
+   "CASH_FLOWS": [
     {
-     "set": "valuation.npv",
-     "expr": "$.mtm"
+     "FLOW_ID": 20000084001,
+     "FLOW_TYPE": "Caplet",
+     "NOTIONAL": 182000000.0,
+     "RATE": 0.01976,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2024-10-21",
+     "END_DATE": "2025-04-07",
+     "PAYMENT_DATE": "2025-04-09",
+     "RATE_DETERMINATION_DATE": "2024-10-17",
+     "FIRST_RESET_DATE": "2024-10-17",
+     "LAST_RESET_DATE": "2024-10-17",
+     "STRIKE_PRICE": 0.028856,
+     "RESETS": [
+      {
+       "RESET_ID": "R-1",
+       "ACCRUAL": "",
+       "START_DATE": "2024-10-17",
+       "END_DATE": "2025-04-07",
+       "RESET_DATE": "2024-10-17",
+       "ACCRUAL_START_DATE": "2024-10-21",
+       "ACCRUAL_END_DATE": "2025-04-07",
+       "RATE": 0.01976
+      }
+     ]
     },
     {
-     "set": "valuation.cleanPv",
-     "expr": "$.mtm - valuation.accrued"
+     "FLOW_ID": 20000084002,
+     "FLOW_TYPE": "Caplet",
+     "NOTIONAL": 182000000.0,
+     "RATE": 0.020615,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2025-04-07",
+     "END_DATE": "2025-10-07",
+     "PAYMENT_DATE": "2025-10-09",
+     "RATE_DETERMINATION_DATE": "2025-04-03",
+     "FIRST_RESET_DATE": "2025-04-03",
+     "LAST_RESET_DATE": "2025-04-03",
+     "STRIKE_PRICE": 0.028856,
+     "RESETS": [
+      {
+       "RESET_ID": "R-2",
+       "ACCRUAL": "",
+       "START_DATE": "2025-04-03",
+       "END_DATE": "2025-10-07",
+       "RESET_DATE": "2025-04-03",
+       "ACCRUAL_START_DATE": "2025-04-07",
+       "ACCRUAL_END_DATE": "2025-10-07",
+       "RATE": 0.020615
+      }
+     ]
     },
     {
-     "set": "pnl1d",
-     "expr": "$.mtm - pnlExplain.0.pnl"
+     "FLOW_ID": 20000084003,
+     "FLOW_TYPE": "Caplet",
+     "NOTIONAL": 182000000.0,
+     "RATE": 0.019961,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2025-10-07",
+     "END_DATE": "2026-04-07",
+     "PAYMENT_DATE": "2026-04-09",
+     "RATE_DETERMINATION_DATE": "2025-10-03",
+     "FIRST_RESET_DATE": "2025-10-03",
+     "LAST_RESET_DATE": "2025-10-03",
+     "STRIKE_PRICE": 0.028856,
+     "RESETS": [
+      {
+       "RESET_ID": "R-3",
+       "ACCRUAL": "",
+       "START_DATE": "2025-10-03",
+       "END_DATE": "2026-04-07",
+       "RESET_DATE": "2025-10-03",
+       "ACCRUAL_START_DATE": "2025-10-07",
+       "ACCRUAL_END_DATE": "2026-04-07",
+       "RATE": 0.019961
+      }
+     ]
     },
     {
-     "set": "pnlExplain.2.pnl",
-     "expr": "pnlExplain.2.pnl + ($.mtm - sum(pnlExplain.*.pnl))"
+     "FLOW_ID": 20000084004,
+     "FLOW_TYPE": "Caplet",
+     "NOTIONAL": 182000000.0,
+     "RATE": 0.019988,
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-04-07",
+     "END_DATE": "2026-10-07",
+     "PAYMENT_DATE": "2026-10-09",
+     "RATE_DETERMINATION_DATE": "2026-04-01",
+     "FIRST_RESET_DATE": "2026-04-01",
+     "LAST_RESET_DATE": "2026-04-01",
+     "STRIKE_PRICE": 0.028856,
+     "RESETS": [
+      {
+       "RESET_ID": "R-4",
+       "ACCRUAL": "",
+       "START_DATE": "2026-04-01",
+       "END_DATE": "2026-10-07",
+       "RESET_DATE": "2026-04-01",
+       "ACCRUAL_START_DATE": "2026-04-07",
+       "ACCRUAL_END_DATE": "2026-10-07",
+       "RATE": 0.019988
+      }
+     ]
     }
    ]
   }
+ ],
+ "EVENTS": [
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000084001,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "BOOKED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2024-10-17",
+   "AMOUNT": "",
+   "CURRENCY": "EUR",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000084002,
+   "EVENT_NUMBER": 2,
+   "EVENT_TYPE": "CONFIRMED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2024-10-17",
+   "AMOUNT": "",
+   "CURRENCY": "EUR",
+   "SEQUENCE_NUMBER": 2,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000084003,
+   "EVENT_NUMBER": 3,
+   "EVENT_TYPE": "CASH_SETTLED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-04-01",
+   "AMOUNT": 0.0,
+   "CURRENCY": "EUR",
+   "SEQUENCE_NUMBER": 3,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000084004,
+   "EVENT_NUMBER": 4,
+   "EVENT_TYPE": "MATURITY",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-10-07",
+   "AMOUNT": "",
+   "CURRENCY": "EUR",
+   "SEQUENCE_NUMBER": 4,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  }
+ ],
+ "_meta": {
+  "source": "murex",
+  "generation": 1
  }
 }

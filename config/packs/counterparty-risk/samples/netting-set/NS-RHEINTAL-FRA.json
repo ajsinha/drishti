@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "BBG-60000082",
+   "tradeId": "CLY-3000268",
    "product": "Repurchase agreement",
    "assetClass": "Securities financing",
    "currency": "EUR",
@@ -73,7 +73,7 @@
    "mtm": 4140501
   },
   {
-   "tradeId": "BBG-60000102",
+   "tradeId": "CLY-3000288",
    "product": "Buy / sell-back",
    "assetClass": "Securities financing",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": -2924657
   },
   {
-   "tradeId": "BBG-60000098",
+   "tradeId": "CLY-3000284",
    "product": "Buy / sell-back",
    "assetClass": "Securities financing",
    "currency": "GBP",

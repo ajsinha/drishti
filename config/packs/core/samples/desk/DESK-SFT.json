@@ -28,294 +28,294 @@
  ],
  "positions": [
   {
-   "tradeId": "BBG-60000081",
+   "tradeId": "CLY-3000267",
    "book": "BOOK-SFT-1",
    "currency": "USD",
    "family": "sft",
    "mtm": 396058
   },
   {
-   "tradeId": "BBG-60000086",
+   "tradeId": "CLY-3000272",
    "book": "BOOK-SFT-1",
    "currency": "EUR",
    "family": "sft",
    "mtm": 3324957
   },
   {
-   "tradeId": "BBG-60000088",
+   "tradeId": "CLY-3000274",
    "book": "BOOK-SFT-1",
    "currency": "USD",
    "family": "sft",
    "mtm": 319538
   },
   {
-   "tradeId": "BBG-60000089",
+   "tradeId": "CLY-3000275",
    "book": "BOOK-SFT-1",
    "currency": "USD",
    "family": "sft",
    "mtm": 2428077
   },
   {
-   "tradeId": "BBG-60000090",
+   "tradeId": "CLY-3000276",
    "book": "BOOK-SFT-1",
    "currency": "USD",
    "family": "sft",
    "mtm": 1817034
   },
   {
-   "tradeId": "BBG-60000093",
+   "tradeId": "CLY-3000279",
    "book": "BOOK-SFT-1",
    "currency": "EUR",
    "family": "sft",
    "mtm": 1780029
   },
   {
-   "tradeId": "BBG-60000094",
+   "tradeId": "CLY-3000280",
    "book": "BOOK-SFT-1",
    "currency": "JPY",
    "family": "sft",
    "mtm": -708216
   },
   {
-   "tradeId": "BBG-60000098",
+   "tradeId": "CLY-3000284",
    "book": "BOOK-SFT-1",
    "currency": "GBP",
    "family": "sft",
    "mtm": -453412
   },
   {
-   "tradeId": "BBG-60000101",
+   "tradeId": "CLY-3000287",
    "book": "BOOK-SFT-1",
    "currency": "JPY",
    "family": "sft",
    "mtm": 23832
   },
   {
-   "tradeId": "BBG-60000104",
+   "tradeId": "CLY-3000290",
    "book": "BOOK-SFT-1",
    "currency": "CHF",
    "family": "sft",
    "mtm": -1421662
   },
   {
-   "tradeId": "BBG-60000105",
+   "tradeId": "CLY-3000291",
    "book": "BOOK-SFT-1",
    "currency": "JPY",
    "family": "sft",
    "mtm": 116927
   },
   {
-   "tradeId": "BBG-60000107",
+   "tradeId": "CLY-3000293",
    "book": "BOOK-SFT-1",
    "currency": "USD",
    "family": "sft",
    "mtm": 2398191
   },
   {
-   "tradeId": "BBG-60000111",
+   "tradeId": "CLY-3000297",
    "book": "BOOK-SFT-1",
    "currency": "GBP",
    "family": "sft",
    "mtm": -1901921
   },
   {
-   "tradeId": "BBG-60000113",
+   "tradeId": "CLY-3000299",
    "book": "BOOK-SFT-1",
    "currency": "EUR",
    "family": "sft",
    "mtm": -1189358
   },
   {
-   "tradeId": "BBG-60000115",
+   "tradeId": "CLY-3000301",
    "book": "BOOK-SFT-1",
    "currency": "USD",
    "family": "sft",
    "mtm": -354213
   },
   {
-   "tradeId": "BBG-60000116",
+   "tradeId": "CLY-3000302",
    "book": "BOOK-SFT-1",
    "currency": "JPY",
    "family": "sft",
    "mtm": 709577
   },
   {
-   "tradeId": "BBG-60000120",
+   "tradeId": "CLY-3000306",
    "book": "BOOK-SFT-1",
    "currency": "USD",
    "family": "sft",
    "mtm": 1594435
   },
   {
-   "tradeId": "BBG-60000079",
+   "tradeId": "CLY-3000265",
    "book": "BOOK-SFT-2",
    "currency": "JPY",
    "family": "sft",
    "mtm": -271929
   },
   {
-   "tradeId": "BBG-60000080",
+   "tradeId": "CLY-3000266",
    "book": "BOOK-SFT-2",
    "currency": "USD",
    "family": "sft",
    "mtm": 122689
   },
   {
-   "tradeId": "BBG-60000085",
+   "tradeId": "CLY-3000271",
    "book": "BOOK-SFT-2",
    "currency": "CHF",
    "family": "sft",
    "mtm": -2160188
   },
   {
-   "tradeId": "BBG-60000091",
+   "tradeId": "CLY-3000277",
    "book": "BOOK-SFT-2",
    "currency": "USD",
    "family": "sft",
    "mtm": -135470
   },
   {
-   "tradeId": "BBG-60000095",
+   "tradeId": "CLY-3000281",
    "book": "BOOK-SFT-2",
    "currency": "JPY",
    "family": "sft",
    "mtm": -1727235
   },
   {
-   "tradeId": "BBG-60000096",
+   "tradeId": "CLY-3000282",
    "book": "BOOK-SFT-2",
    "currency": "EUR",
    "family": "sft",
    "mtm": 1265588
   },
   {
-   "tradeId": "BBG-60000099",
+   "tradeId": "CLY-3000285",
    "book": "BOOK-SFT-2",
    "currency": "EUR",
    "family": "sft",
    "mtm": -127858
   },
   {
-   "tradeId": "BBG-60000100",
+   "tradeId": "CLY-3000286",
    "book": "BOOK-SFT-2",
    "currency": "USD",
    "family": "sft",
    "mtm": -147461
   },
   {
-   "tradeId": "BBG-60000103",
+   "tradeId": "CLY-3000289",
    "book": "BOOK-SFT-2",
    "currency": "EUR",
    "family": "sft",
    "mtm": 516127
   },
   {
-   "tradeId": "BBG-60000108",
+   "tradeId": "CLY-3000294",
    "book": "BOOK-SFT-2",
    "currency": "GBP",
    "family": "sft",
    "mtm": -362786
   },
   {
-   "tradeId": "BBG-60000109",
+   "tradeId": "CLY-3000295",
    "book": "BOOK-SFT-2",
    "currency": "CAD",
    "family": "sft",
    "mtm": -2184430
   },
   {
-   "tradeId": "BBG-60000110",
+   "tradeId": "CLY-3000296",
    "book": "BOOK-SFT-2",
    "currency": "CHF",
    "family": "sft",
    "mtm": -562899
   },
   {
-   "tradeId": "BBG-60000112",
+   "tradeId": "CLY-3000298",
    "book": "BOOK-SFT-2",
    "currency": "GBP",
    "family": "sft",
    "mtm": -511456
   },
   {
-   "tradeId": "BBG-60000114",
+   "tradeId": "CLY-3000300",
    "book": "BOOK-SFT-2",
    "currency": "EUR",
    "family": "sft",
    "mtm": -2200202
   },
   {
-   "tradeId": "BBG-60000082",
+   "tradeId": "CLY-3000268",
    "book": "BOOK-SFT-3",
    "currency": "EUR",
    "family": "sft",
    "mtm": 4140501
   },
   {
-   "tradeId": "BBG-60000083",
+   "tradeId": "CLY-3000269",
    "book": "BOOK-SFT-3",
    "currency": "EUR",
    "family": "sft",
    "mtm": 269743
   },
   {
-   "tradeId": "BBG-60000084",
+   "tradeId": "CLY-3000270",
    "book": "BOOK-SFT-3",
    "currency": "USD",
    "family": "sft",
    "mtm": -422916
   },
   {
-   "tradeId": "BBG-60000087",
+   "tradeId": "CLY-3000273",
    "book": "BOOK-SFT-3",
    "currency": "USD",
    "family": "sft",
    "mtm": -730273
   },
   {
-   "tradeId": "BBG-60000092",
+   "tradeId": "CLY-3000278",
    "book": "BOOK-SFT-3",
    "currency": "EUR",
    "family": "sft",
    "mtm": -4913363
   },
   {
-   "tradeId": "BBG-60000097",
+   "tradeId": "CLY-3000283",
    "book": "BOOK-SFT-3",
    "currency": "USD",
    "family": "sft",
    "mtm": 119432
   },
   {
-   "tradeId": "BBG-60000102",
+   "tradeId": "CLY-3000288",
    "book": "BOOK-SFT-3",
    "currency": "USD",
    "family": "sft",
    "mtm": -2924657
   },
   {
-   "tradeId": "BBG-60000106",
+   "tradeId": "CLY-3000292",
    "book": "BOOK-SFT-3",
    "currency": "CHF",
    "family": "sft",
    "mtm": 103775
   },
   {
-   "tradeId": "BBG-60000117",
+   "tradeId": "CLY-3000303",
    "book": "BOOK-SFT-3",
    "currency": "EUR",
    "family": "sft",
    "mtm": 1993603
   },
   {
-   "tradeId": "BBG-60000118",
+   "tradeId": "CLY-3000304",
    "book": "BOOK-SFT-3",
    "currency": "USD",
    "family": "sft",
    "mtm": 697723
   },
   {
-   "tradeId": "BBG-60000119",
+   "tradeId": "CLY-3000305",
    "book": "BOOK-SFT-3",
    "currency": "JPY",
    "family": "sft",

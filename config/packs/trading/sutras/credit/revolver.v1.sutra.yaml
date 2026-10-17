@@ -16,78 +16,169 @@
 rachana: 1
 sutra: revolver
 version: 1
-description: Committed facility drawn and repaid at will.
-match: { kind: trade, where: "$.productType == 'REVOLVER'", priority: 10 }
-title: { pill: Credit · Revolving credit facility, id: $.tradeId, with: "link($.counterparty.id, 'counterparty', $.counterparty.name)" }
+description: "Committed facility drawn and repaid at will."
+match: { kind: trade, where: "$.PRODUCT_TYPE == 'REVOLVER'", priority: 10 }
+title: { pill: "Credit · Revolving credit facility", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }
 strip:
-  - { label: Notional, bind: "$.currency + ' ' + fmt($.notional, 'amount0')" }
-  - { label: Direction, bind: $.direction }
-  - { label: Trade date, bind: $.tradeDate, fmt: date }
-  - { label: Maturity, bind: $.maturityDate, fmt: date }
-  - { label: MTM (USD), bind: $.mtm, fmt: signed0, tone: sign, emphasis: true }
-  - { label: CS01 (USD), bind: $.risk.cs01, fmt: signed0, tone: sign }
-  - { label: Status, bind: $.status, tone: status }
-  - { label: Book, bind: "link($.book, 'book')" }
+  - { label: Source, bind: $.SOURCE_SYSTEM }
+  - { label: Side, bind: "$.BUY_SELL_CODE == 'B' ? 'Buy' : ($.BUY_SELL_CODE == 'S' ? 'Sell' : nonblank($.BUY_SELL_CODE, '–'))" }
+  - { label: Notional, bind: "$.CURRENCY + ' ' + fmt(first($.LEGS).NOTIONAL, 'amount0')", emphasis: true }
+  - { label: Quantity, bind: "fmt($.QUANTITY, 'amount0') + (nonblank(first($.LEGS).PRICE_UNIT) ? ' ' + first($.LEGS).PRICE_UNIT : '')" }
+  - { label: Trade date, bind: $.TRADE_DATE, fmt: date }
+  - { label: Maturity, bind: $.MATURITY_DATE, fmt: date }
+  - { label: Status, bind: "nonblank($.TRADE_STATUS, '–') + (nonblank($.TRADE_VERSION) ? ' v' + $.TRADE_VERSION : '')", tone: status }
+  - { label: Portfolio, bind: "link($.PORTFOLIO, 'book')" }
 panels:
-  - id: terms
+  - id: ticket
     kind: kv
-    title: Terms
-    code: TRM
+    title: Deal ticket
+    code: DES
     key: F2
     columns:
-      - { label: Commitment, bind: $.terms.commitment, fmt: amount0 }
-      - { label: Drawn, bind: $.terms.drawn, fmt: pct0 }
-      - { label: Commitment fee, bind: $.terms.commitmentFee, fmt: bp1 }
-      - { label: Margin, bind: $.terms.margin, fmt: bp1 }
-      - { label: Effective, bind: $.effectiveDate, fmt: date }
-      - { label: Counterparty, bind: $.counterparty.name }
-  - id: explain
-    kind: waterfall
-    title: "P&L explain (USD, opening to closing MTM)"
-    code: PNLX
-    key: F5
-    rows: $.pnlExplain
-    label: step
-    value: pnl
-    sum: Closing MTM
-    fmt: signed0
-  - id: lifecycle
-    kind: timeline
-    title: Lifecycle
-    code: LIFE
-    key: F6
-    rows: $.lifecycle.timeline
-    detail: description
-  - { id: built, kind: provenance, title: How this view was built }
-  - id: marketData
-    kind: line
-    title: "Interest rate curve: Zero rates (%)"
-    code: CRV
+      - { label: Trade id, bind: $.TRADE_ID }
+      - { label: Transaction, bind: "nonblank($.TRANSACTION_ID, '–')" }
+      - { label: Version, bind: "nonblank($.TRADE_VERSION, '–')" }
+      - { label: Action, bind: "nonblank($.TRADE_ACTION, '–')" }
+      - { label: Package, bind: "nonblank($.PACKAGE_ID, '–')" }
+      - { label: Source system, bind: $.SOURCE_SYSTEM }
+      - { label: Updated, bind: "nonblank($.SOURCE_UPDATE_TIME, '–')" }
+      - { label: Product, bind: $.PRODUCT_TYPE }
+      - { label: Sub type, bind: "nonblank($.PRODUCT_SUB_TYPE, '–')" }
+      - { label: Group, bind: "nonblank($.PRODUCT_GROUP, '–') + \" / \" + nonblank($.PRODUCT_SUB_GROUP, '–')" }
+      - { label: Option, bind: "nonblank($.OPTION_TYPE, '–')" }
+      - { label: Strike, bind: $.STRIKE_PRICE, fmt: pct4 }
+      - { label: Price, bind: $.PRICE, fmt: pct4 }
+      - { label: Quantity, bind: $.QUANTITY, fmt: amount2 }
+      - { label: Counterparty, bind: "link($.COUNTERPARTY, 'counterparty')" }
+      - { label: UEN, bind: "nonblank($.COUNTERPARTY_UEN, '–')" }
+      - { label: Country of risk, bind: "nonblank($.COUNTERPARTY_COUNTRY_OF_RISK, '–')" }
+      - { label: Original counterparty, bind: "nonblank($.ORIGINAL_COUNTERPARTY) ? link($.ORIGINAL_COUNTERPARTY, 'counterparty') : '–'" }
+      - { label: Internal / external, bind: "nonblank($.INTERNAL_EXTERNAL_CODE, '–')" }
+      - { label: Legal entity, bind: "nonblank($.LEGAL_ENTITY) ? link($.LEGAL_ENTITY, 'legal-entity') : '–'" }
+      - { label: Transit, bind: "nonblank($.TRANSIT, '–')" }
+      - { label: Portfolio, bind: "link($.PORTFOLIO, 'book')" }
+      - { label: Trader, bind: "link($.TRADER_ID, 'trader', nonblank($.TRADER_FIRST_NAME + ' ' + $.TRADER_LAST_NAME, $.TRADER_ID))" }
+      - { label: Trade date, bind: $.TRADE_DATE, fmt: date }
+      - { label: Input date, bind: "nonblank($.INPUT_DATE, '–')" }
+      - { label: Start, bind: $.START_DATE, fmt: date }
+      - { label: Maturity, bind: $.MATURITY_DATE, fmt: date }
+      - { label: Settlement, bind: "nonblank($.SETTLEMENT_DATE, '–')" }
+      - { label: Currency, bind: $.CURRENCY }
+      - { label: DVP, bind: "nonblank($.DELIVERY_VERSUS_PAYMENT, '–')" }
+      - { label: Book (TT), bind: "nonblank($.TT_BOOK, '–')" }
+  - id: legs
+    kind: tabs
+    title: Legs
+    code: LEGS
+    key: F3
+    each: $.LEGS
+    layout: columns
+    tabTitle: "'Leg ' + @.LEG_ID + ' · ' + nonblank(@.LEG_ECONOMIC_TYPE + ' ' + @.LEG_TYPE, @.LEG_TYPE, '–') + (nonblank(@.INDEX.NAME) ? ' · ' + @.INDEX.NAME : '')"
+    panels:
+      - id: leg-terms
+        kind: kv
+        title: Terms
+        columns:
+          - { label: Type, bind: "nonblank(@.LEG_TYPE, '–')" }
+          - { label: Pay / receive, bind: "nonblank(@.LEG_ECONOMIC_TYPE, '–')" }
+          - { label: Index, bind: "nonblank(@.INDEX.NAME, '–')" }
+          - { label: Index group, bind: "nonblank(@.INDEX.GROUP, '–')" }
+          - { label: Notional, bind: "@.CURRENCY + ' ' + fmt(@.NOTIONAL, 'amount0')" }
+          - { label: Price unit, bind: "nonblank(@.PRICE_UNIT, '–')" }
+          - { label: Spread, bind: "@.FLOAT_SPREAD", fmt: pct4 }
+          - { label: Reset, bind: "nonblank(@.RESET_CONVENTION, '–')" }
+          - { label: Fixing shift, bind: "nonblank(@.RESET_FIXING_SHIFT, '–')" }
+          - { label: Settlement, bind: "nonblank(@.SETTLEMENT_TYPE, '–')" }
+          - { label: Discount index, bind: "nonblank(@.DISCOUNT_INDEX, '–')" }
+          - { label: Daily volume, bind: "@.DAILY_VOLUME", fmt: amount0 }
+          - { label: Flows, bind: "size(@.CASH_FLOWS)" }
+      - id: leg-notional
+        kind: line
+        title: Notional profile
+        rows: "@.CASH_FLOWS"
+        x: START_DATE
+        y: NOTIONAL
+        step: true
+        fmt: amount0
+      - id: leg-fixings
+        kind: line
+        title: Fixings
+        rows: "flatten(@.CASH_FLOWS[*].RESETS)[?nonblank(@.RATE)]"
+        x: START_DATE
+        y: RATE
+        fmt: pct4
+      - id: leg-flows
+        kind: table
+        title: Cash flows and resets
+        rows: "@.CASH_FLOWS"
+        children: "@.RESETS"
+        expand: 1
+        columns:
+          - { label: Flow / reset, bind: "nonblank(@.FLOW_ID, @.RESET_ID, '·')" }
+          - { label: Start, bind: "@.START_DATE", fmt: date }
+          - { label: End, bind: "@.END_DATE", fmt: date }
+          - { label: Pay / reset date, bind: "nonblank(@.PAYMENT_DATE, @.RESET_DATE, '–')" }
+          - { label: Status, bind: "nonblank(@.PAYMENT_DATE) ? (@.PAYMENT_DATE < today() ? 'Paid' : (@.START_DATE <= today() ? 'Pricing' : 'Future')) : (nonblank(@.RATE) ? 'Fixed' : 'Open')", tone: status }
+          - { label: Type, bind: "nonblank(@.FLOW_TYPE, '–')" }
+          - { label: Notional, bind: "@.NOTIONAL", fmt: amount0, total: true }
+          - { label: Rate / price, bind: "@.RATE", fmt: pct4 }
+          - { label: Spread, bind: "@.FLOAT_SPREAD", fmt: pct4 }
+          - { label: Strike, bind: "@.STRIKE_PRICE", fmt: pct4 }
+  - id: flows
+    kind: table
+    title: Cash-flow schedule, every leg
+    code: FLOWS
     key: F4
-    area: right
-    source: "link($.discountCurve, 'ir-curve')"
-    rows: points
-    x: tenor
-    y: zeroRate
-    fmt: price2
-  - id: sensitivities
+    rows: "flatten($.LEGS[*].CASH_FLOWS)"
+    columns:
+      - { label: Flow, bind: "@.FLOW_ID" }
+      - { label: Start, bind: "@.START_DATE", fmt: date }
+      - { label: End, bind: "@.END_DATE", fmt: date }
+      - { label: Payment, bind: "@.PAYMENT_DATE", fmt: date }
+      - { label: Fixing, bind: "nonblank(@.RATE_DETERMINATION_DATE, '–')" }
+      - { label: Notional, bind: "@.NOTIONAL", fmt: amount0, total: true }
+      - { label: Rate / price, bind: "@.RATE", fmt: pct4 }
+      - { label: Resets, bind: "size(@.RESETS)" }
+  - id: events
+    kind: timeline
+    title: Events by leg
+    code: EVT
+    key: F5
+    rows: "$.EVENTS[?nonblank(@.EVENT_DATE)]"
+    date: EVENT_DATE
+    label: "@.EVENT_TYPE + (nonblank(@.LEG_ID) ? ' · leg ' + @.LEG_ID : ' · deal')"
+    detail: "nonblank(@.PAYMENT_TYPE, '') + (nonblank(@.AMOUNT) ? ' ' + @.CURRENCY + ' ' + fmt(@.AMOUNT, 'signed2') : '')"
+  - id: event-list
+    kind: table
+    title: Events
+    code: EVTL
+    rows: $.EVENTS
+    empty: No events booked
+    columns:
+      - { label: Leg, bind: "nonblank(@.LEG_ID, 'deal')" }
+      - { label: Event, bind: "nonblank(@.EVENT_ID, '–')" }
+      - { label: Type, bind: "nonblank(@.EVENT_TYPE, '–')" }
+      - { label: Payment type, bind: "nonblank(@.PAYMENT_TYPE, '–')" }
+      - { label: Date, bind: "nonblank(@.EVENT_DATE, '–')" }
+      - { label: Amount, bind: "@.AMOUNT", fmt: signed2, tone: sign, total: true }
+      - { label: Currency, bind: "nonblank(@.CURRENCY, '–')" }
+  - id: ladder
     kind: hbar
-    title: CS01 by bucket (USD)
-    code: SENS
+    title: Netted payments by date (paid − / received +)
+    code: PAY
+    key: F6
     area: right
-    rows: $.sensitivities
-    label: bucket
-    value: cs01
+    rows: "group($.EVENTS[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)], 'EVENT_DATE', 'AMOUNT')"
     fmt: signed0
     tone: sign
-  - id: pnl
-    kind: line
-    title: Daily P&L, last 20 days (USD)
-    code: PNL
+  - id: by-month
+    kind: hbar
+    title: Payments by month
+    code: PAYM
     area: right
-    rows: $.pnlHistory
-    x: date
-    y: pnl
+    rows: "group($.EVENTS[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)], 'EVENT_DATE', 'AMOUNT', 'month')"
     fmt: signed0
+    tone: sign
+  - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.nettingSet, 'netting-set')", F8: impact, F9: raw }
+keys: { F7: "link($.COUNTERPARTY, 'counterparty-trades')", F8: impact, F9: raw }

@@ -36,3 +36,6 @@ formats:
     decimals: 1
     sign: always
     suffix: ' bp'
+  price4:
+    type: number
+    decimals: 4

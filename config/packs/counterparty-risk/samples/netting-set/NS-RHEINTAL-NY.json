@@ -84,7 +84,7 @@
    "mtm": -4346962
   },
   {
-   "tradeId": "END-1000044",
+   "tradeId": "MX-20000332",
    "product": "Commodity spread option",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -106,7 +106,7 @@
    "mtm": 2484165
   },
   {
-   "tradeId": "WSS-1500111",
+   "tradeId": "CLY-3000261",
    "product": "Call account",
    "assetClass": "Money market",
    "currency": "USD",
@@ -117,7 +117,7 @@
    "mtm": -2192641
   },
   {
-   "tradeId": "CLY-3000023",
+   "tradeId": "CLY-3000107",
    "product": "CDS index option",
    "assetClass": "Credit",
    "currency": "USD",
@@ -128,7 +128,7 @@
    "mtm": 1786443
   },
   {
-   "tradeId": "END-1000058",
+   "tradeId": "MX-20000346",
    "product": "Commodity index swap",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -139,7 +139,7 @@
    "mtm": 1412345
   },
   {
-   "tradeId": "WSS-1500092",
+   "tradeId": "CLY-3000242",
    "product": "Commercial paper",
    "assetClass": "Money market",
    "currency": "CHF",
@@ -161,7 +161,7 @@
    "mtm": -910777
   },
   {
-   "tradeId": "END-1000063",
+   "tradeId": "MX-20000351",
    "product": "Power swap",
    "assetClass": "Commodity",
    "currency": "USD",
@@ -194,7 +194,7 @@
    "mtm": 243660
   },
   {
-   "tradeId": "BBG-60000069",
+   "tradeId": "CLY-3000225",
    "product": "Asset-backed security",
    "assetClass": "Fixed income",
    "currency": "USD",
@@ -205,7 +205,7 @@
    "mtm": 191276
   },
   {
-   "tradeId": "CLY-3000060",
+   "tradeId": "CLY-3000144",
    "product": "Revolving credit facility",
    "assetClass": "Credit",
    "currency": "CAD",
@@ -216,7 +216,7 @@
    "mtm": 139581
   },
   {
-   "tradeId": "END-1000034",
+   "tradeId": "MX-20000322",
    "product": "Average price option (APO)",
    "assetClass": "Commodity",
    "currency": "USD",

@@ -7,7 +7,7 @@
  "dv01": 3248,
  "topTrades": [
   {
-   "tradeId": "BBG-60000086",
+   "tradeId": "CLY-3000272",
    "product": "Reverse repo",
    "assetClass": "Securities financing",
    "currency": "EUR",
@@ -18,7 +18,7 @@
    "mtm": 3324957
   },
   {
-   "tradeId": "BBG-60000089",
+   "tradeId": "CLY-3000275",
    "product": "Reverse repo",
    "assetClass": "Securities financing",
    "currency": "USD",
@@ -29,7 +29,7 @@
    "mtm": 2428077
   },
   {
-   "tradeId": "BBG-60000107",
+   "tradeId": "CLY-3000293",
    "product": "Securities lending",
    "assetClass": "Securities financing",
    "currency": "USD",
@@ -40,7 +40,7 @@
    "mtm": 2398191
   },
   {
-   "tradeId": "BBG-60000111",
+   "tradeId": "CLY-3000297",
    "product": "Securities borrowing",
    "assetClass": "Securities financing",
    "currency": "GBP",
@@ -51,7 +51,7 @@
    "mtm": -1901921
   },
   {
-   "tradeId": "BBG-60000090",
+   "tradeId": "CLY-3000276",
    "product": "Reverse repo",
    "assetClass": "Securities financing",
    "currency": "USD",
@@ -62,7 +62,7 @@
    "mtm": 1817034
   },
   {
-   "tradeId": "BBG-60000093",
+   "tradeId": "CLY-3000279",
    "product": "Tri-party repo",
    "assetClass": "Securities financing",
    "currency": "EUR",
@@ -73,7 +73,7 @@
    "mtm": 1780029
   },
   {
-   "tradeId": "BBG-60000120",
+   "tradeId": "CLY-3000306",
    "product": "Margin loan",
    "assetClass": "Securities financing",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": 1594435
   },
   {
-   "tradeId": "BBG-60000104",
+   "tradeId": "CLY-3000290",
    "product": "Securities lending",
    "assetClass": "Securities financing",
    "currency": "CHF",
@@ -95,7 +95,7 @@
    "mtm": -1421662
   },
   {
-   "tradeId": "BBG-60000113",
+   "tradeId": "CLY-3000299",
    "product": "Securities borrowing",
    "assetClass": "Securities financing",
    "currency": "EUR",
@@ -106,7 +106,7 @@
    "mtm": -1189358
   },
   {
-   "tradeId": "BBG-60000116",
+   "tradeId": "CLY-3000302",
    "product": "Margin loan",
    "assetClass": "Securities financing",
    "currency": "JPY",

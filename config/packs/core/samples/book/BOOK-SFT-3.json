@@ -7,7 +7,7 @@
  "dv01": -4311,
  "topTrades": [
   {
-   "tradeId": "BBG-60000092",
+   "tradeId": "CLY-3000278",
    "product": "Tri-party repo",
    "assetClass": "Securities financing",
    "currency": "EUR",
@@ -18,7 +18,7 @@
    "mtm": -4913363
   },
   {
-   "tradeId": "BBG-60000082",
+   "tradeId": "CLY-3000268",
    "product": "Repurchase agreement",
    "assetClass": "Securities financing",
    "currency": "EUR",
@@ -29,7 +29,7 @@
    "mtm": 4140501
   },
   {
-   "tradeId": "BBG-60000102",
+   "tradeId": "CLY-3000288",
    "product": "Buy / sell-back",
    "assetClass": "Securities financing",
    "currency": "USD",
@@ -40,7 +40,7 @@
    "mtm": -2924657
   },
   {
-   "tradeId": "BBG-60000117",
+   "tradeId": "CLY-3000303",
    "product": "Margin loan",
    "assetClass": "Securities financing",
    "currency": "EUR",
@@ -51,7 +51,7 @@
    "mtm": 1993603
   },
   {
-   "tradeId": "BBG-60000119",
+   "tradeId": "CLY-3000305",
    "product": "Margin loan",
    "assetClass": "Securities financing",
    "currency": "JPY",
@@ -62,7 +62,7 @@
    "mtm": 1033179
   },
   {
-   "tradeId": "BBG-60000087",
+   "tradeId": "CLY-3000273",
    "product": "Reverse repo",
    "assetClass": "Securities financing",
    "currency": "USD",
@@ -73,7 +73,7 @@
    "mtm": -730273
   },
   {
-   "tradeId": "BBG-60000118",
+   "tradeId": "CLY-3000304",
    "product": "Margin loan",
    "assetClass": "Securities financing",
    "currency": "USD",
@@ -84,7 +84,7 @@
    "mtm": 697723
   },
   {
-   "tradeId": "BBG-60000084",
+   "tradeId": "CLY-3000270",
    "product": "Repurchase agreement",
    "assetClass": "Securities financing",
    "currency": "USD",
@@ -95,7 +95,7 @@
    "mtm": -422916
   },
   {
-   "tradeId": "BBG-60000083",
+   "tradeId": "CLY-3000269",
    "product": "Repurchase agreement",
    "assetClass": "Securities financing",
    "currency": "EUR",
@@ -106,7 +106,7 @@
    "mtm": 269743
   },
   {
-   "tradeId": "BBG-60000097",
+   "tradeId": "CLY-3000283",
    "product": "Buy / sell-back",
    "assetClass": "Securities financing",
    "currency": "USD",

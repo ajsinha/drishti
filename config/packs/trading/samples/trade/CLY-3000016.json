@@ -1,412 +1,141 @@
 {
- "tradeId": "CLY-3000016",
- "sourceSystem": "Calypso",
- "sourceTradeId": "3000016",
- "productType": "CDS_TRANCHE",
- "productName": "Index tranche",
- "assetClass": "Credit",
- "family": "cds",
- "status": "Live",
- "direction": "Sell protection",
- "tradeDate": "2025-02-20",
- "effectiveDate": "2025-02-24",
- "maturityDate": "2033-03-21",
- "currency": "USD",
- "notional": 137000000.0,
- "mtm": -2011432,
- "mtmCurrency": "USD",
- "pnl1d": 31629,
- "counterparty": {
-  "id": "CP-KESTREL",
-  "name": "Kestrel Global Macro Fund"
- },
- "nettingSet": "NS-KESTREL-NY",
- "book": "BOOK-CREDIT-1",
- "trader": "TRDR-CDUBOIS",
- "desk": "DESK-CREDIT",
- "legalEntity": "LE-NY",
- "issuer": "ISS-KAIZEN",
- "creditCurve": "CDS-KAIZEN",
- "discountCurve": "CRV-USD-OIS",
- "correlation": "CORR-EU-EQ",
- "terms": {
-  "index": "CDX.NA.IG S47",
-  "attachment": "0.07",
-  "detachment": "0.15",
-  "protection": "Sold"
- },
- "risk": {
-  "cs01": -97936,
-  "jtd": -82200000
- },
- "sensitivities": [
+ "SOURCE_SYSTEM": "CALYPSO",
+ "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z",
+ "TRADE_DATE": "2026-06-18",
+ "INPUT_DATE": "2026-06-18",
+ "TRADE_ID": "CLY-3000016",
+ "TRADE_STATUS": "VALIDATED",
+ "TRADE_ACTION": "NEW",
+ "TRADE_VERSION": "1",
+ "TRANSACTION_ID": "3000016001",
+ "PACKAGE_ID": "",
+ "QUANTITY": 26000000.0,
+ "PRICE": 47.0406,
+ "BUY_SELL_CODE": "B",
+ "PRODUCT_TYPE": "FX_NDF",
+ "PRODUCT_SUB_TYPE": "Non-deliverable forward",
+ "PRODUCT_GROUP": "FX",
+ "PRODUCT_SUB_GROUP": "linear",
+ "OPTION_TYPE": null,
+ "STRIKE_PRICE": null,
+ "COUNTERPARTY": "CP-ALDERSHOT",
+ "COUNTERPARTY_UEN": "UEN0100037",
+ "COUNTERPARTY_COUNTRY_OF_RISK": "GB",
+ "ORIGINAL_COUNTERPARTY": "",
+ "ORIGINAL_COUNTERPARTY_UEN": "",
+ "INTERNAL_EXTERNAL_CODE": "External",
+ "TRANSIT": "00214",
+ "LEGAL_ENTITY": "LE-LDN",
+ "PORTFOLIO": "BOOK-FX-2",
+ "TRADER_ID": "TRDR-LMOREAU",
+ "TRADER_FIRST_NAME": "L.",
+ "TRADER_LAST_NAME": "Moreau",
+ "START_DATE": "2026-06-22",
+ "MATURITY_DATE": "2027-04-12",
+ "REGISTRY_DELIVERY_DATE": "",
+ "CURRENCY": "USD",
+ "DELIVERY_VERSUS_PAYMENT": "NO",
+ "STRATEGY": null,
+ "INTERNAL_TRADING_STRATEGY": "",
+ "NY_CURVE_FLAG": "",
+ "VAULT_LOCATION_ALLOCATION": "",
+ "PRECIOUS_METAL_FLAG": "",
+ "TT_GROUP": "DESK-FX",
+ "TT_BOOK": "BOOK-FX-2",
+ "LEASE_PERPETUITY_FLAG": "",
+ "SETTLEMENT_DATE": "2026-06-22",
+ "LEGS": [
   {
-   "bucket": "6M",
-   "cs01": -4664,
-   "jtd": -3914286
-  },
-  {
-   "bucket": "1Y",
-   "cs01": -9327,
-   "jtd": -7828571
-  },
-  {
-   "bucket": "2Y",
-   "cs01": -13991,
-   "jtd": -11742857
-  },
-  {
-   "bucket": "3Y",
-   "cs01": -18654,
-   "jtd": -15657143
-  },
-  {
-   "bucket": "5Y",
-   "cs01": -23318,
-   "jtd": -19571429
-  },
-  {
-   "bucket": "7Y",
-   "cs01": -27982,
-   "jtd": -23485714
-  }
- ],
- "schedule": [
-  {
-   "payDate": "2026-02-24",
-   "leg": 1,
-   "type": "Premium",
-   "rate": 0.01,
-   "amount": -333971.37,
-   "pv": 0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2027-02-24",
-   "leg": 1,
-   "type": "Premium",
-   "rate": 0.01,
-   "amount": -389937.13,
-   "pv": -378239.02,
-   "status": "Scheduled"
-  },
-  {
-   "payDate": "2028-02-24",
-   "leg": 1,
-   "type": "Premium",
-   "rate": 0.01,
-   "amount": -291742.05,
-   "pv": -282989.79,
-   "status": "Scheduled"
-  },
-  {
-   "payDate": "2029-02-24",
-   "leg": 1,
-   "type": "Premium",
-   "rate": 0.01,
-   "amount": -361260.61,
-   "pv": -350422.79,
-   "status": "Scheduled"
-  },
-  {
-   "payDate": "2030-02-24",
-   "leg": 1,
-   "type": "Premium",
-   "rate": 0.01,
-   "amount": -299936.11,
-   "pv": -290938.03,
-   "status": "Scheduled"
-  },
-  {
-   "payDate": "2031-02-24",
-   "leg": 1,
-   "type": "Premium",
-   "rate": 0.01,
-   "amount": -395935.6,
-   "pv": -384057.53,
-   "status": "Scheduled"
-  },
-  {
-   "payDate": "2032-02-24",
-   "leg": 1,
-   "type": "Premium",
-   "rate": 0.01,
-   "amount": -329223.98,
-   "pv": -319347.26,
-   "status": "Scheduled"
-  },
-  {
-   "payDate": "2033-02-24",
-   "leg": 1,
-   "type": "Premium",
-   "rate": 0.01,
-   "amount": -346200.79,
-   "pv": -335814.77,
-   "status": "Scheduled"
-  },
-  {
-   "payDate": "2033-03-21",
-   "leg": 1,
-   "type": "Premium",
-   "rate": 0.01,
-   "amount": -387077.12,
-   "pv": -375464.81,
-   "status": "Scheduled"
-  }
- ],
- "nextIndex": 1,
- "pnlHistory": [
-  {
-   "date": "2026-09-03",
-   "pnl": 2824
-  },
-  {
-   "date": "2026-09-04",
-   "pnl": 8322
-  },
-  {
-   "date": "2026-09-07",
-   "pnl": 23497
-  },
-  {
-   "date": "2026-09-08",
-   "pnl": 146363
-  },
-  {
-   "date": "2026-09-09",
-   "pnl": 52083
-  },
-  {
-   "date": "2026-09-10",
-   "pnl": -70375
-  },
-  {
-   "date": "2026-09-11",
-   "pnl": -87134
-  },
-  {
-   "date": "2026-09-14",
-   "pnl": 24571
-  },
-  {
-   "date": "2026-09-15",
-   "pnl": -18886
-  },
-  {
-   "date": "2026-09-16",
-   "pnl": -140547
-  },
-  {
-   "date": "2026-09-17",
-   "pnl": 52636
-  },
-  {
-   "date": "2026-09-18",
-   "pnl": 89893
-  },
-  {
-   "date": "2026-09-21",
-   "pnl": -22073
-  },
-  {
-   "date": "2026-09-22",
-   "pnl": -72383
-  },
-  {
-   "date": "2026-09-23",
-   "pnl": 29231
-  },
-  {
-   "date": "2026-09-24",
-   "pnl": -126540
-  },
-  {
-   "date": "2026-09-25",
-   "pnl": -80915
-  },
-  {
-   "date": "2026-09-28",
-   "pnl": -64517
-  },
-  {
-   "date": "2026-09-29",
-   "pnl": -41241
-  },
-  {
-   "date": "2026-09-30",
-   "pnl": -29885
-  }
- ],
- "execution": {
-  "tradeDate": "2025-02-20",
-  "executionTimestamp": "2025-02-20T10:42:02.430Z",
-  "venue": "Voice",
-  "venueMic": "XOFF",
-  "executionType": "Voice",
-  "trader": "C. Dubois",
-  "salesperson": null,
-  "orderId": "ORD-9E13156511"
- },
- "lifecycle": {
-  "status": "Live",
-  "version": 1,
-  "events": [
-   {
-    "version": 1,
-    "event": "New",
-    "reason": "Trade captured",
-    "at": "2025-02-20T10:26:00Z",
-    "by": "mo.ops"
-   }
-  ],
-  "sourceSystem": "Summit",
-  "createdAt": "2025-02-20T10:26:00Z",
-  "lastModifiedAt": "2025-02-20T10:26:00Z",
-  "lastModifiedBy": "mo.ops",
-  "timeline": [
-   {
-    "date": "2025-02-20",
-    "event": "Booked",
-    "status": "Done",
-    "description": "Captured in Calypso by TRDR-CDUBOIS: sell protection Index tranche"
+   "LEG_ID": 1,
+   "LEG_TYPE": "FIXED",
+   "LEG_ECONOMIC_TYPE": "Pay",
+   "CURRENCY": "USD",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 26000000.0,
+   "DISCOUNT_INDEX": "CRV-USD-OIS",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "",
+   "RESET_HOLIDAY_SCHEDULE": null,
+   "RESET_CONVENTION": "",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "1",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "",
+    "GROUP": "",
+    "SUB_GROUP": ""
    },
-   {
-    "date": "2025-02-20",
-    "event": "Confirmed",
-    "status": "Matched",
-    "description": "Matched on MarkitWire (MA379897644)"
-   },
-   {
-    "date": "2026-02-24",
-    "event": "Cash settled",
-    "status": "Settled",
-    "description": "USD payment settled",
-    "amount": -333971.37
-   },
-   {
-    "date": "2027-02-24",
-    "event": "Next payment",
-    "status": "Pending",
-    "description": "Scheduled; settlement instructions confirmed"
-   },
-   {
-    "date": "2033-03-21",
-    "event": "Maturity",
-    "status": "Scheduled",
-    "description": "Final payment and close-out"
-   }
-  ]
- },
- "confirmation": {
-  "status": "Confirmed",
-  "method": "MarkitWire",
-  "platformId": "MA379897644",
-  "matched": "2025-02-20 15:17",
-  "affirmedBy": "Counterparty ops",
-  "breaks": []
- },
- "clearing": {
-  "status": "Bilateral",
-  "mandatory": false,
-  "reason": "Counterparty below clearing threshold"
- },
- "regulatory": {
-  "uti": "549300O1N13GO2II20969E131565113B57DCB341",
-  "upi": "QZDTBHN24KLI",
-  "reportingRegimes": [
-   "CFTC Part 43/45"
-  ],
-  "reportingParty": "Us",
-  "reportingStatus": "Accepted",
-  "clearingObligation": false,
-  "tradingObligation": false,
-  "mifidClassification": "Professional client",
-  "volckerExempt": false,
-  "saCcrAssetClass": "Credit"
- },
- "settlementInstructions": {
-  "method": "Gross",
-  "ourAgent": "JPMorgan Chase Bank, N.A.",
-  "ourAgentBic": "CHASUS33XXX",
-  "theirAgentBic": "KESTUS33XXX",
-  "ssiId": "SSI-USD-69F994",
-  "netting": "Payment netting by currency and value date"
- },
- "valuation": {
-  "asOf": "2026-09-30",
-  "currency": "USD",
-  "npv": -2011432,
-  "cleanPv": -2011432.0,
-  "accrued": 0.0,
-  "legPvs": [],
-  "model": "Discounted cashflows",
-  "curves": [
-   "CDS-KAIZEN",
-   "CRV-USD-OIS",
-   "CORR-EU-EQ"
-  ],
-  "status": "Official EOD",
-  "runId": "EOD-20260930-01"
- },
- "pnlExplain": [
-  {
-   "step": "Opening MTM",
-   "pnl": -2043061,
-   "total": true
-  },
-  {
-   "step": "Carry",
-   "pnl": -6521
-  },
-  {
-   "step": "Roll-down",
-   "pnl": 11671
-  },
-  {
-   "step": "Rates delta",
-   "pnl": 30477
-  },
-  {
-   "step": "FX delta",
-   "pnl": -6357
-  },
-  {
-   "step": "Vol (vega)",
-   "pnl": 995
-  },
-  {
-   "step": "Theta",
-   "pnl": 609
-  },
-  {
-   "step": "Unexplained",
-   "pnl": 755
-  }
- ],
- "_meta": {
-  "source": "murex-credit",
-  "generation": 1,
-  "live": false,
-  "walk": {
-   "mtm": 5393,
-   "derive": [
+   "CASH_FLOWS": [
     {
-     "set": "valuation.npv",
-     "expr": "$.mtm"
-    },
-    {
-     "set": "valuation.cleanPv",
-     "expr": "$.mtm - valuation.accrued"
-    },
-    {
-     "set": "pnl1d",
-     "expr": "$.mtm - pnlExplain.0.pnl"
-    },
-    {
-     "set": "pnlExplain.3.pnl",
-     "expr": "pnlExplain.3.pnl + ($.mtm - sum(pnlExplain.*.pnl))"
+     "FLOW_ID": 3000016001,
+     "FLOW_TYPE": "Principal",
+     "NOTIONAL": 26000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-06-22",
+     "END_DATE": "2027-04-12",
+     "PAYMENT_DATE": "2027-04-12",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
     }
    ]
   }
+ ],
+ "EVENTS": [
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 3000016001,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "BOOKED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-06-18",
+   "AMOUNT": "",
+   "CURRENCY": "USD",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 3000016002,
+   "EVENT_NUMBER": 2,
+   "EVENT_TYPE": "CONFIRMED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-06-18",
+   "AMOUNT": "",
+   "CURRENCY": "USD",
+   "SEQUENCE_NUMBER": 2,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 3000016003,
+   "EVENT_NUMBER": 3,
+   "EVENT_TYPE": "MATURITY",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2027-04-12",
+   "AMOUNT": "",
+   "CURRENCY": "USD",
+   "SEQUENCE_NUMBER": 3,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  }
+ ],
+ "_meta": {
+  "source": "calypso",
+  "generation": 1
  }
 }

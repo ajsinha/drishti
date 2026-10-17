@@ -62,7 +62,7 @@
  ],
  "trades": [
   {
-   "tradeId": "WSS-1500038",
+   "tradeId": "CLY-3000038",
    "product": "FX barrier option",
    "assetClass": "FX",
    "currency": "USD",
@@ -73,7 +73,7 @@
    "mtm": -3413754
   },
   {
-   "tradeId": "IMG-400127",
+   "tradeId": "MX-20000283",
    "product": "Basket option",
    "assetClass": "Equity",
    "currency": "GBP",
@@ -84,7 +84,7 @@
    "mtm": 1923365
   },
   {
-   "tradeId": "IMG-400068",
+   "tradeId": "MX-20000224",
    "product": "Autocallable note",
    "assetClass": "Equity",
    "currency": "USD",
@@ -95,7 +95,7 @@
    "mtm": -1263466
   },
   {
-   "tradeId": "IMG-400065",
+   "tradeId": "MX-20000221",
    "product": "Cliquet (ratchet)",
    "assetClass": "Equity",
    "currency": "EUR",
@@ -106,7 +106,7 @@
    "mtm": -951838
   },
   {
-   "tradeId": "IMG-400128",
+   "tradeId": "MX-20000284",
    "product": "Basket option",
    "assetClass": "Equity",
    "currency": "JPY",
@@ -117,7 +117,7 @@
    "mtm": 841815
   },
   {
-   "tradeId": "WSS-1500010",
+   "tradeId": "CLY-3000010",
    "product": "FX forward",
    "assetClass": "FX",
    "currency": "USD",
@@ -128,7 +128,7 @@
    "mtm": 808778
   },
   {
-   "tradeId": "WSS-1500060",
+   "tradeId": "CLY-3000060",
    "product": "FX average-rate option",
    "assetClass": "FX",
    "currency": "GBP",
@@ -139,7 +139,7 @@
    "mtm": 782361
   },
   {
-   "tradeId": "WSS-1500049",
+   "tradeId": "CLY-3000049",
    "product": "FX one-touch / no-touch",
    "assetClass": "FX",
    "currency": "GBP",
@@ -150,7 +150,7 @@
    "mtm": 621991
   },
   {
-   "tradeId": "IMG-400096",
+   "tradeId": "MX-20000252",
    "product": "Dividend swap",
    "assetClass": "Equity",
    "currency": "JPY",
@@ -161,7 +161,7 @@
    "mtm": -538557
   },
   {
-   "tradeId": "WSS-1500057",
+   "tradeId": "CLY-3000057",
    "product": "FX average-rate option",
    "assetClass": "FX",
    "currency": "JPY",
@@ -172,7 +172,7 @@
    "mtm": 351133
   },
   {
-   "tradeId": "MX-20000170",
+   "tradeId": "MX-20000392",
    "product": "Inflation cap / floor",
    "assetClass": "Inflation",
    "currency": "JPY",
@@ -183,7 +183,7 @@
    "mtm": 334643
   },
   {
-   "tradeId": "WSS-1500078",
+   "tradeId": "CLY-3000078",
    "product": "FX variance swap",
    "assetClass": "FX",
    "currency": "USD",
@@ -194,7 +194,7 @@
    "mtm": 77801
   },
   {
-   "tradeId": "IMG-400086",
+   "tradeId": "MX-20000242",
    "product": "Volatility swap",
    "assetClass": "Equity",
    "currency": "EUR",

@@ -1,306 +1,154 @@
 {
- "tradeId": "MX-20000112",
- "sourceSystem": "Murex",
- "sourceTradeId": "20000112",
- "productType": "SWAPTION_AMER",
- "productName": "American swaption",
- "assetClass": "Rates",
- "family": "option",
- "status": "Live",
- "direction": "Buy",
- "tradeDate": "2026-09-22",
- "effectiveDate": "2026-09-24",
- "maturityDate": "2027-02-26",
- "currency": "JPY",
- "notional": 199000000.0,
- "mtm": 1831652,
- "mtmCurrency": "USD",
- "pnl1d": -60956,
- "counterparty": {
-  "id": "CP-ALDERSHOT",
-  "name": "Aldershot Pension Trust"
- },
- "nettingSet": "NS-ALDERSHOT-NY",
- "book": "BOOK-RATES-3",
- "trader": "TRDR-ASHAH",
- "desk": "DESK-RATES",
- "legalEntity": "LE-NY",
- "discountCurve": "CRV-JPY-OIS",
- "forwardCurve": "CRV-JPY-PROJ",
- "swaptionVolCube": "IRV-JPY",
- "terms": {
-  "payerReceiver": "Receiver",
-  "strike": 0.024904,
-  "expiryDate": "2027-04-29"
- },
- "risk": {
-  "dv01": 6501,
-  "vega": 252497
- },
- "sensitivities": [
+ "SOURCE_SYSTEM": "MUREX",
+ "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z",
+ "TRADE_DATE": "2026-09-22",
+ "INPUT_DATE": "2026-09-22",
+ "TRADE_ID": "MX-20000112",
+ "TRADE_STATUS": "AMENDED",
+ "TRADE_ACTION": "AMEND",
+ "TRADE_VERSION": "2",
+ "TRANSACTION_ID": "20000112002",
+ "PACKAGE_ID": "",
+ "QUANTITY": 199000000.0,
+ "PRICE": null,
+ "BUY_SELL_CODE": "B",
+ "PRODUCT_TYPE": "SWAPTION_AMER",
+ "PRODUCT_SUB_TYPE": "American swaption",
+ "PRODUCT_GROUP": "Rates",
+ "PRODUCT_SUB_GROUP": "option",
+ "OPTION_TYPE": "Receiver",
+ "STRIKE_PRICE": 0.024904,
+ "COUNTERPARTY": "CP-ALDERSHOT",
+ "COUNTERPARTY_UEN": "UEN0100037",
+ "COUNTERPARTY_COUNTRY_OF_RISK": "GB",
+ "ORIGINAL_COUNTERPARTY": "",
+ "ORIGINAL_COUNTERPARTY_UEN": "",
+ "INTERNAL_EXTERNAL_CODE": "External",
+ "TRANSIT": "00107",
+ "LEGAL_ENTITY": "LE-NY",
+ "PORTFOLIO": "BOOK-RATES-3",
+ "TRADER_ID": "TRDR-ASHAH",
+ "TRADER_FIRST_NAME": "A.",
+ "TRADER_LAST_NAME": "Shah",
+ "START_DATE": "2026-09-24",
+ "MATURITY_DATE": "2027-04-29",
+ "REGISTRY_DELIVERY_DATE": "",
+ "CURRENCY": "JPY",
+ "DELIVERY_VERSUS_PAYMENT": "NO",
+ "STRATEGY": null,
+ "INTERNAL_TRADING_STRATEGY": "",
+ "NY_CURVE_FLAG": "",
+ "VAULT_LOCATION_ALLOCATION": "",
+ "PRECIOUS_METAL_FLAG": "",
+ "TT_GROUP": "DESK-RATES",
+ "TT_BOOK": "BOOK-RATES-3",
+ "LEASE_PERPETUITY_FLAG": "",
+ "SETTLEMENT_DATE": "2026-09-24",
+ "LEGS": [
   {
-   "bucket": "3M",
-   "dv01": 2167,
-   "vega": 84166
-  },
-  {
-   "bucket": "6M",
-   "dv01": 4334,
-   "vega": 168331
-  }
- ],
- "pnlHistory": [
-  {
-   "date": "2026-09-03",
-   "pnl": 4313
-  },
-  {
-   "date": "2026-09-04",
-   "pnl": 104463
-  },
-  {
-   "date": "2026-09-07",
-   "pnl": -82885
-  },
-  {
-   "date": "2026-09-08",
-   "pnl": -11140
-  },
-  {
-   "date": "2026-09-09",
-   "pnl": 53935
-  },
-  {
-   "date": "2026-09-10",
-   "pnl": 133240
-  },
-  {
-   "date": "2026-09-11",
-   "pnl": -8612
-  },
-  {
-   "date": "2026-09-14",
-   "pnl": -16603
-  },
-  {
-   "date": "2026-09-15",
-   "pnl": -24434
-  },
-  {
-   "date": "2026-09-16",
-   "pnl": -79923
-  },
-  {
-   "date": "2026-09-17",
-   "pnl": -700
-  },
-  {
-   "date": "2026-09-18",
-   "pnl": 31177
-  },
-  {
-   "date": "2026-09-21",
-   "pnl": -29754
-  },
-  {
-   "date": "2026-09-22",
-   "pnl": 21818
-  },
-  {
-   "date": "2026-09-23",
-   "pnl": 11970
-  },
-  {
-   "date": "2026-09-24",
-   "pnl": -1894
-  },
-  {
-   "date": "2026-09-25",
-   "pnl": 41328
-  },
-  {
-   "date": "2026-09-28",
-   "pnl": 108320
-  },
-  {
-   "date": "2026-09-29",
-   "pnl": -12929
-  },
-  {
-   "date": "2026-09-30",
-   "pnl": -6491
-  }
- ],
- "execution": {
-  "tradeDate": "2026-09-22",
-  "executionTimestamp": "2026-09-22T12:44:41.616Z",
-  "venue": "Tradeweb SEF",
-  "venueMic": "TWSF",
-  "executionType": "Electronic",
-  "trader": "A. Shah",
-  "salesperson": null,
-  "orderId": "ORD-9A495AE248"
- },
- "lifecycle": {
-  "status": "Live",
-  "version": 2,
-  "events": [
-   {
-    "version": 1,
-    "event": "New",
-    "reason": "Trade captured",
-    "at": "2026-09-22T10:38:00Z",
-    "by": "mo.amend"
+   "LEG_ID": 1,
+   "LEG_TYPE": "OPTION",
+   "LEG_ECONOMIC_TYPE": "Pay",
+   "CURRENCY": "JPY",
+   "LEASE_CURRENCY": "",
+   "FLOAT_SPREAD": "",
+   "PRICE_UNIT": "",
+   "NOTIONAL": 199000000.0,
+   "DISCOUNT_INDEX": "CRV-JPY-OIS",
+   "SPOT_CONVERSION_FACTOR": "",
+   "PHYSICAL_LOCATION_NAME": "",
+   "INDEX_LOCATION_NAME": "",
+   "RESET_FIXING_SHIFT": "",
+   "RESET_HOLIDAY_SCHEDULE": null,
+   "RESET_CONVENTION": "",
+   "EMISSIONS_VINTAGE_MIN": "",
+   "EMISSIONS_VINTAGE_MAX": "",
+   "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+   "SETTLEMENT_TYPE": "Cash Settlement",
+   "NY_CURVE_FLAG": "",
+   "NUM_RRDC_REC": "",
+   "NUM_PROFILE_REC": "1",
+   "DAILY_VOLUME": "",
+   "INDEX": {
+    "NAME": "",
+    "GROUP": "",
+    "SUB_GROUP": ""
    },
-   {
-    "version": 2,
-    "event": "Amendment",
-    "reason": "Notional corrected",
-    "at": "2026-09-26T10:38:00Z",
-    "by": "stp.gateway"
-   }
-  ],
-  "sourceSystem": "Summit",
-  "createdAt": "2026-09-22T10:38:00Z",
-  "lastModifiedAt": "2026-09-26T10:38:00Z",
-  "lastModifiedBy": "stp.gateway",
-  "timeline": [
-   {
-    "date": "2026-09-22",
-    "event": "Booked",
-    "status": "Done",
-    "description": "Captured in Murex by TRDR-ASHAH: buy American swaption"
-   },
-   {
-    "date": "2026-09-22",
-    "event": "Confirmed",
-    "status": "Matched",
-    "description": "Matched on MarkitWire (MA323745370)"
-   },
-   {
-    "date": "2026-09-26",
-    "event": "Amended",
-    "status": "Done",
-    "description": "Notional corrected (version 2, by stp.gateway)"
-   },
-   {
-    "date": "2027-02-26",
-    "event": "Maturity",
-    "status": "Scheduled",
-    "description": "Final payment and close-out"
-   }
-  ]
- },
- "confirmation": {
-  "status": "Confirmed",
-  "method": "MarkitWire",
-  "platformId": "MA323745370",
-  "matched": "2026-09-22 15:33",
-  "affirmedBy": "Counterparty ops",
-  "breaks": []
- },
- "clearing": {
-  "status": "Bilateral",
-  "mandatory": false,
-  "reason": "Counterparty below clearing threshold"
- },
- "regulatory": {
-  "uti": "549300O1N13GO2II20969A495AE248BFCADB016F",
-  "upi": "QZL040OWCYA5",
-  "reportingRegimes": [
-   "CFTC Part 43/45"
-  ],
-  "reportingParty": "Us",
-  "reportingStatus": "Accepted",
-  "clearingObligation": false,
-  "tradingObligation": false,
-  "mifidClassification": "Professional client",
-  "volckerExempt": false,
-  "saCcrAssetClass": "Interest rate"
- },
- "settlementInstructions": {
-  "method": "CLS",
-  "ourAgent": "MUFG Bank, Ltd.",
-  "ourAgentBic": "BOTKJPJTXXX",
-  "theirAgentBic": "ALDEGB33XXX",
-  "ssiId": "SSI-JPY-D06EAF",
-  "netting": "Payment netting by currency and value date"
- },
- "valuation": {
-  "asOf": "2026-09-30",
-  "currency": "USD",
-  "npv": 1831652,
-  "cleanPv": 1831652.0,
-  "accrued": 0.0,
-  "legPvs": [],
-  "model": "Black / Bachelier",
-  "curves": [
-   "CRV-JPY-OIS",
-   "CRV-JPY-PROJ",
-   "IRV-JPY"
-  ],
-  "status": "Official EOD",
-  "runId": "EOD-20260930-01"
- },
- "pnlExplain": [
-  {
-   "step": "Opening MTM",
-   "pnl": 1892608,
-   "total": true
-  },
-  {
-   "step": "Carry",
-   "pnl": 739
-  },
-  {
-   "step": "Roll-down",
-   "pnl": 19826
-  },
-  {
-   "step": "Rates delta",
-   "pnl": -70759
-  },
-  {
-   "step": "FX delta",
-   "pnl": 4786
-  },
-  {
-   "step": "Vol (vega)",
-   "pnl": -6956
-  },
-  {
-   "step": "Theta",
-   "pnl": -7215
-  },
-  {
-   "step": "Unexplained",
-   "pnl": -1377
-  }
- ],
- "_meta": {
-  "source": "murex-rates",
-  "generation": 1,
-  "live": true,
-  "walk": {
-   "mtm": 5653,
-   "derive": [
+   "CASH_FLOWS": [
     {
-     "set": "valuation.npv",
-     "expr": "$.mtm"
-    },
-    {
-     "set": "valuation.cleanPv",
-     "expr": "$.mtm - valuation.accrued"
-    },
-    {
-     "set": "pnl1d",
-     "expr": "$.mtm - pnlExplain.0.pnl"
-    },
-    {
-     "set": "pnlExplain.3.pnl",
-     "expr": "pnlExplain.3.pnl + ($.mtm - sum(pnlExplain.*.pnl))"
+     "FLOW_ID": 20000112001,
+     "FLOW_TYPE": "Principal",
+     "NOTIONAL": 199000000.0,
+     "RATE": "",
+     "FLOAT_SPREAD": "",
+     "START_DATE": "2026-09-24",
+     "END_DATE": "2027-02-26",
+     "PAYMENT_DATE": "2027-02-26",
+     "RATE_DETERMINATION_DATE": "",
+     "FIRST_RESET_DATE": "",
+     "LAST_RESET_DATE": "",
+     "STRIKE_PRICE": 0.0,
+     "RESETS": []
     }
    ]
   }
+ ],
+ "EVENTS": [
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000112001,
+   "EVENT_NUMBER": 1,
+   "EVENT_TYPE": "BOOKED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-09-22",
+   "AMOUNT": "",
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 1,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000112002,
+   "EVENT_NUMBER": 2,
+   "EVENT_TYPE": "CONFIRMED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-09-22",
+   "AMOUNT": "",
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 2,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000112003,
+   "EVENT_NUMBER": 3,
+   "EVENT_TYPE": "AMENDED",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2026-09-26",
+   "AMOUNT": "",
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 3,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  },
+  {
+   "LEG_ID": "",
+   "EVENT_ID": 20000112004,
+   "EVENT_NUMBER": 4,
+   "EVENT_TYPE": "MATURITY",
+   "PAYMENT_TYPE": "",
+   "EVENT_DATE": "2027-02-26",
+   "AMOUNT": "",
+   "CURRENCY": "JPY",
+   "SEQUENCE_NUMBER": 4,
+   "VAULT_LOCATION_ALLOCATION": "",
+   "NY_CURVE_FLAG": ""
+  }
+ ],
+ "_meta": {
+  "source": "murex",
+  "generation": 1
  }
 }

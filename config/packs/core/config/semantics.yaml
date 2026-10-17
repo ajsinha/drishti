@@ -92,3 +92,4 @@ acronyms:
 labels:
   tradeId: Trade
   mtm: MTM (USD)
+  TRADE_ID: Trade

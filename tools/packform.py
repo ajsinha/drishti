@@ -34,7 +34,7 @@ TYPES = {
     "id": ["in"],
     "bool": ["is"],
 }
-KEYS = {"path", "label", "type", "operators", "default", "order", "group", "help", "required", "hidden", "values"}
+KEYS = {"path", "label", "type", "operators", "default", "order", "group", "help", "required", "hidden", "values", "depends"}
 PATH = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*|\[\d+\])*")
 ENUMS = {"status", "type", "kind", "sector", "country", "rating", "currency", "ccy", "direction", "side", "book", "desk", "stage", "severity", "phase",
          "category", "segment", "level", "purpose", "product", "decision", "tier", "region", "state", "class", "grade", "instrument", "tissue",

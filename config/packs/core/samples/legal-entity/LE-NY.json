@@ -78,25 +78,25 @@
   {
    "book": "BOOK-COMM-1",
    "desk": "Commodities",
-   "var": 7224074,
-   "pnl": -113161,
-   "mtm": 7191610,
+   "var": 7220978,
+   "pnl": -79231,
+   "mtm": 7760837,
    "trades": 28
   },
   {
    "book": "BOOK-COMM-2",
    "desk": "Commodities",
-   "var": 6653852,
-   "pnl": -200480,
-   "mtm": 23033724,
+   "var": 6653194,
+   "pnl": -133008,
+   "mtm": 20625722,
    "trades": 31
   },
   {
    "book": "BOOK-COMM-3",
    "desk": "Commodities",
-   "var": 4840686,
-   "pnl": 214178,
-   "mtm": -13270944,
+   "var": 4839888,
+   "pnl": 187271,
+   "mtm": -13776964,
    "trades": 31
   },
   {
