@@ -227,7 +227,7 @@ archive desk-quotes-1.2.0.tar.gz (4045 bytes, sha256 0240aef835b10edb...)
   ok    unpack          25 files, 13 KB; no path leaves the pack folder, no links
   ok    pack.yaml       desk-quotes 1.2.0
   ok    manifest        24 files listed; every checksum matches; nothing unlisted
-  ok    server version  needs >=2.0.0, this is 2.1.0
+  ok    server version  needs >=2.0.0, this is 2.2.0
   ok    sutra lint      2 Sutra file(s) passed
   ok    sutra test      2 Sutra file(s) passed
   ok    dependencies    extends no other pack
@@ -267,7 +267,7 @@ archive desk-quotes-1.2.0.tar.gz (4045 bytes, sha256 0240aef835b10edb...)
   ok    unpack          25 files, 13 KB; no path leaves the pack folder, no links
   ok    pack.yaml       desk-quotes 1.2.0
   ok    manifest        24 files listed; every checksum matches; nothing unlisted
-  ok    server version  needs >=2.0.0, this is 2.1.0
+  ok    server version  needs >=2.0.0, this is 2.2.0
   ok    sutra lint      2 Sutra file(s) passed
   ok    sutra test      2 Sutra file(s) passed
   ok    dependencies    extends no other pack

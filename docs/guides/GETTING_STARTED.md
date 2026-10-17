@@ -113,7 +113,7 @@ that the server program was built:
 ls drishti-server/target/*-exec.jar
 ```
 
-You should see `drishti-server/target/drishti-server-2.1.0-exec.jar`.
+You should see `drishti-server/target/drishti-server-2.2.0-exec.jar`.
 
 > **Note:** `./mvnw -q verify` builds **and** runs every test (several minutes more). Use it when you
 > change code; for a first try, `package -DskipTests` is enough.
@@ -180,7 +180,7 @@ Open a terminal in the `drishti` folder and run:
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 export DRISHTI_PACKS=market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics
 export DRISHTI_STUDIO_SAVE=true
-java -jar drishti-server/target/drishti-server-2.1.0-exec.jar
+java -jar drishti-server/target/drishti-server-2.2.0-exec.jar
 ```
 
 What the settings do:
@@ -211,7 +211,7 @@ curl -s localhost:18480/api/v1/packs | python3 -c 'import json,sys; print([p["na
 
 You should see the twelve names, starting with `banking-core`, `market-data`, `trading`.
 
-> **The smallest start.** `java -jar drishti-server/target/drishti-server-2.1.0-exec.jar` with no
+> **The smallest start.** `java -jar drishti-server/target/drishti-server-2.2.0-exec.jar` with no
 > settings loads only the `finance` pack: the four original mockups (`TRD IRS-48213`, `TRD FXS-20931`,
 > `TRD CFT-77120`, `NSET NS-NORTH-01`). Everything in this guide works the same way with those ids.
 > Do not mix `finance` with the banking packs: both define `TRD` and `CRV`.
@@ -264,7 +264,7 @@ Server terminal:
 
 ```bash
 export DRISHTI_SECURITY_ENABLED=true
-java -jar drishti-server/target/drishti-server-2.1.0-exec.jar
+java -jar drishti-server/target/drishti-server-2.2.0-exec.jar
 ```
 
 Console terminal:
@@ -359,7 +359,7 @@ mvn -v                                  # "Apache Maven 3.9.…" and "Java versi
 mvn -q package -DskipTests              # build (add -o to work offline once ~/.m2 is filled)
 mvn -q verify                           # build, every test and every rule
 mvn -q -pl drishti-server -am package -DskipTests    # one module and what it needs
-ls drishti-server/target/*-exec.jar     # the application: drishti-server/target/drishti-server-2.1.0-exec.jar
+ls drishti-server/target/*-exec.jar     # the application: drishti-server/target/drishti-server-2.2.0-exec.jar
 ```
 
 Run the server from the repository root (it finds `./config/packs` and `./data` relative to where you start it). It runs on
@@ -367,7 +367,7 @@ Java 21 (the production target) or any newer JDK. Java-25-only note: `-XX:+UseCo
 
 ```bash
 DRISHTI_PACKS=market-risk,counterparty-risk \
-  java -jar drishti-server/target/drishti-server-2.1.0-exec.jar
+  java -jar drishti-server/target/drishti-server-2.2.0-exec.jar
 ```
 
 Run the console in a Python virtual environment (Python 3.11 or newer). With uv, as in step 3; without it:
@@ -397,7 +397,7 @@ and the packs overlay `./data/packs/added.yaml` (`DRISHTI_PACKS_OVERLAY` moves i
 
 | You want | Do | Command |
 |---|---|---|
-| a site file read **in addition**, on top of the bundled defaults | `--spring.config.additional-location` | `java -jar drishti-server/target/drishti-server-2.1.0-exec.jar --spring.config.additional-location=file:/etc/drishti/site.yaml` |
+| a site file read **in addition**, on top of the bundled defaults | `--spring.config.additional-location` | `java -jar drishti-server/target/drishti-server-2.2.0-exec.jar --spring.config.additional-location=file:/etc/drishti/site.yaml` |
 | the same, from the environment | `SPRING_CONFIG_ADDITIONAL_LOCATION` | `SPRING_CONFIG_ADDITIONAL_LOCATION=file:/etc/drishti/site.yaml java -jar …` |
 | several files, later ones win | a comma list | `--spring.config.additional-location=file:/etc/drishti/site.yaml,file:/etc/drishti/secrets.yaml` |
 | a folder of files | end it with `/` | `--spring.config.additional-location=file:/etc/drishti/conf.d/` |
@@ -510,7 +510,7 @@ $env:JAVA_HOME = $env:DRISHTI_JAVA_HOME
 dir drishti-server\target\*-exec.jar
 ```
 
-You should see `drishti-server-2.1.0-exec.jar`. To also run the tests of the Delta engine and connector:
+You should see `drishti-server-2.2.0-exec.jar`. To also run the tests of the Delta engine and connector:
 `.\mvnw.cmd -q verify -pl drishti-deltalake,plugins/drishti-plugin-delta -am` (tests that need Docker skip themselves).
 
 **Or copy** a server built elsewhere (on Linux, or by CI): Java bytecode is the same on every system. Make a folder,
@@ -518,7 +518,7 @@ for example `C:\drishti`, holding:
 
 | Copy | From | Why |
 |---|---|---|
-| `drishti-server-2.1.0-exec.jar` | `drishti-server\target\` | the server (all its libraries are inside) |
+| `drishti-server-2.2.0-exec.jar` | `drishti-server\target\` | the server (all its libraries are inside) |
 | `config\packs\` | the repository root | the domain packs (Sutras, mnemonics, samples). Also `config\connectors\` (connector files) and `config\bi\` (BI datasets and reports) if you use them |
 | `drishti-console\` | the repository root | only if you will run the console on this machine |
 | `tools\windows\`, `tools\packgen\`, `tools\samplegen\` | the repository's `tools\` | the scripts, and the lake generator if you will build the demo lake here |
@@ -577,7 +577,7 @@ To run the jar by hand instead:
 
 ```powershell
 $env:DRISHTI_PACKS = 'market-risk'
-& "$env:DRISHTI_JAVA_HOME\bin\java.exe" -Xmx2g -jar drishti-server\target\drishti-server-2.1.0-exec.jar
+& "$env:DRISHTI_JAVA_HOME\bin\java.exe" -Xmx2g -jar drishti-server\target\drishti-server-2.2.0-exec.jar
 ```
 
 The native Delta engine is the default, so nothing else is needed.

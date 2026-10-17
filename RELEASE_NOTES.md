@@ -13,7 +13,44 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 2.1.0 — release notes
+# Drishti 2.2.0 — release notes
+
+*2026-10-17.* **The BI foundation rebuilt: datasets and data models rooted in packs, a Python-like expression language,
+read-only SQL, one query plan for everything.** (Wave A of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
+
+- **Datasets and data models.** Every pack kind is a dataset automatically; a dataset can narrow, filter, de-duplicate
+  explicitly, derive columns (expression or Python) and group, and always traces back to its pack. A **data model** is
+  datasets, relationships, measures, hierarchies, security and a versioned contract — a small database rooted in packs.
+  Reports, boards, alerts, subscriptions, exports, embeds, Analyse and AI all **reference** one model; many share one.
+- **The model query language** (`mq: 1`): the one way the UI, the API, AI and the CLI ask a model; every refusal comes
+  with its fix. Answers are identical whichever way you ask, per reader, masked.
+- **DEL, the expression language**, now reads like Python (`sum(trades.mtm, where=trades.status == 'Live')`,
+  `measure('MTM')`, `a if c else b`): 59 functions, a converter from the old syntax, and
+  [EXPRESSIONS.md](docs/guides/EXPRESSIONS.md) with 59 tested finance and risk recipes; the editor completes, checks and
+  fixes as you type.
+- **Drishti SQL**, read-only, over models (`MEASURE('MTM')`): SQL views as datasets, SQL tests, SQL cells in Analyse,
+  `POST /bi/sql` — compiled into the same secured plan.
+- **One logical plan** with security applied per dataset before any join, fan-out refusal, a currency guard, rollups that
+  respect row rules, and a result cache shared by readers with identical security.
+- **Designers:** the dataset wizard (eight steps), the model designer (suggested relationships from packs, field
+  properties, perspectives, hidden fields per role, row-rule and test editors, contract and semver, Used by and impact,
+  Preview as a role, server autosave with a merge view), reports from a model or straight from a dataset, Python starters,
+  and several datasets per report through a model.
+- **Security:** the safeguard (a dataset open to a restricted role needs a rule or an audited note), hidden fields that
+  answer "not available to your role", a warning when a hidden measure is still reachable, report-only readers limited to
+  what their report asks.
+- **Governance:** every publish carries a new version; breaking changes need a major; readers pinned `@1` keep the latest
+  1.x; the publish gate runs model and dataset tests; lineage and impact from report to pack kind.
+- **Also:** `external_lib/` (jars on the server's class path, Python modules in the console, `DRISHTI_EXTERNAL_LIB`); a
+  deployed pack's Sutra opens in the designer; tutorials 10–18 rewritten for models with UI, CLI and YAML in every step.
+
+**Upgrading from 2.1.0:** on first start the server converts stored BI items to the new expression syntax and stored
+datasets to datasets + models (audited; the text before is kept and restorable; anything it cannot convert is listed in
+Admin → BI settings and on the item's page — `drishti.py bi migrate --dry-run` shows what would change). The old dataset
+query API answers `410` with the model query to use. The server jar now starts through Spring Boot's properties launcher
+(`java -jar` is unchanged). The two live sample reports stay on their 2.1 datasets until wave B (live models).
+
+# Previous release: Drishti 2.1.0 — release notes
 
 *2026-10-12.* **The BI long tail closed, a multi-day type-ahead index, and safe install and uninstall in Admin.**
 
@@ -49,7 +86,7 @@ docs/admin/OPERATIONS.md §12.2. Webhook hosts must be allow-listed by an admin 
 looser policy on its own path (it compiles in the browser). Pending alert retries are kept in memory, so a restart drops
 them.
 
-# Previous release: Drishti 2.0.0 — release notes
+# Older release: Drishti 2.0.0 — release notes
 
 *2026-10-12.* **BI complete, maps, coherent live data, seventeen hands-on tutorials and one consistent look.**
 

@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+## 2.2.0 — Datasets and data models rooted in packs, a Python-like expression language, read-only SQL, one query plan (2026-10-17)
+
 - **Server: the model layer's loose ends from the wave A console lane and its QA (wave A).** The **AI authoring hooks work on models**: Describe a
   report, Suggest visuals, Explain in plain words and the helper (was `DRS-9034`) are grounded in the model's `describe` as the author reads it, a
   draft is pinned to it (`rachana: 2`, `model: name@major`), Ask takes a model, and the model designer has **Ask the AI helper** (relationships,
