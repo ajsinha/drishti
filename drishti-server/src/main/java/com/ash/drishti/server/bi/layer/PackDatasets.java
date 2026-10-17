@@ -222,7 +222,7 @@ public final class PackDatasets {
         List<String> keys = grain.get("keys") instanceof List<?> l ? l.stream().map(String::valueOf).toList() : List.of("id");
         String connector = p.routes().getOrDefault(kind, info.connector());
         if (unionMember(p, connector)) {
-            connector = null;                      // one source system of several (union: true): the table reads every one of them together
+            connector = "";                        // one source system of several (union: true): the table reads every one of them together
         }
         String forced = refine.get("time") == null ? null : String.valueOf(refine.get("time"));
         String mode = forced != null ? forced : liveDefault && pushes.test(kind) ? "live" : "snapshot";
