@@ -195,7 +195,17 @@ public class FormController {
     private FormField withValues(FormField f, String kind, Map<String, List<Object>> samples, AsOf asOf, Principal principal) {
         TreeSet<String> found = new TreeSet<>();
         about.forKind(kind).map(a -> a.glossary().get(f.path())).map(GlossaryEntry::values).ifPresent(v -> found.addAll(v.keySet()));
-        if (found.isEmpty()) {
+        if (found.isEmpty() && !entitlements.masked(principal, f.path())) {   // the whole column, every connector of a union
+            columnValues(kind, List.of(f.path()), asOf).ifPresent(c -> {
+                for (int i = 0; i < c.size(); i++) {
+                    Object v = c.value(f.path(), i);
+                    if (v != null && !String.valueOf(v).isBlank()) {
+                        found.add(String.valueOf(v));
+                    }
+                }
+            });
+        }
+        if (found.isEmpty()) {                                        // a source that is not columnar: the sampled rows
             samples.getOrDefault(f.path(), List.of()).stream().filter(v -> v != null && !String.valueOf(v).isBlank()).forEach(v -> found.add(String.valueOf(v)));
         }
         if (found.isEmpty()) {                                        // not one of the key columns: read it from the data
@@ -218,7 +228,18 @@ public class FormController {
      */
     private Map<String, List<String>> parents(FormField f, String kind, AsOf asOf, Principal principal) {
         Map<String, java.util.TreeSet<String>> by = new java.util.TreeMap<>();
-        try {
+        if (!entitlements.masked(principal, f.path()) && !entitlements.masked(principal, f.depends())) {
+            columnValues(kind, List.of(f.path(), f.depends()), asOf).ifPresent(c -> {
+                for (int i = 0; i < c.size(); i++) {
+                    Object child = c.value(f.path(), i);
+                    Object parent = c.value(f.depends(), i);
+                    if (child != null && parent != null && !String.valueOf(child).isBlank() && !String.valueOf(parent).isBlank()) {
+                        by.computeIfAbsent(String.valueOf(child), x -> new java.util.TreeSet<>()).add(String.valueOf(parent));
+                    }
+                }
+            });
+        }
+        try {                                                         // and the documents the sources list (a source that is not columnar)
             String code = mnemonics.codeFor(kind);
             StructuredSearch.Result r = search.run(SearchQuery.parse((code == null ? kind : code) + " where " + f.path() + " != '' and " + f.depends()
                     + " != '' limit " + enumScanRows), asOf, data -> entitlements.redact(principal, data));
@@ -230,11 +251,22 @@ public class FormController {
                 }
             }
         } catch (RuntimeException e) {
-            return Map.of();
+            if (by.isEmpty()) {
+                return Map.of();
+            }
         }
         Map<String, List<String>> out = new LinkedHashMap<>();
         by.forEach((k, v) -> out.put(k, List.copyOf(v)));
         return out;
+    }
+
+    /** Columns of the kind as the sources hold them (all the rows, every connector of a union); empty when a source is not columnar. */
+    private Optional<com.ash.drishti.api.ColumnSet> columnValues(String kind, List<String> paths, AsOf asOf) {
+        try {
+            return router.columns(kind, paths, asOf, java.time.Duration.ofSeconds(10));
+        } catch (RuntimeException e) {
+            return Optional.empty();
+        }
     }
 
     private FormSpec infer(String kind, Map<String, List<Object>> samples) {

@@ -236,10 +236,18 @@ def body_of(src: Path) -> str:
     return "\n".join(lines)
 
 
+class _Plain(yaml.SafeDumper):
+    """Writes a value shared by several connectors (the trade systems' one layout) in full each time: no YAML anchors or aliases,
+    which a reader may refuse or not resolve."""
+
+    def ignore_aliases(self, data):
+        return True
+
+
 def files() -> dict[Path, str]:
     out = {}
     for name in layout.PACKS:
-        body = yaml.safe_dump(manifest(name), sort_keys=False, allow_unicode=True, width=140)
+        body = yaml.dump(manifest(name), Dumper=_Plain, sort_keys=False, allow_unicode=True, width=140)
         out[PACKS / name / "pack.yaml"] = f"{HEADER}\n\n{GENERATED}\n# {layout.PACKS[name]['title']} pack for Drishti.\n{body}"
         out[PACKS / name / "config" / "formats.yaml"] = (f"{HEADER}\n\n{GENERATED}\n# Number formats the banking packs share.\n"
                                                          + yaml.safe_dump({"formats": FORMATS}, sort_keys=False))

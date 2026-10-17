@@ -253,6 +253,8 @@ final class DeltaTable {
             }
         });
         for (Row file : files) {
+            // a partition column (PRODUCT_TYPE=Cash/) is not in the Parquet file: its one value for the file is in the log
+            Map<String, String> partition = InternalScanFileUtils.getPartitionValues(file);
             raw(file, schema, Optional.empty(), batch -> {
                 int n = batch.getSize();
                 io.delta.kernel.data.ColumnVector idv = batch.getColumnVector(0);
@@ -262,17 +264,19 @@ final class DeltaTable {
                 for (int c = 0; c < paths.size(); c++) {
                     String p = paths.get(c);
                     io.delta.kernel.data.ColumnVector v = batch.getColumnVector(c + 1);
+                    String fixed = partition.get(pathToColumn.get(p));
                     if (numeric.get(p)) {
                         double[] chunk = new double[n];
+                        double whole = fixed == null ? Double.NaN : partitionNumber(fixed);
                         for (int r = 0; r < n; r++) {
-                            chunk[r] = v.isNullAt(r) ? Double.NaN : v.getDouble(r);
+                            chunk[r] = fixed != null ? whole : v.isNullAt(r) ? Double.NaN : v.getDouble(r);
                         }
                         nums.get(p).add(chunk);
                     } else {
                         Map<String, String> pool = interned.get(p);
                         List<String> out = texts.get(p);
                         for (int r = 0; r < n; r++) {
-                            String s = v.isNullAt(r) ? null : v.getString(r);
+                            String s = fixed != null ? fixed : v.isNullAt(r) ? null : v.getString(r);
                             out.add(s == null || pool.size() > 200_000 ? s : pool.computeIfAbsent(s, x -> x));
                         }
                     }
@@ -292,6 +296,14 @@ final class DeltaTable {
         Map<String, String[]> text = new LinkedHashMap<>();
         texts.forEach((p, list) -> text.put(p, list.toArray(new String[0])));
         return new com.ash.drishti.api.ColumnSet(ids.toArray(new String[0]), numbers, text, date == LocalDate.MIN ? null : date);
+    }
+
+    private static double partitionNumber(String text) {
+        try {
+            return Double.parseDouble(text);
+        } catch (NumberFormatException e) {
+            return Double.NaN;
+        }
     }
 
     /** Reads a file's Parquet columns as they are stored (no deletion vectors, no partition values). */

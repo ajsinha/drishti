@@ -124,6 +124,16 @@ class CommonSchemaTest(unittest.TestCase):
             self.assertEqual(set(subs), whens[product], product)
         self.assertEqual(len(matches), 130)                    # 125 products of the taxonomy and Endur's five, one Sutra each
 
+    def test_the_three_trade_connectors_each_carry_their_own_layout(self):
+        """A layout shared as a YAML anchor reached only the first connector (the others read no columns, so drop-downs and pivots
+        saw one system): the manifest spells it out for each."""
+        import yaml
+        text = (ROOT / "config" / "packs" / "trading" / "pack.yaml").read_text(encoding="utf-8")
+        self.assertNotRegex(text, r"[&*]id\d")
+        conns = yaml.safe_load(text)["connectors"]
+        for name in ("trade-endur", "trade-calypso", "trade-murex"):
+            self.assertIn("SOURCE_SYSTEM", conns[name]["settings"]["layout"]["trade"]["columns"], name)
+
 
 if __name__ == "__main__":
     unittest.main()
