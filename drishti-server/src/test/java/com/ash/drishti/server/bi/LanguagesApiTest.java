@@ -407,6 +407,8 @@ class LanguagesApiTest {
 
     @Test @Order(22)
     void aPythonColumnIsComputedOverTheReadersRowsAndTheLineageReachesThePackKind() throws Exception {
+        org.junit.jupiter.api.Assumptions.assumeTrue(Files.isExecutable(Path.of("..", "drishti-console", ".venv", "bin", "python").toAbsolutePath()),
+                "the console's Python environment (drishti-console/.venv, with pandas and pyarrow) is needed");   // as ProcessMeasureRunnerTest
         Map<String, Object> q = Map.of("mq", 1, "model", "lang-bucket-view@1", "select", Map.of("fields", List.of("trades.bucket"), "measures", List.of("Trades", "K")), "time",
                 Map.of("as-of", DAY));
         JsonNode rita = ok(call("POST", "/api/v1/bi/mq", reader("rita"), q));
