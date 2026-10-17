@@ -21,24 +21,24 @@ import pandas as pd
 
 doc = view.doc
 rows, nsets = [], []
-for m in doc["members"]:
-    cp = await drishti.get_async("counterparty", m["id"])
-    pd1 = (cp.get("kyc") or {}).get("pd1y", 0.0)
-    rows.append({"member": cp["counterpartyId"], "name": cp["name"], "rating": cp.get("rating"), "sector": cp.get("sector"),
-                 "country": cp.get("country"), "net MTM": cp.get("netMtm"), "peak PFE": cp.get("pfePeak"), "PD 1Y": pd1,
-                 "expected loss": pd1 * 0.6 * (cp.get("pfePeak") or 0)})
-    for ns in cp.get("nettingSets") or []:
-        nsets.append({"member": cp["counterpartyId"], "netting set": ns["id"], "agreement": ns.get("agreement"),
-                      "trades": ns.get("trades"), "net MTM": ns.get("netMtm")})
+for m in doc["MEMBERS"]:
+    cp = await drishti.get_async("counterparty", m["ID"])
+    pd1 = (cp.get("KYC") or {}).get("PD_1Y", 0.0)
+    rows.append({"member": cp["COUNTERPARTY_ID"], "NAME": cp["NAME"], "RATING": cp.get("RATING"), "SECTOR": cp.get("SECTOR"),
+                 "COUNTRY": cp.get("COUNTRY"), "net MTM": cp.get("NET_MTM"), "peak PFE": cp.get("PFE_PEAK"), "PD 1Y": pd1,
+                 "expected loss": pd1 * 0.6 * (cp.get("PFE_PEAK") or 0)})
+    for ns in cp.get("NETTING_SETS") or []:
+        nsets.append({"member": cp["COUNTERPARTY_ID"], "netting set": ns["ID"], "AGREEMENT": ns.get("AGREEMENT"),
+                      "TRADES": ns.get("TRADES"), "net MTM": ns.get("NET_MTM")})
 members = pd.DataFrame(rows)
 total = members["peak PFE"].sum()
 members["share of group PFE"] = members["peak PFE"] / total if total else 0
-show(members, title=f"{view.id}: {doc['name']}, {len(members)} members")
+show(members, title=f"{view.id}: {doc['NAME']}, {len(members)} members")
 weighted_pd = (members["PD 1Y"] * members["peak PFE"]).sum() / total if total else float("nan")
 show(pd.DataFrame({
-    "measure": ["group limit", "peak PFE (sum of members)", "utilisation (recomputed)", "utilisation (booked)", "net MTM",
+    "MEASURE": ["group limit", "peak PFE (sum of members)", "utilisation (recomputed)", "utilisation (booked)", "net MTM",
                 "exposure-weighted PD 1Y", "expected loss"],
-    "value": [doc.get("limit"), total, total / doc["limit"] if doc.get("limit") else None, doc.get("utilisation"),
+    "VALUE": [doc.get("LIMIT"), total, total / doc["LIMIT"] if doc.get("LIMIT") else None, doc.get("UTILISATION"),
               members["net MTM"].sum(), f"{weighted_pd:.3%}", members["expected loss"].sum()],
 }), title="The group against its limit")
 show(pd.DataFrame(nsets), title="Netting sets by member")

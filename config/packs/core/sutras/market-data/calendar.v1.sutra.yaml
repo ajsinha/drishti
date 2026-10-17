@@ -18,23 +18,23 @@ sutra: calendar
 version: 1
 description: "Business-day calendar (USNY, TARGET, GBLO, JPTO…)."
 match: { kind: calendar, priority: 10 }
-title: { pill: Market data · Holiday calendar, id: $.calendarId }
+title: { pill: Market data · Holiday calendar, id: $.CALENDAR_ID }
 strip:
-  - { label: Name, bind: $.name }
-  - { label: Holidays 2026, bind: $.holidays2026, emphasis: true }
-  - { label: Holidays 2027, bind: $.holidays2027 }
-  - { label: Next holiday, bind: $.nextHoliday }
-  - { label: "On", bind: $.nextHolidayDate, fmt: date }
+  - { label: Name, bind: $.NAME }
+  - { label: Holidays 2026, bind: $.HOLIDAYS_2026, emphasis: true }
+  - { label: Holidays 2027, bind: $.HOLIDAYS_2027 }
+  - { label: Next holiday, bind: $.NEXT_HOLIDAY }
+  - { label: "On", bind: $.NEXT_HOLIDAY_DATE, fmt: date }
 panels:
   - id: holidays
     kind: table
     title: Holidays
     key: F2
-    rows: $.holidays
+    rows: $.HOLIDAYS
     columns:
-      - { label: Date, bind: "@.date", fmt: date }
-      - { label: Day, bind: "@.weekday" }
-      - { label: Holiday, bind: "@.name" }
-      - { label: Observed, bind: "@.observed" }
+      - { label: Date, bind: "@.DATE", fmt: date }
+      - { label: Day, bind: "@.WEEKDAY" }
+      - { label: Holiday, bind: "@.NAME" }
+      - { label: Observed, bind: "@.OBSERVED" }
   - { id: built, kind: provenance, title: How this view was built }
 keys: { F8: impact, F9: raw }

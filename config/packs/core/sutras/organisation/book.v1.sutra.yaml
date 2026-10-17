@@ -18,32 +18,32 @@ sutra: book
 version: 1
 description: "A trading book: owner desk, trades and risk."
 match: { kind: book, priority: 10 }
-title: { pill: Organisation · Book, id: $.bookId }
+title: { pill: Organisation · Book, id: $.BOOK_ID }
 strip:
-  - { label: Name, bind: $.name }
-  - { label: Desk, bind: $.deskName }
-  - { label: Trades, bind: $.tradeCount }
-  - { label: MTM, bind: $.mtm, fmt: signed0, tone: sign, emphasis: true }
-  - { label: DV01, bind: $.dv01, fmt: signed0, tone: sign }
+  - { label: Name, bind: $.NAME }
+  - { label: Desk, bind: $.DESK_NAME }
+  - { label: Trades, bind: $.TRADE_COUNT }
+  - { label: MTM, bind: $.MTM, fmt: signed0, tone: sign, emphasis: true }
+  - { label: DV01, bind: $.DV01, fmt: signed0, tone: sign }
 panels:
   - id: trades
     kind: table
     title: Largest trades
     key: F2
-    rows: $.topTrades
+    rows: $.TOP_TRADES
     pivot:
-      fields: [product, assetClass, currency, book, maturityBucket, { field: maturity, label: Maturity date }, { field: notional, fmt: compact }, { field: mtm, label: MTM (USD), fmt: signed0 }, tradeId]
-      rows: [product]
-      columns: [currency]
-      values: [{ field: mtm, agg: sum }]
-      filters: [assetClass, maturityBucket]
+      fields: [PRODUCT, ASSET_CLASS, CURRENCY, BOOK, MATURITY_BUCKET, { field: MATURITY, label: Maturity date }, { field: NOTIONAL, fmt: compact }, { field: MTM, label: MTM (USD), fmt: signed0 }, TRADE_ID]
+      rows: [PRODUCT]
+      columns: [CURRENCY]
+      values: [{ field: MTM, agg: sum }]
+      filters: [ASSET_CLASS, MATURITY_BUCKET]
       heat: true
     columns:
-      - { label: Trade, bind: "@.tradeId" }
-      - { label: Product, bind: "@.product" }
-      - { label: Notional, bind: "@.notional", fmt: compact }
-      - { label: Maturity, bind: "@.maturity", fmt: date }
-      - { label: MTM, bind: "@.mtm", fmt: signed0, tone: sign, total: true }
+      - { label: Trade, bind: "@.TRADE_ID" }
+      - { label: Product, bind: "@.PRODUCT" }
+      - { label: Notional, bind: "@.NOTIONAL", fmt: compact }
+      - { label: Maturity, bind: "@.MATURITY", fmt: date }
+      - { label: MTM, bind: "@.MTM", fmt: signed0, tone: sign, total: true }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.desk, 'desk')", F8: impact, F9: raw }
+keys: { F7: "link($.DESK, 'desk')", F8: impact, F9: raw }

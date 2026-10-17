@@ -22,14 +22,14 @@ import pandas as pd
 from drishti import quant as q
 
 doc = view.doc
-PD = max((doc.get("kyc") or {}).get("pd1y", 0.0), 0.0003)
+PD = max((doc.get("KYC") or {}).get("PD_1Y", 0.0), 0.0003)
 LGD, M = 0.45, 2.5
-mine = [n["id"] for n in doc.get("nettingSets") or []]
+mine = [n["ID"] for n in doc.get("NETTING_SETS") or []]
 ead = 0.0
 for ns_id in mine:                                                    # each netting set names its SA-CCR result
     ns = await drishti.get_async("netting-set", ns_id)
-    if ns.get("saccr"):
-        ead += (await drishti.get_async("sa-ccr", ns["saccr"]))["ead"]
+    if ns.get("SACCR"):
+        ead += (await drishti.get_async("sa-ccr", ns["SACCR"]))["EAD"]
 
 
 def irb(pd_):
@@ -43,10 +43,10 @@ def irb(pd_):
 
 k, r = irb(PD)
 show(pd.DataFrame({
-    "measure": ["netting sets", "EAD (SA-CCR)", "PD 1Y", "LGD", "maturity", "asset correlation", "capital K per unit EAD",
+    "MEASURE": ["netting sets", "EAD (SA-CCR)", "PD 1Y", "LGD", "MATURITY", "asset correlation", "capital K per unit EAD",
                 "risk weight", "RWA", "capital (8% of RWA = K x EAD)", "expected loss (PD x LGD x EAD)"],
-    "value": [len(mine), ead, f"{PD:.2%}", f"{LGD:.0%}", M, r, k, f"{k * 12.5:.0%}", k * 12.5 * ead, k * ead, PD * LGD * ead],
-}), title=f"{view.id}: {doc['name']} ({doc.get('rating')}, {doc.get('sector')})")
+    "VALUE": [len(mine), ead, f"{PD:.2%}", f"{LGD:.0%}", M, r, k, f"{k * 12.5:.0%}", k * 12.5 * ead, k * ead, PD * LGD * ead],
+}), title=f"{view.id}: {doc['NAME']} ({doc.get('RATING')}, {doc.get('SECTOR')})")
 curve = pd.DataFrame({"PD %": [0.03, 0.1, 0.25, 0.5, 1, 2, 5, 10, 20]})
 curve["risk weight %"] = [irb(p / 100)[0] * 12.5 * 100 for p in curve["PD %"]]
 chart(curve, kind="line", x="PD %", y="risk weight %", title="IRB corporate risk weight against PD (LGD 45%, M 2.5)")

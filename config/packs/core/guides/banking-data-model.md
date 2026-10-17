@@ -31,62 +31,58 @@ desk ─► VaR ─► stress results ◄─ stress scenario        book ─► 
 
 | Field | Label | Opens kind | Pack | Data domain |
 |---|---|---|---|---|
+| `AGREEMENT` | Agreement | `agreement` | `counterparty-risk` | `legal` |
+| `BASIS_CURVE` | Basis curve | `ir-curve` | `market-data` | `market` |
+| `BENCHMARK_CURVE` | Benchmark curve | `ir-curve` | `market-data` | `market` |
+| `BOOK` | Book | `book` | `core` | `reference` |
+| `CALENDAR` | Calendar | `calendar` | `core` | `reference` |
+| `CAP_VOL_SURFACE` | Cap vol surface | `cap-vol-surface` | `market-data` | `market` |
+| `CCP` | CCP | `ccp` | `core` | `reference` |
+| `CLEARING_ACCOUNT` | Clearing account | `clearing-account` | `core` | `reference` |
+| `COLLATERAL_BALANCE` | Collateral | `collateral-balance` | `counterparty-risk` | `collateral` |
+| `COMMODITY_CURVE` | Commodity curve | `commodity-curve` | `market-data` | `market` |
+| `COMMODITY_REF` | Commodity | `commodity` | `market-data` | `market` |
+| `COMMODITY_VOL_SURFACE` | Commodity vol surface | `commodity-vol-surface` | `market-data` | `market` |
+| `CORRELATION` | Correlation | `correlation-matrix` | `market-data` | `market` |
 | `COUNTERPARTY` | Counterparty | `counterparty` | `core` | `reference` |
+| `CREDIT_CURVE` | Credit curve | `credit-curve` | `market-data` | `market` |
+| `CREDIT_LIMIT` | Credit limit | `credit-limit` | `counterparty-risk` | `credit` |
+| `CSA` | CSA | `csa` | `counterparty-risk` | `legal` |
+| `CVA_RESULT` | CVA | `cva` | `counterparty-risk` | `credit` |
 | `DESK` | Desk | `desk` | `core` | `reference` |
+| `DISCOUNT_CURVE` | Discount curve | `ir-curve` | `market-data` | `market` |
+| `DIVIDEND_CURVE` | Dividend curve | `dividend-curve` | `market-data` | `market` |
+| `EQUITY` | Equity | `equity` | `market-data` | `market` |
+| `EQUITY_INDEX` | Index | `equity-index` | `market-data` | `market` |
+| `EQUITY_VOL_SURFACE` | Equity vol surface | `equity-vol-surface` | `market-data` | `market` |
+| `EXPOSURE_PROFILE` | Exposure profile | `exposure-profile` | `counterparty-risk` | `credit` |
+| `FIXING_INDEX` | Fixing index | `rate-fixing` | `market-data` | `market` |
+| `FORWARD_CURVE` | Forward curve | `ir-curve` | `market-data` | `market` |
+| `FX_FORWARD_CURVE` | Fx forward curve | `fx-forward-curve` | `market-data` | `market` |
+| `FX_SPOT` | Fx spot | `fx-spot` | `market-data` | `market` |
+| `FX_VOL_SURFACE` | Fx vol surface | `fx-vol-surface` | `market-data` | `market` |
+| `GROUP` | Group | `counterparty-group` | `core` | `reference` |
+| `INFLATION_CURVE` | Inflation curve | `inflation-curve` | `market-data` | `market` |
+| `INFLATION_INDEX` | Inflation index | `inflation-index` | `market-data` | `market` |
+| `ISSUER` | Reference entity | `issuer` | `core` | `reference` |
 | `LEGAL_ENTITY` | Legal entity | `legal-entity` | `core` | `reference` |
 | `NETTING_SET` | Netting set | `netting-set` | `counterparty-risk` | `credit` |
 | `ORIGINAL_COUNTERPARTY` | Original counterparty | `counterparty` | `core` | `reference` |
 | `PORTFOLIO` | Portfolio | `book` | `core` | `reference` |
+| `REPO_CURVE` | Repo curve | `repo-curve` | `market-data` | `market` |
+| `SACCR` | SA-CCR | `sa-ccr` | `counterparty-risk` | `credit` |
+| `SCENARIO` | Scenario | `stress-scenario` | `market-risk` | `risk` |
+| `SIMM` | SIMM | `simm` | `counterparty-risk` | `collateral` |
+| `SWAPTION_VOL_CUBE` | Swaption vol cube | `ir-vol-cube` | `market-data` | `market` |
+| `TRADER` | Trader | `trader` | `core` | `reference` |
 | `TRADER_ID` | Trader | `trader` | `core` | `reference` |
 | `TRADE_ID` | Trade | `trade` | `trading` | `trading` |
 | `TT_BOOK` | Book | `book` | `core` | `reference` |
 | `TT_GROUP` | Desk | `desk` | `core` | `reference` |
-| `agreement` | Agreement | `agreement` | `counterparty-risk` | `legal` |
-| `basisCurve` | Basis curve | `ir-curve` | `market-data` | `market` |
-| `benchmarkCurve` | Benchmark curve | `ir-curve` | `market-data` | `market` |
-| `book` | Book | `book` | `core` | `reference` |
-| `calendar` | Calendar | `calendar` | `core` | `reference` |
-| `capVolSurface` | Cap vol surface | `cap-vol-surface` | `market-data` | `market` |
-| `ccp` | CCP | `ccp` | `core` | `reference` |
-| `clearingAccount` | Clearing account | `clearing-account` | `core` | `reference` |
-| `collateralBalance` | Collateral | `collateral-balance` | `counterparty-risk` | `collateral` |
-| `commodityCurve` | Commodity curve | `commodity-curve` | `market-data` | `market` |
-| `commodityRef` | Commodity | `commodity` | `market-data` | `market` |
-| `commodityVolSurface` | Commodity vol surface | `commodity-vol-surface` | `market-data` | `market` |
-| `correlation` | Correlation | `correlation-matrix` | `market-data` | `market` |
-| `counterparty` | Counterparty | `counterparty` | `core` | `reference` |
-| `creditCurve` | Credit curve | `credit-curve` | `market-data` | `market` |
-| `creditLimit` | Credit limit | `credit-limit` | `counterparty-risk` | `credit` |
-| `csa` | CSA | `csa` | `counterparty-risk` | `legal` |
-| `cvaResult` | CVA | `cva` | `counterparty-risk` | `credit` |
-| `desk` | Desk | `desk` | `core` | `reference` |
-| `discountCurve` | Discount curve | `ir-curve` | `market-data` | `market` |
-| `dividendCurve` | Dividend curve | `dividend-curve` | `market-data` | `market` |
-| `equity` | Equity | `equity` | `market-data` | `market` |
-| `equityIndex` | Index | `equity-index` | `market-data` | `market` |
-| `equityVolSurface` | Equity vol surface | `equity-vol-surface` | `market-data` | `market` |
-| `exposureProfile` | Exposure profile | `exposure-profile` | `counterparty-risk` | `credit` |
-| `fixingIndex` | Fixing index | `rate-fixing` | `market-data` | `market` |
-| `forwardCurve` | Forward curve | `ir-curve` | `market-data` | `market` |
-| `fxForwardCurve` | Fx forward curve | `fx-forward-curve` | `market-data` | `market` |
-| `fxSpot` | Fx spot | `fx-spot` | `market-data` | `market` |
-| `fxVolSurface` | Fx vol surface | `fx-vol-surface` | `market-data` | `market` |
-| `group` | Group | `counterparty-group` | `core` | `reference` |
-| `inflationCurve` | Inflation curve | `inflation-curve` | `market-data` | `market` |
-| `inflationIndex` | Inflation index | `inflation-index` | `market-data` | `market` |
-| `issuer` | Reference entity | `issuer` | `core` | `reference` |
-| `legalEntity` | Legal entity | `legal-entity` | `core` | `reference` |
-| `nettingSet` | Netting set | `netting-set` | `counterparty-risk` | `credit` |
-| `repoCurve` | Repo curve | `repo-curve` | `market-data` | `market` |
-| `saccr` | SA-CCR | `sa-ccr` | `counterparty-risk` | `credit` |
-| `scenario` | Scenario | `stress-scenario` | `market-risk` | `risk` |
-| `simm` | SIMM | `simm` | `counterparty-risk` | `collateral` |
-| `swaptionVolCube` | Swaption vol cube | `ir-vol-cube` | `market-data` | `market` |
-| `trader` | Trader | `trader` | `core` | `reference` |
-| `underlyingBond` | Underlying bond | `bond` | `market-data` | `market` |
-| `underlyingEquity` | Underlying equity | `equity` | `market-data` | `market` |
-| `underlyingIndex` | Underlying index | `equity-index` | `market-data` | `market` |
-| `varResult` | VaR | `var` | `market-risk` | `risk` |
+| `UNDERLYING_BOND` | Underlying bond | `bond` | `market-data` | `market` |
+| `UNDERLYING_EQUITY` | Underlying equity | `equity` | `market-data` | `market` |
+| `UNDERLYING_INDEX` | Underlying index | `equity-index` | `market-data` | `market` |
+| `VAR_RESULT` | VaR | `var` | `market-risk` | `risk` |
 
 ## Packs and data domains
 

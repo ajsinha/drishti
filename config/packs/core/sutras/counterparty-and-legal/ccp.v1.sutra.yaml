@@ -18,20 +18,20 @@ sutra: ccp
 version: 1
 description: A clearing house with its default fund and margin model.
 match: { kind: ccp, priority: 10 }
-title: { pill: Counterparty and legal · Central counterparty, id: $.ccpId }
+title: { pill: Counterparty and legal · Central counterparty, id: $.CCP_ID }
 strip:
-  - { label: Name, bind: $.name }
-  - { label: Default fund, bind: $.defaultFund, fmt: compact }
-  - { label: IM posted, bind: $.imPosted, fmt: compact, emphasis: true }
-  - { label: Model, bind: $.marginModel }
+  - { label: Name, bind: $.NAME }
+  - { label: Default fund, bind: $.DEFAULT_FUND, fmt: compact }
+  - { label: IM posted, bind: $.IM_POSTED, fmt: compact, emphasis: true }
+  - { label: Model, bind: $.MARGIN_MODEL }
 panels:
   - id: accounts
     kind: table
     title: Clearing accounts
     key: F2
-    rows: $.accounts
+    rows: $.ACCOUNTS
     columns:
-      - { label: Account, bind: "@.id" }
-      - { label: IM, bind: "@.im", fmt: compact, total: true }
+      - { label: Account, bind: "@.ID", link: true }
+      - { label: IM, bind: "@.IM", fmt: compact, total: true }
   - { id: built, kind: provenance, title: How this view was built }
 keys: { F8: impact, F9: raw }

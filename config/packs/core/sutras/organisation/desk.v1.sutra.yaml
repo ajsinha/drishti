@@ -18,61 +18,61 @@ sutra: desk
 version: 1
 description: "A trading desk: books, limits and risk results."
 match: { kind: desk, priority: 10 }
-title: { pill: Organisation · Desk, id: $.deskId }
+title: { pill: Organisation · Desk, id: $.DESK_ID }
 strip:
-  - { label: Name, bind: $.name }
-  - { label: Head, bind: $.head }
-  - { label: Books, bind: size($.books) }
-  - { label: VaR, bind: $.var99, fmt: compact, emphasis: true }
-  - { label: MTM, bind: $.mtm, fmt: signed0, tone: sign }
+  - { label: Name, bind: $.NAME }
+  - { label: Head, bind: $.HEAD }
+  - { label: Books, bind: size($.BOOKS) }
+  - { label: VaR, bind: $.VAR_99, fmt: compact, emphasis: true }
+  - { label: MTM, bind: $.MTM, fmt: signed0, tone: sign }
 panels:
   - id: books
     kind: table
     title: Books
     key: F2
-    rows: $.books
+    rows: $.BOOKS
     columns:
-      - { label: Book, bind: "@.id" }
-      - { label: Trades, bind: "@.trades", fmt: amount0, total: true }
-      - { label: MTM, bind: "@.mtm", fmt: signed0, tone: sign, total: true }
+      - { label: Book, bind: "@.ID", link: true }
+      - { label: Trades, bind: "@.TRADES", fmt: amount0, total: true }
+      - { label: MTM, bind: "@.MTM", fmt: signed0, tone: sign, total: true }
   - id: mtmGrid
     kind: pivot
     title: "MTM grid (by book and currency, USD)"
     code: PIV
     key: F3
-    rows: $.positions
+    rows: $.POSITIONS
     fmt: compact
     tone: sign
-    by: book
-    across: currency
-    value: mtm
+    by: BOOK
+    across: CURRENCY
+    value: MTM
     agg: sum
     heat: true
   - id: tradeCount
     kind: pivot
     title: Trades by book and product family
-    rows: $.positions
-    by: book
-    across: family
+    rows: $.POSITIONS
+    by: BOOK
+    across: FAMILY
     agg: count
   - id: positions
     kind: table
     title: Trades by book
     code: TRD
     key: F4
-    rows: $.positions
+    rows: $.POSITIONS
     pivot:
-      rows: [book]
-      columns: [currency]
-      values: [{ field: mtm, agg: sum }]
-      filters: [family]
+      rows: [BOOK]
+      columns: [CURRENCY]
+      values: [{ field: MTM, agg: sum }]
+      filters: [FAMILY]
       heat: true
     columns:
-      - { label: Trade, bind: "@.tradeId" }
-      - { label: Book, bind: "@.book" }
-      - { label: Currency, bind: "@.currency" }
-      - { label: Family, bind: "@.family" }
-      - { label: MTM, bind: "@.mtm", fmt: signed0, tone: sign, total: true }
+      - { label: Trade, bind: "@.TRADE_ID" }
+      - { label: Book, bind: "@.BOOK" }
+      - { label: Currency, bind: "@.CURRENCY" }
+      - { label: Family, bind: "@.FAMILY" }
+      - { label: MTM, bind: "@.MTM", fmt: signed0, tone: sign, total: true }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.legalEntity, 'legal-entity')", F8: impact, F9: raw }
+keys: { F7: "link($.LEGAL_ENTITY, 'legal-entity')", F8: impact, F9: raw }

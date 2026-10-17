@@ -89,12 +89,30 @@ graph:
   - pattern: ^CLR-
     kind: clearing-account
   fields:
+    BOOK:
+      kind: book
+      label: Book
+    CALENDAR:
+      kind: calendar
+      label: Calendar
+    CCP:
+      kind: ccp
+      label: CCP
+    CLEARING_ACCOUNT:
+      kind: clearing-account
+      label: Clearing account
     COUNTERPARTY:
       kind: counterparty
       label: Counterparty
     DESK:
       kind: desk
       label: Desk
+    GROUP:
+      kind: counterparty-group
+      label: Group
+    ISSUER:
+      kind: issuer
+      label: Reference entity
     LEGAL_ENTITY:
       kind: legal-entity
       label: Legal entity
@@ -104,6 +122,9 @@ graph:
     PORTFOLIO:
       kind: book
       label: Portfolio
+    TRADER:
+      kind: trader
+      label: Trader
     TRADER_ID:
       kind: trader
       label: Trader
@@ -113,40 +134,10 @@ graph:
     TT_GROUP:
       kind: desk
       label: Desk
-    book:
-      kind: book
-      label: Book
-    calendar:
-      kind: calendar
-      label: Calendar
-    ccp:
-      kind: ccp
-      label: CCP
-    clearingAccount:
-      kind: clearing-account
-      label: Clearing account
-    counterparty:
-      kind: counterparty
-      label: Counterparty
-    desk:
-      kind: desk
-      label: Desk
-    group:
-      kind: counterparty-group
-      label: Group
-    issuer:
-      kind: issuer
-      label: Reference entity
-    legalEntity:
-      kind: legal-entity
-      label: Legal entity
-    trader:
-      kind: trader
-      label: Trader
   badges:
-    counterparty: $.rating
-    issuer: $.rating
-    clearing-account: '''IM '' + fmt($.im, ''compact'')'
+    counterparty: $.RATING
+    issuer: $.RATING
+    clearing-account: '''IM '' + fmt($.IM, ''compact'')'
 connectors:
   reference-store:
     plugin: delta
@@ -188,30 +179,30 @@ routes:
   clearing-account: reference-store
 columns:
   counterparty:
-  - name
-  - rating
-  - sector
+  - NAME
+  - RATING
+  - SECTOR
   - COUNTRY_OF_RISK
   - UEN
-  - netMtm
+  - NET_MTM
   book:
-  - name
-  - deskName
-  - tradeCount
-  - mtm
-  - dv01
+  - NAME
+  - DESK_NAME
+  - TRADE_COUNT
+  - MTM
+  - DV01
 form:
   counterparty:
-  - path: counterpartyId
+  - path: COUNTERPARTY_ID
     label: Counterparty id
     type: id
-  - path: name
+  - path: NAME
     label: Name
     type: text
-  - path: rating
+  - path: RATING
     label: Rating
     type: enum
-  - path: sector
+  - path: SECTOR
     label: Sector
     type: enum
   - path: COUNTRY_OF_RISK
@@ -220,157 +211,157 @@ form:
   - path: UEN
     label: UEN
     type: text
-  - path: netMtm
-    label: Net mtm
+  - path: NET_MTM
+    label: Net MTM
     type: amount
   counterparty-group:
-  - path: groupId
+  - path: GROUP_ID
     label: Group id
     type: id
-  - path: name
+  - path: NAME
     label: Name
     type: text
-  - path: members
+  - path: MEMBERS
     label: Members
     type: text
-  - path: limit
+  - path: LIMIT
     label: Limit
     type: amount
-  - path: utilisation
+  - path: UTILISATION
     label: Utilisation
     type: number
   issuer:
-  - path: issuerId
+  - path: ISSUER_ID
     label: Issuer id
     type: id
-  - path: name
+  - path: NAME
     label: Name
     type: text
-  - path: rating
+  - path: RATING
     label: Rating
     type: enum
-  - path: sector
+  - path: SECTOR
     label: Sector
     type: enum
-  - path: country
+  - path: COUNTRY
     label: Country
     type: enum
   ccp:
-  - path: ccpId
+  - path: CCP_ID
     label: Ccp id
     type: id
-  - path: name
+  - path: NAME
     label: Name
     type: text
-  - path: defaultFund
+  - path: DEFAULT_FUND
     label: Default fund
     type: text
-  - path: imPosted
+  - path: IM_POSTED
     label: Im posted
     type: text
-  - path: marginModel
+  - path: MARGIN_MODEL
     label: Margin model
     type: text
   legal-entity:
-  - path: entityId
+  - path: ENTITY_ID
     label: Entity id
     type: id
-  - path: name
+  - path: NAME
     label: Name
     type: text
-  - path: lei
-    label: Lei
+  - path: LEI
+    label: LEI
     type: text
-  - path: jurisdiction
+  - path: JURISDICTION
     label: Jurisdiction
     type: text
-  - path: regulator
+  - path: REGULATOR
     label: Regulator
     type: text
   book:
-  - path: bookId
+  - path: BOOK_ID
     label: Book id
     type: id
-  - path: name
+  - path: NAME
     label: Name
     type: text
-  - path: deskName
+  - path: DESK_NAME
     label: Desk name
     type: text
-  - path: tradeCount
+  - path: TRADE_COUNT
     label: Trade count
     type: number
-  - path: mtm
-    label: Mtm
+  - path: MTM
+    label: MTM
     type: amount
-  - path: dv01
-    label: Dv01
+  - path: DV01
+    label: DV01
     type: amount
   desk:
-  - path: deskId
+  - path: DESK_ID
     label: Desk id
     type: id
-  - path: name
+  - path: NAME
     label: Name
     type: text
-  - path: head
+  - path: HEAD
     label: Head
     type: text
-  - path: books
+  - path: BOOKS
     label: Books
     type: text
-  - path: var99
-    label: Var99
+  - path: VAR_99
+    label: VaR 99
     type: text
-  - path: mtm
-    label: Mtm
+  - path: MTM
+    label: MTM
     type: amount
   trader:
-  - path: traderId
+  - path: TRADER_ID
     label: Trader id
     type: id
-  - path: name
+  - path: NAME
     label: Name
     type: text
-  - path: deskName
+  - path: DESK_NAME
     label: Desk name
     type: text
-  - path: tradeCount
+  - path: TRADE_COUNT
     label: Trade count
     type: number
   calendar:
-  - path: calendarId
+  - path: CALENDAR_ID
     label: Calendar id
     type: id
-  - path: name
+  - path: NAME
     label: Name
     type: text
-  - path: holidays2026
-    label: Holidays2026
+  - path: HOLIDAYS_2026
+    label: Holidays 2026
     type: number
-  - path: holidays2027
-    label: Holidays2027
+  - path: HOLIDAYS_2027
+    label: Holidays 2027
     type: number
-  - path: nextHoliday
+  - path: NEXT_HOLIDAY
     label: Next holiday
     type: text
-  - path: nextHolidayDate
+  - path: NEXT_HOLIDAY_DATE
     label: Next holiday date
     type: date
   clearing-account:
-  - path: accountId
+  - path: ACCOUNT_ID
     label: Account id
     type: id
-  - path: ccpName
+  - path: CCP_NAME
     label: Ccp name
     type: text
-  - path: im
+  - path: IM
     label: Im
     type: text
-  - path: vmToday
+  - path: VM_TODAY
     label: Vm today
     type: text
-  - path: excess
+  - path: EXCESS
     label: Excess
     type: text
 console:

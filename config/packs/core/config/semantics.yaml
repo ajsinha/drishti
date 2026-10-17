@@ -90,6 +90,5 @@ acronyms:
 - NDF
 - TRS
 labels:
-  tradeId: Trade
-  mtm: MTM (USD)
   TRADE_ID: Trade
+  MTM: MTM (USD)

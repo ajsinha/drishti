@@ -18,42 +18,42 @@ sutra: counterparty
 version: 1
 description: "A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, country of risk and parent group."
 match: { kind: counterparty, priority: 10 }
-title: { pill: Counterparty and legal · Counterparty, id: $.counterpartyId }
+title: { pill: Counterparty and legal · Counterparty, id: $.COUNTERPARTY_ID }
 strip:
-  - { label: Name, bind: $.name }
-  - { label: LEI, bind: $.lei }
-  - { label: Rating, bind: $.rating, emphasis: true }
-  - { label: Sector, bind: $.sector }
+  - { label: Name, bind: $.NAME }
+  - { label: LEI, bind: $.LEI }
+  - { label: Rating, bind: $.RATING, emphasis: true }
+  - { label: Sector, bind: $.SECTOR }
   - { label: Country of risk, bind: $.COUNTRY_OF_RISK }
   - { label: UEN, bind: $.UEN }
-  - { label: Type, bind: $.type }
-  - { label: Net MTM, bind: $.netMtm, fmt: signed0, tone: sign }
+  - { label: Type, bind: $.TYPE }
+  - { label: Net MTM, bind: $.NET_MTM, fmt: signed0, tone: sign }
 panels:
   - id: nettingSets
     kind: table
     title: Netting sets
     key: F2
-    rows: $.nettingSets
+    rows: $.NETTING_SETS
     columns:
-      - { label: Netting set, bind: "@.id" }
-      - { label: Agreement, bind: "@.agreement" }
-      - { label: Trades, bind: "@.trades", fmt: amount0, total: true }
-      - { label: Net MTM, bind: "@.netMtm", fmt: signed0, tone: sign, total: true }
+      - { label: Netting set, bind: "@.ID", link: true }
+      - { label: Agreement, bind: "@.AGREEMENT" }
+      - { label: Trades, bind: "@.TRADES", fmt: amount0, total: true }
+      - { label: Net MTM, bind: "@.NET_MTM", fmt: signed0, tone: sign, total: true }
   - id: kyc
     kind: kv
     title: KYC and classification
     area: right
-    rows: $.kyc
+    rows: $.KYC
   - id: hierarchy
     kind: graph
     title: Group hierarchy (agreements and netting sets)
     code: HIER
     key: F3
-    nodes: $.hierarchy.nodes
-    edges: $.hierarchy.edges
-    label: label
-    group: type
+    nodes: $.HIERARCHY.NODES
+    edges: $.HIERARCHY.EDGES
+    label: LABEL
+    group: TYPE
     layout: tree
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.group, 'counterparty-group')", F8: impact, F9: raw }
+keys: { F7: "link($.GROUP, 'counterparty-group')", F8: impact, F9: raw }

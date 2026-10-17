@@ -18,21 +18,21 @@ sutra: counterparty-group
 version: 1
 description: Economic group of related counterparties (obligor group).
 match: { kind: counterparty-group, priority: 10 }
-title: { pill: Counterparty and legal · Counterparty group, id: $.groupId }
+title: { pill: Counterparty and legal · Counterparty group, id: $.GROUP_ID }
 strip:
-  - { label: Name, bind: $.name }
-  - { label: Members, bind: size($.members) }
-  - { label: Group limit, bind: $.limit, fmt: compact }
-  - { label: Utilisation, bind: $.utilisation, fmt: pct0, emphasis: true }
+  - { label: Name, bind: $.NAME }
+  - { label: Members, bind: size($.MEMBERS) }
+  - { label: Group limit, bind: $.LIMIT, fmt: compact }
+  - { label: Utilisation, bind: $.UTILISATION, fmt: pct0, emphasis: true }
 panels:
   - id: members
     kind: table
     title: Members
     key: F2
-    rows: $.members
+    rows: $.MEMBERS
     columns:
-      - { label: Counterparty, bind: "@.id" }
-      - { label: Name, bind: "@.name" }
-      - { label: Rating, bind: "@.rating" }
+      - { label: Counterparty, bind: "@.ID", link: true }
+      - { label: Name, bind: "@.NAME" }
+      - { label: Rating, bind: "@.RATING" }
   - { id: built, kind: provenance, title: How this view was built }
 keys: { F8: impact, F9: raw }

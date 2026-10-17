@@ -18,30 +18,30 @@ sutra: clearing-account
 version: 1
 description: An account at a CCP holding cleared trades and margin.
 match: { kind: clearing-account, priority: 10 }
-title: { pill: Collateral and margin · Clearing account, id: $.accountId }
+title: { pill: Collateral and margin · Clearing account, id: $.ACCOUNT_ID }
 strip:
-  - { label: CCP, bind: $.ccpName }
-  - { label: IM, bind: $.im, fmt: compact, emphasis: true }
-  - { label: VM today, bind: $.vmToday, fmt: signed0, tone: sign }
-  - { label: Excess, bind: $.excess, fmt: compact }
+  - { label: CCP, bind: $.CCP_NAME }
+  - { label: IM, bind: $.IM, fmt: compact, emphasis: true }
+  - { label: VM today, bind: $.VM_TODAY, fmt: signed0, tone: sign }
+  - { label: Excess, bind: $.EXCESS, fmt: compact }
 panels:
   - id: trades
     kind: table
     title: Cleared trades
     key: F2
-    rows: $.trades
+    rows: $.TRADES
     pivot:
-      fields: [product, assetClass, currency, book, maturityBucket, { field: maturity, label: Maturity date }, { field: notional, fmt: compact }, { field: mtm, label: MTM (USD), fmt: signed0 }, tradeId]
-      rows: [product]
-      columns: [maturityBucket]
-      values: [{ field: notional, agg: sum }]
-      filters: [currency, assetClass]
+      fields: [PRODUCT, ASSET_CLASS, CURRENCY, BOOK, MATURITY_BUCKET, { field: MATURITY, label: Maturity date }, { field: NOTIONAL, fmt: compact }, { field: MTM, label: MTM (USD), fmt: signed0 }, TRADE_ID]
+      rows: [PRODUCT]
+      columns: [MATURITY_BUCKET]
+      values: [{ field: NOTIONAL, agg: sum }]
+      filters: [CURRENCY, ASSET_CLASS]
     columns:
-      - { label: Trade, bind: "@.tradeId" }
-      - { label: Product, bind: "@.product" }
-      - { label: Notional, bind: "@.notional", fmt: compact }
-      - { label: Maturity, bind: "@.maturity", fmt: date }
-      - { label: MTM, bind: "@.mtm", fmt: signed0, tone: sign, total: true }
+      - { label: Trade, bind: "@.TRADE_ID" }
+      - { label: Product, bind: "@.PRODUCT" }
+      - { label: Notional, bind: "@.NOTIONAL", fmt: compact }
+      - { label: Maturity, bind: "@.MATURITY", fmt: date }
+      - { label: MTM, bind: "@.MTM", fmt: signed0, tone: sign, total: true }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.ccp, 'ccp')", F8: impact, F9: raw }
+keys: { F7: "link($.CCP, 'ccp')", F8: impact, F9: raw }

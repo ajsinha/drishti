@@ -18,19 +18,19 @@ sutra: trader
 version: 1
 description: A trader and their books.
 match: { kind: trader, priority: 10 }
-title: { pill: Organisation · Trader, id: $.traderId }
+title: { pill: Organisation · Trader, id: $.TRADER_ID }
 strip:
-  - { label: Name, bind: $.name }
-  - { label: Desk, bind: $.deskName }
-  - { label: Trades, bind: $.tradeCount, emphasis: true }
+  - { label: Name, bind: $.NAME }
+  - { label: Desk, bind: $.DESK_NAME }
+  - { label: Trades, bind: $.TRADE_COUNT, emphasis: true }
 panels:
   - id: books
     kind: table
     title: Books
     key: F2
-    rows: $.books
+    rows: $.BOOKS
     columns:
-      - { label: Book, bind: "@.id" }
+      - { label: Book, bind: "@.ID", link: true }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.desk, 'desk')", F8: impact, F9: raw }
+keys: { F7: "link($.DESK, 'desk')", F8: impact, F9: raw }

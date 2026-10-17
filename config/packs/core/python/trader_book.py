@@ -20,24 +20,24 @@
 import pandas as pd
 
 doc = view.doc
-t = await drishti.search_async(f"TRD where trader = '{view.id}' and pnl1d > -1000bn and productName != '' and desk != '' limit 1000")
+t = await drishti.search_async(f"TVAL where TRADER_ID = '{view.id}' and PNL_1D > -1000bn and PRODUCT_TYPE != '' and DESK != '' limit 1000")
 if t.empty:
     raise ValueError(f"no trades booked by {view.id}")
-mix = t.groupby("productName").agg(trades=("id", "size"), notional=("notional", "sum"), mtm=("mtm", "sum"), pnl1d=("pnl1d", "sum"))
-show(mix.sort_values("notional", ascending=False), title=f"{view.id}: {doc.get('name', '')}, {len(t)} trades on {doc.get('desk', '')}")
-show(t.pivot_table(index="currency", values=["notional", "mtm", "pnl1d"], aggfunc="sum").sort_values("notional", ascending=False),
+mix = t.groupby("PRODUCT_TYPE").agg(trades=("ID", "size"), notional=("NOTIONAL", "sum"), mtm=("MTM", "sum"), pnl1d=("PNL_1D", "sum"))
+show(mix.sort_values("NOTIONAL", ascending=False), title=f"{view.id}: {doc.get('NAME', '')}, {len(t)} trades on {doc.get('DESK', '')}")
+show(t.pivot_table(index="CURRENCY", values=["NOTIONAL", "MTM", "PNL_1D"], aggfunc="sum").sort_values("NOTIONAL", ascending=False),
      title="By currency")
-wins, losses = t[t["pnl1d"] > 0]["pnl1d"], t[t["pnl1d"] < 0]["pnl1d"]
+wins, losses = t[t["PNL_1D"] > 0]["PNL_1D"], t[t["PNL_1D"] < 0]["PNL_1D"]
 show(pd.DataFrame({
-    "measure": ["1-day P&L", "winning trades", "losing trades", "hit rate", "average win", "average loss", "win / loss"],
-    "value": [t["pnl1d"].sum(), len(wins), len(losses), f"{len(wins) / len(t):.0%}", wins.mean(), losses.mean(),
+    "MEASURE": ["1-day P&L", "winning trades", "losing trades", "hit rate", "average win", "average loss", "win / loss"],
+    "VALUE": [t["PNL_1D"].sum(), len(wins), len(losses), f"{len(wins) / len(t):.0%}", wins.mean(), losses.mean(),
               abs(wins.mean() / losses.mean()) if len(losses) and len(wins) else None],
 }), title="Today")
-show(t.reindex(t["mtm"].abs().sort_values(ascending=False).index).head(10)[["id", "productName", "currency", "notional", "mtm", "pnl1d"]]
+show(t.reindex(t["MTM"].abs().sort_values(ascending=False).index).head(10)[["ID", "PRODUCT_TYPE", "CURRENCY", "NOTIONAL", "MTM", "PNL_1D"]]
      .reset_index(drop=True), title="Ten largest positions by |MTM|")
 
-desk = t["desk"].iloc[0]
-peers = await drishti.search_async(f"TRD where desk = '{desk}' and trader != '' and pnl1d > -1000bn limit 1000")
-by_trader = peers.groupby("trader").agg(trades=("id", "size"), pnl1d=("pnl1d", "sum"), mtm=("mtm", "sum")).sort_values("pnl1d")
+desk = t["DESK"].iloc[0]
+peers = await drishti.search_async(f"TVAL where DESK = '{desk}' and TRADER_ID != '' and PNL_1D > -1000bn limit 1000")
+by_trader = peers.groupby("TRADER_ID").agg(trades=("ID", "size"), pnl1d=("PNL_1D", "sum"), mtm=("MTM", "sum")).sort_values("PNL_1D")
 show(by_trader, title=f"Traders on {desk}")
-chart(by_trader.reset_index(), kind="bar", x="trader", y="pnl1d", title=f"1-day P&L by trader, {desk}")
+chart(by_trader.reset_index(), kind="bar", x="TRADER_ID", y="PNL_1D", title=f"1-day P&L by trader, {desk}")

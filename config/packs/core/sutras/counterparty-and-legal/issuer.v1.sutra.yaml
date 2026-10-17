@@ -18,22 +18,22 @@ sutra: issuer
 version: 1
 description: Issuer of bonds and reference entity for CDS.
 match: { kind: issuer, priority: 10 }
-title: { pill: Counterparty and legal · Issuer, id: $.issuerId }
+title: { pill: Counterparty and legal · Issuer, id: $.ISSUER_ID }
 strip:
-  - { label: Name, bind: $.name }
-  - { label: Rating, bind: $.rating, emphasis: true }
-  - { label: Sector, bind: $.sector }
-  - { label: Country, bind: $.country }
+  - { label: Name, bind: $.NAME }
+  - { label: Rating, bind: $.RATING, emphasis: true }
+  - { label: Sector, bind: $.SECTOR }
+  - { label: Country, bind: $.COUNTRY }
 panels:
   - id: bonds
     kind: table
     title: Bonds outstanding
     key: F2
-    rows: $.bonds
+    rows: $.BONDS
     columns:
-      - { label: ISIN, bind: "@.isin" }
-      - { label: Coupon, bind: "@.coupon", fmt: pct2 }
-      - { label: Maturity, bind: "@.maturity", fmt: date }
+      - { label: ISIN, bind: "@.ISIN" }
+      - { label: Coupon, bind: "@.COUPON", fmt: pct2 }
+      - { label: Maturity, bind: "@.MATURITY", fmt: date }
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.creditCurve, 'credit-curve')", F8: impact, F9: raw }
+keys: { F7: "link($.CREDIT_CURVE, 'credit-curve')", F8: impact, F9: raw }

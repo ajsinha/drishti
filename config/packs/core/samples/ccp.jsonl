@@ -1,0 +1,5 @@
+{"CCP_ID":"CCP-CME","NAME":"CME Clearing","DEFAULT_FUND":720000000.0,"IM_POSTED":43200000,"MARGIN_MODEL":"SPAN 2","ACCOUNTS":[{"ID":"CLR-CME-1","IM":43200000}],"_meta":{"source":"clearing-system","generation":1}}
+{"CCP_ID":"CCP-EUREX","NAME":"Eurex Clearing AG","DEFAULT_FUND":340000000.0,"IM_POSTED":20400000,"MARGIN_MODEL":"Prisma","ACCOUNTS":[{"ID":"CLR-EUREX-1","IM":20400000}],"_meta":{"source":"clearing-system","generation":1}}
+{"CCP_ID":"CCP-ICE","NAME":"ICE Clear Europe","DEFAULT_FUND":260000000.0,"IM_POSTED":15600000,"MARGIN_MODEL":"IRM 2","ACCOUNTS":[{"ID":"CLR-ICE-1","IM":15600000}],"_meta":{"source":"clearing-system","generation":1}}
+{"CCP_ID":"CCP-JSCC","NAME":"Japan Securities Clearing Corp.","DEFAULT_FUND":120000000.0,"IM_POSTED":7200000,"MARGIN_MODEL":"JSCC IRS VaR","ACCOUNTS":[{"ID":"CLR-JSCC-1","IM":7200000}],"_meta":{"source":"clearing-system","generation":1}}
+{"CCP_ID":"CCP-LCH","NAME":"LCH Ltd","DEFAULT_FUND":510000000.0,"IM_POSTED":30600000,"MARGIN_MODEL":"LCH SwapClear PAIRS (5-day, 99.7% ES)","ACCOUNTS":[{"ID":"CLR-LCH-1","IM":30600000}],"_meta":{"source":"clearing-system","generation":1}}

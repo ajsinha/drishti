@@ -49,88 +49,88 @@ Load real data into each domain's folder, or point a domain at a database instea
 
 | Kind | Name | Mnemonic | Identifiers | Id field | What it is |
 |---|---|---|---|---|---|
-| `counterparty` | Counterparty | `CPTY` | `CP-…` | `counterpartyId` | A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, country of risk and parent group. |
-| `counterparty-group` | Counterparty group | `GRP` | `GRP-…` | `groupId` | Economic group of related counterparties (obligor group). |
-| `issuer` | Issuer | `ISS` | `ISS-…` | `issuerId` | Issuer of bonds and reference entity for CDS. |
-| `ccp` | Central counterparty | `CCP` | `CCP-…` | `ccpId` | A clearing house with its default fund and margin model. |
-| `legal-entity` | Bank legal entity | `LE` | `LE-…` | `entityId` | The bank's own booking entity. |
-| `book` | Book | `BOOK` | `BOOK-…` | `bookId` | A trading book: owner desk, trades and risk. |
-| `desk` | Desk | `DESK` | `DESK-…` | `deskId` | A trading desk: books, limits and risk results. |
-| `trader` | Trader | `TRDR` | `TRDR-…` | `traderId` | A trader and their books. |
-| `calendar` | Holiday calendar | `CAL` | `CAL-…` | `calendarId` | Business-day calendar (USNY, TARGET, GBLO, JPTO…). |
-| `clearing-account` | Clearing account | `CLR` | `CLR-…` | `accountId` | An account at a CCP holding cleared trades and margin. |
+| `counterparty` | Counterparty | `CPTY` | `CP-…` | `COUNTERPARTY_ID` | A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, country of risk and parent group. |
+| `counterparty-group` | Counterparty group | `GRP` | `GRP-…` | `GROUP_ID` | Economic group of related counterparties (obligor group). |
+| `issuer` | Issuer | `ISS` | `ISS-…` | `ISSUER_ID` | Issuer of bonds and reference entity for CDS. |
+| `ccp` | Central counterparty | `CCP` | `CCP-…` | `CCP_ID` | A clearing house with its default fund and margin model. |
+| `legal-entity` | Bank legal entity | `LE` | `LE-…` | `ENTITY_ID` | The bank's own booking entity. |
+| `book` | Book | `BOOK` | `BOOK-…` | `BOOK_ID` | A trading book: owner desk, trades and risk. |
+| `desk` | Desk | `DESK` | `DESK-…` | `DESK_ID` | A trading desk: books, limits and risk results. |
+| `trader` | Trader | `TRDR` | `TRDR-…` | `TRADER_ID` | A trader and their books. |
+| `calendar` | Holiday calendar | `CAL` | `CAL-…` | `CALENDAR_ID` | Business-day calendar (USNY, TARGET, GBLO, JPTO…). |
+| `clearing-account` | Clearing account | `CLR` | `CLR-…` | `ACCOUNT_ID` | An account at a CCP holding cleared trades and margin. |
 
 ### Counterparty (`counterparty`)
 
 A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, country of risk and parent group.
 
-**Fields its Sutra reads:** `name`, `lei`, `rating`, `sector`, `COUNTRY_OF_RISK`, `UEN`, `type`, `netMtm`, `pfePeak`, `nettingSets`, `kyc`, `hierarchy`.
+**Fields its Sutra reads:** `NAME`, `LEI`, `RATING`, `SECTOR`, `COUNTRY_OF_RISK`, `UEN`, `TYPE`, `NET_MTM`, `PFE_PEAK`, `NETTING_SETS`, `KYC`, `HIERARCHY`.
 
-**Links:** `group` → Group (`counterparty-group`), `creditLimit` → Credit limit (`credit-limit`), `creditCurve` → Credit curve (`credit-curve`).
+**Links:** `GROUP` → Group (`counterparty-group`), `CREDIT_LIMIT` → Credit limit (`credit-limit`), `CREDIT_CURVE` → Credit curve (`credit-curve`).
 
 ### Counterparty group (`counterparty-group`)
 
 Economic group of related counterparties (obligor group).
 
-**Fields its Sutra reads:** `name`, `members`, `limit`, `utilisation`.
+**Fields its Sutra reads:** `NAME`, `MEMBERS`, `LIMIT`, `UTILISATION`.
 
 ### Issuer (`issuer`)
 
 Issuer of bonds and reference entity for CDS.
 
-**Fields its Sutra reads:** `name`, `rating`, `sector`, `country`, `bonds`.
+**Fields its Sutra reads:** `NAME`, `RATING`, `SECTOR`, `COUNTRY`, `BONDS`.
 
-**Links:** `creditCurve` → Credit curve (`credit-curve`), `equity` → Equity (`equity`).
+**Links:** `CREDIT_CURVE` → Credit curve (`credit-curve`), `EQUITY` → Equity (`equity`).
 
 ### Central counterparty (`ccp`)
 
 A clearing house with its default fund and margin model.
 
-**Fields its Sutra reads:** `name`, `defaultFund`, `imPosted`, `marginModel`, `accounts`.
+**Fields its Sutra reads:** `NAME`, `DEFAULT_FUND`, `IM_POSTED`, `MARGIN_MODEL`, `ACCOUNTS`.
 
 ### Bank legal entity (`legal-entity`)
 
 The bank's own booking entity.
 
-**Fields its Sutra reads:** `name`, `lei`, `jurisdiction`, `regulator`, `desks`, `books`.
+**Fields its Sutra reads:** `NAME`, `LEI`, `JURISDICTION`, `REGULATOR`, `DESKS`, `BOOKS`.
 
 ### Book (`book`)
 
 A trading book: owner desk, trades and risk.
 
-**Fields its Sutra reads:** `name`, `deskName`, `tradeCount`, `mtm`, `dv01`, `topTrades`.
+**Fields its Sutra reads:** `NAME`, `DESK_NAME`, `TRADE_COUNT`, `MTM`, `DV01`, `TOP_TRADES`.
 
-**Links:** `desk` → Desk (`desk`).
+**Links:** `DESK` → Desk (`desk`).
 
 ### Desk (`desk`)
 
 A trading desk: books, limits and risk results.
 
-**Fields its Sutra reads:** `name`, `head`, `books`, `var99`, `mtm`, `positions`.
+**Fields its Sutra reads:** `NAME`, `HEAD`, `BOOKS`, `VAR_99`, `MTM`, `POSITIONS`.
 
-**Links:** `legalEntity` → Legal entity (`legal-entity`), `varResult` → VaR (`var`).
+**Links:** `LEGAL_ENTITY` → Legal entity (`legal-entity`), `VAR_RESULT` → VaR (`var`).
 
 ### Trader (`trader`)
 
 A trader and their books.
 
-**Fields its Sutra reads:** `name`, `deskName`, `tradeCount`, `books`.
+**Fields its Sutra reads:** `NAME`, `DESK_NAME`, `TRADE_COUNT`, `BOOKS`.
 
-**Links:** `desk` → Desk (`desk`).
+**Links:** `DESK` → Desk (`desk`).
 
 ### Holiday calendar (`calendar`)
 
 Business-day calendar (USNY, TARGET, GBLO, JPTO…).
 
-**Fields its Sutra reads:** `name`, `holidays2026`, `holidays2027`, `nextHoliday`, `nextHolidayDate`, `holidays`.
+**Fields its Sutra reads:** `NAME`, `HOLIDAYS_2026`, `HOLIDAYS_2027`, `NEXT_HOLIDAY`, `NEXT_HOLIDAY_DATE`, `HOLIDAYS`.
 
 ### Clearing account (`clearing-account`)
 
 An account at a CCP holding cleared trades and margin.
 
-**Fields its Sutra reads:** `ccpName`, `im`, `vmToday`, `excess`, `trades`.
+**Fields its Sutra reads:** `CCP_NAME`, `IM`, `VM_TODAY`, `EXCESS`, `TRADES`.
 
-**Links:** `ccp` → CCP (`ccp`).
+**Links:** `CCP` → CCP (`ccp`).
 
 ## Who can see it
 

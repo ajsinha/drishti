@@ -19,13 +19,13 @@
 
 import pandas as pd
 
-pos = pd.DataFrame(view.doc["positions"])     # tradeId, book, currency, family, mtm
-mtm = pos.pivot_table(index="book", columns="family", values="mtm", aggfunc="sum", fill_value=0,
+pos = pd.DataFrame(view.doc["POSITIONS"])     # TRADE_ID, BOOK, CURRENCY, FAMILY, MTM
+mtm = pos.pivot_table(index="BOOK", columns="FAMILY", values="MTM", aggfunc="sum", fill_value=0,
                       margins=True, margins_name="Total")
 show(mtm, title=f"{view.id}: MTM by book and product family")
 
-trades = await drishti.search_async(f"TRD where desk = '{view.id}' and pnl1d != 0 limit 1000")
-pnl = trades.pivot_table(index="book", columns="currency", values="pnl1d", aggfunc="sum", fill_value=0,
+trades = await drishti.search_async(f"TVAL where DESK = '{view.id}' and PNL_1D != 0 limit 1000")
+pnl = trades.pivot_table(index="PORTFOLIO", columns="CURRENCY", values="PNL_1D", aggfunc="sum", fill_value=0,
                          margins=True, margins_name="Total")
 show(pnl, title=f"1-day P&L by book and currency ({len(trades)} trades)")
-chart(trades.groupby("book", as_index=False)["pnl1d"].sum(), kind="bar", x="book", y="pnl1d", title="1-day P&L by book")
+chart(trades.groupby("PORTFOLIO", as_index=False)["PNL_1D"].sum(), kind="bar", x="PORTFOLIO", y="PNL_1D", title="1-day P&L by book")

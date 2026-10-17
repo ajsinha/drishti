@@ -24,24 +24,24 @@ from drishti import quant as q
 
 doc = view.doc
 as_of = date.fromisoformat(view.business_date or "2026-09-30")
-cds = await drishti.get_async("credit-curve", doc["creditCurve"]) if doc.get("creditCurve") else None
-cds_t = [q.tenor_years(p["tenor"]) for p in cds["points"]] if cds else []
-cds_s = [p["spread"] for p in cds["points"]] if cds else []
+cds = await drishti.get_async("credit-curve", doc["CREDIT_CURVE"]) if doc.get("CREDIT_CURVE") else None
+cds_t = [q.tenor_years(p["TENOR"]) for p in cds["POINTS"]] if cds else []
+cds_s = [p["SPREAD"] for p in cds["POINTS"]] if cds else []
 rows = []
-for b in doc.get("bonds") or []:
-    bond = await drishti.get_async("bond", "BND-" + b["isin"])
-    freq = {"Annual": 1, "Semi-annual": 2, "Quarterly": 4}.get((bond.get("terms") or {}).get("couponFrequency"), 2)
-    years = (date.fromisoformat(bond["maturity"]) - as_of).days / 365.25
-    ytm = q.bond_yield(bond["price"], bond["coupon"], years, freq)
-    times, amounts, accrued = q.bond_cashflows(bond["coupon"], years, freq)
-    bench = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", bond["benchmarkCurve"]))["points"])
-    zs = q.z_spread(bond["price"] + accrued, times, amounts, bench) * 1e4
+for b in doc.get("BONDS") or []:
+    bond = await drishti.get_async("bond", "BND-" + b["ISIN"])
+    freq = {"Annual": 1, "Semi-annual": 2, "Quarterly": 4}.get((bond.get("TERMS") or {}).get("COUPON_FREQUENCY"), 2)
+    years = (date.fromisoformat(bond["MATURITY"]) - as_of).days / 365.25
+    ytm = q.bond_yield(bond["PRICE"], bond["COUPON"], years, freq)
+    times, amounts, accrued = q.bond_cashflows(bond["COUPON"], years, freq)
+    bench = q.ZeroCurve.from_points((await drishti.get_async("ir-curve", bond["BENCHMARK_CURVE"]))["POINTS"])
+    zs = q.z_spread(bond["PRICE"] + accrued, times, amounts, bench) * 1e4
     cds_bp = float(np.interp(years, cds_t, cds_s)) if cds else None
-    rows.append({"bond": bond["isin"], "coupon %": bond["coupon"] * 100, "maturity": bond["maturity"], "years": years,
-                 "price": bond["price"], "yield %": ytm * 100, "Z-spread bp": zs, "Z-spread (master) bp": bond.get("zSpread"),
+    rows.append({"bond": bond["ISIN"], "coupon %": bond["COUPON"] * 100, "MATURITY": bond["MATURITY"], "years": years,
+                 "PRICE": bond["PRICE"], "yield %": ytm * 100, "Z-spread bp": zs, "Z-spread (master) bp": bond.get("Z_SPREAD"),
                  "CDS bp": cds_bp, "basis bp": cds_bp - zs if cds_bp is not None else None})
 out = pd.DataFrame(rows).sort_values("years").reset_index(drop=True)
-show(out, title=f"{view.id}: {doc.get('name', '')} ({doc.get('rating', '')}, {doc.get('sector', '')}), CDS curve {doc.get('creditCurve')}")
+show(out, title=f"{view.id}: {doc.get('NAME', '')} ({doc.get('RATING', '')}, {doc.get('SECTOR', '')}), CDS curve {doc.get('CREDIT_CURVE')}")
 if cds:
     curve = pd.DataFrame({"years": cds_t, "CDS spread bp": cds_s})
     chart(curve, kind="line", x="years", y="CDS spread bp", title="CDS term structure")

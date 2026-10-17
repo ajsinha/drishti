@@ -21,20 +21,20 @@ import numpy as np
 import pandas as pd
 
 doc = view.doc
-books = pd.DataFrame(doc["books"])
-books["P&L / VaR"] = books["pnl"] / books["var"]
-books["MTM / VaR"] = books["mtm"] / books["var"]
+books = pd.DataFrame(doc["BOOKS"])
+books["P&L / VaR"] = books["PNL"] / books["VAR"]
+books["MTM / VaR"] = books["MTM"] / books["VAR"]
 show(books.sort_values("P&L / VaR", ascending=False).reset_index(drop=True),
-     title=f"{view.id}: {doc.get('name', '')} ({doc.get('jurisdiction', '')}), {len(books)} books")
+     title=f"{view.id}: {doc.get('NAME', '')} ({doc.get('JURISDICTION', '')}), {len(books)} books")
 
-desks = books.groupby("desk").agg(books=("book", "size"), trades=("trades", "sum"), mtm=("mtm", "sum"), pnl=("pnl", "sum"),
-                                  var_sum=("var", "sum"))
-desks["P&L / VaR (sum)"] = desks["pnl"] / desks["var_sum"]
-desks["share of P&L"] = desks["pnl"] / desks["pnl"].abs().sum()
+desks = books.groupby("DESK").agg(books=("BOOK", "size"), trades=("TRADES", "sum"), mtm=("MTM", "sum"), pnl=("PNL", "sum"),
+                                  var_sum=("VAR", "sum"))
+desks["P&L / VaR (sum)"] = desks["PNL"] / desks["var_sum"]
+desks["share of P&L"] = desks["PNL"] / desks["PNL"].abs().sum()
 desks["share of VaR"] = desks["var_sum"] / desks["var_sum"].sum()
 show(desks.sort_values("var_sum", ascending=False), title="By desk (VaR summed over books: no diversification)")
-chart(books, kind="scatter", x="var", y="pnl", title="Books: today's P&L against VaR")
-chart(desks.reset_index(), kind="bar", x="desk", y=["share of P&L", "share of VaR"], title="Each desk's share of P&L and VaR")
-corr = np.corrcoef(books["var"], books["pnl"].abs())[0, 1]
-print(f"Total P&L {books['pnl'].sum():,.0f} on summed VaR {books['var'].sum():,.0f}; correlation of |P&L| with VaR across books "
+chart(books, kind="scatter", x="VAR", y="PNL", title="Books: today's P&L against VaR")
+chart(desks.reset_index(), kind="bar", x="DESK", y=["share of P&L", "share of VaR"], title="Each desk's share of P&L and VaR")
+corr = np.corrcoef(books["VAR"], books["PNL"].abs())[0, 1]
+print(f"Total P&L {books['PNL'].sum():,.0f} on summed VaR {books['VAR'].sum():,.0f}; correlation of |P&L| with VaR across books "
       f"{corr:.2f} (risk that pays should move with it)")
