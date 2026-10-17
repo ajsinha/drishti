@@ -57,3 +57,14 @@ def test_no_route_reads_a_json_body_by_itself():
            if re.search(r"request\.json\(|json\.loads\(\s*await|await request\.body\(\)\)?\s*\)?\s*\.json", p.read_text())]
     assert not bad, bad
     assert len(_json_routes()) >= 15
+
+
+def test_a_browser_that_leaves_before_its_body_arrives_is_a_quiet_499_not_a_stack_trace():
+    """Drill 2.2.0: a page left mid-save made Starlette's ClientDisconnect an 'Exception in ASGI application' in the log."""
+    from starlette.requests import ClientDisconnect
+
+    from core.csrf import gone
+
+    app = create_app(load_settings(CONSOLE / "config"))
+    assert app.exception_handlers.get(ClientDisconnect) is gone
+    assert gone(None, ClientDisconnect()).status_code == 499

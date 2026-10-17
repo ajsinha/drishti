@@ -266,7 +266,6 @@ def test_the_excel_export_has_native_charts_and_a_masked_column_is_never_plotted
                            check=True, timeout=60)
 
 
-@pytest.mark.xfail(strict=True, reason='server: the AI draft and suggest endpoints resolve only a dataset (BiReportService.datasetFor), not the model a 2.2 report reads (DRS-9034 for trades-basic@1); the console sends the model')
 def test_the_designer_copilot_suggests_checks_and_adds_on_accept(stack, browser):
     page = sign_in(browser, "wes", "/bi/design/" + REPORT)
     page.wait_for_selector("[data-ready=yes]", timeout=30000)

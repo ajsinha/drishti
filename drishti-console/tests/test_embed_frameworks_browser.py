@@ -34,7 +34,9 @@ import pytest
 
 os.environ.setdefault("DRISHTI_BI_LIVE_SERVER_PORT", "18949")
 os.environ.setdefault("DRISHTI_BI_LIVE_CONSOLE_PORT", "17949")
-HOST_PORT = int(os.environ.get("DRISHTI_EMBED_FRAMEWORKS_HOST_PORT", "17947"))
+from scratch_ports import worker_port  # noqa: E402
+
+HOST_PORT = worker_port(os.environ.get("DRISHTI_EMBED_FRAMEWORKS_HOST_PORT", "17947"))
 
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 from playwright.sync_api import expect, sync_playwright  # noqa: E402

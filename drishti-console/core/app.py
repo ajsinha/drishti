@@ -317,12 +317,15 @@ def create_app(settings: Settings) -> FastAPI:
 
     app.state.business_dates = BusinessDates()
     app.state.templates = templates
-    from core.csrf import BodyError, SameOrigin, problem
+    from starlette.requests import ClientDisconnect
+
+    from core.csrf import BodyError, SameOrigin, gone, problem
 
     app.add_middleware(AuthGate)
     app.add_middleware(SameOrigin, allowed=settings.get("auth.allowed_origins") or ())    # before any session work
     app.add_middleware(SecurityHeaders)
     app.add_exception_handler(BodyError, problem)
+    app.add_exception_handler(ClientDisconnect, gone)
     from core.notfound import not_found
 
     app.add_exception_handler(404, not_found)

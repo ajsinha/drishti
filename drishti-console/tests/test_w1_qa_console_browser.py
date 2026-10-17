@@ -18,7 +18,7 @@ an alert watches a measure of a model through pickers; a model in a private work
 and starts reports and boards; the security rule's role picker and the roles note; the Datasets list leaves the Security tab; the Models page puts models
 and your datasets before the packs' (grouped, collapsible); the Subscribe form builds its schedule from choices; the new-dataset wizard fits 390 px.
 
-Skipped when Playwright, Chromium or a built server jar is missing, or a scratch port is in use. Never run with pytest -n (the ports are fixed)."""
+Skipped when Playwright, Chromium or a built server jar is missing, or a scratch port is in use. Each pytest-xdist worker adds 100 to the ports (tests/scratch_ports.py)."""
 from __future__ import annotations
 
 import os
@@ -34,11 +34,10 @@ import test_w1_model_designer_browser as base  # noqa: E402
 MAIN = Path(os.environ.get("DRISHTI_MAIN_CHECKOUT", "/home/ashutosh/IdeaProjects/drishti"))
 if not list((base.ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar")) and (MAIN / "drishti-server" / "target").exists():
     base.ROOT = MAIN                                   # the jar, the packs and the sample config are read-only inputs; the console under test is this checkout's
-base.SERVER_PORT, base.CONSOLE_PORT = 18914, 17914
-base.SERVER, base.CONSOLE_URL = f"http://127.0.0.1:{base.SERVER_PORT}", f"http://127.0.0.1:{base.CONSOLE_PORT}"
 from test_w1_model_designer_browser import browser, clean, fetch, sign_in, stack  # noqa: E402,F401
 
-CONSOLE_URL = base.CONSOLE_URL
+PORTS = base.worker_ports(18914, 17914)              # this file's own stack: the stack fixture switches the base module to them
+CONSOLE_URL = f"http://127.0.0.1:{PORTS[1]}"
 
 
 def test_analyse_opens_a_pack_dataset_through_the_grouped_picker(browser):

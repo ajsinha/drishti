@@ -18,7 +18,7 @@ keys, meanings, time mode); a new model takes it and the desks, the pack referen
 from the column; a role restricted on trades but not on desks raises the safeguard beside the Security tab and is resolved with one click; the model is
 saved; a report started from it reads the model in its Fields pane; and the model query's answer equals the old dataset query over the same rows.
 
-Skipped when Playwright, Chromium or the built server jar is missing, or a scratch port is in use. Never run with pytest -n (the ports are fixed)."""
+Skipped when Playwright, Chromium or the built server jar is missing, or a scratch port is in use. Each pytest-xdist worker adds 100 to the ports (tests/scratch_ports.py)."""
 from __future__ import annotations
 
 import glob
@@ -37,11 +37,20 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 from bi_stack import FORBIDDEN, listening, wait  # noqa: E402
+from scratch_ports import worker_ports  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 CONSOLE = ROOT / "drishti-console"
-SERVER_PORT, CONSOLE_PORT = 18918, 17918
+PORTS = worker_ports(18918, 17918)       # a file that reuses this stack names its own PORTS; the stack fixture switches to the running file's
+SERVER_PORT, CONSOLE_PORT = PORTS
 SERVER, CONSOLE_URL = f"http://127.0.0.1:{SERVER_PORT}", f"http://127.0.0.1:{CONSOLE_PORT}"
+
+
+def use_ports(ports) -> None:
+    """Points this module's stack and helpers at the given (server, console) ports: the file being run, never whichever file was imported last."""
+    global SERVER_PORT, CONSOLE_PORT, SERVER, CONSOLE_URL
+    SERVER_PORT, CONSOLE_PORT = ports
+    SERVER, CONSOLE_URL = f"http://127.0.0.1:{SERVER_PORT}", f"http://127.0.0.1:{CONSOLE_PORT}"
 SECRET = "w1-model-scratch-secret-0123456789abcdef"
 PASSWORD = "long-enough-pass-1"
 DESKS = [("DESK-FX", "Foreign exchange"), ("DESK-FI", "Fixed income"), ("DESK-EQD", "Equity derivatives")]
@@ -145,7 +154,8 @@ class Stack:
 
 
 @pytest.fixture(scope="module")
-def stack(tmp_path_factory):
+def stack(request, tmp_path_factory):
+    use_ports(getattr(request.module, "PORTS", PORTS))
     for port in (SERVER_PORT, CONSOLE_PORT):
         if listening(port):
             pytest.skip(f"port {port} is in use: stop whatever listens there")

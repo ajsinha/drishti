@@ -26,7 +26,7 @@ from __future__ import annotations
 import json
 from urllib.parse import urlsplit
 
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
 UNSAFE = frozenset({"POST", "PUT", "PATCH", "DELETE"})
@@ -79,6 +79,11 @@ class BodyError(Exception):
 
 def problem(_request, e: BodyError) -> JSONResponse:
     return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
+
+
+def gone(_request, _e) -> Response:
+    """The browser went away before its request body arrived (a page left mid-save): nobody reads an answer, so a quiet 499, not a stack trace."""
+    return Response(status_code=499)
 
 
 def _too_large(size: int, limit: int, what: str, at_least: bool = False) -> str:

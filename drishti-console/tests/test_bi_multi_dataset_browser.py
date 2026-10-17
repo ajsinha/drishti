@@ -138,7 +138,6 @@ def test_each_input_is_asked_as_the_reader(stack):
 
 # ---- the sample report: the sector slicer and the donut filter every visual of the one model ----------------------------------------------
 
-@pytest.mark.xfail(strict=True, reason='server: a slicer of the shipped pnl-vs-exposure report fails with DRS-9027 (Binder Error: column sector must appear in the GROUP BY) under the report filter Trades > 0 the converter wrote')
 def test_the_sample_report_answers_as_the_model_and_its_slicer_filters_every_visual(stack, browser):
     page = sign_in(browser, "rita")
     open_report(page, REPORT)

@@ -33,7 +33,9 @@ from bi_stack import FORBIDDEN, listening, wait  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 CONSOLE = ROOT / "drishti-console"
-SERVER_PORT, CONSOLE_PORT = 18963, 17963
+from scratch_ports import worker_ports  # noqa: E402
+
+SERVER_PORT, CONSOLE_PORT = worker_ports(18963, 17963)
 SERVER, CONSOLE_URL = f"http://127.0.0.1:{SERVER_PORT}", f"http://127.0.0.1:{CONSOLE_PORT}"
 
 
