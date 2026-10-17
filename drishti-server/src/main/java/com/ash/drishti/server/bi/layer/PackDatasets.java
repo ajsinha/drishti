@@ -75,6 +75,18 @@ public final class PackDatasets {
         this.liveDefault = liveDefault;
     }
 
+    /**
+     * Whether the pack's connector holds one slice of its kinds ({@code settings.union: true}, as the trading pack's trade-endur, trade-calypso
+     * and trade-murex): a route names one of them for reads, but a BI table of the kind must read them all.
+     */
+    static boolean unionMember(Pack p, String connector) {
+        if (connector == null || connector.isBlank()) {
+            return false;
+        }
+        Map<String, Object> spec = map(map(p.manifest().get("connectors")).get(connector));
+        return Boolean.parseBoolean(String.valueOf(map(spec.get("settings")).get("union")));
+    }
+
     /** Every generated dataset, by name. */
     public Map<String, DatasetDef> all() {
         refresh();
@@ -209,6 +221,9 @@ public final class PackDatasets {
         Map<String, Object> grain = map(refine.get("grain"));
         List<String> keys = grain.get("keys") instanceof List<?> l ? l.stream().map(String::valueOf).toList() : List.of("id");
         String connector = p.routes().getOrDefault(kind, info.connector());
+        if (unionMember(p, connector)) {
+            connector = null;                      // one source system of several (union: true): the table reads every one of them together
+        }
         String forced = refine.get("time") == null ? null : String.valueOf(refine.get("time"));
         String mode = forced != null ? forced : liveDefault && pushes.test(kind) ? "live" : "snapshot";
         String name = DatasetDef.PACK_PREFIX + p.name() + "." + kind;
