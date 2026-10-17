@@ -21,7 +21,7 @@ and its regions, a bar, and a slicer. You look at it, cross-filter it, publish i
 
 ### In the designer
 
-You can build the same report yourself with two datasets (pictures to follow). Open **Designer**, start a report on `trading-risk`, and in the Fields pane press **Add dataset** and choose `counterparty-exposure`: a second tree appears, labelled. Drag `counterparties.sector` of the *second* tree onto the canvas: the new visual reads that dataset and carries a small tag with its name. Drag a field of the second tree onto a visual of the first and you are told *this visual reads ...; put ... fields in another visual, or make a composed dataset*. Under the tree the **Links between datasets** panel offers fields that mean the same; tick one and the report's `links:` has it, so a slicer on one dataset filters the other. **Make a composed dataset from these** shows the `from:` / `join:` draft for you to read before anything is saved.
+You can build the same report yourself with two datasets (pictures to follow). Open **Designer**, start a report on `trading-risk`, and in the Fields pane press **Add dataset** and choose `counterparty-exposure`: a second tree appears, labelled. Drag `counterparties.SECTOR` of the *second* tree onto the canvas: the new visual reads that dataset and carries a small tag with its name. Drag a field of the second tree onto a visual of the first and you are told *this visual reads ...; put ... fields in another visual, or make a composed dataset*. Under the tree the **Links between datasets** panel offers fields that mean the same; tick one and the report's `links:` has it, so a slicer on one dataset filters the other. **Make a composed dataset from these** shows the `from:` / `join:` draft for you to read before anything is saved.
 
 ## Time to complete
 
@@ -52,12 +52,12 @@ A report reads a **model**: a small star of **datasets** (each one table with it
 between them and the **measures** the model owns. Choose **Models** in the left rail. Under *Your models* find **World economics**
 (`world-economics`, `model 1.0.0 · published`) and press **Open the designer**, then the **Measures** tab.
 
-![The World economics model in the model designer: v1.0.0, Read-only, Valid; Used by the World economics report; the Measures tab with Economies = count(economies) and GDP (USD bn) = sum(economies.gdpUsdBn)](img/t10/01-model.jpg)
+![The World economics model in the model designer: v1.0.0, Read-only, Valid; Used by the World economics report; the Measures tab with Economies = count(economies) and GDP (USD bn) = sum(economies.GDP_USD_BN)](img/t10/01-model.jpg)
 
 You should see `World economics`, `v1.0.0`, `Read-only` (it ships with Drishti: **Save a copy** makes one of your own) and `Valid`, **Used by** the
 report **World economics**, and the seven **measures** (`Economies`, `GDP (USD bn)`, `Population (m)`, `GDP per capita (USD)`, `Average growth`,
 `Average inflation`, `Average unemployment`), each a formula the model owns, so every report on it agrees. `GDP per capita (USD)` is
-`ratio(sum(economies.gdpUsdBn), sum(economies.populationM)) * 1000`: GDP over population, not an average of averages, so a region's figure is right. The
+`ratio(sum(economies.GDP_USD_BN), sum(economies.POPULATION_M)) * 1000`: GDP over population, not an average of averages, so a region's figure is right. The
 **Canvas** tab shows the one dataset the model reads, under the alias `economies`. Back on **Models**, under *Your datasets*, press **Open** on
 **World economics: economies**.
 
@@ -72,9 +72,9 @@ is what a map needs), World Bank region and income group and a few figures. The 
 three measures, the biggest economies first:
 
 ```text
-$ python3 tools/drishti.py bi mq --model world-economics@1 --select economies.regionName \
+$ python3 tools/drishti.py bi mq --model world-economics@1 --select economies.REGION_NAME \
     --measures "GDP (USD bn),Population (m),GDP per capita (USD)" --sort="-GDP (USD bn)"
-economies.regionName                               GDP (USD bn)  Population (m)  GDP per capita (USD)
+economies.REGION_NAME                               GDP (USD bn)  Population (m)  GDP per capita (USD)
 -------------------------------------------------  ------------  --------------  --------------------
 North America                                      33,098.79     383.50          86,306.87
 East Asia & Pacific                                32,710.77     2,340.96        13,973.22
@@ -91,7 +91,7 @@ Sub-Saharan Africa                                 2,213.29      1,318.05       
 ```yaml
 mq: 1
 model: world-economics@1
-select: { fields: [economies.regionName], measures: [GDP (USD bn), Population (m), GDP per capita (USD)] }
+select: { fields: [economies.REGION_NAME], measures: [GDP (USD bn), Population (m), GDP per capita (USD)] }
 sort: [{ by: GDP (USD bn), desc: true }]
 ```
 
@@ -122,7 +122,7 @@ and the layer.
 
 ## Step 4 · A map
 
-Click an empty part of the canvas to let go of the selection, then click **map** in **Visualizations**. In **Build**, add `economies.iso3` to the **location** well and `GDP per capita (USD)` to **values**.
+Click an empty part of the canvas to let go of the selection, then click **map** in **Visualizations**. In **Build**, add `economies.ISO3` to the **location** well and `GDP per capita (USD)` to **values**.
 
 ![A world map shaded by GDP per capita, the location and values wells below](img/t10/05-map.jpg)
 
@@ -131,8 +131,8 @@ are dots so they can be clicked. The shapes are Natural Earth, shipped with the 
 
 ## Step 5 · A bar, a slicer, and where everything sits
 
-Add a bar: with nothing selected click **bar**, put `economies.name` in **axis** and `GDP (USD bn)` in **values**. Add a slicer: click **slicer**, put `economies.regionName` in **field**, then open **Format** and set the mode to **dropdown**.
-The visuals are stacked wherever there was room, so now place them. **In the UI**, drag a visual by its header and resize it by its corner (the places snap to the 12-column grid), and give the bar its **top 10** in the **Filters** pane: under *On this visual* press **Add a filter**, choose the field `economies.name`, the filter type **Top N**, *Keep the top* `10`, *with the* `highest`, *by measure* `GDP (USD bn)`, and press **Add the filter**. **From the YAML** (the exact way, and what both of these write), open the **YAML** tab: the report is text, and each visual has `at: { x, y, w, h }` on the 12-column grid. Give each one a title and a place, and give the bar a **top 10** filter
+Add a bar: with nothing selected click **bar**, put `economies.NAME` in **axis** and `GDP (USD bn)` in **values**. Add a slicer: click **slicer**, put `economies.REGION_NAME` in **field**, then open **Format** and set the mode to **dropdown**.
+The visuals are stacked wherever there was room, so now place them. **In the UI**, drag a visual by its header and resize it by its corner (the places snap to the 12-column grid), and give the bar its **top 10** in the **Filters** pane: under *On this visual* press **Add a filter**, choose the field `economies.NAME`, the filter type **Top N**, *Keep the top* `10`, *with the* `highest`, *by measure* `GDP (USD bn)`, and press **Add the filter**. **From the YAML** (the exact way, and what both of these write), open the **YAML** tab: the report is text, and each visual has `at: { x, y, w, h }` on the 12-column grid. Give each one a title and a place, and give the bar a **top 10** filter
 (a filter on the visual, `op: top`: the ten economies with the largest GDP):
 
 ![The YAML tab: each visual with its title and its at: place](img/t10/06-yaml-places.jpg)
@@ -147,13 +147,13 @@ The visuals are stacked wherever there was room, so now place them. **In the UI*
   type: map
   title: "GDP per capita (USD): click a country"
   at: { x: 0, y: 2, w: 8, h: 8 }
-  wells: { location: [economies.iso3], values: [GDP per capita (USD)] }
+  wells: { location: [economies.ISO3], values: [GDP per capita (USD)] }
 - id: bar-1
   type: bar
   title: "Largest economies (GDP, USD bn)"
   at: { x: 8, y: 2, w: 4, h: 8 }
-  wells: { axis: [economies.name], values: [GDP (USD bn)] }
-  filters: [{ field: economies.name, op: top, n: 10, by: GDP (USD bn) }]
+  wells: { axis: [economies.NAME], values: [GDP (USD bn)] }
+  filters: [{ field: economies.NAME, op: top, n: 10, by: GDP (USD bn) }]
 ```
 
 You should see the YAML with `at:` lines and no complaints (a mistake is reported with its code, and `DRS-9030` is a place off the grid). Switch back to **Canvas**. (You can also drag a visual by its header and resize it by its corner; the YAML is simply the exact way.)
@@ -170,9 +170,9 @@ Press **View**: the report opens as a reader sees it.
 
 You should see the toolbar (business date, *Click a mark to filter the page / highlight*, **Reset**), the **Export** bar (PDF, PNG, Excel, CSV, Subscribe; tutorial 11), and your visuals drawn with real data. Now **click Australia** on the map.
 
-![Australia selected: a chip economies.iso3: AUS, the cards show one economy, the bar shows Australia alone, the map has opened Australia's regions](img/t10/09-country.jpg)
+![Australia selected: a chip economies.ISO3: AUS, the cards show one economy, the bar shows Australia alone, the map has opened Australia's regions](img/t10/09-country.jpg)
 
-You should see three things at once. A **chip** under the toolbar, `economies.iso3: AUS`, says what is filtering the page. The cards answer for Australia alone (`1,799` billion dollars of GDP, `27.61` million people): this is the **cross-filter**. And the map **drilled**:
+You should see three things at once. A **chip** under the toolbar, `economies.ISO3: AUS`, says what is filtering the page. The cards answer for Australia alone (`1,799` billion dollars of GDP, `27.61` million people): this is the **cross-filter**. And the map **drilled**:
 its title bar says **World › Australia**, and the shapes of Australia's states and territories replace the world.
 
 ![The map one level down: World then Australia, the states and territories](img/t10/10-regions.jpg)
@@ -336,7 +336,7 @@ You should see the two sources as boxes (their grouping columns and measures, th
 
 ![The report: three cards, a Sector slicer, bars of P&L and exposure for the ten counterparties with the most exposure, a donut of exposure by sector, and a table](img/t10/29-two-datasets-report.jpg)
 
-You should see `Desk P&L` `2,671,113`, `Exposure (EE peak)` `1,447,544,943` and the ratio. Two visuals of this report read a **different dataset** from the rest: the **Sector** slicer and the donut read `counterparty-exposure` directly, while the cards, the bars and the table read the composed one. The report's `links:` say that the exposure dataset's `counterparties.sector` and the composed dataset's `joined.sector` are the same thing. In the Sector slicer choose **Banking**.
+You should see `Desk P&L` `2,671,113`, `Exposure (EE peak)` `1,447,544,943` and the ratio. Two visuals of this report read a **different dataset** from the rest: the **Sector** slicer and the donut read `counterparty-exposure` directly, while the cards, the bars and the table read the composed one. The report's `links:` say that the exposure dataset's `counterparties.SECTOR` and the composed dataset's `joined.sector` are the same thing. In the Sector slicer choose **Banking**.
 
 ![Banking chosen: the cards read -1,456,152 and 240,271,956, the bars keep only banks, the donut is Banking 100%](img/t10/30-sector-chosen.jpg)
 
@@ -483,8 +483,8 @@ measures: {}          # the defaults of the columns: Count of large_economies, S
 ids differ on your machine):
 
 ```text
-$ python3 tools/drishti.py bi model check large-economies.dataset.yaml          # the server's Check, nothing stored
-$ python3 tools/drishti.py bi item new models-desk large-economies.dataset.yaml
+$ python3 tools/drishti.py bi model check large-economies.DATASET.yaml          # the server's Check, nothing stored
+$ python3 tools/drishti.py bi item new models-desk large-economies.DATASET.yaml
 $ python3 tools/drishti.py bi catalogue publish <the dataset's id>
 $ python3 tools/drishti.py bi item new models-desk large-economies-model.model.yaml
 $ python3 tools/drishti.py bi mq --model large-economies-model@1 --select large_economies.regionName \

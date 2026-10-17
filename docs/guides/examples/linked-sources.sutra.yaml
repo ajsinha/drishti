@@ -19,22 +19,22 @@ description: >
   Panels that read other entities with `source`. These need the live demo packs (counterparty, netting set, desk),
   so unlike the other examples this one is not self-contained.
 match: { kind: trade }
-title: { pill: "Linked sources · ${$.productName}", id: $.tradeId }
+title: { pill: "Linked sources · ${$.PRODUCT_TYPE}", id: $.TRADE_ID }
 panels:
   - id: sets
     kind: tabs
     title: The counterparty's netting sets
     span: 6
-    source: "link($.counterparty.id, 'counterparty')"
-    each: $.nettingSets
-    tabTitle: "@.id"
+    source: "link($.COUNTERPARTY, 'counterparty')"
+    each: $.NETTING_SETS
+    tabTitle: "@.ID"
     body:
       kind: kv
       columns:
-        - { label: Agreement, bind: "@.agreement", link: true }
-        - { label: Trades, bind: "@.trades" }
-        - { label: Net MTM, bind: "@.netMtm", fmt: signed0, tone: sign }
-  - { id: exposure, kind: area, title: "Netting-set exposure (USD)", span: 6, source: "link($.nettingSet, 'netting-set')",
-      rows: $.profile, x: tenor, limit: $.limit, series: [ { label: EE, value: ee, tone: link }, { label: PFE 95, value: pfe, tone: accent } ] }
-  - { id: grid, kind: pivot, title: "The desk's MTM by book and family (USD)", source: "link($.desk, 'desk')",
-      rows: $.positions, by: book, across: family, value: mtm, heat: true, fmt: compact, tone: sign }
+        - { label: Agreement, bind: "@.AGREEMENT", link: true }
+        - { label: Trades, bind: "@.TRADES" }
+        - { label: Net MTM, bind: "@.NET_MTM", fmt: signed0, tone: sign }
+  - { id: exposure, kind: area, title: "Netting-set exposure (USD)", span: 6, source: "link($.NETTING_SET, 'netting-set')",
+      rows: $.PROFILE, x: TENOR, limit: $.LIMIT, series: [ { label: EE, value: EE, tone: link }, { label: PFE 95, value: PFE, tone: accent } ] }
+  - { id: grid, kind: pivot, title: "The desk's MTM by book and family (USD)", source: "link($.DESK, 'desk')",
+      rows: $.POSITIONS, by: BOOK, across: FAMILY, value: MTM, heat: true, fmt: compact, tone: sign }

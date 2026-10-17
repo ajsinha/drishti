@@ -181,7 +181,7 @@ title: Desk notional, first look
 dataset: mq:trades-basic@1       # the model it reads (mq:<model>@<major>, or dataset:<name> for a dataset's implicit model)
 fields: [trade.tradeId, trade.desk, trade.book, trade.notional, trade.mtm]
 extracts:                       # optional: further extracts, read by a cell as extract("name") and in SQL as a table of that name
-  - { name: exposure, dataset: mq:counterparty-exposure@1, fields: [netting_sets.counterparty, netting_sets.eePeak] }
+  - { name: exposure, dataset: mq:counterparty-exposure@1, fields: [netting_sets.COUNTERPARTY, netting_sets.EE_PEAK] }
 cells:
   - type: slice
     slice: { rows: [desk], columns: [], values: [{ field: notional, agg: sum }], filters: [] }

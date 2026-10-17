@@ -59,7 +59,7 @@ mock:
         report: gdp-by-region
         ...
     - match: "(?i)QUESTION: [^\\n]*per capita"     # "Ask the data": answer with a query (names only)
-      reply: '{"fields":["economies.regionName"],"measures":["GDP per capita (USD)"],...}'
+      reply: '{"fields":["economies.REGION_NAME"],"measures":["GDP per capita (USD)"],...}'
 ```
 
 The mock answers from the **first rule whose regular expression is found in the last message**; with no rule it echoes. That makes the features repeatable, and it is exactly what you want to see before a real model is behind them. Now switch the layer on, on the **server** (it runs the BI hooks) and on the **console** (it shows Admin → AI and
@@ -110,8 +110,8 @@ Before using a feature, know the two gates and the contents. **Gate one**: the B
 DATASET world-economics: World economics
 FIELDS (write them as table.column):
   table economies:
-    economies.regionName string - the World Bank region
-    economies.gdpUsdBn decimal
+    economies.REGION_NAME string - the World Bank region
+    economies.GDP_USD_BN decimal
 MEASURES (write them by name):
   GDP (USD bn) - Gross domestic product at current prices, USD billions.
 QUESTION: GDP by region
@@ -171,17 +171,17 @@ Open the **World economics** report (it reads the model `world-economics@1`). Un
 
 You should see the answer as a **table** and **the visual that suits it** (Drishti chooses it from the shape of the query, not the model: a card for one number, a line over dates, a bar for a few categories), a line `7 rows, answered by the engine for you` and **The query the model chose**. Open that disclosure.
 
-![The query the model chose, as JSON: fields economies.regionName, measures GDP (USD bn), orderBy GDP descending, limit 200](img/t15/06-ask-query.jpg)
+![The query the model chose, as JSON: fields economies.REGION_NAME, measures GDP (USD bn), orderBy GDP descending, limit 200](img/t15/06-ask-query.jpg)
 
 You should see the query: `fields`, `measures`, `filters`, `orderBy`, `limit`. The model chose **names** (of the report's model); the **engine** validated every name, bound every value and ran it as a **model query** of `world-economics@1` **as you**: your row rules and your masks applied, so two people asking the same question get the answers they may each see. A query the model got wrong is refused by the engine with its code (`DRS-9020`) and shown as "the query the model chose was refused"; a question the model cannot turn into a query is `DRS-4020`, not a guess.
 
 ```text
 $ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
     -d '{"report": "file:report:world-economics", "question": "GDP per capita by region"}' "$DRISHTI_SERVER/api/v1/bi/ai/ask"
-200 {"columns": [{"name": "economies.regionName", ...}, {"name": "GDP per capita (USD)", ...}],
+200 {"columns": [{"name": "economies.REGION_NAME", ...}, {"name": "GDP per capita (USD)", ...}],
      "rows": [["North America", 86306.87], ["Europe & Central Asia", 34597.99], ["East Asia & Pacific", 13973.21], ...], "rowCount": 7,
      "meta": {"layer": "columns", "rows": 7, "tables": ["economies"], "masked": [], ...},
-     "query": {"fields": ["economies.regionName"], "measures": ["GDP per capita (USD)"], "filters": [], "orderBy": [{"desc": true, "by": "GDP per capita (USD)"}], "limit": 200},
+     "query": {"fields": ["economies.REGION_NAME"], "measures": ["GDP per capita (USD)"], "filters": [], "orderBy": [{"desc": true, "by": "GDP per capita (USD)"}], "limit": 200},
      "visual": "bar", "values": "labels-only", "summary": null}
 $ curl ... -d '{"report": "file:report:world-economics", "question": "something odd"}' "$DRISHTI_SERVER/api/v1/bi/ai/ask"
 422 {"code": "DRS-4020", "detail": "DRS-4020 the model did not answer with a query"}
@@ -191,8 +191,8 @@ You should see the answer, the query and `"summary": null` (in `labels-only` the
 is an ordinary model query: the same question **without** AI, on the command line, gives the same numbers:
 
 ```text
-$ python3 tools/drishti.py bi mq --model world-economics@1 --select economies.regionName --measures "GDP per capita (USD)" --limit 3
-economies.regionName       GDP per capita (USD)
+$ python3 tools/drishti.py bi mq --model world-economics@1 --select economies.REGION_NAME --measures "GDP per capita (USD)" --limit 3
+economies.REGION_NAME       GDP per capita (USD)
 -------------------------  --------------------
 East Asia & Pacific        13,973.22
 Europe & Central Asia      34,598.00
@@ -205,12 +205,12 @@ and **as YAML** (`bi mq that.yaml`):
 ```yaml
 mq: 1
 model: world-economics@1
-select: { fields: [economies.regionName], measures: [GDP per capita (USD)] }
+select: { fields: [economies.REGION_NAME], measures: [GDP per capita (USD)] }
 sort: [{ by: GDP per capita (USD), desc: true }]
 limit: 200
 ``` Now **Explain this number**: press the light bulb in the header of the **GDP (USD bn)** card.
 
-![Explain this number: GDP (USD bn) = 117,326.82; Model World economics 1.0.0, Measure GDP (USD bn) = sum(economies.gdpUsdBn), Reads economies.gdpUsdBn, Sources economies: world-economics-economies 1.0.0 (economy, macro-store); then the top members by name with their share](img/t15/07-explain.jpg)
+![Explain this number: GDP (USD bn) = 117,326.82; Model World economics 1.0.0, Measure GDP (USD bn) = sum(economies.GDP_USD_BN), Reads economies.GDP_USD_BN, Sources economies: world-economics-economies 1.0.0 (economy, macro-store); then the top members by name with their share](img/t15/07-explain.jpg)
 
 You should see the **lineage** (what the report reads: the model at the version that answered, the measure's definition in the model, the columns it reads, the sources: each table's dataset by its current name and version, the pack kind and connector) and the **breakdown** the engine computed for you: the total, then its main dimensions with their top members and **share** (United States 30,769.7, 26.2%; China 19,498.0, 16.6%). In `labels-only` mode no model is called at all for Explain: it is lineage and arithmetic. Explain says **what a number is made of**, not why it moved over time. The API behind the light bulb, captured:
 
@@ -218,11 +218,11 @@ You should see the **lineage** (what the report reads: the model at the version 
 $ curl ... -d '{"report": "file:report:world-economics", "page": "world", "visual": "gdp", "measure": "GDP (USD bn)", "state": {}}' "$DRISHTI_SERVER/api/v1/bi/ai/explain"
 200 {"measure": "GDP (USD bn)",
      "lineage": {"dataset": {"name": "world-economics", "title": "World economics", "version": "1.0.0"}, "model": {"name": "world-economics", "version": "1.0.0"},
-                 "measure": {"name": "GDP (USD bn)", "expr": "sum(economies.gdpUsdBn)", "description": "Gross domestic product at current prices, USD billions."},
-                 "columns": [{"name": "economies.gdpUsdBn", "type": "decimal", "calculated": false, "expr": null}],
+                 "measure": {"name": "GDP (USD bn)", "expr": "sum(economies.GDP_USD_BN)", "description": "Gross domestic product at current prices, USD billions."},
+                 "columns": [{"name": "economies.GDP_USD_BN", "type": "decimal", "calculated": false, "expr": null}],
                  "sources": [{"table": "economies", "dataset": "world-economics-economies", "version": "1.0.0", "kind": "economy", "connector": "macro-store", "mode": "cached"}]},
      "value": 117326.8175073999,
-     "breakdown": [{"dimension": "economies.name", "members": [{"member": "United States", "value": 30769.7, "share": 26.2}, ...]}, ...]}
+     "breakdown": [{"dimension": "economies.NAME", "members": [{"member": "United States", "value": 30769.7, "share": 26.2}, ...]}, ...]}
 ```
 
 (A page that is not the report's is `DRS-9035 the report has no page 'main'`; the World economics report's page is `world`.)
@@ -294,7 +294,7 @@ pages:
   - id: p
     title: P
     visuals:
-      - { id: v, type: bar, title: V, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { axis: [economies.nope], values: [Nothing] } }
+      - { id: v, type: bar, title: V, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { axis: [economies.NOPE], values: [Nothing] } }
 ```
 
 ![Check, explained in plain words: two DRS-9031 problems (no column nope, no measure Nothing), each with what it means and what to change](img/t15/10-check-explained.jpg)
@@ -306,17 +306,17 @@ In the **model designer** (Models → a model of your own → *Open*), **Ask the
 
 ![The AI helper in the model designer: a measure and two field descriptions, each with its YAML and Accept](img/t15/11-dataset-helper.jpg)
 
-You should see `3 proposed. Nothing changes until you accept one.`, the measure `Average GDP per economy` (`avg(economies.gdpUsdBn)`) and the two field descriptions
-(`economies.regionName`, `economies.incomeName`), each with the YAML it adds: only items that fit the model (the mock also proposed a measure over a
+You should see `3 proposed. Nothing changes until you accept one.`, the measure `Average GDP per economy` (`avg(economies.GDP_USD_BN)`) and the two field descriptions
+(`economies.REGION_NAME`, `economies.INCOME_NAME`), each with the YAML it adds: only items that fit the model (the mock also proposed a measure over a
 column that does not exist and a description for an unknown field; both were dropped). The API behind the button, on the model:
 
 ```text
 $ curl ... -d '{"dataset": "<the id of My world economics>"}' "$DRISHTI_SERVER/api/v1/bi/ai/dataset-helper"
 200 {"dataset": "bi-...", "model": "my-world-economics@1",
      "items": [{"id": "measure:Average GDP per economy", "kind": "measure", "label": "Average GDP per economy", "why": "The mean GDP of one economy, USD billions",
-                "yaml": "Average GDP per economy: { expr: \"avg(economies.gdpUsdBn)\", description: \"The mean GDP of one economy, USD billions\" }", ...},
-               {"id": "field:economies.regionName", "kind": "field", "yaml": "economies.regionName: { description: \"The World Bank region the economy is in\" }", ...},
-               {"id": "field:economies.incomeName", "kind": "field", ...}],
+                "yaml": "Average GDP per economy: { expr: \"avg(economies.GDP_USD_BN)\", description: \"The mean GDP of one economy, USD billions\" }", ...},
+               {"id": "field:economies.REGION_NAME", "kind": "field", "yaml": "economies.REGION_NAME: { description: \"The World Bank region the economy is in\" }", ...},
+               {"id": "field:economies.INCOME_NAME", "kind": "field", ...}],
      "applied": false}
 ```
 
@@ -325,10 +325,10 @@ and in YAML, after the three Accepts and Save, the model has:
 ```yaml
 measures:
   # ... the seven of world-economics
-  Average GDP per economy: { expr: "avg(economies.gdpUsdBn)", description: "The mean GDP of one economy, USD billions" }
+  Average GDP per economy: { expr: "avg(economies.GDP_USD_BN)", description: "The mean GDP of one economy, USD billions" }
 fields:
-  economies.regionName: { description: "The World Bank region the economy is in" }
-  economies.incomeName: { description: "The World Bank income group of the economy" }
+  economies.REGION_NAME: { description: "The World Bank region the economy is in" }
+  economies.INCOME_NAME: { description: "The World Bank income group of the economy" }
 ```
 
 (Asked of a version 1 dataset by its id, the helper still answers in that dataset's own YAML: `book: { type: string, description: ... }`.) The same layer writes the **summary at the top of a subscription's email** ([tutorial 11](11-bi-that-runs-itself.md), step 8). [BI_AI.md sections 9 to 11](../guides/BI_AI.md#9-a-written-summary-at-the-top-of-a-subscriptions-email).

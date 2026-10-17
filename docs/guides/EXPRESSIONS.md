@@ -155,14 +155,14 @@ A measure is worked out per group of the answer in a **filter context** of four 
 ```yaml
 measures:
   MTM:              { expr: "sum(trades.mtm)" }
-  MTM all desks:    { expr: "calc(measure('MTM'), ignore=[desks.name])" }        # the desk slicer and the row's desk dropped
+  MTM all desks:    { expr: "calc(measure('MTM'), ignore=[desks.NAME])" }        # the desk slicer and the row's desk dropped
   MTM % of total:   { expr: "share_of(measure('MTM'), over=ALL)" }               # of the total you may see
-  MTM % of desk:    { expr: "share_of(measure('MTM'), over=[books.name])" }      # a book's share of the rest of its group
+  MTM % of desk:    { expr: "share_of(measure('MTM'), over=[books.NAME])" }      # a book's share of the rest of its group
   MTM % of parent:  { expr: "parent_of(measure('MTM'), hierarchy='Desk and book')" }
   Live MTM anyway:  { expr: "calc(measure('MTM'), where=trades.status == 'Live')" }
-  Region MTM:       { expr: "calc(measure('MTM'), keep=[desks.region])" }        # every filter but the region's dropped
+  Region MTM:       { expr: "calc(measure('MTM'), keep=[desks.REGION])" }        # every filter but the region's dropped
   MTM by settle:    { expr: "calc(measure('MTM'), via='r_5')" }                  # the inactive relationship r_5 instead of the active one
-  Avg book MTM:     { expr: "avg_by(sum(trades.mtm), by=[books.name])" }         # MTM per book, then the average
+  Avg book MTM:     { expr: "avg_by(sum(trades.mtm), by=[books.NAME])" }         # MTM per book, then the average
 ```
 
 Before and after, for *MTM all desks* with a slicer `desk in [RATES]` and the answer grouped by desk and currency:
@@ -170,7 +170,7 @@ Before and after, for *MTM all desks* with a slicer `desk in [RATES]` and the an
 | | desk filter | desk group | currency group | so the value is |
 |---|---|---|---|---|
 | `measure('MTM')` | RATES | the row's desk | the row's currency | MTM of that desk and currency |
-| `calc(measure('MTM'), ignore=[desks.name])` | dropped | dropped | kept | MTM of every desk you may see, in that currency |
+| `calc(measure('MTM'), ignore=[desks.NAME])` | dropped | dropped | kept | MTM of every desk you may see, in that currency |
 
 How it runs: `where=` alone restricts the aggregates (`FILTER (WHERE …)`); `ignore`, `keep`, `via`, `share_of`, `parent_of` and `avg_by` become a
 **context sub-query** (the same question at the coarser grain, as you, joined back on the fields both keep: `Context` nodes in `explain`). Rules:
@@ -185,7 +185,7 @@ A model declares **parameters** and **calculation groups**; a query (`mq: 2`) gi
 ```yaml
 parameters:
   shock:     { kind: number, default: 0, min: -0.5, max: 0.5, step: 0.01 }     # what-if: param.shock in any expression
-  breakdown: { kind: field, fields: [desks.region, trades.currency], default: desks.region }   # field: param.breakdown in select.fields
+  breakdown: { kind: field, fields: [desks.REGION, trades.currency], default: desks.REGION }   # field: param.breakdown in select.fields
 calc-groups:
   Time:
     precedence: 10                                   # several groups: the highest precedence applies first (innermost)
@@ -261,8 +261,8 @@ like any other. The calculations offered are the ones the server's catalogue has
 | Calculation | Writes |
 |---|---|
 | % of total | `share_of(measure('MTM'), over=ALL)`, format `share` (a share of 1 shown as a percent: 1.25 is 125 %) |
-| % of the total of a field | `share_of(measure('MTM'), over=[books.name])` |
-| Ignoring a field's filter (a slicer) | `calc(measure('MTM'), ignore=[desks.name])` |
+| % of the total of a field | `share_of(measure('MTM'), over=[books.NAME])` |
+| Ignoring a field's filter (a slicer) | `calc(measure('MTM'), ignore=[desks.NAME])` |
 | Ignoring every filter | `calc(measure('MTM'), ignore=ALL)` |
 | Through another relationship | `calc(measure('MTM'), via='r_5')` (a relationship without an id is given one) |
 | Year, fiscal year, month to date; prior period; running total | `ytd(...)`, `fiscal_ytd(...)`, `mtd(...)`, `prior_period(...)`, `running(...)` over the date field you pick |
@@ -396,7 +396,7 @@ The text in capital letters.
 | Example | What it says |
 |---|---|
 | `upper(trades.currency)` | usd becomes USD |
-| `upper(counterparties.name) == 'ACME BANK'` | a comparison that ignores case |
+| `upper(counterparties.NAME) == 'ACME BANK'` | a comparison that ignores case |
 
 * **None:** upper(None) is None.
 * **Masked values:** A masked column reads as the text ••• and stays •••.
@@ -772,7 +772,7 @@ The arithmetic mean of x over the rows of the group.
 | Example | What it says |
 |---|---|
 | `avg(trades.notional)` | the average trade size |
-| `avg(economies.growth, where=economies.region == 'Asia')` | average growth of the Asian economies |
+| `avg(economies.GROWTH, where=economies.REGION == 'Asia')` | average growth of the Asian economies |
 
 * **None:** None values are skipped (they are not zeros).
 * **No rows:** None over no rows.
@@ -812,7 +812,7 @@ The largest value of x in the group (numbers, dates or text).
 
 | Example | What it says |
 |---|---|
-| `max(netting_sets.utilisation)` | the highest limit utilisation |
+| `max(netting_sets.UTILISATION)` | the highest limit utilisation |
 | `max(trades.updatedAt)` | when the group last changed |
 
 * **None:** None values are skipped.
@@ -853,7 +853,7 @@ How many different values of x the group has.
 
 | Example | What it says |
 |---|---|
-| `distinct(trades.counterpartyId)` | how many counterparties |
+| `distinct(trades.COUNTERPARTY)` | how many counterparties |
 | `distinct(trades.book, where=trades.status == 'Live')` | books with live trades |
 
 * **None:** None is not a value.
@@ -875,7 +875,7 @@ num / den as a decimal, None when den is 0. The same as num / den in DEL, kept f
 | Example | What it says |
 |---|---|
 | `ratio(sum(trades.mtm), sum(trades.notional))` | MTM per unit of notional |
-| `ratio(sum(regions.gdpUsdBn), sum(regions.population)) * 1000000000` | GDP per head in USD |
+| `ratio(sum(regions.GDP_USD_BN), sum(regions.POPULATION)) * 1000000000` | GDP per head in USD |
 
 * **None:** None when either side is None.
 * **No rows:** None over no rows.
@@ -1122,7 +1122,7 @@ The position of each row of the answer by the aggregate, 1 for the highest (desc
 | Example | What it says |
 |---|---|
 | `rank(sum(trades.mtm))` | MTM rank, best first |
-| `rank(sum(netting_sets.eePeak), by=[counterparties.sector])` | exposure rank within each sector |
+| `rank(sum(netting_sets.EE_PEAK), by=[counterparties.SECTOR])` | exposure rank within each sector |
 
 * **None:** None values rank last.
 
@@ -1245,7 +1245,7 @@ The largest value of the aggregate over the row and the n - 1 rows before it.
 
 | Example | What it says |
 |---|---|
-| `moving_max(max(netting_sets.utilisation), 5, netting_sets.businessDate)` | peak utilisation over five days |
+| `moving_max(max(netting_sets.UTILISATION), 5, netting_sets.businessDate)` | peak utilisation over five days |
 | `moving_max(sum(trades.mtm), 20, trades.tradeDate)` | the 20-day high of MTM |
 
 * **None:** None values are skipped.
@@ -1389,9 +1389,9 @@ The aggregate in an edited filter context: add conditions (where=, a row conditi
 
 | Example | What it says |
 |---|---|
-| `calc(measure('MTM'), ignore=[desks.name])` | MTM ignoring the desk slicer and the desk of the row |
+| `calc(measure('MTM'), ignore=[desks.NAME])` | MTM ignoring the desk slicer and the desk of the row |
 | `calc(sum(trades.mtm), where=trades.status == 'Live')` | MTM of the live trades, whatever else is filtered |
-| `calc(measure('MTM'), keep=[desks.region])` | MTM of the whole region of the row |
+| `calc(measure('MTM'), keep=[desks.REGION])` | MTM of the whole region of the row |
 | `calc(measure('MTM'), via='r_5')` | MTM along the settlement-date relationship |
 
 * **No rows:** None (a count: 0) when the edited context has no rows.
@@ -1403,7 +1403,7 @@ The aggregate in an edited filter context: add conditions (where=, a row conditi
 
 *Scopes: aggregate, context · returns: decimal · since B*
 
-The aggregate divided by itself with the fields of over ignored (the same as agg / calc(agg, ignore=over)): over=ALL is the share of the grand total you may see, over=[books.name] a book's share within the rest of its group.
+The aggregate divided by itself with the fields of over ignored (the same as agg / calc(agg, ignore=over)): over=ALL is the share of the grand total you may see, over=[books.NAME] a book's share within the rest of its group.
 
 | Parameter | Type | Default | Notes |
 |---|---|---|---|
@@ -1413,7 +1413,7 @@ The aggregate divided by itself with the fields of over ignored (the same as agg
 | Example | What it says |
 |---|---|
 | `share_of(measure('MTM'), over=ALL)` | MTM as a share of the total you may see |
-| `share_of(measure('MTM'), over=[books.name])` | a book's share within its desk |
+| `share_of(measure('MTM'), over=[books.NAME])` | a book's share within its desk |
 
 * **None:** None when the coarser total is 0 or None.
 * **Masked values:** Of what you may see: the total never includes rows your row rules hide.
@@ -1645,7 +1645,7 @@ dataset (its implicit model and alias):
 | `SUM(Trades[MTM])` | `sum(trades.mtm)` |
 | `CALCULATE(SUM(Trades[MTM]), Trades[Status] = "Live")` | `sum(trades.mtm, where=trades.status == 'Live')` |
 | `COUNTROWS(Trades)` | `count(trades)` |
-| `DISTINCTCOUNT(Trades[Counterparty])` | `distinct(trades.counterpartyId)` |
+| `DISTINCTCOUNT(Trades[Counterparty])` | `distinct(trades.COUNTERPARTY)` |
 | `DIVIDE([MTM], [Notional])` | `measure('MTM') / measure('Notional')` (or `ratio(...)`: `None` on 0) |
 | `IF([MTM] > 0, [MTM], 0)` | `measure('MTM') if measure('MTM') > 0 else 0` |
 | `TOTALYTD(SUM(Trades[PnL]), Trades[TradeDate])` | `ytd(sum(trades.pnl1d), trades.tradeDate)` |
@@ -1653,10 +1653,10 @@ dataset (its implicit model and alias):
 | `RANKX(ALL(Desks), [MTM])` | `rank(measure('MTM'))` (over the answer's rows) |
 | `PERCENTILE.INC(Trades[MTM], 0.5)` | `percentile(trades.mtm, 0.5)` |
 | `RELATED(Desks[Name])` (calculated column) | `related(desk.name)` in a dataset's `derive` |
-| `CALCULATE([MTM], ALL(Desks[Name]))` | `calc(measure('MTM'), ignore=[desks.name])` *(wave B)* |
+| `CALCULATE([MTM], ALL(Desks[Name]))` | `calc(measure('MTM'), ignore=[desks.NAME])` *(wave B)* |
 | `DIVIDE([MTM], CALCULATE([MTM], ALL(Trades)))` | `share_of(measure('MTM'), over=ALL)` *(wave B)* — of what *you* may see |
 | `CALCULATE([MTM], USERELATIONSHIP(...))` | `calc(measure('MTM'), via='r_5')` *(wave B)* |
-| `CALCULATE([MTM], ALLEXCEPT(Desks, Desks[Region]))` | `calc(measure('MTM'), keep=[desks.region])` *(wave B)* |
+| `CALCULATE([MTM], ALLEXCEPT(Desks, Desks[Region]))` | `calc(measure('MTM'), keep=[desks.REGION])` *(wave B)* |
 
 There is no context transition: iteration is explicit (`avg_by`, wave B), so a measure's number never depends on hidden row context.
 
@@ -1756,14 +1756,14 @@ How to read them: each recipe is the question, the expression, and what to watch
 #### R1 · MTM by desk
 
 ```python
-# by: desks.name
+# by: desks.NAME
 sum(trades.MTM)
 ```
 
 The sum of the trades' mark-to-market for each desk, over the trades *you* may see (a desk head sees their desks only). Masked MTM sums to `None`.
 Captured on the demo lake as the risk reader (the first five desks of the answer):
 
-| desks.name | Recipe |
+| desks.NAME | Recipe |
 |---|---|
 | Bonds and securitised | -2,977,676 |
 | Commodities | 15,411,196 |
@@ -1774,14 +1774,14 @@ Captured on the demo lake as the risk reader (the first five desks of the answer
 #### R2 · P&L over the last day by desk
 
 ```python
-# by: desks.name
+# by: desks.NAME
 sum(trades.PNL_1D)
 ```
 
 #### R3 · Open MTM (live trades only)
 
 ```python
-# by: desks.name
+# by: desks.NAME
 sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')
 ```
 
@@ -1790,14 +1790,14 @@ sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')
 #### R4 · Matured or closed MTM
 
 ```python
-# by: desks.name
+# by: desks.NAME
 sum(trades.MTM, where=trades.TRADE_STATUS == 'MATURED')
 ```
 
 #### R5 · Share of MTM that is still open
 
 ```python
-# by: desks.name
+# by: desks.NAME
 ratio(sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED'), sum(trades.MTM))
 ```
 
@@ -1806,7 +1806,7 @@ ratio(sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED'), sum(trades.MTM))
 #### R6 · Gross MTM
 
 ```python
-# by: desks.name
+# by: desks.NAME
 sum(abs(trades.MTM))
 ```
 
@@ -1815,7 +1815,7 @@ The size of the book whatever the sign: `abs` is applied row by row, then summed
 #### R7 · Net to gross
 
 ```python
-# by: desks.name
+# by: desks.NAME
 ratio(sum(trades.MTM), sum(abs(trades.MTM)))
 ```
 
@@ -1824,21 +1824,21 @@ Close to 1 (or −1) for a one-way book, close to 0 for a hedged one.
 #### R8 · Receivable MTM (positive trades)
 
 ```python
-# by: counterparties.name
+# by: counterparties.NAME
 sum(trades.MTM, where=trades.MTM > 0)
 ```
 
 #### R9 · Payable MTM (negative trades)
 
 ```python
-# by: counterparties.name
+# by: counterparties.NAME
 sum(trades.MTM, where=trades.MTM < 0)
 ```
 
 #### R10 · P&L in bps of notional
 
 ```python
-# by: desks.name
+# by: desks.NAME
 ratio(sum(trades.PNL_1D), sum(trades.NOTIONAL)) * 10_000
 ```
 
@@ -1847,7 +1847,7 @@ Underscores in numbers are allowed, as in Python: `10_000`, `1_000_000`.
 #### R11 · A measure from measures
 
 ```python
-# by: desks.name
+# by: desks.NAME
 measure('MTM') / measure('Notional') * 1_000_000
 ```
 
@@ -1859,7 +1859,7 @@ you when you pick a measure from the list.
 #### R12 · Trades
 
 ```python
-# by: desks.name
+# by: desks.NAME
 count(trades)
 ```
 
@@ -1868,14 +1868,14 @@ count(trades)
 #### R13 · Live trades
 
 ```python
-# by: desks.name
+# by: desks.NAME
 count(trades, where=trades.TRADE_STATUS != 'MATURED')
 ```
 
 #### R14 · Counterparties traded with
 
 ```python
-# by: desks.name
+# by: desks.NAME
 distinct(trades.COUNTERPARTY)
 ```
 
@@ -1899,28 +1899,28 @@ is `convert` over the model's `fx:` ([section 5.3](#53-balances-time-travel-cale
 #### R17 · Largest trade
 
 ```python
-# by: desks.name
+# by: desks.NAME
 max(trades.NOTIONAL)
 ```
 
 #### R18 · Worst trade
 
 ```python
-# by: desks.name
+# by: desks.NAME
 min(trades.MTM)
 ```
 
 #### R19 · Swaps only
 
 ```python
-# by: desks.name
+# by: desks.NAME
 count(trades, where=contains(trades.PRODUCT_TYPE, 'SWAP'))
 ```
 
 #### R20 · One book family
 
 ```python
-# by: desks.name
+# by: desks.NAME
 sum(trades.NOTIONAL, where=startswith(trades.PORTFOLIO, 'BOOK-FX'))
 ```
 
@@ -1936,7 +1936,7 @@ sum(trades.DV01)
 #### R22 · Absolute DV01
 
 ```python
-# by: desks.name
+# by: desks.NAME
 sum(abs(trades.DV01))
 ```
 
@@ -1952,7 +1952,7 @@ ratio(sum(trades.DV01), sum(trades.NOTIONAL)) * 1_000_000
 #### R24 · Notional-weighted tenor in years (a duration proxy)
 
 ```python
-# by: desks.name
+# by: desks.NAME
 ratio(sum(trades.NOTIONAL * days_between(trades.TRADE_DATE, trades.MATURITY_DATE)), sum(trades.NOTIONAL)) / 365
 ```
 
@@ -1968,7 +1968,7 @@ avg(business_days_between(trades.TRADE_DATE, trades.MATURITY_DATE))
 #### R26 · Trades maturing within a year of their trade date
 
 ```python
-# by: desks.name
+# by: desks.NAME
 count(trades, where=days_between(trades.TRADE_DATE, trades.MATURITY_DATE) <= 365)
 ```
 
@@ -1977,14 +1977,14 @@ count(trades, where=days_between(trades.TRADE_DATE, trades.MATURITY_DATE) <= 365
 #### R27 · Median trade MTM
 
 ```python
-# by: desks.name
+# by: desks.NAME
 percentile(trades.MTM, 0.5)
 ```
 
 #### R28 · 5th percentile of one-day P&L (a VaR-style number)
 
 ```python
-# by: desks.name
+# by: desks.NAME
 percentile(trades.PNL_1D, 0.05)
 ```
 
@@ -1994,7 +1994,7 @@ measure for that ([PYTHON_BI.md](PYTHON_BI.md)).
 #### R29 · Expected shortfall, approximately
 
 ```python
-# by: desks.name
+# by: desks.NAME
 avg(trades.PNL_1D, where=trades.PNL_1D <= -8_000)
 ```
 
@@ -2012,8 +2012,8 @@ percentile(trades.NOTIONAL, 0.99)
 #### R31 · Exposure (EE peak) by counterparty
 
 ```python
-# by: counterparties.name
-sum(netting_sets.eePeak)
+# by: counterparties.NAME
+sum(netting_sets.EE_PEAK)
 ```
 
 Exposure lives on the netting sets: group by what netting sets reach (counterparties), not by desk.
@@ -2021,8 +2021,8 @@ Exposure lives on the netting sets: group by what netting sets reach (counterpar
 #### R32 · Counterparty rank by PFE
 
 ```python
-# by: counterparties.name
-rank(sum(netting_sets.pfePeak))
+# by: counterparties.NAME
+rank(sum(netting_sets.PFE_PEAK))
 ```
 
 `rank` is over the rows of the answer, 1 for the highest (`desc=False` for the lowest first). A top 10 is a filter on it (a visual's *Top N*, or MQ
@@ -2031,36 +2031,36 @@ rank(sum(netting_sets.pfePeak))
 #### R33 · Dense rank of desks by P&L
 
 ```python
-# by: desks.name
+# by: desks.NAME
 dense_rank(sum(trades.PNL_1D), desc=True)
 ```
 
 #### R34 · Percent rank of counterparties by MTM
 
 ```python
-# by: counterparties.name
+# by: counterparties.NAME
 percent_rank(sum(trades.MTM))
 ```
 
 #### R35 · Limit utilisation
 
 ```python
-# by: counterparties.name
-ratio(sum(netting_sets.pfePeak), sum(netting_sets.limit))
+# by: counterparties.NAME
+ratio(sum(netting_sets.PFE_PEAK), sum(netting_sets.LIMIT))
 ```
 
 #### R36 · Headroom under the limit
 
 ```python
-# by: counterparties.name
-sum(netting_sets.limit) - sum(netting_sets.pfePeak)
+# by: counterparties.NAME
+sum(netting_sets.LIMIT) - sum(netting_sets.PFE_PEAK)
 ```
 
 #### R37 · Limit breaches
 
 ```python
-# by: counterparties.sector
-count(netting_sets, where=netting_sets.pfePeak > netting_sets.limit)
+# by: counterparties.SECTOR
+count(netting_sets, where=netting_sets.PFE_PEAK > netting_sets.LIMIT)
 ```
 
 A condition between two columns of the same row is fine inside `where=`.
@@ -2068,22 +2068,22 @@ A condition between two columns of the same row is fine inside `where=`.
 #### R38 · Netting sets above 80 % utilised
 
 ```python
-# by: counterparties.sector
-count(netting_sets, where=netting_sets.utilisation >= 0.8)
+# by: counterparties.SECTOR
+count(netting_sets, where=netting_sets.UTILISATION >= 0.8)
 ```
 
 #### R39 · Average utilisation
 
 ```python
-# by: counterparties.rating
-avg(netting_sets.utilisation)
+# by: counterparties.RATING
+avg(netting_sets.UTILISATION)
 ```
 
 #### R40 · Collateral cover
 
 ```python
-# by: counterparties.name
-ratio(sum(netting_sets.collateral), sum(netting_sets.netMtm, where=netting_sets.netMtm > 0))
+# by: counterparties.NAME
+ratio(sum(netting_sets.COLLATERAL), sum(netting_sets.NET_MTM, where=netting_sets.NET_MTM > 0))
 ```
 
 The collateral held over the positive (receivable) net MTM: below 1, part of what is owed to you is unsecured. On the demo lake Aldershot Pension
@@ -2093,8 +2093,8 @@ which is worth a look.
 #### R41 · Uncollateralised exposure
 
 ```python
-# by: counterparties.name
-sum(netting_sets.netMtm, where=netting_sets.netMtm > 0) - sum(netting_sets.collateral)
+# by: counterparties.NAME
+sum(netting_sets.NET_MTM, where=netting_sets.NET_MTM > 0) - sum(netting_sets.COLLATERAL)
 ```
 
 ### 11.6 Time intelligence
@@ -2118,7 +2118,7 @@ mtd(sum(trades.NOTIONAL), trades.TRADE_DATE)
 #### R44 · P&L quarter to date
 
 ```python
-# by: desks.name
+# by: desks.NAME
 qtd(sum(trades.PNL_1D), trades.TRADE_DATE)
 ```
 
@@ -2188,8 +2188,8 @@ The first day has no day before: `lag` is `None` there and so is the change.
 #### R51 · Day-on-day change per desk
 
 ```python
-# by: desks.name, trades.TRADE_DATE
-sum(trades.MTM) - lag(sum(trades.MTM), 1, trades.TRADE_DATE, by=[desks.name])
+# by: desks.NAME, trades.TRADE_DATE
+sum(trades.MTM) - lag(sum(trades.MTM), 1, trades.TRADE_DATE, by=[desks.NAME])
 ```
 
 `by=` restarts the window for each desk.
@@ -2210,7 +2210,7 @@ becomes a field you group by; the test runs each one inside `distinct(...)` or `
 
 ```python
 # scope: row
-# by: desks.name
+# by: desks.NAME
 '0-1y' if days_between(trades.TRADE_DATE, trades.MATURITY_DATE) <= 365 else '1-5y' if days_between(trades.TRADE_DATE, trades.MATURITY_DATE) <= 1825 else '5y+'
 ```
 
@@ -2221,7 +2221,7 @@ by `tenorBucket`. Conditionals chain like Python's: `a if c1 else b if c2 else d
 
 ```python
 # scope: row
-# by: desks.name
+# by: desks.NAME
 'under 30 days' if days_between(trades.TRADE_DATE, date('2026-10-09')) <= 30 else 'under 90 days' if days_between(trades.TRADE_DATE, date('2026-10-09')) <= 90 else 'older'
 ```
 
@@ -2231,7 +2231,7 @@ Dates are written `date('2026-10-09')`.
 
 ```python
 # scope: row
-# by: desks.name
+# by: desks.NAME
 'Long' if trades.MTM >= 0 else 'Short'
 ```
 
@@ -2239,8 +2239,8 @@ Dates are written `date('2026-10-09')`.
 
 ```python
 # scope: row
-# by: counterparties.sector
-coalesce(counterparties.rating, 'NR')
+# by: counterparties.SECTOR
+coalesce(counterparties.RATING, 'NR')
 ```
 
 `coalesce` takes the first value that is not `None`.
@@ -2249,7 +2249,7 @@ coalesce(counterparties.rating, 'NR')
 
 ```python
 # scope: row
-# by: desks.name
+# by: desks.NAME
 trades.TRADE_STATUS != 'MATURED' and trades.NOTIONAL >= 5_000_000
 ```
 
@@ -2281,7 +2281,7 @@ These change *which rows* an aggregate reads (section 5.1) or *which dates* (sec
 #### R60 · Share of the total you may see
 
 ```python
-# by: desks.name
+# by: desks.NAME
 share_of(sum(trades.MTM), over=ALL)
 ```
 
@@ -2291,8 +2291,8 @@ is set. Format it `share` (always a share of 1: a negative total gives shares ab
 #### R61 · A book's share of its desk
 
 ```python
-# by: desks.name, books.name
-share_of(sum(trades.MTM), over=[books.name])
+# by: desks.NAME, books.NAME
+share_of(sum(trades.MTM), over=[books.NAME])
 ```
 
 `over=` names the fields whose filter and group are dropped: here the book, so each book is divided by its desk's MTM. Power BI: `DIVIDE(x, CALCULATE(x, ALL(books[name])))`.
@@ -2300,7 +2300,7 @@ share_of(sum(trades.MTM), over=[books.name])
 #### R62 · Share of the parent level
 
 ```python
-# by: desks.name, books.name
+# by: desks.NAME, books.NAME
 parent_of(sum(trades.MTM), hierarchy='Desk and book')
 ```
 
@@ -2309,8 +2309,8 @@ The value of the level above in the model's hierarchy (the desk of each book), t
 #### R63 · MTM of every desk, ignoring the desk slicer
 
 ```python
-# by: desks.name
-calc(sum(trades.MTM), ignore=[desks.name])
+# by: desks.NAME
+calc(sum(trades.MTM), ignore=[desks.NAME])
 ```
 
 The same number on every row: the slicer and the row's own desk are dropped, every other filter stays. Quick calculation: *Ignoring a field's filter*.
@@ -2318,7 +2318,7 @@ The same number on every row: the slicer and the row's own desk are dropped, eve
 #### R64 · Everything you may see
 
 ```python
-# by: desks.name
+# by: desks.NAME
 calc(sum(trades.MTM), ignore=ALL)
 ```
 
@@ -2327,7 +2327,7 @@ Every query filter dropped (the slicers, the page, the drill); your row rules st
 #### R65 · Live MTM whatever the slicers say about status
 
 ```python
-# by: desks.name
+# by: desks.NAME
 calc(sum(trades.MTM), where=trades.TRADE_STATUS != 'MATURED')
 ```
 
@@ -2336,8 +2336,8 @@ calc(sum(trades.MTM), where=trades.TRADE_STATUS != 'MATURED')
 #### R66 · The average desk
 
 ```python
-# by: counterparties.sector
-avg_by(sum(trades.MTM), by=[desks.name])
+# by: counterparties.SECTOR
+avg_by(sum(trades.MTM), by=[desks.NAME])
 ```
 
 MTM per desk first, then the average of those numbers for each sector: an explicit iteration, where a plain `avg(trades.MTM)` would average the trades.
@@ -2345,7 +2345,7 @@ MTM per desk first, then the average of those numbers for each sector: an explic
 #### R67 · Fiscal year to date
 
 ```python
-# by: desks.name
+# by: desks.NAME
 fiscal_ytd(sum(trades.PNL_1D), trades.TRADE_DATE)
 ```
 
@@ -2354,7 +2354,7 @@ The P&L of the trades dated from the start of the fiscal year (the model's `cale
 #### R68 · The last day's MTM (a balance)
 
 ```python
-# by: desks.name
+# by: desks.NAME
 last(sum(trades.MTM), trades.TRADE_DATE)
 ```
 
@@ -2363,7 +2363,7 @@ Each desk's MTM on its latest trade date: a balance is read on one date, never a
 #### R69 · Month-end closing
 
 ```python
-# by: desks.name
+# by: desks.NAME
 closing(sum(trades.MTM), trades.TRADE_DATE)
 ```
 
@@ -2373,14 +2373,14 @@ before. `opening` is the closing of the period before.
 #### R70 · Opening balance
 
 ```python
-# by: desks.name
+# by: desks.NAME
 opening(sum(trades.MTM), trades.TRADE_DATE)
 ```
 
 #### R71 · Average daily balance
 
 ```python
-# by: desks.name
+# by: desks.NAME
 avg_over(sum(trades.MTM), trades.TRADE_DATE)
 ```
 
@@ -2389,7 +2389,7 @@ The aggregate per date, then the average of those dates.
 #### R72 · Day on day
 
 ```python
-# by: desks.name
+# by: desks.NAME
 sum(trades.MTM) - as_of(sum(trades.MTM), shift_date(asof(), -1))
 ```
 

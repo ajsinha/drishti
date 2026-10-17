@@ -52,8 +52,8 @@ examples/packs/logistics/
 │   └── logistics.md             the guide that card opens
 ├── samples/
 │   ├── catalog.json             the list of sample entities (kind, id, title, subtitle)
-│   ├── shipment/SHP-10042.json  one JSON document per entity, in a folder per kind
-│   ├── container/…  vessel/…  port/…
+│   ├── shipment/SHP-10042.json  one JSON document per entity, in a folder per kind (the older layout; the shipped
+│   ├── container/…  vessel/…  port/…       packs write samples/<kind>.jsonl, one document a line)
 └── tools/
     └── make_samples.py          how the samples were generated (not run by the server)
 ```

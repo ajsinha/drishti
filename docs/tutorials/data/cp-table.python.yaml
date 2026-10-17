@@ -28,9 +28,9 @@ memory: 512
 params: { floor: 1.0 }
 source: |
   def run(pnl, exposure, params):
-      """pnl: id, name, sector, MTM, Trades (the counterparty's fields, without their alias).  exposure: id, Exposure (EE peak)."""
+      """pnl: id, NAME, SECTOR, MTM, Trades (the counterparty's fields, without their alias).  exposure: id, Exposure (EE peak)."""
       short = lambda f: f.rename(columns=lambda c: c.split(".")[-1])          # counterparty.id and id are the same column
-      p = short(pnl).rename(columns={"id": "counterparty", "MTM": "mtm", "Trades": "trades"})
+      p = short(pnl).rename(columns={"id": "counterparty", "NAME": "name", "SECTOR": "sector", "MTM": "mtm", "Trades": "trades"})
       e = short(exposure).rename(columns={"id": "counterparty", "Exposure (EE peak)": "ee_peak"})
       m = p.merge(e, on="counterparty", how="left")
       floor = float(params.get("floor", 1.0))

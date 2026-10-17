@@ -1155,20 +1155,21 @@ format:
 ]
 ```
 
-`samples/<kind>/<id>.json` is the document itself, plus a `_meta` block that becomes its provenance (shown in
-*How this view was built* and in `F9`):
+`samples/<kind>.jsonl` holds the documents of one kind, **one document a line** (JSON Lines), in the catalogue's order;
+each is the document itself plus a `_meta` block that becomes its provenance (shown in *How this view was built* and in
+`F9`). The shipped packs name every attribute in UPPER_SNAKE, as production systems write them (`COUNTERPARTY_ID`,
+`NET_MTM`, `ZERO_RATE`); `samples/shipment.jsonl`, one line of it:
 
 ```json
-{
-  "shipmentId": "SHP-10042",
-  "status": "In transit",
-  "origin": "PORT-SGSIN",
-  "destination": "PORT-NLRTM",
-  "vessel": "VSL-9811000",
-  "etaDelayHours": 6,
-  "_meta": { "source": "port-ops", "generation": 512, "live": true, "walk": { "etaDelayHours": 1 } }
-}
+{"SHIPMENT_ID":"SHP-10042","STATUS":"In transit","ORIGIN":"PORT-SGSIN","DESTINATION":"PORT-NLRTM","VESSEL":"VSL-9811000","ETA_DELAY_HOURS":6,"_meta":{"source":"port-ops","generation":512,"live":true,"walk":{"ETA_DELAY_HOURS":1}}}
 ```
+
+A line's id is its catalogue entry: the entry at its position when the document holds that id as a top-level value
+(writers keep the catalogue's order), else the first top-level value the catalogue lists as an id of the kind. A kind
+whose file would pass 50 MB is split into `samples/<kind>.part-001.jsonl`, `part-002` … (the generators'
+`--sample-part-mb N`; the readers take the parts in order). The older layout, one `samples/<kind>/<id>.json` file per
+document, is still read everywhere (the retired example packs keep it, and packs you wrote that way need no change);
+new and shipped packs are written as JSONL (`tools/packgen/common/packsamples.py`, the pack wizard, `pack_from_jsonl.py`).
 
 | `_meta` key | Meaning |
 |---|---|
@@ -1177,8 +1178,8 @@ format:
 | `live` | `true`: the document ticks while someone watches it |
 | `walk` | `{ field: step }`: numeric fields, named at the top level or by a dotted path into the document (`legs.1.cashflows.0.fixings.3.rate`), that random-walk on each tick by a normal draw whose standard deviation is `step` (usually within a step or two, but unbounded); a step of 1 or more keeps whole numbers. No code needed. |
 
-Every catalogue entry must have its file; a missing file stops the demo source from starting. An entry whose path
-would lead outside the pack's `samples/` folder is skipped. The `title` and `subtitle` are what the suggestions
+An entry with no document (no line, or in the older layout no file) is skipped; one whose path would lead outside the
+pack's `samples/` folder is skipped too. The `title` and `subtitle` are what the suggestions
 dropdown shows.
 
 Realistic samples matter: they should look like what the real system would hold. `tools/samplegen` is a small,
@@ -1836,6 +1837,15 @@ help cards from one description. Each generated file says so in a comment near t
 | retired: `liquidity-risk`, `climate-risk`, `operational-risk`, `retail-banking`, `genomics` (in `examples/packs/`) | `tools/packgen/<area>/make.py` (`liquidity`, `climate`, `oprisk`, `retail`, `genomics`), on the same builder with `retired=True`, which writes under `examples/packs/` |
 | `news-and-markets`; retired: `finance`, `logistics` | hand-written; the samples come from the pack's `tools/` folder (`config/packs/news-and-markets/tools/make_samples.py`, `examples/packs/finance/tools/`, `examples/packs/logistics/tools/`) |
 
+**Attribute names.** Every document, Sutra, form, column list and BI item of the seven shipped packs names attributes in
+UPPER_SNAKE (`COUNTERPARTY_ID`, `NET_MTM`, `EE_PEAK`, `ZERO_RATE`, `GDP_USD_BN`), as production systems write them. The
+banking and world-economy generators build their documents with short internal names and turn them into the written
+names at one boundary, `tools/packgen/common/upper.py` (`name`, `record` for documents and their `_meta.walk`, `kind`
+for a taxonomy kind's Sutra paths, columns and links); a new field in a generator is written in UPPER_SNAKE without more
+work. The retired example packs keep their own names (`make_data.build(upper=False)`, `taxonomy.graph_fields(raw=True)`).
+The connectors that build their own documents (news, yfinance, the public feeds) write UPPER_SNAKE too
+(`com.ash.drishti.common.UpperSnake`).
+
 ### Never edit a generated file by hand
 
 A hand edit to a generated `pack.yaml`, Sutra, sample or guide is lost the next time the generator runs, and
@@ -2085,8 +2095,8 @@ config/packs/library/
   pack.yaml                            kinds, mnemonics, id patterns, link fields, badges, roles, connector, routes, examples
   sutras/library/book-title.v1.sutra.yaml   one YAML Sutra per kind (rachana: 1, with a description)
   sutras/library/author.v1.sutra.yaml
-  samples/book-title/TITLE-0001.json   the documents, for the built-in demo source
-  samples/author/AUTH-001.json
+  samples/book-title.jsonl             the documents, one a line, for the built-in demo source
+  samples/author.jsonl
   samples/catalog.json                 the list the demo source and suggestions read
   guides/library.md                    an overview guide: kinds, fields, links and "Try it" commands
   config/help.yaml                     the guide's card under Help → Domain packs

@@ -35,7 +35,7 @@ mock:
             title: Main
             visuals:
               - { id: gdp, type: card, title: GDP (USD bn), at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [GDP (USD bn)] }, alt: Card with the total GDP in billions of dollars }
-              - { id: by-region, type: bar, title: GDP by region, at: { x: 0, y: 2, w: 8, h: 5 }, wells: { axis: [economies.regionName], values: [GDP (USD bn)] }, alt: Bar chart of GDP for each region }
+              - { id: by-region, type: bar, title: GDP by region, at: { x: 0, y: 2, w: 8, h: 5 }, wells: { axis: [economies.REGION_NAME], values: [GDP (USD bn)] }, alt: Bar chart of GDP for each region }
         ```
     # "Suggest visuals" (designer copilot): a report of suggestions; each visual is checked and offered with its YAML, nothing is added until you press Add
     - match: "TASK: suggest-visuals"
@@ -49,22 +49,22 @@ mock:
           - id: main
             title: Main
             visuals:
-              - { id: by-region, type: bar, title: GDP by region, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [economies.regionName], values: [GDP (USD bn)] }, alt: Which regions carry the world's output }
-              - { id: income-filter, type: slicer, title: Income group, at: { x: 6, y: 0, w: 3, h: 4 }, wells: { field: [economies.incomeName] }, alt: Filter the page to one income group }
+              - { id: by-region, type: bar, title: GDP by region, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [economies.REGION_NAME], values: [GDP (USD bn)] }, alt: Which regions carry the world's output }
+              - { id: income-filter, type: slicer, title: Income group, at: { x: 6, y: 0, w: 3, h: 4 }, wells: { field: [economies.INCOME_NAME] }, alt: Filter the page to one income group }
               - { id: growth, type: card, title: Average growth, at: { x: 9, y: 0, w: 3, h: 2 }, wells: { values: [Average growth] }, alt: The average growth at a glance }
     # "Explain in plain words" (the Check panel): one explanation and fix for each numbered problem
     - match: "TASK: explain-checks"
-      reply: '{"items":[{"n":1,"explain":"The bar chart is asked to plot a field the dataset does not have, so it cannot draw.","fix":"Use a field of the dataset such as economies.regionName."},{"n":2,"explain":"A measure named in the chart is not one of the dataset''s measures.","fix":"Pick one of GDP (USD bn), Population (m), Average growth and the others in the Fields pane."}]}'
+      reply: '{"items":[{"n":1,"explain":"The bar chart is asked to plot a field the dataset does not have, so it cannot draw.","fix":"Use a field of the dataset such as economies.REGION_NAME."},{"n":2,"explain":"A measure named in the chart is not one of the dataset''s measures.","fix":"Pick one of GDP (USD bn), Population (m), Average growth and the others in the Fields pane."}]}'
     # "Ask the AI helper" (Model view): what the model lacks, checked against it before it is shown
     - match: "TASK: dataset-helper"
-      reply: '{"relationships":[],"measures":[{"name":"Average GDP per economy","expr":"avg(economies.gdpUsdBn)","description":"The mean GDP of one economy, USD billions"},{"name":"Broken","expr":"sum(economies.nothing)","description":"not a column"}],"columns":[{"field":"economies.regionName","description":"The World Bank region the economy is in"},{"field":"economies.incomeName","description":"The World Bank income group of the economy"},{"field":"economies.ghost","description":"not a column"}]}'
+      reply: '{"relationships":[],"measures":[{"name":"Average GDP per economy","expr":"avg(economies.GDP_USD_BN)","description":"The mean GDP of one economy, USD billions"},{"name":"Broken","expr":"sum(economies.NOTHING)","description":"not a column"}],"columns":[{"field":"economies.REGION_NAME","description":"The World Bank region the economy is in"},{"field":"economies.INCOME_NAME","description":"The World Bank income group of the economy"},{"field":"economies.GHOST","description":"not a column"}]}'
     # "Ask the data": the model answers with a query (names only); the engine checks every name and runs it as you
     - match: "(?i)QUESTION: [^\\n]*per capita"
-      reply: '{"fields":["economies.regionName"],"measures":["GDP per capita (USD)"],"orderBy":[{"by":"GDP per capita (USD)","desc":true}]}'
+      reply: '{"fields":["economies.REGION_NAME"],"measures":["GDP per capita (USD)"],"orderBy":[{"by":"GDP per capita (USD)","desc":true}]}'
     - match: "(?i)QUESTION: [^\\n]*growth"
-      reply: '{"fields":["economies.incomeName"],"measures":["Average growth"],"orderBy":[{"by":"Average growth","desc":true}]}'
+      reply: '{"fields":["economies.INCOME_NAME"],"measures":["Average growth"],"orderBy":[{"by":"Average growth","desc":true}]}'
     - match: "(?i)QUESTION: [^\\n]*(gdp|economy)"
-      reply: '{"fields":["economies.regionName"],"measures":["GDP (USD bn)"],"orderBy":[{"by":"GDP (USD bn)","desc":true}]}'
+      reply: '{"fields":["economies.REGION_NAME"],"measures":["GDP (USD bn)"],"orderBy":[{"by":"GDP (USD bn)","desc":true}]}'
     - match: "(?i)QUESTION: [^\\n]*(how many|count)"
       reply: '{"fields":[],"measures":["Economies"]}'
     - match: "(?i)QUESTION: [^\\n]*(mtm|notional|desk)"

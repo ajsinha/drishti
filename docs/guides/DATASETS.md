@@ -123,12 +123,12 @@ tables:
   counterparties: { source: { connector: reference-store, kind: counterparty }, columns: { name: string, sector: string } }
 relationships:
   - { from: trades.counterpartyId,      to: counterparties.id, cardinality: many-to-one }
-  - { from: netting_sets.counterparty,  to: counterparties.id, cardinality: many-to-one }
+  - { from: netting_sets.COUNTERPARTY,  to: counterparties.id, cardinality: many-to-one }
 measures:
-  MTM: { expr: "sum(trades.mtm)" }   Trades: { expr: "count(trades)" }   Exposure: { expr: "sum(netting_sets.eePeak)" }   Netting sets: { expr: "count(netting_sets)" }
+  MTM: { expr: "sum(trades.mtm)" }   Trades: { expr: "count(trades)" }   Exposure: { expr: "sum(netting_sets.EE_PEAK)" }   Netting sets: { expr: "count(netting_sets)" }
 ```
 
-`fields: [counterparties.sector]`, `measures: [MTM, Trades, Exposure, Netting sets]` (real answer, first four sectors, with `?explain=true` for the SQL; the table sources are shortened):
+`fields: [counterparties.SECTOR]`, `measures: [MTM, Trades, Exposure, Netting sets]` (real answer, first four sectors, with `?explain=true` for the SQL; the table sources are shortened):
 
 ```text
 Agriculture        20378377.0   35    59019457.0    4
@@ -137,13 +137,13 @@ Asset management   70776928.0  153   289738661.0   15
 Banking            23279594.0   94   240271956.0   12
 ```
 ```sql
-SELECT "counterparties.sector", "MTM", "Trades", "Exposure", "Netting sets" FROM (
-  SELECT coalesce("p0"."counterparties.sector", "p1"."counterparties.sector") AS "counterparties.sector", "p0"."MTM" AS "MTM", "p0"."Trades" AS "Trades", "p1"."Exposure" AS "Exposure", "p1"."Netting sets" AS "Netting sets"
-  FROM (SELECT "counterparties"."sector" AS "counterparties.sector", (sum("trades"."mtm")) AS "MTM", (count(*)) AS "Trades"
+SELECT "counterparties.SECTOR", "MTM", "Trades", "Exposure", "Netting sets" FROM (
+  SELECT coalesce("p0"."counterparties.SECTOR", "p1"."counterparties.SECTOR") AS "counterparties.SECTOR", "p0"."MTM" AS "MTM", "p0"."Trades" AS "Trades", "p1"."Exposure" AS "Exposure", "p1"."Netting sets" AS "Netting sets"
+  FROM (SELECT "counterparties"."sector" AS "counterparties.SECTOR", (sum("trades"."mtm")) AS "MTM", (count(*)) AS "Trades"
         FROM (trades) AS "trades" LEFT JOIN (counterparties) AS "counterparties" ON "trades"."counterpartyId" = "counterparties"."id" GROUP BY "counterparties"."sector" ...) AS "p0"
-  FULL OUTER JOIN (SELECT "counterparties"."sector" AS "counterparties.sector", (sum("netting_sets"."eePeak")) AS "Exposure", (count(*)) AS "Netting sets"
+  FULL OUTER JOIN (SELECT "counterparties"."sector" AS "counterparties.SECTOR", (sum("netting_sets"."eePeak")) AS "Exposure", (count(*)) AS "Netting sets"
         FROM (netting_sets) AS "netting_sets" LEFT JOIN (counterparties) AS "counterparties" ON "netting_sets"."counterparty" = "counterparties"."id" GROUP BY "counterparties"."sector" ...) AS "p1"
-  ON "p0"."counterparties.sector" IS NOT DISTINCT FROM "p1"."counterparties.sector") AS "q" ORDER BY "counterparties.sector" ASC LIMIT 4
+  ON "p0"."counterparties.SECTOR" IS NOT DISTINCT FROM "p1"."counterparties.SECTOR") AS "q" ORDER BY "counterparties.SECTOR" ASC LIMIT 4
 ```
 
 * Each part is the ordinary query of one fact: its own row rules, filters and masks. The parts are **full-outer-joined** on the fields (a null equals a null), so a sector one fact lacks still shows with the other's figures (and an empty cell for the missing one).
@@ -330,7 +330,7 @@ item once per group. Checks: the item is named, `inputs` is not empty, every nam
 ```yaml
 hierarchies:
   Trade date: [trades.tradeDate.year, trades.tradeDate.quarter, trades.tradeDate.month, trades.tradeDate]
-  Desk and book: [desks.name, books.name]
+  Desk and book: [desks.NAME, books.NAME]
 ```
 
 An ordered list of levels, coarse to fine; each is `table.column` or `table.column.part` (a bare column name is accepted when it is in one table only). They are validated and
@@ -343,7 +343,7 @@ security:
   rows:
     - { role: desk-head, where: "trades.desk in user.desks" }
     - { role: risk,      where: "True" }
-  masked: [counterpartyName, counterparties.name]
+  masked: [counterpartyName, counterparties.NAME]
 ```
 
 **Row rules** are evaluated **on the server, for each reader**, and added to every query as a predicate the query cannot remove.
@@ -372,11 +372,11 @@ Real output (the sample `trading-risk`, the same query, three readers; `Counterp
 desk-head whose profile desk is `DESK-FX`, `ann` is an `analyst` without `raw`):
 
 ```
-rita  (risk)       desks.name = 'G10 and EM FX' ... 10 rows   MTM -15,759,419  Trades 84  Counterparties 17
-hana  (desk-head)  desks.name = 'G10 and EM FX' ... 1 row    MTM -15,759,419  Trades 84  Counterparties 17
+rita  (risk)       desks.NAME = 'G10 and EM FX' ... 10 rows   MTM -15,759,419  Trades 84  Counterparties 17
+hana  (desk-head)  desks.NAME = 'G10 and EM FX' ... 1 row    MTM -15,759,419  Trades 84  Counterparties 17
 ann   (analyst)    10 rows, every MTM and Trades as rita sees them,  Counterparties = null  (masked: Counterparties)
-ann asks for counterparties.name:   one row  '•••'  MTM 138,562,638  Trades 750     (not grouped: the 18 names cannot be told apart)
-ann filters counterparties.name:    403 DRS-9021 'counterparties.name' is masked for you: it cannot be filtered on
+ann asks for counterparties.NAME:   one row  '•••'  MTM 138,562,638  Trades 750     (not grouped: the 18 names cannot be told apart)
+ann filters counterparties.NAME:    403 DRS-9021 'counterparties.NAME' is masked for you: it cannot be filtered on
 ```
 
 ## 7. Modes, layers and rollups
@@ -679,13 +679,13 @@ dataset: desk-pnl-vs-exposure
 from:                                   # a question put to another dataset, as the reader, for each alias
   pnl:
     dataset: trading-risk               # a catalogue id, a file name or the dataset's name
-    by: ["counterparties.id as counterparty", "counterparties.name as name"]     # grouping columns; "as" names the column of the joined table
+    by: ["counterparties.id as counterparty", "counterparties.NAME as name"]     # grouping columns; "as" names the column of the joined table
     measures: ["P&L 1d as Desk P&L", Trades]                                     # measures of that dataset ("as" renames)
     key: [counterparty]                 # optional: the columns that identify one row (the rest are attributes of them)
     filters: [{ field: trades.status, op: in, values: [Live] }]                  # optional: conditions of a report filter's form
   exposure:
     dataset: counterparty-exposure
-    by: ["counterparties.id as counterparty", "counterparties.sector as sector"]
+    by: ["counterparties.id as counterparty", "counterparties.SECTOR as sector"]
     measures: [Exposure (EE peak), Exposure (PFE peak)]
     key: [counterparty]
 join:
@@ -754,8 +754,8 @@ dataset: desk-pnl-vs-exposure-py
 derived:
   transform: pnl-vs-exposure            # a Python item with interface: transform (catalogue id, file name or title)
   inputs:                               # the frames the Transform receives, in this order; each is a question as above
-    pnl:      { dataset: trading-risk, by: ["counterparties.id as counterparty", "counterparties.name as name"], measures: ["P&L 1d as Desk P&L", Trades] }
-    exposure: { dataset: counterparty-exposure, by: ["counterparties.id as counterparty", "counterparties.sector as sector"], measures: [Exposure (EE peak), Exposure (PFE peak)] }
+    pnl:      { dataset: trading-risk, by: ["counterparties.id as counterparty", "counterparties.NAME as name"], measures: ["P&L 1d as Desk P&L", Trades] }
+    exposure: { dataset: counterparty-exposure, by: ["counterparties.id as counterparty", "counterparties.SECTOR as sector"], measures: [Exposure (EE peak), Exposure (PFE peak)] }
   params: { floor: 1.0 }                # overrides the item's own params
 columns:                                # optional: what the Transform returns, typed (a contract); left out, the columns of the last good result are kept
   counterparty: string
@@ -797,7 +797,7 @@ ann   18 counterparties   Desk P&L 2,671,113   Exposure (EE peak) 1,447,544,943 
 * **A join on a masked key is refused.** A masked column holds one constant, so joining on it would match every row to every row. `403 DRS-9021` says so and names the source. Real refusal (a dataset that joins on the counterparty *name*, for an analyst):
 
 ```
-DRS-9021 the join key 'name' (counterparties.name of source 'pnl' in 'join-on-name') is masked for you: a join on a masked column would match every row to every row, so it is refused
+DRS-9021 the join key 'name' (counterparties.NAME of source 'pnl' in 'join-on-name') is masked for you: a join on a masked column would match every row to every row, so it is refused
 ```
 
   The sample therefore joins on the counterparty's **id** (`counterparties.id`), which is not masked, and shows the name as a masked attribute. Choose the key that way.

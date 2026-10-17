@@ -381,9 +381,9 @@ panels:
     key: F5
     area: right
     source: "link($.LEGS[0].DISCOUNT_INDEX, 'ir-curve')"
-    rows: $.points                               # with a source, $ is the curve's document, not the trade
-    x: tenor
-    y: zeroRate
+    rows: $.POINTS                               # with a source, $ is the curve's document, not the trade
+    x: TENOR
+    y: ZERO_RATE
     fmt: price2
     unit: "%"
 
@@ -2301,9 +2301,9 @@ just the five shown), and `24 more flows`.
     code: CRV
     area: right
     source: "link($.discountCurve, 'ir-curve')"
-    rows: $.points
-    x: tenor
-    y: zeroRate
+    rows: $.POINTS
+    x: TENOR
+    y: ZERO_RATE
     mark: "'5Y'"
     fmt: price2
     unit: "%"

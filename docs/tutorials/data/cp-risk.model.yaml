@@ -21,28 +21,28 @@ model: cp-risk
 version: 1.0.0
 title: Counterparty P&L and exposure
 datasets:
-  trade: {dataset: pack.trading.trade@^1, role: fact}
+  trade: {dataset: pack.market-risk.trade-valuation@^1, role: fact}     # every trade's valuation (MTM, P&L) from every source system
   netting_set: {dataset: pack.counterparty-risk.netting-set@^1, role: fact}
   counterparty: {dataset: pack.core.counterparty@^1, role: dimension}
   desk: {dataset: pack.core.desk@^1, role: dimension}
 relationships:
-  - {from: trade.counterpartyId, to: counterparty.id, suggested: {from: pack-reference}}
-  - {from: netting_set.counterparty, to: counterparty.id, suggested: {from: pack-reference}}
-  - {from: trade.desk, to: desk.id, suggested: {from: pack-reference}}
+  - {from: trade.COUNTERPARTY, to: counterparty.id, suggested: {from: pack-reference}}
+  - {from: netting_set.COUNTERPARTY, to: counterparty.id, suggested: {from: pack-reference}}
+  - {from: trade.DESK, to: desk.id, suggested: {from: pack-reference}}
 measures:
-  MTM: {expr: sum(trade.mtm), format: signed0}
-  P&L 1d: {expr: sum(trade.pnl1d), format: signed0}
+  MTM: {expr: sum(trade.MTM), format: signed0}
+  P&L 1d: {expr: sum(trade.PNL_1D), format: signed0}
   Trades: {expr: count(trade)}
-  Exposure (EE peak): {expr: sum(netting_set.eePeak), format: amount0}
+  Exposure (EE peak): {expr: sum(netting_set.EE_PEAK), format: amount0}
   Netting sets: {expr: count(netting_set)}
   MTM per exposure: {expr: "measure('MTM') / measure('Exposure (EE peak)')", format: signed2}
 security:
   rows:
     trade:
-      - {role: desk-head, where: trade.desk in user.desks}
+      - {role: desk-head, where: trade.DESK in user.desks}
       - {role: risk, where: 'True'}
       - {role: admin, where: 'True'}
-  masked: [counterparty.name]
+  masked: [counterparty.NAME]
   may-see-all:
     netting_set: [desk-head]
     counterparty: [desk-head]

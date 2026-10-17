@@ -20,25 +20,25 @@ notebook: cp-risk-extracts
 title: Two extracts, joined the wrong way and the right way
 description: Trades and netting sets of the model cp-risk, joined by counterparty in pandas.
 dataset: mq:cp-risk@1
-fields: [trade.counterpartyId, trade.mtm, trade.pnl1d]
+fields: [trade.COUNTERPARTY, trade.MTM, trade.PNL_1D]
 extracts:
-  - { name: exposure, dataset: mq:cp-risk@1, fields: [netting_set.counterparty, netting_set.eePeak] }
+  - { name: exposure, dataset: mq:cp-risk@1, fields: [netting_set.COUNTERPARTY, netting_set.EE_PEAK] }
 cells:
   - type: python
     source: |
       ns = extract("exposure")
-      naive = df.merge(ns, left_on="counterpartyId", right_on="counterparty", how="inner")
+      naive = df.merge(ns, on="COUNTERPARTY", how="inner")
       print("trade rows", len(df), " netting-set rows", len(ns), " rows after the row join", len(naive))
-      print("P&L 1d   true %.0f   row join %.0f" % (df["pnl1d"].sum(), naive["pnl1d"].sum()))
-      print("EE peak  true %.0f   row join %.0f" % (ns["eePeak"].sum(), naive["eePeak"].sum()))
+      print("P&L 1d   true %.0f   row join %.0f" % (df["PNL_1D"].sum(), naive["PNL_1D"].sum()))
+      print("EE peak  true %.0f   row join %.0f" % (ns["EE_PEAK"].sum(), naive["EE_PEAK"].sum()))
     target: server
   - type: python
     source: |
-      mtm = df.groupby("counterpartyId", as_index=False)["mtm"].sum()
-      ee = extract("exposure").groupby("counterparty", as_index=False)["eePeak"].sum()
-      g = mtm.merge(ee, left_on="counterpartyId", right_on="counterparty", how="left").sort_values("eePeak", ascending=False).head(10)
+      mtm = df.groupby("COUNTERPARTY", as_index=False)["MTM"].sum()
+      ee = extract("exposure").groupby("COUNTERPARTY", as_index=False)["EE_PEAK"].sum()
+      g = mtm.merge(ee, on="COUNTERPARTY", how="left").sort_values("EE_PEAK", ascending=False).head(10)
       result = {"title": {"text": "MTM and expected exposure of the ten largest counterparties"}, "legend": {"top": 24},
-                "xAxis": {"type": "category", "data": list(g["counterpartyId"]), "axisLabel": {"rotate": 30}}, "yAxis": {"type": "value"},
-                "series": [{"name": "MTM", "type": "bar", "data": [float(v) for v in g["mtm"]]},
-                           {"name": "Exposure (EE peak)", "type": "bar", "data": [float(v) for v in g["eePeak"]]}]}
+                "xAxis": {"type": "category", "data": list(g["COUNTERPARTY"]), "axisLabel": {"rotate": 30}}, "yAxis": {"type": "value"},
+                "series": [{"name": "MTM", "type": "bar", "data": [float(v) for v in g["MTM"]]},
+                           {"name": "Exposure (EE peak)", "type": "bar", "data": [float(v) for v in g["EE_PEAK"]]}]}
     target: server

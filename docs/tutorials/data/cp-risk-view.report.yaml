@@ -23,12 +23,12 @@ pages:
   - id: view
     title: By sector
     visuals:
-      - { id: sector, type: slicer, title: Sector, at: { x: 9, y: 0, w: 3, h: 2 }, wells: { field: [counterparty.sector] }, format: { mode: dropdown } }
+      - { id: sector, type: slicer, title: Sector, at: { x: 9, y: 0, w: 3, h: 2 }, wells: { field: [counterparty.SECTOR] }, format: { mode: dropdown } }
       - { id: mtm, type: card, title: MTM, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [MTM] } }
       - { id: ee, type: card, title: Exposure (EE peak), at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [Exposure (EE peak)] } }
       - { id: ratio, type: card, title: MTM per exposure, at: { x: 6, y: 0, w: 3, h: 2 }, wells: { values: [MTM per exposure] } }
       - { id: by-sector, type: bar, title: "MTM and exposure by sector (one visual, two facts)", at: { x: 0, y: 2, w: 12, h: 6 },
-          wells: { axis: [counterparty.sector], values: [MTM, Exposure (EE peak)] } }
+          wells: { axis: [counterparty.SECTOR], values: [MTM, Exposure (EE peak)] } }
       - { id: table, type: table, title: Counterparties, at: { x: 0, y: 8, w: 12, h: 6 },
-          wells: { columns: [counterparty.name, counterparty.sector, MTM, Exposure (EE peak), MTM per exposure] },
+          wells: { columns: [counterparty.NAME, counterparty.SECTOR, MTM, Exposure (EE peak), MTM per exposure] },
           sort: { by: Exposure (EE peak), desc: true }, limit: 8 }

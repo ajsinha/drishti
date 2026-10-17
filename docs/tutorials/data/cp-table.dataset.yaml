@@ -22,7 +22,7 @@ title: Counterparty table (Python)
 source:
   python: Counterparty table          # the Python item, by its title (or its catalogue id)
   inputs:
-    pnl: {model: cp-risk@1, select: {fields: [counterparty.id, counterparty.name, counterparty.sector], measures: [MTM, Trades]}}
+    pnl: {model: cp-risk@1, select: {fields: [counterparty.id, counterparty.NAME, counterparty.SECTOR], measures: [MTM, Trades]}}
     exposure: {model: cp-risk@1, select: {fields: [counterparty.id], measures: [Exposure (EE peak)]}}
   params: {floor: 1.0}
 grain: {says: One row per counterparty, keys: [counterparty]}

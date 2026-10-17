@@ -17,6 +17,23 @@
 
 ## Unreleased
 
+- **UPPER_SNAKE attribute names in every kind of the seven packs.** Counterparties, legal entities, books, desks, traders,
+  calendars, agreements, CSAs, netting sets, collateral, margin calls, limits, exposure, CVA, SA-CCR, SIMM, curves, surfaces, FX,
+  fixings, equities, bonds, VaR, stress, FRTB, P&L explain, economies, indicators, jurisdictions, elections, news topics and listed
+  companies now carry `COUNTERPARTY_ID`, `NETTING_SET_ID`, `NET_MTM`, `EE_PEAK`, `ZERO_RATE`, `TENOR`, `GDP_USD_BN`, `ISO3` …
+  (ids keep their values). The generators write them through one boundary (`tools/packgen/common/upper.py`), the Sutras, forms,
+  key columns, link fields, about text, Calc snippets and pack tests follow, the BI samples (models, datasets, reports, the
+  notebook) read the new columns, and the news, yfinance and public-feed connectors write UPPER_SNAKE documents
+  (`com.ash.drishti.common.UpperSnake`). A graph panel reads `ID`/`FROM`/`TO` as well as `id`/`from`/`to`, a panel's default
+  field (`open`, `close`, `label`, `value`, `date` …) reads the UPPER_SNAKE attribute when the row has that, and a control's
+  options from a list of records read `ID` too. The retired example packs keep their names.
+- **Pack samples are one JSON Lines file per kind**: `samples/<kind>.jsonl`, one document a line in the catalogue's order, split
+  into `<kind>.part-001.jsonl` … only above 50 MB (`--sample-part-mb`); the seven packs went from 12,195 sample files to 69. The
+  demo connector, BI pack models, pack export and import, `drishti.py design`, the lake and stream tools and the tests read both
+  layouts (`com.ash.drishti.common.PackSamples`, `tools/packgen/common/packsamples.py`); the generators, the pack wizard and
+  `pack_from_jsonl.py` write JSONL; packs in the older `samples/<kind>/<id>.json` layout keep working.
+- Help: a dead CHANGELOG anchor to the Perspective chart section and three unused Perspective pictures removed.
+
 - **Production-shaped trades from three source systems.** The trading pack's `trade` is the common schema a production extract has:
   47 upper-snake attributes (`SOURCE_SYSTEM`, `TRADE_ID`, `TRADE_STATUS`, `PRODUCT_TYPE`, `COUNTERPARTY`, `LEGAL_ENTITY`, `PORTFOLIO`,
   `TRADER_ID`, the dates, `CURRENCY` …) with `LEGS[]` (`INDEX`, `CASH_FLOWS[]` -> `RESETS[]`) and `EVENTS[]`, the same for **ENDUR**
@@ -450,7 +467,7 @@
 - **Added: Python on boards and in alerts.** A board tile may be a python visual (the sample board `python-wall`); an alert's measure may be a Python measure, read for each person in the sandbox on schedule or after a load, masked when a column is masked for them ([DISTRIBUTION.md](docs/guides/DISTRIBUTION.md#python-measures-in-alerts), [BOARDS.md](docs/guides/BOARDS.md#python-tiles)).
 - **Added: Calc's BI client** `drishti_bi` (`query`, `datasets`, `describe`: the engine's answer as you, a DataFrame) and `drishti_bi.walk(df)`: **Graphic Walker** (PygWalker's front end, vendored; PygWalker itself cannot be vendored offline) in a sandboxed frame with a policy of its own ([PYTHON_CALC.md section 19](docs/guides/PYTHON_CALC.md#19-the-bi-client-and-graphic-walker)).
 - **Added: Slice and SQL in the browser** with vendored DuckDB-Wasm in Analyse (the page keeps the strict policy; the console's engines are the fallback; `bi.explore.browser_engine`, `browser_start_seconds`), and **promotion of a slice or a SQL cell into a visual of a new or an existing report draft** with its dataset, wells and filters mapped ([ANALYSE.md sections 13 and 14](docs/guides/ANALYSE.md#13-in-the-browser-duckdb-wasm)).
-- **Added: Perspective charts** (`type: perspective-chart`, the d3fc plugin) and Perspective's **settings panel** on every Perspective visual, with the view **saved back into the report's draft** as `format.view` ([REPORTS.md](docs/guides/REPORTS.md#perspective-charts-and-the-settings-panel)).
+- **Added: Perspective charts** (`type: perspective-chart`, the d3fc plugin) and Perspective's **settings panel** on every Perspective visual, with the view **saved back into the report's draft** as `format.view` ([REPORTS.md](docs/guides/REPORTS.md#perspective-visuals-of-21-since-230-drishtis-grid)).
 - **Fixed: a measure that mixes grains** (`[MTM] / [Exposure]`) is worked out over each measure at its own grain, no longer repeating the one-side figure; the two measures of two unrelated facts in one expression are answered too ([RUPAKA.md section 20.13](docs/architecture/RUPAKA.md)).
 - **Changed:** new codes `DRS-9076` and `DRS-9077`; `core/pytests.py`, `core/promote_report.py`, `bi-vega.js`, `bi-explore-duck.js`, `drishti_bi.py` and the walker frame are new console files; vendored: Vega (BSD-3), Graphic Walker with its 190 packages (Apache-2.0, MIT and others; no Hippocratic code) ([VENDOR.md](drishti-console/web/static/vendor/VENDOR.md)).
 - **Added: governance beyond removal.** A field or measure renamed with the same `path:`/`expr:` is **recognised as a rename**: the impact says `[renamed to ...]` and *Publish and update the reports* (`applyRenames`) rewrites the stored reports that use the old names, as their next published version, in the same step as the dataset. A changed **type or meaning** (a column's type, path or expression, a measure's expression) is listed as an impact on the reports that use it (shown, not refused). Every import now **keeps what it replaced** (`drishti.bi.governance.imports-dir`, `imports-keep`) and **Roll back this import** (Environments; `POST /bi/imports/{id}/rollback`, audited, refused when an item was edited since unless a bi-admin forces it) puts it back. **Pack archives may carry BI content** (`config/bi/<kinds>/`): the upload check dry-runs the import, the deploy loads it as a real import into the workspace `packs` (published, the pack as audience), a refused import does not undo the deploy; a pack with no `sutras/` folder passes the Sutra checks. **Lineage reaches past the connector** to the table, topic, path or bucket its file declares (credentials never; masked for people who are not administrators). Docs: BI_GOVERNANCE.md sections 5 to 7, API_GUIDE.md, CONFIGURATION.md, TROUBLESHOOTING.md, RUPAKA.md 20.12, tutorial 13.
