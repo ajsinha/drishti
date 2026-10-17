@@ -26,6 +26,7 @@ Skipped when Playwright, Chromium or the built server jar is missing, or a scrat
 from __future__ import annotations
 
 import json
+import os
 import re
 
 import pytest
@@ -39,6 +40,18 @@ from bi_stack import listening  # noqa: E402
 PORTS = w1.worker_ports(18926, 17926)
 CONSOLE_URL = f"http://127.0.0.1:{PORTS[1]}"
 sign_in, clean, fetch = w1.sign_in, w1.clean, w1.fetch
+SHOTS = os.environ.get("DRISHTI_SHOTS", "")                       # a folder: the guides' pictures are taken there too (docs/guides/img/bi-wave-b)
+
+
+def shoot(page, selector, name, max_height=700):
+    """A picture of one region for the guides (only with DRISHTI_SHOTS set), from the whole page at its natural layout."""
+    if SHOTS:
+        page.evaluate("window.scrollTo(0, 0)")
+        bb = page.locator(selector).first.bounding_box()
+        page.screenshot(path=os.path.join(SHOTS, name + ".jpg"), quality=86, full_page=True,
+                        clip={"x": bb["x"], "y": bb["y"], "width": bb["width"], "height": min(bb["height"], max_height)})
+
+
 COMPUTE = re.compile(r"\.wasm(\?|$)|pyodide|duckdb|perspective|calc-worker|bi_driver", re.I)
 
 
@@ -90,6 +103,7 @@ def made(browser, stack):
     page.select_option("[data-qm-calc]", "share-all")
     expect(page.locator("[data-qm-expr]")).to_have_text("share_of(measure('Sum of mtm'), over=ALL)")
     page.fill("[data-qm-name]", "MTM share")
+    shoot(page, "[data-quick-measure]", "quick-calculation")
     page.click("[data-qm-add]")
     expect(page.locator('[data-measure="MTM share"]')).to_be_visible(timeout=15000)
     # a what-if parameter in the Calculations tab, and a measure shocked by it
@@ -98,6 +112,14 @@ def made(browser, stack):
     page.select_option("[data-p-new-kind]", "number")
     page.click("[data-p-add]")
     expect(page.locator('[data-param="shock"]')).to_be_visible(timeout=15000)
+    page.fill("[data-cg-new]", "Time")
+    page.click("[data-cg-add]")
+    expect(page.locator('[data-cg="Time"]')).to_be_visible(timeout=15000)
+    page.click("[data-cal-add]")
+    expect(page.locator("[data-cal-holidays]")).to_be_visible(timeout=15000)
+    page.select_option("[data-cal-holidays]", "USNY")
+    page.select_option("[data-cal-fy]", "4")
+    shoot(page, "[data-calc-pane]", "calculations-tab", 900)
     page.click('[data-tab="measures"]')
     page.select_option("[data-qm-base]", "Sum of mtm")
     page.select_option("[data-qm-calc]", "whatif")
@@ -171,6 +193,8 @@ def test_a_parameter_slicer_shocks_the_report(browser, made):
     expect(page.locator('[data-param-bar] [data-param="shock"]')).to_be_visible(timeout=20000)
     page.evaluate("""() => { const r = document.querySelector('[data-param="shock"]'); r.value = '0.5'; r.dispatchEvent(new Event('input')); r.dispatchEvent(new Event('change')); }""")
     expect(page.locator('[data-chip="param"]')).to_contain_text("shock: 0.5", timeout=15000)
+    page.wait_for_timeout(1500)
+    shoot(page, "[data-report]", "parameter-slicer")
     page.wait_for_function("""(b) => { const r = [...document.querySelectorAll('[data-visual="desks"] tbody tr')].map(x => x.children[3].textContent.trim()); return r.length && r.join('|') !== b; }""",
                            arg="|".join(r[3] for r in before), timeout=30000)
     after = rows_of(page)
@@ -189,6 +213,7 @@ def test_a_live_report_follows_pushed_answers_with_its_state_chip(browser, made,
     chip = page.locator('[data-visual="desks"] .bi-state-chip')
     expect(chip).to_have_attribute("data-state", re.compile("live|tick"), timeout=30000)
     expect(chip).to_contain_text(re.compile("Live|Every few seconds"))
+    shoot(page, '[data-visual="desks"]', "state-chip")
     # new trades land in the lake and the dataset is refreshed: the server's generation bus pushes the new answer, nothing polls
     lake = stack.tmp / "lake" / "2026-10-08" / "trade.jsonl"
     with open(lake, "a") as f:
@@ -216,6 +241,7 @@ def test_the_explain_panel_shows_tiers_layers_and_times(browser, made):
     page.wait_for_selector('[data-visual="desks"] .bi-plan-panel:not([data-explain="loading"])', state="attached", timeout=30000)
     panel = page.locator('[data-visual="desks"] .bi-plan-panel')
     assert panel.get_attribute("data-explain") == "ready", panel.text_content()
+    shoot(page, '[data-visual="desks"]', "explain-panel", 1000)
     expect(panel.locator("[data-tier]").first).to_be_visible()
     expect(panel.locator("[data-explain-times]")).to_contain_text("ms")
     assert panel.locator("[data-explain-op]").count() >= 2

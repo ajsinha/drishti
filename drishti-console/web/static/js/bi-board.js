@@ -124,7 +124,7 @@
     if (entry.follow && entry.followKey === key) { return; }
     if (entry.follow) { entry.follow.close(); entry.follow = null; }
     entry.followKey = key;
-    if (!entry.mq) { chip.el.remove(); return; }
+    if (!entry.mq) { chip.el.remove(); entry.chip = null; return; }
     if (!B.consume.followable(time)) { chip.set('asof', 'A past day never changes: it was asked once.', time); return; }
     if (Array.from(tiles.values()).filter((e) => e.follow).length >= MAX_FOLLOW) { chip.set('once', 'This page follows ' + MAX_FOLLOW + ' tiles already.'); return; }
     chip.set('connecting');
@@ -133,6 +133,7 @@
       onAnswer: (d) => {
         if (tiles.get(entry.key) !== entry || (watch && watch.paused())) { return; }
         canvas.setAttribute('data-pushed', String((Number(canvas.getAttribute('data-pushed')) || 0) + 1));
+        canvas.setAttribute('data-live-round', String((Number(canvas.getAttribute('data-live-round')) || 0) + 1));
         if (!d.rows || !entry.res || entry.res.totals || (d.rows.length && entry.res.columns && d.rows[0].length !== entry.res.columns.length)) { load(entry, true); return; }
         entry.res = Object.assign({}, entry.res, { rows: d.rows, rowCount: d.rows.length });
         const c = ctxFor(entry);
@@ -247,7 +248,7 @@
     watch = B.live.watch(ids, {
       staleSeconds: Number(canvas.getAttribute('data-live-stale')) || 30,
       onHello: (id, d) => { if (wasOff || Number(d.generation) > seenGeneration) { refresher.request(); } wasOff = false; },
-      onTick: () => { if (!Array.from(tiles.values()).some((e) => e.follow)) { refresher.request(); } },
+      onTick: (id, d) => { if ((d && d.resumed) || !Array.from(tiles.values()).some((e) => e.follow)) { refresher.request(); } },          // pushed answers redraw the followed tiles; Resume catches up
       onState: (info) => { if (info.state === 'disconnected' || info.state === 'hidden') { wasOff = true; } if (indicator) { indicator.draw(); } },
       onSignal: () => { if (indicator) { indicator.draw(); } }
     });

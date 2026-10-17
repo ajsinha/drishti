@@ -317,7 +317,8 @@ class BiLiveApiTest {
     @Test @Order(8)
     void aPerspectiveVisualOverTwoTablesAndAnUnknownAggregateAreRefused() throws Exception {
         String author = as("wes", "live-author");
-        String yaml = Files.readString(Path.of("../config/bi/reports/live-trading-desk.report.yaml")).replace("aggregates: { trade.mtm: sum, trade.notional: sum }",
+        // the 2.1 copy keeps its Perspective pivot (config/bi has a matrix since 2.3.0, the browser computing nothing)
+        String yaml = Files.readString(Path.of("src/test/resources/bi/samples-2.1/reports/live-trading-desk.report.yaml")).replace("aggregates: { trade.mtm: sum, trade.notional: sum }",
                 "aggregates: { trade.mtm: total }");
         JsonNode r = ok(call("POST", "/api/v1/bi/reports/validate", author, json.writeValueAsString(Map.of("yaml", yaml))));
         assertThat(r.path("valid").asBoolean()).isFalse();

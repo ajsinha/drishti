@@ -93,7 +93,8 @@
     if (group === 'static' || group === 'entity' || spec.type === 'slicer') { return out; }
     if (group === 'python') { return out; }                                        // a Python result is drawn from rows Python was handed: no alert, drill or marks
     if (B.ai && group !== 'python') { out.push(B.ai.explainButton(spec, mk)); }                                  // Explain this number: hidden unless the server's AI layer is on
-    out.push(mk('bi-plan', 'diagram-3', 'How this was answered: tiers, layers, times', () => { const e = frames.get(spec.id); if (e) { B.consume.explain(e.frame, askedMq(e)); } }, { 'data-act': 'explain-plan' }));
+    const known = frames.get(spec.id);
+    if (!known || known.mq !== null) { out.push(mk('bi-plan', 'diagram-3', 'How this was answered: tiers, layers, times', () => { const e = frames.get(spec.id); if (e) { B.consume.explain(e.frame, askedMq(e)); } }, { 'data-act': 'explain-plan' })); }          // a visual with no model query (a 2.1 dataset's) has no plan to explain
     out.push(alertButton(spec, mk));                                               // Alert me: every visual that shows numbers, live ones too (a live source can alert on change)
     if (group === 'perspective' || group === 'live') { return out; }
     const sel = state.selections.find((s) => s.visual === spec.id);
@@ -195,6 +196,7 @@
     if (!frames.get(spec.id) || frames.get(spec.id) !== entry) { return; }
     if (watch && watch.paused()) { entry.pending = true; return; }
     canvas.setAttribute('data-pushed', String((Number(canvas.getAttribute('data-pushed')) || 0) + 1));
+    canvas.setAttribute('data-live-round', String((Number(canvas.getAttribute('data-live-round')) || 0) + 1));          // a pushed redraw is a round of the live page too
     const whole = d.rows && entry.res && !entry.res.totals && !entry.res.highlight && !DISTRIBUTIONS[spec.type] && !state.rows[spec.id] && entry.res.columns && (!d.rows.length || d.rows[0].length === entry.res.columns.length);
     if (!whole) { load(spec, { quiet: true }); return; }
     entry.res = Object.assign({}, entry.res, { rows: d.rows, rowCount: d.rows.length });
@@ -210,7 +212,7 @@
     if (entry.follow && entry.followKey === key) { return; }
     if (entry.follow) { entry.follow.close(); entry.follow = null; }
     entry.followKey = key;
-    if (!mq) { chip.el.remove(); return; }
+    if (!mq) { chip.el.remove(); entry.chip = null; return; }
     if (!B.consume.followable(state.time)) { chip.set('asof', 'A past day never changes: it was asked once.', state.time); return; }
     const following = Array.from(frames.values()).filter((e) => e.follow).length;
     if (following >= MAX_FOLLOW) { chip.set('once', 'This page follows ' + MAX_FOLLOW + ' visuals already; this one was asked once.'); return; }
@@ -297,7 +299,7 @@
     watch = B.live.watch([reportId], {
       staleSeconds: Number(canvas.getAttribute('data-live-stale')) || 30,
       onHello: (id, d) => { if (wasOff || Number(d.generation) > seenGeneration) { refresher.request(); } wasOff = false; },
-      onTick: () => { if (!Array.from(frames.values()).some((e) => e.follow)) { refresher.request(); } },
+      onTick: (id, d) => { if ((d && d.resumed) || !Array.from(frames.values()).some((e) => e.follow)) { refresher.request(); } },          // pushed answers redraw the followed visuals; Resume catches up
       onState: (info) => { if (info.state === 'disconnected' || info.state === 'hidden') { wasOff = true; } if (indicator) { indicator.draw(); } },
       onSignal: () => { if (indicator) { indicator.draw(); } }
     });

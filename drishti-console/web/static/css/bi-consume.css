@@ -31,7 +31,9 @@
 .bi-param-range { min-width: 8rem; min-height: 44px; accent-color: var(--d-accent); }
 .bi-param-out { min-width: 3rem; font-family: var(--d-font-mono); font-size: .85rem; }
 .bi-param-in { max-width: 9rem; }
-.bi-plan-panel { margin: .4rem .6rem .6rem; padding: .5rem .7rem; border-top: 1px dashed var(--d-border); font-size: .85rem; overflow-x: auto; }
+.bi-vis:has(> .bi-plan-panel) { position: relative; }
+.bi-plan-panel { position: absolute; inset: 2rem 0 0 0; z-index: 3; padding: .5rem .7rem; border-top: 1px dashed var(--d-border); background: var(--d-surface); font-size: .85rem; overflow: auto; }
+.bi-plan-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
 .bi-plan-panel h3 { font-size: .9rem; margin: 0 0 .3rem; }
 .bi-explain-tiers { display: flex; flex-wrap: wrap; gap: .3rem; margin: 0 0 .3rem; }
 .bi-explain-times { color: var(--d-muted); margin: 0 0 .4rem; }

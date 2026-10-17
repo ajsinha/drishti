@@ -26,7 +26,7 @@ version: 1
 title: Live trading desk
 description: >-
   The desk as it ticks: trades, notional, net MTM and P&L, MTM by desk, a rolling line of net MTM, the worst trades and the latest changes; then every trade in
-  a Perspective grid and a pivot by desk and currency.
+  a grid, a matrix by desk and currency, and a chart of it (the server works every number out; the browser draws).
 sample: true
 endorsement: promoted
 tags: [sample, trading, live, streaming, tutorial]
@@ -101,7 +101,7 @@ pages:
     title: Every trade
     visuals:
       - id: all-trades
-        type: perspective-grid          # Perspective in the browser; the rows arrive as masked Arrow, and each change is applied to the row it belongs to
+        type: perspective-grid          # a 2.1 grid type: since 2.3.0 drawn as Drishti's own grid of the rows the server sends (no WebAssembly in the browser)
         title: Trades
         at: { x: 0, y: 0, w: 12, h: 12 }
         wells: { columns: [trade.tradeId, trade.desk, trade.book, trade.productType, trade.currency, trade.direction, trade.trader, trade.notional, trade.mtm, trade.pnl1d] }
@@ -111,20 +111,19 @@ pages:
     title: Pivot
     visuals:
       - id: desk-currency
-        type: perspective-pivot         # Perspective pivots the rows in the browser: desks down, currencies across, the aggregates you name
+        type: matrix                    # the server groups and totals: desks down, currencies across (2.3.0: the browser no longer pivots)
         title: Net MTM and notional by desk and currency
         at: { x: 0, y: 0, w: 12, h: 12 }
-        wells: { rows: [trade.desk], columns: [trade.currency], values: [trade.mtm, trade.notional] }
-        format: { aggregates: { trade.mtm: sum, trade.notional: sum } }
+        wells: { rows: [trade.desk], columns: [trade.currency], values: [MTM, Notional] }
         alt: Pivot table of net mark to market and notional by desk and currency, recomputed as trades tick
 
   - id: chart
     title: Chart
     visuals:
       - id: mtm-chart
-        type: perspective-chart         # Perspective's chart plugin over the same pivot; the gear opens its settings panel and, for the report's editor, the view can be saved back here as format.view
+        type: column                    # the same question as a chart: a column per desk, one series per currency, stacked
         title: Net MTM by desk and currency
         at: { x: 0, y: 0, w: 12, h: 12 }
-        wells: { rows: [trade.desk], columns: [trade.currency], values: [trade.mtm] }
-        format: { plugin: Y Bar, aggregates: { trade.mtm: sum } }
+        wells: { axis: [trade.desk], legend: [trade.currency], values: [MTM] }
+        format: { stacked: true, labels: false }
         alt: Bar chart of net mark to market for each desk, split by currency, redrawn as trades tick
