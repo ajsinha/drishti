@@ -35,7 +35,7 @@ About 60 minutes.
 
 ## What you will learn
 
-- the parts of a dataset: a table, columns, measures; and how to ask it a question before drawing anything;
+- the parts of a **model**: the datasets it reads (one table each, with its columns), the measures it owns; and how to ask it a question before drawing anything;
 - how to make a report in the designer: cards, a **map**, a bar with a **top 10** filter, a slicer; where each visual sits on the 12-column grid;
 - (at the end) a **relative-date slicer**, a **tablet layout** and an **entity view**: *last 4 weeks*, two columns on an 820 px screen, and a counterparty's own view beside a bar;
 - how the map drills **world, country, region** with a breadcrumb, and how a click on a map or a bar **cross-filters** the rest of the page;
@@ -43,39 +43,63 @@ About 60 minutes.
 - **filter like Power BI**: list, dropdown and range slicers, page and report scope, a top-N filter that tames a busy donut, bookmarks, and when to use a slicer instead of a click;
 - the **Counterparty risk** sample: slicers that reach across packs, a selected bar, and drill-through;
 - **two datasets in one report**: a dataset composed of two others, joined in YAML, and a slicer of one dataset that filters the visuals of the other;
-- (step 13) **a dataset of your own, built in the wizard**: pick a connector, tick columns, add a measure, set a refresh, save a draft, publish it and start a report on it, with no YAML typed.
+- (step 13) **a dataset and a model of your own, in the wizard**: narrow a pack dataset (some columns, some rows, a worked-out column), preview it, publish it and make a model of it in one click, with no YAML typed.
 - (preview, 2.2.0) **models**: a pack dataset with nothing to build, a report on it at once, then a model of trades and desks with a suggested relationship, a measure, a row rule and the security safeguard, published, opened in Analyse and watched by an alert, in the UI, over the API and as YAML.
 
-## Step 1 · Look at the dataset
+## Step 1 · Look at the model
 
-Choose **Datasets** in the left rail and open **World economics**.
+A report reads a **model**: a small star of **datasets** (each one table with its columns, the time it keeps and its row rules), the relationships
+between them and the **measures** the model owns. Choose **Models** in the left rail. Under *Your models* find **World economics**
+(`world-economics`, `model 1.0.0 · published`) and press **Open the designer**, then the **Measures** tab.
 
-![The World economics dataset: description, 1 table, 7 measures, and the query preview below](img/t10/01-dataset.jpg)
+![The World economics model in the model designer: v1.0.0, Read-only, Valid; Used by the World economics report; the Measures tab with Economies = count(economies) and GDP (USD bn) = sum(economies.gdpUsdBn)](img/t10/01-model.jpg)
 
-You should see the title, `dataset world-economics · version 1 · engine duckdb · 1 tables · 7 measures`, a badge `valid`, and below it **Preview a query**. The model sits further down: one table, `economies`, whose columns are the country's name, its ISO code
-(`iso3`, which is what a map needs), World Bank region and income group and a few figures; and the seven **measures** (`Economies`, `GDP (USD bn)`, `Population (m)`, `GDP per capita (USD)`, `Average growth`, `Average inflation`, `Average unemployment`). A measure is a
-formula the dataset owns, so every report that uses it agrees. `GDP per capita (USD)` is worked out as GDP over population, not as an average of averages, so a region's figure is right.
+You should see `World economics`, `v1.0.0`, `Read-only` (it ships with Drishti: **Save a copy** makes one of your own) and `Valid`, **Used by** the
+report **World economics**, and the seven **measures** (`Economies`, `GDP (USD bn)`, `Population (m)`, `GDP per capita (USD)`, `Average growth`,
+`Average inflation`, `Average unemployment`), each a formula the model owns, so every report on it agrees. `GDP per capita (USD)` is
+`ratio(sum(economies.gdpUsdBn), sum(economies.populationM)) * 1000`: GDP over population, not an average of averages, so a region's figure is right. The
+**Canvas** tab shows the one dataset the model reads, under the alias `economies`. Back on **Models**, under *Your datasets*, press **Open** on
+**World economics: economies**.
 
-Preview a query: under **Group by** choose `economies.regionName`, under **Measures** hold Ctrl and choose `GDP (USD bn)`, `Population (m)` and `GDP per capita (USD)`, and press **Run the query**.
+![The dataset World economics: economies: read-only, version 1.0.0; its name, keys, time, source (the economy kind of the pack, through macro-store) and refresh, then its columns](img/t10/02-dataset.jpg)
 
-![The preview: seven regions with GDP, population and GDP per capita](img/t10/02-preview.jpg)
+You should see the dataset `world-economics-economies` `1.0.0`: one row per economy (key `id`), time `snapshot (one per business date)`, read from
+`the economy kind of the pack, through macro-store`, refreshed `when new data loads`, and its columns: the country's name, its ISO code (`iso3`, which
+is what a map needs), World Bank region and income group and a few figures. The data is real and public (the World Bank, CC BY 4.0, through the
+`economics` pack).
 
-You should see `7 rows`, the layer that answered (`columns`), the business date of the data, and a table with a row per World Bank region: East Asia and Pacific `32,710.77` billion dollars of GDP, North America `86,306.87` dollars per head. Over REST the same question
-is one call (with the token of tutorial 1; here the server is on port 18943, yours is on 18480):
+**Ask it a question** before drawing anything. **From the command line** (the token of tutorial 1), a **model query** groups by the region and asks
+three measures, the biggest economies first:
 
 ```text
-$ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
-    -d '{"fields":["economies.regionName"],"measures":["GDP (USD bn)","Population (m)","GDP per capita (USD)"]}' \
-    http://localhost:18480/api/v1/bi/datasets/file:dataset:world-economics/query
-{"columns":[{"type":"string","masked":false,"name":"economies.regionName"},{"type":"decimal","masked":false,"name":"GDP (USD bn)"}, ...],
- "rows":[["East Asia & Pacific",32710.7673284,2340.961666,13973.217846105472],["Europe & Central Asia",32262.103690000018,932.4846759999997,34597.99878791792],
-         ["Latin America & Caribbean",7327.566034999997,666.552477,10993.232022750399], ... ["North America",33098.7945,383.501255,86306.8740153145], ...],
- "rowCount":7,"meta":{"layer":"columns","millis":1.93,"cached":false,"dates":["2026-10-09"],"masked":[],"warnings":[]}}
+$ python3 tools/drishti.py bi mq --model world-economics@1 --select economies.regionName \
+    --measures "GDP (USD bn),Population (m),GDP per capita (USD)" --sort="-GDP (USD bn)"
+economies.regionName                               GDP (USD bn)  Population (m)  GDP per capita (USD)
+-------------------------------------------------  ------------  --------------  --------------------
+North America                                      33,098.79     383.50          86,306.87
+East Asia & Pacific                                32,710.77     2,340.96        13,973.22
+Europe & Central Asia                              32,262.10     932.48          34,598.00
+Latin America & Caribbean                          7,327.57      666.55          10,993.23
+Middle East, North Africa, Afghanistan & Pakistan  5,136.27      828.03          6,203.03
+South Asia                                         4,578.02      1,692.26        2,705.28
+Sub-Saharan Africa                                 2,213.29      1,318.05        1,679.22
+7 row(s)  as of 2026-10-16  plan p_96fa8e1c36a0693d
 ```
 
-You should see one row per region and a `meta` block that says which layer answered and how long it took. Everything a report draws is a question like this, asked **as you**: your row rules and masks apply, which is why two people can open one report and see different figures.
+**As YAML**, the same question is a file you can keep and run with `python3 tools/drishti.py bi mq gdp-by-region.yaml`:
 
-**In the UI.** The page above has no YAML on it, and neither does making a dataset of your own: **Datasets → New dataset (guided)** opens the dataset wizard (step 13 builds one end to end). **Edit in the wizard** on a dataset's page opens an existing draft in it, and a dataset with no schedule has **Set a schedule** ([tutorial 11](11-bi-that-runs-itself.md)).
+```yaml
+mq: 1
+model: world-economics@1
+select: { fields: [economies.regionName], measures: [GDP (USD bn), Population (m), GDP per capita (USD)] }
+sort: [{ by: GDP (USD bn), desc: true }]
+```
+
+and **over REST** it is `POST $DRISHTI_SERVER/api/v1/bi/mq` with that body as JSON (`{"mq": 1, "model": "world-economics@1", "select": {...}, "sort": [...]}`),
+which answers the `columns`, the `rows` and a `meta` block with the as-of date and the plan. `python3 tools/drishti.py bi model list` lists every model
+and dataset you may read (`world-economics@1  model  World economics  1.0.0  published`). Everything a report draws is a question like this, asked **as
+you**: your row rules and masks apply, which is why two people can open one report and see different figures. (Your dates differ: the business date is
+today's.)
 
 ## Step 2 · Start a report
 
@@ -377,85 +401,106 @@ You should see the bar the whole width, then the cards in two columns. A phone, 
 
 You should see the counterparty's own **Drishti view** (its name, rating, net MTM and netting sets) in the frame beside the bar, with a chip `counterparties.id: CP-HALCYON`. It is the view page built **for you**: someone who may not see a field does not see it here either. [REPORTS.md section 3.4](../guides/REPORTS.md#34-the-entity-view).
 
-## Step 13 · A dataset of your own, in the wizard
+## Step 13 · A dataset and a model of your own, in the wizard
 
-Everything so far read datasets that ship with Drishti. A business user can make one without typing YAML. This step builds **Economies by region** from the **macro-store** connector, then publishes it and starts a report on it.
+Everything so far read models that ship with Drishti. A business user can make a dataset and a model without typing YAML. This step makes
+**Large economies** (the economies with a GDP of 100 billion dollars or more, with a GDP per head worked out), publishes it, and makes a model of it.
 
-**In the UI.** Choose **Datasets**, then **New dataset (guided)** (it is also behind **My workspace → New item → dataset** and the designer's *build a dataset in the wizard* link when no dataset exists). The wizard has seven steps along the top; you can go back at any time.
+**In the UI.** Choose **Models**, then **New dataset**. The wizard has eight steps along the top; you can go back at any time, and each step shows the
+server's check of what you chose.
 
-**1 · Source.** Choose where the data comes from: *the packs' kinds*, *a connector* (choose it, then its kinds), *combine datasets* (a composed dataset) or *a Python Transform* (a derived dataset; [tutorial 14](14-python-and-analyse.md)). Choose **A connector**, `macro-store`, tick the kind `economy`, and give the dataset a name, a title and a description.
+**1 · Source.** Where the table comes from: **a pack dataset** (keep some of its columns and rows, add columns, group it), an SQL view over a model, a
+query in a SQL connector, a Python Transform, or the answer of a model. Choose **A pack dataset** and `pack.economics.economy` (every kind of every pack
+is a dataset already, certified and read-only; this one narrows it).
 
-![The wizard's source step: a connector chosen, its kinds listed, the economy kind ticked, and the name, title and description filled in](img/t10/35-wizard-source.jpg)
+![The wizard's source step: A pack dataset chosen, pack.economics.economy picked](img/t10/35-wizard-source.jpg)
 
-**2 · Tables and columns.** Every column the kind offers is a row: tick the ones to keep, rename what reports and formulas will call it (the *Name*; the *Source* column is where it comes from), check the type, mark a key, and add a description so others know what it means.
+**2 · Columns.** Tick the columns to keep: press **Only the keys**, then tick `name`, `iso3`, `regionName`, `incomeName`, `gdpUsdBn` and `populationM`
+(each shows its type and role; the key `economyId` always stays, a row must still say what it is).
 
-![The columns step: one row for each column of the economy kind, with its source path, name, type, key and description](img/t10/36-wizard-columns.jpg)
+![The columns step: the economy kind's columns as ticks, six chosen, the key kept](img/t10/36-wizard-columns.jpg)
 
-**3 · Relationships.** With one table there is nothing to join. With several, the wizard lists what the packs declare, relationships the values suggest (with how well they match) and columns with the same name and type, each with **Add**; every relationship is editable (the *many* side is "from", the *one* side "to").
+**3 · Rows.** *Keep the rows where* `gdpUsdBn >= 100` (a filter of the table in DEL, not a security rule: row rules are set on the model). **4 · One row
+is**: the pack's grain stays, one row per economy per business date. **5 · Worked-out columns.** Press **A formula column**, name it `gdpPerHead`, type
+`decimal`, formula `gdpUsdBn / populationM * 1000`: the server checks it as you type.
 
-**4 · Measures.** A measure is a number computed over rows. Add one by choosing an aggregation (`sum`, `avg`, `min`, `max`, `count`, `distinct`) and a column, or switch **Built as** to *Formula* and type one: as you type a table or column name a list of fields appears to pick from. **Check** asks the server whether the whole draft is valid and shows the problems that belong to that measure.
+![A formula column gdpPerHead, decimal, gdpUsdBn / populationM * 1000, and the line Checks clean: gives decimal](img/t10/37-wizard-derive.jpg)
 
-![A measure row: Total GDP, built as an aggregate, sum of economy.gdpUsdBn, and the line "This measure checks out."](img/t10/37-wizard-measures.jpg)
+**6 · Group** (optional) makes a coarser grain; leave it. **7 · Preview** saves your draft (visible only to you) and asks the server for the first rows,
+as you.
 
-**5 · Hierarchies** (optional): an ordered list of fields, coarse to fine, that a visual can drill down. **6 · Refresh and security.** Choose when the layers rebuild on their own (every day at, weekdays, business days, weekly, hourly, after a data load, or a schedule you write); row rules the dataset already has are shown here, read-only.
+![The preview: the first 20 rows of the draft as you, Algeria, Angola, Argentina, Australia with their region, income group and GDP](img/t10/38-wizard-preview.jpg)
 
-![The refresh step: Every day at 06:30, written as refresh: daily 06:30, and the security note](img/t10/38-wizard-refresh.jpg)
+**8 · Save.** Title `Large economies` (the name, what models use, follows: `large-economies`), the **workspace** (a shared one, here *Models desk*: a
+private draft cannot be published), the columns to mask, and the YAML the wizard wrote, for review.
 
-**7 · Review and save.** The wizard shows the YAML it wrote, with the server's check of it. **Edit as YAML** turns the text into a box for an expert; **Save as a draft** stores it in the workspace you choose.
+![The save step: the title Large economies, the name large-economies, the workspace Models desk, the masked columns, and the YAML](img/t10/39-wizard-save.jpg)
 
-![The review step: the YAML of the dataset, ready to save](img/t10/39-wizard-review.jpg)
+Press **Save and publish**. Under the buttons the next steps appear: **Open the dataset**, **Start a report on it** (a report on its implicit model,
+`dataset:large-economies`) and **Use it in a new model**. Press **Use it in a new model**, choose *Models desk* and **Make the model**: the model
+designer opens on **Large economies model**, the dataset placed as a fact under the alias `large_economies`, with the default measures of its columns
+(`Count of large_economies`, `Sum of gdpUsdBn`, `Sum of populationM`).
 
-After saving you can open the **Model view**, open the dataset's page, or (when you may publish) **Publish it, then start a report**: a report reads a *published* dataset, and a draft in your private workspace cannot be published, so choose a shared workspace in the last step (step 7 above) or use **Move to workspace** later. **New report on this dataset** opens the designer's start with the dataset already chosen. To change it later, open the dataset and choose **Edit in the wizard**: it opens the saved text in the same steps, and a key the wizard has no control for (a `security:` block, `tests:`, a `layout:`) is kept as it was. Comments in the original file are not kept.
+![The model designer on Large economies model: v1.0.0, Saved draft, Valid; the dataset large_economies as a fact with its columns, gdpPerHead among them](img/t10/43-new-model.jpg)
 
-**From the command line.** The wizard writes with the same REST calls anyone can make. There is no `tools/drishti.py` command for datasets (the `bi` group lists workspaces and the catalogue and publishes), so these are the calls it makes; the token is the one of tutorial 1. First the draft of a dataset from a kind (this is what step 1 does when you press **Next**):
+From here it is the model designer of the preview section below: add measures, relationships and row rules, **Save**, **Publish**, then **New report
+on this model**. To change the dataset later, open it (Models → *Your datasets* → **Open**) and choose **Narrow it** or edit its YAML; publishing a
+change needs a new version (`1.0.1` for words, `1.1.0` for an added column, `2.0.0` for a column taken away; `DRS-9126` says which).
 
-```text
-$ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
-    -d '{"kinds":["trade"],"name":"wiz-trades"}' http://localhost:18480/api/v1/bi/model/start
-{"yaml":"rachana: 1\ndataset: wiz-trades\nversion: 1\ntitle: New model from trade\n...","tables":[...],"relationships":[],"proposals":[],"warnings":[]}
-```
-
-The YAML in that answer, which is also what steps 1 to 4 build up and step 7 shows (the tutorial's `trade` kind from the `trading-store` connector; the macro-store version has the economy columns):
+**In YAML.** What the wizard wrote for the dataset (the server added `id` on save) and for the model:
 
 ```yaml
-rachana: 1
-dataset: wiz-trades
-version: 1
-title: New model from trade
-description: "Started from the packs' kinds. Edit the columns, relationships and measures; nothing here changes a pack."
-tables:
-  trade:
-    source: { connector: trading-store, kind: trade }
-    columns:
-      book: string
-      currency: string
-      desk: string
-      mtm: decimal
-      notional: decimal
-      pnl1d: decimal
-      productType: string
-      status: string
-      tradeDate: date
-      tradeId: string
-measures:
-  Count of trade: { expr: "count(trade)" }
-  Total trade mtm: { expr: "sum(trade.mtm)" }
-  Total trade notional: { expr: "sum(trade.notional)" }
-refresh: daily 06:30
+rachana: 2
+expressions: 2
+dataset: large-economies
+version: 1.0.0
+id: ds_f57ba227
+title: Large economies
+extends: pack.economics.economy@^1
+columns: [name, iso3, regionName, incomeName, gdpUsdBn, populationM]
+where: gdpUsdBn >= 100
+grain:
+  says: One row per economy per business date
+  keys: [id]
+derive:
+  gdpPerHead: {expr: gdpUsdBn / populationM * 1000, type: decimal}
 ```
 
-Check it, store it as a draft in a shared workspace, publish it (the same calls as the wizard's **Check**, **Save as a draft** and **Publish it**):
+```yaml
+rachana: 2
+expressions: 2
+model: large-economies-model
+version: 1.0.0
+id: md_b51eb4ac
+title: Large economies model
+datasets:
+  large_economies: {dataset: large-economies@^1, role: fact}
+relationships: []
+measures: {}          # the defaults of the columns: Count of large_economies, Sum of gdpUsdBn, Sum of populationM
+```
+
+**From the command line.** The same two files make the same items (a write needs a token with the `bi:write` scope and the `bi-author` power; the
+ids differ on your machine):
 
 ```text
-$ curl -s -X POST ... -d '{"yaml":"...the text above..."}' http://localhost:18480/api/v1/bi/datasets/validate
-{"valid":true,"problems":[], ...}
-$ curl -s -X POST ... -d '{"kind":"dataset","title":"Wizard trades","body":"...the text above..."}' http://localhost:18480/api/v1/bi/workspaces/<workspace>/items
-{"id":"bi-f67d899fb7","status":"draft", ...}
-$ curl -s -X POST ... -d '{"note":"from the wizard"}' http://localhost:18480/api/v1/bi/items/bi-f67d899fb7/publish
-{"status":"published","publishedVersion":1, ...}
+$ python3 tools/drishti.py bi model check large-economies.dataset.yaml          # the server's Check, nothing stored
+$ python3 tools/drishti.py bi item new models-desk large-economies.dataset.yaml
+$ python3 tools/drishti.py bi catalogue publish <the dataset's id>
+$ python3 tools/drishti.py bi item new models-desk large-economies-model.model.yaml
+$ python3 tools/drishti.py bi mq --model large-economies-model@1 --select large_economies.regionName \
+    --measures "Count of large_economies" --sort="-Count of large_economies" --limit 3
+large_economies.regionName                         Count of large_economies
+-------------------------------------------------  ------------------------
+Europe & Central Asia                              29
+Middle East, North Africa, Afghanistan & Pakistan  12
+Latin America & Caribbean                          12
+3 row(s)  as of 2026-10-16  plan p_14611e0c9ed42ee4
 ```
 
-You should see `"valid": true` and, after the publish, `published` at version 1. (Ids differ on your machine.) A report on it is then `dataset: bi-f67d899fb7` in its YAML, which the designer writes when you start one on the dataset.
+A draft model answers its owner (and is listed as `draft` by `bi model list`); a report on it is published once the model is. The reference for the
+wizard's every step is [BI_GUIDE.md section 23](../guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1) and
+[DATASETS.md](../guides/DATASETS.md); the version 1 guided tables builder (*Use the guided tables builder* under the wizard's first step) still makes
+`rachana: 1` datasets, which the upgrade converts to models ([tutorial 17](17-run-it-in-production.md)).
 
 ### Notes: saving safely, and more than one dataset (2.1.0)
 

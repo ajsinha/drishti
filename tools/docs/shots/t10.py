@@ -30,20 +30,18 @@ WORKSPACE = "Economics desk"
 FULL = {"x": 0, "y": 0, "width": 1280, "height": 900}
 
 
-@shot("01-dataset.jpg", also=("02-preview.jpg",))
-def dataset(c: Ctx):
+@shot("01-model.jpg", also=("02-dataset.jpg",))
+def model_and_dataset(c: Ctx):
+    """The World economics model in the model designer (its dataset economies, its seven measures), then the dataset it reads on its own page."""
     login(c, height=900)
-    go(c, "/bi/d/" + WORLD, wait="h1", settle=1500)
-    c.save("01-dataset.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 450})
-    c.page.wait_for_selector("[data-fields] option", state="attached", timeout=30000)
-    c.page.select_option("[data-fields]", ["economies.regionName"])
-    c.page.select_option("[data-measures]", ["GDP (USD bn)", "Population (m)", "GDP per capita (USD)"])
-    c.page.click("[data-run]")
-    c.page.wait_for_selector("[data-grid] tbody tr", timeout=30000)
-    c.page.wait_for_timeout(800)
-    c.page.evaluate("document.querySelector('[data-preview]').scrollIntoView()")
-    c.page.wait_for_timeout(300)
-    elem_shot(c, "02-preview.jpg", "[data-grid-wrap]", pad=14, extra=30)
+    go(c, "/bi/md/file:model:world-economics", wait="[data-md-root][data-ready=yes]", settle=1500)
+    c.page.click('[data-tab="measures"]')
+    c.page.wait_for_timeout(1200)
+    c.page.evaluate("window.scrollTo(0, 0)")
+    c.save("01-model.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 760})
+    go(c, "/bi/ds/file:dataset:world-economics-economies", wait="[data-layer-dataset][data-ready=yes]", settle=1500)
+    c.page.evaluate("window.scrollTo(0, 0)")
+    c.save("02-dataset.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 760})
 
 
 @shot("03-new-report.jpg", also=("04-cards.jpg", "05-map.jpg", "06-yaml-places.jpg", "07-bar-slicer.jpg"))
@@ -373,60 +371,85 @@ def tablet(c: Ctx):
 
 # ---- the dataset wizard and the designer controls that used to need YAML ---------------------------------------------------------------------
 
-WIZ_TITLE = "Economies by region"
+WIZ_TITLE = "Large economies"
+WIZ_NAME = "large-economies"
+WIZ_MODEL = "Large economies model"
+WIZ_DESK = "Models desk"
+WIZ_COLUMNS = ["name", "iso3", "regionName", "incomeName", "gdpUsdBn", "populationM"]
 
 
-def wiz_step(c: Ctx, step: str):
-    c.page.click("[data-wiz-next]")
-    c.page.wait_for_selector(f'[data-wiz-body][data-step="{step}"]')
-    c.page.wait_for_timeout(400)
+def desk(c: Ctx) -> str:
+    """The shared workspace the dataset and the model are published in (a private workspace cannot publish); made once, then reused."""
+    for w in bi(c, "GET", "/workspaces"):
+        if w.get("name") == WIZ_DESK:
+            return w["id"]
+    return bi(c, "POST", "/workspaces", {"name": WIZ_DESK})["id"]
 
 
-@shot("35-wizard-source.jpg", also=("36-wizard-columns.jpg", "37-wizard-measures.jpg", "38-wizard-refresh.jpg", "39-wizard-review.jpg"))
+def wiz_next(c: Ctx, step: str):
+    c.page.click("[data-next]")
+    c.page.wait_for_selector(f'[data-step="{step}"]:not([hidden])')
+    c.page.wait_for_timeout(600)
+
+
+@shot("35-wizard-source.jpg", also=("36-wizard-columns.jpg", "37-wizard-derive.jpg", "38-wizard-preview.jpg", "39-wizard-save.jpg", "43-new-model.jpg"))
 def wizard(c: Ctx):
-    """The dataset wizard on the economics pack's connector: source, columns, a measure, the refresh and the review (the YAML it wrote)."""
+    """The dataset wizard of the model layer on the economics pack's Economy dataset (columns, a row filter, a worked-out column, the preview, save and
+    publish), then a model of it made with one click and opened in the model designer."""
     login(c, height=900)
-    clean_everywhere(c, WIZ_TITLE)
+    clean_everywhere(c, WIZ_TITLE, WIZ_MODEL)
+    ws = desk(c)
+    for it in bi(c, "GET", f"/workspaces/{ws}/items") or []:
+        if it.get("title") in (WIZ_TITLE, WIZ_MODEL):
+            bi(c, "DELETE", "/items/" + it["id"])
     p = c.page
-    go(c, "/bi/datasets", wait="[data-new-wizard]", settle=800)
-    p.click("[data-new-wizard]")
-    p.wait_for_selector('[data-wiz-body][data-step="source"]')
-    p.check('[data-wiz-mode="connector"]')
-    p.wait_for_selector("[data-wiz-connector]")
-    p.select_option("[data-wiz-connector]", "macro-store")
-    p.check('[data-kind="economy"]')
-    p.fill("[data-wiz-name]", "economies-by-region")
-    p.fill("[data-wiz-title-in]", WIZ_TITLE)
-    p.fill("[data-wiz-desc]", "Economies of the world with their region and income group")
-    p.wait_for_timeout(400)
-    c.save("35-wizard-source.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 760})
-    wiz_step(c, "columns")
-    p.evaluate("window.scrollTo(0, 0)")
-    c.save("36-wizard-columns.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 780})
-    wiz_step(c, "relationships")
-    wiz_step(c, "measures")
-    p.get_by_role("button", name="Add a measure").click()
-    last = p.locator("[data-measure-row]").count() - 1
-    p.fill(f'[data-m-name="{last}"]', "Total GDP")
-    numeric = p.eval_on_selector(f'[data-m-field="{last}"]', "s => [...s.options].map(o => o.value).find(v => /gdp/i.test(v)) || ''")
-    if numeric:
-        p.select_option(f'[data-m-field="{last}"]', numeric)
-    p.click(f"[data-measure-row] >> nth={last} >> text=Check")
-    p.wait_for_timeout(2000)
-    p.evaluate("(i) => document.querySelectorAll('[data-measure-row]')[i].scrollIntoView({block: 'center'})", last)
-    p.wait_for_timeout(400)
-    c.save("37-wizard-measures.jpg", locator=f"[data-measure-row] >> nth={last}")
-    wiz_step(c, "hierarchies")
-    wiz_step(c, "refresh")
-    p.select_option("[data-refresh-kind]", "daily")
-    p.fill("[data-refresh-time]", "06:30")
-    p.evaluate("window.scrollTo(0, 0)")
-    c.save("38-wizard-refresh.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 560})
-    wiz_step(c, "review")
-    p.wait_for_selector("[data-wiz-valid]", timeout=30000)
+    p.evaluate("() => window.sessionStorage.clear()")
+    go(c, "/bi/datasets/new-layer", wait="[data-lw-root][data-ready=yes]", settle=800)
+    p.check('[data-src="extends"]')
+    p.select_option("[data-src-extends]", "pack.economics.economy")
     p.wait_for_timeout(600)
-    c.save("39-wizard-review.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 900})
-    clean_everywhere(c, WIZ_TITLE)
+    c.save("35-wizard-source.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 620})
+    wiz_next(c, "columns")
+    p.click("[data-keep-none]")
+    for col in WIZ_COLUMNS:
+        p.check(f'[data-keep-col="{col}"]')
+    p.wait_for_timeout(600)
+    c.save("36-wizard-columns.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 720})
+    wiz_next(c, "filter")
+    p.fill("[data-where]", "gdpUsdBn >= 100")
+    p.wait_for_timeout(800)
+    wiz_next(c, "grain")
+    wiz_next(c, "derive")
+    p.click('[data-derive-add="expr"]')
+    p.fill('[data-derive-name="0"]', "gdpPerHead")
+    p.fill('[data-derive-expr="0"]', "gdpUsdBn / populationM * 1000")
+    p.keyboard.press("Tab")
+    p.wait_for_timeout(1500)
+    c.save("37-wizard-derive.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 620})
+    wiz_next(c, "group")
+    wiz_next(c, "preview")
+    p.click("[data-preview-go]")
+    p.wait_for_selector("[data-preview-table] tbody tr", timeout=60000)
+    p.wait_for_timeout(800)
+    c.save("38-wizard-preview.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 760})
+    wiz_next(c, "save")
+    p.fill("[data-title]", WIZ_TITLE)                                       # the name follows the title (large-economies)
+    p.select_option("[data-ws]", ws)
+    p.locator('[data-step="save"] details summary').click()
+    p.wait_for_timeout(800)
+    c.save("39-wizard-save.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 900})
+    p.click("[data-save-publish]")
+    try:
+        p.wait_for_selector("[data-after]:not([hidden])", timeout=60000)
+    except Exception:
+        raise RuntimeError("publish: " + p.evaluate("[...document.querySelectorAll('[data-near]')].map(x => x.textContent).join(' | ')"))
+    p.click("[data-after-model]")
+    p.wait_for_selector("[data-ask-target]")
+    p.select_option("[data-ask-target]", ws)
+    p.click("[data-ask-go]")
+    p.wait_for_selector("[data-md-root][data-ready=yes]", timeout=60000)
+    p.wait_for_timeout(2500)
+    c.save("43-new-model.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 760})
 
 
 CONTROLS = """rachana: 1
