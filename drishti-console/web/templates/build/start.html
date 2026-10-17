@@ -21,11 +21,12 @@
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm bs" data-start>
-  <h1>Start a design</h1>
+  {% set opens = fields.sutra and '@' in fields.sutra and not fields.example %}
+  <h1>{% if opens %}Open the Sutra {{ fields.sutra.replace('@', ' v') }} in the designer{% else %}Start a design{% endif %}</h1>
   <p>This address would start <b data-start-what>{{ what }}</b> in the workbench. Opening a page never creates a design on its own; confirm to start it.</p>
   <form method="post" action="/studio" data-start-form>
     {% for k, v in fields.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
-    <p class="bs-actions"><button type="submit" class="btn-pill btn-accent" data-start-go>Start the design</button>
+    <p class="bs-actions"><button type="submit" class="btn-pill btn-accent" data-start-go>{% if opens %}Open in the designer{% else %}Start the design{% endif %}</button>
       <a class="btn-pill btn-ghost" href="/build">My designs</a></p>
   </form>
 </div>

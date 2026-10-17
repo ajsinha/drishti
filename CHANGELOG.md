@@ -20,6 +20,9 @@
 - **About this page opens the Sutra.** In *Why the page looks like this*, the Sutra that drew the page is a link that opens it in the
   designer with the record on screen as its sample; the Sutras not chosen open there too.
 - **How this view was built links on.** The panel's Sutra opens in the designer and its Source opens the connector's page.
+- **A Sutra link opens the Sutra at one click.** A link on Drishti's own pages to a Sutra (How this view was built, About this page,
+  Admin → Packs) goes straight into the designer on that Sutra, reusing your own design of the same Sutra and version (the record
+  you came from added as a sample); the same address from another site still asks first, now saying *Open the Sutra … in the designer*.
 - **Wave B QA fixes.** A visual is never cut silently: *first 500 of N* with **Show all**, and a time series is asked by week, month,
   quarter or year so its whole range fits (Trades overview's *Notional by trade date* covers every date; `trade.TRADE_DATE.month_start`
   and the other period parts are dates). The Cashflow ladder's model is fixed: trades a dimension, legs, cashflows and the new payments

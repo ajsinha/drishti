@@ -61,6 +61,15 @@ async def studio(request: Request, sutra: str | None = None, kind: str = "", id:
     backend, me = request.app.state.backend, ident(request)
     tab = "design" if build and build != "0" else "split"
     target = await _existing(backend, me, design)
+    if target is None and sutra and not example and request.headers.get("sec-fetch-site") == "same-origin":
+        # a link on one of Drishti's own pages to a Sutra ("How this view was built", About this page, a pack's Sutras) shows that
+        # Sutra at once: the user's own design of it when there is one, else a new one. A link from another site still confirms.
+        try:
+            target = await _open_sutra(request, me, sutra, kind.strip(), id.strip())
+        except BackendError:
+            target = None                        # an unknown Sutra: the confirmation page, whose button says what is wrong
+        if target:
+            return RedirectResponse(f"/build/d/{target}?{urlencode({'tab': tab})}", status_code=302)
     if target is None:
         fields = {k: v for k, v in (("sutra", sutra or ""), ("kind", kind.strip()), ("id", id.strip()), ("example", example), ("build", build),
                                     ("sutra_given", "1" if sutra is not None else ""), ("asked_design", "1" if design else "")) if v}
@@ -96,7 +105,10 @@ async def studio_open(request: Request):
     if example and not request.app.state.examples.get(example):
         notice = f"There is no example '{example}', so a blank design was opened."
     try:
-        target = (await _start(request, me, sutra, form.get("kind", "").strip(), form.get("id", "").strip(), example))["id"]
+        if sutra and "@" in sutra and not example:      # a Sutra to look at: the user's own Design of it when there is one
+            target = await _open_sutra(request, me, sutra, form.get("kind", "").strip(), form.get("id", "").strip())
+        else:
+            target = (await _start(request, me, sutra, form.get("kind", "").strip(), form.get("id", "").strip(), example))["id"]
     except BackendError as e:
         if e.code == "DRS-2003" and sutra:
             e = BackendError(e.status, e.code, f"no Sutra '{sutra}' is loaded: check the name and version, or search for it under Build, New, An existing Sutra")
@@ -105,6 +117,19 @@ async def studio_open(request: Request):
     if notice:
         query["notice"] = notice
     return RedirectResponse(f"/build/d/{target}?{urlencode(query)}", status_code=303)
+
+
+async def _open_sutra(request: Request, me, sutra: str, kind: str, id_: str) -> str:
+    """The Design that shows this Sutra: the user's most recently changed Design of exactly this ``name@version`` (so following a
+    link again does not pile up copies, the record asked for added as a sample when it is not one yet), else a new one."""
+    backend = request.app.state.backend
+    mine = [d for d in (await backend.designs("GET", "", me)).get("designs", []) if "@" in sutra and d.get("base") == sutra.strip()]
+    if not mine:
+        return (await _start(request, me, sutra, kind, id_, ""))["id"]
+    d = max(mine, key=lambda x: str(x.get("updated") or ""))
+    if kind and id_ and not any((s.get("ref") or {}) == {"kind": kind, "id": id_} for s in d.get("samples", [])):
+        await designs.add_entity(backend, me, d["id"], kind, id_)
+    return d["id"]
 
 
 async def _existing(backend, me, design: str) -> str | None:
