@@ -53,7 +53,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"drishti.sources.plugins.demo.settings.tick-ms=60", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.security.registered-users-only=false",
-        "drishti.packs.enabled=trading,counterparty-risk", "drishti.identity.database-url=jdbc:sqlite:target/bi-live-${random.uuid}/identity.db",
+        "drishti.packs.enabled=trading,counterparty-risk,market-risk", "drishti.identity.database-url=jdbc:sqlite:target/bi-live-${random.uuid}/identity.db",
         "drishti.packs.overlay=target/bi-live-overlay/added.yaml", "drishti.bi.dir=target/bi-live-folder", "drishti.bi.folder-refresh=1s",
         "drishti.bi.query.store-dir=target/bi-live-store/${random.uuid}", "drishti.bi.live.batch=30ms", "drishti.bi.live.frame=50ms",
         "drishti.bi.live.status=1s", "drishti.bi.live.max-streams-per-user=2"})
@@ -188,7 +188,7 @@ class BiLiveApiTest {
             assertThat(n.has("rows")).as("a tick tells that the tables changed, not what is in them").isFalse();
             assertThat(n.path("state").asText()).isEqualTo("live");
         }
-        assertThat(events.get(0)[1]).doesNotContain("\"trader\"");
+        assertThat(events.get(0)[1]).doesNotContain("\"TRADER_ID\"");
     }
 
     @Test @Order(3)
@@ -196,10 +196,10 @@ class BiLiveApiTest {
         String body = "{\"page\":\"grid\",\"visual\":\"all-trades\",\"state\":{\"limit\":50}}";
         JsonNode risk = ok(call("POST", "/api/v1/bi/reports/" + REPORT + "/query", rita(), body));
         JsonNode analyst = ok(call("POST", "/api/v1/bi/reports/" + REPORT + "/query", ann(), body));
-        int trader = columnIndex(risk, "trader");
+        int trader = columnIndex(risk, "TRADER_ID");
         assertThat(risk.path("rows").get(0).get(trader).asText()).startsWith("TRDR-");
         assertThat(analyst.path("rows").get(0).get(trader).asText()).isEqualTo("•••");
-        assertThat(analyst.path("meta").path("masked").toString()).contains("trader");
+        assertThat(analyst.path("meta").path("masked").toString()).contains("TRADER_ID");
         long gen = risk.path("live").path("generation").asLong();
         long end = System.currentTimeMillis() + 10_000;
         JsonNode later = risk;
@@ -229,10 +229,10 @@ class BiLiveApiTest {
         assertThat(risk.headers().get("content-type").get(0)).isEqualTo("application/vnd.apache.arrow.stream");
         ArrowTestReader.Table table = ArrowTestReader.read(risk.body());
         assertThat(table.rows()).isGreaterThan(100);
-        assertThat(table.columns()).containsKeys("tradeId", "trader", "mtm", "id", "updateSeq");
-        assertThat(table.columns().get("trader").get(0).toString()).startsWith("TRDR-");
+        assertThat(table.columns()).containsKeys("TRADE_ID", "TRADER_ID", "MTM", "id", "updateSeq");
+        assertThat(table.columns().get("TRADER_ID").get(0).toString()).startsWith("TRDR-");
         ArrowTestReader.Table masked = ArrowTestReader.read(call("POST", path, ann(), snapshot).body());
-        assertThat(masked.columns().get("trader")).allMatch("•••"::equals);
+        assertThat(masked.columns().get("TRADER_ID")).allMatch("•••"::equals);
         assertThat(masked.rows()).isEqualTo(table.rows());
         JsonNode live = json.readTree(risk.headers().get("x-bi-live").get(0));
         long seq = live.path("tables").get(0).path("seq").asLong();
@@ -318,8 +318,8 @@ class BiLiveApiTest {
     void aPerspectiveVisualOverTwoTablesAndAnUnknownAggregateAreRefused() throws Exception {
         String author = as("wes", "live-author");
         // the 2.1 copy keeps its Perspective pivot (config/bi has a matrix since 2.3.0, the browser computing nothing)
-        String yaml = Files.readString(Path.of("src/test/resources/bi/samples-2.1/reports/live-trading-desk.report.yaml")).replace("aggregates: { trade.mtm: sum, trade.notional: sum }",
-                "aggregates: { trade.mtm: total }");
+        String yaml = Files.readString(Path.of("src/test/resources/bi/samples-2.1/reports/live-trading-desk.report.yaml")).replace("aggregates: { trade.MTM: sum, trade.NOTIONAL: sum }",
+                "aggregates: { trade.MTM: total }");
         JsonNode r = ok(call("POST", "/api/v1/bi/reports/validate", author, json.writeValueAsString(Map.of("yaml", yaml))));
         assertThat(r.path("valid").asBoolean()).isFalse();
         assertThat(r.path("problems").toString()).contains("DRS-9032").contains("is not an aggregate");

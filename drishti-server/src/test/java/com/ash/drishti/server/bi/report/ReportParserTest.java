@@ -47,7 +47,7 @@ class ReportParserTest {
             pages:
               - id: p
                 visuals:
-                  - { id: v, type: bar, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trade.desk], values: [MTM] } }
+                  - { id: v, type: bar, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trade.DESK], values: [MTM] } }
             """;
 
     static List<Problem> errors(String yaml, String dataset) throws IOException {
@@ -129,17 +129,17 @@ class ReportParserTest {
         assertThat(errors(MINI.replace("x: 0", "x: 8"), "trades-basic")).extracting(Problem::code).contains("DRS-9030");        // x + w over 12
         assertThat(errors(MINI.replace("type: bar", "type: pyramid"), "trades-basic")).extracting(Problem::message).anyMatch(m -> m.contains("not a visual type"));
         assertThat(errors(MINI + "  - id: p\n    visuals: []\n", "trades-basic")).extracting(Problem::message).anyMatch(m -> m.contains("used twice"));
-        assertThat(errors(MINI.replace("w: 6, h: 4 }", "w: 6, h: 4 }\n                    , filters: [{ field: trade.desk, op: like, values: [x] }]"), "trades-basic")).isNotEmpty();
+        assertThat(errors(MINI.replace("w: 6, h: 4 }", "w: 6, h: 4 }\n                    , filters: [{ field: trade.DESK, op: like, values: [x] }]"), "trades-basic")).isNotEmpty();
         assertThat(ReportParser.parse(MINI.replace("type: bar", "type: image, src: 'https://example.com/x.png'")).problems()).extracting(Problem::path).contains("pages[0].visuals[0].src");
     }
 
     @Test
     void anEntityViewNeedsItsKeyFieldAndAsksNoQuery() throws IOException {
-        String ok = MINI.replace("type: bar, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trade.desk], values: [MTM] }",
-                "type: entity-view, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { key: [trade.desk] }");
+        String ok = MINI.replace("type: bar, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trade.DESK], values: [MTM] }",
+                "type: entity-view, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { key: [trade.DESK] }");
         assertThat(errors(ok, "trades-basic")).isEmpty();
-        assertThat(errors(ok.replace("key: [trade.desk]", "key: []"), "trades-basic")).extracting(Problem::code).contains("DRS-9032");
-        assertThat(errors(ok.replace("key: [trade.desk]", "key: [MTM]"), "trades-basic")).isNotEmpty();                   // a measure is not a key
+        assertThat(errors(ok.replace("key: [trade.DESK]", "key: []"), "trades-basic")).extracting(Problem::code).contains("DRS-9032");
+        assertThat(errors(ok.replace("key: [trade.DESK]", "key: [MTM]"), "trades-basic")).isNotEmpty();                   // a measure is not a key
         Report r = ReportParser.parse(ok).report();
         Report.Page p = r.page("p");
         assertThatThrownBy(() -> VisualQueries.build(r, p, p.visual("v"), ReportState.NONE, dataset("trades-basic"), BiReportProperties.defaults(), (f, n, by, d, c, a, b) -> List.of()))
@@ -156,29 +156,29 @@ class ReportParserTest {
 
     @Test
     void wellsThatDoNotExistOrAreMisusedAreDrs9032() throws IOException {
-        assertThat(errors(MINI.replace("axis: [trade.desk]", "rows: [trade.desk]"), "trades-basic")).extracting(Problem::code).contains("DRS-9032");     // a bar has no rows well
-        assertThat(errors(MINI.replace("values: [MTM]", "values: [trade.mtm]"), "trades-basic")).extracting(Problem::message).anyMatch(m -> m.contains("is a field; the values well takes measures"));
-        assertThat(errors(MINI.replace("axis: [trade.desk]", "axis: [MTM]"), "trades-basic")).extracting(Problem::message).anyMatch(m -> m.contains("is a measure; the axis well takes fields"));
+        assertThat(errors(MINI.replace("axis: [trade.DESK]", "rows: [trade.DESK]"), "trades-basic")).extracting(Problem::code).contains("DRS-9032");     // a bar has no rows well
+        assertThat(errors(MINI.replace("values: [MTM]", "values: [trade.MTM]"), "trades-basic")).extracting(Problem::message).anyMatch(m -> m.contains("is a field; the values well takes measures"));
+        assertThat(errors(MINI.replace("axis: [trade.DESK]", "axis: [MTM]"), "trades-basic")).extracting(Problem::message).anyMatch(m -> m.contains("is a measure; the axis well takes fields"));
         assertThat(errors(MINI.replace(", values: [MTM]", ""), "trades-basic")).extracting(Problem::message).anyMatch(m -> m.contains("needs at least one item in its values well"));
-        assertThat(errors(MINI.replace("axis: [trade.desk]", "axis: [trade.desk, trade.book]"), "trades-basic")).extracting(Problem::message).anyMatch(m -> m.contains("holds 1 item"));
+        assertThat(errors(MINI.replace("axis: [trade.DESK]", "axis: [trade.DESK, trade.PORTFOLIO]"), "trades-basic")).extracting(Problem::message).anyMatch(m -> m.contains("holds 1 item"));
     }
 
     @Test
     void namesTheDatasetLacksAreDrs9031WithWhatItHas() throws IOException {
-        List<Problem> p = errors(MINI.replace("trade.desk", "trade.nope").replace("MTM", "Profit"), "trades-basic");
+        List<Problem> p = errors(MINI.replace("trade.DESK", "trade.nope").replace("MTM", "Profit"), "trades-basic");
         assertThat(p).extracting(Problem::code).contains("DRS-9031");
         assertThat(p).extracting(Problem::message).anyMatch(m -> m.contains("has no column 'nope'")).anyMatch(m -> m.contains("no measure 'Profit'") && m.contains("Notional"));
         assertThat(errors(MINI.replace("w: 6, h: 4 }", "w: 6, h: 4 }, hierarchy: Nope"), "trades-basic")).extracting(Problem::path).contains("pages[0].visuals[0].hierarchy");
-        String drill = MINI.replace("w: 6, h: 4 }", "w: 6, h: 4 }, drillthrough: { page: elsewhere, field: trade.desk }");
+        String drill = MINI.replace("w: 6, h: 4 }", "w: 6, h: 4 }, drillthrough: { page: elsewhere, field: trade.DESK }");
         assertThat(errors(drill, "trades-basic")).extracting(Problem::message).anyMatch(m -> m.contains("no page 'elsewhere'"));
-        assertThat(errors(MINI.replace("w: 6, h: 4 }", "w: 6, h: 4 }, filters: [{ field: trade.desk, op: top, n: 3, by: Nope }]"), "trades-basic")).extracting(Problem::path).contains("pages[0].visuals[0].filters[0].by");
+        assertThat(errors(MINI.replace("w: 6, h: 4 }", "w: 6, h: 4 }, filters: [{ field: trade.DESK, op: top, n: 3, by: Nope }]"), "trades-basic")).extracting(Problem::path).contains("pages[0].visuals[0].filters[0].by");
         assertThat(errors(MINI + "bookmarks:\n  - { name: b, page: gone }\n", "trades-basic")).extracting(Problem::path).contains("bookmarks[0].page");
     }
 
     @Test
     void anyFieldOfADatePartIsAccepted() throws IOException {
-        assertThat(errors(MINI.replace("trade.desk", "trade.tradeDate.month"), "trades-basic")).isEmpty();
-        assertThat(errors(MINI.replace("trade.desk", "trade.desk.month"), "trades-basic")).isNotEmpty();
+        assertThat(errors(MINI.replace("trade.DESK", "trade.TRADE_DATE.month"), "trades-basic")).isEmpty();
+        assertThat(errors(MINI.replace("trade.DESK", "trade.DESK.month"), "trades-basic")).isNotEmpty();
     }
 
     @Test
@@ -190,7 +190,7 @@ class ReportParserTest {
                 pages:
                   - id: p
                     visuals:
-                      - { id: a, type: bar, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trade.desk], values: [MTM] }, format: { colour: "#ffff99" } }
+                      - { id: a, type: bar, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trade.DESK], values: [MTM] }, format: { colour: "#ffff99" } }
                       - { id: b, type: card, at: { x: 4, y: 2, w: 4, h: 2 }, wells: { values: [MTM] } }
                 """;
         Report r = ReportParser.parse(yaml).report();

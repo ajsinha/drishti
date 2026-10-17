@@ -109,27 +109,28 @@ class EquivalenceTest {
             rachana: 2
             dataset: risk-trades
             version: 1.0.0
-            source: { connector: trading-store, kind: trade }
+            source: { connector: risk-store, kind: trade-valuation }
             grain: { keys: [id] }
             columns:
-              tradeId:          { type: string }
-              desk:             string
-              book:             string
-              nettingSet:       string
-              counterpartyId:   { path: counterparty.id, type: string }
-              counterpartyName: { path: counterparty.name, type: string }
-              productType:      string
-              assetClass:       string
-              currency:         string
-              status:           string
-              notional:         { type: decimal, format: amount0 }
-              mtm:              { type: decimal, format: signed0 }
-              pnl1d:            { type: decimal, format: signed0 }
-              dv01:             { path: risk.dv01, type: decimal, format: signed0 }
-              tradeDate:        date
-              maturityDate:     date
+              VALUATION_ID:  { type: string }
+              TRADE_ID:      string
+              SOURCE_SYSTEM: string
+              DESK:          string
+              PORTFOLIO:     string
+              COUNTERPARTY:  string
+              NETTING_SET:   string
+              PRODUCT_TYPE:  string
+              PRODUCT_GROUP: string
+              CURRENCY:      string
+              TRADE_STATUS:  string
+              NOTIONAL:      { type: decimal, format: amount0 }
+              MTM:           { type: decimal, format: signed0 }
+              PNL_1D:        { type: decimal, format: signed0 }
+              DV01:          { type: decimal, format: signed0 }
+              TRADE_DATE:    date
+              MATURITY_DATE: date
             security:
-              masked: [counterpartyName]
+              masked: [COUNTERPARTY]
             """;
     static final String V2_NETTING = """
             rachana: 2
@@ -175,23 +176,23 @@ class EquivalenceTest {
                   desks:          { dataset: risk-desks, role: dimension }
                   books:          { dataset: risk-books, role: dimension }
                 relationships:
-                  - { from: trades.desk,               to: desks.id }
-                  - { from: trades.book,               to: books.id }
-                  - { from: trades.counterpartyId,     to: counterparties.id }
-                  - { from: trades.nettingSet,         to: netting_sets.id, active: false }
+                  - { from: trades.DESK,               to: desks.id }
+                  - { from: trades.PORTFOLIO,               to: books.id }
+                  - { from: trades.COUNTERPARTY,     to: counterparties.id }
+                  - { from: trades.NETTING_SET,         to: netting_sets.id, active: false }
                   - { from: netting_sets.counterparty, to: counterparties.id }
                 measures:
                 """ + measures + """
                 hierarchies:
-                  Trade date:    [trades.tradeDate.year, trades.tradeDate.quarter, trades.tradeDate.month, trades.tradeDate]
+                  Trade date:    [trades.TRADE_DATE.year, trades.TRADE_DATE.quarter, trades.TRADE_DATE.month, trades.TRADE_DATE]
                   Desk and book: [desks.name, books.name]
                   Counterparty:  [counterparties.sector, counterparties.name]
                 rollups:
-                  - { name: by_desk_currency, table: trades, by: [desk, currency, assetClass], measures: [MTM, Notional, "P&L 1d", Trades, MTM per 1m notional] }
+                  - { name: by_desk_currency, table: trades, by: [DESK, CURRENCY, PRODUCT_GROUP], measures: [MTM, Notional, "P&L 1d", Trades, MTM per 1m notional] }
                 security:
                   rows:
                     trades:
-                      - { role: desk-head, where: "trades.desk in user.desks" }
+                      - { role: desk-head, where: "trades.DESK in user.desks" }
                       - { role: [risk, analyst, admin], where: "true" }
                   masked: [counterparties.name, counterparties.rating]
                   may-see-all: { netting_sets: [desk-head], counterparties: [desk-head], desks: [desk-head], books: [desk-head] }
@@ -201,11 +202,11 @@ class EquivalenceTest {
     @Test
     void tradingRiskAsAW1ModelAnswersAsTheOldFileApartFromTheAllowList() {
         Dataset old = samples.get("trading-risk.dataset.yaml");
-        // as section 8.2 converts it: trades.nettingSet -> netting_sets.id inactive, so the two facts meet on counterparties (one active path)
+        // as section 8.2 converts it: trades.NETTING_SET -> netting_sets.id inactive, so the two facts meet on counterparties (one active path)
         ModelView v = MqHarness.model(v2Model(old), V2_TRADES, V2_NETTING, V2_CPTY, V2_DESKS, V2_BOOKS);
         int compared = 0;
         int allowed = 0;
-        List<List<String>> groupings = List.of(List.of(), List.of("desks.name"), List.of("trades.currency"), List.of("counterparties.sector"));
+        List<List<String>> groupings = List.of(List.of(), List.of("desks.name"), List.of("trades.CURRENCY"), List.of("counterparties.sector"));
         for (String m : old.measures().keySet()) {
             for (List<String> by : groupings) {
                 for (MqHarness.Reader who : readers()) {

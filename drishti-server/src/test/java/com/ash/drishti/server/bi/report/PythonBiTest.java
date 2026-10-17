@@ -52,7 +52,7 @@ class PythonBiTest {
         PythonManifest.Manifest m = manifest(sample("desk-pnl-volatility")).manifest();
         assertThat(m.interfaceKind()).isEqualTo("measure");
         assertThat(m.entry()).isEqualTo("compute");
-        assertThat(m.inputs()).containsExactly("pnl1d");
+        assertThat(m.inputs()).containsExactly("PNL_1D");
         assertThat(m.output()).isEqualTo("number");
         assertThat(manifest(sample("pnl-histogram")).manifest().output()).isEqualTo("echarts");
     }
@@ -94,13 +94,13 @@ class PythonBiTest {
             tables:
               trade:
                 source: { kind: trade }
-                columns: { desk: string, pnl1d: decimal, other: string }
+                columns: { DESK: string, PNL_1D: decimal, other: string }
               leg:
                 source: { kind: leg }
                 columns: { x: decimal }
             measures:
               N: { expr: "count(trade)" }
-              Vol: { python: desk-pnl-volatility, inputs: [trade.pnl1d], by: [trade.desk] }
+              Vol: { python: desk-pnl-volatility, inputs: [trade.PNL_1D], by: [trade.DESK] }
             """;
 
     @Test
@@ -109,18 +109,18 @@ class PythonBiTest {
         Dataset.Measure vol = ds.measures().get("Vol");
         assertThat(vol.expr()).isNull();
         assertThat(vol.python()).isEqualTo("desk-pnl-volatility");
-        assertThat(vol.inputs()).containsExactly("trade.pnl1d");
-        assertThat(vol.by()).containsExactly("trade.desk");
-        assertThat(DatasetParser.parse(DATASET.replace("Vol: {", "Vol: { expr: \"sum(trade.pnl1d)\",")).ok()).as("expr and python together").isFalse();
+        assertThat(vol.inputs()).containsExactly("trade.PNL_1D");
+        assertThat(vol.by()).containsExactly("trade.DESK");
+        assertThat(DatasetParser.parse(DATASET.replace("Vol: {", "Vol: { expr: \"sum(trade.PNL_1D)\",")).ok()).as("expr and python together").isFalse();
     }
 
     @Test
     void aPythonMeasureIsCheckedAgainstTheModelAndWarnsThatAQueryRefusesIt() throws IOException {
         DatasetParser.Result good = DatasetParser.parse(DATASET);
         assertThat(good.problems()).filteredOn(p -> p.path().equals("measures.Vol")).extracting(p -> p.level()).containsExactly("warning");
-        assertThat(DatasetParser.parse(DATASET.replace("inputs: [trade.pnl1d]", "inputs: [trade.nope]")).problems()).anyMatch(p -> p.path().equals("measures.Vol.inputs") && "error".equals(p.level()));
-        assertThat(DatasetParser.parse(DATASET.replace("inputs: [trade.pnl1d]", "inputs: []")).problems()).anyMatch(p -> p.path().equals("measures.Vol.inputs"));
-        assertThat(DatasetParser.parse(DATASET.replace("by: [trade.desk]", "by: [leg.x]")).problems()).anyMatch(p -> p.path().equals("measures.Vol") && p.message().contains("one table"));
+        assertThat(DatasetParser.parse(DATASET.replace("inputs: [trade.PNL_1D]", "inputs: [trade.nope]")).problems()).anyMatch(p -> p.path().equals("measures.Vol.inputs") && "error".equals(p.level()));
+        assertThat(DatasetParser.parse(DATASET.replace("inputs: [trade.PNL_1D]", "inputs: []")).problems()).anyMatch(p -> p.path().equals("measures.Vol.inputs"));
+        assertThat(DatasetParser.parse(DATASET.replace("by: [trade.DESK]", "by: [leg.x]")).problems()).anyMatch(p -> p.path().equals("measures.Vol") && p.message().contains("one table"));
         assertThat(ReportParserTest.dataset("trades-basic").measures().get("Desk P&L volatility").python()).isEqualTo("desk-pnl-volatility");
     }
 
@@ -133,11 +133,11 @@ class PythonBiTest {
         Report r = parsed.report();
         Report.Page page = r.page("risk");
         QueryRequest hist = VisualQueries.build(r, page, page.visual("histogram"), ReportState.of(null), ds, BiReportProperties.defaults(), (f, n, by, d, c, from, to) -> List.of()).query();
-        assertThat(hist.fields()).containsExactly("trade.desk", "trade.pnl1d", "trade.id");
+        assertThat(hist.fields()).containsExactly("trade.DESK", "trade.PNL_1D", "trade.id");
         assertThat(hist.measures()).isEmpty();
         assertThat(hist.limit()).isEqualTo(10_000);
         QueryRequest vol = VisualQueries.build(r, page, page.visual("volatility"), ReportState.of(null), ds, BiReportProperties.defaults(), (f, n, by, d, c, from, to) -> List.of()).query();
-        assertThat(vol.fields()).as("the measure's groups, its inputs, then the row id").containsExactly("trade.desk", "trade.pnl1d", "trade.id");
+        assertThat(vol.fields()).as("the measure's groups, its inputs, then the row id").containsExactly("trade.DESK", "trade.PNL_1D", "trade.id");
         assertThat(vol.measures()).isEmpty();
     }
 
@@ -150,10 +150,10 @@ class PythonBiTest {
                   - id: p
                     title: P
                     visuals:
-                      - { id: a, type: python, wells: { columns: [trade.desk] } }
+                      - { id: a, type: python, wells: { columns: [trade.DESK] } }
                       - { id: b, type: python, wells: { values: [MTM] }, format: { python: x } }
                       - { id: c, type: python, format: { python: x } }
-                      - { id: d, type: python, wells: { columns: [trade.desk] }, format: { python: x } }
+                      - { id: d, type: python, wells: { columns: [trade.DESK] }, format: { python: x } }
                 """;
         List<ReportParser.Problem> problems = ReportValidator.validate(ReportParser.parse(report).report(), ReportParserTest.dataset("trades-basic"));
         assertThat(problems).anyMatch(p -> p.path().contains("visuals[0].format.python"));

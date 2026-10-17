@@ -55,25 +55,25 @@ class SampleDatasetsTest {
         Dataset d = load("trades-basic").dataset();
         assertThat(d.tables()).containsOnlyKeys("trade");
         assertThat(d.measures().keySet()).containsExactly("Notional", "MTM", "Trades", "Average MTM per trade", "Desk P&L volatility");
-        assertThat(d.hierarchies().get("Desk and book")).containsExactly("trade.desk", "trade.book");
+        assertThat(d.hierarchies().get("Desk and book")).containsExactly("trade.DESK", "trade.PORTFOLIO");
     }
 
     @Test
     void theRiskSampleCrossesThreePacksAndCarriesARowRuleAndAMask() throws IOException {
         Dataset d = load("trading-risk").dataset();
-        assertThat(d.tables().values().stream().map(Dataset.Table::connector).toList()).contains("trading-store", "credit-store", "reference-store");
+        assertThat(d.tables().values().stream().map(Dataset.Table::connector).toList()).contains("risk-store", "credit-store", "reference-store");
         assertThat(d.relationships()).hasSize(5);
         assertThat(d.security().rows()).extracting(Dataset.RowRule::role).contains("desk-head", "risk");
-        assertThat(d.security().masked()).contains("counterpartyName");
-        assertThat(d.hierarchies().get("Trade date")).contains("trades.tradeDate.year", "trades.tradeDate.month");
+        assertThat(d.security().masked()).contains("trades.COUNTERPARTY");
+        assertThat(d.hierarchies().get("Trade date")).contains("trades.TRADE_DATE.year", "trades.TRADE_DATE.month");
         assertThat(d.rollups()).hasSize(1);
     }
 
     @Test
     void theCashflowSampleHasLegsAndCashflowsAsArrayTables() throws IOException {
         Dataset d = load("trading-cashflows").dataset();
-        assertThat(d.tables().get("legs").each()).isEqualTo("legs");
-        assertThat(d.tables().get("cashflows").each()).isEqualTo("schedule");
+        assertThat(d.tables().get("legs").each()).isEqualTo("LEGS");
+        assertThat(d.tables().get("cashflows").each()).isEqualTo("LEGS[].CASH_FLOWS");
         assertThat(d.relationships()).extracting(Dataset.Relationship::fromTable).containsExactly("legs", "cashflows");
     }
 

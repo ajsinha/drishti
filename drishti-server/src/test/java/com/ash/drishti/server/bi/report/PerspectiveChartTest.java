@@ -33,7 +33,7 @@ class PerspectiveChartTest {
                 visuals:
             """;
     static final String AT = ", at: { x: 0, y: 0, w: 12, h: 8 }";
-    static final String WELLS = ", wells: { rows: [trades.desk], columns: [trades.currency], values: [trades.mtm] }";
+    static final String WELLS = ", wells: { rows: [trades.DESK], columns: [trades.CURRENCY], values: [trades.MTM] }";
 
     List<ReportParser.Problem> problems(String visual) throws IOException {
         ReportParser.Result parsed = ReportParser.parse(HEAD + "      - " + visual + "\n");
@@ -51,9 +51,9 @@ class PerspectiveChartTest {
     @Test
     void aChartIsAPivotWithAPluginAndTheCatalogueSaysItIsPerspective() throws IOException {
         assertThat(VisualCatalogue.type("perspective-chart").group()).isEqualTo("perspective");
-        assertThat(errors("{ id: c, type: perspective-chart" + AT + WELLS + ", format: { plugin: Y Line, aggregates: { trades.mtm: sum } } }")).isEmpty();
+        assertThat(errors("{ id: c, type: perspective-chart" + AT + WELLS + ", format: { plugin: Y Line, aggregates: { trades.MTM: sum } } }")).isEmpty();
         assertThat(errors("{ id: c, type: perspective-chart" + AT + WELLS + " }")).as("the plugin is optional (Y Bar)").isEmpty();
-        assertThat(errors("{ id: c, type: perspective-chart" + AT + ", wells: { rows: [trades.desk] } }")).anyMatch(e -> e.contains("values"));
+        assertThat(errors("{ id: c, type: perspective-chart" + AT + ", wells: { rows: [trades.DESK] } }")).anyMatch(e -> e.contains("values"));
         assertThat(errors("{ id: c, type: perspective-chart" + AT + WELLS + ", format: { plugin: Pie } }")).anyMatch(e -> e.contains("format.plugin") && e.contains("is not a chart of Perspective"));
         assertThat(errors("{ id: g, type: perspective-pivot" + AT + WELLS + ", format: { plugin: Y Bar } }")).anyMatch(e -> e.contains("plugin is for a perspective-chart"));
     }

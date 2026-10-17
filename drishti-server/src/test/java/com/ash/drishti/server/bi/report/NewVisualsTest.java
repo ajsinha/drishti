@@ -40,7 +40,7 @@ class NewVisualsTest {
         }
         List<ArrowIpcWriter.Column> cols = new ArrayList<>();
         if (categories != null) {
-            cols.add(new ArrowIpcWriter.Column("trade.desk", ArrowIpcWriter.Kind.TEXT, categories));
+            cols.add(new ArrowIpcWriter.Column("trade.DESK", ArrowIpcWriter.Kind.TEXT, categories));
         }
         cols.add(new ArrowIpcWriter.Column(measure, ArrowIpcWriter.Kind.FLOAT64, vals));
         QueryService.Meta meta = new QueryService.Meta("columns", null, values.length, 0, false, List.of(), List.of(), List.of(), List.of(), null, 0);
@@ -97,11 +97,11 @@ class NewVisualsTest {
     void aBoxPerCategoryIsInCategoryOrder() {
         double[] v = {1, 2, 3, 10, 20, 30};
         String[] c = {"B", "B", "B", "A", "A", "A"};
-        Distributions.Shape b = Distributions.box(result("MTM", v, c), "trade.desk", "MTM");
+        Distributions.Shape b = Distributions.box(result("MTM", v, c), "trade.DESK", "MTM");
         assertThat(b.rows()).extracting(r -> r.get(0)).containsExactly("A", "B");
         assertThat(b.rows().get(0).get(3)).isEqualTo(20.0);
         assertThat(b.rows().get(1).get(3)).isEqualTo(2.0);
-        assertThat(b.columns().get(0).get("name")).isEqualTo("trade.desk");
+        assertThat(b.columns().get(0).get("name")).isEqualTo("trade.DESK");
     }
 
     @Test
@@ -136,22 +136,22 @@ class NewVisualsTest {
     void theNewVisualsValidateAndTheWrongWellsAreRefused() throws IOException {
         String at = ", at: { x: 0, y: 0, w: 6, h: 4 }";
         assertThat(problems("{ id: m, type: map" + at + ", wells: { location: [counterparties.country], values: [Trades] } }")).isEmpty();
-        assertThat(problems("{ id: m, type: map" + at + ", wells: { latitude: [trades.dv01], longitude: [trades.dv01], values: [Trades] } }")).isEmpty();
-        assertThat(problems("{ id: f, type: funnel" + at + ", wells: { axis: [trades.status], values: [Trades] } }")).isEmpty();
-        assertThat(problems("{ id: h, type: histogram" + at + ", wells: { axis: [trades.tradeId], values: [MTM] }, format: { bins: 20 } }")).isEmpty();
-        assertThat(problems("{ id: b, type: box" + at + ", wells: { axis: [trades.desk], details: [trades.tradeId], values: [MTM] } }")).isEmpty();
+        assertThat(problems("{ id: m, type: map" + at + ", wells: { latitude: [trades.DV01], longitude: [trades.DV01], values: [Trades] } }")).isEmpty();
+        assertThat(problems("{ id: f, type: funnel" + at + ", wells: { axis: [trades.TRADE_STATUS], values: [Trades] } }")).isEmpty();
+        assertThat(problems("{ id: h, type: histogram" + at + ", wells: { axis: [trades.TRADE_ID], values: [MTM] }, format: { bins: 20 } }")).isEmpty();
+        assertThat(problems("{ id: b, type: box" + at + ", wells: { axis: [trades.DESK], details: [trades.TRADE_ID], values: [MTM] } }")).isEmpty();
         assertThat(problems("{ id: u, type: bubble" + at + ", wells: { details: [counterparties.name], x: [Trades], y: [MTM], size: [Notional] } }")).isEmpty();
         assertThat(problems("{ id: m, type: map" + at + ", wells: { values: [Trades] } }")).extracting(ReportParser.Problem::message).anyMatch(m -> m.contains("a country code"));
-        assertThat(problems("{ id: m, type: map" + at + ", wells: { location: [counterparties.country], latitude: [trades.dv01], longitude: [trades.dv01], values: [Trades] } }"))
+        assertThat(problems("{ id: m, type: map" + at + ", wells: { location: [counterparties.country], latitude: [trades.DV01], longitude: [trades.DV01], values: [Trades] } }"))
                 .extracting(ReportParser.Problem::message).anyMatch(m -> m.contains("not both"));
         assertThat(problems("{ id: m, type: map" + at + ", wells: { location: [counterparties.country], values: [Trades] }, format: { level: AUS, drill: false } }")).isEmpty();
         assertThat(problems("{ id: m, type: map" + at + ", wells: { location: [counterparties.country], values: [Trades] }, format: { level: 5 } }")).extracting(ReportParser.Problem::message).anyMatch(m -> m.contains("level"));
         assertThat(problems("{ id: m, type: map" + at + ", wells: { location: [counterparties.country], values: [Trades] }, format: { drill: sometimes } }")).extracting(ReportParser.Problem::message).anyMatch(m -> m.contains("drill"));
-        assertThat(problems("{ id: m, type: map" + at + ", wells: { latitude: [trades.dv01], values: [Trades] } }")).extracting(ReportParser.Problem::message).anyMatch(m -> m.contains("both a latitude"));
-        assertThat(problems("{ id: m, type: map" + at + ", wells: { latitude: [trades.status], longitude: [trades.dv01], values: [Trades] } }")).extracting(ReportParser.Problem::message).anyMatch(m -> m.contains("is a number"));
-        assertThat(problems("{ id: h, type: histogram" + at + ", wells: { axis: [trades.tradeId], values: [MTM] }, format: { bins: 1 } }")).extracting(ReportParser.Problem::path).anyMatch(p -> p.endsWith("format.bins"));
-        assertThat(problems("{ id: h, type: histogram" + at + ", wells: { axis: [trades.tradeId], values: [trades.mtm] } }")).isNotEmpty();
-        assertThat(problems("{ id: b, type: box" + at + ", wells: { axis: [trades.desk], values: [MTM] } }")).extracting(ReportParser.Problem::message).anyMatch(m -> m.contains("details"));
+        assertThat(problems("{ id: m, type: map" + at + ", wells: { latitude: [trades.DV01], values: [Trades] } }")).extracting(ReportParser.Problem::message).anyMatch(m -> m.contains("both a latitude"));
+        assertThat(problems("{ id: m, type: map" + at + ", wells: { latitude: [trades.TRADE_STATUS], longitude: [trades.DV01], values: [Trades] } }")).extracting(ReportParser.Problem::message).anyMatch(m -> m.contains("is a number"));
+        assertThat(problems("{ id: h, type: histogram" + at + ", wells: { axis: [trades.TRADE_ID], values: [MTM] }, format: { bins: 1 } }")).extracting(ReportParser.Problem::path).anyMatch(p -> p.endsWith("format.bins"));
+        assertThat(problems("{ id: h, type: histogram" + at + ", wells: { axis: [trades.TRADE_ID], values: [trades.MTM] } }")).isNotEmpty();
+        assertThat(problems("{ id: b, type: box" + at + ", wells: { axis: [trades.DESK], values: [MTM] } }")).extracting(ReportParser.Problem::message).anyMatch(m -> m.contains("details"));
     }
 
     @Test
@@ -175,7 +175,7 @@ class NewVisualsTest {
         assertThat(map.fields()).containsExactly("counterparties.country");
         assertThat(map.measures()).containsExactly("Exposure (EE peak)");
         QueryRequest hist = VisualQueries.build(r, p, p.visual("mtm-spread"), ReportState.of(JSON.readTree("{\"limit\": 10}")), ds, BiReportProperties.defaults(), top).query();
-        assertThat(hist.fields()).containsExactly("trades.tradeId");
+        assertThat(hist.fields()).containsExactly("trades.TRADE_ID");
         assertThat(hist.limit()).as("a distribution reads its members whatever the screen's limit").isEqualTo(BiReportProperties.defaults().distributionRows());
         assertThat(hist.orderBy()).isEmpty();
     }

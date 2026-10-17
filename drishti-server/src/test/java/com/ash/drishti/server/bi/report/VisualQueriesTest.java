@@ -65,7 +65,7 @@ class VisualQueriesTest {
     @Test
     void aBarGroupsByItsAxisAndIsRankedByItsFirstMeasure() throws IOException {
         QueryRequest q = build(report("trades-overview"), "overview", "by-desk", "{}", "trades-basic").query();
-        assertThat(q.fields()).containsExactly("trade.desk");
+        assertThat(q.fields()).containsExactly("trade.DESK");
         assertThat(q.measures()).containsExactly("MTM");
         assertThat(q.orderBy()).containsExactly(new QueryRequest.Sort("MTM", true));
         assertThat(q.limit()).isEqualTo(500);
@@ -74,14 +74,14 @@ class VisualQueriesTest {
     @Test
     void aDateAxisIsInDateOrderAndATableAsksForItsFieldsAndMeasures() throws IOException {
         Report r = report("trades-overview");
-        assertThat(build(r, "overview", "by-date", "{}", "trades-basic").query().orderBy()).containsExactly(new QueryRequest.Sort("trade.tradeDate", false));
+        assertThat(build(r, "overview", "by-date", "{}", "trades-basic").query().orderBy()).containsExactly(new QueryRequest.Sort("trade.TRADE_DATE", false));
         QueryRequest t = build(r, "overview", "rows", "{}", "trades-basic").query();
-        assertThat(t.fields()).containsExactly("trade.desk", "trade.currency");
+        assertThat(t.fields()).containsExactly("trade.DESK", "trade.CURRENCY");
         assertThat(t.measures()).containsExactly("Trades", "Notional", "MTM");
         assertThat(t.orderBy()).as("the engine orders a table, and never by a masked column").isEmpty();
         assertThat(t.limit()).isEqualTo(1000);
         QueryRequest m = build(r, "products", "matrix", "{}", "trades-basic").query();
-        assertThat(m.fields()).containsExactly("trade.desk", "trade.currency");
+        assertThat(m.fields()).containsExactly("trade.DESK", "trade.CURRENCY");
     }
 
     @Test
@@ -89,18 +89,18 @@ class VisualQueriesTest {
         Report r = report("trades-overview");
         String s = "{\"slicers\":{\"currency\":[\"USD\",\"EUR\"]}}";
         QueryRequest bar = build(r, "overview", "by-desk", s, "trades-basic").query();
-        assertThat(bar.filters()).containsExactly(new QueryRequest.Filter("trade.currency", "in", List.of("USD", "EUR")));
+        assertThat(bar.filters()).containsExactly(new QueryRequest.Filter("trade.CURRENCY", "in", List.of("USD", "EUR")));
         QueryRequest self = build(r, "overview", "currency", s, "trades-basic").query();
         assertThat(self.filters()).isEmpty();
-        assertThat(self.fields()).containsExactly("trade.currency");
+        assertThat(self.fields()).containsExactly("trade.CURRENCY");
         assertThat(self.measures()).isEmpty();
         assertThat(self.limit()).isEqualTo(1000);
         // a page-scope slicer does not filter another page; a report-scope one does
         assertThat(build(r, "products", "share", s, "trades-basic").query().filters())                        // only the donut's own top-12 filter: the currency slicer is not of this page
-                .containsExactly(new QueryRequest.Filter("trade.productType", "in", List.of("CP-1", "CP-2")));
+                .containsExactly(new QueryRequest.Filter("trade.PRODUCT_TYPE", "in", List.of("CP-1", "CP-2")));
         Report c = report("cashflow-ladder");
-        assertThat(build(c, "legs", "legs-count", "{\"slicers\":{\"desk\":[\"DESK-FX\"]}}", "trading-cashflows").query().filters())
-                .containsExactly(new QueryRequest.Filter("trades.desk", "in", List.of("DESK-FX")));
+        assertThat(build(c, "legs", "legs-count", "{\"slicers\":{\"source-system\":[\"ENDUR\"]}}", "trading-cashflows").query().filters())
+                .containsExactly(new QueryRequest.Filter("trades.SOURCE_SYSTEM", "in", List.of("ENDUR")));
     }
 
     @Test
@@ -111,18 +111,18 @@ class VisualQueriesTest {
                 pages:
                   - id: p
                     visuals:
-                      - { id: n, type: slicer, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { field: [trade.notional] }, format: { mode: range } }
+                      - { id: n, type: slicer, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { field: [trade.NOTIONAL] }, format: { mode: range } }
                       - { id: c, type: card, at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [MTM] } }
                 """).report();
         QueryRequest q = build(r, "p", "c", "{\"slicers\":{\"n\":{\"from\":1000000,\"to\":3000000}}}", "trades-basic").query();
-        assertThat(q.filters()).containsExactly(new QueryRequest.Filter("trade.notional", "ge", List.of(1000000L)), new QueryRequest.Filter("trade.notional", "le", List.of(3000000L)));
+        assertThat(q.filters()).containsExactly(new QueryRequest.Filter("trade.NOTIONAL", "ge", List.of(1000000L)), new QueryRequest.Filter("trade.NOTIONAL", "le", List.of(3000000L)));
     }
 
     @Test
     void aMarkSelectedOnAnotherVisualFiltersThisOneButNotItself() throws IOException {
         Report r = report("trades-overview");
-        String s = "{\"selections\":[{\"visual\":\"by-desk\",\"field\":\"trade.desk\",\"values\":[\"DESK-FX\"]}]}";
-        assertThat(build(r, "overview", "by-date", s, "trades-basic").query().filters()).containsExactly(new QueryRequest.Filter("trade.desk", "in", List.of("DESK-FX")));
+        String s = "{\"selections\":[{\"visual\":\"by-desk\",\"field\":\"trade.DESK\",\"values\":[\"DESK-FX\"]}]}";
+        assertThat(build(r, "overview", "by-date", s, "trades-basic").query().filters()).containsExactly(new QueryRequest.Filter("trade.DESK", "in", List.of("DESK-FX")));
         assertThat(build(r, "overview", "by-desk", s, "trades-basic").query().filters()).isEmpty();
         assertThat(build(r, "overview", "currency", s, "trades-basic").query().filters()).as("a slicer is not cross-filtered").isEmpty();
         assertThat(build(r, "overview", "by-date", s, "trades-basic").highlight()).isNull();
@@ -136,15 +136,15 @@ class VisualQueriesTest {
                 pages:
                   - id: p
                     visuals:
-                      - { id: a, type: bar, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trade.desk], values: [MTM] } }
-                      - { id: b, type: column, at: { x: 6, y: 0, w: 6, h: 4 }, wells: { axis: [trade.currency], values: [MTM] } }
-                      - { id: c, type: line, at: { x: 0, y: 4, w: 6, h: 4 }, wells: { axis: [trade.tradeDate], values: [MTM] } }
-                      - { id: d, type: column, interacts: false, at: { x: 6, y: 4, w: 6, h: 4 }, wells: { axis: [trade.book], values: [MTM] } }
+                      - { id: a, type: bar, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trade.DESK], values: [MTM] } }
+                      - { id: b, type: column, at: { x: 6, y: 0, w: 6, h: 4 }, wells: { axis: [trade.CURRENCY], values: [MTM] } }
+                      - { id: c, type: line, at: { x: 0, y: 4, w: 6, h: 4 }, wells: { axis: [trade.TRADE_DATE], values: [MTM] } }
+                      - { id: d, type: column, interacts: false, at: { x: 6, y: 4, w: 6, h: 4 }, wells: { axis: [trade.PORTFOLIO], values: [MTM] } }
                 """).report();
-        String s = "{\"selections\":[{\"visual\":\"a\",\"field\":\"trade.desk\",\"values\":[\"DESK-FX\"],\"highlight\":true}]}";
+        String s = "{\"selections\":[{\"visual\":\"a\",\"field\":\"trade.DESK\",\"values\":[\"DESK-FX\"],\"highlight\":true}]}";
         VisualQueries.Built b = build(r, "p", "b", s, "trades-basic");
         assertThat(b.query().filters()).isEmpty();
-        assertThat(b.highlight().filters()).containsExactly(new QueryRequest.Filter("trade.desk", "in", List.of("DESK-FX")));
+        assertThat(b.highlight().filters()).containsExactly(new QueryRequest.Filter("trade.DESK", "in", List.of("DESK-FX")));
         VisualQueries.Built line = build(r, "p", "c", s, "trades-basic");
         assertThat(line.highlight()).as("a line cannot draw a highlight, so it is filtered").isNull();
         assertThat(line.query().filters()).hasSize(1);
@@ -157,16 +157,16 @@ class VisualQueriesTest {
     void drillingDownMovesTheAxisDownTheHierarchyAndFiltersByTheValuesClicked() throws IOException {
         Report r = report("trades-overview");
         QueryRequest q = build(r, "overview", "by-desk", "{\"drill\":[\"DESK-FX\"]}", "trades-basic").query();
-        assertThat(q.fields()).containsExactly("trade.book");
-        assertThat(q.filters()).containsExactly(new QueryRequest.Filter("trade.desk", "eq", List.of("DESK-FX")));
+        assertThat(q.fields()).containsExactly("trade.PORTFOLIO");
+        assertThat(q.filters()).containsExactly(new QueryRequest.Filter("trade.DESK", "eq", List.of("DESK-FX")));
         assertThatThrownBy(() -> build(r, "overview", "by-desk", "{\"drill\":[\"DESK-FX\",\"BOOK-1\"]}", "trades-basic")).isInstanceOf(DrishtiException.class)
-                .hasMessageContaining("nothing below trade.book");
+                .hasMessageContaining("nothing below trade.PORTFOLIO");
         assertThatThrownBy(() -> build(r, "overview", "by-date", "{\"drill\":[\"x\"]}", "trades-basic")).hasMessageContaining("does not drill down");
         // a date hierarchy starts where the axis starts
         QueryRequest y = build(report("cashflow-ladder"), "ladder", "by-pay-date", "{\"drill\":[2027,3]}", "trading-cashflows").query();
-        assertThat(y.fields()).containsExactly("cashflows.payDate.month");
-        assertThat(y.filters()).containsExactly(new QueryRequest.Filter("cashflows.payDate", "not-null", List.of()), new QueryRequest.Filter("cashflows.payDate.year", "eq", List.of(2027L)),
-                new QueryRequest.Filter("cashflows.payDate.quarter", "eq", List.of(3L)));          // the visual's own filter, then the path clicked
+        assertThat(y.fields()).containsExactly("cashflows.PAYMENT_DATE.month");
+        assertThat(y.filters()).containsExactly(new QueryRequest.Filter("cashflows.PAYMENT_DATE", "not-null", List.of()), new QueryRequest.Filter("cashflows.PAYMENT_DATE.year", "eq", List.of(2027L)),
+                new QueryRequest.Filter("cashflows.PAYMENT_DATE.quarter", "eq", List.of(3L)));          // the visual's own filter, then the path clicked
     }
 
     @Test
@@ -191,10 +191,10 @@ class VisualQueriesTest {
     @Test
     void showTheRowsAsksForEveryColumnOfTheTableUnderTheSameFiltersAndTheMark() throws IOException {
         Report r = report("trades-overview");
-        QueryRequest q = build(r, "overview", "by-desk", "{\"slicers\":{\"currency\":[\"USD\"]},\"rows\":{\"field\":\"trade.desk\",\"values\":[\"DESK-FX\"]}}", "trades-basic").query();
+        QueryRequest q = build(r, "overview", "by-desk", "{\"slicers\":{\"currency\":[\"USD\"]},\"rows\":{\"field\":\"trade.DESK\",\"values\":[\"DESK-FX\"]}}", "trades-basic").query();
         assertThat(q.measures()).isEmpty();
-        assertThat(q.fields()).startsWith("trade.id", "trade.tradeId", "trade.desk").endsWith("trade.mtmInMillions", "trade.businessDate");
-        assertThat(q.filters()).containsExactly(new QueryRequest.Filter("trade.currency", "in", List.of("USD")), new QueryRequest.Filter("trade.desk", "in", List.of("DESK-FX")));
+        assertThat(q.fields()).startsWith("trade.id", "trade.VALUATION_ID", "trade.TRADE_ID").endsWith("trade.MTM_IN_MILLIONS", "trade.businessDate");
+        assertThat(q.filters()).containsExactly(new QueryRequest.Filter("trade.CURRENCY", "in", List.of("USD")), new QueryRequest.Filter("trade.DESK", "in", List.of("DESK-FX")));
         assertThat(q.limit()).isEqualTo(1000);
         // a card has no fields: the table comes from the tables its measure reads
         assertThat(build(r, "overview", "mtm", "{\"rows\":true}", "trades-basic").query().fields()).startsWith("trade.id");
@@ -217,7 +217,7 @@ class VisualQueriesTest {
     void aBadStateIsDrs9035() throws IOException {
         Report r = report("trades-overview");
         assertThatThrownBy(() -> build(r, "overview", "by-desk", "{\"slicers\":{\"nope\":[\"x\"]}}", "trades-basic")).isInstanceOf(DrishtiException.class).hasMessageContaining("no slicer 'nope'");
-        assertThatThrownBy(() -> build(r, "overview", "by-desk", "{\"selections\":[{\"visual\":\"ghost\",\"field\":\"trade.desk\",\"values\":[\"x\"]}]}", "trades-basic")).hasMessageContaining("no visual 'ghost'");
+        assertThatThrownBy(() -> build(r, "overview", "by-desk", "{\"selections\":[{\"visual\":\"ghost\",\"field\":\"trade.DESK\",\"values\":[\"x\"]}]}", "trades-basic")).hasMessageContaining("no visual 'ghost'");
         assertThatThrownBy(() -> state("{\"selections\":[{\"field\":\"a\"}]}")).hasMessageContaining("{ visual, field, values }");
         assertThatThrownBy(() -> state("[1]")).hasMessageContaining("object");
     }

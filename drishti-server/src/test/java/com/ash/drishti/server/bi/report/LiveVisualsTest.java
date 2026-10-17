@@ -62,11 +62,11 @@ class LiveVisualsTest {
     void aPerspectiveGridAsksForTheTablesRowsWithTheKeyAndTheChangeCounterOfALiveTable() throws IOException {
         QueryRequest q = build("grid", "all-trades", "{}", "live-trading", "live-trading-desk").query();
         assertThat(q.measures()).as("Perspective pivots the rows in the browser: the server sends rows, not aggregates").isEmpty();
-        assertThat(q.fields()).startsWith("trade.tradeId", "trade.desk").endsWith("trade.id", "trade.updateSeq");
+        assertThat(q.fields()).startsWith("trade.TRADE_ID", "trade.DESK").endsWith("trade.id", "trade.updateSeq");
         assertThat(q.filters()).isEmpty();
         assertThat(q.limit()).isEqualTo(20_000);
         QueryRequest pivot = build("pivot", "desk-currency", "{}", "live-trading", "live-trading-desk").query();
-        assertThat(pivot.fields()).containsExactlyInAnyOrder("trade.desk", "trade.currency", "trade.mtm", "trade.notional", "trade.id", "trade.updateSeq").endsWith("trade.id", "trade.updateSeq");
+        assertThat(pivot.fields()).containsExactlyInAnyOrder("trade.DESK", "trade.CURRENCY", "trade.MTM", "trade.NOTIONAL", "trade.id", "trade.updateSeq").endsWith("trade.id", "trade.updateSeq");
     }
 
     @Test
@@ -86,12 +86,12 @@ class LiveVisualsTest {
                 pages:
                   - id: g
                     visuals:
-                      - { id: g, type: perspective-grid, at: { x: 0, y: 0, w: 12, h: 8 }, wells: { columns: [trade.desk, trade.mtm] } }
+                      - { id: g, type: perspective-grid, at: { x: 0, y: 0, w: 12, h: 8 }, wells: { columns: [trade.DESK, trade.MTM] } }
                 """;
         Report r = ReportParser.parse(yaml).report();
         VisualQueries.Built b = VisualQueries.build(r, r.page("g"), r.page("g").visual("g"), ReportState.of(JSON.readTree("{\"since\":5}")), ReportParserTest.dataset("trades-basic"),
                 BiReportProperties.defaults(), (f, n, by, desc, ctx, from, to) -> List.of());
-        assertThat(b.query().fields()).containsExactly("trade.desk", "trade.mtm", "trade.id");
+        assertThat(b.query().fields()).containsExactly("trade.DESK", "trade.MTM", "trade.id");
         assertThat(b.query().filters()).isEmpty();
     }
 
@@ -105,15 +105,15 @@ class LiveVisualsTest {
     @Test
     void whatIsWrongWithAPerspectiveVisualIsRefusedWithItsCodeAndPath() throws IOException {
         String head = "report: bad\ndataset: live-trading\npages:\n  - id: p\n    visuals:\n";
-        List<Problem> across = problems(head + "      - { id: g, type: perspective-grid, title: T, at: { x: 0, y: 0, w: 12, h: 8 }, wells: { columns: [trade.desk] }, format: { aggregates: { trade.desk: total } } }\n",
+        List<Problem> across = problems(head + "      - { id: g, type: perspective-grid, title: T, at: { x: 0, y: 0, w: 12, h: 8 }, wells: { columns: [trade.DESK] }, format: { aggregates: { trade.DESK: total } } }\n",
                 "live-trading");
-        assertThat(across).anyMatch(p -> p.error() && p.code().equals("DRS-9031") && p.path().endsWith("aggregates.trade.desk"));
+        assertThat(across).anyMatch(p -> p.error() && p.code().equals("DRS-9031") && p.path().endsWith("aggregates.trade.DESK"));
         assertThat(across).anyMatch(p -> p.error() && p.code().equals("DRS-9032") && p.message().contains("is not an aggregate"));
         List<Problem> part = problems(head + "      - { id: g, type: perspective-grid, title: T, at: { x: 0, y: 0, w: 12, h: 8 }, wells: { columns: [trade.updatedAt.month] } }\n", "live-trading");
         assertThat(part).anyMatch(p -> p.error() && p.code().equals("DRS-9032") && p.message().contains("date part"));
         List<Problem> measure = problems(head + "      - { id: g, type: perspective-grid, title: T, at: { x: 0, y: 0, w: 12, h: 8 }, wells: { columns: [MTM] } }\n", "live-trading");
         assertThat(measure).anyMatch(p -> p.error() && p.code().equals("DRS-9032") && p.message().contains("is a measure"));
-        List<Problem> empty = problems(head + "      - { id: p, type: perspective-pivot, title: T, at: { x: 0, y: 0, w: 12, h: 8 }, wells: { rows: [trade.desk] } }\n", "live-trading");
+        List<Problem> empty = problems(head + "      - { id: p, type: perspective-pivot, title: T, at: { x: 0, y: 0, w: 12, h: 8 }, wells: { rows: [trade.DESK] } }\n", "live-trading");
         assertThat(empty).anyMatch(p -> p.error() && p.code().equals("DRS-9032") && p.path().endsWith("wells.values"));
     }
 
@@ -131,7 +131,7 @@ class LiveVisualsTest {
         assertThat(problems(head + "      - { id: c, type: live-chart, title: C, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { values: [MTM] }, format: { window: 2 } }\n", "live-trading"))
                 .anyMatch(p -> p.error() && p.path().endsWith("format.window"));
         assertThat(problems(head + "      - { id: c, type: live-chart, title: C, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { values: [MTM] }, format: { window: 600 } }\n", "live-trading").stream().filter(Problem::error)).isEmpty();
-        assertThat(problems(head + "      - { id: g, type: perspective-grid, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { columns: [trade.desk] } }\n", "live-trading"))
+        assertThat(problems(head + "      - { id: g, type: perspective-grid, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { columns: [trade.DESK] } }\n", "live-trading"))
                 .anyMatch(p -> p.level().equals("warning") && p.code().equals("A11Y"));
         assertThat(VisualCatalogue.type("perspective-pivot").wells()).containsOnlyKeys("rows", "columns", "values");
         assertThat(VisualCatalogue.RESERVED).doesNotContain("live-chart", "perspective-grid");

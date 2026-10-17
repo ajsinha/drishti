@@ -173,8 +173,8 @@ class PythonBiApiTest {
         JsonNode measure = ok(call("POST", "/api/v1/bi/reports/file:report:python-desk-risk/python", as("cat", "reader"), Map.of("page", "risk", "visual", "volatility")));
         assertThat(measure.path("id").asText()).isEqualTo("file:python:desk-pnl-volatility");
         assertThat(measure.path("measure").path("name").asText()).isEqualTo("Desk P&L volatility");
-        assertThat(measure.path("measure").path("by").toString()).contains("trade.desk");
-        assertThat(measure.path("measure").path("inputs").toString()).contains("trade.pnl1d");
+        assertThat(measure.path("measure").path("by").toString()).contains("trade.DESK");
+        assertThat(measure.path("measure").path("inputs").toString()).contains("trade.PNL_1D");
         assertThat(measure.path("run").asText()).isEqualTo("auto");
         JsonNode visual = ok(call("POST", "/api/v1/bi/reports/file:report:python-desk-risk/python", as("cat", "reader"), Map.of("page", "risk", "visual", "histogram")));
         assertThat(visual.path("id").asText()).isEqualTo("file:python:pnl-histogram");
