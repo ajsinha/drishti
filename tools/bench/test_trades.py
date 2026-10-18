@@ -35,6 +35,13 @@ class TradesTest(unittest.TestCase):
             self.assertGreaterEqual(endur.num_rows, 400)                               # two days of 200-300
             self.assertEqual(sorted(str(x) for x in set(endur.column("business_date").to_pylist())), ["2026-10-15", "2026-10-16"])
             self.assertIn("NOTIONAL", endur.column_names)                              # the pack's flattened column
+            rows = endur.select(["TRADE_ID", "business_date", "TRADE_VERSION", "NOTIONAL"]).to_pylist()
+            by_id = {}
+            for r in rows:
+                by_id.setdefault(r["TRADE_ID"], {})[str(r["business_date"])] = (r["TRADE_VERSION"], r["NOTIONAL"])
+            both = [v for v in by_id.values() if len(v) == 2]
+            self.assertGreater(len(both), 150)                                         # the same trades on both days
+            self.assertTrue(any(v["2026-10-15"] != v["2026-10-16"] for v in both))     # and some of them changed
             self.assertTrue((lake / "trading" / "trade_calypso" / "_delta_log").is_dir())
             ns = DeltaTable(str(lake / "credit" / "netting-set")).to_pyarrow_table()
             self.assertEqual(ns.num_rows, 2 * 150)                                     # 50 counterparties x 3 legal entities x 2 days

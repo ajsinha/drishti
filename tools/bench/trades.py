@@ -20,12 +20,15 @@ and netting sets, loaded into a Delta lake with drishti.py lake build, one syste
     python tools/bench/trades.py --lake <data dir>/delta --days 7 --min 300000 --max 500000 --systems endur,calypso,murex \
         --counterparties 10000 --tmp <data dir>/tmp/bench
 
-Ids are stable across days (trade i is the same trade every day); counterparty CP-nnnnn and legal entity are a function of the id;
-each netting set NS-nnnnn-<LE> lists its trades of the day. Everything written goes under --lake and --tmp, never the system temp folder.
+Ids are stable across days (trade i is the same trade every day, as in a full daily dump) but trades change: each day about
+5 % are amended (version up, AMENDED/AMEND, price and first-leg notional moved, update time that day), amendments add up across
+the days, and about 1 in 1,000 is cancelled for good from some day on. Counterparty CP-nnnnn and legal entity are a function of
+the id; each netting set NS-nnnnn-<LE> lists its trades of the day. Everything written goes under --lake and --tmp, never the system temp folder.
 """
 from __future__ import annotations
 
 import argparse
+import copy
 import gzip
 import json
 import os
@@ -49,6 +52,46 @@ def business_days(end: str, n: int) -> list[str]:
             out.append(d.isoformat())
         d -= timedelta(days=1)
     return sorted(out)
+
+
+AMEND_PCT, CANCEL_PER_MILLE = 5, 1
+
+
+def _h(i: int, k: int) -> int:
+    """A cheap, repeatable hash of trade i on day k (0..99 after % 100)."""
+    x = (i * 2654435761 ^ (k + 1) * 40503 * 97) & 0xFFFFFFFF
+    x ^= x >> 15
+    return (x * 2246822519) & 0xFFFFFFFF
+
+
+def evolve(doc: dict, i: int, k: int, day: str) -> dict:
+    """Trade i as it stands on day k: its amendments so far (each day about 5 % of trades), and cancelled from its day on."""
+    amended = [j for j in range(k + 1) if _h(i, j) % 100 < AMEND_PCT]
+    cancel_day = _h(i, 1000) % 1000
+    cancelled = (_h(i, 2000) % 1000) < CANCEL_PER_MILLE and cancel_day % 30 <= k
+    if not amended and not cancelled:
+        return doc
+    doc = dict(doc)
+    if amended:
+        n = len(amended)
+        doc["TRADE_VERSION"] = str(int(doc.get("TRADE_VERSION") or 1) + n)
+        doc["TRADE_STATUS"], doc["TRADE_ACTION"] = "AMENDED", "AMEND"
+        doc["TRANSACTION_ID"] = f"{doc.get('TRANSACTION_ID') or i}-{n}"
+        move = 1 + ((_h(i, amended[-1] + 500) % 41) - 20) / 1000             # within +-2 % per the last amendment
+        if isinstance(doc.get("PRICE"), (int, float)):
+            doc["PRICE"] = round(doc["PRICE"] * move, 6)
+        if isinstance(doc.get("QUANTITY"), (int, float)) and n % 2 == 0:
+            doc["QUANTITY"] = round(doc["QUANTITY"] * (1 + n / 100), 2)
+        if doc.get("LEGS") and isinstance(doc["LEGS"][0].get("NOTIONAL"), (int, float)):
+            doc["LEGS"] = copy.deepcopy(doc["LEGS"])
+            doc["LEGS"][0]["NOTIONAL"] = round(doc["LEGS"][0]["NOTIONAL"] * (1 + n / 100), 2)
+        doc["SOURCE_UPDATE_TIME"] = f"{days_of[amended[-1]]}T{9 + _h(i, k) % 9:02d}:{_h(i, k) % 60:02d}:00Z"
+    if cancelled:
+        doc["TRADE_STATUS"], doc["TRADE_ACTION"] = "CANCELLED", "CANCEL"
+    return doc
+
+
+days_of: list[str] = []
 
 
 def build(a, src: Path, day: str, pack: str, connector: str, kind: str | None = None, partition: bool = True, key: str | None = None) -> None:
@@ -85,19 +128,21 @@ def main(argv=None) -> int:
         print(d, ", ".join(f"{s.upper()} {counts[d][s]:,}" for s in systems), flush=True)
     if a.dry_run:
         return 0
+    days_of[:] = days
     tmp = Path(a.tmp)
     tmp.mkdir(parents=True, exist_ok=True)
     base = {s: [json.loads(x) for x in gzip.open(ROOT / "data" / "testdata" / "trades" / s / "snapshot-2026-09-22.jsonl.gz", "rt", encoding="utf-8")]
             for s in systems}
     n_cp = a.counterparties
-    for d in days:
+    for k, d in enumerate(days):
         members: dict[str, list[str]] = {}
         for s in systems:
             ident, connector, salt = SYSTEMS[s]
             path = tmp / f"{s}-{d}.jsonl"
             with open(path, "w", encoding="utf-8") as out:
                 for i in range(counts[d][s]):
-                    doc = dict(base[s][i % len(base[s])])
+                    doc = evolve(base[s][i % len(base[s])], i, k, d)
+                    doc = doc if doc is not base[s][i % len(base[s])] else dict(doc)
                     doc["TRADE_ID"] = ident(i)
                     c = (i * 7919 + salt) % n_cp
                     le = LES[(i // 7) % 3]
