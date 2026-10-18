@@ -75,7 +75,7 @@
 
   WB.model = function (text) {
     var root = window.drishtiYaml.parse(unwrap(text || ''));
-    var out = { panels: [], title: {}, strip: [], keys: {}, match: {}, controls: [], ids: [] };
+    var out = { panels: [], uses: [], title: {}, strip: [], keys: {}, match: {}, controls: [], ids: [] };
     if (!root || root.t !== 'map') { return out; }
     var pick = function (k) { var e = entry(root, k); return e ? js(e.value) : null; };
     out.title = pick('title') || {};
@@ -87,6 +87,7 @@
     if (ps && ps.value && ps.value.t === 'seq') {
       ps.value.items.forEach(function (n) {
         var v = js(n) || {};
+        if (typeof v.use === 'string') { out.uses.push({ ref: v.use, with: v['with'] || {}, line: n.line }); return; }   // a shared block: its panels are drawn by the server
         if (typeof v.id !== 'string') { return; }
         out.panels.push({ id: v.id, kind: v.kind, line: n.line, values: v });
         out.ids.push(v.id);

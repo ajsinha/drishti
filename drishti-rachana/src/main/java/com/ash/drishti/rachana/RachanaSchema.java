@@ -78,12 +78,29 @@ public final class RachanaSchema {
         p.put("keys", Map.of("type", "object", "properties", keys, "additionalProperties", false,
                 "description", "Function keys: link(…) to open an entity, impact (F8), raw (F9)"));
         s.put("properties", p);
-        s.put("$defs", Map.of("panel", panel(formats), "column", column(formats)));
+        Map<String, Object> panel = panel(formats);
+        panel.put("x-rachana-use", Map.of("$ref", "#/$defs/use"));    // an item with `use:` is a shared block's use, not a panel
+        s.put("$defs", Map.of("panel", panel, "column", column(formats), "use", use()));
         Map<String, Object> fns = new LinkedHashMap<>();
         Functions.arity().entrySet().stream().sorted(Map.Entry.comparingByKey())
                 .forEach(e -> fns.put(e.getKey(), Map.of("min", e.getValue()[0], "max", e.getValue()[1])));
         s.put("x-rachana-functions", fns);
         return s;
+    }
+
+    /** A use of a shared block in a panels list: {@code { use: legs@1, with: { rate-fmt: pct4 } }} (DRS-2048 when it does not resolve). */
+    private static Map<String, Object> use() {
+        Map<String, Object> props = new LinkedHashMap<>();
+        props.put("use", Map.of("type", "string", "pattern", "^[a-z][a-z0-9-]{1,63}(@[0-9]+)?$",
+                "description", "A shared block (<name>.v<N>.block.yaml in a pack's sutras folder) as name@version: its panels go here"));
+        props.put("with", Map.of("type", "object", "description", "The block's parameters (its params:), each one value; the block's defaults otherwise"));
+        Map<String, Object> u = new LinkedHashMap<>();
+        u.put("type", "object");
+        u.put("description", "A use of a shared block: the block's panels, in its order, as if they were written here");
+        u.put("required", List.of("use"));
+        u.put("properties", props);
+        u.put("additionalProperties", false);
+        return u;
     }
 
     private static Map<String, Object> controlSchema() {
@@ -138,7 +155,8 @@ public final class RachanaSchema {
             if (k.readsData()) {
                 opts.add("source");
             }
-            for (String shared : List.of(com.ash.drishti.rachana.model.Panel.WHERE, com.ash.drishti.rachana.model.Panel.ON_SELECT)) {
+            for (String shared : List.of(com.ash.drishti.rachana.model.Panel.WHERE, com.ash.drishti.rachana.model.Panel.ON_SELECT,
+                    com.ash.drishti.rachana.model.Panel.WHEN)) {
                 if (k.accepts(shared)) {
                     opts.add(shared);       // the row condition and the click-sets-a-control option: accepted by the kind, so offered by its schema
                 }

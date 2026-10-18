@@ -37,6 +37,9 @@
   /** The sentence for problems the server found in a Sutra it would not compile (each has panel, option, line, message; the code is shown once). */
   WB.problemText = function (p) {
     if (/^while (parsing|scanning)/.test(p.message || '')) { return WB.yamlSyntax(p.message); }
+    if (p.code === 'DRS-2048') {         // a shared block that does not resolve: say how to fix it
+      return 'Shared block: ' + p.message + '. Fix: name one of the blocks listed (use: name@N), give only the parameters it declares under params, or add the block file <name>.v<N>.block.yaml to the pack\'s sutras/common/.';
+    }
     return (p.panel ? 'Panel ' + p.panel + (p.option ? ', ' + p.option : '') + ': ' : '') + p.message;
   };
   /** SnakeYAML's own words ("while parsing a flow sequence in 'reader', line 1, column 8: ... ^ expected ',' or ']'") said once and short (UX-16). */

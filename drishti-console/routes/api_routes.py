@@ -245,10 +245,10 @@ async def view(request: Request, kind: str, id_: str):
 CHART_KINDS = {"line", "area"}
 
 
-def _panel_html(request: Request, panel: dict, embed: bool = False) -> str:
+def _panel_html(request: Request, panel: dict, embed: bool = False, ref: dict | None = None) -> str:
     """Renders one panel with the same macro as first paint, so live and static views look identical."""
     module = request.app.state.templates.env.get_template("_macros/panels.html").module
-    return str(module.panel(panel, embed))
+    return str(module.panel(panel, embed, ref))
 
 
 def _view_event(request: Request, event: str, data: str, embed: bool = False) -> str:

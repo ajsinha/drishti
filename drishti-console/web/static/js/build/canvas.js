@@ -105,7 +105,7 @@
 
     /** An empty design: one large way in (the chooser of the 22 kinds). */
     function callToAction() {
-      var wrap = WB.el('div', 'wb-first'), none = !WB.model(store.state.yaml).panels.length;
+      var m = WB.model(store.state.yaml), wrap = WB.el('div', 'wb-first'), none = !m.panels.length && !m.uses.length;
       if (!none) { wrap.hidden = true; return wrap; }
       var b = WB.el('button', 'btn-pill btn-accent wb-first-b', 'Add your first panel', { type: 'button', 'data-first-panel': '' });
       b.insertBefore(WB.el('i', 'bi bi-plus-lg', null, { 'aria-hidden': 'true' }), b.firstChild);

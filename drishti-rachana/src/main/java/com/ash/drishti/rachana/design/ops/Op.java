@@ -21,7 +21,7 @@ package com.ash.drishti.rachana.design.ops;
  * is applied by {@link OpApplier}, which keeps the text's comments and key order and refuses an operation whose result
  * would not be a valid Sutra.
  */
-public sealed interface Op permits AddPanel, Move, SetOption, Bind, Remove, SetTitle, SetStrip, SetControls, SetKeys, SetMatch, Text {
+public sealed interface Op permits AddPanel, Move, SetOption, Bind, Remove, SetTitle, SetStrip, SetControls, SetKeys, SetMatch, SetBlock, Text {
 
     /** The operation's name in JSON ({@code addPanel}, {@code move}, {@code setOption}, ...). */
     String name();

@@ -348,10 +348,10 @@
 {%- endmacro %}
 
 {# What a panel shows, by kind: the same for a panel of the view and for one inside a tab. #}
-{% macro pbody(p) -%}
+{% macro pbody(p, ref=none) -%}
   {% if p.empty or (p.data is none and p.kind != 'provenance') %}{{ no_data(p) }}
   {% elif p.kind in ['kv', 'status'] %}{{ fields(p.data.fields, 4 if p.area == 'main' else 2) }}
-  {% elif p.kind == 'provenance' %}<dl class="prov">{% for f in (p.data.fields or []) %}{% set w = (f.text or '').split(' ') %}<div><dt>{{ f.label }}</dt><dd class="mono">{% if f.label == 'Layout' and w | length > 2 and w[0] == 'Sutra' and w[2][:1] == 'v' %}{# "Sutra <name> v<N>[ + inference]": the Sutra opens in the designer #}Sutra <a data-prov-sutra href="/studio?sutra={{ (w[1] ~ '@' ~ w[2][1:]) | urlencode }}" title="Open this Sutra in the designer">{{ w[1] }} {{ w[2] }}</a>{{ (' ' ~ (w[3:] | join(' '))) if w | length > 3 else '' }}{% elif f.label == 'Source' and ', gen ' in (f.text or '') %}{% set src = f.text.split(', gen ') %}{# "<connector>, gen <N>": the connector opens on its page #}<a data-prov-source href="/admin/connectors/{{ src[0] | urlencode }}" title="Open this connector's page">{{ src[0] }}</a>, gen {{ src[1] }}{% else %}{{ f.text }}{% endif %}</dd></div>{% endfor %}</dl>
+  {% elif p.kind == 'provenance' %}<dl class="prov">{% for f in (p.data.fields or []) %}{% set w = (f.text or '').split(' ') %}<div><dt>{{ f.label }}</dt><dd class="mono">{% if f.label == 'Layout' and w | length > 2 and w[0] == 'Sutra' and w[2][:1] == 'v' %}{# "Sutra <name> v<N>[ + inference]": the Sutra opens in the designer #}Sutra <a data-prov-sutra href="/studio?sutra={{ (w[1] ~ '@' ~ w[2][1:]) | urlencode }}{% if ref and ref.kind and ref.id %}&amp;kind={{ ref.kind | urlencode }}&amp;id={{ ref.id | urlencode }}{% endif %}" title="Open this Sutra in the designer">{{ w[1] }} {{ w[2] }}</a>{{ (' ' ~ (w[3:] | join(' '))) if w | length > 3 else '' }}{% elif f.label == 'Source' and ', gen ' in (f.text or '') %}{% set src = f.text.split(', gen ') %}{# "<connector>, gen <N>": the connector opens on its page #}<a data-prov-source href="/admin/connectors/{{ src[0] | urlencode }}" title="Open this connector's page">{{ src[0] }}</a>, gen {{ src[1] }}{% else %}{{ f.text }}{% endif %}</dd></div>{% endfor %}</dl>
   {% elif p.kind in ['table', 'ladder'] %}{% if p.data.levels %}{{ drill(p) }}{% else %}{{ pivotable(p) }}{% endif %}
   {% elif p.kind == 'tabs' %}{{ tabs(p) }}
   {% elif p.kind in ['line', 'area'] %}{{ chart(p) }}
@@ -373,7 +373,7 @@
   {% endif %}
 {%- endmacro %}
 
-{% macro panel(p, embed=false) -%}
+{% macro panel(p, embed=false, ref=none) -%}
 {# span (1-12 columns) and height (grid rows) come from the Sutra, or the user's own layout (core/layouts.py); static/css/layout.css sizes them #}
 {% set span = p.span if (p.span is number and 1 <= p.span < 12) else none %}{% set rows = p.height if (p.height is number and 1 <= p.height <= 24) else none %}
 <section class="pnl{% if span %} c-span-{{ span }}{% endif %}{% if rows %} c-h-{{ rows }}{% endif %}{% if p.hidden %} pnl-off{% endif %}" id="p-{{ p.id }}" data-panel="{{ p.id }}" data-kind="{{ p.kind }}"{% if p.key %} data-key="{{ p.key }}"{% endif %}
@@ -384,7 +384,7 @@
       {% if not embed and p.kind in ('table', 'ladder', 'kv', 'status', 'tabs', 'line', 'area', 'hbar', 'surface', 'links', 'gauge', 'waterfall', 'histogram', 'scatter', 'candlestick', 'graph', 'timeline', 'pivot', 'metric', 'map') and not p.empty %}<a class="pnl-help" data-export-panel="{{ p.id }}" hidden title="Download as CSV" aria-label="Download {{ p.title or p.id }} as CSV"><i class="bi bi-download" aria-hidden="true"></i></a>{% endif %}
       <a class="pnl-help" href="/help/panels#{{ p.kind }}" title="What a {{ p.kind }} panel shows" aria-label="Help on {{ p.kind }} panels"><i class="bi bi-question-circle" aria-hidden="true"></i></a></span></header>
   <div class="pnl-b">
-  {{ pbody(p) }}
+  {{ pbody(p, ref) }}
   </div>
 </section>
 {%- endmacro %}

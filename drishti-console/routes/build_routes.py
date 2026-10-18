@@ -104,6 +104,12 @@ async def design_page(request: Request, id_: str, tab: str = "", sample: str = "
     except BackendError as e:
         return render(request, "build/design.html", status_code=e.status, design=None, error=e, screen="build",
                       limits=request.app.state.builder_limits.as_dict())
+    if design.get("base") and not design.get("samples"):
+        # a Design of a pack's Sutra with nothing to draw on: the first record of the pack's samples its match holds for (Samples says so)
+        try:
+            design = await request.app.state.backend.designs("POST", f"/{id_}/samples", ident(request), {"pack": True})
+        except BackendError as e:
+            LOG.info("design %s: no pack sample for %s (%s)", id_, design.get("base"), e.code)
     review, pending = await pending_count(request)
     settings = await request.app.state.backend.studio_settings(ident(request))
     try:
