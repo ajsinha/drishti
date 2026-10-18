@@ -437,6 +437,87 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
     }
 
     /**
+     * The sources a whole-kind read takes the kind from: every union connector of the kind (each source system's own
+     * entities), else the one a read would ask first.
+     */
+    private List<SourcePlugin> wholeKindSources(String kind, AsOf asOf) {
+        List<SourcePlugin> candidates = candidates(kind);
+        if (candidates.isEmpty()) {
+            return List.of();
+        }
+        readOrder(candidates, asOf);
+        List<SourcePlugin> union = candidates.stream().filter(p -> registry.union(p.manifest().name())).toList();
+        return union.isEmpty() ? List.of(candidates.get(0)) : union;
+    }
+
+    /**
+     * Every document of the kind on the date, each source read in one pass ({@link SourcePlugin#documents}), one source
+     * after the other on the caller's thread (a background job: it takes none of the read slots of single reads). False,
+     * having given nothing, when the first source cannot read so; a later one that cannot is an {@link IllegalStateException}
+     * (some documents were given: the caller starts again entity by entity).
+     */
+    public boolean documents(String kind, AsOf asOf, java.util.function.Consumer<EntityDocument> sink) {
+        List<SourcePlugin> sources = wholeKindSources(kind, asOf);
+        if (sources.isEmpty()) {
+            return false;
+        }
+        boolean given = false;
+        for (SourcePlugin p : sources) {
+            if (refusesKnownAt(p, asOf, coverage(p, kind, asOf))) {
+                if (given) {
+                    throw new IllegalStateException(p.manifest().name() + " " + NO_VERSIONS);
+                }
+                return false;
+            }
+            String name = p.manifest().name();
+            boolean read;
+            try {
+                read = p.documents(kind, asOf, d -> sink.accept(named(d, name)));
+            } catch (Exception e) {
+                throw new SourceFailure(ErrorCode.SOURCE_FAILED, name, SourceFailure.reason(e, props.fetchTimeout()),
+                        name + " failed reading every " + kind + detailOf(e), e);
+            }
+            if (!read) {
+                if (given) {
+                    throw new IllegalStateException(name + " cannot read every " + kind + " in one pass");
+                }
+                return false;
+            }
+            given = true;
+        }
+        return true;
+    }
+
+    private static String detailOf(Exception e) {
+        return UnreadableData.in(e).map(u -> ": " + u.getMessage()).orElse("");
+    }
+
+    /**
+     * The version of the data the kind reads on the date, across the sources a whole-kind read takes it from (a load makes a
+     * new one); empty when one of them cannot say.
+     */
+    public Optional<String> dataVersion(String kind, AsOf asOf) {
+        List<SourcePlugin> sources = wholeKindSources(kind, asOf);
+        if (sources.isEmpty()) {
+            return Optional.empty();
+        }
+        StringBuilder out = new StringBuilder();
+        for (SourcePlugin p : sources) {
+            Optional<String> v;
+            try {
+                v = asOf.live() || asOf.businessDate() == null ? p.dataVersion(kind) : p.dataVersion(kind, asOf.businessDate());
+            } catch (RuntimeException e) {
+                return Optional.empty();
+            }
+            if (v.isEmpty()) {
+                return Optional.empty();
+            }
+            out.append(out.isEmpty() ? "" : "|").append(p.manifest().name()).append('=').append(v.get());
+        }
+        return Optional.of(out.toString());
+    }
+
+    /**
      * The kind's entities with these paths as columns, from the source a read of the kind would ask first, when it keeps
      * them as columns; empty otherwise (the caller then reads documents). Within {@code budget}.
      */

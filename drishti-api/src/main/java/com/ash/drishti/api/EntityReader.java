@@ -35,4 +35,17 @@ public interface EntityReader {
     default java.util.Optional<ColumnSet> columns(String kind, Collection<String> paths, AsOf asOf) {
         return java.util.Optional.empty();
     }
+
+    /**
+     * Every document of {@code kind} on the date, from every source that serves it, each read in one pass
+     * ({@link SourcePlugin#documents}). False, having given nothing to {@code sink}, when a source cannot read so.
+     */
+    default boolean documents(String kind, AsOf asOf, java.util.function.Consumer<EntityDocument> sink) {
+        return false;
+    }
+
+    /** The version of the data {@code kind} reads on the date across its sources (changes with every load); empty when one cannot say. */
+    default java.util.Optional<String> dataVersion(String kind, AsOf asOf) {
+        return java.util.Optional.empty();
+    }
 }

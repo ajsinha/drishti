@@ -124,6 +124,16 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
+     * Every document of the kind on the business date, in one pass over the source (a whole day read file by file, not
+     * entity by entity), for connectors built from other kinds (derived pages). Returns false, having given nothing to
+     * {@code sink}, when the source cannot read so (the caller then reads entity by entity); true when it read the date
+     * (possibly nothing: the source does not hold it).
+     */
+    default boolean documents(String kind, AsOf asOf, Consumer<EntityDocument> sink) throws Exception {
+        return false;
+    }
+
+    /**
      * Bulk read for analytics (RUPAKA.md section 6.1): the chosen paths of a kind over a business-date range, filters applied, as column
      * batches. Empty when the source cannot answer it as columns (the caller then reads records and warns that a large table will be slow).
      * Sources that promote columns implement it with {@link ColumnScans#over}.

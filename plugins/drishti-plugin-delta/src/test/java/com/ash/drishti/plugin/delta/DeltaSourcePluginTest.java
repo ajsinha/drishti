@@ -92,6 +92,22 @@ class DeltaSourcePluginTest extends DatedSourceContract {
     }
 
     @Test
+    void aWholeDayIsReadInOnePassAndAgreesWithReadingEachEntity() throws Exception {
+        LocalDate d = LocalDate.of(2026, 9, 30);
+        Map<String, EntityDocument> all = new java.util.LinkedHashMap<>();
+        assertThat(plugin().documents("trade", AsOf.of(d), doc -> all.put(doc.ref().id(), doc))).isTrue();
+        assertThat(all).isNotEmpty();
+        assertThat(all.size()).isEqualTo(plugin().inventory("trade", 10).get(d).intValue());      // every row of the date, once
+        for (EntityDocument doc : all.values()) {
+            EntityDocument one = plugin().fetch(doc.ref(), AsOf.of(d)).orElseThrow();
+            assertThat(doc.data().unwrap()).isEqualTo(one.data().unwrap());
+            assertThat(doc.provenance().businessDate()).isEqualTo(d);
+        }
+        assertThat(plugin().documents("counterparty", AsOf.of(d), doc -> { })).isFalse();          // an effective table: entity by entity
+        assertThat(plugin().documents("no-such-kind", AsOf.of(d), doc -> { })).isFalse();
+    }
+
+    @Test
     void inventoryListsTheNewestDatesWithTheirRowCountsAndSaysNothingForAnUnknownKind() throws Exception {
         Map<LocalDate, Long> inv = plugin().inventory("trade", 5);
         assertThat(inv).isNotEmpty();

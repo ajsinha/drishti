@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 
 /**
  * The one place the server makes temporary files and folders. The server keeps a per-process folder, {@code drishti-<pid>}, under the configured temp base
- * ({@code drishti.tmp-dir} / {@code DRISHTI_TMP_DIR}, default the system temp folder). {@link #start} makes it, removes the folders of dead processes left by a
+ * ({@code drishti.tmp-dir} / {@code DRISHTI_TMP_DIR}, default {@code <data dir>/tmp}). {@link #start} makes it, removes the folders of dead processes left by a
  * crash, points {@code java.io.tmpdir} at it (so libraries that unpack native code or spill to disk, DuckDB, sqlite, snappy, land in it) and removes it on a
  * clean shutdown. An architecture test forbids {@code Files.createTempFile}, {@code Files.createTempDirectory} and {@code File.createTempFile} anywhere else in
  * main code.
@@ -45,13 +45,28 @@ public final class TempFiles {
 
     private TempFiles() {}
 
-    /** The configured base: the {@code drishti.tmp-dir} system property, then {@code DRISHTI_TMP_DIR}, then the system temp folder. */
-    public static String configuredBase() {
+    /**
+     * The configured base: the {@code drishti.tmp-dir} system property, then {@code DRISHTI_TMP_DIR}, then {@code <data dir>/tmp}
+     * ({@link com.ash.drishti.api.DataDir}: never the system temp folder, which may be a small in-memory file system).
+     */
+    /**
+     * The base when {@link #start} did not run (unit tests, a library used outside the server): the configured base when one
+     * is set, else the JVM's temp folder, so nothing is made under a working directory that is not the server's.
+     */
+    static String libraryBase() {
         String p = System.getProperty("drishti.tmp-dir");
         if (p == null || p.isBlank()) {
             p = System.getenv("DRISHTI_TMP_DIR");
         }
         return p == null || p.isBlank() ? System.getProperty("java.io.tmpdir", "/tmp") : p;
+    }
+
+    public static String configuredBase() {
+        String p = System.getProperty("drishti.tmp-dir");
+        if (p == null || p.isBlank()) {
+            p = System.getenv("DRISHTI_TMP_DIR");
+        }
+        return p == null || p.isBlank() ? com.ash.drishti.api.DataDir.under("tmp") : p;
     }
 
     /**
@@ -83,7 +98,7 @@ public final class TempFiles {
         LOCK.lock();
         try {
             if (root == null) {
-                make(Path.of(configuredBase()).toAbsolutePath());
+                make(Path.of(libraryBase()).toAbsolutePath());
                 Runtime.getRuntime().addShutdownHook(new Thread(TempFiles::cleanUp, "drishti-tmp-cleanup"));
             }
             return root;

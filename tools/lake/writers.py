@@ -284,7 +284,8 @@ def write_drishti(t: Table, by_day: dict, workdir: pathlib.Path, jar: str | None
     }
     mf = workdir / "manifest.json"
     mf.write_text(json.dumps(manifest), encoding="utf-8")
-    cmd = [*base, "lake", "write", "--manifest", str(mf)]
+    # the writer's temporary files (native libraries it unpacks) go beside the staged rows, in the lake, never the system temp folder
+    cmd = [base[0], f"-Ddrishti.tmp-dir={workdir / 'tmp'}", *base[1:], "lake", "write", "--manifest", str(mf)]
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     result: dict = {}
     total = len(manifest["parts"])

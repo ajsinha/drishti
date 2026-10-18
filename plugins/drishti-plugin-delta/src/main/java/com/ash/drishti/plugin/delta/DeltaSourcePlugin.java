@@ -384,6 +384,43 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return Optional.empty();
     }
 
+    /**
+     * The date's documents in one pass over its files (derived pages): a snapshot table only, whose newest partition on or
+     * before the date holds every entity; an effective table (an entity's latest row across dates) is read entity by entity.
+     */
+    @Override
+    public boolean documents(String kind, AsOf asOf, java.util.function.Consumer<EntityDocument> sink) {
+        if (!tables.containsKey(kind) || "effective".equals(modes.get(kind))) {
+            return false;
+        }
+        Optional<DeltaTable.Layout> l = readableLayout(kind, asOf.knownAt());
+        if (l.isEmpty()) {
+            return true;                                       // no such table yet: it holds nothing
+        }
+        List<LocalDate> dates = candidates(kind, l.get(), asOf.businessDate());
+        if (dates.isEmpty()) {
+            return true;
+        }
+        LocalDate d = dates.get(0);
+        long version = l.get().version();
+        try {
+            tables.get(kind).forEachDoc(l.get(), d, (id, json) -> {
+                DataNode doc;
+                try {
+                    doc = context.parseJson(new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
+                } catch (IOException e) {
+                    throw new java.io.UncheckedIOException(e);
+                }
+                sink.accept(new EntityDocument(EntityRef.of(kind, id), doc,
+                        new Provenance(sourceName, version, Instant.now(), false, d == LocalDate.MIN ? null : d)));
+            });
+        } catch (RuntimeException e) {
+            throw problems.failed(kind, d.toString(), l.get().timestamp(), e);
+        }
+        problems.ok(kind, d.toString());
+        return true;
+    }
+
     /** The entity's document on one date, or null when that date's files do not hold it. */
     private String doc(EntityRef ref, DeltaTable.Layout l, LocalDate d) {
         // the id map says which file holds the entity; only that file's matching row group is read

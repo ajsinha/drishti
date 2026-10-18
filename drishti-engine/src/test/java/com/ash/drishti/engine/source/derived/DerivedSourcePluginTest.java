@@ -41,7 +41,7 @@ import org.junit.jupiter.api.Test;
 class DerivedSourcePluginTest {
 
     /** Three trades in two books (one without a book), read as of whatever date is asked. */
-    static final class Trades implements EntityReader {
+    static class Trades implements EntityReader {
         final AtomicInteger reads = new AtomicInteger();
         final List<AsOf> asked = new ArrayList<>();
 
@@ -160,6 +160,78 @@ class DerivedSourcePluginTest {
         assertThatThrownBy(() -> started(Map.of("x.from", "trade", "x.group-by", "$.a", "x.fields.y", "sum"), r))
                 .hasMessageContaining("needs an expression");
         assertThatThrownBy(() -> started(Map.of("x.from", "trade", "x.group-by", "$.a +"), r)).hasMessageContaining("is not an expression");
+    }
+
+    /**
+     * The trades of {@link Trades}, read in one pass ({@link EntityReader#documents}) with a data version the test moves (a
+     * load); reading entity by entity is counted, and must not happen.
+     */
+    static final class Stream extends Trades {
+        final AtomicInteger passes = new AtomicInteger();
+        final AtomicInteger versionAsks = new AtomicInteger();
+        volatile String version = "v1";
+        volatile double extra = 0;
+
+        @Override
+        public boolean documents(String kind, AsOf asOf, java.util.function.Consumer<EntityDocument> sink) {
+            passes.incrementAndGet();
+            Map<EntityRef, EntityDocument> all = new LinkedHashMap<>();
+            Map<String, Object> t1 = new LinkedHashMap<>(Map.of("book", "RATES-1", "mtm", 100 + extra, "currency", "USD", "status", "Live"));
+            all.put(EntityRef.of("trade", "T-1"), new EntityDocument(EntityRef.of("trade", "T-1"), DataNode.of(t1), new Provenance("lake", 1, Instant.now(), false, null)));
+            all.put(EntityRef.of("trade", "T-2"), new EntityDocument(EntityRef.of("trade", "T-2"),
+                    DataNode.of(Map.of("book", "RATES-1", "mtm", -40, "currency", "EUR", "status", "Live")), new Provenance("lake", 1, Instant.now(), false, null)));
+            all.values().forEach(sink);
+            return true;
+        }
+
+        @Override
+        public java.util.Optional<String> dataVersion(String kind, AsOf asOf) {
+            versionAsks.incrementAndGet();
+            return java.util.Optional.of(version);
+        }
+    }
+
+    @Test
+    void aSourceThatReadsAWholeDayIsReadInOnePassNotEntityByEntity() throws Exception {
+        Stream trades = new Stream();
+        DerivedSourcePlugin p = started(settings(), trades);
+        DataNode book = p.fetch(EntityRef.of("book-pnl", "RATES-1")).orElseThrow().data();
+        assertThat(book.get("mtm").asDouble()).isEqualTo(60);
+        assertThat(book.get("tradeIds").unwrap()).isEqualTo(List.of("T-1", "T-2"));
+        assertThat(trades.passes.get()).isEqualTo(1);             // one pass for both derived kinds
+        assertThat(trades.reads.get()).isZero();                  // no read entity by entity
+    }
+
+    @Test
+    void aNewDataVersionRebuildsAndAnUnchangedOneNeverDoes() throws Exception {
+        Stream trades = new Stream();
+        Map<String, String> s = settings();
+        s.put("version-check", "0s");                             // ask the version on every read
+        s.put("refresh", "0s");                                   // the timer would rebuild at once: the version must win over it
+        DerivedSourcePlugin p = started(s, trades);
+        assertThat(p.fetch(EntityRef.of("book-pnl", "RATES-1")).orElseThrow().data().get("mtm").asDouble()).isEqualTo(60);
+        for (int i = 0; i < 5; i++) {
+            Thread.sleep(2);
+            assertThat(p.fetch(EntityRef.of("book-pnl", "RATES-1")).orElseThrow().data().get("mtm").asDouble()).isEqualTo(60);
+        }
+        assertThat(trades.passes.get()).isEqualTo(1);             // the version did not move: nothing was read again
+        assertThat(trades.versionAsks.get()).isGreaterThan(1);
+
+        trades.extra = 5;                                         // a load: new data, a new version
+        trades.version = "v2";
+        Thread.sleep(2);
+        p.fetch(EntityRef.of("book-pnl", "RATES-1"));            // answers the last computation and rebuilds behind
+        for (int i = 0; i < 200 && trades.passes.get() < 2; i++) {
+            Thread.sleep(10);
+        }
+        assertThat(trades.passes.get()).isEqualTo(2);
+        for (int i = 0; i < 200; i++) {
+            if (p.fetch(EntityRef.of("book-pnl", "RATES-1")).orElseThrow().data().get("mtm").asDouble() == 65) {
+                break;
+            }
+            Thread.sleep(10);
+        }
+        assertThat(p.fetch(EntityRef.of("book-pnl", "RATES-1")).orElseThrow().data().get("mtm").asDouble()).isEqualTo(65);
     }
 
     /** 2,500 trades served as columns only: reading a document would fail the test. */

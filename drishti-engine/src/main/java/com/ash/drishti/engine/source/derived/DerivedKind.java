@@ -222,9 +222,60 @@ public final class DerivedKind {
         java.util.Collections.sort(ids);
         Map<String, Object> aggregates = new LinkedHashMap<>();
         for (Field f : fields) {
-            aggregates.put(f.name(), aggregate(f, ids, members));
+            aggregates.put(f.name(), aggregate(f, ids, id -> Values.simplify(safe(f.expr(), EvalContext.of(members.get(id), formats)))));
         }
         return assemble(key, ids, aggregates, members::get);
+    }
+
+    /**
+     * A member reduced to what this kind reads of it: each field's and each row column's value, computed once when the
+     * member is read, so a whole day of large documents is never held (only {@link #buildCompact} reads it).
+     */
+    DataNode compact(DataNode doc) {
+        EvalContext c = EvalContext.of(doc, formats);
+        Map<String, Object> out = new LinkedHashMap<>();
+        for (int i = 0; i < fields.size(); i++) {
+            Field f = fields.get(i);
+            if (f.expr() != null) {
+                out.put(FIELD + i, plain(Values.simplify(safe(f.expr(), c))));
+            }
+        }
+        rowColumns.forEach((col, e) -> out.put(ROW + col, plain(Values.simplify(safe(e, c)))));
+        return DataNode.of(out);
+    }
+
+    /** {@link #build} over members made by {@link #compact}: the same document. */
+    DataNode buildCompact(String key, Map<String, DataNode> members) {
+        List<String> ids = new ArrayList<>(members.keySet());
+        java.util.Collections.sort(ids);
+        Map<String, Object> aggregates = new LinkedHashMap<>();
+        for (int i = 0; i < fields.size(); i++) {
+            String name = FIELD + i;
+            aggregates.put(fields.get(i).name(), aggregate(fields.get(i), ids, id -> Values.simplify(members.get(id).get(name))));
+        }
+        Map<String, Object> doc = assembleHead(key, ids, aggregates);
+        List<String> listed = listed(ids);
+        if (!rowColumns.isEmpty()) {
+            List<Map<String, Object>> rows = new ArrayList<>(listed.size());
+            for (String id : listed) {
+                DataNode m = members.get(id);
+                Map<String, Object> row = new LinkedHashMap<>();
+                rowColumns.keySet().forEach(col -> {
+                    DataNode v = m.get(ROW + col);
+                    row.put(col, v.isNull() ? null : v.unwrap());
+                });
+                rows.add(row);
+            }
+            doc.put(rowsField, rows);
+        }
+        return DataNode.of(doc);
+    }
+
+    private static final String FIELD = "f";
+    private static final String ROW = "r:";
+
+    private static Object plain(Object v) {
+        return v instanceof DataNode n ? (n.isNull() ? null : n.unwrap()) : v;
     }
 
     /** The path a plain expression reads ({@code $.mtm} is {@code mtm}), or null for anything else. */
@@ -348,15 +399,25 @@ public final class DerivedKind {
     }
 
     /** The derived document: the key, its aggregates, the member count and the members it lists (with their rows). */
-    private DataNode assemble(String key, List<String> ids, Map<String, Object> aggregates, java.util.function.Function<String, DataNode> member) {
+    /** The group's document without its rows: id, aggregates, member count and the listed member ids. */
+    private Map<String, Object> assembleHead(String key, List<String> ids, Map<String, Object> aggregates) {
         Map<String, Object> doc = new LinkedHashMap<>();
         doc.put("id", key);                               // the entity's id, always (layouts title a view by it)
         doc.put(idField, key);
         doc.put("derivedFrom", from);
         doc.putAll(aggregates);
         doc.put("memberCount", (long) ids.size());
-        List<String> listed = ids.size() > maxMembers ? ids.subList(0, maxMembers) : ids;   // a desk of 200,000 trades lists 1,000
-        doc.put(membersField, listed);
+        doc.put(membersField, listed(ids));
+        return doc;
+    }
+
+    private List<String> listed(List<String> ids) {
+        return ids.size() > maxMembers ? ids.subList(0, maxMembers) : ids;   // a desk of 200,000 trades lists 1,000
+    }
+
+    private DataNode assemble(String key, List<String> ids, Map<String, Object> aggregates, java.util.function.Function<String, DataNode> member) {
+        Map<String, Object> doc = assembleHead(key, ids, aggregates);
+        List<String> listed = listed(ids);
         if (!rowColumns.isEmpty()) {
             List<Map<String, Object>> rows = new ArrayList<>(listed.size());
             for (String id : listed) {
@@ -444,7 +505,8 @@ public final class DerivedKind {
         return out;
     }
 
-    private Object aggregate(Field f, List<String> ids, Map<String, DataNode> members) {
+    /** One field over the members, {@code value} giving each member's value of the field's expression. */
+    private Object aggregate(Field f, List<String> ids, java.util.function.Function<String, Object> value) {
         if (f.op() == Op.COUNT) {
             return (long) ids.size();
         }
@@ -453,7 +515,7 @@ public final class DerivedKind {
         Double best = null;
         Set<String> distinct = new LinkedHashSet<>();
         for (String id : ids) {
-            Object v = Values.simplify(safe(f.expr(), EvalContext.of(members.get(id), formats)));
+            Object v = value.apply(id);
             if (f.op() == Op.FIRST) {
                 return v instanceof DataNode node ? (node.isNull() ? null : node.unwrap()) : v;
             }

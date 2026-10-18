@@ -402,9 +402,18 @@ final class DeltaTable {
     /** Every entity in one business date's partition: id to JSON text. */
     Map<String, String> read(Layout layout, LocalDate date) {
         Map<String, String> out = new LinkedHashMap<>();
+        forEachDoc(layout, date, out::put);
+        return out;
+    }
+
+    /**
+     * Every (id, document) of the date, file by file and batch by batch, kept nowhere: one pass over the files, each row
+     * group decoded once (a whole day for derived pages, without holding the day in memory).
+     */
+    void forEachDoc(Layout layout, LocalDate date, java.util.function.BiConsumer<String, String> sink) {
         List<Row> files = layout.files().get(date);
         if (files == null) {
-            return out;
+            return;
         }
         StructType physical = ScanStateRow.getPhysicalDataReadSchema(layout.scanState());
         for (Row fileRow : files) {
@@ -422,7 +431,7 @@ final class DeltaTable {
                         while (rows.hasNext()) {
                             Row r = rows.next();
                             if (!r.isNullAt(idIx) && !r.isNullAt(docIx)) {
-                                out.put(r.getString(idIx), r.getString(docIx));
+                                sink.accept(r.getString(idIx), r.getString(docIx));
                             }
                         }
                     }
@@ -431,6 +440,5 @@ final class DeltaTable {
                 throw new UncheckedIOException(e);
             }
         }
-        return out;
     }
 }

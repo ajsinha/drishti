@@ -69,7 +69,7 @@ pack.yaml contributions  <  application.yaml  <  application.local.yaml  <  envi
 
 ### Worked example: four layers, one key
 
-The longest a source read may take is `drishti.sources.fetch-timeout`, `2s` in the bundled file.
+The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in the bundled file (2s before 2026-10-18: the first read of a date on a large table loads its id index first).
 
 1. Create `application.local.yaml` in the directory you start the server from (the repository root when
    you run `java -jar drishti-server/target/drishti-server-2.3.0-exec.jar`):
@@ -216,7 +216,7 @@ Both processes keep **one folder of their own** for everything temporary, so a c
 
 | Process | Setting | Variable | Default | The folder |
 |---|---|---|---|---|
-| Server | `drishti.tmp-dir` (or `--drishti.tmp-dir=` on the command line) | `DRISHTI_TMP_DIR` | the system temp folder (`/tmp`) | `<base>/drishti-<pid>` |
+| Server | `drishti.tmp-dir` (or `--drishti.tmp-dir=` on the command line) | `DRISHTI_TMP_DIR` | `<data dir>/tmp` (`./data/tmp`; the system temp folder before 2026-10-18: it can be a small in-memory file system) | `<base>/drishti-<pid>` |
 | Console | `tmp_dir` | `DRISHTI_CONSOLE_TMP_DIR`, then `DRISHTI_TMP_DIR` | the system temp folder | `<base>/drishti-console-<pid>` |
 
 At start each process (1) **leaves the folders of dead processes alone**: removing them automatically was disabled (2026-10-17) because it is not safe on every machine (a reused process id, or a link inside a folder, could lead a delete outside the folder); they are listed on Admin, Health for a person to remove by hand, (2) makes its own, and (3) points the language's temp setting at it before anything loads: the server sets `java.io.tmpdir` (so DuckDB's spill files, the sqlite, snappy and CatBoost native libraries unpack there), the console sets `tempfile.tempdir` (so uploads, exports, the static-file compression cache, the Python runner's scratch and the new-pack wizard land there). On a clean shutdown the folder is removed. The server reads the setting before Spring starts, so it comes from the command line, the system property or the variable, not from `application.yaml`. Files that are written and then moved over a target (atomic saves) are made in the target's own folder, since a move across disks is not atomic; they are made by the same helper.

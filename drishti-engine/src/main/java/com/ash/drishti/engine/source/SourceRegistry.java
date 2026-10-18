@@ -107,6 +107,16 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         public Optional<com.ash.drishti.api.ColumnSet> columns(String kind, Collection<String> paths, com.ash.drishti.api.AsOf asOf) {
             return router().columns(kind, paths, asOf, BUDGET);
         }
+
+        @Override
+        public boolean documents(String kind, com.ash.drishti.api.AsOf asOf, java.util.function.Consumer<com.ash.drishti.api.EntityDocument> sink) {
+            return router().documents(kind, asOf, sink);
+        }
+
+        @Override
+        public Optional<String> dataVersion(String kind, com.ash.drishti.api.AsOf asOf) {
+            return router().dataVersion(kind, asOf);
+        }
     }
 
     /** Called by the router once it exists, so connectors may read other kinds through it. */

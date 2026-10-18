@@ -109,8 +109,9 @@ drishti:
     enabled: ${DRISHTI_OFFLINE:false}
     plugins: news,yfinance,feed      # the public-data feed plugin too (US Treasury, ECB, NY Fed, FRED: market-data pack)
   sources:
-    # Longest a single source read may take before the view shows the entity as unavailable.
-    fetch-timeout: 2s
+    # Longest a single source read may take before the view shows the entity as unavailable (DRS-1004). 5 s: the first read
+    # of a business date on a large table loads that date's id index first (300K trades: a few seconds).
+    fetch-timeout: 5s
     # Optional directory of extra plugin jars; each gets its own class loader.
     plugin-dir: ${DRISHTI_PLUGIN_DIR:}
     # kind -> plugin. Kinds without a route try default-route first, then any plugin that serves them.

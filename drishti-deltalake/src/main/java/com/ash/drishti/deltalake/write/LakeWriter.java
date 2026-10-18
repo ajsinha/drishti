@@ -78,6 +78,9 @@ public final class LakeWriter {
 
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final String ENGINE_INFO = "Drishti lake build";
+    /** The most bytes one Parquet row group holds (DRISHTI_LAKE_ROW_GROUP_MB, default 1). */
+    static final long ROW_GROUP_BYTES = Long.getLong("drishti.lake.row-group-mb",
+            Long.parseLong(System.getenv().getOrDefault("DRISHTI_LAKE_ROW_GROUP_MB", "1"))) * 1024 * 1024;
 
     /** What a write did. */
     public record Result(long version, int files, long rows, int removed, List<String> leftOut) {}
@@ -85,7 +88,9 @@ public final class LakeWriter {
     private final Engine engine;
 
     public LakeWriter() {
-        this(DefaultEngine.create(new LocalWriteFileIO(Map.of("parquet.compression", "SNAPPY"))));      // as delta-rs writes (Kernel writes uncompressed otherwise)
+        // SNAPPY as delta-rs writes (Kernel writes uncompressed otherwise); row groups of at most 1 MB (Parquet's default is 128 MB):
+        // a single entity's read decodes its row group, so a large file in one group would be decoded whole for every entity read
+        this(DefaultEngine.create(new LocalWriteFileIO(Map.of("parquet.compression", "SNAPPY", "parquet.block.size", String.valueOf(ROW_GROUP_BYTES)))));
     }
 
     LakeWriter(Engine engine) {

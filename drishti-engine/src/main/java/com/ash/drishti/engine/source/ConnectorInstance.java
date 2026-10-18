@@ -107,6 +107,11 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public boolean documents(String kind, AsOf asOf, java.util.function.Consumer<EntityDocument> sink) throws Exception {
+        return serves(kind) ? delegate.documents(kind, asOf, sink) : true;     // a kind it does not serve: it holds none
+    }
+
+    @Override
     public Optional<com.ash.drishti.api.ArrowScan> scan(com.ash.drishti.api.ScanRequest request) throws Exception {
         return serves(request.kind()) ? delegate.scan(request) : Optional.empty();
     }
