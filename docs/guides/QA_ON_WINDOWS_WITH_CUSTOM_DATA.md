@@ -83,26 +83,42 @@ drishti-console\.venv\Scripts\python.exe -m pip install -r drishti-console\requi
 
 You should see: the last line says `Successfully installed …` (fastapi, uvicorn, pyyaml, pyarrow, deltalake and others).
 
-### 2.2 PyCharm (once)
+### 2.2 Two projects: IntelliJ on the project folder, PyCharm on `drishti-console` (once)
 
-1. **File → Open** → choose `C:\Users\asinh09\IdeaProjects\drishti-orig` (the whole folder, **not** `drishti-console`) →
-   **Trust Project**.
-2. **File → Settings → Project: drishti-orig → Python Interpreter → Add Interpreter → Add Local Interpreter →
+IntelliJ and PyCharm each keep their settings in a `.idea` folder inside the folder they open. Opened on the **same**
+folder they overwrite each other's (IntelliJ then says **module not specified** for the server). So each opens its own:
+
+| IDE | Opens | Its run configurations (top-right drop-down) |
+|---|---|---|
+| **IntelliJ** | `C:\Users\asinh09\IdeaProjects\drishti-orig` (the Java server) | `run-configs\`: **Drishti build server jar**, **Drishti server (demo lakes)**, … |
+| **PyCharm** | `C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console` (the console and the tools) | `drishti-console\run-configs\`: **Drishti console**, **Build demo lakes**, **Load ENDUR file into the lake**, the `drishti …` tools |
+
+**If PyCharm was opened on `drishti-orig` before** (it was until 2026-10-18): close **both** IDEs, delete the folder
+`C:\Users\asinh09\IdeaProjects\drishti-orig\.idea` in Windows Explorer (IDE settings only; it is not in git), then
+do step 2.3 (IntelliJ re-creates it) and the steps below. In PyCharm's start screen, remove `drishti-orig` from the recent
+projects (right-click → Remove from Recent Projects) so it is not opened there by habit.
+
+PyCharm:
+
+1. **File → Open** → choose `C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console` → **Trust Project**.
+2. **File → Settings → Project: drishti-console → Python Interpreter → Add Interpreter → Add Local Interpreter →
    Virtualenv Environment → Existing** → `C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe`
    → **OK**.
-3. In the **Project** panel, right-click each folder → **Mark Directory as**:
-   - `drishti-console` → **Sources Root**
-   - `tools` → **Sources Root**
-   - `drishti-console\tests` → **Test Sources Root**
-   - `data` → **Excluded** (PyCharm must not index the lakes)
-4. **File → Settings → Tools → Python Integrated Tools → Default test runner** → **pytest** → **OK**.
+3. **The tools folder as a source folder** (it sits next to `drishti-console`, not inside it): **File → Settings →
+   Project: drishti-console → Project Structure → + Add Content Root** → choose
+   `C:\Users\asinh09\IdeaProjects\drishti-orig\tools` → **OK**; select the new `tools` root in the list → click
+   **Sources** (the blue folder above the list) → **OK**. The **Project** panel now shows `drishti-console` and `tools`.
+   (This is for reading and navigating the tools' code; the run configurations work without it.)
+4. In the **Project** panel, right-click `tests` (inside `drishti-console`) → **Mark Directory as → Test Sources Root**.
+5. **File → Settings → Tools → Python Integrated Tools → Default test runner** → **pytest** → **OK**.
 
-You should see: the drop-down at the top right lists the configurations of `run-configs\`, among them **Build demo lakes**,
-**Load ENDUR file into the lake** and **Drishti console**. They all use the interpreter of step 2; nothing to edit.
+You should see: the drop-down at the top right lists **Build demo lakes**, **Load ENDUR file into the lake**,
+**Drishti console** and the `drishti …` tools. They all use the interpreter of step 2 and run from the project folder
+`drishti-orig` (one level up), so `data\`, `config\` and `tools\` mean the same as in this guide; nothing to edit.
 
 > **What these configurations run.** Every command in this guide that starts with `lake …` (`lake demo`, `lake build`)
 > is not a program of its own: it is a sub-command of the project's command-line tool **`tools\drishti.py`**. A
-> PyCharm configuration is just "run `tools\drishti.py` with these *Parameters*, from the project folder":
+> PyCharm configuration is just "run `tools\drishti.py` with these *Parameters*, from the project folder `drishti-orig`":
 >
 > | Configuration | Script | Parameters (what you edit) |
 > |---|---|---|
@@ -112,7 +128,7 @@ You should see: the drop-down at the top right lists the configurations of `run-
 >
 > So a line like `lake build --from …` below goes into the **Parameters** box, not into a terminal. To run the same
 > thing in PowerShell instead, put `drishti-console\.venv\Scripts\python.exe tools\drishti.py` in front of it, from
-> the project folder. `python tools\drishti.py lake build --help` lists every option.
+> the project folder (PyCharm's Terminal opens in `drishti-console`: type `cd ..` first). `python tools\drishti.py lake build --help` lists every option.
 
 ### 2.3 IntelliJ IDEA (once)
 
@@ -200,28 +216,8 @@ Good to know:
 
 ### 4.1 The server
 
-> **Why not simply IntelliJ?** IntelliJ and PyCharm keep their project settings in the same folder, `drishti-orig\.idea`.
-> With both opened on `drishti-orig`, PyCharm rewrites it as a Python project and IntelliJ then no longer knows the
-> Java modules: its run configuration says **module not specified** and the main class is red. So the server is started
-> from a PowerShell script (way A); IntelliJ is needed only to build the jar (step 2.3).
+**Way A (recommended): IntelliJ**
 
-**Way A (recommended): the script, from PyCharm's Terminal**
-
-1. PyCharm → the **Terminal** tab at the bottom (or any PowerShell window in the project folder).
-2. Type, one line:
-
-   ```
-   powershell -ExecutionPolicy Bypass -File tools\windows\start-server.ps1 -DemoLakes
-   ```
-
-   It runs the newest `drishti-server\target\drishti-server-*-exec.jar` (step 2.3) with exactly the settings of the
-   IntelliJ configuration below: the seven packs on the lakes, samples off, **offline mode**, sign-in on, port 18480,
-   a 4 GB heap. Its first line says so: `Drishti server: … offline demo on the lakes (sign in as drishti-dev-admin)`.
-3. To stop it: click in that Terminal and press **Ctrl+C**.
-
-After a `git pull` that changed Java code, build the jar again (step 2.3) before starting it.
-
-**Way B: IntelliJ** (only while PyCharm is closed, or after the fix in the note below)
 
 1. In IntelliJ's toolbar, top right, there is a drop-down with the name of a run configuration, then a green ▶ (Run)
    and a red ■ (Stop). Click the **drop-down** (not the ▶) → open the folder **Drishti** → choose
@@ -244,10 +240,10 @@ What **Drishti server (demo lakes)** sets (Run → Edit Configurations… → Ap
 | Working directory | the project folder, `C:\Users\asinh09\IdeaProjects\drishti-orig` |
 | Environment variables | the seven packs, samples off, **offline mode** (`DRISHTI_OFFLINE=true`), port 18480, sign-in on with the `drishti-dev-admin` account |
 
-If the configuration says **module not specified** or its main class is red: IntelliJ lost the Maven modules (see
-*Why not simply IntelliJ?*). Open the **Maven** tool window (the **m** on the right edge) → **Reload All Maven Projects**
+If the configuration says **module not specified** or its main class is red: IntelliJ lost the Maven modules (usually
+PyCharm was opened on the same folder: see step 2.2). Open the **Maven** tool window (the **m** on the right edge) → **Reload All Maven Projects**
 (the circular arrows); if there is no Maven window, right-click `pom.xml` in the project folder → **Add as Maven
-Project**. Wait for the import (progress bar bottom right); the module `drishti-server` is then back. Or use way A.
+Project**. Wait for the import (progress bar bottom right); the module `drishti-server` is then back. Or use way B.
 
 If the drop-down has no **Drishti** folder (IntelliJ did not pick up `run-configs\`): **Run → Edit Configurations… → + →
 Application**, fill in the table above, and paste this into *Environment variables* (one line):
@@ -256,7 +252,23 @@ Application**, fill in the table above, and paste this into *Environment variabl
 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets;DRISHTI_DEMO_ENABLED=false;DRISHTI_OFFLINE=true;DRISHTI_PORT=18480;DRISHTI_SECURITY_ENABLED=true;DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789;DRISHTI_SEED_ADMIN=true;DRISHTI_SEED_USERNAME=drishti-dev-admin;DRISHTI_SEED_PASSWORD=drishti-dev-admin123;DRISHTI_STUDIO_SAVE=true;DRISHTI_EXTERNAL_LIB=C:\Users\asinh09\IdeaProjects\drishti-orig\external_lib
 ```
 
-**What you should see** (either way: in the Terminal for way A, in the Run window for way B):
+**Way B: the script, from any PowerShell window** (no IntelliJ needed; it runs the jar of step 2.3)
+
+1. PyCharm → the **Terminal** tab at the bottom (it opens in `drishti-console`), or any PowerShell window.
+2. Type, one line:
+
+   ```
+   powershell -ExecutionPolicy Bypass -File C:\Users\asinh09\IdeaProjects\drishti-orig\tools\windows\start-server.ps1 -DemoLakes
+   ```
+
+   It runs the newest `drishti-server\target\drishti-server-*-exec.jar` with exactly the settings of **Drishti server
+   (demo lakes)**: the seven packs on the lakes, samples off, **offline mode**, sign-in on, port 18480, a 4 GB heap. Its
+   first line says so: `Drishti server: … offline demo on the lakes (sign in as drishti-dev-admin)`.
+3. To stop it: click in that window and press **Ctrl+C**.
+
+After a `git pull` that changed Java code, build the jar again (step 2.3) before starting it this way.
+
+**What you should see** (either way: in the Run window for way A, in the PowerShell window for way B):
 
 - within about 20 seconds: `Started DrishtiApplication in … seconds` — the server answers from now on;
 - then, as the first pages are asked for, one line per large table and date it loads, for example
@@ -340,16 +352,16 @@ trades.
 |---|---|
 | `pip` or Maven cannot download | Ask IT for the mirror settings: pip reads `%APPDATA%\pip\pip.ini`; Maven reads `%USERPROFILE%\.m2\settings.xml`. |
 | PyCharm says the interpreter is invalid | Redo step 2.2 point 2. |
-| The Run tab says **DrishtiApplication**, quotes or news try the internet, or sample trades appear | The server was started from the ▶ in `DrishtiApplication.java`: stop it and start it as section 4.1 says (way A). |
-| IntelliJ: **module not specified**, the main class `com.ash.drishti.server.DrishtiApplication` in red | PyCharm rewrote the shared `.idea` folder: start the server with way A of section 4.1, or reload the Maven projects in IntelliJ (section 4.1, way B note). |
-| `start-server.ps1 … cannot be loaded because running scripts is disabled` | Type the line exactly as in section 4.1 way A (`powershell -ExecutionPolicy Bypass -File …`): it allows this one script only. |
+| The Run tab says **DrishtiApplication**, quotes or news try the internet, or sample trades appear | The server was started from the ▶ in `DrishtiApplication.java`: stop it and start **Drishti server (demo lakes)** (section 4.1, way A). |
+| IntelliJ: **module not specified**, the main class `com.ash.drishti.server.DrishtiApplication` in red | PyCharm was opened on `drishti-orig` and rewrote its `.idea`: do the note of step 2.2 (close both, delete `drishti-orig\.idea`, PyCharm on `drishti-console`), or reload the Maven projects (section 4.1, way A), or use way B. |
+| `start-server.ps1 … cannot be loaded because running scripts is disabled` | Type the line exactly as in section 4.1 way B (`powershell -ExecutionPolicy Bypass -File …`): it allows this one script only. |
 | The server log scrolls with thousands of `FilterCompat` or `delta.kernel` INFO lines | An older copy of the project: `git pull` (since 2026-10-18 these libraries log at WARN; Drishti says one line per large table loaded). |
 | **BI → Trades overview** shows 0 trades, or a page of the demo shows nothing while Admin → Lakes has the table | Old connector files: stop the server, delete `config\connectors` (step 3.1 point 0), start the server again. |
 | `Port 18480 (or 17480) is already in use` | Another copy is running: stop it in IntelliJ / PyCharm (red square), or reboot. |
 | `lake build` says `no id (field 'id' is missing…)` | The parameters lack `--key TRADE_ID`: copy the line of step 3.2 again. |
 | `lake build` says `give --lake DIR (the Delta root the connector reads)` | The parameters lack `--lake data\delta`: copy the line of step 3.2 again (it ends with `--lake data\delta`), and run it from the project folder. |
 | PowerShell says `lake` is not recognized | `lake …` is not a command of its own: run it as `drishti-console\.venv\Scripts\python.exe tools\drishti.py lake …` from the project folder, or use the PyCharm configuration (step 2.2, *What these configurations run*). |
-| The run configurations are not in the drop-down | The project was opened at `drishti-console` instead of the project folder: **File → Open** `drishti-orig` itself (step 2.2 point 1). |
+| The run configurations are not in the drop-down | PyCharm must open `drishti-orig\drishti-console` (its configurations are in `drishti-console\run-configs`); IntelliJ must open `drishti-orig` (`run-configs`). See step 2.2. |
 | ENDUR pages still show synthetic trades | Step 3.2 point 1 was skipped: stop the server, delete `data\delta\trading\trade_endur`, load your files again, start the server. |
 | ENDUR and CALYPSO/MUREX never show on the same date | Step 3.1 used another date: run **Build demo lakes** again with `--as-of` = your newest ENDUR date, then step 3.2 again. |
 | A page says *unavailable* for quotes or news | Check **Admin → Connectors**: the snapshot stores must be RUNNING; run **Build demo lakes** again. |

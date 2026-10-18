@@ -47,8 +47,8 @@ Every step says what to do **in the UI** (IntelliJ IDEA and PyCharm run configur
 
 ## Step 1 · Install, build and check the machine
 
-**In the UI.** Open the repository in IntelliJ IDEA (the run configurations are in `run-configs/`, [IDE_GUIDE.md](../guides/IDE_GUIDE.md)) and run **Drishti build server jar**.
-Then run **Build demo lakes**.
+**In the UI.** Open the repository in IntelliJ IDEA (its run configurations are in `run-configs/`, [IDE_GUIDE.md](../guides/IDE_GUIDE.md)) and run **Drishti build server jar**.
+Then, in PyCharm opened on `drishti-console/` (its run configurations are in `drishti-console/run-configs/`), run **Build demo lakes**.
 
 **From the command line:**
 

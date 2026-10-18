@@ -2667,7 +2667,7 @@ empty PyCharm to a run configuration for each common task.
    uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
    ```
 
-   This is the console's own environment, the one the quick start installs and the shipped run configurations (`run-configs/`) use: it has
+   This is the console's own environment, the one the quick start installs and the shipped run configurations (`drishti-console/run-configs/`) use: it has
    `pyyaml`, `deltalake` and `pyarrow` (the last two for `--store delta`, the default of `pack make`, `data ingest --lake` and `lake build`).
    On Windows the interpreter is `drishti-console\.venv\Scripts\python.exe`.
 3. **Settings (Ctrl+Alt+S) → Project → Python Interpreter → Add Interpreter → Add Local Interpreter → Existing**, pick
@@ -2706,7 +2706,7 @@ failed, 2 = usage; see [section 12](#12-exit-codes)). If the Run window says `no
 (`./mvnw -q -DskipTests package`) or set `DRISHTI_JAR`.
 
 **Templates.** **Run → Edit Configurations → Edit configuration templates... → Python** sets the defaults for every *new* Python
-configuration: put the interpreter, the working directory (`$PROJECT_DIR$`), and the environment variables there once, and each new
+configuration: put the interpreter, the working directory (`$PROJECT_DIR$/..`, the repository root), and the environment variables there once, and each new
 configuration (**+ → Python**) then only needs a **Name**, the **Script path** and the **Parameters**. Duplicate an existing
 configuration (Ctrl+D in the dialog) to make a variant.
 
@@ -2727,30 +2727,30 @@ The Java `sutra` command that `pack check` and `pack make` start is a separate p
 (use 14.5 for that). **Variables** shows the parsed options (`a`), and **Evaluate expression** (Alt+F8) works on them.
 To stop on an error, tick **Run → View Breakpoints → Python Exception Breakpoints → Any exception**.
 
-### 14.4 Share the configurations with the team: `run-configs/`
+### 14.4 Share the configurations with the team: `drishti-console/run-configs/`
 
 By default a configuration lives in `.idea/workspace.xml` (personal, not committed). To share it, open it in **Edit
-Configurations** and tick **Store as project file**: PyCharm writes it to `run-configs/<name>.run.xml` in the project, which can be
-committed. This repository ships four to start from, `run-configs/drishti pack make.run.xml`, `run-configs/drishti sutra gen.run.xml`, `run-configs/drishti data profile.run.xml` and `run-configs/drishti pack regenerate.run.xml`; PyCharm
+Configurations** and tick **Store as project file**: PyCharm (opened on `drishti-console/`) writes it to `drishti-console/run-configs/<name>.run.xml`, which can be
+committed; `$PROJECT_DIR$/..` in it is the repository root. This repository ships several to start from, among them `drishti pack make`, `drishti sutra gen`, `drishti data profile` and `drishti pack regenerate`; PyCharm
 lists them under **Python** as soon as the project opens (reload with **File → Reload All from Disk** if it was open already).
 The format is one `<configuration>` element in a `ProjectRunConfigurationManager` component:
 
 ```xml
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="drishti pack make" type="PythonConfigurationType" factoryName="Python">
-    <module name="drishti" />
+    <module name="drishti-console" />
     <envs><env name="PYTHONUNBUFFERED" value="1" /></envs>
     <option name="SDK_HOME" value="" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <option name="IS_MODULE_SDK" value="false" />
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/drishti.py" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../tools/drishti.py" />
     <option name="PARAMETERS" value="pack make data/testdata/trades/endur/snapshot-2026-09-22.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank --force" />
     <method v="2" />
   </configuration>
 </component>
 ```
 
-(the real files list every option PyCharm writes). `$PROJECT_DIR$` is the repository root on every machine; an empty `SDK_HOME` with `IS_MODULE_SDK`
+(the real files list every option PyCharm writes). `$PROJECT_DIR$` is `drishti-console/` (PyCharm's project), so `$PROJECT_DIR$/..` is the repository root on every machine; an empty `SDK_HOME` with `IS_MODULE_SDK`
 false is PyCharm's *Project Default* interpreter, so nobody's local path is in the file and the same file works on Windows
 (`tools/test_run_configs.py` guards it); the `module` name does not decide the interpreter, so a clone in a folder of another name works too. Put only what is shared in them: no tokens, no home-directory
 paths. Edit **Parameters** for your own input folder, or duplicate the configuration for each data set.

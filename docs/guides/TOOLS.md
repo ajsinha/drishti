@@ -459,6 +459,12 @@ local lake only. It then tells the server the lakes changed: the data-load signa
 `DRISHTI_SERVER`, then `http://localhost:18480`; a token with `loads:write` from `--token-file` or `DRISHTI_TOKEN`), or, with no server
 there, the stamp of section 4.7; `--no-signal` does neither. Everything about the data and the five-step quick start is in [data/testdata/README.md](../../data/testdata/README.md).
 
+`drishti.py testdata capture-market` refreshes the committed market snapshot that `lake demo` builds for offline demos
+(`data/testdata/news-and-markets/{quote,news}`): it starts a scratch server (or uses `--server`) and fetches the twenty companies'
+quotes with a year of daily history (`--range`) and the companies' and topics' headlines through Drishti's own yfinance and news
+connectors, politely (`--delay`); `--only quote|news` takes one of the two, `--dry-run` says what it would fetch. It needs internet;
+the snapshot it writes is real data from Yahoo Finance and Google News, for internal demos only.
+
 ### 4.10 Scheduling the lake build
 
 A nightly load of the day's extract, at 21:30 on weekdays, after the export lands in `/srv/drop`:

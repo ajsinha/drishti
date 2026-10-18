@@ -14,8 +14,8 @@
   See the LICENSE file in the root of this repository for the full terms.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="drishti pack regenerate" type="PythonConfigurationType" factoryName="Python">
-    <module name="drishti" />
+  <configuration default="false" name="QA doctor" type="PythonConfigurationType" factoryName="Python" folderName="Drishti QA">
+    <module name="drishti-console" />
     <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
@@ -23,12 +23,12 @@
       <env name="PYTHONUNBUFFERED" value="1" />
     </envs>
     <option name="SDK_HOME" value="" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/drishti.py" />
-    <option name="PARAMETERS" value="pack regenerate data/build/my-bank/pack/my-bank data/testdata/trades/endur/changes-2026-09-23.jsonl.gz --dry-run" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../tools/drishti.py" />
+    <option name="PARAMETERS" value="doctor --server http://localhost:18580 --token-file $PROJECT_DIR$/../data/qa/token.txt" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

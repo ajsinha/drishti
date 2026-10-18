@@ -79,9 +79,11 @@ To build the runnable jar as well (what `java -jar` and the Docker image use), o
 
 ### 3.1 The run configurations (already in the repository)
 
-The repository commits ready-made run configurations in `run-configs/`. IntelliJ shows them in the drop-down at the top right as soon as the
-project is open (folders **Drishti** and **Drishti QA**); there is nothing to type. Every one uses `$PROJECT_DIR$` (the repository root),
-the project's JDK and no absolute path of yours.
+Two projects, so the two IDEs never share one `.idea` folder (opened on the same folder they overwrite each other's settings and
+IntelliJ loses the Maven modules: "module not specified"): **IntelliJ opens the repository root**, **PyCharm opens `drishti-console/`**
+(section 4.1). The Java run configurations are in `run-configs/` (IntelliJ's), the Python ones in `drishti-console/run-configs/`
+(PyCharm's). IntelliJ shows its own in the drop-down at the top right as soon as the project is open (folder **Drishti**); there is
+nothing to type. Every one uses `$PROJECT_DIR$` (the repository root), the project's JDK and no absolute path of yours.
 
 | Run configuration | What it does | Ports |
 |---|---|---|
@@ -89,10 +91,12 @@ the project's JDK and no absolute path of yours.
 | **Drishti server (QA profile)** | The same, with **its own data folder `data/qa/data`** (git-ignored) so QA never touches `./data` or another stack. | **18580** |
 | **Drishti server (debug-friendly)** | The QA profile with sign-in **off**, DEBUG logging for `com.ash.drishti` and `-Xmx1g`: for stepping through code without logging in (pair it with a console whose sign-in is off too). | 18580 |
 | **Drishti build server jar** | Maven: `package -DskipTests -pl drishti-server -am`; produces `drishti-server/target/drishti-server-<version>-exec.jar`. | |
-| **Build demo lakes** | `drishti.py lake demo`: the seven packs' Delta lakes under `data/delta`, seven business days, from the committed test data ([data/testdata/README.md](../../data/testdata/README.md)); under a minute; the seven days end on today's business date. Then start **Drishti server (demo lakes)**. | |
+| **Build demo lakes** (PyCharm) | `drishti.py lake demo`: the seven packs' Delta lakes under `data/delta`, seven business days, from the committed test data ([data/testdata/README.md](../../data/testdata/README.md)); under a minute; the seven days end on today's business date. Then start **Drishti server (demo lakes)**. | |
 | **Drishti server (demo lakes)** | **Drishti server** with the samples off (`DRISHTI_DEMO_ENABLED=false`), so every page reads the demo lakes, and `-Xmx4g` (15,000 trades over seven days and the BI tables of them). | 18480 |
-| **Drishti QA (server + console)** | Compound: starts the QA server and the QA console together (needs the Python plugin; in IntelliJ IDEA Community start the console from PyCharm instead). | 18580 + 17580 |
-| **QA pack make (from JSON)**, **QA lake build (big JSON to Delta)**, **QA server smoke**, **QA doctor** | The command-line tools of [CLI_GUIDE.md](CLI_GUIDE.md) as Python run configurations (they need PyCharm or the Python plugin). Edit **Parameters** to point at your file (see section 6). | against 18580 |
+| **QA pack make (from JSON)**, **QA lake build (big JSON to Delta)**, **QA server smoke**, **QA doctor** (PyCharm) | The command-line tools of [CLI_GUIDE.md](CLI_GUIDE.md) as Python run configurations in `drishti-console/run-configs/`. Edit **Parameters** to point at your file (see section 6). | against 18580 |
+
+The QA server and the QA console are started one in each IDE (**Drishti server (QA profile)** in IntelliJ, **Drishti console (QA
+profile)** in PyCharm); there is no compound configuration across the two.
 
 The configurations are plain Application configurations (not "Spring Boot"), so they behave the same in IDEA Community and Ultimate.
 To change one for yourself without touching the committed file, **Copy Configuration** (Ctrl+D) and keep the copy (it is stored in
@@ -146,9 +150,18 @@ it must not share `./data`. Point a console at it with `DRISHTI_BACKEND_URL=http
 
 ### 4.1 Open the project
 
-**File -> Open** the **repository root** (not `drishti-console/` alone): the committed run configurations in `run-configs/`, the tools and the docs
-are then all in one project. Opening only `drishti-console/` works for the console, but then the `run-configs/` configurations are not shown.
-Add the interpreter of section 4.2 once.
+**File -> Open** **`drishti-console/`** (not the repository root: that is IntelliJ's project, and the two IDEs must not share one `.idea`
+folder). Its run configurations are in `drishti-console/run-configs/`; each runs from the repository root (`$PROJECT_DIR$/..`), so
+`tools/`, `config/` and `data/` mean what they mean everywhere else. Then, once:
+
+1. the interpreter of section 4.2;
+2. **the tools as a source folder** (they sit next to `drishti-console/`): **Settings → Project: drishti-console → Project Structure →
+   + Add Content Root** → the repository's `tools/` → select it → **Sources** → OK. The Project panel then shows `drishti-console` and
+   `tools` side by side (for reading and navigating; the run configurations work without it);
+3. right-click `tests/` → **Mark Directory as → Test Sources Root**.
+
+If PyCharm was opened on the repository root before, close both IDEs, delete the root's `.idea/` (IDE settings only, git-ignored) and
+reopen: IntelliJ on the root, PyCharm on `drishti-console/`.
 
 ### 4.2 The interpreter
 
@@ -160,12 +173,12 @@ Add the interpreter of section 4.2 once.
 
 ### 4.3 The run configurations (already in the repository)
 
-PyCharm reads the same `run-configs/` folder of the repository root when you open the root as the project (section 4.1):
+PyCharm reads `drishti-console/run-configs/` when you open `drishti-console/` as the project (section 4.1):
 
 | Run configuration | Parameters | Talks to |
 |---|---|---|
 | **Drishti console** | `--server.port=17480 --backend.url=http://127.0.0.1:18480`, environment `DRISHTI_AUTH_ENABLED=true`, `DRISHTI_TOKEN_SECRET` and `DRISHTI_SESSION_SECRET` (the development values, matching the server's), `DRISHTI_SECURE_COOKIE=false` (plain http on your machine) | the default server |
-| **Drishti console (QA profile)** | `--server.port=17580 --backend.url=http://127.0.0.1:18580`, environment `DRISHTI_LAKE_ROOTS=$PROJECT_DIR$/data/qa/delta` (Admin -> Data loads -> Lakes may write there) and the same sign-in settings | the QA server |
+| **Drishti console (QA profile)** | `--server.port=17580 --backend.url=http://127.0.0.1:18580`, environment `DRISHTI_LAKE_ROOTS=$PROJECT_DIR$/../data/qa/delta` (Admin -> Data loads -> Lakes may write there) and the same sign-in settings | the QA server |
 
 Both run `drishti-console/run_drishti_web.py` from the repository root with the **project interpreter** (*Project Default*). Every
 committed Python run configuration stores no interpreter path (`SDK_HOME` empty, `IS_MODULE_SDK` false; `tools/test_run_configs.py`
@@ -193,7 +206,7 @@ it includes.
 The pack and Sutra tools (`tools/drishti.py`: `pack make` (JSON Lines to one deployable folder), `pack new`, `pack check`, `sutra lint`, `data ingest`, the REST commands) run from PyCharm
 the same way, and the Java `sutra` tool runs from IntelliJ IDEA: run configurations, the interpreter with PyYAML (and `deltalake`,
 `pyarrow`), `DRISHTI_TOKEN` and the working directory are in
-[CLI_GUIDE.md](CLI_GUIDE.md#14-running-the-tools-from-pycharm-and-the-java-sutra-from-intellij), which also covers debugging them and sharing run configurations through `run-configs/` (committed: **drishti pack make**, **drishti sutra gen**, **drishti pack regenerate** and **drishti data profile** on the test data, **drishti view get**, **drishti doctor** and **drishti server smoke** against the default server).
+[CLI_GUIDE.md](CLI_GUIDE.md#14-running-the-tools-from-pycharm-and-the-java-sutra-from-intellij), which also covers debugging them and sharing run configurations through `drishti-console/run-configs/` (committed: **drishti pack make**, **drishti sutra gen**, **drishti pack regenerate** and **drishti data profile** on the test data, **drishti view get**, **drishti doctor** and **drishti server smoke** against the default server).
 
 ## 5. Running the tests from the IDEs
 
@@ -232,8 +245,7 @@ This is the walk a tester follows without a terminal. It uses ports 18580 (serve
 2. **Start the QA server.** IntelliJ: run (or debug) **Drishti server (QA profile)**. The log ends with `Started DrishtiApplication`.
    Open http://127.0.0.1:18580/actuator/health: `{"status":"UP"...}`.
 3. **Start the QA console.** PyCharm: run **Drishti console (QA profile)** and open http://localhost:17580. Sign in as
-   `drishti-dev-admin` / `drishti-dev-admin123` (development defaults, [CONFIGURATION.md](../admin/CONFIGURATION.md)). With the
-   Python plugin in IDEA, run the compound **Drishti QA (server + console)** for steps 2 and 3 in one click.
+   `drishti-dev-admin` / `drishti-dev-admin123` (development defaults, [CONFIGURATION.md](../admin/CONFIGURATION.md)).
 4. **Make an API token for the tools** (smoke, doctor, the lake build's `--signal`): console -> *My account -> API tokens*, create one, and
    save its text as `data/qa/token.txt` (create the folder; the file is git-ignored with the folder).
 5. **Check the stack.** Run **QA server smoke** and **QA doctor**: smoke ends `smoke: OK`; doctor shows no red lines.

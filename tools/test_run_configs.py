@@ -12,11 +12,13 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Guard: the committed IDE run configurations (run-configs/) work on Windows, macOS and Linux without editing.
+"""Guard: the committed IDE run configurations work on Windows, macOS and Linux without editing.
 
-A Python run configuration uses the project interpreter (SDK_HOME empty, IS_MODULE_SDK false: PyCharm's "Project Default"), never a
-path such as drishti-console/.venv/bin/python, which does not exist on Windows (there it is .venv\\Scripts\\python.exe). Every
-configuration runs from the repository root ($PROJECT_DIR$) and parses as XML. docs/guides/QA_ON_WINDOWS_WITH_CUSTOM_DATA.md and
+Two projects, so IntelliJ and PyCharm never share one .idea folder: IntelliJ opens the repository root and reads the Java ones in
+run-configs/; PyCharm opens drishti-console/ and reads the Python ones in drishti-console/run-configs/. A Python run configuration uses
+the project interpreter (SDK_HOME empty, IS_MODULE_SDK false: PyCharm's "Project Default"), never a path such as
+drishti-console/.venv/bin/python, which does not exist on Windows (there it is .venv\\Scripts\\python.exe). Every configuration runs
+from the repository root ($PROJECT_DIR$ for IntelliJ, $PROJECT_DIR$/.. for PyCharm) and parses as XML. docs/guides/QA_ON_WINDOWS_WITH_CUSTOM_DATA.md and
 docs/guides/IDE_GUIDE.md section 4 rely on this.
 """
 import pathlib
@@ -24,7 +26,9 @@ import unittest
 import xml.etree.ElementTree as ET
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-CONFIGS = sorted((ROOT / "run-configs").glob("*.run.xml"))
+JAVA = sorted((ROOT / "run-configs").glob("*.run.xml"))
+PYTHON = sorted((ROOT / "drishti-console" / "run-configs").glob("*.run.xml"))
+CONFIGS = JAVA + PYTHON
 
 
 def options(conf: ET.Element) -> dict:
@@ -45,13 +49,17 @@ class RunConfigs(unittest.TestCase):
             o = options(conf)
             self.assertEqual(o.get("SDK_HOME"), "", f"{f.name}: SDK_HOME must be empty (the project interpreter), not {o.get('SDK_HOME')}")
             self.assertEqual(o.get("IS_MODULE_SDK"), "false", f"{f.name}: IS_MODULE_SDK must be false (the project interpreter)")
-            self.assertEqual(o.get("WORKING_DIRECTORY"), "$PROJECT_DIR$", f"{f.name}: runs from the repository root")
+            self.assertIn(f, PYTHON, f"{f.name}: a Python configuration belongs in drishti-console/run-configs (PyCharm's project)")
+            self.assertEqual(o.get("WORKING_DIRECTORY"), "$PROJECT_DIR$/..", f"{f.name}: runs from the repository root")
+            self.assertNotIn("$PROJECT_DIR$/tools", f.read_text(encoding="utf-8"), f"{f.name}: PyCharm's $PROJECT_DIR$ is drishti-console")
             self.assertNotIn("/bin/python", f.read_text(encoding="utf-8"), f.name)
         self.assertGreaterEqual(python, 10)
 
     def test_application_configurations_run_from_the_repository_root(self):
         for f in CONFIGS:
             conf = ET.parse(f).getroot().find("configuration")
+            if conf.get("type") in ("Application", "MavenRunConfiguration"):
+                self.assertIn(f, JAVA, f"{f.name}: a Java configuration belongs in run-configs/ (IntelliJ's project)")
             if conf.get("type") == "Application":
                 self.assertEqual(options(conf).get("WORKING_DIRECTORY"), "$PROJECT_DIR$", f.name)
 

@@ -80,7 +80,7 @@ banking, climate, operational and liquidity risk) live in `examples/packs/` and 
 
 | | You need | Read |
 |---|---|---|
-| **IntelliJ IDEA and PyCharm, no terminal** | the two IDEs; the repository's ready-made run configurations in `run-configs/` (**Build demo lakes**, **Drishti build server jar**, **Drishti server (demo lakes)**, **Drishti console**, a QA profile, the CLI tools) | [IDE_GUIDE.md](IDE_GUIDE.md); this guide's steps 1 and 2, then run the configurations in the order of steps 3 to 7 |
+| **IntelliJ IDEA and PyCharm, no terminal** | the two IDEs, IntelliJ on the repository root and PyCharm on `drishti-console/` (never both on one folder); the ready-made run configurations in `run-configs/` (Java) and `drishti-console/run-configs/` (Python) (**Build demo lakes**, **Drishti build server jar**, **Drishti server (demo lakes)**, **Drishti console**, a QA profile, the CLI tools) | [IDE_GUIDE.md](IDE_GUIDE.md); this guide's steps 1 and 2, then run the configurations in the order of steps 3 to 7 |
 | **A terminal** | the commands below | this guide |
 
 Both give the same result: the run configurations hold exactly the settings the terminal commands below spell out.
@@ -488,7 +488,7 @@ Nothing Drishti writes is hidden (no dot-folders of its own), and everything it 
 | `data/loads/`, `data/governance/`, `data/collab/`, `data/reports/` | data-load history, BI governance, collaboration files, report output |
 | `data/qa/`, `data/build/`, `data/drill/` | the QA profile's own data, tool output (`lake demo` staging), the drill's logs |
 
-The repository itself holds code and configuration: `config/` (packs, connector files, BI files), `run-configs/` (the IDE run
+The repository itself holds code and configuration: `config/` (packs, connector files, BI files), `run-configs/` and `drishti-console/run-configs/` (the IntelliJ and PyCharm run
 configurations), `docs/`, `tools/`, `external_lib/`.
 
 ## Stopping and starting again
@@ -543,10 +543,10 @@ note: `-XX:+UseCompactObjectHeaders` saves about 10% of the heap there, and Java
 
 Running the server from IntelliJ IDEA and the console from PyCharm (the run configurations, JDK and interpreter setup, debugging,
 reloading changes, tests in the IDE, common problems) has its own guide: **[IDE_GUIDE.md](IDE_GUIDE.md)**. The repository ships
-ready-made run configurations in `run-configs/` (a visible folder; the IDE reads it as a project run-configuration folder): **Build
+ready-made run configurations: IntelliJ (opened on the repository root) reads `run-configs/`, PyCharm (opened on `drishti-console/`)
+reads `drishti-console/run-configs/`: **Build
 demo lakes**, **Drishti build server jar**, **Drishti server**, **Drishti server (demo lakes)**, **Drishti server (debug-friendly)**,
-**Drishti console**, a QA profile on its own ports and data folder (**Drishti server (QA profile)**, **Drishti console (QA profile)**,
-the compound **Drishti QA (server + console)**), and the tools (`drishti doctor`, `drishti pack make`, `drishti sutra gen`,
+**Drishti console**, a QA profile on its own ports and data folder (**Drishti server (QA profile)**, **Drishti console (QA profile)**), and the tools (`drishti doctor`, `drishti pack make`, `drishti sutra gen`,
 `drishti view get`, the QA lake build, …), so a tester needs only the two IDEs and no terminal.
 
 Where next from a terminal: **[CLI_GUIDE.md](CLI_GUIDE.md)** is the one command line, `tools/drishti.py`, for turning your JSON

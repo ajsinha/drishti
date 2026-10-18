@@ -139,7 +139,7 @@ drishti-benchmarks                (inference)
 | `examples/packs/` | The retired packs (`finance`, `genomics`, `logistics`, `retail-banking`, `climate-risk`, `operational-risk`, `liquidity-risk`), kept as examples and as fixtures for tests written against them; loaded only with `DRISHTI_PACKS_EXTRA_DIRS=examples/packs` |
 | `config/connectors/`, `config/connectors.examples/` | The site's connector files (written by the server at its first start from the packs' templates; not committed) and ready-made examples per store ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)) |
 | `config/bi/` | Shipped BI files: datasets, models, reports, boards |
-| `run-configs/` | The IntelliJ IDEA and PyCharm run configurations, a visible folder ([IDE_GUIDE.md](IDE_GUIDE.md)): **Build demo lakes**, **Drishti build server jar**, **Drishti server**, **Drishti server (demo lakes)**, **Drishti server (debug-friendly)**, **Drishti console**, the QA profile (server, console, compound) and the CLI tools |
+| `run-configs/` | The IntelliJ IDEA run configurations (IntelliJ opens the repository root; [IDE_GUIDE.md](IDE_GUIDE.md)): **Drishti build server jar**, **Drishti server**, **Drishti server (demo lakes)**, **Drishti server (debug-friendly)**, **Drishti server (QA profile)**. The PyCharm ones (PyCharm opens `drishti-console/`, so the two IDEs never share one `.idea`) are in `drishti-console/run-configs/`: **Drishti console**, **Build demo lakes**, **Load ENDUR file into the lake**, the QA console and the CLI tools |
 | `data/testdata/` | The committed test data: seven business days of every dataset the seven packs read (5,000 trades a day per source system), `.jsonl.gz`, with `testdata.yaml` and a README ([data/testdata/README.md](../../data/testdata/README.md)) |
 | `tools/drishti.py` | The one command line over the tools below and the server's REST: `sutra`, `pack ...` (`new`, `make`, `check`, `about-check`, `diff`, `i18n`, `publish`, `install`, `regenerate`, `catalogue`, `bundle`, `verify`, `deploy`, `rollback`, `keygen`), `data ingest|load|profile`, `server health|packs|smoke`, `connector ...`, `bi ...`, `view get|explain`, `design ...`, `lake build|scan|status|demo|maintain`, `doctor`, `completion`, `docs shots`; the `test_cli_*.py` and `test_drishti_cli.py` suites cover it. See [CLI_GUIDE.md](CLI_GUIDE.md) and [TOOLS.md](TOOLS.md) |
 | `tools/lake/` | Delta lakes from Python: `build.py` (`lake build`: a large JSON export streamed into a Delta table, flat memory, partitions, promoted columns, the data-load signal or the BI-store stamp), `demo.py` (`lake demo`: the demo lakes from `data/testdata`), `scan.py`, `laketables.py` (`lake status`), `maintain.py` (retention, compaction, checkpoints, vacuum, `relayout`), each with its tests |
@@ -1617,7 +1617,7 @@ Only names an external tool looks for by exactly that name keep the dot:
 | `.java-version` | version managers (jenv, SDKMAN) |
 | `.mvn/` | the Maven wrapper |
 | `.github/` | GitHub |
-| `.idea/` | IntelliJ IDEA and PyCharm (our run configurations are in the visible `run-configs/`) |
+| `.idea/` | IntelliJ IDEA at the root, PyCharm in `drishti-console/` (our run configurations are in the visible `run-configs/` and `drishti-console/run-configs/`) |
 | `.venv/` | the Python convention for a virtual environment (git-ignored) |
 | `.claude/` | Claude Code |
 

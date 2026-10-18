@@ -14,21 +14,26 @@
   See the LICENSE file in the root of this repository for the full terms.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="QA pack make (from JSON)" type="PythonConfigurationType" factoryName="Python" folderName="Drishti QA">
-    <module name="drishti" />
+  <configuration default="false" name="Drishti console (QA profile)" type="PythonConfigurationType" factoryName="Python" folderName="Drishti">
+    <module name="drishti-console" />
     <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
       <env name="PYTHONUNBUFFERED" value="1" />
+      <env name="DRISHTI_LAKE_ROOTS" value="$PROJECT_DIR$/../data/qa/delta" />
+      <env name="DRISHTI_TOKEN_SECRET" value="drishti-dev-only-token-secret-change-me-0123456789" />
+      <env name="DRISHTI_AUTH_ENABLED" value="true" />
+      <env name="DRISHTI_SESSION_SECRET" value="drishti-dev-only-session-secret-change-me-0123456789" />
+      <env name="DRISHTI_SECURE_COOKIE" value="false" />
     </envs>
     <option name="SDK_HOME" value="" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/drishti.py" />
-    <option name="PARAMETERS" value="pack make $USER_HOME$/Downloads/YOUR_SAMPLE.jsonl --kind trade --match PRODUCT_TYPE --name qa-pack --out data/qa/packs/qa-pack --force" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/run_drishti_web.py" />
+    <option name="PARAMETERS" value="--server.port=17580 --backend.url=http://127.0.0.1:18580" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

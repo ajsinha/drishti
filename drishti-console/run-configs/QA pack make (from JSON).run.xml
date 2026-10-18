@@ -14,8 +14,8 @@
   See the LICENSE file in the root of this repository for the full terms.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="QA server smoke" type="PythonConfigurationType" factoryName="Python" folderName="Drishti QA">
-    <module name="drishti" />
+  <configuration default="false" name="QA pack make (from JSON)" type="PythonConfigurationType" factoryName="Python" folderName="Drishti QA">
+    <module name="drishti-console" />
     <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
@@ -23,12 +23,12 @@
       <env name="PYTHONUNBUFFERED" value="1" />
     </envs>
     <option name="SDK_HOME" value="" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/drishti.py" />
-    <option name="PARAMETERS" value="server smoke --server http://localhost:18580 --ids 2 --dates 2 --token-file $PROJECT_DIR$/data/qa/token.txt" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../tools/drishti.py" />
+    <option name="PARAMETERS" value="pack make $USER_HOME$/Downloads/YOUR_SAMPLE.jsonl --kind trade --match PRODUCT_TYPE --name qa-pack --out data/qa/packs/qa-pack --force" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />
