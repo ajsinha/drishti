@@ -817,6 +817,8 @@ guides are listed in [CONNECTORS.md](../connectors/CONNECTORS.md).
 ## 7. Lake maintenance: `tools/lake/maintain.py`
 
 > From the browser, with schedules, settings per table and a history: **Admin → Lakes → Maintain**, [LAKE_MAINTENANCE.md](../admin/LAKE_MAINTENANCE.md).
+> Its parts beside `maintain.py`: `tools/lake/maintconfig.py` (the maintenance YAML and the run history), `tools/lake/maintschedule.py` (the one
+> scheduler, used by `--daemon` and by the console) and `tools/lake/ownership.py` (which tables Drishti's lake tool built: the only ones it maintains).
 
 `drishti.py lake maintain` (the same as `tools/lake/maintain.py`) keeps a lake bounded: **retention** (business dates older than
 `keep-business-days`, never more than `max-drop-share` of a table without `--force-drop`), **compaction** of each day's small
