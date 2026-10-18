@@ -42,3 +42,14 @@
 .pd-field input[type=file] { max-width: 100%; min-height: 2.75rem; }
 .pd-folder { overflow-wrap: anywhere; white-space: normal; }
 .pd-data progress { width: 100%; max-width: 32rem; }
+
+/* Admin -> Health -> Activity: requests a minute (bars) and the average response time (line), last 30 minutes */
+.act-chart { width: 100%; max-width: 900px; height: auto; display: block; margin: .25rem 0 1rem; }
+.act-bar { fill: var(--d-pos); opacity: .55; }
+.act-bar.act-now { opacity: .9; }
+.act-bar.act-err { fill: var(--d-neg); }
+.act-line { fill: none; stroke: var(--d-accent); stroke-width: 2; }
+.act-axis { fill: var(--d-muted); font-size: 9px; }
+.act-key { display: inline-block; width: .8rem; height: .5rem; vertical-align: middle; }
+.act-key-bar { background: var(--d-pos); opacity: .7; }
+.act-key-line { background: var(--d-accent); height: .15rem; }

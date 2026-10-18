@@ -67,6 +67,20 @@ public class SecurityConfiguration {
         return r;
     }
 
+    /** Every API request counted in its minute, with its time (Admin -> Health -> Activity). */
+    @Bean
+    public com.ash.drishti.server.api.RequestActivity requestActivity() {
+        return new com.ash.drishti.server.api.RequestActivity();
+    }
+
+    @Bean
+    public FilterRegistrationBean<com.ash.drishti.server.api.RequestActivity> requestActivityFilter(com.ash.drishti.server.api.RequestActivity activity) {
+        FilterRegistrationBean<com.ash.drishti.server.api.RequestActivity> r = new FilterRegistrationBean<>(activity);
+        r.addUrlPatterns("/api/*");
+        r.setOrder(-20);                                          // outermost: the whole request, refusals included
+        return r;
+    }
+
     /** Answers an oversized request body with a clean 413 DRS-5005 before the body is read (S2-08). */
     @Bean
     public FilterRegistrationBean<RequestSizeFilter> requestSizeFilter(RequestLimitProperties limits) {

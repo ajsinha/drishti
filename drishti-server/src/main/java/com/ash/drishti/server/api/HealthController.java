@@ -68,6 +68,13 @@ public class HealthController {
     void pageTimes(PageTimes times) {
         this.pageTimes = times;
     }
+
+    private RequestActivity activity;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void activity(RequestActivity a) {
+        this.activity = a;
+    }
     private final com.ash.drishti.server.bi.BiFolder biFolder;
     private final com.ash.drishti.server.RetryService retry;
     private final ObjectProvider<com.zaxxer.hikari.HikariDataSource> identityDataSource;
@@ -187,6 +194,9 @@ public class HealthController {
         out.put("connectors", connectors.healthSummary());
         if (pageTimes != null) {
             out.put("pages", pageTimes.summary());             // per kind: views, p50, p95, p99 over ten minutes
+        }
+        if (activity != null) {
+            out.put("activity", activity.lastMinutes(30));     // requests, average and slowest time, minute by minute
         }
         out.put("bi", Map.of("watch", biFolder.watchState(), "shippedItems", biFolder.items().size(), "problems", biFolder.problems().stream()
                 .map(x -> Map.of("file", x.file(), "message", x.message(), "keptLastGood", x.keptLastGood())).toList()));

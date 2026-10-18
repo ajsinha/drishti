@@ -81,3 +81,21 @@ def test_a_degraded_connector_is_shown_with_what_it_cannot_read(client, backend,
     page = client.get("/admin/health").text
     assert "hl-warn" in page and "cannot read trade 2026-09-30" in page
     assert "1 degraded" in page.replace("<b>", "").replace("</b>", "")
+
+
+def test_the_health_page_draws_activity_and_page_times(client, backend, monkeypatch):
+    # requests a minute and the average response time, the last 30 minutes, drawn as SVG; the slowest kinds of pages first
+    activity = [{"minute": f"2026-10-18T13:{m:02d}:00Z", "requests": m * 10, "avgMs": 20.0 + m, "maxMs": 90.0 + m, "errors": 1 if m == 29 else 0}
+                for m in range(30)]
+    data = {"status": "OK", "summary": {"sources": 0, "sourcesDown": 0, "failedToStart": 0, "packs": 0, "packsWithProblems": 0}, "server": {"version": "2.3.0", "uptimeSeconds": 60, "java": "21", "heapUsedMb": 300, "heapMaxMb": 8000, "threads": 60, "cpus": 8}, "sources": [], "packs": [], "live": {},
+            "activity": activity, "pages": [{"kind": "counterparty-trades", "views": 277, "p50Ms": 70.3, "p95Ms": 1099.0, "p99Ms": 1430.0},
+                                             {"kind": "trade", "views": 1678, "p50Ms": 17.6, "p95Ms": 53.7, "p99Ms": 84.5}]}
+
+    async def admin(method, path, ident, body=None, **params):
+        return {"connectors": []} if path == "/connectors" else data
+    monkeypatch.setattr(backend, "admin", admin)
+    page = client.get("/admin/health").text
+    assert "Activity, last 30 minutes" in page and page.count('class="act-bar') == 30
+    assert "act-err" in page and "<polyline" in page and "13:29 UTC: 290 requests, average 49 ms, slowest 119 ms, 1 errors" in page
+    assert "most <b class=\"mono\">290</b>" in page
+    assert "data-page-times" in page and page.index("counterparty-trades") < page.index(">trade<") and "t-warn" in page   # p95 over 1 s marked

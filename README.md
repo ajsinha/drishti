@@ -177,6 +177,22 @@ Checks: `curl -s localhost:18480/actuator/health` and `curl -s localhost:17480/h
 `{"status":"UP"…}`; `curl -s localhost:17480/readyz` answers `{"status":"UP","server":"reachable"}` once the
 console reaches the server.
 
+## Performance at scale
+
+Measured on one developer workstation (server heap capped at 8 GB) with `tools/bench/trades.py` and `tools/bench/users.py`;
+method and every figure in [SCALE_STRATEGY.md](docs/architecture/SCALE_STRATEGY.md) and [SCALE_BENCHMARK.md](docs/admin/SCALE_BENCHMARK.md).
+
+| Data | Measure | Result |
+|---|---|---|
+| 8.2 million trades: ENDUR, CALYPSO, MUREX, 300K–500K a day each for 7 days; 10,000 counterparties, 30,000 netting sets | 50 simultaneous users against the server | 146 requests/s, 0 failures, heap 1.8 GB |
+| the same | 50 simultaneous users through the console | 69 requests/s, 0 failures |
+| the same | single trade, p50 / p95 | 18 / 54 ms |
+| the same | a counterparty's trades (grouped page, from disk), p50 / p95 | 70 / 99 ms |
+| the same, after a restart | a table date's id map / grouped pages | 3 ms (memory-mapped; 729 ms before) / served at once |
+| the same | a field's history over 30 days / a diff between two dates | 0.02–0.12 s / 6–14 ms |
+| 1 million trades | search, 2,017 matches | 134 ms |
+| warm cache | view built on the server / over HTTP, p99 | 0.6 ms / 3.0 ms |
+
 ## How it is built
 
 | Layer | Technology |
