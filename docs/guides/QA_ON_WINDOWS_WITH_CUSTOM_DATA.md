@@ -134,6 +134,10 @@ exists.
 The synthetic data has seven business days. Make them **end on the date of your newest ENDUR file**, so the date picker
 shows CALYPSO, MUREX and ENDUR together.
 
+0. **If this project folder was used before** (an earlier Drishti ran from it): in Windows Explorer delete the folder
+   `C:\Users\asinh09\IdeaProjects\drishti-orig\config\connectors`. It holds connector files the server wrote from an
+   older version of the packs (for example, a `risk-store` that does not serve trade valuations, so BI shows 0 trades).
+   The server writes fresh ones from the packs at its next start. The folder is not in git; nothing of yours is lost.
 1. PyCharm, top-right drop-down → **Build demo lakes** → **Edit Configurations…**. The configuration runs the script
    `tools\drishti.py`; in its *Parameters* box change `lake demo` to `lake demo --as-of 2026-10-16` (your newest ENDUR
    date) → **OK**.
@@ -263,8 +267,8 @@ The console reconnects by itself if you start or restart the server after it.
 
    ![Admin, Lakes: every table with rows, files, size, dates and the Maintain controls](img/qa-windows/01-admin-lakes.png)
 2. **Admin ▾ → Connectors.** You should see `trade-endur`, `trade-calypso`, `trade-murex` and the stores **RUNNING**.
-   The live **yfinance** and **news** connectors are shown as **disabled**; the stores `news-store` and `market-store`
-   are **RUNNING** and serve the snapshot.
+   The live **yfinance** and **news** connectors are shown as **disabled**; `news-store` is **RUNNING** and serves the
+   snapshot's quotes and headlines.
 
    ![Admin, Connectors: the trade connectors of the three systems RUNNING](img/qa-windows/02-admin-connectors.png)
 3. **Admin ▾ → Health.** You should see everything green (a warning about a field mask of an example pack that is not
@@ -291,7 +295,7 @@ The console reconnects by itself if you start or restart the server after it.
 | 6 | An **equity price** | `/v/listed-company/CO-AAPL` (quote and chart from the snapshot) |
 | 7 | **News** | the news panel of the company page, or `/v/news-topic/TOPIC-FED` |
 | 8 | **Compare** across two dates | on a trade page, set the date picker to one of your dates → **Compare** → the other date |
-| 9 | **BI** by source system | Top bar, the bar-chart icon (**BI**) → **Catalogue** → **Trades overview** → **Open the report**; change a slicer. **Known issue (2026-10-18): on the demo lakes this report shows 0 trades; skip this row until the fix is pushed.** |
+| 9 | **BI** by source system | Top bar, the bar-chart icon (**BI**) → **Catalogue** → **Trades overview** → **Open the report**; change a slicer. |
 | 10 | How a screen is designed | on a deal page, *How this view was built* → click the Sutra name: the designer opens with the trade as its sample |
 
 ### The pages, as they look
@@ -317,6 +321,7 @@ trades.
 | PyCharm says the interpreter is invalid | Redo step 2.2 point 2. |
 | The Run tab says **DrishtiApplication**, quotes or news try the internet, or sample trades appear | The server was started from the ▶ in `DrishtiApplication.java`: stop it and start **Drishti server (demo lakes)** (section 4.1). |
 | The server log scrolls with thousands of `FilterCompat` or `delta.kernel` INFO lines | An older copy of the project: `git pull` (since 2026-10-18 these libraries log at WARN; Drishti says one line per large table loaded). |
+| **BI → Trades overview** shows 0 trades, or a page of the demo shows nothing while Admin → Lakes has the table | Old connector files: stop the server, delete `config\connectors` (step 3.1 point 0), start the server again. |
 | `Port 18480 (or 17480) is already in use` | Another copy is running: stop it in IntelliJ / PyCharm (red square), or reboot. |
 | `lake build` says `no id (field 'id' is missing…)` | The parameters lack `--key TRADE_ID`: copy the line of step 3.2 again. |
 | `lake build` says `give --lake DIR (the Delta root the connector reads)` | The parameters lack `--lake data\delta`: copy the line of step 3.2 again (it ends with `--lake data\delta`), and run it from the project folder. |
