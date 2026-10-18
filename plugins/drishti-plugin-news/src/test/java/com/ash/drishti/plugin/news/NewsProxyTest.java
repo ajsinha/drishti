@@ -59,7 +59,7 @@ class NewsProxyTest {
     }
 
     private static void read(NewsSourcePlugin p, String name) throws Exception {
-        assertThat(p.fetch(EntityRef.of("news", "NEWS-" + name)).orElseThrow().data().get("items").size()).isPositive();
+        assertThat(p.fetch(EntityRef.of("news", "NEWS-" + name)).orElseThrow().data().get("ITEMS").size()).isPositive();
     }
 
     @Test
