@@ -132,7 +132,9 @@ sees a document of an old version, however long that document's TTL still runs. 
 |---|---|
 | Single trades, searches, linked entities | about **10 seconds** after the load's commit, at most |
 | With the load signal (Admin → Lakes, `--signal`, `lake demo`) | at once: the signal drops the caches |
+| BI reports and boards | the next query after the commit: each stored partition records the data version it was read from and is rebuilt when Delta holds other data for that date (`Layers`, already so in 2.3.0) |
 | The TTL (12 h) | **no effect on freshness**: an expired document is re-read from Delta, which costs one read |
+| A page already open in the browser | what it showed when drawn, until reloaded (the page offers a refresh when a newer generation exists) |
 | Grouped pages today (2.3.0) | up to `refresh` (60 s) without the load signal: they follow a timer, not the version. Phase 1 fixes this (section 9). |
 
 ## 7. Computed at load
