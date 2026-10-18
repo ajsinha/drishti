@@ -51,6 +51,27 @@ def get(doc, path: str):
     return cur
 
 
+_STEP = re.compile(r"([^.\[\]]+)|\[(\d+)\]")
+
+
+def get_indexed(doc, path: str):
+    """The value at a path that may index lists (``LEGS[0].NOTIONAL``, ``LEGS[1].INDEX.NAME``), MISSING when absent."""
+    cur = doc
+    for name, index in _STEP.findall(path):
+        if name:
+            if isinstance(cur, dict) and name in cur:
+                cur = cur[name]
+            else:
+                return MISSING
+        else:
+            i = int(index)
+            if isinstance(cur, list) and i < len(cur):
+                cur = cur[i]
+            else:
+                return MISSING
+    return cur
+
+
 def column_name(path: str) -> str:
     """The physical column of a promoted path or partition: counterparty.id -> counterparty__id (as tools/samplegen/layout.py)."""
     return path.replace(".", "__")
@@ -141,8 +162,12 @@ class Stager:
     """Writes accepted documents into staged files by (business date, partition values)."""
 
     def __init__(self, folder: pathlib.Path | None, key: str, date_field: str | None, as_of: date | None,
-                 partition_by: list[str], promote: list[str]):
+                 partition_by: list[str], promote: list[str], flatten: dict | None = None):
         self.folder, self.key, self.date_field, self.as_of = folder, key, date_field, as_of
+        # flattened fields (the pack's layout.<kind>.flatten: NOTIONAL: LEGS[0].NOTIONAL): a plain field of the document and a
+        # column, so searches, totals and BI read it without the document; a field the document already has is never replaced
+        self.flatten = dict(flatten or {})
+        promote = list(promote) + [n for n in self.flatten if n not in promote]
         self.partition_by = list(partition_by)
         self.promote = [p for p in promote if p not in self.partition_by]       # a partition column is a real column already
         self.parts: dict[tuple, Part] = {}
@@ -178,6 +203,10 @@ class Stager:
             if day is None:
                 st.reject(where, f"no business date (field '{self.date_field}' is " + ("missing or empty)" if raw in (MISSING, None, "") else "not a date)"))
                 return
+        if self.flatten and isinstance(doc, dict):
+            added = {n: v for n, path in self.flatten.items() if n not in doc and (v := get_indexed(doc, path)) is not MISSING}
+            if added:
+                doc = {**doc, **added}
         values = tuple(scalar_text(get(doc, p)) for p in self.partition_by)
         promoted = {}
         for p in self.promote:

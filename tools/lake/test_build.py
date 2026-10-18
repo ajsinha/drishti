@@ -228,6 +228,27 @@ class BuildTest(unittest.TestCase):
         self.assertEqual((s["pack"], s["domain"], s["kind"], s["promote"]), ("synth-book", "book", "deal", ["NOTIONAL"]))
         self.assertTrue((self.lake / "book" / "deal" / "_delta_log").is_dir())
 
+    def test_the_pack_flattens_values_inside_lists_into_fields_and_columns(self):
+        pack = self.root / "pack"
+        pack.mkdir()
+        (pack / "pack.yaml").write_text(
+            "pack: synth-book\nconnectors:\n  book-store:\n    plugin: delta\n    kinds: [deal]\n    settings:\n      root: x\n      domain: book\n"
+            "      layout:\n        deal:\n          columns: [FIRST_LEG, NOTIONAL]\n"
+            "ingest:\n  deal:\n    key: TRADE_ID\n    date: TRADE_DATE\n    flatten: {FIRST_LEG: 'LEGS[0].LEG_ID', SECOND_FLOW: 'LEGS[1].CASH_FLOWS[1].AMOUNT', NOTIONAL: 'LEGS[0].LEG_ID', NONE: 'LEGS[5].LEG_ID'}\n",
+            encoding="utf-8")
+        a = args(src=[str(self.src)], lake=str(self.lake), pack=str(pack), engine="deltalake")
+        code, s = build.run(a, quiet)
+        self.assertEqual(code, 0, s.get("error"))
+        from deltalake import DeltaTable
+        t = DeltaTable(str(self.lake / "book" / "deal")).to_pyarrow_table().to_pylist()
+        row = t[0]
+        self.assertEqual(row["FIRST_LEG"], 0.0)                     # LEGS[0].LEG_ID, a column
+        self.assertEqual(row["SECOND_FLOW"], 1.5)                   # LEGS[1].CASH_FLOWS[1].AMOUNT
+        doc = json.loads(row["doc"])
+        self.assertEqual(doc["SECOND_FLOW"], 1.5)                   # and a plain field of the document
+        self.assertEqual(doc["NOTIONAL"], 1000.0 * (int(doc["TRADE_ID"]) - 100000 + 1))   # a field the document has is never replaced
+        self.assertNotIn("NONE", doc)                               # a path that is not there adds nothing
+
     def test_signal_posts_each_date(self):
         got = []
 

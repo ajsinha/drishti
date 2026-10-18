@@ -149,11 +149,16 @@ def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = 
             flat = st.get(f"layout.{kind}.columns")
             cols = (lay or {}).get("columns") or flat or []
             out["promote"] = [x.strip() for x in (cols.split(",") if isinstance(cols, str) else cols) if str(x).strip()]
+            fl = (lay or {}).get("flatten") or {}
+            out["flatten"] = {str(n): str(p) for n, p in fl.items()} if isinstance(fl, dict) else {}
             named = (st.get("table") or {}).get(kind) if isinstance(st.get("table"), dict) else st.get(f"table.{kind}")
             out["table"] = named or None
     if kind and isinstance(ing.get(kind), dict):
         out["key"] = ing[kind].get("key")
         out["date"] = ing[kind].get("date")
+        fl = ing[kind].get("flatten") or {}
+        if isinstance(fl, dict) and fl:
+            out["flatten"] = {str(n): str(p) for n, p in fl.items()}
     return out
 
 
@@ -167,6 +172,7 @@ def plan(a) -> dict:
             p[k] = p[k] or d.get(k)
         if not p["promote"] and a.promote is None:
             p["promote"] = d.get("promote") or []
+        p["flatten"] = d.get("flatten") or {}
     p["key"] = p["key"] or "id"
     if p["table"] and (not str(p["table"]).replace("_", "").replace("-", "").isalnum()):
         raise BuildError(f"--table is a folder name under the domain, not a path: {p['table']}")
@@ -251,7 +257,7 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say) -> tuple[int, dic
         if old.is_dir():                                   # left by a run that died: we hold the lock, nobody else is using it
             shutil.rmtree(old, ignore_errors=True)
         staging = old / summary["run"]
-    st = stage.Stager(staging, p["key"], p["date"], as_of, p["partition_by"], p["promote"])
+    st = stage.Stager(staging, p["key"], p["date"], as_of, p["partition_by"], p["promote"], p.get("flatten"))
     try:
         if table:                                          # a table of another partitioning fails before anything is read
             writers.check_layout(writers.Table(table, [stage.column_name(c) for c in p["partition_by"]], {}, a.mode, a.batch_rows, []))

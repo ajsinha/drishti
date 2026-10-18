@@ -63,6 +63,14 @@ graph:
       trade: first($.LEGS).NOTIONAL
     formats:
       trade: compact
+# Read by drishti.py lake build (ignored by the server): each trade's key, and values inside its legs written as plain fields and
+# columns at load, so searches, totals and BI need no document (docs/architecture/SCALE_STRATEGY.md, phase 3)
+ingest:
+  trade:
+    key: TRADE_ID
+    flatten:
+      NOTIONAL: LEGS[0].NOTIONAL
+      INDEX_NAME: LEGS[0].INDEX.NAME
 connectors:
   trade-endur:
     plugin: delta
@@ -91,6 +99,8 @@ connectors:
           - LEGAL_ENTITY
           - PORTFOLIO
           - TRADER_ID
+          - NOTIONAL                 # flattened at load (ingest.trade.flatten)
+          - INDEX_NAME
           sort-by: id
           file-rows: 250000
           row-group-rows: 1000
@@ -125,6 +135,8 @@ connectors:
           - LEGAL_ENTITY
           - PORTFOLIO
           - TRADER_ID
+          - NOTIONAL                 # flattened at load (ingest.trade.flatten)
+          - INDEX_NAME
           sort-by: id
           file-rows: 250000
           row-group-rows: 1000
@@ -159,6 +171,8 @@ connectors:
           - LEGAL_ENTITY
           - PORTFOLIO
           - TRADER_ID
+          - NOTIONAL                 # flattened at load (ingest.trade.flatten)
+          - INDEX_NAME
           sort-by: id
           file-rows: 250000
           row-group-rows: 1000
