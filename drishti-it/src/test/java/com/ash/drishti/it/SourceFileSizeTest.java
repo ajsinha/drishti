@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
-/** No non-UX source file may exceed 1500 lines. UX templates, styles and scripts are exempt. */
+/** No non-UX source file may exceed 1500 lines. UX templates, styles and scripts are exempt, and so is the generated test data. */
 class SourceFileSizeTest {
 
     static final int MAX_LINES = 1500;
@@ -37,6 +37,9 @@ class SourceFileSizeTest {
         for (Path p : RepositoryFiles.withSuffixes(Set.of(".java", ".py", ".yaml", ".yml", ".xml"))) {
             String rel = root.relativize(p).toString().replace('\\', '/');
             if (rel.startsWith("drishti-console/web/")) {
+                continue;
+            }
+            if (rel.startsWith("data/testdata/")) {             // the committed test data: generated data and its manifest, not source
                 continue;
             }
             long lines;
