@@ -124,6 +124,31 @@ Lake: 12.5 GB of Parquet. Server `-Xmx8g`, grouped pages `store: disk`. Times th
 | Form search, one counterparty over 1.16M trades | **2.1–2.3 s** (target 1 s: section 7) |
 | Purge and rebuild (`drishti.py server caches purge trade-pages`) | new pages built in 46 s from the lake while the old ones served; the old folder deleted a minute later |
 
+### 4.4 Concurrency on the extreme lake (2026-10-18)
+
+Many users at once, straight against the server API (`-Xmx8g`, 24 cores): each user loops for 60 s over a mix of 80 %
+single trades (random system, random date of the seven), 10 % counterparty-trades pages, 5 % netting sets, 5 % searches
+(one counterparty's trades over 1.16M). Three rounds; the fixes between them came out of profiling the round before.
+
+| Round | Users | Requests/s | Trade p50 / p95 | CTRD p50 / p95 | Search p50 | Failed |
+|---|---|---|---|---|---|---|
+| 1 (as built) | 10 / 50 / 100 | 76 / 110 / 83 | 0.07 / 0.21 · 0.29 / 0.55 · 0.76 / 1.28 s | 0.23 / 0.56 · 1.4 / 2.3 · 3.7 / 5.9 s | 0.43 · 0.40 · 0.46 s | 0 |
+| 2 (+ pack access cached) | 10 / 50 / 100 | 65 / 66 / 66 | 0.06 / 0.54 · 0.07 / 3.0 · 0.16 / 5.0 s | 0.10 / 0.14 · 0.10 / 0.20 · 0.12 / 1.6 s | 0.59 · 0.65 · 0.69 s | 913 trades at 100 |
+| 3 (+ Parquet footers cached) | 10 / 50 / 100 | **133 / 141 / 122** | **0.03 / 0.08** · 0.18 / 1.0 · 0.53 / 2.4 s | **0.10 / 0.16** · 0.26 / 1.0 · 0.52 / 2.3 s | 0.57 · 0.79 · 0.98 s | **0** |
+
+What profiling found and what was fixed:
+
+1. **Every entity of every page read the user and the user's pack preferences from the identity database** (SQLite,
+   one access at a time) to decide whether the kind may be opened: the main bottleneck of round 1. Fixed: each user's
+   effective packs cached for 5 s (`PackAccess`), cleared at once by the user's own choice, an administrator's change to
+   the user, a pack loaded, unloaded, switched on or off, and the sample-pack setting.
+2. **Every single read parsed its Parquet file's footer again**; with 1 MB row groups a file of 60,000 trades has about
+   500 groups and a large footer: the bottleneck of round 2. Fixed: footers cached per immutable file (`ParquetBatches`,
+   at most 50,000 row groups' worth; a purge of the connector clears them).
+3. What remains is the data work itself: decompressing the pages that hold the trade (Snappy), then building the view.
+   About 140 requests a second on this machine; latency grows with users beyond that (queueing, no failures). Next steps
+   in section 12.
+
 The same probes before the fixes of the day: grouped pages out of memory above about 250,000 trades at 8 GB, or partial
 with a cap; with them, complete at 1.16 million a day in 1.2 GB of heap.
 
@@ -277,7 +302,10 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 | | temp files under `<data dir>/tmp` | **done** |
 | | **grouped pages on disk** (section 10): complete at any number of trades, heap per group only | **done** |
 | | Admin → Caches and `drishti.py server caches [purge NAME]`: grouped pages and caches dropped and rebuilt from the lake | **done** |
+| | pack access cached per user (no identity database read per entity): 2–4× throughput under load | **done** |
+| | Parquet footers cached per file (no footer parse per single read) | **done** |
 | | paging the grouped pages' row lists; form search under 1 s at 1M+ trades | next |
+| | the RocksDB document cache (section 8.1): a trade opened again, even after a restart, without decompressing pages | next |
 | | one memory budget for all connector caches (section 5) | next |
 | | separate read slots for all background work | next |
 | **0. Measure** | scale benchmark in `drishti-benchmarks`: 3 systems × 300K–600K × 7 → 60 days; every path of section 7; heap and disk; a smaller version in CI against regressions | started (the 2026-10-18 runs, section 4) |

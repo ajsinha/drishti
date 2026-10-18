@@ -709,6 +709,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     @Override
     public void purgeCaches() {
+        com.ash.drishti.deltalake.NativeEngine.purgeFooterCache();
         parts.synchronous().invalidateAll();
         latest.synchronous().invalidateAll();
         travelled.synchronous().invalidateAll();

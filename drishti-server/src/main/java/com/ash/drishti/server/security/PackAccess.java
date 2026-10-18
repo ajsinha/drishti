@@ -54,6 +54,15 @@ public final class PackAccess {
     private volatile com.ash.drishti.packs.SamplePolicy samples = new com.ash.drishti.packs.SamplePolicy("visible", null);
     private volatile java.util.function.Predicate<String> developer = u -> true;
     private final ObjectMapper json = new ObjectMapper();
+    /**
+     * Each user's effective packs, asked for every entity a page opens (the page's own and each linked one): read from the
+     * identity database once per user and few seconds, not per entity. The registry's version (a pack loaded or unloaded)
+     * and the user's own choice clear it at once; an administrator's change to the user shows within {@link #EFFECTIVE_FOR}.
+     */
+    private record Effective(long version, long states, String samples, Set<String> packs) {}
+    static final java.time.Duration EFFECTIVE_FOR = java.time.Duration.ofSeconds(5);
+    private final com.github.benmanes.caffeine.cache.Cache<String, Effective> effectiveByUser =
+            com.github.benmanes.caffeine.cache.Caffeine.newBuilder().expireAfterWrite(EFFECTIVE_FOR).maximumSize(100_000).build();
 
     public PackAccess(PackRegistry registry, UserService users, PreferenceStore prefs, List<String> defaults,
             com.ash.drishti.identity.PackStateStore states) {
@@ -87,6 +96,7 @@ public final class PackAccess {
     public void samples(com.ash.drishti.packs.SamplePolicy policy, java.util.function.Predicate<String> developer) {
         this.samples = policy;
         this.developer = developer;
+        effectiveByUser.invalidateAll();                          // who sees sample packs changed for everyone
     }
 
     public com.ash.drishti.packs.SamplePolicy samplePolicy() {
@@ -225,11 +235,30 @@ public final class PackAccess {
         var arr = node.putArray("active");
         installed().stream().filter(want::contains).forEach(arr::add);
         prefs.put(user, NS, KEY, node);
+        effectiveByUser.invalidate(user);
         return active(user);
     }
 
     /** The user's active packs and every pack they require (a risk pack brings its reference data with it). */
     public Set<String> effective(String user) {
+        long v = registry.version();
+        long st = states.version();
+        String mode = samples.mode();
+        Effective e = effectiveByUser.getIfPresent(user);
+        if (e != null && e.version() == v && e.states() == st && java.util.Objects.equals(e.samples(), mode)) {
+            return e.packs();
+        }
+        Set<String> packs = java.util.Collections.unmodifiableSet(computeEffective(user));
+        effectiveByUser.put(user, new Effective(v, st, mode, packs));
+        return packs;
+    }
+
+    /** Forgets what is cached of a user's packs (an administrator changed the user). */
+    public void forget(String user) {
+        effectiveByUser.invalidate(user);
+    }
+
+    private Set<String> computeEffective(String user) {
         Map<String, Pack> byName = new HashMap<>();
         registry.packs().forEach(p -> byName.put(p.name(), p));
         Set<String> out = new LinkedHashSet<>();

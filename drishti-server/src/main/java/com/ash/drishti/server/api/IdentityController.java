@@ -147,6 +147,7 @@ public class IdentityController {
         entitlements.requireAdmin(p);
         packAccess.validate(profile.packs());
         User u = users.update(p.user(), username, profile);
+        packAccess.forget(username);                             // the user's packs as changed, from the next request
         if (!u.enabled()) {
             sessions.endAll(u.username(), p.user(), "disabled");
         }
@@ -176,6 +177,7 @@ public class IdentityController {
     public void delete(@PathVariable String username, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
         users.delete(p.user(), username);
+        packAccess.forget(username);
         preferences.forget(username);
         designs.forget(username);       // the user's Build designs and their samples go with the account
         alerts.forget(username);

@@ -45,6 +45,12 @@ import org.apache.parquet.hadoop.metadata.CompressionCodecName;
  */
 public final class NativeEngine implements Engine, AutoCloseable {
 
+    /** Forgets the parsed Parquet footers kept across reads (a purge of a connector's caches). */
+    public static void purgeFooterCache() {
+        ParquetBatches.purgeFooters();
+    }
+
+
     private static final int LZ4_FILES_REMEMBERED = 20_000;
 
     private final NativeFileIO io;

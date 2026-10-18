@@ -57,7 +57,15 @@ public final class PackStateStore {
         }
     }
 
+    /** Moves whenever the states are read again (a pack switched on or off): callers that cache what follows from them compare it. */
+    public long version() {
+        return version.get();
+    }
+
+    private final java.util.concurrent.atomic.AtomicLong version = new java.util.concurrent.atomic.AtomicLong();
+
     private void reload() {
+        version.incrementAndGet();
         snapshot = tx.execute(s -> states.findAll().stream().map(e -> new State(e.name, e.enabled, e.updatedAt, e.updatedBy))
                 .collect(Collectors.toUnmodifiableMap(State::name, Function.identity())));
     }

@@ -106,11 +106,30 @@ final class ParquetBatches implements CloseableIterator<ColumnarBatch> {
         }
     }
 
+    /**
+     * Parsed footers by file. A Delta data file never changes once written (a rewrite is a new file), so its footer is read
+     * once, not on every single-entity read; a file of many row groups has a large footer (hundreds of KB to parse). Weighed
+     * by row groups: at most {@code drishti.parquet.footer-cache-groups} (default 50,000, a few tens of MB) are kept.
+     */
+    private static final com.github.benmanes.caffeine.cache.Cache<String, ParquetMetadata> FOOTERS = com.github.benmanes.caffeine.cache.Caffeine
+            .newBuilder().maximumWeight(Long.getLong("drishti.parquet.footer-cache-groups", 50_000))
+            .weigher((String k, ParquetMetadata m) -> 1 + m.getBlocks().size()).build();
+
+    /** Forgets every parsed footer (a purge of the connector's caches; a file changed in place is read again). */
+    static void purgeFooters() {
+        FOOTERS.invalidateAll();
+    }
+
     private void open() throws IOException {
         InputFile in = io.newParquetFile(file.getPath(), file.getSize());
         SeekableInputStream stream = in.newStream();
         try {
-            ParquetMetadata footer = ParquetFileReader.readFooter(in, options().build(), stream);
+            String key = file.getPath() + "|" + file.getSize();
+            ParquetMetadata footer = FOOTERS.getIfPresent(key);
+            if (footer == null) {
+                footer = ParquetFileReader.readFooter(in, options().build(), stream);
+                FOOTERS.put(key, footer);
+            }
             MessageType fileSchema = footer.getFileMetaData().getSchema();
             Optional<FilterPredicate> filter = predicate.flatMap(p -> ParquetFilterUtils.toParquetFilter(fileSchema, p));
             ParquetReadOptions withFilter = options().withRecordFilter(filter.map(FilterCompat::get).orElse(FilterCompat.NOOP)).build();
