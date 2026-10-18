@@ -42,8 +42,11 @@ public class ViewController {
     private final Timer timer;
     private final Entitlements entitlements;
 
-    public ViewController(ViewPipeline pipeline, RecentEntities recents, MeterRegistry meters, Entitlements entitlements) {
+    private final PageTimes pageTimes;
+
+    public ViewController(ViewPipeline pipeline, RecentEntities recents, MeterRegistry meters, Entitlements entitlements, PageTimes pageTimes) {
         this.pipeline = pipeline;
+        this.pageTimes = pageTimes;
         this.recents = recents;
         this.entitlements = entitlements;
         this.timer = Timer.builder("drishti.view").description("Time to build an entity view")
@@ -55,8 +58,10 @@ public class ViewController {
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal, jakarta.servlet.http.HttpServletRequest request) {
         entitlements.requireOpen(principal, kind);
         EntityRef ref = EntityRef.of(kind, id);
+        long started = System.nanoTime();
         ViewModel v = entitlements.restrict(principal, timer.record(() -> pipeline.view(ref, asOf, entitlements.redactor(principal), k -> entitlements.mayOpen(principal, k),
                 ControlValues.of(request.getParameterMap()))));
+        pageTimes.record(kind, System.nanoTime() - started);
         String subtitle = v.title().pill() == null ? kind : v.title().pill().replace("Trade · ", "")
                 + (v.title().with() == null ? "" : " · " + v.title().with().text());
         recents.touch(principal.user(), new EntityHit(ref, v.title().id(), subtitle));

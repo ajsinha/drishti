@@ -61,6 +61,13 @@ public class HealthController {
     private final List<String> overrides;
     private final com.ash.drishti.server.loads.ExpectationService expectations;
     private final com.ash.drishti.server.connectors.ConnectorManager connectors;
+    /** Per kind page times (set by Spring; absent in a test that makes the controller itself). */
+    private PageTimes pageTimes;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void pageTimes(PageTimes times) {
+        this.pageTimes = times;
+    }
     private final com.ash.drishti.server.bi.BiFolder biFolder;
     private final com.ash.drishti.server.RetryService retry;
     private final ObjectProvider<com.zaxxer.hikari.HikariDataSource> identityDataSource;
@@ -178,6 +185,9 @@ public class HealthController {
                 "by", d.by() + " " + d.zone(), "line", d.line())).toList());
         out.put("overrides", overrides);
         out.put("connectors", connectors.healthSummary());
+        if (pageTimes != null) {
+            out.put("pages", pageTimes.summary());             // per kind: views, p50, p95, p99 over ten minutes
+        }
         out.put("bi", Map.of("watch", biFolder.watchState(), "shippedItems", biFolder.items().size(), "problems", biFolder.problems().stream()
                 .map(x -> Map.of("file", x.file(), "message", x.message(), "keptLastGood", x.keptLastGood())).toList()));
         out.put("live", Map.of("streams", slots.open(), "topics", hub.topicCount(), "frames", live.frames(), "droppedFrames", live.droppedFrames(),

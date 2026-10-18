@@ -111,6 +111,16 @@
   <ul class="mono cmp-path">{% for o in h.overrides %}<li>{{ o }}</li>{% endfor %}</ul></details>
 {% endif %}
 
+{% if h.pages %}
+<h2 class="ws-h">Pages</h2>
+<p class="text-muted-d">How long each kind's pages took to build on the server over the last ten minutes, slowest first (any pack's kinds,
+  grouped pages included). A kind whose p95 climbs as the data grows is the one to look at.</p>
+<div class="tbl-wrap"><table class="tbl" data-page-times>
+  <thead><tr><th>Kind</th><th class="num">Views</th><th class="num">p50 ms</th><th class="num">p95 ms</th><th class="num">p99 ms</th></tr></thead>
+  <tbody>{% for p in h.pages[:30] %}<tr><td class="mono">{{ p.kind }}</td><td class="num mono">{{ p.views }}</td>
+    <td class="num mono">{{ p.p50Ms }}</td><td class="num mono{{ ' t-warn' if p.p95Ms > 1000 }}">{{ p.p95Ms }}</td><td class="num mono">{{ p.p99Ms }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endif %}
 <h2 class="ws-h">Live</h2>
 <div class="hl-sum">
   <span><b>{{ h.live.streams }}</b> open streams</span><span><b>{{ h.live.topics }}</b> live topics</span>
