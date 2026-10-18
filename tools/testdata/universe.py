@@ -141,7 +141,7 @@ class Universe:
                 f["FLOW_ID"] = base + n
         for k, e in enumerate(out["EVENTS"], start=1):
             e["EVENT_ID"] = base + k
-        return self._keep(d, out)
+        return self._keep(d, TS.text_ids(out))
 
     def _endur(self) -> list[dict]:
         book = TE.Endur(as_of=AS_OF).samples(3)              # the pack's 15 sample deals, ids 1000001 ...
@@ -151,7 +151,7 @@ class Universe:
         while len(book) < self.per_system:
             d = gen.deal(1000 + n)
             n += 1
-            d["TRADE_ID"] = TE.FIRST_ID + len(book)
+            d["TRADE_ID"] = str(TE.FIRST_ID + len(book))
             role = ROLE_OF.get(d["PRODUCT_SUB_TYPE"]) or ROLE_OF.get(d["PRODUCT_TYPE"])
             if role and rng.random() < ROLE_SHARE:
                 cp = "CP-" + rng.choice(role)

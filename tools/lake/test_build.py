@@ -341,3 +341,36 @@ class ScanTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class IdsAreTextTest(unittest.TestCase):
+    """Ids are text: a number in the file is read as its digits; any shape (letters, dashes, underscores, leading zeros) is an id."""
+
+    IDS = [1000008, "1000009", "SWP-AB_12", "mx_2000-01", "007123", 1000010.0]
+    WANT = ["1000008", "1000009", "SWP-AB_12", "mx_2000-01", "007123", "1000010"]
+
+    def test_ids_of_every_shape_become_text_in_id_column_promoted_column_and_document(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            src, lake = Path(tmp) / "book.jsonl", Path(tmp) / "lake"
+            src.write_text("".join(json.dumps({"TRADE_ID": i, "TRADE_DATE": DATES[0], "PRODUCT_TYPE": "ComSwap", "SOURCE_SYSTEM": "ENDUR"}) + "\n"
+                                   for i in self.IDS), encoding="utf-8")
+            os.environ["DRISHTI_DELTA_ROOT"] = str(lake)
+            a = args(src=[str(src)], lake=str(lake), domain="trading", kind="trade", key="TRADE_ID", date="TRADE_DATE",
+                     partition_by=["PRODUCT_TYPE"], promote=["TRADE_ID,SOURCE_SYSTEM"], engine="deltalake")
+            code, s = build.run(a, quiet)
+            self.assertEqual(code, build.EXIT_OK, s.get("error"))
+            self.assertEqual(s["columns"]["promoted"]["TRADE_ID"], "string")
+            from deltalake import DeltaTable
+            rows = DeltaTable(str(lake / "trading" / "trade")).to_pyarrow_table().to_pylist()
+            self.assertEqual(sorted(r["id"] for r in rows), sorted(self.WANT))
+            self.assertEqual(sorted(r["TRADE_ID"] for r in rows), sorted(self.WANT))
+            self.assertEqual(sorted(json.loads(r["doc"])["TRADE_ID"] for r in rows), sorted(self.WANT))
+
+    def test_an_older_table_with_a_number_trade_id_column_still_takes_rows(self):
+        import stage
+        import writers
+        self.assertTrue(stage.is_id_field("TRADE_ID") and stage.is_id_field("counterparty__id") and stage.is_id_field("TRADE_IDS"))
+        self.assertFalse(stage.is_id_field("PAID") or stage.is_id_field("NOTIONAL"))
+        self.assertEqual(writers._cell("1000008", "double"), 1000008.0)        # the table keeps its type; the row is not lost
+        self.assertEqual(stage.id_text(1000008.0), "1000008")
+        self.assertEqual(stage.id_text("007123"), "007123")

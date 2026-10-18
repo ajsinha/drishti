@@ -46,7 +46,7 @@
  "SETTLEMENT_DATE": "2025-12-26",
  "LEGS": [
   {
-   "LEG_ID": 1,
+   "LEG_ID": "1",
    "LEG_TYPE": "FIXED",
    "LEG_ECONOMIC_TYPE": "Receive",
    "CURRENCY": "JPY",
@@ -76,7 +76,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 3000181001,
+     "FLOW_ID": "3000181001",
      "FLOW_TYPE": "First call",
      "NOTIONAL": 63000000.0,
      "RATE": 0.027195,
@@ -91,7 +91,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000181002,
+     "FLOW_ID": "3000181002",
      "FLOW_TYPE": "Bermudan call",
      "NOTIONAL": 63000000.0,
      "RATE": 0.020941,
@@ -106,7 +106,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000181003,
+     "FLOW_ID": "3000181003",
      "FLOW_TYPE": "Bermudan call",
      "NOTIONAL": 63000000.0,
      "RATE": 0.043124,
@@ -121,7 +121,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000181004,
+     "FLOW_ID": "3000181004",
      "FLOW_TYPE": "Bermudan call",
      "NOTIONAL": 63000000.0,
      "RATE": 0.040911,
@@ -136,7 +136,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000181005,
+     "FLOW_ID": "3000181005",
      "FLOW_TYPE": "Bermudan call",
      "NOTIONAL": 63000000.0,
      "RATE": 0.041254,
@@ -151,7 +151,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000181006,
+     "FLOW_ID": "3000181006",
      "FLOW_TYPE": "Bermudan call",
      "NOTIONAL": 63000000.0,
      "RATE": 0.025649,
@@ -171,7 +171,7 @@
  "EVENTS": [
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000181001,
+   "EVENT_ID": "3000181001",
    "EVENT_NUMBER": 1,
    "EVENT_TYPE": "BOOKED",
    "PAYMENT_TYPE": "",
@@ -184,7 +184,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000181002,
+   "EVENT_ID": "3000181002",
    "EVENT_NUMBER": 2,
    "EVENT_TYPE": "CONFIRMED",
    "PAYMENT_TYPE": "",
@@ -197,7 +197,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000181003,
+   "EVENT_ID": "3000181003",
    "EVENT_NUMBER": 3,
    "EVENT_TYPE": "CLEARED",
    "PAYMENT_TYPE": "",
@@ -210,7 +210,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000181004,
+   "EVENT_ID": "3000181004",
    "EVENT_NUMBER": 4,
    "EVENT_TYPE": "NEXT_PAYMENT",
    "PAYMENT_TYPE": "",
@@ -223,7 +223,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000181005,
+   "EVENT_ID": "3000181005",
    "EVENT_NUMBER": 5,
    "EVENT_TYPE": "MATURITY",
    "PAYMENT_TYPE": "",

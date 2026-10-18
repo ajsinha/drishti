@@ -3,7 +3,7 @@
  "SOURCE_UPDATE_TIME": "",
  "TRADE_DATE": "2026-05-04",
  "INPUT_DATE": "",
- "TRADE_ID": 1000015,
+ "TRADE_ID": "1000015",
  "TRADE_STATUS": "MATURED",
  "TRADE_ACTION": "",
  "TRADE_VERSION": "2",
@@ -46,7 +46,7 @@
  "SETTLEMENT_DATE": "",
  "LEGS": [
   {
-   "LEG_ID": 1,
+   "LEG_ID": "1",
    "LEG_TYPE": "PHYSICAL",
    "LEG_ECONOMIC_TYPE": "",
    "CURRENCY": "USD",
@@ -76,7 +76,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 5000714,
+     "FLOW_ID": "5000714",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -102,7 +102,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000715,
+     "FLOW_ID": "5000715",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -128,7 +128,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000716,
+     "FLOW_ID": "5000716",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -154,7 +154,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000717,
+     "FLOW_ID": "5000717",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -180,7 +180,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000718,
+     "FLOW_ID": "5000718",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -206,7 +206,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000719,
+     "FLOW_ID": "5000719",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -232,7 +232,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000720,
+     "FLOW_ID": "5000720",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -258,7 +258,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000721,
+     "FLOW_ID": "5000721",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -284,7 +284,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000722,
+     "FLOW_ID": "5000722",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -310,7 +310,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000723,
+     "FLOW_ID": "5000723",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -338,7 +338,7 @@
    ]
   },
   {
-   "LEG_ID": 2,
+   "LEG_ID": "2",
    "LEG_TYPE": "FIXED",
    "LEG_ECONOMIC_TYPE": "",
    "CURRENCY": "USD",
@@ -368,7 +368,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 5000724,
+     "FLOW_ID": "5000724",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -394,7 +394,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000725,
+     "FLOW_ID": "5000725",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -420,7 +420,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000726,
+     "FLOW_ID": "5000726",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -446,7 +446,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000727,
+     "FLOW_ID": "5000727",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -472,7 +472,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000728,
+     "FLOW_ID": "5000728",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -498,7 +498,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000729,
+     "FLOW_ID": "5000729",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -524,7 +524,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000730,
+     "FLOW_ID": "5000730",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -550,7 +550,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000731,
+     "FLOW_ID": "5000731",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -576,7 +576,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000732,
+     "FLOW_ID": "5000732",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -602,7 +602,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000733,
+     "FLOW_ID": "5000733",
      "FLOW_TYPE": "",
      "NOTIONAL": 821819.4,
      "RATE": "821.8194",
@@ -632,8 +632,8 @@
  ],
  "EVENTS": [
   {
-   "LEG_ID": 2,
-   "EVENT_ID": 9000216,
+   "LEG_ID": "2",
+   "EVENT_ID": "9000216",
    "EVENT_NUMBER": 1,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Commodity payment",
@@ -645,8 +645,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 2,
-   "EVENT_ID": 9000217,
+   "LEG_ID": "2",
+   "EVENT_ID": "9000217",
    "EVENT_NUMBER": 2,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Commodity payment",
@@ -658,8 +658,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 2,
-   "EVENT_ID": 9000218,
+   "LEG_ID": "2",
+   "EVENT_ID": "9000218",
    "EVENT_NUMBER": 3,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Commodity payment",
@@ -671,8 +671,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 2,
-   "EVENT_ID": 9000219,
+   "LEG_ID": "2",
+   "EVENT_ID": "9000219",
    "EVENT_NUMBER": 4,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Commodity payment",
@@ -684,8 +684,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 2,
-   "EVENT_ID": 9000220,
+   "LEG_ID": "2",
+   "EVENT_ID": "9000220",
    "EVENT_NUMBER": 5,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Commodity payment",
@@ -697,8 +697,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 2,
-   "EVENT_ID": 9000221,
+   "LEG_ID": "2",
+   "EVENT_ID": "9000221",
    "EVENT_NUMBER": 6,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Commodity payment",
@@ -710,8 +710,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 2,
-   "EVENT_ID": 9000222,
+   "LEG_ID": "2",
+   "EVENT_ID": "9000222",
    "EVENT_NUMBER": 7,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Commodity payment",
@@ -723,8 +723,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 2,
-   "EVENT_ID": 9000223,
+   "LEG_ID": "2",
+   "EVENT_ID": "9000223",
    "EVENT_NUMBER": 8,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Commodity payment",
@@ -736,8 +736,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 2,
-   "EVENT_ID": 9000224,
+   "LEG_ID": "2",
+   "EVENT_ID": "9000224",
    "EVENT_NUMBER": 9,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Commodity payment",
@@ -749,8 +749,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 2,
-   "EVENT_ID": 9000225,
+   "LEG_ID": "2",
+   "EVENT_ID": "9000225",
    "EVENT_NUMBER": 10,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Commodity payment",

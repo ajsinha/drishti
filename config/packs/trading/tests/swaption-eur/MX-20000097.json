@@ -46,7 +46,7 @@
  "SETTLEMENT_DATE": "2025-10-20",
  "LEGS": [
   {
-   "LEG_ID": 1,
+   "LEG_ID": "1",
    "LEG_TYPE": "FIXED",
    "LEG_ECONOMIC_TYPE": "Receive",
    "CURRENCY": "USD",
@@ -76,7 +76,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 20000097001,
+     "FLOW_ID": "20000097001",
      "FLOW_TYPE": "Interest",
      "NOTIONAL": 160000000.0,
      "RATE": 0.022469,
@@ -91,7 +91,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000097002,
+     "FLOW_ID": "20000097002",
      "FLOW_TYPE": "Interest",
      "NOTIONAL": 160000000.0,
      "RATE": 0.022469,
@@ -106,7 +106,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000097003,
+     "FLOW_ID": "20000097003",
      "FLOW_TYPE": "Interest",
      "NOTIONAL": 160000000.0,
      "RATE": 0.022469,
@@ -121,7 +121,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000097004,
+     "FLOW_ID": "20000097004",
      "FLOW_TYPE": "Interest",
      "NOTIONAL": 160000000.0,
      "RATE": 0.022469,
@@ -138,7 +138,7 @@
    ]
   },
   {
-   "LEG_ID": 2,
+   "LEG_ID": "2",
    "LEG_TYPE": "FLOAT",
    "LEG_ECONOMIC_TYPE": "Pay",
    "CURRENCY": "USD",
@@ -168,7 +168,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 20000097005,
+     "FLOW_ID": "20000097005",
      "FLOW_TYPE": "Interest",
      "NOTIONAL": 160000000.0,
      "RATE": 0.034923,
@@ -204,7 +204,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000097006,
+     "FLOW_ID": "20000097006",
      "FLOW_TYPE": "Interest",
      "NOTIONAL": 160000000.0,
      "RATE": 0.035757,
@@ -230,7 +230,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000097007,
+     "FLOW_ID": "20000097007",
      "FLOW_TYPE": "Interest",
      "NOTIONAL": 160000000.0,
      "RATE": 0.035827,
@@ -266,7 +266,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000097008,
+     "FLOW_ID": "20000097008",
      "FLOW_TYPE": "Interest",
      "NOTIONAL": 160000000.0,
      "RATE": 0.035902,
@@ -292,7 +292,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000097009,
+     "FLOW_ID": "20000097009",
      "FLOW_TYPE": "Interest",
      "NOTIONAL": 160000000.0,
      "RATE": 0.036594,
@@ -318,7 +318,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000097010,
+     "FLOW_ID": "20000097010",
      "FLOW_TYPE": "Interest",
      "NOTIONAL": 160000000.0,
      "RATE": 0.038131,
@@ -344,7 +344,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000097011,
+     "FLOW_ID": "20000097011",
      "FLOW_TYPE": "Interest",
      "NOTIONAL": 160000000.0,
      "RATE": 0.038504,
@@ -370,7 +370,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000097012,
+     "FLOW_ID": "20000097012",
      "FLOW_TYPE": "Interest",
      "NOTIONAL": 160000000.0,
      "RATE": 0.03888,
@@ -401,7 +401,7 @@
  "EVENTS": [
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000097001,
+   "EVENT_ID": "20000097001",
    "EVENT_NUMBER": 1,
    "EVENT_TYPE": "BOOKED",
    "PAYMENT_TYPE": "",
@@ -414,7 +414,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000097002,
+   "EVENT_ID": "20000097002",
    "EVENT_NUMBER": 2,
    "EVENT_TYPE": "CONFIRMED",
    "PAYMENT_TYPE": "",
@@ -427,7 +427,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000097003,
+   "EVENT_ID": "20000097003",
    "EVENT_NUMBER": 3,
    "EVENT_TYPE": "MATURITY",
    "PAYMENT_TYPE": "",
@@ -439,8 +439,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 20000097004,
+   "LEG_ID": "1",
+   "EVENT_ID": "20000097004",
    "EVENT_NUMBER": 4,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Interest",
@@ -452,8 +452,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 20000097005,
+   "LEG_ID": "1",
+   "EVENT_ID": "20000097005",
    "EVENT_NUMBER": 5,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Interest",
@@ -465,8 +465,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 20000097006,
+   "LEG_ID": "1",
+   "EVENT_ID": "20000097006",
    "EVENT_NUMBER": 6,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Interest",
@@ -478,8 +478,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 20000097007,
+   "LEG_ID": "1",
+   "EVENT_ID": "20000097007",
    "EVENT_NUMBER": 7,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Interest",
@@ -491,8 +491,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 2,
-   "EVENT_ID": 20000097008,
+   "LEG_ID": "2",
+   "EVENT_ID": "20000097008",
    "EVENT_NUMBER": 8,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Interest",
@@ -504,8 +504,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 2,
-   "EVENT_ID": 20000097009,
+   "LEG_ID": "2",
+   "EVENT_ID": "20000097009",
    "EVENT_NUMBER": 9,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Interest",
@@ -517,8 +517,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 2,
-   "EVENT_ID": 20000097010,
+   "LEG_ID": "2",
+   "EVENT_ID": "20000097010",
    "EVENT_NUMBER": 10,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Interest",
@@ -530,8 +530,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 2,
-   "EVENT_ID": 20000097011,
+   "LEG_ID": "2",
+   "EVENT_ID": "20000097011",
    "EVENT_NUMBER": 11,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Interest",
@@ -543,8 +543,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 2,
-   "EVENT_ID": 20000097012,
+   "LEG_ID": "2",
+   "EVENT_ID": "20000097012",
    "EVENT_NUMBER": 12,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Interest",
@@ -556,8 +556,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 2,
-   "EVENT_ID": 20000097013,
+   "LEG_ID": "2",
+   "EVENT_ID": "20000097013",
    "EVENT_NUMBER": 13,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Interest",
@@ -569,8 +569,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 2,
-   "EVENT_ID": 20000097014,
+   "LEG_ID": "2",
+   "EVENT_ID": "20000097014",
    "EVENT_NUMBER": 14,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Interest",
@@ -582,8 +582,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 2,
-   "EVENT_ID": 20000097015,
+   "LEG_ID": "2",
+   "EVENT_ID": "20000097015",
    "EVENT_NUMBER": 15,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Interest",

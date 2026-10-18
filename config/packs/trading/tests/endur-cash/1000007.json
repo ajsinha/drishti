@@ -3,7 +3,7 @@
  "SOURCE_UPDATE_TIME": "",
  "TRADE_DATE": "2026-01-06",
  "INPUT_DATE": "",
- "TRADE_ID": 1000007,
+ "TRADE_ID": "1000007",
  "TRADE_STATUS": "MATURED",
  "TRADE_ACTION": "",
  "TRADE_VERSION": "",
@@ -46,7 +46,7 @@
  "SETTLEMENT_DATE": "",
  "LEGS": [
   {
-   "LEG_ID": 1,
+   "LEG_ID": "1",
    "LEG_TYPE": "FIXED",
    "LEG_ECONOMIC_TYPE": "",
    "CURRENCY": "USD",
@@ -76,7 +76,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 5000272,
+     "FLOW_ID": "5000272",
      "FLOW_TYPE": "",
      "NOTIONAL": 666163.97,
      "RATE": "",
@@ -106,8 +106,8 @@
  ],
  "EVENTS": [
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 9000155,
+   "LEG_ID": "1",
+   "EVENT_ID": "9000155",
    "EVENT_NUMBER": 1,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Cash payment",

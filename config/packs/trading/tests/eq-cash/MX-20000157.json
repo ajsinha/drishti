@@ -46,7 +46,7 @@
  "SETTLEMENT_DATE": "2024-11-18",
  "LEGS": [
   {
-   "LEG_ID": 1,
+   "LEG_ID": "1",
    "LEG_TYPE": "FIXED",
    "LEG_ECONOMIC_TYPE": "Receive",
    "CURRENCY": "EUR",
@@ -76,7 +76,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 20000157001,
+     "FLOW_ID": "20000157001",
      "FLOW_TYPE": "Principal",
      "NOTIONAL": 150000000.0,
      "RATE": "",
@@ -96,7 +96,7 @@
  "EVENTS": [
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000157001,
+   "EVENT_ID": "20000157001",
    "EVENT_NUMBER": 1,
    "EVENT_TYPE": "BOOKED",
    "PAYMENT_TYPE": "",
@@ -109,7 +109,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000157002,
+   "EVENT_ID": "20000157002",
    "EVENT_NUMBER": 2,
    "EVENT_TYPE": "CONFIRMED",
    "PAYMENT_TYPE": "",
@@ -122,7 +122,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000157003,
+   "EVENT_ID": "20000157003",
    "EVENT_NUMBER": 3,
    "EVENT_TYPE": "CLEARED",
    "PAYMENT_TYPE": "",
@@ -135,7 +135,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000157004,
+   "EVENT_ID": "20000157004",
    "EVENT_NUMBER": 4,
    "EVENT_TYPE": "PARTIALLY_TERMINATED",
    "PAYMENT_TYPE": "",
@@ -148,7 +148,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000157005,
+   "EVENT_ID": "20000157005",
    "EVENT_NUMBER": 5,
    "EVENT_TYPE": "MATURITY",
    "PAYMENT_TYPE": "",

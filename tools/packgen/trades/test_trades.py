@@ -54,7 +54,7 @@ class CommonSchemaTest(unittest.TestCase):
     def test_ids_are_unique_across_systems(self):
         ids = [str(t["TRADE_ID"]) for trades in self.books.values() for t in trades]
         self.assertEqual(len(ids), len(set(ids)))
-        self.assertTrue(all(isinstance(t["TRADE_ID"], int) for t in self.books["ENDUR"]))
+        self.assertTrue(all(isinstance(t["TRADE_ID"], str) for b in self.books.values() for t in b))     # ids are text, ENDUR digits too
         self.assertTrue(all(t["TRADE_ID"].startswith("CLY-") for t in self.books["CALYPSO"]))
         self.assertTrue(all(t["TRADE_ID"].startswith("MX-") for t in self.books["MUREX"]))
 

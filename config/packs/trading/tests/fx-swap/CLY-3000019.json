@@ -46,7 +46,7 @@
  "SETTLEMENT_DATE": "2026-07-27",
  "LEGS": [
   {
-   "LEG_ID": 1,
+   "LEG_ID": "1",
    "LEG_TYPE": "FLOAT",
    "LEG_ECONOMIC_TYPE": "Receive",
    "CURRENCY": "USD",
@@ -76,7 +76,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 3000019001,
+     "FLOW_ID": "3000019001",
      "FLOW_TYPE": "Premium",
      "NOTIONAL": 98000000.0,
      "RATE": 0.01,
@@ -91,7 +91,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000019002,
+     "FLOW_ID": "3000019002",
      "FLOW_TYPE": "Premium",
      "NOTIONAL": 98000000.0,
      "RATE": 0.01,
@@ -106,7 +106,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000019003,
+     "FLOW_ID": "3000019003",
      "FLOW_TYPE": "Premium",
      "NOTIONAL": 98000000.0,
      "RATE": 0.01,
@@ -121,7 +121,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000019004,
+     "FLOW_ID": "3000019004",
      "FLOW_TYPE": "Premium",
      "NOTIONAL": 98000000.0,
      "RATE": 0.01,
@@ -136,7 +136,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000019005,
+     "FLOW_ID": "3000019005",
      "FLOW_TYPE": "Premium",
      "NOTIONAL": 98000000.0,
      "RATE": 0.01,
@@ -151,7 +151,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000019006,
+     "FLOW_ID": "3000019006",
      "FLOW_TYPE": "Premium",
      "NOTIONAL": 98000000.0,
      "RATE": 0.01,
@@ -166,7 +166,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000019007,
+     "FLOW_ID": "3000019007",
      "FLOW_TYPE": "Premium",
      "NOTIONAL": 98000000.0,
      "RATE": 0.01,
@@ -181,7 +181,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000019008,
+     "FLOW_ID": "3000019008",
      "FLOW_TYPE": "Premium",
      "NOTIONAL": 98000000.0,
      "RATE": 0.01,
@@ -196,7 +196,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000019009,
+     "FLOW_ID": "3000019009",
      "FLOW_TYPE": "Premium",
      "NOTIONAL": 98000000.0,
      "RATE": 0.01,
@@ -211,7 +211,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000019010,
+     "FLOW_ID": "3000019010",
      "FLOW_TYPE": "Premium",
      "NOTIONAL": 98000000.0,
      "RATE": 0.01,
@@ -226,7 +226,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000019011,
+     "FLOW_ID": "3000019011",
      "FLOW_TYPE": "Premium",
      "NOTIONAL": 98000000.0,
      "RATE": 0.01,
@@ -243,7 +243,7 @@
    ]
   },
   {
-   "LEG_ID": 2,
+   "LEG_ID": "2",
    "LEG_TYPE": "FLOAT",
    "LEG_ECONOMIC_TYPE": "Pay",
    "CURRENCY": "USD",
@@ -273,7 +273,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 3000019012,
+     "FLOW_ID": "3000019012",
      "FLOW_TYPE": "Float",
      "NOTIONAL": 98000000.0,
      "RATE": 0.036215,
@@ -293,7 +293,7 @@
  "EVENTS": [
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000019001,
+   "EVENT_ID": "3000019001",
    "EVENT_NUMBER": 1,
    "EVENT_TYPE": "BOOKED",
    "PAYMENT_TYPE": "",
@@ -306,7 +306,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000019002,
+   "EVENT_ID": "3000019002",
    "EVENT_NUMBER": 2,
    "EVENT_TYPE": "CONFIRMED",
    "PAYMENT_TYPE": "",
@@ -319,7 +319,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000019003,
+   "EVENT_ID": "3000019003",
    "EVENT_NUMBER": 3,
    "EVENT_TYPE": "AMENDED",
    "PAYMENT_TYPE": "",
@@ -332,7 +332,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000019004,
+   "EVENT_ID": "3000019004",
    "EVENT_NUMBER": 4,
    "EVENT_TYPE": "NEXT_PAYMENT",
    "PAYMENT_TYPE": "",
@@ -345,7 +345,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000019005,
+   "EVENT_ID": "3000019005",
    "EVENT_NUMBER": 5,
    "EVENT_TYPE": "MATURITY",
    "PAYMENT_TYPE": "",
@@ -357,8 +357,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 3000019006,
+   "LEG_ID": "1",
+   "EVENT_ID": "3000019006",
    "EVENT_NUMBER": 6,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Premium",
@@ -370,8 +370,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 3000019007,
+   "LEG_ID": "1",
+   "EVENT_ID": "3000019007",
    "EVENT_NUMBER": 7,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Premium",
@@ -383,8 +383,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 3000019008,
+   "LEG_ID": "1",
+   "EVENT_ID": "3000019008",
    "EVENT_NUMBER": 8,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Premium",
@@ -396,8 +396,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 3000019009,
+   "LEG_ID": "1",
+   "EVENT_ID": "3000019009",
    "EVENT_NUMBER": 9,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Premium",
@@ -409,8 +409,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 3000019010,
+   "LEG_ID": "1",
+   "EVENT_ID": "3000019010",
    "EVENT_NUMBER": 10,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Premium",
@@ -422,8 +422,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 3000019011,
+   "LEG_ID": "1",
+   "EVENT_ID": "3000019011",
    "EVENT_NUMBER": 11,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Premium",
@@ -435,8 +435,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 3000019012,
+   "LEG_ID": "1",
+   "EVENT_ID": "3000019012",
    "EVENT_NUMBER": 12,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Premium",
@@ -448,8 +448,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 3000019013,
+   "LEG_ID": "1",
+   "EVENT_ID": "3000019013",
    "EVENT_NUMBER": 13,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Premium",
@@ -461,8 +461,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 3000019014,
+   "LEG_ID": "1",
+   "EVENT_ID": "3000019014",
    "EVENT_NUMBER": 14,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Premium",
@@ -474,8 +474,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 3000019015,
+   "LEG_ID": "1",
+   "EVENT_ID": "3000019015",
    "EVENT_NUMBER": 15,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Premium",
@@ -487,8 +487,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 3000019016,
+   "LEG_ID": "1",
+   "EVENT_ID": "3000019016",
    "EVENT_NUMBER": 16,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Premium",

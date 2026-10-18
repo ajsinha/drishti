@@ -261,7 +261,11 @@ final class DeltaTable {
         StructType schema = new StructType().add(idColumn, StringType.STRING);
         List<String> paths = new ArrayList<>(pathToColumn.keySet());
         for (String p : paths) {
-            schema = schema.add(pathToColumn.get(p), numeric.get(p) ? io.delta.kernel.types.DoubleType.DOUBLE : StringType.STRING);
+            // a text column is read in the type the table has (an old table's TRADE_ID may be a number) and turned into its text
+            io.delta.kernel.types.DataType have = layout.schema() == null || layout.schema().indexOf(pathToColumn.get(p)) < 0 ? null
+                    : layout.schema().get(pathToColumn.get(p)).getDataType();
+            schema = schema.add(pathToColumn.get(p), numeric.get(p) ? io.delta.kernel.types.DoubleType.DOUBLE
+                    : have instanceof io.delta.kernel.types.StringType || have == null || !isScalar(have) ? StringType.STRING : have);
         }
         List<String> ids = new ArrayList<>();
         Map<String, List<double[]>> nums = new LinkedHashMap<>();
@@ -299,7 +303,7 @@ final class DeltaTable {
                         Map<String, String> pool = interned.get(p);
                         List<String> out = texts.get(p);
                         for (int r = 0; r < n; r++) {
-                            String s = fixed != null ? fixed : v.isNullAt(r) ? null : v.getString(r);
+                            String s = fixed != null ? fixed : v.isNullAt(r) ? null : text(v, r);
                             out.add(s == null || pool.size() > 200_000 ? s : pool.computeIfAbsent(s, x -> x));
                         }
                     }
@@ -319,6 +323,43 @@ final class DeltaTable {
         Map<String, String[]> text = new LinkedHashMap<>();
         texts.forEach((p, list) -> text.put(p, list.toArray(new String[0])));
         return new com.ash.drishti.api.ColumnSet(ids.toArray(new String[0]), numbers, text, date == LocalDate.MIN ? null : date);
+    }
+
+    private static boolean isScalar(io.delta.kernel.types.DataType t) {
+        return t instanceof io.delta.kernel.types.LongType || t instanceof io.delta.kernel.types.IntegerType
+                || t instanceof io.delta.kernel.types.ShortType || t instanceof io.delta.kernel.types.ByteType
+                || t instanceof io.delta.kernel.types.DoubleType || t instanceof io.delta.kernel.types.FloatType
+                || t instanceof io.delta.kernel.types.DecimalType || t instanceof io.delta.kernel.types.BooleanType;
+    }
+
+    /** A cell as text: a number keeps its digits (1000008, never 1000008.0), so an id written as a number reads as the id. */
+    static String text(io.delta.kernel.data.ColumnVector v, int r) {
+        io.delta.kernel.types.DataType t = v.getDataType();
+        if (t instanceof io.delta.kernel.types.LongType) {
+            return Long.toString(v.getLong(r));
+        }
+        if (t instanceof io.delta.kernel.types.IntegerType) {
+            return Integer.toString(v.getInt(r));
+        }
+        if (t instanceof io.delta.kernel.types.ShortType) {
+            return Short.toString(v.getShort(r));
+        }
+        if (t instanceof io.delta.kernel.types.ByteType) {
+            return Byte.toString(v.getByte(r));
+        }
+        if (t instanceof io.delta.kernel.types.DoubleType) {
+            return com.ash.drishti.api.IdText.of(v.getDouble(r));
+        }
+        if (t instanceof io.delta.kernel.types.FloatType) {
+            return com.ash.drishti.api.IdText.of(v.getFloat(r));
+        }
+        if (t instanceof io.delta.kernel.types.DecimalType) {
+            return v.getDecimal(r).stripTrailingZeros().toPlainString();
+        }
+        if (t instanceof io.delta.kernel.types.BooleanType) {
+            return Boolean.toString(v.getBoolean(r));
+        }
+        return v.getString(r);
     }
 
     private static double partitionNumber(String text) {

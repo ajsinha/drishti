@@ -110,7 +110,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000157001,
+     "EVENT_ID": "20000157001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -123,7 +123,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000157002,
+     "EVENT_ID": "20000157002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -136,7 +136,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000157003,
+     "EVENT_ID": "20000157003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CLEARED",
      "PAYMENT_TYPE": "",
@@ -149,7 +149,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000157004,
+     "EVENT_ID": "20000157004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "PARTIALLY_TERMINATED",
      "PAYMENT_TYPE": "",
@@ -162,7 +162,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000157005,
+     "EVENT_ID": "20000157005",
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -190,7 +190,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000161001,
+     "EVENT_ID": "20000161001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -203,7 +203,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000161002,
+     "EVENT_ID": "20000161002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -216,7 +216,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000161003,
+     "EVENT_ID": "20000161003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CLEARED",
      "PAYMENT_TYPE": "",
@@ -229,7 +229,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000161004,
+     "EVENT_ID": "20000161004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "AMENDED",
      "PAYMENT_TYPE": "",
@@ -242,7 +242,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000161005,
+     "EVENT_ID": "20000161005",
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -270,7 +270,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000163001,
+     "EVENT_ID": "20000163001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -283,7 +283,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000163002,
+     "EVENT_ID": "20000163002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -296,7 +296,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000163003,
+     "EVENT_ID": "20000163003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -324,7 +324,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000165001,
+     "EVENT_ID": "20000165001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -337,7 +337,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000165002,
+     "EVENT_ID": "20000165002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -350,7 +350,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000165003,
+     "EVENT_ID": "20000165003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "AMENDED",
      "PAYMENT_TYPE": "",
@@ -363,7 +363,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000165004,
+     "EVENT_ID": "20000165004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -391,7 +391,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000166001,
+     "EVENT_ID": "20000166001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -404,7 +404,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000166002,
+     "EVENT_ID": "20000166002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -417,7 +417,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000166003,
+     "EVENT_ID": "20000166003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -445,7 +445,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000169001,
+     "EVENT_ID": "20000169001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -458,7 +458,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000169002,
+     "EVENT_ID": "20000169002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -471,7 +471,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000169003,
+     "EVENT_ID": "20000169003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CLEARED",
      "PAYMENT_TYPE": "",
@@ -484,7 +484,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000169004,
+     "EVENT_ID": "20000169004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -512,7 +512,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000175001,
+     "EVENT_ID": "20000175001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -525,7 +525,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000175002,
+     "EVENT_ID": "20000175002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -538,7 +538,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000175003,
+     "EVENT_ID": "20000175003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CLEARED",
      "PAYMENT_TYPE": "",
@@ -551,7 +551,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000175004,
+     "EVENT_ID": "20000175004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -579,7 +579,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000178001,
+     "EVENT_ID": "20000178001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -592,7 +592,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000178002,
+     "EVENT_ID": "20000178002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -605,7 +605,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000178003,
+     "EVENT_ID": "20000178003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CLEARED",
      "PAYMENT_TYPE": "",
@@ -618,7 +618,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000178004,
+     "EVENT_ID": "20000178004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "AMENDED",
      "PAYMENT_TYPE": "",
@@ -631,7 +631,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000178005,
+     "EVENT_ID": "20000178005",
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -659,7 +659,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000179001,
+     "EVENT_ID": "20000179001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -672,7 +672,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000179002,
+     "EVENT_ID": "20000179002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -685,7 +685,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000179003,
+     "EVENT_ID": "20000179003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CLEARED",
      "PAYMENT_TYPE": "",
@@ -698,7 +698,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000179004,
+     "EVENT_ID": "20000179004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -726,7 +726,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000180001,
+     "EVENT_ID": "20000180001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -739,7 +739,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000180002,
+     "EVENT_ID": "20000180002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -752,7 +752,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000180003,
+     "EVENT_ID": "20000180003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CLEARED",
      "PAYMENT_TYPE": "",
@@ -765,7 +765,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000180004,
+     "EVENT_ID": "20000180004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -793,7 +793,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000181001,
+     "EVENT_ID": "20000181001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -806,7 +806,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000181002,
+     "EVENT_ID": "20000181002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -819,7 +819,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000181003,
+     "EVENT_ID": "20000181003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CLEARED",
      "PAYMENT_TYPE": "",
@@ -832,7 +832,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000181004,
+     "EVENT_ID": "20000181004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -860,7 +860,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000182001,
+     "EVENT_ID": "20000182001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -873,7 +873,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000182002,
+     "EVENT_ID": "20000182002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -886,7 +886,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000182003,
+     "EVENT_ID": "20000182003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CLEARED",
      "PAYMENT_TYPE": "",
@@ -899,7 +899,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000182004,
+     "EVENT_ID": "20000182004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -927,7 +927,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000185001,
+     "EVENT_ID": "20000185001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -940,7 +940,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000185002,
+     "EVENT_ID": "20000185002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -953,7 +953,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000185003,
+     "EVENT_ID": "20000185003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CLEARED",
      "PAYMENT_TYPE": "",
@@ -966,7 +966,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000185004,
+     "EVENT_ID": "20000185004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -994,7 +994,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000186001,
+     "EVENT_ID": "20000186001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -1007,7 +1007,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000186002,
+     "EVENT_ID": "20000186002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -1020,7 +1020,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000186003,
+     "EVENT_ID": "20000186003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CLEARED",
      "PAYMENT_TYPE": "",
@@ -1033,7 +1033,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000186004,
+     "EVENT_ID": "20000186004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -1061,7 +1061,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000190001,
+     "EVENT_ID": "20000190001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -1074,7 +1074,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000190002,
+     "EVENT_ID": "20000190002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -1087,7 +1087,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000190003,
+     "EVENT_ID": "20000190003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -1115,7 +1115,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000193001,
+     "EVENT_ID": "20000193001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -1128,7 +1128,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000193002,
+     "EVENT_ID": "20000193002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -1141,7 +1141,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000193003,
+     "EVENT_ID": "20000193003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -1169,7 +1169,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000197001,
+     "EVENT_ID": "20000197001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -1182,7 +1182,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000197002,
+     "EVENT_ID": "20000197002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -1195,7 +1195,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000197003,
+     "EVENT_ID": "20000197003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -1223,7 +1223,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000198001,
+     "EVENT_ID": "20000198001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -1236,7 +1236,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000198002,
+     "EVENT_ID": "20000198002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -1249,7 +1249,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000198003,
+     "EVENT_ID": "20000198003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "PARTIALLY_TERMINATED",
      "PAYMENT_TYPE": "",
@@ -1262,7 +1262,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000198004,
+     "EVENT_ID": "20000198004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -1290,7 +1290,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000199001,
+     "EVENT_ID": "20000199001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -1303,7 +1303,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000199002,
+     "EVENT_ID": "20000199002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -1316,7 +1316,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000199003,
+     "EVENT_ID": "20000199003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "AMENDED",
      "PAYMENT_TYPE": "",
@@ -1329,7 +1329,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000199004,
+     "EVENT_ID": "20000199004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -1342,7 +1342,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000199005,
+     "EVENT_ID": "20000199005",
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -1370,7 +1370,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000203001,
+     "EVENT_ID": "20000203001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -1383,7 +1383,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000203002,
+     "EVENT_ID": "20000203002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -1396,7 +1396,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000203003,
+     "EVENT_ID": "20000203003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -1409,7 +1409,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000203004,
+     "EVENT_ID": "20000203004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -1437,7 +1437,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000204001,
+     "EVENT_ID": "20000204001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -1450,7 +1450,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000204002,
+     "EVENT_ID": "20000204002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -1463,7 +1463,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000204003,
+     "EVENT_ID": "20000204003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -1476,7 +1476,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000204004,
+     "EVENT_ID": "20000204004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -1504,7 +1504,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000207001,
+     "EVENT_ID": "20000207001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -1517,7 +1517,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000207002,
+     "EVENT_ID": "20000207002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -1530,7 +1530,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000207003,
+     "EVENT_ID": "20000207003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -1543,7 +1543,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000207004,
+     "EVENT_ID": "20000207004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -1571,7 +1571,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000211001,
+     "EVENT_ID": "20000211001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -1584,7 +1584,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000211002,
+     "EVENT_ID": "20000211002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -1597,7 +1597,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000211003,
+     "EVENT_ID": "20000211003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -1625,7 +1625,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000212001,
+     "EVENT_ID": "20000212001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -1638,7 +1638,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000212002,
+     "EVENT_ID": "20000212002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -1651,7 +1651,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000212003,
+     "EVENT_ID": "20000212003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "AMENDED",
      "PAYMENT_TYPE": "",
@@ -1664,7 +1664,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000212004,
+     "EVENT_ID": "20000212004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "PARTIALLY_TERMINATED",
      "PAYMENT_TYPE": "",
@@ -1677,7 +1677,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000212005,
+     "EVENT_ID": "20000212005",
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -1705,7 +1705,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000214001,
+     "EVENT_ID": "20000214001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -1718,7 +1718,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000214002,
+     "EVENT_ID": "20000214002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -1731,7 +1731,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000214003,
+     "EVENT_ID": "20000214003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "PARTIALLY_TERMINATED",
      "PAYMENT_TYPE": "",
@@ -1744,7 +1744,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000214004,
+     "EVENT_ID": "20000214004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -1772,7 +1772,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000215001,
+     "EVENT_ID": "20000215001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -1785,7 +1785,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000215002,
+     "EVENT_ID": "20000215002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -1798,7 +1798,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000215003,
+     "EVENT_ID": "20000215003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -1826,7 +1826,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000217001,
+     "EVENT_ID": "20000217001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -1839,7 +1839,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000217002,
+     "EVENT_ID": "20000217002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -1852,7 +1852,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000217003,
+     "EVENT_ID": "20000217003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -1865,7 +1865,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000217004,
+     "EVENT_ID": "20000217004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -1893,7 +1893,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000218001,
+     "EVENT_ID": "20000218001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -1906,7 +1906,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000218002,
+     "EVENT_ID": "20000218002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -1919,7 +1919,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000218003,
+     "EVENT_ID": "20000218003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -1932,7 +1932,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000218004,
+     "EVENT_ID": "20000218004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -1960,7 +1960,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000222001,
+     "EVENT_ID": "20000222001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -1973,7 +1973,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000222002,
+     "EVENT_ID": "20000222002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -1986,7 +1986,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000222003,
+     "EVENT_ID": "20000222003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "PARTIALLY_TERMINATED",
      "PAYMENT_TYPE": "",
@@ -1999,7 +1999,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000222004,
+     "EVENT_ID": "20000222004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -2012,7 +2012,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000222005,
+     "EVENT_ID": "20000222005",
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -2040,7 +2040,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000223001,
+     "EVENT_ID": "20000223001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -2053,7 +2053,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000223002,
+     "EVENT_ID": "20000223002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -2066,7 +2066,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000223003,
+     "EVENT_ID": "20000223003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -2079,7 +2079,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000223004,
+     "EVENT_ID": "20000223004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -2107,7 +2107,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000226001,
+     "EVENT_ID": "20000226001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -2120,7 +2120,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000226002,
+     "EVENT_ID": "20000226002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -2133,7 +2133,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000226003,
+     "EVENT_ID": "20000226003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "AMENDED",
      "PAYMENT_TYPE": "",
@@ -2146,7 +2146,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000226004,
+     "EVENT_ID": "20000226004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -2159,7 +2159,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000226005,
+     "EVENT_ID": "20000226005",
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -2187,7 +2187,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000227001,
+     "EVENT_ID": "20000227001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -2200,7 +2200,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000227002,
+     "EVENT_ID": "20000227002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -2213,7 +2213,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000227003,
+     "EVENT_ID": "20000227003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -2226,7 +2226,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000227004,
+     "EVENT_ID": "20000227004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -2254,7 +2254,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000232001,
+     "EVENT_ID": "20000232001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -2267,7 +2267,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000232002,
+     "EVENT_ID": "20000232002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -2280,7 +2280,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000232003,
+     "EVENT_ID": "20000232003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "PARTIALLY_TERMINATED",
      "PAYMENT_TYPE": "",
@@ -2293,7 +2293,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000232004,
+     "EVENT_ID": "20000232004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "CASH_SETTLED",
      "PAYMENT_TYPE": "",
@@ -2306,7 +2306,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000232005,
+     "EVENT_ID": "20000232005",
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -2319,7 +2319,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000232006,
+     "EVENT_ID": "20000232006",
      "EVENT_NUMBER": 6,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -2331,8 +2331,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232007,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232007",
      "EVENT_NUMBER": 7,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2344,8 +2344,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232008,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232008",
      "EVENT_NUMBER": 8,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2357,8 +2357,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232009,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232009",
      "EVENT_NUMBER": 9,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2370,8 +2370,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232010,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232010",
      "EVENT_NUMBER": 10,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2383,8 +2383,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232011,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232011",
      "EVENT_NUMBER": 11,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2396,8 +2396,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232012,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232012",
      "EVENT_NUMBER": 12,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2409,8 +2409,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232013,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232013",
      "EVENT_NUMBER": 13,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2422,8 +2422,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232014,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232014",
      "EVENT_NUMBER": 14,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2435,8 +2435,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232015,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232015",
      "EVENT_NUMBER": 15,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2448,8 +2448,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232016,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232016",
      "EVENT_NUMBER": 16,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2461,8 +2461,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232017,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232017",
      "EVENT_NUMBER": 17,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2474,8 +2474,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232018,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232018",
      "EVENT_NUMBER": 18,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2487,8 +2487,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232019,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232019",
      "EVENT_NUMBER": 19,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2500,8 +2500,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232020,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232020",
      "EVENT_NUMBER": 20,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2513,8 +2513,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232021,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232021",
      "EVENT_NUMBER": 21,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2526,8 +2526,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232022,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232022",
      "EVENT_NUMBER": 22,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2539,8 +2539,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232023,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232023",
      "EVENT_NUMBER": 23,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2552,8 +2552,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232024,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232024",
      "EVENT_NUMBER": 24,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2565,8 +2565,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232025,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232025",
      "EVENT_NUMBER": 25,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2578,8 +2578,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232026,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232026",
      "EVENT_NUMBER": 26,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2591,8 +2591,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232027,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232027",
      "EVENT_NUMBER": 27,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2604,8 +2604,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232028,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232028",
      "EVENT_NUMBER": 28,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2617,8 +2617,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232029,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232029",
      "EVENT_NUMBER": 29,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2630,8 +2630,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000232030,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000232030",
      "EVENT_NUMBER": 30,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -2659,7 +2659,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000237001,
+     "EVENT_ID": "20000237001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -2672,7 +2672,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000237002,
+     "EVENT_ID": "20000237002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -2685,7 +2685,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000237003,
+     "EVENT_ID": "20000237003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -2698,7 +2698,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000237004,
+     "EVENT_ID": "20000237004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -2726,7 +2726,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000240001,
+     "EVENT_ID": "20000240001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -2739,7 +2739,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000240002,
+     "EVENT_ID": "20000240002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -2752,7 +2752,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000240003,
+     "EVENT_ID": "20000240003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -2765,7 +2765,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000240004,
+     "EVENT_ID": "20000240004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -2793,7 +2793,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000242001,
+     "EVENT_ID": "20000242001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -2806,7 +2806,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000242002,
+     "EVENT_ID": "20000242002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -2819,7 +2819,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000242003,
+     "EVENT_ID": "20000242003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "AMENDED",
      "PAYMENT_TYPE": "",
@@ -2832,7 +2832,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000242004,
+     "EVENT_ID": "20000242004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -2845,7 +2845,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000242005,
+     "EVENT_ID": "20000242005",
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -2873,7 +2873,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000243001,
+     "EVENT_ID": "20000243001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -2886,7 +2886,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000243002,
+     "EVENT_ID": "20000243002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -2899,7 +2899,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000243003,
+     "EVENT_ID": "20000243003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -2912,7 +2912,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000243004,
+     "EVENT_ID": "20000243004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -2940,7 +2940,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000246001,
+     "EVENT_ID": "20000246001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -2953,7 +2953,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000246002,
+     "EVENT_ID": "20000246002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -2966,7 +2966,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000246003,
+     "EVENT_ID": "20000246003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -2979,7 +2979,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000246004,
+     "EVENT_ID": "20000246004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -3007,7 +3007,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000251001,
+     "EVENT_ID": "20000251001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -3020,7 +3020,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000251002,
+     "EVENT_ID": "20000251002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -3033,7 +3033,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000251003,
+     "EVENT_ID": "20000251003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -3061,7 +3061,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000252001,
+     "EVENT_ID": "20000252001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -3074,7 +3074,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000252002,
+     "EVENT_ID": "20000252002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -3087,7 +3087,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000252003,
+     "EVENT_ID": "20000252003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "AMENDED",
      "PAYMENT_TYPE": "",
@@ -3100,7 +3100,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000252004,
+     "EVENT_ID": "20000252004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -3128,7 +3128,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000253001,
+     "EVENT_ID": "20000253001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -3141,7 +3141,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000253002,
+     "EVENT_ID": "20000253002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -3154,7 +3154,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000253003,
+     "EVENT_ID": "20000253003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CASH_SETTLED",
      "PAYMENT_TYPE": "",
@@ -3167,7 +3167,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000253004,
+     "EVENT_ID": "20000253004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -3180,7 +3180,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000253005,
+     "EVENT_ID": "20000253005",
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -3192,8 +3192,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000253006,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000253006",
      "EVENT_NUMBER": 6,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3205,8 +3205,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000253007,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000253007",
      "EVENT_NUMBER": 7,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3218,8 +3218,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000253008,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000253008",
      "EVENT_NUMBER": 8,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3231,8 +3231,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000253009,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000253009",
      "EVENT_NUMBER": 9,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3244,8 +3244,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000253010,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000253010",
      "EVENT_NUMBER": 10,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3273,7 +3273,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000255001,
+     "EVENT_ID": "20000255001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -3286,7 +3286,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000255002,
+     "EVENT_ID": "20000255002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -3299,7 +3299,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000255003,
+     "EVENT_ID": "20000255003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CASH_SETTLED",
      "PAYMENT_TYPE": "",
@@ -3312,7 +3312,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000255004,
+     "EVENT_ID": "20000255004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -3325,7 +3325,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000255005,
+     "EVENT_ID": "20000255005",
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -3337,8 +3337,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000255006,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000255006",
      "EVENT_NUMBER": 6,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3350,8 +3350,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000255007,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000255007",
      "EVENT_NUMBER": 7,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3363,8 +3363,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000255008,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000255008",
      "EVENT_NUMBER": 8,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3376,8 +3376,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000255009,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000255009",
      "EVENT_NUMBER": 9,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3405,7 +3405,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000258001,
+     "EVENT_ID": "20000258001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -3418,7 +3418,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000258002,
+     "EVENT_ID": "20000258002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -3431,7 +3431,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000258003,
+     "EVENT_ID": "20000258003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CASH_SETTLED",
      "PAYMENT_TYPE": "",
@@ -3444,7 +3444,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000258004,
+     "EVENT_ID": "20000258004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -3457,7 +3457,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000258005,
+     "EVENT_ID": "20000258005",
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -3469,8 +3469,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000258006,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000258006",
      "EVENT_NUMBER": 6,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3482,8 +3482,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000258007,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000258007",
      "EVENT_NUMBER": 7,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3495,8 +3495,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000258008,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000258008",
      "EVENT_NUMBER": 8,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3508,8 +3508,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000258009,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000258009",
      "EVENT_NUMBER": 9,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3521,8 +3521,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000258010,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000258010",
      "EVENT_NUMBER": 10,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3534,8 +3534,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000258011,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000258011",
      "EVENT_NUMBER": 11,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3547,8 +3547,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000258012,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000258012",
      "EVENT_NUMBER": 12,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3560,8 +3560,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000258013,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000258013",
      "EVENT_NUMBER": 13,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3573,8 +3573,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000258014,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000258014",
      "EVENT_NUMBER": 14,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3586,8 +3586,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000258015,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000258015",
      "EVENT_NUMBER": 15,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3599,8 +3599,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000258016,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000258016",
      "EVENT_NUMBER": 16,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3612,8 +3612,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000258017,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000258017",
      "EVENT_NUMBER": 17,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Premium",
@@ -3641,7 +3641,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000261001,
+     "EVENT_ID": "20000261001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -3654,7 +3654,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000261002,
+     "EVENT_ID": "20000261002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -3667,7 +3667,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000261003,
+     "EVENT_ID": "20000261003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -3695,7 +3695,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000262001,
+     "EVENT_ID": "20000262001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -3708,7 +3708,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000262002,
+     "EVENT_ID": "20000262002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -3721,7 +3721,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000262003,
+     "EVENT_ID": "20000262003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -3749,7 +3749,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000268001,
+     "EVENT_ID": "20000268001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -3762,7 +3762,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000268002,
+     "EVENT_ID": "20000268002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -3775,7 +3775,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000268003,
+     "EVENT_ID": "20000268003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -3803,7 +3803,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000273001,
+     "EVENT_ID": "20000273001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -3816,7 +3816,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000273002,
+     "EVENT_ID": "20000273002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -3829,7 +3829,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000273003,
+     "EVENT_ID": "20000273003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CLEARED",
      "PAYMENT_TYPE": "",
@@ -3842,7 +3842,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000273004,
+     "EVENT_ID": "20000273004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -3870,7 +3870,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000275001,
+     "EVENT_ID": "20000275001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -3883,7 +3883,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000275002,
+     "EVENT_ID": "20000275002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -3896,7 +3896,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000275003,
+     "EVENT_ID": "20000275003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "AMENDED",
      "PAYMENT_TYPE": "",
@@ -3909,7 +3909,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000275004,
+     "EVENT_ID": "20000275004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "CLEARED",
      "PAYMENT_TYPE": "",
@@ -3922,7 +3922,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000275005,
+     "EVENT_ID": "20000275005",
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -3950,7 +3950,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000279001,
+     "EVENT_ID": "20000279001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -3963,7 +3963,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000279002,
+     "EVENT_ID": "20000279002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -3976,7 +3976,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000279003,
+     "EVENT_ID": "20000279003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CASH_SETTLED",
      "PAYMENT_TYPE": "",
@@ -3989,7 +3989,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000279004,
+     "EVENT_ID": "20000279004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -4002,7 +4002,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000279005,
+     "EVENT_ID": "20000279005",
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -4014,8 +4014,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000279006,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000279006",
      "EVENT_NUMBER": 6,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4027,8 +4027,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000279007,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000279007",
      "EVENT_NUMBER": 7,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4040,8 +4040,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000279008,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000279008",
      "EVENT_NUMBER": 8,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4053,8 +4053,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000279009,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000279009",
      "EVENT_NUMBER": 9,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4066,8 +4066,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000279010,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000279010",
      "EVENT_NUMBER": 10,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4079,8 +4079,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000279011,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000279011",
      "EVENT_NUMBER": 11,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4092,8 +4092,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000279012,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000279012",
      "EVENT_NUMBER": 12,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4105,8 +4105,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000279013,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000279013",
      "EVENT_NUMBER": 13,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4118,8 +4118,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000279014,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000279014",
      "EVENT_NUMBER": 14,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4131,8 +4131,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000279015,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000279015",
      "EVENT_NUMBER": 15,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4144,8 +4144,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000279016,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000279016",
      "EVENT_NUMBER": 16,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4157,8 +4157,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000279017,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000279017",
      "EVENT_NUMBER": 17,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4170,8 +4170,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000279018,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000279018",
      "EVENT_NUMBER": 18,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4183,8 +4183,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000279019,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000279019",
      "EVENT_NUMBER": 19,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4196,8 +4196,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000279020,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000279020",
      "EVENT_NUMBER": 20,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4209,8 +4209,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000279021,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000279021",
      "EVENT_NUMBER": 21,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4238,7 +4238,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000280001,
+     "EVENT_ID": "20000280001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -4251,7 +4251,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000280002,
+     "EVENT_ID": "20000280002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -4264,7 +4264,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000280003,
+     "EVENT_ID": "20000280003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CASH_SETTLED",
      "PAYMENT_TYPE": "",
@@ -4277,7 +4277,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000280004,
+     "EVENT_ID": "20000280004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -4290,7 +4290,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000280005,
+     "EVENT_ID": "20000280005",
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -4302,8 +4302,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000280006,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000280006",
      "EVENT_NUMBER": 6,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4315,8 +4315,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000280007,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000280007",
      "EVENT_NUMBER": 7,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4328,8 +4328,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000280008,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000280008",
      "EVENT_NUMBER": 8,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4341,8 +4341,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000280009,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000280009",
      "EVENT_NUMBER": 9,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4354,8 +4354,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000280010,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000280010",
      "EVENT_NUMBER": 10,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4367,8 +4367,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000280011,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000280011",
      "EVENT_NUMBER": 11,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4380,8 +4380,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000280012,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000280012",
      "EVENT_NUMBER": 12,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4393,8 +4393,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000280013,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000280013",
      "EVENT_NUMBER": 13,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4406,8 +4406,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000280014,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000280014",
      "EVENT_NUMBER": 14,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4419,8 +4419,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000280015,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000280015",
      "EVENT_NUMBER": 15,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4432,8 +4432,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000280016,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000280016",
      "EVENT_NUMBER": 16,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4445,8 +4445,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000280017,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000280017",
      "EVENT_NUMBER": 17,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4458,8 +4458,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000280018,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000280018",
      "EVENT_NUMBER": 18,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4471,8 +4471,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000280019,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000280019",
      "EVENT_NUMBER": 19,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4484,8 +4484,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000280020,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000280020",
      "EVENT_NUMBER": 20,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4497,8 +4497,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000280021,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000280021",
      "EVENT_NUMBER": 21,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4510,8 +4510,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000280022,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000280022",
      "EVENT_NUMBER": 22,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4523,8 +4523,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000280023,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000280023",
      "EVENT_NUMBER": 23,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4536,8 +4536,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000280024,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000280024",
      "EVENT_NUMBER": 24,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4565,7 +4565,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000281001,
+     "EVENT_ID": "20000281001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -4578,7 +4578,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000281002,
+     "EVENT_ID": "20000281002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -4591,7 +4591,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000281003,
+     "EVENT_ID": "20000281003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CASH_SETTLED",
      "PAYMENT_TYPE": "",
@@ -4604,7 +4604,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000281004,
+     "EVENT_ID": "20000281004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -4617,7 +4617,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000281005,
+     "EVENT_ID": "20000281005",
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -4629,8 +4629,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000281006,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000281006",
      "EVENT_NUMBER": 6,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4642,8 +4642,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000281007,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000281007",
      "EVENT_NUMBER": 7,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4655,8 +4655,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000281008,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000281008",
      "EVENT_NUMBER": 8,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4668,8 +4668,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000281009,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000281009",
      "EVENT_NUMBER": 9,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4681,8 +4681,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000281010,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000281010",
      "EVENT_NUMBER": 10,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4694,8 +4694,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000281011,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000281011",
      "EVENT_NUMBER": 11,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4707,8 +4707,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000281012,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000281012",
      "EVENT_NUMBER": 12,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4720,8 +4720,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000281013,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000281013",
      "EVENT_NUMBER": 13,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4733,8 +4733,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000281014,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000281014",
      "EVENT_NUMBER": 14,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4746,8 +4746,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000281015,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000281015",
      "EVENT_NUMBER": 15,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4775,7 +4775,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000282001,
+     "EVENT_ID": "20000282001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -4788,7 +4788,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000282002,
+     "EVENT_ID": "20000282002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -4801,7 +4801,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000282003,
+     "EVENT_ID": "20000282003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "CASH_SETTLED",
      "PAYMENT_TYPE": "",
@@ -4814,7 +4814,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000282004,
+     "EVENT_ID": "20000282004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "NEXT_PAYMENT",
      "PAYMENT_TYPE": "",
@@ -4827,7 +4827,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000282005,
+     "EVENT_ID": "20000282005",
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -4839,8 +4839,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000282006,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000282006",
      "EVENT_NUMBER": 6,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4852,8 +4852,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000282007,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000282007",
      "EVENT_NUMBER": 7,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4865,8 +4865,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000282008,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000282008",
      "EVENT_NUMBER": 8,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4878,8 +4878,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000282009,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000282009",
      "EVENT_NUMBER": 9,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4891,8 +4891,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000282010,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000282010",
      "EVENT_NUMBER": 10,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4904,8 +4904,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000282011,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000282011",
      "EVENT_NUMBER": 11,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4917,8 +4917,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000282012,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000282012",
      "EVENT_NUMBER": 12,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4930,8 +4930,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000282013,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000282013",
      "EVENT_NUMBER": 13,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4943,8 +4943,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000282014,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000282014",
      "EVENT_NUMBER": 14,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4956,8 +4956,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000282015,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000282015",
      "EVENT_NUMBER": 15,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4969,8 +4969,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000282016,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000282016",
      "EVENT_NUMBER": 16,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4982,8 +4982,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000282017,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000282017",
      "EVENT_NUMBER": 17,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -4995,8 +4995,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000282018,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000282018",
      "EVENT_NUMBER": 18,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -5008,8 +5008,8 @@
      "NY_CURVE_FLAG": ""
     },
     {
-     "LEG_ID": 1,
-     "EVENT_ID": 20000282019,
+     "LEG_ID": "1",
+     "EVENT_ID": "20000282019",
      "EVENT_NUMBER": 19,
      "EVENT_TYPE": "CASH_SETTLEMENT",
      "PAYMENT_TYPE": "Interest",
@@ -5037,7 +5037,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000287001,
+     "EVENT_ID": "20000287001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -5050,7 +5050,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000287002,
+     "EVENT_ID": "20000287002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -5063,7 +5063,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000287003,
+     "EVENT_ID": "20000287003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "AMENDED",
      "PAYMENT_TYPE": "",
@@ -5076,7 +5076,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000287004,
+     "EVENT_ID": "20000287004",
      "EVENT_NUMBER": 4,
      "EVENT_TYPE": "PARTIALLY_TERMINATED",
      "PAYMENT_TYPE": "",
@@ -5089,7 +5089,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000287005,
+     "EVENT_ID": "20000287005",
      "EVENT_NUMBER": 5,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",
@@ -5117,7 +5117,7 @@
    "EVENTS": [
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000288001,
+     "EVENT_ID": "20000288001",
      "EVENT_NUMBER": 1,
      "EVENT_TYPE": "BOOKED",
      "PAYMENT_TYPE": "",
@@ -5130,7 +5130,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000288002,
+     "EVENT_ID": "20000288002",
      "EVENT_NUMBER": 2,
      "EVENT_TYPE": "CONFIRMED",
      "PAYMENT_TYPE": "",
@@ -5143,7 +5143,7 @@
     },
     {
      "LEG_ID": "",
-     "EVENT_ID": 20000288003,
+     "EVENT_ID": "20000288003",
      "EVENT_NUMBER": 3,
      "EVENT_TYPE": "MATURITY",
      "PAYMENT_TYPE": "",

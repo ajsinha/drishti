@@ -237,4 +237,4 @@ class Converter:
 
 def convert(doc: dict, as_of: str) -> dict:
     """A rich internal trade (data_trades.py) as its booking system's feed writes it: the common schema, nothing else."""
-    return Converter(doc, as_of).trade()
+    return S.text_ids(Converter(doc, as_of).trade())

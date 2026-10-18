@@ -46,7 +46,7 @@
  "SETTLEMENT_DATE": "2025-08-25",
  "LEGS": [
   {
-   "LEG_ID": 1,
+   "LEG_ID": "1",
    "LEG_TYPE": "OPTION",
    "LEG_ECONOMIC_TYPE": "Receive",
    "CURRENCY": "CHF",
@@ -76,7 +76,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 20000133001,
+     "FLOW_ID": "20000133001",
      "FLOW_TYPE": "Performance",
      "NOTIONAL": 73000000.0,
      "RATE": "",
@@ -93,7 +93,7 @@
    ]
   },
   {
-   "LEG_ID": 2,
+   "LEG_ID": "2",
    "LEG_TYPE": "FLOAT",
    "LEG_ECONOMIC_TYPE": "Pay",
    "CURRENCY": "CHF",
@@ -123,7 +123,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 20000133002,
+     "FLOW_ID": "20000133002",
      "FLOW_TYPE": "Float",
      "NOTIONAL": 73000000.0,
      "RATE": 0.0033,
@@ -143,7 +143,7 @@
  "EVENTS": [
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000133001,
+   "EVENT_ID": "20000133001",
    "EVENT_NUMBER": 1,
    "EVENT_TYPE": "BOOKED",
    "PAYMENT_TYPE": "",
@@ -156,7 +156,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000133002,
+   "EVENT_ID": "20000133002",
    "EVENT_NUMBER": 2,
    "EVENT_TYPE": "CONFIRMED",
    "PAYMENT_TYPE": "",
@@ -169,7 +169,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000133003,
+   "EVENT_ID": "20000133003",
    "EVENT_NUMBER": 3,
    "EVENT_TYPE": "AMENDED",
    "PAYMENT_TYPE": "",
@@ -182,7 +182,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000133004,
+   "EVENT_ID": "20000133004",
    "EVENT_NUMBER": 4,
    "EVENT_TYPE": "NEXT_PAYMENT",
    "PAYMENT_TYPE": "",
@@ -195,7 +195,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000133005,
+   "EVENT_ID": "20000133005",
    "EVENT_NUMBER": 5,
    "EVENT_TYPE": "MATURITY",
    "PAYMENT_TYPE": "",

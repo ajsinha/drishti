@@ -128,6 +128,8 @@ country topic and a listed company of `news-and-markets` link to their economy i
 
 ### Trading
 
+**Ids are text; numeric ids in files are read as text.** `TRADE_ID` and every other id (`LEG_ID`, `FLOW_ID`, `RESET_ID`, `EVENT_ID`, `TRADE_IDS`) is a string in the test data and samples (ENDUR's are digits, `"1000008"`). A real extract that writes an id as a JSON number (`1000008`) is read as `"1000008"`, never `1000008.0`; text ids keep their leading zeros; no id prefix or shape is assumed (`SWP-AB_12`, `mx_2000-01`, `007123` are all ids) — `SOURCE_SYSTEM` says which system a trade comes from. An older lake whose `TRADE_ID` column was written as a number is still read (as text).
+
 A bank books its trades in several systems; the trading pack shows them as one book. Each system feeds a **common schema**: the
 47 UPPER_SNAKE attributes a production extract has, nested the same way whatever the system:
 

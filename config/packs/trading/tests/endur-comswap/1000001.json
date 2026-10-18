@@ -3,7 +3,7 @@
  "SOURCE_UPDATE_TIME": "",
  "TRADE_DATE": "2025-06-20",
  "INPUT_DATE": "",
- "TRADE_ID": 1000001,
+ "TRADE_ID": "1000001",
  "TRADE_STATUS": "VALIDATED",
  "TRADE_ACTION": "",
  "TRADE_VERSION": "1",
@@ -46,7 +46,7 @@
  "SETTLEMENT_DATE": "",
  "LEGS": [
   {
-   "LEG_ID": 1,
+   "LEG_ID": "1",
    "LEG_TYPE": "FIXED",
    "LEG_ECONOMIC_TYPE": "Fixed price",
    "CURRENCY": "USD",
@@ -76,7 +76,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 5000001,
+     "FLOW_ID": "5000001",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -91,7 +91,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000002,
+     "FLOW_ID": "5000002",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -106,7 +106,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000003,
+     "FLOW_ID": "5000003",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -121,7 +121,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000004,
+     "FLOW_ID": "5000004",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -136,7 +136,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000005,
+     "FLOW_ID": "5000005",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -151,7 +151,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000006,
+     "FLOW_ID": "5000006",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -166,7 +166,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000007,
+     "FLOW_ID": "5000007",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -181,7 +181,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000008,
+     "FLOW_ID": "5000008",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -196,7 +196,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000009,
+     "FLOW_ID": "5000009",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -211,7 +211,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000010,
+     "FLOW_ID": "5000010",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -226,7 +226,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000011,
+     "FLOW_ID": "5000011",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -241,7 +241,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000012,
+     "FLOW_ID": "5000012",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -256,7 +256,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000013,
+     "FLOW_ID": "5000013",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -271,7 +271,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000014,
+     "FLOW_ID": "5000014",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -286,7 +286,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000015,
+     "FLOW_ID": "5000015",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -301,7 +301,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000016,
+     "FLOW_ID": "5000016",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -316,7 +316,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000017,
+     "FLOW_ID": "5000017",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -331,7 +331,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000018,
+     "FLOW_ID": "5000018",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -346,7 +346,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000019,
+     "FLOW_ID": "5000019",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -361,7 +361,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000020,
+     "FLOW_ID": "5000020",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -376,7 +376,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000021,
+     "FLOW_ID": "5000021",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -391,7 +391,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000022,
+     "FLOW_ID": "5000022",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -406,7 +406,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000023,
+     "FLOW_ID": "5000023",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -421,7 +421,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000024,
+     "FLOW_ID": "5000024",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -436,7 +436,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000025,
+     "FLOW_ID": "5000025",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -451,7 +451,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000026,
+     "FLOW_ID": "5000026",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -466,7 +466,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000027,
+     "FLOW_ID": "5000027",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -481,7 +481,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000028,
+     "FLOW_ID": "5000028",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -496,7 +496,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000029,
+     "FLOW_ID": "5000029",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -511,7 +511,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000030,
+     "FLOW_ID": "5000030",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -526,7 +526,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000031,
+     "FLOW_ID": "5000031",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -541,7 +541,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000032,
+     "FLOW_ID": "5000032",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -556,7 +556,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000033,
+     "FLOW_ID": "5000033",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -571,7 +571,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000034,
+     "FLOW_ID": "5000034",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -586,7 +586,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000035,
+     "FLOW_ID": "5000035",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -601,7 +601,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 5000036,
+     "FLOW_ID": "5000036",
      "FLOW_TYPE": "Fixed price",
      "NOTIONAL": 4665826.2,
      "RATE": "2332.9131",
@@ -618,7 +618,7 @@
    ]
   },
   {
-   "LEG_ID": 2,
+   "LEG_ID": "2",
    "LEG_TYPE": "FLOAT",
    "LEG_ECONOMIC_TYPE": "Floating price",
    "CURRENCY": "USD",
@@ -648,7 +648,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 5000037,
+     "FLOW_ID": "5000037",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4528808.53,
      "RATE": "",
@@ -662,7 +662,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2025-08-01",
        "END_DATE": "2025-08-31",
@@ -674,7 +674,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000038,
+     "FLOW_ID": "5000038",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4490128.59,
      "RATE": "",
@@ -688,7 +688,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2025-09-01",
        "END_DATE": "2025-09-30",
@@ -700,7 +700,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000039,
+     "FLOW_ID": "5000039",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4486111.41,
      "RATE": "",
@@ -714,7 +714,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2025-10-01",
        "END_DATE": "2025-10-31",
@@ -726,7 +726,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000040,
+     "FLOW_ID": "5000040",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4475385.24,
      "RATE": "",
@@ -740,7 +740,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2025-11-01",
        "END_DATE": "2025-11-30",
@@ -752,7 +752,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000041,
+     "FLOW_ID": "5000041",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4512540.44,
      "RATE": "",
@@ -766,7 +766,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2025-12-01",
        "END_DATE": "2025-12-31",
@@ -778,7 +778,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000042,
+     "FLOW_ID": "5000042",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4487144.12,
      "RATE": "",
@@ -792,7 +792,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2026-01-01",
        "END_DATE": "2026-01-31",
@@ -804,7 +804,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000043,
+     "FLOW_ID": "5000043",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4521659.46,
      "RATE": "",
@@ -818,7 +818,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2026-02-01",
        "END_DATE": "2026-02-28",
@@ -830,7 +830,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000044,
+     "FLOW_ID": "5000044",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4549564.16,
      "RATE": "",
@@ -844,7 +844,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2026-03-01",
        "END_DATE": "2026-03-31",
@@ -856,7 +856,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000045,
+     "FLOW_ID": "5000045",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4589849.79,
      "RATE": "",
@@ -870,7 +870,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2026-04-01",
        "END_DATE": "2026-04-30",
@@ -882,7 +882,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000046,
+     "FLOW_ID": "5000046",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4582655.38,
      "RATE": "",
@@ -896,7 +896,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2026-05-01",
        "END_DATE": "2026-05-31",
@@ -908,7 +908,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000047,
+     "FLOW_ID": "5000047",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4571620.26,
      "RATE": "",
@@ -922,7 +922,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2026-06-01",
        "END_DATE": "2026-06-30",
@@ -934,7 +934,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000048,
+     "FLOW_ID": "5000048",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4560819.75,
      "RATE": "",
@@ -948,7 +948,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2026-07-01",
        "END_DATE": "2026-07-31",
@@ -960,7 +960,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000049,
+     "FLOW_ID": "5000049",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4610358.12,
      "RATE": "",
@@ -974,7 +974,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2026-08-01",
        "END_DATE": "2026-08-31",
@@ -986,7 +986,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000050,
+     "FLOW_ID": "5000050",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4678797.89,
      "RATE": "",
@@ -1000,7 +1000,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2026-09-01",
        "END_DATE": "2026-09-30",
@@ -1012,7 +1012,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000051,
+     "FLOW_ID": "5000051",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4664048.25,
      "RATE": "",
@@ -1026,7 +1026,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2026-10-01",
        "END_DATE": "2026-10-31",
@@ -1038,7 +1038,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000052,
+     "FLOW_ID": "5000052",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4600370.77,
      "RATE": "",
@@ -1052,7 +1052,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2026-11-01",
        "END_DATE": "2026-11-30",
@@ -1064,7 +1064,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000053,
+     "FLOW_ID": "5000053",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4561040.32,
      "RATE": "",
@@ -1078,7 +1078,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2026-12-01",
        "END_DATE": "2026-12-31",
@@ -1090,7 +1090,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000054,
+     "FLOW_ID": "5000054",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4494354.18,
      "RATE": "",
@@ -1104,7 +1104,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2027-01-01",
        "END_DATE": "2027-01-31",
@@ -1116,7 +1116,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000055,
+     "FLOW_ID": "5000055",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4538604.94,
      "RATE": "",
@@ -1130,7 +1130,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2027-02-01",
        "END_DATE": "2027-02-28",
@@ -1142,7 +1142,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000056,
+     "FLOW_ID": "5000056",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4480884.39,
      "RATE": "",
@@ -1156,7 +1156,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2027-03-01",
        "END_DATE": "2027-03-31",
@@ -1168,7 +1168,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000057,
+     "FLOW_ID": "5000057",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4441979.43,
      "RATE": "",
@@ -1182,7 +1182,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2027-04-01",
        "END_DATE": "2027-04-30",
@@ -1194,7 +1194,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000058,
+     "FLOW_ID": "5000058",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4377830.66,
      "RATE": "",
@@ -1208,7 +1208,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2027-05-01",
        "END_DATE": "2027-05-31",
@@ -1220,7 +1220,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000059,
+     "FLOW_ID": "5000059",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4361090.61,
      "RATE": "",
@@ -1234,7 +1234,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2027-06-01",
        "END_DATE": "2027-06-30",
@@ -1246,7 +1246,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000060,
+     "FLOW_ID": "5000060",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4312637.62,
      "RATE": "",
@@ -1260,7 +1260,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2027-07-01",
        "END_DATE": "2027-07-31",
@@ -1272,7 +1272,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000061,
+     "FLOW_ID": "5000061",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4355353.83,
      "RATE": "",
@@ -1286,7 +1286,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2027-08-01",
        "END_DATE": "2027-08-31",
@@ -1298,7 +1298,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000062,
+     "FLOW_ID": "5000062",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4402930.95,
      "RATE": "",
@@ -1312,7 +1312,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2027-09-01",
        "END_DATE": "2027-09-30",
@@ -1324,7 +1324,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000063,
+     "FLOW_ID": "5000063",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4419629.68,
      "RATE": "",
@@ -1338,7 +1338,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2027-10-01",
        "END_DATE": "2027-10-31",
@@ -1350,7 +1350,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000064,
+     "FLOW_ID": "5000064",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4473432.96,
      "RATE": "",
@@ -1364,7 +1364,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2027-11-01",
        "END_DATE": "2027-11-30",
@@ -1376,7 +1376,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000065,
+     "FLOW_ID": "5000065",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4503488.41,
      "RATE": "",
@@ -1390,7 +1390,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2027-12-01",
        "END_DATE": "2027-12-31",
@@ -1402,7 +1402,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000066,
+     "FLOW_ID": "5000066",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4535631.08,
      "RATE": "",
@@ -1416,7 +1416,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2028-01-01",
        "END_DATE": "2028-01-31",
@@ -1428,7 +1428,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000067,
+     "FLOW_ID": "5000067",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4560912.58,
      "RATE": "",
@@ -1442,7 +1442,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2028-02-01",
        "END_DATE": "2028-02-29",
@@ -1454,7 +1454,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000068,
+     "FLOW_ID": "5000068",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4612879.86,
      "RATE": "",
@@ -1468,7 +1468,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2028-03-01",
        "END_DATE": "2028-03-31",
@@ -1480,7 +1480,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000069,
+     "FLOW_ID": "5000069",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4602077.76,
      "RATE": "",
@@ -1494,7 +1494,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2028-04-01",
        "END_DATE": "2028-04-30",
@@ -1506,7 +1506,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000070,
+     "FLOW_ID": "5000070",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4548436.14,
      "RATE": "",
@@ -1520,7 +1520,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2028-05-01",
        "END_DATE": "2028-05-31",
@@ -1532,7 +1532,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000071,
+     "FLOW_ID": "5000071",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4512964.64,
      "RATE": "",
@@ -1546,7 +1546,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2028-06-01",
        "END_DATE": "2028-06-30",
@@ -1558,7 +1558,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000072,
+     "FLOW_ID": "5000072",
      "FLOW_TYPE": "Floating average",
      "NOTIONAL": 4480270.37,
      "RATE": "",
@@ -1572,7 +1572,7 @@
      "STRIKE_PRICE": 0.0,
      "RESETS": [
       {
-       "RESET_ID": 1,
+       "RESET_ID": "1",
        "ACCRUAL": 1.0,
        "START_DATE": "2028-07-01",
        "END_DATE": "2028-07-31",
@@ -1588,8 +1588,8 @@
  ],
  "EVENTS": [
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 9000001,
+   "LEG_ID": "1",
+   "EVENT_ID": "9000001",
    "EVENT_NUMBER": 1,
    "EVENT_TYPE": "RESET",
    "PAYMENT_TYPE": "Fixing",
@@ -1601,8 +1601,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 9000002,
+   "LEG_ID": "1",
+   "EVENT_ID": "9000002",
    "EVENT_NUMBER": 2,
    "EVENT_TYPE": "AMENDMENT",
    "PAYMENT_TYPE": "Fee",
@@ -1614,8 +1614,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 9000003,
+   "LEG_ID": "1",
+   "EVENT_ID": "9000003",
    "EVENT_NUMBER": 3,
    "EVENT_TYPE": "AMENDMENT",
    "PAYMENT_TYPE": "Fee",
@@ -1627,8 +1627,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 9000004,
+   "LEG_ID": "1",
+   "EVENT_ID": "9000004",
    "EVENT_NUMBER": 4,
    "EVENT_TYPE": "NOVATION",
    "PAYMENT_TYPE": "Novation fee",
@@ -1640,8 +1640,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 2,
-   "EVENT_ID": 9000005,
+   "LEG_ID": "2",
+   "EVENT_ID": "9000005",
    "EVENT_NUMBER": 1,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Cash settlement",

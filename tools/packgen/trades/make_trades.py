@@ -91,7 +91,7 @@ def clone(t: dict, i: int, system: str) -> dict:
             f["FLOW_ID"] = base + n
     for k, e in enumerate(d["EVENTS"], start=1):
         e["EVENT_ID"] = base + k
-    return d
+    return S.text_ids(d)
 
 
 def book(system: str, count: int, as_of: str) -> list[dict]:

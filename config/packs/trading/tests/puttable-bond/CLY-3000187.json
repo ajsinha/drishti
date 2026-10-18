@@ -46,7 +46,7 @@
  "SETTLEMENT_DATE": "2025-11-28",
  "LEGS": [
   {
-   "LEG_ID": 1,
+   "LEG_ID": "1",
    "LEG_TYPE": "FIXED",
    "LEG_ECONOMIC_TYPE": "Pay",
    "CURRENCY": "EUR",
@@ -76,7 +76,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 3000187001,
+     "FLOW_ID": "3000187001",
      "FLOW_TYPE": "First call",
      "NOTIONAL": 47000000.0,
      "RATE": 0.040616,
@@ -91,7 +91,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000187002,
+     "FLOW_ID": "3000187002",
      "FLOW_TYPE": "Bermudan call",
      "NOTIONAL": 47000000.0,
      "RATE": 0.033462,
@@ -106,7 +106,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000187003,
+     "FLOW_ID": "3000187003",
      "FLOW_TYPE": "Bermudan call",
      "NOTIONAL": 47000000.0,
      "RATE": 0.028013,
@@ -126,7 +126,7 @@
  "EVENTS": [
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000187001,
+   "EVENT_ID": "3000187001",
    "EVENT_NUMBER": 1,
    "EVENT_TYPE": "BOOKED",
    "PAYMENT_TYPE": "",
@@ -139,7 +139,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000187002,
+   "EVENT_ID": "3000187002",
    "EVENT_NUMBER": 2,
    "EVENT_TYPE": "CONFIRMED",
    "PAYMENT_TYPE": "",
@@ -152,7 +152,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000187003,
+   "EVENT_ID": "3000187003",
    "EVENT_NUMBER": 3,
    "EVENT_TYPE": "CLEARED",
    "PAYMENT_TYPE": "",
@@ -165,7 +165,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000187004,
+   "EVENT_ID": "3000187004",
    "EVENT_NUMBER": 4,
    "EVENT_TYPE": "AMENDED",
    "PAYMENT_TYPE": "",
@@ -178,7 +178,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000187005,
+   "EVENT_ID": "3000187005",
    "EVENT_NUMBER": 5,
    "EVENT_TYPE": "NEXT_PAYMENT",
    "PAYMENT_TYPE": "",
@@ -191,7 +191,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000187006,
+   "EVENT_ID": "3000187006",
    "EVENT_NUMBER": 6,
    "EVENT_TYPE": "MATURITY",
    "PAYMENT_TYPE": "",

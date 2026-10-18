@@ -103,7 +103,8 @@ class Packs:
 
 
 def _key(doc: dict, key: str) -> str:
-    return str(doc.get(key))
+    v = doc.get(key)
+    return str(int(v)) if isinstance(v, float) and v.is_integer() else str(v)     # ids are text: 1000008, never 1000008.0
 
 
 class RealExtras:
@@ -120,7 +121,7 @@ class RealExtras:
             data = json.loads(p.read_text(encoding="utf-8"))
             rows = data if isinstance(data, list) else (data.get("TRADES") or data.get("trades") or [data])
             for t in rows:
-                d = TS.rename(t)
+                d = TS.text_ids(TS.rename(t))                # a real extract's numeric ids (TRADE_ID, LEG_ID ...) become their text
                 out[str(d.get("TRADE_ID"))] = d
         return list(out.values())
 

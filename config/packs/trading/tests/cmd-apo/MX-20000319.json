@@ -46,7 +46,7 @@
  "SETTLEMENT_DATE": "2025-08-27",
  "LEGS": [
   {
-   "LEG_ID": 1,
+   "LEG_ID": "1",
    "LEG_TYPE": "OPTION",
    "LEG_ECONOMIC_TYPE": "Receive",
    "CURRENCY": "USD",
@@ -76,7 +76,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 20000319001,
+     "FLOW_ID": "20000319001",
      "FLOW_TYPE": "2025-11-27..2026-02-27",
      "NOTIONAL": 230000000.0,
      "RATE": 0.026386,
@@ -102,7 +102,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000319002,
+     "FLOW_ID": "20000319002",
      "FLOW_TYPE": "2026-02-27..2026-05-27",
      "NOTIONAL": 230000000.0,
      "RATE": 0.034994,
@@ -128,7 +128,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000319003,
+     "FLOW_ID": "20000319003",
      "FLOW_TYPE": "2026-05-27..2026-08-27",
      "NOTIONAL": 230000000.0,
      "RATE": 0.041349,
@@ -154,7 +154,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000319004,
+     "FLOW_ID": "20000319004",
      "FLOW_TYPE": "2026-08-27..2026-11-27",
      "NOTIONAL": 230000000.0,
      "RATE": 0.021584,
@@ -180,7 +180,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000319005,
+     "FLOW_ID": "20000319005",
      "FLOW_TYPE": "2026-11-27..2027-02-27",
      "NOTIONAL": 230000000.0,
      "RATE": 0.039447,
@@ -206,7 +206,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000319006,
+     "FLOW_ID": "20000319006",
      "FLOW_TYPE": "2027-02-27..2027-05-27",
      "NOTIONAL": 230000000.0,
      "RATE": 0.025457,
@@ -232,7 +232,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000319007,
+     "FLOW_ID": "20000319007",
      "FLOW_TYPE": "2027-05-27..2027-08-27",
      "NOTIONAL": 230000000.0,
      "RATE": 0.034517,
@@ -258,7 +258,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000319008,
+     "FLOW_ID": "20000319008",
      "FLOW_TYPE": "2027-08-27..2027-11-27",
      "NOTIONAL": 230000000.0,
      "RATE": 0.022937,
@@ -284,7 +284,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000319009,
+     "FLOW_ID": "20000319009",
      "FLOW_TYPE": "2027-11-27..2028-02-27",
      "NOTIONAL": 230000000.0,
      "RATE": 0.022932,
@@ -310,7 +310,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000319010,
+     "FLOW_ID": "20000319010",
      "FLOW_TYPE": "2028-02-27..2028-05-27",
      "NOTIONAL": 230000000.0,
      "RATE": 0.048151,
@@ -336,7 +336,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000319011,
+     "FLOW_ID": "20000319011",
      "FLOW_TYPE": "2028-05-27..2028-08-27",
      "NOTIONAL": 230000000.0,
      "RATE": 0.027936,
@@ -362,7 +362,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000319012,
+     "FLOW_ID": "20000319012",
      "FLOW_TYPE": "2028-08-27..2028-11-27",
      "NOTIONAL": 230000000.0,
      "RATE": 0.04565,
@@ -388,7 +388,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000319013,
+     "FLOW_ID": "20000319013",
      "FLOW_TYPE": "2028-11-27..2029-02-27",
      "NOTIONAL": 230000000.0,
      "RATE": 0.034776,
@@ -414,7 +414,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000319014,
+     "FLOW_ID": "20000319014",
      "FLOW_TYPE": "2029-02-27..2029-05-27",
      "NOTIONAL": 230000000.0,
      "RATE": 0.042192,
@@ -440,7 +440,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000319015,
+     "FLOW_ID": "20000319015",
      "FLOW_TYPE": "2029-05-27..2029-08-27",
      "NOTIONAL": 230000000.0,
      "RATE": 0.023298,
@@ -466,7 +466,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000319016,
+     "FLOW_ID": "20000319016",
      "FLOW_TYPE": "2029-08-27..2029-11-27",
      "NOTIONAL": 230000000.0,
      "RATE": 0.030635,
@@ -492,7 +492,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000319017,
+     "FLOW_ID": "20000319017",
      "FLOW_TYPE": "2029-11-27..2030-02-27",
      "NOTIONAL": 230000000.0,
      "RATE": 0.02675,
@@ -518,7 +518,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000319018,
+     "FLOW_ID": "20000319018",
      "FLOW_TYPE": "2029-12-28..2030-03-28",
      "NOTIONAL": 230000000.0,
      "RATE": 0.034542,
@@ -549,7 +549,7 @@
  "EVENTS": [
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000319001,
+   "EVENT_ID": "20000319001",
    "EVENT_NUMBER": 1,
    "EVENT_TYPE": "BOOKED",
    "PAYMENT_TYPE": "",
@@ -562,7 +562,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000319002,
+   "EVENT_ID": "20000319002",
    "EVENT_NUMBER": 2,
    "EVENT_TYPE": "CONFIRMED",
    "PAYMENT_TYPE": "",
@@ -575,7 +575,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000319003,
+   "EVENT_ID": "20000319003",
    "EVENT_NUMBER": 3,
    "EVENT_TYPE": "CASH_SETTLED",
    "PAYMENT_TYPE": "",
@@ -588,7 +588,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000319004,
+   "EVENT_ID": "20000319004",
    "EVENT_NUMBER": 4,
    "EVENT_TYPE": "NEXT_PAYMENT",
    "PAYMENT_TYPE": "",
@@ -601,7 +601,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000319005,
+   "EVENT_ID": "20000319005",
    "EVENT_NUMBER": 5,
    "EVENT_TYPE": "MATURITY",
    "PAYMENT_TYPE": "",
@@ -613,8 +613,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 20000319006,
+   "LEG_ID": "1",
+   "EVENT_ID": "20000319006",
    "EVENT_NUMBER": 6,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "2026-05-27..2026-08-27",
@@ -626,8 +626,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 20000319007,
+   "LEG_ID": "1",
+   "EVENT_ID": "20000319007",
    "EVENT_NUMBER": 7,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "2026-11-27..2027-02-27",
@@ -639,8 +639,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 20000319008,
+   "LEG_ID": "1",
+   "EVENT_ID": "20000319008",
    "EVENT_NUMBER": 8,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "2028-02-27..2028-05-27",
@@ -652,8 +652,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 20000319009,
+   "LEG_ID": "1",
+   "EVENT_ID": "20000319009",
    "EVENT_NUMBER": 9,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "2028-08-27..2028-11-27",
@@ -665,8 +665,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 20000319010,
+   "LEG_ID": "1",
+   "EVENT_ID": "20000319010",
    "EVENT_NUMBER": 10,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "2029-02-27..2029-05-27",

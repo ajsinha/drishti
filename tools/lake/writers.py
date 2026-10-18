@@ -187,6 +187,11 @@ def _cell(v, kind: str):
     if v is None:
         return None
     if kind == "double":
+        if isinstance(v, str):                       # an id column an older table keeps as a number: the id's digits
+            try:
+                return float(v)
+            except ValueError:
+                return None
         return float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else None
     if isinstance(v, str):
         return v

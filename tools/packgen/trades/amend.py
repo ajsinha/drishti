@@ -73,10 +73,10 @@ def amend(doc: dict, day: str, seed: int = 5, share: float = 0.06) -> dict:
         leg = rng.choice(legs) if legs else None
         events = d.setdefault("EVENTS", [])
         n = len(events) + 1
-        ids = [e["EVENT_ID"] for e in events if isinstance(e.get("EVENT_ID"), int)]
+        ids = [int(e["EVENT_ID"]) for e in events if str(e.get("EVENT_ID", "")).isdigit()]
         amount = round(float((leg or {}).get("NOTIONAL") or 1e6) * rng.uniform(0.0002, 0.002), 2)
         fee = rng.random() < 0.5
-        events.append(S.blank_event() | {"LEG_ID": leg["LEG_ID"] if leg else "", "EVENT_ID": (max(ids) + 1) if ids else int(f"9{n:04d}"),
+        events.append(S.blank_event() | {"LEG_ID": leg["LEG_ID"] if leg else "", "EVENT_ID": str(max(ids) + 1) if ids else f"9{n:04d}",
                                          "EVENT_NUMBER": n, "EVENT_TYPE": "FEE" if fee else "CASH_SETTLEMENT",
                                          "PAYMENT_TYPE": "Amendment fee" if fee else "Adjustment", "EVENT_DATE": day,
                                          "AMOUNT": -amount if fee else amount, "CURRENCY": (leg or {}).get("CURRENCY") or d.get("CURRENCY", ""),
