@@ -65,12 +65,15 @@ public class HealthController {
     private final com.ash.drishti.server.RetryService retry;
     private final ObjectProvider<com.zaxxer.hikari.HikariDataSource> identityDataSource;
     private final com.ash.drishti.identity.IdentityProperties identity;
+    private final com.ash.drishti.server.security.MaskCoverage masks;
 
     public HealthController(SourceRegistry registry, SourceRouter router, PackRegistry packs, SutraRegistry sutras, LiveMetrics live,
             TopicHub hub, LiveStreamSlots slots, Entitlements entitlements, ObjectProvider<BuildProperties> build,
             org.springframework.core.env.Environment env, com.ash.drishti.server.loads.ExpectationService expectations, com.ash.drishti.server.connectors.ConnectorManager connectors,
             com.ash.drishti.server.bi.BiFolder biFolder, com.ash.drishti.server.RetryService retry,
-            ObjectProvider<com.zaxxer.hikari.HikariDataSource> identityDataSource, com.ash.drishti.identity.IdentityProperties identity) {
+            ObjectProvider<com.zaxxer.hikari.HikariDataSource> identityDataSource, com.ash.drishti.identity.IdentityProperties identity,
+            com.ash.drishti.server.security.MaskCoverage masks) {
+        this.masks = masks;
         this.identityDataSource = identityDataSource;
         this.identity = identity;
         this.biFolder = biFolder;
@@ -168,6 +171,7 @@ public class HealthController {
             }
         });
         out.put("packsNotLoaded", loadedNames);
+        out.put("masksMatchingNothing", masks.unmatched());              // DRS-6011: a redact entry that names no field of the loaded packs
         out.put("retry", retry.snapshot());
         out.put("sutras", Map.of("hotReload", hotReload, "problemFiles", sutras.problems().size()));
         out.put("dataLate", dataLate.stream().map(d -> Map.of("pack", d.pack(), "kind", d.kind(), "businessDate", d.businessDate().toString(), "state", d.state(),

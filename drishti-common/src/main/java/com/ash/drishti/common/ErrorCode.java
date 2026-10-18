@@ -113,6 +113,8 @@ public enum ErrorCode {
     ROLE_IN_USE("DRS-6009", 409),
     /** The console refuses everything but the account page until a password change asked for is done. */
     PASSWORD_CHANGE_DUE("DRS-6010", 403),
+    /** A start-up warning, never an HTTP answer: a {@code drishti.security.redact} entry names no field of the loaded packs' samples, so it masks nothing (Admin → Health, {@code masksMatchingNothing}). */
+    MASK_MATCHES_NOTHING("DRS-6011", 500),
     /** No share with that id, or the caller is not its sender, a recipient or compliance (never a 403: the share's existence is not revealed). */
     SHARE_NOT_FOUND("DRS-7001", 404),
     /** No recipient, an unknown user or role, a role that may not be addressed, or over the recipient limits. */

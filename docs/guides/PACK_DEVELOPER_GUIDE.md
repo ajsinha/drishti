@@ -1656,8 +1656,9 @@ How the setting works, and what it deliberately does not hide, is in
 - the setting list, with defaults, is in [CONFIGURATION.md](../admin/CONFIGURATION.md) (`drishti.security`).
 
 Packs that carry personal or confidential fields should say so in their guide, so that an administrator knows what to
-put in `redact`. The shipped setting masks the trader's identity on a trade (`TRADER_ID`, `TRADER_FIRST_NAME`, `TRADER_LAST_NAME`), and the
-older `trader`, `counterpartyId`, `patientName` and `lifecycle.timeline.description` of the retired example packs, for exactly this reason.
+put in `redact`. The shipped setting masks the trader's identity on a trade (`TRADER_ID`, `TRADER_FIRST_NAME`, `TRADER_LAST_NAME`) and
+the counterparty's identifier (`COUNTERPARTY_ID`), for exactly this reason. Names match in any case and convention (`counterpartyId`
+masks `COUNTERPARTY_ID`); an entry that names no field of the loaded packs is logged at start-up as `DRS-6011`.
 
 ## Calc: Python snippets
 

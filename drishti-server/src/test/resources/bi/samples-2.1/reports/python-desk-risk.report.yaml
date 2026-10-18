@@ -66,8 +66,8 @@ pages:
           spec:
             mark: { type: bar, cornerRadiusEnd: 3 }
             encoding:
-              x: { field: desk, type: nominal, sort: "-y", title: Desk }
+              x: { field: DESK, type: nominal, sort: "-y", title: Desk }
               y: { field: MTM, type: quantitative, title: Net MTM }
               color: { condition: { test: "datum.MTM < 0", value: "#b3261e" }, value: "#4f7cff" }
-              tooltip: [{ field: desk }, { field: MTM, format: ",.0f" }, { field: Trades }]
+              tooltip: [{ field: DESK }, { field: MTM, format: ",.0f" }, { field: Trades }]
         alt: Bars of net mark to market for each desk, red where it is negative

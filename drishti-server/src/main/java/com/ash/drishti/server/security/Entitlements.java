@@ -244,17 +244,58 @@ public final class Entitlements {
         return n;
     }
 
-    /** A field is masked by its name, or by the end of its path when a {@code redact} entry has dots. */
+    /** A field is masked by its name, or by the end of its path when a {@code redact} entry has dots, in any naming convention. */
     private boolean masked(String name, String path) {
-        if (props.redact().contains(name)) {
+        return matches(props.redact(), name, path);
+    }
+
+    /**
+     * True when one of the {@code redact} entries names this field: by its name, or by the end of its path when the entry has
+     * dots. Names match in any case and convention ({@code counterpartyId}, {@code COUNTERPARTY_ID} and {@code counterparty-id}
+     * are the same field), so a mask written before the 2.3.0 UPPER_SNAKE rename still masks the renamed field: a mask never
+     * stops masking because the data's names changed convention.
+     */
+    public static boolean matches(List<String> redact, String name, String path) {
+        if (redact.isEmpty()) {
+            return false;
+        }
+        if (redact.contains(name)) {
             return true;
         }
-        for (String entry : props.redact()) {
-            if (entry.indexOf('.') > 0 && (path.equals(entry) || path.endsWith("." + entry))) {
+        String n = canonical(name);
+        String at = null;
+        for (String entry : redact) {
+            if (entry.indexOf('.') > 0) {
+                at = at == null ? canonicalPath(path) : at;
+                String e = canonicalPath(entry);
+                if (at.equals(e) || at.endsWith("." + e)) {
+                    return true;
+                }
+            } else if (canonical(entry).equals(n)) {
                 return true;
             }
         }
         return false;
+    }
+
+    /** A field name without case or separators: {@code COUNTERPARTY_ID}, {@code counterpartyId} and {@code counterparty-id} read {@code counterpartyid}. */
+    public static String canonical(String name) {
+        StringBuilder b = new StringBuilder(name.length());
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            if (c != '_' && c != '-' && c != ' ') {
+                b.append(Character.toLowerCase(c));
+            }
+        }
+        return b.toString();
+    }
+
+    private static String canonicalPath(String path) {
+        StringBuilder b = new StringBuilder(path.length());
+        for (String part : path.split("\\.", -1)) {
+            b.append(b.isEmpty() ? "" : ".").append(canonical(part));
+        }
+        return b.toString();
     }
 
     /**

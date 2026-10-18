@@ -43,8 +43,8 @@ functions:
     since: W1
     description: The absolute value of a number.
     examples:
-      - { expr: "abs(trades.mtm)", says: "the size of a trade's MTM, whatever its sign (row scope)" }
-      - { expr: "sum(abs(trades.mtm))", says: "gross MTM: the sum of the absolute values" }
+      - { expr: "abs(trades.MTM)", says: "the size of a trade's MTM, whatever its sign (row scope)" }
+      - { expr: "sum(abs(trades.MTM))", says: "gross MTM: the sum of the absolute values" }
     edge-cases:
       nulls: "abs(None) is None."
       types: "Numbers only; abs of a text or a date is DRS-9127."
@@ -59,7 +59,7 @@ functions:
     since: W1
     description: Rounds a number to n decimal places (half away from zero, as the database rounds).
     examples:
-      - { expr: "round(trades.notional / 1000000, 1)", says: "notional in millions with one decimal" }
+      - { expr: "round(trades.NOTIONAL / 1000000, 1)", says: "notional in millions with one decimal" }
       - { expr: "round(measure('MTM'))", says: "a measure rounded to a whole number" }
     edge-cases:
       nulls: "round(None, 2) is None."
@@ -75,7 +75,7 @@ functions:
     since: W1
     description: The first of its arguments that is not None.
     examples:
-      - { expr: "coalesce(trades.book, 'UNBOOKED')", says: "the book, or UNBOOKED when it is missing" }
+      - { expr: "coalesce(trades.PORTFOLIO, 'UNBOOKED')", says: "the book, or UNBOOKED when it is missing" }
       - { expr: "coalesce(measure('MTM'), 0)", says: "a measure that shows 0 instead of an empty cell" }
     edge-cases:
       nulls: "None only when every argument is None."
@@ -91,7 +91,7 @@ functions:
     since: W1
     description: The text in capital letters.
     examples:
-      - { expr: "upper(trades.currency)", says: "usd becomes USD" }
+      - { expr: "upper(trades.CURRENCY)", says: "usd becomes USD" }
       - { expr: "upper(counterparties.NAME) == 'ACME BANK'", says: "a comparison that ignores case" }
     edge-cases:
       nulls: "upper(None) is None."
@@ -107,8 +107,8 @@ functions:
     since: W1
     description: The text in small letters.
     examples:
-      - { expr: "lower(trades.status)", says: "LIVE becomes live" }
-      - { expr: "lower(trades.desk) in ['rates', 'credit']", says: "a list test that ignores case" }
+      - { expr: "lower(trades.TRADE_STATUS)", says: "LIVE becomes live" }
+      - { expr: "lower(trades.DESK) in ['rates', 'credit']", says: "a list test that ignores case" }
     edge-cases:
       nulls: "lower(None) is None."
 
@@ -123,8 +123,8 @@ functions:
     legacy: length
     description: The number of characters of a text.
     examples:
-      - { expr: "len(trades.tradeId)", says: "how long the id is" }
-      - { expr: "len(trades.comment) > 0", says: "a comment was written" }
+      - { expr: "len(trades.TRADE_ID)", says: "how long the id is" }
+      - { expr: "len(trades.COUNTERPARTY) > 0", says: "a comment was written" }
     edge-cases:
       nulls: "len(None) is None (not 0)."
       types: "Text only; len of a list is not DEL."
@@ -139,8 +139,8 @@ functions:
     since: W1
     description: True when the text contains the part, ignoring case.
     examples:
-      - { expr: "contains(trades.product, 'swap')", says: "every kind of swap" }
-      - { expr: "sum(trades.mtm, where=contains(trades.book, 'HEDGE'))", says: "MTM of the hedge books" }
+      - { expr: "contains(trades.PRODUCT_TYPE, 'SWAP')", says: "every kind of swap" }
+      - { expr: "sum(trades.MTM, where=contains(trades.PORTFOLIO, 'COMM'))", says: "MTM of the hedge books" }
     edge-cases:
       nulls: "contains(None, 'x') is None, which a filter treats as not matching."
       masked: "Filtering on a masked column is DRS-9161."
@@ -156,8 +156,8 @@ functions:
     legacy: startsWith
     description: True when the text starts with the prefix, ignoring case.
     examples:
-      - { expr: "startswith(trades.book, 'RATES-')", says: "the rates books" }
-      - { expr: "count(trades, where=startswith(trades.tradeId, 'BBG'))", says: "how many Bloomberg-booked trades" }
+      - { expr: "startswith(trades.PORTFOLIO, 'BOOK-RATES-')", says: "the rates books" }
+      - { expr: "count(trades, where=startswith(trades.TRADE_ID, 'BBG'))", says: "how many Bloomberg-booked trades" }
     edge-cases:
       nulls: "startswith(None, 'x') is None."
 
@@ -171,8 +171,8 @@ functions:
     since: A
     description: True when the text ends with the suffix, ignoring case.
     examples:
-      - { expr: "endswith(trades.book, '-LDN')", says: "the London books" }
-      - { expr: "not endswith(trades.product, 'option')", says: "everything but options" }
+      - { expr: "endswith(trades.PORTFOLIO, '-1')", says: "the London books" }
+      - { expr: "not endswith(trades.PRODUCT_TYPE, 'OPTION')", says: "everything but options" }
     edge-cases:
       nulls: "endswith(None, 'x') is None."
 
@@ -186,8 +186,8 @@ functions:
     since: A
     description: A date written in ISO form (YYYY-MM-DD). DEL has no date literal; this is it.
     examples:
-      - { expr: "trades.tradeDate >= date('2026-10-01')", says: "trades from October 2026" }
-      - { expr: "sum(trades.mtm, where=trades.maturityDate < date('2027-01-01'))", says: "MTM of what matures this year" }
+      - { expr: "trades.TRADE_DATE >= date('2026-10-01')", says: "trades from October 2026" }
+      - { expr: "sum(trades.MTM, where=trades.MATURITY_DATE < date('2027-01-01'))", says: "MTM of what matures this year" }
     edge-cases:
       types: "The text must be an ISO date; date('10/01/2026') is DRS-9127. Comparing a date with a text is allowed only for an ISO text."
 
@@ -214,10 +214,10 @@ functions:
     scopes: [row, rule, aggregate]
     status: built
     since: W1
-    description: The year of a date or timestamp. The same as the field part trades.tradeDate.year.
+    description: The year of a date or timestamp. The same as the field part trades.TRADE_DATE.year.
     examples:
-      - { expr: "year(trades.tradeDate) == 2026", says: "trades of 2026" }
-      - { expr: "year(trades.maturityDate) - year(trades.tradeDate)", says: "a rough tenor in years" }
+      - { expr: "year(trades.TRADE_DATE) == 2026", says: "trades of 2026" }
+      - { expr: "year(trades.MATURITY_DATE) - year(trades.TRADE_DATE)", says: "a rough tenor in years" }
     edge-cases:
       nulls: "year(None) is None."
       types: "Dates and timestamps only."
@@ -232,8 +232,8 @@ functions:
     since: W1
     description: The quarter (1 to 4) of a date or timestamp.
     examples:
-      - { expr: "quarter(trades.tradeDate)", says: "1 for January to March" }
-      - { expr: "count(trades, where=quarter(trades.tradeDate) == 4)", says: "trades done in the fourth quarter" }
+      - { expr: "quarter(trades.TRADE_DATE)", says: "1 for January to March" }
+      - { expr: "count(trades, where=quarter(trades.TRADE_DATE) == 4)", says: "trades done in the fourth quarter" }
     edge-cases:
       nulls: "quarter(None) is None."
 
@@ -247,8 +247,8 @@ functions:
     since: W1
     description: The month (1 to 12) of a date or timestamp.
     examples:
-      - { expr: "month(trades.tradeDate)", says: "10 for October" }
-      - { expr: "month(trades.maturityDate) in [3, 6, 9, 12]", says: "quarter-end maturities" }
+      - { expr: "month(trades.TRADE_DATE)", says: "10 for October" }
+      - { expr: "month(trades.MATURITY_DATE) in [3, 6, 9, 12]", says: "quarter-end maturities" }
     edge-cases:
       nulls: "month(None) is None."
 
@@ -262,8 +262,8 @@ functions:
     since: A
     description: The ISO week number (1 to 53) of a date or timestamp.
     examples:
-      - { expr: "week(trades.tradeDate)", says: "the ISO week a trade was done in" }
-      - { expr: "count(trades, where=week(trades.tradeDate) == 41)", says: "trades of week 41" }
+      - { expr: "week(trades.TRADE_DATE)", says: "the ISO week a trade was done in" }
+      - { expr: "count(trades, where=week(trades.TRADE_DATE) == 41)", says: "trades of week 41" }
     edge-cases:
       nulls: "week(None) is None."
       types: "ISO weeks: the first days of January can belong to week 52 or 53 of the year before."
@@ -278,8 +278,8 @@ functions:
     since: W1
     description: The day of the month (1 to 31) of a date or timestamp.
     examples:
-      - { expr: "day(trades.tradeDate)", says: "9 for 2026-10-09" }
-      - { expr: "day(trades.maturityDate) == 15", says: "mid-month maturities" }
+      - { expr: "day(trades.TRADE_DATE)", says: "9 for 2026-10-09" }
+      - { expr: "day(trades.MATURITY_DATE) == 15", says: "mid-month maturities" }
     edge-cases:
       nulls: "day(None) is None."
 
@@ -293,8 +293,8 @@ functions:
     since: A
     description: Calendar days from a to b (negative when b is before a). The same as b - a for two dates.
     examples:
-      - { expr: "days_between(trades.tradeDate, trades.maturityDate)", says: "a trade's tenor in days" }
-      - { expr: "avg(days_between(trades.tradeDate, trades.maturityDate))", says: "the average tenor" }
+      - { expr: "days_between(trades.TRADE_DATE, trades.MATURITY_DATE)", says: "a trade's tenor in days" }
+      - { expr: "avg(days_between(trades.TRADE_DATE, trades.MATURITY_DATE))", says: "the average tenor" }
     edge-cases:
       nulls: "None when either date is None."
       types: "Timestamps are taken at their date."
@@ -309,8 +309,8 @@ functions:
     since: A
     description: "Business days from a, excluded, to b, included, on the model's calendar (calendars.holidays, else the pack's): weekdays less the holidays between; negative when b is before a."
     examples:
-      - { expr: "business_days_between(trades.tradeDate, trades.settlementDate)", says: "the settlement lag in business days" }
-      - { expr: "count(trades, where=business_days_between(trades.tradeDate, trades.settlementDate) > 2)", says: "trades settling later than T+2" }
+      - { expr: "business_days_between(trades.TRADE_DATE, trades.MATURITY_DATE)", says: "the settlement lag in business days" }
+      - { expr: "count(trades, where=business_days_between(trades.TRADE_DATE, trades.MATURITY_DATE) > 2)", says: "trades settling later than T+2" }
     edge-cases:
       nulls: "None when either date is None."
       types: "Weekends only until model calendars arrive (B); a holiday is counted as a business day."
@@ -326,8 +326,8 @@ functions:
     since: B
     description: "The rate that converts one unit of ccy into the currency to: the latest rate on or before the row's business date (or at=) in the model's FX rates (fx: { rates, from, to, rate, date, base }), a pair as stored, its inverse, or through the base currency; 1 for the same currency. Worked out inside a measure (a dataset's derived column cannot read the rates)."
     examples:
-      - { expr: "sum(trades.notional * fx(trades.currency, 'USD'))", says: "notional in US dollars" }
-      - { expr: "sum(trades.mtm * fx(trades.currency, 'EUR', at=trades.tradeDate))", says: "MTM in euros at each trade date" }
+      - { expr: "sum(trades.NOTIONAL * fx(trades.CURRENCY, 'USD'))", says: "notional in US dollars" }
+      - { expr: "sum(trades.MTM * fx(trades.CURRENCY, 'EUR', at=trades.TRADE_DATE))", says: "MTM in euros at each trade date" }
     edge-cases:
       nulls: "None when the currency is None or no rate for the pair is on or before the date."
       currencies: "A converted amount has one currency, so summing it lifts the currency guard (DRS-9158)."
@@ -343,8 +343,8 @@ functions:
     since: B
     description: "An aggregate of amounts in many currencies, converted to one: each amount inside is multiplied by the rate of its own currency (its column's unit: { currency: ... }) at the as-of date (at='as-of'), at each row's trade date (at='trade-date'; the business date when the row has none) or at another date column of the row (at='settleDate')."
     examples:
-      - { expr: "convert(sum(trades.notional), to='USD')", says: "notional in USD at the as-of rate" }
-      - { expr: "convert(sum(trades.mtm), to='EUR', at='trade-date')", says: "each trade converted at its own trade date" }
+      - { expr: "convert(sum(trades.NOTIONAL), to='USD')", says: "notional in USD at the as-of rate" }
+      - { expr: "convert(sum(trades.MTM), to='EUR', at='trade-date')", says: "each trade converted at its own trade date" }
     edge-cases:
       currencies: "Lifts the currency guard: the result has one currency."
       types: "An amount with no currency, or mixing two, is refused (DRS-9020): convert each amount in its own aggregate."
@@ -379,9 +379,9 @@ functions:
     since: W1
     description: "The sum of x over the rows of the group (after security and filters), only the rows where the condition holds when where= is given."
     examples:
-      - { expr: "sum(trades.mtm)", says: "MTM" }
-      - { expr: "sum(trades.mtm, where=trades.status == 'Live')", says: "MTM of the live trades only" }
-      - { expr: "sum(trades.notional * trades.rate) / sum(trades.notional)", says: "a notional-weighted average rate" }
+      - { expr: "sum(trades.MTM)", says: "MTM" }
+      - { expr: "sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')", says: "MTM of the live trades only" }
+      - { expr: "sum(trades.NOTIONAL * trades.DV01) / sum(trades.NOTIONAL)", says: "a notional-weighted average rate" }
     edge-cases:
       nulls: "None values are skipped."
       empty: "None over no rows (not 0); wrap it in coalesce(..., 0) to show 0."
@@ -398,7 +398,7 @@ functions:
     since: W1
     description: The arithmetic mean of x over the rows of the group.
     examples:
-      - { expr: "avg(trades.notional)", says: "the average trade size" }
+      - { expr: "avg(trades.NOTIONAL)", says: "the average trade size" }
       - { expr: "avg(economies.GROWTH, where=economies.REGION == 'Asia')", says: "average growth of the Asian economies" }
     edge-cases:
       nulls: "None values are skipped (they are not zeros)."
@@ -415,8 +415,8 @@ functions:
     since: W1
     description: The smallest value of x in the group (numbers, dates or text).
     examples:
-      - { expr: "min(trades.mtm)", says: "the worst trade MTM" }
-      - { expr: "min(trades.maturityDate, where=trades.status == 'Live')", says: "the next maturity" }
+      - { expr: "min(trades.MTM)", says: "the worst trade MTM" }
+      - { expr: "min(trades.MATURITY_DATE, where=trades.TRADE_STATUS != 'MATURED')", says: "the next maturity" }
     edge-cases:
       nulls: "None values are skipped."
       empty: "None over no rows."
@@ -448,8 +448,8 @@ functions:
     description: "count(trades) counts the rows of a dataset alias; count(x) counts the rows where x is not None."
     examples:
       - { expr: "count(trades)", says: "how many trades" }
-      - { expr: "count(trades, where=trades.mtm < 0)", says: "how many trades lose money" }
-      - { expr: "count(trades.book)", says: "trades with a book" }
+      - { expr: "count(trades, where=trades.MTM < 0)", says: "how many trades lose money" }
+      - { expr: "count(trades.PORTFOLIO)", says: "trades with a book" }
     edge-cases:
       nulls: "count(x) skips None; count(alias) counts every row."
       empty: "0 over no rows (never None)."
@@ -465,7 +465,7 @@ functions:
     description: How many different values of x the group has.
     examples:
       - { expr: "distinct(trades.COUNTERPARTY)", says: "how many counterparties" }
-      - { expr: "distinct(trades.book, where=trades.status == 'Live')", says: "books with live trades" }
+      - { expr: "distinct(trades.PORTFOLIO, where=trades.TRADE_STATUS != 'MATURED')", says: "books with live trades" }
     edge-cases:
       nulls: "None is not a value."
       empty: "0 over no rows."
@@ -481,7 +481,7 @@ functions:
     since: W1
     description: "num / den as a decimal, None when den is 0. The same as num / den in DEL, kept for readability."
     examples:
-      - { expr: "ratio(sum(trades.mtm), sum(trades.notional))", says: "MTM per unit of notional" }
+      - { expr: "ratio(sum(trades.MTM), sum(trades.NOTIONAL))", says: "MTM per unit of notional" }
       - { expr: "ratio(sum(regions.GDP_USD_BN), sum(regions.POPULATION)) * 1000000000", says: "GDP per head in USD" }
     edge-cases:
       nulls: "None when either side is None."
@@ -497,7 +497,7 @@ functions:
     since: W1
     description: "The continuous p-quantile of x in the group (p between 0 and 1): 0.5 is the median, 0.99 the 99th percentile."
     examples:
-      - { expr: "percentile(trades.mtm, 0.5)", says: "the median trade MTM" }
+      - { expr: "percentile(trades.MTM, 0.5)", says: "the median trade MTM" }
       - { expr: "-percentile(scenarios.pnl, 0.01)", says: "a 99% VaR-style loss from scenario P&L" }
     edge-cases:
       nulls: "None values are skipped."
@@ -514,8 +514,8 @@ functions:
     since: B
     description: "A two-level aggregate: agg per value of by (within each group of the answer), then the average of those values (the explicit iteration DEL has instead of DAX context transition)."
     examples:
-      - { expr: "avg_by(sum(trades.mtm), by=[trades.tradeDate])", says: "the average daily MTM" }
-      - { expr: "avg_by(count(trades), by=[trades.book])", says: "trades per book, on average" }
+      - { expr: "avg_by(sum(trades.MTM), by=[trades.TRADE_DATE])", says: "the average daily MTM" }
+      - { expr: "avg_by(count(trades), by=[trades.PORTFOLIO])", says: "trades per book, on average" }
     edge-cases:
       nulls: "Groups of by whose aggregate is None are left out of the average."
       empty: "None when no group of by has rows."
@@ -532,8 +532,8 @@ functions:
     since: W1
     description: "The aggregate over the rows whose date falls between the start of the as-of date's year and the as-of date (the end of the query's dates), on the pack's business-day calendar."
     examples:
-      - { expr: "ytd(sum(trades.mtm), trades.tradeDate)", says: "MTM of the trades dated this year so far" }
-      - { expr: "ytd(count(trades), trades.tradeDate)", says: "trades done this year" }
+      - { expr: "ytd(sum(trades.MTM), trades.TRADE_DATE)", says: "MTM of the trades dated this year so far" }
+      - { expr: "ytd(count(trades), trades.TRADE_DATE)", says: "trades done this year" }
     edge-cases:
       empty: "None (a count: 0) when no row is in the window."
       types: "date is a date or timestamp field of the aggregate's dataset."
@@ -548,8 +548,8 @@ functions:
     since: W1
     description: The aggregate over the rows dated from the start of the as-of month to the as-of date.
     examples:
-      - { expr: "mtd(sum(trades.pnl1d), trades.tradeDate)", says: "month-to-date P&L" }
-      - { expr: "mtd(count(trades), trades.tradeDate)", says: "trades this month" }
+      - { expr: "mtd(sum(trades.PNL_1D), trades.TRADE_DATE)", says: "month-to-date P&L" }
+      - { expr: "mtd(count(trades), trades.TRADE_DATE)", says: "trades this month" }
     edge-cases:
       empty: "None (a count: 0) when no row is in the window."
 
@@ -563,8 +563,8 @@ functions:
     since: W1
     description: The aggregate over the rows dated from the start of the as-of quarter to the as-of date.
     examples:
-      - { expr: "qtd(sum(trades.pnl1d), trades.tradeDate)", says: "quarter-to-date P&L" }
-      - { expr: "qtd(sum(trades.notional), trades.tradeDate)", says: "notional traded this quarter" }
+      - { expr: "qtd(sum(trades.PNL_1D), trades.TRADE_DATE)", says: "quarter-to-date P&L" }
+      - { expr: "qtd(sum(trades.NOTIONAL), trades.TRADE_DATE)", says: "notional traded this quarter" }
     edge-cases:
       empty: "None (a count: 0) when no row is in the window."
 
@@ -578,8 +578,8 @@ functions:
     since: W1
     description: "The aggregate over the period just before the query's dates, of the same number of business days."
     examples:
-      - { expr: "prior_period(sum(trades.pnl1d), trades.tradeDate)", says: "P&L of the period before" }
-      - { expr: "sum(trades.pnl1d) - prior_period(sum(trades.pnl1d), trades.tradeDate)", says: "change on the prior period" }
+      - { expr: "prior_period(sum(trades.PNL_1D), trades.TRADE_DATE)", says: "P&L of the period before" }
+      - { expr: "sum(trades.PNL_1D) - prior_period(sum(trades.PNL_1D), trades.TRADE_DATE)", says: "change on the prior period" }
     edge-cases:
       empty: "None (a count: 0) when the prior period has no rows."
 
@@ -593,8 +593,8 @@ functions:
     since: W1
     description: The aggregate over the query's dates moved back one year.
     examples:
-      - { expr: "same_period_last_year(sum(trades.notional), trades.tradeDate)", says: "notional a year ago" }
-      - { expr: "ratio(sum(trades.notional), same_period_last_year(sum(trades.notional), trades.tradeDate)) - 1", says: "growth on last year" }
+      - { expr: "same_period_last_year(sum(trades.NOTIONAL), trades.TRADE_DATE)", says: "notional a year ago" }
+      - { expr: "ratio(sum(trades.NOTIONAL), same_period_last_year(sum(trades.NOTIONAL), trades.TRADE_DATE)) - 1", says: "growth on last year" }
     edge-cases:
       empty: "None (a count: 0) when last year's window has no rows."
 
@@ -608,8 +608,8 @@ functions:
     since: W1
     description: "A running total of a sum, count, min or max along the date field of the answer (the date must be a field of the visual)."
     examples:
-      - { expr: "running(sum(trades.notional), trades.tradeDate)", says: "cumulative notional by day" }
-      - { expr: "running(count(trades), trades.tradeDate)", says: "trades so far" }
+      - { expr: "running(sum(trades.NOTIONAL), trades.TRADE_DATE)", says: "cumulative notional by day" }
+      - { expr: "running(count(trades), trades.TRADE_DATE)", says: "trades so far" }
     edge-cases:
       types: "Only sum, count, min, max; the date field must be in the answer (DRS-9020 otherwise)."
       masked: "Refused along a masked date (DRS-9021)."
@@ -624,8 +624,8 @@ functions:
     since: B
     description: "The aggregate from the start of the fiscal year that holds the as-of date to the as-of date; the fiscal year starts on the first of the model's calendars.fiscal-year-start month (January when the model names none)."
     examples:
-      - { expr: "fiscal_ytd(sum(trades.pnl1d), trades.tradeDate)", says: "fiscal year-to-date P&L" }
-      - { expr: "fiscal_ytd(count(trades), trades.tradeDate)", says: "trades this fiscal year" }
+      - { expr: "fiscal_ytd(sum(trades.PNL_1D), trades.TRADE_DATE)", says: "fiscal year-to-date P&L" }
+      - { expr: "fiscal_ytd(count(trades), trades.TRADE_DATE)", says: "trades this fiscal year" }
     edge-cases:
       empty: "None (a count: 0) when no row is in the window."
       types: "date is a date or timestamp field of the aggregate's dataset."
@@ -641,8 +641,8 @@ functions:
     since: W1
     description: "The aggregate n rows before, along order (a field of the answer), restarting for each value of by (default: every other field of the answer)."
     examples:
-      - { expr: "lag(sum(trades.mtm), 1, trades.tradeDate)", says: "yesterday's MTM on each row" }
-      - { expr: "sum(trades.mtm) - lag(sum(trades.mtm), 1, trades.tradeDate, by=[trades.desk])", says: "day-on-day change per desk" }
+      - { expr: "lag(sum(trades.MTM), 1, trades.TRADE_DATE)", says: "yesterday's MTM on each row" }
+      - { expr: "sum(trades.MTM) - lag(sum(trades.MTM), 1, trades.TRADE_DATE, by=[trades.DESK])", says: "day-on-day change per desk" }
     edge-cases:
       nulls: "None on the first n rows of each partition."
       masked: "A masked field is never a partition; ordering along a masked field is DRS-9021."
@@ -657,8 +657,8 @@ functions:
     since: W1
     description: The aggregate n rows after, along order.
     examples:
-      - { expr: "lead(sum(trades.notional), 1, trades.maturityDate)", says: "the next maturity bucket's notional" }
-      - { expr: "lead(count(trades), 2, trades.tradeDate, by=[trades.book])", says: "two days ahead, per book" }
+      - { expr: "lead(sum(trades.NOTIONAL), 1, trades.MATURITY_DATE)", says: "the next maturity bucket's notional" }
+      - { expr: "lead(count(trades), 2, trades.TRADE_DATE, by=[trades.PORTFOLIO])", says: "two days ahead, per book" }
     edge-cases:
       nulls: "None on the last n rows of each partition."
 
@@ -672,7 +672,7 @@ functions:
     since: W1
     description: "The position of each row of the answer by the aggregate, 1 for the highest (desc=False: 1 for the lowest); ties share a rank and leave gaps."
     examples:
-      - { expr: "rank(sum(trades.mtm))", says: "MTM rank, best first" }
+      - { expr: "rank(sum(trades.MTM))", says: "MTM rank, best first" }
       - { expr: "rank(sum(netting_sets.EE_PEAK), by=[counterparties.SECTOR])", says: "exposure rank within each sector" }
     edge-cases:
       nulls: "None values rank last."
@@ -687,7 +687,7 @@ functions:
     since: W1
     description: Like rank, without gaps after ties.
     examples:
-      - { expr: "dense_rank(sum(trades.notional))", says: "1, 2, 2, 3 for tied notionals" }
+      - { expr: "dense_rank(sum(trades.NOTIONAL))", says: "1, 2, 2, 3 for tied notionals" }
       - { expr: "dense_rank(count(trades), desc=False)", says: "the quietest first" }
     edge-cases:
       nulls: "None values rank last."
@@ -702,8 +702,8 @@ functions:
     since: W1
     description: The relative rank from 0 to 1.
     examples:
-      - { expr: "percent_rank(sum(trades.mtm))", says: "0 for the best desk, 1 for the worst" }
-      - { expr: "percent_rank(sum(trades.notional), desc=False)", says: "a percentile position by size" }
+      - { expr: "percent_rank(sum(trades.MTM))", says: "0 for the best desk, 1 for the worst" }
+      - { expr: "percent_rank(sum(trades.NOTIONAL), desc=False)", says: "a percentile position by size" }
     edge-cases:
       empty: "0 for a single row."
 
@@ -717,8 +717,8 @@ functions:
     since: W1
     description: The average of the aggregate over the row and the n - 1 rows before it along order.
     examples:
-      - { expr: "moving_avg(sum(trades.mtm), 3, trades.tradeDate)", says: "a three-day moving average of MTM" }
-      - { expr: "moving_avg(sum(trades.pnl1d), 20, trades.tradeDate, by=[trades.desk])", says: "a 20-day average P&L per desk" }
+      - { expr: "moving_avg(sum(trades.MTM), 3, trades.TRADE_DATE)", says: "a three-day moving average of MTM" }
+      - { expr: "moving_avg(sum(trades.PNL_1D), 20, trades.TRADE_DATE, by=[trades.DESK])", says: "a 20-day average P&L per desk" }
     edge-cases:
       nulls: "The first rows average over what is there."
 
@@ -732,8 +732,8 @@ functions:
     since: W1
     description: The sum of the aggregate over the row and the n - 1 rows before it.
     examples:
-      - { expr: "moving_sum(sum(trades.pnl1d), 5, trades.tradeDate)", says: "a rolling five-day P&L" }
-      - { expr: "moving_sum(count(trades), 7, trades.tradeDate)", says: "trades over the last seven rows" }
+      - { expr: "moving_sum(sum(trades.PNL_1D), 5, trades.TRADE_DATE)", says: "a rolling five-day P&L" }
+      - { expr: "moving_sum(count(trades), 7, trades.TRADE_DATE)", says: "trades over the last seven rows" }
     edge-cases:
       nulls: "None values are skipped."
 
@@ -747,8 +747,8 @@ functions:
     since: W1
     description: The smallest value of the aggregate over the row and the n - 1 rows before it.
     examples:
-      - { expr: "moving_min(sum(trades.mtm), 10, trades.tradeDate)", says: "the worst MTM of the last ten days" }
-      - { expr: "moving_min(min(trades.mtm), 3, trades.tradeDate)", says: "the worst trade over three days" }
+      - { expr: "moving_min(sum(trades.MTM), 10, trades.TRADE_DATE)", says: "the worst MTM of the last ten days" }
+      - { expr: "moving_min(min(trades.MTM), 3, trades.TRADE_DATE)", says: "the worst trade over three days" }
     edge-cases:
       nulls: "None values are skipped."
 
@@ -763,7 +763,7 @@ functions:
     description: The largest value of the aggregate over the row and the n - 1 rows before it.
     examples:
       - { expr: "moving_max(max(netting_sets.UTILISATION), 5, netting_sets.businessDate)", says: "peak utilisation over five days" }
-      - { expr: "moving_max(sum(trades.mtm), 20, trades.tradeDate)", says: "the 20-day high of MTM" }
+      - { expr: "moving_max(sum(trades.MTM), 20, trades.TRADE_DATE)", says: "the 20-day high of MTM" }
     edge-cases:
       nulls: "None values are skipped."
 
@@ -777,8 +777,8 @@ functions:
     since: W1
     description: The same as running(agg, date).
     examples:
-      - { expr: "cumulative(sum(trades.notional), trades.tradeDate)", says: "notional so far" }
-      - { expr: "cumulative(count(trades), trades.tradeDate)", says: "trades so far" }
+      - { expr: "cumulative(sum(trades.NOTIONAL), trades.TRADE_DATE)", says: "notional so far" }
+      - { expr: "cumulative(count(trades), trades.TRADE_DATE)", says: "trades so far" }
     edge-cases:
       types: "As running."
 
@@ -872,7 +872,7 @@ functions:
     description: "The aggregate in an edited filter context: add conditions (where=, a row condition ANDed to the aggregate's), drop the query's and the group's filters on some fields (ignore=[...]) or on all (ignore=ALL), drop every filter except those on some fields (keep=[...]), or follow an inactive relationship (via='r_5', the active one for the same pair switched off). Security is never in scope: ignore=ALL means everything you may see."
     examples:
       - { expr: "calc(measure('MTM'), ignore=[desks.NAME])", says: "MTM ignoring the desk slicer and the desk of the row" }
-      - { expr: "calc(sum(trades.mtm), where=trades.status == 'Live')", says: "MTM of the live trades, whatever else is filtered" }
+      - { expr: "calc(sum(trades.MTM), where=trades.TRADE_STATUS != 'MATURED')", says: "MTM of the live trades, whatever else is filtered" }
       - { expr: "calc(measure('MTM'), keep=[desks.REGION])", says: "MTM of the whole region of the row" }
       - { expr: "calc(measure('MTM'), via='r_5')", says: "MTM along the settlement-date relationship" }
     edge-cases:
@@ -955,8 +955,8 @@ functions:
     since: B
     description: "The query's as-of date: the end of its dates (time.as-of, the window's end), else the business date it read."
     examples:
-      - { expr: "sum(trades.notional, where=days_between(trades.tradeDate, asof()) <= 30)", says: "notional traded in the last 30 days" }
-      - { expr: "count(trades, where=trades.maturityDate <= shift_date(asof(), 30, unit='day'))", says: "trades maturing within 30 days" }
+      - { expr: "sum(trades.NOTIONAL, where=days_between(trades.TRADE_DATE, asof()) <= 30)", says: "notional traded in the last 30 days" }
+      - { expr: "count(trades, where=trades.MATURITY_DATE <= shift_date(asof(), 30, unit='day'))", says: "trades maturing within 30 days" }
     edge-cases:
       types: "Always a date."
 

@@ -333,9 +333,9 @@ drishti:
       roles-from-provider: true        # the provider's groups replace the roles at every sign-in
       algorithms: [RS256, ES256]
     # Fields masked (•••) for roles without raw: raw JSON, views, search, Impact, type-ahead, alerts. A name masks that field at any
-    # depth; an entry with dots masks by the end of the path. lifecycle.timeline.description is free text that carries the trader
-    # ("Captured in Murex by TRDR-ASHAH") in the shipped trading data, so it is masked with the trader it names.
-    redact: [trader, TRADER_ID, TRADER_FIRST_NAME, TRADER_LAST_NAME, counterpartyId, patientName, lifecycle.timeline.description]
+    # depth, in any case and convention (counterpartyId masks COUNTERPARTY_ID); an entry with dots masks by the end of the path.
+    # An entry that names no field of the loaded packs' samples is logged at start-up (DRS-6011) and listed in Admin -> Health.
+    redact: [TRADER_ID, TRADER_FIRST_NAME, TRADER_LAST_NAME, COUNTERPARTY_ID]
     # Opt-in: also replace exact copies of a masked field's value found in the OTHER text of the same document (best effort: exact,
     # case-sensitive; text of at least min-length characters, numbers of 4+ digits). Documents over max-nodes are not scanned.
     mask-copies: ${DRISHTI_MASK_COPIES:false}

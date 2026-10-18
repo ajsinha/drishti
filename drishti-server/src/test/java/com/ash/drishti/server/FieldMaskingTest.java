@@ -22,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.ash.drishti.server.alerts.AlertEngine;
+import com.ash.drishti.server.alerts.AlertEvent;
 import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,6 +57,7 @@ class FieldMaskingTest {
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
     @Autowired AlertEngine alerts;
+    @Autowired com.ash.drishti.server.security.MaskCoverage coverage;
     private final ObjectMapper json = new ObjectMapper();
 
     private String as(String role) {
@@ -77,6 +79,17 @@ class FieldMaskingTest {
             }
         }
         throw new AssertionError("no cell " + label + " in " + cells);
+    }
+
+    private static int column(JsonNode table, String label) {
+        JsonNode columns = table.path("columns");
+        for (int i = 0; i < columns.size(); i++) {
+            JsonNode c = columns.get(i);
+            if (label.equals(c.isTextual() ? c.asText() : c.path("label").asText())) {
+                return i;
+            }
+        }
+        throw new AssertionError("no column " + label + " in " + columns);
     }
 
     private static JsonNode panel(JsonNode view, String id) {
@@ -110,7 +123,7 @@ class FieldMaskingTest {
 
         JsonNode ns = read("/api/v1/views/netting-set/NS-MERIDIAN-RE-NY", "masked");
         JsonNode table = panel(ns, "trades").path("data");
-        int mtmColumn = 4;
+        int mtmColumn = column(table, "MTM");
         for (JsonNode row : table.path("rows")) {
             assertThat(row.path("cells").get(mtmColumn).path("text").asText()).isEqualTo(MASK);
         }
@@ -201,6 +214,7 @@ class FieldMaskingTest {
     @Test
     void alertsAndPhrasesCannotProbeAMaskedField() throws Exception {
         String user = "u-masked";
+        long before = alerts.events(user, 1).stream().mapToLong(e -> e.seq()).max().orElse(Long.MIN_VALUE);  // the history survives runs
         mvc.perform(put("/api/v1/me/alerts/rules/Probe").header("Authorization", as("masked")).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"kind\":\"trade\",\"id\":\"MX-20000001\",\"when\":\"$.COUNTERPARTY == 'CP-MERIDIAN-RE'\",\"severity\":\"info\"}"))
                 .andExpect(status().isOk());
@@ -209,11 +223,11 @@ class FieldMaskingTest {
                         + "\"message\":\"Notional ${fmt(first($.LEGS).NOTIONAL, 'compact')} with ${$.COUNTERPARTY}\"}"))
                 .andExpect(status().isOk());
         long deadline = System.currentTimeMillis() + 5000;
-        while (alerts.events(user, 10).isEmpty() && System.currentTimeMillis() < deadline) {
+        while (since(user, before).isEmpty() && System.currentTimeMillis() < deadline) {
             Thread.sleep(50);
         }
         Thread.sleep(400);
-        assertThat(alerts.events(user, 50)).isNotEmpty().allSatisfy(e -> {   // the rule on the masked counterparty never fires
+        assertThat(since(user, before)).isNotEmpty().allSatisfy(e -> {   // the rule on the masked counterparty never fires
             assertThat(e.rule()).isEqualTo("Shown");
             assertThat(e.message()).isEqualTo("Notional " + MASK + " with " + MASK);
         });
@@ -222,6 +236,20 @@ class FieldMaskingTest {
         JsonNode masked = read("/api/v1/phrase", "masked", "text", "trades of trader TRDR-ASHAH");
         assertThat(full.path("query").asText()).contains("TRDR-ASHAH");
         assertThat(masked.path("query").asText()).doesNotContain("TRDR-ASHAH");
+    }
+
+    private List<AlertEvent> since(String user, long seq) {
+        return alerts.events(user, 50).stream().filter(e -> e.seq() > seq).toList();
+    }
+
+    @Test
+    void aMaskInAnotherConventionStillMasksAndAMaskThatMatchesNothingIsReported() {
+        assertThat(com.ash.drishti.server.security.Entitlements.matches(List.of("counterpartyId"), "COUNTERPARTY_ID", "COUNTERPARTY_ID")).isTrue();
+        assertThat(com.ash.drishti.server.security.Entitlements.matches(List.of("trader_id"), "TRADER_ID", "TICKET.TRADER_ID")).isTrue();
+        assertThat(com.ash.drishti.server.security.Entitlements.matches(List.of("lifecycle.timeline.description"), "DESCRIPTION",
+                "LIFECYCLE.TIMELINE.DESCRIPTION")).isTrue();
+        assertThat(com.ash.drishti.server.security.Entitlements.matches(List.of("counterpartyId"), "COUNTERPARTY", "COUNTERPARTY")).isFalse();
+        assertThat(coverage.unmatched()).contains("trader").doesNotContain("TRADER_ID", "COUNTERPARTY", "MTM", "NOTIONAL", "mtm", "counterparty");
     }
 
     @Test

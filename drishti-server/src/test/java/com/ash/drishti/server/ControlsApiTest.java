@@ -163,21 +163,25 @@ class ControlsApiTest {
     }
 
     @Test
-    void topNLimitsTheRowsAndASelectSetsTheDropdown() throws Exception {
-        JsonNode view = read(NETTING, "full");
+    void aStatusFilterNarrowsTheMembersAndASelectSetsTheDropdown() throws Exception {
+        JsonNode view = read(NETTING, "full");                                        // every member trade is listed (2.3.0): no top-n
         JsonNode trades = panel(view, "trades");
         int all = trades.path("data").path("rows").size();
-        assertThat(control(view, "top").path("value").asText()).isEqualTo("25");
-        assertThat(all).isLessThanOrEqualTo(25);
-        JsonNode five = read(NETTING, "full", "ctl.top", "10");
-        assertThat(panel(five, "trades").path("data").path("rows").size()).isLessThanOrEqualTo(10);
+        JsonNode status = control(view, "status");
+        assertThat(status.path("kind").asText()).isEqualTo("multi-select");
+        assertThat(status.path("values")).hasSize(values(status).size());            // default: all
+        assertThat(values(status)).isNotEmpty();
+        String first = values(status).get(0);
+        JsonNode one = panel(read(NETTING, "full", "ctl.status", first), "trades").path("data").path("rows");
+        assertThat(one.size()).isBetween(1, all);
+        one.forEach(r -> assertThat(r.path("cells").get(1).path("text").asText()).isEqualTo(first));
         assertThat(view.path("selects")).hasSize(1);
         assertThat(view.path("selects").get(0).path("by").asText()).isEqualTo("asset");
         String asset = values(control(view, "asset")).get(0);
         JsonNode filtered = read(NETTING, "full", "ctl.asset", asset);
         JsonNode rows = panel(filtered, "trades").path("data").path("rows");
         assertThat(rows.size()).isBetween(1, all);
-        assertThat(panel(filtered, "trades").path("title").asText()).isEqualTo("Member trades · " + asset);
+        assertThat(panel(filtered, "trades").path("title").asText()).startsWith("Member trades (").endsWith(" · " + asset);
         rows.forEach(r -> assertThat(r.path("cells").get(1).path("text").asText()).isNotEmpty());
         assertThat(control(filtered, "asset").path("value").asText()).isEqualTo(asset);
         assertThat(control(filtered, "asset").path("reads")).extracting(JsonNode::asText).contains("trades");

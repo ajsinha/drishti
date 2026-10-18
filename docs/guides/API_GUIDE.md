@@ -301,8 +301,9 @@ A signed token whose user was deleted or disabled is refused with `401` (`drisht
 Shares, their notes and inbox rows are masked answers too: a note's copies of a masked value read `•••` for a reader without `raw`, and a notice carries no data value, only who, what kind and which id.
 
 A `redact` entry with dots names a field by the end of its path (arrays are not a step): `lifecycle.timeline.description` masks
-every `description` under `lifecycle.timeline`, and no other `description`. The shipped setting masks it, because the trading
-data's timeline spells the trader out ("Captured in Murex by TRDR-ASHAH").
+every `description` under `lifecycle.timeline`, and no other `description`. Names match in any case and convention
+(`counterpartyId` masks `COUNTERPARTY_ID`, `trader_id` masks `TRADER_ID`), so a mask written before the 2.3.0 UPPER_SNAKE rename
+keeps masking; an entry that names no field of the loaded packs' samples is logged at start-up (`DRS-6011`).
 
 **Copies of a masked value (`drishti.security.mask-copies`, default `false`).** Masking works on fields. With the setting on, after
 masking, the server also replaces every exact occurrence of a masked field's original value inside the *other* text of the same
@@ -1609,6 +1610,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-6008 | 404 | role not found | no such role |
 | DRS-6009 | 409 | role in use | the role is held by a user; take it away from them first |
 | DRS-6010 | 403 | password change due | (console) the user must choose a new password on My account before anything else |
+| DRS-6011 | 500 | mask matches nothing | (start-up warning in the log, never an answer) a `drishti.security.redact` entry names no field of the loaded packs' samples, so it masks nothing; Admin → Health lists it under `masksMatchingNothing`. Masks match in any case and convention (`counterpartyId` masks `COUNTERPARTY_ID`) |
 | DRS-7001 | 404 | share not found | no share with that id, or you are not its sender, a recipient it reached, or `compliance` (never a 403: the share's existence is not revealed) |
 | DRS-7002 | 422 | bad recipients | no recipient, an unknown user (or one outside your packs), a role that may not be addressed, or over `share.max-recipients`, `share.max-expanded` or `max-group-size` |
 | DRS-7003 | 429 | collab rate limited | over `limits.shares-per-minute`, `shares-per-day` or `directory-per-minute`; `Retry-After` says when to try again |

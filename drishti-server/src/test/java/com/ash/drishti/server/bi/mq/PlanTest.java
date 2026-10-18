@@ -238,8 +238,15 @@ class PlanTest {
         Map<String, Object> balance = refusing.ask(b, MqParser.parse("{ mq: 1, model: desk-risk, select: { measures: [Sum of amount] }, time: { window: { from: 2026-10-08, to: 2026-10-09 } } }"),
                 false).body();
         assertThat(balance.get("rows")).as("a balance alone over a window is its last date's value: right, so answered").isNotNull();
-        // wave B: a balance added across the dates with another measure is refused, with the balance functions as the fix; written with last() it is not
-        assertThatThrownBy(() -> refusing.ask(b, MqParser.parse("{ mq: 1, model: desk-risk, select: { measures: [Sum of amount, Trades] }, time: { window: { from: 2026-10-08, to: "
+        // wave B: a balance added across the dates with a measure that does add up over them is refused, with the balance functions as the fix;
+        // written with last() it is not. (Since 2.3.0 a count of a daily snapshot such as Trades takes the last date too, so it is no longer a mix:
+        // the flow here is a measure its author declares additive.)
+        MqService.Bound flows = h.bind(MqHarness.model(ROLLUP_MODEL.replace("  Trades:   { id: m_trades, expr: \"count(trades)\" }\n",
+                "  Trades:   { id: m_trades, expr: \"count(trades)\" }\n  Bookings: { id: m_bookings, expr: \"count(trades)\", additive: true }\n"),
+                MqEngineTest.TRADES, MqEngineTest.DESKS, MqEngineTest.LIMITS), MqHarness.RITA, "m");
+        assertThat(refusing.ask(b, MqParser.parse("{ mq: 1, model: desk-risk, select: { measures: [Sum of amount, Trades] }, time: { window: { from: 2026-10-08, to: "
+                + "2026-10-09 } } }"), false).body().get("rows")).as("a balance and a snapshot count: both the last date's, so answered").isNotNull();
+        assertThatThrownBy(() -> refusing.ask(flows, MqParser.parse("{ mq: 1, model: desk-risk, select: { measures: [Sum of amount, Bookings] }, time: { window: { from: 2026-10-08, to: "
                 + "2026-10-09 } } }"), false)).isInstanceOf(MqException.class).hasMessageContaining("DRS-9159").hasMessageContaining("last(measure(");
         Map<String, Object> last = refusing.ask(b, MqParser.parse("{ mq: 1, model: desk-risk, define: { Closing: \"last(sum(limits.amount), limits.businessDate)\" }, "
                 + "select: { measures: [Closing] }, time: { window: { from: 2026-10-08, to: 2026-10-09 } } }"), false).body();

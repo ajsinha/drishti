@@ -79,7 +79,7 @@ public final class McpGateway {
         Map<String, Object> clean = new HashMap<>();
         int argChars = 0;
         for (Map.Entry<String, Object> a : (args == null ? Map.<String, Object>of() : args).entrySet()) {
-            Object v = settings.redactedFields().stream().anyMatch(a.getKey()::equalsIgnoreCase) ? PromptMasker.MASK
+            Object v = settings.redactedFields().stream().anyMatch(f -> PromptMasker.sameField(f, a.getKey())) ? PromptMasker.MASK
                     : a.getValue() instanceof String s ? masker.mask(s) : a.getValue();
             clean.put(a.getKey(), v);
             argChars += String.valueOf(v).length();

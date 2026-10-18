@@ -802,7 +802,7 @@ servers). The environment variables of this section are in the [placeholder tabl
 | `mask-copies-min-length` | `3` | Shortest text value scrubbed as a copy; numbers are scrubbed from four digits. |
 | `mask-copies-max-nodes` | `50000` | A document with more nodes is not scanned for copies (its masked fields are still masked). |
 | `mask-copies-max-values` | `64` | Most distinct masked values scrubbed per document. |
-| `redact` | `[trader, TRADER_ID, TRADER_FIRST_NAME, TRADER_LAST_NAME, counterpartyId, patientName, lifecycle.timeline.description]` | Field names masked for roles without `raw`, on every path that shows or reads their values ([field masks](#field-masks)). |
+| `redact` | `[TRADER_ID, TRADER_FIRST_NAME, TRADER_LAST_NAME, COUNTERPARTY_ID]` | Field names masked for roles without `raw`, on every path that shows or reads their values ([field masks](#field-masks)). |
 
 The bundled roles; packs add domain roles (trading: `trader`; market-risk: `market-risk`; counterparty-risk: `credit-risk`):
 
@@ -829,6 +829,9 @@ drishti:
 
 For a role without `raw`, every field named in `redact` reads `•••` wherever the user could see or infer its value.
 An entry with dots (`lifecycle.timeline.description`) masks a field by the end of its path; arrays are not a step.
+Names match in any case and convention: `counterpartyId`, `COUNTERPARTY_ID` and `counterparty-id` are the same field, so a
+mask written before the 2.3.0 UPPER_SNAKE rename keeps masking. An entry that names no field of the loaded packs' samples
+masks nothing: the server logs it at start-up as `DRS-6011` and Admin → Health lists it under `masksMatchingNothing`.
 A name matches at any depth (`trader` masks `$.trader` and `$.confirmation.trader`), and the mask covers everything
 under the field (with `counterparty` listed, `counterparty.name` and `counterparty.id` read `•••` too). The masking is
 done once, on the server, before anything reads the document, so it is the same on every path:

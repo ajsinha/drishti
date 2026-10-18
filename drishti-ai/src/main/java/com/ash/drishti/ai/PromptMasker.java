@@ -36,7 +36,7 @@ public final class PromptMasker {
     public PromptMasker(Collection<String> redactedFields, Collection<String> extraPatterns) {
         for (String f : redactedFields) {
             if (f != null && !f.isBlank()) {
-                fieldPatterns.add(Pattern.compile("(?i)(\"?\\b" + Pattern.quote(f.strip()) + "\\b\"?\\s*[:=]\\s*)(\"[^\"]*\"|[^\\s,;}\\]]+)"));
+                fieldPatterns.add(Pattern.compile("(?i)(\"?\\b" + anyConvention(f.strip()) + "\\b\"?\\s*[:=]\\s*)(\"[^\"]*\"|[^\\s,;}\\]]+)"));
             }
         }
         for (String p : extraPatterns) {
@@ -44,6 +44,37 @@ public final class PromptMasker {
                 plainPatterns.add(Pattern.compile(p));
             }
         }
+    }
+
+    /**
+     * True when two field names are the same field in any case and convention ({@code counterpartyId}, {@code COUNTERPARTY_ID},
+     * {@code counterparty-id}): a mask written before the UPPER_SNAKE rename still masks the renamed field.
+     */
+    public static boolean sameField(String a, String b) {
+        return canonical(a).equals(canonical(b));
+    }
+
+    private static String canonical(String name) {
+        StringBuilder out = new StringBuilder(name.length());
+        for (char c : name.toCharArray()) {
+            if (c != '_' && c != '-' && c != ' ') {
+                out.append(Character.toLowerCase(c));
+            }
+        }
+        return out.toString();
+    }
+
+    /** The field name as a pattern that matches it in any convention (case is ignored by the caller's flag; a separator may sit between any two characters). */
+    private static String anyConvention(String field) {
+        String c = canonical(field);
+        if (c.isEmpty()) {
+            return Pattern.quote(field);
+        }
+        StringBuilder p = new StringBuilder();
+        for (int i = 0; i < c.length(); i++) {
+            p.append(i == 0 ? "" : "[_-]?").append(Pattern.quote(String.valueOf(c.charAt(i))));
+        }
+        return p.toString();
     }
 
     public static PromptMasker none() {

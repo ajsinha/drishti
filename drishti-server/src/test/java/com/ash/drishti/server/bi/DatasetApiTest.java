@@ -365,9 +365,10 @@ class DatasetApiTest {
         JsonNode j = query(rita(), "{\"fields\":[\"books.name\"],\"measures\":[\"Notional\"],\"dates\":{\"from\":\"2026-10-08\"}}");
         assertThat(j.path("meta").path("layer").asText()).isEqualTo("columns");
         assertThat(byFirstColumn(j, 1).keySet()).containsExactly("Credit one", "FX one", "Rates one");
-        // two dates
+        // two dates: the trades are a daily snapshot, so over a window Notional is the last date's, not the two added (2.3.0, DRS-9159)
         JsonNode both = query(rita(), "{\"measures\":[\"Notional\"],\"dates\":{\"from\":\"2026-10-07\",\"to\":\"2026-10-08\"}}");
-        assertThat(both.path("rows").get(0).get(0).asDouble()).isEqualTo(expected(null, 7, 1) * 2);
+        assertThat(both.path("rows").get(0).get(0).asDouble()).isEqualTo(expected(null, 8, 1));
+        assertThat(both.path("meta").path("warnings").toString()).contains("DRS-9159");
     }
 
     @Test @Order(5)

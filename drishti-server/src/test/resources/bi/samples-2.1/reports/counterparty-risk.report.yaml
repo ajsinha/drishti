@@ -117,4 +117,5 @@ pages:
         title: The counterparty's view
         at: { x: 5, y: 0, w: 7, h: 10 }
         wells: { key: [counterparties.id] }
+        format: { kind: counterparty }                # the kind of entity the key names: its Drishti view opens
         alt: The Drishti view of the counterparty selected in the bar chart
