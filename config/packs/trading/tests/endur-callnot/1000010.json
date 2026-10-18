@@ -3,7 +3,7 @@
  "SOURCE_UPDATE_TIME": "",
  "TRADE_DATE": "2026-07-16",
  "INPUT_DATE": "",
- "TRADE_ID": 1000010,
+ "TRADE_ID": "1000010",
  "TRADE_STATUS": "VALIDATED",
  "TRADE_ACTION": "",
  "TRADE_VERSION": "",
@@ -46,7 +46,7 @@
  "SETTLEMENT_DATE": "",
  "LEGS": [
   {
-   "LEG_ID": 1,
+   "LEG_ID": "1",
    "LEG_TYPE": "FIXED",
    "LEG_ECONOMIC_TYPE": "",
    "CURRENCY": "EUR",
@@ -76,7 +76,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 5000311,
+     "FLOW_ID": "5000311",
      "FLOW_TYPE": "",
      "NOTIONAL": 2000000.0,
      "RATE": "3.0160",
@@ -102,7 +102,7 @@
      ]
     },
     {
-     "FLOW_ID": 5000312,
+     "FLOW_ID": "5000312",
      "FLOW_TYPE": "",
      "NOTIONAL": 2000000.0,
      "RATE": "3.0160",
@@ -132,8 +132,8 @@
  ],
  "EVENTS": [
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 9000161,
+   "LEG_ID": "1",
+   "EVENT_ID": "9000161",
    "EVENT_NUMBER": 1,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Interest",
@@ -145,8 +145,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 9000162,
+   "LEG_ID": "1",
+   "EVENT_ID": "9000162",
    "EVENT_NUMBER": 2,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Interest",

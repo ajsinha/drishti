@@ -46,7 +46,7 @@
  "SETTLEMENT_DATE": "2026-07-20",
  "LEGS": [
   {
-   "LEG_ID": 1,
+   "LEG_ID": "1",
    "LEG_TYPE": "OPTION",
    "LEG_ECONOMIC_TYPE": "Pay",
    "CURRENCY": "USD",
@@ -76,7 +76,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 20000367001,
+     "FLOW_ID": "20000367001",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 6000000.0,
      "RATE": "",
@@ -91,7 +91,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000367002,
+     "FLOW_ID": "20000367002",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 6000000.0,
      "RATE": "",
@@ -106,7 +106,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000367003,
+     "FLOW_ID": "20000367003",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 6000000.0,
      "RATE": "",
@@ -121,7 +121,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000367004,
+     "FLOW_ID": "20000367004",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 6000000.0,
      "RATE": "",
@@ -136,7 +136,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000367005,
+     "FLOW_ID": "20000367005",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 6000000.0,
      "RATE": "",
@@ -151,7 +151,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000367006,
+     "FLOW_ID": "20000367006",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 6000000.0,
      "RATE": "",
@@ -166,7 +166,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000367007,
+     "FLOW_ID": "20000367007",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 6000000.0,
      "RATE": "",
@@ -181,7 +181,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000367008,
+     "FLOW_ID": "20000367008",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 6000000.0,
      "RATE": "",
@@ -196,7 +196,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000367009,
+     "FLOW_ID": "20000367009",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 6000000.0,
      "RATE": "",
@@ -211,7 +211,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000367010,
+     "FLOW_ID": "20000367010",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 6000000.0,
      "RATE": "",
@@ -226,7 +226,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000367011,
+     "FLOW_ID": "20000367011",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 6000000.0,
      "RATE": "",
@@ -241,7 +241,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000367012,
+     "FLOW_ID": "20000367012",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 6000000.0,
      "RATE": "",
@@ -256,7 +256,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000367013,
+     "FLOW_ID": "20000367013",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 6000000.0,
      "RATE": "",
@@ -271,7 +271,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000367014,
+     "FLOW_ID": "20000367014",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 6000000.0,
      "RATE": "",
@@ -286,7 +286,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000367015,
+     "FLOW_ID": "20000367015",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 6000000.0,
      "RATE": "",
@@ -301,7 +301,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000367016,
+     "FLOW_ID": "20000367016",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 6000000.0,
      "RATE": "",
@@ -316,7 +316,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000367017,
+     "FLOW_ID": "20000367017",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 6000000.0,
      "RATE": "",
@@ -331,7 +331,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 20000367018,
+     "FLOW_ID": "20000367018",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 6000000.0,
      "RATE": "",
@@ -351,7 +351,7 @@
  "EVENTS": [
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000367001,
+   "EVENT_ID": "20000367001",
    "EVENT_NUMBER": 1,
    "EVENT_TYPE": "BOOKED",
    "PAYMENT_TYPE": "",
@@ -364,7 +364,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000367002,
+   "EVENT_ID": "20000367002",
    "EVENT_NUMBER": 2,
    "EVENT_TYPE": "CONFIRMED",
    "PAYMENT_TYPE": "",
@@ -377,7 +377,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000367003,
+   "EVENT_ID": "20000367003",
    "EVENT_NUMBER": 3,
    "EVENT_TYPE": "NEXT_PAYMENT",
    "PAYMENT_TYPE": "",
@@ -390,7 +390,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000367004,
+   "EVENT_ID": "20000367004",
    "EVENT_NUMBER": 4,
    "EVENT_TYPE": "MATURITY",
    "PAYMENT_TYPE": "",

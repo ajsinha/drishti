@@ -86,6 +86,8 @@ Written by `tools/testdata/make_testdata.py` (deterministic; `--check` says whet
 
 ## The datasets
 
+**Ids are text; numeric ids in files are read as text.** `TRADE_ID` and every other id (`LEG_ID`, `FLOW_ID`, `RESET_ID`, `EVENT_ID`, `TRADE_IDS`) is a string in the test data and samples (ENDUR's are digits, `"1000008"`). A real extract that writes an id as a JSON number (`1000008`) is read as `"1000008"`, never `1000008.0`; text ids keep their leading zeros; no id prefix or shape is assumed (`SWP-AB_12`, `mx_2000-01`, `007123` are all ids) — `SOURCE_SYSTEM` says which system a trade comes from. An older lake whose `TRADE_ID` column was written as a number is still read (as text).
+
 Seven business days, 2026-09-22 to 2026-09-30 in the files (USNY calendar; `lake demo` moves them to end today unless `--as-of data`). Every document is UPPER_SNAKE, the shape the packs read; every
 counterparty is fictitious (`CP-…`). Columns: the first day's documents, the documents new or changed on each later day, the documents
 on the last day, and the folder's compressed size (MB).

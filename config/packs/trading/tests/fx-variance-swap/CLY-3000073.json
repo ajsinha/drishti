@@ -46,7 +46,7 @@
  "SETTLEMENT_DATE": "2024-12-23",
  "LEGS": [
   {
-   "LEG_ID": 1,
+   "LEG_ID": "1",
    "LEG_TYPE": "OPTION",
    "LEG_ECONOMIC_TYPE": "Receive",
    "CURRENCY": "USD",
@@ -76,7 +76,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 3000073001,
+     "FLOW_ID": "3000073001",
      "FLOW_TYPE": "Coupon paid",
      "NOTIONAL": 2000000.0,
      "RATE": 97.13,
@@ -102,7 +102,7 @@
      ]
     },
     {
-     "FLOW_ID": 3000073002,
+     "FLOW_ID": "3000073002",
      "FLOW_TYPE": "Coupon paid",
      "NOTIONAL": 2000000.0,
      "RATE": 92.44,
@@ -128,7 +128,7 @@
      ]
     },
     {
-     "FLOW_ID": 3000073003,
+     "FLOW_ID": "3000073003",
      "FLOW_TYPE": "Coupon paid",
      "NOTIONAL": 2000000.0,
      "RATE": 89.42,
@@ -154,7 +154,7 @@
      ]
     },
     {
-     "FLOW_ID": 3000073004,
+     "FLOW_ID": "3000073004",
      "FLOW_TYPE": "Coupon paid",
      "NOTIONAL": 2000000.0,
      "RATE": 95.44,
@@ -180,7 +180,7 @@
      ]
     },
     {
-     "FLOW_ID": 3000073005,
+     "FLOW_ID": "3000073005",
      "FLOW_TYPE": "Coupon paid",
      "NOTIONAL": 2000000.0,
      "RATE": 91.43,
@@ -206,7 +206,7 @@
      ]
     },
     {
-     "FLOW_ID": 3000073006,
+     "FLOW_ID": "3000073006",
      "FLOW_TYPE": "Coupon paid",
      "NOTIONAL": 2000000.0,
      "RATE": 91.0,
@@ -232,7 +232,7 @@
      ]
     },
     {
-     "FLOW_ID": 3000073007,
+     "FLOW_ID": "3000073007",
      "FLOW_TYPE": "Coupon paid",
      "NOTIONAL": 2000000.0,
      "RATE": 96.58,
@@ -258,7 +258,7 @@
      ]
     },
     {
-     "FLOW_ID": 3000073008,
+     "FLOW_ID": "3000073008",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 2000000.0,
      "RATE": "",
@@ -273,7 +273,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000073009,
+     "FLOW_ID": "3000073009",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 2000000.0,
      "RATE": "",
@@ -288,7 +288,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000073010,
+     "FLOW_ID": "3000073010",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 2000000.0,
      "RATE": "",
@@ -303,7 +303,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000073011,
+     "FLOW_ID": "3000073011",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 2000000.0,
      "RATE": "",
@@ -318,7 +318,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000073012,
+     "FLOW_ID": "3000073012",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 2000000.0,
      "RATE": "",
@@ -333,7 +333,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000073013,
+     "FLOW_ID": "3000073013",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 2000000.0,
      "RATE": "",
@@ -348,7 +348,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000073014,
+     "FLOW_ID": "3000073014",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 2000000.0,
      "RATE": "",
@@ -363,7 +363,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000073015,
+     "FLOW_ID": "3000073015",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 2000000.0,
      "RATE": "",
@@ -378,7 +378,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000073016,
+     "FLOW_ID": "3000073016",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 2000000.0,
      "RATE": "",
@@ -393,7 +393,7 @@
      "RESETS": []
     },
     {
-     "FLOW_ID": 3000073017,
+     "FLOW_ID": "3000073017",
      "FLOW_TYPE": "Pending",
      "NOTIONAL": 2000000.0,
      "RATE": "",
@@ -413,7 +413,7 @@
  "EVENTS": [
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000073001,
+   "EVENT_ID": "3000073001",
    "EVENT_NUMBER": 1,
    "EVENT_TYPE": "BOOKED",
    "PAYMENT_TYPE": "",
@@ -426,7 +426,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000073002,
+   "EVENT_ID": "3000073002",
    "EVENT_NUMBER": 2,
    "EVENT_TYPE": "CONFIRMED",
    "PAYMENT_TYPE": "",
@@ -439,7 +439,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000073003,
+   "EVENT_ID": "3000073003",
    "EVENT_NUMBER": 3,
    "EVENT_TYPE": "NEXT_PAYMENT",
    "PAYMENT_TYPE": "",
@@ -452,7 +452,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000073004,
+   "EVENT_ID": "3000073004",
    "EVENT_NUMBER": 4,
    "EVENT_TYPE": "MATURITY",
    "PAYMENT_TYPE": "",

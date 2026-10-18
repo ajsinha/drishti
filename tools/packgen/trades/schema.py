@@ -20,7 +20,7 @@ upper snake case, in this order, with a nested ``LEGS[]`` (each with an ``INDEX`
 such extracts write them: an empty string (most), ``null`` (a few), ``0`` (amounts). The legal entity is ``LEGAL_ENTITY`` (an
 extract that writes it under another name is mapped on load: :data:`RENAMED`).
 
-    TRADE_ID          unique across the systems: ENDUR a number (1000001 ...), CALYPSO CLY-..., MUREX MX-...
+    TRADE_ID          text, unique across the systems: ENDUR digits ("1000001" ...), CALYPSO CLY-..., MUREX MX-...; every id is text
     SOURCE_SYSTEM     ENDUR, CALYPSO or MUREX
     PRODUCT_TYPE      selects the deal's Sutra (one per product type)
     COUNTERPARTY      a counterparty id of the core pack (its COUNTERPARTY_ID); PORTFOLIO a book id; LEGAL_ENTITY a legal entity id
@@ -119,3 +119,25 @@ def _names(v, seen=None):
     elif isinstance(v, list):
         for x in v:
             yield from _names(x)
+
+
+def _text(v):
+    """An id as text: a number keeps its digits (1000008, never 1000008.0); text and blanks unchanged."""
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        return v
+    return str(int(v)) if isinstance(v, int) or v.is_integer() else repr(v)
+
+
+def text_ids(doc: dict) -> dict:
+    """Ids are text in every system (an Endur deal number included): TRADE_ID, LEG_ID, FLOW_ID, RESET_ID, EVENT_ID. In place; returns doc."""
+    doc["TRADE_ID"] = _text(doc.get("TRADE_ID"))
+    for leg in doc.get("LEGS") or []:
+        leg["LEG_ID"] = _text(leg.get("LEG_ID"))
+        for f in leg.get("CASH_FLOWS") or []:
+            f["FLOW_ID"] = _text(f.get("FLOW_ID"))
+            for r in f.get("RESETS") or []:
+                r["RESET_ID"] = _text(r.get("RESET_ID"))
+    for e in doc.get("EVENTS") or []:
+        e["LEG_ID"] = _text(e.get("LEG_ID"))
+        e["EVENT_ID"] = _text(e.get("EVENT_ID"))
+    return doc

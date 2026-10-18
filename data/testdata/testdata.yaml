@@ -39,49 +39,49 @@ datasets:
     total: 4980
     files:
     - snapshot-2026-09-22.jsonl.gz
-    bytes: 3160011
+    bytes: 3170294
   - day: '2026-09-23'
     kind: changes
     documents: 189
     total: 4986
     files:
     - changes-2026-09-23.jsonl.gz
-    bytes: 160763
+    bytes: 161226
   - day: '2026-09-24'
     kind: changes
     documents: 163
     total: 4991
     files:
     - changes-2026-09-24.jsonl.gz
-    bytes: 132777
+    bytes: 132983
   - day: '2026-09-25'
     kind: changes
     documents: 170
     total: 5000
     files:
     - changes-2026-09-25.jsonl.gz
-    bytes: 124734
+    bytes: 124769
   - day: '2026-09-28'
     kind: changes
     documents: 145
     total: 5000
     files:
     - changes-2026-09-28.jsonl.gz
-    bytes: 100282
+    bytes: 100762
   - day: '2026-09-29'
     kind: changes
     documents: 162
     total: 5000
     files:
     - changes-2026-09-29.jsonl.gz
-    bytes: 122289
+    bytes: 122855
   - day: '2026-09-30'
     kind: changes
     documents: 156
     total: 5000
     files:
     - changes-2026-09-30.jsonl.gz
-    bytes: 110872
+    bytes: 110994
 - folder: trades/calypso
   pack: trading
   kind: trade
@@ -96,49 +96,49 @@ datasets:
     total: 4936
     files:
     - snapshot-2026-09-22.jsonl.gz
-    bytes: 1705681
+    bytes: 1709588
   - day: '2026-09-23'
     kind: changes
     documents: 319
     total: 4936
     files:
     - changes-2026-09-23.jsonl.gz
-    bytes: 140338
+    bytes: 140586
   - day: '2026-09-24'
     kind: changes
     documents: 325
     total: 4952
     files:
     - changes-2026-09-24.jsonl.gz
-    bytes: 130456
+    bytes: 130676
   - day: '2026-09-25'
     kind: changes
     documents: 367
     total: 5000
     files:
     - changes-2026-09-25.jsonl.gz
-    bytes: 144094
+    bytes: 144384
   - day: '2026-09-28'
     kind: changes
     documents: 292
     total: 5000
     files:
     - changes-2026-09-28.jsonl.gz
-    bytes: 124566
+    bytes: 124786
   - day: '2026-09-29'
     kind: changes
     documents: 305
     total: 5000
     files:
     - changes-2026-09-29.jsonl.gz
-    bytes: 127712
+    bytes: 127906
   - day: '2026-09-30'
     kind: changes
     documents: 287
     total: 5000
     files:
     - changes-2026-09-30.jsonl.gz
-    bytes: 119342
+    bytes: 119537
 - folder: trades/murex
   pack: trading
   kind: trade
@@ -153,49 +153,49 @@ datasets:
     total: 4933
     files:
     - snapshot-2026-09-22.jsonl.gz
-    bytes: 5532614
+    bytes: 5536487
   - day: '2026-09-23'
     kind: changes
     documents: 303
     total: 4955
     files:
     - changes-2026-09-23.jsonl.gz
-    bytes: 345801
+    bytes: 346047
   - day: '2026-09-24'
     kind: changes
     documents: 320
     total: 4978
     files:
     - changes-2026-09-24.jsonl.gz
-    bytes: 358538
+    bytes: 358808
   - day: '2026-09-25'
     kind: changes
     documents: 324
     total: 5000
     files:
     - changes-2026-09-25.jsonl.gz
-    bytes: 332317
+    bytes: 332667
   - day: '2026-09-28'
     kind: changes
     documents: 295
     total: 5000
     files:
     - changes-2026-09-28.jsonl.gz
-    bytes: 353023
+    bytes: 353365
   - day: '2026-09-29'
     kind: changes
     documents: 277
     total: 5000
     files:
     - changes-2026-09-29.jsonl.gz
-    bytes: 326650
+    bytes: 327087
   - day: '2026-09-30'
     kind: changes
     documents: 275
     total: 5000
     files:
     - changes-2026-09-30.jsonl.gz
-    bytes: 368552
+    bytes: 369259
 - folder: counterparty-risk/agreement
   pack: counterparty-risk
   kind: agreement
@@ -910,7 +910,7 @@ datasets:
     total: 24
     files:
     - changes-2026-09-30.jsonl.gz
-    bytes: 6968
+    bytes: 6966
 - folder: core/counterparty-group
   pack: core
   kind: counterparty-group
@@ -2175,7 +2175,7 @@ datasets:
     total: 76
     files:
     - changes-2026-09-30.jsonl.gz
-    bytes: 367294
+    bytes: 367292
 - folder: market-risk/pnl-explain
   pack: market-risk
   kind: pnl-explain
@@ -2573,49 +2573,49 @@ datasets:
     total: 14849
     files:
     - snapshot-2026-09-22.jsonl.gz
-    bytes: 639249
+    bytes: 639486
   - day: '2026-09-23'
     kind: changes
     documents: 14877
     total: 14877
     files:
     - changes-2026-09-23.jsonl.gz
-    bytes: 640402
+    bytes: 640641
   - day: '2026-09-24'
     kind: changes
     documents: 14921
     total: 14921
     files:
     - changes-2026-09-24.jsonl.gz
-    bytes: 642210
+    bytes: 642385
   - day: '2026-09-25'
     kind: changes
     documents: 15000
     total: 15000
     files:
     - changes-2026-09-25.jsonl.gz
-    bytes: 645608
+    bytes: 645831
   - day: '2026-09-28'
     kind: changes
     documents: 15000
     total: 15000
     files:
     - changes-2026-09-28.jsonl.gz
-    bytes: 645684
+    bytes: 645910
   - day: '2026-09-29'
     kind: changes
     documents: 15000
     total: 15000
     files:
     - changes-2026-09-29.jsonl.gz
-    bytes: 645833
+    bytes: 646040
   - day: '2026-09-30'
     kind: changes
     documents: 15000
     total: 15000
     files:
     - changes-2026-09-30.jsonl.gz
-    bytes: 612703
+    bytes: 612902
 - folder: core/trader
   pack: core
   kind: trader

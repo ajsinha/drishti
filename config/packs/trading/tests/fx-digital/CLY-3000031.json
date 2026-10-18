@@ -46,7 +46,7 @@
  "SETTLEMENT_DATE": "2025-03-24",
  "LEGS": [
   {
-   "LEG_ID": 1,
+   "LEG_ID": "1",
    "LEG_TYPE": "OPTION",
    "LEG_ECONOMIC_TYPE": "Pay",
    "CURRENCY": "USD",
@@ -76,7 +76,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 3000031001,
+     "FLOW_ID": "3000031001",
      "FLOW_TYPE": "Principal",
      "NOTIONAL": 16000000.0,
      "RATE": "",
@@ -96,7 +96,7 @@
  "EVENTS": [
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000031001,
+   "EVENT_ID": "3000031001",
    "EVENT_NUMBER": 1,
    "EVENT_TYPE": "BOOKED",
    "PAYMENT_TYPE": "",
@@ -109,7 +109,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000031002,
+   "EVENT_ID": "3000031002",
    "EVENT_NUMBER": 2,
    "EVENT_TYPE": "CONFIRMED",
    "PAYMENT_TYPE": "",
@@ -122,7 +122,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 3000031003,
+   "EVENT_ID": "3000031003",
    "EVENT_NUMBER": 3,
    "EVENT_TYPE": "MATURITY",
    "PAYMENT_TYPE": "",

@@ -46,7 +46,7 @@
  "SETTLEMENT_DATE": "2026-06-22",
  "LEGS": [
   {
-   "LEG_ID": 1,
+   "LEG_ID": "1",
    "LEG_TYPE": "OPTION",
    "LEG_ECONOMIC_TYPE": "Receive",
    "CURRENCY": "GBP",
@@ -76,7 +76,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 20000391001,
+     "FLOW_ID": "20000391001",
      "FLOW_TYPE": "2026-09-22..2026-12-22",
      "NOTIONAL": 243000000.0,
      "RATE": 0.026223,
@@ -102,7 +102,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000391002,
+     "FLOW_ID": "20000391002",
      "FLOW_TYPE": "2026-12-22..2027-03-22",
      "NOTIONAL": 243000000.0,
      "RATE": 0.028217,
@@ -128,7 +128,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000391003,
+     "FLOW_ID": "20000391003",
      "FLOW_TYPE": "2027-03-22..2027-06-22",
      "NOTIONAL": 243000000.0,
      "RATE": 0.048933,
@@ -154,7 +154,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000391004,
+     "FLOW_ID": "20000391004",
      "FLOW_TYPE": "2027-06-22..2027-09-22",
      "NOTIONAL": 243000000.0,
      "RATE": 0.042246,
@@ -180,7 +180,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000391005,
+     "FLOW_ID": "20000391005",
      "FLOW_TYPE": "2027-09-22..2027-12-22",
      "NOTIONAL": 243000000.0,
      "RATE": 0.037215,
@@ -206,7 +206,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000391006,
+     "FLOW_ID": "20000391006",
      "FLOW_TYPE": "2027-12-22..2028-03-22",
      "NOTIONAL": 243000000.0,
      "RATE": 0.046232,
@@ -232,7 +232,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000391007,
+     "FLOW_ID": "20000391007",
      "FLOW_TYPE": "2028-03-22..2028-06-22",
      "NOTIONAL": 243000000.0,
      "RATE": 0.047991,
@@ -258,7 +258,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000391008,
+     "FLOW_ID": "20000391008",
      "FLOW_TYPE": "2028-06-22..2028-09-22",
      "NOTIONAL": 243000000.0,
      "RATE": 0.029561,
@@ -284,7 +284,7 @@
      ]
     },
     {
-     "FLOW_ID": 20000391009,
+     "FLOW_ID": "20000391009",
      "FLOW_TYPE": "2028-08-15..2028-11-15",
      "NOTIONAL": 243000000.0,
      "RATE": 0.022396,
@@ -315,7 +315,7 @@
  "EVENTS": [
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000391001,
+   "EVENT_ID": "20000391001",
    "EVENT_NUMBER": 1,
    "EVENT_TYPE": "BOOKED",
    "PAYMENT_TYPE": "",
@@ -328,7 +328,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000391002,
+   "EVENT_ID": "20000391002",
    "EVENT_NUMBER": 2,
    "EVENT_TYPE": "CONFIRMED",
    "PAYMENT_TYPE": "",
@@ -341,7 +341,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000391003,
+   "EVENT_ID": "20000391003",
    "EVENT_NUMBER": 3,
    "EVENT_TYPE": "PARTIALLY_TERMINATED",
    "PAYMENT_TYPE": "",
@@ -354,7 +354,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000391004,
+   "EVENT_ID": "20000391004",
    "EVENT_NUMBER": 4,
    "EVENT_TYPE": "CASH_SETTLED",
    "PAYMENT_TYPE": "",
@@ -367,7 +367,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000391005,
+   "EVENT_ID": "20000391005",
    "EVENT_NUMBER": 5,
    "EVENT_TYPE": "NEXT_PAYMENT",
    "PAYMENT_TYPE": "",
@@ -380,7 +380,7 @@
   },
   {
    "LEG_ID": "",
-   "EVENT_ID": 20000391006,
+   "EVENT_ID": "20000391006",
    "EVENT_NUMBER": 6,
    "EVENT_TYPE": "MATURITY",
    "PAYMENT_TYPE": "",
@@ -392,8 +392,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 20000391007,
+   "LEG_ID": "1",
+   "EVENT_ID": "20000391007",
    "EVENT_NUMBER": 7,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "2027-03-22..2027-06-22",
@@ -405,8 +405,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 20000391008,
+   "LEG_ID": "1",
+   "EVENT_ID": "20000391008",
    "EVENT_NUMBER": 8,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "2027-06-22..2027-09-22",
@@ -418,8 +418,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 20000391009,
+   "LEG_ID": "1",
+   "EVENT_ID": "20000391009",
    "EVENT_NUMBER": 9,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "2027-09-22..2027-12-22",
@@ -431,8 +431,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 20000391010,
+   "LEG_ID": "1",
+   "EVENT_ID": "20000391010",
    "EVENT_NUMBER": 10,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "2027-12-22..2028-03-22",
@@ -444,8 +444,8 @@
    "NY_CURVE_FLAG": ""
   },
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 20000391011,
+   "LEG_ID": "1",
+   "EVENT_ID": "20000391011",
    "EVENT_NUMBER": 11,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "2028-03-22..2028-06-22",

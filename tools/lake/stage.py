@@ -87,6 +87,21 @@ def scalar_text(v) -> str | None:
     return json.dumps(v, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
 
 
+_ID_FIELD = re.compile(r"(?i)(^|_)(id|ids|ref|refs|key)$")
+
+
+def is_id_field(path: str) -> bool:
+    """A field named like an id or key (ID, TRADE_ID, TRADE_IDS, DEAL_REF, counterparty.id): its column is text, whatever the values."""
+    return bool(_ID_FIELD.search(path.replace("__", ".").rsplit(".", 1)[-1]))
+
+
+def id_text(v) -> str | None:
+    """An id as its exact text: 1000008 (a number in the file) -> "1000008", never "1000008.0"; text unchanged (leading zeros kept)."""
+    if isinstance(v, float) and v.is_integer() and abs(v) < 1e18:
+        return str(int(v))
+    return scalar_text(v)
+
+
 def _number(v) -> bool:
     return isinstance(v, (int, float)) and not isinstance(v, bool)
 
@@ -152,7 +167,9 @@ class Stager:
         if isinstance(kv, (dict, list)):
             st.reject(where, f"the id field '{self.key}' is not a single value")
             return
-        ident = scalar_text(kv)
+        ident = id_text(kv)
+        if _number(kv) and isinstance(doc, dict) and self.key in doc:       # the document carries its id as text too
+            doc = {**doc, self.key: ident}
         if self.as_of:
             day = self.as_of
         else:
@@ -169,6 +186,9 @@ class Stager:
             name = column_name(p)
             if v is not None and not _number(v):
                 st.numeric[name] = False
+            if is_id_field(p) or p == self.key:                         # an id column is text even when every id is a number
+                st.numeric[name] = False
+                v = id_text(v) if _number(v) else v
             promoted[name] = v
         h = int.from_bytes(hashlib.blake2b(ident.encode("utf-8"), digest_size=8).digest(), "big")
         seen = self._seen.setdefault(day, set())

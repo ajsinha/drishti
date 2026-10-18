@@ -123,7 +123,7 @@ class Endur:
             out["VAULT_LOCATION_ALLOCATION"] = rng.choice(VAULTS) if rich else ""
             out["REGISTRY_DELIVERY_DATE"] = out["START_DATE"] if rich else ""
             out["LEASE_PERPETUITY_FLAG"] = rng.choice(["Y", "N"]) if rich else ""
-        return {k: out[k] for k in S.TOP}
+        return S.text_ids({k: out[k] for k in S.TOP})
 
     def deals(self, count: int, start: int = 0):
         for n in range(start, start + count):
@@ -145,5 +145,5 @@ class Endur:
                     break
             out += mine
         for i, d in enumerate(out):                    # numbered in order, as an extract lists them
-            d["TRADE_ID"] = FIRST_ID + i
+            d["TRADE_ID"] = str(FIRST_ID + i)
         return out

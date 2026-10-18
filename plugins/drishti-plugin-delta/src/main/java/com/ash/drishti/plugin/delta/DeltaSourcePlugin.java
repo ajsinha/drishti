@@ -638,7 +638,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return join(columnSets.get(new PartKey(kind, l, date), k -> {
             Map<String, Boolean> numeric = new LinkedHashMap<>();
             cols.forEach((path, column) -> numeric.put(path,
-                    l.schema().get(column).getDataType() instanceof io.delta.kernel.types.DoubleType));
+                    l.schema().get(column).getDataType() instanceof io.delta.kernel.types.DoubleType && !com.ash.drishti.api.IdText.isIdField(path)));
             return tables.get(kind).columns(l, date, cols, numeric);
         }));
     }

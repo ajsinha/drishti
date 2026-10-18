@@ -3,7 +3,7 @@
  "SOURCE_UPDATE_TIME": "",
  "TRADE_DATE": "2025-11-08",
  "INPUT_DATE": "",
- "TRADE_ID": 1000004,
+ "TRADE_ID": "1000004",
  "TRADE_STATUS": "MATURED",
  "TRADE_ACTION": "",
  "TRADE_VERSION": "1",
@@ -46,7 +46,7 @@
  "SETTLEMENT_DATE": "",
  "LEGS": [
   {
-   "LEG_ID": 1,
+   "LEG_ID": "1",
    "LEG_TYPE": "FLOAT",
    "LEG_ECONOMIC_TYPE": "",
    "CURRENCY": "USD",
@@ -76,7 +76,7 @@
    },
    "CASH_FLOWS": [
     {
-     "FLOW_ID": 5000236,
+     "FLOW_ID": "5000236",
      "FLOW_TYPE": "",
      "NOTIONAL": 9143418.2,
      "RATE": "",
@@ -106,8 +106,8 @@
  ],
  "EVENTS": [
   {
-   "LEG_ID": 1,
-   "EVENT_ID": 9000141,
+   "LEG_ID": "1",
+   "EVENT_ID": "9000141",
    "EVENT_NUMBER": 1,
    "EVENT_TYPE": "CASH_SETTLEMENT",
    "PAYMENT_TYPE": "Futures settlement",
