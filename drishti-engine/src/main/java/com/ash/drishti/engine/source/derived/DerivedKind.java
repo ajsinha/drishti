@@ -75,6 +75,8 @@ public final class DerivedKind {
     private final String rowsField;
     private final int maxMembers;
     private final Formats formats;
+    /** What {@link #compact} computes from a member (source kind, fields, row columns): kinds with the same signature share it. */
+    private String signature;
 
     private DerivedKind(String kind, String from, Expr groupBy, String groupSource, Expr where, String idField, String membersField, List<Field> fields,
             Map<String, Expr> rowColumns, String rowsField, int maxMembers, Formats formats) {
@@ -125,10 +127,20 @@ public final class DerivedKind {
                 }
             });
             String where = settings.get(p + "where");
-            out.add(new DerivedKind(kind, from, compile(kind, "group-by", group, el), group.trim(), where == null || where.isBlank() ? null : compile(kind, "where", where, el),
+            DerivedKind made = new DerivedKind(kind, from, compile(kind, "group-by", group, el), group.trim(), where == null || where.isBlank() ? null : compile(kind, "where", where, el),
                     settings.getOrDefault(p + "id-field", "id"), settings.getOrDefault(p + "members", "members"), List.copyOf(fields),
                     rowColumns, settings.getOrDefault(p + "rows-field", "rows"), Integer.parseInt(settings.getOrDefault(p + "max-members", "1000")),
-                    formats));
+                    formats);
+            // kinds that read the same fields and row columns of the same source share one compact copy of each member
+            StringBuilder sig = new StringBuilder(from).append('|');
+            fields.forEach(f -> sig.append(f.name()).append('=').append(f.source()).append(';'));
+            new java.util.TreeMap<>(settings).forEach((k, v) -> {
+                if (k.startsWith(rp)) {
+                    sig.append(k.substring(rp.length())).append('=').append(v).append(';');
+                }
+            });
+            made.signature = sig.toString();
+            out.add(made);
         }
         return out;
     }
@@ -242,6 +254,149 @@ public final class DerivedKind {
         }
         rowColumns.forEach((col, e) -> out.put(ROW + col, plain(Values.simplify(safe(e, c)))));
         return DataNode.of(out);
+    }
+
+    // ---- pages kept on disk (store: disk): the heap holds each group's totals, the disk each member's row -------------------
+
+    private static final com.fasterxml.jackson.databind.ObjectMapper JSON = new com.fasterxml.jackson.databind.ObjectMapper();
+
+    /** A new, empty set of totals for one group. */
+    Totals totals() {
+        return new Totals();
+    }
+
+    /**
+     * One group's totals, added to member by member in any order: what the page's fields need (count, sums, extremes, distinct
+     * values, the first member's value by id), never the members themselves. The same values {@link #build} computes.
+     */
+    final class Totals {
+        long count;
+        private final double[] sum = new double[fields.size()];
+        private final int[] n = new int[fields.size()];
+        private final Double[] best = new Double[fields.size()];
+        private final List<Set<String>> distinct = new ArrayList<>();
+        private final String[] firstId = new String[fields.size()];
+        private final Object[] first = new Object[fields.size()];
+
+        Totals() {
+            for (int i = 0; i < fields.size(); i++) {
+                distinct.add(fields.get(i).op() == Op.DISTINCT ? new java.util.TreeSet<>() : null);
+            }
+        }
+
+        void add(String id, DataNode doc) {
+            count++;
+            EvalContext c = null;
+            for (int i = 0; i < fields.size(); i++) {
+                Field f = fields.get(i);
+                if (f.op() == Op.COUNT) {
+                    continue;
+                }
+                if (c == null) {
+                    c = EvalContext.of(doc, formats);
+                }
+                Object v = Values.simplify(safe(f.expr(), c));
+                switch (f.op()) {
+                    case FIRST -> {
+                        if (firstId[i] == null || id.compareTo(firstId[i]) < 0) {
+                            firstId[i] = id;
+                            first[i] = plain(v);
+                        }
+                    }
+                    case DISTINCT -> {
+                        if (!Values.isNull(v)) {
+                            distinct.get(i).add(Values.text(v));
+                        }
+                    }
+                    default -> {
+                        if (Values.isNumber(v)) {
+                            double d = Values.number(v);
+                            sum[i] += d;
+                            n[i]++;
+                            best[i] = best[i] == null ? d : f.op() == Op.MIN ? Math.min(best[i], d) : Math.max(best[i], d);
+                        }
+                    }
+                }
+            }
+        }
+
+        Map<String, Object> values() {
+            Map<String, Object> out = new LinkedHashMap<>();
+            for (int i = 0; i < fields.size(); i++) {
+                Field f = fields.get(i);
+                out.put(f.name(), switch (f.op()) {
+                    case COUNT -> count;
+                    case FIRST -> first[i];
+                    case DISTINCT -> List.copyOf(distinct.get(i));
+                    case SUM -> Values.normalise(sum[i]);
+                    case AVG -> n[i] == 0 ? null : Values.normalise(sum[i] / n[i]);
+                    case MIN, MAX -> best[i] == null ? null : Values.normalise(best[i]);
+                });
+            }
+            return out;
+        }
+    }
+
+    /** True when the kind's page has rows (one per listed member). */
+    boolean hasRows() {
+        return !rowColumns.isEmpty();
+    }
+
+    /** A member's row (the row columns' values) as JSON bytes, for the disk. */
+    byte[] rowBytes(DataNode doc) {
+        EvalContext c = EvalContext.of(doc, formats);
+        Map<String, Object> row = new LinkedHashMap<>();
+        rowColumns.forEach((col, e) -> row.put(col, plain(Values.simplify(safe(e, c)))));
+        try {
+            return JSON.writeValueAsBytes(row);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new IllegalStateException("a derived row cannot be written: " + e.getMessage(), e);
+        }
+    }
+
+    /** The most members a page lists (its rows and member ids). */
+    int maxMembers() {
+        return maxMembers;
+    }
+
+    /**
+     * The group's page from its totals and its listed members' ids and rows (read from the disk, ids in order): the same
+     * document {@link #build} makes.
+     */
+    DataNode buildStored(String key, Totals t, List<String> listed, java.util.function.Function<String, byte[]> row) {
+        Map<String, Object> doc = new LinkedHashMap<>();
+        doc.put("id", key);
+        doc.put(idField, key);
+        doc.put("derivedFrom", from);
+        doc.putAll(t.values());
+        doc.put("memberCount", t.count);
+        doc.put(membersField, listed);
+        if (!rowColumns.isEmpty()) {
+            List<Map<String, Object>> rows = new ArrayList<>(listed.size());
+            for (String id : listed) {
+                byte[] b = row.apply(id);
+                Map<String, Object> r = new LinkedHashMap<>();
+                if (b != null) {
+                    try {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> read = JSON.readValue(b, LinkedHashMap.class);
+                        r.putAll(read);
+                    } catch (java.io.IOException e) {
+                        throw new java.io.UncheckedIOException(e);
+                    }
+                } else {
+                    rowColumns.keySet().forEach(col -> r.put(col, null));
+                }
+                rows.add(r);
+            }
+            doc.put(rowsField, rows);
+        }
+        return DataNode.of(doc);
+    }
+
+    /** Kinds with the same signature compute the same {@link #compact} member, so one copy serves them all. */
+    String signature() {
+        return signature == null ? kind : signature;
     }
 
     /** {@link #build} over members made by {@link #compact}: the same document. */

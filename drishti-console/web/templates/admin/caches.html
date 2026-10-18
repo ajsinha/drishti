@@ -24,7 +24,9 @@
   {% with tab='caches' %}{% include "admin/_nav.html" %}{% endwith %}
   <div class="adm-bar">
     <p class="text-muted-d">What the engine and each connector hold in memory and on disk. Purging is safe at any time: the next reads
-      refill from the source. Disk caches also clear themselves every night. Every purge is audited.</p>
+      refill from the source. Disk caches also clear themselves every night. Grouped pages kept on disk (a <code>derived</code> connector
+      with <code>store: disk</code>, such as <code>trade-pages</code>) are rebuilt from the lake at once after a purge; the old ones serve
+      until the new ones are ready. Every purge is audited. From a terminal: <code>drishti.py server caches</code>, <code>… caches purge NAME</code>.</p>
     <button type="button" class="btn-pill btn-ghost" data-purge="all"><i class="bi bi-trash" aria-hidden="true"></i> Purge all</button>
   </div>
   <p class="adm-status mono" data-purge-status role="status" aria-live="polite"></p>

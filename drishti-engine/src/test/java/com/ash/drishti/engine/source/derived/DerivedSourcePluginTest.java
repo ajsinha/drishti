@@ -203,6 +203,64 @@ class DerivedSourcePluginTest {
     }
 
     @Test
+    void aCutBuildSaysSoInItsHealthAndKindsWithTheSameColumnsShareOneCopy() throws Exception {
+        Stream trades = new Stream();
+        Map<String, String> s = new LinkedHashMap<>();
+        for (String k : List.of("by-book", "by-ccy")) {                // the same fields and row columns, grouped differently
+            s.put(k + ".from", "trade");
+            s.put(k + ".group-by", k.equals("by-book") ? "$.book" : "$.currency");
+            s.put(k + ".fields.mtm", "sum $.mtm");
+            s.put(k + ".rows.mtm", "$.mtm");
+        }
+        s.put("max-stream", "1");
+        DerivedSourcePlugin p = started(s, trades);
+        assertThat(p.fetch(EntityRef.of("by-book", "RATES-1")).orElseThrow().data().get("mtm").asDouble()).isEqualTo(100);   // T-1 only
+        assertThat(p.health()).startsWith("DEGRADED: partial:").contains("first 1 of 2 trade documents").contains("max-stream");
+        s.put("max-stream", "10");
+        DerivedSourcePlugin whole = started(s, trades);
+        assertThat(whole.fetch(EntityRef.of("by-ccy", "USD")).orElseThrow().data().get("mtm").asDouble()).isEqualTo(100);
+        assertThat(whole.fetch(EntityRef.of("by-ccy", "EUR")).orElseThrow().data().get("mtm").asDouble()).isEqualTo(-40);
+        assertThat(whole.health()).isEqualTo("UP");
+    }
+
+    @Test
+    void pagesKeptOnDiskAreTheSamePagesAndTheirFolderGoesWhenTheyAreRetired(@org.junit.jupiter.api.io.TempDir java.nio.file.Path tmp) throws Exception {
+        java.nio.file.Path root = tmp.resolve("derived").resolve("pages");
+        java.nio.file.Files.createDirectories(root.resolve("left-over-from-a-crash"));
+        Map<String, String> s = settings();
+        s.put("store", "disk");
+        s.put("store-dir", root.toString());
+        s.put("retire-after", "0s");
+        Stream disk = new Stream();
+        DerivedSourcePlugin onDisk = started(s, disk);
+        assertThat(root.resolve("left-over-from-a-crash")).doesNotExist();                  // the folder is the pages' own: emptied at start
+        DerivedSourcePlugin inHeap = started(settings(), new Stream());
+        for (String kind : List.of("book-pnl", "live-books")) {
+            assertThat(onDisk.search(kind, "", 10)).isEqualTo(inHeap.search(kind, "", 10));
+            for (var hit : inHeap.search(kind, "", 10)) {
+                assertThat(onDisk.fetch(hit.ref()).orElseThrow().data().unwrap()).as(kind + " " + hit.ref().id())
+                        .isEqualTo(inHeap.fetch(hit.ref()).orElseThrow().data().unwrap());
+            }
+        }
+        assertThat(onDisk.fetch(EntityRef.of("book-pnl", "NOPE"))).isEmpty();
+        java.nio.file.Path first;
+        try (var dirs = java.nio.file.Files.list(root)) {
+            List<java.nio.file.Path> all = dirs.toList();
+            assertThat(all).hasSize(1);                                                     // one build, one folder, under store-dir only
+            first = all.get(0);
+        }
+        onDisk.purgeCaches();                                                               // retired (its folder goes) and built again at once
+        for (int i = 0; i < 300 && java.nio.file.Files.exists(first); i++) {
+            Thread.sleep(10);
+        }
+        assertThat(first).doesNotExist();
+        assertThat(onDisk.fetch(EntityRef.of("book-pnl", "RATES-1")).orElseThrow().data().get("mtm").asDouble()).isEqualTo(60);   // built again
+        try (var dirs = java.nio.file.Files.list(root)) {
+            assertThat(dirs.toList()).hasSize(1).doesNotContain(first);                     // the new build's folder only
+        }
+    }
+
+    @Test
     void aNewDataVersionRebuildsAndAnUnchangedOneNeverDoes() throws Exception {
         Stream trades = new Stream();
         Map<String, String> s = settings();

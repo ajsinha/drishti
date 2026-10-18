@@ -191,6 +191,9 @@ connectors:
     - index-trades
     settings:
       refresh: 60s
+      # the pages on disk (<data dir>/derived/trade-pages), the heap keeping each group's totals only: complete at any number of
+      # trades (1.16 million a day measured in an 8 GB heap). heap keeps every page in memory, for small books.
+      store: disk
       counterparty-trades:
         from: trade
         group-by: $.COUNTERPARTY

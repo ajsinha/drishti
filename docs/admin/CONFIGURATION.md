@@ -2206,8 +2206,16 @@ Nothing is stored: each document is worked out when asked for (the news about th
 | `<kind>.members` | `members` | The field listing the members' ids. |
 | `<kind>.fields.<name>` | none | `count`, or `sum`/`avg`/`min`/`max`/`distinct`/`first` followed by an expression. |
 | `<kind>.rows.<column>` | none | One row per member with these columns (field `rows`, or `<kind>.rows-field`). |
-| `refresh` | `30s` | How long a computation is reused per business date. |
-| `max-scan` | `50000` | Members read at most. |
+| `store` | `heap` (`disk` in the trading pack's `trade-pages`) | `heap`: every page is built and kept in memory (small books). `disk`: the pages live under `store-dir`, the heap keeps each group's totals only; complete at any number of members (1.16 million trades a day measured in an 8 GB heap, 2026-10-18). |
+| `store-dir` | `<data dir>/derived/<connector>` | The pages' only folder (`store: disk`); emptied at start, one sub-folder per computation, deleted when a newer one replaces it. |
+| `retire-after` | `60s` | How long replaced pages on disk are kept for reads still running. |
+| `version-check` | `10s` | How often the members' data version is asked; a new version (a load) rebuilds, nothing else does. |
+| `refresh` | `30s` | Rebuild age, used only when a source cannot say its data's version. |
+| `max-stream` | `100000` | `store: heap`: members kept from a one-pass read (a WARN and Admin → Health DEGRADED say when it cuts). Not used with `store: disk`. |
+| `max-scan` | `50000` | Members read one at a time, for sources that cannot read a day in one pass. |
+
+Admin → Caches (or `drishti.py server caches purge <connector>`) drops a derived connector's pages; with `store: disk` the
+latest date is rebuilt from the lake at once, the old pages serving until the new ones are ready.
 
 In a pack the settings may be nested (`book-pnl: { from: trade, fields: { mtm: sum $.mtm } }`): nested maps become
 dotted keys. Worked example: [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds).

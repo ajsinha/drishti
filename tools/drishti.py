@@ -732,6 +732,27 @@ def cmd_server_health(a, extra) -> int:
     return 0 if h.get("status") == "OK" else 1
 
 
+def cmd_server_caches(a, extra) -> int:
+    """server caches [purge NAME|all]: what the engine and each connector hold; purge drops a cache (grouped pages on disk are
+    rebuilt from the lake at once)."""
+    api = Api.from_args(a)
+    if a.action == "purge":
+        if not a.name:
+            print("server caches purge: give a cache name (see `server caches`) or all", file=sys.stderr)
+            return 2
+        res = api.json("POST", f"/api/v1/admin/caches/{q(a.name)}/purge")
+        say_json(res) if a.json else print(f"purged: {', '.join(res.get('purged', [])) or a.name}")
+        return 0
+    rows = api.json("GET", "/api/v1/admin/caches")
+    if a.json:
+        say_json(rows)
+    else:
+        for c in rows:
+            stats = "  ".join(f"{k} {v}" for k, v in (c.get("stats") or {}).items())
+            print(f"{c['name']:<28}{c.get('type', ''):<12}{stats}")
+    return 0
+
+
 def server_pack_change(a, action: str, name: str) -> int:
     api = Api.from_args(a)
     if action in ("load", "unload"):
@@ -1127,6 +1148,9 @@ def build_parser() -> argparse.ArgumentParser:
     # server -----------------------------------------------------------------------------------------------
     sv = group("server", "A running server over REST: health and pack management (administrator)")
     add(sv, "health", cmd_server_health, "server health: GET /api/v1/admin/health (exit 1 unless the status is OK)", [srv])
+    sc = add(sv, "caches", cmd_server_caches, "server caches [purge NAME|all]: list the caches, or drop one (grouped pages on disk are rebuilt at once)", [srv])
+    sc.add_argument("action", nargs="?", choices=["list", "purge"], default="list")
+    sc.add_argument("name", nargs="?", help="the cache to purge: a connector's name, engine, or all")
     sp = sv.add_parser("packs", help="server packs list|load|unload|on|off", description="Pack management; load, unload, on and off need an administrator.")
     ps = sp.add_subparsers(dest="packs_cmd", metavar="ACTION", required=True)
     for act, what in (("list", "all packs: loaded, on, added from Admin, kinds"), ("load", "load a pack that is on disk (it takes effect at once, with no restart)"),

@@ -103,12 +103,29 @@ partition rebuilt when the data version it was read from changes.
 | A load (a restated date) while serving | grouped page updated within **about 20 s**, no restart, no signal |
 | Trade documents: what makes them large | `LEGS` 7.7 KB (of which cash flows 2.6 KB), `EVENTS` 1.7 KB, everything else under 0.5 KB |
 
-### 4.3 The extreme case (planned run of 2026-10-18)
+### 4.3 The extreme case (2026-10-18)
 
-ENDUR, CALYPSO and MUREX, 7 business days, 300K–500K trades a day each (about 8 million rows); 10,000 counterparties
-and 30,000 netting sets a day; server at `-Xmx8g`. Results go here: start time, heap, single-trade p50/p95 per system
-and date, form search, counterparty and netting-set pages, the first read of a date, a date switch, a load while
-serving.
+ENDUR, CALYPSO and MUREX, 7 business days (2026-10-07 … 16), 313K–492K trades a day each: **8.2 million trades**
+(ENDUR 2.82M, CALYPSO 2.66M, MUREX 2.71M; 1.0–1.3 million a day across the three); 10,000 counterparties and 30,000
+netting sets a day. Synthetic documents of the real shapes (ENDUR 9.7 KB, CALYPSO 6.3 KB, MUREX about 14 KB of JSON).
+Lake: 12.5 GB of Parquet. Server `-Xmx8g`, grouped pages `store: disk`. Times through the console (page rendered).
+
+| What | Result |
+|---|---|
+| Load one system's day (`lake build`) | ENDUR 47–69 s, CALYPSO 50–69 s, MUREX 90–161 s (300K–500K trades) |
+| Server start | 9 s; id maps of the three newest dates loaded in the background (≈0.3–0.5 s per table and date) |
+| Grouped pages, latest date (1,163,754 trades, three systems) | built in **45 s** in the background, **complete**: 10,000 counterparty pages, 30 portfolios, 3 legal entities, 57 indices; 631 MB on disk |
+| Heap | **0.85 GB** after the build, **1.16 GB** after the probes (several dates' id maps and columns), of 8 GB; no out of memory, no `DRS-1004` |
+| Open one trade, latest date (25 random ids per system) | p50 **15–26 ms**, p95 **19–46 ms**, 0 failures |
+| Open one trade, a past date (2026-10-08) | first read of the date **0.37 s** (its id map); then p50 **19–31 ms**, p95 **21–41 ms** |
+| Counterparty page (reference), netting-set page | **13 ms**, **71–91 ms** |
+| Counterparty trades page (`CTRD`, ~116 trades) | **0.15 s** |
+| Portfolio trades page (`PTRD`, 20,000 listed trades, a 7.4 MB page) | **3.2 s**: the page lists 20,000 rows; paging the list is the fix (section 10) |
+| Form search, one counterparty over 1.16M trades | **2.1–2.3 s** (target 1 s: section 7) |
+| Purge and rebuild (`drishti.py server caches purge trade-pages`) | new pages built in 46 s from the lake while the old ones served; the old folder deleted a minute later |
+
+The same probes before the fixes of the day: grouped pages out of memory above about 250,000 trades at 8 GB, or partial
+with a cap; with them, complete at 1.16 million a day in 1.2 GB of heap.
 
 ## 5. Memory: what lives in the heap
 
@@ -122,7 +139,7 @@ numbers, and a cap.
 | Recently read documents | documents read | ~10–50 KB each | `doc-cache-mb` (256 MB per connector) | fine; to RocksDB on disk (phase 2) |
 | Type-ahead index | ids of the kept days | ~40 B per id | `index.max-memory` (600 MB), then files | fine |
 | Loaded days for reverse links (`parts`) | trades of a day, **documents** | whole day | `cache-mb` 512 MB and `max-load-rows` 200,000 | used only for tables without promoted link columns; keep it so |
-| **Grouped pages** (`trade-pages`, `desk-totals`) | **trades × 4 kinds × row** (the row includes `EVENTS`) | ~10–30 KB per trade | `max-stream` (100,000) | **the risk**: section 10 makes it ids only |
+| **Grouped pages** (`trade-pages`) | with `store: disk`: **groups** (totals only); members and rows on disk | ~1 KB per group | the number of groups | **done** (section 10); `store: heap` keeps trades × row and is capped by `max-stream` |
 | BI store reads | rows of a query | — | DuckDB, spilling to `<data dir>/tmp` | fine |
 
 **The sum of the caps must fit the heap.** Today each Delta connector may cache up to about 2.8 GB, and there are a
@@ -130,8 +147,8 @@ dozen connectors: the caps add up to far more than any heap. They do not all fil
 Phase 1 gives the server **one memory budget** (a share of `-Xmx`) that every connector's caches draw from, so the
 total cannot pass it. Until then: the defaults, `-Xmx8g`, and Admin → Caches to watch them.
 
-**Out of memory, today:** the grouped pages are the only holder that grows with trades without a size cap (only the
-`max-stream` count cap). A build that runs out now fails cleanly: it is logged
+**Out of memory, today:** with `store: disk` (the trading pack's default) the grouped pages no longer grow with trades.
+With `store: heap` they do, capped by `max-stream`. A build that runs out now fails cleanly: it is logged
 (`derived pages … ran out of memory: lower its max-stream setting or raise -Xmx`), Admin → Health shows the connector
 DOWN with that reason, its pages answer "unavailable", and the rest of the server keeps working.
 
@@ -202,14 +219,26 @@ up the current version only.
 | The RocksDB TTL (planned) | no effect on freshness |
 | A page already open in the browser | until reloaded (the page offers a refresh when a newer generation exists) |
 
-## 10. Grouped pages: ids only
+## 10. Grouped pages: on disk (built 2026-10-18)
 
 **Why they are in the heap today.** The `derived` connector was built for books of a few thousand trades. It builds
 each group's page in advance (the totals and a row per member trade, including the trade's `EVENTS` for the payments
 ladder) and keeps every page in memory, once per grouped kind (counterparty, portfolio, legal entity, index: four
 copies of every trade's row). Memory is trades × 4 × row: several GB at 300K, whatever the heap.
 
-**The design:**
+**Built (2026-10-18), `store: disk`, the trading pack's default:** one pass over each source's day; each member's key
+`kind | group | trade id` and its row (once per set of identical columns, shared by the four kinds) go to a sorted
+store on disk (`SortedStore`, RocksDB, `<data dir>/derived/<connector>/<build>`); the heap keeps each **group's totals**
+(count, sums, extremes, distinct values, the first member by id), never the members. A page is assembled when asked for:
+its totals, then its members' ids and rows read from the store in id order (up to `max-members`). One folder per
+computation, deleted when a newer one replaces it; the folder is emptied at start. Measured in section 4.3: complete at
+1.16 million trades a day, 45 s, 631 MB on disk.
+
+Still to do: the payments ladder totals computed in the pass (today a page sums its rows' `EVENTS`, which works because
+the rows are on disk); paging the row list (a 20,000-trade portfolio is a 7 MB page); the trade list could later come
+from promoted columns instead of stored rows.
+
+**The earlier plan, ids only (kept for reference):**
 
 | Kept in memory, per group | Read when the page opens |
 |---|---|
@@ -246,7 +275,9 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 | | single-read time limit 5 s | **done** |
 | | quiet startup log (library INFO at WARN; one line per large table and date; progress every 100,000) | **done** |
 | | temp files under `<data dir>/tmp` | **done** |
-| | **grouped pages: ids only** (section 10) | next |
+| | **grouped pages on disk** (section 10): complete at any number of trades, heap per group only | **done** |
+| | Admin → Caches and `drishti.py server caches [purge NAME]`: grouped pages and caches dropped and rebuilt from the lake | **done** |
+| | paging the grouped pages' row lists; form search under 1 s at 1M+ trades | next |
 | | one memory budget for all connector caches (section 5) | next |
 | | separate read slots for all background work | next |
 | **0. Measure** | scale benchmark in `drishti-benchmarks`: 3 systems × 300K–600K × 7 → 60 days; every path of section 7; heap and disk; a smaller version in CI against regressions | started (the 2026-10-18 runs, section 4) |
@@ -268,7 +299,10 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 | `max-concurrent-reads` | Delta connector | 16 | single-entity reads at once |
 | `warm-dates` | Delta connector | 3 | newest dates whose id maps load at start |
 | `index.days`, `index.max-memory`, `index.storage`, `index.max-disk` | Delta connector | 1, 600MB, heap, 2GB | the type-ahead index |
-| `max-stream` | `derived` connector | **100000** | most members read in one pass; a WARN says when it cuts |
+| `store` | `derived` connector | `heap` (`disk` in `trade-pages`) | where the grouped pages live |
+| `store-dir` | `derived` connector | `<data dir>/derived/<connector>` | the pages' only folder |
+| `retire-after` | `derived` connector | 60s | replaced pages on disk kept this long for reads still running |
+| `max-stream` | `derived` connector | **100000** | `store: heap` only: most members kept from a one-pass read; a WARN and DEGRADED say when it cuts |
 | `version-check` | `derived` connector | **10s** | how often the data's version is asked; a new version rebuilds |
 | `refresh` | `derived` connector | 30s (trading pack: 60s) | rebuild age, used only when a source cannot say its version |
 | `max-scan` | `derived` connector | 50000 | members read one at a time, for sources that cannot read a day in one pass |
@@ -293,7 +327,7 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 
 | Risk | Effect | Mitigation |
 |---|---|---|
-| Grouped pages run out of memory | their pages unavailable | done: clean failure and `max-stream`; next: ids only (section 10) |
+| Grouped pages run out of memory | their pages unavailable | done: pages on disk (`store: disk`); with `store: heap`, a clean failure and `max-stream` |
 | The sum of cache caps passes the heap | long garbage collection, timeouts, out of memory | next: one memory budget; meanwhile defaults, `-Xmx8g`, Admin → Caches |
 | First read of a date on a 500K table | a few seconds on that read | 5 s limit; `warm-dates`; phase 2 warm tier on disk keeps it after restart |
 | A reload of a day while people read it | readers see the old version until the commit, then the new | by design (one commit per load) |

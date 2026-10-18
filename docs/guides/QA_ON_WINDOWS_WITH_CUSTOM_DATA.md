@@ -284,9 +284,15 @@ After a `git pull` that changed Java code, build the jar again (step 2.3) before
 - about 15 seconds after the start, the counterparty, portfolio, legal-entity and index pages being built from the trades,
   with a line every 100,000 trades and a last line `derived pages trade-pages (latest) built in … s: counterparty-trades … pages …`.
 
-A `WARN … has more than 50,000 documents; … built from the first 50,000 only` line means your ENDUR file is larger than
-what these grouped pages read: the trade pages themselves show every trade; the counterparty/portfolio *grouped* pages
-count only the first 50,000.
+The grouped pages (`CTRD` counterparty trades, `PTRD` portfolio trades, `LTRD`, `ITRD`) are kept on disk, in
+`data\derived\trade-pages`, and count **every** trade of the day (1.16 million a day measured in an 8 GB heap). The
+log says `derived pages trade-pages (latest) built in … s on disk (… MB)`; until then those pages answer from the
+previous build. If your `config\connectors\trade-pages.yaml` was made before 2026-10-18, delete that one file before
+starting (the server writes it again from the pack, with `store: disk`); otherwise they are built in memory and only the
+first 100,000 trades count (Admin → Health then shows `trade-pages` DEGRADED, partial).
+
+To throw the grouped pages and caches away and rebuild them from the lake: **Admin → Caches → Purge** on `trade-pages`
+(or Purge all), or in a terminal `…\python.exe …\tools\drishti.py server caches purge trade-pages --token-file <your token file>`.
 
 Quotes and news come from the committed snapshot and no website is contacted.
 

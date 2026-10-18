@@ -62,10 +62,30 @@ public final class DerivedSourcePlugin implements SourcePlugin {
      * One computation: every group of every derived kind, for one business date; {@code version} the version of the data it
      * was built from (null when a source cannot say), {@code at} when it was built or its version last found unchanged.
      */
-    private record Snapshot(Map<String, Map<String, DataNode>> byKind, Map<String, Integer> scanned, LocalDate dataDate, long generation,
+    private record Snapshot(Pages pages, Map<String, Integer> scanned, LocalDate dataDate, long generation,
             Instant at, String version) {
         Snapshot checked(Instant now) {
-            return new Snapshot(byKind, scanned, dataDate, generation, now, version);
+            return new Snapshot(pages, scanned, dataDate, generation, now, version);
+        }
+    }
+
+    /** The pages of one computation: in the heap (built documents) or on disk ({@link DiskPages}). */
+    interface Pages {
+        DataNode page(String kind, String id);
+
+        java.util.Set<String> ids(String kind);
+
+        default void close() {}
+    }
+
+    /** Pages built as documents and held in the heap (store: heap, the default). */
+    record HeapPages(Map<String, Map<String, DataNode>> byKind) implements Pages {
+        public DataNode page(String kind, String id) {
+            return byKind.getOrDefault(kind, Map.of()).get(id);
+        }
+
+        public java.util.Set<String> ids(String kind) {
+            return byKind.getOrDefault(kind, Map.of()).keySet();
         }
     }
 
@@ -80,6 +100,11 @@ public final class DerivedSourcePlugin implements SourcePlugin {
     private Duration versionCheck = Duration.ofSeconds(10);
     private String sourceName = "derived";
     private final AtomicLong generation = new AtomicLong();
+    /** store: disk keeps each computation's pages in a sorted store under {@link #storeRoot}; the heap holds per group totals only. */
+    private boolean onDisk;
+    private java.nio.file.Path storeRoot;
+    /** How long retired pages on disk are kept for reads still running. */
+    private Duration retireAfter = Duration.ofSeconds(60);
     private final Map<String, CompletableFuture<Snapshot>> cache = new LinkedHashMap<>(CACHED_DATES, 0.75f, true);
     private volatile String health = "UP (nothing computed yet)";
 
@@ -110,6 +135,18 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         maxStream = Integer.parseInt(context.setting("max-stream", "100000"));
         versionCheck = org.springframework.boot.convert.DurationStyle.detectAndParse(context.setting("version-check", "10s"));
         sourceName = context.setting("source-name", "derived");
+        onDisk = "disk".equalsIgnoreCase(context.setting("store", "heap"));
+        retireAfter = org.springframework.boot.convert.DurationStyle.detectAndParse(context.setting("retire-after", "60s"));
+        if (onDisk) {
+            // the pages' only folder: <data dir>/derived/<connector>; what a previous run left there is removed
+            storeRoot = java.nio.file.Path.of(context.setting("store-dir", com.ash.drishti.api.DataDir.under("derived/" + sourceName))).toAbsolutePath();
+            try {
+                com.ash.drishti.diskcache.SortedStore.deleteFolder(storeRoot);
+                java.nio.file.Files.createDirectories(storeRoot);
+            } catch (java.io.IOException e) {
+                throw new IllegalStateException("derived pages " + sourceName + ": cannot use " + storeRoot + ": " + e.getMessage(), e);
+            }
+        }
         // the first computation after start, so the first reader of a large book finds it ready
         if (context.scheduler() == null) {
             return;
@@ -131,7 +168,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
     @Override
     public Optional<EntityDocument> fetch(EntityRef ref, AsOf asOf) {
         Snapshot s = snapshot(asOf);
-        DataNode doc = s.byKind().getOrDefault(ref.kind(), Map.of()).get(ref.id());
+        DataNode doc = s.pages().page(ref.kind(), ref.id());
         return doc == null ? Optional.empty()
                 : Optional.of(new EntityDocument(ref, doc, new Provenance(sourceName, s.generation(), s.at(), false, s.dataDate())));
     }
@@ -148,8 +185,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
             return List.of();
         }
         String t = text == null ? "" : text.trim().toLowerCase(Locale.ROOT);
-        Map<String, DataNode> groups = snapshot(asOf).byKind().getOrDefault(kind, Map.of());
-        return groups.keySet().stream().sorted().filter(id -> id.toLowerCase(Locale.ROOT).contains(t)).limit(limit)
+        return snapshot(asOf).pages().ids(kind).stream().sorted().filter(id -> id.toLowerCase(Locale.ROOT).contains(t)).limit(limit)
                 .map(id -> new EntityHit(EntityRef.of(kind, id), id, kind + " · from " + k.from())).toList();
     }
 
@@ -161,9 +197,33 @@ public final class DerivedSourcePlugin implements SourcePlugin {
 
     @Override
     public Map<String, Object> cacheStats() {
-        synchronized (cache) {
-            return Map.of("dates", cache.size(), "kinds", kinds.size());
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("store", onDisk ? "disk" : "heap");
+        synchronized (cache) {   // pinning-ok: join() is only called on futures that are already done
+            out.put("dates", cache.size());
+            long pages = 0;
+            long bytes = 0;
+            for (CompletableFuture<Snapshot> f : cache.values()) {
+                if (f.isDone() && !f.isCompletedExceptionally()) {
+                    Pages p = f.join().pages();
+                    for (DerivedKind k : kinds) {
+                        pages += p.ids(k.kind()).size();
+                    }
+                    if (p instanceof DiskPages d) {
+                        bytes += d.sizeOnDisk();
+                    }
+                }
+            }
+            out.put("pages", pages);
+            if (onDisk) {
+                out.put("diskMB", bytes / (1024 * 1024));
+                out.put("folder", String.valueOf(storeRoot));
+            }
         }
+        if (!"UP".equals(health)) {
+            out.put("health", health);
+        }
+        return out;
     }
 
     @Override
@@ -171,10 +231,24 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         return kinds.stream().anyMatch(k -> k.from().equals(kind));
     }
 
+    /**
+     * Drops every computation (on disk: their folders go). With pages on disk, the latest date is built again from the source
+     * at once, in the background: Admin -> Caches -> Purge, or {@code drishti.py server caches purge}, rebuilds from scratch.
+     */
     @Override
     public void purgeCaches() {
         synchronized (cache) {
+            cache.values().forEach(f -> retire(f, null));
             cache.clear();
+        }
+        if (onDisk) {
+            Thread.ofVirtual().name("derived-rebuild").start(() -> {
+                try {
+                    snapshot(AsOf.LATEST);
+                } catch (RuntimeException e) {
+                    // said in health and the log by the computation; the next reader tries again
+                }
+            });
         }
     }
 
@@ -212,7 +286,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
             boolean done = f != null && f.isDone() && !f.isCompletedExceptionally();
             if (done && Boolean.FALSE.equals(changed)) {
                 Snapshot same = f.join().checked(Instant.now());          // unchanged: asked again after version-check
-                cache.put(key, CompletableFuture.completedFuture(same));
+                put(key, CompletableFuture.completedFuture(same));
                 return same;
             }
             boolean timer = done && f.join().at().plus(refresh).isBefore(Instant.now());
@@ -222,16 +296,16 @@ public final class DerivedSourcePlugin implements SourcePlugin {
                 // serve the last computation now and refresh it behind: a reader never waits for a recomputation
                 Snapshot last = f.join();
                 CompletableFuture<Snapshot> next = new CompletableFuture<>();
-                cache.put(key, CompletableFuture.completedFuture(last.checked(Instant.now())));   // one refresh at a time
+                put(key, CompletableFuture.completedFuture(last.checked(Instant.now())));   // one refresh at a time
                 Thread.ofVirtual().name("derived-refresh").start(() -> {
                     try {
                         next.complete(compute(asOf, false));
                         synchronized (cache) {
-                            cache.put(key, next);
+                            put(key, next);
                         }
                     } catch (RuntimeException | OutOfMemoryError e) {
                         // the last computation stays in use; out of memory is said, not left to kill the thread silently
-                        health = "DOWN: " + e;
+                        health = (e instanceof OutOfMemoryError ? "DEGRADED: " : "DOWN: ") + e;
                         LOG.warn("derived pages for {} could not be refreshed: {}", asOf, e.toString());
                     }
                 });
@@ -239,10 +313,10 @@ public final class DerivedSourcePlugin implements SourcePlugin {
             }
             if (f == null || f.isCompletedExceptionally()) {
                 f = new CompletableFuture<>();
-                cache.put(key, f);
+                put(key, f);
                 mine = true;
                 while (cache.size() > CACHED_DATES) {
-                    cache.remove(cache.keySet().iterator().next());
+                    retire(cache.remove(cache.keySet().iterator().next()), null);
                 }
             }
         }
@@ -255,7 +329,8 @@ public final class DerivedSourcePlugin implements SourcePlugin {
                 f.completeExceptionally(e);
             } catch (OutOfMemoryError e) {
                 // never leave the computation pending: every later reader would wait on it forever
-                health = "DOWN: out of memory building the pages (lower max-stream, or give the server more heap)";
+                // DEGRADED, not DOWN: DOWN makes the registry restart the connector, which would run out of memory again
+                health = "DEGRADED: out of memory building the pages (lower max-stream, or give the server more heap)";
                 LOG.error("derived pages {} for {} ran out of memory: lower its max-stream setting or raise -Xmx", sourceName, asOf);
                 f.completeExceptionally(new IllegalStateException(health, e));
             } catch (Error e) {
@@ -268,6 +343,33 @@ public final class DerivedSourcePlugin implements SourcePlugin {
             return f.join();
         } catch (CompletionException e) {
             throw e.getCause() instanceof RuntimeException re ? re : e;
+        }
+    }
+
+    /** Puts a computation in the cache; one it replaces is retired (its pages on disk deleted) unless the new one shares them. Under the cache lock. */
+    private void put(String key, CompletableFuture<Snapshot> f) {
+        CompletableFuture<Snapshot> old = cache.put(key, f);
+        retire(old, f);
+    }
+
+    /** Retires a computation no longer cached: its pages on disk go, a minute later (a read may still be using them). */
+    private void retire(CompletableFuture<Snapshot> old, CompletableFuture<Snapshot> by) {
+        if (old == null || !old.isDone() || old.isCompletedExceptionally()) {
+            return;
+        }
+        Pages gone = old.join().pages();
+        if (by != null && by.isDone() && !by.isCompletedExceptionally() && by.join().pages() == gone) {
+            return;                                           // the same pages, checked again
+        }
+        if (gone instanceof DiskPages) {
+            Thread.ofVirtual().name("derived-retire").start(() -> {
+                try {
+                    Thread.sleep(retireAfter.toMillis());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                gone.close();
+            });
         }
     }
 
@@ -301,6 +403,13 @@ public final class DerivedSourcePlugin implements SourcePlugin {
     private Snapshot compute(AsOf asOf, boolean announce) {
         long started = System.nanoTime();
         String version = version(asOf).orElse(null);          // before reading: a load during the read makes the next look rebuild
+        if (onDisk) {
+            Snapshot d = computeOnDisk(asOf, announce, version, started);
+            if (d != null) {
+                return d;
+            }
+        }
+        List<String> partial = new ArrayList<>();
         Map<String, Map<String, DataNode>> byKind = new HashMap<>();
         Map<String, Integer> scanned = new HashMap<>();
         LocalDate dataDate = null;
@@ -324,6 +433,9 @@ public final class DerivedSourcePlugin implements SourcePlugin {
             Members one = new Members(e.getValue());
             if (streamed(e.getKey(), asOf, one, announce)) {           // one pass over the sources' files
                 one.into(byKind, scanned);
+                if (one.partial != null) {
+                    partial.add(one.partial);
+                }
                 if (one.dataDate != null && (dataDate == null || one.dataDate.isAfter(dataDate))) {
                     dataDate = one.dataDate;
                 }
@@ -368,12 +480,151 @@ public final class DerivedSourcePlugin implements SourcePlugin {
                 scanned.put(k.kind(), n);
             }
         }
-        health = "UP";
+        // a cut build is said where an administrator looks (Admin -> Health), not only in the log
+        health = partial.isEmpty() ? "UP" : "DEGRADED: partial: " + String.join("; ", partial);
         say(announce, "derived pages {} ({}) built in {} s: {}", sourceName, asOf.live() ? "latest" : asOf.businessDate(),
                 String.format("%.1f", (System.nanoTime() - started) / 1e9), byKind.entrySet().stream()
                         .map(e -> e.getKey() + " " + e.getValue().size() + " pages from " + String.format("%,d", scanned.getOrDefault(e.getKey(), 0)))
                         .sorted().collect(Collectors.joining(", ")));
-        return new Snapshot(byKind, scanned, asOf.live() ? null : dataDate, generation.incrementAndGet(), Instant.now(), version);
+        return new Snapshot(new HeapPages(byKind), scanned, asOf.live() ? null : dataDate, generation.incrementAndGet(), Instant.now(), version);
+    }
+
+    private static final byte[] NOTHING = new byte[0];
+    private static final char SEP = '\u0001';
+
+    /**
+     * Every group of every derived kind for the date, kept on disk (store: disk): one pass over each source kind's documents;
+     * each member's key under its group, each member's row once (kinds with the same columns share it); the heap keeps each
+     * group's totals only, so it does not grow with the members. Null when a source cannot read a day in one pass (then the
+     * pages are built in the heap).
+     */
+    private Snapshot computeOnDisk(AsOf asOf, boolean announce, String version, long started) {
+        String date = asOf.live() ? "latest" : String.valueOf(asOf.businessDate());
+        java.nio.file.Path dir = storeRoot.resolve((asOf.live() ? "live" : date + "-" + (asOf.knownAt() == null ? "now" : asOf.knownAt().toEpochMilli()))
+                + "-" + System.nanoTime());
+        com.ash.drishti.diskcache.SortedStore store;
+        try {
+            store = com.ash.drishti.diskcache.SortedStore.create(dir);
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException("derived pages " + sourceName + ": " + e.getMessage(), e);
+        }
+        Map<String, String> rowKeys = new HashMap<>();       // row signature -> a short name in keys
+        Map<String, Map<String, DerivedKind.Totals>> totals = new HashMap<>();
+        Map<String, DerivedKind> byName = new HashMap<>();
+        kinds.forEach(k -> {
+            totals.put(k.kind(), new HashMap<>());
+            byName.put(k.kind(), k);
+            rowKeys.computeIfAbsent(k.signature(), x -> "s" + rowKeys.size());
+        });
+        Map<String, Integer> scanned = new HashMap<>();
+        LocalDate[] dataDate = {null};
+        try {
+            for (Map.Entry<String, List<DerivedKind>> e : kinds.stream().collect(Collectors.groupingBy(DerivedKind::from, java.util.LinkedHashMap::new,
+                    Collectors.toList())).entrySet()) {
+                String from = e.getKey();
+                List<DerivedKind> ks = e.getValue();
+                long[] n = {0};
+                say(announce, "derived pages {} ({}): reading every {} document in one pass, onto disk", sourceName, date, from);
+                boolean read = reader.documents(from, asOf, d -> {
+                    String id = d.ref().id();
+                    java.util.Set<String> rowsDone = new java.util.HashSet<>(2);
+                    for (DerivedKind k : ks) {
+                        String g = k.keyOf(d.data());
+                        if (g == null) {
+                            continue;
+                        }
+                        totals.get(k.kind()).computeIfAbsent(g, x -> k.totals()).add(id, d.data());
+                        store.put("m" + SEP + k.kind() + SEP + g + SEP + id, NOTHING);
+                        String sig = rowKeys.get(k.signature());
+                        if (k.hasRows() && rowsDone.add(sig)) {
+                            store.put("r" + SEP + sig + SEP + id, k.rowBytes(d.data()));
+                        }
+                    }
+                    LocalDate dd = d.provenance() == null ? null : d.provenance().businessDate();
+                    if (dd != null && (dataDate[0] == null || dd.isAfter(dataDate[0]))) {
+                        dataDate[0] = dd;
+                    }
+                    if (++n[0] % PROGRESS_EVERY == 0) {
+                        say(announce, "derived pages {}: {} {} documents read", sourceName, String.format("%,d", n[0]), from);
+                    }
+                });
+                if (!read) {
+                    LOG.info("derived pages {}: {} cannot be read in one pass; its pages are built in the heap", sourceName, from);
+                    store.close();
+                    return null;
+                }
+                ks.forEach(k -> scanned.put(k.kind(), (int) Math.min(Integer.MAX_VALUE, n[0])));
+            }
+            store.finish();
+        } catch (IllegalStateException e) {
+            store.close();
+            LOG.debug("derived pages {}: a source cannot be read in one pass ({}); building in the heap", sourceName, e.getMessage());
+            return null;
+        } catch (RuntimeException | Error e) {
+            store.close();
+            throw e;
+        }
+        health = "UP";
+        say(announce, "derived pages {} ({}) built in {} s on disk ({} MB): {}", sourceName, date, String.format("%.1f", (System.nanoTime() - started) / 1e9),
+                store.sizeOnDisk() / (1024 * 1024), totals.entrySet().stream()
+                        .map(t -> t.getKey() + " " + t.getValue().size() + " pages from " + String.format("%,d", scanned.getOrDefault(t.getKey(), 0)))
+                        .sorted().collect(Collectors.joining(", ")));
+        return new Snapshot(new DiskPages(store, byName, totals, rowKeys), scanned, asOf.live() ? null : dataDate[0], generation.incrementAndGet(),
+                Instant.now(), version);
+    }
+
+    /**
+     * Pages kept on disk: each group's totals in the heap; its members' ids (in id order) and rows in a {@link
+     * com.ash.drishti.diskcache.SortedStore}, read when the page is asked for. The store's folder goes when the pages are retired.
+     */
+    static final class DiskPages implements Pages {
+        private final com.ash.drishti.diskcache.SortedStore store;
+        private final Map<String, DerivedKind> kinds;
+        private final Map<String, Map<String, DerivedKind.Totals>> totals;
+        private final Map<String, String> rowKeys;
+        private final com.github.benmanes.caffeine.cache.Cache<String, DataNode> recent =
+                com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(32).build();   // a page asked for again by the same view
+
+        DiskPages(com.ash.drishti.diskcache.SortedStore store, Map<String, DerivedKind> kinds, Map<String, Map<String, DerivedKind.Totals>> totals,
+                Map<String, String> rowKeys) {
+            this.store = store;
+            this.kinds = kinds;
+            this.totals = totals;
+            this.rowKeys = rowKeys;
+        }
+
+        @Override
+        public DataNode page(String kind, String id) {
+            DerivedKind k = kinds.get(kind);
+            DerivedKind.Totals t = totals.getOrDefault(kind, Map.of()).get(id);
+            if (k == null || t == null) {
+                return null;
+            }
+            return recent.get(kind + SEP + id, x -> {
+                String prefix = "m" + SEP + kind + SEP + id + SEP;
+                List<String> listed = new ArrayList<>();
+                store.scan(prefix, (key, v) -> {
+                    listed.add(key.substring(prefix.length()));
+                    return listed.size() < k.maxMembers();
+                });
+                String sig = rowKeys.get(k.signature());
+                return k.buildStored(id, t, listed, member -> store.get("r" + SEP + sig + SEP + member));
+            });
+        }
+
+        @Override
+        public java.util.Set<String> ids(String kind) {
+            return totals.getOrDefault(kind, Map.of()).keySet();
+        }
+
+        long sizeOnDisk() {
+            return store.sizeOnDisk();
+        }
+
+        @Override
+        public void close() {
+            store.close();
+        }
     }
 
     /**
@@ -385,6 +636,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         boolean read;
         try {
             read = reader.documents(from, asOf, d -> {
+                m.seen++;
                 if (m.n >= maxStream) {
                     m.cut = true;
                     return;
@@ -403,8 +655,9 @@ public final class DerivedSourcePlugin implements SourcePlugin {
             return false;
         }
         if (m.cut) {
-            LOG.warn("derived pages {}: {} has more than {} documents; {} are built from the first {} only (raise the connector's max-stream setting)",
-                    sourceName, from, String.format("%,d", maxStream), m.names(), String.format("%,d", maxStream));
+            m.partial = m.names() + " built from the first " + String.format("%,d", m.n) + " of " + String.format("%,d", m.seen) + " " + from
+                    + " documents (max-stream " + String.format("%,d", maxStream) + "): raise max-stream, with heap for it";
+            LOG.warn("derived pages {}: {}", sourceName, m.partial);
         }
         return true;
     }
@@ -414,7 +667,9 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         final List<DerivedKind> kinds;
         final Map<DerivedKind, Map<String, Map<String, DataNode>>> groups = new HashMap<>();
         int n;
+        long seen;
         boolean cut;
+        String partial;
         LocalDate dataDate;
 
         Members(List<DerivedKind> kinds) {
@@ -424,17 +679,21 @@ public final class DerivedSourcePlugin implements SourcePlugin {
 
         void clear() {
             n = 0;
+            seen = 0;
             cut = false;
+            partial = null;
             dataDate = null;
             kinds.forEach(k -> groups.put(k, new HashMap<>()));
         }
 
         void add(EntityDocument d) {
             n++;
+            Map<String, DataNode> made = new HashMap<>(4);   // one compact copy per signature: the grouped kinds of a pack share it
             for (DerivedKind k : kinds) {
                 String g = k.keyOf(d.data());
                 if (g != null) {                       // kept as the values the kind reads, not the document (a day of large documents)
-                    groups.get(k).computeIfAbsent(g, x -> new HashMap<>()).put(d.ref().id(), k.compact(d.data()));
+                    DataNode member = made.computeIfAbsent(k.signature(), x -> k.compact(d.data()));
+                    groups.get(k).computeIfAbsent(g, x -> new HashMap<>()).put(d.ref().id(), member);
                 }
             }
             LocalDate dd = d.provenance() == null ? null : d.provenance().businessDate();
