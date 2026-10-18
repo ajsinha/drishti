@@ -81,6 +81,21 @@ async def save(request: Request):
     return JSONResponse({"saved": out.get("savedSearches", [])})
 
 
+@router.get("/form/{pack}/values")
+async def form_values(request: Request, pack: str, kind: str = "", path: str = "", q: str = ""):
+    """The values of a long pick list (a field with more values than a page shows) that contain ``q``, at most 50, for the find box."""
+    try:
+        info = await request.app.state.backend.form(pack, kind, ident(request))
+    except BackendError as e:
+        return JSONResponse({"detail": str(e)}, status_code=e.page_status)
+    field = next((f for f in info["form"]["fields"] if f.get("path") == path), None)
+    if field is None:
+        return JSONResponse({"detail": f"no field {path}"}, status_code=404)
+    needle = q.strip().lower()
+    found = [v for v in field.get("values") or [] if needle in str(v).lower()] if needle else []
+    return JSONResponse({"values": found[:50], "more": max(0, len(found) - 50)})
+
+
 @router.get("/form/{pack}")
 async def form_page(request: Request, pack: str, kind: str = ""):
     backend, me = request.app.state.backend, ident(request)

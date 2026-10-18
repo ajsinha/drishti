@@ -304,7 +304,13 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 | | Admin → Caches and `drishti.py server caches [purge NAME]`: grouped pages and caches dropped and rebuilt from the lake | **done** |
 | | pack access cached per user (no identity database read per entity): 2–4× throughput under load | **done** |
 | | Parquet footers cached per file (no footer parse per single read) | **done** |
-| | paging the grouped pages' row lists; form search under 1 s at 1M+ trades | next |
+| | grouped pages list 1,000 trades, the payments ladder over every member computed in the pass (`today()` set), 20,000-trade page 3.2 s/7.4 MB → 0.4 s/486 KB | **done** |
+| | form pick lists cached per data version (server form 1.3 s → 0.2 s); long pick lists (over 300 values) found as you type instead of one checkbox each (form page 1.3 MB → 98 KB) | **done** |
+| | one memory budget: Delta connectors without their own cache sizes share caches sized from the heap (day loads 5 %, id maps 20 %, columns 20 %, documents 5 %: half the heap in all) | **done** |
+| | recent users cached 5 s in the identity store (each request read its user from SQLite); start-up warm-up on its own read slots | **done** |
+| | console worker processes (`server.workers`, default 4): one Python process tops at ~40 pages/s | **done** |
+| | **phase 1 integration test** (extreme lake, 8 GB): 16 functional checks pass; 50 users: server 146 req/s, console 69 req/s, 0 failures; heap 1.8 GB after collection | **passed** (2026-10-18) |
+| | in-list paging (next 1,000 rows of a grouped page); console search under load (3 backend calls and a render per search: ~4 s at 50 users) | open |
 | | the RocksDB document cache (section 8.1): **on by default**, one per connector (`<data dir>/cache/<connector>/docs`), 1 GB cap, 12 h TTL, hourly compaction, daily clearing, kept across restarts, skipped with a WARN when it cannot open; −17 % CPU per read for trades read before | **done** (2026-10-18) |
 | | row groups of 256 KB and 64 KB pages in the lake writer: +13 % reads a second, −20 % CPU per first read (362,804 trades) | **done** |
 | | one Parquet version (1.18.0) for every library (root `pom.xml`); the Parquet page index for single reads **on by default** (`drishti.parquet.page-index`): neutral on 256 KB row groups (812 vs 812 reads/s, same trades), it narrows reads of files with larger groups | **done** |

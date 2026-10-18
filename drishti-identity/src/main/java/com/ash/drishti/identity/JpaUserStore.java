@@ -33,9 +33,28 @@ public final class JpaUserStore implements UserStore {
         this.tx = tx;
     }
 
+    /**
+     * Users read in the last few seconds: every request checks its user (enabled, roles), and the identity database takes one
+     * access at a time, so under load the reads queued (measured 2026-10-18). A write through this store forgets the user at
+     * once; a change made by another server of a cluster shows within {@link #RECENT_NANOS}.
+     */
+    private record Hit(Optional<User> user, long at) {}
+    static final long RECENT_NANOS = java.util.concurrent.TimeUnit.SECONDS.toNanos(5);
+    private final java.util.concurrent.ConcurrentHashMap<String, Hit> recent = new java.util.concurrent.ConcurrentHashMap<>();
+
     @Override
     public Optional<User> find(String username) {
-        return tx.execute(s -> users.findById(username).map(JpaUserStore::toUser));
+        long now = System.nanoTime();
+        Hit h = recent.get(username);
+        if (h != null && now - h.at() < RECENT_NANOS) {
+            return h.user();
+        }
+        Optional<User> u = tx.execute(s -> users.findById(username).map(JpaUserStore::toUser));
+        if (recent.size() > 100_000) {
+            recent.clear();
+        }
+        recent.put(username, new Hit(u, now));
+        return u;
     }
 
     @Override
@@ -70,17 +89,20 @@ public final class JpaUserStore implements UserStore {
             }
             users.save(e);
         });
+        recent.remove(u.username());
     }
 
     @Override
     public boolean delete(String username) {
-        return Boolean.TRUE.equals(tx.execute(s -> {
+        boolean gone = Boolean.TRUE.equals(tx.execute(s -> {
             if (!users.existsById(username)) {
                 return false;
             }
             users.deleteById(username);
             return true;
         }));
+        recent.remove(username);
+        return gone;
     }
 
     /** Whether the store holds no user at all (first start: seed or import). */

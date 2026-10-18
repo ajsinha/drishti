@@ -83,10 +83,8 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     /** A table date with at least this many ids says it was loaded at INFO; smaller ones at DEBUG. */
     private static final int ANNOUNCE_IDS = 10_000;
 
-    private record PartKey(String kind, long version, long at, LocalDate date) {
-        PartKey(String kind, DeltaTable.Layout l, LocalDate date) {
-            this(kind, l.version(), l.timestamp(), date);
-        }
+    /** A table date of one connector ({@code owner}): connectors may share the caches (see {@link Shared}), and kinds repeat across them. */
+    private record PartKey(String owner, String kind, long version, long at, LocalDate date) {
     }
 
     /** One partition in memory: documents by id, and a reverse index (referenced id to referring ids). */
@@ -110,6 +108,36 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     private AsyncCache<String, DeltaTable.Layout> latest;
     private AsyncCache<String, DeltaTable.Layout> travelled;
     private AsyncCache<PartKey, Part> parts;
+    /** This connector in the shared caches' keys. */
+    private final String owner = "c" + OWNERS.incrementAndGet();
+    private static final java.util.concurrent.atomic.AtomicLong OWNERS = new java.util.concurrent.atomic.AtomicLong();
+
+    private PartKey key(String kind, DeltaTable.Layout l, LocalDate date) {
+        return new PartKey(owner, kind, l.version(), l.timestamp(), date);
+    }
+
+    /**
+     * One memory budget for every Delta connector that sets no cache size of its own: their day loads, id maps, column sets and
+     * documents share caches sized from the heap (5 %, 20 %, 20 % and 5 % of -Xmx: half the heap in all, however many connectors
+     * run), instead of each connector holding up to its own 2.8 GB. A connector that sets cache-mb, id-map-mb, columns-cache-mb or
+     * doc-cache-mb keeps a cache of its own of that size.
+     */
+    private static final class Shared {
+        static final long HEAP = Runtime.getRuntime().maxMemory();
+        static final java.util.concurrent.ExecutorService LOADERS = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor();
+        static final AsyncCache<PartKey, Part> PARTS = Caffeine.newBuilder().executor(LOADERS).maximumWeight(HEAP / 20)
+                .weigher((PartKey k, Part v) -> partWeight(v)).buildAsync();
+        static final AsyncCache<PartKey, DeltaTable.IdMap> ID_MAPS = Caffeine.newBuilder().executor(LOADERS).maximumWeight(HEAP / 5)
+                .weigher((PartKey k, DeltaTable.IdMap v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes())).buildAsync();
+        static final AsyncCache<PartKey, com.ash.drishti.api.ColumnSet> COLUMNS = Caffeine.newBuilder().executor(LOADERS).maximumWeight(HEAP / 5)
+                .weigher((PartKey k, com.ash.drishti.api.ColumnSet v) -> (int) Math.min(Integer.MAX_VALUE, weight(v))).buildAsync();
+        static final com.github.benmanes.caffeine.cache.Cache<String, String> DOCS = Caffeine.newBuilder().maximumWeight(HEAP / 20)
+                .weigher((String k, String v) -> 2 * (k.length() + v.length()) + 64).build();
+    }
+
+    private static int partWeight(Part v) {
+        return (int) Math.min(Integer.MAX_VALUE, 64L + v.docs().values().stream().mapToLong(d -> 2L * d.length() + 64).sum() + 48L * v.refs().size());
+    }
     private AsyncCache<PartKey, DeltaTable.IdMap> idMaps;
     private AsyncCache<PartKey, com.ash.drishti.api.ColumnSet> columnSets;
     private com.github.benmanes.caffeine.cache.Cache<String, String> docs;
@@ -179,14 +207,16 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         this.latest = Caffeine.newBuilder().executor(loaders).expireAfterWrite(Duration.ofSeconds(refresh)).buildAsync();
         this.travelled = Caffeine.newBuilder().executor(loaders).maximumSize(256).buildAsync();
         // bounded by memory, not by count: a partition weighs about its documents' text (two bytes a character)
-        this.parts = Caffeine.newBuilder().executor(loaders).maximumWeight(Long.parseLong(ctx.setting("cache-mb", "512")) * 1024 * 1024)
-                .weigher((PartKey k, Part v) -> (int) Math.min(Integer.MAX_VALUE,
-                        64L + v.docs().values().stream().mapToLong(d -> 2L * d.length() + 64).sum() + 48L * v.refs().size()))
-                .buildAsync();
-        this.idMaps = Caffeine.newBuilder().executor(loaders).maximumWeight(Long.parseLong(ctx.setting("id-map-mb", "1024")) * 1024 * 1024)
-                .weigher((PartKey k, DeltaTable.IdMap v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes())).buildAsync();
-        this.columnSets = Caffeine.newBuilder().executor(loaders).maximumWeight(Long.parseLong(ctx.setting("columns-cache-mb", "1024")) * 1024 * 1024)
-                .weigher((PartKey k, com.ash.drishti.api.ColumnSet v) -> (int) Math.min(Integer.MAX_VALUE, weight(v))).buildAsync();
+        Map<String, String> set = ctx.settings();
+        this.parts = !set.containsKey("cache-mb") ? Shared.PARTS
+                : Caffeine.newBuilder().executor(loaders).maximumWeight(Long.parseLong(set.get("cache-mb")) * 1024 * 1024)
+                        .weigher((PartKey k, Part v) -> partWeight(v)).buildAsync();
+        this.idMaps = !set.containsKey("id-map-mb") ? Shared.ID_MAPS
+                : Caffeine.newBuilder().executor(loaders).maximumWeight(Long.parseLong(set.get("id-map-mb")) * 1024 * 1024)
+                        .weigher((PartKey k, DeltaTable.IdMap v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes())).buildAsync();
+        this.columnSets = !set.containsKey("columns-cache-mb") ? Shared.COLUMNS
+                : Caffeine.newBuilder().executor(loaders).maximumWeight(Long.parseLong(set.get("columns-cache-mb")) * 1024 * 1024)
+                        .weigher((PartKey k, com.ash.drishti.api.ColumnSet v) -> (int) Math.min(Integer.MAX_VALUE, weight(v))).buildAsync();
         if (Boolean.parseBoolean(ctx.setting("doc-disk-cache.enabled", "true"))) {
             // documents already read, on disk under <data dir>/cache/<connector>/docs (one RocksDB per connector: no shared files or
             // compactions between connectors): keyed by the table version they were read from (never stale), capped by size, a time
@@ -202,7 +232,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 org.slf4j.LoggerFactory.getLogger(DeltaSourcePlugin.class).warn("{}: documents are not cached on disk ({}): reads go on without it", sourceName, e.toString());
             }
         }
-        this.docs = Caffeine.newBuilder().maximumWeight(Long.parseLong(ctx.setting("doc-cache-mb", "256")) * 1024 * 1024)
+        this.docs = !set.containsKey("doc-cache-mb") ? Shared.DOCS : Caffeine.newBuilder().maximumWeight(Long.parseLong(set.get("doc-cache-mb")) * 1024 * 1024)
                 .weigher((String k, String v) -> 2 * (k.length() + v.length()) + 64).build();
         this.maxLoadRows = Integer.parseInt(ctx.setting("max-load-rows", "200000"));
         this.docReads = new java.util.concurrent.Semaphore(Integer.parseInt(ctx.setting("max-concurrent-reads", "16")));
@@ -300,7 +330,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     private DeltaTable.IdMap idMap(String kind, DeltaTable.Layout l, LocalDate date) {
-        return join(idMaps.get(new PartKey(kind, l, date), k -> {
+        return join(idMaps.get(key(kind, l, date), k -> {
             long started = System.nanoTime();
             DeltaTable.IdMap m = tables.get(kind).ids(l, date);
             // one line per large table and date, when it is first read (the rest at DEBUG): the Parquet reader's per-record lines are off (application.yaml)
@@ -323,7 +353,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     private Part part(String kind, DeltaTable.Layout l, LocalDate date) {
-        return join(parts.get(new PartKey(kind, l, date), k -> {
+        return join(parts.get(key(kind, l, date), k -> {
             Map<String, String> docs = tables.get(kind).read(l, date);
             Map<String, Set<String>> refs = new HashMap<>();
             docs.forEach((id, json) -> ReferenceScanner.referencedIds(json).forEach(r -> refs.computeIfAbsent(r, x -> new HashSet<>()).add(id)));
@@ -469,12 +499,13 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             return null;
         }
         String key = ref.kind() + "\u001f" + l.version() + "@" + l.timestamp() + "\u001f" + d + "\u001f" + ref.id();
-        String json = docs.getIfPresent(key);
+        String heapKey = owner + "\u001f" + key;                // the heap cache may be shared by connectors; the disk one is this connector's
+        String json = docs.getIfPresent(heapKey);
         if (json == null && diskDocs != null) {                // second tier: documents read before, on disk (also by an earlier run)
             byte[] b = diskDocs.get(key);
             if (b != null) {
                 json = new String(b, StandardCharsets.UTF_8);
-                docs.put(key, json);
+                docs.put(heapKey, json);
                 return json;
             }
         }
@@ -486,7 +517,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 slots.release();
             }
             if (json != null) {
-                docs.put(key, json);
+                docs.put(heapKey, json);
                 if (diskDocs != null) {
                     diskDocs.put(key, json.getBytes(StandardCharsets.UTF_8));
                 }
@@ -734,7 +765,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     /** Every promoted column of one date, read once and kept (by memory), shared by searches and aggregates. */
     private com.ash.drishti.api.ColumnSet columnSet(String kind, DeltaTable.Layout l, LocalDate date, Map<String, String> cols) {
-        return join(columnSets.get(new PartKey(kind, l, date), k -> {
+        return join(columnSets.get(key(kind, l, date), k -> {
             Map<String, Boolean> numeric = new LinkedHashMap<>();
             cols.forEach((path, column) -> numeric.put(path,
                     l.schema().get(column).getDataType() instanceof io.delta.kernel.types.DoubleType && !com.ash.drishti.api.IdText.isIdField(path)));
@@ -749,9 +780,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     @Override
     public Map<String, Object> cacheStats() {
-        Map<String, Object> m = new java.util.LinkedHashMap<>(Map.of("engine", lake.engineName(), "partitions", parts.synchronous().estimatedSize(), "tables",
+        Map<String, Object> m = new java.util.LinkedHashMap<>(Map.of("engine", lake.engineName(), "partitions", own(parts), "tables",
                 latest.synchronous().estimatedSize(), "timeTravel", travelled.synchronous().estimatedSize(), "idMaps",
-                idMaps.synchronous().estimatedSize(), "columnSets", columnSets.synchronous().estimatedSize(), "documents", docs.estimatedSize()));
+                own(idMaps), "columnSets", own(columnSets), "documents", docs.asMap().keySet().stream().filter(k -> k.startsWith(owner + "\u001f")).count()));
         if (dated.enabled()) {
             m.putAll(dated.health());
         }
@@ -763,18 +794,24 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return m;
     }
 
+    /** This connector's entries in a cache that may be shared. */
+    private long own(AsyncCache<PartKey, ?> c) {
+        return c.synchronous().asMap().keySet().stream().filter(k -> k.owner().equals(owner)).count();
+    }
+
     @Override
     public void purgeCaches() {
         if (diskDocs != null) {
             diskDocs.clear();
         }
         com.ash.drishti.deltalake.NativeEngine.purgeFooterCache();
-        parts.synchronous().invalidateAll();
         latest.synchronous().invalidateAll();
         travelled.synchronous().invalidateAll();
-        idMaps.synchronous().invalidateAll();
-        columnSets.synchronous().invalidateAll();
-        docs.invalidateAll();
+        // this connector's entries only: the caches may be shared with the other Delta connectors
+        parts.synchronous().asMap().keySet().removeIf(k -> k.owner().equals(owner));
+        idMaps.synchronous().asMap().keySet().removeIf(k -> k.owner().equals(owner));
+        columnSets.synchronous().asMap().keySet().removeIf(k -> k.owner().equals(owner));
+        docs.asMap().keySet().removeIf(k -> k.startsWith(owner + "\u001f"));
     }
 
     @Override

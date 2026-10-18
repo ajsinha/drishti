@@ -58,6 +58,38 @@
   }
   dependents();
 
+  /* A long pick list (data-big-url): typing finds its values (the console asks /form/<pack>/values), each a checkbox to tick;
+     ticked ones stay when the search changes, so several can be chosen. */
+  each(document.querySelectorAll('[data-big-url]'), function (group) {
+    var box = group.querySelector('[data-big-q]'), out = group.querySelector('[data-big-found]'), timer = null, asked = 0;
+    if (!box || !out) { return; }
+    var name = (group.querySelector('input[type=checkbox]') || {}).name || ('v.' + new URLSearchParams(group.getAttribute('data-big-url').split('?')[1]).get('path'));
+    box.addEventListener('input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        var n = ++asked, text = box.value.trim();
+        if (!text) { out.textContent = ''; return; }
+        fetch(group.getAttribute('data-big-url') + '&q=' + encodeURIComponent(text), { credentials: 'same-origin' })
+          .then(function (r) { return r.ok ? r.json() : { values: [] }; })
+          .then(function (res) {
+            if (n !== asked) { return; }                       // a newer search answered first
+            out.textContent = '';
+            var chosen = {};
+            each(group.querySelectorAll('input[type=checkbox]:checked'), function (b) { chosen[b.value] = true; });
+            (res.values || []).forEach(function (v) {
+              if (chosen[v]) { return; }
+              var l = document.createElement('label'), c = document.createElement('input'), s = document.createElement('span');
+              l.className = 'qf-chk'; c.type = 'checkbox'; c.name = name; c.value = v; s.textContent = ' ' + v;
+              c.addEventListener('change', function () { if (c.checked) { group.insertBefore(l, box); } });
+              l.appendChild(c); l.appendChild(s); out.appendChild(l);
+            });
+            if (!(res.values || []).length) { out.textContent = 'No match'; }
+            else if (res.more) { var m = document.createElement('span'); m.className = 'text-muted-d'; m.textContent = ' … and ' + res.more + ' more: type more'; out.appendChild(m); }
+          }).catch(function () { out.textContent = ''; });
+      }, 200);
+    });
+  });
+
   function syncField(box) {
     var op = box.querySelector('.qf-op'), type = box.getAttribute('data-type');
     var v = box.querySelector('.qf-v'), v2 = box.querySelector('.qf-v2');
