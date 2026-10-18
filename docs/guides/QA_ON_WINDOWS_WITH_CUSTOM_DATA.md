@@ -126,9 +126,12 @@ You should see: the drop-down at the top right lists **Build demo lakes**, **Loa
 > | **Load ENDUR file into the lake** | `tools\drishti.py` | `lake build …` |
 > | **Drishti console** | `drishti-console\run_drishti_web.py` | `--server.port=17480 --backend.url=http://127.0.0.1:18480` |
 >
-> So a line like `lake build --from …` below goes into the **Parameters** box, not into a terminal. To run the same
-> thing in PowerShell instead, put `drishti-console\.venv\Scripts\python.exe tools\drishti.py` in front of it, from
-> the project folder (PyCharm's Terminal opens in `drishti-console`: type `cd ..` first). `python tools\drishti.py lake build --help` lists every option.
+> So a line like `lake build --from …` below goes into the **Parameters** box, not into a terminal. In a configuration,
+> `$PROJECT_DIR$` is PyCharm's project folder `drishti-console`, so `$PROJECT_DIR$/..` is `drishti-orig`.
+>
+> To run the same thing in a terminal instead (PyCharm's **Terminal** tab opens in `drishti-console`; any PowerShell
+> window works), this guide gives every command with **full paths**, so it works from whatever folder the terminal is in:
+> `C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\drishti.py …`. `… C:\Users\asinh09\IdeaProjects\drishti-orig\tools\drishti.py lake build --help` lists every option.
 
 ### 2.3 IntelliJ IDEA (once)
 
@@ -165,7 +168,11 @@ You should see, after about a minute: the Run window ends with what to start nex
 `trading`, `reference`, `legal`, `collateral`, `credit`, `risk`, `market`, `macro`, `news` and `civic` (64 tables). This includes the quotes and news snapshot and
 the world economy data.
 
-(PowerShell instead: `drishti-console\.venv\Scripts\python.exe tools\drishti.py lake demo --as-of 2026-10-16`.)
+Terminal instead (one line, from any folder):
+
+```
+C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\drishti.py lake demo --as-of 2026-10-16
+```
 
 ### 3.2 Replace the synthetic ENDUR trades with your real files
 
@@ -177,22 +184,23 @@ the world economy data.
    the two things that name your file — the path after `--from` and the date after `--as-of` — for example:
 
    ```
-   lake build --from C:\Users\asinh09\drishti-private\endur\2026-10-15.jsonl --as-of 2026-10-15 --pack config/packs/trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates --lake data\delta
+   lake build --from C:\Users\asinh09\drishti-private\endur\2026-10-15.jsonl --as-of 2026-10-15 --pack $PROJECT_DIR$/../config/packs/trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates --lake $PROJECT_DIR$/../data/delta
    ```
 
    → **OK** → ▶ (Run).
 
-   PowerShell instead (from the project folder, same line with the script in front):
+   Terminal instead (one line, from any folder; full paths, so `$PROJECT_DIR$` is not needed):
 
-   ```powershell
-   drishti-console\.venv\Scripts\python.exe tools\drishti.py lake build --from C:\Users\asinh09\drishti-private\endur\2026-10-15.jsonl --as-of 2026-10-15 --pack config/packs/trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates --lake data\delta
+   ```
+   C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\drishti.py lake build --from C:\Users\asinh09\drishti-private\endur\2026-10-15.jsonl --as-of 2026-10-15 --pack C:\Users\asinh09\IdeaProjects\drishti-orig\config\packs\trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates --lake C:\Users\asinh09\IdeaProjects\drishti-orig\data\delta
    ```
 
    What the options mean: `--from` your file; `--as-of` its business date; `--pack` the trading pack, whose schema
    checks each trade; `--connector trade-endur` the table it feeds (`data\delta\trading\trade_endur`); `--key TRADE_ID`
    the id field; `--partition-by PRODUCT_TYPE` one folder per product type; `--mode overwrite-dates` replaces that
-   date if it was loaded before; `--lake data\delta` the lake folder the server reads (the project's `data\delta`; the
-   table lands in `data\delta\trading\trade_endur`). Run it from the project folder: `data\delta` is relative to it.
+   date if it was loaded before; `--lake …\data\delta` the lake folder the server reads (the project's `data\delta`; the
+   table lands in `data\delta\trading\trade_endur`). `--pack` and `--lake` are full paths (`$PROJECT_DIR$/..` in the
+   configuration), so the folder you run from does not matter.
 3. Repeat step 2 for **each** of your files (each with its own path and date).
 
 You should see, for each file, a last line like:
@@ -359,8 +367,9 @@ trades.
 | **BI → Trades overview** shows 0 trades, or a page of the demo shows nothing while Admin → Lakes has the table | Old connector files: stop the server, delete `config\connectors` (step 3.1 point 0), start the server again. |
 | `Port 18480 (or 17480) is already in use` | Another copy is running: stop it in IntelliJ / PyCharm (red square), or reboot. |
 | `lake build` says `no id (field 'id' is missing…)` | The parameters lack `--key TRADE_ID`: copy the line of step 3.2 again. |
-| `lake build` says `give --lake DIR (the Delta root the connector reads)` | The parameters lack `--lake data\delta`: copy the line of step 3.2 again (it ends with `--lake data\delta`), and run it from the project folder. |
-| PowerShell says `lake` is not recognized | `lake …` is not a command of its own: run it as `drishti-console\.venv\Scripts\python.exe tools\drishti.py lake …` from the project folder, or use the PyCharm configuration (step 2.2, *What these configurations run*). |
+| `lake build` says `give --lake DIR (the Delta root the connector reads)` | The parameters lack `--lake`: copy the line of step 3.2 again (it ends with `--lake $PROJECT_DIR$/../data/delta`, or the full path in a terminal). |
+| `lake build` says `no such file or folder` for `config\packs\trading` or writes a `data\delta` inside `drishti-console` | A relative path run from PyCharm's Terminal (it opens in `drishti-console`): use the full-path line of step 3.2. Delete a stray `drishti-console\data` folder if one was made. |
+| PowerShell says `lake` is not recognized | `lake …` is not a command of its own: run it as `C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\drishti.py lake …`, or use the PyCharm configuration (step 2.2, *What these configurations run*). |
 | The run configurations are not in the drop-down | PyCharm must open `drishti-orig\drishti-console` (its configurations are in `drishti-console\run-configs`); IntelliJ must open `drishti-orig` (`run-configs`). See step 2.2. |
 | ENDUR pages still show synthetic trades | Step 3.2 point 1 was skipped: stop the server, delete `data\delta\trading\trade_endur`, load your files again, start the server. |
 | ENDUR and CALYPSO/MUREX never show on the same date | Step 3.1 used another date: run **Build demo lakes** again with `--as-of` = your newest ENDUR date, then step 3.2 again. |
