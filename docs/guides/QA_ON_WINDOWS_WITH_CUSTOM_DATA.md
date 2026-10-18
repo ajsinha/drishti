@@ -119,7 +119,9 @@ You should see: the drop-down at the top right lists the configurations of `run-
 1. **File → Open** → `C:\Users\asinh09\IdeaProjects\drishti-orig` → **Trust Project**. IntelliJ imports the Maven project
    (bottom-right progress bar; it downloads through your mirror the first time).
 2. **File → Project Structure → Project → SDK** → your **JDK 21** → **OK**.
-3. Top-right drop-down → **Drishti build server jar** → ▶ (Run). (This is Maven `package -DskipTests -pl drishti-server -am`
+3. Top-right drop-down → **Drishti build server jar** → ▶ (Run). (If IntelliJ says the Maven project is not found, or
+   modules are missing because PyCharm was opened on the same folder: Maven tool window → **Reload All Maven Projects**
+   first, see section 4.1.) (This is Maven `package -DskipTests -pl drishti-server -am`
    on the project's `pom.xml`.)
 
 You should see: in the Run window `BUILD SUCCESS`, and the file `drishti-server\target\drishti-server-2.3.0-exec.jar`
@@ -196,7 +198,30 @@ Good to know:
 
 ## 4. Start the server (IntelliJ) and the console (PyCharm)
 
-### 4.1 The server, in IntelliJ
+### 4.1 The server
+
+> **Why not simply IntelliJ?** IntelliJ and PyCharm keep their project settings in the same folder, `drishti-orig\.idea`.
+> With both opened on `drishti-orig`, PyCharm rewrites it as a Python project and IntelliJ then no longer knows the
+> Java modules: its run configuration says **module not specified** and the main class is red. So the server is started
+> from a PowerShell script (way A); IntelliJ is needed only to build the jar (step 2.3).
+
+**Way A (recommended): the script, from PyCharm's Terminal**
+
+1. PyCharm → the **Terminal** tab at the bottom (or any PowerShell window in the project folder).
+2. Type, one line:
+
+   ```
+   powershell -ExecutionPolicy Bypass -File tools\windows\start-server.ps1 -DemoLakes
+   ```
+
+   It runs the newest `drishti-server\target\drishti-server-*-exec.jar` (step 2.3) with exactly the settings of the
+   IntelliJ configuration below: the seven packs on the lakes, samples off, **offline mode**, sign-in on, port 18480,
+   a 4 GB heap. Its first line says so: `Drishti server: … offline demo on the lakes (sign in as drishti-dev-admin)`.
+3. To stop it: click in that Terminal and press **Ctrl+C**.
+
+After a `git pull` that changed Java code, build the jar again (step 2.3) before starting it.
+
+**Way B: IntelliJ** (only while PyCharm is closed, or after the fix in the note below)
 
 1. In IntelliJ's toolbar, top right, there is a drop-down with the name of a run configuration, then a green ▶ (Run)
    and a red ■ (Stop). Click the **drop-down** (not the ▶) → open the folder **Drishti** → choose
@@ -219,6 +244,11 @@ What **Drishti server (demo lakes)** sets (Run → Edit Configurations… → Ap
 | Working directory | the project folder, `C:\Users\asinh09\IdeaProjects\drishti-orig` |
 | Environment variables | the seven packs, samples off, **offline mode** (`DRISHTI_OFFLINE=true`), port 18480, sign-in on with the `drishti-dev-admin` account |
 
+If the configuration says **module not specified** or its main class is red: IntelliJ lost the Maven modules (see
+*Why not simply IntelliJ?*). Open the **Maven** tool window (the **m** on the right edge) → **Reload All Maven Projects**
+(the circular arrows); if there is no Maven window, right-click `pom.xml` in the project folder → **Add as Maven
+Project**. Wait for the import (progress bar bottom right); the module `drishti-server` is then back. Or use way A.
+
 If the drop-down has no **Drishti** folder (IntelliJ did not pick up `run-configs\`): **Run → Edit Configurations… → + →
 Application**, fill in the table above, and paste this into *Environment variables* (one line):
 
@@ -226,7 +256,7 @@ Application**, fill in the table above, and paste this into *Environment variabl
 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets;DRISHTI_DEMO_ENABLED=false;DRISHTI_OFFLINE=true;DRISHTI_PORT=18480;DRISHTI_SECURITY_ENABLED=true;DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789;DRISHTI_SEED_ADMIN=true;DRISHTI_SEED_USERNAME=drishti-dev-admin;DRISHTI_SEED_PASSWORD=drishti-dev-admin123;DRISHTI_STUDIO_SAVE=true;DRISHTI_EXTERNAL_LIB=C:\Users\asinh09\IdeaProjects\drishti-orig\external_lib
 ```
 
-You should see, in the Run window:
+**What you should see** (either way: in the Terminal for way A, in the Run window for way B):
 
 - within about 20 seconds: `Started DrishtiApplication in … seconds` — the server answers from now on;
 - then, as the first pages are asked for, one line per large table and date it loads, for example
@@ -239,15 +269,6 @@ what these grouped pages read: the trade pages themselves show every trade; the 
 count only the first 50,000.
 
 Quotes and news come from the committed snapshot and no website is contacted.
-
-PowerShell instead (after step 2.3 built the jar), from the project folder:
-
-```powershell
-$env:DRISHTI_PACKS="core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets"; $env:DRISHTI_DEMO_ENABLED="false"; $env:DRISHTI_OFFLINE="true"
-$env:DRISHTI_SECURITY_ENABLED="true"; $env:DRISHTI_TOKEN_SECRET="drishti-dev-only-token-secret-change-me-0123456789"
-$env:DRISHTI_SEED_ADMIN="true"; $env:DRISHTI_SEED_USERNAME="drishti-dev-admin"; $env:DRISHTI_SEED_PASSWORD="drishti-dev-admin123"
-java -Xmx4g -jar drishti-server\target\drishti-server-2.3.0-exec.jar
-```
 
 ### 4.2 The console, in PyCharm and the browser
 
@@ -319,7 +340,9 @@ trades.
 |---|---|
 | `pip` or Maven cannot download | Ask IT for the mirror settings: pip reads `%APPDATA%\pip\pip.ini`; Maven reads `%USERPROFILE%\.m2\settings.xml`. |
 | PyCharm says the interpreter is invalid | Redo step 2.2 point 2. |
-| The Run tab says **DrishtiApplication**, quotes or news try the internet, or sample trades appear | The server was started from the ▶ in `DrishtiApplication.java`: stop it and start **Drishti server (demo lakes)** (section 4.1). |
+| The Run tab says **DrishtiApplication**, quotes or news try the internet, or sample trades appear | The server was started from the ▶ in `DrishtiApplication.java`: stop it and start it as section 4.1 says (way A). |
+| IntelliJ: **module not specified**, the main class `com.ash.drishti.server.DrishtiApplication` in red | PyCharm rewrote the shared `.idea` folder: start the server with way A of section 4.1, or reload the Maven projects in IntelliJ (section 4.1, way B note). |
+| `start-server.ps1 … cannot be loaded because running scripts is disabled` | Type the line exactly as in section 4.1 way A (`powershell -ExecutionPolicy Bypass -File …`): it allows this one script only. |
 | The server log scrolls with thousands of `FilterCompat` or `delta.kernel` INFO lines | An older copy of the project: `git pull` (since 2026-10-18 these libraries log at WARN; Drishti says one line per large table loaded). |
 | **BI → Trades overview** shows 0 trades, or a page of the demo shows nothing while Admin → Lakes has the table | Old connector files: stop the server, delete `config\connectors` (step 3.1 point 0), start the server again. |
 | `Port 18480 (or 17480) is already in use` | Another copy is running: stop it in IntelliJ / PyCharm (red square), or reboot. |

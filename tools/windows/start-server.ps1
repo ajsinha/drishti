@@ -28,6 +28,11 @@
   .\tools\windows\start-server.ps1 -JavaHome 'C:\Program Files\Eclipse Adoptium\jdk-21.0.5.11-hotspot' -Packs market-risk -Background
 .EXAMPLE
   .\tools\windows\start-server.ps1 -Stop
+.EXAMPLE
+  powershell -ExecutionPolicy Bypass -File tools\windows\start-server.ps1 -DemoLakes
+  The offline demo of docs\guides\QA_ON_WINDOWS_WITH_CUSTOM_DATA.md: what the IntelliJ run configuration
+  'Drishti server (demo lakes)' sets (the seven packs on the lakes, samples off, offline mode, sign-in on with the
+  drishti-dev-admin account, a 4 GB heap), without IntelliJ.
 #>
 param(
     # The JDK folder (21 or newer, production runs 21); default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH.
@@ -43,8 +48,10 @@ param(
     # The Delta engine (DRISHTI_DELTA_ENGINE): native works on Windows; hadoop needs winutils.exe.
     [ValidateSet('native', 'hadoop', 'auto')]
     [string]$Engine = $(if ($env:DRISHTI_DELTA_ENGINE) { $env:DRISHTI_DELTA_ENGINE } else { 'native' }),
-    # The heap limit, e.g. 2g or 8g.
-    [string]$Heap = '2g',
+    # The heap limit, e.g. 2g or 8g (default 2g; 4g with -DemoLakes).
+    [string]$Heap = '',
+    # The offline demo on the lakes: the settings of the run configuration 'Drishti server (demo lakes)'.
+    [switch]$DemoLakes,
     # Start in the background (log in data\logs\server.log, process id in data\server.pid).
     [switch]$Background,
     # Stop a server started with -Background.
@@ -85,6 +92,20 @@ if (-not $Jar) {
 }
 if (-not (Test-Path (Join-Path $root 'config\packs'))) { Write-Warning "No config\packs\ folder in $root: the server will start without domain packs." }
 
+if ($DemoLakes) {
+    if (-not $Packs) { $Packs = 'core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets' }
+    if (-not $Heap) { $Heap = '4g' }
+    $env:DRISHTI_DEMO_ENABLED = 'false'               # the lakes are the only data: no built-in samples
+    $env:DRISHTI_OFFLINE = 'true'                     # quotes and news from the committed snapshot; no website is contacted
+    $env:DRISHTI_SECURITY_ENABLED = 'true'
+    $env:DRISHTI_TOKEN_SECRET = 'drishti-dev-only-token-secret-change-me-0123456789'
+    $env:DRISHTI_SEED_ADMIN = 'true'
+    $env:DRISHTI_SEED_USERNAME = 'drishti-dev-admin'
+    $env:DRISHTI_SEED_PASSWORD = 'drishti-dev-admin123'
+    $env:DRISHTI_STUDIO_SAVE = 'true'
+    $env:DRISHTI_EXTERNAL_LIB = Join-Path $root 'external_lib'
+}
+if (-not $Heap) { $Heap = '2g' }
 $env:DRISHTI_DELTA_ENGINE = $Engine
 $env:DRISHTI_PORT = "$Port"
 $env:DRISHTI_DELTA_ROOT = $LakeRoot
@@ -92,7 +113,7 @@ if ($Packs) { $env:DRISHTI_PACKS = $Packs }
 # compact object headers exist from Java 25 (Java 21 refuses to start with the flag)
 $javaArgs = @("-Xmx$Heap", '-jar', $Jar)
 if ($major -ge 25) { $javaArgs = @('-XX:+UseCompactObjectHeaders') + $javaArgs }
-Write-Host "Drishti server: $Jar on port $Port, Delta engine $Engine, lake $LakeRoot, packs $(if ($Packs) { $Packs } else { '(default)' })"
+Write-Host "Drishti server: $Jar on port $Port, Delta engine $Engine, lake $LakeRoot, packs $(if ($Packs) { $Packs } else { '(default)' }), heap $Heap$(if ($DemoLakes) { ', offline demo on the lakes (sign in as drishti-dev-admin)' })"
 
 if ($Background) {
     $logs = Join-Path $root 'data\logs'
