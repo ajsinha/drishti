@@ -34,7 +34,9 @@ def test_irs_view_renders_the_mockup(client):
     assert "−9,764,027.78" in t and "Total" in t
     assert 'data-chart="' in h and 'data-kind="line"' in h
     assert 'href="/v/netting-set/NS-NORTH-01"' in h and "EE 4.1m" in t
-    assert "Sutra irs-vanilla v3 + inference" in t and "aero-risk, gen 1742" in t
+    built = " ".join(t.split())                    # the Sutra and the connector are links now: their text sits between tags
+    assert "Sutra irs-vanilla v3 + inference" in built and "gen 1742" in built
+    assert 'href="/studio?sutra=irs-vanilla%403' in h and 'href="/admin/connectors/aero-risk"' in h
     assert 'data-fkey="F9"' in h and "Raw JSON" in t and 'data-fkey="F7"' in h
     assert 'value="TRD IRS-48213 &lt;GO&gt;"' in h
 
