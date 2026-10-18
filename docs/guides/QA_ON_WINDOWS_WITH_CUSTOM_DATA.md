@@ -179,14 +179,22 @@ The console reconnects by itself if you start or restart the server after it.
 ## 5. Check in the admin console (5 minutes)
 
 1. **Admin ▾ → Lakes.** You should see every table with its rows and latest date. `trading / trade_endur` shows **your**
-   row count and **your** dates.
+   row count and **your** dates. (On Windows the folder under each table name reads `C:\Users\asinh09\IdeaProjects\drishti-orig\data\delta`.)
+
+   ![Admin, Lakes: every table with rows, files, size, dates and the Maintain controls](img/qa-windows/01-admin-lakes.png)
 2. **Admin ▾ → Connectors.** You should see `trade-endur`, `trade-calypso`, `trade-murex` and the stores **RUNNING**.
-   Yahoo Finance and news are shown as off (offline mode); their stores serve the snapshot.
+   Yahoo Finance and news are shown as **off (offline mode)**; their stores serve the snapshot.
+
+   ![Admin, Connectors: the trade connectors of the three systems RUNNING](img/qa-windows/02-admin-connectors.png)
 3. **Admin ▾ → Health.** You should see everything green (a warning about a field mask of an example pack that is not
    loaded can be ignored).
+
+   ![Admin, Health](img/qa-windows/03-admin-health.png)
 4. **Admin ▾ → Packs → trading → Sutra coverage.** Every SOURCE_SYSTEM × PRODUCT_TYPE in your data has exactly one Sutra.
    A row without a Sutra means a product type of your real data the pack does not know yet: its trades still open, laid
    out by inference.
+
+   ![Admin, Packs, trading: the Sutra coverage table](img/qa-windows/04-pack-coverage.png)
 
 ---
 
@@ -204,6 +212,19 @@ The console reconnects by itself if you start or restart the server after it.
 | 8 | **Compare** across two dates | on a trade page, set the date picker to one of your dates → **Compare** → the other date |
 | 9 | **BI** by source system | **BI → Reports → Trades overview**; change a slicer; open *How this was answered* |
 | 10 | How a screen is designed | on a deal page, *How this view was built* → click the Sutra name: the designer opens with the trade as its sample |
+
+### The pages, as they look
+
+| | |
+|---|---|
+| ![An ENDUR deal: ticket, payments, linked entities](img/qa-windows/05-endur-deal.png) **1. An ENDUR deal** | ![Forms: the trading form](img/qa-windows/06-trading-form.png) **2. Forms → Trading** |
+| ![A CALYPSO deal](img/qa-windows/07-calypso-deal.png) **3. A CALYPSO deal** | ![A MUREX deal](img/qa-windows/08-murex-deal.png) **3. A MUREX deal** |
+| ![A counterparty, its trades and netting sets](img/qa-windows/09-counterparty.png) **4. A counterparty** | ![A commodity curve](img/qa-windows/10-curve.png) **5. A curve** |
+| ![Compare a trade across two dates](img/qa-windows/13-compare.png) **8. Compare** | ![BI: Trades overview](img/qa-windows/14-bi-trades-overview.png) **9. BI, Trades overview** |
+| ![How this view was built: the Sutra link](img/qa-windows/15-view-built.png) **10. How this view was built** | ![The designer opened on the Sutra with the trade as its sample](img/qa-windows/16-designer.png) **10. The designer** |
+
+The pictures were taken on synthetic data (a stand-in ENDUR file loaded exactly as in step 3.2); your pages show your
+trades.
 
 ---
 
