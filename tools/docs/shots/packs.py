@@ -65,6 +65,12 @@ def registry_install(c: Ctx):
     c.page.on("dialog", lambda d: d.accept())                   # "Install helpdesk 0.1.0? The server restarts in place"
     c.page.goto(c.base + "/admin/packs")
     c.page.locator('[data-registry="install"]').first.click()
+    yes = c.page.locator("[data-ask-yes]")                       # the page's own dialog asks first (never window.confirm)
+    try:
+        yes.wait_for(state="visible", timeout=10000)
+        yes.click()
+    except Exception:  # noqa: BLE001 - an older page asked with window.confirm, which the handler above accepts
+        pass
     for _ in range(240):                                        # the server restarts in place; the page reloads by itself
         c.page.wait_for_timeout(500)
         try:

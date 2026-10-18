@@ -34,7 +34,7 @@ SERVER_ENV = {"DRISHTI_SECURITY_ENABLED": "true", "DRISHTI_TOKEN_SECRET": "about
               "DRISHTI_SECURITY_REDACT": "trader,counterpartyId,patientName,lifecycle.timeline.description,limit",   # `limit` added: a demo only
               "DRISHTI_AUTH_ENABLED": "true", "DRISHTI_SESSION_SECRET": "about-session-secret-0123456789abcdef-xyz", "DRISHTI_SECURE_COOKIE": "false"}
 PASSWORD = "about-pass-2026"
-VAR, VARIANT = "/v/var/VAR-EQD", "/v/variant/VRNT-BRAF-V600E"
+VAR, ECONOMY = "/v/var/VAR-EQD", "/v/economy/ECON-USA"
 _state: dict = {"users": False}
 
 
@@ -91,10 +91,10 @@ def var_phone(c: Ctx):
     c.save("03-var-phone.jpg")
 
 
-@shot("04-genomics-variant.jpg")
-def genomics(c: Ctx):
-    drawer(c, "asha", VARIANT)
-    c.save("04-genomics-variant.jpg")
+@shot("04-economy.jpg")
+def economy(c: Ctx):
+    drawer(c, "asha", ECONOMY)
+    c.save("04-economy.jpg")
 
 
 @shot("05-viewer-masked.jpg")

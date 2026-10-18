@@ -783,10 +783,10 @@ limit" and layer 3 says "1 field hidden for your role: Limit":
 
 ### Another domain
 
-The words come from the pack, not from the program, so every domain explains itself in its own terms. A gene variant (the retired example
-pack `genomics`, under `examples/packs/`):
+The words come from the pack, not from the program, so every domain explains itself in its own terms. An economy of the
+world-economy pack (`ECON ECON-USA`), in that pack's words:
 
-![The drawer on a gene variant](img/about/04-genomics-variant.jpg)
+![The drawer on an economy, with the world-economy pack's text](img/about/04-economy.jpg)
 
 ### Good to know
 

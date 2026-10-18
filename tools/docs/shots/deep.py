@@ -41,21 +41,23 @@ def sample(product: str, legs: int) -> str:
 def open_trade(c: Ctx, trade: str, width: int, height: int):
     c.page.set_viewport_size({"width": width, "height": height})
     c.page.goto(f"{c.base}/v/trade/{trade}")
-    c.page.locator("#p-legs .tab-head").first.wait_for(state="attached", timeout=30000)
+    c.page.locator("#p-legs .col-box").first.wait_for(state="attached", timeout=30000)      # the legs side by side
     c.page.wait_for_timeout(1500)
 
 
 def legs_box(c: Ctx, extra: int):
+    """The legs panel from its title down, scrolled to just under the top bar."""
+    c.page.evaluate("() => { const e = document.querySelector('#p-legs'); window.scrollTo(0, e.getBoundingClientRect().top + window.scrollY - 70); }")
+    c.page.wait_for_timeout(400)
     p = c.page.locator("#p-legs").first.bounding_box()
-    top = c.page.locator(".vhead").first.bounding_box()
-    return {"x": 0, "y": top["y"], "width": min(p["x"] + p["width"] + 30, 1440), "height": min(p["y"] - top["y"] + extra, 1700)}
+    y = max(0, p["y"] - 8)
+    return {"x": max(0, p["x"] - 8), "y": y, "width": min(p["width"] + 16, 1440), "height": min(extra, 1700 - y)}
 
 
 @shot("01-commodity.jpg")
 def commodity(c: Ctx):
-    open_trade(c, sample("CMD_SWAP", 3), 1440, 1700)
-    c.page.locator("#p-legs .tab-head").nth(1).click()
-    c.page.locator("#p-legs .tab-pane:not([hidden]) button.tr-tog").first.click()
+    open_trade(c, "1000001", 1440, 1700)
+    c.page.locator("#p-legs .col-box").nth(1).locator("button.tr-tog").first.click()   # leg 2: its first cash flow opened to its resets
     c.page.mouse.move(1430, 1650)
     c.page.wait_for_timeout(500)
     c.save("01-commodity.jpg", clip=legs_box(c, 1000))
@@ -64,8 +66,7 @@ def commodity(c: Ctx):
 @shot("02-swap.jpg")
 def swap(c: Ctx):
     open_trade(c, "MX-20000001", 1440, 1700)
-    c.page.locator("#p-legs .tab-head").nth(1).click()
-    c.page.locator("#p-legs .tab-pane:not([hidden]) button.tr-tog").first.click()
+    c.page.locator("#p-legs .col-box").nth(1).locator("button.tr-tog").first.click()   # leg 2: its first cash flow opened to its resets
     c.page.mouse.move(1430, 1650)
     c.page.wait_for_timeout(500)
     c.save("02-swap.jpg", clip=legs_box(c, 900))
@@ -73,9 +74,8 @@ def swap(c: Ctx):
 
 @shot("03-phone.jpg")
 def phone(c: Ctx):
-    open_trade(c, sample("CMD_SWAP", 3), 390, 844)
-    c.page.locator("#p-legs .tab-head").nth(1).click()
-    c.page.locator("#p-legs .tab-pane:not([hidden]) button.tr-tog").first.click()
+    open_trade(c, "1000001", 390, 844)
+    c.page.locator("#p-legs .col-box").nth(1).locator("button.tr-tog").first.click()   # leg 2: its first cash flow opened to its resets
     c.page.locator("#p-legs").scroll_into_view_if_needed()
     c.page.wait_for_timeout(600)
     c.save("03-phone.jpg")

@@ -51,16 +51,16 @@ def start_servers(work: Path) -> list:
     (packs / "desk-demo").mkdir()
     (packs / "desk-demo" / "pack.yaml").write_text(
         "pack: desk-demo\nversion: 1.0.0\ntitle: Desk demo\ndescription: Quotes read from a stream somebody has not set up yet.\n"
-        "kinds: [quote, quote-archive]\nconnectors: [desk-quotes, desk-archive]\nroutes:\n  quote: desk-quotes\n  quote-archive: desk-archive\n"
-        "connector-templates:\n  desk-quotes:\n    plugin: file\n    kinds: [quote]\n    settings:\n      root: ./data/desk-quotes\n", encoding="utf-8")
+        "kinds: [desk-quote, desk-quote-archive]\nconnectors: [desk-quotes, desk-archive]\nroutes:\n  desk-quote: desk-quotes\n  desk-quote-archive: desk-archive\n"
+        "connector-templates:\n  desk-quotes:\n    plugin: file\n    kinds: [desk-quote]\n    settings:\n      root: ./data/desk-quotes\n", encoding="utf-8")
     lake = work / "lake"
     for day in ("2026-10-02", "2026-10-05"):
         (lake / day).mkdir(parents=True)
-        (lake / day / "quote.jsonl").write_text("".join(f'{{"id": "Q-{i}", "bid": {100 + i}}}\n' for i in range(4 if day.endswith("05") else 3)), encoding="utf-8")
+        (lake / day / "desk-quote.jsonl").write_text("".join(f'{{"id": "Q-{i}", "bid": {100 + i}}}\n' for i in range(4 if day.endswith("05") else 3)), encoding="utf-8")
     conns = work / "connectors"
     conns.mkdir()
     (conns / "site-quotes.yaml").write_text(
-        f"# A site connector: no pack suggests it.\nplugin: file\nkinds: [quote]\ndescription: Quotes from the desk's drop folder\nsettings:\n  root: {lake}\n  lookback-days: '10'\n",
+        f"# A site connector: no pack suggests it.\nplugin: file\nkinds: [desk-quote]\ndescription: Quotes from the desk's drop folder\nsettings:\n  root: {lake}\n  lookback-days: '10'\n",
         encoding="utf-8")
     ca = work / "ledger-ca.pem"                    # a real certificate, so the connector's page can show when it expires
     subprocess.run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", str(work / "ledger-ca.key"), "-out", str(ca), "-days", "21",
@@ -197,8 +197,8 @@ def from_suggestion(c: Ctx):
 def disable_asks(c: Ctx):
     wide(c)
     c.page.goto(c.base + "/admin/connectors")
-    row = c.page.locator("tr[data-conn='trading-store']")
-    row.get_by_role("button", name="Disable trading-store").click()
+    row = c.page.locator("tr[data-conn='trade-endur']")
+    row.get_by_role("button", name="Disable trade-endur").click()
     c.page.locator("[data-confirm-dialog]").wait_for()
     c.page.wait_for_timeout(400)
     c.save("09-disable-asks.jpg", "[data-confirm-dialog]")

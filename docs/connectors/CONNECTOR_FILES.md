@@ -450,8 +450,8 @@ The pack loads. Its kinds say so, in three places:
 ```
 HTTP/1.1 404
 {"title":"connector not configured","status":404,
- "detail":"DRS-1011 connector desk-archive is not configured: kind 'quote-archive' is routed to it, but no connector file desk-archive.yaml exists (create it in Admin -> Connectors)",
- "instance":"/api/v1/views/quote-archive/Q-1","code":"DRS-1011"}
+ "detail":"DRS-1011 connector desk-archive is not configured: kind 'desk-quote-archive' is routed to it, but no connector file desk-archive.yaml exists (create it in Admin -> Connectors)",
+ "instance":"/api/v1/views/desk-quote-archive/Q-1","code":"DRS-1011"}
 ```
 
 ![Admin → Packs → Data source: the pack's connectors, one not configured, with Edit and Create links](img/connector_files/07-pack-connectors.jpg)
@@ -751,8 +751,8 @@ $ drishti.py server packs datasource get desk-demo
 connectors of desk-demo   [files in …/config/connectors; change them with `drishti.py connector ...`]
   connector     state           plugin  kinds from this pack  defined by          problems
   ------------  --------------  ------  --------------------  ------------------  ----------------------------------------
-  desk-quotes   running         file    quote                 file
-  desk-archive  not configured          quote-archive         nothing defines it  connector desk-archive is not configured
+  desk-quotes   running         file    desk-quote            file
+  desk-archive  not configured          desk-quote-archive    nothing defines it  connector desk-archive is not configured
   desk-archive is not configured: create it with `drishti.py connector apply desk-archive.yaml` or in Admin -> Connectors
 [exit 1]
 ```

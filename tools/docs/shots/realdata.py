@@ -82,13 +82,13 @@ def indicator_nigeria(c: Ctx):
 
 @shot("form-economics.jpg")
 def form_economics(c: Ctx):
-    """FORM economics: real growth above 6% among economies larger than USD 100 bn."""
-    c.page.goto(f"{c.base}/form/economics?kind=economy")
-    c.page.locator('[name="op.growth"]').wait_for(timeout=30000)
-    c.page.locator('[name="op.growth"]').select_option(">")
-    c.page.locator('[name="v.growth"]').fill("6")
-    c.page.locator('[name="op.gdpUsdBn"]').select_option(">")
-    c.page.locator('[name="v.gdpUsdBn"]').fill("100")
+    """FORM world-economy economy: real growth above 6% among economies larger than USD 100 bn."""
+    c.page.goto(f"{c.base}/form/world-economy?kind=economy")
+    c.page.locator('[name="op.GROWTH"]').wait_for(timeout=30000)
+    c.page.locator('[name="op.GROWTH"]').select_option(">")
+    c.page.locator('[name="v.GROWTH"]').fill("6")
+    c.page.locator('[name="op.GDP_USD_BN"]').select_option(">")
+    c.page.locator('[name="v.GDP_USD_BN"]').fill("100")
     c.page.locator("button.qf-go").click()
     c.page.locator("table tbody tr").first.wait_for(timeout=30000)
     c.page.wait_for_timeout(1000)
