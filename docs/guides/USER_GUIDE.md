@@ -1118,6 +1118,7 @@ keys than shown*); a search's drill-down shows 50 rows a page. An administrator 
 | `F1` | Help for the page you are on. On a view it opens [About this page](#about-this-page); `F1` again goes to the guide |
 | `?` | On a view (focus not in a text field): open or close [About this page](#about-this-page) |
 | `F2`–`F6` | Jump to the panel that shows that key in its header |
+| `Alt`+`Shift`+`1`…`9`, `0` | The same as `F1`…`F9`, `F10` on a view. On Windows a laptop's F-keys are media keys unless `Fn` is held (or Fn Lock is on, often `Fn`+`Esc`), and Edge keeps `F9` for its Immersive Reader: these always work |
 | `F7` | Open the main linked entity (for a trade: its netting set) |
 | `F8` | Impact: what depends on this entity |
 | `F9` | Raw JSON of the entity, with its source and generation |

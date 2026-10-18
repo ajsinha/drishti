@@ -102,6 +102,8 @@ public final class DerivedSourcePlugin implements SourcePlugin {
     private final AtomicLong generation = new AtomicLong();
     /** store: disk keeps each computation's pages in a sorted store under {@link #storeRoot}; the heap holds per group totals only. */
     private boolean onDisk;
+    /** The zone whose calendar date {@code today()} is for the latest pages. */
+    private java.time.ZoneId zone = java.time.ZoneId.of("America/New_York");
     private java.nio.file.Path storeRoot;
     /** How long retired pages on disk are kept for reads still running. */
     private Duration retireAfter = Duration.ofSeconds(60);
@@ -136,6 +138,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         versionCheck = org.springframework.boot.convert.DurationStyle.detectAndParse(context.setting("version-check", "10s"));
         sourceName = context.setting("source-name", "derived");
         onDisk = "disk".equalsIgnoreCase(context.setting("store", "heap"));
+        zone = java.time.ZoneId.of(context.setting("zone", "America/New_York"));
         retireAfter = org.springframework.boot.convert.DurationStyle.detectAndParse(context.setting("retire-after", "60s"));
         if (onDisk) {
             // the pages' only folder: <data dir>/derived/<connector>; what a previous run left there is removed
@@ -373,6 +376,11 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         }
     }
 
+    /** What {@code today()} is in the pages' expressions: the business date asked for, or the calendar date for the latest. */
+    private LocalDate todayOf(AsOf asOf) {
+        return asOf.live() || asOf.businessDate() == null ? LocalDate.now(zone) : asOf.businessDate();
+    }
+
     /** The version of the snapshot cached under {@code key}, or null. */
     private String currentVersion(String key) {
         synchronized (cache) {   // pinning-ok: join() is only called on futures that are already done
@@ -430,7 +438,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
             byDocs.computeIfAbsent(k.from(), x -> new ArrayList<>()).add(k);
         }
         for (Map.Entry<String, List<DerivedKind>> e : byDocs.entrySet()) {
-            Members one = new Members(e.getValue());
+            Members one = new Members(e.getValue(), todayOf(asOf));
             if (streamed(e.getKey(), asOf, one, announce)) {           // one pass over the sources' files
                 one.into(byKind, scanned);
                 if (one.partial != null) {
@@ -464,7 +472,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
                     for (DerivedKind k : e.getValue()) {
                         String g = k.keyOf(d.data());
                         if (g != null) {
-                            groups.get(k).computeIfAbsent(g, x -> new HashMap<>()).put(d.ref().id(), k.compact(d.data()));
+                            groups.get(k).computeIfAbsent(g, x -> new HashMap<>()).put(d.ref().id(), k.compact(d.data(), todayOf(asOf)));
                         }
                     }
                     LocalDate dd = d.provenance().businessDate();
@@ -500,6 +508,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
      */
     private Snapshot computeOnDisk(AsOf asOf, boolean announce, String version, long started) {
         String date = asOf.live() ? "latest" : String.valueOf(asOf.businessDate());
+        LocalDate today = todayOf(asOf);
         java.nio.file.Path dir = storeRoot.resolve((asOf.live() ? "live" : date + "-" + (asOf.knownAt() == null ? "now" : asOf.knownAt().toEpochMilli()))
                 + "-" + System.nanoTime());
         com.ash.drishti.diskcache.SortedStore store;
@@ -528,16 +537,18 @@ public final class DerivedSourcePlugin implements SourcePlugin {
                 boolean read = reader.documents(from, asOf, d -> {
                     String id = d.ref().id();
                     java.util.Set<String> rowsDone = new java.util.HashSet<>(2);
+                    Map<String, Object[]> fieldValues = new HashMap<>(2);   // once per signature: kinds of one pack share them
                     for (DerivedKind k : ks) {
                         String g = k.keyOf(d.data());
                         if (g == null) {
                             continue;
                         }
-                        totals.get(k.kind()).computeIfAbsent(g, x -> k.totals()).add(id, d.data());
+                        Object[] values = fieldValues.computeIfAbsent(rowKeys.get(k.signature()), x -> k.fieldValues(d.data(), today));
+                        totals.get(k.kind()).computeIfAbsent(g, x -> k.totals()).add(id, values);
                         store.put("m" + SEP + k.kind() + SEP + g + SEP + id, NOTHING);
                         String sig = rowKeys.get(k.signature());
                         if (k.hasRows() && rowsDone.add(sig)) {
-                            store.put("r" + SEP + sig + SEP + id, k.rowBytes(d.data()));
+                            store.put("r" + SEP + sig + SEP + id, k.rowBytes(d.data(), today));
                         }
                     }
                     LocalDate dd = d.provenance() == null ? null : d.provenance().businessDate();
@@ -672,8 +683,11 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         String partial;
         LocalDate dataDate;
 
-        Members(List<DerivedKind> kinds) {
+        final LocalDate today;
+
+        Members(List<DerivedKind> kinds, LocalDate today) {
             this.kinds = kinds;
+            this.today = today;
             clear();
         }
 
@@ -692,7 +706,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
             for (DerivedKind k : kinds) {
                 String g = k.keyOf(d.data());
                 if (g != null) {                       // kept as the values the kind reads, not the document (a day of large documents)
-                    DataNode member = made.computeIfAbsent(k.signature(), x -> k.compact(d.data()));
+                    DataNode member = made.computeIfAbsent(k.signature(), x -> k.compact(d.data(), today));
                     groups.get(k).computeIfAbsent(g, x -> new HashMap<>()).put(d.ref().id(), member);
                 }
             }

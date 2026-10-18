@@ -261,6 +261,23 @@ class DerivedSourcePluginTest {
     }
 
     @Test
+    void todayInAFieldIsTheComputationsDateInTheHeapAndOnDisk(@org.junit.jupiter.api.io.TempDir java.nio.file.Path tmp) throws Exception {
+        for (String store : List.of("heap", "disk")) {
+            Map<String, String> s = settings();
+            s.put("book-pnl.fields.asOf", "first today()");
+            s.put("book-pnl.fields.live", "sum $.mtm > 0 && days(today(), today()) == 0 ? 1 : 0");
+            s.put("store", store);
+            s.put("store-dir", tmp.resolve(store).toString());
+            DerivedSourcePlugin p = started(s, new Stream());
+            DataNode book = p.fetch(EntityRef.of("book-pnl", "RATES-1")).orElseThrow().data();
+            assertThat(book.get("asOf").asText()).as(store).isEqualTo(LocalDate.now(java.time.ZoneId.of("America/New_York")).toString());
+            assertThat(book.get("live").asDouble()).as(store).isEqualTo(1);                 // T-1 (mtm 100) counts, T-2 (-40) not
+            DataNode then = p.fetch(EntityRef.of("book-pnl", "RATES-1"), AsOf.of(LocalDate.of(2026, 9, 28))).orElseThrow().data();
+            assertThat(then.get("asOf").asText()).as(store).isEqualTo("2026-09-28");      // a picked date: today() is that date
+        }
+    }
+
+    @Test
     void aNewDataVersionRebuildsAndAnUnchangedOneNeverDoes() throws Exception {
         Stream trades = new Stream();
         Map<String, String> s = settings();

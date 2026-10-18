@@ -32,26 +32,26 @@ panels:
   - id: pay7
     kind: metric
     title: Payments, next 7 days
-    value: "sum(flatten($.TRADES[*].EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7], 'AMOUNT')"
+    value: "$.PAY_7D"
     fmt: signed0
     tone: sign
-    caption: "${size(flatten($.TRADES[*].EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 7])} events"
+    caption: "${$.PAY_7D_EVENTS} events"
     span: 4
   - id: pay30
     kind: metric
     title: Payments, next 30 days
-    value: "sum(flatten($.TRADES[*].EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30], 'AMOUNT')"
+    value: "$.PAY_30D"
     fmt: signed0
     tone: sign
-    caption: "${size(flatten($.TRADES[*].EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30])} events"
+    caption: "${$.PAY_30D_EVENTS} events"
     span: 4
   - id: pay90
     kind: metric
     title: Payments, next 90 days
-    value: "sum(flatten($.TRADES[*].EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90], 'AMOUNT')"
+    value: "$.PAY_90D"
     fmt: signed0
     tone: sign
-    caption: "${size(flatten($.TRADES[*].EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90])} events"
+    caption: "${$.PAY_90D_EVENTS} events"
     span: 4
   - id: trades
     kind: table
@@ -73,7 +73,7 @@ panels:
       - { label: Status, bind: "nonblank(@.TRADE_STATUS, '–')", tone: status }
   - id: upcoming
     kind: ladder
-    title: Upcoming payments, next 90 days
+    title: "Upcoming payments, next 90 days${$.TRADE_COUNT > size($.TRADES) ? ' (the ' + size($.TRADES) + ' trades listed)' : ''}"
     code: PAY
     key: F3
     rows: "flatten($.TRADES[*].EVENTS)[?nonblank(@.AMOUNT) && nonblank(@.EVENT_DATE)][?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 90]"

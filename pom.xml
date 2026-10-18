@@ -190,6 +190,9 @@
             <!-- as the server does at start (ProxySettings.allowBasicThroughTunnels): the JDK reads this once, at its first
                  HTTP client, so a test that makes a client before a proxy test would otherwise fix the default (Basic refused) -->
             <jdk.http.auth.tunneling.disabledSchemes></jdk.http.auth.tunneling.disabledSchemes>
+            <!-- what a test makes at runtime (connector caches on disk, the derived pages' store) goes under target/, never a
+                 data/ folder inside the repository -->
+            <drishti.data.dir>${project.build.directory}/test-data</drishti.data.dir>
           </systemPropertyVariables>
         </configuration>
       </plugin>

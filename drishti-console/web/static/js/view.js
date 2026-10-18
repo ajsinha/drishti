@@ -310,10 +310,20 @@
   document.querySelectorAll('[data-fkey]').forEach(function (b) { b.addEventListener('click', function () { run(b); }); });
   document.addEventListener('keydown', function (e) {
     if (e.altKey && e.key === 'ArrowLeft') { e.preventDefault(); history.back(); return; }
-    if (!/^F([1-9]|1[0-2])$/.test(e.key)) { return; }
-    if (e.key === 'Escape' && raw && !raw.hidden) { toggleRaw(); return; }
-    var b = document.querySelector('[data-fkey="' + e.key + '"]');
+    // Alt+Shift+1..9 (0 for F10) work as F1..F10: on Windows a laptop's F-keys are media keys until Fn is held, and Edge
+    // keeps some for itself (F9: Immersive Reader), so the function keys of a page cannot be relied on there
+    var d = e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey ? /^Digit([0-9])$/.exec(e.code || '') : null;
+    var key = d ? (d[1] === '0' ? 'F10' : 'F' + d[1]) : e.key;
+    if (!/^F([1-9]|1[0-2])$/.test(key)) { return; }
+    var b = document.querySelector('[data-fkey="' + key + '"]');
     if (b) { e.preventDefault(); run(b); }
+  });
+  document.querySelectorAll('[data-fkey]').forEach(function (b) {
+    var m = /^F([1-9]|10)$/.exec(b.getAttribute('data-fkey') || '');
+    if (m) {
+      var keys = b.getAttribute('data-fkey') + ' or Alt+Shift+' + (m[1] === '10' ? '0' : m[1]);
+      b.title = b.title ? b.title + ' (' + keys + ')' : keys;
+    }
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && raw && !raw.hidden) { raw.hidden = true; } });
 

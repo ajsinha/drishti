@@ -243,8 +243,8 @@ public final class DerivedKind {
      * A member reduced to what this kind reads of it: each field's and each row column's value, computed once when the
      * member is read, so a whole day of large documents is never held (only {@link #buildCompact} reads it).
      */
-    DataNode compact(DataNode doc) {
-        EvalContext c = EvalContext.of(doc, formats);
+    DataNode compact(DataNode doc, java.time.LocalDate today) {
+        EvalContext c = EvalContext.of(doc, formats).withToday(today);
         Map<String, Object> out = new LinkedHashMap<>();
         for (int i = 0; i < fields.size(); i++) {
             Field f = fields.get(i);
@@ -284,18 +284,15 @@ public final class DerivedKind {
             }
         }
 
-        void add(String id, DataNode doc) {
+        /** Adds a member by its field values ({@link #fieldValues}, worked out once per member and shared by kinds of the same signature). */
+        void add(String id, Object[] values) {
             count++;
-            EvalContext c = null;
             for (int i = 0; i < fields.size(); i++) {
                 Field f = fields.get(i);
                 if (f.op() == Op.COUNT) {
                     continue;
                 }
-                if (c == null) {
-                    c = EvalContext.of(doc, formats);
-                }
-                Object v = Values.simplify(safe(f.expr(), c));
+                Object v = values[i];
                 switch (f.op()) {
                     case FIRST -> {
                         if (firstId[i] == null || id.compareTo(firstId[i]) < 0) {
@@ -337,14 +334,34 @@ public final class DerivedKind {
         }
     }
 
+    /**
+     * A member's value of each field's expression ({@code today()} is {@code today}: the computation's business date), in the
+     * order of the fields; null for count.
+     */
+    Object[] fieldValues(DataNode doc, java.time.LocalDate today) {
+        Object[] out = new Object[fields.size()];
+        EvalContext c = null;
+        for (int i = 0; i < fields.size(); i++) {
+            Field f = fields.get(i);
+            if (f.op() == Op.COUNT) {
+                continue;
+            }
+            if (c == null) {
+                c = EvalContext.of(doc, formats).withToday(today);
+            }
+            out[i] = Values.simplify(safe(f.expr(), c));
+        }
+        return out;
+    }
+
     /** True when the kind's page has rows (one per listed member). */
     boolean hasRows() {
         return !rowColumns.isEmpty();
     }
 
     /** A member's row (the row columns' values) as JSON bytes, for the disk. */
-    byte[] rowBytes(DataNode doc) {
-        EvalContext c = EvalContext.of(doc, formats);
+    byte[] rowBytes(DataNode doc, java.time.LocalDate today) {
+        EvalContext c = EvalContext.of(doc, formats).withToday(today);
         Map<String, Object> row = new LinkedHashMap<>();
         rowColumns.forEach((col, e) -> row.put(col, plain(Values.simplify(safe(e, c)))));
         try {

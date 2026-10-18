@@ -120,6 +120,8 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     private int maxLoadRows;
     /** Single-entity reads decode a row group each: bounded, so a burst of them cannot exhaust memory. */
     private java.util.concurrent.Semaphore docReads;
+    /** Single reads of background work (the start-up warm-up): apart from {@link #docReads}, so a page never waits behind them. */
+    private final java.util.concurrent.Semaphore warmReads = new java.util.concurrent.Semaphore(2);
     private SourceContext context;
     private String sourceName;
     private int lookbackDays;
@@ -240,7 +242,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                     }
                     String[] ids = idMap(kind, l.get(), d).ids();
                     if (ids.length > 0) {
-                        doc(EntityRef.of(kind, ids[0]), l.get(), d);
+                        doc(EntityRef.of(kind, ids[0]), l.get(), d, warmReads);   // background: its own slot, never a page's
                     }
                 }
             } catch (RuntimeException e) {
@@ -456,6 +458,11 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     /** The entity's document on one date, or null when that date's files do not hold it. */
     private String doc(EntityRef ref, DeltaTable.Layout l, LocalDate d) {
+        return doc(ref, l, d, docReads);
+    }
+
+    /** The entity's document on one date, read under {@code slots} (pages: {@link #docReads}; background work: {@link #warmReads}). */
+    private String doc(EntityRef ref, DeltaTable.Layout l, LocalDate d, java.util.concurrent.Semaphore slots) {
         // the id map says which file holds the entity; only that file's matching row group is read
         int file = idMap(ref.kind(), l, d).file(ref.id());
         if (file < 0) {
@@ -472,11 +479,11 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             }
         }
         if (json == null) {
-            docReads.acquireUninterruptibly();
+            slots.acquireUninterruptibly();
             try {
                 json = tables.get(ref.kind()).doc(l, d, file, ref.id()).orElse(null);
             } finally {
-                docReads.release();
+                slots.release();
             }
             if (json != null) {
                 docs.put(key, json);
