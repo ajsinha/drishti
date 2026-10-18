@@ -16,7 +16,7 @@
 
 # Scale strategy: millions of trades, fast, in a bounded heap
 
-**Status:** agreed direction, 2026-10-18. Phase 1 quick fixes are built (section 12); the rest is planned. Numbers marked
+**Status:** agreed direction, 2026-10-18. Phases 0 to 5 are built and measured (section 12); open items are listed there. Numbers marked
 *measured* come from runs on 2026-10-18 (section 4); numbers marked *estimate* are to be replaced by phase 0.
 
 Contents: 1 Goal · 2 Ground rules · 3 How Drishti reads today · 4 Measurements · 5 Memory: what lives in the heap ·
@@ -241,7 +241,7 @@ up the current version only.
 | With the load signal (Admin → Lakes, `--signal`, `lake demo`) | at once: the signal drops the caches |
 | Grouped pages | about **10–20 s** (done: they follow the data's version, asked every `version-check`, 10 s) |
 | BI reports and boards | the next query: each stored partition records the data version it was built from |
-| The RocksDB TTL (planned) | no effect on freshness |
+| The RocksDB TTL (`doc-disk-cache.ttl`, 12h) | no effect on freshness |
 | A page already open in the browser | until reloaded (the page offers a refresh when a newer generation exists) |
 
 ## 10. Grouped pages: on disk (built 2026-10-18)
@@ -314,7 +314,6 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 | | the RocksDB document cache (section 8.1): **on by default**, one per connector (`<data dir>/cache/<connector>/docs`), 1 GB cap, 12 h TTL, hourly compaction, daily clearing, kept across restarts, skipped with a WARN when it cannot open; −17 % CPU per read for trades read before | **done** (2026-10-18) |
 | | row groups of 256 KB and 64 KB pages in the lake writer: +13 % reads a second, −20 % CPU per first read (362,804 trades) | **done** |
 | | one Parquet version (1.18.0) for every library (root `pom.xml`); the Parquet page index for single reads **on by default** (`drishti.parquet.page-index`): neutral on 256 KB row groups (812 vs 812 reads/s, same trades), it narrows reads of files with larger groups | **done** |
-| | one memory budget for all connector caches (section 5) | next |
 | | separate read slots for all background work | next |
 | **2. Storage and caches** | id maps on disk, memory-mapped (`id-map-disk`): after a restart 3 ms instead of 729 ms per table date, first read of a past date 0.03–0.06 s instead of 0.24–0.34 s; 44 MB per trade connector | **done** (2026-10-18) |
 | | grouped pages kept across restarts (`pages.json` beside the pages): served at once, no rebuild while the data is unchanged; 50 users straight after a restart 151 req/s, 0 failures (before: 395 timeouts) | **done** |
@@ -326,12 +325,9 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 | | BI monthly rollups: not added; rollups are per business date and a year reads about 250 small rollup files; revisit if a year-long BI question exceeds 3 s in the longevity tests | decided |
 | **5. Operations** | Admin → Caches shows the shared memory budget (each shared cache's size against its cap, the heap); a sizing guide from the measurements ([SCALE_BENCHMARK.md section 8](../admin/SCALE_BENCHMARK.md)) | **done** (2026-10-18) |
 | | Admin → Health → Pages: per kind (any pack) the views, p50, p95 and p99 over ten minutes, slowest first | **done** |
+| | Admin → Health → Activity: requests a minute and the average response time, last 30 minutes, as a moving bar chart | **done** |
 | | retention: `keep-business-days` per table in Admin → Lakes (since 2.3.0) | done |
 | **0. Measure** | `tools/bench/trades.py` (synthetic trades of the real shapes, N a day per system for D days, counterparties and netting sets, loaded day by day) and `tools/bench/users.py` (simultaneous users, p50/p95/p99 per request kind), a small version in the tool tests ([SCALE_BENCHMARK.md section 9](../admin/SCALE_BENCHMARK.md)) | **done** (2026-10-18) |
-| **2. Storage and caches** | bloom filters on ids; memory-mapped warm tier for id maps and columns; RocksDB document cache (section 8.1) | planned |
-| **3. Computed at load** | grouped totals and flattened columns written by the load | planned |
-| **4. History** | DuckDB over Delta for anything across dates; BI monthly rollups | planned |
-| **5. Operations** | p95 per screen and connector in Admin → Health; cache sizes against the memory budget in Admin → Caches; a sizing guide; retention in Admin → Lakes | planned |
 
 ## 13. Settings reference
 
