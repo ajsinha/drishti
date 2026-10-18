@@ -73,31 +73,31 @@ Captured from the connector reading the local fake the tests use, `GET /api/v1/e
   "ref": { "kind": "quote", "id": "QUOTE-AAPL" },
   "provenance": { "source": "yfinance", "generation": 1791705297975, "fetchedAt": "2026-10-11T07:54:57.975654276Z", "live": false, "businessDate": null },
   "data": {
-    "quoteId": "QUOTE-AAPL", "symbol": "AAPL", "name": "AAPL Corporation", "exchange": "NasdaqGS", "currency": "USD", "instrumentType": "EQUITY",
-    "price": 204.3, "previousClose": 202.6, "change": 1.7, "changePct": 0.8390918065153096,
-    "dayLow": 201.9, "dayHigh": 205.4, "fiftyTwoWeekLow": 140.1, "fiftyTwoWeekHigh": 230.5, "volume": 51234567.0, "marketCap": null,
-    "marketState": "UNKNOWN", "asOf": "2026-10-20 10:13 America/New_York",
-    "history": [ { "date": "2026-09-21", "open": 182.0, "high": 183.0, "low": 181.0, "close": 182.0, "volume": 1000.0 },
-                 { "date": "2026-09-22", "open": 183.7, "high": 184.7, "low": 182.7, "close": 183.7, "volume": 2000.0 }, "..." ],
-    "dayRange": "201.90 – 205.40", "fiftyTwoWeekRange": "140.10 – 230.50", "historyRange": "6mo", "interval": "1d",
-    "provenance": { "feed": "Yahoo Finance public chart endpoint (unofficial)", "fetched": "2026-10-11T07:54:57.975654276Z", "cachedFor": "60 s",
-                    "terms": "Sample and internal demonstration use only; not for production or redistribution" }
+    "QUOTE_ID": "QUOTE-AAPL", "SYMBOL": "AAPL", "NAME": "AAPL Corporation", "EXCHANGE": "NasdaqGS", "CURRENCY": "USD", "INSTRUMENT_TYPE": "EQUITY",
+    "PRICE": 204.3, "PREVIOUS_CLOSE": 202.6, "CHANGE": 1.7, "CHANGE_PCT": 0.8390918065153096,
+    "DAY_LOW": 201.9, "DAY_HIGH": 205.4, "FIFTY_TWO_WEEK_LOW": 140.1, "FIFTY_TWO_WEEK_HIGH": 230.5, "VOLUME": 51234567.0, "MARKET_CAP": null,
+    "MARKET_STATE": "UNKNOWN", "AS_OF": "2026-10-20 10:13 America/New_York",
+    "HISTORY": [ { "DATE": "2026-09-21", "OPEN": 182.0, "HIGH": 183.0, "LOW": 181.0, "CLOSE": 182.0, "VOLUME": 1000.0 },
+                 { "DATE": "2026-09-22", "OPEN": 183.7, "HIGH": 184.7, "LOW": 182.7, "CLOSE": 183.7, "VOLUME": 2000.0 }, "..." ],
+    "DAY_RANGE": "201.90 – 205.40", "FIFTY_TWO_WEEK_RANGE": "140.10 – 230.50", "HISTORY_RANGE": "6mo", "INTERVAL": "1d",
+    "PROVENANCE": { "FEED": "Yahoo Finance public chart endpoint (unofficial)", "FETCHED": "2026-10-11T07:54:57.975654276Z", "CACHED_FOR": "60 s",
+                    "TERMS": "Sample and internal demonstration use only; not for production or redistribution" }
   }
 }
 ```
 
-`marketCap` is `null` when Yahoo's chart answer does not carry it (it usually does not). Every field of the quote is optional except the price.
+`MARKET_CAP` is `null` when Yahoo's chart answer does not carry it (it usually does not). Every field of the quote is optional except the price.
 
 ## 5. How the figures are worked out
 
 | Field | From |
 |---|---|
-| `price` | `meta.regularMarketPrice`, else the last close of the history |
-| `previousClose` | `meta.previousClose` when present; else, for daily bars, the close before the last bar; else `meta.chartPreviousClose` (which, for a long range, is the close before the range began, hence the order) |
-| `change`, `changePct` | `price - previousClose`, and that over `previousClose` as a percent (`+0.84` means 0.84 %) |
-| `marketState` | `meta.marketState` when given; else `REGULAR` when now lies in the regular trading period of `meta.currentTradingPeriod`, `CLOSED` when not, `UNKNOWN` if the answer has no period |
-| `history` | the timestamps and `indicators.quote[0]` arrays; a bar without a close is skipped; dates are in the exchange's time zone (`gmtoffset`): `yyyy-MM-dd` for daily and longer bars, with `HH:mm` for intraday |
-| `dayRange`, `fiftyTwoWeekRange` | the low and high as text, `188.90 – 192.30` |
+| `PRICE` | `meta.regularMarketPrice`, else the last close of the history |
+| `PREVIOUS_CLOSE` | `meta.previousClose` when present; else, for daily bars, the close before the last bar; else `meta.chartPreviousClose` (which, for a long range, is the close before the range began, hence the order) |
+| `CHANGE`, `CHANGE_PCT` | `PRICE - PREVIOUS_CLOSE`, and that over `PREVIOUS_CLOSE` as a percent (`+0.84` means 0.84 %) |
+| `MARKET_STATE` | `meta.marketState` when given; else `REGULAR` when now lies in the regular trading period of `meta.currentTradingPeriod`, `CLOSED` when not, `UNKNOWN` if the answer has no period |
+| `HISTORY` | the timestamps and `indicators.quote[0]` arrays; a bar without a close is skipped; dates are in the exchange's time zone (`gmtoffset`): `yyyy-MM-dd` for daily and longer bars, with `HH:mm` for intraday |
+| `DAY_RANGE`, `FIFTY_TWO_WEEK_RANGE` | the low and high as text, `188.90 – 192.30` |
 
 A number that is not a number, or a field of the wrong type, is read as missing; an answer that is not a chart (`{"hello":"world"}`) or is
 not JSON is an error, never a half-empty quote.
@@ -156,9 +156,9 @@ routes: { quote: yfinance }
 ```
 
 ```yaml
-# a company's document holds  "quoteId": "QUOTE-AAPL";  its Sutra:
-  - { id: quote, kind: kv, source: "link($.quoteId, 'quote')", columns: [ { label: Price, bind: $.price, fmt: price2 }, ... ] }
-  - { id: history, kind: line, source: "link($.quoteId, 'quote')", rows: $.history, x: date, y: close, fmt: price2 }
+# a company's document holds  "QUOTE_ID": "QUOTE-AAPL";  its Sutra:
+  - { id: quote, kind: kv, source: "link($.QUOTE_ID, 'quote')", columns: [ { label: Price, bind: $.PRICE, fmt: price2 }, ... ] }
+  - { id: history, kind: line, source: "link($.QUOTE_ID, 'quote')", rows: $.HISTORY, x: DATE, y: CLOSE, fmt: price2 }
 ```
 
 See the [`news-and-markets` sample pack](../guides/PACKS.md#sample-packs).

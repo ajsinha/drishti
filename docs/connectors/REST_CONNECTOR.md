@@ -141,9 +141,9 @@ HTTP/1.1 200 OK
 Content-Type: application/json
 X-Version: 42
 
-{"counterpartyId": "CP-HARBOURVIEW", "name": "Harbourview Capital LLP", "lei": "5493001KJTIIGC8Y1R12",
- "rating": "A", "sector": "Asset management", "country": "GB", "type": "Fund manager",
- "nettingSets": ["NS-HARBOURVIEW-ISDA"], "parentId": "CP-HARBOURVIEW-HOLDINGS"}
+{"COUNTERPARTY_ID": "CP-HARBOURVIEW", "NAME": "Harbourview Capital LLP", "LEI": "5493001KJTIIGC8Y1R12",
+ "RATING": "A", "SECTOR": "Asset management", "COUNTRY": "GB", "TYPE": "Fund manager",
+ "NETTING_SETS": ["NS-HARBOURVIEW-ISDA"], "PARENT_ID": "CP-HARBOURVIEW-HOLDINGS"}
 ```
 
 What Drishti records (`GET /api/v1/entities/counterparty/CP-HARBOURVIEW/raw`, connector `crm-api`):
@@ -152,7 +152,7 @@ What Drishti records (`GET /api/v1/entities/counterparty/CP-HARBOURVIEW/raw`, co
 {"ref": {"kind": "counterparty", "id": "CP-HARBOURVIEW"},
  "provenance": {"source": "crm-api", "generation": 42, "fetchedAt": "2026-10-01T09:14:03.118Z", "live": false,
                 "businessDate": null},
- "data": {"counterpartyId": "CP-HARBOURVIEW", "name": "Harbourview Capital LLP", "…": "…"}}
+ "data": {"COUNTERPARTY_ID": "CP-HARBOURVIEW", "NAME": "Harbourview Capital LLP", "…": "…"}}
 ```
 
 `live` is always `false` and `businessDate` always `null`: the document is the service's current answer.
@@ -568,7 +568,7 @@ Any static file server will do as a stand-in for the API:
 
 ```bash
 mkdir -p /tmp/crm/api/counterparty
-echo '{"counterpartyId": "CP-HARBOURVIEW", "name": "Harbourview Capital LLP", "rating": "A", "country": "GB"}' \
+echo '{"COUNTERPARTY_ID": "CP-HARBOURVIEW", "NAME": "Harbourview Capital LLP", "RATING": "A", "COUNTRY": "GB"}' \
   > /tmp/crm/api/counterparty/CP-HARBOURVIEW.json
 (cd /tmp/crm && python3 -m http.server 9000)
 ```

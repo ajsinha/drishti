@@ -60,17 +60,17 @@ The extract is **rebuilt for you on every run** and never kept: the console hold
 ## 2. The extract
 
 Choose a dataset, tick the fields (columns of its tables; `id` is added for you and dropped from the extract), and **Open the extract**. The line under the form tells you what you got:
-`60 rows, 8 columns.` and, when something is masked for you, `Masked for you: mtm.` The rows are the table's *own* rows (not grouped), cut to `bi.explore.max_rows`
-(10,000); a cut says so (`60 rows of 4,000 (cut to the row limit)`). Columns are named for the table's column (`desk`, not `trade.desk`); two columns of the same name keep their
-table (`trade_desk`).
+`60 rows, 8 columns.` and, when something is masked for you, `Masked for you: MTM.` The rows are the table's *own* rows (not grouped), cut to `bi.explore.max_rows`
+(10,000); a cut says so (`60 rows of 4,000 (cut to the row limit)`). Columns are named for the table's column (`DESK`, not `trade.DESK`); two columns of the same name keep their
+table (`trade_DESK`).
 
 **More than one extract.** *More extracts: join several datasets* (under the form) adds further extracts to the notebook, each a name, a dataset and fields, built for you by the server exactly as the first is (your row rules, your masks; `bi.explore.max_extracts`, 6, besides the first). A **Python** cell reads one as `extract("name")` (a pandas DataFrame; a copy, so changing it changes nothing else), or by the dataset it came from, and joins them in pandas; a **SQL** cell reads each as a table of that name. Real output of the sample notebook (below), with two extracts, the trades of `trading-risk` as `df` and the netting sets of `counterparty-exposure` as `exposure`, joined in a Python cell:
 
 ![The notebook's extracts: the first extract opened, and the second, exposure, under More extracts](../tutorials/img/t14/13-analyse-extracts.jpg)
 
 ```python
-pnl = df.groupby("counterpartyId", as_index=False)["pnl1d"].sum().rename(columns={"counterpartyId": "counterparty", "pnl1d": "desk_pnl"})
-ee = extract("exposure").groupby("counterparty", as_index=False)["eePeak"].sum().rename(columns={"eePeak": "ee_peak"})
+pnl = df.groupby("COUNTERPARTY", as_index=False)["PNL_1D"].sum().rename(columns={"COUNTERPARTY": "counterparty", "PNL_1D": "desk_pnl"})
+ee = extract("exposure").groupby("counterparty", as_index=False)["EE_PEAK"].sum().rename(columns={"EE_PEAK": "ee_peak"})
 joined = pnl.merge(ee, on="counterparty", how="left")
 joined["pnl_per_exposure"] = joined["desk_pnl"] / joined["ee_peak"]
 result = joined.sort_values("ee_peak", ascending=False).head(15)
@@ -105,10 +105,10 @@ cell starts with a statement written from the model (the first text field you ti
 model *SQL model* (trades and desks, one measure *Sum of mtm*):
 
 ```sql
-SELECT trade.book,
+SELECT trade.PORTFOLIO,
        MEASURE('Sum of mtm') AS "Sum of mtm"
 FROM   trade
-GROUP  BY trade.book
+GROUP  BY trade.PORTFOLIO
 LIMIT  20
 ```
 
@@ -125,8 +125,8 @@ still runs there whatever the choice.
 Over the extract, a SQL cell is **one `SELECT`** (or `WITH ... SELECT`) over the table **`extract`** (and over a table for each further extract of the notebook, named as it is, so `SELECT ... FROM extract JOIN exposure ON ...`):
 
 ```sql
-SELECT desk, COUNT(*) AS trades, SUM(notional) AS notional
-FROM extract GROUP BY desk ORDER BY notional DESC
+SELECT DESK, COUNT(*) AS trades, SUM(NOTIONAL) AS notional
+FROM extract GROUP BY DESK ORDER BY notional DESC
 ```
 
 A cell over the model is **Drishti SQL, run by the server** as you (section 4's first half). A cell that reads the table `extract` (a notebook of 2.2) runs
@@ -154,10 +154,10 @@ What the cell prints (`print`) comes back as text. What it puts in **`result`** 
 scratch folder, CPU, memory, time and output limits).
 
 ```python
-g = df.groupby("desk", as_index=False)["notional"].sum()
+g = df.groupby("DESK", as_index=False)["NOTIONAL"].sum()
 print(round(quant.price("black_scholes", spot=100, strike=100, rate=0.05, vol=0.2, years=1), 4))   # 10.4506
-result = {"title": {"text": "Notional by desk"}, "xAxis": {"type": "category", "data": list(g["desk"])},
-          "yAxis": {"type": "value"}, "series": [{"type": "bar", "data": [float(v) for v in g["notional"]]}]}
+result = {"title": {"text": "Notional by desk"}, "xAxis": {"type": "category", "data": list(g["DESK"])},
+          "yAxis": {"type": "value"}, "series": [{"type": "bar", "data": [float(v) for v in g["NOTIONAL"]]}]}
 ```
 
 ![A Python cell with a chart](img/analyse/python.png)
@@ -179,17 +179,17 @@ rachana: 1
 notebook: desk-notional-first-look
 title: Desk notional, first look
 dataset: mq:trades-basic@1       # the model it reads (mq:<model>@<major>, or dataset:<name> for a dataset's implicit model)
-fields: [trade.tradeId, trade.desk, trade.book, trade.notional, trade.mtm]
+fields: [trade.TRADE_ID, trade.DESK, trade.PORTFOLIO, trade.NOTIONAL, trade.MTM]
 extracts:                       # optional: further extracts, read by a cell as extract("name") and in SQL as a table of that name
   - { name: exposure, dataset: mq:counterparty-exposure@1, fields: [netting_sets.COUNTERPARTY, netting_sets.EE_PEAK] }
 cells:
   - type: slice
-    slice: { rows: [desk], columns: [], values: [{ field: notional, agg: sum }], filters: [] }
+    slice: { rows: [DESK], columns: [], values: [{ field: NOTIONAL, agg: sum }], filters: [] }
   - type: sql
-    source: SELECT desk, SUM(notional) FROM extract GROUP BY desk
+    source: SELECT DESK, SUM(NOTIONAL) FROM extract GROUP BY DESK
   - type: python
     source: |
-      result = df.groupby("desk", as_index=False)["notional"].sum()
+      result = df.groupby("DESK", as_index=False)["NOTIONAL"].sum()
     target: server
 ```
 
@@ -285,8 +285,8 @@ for a cell over `extract`), Python the console's sandbox. Calc (the terminal's P
 | a **slice** | a **matrix** (rows, one column field, values) when a value matches a measure of the model, else a **table** of the fields, else a **card**; the slice's **filters** become the visual's `filters` (`field`, `op: in`, `values`) |
 | a **SQL cell** | read by a small reader (`core/promote_report.py`), not a SQL engine: the plain columns and `GROUP BY` columns become *rows* (or the table's columns), the aggregates `sum`, `avg`, `count`, `min`, `max` of a column become *values*, and simple `WHERE` conditions (`col = 'x'`, `<>`, `<`, `<=`, `>`, `>=`, `IN (...)`, `NOT IN`, `BETWEEN a AND b`, `IS [NOT] NULL`, joined by `AND`) become *filters* |
 
-* **Values are measures.** A report shows the model's measures (`GET /models/<ref>/describe`), so an aggregate becomes a value only when the model has a measure that is exactly that (`sum(trade.mtm)`; `count(*)` is the measure `count(trade)`); the notes name each one that is missing so you add it to the model. Names are mapped from the extract's (`desk`) back to the model's (`trade.desk`).
-* **What cannot be said is said.** A join or a sub-query, an expression (`notional * 2`), `LIKE`, `OR`, `HAVING`, `count(distinct ...)` are left out and listed in the notes; `ORDER BY` and `LIMIT` are left out too (a visual sorts and limits in its own settings). Nothing is guessed.
+* **Values are measures.** A report shows the model's measures (`GET /models/<ref>/describe`), so an aggregate becomes a value only when the model has a measure that is exactly that (`sum(trade.MTM)`; `count(*)` is the measure `count(trade)`); the notes name each one that is missing so you add it to the model. Names are mapped from the extract's (`desk`) back to the model's (`trade.desk`).
+* **What cannot be said is said.** A join or a sub-query, an expression (`NOTIONAL * 2`), `LIKE`, `OR`, `HAVING`, `count(distinct ...)` are left out and listed in the notes; `ORDER BY` and `LIMIT` are left out too (a visual sorts and limits in its own settings). Nothing is guessed.
 * **The model.** A new report draft is `rachana: 2` with `model:` the model the extract was opened from (`trades-basic@1`). A report reads one model, so a slice of another model is not added to an existing report: `DRS-9070` says which model each reads; promote it to a new report instead.
 * **An existing report** is read through the server's checker (`POST /bi/api/reports/validate`), the visual is added **below** what the page holds with a free id (`slice`, `sql`, then `slice-2` ...), and the report is written again by the designer's writer (`/reports/format`) and saved as the item's **draft** (`PUT /bi/api/items/<id>`). Comments in the report's YAML are **not kept** (the note says so); nothing is published. The target must be a report item you may edit: a shipped one, or one that is not a report, is `DRS-9070`.
 * In both cases the draft is yours to finish in the designer, then check and publish like any report.

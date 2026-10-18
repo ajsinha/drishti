@@ -112,17 +112,17 @@ market-risk pack's samples have it:
 
 ```json
 {
-  "resultId": "STR-COVID2020-COMM",
-  "scenarioName": "COVID-19 March 2020",
-  "pnl": -79275425,
-  "limit": -75800000.0,
-  "byBook": [
-    {"book": "BOOK-COMM-1", "pnl": -24551466},
-    {"book": "BOOK-COMM-2", "pnl": -40288036},
-    {"book": "BOOK-COMM-3", "pnl": -14435923}
+  "RESULT_ID": "STR-COVID2020-COMM",
+  "SCENARIO_NAME": "COVID-19 March 2020",
+  "PNL": -79275425,
+  "LIMIT": -75800000.0,
+  "BY_BOOK": [
+    {"BOOK": "BOOK-COMM-1", "PNL": -24551466},
+    {"BOOK": "BOOK-COMM-2", "PNL": -40288036},
+    {"BOOK": "BOOK-COMM-3", "PNL": -14435923}
   ],
-  "scenario": "SCN-COVID2020",
-  "desk": "DESK-COMM"
+  "SCENARIO": "SCN-COVID2020",
+  "DESK": "DESK-COMM"
 }
 ```
 
@@ -647,8 +647,8 @@ This walk-through puts the connector to work on a small case; the sections above
 The layout is described in [The layout](#2-the-layout): `<prefix><kind>/<id>.json` (undated) and `<prefix><yyyy-MM-dd>/<kind>/<id>.json`. One object:
 
 ```json
-{"resultId": "STR-CLIMATE-2026Q3", "scenarioName": "Disorderly transition 2026Q3", "pnl": -41250000,
- "limit": -60000000.0, "scenario": "SCN-NGFS-DISORDERLY", "desk": "DESK-RATES"}
+{"RESULT_ID": "STR-CLIMATE-2026Q3", "SCENARIO_NAME": "Disorderly transition 2026Q3", "PNL": -41250000,
+ "LIMIT": -60000000.0, "SCENARIO": "SCN-NGFS-DISORDERLY", "DESK": "DESK-RATES"}
 ```
 
 #### Configure it

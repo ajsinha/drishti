@@ -125,15 +125,15 @@ id is the `id` header (or `message_id`), else the body's field `id-field.<queue>
 
 ```text
 exchange:     collateral                 routing key: margin.call.new
-queue:        drishti.margin-calls       (kind.drishti.margin-calls: margin-call, id-field.drishti.margin-calls: callId)
+queue:        drishti.margin-calls       (kind.drishti.margin-calls: margin-call, id-field.drishti.margin-calls: CALL_ID)
 properties:   delivery_mode 2 (persistent), headers {"id": "MC-CORAL-FRA-2"}        (the header is optional)
 body:
-{"callId": "MC-CORAL-FRA-2", "callDate": "2026-09-28", "marginType": "Variation", "direction": "We call",
- "amount": 128000.0, "status": "Settled", "disputeAmount": 0,
- "events": [{"at": "2026-09-28 09:05", "event": "Call issued", "by": "collateral-system"},
-            {"at": "2026-09-28 11:40", "event": "Agreed", "by": "counterparty ops"},
-            {"at": "2026-09-29 10:15", "event": "Settled", "by": "payments"}],
- "nettingSet": "NS-CORAL-FRA", "csa": "CSA-CORAL", "currency": "USD"}
+{"CALL_ID": "MC-CORAL-FRA-2", "CALL_DATE": "2026-09-28", "MARGIN_TYPE": "Variation", "DIRECTION": "We call",
+ "AMOUNT": 128000.0, "STATUS": "Settled", "DISPUTE_AMOUNT": 0,
+ "EVENTS": [{"AT": "2026-09-28 09:05", "EVENT": "Call issued", "BY": "collateral-system"},
+            {"AT": "2026-09-28 11:40", "EVENT": "Agreed", "BY": "counterparty ops"},
+            {"AT": "2026-09-29 10:15", "EVENT": "Settled", "BY": "payments"}],
+ "NETTING_SET": "NS-CORAL-FRA", "CSA": "CSA-CORAL", "CURRENCY": "USD"}
 ```
 
 The stored document is the body exactly (re-serialised); the connector adds nothing to it and removes nothing.
@@ -143,7 +143,7 @@ The stored document is the body exactly (re-serialised); the connector adds noth
 On a queue without a kind (no `kind.<queue>` and no `kind`), the body is an envelope:
 
 ```json
-{"kind": "netting-set", "id": "NS-CORAL-FRA", "doc": {"nettingSetId": "NS-CORAL-FRA", "counterparty": "CP-CORAL", "netMtm": 4120000.0}}
+{"kind": "netting-set", "id": "NS-CORAL-FRA", "doc": {"NETTING_SET_ID": "NS-CORAL-FRA", "COUNTERPARTY": "CP-CORAL", "NET_MTM": 4120000.0}}
 ```
 
 Here the envelope's `"id"` wins; the `id` header (or `message_id`) is used only when the envelope has no `"id"`. One
@@ -195,7 +195,7 @@ connectors:
       declare: true                                                # declare each queue durable, and bind it
       bind.drishti.margin-calls: collateral:margin.#               # exchange:routing.key; the exchange must exist
       kind.drishti.margin-calls: margin-call
-      id-field.drishti.margin-calls: callId
+      id-field.drishti.margin-calls: CALL_ID
       prefetch: 100
       state.max-gb: 20                                             # this connector's disk budget
       state.when-full: evict-oldest                                # the default; warn keeps everything
@@ -215,7 +215,7 @@ settings:
   queues: drishti.margin-calls,drishti.collateral-events
   declare: false                             # the platform team owns the queues; bind.* is ignored
   kind.drishti.margin-calls: margin-call
-  id-field.drishti.margin-calls: callId
+  id-field.drishti.margin-calls: CALL_ID
   # drishti.collateral-events has no kind: its messages are envelopes {kind, id, doc}
   heartbeat-seconds: '20'
   recovery-interval-ms: '2000'
@@ -582,7 +582,7 @@ drishti:
           uri: ${RABBIT_URI}                    # amqps://drishti:…@rabbit.bank.example:5671/collateral
           queues: collateral.calls
           kind.collateral.calls: collateral-call
-          id-field.collateral.calls: callId
+          id-field.collateral.calls: CALL_ID
           tls.ca-file: /etc/drishti/tls/ca.pem
 ```
 
@@ -722,7 +722,7 @@ settings:
   declare: true
   bind.drishti.margin-calls: collateral:margin.#
   kind.drishti.margin-calls: margin-call
-  id-field.drishti.margin-calls: callId
+  id-field.drishti.margin-calls: CALL_ID
   prefetch: '100'
   state.max-gb: '20'
   state.when-full: evict-oldest
@@ -818,9 +818,9 @@ A message for it:
 exchange:    collateral          routing key: margin.call.new
 queue:       drishti.margin-calls
 headers:     {"id": "MC-ALDERSHOT-FRA-2"}          (optional)
-body:        {"callId": "MC-ALDERSHOT-FRA-2", "callDate": "2026-09-30", "marginType": "Variation",
-              "direction": "They call", "amount": 250000.0, "status": "Issued", "nettingSet": "NS-ALDERSHOT-FRA",
-              "csa": "CSA-ALDERSHOT", "currency": "USD"}
+body:        {"CALL_ID": "MC-ALDERSHOT-FRA-2", "CALL_DATE": "2026-09-30", "MARGIN_TYPE": "Variation",
+              "DIRECTION": "They call", "AMOUNT": 250000.0, "STATUS": "Issued", "NETTING_SET": "NS-ALDERSHOT-FRA",
+              "CSA": "CSA-ALDERSHOT", "CURRENCY": "USD"}
 ```
 
 1. **Start a broker and create the exchange** (the connector never declares exchanges), then start the server with
@@ -839,12 +839,12 @@ body:        {"callId": "MC-ALDERSHOT-FRA-2", "callDate": "2026-09-30", "marginT
    curl -u guest:guest -H 'content-type: application/json' -X POST \
      http://localhost:15672/api/exchanges/%2f/collateral/publish \
      -d '{"routing_key":"margin.call.new","properties":{"headers":{"id":"MC-ALDERSHOT-FRA-2"}},"payload_encoding":"string",
-          "payload":"{\"callId\":\"MC-ALDERSHOT-FRA-2\",\"amount\":250000.0,\"status\":\"Issued\",\"nettingSet\":\"NS-ALDERSHOT-FRA\"}"}'
+          "payload":"{\"CALL_ID\":\"MC-ALDERSHOT-FRA-2\",\"AMOUNT\":250000.0,\"STATUS\":\"Issued\",\"NETTING_SET\":\"NS-ALDERSHOT-FRA\"}"}'
    ```
 
    The publish answers `{"routed":true}` when the binding matched.
 3. **Look at it in the terminal.** `MC MC-ALDERSHOT-FRA-2 <GO>`: provenance `margin-mq`, live. Publish again with
-   `"status":"Agreed"` and the view updates.
+   `"STATUS":"Agreed"` and the view updates.
 4. **Health and a broker outage** are in [section 11](#11-failure-and-recovery).
 
 ### Configuration by example

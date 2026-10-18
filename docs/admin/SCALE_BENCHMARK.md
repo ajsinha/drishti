@@ -15,6 +15,12 @@
 -->
 # Scale benchmark
 
+> **Measured on Drishti 1.12.0 (2026-10-01); the numbers are historical and were not re-measured for 2.3.0.** The searches below are shown
+> as they were run, on the 2.2-era generated book (fields `mtm`, `notional`, `book`, ids `END-…`). In 2.3.0 the trades carry the source
+> systems' UPPER_SNAKE attributes (`QUANTITY`, `PORTFOLIO`, `CURRENCY`; no MTM, that is the market-risk pack's trade valuation) and the
+> packs are `core`, `trading`, `market-data`, `market-risk`, `counterparty-risk`, `news-and-markets` and `world-economy`; the equivalent
+> searches today read `TRD where QUANTITY > 500m and CURRENCY = 'USD'` and `TRD PORTFOLIO=BOOK-RATES-3`. The method and the scripts are unchanged.
+
 This document describes a repeatable benchmark of Drishti's stores. It loads the same trading book into each store at
 several sizes, asks the same questions over HTTP, and fits a scaling curve to what it measured. It answers three
 questions:
@@ -41,7 +47,7 @@ Contents:
 ## 1. What is measured
 
 The book is the trading pack's generated book (`tools/samplegen/bulk_trades.py`): **N trades a day for three business
-days** (2026-09-28 to 2026-09-30), plus the banking packs' samples (17,910 documents of reference, market, risk, credit
+days** (2026-09-28 to 2026-09-30), plus the samples of the packs then shipped (the banking packs, since replaced by the seven packs above) (17,910 documents of reference, market, risk, credit
 and collateral data). The first 750 trades are the samples; the rest are clones in each booking system's own number
 range (`MX-30000000 …`, `CLY-4000000 …`, `END-1100000 …`). Every store is loaded with the project's own loader
 (`tools/load-<store>.sh … --trades N --days 3`), in the layout its connector reads at scale.
@@ -129,7 +135,7 @@ The stores and what `scale.sh` starts for them:
 | `iceberg` | none (path-based tables) | `iceberg`, `DRISHTI_ICEBERG_ROOT` at the scratch folder |
 
 The server runs `DRISHTI_PACKS=market-risk,counterparty-risk` (with the packs they extend: trading, market data,
-banking core), `java -Xmx2g -XX:+UseCompactObjectHeaders -jar drishti-server/target/drishti-server-*-exec.jar`, its
+the `core` pack), `java -Xmx2g -XX:+UseCompactObjectHeaders -jar drishti-server/target/drishti-server-*-exec.jar`, its
 identity database, governance and report folders in the scratch folder, the access log and the report scheduler off.
 
 Each result line looks like this:

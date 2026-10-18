@@ -127,14 +127,14 @@ Other properties and headers (`JMSType`, `JMSCorrelationID`, priority, expiry) a
 When the destination has a kind (`kind.<destination>`, or `kind` for every destination), the body is the document
 itself. The id is the `id` property, else the body's field `id-field.<destination>`, else `id-field` (default `id`).
 `<destination>` is the name without `queue:` or `topic:`. On `limits` with `kind.limits: credit-limit` and
-`id-field.limits: limitId`:
+`id-field.limits: LIMIT_ID`:
 
 ```text
 destination: queue://limits
-property id: LIM-ALDERSHOT                       (optional: else the body's limitId)
-body:        {"limitId": "LIM-ALDERSHOT", "counterparty": "CP-ALDERSHOT", "currency": "USD",
-              "limit": 338000000.0, "used": 241900000, "utilisation": 0.7157, "status": "Within limit",
-              "asOf": "2026-09-30T16:05:12Z"}
+property id: LIM-ALDERSHOT                       (optional: else the body's LIMIT_ID)
+body:        {"LIMIT_ID": "LIM-ALDERSHOT", "COUNTERPARTY": "CP-ALDERSHOT", "CURRENCY": "USD",
+              "LIMIT": 338000000.0, "USED": 241900000, "UTILISATION": 0.7157, "STATUS": "Within limit",
+              "AS_OF": "2026-09-30T16:05:12Z"}
 ```
 
 The id field is read at the top level only (`doc.path(field)`): `counterparty.id` is a field named
@@ -146,8 +146,8 @@ Any other destination carries an envelope:
 
 ```json
 {"kind": "netting-set", "id": "NS-MERIDIAN-RE-ISDA",
- "doc": {"nettingSetId": "NS-MERIDIAN-RE-ISDA", "counterparty": "CP-MERIDIAN-RE", "agreement": "ISDA-2002",
-         "netMtm": 18450210.55, "trades": 1282, "csa": true}}
+ "doc": {"NETTING_SET_ID": "NS-MERIDIAN-RE-ISDA", "COUNTERPARTY": "CP-MERIDIAN-RE", "AGREEMENT": "ISDA-2002",
+         "NET_MTM": 18450210.55, "TRADES": 1282, "CSA": true}}
 ```
 
 The `id` property stands in for a missing `"id"`. One destination can carry several kinds this way, and the kinds the
@@ -217,9 +217,9 @@ connectors:
       password: ${AMQ_PASSWORD}
       destinations: queue:limits,topic:limit-breaches,queue:risk.entities
       kind.limits: credit-limit
-      id-field.limits: limitId
+      id-field.limits: LIMIT_ID
       kind.limit-breaches: credit-limit
-      id-field.limit-breaches: limitId
+      id-field.limit-breaches: LIMIT_ID
       # risk.entities has no kind: its messages are envelopes {"kind", "id", "doc"}
       client-id: ${AMQ_CLIENT_ID:drishti-limits-mq}
       state.max-gb: 20                                        # this connector's disk budget
@@ -242,7 +242,7 @@ settings:
   password: ${AMQ_PASSWORD}
   destinations: queue:limits
   kind.limits: credit-limit
-  id-field.limits: limitId
+  id-field.limits: LIMIT_ID
   client-id: drishti-prod-1-limits-mq
   cache-mb: '256'
   state.root: /var/lib/drishti/state     # the store goes to /var/lib/drishti/state/limits-mq
@@ -518,7 +518,7 @@ The connector is undated. For history, serve the same kind from a dated connecto
 connectors:
   credit-store:  { plugin: delta, settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: credit } }
   limits-mq:     { plugin: activemq, kinds: [credit-limit], settings: { destinations: queue:limits,
-                   kind.limits: credit-limit, id-field.limits: limitId } }
+                   kind.limits: credit-limit, id-field.limits: LIMIT_ID } }
 routes:
   credit-limit: credit-store
 ```
@@ -666,7 +666,7 @@ drishti:
           password: ${AMQ_PASSWORD}
           destinations: queue:limits
           kind.limits: credit-limit
-          id-field.limits: limitId
+          id-field.limits: LIMIT_ID
           tls.ca-file: /etc/drishti/tls/ca.pem                 # one or many CA certificates
 ```
 
@@ -786,9 +786,9 @@ settings:
   password: ${AMQ_PASSWORD}
   destinations: queue:limits,topic:limit-breaches,queue:risk.entities
   kind.limits: credit-limit
-  id-field.limits: limitId
+  id-field.limits: LIMIT_ID
   kind.limit-breaches: credit-limit
-  id-field.limit-breaches: limitId
+  id-field.limit-breaches: LIMIT_ID
   client-id: ${AMQ_CLIENT_ID:drishti-limits-mq}
   state.max-gb: '20'
   state.when-full: evict-oldest
@@ -882,8 +882,8 @@ DRISHTI_LIMITS_MQ=true java -jar drishti-server/target/drishti-server-*-exec.jar
 # uv run --with stomp.py python send_limit.py
 import json, stomp
 c = stomp.Connection([("localhost", 61613)]); c.connect("admin", "admin", wait=True)
-c.send("/queue/limits", json.dumps({"limitId": "LIM-ALDERSHOT", "limit": 338000000.0, "used": 241900000,
-                                    "utilisation": 0.7157, "status": "Within limit"}), headers={"id": "LIM-ALDERSHOT"})
+c.send("/queue/limits", json.dumps({"LIMIT_ID": "LIM-ALDERSHOT", "LIMIT": 338000000.0, "USED": 241900000,
+                                    "UTILISATION": 0.7157, "STATUS": "Within limit"}), headers={"id": "LIM-ALDERSHOT"})
 c.disconnect()
 ```
 

@@ -19,8 +19,8 @@ Most connectors read a store: a lake, a database, a queue. The `news` plugin (mo
 nothing. Its documents are **computed when they are asked for**: the entity id carries a name, the connector searches Google News
 for it, reads the answer safely, filters and tidies it, and returns the headlines as an ordinary entity that the console lays out
 like any other. It is the teaching example for [connectors that compute data on demand](CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand);
-its sibling [YFINANCE.md](YFINANCE.md) does the same for market quotes. The sample packs
-[news-and-markets](../guides/PACKS.md#sample-packs) and [news-and-markets](../guides/PACKS.md#sample-packs) are built on them.
+its sibling [YFINANCE.md](YFINANCE.md) does the same for market quotes. The sample pack
+[news-and-markets](../guides/PACKS.md#sample-packs) is built on them.
 
 > **Privacy: names leave your network.** Every time a headline list is not in the cache, the connector sends the entity's name
 > (and the language and country of the edition) to `news.google.com`. For a company or a country that is harmless; for a client,
@@ -55,7 +55,7 @@ have been asked for since the server started can be found with the command-line 
 ## 2. Turning it on
 
 The connector is a site resource like any other: one file, `config/connectors/news.yaml`. It does not exist until a pack that uses it
-(`news-and-markets`, or `news-and-markets` which extends it) is loaded; the server then writes it **once** from the pack's template, with
+(`news-and-markets`) is loaded; the server then writes it **once** from the pack's template, with
 `enabled: ${DRISHTI_NEWS_ENABLED:false}`. To use it:
 
 ```
@@ -82,7 +82,7 @@ NEWS-<name>[@<language>-<COUNTRY>][~all]
 | `~all` | optional: no relevance filter for this read |
 
 A name can be 120 characters at most and holds no control characters; anything else is "not held". The id is what a pack's document
-holds (`newsId: NEWS-Federal_Reserve`), so a page can read the headlines with `source: "link($.newsId, 'news')"`.
+holds (`NEWS_ID: NEWS-Federal_Reserve`), so a page can read the headlines with `source: "link($.NEWS_ID, 'news')"`.
 
 ## 4. The logic, step by step
 
@@ -114,23 +114,23 @@ name the entity), `GET /api/v1/entities/news/NEWS-Federal_Reserve/raw`:
   "ref": { "kind": "news", "id": "NEWS-Federal_Reserve" },
   "provenance": { "source": "news", "generation": 1791705297924, "fetchedAt": "2026-10-11T07:54:57.924352637Z", "live": false, "businessDate": null },
   "data": {
-    "newsId": "NEWS-Federal_Reserve",
-    "entity": "Federal Reserve",
-    "aliases": ["Fed", "FOMC", "Powell"],
-    "edition": "en-US",
-    "relevanceFilter": "on",
-    "count": 3,
-    "fetchedAt": "2026-10-11 07:54 UTC",
-    "items": [
-      { "published": "2026-10-09 18:45 UTC", "source": "Reuters", "title": "Federal Reserve announces record quarter", "link": "https://news.example/a1", "snippet": "" },
-      { "published": "2026-10-08 07:15 UTC", "source": "Bloomberg", "title": "Why Federal Reserve shares moved on Thursday", "link": "https://news.example/b1", "snippet": "" },
-      { "published": "2026-10-07 12:00 UTC", "source": "Financial Times", "title": "Analysts react to Federal Reserve guidance", "link": "https://news.example/c1", "snippet": "" }
+    "NEWS_ID": "NEWS-Federal_Reserve",
+    "ENTITY": "Federal Reserve",
+    "ALIASES": ["Fed", "FOMC", "Powell"],
+    "EDITION": "en-US",
+    "RELEVANCE_FILTER": "on",
+    "COUNT": 3,
+    "FETCHED_AT": "2026-10-11 07:54 UTC",
+    "ITEMS": [
+      { "PUBLISHED": "2026-10-09 18:45 UTC", "SOURCE": "Reuters", "TITLE": "Federal Reserve announces record quarter", "LINK": "https://news.example/a1", "SNIPPET": "" },
+      { "PUBLISHED": "2026-10-08 07:15 UTC", "SOURCE": "Bloomberg", "TITLE": "Why Federal Reserve shares moved on Thursday", "LINK": "https://news.example/b1", "SNIPPET": "" },
+      { "PUBLISHED": "2026-10-07 12:00 UTC", "SOURCE": "Financial Times", "TITLE": "Analysts react to Federal Reserve guidance", "LINK": "https://news.example/c1", "SNIPPET": "" }
     ],
-    "bySource": [ { "source": "Reuters", "count": 1 }, { "source": "Bloomberg", "count": 1 }, { "source": "Financial Times", "count": 1 } ],
-    "pipeline": [ { "step": "relevance", "kept": 4, "dropped": 1 }, { "step": "duplicates", "kept": 3, "dropped": 1 }, { "step": "limit", "kept": 3, "dropped": 0 } ],
-    "fetched": 5,
-    "provenance": { "feed": "Google News RSS (127.0.0.1)", "fetched": "2026-10-11 07:54 UTC", "cachedFor": "600 s",
-                    "terms": "Headlines and links belong to their publishers; shown for information" }
+    "BY_SOURCE": [ { "SOURCE": "Reuters", "COUNT": 1 }, { "SOURCE": "Bloomberg", "COUNT": 1 }, { "SOURCE": "Financial Times", "COUNT": 1 } ],
+    "PIPELINE": [ { "STEP": "relevance", "KEPT": 4, "DROPPED": 1 }, { "STEP": "duplicates", "KEPT": 3, "DROPPED": 1 }, { "STEP": "limit", "KEPT": 3, "DROPPED": 0 } ],
+    "FETCHED": 5,
+    "PROVENANCE": { "FEED": "Google News RSS (127.0.0.1)", "FETCHED": "2026-10-11 07:54 UTC", "CACHED_FOR": "600 s",
+                    "TERMS": "Headlines and links belong to their publishers; shown for information" }
   }
 }
 ```
@@ -195,7 +195,7 @@ A failed read never returns "not held": it throws, so a view says the source fai
 
 **Linked panels and the link budget.** A page that reads headlines through `source: link(...)` waits for them at most
 `drishti.graph.link-budget` (40 ms by default). A web call takes longer, so the first view of a name shows its news panels as *pending*
-and the next view (within `cache-ttl-seconds`) shows the headlines. For a site that uses these sample packs, set the budget to a
+and the next view (within `cache-ttl-seconds`) shows the headlines. For a site that uses this sample pack, set the budget to a
 second or two (`drishti.graph.link-budget: 2s`, see [PERFORMANCE.md](../admin/PERFORMANCE.md)). While the connector is off the
 panels stay empty with the reason (`waiting for NEWS-...`), and the page's own note says why.
 
@@ -210,21 +210,21 @@ routes: { news: news }
 ```
 
 ```yaml
-# the entity's document:  {"topicId": "TOPIC-FED", "name": "Federal Reserve", "newsId": "NEWS-Federal_Reserve", ...}
+# the entity's document:  {"TOPIC_ID": "TOPIC-FED", "NAME": "Federal Reserve", "NEWS_ID": "NEWS-Federal_Reserve", ...}
 # its Sutra:
   - id: headlines
     kind: table
-    source: "link($.newsId, 'news')"
-    rows: $.items
+    source: "link($.NEWS_ID, 'news')"
+    rows: $.ITEMS
     columns:
-      - { label: Published, bind: "@.published" }
-      - { label: Source, bind: "@.source" }
-      - { label: Headline, bind: "@.title" }
-      - { label: Link, bind: "@.link" }       # a web address in a cell is shown as a link that opens in a new tab
+      - { label: Published, bind: "@.PUBLISHED" }
+      - { label: Source, bind: "@.SOURCE" }
+      - { label: Headline, bind: "@.TITLE" }
+      - { label: Link, bind: "@.LINK" }       # a web address in a cell is shown as a link that opens in a new tab
 ```
 
-The shipped examples are the `news-and-markets` pack (fifteen topics: central banks, countries, companies, themes) and the `news-and-markets`
-pack (twenty listed companies with a quote, a price chart and these headlines); both are sample packs, see [PACKS.md](../guides/PACKS.md#sample-packs).
+The shipped example is the `news-and-markets` pack: fifteen topics (central banks, countries, companies, themes) and twenty listed companies
+with a quote, a price chart and these headlines; it is a sample pack, see [PACKS.md](../guides/PACKS.md#sample-packs).
 
 ## 9. How it is built
 
