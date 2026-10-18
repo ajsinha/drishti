@@ -106,7 +106,7 @@ example ids are real: they are in the pack's `samples/` and in the [demo lakes](
 | `counterparty-risk` | `CCR` | `trading` | `AGR` master agreement (ISDA) · `CSA` credit support annex · `NSET` netting set · `LIM` credit limit · `EXP` exposure profile · `CVA` CVA / XVA · `SACCR` SA-CCR exposure · `COLL` collateral balance · `MC` margin call · `SIMM` ISDA SIMM initial margin | `AGR AGR-NORTHBRIDGE-ISDA`, `NSET NS-SUMMIT-NY` |
 | `market-risk` | `MRSK` | `market-data`, `trading` | `VAR` VaR / expected shortfall · `SCN` stress scenario · `STR` stress result · `FRTB` FRTB sensitivities · `PNL` P&L explain · `TVAL` trade valuation (MTM, P&L 1d, DV01 of every trade) | `VAR VAR-RATES`, `TVAL TVAL-MX-20000001` |
 | `world-economy` | `WRLD` | — | `ECON` economy · `MACRO` macro indicator · `FCST` IMF forecast · `LABR` labour market · `FISC` fiscal position · `ECG` country group · `REGE` region economy · `JUR` jurisdiction · `PARTY` party · `OFFC` office holder · `ELEC` election · `REGN` world region · `SOCI` social indicator (real public data for about 216 countries: World Bank, IMF, CIA World Factbook, UNDP; [REAL_DATA](REAL_DATA.md); not a sample, but the IMF part is for internal demonstrations only) | `ECON ECON-IND` |
-| `news-and-markets` | `NWMK` | — | `TOPIC` news topic · `NEWS` headlines · `CO` listed company · `QUOTE` quote and price history (fifteen topics and twenty well-known companies; headlines from the [news connector](../connectors/NEWS.md), quotes from the [yfinance connector](../connectors/YFINANCE.md); a sample pack, both connectors off as shipped; topics and companies also from the demo lake, connector `news-store`) | `TOPIC TOPIC-FED` |
+| `news-and-markets` | `NWMK` | — | `TOPIC` news topic · `NEWS` headlines · `CO` listed company · `QUOTE` quote and price history (fifteen topics and twenty well-known companies; headlines from the [news connector](../connectors/NEWS.md), quotes from the [yfinance connector](../connectors/YFINANCE.md); a sample pack, both connectors off as shipped; topics and companies also from the demo lake, connector `news-store`, and offline the quotes and headlines too, from a committed snapshot: [offline mode](#news-and-markets-and-world-economy-offline)) | `TOPIC TOPIC-FED` |
 
 What each pack holds, as shipped (counted in `config/packs/`):
 
@@ -258,7 +258,7 @@ a folder of Delta tables, one per kind, under `<root>/<domain>/`. The root is `$
 | `legal-store`, `credit-store`, `collateral-store` | `legal/`, `credit/`, `collateral/` | counterparty-risk | agreements and CSAs; netting sets, limits, exposure, CVA, SA-CCR; collateral, margin calls, SIMM |
 | `risk-store` | `risk/` | market-risk | the six kinds of `market-risk` |
 | `macro-store`, `civic-store` | `macro/`, `civic/` | world-economy | the economic kinds; the political and social kinds |
-| `news-store` | `news/` | news-and-markets | `news-topic`, `listed-company` |
+| `news-store` | `news/` | news-and-markets | `news-topic`, `listed-company`; and `quote`, `news` from the captured market snapshot (offline) |
 
 The committed test data (`data/testdata/`, seven business days of every dataset, 5,000 trades per source system) becomes those
 tables with **one command** (or the IDE run configuration **Build demo lakes**):
@@ -291,6 +291,31 @@ Start the server with the samples off so that every page reads the lakes: the ru
 signal for every table and date it wrote (`--server`, `--token-file`), and a running server also sees each rebuilt Delta date by
 itself and reads it again, so BI never shows old figures. The steps, the demo pages and the timings are in
 [data/testdata/README.md](../../data/testdata/README.md); every option of `lake demo` and `lake build` is in [TOOLS.md](TOOLS.md).
+
+### news-and-markets and world-economy offline
+
+A demonstration often runs on a laptop with no internet. Both packs then work fully from the repository:
+
+- **news-and-markets.** Its quotes (`QUOTE-<ticker>`, Yahoo Finance through the `yfinance` connector) and headlines (`NEWS-<name>`,
+  Google News through the `news` connector) are computed live, so the repository keeps a **real snapshot** of them:
+  `data/testdata/news-and-markets/quote/` (the twenty companies, a year of daily bars each) and `news/` (the companies' and the
+  fifteen topics' headlines, filtered and `~all`), captured through the pack's own connectors by `drishti.py testdata capture-market`.
+  `lake demo` builds them into `news/quote` and `news/news`, which the pack's `news-store` connector serves beside the topics and
+  companies. Every page reads the same documents it reads live (same Sutras, same panels); a quote's *As of* and the headlines'
+  *Fetched* end in *(snapshot captured <date>)*, and the quote and headline pages add a **Snapshot** note. The data belongs to its
+  providers and is shown for demonstration only.
+- **world-economy.** Already offline: all thirteen kinds (`economy`, `macro-indicator`, `economic-forecast`, `labour-market`,
+  `fiscal-position`, `country-group`, `region-economy`, `jurisdiction`, `party`, `office-holder`, `election`, `region`,
+  `social-indicator`) are the pack's samples (real World Bank, IMF, CIA World Factbook and UNDP figures captured when the pack was
+  built; [REAL_DATA](REAL_DATA.md)), served by `macro-store` and `civic-store` from the demo lake. The pack has no live connector.
+- **Offline mode.** Start the server with `DRISHTI_OFFLINE=true` (the run configuration **Drishti server (demo lakes)** sets it):
+  the `news`, `yfinance` and public-data `feed` connectors never start, even when a file enables them, so nothing waits on the
+  network and Admin → Connectors shows them **off (offline mode)** while `news-store`, `macro-store` and `civic-store` run
+  ([CONFIGURATION](../admin/CONFIGURATION.md#drishtioffline--offline-mode-no-internet)). Without it the snapshot still answers
+  whenever the live connectors are off (their shipped state); with them on and the internet there, the live connector is asked first.
+
+Refresh the snapshot on a machine with internet: `drishti.py testdata capture-market` (about four minutes: two seconds between calls),
+then `drishti.py lake demo` and commit `data/testdata` ([data/testdata/README.md](../../data/testdata/README.md#the-market-snapshot-news-and-markets-offline)).
 
 ## Turning packs on
 

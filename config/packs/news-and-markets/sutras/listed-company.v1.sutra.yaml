@@ -77,7 +77,7 @@ panels:
     kind: markdown
     title: "About this page"
     area: right
-    text: "Sample pack for internal demonstrations. The quote and history come from Yahoo Finance's unofficial public endpoint and the headlines from Google News, each by its own connector, both off until a site enables them (Admin, Connectors: yfinance and news). Turning them on sends this ticker to Yahoo and this company's name to Google. While the connectors are off (their shipped state) the panels above stay empty."
+    text: "Sample pack for internal demonstrations. The quote and history come from Yahoo Finance's unofficial public endpoint and the headlines from Google News, each by its own connector, both off until a site enables them (Admin, Connectors: yfinance and news). Turning them on sends this ticker to Yahoo and this company's name to Google. With the connectors off (their shipped state) or the server in offline mode (DRISHTI_OFFLINE=true), the demo lake serves a captured snapshot of the same quote, history and headlines: the quote's As of then ends in (snapshot captured <date>), and without a lake the panels above stay empty."
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.QUOTE_ID, 'quote')", F8: "link($.NEWS_ID, 'news')", F9: raw }

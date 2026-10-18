@@ -552,6 +552,9 @@ public final class ConnectorManager {
         if ("DISABLED".equals(state)) {
             return new String[] {"off", "disabled"};
         }
+        if (com.ash.drishti.engine.source.OfflineMode.STATE.equals(state)) {
+            return new String[] {"off", "off (offline mode)"};
+        }
         if ("FAILED".equals(state)) {
             return new String[] {"down", retrying ? "failed, retrying" : "failed"};
         }
@@ -586,7 +589,8 @@ public final class ConnectorManager {
         if (fileProblems.containsKey(name)) {
             out.add(fileProblems.get(name) + (registry.applied(name).isPresent() ? " (the last good configuration is running)" : ""));
         }
-        if (status != null && status.problem() != null && !"RUNNING".equals(status.state()) && !"DISABLED".equals(status.state())) {
+        if (status != null && status.problem() != null && !"RUNNING".equals(status.state()) && !"DISABLED".equals(status.state())
+                && !com.ash.drishti.engine.source.OfflineMode.STATE.equals(status.state())) {
             out.add(status.state().equals("IDLE") ? "not configured: " + status.problem() : status.problem());
         }
         if (applicationDefined.contains(name)) {

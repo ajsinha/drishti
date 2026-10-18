@@ -21,7 +21,7 @@
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 {% from "_macros/retry.html" import retry_note, retry_button %}
-{% set states = {'RUNNING': ['running', 'st-ok'], 'FAILED': ['failed', 'st-bad'], 'DISABLED': ['disabled', ''], 'IDLE': ['idle', 'st-warn'], 'NOT_LOADED': ['not started', 'st-warn']} %}
+{% set states = {'RUNNING': ['running', 'st-ok'], 'FAILED': ['failed', 'st-bad'], 'DISABLED': ['disabled', ''], 'OFFLINE': ['off (offline mode)', ''], 'IDLE': ['idle', 'st-warn'], 'NOT_LOADED': ['not started', 'st-warn']} %}
 <div class="adm" data-connectors data-zone="{{ (business_date or {}).get('zone') or CLOCK_TZ or 'America/New_York' }}" data-watch="/admin/connectors/api/stamp" data-detail="{{ c.name }}" data-kinds="{{ (known_kinds or []) | join(',') }}" data-directory="{{ c.directory }}">
   {% with tab='connectors' %}{% include "admin/_nav.html" %}{% endwith %}
   <p class="adm-crumb"><a href="/admin/connectors">Connectors</a> <span aria-hidden="true">/</span> <span class="mono">{{ c.name }}</span></p>

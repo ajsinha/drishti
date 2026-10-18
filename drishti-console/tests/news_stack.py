@@ -93,10 +93,13 @@ def chart(symbol: str) -> bytes:
 
 
 class _Fake(BaseHTTPRequestHandler):
+    requests: list[str] = []          # every request the fakes answered (offline mode must leave this empty)
+
     def log_message(self, *args):  # noqa: D401 - quiet
         pass
 
     def do_GET(self):  # noqa: N802
+        _Fake.requests.append(self.path)
         url = urllib.parse.urlparse(self.path)
         if url.path.startswith("/rss/search"):
             q = urllib.parse.parse_qs(url.query).get("q", [""])[0]
@@ -116,8 +119,10 @@ class _Fake(BaseHTTPRequestHandler):
 
 
 class Stack:
-    def __init__(self, tmp: Path, connectors_on: bool = True):
-        self.tmp, self.procs, self.connectors_on, self.fake = tmp, {}, connectors_on, None
+    def __init__(self, tmp: Path, connectors_on: bool = True, offline: bool = False):
+        """``offline``: DRISHTI_OFFLINE=true over a demo lake of the news-and-markets pack built from the committed snapshot
+        (``drishti.py lake demo --only news-and-markets``), with the live connectors still switched on in their files."""
+        self.tmp, self.procs, self.connectors_on, self.offline, self.fake = tmp, {}, connectors_on, offline, None
 
     def start(self) -> "Stack":
         for port in (SERVER_PORT, CONSOLE_PORT):
@@ -126,6 +131,7 @@ class Stack:
         java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
         if not jars or not Path(java).exists():
             raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
+        _Fake.requests = []
         self.fake = ThreadingHTTPServer(("127.0.0.1", 0), _Fake)
         threading.Thread(target=self.fake.serve_forever, daemon=True).start()
         base = f"http://127.0.0.1:{self.fake.server_address[1]}"
@@ -135,6 +141,14 @@ class Stack:
         env = dict(os.environ, DRISHTI_PACKS="news-and-markets", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS_SAMPLES="visible",
                    DRISHTI_NEWS_ENABLED=on, DRISHTI_NEWS_URL=base + "/rss/search", DRISHTI_YFINANCE_ENABLED=on, DRISHTI_YFINANCE_URL=base + "/v8/finance/chart",
                    DRISHTI_CONNECTORS_DIR=str(work / "connectors"), DRISHTI_GRAPH_LINK_BUDGET="3s")
+        if self.offline:
+            lake = self.tmp / "delta"
+            built = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--only", "news-and-markets", "--lake", str(lake),
+                                    "--as-of", "today", "--connectors-dir", str(work / "connectors"), "--no-signal", "-q"],
+                                   env=dict(os.environ, DRISHTI_DATA_DIR=str(self.tmp / "data")), capture_output=True, text=True, timeout=600)
+            if built.returncode:
+                raise RuntimeError("lake demo failed: " + built.stderr[-2000:])
+            env.update(DRISHTI_OFFLINE="true", DRISHTI_DELTA_ROOT=str(lake), DRISHTI_DATA_DIR=str(work / "data"))
         self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}"], cwd=work, env=env,
                                                 stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
         wait(SERVER + "/actuator/health")

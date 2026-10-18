@@ -45,6 +45,8 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     private final List<SourcePlugin> discovered;
     private final JsonCodec codec;
     private final SourcesProperties props;
+    /** Offline mode: connectors of internet plugins never start ({@code DRISHTI_OFFLINE}). */
+    private final OfflineMode offline;
     private final Map<String, java.util.concurrent.locks.ReentrantLock> locks = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, ConnectorStatus> statuses = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, SourcesProperties.ConnectorSettings> applied = new java.util.concurrent.ConcurrentHashMap<>();
@@ -54,7 +56,8 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     /**
      * Where a named connector stands.
      *
-     * @param state {@code RUNNING}, {@code DISABLED}, {@code IDLE} (installed, not configured) or {@code FAILED}
+     * @param state {@code RUNNING}, {@code DISABLED}, {@code IDLE} (installed, not configured), {@code FAILED} or {@code OFFLINE} (an
+     *     internet plugin's connector while offline mode is on: {@link OfflineMode})
      * @param problem why it is not running, or null
      * @param since when this state began
      */
@@ -128,6 +131,13 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     }
 
     public SourceRegistry(List<SourcePlugin> discovered, SourcesProperties props, JsonCodec codec, com.ash.drishti.common.RetryPolicy policy) {
+        this(discovered, props, codec, policy, OfflineMode.OFF);
+    }
+
+    /** As above; while {@code offline} is on, no connector (or plugin running as itself) of an internet plugin starts. */
+    public SourceRegistry(List<SourcePlugin> discovered, SourcesProperties props, JsonCodec codec, com.ash.drishti.common.RetryPolicy policy,
+            OfflineMode offline) {
+        this.offline = offline == null ? OfflineMode.OFF : offline;
         this.retry = new com.ash.drishti.common.RetryBoard("connector", policy);
         this.discovered = List.copyOf(discovered);
         this.codec = codec;
@@ -143,6 +153,7 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         List<SourcePlugin> enabled = new ArrayList<>(discovered.stream()
                 .filter(p -> !viaConnectors.contains(p.manifest().name()) || props.plugins().containsKey(p.manifest().name()))
                 .filter(p -> props.settingsFor(p.manifest().name()).enabled())
+                .filter(p -> !this.offline.blocks(p.manifest().name()))
                 .toList());
         Map<SourcePlugin, Map<String, String>> settings = new java.util.IdentityHashMap<>();
         enabled.forEach(p -> settings.put(p, props.settingsFor(p.manifest().name()).settings()));
@@ -151,6 +162,11 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
             order.add(name);
             if (!c.enabled()) {
                 statuses.put(name, new ConnectorStatus("DISABLED", null, java.time.Instant.now()));
+                return;
+            }
+            if (this.offline.blocks(c.plugin())) {
+                statuses.put(name, new ConnectorStatus(OfflineMode.STATE, this.offline.reason(c.plugin()), java.time.Instant.now()));
+                LOG.info("connector {} not started: {}", name, this.offline.reason(c.plugin()));
                 return;
             }
             try {
@@ -466,6 +482,11 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
                 retry.forget(name);
                 return status(name, "DISABLED", null);
             }
+            if (offline.blocks(c.plugin())) {
+                failures.remove(name);
+                retry.forget(name);
+                return status(name, OfflineMode.STATE, offline.reason(c.plugin()));
+            }
             SourcePlugin instance;
             try {
                 instance = instantiate(name, c);
@@ -566,6 +587,11 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     }
 
     /** State of every named connector the registry knows. */
+    /** Offline mode as the server started with it. */
+    public OfflineMode offline() {
+        return offline;
+    }
+
     public Map<String, ConnectorStatus> connectorStatuses() {
         return Map.copyOf(statuses);
     }

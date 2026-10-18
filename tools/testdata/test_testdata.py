@@ -99,6 +99,9 @@ class TestData(unittest.TestCase):
             if "samples" in ds:
                 self.assertTrue((ROOT / ds["samples"]).is_dir(), ds)
                 continue
+            if "snapshot" in ds:
+                self.assertTrue((TD / ds["folder"] / ds["snapshot"]).is_file(), ds)
+                continue
             folder = TD / ds["folder"]
             self.assertTrue(list(folder.glob(f"snapshot-{self.dates[0]}*.jsonl.gz")), ds["folder"])
             for day in self.dates[1:]:
@@ -127,7 +130,7 @@ class TestData(unittest.TestCase):
         for ds in self.m["datasets"]:
             if "folder" not in ds:
                 continue
-            f = sorted((TD / ds["folder"]).glob(f"snapshot-{self.dates[0]}*.jsonl.gz"))[0]
+            f = TD / ds["folder"] / ds["snapshot"] if "snapshot" in ds else sorted((TD / ds["folder"]).glob(f"snapshot-{self.dates[0]}*.jsonl.gz"))[0]
             for n, d in enumerate(lines(f)):
                 bad = sorted({k for k in names(d) if not UPPER.match(k)})
                 self.assertEqual(bad, [], f"{ds['folder']}: {bad[:5]}")
@@ -147,6 +150,28 @@ class TestData(unittest.TestCase):
             self.assertTrue(all(endur[t]["COUNTERPARTY"] == cp for t in held))
         uens = [d["UEN"] for d in cps.values()]
         self.assertEqual(len(uens), len(set(uens)), "UEN unique")
+
+    def test_the_captured_market_snapshot_covers_every_company_and_topic(self):
+        snaps = {ds["kind"]: ds for ds in self.m["datasets"] if "snapshot" in ds}
+        if not snaps:
+            self.skipTest("no captured market snapshot (tools/testdata/capture_market.py)")
+        self.assertEqual(set(snaps), {"quote", "news"})
+        sys.path.insert(0, str(ROOT / "tools" / "testdata"))
+        import capture_market as CM
+        want = CM.targets(ROOT / "config" / "packs" / "news-and-markets")
+        for kind, ds in snaps.items():
+            self.assertEqual((ds["pack"], ds["connector"]), ("news-and-markets", "news-store"))
+            docs = {d[ds["key"]]: d for d in lines(TD / ds["folder"] / ds["snapshot"])}
+            self.assertEqual(len(docs), ds["documents"])
+            self.assertTrue(re.fullmatch(r"snapshot-\d{4}-\d{2}-\d{2}\.jsonl\.gz", ds["snapshot"]), ds["snapshot"])
+            self.assertLess(ds["bytes"], 3 * 1024 * 1024, "keep the snapshot small")
+            gone = [i for i in want[kind] if i not in docs]
+            self.assertLessEqual(len(gone), len(want[kind]) // 10, f"{kind}: not captured {gone}")
+            for d in docs.values():
+                self.assertTrue(d["SNAPSHOT"].startswith("Snapshot captured ") and d["SNAPSHOT_CAPTURED_AT"].endswith("Z"), d[ds["key"]])
+                self.assertIn("SNAPSHOT", d["PROVENANCE"])
+        quotes = [d for d in lines(TD / snaps["quote"]["folder"] / snaps["quote"]["snapshot"])]
+        self.assertTrue(all(len(q["HISTORY"]) >= 200 for q in quotes), "about a year of daily bars per company")
 
     def test_no_real_data_in_the_test_data(self):
         cps = {d["COUNTERPARTY_ID"] for d in rebuild("core/counterparty", "COUNTERPARTY_ID", self.dates)}

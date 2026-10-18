@@ -23,6 +23,9 @@ For every dataset of data/testdata/testdata.yaml (written by tools/testdata/make
 into the table the dataset's Delta connector reads: <lake>/<domain>/<kind>/, the trades into trading/trade_endur, trade_calypso and
 trade_murex, partitioned by business date (and PRODUCT_TYPE for trades). Each table is written afresh (its folder is removed first).
 Datasets of static reference data (world-economy, news-and-markets) are built from their packs' samples, the same on every day.
+The news-and-markets pack's captured market snapshot (data/testdata/news-and-markets/quote and news: real quotes and headlines,
+written by `drishti.py testdata capture-market`) becomes news/quote and news/news, the same snapshot on every day and never re-dated,
+so the pack's quote and headline pages work with no internet (the live connectors off, or DRISHTI_OFFLINE=true).
 
 Connector files: the seven packs' Delta connectors read ${DRISHTI_DELTA_ROOT:<data>/delta}. With the default lake nothing needs
 changing; a connector file (config/connectors/<name>.yaml) that points elsewhere, or any of them when --lake is another folder, is
@@ -289,6 +292,15 @@ class DemoLake:
 
     # ---- one dataset -------------------------------------------------------------------------------------------------------------------
     def states(self, ds: dict):
+        if "snapshot" in ds:                                  # a captured snapshot (real, dated): the same documents every day
+            state = {}
+            with gzip.open(self.testdata / ds["folder"] / ds["snapshot"], "rt", encoding="utf-8") as fh:
+                for line in fh:
+                    if line.strip():
+                        state[_key(json.loads(line), ds["key"])] = line.rstrip("\n")
+            for _ in self.manifest.dates:
+                yield state
+            return
         if "samples" in ds:
             sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
             import packsamples
@@ -329,7 +341,7 @@ class DemoLake:
                 key = next((k for k in json.loads(next(iter(state.values()))) if k.endswith("_ID")), "id") if state else "id"
             with stage.open("w", encoding="utf-8") as fh:
                 for line in state.values():
-                    fh.write(self.redate(line) + "\n")
+                    fh.write((line if "snapshot" in ds else self.redate(line)) + "\n")
             argv = ["--from", str(stage), "--pack", str(self.packs.dir / pack), "--kind", kind, "--connector", connector, "--key", key,
                     "--as-of", day, "--lake", str(self.lake), "--engine", self.a.engine, "-q", "--no-stamp"]
             for p in ds.get("partition-by") or []:
@@ -344,7 +356,8 @@ class DemoLake:
         self.tables.append(f"{domain}/{table}")
         self.written.append((pack, kind, f"{domain}/{table}"))
         if not self.a.quiet:
-            print(f"  {domain}/{table}: {rows:,} rows over {len(self.manifest.dates)} days" + (" (failed)" if worst == 1 else ""))
+            note = f" (snapshot captured {ds.get('captured') or ds['snapshot']})" if "snapshot" in ds else ""
+            print(f"  {domain}/{table}: {rows:,} rows over {len(self.manifest.dates)} days{note}" + (" (failed)" if worst == 1 else ""))
         return worst
 
     def write_feeds(self) -> pathlib.Path:
@@ -428,8 +441,8 @@ class DemoLake:
         env = "" if self.lake == self.resolve(DEFAULT_ROOT) else f"DRISHTI_DELTA_ROOT={self.lake} "
         print("\nNext:\n"
               "  1. Start the server on the lakes: IDE run configuration 'Drishti server (demo lakes)' (the samples off, so every page reads\n"
-              "     the lakes), or\n"
-              f"     {env}DRISHTI_DEMO_ENABLED=false DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets "
+              "     the lakes; offline mode on, so quotes and headlines come from the captured snapshot and nothing reaches the internet), or\n"
+              f"     {env}DRISHTI_DEMO_ENABLED=false DRISHTI_OFFLINE=true DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets "
               "java -jar drishti-server/target/drishti-server-*-exec.jar\n"
               "  2. Start the console: run configuration 'Drishti console' (sign in as drishti-dev-admin / drishti-dev-admin123), or\n"
               "     drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=17480 --backend.url=http://127.0.0.1:18480\n"

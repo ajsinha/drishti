@@ -1449,6 +1449,19 @@ expectations:
 > `data ingest`, `data ingest --watch` and `pack make` stage data for a demo, a small team or a proof of concept. They are **not** a production
 > ETL: in production your own ETL loads the store and ends by calling `data landed`.
 
+### `testdata capture-market`: the market snapshot for offline demos
+
+On a machine with internet, captures the news-and-markets pack's real quotes (the twenty companies, a year of daily bars) and
+headlines (the companies and the fifteen topics) through Drishti's own `yfinance` and `news` connectors, on a scratch server it starts
+from the built jar (`--server URL` uses yours), two seconds apart with backoff on 429, into
+`data/testdata/news-and-markets/{quote,news}/snapshot-<date>.jsonl.gz`; `lake demo` then builds them into the tables `news-store`
+serves offline (`DRISHTI_OFFLINE=true`). `--dry-run` lists the 91 ids without fetching. Everything else:
+[data/testdata/README.md](../../data/testdata/README.md#the-market-snapshot-news-and-markets-offline).
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py testdata capture-market
+```
+
 ### `data load`: the demo data, at three sizes
 
 `data load --store S` runs `tools/load-S.sh`, which builds the **shipped banking packs' demo data** (1,791 sample documents

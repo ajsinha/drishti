@@ -258,6 +258,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_HTTP_PROXY_USERNAME` | `drishti.http.proxy.username` | empty | The proxy's Basic-authentication user. |
 | `DRISHTI_HTTP_PROXY_PASSWORD` | `drishti.http.proxy.password` | empty | The proxy's password: an environment variable, never a literal in a file. |
 | `DRISHTI_DEMO_ENABLED` | `drishti.sources.plugins.demo.enabled` | `true` | Run the demo source (the packs' sample data). |
+| `DRISHTI_OFFLINE` | `drishti.offline.enabled` | `false` | Offline mode, for a machine with no internet: connectors of the internet plugins (`drishti.offline.plugins`: `news`, `yfinance`, `feed`) never start, whatever their files say; Admin → Connectors shows them *off (offline mode)*. See [`drishti.offline`](#drishtioffline--offline-mode-no-internet). |
 | `DRISHTI_FEEDS` | `drishti.sources.plugins.file.settings.root` | `./data/feeds` | The folder the bundled `file` source reads. |
 | `DRISHTI_REST_ENABLED` | `drishti.sources.plugins.rest.enabled` | `false` | Run the `rest` source. |
 | `DRISHTI_REST_URL` | `drishti.sources.plugins.rest.settings.base-url` | `http://localhost:9000/api` | The REST source's base URL. |
@@ -473,6 +474,22 @@ the troubleshooting table, is [TLS.md (proxy)](../connectors/TLS.md#outbound-htt
 
 The console's AI and MCP clients read the same `DRISHTI_HTTP_PROXY_URL`, `_USERNAME`, `_PASSWORD`, `_NO_PROXY`, `_ENABLED` and `_FROM_ENVIRONMENT` environment variables. A connector's
 own `proxy.*` block is a connector setting (a row of `proxy.*` in each connector's settings table), not a server setting.
+
+### `drishti.offline` — offline mode (no internet)
+
+For a machine with no internet, such as a demonstration laptop: with `DRISHTI_OFFLINE=true` no connector of an internet plugin starts,
+whatever its file says, so nothing tries the network, nothing waits out a timeout and no connector turns health red. Such a connector is
+reported in the state `OFFLINE`, shown as **off (offline mode)** in Admin → Connectors (no problem, no retry); its kinds are served by
+the other connectors that hold them. The shipped packs keep a snapshot for exactly that: the news-and-markets pack's `news-store` serves
+`quote` and `news` from the market snapshot committed in `data/testdata/news-and-markets` (built into the lake by `drishti.py lake demo`;
+[data/testdata/README.md](../../data/testdata/README.md#the-market-snapshot-news-and-markets-offline)), and the market-data pack's
+`market-store` serves the kinds of its public-data feeds. The run configuration **Drishti server (demo lakes)** sets it. Read once at
+start: a connector file saved in Admin while the server runs cannot start an internet connector either; restart without it to go live.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `drishti.offline.enabled` | `false` (`DRISHTI_OFFLINE`) | `true`, `on`, `yes` or `1` turns offline mode on. |
+| `drishti.offline.plugins` | `news,yfinance,feed` | The plugins whose connectors reach the internet (comma-separated, by plugin name, not connector name): Google News, Yahoo Finance, and the public-data feeds (US Treasury, ECB, NY Fed, FRED). Add `rest` or another plugin when a site's connectors of it reach the internet too. |
 
 ### AI and MCP policy settings
 
@@ -2476,6 +2493,7 @@ Server (S), console (C), or both.
 | `DRISHTI_DEFAULT_PACKS` | S | `drishti.packs.default-for-users` |
 | `DRISHTI_PLUGIN_DIR` | S | `drishti.sources.plugin-dir` |
 | `DRISHTI_DEMO_ENABLED` | S | `drishti.sources.plugins.demo.enabled` |
+| `DRISHTI_OFFLINE` | S | `drishti.offline.enabled` |
 | `DRISHTI_FEEDS` | S | `drishti.sources.plugins.file.settings.root` |
 | `DRISHTI_REST_ENABLED`, `DRISHTI_REST_URL` | S | the `rest` plugin |
 | `DRISHTI_JDBC_ENABLED`, `DRISHTI_JDBC_URL`, `DRISHTI_JDBC_USER`, `DRISHTI_JDBC_PASSWORD` | S | the `jdbc` plugin |

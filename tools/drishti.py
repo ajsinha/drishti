@@ -19,7 +19,7 @@
 
 Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback,
 publish, keygen, install), data (profile and ingest your own JSON Lines or watch a drop folder, load the demo data), server (health, packs, smoke),
-lake (build a Delta lake from a large JSON export, scan, status, maintain), view (get, explain), doctor, completion, design (the Screen Designer's designs over
+lake (build a Delta lake from a large JSON export, scan, status, maintain), testdata (capture-market: a real offline snapshot), view (get, explain), doctor, completion, design (the Screen Designer's designs over
 REST: create, save, check, propose, approve, export, import, bind) and docs (screenshots).
 Needs Python 3.10+ and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
 recipes and real output is docs/guides/CLI_GUIDE.md.
@@ -74,6 +74,10 @@ def load_module(name: str, rel: str):
     finally:
         sys.path.remove(str(TOOLS))
     return mod
+
+
+def cmd_testdata_capture_market(a, extra) -> int:
+    return load_module("capture_market", "testdata/capture_market.py").run(a)
 
 
 def sutragen():
@@ -1238,6 +1242,13 @@ def build_parser() -> argparse.ArgumentParser:
         else:
             p.add_argument("--table", action="store_true", help="text tables (the default; --json gives the raw view)")
     load_module("lakecli", "lake/cli.py").register(groups, add, srv)   # lake build|scan|status|demo|maintain
+    td = group("testdata", "The committed test data (data/testdata): capture the news-and-markets pack's real market snapshot for offline demos")
+    CM = load_module("capture_market", "testdata/capture_market.py")
+    add(td, "capture-market", cmd_testdata_capture_market, "testdata capture-market: fetch the 20 companies' quotes (1y daily history) and the "
+        "companies' and topics' headlines through Drishti's own yfinance and news connectors (a scratch server), politely, into "
+        "data/testdata/news-and-markets (needs internet)", [CM.build_parser(add_help=False)],
+        "examples:\n  drishti.py testdata capture-market\n  drishti.py testdata capture-market --dry-run\n"
+        "  drishti.py testdata capture-market --server http://localhost:18990 --only news\nThen: drishti.py lake demo. Guide: data/testdata/README.md")
 
     cp = groups.add_parser("completion", help="completion: print a shell completion script (bash, zsh, powershell)",
                            description="Generated from the command tree, so it is always current. bash: source <(drishti.py completion bash); zsh: source <(drishti.py completion zsh); "

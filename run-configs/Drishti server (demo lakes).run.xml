@@ -16,6 +16,11 @@
   The demo lakes, read with the samples off (DRISHTI_DEMO_ENABLED=false): every page reads the lakes, and nothing ticks. For
   tutorial 12 (live BI and boards) set DRISHTI_DEMO_ENABLED=true below: the demo source then ticks the live trades about twice a
   second (data/testdata/README.md, "The demo ticker").
+
+  Offline mode (DRISHTI_OFFLINE=true): the server never reaches the internet. The news and yfinance connectors do not start (Admin,
+  Connectors shows them "off (offline mode)"), and the news-and-markets quotes and headlines come from the captured snapshot that
+  `drishti.py lake demo` builds into news/quote and news/news. Set it to false on a machine with internet to use the live connectors
+  (when they are enabled).
 -->
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Drishti server (demo lakes)" type="Application" factoryName="Application" folderName="Drishti">
@@ -34,6 +39,7 @@
       <env name="DRISHTI_EXTERNAL_LIB" value="$PROJECT_DIR$/external_lib" />
       <env name="DRISHTI_PORT" value="18480" />
       <env name="DRISHTI_DEMO_ENABLED" value="false" />
+      <env name="DRISHTI_OFFLINE" value="true" />
     </envs>
     <method v="2">
       <option name="Make" enabled="true" />
