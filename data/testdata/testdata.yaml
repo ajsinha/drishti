@@ -2786,3 +2786,23 @@ datasets:
   pack: news-and-markets
   kind: news-topic
   connector: news-store
+- folder: news-and-markets/quote
+  pack: news-and-markets
+  kind: quote
+  connector: news-store
+  key: QUOTE_ID
+  snapshot: snapshot-2026-10-18.jsonl.gz
+  captured: '2026-10-18T03:24:33Z'
+  source: Yahoo Finance (yfinance connector)
+  documents: 20
+  bytes: 133684
+- folder: news-and-markets/news
+  pack: news-and-markets
+  kind: news
+  connector: news-store
+  key: NEWS_ID
+  snapshot: snapshot-2026-10-18.jsonl.gz
+  captured: '2026-10-18T03:24:33Z'
+  source: Google News (news connector)
+  documents: 71
+  bytes: 144798
