@@ -190,7 +190,7 @@ def test_phone_pages_show_content_have_finger_sized_targets_and_clip_nothing(bro
     page = ctx.new_page()
     broken, small, clipped = [], [], []
     try:
-        for url in _pages(["trade/END-1000008"]):
+        for url in _pages(["trade/1000008"]):
             if url == "/history":                      # a page that does not exist (it is in the sweep as a 404 page)
                 continue
             resp = page.goto(console_url + url, wait_until="load", timeout=BROWSER_WAIT_MS)

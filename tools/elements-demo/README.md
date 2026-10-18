@@ -61,8 +61,8 @@ python3 tools/elements-demo/server.py --port 17968 --console http://127.0.0.1:17
 ```
 
 Open <http://127.0.0.1:17968/>, press **viewer** or **author** (the host's two demo users), and the trade
-`END-1000008` appears with its MTM ticking. Both users see masked fields (`•••`) even though `author` holds the `raw` role: embedded views always mask. Open the
-console's own page (`http://127.0.0.1:17969/v/trade/END-1000008`) beside it to see the same trade unmasked.
+`1000008` appears with its MTM ticking. Both users see masked fields (`•••`) even though `author` holds the `raw` role: embedded views always mask. Open the
+console's own page (`http://127.0.0.1:17969/v/trade/1000008`) beside it to see the same trade unmasked.
 
 ## What to try
 

@@ -38,4 +38,4 @@ export async function demoSignIn(user = 'viewer') {
 }
 
 /** What every sample shows: the entity the search picked, and the report. */
-export const START = { kind: 'trade', id: 'END-1000008', report: 'file:report:live-trading-desk' };
+export const START = { kind: 'trade', id: '1000008', report: 'file:report:live-trading-desk' };

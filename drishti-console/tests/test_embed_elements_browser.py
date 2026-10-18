@@ -98,8 +98,8 @@ def register_host() -> str:
                                                      "jwks": jwks, "subjectTypes": ["jwt"], "callsPerMinute": 100000, "userCallsPerMinute": 100000})
     return made["secret"]
 BROWSERS = ["chromium", "firefox", "webkit"]
-MAIN_ID, SIDE_ID = "END-1000008", "END-1000002"
-RAPID = [f"END-10000{n:02d}" for n in (6, 7, 9, 10, 11, 12, 13, 14, 15, 16)]      # ten trades for the rapid-switching test
+MAIN_ID, SIDE_ID = "1000008", "1000002"
+RAPID = [f"10000{n:02d}" for n in (6, 7, 9, 10, 11, 12, 13, 14, 15, 16)]      # ten trades for the rapid-switching test
 
 
 def _listening(port: int) -> bool:
@@ -336,12 +336,12 @@ def test_search_box_drives_the_element(host, stack, browser):
     h.page.evaluate("window.__ev.length = 0")
     h.until(lambda: any(e[1] == "main" for e in h.events("tick")), 20, "a tick of the new view")
     recents = h.page.locator("#recent button").all_inner_texts()
-    assert recents[0] == "TRD MX-20000001" and "TRD END-1000008" in recents
+    assert recents[0] == "TRD MX-20000001" and "TRD 1000008" in recents
     # the same through the property, and through a recent entity
-    h.js("document.querySelector('#main').entity = 'END-1000004'")
-    h.until(lambda: h.title() == "END-1000004", 10, "the property change")
+    h.js("document.querySelector('#main').entity = '1000004'")
+    h.until(lambda: h.title() == "1000004", 10, "the property change")
     t1 = h.js("performance.now()")
-    h.page.click("#recent button:has-text('END-1000008')")
+    h.page.click("#recent button:has-text('1000008')")
     h.until(lambda: h.title() == MAIN_ID, 10, "a click on a recent entity")
     h.state("#main", "live")
     switch = [e for e in h.events("loaded", "main") if e[2]["ref"]["id"] == MAIN_ID][-1][3] - t1
@@ -351,14 +351,14 @@ def test_search_box_drives_the_element(host, stack, browser):
 def test_switching_aborts_the_request_in_flight(host):
     h = host()
     h.open()
-    h.js("window.__delay['END-1000003'] = 600")
-    h.js("document.querySelector('#main').entity = 'END-1000003'")      # held back 600 ms in the page: in flight
+    h.js("window.__delay['1000003'] = 600")
+    h.js("document.querySelector('#main').entity = '1000003'")      # held back 600 ms in the page: in flight
     h.page.wait_for_timeout(100)
-    h.js("document.querySelector('#main').entity = 'END-1000004'")
-    h.until(lambda: h.title() == "END-1000004", 10, "the last entity")
-    assert "END-1000003" in h.js("window.__aborts")                        # the first one was aborted, not just ignored
+    h.js("document.querySelector('#main').entity = '1000004'")
+    h.until(lambda: h.title() == "1000004", 10, "the last entity")
+    assert "1000003" in h.js("window.__aborts")                        # the first one was aborted, not just ignored
     h.page.wait_for_timeout(800)                                           # the held answer arrives late and is never painted
-    assert h.title() == "END-1000004"
+    assert h.title() == "1000004"
 
 
 # ---- 4. navigation round trip ---------------------------------------------------------------------------------------------
@@ -425,8 +425,8 @@ def test_two_elements_share_one_channel(host):
     assert sent.get("authorization", "").startswith("Bearer ")              # streamed fetch, cross-origin, with Authorization
     n_side = len(h.events("tick", "side"))
     h.page.fill("#q", "")
-    h.js("window.hostApp.show('trade', 'END-1000005')")                   # switch the main one
-    h.until(lambda: h.title() == "END-1000005", 10, "the main switch")
+    h.js("window.hostApp.show('trade', '1000005')")                   # switch the main one
+    h.until(lambda: h.title() == "1000005", 10, "the main switch")
     h.until(lambda: len(h.events("tick", "side")) > n_side + 1, 20, "the side element still ticking")
     assert len(h.channel_gets()) == 1
 
@@ -438,13 +438,13 @@ def test_step7_two_elements_one_channel_on_the_versioned_api(host):
     h.state("#side", "live")
     h.until(lambda: h.events("tick", "main") and h.events("tick", "side"), 20, "both elements ticking")
     assert len(h.channel_gets()) == 1, [r[1] for r in h.channel_gets()]
-    side_views = lambda: [r for r in h.requests if "/embed/v1/views/trade/END-1000002" in r[1] and r[0] == "GET"]     # noqa: E731
+    side_views = lambda: [r for r in h.requests if "/embed/v1/views/trade/1000002" in r[1] and r[0] == "GET"]     # noqa: E731
     before_views, before_ticks = len(side_views()), len(h.events("tick", "side"))
-    h.js("window.hostApp.show('trade', 'END-1000005')")                                  # switch the main one only
-    h.until(lambda: h.title() == "END-1000005", 10, "the main switch")
+    h.js("window.hostApp.show('trade', '1000005')")                                  # switch the main one only
+    h.until(lambda: h.title() == "1000005", 10, "the main switch")
     h.until(lambda: len(h.events("tick", "side")) > before_ticks + 1, 20, "the side element still ticking")
     assert len(side_views()) == before_views, "the other element was reloaded"
-    assert h.js("document.querySelector('#side').getAttribute('entity')") == "END-1000002" and h.state_of("#side") == "live"
+    assert h.js("document.querySelector('#side').getAttribute('entity')") == "1000002" and h.state_of("#side") == "live"
     assert len(h.channel_gets()) == 1
     ours = [r[1] for r in h.requests if "/embed/v1/" in r[1]]
     assert ours and not any("/poc" in u for u in ours), [u for u in ours if "/poc" in u]
@@ -513,7 +513,7 @@ def test_switch_timing_over_ten_switches(host, stack, browser):
     h.open()
     times = []
     for i in range(10):
-        target = ("END-1000003", "END-1000004")[i % 2]
+        target = ("1000003", "1000004")[i % 2]
         mark = h.js("performance.now()")
         h.js(f"document.querySelector('#main').entity = '{target}'")
         h.until(lambda: any(e[2]["ref"]["id"] == target and e[3] > mark for e in h.events("loaded", "main")), 10, "the switch")

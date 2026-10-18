@@ -18,7 +18,7 @@ const D = window.DrishtiElements;
 const $ = (s) => document.querySelector(s);
 const main = $('#main'), side = $('#side'), q = $('#q'), recent = $('#recent');
 const MNEMONIC = { trade: 'TRD', counterparty: 'CPTY' };       // the host's own habit: how it writes an entity in its search box
-let recents = [{ kind: 'trade', id: 'END-1000008' }];
+let recents = [{ kind: 'trade', id: '1000008' }];
 
 // the host's token provider: its own backend asks Drishti for a token for the signed-in user (server to server)
 D.configure({

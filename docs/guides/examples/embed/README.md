@@ -43,7 +43,7 @@ The Angular page is the exception to "strict": Angular has no UMD build, so it n
 
 ## What each page shows
 
-* A search box (`<drishti-search>`): type `END-1000`, pick a result; the page's own code takes the pick (`drishti:select`) and points the view and the About body at it.
+* A search box (`<drishti-search>`): type `1000`, pick a result; the page's own code takes the pick (`drishti:select`) and points the view and the About body at it.
 * The view and its **About this page** body (`<drishti-view>`, `<drishti-about>`), with the page's own live indicator (the `drishti:state` event) and a masked-fields badge (`drishti:masked`).
 * The **report** `file:report:live-trading-desk` (`<drishti-report>`).
 

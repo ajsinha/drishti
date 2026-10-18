@@ -151,7 +151,7 @@ def test_a_framework_page_draws_the_elements_follows_a_search_and_keeps_its_poli
 
     box = page.locator("drishti-search input")
     start = page.evaluate("document.querySelector('#view').getAttribute('entity')")
-    box.fill("END-1000")
+    box.fill("1000")
     hits = page.locator("drishti-search button.ds-hit")
     expect(hits.first).to_be_visible(timeout=30000)
     ids = [hits.nth(i).get_attribute("data-id") for i in range(hits.count())]
