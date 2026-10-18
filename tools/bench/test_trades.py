@@ -48,5 +48,14 @@ class TradesTest(unittest.TestCase):
             self.assertEqual(list(tmp.glob("*.jsonl")) + list(tmp.glob("*.log")), [])                            # each day's file removed after its load
 
 
+class CalendarTest(unittest.TestCase):
+    def test_no_dump_is_dated_on_a_holiday_of_the_servers_calendar(self):
+        days = trades.business_days("2026-10-16", 30, "USNY")
+        self.assertNotIn("2026-09-07", days)                                   # Labor Day
+        self.assertNotIn("2026-10-12", days)                                   # Columbus Day
+        self.assertEqual((days[0], days[-1], len(days)), ("2026-09-03", "2026-10-16", 30))
+        self.assertIn("2026-10-12", trades.business_days("2026-10-16", 30, "GBLO"))
+
+
 if __name__ == "__main__":
     unittest.main()

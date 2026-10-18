@@ -83,6 +83,29 @@ class DeltaDocDiskCacheTest {
     }
 
     @Test
+    void aCacheStillLockedByAStoppingServerIsOpenedOnceItIsFree() throws Exception {
+        Path root = lake();
+        Path cache = tmp.resolve("data").resolve("cache").resolve("lake").resolve("docs");
+        long was = DeltaSourcePlugin.diskRetrySeconds;
+        DeltaSourcePlugin.diskRetrySeconds = 1;
+        try {
+            DeltaSourcePlugin stopping = plugin(root, cache);                  // the previous process, not yet gone
+            DeltaSourcePlugin started = plugin(root, cache);                   // finds the cache locked: reads go on without it
+            assertThat(started.cacheStats()).doesNotContainKey("docsOnDiskMB");
+            assertThat(started.fetch(EntityRef.of("trade", "T-001"))).isPresent();
+            stopping.close();                                                  // the lock is released
+            long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(20);
+            while (!started.cacheStats().containsKey("docsOnDiskMB") && System.nanoTime() < deadline) {
+                Thread.sleep(200);
+            }
+            assertThat(started.cacheStats()).containsKey("docsOnDiskMB");    // opened by a retry, not at the next start
+            started.close();
+        } finally {
+            DeltaSourcePlugin.diskRetrySeconds = was;
+        }
+    }
+
+    @Test
     void durationsReadAsTheSettingsWriteThem() {
         assertThat(DeltaSourcePlugin.duration("12h")).hasHours(12);
         assertThat(DeltaSourcePlugin.duration("30m")).hasMinutes(30);

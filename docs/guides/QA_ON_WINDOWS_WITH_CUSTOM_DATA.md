@@ -401,7 +401,7 @@ trades.
 | The server stops with `OutOfMemoryError` | Close other programs; the configuration already gives it 4 GB (`-Xmx4g`), enough up to about 400,000 trades a day; for a million or more give it 8 GB (`-Xmx8g`). |
 | Health shows `trade-pages DEGRADED: out of memory building the pages` | The grouped pages were built in memory: delete `config\connectors\trade-pages.yaml` (it comes back with `store: disk`), restart, or give the server more heap. |
 | A trade page says `DRS-1004 … timed out` | The first read of a date on a large table; open it again. If it keeps happening, exclude the project's `data` folder from the antivirus's real-time scanning (ask IT), and check that `data` is on the local disk, not a network share. |
-| The log says `documents are not cached on disk (…): reads go on without it` | A second server is running on the same `data` folder: stop it. Nothing is wrong with the data. |
+| The log says `documents are not cached on disk (…): reads go on without it` | Right after a restart: the old server was still stopping; wait for *documents are cached on disk again* (within a few minutes). Otherwise a second server is running on the same `data` folder: stop it. Nothing is wrong with the data. |
 | F7, F8 or F9 do nothing, or Edge opens its Immersive Reader | Use `Alt`+`Shift`+`7`, `8`, `9` (section 4.2). |
 | A counterparty or portfolio page lists only 1,000 trades | By design: the count and every total cover all of its trades; search for the rest. |
 

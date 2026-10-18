@@ -85,6 +85,20 @@ an 8 GB heap, made and driven by `tools/bench/trades.py` and `tools/bench/users.
 | A search with a date range over a business date's 1.1 million trades (the form's "Trade date on") | 0.16 s (5.3 s before 2026-10-18: each row's date was first tried as a number, and the failure was an exception) |
 | A table's own page in Admin → Lakes (4 million rows, from its Delta log) | 0.13 s |
 
+**30 days (2026-10-18).** 35.7 million trades (ENDUR 11.5 M, CALYPSO 12.5 M, MUREX 11.7 M over 30 dates; about 5 % amended each day),
+25,000 counterparties and 75,000 netting sets, loaded with `trades.py --parallel --order random` while the stack served. Grouped pages
+for the latest date (1.3 million trades) built in 113 s, 704 MB on disk. 50 users for 60 s over the dates the calendar serves:
+
+| Target | Requests/s | Failures | p50 / p95 / p99 |
+|---|---|---|---|
+| Server API | 179 | 0 | trade 0.16 / 0.73 / 1.15 s; grouped page 0.17 / 0.73 / 1.10 s; netting set 0.18 / 0.72 / 1.07 s; search 0.85 / 1.47 / 1.68 s |
+| Console pages | 56 | 24 of 3,521 (form searches over the console's 5 s limit) | trade 0.44 / 1.49 / 3.69 s; form search 5.2 / 7.0 / 8.1 s (open) |
+
+Heap 3.7 GB of 8 GB after the run. Two things the run found and fixed: a server restarted while the previous process was still
+stopping (34 s here) ran without its RocksDB document cache (heap 6.7 GB, 133 requests/s): it now retries every 30 s for 10 minutes;
+and dumps dated on a holiday of the server's calendar (`DRISHTI_CALENDAR`, USNY: Labor Day, Columbus Day) are never served, since a
+holiday is answered from the business day before: `trades.py` now follows the calendar.
+
 What makes it so: the Delta connectors share one memory budget (half the heap), id maps are memory-mapped from disk, documents
 read before come from a RocksDB cache on disk, Parquet footers are parsed once, grouped pages live on disk and are kept across
 restarts, and pack access, recent users and form pick lists are cached. The method and the sizing guide are in

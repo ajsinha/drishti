@@ -185,6 +185,9 @@ method and every figure in [SCALE_STRATEGY.md](docs/architecture/SCALE_STRATEGY.
 
 | Data | Measure | Result |
 |---|---|---|
+| 35.7 million trades: ENDUR, CALYPSO, MUREX, 300K–500K a day each for 30 days (about 5 % amended each day), loaded in random date order while serving; 25,000 counterparties, 75,000 netting sets | 50 simultaneous users against the server | 179 requests/s, 0 failures, heap 3.7 GB of 8 GB |
+| the same | single trade / grouped page / netting set, p50 / p95 | 0.16 / 0.73 s, 0.17 / 0.73 s, 0.18 / 0.72 s |
+| the same | 50 simultaneous users through the console | 56 pages/s; form searches p50 5.2 s (24 of 170 over the console's 5 s limit: open) |
 | 8.2 million trades: ENDUR, CALYPSO, MUREX, 300K–500K a day each for 7 days; 10,000 counterparties, 30,000 netting sets | 50 simultaneous users against the server | 146 requests/s, 0 failures, heap 1.8 GB |
 | the same | 50 simultaneous users through the console | 69 requests/s, 0 failures |
 | the same | single trade, p50 / p95 | 18 / 54 ms |

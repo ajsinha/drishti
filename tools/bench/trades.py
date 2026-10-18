@@ -44,11 +44,16 @@ SYSTEMS = {"endur": (lambda i: str(10_000_000 + i), "trade-endur", 0), "calypso"
 LES = ["LE-NY", "LE-LDN", "LE-FRA"]
 
 
-def business_days(end: str, n: int) -> list[str]:
+def business_days(end: str, n: int, calendar: str = "USNY") -> list[str]:
+    """The n business days ending at end in the server's calendar (DRISHTI_CALENDAR): a dump dated on a holiday would never be
+    read, since the server takes a holiday to the business day before it."""
     from datetime import date, timedelta
+    sys.path.insert(0, str(ROOT / "tools" / "samplegen"))
+    from dates import Calendar
+    cal = Calendar.of(*[c for c in calendar.split("+") if c and c != "WEEKENDS"])
     d, out = date.fromisoformat(end), []
     while len(out) < n:
-        if d.weekday() < 5:
+        if cal.is_business_day(d):
             out.append(d.isoformat())
         d -= timedelta(days=1)
     return sorted(out)
@@ -133,6 +138,8 @@ def main(argv=None) -> int:
     ap.add_argument("--tmp", required=True, help="a folder for one day's file at a time (removed after each load)")
     ap.add_argument("--days", type=int, default=7)
     ap.add_argument("--end", default="2026-10-16", help="the last business date")
+    ap.add_argument("--calendar", default=os.environ.get("DRISHTI_CALENDAR", "USNY"),
+                    help="the server's business calendar (DRISHTI_CALENDAR; USNY, GBLO, EUTA, JPTO or joint): no dump on its holidays")
     ap.add_argument("--min", type=int, default=300_000, help="fewest trades a day per system")
     ap.add_argument("--max", type=int, default=500_000, help="most trades a day per system")
     ap.add_argument("--systems", default="endur,calypso,murex")
@@ -148,7 +155,7 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
     rnd = random.Random(a.seed)
     systems = [s.strip() for s in a.systems.split(",") if s.strip()]
-    days = business_days(a.end, a.days)
+    days = business_days(a.end, a.days, a.calendar)
     counts = {d: {s: rnd.randint(a.min, a.max) for s in systems} for d in days}
     for d in days:
         print(d, ", ".join(f"{s.upper()} {counts[d][s]:,}" for s in systems), flush=True)

@@ -818,7 +818,8 @@ drishti-console/.venv/bin/python tools/bench/users.py --console http://127.0.0.1
 `trades.py` loads day by day through `drishti.py lake build` (one day's files on disk at once, under `--tmp`). Trade *i* has the
 same id every day, as in a full daily dump, and trades change: about 5 % are amended each day (version, status, price, quantity,
 first-leg notional, update time; amendments add up across the days) and about 1 in 1,000 is cancelled for good from some day on. The
-same arguments always make the same lake. `--parallel` loads a day's tables side by side (each table has its own lock), `--order
+same arguments always make the same lake, and its dates are business days of `--calendar` (the server's `DRISHTI_CALENDAR`,
+USNY by default): a dump dated on a holiday would never be served. `--parallel` loads a day's tables side by side (each table has its own lock), `--order
 random` loads the days in a shuffled order (dates arriving late or replayed), and `--skip` or `--start` resume an interrupted run:
 
 ```bash

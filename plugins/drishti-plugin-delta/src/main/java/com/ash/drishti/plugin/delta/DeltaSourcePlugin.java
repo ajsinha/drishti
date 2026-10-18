@@ -160,7 +160,10 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     /** Where id maps are kept on disk (id-map-disk.enabled), or null: they are then built in the heap at every start. */
     private java.nio.file.Path idMapDir;
     /** Documents read before, on disk (doc-disk-cache.enabled), or null. */
-    private com.ash.drishti.diskcache.DiskCache diskDocs;
+    private volatile com.ash.drishti.diskcache.DiskCache diskDocs;
+    private volatile java.util.concurrent.ScheduledFuture<?> diskDocsRetry;
+    /** Seconds between attempts to open a document cache found locked (tests shorten it). */
+    static long diskRetrySeconds = 30;
     /** Kind to the document paths its pack promotes to columns ({@code layout.<kind>.columns}). */
     private final Map<String, List<String>> promoted = new java.util.concurrent.ConcurrentHashMap<>();
     private int maxLoadRows;
@@ -243,15 +246,26 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             // documents already read, on disk under <data dir>/cache/<connector>/docs (one RocksDB per connector: no shared files or
             // compactions between connectors): keyed by the table version they were read from (never stale), capped by size, a time
             // limit and a daily clearing, compacted hourly, kept across restarts. It is a cache: when it cannot open, reads go on without it
-            java.nio.file.Path dir = java.nio.file.Path.of(ctx.setting("doc-disk-cache.dir", com.ash.drishti.api.DataDir.under("cache/" + sourceName + "/docs")));
-            try {
-                this.diskDocs = com.ash.drishti.diskcache.DiskCache.bounded(dir, (long) (Double.parseDouble(ctx.setting("doc-disk-cache.max-gb", "1")) * 1024 * 1024 * 1024),
-                    duration(ctx.setting("doc-disk-cache.ttl", "12h")), true,
-                    ctx.scheduler() == null ? null : java.time.LocalTime.parse(ctx.setting("doc-disk-cache.reset-at", "02:00")), java.time.ZoneId.of(ctx.setting("doc-disk-cache.zone", "America/New_York")),
-                    ctx.scheduler(), java.time.Clock.systemUTC());
-            } catch (IOException | RuntimeException | LinkageError e) {
-                this.diskDocs = null;
-                org.slf4j.LoggerFactory.getLogger(DeltaSourcePlugin.class).warn("{}: documents are not cached on disk ({}): reads go on without it", sourceName, e.toString());
+            // A server restarted while the previous process is still stopping finds the cache locked: it retries every 30 s for
+            // 10 minutes (reads go on without it meanwhile) rather than run without the cache until its next restart
+            String failed = openDiskDocs(ctx);
+            if (failed != null) {
+                org.slf4j.LoggerFactory.getLogger(DeltaSourcePlugin.class).warn("{}: documents are not cached on disk ({}): reads go on without it{}", sourceName,
+                        failed, ctx.scheduler() == null ? "" : "; trying again every 30 s for 10 minutes");
+                if (ctx.scheduler() != null) {
+                    long until = System.nanoTime() + TimeUnit.MINUTES.toNanos(10);
+                    diskDocsRetry = ctx.scheduler().scheduleWithFixedDelay(() -> {
+                        String again = openDiskDocs(ctx);
+                        if (again == null) {
+                            org.slf4j.LoggerFactory.getLogger(DeltaSourcePlugin.class).info("{}: documents are cached on disk again", sourceName);
+                        } else if (System.nanoTime() < until) {
+                            return;
+                        } else {
+                            org.slf4j.LoggerFactory.getLogger(DeltaSourcePlugin.class).warn("{}: documents are not cached on disk until the next start ({})", sourceName, again);
+                        }
+                        diskDocsRetry.cancel(false);
+                    }, diskRetrySeconds, diskRetrySeconds, TimeUnit.SECONDS);
+                }
             }
         }
         this.docs = !set.containsKey("doc-cache-mb") ? Shared.DOCS : Caffeine.newBuilder().maximumWeight(Long.parseLong(set.get("doc-cache-mb")) * 1024 * 1024)
@@ -823,6 +837,21 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return Optional.of(new com.ash.drishti.api.ColumnSet(all.ids(), nums, texts, all.businessDate()));
     }
 
+    /** Opens the RocksDB document cache; null when it opened, else why it did not (it is a cache: reads go on without it). */
+    private String openDiskDocs(SourceContext ctx) {
+        java.nio.file.Path dir = java.nio.file.Path.of(ctx.setting("doc-disk-cache.dir", com.ash.drishti.api.DataDir.under("cache/" + sourceName + "/docs")));
+        try {
+            this.diskDocs = com.ash.drishti.diskcache.DiskCache.bounded(dir, (long) (Double.parseDouble(ctx.setting("doc-disk-cache.max-gb", "1")) * 1024 * 1024 * 1024),
+                duration(ctx.setting("doc-disk-cache.ttl", "12h")), true,
+                ctx.scheduler() == null ? null : java.time.LocalTime.parse(ctx.setting("doc-disk-cache.reset-at", "02:00")), java.time.ZoneId.of(ctx.setting("doc-disk-cache.zone", "America/New_York")),
+                ctx.scheduler(), java.time.Clock.systemUTC());
+            return null;
+        } catch (IOException | RuntimeException | LinkageError e) {
+            this.diskDocs = null;
+            return e.toString();
+        }
+    }
+
     /** Every promoted column of one date, read once and kept (by memory), shared by searches and aggregates. */
     private com.ash.drishti.api.ColumnSet columnSet(String kind, DeltaTable.Layout l, LocalDate date, Map<String, String> cols) {
         return join(columnSets.get(key(kind, l, date), k -> {
@@ -890,6 +919,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     @Override
     public void close() {
         loaders.shutdownNow();               // loads in flight are abandoned; their callers get an error, not a hang
+        if (diskDocsRetry != null) {
+            diskDocsRetry.cancel(false);
+        }
         if (diskDocs != null) {
             diskDocs.close();
         }

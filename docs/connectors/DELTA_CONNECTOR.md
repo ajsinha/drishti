@@ -340,8 +340,10 @@ hold the id; it helps most on files written with large row groups.
 Parquet pages, also after a restart (17 % less CPU per read for trades read before, 2026-10-18). Entries are keyed by
 the table version they were read from, so they are never stale. It is bounded by size (`doc-disk-cache.max-gb`, 1), age
 (`doc-disk-cache.ttl`, 12 h; compacted hourly, so expired files go without writes) and a daily clearing
-(`doc-disk-cache.reset-at`, 02:00, in `doc-disk-cache.zone`, `America/New_York`). When it cannot open (a locked folder),
-the connector logs a WARN and reads without it.
+(`doc-disk-cache.reset-at`, 02:00, in `doc-disk-cache.zone`, `America/New_York`). When it cannot open (a locked folder:
+most often the previous server process is still stopping, which took 34 s in the 2026-10-18 run), the connector logs a WARN, reads
+without it, and tries again every 30 s for 10 minutes; *documents are cached on disk again* (INFO) says it opened, *not cached on
+disk until the next start* (WARN) that it gave up.
 
 At most `max-concurrent-reads` (16) such reads run at once: each decodes about 7 MB of documents, so a burst of
 thousands of reads (an impact analysis, a search falling back to documents) queues instead of exhausting memory.

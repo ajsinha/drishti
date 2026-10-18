@@ -647,10 +647,14 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
 ### The log says "documents are not cached on disk (…): reads go on without it"
 
-- **Cause:** a Delta connector's document cache (`<data dir>/cache/<connector>/docs`, RocksDB) could not open: most often a second
-  server running on the same data folder holds its lock.
-- **Fix:** nothing is wrong with the data; reads skip the cache. Give each server its own data folder (`DRISHTI_DATA_DIR`), or set
-  `doc-disk-cache.enabled: false` on the connector.
+- **Cause:** a Delta connector's document cache (`<data dir>/cache/<connector>/docs`, RocksDB) could not open because another process
+  holds its lock: the previous server still stopping after a restart (it can take half a minute), or a second server on the same
+  data folder.
+- **What happens:** reads go on without the cache (slower, more heap) and the connector tries again every 30 s for 10 minutes. The
+  log then says *documents are cached on disk again*, or *not cached on disk until the next start*.
+- **Fix:** after a restart nothing: wait for the INFO line. When it gave up, a second server holds the folder: give each server its
+  own data folder (`DRISHTI_DATA_DIR`), or set `doc-disk-cache.enabled: false` on the connector. When restarting by hand, wait for the
+  old process to end before starting the new one.
 
 ### A trade or grouped page shows data from before the lake was restored or rewritten
 
