@@ -21,7 +21,7 @@
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm" data-lakes data-max-mb="{{ cfg.maxUploadMb }}">
-  {% with tab='loads' %}{% include "admin/_nav.html" %}{% endwith %}
+  {% with tab='lakes' %}{% include "admin/_nav.html" %}{% endwith %}
   <p class="lk-crumb"><a href="/admin/loads">Data loads</a> <span aria-hidden="true">›</span> Lakes</p>
   <h1 class="ws-h">Load a file into a lake <a class="emb-help" href="/help/tools" aria-label="Help: the lake build tool" title="Help: the lake build tool">?</a></h1>
   <details class="adm-about"><summary>About this page</summary>
