@@ -85,7 +85,7 @@ The Java tools (`sutra`, `pack check`, and Drishti's own lake writer) run from t
 `DRISHTI_JAR`, then the newest `drishti-server/target/drishti-server-*-exec.jar` (build it with `./mvnw -q -DskipTests package`).
 
 Exit codes follow one rule everywhere: `0` done, `1` problems found or refused, `2` usage (a bad option, a missing file). The lake
-builder adds `2` for "written with rejects" and `3` for "another run holds the lock" (section 4.6). Commands that talk to a
+builder adds `2` for "written with rejects" and `3` for "another run holds the table's or the lake's lock" (section 4.6). Commands that talk to a
 server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`) and read the token from `--token-file` or
 `DRISHTI_TOKEN`; the token is never printed. Shell completion: `source <(drishti-console/.venv/bin/python tools/drishti.py completion bash)`.
 
@@ -312,15 +312,25 @@ on Python 3.13, a script that called `to_pyarrow_table()` printed its answer but
 | `0` | written, nothing rejected (and, with `--signal`, the server was told) | nothing |
 | `2` | written, but some documents were rejected, or the data-load signal failed | alert someone to read the summary's `rejects` (or re-send the signal: `drishti.py data landed`) |
 | `1` | failed: nothing was committed for the table (a bad option, an unreadable file, another partitioning, the engine failed) | alert; fix and re-run (safe) |
-| `3` | another run holds the lake's lock | try again later; never kill the other run |
+| `3` | another load of the same table is running (or `lake maintain` holds the lake) | try again later; never kill the other run |
 
-**The lock.** One run per lake at a time: the builder takes an exclusive lock on `<lake>/_drishti-lake/lock`. The operating system
-releases it when the process ends, so a run that crashed or was killed never blocks the next one. The file names the holder. Two
-runs started 0.4 s apart (captured):
+**The lock.** One load per **table** at a time; loads of different tables of one lake run side by side (ENDUR's and CALYPSO's
+trades as they land, under one root). A load takes a shared lock on `<lake>/_drishti-lake/lock` and an exclusive one on
+`<lake>/_drishti-lake/locks/<domain>/<table>.lock`; `lake maintain` takes the lake's lock exclusively, so it waits for every load
+and no load starts while it runs. The operating system releases a lock when the process ends, so a run that crashed or was killed
+never blocks the next one; the table's lock file names the holder. On Windows, whose file locks have no shared mode, a load takes
+the whole lake as before (loads there run one after another). A second load of the same table started 0.5 s after the first
+(captured 2026-10-18):
 
 ```
-2026-10-17T17:54:08-04:00 lake-build locked exit=3 run=20261017T175408-1353450 domain=trading kind=trade mode=overwrite-dates seconds=0.0 error="the lake is locked by {\"pid\": 1353448, \"host\": \"oryxpro\", \"since\": \"2026-10-17T17:54:08-04:00\"}"
-2026-10-17T17:54:10-04:00 lake-build ok exit=0 run=20261017T175408-1353448 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4980 rejected=0 dates=1 partitions=5 seconds=2.575
+2026-10-18T14:52:08-04:00 lake-build locked exit=3 run=20261018T145208-2322240 domain=trading kind=trade mode=overwrite-dates seconds=0.026 error="table trading/trade_endur is locked by {\"pid\": 2322204, \"host\": \"oryxpro\", \"since\": \"2026-10-18T14:52:08-04:00\"}"
+```
+
+and ENDUR and CALYPSO loaded side by side into one lake, finishing a second apart:
+
+```
+2026-10-18T14:52:00-04:00 lake-build ok exit=0 run=20261018T145157-2322020 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4980 rejected=0 dates=1 partitions=5 seconds=3.31
+2026-10-18T14:52:01-04:00 lake-build ok exit=0 run=20261018T145158-2322023 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4936 rejected=0 dates=1 partitions=51 seconds=3.624
 ```
 
 **The log and the summary.** Every run appends its log line to `<lake>/_drishti-lake/runs.log` and writes its summary to
@@ -922,7 +932,7 @@ of Parquet.
 | `tools/rachana/md_to_yaml.py` | converts Markdown Sutras (before 1.11) into YAML Sutras |
 | `tools/maps/build_regions.py` | builds the vendored region maps from Natural Earth |
 | `tools/packreg/packreg.py` | the signed pack registry behind `pack publish`, `pack keygen` and `pack install` |
-| `tools/bench/trades.py` | synthetic trades of the real ENDUR, CALYPSO and MUREX shapes at scale (`--min`/`--max` a day per system, `--days`, `--counterparties`, with netting sets), loaded day by day through `lake build`; writes only under `--lake` and `--tmp`; `--dry-run` says the days and counts ([SCALE_BENCHMARK.md section 9](../admin/SCALE_BENCHMARK.md)) |
+| `tools/bench/trades.py` | synthetic trades of the real ENDUR, CALYPSO and MUREX shapes at scale (`--min`/`--max` a day per system, `--days`, `--counterparties`, with netting sets), trades repeat across days and change like a full daily dump (about 5 % amended a day, a few cancelled), loaded day by day through `lake build`; `--parallel` loads a day's tables side by side, `--order random` loads the days in a shuffled order, `--skip`/`--start` resume a run; writes only under `--lake` and `--tmp`; `--dry-run` says the days and counts ([SCALE_BENCHMARK.md section 9](../admin/SCALE_BENCHMARK.md)) |
 | `tools/bench/users.py` | simultaneous users against a server's API (`--server`, `--token-file`) or a console's pages (`--console`, `--user`, `--password`) for `--seconds`: a mix of single trades, counterparty pages, netting sets and searches; one JSON line with requests a second and p50/p95/p99 and failures per kind of request |
 | `tools/bench/scale.sh`, `tools/bench/pinning.sh` | the scale benchmark per store and size, and the virtual-thread pinning comparison (Java 21 / 25); they start and stop their own servers by process id |
 | `tools/windows/start-server.ps1`, `tools/windows/start-console.ps1`, `tools/windows/load-delta.ps1` | starting the server and console, and loading the demo lake, on Windows |

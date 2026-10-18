@@ -82,6 +82,8 @@ an 8 GB heap, made and driven by `tools/bench/trades.py` and `tools/bench/users.
 | Console pages, 50 users, 4 worker processes | about 70 pages/s, 0 failures |
 | Grouped pages (`trade-pages`, `store: disk`) for 1.16 million trades | built in 45 s in the background; a 20,000-trade portfolio page 0.4 s (486 KB) |
 | Server heap after collection | 1.2–1.8 GB |
+| A search with a date range over a business date's 1.1 million trades (the form's "Trade date on") | 0.16 s (5.3 s before 2026-10-18: each row's date was first tried as a number, and the failure was an exception) |
+| A table's own page in Admin → Lakes (4 million rows, from its Delta log) | 0.13 s |
 
 What makes it so: the Delta connectors share one memory budget (half the heap), id maps are memory-mapped from disk, documents
 read before come from a RocksDB cache on disk, Parquet footers are parsed once, grouped pages live on disk and are kept across

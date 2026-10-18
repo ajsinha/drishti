@@ -16,7 +16,7 @@
 
     build      stream a JSON array, JSON Lines or .gz export into <lake>/<domain>/<kind> (tools/lake/build.py)
     scan       the fields of an export with their values, and the suggested --key, --date and --partition-by (tools/lake/scan.py)
-    status     who holds the lake's lock, and the last runs (from <lake>/_drishti-lake)
+    status     whether the lake's lock is held (lake maintain, or a load), and the last runs (from <lake>/_drishti-lake)
     demo       the demo lakes of the seven packs from the committed test data, data/testdata (tools/lake/demo.py)
     maintain   retention, compaction, checkpoints and vacuum, now or on schedules; --history (tools/lake/maintain.py; options passed through)
 """
@@ -91,7 +91,7 @@ def register(groups, add, srv) -> None:
     b = add(sub, "build", cmd_build, "lake build: stream a JSON array / JSON Lines / .gz export into a Delta table, partitioned, with promoted columns",
             [], "examples:\n  drishti.py lake build --from exports/book.json --kind deal --key TRADE_ID --date TRADE_DATE --partition-by PRODUCT_TYPE "
                 "--lake data/delta --domain trading\n  drishti.py lake build --from drop/ --pack config/packs/my-book --lake data/delta --as-of 2026-10-01 "
-                "--signal http://localhost:18480\nexit: 0 ok, 2 written with rejects (or the signal failed), 1 failure, 3 another run holds the lock. "
+                "--signal http://localhost:18480\nexit: 0 ok, 2 written with rejects (or the signal failed), 1 failure, 3 another run holds the table's (or the lake's) lock. "
                 "Guide: docs/guides/TOOLS.md")
     _mod("build").add_arguments(b)
     s = add(sub, "scan", cmd_scan, "lake scan: an export's fields (presence, types, frequent values) and the suggested key, date and classifiers",

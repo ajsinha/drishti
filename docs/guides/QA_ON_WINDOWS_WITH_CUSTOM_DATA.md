@@ -327,6 +327,10 @@ it is rebuilt from the lake.
    row count and **your** dates. (On Windows the folder under each table name reads `C:\Users\asinh09\IdeaProjects\drishti-orig\data\delta`.)
 
    ![Admin, Lakes: every table with rows, files, size, dates and the Maintain controls](img/qa-windows/01-admin-lakes.png)
+
+   Click **trading/trade_endur**: its own page lists each of your business dates with its rows, files and size, the columns
+   (including `NOTIONAL` and `INDEX_NAME` when the table was built from scratch with this version), the newest commits, your
+   `lake build` runs and the connector that reads it (`trade-endur`).
 2. **Admin ▾ → Connectors.** You should see `trade-endur`, `trade-calypso`, `trade-murex` and the stores **RUNNING**.
    The live **yfinance** and **news** connectors are shown as **disabled**; `news-store` is **RUNNING** and serves the
    snapshot's quotes and headlines.

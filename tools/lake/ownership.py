@@ -15,7 +15,7 @@
 """Which tables of a lake Drishti's lake tool built, so maintenance touches only those (the ownership rule).
 
 ``drishti.py lake build`` records every table it commits to in ``<lake>/_drishti-lake/tables-built.json``
-({"<domain>/<table>": {pack, kind, firstBuild, lastBuild, run}}), under the lake's lock. Builds made before that file existed
+({"<domain>/<table>": {pack, kind, firstBuild, lastBuild, run}}), under the lake's lock and a short registry lock (builds of different tables may finish at once). Builds made before that file existed
 are found once in their run summaries (``<lake>/_drishti-lake/runs/*.json``) and added to it. A table with no such record was
 published by another system: it is listed, never compacted or vacuumed by Drishti (``lake maintain --force-foreign`` overrides,
 with a warning).
@@ -58,7 +58,7 @@ def _write(path: pathlib.Path, reg: dict) -> None:
 
 
 def record(lake: str | pathlib.Path, summary: dict) -> None:
-    """Called by a build that committed (status ok or partial), while it holds the lake's lock."""
+    """Called by a build that committed (status ok or partial), while it holds its table's lock."""
     lake = pathlib.Path(lake)
     key = _key(lake, summary.get("table") or "")
     if not key:

@@ -35,7 +35,7 @@ Engines (--engine): auto (default) uses Drishti's own Java writer in the server'
 drishti-server/target), else the Python deltalake package; the run says which ran and why.
 
 For schedulers: exit 0 ok, 2 written with rejects (or the data-load signal failed), 1 failure (nothing was committed for the
-table that failed), 3 another run holds the lake's lock. Each run appends one line to <lake>/_drishti-lake/runs.log and writes a
+table that failed), 3 another run holds the table's lock (or lake maintain the lake's). Each run appends one line to <lake>/_drishti-lake/runs.log and writes a
 JSON summary (rows per date and partition, rejects with reasons, timings, engine) to <lake>/_drishti-lake/runs/<run>.json and
 last-run.json (or --summary FILE). --signal URL then tells that server the data landed (POST /api/v1/packs/{pack}/loads)."""
 from __future__ import annotations

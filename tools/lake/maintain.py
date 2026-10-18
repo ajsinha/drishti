@@ -37,7 +37,7 @@ does what readers cannot, on a schedule, for local lakes and lakes in object sto
     uv run ... maintain.py --history [--limit 50] [--json]     the last runs, from Admin -> Lakes and from here
 
 --config defaults to <data>/lakes/lake-maintenance.yaml, the file Admin -> Lakes writes (docs/admin/LAKE_MAINTENANCE.md). Only
-tables lake build built are maintained (its build record, tools/lake/ownership.py); each run takes the lake's lock, so it never
+tables lake build built are maintained (its build record, tools/lake/ownership.py); each run takes the lake's lock exclusively (builds hold it shared), so it never
 overlaps a build, and is kept in the history (<data>/lakes/maintenance-history.jsonl).
 
     uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.py relayout --root data/delta --domain trading \\
@@ -252,7 +252,7 @@ def wanted_tables(spec, root: str) -> set[str] | None:
 def run_detailed(config: dict, dry_run: bool, today: date | None = None, force_drop: bool = False, tables_spec=None,
                  force_foreign: bool = False, cancel=None, on_event=None, quiet: bool = False) -> dict:
     """One pass: every table of every configured lake (or only ``tables_spec``), each with its own settings (lakes[].tables over the
-    lake's), under the lake's lock (the one lake build takes: one run at a time per lake), only tables Drishti's lake tool built
+    lake's), under the lake's lock (exclusive; lake build holds it shared, with its own table's lock exclusive), only tables Drishti's lake tool built
     unless ``force_foreign``. ``cancel()`` true stops before the next table; ``on_event(event, data)`` hears each table start and end.
     Returns {"tables": [result], "failures", "cancelled"}; a result has table, root, name, before/after or error, skipped."""
     out: dict = {"tables": [], "failures": 0, "cancelled": False}

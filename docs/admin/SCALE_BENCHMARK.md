@@ -815,7 +815,19 @@ drishti-console/.venv/bin/python tools/bench/users.py --server http://127.0.0.1:
 drishti-console/.venv/bin/python tools/bench/users.py --console http://127.0.0.1:17480 --password … --users 50 --seconds 60
 ```
 
-`trades.py` loads one system and day at a time through `drishti.py lake build` (one day's file on disk at once, under `--tmp`).
+`trades.py` loads day by day through `drishti.py lake build` (one day's files on disk at once, under `--tmp`). Trade *i* has the
+same id every day, as in a full daily dump, and trades change: about 5 % are amended each day (version, status, price, quantity,
+first-leg notional, update time; amendments add up across the days) and about 1 in 1,000 is cancelled for good from some day on. The
+same arguments always make the same lake. `--parallel` loads a day's tables side by side (each table has its own lock), `--order
+random` loads the days in a shuffled order (dates arriving late or replayed), and `--skip` or `--start` resume an interrupted run:
+
+```bash
+drishti-console/.venv/bin/python tools/bench/trades.py --lake <data dir>/delta --tmp <data dir>/tmp/bench --days 30 \
+    --counterparties 25000 --parallel --order random
+```
+
+Run it while the server and console are up to watch Drishti as Delta versions move under it: each load is picked up within the
+connector's `refresh-seconds`, grouped pages rebuild after it, and Admin → Health → Activity shows the requests a minute meanwhile.
 `users.py` prints one JSON line: requests a second and, for single trades, counterparty-trades pages, netting sets and searches,
 p50/p95/p99 and failures. `tools/bench/test_trades.py` runs a small version (two systems, two days, a few hundred trades) with the
 tool tests. Admin → Health → Pages shows the same per-kind times from inside the server while a run goes on.

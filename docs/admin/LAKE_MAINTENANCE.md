@@ -49,7 +49,8 @@ files the publisher still expects, or rewrite files under a reader that is in th
 tables: it lists them read-only.
 
 **In the UI.** Open **Admin → Data loads → Lakes** (`/admin/lakes`) and scroll to **The lakes**. Each table shows its rows, files, size,
-partitions, business dates and last build. The **Maintenance** column shows the table's current settings, or for a foreign table
+partitions, business dates and last build; its name opens the table's own page (dates, columns, commits, loads, the connectors that read
+it: [TOOLS.md section 10.2](../guides/TOOLS.md)). The **Maintenance** column shows the table's current settings, or for a foreign table
 *Maintained by its publisher: not built by drishti.py lake build: read only here*. A foreign table's checkbox is disabled, and the reason is
 also shown when you hover over it.
 
@@ -114,8 +115,9 @@ $ drishti.py lake maintain --once --dry-run --tables trading/trade_endur --as-of
 **In the UI.** Press **Maintain now**. The progress bar counts the tables, names the one in hand, and lists each finished table as it ends.
 
 - **One run at a time per lake.** A second run on the same lake is refused while one is going. Each run also takes the lake tool's lock
-  (`<lake>/_drishti-lake/lock`, the one `lake build` takes), so maintenance never overlaps a build or a command-line run. A table whose lake
-  is locked fails with *the lake is locked by …* and nothing is changed.
+  (`<lake>/_drishti-lake/lock`) exclusively; `lake build` holds it shared while it loads (and its own table's lock exclusively), so
+  maintenance waits for every load and no load starts while it runs. A table whose lake is locked fails with *the lake is locked by …*
+  and nothing is changed.
 - **Cancel after this table** stops the run before the next table. The table in hand finishes, so a table is never left half maintained.
 - **Afterwards** each changed table that was built for a pack sends the **data-load signal** (`POST /api/v1/packs/{pack}/loads` for its
   latest business date, `source: lake maintain`), as `lake build` does. The server refreshes and readers' caches stay right. The signal is
