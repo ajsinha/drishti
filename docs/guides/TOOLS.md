@@ -264,6 +264,7 @@ Python `deltalake` package otherwise; the first line of the output says which ra
 | Commits | **one** per table per run: the replaced files are removed and the new ones added in the same version, so a reader sees all of the load or none of it | one per batch; the first batch of a replaced date replaces it |
 | Where | local disk (Windows paths too, no `winutils.exe`) | local disk and object storage |
 | Heap / memory | `DRISHTI_LAKE_HEAP` (default `1g`) | the batch (`--batch-mb`) plus Arrow's copy |
+| Row groups and pages | `DRISHTI_LAKE_ROW_GROUP_KB` (default `256`; `DRISHTI_LAKE_ROW_GROUP_MB` also read) and `DRISHTI_LAKE_PAGE_KB` (default `64`): a single entity's read decodes its row group, so small groups make first reads cheap (256 KB: 13 % more reads a second than 1 MB on 362,804 trades, 2026-10-18) | delta-rs defaults |
 
 The same day through `deltalake`, into a second lake; then the table Drishti's writer made (one commit per run: versions 0 to 2 for
 the three runs above), read back with deltalake: the two engines write the same table.

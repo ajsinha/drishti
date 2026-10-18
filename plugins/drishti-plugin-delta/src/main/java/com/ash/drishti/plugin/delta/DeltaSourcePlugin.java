@@ -113,6 +113,8 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     private AsyncCache<PartKey, DeltaTable.IdMap> idMaps;
     private AsyncCache<PartKey, com.ash.drishti.api.ColumnSet> columnSets;
     private com.github.benmanes.caffeine.cache.Cache<String, String> docs;
+    /** Documents read before, on disk (doc-disk-cache.enabled), or null. */
+    private com.ash.drishti.diskcache.DiskCache diskDocs;
     /** Kind to the document paths its pack promotes to columns ({@code layout.<kind>.columns}). */
     private final Map<String, List<String>> promoted = new java.util.concurrent.ConcurrentHashMap<>();
     private int maxLoadRows;
@@ -183,6 +185,15 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 .weigher((PartKey k, DeltaTable.IdMap v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes())).buildAsync();
         this.columnSets = Caffeine.newBuilder().executor(loaders).maximumWeight(Long.parseLong(ctx.setting("columns-cache-mb", "1024")) * 1024 * 1024)
                 .weigher((PartKey k, com.ash.drishti.api.ColumnSet v) -> (int) Math.min(Integer.MAX_VALUE, weight(v))).buildAsync();
+        if (Boolean.parseBoolean(ctx.setting("doc-disk-cache.enabled", "false"))) {
+            // documents already read, on disk under <data dir>/cache/<connector>/docs: keyed by the table version they were read
+            // from (never stale), capped by size, a time limit and a daily clearing, kept across restarts
+            java.nio.file.Path dir = java.nio.file.Path.of(ctx.setting("doc-disk-cache.dir", com.ash.drishti.api.DataDir.under("cache/" + sourceName + "/docs")));
+            this.diskDocs = com.ash.drishti.diskcache.DiskCache.bounded(dir, (long) (Double.parseDouble(ctx.setting("doc-disk-cache.max-gb", "2")) * 1024 * 1024 * 1024),
+                    duration(ctx.setting("doc-disk-cache.ttl", "12h")), true,
+                    ctx.scheduler() == null ? null : java.time.LocalTime.parse(ctx.setting("doc-disk-cache.reset-at", "02:00")), java.time.ZoneId.of(ctx.setting("doc-disk-cache.zone", "America/New_York")),
+                    ctx.scheduler(), java.time.Clock.systemUTC());
+        }
         this.docs = Caffeine.newBuilder().maximumWeight(Long.parseLong(ctx.setting("doc-cache-mb", "256")) * 1024 * 1024)
                 .weigher((String k, String v) -> 2 * (k.length() + v.length()) + 64).build();
         this.maxLoadRows = Integer.parseInt(ctx.setting("max-load-rows", "200000"));
@@ -421,6 +432,22 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return true;
     }
 
+    /** {@code 90s}, {@code 30m}, {@code 12h}, {@code 7d}, or an ISO-8601 duration ({@code PT12H}). */
+    static java.time.Duration duration(String text) {
+        String t = text.trim().toLowerCase(java.util.Locale.ROOT);
+        if (t.startsWith("p")) {
+            return java.time.Duration.parse(t.toUpperCase(java.util.Locale.ROOT));
+        }
+        long n = Long.parseLong(t.substring(0, t.length() - 1));
+        return switch (t.charAt(t.length() - 1)) {
+            case 's' -> java.time.Duration.ofSeconds(n);
+            case 'm' -> java.time.Duration.ofMinutes(n);
+            case 'h' -> java.time.Duration.ofHours(n);
+            case 'd' -> java.time.Duration.ofDays(n);
+            default -> throw new IllegalArgumentException("not a duration: " + text + " (use 90s, 30m, 12h or 7d)");
+        };
+    }
+
     /** The entity's document on one date, or null when that date's files do not hold it. */
     private String doc(EntityRef ref, DeltaTable.Layout l, LocalDate d) {
         // the id map says which file holds the entity; only that file's matching row group is read
@@ -430,6 +457,14 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         }
         String key = ref.kind() + "\u001f" + l.version() + "@" + l.timestamp() + "\u001f" + d + "\u001f" + ref.id();
         String json = docs.getIfPresent(key);
+        if (json == null && diskDocs != null) {                // second tier: documents read before, on disk (also by an earlier run)
+            byte[] b = diskDocs.get(key);
+            if (b != null) {
+                json = new String(b, StandardCharsets.UTF_8);
+                docs.put(key, json);
+                return json;
+            }
+        }
         if (json == null) {
             docReads.acquireUninterruptibly();
             try {
@@ -439,6 +474,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             }
             if (json != null) {
                 docs.put(key, json);
+                if (diskDocs != null) {
+                    diskDocs.put(key, json.getBytes(StandardCharsets.UTF_8));
+                }
             }
         }
         return json;
@@ -704,11 +742,19 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         if (dated.enabled()) {
             m.putAll(dated.health());
         }
+        if (diskDocs != null) {
+            m.put("docsOnDiskMB", diskDocs.sizeOnDisk() / (1024 * 1024));
+            m.put("docsOnDiskHits", diskDocs.hits());
+            m.put("docsOnDiskMisses", diskDocs.misses());
+        }
         return m;
     }
 
     @Override
     public void purgeCaches() {
+        if (diskDocs != null) {
+            diskDocs.clear();
+        }
         com.ash.drishti.deltalake.NativeEngine.purgeFooterCache();
         parts.synchronous().invalidateAll();
         latest.synchronous().invalidateAll();
@@ -721,6 +767,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     @Override
     public void close() {
         loaders.shutdownNow();               // loads in flight are abandoned; their callers get an error, not a hang
+        if (diskDocs != null) {
+            diskDocs.close();
+        }
         if (lake != null) {
             lake.close();                    // the native engine's S3 connections
         }

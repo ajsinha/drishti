@@ -305,7 +305,9 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 | | pack access cached per user (no identity database read per entity): 2–4× throughput under load | **done** |
 | | Parquet footers cached per file (no footer parse per single read) | **done** |
 | | paging the grouped pages' row lists; form search under 1 s at 1M+ trades | next |
-| | the RocksDB document cache (section 8.1): a trade opened again, even after a restart, without decompressing pages | next |
+| | the RocksDB document cache (section 8.1): `doc-disk-cache.enabled` (off by default), size cap, 12 h TTL, daily clearing, kept across restarts; −17 % CPU per read for trades read before | **done** (2026-10-18) |
+| | row groups of 256 KB and 64 KB pages in the lake writer: +13 % reads a second, −20 % CPU per first read (362,804 trades) | **done** |
+| | the Parquet page index for single reads (`drishti.parquet.page-index`): built, **off**; the server ships parquet-hadoop 1.16 with parquet-column 1.18, whose page-index code does not match (every read failed in the test): align the Parquet versions first | blocked |
 | | one memory budget for all connector caches (section 5) | next |
 | | separate read slots for all background work | next |
 | **0. Measure** | scale benchmark in `drishti-benchmarks`: 3 systems × 300K–600K × 7 → 60 days; every path of section 7; heap and disk; a smaller version in CI against regressions | started (the 2026-10-18 runs, section 4) |

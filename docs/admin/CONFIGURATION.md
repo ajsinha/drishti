@@ -1825,6 +1825,8 @@ Layout: `<root>/<domain>/<kind>/business_date=yyyy-MM-dd/` holding `(id, doc)` r
 | `layout.<kind>.columns` | none | Document paths stored as columns beside the document (see [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#large-kinds-the-lake-layout)); searches, pick lists, derived kinds and impact read them instead of documents. `layout.<kind>.sort-by`, `file-rows`, `row-group-rows` tell the writers how to lay the table out. |
 | `id-map-mb` | `1024` | Each day's ids and the file each is in, read from the id column alone, kept by size. |
 | `doc-cache-mb` | `256` | Single documents read recently. |
+| `doc-disk-cache.enabled` | `false` | A second tier for single documents, on disk (RocksDB) under `doc-disk-cache.dir` (default `<data dir>/cache/<connector>/docs`): a document read once is answered without decompressing its Parquet pages, also after a restart. Keyed by the table version it was read from, so never stale. Measured on 362,804 ENDUR trades: 17 % less CPU per read for documents already read (2026-10-18). |
+| `doc-disk-cache.max-gb`, `.ttl`, `.reset-at`, `.zone` | `2`, `12h`, `02:00`, `America/New_York` | Its size cap (the oldest files go first), time limit (entries written longer ago go), and daily clearing. |
 | `columns-cache-mb` | `1024` | A day's promoted columns, read once and kept by size (the newest day is loaded in the background). |
 | `max-concurrent-reads` | `16` | Single-document reads at once (each decodes one row group). |
 | `max-load-rows` | `200000` | A table without columns has a whole day loaded for reverse lookups only up to this many rows. |

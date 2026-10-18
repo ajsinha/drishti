@@ -120,6 +120,11 @@ final class ParquetBatches implements CloseableIterator<ColumnarBatch> {
         FOOTERS.invalidateAll();
     }
 
+    /** Whether single-entity reads use the page index (drishti.parquet.page-index, default false: parquet-hadoop and parquet-column must first be one version). */
+    static final boolean PAGE_INDEX = Boolean.parseBoolean(System.getProperty("drishti.parquet.page-index", "false"));
+    /** This read skips the pages the page index rules out. */
+    private boolean pageFiltered;
+
     private void open() throws IOException {
         InputFile in = io.newParquetFile(file.getPath(), file.getSize());
         SeekableInputStream stream = in.newStream();
@@ -132,7 +137,11 @@ final class ParquetBatches implements CloseableIterator<ColumnarBatch> {
             }
             MessageType fileSchema = footer.getFileMetaData().getSchema();
             Optional<FilterPredicate> filter = predicate.flatMap(p -> ParquetFilterUtils.toParquetFilter(fileSchema, p));
-            ParquetReadOptions withFilter = options().withRecordFilter(filter.map(FilterCompat::get).orElse(FilterCompat.NOOP)).build();
+            // a single entity's read (id = …) also uses the page index, when the file has one: only the page that can hold the id
+            // is decompressed, not its whole row group (a file without the index reads the row group, as before)
+            pageFiltered = filter.isPresent() && !rowIndex && PAGE_INDEX;
+            ParquetReadOptions withFilter = options().useColumnIndexFilter(pageFiltered)
+                    .withRecordFilter(filter.map(FilterCompat::get).orElse(FilterCompat.NOOP)).build();
             reader = ParquetFileReader.open(in, footer, withFilter, stream);      // the reader owns the stream now
             MessageType requested = new BatchReadSupport(batchSize, schema).init(new InitContext(PLAIN, Map.of(), fileSchema))
                     .getRequestedSchema();
@@ -150,7 +159,7 @@ final class ParquetBatches implements CloseableIterator<ColumnarBatch> {
     /** Moves to the next row group that has rows; false at the end of the file. */
     private boolean advance() throws IOException {
         while (leftInGroup == 0) {
-            PageReadStore pages = reader.readNextRowGroup();
+            PageReadStore pages = pageFiltered ? reader.readNextFilteredRowGroup() : reader.readNextRowGroup();
             if (pages == null) {
                 return false;
             }

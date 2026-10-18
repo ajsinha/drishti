@@ -156,6 +156,14 @@ public final class DiskCache implements AutoCloseable {
         }
 
         private void dispose() {
+            if (keepFiles) {
+                // writes skip the write-ahead log: what is still in memory is flushed, or a reopened cache would miss it
+                try (org.rocksdb.FlushOptions f = new org.rocksdb.FlushOptions().setWaitForFlush(true)) {
+                    db.flush(f);
+                } catch (RocksDBException e) {
+                    LOG.debug("disk cache {}: flush before close failed: {}", dir, e.getMessage());
+                }
+            }
             write.close();
             db.close();
             options.close();
@@ -175,6 +183,10 @@ public final class DiskCache implements AutoCloseable {
     private final ReentrantLock lifecycle = new ReentrantLock();   // clear and close; not synchronized, so virtual threads never pin
     private volatile boolean closed;
     private final boolean persistent;       // closing keeps the files, for the next run
+    /** Keeps what the previous run cached (a bounded cache that outlives a restart). */
+    private final boolean reopen;
+    /** Entries older than this go (null: no time limit). */
+    private final java.time.Duration ttl;
     private final Durability durability;
     private final ScheduledExecutorService scheduler;
     private final AtomicLong generation = new AtomicLong();
@@ -208,13 +220,30 @@ public final class DiskCache implements AutoCloseable {
      */
     public DiskCache(Path root, long maxBytes, LocalTime resetAt, ZoneId zone, ScheduledExecutorService scheduler, Clock clock,
             boolean persistent, Durability durability) throws IOException {
+        this(root, maxBytes, resetAt, zone, scheduler, clock, persistent, durability, null, false);
+    }
+
+    /**
+     * A cache with a time limit that may outlive a restart: entries older than {@code ttl} go (RocksDB's FIFO time limit: whole
+     * files, dropped by compaction), besides the size budget and the daily clearing; with {@code reopen} what the previous run
+     * cached is kept (for entries keyed by what they were read from, such as a table version, which never go stale).
+     */
+    public static DiskCache bounded(Path root, long maxBytes, java.time.Duration ttl, boolean reopen, LocalTime resetAt, ZoneId zone,
+            ScheduledExecutorService scheduler, Clock clock) throws IOException {
+        return new DiskCache(root, maxBytes, resetAt, zone, scheduler, clock, false, Durability.NONE, ttl, reopen);
+    }
+
+    private DiskCache(Path root, long maxBytes, LocalTime resetAt, ZoneId zone, ScheduledExecutorService scheduler, Clock clock,
+            boolean persistent, Durability durability, java.time.Duration ttl, boolean reopen) throws IOException {
+        this.ttl = ttl;
+        this.reopen = reopen;
         this.durability = durability;
         this.root = root.toAbsolutePath().normalize();
         this.maxBytes = maxBytes;
         this.scheduler = scheduler;
         this.persistent = persistent;
         Files.createDirectories(this.root);
-        Path previous = persistent ? newestGeneration() : null;
+        Path previous = persistent || reopen ? newestGeneration() : null;
         if (previous == null) {
             deleteGenerations();              // a cache: whatever a previous run left is stale by definition
             store.set(open());
@@ -250,6 +279,9 @@ public final class DiskCache implements AutoCloseable {
                 .setWriteBufferSize(32L * 1024 * 1024);
         if (fifo != null) {
             o.setCompactionStyle(CompactionStyle.FIFO).setCompactionOptionsFIFO(fifo);
+            if (ttl != null && !ttl.isZero()) {
+                o.setTtl(ttl.toSeconds());                 // files whose every entry is older go at the next compaction
+            }
         } else {
             // the latest value of each key: overwrites and deletes are compacted away, so the files follow the live
             // entities, not the messages received; the write-ahead log is capped so it never grows past 64 MB
@@ -522,7 +554,7 @@ public final class DiskCache implements AutoCloseable {
             closed = true;
             Store s = store.getAndSet(null);
             if (s != null) {
-                s.keepFiles = persistent;
+                s.keepFiles = persistent || reopen;
                 if (s.leave()) {
                     s.disposeOnce();          // nobody inside: close here (a plain cache's files are gone when close returns)
                 }

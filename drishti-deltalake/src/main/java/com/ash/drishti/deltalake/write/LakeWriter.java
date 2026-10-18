@@ -78,9 +78,15 @@ public final class LakeWriter {
 
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final String ENGINE_INFO = "Drishti lake build";
-    /** The most bytes one Parquet row group holds (DRISHTI_LAKE_ROW_GROUP_MB, default 1). */
-    static final long ROW_GROUP_BYTES = Long.getLong("drishti.lake.row-group-mb",
-            Long.parseLong(System.getenv().getOrDefault("DRISHTI_LAKE_ROW_GROUP_MB", "1"))) * 1024 * 1024;
+    /**
+     * The most bytes one Parquet row group holds: DRISHTI_LAKE_ROW_GROUP_KB (default 256), or DRISHTI_LAKE_ROW_GROUP_MB. A single
+     * entity's read decodes at most its row group (its page, with the page index), so small groups make first reads cheap.
+     */
+    static final long ROW_GROUP_BYTES = System.getenv("DRISHTI_LAKE_ROW_GROUP_MB") != null
+            ? Long.parseLong(System.getenv("DRISHTI_LAKE_ROW_GROUP_MB")) * 1024 * 1024
+            : Long.parseLong(System.getenv().getOrDefault("DRISHTI_LAKE_ROW_GROUP_KB", "256")) * 1024;
+    /** The most bytes one Parquet page holds (DRISHTI_LAKE_PAGE_KB, default 64): the unit the page index can skip to. */
+    static final long PAGE_BYTES = Long.parseLong(System.getenv().getOrDefault("DRISHTI_LAKE_PAGE_KB", "64")) * 1024;
 
     /** What a write did. */
     public record Result(long version, int files, long rows, int removed, List<String> leftOut) {}
@@ -88,9 +94,10 @@ public final class LakeWriter {
     private final Engine engine;
 
     public LakeWriter() {
-        // SNAPPY as delta-rs writes (Kernel writes uncompressed otherwise); row groups of at most 1 MB (Parquet's default is 128 MB):
-        // a single entity's read decodes its row group, so a large file in one group would be decoded whole for every entity read
-        this(DefaultEngine.create(new LocalWriteFileIO(Map.of("parquet.compression", "SNAPPY", "parquet.block.size", String.valueOf(ROW_GROUP_BYTES)))));
+        // SNAPPY as delta-rs writes (Kernel writes uncompressed otherwise); small row groups and pages (Parquet's defaults are 128 MB
+        // and 1 MB): a single entity's read decodes its row group, or with the page index only the page that holds it
+        this(DefaultEngine.create(new LocalWriteFileIO(Map.of("parquet.compression", "SNAPPY", "parquet.block.size", String.valueOf(ROW_GROUP_BYTES),
+                "parquet.page.size", String.valueOf(PAGE_BYTES)))));
     }
 
     LakeWriter(Engine engine) {
