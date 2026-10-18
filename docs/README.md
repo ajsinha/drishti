@@ -63,6 +63,7 @@ If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER
 | Ship packs, Sutras and data to servers by copying: bundle, verify, deploy, promote, roll back | [OPERATIONALISING.md](guides/OPERATIONALISING.md) |
 | Install and run it on Windows (PowerShell, no Hadoop) | [GETTING_STARTED.md: Windows](guides/GETTING_STARTED.md#drishti-on-windows) |
 | Run and debug the server in IntelliJ IDEA and the console in PyCharm | [IDE_GUIDE.md](guides/IDE_GUIDE.md) |
+| Demo or QA on Windows with your own ENDUR files, offline | [QA_ON_WINDOWS_WITH_CUSTOM_DATA.md](guides/QA_ON_WINDOWS_WITH_CUSTOM_DATA.md) |
 | Build a pack from JSON Lines, check it in CI, load data and drive the Screen Designer's review from a terminal | [CLI_GUIDE.md](guides/CLI_GUIDE.md) |
 | Find the right tool (command, script or page) for a job, load a large JSON export into a Delta lake, schedule loads and maintenance | [TOOLS.md](guides/TOOLS.md) |
 | Find your way around the top bar and its menus | [USER_GUIDE.md › The top bar](guides/USER_GUIDE.md#the-top-bar) |
@@ -195,6 +196,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [GETTING_STARTED.md](guides/GETTING_STARTED.md) | you want Drishti running in ten minutes and need only the commands |
 | [GETTING_STARTED.md](guides/GETTING_STARTED.md) | you are installing for the first time and want each step explained, with what you should see |
 | [IDE_GUIDE.md](guides/IDE_GUIDE.md) | you run the server from IntelliJ IDEA and the console from PyCharm: JDK and interpreter setup, run configurations, debugging, reloading changes, tests in the IDE |
+| [QA_ON_WINDOWS_WITH_CUSTOM_DATA.md](guides/QA_ON_WINDOWS_WITH_CUSTOM_DATA.md) | you demo or QA on a Windows machine without internet, with your own ENDUR JSONL files replacing the synthetic ENDUR trades: setup, data, start, checks, a ten-page demo script |
 | [GETTING_STARTED.md: Windows](guides/GETTING_STARTED.md#drishti-on-windows) | you run Drishti on Windows: a JDK 21 or newer (production runs 21) and Python, building or copying the jar, the native Delta engine (no Hadoop, no `winutils.exe`), the PowerShell scripts, what does not work there, troubleshooting |
 | [USER_GUIDE.md](guides/USER_GUIDE.md) | you use the console: top bar, command line, pick lists, tables, views, dates, search, export, monitors, alerts, workspaces, settings, the Build workbench, administration |
 | [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md) | something is not working: each problem has what you see, how to check and the fix |

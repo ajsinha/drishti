@@ -36,6 +36,8 @@ Written by `tools/testdata/make_testdata.py` (deterministic; `--check` says whet
 
 ## Quick start: five steps
 
+On Windows, offline, with your own ENDUR files: [How to QA in Windows Environment using Custom Data](../../docs/guides/QA_ON_WINDOWS_WITH_CUSTOM_DATA.md).
+
 1. **Clone** the repository (`git clone …`, then `cd drishti`).
 2. **Install** once: the console's Python with its requirements (PyYAML, deltalake and pyarrow among them),
    `python3 -m venv drishti-console/.venv && drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt`,
