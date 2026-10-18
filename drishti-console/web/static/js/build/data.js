@@ -61,7 +61,10 @@
         var pick = WB.el('button', 'wb-sample-pick mono', name, { type: 'button', 'aria-pressed': name === st.sample && !st.file ? 'true' : 'false', title: 'Preview the design with this sample' });
         pick.addEventListener('click', function () { store.setSample(name); });
         li.appendChild(pick);
-        if (s.type === 'ref') { li.appendChild(WB.el('span', 'bs-role', 'stored entity', { title: 'Read again each time with your rights and masks' })); }
+        if (name.indexOf('pack sample ') === 0) {
+          li.appendChild(WB.el('span', 'bs-role', 'from the pack', { title: 'Picked for you: the first record of the pack\'s samples this Sutra matches' }));
+          li.appendChild(WB.el('p', 'text-muted-d wb-sample-note', 'Sample picked from the pack: ' + name.slice('pack sample '.length) + '; add your own.', { 'data-pack-sample': '' }));
+        } else if (s.type === 'ref') { li.appendChild(WB.el('span', 'bs-role', 'stored entity', { title: 'Read again each time with your rights and masks' })); }
         else if (s.synthetic) { li.appendChild(WB.el('span', 'bs-role', 'synthetic', { title: 'Generated from a schema: not evidence that a screen works on real data' })); }
         var rm = WB.el('button', 'btn-pill btn-ghost', 'Remove', { type: 'button', 'data-remove': '', 'aria-label': 'Remove ' + name });
         rm.addEventListener('click', function () {

@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **Shared blocks in the Build designer (step 1).** A Sutra written with shared blocks (`{ use: legs@1, with: {...} }`, the 130 trading Sutras) opens drawn: the preview is the server's own expansion, the canvas no longer says "Add your first panel", and the YAML check knows `use:`/`with:` (the schema's `$defs.use`) and every panel's `when:` (no false problems; a real `DRS-2048` says how to fix it). A Design of a pack Sutra with no sample gets the first record of the pack's `samples/<kind>.jsonl` its match holds for (`POST /builder/designs/{id}/samples {pack: true}`; Samples says "Sample picked from the pack: MX-…; add your own"). The "How this view was built" link carries the page's record (`&kind=&id=`) like About's. Design operations count a use as one written item (adding, moving, removing a written panel lands at its own place; a block's panel is refused with a pointer to the block), new `setBlock` operation sets a use's `with:` or removes it; `GET /builder/designs/{id}/blocks` lists the uses with the panels they bring, `GET /rachana/blocks[/{name}/{version}]` reads blocks. Canvas block groups, Open block and the inspector follow in step 2.
+
 ## 2.3.0 — BI with filter context, time and live push; production-shaped trades from three source systems; a demo from a fresh clone (2026-10-17)
 
 - **Lake maintenance in Admin → Lakes.** Tick tables, **Dry run** (files and size before → after, dates retention drops, files vacuum

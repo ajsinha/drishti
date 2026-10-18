@@ -127,6 +127,60 @@ public final class PackSamples {
         return out;
     }
 
+    /**
+     * The first sample of a kind (in the files' order, either layout) that {@code test} accepts, as its id and JSON text; read line by
+     * line and stopped at the first match, so a large JSON Lines file is not read whole. A line that is not JSON is skipped.
+     */
+    public static java.util.Optional<Map.Entry<String, String>> first(Path folder, String kind, java.util.function.Predicate<JsonNode> test)
+            throws IOException {
+        Path samples = folder.toAbsolutePath().normalize();
+        List<Path> files = kindFiles(samples, kind);
+        if (files.isEmpty()) {
+            for (Map.Entry<String, String> e : documents(samples, kind, Set.of(), 0).entrySet()) {
+                if (accepts(test, e.getValue())) {
+                    return java.util.Optional.of(e);
+                }
+            }
+            return java.util.Optional.empty();
+        }
+        List<String> inOrder = catalogue(samples, kind);
+        Set<String> known = new java.util.HashSet<>(inOrder);
+        Map<String, String> taken = new LinkedHashMap<>();
+        int n = 0;
+        for (Path f : files) {
+            try (BufferedReader r = Files.newBufferedReader(f, StandardCharsets.UTF_8)) {
+                for (String line = r.readLine(); line != null; line = r.readLine()) {
+                    if (line.isBlank()) {
+                        continue;
+                    }
+                    n++;
+                    JsonNode doc;
+                    try {
+                        doc = JSON.readTree(line);
+                    } catch (IOException e) {
+                        continue;
+                    }
+                    String id = known.isEmpty() ? kind + "-" + n : idAt(doc, n <= inOrder.size() ? inOrder.get(n - 1) : null, known, taken);
+                    if (id == null || taken.putIfAbsent(id, "") != null) {
+                        continue;
+                    }
+                    if (test.test(doc)) {
+                        return java.util.Optional.of(Map.entry(id, line));
+                    }
+                }
+            }
+        }
+        return java.util.Optional.empty();
+    }
+
+    private static boolean accepts(java.util.function.Predicate<JsonNode> test, String json) {
+        try {
+            return test.test(JSON.readTree(json));
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
     /** One sample's JSON text, by kind and id (either layout); empty when there is none. */
     public static java.util.Optional<String> document(Path samples, String kind, String id) throws IOException {
         return java.util.Optional.ofNullable(documents(samples, kind, new java.util.LinkedHashSet<>(List.of(id)), 1).get(id));

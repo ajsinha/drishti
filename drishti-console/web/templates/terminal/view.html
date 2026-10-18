@@ -91,8 +91,8 @@
     {{ strip(vm) }}
   </section>
   <div class="vgrid">
-    <div class="vmain">{{ panels(main) }}</div>
-    <aside class="vright" aria-label="Context">{{ panels(right) }}</aside>
+    <div class="vmain">{{ panels(main, false, vm.ref) }}</div>
+    <aside class="vright" aria-label="Context">{{ panels(right, false, vm.ref) }}</aside>
   </div>
 </div>
 {% if not embed %}{% include "terminal/_share.html" %}{% endif %}

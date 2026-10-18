@@ -105,9 +105,12 @@ public class DesignController {
     private final SampleCheckService checks;
     private final OpApplier applier = new OpApplier();
     private final DesignRebase rebase;
+    private final com.ash.drishti.server.design.PackSamplePicker picker;
 
     public DesignController(DesignService designs, ShapeService shapes, AutoDesigner designer, BuilderController builder, ViewPipeline pipeline,
-            SutraRegistry sutras, SourceRouter router, Entitlements entitlements, JsonCodec codec, SampleCheckService checks, DesignRebase rebase) {
+            SutraRegistry sutras, SourceRouter router, Entitlements entitlements, JsonCodec codec, SampleCheckService checks, DesignRebase rebase,
+            com.ash.drishti.server.design.PackSamplePicker picker) {
+        this.picker = picker;
         this.checks = checks;
         this.rebase = rebase;
         this.designs = designs;
@@ -238,6 +241,9 @@ public class DesignController {
         if (b.has("refs")) {
             addRefs(b.get("refs"), who, add);
         }
+        if (b.path("pack").asBoolean(false)) {
+            packSample(who, designs.get(who.user(), id), add);
+        }
         if (b.path("schema").isObject()) {
             int count = Math.max(1, Math.min(b.path("count").asInt(5), Math.min(designs.limits().maxSamples(), limits.maxSamples())));
             SchemaSampler sampler = new SchemaSampler(b.get("schema"), SchemaSampler.Limits.of(limits));
@@ -247,12 +253,54 @@ public class DesignController {
                 add.add(new DesignService.NewSample("synthetic-" + (i + 1), StoredDesign.SYNTHETIC, null, null, mapper.writeValueAsString(docs.get(i))));
             }
         }
+        if (add.isEmpty() && b.path("pack").asBoolean(false)) {
+            return view(designs.summary(designs.get(who.user(), id)), true);      // the pack's sample is there already
+        }
         if (add.isEmpty()) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "send 'samples' ([{name, document}]), 'refs' ({kind, ids|count}) or 'schema'");
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "send 'samples' ([{name, document}]), 'refs' ({kind, ids|count}), 'schema' or 'pack': true");
         }
         ObjectNode out = view(designs.summary(designs.addSamples(who.user(), id, add)), true);
         if (!sampled.isEmpty()) {
             sampled.forEach(out.putArray("problems")::add);      // what the synthetic sampler clamped (drishti.builder.sample-max-*)
+        }
+        return out;
+    }
+
+    /**
+     * {@code pack: true}: the first record of the base Sutra's pack samples that its match holds for, kept as a document named
+     * {@code pack sample <id>} (a Design with no base, or a pack with no such record: 404 DRS-1001, nothing added).
+     */
+    private void packSample(Principal who, StoredDesign d, List<DesignService.NewSample> add) {
+        var picked = picker.pick(d.base).orElse(null);
+        if (picked == null) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, d.base == null || d.base.isBlank() ? "this design edits no pack Sutra (it has no base)"
+                    : "the pack of " + d.base + " has no sample its match holds for");
+        }
+        entitlements.requireOpen(who, picked.kind());          // a pack's record is data of its kind: the same right as a stored one
+        if (d.sample(picked.name()) == null) {
+            add.add(new DesignService.NewSample(picked.name(), StoredDesign.DOCUMENT, null, null, picked.json()));
+        }
+    }
+
+    /** The shared blocks the Design's Sutra uses ({@code { use: legs@1, with: {...} }}), each with the panels it brings and its problems. */
+    @GetMapping("/{id}/blocks")
+    public ObjectNode blocks(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal who) {
+        StoredDesign d = designs.get(who.user(), id);
+        ObjectNode out = mapper.createObjectNode();
+        ArrayNode uses = out.putArray("uses");
+        for (var u : com.ash.drishti.rachana.parse.BlockUses.of(d.sutra)) {
+            ObjectNode n = uses.addObject().put("item", u.item()).put("at", u.at()).put("line", u.line()).put("column", u.column())
+                    .put("ref", u.ref()).put("name", u.name()).put("description", u.description());
+            if (u.version() != null) {
+                n.put("version", u.version()).put("file", u.file()).put("source", sutras.relative(u.source()));
+            }
+            n.set("params", mapper.valueToTree(u.params()));
+            n.set("with", mapper.valueToTree(u.with()));
+            ArrayNode ps = n.putArray("panels");
+            u.panels().forEach(p -> ps.addObject().put("id", p.id()).put("kind", p.kind()).put("title", p.title()).put("when", p.when()));
+            ArrayNode pr = n.putArray("problems");
+            sutras.relative(u.problems()).forEach(p -> pr.addObject().put("code", p.code()).put("message", p.message())
+                    .put("line", p.location() == null ? 0 : p.location().line()));
         }
         return out;
     }

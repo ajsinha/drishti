@@ -65,8 +65,31 @@ public final class SutraBlocks {
     private static final Pattern FILE = Pattern.compile("(.+)\\.v(\\d+)\\.block\\.yaml");
     private static final PositionalYamlReader READER = new PositionalYamlReader();
 
-    /** One block: its text (parameters not yet filled), its default parameters and where it came from. */
-    public record Block(String name, int version, String text, Map<String, String> params, String file) {}
+    /**
+     * One block: its text (parameters not yet filled), its default parameters, its file name and the path it was read from (the
+     * file name when it was not read from disk).
+     */
+    public record Block(String name, int version, String text, Map<String, String> params, String file, String path) {
+
+        public Block(String name, int version, String text, Map<String, String> params, String file) {
+            this(name, version, text, params, file, file);
+        }
+
+        /** The block's {@code description:} (empty when it has none). */
+        public String description() {
+            try {
+                PNode d = parse(text.replace("%{", "pXq{"), file).map().get("description");
+                return d == null || d.text() == null ? "" : d.text().replace("pXq{", "%{");
+            } catch (SutraException e) {
+                return "";
+            }
+        }
+
+        /** {@code name@version}. */
+        public String ref() {
+            return name + "@" + version;
+        }
+    }
 
     private static final AtomicReference<Map<String, TreeMap<Integer, Block>>> LIBRARY = new AtomicReference<>(Map.of());
     private static final AtomicReference<List<SutraProblem>> PROBLEMS = new AtomicReference<>(List.of());
@@ -89,7 +112,7 @@ public final class SutraBlocks {
             try (Stream<Path> s = Files.walk(dir)) {
                 for (Path f : s.filter(SutraBlocks::isBlockFile).sorted().toList()) {
                     try {
-                        Block b = read(Files.readString(f, StandardCharsets.UTF_8), f.getFileName().toString());
+                        Block b = read(Files.readString(f, StandardCharsets.UTF_8), f.getFileName().toString(), f.toString());
                         next.computeIfAbsent(b.name(), k -> new TreeMap<>()).put(b.version(), b);   // a later folder (a more specific pack) wins
                     } catch (SutraException e) {
                         problems.addAll(e.problems());
@@ -118,6 +141,11 @@ public final class SutraBlocks {
 
     /** One block file's content, checked: {@code rachana: 1}, {@code block}, {@code version}, {@code panels} (a list), {@code params} (scalars). */
     public static Block read(String text, String file) {
+        return read(text, file, file);
+    }
+
+    /** As {@link #read(String, String)}, remembering the path the file was read from. */
+    public static Block read(String text, String file, String path) {
         PNode root = parse(text.replace("%{", "pXq{"), file);         // parameters are filled later; read the shape with them masked
         Map<String, PNode> m = root.map();
         Matcher fm = FILE.matcher(file);
@@ -144,7 +172,35 @@ public final class SutraBlocks {
         if (ps != null) {
             ps.map().forEach((k, v) -> params.put(k, v.text() == null ? "" : v.text().replace("pXq{", "%{")));
         }
-        return new Block(name, version, text, Map.copyOf(params), file);
+        return new Block(name, version, text, Map.copyOf(params), file, path);
+    }
+
+    /** The block a use names ({@code name@N}, or {@code name} for the newest version), if it is loaded. */
+    public static java.util.Optional<Block> find(String ref) {
+        String r = ref == null ? "" : ref.trim();
+        String name = r.contains("@") ? r.substring(0, r.indexOf('@')) : r;
+        TreeMap<Integer, Block> versions = LIBRARY.get().get(name);
+        if (versions == null || versions.isEmpty()) {
+            return java.util.Optional.empty();
+        }
+        return java.util.Optional.ofNullable(r.contains("@") ? versions.get(parseVersion(r.substring(r.indexOf('@') + 1))) : versions.lastEntry().getValue());
+    }
+
+    /** Whether an item of a panels list is a use of a block ({@code { use: name@N, with: {...} }}). */
+    public static boolean isUse(PNode item) {
+        return item != null && item.isMap() && item.map().containsKey("use");
+    }
+
+    /**
+     * How many panels each item of a written panels list stands for once expanded: 1 for a panel, the block's panel count for a use
+     * (0 when the use does not resolve). The design operations map a panel's place among the expanded panels to its written item.
+     */
+    public static List<Integer> sizes(List<PNode> panels) {
+        List<Integer> out = new ArrayList<>();
+        for (PNode p : panels) {
+            out.add(isUse(p) ? expand(List.of(p), "studio", new ArrayList<>()).size() : 1);
+        }
+        return out;
     }
 
     /**

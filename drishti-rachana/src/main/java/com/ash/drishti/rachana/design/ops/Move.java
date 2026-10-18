@@ -58,6 +58,20 @@ public record Move(String panel, String area, String before, String after, Integ
         if (height != null && height != 0) {
             OpChecks.range(Panel.HEIGHT, (long) height, Panel.MAX_HEIGHT);
         }
+        if (doc.usesBlocks()) {
+            // a shared block's use is one written item standing for several panels: move the written panel by its lines, and set its keys
+            doc.setPanelKey(panel, "area", to == Area.RIGHT ? "right" : null);
+            if (span != null) {
+                doc.setPanelKey(panel, Panel.SPAN, span == Panel.MAX_SPAN ? null : (long) span);
+            }
+            if (height != null) {
+                doc.setPanelKey(panel, Panel.HEIGHT, height == 0 ? null : (long) height);
+            }
+            if (near != null || to != moved.area()) {
+                doc.moveItem(panel, near, before != null);
+            }
+            return;
+        }
         List<Panel> rest = new ArrayList<>(panels);
         rest.remove(moved);
         int at;

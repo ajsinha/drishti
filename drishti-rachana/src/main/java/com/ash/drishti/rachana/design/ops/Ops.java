@@ -64,6 +64,7 @@ public final class Ops {
             Map.entry("setControls", Set.of("op", "items")),
             Map.entry("setKeys", Set.of("op", "keys")),
             Map.entry("setMatch", Set.of("op", "match")),
+            Map.entry("setBlock", Set.of("op", "use", "with", "remove")),
             Map.entry("text", Set.of("op", "yaml")));
     private static final Set<String> AT = Set.of("area", "before", "after", "span", "height");
     private static final ObjectMapper JSON = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
@@ -125,6 +126,13 @@ public final class Ops {
             case "setControls" -> new SetControls(items(i, n));
             case "setKeys" -> new SetKeys((Map<String, Object>) map(i, n, "keys", true));
             case "setMatch" -> new SetMatch((Map<String, Object>) map(i, n, "match", true));
+            case "setBlock" -> {
+                Integer use = whole(i, n, "use");
+                if (use == null || use < 0) {
+                    throw new FormatException(i, "'setBlock' needs \"use\": which use of a block (0 is the first)");
+                }
+                yield new SetBlock(use, (Map<String, Object>) map(i, n, "with", false), n.path("remove").asBoolean(false));
+            }
             default -> new Text(text(i, n, "yaml", true));
         };
     }

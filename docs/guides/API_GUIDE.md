@@ -985,6 +985,7 @@ curl -s $B/calc/settings
 | `GET` | `/sutras/{name}/{version}/source` | the Sutra file as written (`text/yaml`, the whole `.sutra.yaml` file with its comments); `404 DRS-2003` |
 | `GET` | `/sutras/problems` | `{file: [{code, message, location}]}` for Sutras that failed to load, and for files in a Sutra folder that are not Sutras (`DRS-2004`); `{}` when all is well |
 | `GET` | `/rachana/schema` | the JSON Schema (draft 2020-12, `application/schema+json`) of a Sutra in Rachana language 1, generated from the grammar, with this server's entity kinds and formats filled in and the Rachana-EL functions under `x-rachana-functions`; for editor completion and checking |
+| `GET` | `/rachana/blocks`, `/rachana/blocks/{name}/{version}` | the shared panel blocks loaded (`<name>.v<N>.block.yaml`): name, version, description, params, file; one block adds its `text` (404 `DRS-2003` when unknown) |
 
 ```bash
 curl -s $B/packs | jq -c '.[0:2][] | {name, version, title, kinds: .kinds[0:3], assigned, active}'
@@ -1169,6 +1170,7 @@ user; a design is reachable only by its owner (anyone else gets `404 DRS-5006`);
 | `POST` | `/builder/designs` | body `{name, kind, base, sutra, notes}`, all optional (no name: a scratch design, forgotten after a day); `base` as `name@version` without `sutra` copies that Sutra; `201` with the design |
 | `GET` / `PATCH` / `DELETE` | `/builder/designs/{id}` | read (touches it), change `name`, `kind`, `notes`, `sutra` (a new text is a new `rev`), `tests`; delete (and its samples) |
 | `POST` | `/builder/designs/{id}/duplicate` | body `{name}` optional; a named copy with its samples |
+| `GET` | `/builder/designs/{id}/blocks` | `{uses: [{item, at, line, ref, name, version, description, params, with, source, panels: [{id, kind, title, when}], problems}]}`: the shared blocks the design's Sutra uses and the panels each brings (`DRS-2048` problems when one does not resolve). `POST .../samples {pack: true}` adds the first record of the base Sutra's pack samples its match holds for, named `pack sample <id>` (404 when there is none) |
 | `POST` | `/builder/designs/{id}/propose` | body `{note}` optional; author right and `studio-save`. Runs the check and proposes the design's Sutra **with evidence** (matrix, sample names, notes; `GET /sutras/proposals/{id}` returns it as `evidence`). `202 {proposal, status}`; with review off `200 {name, version, status}`. The design's `status` becomes `proposed(P-n)`, then `live(vN)` on approval |
 | `GET` / `PUT` | `/builder/designs/{id}/about` | the design's About text (the pack's `config/about.yaml`) and its card over `?sample=` (`{rev, about, kind, card: {about, glossary, errors}, panels, problems, lint, coverage}`: `problems` are `DRS-2040`-`2044` with line and column, `lint` is `DRS-2045`-`2047`); `PUT {baseRev, text}` keeps the text as a step of the log (a new `rev`; `409 DRS-5007` when stale; counted with `max-notes-kb`) |
 | `POST` | `/builder/designs/{id}/about/preview` | body `{text, sample?}`: the same answer for the text in the editor, nothing kept |

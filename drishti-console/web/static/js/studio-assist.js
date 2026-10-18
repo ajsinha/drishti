@@ -143,6 +143,8 @@
     function visit(node, s, label, key) {
       s = schema.resolve(s);
       if (!s || !node) { return; }
+      // { use: legs@1, with: {...} } in a panels list is a shared block's use, not a panel: checked as one (the server says DRS-2048 when it does not resolve)
+      if (schema.isPanel(s) && node.t === 'map' && Y.get(node, 'use') && s['x-rachana-use']) { s = schema.resolve(s['x-rachana-use']); }
       if (s['const'] !== undefined && node.t === 'scalar' && node.v !== s['const']) { add(node, String(node.raw).length, label + ' must be ' + s['const']); }
       if (s['enum'] && node.t === 'scalar' && node.v !== '' && node.v !== null && s['enum'].indexOf(node.v) < 0 && !(label === 'match.kind' && (validKinds || []).indexOf(node.v) >= 0) && !/\$\{/.test(String(node.v))) {
         add(node, String(node.raw).length, '"' + node.v + '" is not a ' + (key === 'kind' && label.indexOf('match') < 0 ? 'panel kind' : 'valid ' + key) + (s['enum'].length <= 16 ? ' (' + s['enum'].join(', ') + ')' : ''));

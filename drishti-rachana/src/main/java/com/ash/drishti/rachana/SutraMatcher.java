@@ -90,6 +90,11 @@ public final class SutraMatcher {
         return registry.forKind(kind).stream().filter(s -> holds(s.match().where(), ctx)).toList();
     }
 
+    /** Whether a Sutra's {@code match.where} holds for a document (no {@code where}: always; one that cannot be evaluated: not). */
+    public boolean matches(Sutra s, DataNode doc) {
+        return holds(s.match().where(), EvalContext.of(doc, formats));
+    }
+
     /** The ids of a Sutra's panels (inside its tabs too) whose {@code when} holds for the document: what is shown only for some documents. */
     public List<String> shownByWhen(Sutra s, DataNode doc) {
         EvalContext ctx = EvalContext.of(doc, formats);
