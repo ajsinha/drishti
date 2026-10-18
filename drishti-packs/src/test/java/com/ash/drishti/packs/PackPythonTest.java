@@ -99,8 +99,9 @@ class PackPythonTest {
         assertThat(titles.get("market-risk"))
                 .contains("VaR and expected shortfall from the scenario P&L", "VaR backtest: exceptions, Kupiec and the traffic light")
                 .hasSizeGreaterThanOrEqualTo(10);
-        assertThat(titles.get("trading")).contains("MTM under parallel rate moves", "FX option: Garman-Kohlhagen price and Greeks")
-                .hasSizeGreaterThanOrEqualTo(10);
+        // trading keeps nine since 2.3.0: the option and FX-forward snippets need an underlying the common trade schema does not name
+        assertThat(titles.get("trading")).contains("MTM under parallel rate moves", "Payment ladder: what the trade pays and receives, by month")
+                .hasSizeGreaterThanOrEqualTo(9);
         assertThat(titles.get("core")).contains("P&L by book: a pandas pivot").hasSizeGreaterThanOrEqualTo(10);
         assertThat(titles.get("market-data")).contains("Interpolate the curve at any tenor", "Key-rate DV01 by bump and reprice")
                 .hasSizeGreaterThanOrEqualTo(20);
