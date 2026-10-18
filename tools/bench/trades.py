@@ -100,11 +100,31 @@ def build(a, src: Path, day: str, pack: str, connector: str, kind: str | None = 
     argv += ["--partition-by", "PRODUCT_TYPE"] if partition else []
     argv += ["--kind", kind] if kind else []
     argv += ["--key", key] if key else []                    # trades: the pack's ingest.trade.key
-    t = time.time()
-    r = subprocess.run(argv, capture_output=True, text=True, env={**os.environ, "TMPDIR": a.tmp})
-    print(f"  {connector} {day}: exit {r.returncode} in {time.time() - t:.0f} s", flush=True)
-    if r.returncode not in (0, 2):
-        sys.exit((r.stdout + r.stderr)[-2000:])
+    log = Path(a.tmp) / f"{connector}-{day}.log"
+    with open(log, "w", encoding="utf-8") as out:
+        proc = subprocess.Popen(argv, stdout=out, stderr=subprocess.STDOUT, env={**os.environ, "TMPDIR": a.tmp})
+    running.append((proc, connector, day, time.time(), src, log))
+    if not a.parallel:
+        finish()
+
+
+running: list = []
+
+
+def finish() -> None:
+    """Waits for every load started, removes its input, and stops at the first that failed."""
+    failed = None
+    for proc, connector, day, t, src, log in running:
+        code = proc.wait()
+        print(f"  {connector} {day}: exit {code} in {time.time() - t:.0f} s", flush=True)
+        Path(src).unlink(missing_ok=True)
+        if code not in (0, 2):
+            failed = failed or log.read_text(encoding="utf-8")[-2000:]
+        else:
+            log.unlink(missing_ok=True)
+    running.clear()
+    if failed:
+        sys.exit(failed)
 
 
 def main(argv=None) -> int:
@@ -118,6 +138,12 @@ def main(argv=None) -> int:
     ap.add_argument("--systems", default="endur,calypso,murex")
     ap.add_argument("--counterparties", type=int, default=10_000, help="netting sets are three per counterparty")
     ap.add_argument("--seed", type=int, default=20261018)
+    ap.add_argument("--order", choices=("date", "random"), default="date", help="the order the days are loaded in (random: as late "
+                    "or replayed files arrive; each day's trades are the same either way)")
+    ap.add_argument("--skip", default="", help="business dates already loaded, comma separated")
+    ap.add_argument("--start", help="the first business date to load (an earlier run loaded the days before; the data is the same every run)")
+    ap.add_argument("--parallel", action="store_true", help="load a day's tables side by side (each starts as soon as its file is written); "
+                    "builds of different tables of one lake run side by side (POSIX; on Windows they wait for each other)")
     ap.add_argument("--dry-run", action="store_true", help="say the days and counts, write nothing")
     a = ap.parse_args(argv)
     rnd = random.Random(a.seed)
@@ -134,7 +160,14 @@ def main(argv=None) -> int:
     base = {s: [json.loads(x) for x in gzip.open(ROOT / "data" / "testdata" / "trades" / s / "snapshot-2026-09-22.jsonl.gz", "rt", encoding="utf-8")]
             for s in systems}
     n_cp = a.counterparties
-    for k, d in enumerate(days):
+    order = list(enumerate(days))
+    if a.order == "random":
+        random.Random(a.seed + 1).shuffle(order)
+    skip = {x.strip() for x in a.skip.split(",") if x.strip()}
+    for k, d in order:
+        if (a.start and d < a.start) or d in skip:
+            continue
+        print(f"{time.strftime('%H:%M:%S')} loading {d}", flush=True)
         members: dict[str, list[str]] = {}
         for s in systems:
             ident, connector, salt = SYSTEMS[s]
@@ -150,7 +183,6 @@ def main(argv=None) -> int:
                     members.setdefault(f"NS-{c:05d}-{le[3:]}", []).append(doc["TRADE_ID"])
                     out.write(json.dumps(doc, separators=(",", ":")) + "\n")
             build(a, path, d, "trading", connector)
-            path.unlink()
         cps, nss = tmp / f"cp-{d}.jsonl", tmp / f"ns-{d}.jsonl"
         with open(cps, "w", encoding="utf-8") as out:
             for c in range(n_cp):
@@ -165,8 +197,7 @@ def main(argv=None) -> int:
                                           "TRADE_COUNT": len(ids), "TRADE_IDS": ids}, separators=(",", ":")) + "\n")
         build(a, cps, d, "core", "reference-store", "counterparty", partition=False, key="COUNTERPARTY_ID")
         build(a, nss, d, "counterparty-risk", "credit-store", "netting-set", partition=False, key="NETTING_SET_ID")
-        cps.unlink()
-        nss.unlink()
+        finish()                                              # a day at a time: at most one day's files on disk
     return 0
 
 

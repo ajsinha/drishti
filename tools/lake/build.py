@@ -75,10 +75,16 @@ class Locked(BuildError):
 # ------------------------------------------------------------------------------------------------ the lock
 
 class LakeLock:
-    """One run per lake at a time: an exclusive lock on <lake>/_drishti-lake/lock (released by the OS if the run dies, so a crashed
-    run never blocks the next). The file says who holds it."""
+    """Who may write the lake: an OS lock on <lake>/_drishti-lake/lock (released by the OS if the run dies, so a crashed run never
+    blocks the next). Without a table it is exclusive (lake maintain, one run at a time over the whole lake). With a table (a build)
+    it is shared on the lake and exclusive on locks/<domain>/<table>.lock, so builds of different tables run side by side (one
+    system's trades and another's, as they land) and two builds of one table never do; on Windows, whose file locks have no shared
+    mode, a build takes the whole lake as before. The file of an exclusive lock says who holds it."""
 
-    def __init__(self, lake: pathlib.Path):
+    def __init__(self, lake: pathlib.Path, table: str | None = None):
+        self.table = table if os.name != "nt" else None
+        self.lake = lake
+        self.table_lock = None
         old = lake / ".drishti-lake"                       # the hidden name of earlier builds: renamed once
         if old.is_dir() and not (lake / STATE).exists():
             old.rename(lake / STATE)
@@ -87,34 +93,56 @@ class LakeLock:
         self.fh = None
 
     def __enter__(self):
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.fh = open(self.path, "a+", encoding="utf-8")
-        try:
-            if os.name == "nt":
-                import msvcrt
-                self.fh.seek(0)
-                msvcrt.locking(self.fh.fileno(), msvcrt.LK_NBLCK, 1)
-            else:
-                import fcntl
-                fcntl.flock(self.fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except OSError:
-            self.fh.seek(0)
-            holder = self.fh.read().strip() or "another run"
-            self.fh.close()
-            raise Locked(f"the lake is locked by {holder}") from None
-        self.fh.seek(0)
-        self.fh.truncate()
-        self.fh.write(json.dumps({"pid": os.getpid(), "host": socket.gethostname(), "since": now_iso()}))
-        self.fh.flush()
+        if self.table:
+            self.fh = _flock(self.path, shared=True, what="the lake")
+            try:
+                self.table_lock = LakeLock._exclusive(self.lake / STATE / "locks" / f"{self.table}.lock", f"table {self.table}")
+            except Locked:
+                self.fh.close()
+                raise
+            return self
+        self.fh = LakeLock._exclusive(self.path, "the lake")
         return self
 
+    @staticmethod
+    def _exclusive(path: pathlib.Path, what: str):
+        fh = _flock(path, shared=False, what=what)
+        fh.seek(0)
+        fh.truncate()
+        fh.write(json.dumps({"pid": os.getpid(), "host": socket.gethostname(), "since": now_iso()}))
+        fh.flush()
+        return fh
+
     def __exit__(self, *exc):
-        try:
-            self.fh.seek(0)
-            self.fh.truncate()
-        finally:
-            self.fh.close()          # closing releases the lock
+        for fh in (self.table_lock, self.fh):
+            if fh is None:
+                continue
+            try:
+                if fh is self.table_lock or not self.table:
+                    fh.seek(0)
+                    fh.truncate()
+            finally:
+                fh.close()           # closing releases the lock
         return False
+
+
+def _flock(path: pathlib.Path, shared: bool, what: str):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fh = open(path, "a+", encoding="utf-8")
+    try:
+            if os.name == "nt":
+                import msvcrt
+                fh.seek(0)
+                msvcrt.locking(fh.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(fh.fileno(), (fcntl.LOCK_SH if shared else fcntl.LOCK_EX) | fcntl.LOCK_NB)
+    except OSError:
+        fh.seek(0)
+        holder = fh.read().strip() or "another run"
+        fh.close()
+        raise Locked(f"{what} is locked by {holder}") from None
+    return fh
 
 
 def now_iso() -> str:
@@ -240,7 +268,7 @@ def run(a, say=print) -> tuple[int, dict]:
         summary["table"] = table
         if a.dry_run:
             return _go(a, p, as_of, None, table, summary, prog, started, say)
-        with LakeLock(lake):
+        with LakeLock(lake, table=f"{p['domain']}/{p['table'] or p['kind']}"):
             return _go(a, p, as_of, lake, table, summary, prog, started, say)
     except Locked as e:
         summary.update(status="locked", error=str(e))
@@ -253,8 +281,9 @@ def run(a, say=print) -> tuple[int, dict]:
 def _go(a, p, as_of, lake, table, summary, prog, started, say) -> tuple[int, dict]:
     staging = None
     if lake:
-        old = lake / STATE / "staging"
-        if old.is_dir():                                   # left by a run that died: we hold the lock, nobody else is using it
+        table_path = pathlib.Path(summary["table"])
+        old = lake / STATE / "staging" / f"{table_path.parent.name}--{table_path.name}"
+        if old.is_dir():                                   # left by a run of this table that died: we hold its lock
             shutil.rmtree(old, ignore_errors=True)
         staging = old / summary["run"]
     st = stage.Stager(staging, p["key"], p["date"], as_of, p["partition_by"], p["promote"], p.get("flatten"))
@@ -414,7 +443,9 @@ def _finish(a, lake, summary, code, started, say, write_files: bool = True) -> t
         runs.mkdir(parents=True, exist_ok=True)
         text = json.dumps(summary, indent=2, default=str)
         (runs / f"{summary['run']}.json").write_text(text, encoding="utf-8")
-        (lake / STATE / "last-run.json").write_text(text, encoding="utf-8")
+        last = lake / STATE / f"last-run.json.{os.getpid()}"
+        last.write_text(text, encoding="utf-8")
+        os.replace(last, lake / STATE / "last-run.json")     # whole, even with builds of other tables finishing at once
         if summary.get("status") in ("ok", "partial") and not summary.get("dryRun"):
             import ownership                               # the table is Drishti's to maintain (lake maintain, Admin -> Lakes)
             ownership.record(lake, summary)

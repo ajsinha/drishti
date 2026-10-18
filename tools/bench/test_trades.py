@@ -28,7 +28,7 @@ class TradesTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             lake, tmp = Path(d) / "delta", Path(d) / "tmp"
             code = trades.main(["--lake", str(lake), "--tmp", str(tmp), "--days", "2", "--min", "200", "--max", "300",
-                                "--systems", "endur,calypso", "--counterparties", "50"])
+                                "--systems", "endur,calypso", "--counterparties", "50", "--parallel"])
             self.assertEqual(code, 0)
             from deltalake import DeltaTable
             endur = DeltaTable(str(lake / "trading" / "trade_endur")).to_pyarrow_table()
@@ -45,7 +45,7 @@ class TradesTest(unittest.TestCase):
             self.assertTrue((lake / "trading" / "trade_calypso" / "_delta_log").is_dir())
             ns = DeltaTable(str(lake / "credit" / "netting-set")).to_pyarrow_table()
             self.assertEqual(ns.num_rows, 2 * 150)                                     # 50 counterparties x 3 legal entities x 2 days
-            self.assertEqual(list(tmp.glob("*.jsonl")), [])                            # each day's file removed after its load
+            self.assertEqual(list(tmp.glob("*.jsonl")) + list(tmp.glob("*.log")), [])                            # each day's file removed after its load
 
 
 if __name__ == "__main__":

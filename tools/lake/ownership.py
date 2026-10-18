@@ -52,7 +52,7 @@ def _read(path: pathlib.Path) -> dict:
 
 def _write(path: pathlib.Path, reg: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(path.name + ".writing")
+    tmp = path.with_name(f"{path.name}.writing.{os.getpid()}")
     tmp.write_text(json.dumps(reg, indent=2, sort_keys=True), encoding="utf-8")
     os.replace(tmp, path)
 
@@ -64,12 +64,35 @@ def record(lake: str | pathlib.Path, summary: dict) -> None:
     if not key:
         return
     path = lake / STATE / REGISTRY
-    reg = _read(path)
-    at = summary.get("finishedAt") or summary.get("startedAt")
-    old = reg.get(key) or {}
-    reg[key] = {"pack": summary.get("pack") or old.get("pack"), "kind": summary.get("kind") or old.get("kind"),
-                "firstBuild": old.get("firstBuild") or at, "lastBuild": at, "run": summary.get("run")}
-    _write(path, reg)
+    with _RegistryLock(lake):                           # builds of other tables may record at the same moment
+        reg = _read(path)
+        at = summary.get("finishedAt") or summary.get("startedAt")
+        old = reg.get(key) or {}
+        reg[key] = {"pack": summary.get("pack") or old.get("pack"), "kind": summary.get("kind") or old.get("kind"),
+                    "firstBuild": old.get("firstBuild") or at, "lastBuild": at, "run": summary.get("run")}
+        _write(path, reg)
+
+
+class _RegistryLock:
+    """A short, waiting lock around the registry's read and write (POSIX; on Windows builds never run side by side)."""
+
+    def __init__(self, lake: pathlib.Path):
+        self.path = lake / STATE / "registry.lock"
+        self.fh = None
+
+    def __enter__(self):
+        if os.name == "nt":
+            return self
+        import fcntl
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.fh = open(self.path, "a+", encoding="utf-8")
+        fcntl.flock(self.fh.fileno(), fcntl.LOCK_EX)
+        return self
+
+    def __exit__(self, *exc):
+        if self.fh:
+            self.fh.close()
+        return False
 
 
 def built(lake: str | pathlib.Path) -> dict:

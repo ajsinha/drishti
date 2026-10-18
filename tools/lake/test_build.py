@@ -20,6 +20,7 @@ import gzip
 import http.server
 import json
 import os
+import pathlib
 import sys
 import tempfile
 import threading
@@ -208,6 +209,21 @@ class BuildTest(unittest.TestCase):
         code, s = build.run(self.base(partition_by=["DESK"]), quiet)
         self.assertEqual(code, build.EXIT_FAILED)
         self.assertIn("partitioned by business_date, PRODUCT_TYPE", s["error"])
+
+    @unittest.skipIf(os.name == "nt", "on Windows a build takes the whole lake")
+    def test_builds_of_different_tables_run_side_by_side_but_not_of_one_table(self):
+        code, s = build.run(self.base(), quiet)
+        self.assertEqual(code, 0, s.get("error"))
+        table = f"{pathlib.Path(s['table']).parent.name}/{pathlib.Path(s['table']).name}"
+        with build.LakeLock(self.lake, table="trading/another_table"):          # another table loading: this one goes on
+            self.assertEqual(build.run(self.base(), quiet)[0], 0)
+        with build.LakeLock(self.lake, table=table):                            # this table loading: refused
+            code, s = build.run(self.base(), quiet)
+        self.assertEqual(code, build.EXIT_LOCKED)
+        self.assertIn(f"table {table} is locked by", s["error"])
+        with build.LakeLock(self.lake, table="trading/another_table"):          # lake maintain waits for every build
+            with self.assertRaises(build.Locked):
+                build.LakeLock(self.lake).__enter__()
 
     def test_usage_failures(self):
         self.assertEqual(build.run(self.base(date=None), quiet)[0], build.EXIT_FAILED)
