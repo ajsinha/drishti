@@ -335,7 +335,9 @@ drishti:
     # Fields masked (•••) for roles without raw: raw JSON, views, search, Impact, type-ahead, alerts. A name masks that field at any
     # depth, in any case and convention (counterpartyId masks COUNTERPARTY_ID); an entry with dots masks by the end of the path.
     # An entry that names no field of the loaded packs' samples is logged at start-up (DRS-6011) and listed in Admin -> Health.
-    redact: [TRADER_ID, TRADER_FIRST_NAME, TRADER_LAST_NAME, COUNTERPARTY_ID]
+    # trader, patientName and lifecycle.timeline.description are the camelCase example packs' (examples/packs); counterpartyId
+    # masks the core pack's COUNTERPARTY_ID as it masked banking-core's counterpartyId before the 2.3.0 rename.
+    redact: [trader, TRADER_ID, TRADER_FIRST_NAME, TRADER_LAST_NAME, counterpartyId, patientName, lifecycle.timeline.description]
     # Opt-in: also replace exact copies of a masked field's value found in the OTHER text of the same document (best effort: exact,
     # case-sensitive; text of at least min-length characters, numbers of 4+ digits). Documents over max-nodes are not scanned.
     mask-copies: ${DRISHTI_MASK_COPIES:false}
