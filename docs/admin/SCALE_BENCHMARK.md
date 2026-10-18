@@ -801,3 +801,21 @@ latest day), 10,000 counterparties and 30,000 netting sets; one machine (24 core
 **What to provision for 1.5 million trades a day, a year kept:** 8–16 cores; 32 GB RAM (8 GB heap, the rest for the operating
 system's file cache and the console's workers); about 1 TB of SSD (the lake, plus a few GB of caches and grouped pages); on
 Windows, the data folder excluded from antivirus real-time scanning.
+
+## 9. Running the trades-at-scale benchmark
+
+Two tools under `tools/bench/` repeat the runs of section 8 on any machine:
+
+```bash
+# a lake of synthetic trades of the real shapes: N a day per system for D business days, with counterparties and netting sets
+drishti-console/.venv/bin/python tools/bench/trades.py --lake <data dir>/delta --tmp <data dir>/tmp/bench \
+    --days 7 --min 300000 --max 500000 --systems endur,calypso,murex --counterparties 10000
+# start the server and console on that data folder, then: simultaneous users against the server's API, or through the console
+drishti-console/.venv/bin/python tools/bench/users.py --server http://127.0.0.1:18480 --token-file token.txt --users 50 --seconds 60
+drishti-console/.venv/bin/python tools/bench/users.py --console http://127.0.0.1:17480 --password … --users 50 --seconds 60
+```
+
+`trades.py` loads one system and day at a time through `drishti.py lake build` (one day's file on disk at once, under `--tmp`).
+`users.py` prints one JSON line: requests a second and, for single trades, counterparty-trades pages, netting sets and searches,
+p50/p95/p99 and failures. `tools/bench/test_trades.py` runs a small version (two systems, two days, a few hundred trades) with the
+tool tests. Admin → Health → Pages shows the same per-kind times from inside the server while a run goes on.

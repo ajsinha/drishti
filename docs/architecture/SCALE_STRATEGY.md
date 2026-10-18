@@ -327,7 +327,7 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 | **5. Operations** | Admin → Caches shows the shared memory budget (each shared cache's size against its cap, the heap); a sizing guide from the measurements ([SCALE_BENCHMARK.md section 8](../admin/SCALE_BENCHMARK.md)) | **done** (2026-10-18) |
 | | Admin → Health → Pages: per kind (any pack) the views, p50, p95 and p99 over ten minutes, slowest first | **done** |
 | | retention: `keep-business-days` per table in Admin → Lakes (since 2.3.0) | done |
-| **0. Measure** | scale benchmark in `drishti-benchmarks`: 3 systems × 300K–600K × 7 → 60 days; every path of section 7; heap and disk; a smaller version in CI against regressions | started (the 2026-10-18 runs, section 4) |
+| **0. Measure** | `tools/bench/trades.py` (synthetic trades of the real shapes, N a day per system for D days, counterparties and netting sets, loaded day by day) and `tools/bench/users.py` (simultaneous users, p50/p95/p99 per request kind), a small version in the tool tests ([SCALE_BENCHMARK.md section 9](../admin/SCALE_BENCHMARK.md)) | **done** (2026-10-18) |
 | **2. Storage and caches** | bloom filters on ids; memory-mapped warm tier for id maps and columns; RocksDB document cache (section 8.1) | planned |
 | **3. Computed at load** | grouped totals and flattened columns written by the load | planned |
 | **4. History** | DuckDB over Delta for anything across dates; BI monthly rollups | planned |
