@@ -62,6 +62,9 @@ public final class Values {
             return n.doubleValue();
         }
         if (s instanceof String str) {
+            if (!couldBeNumber(str)) {
+                return Double.NaN;                                // a date, a code or a name: no exception per row
+            }
             try {
                 return Double.parseDouble(str.trim());
             } catch (NumberFormatException e) {
@@ -72,6 +75,33 @@ public final class Values {
             return b ? 1 : 0;
         }
         return Double.NaN;
+    }
+
+    /**
+     * False for text {@link Double#parseDouble} certainly rejects: one that starts with something no number starts with
+     * ("CP-0042", "ENDUR") or has a minus sign inside that is not an exponent's ("2026-09-09"). Comparisons over a million
+     * rows of such text then cost a check each, not a thrown exception each.
+     */
+    static boolean couldBeNumber(String str) {
+        int n = str.length();
+        int i = 0;
+        while (i < n && Character.isWhitespace(str.charAt(i))) {
+            i++;
+        }
+        if (i == n) {
+            return false;
+        }
+        char first = str.charAt(i);
+        if (!(first >= '0' && first <= '9' || first == '+' || first == '-' || first == '.' || first == 'N' || first == 'I')) {
+            return false;
+        }
+        for (int k = i + 1; k < n; k++) {
+            char ch = str.charAt(k);
+            if ((ch == '-' || ch == '+') && "eEpP".indexOf(str.charAt(k - 1)) < 0) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static boolean isNumber(Object v) {
